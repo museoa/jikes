@@ -523,7 +523,7 @@ RepairCandidate DiagnoseParser::PrimaryPhase(TokenObject error_token)
 /* the buffer.  If so, it returns the candidate in question;     */
 /* otherwise it returns 0.                                       */
 /*****************************************************************/
-bool DiagnoseParser::MergeCandidate(int state, int buffer_position)
+int DiagnoseParser::MergeCandidate(int state, int buffer_position)
 {
     int i,
         k,

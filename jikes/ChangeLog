@@ -1,4 +1,10 @@
-2000-06-26  C. Scott Ananian <cananian@lesser-magoo.lcs.mit.edu>
+2000-06-26  Andrew G. Tereschenko  <tag@ibis.odessa.ua>
+
+	* src/diagnose.cpp (MergeCandidate):
+	* src/diagnose.h (MergeCandidate): Change
+	return type of method from bool to int.
+
+2000-06-26  C. Scott Ananian  <cananian@lesser-magoo.lcs.mit.edu>
 
 	* src/code.h: Fix comment.
 	* src/gencode.java: Fix comment.

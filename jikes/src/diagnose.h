@@ -154,7 +154,7 @@ private:
 
     RepairCandidate ErrorRecovery(TokenObject error_token);
     RepairCandidate PrimaryPhase(TokenObject error_token);
-    bool MergeCandidate(int state, int buffer_position);
+    int MergeCandidate(int state, int buffer_position);
     PrimaryRepairInfo CheckPrimaryDistance(int stack[],
                                            int stack_top,
                                            PrimaryRepairInfo repair);
