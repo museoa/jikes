@@ -11,8 +11,8 @@
 
     <TABLE BORDER=0 ALIGN="CENTER">
       <TR VALIGN="MIDDLE">
-        <TD ALIGN="RIGHT"><a href="http://debian.org"><IMG SRC="images/debian.jpg" alt="" BORDER=0 HEIGHT=61 WIDTH=50></A></TD>
-        <TD ALIGN="LEFT" ><a href="http://debian.org">Debian</a></TD>
+        <TD ALIGN="RIGHT"><a href="http://packages.debian.org/jikes*"><IMG SRC="images/debian.jpg" alt="" BORDER=0 HEIGHT=61 WIDTH=50></A></TD>
+        <TD ALIGN="LEFT" ><a href="http://packages.debian.org/jikes*">Debian</a> - (<small><a href="http://packages.qa.debian.org/j/jikes.html">see also</a></small>)</TD>
       </TR><TR>
         <TD COLSPAN=2><HR></TD>
       </TR><TR VALIGN="MIDDLE">
@@ -38,7 +38,7 @@
       </TR><TR VALIGN="MIDDLE">
         <TD ALIGN="RIGHT"><a href="http://redhat.com"><IMG SRC="images/redhat.gif" alt="" BORDER=0 HEIGHT=56 WIDTH=70></A></TD>
         <TD ALIGN="LEFT" ><a href="http://redhat.com">Red Hat</a></TD>
-      </TR-->
+      </TR -->
     </TABLE>
 <br>
     <p>Jikes is also available in the following developer's Tool Kits:</p>
