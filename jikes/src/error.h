@@ -292,6 +292,7 @@ class SemanticError
         PARAMETER_REDECLARED,
         BAD_ABSTRACT_METHOD_MODIFIER,
         ABSTRACT_METHOD_MODIFIER_CONFLICT,
+        STRICTFP_NATIVE_METHOD,
         ABSTRACT_METHOD_INVOCATION,
         FINAL_METHOD_OVERRIDE,
         FINAL_METHOD_OVERRIDE_EXTERNALLY,
@@ -623,6 +624,7 @@ private:
     static wchar_t *PrintPARAMETER_REDECLARED(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintBAD_ABSTRACT_METHOD_MODIFIER(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintABSTRACT_METHOD_MODIFIER_CONFLICT(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintSTRICTFP_NATIVE_METHOD(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintABSTRACT_METHOD_INVOCATION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintFINAL_METHOD_OVERRIDE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintFINAL_METHOD_OVERRIDE_EXTERNALLY(ErrorInfo &, LexStream *, Control &);

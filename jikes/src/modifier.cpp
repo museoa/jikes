@@ -30,7 +30,8 @@ AccessFlags Semantic::ProcessClassModifiers(AstClassDeclaration *class_declarati
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_ABSTRACT();
 
@@ -46,7 +47,8 @@ AccessFlags Semantic::ProcessClassModifiers(AstClassDeclaration *class_declarati
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_FINAL();
 
@@ -62,7 +64,8 @@ AccessFlags Semantic::ProcessClassModifiers(AstClassDeclaration *class_declarati
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_PUBLIC();
                  break;
@@ -71,7 +74,8 @@ AccessFlags Semantic::ProcessClassModifiers(AstClassDeclaration *class_declarati
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_STRICTFP();
                  break;
@@ -103,7 +107,8 @@ AccessFlags Semantic::ProcessLocalClassModifiers(AstClassDeclaration *class_decl
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_ABSTRACT();
 
@@ -119,7 +124,8 @@ AccessFlags Semantic::ProcessLocalClassModifiers(AstClassDeclaration *class_decl
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_FINAL();
 
@@ -135,7 +141,8 @@ AccessFlags Semantic::ProcessLocalClassModifiers(AstClassDeclaration *class_decl
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_STRICTFP();
                  break;
@@ -167,7 +174,8 @@ AccessFlags Semantic::ProcessNestedClassModifiers(AstClassDeclaration *class_dec
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_ABSTRACT();
 
@@ -183,7 +191,8 @@ AccessFlags Semantic::ProcessNestedClassModifiers(AstClassDeclaration *class_dec
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_FINAL();
 
@@ -199,7 +208,8 @@ AccessFlags Semantic::ProcessNestedClassModifiers(AstClassDeclaration *class_dec
                  {
                      ReportSemError(SemanticError::DUPLICATE_ACCESS_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_PUBLIC();
                  break;
@@ -208,7 +218,8 @@ AccessFlags Semantic::ProcessNestedClassModifiers(AstClassDeclaration *class_dec
                  {
                      ReportSemError(SemanticError::DUPLICATE_ACCESS_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_PRIVATE();
                  break;
@@ -217,7 +228,8 @@ AccessFlags Semantic::ProcessNestedClassModifiers(AstClassDeclaration *class_dec
                  {
                      ReportSemError(SemanticError::DUPLICATE_ACCESS_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_PROTECTED();
                  break;
@@ -226,7 +238,8 @@ AccessFlags Semantic::ProcessNestedClassModifiers(AstClassDeclaration *class_dec
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_STATIC();
                  break;
@@ -235,7 +248,8 @@ AccessFlags Semantic::ProcessNestedClassModifiers(AstClassDeclaration *class_dec
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_STRICTFP();
                  break;
@@ -267,7 +281,8 @@ AccessFlags Semantic::ProcessStaticNestedClassModifiers(AstClassDeclaration *cla
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_ABSTRACT();
 
@@ -283,7 +298,8 @@ AccessFlags Semantic::ProcessStaticNestedClassModifiers(AstClassDeclaration *cla
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_FINAL();
 
@@ -299,7 +315,8 @@ AccessFlags Semantic::ProcessStaticNestedClassModifiers(AstClassDeclaration *cla
                  {
                      ReportSemError(SemanticError::DUPLICATE_ACCESS_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else
                  {
@@ -315,7 +332,8 @@ AccessFlags Semantic::ProcessStaticNestedClassModifiers(AstClassDeclaration *cla
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else
                  {
@@ -331,7 +349,8 @@ AccessFlags Semantic::ProcessStaticNestedClassModifiers(AstClassDeclaration *cla
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_STRICTFP();
                  break;
@@ -370,7 +389,8 @@ AccessFlags Semantic::ProcessInterfaceModifiers(AstInterfaceDeclaration *interfa
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else
                  {
@@ -385,7 +405,8 @@ AccessFlags Semantic::ProcessInterfaceModifiers(AstInterfaceDeclaration *interfa
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_PUBLIC();
                  break;
@@ -394,7 +415,8 @@ AccessFlags Semantic::ProcessInterfaceModifiers(AstInterfaceDeclaration *interfa
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_STRICTFP();
                  break;
@@ -431,7 +453,8 @@ AccessFlags Semantic::ProcessStaticNestedInterfaceModifiers(AstInterfaceDeclarat
             {
                 ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                modifier -> modifier_kind_token,
-                               modifier -> modifier_kind_token);
+                               modifier -> modifier_kind_token,
+                               lex_stream -> NameString(modifier -> modifier_kind_token));
             }
             else
             {
@@ -445,7 +468,8 @@ AccessFlags Semantic::ProcessStaticNestedInterfaceModifiers(AstInterfaceDeclarat
             {
                 ReportSemError(SemanticError::DUPLICATE_ACCESS_MODIFIER,
                                modifier -> modifier_kind_token,
-                               modifier -> modifier_kind_token);
+                               modifier -> modifier_kind_token,
+                               lex_stream -> NameString(modifier -> modifier_kind_token));
             }
             else 
             {
@@ -456,12 +480,13 @@ AccessFlags Semantic::ProcessStaticNestedInterfaceModifiers(AstInterfaceDeclarat
                 access_flags.SetACC_PUBLIC();
             }
             break;
-        case Ast::STATIC: // TODO: Need to confirm that this is valid !!!
+        case Ast::STATIC:
             if(access_flags.ACC_STATIC())
             {
                 ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                modifier -> modifier_kind_token,
-                               modifier -> modifier_kind_token);
+                               modifier -> modifier_kind_token,
+                               lex_stream -> NameString(modifier -> modifier_kind_token));
             }
             else 
             {
@@ -477,7 +502,8 @@ AccessFlags Semantic::ProcessStaticNestedInterfaceModifiers(AstInterfaceDeclarat
             {
                 ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                modifier -> modifier_kind_token,
-                               modifier -> modifier_kind_token);
+                               modifier -> modifier_kind_token,
+                               lex_stream -> NameString(modifier -> modifier_kind_token));
             }
             else access_flags.SetACC_STRICTFP();
             break;
@@ -513,7 +539,8 @@ AccessFlags Semantic::ProcessNestedInterfaceModifiers(AstInterfaceDeclaration *i
             {
                 ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                modifier -> modifier_kind_token,
-                               modifier -> modifier_kind_token);
+                               modifier -> modifier_kind_token,
+                               lex_stream -> NameString(modifier -> modifier_kind_token));
             }
             else
             {
@@ -527,7 +554,8 @@ AccessFlags Semantic::ProcessNestedInterfaceModifiers(AstInterfaceDeclaration *i
             {
                 ReportSemError(SemanticError::DUPLICATE_ACCESS_MODIFIER,
                                modifier -> modifier_kind_token,
-                               modifier -> modifier_kind_token);
+                               modifier -> modifier_kind_token,
+                               lex_stream -> NameString(modifier -> modifier_kind_token));
             }
             else access_flags.SetACC_PUBLIC();
             break;
@@ -536,7 +564,8 @@ AccessFlags Semantic::ProcessNestedInterfaceModifiers(AstInterfaceDeclaration *i
             {
                 ReportSemError(SemanticError::DUPLICATE_ACCESS_MODIFIER,
                                modifier -> modifier_kind_token,
-                               modifier -> modifier_kind_token);
+                               modifier -> modifier_kind_token,
+                               lex_stream -> NameString(modifier -> modifier_kind_token));
             }
             else access_flags.SetACC_PRIVATE();
             break;
@@ -545,16 +574,18 @@ AccessFlags Semantic::ProcessNestedInterfaceModifiers(AstInterfaceDeclaration *i
             {
                 ReportSemError(SemanticError::DUPLICATE_ACCESS_MODIFIER,
                                modifier -> modifier_kind_token,
-                               modifier -> modifier_kind_token);
+                               modifier -> modifier_kind_token,
+                               lex_stream -> NameString(modifier -> modifier_kind_token));
             }
             else access_flags.SetACC_PROTECTED();
             break;
-        case Ast::STATIC: // TODO: Need to confirm that this is valid !!!
+        case Ast::STATIC:
             if (access_flags.ACC_STATIC())
             {
                 ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                modifier -> modifier_kind_token,
-                               modifier -> modifier_kind_token);
+                               modifier -> modifier_kind_token,
+                               lex_stream -> NameString(modifier -> modifier_kind_token));
             }
             else if (control.option.pedantic)
             {
@@ -570,7 +601,8 @@ AccessFlags Semantic::ProcessNestedInterfaceModifiers(AstInterfaceDeclaration *i
             {
                 ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                modifier -> modifier_kind_token,
-                               modifier -> modifier_kind_token);
+                               modifier -> modifier_kind_token,
+                               lex_stream -> NameString(modifier -> modifier_kind_token));
             }
             else access_flags.SetACC_STRICTFP();
             break;
@@ -606,7 +638,8 @@ AccessFlags Semantic::ProcessFieldModifiers(AstFieldDeclaration *field_declarati
                  {
                      ReportSemError(SemanticError::DUPLICATE_ACCESS_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_PUBLIC();
                  break;
@@ -615,7 +648,8 @@ AccessFlags Semantic::ProcessFieldModifiers(AstFieldDeclaration *field_declarati
                  {
                      ReportSemError(SemanticError::DUPLICATE_ACCESS_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_PROTECTED();
                  break;
@@ -624,7 +658,8 @@ AccessFlags Semantic::ProcessFieldModifiers(AstFieldDeclaration *field_declarati
                  {
                      ReportSemError(SemanticError::DUPLICATE_ACCESS_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_PRIVATE();
                  break;
@@ -633,7 +668,8 @@ AccessFlags Semantic::ProcessFieldModifiers(AstFieldDeclaration *field_declarati
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_STATIC();
                  break;
@@ -642,7 +678,8 @@ AccessFlags Semantic::ProcessFieldModifiers(AstFieldDeclaration *field_declarati
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_FINAL();
 
@@ -658,7 +695,8 @@ AccessFlags Semantic::ProcessFieldModifiers(AstFieldDeclaration *field_declarati
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_TRANSIENT();
                  break;
@@ -667,7 +705,8 @@ AccessFlags Semantic::ProcessFieldModifiers(AstFieldDeclaration *field_declarati
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_VOLATILE();
 
@@ -705,7 +744,8 @@ AccessFlags Semantic::ProcessLocalModifiers(AstLocalVariableDeclarationStatement
             {
                 ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                modifier -> modifier_kind_token,
-                               modifier -> modifier_kind_token);
+                               modifier -> modifier_kind_token,
+                               lex_stream -> NameString(modifier -> modifier_kind_token));
             }
             else access_flags.SetACC_FINAL();
         }
@@ -736,7 +776,8 @@ AccessFlags Semantic::ProcessFormalModifiers(AstFormalParameter *parameter_decla
             {
                 ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                modifier -> modifier_kind_token,
-                               modifier -> modifier_kind_token);
+                               modifier -> modifier_kind_token,
+                               lex_stream -> NameString(modifier -> modifier_kind_token));
             }
             else access_flags.SetACC_FINAL();
         }
@@ -768,7 +809,8 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
                  {
                      ReportSemError(SemanticError::DUPLICATE_ACCESS_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_PUBLIC();
                  break;
@@ -777,7 +819,8 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
                  {
                      ReportSemError(SemanticError::DUPLICATE_ACCESS_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_PROTECTED();
                  break;
@@ -786,7 +829,8 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
                  {
                      ReportSemError(SemanticError::DUPLICATE_ACCESS_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_PRIVATE();
 
@@ -803,7 +847,8 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_STATIC();
 
@@ -820,21 +865,38 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_STRICTFP();
+
+                 if (access_flags.ACC_NATIVE())
+                 {
+                     ReportSemError(SemanticError::STRICTFP_NATIVE_METHOD,
+                                    modifier -> modifier_kind_token,
+                                    modifier -> modifier_kind_token);
+                 }
+                 if (access_flags.ACC_ABSTRACT())
+                 {
+                     ReportSemError(SemanticError::ABSTRACT_METHOD_MODIFIER_CONFLICT,
+                                    modifier -> modifier_kind_token,
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
+                 }
                  break;
             case Ast::ABSTRACT:
                  if (access_flags.ACC_ABSTRACT())
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_ABSTRACT();
 
                  if (access_flags.ACC_PRIVATE() || access_flags.ACC_STATIC() ||
-                     access_flags.ACC_FINAL()   || access_flags.ACC_NATIVE() || access_flags.ACC_SYNCHRONIZED())
+                     access_flags.ACC_FINAL()   || access_flags.ACC_NATIVE() ||
+                     access_flags.ACC_SYNCHRONIZED() || access_flags.ACC_STRICTFP())
                  {
                      ReportSemError(SemanticError::BAD_ABSTRACT_METHOD_MODIFIER,
                                     modifier -> modifier_kind_token,
@@ -846,7 +908,8 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_FINAL();
 
@@ -863,7 +926,8 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_NATIVE();
 
@@ -874,13 +938,20 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
                                     modifier -> modifier_kind_token,
                                     lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
+                 if (access_flags.ACC_STRICTFP())
+                 {
+                     ReportSemError(SemanticError::STRICTFP_NATIVE_METHOD,
+                                    modifier -> modifier_kind_token,
+                                    modifier -> modifier_kind_token);
+                 }
                  break;
             case Ast::SYNCHRONIZED:
                  if (access_flags.ACC_SYNCHRONIZED())
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_SYNCHRONIZED();
 
@@ -900,7 +971,7 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
                  break;
         }
     }
-
+    
     return access_flags;
 }
 
@@ -920,7 +991,8 @@ AccessFlags Semantic::ProcessInterfaceMethodModifiers(AstMethodDeclaration *meth
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else
                  {
@@ -936,7 +1008,8 @@ AccessFlags Semantic::ProcessInterfaceMethodModifiers(AstMethodDeclaration *meth
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else
                  {
@@ -981,7 +1054,8 @@ AccessFlags Semantic::ProcessConstructorModifiers(AstConstructorDeclaration *con
                  {
                      ReportSemError(SemanticError::DUPLICATE_ACCESS_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_PUBLIC();
                  break;
@@ -990,7 +1064,8 @@ AccessFlags Semantic::ProcessConstructorModifiers(AstConstructorDeclaration *con
                  {
                      ReportSemError(SemanticError::DUPLICATE_ACCESS_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_PROTECTED();
                  break;
@@ -999,7 +1074,8 @@ AccessFlags Semantic::ProcessConstructorModifiers(AstConstructorDeclaration *con
                  {
                      ReportSemError(SemanticError::DUPLICATE_ACCESS_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else access_flags.SetACC_PRIVATE();
                  break;
@@ -1031,7 +1107,8 @@ AccessFlags Semantic::ProcessConstantModifiers(AstFieldDeclaration *field_declar
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else
                  {
@@ -1047,7 +1124,8 @@ AccessFlags Semantic::ProcessConstantModifiers(AstFieldDeclaration *field_declar
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else
                  {
@@ -1063,7 +1141,8 @@ AccessFlags Semantic::ProcessConstantModifiers(AstFieldDeclaration *field_declar
                  {
                      ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                     modifier -> modifier_kind_token,
-                                    modifier -> modifier_kind_token);
+                                    modifier -> modifier_kind_token,
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  else
                  {

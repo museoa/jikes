@@ -701,6 +701,7 @@ void SemanticError::StaticInitializer()
     print_message[PARAMETER_REDECLARED] = PrintPARAMETER_REDECLARED;
     print_message[BAD_ABSTRACT_METHOD_MODIFIER] = PrintBAD_ABSTRACT_METHOD_MODIFIER;
     print_message[ABSTRACT_METHOD_MODIFIER_CONFLICT] = PrintABSTRACT_METHOD_MODIFIER_CONFLICT;
+    print_message[STRICTFP_NATIVE_METHOD] = PrintSTRICTFP_NATIVE_METHOD;
     print_message[ABSTRACT_METHOD_INVOCATION] = PrintABSTRACT_METHOD_INVOCATION;
     print_message[FINAL_METHOD_OVERRIDE] = PrintFINAL_METHOD_OVERRIDE;
     print_message[FINAL_METHOD_OVERRIDE_EXTERNALLY] = PrintFINAL_METHOD_OVERRIDE_EXTERNALLY;
@@ -1762,7 +1763,7 @@ wchar_t *SemanticError::PrintDUPLICATE_MODIFIER(ErrorInfo &err, LexStream *lex_s
 {
     ErrorString s;
     
-    s << "Duplicate specification of this modifier.";
+    s << "Duplicate specification of the modifier \"" << err.insert1 << "\".";
 
     return s.Array();
 }
@@ -1783,8 +1784,8 @@ wchar_t *SemanticError::PrintINVALID_TOP_LEVEL_CLASS_MODIFIER(ErrorInfo &err, Le
 {
     ErrorString s;
     
-    s << err.insert1
-            << " is not a valid modifier for a top-level class.";
+    s << "\"" << err.insert1
+            << "\" is not a valid modifier for a top-level class.";
 
     return s.Array();
 }
@@ -1794,8 +1795,8 @@ wchar_t *SemanticError::PrintINVALID_INNER_CLASS_MODIFIER(ErrorInfo &err, LexStr
 {
     ErrorString s;
     
-    s << err.insert1
-            << " is not a valid modifier for an inner class.";
+    s << "\"" << err.insert1
+            << "\" is not a valid modifier for an inner class.";
 
     return s.Array();
 }
@@ -1805,8 +1806,8 @@ wchar_t *SemanticError::PrintINVALID_STATIC_INNER_CLASS_MODIFIER(ErrorInfo &err,
 {
     ErrorString s;
     
-    s << err.insert1
-            << " is not a valid modifier for an inner class that is enclosed in an interface.";
+    s << "\"" << err.insert1
+            << "\" is not a valid modifier for an inner class that is enclosed in an interface.";
 
     return s.Array();
 }
@@ -1816,8 +1817,8 @@ wchar_t *SemanticError::PrintINVALID_LOCAL_CLASS_MODIFIER(ErrorInfo &err, LexStr
 {
     ErrorString s;
     
-    s << err.insert1
-            << " is not a valid modifier for a local inner class.";
+    s << "\"" << err.insert1
+            << "\" is not a valid modifier for a local inner class.";
 
     return s.Array();
 }
@@ -1837,8 +1838,8 @@ wchar_t *SemanticError::PrintINVALID_INTERFACE_MODIFIER(ErrorInfo &err, LexStrea
 {
     ErrorString s;
     
-    s << err.insert1
-            << " is not a valid interface modifier.";
+    s << "\"" << err.insert1
+            << "\" is not a valid interface modifier.";
 
     return s.Array();
 }
@@ -1868,8 +1869,8 @@ wchar_t *SemanticError::PrintINVALID_FIELD_MODIFIER(ErrorInfo &err, LexStream *l
 {
     ErrorString s;
     
-    s << err.insert1
-            << " is not a valid field modifier.";
+    s << "\"" << err.insert1
+            << "\" is not a valid field modifier.";
 
     return s.Array();
 }
@@ -1879,8 +1880,8 @@ wchar_t *SemanticError::PrintINVALID_LOCAL_MODIFIER(ErrorInfo &err, LexStream *l
 {
     ErrorString s;
     
-    s << err.insert1
-            << " is not a valid local variable or parameter modifier.";
+    s << "\"" << err.insert1
+            << "\" is not a valid local variable or parameter modifier.";
 
     return s.Array();
 }
@@ -1890,8 +1891,8 @@ wchar_t *SemanticError::PrintINVALID_METHOD_MODIFIER(ErrorInfo &err, LexStream *
 {
     ErrorString s;
     
-    s << err.insert1
-            << " is not a valid method modifier.";
+    s << "\"" << err.insert1
+            << "\" is not a valid method modifier.";
 
     return s.Array();
 }
@@ -1901,8 +1902,8 @@ wchar_t *SemanticError::PrintINVALID_SIGNATURE_MODIFIER(ErrorInfo &err, LexStrea
 {
     ErrorString s;
     
-    s << err.insert1
-            << " is not a valid signature modifier.";
+    s << "\"" << err.insert1
+            << "\" is not a valid signature modifier.";
 
     return s.Array();
 }
@@ -1912,8 +1913,8 @@ wchar_t *SemanticError::PrintINVALID_CONSTRUCTOR_MODIFIER(ErrorInfo &err, LexStr
 {
     ErrorString s;
     
-    s << err.insert1
-            << " is not a valid constructor modifier.";
+    s << "\"" << err.insert1
+            << "\" is not a valid constructor modifier.";
 
     return s.Array();
 }
@@ -1923,8 +1924,8 @@ wchar_t *SemanticError::PrintINVALID_CONSTANT_MODIFIER(ErrorInfo &err, LexStream
 {
     ErrorString s;
     
-    s << err.insert1
-            << " is not a valid constant modifier.";
+    s << "\"" << err.insert1
+            << "\" is not a valid interface field modifier.";
 
     return s.Array();
 }
@@ -3998,8 +3999,8 @@ wchar_t *SemanticError::PrintBAD_ABSTRACT_METHOD_MODIFIER(ErrorInfo &err, LexStr
 {
     ErrorString s;
     
-    s << "A method declaration that contains the keyword \"abstract\" may not also contain one of the keywords: "
-               "\"private\", \"static\", \"final\", \"native\" or \"synchronized\".";
+    s << "A method declaration that contains the keyword \"abstract\" may not contain any of the keywords: "
+               "\"private\", \"static\", \"final\", \"native\", \"strictfp\" or \"synchronized\".";
 
     return s.Array();
 }
@@ -4009,9 +4010,19 @@ wchar_t *SemanticError::PrintABSTRACT_METHOD_MODIFIER_CONFLICT(ErrorInfo &err, L
 {
     ErrorString s;
     
-    s << "An abstract method may not also contain the keyword \""
+    s << "An \"abstract\" method may not also contain the keyword \""
             << err.insert1
             << "\".";
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintSTRICTFP_NATIVE_METHOD(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    ErrorString s;
+    
+    s << "A \"native\" method method may not also be \"strictfp\".";
 
     return s.Array();
 }

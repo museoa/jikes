@@ -4079,26 +4079,11 @@ TypeSymbol *Semantic::GetAnonymousType(AstClassInstanceCreationExpression *class
     inner_type -> SetSignature(control);
 
     //
-    // TODO: As an anonymous type cannot be a super class, it makes sense to mark
-    // is final. This allows jikes to be consistent with javac in emitting an
-    // error message when the anonymous class is checked in an instanceof
-    // operation against an interface. However, this fact is not documented
-    // in the 1.1 document. Furthermore, the class file that is emitted for an
-    // anonymous flag (when processed by javac) does not have the FINAL flag turned on.
-    // We also turn this flag off after processing the body of the anonymmous type.
-    // See bolow...
+    // By JLS2 15.9.5, an anonymous class is implicitly final, but never
+    // static.  However, in a static context, error checking is much
+    // easier if the STATIC flag is temporarily set; we turn it off below.
     //
     inner_type -> SetACC_FINAL();
-
-    //
-    // Note that if the anonymous type we are constructing was encountered while
-    // we were processing an explicit constructor invocation, we assume we are
-    // in a static region. This allows the anonymous type to be constructed without
-    // requiring a this$0 parameter as the "this" pointer argument that would
-    // be passed such a this$0 parameter does not yet exist at that point. Furthermore,
-    // making the anonymous type static also prevents it from accessing any surrounding
-    // instance variable that would require the this$0 pointer.
-    //
     if (StaticRegion() || (ExplicitConstructorInvocation() && inner_type -> ContainingType() == ThisType()))
          inner_type -> SetACC_STATIC();
     else inner_type -> InsertThis(0);
@@ -4170,9 +4155,9 @@ TypeSymbol *Semantic::GetAnonymousType(AstClassInstanceCreationExpression *class
     }
 
     //
-    // TODO: See comment above regarding the setting of this flag.
+    // See above - anonymous classes are never static.
     //
-    inner_type -> ResetACC_FINAL();
+    inner_type -> ResetACC_STATIC();
 
     return inner_type;
 }

@@ -3656,15 +3656,11 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
                                            : ProcessMethodModifiers(method_declaration));
 
     //
-    // TODO: File Query Sun on that one. We no longer explicitly mark such methods as final
-    //       as it appears that some tools expect these methods to remain unmarked.
+    // By JLS2 8.4.3.3, a private method and all methods declared in a
+    // final class are implicitly final.
     //
-    //
-    // A private method and all methods declared in a final class are implicitly final.
-    //
-    // if (access_flags.ACC_PRIVATE() || this_type -> ACC_FINAL())
-    //    access_flags.SetACC_FINAL();
-    //
+    if (access_flags.ACC_PRIVATE() || this_type -> ACC_FINAL())
+        access_flags.SetACC_FINAL();
 
     //
     // A method enclosed in an inner type may not be declared static.
