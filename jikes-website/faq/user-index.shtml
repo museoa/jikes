@@ -855,6 +855,7 @@ q</pre>
             interpreting the specification.
           </p>
 
+          <a name="compat-class-literal">
 	  <h4>Class Literal Semantics</h4>
 
 	  <p> The Java Language Specification does not allow class literals 
@@ -908,6 +909,7 @@ static void m(Class c) {
 	  href="/pipermail/jikes-dev/2002-December/003642.html">this
 	  posting</a> to jikes-dev.</p>
 
+          <a name="compat-extra-semi">
           <h4>Extraneous Semicolons</h4>
 
           <p>
@@ -940,6 +942,7 @@ public class Test {
             delete those extra semicolons.
           </p>
 
+          <a name="compat-unreach">
           <h4>Unreachable Statements</h4>
 
           <p>
@@ -1000,6 +1003,7 @@ class Test {
             for the full story.
           </p>
 
+          <a name="compat-cyclic">
           <h4>Cyclic Scoping</h4>
 
           <p>
@@ -1109,6 +1113,7 @@ class C implements C.I {
             erroneous.
           </p>
 
+          <a name="compat-queries">
           <h4>Queries to Sun</h4>
 
           <p>
