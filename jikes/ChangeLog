@@ -1,3 +1,9 @@
+2001-09-20  Chris Abbey  <jikes@cabbey.net> 
+
+	* src/double.h (BigInt): Fixed friend class issues, to correct
+	build breakage with compilers stricter than gcc is (like AIX) -
+	patch 186.
+
 2001-09-20  Mo DeJong  <supermo@bayarea.net> 
 
 	* configure.in: Add check for __int64 type which is supported by

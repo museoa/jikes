@@ -588,8 +588,8 @@ public:
     IEEEdouble DoubleValue() const;
 
 private:
-    friend IEEEfloat IEEEfloat::Ratio(const BigInt &, const BigInt &);
-    friend IEEEdouble IEEEdouble::Ratio(const BigInt &, const BigInt &);
+    friend class IEEEfloat;
+    friend class IEEEdouble;
 
     int k;      // log2 maxwds
     int maxwds; // size of data[]
