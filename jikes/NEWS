@@ -7,6 +7,9 @@ must specify -source 1.3 or -target 1.3 at the command line.
 Constant instance variables are now initialized sooner, so that you
 cannot view their default 0 value even with reflection.
 
+The statement 'throw null;' is now treated as an unchecked exception,
+since it always results in a NullPointerException being thrown.
+
 FIXME: What other big changes have been added?
 
 *** Jikes 1.18 was released 21 November 2002.

@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -1335,12 +1334,14 @@ private:
     //
     // Any exception that is neither RuntimeException or one of its subclasses
     // nor Error or one of its subclasses is a checked exception. This also
-    // ignores invalid types.
+    // ignores invalid types. Additionally, 'throw null' results in a
+    // NullPointerException, so it is unchecked.
     //
     inline bool CheckedException(TypeSymbol* exception)
     {
         return (! exception -> IsSubclass(control.RuntimeException()) &&
                 ! exception -> IsSubclass(control.Error()) &&
+                exception != control.null_type &&
                 exception != control.no_type);
     }
 

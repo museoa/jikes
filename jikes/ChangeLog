@@ -1,3 +1,9 @@
+2004-01-15  Eric Blake  <ebb9@byu.net>
+
+	* src/semantic.h (CheckedException): From Java Spec Report, throw
+	null is unchecked.
+	* NEWS: Document this.
+
 2004-01-14  Eric Blake  <ebb9@byu.net>
 
 	* src/expr.cpp (ReportMethodNotFound): Improve error message when
