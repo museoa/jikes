@@ -1,3 +1,11 @@
+2001-02-01  Mo DeJong  <mdejong@redhat.com>
+
+	* TODO: Note that deps have been added
+	to Makefile.am.
+	* src/Makefile.am: Add deps for .h files.
+	* src/set.h:
+	* src/tuple.h: Removed unused #includes.
+
 2001-01-31  Mo DeJong  <mdejong@redhat.com>
 
 	* config.guess:
