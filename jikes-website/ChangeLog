@@ -1,3 +1,10 @@
+2003-02-07  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* faq/dev-win32.shtml: Add "cd .." to end of
+	libiconv notes. Note that users should click on
+	the shortcut not the msys icon. Fix text that
+	read --encoding, it should have been -encoding.
+
 2003-02-05  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* faq/dev-linux.shtml: Point users at generic

@@ -72,7 +72,8 @@
               We suggest grabbing the most recent
               <A HREF="http://sourceforge.net/project/showfiles.php?group_id=10894">msys_mingw zip file</A>
               (scroll down, it is near the bottom). Then just unzip the file and
-              double click on the msys shortcut to start the shell. One can run
+              double click on the msys shortcut (not the icon) to start the shell.
+              One can run
               the jikes <code>configure</code> script in the normal way from inside
               the shell. Using the bundled zip file is the most simple method to
               get up and running, if you want to install these tools separately,
@@ -95,7 +96,7 @@
               and follow the
               <a href="dev-compiling.shtml">generic build instructions</a>.
               This will generate a <code>jikes.exe</code> executable that does not recognize
-              the <tt>--encoding</tt> option. If you need to make use of encodings
+              the <tt>-encoding</tt> option. If you need to make use of encodings
               go to the next section.
             </p>
 
@@ -134,7 +135,8 @@
                             $ cd libiconv-build<br/>
                             $ ../libiconv-1.8/configure --enable-extra-encodings \<br/>
                             --enable-static --disable-shared<br/>
-                            $ make</tt>
+                            $ make<br/>
+                            $ cd ..</tt>
                           </p>
                         </td>
                       </tr>
