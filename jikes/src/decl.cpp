@@ -2234,6 +2234,7 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration* construc
         if (control.IsDoubleWordType(symbol -> Type()))
             block_symbol -> max_variable_index++;
         symbol -> declarator = formal_declarator;
+        symbol -> SetLocation();
         constructor -> AddFormalParameter(symbol);
     }
 
@@ -3315,7 +3316,7 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration* method_declaration
     method -> SetContainingType(this_type);
     method -> SetBlockSymbol(block_symbol);
     method -> declaration = method_declaration;
-    method-> SetLocation();
+    method -> SetLocation();
     for (unsigned i = 0; i < method_declarator -> NumFormalParameters(); i++)
     {
         AstVariableDeclarator* formal_declarator =
@@ -3328,6 +3329,7 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration* method_declaration
         if (control.IsDoubleWordType(symbol -> Type()))
             block_symbol -> max_variable_index++;
         symbol -> declarator = formal_declarator;
+        symbol -> SetLocation();
         method -> AddFormalParameter(symbol);
     }
     method -> SetSignature(control);

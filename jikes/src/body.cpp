@@ -193,12 +193,13 @@ void Semantic::ProcessLocalVariableDeclarationStatement(Ast* stmt)
         // According to JLS2 14.4.2, only check for a duplicate in
         // the local class scope; don't worry about enclosing classes
         //
-        if (LocalSymbolTable().FindVariableSymbol(name_symbol))
+        VariableSymbol* duplicate =
+            LocalSymbolTable().FindVariableSymbol(name_symbol);
+        if (duplicate)
         {
             ReportSemError(SemanticError::DUPLICATE_LOCAL_VARIABLE_DECLARATION,
                            name -> identifier_token, name_symbol -> Name(),
-                           LocalSymbolTable().
-                           FindVariableSymbol(name_symbol) -> FileLoc());
+                           duplicate -> FileLoc());
         }
         else
         {
@@ -1419,6 +1420,7 @@ void Semantic::ProcessTryStatement(Ast* stmt)
         symbol -> SetLocalVariableIndex(block -> max_variable_index++);
         symbol -> MarkComplete();
         symbol -> declarator = parameter -> formal_declarator;
+        symbol -> SetLocation();
 
         clause -> parameter_symbol = symbol;
 

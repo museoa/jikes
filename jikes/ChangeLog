@@ -1,3 +1,17 @@
+2004-02-22  Elliott Hughes  <enh@acm.org>
+
+	* body.cpp (ProcessLocalVariableDeclarationStatement): Make the
+	duplicate local variable declaration checking more similar to that
+	in ProcessTryStatement.
+	* body.cpp (ProcessTryStatement):
+	* decl.cpp (ProcessConstructorDeclaration, ProcessMethodDeclaration):
+	Invoke SetLocation on formal parameters. We can't do it in
+	ProcessFormalParameters, because that's invoked before the variable
+	symbols can have an owner -- how else do you check for duplicate
+	signatures? -- but we do need to come back and do it eventually.
+	The problems was noticed with reporting the location of the original
+	occurrence of a local variable, where the location would be given as "".
+
 2004-02-17  Eric Blake  <ebb9@byu.net>
 
 	* ChangeLog: Reformat to fit 80 columns.
