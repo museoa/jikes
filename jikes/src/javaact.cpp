@@ -1,4 +1,4 @@
-#line 427 "java.g"
+#line 427 "java.g" 
 // $Id$
 //
 // This software is subject to the terms of the IBM Jikes Compiler
