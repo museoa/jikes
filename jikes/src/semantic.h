@@ -1130,7 +1130,7 @@ inline void Semantic::AddDependence(TypeSymbol *base_type_, TypeSymbol *parent_t
         base_type -> parents -> AddElement(parent_type);
     }
 
-    if (control.option.Verbose)
+    if (control.option.pedantic)
     {
         if (parent_type -> ContainingPackage() == control.unnamed_package &&
             base_type -> ContainingPackage() != control.unnamed_package)

@@ -118,7 +118,6 @@ public:
          depend,
          nowarn,
          one_one,
-         dollar,
          zero_defect;
     int first_file_index;
 
@@ -136,7 +135,7 @@ public:
          errors,
          ascii, // used on EBCDIC systems to AVOID input translation from EBCDIC to ASCII
          comments,
-         Verbose;
+         pedantic;
 
     Option(ArgumentExpander &);
 

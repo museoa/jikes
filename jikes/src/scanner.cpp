@@ -41,11 +41,18 @@ Scanner::Scanner(Control &control_) : control(control_)
     assert(NUM_TERMINALS < 128);
 
     //
+    // -------------------------------------------------------------------------------
+    // We are pulling this code out because we are tired of defending it. We
+    // tought it was obvious that either $ should not have been used for compiler
+    // generated variables or that users should not be allowed to use in variable names...
+    // -------------------------------------------------------------------------------
+    //
     // For version 1.1 or above a $ may not be used as part of an identifier name
     // unless the user specifically requests that it be allowed.
     //
-    if (control.option.one_one && (! control.option.dollar))
-        Code::SetBadCode(U_DOLLAR);
+    //    if (control.option.one_one && (! control.option.dollar))
+    //        Code::SetBadCode(U_DOLLAR);
+    //
 
     //
     // CLASSIFY_TOKEN is a mapping from each character into a     

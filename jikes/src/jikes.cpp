@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
              << "- Licensed Materials - Program Property of IBM - All Rights Reserved.\n"
              << "\nuse: jikes [-classpath path][-d dir][-debug][-depend][-deprecation]\n"
              << "  [-g][-nowarn][-nowrite][-O][-verbose]"
-             << "[+1.0][+$][++][+B][+D][+E][+F]][+M][+U][+V][+Z]" 
+             << "[+1.0][][++][+B][+D][+E][+F][+M][+P][+U][+Z]" 
              << "  file.java...\n\n"
              << "-classpath path    use path for CLASSPATH\n"
              << "-d dir             write class files in directory dir\n"
@@ -61,7 +61,6 @@ int main(int argc, char *argv[])
              << "-O                 do not write LineNumberTable\n"
              << "-verbose           list files read and written\n"
              << "+1.0               recognize only 1.0.2 language\n"
-             << "+$                 allow use of $ in 1.1 identifiers\n"
              << "++                 compile in incremental mode\n"
              << "+B                 do not invoke bytecode generator\n"
              << "+D                 report errors immediately in emacs-form without buffering\n"
@@ -69,11 +68,11 @@ int main(int argc, char *argv[])
              << "+F                 do full dependence check except for Zip and Jar files\n"
              << "+Kname=TypeKeyWord map name to type keyword\n"
              << "+M                 generate makefile dependencies\n"
+             << "+P                 generate pedantic listing\n"
              << "+Td...d            set value of tab d...d spaces; each d is a decimal digit\n"
              << "+U                 do full dependence check including Zip and Jar files\n"
-             << "+V                 generate veracious listing\n"
              << "+Z                 treat cautions as errors\n"
-             << "\nVersion 0.43 (12 Feb 98)"
+             << "\nVersion 0.44 (?? Feb 98)"
              << " by Philippe Charles and David Shields, IBM Research.\n";
         cerr << "Please report problems to shields@watson.ibm.com.\n" ;
     cerr << "or via browser at http://www.ibm.com/research/jikes\n";

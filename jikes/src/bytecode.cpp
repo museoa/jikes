@@ -119,16 +119,25 @@ void ByteCode::CompileClass(TypeSymbol * type)
         }
     }
 
+    //
+    // NOTE that an abstract class that requires this patch may become out-of-date
+    // and cause spurious messages to be emitted if any abstract method inherited
+    // from an interface is later removed from that interface.
+    //
     if (type -> ACC_ABSTRACT())
     {
-        for (i=0; i < type -> expanded_method_table -> symbol_pool.Length(); i++) {
+        for (int i = 0; i < type -> expanded_method_table -> symbol_pool.Length(); i++)
+        {
             MethodShadowSymbol *method_shadow_symbol = type -> expanded_method_table -> symbol_pool[i];
             MethodSymbol *method_symbol = method_shadow_symbol -> method_symbol;
-            if (method_symbol -> containing_type != type && method_symbol -> ACC_ABSTRACT()){
+            if (method_symbol -> ACC_ABSTRACT() &&
+                method_symbol -> containing_type != type &&
+                method_symbol -> containing_type -> ACC_INTERFACE())
+            {
                 if (! method_symbol -> IsTyped())
                     method_symbol -> ProcessMethodSignature(&this_semantic, class_decl -> identifier_token);
                 method_symbol -> ProcessMethodThrows(&this_semantic, class_decl -> identifier_token);
-
+    
                 method_index = BeginMethod(METHOD_KIND_ORDINARY, method_symbol);
                 EndMethod(METHOD_KIND_ORDINARY,method_index, method_symbol);
             }
@@ -525,6 +534,7 @@ void ByteCode::GenerateAccessMethod(MethodSymbol * method_symbol)
     // generate code for access method to private member of containing class
 
     int stack_words = 0;
+    int argument_offset = 0; // offset to start of argument
     code_attribute -> max_locals = 1; // DS fix this 01 dec 97
     TypeSymbol * parameter_type;
 
@@ -541,7 +551,8 @@ void ByteCode::GenerateAccessMethod(MethodSymbol * method_symbol)
             TypeSymbol * local_type = method_symbol -> FormalParameter(i) -> Type();
             code_attribute -> max_locals += GetTypeWords(local_type);
             stack_words += GetTypeWords(local_type);
-            LoadLocal(method_symbol -> ACC_STATIC() ? i: i+1, local_type);
+            LoadLocal(method_symbol -> ACC_STATIC() ? argument_offset: argument_offset+1, local_type);
+            argument_offset += GetTypeWords(local_type); // update position in stack
         }
         PutOp(method_symbol -> ACC_STATIC() ? OP_INVOKESTATIC  // must be static or private
                                             : OP_INVOKENONVIRTUAL);  
@@ -2527,10 +2538,6 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *expression,int n
 
             EmitExpression(expression -> expression);
 
-            if (expression -> expression-> Type() == this_control.long_type && (opc == OP_LSHL || opc == OP_LSHR || opc == OP_IUSHR)) {
-                PutOp(OP_L2I);
-            }
-
             PutOp(opc);  
 
             if (need_cast) { // now cast result back to type of result
@@ -2741,21 +2748,12 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
                 EmitBinaryOp(expression, OP_ISUB, OP_LSUB, OP_FSUB, OP_DSUB);
         break;
         case AstBinaryExpression::LEFT_SHIFT:
-                if (expression -> right_expression-> Type() == this_control.long_type) {
-            PutOp(OP_L2I);
-        }
                 EmitBinaryOp(expression, OP_ISHL, OP_LSHL, 0, 0);
                 break;
         case AstBinaryExpression::RIGHT_SHIFT:
-                if (expression -> right_expression-> Type() == this_control.long_type) {
-            PutOp(OP_L2I);
-        }
                 EmitBinaryOp(expression, OP_ISHR, OP_LSHR, 0, 0);
                 break;
         case AstBinaryExpression::UNSIGNED_RIGHT_SHIFT:
-                if (expression -> right_expression-> Type() == this_control.long_type) {
-            PutOp(OP_L2I);
-        }
                 EmitBinaryOp(expression, OP_IUSHR, OP_LUSHR, 0, 0);
                 break;
                 //          case AstBinaryExpression::INSTANCEOF:

@@ -167,11 +167,10 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
                                               errors(true),
                                               ascii(false),
                                               comments(false),
-                                              Verbose(false),
+                                              pedantic(false),
                                               directory(NULL),
                                               first_file_index(arguments.argc),
                                               one_one(true),
-                                              dollar(false),
                                               g(false),
                                               nowrite(false),
                                               deprecation(false),
@@ -351,12 +350,8 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
                     }
                 }
             }
-            else if (strcmp(arguments.argv[i],"+V") == 0)
-                 Verbose = true;
             else if (strcmp(arguments.argv[i],"+1.0") == 0)
                  one_one = false;
-            else if (strcmp(arguments.argv[i], "+$") == 0 || strcmp(arguments.argv[i], "+dollar") == 0)
-                 dollar = true;
             else if (strcmp(arguments.argv[i],"+F") == 0)
                  full_check = true;
             else if (strcmp(arguments.argv[i],"+M") == 0) 
@@ -369,6 +364,8 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
                  debug_trap_op = atoi(arguments.argv[i+1]);
                  i++;
             }
+            else if (strcmp(arguments.argv[i],"+P") == 0)
+                 pedantic = true;
             else if (arguments.argv[i][0] == U_PLUS && arguments.argv[i][1] == U_T)
             {
                 int tab_size = 0;

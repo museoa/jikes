@@ -79,7 +79,7 @@ void Semantic::ProcessTypeNames()
     //
     // If we are supposed to be verbose, report empty declarations...
     //
-    if (control.option.Verbose)
+    if (control.option.pedantic)
     {
         if (compilation_unit -> EmptyCompilationUnitCast())
         {
@@ -347,7 +347,7 @@ void Semantic::CheckClassMembers(TypeSymbol *containing_type, AstClassBody *clas
 
     for (int l = 0; l < class_body -> NumEmptyDeclarations(); l++)
     {
-        if (control.option.Verbose)
+        if (control.option.pedantic)
         {
             ReportSemError(SemanticError::EMPTY_DECLARATION,
                            class_body -> EmptyDeclaration(l) -> LeftToken(),
@@ -571,7 +571,7 @@ void Semantic::CheckInterfaceMembers(TypeSymbol *containing_type, AstInterfaceDe
 
     for (int l = 0; l < interface_declaration -> NumEmptyDeclarations(); l++)
     {
-        if (control.option.Verbose)
+        if (control.option.pedantic)
         {
             ReportSemError(SemanticError::EMPTY_DECLARATION,
                            interface_declaration -> EmptyDeclaration(l) -> LeftToken(),
@@ -1708,14 +1708,29 @@ assert(this_type -> FieldMembersProcessed());
 
             if (method -> ACC_ABSTRACT())
             {
-                if (method -> containing_type != this_type)
+                TypeSymbol *containing_type = method -> containing_type;
+                if (containing_type != this_type)
                 {
-                    ReportSemError(SemanticError::NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD,
-                                   identifier_token,
-                                   identifier_token,
-                                   method -> Header((Semantic *) this, identifier_token),
-                                   method -> containing_type -> Name(),
-                                   this_type -> Name());
+                    //
+                    // If the method is contained in an abstract method read from a class file,
+                    // then it is possible that the abstract method is just out-of-date and needs
+                    // to be recompiled.
+                    //
+                    if ((! containing_type -> ACC_INTERFACE()) &&
+                        containing_type -> file_symbol &&
+                        containing_type -> file_symbol -> IsClass())
+                         ReportSemError(SemanticError::NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD_FROM_ABSTRACT_CLASS,
+                                        identifier_token,
+                                        identifier_token,
+                                        method -> Header((Semantic *) this, identifier_token),
+                                        containing_type -> Name(),
+                                        this_type -> Name());
+                    else ReportSemError(SemanticError::NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD,
+                                        identifier_token,
+                                        identifier_token,
+                                        method -> Header((Semantic *) this, identifier_token),
+                                        containing_type -> Name(),
+                                        this_type -> Name());
                 }
             }
         }

@@ -427,6 +427,7 @@ void SemanticError::StaticInitializer()
     print_message[INVALID_CONTINUE_TARGET] = PrintINVALID_CONTINUE_TARGET;
     print_message[NON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD] = PrintNON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD;
     print_message[NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD] = PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD;
+    print_message[NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD_FROM_ABSTRACT_CLASS] = PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD_FROM_ABSTRACT_CLASS;
     print_message[NO_ABSTRACT_METHOD_IMPLEMENTATION] = PrintNO_ABSTRACT_METHOD_IMPLEMENTATION;
     print_message[DUPLICATE_INTERFACE] = PrintDUPLICATE_INTERFACE;
     print_message[UNKNOWN_QUALIFIED_NAME_BASE] = PrintUNKNOWN_QUALIFIED_NAME_BASE;
@@ -2651,6 +2652,25 @@ void SemanticError::PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD(ErrorInfo &e
     cout << "\", is not implemented in the non-abstract type \"";
     Unicode::Cout(err.insert3);
     cout << "\"";
+
+    return;
+}
+
+
+void SemanticError::PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD_FROM_ABSTRACT_CLASS(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "The abstract method \"";
+    Unicode::Cout(err.insert1);
+    cout << "\", inherited from class \"";
+    Unicode::Cout(err.insert2);
+    cout << "\", is not implemented in the non-abstract type \"";
+    Unicode::Cout(err.insert3);
+    cout << "\". Since the class \"";
+    Unicode::Cout(err.insert2);
+    cout << "\" was read from a class file, it is possible that it just needs to be recompiled "
+            "because after having inherited method \"";
+    Unicode::Cout(err.insert1);
+    cout << "\" from an interface, the method was subsequently removed from the interface.";
 
     return;
 }

@@ -2798,17 +2798,20 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                 method_call -> Argument(i) = ConvertToType(expr, method -> FormalParameter(i) -> Type());
         }
 
-        for (int k = method -> NumThrows((Semantic *) this, method_call -> method -> RightToken()) - 1; k >= 0; k--)
+        if (! (this_type -> Anonymous() && ThisMethod() -> Identity() == control.block_init_name_symbol))
         {
-            TypeSymbol *exception = method -> Throws(k);
-            if (! CatchableException(exception))
+            for (int k = method -> NumThrows((Semantic *) this, method_call -> method -> RightToken()) - 1; k >= 0; k--)
             {
-                ReportSemError(SemanticError::UNCATCHABLE_METHOD_THROWN_CHECKED_EXCEPTION,
-                               method_call -> LeftToken(),
-                               method_call -> RightToken(),
-                               method -> Header(),
-                               exception -> ContainingPackage() -> PackageName(),
-                               exception -> ExternalName());
+                TypeSymbol *exception = method -> Throws(k);
+                if (! CatchableException(exception))
+                {
+                    ReportSemError(SemanticError::UNCATCHABLE_METHOD_THROWN_CHECKED_EXCEPTION,
+                                   method_call -> LeftToken(),
+                                   method_call -> RightToken(),
+                                   method -> Header(),
+                                   exception -> ContainingPackage() -> PackageName(),
+                                   exception -> ExternalName());
+                }
             }
         }
     }
@@ -3756,17 +3759,20 @@ assert(CanMethodInvocationConvert(method -> containing_type -> ContainingType(),
                         exception_set -> AddElement(method -> Throws(i));
                 }
 
-                for (int k = method -> NumThrows((Semantic *) this, actual_type -> RightToken()) - 1; k >= 0; k--)
+                if (! (ThisType() -> Anonymous() && ThisMethod() -> Identity() == control.block_init_name_symbol))
                 {
-                    TypeSymbol *exception = method -> Throws(k);
-                    if (! CatchableException(exception))
+                    for (int k = method -> NumThrows((Semantic *) this, actual_type -> RightToken()) - 1; k >= 0; k--)
                     {
-                        ReportSemError(SemanticError::UNCATCHABLE_CONSTRUCTOR_THROWN_CHECKED_EXCEPTION,
-                                       actual_type -> LeftToken(),
-                                       actual_type -> RightToken(),
-                                       type -> ExternalName(),
-                                       exception -> ContainingPackage() -> PackageName(),
-                                       exception -> ExternalName());
+                        TypeSymbol *exception = method -> Throws(k);
+                        if (! CatchableException(exception))
+                        {
+                            ReportSemError(SemanticError::UNCATCHABLE_CONSTRUCTOR_THROWN_CHECKED_EXCEPTION,
+                                           actual_type -> LeftToken(),
+                                           actual_type -> RightToken(),
+                                           type -> ExternalName(),
+                                           exception -> ContainingPackage() -> PackageName(),
+                                           exception -> ExternalName());
+                        }
                     }
                 }
             }
@@ -5092,6 +5098,8 @@ void Semantic::ProcessLEFT_SHIFT(AstBinaryExpression *expr)
     {
         expr -> left_expression  = PromoteUnaryNumericExpression(expr -> left_expression);
         expr -> right_expression = PromoteUnaryNumericExpression(expr -> right_expression);
+        if (expr -> right_expression -> Type() == control.long_type)
+            expr -> right_expression = ConvertToType(expr -> right_expression, control.int_type);
         expr -> symbol = expr -> left_expression -> symbol;
 
         if (expr -> left_expression -> IsConstant() && expr -> right_expression -> IsConstant())
@@ -5099,20 +5107,9 @@ void Semantic::ProcessLEFT_SHIFT(AstBinaryExpression *expr)
             if (expr -> Type() == control.long_type)
             {
                 LongLiteralValue *left = (LongLiteralValue *) expr -> left_expression -> value;
-                int right_value;
-                if (expr -> right_expression -> Type() == control.long_type)
-                {
-                    LongLiteralValue *right = (LongLiteralValue *) expr -> right_expression -> value;
-                    right_value = right -> value.LowWord();
-                }
-                else
-                {
-                    IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
-                    right_value = right -> value;
-                }
-                right_value &= 0x3F;
+                IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
 
-                expr -> value = control.long_pool.FindOrInsert(left -> value << right_value);
+                expr -> value = control.long_pool.FindOrInsert(left -> value << (right -> value & 0x3F));
             }
             else // assert(expr -> Type() == control.int_type)
             {
@@ -5158,6 +5155,8 @@ void Semantic::ProcessRIGHT_SHIFT(AstBinaryExpression *expr)
     {
         expr -> left_expression  = PromoteUnaryNumericExpression(expr -> left_expression);
         expr -> right_expression = PromoteUnaryNumericExpression(expr -> right_expression);
+        if (expr -> right_expression -> Type() == control.long_type)
+            expr -> right_expression = ConvertToType(expr -> right_expression, control.int_type);
         expr -> symbol = expr -> left_expression -> symbol;
 
         if (expr -> left_expression -> IsConstant() && expr -> right_expression -> IsConstant())
@@ -5165,20 +5164,9 @@ void Semantic::ProcessRIGHT_SHIFT(AstBinaryExpression *expr)
             if (expr -> Type() == control.long_type)
             {
                 LongLiteralValue *left = (LongLiteralValue *) expr -> left_expression -> value;
-                int right_value;
-                if (expr -> right_expression -> Type() == control.long_type)
-                {
-                    LongLiteralValue *right = (LongLiteralValue *) expr -> right_expression -> value;
-                    right_value = right -> value.LowWord();
-                }
-                else
-                {
-                    IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
-                    right_value = right -> value;
-                }
-                right_value &= 0x3F;
+                IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
 
-                expr -> value = control.long_pool.FindOrInsert(left -> value >> right_value);
+                expr -> value = control.long_pool.FindOrInsert(left -> value >> (right -> value & 0x3F));
             }
             else // assert(expr -> Type() == control.int_type)
             {
@@ -5224,6 +5212,8 @@ void Semantic::ProcessUNSIGNED_RIGHT_SHIFT(AstBinaryExpression *expr)
     {
         expr -> left_expression  = PromoteUnaryNumericExpression(expr -> left_expression);
         expr -> right_expression = PromoteUnaryNumericExpression(expr -> right_expression);
+        if (expr -> right_expression -> Type() == control.long_type)
+            expr -> right_expression = ConvertToType(expr -> right_expression, control.int_type);
         expr -> symbol = expr -> left_expression -> symbol;
 
         if (expr -> left_expression -> IsConstant() && expr -> right_expression -> IsConstant())
@@ -5231,18 +5221,8 @@ void Semantic::ProcessUNSIGNED_RIGHT_SHIFT(AstBinaryExpression *expr)
             if (expr -> Type() == control.long_type)
             {
                 LongLiteralValue *left = (LongLiteralValue *) expr -> left_expression -> value;
-                int right_value;
-                if (expr -> right_expression -> Type() == control.long_type)
-                {
-                    LongLiteralValue *right = (LongLiteralValue *) expr -> right_expression -> value;
-                    right_value = right -> value.LowWord();
-                }
-                else
-                {
-                    IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
-                    right_value = right -> value;
-                }
-                right_value &= 0x3F;
+                IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+                int right_value = right -> value & 0x3F;
 
                 LongInt value = left -> value >> right_value;
                 if (left -> value < 0)
@@ -6473,6 +6453,8 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
         case AstAssignmentExpression::UNSIGNED_RIGHT_SHIFT_EQUAL:
              assignment_expression -> left_hand_side = PromoteUnaryNumericExpression(left_hand_side);
              assignment_expression -> expression = PromoteUnaryNumericExpression(assignment_expression -> expression);
+             if (assignment_expression -> expression -> Type() == control.long_type)
+                 assignment_expression -> expression = ConvertToType(assignment_expression -> expression, control.int_type);
              break;
         case AstAssignmentExpression::AND_EQUAL:
         case AstAssignmentExpression::XOR_EQUAL:
