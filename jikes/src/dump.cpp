@@ -23,6 +23,7 @@ static char*
       TK_notoken_STRING = "TK_notoken",
       TK_Identifier_STRING[] = "TK_Identifier",
       TK_abstract_STRING[] = "TK_abstract",
+      TK_assert_STRING[] = "TK_assert",
       TK_boolean_STRING[] = "TK_boolean",
       TK_break_STRING[] = "TK_break",
       TK_byte_STRING[] = "TK_byte",
@@ -60,6 +61,7 @@ static char*
       TK_return_STRING[] = "TK_return",
       TK_short_STRING[] = "TK_short",
       TK_static_STRING[] = "TK_static",
+      TK_strictfp_STRING[] = "TK_strictfp",
       TK_super_STRING[] = "TK_super",
       TK_switch_STRING[] = "TK_switch",
       TK_synchronized_STRING[] = "TK_synchronized",
@@ -133,6 +135,7 @@ static char *token_type(unsigned char kind)
     {
     case TK_Identifier: return TK_Identifier_STRING;
     case TK_abstract: return TK_abstract_STRING;
+    case TK_assert: return TK_assert_STRING;
     case TK_boolean: return TK_boolean_STRING;
     case TK_break: return TK_break_STRING;
     case TK_byte: return TK_byte_STRING;
@@ -170,6 +173,7 @@ static char *token_type(unsigned char kind)
     case TK_return: return TK_return_STRING;
     case TK_short: return TK_short_STRING;
     case TK_static: return TK_static_STRING;
+    case TK_strictfp: return TK_strictfp_STRING;
     case TK_super: return TK_super_STRING;
     case TK_switch: return TK_switch_STRING;
     case TK_synchronized: return TK_synchronized_STRING;

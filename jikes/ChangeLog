@@ -1,5 +1,9 @@
 2002-05-16  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/dump.cpp (token_type): One more update.
+
+2002-05-16  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/error.cpp (PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL):
 	* src/decl.cpp (FindType): Improve error message.
 
