@@ -1,5 +1,13 @@
 2002-07-19  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/decl.cpp (CheckMethodOverride, AddInheritedMethods): Fix
+	method overriding to detect package scope method conflicts when
+	the method was not inherited.
+	* src/error.cpp: Improve error message wording related to method
+	inheritance.
+
+2002-07-19  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/scanner.cpp (ScanStarComment): Only the most recent doc
 	comment applies to a declaration.
 	* src/getclass.cpp (ReadTypeFromSignature): 

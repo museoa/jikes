@@ -1999,8 +1999,8 @@ wchar_t *SemanticError::PrintMISMATCHED_INHERITED_METHOD(ErrorInfo &err,
     ErrorString s;
 
     s << "The return type of method \"" << err.insert1
-      << "\" does not match the return type of method \"" << err.insert2
-      << "\" inherited from type \"";
+      << "\" does not match the return type of the accessible method \""
+      << err.insert2 << "\" declared in type \"";
     if (NotDot(err.insert3))
         s << err.insert3 << "/";
     s << err.insert4 << "\".";
@@ -3579,7 +3579,7 @@ wchar_t *SemanticError::PrintFINAL_METHOD_OVERRIDE(ErrorInfo &err,
     ErrorString s;
 
     s << "The method \"" << err.insert1
-      << "\" cannot override the final method \""
+      << "\" cannot replace the accessible final method \""
       << err.insert2 << "\" declared in type \"";
     if (NotDot(err.insert3))
         s << err.insert3 << "/";
@@ -3596,7 +3596,7 @@ wchar_t *SemanticError::PrintCLASS_METHOD_OVERRIDE(ErrorInfo &err,
     ErrorString s;
 
     s << "The instance method \"" << err.insert1
-      << "\" cannot override the static method \""
+      << "\" cannot override the accessible static method \""
       << err.insert2 << "\" declared in type \"";
     if (NotDot(err.insert3))
         s << err.insert3 << "/";
@@ -3613,8 +3613,8 @@ wchar_t *SemanticError::PrintINSTANCE_METHOD_OVERRIDE(ErrorInfo &err,
     ErrorString s;
 
     s << "The static method \"" << err.insert1
-      << "\" cannot hide the instance method \"" << err.insert2
-      << "\" declared in \"";
+      << "\" cannot hide the accessible instance method \"" << err.insert2
+      << "\" declared in type \"";
     if (NotDot(err.insert3))
         s << err.insert3 << "/";
     s << err.insert4 << "\".";
@@ -3650,7 +3650,7 @@ wchar_t *SemanticError::PrintBAD_ACCESS_METHOD_OVERRIDE(ErrorInfo &err,
     ErrorString s;
 
     s << "The method \"" << err.insert1 << "\" with " << err.insert2
-      << " access cannot override the method \"" << err.insert3
+      << " access cannot replace the accessible method \"" << err.insert3
       << "\" with " << err.insert4 << " access declared in type \"";
     if (NotDot(err.insert5))
         s << err.insert5 << "/";
@@ -3687,9 +3687,8 @@ wchar_t *SemanticError::PrintMISMATCHED_OVERRIDDEN_EXCEPTION(ErrorInfo &err,
     ErrorString s;
 
     s << "The checked exception \"" << err.insert1
-      << "\" is not the same as or a subclass of any exception in the "
-      << "throws clause of the overridden method \"" << err.insert2
-      << "\" declared in type \"";
+      << "\" is not assignable to any exception in the throws clause of the "
+      << "accessible method \"" << err.insert2 << "\" declared in type \"";
     if (NotDot(err.insert3))
         s << err.insert3 << "/";
     s << err.insert4 << "\".";
@@ -3723,8 +3722,8 @@ wchar_t *SemanticError::PrintMISMATCHED_OVERRIDDEN_EXCEPTION_EXTERNALLY(ErrorInf
       << "\", inherited from type \"";
     if (NotDot(err.insert4))
         s << err.insert4 << "/";
-    s << err.insert5 << "\", is not the same as or a subclass of any "
-      << "exception in the throws clause of the overridden method \""
+    s << err.insert5 << "\", is not assignable to any exception in the "
+      << "throws clause of the overridden method \""
       << err.insert6 << "\" declared in type \"";
     if (NotDot(err.insert7))
         s << err.insert7 << "/";
@@ -4083,7 +4082,7 @@ wchar_t *SemanticError::PrintDEFAULT_METHOD_NOT_OVERRIDDEN(ErrorInfo &err,
     s << "Method \"" << err.insert1 << "\" in class \"";
     if (NotDot(err.insert2))
         s << err.insert2 << "/";
-    s << err.insert3 << "\" does not override the corresponding instance "
+    s << err.insert3 << "\" does not override or hide the corresponding "
       << "method with default access in class \"";
     if (NotDot(err.insert4))
         s << err.insert4 << "/";

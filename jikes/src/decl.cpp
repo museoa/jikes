@@ -2552,20 +2552,15 @@ void Semantic::CheckMethodOverride(MethodSymbol *method,
 {
     assert(! hidden_method -> ACC_PRIVATE());           
 
-    if (hidden_method == method)
-        return;
-
     //
-    // Based on the order we built the method table, hidden_method should
-    // always be declared in an interface. But this includes the methods of
-    // Object, which all interfaces inherit. So, when hidden_method is declared
-    // by Object, but base_type inherits an override from its supertype,
-    // we have already checked that the override is acceptable.
+    // If we inherit the same method from multiple paths (including methods
+    // of Object via interfaces), we already know the result.
     //
-    if (method -> containing_type != base_type &&
-        ! (hidden_method -> ACC_PUBLIC() && hidden_method -> ACC_ABSTRACT()))
+    if (hidden_method == method ||
+        (method -> containing_type -> ACC_INTERFACE() &&
+         method -> containing_type != base_type &&
+         hidden_method -> containing_type == control.Object()))
     {
-        assert (hidden_method -> containing_type == control.Object());
         return;
     }
 
@@ -2666,7 +2661,6 @@ void Semantic::CheckMethodOverride(MethodSymbol *method,
     //
     if (method -> containing_type == base_type &&
         (hidden_method -> ACC_FINAL() ||
-         hidden_method -> ACC_PRIVATE() ||
          hidden_method -> containing_type -> ACC_FINAL()))
     {
         if (base_type -> ACC_INTERFACE())
@@ -3033,13 +3027,17 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type,
         return;
     }
 
-    ExpandedMethodTable &base_expanded_table = *(base_type -> expanded_method_table),
-                        &super_expanded_table = *(super_type -> expanded_method_table);
+    ExpandedMethodTable *base_expanded_table =
+        base_type -> expanded_method_table;
+    ExpandedMethodTable *super_expanded_table =
+        super_type -> expanded_method_table;
+    PackageSymbol *base_package = base_type -> ContainingPackage();
+    int i;
 
-    for (int i = 0; i < super_expanded_table.symbol_pool.Length(); i++)
+    for (i = 0; i < super_expanded_table -> symbol_pool.Length(); i++)
     {
         MethodShadowSymbol *method_shadow_symbol =
-            super_expanded_table.symbol_pool[i];
+            super_expanded_table -> symbol_pool[i];
         MethodSymbol *method = method_shadow_symbol -> method_symbol;
 
         //
@@ -3060,16 +3058,13 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type,
         // type that is a super class of base_type. Since synthetic methods
         // cannot be called in user code, we can safely ignore them here.
         //
-        if (method -> ACC_PUBLIC() ||
-            method -> ACC_PROTECTED() ||
-            (! method -> ACC_PRIVATE() &&
-             super_type -> ContainingPackage() ==
-             base_type -> ContainingPackage()) &&
+        if ((method -> ACC_PUBLIC() || method -> ACC_PROTECTED() ||
+             (! method -> ACC_PRIVATE() &&
+              super_type -> ContainingPackage() == base_package)) &&
             ! method -> IsSynthetic())
         {
-            MethodShadowSymbol *shadow =
-                base_expanded_table.FindOverloadMethodShadow(method, this,
-                                                             tok);
+            MethodShadowSymbol *shadow = base_expanded_table ->
+                FindOverloadMethodShadow(method, this, tok);
 
             //
             // Check that method is compatible with every method it
@@ -3089,7 +3084,7 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type,
                 shadow -> method_symbol -> containing_type != base_type)
             {
                 if (! shadow)
-                    shadow = base_expanded_table.Overload(method);
+                    shadow = base_expanded_table -> Overload(method);
                 else shadow -> AddConflict(method);
 
                 assert(method -> containing_type != super_type ||
@@ -3107,9 +3102,8 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type,
         else if (! method -> ACC_PRIVATE() &&
                  ! method -> IsSynthetic())
         {
-            MethodShadowSymbol *shadow =
-                base_expanded_table.FindOverloadMethodShadow(method, this,
-                                                             tok);
+            MethodShadowSymbol *shadow = base_expanded_table ->
+                FindOverloadMethodShadow(method, this, tok);
             if (method_shadow_symbol -> NumConflicts() > 0)
             {
                 assert(method -> containing_type != super_type);
@@ -3127,7 +3121,7 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type,
                 }
                 else
                 {
-                    shadow = base_expanded_table.
+                    shadow = base_expanded_table ->
                         Overload(method_shadow_symbol -> Conflict(0));
 
                     for (int l = 1;
@@ -3138,16 +3132,13 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type,
                     }
                 }
             }
-            else if (shadow && ! method -> ACC_STATIC() &&
-                     control.option.pedantic)
+            else if (shadow && control.option.pedantic)
             {
                 //
-                // The base_type declares a method by the same name as an
-                // instance method in the superclass, but the new method does
-                // not override the old. Warn the user about this fact,
-                // although it is usually not an error. (This is never a
-                // problem with fields, nested types, or static methods,
-                // since they are just hidden, not overridden.)
+                // The base_type declares a method by the same name as a
+                // method in the superclass, but the new method does not
+                // override or hide the old. Warn the user about this fact,
+                // although it is usually not an error.
                 //
                 assert(shadow -> method_symbol -> containing_type == base_type);
                 LexStream::TokenIndex left_tok,
@@ -3202,6 +3193,44 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type,
                                base_type -> ExternalName(),
                                super_type -> ContainingPackage() -> PackageName(),
                                super_type -> ExternalName());
+            }
+        }
+    }
+    //
+    // Now, we must ensure that any time the inheritance tree left and
+    // reentered the package, the non-inherited default methods were
+    // correctly overridden or hidden if redeclared in this class. A method
+    // is non-inherited only if a class C is in the package, it's subclass
+    // is not, and there is no interface method also inherited into C.
+    //
+    while (super_type -> super)
+    {
+        TypeSymbol *prev = super_type;
+        super_type = super_type -> super;
+        if (prev -> ContainingPackage() == base_package ||
+            super_type -> ContainingPackage() != base_package)
+        {
+            continue;
+        }
+        super_expanded_table = super_type -> expanded_method_table;
+        for (i = 0; i < super_expanded_table -> symbol_pool.Length(); i++)
+        {
+            MethodShadowSymbol *method_shadow_symbol =
+                super_expanded_table -> symbol_pool[i];
+            MethodSymbol *method = method_shadow_symbol -> method_symbol;
+            if (! method -> ACC_PUBLIC() && ! method -> ACC_PROTECTED() &&
+                ! method -> ACC_PRIVATE() && ! method -> IsSynthetic() &&
+                method_shadow_symbol -> NumConflicts() == 0)
+            {
+                // found a non-inherited package scope method
+                MethodShadowSymbol *shadow = base_expanded_table ->
+                    FindOverloadMethodShadow(method, this, tok);
+                if (shadow &&
+                    shadow -> method_symbol -> containing_type == base_type)
+                {
+                    CheckMethodOverride(shadow -> method_symbol, method,
+                                        base_type);
+                }
             }
         }
     }
