@@ -91,7 +91,7 @@ void OutOfMemory() { return; }
 )
 
 if test "$ac_cv_standard_set_new_handler" != "yes" ; then
-    AC_MSG_ERROR([Cound not find standard set_new_handler function])
+    AC_MSG_ERROR([Could not find standard set_new_handler function])
 fi
 
 fi

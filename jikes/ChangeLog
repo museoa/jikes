@@ -1,4 +1,18 @@
-2002-12-27  Elliott Hughes  <enh@acm.org>
+2003-03-24  Eric Blake  <ebb9@email.byu.edu>
+
+	* configure.in: Update to automake 1.7.3.
+	* src/m4/ac_cxx_check_set_new_handler.m4: Fix typo.
+	* Makefile.in:
+	* aclocal.m4:
+	* config.guess:
+	* config.sub:
+	* configure:
+	* depcomp:
+	* doc/Makefile.in:
+	* src/Makefile.in:
+	* src/config.h.in: Regenerate.
+
+2003-03-02  Elliott Hughes  <enh@acm.org>
 
 	* src/diagnose.cpp:
 	* src/stream.cpp: (emacsErrorString, regularErrorString):
