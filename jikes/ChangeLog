@@ -1,5 +1,32 @@
 2001-02-16  Mo DeJong  <mdejong@redhat.com>
 
+	* src/lookup.cpp (EvaluateConstant,
+	IsConstant, CheckStringConstant):
+	Use type safe utf8_literals
+	tuple instead of using a nasty bug
+	causing down cast in EvaluateConstant.
+	Check that a given final is of
+	type string before adding it to
+	the utf8_literals tuple in
+	IsConstant. If dynamic_cast
+	and RTTI are supported, use
+	them to better diagnose invalid
+	input conditions. Modify the
+  	IsConstant method to pass a
+	pointer to the String type so
+	that the expression type can
+	be checked. This change fixes
+	a bunch of core dumps related
+	to string concatenation.
+	* src/lookup.h (Utf8LiteralTable):
+	Change Tuple<AstExpression *> *expr
+	to Tuple<Utf8LiteralValue *> *utf8_literals.
+	The new name is more descriptive and a
+	type safe container avoid some nasty
+	down casting problems later on.
+
+2001-02-16  Mo DeJong  <mdejong@redhat.com>
+
 	* TODO: Update items in the TODO list.
 	* acinclude.m4: Add new macro files.
 	* configure.in: Add macros to check

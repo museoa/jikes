@@ -803,9 +803,9 @@ public:
 
 private:
 
-    Tuple<AstExpression *> *expr;
+    Tuple<Utf8LiteralValue *> *utf8_literals;
     void EvaluateConstant(AstExpression *, int, int);
-    bool IsConstant(AstExpression *);
+    bool IsConstant(AstExpression *, Symbol *);
 
     enum
     {
