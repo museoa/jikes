@@ -12,7 +12,19 @@
 # configure.ac
 # any of the files in src/m4
 
-aclocal -I src/m4
-autoconf
-autoheader
-automake --foreign --add-missing --force-missing --copy
+aclocal -I src/m4 || {
+    echo Error running aclocal, aborting.
+    exit 1;
+}
+autoconf  || {
+    echo Error running autoconf, aborting.
+    exit 2;
+}
+autoheader || {
+    echo Error running autoheader, aborting.
+    exit 3;
+}
+automake --foreign --add-missing --force-missing --copy  || {
+    echo Error running automake, aborting.
+    exit 4;
+}

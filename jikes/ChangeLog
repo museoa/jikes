@@ -1,3 +1,7 @@
+2004-05-04  Chris Abbey  <jikes@cabbey.net>
+
+	* autogen.sh: made more user friendly
+
 2004-05-03  Elliott Hughes  <enh@acm.org>
 
 	* src/init.cpp: fix bug #3948 by ignoring fields of array types
