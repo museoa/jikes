@@ -1794,7 +1794,7 @@ void Semantic::CheckSimpleName(AstSimpleName *simple_name,
 
     assert(variable_symbol);
 
-    if (StaticRegion())
+    if (StaticRegion() && ! ExplicitConstructorInvocation())
     {
         if (! (variable_symbol -> IsLocal() || variable_symbol -> ACC_STATIC()))
         {
@@ -1814,7 +1814,8 @@ void Semantic::CheckSimpleName(AstSimpleName *simple_name,
     }
     else if (! variable_symbol -> ACC_STATIC()) // an instance variable?
     {
-        TypeSymbol *containing_type = variable_symbol -> owner -> TypeCast(); // an instance field member ?
+        // an instance field member ?
+        TypeSymbol *containing_type = variable_symbol -> owner -> TypeCast();
 
         if (containing_type) // variable must be a field
         {
@@ -1827,7 +1828,8 @@ void Semantic::CheckSimpleName(AstSimpleName *simple_name,
                                simple_name -> identifier_token,
                                lex_stream -> NameString(simple_name -> identifier_token));
             }
-            else if (ExplicitConstructorInvocation() && where_found == state_stack.Top())
+            else if (ExplicitConstructorInvocation() &&
+                     where_found == state_stack.Top())
             {
                 //
                 // If the variable in question is an instance variable that is
