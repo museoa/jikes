@@ -3798,9 +3798,6 @@ int ByteCode::EmitFieldAccess(AstFieldAccess *expression, bool need_value)
     AstExpression *base = expression -> base;
     VariableSymbol *sym = expression -> symbol -> VariableCast();
 
-    if (! sym) // must be a class or package name
-        return 0;
-
     if (expression -> resolution_opt) // resolve reference to private field nested in same top-level class
     {
         //
@@ -3816,6 +3813,9 @@ int ByteCode::EmitFieldAccess(AstFieldAccess *expression, bool need_value)
         else
             return EmitExpression(expression -> resolution_opt, need_value);
     }
+
+    if (! sym) // not a variable, so it must be a class or package name
+        return 0;
 
     if (base -> Type() -> IsArray() && sym -> ExternalIdentity() == this_control.length_name_symbol)
     {

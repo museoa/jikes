@@ -1,3 +1,8 @@
+2001-09-20  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/bytecode.cpp (EmitFieldAccess): Fix another reported
+	regression caused by patch 90.
+
 2001-09-17  Eric B Blake  <eblake@ee.byu.edu>
 
 	* src/jikesapi.cpp:
