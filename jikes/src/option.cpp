@@ -206,6 +206,7 @@ Option::Option(ArgumentExpander &arguments) :
     current_directory[0] = main_current_directory;
 #endif
 
+    char * classpath_buffer;
     Tuple<int> filename_index(2048);
 
     for (int i = 1; i < arguments.argc; i++)
@@ -266,7 +267,7 @@ Option::Option(ArgumentExpander &arguments) :
             else if (strcmp(arguments.argv[i], "-d") == 0 && ((i + 1) < arguments.argc))
             {
                 ++i;
-#ifdef UNIX_FILE_SYSTEM
+#if defined(UNIX_FILE_SYSTEM)
                 int length = strlen(arguments.argv[i]);
                 directory = new char[length + 1];
                 strcpy(directory, arguments.argv[i]);
@@ -451,10 +452,9 @@ Option::Option(ArgumentExpander &arguments) :
         {
             /* Create a copy of the classpath string we can modify
                this copy without worry that it will effect the env array */
-            char * buf;
-            buf = new char[strlen(classpath)+1];
-            strcpy(buf, classpath);
-            classpath = buf;
+            classpath_buffer = new char[strlen(classpath)+1];
+            strcpy(classpath_buffer, classpath);
+            classpath = classpath_buffer;
 
 #ifdef EBCDIC
             //
@@ -470,17 +470,6 @@ Option::Option(ArgumentExpander &arguments) :
                 delete [] classpath;
                 classpath = NULL;
             }
-
-#ifdef HAVE_CYGWIN_WIN32_TO_POSIX_PATH_LIST
-            // Under Cygwin, we convert a windows style path into a unix
-            // style path. A path like "C:\Cygwin\tmp;C:\Windows" is converted
-            // into "/tmp:/cygdrive/c/Windows" (assuming C:\Cygwin is cygroot).
-            // We can then parse it using the unix path seperator char ':'
-            buf = new char[cygwin_win32_to_posix_path_list_buf_size(classpath)];
-            cygwin_win32_to_posix_path_list(classpath, buf);
-            delete [] classpath;
-            classpath = buf;
-#endif
         }
 
         if (! classpath)
@@ -490,6 +479,20 @@ Option::Option(ArgumentExpander &arguments) :
             classpath[1] = U_NULL;
         }
     }
+    
+    // If we need to do a cygwin CLASSPATH conversion do it after the env is checked
+    // so that it will work for a -classpath argument or a CLASSPATH env var.
+
+#ifdef HAVE_CYGWIN_WIN32_TO_POSIX_PATH_LIST
+    // Under Cygwin, we convert a windows style path into a unix
+    // style path. A path like "C:\Cygwin\tmp;C:\Windows" is converted
+    // into "/tmp:/cygdrive/c/Windows" (assuming C:\Cygwin is cygroot).
+    // We can then parse it using the unix path seperator char ':'
+    classpath_buffer = new char[cygwin_win32_to_posix_path_list_buf_size(classpath)];
+    cygwin_win32_to_posix_path_list(classpath, classpath_buffer);
+    delete [] classpath;
+    classpath = classpath_buffer;
+#endif
 
     //
     // Initially, first_file_index is set to argc. Since the array filename_index
