@@ -1,3 +1,9 @@
+2004-05-20  Elliott Hughes  <enh@acm.org>
+
+	* src/bytecode.cpp: Bug 3974 - don't assume that a string literal
+	has type java.lang.String; it may have been cast to java.lang.Object
+	or one of String's implemented interfaces in valid (if strange) code.
+
 2004-05-17  Elliott Hughes  <enh@acm.org>
 
 	* src/expr.cpp: Bug 3972 - don't assume that a constant is an int
