@@ -181,12 +181,18 @@ public:
     // fields, rather than generating a non-const every time.  However,
     // adding const support is a big undertaking.
     //
-    static inline const IEEEfloat NaN(void)               { return IEEEfloat(NAN); }
-    static inline const IEEEfloat POSITIVE_INFINITY(void) { return IEEEfloat(POS_INF); }
-    static inline const IEEEfloat NEGATIVE_INFINITY(void) { return IEEEfloat(NEG_INF); }
-    static inline const IEEEfloat POSITIVE_ZERO(void)     { return IEEEfloat(POS_ZERO); }
-    static inline const IEEEfloat NEGATIVE_ZERO(void)     { return IEEEfloat(NEG_ZERO); }
-
+    // Note: the (u4) cast is necessary to prevent MSVC from promoting the
+    // enum constants to integer, which causes an infinite loop.
+    static inline const IEEEfloat
+        NaN(void)               { return IEEEfloat((u4)NAN); }
+    static inline const IEEEfloat
+        POSITIVE_INFINITY(void) { return IEEEfloat((u4)POS_INF); }
+    static inline const IEEEfloat
+        NEGATIVE_INFINITY(void) { return IEEEfloat((u4)NEG_INF); }
+    static inline const IEEEfloat
+        POSITIVE_ZERO(void)     { return IEEEfloat((u4)POS_ZERO); }
+    static inline const IEEEfloat
+        NEGATIVE_ZERO(void)     { return IEEEfloat((u4)NEG_ZERO); }
 
     //
     // Constructors
