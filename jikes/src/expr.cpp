@@ -4339,6 +4339,16 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
         // The grammar guarantees that the actual type is a simple name.
         //
         type = MustFindNestedType(enclosing_type, actual_type);
+        if (type -> ACC_INTERFACE())
+        {
+            ReportSemError(SemanticError::INTERFACE_NOT_INNER_CLASS,
+                           actual_type -> LeftToken(),
+                           actual_type -> RightToken(),
+                           type -> ContainingPackage() -> PackageName(),
+                           type -> ExternalName());
+            class_creation -> symbol = control.no_type;
+            return;
+        }
         if (type -> ACC_STATIC())
         {
             ReportSemError(SemanticError::STATIC_NOT_INNER_CLASS,
@@ -4346,6 +4356,8 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
                            actual_type -> RightToken(),
                            type -> ContainingPackage() -> PackageName(),
                            type -> ExternalName());
+            class_creation -> symbol = control.no_type;
+            return;
         }
     }
     else

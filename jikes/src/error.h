@@ -346,6 +346,7 @@ class SemanticError
         INVALID_CLASS_FILE,
         CANNOT_OPEN_CLASS_FILE,
 
+        INTERFACE_NOT_INNER_CLASS,
         STATIC_NOT_INNER_CLASS,
         TYPE_NOT_INNER_CLASS,
         SUPER_TYPE_NOT_INNER_CLASS,
@@ -671,6 +672,7 @@ private:
     static wchar_t *PrintCOMPRESSED_ZIP_FILE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINVALID_CLASS_FILE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintCANNOT_OPEN_CLASS_FILE(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintINTERFACE_NOT_INNER_CLASS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintSTATIC_NOT_INNER_CLASS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintTYPE_NOT_INNER_CLASS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintSUPER_TYPE_NOT_INNER_CLASS(ErrorInfo &, LexStream *, Control &);

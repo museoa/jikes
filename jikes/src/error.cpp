@@ -756,6 +756,7 @@ void SemanticError::StaticInitializer()
     print_message[INVALID_CLASS_FILE] = PrintINVALID_CLASS_FILE;
     print_message[CANNOT_OPEN_CLASS_FILE] = PrintCANNOT_OPEN_CLASS_FILE;
 
+    print_message[INTERFACE_NOT_INNER_CLASS] = PrintINTERFACE_NOT_INNER_CLASS;
     print_message[STATIC_NOT_INNER_CLASS] = PrintSTATIC_NOT_INNER_CLASS;
     print_message[TYPE_NOT_INNER_CLASS] = PrintTYPE_NOT_INNER_CLASS;
     print_message[SUPER_TYPE_NOT_INNER_CLASS] = PrintSUPER_TYPE_NOT_INNER_CLASS;
@@ -4940,6 +4941,23 @@ wchar_t *SemanticError::PrintCANNOT_OPEN_CLASS_FILE(ErrorInfo &err, LexStream *l
     }
     s << err.insert2
             << "\".";
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintINTERFACE_NOT_INNER_CLASS(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    ErrorString s;
+
+    s << "The interface \"";
+    if (NotDot(err.insert1))
+    {
+        s << err.insert1
+                << "/";
+    }
+    s << err.insert2
+            << "\" is not an inner class.";
 
     return s.Array();
 }

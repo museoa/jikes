@@ -1,3 +1,16 @@
+2001-02-15  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/error.cpp (StaticInitializer,
+	PrintINTERFACE_NOT_INNER_CLASS):
+	* src/error.h (SemanticError):
+	Add INTERFACE_NOT_INNER_CLASS error message.
+	* src/expr.cpp (
+	ProcessClassInstanceCreationExpression):
+	Generate error and return from function
+	when a qualified class instance creation
+	expression makes use of an interface.
+	See JLS 15.9.1 for more information.
+
 2001-02-14  Mo DeJong  <mdejong@redhat.com>
 
 	* acinclude.m4: Add the M4 macro file
