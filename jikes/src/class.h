@@ -2860,7 +2860,7 @@ class ClassFile : public AccessFlags
     {
         MAGIC = 0xcafebabe
     };
-    bool valid; // true unless input file not valid
+    const char* problem; // why this file is invalid (NULL if it's okay)
     const char* buffer; // current location during input (NULL for output)
     const char* const buffer_tail; // last location during input
 
@@ -2905,7 +2905,7 @@ public:
     // Construct a class file for output, given the finished type.
     //
     ClassFile()
-        : valid(true)
+        : problem(NULL)
         , buffer(NULL)
         , buffer_tail(NULL)
         , magic(MAGIC)
@@ -3038,14 +3038,15 @@ public:
 
     void Write(TypeSymbol* unit_type) const;
 
-    bool Valid() const { return valid; }
-    void MarkInvalid() { valid = false; }
+    bool Valid() const { return (problem == NULL); }
+    void MarkInvalid(const char* reason) { problem = reason; }
+    const char* DescribeProblem() const { return problem; }
 
     inline u1 GetU1()
     {
         if (buffer == buffer_tail)
         {
-            valid = false;
+            MarkInvalid("couldn't read u1");
             return 0;
         }
         return (u1) *buffer++;
@@ -3054,7 +3055,7 @@ public:
     {
         if (buffer + 1 >= buffer_tail)
         {
-            valid = false;
+            MarkInvalid("couldn't read u2");
             buffer = buffer_tail;
             return 0;
         }
@@ -3066,7 +3067,7 @@ public:
     {
         if (buffer + 1 >= buffer_tail)
         {
-            valid = false;
+            MarkInvalid("couldn't peek u2");
             return 0;
         }
         u2 i = (u1) *buffer;
@@ -3077,7 +3078,7 @@ public:
     {
         if (buffer + 3 >= buffer_tail)
         {
-            valid = false;
+            MarkInvalid("couldn't get u4");
             buffer = buffer_tail;
             return 0;
         }
@@ -3091,7 +3092,7 @@ public:
     {
         if (buffer + 7 >= buffer_tail)
         {
-            valid = false;
+            MarkInvalid("couldn't get u8");
             buffer = buffer_tail;
             return 0;
         }
@@ -3116,7 +3117,7 @@ public:
     {
         if (buffer + len >= buffer_tail)
         {
-            valid = false;
+            MarkInvalid("couldn't get n bytes");
             len = buffer_tail - buffer;
         }
         bytes = new u1[len + 1];
@@ -3130,7 +3131,7 @@ public:
     {
         if (buffer + len >= buffer_tail)
         {
-            valid = false;
+            MarkInvalid("couldn't skip N");
             buffer = buffer_tail;
         }
         else buffer += len;
@@ -3141,8 +3142,9 @@ public:
     void Print()
     {
         unsigned i;
-        if (! valid)
-            Coutput << " *** Not a valid Java .class file! ***" << endl;
+        if (problem)
+            Coutput << " *** Not a valid Java .class file (" << problem
+                    << ")! ***" << endl;
 
         Coutput << "*** Magic number: 0x";
         for (i = 32; i; i -= 4)

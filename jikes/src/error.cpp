@@ -1280,7 +1280,7 @@ void SemanticError::InitializeMessages()
         "The file %1(%F2) is in an unsupported compressed format. "
         "(Unzip and) Rezip \"%1\".";
     messages[INVALID_CLASS_FILE] =
-        "The class file \"%F1.class\" has an invalid format.";
+        "The class file \"%F1.class\" has an invalid format (%4).";
     messages[CANNOT_OPEN_CLASS_FILE] =
         "Unable to open file associated with type \"%T1\".";
     messages[IO_ERROR] = "I/O error: %1.";
