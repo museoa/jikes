@@ -1333,15 +1333,18 @@ void ByteCode::EmitStatementExpression(AstExpression * expression)
                 }
                 break;
         case Ast::CALL:
-            EmitMethodInvocation((AstMethodInvocation *) expression);
-            if (expression-> Type()!=this_control.void_type) {
-                if (this_control.IsDoubleWordType(expression-> Type())) {
-                    PutOp(OP_POP2);
-                }
-                else {
-                    PutOp(OP_POP); // discard value if used as statement
-                }
+        {
+            AstMethodInvocation *method_call = (AstMethodInvocation *) expression;
+            method_call = (method_call -> resolution_opt
+                                          ? method_call -> resolution_opt -> MethodInvocationCast()
+                                          : method_call);
+            
+            (void) EmitMethodInvocation(method_call);
+            if (method_call -> Type()!=this_control.void_type) {
+                // discard value if used as statement
+                PutOp(this_control.IsDoubleWordType(method_call -> Type()) ? OP_POP2 : OP_POP);
             }
+        }
             break;
         case Ast::POST_UNARY:
             (void) EmitPostUnaryExpression((AstPostUnaryExpression *)expression,0);
