@@ -1,5 +1,9 @@
 2002-11-02  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/semantic.h (class Semantic): Fix prototype.
+
+2002-11-02  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/modifier.cpp (ProcessAccessFlag): Overdid last commit -
 	restore behavior of pedantic_modifier_order.
 

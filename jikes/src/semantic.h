@@ -967,9 +967,8 @@ private:
     void ProcessSingleTypeImportDeclaration(AstImportDeclaration *);
 
     // Implemented in modifier.cpp - process declaration modifiers
-    void Semantic::ProcessAccessFlag(AccessFlags&, LexStream::TokenIndex,
-                                     Ast::Kind, const wchar_t*,
-                                     u2 valid_flags, u2 implicit_flags = 0);
+    void ProcessAccessFlag(AccessFlags&, LexStream::TokenIndex, Ast::Kind,
+                           const wchar_t*, u2 valid, u2 implicit = 0);
     AccessFlags ProcessClassModifiers(AstClassDeclaration *);
     AccessFlags ProcessLocalClassModifiers(AstClassDeclaration *);
     AccessFlags ProcessNestedClassModifiers(AstClassDeclaration *);
