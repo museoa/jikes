@@ -453,7 +453,7 @@ void LexStream::ProcessInput(char *buffer, long filesize)
 // Read file_size Ascii characters from srcfile, convert them to unicode and
 // store them in input_buffer.
 //
-void LexStream::ProcessInputAscii(char *buffer, long filesize)
+void LexStream::ProcessInputAscii(const char *buffer, long filesize)
 {
 #ifdef TEST
     file_read++;
@@ -465,7 +465,7 @@ void LexStream::ProcessInputAscii(char *buffer, long filesize)
 
     if (buffer)
     {
-        char *source_ptr = buffer,
+        const char *source_ptr = buffer,
              *source_tail = &(buffer[filesize - 1]); // point to last character read from the file.
 
         while(source_ptr <= source_tail)
@@ -484,7 +484,7 @@ void LexStream::ProcessInputAscii(char *buffer, long filesize)
                     *(++input_ptr) = *source_ptr++;
                 else if (*source_ptr == U_u)
                 {
-                    char *u_ptr = source_ptr;
+                    const char *u_ptr = source_ptr;
 
                     for (source_ptr++; source_ptr <= source_tail && *source_ptr == U_u; source_ptr++)
                         ;
@@ -494,7 +494,7 @@ void LexStream::ProcessInputAscii(char *buffer, long filesize)
                     {
                         int multiplier[4] = {4096, 256, 16, 1};
 
-                        char ch = *source_ptr++;
+                        const char ch = *source_ptr++;
                         switch(ch)
                         {
                             case U_a: case U_A:
@@ -580,18 +580,15 @@ void LexStream::ProcessInputAscii(char *buffer, long filesize)
 // Read file_size Ascii characters from srcfile, convert them to unicode, and
 // store them in input_buffer.
 //
-void LexStream::ProcessInputUnicode(char *buffer, long filesize)
+void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
 {
+    //fprintf(stderr,"LexStream::ProcessInputUnicode called.\n");
 #ifdef TEST
     file_read++;
 #endif
 
-#ifdef HAVE_LIB_ICU_UC
-    input_buffer       = new wchar_t[filesize + 4 + 2];
+    input_buffer       = new wchar_t[filesize + 4];
     wchar_t *input_tail = input_buffer + filesize;
-#else
-    input_buffer = new wchar_t[filesize + 4];
-#endif
     
     wchar_t *input_ptr = input_buffer;
     *input_ptr = U_LINE_FEED; // add an initial '\n';
@@ -600,20 +597,16 @@ void LexStream::ProcessInputUnicode(char *buffer, long filesize)
     {
         int      escape_value;
         wchar_t *escape_ptr;
-        const char *source_ptr = buffer,
-            *source_tail = &(buffer[filesize - 1]); // point to last character read from the file.
+        const char *source_ptr  = buffer;
+        const char *source_tail = buffer + filesize - 1; // point to last character read from the file.
         
         UnicodeLexerState saved_state;
-        UnicodeLexerState state=RAW;
-        bool oncemore=false;
-
-#ifdef HAVE_LIB_ICU_UC
+        UnicodeLexerState state = RAW;
         UErrorCode err = U_ZERO_ERROR;
-#endif
+        bool oncemore = false;
 
         while((source_ptr <= source_tail) || oncemore)
         {
-#ifdef HAVE_LIB_ICU_UC
             // On each iteration we advance input_ptr maximun 2 postions.
             // Here we check if we are close to the end of input_buffer
             if(input_ptr>=input_tail)
@@ -627,33 +620,43 @@ void LexStream::ProcessInputUnicode(char *buffer, long filesize)
                 // If such reallocation will be required, it will indeed
                 // slow down compilation a bit.
                 size_t cursize = input_ptr-input_buffer;
-                size_t newsize = cursize+cursize/10; // add 10%
+                size_t newsize = cursize+cursize/10+4; // add 10%
                 wchar_t *tmp   = new wchar_t[newsize]; 
-                memcpy(tmp, input_buffer, newsize*sizeof(wchar_t));
+                wmemcpy (tmp, input_buffer, cursize);
                 delete input_buffer;
                 input_buffer = tmp;
-                input_tail = input_buffer + newsize;
-                input_ptr  = input_buffer+cursize;
+                input_tail = input_buffer + newsize - 1;
+                input_ptr  = input_buffer + cursize;
             }
-#endif
             
             wchar_t ch;
             
             if(!oncemore)
             {
-#ifdef HAVE_LIB_ICU_UC
                 if(control.option.converter)
+                {
+                    const char *before = source_ptr;
                     ch=ucnv_getNextUChar (control.option.converter,
                                           &source_ptr,
                                           source_tail,
                                           &err);
+                    if(U_FAILURE(err) || before==source_ptr)
+                    {
+                        fprintf(stderr,"conversion error!\n");
+                        break;
+                    }
+
+//                     fprintf(stderr,"Converted: %d bytes [", (source_ptr-before));
+//                     for(int i=0;i<(source_ptr-before);i++)
+//                         fprintf(stderr,"%x ",*(before+i));
+//                     fprintf(stderr,"]\n");
+//                     fprintf(stderr,"to unicode char %x\n", (int)ch);
+
+                }
                 else
+                {
                     ch=*source_ptr++;
-                if(err!=U_ZERO_ERROR)
-                    break;
-#else
-                ch=*source_ptr++;
-#endif
+                }
             } else oncemore = false;
       
             switch(state)
@@ -776,7 +779,7 @@ void LexStream::ProcessInputUnicode(char *buffer, long filesize)
 
     return;
 }
-#endif
+#endif // HAVE_LIB_ICU_UC
 
 //
 // This procedure uses a  quick sort algorithm to sort the stream ERRORS

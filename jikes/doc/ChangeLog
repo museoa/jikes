@@ -1,3 +1,10 @@
+2000-01-18  Vadim Zaliva  <lord@crocodile.org>
+
+	* stream.cpp (ProcessInputUnicode): buffer resize on surrogate
+ 	characters use more accurate memory allocation.
+
+	* configure.in: check for wmemcpy added.
+
 2000-01-18  C. Scott Ananian <cananian@lesser-magoo.lcs.mit.edu>
 
 	* bytecode.cpp:

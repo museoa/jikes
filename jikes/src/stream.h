@@ -291,6 +291,7 @@ private:
 
     int hexvalue(wchar_t ch);
     
+#ifdef HAVE_LIB_ICU_UC
     enum UnicodeLexerState
     {
         RAW,
@@ -301,6 +302,7 @@ private:
         UNICODE_ESCAPE_DIGIT_1,
         UNICODE_ESCAPE_DIGIT_2
     };
+#endif
     
     friend class Scanner;
 
@@ -388,9 +390,9 @@ private:
 
     void ReadInput();
     void ProcessInput(char *, long);
-    void ProcessInputAscii(char *, long);
+    void ProcessInputAscii(const char *, long);
 #ifdef HAVE_LIB_ICU_UC
-    void ProcessInputUnicode(char *, long);
+    void ProcessInputUnicode(const char *, long);
 #endif  
 
     wchar_t *KeywordName(int);
