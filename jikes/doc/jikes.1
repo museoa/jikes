@@ -239,10 +239,11 @@ promote warnings, just cautions.
 
 .PP
 An argument may have the form \fI@file\fP, which names a \fIfile\fP
-holding additional command-line arguments.  Each token in that file
-separated by whitespace, or single or double quotes, is treated as an
-argument, except that lines beginning with \fI@\fP are not expanded
-recursively.
+holding additional command-line arguments.  Each line in that file is
+treated as an argument, except that lines beginning with \fI@\fP are
+not expanded recursively.  Lines may optionally be quoted using either
+single or double quotes.  There are no escape characters (\fI'\\'\fP
+is not treated as special).
 
 .SH FILES
 \fBJikes\fP has several options related to classpath searching.

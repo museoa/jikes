@@ -1,3 +1,8 @@
+2002-02-12  Andrew M. Inggs  <aminggs@yahoo.co.uk>
+
+	* doc/jikes.1: Updated description of @file option to match
+	changes made on 2001-12-11.
+
 2002-02-09  Eric Blake  <ebb9@email.byu.edu>
 
 	* doc/jikes.1:
