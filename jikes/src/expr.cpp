@@ -2499,8 +2499,12 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                 if (variable_symbol)
                 {
                     if (! variable_symbol -> IsTyped())
-                        variable_symbol -> ProcessVariableSignature(this,
-                                                                    field_access -> identifier_token);
+                    {
+                        variable_symbol ->
+                            ProcessVariableSignature(this, field_access ->
+                                                     identifier_token);
+                    }
+                    variable_symbol -> MarkInitialized();
                     field_access -> symbol = variable_symbol;
                 }
                 else
