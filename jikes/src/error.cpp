@@ -719,7 +719,7 @@ bool SemanticError::ProcessWarningSwitch(const char* image)
         if (strcmp(group -> name, image) == 0)
         {
             switch_recognized = true;
-            for (int c = 0; c < group -> codes.Length(); ++c)
+            for (unsigned c = 0; c < group -> codes.Length(); ++c)
             {
                 SemanticErrorKind kind = group -> codes[c];
                 switch(group -> level)
@@ -1669,6 +1669,9 @@ void SemanticError::InitializeMessages()
         "The value of a float literal must not round to infinity or zero.";
     messages[INVALID_DOUBLE_VALUE] =
         "The value of a double literal must not round to infinity or zero.";
+    messages[HEX_FLOATING_POINT_UNSUPPORTED] =
+        "Hexadecimal floating point values are only supported for `-source "
+        "1.5' or greater.";
     messages[RETURN_STATEMENT_IN_INITIALIZER] =
         "A return statement may not appear in an initializer block.";
     messages[ABRUPT_INITIALIZER] =

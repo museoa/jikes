@@ -304,7 +304,7 @@ EXTRA_DIST = java.g gencode.java
 
 # FIXME: hardcoded at the moment, makes bootstrap difficult...
 @MAINTAINER_MODE_TRUE@JAVA = java
-@MAINTAINER_MODE_TRUE@JAVAC = jikes
+@MAINTAINER_MODE_TRUE@JAVAC = jikes -nowarn -source 1.4
 all: $(BUILT_SOURCES) config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 

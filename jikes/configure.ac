@@ -45,11 +45,13 @@ dnl Maintainer mode depends on touch
 AC_PATH_PROG([TOUCH], [touch])
 
 dnl     make it easy to turn on debug, like any other project
-AC_ARG_ENABLE(debug, [  --enable-debug          Turn on internal compiler debugging.],
+AC_ARG_ENABLE([debug],
+              [AS_HELP_STRING([--enable-debug],
+                              [Turn on internal compiler debugging.])],
           [jikes_debug=$enableval], [jikes_debug=no])
 
-if test "$jikes_debug" = "yes"; then
-  AC_DEFINE(JIKES_DEBUG, 1, [Enable internal compiler debugging])
+AS_IF([test "$jikes_debug" = yes],
+  [AC_DEFINE([JIKES_DEBUG], [1], [Enable internal compiler debugging])
 
   dnl If the user did not set CXXFLAGS, set debug flags to
   dnl keep the AC_PROG_CXX macro from defaulting to -g -O2.
@@ -59,16 +61,14 @@ if test "$jikes_debug" = "yes"; then
     else
       CXXFLAGS="-g"
     fi
-  fi
-else
-  dnl If the user did not set CXXFLAGS and we are using VC++, set
+  fi],
+  [dnl If the user did not set CXXFLAGS and we are using VC++, set
   dnl default flags to keep AC_PROG_CXX from defaulting to -g -O2.
   if test "${CXXFLAGS+set}" != "set" ; then
     if test "$jikes_vcpp" = "yes" ; then
       CXXFLAGS="-MD -GX -GR"
     fi
-  fi
-fi
+  fi])
 
 dnl	Tell the system that we are going to use the C++ language
 AC_LANG([C++])
@@ -92,13 +92,14 @@ fi
 dnl	Don't define classes in a Jikes namespace by default
 dnl	since most compilers do not support C++ namespaces properly.
 
-AC_ARG_ENABLE(jikes-namespace,
-    [  --enable-jikes-namespace      Define Jikes classes in a C++ namespace],
+AC_ARG_ENABLE([jikes-namespace],
+              [AS_HELP_STRING([--enable-jikes-namespace],
+                              [Define Jikes classes in a C++ namespace])],
     [ok=$enableval], [ok=no])
 
-if test "$ok" = "yes"; then
-    AC_DEFINE(HAVE_JIKES_NAMESPACE, 1, [Define Jikes classes in a C++ namespace])
-fi
+AS_IF([test "$ok" = yes],
+      [AC_DEFINE([HAVE_JIKES_NAMESPACE], [1],
+                 [Define Jikes classes in a C++ namespace])])
 
 
 dnl	Check for standard c and c++ headers and libraries
@@ -173,7 +174,9 @@ AC_CXX_STATIC_CAST()
 
 dnl Check to see if build will use emulated floating point
 
-AC_ARG_ENABLE(fp-emulation, [  --disable-fp-emulation  Use native floating point operations instead of emulation],
+AC_ARG_ENABLE([fp-emulation],
+              [AS_HELP_STRING([--disable-fp-emulation],
+                 [Use native floating point operations instead of emulation])],
 	[ok=$enableval], [ok=yes])
 
 AC_MSG_CHECKING([for floating point support])
@@ -343,6 +346,15 @@ AS_IF([test "$JIKESPG" != NONE],
       [JIKESPG=jikespg])
 AC_SUBST(JIKESPG)
 
+
+# Turn on beta version of 1.5 support
+AC_ARG_ENABLE([source15],
+              [AS_HELP_STRING([--enable-source15],
+                              [Enable experimental 1.5 source features])],
+              [source15=$enableval], [source15=no])
+AS_IF([test $source15=yes],
+      [AC_DEFINE([ENABLE_SOURCE_15], [1],
+                 [Define to enable experimental `-source 1.5' features.])])
 
 # Subst variables into Makefile.in to produce the Makefile
 

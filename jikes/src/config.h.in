@@ -6,6 +6,9 @@ http://ibm.com/developerworks/opensource/jikes.
 Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 You must accept the terms of that agreement to use this software. */
 
+/* Define to enable experimental `-source 1.5' features. */
+#undef ENABLE_SOURCE_15
+
 /* Defined when the compiler supports 64 bit integer math */
 #undef HAVE_64BIT_TYPES
 

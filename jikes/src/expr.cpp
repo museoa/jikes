@@ -2720,6 +2720,12 @@ void Semantic::ProcessFloatLiteral(Ast* expr)
 
     if (! literal -> value)
         control.float_pool.FindOrInsertFloat(literal);
+    if (control.option.source < JikesOption::SDK1_5 &&
+        (literal -> Name()[1] == U_x || literal -> Name()[1] == U_X))
+    {
+        ReportSemError(SemanticError::HEX_FLOATING_POINT_UNSUPPORTED,
+                       float_literal);
+    }
     if (literal -> value == control.BadValue())
     {
         ReportSemError(SemanticError::INVALID_FLOAT_VALUE, float_literal);
@@ -2742,6 +2748,12 @@ void Semantic::ProcessDoubleLiteral(Ast* expr)
 
     if (! literal -> value)
         control.double_pool.FindOrInsertDouble(literal);
+    if (control.option.source < JikesOption::SDK1_5 &&
+        (literal -> Name()[1] == U_x || literal -> Name()[1] == U_X))
+    {
+        ReportSemError(SemanticError::HEX_FLOATING_POINT_UNSUPPORTED,
+                       double_literal);
+    }
     if (literal -> value == control.BadValue())
     {
         ReportSemError(SemanticError::INVALID_DOUBLE_VALUE, double_literal);
@@ -3303,10 +3315,11 @@ void Semantic::ProcessClassLiteral(Ast* expr)
             class_lit -> symbol = control.no_type;
         }
     }
-    else
+    else if (control.option.target < JikesOption::SDK1_5)
     {
         //
-        // We have already checked that the type is accessible.
+        // We have already checked that the type is accessible. Older VMs
+        // require a helper method to resolve the reference.
         //
         VariableSymbol* var = this_type -> FindOrInsertClassLiteral(type);
         AstName* name = compilation_unit -> ast_pool ->
@@ -3315,6 +3328,7 @@ void Semantic::ProcessClassLiteral(Ast* expr)
         class_lit -> symbol = var;
         class_lit -> resolution_opt = name;
     }
+    else class_lit -> symbol = control.Class();
 }
 
 

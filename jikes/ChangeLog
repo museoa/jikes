@@ -1,3 +1,43 @@
+2004-02-17  Eric Blake  <ebb9@byu.net>
+
+	* ChangeLog: Reformat to fit 80 columns.
+
+	* configure.ac: Add --enable-source15 to turn on beta 1.5
+	features, without making it default.
+	* NEWS: Document configure option.
+	* src/option.cpp (GetErrorMessage, Option): Use it.
+	* src/Makefile.am (JAVAC): Silence code.h regen warnings.
+	* configure: Regenerate.
+	* src/Makefile.in: Ditto.
+	* src/config.h.in: Ditto.
+	* src/access.h (ACC_ANNOTATION): Now 0x2000, per updated JSR 175.
+	* src/bytecode.cpp (EmitExpression, GenerateClassAccessMethod),
+	(GenerateClassAccess): Utilize 1.5 class format change that allows
+	ldc class.
+	* src/expr.cpp (ProcessClassLiteral): Ditto.
+	* src/class.cpp (Signature, SignatureLength): Signature parsing is
+	experimental on the generics-branch; disable it completely here to
+	allow -source 1.5 to work.
+
+	* src/gencode.java: Update to support Unicode 4.0 surrogate pairs,
+	now legal in 1.5.
+	* src/code.h: Regenerate.
+	* src/code.cpp: Ditto.
+	* src/lookup.cpp: Use adjusted Code methods.
+	* src/scanner.cpp: Ditto.
+	(ClassifyNumericLiteral): Scan hex floating point. In the process,
+	make some floating point errors nicer.
+	* src/double.cpp (IEEEfloat(char*), IEEEdouble(char*)): Resolve
+	hex floating point.
+	* src/expr.cpp (ProcessFloatLiteral, ProcessDoubleLiteral): Accept
+	hex floating point.
+	* src/error.cpp (HEX_FLOATING_POINT_UNSUPPORTED): New error.
+	* src/error.h: Ditto.
+	* src/stream.cpp (INVALID_FLOATING_HEX_EXPONENT),
+	(INVALID_FLOATING_HEX_MANTISSA, INVALID_FLOATING_HEX_PREFIX),
+	(INVALID_OCTAL_CONSTANT, INVALID_FLOATING_EXPONENT): Ditto.
+	* src/stream.h: Ditto.
+
 2004-02-17  Elliott Hughes  <enh@acm.org>
 
 	* doc/jikes.1: Document new +Peffective-java and +Pserial switches.
@@ -9,18 +49,20 @@
 	(CheckFieldDeclaration, CheckFieldName): Factor out the field
 	checking, now there's more of it.
 	* double.cpp, src/double.h: Use Int::MIN_INT and Int::MAX_INT.
-	* src/error.cpp, src/error.h: New errors. Proper support for
-	command-line +P switches that turn groups of warnings on/off (previously
-	there was a single special case for +Pnaming).
-	* src/expr.cpp: Adds overflow checking for integer constant expressions.
+	* src/error.cpp: New errors. Proper support for command-line +P
+	switches that turn groups of warnings on/off (previously there was
+	a single special case for +Pnaming).
+	* src/error.h: Ditto.
+	* src/expr.cpp: Adds overflow checking for integer constant
+	expressions.
 	* src/expr.cpp (FindMethodMember, FindVariableMember): Check for class
 	methods or fields accessed via an instance rather than the class.
 	* src/expr.cpp (ProcessShift, ProcessShiftCount, ProcessLEFT_SHIFT,
 	ProcessRIGHT_SHIFT): check for over-large or negative shift counts,
 	factor out some duplicated code. (These checks would have helped the
 	submitter of the recently-fixed code generation bug for prefix unary
-	operators.)
-	(The new overflow-related code might be better in a new file overflow.h)
+	operators.) (The new overflow-related code might be better in a
+	new file overflow.h)
 	* src/long.h: New class Int, analogous to LongInt, so we can get hold
 	of MIN_INT and MAX_INT in a similar manner.
 	* src/semantic.h: New prototypes.
@@ -212,7 +254,8 @@
 	(REDUNDANT_MODIFIER, RECOMMENDED_MODIFER_ORDER): remove from
 	default +P set, must ask for these explicitly now.
 	* src/error.h:
-	* src/error.cpp: add a meta +P switch for all naming convention warnings
+	* src/error.cpp: add a meta +P switch for all naming convention
+	warnings
 	* src/scanner.cpp: make the new l vs L warning pedantic 
 	
 2004-01-25  Elliott Hughes  <enh@acm.org>
@@ -226,8 +269,8 @@
 	* src/platform.cpp:
 	* src/platform.h: Add 'serialVersionUID' symbol.
 	* src/error.cpp: Improves the message for unconventional names.
-	* src/decl.cpp: Ignore empty classes when suggesting private constructors
-	for utility classes.
+	* src/decl.cpp: Ignore empty classes when suggesting private
+	constructors for utility classes.
 	* src/body.cpp: Warn about unconventional names, returning null instead
 	of a zero-length array, empty catch and finally blocks, and overly
 	general throws clauses.
@@ -235,12 +278,13 @@
 	* src/semantic.h:
 	* src/decl.cpp: Warn about unconventional names, overloaded equals
 	methods, equals without hashCode and vice versa, use of Latin, utility
-	classes without a private constructor, interfaces that don't define types,
-	and public static final array fields.
+	classes without a private constructor, interfaces that don't
+	define types, and public static final array fields.
 	* src/error.cpp:
 	* src/error.h: Add all the new errors.
 	* src/lookup.cpp:
-	* src/lookup.h: Add NameSymbol methods for finding unconventional names.
+	* src/lookup.h: Add NameSymbol methods for finding unconventional
+	names.
 	* src/platform.cpp:
 	* src/platform.h: Add 'equals' and 'hashCode' string constants.
 	* src/scanner.cpp: Warn about use of l instead of L as a suffix.
@@ -2239,7 +2283,8 @@
 
 2002-05-16  Eric Blake  <ebb9@email.byu.edu>
 
-	* src/error.cpp (PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL):
+	* src/error.cpp
+	(PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL):
 	* src/decl.cpp (FindType): Improve error message.
 
 2002-05-15  Andrew Pimlott  <jikes-dev@andrew.pimlott.net>
@@ -5917,9 +5962,10 @@
 
 2000-04-05  Vadim Zaliva  <lord@crocodile.org>
 
-	* expr.cpp (ConstructorAccessCheck): corrected problem with not reporting
-	illegal access to protected constructor from other pckage.
-	problem reportred by:  Garrick Olson <garrick_olson@hotmail.com>
+	* expr.cpp (ConstructorAccessCheck): corrected problem with not
+	reporting illegal access to protected constructor from other
+	pckage. problem reportred by:  Garrick Olson
+	<garrick_olson@hotmail.com>
 
 2000-03-31  Chris Abbey <cabbey@home.net>
 
@@ -5947,21 +5993,23 @@
 
 2000-03-15  Vadim Zaliva  <lord@crocodile.org>
 
-	* stream.cpp (ProcessInputUnicode): corrected problem with losing last source file
-	character when using 'iconv' function for charset conversion.
+	* stream.cpp (ProcessInputUnicode): corrected problem with losing
+	last source file character when using 'iconv' function for charset
+	conversion.
 
 2000-03-14  Vadim Zaliva  <lord@crocodile.org>
 
 	* modifier.cpp (ProcessStaticNestedInterfaceModifiers): simplification.
-	(ProcessNestedInterfaceModifiers): possibility of specifying duplicate 'static'
-	declarations removed.
+	(ProcessNestedInterfaceModifiers): possibility of specifying
+	duplicate 'static' declarations removed.
 
 2000-03-08 Ziqiang Tang   <ztang@lcs.mit.edu>
 
 	* decl.cpp:
 	* semantic.h:
 	* modifier.cpp: added correct support for interface-contained
-	interfaces (public, static) using Semantic::ProcessStaticNestedInterfaceModifiers.
+	interfaces (public, static) using
+	Semantic::ProcessStaticNestedInterfaceModifiers.
 
 2000-03-13  Vadim Zaliva  <lord@crocodile.org>
 
@@ -5984,18 +6032,20 @@
 
 	* Switched to ICU-1.4.0
 
-	* option.cpp (Option): small problem with compilation while both ICU and
-	ICONV are present.
+	* option.cpp (Option): small problem with compilation while both
+	ICU and ICONV are present.
 
 	* stream.cpp:
 	* option.h: new ICU header names.
 
-	* configure.in (LDFLAGS): checking for u_getVersion to check is ICU is installed.
+	* configure.in (LDFLAGS): checking for u_getVersion to check is
+	ICU is installed.
 
 2000-02-21  Vadim Zaliva  <lord@crocodile.org>
 
-	* jikesapi.h (class JikesAPI): reader and writer factories removed - they are
-	duplicating read/write methods functionality. read/write made virtual.
+	* jikesapi.h (class JikesAPI): reader and writer factories removed
+	- they are duplicating read/write methods
+	functionality. read/write made virtual.
 
 	* jikesapi.cpp:
 	* jikesapi.h: method of readers and writers renamed to follow
@@ -6304,14 +6354,15 @@
 	* option.cpp:
 	* symbol.h:
 	* system.cpp:
-	Patches from Mike Ernst that correct a few minor problems with Jikes 1.10:
+	Patches from Mike Ernst that correct a few minor problems with
+	Jikes 1.10:
 	 * some formatting
 	 * repeated declarations
-	 * parenthesize assignments used as conditionals, to flag that use and to
-	   suppress gcc -Wall warnings
-	 * reorder constructor initializers, to put them in the same order as the
-	   declarations.  This makes them easier to read and suppresses gcc -Wall
-	   warnings.
+	 * parenthesize assignments used as conditionals, to flag that use
+	   and to suppress gcc -Wall warnings
+	 * reorder constructor initializers, to put them in the same order
+	   as the declarations.  This makes them easier to read and
+	   suppresses gcc -Wall warnings.
 	 * a couple of comments
 	 * add #ifdef around a declaration used only under Win32
 
@@ -6451,7 +6502,8 @@ that
 
 	* symbol.h:
 	* symbol.cpp:
-	Add code from Mike Ernst to help resolve compilation problems on Win/NT.
+	Add code from Mike Ernst to help resolve compilation problems on
+	Win/NT.
 
 1999-10-20    <shields@jikes.watson.ibm.com>
 
@@ -6590,7 +6642,8 @@ that
 	
 1999-10-16    <shields@jikes.watson.ibm.com>
 	* configure.in:
-	Add check from Moses DeJong for sufficiently recent version of autoconf.
+	Add check from Moses DeJong for sufficiently recent version of
+	autoconf.
 
 1999-10-16    <shields@jikes.watson.ibm.com>
 	* lookup.cpp:
@@ -6614,8 +6667,8 @@ that
 	* java.g:
 	* symbol.cpp: (look for TODO-ERNST)
 	* system.cpp:
-	Make changes, in some case commenting out code, or making it conditional,
-	so can compile cleanly on Win/NT.
+	Make changes, in some case commenting out code, or making it
+	conditional, so can compile cleanly on Win/NT.
 
 1999-10-15    <shields@jikes.watson.ibm.com>
 
@@ -6700,8 +6753,8 @@ that
 	* stream.h: Delete extraneous ",' that causes AIX xlC to complain
 
 	* jikes.cpp:
-	Update version to 1.07, and revise descriptive text printed when Jikes is
-	invoked with no arguments.
+	Update version to 1.07, and revise descriptive text printed when
+	Jikes is invoked with no arguments.
 
 	* expr.cpp:
 	* symbol.cpp:
@@ -6711,16 +6764,16 @@ that
 
 	* stream.cpp:
 	vz1013a: code from Vadim, who writes:
-	Attached is modified version of stream.cpp. It handles very rare situation
-	when one code page character could be repesented by more that one unicode
-	chars.
+	Attached is modified version of stream.cpp. It handles very rare
+	situation when one code page character could be repesented by more
+	that one unicode chars.
 
-	One of situations, when this could happen is when character is represented
-	by UNICODE "surrogates"*
+	One of situations, when this could happen is when character is
+	represented by UNICODE "surrogates"*
 
-	Anyway, even though not tested, I suggest to include this code. It will not make
-	current implementation worse (currently it dumps core if such character
-	will be used in source).
+	Anyway, even though not tested, I suggest to include this code. It
+	will not make current implementation worse (currently it dumps
+	core if such character will be used in source).
 
 	* class.h:
 	* pc1013b: add code that should have been in pc1013a.
@@ -6781,7 +6834,8 @@ that
 
 1999-10-10    <shields@jikes.watson.ibm.com>
 
-	* option.cpp: Fix compilation error by adding conditional defines for ICU
+	* option.cpp: Fix compilation error by adding conditional defines
+	for ICU
 
 	* stream.cpp:
 	Fix typos: TRUE->true, FALSE->false
@@ -6798,8 +6852,10 @@ that
 
 1999-10-07  Vadim Zaliva  <lord@crocodile.org>
 
-	* stream.cpp (ProcessInput): reimplemented to facilitate ICU for code page conversion.
-	* option.cpp (Option): added test for unsupported encoding end error reporting.
+	* stream.cpp (ProcessInput): reimplemented to facilitate ICU for
+	code page conversion.
+	* option.cpp (Option): added test for unsupported encoding end
+	error reporting.
 
 1999-10-06  Vadim Zaliva  <lord@crocodile.org>
 
@@ -6807,8 +6863,10 @@ that
 	* option.cpp (Option):
 	* config.cpp:
 	* jikes.cpp (main): Added -encoding option
-	* Makefile.in (LIBS): added LIBS variable to link with extra libraries (detected by autoconf).
-	* configure.in (LDFLAGS): Added checks for "IBM Classes for Unicode" library.
+	* Makefile.in (LIBS): added LIBS variable to link with extra
+	libraries (detected by autoconf).
+	* configure.in (LDFLAGS): Added checks for "IBM Classes for
+	Unicode" library.
 
 1999-10-09  Dave Shields  <shields@watson.ibm.com>
 	* Makefile.in:
@@ -6836,8 +6894,10 @@ that
 
 1999-10-07  Vadim Zaliva  <lord@crocodile.org>
 
-	* stream.cpp (ProcessInput): reimplemented to facilitate ICU for code page conversion.
-	* option.cpp (Option): added test for unsupported encoding end error reporting.
+	* stream.cpp (ProcessInput): reimplemented to facilitate ICU for
+	code page conversion.
+	* option.cpp (Option): added test for unsupported encoding end
+	error reporting.
 
 1999-10-06  Vadim Zaliva  <lord@crocodile.org>
 
@@ -6845,8 +6905,10 @@ that
 	* option.cpp (Option):
 	* config.cpp:
 	* jikes.cpp (main): Added -encoding option
-	* Makefile.in (LIBS): added LIBS variable to link with extra libraries (detected by autoconf).
-	* configure.in (LDFLAGS): Added checks for "IBM Classes for Unicode" library.
+	* Makefile.in (LIBS): added LIBS variable to link with extra
+	libraries (detected by autoconf).
+	* configure.in (LDFLAGS): Added checks for "IBM Classes for
+	Unicode" library.
 
 1999-10-09    <shields@jikes.watson.ibm.com>
 
@@ -7346,8 +7408,9 @@ that
 	Include patch from C. Scott Ananian (cananian@lesser-magoo.lcs.mit.edu)
 	submitted to jikes-patches on 3 April 1999, who wrote:
 	  The following short patch using autoconf lets jikes build properly on
-	  libc5 systems -- or others where wchar.h is broken.  This has allowed me
-	  to release RPMs of jikes for RedHat 4.2 and earlier linux systems.
+	  libc5 systems -- or others where wchar.h is broken.  This has
+	  allowed me to release RPMs of jikes for RedHat 4.2 and earlier
+	  linux systems.
 
 	* jikes.1:
 	Start man page, first draft generously provided by Pierpaolo

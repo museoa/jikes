@@ -1,6 +1,18 @@
 *** Jikes 1.19a is a CVS version.
 
-FIXME: no improvements, yet.
+The `-target 1.5' option produces class files compatible with Sun's
+JDK 1.5 virtual machine (the biggest change is class literals take
+much less space).  Also, the EnclosingMethod attribute is now used to
+improve reflection.  Fixed bug where compiling with classfiles
+produced by JDK 1.5 caused an assertion error when read by jikes.
+
+Some beta support for JDK 1.5 features is being added.  To try it out,
+you must build jikes yourself, and use the --enable-source15 configure
+option.  Once compiled, the following items are supported by using the
+`-source 1.5' command line argument (but possibly with bugs):
+- Hexadecimal floating point literals, documented in
+java.lang.Float.valueOf(String) and similar to the C99 language
+(0x1.8p+0d is the same as 1.5d).
 
 *** Jikes 1.19 was released 1 February 2004.
 

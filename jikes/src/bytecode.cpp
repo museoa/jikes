@@ -3055,14 +3055,25 @@ int ByteCode::EmitExpression(AstExpression* expression, bool need_value)
             AstClassLiteral* class_lit = (AstClassLiteral*) expression;
             if (class_lit -> resolution_opt)
                 return GenerateClassAccess(class_lit, need_value);
-            if (need_value)
+            TypeSymbol* type = expression -> symbol -> TypeCast();
+            if (type)
             {
-                VariableSymbol* sym = (VariableSymbol*) expression -> symbol;
-                PutOp(OP_GETSTATIC);
-                PutU2(RegisterFieldref(sym));
-                return 1;
+                // Must load for side effect of class not found
+                assert(type == control.Class());
+                LoadConstantAtIndex(RegisterClass(class_lit -> type ->
+                                                  symbol));
+                if (! need_value)
+                    PutOp(OP_POP);
             }
-            return 0;
+            else if (need_value)
+            {
+                // No side effects for Integer.TYPE and friends.
+                assert(expression -> symbol -> VariableCast());
+                PutOp(OP_GETSTATIC);
+                PutU2(RegisterFieldref((VariableSymbol*) expression ->
+                                       symbol));
+            }
+            return need_value ? 1 : 0;
         }
     case Ast::DOT:
         return EmitFieldAccess((AstFieldAccess*) expression, need_value);
@@ -3210,10 +3221,12 @@ void ByteCode::EmitFieldAccessLhs(AstExpression* expression)
 
 
 //
-// Generate code for access method used to set class literal fields
+// Generate code for access method used to set class literal fields, when
+// compiling for older VMs.
 //
 void ByteCode::GenerateClassAccessMethod()
 {
+    assert(control.option.target < JikesOption::SDK1_5);
     //
     // Here, we add a line-number attribute entry for this method.
     // Even though this is a generated method, JPDA debuggers will
@@ -3325,12 +3338,14 @@ void ByteCode::GenerateClassAccessMethod()
 
 
 //
-// here to generate code to dymanically initialize the field for a class
-// literal and then return its value
+// Generate code to dymanically initialize the field for a class literal, and
+// return its value. Only generated for older VMs (since newer ones support
+// ldc class).
 //
 int ByteCode::GenerateClassAccess(AstClassLiteral* class_lit,
                                   bool need_value)
 {
+    assert(control.option.target < JikesOption::SDK1_5);
     //
     // Evaluate X.class literal. If X is a primitive type, this is a
     // predefined field, and we emitted it directly rather than relying on

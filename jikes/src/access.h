@@ -38,8 +38,8 @@ public:
         ACCESS_INTERFACE = 0x0200,
         ACCESS_ABSTRACT = 0x0400,
         ACCESS_STRICTFP = 0x0800,
-        ACCESS_ANNOTATION = 0x0800, // JSR 175? described in JSR 14
         ACCESS_SYNTHETIC = 0x1000, // JSR 201
+        ACCESS_ANNOTATION = 0x2000, // JSR 175
         ACCESS_ACCESS = ACCESS_PUBLIC | ACCESS_PROTECTED | ACCESS_PRIVATE
     };
 
@@ -66,8 +66,8 @@ public:
     bool ACC_INTERFACE() const { return IsSet(ACCESS_INTERFACE); }
     bool ACC_ABSTRACT() const { return IsSet(ACCESS_ABSTRACT); }
     bool ACC_STRICTFP() const { return IsSet(ACCESS_STRICTFP); }
-    bool ACC_ANNOTATION() const { return IsSet(ACCESS_ANNOTATION); }
     bool ACC_SYNTHETIC() const { return IsSet(ACCESS_SYNTHETIC); }
+    bool ACC_ANNOTATION() const { return IsSet(ACCESS_ANNOTATION); }
 
     void SetFlags(u2 flag) { access_flags |= flag; }
     void SetFlags(const AccessFlags& af)  { access_flags = af.access_flags; }
@@ -87,8 +87,8 @@ public:
     void SetACC_INTERFACE() { SetFlags(ACCESS_INTERFACE); }
     void SetACC_ABSTRACT() { SetFlags(ACCESS_ABSTRACT); }
     void SetACC_STRICTFP() { SetFlags(ACCESS_STRICTFP); }
-    void SetACC_ANNOTATION() { SetFlags(ACCESS_ANNOTATION); }
     void SetACC_SYNTHETIC() { SetFlags(ACCESS_SYNTHETIC); }
+    void SetACC_ANNOTATION() { SetFlags(ACCESS_ANNOTATION); }
 
     void ResetFlags(u2 flag = 0xffff) { access_flags &= ~ flag; }
     void ResetACC_PUBLIC() { ResetFlags(ACCESS_PUBLIC); }
@@ -107,8 +107,8 @@ public:
     void ResetACC_INTERFACE() { ResetFlags(ACCESS_INTERFACE); }
     void ResetACC_ABSTRACT() { ResetFlags(ACCESS_ABSTRACT); }
     void ResetACC_STRICTFP() { ResetFlags(ACCESS_STRICTFP); }
-    void ResetACC_ANNOTATION() { ResetFlags(ACCESS_ANNOTATION); }
     void ResetACC_SYNTHETIC() { ResetFlags(ACCESS_SYNTHETIC); }
+    void ResetACC_ANNOTATION() { ResetFlags(ACCESS_ANNOTATION); }
 
     u2 Flags() const { return access_flags; }
 
@@ -212,9 +212,11 @@ public:
         if (ACC_ABSTRACT())
             Coutput << " abstract";
         if (ACC_STRICTFP())
-            Coutput << (metatype == ACCESS_TYPE ? " annotation" : " strictfp");
+            Coutput << " strictfp";
         if (ACC_SYNTHETIC())
             Coutput << " synthetic";
+        if (ACC_ANNOTATION())
+            Coutput << " annotation";
         Coutput << endl;
     }
 #endif // JIKES_DEBUG

@@ -312,24 +312,24 @@ FieldInfo::FieldInfo(ClassFile& buffer)
 }
 
 const char* FieldInfo::Signature(const ConstantPool& pool,
-                                 const Control& control) const
+                                 const Control& /*control*/) const
 {
     assert(pool[descriptor_index] -> Tag() == CPInfo::CONSTANT_Utf8);
     const CPUtf8Info* sig =
-        (control.option.source >= JikesOption::SDK1_5 && attr_signature)
+        /*(control.option.source >= JikesOption::SDK1_5 && attr_signature)
         ? attr_signature -> Signature(pool)
-        : (const CPUtf8Info*) pool[descriptor_index];
+        :*/ (const CPUtf8Info*) pool[descriptor_index];
     return sig -> Bytes();
 }
 
 u2 FieldInfo::SignatureLength(const ConstantPool& pool,
-                              const Control& control) const
+                              const Control& /*control*/) const
 {
     assert(pool[descriptor_index] -> Tag() == CPInfo::CONSTANT_Utf8);
     const CPUtf8Info* sig =
-        (control.option.source >= JikesOption::SDK1_5 && attr_signature)
+        /*(control.option.source >= JikesOption::SDK1_5 && attr_signature)
         ? attr_signature -> Signature(pool)
-        : (const CPUtf8Info*) pool[descriptor_index];
+        :*/ (const CPUtf8Info*) pool[descriptor_index];
     return sig -> Length();
 }
 
@@ -428,24 +428,24 @@ MethodInfo::MethodInfo(ClassFile& buffer)
 }
 
 const char* MethodInfo::Signature(const ConstantPool& pool,
-                                  const Control& control) const
+                                  const Control& /*control*/) const
 {
     assert(pool[descriptor_index] -> Tag() == CPInfo::CONSTANT_Utf8);
     const CPUtf8Info* sig =
-        (control.option.source >= JikesOption::SDK1_5 && attr_signature)
+        /*(control.option.source >= JikesOption::SDK1_5 && attr_signature)
         ? attr_signature -> Signature(pool)
-        : (const CPUtf8Info*) pool[descriptor_index];
+        :*/ (const CPUtf8Info*) pool[descriptor_index];
     return sig -> Bytes();
 }
 
 u2 MethodInfo::SignatureLength(const ConstantPool& pool,
-                               const Control& control) const
+                               const Control& /*control*/) const
 {
     assert(pool[descriptor_index] -> Tag() == CPInfo::CONSTANT_Utf8);
     const CPUtf8Info* sig =
-        (control.option.source >= JikesOption::SDK1_5 && attr_signature)
+        /*(control.option.source >= JikesOption::SDK1_5 && attr_signature)
         ? attr_signature -> Signature(pool)
-        : (const CPUtf8Info*) pool[descriptor_index];
+        :*/ (const CPUtf8Info*) pool[descriptor_index];
     return sig -> Length();
 }
 
@@ -1503,11 +1503,11 @@ TypeSymbol* Semantic::ReadTypeFromSignature(TypeSymbol* base_type,
             ;
 
         if (signature[total_length] != U_NULL &&
-            Code::IsDigit(signature[total_length + 1]))
+            Code::IsDecimalDigit(signature[total_length + 1]))
         {
             // an anonymous or a local type?
             for (total_length += 2;
-                 Code::IsDigit(signature[total_length]); total_length++)
+                 Code::IsDecimalDigit(signature[total_length]); total_length++)
                 // will stop at next '$' or '\0' !!!
                 ;
             if (signature[total_length] != U_NULL)

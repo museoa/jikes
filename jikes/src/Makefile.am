@@ -112,7 +112,7 @@ $(PARSER_FILES): javaact.stamp
 
 # FIXME: hardcoded at the moment, makes bootstrap difficult...
 JAVA = java
-JAVAC = jikes
+JAVAC = jikes -nowarn -source 1.4
 code.stamp: $(srcdir)/gencode.java
 	@rm -f code.tmp
 	@$(TOUCH) code.tmp

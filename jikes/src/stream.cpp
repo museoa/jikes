@@ -55,7 +55,21 @@ const wchar_t* StreamError::getErrorMessage()
     case UNTERMINATED_STRING_CONSTANT:
         return L"String constant not properly terminated.";
     case INVALID_HEX_CONSTANT:
-        return L"The prefix 0x must be followed by at least one hex digit.";
+        return L"The hexadecimal prefix '0x' must be followed by at least one "
+            L"hex digit.";
+    case INVALID_FLOATING_HEX_EXPONENT:
+        return L"A hexadecimal floating point literal must have an exponent "
+            L"'p' designator.";
+    case INVALID_FLOATING_HEX_MANTISSA:
+        return L"A hexadecimal floating point literal must have at least one "
+            L"hex digit between the prefix '0x' and exponent 'p'.";
+    case INVALID_FLOATING_HEX_PREFIX:
+        return L"A hexadecimal floating point literal must start with the "
+            L"prefix '0x'.";
+    case INVALID_OCTAL_CONSTANT:
+        return L"The octal prefix '0' must not be followed by '8' or '9'.";
+    case INVALID_FLOATING_EXPONENT:
+        return L"A floating point exponent must have at least one digit.";
     case INVALID_UNICODE_ESCAPE:
         return L"Invalid unicode escape character.";
     case INVALID_ESCAPE_SEQUENCE:

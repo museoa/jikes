@@ -12,7 +12,6 @@
 #include "error.h"
 #include "case.h"
 #include "tab.h"
-#include "code.h"
 
 #ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes { // Open namespace Jikes block
@@ -173,6 +172,13 @@ const wchar_t* OptionError::GetErrorMessage()
         s << '\"' << name << "\" requires an argument.";
         break;
     case INVALID_SOURCE_ARGUMENT:
+        if (ENABLE_SOURCE_15)
+        {
+            s << "\"-source\" only recognizes Java releases 1.3 (JLS 2 "
+              << "features), 1.4 (assert statement), and 1.5 (partial "
+              << "support beta, see NEWS for supported features).";
+            break;
+        }
         s << "\"-source\" only recognizes Java releases 1.3 (JLS 2 features) "
           << "and 1.4 (assert statement).";
         break;
@@ -590,10 +596,15 @@ Option::Option(ArgumentExpander& arguments,
                 }
                 // See below for setting the default.
                 i++;
-                if (strcmp(arguments.argv[i], "1.3") == 0)
+                if (! strcmp(arguments.argv[i], "1.3"))
                     source = SDK1_3;
-                else if (strcmp(arguments.argv[i], "1.4") == 0)
+                else if (! strcmp(arguments.argv[i], "1.4"))
                     source = SDK1_4;
+                else if (ENABLE_SOURCE_15 &&
+                         ! strcmp(arguments.argv[i], "1.5"))
+                {
+                    source = SDK1_5;
+                }
                 else
                 {
                     bad_options.Next() =
@@ -628,16 +639,18 @@ Option::Option(ArgumentExpander& arguments,
                 }
                 // See below for setting the default.
                 i++;
-                if (strcmp(arguments.argv[i], "1.1") == 0)
+                if (! strcmp(arguments.argv[i], "1.1"))
                     target = SDK1_1;
-                else if (strcmp(arguments.argv[i], "1.2") == 0)
+                else if (! strcmp(arguments.argv[i], "1.2"))
                     target = SDK1_2;
-                else if (strcmp(arguments.argv[i], "1.3") == 0)
+                else if (! strcmp(arguments.argv[i], "1.3"))
                     target = SDK1_3;
-                else if (strcmp(arguments.argv[i], "1.4") == 0)
+                else if (! strcmp(arguments.argv[i], "1.4"))
                     target = SDK1_4;
-                else if (strcmp(arguments.argv[i], "1.4.2") == 0)
+                else if (! strcmp(arguments.argv[i], "1.4.2"))
                     target = SDK1_4_2;
+                else if (! strcmp(arguments.argv[i], "1.5"))
+                    target = SDK1_5;
                 else
                 {
                     bad_options.Next() =
@@ -845,7 +858,7 @@ Option::Option(ArgumentExpander& arguments,
                 }
 
                 char *p;
-                for (p = image; *p && Code::IsDigit(*p); p++)
+                for (p = image; *p && *p >= '0' && *p <= '9'; p++)
                 {
                     int digit = *p - '0';
                     tab_size = tab_size * 10 + digit;
@@ -917,6 +930,9 @@ Option::Option(ArgumentExpander& arguments,
         case SDK1_4:
         case SDK1_4_2:
             source = SDK1_4;
+            break;
+        case SDK1_5:
+            source = ENABLE_SOURCE_15 ? SDK1_5 : SDK1_4;
             break;
         default:
             assert(false && "Unexpected target level");
