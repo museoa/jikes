@@ -370,6 +370,7 @@ void SemanticError::StaticInitializer()
     print_message[METHOD_NOT_FOUND] = PrintMETHOD_NOT_FOUND;
     print_message[METHOD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE] = PrintMETHOD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE;
     print_message[METHOD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE] = PrintMETHOD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE;
+    print_message[HIDDEN_METHOD_IN_ENCLOSING_CLASS] = PrintHIDDEN_METHOD_IN_ENCLOSING_CLASS;
     print_message[FIELD_NOT_METHOD] = PrintFIELD_NOT_METHOD;
     print_message[TYPE_NOT_METHOD] = PrintTYPE_NOT_METHOD;
     print_message[TYPE_NOT_FIELD] = PrintTYPE_NOT_FIELD;
@@ -1924,6 +1925,24 @@ void SemanticError::PrintMETHOD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE(ErrorInfo &er
     }
     Unicode::Cout(err.insert5);
     cout << "\" which is in a different package";
+
+    return;
+}
+
+
+void SemanticError::PrintHIDDEN_METHOD_IN_ENCLOSING_CLASS(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "The method \"";
+    Unicode::Cout(err.insert1);
+    cout << "\" contained in the enclosing type \"";
+    if (NotDot(err.insert2))
+    {
+        Unicode::Cout(err.insert2);
+        cout << "/";
+    }
+    Unicode::Cout(err.insert3);
+    cout << "\" is a perfect match for this method call."
+            " However, it is not visible here because a method with the same name is hiding it";
 
     return;
 }

@@ -484,55 +484,66 @@ void Semantic::SearchForMethodInEnvironment(Tuple<MethodSymbol *> &methods_found
     AstSimpleName *simple_name = method_call -> method -> SimpleNameCast();
     NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(simple_name -> identifier_token);
 
-    SemanticEnvironment *env;
-    for (env = stack; env; env = env -> previous)
+    for (SemanticEnvironment *env = stack; env; env = env -> previous)
     {
         TypeSymbol *type = env -> Type();
         if (! type -> expanded_method_table)
             ComputeMethodsClosure(type, simple_name -> identifier_token);
 
         methods_found.Reset();
+        where_found = NULL;
 
-        for (MethodShadowSymbol *method_shadow = type -> expanded_method_table -> FindMethodShadowSymbol(name_symbol);
-             method_shadow; method_shadow = method_shadow -> next_method)
+        //
+        // If this environment contained a method with the right name, the search stops:
+        //
+        //    "Class scoping does not influence overloading: if the inner class has one
+        //     print method, the simple method name 'print' refers to that method, not 
+        //     any of the ten 'print' methods in the enclosing class."
+        //
+        MethodShadowSymbol *method_shadow = type -> expanded_method_table -> FindMethodShadowSymbol(name_symbol);
+        if (method_shadow)
         {
-            MethodSymbol *method = method_shadow -> method_symbol;
-            TypeSymbol *containing_type = method -> containing_type;
-
-            if (! method -> IsTyped())
-                method -> ProcessMethodSignature((Semantic *) this, simple_name -> identifier_token);
-
-            //
-            // Since type -> IsOwner(this_type()), i.e., type encloses this_type(),
-            // method is accessible, even if it is private.
-            //
-            if (method_call -> NumArguments() == method -> NumFormalParameters())
+            for (; method_shadow; method_shadow = method_shadow -> next_method)
             {
-                int i;
-                for (i = 0; i < method_call -> NumArguments(); i++)
+                MethodSymbol *method = method_shadow -> method_symbol;
+                TypeSymbol *containing_type = method -> containing_type;
+
+                if (! method -> IsTyped())
+                    method -> ProcessMethodSignature((Semantic *) this, simple_name -> identifier_token);
+
+                //
+                // Since type -> IsOwner(this_type()), i.e., type encloses this_type(),
+                // method is accessible, even if it is private.
+                //
+                if (method_call -> NumArguments() == method -> NumFormalParameters())
                 {
-                    AstExpression *expr =  method_call -> Argument(i);
-                    if (! CanMethodInvocationConvert(method -> FormalParameter(i) -> Type(), expr -> Type()))
-                        break;
-                }
-                if (i == method_call -> NumArguments())
-                {
-                    if (MoreSpecific(method, methods_found))
+                    int i;
+                    for (i = 0; i < method_call -> NumArguments(); i++)
                     {
-                        methods_found.Reset();
-                        methods_found.Next() = method;
+                        AstExpression *expr =  method_call -> Argument(i);
+                        if (! CanMethodInvocationConvert(method -> FormalParameter(i) -> Type(), expr -> Type()))
+                            break;
                     }
-                    else if (NoMethodMoreSpecific(methods_found, method))
-                        methods_found.Next() = method;
+                    if (i == method_call -> NumArguments())
+                    {
+                        if (MoreSpecific(method, methods_found))
+                        {
+                            methods_found.Reset();
+                            methods_found.Next() = method;
+                        }
+                        else if (NoMethodMoreSpecific(methods_found, method))
+                            methods_found.Next() = method;
+                    }
                 }
             }
-        }
 
-        if (methods_found.Length() > 0)
+            //
+            // If a match was found, save the environment
+            //
+            where_found = (methods_found.Length() > 0 ? env : NULL);
             break;
+        }
     }
-
-    where_found = env;
 
     return;
 }
@@ -591,7 +602,35 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
         NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(simple_name -> identifier_token);
         bool symbol_found = false;
 
-        for (SemanticEnvironment *env = stack; env; env = env -> previous)
+        //
+        // First, search for a perfect visible method match in an enclosing class.
+        //
+assert(stack);
+        for (SemanticEnvironment *env = stack -> previous; env; env = env -> previous)
+        {
+            Tuple<MethodSymbol *> others(2);
+            SemanticEnvironment *found_other;
+            SearchForMethodInEnvironment(others, found_other, env, method_call);
+
+            if (others.Length() > 0)
+            {
+                ReportSemError(SemanticError::HIDDEN_METHOD_IN_ENCLOSING_CLASS,
+                               method_call -> LeftToken(),
+                               method_call -> RightToken(),
+                               others[0] -> Header(),
+                               others[0] -> containing_type -> ContainingPackage() -> PackageName(),
+                               others[0] -> containing_type -> ExternalName());
+
+                symbol_found = true;
+                break;
+            }
+        }
+
+        //
+        // If a method in an enclosing class was not found. Search for a similar visible field 
+        // or a private method with the name.
+        //
+        for (env = stack; env && (! symbol_found); env = env -> previous)
         {
             TypeSymbol *type = env -> Type();
 
@@ -663,6 +702,10 @@ assert(enclosing_type);
             }
         }
 
+        //
+        // Finally, if we did not find a method or field name that matches, look for a type
+        // with that name.
+        //
         if (! symbol_found)
         {
             if (FindType(simple_name -> identifier_token))

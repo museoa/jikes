@@ -111,6 +111,7 @@ public:
         METHOD_NOT_FOUND,
         METHOD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE,
         METHOD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE,
+        HIDDEN_METHOD_IN_ENCLOSING_CLASS,
         FIELD_NOT_METHOD,
         TYPE_NOT_METHOD,
         TYPE_NOT_FIELD,
@@ -413,6 +414,7 @@ private:
     static void PrintMETHOD_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
     static void PrintMETHOD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
     static void PrintMETHOD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
+    static void PrintHIDDEN_METHOD_IN_ENCLOSING_CLASS(ErrorInfo &, LexStream *, Control &);
     static void PrintFIELD_NOT_METHOD(ErrorInfo &, LexStream *, Control &);
     static void PrintTYPE_NOT_METHOD(ErrorInfo &, LexStream *, Control &);
     static void PrintTYPE_NOT_FIELD(ErrorInfo &, LexStream *, Control &);
