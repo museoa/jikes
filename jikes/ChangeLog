@@ -1,3 +1,8 @@
+2001-05-04  Pascal Davoust  <davoustp@yahoo.com>
+
+	* control.cpp (Control): fix MSVC build break
+	because of duplicate variables in for loops.
+
 2001-05-04  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/lookup.h (IsConstant): 
@@ -8,9 +13,10 @@
 
 2001-05-04  ??  <vajoczki@yahoo.com>
 
-	* src/bytecode.cpp(): Workaround for Sun JVM
-	TABLESWITCH bug in JDK 1.2, 1.3 which causes a
-	VerifyError (bug 167, 14.10-runtime-verifier-1)
+	* src/bytecode.cpp (EmitSwitchStatement):
+	Workaround for Sun JVM TABLESWITCH bug in JDK
+	1.2, 1.3 which causes a VerifyError (bug 167,
+	jacks 14.10-runtime-verifier-1)
 
 2001-05-01  Eric Blake  <ebb9@email.byu.edu>
 

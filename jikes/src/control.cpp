@@ -180,12 +180,13 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
     //
     //
     //
-    for (int l = 0; l < bad_dirnames.Length(); ++l)
+    int l;
+    for (l = 0; l < bad_dirnames.Length(); ++l)
     {
         system_semantic -> ReportSemError(SemanticError::CANNOT_OPEN_PATH_DIRECTORY, 0, 0, bad_dirnames[l]);
     }
 
-    for (int l = 0; l < bad_zip_filenames.Length(); l++)
+    for (l = 0; l < bad_zip_filenames.Length(); l++)
     {
         system_semantic -> ReportSemError(SemanticError::CANNOT_OPEN_ZIP_FILE, 0, 0, bad_zip_filenames[l]);
 
