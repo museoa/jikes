@@ -986,8 +986,12 @@ void Control::ProcessExtDirs()
                             // + 1 for possible '/' between path and file.
                             int fullpath_length = input_name_length +
                                 entry_length + 1;
+			    char * ending = &(entry->d_name[entry_length-3]);
+			    // skip ., .., and things that are neither zip nor jar
                             if (! strcmp(entry->d_name, U8S_DO) ||
-                                ! strcmp(entry->d_name, U8S_DO_DO))
+                                ! strcmp(entry->d_name, U8S_DO_DO) ||
+				  ( strcasecmp(ending, "zip") &&
+				    strcasecmp(ending, "jar")    ) )
                                 continue;
 
                             char* extdir_entry = new char[fullpath_length + 1];
@@ -1053,9 +1057,12 @@ void Control::ProcessExtDirs()
                             // + 1 for possible '/' between path and file.
                             int fullpath_length = input_name_length +
                                 entry_length + 1;
-
-                            if ((! strcmp(entry.cFileName, ".")) ||
-                                 (! strcmp(entry.cFileName, "..")))
+			    char * ending = &(entry->d_name[entry_length-3]);
+			    // skip ., .., and things that are neither zip nor jar
+                            if ((! strcmp(entry.cFileName, "." )) ||
+                                (! strcmp(entry.cFileName, "..")) ||
+				  ( strcasecmp(ending, "zip") &&
+				    strcasecmp(ending, "jar")    ) )
                                 continue;
 
                             char* extdir_entry = new char[fullpath_length + 1];

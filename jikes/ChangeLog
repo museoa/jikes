@@ -1,3 +1,9 @@
+2004-01-28  Chris Abbey  <jikes@cabbey.net>
+
+	* src/system.cpp (Control::ProcessExtDirs): Don't spew
+	an error about invalid zip or jar for files that are
+	obviously neither zip nor jar.
+
 2004-01-28  Eric Blake  <ebb9@byu.net>
 
 	* src/bytecode.h (IsMultiDimensionalArray): New method.
