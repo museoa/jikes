@@ -1,4 +1,9 @@
-2002-06-27  Eric Blake  <ebb9@email.byu.edu>
+2002-06-28  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/expr.cpp (ProcessMOD): Fix bug from incomplete patch on the
+	22nd - bug 3006.
+
+2002-06-28  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.cpp: Minor formatting improvements.
 	(EmitTryStatement): Emit exception handlers in correct order -

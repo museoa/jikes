@@ -6556,8 +6556,6 @@ void Semantic::ProcessMOD(AstBinaryExpression *expr)
                 ReportSemError(SemanticError::ZERO_DIVIDE_CAUTION,
                                expr -> LeftToken(),
                                expr -> RightToken());
-                if (left_expression -> IsConstant())
-                    expr -> symbol = control.no_type;
             }
             else if (left_expression -> IsConstant())
             {
