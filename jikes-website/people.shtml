@@ -102,7 +102,7 @@
 
     <h1>In the here and now</h1>
       
-      <h2>Project Administration</h2>
+      <a name="admin"><h2>Project Administration</h2></a>
 
         <P><b>Name:</b> Mo DeJong<BR>
            <b>Organization:</b> Red Hat Inc<BR>
@@ -118,12 +118,11 @@
            <b>Occupation:</b> Staff Software Engineer, SanFrancisco Distributed Object Infrastructure Development and Support<BR>
            <b>Location:</b> Rochester, MN, USA<BR>
            <b>Comments:</b> java geek, open source bigot, linux advocate, thorn in management's side<BR>
-           <b>Contributions:</b> AIX support &amp; binary, a few patches, some testcases, support structure liaison.</p>
+           <b>Contributions:</b> AIX support &amp; binary, a few patches, some testcases, support structure liaison. Note that I defer all code related matter to Mo, so if he rejects a patch, don't appeal to me... take a reasoned argument to jikes-dev.</p>
         
-      <h2>Project Contributors</h2>
+      <a name=contrib"><h2>Project Contributors</h2></a>
         <p>Folks who have through their repeated contributions to and outstanding participation
-        in the project have gained the notice of the project administration. All are active on
-        the Jikes-dev mailing list. (in some semblence of chronology)
+        in the project have gained the notice of the project administration. (in some semblence of chronology)
         
         <P><b>Name:</b> C. Scott Ananian<BR>
            <b>Email:</b> <A HREF="mailto:">cananian@alumni.princeton.edu</A><BR>

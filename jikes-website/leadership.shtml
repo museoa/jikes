@@ -7,26 +7,21 @@
 
 <h1>Jikes Steering Committee</h1>
 
-<p>The Jikes project is managed by a small, core group of
-individuals known as the Jikes Steering Committee. In addition to having
-read-write access to the Jikes source code repository, this group has
-the following responsibilities: 
+<p>The Jikes project is overseen by a small group of individuals known
+as the Jikes Steering Committee. This group has the following responsibilities: 
 
 <UL>
-        <LI>Enforcing strict compliance to the language specification
-        <LI>Deciding which features go into which releases 
-        <LI>Deciding who has access to the Jikes source code repository (who is a Jikes <I>contributor</I>) 
-        <LI>Approving the check-in of new or changed source code and documentation 
-        <LI>Appointing new members of the core team. 
-        <LI>Updating the Jikes charter, if necessary. 
+        <LI>Enforcing strict compliance to the language specification.
+        <LI>Deciding which features go into which releases when
+	the project administrators are unable to decide.
+        <LI>Appointing new members of the Steering Committee and new Project
+	Administraitors.
 </UL>
 
 New members of the Jikes Steering Committee are added when a frequent
 contributor is nominated by a member of the Steering Committee and unanimously
-approved by all members. In most cases, developers will have actively
-contributed to Jikes development for at least six months before being
-considered for membership on the Steering Committee. The goal is to keep the
-membership of the core group low (5 to 10 people) in order to
+approved by all members. The goal is to keep the
+membership of the Committee low (5 to 10 people) in order to
 minimize the amount of bureaucratic overhead required to keep the
 project running. 
 
@@ -36,58 +31,41 @@ disruptive to the development process or ceases to contribute for a
 long period, he or she may be removed by a unanimous vote of the
 remaining members of the Steering Committee.
 
-<P>The Steering Committee is responsible for maintaining and updating the Jikes
-charter. Any changes to the development process necessitate a change to the
-charter. Changes must be unanimously approved by all members of the Steering Committee.
-
 <P>The current members of the Jikes Steering Committee are listed on the
 <a href="people.shtml">people page</a>
 
+<h1>Jikes Project Administrators</h1>
+<p>The day to day, and release to release decisions on the project
+are handled by the <a href="people.shtml#admin">Project Administraitors</a>.
+They have read-write access to the CVS repository and adminstrative control
+over the Jikes Project space within developerWorks.
+
+<P>
+In the unlikely event that a Project Adminstraitor becomes
+disruptive to the development process or ceases to contribute for a
+long period, he or she may be removed by a majority vote of the
+Steering Committee. New Project Adminstraitors will be named on
+an as needed basis by the Steering Committee and will in most cases
+have been actively contributing to the project for at least a year.
+<!--except chris, who seems to have given himself a promotion in the
+process of rewriting this web page-->
+
+<P>The current Project Adminstraitors are listed on the
+<a href="people.shtml#admin">people page</a>.
+
+
 <h1>Jikes contributors</h1>
-<p>In addition to the Jikes Steering Committee, there may be a number of
-<I>contributors</I> to the Jikes project. Contributors are individual
-or company-affiliated developers who have read-write access to the
-Jikes source code repository. New Jikes contributors are added when a
-developer is nominated by a member of the Steering Committee and is approved
-by at least 50% of the Steering Committee members, with no &quot;no&quot;
-votes. In most cases, new contributors will have already been
-participating in the development process by submitting suggestions
-and/or fixes using the bug report page or newsgroups. 
+<p>Contributors are individual or company-affiliated developers who have
+registered developer level access to the Jikes Project in developerWorks.
+New Jikes contributors are added when a developer is recognized by the
+Project Administraitors or a member of the Steering Committee and is approved
+by at least half of the Steering Committee, without any &quot;no&quot;
+votes, or by unanimous agreement of the Project Adminstraitors. In most cases,
+new contributors will have already been participating in the development process
+by submitting patches, bug reportss, testcases and/or binaries for at least
+a few months.
 
-<P>No Jikes contributors have yet been named. 
-
-<h1>Jikes steward</h1>
-<p>One member of the Jikes Steering Committee, chosen by IBM, serves as the
-steward.  Should it become necessary to select a new steward, IBM may
-either designate an existing member of the core team, or select a new
-person, who then also becomes a member of the Steering Committee.
-
-<p>
-IBM is committed to open standards and Java standardization.  The
-steward has the responsibility for seeing that the project maintains
-as its principal goal strict adherence to the language specification,
-and so has unrestricted read-write access to the source repository.
-
-<p>
-IBM is committed to certain core values and business practices.  The
-Steering Committee respects this commitment, and the steward has the
-responsibility to maintain the continued existence of the project,
-and extraordinary authority to remedy any situation that, if
-unresolved, would make it unacceptable for IBM to provide continuing
-support, including the resources used to host the project's web pages.
-
-<p>
-It is hoped this extraordinary authority will never be exercised. The
-normal role of the steward is that of a Steering Committee member, and it is
-expected that he or she make it clear if and when they are excercising
-extraordinary powers in the role of steward.
-
-<P>The current steward is:<br> 
-		
-        David Shields<br>
-		IBM Corporation<br>
-		<A HREF="mailto:shields@watson.ibm.com">shields@watson.ibm.com</a></p>
-
+<p>Contributors are listed on the <a href="people.shtml#contrib">people page</a>.
 
 <h1>Copyright notice for contributions</h1>
 <p>Jikes is covered by the <A HREF="/developerworks/opensource/license10.html">IBM Public License</A>.

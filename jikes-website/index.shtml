@@ -38,13 +38,13 @@
           General Interest
           <ul>
             <li><a href="people.shtml">People</a>
-	    <li><a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf">Old discusion database at IBM Research</a><small>includes the queries to Sun about the JLS</small>
+	    <li><a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf">Old discusion<br>database at<br>IBM Research</a><small>includes the queries<br>to Sun about<br>the JLS.</small>
 	    <li><a href="steering.shtml">Jikes Steering Committee</a>
           </ul>
           <hr>
           Related Links
           <ul>
-            <li><a href="../jacks/">Jacks Project</a>
+            <li><a href="/developerworks/projects/jacks/">Jacks Project</a>
             <li><a href="http://www.ergnosis.com/java-spec-report/">Java Spec Report</a>
 	    <li><a href="http://ibm.com/java/jdk/">The Best JVMs on the planet</a>
           </ul>
