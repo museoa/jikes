@@ -1,10 +1,15 @@
+2004-05-05  Chris Abbey  <jikes@cabbey.net>
+
+	* distribs.shtml: added Gentoo and OpenDarwin ports, corrected
+	debian search link
+
 2004-04-21  Elliot Hughes  <enh@acm.org>
 
 	* faq/dev-mac.shtml: minor updates.
 
 2004-04-20  Chris Abbey  <jikes@cabbey.net>
 
-	* ndex.shtml: fix typo pointed out by Jonathan Adam Mcgee
+	* index.shtml: fix typo pointed out by Jonathan Adam Mcgee
 	
 2004-02-22  Elliott Hughes  <enh@acm.org>
 

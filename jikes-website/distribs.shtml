@@ -11,8 +11,8 @@
 
     <TABLE BORDER=0 ALIGN="CENTER">
       <TR VALIGN="MIDDLE">
-        <TD ALIGN="RIGHT"><a href="http://packages.debian.org/jikes*"><IMG SRC="images/debian.jpg" alt="" BORDER=0 HEIGHT=61 WIDTH=50></A></TD>
-        <TD ALIGN="LEFT" ><a href="http://packages.debian.org/jikes*">Debian</a> - (<small><a href="http://packages.qa.debian.org/j/jikes.html">see also</a></small>)</TD>
+        <TD ALIGN="RIGHT"><a href="http://packages.debian.org/jikes"><IMG SRC="images/debian.jpg" alt="" BORDER=0 HEIGHT=61 WIDTH=50></A></TD>
+        <TD ALIGN="LEFT" ><a href="http://packages.debian.org/jikes">Debian</a> - (<small><a href="http://packages.qa.debian.org/j/jikes.html">see also</a></small>)</TD>
       </TR><TR>
         <TD COLSPAN=2><HR></TD>
       </TR><TR VALIGN="MIDDLE">
@@ -23,6 +23,16 @@
       </TR><TR VALIGN="MIDDLE">
         <TD ALIGN="RIGHT"><a href="http://www.suse.com"><IMG SRC="images/suse.gif" alt="" BORDER=0 HEIGHT=76 WIDTH=108></A></TD>
         <TD ALIGN="LEFT" ><a href="http://www.suse.com">SuSE</a></TD>
+      </TR><TR>
+        <TD COLSPAN=2><HR></TD>
+      </TR><TR VALIGN="MIDDLE">
+        <TD ALIGN="RIGHT"><a href="http://packages.gentoo.org/packages/?category=dev-java;name=jikes"><IMG SRC="images/gentoo.png" alt="" BORDER=0 HEIGHT=66 WIDTH=68></A></TD>
+        <TD ALIGN="LEFT" ><a href="http://packages.gentoo.org/packages/?category=dev-java;name=jikes">Gentoo</a> - (<small>in portage</small>)</TD>
+      </TR><TR>
+        <TD COLSPAN=2><HR></TD>
+      </TR><TR VALIGN="MIDDLE">
+        <TD ALIGN="RIGHT"><a href="http://darwinports.opendarwin.org/ports/?by=name&amp;substr=jikes&amp;Search="><IMG SRC="images/opendarwin.png" alt="" BORDER=0 HEIGHT=80 WIDTH=80></A></TD>
+        <TD ALIGN="LEFT" ><a href="http://darwinports.opendarwin.org/ports/?by=name&amp;substr=jikes&amp;Search=">OpenDarwin</a> - (<small>in Darwin Ports</small>)</TD>
       </TR><TR>
         <TD COLSPAN=2><HR></TD>
       </TR><TR VALIGN="MIDDLE">
