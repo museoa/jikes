@@ -1,6 +1,11 @@
 2001-11-12  Eric Blake  <ebb9@email.byu.edu>
 
-	* src/expr.cpp (FindVariable*): Another regression in 229.
+	* src/bytecode.cpp (LoadImmediateInteger): Fix a regression from
+	my patch of bug 220.
+
+2001-11-12  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/expr.cpp (FindVariable*): Another regression in patch 229.
 
 2001-11-11  Eric Blake  <ebb9@email.byu.edu>
 

@@ -5205,24 +5205,24 @@ void ByteCode::LoadImmediateInteger(int val)
         PutOp(OP_BIPUSH);
         PutU1(val);
     }
-    else
+    else if (val >= -32768 && val < 32768)
     {
         //
         // For a short value, look to see if it is already in the constant
         // pool. In such a case, ldc is two bytes, while sipush is three, so
         // we emit a smaller classfile with no penalty to a good JIT. Note
-        // that ldc_w does not buy us anything, however. Outside the range of
-        // sipush, we must use the constant pool.
+        // that ldc_w does not buy us anything, however.
         //
-        u2 index = (val >= -32768 && val < 32768 ? FindInteger(this_control.int_pool.Find(val))
-                                                 : RegisterInteger(this_control.int_pool.FindOrInsert(val)));
-        if (index == 0 || index > 255) // a short value where ldc is overkill
+        u2 index = FindInteger(this_control.int_pool.Find(val));
+        if (index == 0 || index > 255) 
         {
             PutOp(OP_SIPUSH);
             PutU2(val);
         }
         else LoadConstantAtIndex(index);
     }
+    // Outside the range of sipush, we must use the constant pool.
+    else LoadConstantAtIndex(RegisterInteger(this_control.int_pool.FindOrInsert(val)));
 }
 
 
