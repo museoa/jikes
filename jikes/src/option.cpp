@@ -183,6 +183,51 @@ ArgumentExpander::ArgumentExpander(Tuple<char> &line)
 }
 
 
+wchar_t* OptionError::GetErrorMessage()
+{
+    ErrorString s;
+
+    switch (kind)
+    {
+    case INVALID_OPTION:
+        s << '\"' << name << "\" is an invalid option.";
+        break;
+    case MISSING_OPTION_ARGUMENT:
+        s << '\"' << name << "\" requires an argument.";
+        break;
+    case INVALID_K_OPTION:
+        s << "No argument specified for +K option. The proper form is \"+Kxxx=xxx\" (with no intervening space).";
+        break;
+    case INVALID_K_TARGET:
+        s << '\"' << name
+          << "\" is not a valid target in a +K option. The target must be a numeric type or boolean.";
+        break;
+    case INVALID_TAB_VALUE:
+        s << '\"' << name
+          << "\" is not a valid tab size. An integer value is expected.";
+        break;
+    case INVALID_DIRECTORY:
+        s << "The directory specified in the \"-d\" option, \"" << name
+          << "\", is either invalid or it could not be expanded.";
+        break;
+    case UNSUPPORTED_ENCODING:
+        s << "Unsupported encoding: \"" << name << "\".";
+        break;
+    case UNSUPPORTED_OPTION:
+        s << "The option \"" << name
+          << "\" is unsupported in this build.";
+        break;
+    case DISABLED_OPTION:
+        s << "This option \"" << name
+          << "\" has been temporarily disabled.";
+        break;
+    default:
+        assert(false && "invalid OptionError kind");
+    }
+    return s.Array();
+}
+
+
 #ifdef WIN32_FILE_SYSTEM
 void Option::SaveCurrentDirectoryOnDisk(char c)
 {
@@ -310,71 +355,39 @@ Option::Option(ArgumentExpander &arguments) :
     {
         if (arguments.argv[i][0] == '-')
         {
-            if (strcmp(arguments.argv[i], "-classpath") == 0 &&
-                ((i + 1) < arguments.argc))
+            if (strcmp(arguments.argv[i], "-bootclasspath") == 0 ||
+                strcmp(arguments.argv[i], "--bootclasspath") == 0)
             {
-                // Create a clean copy of the -classpath argument so we can modify
-                //   this copy and delete it later in ~JikesOption
-                classpath = makeStrippedCopy(arguments.argv[++i]);
-            }
-            else if (strcmp(arguments.argv[i], "-bootclasspath") == 0 &&
-                     ((i + 1) < arguments.argc))
-            {
-                // Create a clean copy of the -bootclasspath argument so we can
-                // modify this copy and delete it later in ~JikesOption
+                if (i + 1 == arguments.argc)
+                {
+                    bad_options.Next() = new OptionError(OptionError::MISSING_OPTION_ARGUMENT, arguments.argv[i]);
+                    continue;
+                }
+                // Create a clean copy of the -bootclasspath argument so we
+                // can modify this copy and delete it later in ~JikesOption
                 bootclasspath = makeStrippedCopy(arguments.argv[++i]);
             }
-            else if (strcmp(arguments.argv[i], "-extdirs") == 0 &&
-                     ((i + 1) < arguments.argc))
+            else if (strcmp(arguments.argv[i], "-classpath") == 0 ||
+                     strcmp(arguments.argv[i], "--classpath") == 0 ||
+                     strcmp(arguments.argv[i], "-cp") == 0)
             {
-                // Create a clean copy of the -extdirs argument so we can modify
-                // this copy and delete it later in ~JikesOption
-                extdirs = makeStrippedCopy(arguments.argv[++i]);
-            }
-            else if (strcmp(arguments.argv[i], "-sourcepath") == 0 &&
-                     ((i + 1) < arguments.argc))
-            {
-                // Create a clean copy of the -sourcepath argument so we can
-                // modify this copy and delete it later in ~JikesOption
-                sourcepath = makeStrippedCopy(arguments.argv[++i]);
-            }
-            else if (strcmp(arguments.argv[i], "-depend") == 0 ||
-                     strcmp(arguments.argv[i], "-Xdepend") == 0)
-                 depend = true;
-#if defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
-            else if (strcmp(arguments.argv[i], "-encoding") == 0 &&
-                     ((i + 1) < arguments.argc))
-            {
-                i++;
-                encoding = new char[strlen(arguments.argv[i]) + 1];
-                strcpy(encoding, arguments.argv[i]);
-                if (! Stream::IsSupportedEncoding(encoding))
+                if (i + 1 == arguments.argc)
                 {
-                    bad_options.Next() =
-                        new OptionError(SemanticError::UNSUPPORTED_ENCODING, encoding);
-                    encoding = NULL;
+                    bad_options.Next() = new OptionError(OptionError::MISSING_OPTION_ARGUMENT, arguments.argv[i]);
+                    continue;
                 }
-
-                continue;
+                // Create a clean copy of the -classpath argument so we can
+                // modify this copy and delete it later in ~JikesOption
+                classpath = makeStrippedCopy(arguments.argv[++i]);
             }
-#endif // defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
-            else if (strcmp(arguments.argv[i], "-verbose") == 0)
-                 verbose = true;
-            else if (strcmp(arguments.argv[i], "-g") == 0)
-                 g = true;
-            else if (strcmp(arguments.argv[i], "-O") == 0)
-                 O = true;
-            else if (strcmp(arguments.argv[i], "-deprecation") == 0)
-                 deprecation = true;
-            else if (strcmp(arguments.argv[i], "-nowrite") == 0)
-                 nowrite = true;
-            else if (strcmp(arguments.argv[i], "-nowarn") == 0)
-                 nowarn = true;
-            else if (strcmp(arguments.argv[i], "-Xstdout") == 0)
-                 Coutput.StandardOutput();
-            else if (strcmp(arguments.argv[i], "-d") == 0 &&
-                     ((i + 1) < arguments.argc))
+            else if (strcmp(arguments.argv[i], "-d") == 0 ||
+                     strcmp(arguments.argv[i], "--target-directory") == 0)
             {
+                if (i + 1 == arguments.argc)
+                {
+                    bad_options.Next() = new OptionError(OptionError::MISSING_OPTION_ARGUMENT, arguments.argv[i]);
+                    continue;
+                }
                 ++i;
 #if defined(UNIX_FILE_SYSTEM)
                 int length = strlen(arguments.argv[i]);
@@ -382,10 +395,10 @@ Option::Option(ArgumentExpander &arguments) :
                 strcpy(directory, arguments.argv[i]);
 #elif defined(WIN32_FILE_SYSTEM)
                 char disk = (strlen(arguments.argv[i]) >= 2 &&
-                            Case::IsAsciiAlpha(arguments.argv[i][0]) &&
-                            arguments.argv[i][1] == U_COLON
-                                     ? arguments.argv[i][0]
-                                     : 0);
+                             Case::IsAsciiAlpha(arguments.argv[i][0]) &&
+                             arguments.argv[i][1] == (U_COLON
+                                                      ? arguments.argv[i][0]
+                                                      : 0));
                 SaveCurrentDirectoryOnDisk(disk);
                 if (SetCurrentDirectory(arguments.argv[i]))
                 {
@@ -404,7 +417,7 @@ Option::Option(ArgumentExpander &arguments) :
                 SetMainCurrentDirectory();       // reset the real current directory...
 
                 if (! directory)
-                    bad_options.Next() = new OptionError(SemanticError::INVALID_DIRECTORY, arguments.argv[i]);
+                    bad_options.Next() = new OptionError(OptionError::INVALID_DIRECTORY, arguments.argv[i]);
 #endif // WIN32_FILE_SYSTEM
                 if (directory)
                 {
@@ -412,11 +425,181 @@ Option::Option(ArgumentExpander &arguments) :
                         *ptr = (*ptr != U_BACKSLASH ? *ptr : (char) U_SLASH); // turn '\' to '/'.
                 }
             }
-            else bad_options.Next() = new OptionError(SemanticError::INVALID_OPTION, arguments.argv[i]);
+            else if (strcmp(arguments.argv[i], "-debug") == 0)
+                ; // Ignore for compatibility.
+            else if (strcmp(arguments.argv[i], "-depend") == 0 ||
+                     strcmp(arguments.argv[i], "--depend") == 0 ||
+                     strcmp(arguments.argv[i], "-Xdepend") == 0)
+                 depend = true;
+            else if (strcmp(arguments.argv[i], "-deprecation") == 0 ||
+                     strcmp(arguments.argv[i], "--deprecation") == 0)
+                 deprecation = true;
+            else if (strcmp(arguments.argv[i], "-encoding") == 0 ||
+                     strcmp(arguments.argv[i], "--encoding") == 0)
+            {
+                if (i + 1 == arguments.argc)
+                {
+                    bad_options.Next() = new OptionError(OptionError::MISSING_OPTION_ARGUMENT, arguments.argv[i]);
+                    continue;
+                }
+                i++;
+#if defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
+                encoding = new char[strlen(arguments.argv[i]) + 1];
+                strcpy(encoding, arguments.argv[i]);
+                if (! Stream::IsSupportedEncoding(encoding))
+                {
+                    bad_options.Next() =
+                        new OptionError(OptionError::UNSUPPORTED_ENCODING, encoding);
+                    encoding = NULL;
+                }
+
+#else // ! defined(HAVE_LIBICU_UC) && ! defined(HAVE_ICONV_H)
+                bad_options.Next() = new OptionError(OptionError::UNSUPPORTED_OPTION, "-encoding");
+#endif // ! defined(HAVE_LIBICU_UC) && ! defined(HAVE_ICONV_H)
+            }
+            else if (strcmp(arguments.argv[i], "-extdirs") == 0 ||
+                     strcmp(arguments.argv[i], "--extdirs") == 0)
+            {
+                if (i + 1 == arguments.argc)
+                {
+                    bad_options.Next() = new OptionError(OptionError::MISSING_OPTION_ARGUMENT, arguments.argv[i]);
+                    continue;
+                }
+                // Create a clean copy of the -extdirs argument so we can
+                // modify this copy and delete it later in ~JikesOption
+                extdirs = makeStrippedCopy(arguments.argv[++i]);
+            }
+            else if (arguments.argv[i][1] == 'g')
+            {
+                // This defaults to SOURCE | LINES if no -g option was
+                // explicitly specified. "-g" is equivalent to
+                // "-g:source,lines,vars".
+                if (strcmp(arguments.argv[i], "-g:none") == 0)
+                    g = NONE;
+                else if (strcmp(arguments.argv[i], "-g:source") == 0)
+                    g = SOURCE;
+                else if (strcmp(arguments.argv[i], "-g:lines") == 0)
+                    g = LINES;
+                else if (strcmp(arguments.argv[i], "-g:vars") == 0)
+                    g = VARS;
+                else if (strcmp(arguments.argv[i], "-g:source,lines") == 0 ||
+                         strcmp(arguments.argv[i], "-g:lines,source") == 0)
+                    g = SOURCE | LINES;
+                else if (strcmp(arguments.argv[i], "-g:source,vars") == 0 ||
+                         strcmp(arguments.argv[i], "-g:vars,source") == 0)
+                    g = SOURCE | VARS;
+                else if (strcmp(arguments.argv[i], "-g:lines,vars") == 0 ||
+                         strcmp(arguments.argv[i], "-g:vars,lines") == 0)
+                    g = LINES | VARS;
+                else if (strcmp(arguments.argv[i], "-g") == 0 ||
+                         strcmp(arguments.argv[i], "-g:source,lines,vars") == 0 ||
+                         strcmp(arguments.argv[i], "-g:source,vars,lines") == 0 ||
+                         strcmp(arguments.argv[i], "-g:lines,source,vars") == 0 ||
+                         strcmp(arguments.argv[i], "-g:lines,vars,source") == 0 ||
+                         strcmp(arguments.argv[i], "-g:vars,source,lines") == 0 ||
+                         strcmp(arguments.argv[i], "-g:vars,lines,source") == 0)
+                    g = SOURCE | LINES | VARS;
+                else bad_options.Next() = new OptionError(OptionError::INVALID_OPTION, arguments.argv[i]);
+            }
+            else if (strcmp(arguments.argv[i], "-help") == 0 ||
+                     strcmp(arguments.argv[i], "--help") == 0 ||
+                     strcmp(arguments.argv[i], "-h") == 0 ||
+                     strcmp(arguments.argv[i], "-?") == 0)
+                 help = true;
+            else if (arguments.argv[i][1] == 'J')
+                 ; // Ignore for compatibility.
+            else if (strcmp(arguments.argv[i], "-nowarn") == 0 ||
+                     strcmp(arguments.argv[i], "--nowarn") == 0 ||
+                     strcmp(arguments.argv[i], "-q") == 0)
+                 nowarn = true;
+            else if (strcmp(arguments.argv[i], "-nowrite") == 0 ||
+                     strcmp(arguments.argv[i], "--nowrite") == 0)
+                 nowrite = true;
+            else if (strcmp(arguments.argv[i], "-O") == 0 ||
+                     strcmp(arguments.argv[i], "--optimize") == 0)
+                 optimize = true;
+            else if (strcmp(arguments.argv[i], "-source") == 0 ||
+                     strcmp(arguments.argv[i], "--source") == 0)
+            {
+                if (i + 1 == arguments.argc)
+                {
+                    bad_options.Next() = new OptionError(OptionError::MISSING_OPTION_ARGUMENT, arguments.argv[i]);
+                    continue;
+                }
+                // For now, this defaults to SDK1_3 if not specified.
+                i++;
+                if (strcmp(arguments.argv[i], "1.1"))
+                    source = SDK1_1;
+                else if (strcmp(arguments.argv[i], "1.2"))
+                    source = SDK1_2;
+                else if (strcmp(arguments.argv[i], "1.3"))
+                    source = SDK1_3;
+                else if (strcmp(arguments.argv[i], "1.4"))
+                    source = SDK1_4;
+                else bad_options.Next() = new OptionError(OptionError::INVALID_OPTION, "-source");
+            }
+            else if (strcmp(arguments.argv[i], "-sourcepath") == 0 ||
+                     strcmp(arguments.argv[i], "--sourcepath") == 0)
+            {
+                if (i + 1 == arguments.argc)
+                {
+                    bad_options.Next() = new OptionError(OptionError::MISSING_OPTION_ARGUMENT, arguments.argv[i]);
+                    continue;
+                }
+                // Create a clean copy of the -sourcepath argument so we can
+                // modify this copy and delete it later in ~JikesOption
+                sourcepath = makeStrippedCopy(arguments.argv[++i]);
+            }
+            else if (strcmp(arguments.argv[i], "-target") == 0 ||
+                     strcmp(arguments.argv[i], "--target") == 0)
+            {
+                if (i + 1 == arguments.argc)
+                {
+                    bad_options.Next() = new OptionError(OptionError::MISSING_OPTION_ARGUMENT, arguments.argv[i]);
+                    continue;
+                }
+                // This defaults to the value of source if not specified, or
+                // specified to a value less than source.
+                i++;
+                if (strcmp(arguments.argv[i], "1.1"))
+                    target = SDK1_1;
+                else if (strcmp(arguments.argv[i], "1.2"))
+                    target = SDK1_2;
+                else if (strcmp(arguments.argv[i], "1.3"))
+                    target = SDK1_3;
+                else if (strcmp(arguments.argv[i], "1.4"))
+                    target = SDK1_4;
+                else bad_options.Next() = new OptionError(OptionError::INVALID_OPTION, "-target");
+            }
+            else if (strcmp(arguments.argv[i], "-verbose") == 0 ||
+                     strcmp(arguments.argv[i], "--verbose") == 0 ||
+                     strcmp(arguments.argv[i], "-v") == 0)
+                verbose = true;
+            else if (strcmp(arguments.argv[i], "-version") == 0 ||
+                     strcmp(arguments.argv[i], "--version") == 0 ||
+                     strcmp(arguments.argv[i], "-V") == 0)
+                version = true;
+            else if (strcmp(arguments.argv[i], "-Xstdout") == 0)
+                //
+                // FIXME: Javac 1.3 takes an argument to -Xstdout, as the name
+                // of the file where to direct output. It is not a unary
+                // flag to direct output to stdout instead of stderr.
+                //
+                Coutput.StandardOutput();
+            else if (arguments.argv[i][1] == 'X')
+                // Note that we've already consumed -Xdepend and -Xstdout
+                bad_options.Next() = new OptionError(OptionError::UNSUPPORTED_OPTION, arguments.argv[i]);
+            else bad_options.Next() = new OptionError(OptionError::INVALID_OPTION, arguments.argv[i]);
         }
         else if (arguments.argv[i][0] == '+')
         {
-            if (strcmp(arguments.argv[i], "+A") == 0)
+            if (strcmp(arguments.argv[i], "++") == 0)
+            {
+                 incremental = true;
+                 full_check = true;
+            }
+#ifdef JIKES_DEBUG
+            else if (strcmp(arguments.argv[i], "+A") == 0)
                  debug_dump_ast = true;
             else if (strcmp(arguments.argv[i], "+u") == 0)
                  debug_unparse_ast = true;
@@ -425,12 +608,15 @@ Option::Option(ArgumentExpander &arguments) :
                 debug_unparse_ast = true;
                 debug_unparse_ast_debug = true;
             }
+#endif // JIKES_DEBUG
             else if (strcmp(arguments.argv[i], "+B") == 0)
                  bytecode = false;
+#ifdef JIKES_DEBUG
             else if (strcmp(arguments.argv[i], "+c") == 0)
                  comments = true;
             else if (strcmp(arguments.argv[i], "+C") == 0)
                  debug_dump_class = true;
+#endif // JIKES_DEBUG
             else if (strcmp(arguments.argv[i], "+OLDCSO") == 0)
                  old_classpath_search_order = true;
             else if (strcmp(arguments.argv[i], "+D") == 0)
@@ -450,7 +636,7 @@ Option::Option(ArgumentExpander &arguments) :
                     ;
 
                 if (*image != '=')
-                    bad_options.Next() = new OptionError(SemanticError::INVALID_K_OPTION, arguments.argv[i]);
+                    bad_options.Next() = new OptionError(OptionError::INVALID_K_OPTION, arguments.argv[i]);
                 else
                 {
                     int key = 0; // assume undefined
@@ -472,7 +658,7 @@ Option::Option(ArgumentExpander &arguments) :
                          key = TK_float;
                     else if (strcmp(image, "double") == 0)
                          key = TK_double;
-                    else bad_options.Next() = new OptionError(SemanticError::INVALID_K_TARGET, image);
+                    else bad_options.Next() = new OptionError(OptionError::INVALID_K_TARGET, image);
 
                     if (key != 0)
                     {
@@ -501,11 +687,13 @@ Option::Option(ArgumentExpander &arguments) :
                      new char[strlen(&arguments.argv[i][4]) + 1];
                  strcpy(dependence_report_name, &arguments.argv[i][4]);
             }
+#ifdef JIKES_DEBUG
             else if (strcmp(arguments.argv[i], "+O") == 0)
             {
                  debug_trap_op = atoi(arguments.argv[i + 1]);
                  i++;
             }
+#endif // JIKES_DEBUG
             else if (strcmp(arguments.argv[i], "+P") == 0)
                  pedantic = true;
             else if (arguments.argv[i][1] == 'T')
@@ -520,27 +708,30 @@ Option::Option(ArgumentExpander &arguments) :
                 }
 
                 if (*p)
-                     bad_options.Next() = new OptionError(SemanticError::INVALID_TAB_VALUE, image);
+                     bad_options.Next() = new OptionError(OptionError::INVALID_TAB_VALUE, image);
                 Tab::SetTabSize(tab_size == 0 ? Tab::DEFAULT_TAB_SIZE : tab_size);
             }
+#ifdef JIKES_DEBUG
             else if (strcmp(arguments.argv[i], "+L") == 0)
                  debug_dump_lex = true;
+#endif // JIKES_DEBUG
             else if (strcmp(arguments.argv[i], "+U") == 0)
             {
                  unzip = true;
                  full_check = true;
             }
-            else if (strcmp(arguments.argv[i], "++") == 0)
-            {
-                 incremental = true;
-                 full_check = true;
-            }
             else if (strcmp(arguments.argv[i], "+Z") == 0)
                  zero_defect = true;
-            else bad_options.Next() = new OptionError(SemanticError::INVALID_OPTION, arguments.argv[i]);
+            else bad_options.Next() = new OptionError(OptionError::INVALID_OPTION, arguments.argv[i]);
         }
         else filename_index.Next() = i;
     }
+
+    // Specify defaults for -source and -target.
+    if (source == UNKNOWN)
+        source = SDK1_3;
+    if (target < source)
+        target = source;
 
     if (! bootclasspath)
         // Create a clean copy of the bootclasspath envvar so we can modify

@@ -1486,6 +1486,14 @@ public:
         Semantic *sem = unit_type -> semantic_environment -> sem;
         Control &control = sem -> control;
 
+        char *class_file_name = unit_type -> ClassName();
+        if (control.option.verbose)
+        {
+            Coutput << "[write "
+                    << class_file_name
+                    << "]" << endl;
+        }
+
         if (! control.option.nowrite)
         {
             output_buffer.PutB4(magic);
@@ -1536,14 +1544,6 @@ public:
             output_buffer.PutB2(attributes.Length());
             for (int m = 0; m < attributes.Length(); m++)
                 attributes[m] -> Put(output_buffer);
-
-            char *class_file_name = unit_type -> ClassName();
-            if (control.option.verbose)
-            {
-                Coutput << "[write "
-                        << class_file_name
-                        << "]" << endl;
-            }
 
             if (! output_buffer.WriteToFile(class_file_name))
             {

@@ -296,8 +296,10 @@ public:
     {
         block = new AstBlock*[stack_size];
         definite_pairs = new DefinitePairs*[stack_size];
-        local_variables = (VariableSymbol ***) (control.option.g ? new VariableSymbol**[stack_size] : NULL);
-        locally_defined_variables = (BitSet **) (control.option.g ? new BitSet*[stack_size] : NULL);
+        local_variables = (VariableSymbol ***) ((control.option.g & JikesOption::VARS)
+                                                ? new VariableSymbol**[stack_size] : NULL);
+        locally_defined_variables = (BitSet **) ((control.option.g & JikesOption::VARS)
+                                                 ? new BitSet*[stack_size] : NULL);
 
         for (int i = 0; i < stack_size; i++)
         {

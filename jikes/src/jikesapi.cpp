@@ -95,7 +95,7 @@ JikesOption::~JikesOption()
     delete [] sourcepath;
 }
 
-JikesOption::JikesOption():
+JikesOption::JikesOption() :
     bootclasspath(NULL),
     extdirs(NULL),
     classpath(NULL),
@@ -104,13 +104,17 @@ JikesOption::JikesOption():
     encoding(NULL),
     nowrite(false),
     deprecation(false),
-    O(false),
-    g(false),
+    optimize(false),
     verbose(false),
     depend(false),
     nowarn(false),
     old_classpath_search_order(false),
-    zero_defect(false)
+    zero_defect(false),
+    help(false),
+    version(false),
+    g(SOURCE | LINES),
+    source(UNKNOWN),
+    target(UNKNOWN)
 {
 }
 
@@ -158,24 +162,28 @@ char ** JikesAPI::parseOptions(int argc, char **argv)
     ArgumentExpander *args = new ArgumentExpander(argc, argv);
     Option* opt = new Option(*args);
     option = opt;
-    int n = args->argc - opt->first_file_index;
+    int n = args -> argc - opt -> first_file_index;
+    int i;
 
-    if (n <= 0)
+    if (n <= 0 || opt -> bad_options.Length() > 0)
     {
+        for (i = 0; i < opt -> bad_options.Length(); i++)
+            Coutput << opt -> bad_options[i] -> GetErrorMessage() << endl;
         delete args;
         return NULL;
     }
     else
     {
-        parsedOptions = new char*[n+1];
-        for (int i=0; i<n; i++)
+        parsedOptions = new char*[n + 1];
+        for (i = 0; i < n; i++)
         {
-            const char *o = args->argv[opt->first_file_index+i];
+            const char *o = args -> argv[opt -> first_file_index + i];
             if (o)
             {
-                parsedOptions[i] = new char[strlen(o)+1];
-                strcpy(parsedOptions[i],o);
-            } else
+                parsedOptions[i] = new char[strlen(o) + 1];
+                strcpy(parsedOptions[i], o);
+            }
+            else
             {
                 parsedOptions[i] = NULL;
                 break;

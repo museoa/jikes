@@ -159,15 +159,9 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
 #endif
 
     //
+    // By this point, JikesAPI should have already handled bad options.
     //
-    //
-    for (int o = 0; o < option.bad_options.Length(); o++)
-    {
-        system_semantic -> ReportSemError((SemanticError::SemanticErrorKind) option.bad_options[o] -> kind,
-                                          0,
-                                          0,
-                                          option.bad_options[o] -> name);
-    }
+    assert(option.bad_options.Length() == 0);
 
     if (java_util_package -> directory.Length() == 0)
     {

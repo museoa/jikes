@@ -54,21 +54,33 @@ public:
 class OptionError
 {
 public:
-    int kind;
-    wchar_t *name;
-
-    OptionError(int kind_, char *str) : kind(kind_)
+    enum OptionErrorKind
     {
-        int length = strlen(str);
-        name = new wchar_t[length + 1];
-        for (int i = 0; i < length; i++)
-            name[i] = str[i];
-        name[length] = U_NULL;
+        INVALID_OPTION,
+        MISSING_OPTION_ARGUMENT,
+        INVALID_K_OPTION,
+        INVALID_K_TARGET,
+        INVALID_TAB_VALUE,
+        INVALID_DIRECTORY,
+        UNSUPPORTED_ENCODING,
+        UNSUPPORTED_OPTION,
+        DISABLED_OPTION
+    };
 
+    OptionError(OptionErrorKind kind_, char *str) : kind(kind_)
+    {
+        name = new char[strlen(str) + 1];
+        strcpy(name, str);
         return;
     }
 
     ~OptionError() { delete [] name; }
+
+    wchar_t* GetErrorMessage();
+
+private:
+    OptionErrorKind kind;
+    char *name;
 };
 
 class Ostream;

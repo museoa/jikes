@@ -97,15 +97,6 @@ class SemanticError
         BAD_ERROR,
         DEFAULT_ERROR,
 
-        INVALID_OPTION,
-        INVALID_K_OPTION,
-        INVALID_K_TARGET,
-        INVALID_TAB_VALUE,
-        INVALID_DIRECTORY,
-        UNSUPPORTED_ENCODING,
-        UNSUPPORTED_OPTION,
-        DISABLED_OPTION,
-
         NO_CURRENT_DIRECTORY,
         CANNOT_OPEN_ZIP_FILE,
         CANNOT_OPEN_PATH_DIRECTORY,
@@ -432,14 +423,6 @@ private:
 
     static wchar_t *PrintBAD_ERROR(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintDEFAULT_ERROR(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintINVALID_OPTION(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintINVALID_K_OPTION(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintINVALID_K_TARGET(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintINVALID_TAB_VALUE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintINVALID_DIRECTORY(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintUNSUPPORTED_ENCODING(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintUNSUPPORTED_OPTION(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintDISABLED_OPTION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNO_CURRENT_DIRECTORY(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintCANNOT_OPEN_ZIP_FILE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintCANNOT_OPEN_PATH_DIRECTORY(ErrorInfo &, LexStream *, Control &);

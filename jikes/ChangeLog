@@ -1,3 +1,26 @@
+2001-10-31  Eric Blake  <ebb9@email.byu.edu>
+
+	Patch 211:
+	* doc/jikes.1: Update the man page to reflect options changes.
+	* src/jikesapi.h:
+	* src/jikesapi.cpp:
+	* src/option.h:
+	* src/option.cpp (Option): Add -encoding option on builds without
+	encoding, which prints an error message - bug 2242. Add various
+	options synonyms - bug 389. Add -source, -target, and -J options,
+	as well as making -g work like in javac - bug 273.
+	* src/bytecode.cpp:
+	* src/class.h (Write):
+	* src/control.cpp:
+	* src/definite.cpp:
+	* src/error.cpp:
+	* src/error.h:
+	* src/platform.cpp:
+	* src/platform.h:
+	* src/semantic.h: Update to use improved options.
+	* src/jikes.cpp: Add --help and --version support. Print usage to
+	stdout - bug 225.
+
 2001-10-30  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/decl.cpp (ProcessTypeHeader): Fix infinite recursion with

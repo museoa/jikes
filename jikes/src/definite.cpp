@@ -480,12 +480,12 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentExpression(AstExpression *exp
             int index = variable -> LocalVariableIndex();
 
             //
-            // If the debug option "g" is set and we have a simple assignment
-            // statement whose left-hand side is a local variable that has not
-            // yet been defined, mark this assignment as a definition
-            // assignment.
+            // If the debug level is set as -g:vars and we have a simple
+            // assignment statement whose left-hand side is a local variable
+            // that has not yet been defined, mark this assignment as a
+            // definition assignment.
             //
-            if (control.option.g &&
+            if ((control.option.g & JikesOption::VARS) &&
                 assignment_expression -> assignment_tag == AstAssignmentExpression::SIMPLE_EQUAL &&
                 variable -> IsLocal(ThisMethod()) &&
                 ! (*definite_block_stack -> TopLocallyDefinedVariables())[index])
@@ -679,7 +679,8 @@ inline void Semantic::DefiniteStatement(Ast *ast)
 
 inline void Semantic::DefiniteBlockStatements(AstBlock *block_body)
 {
-    if (control.option.g && block_body -> NumStatements() > 0)
+    if ((control.option.g & JikesOption::VARS) &&
+        block_body -> NumStatements() > 0)
     {
         AstStatement *statement = (AstStatement *) block_body -> Statement(0);
         DefiniteStatement(statement);
@@ -753,7 +754,8 @@ void Semantic::DefiniteBlock(Ast *stmt)
     DefiniteBlockStatements(block_body);
 
 #ifdef DUMP
-    if (control.option.g && block_body -> NumLocallyDefinedVariables() > 0)
+    if ((control.option.g & JikesOption::VARS) &&
+        block_body -> NumLocallyDefinedVariables() > 0)
     {
         Coutput << "(3) At Line "
                 << lex_stream -> Line(block_body -> RightToken())
@@ -802,7 +804,7 @@ void Semantic::DefiniteLocalVariableDeclarationStatement(Ast *stmt)
         VariableSymbol *variable_symbol = variable_declarator -> symbol;
         if (variable_symbol)
         {
-            if (control.option.g)
+            if (control.option.g & JikesOption::VARS)
             {
                 assert(definite_block_stack -> TopLocalVariables()[variable_symbol -> LocalVariableIndex()] == NULL);
 #ifdef DUMP
@@ -821,7 +823,7 @@ void Semantic::DefiniteLocalVariableDeclarationStatement(Ast *stmt)
                 DefiniteVariableInitializer(variable_declarator);
                 definitely_assigned_variables -> AssignElement(variable_symbol -> LocalVariableIndex());
 
-                if (control.option.g)
+                if (control.option.g & JikesOption::VARS)
                 {
                     definite_block_stack -> TopLocallyDefinedVariables() -> AddElement(variable_symbol -> LocalVariableIndex());
                     AstBlock *block = definite_block_stack -> TopBlock();
@@ -1000,7 +1002,8 @@ void Semantic::DefiniteForStatement(Ast *stmt)
     //     for (int i = 0; i < 10; i++);
     //     for (int i = 10; i < 20; i++);
     //
-    if (control.option.g && for_statement -> NumForInitStatements() > 0)
+    if ((control.option.g & JikesOption::VARS) &&
+        for_statement -> NumForInitStatements() > 0)
     {
         AstStatement *statement = (AstStatement *) for_statement -> ForInitStatement(0);
         DefiniteStatement(statement);
@@ -1153,7 +1156,8 @@ void Semantic::DefiniteSwitchStatement(Ast *stmt)
 
         *definitely_assigned_variables *= starting_pair;
 
-        if (control.option.g && switch_block_statement -> NumStatements() > 0)
+        if ((control.option.g & JikesOption::VARS) &&
+            switch_block_statement -> NumStatements() > 0)
         {
             BitSet &locally_defined_variables = *definite_block_stack -> TopLocallyDefinedVariables();
             AstStatement *statement = (AstStatement *) switch_block_statement -> Statement(0);
@@ -1199,7 +1203,8 @@ void Semantic::DefiniteSwitchStatement(Ast *stmt)
             }
 
 #ifdef DUMP
-            if (control.option.g && block_body -> NumLocallyDefinedVariables() > 0)
+            if ((control.option.g & JikesOption::VARS) &&
+                block_body -> NumLocallyDefinedVariables() > 0)
             {
                 Coutput << "(5.5) At Line "
                         << lex_stream -> Line(statement -> RightToken())
@@ -1598,7 +1603,8 @@ void Semantic::DefiniteTryStatement(Ast *stmt)
     DefiniteBlockStatements(try_block_body);
 
 #ifdef DUMP
-    if (control.option.g && try_block_body -> NumLocallyDefinedVariables() > 0)
+    if ((control.option.g & JikesOption::VARS) &&
+        try_block_body -> NumLocallyDefinedVariables() > 0)
     {
         Coutput << "(6) At Line "
                 << lex_stream -> Line(try_block_body -> RightToken())
@@ -1668,7 +1674,7 @@ void Semantic::DefiniteTryStatement(Ast *stmt)
         // The parameter must be added as well
         //
         definitely_assigned_variables -> AddElement(clause -> parameter_symbol -> LocalVariableIndex());
-        if (control.option.g)
+        if (control.option.g & JikesOption::VARS)
         {
             VariableSymbol *variable = clause -> parameter_symbol;
             definite_block_stack -> TopLocallyDefinedVariables() -> AddElement(variable -> LocalVariableIndex());
@@ -1685,7 +1691,8 @@ void Semantic::DefiniteTryStatement(Ast *stmt)
         DefiniteBlockStatements(clause_block_body);
 
 #ifdef DUMP
-        if (control.option.g && clause_block_body -> NumLocallyDefinedVariables() > 0)
+        if ((control.option.g & JikesOption::VARS) &&
+            clause_block_body -> NumLocallyDefinedVariables() > 0)
         {
             Coutput << "(8) At Line "
                     << lex_stream -> Line(clause_block_body -> RightToken())
@@ -1771,12 +1778,12 @@ void Semantic::DefiniteMethodBody(AstMethodDeclaration *method_declaration, Tupl
     if (! method_declaration -> method_body -> EmptyStatementCast())
     {
 #ifdef DUMP
-        if (control.option.g)
+        if (control.option.g & JikesOption::VARS)
             Coutput << "(9) Processing method \""
                     << method_declaration -> method_symbol -> Name()
                     << "\" in "
-                    << ThisType() -> ContainingPackage() -> PackageName() << "/"
-                    << ThisType() -> ExternalName() << endl;
+                    << ThisType() -> ContainingPackage() -> PackageName()
+                    << "/" << ThisType() -> ExternalName() << endl;
 #endif
         AstConstructorBlock *constructor_block = method_declaration -> method_body -> ConstructorBlockCast();
         AstBlock *block_body = (constructor_block ? constructor_block -> block : (AstBlock *) method_declaration -> method_body);
@@ -1805,7 +1812,7 @@ void Semantic::DefiniteMethodBody(AstMethodDeclaration *method_declaration, Tupl
         {
             AstVariableDeclarator *formal_declarator = method_declarator -> FormalParameter(k) -> formal_declarator;
             definitely_assigned_variables -> AssignElement(formal_declarator -> symbol -> LocalVariableIndex());
-            if (control.option.g)
+            if (control.option.g & JikesOption::VARS)
             {
                 VariableSymbol *variable = formal_declarator -> symbol;
                 definite_block_stack -> TopLocallyDefinedVariables() -> AddElement(variable -> LocalVariableIndex());
@@ -1830,7 +1837,8 @@ void Semantic::DefiniteMethodBody(AstMethodDeclaration *method_declaration, Tupl
         DefiniteBlockStatements(block_body);
 
 #ifdef DUMP
-        if (control.option.g && block_body -> NumLocallyDefinedVariables() > 0)
+        if ((control.option.g & JikesOption::VARS) &&
+            block_body -> NumLocallyDefinedVariables() > 0)
         {
             Coutput << "(11) At Line "
                     << lex_stream -> Line(block_body -> RightToken())
@@ -1860,7 +1868,7 @@ void Semantic::DefiniteMethodBody(AstMethodDeclaration *method_declaration, Tupl
 void Semantic::DefiniteConstructorBody(AstConstructorDeclaration *constructor_declaration, Tuple<VariableSymbol *> &finals)
 {
 #ifdef DUMP
-    if (control.option.g)
+    if (control.option.g & JikesOption::VARS)
         Coutput << "(12) Processing constructor \""
                 << constructor_declaration -> constructor_symbol -> Name()
                 << "\" in "
@@ -1915,7 +1923,7 @@ void Semantic::DefiniteConstructorBody(AstConstructorDeclaration *constructor_de
     //
 
     definite_block_stack -> Push(block_body);
-    if (control.option.g)
+    if (control.option.g & JikesOption::VARS)
     {
         //
         // We need this initialization to prevent debug info from being
@@ -1935,7 +1943,7 @@ void Semantic::DefiniteConstructorBody(AstConstructorDeclaration *constructor_de
     {
         AstVariableDeclarator *formal_declarator = constructor_declarator -> FormalParameter(j) -> formal_declarator;
         definitely_assigned_variables -> AddElement(formal_declarator -> symbol -> LocalVariableIndex());
-        if (control.option.g)
+        if (control.option.g & JikesOption::VARS)
         {
             VariableSymbol *variable = formal_declarator -> symbol;
             definite_block_stack -> TopLocallyDefinedVariables() -> AddElement(variable -> LocalVariableIndex());
@@ -1960,7 +1968,8 @@ void Semantic::DefiniteConstructorBody(AstConstructorDeclaration *constructor_de
     DefiniteBlockStatements(block_body);
 
 #ifdef DUMP
-    if (control.option.g && block_body -> NumLocallyDefinedVariables() > 0)
+    if ((control.option.g & JikesOption::VARS) &&
+        block_body -> NumLocallyDefinedVariables() > 0)
     {
         Coutput << "(14) At Line "
                 << lex_stream -> Line(block_body -> RightToken())
@@ -2001,7 +2010,7 @@ void Semantic::DefiniteConstructorBody(AstConstructorDeclaration *constructor_de
 void Semantic::DefiniteBlockInitializer(AstBlock *block_body, int stack_size, Tuple<VariableSymbol *> &finals)
 {
 #ifdef DUMP
-    if (control.option.g)
+    if (control.option.g & JikesOption::VARS)
         Coutput << "(15) Processing Initializer block " << " in "
                 << ThisType() -> ContainingPackage() -> PackageName() << "/"
                 << ThisType() -> ExternalName() << endl;
@@ -2037,7 +2046,7 @@ void Semantic::DefiniteBlockInitializer(AstBlock *block_body, int stack_size, Tu
 
     definite_block_stack -> Push(NULL); // No method available
     definite_block_stack -> Push(block_body);
-    if (control.option.g)
+    if (control.option.g & JikesOption::VARS)
     {
         //
         // We need this initialization to prevent debug info from being
@@ -2061,7 +2070,8 @@ void Semantic::DefiniteBlockInitializer(AstBlock *block_body, int stack_size, Tu
     DefiniteBlockStatements(block_body);
 
 #ifdef DUMP
-    if (control.option.g && block_body -> NumLocallyDefinedVariables() > 0)
+    if ((control.option.g & JikesOption::VARS) &&
+        block_body -> NumLocallyDefinedVariables() > 0)
     {
         Coutput << "(16) At Line "
                 << lex_stream -> Line(block_body -> RightToken())

@@ -46,9 +46,8 @@ void ErrorInfo::Initialize(LexStream *l, wchar_t  *m, JikesErrorSeverity s)
     severity = s;
 }
 
-ErrorInfo::ErrorInfo()
-:msg(NULL),
-severity(JikesError::JIKES_ERROR)
+ErrorInfo::ErrorInfo() : msg(NULL),
+                         severity(JikesError::JIKES_ERROR)
 {
 }
 
@@ -58,11 +57,11 @@ ErrorInfo::~ErrorInfo()
 }
 
 
-JikesError::JikesErrorSeverity ErrorInfo::getSeverity        () { return severity        ; }
-int ErrorInfo::getLeftLineNo      () { return left_line_no    ; }
-int ErrorInfo::getLeftColumnNo    () { return left_column_no  ; }
-int ErrorInfo::getRightLineNo     () { return right_line_no   ; }
-int ErrorInfo::getRightColumnNo   () { return right_column_no ; }
+JikesError::JikesErrorSeverity ErrorInfo::getSeverity() { return severity; }
+int ErrorInfo::getLeftLineNo      () { return left_line_no; }
+int ErrorInfo::getLeftColumnNo    () { return left_column_no; }
+int ErrorInfo::getRightLineNo     () { return right_line_no; }
+int ErrorInfo::getRightColumnNo   () { return right_column_no; }
 
 const char *ErrorInfo::getFileName() 
 { 
@@ -221,7 +220,7 @@ SemanticError::SemanticError(Control &control_, FileSymbol *file_symbol) : num_e
                                                                            buffer(1024),
                                                                            error(512)
 {
-    ErrorInfo::emacs_style_report=!control.option.errors;
+    ErrorInfo::emacs_style_report = ! control.option.errors;
 }
 
 //
@@ -439,8 +438,6 @@ void SemanticError::StaticInitializer()
 {
     memset(warning, 0, _num_kinds * sizeof(unsigned char));
 
-    warning[INVALID_OPTION] = 1;
-    warning[DISABLED_OPTION] = 1;
     warning[CANNOT_OPEN_ZIP_FILE] = 1;
     warning[CANNOT_OPEN_PATH_DIRECTORY] = 1;
 
@@ -506,14 +503,6 @@ void SemanticError::StaticInitializer()
 
     print_message[BAD_ERROR] = PrintBAD_ERROR;
     print_message[DEFAULT_ERROR] = PrintDEFAULT_ERROR;
-    print_message[INVALID_OPTION] = PrintINVALID_OPTION;
-    print_message[INVALID_K_OPTION] = PrintINVALID_K_OPTION;
-    print_message[INVALID_K_TARGET] = PrintINVALID_K_TARGET;
-    print_message[INVALID_TAB_VALUE] = PrintINVALID_TAB_VALUE;
-    print_message[INVALID_DIRECTORY] = PrintINVALID_DIRECTORY;
-    print_message[UNSUPPORTED_OPTION] = PrintUNSUPPORTED_OPTION;
-    print_message[UNSUPPORTED_ENCODING] = PrintUNSUPPORTED_ENCODING;
-    print_message[DISABLED_OPTION] = PrintDISABLED_OPTION;
     print_message[NO_CURRENT_DIRECTORY] = PrintNO_CURRENT_DIRECTORY;
     print_message[CANNOT_OPEN_ZIP_FILE] = PrintCANNOT_OPEN_ZIP_FILE;
     print_message[CANNOT_OPEN_PATH_DIRECTORY] = PrintCANNOT_OPEN_PATH_DIRECTORY;
@@ -1064,101 +1053,6 @@ wchar_t *SemanticError::PrintDEFAULT_ERROR(ErrorInfo &err, LexStream *lex_stream
     return s.Array();
 }
 
-
-wchar_t *SemanticError::PrintINVALID_OPTION(ErrorInfo &err, LexStream *lex_stream, Control &control)
-{
-    ErrorString s;
-
-    s << '\"'
-            << err.insert1
-            << "\" is an invalid option; "
-            << StringConstant::U8S_command_format
-            << '.';
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintINVALID_K_OPTION(ErrorInfo &err, LexStream *lex_stream, Control &control)
-{
-    ErrorString s;
-
-    s << "No argument specified for +K option. The proper form is \"+Kxxx=xxx\" (with no intervening space).";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintINVALID_K_TARGET(ErrorInfo &err, LexStream *lex_stream, Control &control)
-{
-    ErrorString s;
-    
-    s << '\"'
-            << err.insert1
-            << "\" is not a valid target in a +K option. The target must be a numeric type or boolean.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintINVALID_TAB_VALUE(ErrorInfo &err, LexStream *lex_stream, Control &control)
-{
-    ErrorString s;
-
-    s << '\"'
-            << err.insert1
-            << "\" is not a valid tab size. An integer value is expected.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintINVALID_DIRECTORY(ErrorInfo &err, LexStream *lex_stream, Control &control)
-{
-    ErrorString s;
-    
-    s << "The directory specified in the \"-d\" option, \""
-            << err.insert1
-            << "\", is either invalid or it could not be expanded.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintUNSUPPORTED_OPTION(ErrorInfo &err, LexStream *lex_stream, Control &control)
-{
-    ErrorString s;
-    
-    s << "This option \""
-            << err.insert1
-            << "\" is currently unsupported.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintDISABLED_OPTION(ErrorInfo &err, LexStream *lex_stream, Control &control)
-{
-    ErrorString s;
-    
-    s << "This option \""
-            << err.insert1
-            << "\" has been temporarily disabled.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintUNSUPPORTED_ENCODING(ErrorInfo &err, LexStream *lex_stream, Control &control)
-{
-    ErrorString s;
-    
-    s << "Unsupported encoding: \""
-            << err.insert1
-            << "\".";
-    
-    return s.Array();
-}              
 
 wchar_t *SemanticError::PrintNO_CURRENT_DIRECTORY(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {

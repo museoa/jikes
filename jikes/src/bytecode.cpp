@@ -449,10 +449,10 @@ void ByteCode::CompileClass()
     }
 
     if (this_semantic.NumErrors() == 0)
-         Write();
+        Write();
 #ifdef JIKES_DEBUG
-    else if (this_control.option.debug_dump_class)
-         PrintCode();
+    if (this_control.option.debug_dump_class)
+        PrintCode();
 #endif
 }
 
@@ -537,10 +537,10 @@ void ByteCode::CompileInterface()
     }
 
     if (this_semantic.NumErrors() == 0)
-         Write();
+        Write();
 #ifdef JIKES_DEBUG
-    else if (this_control.option.debug_dump_class)
-         PrintCode();
+    if (this_control.option.debug_dump_class)
+        PrintCode();
 #endif
 
     return;
@@ -818,9 +818,9 @@ Coutput.flush();
         line_number = 0;
         line_number_table_attribute = new LineNumberTable_attribute(RegisterUtf8(this_control.LineNumberTable_literal));
 
-        local_variable_table_attribute = (this_control.option.g
-                                            ? new LocalVariableTable_attribute(RegisterUtf8(this_control.LocalVariableTable_literal))
-                                            : (LocalVariableTable_attribute *) NULL);
+        local_variable_table_attribute = ((this_control.option.g & JikesOption::VARS)
+                                          ? new LocalVariableTable_attribute(RegisterUtf8(this_control.LocalVariableTable_literal))
+                                          : (LocalVariableTable_attribute *) NULL);
     }
 
     VariableSymbol *last_parameter = (msym -> NumFormalParameters() ? msym -> FormalParameter(msym -> NumFormalParameters() - 1)
@@ -901,18 +901,23 @@ void ByteCode::EndMethod(int method_index, MethodSymbol *msym)
 
         //
         // attribute length:
-        // need to review how to make attribute_name and attribute_length
-        // only write line number attribute if -O not specified and there
-        // are line numbers to write.
+        // Need to review how to make attribute_name and attribute_length.
+        // Only write line number attribute if there are line numbers to
+        // write, and -g:lines is enabled.
         //
-        if ((! this_control.option.O) && line_number_table_attribute -> LineNumberTableLength() > 0)
+        if ((this_control.option.g & JikesOption::LINES) &&
+            line_number_table_attribute -> LineNumberTableLength() > 0)
+        {
              code_attribute -> AddAttribute(line_number_table_attribute);
+        }
         else delete line_number_table_attribute; // line_number_table_attribute not needed, so delete it now
 
         //
-        // debug & not dealing with generated accessed method
+        // Debug level -g:vars & not dealing with generated accessed method
         //
-        if (this_control.option.g && (! msym -> accessed_member) && (msym -> Identity() != this_control.class_name_symbol))
+        if ((this_control.option.g & JikesOption::VARS)
+            && (! msym -> accessed_member)
+            && (msym -> Identity() != this_control.class_name_symbol))
         {
             if (! msym -> ACC_STATIC()) // add 'this' to local variable table
             {
@@ -1085,7 +1090,7 @@ void ByteCode::DeclareLocalVariable(AstVariableDeclarator *declarator)
 
     StoreLocal(declarator -> symbol -> LocalVariableIndex(), declarator -> symbol -> Type());
 
-    if (this_control.option.g)
+    if (this_control.option.g & JikesOption::VARS)
     {
 #ifdef JIKES_DEBUG
         assert(method_stack -> StartPc(declarator -> symbol) == 0xFFFF); // must be uninitialized
@@ -1125,7 +1130,7 @@ void ByteCode::EmitStatement(AstStatement *statement)
                                                      this_semantic.lex_stream -> Line(statement -> LeftToken()));
     }
 
-    if (this_control.option.g)
+    if (this_control.option.g & JikesOption::VARS)
     {
         for (int i = 0; i < statement -> NumDefinedVariables(); i++)
         {
@@ -1388,7 +1393,7 @@ void ByteCode::EmitBlockStatement(AstBlock *block)
         DefineLabel(method_stack -> TopBreakLabel());
     CompleteLabel(method_stack -> TopBreakLabel());
 
-    if (this_control.option.g)
+    if (this_control.option.g & JikesOption::VARS)
     {
         for (int i = 0; i < block -> NumLocallyDefinedVariables(); i++)
         {
@@ -1671,7 +1676,7 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
         // close the range of the locally defined variables here and
         // reset their StartPc
         //
-        if (this_control.option.g)
+        if (this_control.option.g & JikesOption::VARS)
         {
             for (int i = 0; i < switch_block_statement -> NumLocallyDefinedVariables(); i++)
             {
@@ -1706,7 +1711,7 @@ Coutput.flush();
     // close the range of the locally defined variables that have
     // been defined but not yet processsed.
     //
-    if (this_control.option.g)
+    if (this_control.option.g & JikesOption::VARS)
     {
         for (int i = 0; i < switch_block -> NumLocallyDefinedVariables(); i++)
         {
@@ -1834,7 +1839,7 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
 
             EmitBlockStatement(catch_clause -> block);
 
-            if (this_control.option.g)
+            if (this_control.option.g & JikesOption::VARS)
             {
                 local_variable_table_attribute -> AddLocalVariable(handler_pc,
                                                                    code_attribute -> CodeLength(),
@@ -3348,7 +3353,8 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
             assert(false && "bad kind in EmitAssignmentExpression");
     }
 
-    if (this_control.option.g && assignment_expression -> assignment_tag == AstAssignmentExpression::DEFINITE_EQUAL)
+    if ((this_control.option.g & JikesOption::VARS) &&
+        assignment_expression -> assignment_tag == AstAssignmentExpression::DEFINITE_EQUAL)
     {
         VariableSymbol *variable = assignment_expression -> left_hand_side -> symbol -> VariableCast();
         assert(variable);
@@ -5305,8 +5311,12 @@ void ByteCode::StoreVariable(int kind, AstExpression *expr)
 //
 void ByteCode::FinishCode(TypeSymbol *type)
 {
-    attributes.Next() = new SourceFile_attribute(RegisterUtf8(this_control.Sourcefile_literal),
-                                                 RegisterUtf8(type -> file_symbol -> FileNameLiteral()));
+    //
+    // Only output SourceFile attribute if -g:source is enabled.
+    //
+    if (this_control.option.g & JikesOption::SOURCE)
+        attributes.Next() = new SourceFile_attribute(RegisterUtf8(this_control.Sourcefile_literal),
+                                                     RegisterUtf8(type -> file_symbol -> FileNameLiteral()));
 
     if (type == NULL)
         return; // return if interface type

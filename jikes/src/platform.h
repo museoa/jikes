@@ -668,6 +668,7 @@ public:
 
     static wchar_t US_smallest_int[]; // "-2147483648"
 
+    static char U8S_help_header[];
     static char U8S_command_format[];
 
     static int U8S_ConstantValue_length,
