@@ -1,53 +1,174 @@
-Get IRIX build support working again.
+*** TBD for Jikes 1.13 release:
 
-g++ -DHAVE_CONFIG_H -I. -I../../jikes/src -I.     -g -c -o stream.o `test -f ../../jikes/src/stream.cpp || echo '../../jikes/src/'`../../jikes/src/stream.cpp
-../../jikes/src/stream.cpp: In method `void LexStream::ProcessInputUnicode(const char *, long int)':
-../../jikes/src/stream.cpp:895: passing `const char **' as argument 2 of `iconv(_t_iconv *, char **, size_t *, char **, size_t *)' discards qualifiers
-make[1]: *** [stream.o] Error 1
+Fix build under IRIX, it failed in
+1.12 because of iconv prototype mismatch.
+(FIXED : needs to be verified)
 
-/usr/include/iconv.h
-extern size_t   iconv(iconv_t, char **, size_t *, char **, size_t *);
+Include java.g file in tar ball.
+This was omitted in the 1.12 release.
 
-(on my linux box)
-extern size_t iconv __P ((iconv_t __cd,
-                          __const char **__restrict __inbuf,
-                          size_t *__restrict __inbytesleft,
-                          char **__restrict __outbuf,
-                          size_t *__restrict __outbytesleft));
+Add RPM spec file to the tar ball.
+This was omitted in the 1.12 release.
 
-Irix Sig:  iconv(iconv_t, char **, size_t *, char **, size_t *)
-Linux Sig: iconv(iconv_t, __const char **, char **, size_t *)
+Add a configure check to make folks do
+not attempt to build under Cygwin with
+the -mno-cygwin flag.
+
+Add the src/m4 subdir contents to
+the .tar file.
+
+Look into fixing namespaces so that
+folks can at least build on systems
+that require strict namespace support.
+Currently, we incorrectly use
+HAVE_NAMESPACE instead of HAVE_NAMESPACES,
+so even this does not work!
+
+setenv HAVE_NAMESPACES 1
+./configure
+
+Namespaces are totally broken with gcc,
+2.96 will compile with some minor hacks
+but it fails to link since global methods
+get defined outside the namespace.
+
+% nm --print-file-name *.o | grep SystemIsDirectory | c++filt
+control.o:         U Jikes::SystemIsDirectory(char *)
+platform.o:000000d8 T SystemIsDirectory(char *)
 
 
-We need a solution like those for wcslen but for iconv.
 
+It is not clear if iconv is only a little
+broken or totally busted.
+
+More testing is needed to figure out
+if this is an endian issue. It works
+on an Intel box but fails on a Solaris
+Sparc so I think it is a byte order issue.
+
+http://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=19647
+
+While some iconv tests fail under Red Hat 6.2, they
+all fail on Red Hat 7.0, which is what this bug
+report is talking about.
+
+Also, would it be better to convert a bunch
+of chars in a buffer instead of doing them
+one at a time?
+
+
+Use new casting operations instead of C style
+casts:
+
+Casting up from A to B will be checked if
+compiler support RTTI. This could catch
+nasty cast errors in Jikes.
+
+http://www.sns.ias.edu/Main/computing/compilers_html/c-plusplus/c++_ug/Cast.new.doc.html
+
+const_case<int> 'c'
+
+same as
+
+(int) 'c'
+
+dynamic_cast<type>(ARG)
+
+A -> B
+
+B*  bp = new B():
+A*  ap = bp;
+
+assert( ap != NULL );
+B*  bp2 = dynamic_cast<B*>(ap);
+assert( bp2 != NULL );
+
+
+
+Manually generate a list of #include deps for
+each of the .c files in the src dir and include
+then in Makefile.am. We do not want to use
+the automatic depcomp feature of automake.
+
+
+
+The website needs to be made available as a CVS module.
+That will make changing and tracking changes far easier.
+
+
+Fix the problems with @files demonstrated by
+non-jls-argument-expansion tests in Jacks. This
+would be significantly easier if during input
+conversion, \r \r\n and \n where always converted
+into a single \n in the source code.
+
+
+Add new floating point emulation support code.
+
+
+*** Things that will not be done in 1.13
+
+
+
+
+*** TBD at some point:
 
 Add test cases for the typos in error.cpp that were fixed
-just before the release. In fact, it would be nice if we
+just before the 1.12 release. In fact, it would be nice if we
 could generate a test case for every error condition and
+
 test the compiler output.
-
-
-See if the -fhonor-std flag helps with the namespace
-problems with g++.
 
 Check into the fix for bug 102, we reverted it because of
 crashes, but it would be nice to look into the fix again.
 
-
-Move the jikes/project/index.html file from the
-webserver into the CVS. We need to be able to
-track changes.
+Drop OLDCSO support from the compiler.
 
 
-Drop OLDCSO support from Jikes.
+Why does jikes treat the catching of exceptions
+that were not thrown in the try block as a
+warning condition. Should these not be errors?
 
 
-Why are catching of exceptions that are not thrown
-treated as warnings? I thought these would be errors.
+
+A misleading error from Jikes:
+
+% cat unicode_1.java
+public class unicode_1 {
+    void check(int num, char val) {
+        if (num != (int) val) {
+            System.err.println("error: mismatch for " + num);
+        }
+    }
+
+    public static void main(String[] argv) {
+        check(0, '\u0000');
+        check(0, '\u0001');
+    }
+}
+
+Error from Javac:
+
+unicode_1.java:9: Can't make static reference to method void check(int, char) in class unicode_1.
+        check(0, '\u0000');
+             ^
+unicode_1.java:10: Can't make static reference to method void check(int, char) in class unicode_1.
+        check(0, '\u0001');
+             ^
+2 errors
 
 
-Make sure the java.g file is included in the .tar ball.
-It seems this did not happen for 1.12.
+Error from Jikes:
 
+Found 2 semantic errors compiling "unicode_1.java":
+
+     9.         check(0, '
+
+    10.         check(0, '`');
+                <----------->
+*** Error: The method "check" does not denote a class method.
+
+
+Is it just me, or is this error message really misleading?
+The Sun error message seems a whole lot better.
 

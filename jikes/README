@@ -1,5 +1,6 @@
 The files in this directory and its contained subdirectories
-collectively comprise the distribution of the IBM Jikes Compiler,
+collectively comprise the distribution of the IBM Jikes Compiler.
+
 http://oss.software.ibm.com/developerworks/opensource/jikes/project/index.html
 
 This distribution is covered by the "IBM Public License Version
@@ -12,7 +13,8 @@ OSI Certified is a certification mark of the Open Source Initiative.
 See the ChangeLog for file revision history.
 
 For instructions on how to build and install jikes, see
-the INSTALL file.
+the INSTALL file. For info about making changes to the
+Jikes source code itself, see the HACKING file.
 
 Documentation files provided in 'doc' directory include:
 
@@ -29,12 +31,6 @@ Team.
 jikes.spec: "spec" file for use with RPM (Red Hat Package Manager).
 
 Complete program source is provided in the 'src' subdirectory.
-
-However, note that some of the files are machine-generated.
-Any changes that require edits to the file src/java.g will also
-require you to obtain a copy of the Jikes Parser Generator (jikespg).
-
-http://oss.software.ibm.com/developerworks/opensource/jikes/project/pub/index.html
 
 If you have further questions, you can consult the archives of the
 Jikes mailing lists, or subscribe to the Jikes list and then seek

@@ -1,0 +1,65 @@
+If you are contributing code to the Jikes project,
+please read this file.
+
+
+Autotools based build system:
+
+If you modify any of the files used by the autotools build
+process (Makefile.am, configure.in, and so on), you will
+need to run the ./autogen.sh script to generate a new
+./configure script. The autogen.sh requires that you
+have the CVS versions of autoconf and automake installed.
+You can not use the 2.13 release of autoconf.
+
+The java.g file:
+
+Note that some of the files in Jikes are machine-generated.
+Any changes that require edits to the file src/java.g will
+also require you to obtain a copy of the Jikes Parser
+Generator (jikespg).
+
+
+Rules to Live By:
+
+Never allocate objects on the stack. Always allocate
+objects using the new operator, even if the object
+will only be used inside a function. Objects
+allocated on the stack can become corrupted and
+take the stack along with it, making debugging
+very difficult.
+
+
+Before you send in that patch:
+
+Patches to the Jikes compiler should be accompanied
+by test cases for Jacks, the automated regression
+test suite used by the Jikes project. The Jacks
+cvs module is "jacks", the CVSROOT is the same
+as the one used by Jikes.
+
+
+
+Some handy CXXFLAGS you may want to use g++:
+
+-Wall : Print all warnings
+
+-Weffc++ : Warn based on Effective C++ guidelines
+
+-pedantic : Be even more strict than -Wall
+
+-Wshadow : Warn when a local variable shadows another local variable. 
+
+-fno-rtti : Disable runtime type identification (not currently used)
+
+-fno-exceptions : Disable exception support (not currently used)
+
+-Wold-style-cast : Warn on C style casts
+
+-fhonor-std : Try harder to honor C++ standards.
+
+-ggdb : Write debug info with gdb in mind
+
+-static : create a statically linked binary
+
+CXXFLAGS='-Wall -Weffc++ -pedantic -Wshadow -fno-rtti -fno-exceptions -ggdb'
+

@@ -1,4 +1,4 @@
-To compile Jikes:
+Compiling and Installing Jikes:
 
 ./configure ; make ; make install
 
@@ -9,7 +9,7 @@ ftp://ftp.freesoftware.com/pub/sourceware/cygwin/latest/setup.exe
 
 If you want to install jikes into a directory
 other than the default of /usr/local, pass
-a --prefix argument to the ./configure script.
+a --prefix=DIR argument to the ./configure script.
 
 If you want to get fancy, you can even build
 jikes in a directory other than the source
@@ -22,13 +22,13 @@ cd ..
 
 mkdir build_linux_debug ; cd build_linux_debug
 
-../jikes/configure --prefix=/tmp/jikes_debug CFLAGS=-g
+../jikes/configure --prefix=/tmp/jikes_debug CXXFLAGS=-g
 make
 
 
 mkdir build_linux_opt ; cd build_linux_opt
 
-../jikes/configure --prefix=/tmp/jikes_opt CFLAGS="-O6 -fomit-frame-pointer"
+../jikes/configure --prefix=/tmp/jikes_opt CXXFLAGS=-O3
 make
 
 
@@ -40,8 +40,3 @@ using the mingw cross compiler (i386-mingw32msvc-c++).
 mkdir build_mingw ; cd build_mingw
 ../jikes/configure --prefix=/tmp/jikes_Xmingw --host=i386-mingw32msvc
 
-If you modify any of the files used by the autotools build
-process (Makefile.am, configure.in, and so on), you will
-need to run the ./autogen.sh script to generate a new
-./configure script. The autogen.sh requires that you
-have an up to date set of Gnu autotools installed.
