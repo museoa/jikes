@@ -1,3 +1,9 @@
+2001-02-07  Chris Abbey  <cabbey@bresnanlink.net>
+
+	* todo.shtml
+	* index.shtml: enabled the real mailing list management
+	* listst.shtml: DELETED this hack
+
 2001-02-05  Chris Abbey  <cabbey@bresnanlink.net>
 
 	* index.shtml: removed hack around next/prev 50 bug list bug

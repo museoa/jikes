@@ -13,7 +13,7 @@
     If there is someone known to be working on an item then I'll
     list their name so as to reduce redundancy and provide a point of contact for anyone interested in helping out
     with this task. If you've got some time to aid any of these tasks post a note to the
-    <!--TODO replace after lists migrated  a href="/developerworks/mail/?group_id=10"-->Jikes-Dev list<!--/a-->. <small>(and yes, it's also to keep us honest ;)</small></p>
+    <a href="/developerworks/mail/?group_id=10">Jikes-Dev list</a>. <small>(and yes, it's also to keep us honest ;)</small></p>
 
     <ul>
       <li>Migrate old jitterbug bugs to new system. (TAG, EricB, CAbbey, more welcome)

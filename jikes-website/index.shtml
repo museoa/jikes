@@ -21,8 +21,6 @@
             <li><a href="/developerworks/news/index.php?group_id=10">News</a>
             <li><a href="distribs.shtml">Distributions</a>
             <li><a href="/developerworks/project/showfiles.php?group_id=10">Downloads</a>
-<!--            <li><a href="/developerworks/mail/?group_id=10">Mailing Lists</a>
--->
             <li><a href="/developerworks/bugs/?group_id=10">View open bugs</a>
             <li><a href="/developerworks/bugs/?func=addbug&group_id=10">Report Bugs Here</a>
           </ul>
@@ -40,7 +38,7 @@
 	      <hr>
           General Interest
           <ul>
-	    <li><a href="lists.shtml">Mailing Lists</a>
+            <li><a href="/developerworks/mail/?group_id=10">Mailing Lists</a>
             <li><a href="people.shtml">People</a>
 	    <li><a href="leadership.shtml">Leadership</a>
 	    <li><a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf">Old discussion database<br>at IBM Research</a> <small>includes<br>the "Queries to Sun".</small>
