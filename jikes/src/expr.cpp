@@ -3924,20 +3924,20 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
                           ctor -> containing_type -> EnclosingType());
     }
 
-    for (int i = 0; i < class_creation -> NumArguments(); i++)
+    for (int j = 0; j < class_creation -> NumArguments(); j++)
     {
-        AstExpression *expr = class_creation -> Argument(i);
-        class_creation -> Argument(i) =
-            ConvertToType(expr, ctor -> FormalParameter(i) -> Type());
+        AstExpression *expr = class_creation -> Argument(j);
+        class_creation -> Argument(j) =
+            ConvertToType(expr, ctor -> FormalParameter(j) -> Type());
     }
 
     //
     // Process the throws clause.
     //
     SymbolSet *exception_set = TryExceptionTableStack().Top();
-    for (int j = ctor -> NumThrows() - 1; j >= 0; j--)
+    for (int k = ctor -> NumThrows() - 1; k >= 0; k--)
     {
-        TypeSymbol *exception = ctor -> Throws(j);
+        TypeSymbol *exception = ctor -> Throws(k);
         if (exception_set)
             exception_set -> AddElement(exception);
 
