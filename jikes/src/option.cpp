@@ -180,6 +180,7 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
                                               verbose(false),
                                               depend(false),
                                               nowarn(false),
+                                              classpath_search_order(false),
                                               O(false),
                                               zero_defect(false)
 {
@@ -302,6 +303,8 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
                  comments = true;
             else if (strcmp(arguments.argv[i], "+C") == 0)
                  debug_dump_class = true;
+            else if (strcmp(arguments.argv[i], "+CSO") == 0)
+                classpath_search_order = true;
             else if (strcmp(arguments.argv[i],"+D") == 0)
             {
                  dump_errors = true;

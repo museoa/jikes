@@ -472,6 +472,8 @@ public:
     static DirectorySymbol *GetOutputDirectory(FileSymbol *);
     static FileSymbol *GetJavaFile(PackageSymbol *, NameSymbol *);
     static FileSymbol *GetFile(Control &, PackageSymbol *, NameSymbol *);
+    static FileSymbol *GetFileBoth(Control &, PackageSymbol *, NameSymbol *);
+    static FileSymbol *GetFileFirst(Control &, PackageSymbol *, NameSymbol *);
 
     PackageSymbol *FindOrInsertPackage(LexStream *, AstExpression *);
     void ProcessPackageDeclaration(FileSymbol *, AstPackageDeclaration *);

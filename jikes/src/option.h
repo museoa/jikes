@@ -129,6 +129,7 @@ public:
          verbose,
          depend,
          nowarn,
+         classpath_search_order,
          one_one,
          zero_defect;
     int first_file_index;

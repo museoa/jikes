@@ -62,6 +62,7 @@ int main(int argc, char *argv[])
                 "+1.0               recognize only 1.0.2 language\n"
                 "++                 compile in incremental mode\n"
                 "+B                 do not invoke bytecode generator\n"
+                "+CSO               search for both java and classfile in classpath\n"
                 "+D                 report errors immediately in emacs-form without buffering\n"
                 "+E                 list errors in emacs-form\n"
                 "+F                 do full dependence check except for Zip and Jar files\n"
@@ -72,10 +73,10 @@ int main(int argc, char *argv[])
                 "+Td...d            set value of tab d...d spaces; each d is a decimal digit\n"
                 "+U                 do full dependence check including Zip and Jar files\n"
                 "+Z                 treat cautions as errors\n"
-                "\nVersion 1.07-vz1010a (10 Oct 99)"
+                "\nVersion 1.07 (12 Oct 99)"
                 " by Philippe Charles and David Shields, IBM Research.\n"
-                "Please report problems to shields@watson.ibm.com.\n"
-                "or via browser at http://www.ibm.com/research/jikes\n");
+                "Please report problems to Jikes Project at\n"
+                "  http://ibm.com/developerworks/opensource\n");
 
         return_code = 1;
     }
