@@ -1,3 +1,8 @@
+2002-01-11  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/expr.cpp (ProcessSLASH, ProcessMOD): Fix core dump when
+	caution instead of error occurs on divide by 0 - bug 2568.
+
 2002-01-11  Marko Kreen  <marko@l-t.ee>
 
 	* src/bytecode.cpp (ByteCode): Improve verbose output in debug

@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -6406,14 +6406,18 @@ void Semantic::ProcessSLASH(AstBinaryExpression *expr)
             // side is 0 then issue an error message. Otherwise, if both
             // subexpressions are constant, calculate result.
             //
-            if ((expr -> Type() == control.int_type && ((IntLiteralValue *) right_expression -> value) -> value == 0) ||
-                (expr -> Type() == control.long_type && ((LongLiteralValue *) right_expression -> value) -> value == 0))
+            if ((expr -> Type() == control.int_type &&
+                 ((IntLiteralValue *) right_expression -> value) -> value == 0) ||
+                (expr -> Type() == control.long_type &&
+                 ((LongLiteralValue *) right_expression -> value) -> value == 0))
             {
-                ReportSemError(left_expression -> IsConstant() ? SemanticError::ZERO_DIVIDE_ERROR
-                                                               : SemanticError::ZERO_DIVIDE_CAUTION,
+                ReportSemError((left_expression -> IsConstant()
+                                ? SemanticError::ZERO_DIVIDE_ERROR
+                                : SemanticError::ZERO_DIVIDE_CAUTION),
                                expr -> LeftToken(),
                                expr -> RightToken());
-                expr -> symbol = control.no_type;
+                if (left_expression -> IsConstant())
+                    expr -> symbol = control.no_type;
             }
             else if (left_expression -> IsConstant())
             {
@@ -6483,14 +6487,18 @@ void Semantic::ProcessMOD(AstBinaryExpression *expr)
             // side is 0 then issue an error message. Otherwise, if both
             // subexpressions are constant, calculate result.
             //
-            if ((expr -> Type() == control.int_type && ((IntLiteralValue *) right_expression -> value) -> value == 0) ||
-                (expr -> Type() == control.long_type && ((LongLiteralValue *) right_expression -> value) -> value == 0))
+            if ((expr -> Type() == control.int_type &&
+                 ((IntLiteralValue *) right_expression -> value) -> value == 0) ||
+                (expr -> Type() == control.long_type &&
+                 ((LongLiteralValue *) right_expression -> value) -> value == 0))
             {
-                ReportSemError(left_expression -> IsConstant() ? SemanticError::ZERO_DIVIDE_ERROR
-                                                               : SemanticError::ZERO_DIVIDE_CAUTION,
+                ReportSemError((left_expression -> IsConstant()
+                                ? SemanticError::ZERO_DIVIDE_ERROR
+                                : SemanticError::ZERO_DIVIDE_CAUTION),
                                expr -> LeftToken(),
                                expr -> RightToken());
-                expr -> symbol = control.no_type;
+                if (left_expression -> IsConstant())
+                    expr -> symbol = control.no_type;
             }
             else if (left_expression -> IsConstant())
             {
