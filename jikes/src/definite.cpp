@@ -1197,7 +1197,9 @@ void Semantic::DefiniteSwitchStatement(Ast* stmt)
 
     //
     // Recall that the parser inserts an empty statement if necessary after
-    // the last label, so that all SwitchBlockStatementGroups have statements
+    // the last label, so that all SwitchBlockStatementGroups have statements.
+    // The standard does not allow us to optimize for a constant switch, or
+    // for enumerating all 256 byte cases with no default.
     //
     unsigned i;
     for (i = 0; i < block_body -> NumStatements(); i++)
@@ -1208,14 +1210,9 @@ void Semantic::DefiniteSwitchStatement(Ast* stmt)
         *DefinitelyAssignedVariables() *= starting_pair;
         DefiniteBlockStatements(switch_block_statement);
     }
-
-    //
-    // TODO: What if the switch enumerates all 256 byte cases without a
-    // default label?
-    //
-    if (switch_statement -> DefaultCase())
-        *DefinitelyAssignedVariables() *= DefiniteBlocks() -> TopBreakPair();
-    else *DefinitelyAssignedVariables() = starting_pair;
+    if (! switch_statement -> DefaultCase())
+        *DefinitelyAssignedVariables() *= starting_pair;
+    *DefinitelyAssignedVariables() *= DefiniteBlocks() -> TopBreakPair();
 
     //
     // Remove all variables that just went out of scope

@@ -1,3 +1,8 @@
+2004-03-26  Eric Blake  <ebb9@byu.net>
+
+	* src/definite.cpp (DefiniteSwitchStatement): Fix problems with
+	switch statements without a default label.
+
 2004-03-25  Eric Blake  <ebb9@byu.net>
 
 	* configure.ac (AC_CXX_RTTI): Compilers have improved in 2 years,
