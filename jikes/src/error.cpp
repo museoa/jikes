@@ -4647,8 +4647,7 @@ wchar_t *SemanticError::PrintUNREACHABLE_DEFAULT_CATCH_CLAUSE(ErrorInfo &err, Le
 {
     ErrorString s;
 
-    s << "This try block cannot throw a \"checked exception\" (JLS section 14.7),"
-         " you may have intended to catch a RuntimeException instead of an Exception.";
+    s << "This try block cannot throw a \"checked exception\" (JLS section 14.7) that can be caught here. You may have intended to catch a RuntimeException instead of an Exception.";
 
     return s.Array();
 }
