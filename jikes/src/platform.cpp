@@ -1395,9 +1395,9 @@ wchar_t StringConstant::US_AND[]                        = {U_AM, U_NU}, // "&"
 
 wchar_t StringConstant::US_smallest_int[] = {U_MINUS, U_2, U_1, U_4, U_7, U_4, U_8, U_3, U_6, U_4, U_8, U_NU}; // "-2147483648"
 
-char StringConstant::U8S_help_header[] = ("Jikes Compiler - " JIKES_VERSION_STRING
-                                          "\n(C) Copyright IBM Corp. 1997, 1998, 1999, 2000, 2001.\n"
-                                          "- Licensed Materials - Program Property of IBM - All Rights Reserved.\n");
+char StringConstant::U8S_help_header[] = "Jikes Compiler - " JIKES_VERSION_STRING
+        "\n(C) Copyright IBM Corp. 1997, 1998, 1999, 2000, 2001.\n"
+        "- Licensed Materials - Program Property of IBM - All Rights Reserved.\n";
 char StringConstant::U8S_command_format[] = "use: jikes [options] [@files] file.java...\n";
 
 char StringConstant::U8S_B[] = {U_B, U_NU}, // "B"

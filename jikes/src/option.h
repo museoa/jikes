@@ -67,7 +67,7 @@ public:
         DISABLED_OPTION
     };
 
-    OptionError(OptionErrorKind kind_, char *str) : kind(kind_)
+    OptionError(OptionErrorKind kind_, const char *str) : kind(kind_)
     {
         name = new char[strlen(str) + 1];
         strcpy(name, str);
