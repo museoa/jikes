@@ -133,6 +133,12 @@ void Semantic::ProcessTypeNames()
     }
 
     //
+    // Use this tuple to compute the list of valid types encountered in this
+    // compilation unit.
+    //
+    Tuple<TypeSymbol *> type_list;
+
+    //
     // Process each type in this compilation unit, in turn
     //
     for (int k = 0; k < compilation_unit -> NumTypeDeclarations(); k++)
@@ -175,6 +181,8 @@ void Semantic::ProcessTypeNames()
                                                old_type -> FileLoc());
                             }
                         }
+
+                        type_list.Next() = type; // Save valid type for later processing. See below
 
                         type -> MarkSourceNoLongerPending();
                         type -> semantic_environment = new SemanticEnvironment((Semantic *) this, type, NULL);
@@ -229,6 +237,8 @@ void Semantic::ProcessTypeNames()
                                                old_type -> FileLoc());
                             }
                         }
+
+                        type_list.Next() = type; // Save valid type for later processing. See below
 
                         type -> MarkSourceNoLongerPending();
                         type -> semantic_environment = new SemanticEnvironment((Semantic *) this, type, NULL);
@@ -303,7 +313,67 @@ void Semantic::ProcessTypeNames()
 
     CheckPackage();
     ProcessImports();
-    ProcessSuperTypeDependences();
+
+    //
+    // Process outer type of superclasses and interfaces and make sure that compilation unit
+    // contains exactly one public type.
+    //
+    TypeSymbol *public_type = NULL;
+    for (int i = 0; i < type_list.Length(); i++)
+    {
+        TypeSymbol *type = type_list[i];
+
+        AstClassDeclaration *class_declaration = type -> declaration -> ClassDeclarationCast();
+        AstInterfaceDeclaration *interface_declaration = type -> declaration -> InterfaceDeclarationCast();
+        if (class_declaration)
+             ProcessSuperTypeDependences(class_declaration);
+        else ProcessSuperTypeDependences(interface_declaration);
+
+        if (type && type -> ACC_PUBLIC())
+        {
+            if (! public_type)
+            {
+                public_type = type;
+
+                if  (source_file_symbol -> Identity() != public_type -> Identity())
+                {
+                    if (class_declaration)
+                    {
+                        ReportSemError(SemanticError::MISMATCHED_TYPE_AND_FILE_NAMES,
+                                       class_declaration -> identifier_token,
+                                       class_declaration -> identifier_token,
+                                       public_type -> Name());
+                    }
+                    else
+                    {
+                        ReportSemError(SemanticError::MISMATCHED_TYPE_AND_FILE_NAMES,
+                                       interface_declaration -> identifier_token,
+                                       interface_declaration -> identifier_token,
+                                       public_type -> Name());
+                    }
+                }
+            }
+            else
+            {
+                if (class_declaration)
+                {
+                    ReportSemError(SemanticError::MULTIPLE_PUBLIC_TYPES,
+                                   class_declaration -> identifier_token,
+                                   class_declaration -> identifier_token,
+                                   type -> Name(),
+                                   public_type -> Name());
+                }
+                else
+                {
+                    ReportSemError(SemanticError::MULTIPLE_PUBLIC_TYPES,
+                                   interface_declaration -> identifier_token,
+                                   interface_declaration -> identifier_token,
+                                   type -> Name(),
+                                   public_type -> Name());
+                }
+            }
+        }
+    }
 
     return;
 }
@@ -629,193 +699,57 @@ void Semantic::ProcessImports()
 //
 // Pass 1.3: Process outer types in "extends" and "implements" clauses associated with the types.
 //
-void Semantic::ProcessNestedSuperTypeDependences(AstClassDeclaration *class_declaration)
+void Semantic::ProcessSuperTypeDependences(AstClassDeclaration *class_declaration)
 {
-    if (class_declaration -> semantic_environment)
+    TypeSymbol *type = class_declaration -> semantic_environment -> Type();
+    if (class_declaration -> super_opt)
     {
-        TypeSymbol *type = class_declaration -> semantic_environment -> Type();
-        if (class_declaration -> super_opt)
-        {
-            TypeSymbol *super_type = FindFirstType(class_declaration -> super_opt) -> symbol -> TypeCast();
-            if (super_type)
-                super_type -> subtypes -> AddElement(type -> outermost_type);
-        }
-
-        for (int k = 0; k < class_declaration -> NumInterfaces(); k++)
-        {
-            TypeSymbol *super_type = FindFirstType(class_declaration -> Interface(k)) -> symbol -> TypeCast();
-            if (super_type)
-            {
-                assert(super_type -> subtypes);
-
-                super_type -> subtypes -> AddElement(type -> outermost_type);
-            }
-        }
-
-        SetDefaultSuperType(class_declaration);
-
-        AstClassBody *class_body = class_declaration -> class_body;
-        for (int i = 0; i < class_body -> NumNestedClasses(); i++)
-            ProcessNestedSuperTypeDependences(class_body -> NestedClass(i));
-
-        for (int j = 0; j < class_body -> NumNestedInterfaces(); j++)
-            ProcessNestedSuperTypeDependences(class_body -> NestedInterface(j));
+        TypeSymbol *super_type = FindFirstType(class_declaration -> super_opt) -> symbol -> TypeCast();
+        if (super_type)
+            super_type -> subtypes -> AddElement(type -> outermost_type);
     }
+
+    for (int k = 0; k < class_declaration -> NumInterfaces(); k++)
+    {
+         TypeSymbol *super_type = FindFirstType(class_declaration -> Interface(k)) -> symbol -> TypeCast();
+         if (super_type)
+         {
+             assert(super_type -> subtypes);
+
+             super_type -> subtypes -> AddElement(type -> outermost_type);
+         }
+    }
+
+    SetDefaultSuperType(class_declaration);
+
+    AstClassBody *class_body = class_declaration -> class_body;
+    for (int i = 0; i < class_body -> NumNestedClasses(); i++)
+        ProcessSuperTypeDependences(class_body -> NestedClass(i));
+
+    for (int j = 0; j < class_body -> NumNestedInterfaces(); j++)
+        ProcessSuperTypeDependences(class_body -> NestedInterface(j));
 
     return;
 }
 
 
-void Semantic::ProcessNestedSuperTypeDependences(AstInterfaceDeclaration *interface_declaration)
+void Semantic::ProcessSuperTypeDependences(AstInterfaceDeclaration *interface_declaration)
 {
-    if (interface_declaration -> semantic_environment)
+    TypeSymbol *type = interface_declaration -> semantic_environment -> Type();
+    for (int k = 0; k < interface_declaration -> NumExtendsInterfaces(); k++)
     {
-        TypeSymbol *type = interface_declaration -> semantic_environment -> Type();
-        for (int k = 0; k < interface_declaration -> NumExtendsInterfaces(); k++)
-        {
-            TypeSymbol *super_type = FindFirstType(interface_declaration -> ExtendsInterface(k)) -> symbol -> TypeCast();
-            if (super_type)
-                super_type -> subtypes -> AddElement(type -> outermost_type);
-        }
-
-        SetDefaultSuperType(interface_declaration);
-
-        for (int i = 0; i < interface_declaration -> NumNestedClasses(); i++)
-            ProcessNestedSuperTypeDependences(interface_declaration -> NestedClass(i));
-
-        for (int j = 0; j < interface_declaration -> NumNestedInterfaces(); j++)
-            ProcessNestedSuperTypeDependences(interface_declaration -> NestedInterface(j));
+        TypeSymbol *super_type = FindFirstType(interface_declaration -> ExtendsInterface(k)) -> symbol -> TypeCast();
+        if (super_type)
+            super_type -> subtypes -> AddElement(type -> outermost_type);
     }
 
-    return;
-}
+    SetDefaultSuperType(interface_declaration);
 
+    for (int i = 0; i < interface_declaration -> NumNestedClasses(); i++)
+        ProcessSuperTypeDependences(interface_declaration -> NestedClass(i));
 
-void Semantic::ProcessSuperTypeDependences()
-{
-    //
-    // Process outer type of superclasses and interfaces and make sure that compilation unit
-    // contains exactly one public type.
-    //
-    TypeSymbol *public_type = NULL;
-    for (int i = 0; i < compilation_unit -> NumTypeDeclarations(); i++)
-    {
-        TypeSymbol *type = NULL;
-
-        Ast *type_declaration = compilation_unit -> TypeDeclaration(i);
-        switch(type_declaration -> kind)
-        {
-            case Ast::CLASS:
-            {
-                AstClassDeclaration *class_declaration = (AstClassDeclaration *) type_declaration;
-                if (class_declaration -> semantic_environment)
-                {
-                    type = class_declaration -> semantic_environment -> Type();
-                    if (class_declaration -> super_opt)
-                    {
-                        TypeSymbol *super_type = FindFirstType(class_declaration -> super_opt) -> symbol -> TypeCast();
-                        if (super_type)
-                            super_type -> subtypes -> AddElement(type);
-                    }
-
-                    for (int k = 0; k < class_declaration -> NumInterfaces(); k++)
-                    {
-                        TypeSymbol *super_type = FindFirstType(class_declaration -> Interface(k)) -> symbol -> TypeCast();
-                        if (super_type)
-                        {
-                            assert(super_type -> subtypes);
-
-                            super_type -> subtypes -> AddElement(type);
-                        }
-                    }
-
-                    SetDefaultSuperType(class_declaration);
-
-                    AstClassBody *class_body = class_declaration -> class_body;
-                    for (int l = 0; l < class_body -> NumNestedClasses(); l++)
-                        ProcessNestedSuperTypeDependences(class_body -> NestedClass(l));
-
-                    for (int j = 0; j < class_body -> NumNestedInterfaces(); j++)
-                        ProcessNestedSuperTypeDependences(class_body -> NestedInterface(j));
-                }
-                break;
-            }
-            case Ast::INTERFACE:
-            {
-                AstInterfaceDeclaration *interface_declaration = (AstInterfaceDeclaration *) type_declaration;
-                if (interface_declaration -> semantic_environment)
-                {
-                    type = interface_declaration -> semantic_environment -> Type();
-                    for (int k = 0; k < interface_declaration -> NumExtendsInterfaces(); k++)
-                    {
-                        TypeSymbol *super_type = FindFirstType(interface_declaration -> ExtendsInterface(k)) -> symbol -> TypeCast();
-                        if (super_type)
-                            super_type -> subtypes -> AddElement(type);
-                    }
-
-                    SetDefaultSuperType(interface_declaration);
-
-                    for (int l = 0; l < interface_declaration -> NumNestedClasses(); l++)
-                        ProcessNestedSuperTypeDependences(interface_declaration -> NestedClass(l));
-
-                    for (int j = 0; j < interface_declaration -> NumNestedInterfaces(); j++)
-                        ProcessNestedSuperTypeDependences(interface_declaration -> NestedInterface(j));
-                }
-                break;
-            }
-            default:
-                break;
-        }
-
-        if (type && type -> ACC_PUBLIC())
-        {
-            if (! public_type)
-            {
-                public_type = type;
-
-                if  (source_file_symbol -> Identity() != public_type -> Identity())
-                {
-                    if (type -> ACC_INTERFACE())
-                    {
-                        AstInterfaceDeclaration *interface_declaration = (AstInterfaceDeclaration *) type_declaration;
-                        ReportSemError(SemanticError::MISMATCHED_TYPE_AND_FILE_NAMES,
-                                       interface_declaration -> identifier_token,
-                                       interface_declaration -> identifier_token,
-                                       public_type -> Name());
-                    }
-                    else
-                    {
-                        AstClassDeclaration *class_declaration = (AstClassDeclaration *) type_declaration;
-                        ReportSemError(SemanticError::MISMATCHED_TYPE_AND_FILE_NAMES,
-                                       class_declaration -> identifier_token,
-                                       class_declaration -> identifier_token,
-                                       public_type -> Name());
-                    }
-                }
-            }
-            else
-            {
-                if (type -> ACC_INTERFACE())
-                {
-                    AstInterfaceDeclaration *interface_declaration = (AstInterfaceDeclaration *) type_declaration;
-                    ReportSemError(SemanticError::MULTIPLE_PUBLIC_TYPES,
-                                   interface_declaration -> identifier_token,
-                                   interface_declaration -> identifier_token,
-                                   type -> Name(),
-                                   public_type -> Name());
-                }
-                else
-                {
-                    AstClassDeclaration *class_declaration = (AstClassDeclaration *) type_declaration;
-                    ReportSemError(SemanticError::MULTIPLE_PUBLIC_TYPES,
-                                   class_declaration -> identifier_token,
-                                   class_declaration -> identifier_token,
-                                   type -> Name(),
-                                   public_type -> Name());
-                }
-            }
-        }
-    }
+    for (int j = 0; j < interface_declaration -> NumNestedInterfaces(); j++)
+        ProcessSuperTypeDependences(interface_declaration -> NestedInterface(j));
 
     return;
 }
@@ -1212,22 +1146,27 @@ void Semantic::ProcessTypeHeaders(AstClassDeclaration *class_declaration)
     ProcessSuperTypesOfOuterType(this_type);
 
     //
-    // Note that no environment is set before we invoke ProcessTypeHeader to process the
-    // super types of this_type. As a result, the dependence map is not updated with tha
-    // information. We do so here.
+    // Note that if we are processing an outermost type, no environment is set before we
+    // invoke ProcessTypeHeader to process its super types. Therefore, the dependence map
+    // is not updated with the super type information. In that case, we do so here.
     //
-    if (this_type -> super)
+    if (state_stack.Size() == 0)
     {
-        AddDependence(this_type,
-                      this_type -> super,
-                      (class_declaration -> super_opt ? class_declaration -> super_opt -> LeftToken()
-                                                      : class_declaration -> identifier_token));
-    }
+        if (this_type -> super)
+        {
+            AddDependence(this_type,
+                          this_type -> super,
+                          (class_declaration -> super_opt ? class_declaration -> super_opt -> LeftToken()
+                                                          : class_declaration -> identifier_token));
+        }
 
-    for (int i = 0; i < class_declaration -> NumInterfaces(); i++)
-    {
-        if (class_declaration -> Interface(i) -> symbol)
-            AddDependence(this_type, class_declaration -> Interface(i) -> Type(), class_declaration -> Interface(i) -> LeftToken());
+        for (int i = 0; i < class_declaration -> NumInterfaces(); i++)
+        {
+            if (class_declaration -> Interface(i) -> symbol)
+                AddDependence(this_type,
+                              class_declaration -> Interface(i) -> Type(),
+                              class_declaration -> Interface(i) -> LeftToken());
+        }
     }
 
     return;
@@ -3044,33 +2983,36 @@ void Semantic::AddDefaultConstructor(TypeSymbol *type)
 
 void Semantic::CheckInheritedMethodThrows(AstMethodDeclaration *method_declaration, MethodSymbol *method)
 {
-    for (int i = 0; i < method_declaration -> NumThrows(); i++)
+    if (method_declaration -> NumThrows() > 0)
     {
-        AstExpression *name = method_declaration -> Throw(i);
-        TypeSymbol *exception = (TypeSymbol *) name -> symbol;
+        if (! method -> IsTyped())
+            method -> ProcessMethodSignature((Semantic *) this, method_declaration -> Throw(0) -> LeftToken());
+        method -> ProcessMethodThrows((Semantic *) this, method_declaration -> Throw(0) -> LeftToken());
 
-        if (CheckedException(exception))
+        for (int i = 0; i < method_declaration -> NumThrows(); i++)
         {
-            if (! method -> IsTyped())
-                method -> ProcessMethodSignature((Semantic *) this, name -> RightToken());
-            method -> ProcessMethodThrows((Semantic *) this, name -> RightToken());
+            AstExpression *name = method_declaration -> Throw(i);
+            TypeSymbol *exception = (TypeSymbol *) name -> symbol;
 
-            int k;
-            for (k = method -> NumThrows() - 1; k >= 0; k--)
+            if (CheckedException(exception))
             {
-                if (exception -> IsSubclass(method -> Throws(k)))
-                    break;
-            }
+                int k;
+                for (k = method -> NumThrows() - 1; k >= 0; k--)
+                {
+                    if (exception -> IsSubclass(method -> Throws(k)))
+                        break;
+                }
 
-            if (k < 0)
-            {
-                ReportSemError(SemanticError::MISMATCHED_OVERRIDDEN_EXCEPTION,
-                               name -> LeftToken(),
-                               name -> RightToken(),
-                               exception -> Name(),
-                               method -> Header(),
-                               method -> containing_type -> ContainingPackage() -> PackageName(),
-                               method -> containing_type -> ExternalName());
+                if (k < 0)
+                {
+                    ReportSemError(SemanticError::MISMATCHED_OVERRIDDEN_EXCEPTION,
+                                   name -> LeftToken(),
+                                   name -> RightToken(),
+                                   exception -> Name(),
+                                   method -> Header(),
+                                   method -> containing_type -> ContainingPackage() -> PackageName(),
+                                   method -> containing_type -> ExternalName());
+                }
             }
         }
     }

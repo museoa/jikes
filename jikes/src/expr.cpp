@@ -318,6 +318,9 @@ MethodSymbol *Semantic::FindConstructor(TypeSymbol *containing_type, Ast *ast,
 
     delete [] argument;
 
+    //
+    // If this constructor came from a class file, make sure that its throws clause has been processed.
+    //
     constructor_set[0] -> ProcessMethodThrows((Semantic *) this, right_tok);
 
     return constructor_set[0];
@@ -627,6 +630,11 @@ See comment above...
                        method -> containing_type -> ExternalName());
     }
 
+    //
+    // If this method came from a class file, make sure that its throws clause has been processed.
+    //
+    method -> ProcessMethodThrows((Semantic *) this, field_access -> identifier_token);
+
     return method;
 }
 
@@ -917,6 +925,11 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
         }
     }
 
+    //
+    // If this method came from a class file, make sure that its throws clause has been processed.
+    //
+    method_symbol -> ProcessMethodThrows((Semantic *) this, method_call -> method -> RightToken());
+
     return method_symbol;
 }
 
@@ -983,6 +996,10 @@ inline VariableSymbol *Semantic::FindVariableInType(TypeSymbol *type, AstFieldAc
                            variable_symbol -> owner -> TypeCast() -> ContainingPackage() -> PackageName(),
                            variable_symbol -> owner -> TypeCast() -> ExternalName());
         }
+
+        if (! variable_symbol -> IsTyped())
+            variable_symbol -> ProcessVariableSignature((Semantic *) this, field_access -> identifier_token);
+
         return variable_symbol;
     }
 
@@ -1209,6 +1226,9 @@ VariableSymbol *Semantic::FindVariableInEnvironment(SemanticEnvironment *&where_
                        variables_found[i] -> owner -> TypeCast() -> ContainingPackage() -> PackageName(),
                        variables_found[i] -> owner -> TypeCast() -> ExternalName());
     }
+
+    if (variable_symbol && (! variable_symbol -> IsTyped()))
+        variable_symbol -> ProcessVariableSignature((Semantic *) this, identifier_token);
 
     return variable_symbol;
 }
@@ -1563,11 +1583,7 @@ void Semantic::ProcessSimpleName(Ast *expr)
     {
         simple_name -> symbol = variable_symbol;
 
-        //
-        // Make sure that variable has been fully prepared
-        //
-        if (! variable_symbol -> IsTyped())
-            variable_symbol -> ProcessVariableSignature((Semantic *) this, simple_name -> identifier_token);
+        assert(variable_symbol -> IsTyped());
 
         //
         // A variable_symbol FINAL must have an initial value.
@@ -1956,8 +1972,7 @@ void Semantic::FindVariableMember(TypeSymbol *type, TypeSymbol *environment_type
         VariableSymbol *variable_symbol = FindVariableInType(type, field_access);
         if (variable_symbol)
         {
-            if (! variable_symbol -> IsTyped())
-                variable_symbol -> ProcessVariableSignature((Semantic *) this, field_access -> identifier_token);
+            assert(variable_symbol -> IsTyped());
 
             //
             // If a variable is FINAL and initialized with a constant expression,
@@ -2085,8 +2100,7 @@ void Semantic::ProcessAmbiguousName(Ast *name)
         VariableSymbol *variable_symbol = FindVariableInEnvironment(where_found, state_stack.Top(), simple_name -> identifier_token);
         if (variable_symbol)
         {
-            if (! variable_symbol -> IsTyped())
-                variable_symbol -> ProcessVariableSignature((Semantic *) this, simple_name -> identifier_token);
+            assert(variable_symbol -> IsTyped());
 
             //
             // A variable_symbol that is FINAL may have an initial value.
@@ -2199,9 +2213,15 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                 else // (type == control.void_type)
                      type = control.Void();
                 base -> symbol = type;
-                field_access -> symbol = type -> FindVariableSymbol(control.type_name_symbol);
 
-                assert(field_access -> symbol);
+                VariableSymbol *variable_symbol = type -> FindVariableSymbol(control.type_name_symbol);
+
+                assert(variable_symbol);
+
+                if (! variable_symbol -> IsTyped())
+                    variable_symbol -> ProcessVariableSignature((Semantic *) this, field_access -> identifier_token);
+
+                field_access -> symbol = variable_symbol;
             }
             else
             {
@@ -2457,8 +2477,7 @@ void Semantic::ProcessAmbiguousName(Ast *name)
 
                     if (variable_symbol)
                     {
-                        if (! variable_symbol -> IsTyped())
-                            variable_symbol -> ProcessVariableSignature((Semantic *) this, field_access -> identifier_token);
+                        assert(variable_symbol -> IsTyped());
 
                         if (base -> IsName()) // a type name (as opposed to an expression) ? 
                         {
@@ -2639,11 +2658,9 @@ void Semantic::ProcessFieldAccess(Ast *expr)
                            type -> Name());
             field_access -> symbol = control.no_type;
         }
-        else
+        else // Assertion: either it's not a variable (an error) or the signature of the variable has been typed
         {
-            VariableSymbol *variable = field_access -> symbol -> VariableCast();
-            if (variable && (! variable -> IsTyped()))
-                variable -> ProcessVariableSignature((Semantic *) this, field_access -> identifier_token);
+            assert((! field_access -> symbol -> VariableCast()) || field_access -> symbol -> VariableCast() -> IsTyped());
         }
     }
 
@@ -2883,8 +2900,7 @@ MethodSymbol *Semantic::FindMethodMember(TypeSymbol *type, TypeSymbol *environme
 
         if (method)
         {
-            if (! method -> IsTyped())
-                method -> ProcessMethodSignature((Semantic *) this, field_access -> identifier_token);
+            assert(method -> IsTyped());
 
             //
             // Access to an private or protected method in an enclosing type ?
@@ -2958,8 +2974,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
             method_call -> symbol = control.no_type;
         else
         {
-            if (! method -> IsTyped())
-                method -> ProcessMethodSignature((Semantic *) this, simple_name -> identifier_token);
+            assert(method -> IsTyped());
 
             if (! method -> ACC_STATIC())
             {
@@ -3091,8 +3106,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
 
                 if (method)
                 {
-                    if (! method -> IsTyped())
-                        method -> ProcessMethodSignature((Semantic *) this, base -> LeftToken());
+                    assert(method -> IsTyped());
 
                     if (base -> IsName() && (! method -> ACC_STATIC()))
                     {
@@ -3205,8 +3219,6 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
     if (method_call -> symbol != control.no_type)
     {
         MethodSymbol *method = (MethodSymbol *) method_call -> symbol;
-
-        method -> ProcessMethodThrows((Semantic *) this, method_call -> method -> RightToken()); 
 
         if (exception_set)
         {

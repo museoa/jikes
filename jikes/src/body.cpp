@@ -1525,7 +1525,7 @@ void Semantic::ProcessThisCall(AstThisCall *this_call)
     }
     if (no_bad_argument)
     {
-        MethodSymbol *constructor = FindConstructor(this_type, this_call, this_call -> LeftToken(), this_call -> RightToken());
+        MethodSymbol *constructor = FindConstructor(this_type, this_call, this_call -> this_token, this_call -> RightToken());
         if (constructor)
         {
             this_call -> symbol = constructor;
@@ -1650,7 +1650,7 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
     }
     else if (no_bad_argument)
     {
-        MethodSymbol *constructor = FindConstructor(super_type, super_call, super_call -> LeftToken(), super_call -> RightToken());
+        MethodSymbol *constructor = FindConstructor(super_type, super_call, super_call -> super_token, super_call -> RightToken());
 
         if (constructor)
         {
@@ -1708,7 +1708,6 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
             //
             // Make sure that the throws signature of the constructor is processed.
             //
-            constructor -> ProcessMethodThrows((Semantic *) this, super_call -> super_token);
             for (int k = constructor -> NumThrows() - 1; k >= 0; k--)
             {
                 TypeSymbol *exception = constructor -> Throws(k);

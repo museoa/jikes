@@ -505,9 +505,8 @@ public:
     void CheckPackage();
     void ProcessTypeNames();
     void ProcessImports();
-    void ProcessNestedSuperTypeDependences(AstClassDeclaration *);
-    void ProcessNestedSuperTypeDependences(AstInterfaceDeclaration *);
-    void ProcessSuperTypeDependences();
+    void ProcessSuperTypeDependences(AstClassDeclaration *);
+    void ProcessSuperTypeDependences(AstInterfaceDeclaration *);
 
     LiteralValue *ComputeFinalValue(AstVariableDeclarator *);
 
