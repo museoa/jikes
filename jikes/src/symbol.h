@@ -1052,6 +1052,14 @@ public:
     inline void CompressSpace();
 
 private:
+    //
+    // The fields hash_address and next_type are used in the class TypeLookupTable
+    // to contruct a mapping from each fully_qualified name into the type that it defines.
+    //
+    friend TypeLookupTable;
+    unsigned hash_address;
+    TypeSymbol *next_type;
+
     NameSymbol *external_name_symbol;
 
     SymbolTable *table;
@@ -1545,7 +1553,7 @@ inline PathSymbol *SymbolTable::InsertPathSymbol(NameSymbol *name_symbol, Direct
     // 2 times the size of the base, and we have not yet reached the maximum
     // allowable size for a base, reallocate a larger base and rehash the elements.
     //
-    if ((hash_size < MAX_HASH_SIZE) && (Size() > (hash_size << 1)))
+    if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
 
     return symbol;
@@ -1582,7 +1590,7 @@ inline DirectorySymbol *SymbolTable::InsertDirectorySymbol(NameSymbol *name_symb
     // 2 times the size of the base, and we have not yet reached the maximum
     // allowable size for a base, reallocate a larger base and rehash the elements.
     //
-    if ((hash_size < MAX_HASH_SIZE) && (Size() > (hash_size << 1)))
+    if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
 
     return symbol;
@@ -1638,7 +1646,7 @@ inline FileSymbol *SymbolTable::InsertFileSymbol(NameSymbol *name_symbol)
     // 2 times the size of the base, and we have not yet reached the maximum
     // allowable size for a base, reallocate a larger base and rehash the elements.
     //
-    if ((hash_size < MAX_HASH_SIZE) && (Size() > (hash_size << 1)))
+    if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
 
     return symbol;
@@ -1691,7 +1699,7 @@ inline PackageSymbol *SymbolTable::InsertPackageSymbol(NameSymbol *name_symbol, 
     // 2 times the size of the base, and we have not yet reached the maximum
     // allowable size for a base, reallocate a larger base and rehash the elements.
     //
-    if ((hash_size < MAX_HASH_SIZE) && (Size() > (hash_size << 1)))
+    if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
 
     return symbol;
@@ -1759,7 +1767,7 @@ inline TypeSymbol *SymbolTable::InsertSystemTypeSymbol(NameSymbol *name_symbol)
     // 2 times the size of the base, and we have not yet reached the maximum
     // allowable size for a base, reallocate a larger base and rehash the elements.
     //
-    if ((hash_size < MAX_HASH_SIZE) && (Size() > (hash_size << 1)))
+    if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
 
     return symbol;
@@ -1789,7 +1797,7 @@ inline TypeSymbol *SymbolTable::InsertOuterTypeSymbol(NameSymbol *name_symbol)
     // 2 times the size of the base, and we have not yet reached the maximum
     // allowable size for a base, reallocate a larger base and rehash the elements.
     //
-    if ((hash_size < MAX_HASH_SIZE) && (Size() > (hash_size << 1)))
+    if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
 
     return symbol;
@@ -1819,7 +1827,7 @@ inline TypeSymbol *SymbolTable::InsertNestedTypeSymbol(NameSymbol *name_symbol)
     // 2 times the size of the base, and we have not yet reached the maximum
     // allowable size for a base, reallocate a larger base and rehash the elements.
     //
-    if ((hash_size < MAX_HASH_SIZE) && (Size() > (hash_size << 1)))
+    if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
 
     return symbol;
@@ -1934,7 +1942,7 @@ inline MethodSymbol *SymbolTable::InsertMethodSymbol(NameSymbol *name_symbol)
     // 2 times the size of the base, and we have not yet reached the maximum
     // allowable size for a base, reallocate a larger base and rehash the elements.
     //
-    if ((hash_size < MAX_HASH_SIZE) && (Size() > (hash_size << 1)))
+    if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
 
     return symbol;
@@ -1977,7 +1985,7 @@ inline void SymbolTable::InsertMethodSymbol(MethodSymbol *method_symbol)
     // 2 times the size of the base, and we have not yet reached the maximum
     // allowable size for a base, reallocate a larger base and rehash the elements.
     //
-    if ((hash_size < MAX_HASH_SIZE) && (Size() > (hash_size << 1)))
+    if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
 
     return;
@@ -2055,7 +2063,7 @@ inline VariableSymbol *SymbolTable::InsertVariableSymbol(NameSymbol *name_symbol
     // 2 times the size of the base, and we have not yet reached the maximum
     // allowable size for a base, reallocate a larger base and rehash the elements.
     //
-    if ((hash_size < MAX_HASH_SIZE) && (Size() > (hash_size << 1)))
+    if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
 
     return symbol;
@@ -2089,7 +2097,7 @@ inline void SymbolTable::InsertVariableSymbol(VariableSymbol *variable_symbol)
     // 2 times the size of the base, and we have not yet reached the maximum
     // allowable size for a base, reallocate a larger base and rehash the elements.
     //
-    if ((hash_size < MAX_HASH_SIZE) && (Size() > (hash_size << 1)))
+    if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
 
     return;

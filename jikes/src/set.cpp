@@ -234,7 +234,7 @@ void SymbolMap::Map(Symbol *symbol, Symbol *image)
         // allowable size for a base, reallocate a larger base and rehash
          // the elements.
         //
-        if ((hash_size < MAX_HASH_SIZE) && (symbol_pool.Length() > (hash_size << 1)))
+        if ((symbol_pool.Length() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
             Rehash();
     }
     else

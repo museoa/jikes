@@ -13,6 +13,11 @@
 #include "semantic.h"
 #include "zip.h"
 
+//
+// Convert the null terminated Unicode string source into its Utf8
+// representation pointed to by target. The char string target is presumed
+// to have been allocated and to be large enough to accomodate the conversion.
+//
 int Control::ConvertUnicodeToUtf8(wchar_t *source, char *target)
 {
     int length = 0;
@@ -43,6 +48,54 @@ int Control::ConvertUnicodeToUtf8(wchar_t *source, char *target)
     target[length] = U_NULL;
 
     return length;
+}
+
+
+//
+// Convert the Utf8 string of length len pointed to by source into its unicode
+// representation pointed to by target. The wchar_t string target is presumed
+// to have been allocated and to be large enough (at least len + 1) to accomodate
+// the conversion.
+//
+int Control::ConvertUtf8ToUnicode(wchar_t *target, char *source, int len)
+{
+    wchar_t *ptr = target;
+    for (int i = 0; i < len; i++, ptr++)
+    {
+        u1 ch = source[i];
+
+        if ((ch & 0x80) == 0)
+            *ptr = ch;
+        else if ((ch & 0xE0) == 0xC0)
+        {
+            *ptr = ch & 0x1F;
+            *ptr <<= 6;
+            i++;
+            ch = source[i] & 0x3F;
+            *ptr += ch;
+        }
+        else if ((ch & 0xF0) == 0xE0)
+        {
+            *ptr = ch & 0x0F;
+            *ptr <<= 6;
+            i++;
+            ch = source[i] & 0x3F;
+            *ptr += ch;
+
+            *ptr <<= 6;
+            i++;
+            ch = source[i] & 0x3F;
+            *ptr += ch;
+        }
+        else
+        {
+            assert(! "valid character encoding: chaos, Damn, Caramba, Zut !!!\n");
+        }
+    }
+
+    *ptr = U_NULL;
+
+    return (ptr - target);
 }
 
 

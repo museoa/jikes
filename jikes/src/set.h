@@ -243,7 +243,7 @@ public:
         // 2 times the size of the base, and we have not yet reached the maximum
         // allowable size for a base, reallocate a larger base and rehash the elements.
         //
-        if ((hash_size < MAX_HASH_SIZE) && (symbol_pool.Length() > (hash_size << 1)))
+        if ((symbol_pool.Length() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
             Rehash();
 
         return;

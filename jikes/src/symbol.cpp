@@ -359,6 +359,8 @@ void TypeSymbol::SetSignature(Control &control)
         this -> signature = control.ConvertUnicodeToUtf8(type_signature);
 
         delete [] type_signature;
+
+        control.type_table.InsertType((TypeSymbol *) this);
     }
 
     return;
@@ -966,14 +968,8 @@ void TypeSymbol::ProcessNestedTypeSignatures(Semantic *sem, LexStream::TokenInde
 {
     for (int i = 0; i < NumNestedTypeSignatures(); i++)
     {
-        int length = strlen(NestedTypeSignature(i));
-        wchar_t *nested_class_name = new wchar_t[length + 1];
-        sem -> ConvertUtf8ToUnicode(nested_class_name, NestedTypeSignature(i), length);
-        NameSymbol *name_symbol = sem -> control.FindOrInsertName(nested_class_name, length);
-
-        delete [] nested_class_name;
+        NameSymbol *name_symbol = sem -> control.ConvertUtf8ToUnicode(NestedTypeSignature(i), strlen(NestedTypeSignature(i)));
         delete [] NestedTypeSignature(i);
-
         sem -> ProcessNestedType(this, name_symbol, tok);
     }
 
@@ -995,11 +991,11 @@ void MethodSymbol::ProcessMethodThrows(Semantic *sem, LexStream::TokenIndex tok)
         //
         for (int i = 0; i < NumThrowsSignatures(); i++)
         {
-            int length = strlen(ThrowsSignature(i));
-            wchar_t *type_name = new wchar_t[length + 1];
-            sem -> ConvertUtf8ToUnicode(type_name, ThrowsSignature(i), length);
-            this -> AddThrows(sem -> ReadType(this -> containing_type, type_name, tok));
-            delete [] type_name;
+            TypeSymbol *type = sem -> ReadTypeFromSignature(this -> containing_type,
+                                                            ThrowsSignature(i),
+                                                            strlen(ThrowsSignature(i)),
+                                                            tok);
+            this -> AddThrows(type);
             delete [] ThrowsSignature(i);
         }
 

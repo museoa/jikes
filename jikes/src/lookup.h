@@ -46,6 +46,7 @@ class Utf8LiteralValue;
 
 class Utf8LiteralTable;
 class NameLookupTable;
+class TypeLookupTable;
 class LiteralLookupTable;
 
 class AstBinaryExpression;
@@ -479,6 +480,36 @@ private:
     int prime_index;
 
     inline static unsigned Hash(wchar_t *head, int len) { return Hash::Function(head, len); }
+
+    void Rehash();
+};
+
+
+class TypeLookupTable
+{
+public:
+    TypeLookupTable(int estimate = 16384);
+    ~TypeLookupTable();
+
+    TypeSymbol *FindType(char *, int);
+    void InsertType(TypeSymbol *);
+
+private:
+    Tuple<TypeSymbol *> symbol_pool;
+
+    enum
+    {
+        DEFAULT_HASH_SIZE = 4093,
+        MAX_HASH_SIZE = 32771
+    };
+
+    TypeSymbol **base;
+    int hash_size;
+
+    static int primes[];
+    int prime_index;
+
+    inline static unsigned Hash(char *head, int len) { return Hash::Function(head, len); }
 
     void Rehash();
 };

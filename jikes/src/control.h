@@ -70,6 +70,7 @@ public:
                        float_table,
                        double_table;
     NameLookupTable name_table;
+    TypeLookupTable type_table;
 
     //
     //
@@ -423,6 +424,18 @@ public:
         delete [] target;
 
         return literal;
+    }
+
+    static int ConvertUtf8ToUnicode(wchar_t *, char *, int);
+
+    NameSymbol *ConvertUtf8ToUnicode(char *source, int length)
+    {
+        wchar_t *name = new wchar_t[length + 1];
+        int name_length = ConvertUtf8ToUnicode(name, source, length);
+        NameSymbol *name_symbol = FindOrInsertName(name, name_length);
+        delete [] name;
+
+        return name_symbol;
     }
 
     void FindPathsToDirectory(PackageSymbol *);

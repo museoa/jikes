@@ -2085,49 +2085,6 @@ void Semantic::CleanUpType(TypeSymbol *type)
 }
 
 
-//
-//
-//
-void Semantic::ConvertUtf8ToUnicode(wchar_t *target, char *source, int len)
-{
-    for (int i = 0; i < len; i++, target++)
-    {
-        u1 ch = source[i];
-
-        if ((ch & 0x80) == 0)
-            *target = ch;
-        else if ((ch & 0xE0) == 0xC0)
-        {
-            *target = ch & 0x1F;
-            *target <<= 6;
-            i++;
-            ch = source[i] & 0x3F;
-            *target += ch;
-        }
-        else if ((ch & 0xF0) == 0xE0)
-        {
-            *target = ch & 0x0F;
-            *target <<= 6;
-            i++;
-            ch = source[i] & 0x3F;
-            *target += ch;
-
-            *target <<= 6;
-            i++;
-            ch = source[i] & 0x3F;
-            *target += ch;
-        }
-        else
-        {
-fprintf(stderr, "chaos: Damn, Caramba, Zut !!!\n");
-        }
-    }
-
-    *target = U_NULL;
-    return;
-}
-
-
 TypeSymbol *Semantic::ReadType(FileSymbol *file_symbol, PackageSymbol *package, NameSymbol *name_symbol, LexStream::TokenIndex tok)
 {
     TypeSymbol *type;
@@ -2261,17 +2218,15 @@ TypeSymbol *Semantic::GetBadNestedType(TypeSymbol *type, LexStream::TokenIndex i
 }
 
 
-Symbol *Semantic::ProcessImportQualifiedName(AstExpression *name)
+void Semantic::ProcessImportQualifiedName(AstExpression *name)
 {
-    PackageSymbol *package = NULL;
-    TypeSymbol *type = NULL;
-
     AstFieldAccess *field_access = name -> FieldAccessCast();
     if (field_access)
     {
-        Symbol *symbol = ProcessImportQualifiedName(field_access -> base);
+        ProcessImportQualifiedName(field_access -> base);
+        Symbol *symbol = field_access -> base -> symbol;
 
-        type = symbol -> TypeCast();
+        TypeSymbol *type = symbol -> TypeCast();
         if (type) // The base name is a type
         {
             if (! type -> NestedTypesProcessed())
@@ -2287,7 +2242,7 @@ Symbol *Semantic::ProcessImportQualifiedName(AstExpression *name)
         }
         else
         {
-            package = symbol -> PackageCast();
+            PackageSymbol *package = symbol -> PackageCast();
             NameSymbol *name_symbol = lex_stream -> NameSymbol(field_access -> identifier_token);
             type = package -> FindTypeSymbol(name_symbol);
             if (! type)
@@ -2312,7 +2267,7 @@ Symbol *Semantic::ProcessImportQualifiedName(AstExpression *name)
                 if (! subpackage)
                     subpackage = package -> InsertPackageSymbol(name_symbol);
                 control.FindPathsToDirectory(subpackage);
-                package = subpackage;
+                field_access -> symbol = subpackage;
             }
         }
     }
@@ -2329,6 +2284,7 @@ Symbol *Semantic::ProcessImportQualifiedName(AstExpression *name)
         //    import statement. Class names in import statements must be fully package
         //    qualified, and be resolvable without reference to inheritance relations...
         //
+        TypeSymbol *type;
         if (compilation_unit -> package_declaration_opt)
         {
             type = FindSimpleNameType(this_package, simple_name -> identifier_token);
@@ -2354,28 +2310,27 @@ Symbol *Semantic::ProcessImportQualifiedName(AstExpression *name)
         else
         {
             NameSymbol *name_symbol = lex_stream -> NameSymbol(simple_name -> identifier_token);
-            package = control.external_table.FindPackageSymbol(name_symbol);
+            PackageSymbol *package = control.external_table.FindPackageSymbol(name_symbol);
             if (! package)
                 package = control.external_table.InsertPackageSymbol(name_symbol, NULL);
             control.FindPathsToDirectory(package);
+            simple_name -> symbol = package;
         }
     }
 
-    return (type ? (Symbol *) type : (Symbol *) package);
+    return;
 }
 
 
-Symbol *Semantic::ProcessPackageOrType(AstExpression *name)
+void Semantic::ProcessPackageOrType(AstExpression *name)
 {
-    PackageSymbol *package = NULL;
-    TypeSymbol *type = NULL;
-
     AstFieldAccess *field_access = name -> FieldAccessCast();
     if (field_access)
     {
-        Symbol *symbol = ProcessPackageOrType(field_access -> base);
+        ProcessPackageOrType(field_access -> base);
+        Symbol *symbol = field_access -> base -> symbol;
 
-        type = symbol -> TypeCast();
+        TypeSymbol *type = symbol -> TypeCast();
         if (type) // The base name is a type
         {
             type = MustFindNestedType(type, field_access);
@@ -2383,7 +2338,7 @@ Symbol *Semantic::ProcessPackageOrType(AstExpression *name)
         }
         else
         {
-            package = symbol -> PackageCast();
+            PackageSymbol *package = symbol -> PackageCast();
             NameSymbol *name_symbol = lex_stream -> NameSymbol(field_access -> identifier_token);
             type = package -> FindTypeSymbol(name_symbol);
             if (! type)
@@ -2408,7 +2363,7 @@ Symbol *Semantic::ProcessPackageOrType(AstExpression *name)
                 if (! subpackage)
                     subpackage = package -> InsertPackageSymbol(name_symbol);
                 control.FindPathsToDirectory(subpackage);
-                package = subpackage;
+                field_access -> symbol = subpackage;
             }
         }
     }
@@ -2418,7 +2373,7 @@ Symbol *Semantic::ProcessPackageOrType(AstExpression *name)
 
         assert(simple_name);
 
-        type = FindType(simple_name -> identifier_token);
+        TypeSymbol *type = FindType(simple_name -> identifier_token);
         if (type)
         {
             TypeAccessCheck(simple_name, type);
@@ -2427,20 +2382,22 @@ Symbol *Semantic::ProcessPackageOrType(AstExpression *name)
         else
         {
             NameSymbol *name_symbol = lex_stream -> NameSymbol(simple_name -> identifier_token);
-            package = control.external_table.FindPackageSymbol(name_symbol);
+            PackageSymbol *package = control.external_table.FindPackageSymbol(name_symbol);
             if (! package)
                 package = control.external_table.InsertPackageSymbol(name_symbol, NULL);
             control.FindPathsToDirectory(package);
+            simple_name -> symbol = package;
         }
     }
 
-    return (type ? (Symbol *) type : (Symbol *) package);
+    return;
 }
 
 
 void Semantic::ProcessTypeImportOnDemandDeclaration(AstImportDeclaration *import_declaration)
 {
-    Symbol *symbol = ProcessImportQualifiedName(import_declaration -> name);
+    ProcessImportQualifiedName(import_declaration -> name);
+    Symbol *symbol = import_declaration -> name -> symbol;
 
     PackageSymbol *package = symbol -> PackageCast();
     if (package && package -> directory.Length() == 0)
@@ -2535,7 +2492,7 @@ AstExpression *Semantic::FindFirstType(Ast *name)
 
         assert(simple_name);
 
-        simple_name -> symbol = ProcessPackageOrType(simple_name);
+        ProcessPackageOrType(simple_name);
         name_expression = simple_name;
     }
 
@@ -2568,7 +2525,8 @@ TypeSymbol *Semantic::FindSimpleNameType(PackageSymbol *package, LexStream::Toke
 
 void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_declaration)
 {
-    Symbol *symbol = ProcessImportQualifiedName(import_declaration -> name);
+    ProcessImportQualifiedName(import_declaration -> name);
+    Symbol *symbol = import_declaration -> name -> symbol;
     PackageSymbol *package = symbol -> PackageCast();
     if (package)
     {
@@ -2621,7 +2579,13 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_d
 
     if (k < compilation_unit -> NumTypeDeclarations())
     {
-        if (type == old_type) // It's ok to import a type that is being compiled...
+        AstFieldAccess *field_access = import_declaration -> name -> FieldAccessCast();
+        package = (field_access ? field_access -> base -> symbol -> PackageCast() : control.unnamed_package);
+
+        //
+        // It's ok to import a type that is being compiled...
+        //
+        if (type == old_type && package == this_package)
         {
             ReportSemError(SemanticError::UNNECESSARY_TYPE_IMPORT,
                            import_declaration -> name -> LeftToken(),
@@ -4158,7 +4122,8 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
 
         identifier_token = field_access -> identifier_token;
 
-        Symbol *symbol = ProcessPackageOrType(field_access -> base);
+        ProcessPackageOrType(field_access -> base);
+        Symbol *symbol = field_access -> base -> symbol;
 
         type = symbol -> TypeCast();
         if (type)

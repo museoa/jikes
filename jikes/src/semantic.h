@@ -823,9 +823,8 @@ public:
     }
 
     TypeSymbol *ProcessSignature(TypeSymbol *, char *, LexStream::TokenIndex);
-    void ConvertUtf8ToUnicode(wchar_t *, char *, int);
     TypeSymbol *ReadType(FileSymbol *, PackageSymbol *, NameSymbol *, LexStream::TokenIndex);
-    TypeSymbol *ReadType(TypeSymbol *, wchar_t *, LexStream::TokenIndex);
+    TypeSymbol *ReadTypeFromSignature(TypeSymbol *, char *, int, LexStream::TokenIndex);
     TypeSymbol *ProcessNestedType(TypeSymbol *, NameSymbol *, LexStream::TokenIndex);
 
 private:
@@ -907,8 +906,8 @@ private:
     TypeSymbol *GetBadNestedType(TypeSymbol *, LexStream::TokenIndex);
     TypeSymbol *FindNestedType(TypeSymbol *, LexStream::TokenIndex);
     TypeSymbol *MustFindNestedType(TypeSymbol *, Ast *);
-    Symbol *ProcessImportQualifiedName(AstExpression *);
-    Symbol *ProcessPackageOrType(AstExpression *);
+    void ProcessImportQualifiedName(AstExpression *);
+    void ProcessPackageOrType(AstExpression *);
     void ProcessTypeImportOnDemandDeclaration(AstImportDeclaration *);
     AstExpression *FindFirstType(Ast *);
     TypeSymbol *FindSimpleNameType(PackageSymbol *, LexStream::TokenIndex);

@@ -15,9 +15,6 @@
 #include "ast.h"
 #include "case.h"
 
-int IntLiteralTable::int32_limit = 0x7FFFFFFF / 10;
-LongInt LongLiteralTable::int64_limit = LongInt(0x7FFFFFFF, 0xFFFFFFFF) / 10;
-
 int SystemTable::primes[] = {DEFAULT_HASH_SIZE, 101, 401, MAX_HASH_SIZE};
 
 SystemTable::SystemTable(int hash_size_) : directories(1024)
@@ -88,7 +85,7 @@ void SystemTable::InsertDirectorySymbol(dev_t device, ino_t inode, DirectorySymb
     // 2 times the size of the base, and we have not yet reached the maximum
     // allowable size for a base, reallocate a larger base and rehash the elements.
     //
-    if ((hash_size < MAX_HASH_SIZE) && (directories.Length() > (hash_size << 1)))
+    if ((directories.Length() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
 
     return;
@@ -123,15 +120,15 @@ total += num;
 
 if (num_slots > 0)
 {
-cout << "\nDestroying the Name table with " << total
-     << " elements and base size " << hash_size << " containing " << num_slots << " non-empty slots\n";
+Coutput << "\nDestroying the Name table with " << total
+        << " elements and base size " << hash_size << " containing " << num_slots << " non-empty slots\n";
 for (n = 0; n < hash_size; n++)
 {
 int num = 0;
 for (Symbol *s = base[n]; s; s = s -> next)
     num++;
 if (num > 0)
-cout << "    slot " << n << " contains " << num << " element(s)\n";
+Coutput << "    slot " << n << " contains " << num << " element(s)\n";
 }
 }
 if (hash_size < total)
@@ -142,30 +139,6 @@ if (hash_size < total)
         delete entry_pool[i];
     delete [] base;
 #endif
-}
-
-
-time_t DirectoryEntry::Mtime()
-{
-    if (mtime_ == 0)
-    {
-        char *dirname = this -> directory -> DirectoryName();
-        int length = this -> directory -> DirectoryNameLength() + this -> length + 1; // +1 for '/'
-        char *file_name = new char[length + 1];
-        strcpy(file_name, dirname);
-        if (dirname[this -> directory -> DirectoryNameLength() - 1] != U_SLASH)
-            strcat(file_name, StringConstant::U8S__SL);
-        strcat(file_name, this -> name);
-
-        struct stat status;
-        if (::SystemStat(file_name, &status) == 0)
-             mtime_ = status.st_mtime;
-        else assert(false && "Cannot compute system time stamp\n");
-
-        delete [] file_name;
-    }
-
-    return mtime_;
 }
 
 
@@ -225,7 +198,7 @@ DirectoryEntry *DirectoryTable::InsertEntry(DirectorySymbol *directory_symbol, c
     // allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if ((hash_size < MAX_HASH_SIZE) && (entry_pool.Length() > (hash_size << 1)))
+    if ((entry_pool.Length() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
 
     return entry;
@@ -277,7 +250,7 @@ void DirectoryTable::InsertCaseInsensitiveEntry(DirectoryEntry *image)
         // allowable size for a base, reallocate a larger base and rehash
         // the elements.
         //
-        if ((hash_size < MAX_HASH_SIZE) && (entry_pool.Length() > (hash_size << 1)))
+        if ((entry_pool.Length() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
             Rehash();
     }
 
@@ -286,6 +259,30 @@ void DirectoryTable::InsertCaseInsensitiveEntry(DirectoryEntry *image)
     return;
 }
 #endif
+
+
+time_t DirectoryEntry::Mtime()
+{
+    if (mtime_ == 0)
+    {
+        char *dirname = this -> directory -> DirectoryName();
+        int length = this -> directory -> DirectoryNameLength() + this -> length + 1; // +1 for '/'
+        char *file_name = new char[length + 1];
+        strcpy(file_name, dirname);
+        if (dirname[this -> directory -> DirectoryNameLength() - 1] != U_SLASH)
+            strcat(file_name, StringConstant::U8S__SL);
+        strcat(file_name, this -> name);
+
+        struct stat status;
+        if (::SystemStat(file_name, &status) == 0)
+             mtime_ = status.st_mtime;
+        else assert(false && "Cannot compute system time stamp\n");
+
+        delete [] file_name;
+    }
+
+    return mtime_;
+}
 
 
 int NameLookupTable::primes[] = {DEFAULT_HASH_SIZE, 8191, 16411, MAX_HASH_SIZE};
@@ -317,335 +314,15 @@ total += num;
 
 if (num_slots > 0)
 {
-cout << "\nDestroying the Name table with " << total
-     << " elements and base size " << hash_size << " containing " << num_slots << " non-empty slots\n";
+Coutput << "\nDestroying the Name table with " << total
+        << " elements and base size " << hash_size << " containing " << num_slots << " non-empty slots\n";
 for (n = 0; n < hash_size; n++)
 {
 int num = 0;
 for (Symbol *s = base[n]; s; s = s -> next)
     num++;
 if (num > 0)
-cout << "    slot " << n << " contains " << num << " element(s)\n";
-}
-}
-if (hash_size < total)
-    total = total;
-*/
-#ifdef TEST
-    for (int i = 0; i < symbol_pool.Length(); i++)
-        delete symbol_pool[i];
-    delete [] base;
-#endif
-}
-
-
-int LiteralLookupTable::primes[] = {DEFAULT_HASH_SIZE, 2039, 4093, MAX_HASH_SIZE};
-
-LiteralLookupTable::LiteralLookupTable() : symbol_pool(16384),
-                                           prime_index(0),
-                                           hash_size(primes[0])
-{
-    base = (LiteralSymbol **) memset(new LiteralSymbol *[hash_size], 0, hash_size * sizeof(LiteralSymbol *));
-}
-
-LiteralLookupTable::~LiteralLookupTable()
-{
-/*
-int n;
-int num_slots = 0;
-int total = 0;
-for (n = 0; n < hash_size; n++)
-{
-int num = 0;
-for (Symbol *s = base[n]; s; s = s -> next)
-    num++;
-if (num > 0)
-{
-num_slots++;
-total += num;
-}
-}
-
-if (num_slots > 0)
-{
-cout << "\nDestroying the Literal table with " << total
-     << " elements and base size " << hash_size << " containing " << num_slots << " non-empty slots\n";
-for (n = 0; n < hash_size; n++)
-{
-int num = 0;
-for (Symbol *s = base[n]; s; s = s -> next)
-    num++;
-if (num > 0)
-cout << "    slot " << n << " contains " << num << " element(s)\n";
-}
-}
-if (hash_size < total)
-    total = total;
-*/
-#ifdef TEST
-    for (int i = 0; i < symbol_pool.Length(); i++)
-        delete symbol_pool[i];
-    delete [] base;
-#endif
-}
-
-
-int IntLiteralTable::primes[] = {DEFAULT_HASH_SIZE, 8191, 16411, MAX_HASH_SIZE};
-
-IntLiteralTable::IntLiteralTable(LiteralValue *bad_value_) : symbol_pool(16384),
-                                                             bad_value(bad_value_),
-                                                             prime_index(0),
-                                                             hash_size(primes[0])
-{
-    base = (IntLiteralValue **) memset(new IntLiteralValue *[hash_size], 0, hash_size * sizeof(IntLiteralValue *));
-    symbol_pool.Next() = NULL; // do not use the 0th element
-}
-
-IntLiteralTable::~IntLiteralTable()
-{
-/*
-int n;
-int num_slots = 0;
-int total = 0;
-for (n = 0; n < hash_size; n++)
-{
-int num = 0;
-for (LiteralValue *s = base[n]; s; s = s -> next)
-    num++;
-if (num > 0)
-{
-num_slots++;
-total += num;
-}
-}
-
-if (num_slots > 0)
-{
-cout << "\nDestroying the integer table with " << total
-     << " elements and base size " << hash_size << " containing " << num_slots << " non-empty slots\n";
-for (n = 0; n < hash_size; n++)
-{
-int num = 0;
-for (LiteralValue *s = base[n]; s; s = s -> next)
-    num++;
-if (num > 0)
-cout << "    slot " << n << " contains " << num << " element(s)\n";
-}
-}
-if (hash_size < total)
-    total = total;
-*/
-
-#ifdef TEST
-    for (int i = 0; i < symbol_pool.Length(); i++)
-        delete symbol_pool[i];
-    delete [] base;
-#endif
-}
-
-
-int LongLiteralTable::primes[] = {DEFAULT_HASH_SIZE, 2039, 4093, MAX_HASH_SIZE};
-
-LongLiteralTable::LongLiteralTable(LiteralValue *bad_value_) : symbol_pool(16384),
-                                                               bad_value(bad_value_),
-                                                               prime_index(0),
-                                                               hash_size(primes[0])
-{
-    base = (LongLiteralValue **) memset(new LongLiteralValue *[hash_size], 0, hash_size * sizeof(LongLiteralValue *));
-    symbol_pool.Next() = NULL; // do not use the 0th element
-}
-
-LongLiteralTable::~LongLiteralTable()
-{
-/*
-int n;
-int num_slots = 0;
-int total = 0;
-for (n = 0; n < hash_size; n++)
-{
-int num = 0;
-for (LiteralValue *s = base[n]; s; s = s -> next)
-    num++;
-if (num > 0)
-{
-num_slots++;
-total += num;
-}
-}
-
-if (num_slots > 0)
-{
-cout << "\nDestroying the long table with " << total
-     << " elements and base size " << hash_size << " containing " << num_slots << " non-empty slots\n";
-for (n = 0; n < hash_size; n++)
-{
-int num = 0;
-for (LiteralValue *s = base[n]; s; s = s -> next)
-    num++;
-if (num > 0)
-cout << "    slot " << n << " contains " << num << " element(s)\n";
-}
-}
-if (hash_size < total)
-    total = total;
-*/
-
-#ifdef TEST
-    for (int i = 0; i < symbol_pool.Length(); i++)
-        delete symbol_pool[i];
-    delete [] base;
-#endif
-}
-
-
-int FloatLiteralTable::primes[] = {DEFAULT_HASH_SIZE, 2039, 4093, MAX_HASH_SIZE};
-
-FloatLiteralTable::FloatLiteralTable(LiteralValue *bad_value_) : symbol_pool(16384),
-                                                                 bad_value(bad_value_),
-                                                                 prime_index(0),
-                                                                 hash_size(primes[0])
-{
-    base = (FloatLiteralValue **) memset(new FloatLiteralValue *[hash_size], 0, hash_size * sizeof(FloatLiteralValue *));
-    symbol_pool.Next() = NULL; // do not use the 0th element
-}
-
-FloatLiteralTable::~FloatLiteralTable()
-{
-/*
-int n;
-int num_slots = 0;
-int total = 0;
-for (n = 0; n < hash_size; n++)
-{
-int num = 0;
-for (LiteralValue *s = base[n]; s; s = s -> next)
-    num++;
-if (num > 0)
-{
-num_slots++;
-total += num;
-}
-}
-
-if (num_slots > 0)
-{
-cout << "\nDestroying the float table with " << total
-     << " elements and base size " << hash_size << " containing " << num_slots << " non-empty slots\n";
-for (n = 0; n < hash_size; n++)
-{
-int num = 0;
-for (LiteralValue *s = base[n]; s; s = s -> next)
-    num++;
-if (num > 0)
-cout << "    slot " << n << " contains " << num << " element(s)\n";
-}
-}
-if (hash_size < total)
-    total = total;
-*/
-
-#ifdef TEST
-    for (int i = 0; i < symbol_pool.Length(); i++)
-        delete symbol_pool[i];
-    delete [] base;
-#endif
-}
-
-
-int DoubleLiteralTable::primes[] = {DEFAULT_HASH_SIZE, 2039, 4093, MAX_HASH_SIZE};
-
-DoubleLiteralTable::DoubleLiteralTable(LiteralValue *bad_value_) : symbol_pool(16384),
-                                                                   bad_value(bad_value_),
-                                                                   prime_index(0),
-                                                                   hash_size(primes[0])
-{
-    base = (DoubleLiteralValue **) memset(new DoubleLiteralValue *[hash_size], 0, hash_size * sizeof(DoubleLiteralValue *));
-    symbol_pool.Next() = NULL; // do not use the 0th element
-}
-
-DoubleLiteralTable::~DoubleLiteralTable()
-{
-/*
-int n;
-int num_slots = 0;
-int total = 0;
-for (n = 0; n < hash_size; n++)
-{
-int num = 0;
-for (LiteralValue *s = base[n]; s; s = s -> next)
-    num++;
-if (num > 0)
-{
-num_slots++;
-total += num;
-}
-}
-
-if (num_slots > 0)
-{
-cout << "\nDestroying the double table with " << total
-     << " elements and base size " << hash_size << " containing " << num_slots << " non-empty slots\n";
-for (n = 0; n < hash_size; n++)
-{
-int num = 0;
-for (LiteralValue *s = base[n]; s; s = s -> next)
-    num++;
-if (num > 0)
-cout << "    slot " << n << " contains " << num << " element(s)\n";
-}
-}
-if (hash_size < total)
-    total = total;
-*/
-#ifdef TEST
-    for (int i = 0; i < symbol_pool.Length(); i++)
-        delete symbol_pool[i];
-    delete [] base;
-#endif
-}
-
-
-int Utf8LiteralTable::primes[] = {DEFAULT_HASH_SIZE, 8191, 16411, MAX_HASH_SIZE};
-
-Utf8LiteralTable::Utf8LiteralTable(LiteralValue *bad_value_) : symbol_pool(16384),
-                                                               bad_value(bad_value_),
-                                                               prime_index(0),
-                                                               hash_size(primes[0])
-{
-    base = (Utf8LiteralValue **) memset(new Utf8LiteralValue *[hash_size], 0, hash_size * sizeof(Utf8LiteralValue *));
-    symbol_pool.Next() = NULL; // do not use the 0th element
-}
-
-
-Utf8LiteralTable::~Utf8LiteralTable()
-{
-/*
-int n;
-int num_slots = 0;
-int total = 0;
-for (n = 0; n < hash_size; n++)
-{
-int num = 0;
-for (LiteralValue *s = base[n]; s; s = s -> next)
-    num++;
-if (num > 0)
-{
-num_slots++;
-total += num;
-}
-}
-
-if (num_slots > 0)
-{
-cout << "\nDestroying the Utf8 table with " << total
-     << " elements and base size " << hash_size << " containing " << num_slots << " non-empty slots\n";
-for (n = 0; n < hash_size; n++)
-{
-int num = 0;
-for (LiteralValue *s = base[n]; s; s = s -> next)
-    num++;
-if (num > 0)
-cout << "    slot " << n << " contains " << num << " element(s)\n";
+Coutput << "    slot " << n << " contains " << num << " element(s)\n";
 }
 }
 if (hash_size < total)
@@ -703,49 +380,108 @@ NameSymbol *NameLookupTable::FindOrInsertName(wchar_t *str, int len)
     // allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if ((hash_size < MAX_HASH_SIZE) && (symbol_pool.Length() > (hash_size << 1)))
+    if ((symbol_pool.Length() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
 
     return symbol;
 }
 
 
-void LiteralLookupTable::Rehash()
+int TypeLookupTable::primes[] = {DEFAULT_HASH_SIZE, 8191, 16411, MAX_HASH_SIZE};
+
+TypeLookupTable::TypeLookupTable(int estimate) : symbol_pool(estimate),
+                                                 prime_index(0),
+                                                 hash_size(primes[0])
+{
+    base = (TypeSymbol **) memset(new TypeSymbol *[hash_size], 0, hash_size * sizeof(TypeSymbol *));
+}
+
+TypeLookupTable::~TypeLookupTable()
+{
+/*
+int n;
+int num_slots = 0;
+int total = 0;
+for (n = 0; n < hash_size; n++)
+{
+int num = 0;
+for (TypeSymbol *s = base[n]; s; s = s -> next_type)
+    num++;
+if (num > 0)
+{
+num_slots++;
+total += num;
+}
+}
+
+if (num_slots > 0)
+{
+Coutput << "\nDestroying the Type table with " << total
+        << " elements and base size " << hash_size << " containing " << num_slots << " non-empty slots\n";
+for (n = 0; n < hash_size; n++)
+{
+int num = 0;
+for (TypeSymbol *s = base[n]; s; s = s -> next_type)
+    num++;
+if (num > 0)
+Coutput << "    slot " << n << " contains " << num << " element(s)\n";
+}
+}
+if (hash_size < total)
+    total = total;
+*/
+}
+
+
+void TypeLookupTable::Rehash()
 {
     hash_size = primes[++prime_index];
 
     delete [] base;
-    base = (LiteralSymbol **) memset(new LiteralSymbol *[hash_size], 0, hash_size * sizeof(LiteralSymbol *));
+    base = (TypeSymbol **) memset(new TypeSymbol *[hash_size], 0, hash_size * sizeof(TypeSymbol *));
 
     for (int i = 0; i < symbol_pool.Length(); i++)
     {
-        LiteralSymbol *ls = symbol_pool[i];
-        int k = ls -> hash_address % hash_size;
-        ls -> next = base[k];
-        base[k] = ls;
+        TypeSymbol *type = symbol_pool[i];
+        int k = type -> hash_address % hash_size;
+        type -> next_type = base[k];
+        base[k] = type;
     }
 
     return;
 }
 
 
-LiteralSymbol *LiteralLookupTable::FindOrInsertLiteral(wchar_t *str, int len)
+TypeSymbol *TypeLookupTable::FindType(char *str, int len)
 {
     unsigned hash_address = Hash(str, len);
     int k = hash_address % hash_size;
-    LiteralSymbol *symbol;
-    for (symbol = base[k]; symbol; symbol = (LiteralSymbol *) symbol -> next)
+    for (TypeSymbol *type = base[k]; type; type = type -> next_type)
     {
-        if (len == symbol -> NameLength() && memcmp(symbol -> Name(), str, len * sizeof(wchar_t)) == 0)
-            return symbol;
+        Utf8LiteralValue *fully_qualified_name = type -> fully_qualified_name;
+        if (len == fully_qualified_name -> length && memcmp(fully_qualified_name -> value, str, len * sizeof(char)) == 0)
+            return type;
     }
 
-    symbol = new LiteralSymbol();
-    symbol_pool.Next() = symbol;
-    symbol -> Initialize(str, hash_address, len);
+    return NULL;
+}
 
-    symbol -> next = base[k];
-    base[k] = symbol;
+
+void TypeLookupTable::InsertType(TypeSymbol *type)
+{
+    unsigned hash_address = Hash(type -> fully_qualified_name -> value, type -> fully_qualified_name -> length);
+    int k = hash_address % hash_size;
+
+#ifdef TEST
+    for (TypeSymbol *t = base[k]; t; t = t -> next_type)
+        assert (type != t && "Type was already entered in type table");
+#endif
+
+    symbol_pool.Next() = type;
+    type -> hash_address = hash_address;
+
+    type -> next_type = base[k];
+    base[k] = type;
 
     //
     // If the number of unique elements in the hash table exceeds 2 times
@@ -753,10 +489,65 @@ LiteralSymbol *LiteralLookupTable::FindOrInsertLiteral(wchar_t *str, int len)
     // allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if ((hash_size < MAX_HASH_SIZE) && (symbol_pool.Length() > (hash_size << 1)))
+    if ((symbol_pool.Length() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
 
-    return symbol;
+    return;
+}
+
+
+int IntLiteralTable::int32_limit = 0x7FFFFFFF / 10;
+int IntLiteralTable::primes[] = {DEFAULT_HASH_SIZE, 8191, 16411, MAX_HASH_SIZE};
+
+IntLiteralTable::IntLiteralTable(LiteralValue *bad_value_) : symbol_pool(16384),
+                                                             bad_value(bad_value_),
+                                                             prime_index(0),
+                                                             hash_size(primes[0])
+{
+    base = (IntLiteralValue **) memset(new IntLiteralValue *[hash_size], 0, hash_size * sizeof(IntLiteralValue *));
+    symbol_pool.Next() = NULL; // do not use the 0th element
+}
+
+IntLiteralTable::~IntLiteralTable()
+{
+/*
+int n;
+int num_slots = 0;
+int total = 0;
+for (n = 0; n < hash_size; n++)
+{
+int num = 0;
+for (LiteralValue *s = base[n]; s; s = s -> next)
+    num++;
+if (num > 0)
+{
+num_slots++;
+total += num;
+}
+}
+
+if (num_slots > 0)
+{
+Coutput << "\nDestroying the integer table with " << total
+        << " elements and base size " << hash_size << " containing " << num_slots << " non-empty slots\n";
+for (n = 0; n < hash_size; n++)
+{
+int num = 0;
+for (LiteralValue *s = base[n]; s; s = s -> next)
+    num++;
+if (num > 0)
+Coutput << "    slot " << n << " contains " << num << " element(s)\n";
+}
+}
+if (hash_size < total)
+    total = total;
+*/
+
+#ifdef TEST
+    for (int i = 0; i < symbol_pool.Length(); i++)
+        delete symbol_pool[i];
+    delete [] base;
+#endif
 }
 
 
@@ -1012,10 +803,65 @@ IntLiteralValue *IntLiteralTable::FindOrInsert(int value)
     // allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if ((hash_size < MAX_HASH_SIZE) && (symbol_pool.Length() > (hash_size << 1)))
+    if ((symbol_pool.Length() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
 
     return lit;
+}
+
+
+LongInt LongLiteralTable::int64_limit = LongInt(0x7FFFFFFF, 0xFFFFFFFF) / 10;
+int LongLiteralTable::primes[] = {DEFAULT_HASH_SIZE, 2039, 4093, MAX_HASH_SIZE};
+
+LongLiteralTable::LongLiteralTable(LiteralValue *bad_value_) : symbol_pool(16384),
+                                                               bad_value(bad_value_),
+                                                               prime_index(0),
+                                                               hash_size(primes[0])
+{
+    base = (LongLiteralValue **) memset(new LongLiteralValue *[hash_size], 0, hash_size * sizeof(LongLiteralValue *));
+    symbol_pool.Next() = NULL; // do not use the 0th element
+}
+
+LongLiteralTable::~LongLiteralTable()
+{
+/*
+int n;
+int num_slots = 0;
+int total = 0;
+for (n = 0; n < hash_size; n++)
+{
+int num = 0;
+for (LiteralValue *s = base[n]; s; s = s -> next)
+    num++;
+if (num > 0)
+{
+num_slots++;
+total += num;
+}
+}
+
+if (num_slots > 0)
+{
+Coutput << "\nDestroying the long table with " << total
+        << " elements and base size " << hash_size << " containing " << num_slots << " non-empty slots\n";
+for (n = 0; n < hash_size; n++)
+{
+int num = 0;
+for (LiteralValue *s = base[n]; s; s = s -> next)
+    num++;
+if (num > 0)
+Coutput << "    slot " << n << " contains " << num << " element(s)\n";
+}
+}
+if (hash_size < total)
+    total = total;
+*/
+
+#ifdef TEST
+    for (int i = 0; i < symbol_pool.Length(); i++)
+        delete symbol_pool[i];
+    delete [] base;
+#endif
 }
 
 
@@ -1208,10 +1054,64 @@ LongLiteralValue *LongLiteralTable::FindOrInsert(LongInt value)
     // allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if ((hash_size < MAX_HASH_SIZE) && (symbol_pool.Length() > (hash_size << 1)))
+    if ((symbol_pool.Length() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
 
     return lit;
+}
+
+
+int FloatLiteralTable::primes[] = {DEFAULT_HASH_SIZE, 2039, 4093, MAX_HASH_SIZE};
+
+FloatLiteralTable::FloatLiteralTable(LiteralValue *bad_value_) : symbol_pool(16384),
+                                                                 bad_value(bad_value_),
+                                                                 prime_index(0),
+                                                                 hash_size(primes[0])
+{
+    base = (FloatLiteralValue **) memset(new FloatLiteralValue *[hash_size], 0, hash_size * sizeof(FloatLiteralValue *));
+    symbol_pool.Next() = NULL; // do not use the 0th element
+}
+
+FloatLiteralTable::~FloatLiteralTable()
+{
+/*
+int n;
+int num_slots = 0;
+int total = 0;
+for (n = 0; n < hash_size; n++)
+{
+int num = 0;
+for (LiteralValue *s = base[n]; s; s = s -> next)
+    num++;
+if (num > 0)
+{
+num_slots++;
+total += num;
+}
+}
+
+if (num_slots > 0)
+{
+Coutput << "\nDestroying the float table with " << total
+        << " elements and base size " << hash_size << " containing " << num_slots << " non-empty slots\n";
+for (n = 0; n < hash_size; n++)
+{
+int num = 0;
+for (LiteralValue *s = base[n]; s; s = s -> next)
+    num++;
+if (num > 0)
+Coutput << "    slot " << n << " contains " << num << " element(s)\n";
+}
+}
+if (hash_size < total)
+    total = total;
+*/
+
+#ifdef TEST
+    for (int i = 0; i < symbol_pool.Length(); i++)
+        delete symbol_pool[i];
+    delete [] base;
+#endif
 }
 
 
@@ -1278,10 +1178,63 @@ FloatLiteralValue *FloatLiteralTable::FindOrInsert(IEEEfloat value)
     // allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if ((hash_size < MAX_HASH_SIZE) && (symbol_pool.Length() > (hash_size << 1)))
+    if ((symbol_pool.Length() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
 
     return lit;
+}
+
+
+int DoubleLiteralTable::primes[] = {DEFAULT_HASH_SIZE, 2039, 4093, MAX_HASH_SIZE};
+
+DoubleLiteralTable::DoubleLiteralTable(LiteralValue *bad_value_) : symbol_pool(16384),
+                                                                   bad_value(bad_value_),
+                                                                   prime_index(0),
+                                                                   hash_size(primes[0])
+{
+    base = (DoubleLiteralValue **) memset(new DoubleLiteralValue *[hash_size], 0, hash_size * sizeof(DoubleLiteralValue *));
+    symbol_pool.Next() = NULL; // do not use the 0th element
+}
+
+DoubleLiteralTable::~DoubleLiteralTable()
+{
+/*
+int n;
+int num_slots = 0;
+int total = 0;
+for (n = 0; n < hash_size; n++)
+{
+int num = 0;
+for (LiteralValue *s = base[n]; s; s = s -> next)
+    num++;
+if (num > 0)
+{
+num_slots++;
+total += num;
+}
+}
+
+if (num_slots > 0)
+{
+Coutput << "\nDestroying the double table with " << total
+        << " elements and base size " << hash_size << " containing " << num_slots << " non-empty slots\n";
+for (n = 0; n < hash_size; n++)
+{
+int num = 0;
+for (LiteralValue *s = base[n]; s; s = s -> next)
+    num++;
+if (num > 0)
+Coutput << "    slot " << n << " contains " << num << " element(s)\n";
+}
+}
+if (hash_size < total)
+    total = total;
+*/
+#ifdef TEST
+    for (int i = 0; i < symbol_pool.Length(); i++)
+        delete symbol_pool[i];
+    delete [] base;
+#endif
 }
 
 
@@ -1348,7 +1301,7 @@ DoubleLiteralValue *DoubleLiteralTable::FindOrInsert(IEEEdouble value)
     // allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if ((hash_size < MAX_HASH_SIZE) && (symbol_pool.Length() > (hash_size << 1)))
+    if ((symbol_pool.Length() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
 
     return lit;
@@ -1524,6 +1477,60 @@ void Utf8LiteralTable::Rehash()
 }
 
 
+int Utf8LiteralTable::primes[] = {DEFAULT_HASH_SIZE, 8191, 16411, MAX_HASH_SIZE};
+
+Utf8LiteralTable::Utf8LiteralTable(LiteralValue *bad_value_) : symbol_pool(16384),
+                                                               bad_value(bad_value_),
+                                                               prime_index(0),
+                                                               hash_size(primes[0])
+{
+    base = (Utf8LiteralValue **) memset(new Utf8LiteralValue *[hash_size], 0, hash_size * sizeof(Utf8LiteralValue *));
+    symbol_pool.Next() = NULL; // do not use the 0th element
+}
+
+
+Utf8LiteralTable::~Utf8LiteralTable()
+{
+/*
+int n;
+int num_slots = 0;
+int total = 0;
+for (n = 0; n < hash_size; n++)
+{
+int num = 0;
+for (LiteralValue *s = base[n]; s; s = s -> next)
+    num++;
+if (num > 0)
+{
+num_slots++;
+total += num;
+}
+}
+
+if (num_slots > 0)
+{
+Coutput << "\nDestroying the Utf8 table with " << total
+        << " elements and base size " << hash_size << " containing " << num_slots << " non-empty slots\n";
+for (n = 0; n < hash_size; n++)
+{
+int num = 0;
+for (LiteralValue *s = base[n]; s; s = s -> next)
+    num++;
+if (num > 0)
+Coutput << "    slot " << n << " contains " << num << " element(s)\n";
+}
+}
+if (hash_size < total)
+    total = total;
+*/
+#ifdef TEST
+    for (int i = 0; i < symbol_pool.Length(); i++)
+        delete symbol_pool[i];
+    delete [] base;
+#endif
+}
+
+
 Utf8LiteralValue *Utf8LiteralTable::FindOrInsert(char *str, int len)
 {
     unsigned hash_address = Hash(str, len);
@@ -1552,7 +1559,7 @@ Utf8LiteralValue *Utf8LiteralTable::FindOrInsert(char *str, int len)
     // allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if ((hash_size < MAX_HASH_SIZE) && (symbol_pool.Length() > (hash_size << 1)))
+    if ((symbol_pool.Length() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
 
     return lit;
@@ -1629,4 +1636,105 @@ void Utf8LiteralTable::CheckStringConstant(AstExpression *expression)
     delete expr;
 
     return;
+}
+
+
+int LiteralLookupTable::primes[] = {DEFAULT_HASH_SIZE, 2039, 4093, MAX_HASH_SIZE};
+
+LiteralLookupTable::LiteralLookupTable() : symbol_pool(16384),
+                                           prime_index(0),
+                                           hash_size(primes[0])
+{
+    base = (LiteralSymbol **) memset(new LiteralSymbol *[hash_size], 0, hash_size * sizeof(LiteralSymbol *));
+}
+
+LiteralLookupTable::~LiteralLookupTable()
+{
+/*
+int n;
+int num_slots = 0;
+int total = 0;
+for (n = 0; n < hash_size; n++)
+{
+int num = 0;
+for (Symbol *s = base[n]; s; s = s -> next)
+    num++;
+if (num > 0)
+{
+num_slots++;
+total += num;
+}
+}
+
+if (num_slots > 0)
+{
+Coutput << "\nDestroying the Literal table with " << total
+        << " elements and base size " << hash_size << " containing " << num_slots << " non-empty slots\n";
+for (n = 0; n < hash_size; n++)
+{
+int num = 0;
+for (Symbol *s = base[n]; s; s = s -> next)
+    num++;
+if (num > 0)
+Coutput << "    slot " << n << " contains " << num << " element(s)\n";
+}
+}
+if (hash_size < total)
+    total = total;
+*/
+#ifdef TEST
+    for (int i = 0; i < symbol_pool.Length(); i++)
+        delete symbol_pool[i];
+    delete [] base;
+#endif
+}
+
+
+void LiteralLookupTable::Rehash()
+{
+    hash_size = primes[++prime_index];
+
+    delete [] base;
+    base = (LiteralSymbol **) memset(new LiteralSymbol *[hash_size], 0, hash_size * sizeof(LiteralSymbol *));
+
+    for (int i = 0; i < symbol_pool.Length(); i++)
+    {
+        LiteralSymbol *ls = symbol_pool[i];
+        int k = ls -> hash_address % hash_size;
+        ls -> next = base[k];
+        base[k] = ls;
+    }
+
+    return;
+}
+
+
+LiteralSymbol *LiteralLookupTable::FindOrInsertLiteral(wchar_t *str, int len)
+{
+    unsigned hash_address = Hash(str, len);
+    int k = hash_address % hash_size;
+    LiteralSymbol *symbol;
+    for (symbol = base[k]; symbol; symbol = (LiteralSymbol *) symbol -> next)
+    {
+        if (len == symbol -> NameLength() && memcmp(symbol -> Name(), str, len * sizeof(wchar_t)) == 0)
+            return symbol;
+    }
+
+    symbol = new LiteralSymbol();
+    symbol_pool.Next() = symbol;
+    symbol -> Initialize(str, hash_address, len);
+
+    symbol -> next = base[k];
+    base[k] = symbol;
+
+    //
+    // If the number of unique elements in the hash table exceeds 2 times
+    // the size of the base, and we have not yet reached the maximum
+    // allowable size for a base, reallocate a larger base and rehash
+    // the elements.
+    //
+    if ((symbol_pool.Length() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
+        Rehash();
+
+    return symbol;
 }

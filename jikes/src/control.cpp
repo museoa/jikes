@@ -546,7 +546,7 @@ Control::~Control()
         delete [] unreadable_input_filenames[k];
 
     for (int l = 0; l < system_directories.Length(); l++)
-        delete [] system_directories[l];
+        delete system_directories[l];
 
     delete scanner;
     delete parser;
