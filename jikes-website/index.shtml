@@ -28,7 +28,7 @@
 	  <hr>
           General Interest
           <ul>
-            <li><a href="/developerworks/mail/?group_id=10">Mailing Lists</a>
+            <li><a href="http://sourceforge.net/mail/?group_id=128803">Mailing Lists</a>
             <li><a href="people.shtml">People</a>
 	    <li><a href="leadership.shtml">Leadership</a>
           </ul>
@@ -36,22 +36,22 @@
           For Users
           <ul>
             <li><a href="faq/user-index.shtml">User's FAQ</a>
-            <li><a href="/developerworks/news/index.php?group_id=10">News</a>
+            <li><a href="http://sourceforge.net/news/?group_id=128803">News</a>
             <li><a href="distribs.shtml">Distributions</a>
-            <li><a href="/developerworks/downloads/index.php?group_id=10&amp;recent_only=1">Downloads</a>
+            <li><a href="http://sourceforge.net/project/showfiles.php?group_id=128803">Downloads</a>
             <li><a href="/developerworks/bugs/?group_id=10">View open bugs</a>
             <li><a href="faq/bug-reporting.shtml">Report bugs here</a>
-            <li><a href="/developerworks/opensource/license10.html">IBM Public License</a>
+            <li><a href="http://oss.software.ibm.com/developerworks/opensource/license10.html">IBM Public License</a>
           </ul>
           <hr>
           For Developers
           <ul>
 	    <li><a href="faq/dev-index.shtml">Developer's FAQ</a>
             <li><a href="cvs.shtml">CVS</a>
-            <li><a href="/developerworks/patch/?group_id=10">Patch Queue</a>
+            <li><a href="http://sourceforge.net/tracker/?group_id=128803&atid=712762">Patch Queue</a>
 	    <ul>
 	      <li><a href="patchguide.shtml"><small>Patch Guidelines</small></a>
-	      <li><a href="/developerworks/oss/jacks"><small>Regression Testing Framework</small></a>
+	      <li><small><a href="http://sources.redhat.com/cgi-bin/cvsweb.cgi/~checkout~/jacks/jacks.html?cvsroot=mauve">Regression Testing Framework</a> (now in <a href="http://sources.redhat.com/mauve/">Mauve</a>)</small>
             </ul>
 	    <li><a href="todo.shtml">Todo list</a>
 	    <li><a href="documents/">Document Repository</a>
@@ -59,14 +59,16 @@
           <hr>
           Related Links
           <ul>
-            <li><a href="/developerworks/oss/jacks/">Jacks Project</a> is our automated regression testing framework
+            <li><a href="http://sources.redhat.com/mauve/">The Mauve
+	    Project</a> has absorbed our automated regression testing
+	    framework, Jacks.
             <li><a href="http://www.ergnosis.com/java-spec-report/">Java Spec Report</a> publicly debates the finer points of the specifications
 	    <li><a href="http://ibm.com/java/jdk/">The Best JVMs on the net</a>
 	    <li><a href="http://www.java.sun.com/docs/books/jls">Language Spec.</a>
 	    <li><a href="http://www.java.sun.com/docs/books/vmspec">Virtual Machine Spec.</a>
 	    <li><a href="http://java.sun.com/docs/books/effective/">Effective Java.</a>
-	    <li><a href="queries/">Old Jikes &quot;Queries to Sun&quot; database</a>
-	    <li><a href="/developerworks/oss/jikesrvm/?origin=jikes">The Jikes Research Virtual Machine project</a> can only be built with Jikes.
+	    <!-- li><a href="queries/">Old Jikes &quot;Queries to Sun&quot; database</a -->
+	    <li><a href="http://jikesrvm.sourceforge.net/">The Jikes Research Virtual Machine project</a> can only be built with Jikes.
 	    <li><a href="http://ibm.com/alphaworks/robocode/?origin=jikes">Robocode</a> is a fun way to learn java programming, and it uses jikes under the covers to reduce the compile delays and keep the student's attention!
           </ul>
         </td>
@@ -92,7 +94,7 @@
     <a href="/developerworks/projects/jikes/">dW/OSS</a>. --> </p>
 </td><td>
 <a href="http://sourceforge.net"><img
-    src="http://sourceforge.net/sflogo.php?group_id=YOUR_GROUP_ID_GOES_HERE&amp;type=7"
+    src="http://sourceforge.net/sflogo.php?type=7"
     width="210" height="62" border="0" alt="SourceForge.net Logo" align=right hspace=4 vspace=4/></a>
 </td></tr></table>
 
