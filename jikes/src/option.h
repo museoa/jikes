@@ -112,7 +112,7 @@ public:
     char *default_path,
          *classpath,
          *directory,
-         *makefile_name,
+         *dependence_report_name,
          *encoding;
 
 #ifdef HAVE_LIB_ICU_UC
@@ -145,6 +145,7 @@ public:
          applet_author,
          incremental,
          makefile,
+	 dependence_report,
          bytecode,
          full_check,
          unzip,

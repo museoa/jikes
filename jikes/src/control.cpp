@@ -413,11 +413,11 @@ Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
         //
         if (option.makefile)
         {
-            if (option.makefile_name)
+            if (option.dependence_report)
             {
-                FILE *outfile = ::SystemFopen(option.makefile_name, "w");
+                FILE *outfile = ::SystemFopen(option.dependence_report_name, "w");
                 if (outfile == NULL)
-                    Coutput << "*** Cannot open file " << option.makefile_name << "\n";
+                    Coutput << "*** Cannot open file " << option.dependence_report_name << "\n";
                 else
                 {
                     SymbolSet types_in_new_files;

@@ -157,7 +157,7 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
 #endif
                                               directory(NULL),
                                               encoding(NULL),
-                                              makefile_name(NULL),
+                                              dependence_report_name(NULL),
                                               nowrite(false),
                                               deprecation(false),
                                               O(false),
@@ -178,6 +178,7 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
                                               applet_author(false),
                                               incremental(false),
                                               makefile(false),
+                                              dependence_report(false),
                                               bytecode(true),
                                               full_check(false),
                                               unzip(false),
@@ -392,11 +393,12 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
                  makefile = true;
                  full_check = true;
             }
-            else if (strncmp(arguments.argv[i], "+M=", 3) == 0)
+            else if (strncmp(arguments.argv[i], "+DR=", 4) == 0)
             {
                  makefile = true;
+                 dependence_report=true;
                  full_check = true;
-                 makefile_name = &arguments.argv[i][3];
+                 dependence_report_name = &arguments.argv[i][4];
             }
             else if (strcmp(arguments.argv[i], "+O") == 0)
             {
