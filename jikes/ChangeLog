@@ -1,3 +1,8 @@
+2004-04-04  Elliott Hughes  <enh@acm.org>
+
+	* src/expr.cpp (GetAnonymousType): Fix bug 3692. If we failed to
+	get a default constructor, we should give up before we require it.
+
 2004-04-03  Elliott Hughes  <enh@acm.org>
 
 	* src/error.cpp: Correctly fix the text of *all* package-related errors.

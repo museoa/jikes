@@ -3977,6 +3977,13 @@ TypeSymbol* Semantic::GetAnonymousType(AstClassCreationExpression* class_creatio
     }
 
     //
+    // If we failed to provide a default constructor, this is as far as
+    // we can go.
+    //
+    if (class_creation -> class_type -> symbol == control.no_type)
+        return control.no_type;
+
+    //
     // Finally, mark the class complete, in order to add any shadow variable
     // parameters to the constructor.
     //
@@ -3991,8 +3998,7 @@ TypeSymbol* Semantic::GetAnonymousType(AstClassCreationExpression* class_creatio
         }
         anon_type -> MarkLocalClassProcessingCompleted();
     }
-    return class_creation -> class_type -> symbol == control.no_type
-        ? control.no_type : anon_type;
+    return anon_type;
 }
 
 
