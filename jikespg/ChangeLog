@@ -1,3 +1,9 @@
+2002-03-05  Eric Blake  <ebb9@email.byu.edu>
+
+	* Makefile: Add.
+	* src/ChangeLog: Remove.
+	* src/ctabs.c: Update copyright.
+
 2001-10-10  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/Makefile:

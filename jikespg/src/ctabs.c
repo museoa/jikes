@@ -3,7 +3,7 @@
  This software is subject to the terms of the IBM Jikes Compiler
  License Agreement available at the following URL:
  http://ibm.com/developerworks/opensource/jikes.
- Copyright (C) 1983, 1999, 2001 International Business
+ Copyright (C) 1983, 1999, 2001, 2002 International Business
  Machines Corporation and others.  All Rights Reserved.
  You must accept the terms of that agreement to use this software.
 */
@@ -560,7 +560,7 @@ static void init_file(FILE **file, char *file_name, char *file_tag)
 		"// This software is subject to the terms of the IBM Jikes Compiler Open\n"
 		"// Source License Agreement available at the following URL:\n"
 		"// http://ibm.com/developerworks/opensource/jikes.\n"
-		"// Copyright (C) 1996, 1997, 1998, 1999, 2001, International\n"
+		"// Copyright (C) 1996, 1997, 1998, 1999, 2001, 2002 International\n"
 		"// Business Machines Corporation and others.  All Rights Reserved.\n"
 		"// You must accept the terms of that agreement to use this software.\n"
 		"//\n\n");
