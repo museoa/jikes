@@ -4753,11 +4753,7 @@ bool Semantic::CanMethodInvocationConvert(TypeSymbol *target_type, TypeSymbol *s
             }
             return (target_type == control.Object() ||
                     target_type == control.Cloneable() ||
-                    //
-                    // TODO: This is an undocumented feature, but this fix
-                    // appears to make sense.
-                    //
-                    (target_type == control.Serializable() && source_type -> Implements(target_type)));
+                    target_type == control.Serializable());
         }
         else if (source_type -> ACC_INTERFACE())
         {
@@ -6952,13 +6948,13 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
     }
 
     //
-    // In the current spec, it is stated that the type of both the left-hand
-    // and right-hand side of an "op=" assignment must be primitive. However,
-    // the left-hand side may be of type String if the operator is "+=" and in
-    // that case, the right-hand side may also be of type String (or anything
-    // else).
+    // In JLS 2, it states that the only reference type on the left can
+    // be String, for +=.  However, some compilers accept any type on the left
+    // that can be assigned a String, provided the right side is a String.
+    // In the process, that means an array access could then throw an
+    // ArrayStoreException when the left type is not String.
     //
-    // TODO: CONFIRM THAT THERE WAS A MISTAKE IN THE SPEC.
+    // TODO: Get the definative answer from Sun which behavior is correct
     //
     if (left_type == control.String() && assignment_expression -> assignment_tag == AstAssignmentExpression::PLUS_EQUAL)
     {

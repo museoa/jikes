@@ -944,7 +944,7 @@ private:
 
     bool CanWideningPrimitiveConvert(TypeSymbol *, TypeSymbol *);
     bool CanNarrowingPrimitiveConvert(TypeSymbol *, TypeSymbol *);
-    bool CanCastConvert(TypeSymbol *, TypeSymbol *, LexStream::TokenIndex = LexStream::Badtoken());
+    bool CanCastConvert(TypeSymbol *, TypeSymbol *, LexStream::TokenIndex = LexStream::BadToken());
     bool CanMethodInvocationConvert(TypeSymbol *, TypeSymbol *);
     bool CanAssignmentConvert(TypeSymbol *, AstExpression *);
     bool CanAssignmentConvertReference(TypeSymbol *, TypeSymbol *);

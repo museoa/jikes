@@ -123,22 +123,14 @@ void Semantic::ProcessBlock(Ast *stmt)
     //     l: a = b;
     //     l: b = c;
     //
-    for (int i = 0; i < block_body -> NumLabels(); i++)
+    if (block_body -> label_opt != lex_stream -> BadToken())
     {
-        NameSymbol *name_symbol = lex_stream -> NameSymbol(block_body -> Label(i));
-        Symbol *symbol = NULL;
-        for (SemanticEnvironment *env = state_stack.Top(); env; env = env -> previous)
-        {
-            symbol = env -> symbol_table.FindLabelSymbol(name_symbol);
-            if (symbol)
-                break;
-        }
-
-        if (symbol)
+        NameSymbol *name_symbol = lex_stream -> NameSymbol(block_body -> label_opt);
+        if (LocalSymbolTable().FindLabelSymbol(name_symbol))
         {
             ReportSemError(SemanticError::DUPLICATE_LABEL,
-                           block_body -> Label(i),
-                           block_body -> Label(i),
+                           block_body -> label_opt,
+                           block_body -> label_opt,
                            name_symbol -> Name());
         }
         else
@@ -682,18 +674,13 @@ void Semantic::ProcessSwitchStatement(Ast *stmt)
     // A switch statement can complete normally iff at least one of the
     // following is true:
     //
-    // . there is a reachable break statement that exits the switch
-    //   statement. (See ProcessBreakStatement)
-    // . the switch block is empty or contains only switch labels
-    //   //
-    //   // TODO: This statement seems to be erroneous. The proper statement
-    //   //       as implemented here is:
-    //   //
-    //   //           . the switch block is empty or contains only case labels
-    //   //
-    // . there is at least one switch label after the last switch block
+    // . The last statement in the switch block can complete normally.
+    // . The switch block is empty or contains only switch labels.
+    // . There is at least one switch label after the last switch block
     //   statement group.
-    // . the last statement in the switch block can complete normally
+    // . The switch block does not contain a default label.
+    // . There is a reachable break statement that exits the switch
+    //   statement. (See ProcessBreakStatement)
     //
     if (block_body -> can_complete_normally)
         switch_statement -> can_complete_normally = true;
@@ -820,6 +807,8 @@ void Semantic::ProcessBreakStatement(Ast *stmt)
             //
             // A labeled statement can complete normally if there is a
             // reachable break statement that exits the labeled statement.
+            // If the break occurs in a try or catch block with a finally
+            // block that completes abruptly, the break is discarded.
             //
             if (block_body && break_statement -> is_reachable)
                 block_body -> can_complete_normally = true;
@@ -899,7 +888,8 @@ void Semantic::ProcessContinueStatement(Ast *stmt)
     //
     // If this is a valid continue statement, it is associated with a loop
     // statement. Since the loop can be continued, its enclosed statement
-    // "can complete normally".
+    // "can complete normally". However, if the continue occurs in a try or
+    // catch block that completes abruptly, the continue is discarded.
     //
     if (loop_statement)
     {

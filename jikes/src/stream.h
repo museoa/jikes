@@ -213,7 +213,7 @@ class LexStream : public Stream
     inline TokenIndex Gettoken(TokenIndex end_token)
          { return index = (index < end_token ? Next(index) : token_stream.Length() - 1); }
 
-    inline static TokenIndex Badtoken() { return 0; }
+    inline static TokenIndex BadToken() { return 0; }
 
     inline unsigned Kind(TokenIndex i) { return tokens[i].Kind(); }
 

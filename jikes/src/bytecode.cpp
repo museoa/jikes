@@ -1505,9 +1505,9 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
     //
     bool use_lookup = true; // set if using LOOKUPSWITCH opcode
     int ncases = switch_statement -> NumCases(),
-        nlabels = ncases,
-        high = 0,
-        low = 0;
+        nlabels = ncases;
+    i4 high = 0,
+       low = 0;
     if (ncases > 0)
     {
         low = switch_statement -> Case(0) -> Value();

@@ -61,10 +61,8 @@ void AstBlock::Unparse(Ostream& os, LexStream* lex_stream)
         os << "{" << endl;
     // Open brace, if any, must precede labels (e.g., to avoid separating
     // labels from following for statement).
-    for (int il = 0; il < NumLabels(); il++)
-    {
-        os << lex_stream -> NameString(Label(il)) << ": ";
-    }
+    if (label_opt)
+        os << lex_stream -> NameString(label_opt) << ": ";
 
     for (int is = 0; is < NumStatements(); is++)
     {

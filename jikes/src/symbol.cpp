@@ -1693,7 +1693,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
         //
         // Use the location of the class name for all elements of this method.
         //
-        LexStream::TokenIndex loc = LexStream::Badtoken();
+        LexStream::TokenIndex loc = LexStream::BadToken();
         if (declaration -> ClassDeclarationCast())
             loc = ((AstClassDeclaration *) declaration) -> identifier_token;
         else if (declaration -> ClassInstanceCreationExpressionCast())
@@ -1701,7 +1701,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
             assert(((AstClassInstanceCreationExpression *) declaration) -> class_body_opt);
             loc = ((AstClassInstanceCreationExpression *) declaration) -> class_body_opt -> left_brace_token;
         }
-        assert(loc != LexStream::Badtoken());
+        assert(loc != LexStream::BadToken());
 
         int parameter_count = member -> NumFormalParameters();
 
@@ -2133,7 +2133,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member,
         //
         // Use the location of the class name for all elements of this method
         //
-        LexStream::TokenIndex loc = LexStream::Badtoken();
+        LexStream::TokenIndex loc = LexStream::BadToken();
         if (declaration -> ClassDeclarationCast())
             loc = ((AstClassDeclaration *) declaration) -> identifier_token;
         else if (declaration -> ClassInstanceCreationExpressionCast())
@@ -2141,7 +2141,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member,
             assert(((AstClassInstanceCreationExpression *) declaration) -> class_body_opt);
             loc = ((AstClassInstanceCreationExpression *) declaration) -> class_body_opt -> left_brace_token;
         }
-        assert(loc != LexStream::Badtoken());
+        assert(loc != LexStream::BadToken());
 
         read_method = InsertMethodSymbol(control.FindOrInsertName(name, length));
         read_method -> MarkSynthetic();
@@ -2276,7 +2276,7 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member,
         //
         // Use the location of the class name for all elements of this method
         //
-        LexStream::TokenIndex loc = LexStream::Badtoken();
+        LexStream::TokenIndex loc = LexStream::BadToken();
         if (declaration -> ClassDeclarationCast())
             loc = ((AstClassDeclaration *) declaration) -> identifier_token;
         else if (declaration -> ClassInstanceCreationExpressionCast())
@@ -2284,7 +2284,7 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member,
             assert(((AstClassInstanceCreationExpression *) declaration) -> class_body_opt);
             loc = ((AstClassInstanceCreationExpression *) declaration) -> class_body_opt -> left_brace_token;
         }
-        assert(loc != LexStream::Badtoken());
+        assert(loc != LexStream::BadToken());
 
         write_method = InsertMethodSymbol(control.FindOrInsertName(name, length));
         write_method -> MarkSynthetic();

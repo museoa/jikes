@@ -1491,7 +1491,7 @@ RepairCandidate DiagnoseParser::SecondaryPhase(TokenObject error_token)
         for (k = 3; k < BUFF_UBOUND; k++)
             buffer[k] = lex_stream -> Next(buffer[k - 1]);
 
-        buffer[BUFF_UBOUND] = lex_stream -> Badtoken();/* elmt not available */
+        buffer[BUFF_UBOUND] = lex_stream -> BadToken();/* elmt not available */
 
         /*********************************************************/
         /* If we are at the end of the input stream, compute the */
@@ -1590,7 +1590,7 @@ RepairCandidate DiagnoseParser::SecondaryPhase(TokenObject error_token)
         for (k = 3; k < BUFF_UBOUND; k++)
             buffer[k] = lex_stream -> Next(buffer[k - 1]);
 
-        buffer[BUFF_UBOUND] = lex_stream -> Badtoken();/* elmt not available */
+        buffer[BUFF_UBOUND] = lex_stream -> BadToken();/* elmt not available */
 
         location_stack[next_stack_top] = Loc(buffer[2]);
         last_index = next_last_index;

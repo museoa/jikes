@@ -199,8 +199,7 @@ Ast *AstBlock::Clone(StoragePool *ast_pool)
 {
     AstBlock *clone = ast_pool -> GenBlock();
 
-    for (int i = 0; i < NumLabels(); i++)
-        clone -> AddLabel(Label(i));
+    clone -> label_opt = label_opt;
     clone -> nesting_level = nesting_level;
     clone -> left_brace_token = left_brace_token;
     if (NumStatements() == 0)
@@ -1027,11 +1026,8 @@ void Ast::Print(LexStream& lex_stream)
 void AstBlock::Print(LexStream& lex_stream)
 {
     Coutput << "#" << id << " (";
-    for (int i = 0; i < NumLabels(); i++)
-    {
-        Coutput << lex_stream.NameString(Label(i))
-                << ": ";
-    }
+    if (label_opt)
+        Coutput << lex_stream.NameString(label_opt) << ": ";
     Coutput << "Block at level " << nesting_level;
     if (block_symbol)
         Coutput << ", max_variable_index " << block_symbol -> max_variable_index

@@ -1,5 +1,23 @@
 2001-12-08  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/java.g: Update parser to have only one label per block.
+	* src/javaact.cpp: Regenerate.
+	* src/ast.cpp:
+	* src/ast.h:
+	* src/body.cpp:
+	* src/definite.cpp:
+	* src/unparse.cpp: Update label handling - bug 2483.
+	* src/stream.h (BadToken): Rename from Badtoken.
+	* src/decl.cpp:
+	* src/diagnose.cpp:
+	* src/semantic.h:
+	* src/symbol.cpp: Update spelling of BadToken.
+	* src/bytecode.cpp:
+	* src/error.cpp:
+	* src/expr.cpp: Other minor fixes - patch 239.	
+
+2001-12-08  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/java.g: Update parser rules for qualified this and super to
 	favor types over variables.
 	* src/javaact.cpp:

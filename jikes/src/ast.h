@@ -752,8 +752,6 @@ public:
 class AstBlock : public AstStatement
 {
 private:
-
-    AstArray<LexStream::TokenIndex> *labels;
     AstArray<Ast *> *block_statements;
     VariableSymbolArray *locally_defined_variables;
 
@@ -773,15 +771,16 @@ public:
     int nesting_level;
     LexStream::TokenIndex left_brace_token;
     LexStream::TokenIndex right_brace_token;
+    LexStream::TokenIndex label_opt;
 
     bool no_braces;
 
-    AstBlock(StoragePool *pool_) : labels(NULL),
-                                   block_statements(NULL),
+    AstBlock(StoragePool *pool_) : block_statements(NULL),
                                    locally_defined_variables(NULL),
                                    block_tag(NONE),
                                    block_symbol(NULL),
                                    nesting_level(0),
+                                   label_opt(LexStream::BadToken()),
                                    no_braces(false)
     {
         Ast::kind = Ast::BLOCK;
@@ -799,11 +798,6 @@ public:
     inline int NumStatements() { return (block_statements ? block_statements -> Length() : 0); }
     inline void AllocateBlockStatements(int estimate = 0);
     inline void AddStatement(Ast *);
-
-    inline LexStream::TokenIndex &Label(int i) { return (*labels)[i]; }
-    inline int NumLabels() { return (labels ? labels -> Length() : 0); }
-    inline void AllocateLabels(int estimate = 4);
-    inline void AddLabel(LexStream::TokenIndex);
 
     inline VariableSymbol *&LocallyDefinedVariable(int i) { return (*locally_defined_variables)[i]; }
     inline int NumLocallyDefinedVariables() { return (locally_defined_variables ? locally_defined_variables -> Length() : 0); }
@@ -6288,19 +6282,6 @@ inline void AstBlock::AddStatement(Ast *statement)
     if (! block_statements)
         AllocateBlockStatements();
     block_statements -> Next() = statement;
-}
-
-inline void AstBlock::AllocateLabels(int estimate)
-{
-    if (! labels)
-        labels = pool -> NewTokenIndexArray(estimate);
-}
-
-inline void AstBlock::AddLabel(LexStream::TokenIndex label_token_index)
-{
-    if (! labels)
-        AllocateLabels();
-    labels -> Next() = label_token_index;
 }
 
 inline void AstBlock::AllocateLocallyDefinedVariables(int estimate)

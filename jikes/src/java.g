@@ -2676,10 +2676,7 @@ void Parser::MakeLabeledStatement(void)
 {
     AstBlock *p = Sym(3) -> BlockCast();
 
-    if (! (p && p -> NumStatements() == 1 &&
-           (p -> Statement(0) -> kind == Ast::FOR   ||
-            p -> Statement(0) -> kind == Ast::WHILE ||
-            p -> Statement(0) -> kind == Ast::DO)))
+    if (! p || p -> label_opt)
     {
         //
         // When a statement is labeled, it is enclosed in a block.
@@ -2694,7 +2691,7 @@ void Parser::MakeLabeledStatement(void)
         p -> right_brace_token = Sym(3) -> RightToken();
     }
 
-    p -> AddLabel(Token(1)); // add label to statement
+    p -> label_opt = Token(1); // add label to statement
     Sym(1) = p; // The final result is a block containing the labeled-statement
 }
 ./
@@ -3136,7 +3133,7 @@ void Parser::MakeWhileStatement(void)
 
     AstBlock *block = ast_pool -> NewBlock();
     block -> AllocateBlockStatements(1); // allocate 1 element
-    block -> left_brace_token  = Token(1); // point to 'WHILE keyword
+    block -> left_brace_token  = Token(1); // point to 'WHILE' keyword
     block -> AddStatement(p);
     block -> right_brace_token = Sym(5) -> RightToken(); // point to last token in statement
 

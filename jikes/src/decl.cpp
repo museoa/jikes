@@ -135,7 +135,7 @@ void Semantic::ProcessTypeNames()
     //
     for (int k = 0; k < compilation_unit -> NumTypeDeclarations(); k++)
     {
-        LexStream::TokenIndex identifier_token = LexStream::Badtoken();
+        LexStream::TokenIndex identifier_token = LexStream::BadToken();
         TypeSymbol *type = NULL;
 
         Ast *type_declaration = compilation_unit -> TypeDeclaration(k);

@@ -4264,7 +4264,7 @@ wchar_t *SemanticError::PrintSTATIC_NOT_INNER_CLASS(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "The static class \"";
+    s << "The interface \"";
     if (NotDot(err.insert1))
         s << err.insert1 << "/";
     s << err.insert2 << "\" is not an inner class.";
