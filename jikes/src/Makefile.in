@@ -53,6 +53,9 @@ install: all
 	mkdir -p $(prefix)/man/man1
 	cp ../doc/jikes.1 $(prefix)/man/man1
 
+Makefile: $(srcdir)/Makefile.in
+       ./config.status
+
 OBJECTS=jikes.@O@ jikesapi.@O@ scanner.@O@ code.@O@ zip.@O@ unzip.@O@ \
         ast.@O@ diagnose.@O@ parser.@O@ lpginput.@O@ javaact.@O@ \
         error.@O@ set.@O@ symbol.@O@ lookup.@O@ long.@O@ depend.@O@ \
@@ -279,6 +282,7 @@ javaact.@O@: $(srcdir)/javaact.cpp $(srcdir)/config.h $(srcdir)/parser.h \
 
 
 jikesapi.@O@:  $(srcdir)/jikesapi.cpp $(srcdir)/jikesapi.h 
+	$(CXX) $(CXXFLAGS) $(srcdir)/jikesapi.cpp
 
 jikes.@O@:  $(srcdir)/jikes.cpp $(srcdir)/config.h $(srcdir)/control.h \
             $(srcdir)/option.h $(srcdir)/code.h \
