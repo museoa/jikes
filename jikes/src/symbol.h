@@ -593,7 +593,7 @@ private:
 
     bool ACC_FINAL()
     {
-assert(! "use the ACC_FINAL() flag on a method symbol. Use the function \"IsFinal()\" instead");
+assert(! "use the ACC_FINAL() flag on a method symbol. Use the function IsFinal() instead");
         return false;
     }
 };
