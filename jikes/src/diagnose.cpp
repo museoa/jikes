@@ -2196,7 +2196,7 @@ const wchar_t* ParseErrorInfo::emacsErrorString()
       << ':' << left_line_no  << ':' << left_column_no
       << ':' << right_line_no << ':' << right_column_no
       << ": Syntax " << getSeverityString() << ": "
-      << getErrorMessage() << endl;
+      << getErrorMessage();
 
     return s.Array();
 }

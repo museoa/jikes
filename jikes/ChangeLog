@@ -1,3 +1,12 @@
+2004-04-11  Elliott Hughes  <enh@acm.org>
+
+	* src/diagnose.cpp: Remove an extraneous endl that caused blank
+	lines to appear in +E or +D output when there were syntax (rather
+	than lexical or semantic) errors. There are still some cases where
+	Jikes outputs extra blank lines in its regular output, but they're
+	less noticeable when the output isn't very tight anyway, and I haven't
+	found them in the source, either.
+
 2004-04-11  Phil Norman  <cuvy.abezna@virgin.net>
 
 	* src/symbol.h, src/symbol.cpp: Fix bug 3446. Added a method
