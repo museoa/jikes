@@ -1409,7 +1409,6 @@ that
 	unified block stack. This version is known to fail some tests; we are
 	working on this.
 
->>>>>>> 1.89
 1999-09-17    <shields@jikes.watson.ibm.com>
 
 	* jikes.cpp:
