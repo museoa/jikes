@@ -23,10 +23,13 @@ class StoragePool;
 class Ast;
 class AstPackageDeclaration;
 class AstCompilationUnit;
+class AstType;
+class AstTypeName;
 class AstClassBody;
 class AstInterfaceDeclaration;
 class AstListNode;
 class AstMethodBody;
+class AstSimpleName;
 class AstStatement;
 
 enum ParseErrorCode

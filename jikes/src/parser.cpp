@@ -242,7 +242,7 @@ bool Parser::BodyParse(LexStream *lex_stream_, AstClassBody *class_body)
 
     delete list_node_pool; // free the pool of list nodes
 
-    class_body -> mark_parsed();
+    class_body -> MarkParsed();
 
     return success;
 }
@@ -323,7 +323,7 @@ bool Parser::BodyParse(LexStream *lex_stream_,
 
     delete list_node_pool; // free the pool of list nodes
 
-    interface_declaration -> mark_parsed();
+    interface_declaration -> MarkParsed();
 
     return success;
 }

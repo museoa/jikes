@@ -1,3 +1,29 @@
+2002-12-04  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/ast.h (AstType, AstInstanceofExpression, AstClassLiteral):
+	Backport abstract syntax tree improvements from generics-branch.
+	* src/java.g: Backport grammar improvements from generics-branch,
+	now allowing LALR(1) instead of LALR(2) parsing.
+	* src/ast.cpp
+	* src/body.cpp:
+	* src/bytecode.cpp:
+	* src/bytecode.h:
+	* src/decl.cpp:
+	* src/definite.cpp:
+	* src/expr.cpp:
+	* src/modifier.cpp:
+	* src/parser.cpp:
+	* src/parser.h:
+	* src/semantic.h:
+	* src/symbol.cpp:
+	* src/unparse.cpp: Backport changes associated with AST update.
+	* src/javaact.cpp:
+	* src/javaact.h:
+	* src/javadcl.h:
+	* src/javadef.h:
+	* src/javaprs.h:
+	* src/javasym.h: Regenerate.
+
 2002-12-02  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.cpp (InitializeArray): Fix bug 3399.

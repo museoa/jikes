@@ -344,30 +344,31 @@ void TypeSymbol::RemoveCompilationReferences()
 }
 
 
-TypeSymbol *TypeSymbol::GetArrayType(Semantic *sem, int num_dimensions_)
+TypeSymbol* TypeSymbol::GetArrayType(Semantic* sem, int dims)
 {
-    if (num_dimensions_ == 0 || Bad())
+    if (dims == num_dimensions)
         return this;
-    if (num_dimensions_ < NumArrays())
-        return Array(num_dimensions_);
+    if (num_dimensions)
+        return base_type -> GetArrayType(sem, dims);
+    if (! dims || Bad())
+        return this;
+    if (dims < NumArrays())
+        return Array(dims);
 
     if (NumArrays() == 0)
         AddArrayType(this);
-
-    TypeSymbol *previous_array_type = Array(array -> Length() - 1);
-    wchar_t *name =
-        new wchar_t[ExternalNameLength() + (num_dimensions_ * 2) + 1];
+    TypeSymbol* previous_array_type = Array(array -> Length() - 1);
+    wchar_t* name = new wchar_t[ExternalNameLength() + (dims * 2) + 1];
     wcscpy(name, previous_array_type -> ExternalName());
 
     for (int num = array -> Length(),
              len = previous_array_type -> ExternalNameLength() + 2;
-         num <= num_dimensions_;
+         num <= dims;
          num++, len = len + 2)
     {
         wcscat(name, StringConstant::US_LB_RB);
-        NameSymbol *name_sym = sem -> control.FindOrInsertName(name, len);
-
-        TypeSymbol *type = new TypeSymbol(name_sym);
+        NameSymbol* name_sym = sem -> control.FindOrInsertName(name, len);
+        TypeSymbol* type = new TypeSymbol(name_sym);
 
         type -> MarkHeaderProcessed();
         type -> MarkConstructorMembersProcessed();
@@ -402,7 +403,7 @@ TypeSymbol *TypeSymbol::GetArrayType(Semantic *sem, int num_dimensions_)
         type -> table = new SymbolTable(2);
         type -> SetSignature(sem -> control);
 
-        MethodSymbol *method =
+        MethodSymbol* method =
             type -> InsertMethodSymbol(sem -> control.clone_name_symbol);
         method -> SetType(sem -> control.Object());
         method -> SetContainingType(type);
@@ -412,7 +413,7 @@ TypeSymbol *TypeSymbol::GetArrayType(Semantic *sem, int num_dimensions_)
         method -> SetBlockSymbol(new BlockSymbol(1));
         method -> SetSignature(sem -> control);
 
-        VariableSymbol *symbol =
+        VariableSymbol* symbol =
             type -> InsertVariableSymbol(sem -> control.length_name_symbol);
         symbol -> SetACC_PUBLIC();
         symbol -> SetACC_FINAL();
@@ -422,12 +423,11 @@ TypeSymbol *TypeSymbol::GetArrayType(Semantic *sem, int num_dimensions_)
         symbol -> MarkInitialized();
 
         type -> CompressSpace(); // space optimization
-
         AddArrayType(type);
     }
 
     delete [] name;
-    return Array(num_dimensions_);
+    return Array(dims);
 }
 
 void TypeSymbol::SetLocation()
@@ -1179,13 +1179,14 @@ void MethodSymbol::ProcessMethodThrows(Semantic *sem, LexStream::TokenIndex tok)
 // In addition to (re)setting the signature, this updates the
 // max_variable_index if needed.
 //
-void MethodSymbol::SetSignature(Control &control, TypeSymbol *placeholder)
+void MethodSymbol::SetSignature(Control& control, TypeSymbol* placeholder)
 {
     int i;
-    int len = 2 + strlen(Type() -> SignatureString()); // +1 for '(' +1 for ')'
-
     bool is_constructor = Identity() == control.init_name_symbol;
-    TypeSymbol *this0_type = containing_type -> EnclosingType();
+    int len = is_constructor ? 3 : 2 + strlen(Type() -> SignatureString());
+    // +1 for '(' +1 for ')'; constructors have type 'V'
+
+    TypeSymbol* this0_type = containing_type -> EnclosingType();
     int variable_index = ACC_STATIC() ? 0 : 1;
 
     if (is_constructor && this0_type)
@@ -1195,7 +1196,7 @@ void MethodSymbol::SetSignature(Control &control, TypeSymbol *placeholder)
     }
     for (i = 0; i < NumFormalParameters(); i++)
     {
-        TypeSymbol *formal_type = FormalParameter(i) -> Type();
+        TypeSymbol* formal_type = FormalParameter(i) -> Type();
         len += strlen(formal_type -> SignatureString());
         variable_index += (control.IsDoubleWordType(formal_type) ? 2 : 1);
     }
@@ -1203,7 +1204,7 @@ void MethodSymbol::SetSignature(Control &control, TypeSymbol *placeholder)
     {
         for (i = 0; i < containing_type -> NumConstructorParameters(); i++)
         {
-            TypeSymbol *shadow_type =
+            TypeSymbol* shadow_type =
                 containing_type -> ConstructorParameter(i) -> Type();
             len += strlen(shadow_type -> SignatureString());
             variable_index += (control.IsDoubleWordType(shadow_type) ? 2 : 1);
@@ -1217,42 +1218,50 @@ void MethodSymbol::SetSignature(Control &control, TypeSymbol *placeholder)
     if (block_symbol && variable_index > block_symbol -> max_variable_index)
         block_symbol -> max_variable_index = variable_index;
 
-    char *method_signature = new char[len + 1]; // +1 for '\0'
+    char* method_signature = new char[len + 1]; // +1 for '\0'
     method_signature[0] = U_LEFT_PARENTHESIS;
     int s = 1;
     if (is_constructor && this0_type)
     {
-        for (char *str = this0_type -> SignatureString(); *str; str++, s++)
+        for (char* str = this0_type -> SignatureString(); *str; str++, s++)
             method_signature[s] = *str;
     }
     for (i = 0; i < NumFormalParameters(); i++)
     {
-        TypeSymbol *formal_type = FormalParameter(i) -> Type();
-        for (char *str = formal_type -> SignatureString(); *str; str++, s++)
+        TypeSymbol* formal_type = FormalParameter(i) -> Type();
+        for (char* str = formal_type -> SignatureString(); *str; str++, s++)
             method_signature[s] = *str;
     }
     if (is_constructor)
     {
         for (i = 0; i < containing_type -> NumConstructorParameters(); i++)
         {
-            TypeSymbol *shadow_type =
+            TypeSymbol* shadow_type =
                 containing_type -> ConstructorParameter(i) -> Type();
-            for (char *str = shadow_type -> SignatureString();
+            for (char* str = shadow_type -> SignatureString();
                  *str; str++, s++)
             {
                 method_signature[s] = *str;
             }
         }
         if (placeholder)
-            for (char *str = placeholder -> SignatureString();
+            for (char* str = placeholder -> SignatureString();
                  *str; str++, s++)
             {
                 method_signature[s] = *str;
             }
     }
     method_signature[s++] = U_RIGHT_PARENTHESIS;
-    for (char *str = Type() -> SignatureString(); *str; str++, s++)
-        method_signature[s] = *str;
+    if (is_constructor)
+    {
+        assert(Type() == containing_type);
+        method_signature[s++] = U_V;
+    }
+    else
+    {
+        for (char* str = Type() -> SignatureString(); *str; str++, s++)
+            method_signature[s] = *str;
+    }
     method_signature[s] = U_NULL;
 
     signature = control.Utf8_pool.FindOrInsert(method_signature, len);
@@ -1261,7 +1270,7 @@ void MethodSymbol::SetSignature(Control &control, TypeSymbol *placeholder)
 }
 
 
-void MethodSymbol::ProcessMethodSignature(Semantic *sem,
+void MethodSymbol::ProcessMethodSignature(Semantic* sem,
                                           LexStream::TokenIndex token_location)
 {
     if (! type_)
@@ -1269,13 +1278,14 @@ void MethodSymbol::ProcessMethodSignature(Semantic *sem,
         assert(sem);
 
         int num_parameters = 0;
-        char *signature = SignatureString();
+        const char* signature = SignatureString();
         signature++; // +1 to skip initial '('
 
         //
         // For the constructor of an inner type, skip the "this$0" argument.
         //
         if (containing_type -> EnclosingType() &&
+            ! containing_type -> EnclosingType() -> ACC_PRIVATE() &&
             Identity() == sem -> control.init_name_symbol)
         {
             if (*signature != U_RIGHT_PARENTHESIS)
@@ -1283,7 +1293,7 @@ void MethodSymbol::ProcessMethodSignature(Semantic *sem,
                 //
                 // Move to next signature
                 //
-                char *str;
+                const char *str;
                 for (str = signature; *str == U_LEFT_BRACKET; str++)
                     ;
                 if (*str == U_L)
@@ -1303,9 +1313,9 @@ void MethodSymbol::ProcessMethodSignature(Semantic *sem,
             // Make up a name for each parameter... Recall that for an inner
             // class we need to skip the this$0 parameter
             //
-            NameSymbol *name_symbol =
+            NameSymbol* name_symbol =
                 sem -> control.MakeParameter(++num_parameters);
-            VariableSymbol *symbol = new VariableSymbol(name_symbol);
+            VariableSymbol* symbol = new VariableSymbol(name_symbol);
             symbol -> SetType(sem -> ProcessSignature(containing_type,
                                                       signature,
                                                       token_location));
@@ -1315,7 +1325,7 @@ void MethodSymbol::ProcessMethodSignature(Semantic *sem,
             //
             // Move to next signature
             //
-            char *str;
+            const char* str;
             for (str = signature; *str == U_LEFT_BRACKET; str++)
                 ;
             if (*str == U_L)
@@ -1332,14 +1342,22 @@ void MethodSymbol::ProcessMethodSignature(Semantic *sem,
         //
         // Now set the type of the method.
         //
-        SetType(sem -> ProcessSignature(containing_type, signature,
-                                        token_location));
+        if (Identity() == sem -> control.init_name_symbol)
+        {
+            assert(*signature++ == U_V);
+            SetType(containing_type);
+        }
+        else
+        {
+            SetType(sem -> ProcessSignature(containing_type, signature,
+                                            token_location));
+        }
 
         //
         // Create a symbol table for this method for consistency... and in
         // order to release the space used by the variable paramaters later.
         //
-        BlockSymbol *block_symbol = new BlockSymbol(num_parameters);
+        BlockSymbol* block_symbol = new BlockSymbol(num_parameters);
         for (int k = 0; k < num_parameters; k++)
             block_symbol -> InsertVariableSymbol((*formal_parameters)[k]);
         block_symbol -> CompressSpace(); // space optimization
@@ -2009,7 +2027,6 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
 
         AstFieldAccess *field_access = ast_pool -> GenFieldAccess();
         field_access -> base = base;
-        field_access -> dot_token = loc;
         field_access -> identifier_token = loc;
 
         AstMethodInvocation *method_invocation =
@@ -2411,7 +2428,6 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member,
 
         AstFieldAccess *field_access = ast_pool -> GenFieldAccess();
         field_access -> base = base;
-        field_access -> dot_token = loc;
         field_access -> identifier_token = loc;
         field_access -> symbol = member;
 
@@ -2569,7 +2585,6 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member,
 
         AstFieldAccess *left_hand_side = ast_pool -> GenFieldAccess();
         left_hand_side -> base = base;
-        left_hand_side -> dot_token = loc;
         left_hand_side -> identifier_token = loc;
         left_hand_side -> symbol = member;
 
@@ -2715,7 +2730,7 @@ TypeSymbol *TypeSymbol::GetPlaceholderType()
         AstClassInstanceCreationExpression *class_creation =
             ast_pool -> GenClassInstanceCreationExpression();
         class_creation -> new_token = loc;
-        class_creation -> class_type = ast_pool -> GenTypeExpression(ast_type);
+        class_creation -> class_type = ast_pool -> GenTypeName(ast_type);
         class_creation -> left_parenthesis_token = loc;
         class_creation -> right_parenthesis_token = loc;
         class_creation -> class_body_opt = class_body;

@@ -4,7 +4,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler Open
 // Source License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1997, 1998, 1999, 2001, 2002 International
+// Copyright (C) 1996, 1997, 1998, 1999, 2001, International
 // Business Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -62,29 +62,11 @@ public:
         return base_action[state + sym];
     }
 
-    static int t_action(int act, int sym, LexStream *stream)
+    static int t_action(int state, int sym, LexStream *stream)
     {
-        act = base_action[act];
-        int i = act + sym;
-
-        act = term_action[term_check[i] == sym ? i : act];
-
-        if (act > LA_STATE_OFFSET)
-        {
-            for (TokenObject tok = stream -> Peek();
-                 ;
-                 tok = stream -> Next(tok))
-            {
-               act -= LA_STATE_OFFSET;
-               sym = stream -> Kind(tok);
-               i = act + sym;
-               act = term_action[term_check[i] == sym ? i : act];
-               if (act <= LA_STATE_OFFSET)
-                   break;
-            } 
-        }
-
-        return act;
+        return term_action[term_check[base_action[state]+sym] == sym
+                               ? base_action[state] + sym
+                               : base_action[state]];
     }
 };
 

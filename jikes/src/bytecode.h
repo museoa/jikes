@@ -68,7 +68,7 @@ class MethodStack
 {
 public:
 
-    void Push(AstBlock *block)
+    void Push(AstBlock* block)
     {
         assert(block -> nesting_level < stack_size &&
                (top_index == 0 ||
@@ -131,43 +131,43 @@ public:
     }
     int NestingLevel(int i) { AssertIndex(i); return nesting_level[i]; }
 
-    Label &TopBreakLabel() { return break_labels[TopNestingLevel()]; }
-    Label &BreakLabel(int i) { AssertIndex(i); return break_labels[i]; }
+    Label& TopBreakLabel() { return break_labels[TopNestingLevel()]; }
+    Label& BreakLabel(int i) { AssertIndex(i); return break_labels[i]; }
 
-    Label &TopContinueLabel() { return continue_labels[TopNestingLevel()]; }
-    Label &ContinueLabel(int i) { AssertIndex(i); return continue_labels[i]; }
+    Label& TopContinueLabel() { return continue_labels[TopNestingLevel()]; }
+    Label& ContinueLabel(int i) { AssertIndex(i); return continue_labels[i]; }
 
-    Label &TopFinallyLabel() { return finally_labels[TopNestingLevel()]; }
-    Label &FinallyLabel(int i) { AssertIndex(i); return finally_labels[i]; }
+    Label& TopFinallyLabel() { return finally_labels[TopNestingLevel()]; }
+    Label& FinallyLabel(int i) { AssertIndex(i); return finally_labels[i]; }
 
-    Tuple<u2> &TopHandlerRangeStart()
+    Tuple<u2>& TopHandlerRangeStart()
     {
         return handler_range_start[TopNestingLevel()];
     }
-    Tuple<u2> &HandlerRangeStart(int i)
+    Tuple<u2>& HandlerRangeStart(int i)
     {
         AssertIndex(i);
         return handler_range_start[i];
     }
 
-    Tuple<u2> &TopHandlerRangeEnd()
+    Tuple<u2>& TopHandlerRangeEnd()
     {
         return handler_range_end[TopNestingLevel()];
     }
-    Tuple<u2> &HandlerRangeEnd(int i)
+    Tuple<u2>& HandlerRangeEnd(int i)
     {
         AssertIndex(i);
         return handler_range_end[i];
     }
 
-    AstBlock *TopBlock() { return blocks[TopNestingLevel()]; }
-    AstBlock *Block(int i) { AssertIndex(i); return blocks[i]; }
+    AstBlock* TopBlock() { return blocks[TopNestingLevel()]; }
+    AstBlock* Block(int i) { AssertIndex(i); return blocks[i]; }
 
-    u2 *TopLocalVariablesStartPc()
+    u2* TopLocalVariablesStartPc()
     {
-        return (u2 *) local_variables_start_pc[TopNestingLevel()];
+        return (u2*) local_variables_start_pc[TopNestingLevel()];
     }
-    u2 &StartPc(VariableSymbol *variable)
+    u2& StartPc(VariableSymbol* variable)
     {
         assert(variable -> LocalVariableIndex() >= 0 &&
                variable -> LocalVariableIndex() < size);
@@ -184,9 +184,9 @@ public:
         finally_labels = new Label[stack_size];
         handler_range_start = new Tuple<u2>[stack_size];
         handler_range_end = new Tuple<u2>[stack_size];
-        blocks = new AstBlock *[stack_size];
+        blocks = new AstBlock*[stack_size];
 
-        local_variables_start_pc = new u2 *[stack_size];
+        local_variables_start_pc = new u2*[stack_size];
         for (int i = 0; i < stack_size; i++)
             local_variables_start_pc[i] = new u2[size];
     }
@@ -206,17 +206,17 @@ public:
     }
 
 private:
-    int *nesting_level;
+    int* nesting_level;
 
-    Label *break_labels;
-    Label *continue_labels;
-    Label *finally_labels;
-    Tuple<u2> *handler_range_start;
-    Tuple<u2> *handler_range_end;
+    Label* break_labels;
+    Label* continue_labels;
+    Label* finally_labels;
+    Tuple<u2>* handler_range_start;
+    Tuple<u2>* handler_range_end;
 
-    AstBlock **blocks; // block symbols for current block
+    AstBlock* *blocks; // block symbols for current block
 
-    u2 **local_variables_start_pc;
+    u2* *local_variables_start_pc;
     int stack_size,
         size,
         top_index;
@@ -245,7 +245,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         stack_depth,          // current stack depth;
         max_stack,
         max_block_depth;
-    MethodStack *method_stack;
+    MethodStack* method_stack;
 
     bool string_overflow,
          library_method_not_found,
@@ -256,10 +256,10 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     u2 shadow_parameter_offset;
 
-    Code_attribute *code_attribute; // code for current method ?
-    LineNumberTable_attribute *line_number_table_attribute;
-    LocalVariableTable_attribute *local_variable_table_attribute;
-    InnerClasses_attribute *inner_classes_attribute;
+    Code_attribute* code_attribute; // code for current method ?
+    LineNumberTable_attribute* line_number_table_attribute;
+    LocalVariableTable_attribute* local_variable_table_attribute;
+    InnerClasses_attribute* inner_classes_attribute;
 
     void MethodInitialization()
     {
@@ -270,12 +270,12 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         max_stack = 0;
     }
 
-    bool ProcessAbruptExit(int, u2, TypeSymbol * = NULL);
-    void CompleteLabel(Label &lab);
-    void DefineLabel(Label &lab);
-    void UseLabel(Label &lab, int length, int op_offset);
+    bool ProcessAbruptExit(int, u2, TypeSymbol* = NULL);
+    void CompleteLabel(Label& lab);
+    void DefineLabel(Label& lab);
+    void UseLabel(Label& lab, int length, int op_offset);
 
-    bool IsLabelUsed(Label &lab)
+    bool IsLabelUsed(Label& lab)
     {
         return lab.uses.Length() > 0;
     }
@@ -284,7 +284,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     // Does p refer to a non-null reference type?
     //
-    bool IsReferenceType(TypeSymbol *p)
+    bool IsReferenceType(TypeSymbol* p)
     {
         return ! p -> Primitive() && p != control.null_type;
     }
@@ -293,31 +293,31 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     // See if operand is constant zero (including -0.0).
     //
-    bool IsZero(AstExpression *p)
+    bool IsZero(AstExpression* p)
     {
-        TypeSymbol *type = p -> Type();
+        TypeSymbol* type = p -> Type();
         if (p -> IsConstant() && type != control.String())
         {
             if (control.IsSimpleIntegerValueType(type) ||
                 type == control.boolean_type)
             {
-                return (DYNAMIC_CAST<IntLiteralValue *> (p -> value)) ->
+                return (DYNAMIC_CAST<IntLiteralValue*> (p -> value)) ->
                     value == 0;
             }
             else if (type == control.long_type)
             {
-                return (DYNAMIC_CAST<LongLiteralValue *> (p -> value)) ->
+                return (DYNAMIC_CAST<LongLiteralValue*> (p -> value)) ->
                     value == 0;
             }
             else if (type == control.float_type)
             {
-                return (DYNAMIC_CAST<FloatLiteralValue *> (p -> value)) ->
+                return (DYNAMIC_CAST<FloatLiteralValue*> (p -> value)) ->
                     value == 0;
             }
             else
             {
                 assert(type == control.double_type);
-                return (DYNAMIC_CAST<DoubleLiteralValue *> (p -> value)) ->
+                return (DYNAMIC_CAST<DoubleLiteralValue*> (p -> value)) ->
                     value == 0;
             }
         }
@@ -328,31 +328,31 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     // See if operand is constant one.
     //
-    bool IsOne(AstExpression *p)
+    bool IsOne(AstExpression* p)
     {
-        TypeSymbol *type = p -> Type();
+        TypeSymbol* type = p -> Type();
         if (p -> IsConstant() && type != control.String())
         {
             if (control.IsSimpleIntegerValueType(type) ||
                 type == control.boolean_type)
             {
-                return (DYNAMIC_CAST<IntLiteralValue *> (p -> value)) ->
+                return (DYNAMIC_CAST<IntLiteralValue*> (p -> value)) ->
                     value == 1;
             }
             else if (type == control.long_type)
             {
-                return (DYNAMIC_CAST<LongLiteralValue *> (p -> value)) ->
+                return (DYNAMIC_CAST<LongLiteralValue*> (p -> value)) ->
                     value == 1;
             }
             else if (type == control.float_type)
             {
-                return (DYNAMIC_CAST<FloatLiteralValue *> (p -> value)) ->
+                return (DYNAMIC_CAST<FloatLiteralValue*> (p -> value)) ->
                     value == 1;
             }
             else
             {
                 assert(type == control.double_type);
-                return (DYNAMIC_CAST<DoubleLiteralValue *> (p -> value)) ->
+                return (DYNAMIC_CAST<DoubleLiteralValue*> (p -> value)) ->
                     value == 1;
             }
         }
@@ -375,23 +375,23 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         LHS_METHOD = 4 // access to private variable
     };
 
-    VariableCategory GetLhsKind(AstExpression *expression)
+    VariableCategory GetLhsKind(AstExpression* expression)
     {
-        AstAssignmentExpression *assignment =
+        AstAssignmentExpression* assignment =
             expression -> AssignmentExpressionCast();
-        AstPreUnaryExpression *pre = expression -> PreUnaryExpressionCast();
-        AstPostUnaryExpression *post = expression -> PostUnaryExpressionCast();
+        AstPreUnaryExpression* pre = expression -> PreUnaryExpressionCast();
+        AstPostUnaryExpression* post = expression -> PostUnaryExpressionCast();
 
-        AstExpression *lhs = (assignment
+        AstExpression* lhs = (assignment
                               ? (assignment -> write_method
-                                 ? (AstExpression *) NULL
+                                 ? (AstExpression*) NULL
                                  : assignment -> left_hand_side)
                               : pre
                               ? (pre -> write_method
-                                 ? (AstExpression *) NULL : pre -> expression)
+                                 ? (AstExpression*) NULL : pre -> expression)
                               : post
                               ? (post -> write_method
-                                 ? (AstExpression *) NULL : post -> expression)
+                                 ? (AstExpression*) NULL : post -> expression)
                               : expression);
 
         //
@@ -400,10 +400,10 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         // symbol is null.
         //
         if (lhs && lhs -> CastExpressionCast())
-            lhs = ((AstCastExpression *) lhs) -> expression;
+            lhs = ((AstCastExpression*) lhs) -> expression;
         while (lhs && lhs -> ParenthesizedExpressionCast())
-            lhs = ((AstParenthesizedExpression *) lhs) -> expression;
-        Symbol *sym = lhs ? lhs -> symbol : (Symbol *) NULL;
+            lhs = ((AstParenthesizedExpression*) lhs) -> expression;
+        Symbol* sym = lhs ? lhs -> symbol : (Symbol*) NULL;
 
         //
         // If the expression associated with the left-hand side is null,
@@ -412,8 +412,8 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         // a FieldAccess or name, the left-hand side is resolved into a
         // variable. For an array access, it is resolved into a type.
         //
-        VariableSymbol *var = (sym ? sym -> VariableCast()
-                               : (VariableSymbol *) NULL);
+        VariableSymbol* var = (sym ? sym -> VariableCast()
+                               : (VariableSymbol*) NULL);
         return (! lhs ? LHS_METHOD
                 : ! var ? LHS_ARRAY
                 : var -> owner -> MethodCast() ? LHS_LOCAL
@@ -422,7 +422,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     }
 
 
-    int GetTypeWords(TypeSymbol *type)
+    int GetTypeWords(TypeSymbol* type)
     {
         return control.IsDoubleWordType(type) ? 2 : 1;
     }
@@ -431,15 +431,15 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     // methods to load and store values
     //
-    void LoadLocal(int varno, TypeSymbol *);
-    void StoreLocal(int varno, TypeSymbol *);
-    void LoadLiteral(LiteralValue *, TypeSymbol *);
+    void LoadLocal(int varno, TypeSymbol*);
+    void StoreLocal(int varno, TypeSymbol*);
+    void LoadLiteral(LiteralValue*, TypeSymbol*);
     void LoadImmediateInteger(int);
-    int LoadVariable(VariableCategory, AstExpression *, bool = true);
-    int LoadArrayElement(TypeSymbol *);
-    void StoreArrayElement(TypeSymbol *);
-    void StoreField(AstExpression *);
-    void StoreVariable(VariableCategory, AstExpression *);
+    int LoadVariable(VariableCategory, AstExpression*, bool = true);
+    int LoadArrayElement(TypeSymbol*);
+    void StoreArrayElement(TypeSymbol*);
+    void StoreField(AstExpression*);
+    void StoreVariable(VariableCategory, AstExpression*);
 
     void LoadConstantAtIndex(u2 index)
     {
@@ -461,20 +461,20 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     SegmentPool segment_pool;
 
-    Pair *double_constant_pool_index,
-         *integer_constant_pool_index,
-         *long_constant_pool_index,
-         *float_constant_pool_index,
-         *string_constant_pool_index,
+    Pair* double_constant_pool_index;
+    Pair* integer_constant_pool_index;
+    Pair* long_constant_pool_index;
+    Pair* float_constant_pool_index;
+    Pair* string_constant_pool_index;
 
-         utf8_constant_pool_index,
-         class_constant_pool_index;
+    Pair utf8_constant_pool_index;
+    Pair class_constant_pool_index;
 
-    Triplet *name_and_type_constant_pool_index,
-            *fieldref_constant_pool_index,
-            *methodref_constant_pool_index;
+    Triplet* name_and_type_constant_pool_index;
+    Triplet* fieldref_constant_pool_index;
+    Triplet* methodref_constant_pool_index;
 
-    u2 RegisterNameAndType(Utf8LiteralValue *name, Utf8LiteralValue *type_name)
+    u2 RegisterNameAndType(Utf8LiteralValue* name, Utf8LiteralValue* type_name)
     {
         assert(name && type_name && "null argument to RegisterNameAndType");
 
@@ -502,9 +502,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     }
 
 
-    u2 RegisterFieldref(Utf8LiteralValue *class_name,
-                        Utf8LiteralValue *field_name,
-                        Utf8LiteralValue *field_type_name)
+    u2 RegisterFieldref(Utf8LiteralValue* class_name,
+                        Utf8LiteralValue* field_name,
+                        Utf8LiteralValue* field_type_name)
     {
         assert(class_name && field_name && field_type_name &&
                "null argument to RegisterFieldref");
@@ -534,7 +534,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     }
 
 
-    u2 RegisterFieldref(TypeSymbol *type, VariableSymbol *variable)
+    u2 RegisterFieldref(TypeSymbol* type, VariableSymbol* variable)
     {
         assert(variable -> owner -> TypeCast());
 
@@ -544,7 +544,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     }
 
 
-    u2 RegisterFieldref(VariableSymbol *variable)
+    u2 RegisterFieldref(VariableSymbol* variable)
     {
         assert(variable -> owner -> TypeCast());
 
@@ -555,9 +555,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
 
 
     u2 RegisterMethodref(ConstantKind kind,
-                         Utf8LiteralValue *class_name,
-                         Utf8LiteralValue *method_name,
-                         Utf8LiteralValue *method_type_name)
+                         Utf8LiteralValue* class_name,
+                         Utf8LiteralValue* method_name,
+                         Utf8LiteralValue* method_type_name)
     {
         assert(class_name && method_name && method_type_name &&
                "null argument to RegisterMethodref");
@@ -580,10 +580,10 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
 
             u2 class_name_index = RegisterClass(class_name);
             constant_pool[i] = kind == CONSTANT_Methodref
-                ? (cp_info *) new CONSTANT_Methodref_info(CONSTANT_Methodref,
+                ? (cp_info*) new CONSTANT_Methodref_info(CONSTANT_Methodref,
                                                           class_name_index,
                                                           name_type_index)
-                : (cp_info *) new CONSTANT_InterfaceMethodref_info(CONSTANT_InterfaceMethodref,
+                : (cp_info*) new CONSTANT_InterfaceMethodref_info(CONSTANT_InterfaceMethodref,
                                                                    class_name_index,
                                                                    name_type_index);
         }
@@ -592,9 +592,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     }
 
 
-    u2 RegisterMethodref(TypeSymbol *class_type,
-                         NameSymbol *method_name,
-                         MethodSymbol *method_type)
+    u2 RegisterMethodref(TypeSymbol* class_type,
+                         NameSymbol* method_name,
+                         MethodSymbol* method_type)
     {
         return RegisterMethodref(CONSTANT_Methodref,
                                  class_type -> fully_qualified_name,
@@ -602,9 +602,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
                                  method_type -> signature);
     }
 
-    u2 RegisterInterfaceMethodref(TypeSymbol *interface_name,
-                                  NameSymbol *method_name,
-                                  MethodSymbol *method_type_name)
+    u2 RegisterInterfaceMethodref(TypeSymbol* interface_name,
+                                  NameSymbol* method_name,
+                                  MethodSymbol* method_type_name)
     {
         return RegisterMethodref(CONSTANT_InterfaceMethodref,
                                  interface_name -> fully_qualified_name,
@@ -613,7 +613,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     }
 
 
-    u2 RegisterLibraryMethodref(MethodSymbol *method)
+    u2 RegisterLibraryMethodref(MethodSymbol* method)
     {
         // The library method must exist. If it does not, flag an error.
         if (method)
@@ -626,7 +626,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         return 0;
     }
 
-    u2 RegisterDouble(DoubleLiteralValue *lit)
+    u2 RegisterDouble(DoubleLiteralValue* lit)
     {
         assert((lit != NULL) && "null argument to RegisterDouble");
 
@@ -652,7 +652,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     }
 
 
-    u2 RegisterInteger(IntLiteralValue *lit)
+    u2 RegisterInteger(IntLiteralValue* lit)
     {
         assert((lit != NULL) && "null argument to RegisterInteger");
 
@@ -679,14 +679,14 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     }
 
 
-    u2 FindInteger(IntLiteralValue *lit)
+    u2 FindInteger(IntLiteralValue* lit)
     {
         return (lit && integer_constant_pool_index
                 ? (*integer_constant_pool_index)[lit -> index] : 0);
     }
 
 
-    u2 RegisterLong(LongLiteralValue *lit)
+    u2 RegisterLong(LongLiteralValue* lit)
     {
         assert((lit != NULL) && "null argument to RegisterLong");
 
@@ -712,7 +712,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     }
 
 
-    u2 RegisterFloat(FloatLiteralValue *lit)
+    u2 RegisterFloat(FloatLiteralValue* lit)
     {
         assert((lit != NULL) && "null argument to RegisterFloat");
 
@@ -735,7 +735,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     }
 
 
-    u2 RegisterUtf8(Utf8LiteralValue *lit)
+    u2 RegisterUtf8(Utf8LiteralValue* lit)
     {
         assert(lit != NULL && "null argument to RegisterUtf8");
 
@@ -756,12 +756,12 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         return index;
     }
 
-    u2 RegisterName(NameSymbol *sym)
+    u2 RegisterName(NameSymbol* sym)
     {
         return RegisterUtf8(sym -> Utf8_literal);
     }
 
-    u2 RegisterString(Utf8LiteralValue *lit)
+    u2 RegisterString(Utf8LiteralValue* lit)
     {
         assert(lit && "null argument to RegisterString");
 
@@ -789,7 +789,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     }
 
 
-    u2 RegisterClass(Utf8LiteralValue *lit)
+    u2 RegisterClass(Utf8LiteralValue* lit)
     {
         assert(lit && "null argument to RegisterClass");
 
@@ -807,7 +807,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         return index;
     }
 
-    u2 RegisterClass(TypeSymbol *sym)
+    u2 RegisterClass(TypeSymbol* sym)
     {
         return RegisterClass(sym -> fully_qualified_name);
     }
@@ -816,13 +816,13 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     //  Methods to write out the byte code
     //
-    Deprecated_attribute *CreateDeprecatedAttribute()
+    Deprecated_attribute* CreateDeprecatedAttribute()
     {
         return new Deprecated_attribute(RegisterUtf8(control.Deprecated_literal));
     }
 
 
-    Synthetic_attribute *CreateSyntheticAttribute()
+    Synthetic_attribute* CreateSyntheticAttribute()
     {
         return new Synthetic_attribute(RegisterUtf8(control.Synthetic_literal));
     }
@@ -831,85 +831,86 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     // Methods to generate expressions.
     //
-    int EmitExpression(AstExpression *, bool = true);
-    int EmitArrayCreationExpression(AstArrayCreationExpression *, bool = true);
-    int EmitAssignmentExpression(AstAssignmentExpression *, bool);
+    int EmitExpression(AstExpression*, bool = true);
+    int EmitArrayCreationExpression(AstArrayCreationExpression*, bool = true);
+    int EmitAssignmentExpression(AstAssignmentExpression*, bool);
     int EmitBinaryExpression(AstBinaryExpression*, bool);
-    int EmitCastExpression(AstCastExpression *, bool);
-    void EmitCast(TypeSymbol *, TypeSymbol *);
-    int EmitInstanceCreationExpression(AstClassInstanceCreationExpression *,
+    int EmitInstanceofExpression(AstInstanceofExpression*, bool);
+    int EmitCastExpression(AstCastExpression*, bool);
+    void EmitCast(TypeSymbol*, TypeSymbol*);
+    int EmitInstanceCreationExpression(AstClassInstanceCreationExpression*,
                                         bool);
-    int EmitConditionalExpression(AstConditionalExpression *, bool);
-    int EmitFieldAccess(AstFieldAccess *, bool = true);
-    AstExpression *VariableExpressionResolution(AstExpression *);
-    TypeSymbol *VariableTypeResolution(AstExpression *, VariableSymbol *);
-    TypeSymbol *MethodTypeResolution(AstExpression *, MethodSymbol *);
-    void EmitFieldAccessLhsBase(AstExpression *);
-    void EmitFieldAccessLhs(AstExpression *);
-    void EmitMethodInvocation(AstMethodInvocation *);
-    void EmitNewArray(int, TypeSymbol *);
-    int EmitPostUnaryExpression(AstPostUnaryExpression *, bool);
-    void EmitPostUnaryExpressionArray(AstPostUnaryExpression *, bool);
+    int EmitConditionalExpression(AstConditionalExpression*, bool);
+    int EmitFieldAccess(AstFieldAccess*, bool = true);
+    AstExpression* VariableExpressionResolution(AstExpression*);
+    TypeSymbol* VariableTypeResolution(AstExpression*, VariableSymbol*);
+    TypeSymbol* MethodTypeResolution(AstExpression*, MethodSymbol*);
+    void EmitFieldAccessLhsBase(AstExpression*);
+    void EmitFieldAccessLhs(AstExpression*);
+    void EmitMethodInvocation(AstMethodInvocation*);
+    void EmitNewArray(int, TypeSymbol*);
+    int EmitPostUnaryExpression(AstPostUnaryExpression*, bool);
+    void EmitPostUnaryExpressionArray(AstPostUnaryExpression*, bool);
     void EmitPostUnaryExpressionField(VariableCategory,
-                                      AstPostUnaryExpression *, bool);
+                                      AstPostUnaryExpression*, bool);
     void EmitPostUnaryExpressionSimple(VariableCategory,
-                                       AstPostUnaryExpression *, bool);
-    int EmitPreUnaryExpression(AstPreUnaryExpression *, bool);
-    void EmitPreUnaryIncrementExpression(AstPreUnaryExpression *, bool);
-    void EmitPreUnaryIncrementExpressionArray(AstPreUnaryExpression *, bool);
+                                       AstPostUnaryExpression*, bool);
+    int EmitPreUnaryExpression(AstPreUnaryExpression*, bool);
+    void EmitPreUnaryIncrementExpression(AstPreUnaryExpression*, bool);
+    void EmitPreUnaryIncrementExpressionArray(AstPreUnaryExpression*, bool);
     void EmitPreUnaryIncrementExpressionField(VariableCategory,
-                                              AstPreUnaryExpression *, bool);
+                                              AstPreUnaryExpression*, bool);
     void EmitPreUnaryIncrementExpressionSimple(VariableCategory,
-                                               AstPreUnaryExpression *, bool);
-    void EmitThisInvocation(AstThisCall *);
-    void EmitSuperInvocation(AstSuperCall *);
+                                               AstPreUnaryExpression*, bool);
+    void EmitThisInvocation(AstThisCall*);
+    void EmitSuperInvocation(AstSuperCall*);
     void ConcatenateString(AstBinaryExpression*, bool);
     void AppendString(AstExpression*, bool);
-    void EmitStringAppendMethod(TypeSymbol *);
+    void EmitStringAppendMethod(TypeSymbol*);
     void ChangeStack(int);
-    void ResolveAccess(AstExpression *);
-    int GenerateClassAccess(AstFieldAccess *, bool);
+    void ResolveAccess(AstExpression*);
+    int GenerateClassAccess(AstClassLiteral*, bool);
     void GenerateClassAccessMethod();
-    void GenerateAssertVariableInitializer(TypeSymbol *, VariableSymbol *);
-    void EmitCheckForNull(AstExpression *expr, bool = true);
+    void GenerateAssertVariableInitializer(TypeSymbol*, VariableSymbol*);
+    void EmitCheckForNull(AstExpression* expr, bool = true);
 
     //
     // Methods to process statements
     //
     void CompileConstructor(AstConstructorDeclaration*, bool);
 
-    void BeginMethod(int, MethodSymbol *);
-    void EndMethod(int, MethodSymbol *);
-    void DeclareField(VariableSymbol *);
-    void InitializeVariable(AstVariableDeclarator *);
-    void InitializeArray(TypeSymbol *, AstArrayInitializer *, bool = true);
-    void DeclareLocalVariable(AstVariableDeclarator *);
-    bool EmitStatement(AstStatement *);
-    void EmitReturnStatement(AstReturnStatement *);
-    bool EmitSynchronizedStatement(AstSynchronizedStatement *);
-    bool EmitBlockStatement(AstBlock *);
-    void EmitStatementExpression(AstExpression *);
+    void BeginMethod(int, MethodSymbol*);
+    void EndMethod(int, MethodSymbol*);
+    void DeclareField(VariableSymbol*);
+    void InitializeVariable(AstVariableDeclarator*);
+    void InitializeArray(TypeSymbol*, AstArrayInitializer*, bool = true);
+    void DeclareLocalVariable(AstVariableDeclarator*);
+    bool EmitStatement(AstStatement*);
+    void EmitReturnStatement(AstReturnStatement*);
+    bool EmitSynchronizedStatement(AstSynchronizedStatement*);
+    bool EmitBlockStatement(AstBlock*);
+    void EmitStatementExpression(AstExpression*);
     bool EmitSwitchStatement(AstSwitchStatement*);
     bool EmitSwitchBlockStatement(AstSwitchBlockStatement*, bool);
     void CloseSwitchLocalVariables(AstBlock*, u2 op_start);
-    void EmitTryStatement(AstTryStatement *);
-    void EmitAssertStatement(AstAssertStatement *);
-    void EmitBranchIfExpression(AstExpression *, bool, Label &,
-                                AstStatement * = NULL);
-    void EmitBranch(Opcode, Label &, AstStatement * = NULL);
-    void CompleteCall(MethodSymbol *, int, TypeSymbol * = NULL);
+    void EmitTryStatement(AstTryStatement*);
+    void EmitAssertStatement(AstAssertStatement*);
+    void EmitBranchIfExpression(AstExpression*, bool, Label&,
+                                AstStatement* = NULL);
+    void EmitBranch(Opcode, Label&, AstStatement* = NULL);
+    void CompleteCall(MethodSymbol*, int, TypeSymbol* = NULL);
 
-    AstExpression *StripNops(AstExpression *);
-    bool IsNop(AstBlock *);
+    AstExpression* StripNops(AstExpression*);
+    bool IsNop(AstBlock*);
 
-    void EmitArrayAccessLhs(AstArrayAccess *expression)
+    void EmitArrayAccessLhs(AstArrayAccess* expression)
     {
         EmitExpression(expression -> base);
         EmitExpression(expression -> expression);
     }
 
 
-    int EmitArrayAccessRhs(AstArrayAccess *expression)
+    int EmitArrayAccessRhs(AstArrayAccess* expression)
     {
         EmitArrayAccessLhs(expression); // get array address and index
         return LoadArrayElement(expression -> Type());
@@ -931,7 +932,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         return (Opcode) (((opc + 1) ^ 1) - 1);
     }
 
-    void GenerateReturn(TypeSymbol *type)
+    void GenerateReturn(TypeSymbol* type)
     {
         PutOp((control.IsSimpleIntegerValueType(type) ||
                type == control.boolean_type) ? OP_IRETURN
@@ -985,7 +986,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         code_attribute -> AddCode(u & 0xff);
     }
 
-    void FinishCode(TypeSymbol *);
+    void FinishCode(TypeSymbol*);
 
     void Reset()
     {
@@ -997,7 +998,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     }
 
 public:
-    ByteCode(TypeSymbol *);
+    ByteCode(TypeSymbol*);
 
     ~ByteCode()
     {

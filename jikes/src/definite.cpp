@@ -212,33 +212,29 @@ DefiniteAssignmentSet *Semantic::DefiniteArrayCreationExpression(AstExpression *
 }
 
 
-inline VariableSymbol *Semantic::DefiniteFinal(AstFieldAccess *field_access)
+inline VariableSymbol* Semantic::DefiniteFinal(AstFieldAccess* field_access)
 {
     if (field_access -> resolution_opt)
         field_access = field_access -> resolution_opt -> FieldAccessCast();
 
     if (field_access)
     {
-        VariableSymbol *variable = (field_access -> symbol
+        VariableSymbol* variable = (field_access -> symbol
                                     ? field_access -> symbol -> VariableCast()
-                                    : (VariableSymbol *) NULL);
+                                    : (VariableSymbol*) NULL);
         if (variable && variable -> IsFinal(ThisType()))
         {
+            //
             // There is exactly one copy of a static variable, so, it's
-            // always the right one.
-            if (variable -> ACC_STATIC())
-                return variable;
-
-            AstFieldAccess *sub_field_access =
-                field_access -> base -> FieldAccessCast();
-            if (field_access -> base -> ThisExpressionCast() ||
-                (sub_field_access && sub_field_access -> IsThisAccess()))
+            // always the right one. Access via 'this' is also legal.
+            //
+            if (variable -> ACC_STATIC() ||
+                field_access -> base -> ThisExpressionCast())
             {
                 return variable;
             }
         }
     }
-
     return NULL;
 }
 
@@ -524,6 +520,15 @@ DefiniteAssignmentSet *Semantic::DefiniteConditionalExpression(AstExpression *ex
     delete after_false;
 
     return after_true;
+}
+
+
+DefiniteAssignmentSet* Semantic::DefiniteInstanceofExpression(AstExpression* expression,
+                                                              DefinitePair& def_pair)
+{
+    AstInstanceofExpression* expr = (AstInstanceofExpression*) expression;
+    DefiniteExpression(expr -> expression, def_pair);
+    return (DefiniteAssignmentSet*) NULL;
 }
 
 

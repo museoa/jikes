@@ -509,8 +509,7 @@ void ByteCode::DeclareField(VariableSymbol *symbol)
     if (type -> num_dimensions > 255)
     {
         semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW,
-                                symbol -> declarator -> LeftToken(),
-                                symbol -> declarator -> RightToken());
+                                symbol -> declarator);
     }
 
     fields[field_index].SetFlags(symbol -> Flags());
@@ -625,9 +624,7 @@ void ByteCode::BeginMethod(int method_index, MethodSymbol *msym)
         assert(msym -> declaration -> MethodDeclarationCast());
         Ast *type = ((AstMethodDeclaration *) msym -> declaration) -> type;
 
-        semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW,
-                                type -> LeftToken(),
-                                type -> RightToken());
+        semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW, type);
     }
 
     VariableSymbol *parameter = NULL;
@@ -637,8 +634,7 @@ void ByteCode::BeginMethod(int method_index, MethodSymbol *msym)
         if (parameter -> Type() -> num_dimensions > 255)
         {
             semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW,
-                                    parameter -> declarator -> LeftToken(),
-                                    parameter -> declarator -> RightToken());
+                                    parameter -> declarator);
         }
     }
     if (parameter)
@@ -896,11 +892,7 @@ void ByteCode::DeclareLocalVariable(AstVariableDeclarator *declarator)
     }
 
     if (declarator -> symbol -> Type() -> num_dimensions > 255)
-    {
-        semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW,
-                                declarator -> LeftToken(),
-                                declarator -> RightToken());
-    }
+        semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW, declarator);
 
     if (declarator -> symbol -> initial_value)
     {
@@ -2177,8 +2169,8 @@ void ByteCode::EmitBranch(Opcode opc, Label& lab, AstStatement *over)
 // even needed (if statements and other places might have a constant false
 // expression, allowing the next block of code to be skipped entirely).
 //
-void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
-                                      AstStatement *over)
+void ByteCode::EmitBranchIfExpression(AstExpression* p, bool cond, Label& lab,
+                                      AstStatement* over)
 {
     p = StripNops(p);
     assert(p -> Type() == control.boolean_type);
@@ -2190,19 +2182,18 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
         return;
     }
 
-    AstPreUnaryExpression *pre = p -> PreUnaryExpressionCast();
+    AstPreUnaryExpression* pre = p -> PreUnaryExpressionCast();
     if (pre) // must be !
     {
+        //
         // branch_if(!e,c,l) => branch_if(e,!c,l)
-        // test opcode
-        // call again with complementary control expression to show
-        // effect of negation
+        //
         assert(pre -> pre_unary_tag == AstPreUnaryExpression::NOT);
         EmitBranchIfExpression(pre -> expression, ! cond, lab, over);
         return;
     }
 
-    AstConditionalExpression *conditional = p -> ConditionalExpressionCast();
+    AstConditionalExpression* conditional = p -> ConditionalExpressionCast();
     if (conditional)
     {
         if (conditional -> test_expression -> IsConstant())
@@ -2360,11 +2351,70 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
         return;
     }
 
+    AstInstanceofExpression* instanceof = p -> InstanceofExpressionCast();
+    if (instanceof)
+    {
+        AstExpression* expr = StripNops(instanceof -> expression);
+        TypeSymbol* left_type = expr -> Type();
+        TypeSymbol* right_type = instanceof -> type -> symbol;
+        if (right_type -> num_dimensions > 255)
+        {
+            semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW,
+                                    instanceof -> type);
+        }
+        if (left_type == control.null_type)
+        {
+            //
+            // We know the result: false. But emit the left expression,
+            // in case of side effects in (expr ? null : null).
+            //
+            EmitExpression(expr, false);
+            if (! cond)
+                EmitBranch(OP_GOTO, lab, over);
+        }
+        else if (expr -> IsConstant() || // a String constant
+                 expr -> BinaryExpressionCast()) // a String concat
+        {
+            //
+            // We know the result: true, since the expression is non-null
+            // and String is a final class.
+            //
+            assert(left_type == control.String());
+            EmitExpression(expr, false);
+            if (cond)
+                EmitBranch(OP_GOTO, lab, over);
+        }
+        else if ((expr -> ThisExpressionCast() ||
+                  expr -> SuperExpressionCast() ||
+                  expr -> ClassLiteralCast() ||
+                  expr -> ClassInstanceCreationExpressionCast() ||
+                  expr -> ArrayCreationExpressionCast()) &&
+                 left_type -> IsSubtype(right_type))
+        {
+            //
+            // We know the result: true, since the expression is non-null.
+            //
+            EmitExpression(expr, false);
+            if (cond)
+                EmitBranch(OP_GOTO, lab, over);
+        }
+        else
+        {
+            EmitExpression(expr);
+            PutOp(OP_INSTANCEOF);
+            PutU2(right_type -> num_dimensions > 0
+                  ? RegisterClass(right_type -> signature)
+                  : RegisterClass(right_type));
+            EmitBranch((cond ? OP_IFNE : OP_IFEQ), lab, over);
+        }
+        return;
+    }
+
     //
     // dispose of non-binary expression case by just evaluating
     // operand and emitting appropiate test.
     //
-    AstBinaryExpression *bp = p -> BinaryExpressionCast();
+    AstBinaryExpression* bp = p -> BinaryExpressionCast();
     if (! bp)
     {
         EmitExpression(p);
@@ -2382,61 +2432,6 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
                *right_type = right -> Type();
     switch (bp -> binary_tag)
     {
-    case AstBinaryExpression::INSTANCEOF:
-        {
-            if (right_type -> num_dimensions > 255)
-            {
-                semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW,
-                                        right -> LeftToken(),
-                                        right -> RightToken());
-            }
-            if (left_type == control.null_type)
-            {
-                //
-                // We know the result: false. But emit the left expression,
-                // in case of side effects in (expr ? null : null).
-                //
-                EmitExpression(left, false);
-                if (! cond)
-                    EmitBranch(OP_GOTO, lab, over);
-            }
-            else if (left -> IsConstant() || // a String constant
-                     left -> BinaryExpressionCast()) // a String concat
-            {
-                //
-                // We know the result: true, since the expression is non-null
-                // and String is a final class.
-                //
-                assert(left_type == control.String());
-                EmitExpression(left, false);
-                if (cond)
-                    EmitBranch(OP_GOTO, lab, over);
-            }
-            else if ((left -> IsThisExpression() ||
-                      left -> IsSuperExpression() ||
-                      left -> ClassInstanceCreationExpressionCast() ||
-                      left -> ArrayCreationExpressionCast()) &&
-                     left_type -> IsSubtype(right_type))
-            {
-                //
-                // We know the result: true, since the expression is non-null.
-                //
-                EmitExpression(left, false);
-                if (cond)
-                    EmitBranch(OP_GOTO, lab, over);
-            }
-            else
-            {
-                EmitExpression(left);
-                PutOp(OP_INSTANCEOF);
-                PutU2(right_type -> num_dimensions > 0
-                      ? RegisterClass(right_type -> signature)
-                      : RegisterClass(right_type));
-
-                EmitBranch((cond ? OP_IFNE : OP_IFEQ), lab, over);
-            }
-        }
-        return;
     case AstBinaryExpression::AND_AND:
         //
         // branch_if(true&&b, cond, lab) => branch_if(b, cond, lab);
@@ -3134,16 +3129,22 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
         return EmitInstanceCreationExpression((AstClassInstanceCreationExpression *) expression, need_value);
     case Ast::ARRAY_CREATION:
         return EmitArrayCreationExpression((AstArrayCreationExpression *) expression, need_value);
-    case Ast::DOT:
+    case Ast::CLASS_LITERAL:
         {
-            AstFieldAccess *field_access = (AstFieldAccess *) expression;
-            if (field_access -> IsClassAccess() &&
-                field_access -> resolution_opt)
+            AstClassLiteral* class_lit = (AstClassLiteral*) expression;
+            if (class_lit -> resolution_opt)
+                return GenerateClassAccess(class_lit, need_value);
+            if (need_value)
             {
-                return GenerateClassAccess(field_access, need_value);
+                VariableSymbol* sym = (VariableSymbol*) expression -> symbol;
+                PutOp(OP_GETSTATIC);
+                PutU2(RegisterFieldref(sym -> owner -> TypeCast(), sym));
+                return 1;
             }
-            return EmitFieldAccess(field_access, need_value);
+            return 0;
         }
+    case Ast::DOT:
+        return EmitFieldAccess((AstFieldAccess*) expression, need_value);
     case Ast::CALL:
         {
             AstMethodInvocation *method_call =
@@ -3175,6 +3176,9 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
     case Ast::BINARY:
         return EmitBinaryExpression((AstBinaryExpression*) expression,
                                     need_value);
+    case Ast::INSTANCEOF:
+        return EmitInstanceofExpression((AstInstanceofExpression*) expression,
+                                        need_value);
     case Ast::CONDITIONAL:
         return EmitConditionalExpression(((AstConditionalExpression*)
                                           expression),
@@ -3225,30 +3229,26 @@ AstExpression *ByteCode::VariableExpressionResolution(AstExpression *expression)
 }
 
 
-TypeSymbol *ByteCode::VariableTypeResolution(AstExpression *expression,
-                                             VariableSymbol *sym)
+TypeSymbol* ByteCode::VariableTypeResolution(AstExpression* expression,
+                                             VariableSymbol* sym)
 {
     expression = VariableExpressionResolution(expression);
-    AstFieldAccess *field = expression -> FieldAccessCast();
-    AstSimpleName *simple_name = expression -> SimpleNameCast();
-    TypeSymbol *owner = sym -> ContainingType();
+    AstFieldAccess* field = expression -> FieldAccessCast();
+    AstSimpleName* simple_name = expression -> SimpleNameCast();
     assert(field || simple_name);
 
     //
     // JLS2 13.1 Use the type of the base expression for qualified reference
     // (this even works for super expressions), and the innermost type that
     // contains the (possibly inherited) field for simple name reference.
-    // However, for class literals, use the owner of the symbol: int.class
-    // refers to Integer.TYPE, not a field of int.
     //
     // Prior to JDK 1.4, VMs incorrectly complained if a field declared in an
     // interface is referenced by inheritance, even though the JVMS permits it
     // and JLS 13 requires it.
     //
-    TypeSymbol *candidate = field
-        ? (field -> IsClassAccess() ? owner : field -> base -> Type())
-        : (simple_name -> resolution_opt
-           ? simple_name -> resolution_opt -> Type() : unit_type);
+    TypeSymbol *candidate = field ? field -> base -> Type()
+        : simple_name -> resolution_opt
+        ? simple_name -> resolution_opt -> Type() : unit_type;
     return (sym -> ContainingType() -> ACC_INTERFACE() &&
             control.option.target < JikesOption::SDK1_4)
         ? sym -> ContainingType() : candidate;
@@ -3434,7 +3434,7 @@ void ByteCode::GenerateClassAccessMethod()
 // here to generate code to dymanically initialize the field for a class
 // literal and then return its value
 //
-int ByteCode::GenerateClassAccess(AstFieldAccess *field_access,
+int ByteCode::GenerateClassAccess(AstClassLiteral* class_lit,
                                   bool need_value)
 {
     //
@@ -3463,8 +3463,8 @@ int ByteCode::GenerateClassAccess(AstFieldAccess *field_access,
     // label:
     //
     Label label;
-    assert(field_access -> symbol -> VariableCast());
-    VariableSymbol *cache = (VariableSymbol *) field_access -> symbol;
+    assert(class_lit -> symbol -> VariableCast());
+    VariableSymbol* cache = (VariableSymbol*) class_lit -> symbol;
 
     u2 field_index = RegisterFieldref(cache);
 
@@ -3476,13 +3476,9 @@ int ByteCode::GenerateClassAccess(AstFieldAccess *field_access,
 
     if (need_value)
         PutOp(OP_POP);
-    TypeSymbol *type = field_access -> base -> Type();
+    TypeSymbol* type = class_lit -> type -> symbol;
     if (type -> num_dimensions > 255)
-    {
-        semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW,
-                                field_access -> LeftToken(),
-                                field_access -> RightToken());
-    }
+        semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW, class_lit);
     bool is_array = type -> IsArray();
     if (! is_array)
         type = type -> GetArrayType(control.system_semantic, 1);
@@ -3495,10 +3491,8 @@ int ByteCode::GenerateClassAccess(AstFieldAccess *field_access,
         PutOp(OP_DUP);
     PutOp(OP_PUTSTATIC);
     PutU2(field_index);
-
     DefineLabel(label);
     CompleteLabel(label);
-
     return need_value ? 1 : 0;
 }
 
@@ -3564,11 +3558,7 @@ int ByteCode::EmitArrayCreationExpression(AstArrayCreationExpression *expression
     int num_dims = expression -> NumDimExprs();
 
     if (expression -> Type() -> num_dimensions > 255)
-    {
-        semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW,
-                                expression -> LeftToken(),
-                                expression -> RightToken());
-    }
+        semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW, expression);
 
     if (expression -> array_initializer_opt)
     {
@@ -3995,67 +3985,8 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression* expression,
     TypeSymbol* type = expression -> Type();
 
     //
-    // First, special case instanceof and string concatenation.
+    // First, special case string concatenation.
     //
-    if (expression -> binary_tag == AstBinaryExpression::INSTANCEOF)
-    {
-        TypeSymbol *left_type = expression -> left_expression -> Type();
-        TypeSymbol *right_type = expression -> right_expression -> Type();
-        if (right_type -> num_dimensions > 255)
-        {
-            semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW,
-                                    expression -> right_expression -> LeftToken(),
-                                    expression -> right_expression -> RightToken());
-        }
-        if (left_type == control.null_type)
-        {
-            //
-            // We know the result: false. But emit the left expression,
-            // in case of side effects in (expr ? null : null).
-            //
-            EmitExpression(expression -> left_expression, false);
-            if (need_value)
-                PutOp(OP_ICONST_0);
-        }
-        else if (expression -> left_expression -> IsConstant() ||
-                 expression -> left_expression -> BinaryExpressionCast())
-        {
-            //
-            // We know the result: true, since the string literals and string
-            // concats are non-null and String is a final class.
-            //
-            assert(left_type == control.String());
-            EmitExpression(expression -> left_expression, false);
-            if (need_value)
-                PutOp(OP_ICONST_1);
-        }
-        else if ((expression -> left_expression -> IsThisExpression() ||
-                  expression -> left_expression -> IsSuperExpression() ||
-                  expression -> left_expression -> ClassInstanceCreationExpressionCast() ||
-                  expression -> left_expression -> ArrayCreationExpressionCast()) &&
-                 left_type -> IsSubtype(right_type))
-        {
-            //
-            // We know the result: true, since the expression is non-null.
-            //
-            EmitExpression(expression -> left_expression, false);
-            if (need_value)
-                PutOp(OP_ICONST_1);
-        }
-        else
-        {
-            EmitExpression(expression -> left_expression, need_value);
-            if (need_value)
-            {
-                PutOp(OP_INSTANCEOF);
-                PutU2(right_type -> num_dimensions > 0
-                      ? RegisterClass(right_type -> signature)
-                      : RegisterClass(right_type));
-            }
-        }
-        return need_value ? 1 : 0;
-    }
-
     if (type == control.String())
     {
         assert(expression -> binary_tag == AstBinaryExpression::PLUS);
@@ -4433,14 +4364,13 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression* expression,
     }
 
     //
-    // Finally, if we get here, the expression is not boolean, and cannot be
-    // optimized.
+    // Finally, if we get here, the expression cannot be optimized.
     //
     EmitExpression(expression -> left_expression);
     EmitExpression(expression -> right_expression);
 
-    assert(type != control.boolean_type);
-    bool integer_type = (control.IsSimpleIntegerValueType(type));
+    bool integer_type = type == control.boolean_type ||
+        control.IsSimpleIntegerValueType(type);
     switch (expression -> binary_tag)
     {
     case AstBinaryExpression::STAR:
@@ -4499,16 +4429,73 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression* expression,
 }
 
 
+int ByteCode::EmitInstanceofExpression(AstInstanceofExpression* expr,
+                                       bool need_value)
+{
+    TypeSymbol* left_type = expr -> expression -> Type();
+    TypeSymbol* right_type = expr -> type -> symbol;
+    if (right_type -> num_dimensions > 255)
+        semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW, expr -> type);
+    if (left_type == control.null_type)
+    {
+        //
+        // We know the result: false. But emit the left expression,
+        // in case of side effects in (expr ? null : null).
+        //
+        EmitExpression(expr -> expression, false);
+        if (need_value)
+            PutOp(OP_ICONST_0);
+    }
+    else if (expr -> expression -> IsConstant() ||
+             expr -> expression -> BinaryExpressionCast())
+    {
+        //
+        // We know the result: true, since the string literals and string
+        // concats are non-null and String is a final class.
+        //
+        assert(left_type == control.String());
+        EmitExpression(expr -> expression, false);
+        if (need_value)
+            PutOp(OP_ICONST_1);
+    }
+    else if ((expr -> expression -> ThisExpressionCast() ||
+              expr -> expression -> SuperExpressionCast() ||
+              expr -> expression -> ClassLiteralCast() ||
+              expr -> expression -> ClassInstanceCreationExpressionCast() ||
+              expr -> expression -> ArrayCreationExpressionCast()) &&
+             left_type -> IsSubtype(right_type))
+    {
+        //
+        // We know the result: true, since the expression is non-null.
+        //
+        EmitExpression(expr -> expression, false);
+        if (need_value)
+            PutOp(OP_ICONST_1);
+    }
+    else
+    {
+        EmitExpression(expr -> expression, need_value);
+        if (need_value)
+        {
+            PutOp(OP_INSTANCEOF);
+            PutU2(right_type -> num_dimensions > 0
+                  ? RegisterClass(right_type -> signature)
+                  : RegisterClass(right_type));
+        }
+    }
+    return need_value ? 1 : 0;
+}
+
+
 int ByteCode::EmitCastExpression(AstCastExpression *expression,
                                  bool need_value)
 {
     TypeSymbol *dest_type = expression -> Type();
     TypeSymbol *source_type = expression -> expression -> Type();
-    if (dest_type -> num_dimensions > 255)
+    if (dest_type -> num_dimensions > 255 && expression -> type)
     {
         semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW,
-                                expression -> type_opt -> LeftToken(),
-                                expression -> right_parenthesis_token_opt - 1);
+                                expression -> type);
     }
 
     //
@@ -4632,7 +4619,7 @@ void ByteCode::EmitCast(TypeSymbol *dest_type, TypeSymbol *source_type)
 // constructor parameter), after performing the null check on the qualifier
 // of the anonymous class instance creation expression.
 //
-void ByteCode::EmitCheckForNull(AstExpression *expression, bool need_value)
+void ByteCode::EmitCheckForNull(AstExpression* expression, bool need_value)
 {
     expression = StripNops(expression);
 
@@ -4651,10 +4638,11 @@ void ByteCode::EmitCheckForNull(AstExpression *expression, bool need_value)
             ChangeStack(1);
         return;
     }
-    VariableSymbol *variable = expression -> symbol -> VariableCast();
+    VariableSymbol* variable = expression -> symbol -> VariableCast();
     if (expression -> ClassInstanceCreationExpressionCast() ||
-        expression -> IsThisExpression() ||
-        expression -> IsSuperExpression() ||
+        expression -> ThisExpressionCast() ||
+        expression -> SuperExpressionCast() ||
+        expression -> ClassLiteralCast() ||
         (variable && variable -> IsSynthetic() &&
          variable -> Identity() == control.this0_name_symbol))
     {
@@ -4890,17 +4878,17 @@ int ByteCode::EmitFieldAccess(AstFieldAccess *expression, bool need_value)
 }
 
 
-void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
+void ByteCode::EmitMethodInvocation(AstMethodInvocation* expression)
 {
     //
     // If the method call was resolved into a call to another method, use the
     // resolution expression.
     //
-    AstMethodInvocation *method_call = expression -> resolution_opt
+    AstMethodInvocation* method_call = expression -> resolution_opt
         ? expression -> resolution_opt -> MethodInvocationCast() : expression;
     assert(method_call);
 
-    MethodSymbol *msym = (MethodSymbol *) method_call -> symbol;
+    MethodSymbol* msym = (MethodSymbol*) method_call -> symbol;
 
     bool is_super = false; // set if super call
 
@@ -4913,15 +4901,15 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
         // access an instance method, in which case the base expression
         // will already be evaluated as the first parameter.
         //
-        AstFieldAccess *field = (msym -> AccessesInstanceMember() ? NULL
+        AstFieldAccess* field = (msym -> AccessesInstanceMember() ? NULL
                                  : method_call -> method -> FieldAccessCast());
         if (field)
             EmitExpression(field -> base, false);
     }
     else
     {
-        AstFieldAccess *field = method_call -> method -> FieldAccessCast();
-        AstSimpleName *simple_name = method_call -> method -> SimpleNameCast();
+        AstFieldAccess* field = method_call -> method -> FieldAccessCast();
+        AstSimpleName* simple_name = method_call -> method -> SimpleNameCast();
         if (field)
         {
             //
@@ -4931,9 +4919,7 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
             // Foo.access$<num>(Foo $1) { $1.bar(); }
             // but must use invokespecial instead of the regular invokevirtual.
             //
-            is_super = (field -> base -> IsSuperExpression() ||
-                        field -> IsSuperAccess());
-
+            is_super = field -> base -> SuperExpressionCast() != NULL;
             EmitExpression(field -> base);
         }
         else if (simple_name)
@@ -6332,13 +6318,13 @@ void ByteCode::ResolveAccess(AstExpression *p)
 }
 
 
-int ByteCode::LoadVariable(VariableCategory kind, AstExpression *expr,
+int ByteCode::LoadVariable(VariableCategory kind, AstExpression* expr,
                            bool need_value)
 {
     expr = StripNops(expr);
-    VariableSymbol *sym = (VariableSymbol *) expr -> symbol;
-    TypeSymbol *expression_type = expr -> Type();
-    AstFieldAccess *field_access = expr -> FieldAccessCast();
+    VariableSymbol* sym = (VariableSymbol*) expr -> symbol;
+    TypeSymbol* expression_type = expr -> Type();
+    AstFieldAccess* field_access = expr -> FieldAccessCast();
     switch (kind)
     {
     case LHS_LOCAL:
@@ -6410,7 +6396,7 @@ int ByteCode::LoadVariable(VariableCategory kind, AstExpression *expr,
             // evaluate it for side effects. Likewise, volatile fields must be
             // loaded because of the memory barrier side effect.
             //
-            if (field_access && ! field_access -> IsClassAccess())
+            if (field_access)
                 EmitExpression(field_access -> base, false);
             if (need_value || sym -> ACC_VOLATILE())
             {

@@ -776,7 +776,8 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration *class_declaration)
 
     if (class_declaration -> super_opt)
     {
-        TypeSymbol *super_type = MustFindType(class_declaration -> super_opt);
+        ProcessType(class_declaration -> super_opt);
+        TypeSymbol* super_type = class_declaration -> super_opt -> symbol;
         assert(! super_type -> SourcePending());
         if (! super_type -> HeaderProcessed())
         {
@@ -891,14 +892,15 @@ void Semantic::ProcessTypeHeader(AstInterfaceDeclaration *interface_declaration)
 }
 
 
-void Semantic::ProcessInterface(TypeSymbol *base_type, AstExpression *name)
+void Semantic::ProcessInterface(TypeSymbol* base_type, AstTypeName* name)
 {
-    TypeSymbol *interf = MustFindType(name);
+    ProcessType(name);
+    TypeSymbol* interf = name -> symbol;
 
     assert(! interf -> SourcePending());
     if (! interf -> HeaderProcessed())
     {
-        AstClassDeclaration *class_decl =
+        AstClassDeclaration* class_decl =
             interf -> declaration -> ClassDeclarationCast();
         AstInterfaceDeclaration *interface_decl =
             interf -> declaration -> InterfaceDeclarationCast();
@@ -2246,9 +2248,9 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_d
 }
 
 
-void Semantic::ProcessFieldDeclaration(AstFieldDeclaration *field_declaration)
+void Semantic::ProcessFieldDeclaration(AstFieldDeclaration* field_declaration)
 {
-    TypeSymbol *this_type = ThisType();
+    TypeSymbol* this_type = ThisType();
     AccessFlags access_flags = this_type -> ACC_INTERFACE()
         ? ProcessInterfaceFieldModifiers(field_declaration)
         : ProcessFieldModifiers(field_declaration);
@@ -2269,11 +2271,11 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration *field_declaration)
             must_be_constant = true;
         else
         {
-            AstModifier *modifier = NULL;
+            AstModifier* modifier = NULL;
             for (int i = 0;
                  i < field_declaration -> NumVariableModifiers(); i++)
             {
-                if (field_declaration -> VariableModifier(i) -> kind ==
+                if (field_declaration -> VariableModifier(i) -> class_tag ==
                     Ast::STATIC)
                 {
                     modifier = field_declaration -> VariableModifier(i);
@@ -2283,9 +2285,7 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration *field_declaration)
             assert(modifier);
 
             ReportSemError(SemanticError::STATIC_FIELD_IN_INNER_CLASS_NOT_FINAL,
-                           modifier -> modifier_kind_token,
-                           modifier -> modifier_kind_token,
-                           this_type -> Name(),
+                           modifier, this_type -> Name(),
                            this_type -> FileLoc());
         }
     }
@@ -2300,61 +2300,44 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration *field_declaration)
     bool deprecated_type = this_type -> IsDeprecated();
     if (deprecated_declarations)
         this_type -> MarkDeprecated();
-    AstArrayType *array_type = field_declaration -> type -> ArrayTypeCast();
-    TypeSymbol *field_type;
-    {
-        Ast *actual_type = (array_type ? array_type -> type
-                            : field_declaration -> type);
-        AstPrimitiveType *primitive_type = actual_type -> PrimitiveTypeCast();
-        field_type = (primitive_type ? FindPrimitiveType(primitive_type)
-                      : MustFindType(actual_type));
-    }
+    ProcessType(field_declaration -> type);
+    TypeSymbol* field_type = field_declaration -> type -> symbol;
     if (! deprecated_type && deprecated_declarations)
         this_type -> ResetDeprecated();
 
     for (int i = 0; i < field_declaration -> NumVariableDeclarators(); i++)
     {
-        AstVariableDeclarator *variable_declarator =
+        AstVariableDeclarator* variable_declarator =
             field_declaration -> VariableDeclarator(i);
-        AstVariableDeclaratorId *name =
+        AstVariableDeclaratorId* name =
             variable_declarator -> variable_declarator_name;
-        NameSymbol *name_symbol =
+        NameSymbol* name_symbol =
             lex_stream -> NameSymbol(name -> identifier_token);
 
         if (this_type -> FindVariableSymbol(name_symbol))
         {
             ReportSemError(SemanticError::DUPLICATE_FIELD,
-                           name -> identifier_token,
-                           name -> identifier_token,
-                           name_symbol -> Name(),
+                           name -> identifier_token, name_symbol -> Name(),
                            this_type -> Name());
         }
         else
         {
-            VariableSymbol *variable =
+            VariableSymbol* variable =
                 this_type -> InsertVariableSymbol(name_symbol);
-            int num_dimensions =
-                (array_type ? array_type -> NumBrackets() : 0) +
-                name -> NumBrackets();
-            if (num_dimensions == 0)
-                variable -> SetType(field_type);
-            else variable -> SetType(field_type ->
-                                     GetArrayType(this, num_dimensions));
+            int dims =
+                field_type -> num_dimensions + name -> NumBrackets();
+            variable -> SetType(field_type -> GetArrayType(this, dims));
             variable -> SetFlags(access_flags);
             variable -> SetOwner(this_type);
             variable -> declarator = variable_declarator;
             if (must_be_constant &&
-                (num_dimensions != 0 ||
-                 ! variable_declarator -> variable_initializer_opt ||
+                (dims || ! variable_declarator -> variable_initializer_opt ||
                  (! field_type -> Primitive() &&
                   field_type != control.String())))
             {
                 ReportSemError(SemanticError::STATIC_FIELD_IN_INNER_CLASS_NOT_CONSTANT,
-                               name -> identifier_token,
-                               name -> identifier_token,
-                               name_symbol -> Name(),
-                               this_type -> Name(),
-                               this_type -> FileLoc());
+                               name -> identifier_token, name_symbol -> Name(),
+                               this_type -> Name(), this_type -> FileLoc());
             }
 
             variable_declarator -> symbol = variable;
@@ -2461,7 +2444,7 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration *construc
     // If the method is not static, leave a slot for the "this" pointer.
     //
     constructor -> SetType(treat_as_method ? control.no_type
-                           : control.void_type);
+                           : this_type);
     constructor -> SetFlags(access_flags);
     constructor -> SetContainingType(this_type);
     constructor -> SetBlockSymbol(block_symbol);
@@ -2498,10 +2481,9 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration *construc
 
     for (int k = 0; k < constructor_declaration -> NumThrows(); k++)
     {
-        AstExpression *throw_expression = constructor_declaration -> Throw(k);
-        TypeSymbol *throw_type = MustFindType(throw_expression);
-        throw_expression -> symbol = throw_type;
-        constructor -> AddThrows(throw_type);
+        AstTypeName* throw_expr = constructor_declaration -> Throw(k);
+        ProcessType(throw_expr);
+        constructor -> AddThrows(throw_expr -> symbol);
     }
 
     constructor_declaration -> constructor_symbol = constructor; // save for processing bodies later.
@@ -2519,7 +2501,7 @@ void Semantic::AddDefaultConstructor(TypeSymbol *type)
     BlockSymbol *block_symbol = new BlockSymbol(1);
     block_symbol -> max_variable_index = 1; // All types need a spot for "this"
 
-    constructor -> SetType(control.void_type);
+    constructor -> SetType(type);
     constructor -> SetContainingType(type);
     constructor -> SetBlockSymbol(block_symbol);
     if (type -> ACC_PUBLIC())
@@ -2564,8 +2546,6 @@ void Semantic::AddDefaultConstructor(TypeSymbol *type)
         if (type != control.Object())
         {
             super_call = compilation_unit -> ast_pool -> GenSuperCall();
-            super_call -> base_opt = NULL;
-            super_call -> dot_token_opt = 0;
             super_call -> super_token = left_loc;
             super_call -> left_parenthesis_token = left_loc;
             super_call -> right_parenthesis_token = right_loc;
@@ -2575,7 +2555,6 @@ void Semantic::AddDefaultConstructor(TypeSymbol *type)
         AstReturnStatement *return_statement =
             compilation_unit -> ast_pool -> GenReturnStatement();
         return_statement -> return_token = left_loc;
-        return_statement -> expression_opt = NULL;
         return_statement -> semicolon_token = left_loc;
         return_statement -> is_reachable = true;
 
@@ -3478,42 +3457,31 @@ void Semantic::ComputeMethodsClosure(TypeSymbol *type,
 }
 
 
-void Semantic::ProcessFormalParameters(BlockSymbol *block,
-                                       AstMethodDeclarator *method_declarator)
+void Semantic::ProcessFormalParameters(BlockSymbol* block,
+                                       AstMethodDeclarator* method_declarator)
 {
     for (int i = 0; i < method_declarator -> NumFormalParameters(); i++)
     {
-        AstFormalParameter *parameter = method_declarator -> FormalParameter(i);
-        AstArrayType *array_type = parameter -> type -> ArrayTypeCast();
-        Ast *actual_type =
-            (array_type ? array_type -> type : parameter -> type);
-
+        AstFormalParameter* parameter =
+            method_declarator -> FormalParameter(i);
         AccessFlags access_flags = ProcessFormalModifiers(parameter);
+        ProcessType(parameter -> type);
+        TypeSymbol* parm_type = parameter -> type -> symbol;
 
-        AstPrimitiveType *primitive_type = actual_type -> PrimitiveTypeCast();
-        TypeSymbol *parm_type = (primitive_type
-                                 ? FindPrimitiveType(primitive_type)
-                                 : MustFindType(actual_type));
-
-        AstVariableDeclaratorId *name =
+        AstVariableDeclaratorId* name =
             parameter -> formal_declarator -> variable_declarator_name;
-        NameSymbol *name_symbol =
+        NameSymbol* name_symbol =
             lex_stream -> NameSymbol(name -> identifier_token);
-        VariableSymbol *symbol = block -> FindVariableSymbol(name_symbol);
+        VariableSymbol* symbol = block -> FindVariableSymbol(name_symbol);
         if (symbol)
         {
             ReportSemError(SemanticError::DUPLICATE_FORMAL_PARAMETER,
-                           name -> identifier_token,
-                           name -> identifier_token,
-                           name_symbol -> Name());
+                           name -> identifier_token, name_symbol -> Name());
         }
         else symbol = block -> InsertVariableSymbol(name_symbol);
 
-        int num_dimensions = (array_type ? array_type -> NumBrackets() : 0) +
-            name -> NumBrackets();
-        if (num_dimensions == 0)
-            symbol -> SetType(parm_type);
-        else symbol -> SetType(parm_type -> GetArrayType(this, num_dimensions));
+        int dims = parm_type -> num_dimensions + name -> NumBrackets();
+        symbol -> SetType(parm_type -> GetArrayType(this, dims));
         symbol -> SetFlags(access_flags);
         symbol -> MarkComplete();
         symbol -> MarkInitialized();
@@ -3548,15 +3516,14 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
         AstModifier *modifier = NULL;
         for (int i = 0; i < method_declaration -> NumMethodModifiers(); i++)
         {
-            if (method_declaration -> MethodModifier(i) -> kind == Ast::STATIC)
+            if (method_declaration -> MethodModifier(i) -> class_tag == Ast::STATIC)
                 modifier = method_declaration -> MethodModifier(i);
         }
 
         assert(modifier);
 
         ReportSemError(SemanticError::STATIC_METHOD_IN_INNER_CLASS,
-                       modifier -> modifier_kind_token,
-                       modifier -> modifier_kind_token,
+                       modifier,
                        lex_stream -> NameString(method_declaration -> method_declarator -> identifier_token),
                        this_type -> Name(),
                        this_type -> FileLoc());
@@ -3574,28 +3541,22 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
     bool deprecated_type = this_type -> IsDeprecated();
     if (deprecated_method)
         this_type -> MarkDeprecated();
-    AstArrayType *array_type = method_declaration -> type -> ArrayTypeCast();
-    Ast *actual_type = (array_type ? array_type -> type
-                        : method_declaration -> type);
-    AstPrimitiveType *primitive_type = actual_type -> PrimitiveTypeCast();
-    TypeSymbol *method_type = (primitive_type
-                               ? FindPrimitiveType(primitive_type)
-                               : MustFindType(actual_type));
+    ProcessType(method_declaration -> type);
+    TypeSymbol* method_type = method_declaration -> type -> symbol;
 
-    AstMethodDeclarator *method_declarator =
+    AstMethodDeclarator* method_declarator =
         method_declaration -> method_declarator;
-    if (method_declarator -> NumBrackets() > 0)
+    if (method_declarator -> NumBrackets())
     {
         if (method_type == control.void_type)
             ReportSemError(SemanticError::VOID_ARRAY,
                            method_declaration -> type -> LeftToken(),
                            method_declarator -> RightToken());
         else ReportSemError(SemanticError::OBSOLESCENT_BRACKETS,
-                            method_declarator -> LeftToken(),
-                            method_declarator -> RightToken());
+                            method_declarator);
     }
 
-    NameSymbol *name_symbol =
+    NameSymbol* name_symbol =
         lex_stream -> NameSymbol(method_declarator -> identifier_token);
 
     if (name_symbol == this_type -> Identity())
@@ -3611,14 +3572,14 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
     // size for its symbol table based on the number of lines in the body + a
     // margin for one-liners.
     //
-    BlockSymbol *block_symbol =
+    BlockSymbol* block_symbol =
         new BlockSymbol(method_declarator -> NumFormalParameters());
     block_symbol -> max_variable_index = (access_flags.ACC_STATIC() ? 0 : 1);
     ProcessFormalParameters(block_symbol, method_declarator);
     if (! deprecated_type && deprecated_method)
         this_type -> ResetDeprecated();
 
-    MethodSymbol *method = this_type -> FindMethodSymbol(name_symbol);
+    MethodSymbol* method = this_type -> FindMethodSymbol(name_symbol);
 
     if (! method)
         method = this_type -> InsertMethodSymbol(name_symbol);
@@ -3627,9 +3588,7 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
         if (this_type -> FindOverloadMethod(method, method_declarator))
         {
             ReportSemError(SemanticError::DUPLICATE_METHOD,
-                           method_declarator -> LeftToken(),
-                           method_declarator -> RightToken(),
-                           name_symbol -> Name(),
+                           method_declarator, name_symbol -> Name(),
                            this_type -> Name());
             delete block_symbol;
             return;
@@ -3637,14 +3596,9 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
 
         method = this_type -> Overload(method);
     }
-
-    int num_dimensions = ((method_type == control.void_type)
-                          ? 0
-                          : (array_type ? array_type -> NumBrackets() : 0))
-                         + method_declarator -> NumBrackets();
-    if (num_dimensions == 0)
-        method -> SetType(method_type);
-    else method -> SetType(method_type -> GetArrayType(this, num_dimensions));
+    int dims =
+        method_type -> num_dimensions + method_declarator -> NumBrackets();
+    method -> SetType(method_type -> GetArrayType(this, dims));
 
     //
     // if the method is not static, leave a slot for the "this" pointer.
@@ -3671,10 +3625,9 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
 
     for (int k = 0; k < method_declaration -> NumThrows(); k++)
     {
-        AstExpression *throw_expression = method_declaration -> Throw(k);
-        TypeSymbol *throw_type = MustFindType(throw_expression);
-        throw_expression -> symbol = throw_type;
-        method -> AddThrows(throw_type);
+        AstTypeName* throw_expr = method_declaration -> Throw(k);
+        ProcessType(throw_expr);
+        method -> AddThrows(throw_expr -> symbol);
     }
 
     method_declaration -> method_symbol = method; // save for processing bodies later.
@@ -4099,6 +4052,34 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
 }
 
 
+void Semantic::ProcessType(AstType* type_expr)
+{
+    AstArrayType* array_type = type_expr -> ArrayTypeCast();
+    AstType* actual_type = array_type ? array_type -> type : type_expr;
+    AstTypeName* name = actual_type -> TypeNameCast();
+    AstPrimitiveType* primitive_type = actual_type -> PrimitiveTypeCast();
+    assert(name || primitive_type);
+    //
+    // Occaisionally, MustFindType finds a bad type (for example, if we
+    // reference Other.java which has syntax errors), but does not know to
+    // report the error.
+    //
+    unsigned error_count = NumErrors();
+    TypeSymbol* type;
+    if (primitive_type)
+        type = FindPrimitiveType(primitive_type);
+    else type = MustFindType(name -> name);
+    if (type -> Bad() && NumErrors() == error_count)
+        ReportSemError(SemanticError::INVALID_TYPE_FOUND, actual_type,
+                       lex_stream -> NameString(type_expr ->
+                                                IdentifierToken()));
+
+    if (array_type)
+        type = type -> GetArrayType(this, array_type -> NumBrackets());
+    type_expr -> symbol = type;
+}
+
+
 //
 // Initializes a static or instance field. In addition to checking the
 // semantics, the initialization is added as a statement in the init_method,
@@ -4235,13 +4216,13 @@ MethodSymbol *Semantic::GetStaticInitializerMethod(int estimate)
     block -> AllocateStatements(estimate);
 
     // The return type (void).
-    AstSimpleName *return_type = ast_pool -> GenSimpleName(loc);
+    AstType* return_type = ast_pool -> GenPrimitiveType(Ast::VOID_TYPE, loc);
     return_type -> symbol = control.void_type;
 
     // The method declaration. We leave some fields uninitialized, because
     // they are not needed in bytecode.cpp.
-    AstMethodDeclaration *declaration = ast_pool -> GenMethodDeclaration();
-    MethodSymbol *init_method =
+    AstMethodDeclaration* declaration = ast_pool -> GenMethodDeclaration();
+    MethodSymbol* init_method =
         this_type -> InsertMethodSymbol(control.clinit_name_symbol);
     declaration -> type = return_type;
     declaration -> method_symbol = init_method;
@@ -4400,13 +4381,13 @@ void Semantic::ProcessInstanceInitializers(AstClassBody *class_body)
     block -> block_symbol = block_symbol;
 
     // The return type (void).
-    AstSimpleName *return_type = ast_pool -> GenSimpleName(loc);
+    AstType* return_type = ast_pool -> GenPrimitiveType(Ast::VOID_TYPE, loc);
     return_type -> symbol = control.void_type;
 
     // The method declaration. We leave some fields uninitialized, because
     // they are not needed in bytecode.cpp.
-    AstMethodDeclaration *declaration = ast_pool -> GenMethodDeclaration();
-    MethodSymbol *init_method =
+    AstMethodDeclaration* declaration = ast_pool -> GenMethodDeclaration();
+    MethodSymbol* init_method =
         this_type -> InsertMethodSymbol(control.block_init_name_symbol);
     declaration -> type = return_type;
     declaration -> method_symbol = init_method;

@@ -578,7 +578,7 @@ void Semantic::ProcessSwitchStatement(Ast* stmt)
     unsigned num_case_labels = 0;
     for (int i = 0; i < block_body -> NumStatements(); i++)
         num_case_labels += switch_statement -> Block(i) -> NumSwitchLabels();
-    switch_statement -> AllocateCases(num_case_labels - 1);
+    switch_statement -> AllocateCases(num_case_labels);
 
     //
     // A switch block is reachable iff its switch statement is reachable.
@@ -960,28 +960,26 @@ void Semantic::ProcessContinueStatement(Ast *stmt)
 }
 
 
-void Semantic::ProcessReturnStatement(Ast *stmt)
+void Semantic::ProcessReturnStatement(Ast* stmt)
 {
-    AstReturnStatement *return_statement = (AstReturnStatement *) stmt;
-
-    MethodSymbol *this_method = ThisMethod();
+    AstReturnStatement* return_statement = (AstReturnStatement*) stmt;
+    MethodSymbol* this_method = ThisMethod();
 
     if (this_method -> name_symbol == control.clinit_name_symbol ||
         this_method -> name_symbol == control.block_init_name_symbol)
     {
         ReportSemError(SemanticError::RETURN_STATEMENT_IN_INITIALIZER,
-                       return_statement -> LeftToken(),
-                       return_statement -> RightToken());
+                       return_statement);
     }
     else if (return_statement -> expression_opt)
     {
         ProcessExpressionOrStringConstant(return_statement -> expression_opt);
 
-        if (this_method -> Type() == control.void_type)
+        if (this_method -> Type() == control.void_type ||
+            this_method -> name_symbol == control.init_name_symbol)
         {
             ReportSemError(SemanticError::MISPLACED_RETURN_WITH_EXPRESSION,
-                           return_statement -> LeftToken(),
-                           return_statement -> RightToken());
+                           return_statement);
         }
         else if (return_statement -> expression_opt -> Type() !=
                  control.no_type)
@@ -997,8 +995,7 @@ void Semantic::ProcessReturnStatement(Ast *stmt)
                 else
                 {
                     ReportSemError(SemanticError::MISMATCHED_RETURN_AND_METHOD_TYPE,
-                                   return_statement -> expression_opt -> LeftToken(),
-                                   return_statement -> expression_opt -> RightToken(),
+                                   return_statement -> expression_opt,
                                    return_statement -> expression_opt -> Type() -> ContainingPackageName(),
                                    return_statement -> expression_opt -> Type() -> ExternalName(),
                                    this_method -> Type() -> ContainingPackageName(),
@@ -1007,11 +1004,11 @@ void Semantic::ProcessReturnStatement(Ast *stmt)
             }
         }
     }
-    else if (this_method -> Type() != control.void_type)
+    else if (this_method -> Type() != control.void_type &&
+             this_method -> name_symbol != control.init_name_symbol)
     {
         ReportSemError(SemanticError::MISPLACED_RETURN_WITH_NO_EXPRESSION,
-                       return_statement -> LeftToken(),
-                       return_statement -> RightToken());
+                       return_statement);
     }
 }
 
@@ -1679,21 +1676,21 @@ TypeSymbol *Semantic::GetLocalType(AstClassDeclaration *class_declaration)
 
 void Semantic::ProcessClassDeclaration(Ast *stmt)
 {
-    AstClassDeclaration *class_declaration = (AstClassDeclaration *) stmt;
-    AstClassBody *class_body = class_declaration -> class_body;
+    AstLocalClassDeclarationStatement* class_statement =
+        (AstLocalClassDeclarationStatement*) stmt;
+    AstClassDeclaration* class_declaration = class_statement -> declaration;
+    AstClassBody* class_body = class_declaration -> class_body;
 
-    class_declaration -> MarkLocal();
     CheckNestedTypeDuplication(state_stack.Top(),
                                class_declaration -> identifier_token);
 
-    TypeSymbol *inner_type = GetLocalType(class_declaration);
+    TypeSymbol* inner_type = GetLocalType(class_declaration);
     inner_type -> outermost_type = ThisType() -> outermost_type;
     inner_type -> supertypes_closure = new SymbolSet;
     inner_type -> subtypes_closure = new SymbolSet;
     inner_type -> subtypes = new SymbolSet;
     inner_type -> semantic_environment =
-        new SemanticEnvironment((Semantic *) this, inner_type,
-                                state_stack.Top());
+        new SemanticEnvironment(this, inner_type, state_stack.Top());
     inner_type -> declaration = class_declaration;
     inner_type -> file_symbol = source_file_symbol;
     inner_type -> SetFlags(ProcessLocalClassModifiers(class_declaration));
@@ -1716,9 +1713,7 @@ void Semantic::ProcessClassDeclaration(Ast *stmt)
     // Save environment for processing bodies later.
     class_declaration -> semantic_environment =
         inner_type -> semantic_environment;
-
     CheckClassMembers(inner_type, class_body);
-
     ProcessTypeHeaders(class_declaration);
 
     ProcessMembers(class_declaration -> semantic_environment, class_body);
@@ -1726,7 +1721,6 @@ void Semantic::ProcessClassDeclaration(Ast *stmt)
                         class_declaration -> identifier_token, class_body);
     ProcessExecutableBodies(class_declaration -> semantic_environment,
                             class_body);
-
     UpdateLocalConstructors(inner_type);
 }
 
@@ -2011,27 +2005,22 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
 // Checks that types in a throws clause extend Throwable. throws_list is NULL
 // except in pedantic mode, where it is used to detect duplicates.
 //
-void Semantic::CheckThrow(AstExpression *throw_expression,
-                          Tuple<AstExpression *> *throws_list)
+void Semantic::CheckThrow(AstTypeName* throw_expression,
+                          Tuple<AstTypeName*>* throws_list)
 {
-    TypeSymbol *throw_type = throw_expression -> symbol -> TypeCast();
-    assert(throw_type);
+    TypeSymbol* throw_type = throw_expression -> symbol;
     if (throw_type -> Bad())
         return;
 
     if (throw_type -> ACC_INTERFACE())
     {
-        ReportSemError(SemanticError::NOT_A_CLASS,
-                       throw_expression -> LeftToken(),
-                       throw_expression -> RightToken(),
+        ReportSemError(SemanticError::NOT_A_CLASS, throw_expression,
                        throw_type -> ContainingPackageName(),
                        throw_type -> ExternalName());
     }
     else if (! throw_type -> IsSubclass(control.Throwable()))
     {
-        ReportSemError(SemanticError::TYPE_NOT_THROWABLE,
-                       throw_expression -> LeftToken(),
-                       throw_expression -> RightToken(),
+        ReportSemError(SemanticError::TYPE_NOT_THROWABLE, throw_expression,
                        throw_type -> ContainingPackageName(),
                        throw_type -> ExternalName());
     }
@@ -2040,8 +2029,7 @@ void Semantic::CheckThrow(AstExpression *throw_expression,
         assert(throws_list);
         if (! CheckedException(throw_type))
             ReportSemError(SemanticError::UNCHECKED_THROWS_CLAUSE_CLASS,
-                           throw_expression -> LeftToken(),
-                           throw_expression -> RightToken(),
+                           throw_expression,
                            throw_type -> ContainingPackageName(),
                            throw_type -> ExternalName());
         else
@@ -2049,13 +2037,12 @@ void Semantic::CheckThrow(AstExpression *throw_expression,
             bool add = true;
             for (int i = 0; i < throws_list -> Length(); i++)
             {
-                AstExpression *other_expr = (*throws_list)[i];
-                TypeSymbol *other_type = other_expr -> symbol -> TypeCast();
+                AstTypeName* other_expr = (*throws_list)[i];
+                TypeSymbol* other_type = other_expr -> symbol;
                 if (other_type == throw_type)
                 {
                     ReportSemError(SemanticError::DUPLICATE_THROWS_CLAUSE_CLASS,
-                                   throw_expression -> LeftToken(),
-                                   throw_expression -> RightToken(),
+                                   throw_expression,
                                    throw_type -> ContainingPackageName(),
                                    throw_type -> ExternalName());
                     add = false;
@@ -2063,8 +2050,7 @@ void Semantic::CheckThrow(AstExpression *throw_expression,
                 else if (throw_type -> IsSubclass(other_type))
                 {
                     ReportSemError(SemanticError::REDUNDANT_THROWS_CLAUSE_CLASS,
-                                   throw_expression -> LeftToken(),
-                                   throw_expression -> RightToken(),
+                                   throw_expression,
                                    throw_type -> ContainingPackageName(),
                                    throw_type -> ExternalName(),
                                    other_type -> ContainingPackageName(),
@@ -2074,8 +2060,7 @@ void Semantic::CheckThrow(AstExpression *throw_expression,
                 else if (other_type -> IsSubclass(throw_type))
                 {
                     ReportSemError(SemanticError::REDUNDANT_THROWS_CLAUSE_CLASS,
-                                   other_expr -> LeftToken(),
-                                   other_expr -> RightToken(),
+                                   other_expr,
                                    other_type -> ContainingPackageName(),
                                    other_type -> ExternalName(),
                                    throw_type -> ContainingPackageName(),
@@ -2098,13 +2083,13 @@ void Semantic::CheckThrow(AstExpression *throw_expression,
 
 void Semantic::ProcessMethodBody(AstMethodDeclaration *method_declaration)
 {
-    MethodSymbol *this_method = ThisMethod();
+    MethodSymbol* this_method = ThisMethod();
 
     if (method_declaration -> NumThrows())
     {
-        Tuple<AstExpression *> *throws_list = NULL;
+        Tuple<AstTypeName*>* throws_list = NULL;
         if (control.option.pedantic)
-            throws_list = new Tuple<AstExpression *>
+            throws_list = new Tuple<AstTypeName*>
                 (method_declaration -> NumThrows());
         for (int k = 0; k < method_declaration -> NumThrows(); k++)
             CheckThrow(method_declaration -> Throw(k), throws_list);
@@ -2137,7 +2122,6 @@ void Semantic::ProcessMethodBody(AstMethodDeclaration *method_declaration)
                     compilation_unit -> ast_pool -> GenReturnStatement();
                 return_statement -> return_token =
                     block_body -> right_brace_token;
-                return_statement -> expression_opt = NULL;
                 return_statement -> semicolon_token =
                     block_body -> right_brace_token;
                 return_statement -> is_reachable = true;
@@ -2177,13 +2161,13 @@ void Semantic::ProcessMethodBody(AstMethodDeclaration *method_declaration)
 void Semantic::ProcessConstructorBody(AstConstructorDeclaration *constructor_declaration)
 {
     TypeSymbol *this_type = ThisType();
-    MethodSymbol *this_method = ThisMethod();
+    MethodSymbol* this_method = ThisMethod();
 
     if (constructor_declaration -> NumThrows())
     {
-        Tuple<AstExpression *> *throws_list = NULL;
+        Tuple<AstTypeName*>* throws_list = NULL;
         if (control.option.pedantic)
-            throws_list = new Tuple<AstExpression *>
+            throws_list = new Tuple<AstTypeName*>
                 (constructor_declaration -> NumThrows());
         for (int k = 0; k < constructor_declaration -> NumThrows(); k++)
             CheckThrow(constructor_declaration -> Throw(k), throws_list);
@@ -2214,8 +2198,6 @@ void Semantic::ProcessConstructorBody(AstConstructorDeclaration *constructor_dec
     {
         LexStream::TokenIndex loc = constructor_block -> LeftToken();
         super_call = compilation_unit -> ast_pool -> GenSuperCall();
-        super_call -> base_opt = NULL;
-        super_call -> dot_token_opt = loc;
         super_call -> super_token = loc;
         super_call -> left_parenthesis_token = loc;
         super_call -> right_parenthesis_token = loc;
@@ -2249,7 +2231,6 @@ void Semantic::ProcessConstructorBody(AstConstructorDeclaration *constructor_dec
             compilation_unit -> ast_pool -> GenReturnStatement();
         return_statement -> return_token =
             constructor_block -> right_brace_token;
-        return_statement -> expression_opt = NULL;
         return_statement -> semicolon_token =
             constructor_block -> right_brace_token;
         return_statement -> is_reachable = true;
