@@ -153,7 +153,9 @@ void Option::SaveCurrentDirectoryOnDisk(char c)
 Option::Option(ArgumentExpander &arguments) : default_path(NULL),
                                               classpath(NULL),
                                               encoding(NULL),
+#ifdef HAVE_LIB_ICU_UC
                                               converter(NULL),
+#endif
                                               makefile_name(NULL),
                                               debug_dump_lex(false),
                                               debug_dump_ast(false),
