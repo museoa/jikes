@@ -1,3 +1,13 @@
+2001-09-21  Mo DeJong  <supermo@bayarea.net>
+
+	* HACKING: Add note about running ./autogen.sh to regenerate
+	autotools files - patch 193.
+	* autogen.sh: Run automake before autoconf.
+	* src/Makefile.am: Update the dependencies to be current.
+	* Makefile.in:
+	* doc/Makefile.in:
+	* src/Makefile.in: Regen, without auto dependency tracking for now.
+
 2001-09-20  Mo DeJong  <supermo@bayarea.net>
 
 	* configure.in: Change --enable-debug option so that CXXFLAGS is

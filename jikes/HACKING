@@ -6,9 +6,11 @@ Autotools based build system:
 
 If you modify any of the files used by the autotools build
 process (Makefile.am, configure.in, and so on), you should
-configure with --enable-maintainer-mode.  Jikes requires
-fairly recent versions, such as autoconf 2.50 or greater,
-for the autotool chain to work correctly.
+regenerate the configure script by running ./autogen.sh
+(this passes --ignore-deps to automake).  Jikes requires
+autoconf 2.50 or newer and automake 1.4 or newer. Consider
+configuring with --enable-maintainer-mode to automatically
+update all the generated files.
 
 
 src/java???.{h,cpp} src/code.{h,cpp}:

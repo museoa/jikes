@@ -10,6 +10,5 @@
 
 aclocal
 autoheader
-autoconf
 automake --ignore-deps
-
+autoconf
