@@ -1,25 +1,23 @@
 The files in this directory and its contained subdirectories
 collectively comprise the distribution of the IBM Jikes
-Compiler (http://www.ibm.com/research/jikes).
+Compiler, http://ibm.com/developerworks/opensource/jikes.
 
 This distribution is covered by the 
         IBM Public License Version 1.0 - Jikes Compiler
 contained in the file license.htm.
-
-Almost all files are covered by the license, in particular each and 
-every file that contains the following near the beginning:
-
-  This software is subject to the terms of the IBM Jikes Compiler 
-  License Agreement available at the following URL:
-  http://www.ibm.com/research/jikes.
-  Copyright (C) 1996, 1998, International Business Machines Corporation
-  and others.  All Rights Reserved.
-  You must accept the terms of that agreement to use this software.
-
 You must accept the terms of the license agreement to use this software.
 
 See the file ./jikes.htm for documentation in FAQ (Frequently Asked
 Questions) format.
 
-See the file ./news.htm for news of developments since the release of the source
-in December 1998.
+See the file ./news.htm for news of developments since the release of 
+the source in December 1998.
+
+See the file ./jikes.1 for a Unix-style "man" page.
+
+The file ./jikes.spec can be used to build RPM (Red Hat Package Manager) files.
+
+The file ./contrib.htm names some of the people who have helped develop 
+and refine this software.
+
+The file ./ChangeLog is a log of changes, as is ./src/ChangeLog.
