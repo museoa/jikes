@@ -1,3 +1,10 @@
+2000-05-02  Mo DeJong  <mdejong@cygnus.com>
+
+	* src/config.h:
+	* src/control.cpp:
+	* src/jikesapi.cpp: Removed all uses
+	of #ifdef NO_LEAKS.
+
 2000-04-09  Mo DeJong  <mdejong@cygnus.com>
 
 	* src/decl.cpp:

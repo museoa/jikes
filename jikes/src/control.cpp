@@ -537,9 +537,7 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
 
     delete main_file_clone; // delete the clone of the main source file...
 
-#ifdef NO_LEAKS
     delete [] input_files;
-#endif
 
     return;
 }
@@ -547,7 +545,6 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
 
 Control::~Control()
 {
-#ifdef NO_LEAKS
     for (int i = 0; i < bad_zip_filenames.Length(); i++)
         delete [] bad_zip_filenames[i];
 
@@ -564,7 +561,6 @@ Control::~Control()
     delete parser;
     delete system_semantic;
     delete system_table;
-#endif
 
 #ifdef TEST
     if (option.debug_dump_lex || option.debug_dump_ast || option.debug_unparse_ast)

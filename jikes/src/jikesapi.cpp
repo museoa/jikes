@@ -49,17 +49,13 @@ JikesAPI * JikesAPI::getInstance()
 
 JikesAPI::~JikesAPI()
 {
-#ifdef NO_LEAKS
     delete option;
-#endif
 }
 
 char ** JikesAPI::parseOptions(int argc, char **argv)
 {
 
-#ifdef NO_LEAKS
     delete option;
-#endif
 
     ArgumentExpander *args=new ArgumentExpander(argc, argv);
     Option *opt = new Option(*args);
@@ -101,12 +97,11 @@ JikesOption *JikesAPI::getOptions()
  */
 int JikesAPI::compile(char **filenames)
 {
+    // FIXME: why dont we just create a Control on the stack here?
     Control *control = new Control(filenames , *((Option*)option));
     int return_code = control -> return_code;
 
-#ifdef NO_LEAKS
     delete control;
-#endif
 
     return return_code;
 }
