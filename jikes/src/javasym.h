@@ -4,7 +4,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler Open
 // Source License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1997, 1998, 1999, 2001, International
+// Copyright (C) 1996, 1997, 1998, 1999, 2001, 2002 International
 // Business Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -73,7 +73,7 @@ enum {
       TK_while = 67,
       TK_IntegerLiteral = 49,
       TK_LongLiteral = 50,
-      TK_FloatingPointLiteral = 51,
+      TK_FloatLiteral = 51,
       TK_DoubleLiteral = 52,
       TK_CharacterLiteral = 53,
       TK_StringLiteral = 54,

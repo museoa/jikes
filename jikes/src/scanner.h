@@ -65,7 +65,6 @@ private:
     static int ScanKeyword10(wchar_t *p1);
     static int ScanKeyword12(wchar_t *p1);
 
-    inline void CheckOctalLiteral(wchar_t *, wchar_t *);
     inline void SkipSpaces();
     void ScanSlashComment();
     void ScanStarComment();

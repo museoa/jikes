@@ -564,154 +564,227 @@ public:
                                          definite_visible_variables(NULL),
                                          processing_simple_assignment(false)
     {
-        ProcessExprOrStmt[Ast::LOCAL_VARIABLE_DECLARATION] = &Semantic::ProcessLocalVariableDeclarationStatement;
-        ProcessExprOrStmt[Ast::BLOCK]                      = &Semantic::ProcessBlock;
-        ProcessExprOrStmt[Ast::EXPRESSION_STATEMENT]       = &Semantic::ProcessExpressionStatement;
-        ProcessExprOrStmt[Ast::SYNCHRONIZED_STATEMENT]     = &Semantic::ProcessSynchronizedStatement;
-        ProcessExprOrStmt[Ast::IF]                         = &Semantic::ProcessIfStatement;
-        ProcessExprOrStmt[Ast::WHILE]                      = &Semantic::ProcessWhileStatement;
-        ProcessExprOrStmt[Ast::FOR]                        = &Semantic::ProcessForStatement;
-        ProcessExprOrStmt[Ast::SWITCH]                     = &Semantic::ProcessSwitchStatement;
-        ProcessExprOrStmt[Ast::DO]                         = &Semantic::ProcessDoStatement;
-        ProcessExprOrStmt[Ast::BREAK]                      = &Semantic::ProcessBreakStatement;
-        ProcessExprOrStmt[Ast::CONTINUE]                   = &Semantic::ProcessContinueStatement;
-        ProcessExprOrStmt[Ast::RETURN]                     = &Semantic::ProcessReturnStatement;
-        ProcessExprOrStmt[Ast::THROW]                      = &Semantic::ProcessThrowStatement;
-        ProcessExprOrStmt[Ast::TRY]                        = &Semantic::ProcessTryStatement;
-        ProcessExprOrStmt[Ast::ASSERT]                     = &Semantic::ProcessAssertStatement;
-        ProcessExprOrStmt[Ast::EMPTY_STATEMENT]            = &Semantic::ProcessEmptyStatement;
-        ProcessExprOrStmt[Ast::CLASS]                      = &Semantic::ProcessClassDeclaration;
+        ProcessExprOrStmt[Ast::LOCAL_VARIABLE_DECLARATION] =
+            &Semantic::ProcessLocalVariableDeclarationStatement;
+        ProcessExprOrStmt[Ast::BLOCK] = &Semantic::ProcessBlock;
+        ProcessExprOrStmt[Ast::EXPRESSION_STATEMENT] =
+            &Semantic::ProcessExpressionStatement;
+        ProcessExprOrStmt[Ast::SYNCHRONIZED_STATEMENT] =
+            &Semantic::ProcessSynchronizedStatement;
+        ProcessExprOrStmt[Ast::IF] = &Semantic::ProcessIfStatement;
+        ProcessExprOrStmt[Ast::WHILE] = &Semantic::ProcessWhileStatement;
+        ProcessExprOrStmt[Ast::FOR] = &Semantic::ProcessForStatement;
+        ProcessExprOrStmt[Ast::SWITCH] = &Semantic::ProcessSwitchStatement;
+        ProcessExprOrStmt[Ast::DO] = &Semantic::ProcessDoStatement;
+        ProcessExprOrStmt[Ast::BREAK] = &Semantic::ProcessBreakStatement;
+        ProcessExprOrStmt[Ast::CONTINUE] = &Semantic::ProcessContinueStatement;
+        ProcessExprOrStmt[Ast::RETURN] = &Semantic::ProcessReturnStatement;
+        ProcessExprOrStmt[Ast::THROW] = &Semantic::ProcessThrowStatement;
+        ProcessExprOrStmt[Ast::TRY] = &Semantic::ProcessTryStatement;
+        ProcessExprOrStmt[Ast::ASSERT] = &Semantic::ProcessAssertStatement;
+        ProcessExprOrStmt[Ast::EMPTY_STATEMENT] =
+            &Semantic::ProcessEmptyStatement;
+        ProcessExprOrStmt[Ast::CLASS] = &Semantic::ProcessClassDeclaration;
+        ProcessExprOrStmt[Ast::IDENTIFIER] = &Semantic::ProcessSimpleName;
+        ProcessExprOrStmt[Ast::DOT] = &Semantic::ProcessFieldAccess;
+        ProcessExprOrStmt[Ast::INTEGER_LITERAL] =
+            &Semantic::ProcessIntegerLiteral;
+        ProcessExprOrStmt[Ast::LONG_LITERAL] = &Semantic::ProcessLongLiteral;
+        ProcessExprOrStmt[Ast::FLOAT_LITERAL] = &Semantic::ProcessFloatLiteral;
+        ProcessExprOrStmt[Ast::DOUBLE_LITERAL] =
+            &Semantic::ProcessDoubleLiteral;
+        ProcessExprOrStmt[Ast::TRUE_LITERAL] = &Semantic::ProcessTrueLiteral;
+        ProcessExprOrStmt[Ast::FALSE_LITERAL] = &Semantic::ProcessFalseLiteral;
+        ProcessExprOrStmt[Ast::STRING_LITERAL] =
+            &Semantic::ProcessStringLiteral;
+        ProcessExprOrStmt[Ast::CHARACTER_LITERAL] =
+            &Semantic::ProcessCharacterLiteral;
+        ProcessExprOrStmt[Ast::NULL_LITERAL] = &Semantic::ProcessNullLiteral;
+        ProcessExprOrStmt[Ast::ARRAY_ACCESS] = &Semantic::ProcessArrayAccess;
+        ProcessExprOrStmt[Ast::CALL] = &Semantic::ProcessMethodInvocation;
+        ProcessExprOrStmt[Ast::THIS_EXPRESSION] =
+            &Semantic::ProcessThisExpression;
+        ProcessExprOrStmt[Ast::SUPER_EXPRESSION] =
+            &Semantic::ProcessSuperExpression;
+        ProcessExprOrStmt[Ast::PARENTHESIZED_EXPRESSION] =
+            &Semantic::ProcessParenthesizedExpression;
+        ProcessExprOrStmt[Ast::CLASS_CREATION] =
+            &Semantic::ProcessClassInstanceCreationExpression;
+        ProcessExprOrStmt[Ast::ARRAY_CREATION] =
+            &Semantic::ProcessArrayCreationExpression;
+        ProcessExprOrStmt[Ast::POST_UNARY] =
+            &Semantic::ProcessPostUnaryExpression;
+        ProcessExprOrStmt[Ast::PRE_UNARY] =
+            &Semantic::ProcessPreUnaryExpression;
+        ProcessExprOrStmt[Ast::CAST] = &Semantic::ProcessCastExpression;
+        ProcessExprOrStmt[Ast::BINARY] = &Semantic::ProcessBinaryExpression;
+        ProcessExprOrStmt[Ast::TYPE] = &Semantic::ProcessTypeExpression;
+        ProcessExprOrStmt[Ast::CONDITIONAL] =
+            &Semantic::ProcessConditionalExpression;
+        ProcessExprOrStmt[Ast::ASSIGNMENT] =
+            &Semantic::ProcessAssignmentExpression;
 
-        ProcessExprOrStmt[Ast::IDENTIFIER]               = &Semantic::ProcessSimpleName;
-        ProcessExprOrStmt[Ast::DOT]                      = &Semantic::ProcessFieldAccess;
-        ProcessExprOrStmt[Ast::INTEGER_LITERAL]          = &Semantic::ProcessIntegerLiteral;
-        ProcessExprOrStmt[Ast::LONG_LITERAL]             = &Semantic::ProcessLongLiteral;
-        ProcessExprOrStmt[Ast::FLOATING_POINT_LITERAL]   = &Semantic::ProcessFloatingPointLiteral;
-        ProcessExprOrStmt[Ast::DOUBLE_LITERAL]           = &Semantic::ProcessDoubleLiteral;
-        ProcessExprOrStmt[Ast::TRUE_LITERAL]             = &Semantic::ProcessTrueLiteral;
-        ProcessExprOrStmt[Ast::FALSE_LITERAL]            = &Semantic::ProcessFalseLiteral;
-        ProcessExprOrStmt[Ast::STRING_LITERAL]           = &Semantic::ProcessStringLiteral;
-        ProcessExprOrStmt[Ast::CHARACTER_LITERAL]        = &Semantic::ProcessCharacterLiteral;
-        ProcessExprOrStmt[Ast::NULL_LITERAL]             = &Semantic::ProcessNullLiteral;
-        ProcessExprOrStmt[Ast::ARRAY_ACCESS]             = &Semantic::ProcessArrayAccess;
-        ProcessExprOrStmt[Ast::CALL]                     = &Semantic::ProcessMethodInvocation;
-        ProcessExprOrStmt[Ast::THIS_EXPRESSION]          = &Semantic::ProcessThisExpression;
-        ProcessExprOrStmt[Ast::SUPER_EXPRESSION]         = &Semantic::ProcessSuperExpression;
-        ProcessExprOrStmt[Ast::PARENTHESIZED_EXPRESSION] = &Semantic::ProcessParenthesizedExpression;
-        ProcessExprOrStmt[Ast::CLASS_CREATION]           = &Semantic::ProcessClassInstanceCreationExpression;
-        ProcessExprOrStmt[Ast::ARRAY_CREATION]           = &Semantic::ProcessArrayCreationExpression;
-        ProcessExprOrStmt[Ast::POST_UNARY]               = &Semantic::ProcessPostUnaryExpression;
-        ProcessExprOrStmt[Ast::PRE_UNARY]                = &Semantic::ProcessPreUnaryExpression;
-        ProcessExprOrStmt[Ast::CAST]                     = &Semantic::ProcessCastExpression;
-        ProcessExprOrStmt[Ast::BINARY]                   = &Semantic::ProcessBinaryExpression;
-        ProcessExprOrStmt[Ast::TYPE]                     = &Semantic::ProcessTypeExpression;
-        ProcessExprOrStmt[Ast::CONDITIONAL]              = &Semantic::ProcessConditionalExpression;
-        ProcessExprOrStmt[Ast::ASSIGNMENT]               = &Semantic::ProcessAssignmentExpression;
+        DefiniteStmt[Ast::LOCAL_VARIABLE_DECLARATION] =
+            &Semantic::DefiniteLocalVariableDeclarationStatement;
+        DefiniteStmt[Ast::BLOCK] = &Semantic::DefiniteBlock;
+        DefiniteStmt[Ast::EXPRESSION_STATEMENT] =
+            &Semantic::DefiniteExpressionStatement;
+        DefiniteStmt[Ast::SYNCHRONIZED_STATEMENT] =
+            &Semantic::DefiniteSynchronizedStatement;
+        DefiniteStmt[Ast::IF] = &Semantic::DefiniteIfStatement;
+        DefiniteStmt[Ast::WHILE] = &Semantic::DefiniteWhileStatement;
+        DefiniteStmt[Ast::FOR] = &Semantic::DefiniteForStatement;
+        DefiniteStmt[Ast::SWITCH] = &Semantic::DefiniteSwitchStatement;
+        DefiniteStmt[Ast::DO] = &Semantic::DefiniteDoStatement;
+        DefiniteStmt[Ast::BREAK] = &Semantic::DefiniteBreakStatement;
+        DefiniteStmt[Ast::CONTINUE] = &Semantic::DefiniteContinueStatement;
+        DefiniteStmt[Ast::RETURN] = &Semantic::DefiniteReturnStatement;
+        DefiniteStmt[Ast::THROW] = &Semantic::DefiniteThrowStatement;
+        DefiniteStmt[Ast::TRY] = &Semantic::DefiniteTryStatement;
+        DefiniteStmt[Ast::ASSERT] = &Semantic::DefiniteAssertStatement;
+        DefiniteStmt[Ast::EMPTY_STATEMENT] = &Semantic::DefiniteEmptyStatement;
+        DefiniteStmt[Ast::CLASS] = &Semantic::DefiniteClassDeclaration;
 
-        DefiniteStmt[Ast::LOCAL_VARIABLE_DECLARATION] = &Semantic::DefiniteLocalVariableDeclarationStatement;
-        DefiniteStmt[Ast::BLOCK]                      = &Semantic::DefiniteBlock;
-        DefiniteStmt[Ast::EXPRESSION_STATEMENT]       = &Semantic::DefiniteExpressionStatement;
-        DefiniteStmt[Ast::SYNCHRONIZED_STATEMENT]     = &Semantic::DefiniteSynchronizedStatement;
-        DefiniteStmt[Ast::IF]                         = &Semantic::DefiniteIfStatement;
-        DefiniteStmt[Ast::WHILE]                      = &Semantic::DefiniteWhileStatement;
-        DefiniteStmt[Ast::FOR]                        = &Semantic::DefiniteForStatement;
-        DefiniteStmt[Ast::SWITCH]                     = &Semantic::DefiniteSwitchStatement;
-        DefiniteStmt[Ast::DO]                         = &Semantic::DefiniteDoStatement;
-        DefiniteStmt[Ast::BREAK]                      = &Semantic::DefiniteBreakStatement;
-        DefiniteStmt[Ast::CONTINUE]                   = &Semantic::DefiniteContinueStatement;
-        DefiniteStmt[Ast::RETURN]                     = &Semantic::DefiniteReturnStatement;
-        DefiniteStmt[Ast::THROW]                      = &Semantic::DefiniteThrowStatement;
-        DefiniteStmt[Ast::TRY]                        = &Semantic::DefiniteTryStatement;
-        DefiniteStmt[Ast::ASSERT]                     = &Semantic::DefiniteAssertStatement;
-        DefiniteStmt[Ast::EMPTY_STATEMENT]            = &Semantic::DefiniteEmptyStatement;
-        DefiniteStmt[Ast::CLASS]                      = &Semantic::DefiniteClassDeclaration;
+        DefiniteExpr[Ast::IDENTIFIER] = &Semantic::DefiniteSimpleName;
+        DefiniteExpr[Ast::DOT] = &Semantic::DefiniteFieldAccess;
+        DefiniteExpr[Ast::ARRAY_ACCESS] = &Semantic::DefiniteArrayAccess;
+        DefiniteExpr[Ast::CALL] = &Semantic::DefiniteMethodInvocation;
+        DefiniteExpr[Ast::PARENTHESIZED_EXPRESSION] =
+            &Semantic::DefiniteParenthesizedExpression;
+        DefiniteExpr[Ast::CLASS_CREATION] =
+            &Semantic::DefiniteClassInstanceCreationExpression;
+        DefiniteExpr[Ast::ARRAY_CREATION] =
+            &Semantic::DefiniteArrayCreationExpression;
+        DefiniteExpr[Ast::POST_UNARY] = &Semantic::DefinitePostUnaryExpression;
+        DefiniteExpr[Ast::PRE_UNARY] = &Semantic::DefinitePreUnaryExpression;
+        DefiniteExpr[Ast::CAST] = &Semantic::DefiniteCastExpression;
+        DefiniteExpr[Ast::CHECK_AND_CAST] = &Semantic::DefiniteCastExpression;
+        DefiniteExpr[Ast::BINARY] = &Semantic::DefiniteBinaryExpression;
+        DefiniteExpr[Ast::CONDITIONAL] =
+            &Semantic::DefiniteConditionalExpression;
+        DefiniteExpr[Ast::ASSIGNMENT] =
+            &Semantic::DefiniteAssignmentExpression;
+        DefiniteExpr[Ast::INTEGER_LITERAL] =
+            &Semantic::DefiniteDefaultExpression;
+        DefiniteExpr[Ast::LONG_LITERAL] = &Semantic::DefiniteDefaultExpression;
+        DefiniteExpr[Ast::FLOAT_LITERAL] =
+            &Semantic::DefiniteDefaultExpression;
+        DefiniteExpr[Ast::DOUBLE_LITERAL] =
+            &Semantic::DefiniteDefaultExpression;
+        DefiniteExpr[Ast::TRUE_LITERAL] = &Semantic::DefiniteDefaultExpression;
+        DefiniteExpr[Ast::FALSE_LITERAL] =
+            &Semantic::DefiniteDefaultExpression;
+        DefiniteExpr[Ast::STRING_LITERAL] =
+            &Semantic::DefiniteDefaultExpression;
+        DefiniteExpr[Ast::CHARACTER_LITERAL] =
+            &Semantic::DefiniteDefaultExpression;
+        DefiniteExpr[Ast::NULL_LITERAL] = &Semantic::DefiniteDefaultExpression;
+        DefiniteExpr[Ast::THIS_EXPRESSION] =
+            &Semantic::DefiniteDefaultExpression;
+        DefiniteExpr[Ast::SUPER_EXPRESSION] =
+            &Semantic::DefiniteDefaultExpression;
+        DefiniteExpr[Ast::TYPE] = &Semantic::DefiniteDefaultExpression;
 
-        DefiniteExpr[Ast::IDENTIFIER]               = &Semantic::DefiniteSimpleName;
-        DefiniteExpr[Ast::DOT]                      = &Semantic::DefiniteFieldAccess;
-        DefiniteExpr[Ast::ARRAY_ACCESS]             = &Semantic::DefiniteArrayAccess;
-        DefiniteExpr[Ast::CALL]                     = &Semantic::DefiniteMethodInvocation;
-        DefiniteExpr[Ast::PARENTHESIZED_EXPRESSION] = &Semantic::DefiniteParenthesizedExpression;
-        DefiniteExpr[Ast::CLASS_CREATION]           = &Semantic::DefiniteClassInstanceCreationExpression;
-        DefiniteExpr[Ast::ARRAY_CREATION]           = &Semantic::DefiniteArrayCreationExpression;
-        DefiniteExpr[Ast::POST_UNARY]               = &Semantic::DefinitePostUnaryExpression;
-        DefiniteExpr[Ast::PRE_UNARY]                = &Semantic::DefinitePreUnaryExpression;
-        DefiniteExpr[Ast::CAST]                     = &Semantic::DefiniteCastExpression;
-        DefiniteExpr[Ast::CHECK_AND_CAST]           = &Semantic::DefiniteCastExpression;
-        DefiniteExpr[Ast::BINARY]                   = &Semantic::DefiniteBinaryExpression;
-        DefiniteExpr[Ast::CONDITIONAL]              = &Semantic::DefiniteConditionalExpression;
-        DefiniteExpr[Ast::ASSIGNMENT]               = &Semantic::DefiniteAssignmentExpression;
+        DefiniteBinaryExpr[AstBinaryExpression::PLUS] =
+            &Semantic::DefiniteDefaultBinaryExpression;
+        DefiniteBinaryExpr[AstBinaryExpression::LEFT_SHIFT] =
+            &Semantic::DefiniteDefaultBinaryExpression;
+        DefiniteBinaryExpr[AstBinaryExpression::RIGHT_SHIFT] =
+            &Semantic::DefiniteDefaultBinaryExpression;
+        DefiniteBinaryExpr[AstBinaryExpression::UNSIGNED_RIGHT_SHIFT] =
+            &Semantic::DefiniteDefaultBinaryExpression;
+        DefiniteBinaryExpr[AstBinaryExpression::LESS] =
+            &Semantic::DefiniteDefaultBinaryExpression;
+        DefiniteBinaryExpr[AstBinaryExpression::GREATER] =
+            &Semantic::DefiniteDefaultBinaryExpression;
+        DefiniteBinaryExpr[AstBinaryExpression::LESS_EQUAL] =
+            &Semantic::DefiniteDefaultBinaryExpression;
+        DefiniteBinaryExpr[AstBinaryExpression::GREATER_EQUAL] =
+            &Semantic::DefiniteDefaultBinaryExpression;
+        DefiniteBinaryExpr[AstBinaryExpression::AND] =
+            &Semantic::DefiniteDefaultBinaryExpression;
+        DefiniteBinaryExpr[AstBinaryExpression::XOR] =
+            &Semantic::DefiniteDefaultBinaryExpression;
+        DefiniteBinaryExpr[AstBinaryExpression::IOR] =
+            &Semantic::DefiniteDefaultBinaryExpression;
+        DefiniteBinaryExpr[AstBinaryExpression::EQUAL_EQUAL] =
+            &Semantic::DefiniteDefaultBinaryExpression;
+        DefiniteBinaryExpr[AstBinaryExpression::NOT_EQUAL] =
+            &Semantic::DefiniteDefaultBinaryExpression;
+        DefiniteBinaryExpr[AstBinaryExpression::AND_AND] =
+            &Semantic::DefiniteAND_AND;
+        DefiniteBinaryExpr[AstBinaryExpression::OR_OR] =
+            &Semantic::DefiniteOR_OR;
+        DefiniteBinaryExpr[AstBinaryExpression::STAR] =
+            &Semantic::DefiniteDefaultBinaryExpression;
+        DefiniteBinaryExpr[AstBinaryExpression::MINUS] =
+            &Semantic::DefiniteDefaultBinaryExpression;
+        DefiniteBinaryExpr[AstBinaryExpression::SLASH] =
+            &Semantic::DefiniteDefaultBinaryExpression;
+        DefiniteBinaryExpr[AstBinaryExpression::MOD] =
+            &Semantic::DefiniteDefaultBinaryExpression;
+        DefiniteBinaryExpr[AstBinaryExpression::INSTANCEOF] =
+            &Semantic::DefiniteDefaultBinaryExpression;
 
-        DefiniteExpr[Ast::INTEGER_LITERAL]          = &Semantic::DefiniteDefaultExpression;
-        DefiniteExpr[Ast::LONG_LITERAL]             = &Semantic::DefiniteDefaultExpression;
-        DefiniteExpr[Ast::FLOATING_POINT_LITERAL]   = &Semantic::DefiniteDefaultExpression;
-        DefiniteExpr[Ast::DOUBLE_LITERAL]           = &Semantic::DefiniteDefaultExpression;
-        DefiniteExpr[Ast::TRUE_LITERAL]             = &Semantic::DefiniteDefaultExpression;
-        DefiniteExpr[Ast::FALSE_LITERAL]            = &Semantic::DefiniteDefaultExpression;
-        DefiniteExpr[Ast::STRING_LITERAL]           = &Semantic::DefiniteDefaultExpression;
-        DefiniteExpr[Ast::CHARACTER_LITERAL]        = &Semantic::DefiniteDefaultExpression;
-        DefiniteExpr[Ast::NULL_LITERAL]             = &Semantic::DefiniteDefaultExpression;
-        DefiniteExpr[Ast::THIS_EXPRESSION]          = &Semantic::DefiniteDefaultExpression;
-        DefiniteExpr[Ast::SUPER_EXPRESSION]         = &Semantic::DefiniteDefaultExpression;
-        DefiniteExpr[Ast::TYPE]                     = &Semantic::DefiniteDefaultExpression;
+        DefinitePreUnaryExpr[AstPreUnaryExpression::PLUS] =
+            &Semantic::DefiniteDefaultPreUnaryExpression;
+        DefinitePreUnaryExpr[AstPreUnaryExpression::MINUS] =
+            &Semantic::DefiniteDefaultPreUnaryExpression;
+        DefinitePreUnaryExpr[AstPreUnaryExpression::TWIDDLE] =
+            &Semantic::DefiniteDefaultPreUnaryExpression;
+        DefinitePreUnaryExpr[AstPreUnaryExpression::NOT] =
+            &Semantic::DefiniteNOT;
+        DefinitePreUnaryExpr[AstPreUnaryExpression::PLUSPLUS] =
+            &Semantic::DefinitePLUSPLUSOrMINUSMINUS;
+        DefinitePreUnaryExpr[AstPreUnaryExpression::MINUSMINUS] =
+            &Semantic::DefinitePLUSPLUSOrMINUSMINUS;
 
-        DefiniteBinaryExpr[AstBinaryExpression::PLUS]                 = &Semantic::DefiniteDefaultBinaryExpression;
-        DefiniteBinaryExpr[AstBinaryExpression::LEFT_SHIFT]           = &Semantic::DefiniteDefaultBinaryExpression;
-        DefiniteBinaryExpr[AstBinaryExpression::RIGHT_SHIFT]          = &Semantic::DefiniteDefaultBinaryExpression;
-        DefiniteBinaryExpr[AstBinaryExpression::UNSIGNED_RIGHT_SHIFT] = &Semantic::DefiniteDefaultBinaryExpression;
-        DefiniteBinaryExpr[AstBinaryExpression::LESS]                 = &Semantic::DefiniteDefaultBinaryExpression;
-        DefiniteBinaryExpr[AstBinaryExpression::GREATER]              = &Semantic::DefiniteDefaultBinaryExpression;
-        DefiniteBinaryExpr[AstBinaryExpression::LESS_EQUAL]           = &Semantic::DefiniteDefaultBinaryExpression;
-        DefiniteBinaryExpr[AstBinaryExpression::GREATER_EQUAL]        = &Semantic::DefiniteDefaultBinaryExpression;
+        ProcessBinaryExpr[AstBinaryExpression::PLUS] = &Semantic::ProcessPLUS;
+        ProcessBinaryExpr[AstBinaryExpression::LEFT_SHIFT] =
+            &Semantic::ProcessLEFT_SHIFT;
+        ProcessBinaryExpr[AstBinaryExpression::RIGHT_SHIFT] =
+            &Semantic::ProcessRIGHT_SHIFT;
+        ProcessBinaryExpr[AstBinaryExpression::UNSIGNED_RIGHT_SHIFT] =
+            &Semantic::ProcessUNSIGNED_RIGHT_SHIFT;
+        ProcessBinaryExpr[AstBinaryExpression::LESS] = &Semantic::ProcessLESS;
+        ProcessBinaryExpr[AstBinaryExpression::GREATER] =
+            &Semantic::ProcessGREATER;
+        ProcessBinaryExpr[AstBinaryExpression::LESS_EQUAL] =
+            &Semantic::ProcessLESS_EQUAL;
+        ProcessBinaryExpr[AstBinaryExpression::GREATER_EQUAL] =
+            &Semantic::ProcessGREATER_EQUAL;
+        ProcessBinaryExpr[AstBinaryExpression::AND] = &Semantic::ProcessAND;
+        ProcessBinaryExpr[AstBinaryExpression::XOR] = &Semantic::ProcessXOR;
+        ProcessBinaryExpr[AstBinaryExpression::IOR] = &Semantic::ProcessIOR;
+        ProcessBinaryExpr[AstBinaryExpression::AND_AND] =
+            &Semantic::ProcessAND_AND;
+        ProcessBinaryExpr[AstBinaryExpression::OR_OR] =
+            &Semantic::ProcessOR_OR;
+        ProcessBinaryExpr[AstBinaryExpression::EQUAL_EQUAL] =
+            &Semantic::ProcessEQUAL_EQUAL;
+        ProcessBinaryExpr[AstBinaryExpression::NOT_EQUAL] =
+            &Semantic::ProcessNOT_EQUAL;
+        ProcessBinaryExpr[AstBinaryExpression::STAR] = &Semantic::ProcessSTAR;
+        ProcessBinaryExpr[AstBinaryExpression::MINUS] =
+            &Semantic::ProcessMINUS;
+        ProcessBinaryExpr[AstBinaryExpression::SLASH] =
+            &Semantic::ProcessSLASH;
+        ProcessBinaryExpr[AstBinaryExpression::MOD] = &Semantic::ProcessMOD;
+        ProcessBinaryExpr[AstBinaryExpression::INSTANCEOF] =
+            &Semantic::ProcessINSTANCEOF;
 
-        DefiniteBinaryExpr[AstBinaryExpression::AND]                  = &Semantic::DefiniteDefaultBinaryExpression;
-        DefiniteBinaryExpr[AstBinaryExpression::XOR]                  = &Semantic::DefiniteDefaultBinaryExpression;
-        DefiniteBinaryExpr[AstBinaryExpression::IOR]                  = &Semantic::DefiniteDefaultBinaryExpression;
-
-        DefiniteBinaryExpr[AstBinaryExpression::EQUAL_EQUAL]          = &Semantic::DefiniteDefaultBinaryExpression;
-        DefiniteBinaryExpr[AstBinaryExpression::NOT_EQUAL]            = &Semantic::DefiniteDefaultBinaryExpression;
-
-        DefiniteBinaryExpr[AstBinaryExpression::AND_AND]              = &Semantic::DefiniteAND_AND;
-        DefiniteBinaryExpr[AstBinaryExpression::OR_OR]                = &Semantic::DefiniteOR_OR;
-        DefiniteBinaryExpr[AstBinaryExpression::STAR]                 = &Semantic::DefiniteDefaultBinaryExpression;
-        DefiniteBinaryExpr[AstBinaryExpression::MINUS]                = &Semantic::DefiniteDefaultBinaryExpression;
-        DefiniteBinaryExpr[AstBinaryExpression::SLASH]                = &Semantic::DefiniteDefaultBinaryExpression;
-        DefiniteBinaryExpr[AstBinaryExpression::MOD]                  = &Semantic::DefiniteDefaultBinaryExpression;
-        DefiniteBinaryExpr[AstBinaryExpression::INSTANCEOF]           = &Semantic::DefiniteDefaultBinaryExpression;
-
-        DefinitePreUnaryExpr[AstPreUnaryExpression::PLUS]             = &Semantic::DefiniteDefaultPreUnaryExpression;
-        DefinitePreUnaryExpr[AstPreUnaryExpression::MINUS]            = &Semantic::DefiniteDefaultPreUnaryExpression;
-        DefinitePreUnaryExpr[AstPreUnaryExpression::TWIDDLE]          = &Semantic::DefiniteDefaultPreUnaryExpression;
-        DefinitePreUnaryExpr[AstPreUnaryExpression::NOT]              = &Semantic::DefiniteNOT;
-        DefinitePreUnaryExpr[AstPreUnaryExpression::PLUSPLUS]         = &Semantic::DefinitePLUSPLUSOrMINUSMINUS;
-        DefinitePreUnaryExpr[AstPreUnaryExpression::MINUSMINUS]       = &Semantic::DefinitePLUSPLUSOrMINUSMINUS;
-
-        ProcessBinaryExpr[AstBinaryExpression::PLUS]                 = &Semantic::ProcessPLUS;
-        ProcessBinaryExpr[AstBinaryExpression::LEFT_SHIFT]           = &Semantic::ProcessLEFT_SHIFT;
-        ProcessBinaryExpr[AstBinaryExpression::RIGHT_SHIFT]          = &Semantic::ProcessRIGHT_SHIFT;
-        ProcessBinaryExpr[AstBinaryExpression::UNSIGNED_RIGHT_SHIFT] = &Semantic::ProcessUNSIGNED_RIGHT_SHIFT;
-        ProcessBinaryExpr[AstBinaryExpression::LESS]                 = &Semantic::ProcessLESS;
-        ProcessBinaryExpr[AstBinaryExpression::GREATER]              = &Semantic::ProcessGREATER;
-        ProcessBinaryExpr[AstBinaryExpression::LESS_EQUAL]           = &Semantic::ProcessLESS_EQUAL;
-        ProcessBinaryExpr[AstBinaryExpression::GREATER_EQUAL]        = &Semantic::ProcessGREATER_EQUAL;
-        ProcessBinaryExpr[AstBinaryExpression::AND]                  = &Semantic::ProcessAND;
-        ProcessBinaryExpr[AstBinaryExpression::XOR]                  = &Semantic::ProcessXOR;
-        ProcessBinaryExpr[AstBinaryExpression::IOR]                  = &Semantic::ProcessIOR;
-        ProcessBinaryExpr[AstBinaryExpression::AND_AND]              = &Semantic::ProcessAND_AND;
-        ProcessBinaryExpr[AstBinaryExpression::OR_OR]                = &Semantic::ProcessOR_OR;
-        ProcessBinaryExpr[AstBinaryExpression::EQUAL_EQUAL]          = &Semantic::ProcessEQUAL_EQUAL;
-        ProcessBinaryExpr[AstBinaryExpression::NOT_EQUAL]            = &Semantic::ProcessNOT_EQUAL;
-        ProcessBinaryExpr[AstBinaryExpression::STAR]                 = &Semantic::ProcessSTAR;
-        ProcessBinaryExpr[AstBinaryExpression::MINUS]                = &Semantic::ProcessMINUS;
-        ProcessBinaryExpr[AstBinaryExpression::SLASH]                = &Semantic::ProcessSLASH;
-        ProcessBinaryExpr[AstBinaryExpression::MOD]                  = &Semantic::ProcessMOD;
-        ProcessBinaryExpr[AstBinaryExpression::INSTANCEOF]           = &Semantic::ProcessINSTANCEOF;
-
-        ProcessPreUnaryExpr[AstPreUnaryExpression::PLUS]       = &Semantic::ProcessPLUS;
-        ProcessPreUnaryExpr[AstPreUnaryExpression::MINUS]      = &Semantic::ProcessMINUS;
-        ProcessPreUnaryExpr[AstPreUnaryExpression::TWIDDLE]    = &Semantic::ProcessTWIDDLE;
-        ProcessPreUnaryExpr[AstPreUnaryExpression::NOT]        = &Semantic::ProcessNOT;
-        ProcessPreUnaryExpr[AstPreUnaryExpression::PLUSPLUS]   = &Semantic::ProcessPLUSPLUSOrMINUSMINUS;
-        ProcessPreUnaryExpr[AstPreUnaryExpression::MINUSMINUS] = &Semantic::ProcessPLUSPLUSOrMINUSMINUS;
+        ProcessPreUnaryExpr[AstPreUnaryExpression::PLUS] =
+            &Semantic::ProcessPLUS;
+        ProcessPreUnaryExpr[AstPreUnaryExpression::MINUS] =
+            &Semantic::ProcessMINUS;
+        ProcessPreUnaryExpr[AstPreUnaryExpression::TWIDDLE] =
+            &Semantic::ProcessTWIDDLE;
+        ProcessPreUnaryExpr[AstPreUnaryExpression::NOT] =
+            &Semantic::ProcessNOT;
+        ProcessPreUnaryExpr[AstPreUnaryExpression::PLUSPLUS] =
+            &Semantic::ProcessPLUSPLUSOrMINUSMINUS;
+        ProcessPreUnaryExpr[AstPreUnaryExpression::MINUSMINUS] =
+            &Semantic::ProcessPLUSPLUSOrMINUSMINUS;
     }
 
     ~Semantic() { delete error; }
@@ -1165,7 +1238,7 @@ private:
     void ProcessFieldAccess(Ast *);
     void ProcessIntegerLiteral(Ast *);
     void ProcessLongLiteral(Ast *);
-    void ProcessFloatingPointLiteral(Ast *);
+    void ProcessFloatLiteral(Ast *);
     void ProcessDoubleLiteral(Ast *);
     void ProcessTrueLiteral(Ast *);
     void ProcessFalseLiteral(Ast *);

@@ -630,7 +630,6 @@ void SemanticError::StaticInitializer()
     print_message[INVALID_LONG_VALUE] = PrintINVALID_LONG_VALUE;
     print_message[INVALID_FLOAT_VALUE] = PrintINVALID_FLOAT_VALUE;
     print_message[INVALID_DOUBLE_VALUE] = PrintINVALID_DOUBLE_VALUE;
-    print_message[INVALID_STRING_VALUE] = PrintINVALID_STRING_VALUE;
     print_message[RETURN_STATEMENT_IN_INITIALIZER] = PrintRETURN_STATEMENT_IN_INITIALIZER;
     print_message[ABRUPT_INITIALIZER] = PrintABRUPT_INITIALIZER;
     print_message[MISPLACED_RETURN_WITH_EXPRESSION] = PrintMISPLACED_RETURN_WITH_EXPRESSION;
@@ -1917,7 +1916,8 @@ wchar_t *SemanticError::PrintOBJECT_WITH_SUPER_TYPE(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "The type \"java.lang.Object\" must not have a super type.";
+    s << "The type \"java.lang.Object\" must not have an extends or implements "
+      << "clause, as it has no supertype.";
 
     return s.Array();
 }
@@ -1929,7 +1929,7 @@ wchar_t *SemanticError::PrintOBJECT_HAS_NO_SUPER_TYPE(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "The type \"java.lang.Object\" does not have a super type.";
+    s << "The type \"java.lang.Object\" does not have a supertype.";
 
     return s.Array();
 }
@@ -2971,8 +2971,7 @@ wchar_t *SemanticError::PrintINVALID_BYTE_VALUE(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "A byte value must be an integer value (note that a character "
-      << "literal is not an integer value) in the range -128..127.";
+    s << "A byte value must be an integer value in the range -128..127.";
 
     return s.Array();
 }
@@ -2984,8 +2983,7 @@ wchar_t *SemanticError::PrintINVALID_SHORT_VALUE(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "A short value must be an integer value (note that a character "
-      << "literal is not an integer value) in the range -32768..32767.";
+    s << "A short value must be an integer value in the range -32768..32767.";
 
     return s.Array();
 }
@@ -2997,10 +2995,7 @@ wchar_t *SemanticError::PrintINVALID_CHARACTER_VALUE(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "A character literal must be a valid unicode value - i.e., a "
-      << "character literal enclosed in single quotes or an integer value "
-      << "in the range 0..65535 or an escaped 3-digit octal value in the "
-      << "range \\000..\\377.";
+    s << "A character must be an the range 0..65535 ('\\u0000'..'\\uffff').";
 
     return s.Array();
 }
@@ -3027,7 +3022,7 @@ wchar_t *SemanticError::PrintINVALID_LONG_VALUE(ErrorInfo &err,
     ErrorString s;
 
     s << "The value of a long literal must be a decimal value in the range "
-      << "-9223372036854775808..9223372036854775807 or a hexadecimal or "
+      << "-9223372036854775808L..9223372036854775807L or a hexadecimal or "
       << "octal literal that fits in 64 bits.";
 
     return s.Array();
@@ -3053,19 +3048,6 @@ wchar_t *SemanticError::PrintINVALID_DOUBLE_VALUE(ErrorInfo &err,
     ErrorString s;
 
     s << "The value of a double literal must not round to infinity or zero.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintINVALID_STRING_VALUE(ErrorInfo &err,
-                                                  LexStream *lex_stream,
-                                                  Control &control)
-{
-    ErrorString s;
-
-    s << "The value of this \"String\" literal is invalid. Perhaps it "
-      << "contains a bad escape sequence?";
 
     return s.Array();
 }

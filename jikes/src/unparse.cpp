@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1999, 2000, 2001 International Business
+// Copyright (C) 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -814,13 +814,13 @@ void AstLongLiteral::Unparse(Ostream& os, LexStream* lex_stream)
         os << "/*:AstLongLiteral#" << id << "*/";
 }
 
-void AstFloatingPointLiteral::Unparse(Ostream& os, LexStream* lex_stream)
+void AstFloatLiteral::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstFloatingPointLiteral:#" << id << "*/";
-    os << lex_stream -> NameString(floating_point_literal_token);
+        os << "/*AstFloatLiteral:#" << id << "*/";
+    os << lex_stream -> NameString(float_literal_token);
     if (Ast::debug_unparse)
-        os << "/*:AstFloatingPointLiteral#" << id << "*/";
+        os << "/*:AstFloatLiteral#" << id << "*/";
 }
 
 void AstDoubleLiteral::Unparse(Ostream& os, LexStream* lex_stream)

@@ -83,6 +83,18 @@ public:
         return codes[(u2) (blocks[c >> SHIFT] + c)] == DIGIT_CODE;
     }
 
+    static inline bool IsOctalDigit(wchar_t c)
+    {
+        return c >= U_0 && c <= U_7;
+    }
+
+    static inline bool IsHexDigit(wchar_t c)
+    {
+        return c <= U_f && (c >= U_a ||
+                            (c >= U_A && c <= U_F) ||
+                            (c >= U_0 && c <= U_9));
+    }
+
     static inline bool IsUpper(wchar_t c)
     {
         return codes[(u2) (blocks[c >> SHIFT] + c)] == UPPER_CODE;

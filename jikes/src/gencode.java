@@ -282,6 +282,18 @@ class gencode
         hfile.println("        return codes[(u2) (blocks[c >> SHIFT] + c)] == DIGIT_CODE;");
         hfile.println("    }");
         hfile.println();
+        hfile.println("    static inline bool IsOctalDigit(wchar_t c)");
+        hfile.println("    {");
+        hfile.println("        return c >= U_0 && c <= U_7;");
+        hfile.println("    }");
+        hfile.println();
+        hfile.println("    static inline bool IsHexDigit(wchar_t c)");
+        hfile.println("    {");
+        hfile.println("        return c <= U_f && (c >= U_a ||");
+        hfile.println("                            (c >= U_A && c <= U_F) ||");
+        hfile.println("                            (c >= U_0 && c <= U_9));");
+        hfile.println("    }");
+        hfile.println();
         hfile.println("    static inline bool IsUpper(wchar_t c)");
         hfile.println("    {");
         hfile.println("        return codes[(u2) (blocks[c >> SHIFT] + c)] == UPPER_CODE;");

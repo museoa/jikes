@@ -215,7 +215,7 @@ class AstFinallyClause;
 class AstTryStatement;
 class AstIntegerLiteral;
 class AstLongLiteral;
-class AstFloatingPointLiteral;
+class AstFloatLiteral;
 class AstDoubleLiteral;
 class AstTrueLiteral;
 class AstFalseLiteral;
@@ -274,7 +274,7 @@ public:
         DOT,
         INTEGER_LITERAL,
         LONG_LITERAL,
-        FLOATING_POINT_LITERAL,
+        FLOAT_LITERAL,
         DOUBLE_LITERAL,
         TRUE_LITERAL,
         FALSE_LITERAL,
@@ -519,7 +519,7 @@ public:
     inline AstTryStatement *TryStatementCast();
     inline AstIntegerLiteral *IntegerLiteralCast();
     inline AstLongLiteral *LongLiteralCast();
-    inline AstFloatingPointLiteral *FloatingPointLiteralCast();
+    inline AstFloatLiteral *FloatLiteralCast();
     inline AstDoubleLiteral *DoubleLiteralCast();
     inline AstTrueLiteral *TrueLiteralCast();
     inline AstFalseLiteral *FalseLiteralCast();
@@ -1957,7 +1957,7 @@ public:
                                                     constructor_modifiers(NULL),
                                                     throws(NULL),
                                                     constructor_symbol(NULL),
-                                                    index(CycleChecker::OMEGA)
+                                                    index(ConstructorCycleChecker::OMEGA)
     {
         Ast::kind = Ast::CONSTRUCTOR;
         Ast::class_tag = Ast::NO_TAG;
@@ -2997,7 +2997,7 @@ public:
 //
 // Literal --> IntegerLiteral
 //           | LongLiteral
-//           | FloatingPointLiteral
+//           | FloatLiteral
 //           | DoubleLiteral
 //           | BooleanLiteral
 //           | StringLiteral
@@ -3070,23 +3070,23 @@ public:
 
 
 //
-// FloatingPointLiteral --> <FLOATING_POINT_LITERAL, Literal, value>
+// FloatLiteral --> <FLOAT_LITERAL, Literal, value>
 //
-class AstFloatingPointLiteral : public AstExpression
+class AstFloatLiteral : public AstExpression
 {
 public:
-    LexStream::TokenIndex floating_point_literal_token;
+    LexStream::TokenIndex float_literal_token;
 
-    AstFloatingPointLiteral(LexStream::TokenIndex token_) : floating_point_literal_token(token_)
+    AstFloatLiteral(LexStream::TokenIndex token_) : float_literal_token(token_)
     {
-        Ast::kind = Ast::FLOATING_POINT_LITERAL;
+        Ast::kind = Ast::FLOAT_LITERAL;
         Ast::class_tag = Ast::EXPRESSION;
         Ast::generated = 0;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
 
-    virtual ~AstFloatingPointLiteral();
+    virtual ~AstFloatLiteral();
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -3095,8 +3095,8 @@ public:
 
     virtual Ast *Clone(StoragePool *);
 
-    virtual LexStream::TokenIndex LeftToken()  { return floating_point_literal_token; }
-    virtual LexStream::TokenIndex RightToken() { return floating_point_literal_token; }
+    virtual LexStream::TokenIndex LeftToken()  { return float_literal_token; }
+    virtual LexStream::TokenIndex RightToken() { return float_literal_token; }
 };
 
 //
@@ -4637,9 +4637,9 @@ public:
         return new (Alloc(sizeof(AstLongLiteral))) AstLongLiteral(token);
     }
 
-    inline AstFloatingPointLiteral *NewFloatingPointLiteral(LexStream::TokenIndex token)
+    inline AstFloatLiteral *NewFloatLiteral(LexStream::TokenIndex token)
     {
-        return new (Alloc(sizeof(AstFloatingPointLiteral))) AstFloatingPointLiteral(token);
+        return new (Alloc(sizeof(AstFloatLiteral))) AstFloatLiteral(token);
     }
 
     inline AstDoubleLiteral *NewDoubleLiteral(LexStream::TokenIndex token)
@@ -5093,9 +5093,9 @@ public:
         return p;
     }
 
-    inline AstFloatingPointLiteral *GenFloatingPointLiteral(LexStream::TokenIndex token)
+    inline AstFloatLiteral *GenFloatLiteral(LexStream::TokenIndex token)
     {
-        AstFloatingPointLiteral *p = NewFloatingPointLiteral(token);
+        AstFloatLiteral *p = NewFloatLiteral(token);
         p -> generated = 1;
         return p;
     }
@@ -5646,10 +5646,10 @@ inline AstLongLiteral *Ast::LongLiteralCast()
         (kind == LONG_LITERAL ? this : NULL);
 }
 
-inline AstFloatingPointLiteral *Ast::FloatingPointLiteralCast()
+inline AstFloatLiteral *Ast::FloatLiteralCast()
 {
-    return DYNAMIC_CAST<AstFloatingPointLiteral *, Ast *>
-        (kind == FLOATING_POINT_LITERAL ? this : NULL);
+    return DYNAMIC_CAST<AstFloatLiteral *, Ast *>
+        (kind == FLOAT_LITERAL ? this : NULL);
 }
 
 inline AstDoubleLiteral *Ast::DoubleLiteralCast()

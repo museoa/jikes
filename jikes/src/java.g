@@ -6,7 +6,7 @@
 -- This software is subject to the terms of the IBM Jikes Compiler
 -- License Agreement available at the following URL:
 -- http://ibm.com/developerworks/opensource/jikes.
--- Copyright (C) 1996, 1999, 2000, 2001 International Business
+-- Copyright (C) 1996, 1999, 2000, 2001, 2002 International Business
 -- Machines Corporation and others.  All Rights Reserved.
 -- You must accept the terms of that agreement to use this software.
 
@@ -276,7 +276,7 @@ $Terminals
 
     IntegerLiteral
     LongLiteral
-    FloatingPointLiteral
+    FloatLiteral
     DoubleLiteral
     CharacterLiteral
     StringLiteral
@@ -400,7 +400,7 @@ $Rules
 // This software is subject to the terms of the IBM Jikes Compiler Open
 // Source License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 2001 International Business
+// Copyright (C) 1996, 1998, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -447,7 +447,7 @@ void Parser::InitRuleAction()
 // This software is subject to the terms of the IBM Jikes Compiler Open
 // Source License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 2001 International Business
+// Copyright (C) 1996, 1998, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -531,12 +531,12 @@ void Parser::Act$rule_number(void)
 }
 ./
 
-Literal ::= FloatingPointLiteral
+Literal ::= FloatLiteral
 \:$action:\
 /.$location
 void Parser::Act$rule_number(void)
 {
-    Sym(1) = ast_pool -> NewFloatingPointLiteral(Token(1));
+    Sym(1) = ast_pool -> NewFloatLiteral(Token(1));
 }
 ./
 

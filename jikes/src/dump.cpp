@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -74,7 +74,7 @@ static char*
       TK_while_STRING[] = "TK_while",
       TK_IntegerLiteral_STRING[] = "TK_IntegerLiteral",
       TK_LongLiteral_STRING[] = "TK_LongLiteral",
-      TK_FloatingPointLiteral_STRING[] = "TK_FloatingPointLiteral",
+      TK_FloatLiteral_STRING[] = "TK_FloatLiteral",
       TK_DoubleLiteral_STRING[] = "TK_DoubleLiteral",
       TK_CharacterLiteral_STRING[] = "TK_CharacterLiteral",
       TK_StringLiteral_STRING[] = "TK_StringLiteral",
@@ -185,7 +185,7 @@ static char *token_type(unsigned char kind)
     case TK_while: return TK_while_STRING;
     case TK_IntegerLiteral: return TK_IntegerLiteral_STRING;
     case TK_LongLiteral: return TK_LongLiteral_STRING;
-    case TK_FloatingPointLiteral: return TK_FloatingPointLiteral_STRING;
+    case TK_FloatLiteral: return TK_FloatLiteral_STRING;
     case TK_DoubleLiteral: return TK_DoubleLiteral_STRING;
     case TK_CharacterLiteral: return TK_CharacterLiteral_STRING;
     case TK_StringLiteral: return TK_StringLiteral_STRING;

@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -774,9 +774,9 @@ Ast *AstLongLiteral::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstFloatingPointLiteral::Clone(StoragePool *ast_pool)
+Ast *AstFloatLiteral::Clone(StoragePool *ast_pool)
 {
-    AstFloatingPointLiteral *clone = ast_pool -> GenFloatingPointLiteral(floating_point_literal_token);
+    AstFloatLiteral *clone = ast_pool -> GenFloatLiteral(float_literal_token);
 
     return clone;
 }
@@ -1642,10 +1642,10 @@ void AstLongLiteral::Print(LexStream& lex_stream)
             << endl;
 }
 
-void AstFloatingPointLiteral::Print(LexStream& lex_stream)
+void AstFloatLiteral::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (FloatingPointLiteral):  "
-            << lex_stream.NameString(floating_point_literal_token)
+    Coutput << "#" << id << " (FloatLiteral):  "
+            << lex_stream.NameString(float_literal_token)
             << endl;
 }
 
@@ -2235,7 +2235,7 @@ AstLongLiteral::~AstLongLiteral()
     assert(false);
 }
 
-AstFloatingPointLiteral::~AstFloatingPointLiteral()
+AstFloatLiteral::~AstFloatLiteral()
 {
     assert(false);
 }

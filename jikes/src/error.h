@@ -240,7 +240,6 @@ class SemanticError
         INVALID_LONG_VALUE,
         INVALID_FLOAT_VALUE,
         INVALID_DOUBLE_VALUE,
-        INVALID_STRING_VALUE,
         RETURN_STATEMENT_IN_INITIALIZER,
         ABRUPT_INITIALIZER,
         MISPLACED_RETURN_WITH_EXPRESSION,
@@ -545,7 +544,6 @@ private:
     static wchar_t *PrintINVALID_LONG_VALUE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINVALID_FLOAT_VALUE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINVALID_DOUBLE_VALUE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintINVALID_STRING_VALUE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintRETURN_STATEMENT_IN_INITIALIZER(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintABRUPT_INITIALIZER(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISPLACED_RETURN_WITH_EXPRESSION(ErrorInfo &, LexStream *, Control &);

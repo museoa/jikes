@@ -1,5 +1,35 @@
 2002-03-06  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/ast.h: 
+	* src/ast.cpp:
+	* src/dump.cpp:
+	* src/semantic.h:
+	* src/unparse.cpp:
+	* src/java.g: Rename FloatingPointLiteral to FloatLiteral.
+	* src/gencode.java: Add IsHexDigit, IsOctalDigit.
+	* src/javaact.cpp:
+	* src/javaact.h:
+	* src/javadcl.h:
+	* src/javadef.h:
+	* src/javaprs.h:
+	* src/javasym.h:
+	* src/code.h: Regenerate.
+	* src/scanner.h (CheckOctalLiteral): Delete.
+	* src/scanner.cpp (ClassifyNumericLiteral): Correctly tokenize
+	numeric literals according to JLS chapter 3.
+	(ClassifyCharLiteral, ClassifyStringLiteral): Detect bad escape
+	sequences during parsing, not syntax or semantic analysis.
+	* src/stream.h:
+	* src/stream.cpp:
+	* src/error.cpp: Fix error messages for parsing literals.
+	* src/error.h (INVALID_STRING_VALUE): Delete.
+	* src/lookup.cpp:
+	* src/expr.cpp: Update to changes in scanner.
+	(ProcessAmbiguousName): Remove assertion failure from bad
+	java.lang.
+
+2002-03-06  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/decl.cpp (ProcessTypeNames): Fix crash in compiling
 	java.lang with syntax errors.
 	* src/double.cpp (operator>, operator<): Quick optimization.

@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -46,8 +46,6 @@ const wchar_t *StreamError::getErrorMessage()
     {
     case StreamError::BAD_TOKEN:
         return L"Illegal token.";
-    case StreamError::BAD_OCTAL_CONSTANT:
-        return L"Octal constant contains invalid digit.";
     case StreamError::EMPTY_CHARACTER_CONSTANT:
         return L"Empty character constant.";
     case StreamError::UNTERMINATED_CHARACTER_CONSTANT:
@@ -58,10 +56,10 @@ const wchar_t *StreamError::getErrorMessage()
         return L"String constant not properly terminated.";
     case StreamError::INVALID_HEX_CONSTANT:
         return L"The prefix 0x must be followed by at least one hex digit.";
-    case StreamError::INVALID_FLOATING_CONSTANT_EXPONENT:
-        return L"floating-constant exponent has no digit.";
     case StreamError::INVALID_UNICODE_ESCAPE:
         return L"Invalid unicode escape character.";
+    case StreamError::INVALID_ESCAPE_SEQUENCE:
+        return L"Invalid escape sequence.";
     case StreamError::DEPRECATED_IDENTIFIER_ASSERT:
         return L"The use of \"assert\" as an identifier is deprecated, as it "
             L"is now a keyword.";

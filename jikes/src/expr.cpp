@@ -2499,31 +2499,43 @@ void Semantic::ProcessAmbiguousName(Ast *name)
             if (type -> Primitive())
             {
                 if (type == control.int_type)
-                     type = control.Integer();
+                    type = control.Integer();
                 else if (type == control.double_type)
-                     type = control.Double();
+                    type = control.Double();
                 else if (type == control.char_type)
-                     type = control.Character();
+                    type = control.Character();
                 else if (type == control.long_type)
-                     type = control.Long();
+                    type = control.Long();
                 else if (type == control.float_type)
-                     type = control.Float();
+                    type = control.Float();
                 else if (type == control.byte_type)
-                     type = control.Byte();
+                    type = control.Byte();
                 else if (type == control.short_type)
-                     type = control.Short();
+                    type = control.Short();
                 else if (type == control.boolean_type)
-                     type = control.Boolean();
+                    type = control.Boolean();
                 else // (type == control.void_type)
-                     type = control.Void();
+                    type = control.Void();
 
-                VariableSymbol *variable_symbol = type -> FindVariableSymbol(control.type_name_symbol);
-                assert(variable_symbol || (false && "faulty library"));
+                VariableSymbol *variable_symbol =
+                    type -> FindVariableSymbol(control.type_name_symbol);
 
-                if (! variable_symbol -> IsTyped())
-                    variable_symbol -> ProcessVariableSignature((Semantic *) this, field_access -> identifier_token);
-
-                field_access -> symbol = variable_symbol;
+                if (variable_symbol)
+                {
+                    if (! variable_symbol -> IsTyped())
+                        variable_symbol -> ProcessVariableSignature((Semantic *) this,
+                                                                    field_access -> identifier_token);
+                    field_access -> symbol = variable_symbol;
+                }
+                else
+                {
+                    ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
+                                   0,
+                                   0,
+                                   type -> ContainingPackage() -> PackageName(),
+                                   type -> ExternalName());
+                    field_access -> symbol = control.no_type;
+                }
             }
             else
             {
@@ -2749,18 +2761,9 @@ void Semantic::ProcessCharacterLiteral(Ast *expr)
 
     if (! literal -> value)
         control.int_pool.FindOrInsertChar(literal);
-    if (literal -> value == control.BadValue())
-    {
-        ReportSemError(SemanticError::INVALID_CHARACTER_VALUE,
-                       char_literal -> LeftToken(),
-                       char_literal -> RightToken());
-        char_literal -> symbol = control.no_type;
-    }
-    else
-    {
-        char_literal -> value = literal -> value;
-        char_literal -> symbol = control.char_type;
-    }
+    assert(literal -> value != control.BadValue());
+    char_literal -> value = literal -> value;
+    char_literal -> symbol = control.char_type;
 }
 
 
@@ -2810,11 +2813,12 @@ void Semantic::ProcessLongLiteral(Ast *expr)
 }
 
 
-void Semantic::ProcessFloatingPointLiteral(Ast *expr)
+void Semantic::ProcessFloatLiteral(Ast *expr)
 {
-    AstFloatingPointLiteral *float_literal = (AstFloatingPointLiteral *) expr;
+    AstFloatLiteral *float_literal = (AstFloatLiteral *) expr;
 
-    LiteralSymbol *literal = lex_stream -> LiteralSymbol(float_literal -> floating_point_literal_token);
+    LiteralSymbol *literal =
+        lex_stream -> LiteralSymbol(float_literal -> float_literal_token);
 
     if (! literal -> value)
         control.float_pool.FindOrInsertFloat(literal);
@@ -2837,7 +2841,8 @@ void Semantic::ProcessDoubleLiteral(Ast *expr)
 {
     AstDoubleLiteral *double_literal = (AstDoubleLiteral *) expr;
 
-    LiteralSymbol *literal = lex_stream -> LiteralSymbol(double_literal -> double_literal_token);
+    LiteralSymbol *literal =
+        lex_stream -> LiteralSymbol(double_literal -> double_literal_token);
 
     if (! literal -> value)
         control.double_pool.FindOrInsertDouble(literal);
@@ -2878,22 +2883,14 @@ void Semantic::ProcessStringLiteral(Ast *expr)
 {
     AstStringLiteral *string_literal = (AstStringLiteral *) expr;
 
-    LiteralSymbol *literal = lex_stream -> LiteralSymbol(string_literal -> string_literal_token);
+    LiteralSymbol *literal =
+        lex_stream -> LiteralSymbol(string_literal -> string_literal_token);
 
     if (! literal -> value)
         control.Utf8_pool.FindOrInsertString(literal);
-    if (literal -> value == control.BadValue())
-    {
-        ReportSemError(SemanticError::INVALID_STRING_VALUE,
-                       string_literal -> LeftToken(),
-                       string_literal -> RightToken());
-        string_literal -> symbol = control.no_type;
-    }
-    else
-    {
-        string_literal -> value = literal -> value;
-        string_literal -> symbol = control.String();
-    }
+    assert(literal -> value != control.BadValue());
+    string_literal -> value = literal -> value;
+    string_literal -> symbol = control.String();
 }
 
 
@@ -6911,28 +6908,32 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
     {
         if (left_type != right_type)
         {
-            if (CanAssignmentConvert(left_type, assignment_expression -> expression))
-                assignment_expression -> expression = ConvertToType(assignment_expression -> expression, left_type);
+            if (CanAssignmentConvert(left_type,
+                                     assignment_expression -> expression))
+            {
+                assignment_expression -> expression =
+                    ConvertToType(assignment_expression -> expression,
+                                  left_type);
+            }
             else if (assignment_expression -> expression -> IsConstant() &&
                      control.IsSimpleIntegerValueType(left_type) &&
-                     control.IsSimpleIntegerValueType(assignment_expression -> expression -> Type()))
+                     control.IsSimpleIntegerValueType(right_type))
             {
                 if (left_type == control.byte_type)
-                     ReportSemError(SemanticError::INVALID_BYTE_VALUE,
-                                    assignment_expression -> expression -> LeftToken(),
-                                    assignment_expression -> expression -> RightToken());
+                    ReportSemError(SemanticError::INVALID_BYTE_VALUE,
+                                   assignment_expression -> expression -> LeftToken(),
+                                   assignment_expression -> expression -> RightToken());
                 else if (left_type == control.short_type)
-                     ReportSemError(SemanticError::INVALID_SHORT_VALUE,
-                                    assignment_expression -> expression -> LeftToken(),
-                                    assignment_expression -> expression -> RightToken());
-                else if (left_type == control.int_type)
-                     ReportSemError(SemanticError::INVALID_INT_VALUE,
-                                    assignment_expression -> expression -> LeftToken(),
-                                    assignment_expression -> expression -> RightToken());
-                else // assert(left_type == control.char_type);
-                     ReportSemError(SemanticError::INVALID_CHARACTER_VALUE,
-                                    assignment_expression -> expression -> LeftToken(),
-                                    assignment_expression -> expression -> RightToken());
+                    ReportSemError(SemanticError::INVALID_SHORT_VALUE,
+                                   assignment_expression -> expression -> LeftToken(),
+                                   assignment_expression -> expression -> RightToken());
+                else
+                {
+                    assert(left_type == control.char_type);
+                    ReportSemError(SemanticError::INVALID_CHARACTER_VALUE,
+                                   assignment_expression -> expression -> LeftToken(),
+                                   assignment_expression -> expression -> RightToken());
+                }
             }
             else
             {

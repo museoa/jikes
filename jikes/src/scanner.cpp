@@ -129,14 +129,14 @@ Scanner::Scanner(Control &control_) : control(control_),
 
 
 //
-// Associate a lexical stream with this file
+// Associate a lexical stream with this file.
 //
 void Scanner::Initialize(FileSymbol *file_symbol)
 {
     lex = new LexStream(control, file_symbol);
     lex -> Reset();
 
-    current_token_index = lex -> GetNextToken(0); // Get 0th token !
+    current_token_index = lex -> GetNextToken(0); // Get 0th token.
     current_token = &(lex -> token_stream[current_token_index]);
     current_token -> SetKind(0);
 
@@ -153,14 +153,13 @@ void Scanner::Initialize(FileSymbol *file_symbol)
     }
 #endif // JIKES_DEBUG
 
-    lex -> line_location.Next() = 0; // mark starting location of line # 0
+    lex -> line_location.Next() = 0; // Mark starting location of line # 0
 }
 
 
 //
-// This is one of the main entry point for the Java lexical analyser.
-// Its input is the name of a regular text file. Its output is a stream
-// of tokens.
+// This is one of the main entry point for the Java lexical analyser. Its
+// input is the name of a regular text file. Its output is a stream of tokens.
 //
 void Scanner::SetUp(FileSymbol *file_symbol)
 {
@@ -171,9 +170,8 @@ void Scanner::SetUp(FileSymbol *file_symbol)
 
 
 //
-// This is one of the main entry point for the Java lexical analyser.
-// Its input is the name of a regular text file. Its output is a stream
-// of tokens.
+// This is one of the main entry point for the Java lexical analyser. Its
+// input is the name of a regular text file. Its output is a stream of tokens.
 //
 void Scanner::Scan(FileSymbol *file_symbol)
 {
@@ -188,9 +186,6 @@ void Scanner::Scan(FileSymbol *file_symbol)
 
         lex -> CompressSpace();
 
-        //
-        //
-        //
         if (control.option.dump_errors)
         {
             lex -> SortMessages();
@@ -218,7 +213,7 @@ void Scanner::Scan()
 
     //
     // CURSOR is assumed to point to the next character to be scanned.
-    // Using CURSOR,we jump to the proper classification function
+    // Using CURSOR, we jump to the proper classification function
     // which scans and classifies the token and returns the location of
     // the character immediately following it.
     //
@@ -349,7 +344,7 @@ void Scanner::ScanStarComment()
                         cursor[8] == U_e &&
                         cursor[9] == U_d)
                     {
-                        // mark the token that precedes this comment
+                        // Mark the token that precedes this comment.
                         current_token -> SetDeprecated();
                     }
                 }
@@ -360,7 +355,7 @@ void Scanner::ScanStarComment()
     {
         while (cursor != input_buffer_tail)
         {
-            if (*cursor == U_STAR) // Potential comment closer
+            if (*cursor == U_STAR) // Potential comment closer.
             {
                 while (*++cursor == U_STAR)
                     ;
@@ -377,7 +372,7 @@ void Scanner::ScanStarComment()
                     return;
                 }
             }
-            if (Code::IsNewline(*cursor++)) // Record new line
+            if (Code::IsNewline(*cursor++)) // Record new line.
             {
                 lex -> line_location.Next() = cursor - lex -> InputBuffer();
             }
@@ -405,7 +400,9 @@ void Scanner::ScanStarComment()
 
 
 //
-//
+// CURSOR points to the starting position of a comment.  Scan the
+// the comment and return the location of the character immediately
+// following it. CURSOR is advanced accordingly.
 //
 void Scanner::ScanSlashComment()
 {
@@ -441,7 +438,7 @@ inline void Scanner::SkipSpaces()
     {
         while (Code::IsSpaceButNotNewline(*cursor))
             cursor++;
-        while (Code::IsNewline(*cursor))        // starting a new line?
+        while (Code::IsNewline(*cursor))  // Starting a new line?
         {
             cursor++;
             lex -> line_location.Next() = cursor - lex -> InputBuffer();
@@ -461,18 +458,10 @@ inline void Scanner::SkipSpaces()
 }
 
 
-/**********************************************************************/
-/**********************************************************************/
-/**                                                                  **/
-/**                           scan_keyword(i):                       **/
-/**                                                                  **/
-/**********************************************************************/
-/**********************************************************************/
-/**                                                                  **/
-/** Scan an identifier of length I and determine if it is a keyword. **/
-/**                                                                  **/
-/**********************************************************************/
-/**********************************************************************/
+//
+// scan_keyword(i):
+// Scan an identifier of length I and determine if it is a keyword.
+//
 int Scanner::ScanKeyword0(wchar_t *p1)
 {
     return TK_Identifier;
@@ -753,14 +742,15 @@ int Scanner::ScanKeyword9(wchar_t *p1)
 
 int Scanner::ScanKeyword10(wchar_t *p1)
 {
-    if (p1[0] == U_i && p1[1] == U_m && p1[2] == U_p &&
-        p1[3] == U_l && p1[4] == U_e && p1[5] == U_m &&
-        p1[6] == U_e && p1[7] == U_n && p1[8] == U_t && p1[9] == U_s)
-        return TK_implements;
-    else if (p1[0] == U_i && p1[1] == U_n && p1[2] == U_s &&
-             p1[3] == U_t && p1[4] == U_a && p1[5] == U_n &&
-             p1[6] == U_c && p1[7] == U_e && p1[8] == U_o && p1[9] == U_f)
-        return TK_instanceof;
+    if (p1[0] == U_i)
+        if (p1[1] == U_m && p1[2] == U_p && p1[3] == U_l &&
+            p1[4] == U_e && p1[5] == U_m && p1[6] == U_e &&
+            p1[7] == U_n && p1[8] == U_t && p1[9] == U_s)
+            return TK_implements;
+        else if (p1[1] == U_n && p1[2] == U_s && p1[3] == U_t &&
+                 p1[4] == U_a && p1[5] == U_n && p1[6] == U_c &&
+                 p1[7] == U_e && p1[8] == U_o && p1[9] == U_f)
+            return TK_instanceof;
 
     return TK_Identifier;
 }
@@ -776,158 +766,184 @@ int Scanner::ScanKeyword12(wchar_t *p1)
     return TK_Identifier;
 }
 
-/**********************************************************************/
-/*                           CHECK_OctalLiteral:                      */
-/**********************************************************************/
-/* Verify that an octal token is legal. If not, issue a message.      */
-/**********************************************************************/
-inline void Scanner::CheckOctalLiteral(wchar_t *cursor, wchar_t *tail)
-{
-    if (cursor[0] == U_0 && cursor[1] != U_x && cursor[1] != U_X)
-    {
-        wchar_t *p;
-        for (p = cursor + 1; p < tail; p++)
-        {
-            if (*p == U_8 || *p == U_9)
-                break;
-        }
 
-        if (p < tail)
-            lex -> bad_tokens.Next().Initialize(StreamError::BAD_OCTAL_CONSTANT,
-                                                (unsigned) (cursor - lex -> InputBuffer()),
-                                                (unsigned) (tail - lex -> InputBuffer()) - 1,
-                                                lex);
-    }
-}
-
-
-/**********************************************************************/
-/*                      ClassifyCharLiteral:                          */
-/**********************************************************************/
-/* This procedure is invoked to scan a character literal or a large   */
-/* character literal. A large character literal is preceded by the    */
-/* letter L (capital L). After the character literal has been scanned */
-/* and classified, it is entered in the table without its closing     */
-/* quote but with the opening quote (preceded by L if it's a large    */
-/* character literal).                                                */
-/**********************************************************************/
+//
+// This procedure is invoked to scan a character literal. After the character
+// literal has been scanned and classified, it is entered in the table
+// with both quotes stripped.
+//
 void Scanner::ClassifyCharLiteral()
 {
     current_token -> SetKind(TK_CharacterLiteral);
 
-    wchar_t *ptr = cursor + 1;
+    wchar_t *ptr = ++cursor;
 
-    while (*ptr != U_SINGLE_QUOTE && (! Code::IsNewline(*ptr)))
+    if (*ptr == U_SINGLE_QUOTE)
     {
-        if (*ptr++ == U_BACKSLASH)   // In any case, skip the character
-        {                            // If it was a backslash, and next char
-            if (! Code::IsNewline(*ptr)) // is not EOF, skip the backslash.
-                ptr++;
+        lex -> bad_tokens.Next().
+            Initialize(StreamError::EMPTY_CHARACTER_CONSTANT,
+                       current_token -> Location(),
+                       (unsigned) (ptr - lex -> InputBuffer()),
+                       lex);
+        current_token -> SetKind(0);
+    }
+    else if (*ptr == U_BACKSLASH)
+    {
+        switch (*++ptr)
+        {
+        case U_b:
+        case U_f:
+        case U_n:
+        case U_r:
+        case U_t:
+        case U_SINGLE_QUOTE:
+        case U_DOUBLE_QUOTE:
+        case U_BACKSLASH:
+            break;
+        case U_0:
+        case U_1:
+        case U_2:
+        case U_3:
+            if (! Code::IsOctalDigit(ptr[1]))
+                break;
+            ptr++;
+            // fallthrough
+        case U_4:
+        case U_5:
+        case U_6:
+        case U_7:
+            if (! Code::IsOctalDigit(ptr[1]))
+                break;
+            ptr++;
+            break;
+        case U_u:
+            //
+            // By now, Unicode escapes have already been flattened; and it is
+            // illegal to try it twice (such as '\u005cu0000').
+            //
+        default:
+            lex -> bad_tokens.Next().
+                Initialize(StreamError::INVALID_ESCAPE_SEQUENCE,
+                           (unsigned) (cursor - lex -> InputBuffer()),
+                           (unsigned) (ptr - lex -> InputBuffer()),
+                           lex);
+            current_token -> SetKind(0);
         }
     }
 
-    int len = ptr - cursor;
-    if (*ptr == U_SINGLE_QUOTE)
+    if (Code::IsNewline(*ptr))
     {
-        if (len == 1)
-            lex -> bad_tokens.Next().Initialize(StreamError::EMPTY_CHARACTER_CONSTANT,
-                                                current_token -> Location(),
-                                                (unsigned) (ptr - lex -> InputBuffer()),
-                                                lex);
-        ptr++;
-    }
-    else
-    {
-        if (len == 1) /* Definitely, an isolated quote */
+        if (current_token -> Kind())
+        {
+            lex -> bad_tokens.Next().
+                Initialize(StreamError::UNTERMINATED_CHARACTER_CONSTANT,
+                           current_token -> Location(),
+                           (unsigned) (ptr - lex -> InputBuffer()),
+                           lex);
             current_token -> SetKind(0);
-        lex -> bad_tokens.Next().Initialize(StreamError::UNTERMINATED_CHARACTER_CONSTANT,
-                                            current_token -> Location(),
-                                            (unsigned) (ptr - lex -> InputBuffer()) - 1,
-                                            lex);
+        }
+        lex -> line_location.Next() = ptr - lex -> InputBuffer() + 1;
+    }
+    else if (*++ptr != U_SINGLE_QUOTE)
+    {
+        ptr--;
+        if (current_token -> Kind())
+        {
+            lex -> bad_tokens.Next().
+                Initialize(StreamError::UNTERMINATED_CHARACTER_CONSTANT,
+                           current_token -> Location(),
+                           (unsigned) (ptr - lex -> InputBuffer()),
+                           lex);
+            current_token -> SetKind(0);
+        }
     }
 
     current_token ->
         SetSymbol(control.char_table.FindOrInsertLiteral(cursor,
                                                          ptr - cursor));
 
-    cursor = ptr;
+    cursor = ptr + 1;
 }
 
 
-/**********************************************************************/
-/*                     CLASSIFY_STRINGLITERAL:                        */
-/**********************************************************************/
-/* This procedure is invoked to scan a string literal or a large      */
-/* string literal. A large string literal is preceded by the letter   */
-/* L (capital L). After the string literal has been scanned and       */
-/* classified, it is entered in the table without its closing double  */
-/* quote but with the opening quote (preceded by L if it's a large    */
-/* string literal).                                                   */
-/**********************************************************************/
+//
+// This procedure is invoked to scan a string literal. After the string
+// literal has been scanned and classified, it is entered in the table with
+// both quotes stripped.
+//
 void Scanner::ClassifyStringLiteral()
 {
     current_token -> SetKind(TK_StringLiteral);
 
-    wchar_t *ptr = cursor + 1;
+    wchar_t *ptr = ++cursor;
 
-    while (*ptr != U_DOUBLE_QUOTE && (! Code::IsNewline(*ptr)))
+    while (*ptr != U_DOUBLE_QUOTE && ! Code::IsNewline(*ptr))
     {
-        if (*ptr++ == U_BACKSLASH)   // In any case, skip the character
-        {                            // If it was a backslash, and next char
-            if (! Code::IsNewline(*ptr)) // is not EOF, skip the backslash.
-                ptr++;
+        if (*ptr++ == U_BACKSLASH)
+        {
+            switch (*ptr++)
+            {
+            case U_b:
+            case U_f:
+            case U_n:
+            case U_r:
+            case U_t:
+            case U_SINGLE_QUOTE:
+            case U_DOUBLE_QUOTE:
+            case U_BACKSLASH:
+            case U_0:
+            case U_1:
+            case U_2:
+            case U_3:
+            case U_4:
+            case U_5:
+            case U_6:
+            case U_7:
+                break;
+            case U_u:
+                //
+                // By now, Unicode escapes have already been flattened; and it
+                // is illegal to try it twice (such as "\u005cu0000").
+                //
+            default:
+                lex -> bad_tokens.Next().
+                    Initialize(StreamError::INVALID_ESCAPE_SEQUENCE,
+                               (unsigned) (ptr - lex -> InputBuffer()) - 1,
+                               (unsigned) (ptr - lex -> InputBuffer()),
+                               lex);
+                current_token -> SetKind(0);
+                if (Code::IsNewline(ptr[-1]))
+                    ptr--; // This will break us out of the loop.
+            }
         }
     }
 
-    if (*ptr == U_DOUBLE_QUOTE)
-        ptr++;
-    else
+    if (Code::IsNewline(*ptr))
     {
-        if ((ptr - cursor) == 1) // Definitely, an isolated double quote.
-            current_token -> SetKind(0);
-        lex -> bad_tokens.Next().Initialize(StreamError::UNTERMINATED_STRING_CONSTANT,
-                                            current_token -> Location(),
-                                            (unsigned) (ptr - lex -> InputBuffer()) - 1,
-                                            lex);
+        if (current_token -> Kind())
+            lex -> bad_tokens.Next().
+                Initialize(StreamError::UNTERMINATED_STRING_CONSTANT,
+                           current_token -> Location(),
+                           (unsigned) (ptr - lex -> InputBuffer()),
+                           lex);
+        current_token -> SetKind(0);
+        lex -> line_location.Next() = ptr - lex -> InputBuffer() + 1;
     }
 
     current_token ->
         SetSymbol(control.string_table.FindOrInsertLiteral(cursor,
                                                            ptr - cursor));
 
-    cursor = ptr;
+    cursor = ptr + 1;
 }
 
 
-/**********************************************************************/
-/*                     CLASSIFYIDORKEYWORD:                        */
-/**********************************************************************/
-/* This procedure is invoked when CURSOR points to one of the         */
-/* following characters:                                              */
-/*                                                                    */
-/*      'a'                                                           */
-/*      'b'                                                           */
-/*      'c'                                                           */
-/*      'd'                                                           */
-/*      'e'                                                           */
-/*      'f'                                                           */
-/*      'g'                                                           */
-/*      'i'                                                           */
-/*      'l'                                                           */
-/*      'n'                                                           */
-/*      'o'                                                           */
-/*      'p'                                                           */
-/*      'r'                                                           */
-/*      's'                                                           */
-/*      't'                                                           */
-/*      'v'                                                           */
-/*      'w'                                                           */
-/*                                                                    */
-/* It scans the identifier and checks whether or not it is a keyword. */
-/*                                                                    */
-/* NOTE that the use of that check is a time-optimization that is not */
-/* required for correctness.                                          */
-/**********************************************************************/
+//
+// This procedure is invoked when CURSOR points to a letter which starts a
+// keyword. It scans the identifier and checks whether or not it is a keyword.
+// Note that the use of that check is a time-optimization that is not
+// required for correctness.
+//
 void Scanner::ClassifyIdOrKeyword()
 {
     wchar_t *ptr = cursor + 1;
@@ -988,13 +1004,10 @@ void Scanner::ClassifyIdOrKeyword()
     cursor = ptr;
 }
 
-/**********************************************************************/
-/*                             CLASSIFY_ID:                           */
-/**********************************************************************/
-/* This procedure is invoked when CURSOR points to an alphabetic      */
-/* character other than the ones identified above or '$' or '_'.      */
-/* A token that starts with one of these letters is an identifier.    */
-/**********************************************************************/
+//
+// This procedure is invoked when CURSOR points to an identifier start
+// which cannot start a keyword.
+//
 void Scanner::ClassifyId()
 {
     bool has_dollar = (*cursor == U_DS);
@@ -1033,120 +1046,117 @@ void Scanner::ClassifyId()
 }
 
 
-/**********************************************************************/
-/*                     CLASSIFY_NUMERICLITERAL:                       */
-/**********************************************************************/
-/* This procedure is invoked when CURSOR points directly to one of    */
-/* the characters below or to a '.' followed by one of the characters */
-/* below:                                                             */
-/*                                                                    */
-/*        case '0': case '1': case '2': case '3': case '4':           */
-/*        case '5': case '6': case '7': case '8': case '9':           */
-/*                                                                    */
-/* Such a token is classified as a numeric literal:                   */
-/*                                                                    */
-/*   TK_LongLiteral, TK_IntegerLiteral,                               */
-/*   TK_DOUBLELiteral, TK_FloatingPointLiteral                        */
-/**********************************************************************/
+//
+// This procedure is invoked when CURSOR points directly to '0' - '9' or '.'.
+// Such a token is classified as a numeric literal: TK_LongLiteral,
+// TK_IntegerLiteral, TK_DoubleLiteral, or TK_FloatLiteral.
+//
 void Scanner::ClassifyNumericLiteral()
 {
-    /******************************************************************/
-    /* Scan the initial sequence of digits if any.                    */
-    /******************************************************************/
-    wchar_t *ptr;
-    for (ptr = cursor; Code::IsDigit(*ptr); ptr++)
-        ;
+    //
+    // Scan the initial sequence of digits, if any.
+    //
+    wchar_t *ptr = cursor - 1;
+    while (Code::IsDigit(*++ptr));
 
-    /******************************************************************/
-    /* We now take an initial crack at classifying the numeric token. */
-    /* we have four cases to consider.                                */
-    /*                                                                */
-    /* 1) If the initial (perhaps an empty) sequence of digits is     */
-    /*    followed by a period ('.'), we have a floating-constant.    */
-    /*    We scan the sequence of digits (if any) that follows the    */
-    /*    period.                                                     */
-    /*                                                                */
-    /* 2) Otherwise, we hava an integer literal.                      */
-    /*                                                                */
-    /*    If the initial (can't be empty) sequence of digits start    */
-    /*    with "0x" or "0X" we have a hexadecimal constant:           */
-    /*    continue scanning all hex-digits that follow the 'x'.       */
-    /******************************************************************/
+    //
+    // We now take an initial crack at classifying the numeric token.
+    // We have two initial cases to consider:
+    //
+    // 1) If the initial (perhaps empty) sequence of digits is followed by
+    //    '.', we have a floating-point constant. We scan the sequence of
+    //    digits (if any) that follows the period.
+    // 2) Otherwise, we have an integer literal. If the initial (non-empty)
+    //    sequence of digits start with "0x" or "0X" we have a hexadecimal
+    //    constant: continue scanning all hex digits that follow the 'x'. If
+    //    the digits start with "0", we have an octal constant: continue
+    //    scanning only octal digits. Note that a non-octal digit starts a
+    //    new numeric literal, although this will cause a syntax error
+    //    downstream. In other words, 019 is parsed as the literal 01 followed
+    //    by the literal 9.
+    //
     if (*ptr == U_DOT)
     {
         current_token -> SetKind(TK_DoubleLiteral);
-        for (ptr++; Code::IsDigit(*ptr); ptr++)
-            ;
+        while (Code::IsDigit(*++ptr));
     }
     else
     {
         current_token -> SetKind(TK_IntegerLiteral);
-        if (*cursor == U_0 && (cursor[1] == U_x || cursor[1] == U_X))
+        if (*cursor == U_0)
         {
-            ptr = cursor + 2;
-            if (isxdigit(*ptr))
+            if (cursor[1] == U_x || cursor[1] == U_X)
             {
-                for (ptr++; isxdigit(*ptr); ptr++)
-                    ;
+                ptr = cursor + 2;
+                // Don't us isxdigit, it's not platform independent.
+                if (Code::IsHexDigit(*ptr))
+                {
+                    while (Code::IsHexDigit(*++ptr));
+                }
+                else lex -> bad_tokens.Next().
+                         Initialize(StreamError::INVALID_HEX_CONSTANT,
+                                    current_token -> Location(),
+                                    (unsigned) (ptr - lex -> InputBuffer()),
+                                    lex);
             }
-            else lex -> bad_tokens.Next().Initialize(StreamError::INVALID_HEX_CONSTANT,
-                                                     current_token -> Location(),
-                                                     (unsigned) (ptr - lex -> InputBuffer()) - 1,
-                                                     lex);
+            else if (! (((*ptr == U_e || *ptr == U_E) &&
+                         (Code::IsDigit(ptr[1]) ||
+                          ((ptr[1] == U_PLUS || ptr[1] == U_MINUS) &&
+                           Code::IsDigit(ptr[2])))) ||
+                        *ptr == U_d || *ptr == U_D ||
+                        *ptr == U_f || *ptr == U_F))
+            {
+                ptr = cursor;
+                while (Code::IsOctalDigit(*++ptr));
+            }
         }
     }
 
-    /******************************************************************/
-    /* If the initial numeric token is followed by an exponent, then  */
-    /* it is a floating-constant. If that's the case, the literal is  */
-    /* reclassified ant the exponent is scanned.                      */
-    /*                                                                */
-    /* NOTE that as 'E' and 'e' are legitimate hexadecimal digits, we */
-    /* don't have to worry about a hexadecimal constant being used as */
-    /* the prefix of a floating-constant. E.g., 0x123e12 is tokenized */
-    /* as a single hexadecimal digit. The string 0x123e+12 gets       */
-    /* broken down as the hex number 0x123e, the operator '+' and the */
-    /* decimal constant 12.                                           */
-    /******************************************************************/
-    if (*ptr == U_e || *ptr == U_E)
+    //
+    // If the initial numeric token is followed by an exponent, then it is a
+    // floating-point constant. If that's the case, the literal is
+    // reclassified and the exponent is scanned. Note that as 'E' and 'e' are
+    // legitimate hexadecimal digits, we don't have to worry about a
+    // hexadecimal constant being used as the prefix of a floating-point
+    // constant. An exponent overrides an octal literal, as do the float and
+    // double suffixes. However, a missing exponent results in splitting the
+    // token (although this will always cause a downstream syntax error).
+    //
+    // For example, 0x123e12 is tokenized as a single hexadecimal digit, while
+    // the string 0x123e+12 gets broken down as the hex number 0x123e, the
+    // operator '+', and the decimal constant 12. Meanwhile, 019e+0 and 019d
+    // are both tokenized as a single floating-point constant 19.0. But 1e+
+    // is parsed as the integer literal 1, the identifier e, and the operator
+    // '+', which causes a syntax error downstream.
+    //
+    if ((*ptr == U_e || *ptr == U_E) &&
+        (Code::IsDigit(ptr[1]) ||
+         ((ptr[1] == U_PLUS || ptr[1] == U_MINUS) &&
+          Code::IsDigit(ptr[2]))))
     {
         current_token -> SetKind(TK_DoubleLiteral);
-
-        ptr++; /* Skip the 'e' or 'E' */
-
+        ptr++; // Skip the 'e' or 'E'.
         if (*ptr == U_PLUS || *ptr == U_MINUS)
-            ptr++; /* Skip the '+' or '-' */
-
-        if (Code::IsDigit(*ptr))
-        {
-            for (ptr++; Code::IsDigit(*ptr); ptr++)
-                ;
-        }
-        else lex -> bad_tokens.Next().Initialize(StreamError::INVALID_FLOATING_CONSTANT_EXPONENT,
-                                                 current_token -> Location(),
-                                                 (unsigned) (ptr - lex -> InputBuffer()) - 1,
-                                                 lex);
+            ptr++; // Skip the '+' or '-'.
+        while (Code::IsDigit(*++ptr));
     }
 
-    /******************************************************************/
-    /* A numeric constant may be suffixed by a letter that further    */
-    /* qualifies what kind of a constant it is. We check for these    */
-    /* suffixes here.                                                 */
-    /******************************************************************/
+    //
+    // A numeric constant may be suffixed by a letter that further qualifies
+    // what kind of a constant it is. We check for these suffixes here.
+    //
     int len;
 
     if (*ptr == U_f || *ptr == U_F)
     {
-        ptr++;
-        len = ptr - cursor;
+        len = ++ptr - cursor;
         current_token ->
             SetSymbol(control.float_table.FindOrInsertLiteral(cursor, len));
-        current_token -> SetKind(TK_FloatingPointLiteral);
+        current_token -> SetKind(TK_FloatLiteral);
     }
     else if (*ptr == U_d || *ptr == U_D)
     {
-        ptr++;
-        len = ptr - cursor;
+        len = ++ptr - cursor;
         current_token ->
             SetSymbol(control.double_table.FindOrInsertLiteral(cursor, len));
         current_token -> SetKind(TK_DoubleLiteral);
@@ -1155,8 +1165,7 @@ void Scanner::ClassifyNumericLiteral()
     {
         if (*ptr == U_l || *ptr == U_L)
         {
-            ptr++; /* Skip the 'l' or 'L' */
-            len = ptr - cursor;
+            len = ++ptr - cursor;
             current_token ->
                 SetSymbol(control.long_table.FindOrInsertLiteral(cursor, len));
             current_token -> SetKind(TK_LongLiteral);
@@ -1167,8 +1176,6 @@ void Scanner::ClassifyNumericLiteral()
             current_token ->
                 SetSymbol(control.int_table.FindOrInsertLiteral(cursor, len));
         }
-
-        CheckOctalLiteral(cursor, ptr);
     }
     else
     {
@@ -1178,22 +1185,10 @@ void Scanner::ClassifyNumericLiteral()
         current_token -> SetKind(TK_DoubleLiteral);
     }
 
-    /******************************************************************/
-    /* We now have scanned the complete token and it has been properly*/
-    /* classified. CURSOR points to its first character in the buffer */
-    /* and PTR points to the character immediately following it. We   */
-    /* insert the name into the name table and if the token is an     */
-    /* octal constant, we check that all the digits in its name are   */
-    /* in the range 0-7.                                              */
-    /******************************************************************/
-
     cursor = ptr;
 }
 
 
-/**********************************************************************/
-/*                         CLASSIFY_COLON:                            */
-/**********************************************************************/
 void Scanner::ClassifyColon()
 {
     current_token -> SetKind(TK_COLON);
@@ -1202,9 +1197,6 @@ void Scanner::ClassifyColon()
 }
 
 
-/**********************************************************************/
-/*                          CLASSIFY_PLUS:                            */
-/**********************************************************************/
 void Scanner::ClassifyPlus()
 {
     cursor++;
@@ -1223,9 +1215,6 @@ void Scanner::ClassifyPlus()
 }
 
 
-/**********************************************************************/
-/*                         CLASSIFY_MINUS:                            */
-/**********************************************************************/
 void Scanner::ClassifyMinus()
 {
     cursor++;
@@ -1244,9 +1233,6 @@ void Scanner::ClassifyMinus()
 }
 
 
-/**********************************************************************/
-/*                          CLASSIFY_STAR:                            */
-/**********************************************************************/
 void Scanner::ClassifyStar()
 {
     cursor++;
@@ -1260,9 +1246,6 @@ void Scanner::ClassifyStar()
 }
 
 
-/**********************************************************************/
-/*                         CLASSIFY_SLASH:                            */
-/**********************************************************************/
 void Scanner::ClassifySlash()
 {
     cursor++;
@@ -1276,9 +1259,6 @@ void Scanner::ClassifySlash()
 }
 
 
-/**********************************************************************/
-/*                         CLASSIFY_LESS:                             */
-/**********************************************************************/
 void Scanner::ClassifyLess()
 {
     cursor++;
@@ -1303,9 +1283,6 @@ void Scanner::ClassifyLess()
 }
 
 
-/**********************************************************************/
-/*                        CLASSIFY_GREATER:                           */
-/**********************************************************************/
 void Scanner::ClassifyGreater()
 {
     cursor++;
@@ -1341,9 +1318,6 @@ void Scanner::ClassifyGreater()
 }
 
 
-/**********************************************************************/
-/*                          CLASSIFY_AND:                             */
-/**********************************************************************/
 void Scanner::ClassifyAnd()
 {
     cursor++;
@@ -1362,9 +1336,6 @@ void Scanner::ClassifyAnd()
 }
 
 
-/**********************************************************************/
-/*                          CLASSIFY_OR:                              */
-/**********************************************************************/
 void Scanner::ClassifyOr()
 {
     cursor++;
@@ -1383,9 +1354,6 @@ void Scanner::ClassifyOr()
 }
 
 
-/**********************************************************************/
-/*                          CLASSIFY_XOR:                             */
-/**********************************************************************/
 void Scanner::ClassifyXor()
 {
     cursor++;
@@ -1399,9 +1367,6 @@ void Scanner::ClassifyXor()
 }
 
 
-/**********************************************************************/
-/*                          CLASSIFY_NOT:                             */
-/**********************************************************************/
 void Scanner::ClassifyNot()
 {
     cursor++;
@@ -1415,9 +1380,6 @@ void Scanner::ClassifyNot()
 }
 
 
-/**********************************************************************/
-/*                         CLASSIFY_EQUAL:                            */
-/**********************************************************************/
 void Scanner::ClassifyEqual()
 {
     cursor++;
@@ -1431,9 +1393,6 @@ void Scanner::ClassifyEqual()
 }
 
 
-/**********************************************************************/
-/*                          CLASSIFY_MOD:                             */
-/**********************************************************************/
 void Scanner::ClassifyMod()
 {
     cursor++;
@@ -1447,9 +1406,6 @@ void Scanner::ClassifyMod()
 }
 
 
-/**********************************************************************/
-/*                         CLASSIFY_PERIOD:                           */
-/**********************************************************************/
 void Scanner::ClassifyPeriod()
 {
     if (Code::IsDigit(cursor[1])) // Is period immediately followed by digit?
@@ -1463,9 +1419,6 @@ void Scanner::ClassifyPeriod()
 }
 
 
-/**********************************************************************/
-/*                         CLASSIFY_SEMICOLON:                        */
-/**********************************************************************/
 void Scanner::ClassifySemicolon()
 {
     current_token -> SetKind(TK_SEMICOLON);
@@ -1474,9 +1427,6 @@ void Scanner::ClassifySemicolon()
 }
 
 
-/**********************************************************************/
-/*                           CLASSIFY_COMMA:                          */
-/**********************************************************************/
 void Scanner::ClassifyComma()
 {
     current_token -> SetKind(TK_COMMA);
@@ -1485,9 +1435,6 @@ void Scanner::ClassifyComma()
 }
 
 
-/**********************************************************************/
-/*                           CLASSIFY_LBRACE:                         */
-/**********************************************************************/
 void Scanner::ClassifyLbrace()
 {
     //
@@ -1503,9 +1450,6 @@ void Scanner::ClassifyLbrace()
 }
 
 
-/**********************************************************************/
-/*                           CLASSIFY_RBRACE:                         */
-/**********************************************************************/
 void Scanner::ClassifyRbrace()
 {
     //
@@ -1526,9 +1470,6 @@ void Scanner::ClassifyRbrace()
 }
 
 
-/**********************************************************************/
-/*                           CLASSIFY_LPAREN:                         */
-/**********************************************************************/
 void Scanner::ClassifyLparen()
 {
     current_token -> SetKind(TK_LPAREN);
@@ -1537,9 +1478,6 @@ void Scanner::ClassifyLparen()
 }
 
 
-/**********************************************************************/
-/*                           CLASSIFY_RPAREN:                         */
-/**********************************************************************/
 void Scanner::ClassifyRparen()
 {
     current_token -> SetKind(TK_RPAREN);
@@ -1548,9 +1486,6 @@ void Scanner::ClassifyRparen()
 }
 
 
-/**********************************************************************/
-/*                          CLASSIFY_LBRACKET:                        */
-/**********************************************************************/
 void Scanner::ClassifyLbracket()
 {
     current_token -> SetKind(TK_LBRACKET);
@@ -1559,9 +1494,6 @@ void Scanner::ClassifyLbracket()
 }
 
 
-/**********************************************************************/
-/*                          CLASSIFY_RBRACKET:                        */
-/**********************************************************************/
 void Scanner::ClassifyRbracket()
 {
     current_token -> SetKind(TK_RBRACKET);
@@ -1570,9 +1502,6 @@ void Scanner::ClassifyRbracket()
 }
 
 
-/**********************************************************************/
-/*                         CLASSIFY_COMPLEMENT:                       */
-/**********************************************************************/
 void Scanner::ClassifyComplement()
 {
     current_token -> SetKind(TK_TWIDDLE);
@@ -1581,9 +1510,9 @@ void Scanner::ClassifyComplement()
 }
 
 
-/**********************************************************************/
-/*                        CLASSIFY_BAD_TOKEN:                         */
-/**********************************************************************/
+//
+// Anything that doesn't fit above.
+//
 void Scanner::ClassifyBadToken()
 {
     // Not the terminating character?
@@ -1603,10 +1532,6 @@ void Scanner::ClassifyBadToken()
 }
 
 
-/**********************************************************************/
-/*                        CLASSIFY_QUESTION:                          */
-/**********************************************************************/
-/**********************************************************************/
 void Scanner::ClassifyQuestion()
 {
     current_token -> SetKind(TK_QUESTION);
@@ -1615,9 +1540,6 @@ void Scanner::ClassifyQuestion()
 }
 
 
-/**********************************************************************/
-/*                     CLASSIFY_NONASCIIUNICODE:                      */
-/**********************************************************************/
 void Scanner::ClassifyNonAsciiUnicode()
 {
     if (Code::IsAlpha(*cursor)) // Some kind of non-ascii unicode letter
@@ -1629,4 +1551,3 @@ void Scanner::ClassifyNonAsciiUnicode()
 #ifdef HAVE_JIKES_NAMESPACE
 } // Close namespace Jikes block
 #endif
-
