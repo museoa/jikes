@@ -17,19 +17,19 @@
 class AccessFlags
 {
 public:
-    bool ACC_PUBLIC()       { return access_flags & 0x0001; }
-    bool ACC_PRIVATE()      { return access_flags & 0x0002; }
-    bool ACC_PROTECTED()    { return access_flags & 0x0004; }
-    bool ACC_STATIC()       { return access_flags & 0x0008; }
-    bool ACC_FINAL()        { return access_flags & 0x0010; }
-    bool ACC_SUPER()        { return access_flags & 0x0020; }
-    bool ACC_SYNCHRONIZED() { return access_flags & 0x0020; }
-    bool ACC_VOLATILE()     { return access_flags & 0x0040; }
-    bool ACC_TRANSIENT()    { return access_flags & 0x0080; }
-    bool ACC_NATIVE()       { return access_flags & 0x0100; }
-    bool ACC_INTERFACE()    { return access_flags & 0x0200; }
-    bool ACC_ABSTRACT()     { return access_flags & 0x0400; }
-    bool ACC_STRICTFP()     { return access_flags & 0x0800; }
+    bool ACC_PUBLIC()       { return (access_flags & 0x0001) != 0; }
+    bool ACC_PRIVATE()      { return (access_flags & 0x0002) != 0; }
+    bool ACC_PROTECTED()    { return (access_flags & 0x0004) != 0; }
+    bool ACC_STATIC()       { return (access_flags & 0x0008) != 0; }
+    bool ACC_FINAL()        { return (access_flags & 0x0010) != 0; }
+    bool ACC_SUPER()        { return (access_flags & 0x0020) != 0; }
+    bool ACC_SYNCHRONIZED() { return (access_flags & 0x0020) != 0; }
+    bool ACC_VOLATILE()     { return (access_flags & 0x0040) != 0; }
+    bool ACC_TRANSIENT()    { return (access_flags & 0x0080) != 0; }
+    bool ACC_NATIVE()       { return (access_flags & 0x0100) != 0; }
+    bool ACC_INTERFACE()    { return (access_flags & 0x0200) != 0; }
+    bool ACC_ABSTRACT()     { return (access_flags & 0x0400) != 0; }
+    bool ACC_STRICTFP()     { return (access_flags & 0x0800) != 0; }
 
     void SetACC_PUBLIC()       { access_flags |= 0x0001; }
     void SetACC_PRIVATE()      { access_flags |= 0x0002; }
@@ -87,3 +87,5 @@ public:
 };
 
 #endif
+
+

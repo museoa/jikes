@@ -20,7 +20,7 @@
 #include "tuple.h"
 #include "spell.h"
 
-inline bool Semantic::IsIntValueRepresentableInType(AstExpression *expr, TypeSymbol *type)
+bool Semantic::IsIntValueRepresentableInType(AstExpression *expr, TypeSymbol *type)
 {
     IntLiteralValue *literal = (IntLiteralValue *) expr -> value;
 
@@ -319,7 +319,7 @@ VariableSymbol *Semantic::FindMisspelledVariableName(TypeSymbol *type, LexStream
 {
     VariableSymbol *misspelled_variable = NULL;
     int index = 0;
-    NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(identifier_token);
+    wchar_t *name = lex_stream -> Name(identifier_token);
 
     for (int k = 0; k < type -> expanded_field_table -> symbol_pool.Length(); k++)
     {
@@ -328,7 +328,7 @@ VariableSymbol *Semantic::FindMisspelledVariableName(TypeSymbol *type, LexStream
         if (! variable -> IsTyped())
             variable -> ProcessVariableSignature((Semantic *) this, identifier_token);
 
-        int new_index = Spell::Index(name_symbol -> Name(), variable -> Name());
+        int new_index = Spell::Index(name, variable -> Name());
         if (new_index > index)
         {
             misspelled_variable = variable;
@@ -336,7 +336,7 @@ VariableSymbol *Semantic::FindMisspelledVariableName(TypeSymbol *type, LexStream
         }
     }
 
-    int length = name_symbol -> NameLength();
+    int length = wcslen(name);
 
     return ((length == 3 && index >= 5) || (length == 4 && index >= 6) || (length >= 5 && index >= 7)
                           ? misspelled_variable
@@ -411,7 +411,7 @@ MethodSymbol *Semantic::FindMethodInType(TypeSymbol *type, AstMethodInvocation *
     Tuple<MethodSymbol *> method_set(2);
     AstFieldAccess *field_access = method_call -> method -> FieldAccessCast();
     if (! name_symbol)
-        name_symbol = (NameSymbol *) lex_stream -> NameSymbol(field_access -> identifier_token);
+        name_symbol = lex_stream -> NameSymbol(field_access -> identifier_token);
 
     if (! type -> expanded_method_table)
         ComputeMethodsClosure(type, field_access -> identifier_token);
@@ -601,7 +601,7 @@ void Semantic::SearchForMethodInEnvironment(Tuple<MethodSymbol *> &methods_found
                                             AstMethodInvocation *method_call)
 {
     AstSimpleName *simple_name = method_call -> method -> SimpleNameCast();
-    NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(simple_name -> identifier_token);
+    NameSymbol *name_symbol = lex_stream -> NameSymbol(simple_name -> identifier_token);
 
     for (SemanticEnvironment *env = stack; env; env = env -> previous)
     {
@@ -737,7 +737,7 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
     else
     {
         AstSimpleName *simple_name = method_call -> method -> SimpleNameCast();
-        NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(simple_name -> identifier_token);
+        NameSymbol *name_symbol = lex_stream -> NameSymbol(simple_name -> identifier_token);
         bool symbol_found = false;
 
         //
@@ -891,7 +891,7 @@ assert(enclosing_type);
 inline VariableSymbol *Semantic::FindVariableInType(TypeSymbol *type, AstFieldAccess *field_access, NameSymbol *name_symbol)
 {
     if (! name_symbol)
-        name_symbol = (NameSymbol *) lex_stream -> NameSymbol(field_access -> identifier_token);
+        name_symbol = lex_stream -> NameSymbol(field_access -> identifier_token);
 
     if (! type -> expanded_field_table)
         ComputeFieldsClosure(type, field_access -> identifier_token);
@@ -925,7 +925,7 @@ inline VariableSymbol *Semantic::FindVariableInType(TypeSymbol *type, AstFieldAc
 
         for (int i = 0; i < variable_shadow_symbol -> NumConflicts(); i++)
         {
-            ReportSemError(SemanticError::AMBIGUOUS_NAME,
+            ReportSemError(SemanticError::AMBIGUOUS_FIELD,
                            field_access -> LeftToken(),
                            field_access -> RightToken(),
                            name_symbol -> Name(),
@@ -953,7 +953,7 @@ inline VariableSymbol *Semantic::FindVariableInType(TypeSymbol *type, AstFieldAc
 
 void Semantic::ReportAccessedFieldNotFound(AstFieldAccess *field_access, TypeSymbol *type)
 {
-    NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(field_access -> identifier_token);
+    NameSymbol *name_symbol = lex_stream -> NameSymbol(field_access -> identifier_token);
     VariableShadowSymbol *variable_shadow_symbol;
 
     if (! type -> expanded_field_table)
@@ -1054,7 +1054,7 @@ VariableSymbol *Semantic::FindVariableInEnvironment(SemanticEnvironment *&where_
                                                     SemanticEnvironment *stack, LexStream::TokenIndex identifier_token)
 {
     Tuple<VariableSymbol *> variables_found(2);
-    NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(identifier_token);
+    NameSymbol *name_symbol = lex_stream -> NameSymbol(identifier_token);
     SearchForVariableInEnvironment(variables_found, where_found, stack, name_symbol, identifier_token);
 
     VariableSymbol *variable_symbol = (VariableSymbol *) (variables_found.Length() > 0 ? variables_found[0] : NULL);
@@ -1159,7 +1159,7 @@ assert(variable_symbol);
 
     for (int i = 1; i < variables_found.Length(); i++)
     {
-        ReportSemError(SemanticError::AMBIGUOUS_NAME,
+        ReportSemError(SemanticError::AMBIGUOUS_FIELD,
                        identifier_token,
                        identifier_token,
                        variable_symbol -> Name(),
@@ -1204,27 +1204,33 @@ assert(class_declaration || class_creation);
     int k = base_type -> NumEnclosingInstances();
     for (TypeSymbol *type = base_type -> EnclosingInstance(k - 1) -> Type(); type; type = type -> ContainingType(), k++)
     {
-        AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(loc);
-        simple_name -> symbol = base_type -> EnclosingInstance(k - 1);
+        AstSimpleName *parm = compilation_unit -> ast_pool -> GenSimpleName(loc);
+        parm -> symbol = base_type -> EnclosingInstance(k - 1);
 
-        AstFieldAccess *field_access = compilation_unit -> ast_pool -> GenFieldAccess();
-        field_access -> base = simple_name;
-        field_access -> dot_token = loc;
-        field_access -> identifier_token = loc;
-        field_access -> symbol = type -> FindThis(0);
+        VariableSymbol *variable_symbol = (VariableSymbol *) type -> FindThis(0);
 
-        AstMethodInvocation *rhs      = compilation_unit -> ast_pool -> GenMethodInvocation();
-        rhs -> method                  = field_access;
+        AstSimpleName *method_base = compilation_unit -> ast_pool -> GenSimpleName(loc);
+        method_base -> symbol = parm -> Type();
+
+        AstFieldAccess *method_name = compilation_unit -> ast_pool -> GenFieldAccess();
+        method_name -> base = method_base;
+        method_name -> dot_token = loc;
+        method_name -> identifier_token = loc;
+        method_name -> symbol = variable_symbol; // the variable in question
+
+        AstMethodInvocation *rhs       = compilation_unit -> ast_pool -> GenMethodInvocation();
+        rhs -> method                  = method_name;
         rhs -> left_parenthesis_token  = loc;
         rhs -> right_parenthesis_token = loc;
-        rhs -> symbol                  = TypeSymbol::GetReadAccessMethod((VariableSymbol *) field_access -> symbol);
+        rhs -> symbol                  = TypeSymbol::GetReadAccessMethod(variable_symbol);
+        rhs -> AddArgument(parm);
 
         AstSimpleName *lhs = compilation_unit -> ast_pool -> GenSimpleName(loc);
         VariableSymbol *variable = base_type -> FindThis(k);
         lhs -> symbol = (variable ? variable : base_type -> InsertThis(k));
 
         AstAssignmentExpression *assign = compilation_unit -> ast_pool
-                                                            -> GenAssignmentExpression(AstAssignmentExpression::EQUAL, loc);
+                                                           -> GenAssignmentExpression(AstAssignmentExpression::EQUAL, loc);
         assign -> left_hand_side = lhs;
         assign -> expression     = rhs;
         assign -> symbol         = lhs -> Type();
@@ -1294,17 +1300,21 @@ AstExpression *Semantic::CreateAccessToType(Ast *source, TypeSymbol *environment
             {
                 variable = FindInstance(containing_type, environment_type);
 
-                AstFieldAccess *field_access = compilation_unit -> ast_pool -> GenFieldAccess();
-                field_access -> base = resolution;
-                field_access -> dot_token = field_access -> dot_token;
-                field_access -> identifier_token = field_access -> dot_token;
-                field_access -> symbol = variable;
+                AstSimpleName *method_base = compilation_unit -> ast_pool -> GenSimpleName(tok);
+                method_base -> symbol = resolution -> Type();
 
-                AstMethodInvocation *method_call      = compilation_unit -> ast_pool -> GenMethodInvocation();
-                method_call -> method                  = field_access;
-                method_call -> left_parenthesis_token  = field_access -> dot_token;
-                method_call -> right_parenthesis_token = field_access -> dot_token;
+                AstFieldAccess *method_name = compilation_unit -> ast_pool -> GenFieldAccess();
+                method_name -> base = method_base;
+                method_name -> dot_token = tok;
+                method_name -> identifier_token = tok;
+                method_name -> symbol = variable;
+
+                AstMethodInvocation *method_call       = compilation_unit -> ast_pool -> GenMethodInvocation();
+                method_call -> method                  = method_name;
+                method_call -> left_parenthesis_token  = tok;
+                method_call -> right_parenthesis_token = tok;
                 method_call -> symbol                  = TypeSymbol::GetReadAccessMethod(variable);
+                method_call -> AddArgument(resolution);
 
                 resolution = method_call;
             }
@@ -1348,29 +1358,43 @@ assert(environment_type -> IsOwner(ThisType()));
 
     if (access_expression -> symbol != control.no_type)
     {
-        AstFieldAccess *field_access = compilation_unit -> ast_pool -> GenFieldAccess();
-        field_access -> base = access_expression;
-        field_access -> dot_token = simple_name -> identifier_token;
-        field_access -> identifier_token = simple_name -> identifier_token;
-        field_access -> symbol = variable_symbol;
-
         //
         // TODO: we have filed a query to Sun regarding the necessity of this check!
         //
         // SimpleNameAccessCheck(simple_name, variable_symbol -> owner -> TypeCast(), variable_symbol);
         //
-
         if (variable_symbol -> ACC_PRIVATE())
         {
+            AstSimpleName *method_base = compilation_unit -> ast_pool -> GenSimpleName(simple_name -> identifier_token);
+            method_base -> symbol = access_expression -> Type();
+
+            AstFieldAccess *method_name = compilation_unit -> ast_pool -> GenFieldAccess();
+            method_name -> base = method_base;
+            method_name -> dot_token = simple_name -> identifier_token;
+            method_name -> identifier_token = simple_name -> identifier_token;
+            method_name -> symbol = variable_symbol;
+
             AstMethodInvocation *method_call       = compilation_unit -> ast_pool -> GenMethodInvocation();
-            method_call -> method                  = field_access;
+            method_call -> method                  = method_name;
             method_call -> left_parenthesis_token  = simple_name -> identifier_token;
             method_call -> right_parenthesis_token = simple_name -> identifier_token;
             method_call -> symbol                  = TypeSymbol::GetReadAccessMethod(variable_symbol);
 
+            if (! variable_symbol -> ACC_STATIC())
+                method_call -> AddArgument(access_expression);
+
             simple_name -> resolution_opt = method_call;
         }
-        else simple_name -> resolution_opt = field_access;
+        else
+        {
+            AstFieldAccess *field_access = compilation_unit -> ast_pool -> GenFieldAccess();
+            field_access -> base = access_expression;
+            field_access -> dot_token = simple_name -> identifier_token;
+            field_access -> identifier_token = simple_name -> identifier_token;
+            field_access -> symbol = variable_symbol;
+
+            simple_name -> resolution_opt = field_access;
+        }
     }
 
     return;
@@ -1399,10 +1423,28 @@ assert(simple_name -> SimpleNameCast());
         //
         // SimpleNameAccessCheck(simple_name, method -> containing_type, method);
         //
-
         simple_name -> resolution_opt = access_expression;
         if (method -> ACC_PRIVATE())
-            method_call -> symbol = TypeSymbol::GetReadAccessMethod(method);
+        {
+            if (method -> ACC_STATIC())
+                method_call -> symbol = TypeSymbol::GetReadAccessMethod(method);
+            else
+            {
+                AstMethodInvocation *old_method_call = method_call;
+
+                //
+                // TODO: WARNING: sharing of subtrees...
+                //
+                AstMethodInvocation *method_call       = compilation_unit -> ast_pool -> GenMethodInvocation();
+                method_call -> method                  = old_method_call -> method;
+                method_call -> left_parenthesis_token  = old_method_call -> left_parenthesis_token;
+                method_call -> right_parenthesis_token = old_method_call -> right_parenthesis_token;
+                method_call -> symbol                  = TypeSymbol::GetReadAccessMethod(method);
+                method_call -> AddArgument(access_expression);
+
+                old_method_call -> resolution_opt = method_call;
+            }
+        }
     }
 
     return;
@@ -1515,7 +1557,7 @@ void Semantic::ProcessSimpleName(Ast *expr)
         // We make a little effort to issue a better error message if we can identify
         // the name in question as the name of a method in the local type.
         //
-        NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(simple_name -> identifier_token);
+        NameSymbol *name_symbol = lex_stream -> NameSymbol(simple_name -> identifier_token);
 
         MethodShadowSymbol *method_shadow;
         MethodSymbol *method;
@@ -1894,17 +1936,23 @@ void Semantic::FindVariableMember(TypeSymbol *type, AstFieldAccess *field_access
                     field_access -> symbol = variable_symbol;
                 else
                 {
-                    AstFieldAccess *method_access = compilation_unit -> ast_pool -> GenFieldAccess();
-                    method_access -> base = field_access -> base;  // TODO: WARNING: sharing of Ast subtree !!!
-                    method_access -> dot_token = field_access -> identifier_token;
-                    method_access -> identifier_token = field_access -> identifier_token;
-                    method_access -> symbol = variable_symbol; // the variable in question
+                    AstSimpleName *method_base = compilation_unit -> ast_pool -> GenSimpleName(field_access -> identifier_token);
+                    method_base -> symbol = field_access -> base -> Type();
 
-                    AstMethodInvocation *p      = compilation_unit -> ast_pool -> GenMethodInvocation();
-                    p -> method                  = method_access;
+                    AstFieldAccess *method_name = compilation_unit -> ast_pool -> GenFieldAccess();
+                    method_name -> base = method_base;
+                    method_name -> dot_token = field_access -> identifier_token;
+                    method_name -> identifier_token = field_access -> identifier_token;
+                    method_name -> symbol = variable_symbol;
+
+                    AstMethodInvocation *p       = compilation_unit -> ast_pool -> GenMethodInvocation();
+                    p -> method                  = method_name;
                     p -> left_parenthesis_token  = field_access -> identifier_token;
                     p -> right_parenthesis_token = field_access -> identifier_token;
                     p -> symbol                  = TypeSymbol::GetReadAccessMethod(variable_symbol);
+
+                    if (! variable_symbol -> ACC_STATIC())
+                        p -> AddArgument(field_access -> base); // TODO: WARNING: sharing of Ast subtree !!!
 
                     field_access -> resolution_opt = p;
                     field_access -> symbol = p -> symbol;
@@ -2038,7 +2086,7 @@ void Semantic::ProcessAmbiguousName(Ast *name)
         //
         else
         {
-            NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(simple_name -> identifier_token);
+            NameSymbol *name_symbol = lex_stream -> NameSymbol(simple_name -> identifier_token);
             PackageSymbol *package = control.external_table.FindPackageSymbol(name_symbol);
             if (package)
                 simple_name -> symbol = package;
@@ -2164,6 +2212,10 @@ assert(field_access -> symbol);
                         method_access -> identifier_token = field_access -> identifier_token;
                         method_access -> symbol = variable_symbol; // the variable in question
 
+                        //
+                        // Recall that the variable is static...
+                        //
+assert(variable_symbol -> ACC_STATIC());
                         AstMethodInvocation *method_call       = compilation_unit -> ast_pool -> GenMethodInvocation();
                         method_call -> method                  = method_access;
                         method_call -> left_parenthesis_token  = field_access -> identifier_token;
@@ -2271,7 +2323,7 @@ assert(field_access -> symbol);
                 // contains a declaration of a type whose name is the same as the Identifier, then the
                 // AmbiguousName is reclassified as a TypeName...
                 //
-                NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(field_access -> identifier_token);
+                NameSymbol *name_symbol = lex_stream -> NameSymbol(field_access -> identifier_token);
                 type = package -> FindTypeSymbol(name_symbol);
 
                 if (type)
@@ -2417,17 +2469,23 @@ assert(field_access -> symbol);
                                 field_access -> symbol = variable_symbol;
                             else
                             {
-                                AstFieldAccess *method_access = compilation_unit -> ast_pool -> GenFieldAccess();
-                                method_access -> base = field_access -> base;  // TODO: WARNING: sharing of Ast subtree !!!
-                                method_access -> dot_token = field_access -> identifier_token;
-                                method_access -> identifier_token = field_access -> identifier_token;
-                                method_access -> symbol = variable_symbol; // the variable in question
+                                AstFieldAccess *method_name = compilation_unit -> ast_pool -> GenFieldAccess();
+                                method_name -> base = field_access -> base;  // TODO: WARNING: sharing of Ast subtree !!!
+                                method_name -> dot_token = field_access -> identifier_token;
+                                method_name -> identifier_token = field_access -> identifier_token;
+                                method_name -> symbol = variable_symbol; // the variable in question
 
-                                AstMethodInvocation *p      = compilation_unit -> ast_pool -> GenMethodInvocation();
-                                p -> method                  = method_access;
+                                //
+                                // variable_symbol is static.
+                                //
+                                AstMethodInvocation *p       = compilation_unit -> ast_pool -> GenMethodInvocation();
+                                p -> method                  = method_name;
                                 p -> left_parenthesis_token  = field_access -> identifier_token;
                                 p -> right_parenthesis_token = field_access -> identifier_token;
                                 p -> symbol                  = TypeSymbol::GetReadAccessMethod(variable_symbol);
+
+                                if (! variable_symbol -> ACC_STATIC())
+                                    p -> AddArgument(field_access -> base); // TODO: WARNING: sharing of Ast subtree !!!
 
                                 field_access -> resolution_opt = p;
                                 field_access -> symbol = p -> symbol;
@@ -2482,7 +2540,7 @@ assert(field_access -> symbol);
         {
             TypeSymbol *parent_type = (type -> IsArray() ? type -> base_type : type);
             if (! parent_type -> Primitive())
-                AddDependence(this_type, parent_type, field_access -> identifier_token);
+                AddDependence(this_type, parent_type, field_access -> identifier_token, field_access -> IsConstant());
         }
     }
 
@@ -2533,7 +2591,7 @@ void Semantic::ProcessCharacterLiteral(Ast *expr)
 {
     AstCharacterLiteral *char_literal = (AstCharacterLiteral *) expr;
 
-    LiteralSymbol *literal = (LiteralSymbol *) lex_stream -> NameSymbol(char_literal -> character_literal_token);
+    LiteralSymbol *literal = lex_stream -> LiteralSymbol(char_literal -> character_literal_token);
 
     if (! literal -> value)
         control.int_pool.FindOrInsertChar(literal);
@@ -2556,7 +2614,7 @@ void Semantic::ProcessIntegerLiteral(Ast *expr)
 {
     AstIntegerLiteral *int_literal = (AstIntegerLiteral *) expr;
 
-    LiteralSymbol *literal = (LiteralSymbol *) lex_stream -> NameSymbol(int_literal -> integer_literal_token);
+    LiteralSymbol *literal = lex_stream -> LiteralSymbol(int_literal -> integer_literal_token);
 
     if (! literal -> value)
         control.int_pool.FindOrInsertInt(literal);
@@ -2579,7 +2637,7 @@ void Semantic::ProcessLongLiteral(Ast *expr)
 {
     AstLongLiteral *long_literal = (AstLongLiteral *) expr;
 
-    LiteralSymbol *literal = (LiteralSymbol *) lex_stream -> NameSymbol(long_literal -> long_literal_token);
+    LiteralSymbol *literal = lex_stream -> LiteralSymbol(long_literal -> long_literal_token);
 
     if (! literal -> value)
         control.long_pool.FindOrInsertLong(literal);
@@ -2602,7 +2660,7 @@ void Semantic::ProcessFloatingPointLiteral(Ast *expr)
 {
     AstFloatingPointLiteral *float_literal = (AstFloatingPointLiteral *) expr;
 
-    LiteralSymbol *literal = (LiteralSymbol *) lex_stream -> NameSymbol(float_literal -> floating_point_literal_token);
+    LiteralSymbol *literal = lex_stream -> LiteralSymbol(float_literal -> floating_point_literal_token);
 
     if (! literal -> value)
         control.float_pool.FindOrInsertFloat(literal);
@@ -2625,7 +2683,7 @@ void Semantic::ProcessDoubleLiteral(Ast *expr)
 {
     AstDoubleLiteral *double_literal = (AstDoubleLiteral *) expr;
 
-    LiteralSymbol *literal = (LiteralSymbol *) lex_stream -> NameSymbol(double_literal -> double_literal_token);
+    LiteralSymbol *literal = lex_stream -> LiteralSymbol(double_literal -> double_literal_token);
 
     if (! literal -> value)
         control.double_pool.FindOrInsertDouble(literal);
@@ -2666,7 +2724,7 @@ void Semantic::ProcessStringLiteral(Ast *expr)
 {
     AstStringLiteral *string_literal = (AstStringLiteral *) expr;
 
-    LiteralSymbol *literal = (LiteralSymbol *) lex_stream -> NameSymbol(string_literal -> string_literal_token);
+    LiteralSymbol *literal = lex_stream -> LiteralSymbol(string_literal -> string_literal_token);
 
     if (! literal -> value)
         control.Utf8_pool.FindOrInsertString(literal);
@@ -2763,7 +2821,26 @@ MethodSymbol *Semantic::FindMethodMember(TypeSymbol *type, AstMethodInvocation *
         {
             if (method -> ACC_PRIVATE() && this_type != method -> containing_type
                                         && this_type -> outermost_type == method -> containing_type -> outermost_type)
-                method_call -> symbol = TypeSymbol::GetReadAccessMethod(method);
+            {
+                if (method -> ACC_STATIC())
+                    method_call -> symbol = TypeSymbol::GetReadAccessMethod(method);
+                else
+                {
+                    AstMethodInvocation *old_method_call = method_call;
+
+                    //
+                    // TODO: WARNING: sharing of subtrees...
+                    //
+                    AstMethodInvocation *method_call       = compilation_unit -> ast_pool -> GenMethodInvocation();
+                    method_call -> method                  = old_method_call -> method;
+                    method_call -> left_parenthesis_token  = old_method_call -> left_parenthesis_token;
+                    method_call -> right_parenthesis_token = old_method_call -> right_parenthesis_token;
+                    method_call -> symbol = TypeSymbol::GetReadAccessMethod(method);
+                    method_call -> AddArgument(field_access -> base);
+
+                    old_method_call -> resolution_opt = method_call;
+                }
+            }
             else
             {
                 method_call -> symbol = method;
@@ -2957,7 +3034,26 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
 
                     if (method -> ACC_PRIVATE() && this_type != method -> containing_type
                                                 && this_type -> outermost_type == method -> containing_type -> outermost_type)
-                        method_call -> symbol = TypeSymbol::GetReadAccessMethod(method);
+                    {
+                        if (method -> ACC_STATIC())
+                            method_call -> symbol = TypeSymbol::GetReadAccessMethod(method);
+                        else
+                        {
+                            AstMethodInvocation *old_method_call = method_call;
+
+                            //
+                            // TODO: WARNING: sharing of subtrees...
+                            //
+                            AstMethodInvocation *method_call       = compilation_unit -> ast_pool -> GenMethodInvocation();
+                            method_call -> method                  = old_method_call -> method;
+                            method_call -> left_parenthesis_token  = old_method_call -> left_parenthesis_token;
+                            method_call -> right_parenthesis_token = old_method_call -> right_parenthesis_token;
+                            method_call -> symbol = TypeSymbol::GetReadAccessMethod(method);
+                            method_call -> AddArgument(field_access -> base);
+
+                            old_method_call -> resolution_opt = method_call;
+                        }
+                    }
                     else
                     {
                         method_call -> symbol = method;
@@ -2979,7 +3075,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
         else // illegal Name !!!
         {
             PackageSymbol *package = symbol -> PackageCast();
-            NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(field_access -> identifier_token);
+            NameSymbol *name_symbol = lex_stream -> NameSymbol(field_access -> identifier_token);
 
             if (package && (package -> FindTypeSymbol(name_symbol) ||
                             Control::GetFile(package, name_symbol, control.option.depend)))
@@ -3729,22 +3825,13 @@ TypeSymbol *Semantic::GetAnonymousType(AstClassInstanceCreationExpression *class
     //
     // Make up a proper name for the anonymous type
     //
-    int num = outermost_type -> num_anonymous_types() + 1;
-    wchar_t str[11],
-            *p = &str[10];
-    *p = U_NULL;
-    do
-    {
-        p--;
-        *p = U_0 + (num % 10);
-        num /= 10;
-    } while (num > 0);
+    IntToWstring value(outermost_type -> num_anonymous_types() + 1);
 
-    int length = wcslen(p) + outermost_type -> NameLength() + 1; // +1 for $
+    int length = value.Length() + outermost_type -> NameLength() + 1; // +1 for $
     wchar_t *anonymous_name = new wchar_t[length + 1];
     wcscpy(anonymous_name, outermost_type -> Name());
     wcscat(anonymous_name, StringConstant::US__DS_);
-    wcscat(anonymous_name, p);
+    wcscat(anonymous_name, value.String());
 
     NameSymbol *name_symbol = control.FindOrInsertName(anonymous_name, length);
 
@@ -4024,16 +4111,13 @@ assert(CanMethodInvocationConvert(method -> containing_type -> ContainingType(),
 
             if (method -> ACC_PRIVATE() && ThisType() != type && ThisType() -> outermost_type == type -> outermost_type)
             {
-                //
-                // TODO: Awaiting language clarification.
-                //
-                ReportSemError(SemanticError::PRIVATE_ENCLOSED_CONSTRUCTOR,
-                               class_creation -> new_token,
-                               class_creation -> right_parenthesis_token,
-                               method -> Header());
-
                 method = TypeSymbol::GetReadAccessMethod(method);
                 class_creation -> class_type -> symbol = method;
+
+                //
+                // Add extra argument for read access constructor;
+                //
+                class_creation -> AddNullArgument();
             }
             else ConstructorAccessCheck(class_creation, method);
 
@@ -4223,7 +4307,7 @@ void Semantic::ProcessMINUS(AstPreUnaryExpression *expr)
 
     if (int_literal = expr -> expression -> IntegerLiteralCast())
     {
-        LiteralSymbol *literal = (LiteralSymbol *) lex_stream -> NameSymbol(int_literal -> integer_literal_token);
+        LiteralSymbol *literal = lex_stream -> LiteralSymbol(int_literal -> integer_literal_token);
 
         expr -> value = control.int_pool.FindOrInsertNegativeInt(literal);
         if (expr -> value == &control.bad_value)
@@ -4237,7 +4321,7 @@ void Semantic::ProcessMINUS(AstPreUnaryExpression *expr)
     }
     else if (long_literal = expr -> expression -> LongLiteralCast())
     {
-        LiteralSymbol *literal = (LiteralSymbol *) lex_stream -> NameSymbol(long_literal -> long_literal_token);
+        LiteralSymbol *literal = lex_stream -> LiteralSymbol(long_literal -> long_literal_token);
 
         expr -> value = control.long_pool.FindOrInsertNegativeLong(literal);
         if (expr -> value == &control.bad_value)

@@ -535,6 +535,7 @@ TypeSymbol::TypeSymbol(NameSymbol *name_symbol_) : semantic_environment(NULL),
                                                    innertypes_closure(NULL),
                                                    dependents(new SymbolSet()),
                                                    parents(new SymbolSet()),
+                                                   static_parents(new SymbolSet()),
                                                    dependents_closure(NULL),
                                                    parents_closure(NULL),
                                                    num_dimensions(0),
@@ -579,6 +580,7 @@ TypeSymbol::~TypeSymbol()
     delete innertypes_closure;
     delete dependents;
     delete parents;
+    delete static_parents;
     delete table;
     delete expanded_type_table;
     delete expanded_field_table;
@@ -1217,20 +1219,12 @@ assert(semantic_environment);
 
 inline NameSymbol *TypeSymbol::GetThisName(Control &control, int n)
 {
-    wchar_t info[12],
-            *str = &info[11];
-    *str = U_NULL;
-    int num = n;
-    do
-    {
-        *--str = (U_0 + num % 10);
-        num /= 10;
-    } while (num != 0);
+    IntToWstring value(n);
 
-    int length = wcslen(StringConstant::US__this_DOLLAR) + (&info[11] - str);
+    int length = wcslen(StringConstant::US__this_DOLLAR) + value.Length();
     wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
     wcscpy(name, StringConstant::US__this_DOLLAR);
-    wcscat(name, str);
+    wcscat(name, value.String());
     NameSymbol *name_symbol = control.FindOrInsertName(name, length);
 
     delete [] name;
@@ -1299,7 +1293,7 @@ assert(this == outermost_type);
         class_creation -> dot_token_opt = 0;
         class_creation -> new_token = tok;
 
-             AstSimpleName *ast_type= compilation_unit -> ast_pool -> GenSimpleName(tok);
+             AstSimpleName *ast_type = compilation_unit -> ast_pool -> GenSimpleName(tok);
 
         class_creation -> class_type = compilation_unit -> ast_pool -> GenTypeExpression(ast_type);
         class_creation -> left_parenthesis_token  = tok;
@@ -1505,35 +1499,22 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
         TypeSymbol *type = member -> containing_type;
         Semantic *sem = type -> semantic_environment -> sem;
         Control &control = sem -> control;
+        LexStream *lex_stream = sem -> lex_stream;
         StoragePool *ast_pool = sem -> compilation_unit -> ast_pool;
 
-        wchar_t info[12],
-                *str = &info[11];
-        int n = (member -> Identity() == control.init_name_symbol ? type -> NumPrivateAccessConstructors()
-                                                                  : type -> NumPrivateAccessMethods());
-        *str = U_NULL;
-        do
-        {
-            *--str = (U_0 + n % 10);
-            n /= 10;
-        } while (n != 0);
+        IntToWstring value(member -> Identity() == control.init_name_symbol ? type -> NumPrivateAccessConstructors()
+                                                                            : type -> NumPrivateAccessMethods());
 
-        int length = 7 + (&info[11] - str); // +7 for access$
+        int length = 7 + value.Length(); // +7 for access$
         wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
         wcscpy(name, StringConstant::US__access_DOLLAR);
-        wcscat(name, str);
+        wcscat(name, value.String());
 
         BlockSymbol *block_symbol = new BlockSymbol(member -> NumFormalParameters() + 3);
 
         MethodSymbol *method = type -> InsertMethodSymbol(control.FindOrInsertName(name, length));
         method -> MarkSynthetic();
         method -> SetType(member -> Type());
-        if (member -> ACC_STATIC())
-        {
-            method -> SetACC_STATIC();
-            block_symbol -> max_variable_index = 0;
-        }
-        else block_symbol -> max_variable_index = 1;
         method -> SetContainingType(type);
         method -> SetBlockSymbol(block_symbol);
 
@@ -1545,9 +1526,22 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
         //
         if (member -> Identity() != control.init_name_symbol) // not a constructor
         {
+            method -> SetACC_STATIC();
+            block_symbol -> max_variable_index = 0;
+
+            if (! member -> ACC_STATIC())
+            {
+                VariableSymbol *instance = block_symbol -> InsertVariableSymbol(control.MakeParameter(1));
+                instance -> MarkSynthetic();
+                instance -> SetType(type);
+                instance -> SetOwner(method);
+                instance -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+                method -> AddFormalParameter(instance);
+            }
+
             for (int i = 0; i < member -> NumFormalParameters(); i++)
             {
-                VariableSymbol *parm = method -> block_symbol -> InsertVariableSymbol(member -> FormalParameter(i) -> Identity());
+                VariableSymbol *parm = block_symbol -> InsertVariableSymbol(member -> FormalParameter(i) -> Identity());
                 parm -> MarkSynthetic();
                 parm -> SetType(member -> FormalParameter(i) -> Type());
                 parm -> SetOwner(method);
@@ -1563,6 +1557,10 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
         }
         else
         {
+            //
+            //
+            //
+            block_symbol -> max_variable_index = 1;
             method -> SetExternalIdentity(member -> Identity());
 
             Ast *declaration = member -> method_or_constructor_declaration;
@@ -1572,7 +1570,32 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
                                                      : ((AstConstructorDeclaration *) declaration) -> constructor_declarator);
             LexStream::TokenIndex loc = declarator -> identifier_token;
 
-            AstMethodDeclarator *method_declarator      = ast_pool -> GenMethodDeclarator();
+            //
+            // Create a new anonymous type in order to create a unique substitute constructor.
+            //
+            AstClassInstanceCreationExpression *class_creation = ast_pool -> GenClassInstanceCreationExpression();
+            class_creation -> base_opt      = NULL;
+            class_creation -> dot_token_opt = 0;
+            class_creation -> new_token = loc;
+
+                AstSimpleName *ast_type = ast_pool -> GenSimpleName(loc);
+
+            class_creation -> class_type = ast_pool -> GenTypeExpression(ast_type);
+            class_creation -> left_parenthesis_token  = loc;
+            class_creation -> right_parenthesis_token = loc;
+
+                AstClassBody *class_body = ast_pool -> GenClassBody();
+                class_body -> left_brace_token = loc;
+                class_body -> right_brace_token = loc;
+
+            class_creation -> class_body_opt = class_body;
+
+            TypeSymbol *anonymous_type = sem -> GetAnonymousType(class_creation, control.Object());
+
+            //
+            //
+            //
+            AstMethodDeclarator *method_declarator       = ast_pool -> GenMethodDeclarator();
             method_declarator -> identifier_token        = loc;
             method_declarator -> left_parenthesis_token  = declarator -> LeftToken();
             method_declarator -> right_parenthesis_token = declarator -> RightToken();
@@ -1594,9 +1617,24 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
                 this0_variable -> SetOwner(method);
                 this0_variable -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
             }
+
+            //
+            // Add extra parameter with anonymous type...
+            //
+            VariableSymbol *parm = block_symbol -> InsertVariableSymbol(control.MakeParameter(1));
+            parm -> MarkSynthetic();
+            parm -> SetType(anonymous_type);
+            parm -> SetOwner(method);
+            parm -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+            method -> AddFormalParameter(parm);
+
+            //
+            // Since private_access_constructors will be compiled (see body.cpp), we must create
+            // valid ast_simple_names for its parameters.
+            //
             for (int i = 0; i < member -> NumFormalParameters(); i++)
             {
-                VariableSymbol *parm = method -> block_symbol -> InsertVariableSymbol(member -> FormalParameter(i) -> Identity());
+                parm = block_symbol -> InsertVariableSymbol(member -> FormalParameter(i) -> Identity());
                 parm -> MarkSynthetic();
                 parm -> SetType(member -> FormalParameter(i) -> Type());
                 parm -> SetOwner(method);
@@ -1606,7 +1644,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
                 method -> AddFormalParameter(parm);
 
                 //
-                // Since private_access_constructors will compiled (see body.cpp), we must create
+                // Since private_access_constructors will be compiled (see body.cpp), we must create
                 // valid ast_simple_names for its parameters.
                 //
                 AstVariableDeclaratorId *variable_declarator_name = declarator -> FormalParameter(i) -> variable_declarator_name;
@@ -1669,29 +1707,36 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member)
         Semantic *sem = type -> semantic_environment -> sem;
         Control &control = sem -> control;
 
-        wchar_t info[12],
-                *str = &info[11];
-        int n = type -> NumPrivateAccessMethods();
-        *str = U_NULL;
-        do
-        {
-            *--str = (U_0 + n % 10);
-            n /= 10;
-        } while (n != 0);
+        IntToWstring value(type -> NumPrivateAccessMethods());
 
-        int length = 7 + (&info[11] - str); // +7 for access$
+        int length = 7 + value.Length(); // +7 for access$
         wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
         wcscpy(name, StringConstant::US__access_DOLLAR);
-        wcscat(name, str);
+        wcscat(name, value.String());
 
         MethodSymbol *method = type -> InsertMethodSymbol(control.FindOrInsertName(name, length));
         method -> MarkSynthetic();
         method -> SetType(member -> Type());
-        if (member -> ACC_STATIC())
-            method -> SetACC_STATIC();
+        method -> SetACC_STATIC();
         method -> SetContainingType(type);
-        // No block_symbol is associated with an access method !
-        // A read access method for a field has no formal parameters !
+
+        //
+        // A read access method for a field has 1 formal parameter if the member in question is not static
+        //
+        BlockSymbol *block_symbol = new BlockSymbol(3);
+        block_symbol -> max_variable_index = 0;
+        method -> SetBlockSymbol(block_symbol);
+
+        if (! member -> ACC_STATIC())
+        {
+            VariableSymbol *instance = block_symbol -> InsertVariableSymbol(control.MakeParameter(1));
+            instance -> MarkSynthetic();
+            instance -> SetType(type);
+            instance -> SetOwner(method);
+            instance -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+            method -> AddFormalParameter(instance);
+        }
+
         method -> SetSignature(control);
         // A read access method has no throws clause !
 
@@ -1714,38 +1759,45 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member)
         Semantic *sem = type -> semantic_environment -> sem;
         Control &control = sem -> control;
 
-        wchar_t info[12],
-                *str = &info[11];
-        int n = type -> NumPrivateAccessMethods();
-        *str = U_NULL;
-        do
-        {
-            *--str = (U_0 + n % 10);
-            n /= 10;
-        } while (n != 0);
+        IntToWstring value(type -> NumPrivateAccessMethods());
 
-        int length = 7 + (&info[11] - str); // +7 for access$
+        int length = 7 + value.Length(); // +7 for access$
         wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
         wcscpy(name, StringConstant::US__access_DOLLAR);
-        wcscat(name, str);
+        wcscat(name, value.String());
 
         MethodSymbol *method = type -> InsertMethodSymbol(control.FindOrInsertName(name, length));
         method -> MarkSynthetic();
         method -> SetType(sem -> control.void_type);
-        if (member -> ACC_STATIC())
-            method -> SetACC_STATIC();
+        method -> SetACC_STATIC();
         method -> SetContainingType(type);
-        method -> SetBlockSymbol(new BlockSymbol(3)); // the associated symbol table will contain 1 element
+
+        BlockSymbol *block_symbol = new BlockSymbol(3);
+        block_symbol -> max_variable_index = 0;
+        method -> SetBlockSymbol(block_symbol);
+
         //
-        // A write access method takes exactly one argument of the same type
-        // as the variable. For a member named "m", its body will consist of
-        // the single statement:
+        // A write access method takes one or two arguments. The first is the instance, $1,
+        // of the object in which to do the writing if the member in question is not static.
+        // The second is a parameter of the same type as the member. For a member named "m",
+        // the body of the write access method will consist of the single statement:
         //
-        //    this.m = m;
+        //    $1.m = m;
         //
-        VariableSymbol *symbol = method -> block_symbol -> InsertVariableSymbol(member -> Identity());
+        if (! member -> ACC_STATIC())
+        {
+            VariableSymbol *instance = block_symbol -> InsertVariableSymbol(control.MakeParameter(1));
+            instance -> MarkSynthetic();
+            instance -> SetType(type);
+            instance -> SetOwner(method);
+            instance -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+            method -> AddFormalParameter(instance);
+	}
+
+        VariableSymbol *symbol = block_symbol -> InsertVariableSymbol(member -> Identity());
         symbol -> MarkSynthetic();
         symbol -> SetType(member -> Type());
+        symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
         method -> AddFormalParameter(symbol);
 
         method -> SetSignature(control);

@@ -62,19 +62,6 @@ void ByteCode::CompileClass(TypeSymbol * type)
     class_literal_method = type -> outermost_type -> ClassLiteralMethod();
     
     //
-    // Make sure there is an entry in the constant pool for all types on which
-    // this type depends. This code is necessary because in the case of a dependence
-    // on a type from which we only access a static final constant, the constant is
-    // inlined and no other information about it is otherwise recorded.
-    //
-    for (TypeSymbol *parent = (TypeSymbol *) type -> parents -> FirstElement();
-         parent;
-         parent = (TypeSymbol *) type -> parents -> NextElement())
-    {
-        RegisterUtf8(parent -> signature);
-    }
-
-    //
     // Process static variables.
     //
     for (i=0; i < class_body -> NumClassVariables(); i++) {
@@ -528,7 +515,10 @@ void ByteCode::DeclareField(VariableSymbol * symbol)
     fields[field_index].descriptor_index = RegisterUtf8(symbol -> Type() -> signature);
 
     TypeSymbol *type = symbol -> Type();
-    if (symbol -> ACC_FINAL() && symbol -> initial_value && (type -> Primitive() || type == this_control.String())) {
+    if (symbol -> ACC_FINAL() &&
+        symbol -> initial_value &&
+        (type -> Primitive() || (type == this_control.String() && symbol -> initial_value != this_control.NullValue())))
+    {
         u4 constant_value_attribute_length = 2;
         int lit_index = GetConstant(symbol -> initial_value, symbol -> Type());
 
@@ -549,79 +539,86 @@ void ByteCode::DeclareField(VariableSymbol * symbol)
             
 void ByteCode::GenerateAccessMethod(MethodSymbol * method_symbol)
 {
+assert(method_symbol -> ACC_STATIC());
     // generate code for access method to private member of containing class
 
     int stack_words = 0;
     int argument_offset = 0; // offset to start of argument
-    code_attribute -> max_locals = 1; // DS fix this 01 dec 97
-    TypeSymbol * parameter_type;
+    code_attribute -> max_locals = 0; // DS fix this 01 dec 97 (set to 1) ; PC fix this 18 Mar 99 (set to 0)
+    TypeSymbol *parameter_type;
 
-
-    VariableSymbol * field_sym = method_symbol -> accessed_member -> VariableCast();
-    // generate code according to type of method
-    if (method_symbol -> accessed_member -> MethodCast()) {
-        // if accessing another method
-        // copy arguments
-        if (! method_symbol -> ACC_STATIC()) {
-            PutOp(OP_ALOAD_0); // load address of object on which method is to be invoked
-        }
-        for (int i = 0; i < method_symbol -> NumFormalParameters(); i++) {
-            TypeSymbol * local_type = method_symbol -> FormalParameter(i) -> Type();
-            code_attribute -> max_locals += GetTypeWords(local_type);
-            stack_words += GetTypeWords(local_type);
-            LoadLocal(method_symbol -> ACC_STATIC() ? argument_offset: argument_offset+1, local_type);
-            argument_offset += GetTypeWords(local_type); // update position in stack
-        }
-        PutOp(method_symbol -> ACC_STATIC() ? OP_INVOKESTATIC  // must be static or private
-                                            : OP_INVOKENONVIRTUAL);  
-        CompleteCall(method_symbol -> accessed_member -> MethodCast(), stack_words, 0);
+    for (int i = 0; i < method_symbol -> NumFormalParameters(); i++)
+    {
+        TypeSymbol * local_type = method_symbol -> FormalParameter(i) -> Type();
+        code_attribute -> max_locals += GetTypeWords(local_type);
+        stack_words += GetTypeWords(local_type);
+        LoadLocal(argument_offset, local_type);
+        argument_offset += GetTypeWords(local_type); // update position in stack
     }
-    else {
-        // accessing field
-        if (method_type == this_control.void_type) {
+
+    MethodSymbol *method_sym = method_symbol -> accessed_member -> MethodCast();
+    // generate code according to type of method
+    if (method_sym)
+    {
+        PutOp(OP_INVOKESTATIC);  // must be static
+        CompleteCall(method_sym, stack_words, 0);
+    }
+    else
+    {
+        VariableSymbol *field_sym = method_symbol -> accessed_member -> VariableCast();
+
+        if (method_type == this_control.void_type) // writing to a field
+        {
             // need method to assign value to field
-            if (method_symbol -> NumFormalParameters()== 0) {
+            if (method_symbol -> NumFormalParameters() == 0) {
                 chaos("assignment access method requires parameter");
             }  
             parameter_type = method_symbol -> FormalParameter(0) -> Type();
             code_attribute -> max_locals += GetTypeWords(parameter_type);
             
-            if (method_symbol -> ACC_STATIC()) {
+            if (field_sym -> ACC_STATIC())
+            {
                 LoadLocal(0, parameter_type);
                 PutOp(OP_PUTSTATIC);
             }
-            else {
+            else
+            {
                 PutOp(OP_ALOAD_0); // get this for field access
                 LoadLocal(1, parameter_type);
                 PutOp(OP_PUTFIELD);
             }
-            ChangeStack(this_control.IsDoubleWordType(parameter_type) ? -2: -1);
-            PutU2(GenerateFieldReference(method_symbol -> accessed_member -> VariableCast()));
+            ChangeStack(this_control.IsDoubleWordType(parameter_type) ? -2 : -1);
+            PutU2(GenerateFieldReference(field_sym));
         }
-        else {
+        else
+        {
             // need method to retrieve value of field
-            if (field_sym -> ACC_STATIC()) {
+            if (field_sym -> ACC_STATIC())
+            {
                 PutOp(OP_GETSTATIC);
-                ChangeStack(this_control.IsDoubleWordType(method_type) ? 2: 1);
+                ChangeStack(this_control.IsDoubleWordType(method_type) ? 2 : 1);
             }
             else {
                 PutOp(OP_ALOAD_0); // get this for field access
                 PutOp(OP_GETFIELD);
-                ChangeStack(this_control.IsDoubleWordType(method_type) ? 1: 0);
+                ChangeStack(this_control.IsDoubleWordType(method_type) ? 1 : 0);
             }
             PutU2(GenerateFieldReference(field_sym));
         }
     }
     
-        // method returns void, generate return unless last statement is return
-    if (method_type == this_control.void_type) {
+    // method returns void, generate return unless last statement is return
+    if (method_type == this_control.void_type)
+    {
         //  int line_index;
         // line_index = line_number_table_attribute -> line_number_table.NextIndex();
         // line_number_table_attribute -> line_number_table[line_index]
         PutOp(OP_RETURN);// guarantee return at end of body
     }
     else GenerateReturn(method_type);
-    if (last_label_pc >= code_attribute -> code.Length()) {
+
+    if (last_label_pc >= code_attribute -> code.Length())
+    {
         // here to emit noop if would otherwise EmitBranch past end
         PutNop(0);
     }
@@ -2175,7 +2172,11 @@ int ByteCode::EmitExpression(AstExpression *expression)
                                                        : EmitFieldAccess(field_access);
         }
         case Ast::CALL:
-            return EmitMethodInvocation((AstMethodInvocation *)expression, 0);
+        {
+            AstMethodInvocation *method_call = expression -> MethodInvocationCast();
+            method_call = (method_call -> resolution_opt ? method_call -> resolution_opt -> MethodInvocationCast() : method_call);
+            return EmitMethodInvocation(method_call, 0);
+        }
         case Ast::ARRAY_ACCESS:             // if seen alone this will be as RHS
             return EmitArrayAccessRHS((AstArrayAccess *) expression);
         case Ast::POST_UNARY:
@@ -2184,7 +2185,7 @@ int ByteCode::EmitExpression(AstExpression *expression)
             return EmitPreUnaryExpression((AstPreUnaryExpression *)expression,1);
         case Ast::CAST:
         {
-          AstCastExpression * cast_expression = expression -> CastExpressionCast();
+            AstCastExpression * cast_expression = expression -> CastExpressionCast();
             if (cast_expression -> expression-> Type() -> Primitive())
             {
              // primitive types require casting
@@ -2911,6 +2912,11 @@ int ByteCode::EmitClassInstanceCreationExpression(AstClassInstanceCreationExpres
 
     for (int i=0; i < expression -> NumLocalArguments();i++) {
         stack_words += EmitExpression((AstExpression *) expression -> LocalArgument(i));
+    }
+    if (expression -> NeedsExtraNullArgument())
+    {
+        PutOp(OP_ACONST_NULL);
+        stack_words += 1;
     }
     for (int k=0; k < expression -> NumArguments();k++) {
         stack_words += EmitExpression((AstExpression *) expression -> Argument(k));
@@ -3674,6 +3680,11 @@ void ByteCode::EmitSuperInvocation(AstSuperCall *super_call)
     }
     for (int i=0; i < super_call -> NumLocalArguments();i++) {
         stack_words += EmitExpression((AstExpression *) super_call -> LocalArgument(i));
+    }
+    if (super_call -> NeedsExtraNullArgument())
+    {
+        PutOp(OP_ACONST_NULL);
+        stack_words += 1;
     }
     for (int k=0; k < super_call -> NumArguments();k++) {
         stack_words += EmitExpression((AstExpression *) super_call -> Argument(k));

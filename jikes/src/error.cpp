@@ -368,7 +368,8 @@ void SemanticError::StaticInitializer()
     print_message[DUPLICATE_LABEL] = PrintDUPLICATE_LABEL;
     print_message[CATCH_PRIMITIVE_TYPE] = PrintCATCH_PRIMITIVE_TYPE;
     print_message[CATCH_ARRAY_TYPE] = PrintCATCH_ARRAY_TYPE;
-    print_message[AMBIGUOUS_NAME] = PrintAMBIGUOUS_NAME;
+    print_message[AMBIGUOUS_FIELD] = PrintAMBIGUOUS_FIELD;
+    print_message[AMBIGUOUS_TYPE] = PrintAMBIGUOUS_TYPE;
     print_message[FIELD_IS_TYPE] = PrintFIELD_IS_TYPE;
     print_message[FIELD_NOT_FOUND] = PrintFIELD_NOT_FOUND;
     print_message[FIELD_NAME_MISSPELLED] = PrintFIELD_NAME_MISSPELLED;
@@ -414,7 +415,8 @@ void SemanticError::StaticInitializer()
     print_message[TYPE_NOT_REFERENCE] = PrintTYPE_NOT_REFERENCE;
     print_message[TYPE_NOT_VALID_FOR_SWITCH] = PrintTYPE_NOT_VALID_FOR_SWITCH;
     print_message[TYPE_IS_VOID] = PrintTYPE_IS_VOID;
-    print_message[VALUE_NOT_REPRESENTABLE_IN_TYPE] = PrintVALUE_NOT_REPRESENTABLE_IN_TYPE;
+    print_message[VALUE_NOT_REPRESENTABLE_IN_SWITCH_TYPE] = PrintVALUE_NOT_REPRESENTABLE_IN_SWITCH_TYPE;
+    print_message[TYPE_NOT_CONVERTIBLE_TO_SWITCH_TYPE] = PrintTYPE_NOT_CONVERTIBLE_TO_SWITCH_TYPE;
     print_message[DUPLICATE_CASE_VALUE] = PrintDUPLICATE_CASE_VALUE;
     print_message[MISPLACED_THIS_EXPRESSION] = PrintMISPLACED_THIS_EXPRESSION;
     print_message[MISPLACED_SUPER_EXPRESSION] = PrintMISPLACED_SUPER_EXPRESSION;
@@ -531,7 +533,6 @@ void SemanticError::StaticInitializer()
     print_message[CONSTRUCTOR_FOUND_IN_ANONYMOUS_CLASS] = PrintCONSTRUCTOR_FOUND_IN_ANONYMOUS_CLASS;
     print_message[ENCLOSING_INSTANCE_NOT_ACCESSIBLE] = PrintENCLOSING_INSTANCE_NOT_ACCESSIBLE;
     print_message[INVALID_ENCLOSING_INSTANCE] = PrintINVALID_ENCLOSING_INSTANCE;
-    print_message[PRIVATE_ENCLOSED_CONSTRUCTOR] = PrintPRIVATE_ENCLOSED_CONSTRUCTOR;
     print_message[ZERO_DIVIDE] = PrintZERO_DIVIDE;
     print_message[VOID_TO_STRING] = PrintVOID_TO_STRING;
 
@@ -1816,9 +1817,33 @@ void SemanticError::PrintCATCH_ARRAY_TYPE(ErrorInfo &err, LexStream *lex_stream,
 }
 
 
-void SemanticError::PrintAMBIGUOUS_NAME(ErrorInfo &err, LexStream *lex_stream, Control &control)
+void SemanticError::PrintAMBIGUOUS_FIELD(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The name \"";
+    cout << "The field name \"";
+    Unicode::Cout(err.insert1);
+    cout << "\" is an ambiguous name found in the types \"";
+    if (NotDot(err.insert2))
+    {
+        Unicode::Cout(err.insert2);
+        cout << "/";
+    }
+    Unicode::Cout(err.insert3);
+    cout << "\" and \"";
+    if (NotDot(err.insert4))
+    {
+        Unicode::Cout(err.insert4);
+        cout << "/";
+    }
+    Unicode::Cout(err.insert5);
+    cout << "\"";
+
+    return;
+}
+
+
+void SemanticError::PrintAMBIGUOUS_TYPE(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "The the nested type name \"";
     Unicode::Cout(err.insert1);
     cout << "\" is an ambiguous name found in the types \"";
     if (NotDot(err.insert2))
@@ -2479,10 +2504,24 @@ void SemanticError::PrintTYPE_IS_VOID(ErrorInfo &err, LexStream *lex_stream, Con
 }
 
 
-void SemanticError::PrintVALUE_NOT_REPRESENTABLE_IN_TYPE(ErrorInfo &err, LexStream *lex_stream, Control &control)
+void SemanticError::PrintVALUE_NOT_REPRESENTABLE_IN_SWITCH_TYPE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The value of this expression cannot be represented in type \"";
+    cout << "The value of this expression, ";
     Unicode::Cout(err.insert1);
+    cout << ", cannot be represented in the type of the switch statement expression, \"";
+    Unicode::Cout(err.insert2);
+    cout << "\"";
+
+    return;
+}
+
+
+void SemanticError::PrintTYPE_NOT_CONVERTIBLE_TO_SWITCH_TYPE(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "The type of this expression, \"";
+    Unicode::Cout(err.insert1);
+    cout << "\", is not assignment-convertible to the type of the switch statement expression, \"";
+    Unicode::Cout(err.insert2);
     cout << "\"";
 
     return;
@@ -2818,7 +2857,7 @@ void SemanticError::PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD(ErrorInfo &e
 {
     cout << "The abstract method \"";
     Unicode::Cout(err.insert1);
-    cout << "\", inherited from class \"";
+    cout << "\", inherited from type \"";
     if (NotDot(err.insert2))
     {
         Unicode::Cout(err.insert2);
@@ -2842,7 +2881,7 @@ void SemanticError::PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD_FROM_ABSTRAC
 {
     cout << "The abstract method \"";
     Unicode::Cout(err.insert1);
-    cout << "\", inherited from class \"";
+    cout << "\", inherited from type \"";
     if (NotDot(err.insert2))
     {
         Unicode::Cout(err.insert2);
@@ -4190,16 +4229,6 @@ void SemanticError::PrintINVALID_ENCLOSING_INSTANCE(ErrorInfo &err, LexStream *l
     }
     Unicode::Cout(err.insert6);
     cout << "\"";
-
-    return;
-}
-
-
-void SemanticError::PrintPRIVATE_ENCLOSED_CONSTRUCTOR(ErrorInfo &err, LexStream *lex_stream, Control &control)
-{
-    cout << "Access to a private enclosed constructor \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" is currently unsupported... Awaiting clarification of language spec";
 
     return;
 }

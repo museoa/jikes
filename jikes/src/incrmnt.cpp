@@ -29,6 +29,17 @@ void Control::RemoveTrashedTypes(SymbolSet &type_trash_set)
     //
     for (type = (TypeSymbol *) type_trash_set.FirstElement(); type; type = (TypeSymbol *) type_trash_set.NextElement())
     {
+        for (TypeSymbol *static_parent = (TypeSymbol *) type -> parents -> FirstElement();
+                         static_parent;
+                         static_parent = (TypeSymbol *) type -> parents -> NextElement())
+        {
+            if (! type_trash_set.IsElement(static_parent))
+            {
+                static_parent -> dependents -> RemoveElement(type);
+                static_parent -> subtypes -> RemoveElement(type);
+            }
+        }
+
         for (TypeSymbol *parent = (TypeSymbol *) type -> parents -> FirstElement();
                          parent;
                          parent = (TypeSymbol *) type -> parents -> NextElement())
@@ -256,7 +267,7 @@ void Control::ComputeRecompilationSet(TypeDependenceChecker &dependence_checker)
                         LexStream::TokenIndex identifier_token = lex_stream -> Next(lex_stream -> Type(k));
                         if (lex_stream -> Kind(identifier_token) == TK_Identifier)
                         {
-                            NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(identifier_token);
+                            NameSymbol *name_symbol = lex_stream -> NameSymbol(identifier_token);
                             TypeSymbol *type = package -> FindTypeSymbol(name_symbol);
                             if (type && (! dependents_closure.IsElement(type)))
                             {

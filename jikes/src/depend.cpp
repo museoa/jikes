@@ -262,62 +262,58 @@ void TypeDependenceChecker::ProcessType(TypeSymbol *type)
 
 void TypeDependenceChecker::OutputMake(FILE *outfile, char *output_name, Tuple<FileSymbol *> &file_list)
 {
-    if (outfile)
+assert(outfile);
+
+    for (int i = 0; i < file_list.Length(); i++)
     {
-        for (int i = 0; i < file_list.Length(); i++)
-        {
-            FileSymbol *file_symbol = file_list[i];
-            char *name = file_symbol -> FileName();
-            int length = file_symbol -> FileNameLength() - (file_symbol -> IsJava() ? FileSymbol::java_suffix_length
-                                                                                    : FileSymbol::class_suffix_length);
+        FileSymbol *file_symbol = file_list[i];
+        char *name = file_symbol -> FileName();
+        int length = file_symbol -> FileNameLength() - (file_symbol -> IsJava() ? FileSymbol::java_suffix_length
+                                                                                : FileSymbol::class_suffix_length);
 
-            char *class_name = new char[length + FileSymbol::class_suffix_length + 1],
-                 *java_name = new char[length + FileSymbol::java_suffix_length + 1];
+        char *class_name = new char[length + FileSymbol::class_suffix_length + 1],
+             *java_name = new char[length + FileSymbol::java_suffix_length + 1];
 
-            strncpy(class_name, name, length);
-            strcpy(&class_name[length], FileSymbol::class_suffix);
-            strncpy(java_name, name, length);
-            strcpy(&java_name[length], FileSymbol::java_suffix);
+        strncpy(class_name, name, length);
+        strcpy(&class_name[length], FileSymbol::class_suffix);
+        strncpy(java_name, name, length);
+        strcpy(&java_name[length], FileSymbol::java_suffix);
 
-            struct stat status;
-
-            if ((::SystemStat(java_name,  &status) == 0) && (status.st_mode  & STAT_S_IFREG)) {
-                fprintf(outfile, "%s: ", output_name);
 #ifdef EBCDIC
-                char * charp = java_name;
-                charp = java_name;
-                while (*charp) fprintf(outfile, "%c", Code::ToEBCDIC(*charp++));
+        for (char *p = output_name; *p; p++)
+            fprintf(outfile, "%c", Code::ToEBCDIC(*p));
+        fprintf(outfile, " : ");
+        for (char *q = java_name; *q; q++)
+            fprintf(outfile, "%c", Code::ToEBCDIC(*q));
+        fprintf(outfile, "\n");
 #else
-                fprintf(outfile, "%s", java_name);
+        fprintf(outfile, "%s : %s\n", output_name, java_name);
 #endif
-                fprintf(outfile, "\n");
-                
-            }
             
-            if (i > 0) // Not the first file in the list
-            {
-                if ((::SystemStat(class_name, &status) == 0) && (status.st_mode & STAT_S_IFREG)) {
-                fprintf(outfile, "%s: ", output_name);
-#ifdef EBCDIC
-                char * charp = class_name;
-                while (*charp) fprintf(outfile, "%c", Code::ToEBCDIC(*charp++));
-#else
-                fprintf(outfile, "%s", class_name);
-#endif
-                fprintf(outfile, "\n");
-                }
-            }
+        if (i > 0) // Not the first file in the list
+        {
 
-            delete [] class_name;
-            delete [] java_name;
+#ifdef EBCDIC
+            for (char *p = output_name; *p; p++)
+                fprintf(outfile, "%c", Code::ToEBCDIC(*p));
+            fprintf(outfile, " : ");
+            for (char *q = class_name; *q; q++)
+                fprintf(outfile, "%c", Code::ToEBCDIC(*q));
+            fprintf(outfile, "\n");
+#else
+            fprintf(outfile, "%s : %s\n", output_name, class_name);
+#endif
         }
+
+        delete [] class_name;
+        delete [] java_name;
     }
 
     return;
 }
 
 
-void TypeDependenceChecker::OutputMake(FILE *outfile, FileSymbol *file_symbol)
+void TypeDependenceChecker::OutputMake(FileSymbol *file_symbol)
 {
     //
     //
@@ -360,18 +356,13 @@ void TypeDependenceChecker::OutputMake(FILE *outfile, FileSymbol *file_symbol)
     for (FileSymbol *symbol = (FileSymbol *) file_set.FirstElement(); symbol; symbol = (FileSymbol *) file_set.NextElement())
         file_list.Next() = symbol;
 
-    if (outfile) // A single output makefile was specified
-        OutputMake(outfile, output_name, file_list);
+    FILE *outfile = ::SystemFopen(u_name, "w");
+    if (outfile == NULL)
+        cout << "*** Cannot open file " << u_name << "\n";
     else
     {
-        outfile = ::SystemFopen(u_name, "w");
-        if (outfile == NULL)
-            cout << "*** Cannot open file " << u_name << "\n";
-        else
-        {
-            OutputMake(outfile, output_name, file_list);
-            fclose(outfile);
-        }
+        OutputMake(outfile, output_name, file_list);
+        fclose(outfile);
     }
 
     delete [] output_name;
@@ -405,16 +396,8 @@ void TypeDependenceChecker::OutputDependences()
                 dependent -> parents_closure -> AddElement(parent);
     }
 
-    FILE *outfile = NULL;
-    if (control -> option.makefile_name)
-    {
-        outfile = ::SystemFopen(control -> option.makefile_name, "w");
-        if (outfile == NULL)
-            cout << "*** Cannot open file " << control -> option.makefile_name << "\n";
-    }
-
     for (FileSymbol *symbol = (FileSymbol *) new_file_set.FirstElement(); symbol; symbol = (FileSymbol *) new_file_set.NextElement())
-        OutputMake(outfile, symbol);
+        OutputMake(symbol);
 
     for (int n = 0; n < type_list.Length(); n++)
     {

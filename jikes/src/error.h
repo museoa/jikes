@@ -103,7 +103,8 @@ public:
         DUPLICATE_LABEL,
         CATCH_PRIMITIVE_TYPE,
         CATCH_ARRAY_TYPE,
-        AMBIGUOUS_NAME,
+        AMBIGUOUS_FIELD,
+        AMBIGUOUS_TYPE,
         FIELD_IS_TYPE,
         FIELD_NOT_FOUND,
         FIELD_NAME_MISSPELLED,
@@ -149,7 +150,8 @@ public:
         TYPE_NOT_REFERENCE,
         TYPE_NOT_VALID_FOR_SWITCH,
         TYPE_IS_VOID,
-        VALUE_NOT_REPRESENTABLE_IN_TYPE,
+        VALUE_NOT_REPRESENTABLE_IN_SWITCH_TYPE,
+        TYPE_NOT_CONVERTIBLE_TO_SWITCH_TYPE,
         DUPLICATE_CASE_VALUE,
         MISPLACED_THIS_EXPRESSION,
         MISPLACED_SUPER_EXPRESSION,
@@ -266,7 +268,6 @@ public:
         CONSTRUCTOR_FOUND_IN_ANONYMOUS_CLASS,
         ENCLOSING_INSTANCE_NOT_ACCESSIBLE,
         INVALID_ENCLOSING_INSTANCE,
-        PRIVATE_ENCLOSED_CONSTRUCTOR,
 
         ZERO_DIVIDE,
         VOID_TO_STRING,
@@ -420,7 +421,8 @@ private:
     static void PrintDUPLICATE_LABEL(ErrorInfo &, LexStream *, Control &);
     static void PrintCATCH_PRIMITIVE_TYPE(ErrorInfo &, LexStream *, Control &);
     static void PrintCATCH_ARRAY_TYPE(ErrorInfo &, LexStream *, Control &);
-    static void PrintAMBIGUOUS_NAME(ErrorInfo &, LexStream *, Control &);
+    static void PrintAMBIGUOUS_FIELD(ErrorInfo &, LexStream *, Control &);
+    static void PrintAMBIGUOUS_TYPE(ErrorInfo &, LexStream *, Control &);
     static void PrintFIELD_IS_TYPE(ErrorInfo &, LexStream *, Control &);
     static void PrintFIELD_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
     static void PrintFIELD_NAME_MISSPELLED(ErrorInfo &, LexStream *, Control &);
@@ -466,7 +468,8 @@ private:
     static void PrintTYPE_NOT_REFERENCE(ErrorInfo &, LexStream *, Control &);
     static void PrintTYPE_NOT_VALID_FOR_SWITCH(ErrorInfo &, LexStream *, Control &);
     static void PrintTYPE_IS_VOID(ErrorInfo &, LexStream *, Control &);
-    static void PrintVALUE_NOT_REPRESENTABLE_IN_TYPE(ErrorInfo &, LexStream *, Control &);
+    static void PrintVALUE_NOT_REPRESENTABLE_IN_SWITCH_TYPE(ErrorInfo &, LexStream *, Control &);
+    static void PrintTYPE_NOT_CONVERTIBLE_TO_SWITCH_TYPE(ErrorInfo &, LexStream *, Control &);
     static void PrintDUPLICATE_CASE_VALUE(ErrorInfo &, LexStream *, Control &);
     static void PrintMISPLACED_THIS_EXPRESSION(ErrorInfo &, LexStream *, Control &);
     static void PrintMISPLACED_SUPER_EXPRESSION(ErrorInfo &, LexStream *, Control &);
@@ -583,7 +586,6 @@ private:
     static void PrintCONSTRUCTOR_FOUND_IN_ANONYMOUS_CLASS(ErrorInfo &, LexStream *, Control &);
     static void PrintENCLOSING_INSTANCE_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
     static void PrintINVALID_ENCLOSING_INSTANCE(ErrorInfo &, LexStream *, Control &);
-    static void PrintPRIVATE_ENCLOSED_CONSTRUCTOR(ErrorInfo &, LexStream *, Control &);
     static void PrintZERO_DIVIDE(ErrorInfo &, LexStream *, Control &);
     static void PrintVOID_TO_STRING(ErrorInfo &, LexStream *, Control &);
 

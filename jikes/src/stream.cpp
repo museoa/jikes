@@ -141,6 +141,26 @@ LexStream::~LexStream()
 
 
 //
+//
+//
+::LiteralSymbol *LexStream::LiteralSymbol(TokenIndex i)
+{
+    Symbol *symbol = tokens[i].additional_info.symbol;
+    return (symbol && (Kind(i) != TK_LBRACE) ? symbol -> LiteralCast() : (::LiteralSymbol *) NULL);
+}
+
+
+//
+//
+//
+::NameSymbol *LexStream::NameSymbol(TokenIndex i)
+{
+    Symbol *symbol = tokens[i].additional_info.symbol;
+    return (symbol && (Kind(i) != TK_LBRACE) ? symbol -> NameCast() : (::NameSymbol *) NULL);
+}
+
+
+//
 // Name of input file where the token appeared.
 //
 char *LexStream::FileName() { return file_symbol -> FileName(); }

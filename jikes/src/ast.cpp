@@ -799,7 +799,7 @@ Ast *AstArrayCreationExpression::Clone(StoragePool *ast_pool)
 
 Ast *AstFieldAccess::Clone(StoragePool *ast_pool)
 {
-    AstFieldAccess *clone = ast_pool -> GenFieldAccess();
+    AstFieldAccess *clone = ast_pool -> GenFieldAccess(this -> field_access_tag);
 
     clone -> base = (AstExpression *) this -> base -> Clone(ast_pool);
     clone -> dot_token = this -> dot_token;
@@ -819,6 +819,7 @@ Ast *AstMethodInvocation::Clone(StoragePool *ast_pool)
     for (int i = 0; i < this -> NumArguments(); i++)
         clone -> AddArgument((AstExpression *) this -> Argument(i) -> Clone(ast_pool));
     clone -> right_parenthesis_token = this -> right_parenthesis_token;
+    clone -> resolution_opt = (AstExpression *) (this -> resolution_opt ? this -> resolution_opt -> Clone(ast_pool) : NULL);
 
     return clone;
 }
@@ -1178,12 +1179,20 @@ Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
     void AstThisCall::Print(LexStream& lex_stream)
     {
         cout << "#" << this -> id << " (ThisCall):  ";
+        if (base_opt)
+        {
+            cout << "#" << base_opt -> id;
+            Unicode::Cout(lex_stream.Name(dot_token_opt));
+        }
         Unicode::Cout(lex_stream.Name(this_token));
         cout << " (";
         for (int i = 0; i < this -> NumArguments(); i++)
             cout << " #" << this -> Argument(i) -> id;
         cout << " ) \n";
         
+        if (base_opt)
+            base_opt -> Print(lex_stream);
+
         for (int j = 0; j < NumArguments(); j++)
             this -> Argument(j) -> Print(lex_stream);
     }
@@ -1201,7 +1210,9 @@ Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
         for (int i = 0; i < this -> NumArguments(); i++)
             cout << " #" << this -> Argument(i) -> id;
         cout << " ) \n";
-        base_opt -> Print(lex_stream);
+
+        if (base_opt)
+            base_opt -> Print(lex_stream);
 
         for (int j = 0; j < NumArguments(); j++)
             this -> Argument(j) -> Print(lex_stream);
@@ -1590,7 +1601,7 @@ Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
     void AstClassInstanceCreationExpression::Print(LexStream& lex_stream)
     {
         cout << "#" << this -> id << " (ClassInstanceCreationExpression):  ";
-        if (dot_token_opt)
+        if (base_opt)
         {
             cout << "#" << base_opt -> id;
             Unicode::Cout(lex_stream.Name(dot_token_opt));
@@ -1603,11 +1614,13 @@ Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
         cout << " ) \n";
         cout << "#" << (class_body_opt ? class_body_opt -> id : 0) << "\n";
 
-        if (dot_token_opt /* base_opt - see ast.h for explanation */)
+        if (base_opt)
             base_opt -> Print(lex_stream);
+
         class_type -> Print(lex_stream);
         for (int j = 0; j < NumArguments(); j++)
             this -> Argument(j) -> Print(lex_stream);
+
         if (class_body_opt)
             class_body_opt -> Print(lex_stream);
     }
@@ -2177,6 +2190,7 @@ AstMethodInvocation::~AstMethodInvocation()
     assert(0);
     //    delete method;
     //    delete arguments;
+    //    delete resolution_opt;
 }
 
 AstArrayAccess::~AstArrayAccess()

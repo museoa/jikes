@@ -374,16 +374,122 @@ Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
         //
         if (option.makefile)
         {
-            SymbolSet *candidates = new SymbolSet(input_java_file_set.Size() + input_class_file_set.Size());
-            *candidates = input_java_file_set;
-            candidates -> Union(input_class_file_set);
+            if (option.makefile_name)
+            {
+                FILE *outfile = ::SystemFopen(option.makefile_name, "w");
+                if (outfile == NULL)
+                    cout << "*** Cannot open file " << option.makefile_name << "\n";
+                else
+                {
+                    SymbolSet types_in_new_files;
 
-            TypeDependenceChecker *dependence_checker = new TypeDependenceChecker((Control *) this, *candidates, type_trash_bin);
-            dependence_checker -> PartialOrder();
-            dependence_checker -> OutputDependences();
-            delete dependence_checker;
+                    for (FileSymbol *file_symbol = (FileSymbol *) input_java_file_set.FirstElement();
+                                     file_symbol;
+                                     file_symbol = (FileSymbol *) input_java_file_set.NextElement())
+                    {
+                        char *java_name = file_symbol -> FileName();
 
-            delete candidates;
+                        for (int j = 0; j < file_symbol -> types.Length(); j++)
+                        {
+                            TypeSymbol *type = file_symbol -> types[j];
+#ifdef EBCDIC
+                            for (char *p = java_name; *p; p++)
+                                 fprintf(outfile, "%c", Code::ToEBCDIC(*p));
+                            fprintf(outfile, " : ");
+                            for (char *q = type -> SignatureString(); *q; q++)
+                                 fprintf(outfile, "%c", Code::ToEBCDIC(*q));
+                            fprintf(outfile, "\n");
+#else
+                            fprintf(outfile, "%s : %s\n", java_name, type -> SignatureString());
+#endif
+
+                            //
+                            //
+                            //
+                            for (TypeSymbol *static_parent = (TypeSymbol *) type -> static_parents -> FirstElement();
+                                             static_parent;
+                                             static_parent = (TypeSymbol *) type -> static_parents -> NextElement())
+                            {
+                                if (! type -> parents -> IsElement(static_parent)) // Only a static reference to static_parent?
+                                {
+#ifdef EBCDIC
+                                    fprintf(outfile, "   !");
+                                    for (char *q = static_parent -> SignatureString(); *q; q++)
+                                         fprintf(outfile, "%c", Code::ToEBCDIC(*q));
+                                    fprintf(outfile, "\n");
+#else
+                                    fprintf(outfile, "   !%s\n", static_parent -> SignatureString());
+#endif
+
+                                    //
+                                    // If the type is contained in a type that is not one of the input files, save it
+                                    //
+                                    if (static_parent -> file_symbol -> IsClass())
+                                        types_in_new_files.AddElement(static_parent);
+                                }
+                            }
+
+                            //
+                            //
+                            //
+                            for (TypeSymbol *parent = (TypeSymbol *) type -> parents -> FirstElement();
+                                             parent;
+                                             parent = (TypeSymbol *) type -> parents -> NextElement())
+                            {
+#ifdef EBCDIC
+                                fprintf(outfile, "    ");
+                                for (char *q = parent -> SignatureString(); *q; q++)
+                                     fprintf(outfile, "%c", Code::ToEBCDIC(*q));
+                                fprintf(outfile, "\n");
+#else
+                                fprintf(outfile, "    %s\n", parent -> SignatureString());
+#endif
+
+                                //
+                                // If the type is contained in a type that is not one of the input files, save it
+                                //
+                                if (parent -> file_symbol -> IsClass())
+                                    types_in_new_files.AddElement(parent);
+                            }
+                        }
+                    }
+
+                    //
+                    // Print the list of class files that are referenced.
+                    //
+                    for (TypeSymbol *type = (TypeSymbol *) types_in_new_files.FirstElement();
+                                     type;
+                                     type = (TypeSymbol *) types_in_new_files.NextElement())
+                    {
+                        char *class_name = type -> file_symbol -> FileName();
+#ifdef EBCDIC
+                        for (char *p = class_name; *p; p++)
+                             fprintf(outfile, "%c", Code::ToEBCDIC(*p));
+                        fprintf(outfile, " : ");
+                        for (char *q = type -> SignatureString(); *q; q++)
+                             fprintf(outfile, "%c", Code::ToEBCDIC(*q));
+                        fprintf(outfile, "\n");
+#else
+                        fprintf(outfile, "%s : %s\n", class_name, type -> SignatureString());
+#endif
+                    }
+
+                    fclose(outfile);
+                }
+            }
+            else
+            {
+                SymbolSet *candidates = new SymbolSet(input_java_file_set.Size() + input_class_file_set.Size());
+                *candidates = input_java_file_set;
+                candidates -> Union(input_class_file_set);
+
+                TypeDependenceChecker *dependence_checker = new TypeDependenceChecker((Control *) this, *candidates, type_trash_bin);
+                dependence_checker -> PartialOrder();
+                dependence_checker -> OutputDependences();
+                delete dependence_checker;
+
+                delete candidates;
+            }
         }
     }
 
@@ -846,7 +952,7 @@ PackageSymbol *Control::FindOrInsertPackage(LexStream *lex_stream, AstExpression
     if (field_access)
     {
         package = FindOrInsertPackage(lex_stream, field_access -> base);
-        NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(field_access -> identifier_token);
+        NameSymbol *name_symbol = lex_stream -> NameSymbol(field_access -> identifier_token);
         PackageSymbol *subpackage = package -> FindPackageSymbol(name_symbol);
         if (! subpackage)
             subpackage = package -> InsertPackageSymbol(name_symbol);
@@ -855,7 +961,7 @@ PackageSymbol *Control::FindOrInsertPackage(LexStream *lex_stream, AstExpression
     else
     {
         AstSimpleName *simple_name = (AstSimpleName *) name;
-        NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(simple_name -> identifier_token);
+        NameSymbol *name_symbol = lex_stream -> NameSymbol(simple_name -> identifier_token);
         package = external_table.FindPackageSymbol(name_symbol);
         if (! package)
             package = external_table.InsertPackageSymbol(name_symbol, NULL);
@@ -1146,7 +1252,7 @@ void Control::ProcessPackageDeclaration(FileSymbol *file_symbol, AstPackageDecla
         LexStream::TokenIndex identifier_token = file_symbol -> lex_stream -> Next(file_symbol -> lex_stream -> Type(i));
         if (file_symbol -> lex_stream -> Kind(identifier_token) == TK_Identifier)
         {
-            NameSymbol *name_symbol = (NameSymbol *) file_symbol -> lex_stream -> NameSymbol(identifier_token);
+            NameSymbol *name_symbol = file_symbol -> lex_stream -> NameSymbol(identifier_token);
             if (! file_symbol -> package -> FindTypeSymbol(name_symbol))
             {
                 TypeSymbol *type = file_symbol -> package -> InsertOuterTypeSymbol(name_symbol);

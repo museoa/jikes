@@ -1115,19 +1115,21 @@ public:
     static inline u4 GetAndSkipU4(char *&);
     static inline void Skip(char *&, int);
 
-    inline void AddDependence(TypeSymbol *, TypeSymbol *, LexStream::TokenIndex);
+    inline void AddDependence(TypeSymbol *, TypeSymbol *, LexStream::TokenIndex, bool = false);
     inline void SetObjectSuperType(TypeSymbol *, LexStream::TokenIndex);
     inline void AddStringConversionDependence(TypeSymbol *, LexStream::TokenIndex);
 };
 
 
-inline void Semantic::AddDependence(TypeSymbol *base_type_, TypeSymbol *parent_type_, LexStream::TokenIndex tok)
+inline void Semantic::AddDependence(TypeSymbol *base_type_, TypeSymbol *parent_type_, LexStream::TokenIndex tok, bool static_access)
 {
     TypeSymbol *base_type = base_type_ -> outermost_type,
                *parent_type = parent_type_ -> outermost_type; 
 
     parent_type -> dependents -> AddElement(base_type);
-    base_type -> parents -> AddElement(parent_type);
+    if (static_access)
+         base_type -> static_parents -> AddElement(parent_type);
+    else base_type -> parents -> AddElement(parent_type);
 
     if (control.option.pedantic)
     {

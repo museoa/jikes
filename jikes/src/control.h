@@ -278,22 +278,13 @@ public:
     //
     NameSymbol *MakeParameter(int num)
     {
-        wchar_t str[12],
-                *p;
+        IntToWstring value(num);
 
-        p = &str[10];
-        *p = U_NULL;
-        do
-        {
-            p--;
-            *p = U_0 + (num % 10);
-            num /= 10;
-        } while (num > 0);
+        wchar_t str[13];
+        str[0] = U_DOLLAR; // '$'
+        wcscpy(&str[1], value.String());
 
-        p--;
-        *p = U_DOLLAR; // '$'
-
-        return FindOrInsertName(p, wcslen(p));
+        return FindOrInsertName(str, value.Length() + 1);
     }
 
     //

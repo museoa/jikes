@@ -119,7 +119,7 @@ void Semantic::ProcessBlock(Ast *stmt)
     //
     if (block_body -> label_token_opt)
     {
-        NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(block_body -> label_token_opt);
+        NameSymbol *name_symbol = lex_stream -> NameSymbol(block_body -> label_token_opt);
         Symbol *symbol = LocalSymbolTable().FindLabelSymbol(name_symbol);
         if (symbol)
         {
@@ -178,7 +178,7 @@ void Semantic::ProcessLocalVariableDeclarationStatement(Ast *stmt)
     {
         AstVariableDeclarator *variable_declarator = local_decl -> VariableDeclarator(i);
         AstVariableDeclaratorId *name = variable_declarator -> variable_declarator_name;
-        NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(name -> identifier_token);
+        NameSymbol *name_symbol = lex_stream -> NameSymbol(name -> identifier_token);
 
 //
 // TODO: Confirm that this new test is indeed the case. In 1.0, only the more restricted test below was necessary.
@@ -564,7 +564,7 @@ void Semantic::ProcessSwitchStatement(Ast *stmt)
             {
                 ProcessExpression(case_label -> expression);
 
-                if (CanAssignmentConvert(type, case_label -> expression))
+                if (case_label -> expression -> Type() != control.no_type)
                 {
                     if (! case_label -> expression -> IsConstant())
                     {
@@ -573,27 +573,42 @@ void Semantic::ProcessSwitchStatement(Ast *stmt)
                                        case_label -> expression -> RightToken());
                         case_label -> expression -> symbol = control.no_type;
                     }
-                    else if (case_label -> expression -> Type() != control.no_type)
+                    else if (type != control.no_type)
                     {
-                        if (case_label -> expression -> Type() != type && type != control.no_type)
-                            case_label -> expression = ConvertToType(case_label -> expression, type);
+                        if (CanAssignmentConvert(type, case_label -> expression))
+                        {
+                            if (case_label -> expression -> Type() != type)
+                                case_label -> expression = ConvertToType(case_label -> expression, type);
 
-                        case_label -> map_index = switch_statement -> map.Length();
+                            case_label -> map_index = switch_statement -> map.Length();
 
-                        CaseElement *case_element = compilation_unit -> ast_pool -> GenCaseElement();
-                        switch_statement -> map.Next() = case_element;
+                            CaseElement *case_element = compilation_unit -> ast_pool -> GenCaseElement();
+                            switch_statement -> map.Next() = case_element;
 
-                        case_element -> expression = case_label -> expression;
-                        case_element -> switch_block_statement = switch_block_statement;
-                        case_element -> index = case_label -> map_index; // use this index to keep sort stable !
+                            case_element -> expression = case_label -> expression;
+                            case_element -> switch_block_statement = switch_block_statement;
+                            case_element -> index = case_label -> map_index; // use this index to keep sort stable !
+                        }
+                        else if (case_label -> expression -> Type() == control.int_type &&
+                                 ! IsIntValueRepresentableInType(case_label -> expression, type))
+                        {
+                            IntToWstring value(((IntLiteralValue *) (case_label -> expression -> value)) -> value);
+
+                            ReportSemError(SemanticError::VALUE_NOT_REPRESENTABLE_IN_SWITCH_TYPE,
+                                           case_label -> expression -> LeftToken(),
+                                           case_label -> expression -> RightToken(),
+                                           value.String(),
+                                           type -> Name());
+                        }
+                        else
+                        {
+                            ReportSemError(SemanticError::TYPE_NOT_CONVERTIBLE_TO_SWITCH_TYPE,
+                                           case_label -> expression -> LeftToken(),
+                                           case_label -> expression -> RightToken(),
+                                           case_label -> expression -> Type() -> Name(),
+                                           type -> Name());
+                        }
                     }
-                }
-                else
-                {
-                    ReportSemError(SemanticError::VALUE_NOT_REPRESENTABLE_IN_TYPE,
-                                   case_label -> expression -> LeftToken(),
-                                   case_label -> expression -> RightToken(),
-                                   type -> Name());
                 }
             }
             else if (switch_statement -> default_case.switch_block_statement == NULL)
@@ -701,25 +716,12 @@ void Semantic::ProcessSwitchStatement(Ast *stmt)
     {
         if (switch_statement -> map[k] -> Value() == switch_statement -> map[k - 1] -> Value())
         {
-            wchar_t info[12],
-                    *str = &info[11];
-            int n = switch_statement -> map[k] -> Value();
-            bool negative = (n < 0);
-            if (negative)
-                n = -n;
-            *str = U_NULL;
-            do
-            {
-                *--str = (U_0 + n % 10);
-                n /= 10;
-            } while (n != 0);
-            if (negative)
-                *--str = '-';
+            IntToWstring value(switch_statement -> map[k] -> Value());
 
             ReportSemError(SemanticError::DUPLICATE_CASE_VALUE,
                            switch_statement -> map[k] -> expression -> LeftToken(),
                            switch_statement -> map[k] -> expression -> RightToken(),
-                           str);
+                           value.String());
         }
     }
 
@@ -807,7 +809,7 @@ void Semantic::ProcessBreakStatement(Ast *stmt)
     //
     if (break_statement -> identifier_token_opt)
     {
-        NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(break_statement -> identifier_token_opt);
+        NameSymbol *name_symbol = lex_stream -> NameSymbol(break_statement -> identifier_token_opt);
         LabelSymbol *label_symbol = LocalSymbolTable().FindLabelSymbol(name_symbol);
 
         if (label_symbol)
@@ -867,7 +869,7 @@ void Semantic::ProcessContinueStatement(Ast *stmt)
     }
     else if (continue_statement -> identifier_token_opt)
     {
-        NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(continue_statement -> identifier_token_opt);
+        NameSymbol *name_symbol = lex_stream -> NameSymbol(continue_statement -> identifier_token_opt);
         LabelSymbol *label_symbol = LocalSymbolTable().FindLabelSymbol(name_symbol);
 
         if (label_symbol)
@@ -1181,7 +1183,7 @@ void Semantic::ProcessTryStatement(Ast *stmt)
         }
 
         AstVariableDeclaratorId *name = parameter -> variable_declarator_name;
-        NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(name -> identifier_token);
+        NameSymbol *name_symbol = lex_stream -> NameSymbol(name -> identifier_token);
         if (LocalSymbolTable().FindVariableSymbol(name_symbol))
         {
             ReportSemError(SemanticError::DUPLICATE_LOCAL_VARIABLE_DECLARATION,
@@ -1351,29 +1353,20 @@ void Semantic::ProcessEmptyStatement(Ast *stmt)
 
 TypeSymbol *Semantic::GetLocalType(AstClassDeclaration *class_declaration)
 {
-    NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(class_declaration -> identifier_token);
+    NameSymbol *name_symbol = lex_stream -> NameSymbol(class_declaration -> identifier_token);
     TypeSymbol *type = LocalSymbolTable().Top() -> InsertNestedTypeSymbol(name_symbol);
 
     TypeSymbol *outermost_type = ThisType() -> outermost_type;
     if (! outermost_type -> local)
         outermost_type -> local = new SymbolSet;
 
-    int num = outermost_type -> local -> NameCount(name_symbol) + 1;
-    wchar_t str[11],
-            *p = &str[10];
-    *p = U_NULL;
-    do
-    {
-        p--;
-        *p = U_0 + (num % 10);
-        num /= 10;
-    } while (num > 0);
+    IntToWstring value(outermost_type -> local -> NameCount(name_symbol) + 1);
 
-    int length = wcslen(p) + outermost_type -> NameLength() + 1 + name_symbol -> NameLength() + 1; // +1 for $,... +1 for $
+    int length = value.Length() + outermost_type -> NameLength() + 1 + name_symbol -> NameLength() + 1; // +1 for $,... +1 for $
     wchar_t *external_name = new wchar_t[length + 1]; // +1 for '\0';
     wcscpy(external_name, outermost_type -> Name());
     wcscat(external_name, StringConstant::US__DS_);
-    wcscat(external_name, p);
+    wcscat(external_name, value.String());
     wcscat(external_name, StringConstant::US__DS_);
     wcscat(external_name, name_symbol -> Name());
 
@@ -1403,7 +1396,7 @@ void Semantic::ProcessClassDeclaration(Ast *stmt)
 
     CheckNestedTypeDuplication(state_stack.Top(), class_declaration -> identifier_token);
 
-    NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(class_declaration -> identifier_token);
+    NameSymbol *name_symbol = lex_stream -> NameSymbol(class_declaration -> identifier_token);
 
     TypeSymbol *inner_type = GetLocalType(class_declaration);
     inner_type -> outermost_type = ThisType() -> outermost_type;
@@ -1648,15 +1641,12 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
             {
                 if (this_type -> outermost_type == super_type -> outermost_type)
                 {
-                     //
-                     // TODO: Awaiting language clarification.
-                     //
-                     ReportSemError(SemanticError::PRIVATE_ENCLOSED_CONSTRUCTOR,
-                                    super_call -> LeftToken(),
-                                    super_call -> RightToken(),
-                                    constructor -> Header());
-
                      constructor = TypeSymbol::GetReadAccessMethod(constructor);
+
+                     //
+                     // Add extra argument for read access constructor;
+                     //
+                     super_call -> AddNullArgument();
                 }
                 else ReportSemError(SemanticError::PRIVATE_CONSTRUCTOR_NOT_ACCESSIBLE,
                                     super_call -> LeftToken(),

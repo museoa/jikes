@@ -214,7 +214,7 @@ public:
         delete [] base;
     }
 
-    inline void InsertTypeShadowSymbol(TypeSymbol *type_symbol)
+    inline TypeShadowSymbol *InsertTypeShadowSymbol(TypeSymbol *type_symbol)
     {
         int i = type_symbol -> name_symbol -> index % hash_size;
         TypeShadowSymbol *p = new TypeShadowSymbol(type_symbol);
@@ -222,7 +222,7 @@ public:
         base[i] = p;
         symbol_pool.Next() = p;
         
-        return;
+        return p;
     }
 
     inline TypeShadowSymbol *FindTypeShadowSymbol(NameSymbol *name_symbol)
@@ -280,7 +280,7 @@ public:
         delete [] base;
     }
 
-    inline void InsertVariableShadowSymbol(VariableSymbol *variable_symbol)
+    inline VariableShadowSymbol *InsertVariableShadowSymbol(VariableSymbol *variable_symbol)
     {
         int i = variable_symbol -> name_symbol -> index % hash_size;
         VariableShadowSymbol *p = new VariableShadowSymbol(variable_symbol);
@@ -288,7 +288,7 @@ public:
         base[i] = p;
         symbol_pool.Next() = p;
 
-        return;
+        return p;
     }
 
     inline VariableShadowSymbol *FindVariableShadowSymbol(NameSymbol *name_symbol)

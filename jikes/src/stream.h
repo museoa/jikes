@@ -104,8 +104,6 @@ public:
 
     inline TokenIndex MatchingBrace(TokenIndex i) { return tokens[i].additional_info.right_brace; }
 
-    inline Symbol *NameSymbol(TokenIndex i) { return (Kind(i) != TK_LBRACE ? tokens[i].additional_info.symbol : (Symbol *) NULL); }
-
     wchar_t *Name(TokenIndex i)
     {
         return (NameSymbol(i) ? tokens[i].additional_info.symbol -> Name() : KeywordName(tokens[i].Kind()));
@@ -115,6 +113,10 @@ public:
     {
         return (NameSymbol(i) ? tokens[i].additional_info.symbol -> NameLength() : wcslen(KeywordName(tokens[i].Kind())));
     }
+
+    ::LiteralSymbol *LiteralSymbol(TokenIndex);
+
+    ::NameSymbol *NameSymbol(TokenIndex);
 
     char *FileName();
     int FileNameLength();
@@ -276,7 +278,7 @@ private:
         // to be expanded from 16M to 32M.
         //
 
-        inline void SetSymbol(Symbol *symbol)             { additional_info.symbol = symbol; }
+        inline void SetSymbol(Symbol *symbol)         { additional_info.symbol = symbol; }
         inline void SetRightBrace(TokenIndex right_brace) { additional_info.right_brace = right_brace; }
     };
 

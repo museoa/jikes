@@ -113,7 +113,7 @@ private:
     } stack;
 
     void OutputMake(FILE *, char *, Tuple<FileSymbol *> &);
-    void OutputMake(FILE *, FileSymbol *);
+    void OutputMake(FileSymbol *);
 
     Tuple<TypeSymbol *> type_list;
 

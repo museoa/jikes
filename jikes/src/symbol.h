@@ -576,7 +576,7 @@ assert(! base_method -> local_constructor);
     void CleanUp();
 
     void MarkSynthetic() { status |= (unsigned char) 0x08; }
-    bool IsSynthetic()   { return status & (unsigned char) 0x08; }
+    bool IsSynthetic()   { return (status & (unsigned char) 0x08) != 0; }
 
 private:
     NameSymbol *external_name_symbol;
@@ -731,6 +731,7 @@ public:
 
     SymbolSet *dependents,
               *parents,
+              *static_parents,
               *dependents_closure,  // processed in cycle.cpp
               *parents_closure;     // processed in cycle.cpp
 
@@ -935,29 +936,29 @@ assert(NumConstructorParameters() > 0);
     }
 
     void MarkConstructorMembersProcessed() { status |= (unsigned short) 0x0001; }
-    bool ConstructorMembersProcessed() { return status & (unsigned short) 0x0001; }
+    bool ConstructorMembersProcessed() { return (status & (unsigned short) 0x0001) != 0 ; }
 
     void MarkMethodMembersProcessed() { status |= (unsigned short) 0x0002; }
-    bool MethodMembersProcessed() { return status & (unsigned short) 0x0002; }
+    bool MethodMembersProcessed() { return (status & (unsigned short) 0x0002) != 0; }
 
     void MarkFieldMembersProcessed() { status |= (unsigned short) 0x0004; }
-    bool FieldMembersProcessed() { return status & (unsigned short) 0x0004; }
+    bool FieldMembersProcessed() { return (status & (unsigned short) 0x0004) != 0; }
 
     void MarkLocalClassProcessingCompleted() { status |= (unsigned short) 0x0008; }
-    bool LocalClassProcessingCompleted() { return status & (unsigned short) 0x0008; }
+    bool LocalClassProcessingCompleted() { return (status & (unsigned short) 0x0008) != 0; }
 
     void MarkSourcePending() { status |= (unsigned short) 0x0010; }
     void MarkSourceNoLongerPending() { status &= (~ ((unsigned short) 0x0010)); }
-    bool SourcePending() { return status & (unsigned short) 0x0010; }
+    bool SourcePending() { return (status & (unsigned short) 0x0010) != 0; }
 
     void MarkAnonymous() { status |= (unsigned short) 0x0020; }
-    bool Anonymous() { return status & (unsigned short) 0x0020; }
+    bool Anonymous() { return (status & (unsigned short) 0x0020) != 0; }
 
     void MarkHeaderProcessed() { status |= (unsigned short) 0x0040; }
-    bool HeaderProcessed() { return status & (unsigned short) 0x0040; }
+    bool HeaderProcessed() { return (status & (unsigned short) 0x0040) != 0; }
 
     void MarkPrimitive() { status |= (unsigned short) 0x0080; }
-    bool Primitive()     { return status & (unsigned short) 0x0080; }
+    bool Primitive()     { return (status & (unsigned short) 0x0080) != 0; }
 
     void MarkBad()
     {
@@ -974,7 +975,7 @@ assert(NumConstructorParameters() > 0);
 
         return;
     }
-    bool Bad() { return status & (unsigned short) 0x0100; }
+    bool Bad() { return (status & (unsigned short) 0x0100) != 0; }
 
     void MarkCircular()
     {
@@ -983,7 +984,7 @@ assert(NumConstructorParameters() > 0);
         return;
     }
     void MarkNonCircular() { status &= (~ ((unsigned short) 0x0200)); }
-    bool Circular() { return status & (unsigned short) 0x0200; }
+    bool Circular() { return (status & (unsigned short) 0x0200) != 0; }
 
     void ProcessNestedTypeSignatures(Semantic *, LexStream::TokenIndex);
 
@@ -1247,17 +1248,17 @@ assert(type_);
     //
     void MarkIncomplete()         { status &= (~((unsigned char) 0x01)); }
     void MarkComplete()           { status |= (unsigned char) 0x01; }
-    bool IsDeclarationComplete()  { return status & (unsigned char) 0x01; }
+    bool IsDeclarationComplete()  { return (status & (unsigned char) 0x01) != 0; }
 
     void MarkNotDefinitelyAssigned() { status &= (~((unsigned char) 0x02)); }
     void MarkDefinitelyAssigned()    { status |= (unsigned char) 0x02; }
-    bool IsDefinitelyAssigned()      { return status & (unsigned char) 0x02; }
+    bool IsDefinitelyAssigned()      { return (status & (unsigned char) 0x02) != 0; }
 
     void MarkPossiblyAssigned() { status |= (unsigned char) 0x04; }
-    bool IsPossiblyAssigned()   { return status & (unsigned char) 0x04; }
+    bool IsPossiblyAssigned()   { return (status & (unsigned char) 0x04) != 0; }
 
     void MarkSynthetic() { status |= (unsigned char) 0x08; }
-    bool IsSynthetic()   { return status & (unsigned char) 0x08; }
+    bool IsSynthetic()   { return (status & (unsigned char) 0x08) != 0; }
 
 private:
     NameSymbol *external_name_symbol;

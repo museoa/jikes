@@ -296,11 +296,11 @@ public:
     typedef unsigned char  Tag;
 #endif
 
-    Kind          kind;      // every node has a unique kind...
-    Tag           class_tag; // Some subsets of nodes are grouped together to form a class of nodes.
-    unsigned char generated; // "generated" is a boolean value that indicates whether ot not a node
-                             // is associated with a construct in a source file or that is was generated
-                             // by the compiler. See functions "gen_ ..." and "new_ ..." below.
+    Kind  kind;      // every node has a unique kind...
+    Tag   class_tag; // Some subsets of nodes are grouped together to form a class of nodes.
+    bool  generated; // "generated" is a boolean value that indicates whether ot not a node
+                     // is associated with a construct in a source file or that is was generated
+                     // by the compiler. See functions "gen_ ..." and "new_ ..." below.
 
 #ifdef TEST
     unsigned id;
@@ -1706,6 +1706,8 @@ private:
     AstArray<AstExpression *> *arguments;
     AstArray<AstExpression *> *local_arguments_opt; // used only for local classes that use enclosed local variables
 
+    bool add_null_argument;
+
 public:
     MethodSymbol *symbol;
 
@@ -1719,6 +1721,7 @@ public:
     AstSuperCall(StoragePool *pool_) : pool(pool_),
                                        arguments(NULL),
                                        local_arguments_opt(NULL),
+                                       add_null_argument(false),
                                        symbol(NULL)
     {
         Ast::kind = Ast::SUPER_CALL;
@@ -1739,6 +1742,9 @@ public:
     inline int NumLocalArguments() { return (local_arguments_opt ? local_arguments_opt -> Length() : 0); }
     inline void AllocateLocalArguments(int estimate = 0);
     inline void AddLocalArgument(AstExpression *);
+
+    inline void AddNullArgument() { add_null_argument = true; }
+    inline bool NeedsExtraNullArgument() { return add_null_argument; }
 
 #ifdef TEST
     virtual void Print(LexStream &);
@@ -3182,6 +3188,8 @@ private:
     AstArray<AstExpression *> *arguments;
     AstArray<AstExpression *> *local_arguments_opt; // used only for local classes that use enclosed local variables
 
+    bool add_null_argument;
+
 public:
     AstExpression *base_opt;
     LexStream::TokenIndex dot_token_opt;
@@ -3193,7 +3201,8 @@ public:
 
     AstClassInstanceCreationExpression(StoragePool *pool_) : pool(pool_),
                                                              arguments(NULL),
-                                                             local_arguments_opt(NULL)
+                                                             local_arguments_opt(NULL),
+                                                             add_null_argument(false)
     {
         Ast::kind = Ast::CLASS_CREATION;
         Ast::class_tag = Ast::EXPRESSION;
@@ -3213,6 +3222,9 @@ public:
     inline int NumLocalArguments() { return (local_arguments_opt ? local_arguments_opt -> Length() : 0); }
     inline void AllocateLocalArguments(int estimate = 0);
     inline void AddLocalArgument(AstExpression *);
+
+    inline void AddNullArgument() { add_null_argument = true; }
+    inline bool NeedsExtraNullArgument() { return add_null_argument; }
 
 #ifdef TEST
     virtual void Print(LexStream &);
@@ -3405,8 +3417,16 @@ public:
     LexStream::TokenIndex left_parenthesis_token;
     LexStream::TokenIndex right_parenthesis_token;
 
+    //
+    // When a method refers to a member in an enclosing scope,
+    // it is mapped into a new expression that creates a path to
+    // the member in question.
+    //
+    AstExpression *resolution_opt;
+
     AstMethodInvocation(StoragePool *pool_) : pool(pool_),
-                                              arguments(NULL)
+                                              arguments(NULL),
+                                              resolution_opt(NULL)
     {
         Ast::kind = Ast::CALL;
         Ast::class_tag = Ast::EXPRESSION;

@@ -110,7 +110,7 @@ void Semantic::ProcessTypeNames()
             LexStream::TokenIndex identifier_token = lex_stream -> Next(lex_stream -> Type(i));
             if (lex_stream -> Kind(identifier_token) == TK_Identifier)
             {
-                NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(identifier_token);
+                NameSymbol *name_symbol = lex_stream -> NameSymbol(identifier_token);
                 TypeSymbol *type = this_package -> FindTypeSymbol(name_symbol);
 assert(type);
                 type -> MarkSourceNoLongerPending();
@@ -143,7 +143,7 @@ assert(type);
             {
                 AstClassDeclaration *class_declaration = (AstClassDeclaration *) type_declaration;
                 identifier_token = class_declaration -> identifier_token;
-                NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(identifier_token);
+                NameSymbol *name_symbol = lex_stream -> NameSymbol(identifier_token);
 
                 type = this_package -> FindTypeSymbol(name_symbol);
                 if (type)
@@ -197,7 +197,7 @@ assert(type);
             {
                 AstInterfaceDeclaration *interface_declaration = (AstInterfaceDeclaration *) type_declaration;
                 identifier_token = interface_declaration -> identifier_token;
-                NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(identifier_token);
+                NameSymbol *name_symbol = lex_stream -> NameSymbol(identifier_token);
 
                 type = this_package -> FindTypeSymbol(name_symbol);
                 if (type)
@@ -255,7 +255,7 @@ assert(type);
         //
         if (type)
         {
-            NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(identifier_token);
+            NameSymbol *name_symbol = lex_stream -> NameSymbol(identifier_token);
             for (int i = 0; i < this_package -> directory.Length(); i++)
             {
                 if (this_package -> directory[i] -> FindDirectorySymbol(name_symbol))
@@ -370,7 +370,7 @@ inline TypeSymbol *Semantic::FindTypeInShadow(TypeShadowSymbol *type_shadow_symb
 
     for (int i = 0; i < type_shadow_symbol -> NumConflicts(); i++)
     {
-        ReportSemError(SemanticError::AMBIGUOUS_NAME,
+        ReportSemError(SemanticError::AMBIGUOUS_TYPE,
                        identifier_token,
                        identifier_token,
                        type_symbol -> Name(),
@@ -407,7 +407,7 @@ TypeSymbol *Semantic::FindTypeInEnvironment(SemanticEnvironment *env_stack, Name
 
 void Semantic::CheckNestedTypeDuplication(SemanticEnvironment *env, LexStream::TokenIndex identifier_token)
 {
-    NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(identifier_token);
+    NameSymbol *name_symbol = lex_stream -> NameSymbol(identifier_token);
 
     //
     // First check to see if we have a duplication at the same level...
@@ -480,7 +480,7 @@ TypeSymbol *Semantic::ProcessNestedClassName(TypeSymbol *containing_type, AstCla
 {
     CheckNestedTypeDuplication(containing_type -> semantic_environment, class_declaration -> identifier_token);
 
-    NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(class_declaration -> identifier_token);
+    NameSymbol *name_symbol = lex_stream -> NameSymbol(class_declaration -> identifier_token);
     TypeSymbol *outermost_type = containing_type -> outermost_type;
 
     int length = containing_type -> ExternalNameLength() + 1 + name_symbol -> NameLength(); // +1 for $,... +1 for $
@@ -587,7 +587,7 @@ TypeSymbol *Semantic::ProcessNestedInterfaceName(TypeSymbol *containing_type, As
 {
     CheckNestedTypeDuplication(containing_type -> semantic_environment, interface_declaration -> identifier_token);
 
-    NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(interface_declaration -> identifier_token);
+    NameSymbol *name_symbol = lex_stream -> NameSymbol(interface_declaration -> identifier_token);
     TypeSymbol *outermost_type = containing_type -> outermost_type;
 
     int length = containing_type -> ExternalNameLength() + 1 + name_symbol -> NameLength(); // +1 for $,... +1 for $
@@ -1200,7 +1200,7 @@ TypeSymbol *Semantic::FindNestedType(TypeSymbol *type, LexStream::TokenIndex ide
     if (type == control.null_type || type == control.no_type || type -> Primitive())
         return NULL;
 
-    NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(identifier_token);
+    NameSymbol *name_symbol = lex_stream -> NameSymbol(identifier_token);
 
     if (! type -> expanded_type_table)
         ComputeTypesClosure(type, identifier_token);
@@ -1259,7 +1259,7 @@ assert(simple_name);
     }
     else // If the simple_name is not a type, assume it is a package
     {
-        NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(simple_name -> identifier_token);
+        NameSymbol *name_symbol = lex_stream -> NameSymbol(simple_name -> identifier_token);
         package = control.external_table.FindPackageSymbol(name_symbol);
         if (! package)
             package = control.external_table.InsertPackageSymbol(name_symbol, NULL);
@@ -1285,7 +1285,7 @@ assert(simple_name);
         }
         else 
         {
-            NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(field_access -> identifier_token);
+            NameSymbol *name_symbol = lex_stream -> NameSymbol(field_access -> identifier_token);
             type = package -> FindTypeSymbol(name_symbol);
             if (! type)
             {
@@ -1306,7 +1306,7 @@ assert(simple_name);
             }
             else // If the field access was not resolved to a type assume it is a package
             {
-                NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(field_access -> identifier_token);
+                NameSymbol *name_symbol = lex_stream -> NameSymbol(field_access -> identifier_token);
                 PackageSymbol *subpackage = package -> FindPackageSymbol(name_symbol);
                 if (! subpackage)
                     subpackage = package -> InsertPackageSymbol(name_symbol);
@@ -2142,7 +2142,7 @@ assert (! type -> IsNested());
 
 TypeSymbol *Semantic::GetBadNestedType(TypeSymbol *type, LexStream::TokenIndex identifier_token)
 {
-    NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(identifier_token);
+    NameSymbol *name_symbol = lex_stream -> NameSymbol(identifier_token);
 
     TypeSymbol *outermost_type = type -> outermost_type;
     if (! outermost_type -> non_local)
@@ -2198,7 +2198,7 @@ Symbol *Semantic::ProcessImportQualifiedName(AstExpression *name)
         {
             if (! type -> NestedTypesProcessed())
                 type -> ProcessNestedTypeSignatures((Semantic *) this, field_access -> identifier_token);
-            NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(field_access -> identifier_token);
+            NameSymbol *name_symbol = lex_stream -> NameSymbol(field_access -> identifier_token);
             TypeSymbol *inner_type = type -> FindTypeSymbol(name_symbol);
             if (! inner_type)
                  inner_type = GetBadNestedType(type, field_access -> identifier_token);
@@ -2210,7 +2210,7 @@ Symbol *Semantic::ProcessImportQualifiedName(AstExpression *name)
         else 
         {
             package = symbol -> PackageCast();
-            NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(field_access -> identifier_token);
+            NameSymbol *name_symbol = lex_stream -> NameSymbol(field_access -> identifier_token);
             type = package -> FindTypeSymbol(name_symbol);
             if (! type)
             {
@@ -2229,7 +2229,7 @@ Symbol *Semantic::ProcessImportQualifiedName(AstExpression *name)
                  field_access -> symbol = type;
             else
             {
-                NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(field_access -> identifier_token);
+                NameSymbol *name_symbol = lex_stream -> NameSymbol(field_access -> identifier_token);
                 PackageSymbol *subpackage = package -> FindPackageSymbol(name_symbol);
                 if (! subpackage)
                     subpackage = package -> InsertPackageSymbol(name_symbol);
@@ -2274,7 +2274,7 @@ assert(simple_name);
         }
         else
         {
-            NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(simple_name -> identifier_token);
+            NameSymbol *name_symbol = lex_stream -> NameSymbol(simple_name -> identifier_token);
             package = control.external_table.FindPackageSymbol(name_symbol);
             if (! package)
                 package = control.external_table.InsertPackageSymbol(name_symbol, NULL);
@@ -2305,7 +2305,7 @@ Symbol *Semantic::ProcessPackageOrType(AstExpression *name)
         else 
         {
             package = symbol -> PackageCast();
-            NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(field_access -> identifier_token);
+            NameSymbol *name_symbol = lex_stream -> NameSymbol(field_access -> identifier_token);
             type = package -> FindTypeSymbol(name_symbol);
             if (! type)
             {
@@ -2324,7 +2324,7 @@ Symbol *Semantic::ProcessPackageOrType(AstExpression *name)
                  field_access -> symbol = type; // save the type to which this expression was resolved for later use...
             else
             {
-                NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(field_access -> identifier_token);
+                NameSymbol *name_symbol = lex_stream -> NameSymbol(field_access -> identifier_token);
                 PackageSymbol *subpackage = package -> FindPackageSymbol(name_symbol);
                 if (! subpackage)
                     subpackage = package -> InsertPackageSymbol(name_symbol);
@@ -2345,7 +2345,7 @@ assert(simple_name);
         }
         else
         {
-            NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(simple_name -> identifier_token);
+            NameSymbol *name_symbol = lex_stream -> NameSymbol(simple_name -> identifier_token);
             package = control.external_table.FindPackageSymbol(name_symbol);
             if (! package)
                 package = control.external_table.InsertPackageSymbol(name_symbol, NULL);
@@ -2409,7 +2409,7 @@ AstExpression *Semantic::FindFirstType(Ast *name)
 assert(package);
             name_expression = field_access; // The relevant subexpression might be this field access...
 
-            NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(field_access -> identifier_token);
+            NameSymbol *name_symbol = lex_stream -> NameSymbol(field_access -> identifier_token);
             TypeSymbol *type = package -> FindTypeSymbol(name_symbol);
             if (type)
             {
@@ -2447,7 +2447,7 @@ assert(simple_name);
 
 TypeSymbol *Semantic::FindSimpleNameType(PackageSymbol *package, LexStream::TokenIndex identifier_token)
 {
-    NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(identifier_token);
+    NameSymbol *name_symbol = lex_stream -> NameSymbol(identifier_token);
     TypeSymbol *type = package -> FindTypeSymbol(name_symbol);
     if (type)
     {
@@ -2601,7 +2601,7 @@ assert(modifier);
     {
         AstVariableDeclarator *variable_declarator = field_declaration -> VariableDeclarator(i);
         AstVariableDeclaratorId *name = variable_declarator -> variable_declarator_name;
-        NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(name -> identifier_token);
+        NameSymbol *name_symbol = lex_stream -> NameSymbol(name -> identifier_token);
  
         if (this_type -> FindVariableSymbol(name_symbol))
         {
@@ -2638,20 +2638,12 @@ void Semantic::GenerateLocalConstructor(MethodSymbol *constructor)
     //
     // Make up external name for constructor
     //
-    wchar_t info[12],
-            *str = &info[11];
-    *str = U_NULL;
-    int num = local_type -> NumGeneratedConstructors();
-    do
-    {
-        *--str = (U_0 + num % 10);
-        num /= 10;
-    } while (num != 0);
+    IntToWstring value(local_type -> NumGeneratedConstructors());
 
-    int length = 12 + (&info[11] - str); // +12 for constructor$
+    int length = 12 + value.Length(); // +12 for constructor$
     wchar_t *external_name = new wchar_t[length + 1]; // +1 for '\0';
     wcscpy(external_name, StringConstant::US__constructor_DOLLAR);
-    wcscat(external_name, str);
+    wcscat(external_name, value.String());
     constructor -> SetExternalIdentity(control.FindOrInsertName(external_name, length)); // Turn the constructor into a method
 
     delete [] external_name;
@@ -2720,7 +2712,7 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration *construc
     AccessFlags access_flags = ProcessConstructorModifiers(constructor_declaration);
 
     AstMethodDeclarator *constructor_declarator = constructor_declaration -> constructor_declarator;
-    NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(constructor_declarator -> identifier_token);
+    NameSymbol *name_symbol = lex_stream -> NameSymbol(constructor_declarator -> identifier_token);
     wchar_t *constructor_name = lex_stream -> Name(constructor_declarator -> identifier_token);
 
     if (lex_stream -> NameSymbol(constructor_declarator -> identifier_token) != this_type -> Identity())
@@ -3211,11 +3203,11 @@ void Semantic::AddInheritedTypes(TypeSymbol *base_type, TypeSymbol *super_type)
             NameSymbol *name_symbol = type_symbol -> Identity();
             TypeShadowSymbol *shadow = base_expanded_table.FindTypeShadowSymbol(name_symbol);
 
-            if (! shadow)
-                base_expanded_table.InsertTypeShadowSymbol(type_symbol);
-            else if (shadow -> type_symbol -> owner != base_type)
+            if ((! shadow) || (shadow -> type_symbol -> owner != base_type))
             {
-                shadow -> AddConflict(type_symbol);
+                if (! shadow)
+                     shadow = base_expanded_table.InsertTypeShadowSymbol(type_symbol);
+                else shadow -> AddConflict(type_symbol);
 
                 if (type_symbol -> owner != super_type) // main type doesn't override all other fields? process conflicts.
                 {
@@ -3256,11 +3248,11 @@ void Semantic::AddInheritedFields(TypeSymbol *base_type, TypeSymbol *super_type)
             NameSymbol *name_symbol = variable_symbol -> Identity();
             VariableShadowSymbol *shadow = base_expanded_table.FindVariableShadowSymbol(name_symbol);
 
-            if (! shadow)
-                base_expanded_table.InsertVariableShadowSymbol(variable_symbol);
-            else if (shadow -> variable_symbol -> owner != base_type)
+            if ((! shadow) || (shadow -> variable_symbol -> owner != base_type))
             {
-                shadow -> AddConflict(variable_symbol);
+                if (! shadow)
+                     shadow = base_expanded_table.InsertVariableShadowSymbol(variable_symbol);
+                else shadow -> AddConflict(variable_symbol);
 
                 if (variable_symbol -> owner != super_type) // main variable doesn't override all other fields? process conflicts.
                 {
@@ -3286,8 +3278,8 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type, TypeSymbol *super_type
         MethodSymbol *method = method_shadow_symbol -> method_symbol;
 
         //
-        // Note that since all fields in an interface are implicitly
-        // public, all other fields encountered here are enclosed in a
+        // Note that since all methods in an interface are implicitly
+        // public, all other methods encountered here are enclosed in a
         // type that is a super class of base_type. 
         //
         if (method -> ACC_PUBLIC() ||
@@ -3321,7 +3313,7 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type, TypeSymbol *super_type
                 }
             }
         }
-        else if (! (method -> ACC_PRIVATE() || method -> IsSynthetic())) // Not amethod with default access from another package?
+        else if (! (method -> ACC_PRIVATE() || method -> IsSynthetic())) // Not a method with default access from another package?
         {
             MethodShadowSymbol *base_method_shadow = base_expanded_table.FindMethodShadowSymbol(method -> Identity());
 
@@ -3526,7 +3518,7 @@ void Semantic::ProcessFormalParameters(BlockSymbol *block, AstMethodDeclarator *
         TypeSymbol *parm_type = (primitive_type ? FindPrimitiveType(primitive_type) : MustFindType(actual_type));
 
         AstVariableDeclaratorId *name = parameter -> variable_declarator_name;
-        NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(name -> identifier_token);
+        NameSymbol *name_symbol = lex_stream -> NameSymbol(name -> identifier_token);
         VariableSymbol *symbol = block -> FindVariableSymbol(name_symbol);
         if (symbol)
         {
@@ -3607,7 +3599,7 @@ assert(modifier);
                             method_declarator -> RightToken());
     }
 
-    NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(method_declarator -> identifier_token);
+    NameSymbol *name_symbol = lex_stream -> NameSymbol(method_declarator -> identifier_token);
 
     if (name_symbol == this_type -> Identity())
     {
@@ -3795,7 +3787,7 @@ TypeSymbol *Semantic::FindType(LexStream::TokenIndex identifier_token)
 {
     TypeSymbol *type;
 
-    NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(identifier_token);
+    NameSymbol *name_symbol = lex_stream -> NameSymbol(identifier_token);
 
     SemanticEnvironment *env;
     for (env = state_stack.Top(); env; env = env -> previous)
@@ -3949,7 +3941,7 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
         //
         if (! type)
         {
-            NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(identifier_token);
+            NameSymbol *name_symbol = lex_stream -> NameSymbol(identifier_token);
             PackageSymbol *package = (compilation_unit -> package_declaration_opt ? this_package : control.unnamed_package);
             FileSymbol *file_symbol = Control::GetFile(package, name_symbol, control.option.depend);
             type = ReadType(file_symbol, package, name_symbol, identifier_token);
@@ -3983,7 +3975,7 @@ assert(field_access);
                                field_access -> base -> RightToken(),
                                package -> PackageName());
             }
-            NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(identifier_token);
+            NameSymbol *name_symbol = lex_stream -> NameSymbol(identifier_token);
             type = package -> FindTypeSymbol(name_symbol);
             if (! type)
             {

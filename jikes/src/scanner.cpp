@@ -829,7 +829,7 @@ void Scanner::ClassifyIdOrKeyword()
     current_token -> SetKind(len < 13 ? (scan_keyword[len])(cursor) : TK_Identifier);
     if (current_token -> Kind() == TK_Identifier)
     {
-        current_token -> SetSymbol((NameSymbol *) control.FindOrInsertName(cursor, len));
+        current_token -> SetSymbol(control.FindOrInsertName(cursor, len));
         for (int i = 0; i < control.option.keyword_map.Length(); i++)
         {
             if (control.option.keyword_map[i].length == len && wcsncmp(cursor, control.option.keyword_map[i].name, len) == 0)
