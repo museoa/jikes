@@ -1,0 +1,62 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+  <head>
+    <TITLE>IBM - developerWorks - Open Source Software -
+    Jikes' Document Collection</TITLE>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  </head>
+  <BODY bgcolor="#ffffff">
+    <p><img src="../images/jikes.png" width=600 height=54 border=0 alt="Jikes"></p>
+
+    <p>This area is intended to be a repository of documents of
+    interest to Jikes' hackers. It will included research papers,
+    disertations, and any other material that seems to be appropriate.
+
+    <p>Contents remain copyright their authors, and are presented here
+    by permission.
+
+    <hr>
+
+    <p>Our ignagural papers both come from Jikes' co-author Philippe
+    Charles. The first is his Ph.D. dissertation, following that a
+    paper he prepared for (a conference). Both papers describe
+    techniques fundamental to Jikes.
+
+    <table>
+    <tr>
+    <td><a href="thesis.pdf"><img src="../images/pdf.png" alt="Adobe
+    Acrobat Document" border=0 width=32 height=32></a></td>
+    <td align=center><p>A Practical method for Constructing Efficient
+    LALR(k) Parsers with Automatic Error Recovery</p>
+    <p>Philippe Charles, May 1991</p>
+    <p>A dissertation in the Department of Computer Science submitted
+    to the faculty of the Graduate School of Arts and Science in
+    partial fulfillment of the requirements for the degree of Doctor
+    of Philosophy at New York University.</p>
+    <p>Edmond Schonberg, Research Advisor</p>
+    </tr>
+    <tr>
+    <td colspan=2><p><b>Abstract:</b> (put here)
+
+    </td>
+    </tr>
+
+    <tr>
+    <td><a href="conf.pdf"><img src="../images/pdf.png" alt="Adobe
+    Acrobat Document" border=0 width=32 height=32></a></td>
+    <td align=center><p>paper from conference (details)
+    </tr>
+    <tr>
+    <td colspan=2><p><b>Abstract:</b> (put here)
+
+    </td>
+    </tr>
+
+    </table>
+
+    <p>
+
+</table>
+<!--#include file="../footer.shtml" -->
+</BODY>
+</HTML>

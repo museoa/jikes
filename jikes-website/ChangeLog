@@ -1,3 +1,13 @@
+2002-12-02  Chris Abbey	<jikes@cabbey.net>
+
+	* documents/index.shtml: new direcotry/area in website
+	to hold special documents. (not tied into production site
+	yet.)
+	* documents/thesis.pdf:
+	* documents/conf.pdf: first two docs from Philippe.
+	(I converted these both from postscript with ps2pdf.)
+	* images/pdf.png: image for representing pdf downloads.
+
 2002-09-30  Chris Abbey <jikes@cabbey.net>
 
 	* distribs.shtml: update distro list to reflect recent developments
