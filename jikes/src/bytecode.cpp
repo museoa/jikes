@@ -1496,22 +1496,30 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
         low = switch_statement -> Case(0) -> Value();
         high = switch_statement -> Case(ncases - 1) -> Value();
 
-        //
-        // want to compute
-        //  (2 + high-low + 1) < (1 + ncases * 2 + 30)
-        // but must guard against overflow, so factor out
-        //  high - low < ncases * 2 + 28
-        // but can't have number of labels < number of cases
-        //
-        LongInt range = LongInt(high) - low + 1;
-        if (range < (ncases * 2 + 28))
-        {
-            use_lookup = false; // use tableswitch
-            nlabels = range.LowWord();
+        // Workaround for Sun JVM TABLESWITCH bug in JDK 1.2, 1.3
+        // when case values of 0x7ffffff0 through 0x7fffffff are used.
+        // Force the generation of a LOOKUPSWITCH in these circumstances.
 
-            assert(range.HighWord() == 0);
-            assert(nlabels >= ncases);
-        }
+        assert(low <= high);
+
+        if ((unsigned long)high < 0x7ffffff0UL)
+        { 
+            // want to compute
+            //  (2 + high-low + 1) < (1 + ncases * 2 + 30)
+            // but must guard against overflow, so factor out
+            //  high - low < ncases * 2 + 28
+            // but can't have number of labels < number of cases
+
+            LongInt range = LongInt(high) - low + 1;
+            if (range < (ncases * 2 + 28))
+            {
+                use_lookup = false; // use tableswitch
+                nlabels = range.LowWord();
+    
+                assert(range.HighWord() == 0);
+                assert(nlabels >= ncases);
+            }
+        } 
     }
 
     //
