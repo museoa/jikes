@@ -1,3 +1,21 @@
+2002-09-03  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/decl.cpp (ProcessTypeHeader, ProcessTypeHeaders),
+	(ComputeTypesClosure): Make member types visible early enough.
+	(ProcessSingleTypeImportDeclaration): Create place-holder type for
+	bad imports to silence further errors.
+	(FindNestedType): Check for inaccessible nested types before
+	reporting type not found.
+	* src/semantic.h (AddDependence): Check for bad types.
+	* src/expr.cpp (ProcessMethodName, GetAnonymousType),
+	(ProcessClassInstanceCreationExpression):
+	* src/body.cpp (ProcessTryStatement): Silence chain-reaction error
+	messages when try block contains semantic error - bug 670.
+	* src/error.h:
+	* src/error.cpp (DUPLICATE_IMPORT_NAME),
+	(ANONYMOUS_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD): New
+	error messages.
+
 2002-08-29  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/expr.cpp (ReportMethodNotFound, FindMethodInType),

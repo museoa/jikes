@@ -127,6 +127,7 @@ public:
         REFERENCE_TO_TYPE_IN_MISMATCHED_FILE,
         DUPLICATE_INNER_TYPE_NAME,
         DUPLICATE_TYPE_DECLARATION,
+        DUPLICATE_IMPORT_NAME,
         UNNECESSARY_TYPE_IMPORT,
         DUPLICATE_ACCESS_MODIFIER,
         DUPLICATE_MODIFIER,
@@ -251,6 +252,7 @@ public:
         NON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD,
         NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD,
         NON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD,
+        ANONYMOUS_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD,
         DUPLICATE_INTERFACE,
         UNKNOWN_AMBIGUOUS_NAME,
         CIRCULAR_INTERFACE,
@@ -434,6 +436,7 @@ private:
     static wchar_t *PrintREFERENCE_TO_TYPE_IN_MISMATCHED_FILE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintDUPLICATE_INNER_TYPE_NAME(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintDUPLICATE_TYPE_DECLARATION(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintDUPLICATE_IMPORT_NAME(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNNECESSARY_TYPE_IMPORT(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintDUPLICATE_ACCESS_MODIFIER(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintDUPLICATE_MODIFIER(ErrorInfo &, LexStream *, Control &);
@@ -558,6 +561,7 @@ private:
     static wchar_t *PrintNON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintANONYMOUS_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintDUPLICATE_INTERFACE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNKNOWN_AMBIGUOUS_NAME(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintCIRCULAR_INTERFACE(ErrorInfo &, LexStream *, Control &);

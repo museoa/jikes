@@ -591,6 +591,7 @@ void Control::ProcessUnnamedPackage()
     no_type -> SetSignature(Utf8_pool.FindOrInsert(U8S_DO, strlen(U8S_DO)));
     no_type -> outermost_type = no_type;
     no_type -> SetOwner(unnamed_package);
+    no_type -> subtypes = new SymbolSet();
     no_type -> MarkBad();
 
     //

@@ -1379,24 +1379,23 @@ inline void Semantic::AddDependence(TypeSymbol *base_type,
                                     TypeSymbol *parent_type,
                                     bool static_access)
 {
-    if (base_type != control.no_type)
-    {
-        base_type = base_type -> outermost_type;
-        parent_type = parent_type -> outermost_type;
+    if (base_type -> Bad() || parent_type -> Bad())
+        return;
+    base_type = base_type -> outermost_type;
+    parent_type = parent_type -> outermost_type;
 
-        parent_type -> dependents -> AddElement(base_type);
-        if (static_access)
-             base_type -> static_parents -> AddElement(parent_type);
-        else base_type -> parents -> AddElement(parent_type);
+    parent_type -> dependents -> AddElement(base_type);
+    if (static_access)
+        base_type -> static_parents -> AddElement(parent_type);
+    else base_type -> parents -> AddElement(parent_type);
 
-        //
-        // It is not possible to import from the unnamed package, and without
-        // imports, it is impossible to reference a class in the unnamed
-        // package from a package.
-        //
-        assert(parent_type -> ContainingPackage() != control.unnamed_package ||
-               base_type -> ContainingPackage() == control.unnamed_package);
-    }
+    //
+    // It is not possible to import from the unnamed package, and without
+    // imports, it is impossible to reference a class in the unnamed
+    // package from a package.
+    //
+    assert(parent_type -> ContainingPackage() != control.unnamed_package ||
+           base_type -> ContainingPackage() == control.unnamed_package);
 }
 
 inline void Semantic::AddStringConversionDependence(TypeSymbol *type)

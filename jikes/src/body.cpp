@@ -1358,7 +1358,8 @@ void Semantic::ProcessTryStatement(Ast *stmt)
         }
         else parm_type = MustFindType(parameter -> type);
 
-        if (! parm_type -> IsSubclass(control.Throwable()))
+        if (! parm_type -> IsSubclass(control.Throwable()) &&
+            parm_type != control.no_type)
         {
             ReportSemError(SemanticError::TYPE_NOT_THROWABLE,
                            parameter -> LeftToken(),

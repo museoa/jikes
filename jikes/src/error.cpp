@@ -417,6 +417,7 @@ void SemanticError::StaticInitializer()
         PrintREFERENCE_TO_TYPE_IN_MISMATCHED_FILE;
     print_message[DUPLICATE_INNER_TYPE_NAME] = PrintDUPLICATE_INNER_TYPE_NAME;
     print_message[DUPLICATE_TYPE_DECLARATION] = PrintDUPLICATE_TYPE_DECLARATION;
+    print_message[DUPLICATE_IMPORT_NAME] = PrintDUPLICATE_IMPORT_NAME;
     print_message[UNNECESSARY_TYPE_IMPORT] = PrintUNNECESSARY_TYPE_IMPORT;
     print_message[DUPLICATE_ACCESS_MODIFIER] = PrintDUPLICATE_ACCESS_MODIFIER;
     print_message[DUPLICATE_MODIFIER] = PrintDUPLICATE_MODIFIER;
@@ -583,6 +584,8 @@ void SemanticError::StaticInitializer()
         PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD;
     print_message[NON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD] =
         PrintNON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD;
+    print_message[ANONYMOUS_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD] =
+        PrintANONYMOUS_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD;
     print_message[DUPLICATE_INTERFACE] = PrintDUPLICATE_INTERFACE;
     print_message[UNKNOWN_AMBIGUOUS_NAME] = PrintUNKNOWN_AMBIGUOUS_NAME;
     print_message[CIRCULAR_INTERFACE] = PrintCIRCULAR_INTERFACE;
@@ -1498,6 +1501,20 @@ wchar_t *SemanticError::PrintDUPLICATE_TYPE_DECLARATION(ErrorInfo &err,
 
     s << "Duplicate declaration of type \"" << err.insert1
       << "\". The other occurrence is at location " << err.insert2 << '.';
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintDUPLICATE_IMPORT_NAME(ErrorInfo &err,
+                                                   LexStream *lex_stream,
+                                                   Control &control)
+{
+    ErrorString s;
+
+    s << "The imported simple name \"" << err.insert1
+      << "\" names a different type than the other use of the name at location "
+      << err.insert2 << '.';
 
     return s.Array();
 }
@@ -3274,6 +3291,24 @@ wchar_t *SemanticError::PrintNON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_
     if (NotDot(err.insert4))
         s << err.insert4 << '/';
     s << err.insert5 << "\" must be abstract.";
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintANONYMOUS_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD(ErrorInfo &err,
+                                                                                    LexStream *lex_stream,
+                                                                                    Control &control)
+{
+    ErrorString s;
+
+    s << "The abstract method \"" << err.insert1
+      << "\", belonging to the class \"";
+    if (NotDot(err.insert2))
+        s << err.insert2 << '/';
+    s << err.insert3 << "\", has default access, so it is not inherited and "
+      << "cannot be implemented in this package. Therefore, an anonymous "
+      << "subclass cannot be created here.";
 
     return s.Array();
 }

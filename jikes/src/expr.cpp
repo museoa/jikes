@@ -3273,7 +3273,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                                        method -> Header(),
                                        method -> containing_type -> Name());
                         method_call -> symbol = control.no_type;
-                        return;
+                        method_shadow = NULL;
                     }
                 }
                 else if (StaticRegion())
@@ -3283,7 +3283,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                                    method_call -> right_parenthesis_token,
                                    lex_stream -> NameString(simple_name -> identifier_token));
                     method_call -> symbol = control.no_type;
-                    return;
+                    method_shadow = NULL;
                 }
             }
 
@@ -3330,8 +3330,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                            base -> LeftToken(),
                            base -> RightToken(),
                            base -> symbol -> PackageCast() -> PackageName());
-            method_call -> symbol = control.no_type;
-            return;
+            base -> symbol = control.no_type;
         }
 
         base_type = base -> Type();
@@ -3340,9 +3339,10 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
         if (base_type == control.no_type)
         {
             method_call -> symbol = control.no_type;
-            return;
+            method_shadow = NULL;
         }
-        method_shadow = FindMethodMember(base_type, method_call);
+        else
+            method_shadow = FindMethodMember(base_type, method_call);
         if (base -> IsSuperExpression())
         {
             //
@@ -3447,6 +3447,16 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
         SymbolSet *exception_set = TryExceptionTableStack().Top();
         if (exception_set)
             exception_set -> Union(exceptions);
+    }
+    else
+    {
+        //
+        // There was no candidate, so we have no idea what can be thrown in
+        // a try block if it had been a valid method call.
+        //
+        SymbolSet *exception_set = TryExceptionTableStack().Top();
+        if (exception_set)
+            exception_set -> AddElement(control.no_type); 
     }
 }
 
@@ -3901,17 +3911,6 @@ TypeSymbol *Semantic::GetAnonymousType(AstClassInstanceCreationExpression *class
                                        TypeSymbol *super_type)
 {
     TypeSymbol *this_type = ThisType();
-
-    if (super_type -> ACC_FINAL())
-    {
-         ReportSemError(SemanticError::SUPER_IS_FINAL,
-                        class_creation -> class_type -> LeftToken(),
-                        class_creation -> class_type -> RightToken(),
-                        super_type -> ContainingPackage() -> PackageName(),
-                        super_type -> ExternalName());
-         return control.no_type;
-    }
-
     AstClassBody *class_body = class_creation -> class_body_opt;
     assert(class_body);
     TypeSymbol *outermost_type = this_type -> outermost_type;
@@ -3973,6 +3972,17 @@ TypeSymbol *Semantic::GetAnonymousType(AstClassInstanceCreationExpression *class
     else anon_type -> super = super_type;
     AddDependence(anon_type, super_type);
     super_type -> subtypes -> AddElement(anon_type);
+    if (super_type -> ACC_FINAL())
+    {
+         ReportSemError(SemanticError::SUPER_IS_FINAL,
+                        class_creation -> class_type -> LeftToken(),
+                        class_creation -> class_type -> RightToken(),
+                        super_type -> ContainingPackage() -> PackageName(),
+                        super_type -> ExternalName());
+         anon_type -> MarkBad();
+    }
+    else if (super_type -> Bad())
+        anon_type -> MarkBad();
 
     this_type -> AddAnonymousType(anon_type);
 
@@ -4008,20 +4018,18 @@ TypeSymbol *Semantic::GetAnonymousType(AstClassInstanceCreationExpression *class
              compilation_unit -> kind = Ast::BAD_COMPILATION;
         else
         {
-            anon_type -> MarkHeaderProcessed();
             ProcessMembers(anon_type -> semantic_environment, class_body);
             CompleteSymbolTable(anon_type -> semantic_environment,
                                 class_body -> left_brace_token, class_body);
         }
 
         if (! control.parser -> BodyParse(lex_stream, class_body))
-             compilation_unit -> kind = Ast::BAD_COMPILATION;
+            compilation_unit -> kind = Ast::BAD_COMPILATION;
         else ProcessExecutableBodies(anon_type -> semantic_environment,
                                      class_body);
     }
     else // The relevant bodies have already been parsed
     {
-        anon_type -> MarkHeaderProcessed();
         ProcessMembers(anon_type -> semantic_environment, class_body);
         CompleteSymbolTable(anon_type -> semantic_environment,
                             class_body -> left_brace_token, class_body);
@@ -4067,20 +4075,14 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
         ProcessExpression(class_creation -> base_opt);
 
         TypeSymbol *enclosing_type = class_creation -> base_opt -> Type();
-        if (enclosing_type == control.no_type)
+        if (! enclosing_type -> IsSubclass(control.Object()))
         {
-            class_creation -> symbol = control.no_type;
-            return;
-        }
-        if (enclosing_type == control.null_type ||
-            enclosing_type -> Primitive())
-        {
-            ReportSemError(SemanticError::TYPE_NOT_REFERENCE,
-                           class_creation -> base_opt -> LeftToken(),
-                           class_creation -> base_opt -> RightToken(),
-                           enclosing_type -> ExternalName());
-            class_creation -> symbol = control.no_type;
-            return;
+            if (enclosing_type != control.no_type)
+                ReportSemError(SemanticError::TYPE_NOT_REFERENCE,
+                               class_creation -> base_opt -> LeftToken(),
+                               class_creation -> base_opt -> RightToken(),
+                               enclosing_type -> ExternalName());
+            enclosing_type = control.no_type;
         }
 
         //
@@ -4094,18 +4096,16 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
                            actual_type -> RightToken(),
                            type -> ContainingPackage() -> PackageName(),
                            type -> ExternalName());
-            class_creation -> symbol = control.no_type;
-            return;
+            type = control.no_type;
         }
-        if (type -> ACC_STATIC())
+        else if (type -> ACC_STATIC())
         {
             ReportSemError(SemanticError::STATIC_NOT_INNER_CLASS,
                            actual_type -> LeftToken(),
                            actual_type -> RightToken(),
                            type -> ContainingPackage() -> PackageName(),
                            type -> ExternalName());
-            class_creation -> symbol = control.no_type;
-            return;
+            type = control.no_type;
         }
     }
     else
@@ -4119,27 +4119,20 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
     //
     // Check the arguments to the constructor.
     //
-    bool bad_argument = false;
     for (i = 0; i < class_creation -> NumArguments(); i++)
     {
         AstExpression *expr = class_creation -> Argument(i);
         ProcessExpressionOrStringConstant(expr);
         if (expr -> symbol == control.no_type)
-            bad_argument = true;
+            type = control.no_type;
         else if (expr -> Type() == control.void_type)
         {
-            bad_argument = true;
+            type = control.no_type;
             ReportSemError(SemanticError::TYPE_IS_VOID,
                            expr -> LeftToken(),
                            expr -> RightToken(),
                            expr -> Type() -> Name());
         }
-    }
-    if (bad_argument)
-    {
-        class_creation -> class_type -> symbol = control.no_type;
-        class_creation -> symbol = control.no_type;
-        return;
     }
 
     //
@@ -4154,21 +4147,17 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
     {
         type = GetAnonymousType(class_creation, type);
         class_creation -> symbol = type;
-        if (type == control.no_type)
-            return;
-        class_creation = class_creation -> resolution_opt;
+        if (type != control.no_type)
+            class_creation = class_creation -> resolution_opt;
     }
-    else class_creation -> symbol = type;
-
-    if (type -> ACC_INTERFACE())
+    else if (type -> ACC_INTERFACE())
     {
         ReportSemError(SemanticError::NOT_A_CLASS,
                        actual_type -> LeftToken(),
                        actual_type -> RightToken(),
                        type -> ContainingPackage() -> PackageName(),
                        type -> ExternalName());
-        class_creation -> symbol = control.no_type;
-        return;
+        type = control.no_type;
     }
     else if (type -> ACC_ABSTRACT())
     {
@@ -4177,69 +4166,78 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
                        actual_type -> RightToken(),
                        type -> ExternalName());
     }
+    class_creation -> symbol = type;
 
     MethodSymbol *ctor =
         FindConstructor(type, class_creation, actual_type -> LeftToken(),
                         class_creation -> right_parenthesis_token);
-    if (! ctor)
-    {
-        class_creation -> class_type -> symbol = control.no_type;
-        return;
-    }
-
     //
     // Convert the arguments to the correct types.
     //
-    assert(ctor -> IsTyped());
-    class_creation -> class_type -> symbol = ctor;
-
-    if (class_creation -> base_opt && ! ctor -> containing_type -> Bad())
+    if (ctor)
     {
-        assert(CanAssignmentConvertReference(ctor -> containing_type -> EnclosingType(),
-                                             class_creation -> base_opt -> Type()));
-        class_creation -> base_opt =
-            ConvertToType(class_creation -> base_opt,
-                          ctor -> containing_type -> EnclosingType());
-    }
-
-    for (i = 0; i < class_creation -> NumArguments(); i++)
-    {
-        AstExpression *expr = class_creation -> Argument(i);
-        class_creation -> Argument(i) =
-            ConvertToType(expr, ctor -> FormalParameter(i) -> Type());
-    }
-
-    //
-    // Process the throws clause.
-    //
-    SymbolSet *exception_set = TryExceptionTableStack().Top();
-    for (i = ctor -> NumThrows() - 1; i >= 0; i--)
-    {
-        TypeSymbol *exception = ctor -> Throws(i);
-        if (exception_set)
-            exception_set -> AddElement(exception);
-
-        if (UncaughtException(exception))
-            ReportSemError((class_creation -> class_body_opt
-                            ? SemanticError::UNCAUGHT_ANONYMOUS_CONSTRUCTOR_EXCEPTION
-                            : SemanticError::UNCAUGHT_CONSTRUCTOR_EXCEPTION),
-                           actual_type -> LeftToken(),
-                           actual_type -> RightToken(),
-                           type -> ExternalName(),
-                           exception -> ContainingPackage() -> PackageName(),
-                           exception -> ExternalName(),
-                           UncaughtExceptionContext());
-    }
-
-    if (ctor -> ACC_PRIVATE() && ThisType() != type)
-    {
-        //
-        // Add extra argument for read access constructor.
-        //
-        assert(ThisType() -> outermost_type == type -> outermost_type);
-        ctor = type -> GetReadAccessConstructor(ctor);
+        assert(ctor -> IsTyped());
         class_creation -> class_type -> symbol = ctor;
-        class_creation -> AddNullArgument();
+
+        if (class_creation -> base_opt)
+        {
+            assert(CanAssignmentConvertReference(ctor -> containing_type -> EnclosingType(),
+                                                 class_creation -> base_opt -> Type()));
+            class_creation -> base_opt =
+                ConvertToType(class_creation -> base_opt,
+                              ctor -> containing_type -> EnclosingType());
+        }
+
+        for (i = 0; i < class_creation -> NumArguments(); i++)
+        {
+            AstExpression *expr = class_creation -> Argument(i);
+            class_creation -> Argument(i) =
+                ConvertToType(expr, ctor -> FormalParameter(i) -> Type());
+        }
+
+        //
+        // Process the throws clause.
+        //
+        SymbolSet *exception_set = TryExceptionTableStack().Top();
+        for (i = ctor -> NumThrows() - 1; i >= 0; i--)
+        {
+            TypeSymbol *exception = ctor -> Throws(i);
+            if (exception_set)
+                exception_set -> AddElement(exception);
+
+            if (UncaughtException(exception))
+                ReportSemError((class_creation -> class_body_opt
+                                ? SemanticError::UNCAUGHT_ANONYMOUS_CONSTRUCTOR_EXCEPTION
+                                : SemanticError::UNCAUGHT_CONSTRUCTOR_EXCEPTION),
+                               actual_type -> LeftToken(),
+                               actual_type -> RightToken(),
+                               type -> ExternalName(),
+                               exception -> ContainingPackage() -> PackageName(),
+                               exception -> ExternalName(),
+                               UncaughtExceptionContext());
+        }
+
+        if (ctor -> ACC_PRIVATE() && ThisType() != type)
+        {
+            //
+            // Add extra argument for read access constructor.
+            //
+            assert(ThisType() -> outermost_type == type -> outermost_type);
+            ctor = type -> GetReadAccessConstructor(ctor);
+            class_creation -> class_type -> symbol = ctor;
+            class_creation -> AddNullArgument();
+        }
+    }
+    else
+    {
+        //
+        // No constructor was found (possibly because the type was not found),
+        // so we don't know what exceptions could be thrown if the user fixes
+        // the prior errors.
+        //
+        SymbolSet *exception_set = TryExceptionTableStack().Top();
+        if (exception_set)
+            exception_set -> AddElement(control.no_type);
     }
 
     //

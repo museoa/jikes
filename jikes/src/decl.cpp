@@ -797,6 +797,8 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration *class_declaration)
                            super_type -> ContainingPackage() -> PackageName(),
                            super_type -> ExternalName());
         }
+        else if (super_type -> Bad())
+            ; // ignore
         else
         {
             super_type -> subtypes -> AddElement(type);
@@ -1002,6 +1004,7 @@ void Semantic::ProcessTypeHeaders(AstInterfaceDeclaration *interface_declaration
 
 void Semantic::ProcessTypeHeaders(TypeSymbol *anon_type, AstClassBody *body)
 {
+    anon_type -> MarkHeaderProcessed();
     state_stack.Push(anon_type -> semantic_environment);
     for (int i = 0; i < body -> NumNestedClasses(); i++)
     {
@@ -1037,8 +1040,7 @@ void Semantic::ReportTypeInaccessible(LexStream::TokenIndex left_tok,
 TypeSymbol *Semantic::FindNestedType(TypeSymbol *type,
                                      LexStream::TokenIndex identifier_token)
 {
-    if (type == control.null_type || type == control.no_type ||
-        type -> Primitive())
+    if (type == control.null_type || type -> Bad() || type -> Primitive())
     {
         return NULL;
     }
@@ -1066,9 +1068,36 @@ TypeSymbol *Semantic::MustFindNestedType(TypeSymbol *type, Ast *name)
     TypeSymbol *inner_type = FindNestedType(type, identifier_token);
     if (inner_type)
         TypeAccessCheck(name, inner_type);
-    else inner_type = GetBadNestedType(type, identifier_token);
+    else
+    {
+        //
+        // Before failing completely, check whether or not the user is trying
+        // to access an inaccessible nested type.
+        //
+        NameSymbol *name_symbol = lex_stream -> NameSymbol(identifier_token);
+        for (TypeSymbol *super_type = type -> super;
+             super_type && ! super_type -> Bad();
+             super_type = super_type -> super)
+        {
+            assert(super_type -> expanded_type_table);
 
-    return inner_type;
+            TypeShadowSymbol *type_shadow_symbol = super_type ->
+                expanded_type_table -> FindTypeShadowSymbol(name_symbol);
+            if (type_shadow_symbol)
+            {
+                inner_type = FindTypeInShadow(type_shadow_symbol,
+                                              identifier_token);
+                break;
+            }
+        }
+
+        if (inner_type)
+            ReportTypeInaccessible(name -> LeftToken(),
+                                   name -> RightToken(), inner_type);
+        else inner_type = GetBadNestedType(type, identifier_token);
+    }
+
+    return inner_type -> Bad() ? control.no_type : inner_type;
 }
 
 
@@ -1506,7 +1535,9 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment,
 
                 if (intermediate == super_type && ! this_type -> ACC_ABSTRACT())
                 {
-                    ReportSemError(SemanticError::NON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD,
+                    ReportSemError((this_type -> Anonymous()
+                                    ? SemanticError::ANONYMOUS_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD
+                                    : SemanticError::NON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD),
                                    identifier_token,
                                    identifier_token,
                                    method -> Header(),
@@ -1807,20 +1838,14 @@ TypeSymbol *Semantic::GetBadNestedType(TypeSymbol *type,
     inner_type -> subtypes = new SymbolSet;
     inner_type -> SetExternalIdentity(control.FindOrInsertName(external_name,
                                                                length));
-    inner_type -> semantic_environment =
-        new SemanticEnvironment(this, inner_type,
-                                type -> semantic_environment);
     inner_type -> super = control.Object();
     inner_type -> SetOwner(type);
-    inner_type -> SetSignature(control);
-
-    AddDefaultConstructor(inner_type);
-
-    ReportSemError(SemanticError::TYPE_NOT_FOUND,
-                   identifier_token,
-                   identifier_token,
-                   inner_type -> ContainingPackage() -> PackageName(),
-                   inner_type -> ExternalName());
+    if (! type -> Bad())
+        ReportSemError(SemanticError::TYPE_NOT_FOUND,
+                       identifier_token,
+                       identifier_token,
+                       inner_type -> ContainingPackage() -> PackageName(),
+                       inner_type -> ExternalName());
 
     delete [] external_name;
 
@@ -2121,10 +2146,14 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_d
     ProcessImportQualifiedName(import_declaration -> name);
     Symbol *symbol = import_declaration -> name -> symbol;
     PackageSymbol *package = symbol -> PackageCast();
+    TypeSymbol *type = symbol -> TypeCast();
+
     //
     // Technically, the JLS grammar forbids "import foo;". However, our
     // grammar parses it, and will either find or create the package foo, so
-    // we can give a better message than "expected '.'".
+    // we can give a better message than "expected '.'". If a non-type is
+    // imported, we create a place-holder type so that the use of the
+    // unqualified type name won't cause cascading errors elsewhere in the file.
     //
     if (package)
     {
@@ -2132,10 +2161,13 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_d
                        import_declaration -> name -> LeftToken(),
                        import_declaration -> name -> RightToken(),
                        package -> PackageName());
-        return;
+        NameSymbol *name_symbol = lex_stream ->
+            NameSymbol(import_declaration -> name -> RightToken());
+        type = package -> InsertOuterTypeSymbol(name_symbol);
+        type -> MarkBad();
+        type -> super = control.no_type;
+        type -> outermost_type = control.no_type;
     }
-
-    TypeSymbol *type = symbol -> TypeCast();
 
     //
     // If two single-type-import declarations in the same compilation unit
@@ -2200,8 +2232,8 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_d
         }
         else
         {
-            ReportSemError(SemanticError::DUPLICATE_TYPE_DECLARATION,
-                           import_declaration -> name -> LeftToken(),
+            ReportSemError(SemanticError::DUPLICATE_IMPORT_NAME,
+                           import_declaration -> name -> RightToken(),
                            import_declaration -> name -> RightToken(),
                            lex_stream -> NameString(import_declaration -> name -> RightToken()),
                            old_type -> FileLoc());
@@ -2232,8 +2264,8 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_d
         {
             FileLocation file_location(lex_stream,
                                        compilation_unit -> ImportDeclaration(i) -> LeftToken());
-            ReportSemError(SemanticError::DUPLICATE_TYPE_DECLARATION,
-                           import_declaration -> name -> LeftToken(),
+            ReportSemError(SemanticError::DUPLICATE_IMPORT_NAME,
+                           import_declaration -> name -> RightToken(),
                            import_declaration -> name -> RightToken(),
                            lex_stream -> NameString(import_declaration -> name -> RightToken()),
                            file_location.location);
@@ -3335,6 +3367,19 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type,
 
 void Semantic::ComputeTypesClosure(TypeSymbol *type, LexStream::TokenIndex tok)
 {
+    if (! type -> HeaderProcessed())
+    {
+        AstClassDeclaration *class_decl =
+            type -> declaration -> ClassDeclarationCast();
+        AstInterfaceDeclaration *interface_decl =
+            type -> declaration -> InterfaceDeclarationCast();
+        Semantic *sem = type -> semantic_environment -> sem;
+        if (class_decl)
+            sem -> ProcessTypeHeaders(class_decl);
+        else if (interface_decl)
+            sem -> ProcessTypeHeaders(interface_decl);
+        else assert(false && "type not processed");
+    }
     type -> expanded_type_table = new ExpandedTypeTable();
 
     TypeSymbol *super_class = type -> super;
@@ -3987,8 +4032,8 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
             //
             // If there is no file associated with the name of the type then
             // the type does not exist. Before invoking ReadType to issue a
-            // "type not found" error message, check whether or not the user is
-            // not attempting to access an inaccessible private type.
+            // "type not found" error message, check whether the user is
+            // trying to access an inaccessible nested type.
             //
             if (! file_symbol && state_stack.Size() > 0)
             {
@@ -4083,7 +4128,7 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
                            type -> ExternalName());
         }
     }
-    return type;
+    return type -> Bad() ? control.no_type : type;
 }
 
 
