@@ -45,7 +45,6 @@ int main(int argc, char *argv[])
         "\n\n"
         "-classpath path    use path for CLASSPATH\n"
         "-d dir             write class files in directory dir\n"
-        "-encoding encoding specify character encoding used by source files\n"
         "-debug             no effect (recognized for compatibility)\n"
         "-depend | -Xdepend recompile all used classes\n"
         "-deprecation       report uses of deprecated features\n"
@@ -71,10 +70,11 @@ int main(int argc, char *argv[])
         "+U                 do full dependence check including Zip and Jar files\n"
         "+Z                 treat cautions as errors\n"
         "\nVersion 1.10 (3 Nov 99)\n"
-        "Originally written by Philippe Charles and David Shields, IBM Research,\n"
-        "Jikes is now maintained and refined by the\n"
+        "Originally written by Philippe Charles and David Shields \n"
+        "of IBM Research, Jikes is now maintained and refined by the\n"
         "Jikes Project at http://ibm.com/developerworks/opensource.\n"
-        "Please use the above URL to report problems.\n");
+        "Please consult this URL for more information and to learn \n"
+        "how to report problems.\n");
 
         return_code = 1;
     }
