@@ -1,6 +1,12 @@
+2004-03-09  Elliott Hughes  <enh@acm.org>
+
+	* src/expr.cpp (GetAnonymousType): Fix invalid assertion that was
+	triggering during placeholder types - bug 3884.
+
 2004-03-07  Elliott Hughes  <enh@acm.org>
 
-	* src/decl.cpp (ProcessInstanceInitializers, ProcessStaticInitializers):
+	* src/decl.cpp (ProcessInstanceInitializers),
+	(ProcessStaticInitializers):
 	fix compilation of classes such as Sun's implementation of
 	java.lang.Character which use field declarations that declare more
 	than one field. The misleading names NumInstanceVariables and

@@ -3896,23 +3896,27 @@ TypeSymbol* Semantic::GetAnonymousType(AstClassCreationExpression* class_creatio
     anon_type -> file_symbol = source_file_symbol;
     if (ThisMethod())
         anon_type -> SetOwner(ThisMethod());
-    else
+    else if (ThisVariable())
     {
         //
         // Creating an anonymous class in a field initializer necessarily
         // requires non-trivial code, so the initializer method should
         // exist as the owner of this type.
         //
-        assert(ThisVariable() &&
-               (ThisVariable() -> ACC_STATIC()
-                ? this_type -> static_initializer_method
-                : (this_type ->
-                   FindMethodSymbol(control.block_init_name_symbol))));
+        assert(ThisVariable() -> ACC_STATIC()
+               ? this_type -> static_initializer_method
+               : (this_type -> FindMethodSymbol(control.
+                                                block_init_name_symbol)));
         anon_type ->
             SetOwner(ThisVariable() -> ACC_STATIC()
                      ? this_type -> static_initializer_method
                      : (this_type ->
                         FindMethodSymbol(control.block_init_name_symbol)));
+    }
+    else
+    {
+        assert(class_creation -> generated);
+        anon_type -> SetOwner(this_type);
     }
 
     //
