@@ -1628,54 +1628,85 @@ Utf8LiteralValue *Utf8LiteralTable::FindOrInsert(const char *str, int len)
 }
 
 
-void Utf8LiteralTable::EvaluateConstant(AstExpression *expression, int start, int end)
+//
+// Collapses all known strings in an expression chain into the leftmost one;
+// since the others in the chain have been set to "", this allows the emitter
+// to use a single call to StringBuffer.append() for the entire chain.
+//
+void Utf8LiteralTable::CollectStrings()
 {
-    if (end - start > 1)
+    int count = utf8_literals -> Length();
+    assert(count && leftmost_constant_expr);
+    if (count == 1)
+    {
+        if (! leftmost_constant_expr -> NullLiteralCast())
+            leftmost_constant_expr -> value = (*utf8_literals)[0];
+    }
+    else
     {
         int length = 0;
-        for (int i = start; i < end; i++)
-        {
-            Utf8LiteralValue *literal = (*utf8_literals)[i];
-            length += literal -> length;
-        }
+        for (int i = 0; i < count; i++)
+            length += (*utf8_literals)[i] -> length;
         char *str = new char[length + 1]; // +1 for '\0'
 
         int index = 0;
-        for (int k = start; k < end; k++)
+        for (int k = 0; k < count; k++)
         {
             Utf8LiteralValue *literal = (*utf8_literals)[k];
             assert(literal -> value);
 
-            memmove(&str[index], literal -> value, literal -> length * sizeof(char));
+            memmove(&str[index], literal -> value,
+                    literal -> length * sizeof(char));
             index += literal -> length;
         }
         str[length] = U_NULL;
 
-        expression -> value = FindOrInsert(str, length);
+        leftmost_constant_expr -> value = FindOrInsert(str, length);
 
         delete [] str;
     }
+    utf8_literals -> Reset();
+    leftmost_constant_expr = NULL;
 }
 
 
-bool Utf8LiteralTable::IsConstantString(AstExpression *expression)
+//
+// The return value is true iff leftmost_constant_expr != NULL; in other words,
+// if the current expression ends in a known String value which can be chained
+// to the next expression. As a side effect, if the expression is constant, it
+// is in the growing tuple of known strings seen so far; and if the expression
+// is not constant, all strings in the tuple are collected into the leftmost
+// constant of the previous chain.
+//
+bool Utf8LiteralTable::EndsInKnownString(AstExpression *expression)
 {
     if (expression -> IsConstant())
     {
-        // EvaluateConstant only works with Utf8LiteralValue* types.
+        //
+        // CollectStrings only works with Utf8LiteralValue* types, which
+        // previous code in expr.cpp has already calculated. Here, we replace
+        // constants with blank strings, and later we replace the left-most
+        // constant with the concatenated version, so that expressions like
+        // (nonconst + "a") + "b"; become (nonconst + "ab") + "";.  The
+        // bytecode emitter is then smart enough to ignore the "".
+        //
         Utf8LiteralValue *literal =
-            DYNAMIC_CAST<Utf8LiteralValue *, LiteralValue *>
-                (expression -> value);
+            DYNAMIC_CAST<Utf8LiteralValue *> (expression -> value);
         assert(literal -> value);
 
         utf8_literals -> Next() = literal;
+        if (! leftmost_constant_expr)
+            leftmost_constant_expr = expression;
+        else
+            expression -> value = FindOrInsert("", 0);
         return true;
     }
 
-    AstBinaryExpression *binary_expression = expression -> BinaryExpressionCast();
-    AstCastExpression *cast_expression = expression -> CastExpressionCast();
-    AstParenthesizedExpression *parenthesized_expression = expression -> ParenthesizedExpressionCast();
-    if (binary_expression)
+    AstBinaryExpression *binary_expr = expression -> BinaryExpressionCast();
+    AstCastExpression *cast_expr = expression -> CastExpressionCast();
+    AstParenthesizedExpression *paren_expr = expression -> ParenthesizedExpressionCast();
+    AstNullLiteral *null_expr = expression -> NullLiteralCast();
+    if (binary_expr)
     {
         //
         // If either subexpression is a constant but not a String, we have
@@ -1684,51 +1715,84 @@ bool Utf8LiteralTable::IsConstantString(AstExpression *expression)
         // we recurse to append the constant String for a primitive
         // expression, as well as to check if a String expression is constant.
         // This relies on the fact that this binary expression is of type
-        // String.
+        // String. Remember that the null literal is not constant.
         //
-        int left_start_marker = utf8_literals -> Length();
-
-        AstExpression *left  = binary_expression -> left_expression,
-                      *right = binary_expression -> right_expression;
-
-        bool left_is_constant = ((left -> IsConstant() ||
-                                  left -> Type() == expression -> Type())
-                                 ? IsConstantString(left) : false);
-
-        int left_end_marker = utf8_literals -> Length();
-
-        bool right_is_constant = ((right -> IsConstant() ||
-                                   right -> Type() == expression -> Type())
-                                  ? IsConstantString(right) : false);
-        if (left_is_constant && right_is_constant)
-             return true;
-
-        if (left_is_constant)
-             EvaluateConstant(left, left_start_marker, left_end_marker);
-        else if (right_is_constant)
-             EvaluateConstant(right, left_end_marker,
-                 utf8_literals -> Length());
-
-        utf8_literals -> Reset(left_start_marker);
+        AstExpression *left  = binary_expr -> left_expression,
+                      *right = binary_expr -> right_expression;
+        if (left -> IsConstant() ||
+            left -> Type() == expression -> Type())
+        {
+            EndsInKnownString(left);
+        }
+        if ((right -> IsConstant() ||
+             right -> Type() == expression -> Type()) &&
+            EndsInKnownString(right))
+        {
+            if (leftmost_constant_expr == left &&
+                ! left -> NullLiteralCast() && ! right -> NullLiteralCast())
+            {
+                leftmost_constant_expr = binary_expr;
+            }
+            return true;
+        }
     }
-    else if (cast_expression)
-         return IsConstantString(cast_expression -> expression);
-    else if (parenthesized_expression)
-         return IsConstantString(parenthesized_expression -> expression);
+    else if (cast_expr && EndsInKnownString(cast_expr -> expression))
+    {
+        //
+        // If we get here, the subexpression is necessarily a constant String;
+        // but this cast is constant only if it is to type String.
+        //
+        if (leftmost_constant_expr == cast_expr -> expression &&
+            cast_expr -> expression -> Type() == cast_expr -> Type())
+        {
+            leftmost_constant_expr = cast_expr;
+        }
+        return true;
+    }
+    else if (paren_expr && EndsInKnownString(paren_expr -> expression))
+    {
+        if (leftmost_constant_expr == paren_expr -> expression &&
+            ! leftmost_constant_expr -> NullLiteralCast())
+        {
+            leftmost_constant_expr = paren_expr;
+        }
+        return true;
+    }
+    else if (null_expr)
+    {
+        //
+        // We are careful that null is never given a string value unless it is
+        // part of a chain of strings, as it is not a compile-time constant.
+        //
+        utf8_literals -> Next() = FindOrInsert(StringConstant::U8S_null, 4);
+        if (! leftmost_constant_expr)
+            leftmost_constant_expr = expression;
+        else
+            expression -> value = FindOrInsert("", 0);
+        return true;
+    }
 
+    if (leftmost_constant_expr)
+        CollectStrings();
     return false; // Not a constant String expression
 }
 
 
-
+//
+// This method flattens all known String expressions in the tree into a minimal
+// number of utf8 literals. Note that it even flattens non-constant expressions
+// (such as (Object)"ab", or null), when there are no side effects which could
+// get in the way.  After this method, expression -> IsConstant() will return
+// the correct value, but some intermediate subexpressions may return a
+// harmless false negative.
+//
 void Utf8LiteralTable::CheckStringConstant(AstExpression *expression)
 {
-    // This tuple object is used in the IsConstantString() method,
-    // it flattens the expresion tree into a set of utf8 literals.
     utf8_literals = new Tuple<Utf8LiteralValue *>(256);
+    leftmost_constant_expr = NULL;
 
-    if (IsConstantString(expression))
-        EvaluateConstant(expression, 0, utf8_literals -> Length());
+    if (EndsInKnownString(expression))
+        CollectStrings();
 
     delete utf8_literals;
 }

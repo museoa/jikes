@@ -759,9 +759,11 @@ public:
                 U8S_java_SL_lang_SL_NoClassDefFoundError[], // "java/lang/NoClassDefFoundError"
                 U8S_java_SL_lang_SL_StringBuffer[], // "java/lang/StringBuffer"
                 U8S_java_SL_lang_SL_Throwable[], // "java/lang/Throwable"
+                U8S_false[], // "false"
                 U8S_null[], // "null"
                 U8S_quit[], // "quit"
                 U8S_this[], // "this"
+                U8S_true[], // "true"
 
                 U8S_LP_C_RP_Ljava_SL_lang_SL_StringBuffer_SC[], // "(C)Ljava/lang/StringBuffer;"
                 U8S_LP_Z_RP_Ljava_SL_lang_SL_StringBuffer_SC[], // "(Z)Ljava/lang/StringBuffer;"

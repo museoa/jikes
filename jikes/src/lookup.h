@@ -802,8 +802,9 @@ public:
 private:
 
     Tuple<Utf8LiteralValue *> *utf8_literals;
-    void EvaluateConstant(AstExpression *, int, int);
-    bool IsConstantString(AstExpression *);
+    AstExpression *leftmost_constant_expr;
+    void CollectStrings();
+    bool EndsInKnownString(AstExpression *);
 
     enum
     {

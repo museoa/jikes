@@ -1,3 +1,22 @@
+2002-02-08  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/platform.cpp:
+	* src/platform.h (U8S_false, U8S_true): Added.
+	* src/expr.cpp (CastValue): Simplified string conversion of
+	boolean.
+	(ProcessPLUS):
+	* src/bytecode.cpp (LoadLiteral): Optimize loading -1L, 2L to 5L,
+	-1.0f, -0.0f, 2.0f to 5.0f, -0.0, -1.0, 2.0 to 5.0.
+	(EmitExpression): Fix bug with over-optimization of casts.
+	(EmitBinaryExpression):
+	* src/lookup.h:
+	* src/lookup.cpp (CollectStrings): Renamed from EvaluateConstant.
+	(EndsInKnownString): Renamed from IsConstantString.
+	In general, adjusted string concatenation to work with known,
+	non-constant strings (such as (Object)string, the null
+	literal). Now jikes performs fully associative string
+	concatenation, resulting in less bytecode!
+
 2002-02-07  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.cpp (ConcatenateString, AppendString): Fix one more

@@ -2801,9 +2801,9 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
         if (need_value)
         {
             LoadLiteral(expression -> value, expression -> Type());
-            return (GetTypeWords(expression -> Type()));
+            return GetTypeWords(expression -> Type());
         }
-        else return 0;
+        return 0;
     }
 
     switch (expression -> kind)
@@ -2816,8 +2816,7 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
                     ? EmitExpression(simple_name -> resolution_opt)
                     : LoadVariable(GetLhsKind(expression), expression));
         }
-        else
-            return 0;
+        return 0;
     case Ast::THIS_EXPRESSION:
     case Ast::SUPER_EXPRESSION:
         if (need_value)
@@ -2825,8 +2824,7 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
             PutOp(OP_ALOAD_0); // will be used
             return 1;
         }
-        else
-            return 0;
+        return 0;
     case Ast::PARENTHESIZED_EXPRESSION:
         return EmitExpression(((AstParenthesizedExpression *) expression) -> expression, need_value);
     case Ast::CLASS_CREATION:
@@ -2854,12 +2852,8 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
             EmitMethodInvocation(method_call);
             if (need_value)
                 return GetTypeWords(method_call -> Type());
-            else
-            {
-                PutOp(GetTypeWords(method_call -> Type()) == 1
-                      ? OP_POP : OP_POP2);
-                return 0;
-            }
+            PutOp(GetTypeWords(method_call -> Type()) == 1 ? OP_POP : OP_POP2);
+            return 0;
         }
     case Ast::ARRAY_ACCESS:
         {
@@ -2867,11 +2861,8 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
             int words = EmitArrayAccessRhs((AstArrayAccess *) expression);
             if (need_value)
                 return words;
-            else
-            {
-                PutOp(words == 1 ? OP_POP : OP_POP2);
-                return 0;
-            }
+            PutOp(words == 1 ? OP_POP : OP_POP2);
+            return 0;
         }
     case Ast::POST_UNARY:
         return EmitPostUnaryExpression((AstPostUnaryExpression *) expression,
@@ -2891,19 +2882,24 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
                     : EmitExpression(cast_expression -> expression, need_value));
         }
     case Ast::CHECK_AND_CAST:
-        // must evaluate, for ClassCastException side effect
-        return EmitCastExpression((AstCastExpression *) expression, need_value);
+        {
+            // must evaluate, for ClassCastException side effect
+            int words = EmitCastExpression((AstCastExpression *) expression,
+                                           true);
+            if (need_value)
+                return words;
+            assert(expression -> Type() -> IsSubclass(control.Object()));
+            PutOp(OP_POP);
+            return 0;
+        }        
     case Ast::BINARY:
         {
             // must evaluate for potential side effects
             int words = EmitBinaryExpression((AstBinaryExpression *) expression);
             if (need_value)
                 return words;
-            else
-            {
-                PutOp(words == 1 ? OP_POP : OP_POP2);
-                return 0;
-            }
+            PutOp(words == 1 ? OP_POP : OP_POP2);
+            return 0;
         }
     case Ast::CONDITIONAL:
         return EmitConditionalExpression((AstConditionalExpression *) expression,
@@ -2917,8 +2913,7 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
             PutOp(OP_ACONST_NULL);
             return 1;
         }
-        else
-            return 0;
+        return 0;
     default:
         assert(false && "unknown expression kind");
         break;
@@ -4033,7 +4028,7 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
 int ByteCode::EmitCastExpression(AstCastExpression *expression, bool need_value)
 {
     //
-    // convert from numeric type src to destination type dest
+    // Convert from src type to destination type.
     //
     EmitExpression(expression -> expression, need_value);
 
@@ -5183,7 +5178,8 @@ void ByteCode::ConcatenateString(AstBinaryExpression *expression)
             // new StringBuffer(null) raising a NullPointerException
             // since string constants are never null.
             //
-            Utf8LiteralValue *value = DYNAMIC_CAST<Utf8LiteralValue *> (left_expr -> value);
+            Utf8LiteralValue *value =
+                DYNAMIC_CAST<Utf8LiteralValue *> (left_expr -> value);
             if (value -> length == 0)
             {
                 PutOp(OP_INVOKESPECIAL);
@@ -5216,7 +5212,8 @@ void ByteCode::AppendString(AstExpression *expression)
 
     if (expression -> IsConstant())
     {
-        Utf8LiteralValue *value = DYNAMIC_CAST<Utf8LiteralValue *> (expression -> value);
+        Utf8LiteralValue *value =
+            DYNAMIC_CAST<Utf8LiteralValue *> (expression -> value);
         if (value -> length == 0)
             return;  // Optimization: do nothing when appending "".
         if (value -> length == 1)
@@ -5284,7 +5281,8 @@ void ByteCode::EmitStringAppendMethod(TypeSymbol *type)
          : IsReferenceType(type) ? control.StringBuffer_append_objectMethod()
          : control.StringBuffer_InitMethod()); // for assertion
 
-    assert(append_method != control.StringBuffer_InitMethod() && "unable to find method for string buffer concatenation");
+    assert(append_method != control.StringBuffer_InitMethod() &&
+           "unable to find method for string buffer concatenation");
 
     PutOp(OP_INVOKEVIRTUAL);
     if (control.IsDoubleWordType(type))
@@ -5486,48 +5484,84 @@ void ByteCode::LoadLocal(int varno, TypeSymbol *type)
 //
 void ByteCode::LoadLiteral(LiteralValue *litp, TypeSymbol *type)
 {
-    if (control.IsSimpleIntegerValueType(type) || type == control.boolean_type) // load literal using literal value
+    if (control.IsSimpleIntegerValueType(type) || type == control.boolean_type)
     {
+        // load literal using literal value
         IntLiteralValue *vp = DYNAMIC_CAST<IntLiteralValue *> (litp);
         LoadImmediateInteger(vp -> value);
     }
-    else if (type == control.String()) // register index as string if this has not yet been done
+    else if (type == control.String() || type == control.null_type)
     {
-        LoadConstantAtIndex(RegisterString(DYNAMIC_CAST<Utf8LiteralValue *> (litp)));
+        // register index as string if this has not yet been done
+        Utf8LiteralValue *vp = DYNAMIC_CAST<Utf8LiteralValue *> (litp);
+        LoadConstantAtIndex(RegisterString(vp));
     }
     else if (type == control.long_type)
     {
         LongLiteralValue *vp = DYNAMIC_CAST<LongLiteralValue *> (litp);
         if (vp -> value == 0)
-             PutOp(OP_LCONST_0);
+            PutOp(OP_LCONST_0);
         else if (vp -> value == 1)
-             PutOp(OP_LCONST_1);
+            PutOp(OP_LCONST_1);
+        else if (vp -> value >= -1 && vp -> value <= 5)
+        {
+            LoadImmediateInteger(vp -> value.LowWord());
+            PutOp(OP_I2L);
+        }
         else
         {
-             PutOp(OP_LDC2_W);
-             PutU2(RegisterLong(vp));
+            PutOp(OP_LDC2_W);
+            PutU2(RegisterLong(vp));
         }
     }
     else if (type == control.float_type)
     {
         FloatLiteralValue *vp = DYNAMIC_CAST<FloatLiteralValue *> (litp);
         IEEEfloat val = vp -> value;
-        if (val.Word() == 0) // if float 0.0
-             PutOp(OP_FCONST_0);
-        else if (val.Word() == 0x3f800000) // if float 1.0
-             PutOp(OP_FCONST_1);
-        else if (val.Word() == 0x40000000) // if float 2.0
-             PutOp(OP_FCONST_2);
+        if (val.IsZero())
+        {
+            PutOp(OP_FCONST_0);
+            if (val.IsNegative())
+                PutOp(OP_FNEG);
+        }
+        else if (val == 1.0f)
+            PutOp(OP_FCONST_1);
+        else if (val == 2.0f)
+            PutOp(OP_FCONST_2);
+        else if (val == -1.0f)
+        {
+            PutOp(OP_FCONST_1);
+            PutOp(OP_FNEG);
+        }
+        else if (val == 3.0f || val == 4.0f || val == 5.0f)
+        {
+            LoadImmediateInteger(val.IntValue());
+            PutOp(OP_I2F);
+        }
         else LoadConstantAtIndex(RegisterFloat(vp));
     }
     else if (type == control.double_type)
     {
         DoubleLiteralValue *vp = DYNAMIC_CAST<DoubleLiteralValue *> (litp);
         IEEEdouble val = vp -> value;
-        if (val.HighWord() == 0 && val.LowWord() == 0)
-             PutOp(OP_DCONST_0);
-        else if (val.HighWord() == 0x3ff00000 && val.LowWord() == 0x00000000) // if double 1.0
-             PutOp(OP_DCONST_1);
+        if (val.IsZero())
+        {
+            PutOp(OP_DCONST_0);
+            if (val.IsNegative())
+                PutOp(OP_DNEG);
+        }
+        else if (val == 1.0)
+            PutOp(OP_DCONST_1);
+        else if (val == -1.0)
+        {
+            PutOp(OP_DCONST_1);
+            PutOp(OP_DNEG);
+        }
+        else if (val == 2.0 || val == 3.0 || val == 4.0 || val == 5.0)
+        {
+            LoadImmediateInteger(val.IntValue());
+            PutOp(OP_I2D);
+        }
         else
         {
              PutOp(OP_LDC2_W);

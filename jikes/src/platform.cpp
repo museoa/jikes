@@ -1610,9 +1610,11 @@ char StringConstant::U8S_java_SL_lang_SL_Throwable[] = {
     U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
     U_T, U_h, U_r, U_o, U_w, U_a, U_b, U_l, U_e,
     U_NU}; // "java/lang/Throwable"
+char StringConstant::U8S_false[] = {U_f, U_a, U_l, U_s, U_e, U_NU}; // "false"
 char StringConstant::U8S_null[] = {U_n, U_u, U_l, U_l, U_NU}; // "null"
 char StringConstant::U8S_quit[] = {U_q, U_u, U_i, U_t, U_NU}; // "quit"
 char StringConstant::U8S_this[] = {U_t, U_h, U_i, U_s, U_NU}; // "this"
+char StringConstant::U8S_true[] = {U_t, U_r, U_u, U_e, U_NU}; // "true"
 
 char StringConstant::U8S_LP_C_RP_Ljava_SL_lang_SL_StringBuffer_SC[] = {
     U_LP, U_C, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
