@@ -122,6 +122,10 @@
 	after deleting it. Don't delete comment_buffer again,
 	it is already done in DestroyInput().
 
+2000-08-01  Mo DeJong  <mdejong@redhat.com>
+
+	Released Jikes 1.12.
+
 2000-07-30  Mo DeJong  <mdejong@redhat.com>
 
 	* jikes.spec: Add default -O3 flag when building
