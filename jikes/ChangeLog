@@ -1,6 +1,12 @@
 2000-05-03  Mo DeJong  <mdejong@cygnus.com>
 
-	* src/src/jikesapi.h: Moved inner classed
+	* src/bytecode.cpp: Commented out else
+	block that was added as part of the
+	fix for bug #198 because it was core dumping.
+
+2000-05-03  Mo DeJong  <mdejong@cygnus.com>
+
+	* src/jikesapi.h: Moved inner classes
 	into the public scope. This was causing
 	compiler errors with non g++ compilers.
 

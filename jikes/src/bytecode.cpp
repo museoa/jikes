@@ -3677,7 +3677,9 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
             }
             else 
             {
-                PutOp(EmitExpression(field -> base) == 2 ? OP_POP2 : OP_POP); // discard value
+	        // FIXME : diasbled because it is crashing jikes !
+	        // This seems to have been caused by a fix for bug #198
+	        //PutOp(EmitExpression(field -> base) == 2 ? OP_POP2 : OP_POP); // discard value
             }
         }
     }
