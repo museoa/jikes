@@ -6013,7 +6013,7 @@ void Semantic::ProcessAND_AND(AstBinaryExpression* expr)
     {
         //
         // Even when evaluating false && x, x must be constant for && to
-        // be constant
+        // be a constant expression according to JLS2 15.28.
         //
         expr -> value = control.int_pool.
             FindOrInsert((IsConstantTrue(expr -> left_expression) &&
@@ -6055,8 +6055,8 @@ void Semantic::ProcessOR_OR(AstBinaryExpression* expr)
         expr -> right_expression -> IsConstant())
     {
         //
-        // Even when evaluating true || x, x must be constant for && to
-        // be constant
+        // Even when evaluating true || x, x must be constant for || to
+        // be a constant expression according to JLS2 15.28.
         //
         expr -> value = control.int_pool.
             FindOrInsert((IsConstantTrue(expr -> left_expression) ||
@@ -6696,8 +6696,9 @@ void Semantic::ProcessConditionalExpression(Ast* expr)
             }
 
             //
-            // If all the subexpressions are constants, compute the results and
-            // set the value of the expression accordingly.
+            // Even when evaluating 'true ? constant : x' or
+            // 'false ? x : constant', x must be constant for ?: to be a
+            // constant expression according to JLS2 15.28.
             //
             if (conditional_expression -> true_expression -> IsConstant() &&
                 conditional_expression -> false_expression -> IsConstant())

@@ -1,3 +1,12 @@
+2004-02-06  Elliott Hughes  <enh@acm.org>
+
+	* src/bytecode.cpp (EmitPreUnaryExpression): Fix bad assertion -
+	patch 433.	
+	* src/error.cpp (EJ_AVOID_OVERLOADING_EQUALS): Fix message typo -
+	Patch 435.
+	* src/expr (ProcessAND_AND, ProcessOR_OR),
+	(ProcessConditionalExpression): Improve comments - Patch 434.
+
 2004-02-06  Eric Blake  <ebb9@byu.net>
 
 	* src/access.h (ACCESS_BRIDGE, ACCESS_VARARGS, ACCESS_ENUM),

@@ -1244,7 +1244,7 @@ void SemanticError::InitializeMessages()
         "The class \"%1\" has an \"equals\" method with parameter of a type "
         "other than \"java.lang.Object\". This will overload, rather than "
         "override, \"java.lang.Object.equals\". "
-        "(See item 7 of \"Effective Java\".)";
+        "(See item 17 of \"Effective Java\".)";
     messages[EJ_EMPTY_CATCH_BLOCK] =
         "An empty catch block defeats the purpose of exceptions. "
         "(See item 47 of \"Effective Java\".)";
@@ -1585,7 +1585,7 @@ void SemanticError::InitializeMessages()
     messages[INVALID_CHARACTER_VALUE] =
         "A character must be in the range 0..65535 ('\\u0000'..'\\uffff').";
     messages[INVALID_INT_VALUE] =
-        "The value of an \"int\" literal must be a decimal value in the "
+        "The value of an int literal must be a decimal value in the "
         "range -2147483648..2147483647 or a hexadecimal or octal literal "
         "that fits in 32 bits.";
     messages[INVALID_LONG_VALUE] =

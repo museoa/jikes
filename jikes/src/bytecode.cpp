@@ -5363,34 +5363,29 @@ int ByteCode::EmitPreUnaryExpression(AstPreUnaryExpression* expression,
     }
     else // here for ordinary unary operator without side effects.
     {
+        EmitExpression(expression -> expression, need_value);
+        if (! need_value)
+            return 0;
         switch (expression -> pre_unary_tag)
         {
         case AstPreUnaryExpression::PLUS:
-            // nothing to do (front-end will have done any needed conversions)
-            assert(need_value);
-            EmitExpression(expression -> expression);
+            // Nothing else to do.
             break;
         case AstPreUnaryExpression::MINUS:
-            assert(need_value);
             assert(control.IsNumeric(type) && "unary minus on bad type");
-
-            EmitExpression(expression -> expression);
             PutOp(control.IsSimpleIntegerValueType(type) ? OP_INEG
                   : type == control.long_type ? OP_LNEG
                   : type == control.float_type ? OP_FNEG
                   : OP_DNEG); // double_type
             break;
         case AstPreUnaryExpression::TWIDDLE:
-            assert(need_value);
             if (control.IsSimpleIntegerValueType(type))
             {
-                EmitExpression(expression -> expression);
                 PutOp(OP_ICONST_M1); // -1
                 PutOp(OP_IXOR);      // exclusive or to get result
             }
             else if (type == control.long_type)
             {
-                EmitExpression(expression -> expression);
                 PutOp(OP_LCONST_1); // make -1
                 PutOp(OP_LNEG);
                 PutOp(OP_LXOR);     // exclusive or to get result
@@ -5399,10 +5394,6 @@ int ByteCode::EmitPreUnaryExpression(AstPreUnaryExpression* expression,
             break;
         case AstPreUnaryExpression::NOT:
             assert(type == control.boolean_type);
-
-            EmitExpression(expression -> expression, need_value);
-            if (! need_value)
-                return 0;
             PutOp(OP_ICONST_1);
             PutOp(OP_IXOR); // !(e) <=> (e)^true
             break;
@@ -5410,7 +5401,6 @@ int ByteCode::EmitPreUnaryExpression(AstPreUnaryExpression* expression,
             assert(false && "unknown preunary tag");
         }
     }
-
     return GetTypeWords(type);
 }
 
