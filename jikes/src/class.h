@@ -690,7 +690,12 @@ public:
     u2 MaxLocals() { return max_locals; }
     void ResetMaxLocals(u2 val) { max_locals = val; }
 
-    u2 CodeLength() { return code.Length(); }
+    u2 CodeLength()
+    {
+        return CodeLengthExceeded() ? 65535 : (u2) code.Length();
+    }
+
+    bool CodeLengthExceeded() { return code.Length() > 65535; }
 
     void ResetCode(int i, u1 byte)
     {

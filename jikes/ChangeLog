@@ -1,5 +1,18 @@
 2002-05-14  Mo DeJong  <supermo@bayarea.net>
 
+	* src/bytecode.cpp (EndMethod): Invoke new
+	Code_attribute::CodeLengthExceeded() method instead of checking
+	the return value of Code_attribute::CodeLength(). The check was
+	not valid since CodeLength() was returning a u2 value which would
+	never be greater than 65535.
+	* src/class.h (CodeLength, CodeLengthExceeded): Return 65535 when
+	the value of CodeLength() exceeds the maximum allowable length to
+	avoid an invalid conversion from int to u2. Bytecode for such a
+	class will not be generated since CodeLengthExceeded() is checked
+	before the class file is emitted. Fixes Jacks 4.10-jvms-2.
+
+2002-05-14  Mo DeJong  <supermo@bayarea.net>
+
 	* src/bytecode.cpp: Add casts to avoid compiler
 	warning on signed/unsigned comparison.
 

@@ -880,7 +880,7 @@ void ByteCode::EndMethod(int method_index, MethodSymbol *msym)
                                     unit_type -> ExternalName());
         }
 
-        if (code_attribute -> CodeLength() > 65535)
+        if (code_attribute -> CodeLengthExceeded())
         {
             semantic.ReportSemError(SemanticError::CODE_OVERFLOW,
                                     msym -> method_or_constructor_declaration -> LeftToken(),
