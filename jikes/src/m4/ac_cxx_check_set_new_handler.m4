@@ -14,6 +14,9 @@ dnl You include file could look like this:
 dnl
 dnl #ifdef HAVE_NEW
 dnl # include <new>
+dnl # ifdef HAVE_NAMESPACE
+dnl #  using namespace std;
+dnl # endif
 dnl #else
 dnl # ifdef HAVE_NEW_H
 dnl #  include <new.h>
@@ -46,7 +49,7 @@ dnl #endif
 dnl }
 dnl
 dnl @version $Id$
-dnl @author Mo DeJong
+dnl @author Mo DeJong <mdejong@cygnus.com>
 dnl
 
 AC_DEFUN(AC_CXX_CHECK_SET_NEW_HANDLER,
@@ -66,6 +69,9 @@ AC_CACHE_CHECK(for VC++ style set_new_handler, ac_cv_vcpp_set_new_handler,
   AC_TRY_LINK([
 #ifdef HAVE_NEW
 # include <new>
+# ifdef HAVE_NAMESPACE
+#  using namespace std;
+# endif
 #else
 # ifdef HAVE_NEW_H
 #  include <new.h>
