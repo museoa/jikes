@@ -1,3 +1,12 @@
+2001-12-13  Mo DeJong  <supermo@bayarea.net>
+
+	* src/zip.cpp (Zip): Avoid core dump when zip file on CLASSPATH
+	does not exist by checking to make sure the zipbuffer has been
+	allocated - patch 247.
+	* src/error.cpp (PrintCANNOT_OPEN_ZIP_FILE): Improve message give
+	to user when a zip file cannot be opened. The file could be
+	invalid but it could also just not exist - patch 248.
+
 2001-12-12  Chris Abbey  <jikes@cabbey.net>
 	    Eric Blake  <ebb9@email.byu.edu>
 

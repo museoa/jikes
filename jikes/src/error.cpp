@@ -1041,7 +1041,8 @@ wchar_t *SemanticError::PrintCANNOT_OPEN_ZIP_FILE(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "The file \"" << err.insert1 << "\" is not a valid zip file.";
+    s << "The file \"" << err.insert1
+      << "\" does not exist or else is not a valid zip file.";
 
     return s.Array();
 }

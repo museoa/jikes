@@ -392,7 +392,7 @@ Zip::Zip(Control &control_, char *zipfile_name) : control(control_),
     // zip file and then scan over the file backwards in search of the
     // END header.
 
-    if (! IsValid()) {
+    if (zipbuffer != NULL && ! IsValid()) {
         u4 sig = 0;
 
 #ifdef UNIX_FILE_SYSTEM
