@@ -4487,11 +4487,8 @@ wchar_t *SemanticError::PrintENCLOSING_INSTANCE_ACCESS_ACROSS_STATIC_REGION(Erro
     if (NotDot(err.insert1))
         s << err.insert1 << "/";
     s << err.insert2
-      << ".this\" is not available as an enclosing instance at this location "
-      << "in type \"";
-    if (NotDot(err.insert3))
-        s << err.insert3 << "/";
-    s << err.insert4 << "\".";
+      << ".this\" exists, but is not accessible at this location because an "
+      << "intermediate anonymous type occurs in an explicit constructor call.";
 
     return s.Array();
 }

@@ -1,5 +1,20 @@
 2002-07-01  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/bytecode.cpp (EmitFieldAccess): Eliminate code duplication,
+	by deferring to LoadVariable.
+	(LoadVariable): Fix handling of constant variables - bug
+	2991. Also, fix shadow variable handling.
+	* src/error.cpp (ENCLOSING_INSTANCE_ACCESS_ACROSS_STATIC_REGION):
+	Improve error message wording.
+	* src/expr.cpp (FindLocalVariable, FindEnclosingInstance),
+	(CreateAccessToType): Improve variable resolution to detect
+	anonymous classes in static regions.
+	(UpdateLocalConstructors, GetAnonymousType),
+	(ProcessClassInstanceCreationExpression): Improve shadow variable
+	handling - bug 2986.
+
+2002-07-01  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/body.cpp (ProcessExecutableBodies):
 	* src/decl.cpp (CompleteSymbolTable, InitializeVariable),
 	(ProcessInitializer, ProcessStaticInitializers),

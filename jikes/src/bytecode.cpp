@@ -4419,52 +4419,8 @@ int ByteCode::EmitFieldAccess(AstFieldAccess *expression, bool need_value)
 
     if (! sym) // not a variable, so it must be a class or package name
         return 0;
-
-    if (base -> Type() -> IsArray())
-    {
-        assert(sym -> name_symbol == control.length_name_symbol);
-        // Possible null pointer exception requires evaluation.
-        EmitExpression(base);
-        PutOp(OP_ARRAYLENGTH);
-        if (! need_value)
-        {
-            PutOp(OP_POP);
-            return 0;
-        }
-        return 1;
-    }
-
-    TypeSymbol *expression_type = expression -> Type();
-    if (sym -> ACC_STATIC())
-    {
-        //
-        // If the access is qualified by an arbitrary base expression,
-        // evaluate it for side effects. Likewise, volatile fields must be
-        // loaded because of the memory barrier side effect.
-        //
-        if (! expression -> IsClassAccess())
-            EmitExpression(base, false);
-        if (need_value || sym -> ACC_VOLATILE())
-            PutOp(OP_GETSTATIC);
-        else return 0;
-    }
-    else
-    {
-        EmitExpression(base); // get base
-        PutOp(OP_GETFIELD); // must evaluate, in case of NullPointerException
-    }
-
-    if (control.IsDoubleWordType(expression_type))
-        ChangeStack(1);
-    PutU2(RegisterFieldref(VariableTypeResolution(expression, sym), sym));
-
-    if (! need_value)
-    {
-        PutOp(control.IsDoubleWordType(expression_type) ? OP_POP2 : OP_POP);
-        return 0;
-    }
-
-    return GetTypeWords(expression_type);
+    return LoadVariable(sym -> ACC_STATIC() ? LHS_STATIC : LHS_FIELD,
+                        expression, need_value);
 }
 
 
@@ -5840,40 +5796,94 @@ int ByteCode::LoadVariable(VariableCategory kind, AstExpression *expr,
         }
     case LHS_FIELD:
     case LHS_STATIC:
-        //
-        // If no value is needed, do nothing for non-volatile fields.
-        // But we must access volatile fields because of the memory
-        // barrier side-effect.
-        //
-        if (! need_value && ! sym -> ACC_VOLATILE())
-            return 0;
+        assert(sym -> IsDeclarationComplete() || ! sym -> ACC_FINAL());
+        if (shadow_parameter_offset && sym -> owner == unit_type &&
+            (sym -> accessed_local ||
+             sym -> Identity() == control.this0_name_symbol))
+        {
+            //
+            // In a constructor, use the parameter that was passed to the
+            // constructor rather than the val$ or this$0 field, because the
+            // field is not yet initialized.
+            //
+            if (! sym -> accessed_local)
+            {
+                LoadLocal(1, expression_type);
+                return 1;
+            }
+            int offset = shadow_parameter_offset;
+            for (int i = 0; i < unit_type -> NumConstructorParameters(); i++)
+            {
+                VariableSymbol *shadow = unit_type -> ConstructorParameter(i);
+                if (sym == shadow)
+                {
+                    LoadLocal(offset, expression_type);
+                    return GetTypeWords(expression_type);
+                }
+                offset += GetTypeWords(shadow -> Type());
+            }
+            assert(false && "local variable shadowing is messed up");
+        }
+        if (expr -> FieldAccessCast() &&
+            ((AstFieldAccess *) expr) -> base -> Type() -> IsArray())
+        {
+            assert(sym -> name_symbol == control.length_name_symbol &&
+                   need_value);
+            EmitExpression(((AstFieldAccess *) expr) -> base);
+            PutOp(OP_ARRAYLENGTH);
+            return 1;
+        }
+
         if (sym -> ACC_STATIC())
         {
             //
-            // If the access is qualified by an arbitrary base
-            // expression, evaluate it for side effects.
+            // If the access is qualified by an arbitrary base expression,
+            // evaluate it for side effects. Likewise, volatile fields must be
+            // loaded because of the memory barrier side effect.
             //
             if (expr -> FieldAccessCast())
             {
-                AstExpression *base = ((AstFieldAccess *) expr) -> base;
-                EmitExpression(base, false);
+                AstFieldAccess *field_access = (AstFieldAccess *) expr;
+                if (! field_access -> IsClassAccess())
+                    EmitExpression(field_access -> base, false);
             }
-
-            PutOp(OP_GETSTATIC);
-            ChangeStack(GetTypeWords(expression_type) - 1);
+            if (need_value || sym -> ACC_VOLATILE())
+            {
+                if (sym -> initial_value)
+                {
+                    //
+                    // Inline any constant. Note that volatile variables can't
+                    // be final, so they are not constant.
+                    //
+                    LoadLiteral(sym -> initial_value, expression_type);
+                    return GetTypeWords(expression_type);
+                }
+                PutOp(OP_GETSTATIC);
+            }
+            else return 0;
         }
         else
         {
-            PutOp(OP_ALOAD_0); // get address of "this"
+            if (expr -> FieldAccessCast())
+                EmitExpression(((AstFieldAccess *) expr) -> base);
+            else PutOp(OP_ALOAD_0); // get address of "this"
             PutOp(OP_GETFIELD);
-            ChangeStack(GetTypeWords(expression_type) - 1);
         }
+        if (control.IsDoubleWordType(expression_type))
+            ChangeStack(1);
         PutU2(RegisterFieldref(VariableTypeResolution(expr, sym), sym));
-        if (! need_value)
+
+        if (! need_value || sym -> initial_value)
         {
-            PutOp(control.IsDoubleWordType(expression_type)
-                  ? OP_POP2 : OP_POP);
-            return 0;
+            PutOp(control.IsDoubleWordType(expression_type) ? OP_POP2 : OP_POP);
+            if (! need_value)
+                return 0;
+            //
+            // Now that we have checked for null, discard the dynamic result and
+            // replace it with the inlined constant.
+            //
+            assert(! sym -> ACC_STATIC());
+            LoadLiteral(sym -> initial_value, expression_type);
         }
         break;
     default:

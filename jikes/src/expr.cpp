@@ -1518,10 +1518,11 @@ VariableSymbol *Semantic::FindVariableInEnvironment(SemanticEnvironment *&where_
 VariableSymbol *Semantic::FindLocalVariable(VariableSymbol *local,
                                             TypeSymbol *type)
 {
+    while (local -> accessed_local)
+        local = local -> accessed_local;
     assert(local -> IsLocal());
 
-    TypeSymbol *containing_type =
-        local -> owner -> MethodCast() -> containing_type;
+    TypeSymbol *containing_type = local -> ContainingType();
     if (type == containing_type)
         return local;
 
@@ -1545,11 +1546,23 @@ VariableSymbol *Semantic::FindLocalVariable(VariableSymbol *local,
 //
 AstExpression *Semantic::FindEnclosingInstance(AstExpression *base,
                                                TypeSymbol *environment_type,
-                                               bool innermost)
+                                               bool exact)
 {
     TypeSymbol *base_type = base -> Type();
+    assert(base_type != environment_type &&
+           base_type -> HasEnclosingInstance(environment_type, exact));
     VariableSymbol *this0 = base_type -> EnclosingInstance();
-    assert(base_type != environment_type && this0);
+    if (! this0)
+    {
+        //
+        // In the case of an anonymous class in an explicit constructor call,
+        // when the immediate enclosing class is not yet initialized, other
+        // enclosing classes are not accessible (even though they COULD be
+        // available through additional constructor parameters) - JLS 8.8.5.1
+        //
+        assert(base_type -> Anonymous() && base_type -> IsLocal());
+        return NULL;
+    }
 
     LexStream::TokenIndex tok = base -> RightToken();
 
@@ -1560,12 +1573,12 @@ AstExpression *Semantic::FindEnclosingInstance(AstExpression *base,
     field_access -> identifier_token = tok;
     field_access -> symbol = this0;
 
-    if (this0 -> Type() == environment_type ||
-        (innermost && this0 -> Type() -> IsSubclass(environment_type)))
+    if (exact ? (this0 -> Type() == environment_type)
+        : (this0 -> Type() -> IsSubclass(environment_type)))
     {
         return field_access;
     }
-    return FindEnclosingInstance(field_access, environment_type, innermost);
+    return FindEnclosingInstance(field_access, environment_type, exact);
 }
 
 
@@ -1596,8 +1609,8 @@ AstExpression *Semantic::CreateAccessToType(Ast *source,
     {
         assert(field_access -> IsSuperAccess() ||
                field_access -> IsThisAccess());
-        left_tok = field_access -> base -> LeftToken();
-        right_tok = field_access -> base -> RightToken();
+        left_tok = field_access -> LeftToken();
+        right_tok = field_access -> identifier_token;
     }
     else assert(false);
 
@@ -1606,34 +1619,12 @@ AstExpression *Semantic::CreateAccessToType(Ast *source,
     if (! this_type -> HasEnclosingInstance(environment_type,
                                             field_access != NULL))
     {
-        if (ExplicitConstructorInvocation())
-            ReportSemError(SemanticError::ENCLOSING_INSTANCE_ACCESS_FROM_CONSTRUCTOR_INVOCATION,
-                           left_tok, right_tok,
-                           environment_type -> ContainingPackage() -> PackageName(),
-                           environment_type -> ExternalName());
-        else
-        {
-            SemanticEnvironment *env = state_stack.Top();
-            // check whether or not there is an intervening static type...
-            for (; env; env = env -> previous)
-            {
-                if (env -> StaticRegion())
-                    break;
-            }
-
-            if (env)
-                 ReportSemError(SemanticError::ENCLOSING_INSTANCE_ACCESS_ACROSS_STATIC_REGION,
-                                left_tok, right_tok,
-                                environment_type -> ContainingPackage() -> PackageName(),
-                                environment_type -> ExternalName(),
-                                env -> Type() -> ContainingPackage() -> PackageName(),
-                                env -> Type() -> ExternalName());
-            else ReportSemError(SemanticError::ENCLOSING_INSTANCE_NOT_ACCESSIBLE,
-                                left_tok, right_tok,
-                                environment_type -> ContainingPackage() -> PackageName(),
-                                environment_type -> ExternalName());
-        }
-
+        ReportSemError((ExplicitConstructorInvocation()
+                        ? SemanticError::ENCLOSING_INSTANCE_ACCESS_FROM_CONSTRUCTOR_INVOCATION
+                        : SemanticError::ENCLOSING_INSTANCE_NOT_ACCESSIBLE),
+                       left_tok, right_tok,
+                       environment_type -> ContainingPackage() -> PackageName(),
+                       environment_type -> ExternalName());
         resolution = compilation_unit -> ast_pool -> GenSimpleName(left_tok);
         resolution -> symbol = control.no_type;
     }
@@ -1664,9 +1655,18 @@ AstExpression *Semantic::CreateAccessToType(Ast *source,
         if (resolved_type != environment_type &&
             (! resolved_type -> IsSubclass(environment_type) || field_access))
         {
-            resolution = FindEnclosingInstance(resolution,
-                                               environment_type,
-                                               ! field_access);
+            AstExpression *intermediate =
+                FindEnclosingInstance(resolution, environment_type,
+                                      field_access);
+            if (! intermediate)
+            {
+                ReportSemError(SemanticError::ENCLOSING_INSTANCE_ACCESS_ACROSS_STATIC_REGION,
+                               left_tok, right_tok,
+                               environment_type -> ContainingPackage() -> PackageName(),
+                               environment_type -> ExternalName());
+                resolution -> symbol = control.no_type;
+            }
+            else resolution = intermediate;
         }
     }
 
@@ -3376,7 +3376,8 @@ void Semantic::ProcessParenthesizedExpression(Ast *expr)
 
 void Semantic::UpdateLocalConstructors(TypeSymbol *inner_type)
 {
-    assert(inner_type -> IsLocal() && ! inner_type -> Anonymous());
+    assert(inner_type -> IsLocal() &&
+           (! inner_type -> Anonymous() || ! inner_type -> EnclosingType()));
 
     //
     // Update the constructor signatures to account for local shadow
@@ -3384,24 +3385,23 @@ void Semantic::UpdateLocalConstructors(TypeSymbol *inner_type)
     //
     inner_type -> MarkLocalClassProcessingCompleted();
     int param_count = inner_type -> NumConstructorParameters();
-    if (param_count == 0)
-        return; // nothing to do
-
-    for (MethodSymbol *ctor = inner_type -> FindConstructorSymbol();
-         ctor; ctor = ctor -> next_method)
+    if (param_count)
     {
-        ctor -> SetSignature(control);
+        for (MethodSymbol *ctor = inner_type -> FindConstructorSymbol();
+             ctor; ctor = ctor -> next_method)
+        {
+            ctor -> SetSignature(control);
+        }
+        for (int j = 0; j < inner_type -> NumPrivateAccessConstructors(); j++)
+            inner_type -> PrivateAccessConstructor(j) ->
+                SetSignature(control, (inner_type -> outermost_type ->
+                                       GetPlaceholderType()));
     }
-    for (int j = 0; j < inner_type -> NumPrivateAccessConstructors(); j++)
-        inner_type -> PrivateAccessConstructor(j) ->
-            SetSignature(control, (inner_type -> outermost_type ->
-                                   GetPlaceholderType()));
 
     //
     // Update all constructor call contexts that were pending on this class.
     // These calls are necessarily located within the body of inner_type, and
     // are calling a constructor in inner_type.
-    // TODO: Figure out how to update accessor constructors.
     //
     for (int i = 0;
          i < inner_type -> NumLocalConstructorCallEnvironments(); i++)
@@ -3417,22 +3417,20 @@ void Semantic::UpdateLocalConstructors(TypeSymbol *inner_type)
 
         if (class_creation)
         {
-            if (class_creation -> symbol != control.no_type)
+            if (class_creation -> symbol != control.no_type && param_count)
             {
-                //
-                // Normally, we can safely use the val$name variable in
-                // inner_class.  However, in the case of an anonymous subclass
-                // of inner_class located in an explicit constructor call,
-                // TODO: think this through a bit more...
-                //
                 class_creation -> AllocateLocalArguments(param_count);
                 for (int k = 0; k < param_count; k++)
                 {
                     AstSimpleName *simple_name = compilation_unit ->
                         ast_pool -> GenSimpleName(class_creation -> new_token);
-                    simple_name -> symbol =
-                        inner_type -> ConstructorParameter(k);
-                    CreateAccessToScopedVariable(simple_name, inner_type);
+                    VariableSymbol *accessor =
+                        FindLocalVariable(inner_type -> ConstructorParameter(k),
+                                          ThisType());
+                    simple_name -> symbol = accessor;
+                    TypeSymbol *owner = accessor -> ContainingType();
+                    if (owner != ThisType())
+                        CreateAccessToScopedVariable(simple_name, owner);
                     class_creation -> AddLocalArgument(simple_name);
                 }
             }
@@ -3440,18 +3438,27 @@ void Semantic::UpdateLocalConstructors(TypeSymbol *inner_type)
         else
         {
             assert(super_call);
-            if (super_call -> symbol -> MethodCast())
+            if (super_call -> symbol && param_count)
             {
                 super_call -> AllocateLocalArguments(param_count);
                 for (int k = 0; k < param_count; k++)
                 {
                     AstSimpleName *simple_name = compilation_unit ->
                         ast_pool -> GenSimpleName(super_call -> super_token);
-                    simple_name -> symbol =
-                        inner_type -> ConstructorParameter(k);
-                    CreateAccessToScopedVariable(simple_name, inner_type);
+                    VariableSymbol *accessor =
+                        FindLocalVariable(inner_type -> ConstructorParameter(k),
+                                          ThisType());
+                    simple_name -> symbol = accessor;
+                    TypeSymbol *owner = accessor -> ContainingType();
+                    if (owner != ThisType())
+                        CreateAccessToScopedVariable(simple_name, owner);
                     super_call -> AddLocalArgument(simple_name);
                 }
+            }
+            if (ThisType() -> Anonymous() &&
+                ! ThisType() -> LocalClassProcessingCompleted())
+            {
+                UpdateLocalConstructors(ThisType());
             }
         }
         state_stack.Pop();
@@ -3790,14 +3797,19 @@ TypeSymbol *Semantic::GetAnonymousType(AstClassInstanceCreationExpression *class
 
     //
     // Finally, mark the class complete, in order to add any shadow variable
-    //parameters to the constructor.
+    // parameters to the constructor.
     //
-    if (anon_type -> NumConstructorParameters())
+    if (! super_type -> IsLocal() ||
+        super_type -> LocalClassProcessingCompleted() ||
+        anon_type -> EnclosingType())
     {
-        class_body -> default_constructor -> constructor_symbol ->
-            SetSignature(control);
+        if (anon_type -> NumConstructorParameters())
+        {
+            class_body -> default_constructor -> constructor_symbol ->
+                SetSignature(control);
+        }
+        anon_type -> MarkLocalClassProcessingCompleted();
     }
-    anon_type -> MarkLocalClassProcessingCompleted();
     return (class_creation -> class_type -> symbol == control.no_type
             ? control.no_type : anon_type);
 }
@@ -3999,22 +4011,26 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
                 class_creation -> AllocateLocalArguments(param_count);
             for (int i = 0; i < param_count; i++)
             {
-                VariableSymbol *local = type -> ConstructorParameter(i) -> accessed_local;
-                AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(class_creation -> new_token);
                 //
                 // Are we currently within the body of the method that
                 // contains the local variable in question? If not, we may need
                 // to create a shadow in the outermost local class enclosing
                 // the variable.
                 //
-                simple_name -> symbol = (type -> owner == ThisMethod()) ? local
-                    : FindLocalVariable(local, ThisType());
+                AstSimpleName *simple_name = compilation_unit ->
+                    ast_pool -> GenSimpleName(class_creation -> new_token);
+                VariableSymbol *accessor =
+                    FindLocalVariable(type -> ConstructorParameter(i),
+                                      ThisType());
+                simple_name -> symbol = accessor;
+                TypeSymbol *owner = accessor -> ContainingType();
+                if (owner != ThisType())
+                    CreateAccessToScopedVariable(simple_name, owner);
                 class_creation -> AddLocalArgument(simple_name);
             }
         }
         else
         {
-
             //
             // We are within body of type; save processing for later, since
             // not all shadows may be known yet. See ProcessClassDeclaration
