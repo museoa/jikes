@@ -1,3 +1,9 @@
+2004-09-13  Elliott Hughes  <enh@acm.org>
+
+	* class.cpp: the release candidate Java 1.5's javac uses
+	UTF-8 constants instead of Class constants for annotations.
+	This patch lets us work with the rt.jar from 1.5-rc.
+
 2004-08-20  Elliott Hughes  <enh@acm.org>
 
 	* configure.ac, src/config.h.in, src/platform.h: bug #4018;

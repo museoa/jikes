@@ -1062,7 +1062,7 @@ Annotation::Annotation(ClassFile& buffer)
     : type_index(buffer.GetU2())
     , components(6, 16)
 {
-    if (buffer.Pool()[type_index] -> Tag() != CPInfo::CONSTANT_Class)
+    if (buffer.Pool()[type_index] -> Tag() != CPInfo::CONSTANT_Utf8)
         buffer.MarkInvalid("bad type for annotation");
     unsigned i = buffer.GetU2();
     while (i--)
