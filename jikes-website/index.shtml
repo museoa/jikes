@@ -83,7 +83,7 @@
 
 <hr>
 <p>What is Jikes?</p>
-<P>Jikes<small><sup>TM</sup></small> is a compiler that translates Java source files as defined in
+<P>Jikes<small><sup>TM</sup></small> is a compiler that translates Java<small><sup>TM</sup></small> source files as defined in
 <a href="http://www.java.sun.com/docs/books/jls">The Java Language Specification</a>
 into the bytecoded instruction set and binary format defined in
 <a href="http://www.java.sun.com/docs/books/vmspec">The Java Virtual Machine Specification</a>.</P>
