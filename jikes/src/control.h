@@ -561,6 +561,7 @@ private:
     void ProcessMembers();
     void CollectTypes(TypeSymbol*, Tuple<TypeSymbol*>&);
     void ProcessBodies(TypeSymbol*);
+    void CheckForUnusedImports(Semantic *);
 
     void ProcessNewInputFiles(SymbolSet&, char**);
 

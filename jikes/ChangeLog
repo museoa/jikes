@@ -1,3 +1,34 @@
+2004-02-23  Emil Ong  <emilong@cs.berkeley.edu>, 
+            Mark Richters  <mr@Informatik.Uni-Bremen.DE>
+	
+	* doc/jikes.1: Documented new pedantic flags unused-type-imports
+	and unused-package-imports; originally by Mark Richters for 1.12,
+	ported to current by Emil Ong, ported to cvs HEAD by cabbey.
+
+	* src/control.cpp (ProcessBodies): If pedantic option is turned
+	on, call CheckForUnusedImports after all types of a body have been
+	processed.
+	(CheckForUnusedImports): New method checks and warns about
+	unnecessary import declarations.
+	* src/control.h (class Control): Declare new method
+	CheckForUnusedImports.
+	* src/decl.cpp (ImportType): If pedantic option is set, keep track
+	of packages from which types are imported as a result of a
+	type-import-on-demand.
+	(FindType): If pedantic option is set, keep track of types which
+	are found by a single-type-import.
+	* src/error.cpp (StaticInitializer): Initialize new named warnings
+	UNUSED_TYPE_IMPORT and UNUSED_PACKAGE_IMPORT.
+	(named_errors[]): Added new named warnings UNUSED_TYPE_IMPORT 
+	and UNUSED_PACKAGE_IMPORT.
+	(InitializeMessages): Added messages for new named warnings 
+	UNUSED_TYPE_IMPORT and UNUSED_PACKAGE_IMPORT.
+	* src/error.h (class SemanticError): Added UNUSED_TYPE_IMPORT and
+	UNUSED_PACKAGE_IMPORT to enum SemanticErrorKind.
+	* src/semantic.h (class Semantic): Added SymbolSets
+	referenced_package_imports and referenced_type_imports.
+
+
 2004-02-23  Eric Blake  <ebb9@byu.net>
 
 	* configure.ac: Fix typo in --enable-source15 test.

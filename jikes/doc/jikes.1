@@ -301,14 +301,19 @@ the \fIno-\fP prefix. At present, the recognized flags are
 in Joshua Bloch's book "Effective Java";
 \fBmodifier-order\fP, which warns about the recommended ordering of
 multiple modifiers;
-\fBredundant-modifiers\fP, which warns about
-explicitly mentioning an implied modifier;
+\fBredundant-modifiers\fP, which warns about explicitly mentioning
+an implied modifier;
 \fBserial\fP, which warns about serializable classes without
 serialVersionUID fields;
 \fBswitchcheck\fP, which
 warns about fallthrough between cases of switch statements;
-and \fBnaming-convention\fP, which warns about names that violate Java
-naming conventions.  Only switchcheck and naming-convention are
+\fBnaming-convention\fP, which warns about names that violate Java
+naming conventions;
+\fBunused-type-imports\fP, which warns about unused single-type
+import statements;
+and \fBunused-package-imports\fP, which warns about unused package
+import statements.
+Only switchcheck and naming-convention are
 included in plain \fB\+P\fP; the others must be asked for by
 name. Multiple \fB\+P\fP options are cumulative in effect. For
 example, to get all pedantic warnings except modifier ordering, use

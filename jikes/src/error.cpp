@@ -647,6 +647,22 @@ void SemanticError::InitializeMessageGroups()
     group -> AddMessage(EJ_PUBLIC_STATIC_FINAL_ARRAY_FIELD);
     group -> AddMessage(EJ_RETURN_OF_NULL_ARRAY);
     message_groups.Push(group);
+
+    //
+    // Warnings about unused imports
+    //
+    group = new MessageGroup("unused-type-imports",
+			     "unused single-type import statements",
+			     NAMED_WEAK_OFF);
+    group -> AddMessage(UNUSED_TYPE_IMPORT);
+    message_groups.Push(group);
+
+    group = new MessageGroup("unused-package-imports",
+			     "unused package import statements",
+			     NAMED_WEAK_OFF);
+    group -> AddMessage(UNUSED_PACKAGE_IMPORT);
+    message_groups.Push(group);
+
 }
 
 //
@@ -1388,6 +1404,11 @@ void SemanticError::InitializeMessages()
     messages[UNNECESSARY_TYPE_IMPORT] =
         "Unnecessary import of type \"%1\". The type is declared at "
         "location %2.";
+    messages[UNUSED_TYPE_IMPORT] = 
+        "Unnecessary import of type \"%T1\". The type is never referenced.";
+    messages[UNUSED_PACKAGE_IMPORT] = 
+        "Unnecessary import of package \"%1\". No types of this package are "
+        "referenced.";
     messages[DUPLICATE_ACCESS_MODIFIER] =
         "Duplicate specification of an access modifier. "
         "Only one instance of \"public\", \"private\", or \"protected\" "

@@ -449,6 +449,9 @@ public:
 
     SymbolSet types_to_be_processed;
 
+    SymbolSet referenced_package_imports;
+    SymbolSet referenced_type_imports;
+
     int return_code;
 
     // The constructor
