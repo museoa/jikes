@@ -1,5 +1,10 @@
 2004-10-09  Elliott Hughes  <enh@acm.org>
 
+	* src/error.cpp: bug #4059; deprecation diagnostics should be
+	warnings, not errors.
+
+2004-10-09  Elliott Hughes  <enh@acm.org>
+
 	* src/decl.cpp: bug #4058; shouldn't warn about deprecation in
 	deprecated contexts.
 
