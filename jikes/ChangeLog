@@ -1,3 +1,10 @@
+2004-06-25  Elliott Hughes  <enh@acm.org>
+
+	* src/decl.cpp: a fix to my fix for bug #3986; still regresses 
+	on the same Jacks tests, but is better practically. Now, as
+	well as rejecting invalid 1.4 source, we can compile against
+	the 1.5 rt.jar classes.
+
 2004-06-22  Elliott Hughes  <enh@acm.org>
 
 	* src/decl.cpp: bug #3424; distinguish between invalid types

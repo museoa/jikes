@@ -2496,10 +2496,11 @@ void Semantic::CheckMethodOverride(MethodSymbol* method,
             method -> Type() -> IsSubtype(hidden_method -> Type()))
         {
             // Silent acceptance for .class files only.
-            // They must work, because the 1.5 library (including
-            // System.out.println("")) is covariant, even for -source 1.4!
+            // They must work, because the 1.5 library is covariant,
+            // even for -source 1.4!
             if (control.option.source < JikesOption::SDK1_5 &&
-                ! ThisType() -> file_symbol -> IsClassOnly())
+                ! hidden_method -> containing_type ->
+                  file_symbol -> IsClassOnly())
             {
                 ReportSemError(SemanticError::COVARIANCE_UNSUPPORTED,
                                left_tok, right_tok, method -> Header(),
