@@ -346,7 +346,7 @@ void TypeSymbol::RemoveCompilationReferences()
 
 TypeSymbol *TypeSymbol::GetArrayType(Semantic *sem, int num_dimensions_)
 {
-    if (num_dimensions_ == 0)
+    if (num_dimensions_ == 0 || Bad())
         return this;
     if (num_dimensions_ < NumArrays())
         return Array(num_dimensions_);

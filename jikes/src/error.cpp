@@ -571,6 +571,7 @@ void SemanticError::StaticInitializer()
     print_message[RECOMPILATION] = PrintRECOMPILATION;
     print_message[PACKAGE_NOT_TYPE] = PrintPACKAGE_NOT_TYPE;
     print_message[TYPE_NOT_FOUND] = PrintTYPE_NOT_FOUND;
+    print_message[INVALID_TYPE_FOUND] = PrintINVALID_TYPE_FOUND;
     print_message[IMPORT_FROM_UNNAMED_PACKAGE] =
         PrintIMPORT_FROM_UNNAMED_PACKAGE;
     print_message[DUPLICATE_ON_DEMAND_IMPORT] = PrintDUPLICATE_ON_DEMAND_IMPORT;
@@ -1911,6 +1912,20 @@ wchar_t *SemanticError::PrintTYPE_NOT_FOUND(ErrorInfo &err,
     if (NotDot(err.insert1))
         s << err.insert1 << "/";
     s << err.insert2 << " was not found.";
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintINVALID_TYPE_FOUND(ErrorInfo &err,
+                                                LexStream *lex_stream,
+                                                Control &control)
+{
+    ErrorString s;
+
+    s << "A candidate for type \"" << err.insert1
+      << "\" was found, but it is invalid and needs to be fixed before this "
+      << "type will successfully compile.";
 
     return s.Array();
 }

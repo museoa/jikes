@@ -1,5 +1,16 @@
 2002-10-14  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/body.cpp (ProcessExecutableBodies): Pedantic warning for
+	strange interface throws clauses - bug 3232.
+	* src/expr.cpp (ProcessTypeExpression),
+	(ProcessClassInstanceCreationExpression): Catch bad types that were
+	found in right file but have invalid contents - bugs 3318, 3319.
+	* src/error.h:
+	* src/error.cpp (INVALID_TYPE_FOUND): New error message.
+	* src/symbol.cpp (GetArrayType): Don't make array of bad type.
+
+2002-10-14  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/expr.cpp (GetAnonymousType): Avoid segfault on bad anonymous
 	class - bug 3322.
 

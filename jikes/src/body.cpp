@@ -2481,15 +2481,16 @@ void Semantic::ProcessExecutableBodies(AstInterfaceDeclaration *interface_declar
 {
     state_stack.Push(interface_declaration -> semantic_environment);
     TypeSymbol *this_type = ThisType();
+    int i;
 
     assert(this_type -> HeaderProcessed());
     assert(this_type -> MethodMembersProcessed());
     assert(this_type -> FieldMembersProcessed());
 
-    for (int k = 0; k < this_type -> NumVariableSymbols(); k++)
+    for (i = 0; i < this_type -> NumVariableSymbols(); i++)
     {
-        VariableSymbol *variable_symbol = this_type -> VariableSym(k);
-        if (! DefinitelyAssignedVariables() -> da_set[k])
+        VariableSymbol *variable_symbol = this_type -> VariableSym(i);
+        if (! DefinitelyAssignedVariables() -> da_set[i])
         {
             ReportSemError(SemanticError::UNINITIALIZED_FINAL_VARIABLE_IN_INTERFACE,
                            variable_symbol -> declarator -> LeftToken(),
@@ -2498,25 +2499,39 @@ void Semantic::ProcessExecutableBodies(AstInterfaceDeclaration *interface_declar
         }
     }
 
+    for (i = 0; i < interface_declaration -> NumMethods(); i++)
+    {
+        AstMethodDeclaration *method_decl = interface_declaration -> Method(i);
+        ThisMethod() = method_decl -> method_symbol;
+        MethodSymbol *this_method = ThisMethod();
+        if (this_method)
+        {
+            LocalSymbolTable().Push(this_method -> block_symbol -> Table());
+            ProcessMethodBody(method_decl);
+            LocalSymbolTable().Pop();
+        }
+    }
+    ThisMethod() = NULL;
+
     //
     // Recursively process all inner types
     //
-    for (int m = 0; m < interface_declaration -> NumNestedClasses(); m++)
+    for (i = 0; i < interface_declaration -> NumNestedClasses(); i++)
     {
         AstClassDeclaration *class_declaration =
-            interface_declaration -> NestedClass(m);
+            interface_declaration -> NestedClass(i);
         if (class_declaration -> semantic_environment)
             ProcessExecutableBodies(class_declaration -> semantic_environment,
                                     class_declaration -> class_body);
     }
 
-    for (int n = 0; n < interface_declaration -> NumNestedInterfaces(); n++)
+    for (i = 0; i < interface_declaration -> NumNestedInterfaces(); i++)
     {
-        if (interface_declaration -> NestedInterface(n) ->
+        if (interface_declaration -> NestedInterface(i) ->
             semantic_environment)
         {
             ProcessExecutableBodies(interface_declaration ->
-                                    NestedInterface(n));
+                                    NestedInterface(i));
         }
     }
 

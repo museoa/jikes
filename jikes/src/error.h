@@ -181,6 +181,7 @@ public:
         RECOMPILATION,
         PACKAGE_NOT_TYPE,
         TYPE_NOT_FOUND,
+        INVALID_TYPE_FOUND,
         IMPORT_FROM_UNNAMED_PACKAGE,
         DUPLICATE_ON_DEMAND_IMPORT,
         UNKNOWN_ON_DEMAND_IMPORT,
@@ -494,6 +495,7 @@ private:
     static wchar_t *PrintRECOMPILATION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintPACKAGE_NOT_TYPE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintTYPE_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintINVALID_TYPE_FOUND(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintIMPORT_FROM_UNNAMED_PACKAGE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintDUPLICATE_ON_DEMAND_IMPORT(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNKNOWN_ON_DEMAND_IMPORT(ErrorInfo &, LexStream *, Control &);

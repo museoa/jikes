@@ -4120,7 +4120,8 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
     }
     else
     {
-        type = MustFindType(actual_type);
+        ProcessTypeExpression(class_creation -> class_type);
+        type = class_creation -> class_type -> Type();
         if (type -> EnclosingType())
             class_creation -> base_opt =
                 CreateAccessToType(class_creation, type -> EnclosingType());
@@ -6875,8 +6876,18 @@ void Semantic::ProcessTypeExpression(Ast *expr)
                         : type_expression -> type);
 
     AstPrimitiveType *primitive_type = actual_type -> PrimitiveTypeCast();
+    //
+    // Occaisionally, MustFindType finds a bad type (for example, if we
+    // reference Other.java which has syntax errors), but does not know to
+    // report the error.
+    //
+    unsigned error_count = NumErrors();
     TypeSymbol *type = (primitive_type ? FindPrimitiveType(primitive_type)
                         : MustFindType(actual_type));
+    if (type -> Bad() && NumErrors() == error_count)
+        ReportSemError(SemanticError::INVALID_TYPE_FOUND,
+                       actual_type -> LeftToken(), actual_type -> RightToken(),
+                       lex_stream -> NameString(actual_type -> RightToken()));
 
     if (array_type)
         type = type -> GetArrayType(this, array_type -> NumBrackets());
