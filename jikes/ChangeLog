@@ -1,3 +1,8 @@
+2001-12-12  Chris Abbey  <jikes@cabbey.net>
+	    Eric Blake  <ebb9@email.byu.edu>
+
+	* src/zip.cpp: Reformat to 80 columns.
+
 2001-12-12  Mo DeJong  <supermo@bayarea.net>
 
 	* src/zip.cpp (Zip, ReadDirectory): Use constants instead of hard

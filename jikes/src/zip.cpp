@@ -22,56 +22,56 @@ namespace Jikes { // Open namespace Jikes block
 //
 //************************************************************
 #ifdef UNIX_FILE_SYSTEM
-    int (*ZipFile::uncompress_file[10]) (FILE *, char *, long) =
-    {
-        UncompressFile0,
-        UncompressFile1,
-        UncompressFile2,
-        UncompressFile3,
-        UncompressFile4,
-        UncompressFile5,
-        UncompressFile6,
-        UncompressFile7,
-        UncompressFile8,
-        UncompressFile9
-    };
+int (*ZipFile::uncompress_file[10]) (FILE *, char *, long) =
+{
+    UncompressFile0,
+    UncompressFile1,
+    UncompressFile2,
+    UncompressFile3,
+    UncompressFile4,
+    UncompressFile5,
+    UncompressFile6,
+    UncompressFile7,
+    UncompressFile8,
+    UncompressFile9
+};
 
-    inline u1 ZipFile::GetU1()
-    {
-        return getc(zipfile);
-    }
+inline u1 ZipFile::GetU1()
+{
+    return getc(zipfile);
+}
 
-    inline void ZipFile::Skip(u4 length)
-    {
-        for (u4 i = 0; i < length; i++)
-             getc(zipfile);
-    }
+inline void ZipFile::Skip(u4 length)
+{
+    for (u4 i = 0; i < length; i++)
+        getc(zipfile);
+}
 
 #elif defined(WIN32_FILE_SYSTEM) // ! UNIX_FILE_SYSTEM
 
-    int (*ZipFile::uncompress_file[10]) (char *, char *, long) =
-    {
-        UncompressFile0,
-        UncompressFile1,
-        UncompressFile2,
-        UncompressFile3,
-        UncompressFile4,
-        UncompressFile5,
-        UncompressFile6,
-        UncompressFile7,
-        UncompressFile8,
-        UncompressFile9
-    };
+int (*ZipFile::uncompress_file[10]) (char *, char *, long) =
+{
+    UncompressFile0,
+    UncompressFile1,
+    UncompressFile2,
+    UncompressFile3,
+    UncompressFile4,
+    UncompressFile5,
+    UncompressFile6,
+    UncompressFile7,
+    UncompressFile8,
+    UncompressFile9
+};
 
-    inline u1 ZipFile::GetU1()
-    {
-        return *file_buffer++;
-    }
+inline u1 ZipFile::GetU1()
+{
+    return *file_buffer++;
+}
 
-    inline void ZipFile::Skip(u4 length)
-    {
-        file_buffer += length;
-    }
+inline void ZipFile::Skip(u4 length)
+{
+    file_buffer += length;
+}
 #endif // WIN32_FILE_SYSTEM
 
 
@@ -145,8 +145,6 @@ ZipFile::ZipFile(FileSymbol *file_symbol) : buffer(NULL)
         }
     }
 #endif
-
-    return;
 }
 
 
@@ -267,8 +265,8 @@ inline void Zip::ProcessDirectoryEntry()
     // -1 to remove last '/'
     if (name[file_name_length - 1] == U_SLASH)
         ProcessSubdirectoryEntries(directory_symbol,
-				   name,
-				   file_name_length - 1);
+                                   name,
+                                   file_name_length - 1);
     else
     {
         bool java_file = (file_name_length >= FileSymbol::java_suffix_length &&
@@ -284,21 +282,21 @@ inline void Zip::ProcessDirectoryEntry()
                 ;
             if (i > 0) // directory specified?
                 directory_symbol = ProcessSubdirectoryEntries(directory_symbol,
-							      name, i);
+                                                              name, i);
             NameSymbol *name_symbol = ProcessFilename(&name[i + 1],
-						      name_length - (i + 1));
+                                                      name_length - (i + 1));
 
             //
             // Search for a file of that name in the directory.
-	    // If one is not found, then insert ... Otherwise,
-	    // either a class file of that name was previously
-	    // processed and now we found a java file with the
-	    // same name or vice-versa... In that case keep
-	    // (or replace with) the file with the most recent
-	    // date stamp.
+            // If one is not found, then insert ... Otherwise,
+            // either a class file of that name was previously
+            // processed and now we found a java file with the
+            // same name or vice-versa... In that case keep
+            // (or replace with) the file with the most recent
+            // date stamp.
             //
             FileSymbol *file_symbol = directory_symbol ->
-	      FindFileSymbol(name_symbol);
+                FindFileSymbol(name_symbol);
             if (! file_symbol)
             {
                 file_symbol = directory_symbol -> InsertFileSymbol(name_symbol);
@@ -324,8 +322,6 @@ inline void Zip::ProcessDirectoryEntry()
             }
         }
     }
-
-    return;
 }
 
 
@@ -349,21 +345,21 @@ Zip::Zip(Control &control_, char *zipfile_name) : control(control_),
     }
 #elif defined(WIN32_FILE_SYSTEM)
     zipfile = CreateFile(zipfile_name,
-			 GENERIC_READ,
-			 FILE_SHARE_READ,
-			 NULL,
-			 OPEN_EXISTING,
-			 FILE_ATTRIBUTE_READONLY,
-			 NULL);
+                         GENERIC_READ,
+                         FILE_SHARE_READ,
+                         NULL,
+                         OPEN_EXISTING,
+                         FILE_ATTRIBUTE_READONLY,
+                         NULL);
     if (zipfile != INVALID_HANDLE_VALUE)
     {
         mapfile = CreateFileMapping(zipfile, NULL, PAGE_READONLY, 0, 0, NULL);
         zipbuffer = (mapfile == INVALID_HANDLE_VALUE ?
-		     NULL :
-		     (char *) MapViewOfFile(mapfile,
-					    FILE_MAP_READ,
-					    0, 0, 0)
-		     );
+                     NULL :
+                     (char *) MapViewOfFile(mapfile,
+                                            FILE_MAP_READ,
+                                            0, 0, 0)
+                     );
         if (zipbuffer)
         {
             buffer_ptr = &zipbuffer[GetFileSize(zipfile, NULL) - END_SIZE];
@@ -382,7 +378,7 @@ Zip::Zip(Control &control_, char *zipfile_name) : control(control_),
     //
     //   I can't read it forwards
     //   I can't read it backwards
-    //   I must know where to being
+    //   I must know where to begin
     //   so I need to look in the middle
     //   to find the middle, I must know the end
     //   but I don't know where that is, so I guess
@@ -512,8 +508,6 @@ Zip::Zip(Control &control_, char *zipfile_name) : control(control_),
     }
 
     ReadDirectory();
-
-    return;
 }
 
 
@@ -569,8 +563,8 @@ void Zip::ReadDirectory()
         zipbuffer = new char[central_directory_size + END_SIZE];
         buffer_ptr = zipbuffer;
         SystemFread(buffer_ptr, sizeof(char),
-		    central_directory_size + END_SIZE,
-		    zipfile);
+                    central_directory_size + END_SIZE,
+                    zipfile);
 #elif defined(WIN32_FILE_SYSTEM)
         Skip(6); // u4 central_directory_offset         = GetU4();
                  // u2 comment_length                   = GetU2();
@@ -579,8 +573,6 @@ void Zip::ReadDirectory()
         for (magic = GetU4(); magic == CEN_SIG; magic = GetU4())
              ProcessDirectoryEntry();
     }
-
-    return;
 }
 
 #ifdef HAVE_JIKES_NAMESPACE
