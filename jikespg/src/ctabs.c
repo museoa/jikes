@@ -3,8 +3,7 @@
  This software is subject to the terms of the IBM Jikes Compiler
  License Agreement available at the following URL:
  http://ibm.com/developerworks/opensource/jikes.
- Copyright (C) 1983, 1999, 2001, 2002 International Business
- Machines Corporation and others.  All Rights Reserved.
+ Copyright (C) 1983, 2003 IBM Corporation and others.  All Rights Reserved.
  You must accept the terms of that agreement to use this software.
 */
 static char hostfile[] = __FILE__;
@@ -560,8 +559,7 @@ static void init_file(FILE **file, char *file_name, char *file_tag)
 		"// This software is subject to the terms of the IBM Jikes Compiler Open\n"
 		"// Source License Agreement available at the following URL:\n"
 		"// http://ibm.com/developerworks/opensource/jikes.\n"
-		"// Copyright (C) 1996, 1997, 1998, 1999, 2001, 2002 International\n"
-		"// Business Machines Corporation and others.  All Rights Reserved.\n"
+		"// Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.\n"
 		"// You must accept the terms of that agreement to use this software.\n"
 		"//\n\n");
 
@@ -1817,10 +1815,12 @@ static void print_externs(void)
         fprintf(sysprs,
                 "class LexStream;\n\n"
                 "class %s_table\n"
-                "{\n"
-                "public:\n",
-
+                "{\n",
                 prs_tag);
+        if (jikes_bit)
+            fprintf(sysprs,
+                    "    int dummy; /* Prevents empty class from causing compile error. */\n");
+        fprintf(sysprs, "public:\n");
 
         if (error_maps_bit || debug_bit)
             fprintf(sysprs,

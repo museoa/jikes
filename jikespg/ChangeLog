@@ -1,3 +1,8 @@
+2003-04-18  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/ctabs.c (print_externs): Add dummy field in jikes mode to
+	avoid empty class problems with gcc 3.3 -Wabi.
+
 2002-12-04  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/ctabs.c (terminal_time_action, terminal_space_action),
