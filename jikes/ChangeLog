@@ -1,5 +1,10 @@
 2004-02-28  Elliott Hughes  <enh@acm.org>
 
+	* NEWS: Try to keep track of what I've done, so I don't have to
+	read through the ChangeLog when we're getting ready to release 1.20.
+
+2004-02-28  Elliott Hughes  <enh@acm.org>
+
 	* src/error.cpp: Implement upgrading of warnings to errors, as well
 	as the old optional upgrading of cautions. Fixes bug 665.
 	* src/jikesapi.cpp, jikesapi.h: Replace the nowarn and zero_defect

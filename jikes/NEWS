@@ -35,6 +35,14 @@ is short for:
     Object o = i.next();
   }
 
+Many new diagnostics have been added. These include detection of
+overflow in integer constant expressions, serialization-related
+checks made by Java 1.5's javac, detection of locals shadowing
+fields (often caused by an unfinished refactoring that promotes a
+local to a field) and fields in subclasses that hide fields in
+superclasses. New command-line options generalize the old -nowarn/+Z
+to also allow all warnings to be considered errors (with +Z2).
+
 *** Jikes 1.19 was released 1 February 2004.
 
 The default -source and -target options are now 1.4 (that is, the
