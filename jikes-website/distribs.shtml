@@ -4,7 +4,7 @@
     <TITLE>IBM - developerWorks - Open Source Software - Jikes - Distributions</TITLE>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
   </head>
-  <BODY bgcolor="ffffff">
+  <BODY bgcolor="#ffffff">
     <p align="center"><img src="images/jikes.png" width=600 height=54 border=0 alt="Jikes"><BR>&nbsp;</p>
 
     <p>Increasingly, one of the easiest ways to get Jikes is with your operating system itself -- Jikes is included in the following distributions (listed in no particular order):</P>
@@ -41,7 +41,21 @@
       </TR>
     </TABLE>
 
-    <P>If you know of an additional distribution we're missing here, please <A HREF="mailto:cabbey@bresnanlink.net">let me know</A>.</P>
+    <p>Jikes is also available in the followinf developer's Tool Kits:</p>
+
+    <TABLE BORDER=0 ALIGN="CENTER">
+      <TR VALIGN="MIDDLE">
+        <TD ALIGN="RIGHT"><a href="http://developer.apple.com/"><IMG SRC="images/apple.jpg" alt="" BORDER=0 HEIGHT=61 WIDTH=50></A></TD>
+        <TD ALIGN="LEFT" ><a href="http://developer.apple.com">Apple's OS X Developer Tools</a></TD>
+<!--      </TR><TR>
+        <TD COLSPAN=2><HR></TD>
+-->      </TR>
+    </TABLE>
+
+
+
+
+    <P>If you know of an additional distribution we're missing here, please <A HREF="mailto:jikes-dev@www-126.ibm.com">let us know</A>.</P>
 
     <P>Most will acquire Jikes as an independent package though, like most open source projects, Jikes is <A HREF="http://oss.software.ibm.com/developerworks/project/showfiles.php?group_id=10">available</A> in both source and precompiled binary forms.</p>
 
