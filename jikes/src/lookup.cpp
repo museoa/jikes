@@ -1589,16 +1589,19 @@ bool Utf8LiteralTable::IsConstant(AstExpression *expression)
     //
     while (! expression -> IsConstant())
     {
-        if (AstBinaryExpression *binary_expression = expression -> BinaryExpressionCast())
+		AstBinaryExpression *binary_expression = expression -> BinaryExpressionCast();
+		AstCastExpression *cast_expression = expression -> CastExpressionCast();
+		AstParenthesizedExpression *parenthesized_expression = expression -> ParenthesizedExpressionCast();
+        if (binary_expression)
         {
              AstExpression *right = binary_expression -> right_expression;
              if (! IsConstant(right))
                  return false;
              expression = binary_expression -> left_expression;
         }
-        else if (AstCastExpression *cast_expression = expression -> CastExpressionCast())
+        else if (cast_expression)
              expression = cast_expression -> expression;
-        else if (AstParenthesizedExpression *parenthesized_expression = expression -> ParenthesizedExpressionCast())
+        else if (parenthesized_expression)
              expression = parenthesized_expression -> expression;
         else return false; // Not a constant String expression
     }
