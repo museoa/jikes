@@ -503,8 +503,6 @@ public:
         bytes = new char[_length];
         for (int i = 0; i < _length; i++)
             bytes[i] = _bytes[i];
-
-        return;
     }
     virtual ~CONSTANT_Utf8_info()
     {
@@ -753,8 +751,6 @@ public:
         output_buffer.PutB2(attributes.Length());
         for (int k = 0; k < attributes.Length(); k++)
             attributes[k] -> Put(output_buffer);
-
-        return;
     }
 
 #ifdef JIKES_DEBUG
@@ -1161,10 +1157,6 @@ public:
             local_variable_table[local_index].descriptor_index = descriptor;
             local_variable_table[local_index].index = index;
         }
-else 
-end = end;
-
-        return;
     }
 
     virtual void Put(OutputBuffer &output_buffer)
@@ -1511,8 +1503,6 @@ public:
 
         for (int j = 0; j < attributes.Length(); j++)
             delete attributes[j];
-
-        return;
     }
 
     void Write()
@@ -1594,8 +1584,6 @@ public:
                 delete [] name;
             }
         }
-
-        return;
     }
 
 protected:

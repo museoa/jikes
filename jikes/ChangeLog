@@ -1,3 +1,7 @@
+2002-05-14  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/class.h (AddLocalVariable): Remove dead code.
+
 2002-05-11  Max Gilead  <gilead@yellow.dyndns.org>
 
 	* doc/jikes.1:
