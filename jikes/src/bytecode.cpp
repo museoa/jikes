@@ -20,7 +20,10 @@
 #include "table.h"
 #include <iostream.h>
 #include <string.h>
-#include <wchar.h>
+
+#ifdef HAVE_WCHAR_H
+# include <wchar.h>
+#endif
 
 #ifdef WIN32_FILE_SYSTEM
 #include <windows.h>
