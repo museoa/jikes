@@ -2,14 +2,13 @@ Compiling and Installing Jikes:
 
 ./configure ; make ; make install
 
-Note: If you run Windows, you will need to
-download, install, and run Cygwin's bash
-shell before you can run ./configure.
-ftp://ftp.freesoftware.com/pub/sourceware/cygwin/latest/setup.exe
+Windows users will need to have Cygwin
+installed, see the Jikes homepage for
+Cygwin install instructions.
 
 If you want to install jikes into a directory
 other than the default of /usr/local, pass
-a --prefix=DIR argument to the ./configure script.
+a --prefix=DIR argument to the configure script.
 
 If you want to get fancy, you can even build
 jikes in a directory other than the source
@@ -33,7 +32,7 @@ make
 
 
 You can even cross compile jikes for another architecture
-with a Gnu cross compiler. In the following example,
+with a GNU cross compiler. In the following example,
 we cross compile jikes for Windows on a Linux box
 using the mingw cross compiler (i386-mingw32msvc-c++).
 

@@ -49,7 +49,9 @@ Some handy CXXFLAGS you may want to use g++:
 
 -Wshadow : Warn when a local variable shadows another local variable. 
 
--fno-rtti : Disable runtime type identification (not currently used)
+-fno-rtti : Disable runtime type identification
+
+-frtti : Enable runtime type identification
 
 -fno-exceptions : Disable exception support (not currently used)
 

@@ -8,7 +8,7 @@ Prefix: /usr
 Provides: jikes
 Release: 1
 Source: jikes-%{version}.tar.gz
-URL: http://oss.software.ibm.com/developerworks/opensource/jikes/project/
+URL: http://oss.software.ibm.com/developerworks/opensource/jikes
 Version: %{version}
 Buildroot: /tmp/jikesrpm
 
@@ -16,7 +16,7 @@ Buildroot: /tmp/jikesrpm
 The IBM Jikes compiler translates Java source files to bytecode. It
 also supports incremental compilation and automatic makefile generation,
 and is maintained by the Jikes Project:
-  http://oss.software.ibm.com/developerworks/opensource/jikes/project/
+  http://oss.software.ibm.com/developerworks/opensource/jikes
 
 %prep
 %setup -q
@@ -35,9 +35,5 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,-,root)
 /usr/bin/jikes
-/usr/doc/jikes-%{version}/contrib.html
-/usr/doc/jikes-%{version}/jikes.gif
-/usr/doc/jikes-%{version}/jikes.html
 /usr/doc/jikes-%{version}/license.htm
-/usr/doc/jikes-%{version}/news.html
 /usr/man/man1/jikes.1
