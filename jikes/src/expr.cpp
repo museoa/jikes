@@ -18,6 +18,7 @@
 #include "control.h"
 #include "table.h"
 #include "tuple.h"
+#include "misspell.h"
 
 inline bool Semantic::IsIntValueRepresentableInType(AstExpression *expr, TypeSymbol *type)
 {
@@ -132,8 +133,8 @@ assert(this_call);
     {
         TypeSymbol *arg_type = argument[i] -> Type();
         length += arg_type -> ContainingPackage() -> PackageNameLength() +
-                  arg_type -> NameLength() + 3; // '/' after package_name
-                                                 // ',' and ' ' to separate this formal parameter from the next one
+                  arg_type -> ExternalNameLength() + 3; // '/' after package_name
+                                                        // ',' and ' ' to separate this formal parameter from the next one
     }
 
     wchar_t *header = new wchar_t[length + 3]; // +1 for (, +1 for ), +1 for '\0'
@@ -160,8 +161,8 @@ assert(this_call);
                 *s++ = U_DOT;
             }
 
-            for (wchar_t *s2 = arg_type -> Name(); *s2; s2++)
-                *s++ = *s2;
+            for (wchar_t *s2 = arg_type -> ExternalName(); *s2; s2++)
+                *s++ = (*s2 == U_DOLLAR ? (wchar_t) U_DOT : *s2);
             *s++ = U_COMMA;
             *s++ = U_SPACE;
         }
@@ -312,6 +313,94 @@ assert(containing_type -> ConstructorMembersProcessed());
 
 
 //
+//
+//
+VariableSymbol *Semantic::FindMisspelledVariableName(TypeSymbol *type, LexStream::TokenIndex identifier_token)
+{
+    VariableSymbol *misspelled_variable = NULL;
+    int index = 0;
+    NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(identifier_token);
+
+    for (int k = 0; k < type -> expanded_field_table -> symbol_pool.Length(); k++)
+    {
+        VariableShadowSymbol *variable_shadow = type -> expanded_field_table -> symbol_pool[k];
+        VariableSymbol *variable = variable_shadow -> variable_symbol;
+        if (! variable -> IsTyped())
+            variable -> ProcessVariableSignature((Semantic *) this, identifier_token);
+
+        int new_index = Misspell::Index(name_symbol -> Name(), variable -> Name());
+        if (new_index > index)
+        {
+            misspelled_variable = variable;
+            index = new_index;
+        }
+    }
+
+    int length = name_symbol -> NameLength();
+
+    return ((length == 3 && index >= 5) || (length == 4 && index >= 6) || (length >= 5 && index >= 7)
+                          ? misspelled_variable
+                          : NULL);
+}
+
+//
+//
+//
+MethodSymbol *Semantic::FindMisspelledMethodName(TypeSymbol *type, AstMethodInvocation *method_call, NameSymbol *name_symbol)
+{
+    MethodSymbol *misspelled_method = NULL;
+    int index = 0;
+    AstSimpleName *simple_name = method_call -> method -> SimpleNameCast();
+    AstFieldAccess *field_access = method_call -> method -> FieldAccessCast();
+    LexStream::TokenIndex identifier_token = (simple_name ? simple_name -> identifier_token : field_access -> identifier_token);
+
+    for (int k = 0; k < type -> expanded_method_table -> symbol_pool.Length(); k++)
+    {
+        MethodShadowSymbol *method_shadow = type -> expanded_method_table -> symbol_pool[k];
+        MethodSymbol *method = method_shadow -> method_symbol;
+        TypeSymbol *containing_type = method -> containing_type;
+
+        if (! method -> IsTyped())
+            method -> ProcessMethodSignature((Semantic *) this, identifier_token);
+
+        if (method_call -> NumArguments() == method -> NumFormalParameters())
+        {
+            int i;
+            for (i = 0; i < method_call -> NumArguments(); i++)
+            {
+                AstExpression *expr =  method_call -> Argument(i);
+                if (! CanMethodInvocationConvert(method -> FormalParameter(i) -> Type(), expr -> Type()))
+                    break;
+            }
+            if (i == method_call -> NumArguments())
+            {
+                int new_index = Misspell::Index(name_symbol -> Name(), method -> Name());
+                if (new_index > index)
+                {
+                    misspelled_method = method;
+                    index = new_index;
+                }
+            }
+        }
+    }
+
+    int length = name_symbol -> NameLength(),
+         num_args = method_call -> NumArguments();
+
+    //
+    // If we have a name of length 2, accept >= 30% probality if the function takes at least one argument
+    // If we have a name of length 3, accept >= 50% probality if the function takes at least one argument
+    // Otherwise, if the length of the name is > 3, accept >= 60% probability.
+    //
+    return (index < 3 ? NULL
+                      : (length == 2 && (index >= 3 || num_args > 0)) ||
+                        (length == 3 && (index >= 5 || num_args > 0)) ||
+                        (length > 3 && index >= 6)
+                                     ? misspelled_method
+                                     : NULL);
+}
+
+//
 // Search the type in question for a method. Note that name_symbol is an optional argument.
 // If it was not passed to this function then its default value is NULL (see semantic.h) and
 // we assume that the name to search for is the name specified in the field_access of the
@@ -452,7 +541,26 @@ assert(enclosing_type);
                                    method_call -> RightToken(),
                                    name_symbol -> Name());
                 }
-                else ReportMethodNotFound(method_call, name_symbol -> Name());
+                else if (type -> expanded_method_table -> FindMethodShadowSymbol(name_symbol))
+                    ReportMethodNotFound(method_call, name_symbol -> Name());
+                else
+                {
+                    MethodSymbol *method = FindMisspelledMethodName(type, method_call, name_symbol);
+                    if (method)
+                         ReportSemError(SemanticError::METHOD_NAME_MISSPELLED,
+                                        method_call -> LeftToken(),
+                                        method_call -> RightToken(),
+                                        name_symbol -> Name(),
+                                        type -> ContainingPackage() -> PackageName(),
+                                        type -> ExternalName(),
+                                        method -> Name());
+                    else ReportSemError(SemanticError::METHOD_NAME_NOT_FOUND_IN_TYPE,
+                                        method_call -> LeftToken(),
+                                        method_call -> RightToken(),
+                                        name_symbol -> Name(),
+                                        type -> ContainingPackage() -> PackageName(),
+                                        type -> ExternalName());
+                }
             }
         }
 
@@ -708,6 +816,8 @@ assert(enclosing_type);
         //
         if (! symbol_found)
         {
+            TypeSymbol *this_type = ThisType();
+
             if (FindType(simple_name -> identifier_token))
             {
                 ReportSemError(SemanticError::TYPE_NOT_METHOD,
@@ -715,7 +825,26 @@ assert(enclosing_type);
                                method_call -> RightToken(),
                                name_symbol -> Name());
             }
-            else ReportMethodNotFound(method_call, name_symbol -> Name());
+            else if (this_type -> expanded_method_table -> FindMethodShadowSymbol(name_symbol))
+                ReportMethodNotFound(method_call, name_symbol -> Name());
+            else
+            {
+                MethodSymbol *method = FindMisspelledMethodName(this_type, method_call, name_symbol);
+                if (method)
+                     ReportSemError(SemanticError::METHOD_NAME_MISSPELLED,
+                                    method_call -> LeftToken(),
+                                    method_call -> RightToken(),
+                                    name_symbol -> Name(),
+                                    this_type -> ContainingPackage() -> PackageName(),
+                                    this_type -> ExternalName(),
+                                    method -> Name());
+                else ReportSemError(SemanticError::METHOD_NAME_NOT_FOUND_IN_TYPE,
+                                    method_call -> LeftToken(),
+                                    method_call -> RightToken(),
+                                    name_symbol -> Name(),
+                                    this_type -> ContainingPackage() -> PackageName(),
+                                    this_type -> ExternalName());
+            }
         }
     }
 
@@ -814,10 +943,21 @@ void Semantic::ReportAccessedFieldNotFound(AstFieldAccess *field_access, TypeSym
     }    
     else
     {
-        ReportSemError(SemanticError::FIELD_NOT_FOUND,
-                       field_access -> LeftToken(),
-                       field_access -> RightToken(),
-                       lex_stream -> Name(field_access -> identifier_token));
+        VariableSymbol *variable = FindMisspelledVariableName(type, field_access -> identifier_token);
+        if (variable)
+             ReportSemError(SemanticError::FIELD_NAME_MISSPELLED,
+                            field_access -> LeftToken(),
+                            field_access -> RightToken(),
+                            name_symbol -> Name(),
+                            type -> ContainingPackage() -> PackageName(),
+                            type -> ExternalName(),
+                            variable -> Name());
+        else ReportSemError(SemanticError::FIELD_NOT_FOUND,
+                            field_access -> LeftToken(),
+                            field_access -> RightToken(),
+                            lex_stream -> Name(field_access -> identifier_token),
+                            type -> ContainingPackage() -> PackageName(),
+                            type -> ExternalName());
     }
 
     return;
@@ -977,13 +1117,7 @@ VariableSymbol *Semantic::FindInstance(TypeSymbol *base_type, TypeSymbol *enviro
     for (int i = 0; i < base_type -> NumEnclosingInstances(); i++)
     {
         VariableSymbol *variable = base_type -> EnclosingInstance(i);
-        //
-        // 1.2 change. In 1.1, we used to allow access to any subclass of type. Now, there must
-        // be a perfect match. I.e.,
-        //
-        // if (variable -> Type() -> IsSubclass(environment_type))
-        //
-        if (variable -> Type() == environment_type)
+        if (variable -> Type() -> IsSubclass(environment_type))
             return variable;
     }
 
@@ -1042,13 +1176,7 @@ assert(class_declaration || class_creation);
 
         this_block -> AddStatement(stmt);
 
-        //
-        // 1.2 change. In 1.1, we used to allow access to any subclass of type. Now, there must
-        // be a perfect match. I.e.,
-        //
-        // if (lhs -> Type() -> IsSubclass(environment_type))
-        //
-        if (lhs -> Type() == environment_type)
+        if (lhs -> Type() -> IsSubclass(environment_type))
             break;
     }
 
@@ -1101,13 +1229,7 @@ AstExpression *Semantic::CreateAccessToType(Ast *source, TypeSymbol *environment
             resolution = compilation_unit -> ast_pool -> GenSimpleName(tok);
             resolution -> symbol = variable;
             TypeSymbol *containing_type = this_type -> ContainingType();
-            //
-            // 1.2 change. In 1.1, we used to allow access to any subclass of type. Now, there must
-            // be a perfect match. I.e.,
-            //
-            // if (! containing_type -> IsSubclass(environment_type))
-            //
-            if (containing_type != environment_type)
+            if (! containing_type -> IsSubclass(environment_type))
             {
                 variable = FindInstance(containing_type, environment_type);
 
@@ -1133,13 +1255,7 @@ assert(this_type -> ACC_STATIC());
             resolution -> symbol = this_type;
         }
     }
-    //
-    // 1.2 change. In 1.1, we used to allow access to any subclass of type. Now, there must
-    // be a perfect match. I.e.,
-    //
-    // else if (this_type -> IsSubclass(environment_type))
-    //
-    else if (this_type == environment_type)
+    else if (this_type -> IsSubclass(environment_type))
     {
         resolution = compilation_unit -> ast_pool -> GenThisExpression(tok);
         resolution -> symbol = this_type;
@@ -1369,10 +1485,22 @@ void Semantic::ProcessSimpleName(Ast *expr)
                             simple_name -> identifier_token,
                             lex_stream -> Name(simple_name -> identifier_token));
         }
-        else ReportSemError(SemanticError::NAME_NOT_FOUND,
-                            simple_name -> identifier_token,
-                            simple_name -> identifier_token,
-                            lex_stream -> Name(simple_name -> identifier_token));
+        else
+        {
+            VariableSymbol *variable = FindMisspelledVariableName(this_type, simple_name -> identifier_token);
+            if (variable)
+                 ReportSemError(SemanticError::FIELD_NAME_MISSPELLED,
+                                simple_name -> identifier_token,
+                                simple_name -> identifier_token,
+                                name_symbol -> Name(),
+                                this_type -> ContainingPackage() -> PackageName(),
+                                this_type -> ExternalName(),
+                                variable -> Name());
+            else ReportSemError(SemanticError::NAME_NOT_FOUND,
+                                simple_name -> identifier_token,
+                                simple_name -> identifier_token,
+                                lex_stream -> Name(simple_name -> identifier_token));
+        }
         simple_name -> symbol = control.no_type;
     }
 
@@ -2043,7 +2171,7 @@ assert(field_access -> symbol);
                     }
                     else
                     {
-                        if (! this_type -> CanAccess(enclosing_type))
+                        if (! (this_type -> IsNestedIn(enclosing_type) && this_type -> CanAccess(enclosing_type)))
                         {
                             if (this_type == enclosing_type && field_access -> IsThisAccess())
                             {
@@ -2840,7 +2968,11 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                 method_call -> Argument(i) = ConvertToType(expr, method -> FormalParameter(i) -> Type());
         }
 
-        if (! (this_type -> Anonymous() && ThisMethod() -> Identity() == control.block_init_name_symbol))
+        //
+        // Recall that an instance initializer in the body of an anonymous type can
+        // throw any exception. The test below allows us to skip such blocks.
+        //
+        if (! (this_type -> Anonymous() && ThisMethod() && ThisMethod() -> Identity() == control.block_init_name_symbol))
         {
             for (int k = method -> NumThrows((Semantic *) this, method_call -> method -> RightToken()) - 1; k >= 0; k--)
             {
