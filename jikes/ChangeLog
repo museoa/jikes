@@ -1,3 +1,10 @@
+2004-05-17  Elliott Hughes  <enh@acm.org>
+
+	* src/expr.cpp: Bug 3972 - don't assume that a constant is an int
+	literal just because it's not one of the other literals we were
+	expecting; check explicitly. Invalid source may mean that we're
+	actually looking at a string constant, say.
+
 2004-05-16  Chris Abbey  <jikes@cabbey.net>
 
 	Release 1.21
