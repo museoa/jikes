@@ -10,6 +10,7 @@
 	margin-left: auto;
       }
     </style>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
   </head>
   <BODY bgcolor="ffffff">
     <table border=0 cellspacing=0 cellpadding=0>
@@ -72,13 +73,13 @@
 
 <!-- content, main - still needs cleanup -->
 
- <a href="http://www-106.ibm.com/developerworks/aboutdw/letter2.html?origin=jikes"><img src="http://www-106.ibm.com/developerworks/i/ad-dWbday2.gif" border=0 width=150 height=50 align=right></a>
- <p>The Jikes Homepage has been reorganized to take advantage of the new support
+ <p><a href="http://www-106.ibm.com/developerworks/aboutdw/letter2.html?origin=jikes"><img src="http://www-106.ibm.com/developerworks/i/ad-dWbday2.gif" border=0 width=150 height=50 align=right alt="[IBM developerWorks celebrates its second anniversary]"></a>
+    The Jikes Homepage has been reorganized to take advantage of the new support
     infrastructure offered by IBM's developerWorks Open Source Software zone. These
     pages will continue to provide user support to the Jikes community; however,
     development related issues will be moved to the
     <a href="/developerworks/projects/jikes/">dW/OSS</a> system as much and as soon
-    as possible.
+    as possible.</p>
 
 <hr>
 <p>What is Jikes?</p>

@@ -1,3 +1,9 @@
+2002-02-13  Andrew M. Inggs  <aminggs@yahoo.co.uk>
+
+	* index.shtml: Defined charset in meta http-equiv and added alt
+	attribute to anniversary image to make it valid HTML again. Moved
+	anniversary image into paragraph and added closing </p>. 
+
 2001-11-03  Andrew M. Inggs  <aminggs@yahoo.co.uk>
 
 	* faq/user-index.html:  Removed changed comments like
