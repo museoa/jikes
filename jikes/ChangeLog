@@ -1,3 +1,12 @@
+2001-10-13  Daniel Resare  <noa@metamatrix.se>
+
+	* jikes.spec: Properly set the file ownership to root
+
+2001-10-13  Chris Abbey  <jikes@cabbey.net>
+
+	* jikes.spec: set version to make it obvious if someone is using
+	CVS versions.
+	
 2001-10-12  Eric Blake  <ebb9@email.byu.edu>
 
 	* jikes.spec: Update to version 1.15.
