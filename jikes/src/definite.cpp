@@ -842,7 +842,7 @@ void Semantic::DefiniteBlock(Ast *stmt)
     }
 #endif // DUMP
     //
-    // Remove all variables that just went out of scope
+    // Remove all variables that just went out of scope.
     //
     for (i = 0; i < block_body -> block_symbol -> NumVariableSymbols(); i++)
     {
@@ -853,6 +853,8 @@ void Semantic::DefiniteBlock(Ast *stmt)
         BlankFinals() -> RemoveElement(index);
         ReachableAssignments() -> RemoveElement(index);
         DefinitelyAssignedVariables() -> ReclaimElement(index);
+        DefiniteBlocks() ->
+            ContinuePair(DefiniteBlocks() -> Size() - 2).ReclaimElement(index);
     }
 
     //

@@ -1,3 +1,8 @@
+2002-11-16  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/definite.cpp (DefiniteBlock): Don't mark variables declared
+	in a loop with continue as multiply assigned - bug 3306.
+
 2002-11-14  Eric Blake  <ebb9@email.byu.edu>
 
 	* COPYING: Revert - Jikes is not under the GPL.
