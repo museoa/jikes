@@ -135,7 +135,7 @@ IEEEfloat& IEEEfloat::operator/= (IEEEfloat op)
     *this = *this / op;
 #else /* IEEE_DIV_0 */
     *this = (op.value.float_value == 0.0
-                                   ? (*this < (float) 0.0
+                                   ? (IEEEfloat) (*this < (float) 0.0
                                             ? NEGATIVE_INFINITY()
                                             : *this == (float) 0.0
                                                      ? NaN()
