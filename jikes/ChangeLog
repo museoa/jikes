@@ -1,3 +1,8 @@
+2001-12-12  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/bytecode.cpp (AppendString): Fix regression from patch 237,
+	when doing string concatenation with primitives.
+
 2001-12-11  Mo DeJong  <supermo@bayarea.net>
 
 	Patch 243, based on poll of user base.

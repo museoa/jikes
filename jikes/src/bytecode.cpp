@@ -4839,6 +4839,14 @@ void ByteCode::AppendString(AstExpression *expression)
             return;
         }
 
+        AstCastExpression *cast_expression = expression -> CastExpressionCast();
+        if (cast_expression && type == control.String())
+        {
+            EmitExpression(cast_expression -> expression);
+            EmitStringAppendMethod(cast_expression -> expression -> Type());
+            return;
+        }
+
         EmitExpression(expression);
     }
 
