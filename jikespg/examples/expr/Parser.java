@@ -1,10 +1,9 @@
-// This software is subject to the terms of the IBM Jikes Compiler
+// This software is subject to the terms of the IBM Jikes Parser Generator
 // License Agreement available at the following URL:
 // http://www.ibm.com/research/jikes.
-// Copyright (C) 1983, 1999, International Business Machines Corporation
+// Copyright (C) 1996, 1998, International Business Machines Corporation
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
-
 class Parser extends exprprs implements exprsym
 {
     final static int STACK_INCREMENT = 128;
@@ -13,8 +12,7 @@ class Parser extends exprprs implements exprsym
 
     exprhdr actions = new exprhdr(this);
 
-    int stack_length = 0,
-        state_stack_top,
+    int state_stack_top,
         stack[],
         location_stack[];
     Ast parse_stack[];
@@ -58,21 +56,20 @@ class Parser extends exprprs implements exprsym
 
     void reallocate_stacks()
     {
-        int old_stack_length = (stack == null ? 0 : stack.length);
         int old_stack[] = stack; 
-        stack = new int[old_stack_length + STACK_INCREMENT];
-        for (int i = 0; i < old_stack_length; i++)
-             stack[i] = old_stack[i];
+        stack = new int[(old_stack == null ? 0 : old_stack.length) + STACK_INCREMENT];
+        if (old_stack != null)
+            System.arraycopy(old_stack, 0, stack, 0, old_stack.length);
 
         old_stack = location_stack; 
-        location_stack = new int[old_stack_length + STACK_INCREMENT];
-        for (int i = 0; i < old_stack_length; i++)
-             location_stack[i] = old_stack[i];
+        location_stack = new int[(old_stack == null ? 0 : old_stack.length) + STACK_INCREMENT];
+        if (old_stack != null)
+            System.arraycopy(old_stack, 0, location_stack, 0, old_stack.length);
 
         Ast old_parse_stack[] = parse_stack; 
-        parse_stack = new Ast[old_stack_length + STACK_INCREMENT];
-        for (int i = 0; i < old_stack_length; i++)
-             parse_stack[i] = old_parse_stack[i];
+        parse_stack = new Ast[(old_parse_stack == null ? 0 : old_parse_stack.length) + STACK_INCREMENT];
+        if (old_parse_stack != null)
+            System.arraycopy(old_parse_stack, 0, parse_stack, 0, old_parse_stack.length);
 
         return;
     }
@@ -91,7 +88,7 @@ class Parser extends exprprs implements exprsym
 
         ProcessTerminals: for (;;)
         {
-            if (++state_stack_top >= stack_length)
+            if (++state_stack_top >= (stack == null ? 0 : stack.length))
                 reallocate_stacks();
  
             stack[state_stack_top] = act;
