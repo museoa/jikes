@@ -1,8 +1,8 @@
 unavail
-avail|coar,shields,cabbey,lord,perera,ernst,charles,mdejong,cabbey|jacks,jikes,jikespg,jikestst,core,jikes-website
+avail|coar,shields,cabbey,lord,perera,ernst,charles,mdejong,cabbey|jikes,jikespg,jikestst,core,jikes-website
 avail|coar,shields,cabbey|CVSROOT
 avail|pdavoust|jikes-website
-avail|ericb|jikes,jikespg,jikestst,jacks
+avail|ericb|jikes,jikespg,jikestst
 avail|elliott-oss|jikes,jikespg
 #the following prevent anyone except jikes admin changing the license files
 unavail||jikes/COPYING,jikes/doc/license.htm
