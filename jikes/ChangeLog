@@ -1,5 +1,12 @@
 2001-10-16  Michael Ernst  <mernst@alum.mit.edu>
 
+	* src/bytecode.cpp (EmitAssignmentExpression): 
+	* src/control.cpp (Serializable_type): 
+	* src/depend.cpp (OutputMake): 
+	* src/dump.cpp (Dump): Disambiguate error messages - patch 200.
+
+2001-10-16  Michael Ernst  <mernst@alum.mit.edu>
+
 	* src/ast.cpp (AstSwitchBlockStatement): Fix some debug output
 	formatting errors - patch 197.
 

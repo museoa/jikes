@@ -418,7 +418,8 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
             {
                 FILE *outfile = SystemFopen(option.dependence_report_name, "w");
                 if (outfile == NULL)
-                    Coutput << "*** Cannot open file " << option.dependence_report_name << endl;
+                    Coutput << "*** Cannot open dependence output file "
+                            << option.dependence_report_name << endl;
                 else
                 {
                     SymbolSet types_in_new_files;
