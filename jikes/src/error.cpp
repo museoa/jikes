@@ -1433,8 +1433,7 @@ void SemanticError::InitializeMessages()
     messages[UNUSED_TYPE_IMPORT] =
         "Unnecessary import of type \"%T1\". The type is never referenced.";
     messages[UNUSED_PACKAGE_IMPORT] =
-        "Unnecessary import of package \"%1\". No types of this package are "
-        "referenced.";
+        "Unnecessary import of %P1. No types of this package are referenced.";
     messages[DUPLICATE_ACCESS_MODIFIER] =
         "Duplicate specification of an access modifier. "
         "Only one instance of \"public\", \"private\", or \"protected\" "

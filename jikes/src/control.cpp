@@ -1381,7 +1381,7 @@ void Control::ProcessBodies(TypeSymbol* type)
 
     sem -> types_to_be_processed.RemoveElement(type);
 
-    if (option.pedantic && sem -> types_to_be_processed.Size() == 0)
+    if (sem -> types_to_be_processed.Size() == 0)
         CheckForUnusedImports(sem);
     if (! option.nocleanup && sem -> types_to_be_processed.Size() == 0)
     {

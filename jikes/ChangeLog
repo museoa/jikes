@@ -1,5 +1,15 @@
 2004-03-02  Elliott Hughes  <enh@acm.org>
 
+	* src/control.cpp, src/decl.cpp: remove checks for +P from referenced
+	import checks; as long as +Punused-package-imports doesn't imply +P --
+	which it's hard to envisage as long as +P also turns on the anonymous
+	pedantic checks -- having +Punused-package-imports seemingly
+	non-functional is going to get us more bug reports.
+	* src/error.cpp: fix the diagnostic text to output the package name
+	in Java source form rather than internal form.
+
+2004-03-02  Elliott Hughes  <enh@acm.org>
+
 	* src/option.cpp: Implement -Werror as a javac-compatible synonym
 	for +Z2.
 	* src/jikes.cpp, doc/jikes.1: Document new -Werror option.

@@ -3499,8 +3499,8 @@ TypeSymbol* Semantic::ImportType(LexStream::TokenIndex identifier_token,
                        type -> ExternalName());
     }
 
-    // keep track of referenced types
-    if (control.option.pedantic && type && location)
+    // Keep track of referenced types.
+    if (type && location)
         referenced_package_imports.AddElement(location);
 
     return type;
@@ -3623,9 +3623,8 @@ TypeSymbol* Semantic::FindType(LexStream::TokenIndex identifier_token)
         type = single_type_imports[i];
         if (name_symbol == type -> Identity())
         {
-            // keep track of referenced types
-            if (control.option.pedantic)
-                referenced_type_imports.AddElement(type);
+            // Keep track of referenced types.
+            referenced_type_imports.AddElement(type);
             return type;
         }
     }
