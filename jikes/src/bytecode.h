@@ -611,8 +611,8 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
 
     u2 FindInteger(IntLiteralValue *lit)
     {
-        return lit && (integer_constant_pool_index
-                       ? (*integer_constant_pool_index)[lit -> index] : 0);
+        return (lit && integer_constant_pool_index
+                ? (*integer_constant_pool_index)[lit -> index] : 0);
     }
 
 

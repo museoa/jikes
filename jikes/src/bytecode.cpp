@@ -1206,8 +1206,9 @@ void ByteCode::EmitStatement(AstStatement *statement)
                 {
                     line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
                                                                  semantic.lex_stream -> Line(wp -> expression -> LeftToken()));
-                    // for side effects only
-                    EmitExpression(wp -> expression, false);
+                    EmitBranchIfExpression(wp -> expression, false,
+                                           method_stack -> TopContinueLabel(),
+                                           wp -> statement);
                 }
                 EmitStatement(wp -> statement);
                 DefineLabel(method_stack -> TopContinueLabel());
@@ -1288,9 +1289,9 @@ void ByteCode::EmitStatement(AstStatement *statement)
                     {
                         line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
                                                                      semantic.lex_stream -> Line(for_statement -> end_expression_opt -> LeftToken()));
-                        // for side effects only
-                        EmitExpression(for_statement -> end_expression_opt,
-                                       false);
+                        EmitBranchIfExpression(for_statement -> end_expression_opt,
+                                               false, method_stack -> TopContinueLabel(),
+                                               for_statement -> statement);
                     }
                 }
                 EmitStatement(for_statement -> statement);
@@ -2027,6 +2028,7 @@ bool ByteCode::ProcessAbruptExit(int level, u2 width, TypeSymbol *return_type)
             else if (block -> block_tag == AstBlock::ABRUPT_TRY_FINALLY)
             {
                 variable_index = -1;
+                PutOp(control.IsDoubleWordType(return_type) ? OP_POP2 : OP_POP);
                 break;
             }
         }
@@ -2048,14 +2050,9 @@ bool ByteCode::ProcessAbruptExit(int level, u2 width, TypeSymbol *return_type)
         else if (block -> block_tag == AstBlock::ABRUPT_TRY_FINALLY)
         {
             //
-            // Pop any return value, and ignore the width of the abrupt
-            // instruction, because the abrupt finally preempts it.
+            // Ignore the width of the abrupt instruction, because the abrupt
+            // finally preempts it.
             //
-            if (return_type)
-            {
-                PutOp(control.IsDoubleWordType(return_type)
-                      ? OP_POP2 : OP_POP);
-            }
             width = 0;
             EmitBranch(OP_GOTO, method_stack -> FinallyLabel(enclosing_level),
                        method_stack -> Block(enclosing_level));
@@ -5626,9 +5623,8 @@ void ByteCode::LoadLocal(int varno, TypeSymbol *type)
 
 
 //
-// see if can load without using LDC even if have literal index; otherwise
-// generate constant pool entry if one has not yet been generated.
-//
+// See if we can load without using LDC; otherwise generate constant pool entry if
+// one has not yet been generated.
 //
 void ByteCode::LoadLiteral(LiteralValue *litp, TypeSymbol *type)
 {
@@ -5808,7 +5804,11 @@ int ByteCode::LoadVariable(int kind, AstExpression *expr, bool need_value)
                 // expression, evaluate it for side effects.
                 //
                 if (expr -> FieldAccessCast())
-                    EmitExpression(((AstFieldAccess *) expr) -> base, false);
+                {
+                    AstExpression *base = ((AstFieldAccess *) expr) -> base;
+                    if (! base -> symbol -> TypeCast())
+                        EmitExpression(base, false);
+                }
 
                 PutOp(OP_GETSTATIC);
                 ChangeStack(GetTypeWords(expression_type) - 1);

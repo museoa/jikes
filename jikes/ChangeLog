@@ -1,3 +1,10 @@
+2002-03-05  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/bytecode.cpp (LoadVariable): Fix bug 2728.
+	(EmitStatement): Fix bug 2729.
+	(ProcessAbruptExit): Fix bug 2731.
+	* src/bytecode.h (FindInteger): Fix bug 2730.
+
 2002-02-26  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.cpp (ProcessAbruptExit): Fix bug 2713.
