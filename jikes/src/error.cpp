@@ -245,7 +245,6 @@ void SemanticError::StaticInitializer()
 
     warning[INVALID_OPTION] = 1;
     warning[DISABLED_OPTION] = 1;
-    warning[UNSUPPORTED_ENCODING] = 1;
     warning[CANNOT_OPEN_ZIP_FILE] = 1;
     warning[CANNOT_OPEN_PATH_DIRECTORY] = 1;
 
@@ -317,7 +316,6 @@ void SemanticError::StaticInitializer()
     print_message[INVALID_DIRECTORY] = PrintINVALID_DIRECTORY;
     print_message[UNSUPPORTED_OPTION] = PrintUNSUPPORTED_OPTION;
     print_message[DISABLED_OPTION] = PrintDISABLED_OPTION;
-    print_message[UNSUPPORTED_ENCODING] = PrintUNSUPPORTED_ENCODING;
     print_message[NO_CURRENT_DIRECTORY] = PrintNO_CURRENT_DIRECTORY;
     print_message[CANNOT_OPEN_ZIP_FILE] = PrintCANNOT_OPEN_ZIP_FILE;
     print_message[CANNOT_OPEN_PATH_DIRECTORY] = PrintCANNOT_OPEN_PATH_DIRECTORY;
@@ -573,6 +571,8 @@ void SemanticError::StaticInitializer()
     print_message[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER] = PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER;
     print_message[ILLEGAL_THIS_FIELD_ACCESS] = PrintILLEGAL_THIS_FIELD_ACCESS;
     print_message[CONSTRUCTOR_FOUND_IN_ANONYMOUS_CLASS] = PrintCONSTRUCTOR_FOUND_IN_ANONYMOUS_CLASS;
+    print_message[ENCLOSING_INSTANCE_ACCESS_FROM_CONSTRUCTOR_INVOCATION] = PrintENCLOSING_INSTANCE_ACCESS_FROM_CONSTRUCTOR_INVOCATION;
+    print_message[ENCLOSING_INSTANCE_ACCESS_ACROSS_STATIC_REGION] = PrintENCLOSING_INSTANCE_ACCESS_ACROSS_STATIC_REGION;
     print_message[ENCLOSING_INSTANCE_NOT_ACCESSIBLE] = PrintENCLOSING_INSTANCE_NOT_ACCESSIBLE;
     print_message[INVALID_ENCLOSING_INSTANCE] = PrintINVALID_ENCLOSING_INSTANCE;
     print_message[ZERO_DIVIDE] = PrintZERO_DIVIDE;
@@ -1054,18 +1054,9 @@ void SemanticError::PrintUNSUPPORTED_OPTION(ErrorInfo &err, LexStream *lex_strea
 }
 
 
-void SemanticError::PrintUNSUPPORTED_ENCODING(ErrorInfo &err, LexStream *lex_stream, Control &control)
-{
-    Coutput << "Unsupported encoding: \""
-            << err.insert1
-            << "\".";
-
-    return;
-}
-
 void SemanticError::PrintDISABLED_OPTION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    Coutput << "The option \""
+    Coutput << "This option \""
             << err.insert1
             << "\" has been temporarily disabled.";
 
@@ -2375,7 +2366,8 @@ void SemanticError::PrintHIDDEN_METHOD_IN_ENCLOSING_CLASS(ErrorInfo &err, LexStr
     }
     Coutput << err.insert3
             << "\" is a perfect match for this method call."
-               " However, it is not visible in this nested class because a method with the same name is hiding it.";
+               " However, it is not visible in this nested class because a"
+               " method with the same name in an intervening class is hiding it.";
 
     return;
 }
@@ -4616,6 +4608,47 @@ void SemanticError::PrintILLEGAL_THIS_FIELD_ACCESS(ErrorInfo &err, LexStream *le
     }
     Coutput << err.insert4
             << "\" or it is not accessible because this expression appears in a static region.";
+
+    return;
+}
+
+
+void SemanticError::PrintENCLOSING_INSTANCE_ACCESS_FROM_CONSTRUCTOR_INVOCATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    Coutput << "An instance of \"";
+    if (NotDot(err.insert1))
+    {
+        Coutput << err.insert1
+                << "/";
+    }
+    Coutput << err.insert2
+            << StringConstant::US__DO
+            << StringConstant::US_this
+            << "\" is not accessible from an explicit constructor invocation.";
+
+    return;
+}
+
+
+void SemanticError::PrintENCLOSING_INSTANCE_ACCESS_ACROSS_STATIC_REGION(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    Coutput << "An instance of \"";
+    if (NotDot(err.insert1))
+    {
+        Coutput << err.insert1
+                << "/";
+    }
+    Coutput << err.insert2
+            << StringConstant::US__DO
+            << StringConstant::US_this
+            << "\" is not accessible here because it would have to cross a static region in the intervening type \"";
+    if (NotDot(err.insert3))
+    {
+        Coutput << err.insert3
+                << "/";
+    }
+    Coutput << err.insert4
+            << "\".";
 
     return;
 }

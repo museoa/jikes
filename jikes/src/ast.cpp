@@ -1018,7 +1018,7 @@ Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
         Coutput << "Block at level " << nesting_level;
         if (block_symbol)
              Coutput << ", max_variable_index " << block_symbol -> max_variable_index
-                     << ", try_variable_index " << block_symbol -> try_variable_index;
+                     << ", try_or_synchronized_variable_index " << block_symbol -> try_or_synchronized_variable_index;
         else Coutput << ", BLOCK_SYMBOL NOT SET";
         Coutput << ")";
 

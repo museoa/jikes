@@ -1835,8 +1835,7 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
     //
     if (statement -> finally_clause_opt)
     {
-        AstBlock *enclosing_block = method_stack -> TopBlock();
-        BlockSymbol *block_symbol = enclosing_block -> block_symbol;
+        int variable_index = method_stack -> TopBlock() -> block_symbol -> try_or_synchronized_variable_index;
 
         //
         // Emit code for "special" handler to make sure finally clause is
@@ -1850,10 +1849,10 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
                                            special_end_pc,
                                            code_attribute -> CodeLength(),
                                            0);
-            StoreLocal(block_symbol -> try_variable_index, this_control.Object()); // Save exception
+            StoreLocal(variable_index, this_control.Object()); // Save exception
             PutOp(OP_JSR); // Jump to finally block.
             UseLabel(finally_label, 2, 1);
-            LoadLocal(block_symbol -> try_variable_index, this_control.Object()); // Reload exception,
+            LoadLocal(variable_index, this_control.Object()); // Reload exception,
             PutOp(OP_ATHROW); // and rethrow it.
         }
 
@@ -1862,26 +1861,23 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
         //
         DefineLabel(finally_label);
         CompleteLabel(finally_label);
+
+        //
+        // If the finally block can complete normally, save the return address.
+        // Otherwise, we pop the return address from the stack.
+        //
         if (statement -> finally_clause_opt -> block -> can_complete_normally)
-        {
-            // Finally block can complete normally, so save the return address.
-            StoreLocal(block_symbol -> try_variable_index + 1, this_control.Object());
-        }
-        else
-        {
-            // Finally block cannot complete normally, so don't need the return address.
-            // Pop it from stack.
-            PutOp(OP_POP);
-        }
+             StoreLocal(variable_index + 1, this_control.Object());
+        else PutOp(OP_POP);
 
         EmitBlockStatement(statement -> finally_clause_opt -> block);
 
+        //
+        // If a finally block can complete normally, after executing itsbody, we return
+        // to the caller using the return address saved earlier.
+        //
         if (statement -> finally_clause_opt -> block -> can_complete_normally)
-        {
-            // Finally can complete normally, so return to caller using the
-            // saved return address.
-            PutOpWide(OP_RET, block_symbol -> try_variable_index + 1);
-        }
+            PutOpWide(OP_RET, variable_index + 1);
     }
 
     if (IsLabelUsed(end_label))
@@ -1907,7 +1903,7 @@ void ByteCode::ProcessAbruptExit(int to_lev, TypeSymbol *return_type)
             if (return_type)
             {
                 Label &finally_label = method_stack -> FinallyLabel(enclosing_level);
-                int variable_index = method_stack -> Block(enclosing_level) -> block_symbol -> try_variable_index + 2;
+                int variable_index = method_stack -> Block(enclosing_level) -> block_symbol -> try_or_synchronized_variable_index + 2;
 
                 StoreLocal(variable_index, return_type);
 
@@ -1927,7 +1923,7 @@ void ByteCode::ProcessAbruptExit(int to_lev, TypeSymbol *return_type)
             if (return_type)
             {
                 Label &monitor_label = method_stack -> MonitorLabel(enclosing_level);
-                int variable_index = block -> block_symbol -> synchronized_variable_index + 2;
+                int variable_index = method_stack -> Block(enclosing_level) -> block_symbol -> try_or_synchronized_variable_index + 2;
 
                 StoreLocal(variable_index, return_type);
 
@@ -2398,10 +2394,10 @@ void ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
 {
     EmitExpression(statement -> expression);
 
-    int var_index = statement -> block -> block_symbol -> synchronized_variable_index; // variable index to save address of object
+    int variable_index = method_stack -> TopBlock() -> block_symbol -> try_or_synchronized_variable_index;
 
-    StoreLocal(var_index, this_control.Object()); // save address of object
-    LoadLocal(var_index, this_control.Object()); // load address of object onto stack
+    StoreLocal(variable_index, this_control.Object()); // save address of object
+    LoadLocal(variable_index, this_control.Object()); // load address of object onto stack
 
     PutOp(OP_MONITORENTER); // enter monitor associated with object
 
@@ -2411,7 +2407,7 @@ void ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
 
     int end_synchronized_pc = code_attribute -> CodeLength(); // end pc
 
-    LoadLocal(var_index, this_control.Object()); // load address of object onto stack
+    LoadLocal(variable_index, this_control.Object()); // load address of object onto stack
     PutOp(OP_MONITOREXIT);
 
     if (start_synchronized_pc != end_synchronized_pc) // if the synchronized block is not empty.
@@ -2426,7 +2422,7 @@ void ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
         //
         max_stack++;
         int handler_pc = code_attribute -> CodeLength();
-        LoadLocal(var_index, this_control.Object()); // load address of object onto stack
+        LoadLocal(variable_index, this_control.Object()); // load address of object onto stack
         PutOp(OP_MONITOREXIT);
         PutOp(OP_ATHROW);
 
@@ -2435,9 +2431,9 @@ void ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
         DefineLabel(method_stack -> TopMonitorLabel());
         CompleteLabel(method_stack -> TopMonitorLabel());
 
-        int loc_index = var_index + 1; // local variable index to save address
+        int loc_index = variable_index + 1; // local variable index to save return  address
         StoreLocal(loc_index, this_control.Object()); // save return address
-        LoadLocal(var_index, this_control.Object()); // load address of object onto stack
+        LoadLocal(variable_index, this_control.Object()); // load address of object onto stack
         PutOp(OP_MONITOREXIT);
         PutOpWide(OP_RET, loc_index);  // return using saved address
 

@@ -1053,7 +1053,9 @@ void Semantic::DefiniteBlock(Ast *stmt)
     {
         VariableSymbol *variable = block_body -> block_symbol -> VariableSym(i);
 
+        possibly_assigned_finals -> RemoveElement(variable -> LocalVariableIndex());
         definitely_assigned_variables -> RemoveElement(variable -> LocalVariableIndex());
+
         definite_visible_variables -> AddElement(variable);
     }
 
@@ -1825,6 +1827,7 @@ void Semantic::DefiniteTryStatement(Ast *stmt)
     {
         VariableSymbol *variable = try_block_body -> block_symbol -> VariableSym(j);
 
+        possibly_assigned_finals -> RemoveElement(variable -> LocalVariableIndex());
         definitely_assigned_variables -> RemoveElement(variable -> LocalVariableIndex());
         definite_visible_variables -> AddElement(variable);
     }
@@ -1886,6 +1889,7 @@ Coutput << "    \"" << try_block_body -> LocallyDefinedVariable(k) -> Name() << 
         {
             VariableSymbol *variable = clause_block_body -> block_symbol -> VariableSym(j);
 
+            possibly_assigned_finals -> RemoveElement(variable -> LocalVariableIndex());
             definitely_assigned_variables -> RemoveElement(variable -> LocalVariableIndex());
             definite_visible_variables -> AddElement(variable);
         }

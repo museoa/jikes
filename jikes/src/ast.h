@@ -1315,7 +1315,7 @@ public:
         Ast::kind = Ast::CLASS;
         Ast::class_tag = Ast::NO_TAG;
         Ast::generated = 0;
-    AstStatement::pool = pool_;
+	AstStatement::pool = pool_;
     }
 
     virtual ~AstClassDeclaration();

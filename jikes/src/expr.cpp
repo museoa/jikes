@@ -783,18 +783,18 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
                                method_symbol -> containing_type -> ContainingPackage() -> PackageName(),
                                method_symbol -> containing_type -> ExternalName());
             }
-            else
+            else if (! where_found -> Type() -> ACC_STATIC())
             {
-                for (SemanticEnvironment *env = where_found -> previous; env; env = env -> previous)
-                {
-                    Tuple<MethodSymbol *> others(2);
-                    SemanticEnvironment *found_other;
-                    SearchForMethodInEnvironment(others, found_other, env, method_call);
+                Tuple<MethodSymbol *> others(2);
+                SemanticEnvironment *found_other,
+                                    *previous_env = where_found -> previous;
+                SearchForMethodInEnvironment(others, found_other, previous_env, method_call);
 
-                    int i;
-                    for (i = 0; i < others.Length();  i++)
+                if (others.Length() > 0 && where_found -> Type() -> CanAccess(found_other -> Type()))
+                {
+                    for (int i = 0; i < others.Length();  i++)
                     {
-                        if (others[i] != method_symbol)
+                        if (! (others[i] == method_symbol && method_symbol -> ACC_STATIC()))
                         {
                             ReportSemError(SemanticError::INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER,
                                            method_call -> LeftToken(),
@@ -804,12 +804,9 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
                                            method_symbol -> containing_type -> ExternalName(),
                                            found_other -> Type() -> ContainingPackage() -> PackageName(),
                                            found_other -> Type() -> ExternalName());
-                            break;
+                            break; // emit only one error message
                         }
                     }
-
-                    if (i < others.Length()) // as soon as we find an error, bail out...
-                        break;
                 }
             }
         }
@@ -824,7 +821,6 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
         // First, search for a perfect visible method match in an enclosing class.
         //
         assert(stack);
-
         for (SemanticEnvironment *env = stack -> previous; env; env = env -> previous)
         {
             Tuple<MethodSymbol *> others(2);
@@ -1232,18 +1228,18 @@ VariableSymbol *Semantic::FindVariableInEnvironment(SemanticEnvironment *&where_
                                type -> ContainingPackage() -> PackageName(),
                                type -> ExternalName());
             }
-            else
+            else if (! where_found -> Type() -> ACC_STATIC())
             {
-                for (SemanticEnvironment *env = where_found -> previous; env; env = env -> previous)
-                {
-                    Tuple<VariableSymbol *> others(2);
-                    SemanticEnvironment *found_other;
-                    SearchForVariableInEnvironment(others, found_other, env, name_symbol, identifier_token);
+                Tuple<VariableSymbol *> others(2);
+                SemanticEnvironment *found_other,
+                                    *previous_env = where_found -> previous;
+                SearchForVariableInEnvironment(others, found_other, previous_env, name_symbol, identifier_token);
 
-                    int i;
-                    for (i = 0; i < others.Length();  i++)
+                if (others.Length() > 0 && where_found -> Type() -> CanAccess(found_other -> Type()))
+                {
+                    for (int i = 0; i < others.Length();  i++)
                     {
-                        if (others[i] != variable_symbol)
+                        if (! (others[i] == variable_symbol && variable_symbol -> ACC_STATIC()))
                         {
                             MethodSymbol *method = others[i] -> owner -> MethodCast();
 
@@ -1272,9 +1268,6 @@ VariableSymbol *Semantic::FindVariableInEnvironment(SemanticEnvironment *&where_
                             }
                         }
                     }
-
-                    if (i < others.Length()) // as soon as we find an error, bail out...
-                        break;
                 }
             }
         }
@@ -1420,11 +1413,35 @@ AstExpression *Semantic::CreateAccessToType(Ast *source, TypeSymbol *environment
 
     if (! this_type -> CanAccess(environment_type))
     {
-        ReportSemError(SemanticError::ENCLOSING_INSTANCE_NOT_ACCESSIBLE,
-                       (field_access ? field_access -> base -> LeftToken() : tok),
-                       (field_access ? field_access -> base -> RightToken() : tok),
-                       environment_type -> ContainingPackage() -> PackageName(),
-                       environment_type -> ExternalName());
+        if (ExplicitConstructorInvocation())
+            ReportSemError(SemanticError::ENCLOSING_INSTANCE_ACCESS_FROM_CONSTRUCTOR_INVOCATION,
+                           (field_access ? field_access -> base -> LeftToken() : tok),
+                           (field_access ? field_access -> base -> RightToken() : tok),
+                           environment_type -> ContainingPackage() -> PackageName(),
+                           environment_type -> ExternalName());
+        else
+        {
+            SemanticEnvironment *env = state_stack.Top();
+            for (; env; env = env -> previous) // check whether or not there is an intervening static type...
+            {
+                if (env -> StaticRegion() || env -> Type() -> ACC_STATIC())
+                    break;
+            }
+
+            if (env)
+                 ReportSemError(SemanticError::ENCLOSING_INSTANCE_ACCESS_ACROSS_STATIC_REGION,
+                                (field_access ? field_access -> base -> LeftToken() : tok),
+                                (field_access ? field_access -> base -> RightToken() : tok),
+                                environment_type -> ContainingPackage() -> PackageName(),
+                                environment_type -> ExternalName(),
+                                env -> Type() -> ContainingPackage() -> PackageName(),
+                                env -> Type() -> ExternalName());
+            else ReportSemError(SemanticError::ENCLOSING_INSTANCE_NOT_ACCESSIBLE,
+                                (field_access ? field_access -> base -> LeftToken() : tok),
+                                (field_access ? field_access -> base -> RightToken() : tok),
+                                environment_type -> ContainingPackage() -> PackageName(),
+                                environment_type -> ExternalName());
+        }
 
         resolution = compilation_unit -> ast_pool -> GenSimpleName(tok);
         resolution -> symbol = control.no_type;
