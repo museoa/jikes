@@ -136,7 +136,7 @@ void Semantic::ReportMethodNotFound(AstMethodInvocation *method_call,
         ReportSemError(SemanticError::METHOD_OVERLOAD_NOT_FOUND,
                        method_call -> LeftToken(),
                        method_call -> RightToken(),
-                       name_symbol -> Name(),
+                       name_symbol -> Name(), // FIXME: should be method_call -> symbol -> Header(), except that method_call has no symbol yet
                        best_match -> containing_type -> ContainingPackage() -> PackageName(),
                        best_match -> containing_type -> ExternalName(),
                        best_match -> Header());
@@ -619,6 +619,12 @@ MethodSymbol *Semantic::FindMethodInType(TypeSymbol *type,
     if (! type -> expanded_method_table)
         ComputeMethodsClosure(type, field_access -> identifier_token);
 
+    //
+    // Here, we ignore any conflicts in a method declaration. If there are
+    // conflicts, they are necessarily abstract methods inherited from
+    // interfaces, so either the original method implements them all, or it
+    // is also abstract and we are free to choose which one to use.
+    //
     for (MethodShadowSymbol *method_shadow = type -> expanded_method_table -> FindMethodShadowSymbol(name_symbol);
          method_shadow; method_shadow = method_shadow -> next_method)
     {

@@ -2922,20 +2922,18 @@ void Semantic::CheckMethodOverride(MethodSymbol *method,
     if (hidden_method == method)
         return;
 
-    if (method -> containing_type != base_type)
+    //
+    // Based on the order we built the method table, hidden_method should
+    // always be declared in an interface. But this includes the methods of
+    // Object, which all interfaces inherit. So, when hidden_method is declared
+    // by Object, but base_type inherits an override from its supertype,
+    // we have already checked that the override is acceptable.
+    //
+    if (method -> containing_type != base_type &&
+        ! (hidden_method -> ACC_PUBLIC() && hidden_method -> ACC_ABSTRACT()))
     {
-        //
-        // If an interface inherits something from Object along two paths, it
-        // is guaranteed to be safe. Otherwise, the hidden method should be
-        // from an interface, based on the order we built the method table.
-        //
-        if (base_type -> ACC_INTERFACE() &&
-            hidden_method -> containing_type == control.Object())
-        {
-            return;
-        }
-        assert(hidden_method -> ACC_ABSTRACT() &&
-               hidden_method -> ACC_PUBLIC());
+        assert (hidden_method -> containing_type == control.Object());
+        return;
     }
 
     LexStream::TokenIndex left_tok;
@@ -4333,7 +4331,11 @@ bool Semantic::NeedsInitializationMethod(AstFieldDeclaration *field_declaration)
     for (int i = 0; i < field_declaration -> NumVariableDeclarators(); i++)
     {
         AstVariableDeclarator *variable_declarator = field_declaration -> VariableDeclarator(i);
-        assert(variable_declarator -> symbol);
+
+        // happens in bad type on duplicate declaration
+        if (! variable_declarator -> symbol)
+            return true;
+
         if (variable_declarator -> variable_initializer_opt)
         {
             if (! variable_declarator -> symbol -> initial_value)

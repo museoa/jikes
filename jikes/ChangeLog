@@ -1,5 +1,12 @@
 2001-11-11  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/decl.cpp:
+	* src/expr.cpp:
+	* src/modifier.cpp: Fix some more random regressions caused by
+	patch 229.
+
+2001-11-11  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/decl.cpp (NeedsInitializationMethod): Fix assertion error in
 	previous commit.
 

@@ -977,12 +977,13 @@ AccessFlags Semantic::ProcessNestedInterfaceModifiers(AstInterfaceDeclaration *i
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token,
                                StringConstant::US_static);
-            else if (control.option.pedantic)
+            else
             {
-                ReportSemError(SemanticError::REDUNDANT_MODIFIER,
-                               modifier -> modifier_kind_token,
-                               modifier -> modifier_kind_token,
-                               StringConstant::US_static);
+                if (control.option.pedantic)
+                    ReportSemError(SemanticError::REDUNDANT_MODIFIER,
+                                   modifier -> modifier_kind_token,
+                                   modifier -> modifier_kind_token,
+                                   StringConstant::US_static);
                 access_flags.SetACC_STATIC(); // detect duplicates
             }
 
