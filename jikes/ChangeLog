@@ -1,5 +1,10 @@
 2002-05-23  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/definite.cpp (DefinitePLUSPLUSOrMINUSMINUS): Yet another
+	corner case - bug 2398.
+
+2002-05-23  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/expr.cpp (CheckSimpleName): One last bug in nested classes -
 	bug 440.
 

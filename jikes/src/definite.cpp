@@ -287,6 +287,7 @@ DefiniteAssignmentSet *Semantic::DefinitePLUSPLUSOrMINUSMINUS(AstExpression *exp
     {
         if ((variable -> IsLocal(ThisMethod()) ||
              variable -> IsFinal(ThisType())) &&
+            ! variable -> IsSynthetic() &&
             (*blank_finals)[variable -> LocalVariableIndex()])
         {
             ReportSemError(SemanticError::VARIABLE_NOT_DEFINITELY_UNASSIGNED,
@@ -303,7 +304,7 @@ DefiniteAssignmentSet *Semantic::DefinitePLUSPLUSOrMINUSMINUS(AstExpression *exp
         }
 
         // Mark it assigned, to catch further errors.
-        if (variable -> IsFinal(ThisType()))
+        if (variable -> IsFinal(ThisType()) && ! variable -> IsSynthetic())
             def_pair.du_set.RemoveElement(variable -> LocalVariableIndex());
     }
 
