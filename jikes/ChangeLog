@@ -1,6 +1,11 @@
 2002-07-10  Chris Abbey	 <jikes@cabbey.net>
 
         * 1.16 release.
+
+2002-07-07  Bu FeiMing  <mybird@online.sh.cn>
+
+	* src/stream.cpp (getErrorMessage): duplication of "to make
+	use of" in error message.
 	
 2002-07-05  Chris Abbey  <jikes@cabbey.net>
 
