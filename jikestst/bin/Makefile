@@ -1,5 +1,6 @@
+# $Id$
 #
-# This software is subject to the terms of the IBM Jikes Test Suite
+# This software is subject to the terms of the IBM Jikes Compiler
 # License Agreement available at the following URL:
 # http://www.ibm.com/resejtarch/jikes.
 # Copyright (C) 1996, 1998, International Business Machines Corporation
