@@ -865,6 +865,7 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                                           source_tail+1,
                                           &err);
 
+                   
                     if(U_FAILURE(err))
                     {
                         fprintf(stderr,"Conversion error: %s at byte %d\n", 
@@ -878,25 +879,25 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                     unsigned char chd[2];
                     unsigned char *chp  = chd;
                     size_t   chl  = 2;
-                    size_t   srcl = (source_ptr-source_tail)+1;
+                    size_t   srcl = 1;
                     size_t n = iconv(control.option.converter,
                                      &source_ptr, &srcl,
                                      (char **)&chp, &chl
                     );
 
+                    if(n==-1)
+                    {
+                        fprintf(stderr,"Charset conversion error at offset %d: ", int(before-buffer));
+                        perror("");
+                        break;
+                    }
+                    
 #        ifdef WORDS_BIGENDIAN
                     ch=chd[0] + chd[1]*256;
 #        else
                     ch=chd[1] + chd[0]*256;
 #        endif
 
-                    if(n==-1 && (errno != E2BIG))
-                    {
-                        fprintf(stderr,"Charset conversion error at offset : ", int(before-buffer));
-                        perror("");
-                        break;
-                    }
-                    
 #   endif
 #endif
                     if(before==source_ptr)

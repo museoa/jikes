@@ -1,3 +1,8 @@
+2000-03-15  Vadim Zaliva  <lord@crocodile.org>
+
+	* stream.cpp (ProcessInputUnicode): corrected problem with losing last source file 
+	character when using 'iconv' function for charset conversion.
+
 2000-03-14  Vadim Zaliva  <lord@crocodile.org>
 
 	* modifier.cpp (ProcessStaticNestedInterfaceModifiers): simplification.
