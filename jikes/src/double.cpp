@@ -2407,9 +2407,9 @@ bool IEEEdouble::operator> (const IEEEdouble op) const
     u4 a = HighWord() & ABS_BITS, b = op.HighWord() & ABS_BITS;
     if (IsPositive())
         return op.IsNegative() ||
-            (a < b || (a == b && LowWord() < op.LowWord()));
+            (a > b || (a == b && LowWord() > op.LowWord()));
     return op.IsNegative() &&
-        (a > b || (a == b && LowWord() > op.LowWord()));
+        (a < b || (a == b && LowWord() < op.LowWord()));
 #endif
 }
 
