@@ -28,6 +28,7 @@
       <li>Move the old Sun Queries from the research database to a web page.
       <li>Fix the bugs that are known, triage the ones that are brand new.
       <li>Update both todo lists.
+      <li>Merge todo lists.
     </ul>
 
     <p>This is of course an open source document, so if there's something I've missed just post a patch to the list.</p>
