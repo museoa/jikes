@@ -898,7 +898,7 @@ void ByteCode::EndMethod(int method_index, MethodSymbol *msym)
         //
         // Sanity check - make sure nothing jumped past here
         //
-        assert(last_label_pc < code_attribute -> CodeLength());
+        assert((u2) last_label_pc < code_attribute -> CodeLength());
 
         //
         // attribute length:
@@ -6230,7 +6230,7 @@ void ByteCode::PutOp(Opcode opc)
 {
 #ifdef JIKES_DEBUG
     if (control.option.debug_trap_op > 0 &&
-        code_attribute -> CodeLength() == control.option.debug_trap_op)
+        code_attribute -> CodeLength() == (u2) control.option.debug_trap_op)
     {
         op_trap();
     }

@@ -1,3 +1,8 @@
+2002-05-14  Mo DeJong  <supermo@bayarea.net>
+
+	* src/bytecode.cpp: Add casts to avoid compiler
+	warning on signed/unsigned comparison.
+
 2002-05-14  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/expr.cpp (ProcessAmbiguousName): Fix name parsing to load
