@@ -1,3 +1,8 @@
+2002-05-09  Mo DeJong  <supermo@bayarea.net>
+
+	* configure.in: Bump version, require autoconf 2.53 - patch 270.
+	* configure: Regenerate.
+
 2002-05-06  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/depend.h:
