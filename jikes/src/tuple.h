@@ -10,7 +10,6 @@
 #ifndef TUPLE_INCLUDED
 #define TUPLE_INCLUDED
 
-#include "platform.h"
 #include "jikesapi.h"
 
 #ifdef	HAVE_JIKES_NAMESPACE

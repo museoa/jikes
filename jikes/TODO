@@ -57,6 +57,10 @@ of chars in a buffer instead of doing them
 one at a time?
 
 
+
+
+
+
 Use new casting operations instead of C style
 casts:
 
@@ -85,11 +89,14 @@ assert( bp2 != NULL );
 
 
 
+
+
 Manually generate a list of #include deps for
 each of the .c files in the src dir and include
 then in Makefile.am. We do not want to use
 the automatic depcomp feature of automake.
 
+(FIXED)
 
 
 The website needs to be made available as a CVS module.

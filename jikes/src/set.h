@@ -11,7 +11,6 @@
 #define set_INCLUDED
 
 #include "platform.h"
-#include "assert.h"
 #include "symbol.h"
 
 #ifdef	HAVE_JIKES_NAMESPACE
