@@ -250,8 +250,6 @@ void SemanticError::StaticInitializer()
     warning[TYPE_IN_MULTIPLE_FILES] = 1;
     warning[MISMATCHED_TYPE_AND_FILE_NAMES] = 1;
     warning[REFERENCE_TO_TYPE_IN_MISMATCHED_FILE] = 1;
-    warning[DEFAULT_METHOD_NOT_OVERRIDDEN] = 1;
-    warning[PRIVATE_METHOD_NOT_OVERRIDDEN] = 1;
     warning[ONE_UNNAMED_PACKAGE] = 1;
     warning[RECOMPILATION] = 1;
     warning[METHOD_WITH_CONSTRUCTOR_NAME] = 1;
@@ -339,6 +337,7 @@ void SemanticError::StaticInitializer()
     print_message[NOT_AN_INTERFACE] = PrintNOT_AN_INTERFACE;
     print_message[SUPER_IS_FINAL] = PrintSUPER_IS_FINAL;
     print_message[OBJECT_WITH_SUPER_TYPE] = PrintOBJECT_WITH_SUPER_TYPE;
+    print_message[OBJECT_HAS_NO_SUPER_TYPE] = PrintOBJECT_HAS_NO_SUPER_TYPE;
     print_message[DUPLICATE_FIELD] = PrintDUPLICATE_FIELD;
     print_message[DUPLICATE_METHOD] = PrintDUPLICATE_METHOD;
     print_message[DUPLICATE_CONSTRUCTOR] = PrintDUPLICATE_CONSTRUCTOR;
@@ -494,6 +493,7 @@ void SemanticError::StaticInitializer()
 
     print_message[ONE_ONE_FEATURE] = PrintONE_ONE_FEATURE;
     print_message[STATIC_NOT_INNER_CLASS] = PrintSTATIC_NOT_INNER_CLASS;
+    print_message[TYPE_NOT_INNER_CLASS] = PrintTYPE_NOT_INNER_CLASS;
     print_message[SUPER_TYPE_NOT_INNER_CLASS] = PrintSUPER_TYPE_NOT_INNER_CLASS;
     print_message[STATIC_FIELD_IN_INNER_CLASS] = PrintSTATIC_FIELD_IN_INNER_CLASS;
     print_message[STATIC_METHOD_IN_INNER_CLASS] = PrintSTATIC_METHOD_IN_INNER_CLASS;
@@ -1525,6 +1525,18 @@ void SemanticError::PrintOBJECT_WITH_SUPER_TYPE(ErrorInfo &err, LexStream *lex_s
     cout << '/';
     Unicode::Cout(err.insert2);
     cout << " must not have a super type";
+
+    return;
+}
+
+
+void SemanticError::PrintOBJECT_HAS_NO_SUPER_TYPE(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "The type ";
+    Unicode::Cout(err.insert1);
+    cout << '/';
+    Unicode::Cout(err.insert2);
+    cout << " does not have a super type";
 
     return;
 }
@@ -3503,7 +3515,7 @@ void SemanticError::PrintDEFAULT_METHOD_NOT_OVERRIDDEN(ErrorInfo &err, LexStream
 
 void SemanticError::PrintPRIVATE_METHOD_NOT_OVERRIDDEN(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Note that method \"";
+    cout << "The method \"";
     Unicode::Cout(err.insert1);
     cout << "\" in class \"";
     if (wcslen(err.insert2) > 0 && wcscmp(err.insert2, StringConstant::US__DO_) != 0)
@@ -3649,6 +3661,28 @@ void SemanticError::PrintSTATIC_NOT_INNER_CLASS(ErrorInfo &err, LexStream *lex_s
     }
     Unicode::Cout(err.insert2);
     cout << "\" is not an inner class";
+
+    return;
+}
+
+
+void SemanticError::PrintTYPE_NOT_INNER_CLASS(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "The type \"";
+    if (wcslen(err.insert1) > 0 && wcscmp(err.insert1, StringConstant::US__DO_) != 0)
+    {
+        Unicode::Cout(err.insert1);
+        cout << "/";
+    }
+    Unicode::Cout(err.insert2);
+    cout << "\", is not an inner class that is immediately enclosed in type \"";
+    if (wcslen(err.insert3) > 0 && wcscmp(err.insert3, StringConstant::US__DO_) != 0)
+    {
+        Unicode::Cout(err.insert3);
+        cout << "/";
+    }
+    Unicode::Cout(err.insert4);
+    cout << "\"";
 
     return;
 }

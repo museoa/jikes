@@ -1651,18 +1651,17 @@ private:
 public:
     MethodSymbol *symbol;
 
+    AstExpression *base_opt;
+    LexStream::TokenIndex dot_token_opt;
     LexStream::TokenIndex this_token;
     LexStream::TokenIndex left_parenthesis_token;
     LexStream::TokenIndex right_parenthesis_token;
     LexStream::TokenIndex semicolon_token;
 
-    AstExpression *base_opt; // When not NULL, this field points to a compiler-generated expression.
-
     AstThisCall(StoragePool *pool_) : pool(pool_),
                                       arguments(NULL),
                                       local_arguments_opt(NULL),
-                                      symbol(NULL),
-                                      base_opt(NULL)
+                                      symbol(NULL)
     {
         Ast::kind = Ast::THIS_CALL;
         Ast::class_tag = Ast::STATEMENT;
@@ -3331,6 +3330,7 @@ public:
         NONE,
         CLASS_TAG,
         THIS_TAG,
+        SUPER_TAG,
 
         _num_kinds
     };
@@ -3369,6 +3369,7 @@ public:
 
     bool IsNameAccess()  { return field_access_tag == NONE; }
     bool IsThisAccess()  { return field_access_tag == THIS_TAG; }
+    bool IsSuperAccess() { return field_access_tag == SUPER_TAG; }
     bool IsClassAccess() { return field_access_tag == CLASS_TAG; }
 
 #ifdef TEST

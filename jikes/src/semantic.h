@@ -946,13 +946,13 @@ private:
     bool MoreSpecific(MethodSymbol *, MethodSymbol *);
     bool MoreSpecific(MethodSymbol *, Tuple<MethodSymbol *> &);
     bool NoMethodMoreSpecific(Tuple<MethodSymbol *> &, MethodSymbol *);
-    void SearchMethodInEnvironment(Tuple<MethodSymbol *> &, SemanticEnvironment *&, SemanticEnvironment *, AstMethodInvocation *);
+    void SearchForMethodInEnvironment(Tuple<MethodSymbol *> &, SemanticEnvironment *&, SemanticEnvironment *, AstMethodInvocation *);
     MethodSymbol *FindMethodInEnvironment(SemanticEnvironment *&, SemanticEnvironment *, AstMethodInvocation *);
     MethodSymbol *FindMethodInType(TypeSymbol *, AstMethodInvocation *, NameSymbol * = NULL);
 
     void ReportAccessedFieldNotFound(AstFieldAccess *, TypeSymbol *);
-    void SearchVariableInEnvironment(Tuple<VariableSymbol *> &, SemanticEnvironment *&,
-                                     SemanticEnvironment *, NameSymbol *, LexStream::TokenIndex);
+    void SearchForVariableInEnvironment(Tuple<VariableSymbol *> &, SemanticEnvironment *&,
+                                        SemanticEnvironment *, NameSymbol *, LexStream::TokenIndex);
     VariableSymbol *FindVariableInEnvironment(SemanticEnvironment *&, SemanticEnvironment *, LexStream::TokenIndex);
     VariableSymbol *FindVariableInType(TypeSymbol *, AstFieldAccess *, NameSymbol * = NULL);
     VariableSymbol *FindInstance(TypeSymbol *, TypeSymbol *);
@@ -995,6 +995,7 @@ private:
     void ProcessMOD(AstBinaryExpression *);
     void ProcessINSTANCEOF(AstBinaryExpression *);
 
+    MethodSymbol *FindMethodMember(TypeSymbol *, AstMethodInvocation *);
     void ProcessMethodName(AstMethodInvocation *);
     void (Semantic::*ProcessExprOrStmt[Ast::_num_kinds])(Ast *);
     inline void ProcessStatement(AstStatement *stmt)
@@ -1040,6 +1041,7 @@ private:
     void GenerateLocalConstructor(MethodSymbol *);
 
     void ProcessSimpleName(Ast *);
+    void FindVariableMember(TypeSymbol *, AstFieldAccess *);
     void ProcessAmbiguousName(Ast *);
     void ProcessFieldAccess(Ast *);
     void ProcessIntegerLiteral(Ast *);

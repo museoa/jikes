@@ -193,7 +193,7 @@ void Semantic::ProcessLocalVariableDeclarationStatement(Ast *stmt)
 //
         SemanticEnvironment *where_found;
         Tuple<VariableSymbol *> variables_found(2);
-        SearchVariableInEnvironment(variables_found, where_found, state_stack.Top(), name_symbol, name -> identifier_token);
+        SearchForVariableInEnvironment(variables_found, where_found, state_stack.Top(), name_symbol, name -> identifier_token);
         VariableSymbol *symbol = (variables_found.Length() > 0 ? variables_found[0] : (VariableSymbol *) NULL);
         if (symbol && symbol -> IsLocal())
         {
@@ -1444,7 +1444,62 @@ void Semantic::ProcessClassDeclaration(Ast *stmt)
 
 void Semantic::ProcessThisCall(AstThisCall *this_call)
 {
+    TypeSymbol *this_type = ThisType(),
+               *containing_type = this_type -> ContainingType();
+
     ExplicitConstructorInvocation() = this_call; // signal that we are about to process an explicit constructor invocation
+
+    if (this_call -> base_opt)
+    {
+        if (! control.option.one_one)
+        {
+            ReportSemError(SemanticError::ONE_ONE_FEATURE,
+                           this_call -> base_opt -> LeftToken(),
+                           this_call -> dot_token_opt);
+        }
+
+        ProcessExpression(this_call -> base_opt);
+
+        TypeSymbol *expr_type = this_call -> base_opt -> Type();
+        if (expr_type != control.no_type)
+        {
+            if (! containing_type)
+            {
+                ReportSemError(SemanticError::TYPE_NOT_INNER_CLASS,
+                               this_call -> base_opt -> LeftToken(),
+                               this_call -> base_opt -> RightToken(),
+                               this_type -> ContainingPackage() -> PackageName(),
+                               this_type -> ExternalName(),
+                               expr_type -> ContainingPackage() -> PackageName(),
+                               expr_type -> ExternalName());
+                this_call -> base_opt -> symbol = control.no_type;
+            }
+            //
+            // 1.2 change. In 1.1, we used to allow access to any subclass of type. Now, there must
+            // be a perfect match.
+            //
+            // else if (! expr_type -> IsSubclass(containing_type))
+            //
+            else if (expr_type != containing_type)
+            {
+                ReportSemError(SemanticError::INVALID_ENCLOSING_INSTANCE,
+                               this_call -> base_opt -> LeftToken(),
+                               this_call -> base_opt -> RightToken(),
+                               this_type -> ContainingPackage() -> PackageName(),
+                               this_type -> ExternalName(),
+                               containing_type -> ContainingPackage() -> PackageName(),
+                               containing_type -> ExternalName(),
+                               expr_type -> ContainingPackage() -> PackageName(),
+                               expr_type -> ExternalName());
+                this_call -> base_opt -> symbol = control.no_type;
+            }
+        }
+    }
+    else // (! super_call -> base_opt)
+    {
+        if (this_type -> IsInner())
+            this_call -> base_opt = CreateAccessToType(this_call, containing_type);
+    }
 
     bool no_bad_argument = true;
 
@@ -1456,20 +1511,10 @@ void Semantic::ProcessThisCall(AstThisCall *this_call)
     }
     if (no_bad_argument)
     {
-        TypeSymbol *this_type = ThisType();
-
         MethodSymbol *constructor = FindConstructor(this_type, this_call, this_call -> LeftToken(), this_call -> RightToken());
         if (constructor)
         {
             this_call -> symbol = constructor;
-
-            if (this_type -> IsInner())
-            {
-                AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(this_call -> this_token);
-                simple_name -> symbol = ThisMethod() -> block_symbol -> FindVariableSymbol(control.this0_name_symbol);
-assert(simple_name -> symbol);
-                this_call -> base_opt = simple_name;
-            }
 
             for (int i = 0; i < this_call -> NumArguments(); i++)
             {
@@ -1548,7 +1593,13 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
                                expr_type -> ExternalName());
                 super_call -> base_opt -> symbol = control.no_type;
             }
-            else if (! expr_type -> IsSubclass(containing_type))
+            //
+            // 1.2 change. In 1.1, we used to allow access to any subclass of type. Now, there must
+            // be a perfect match.
+            //
+            // else if (! expr_type -> IsSubclass(containing_type))
+            //
+            else if (expr_type != containing_type)
             {
                 ReportSemError(SemanticError::INVALID_ENCLOSING_INSTANCE,
                                super_call -> base_opt -> LeftToken(),
@@ -2056,7 +2107,7 @@ assert(this_type -> FieldMembersProcessed());
 
                     SemanticEnvironment *where_found;
                     Tuple<VariableSymbol *> variables_found(2);
-                    SearchVariableInEnvironment(variables_found, where_found, state_stack.Top(),
+                    SearchForVariableInEnvironment(variables_found, where_found, state_stack.Top(),
                                                    parm -> Identity(),
                                                    name -> identifier_token);
                     VariableSymbol *symbol = (variables_found.Length() > 0 ? variables_found[0] : (VariableSymbol *) NULL);
@@ -2143,7 +2194,7 @@ assert(this_type -> FieldMembersProcessed());
 
                 SemanticEnvironment *where_found;
                 Tuple<VariableSymbol *> variables_found(2);
-                SearchVariableInEnvironment(variables_found, where_found, state_stack.Top(),
+                SearchForVariableInEnvironment(variables_found, where_found, state_stack.Top(),
                                                parm -> Identity(),
                                                name -> identifier_token);
                 VariableSymbol *symbol = (variables_found.Length() > 0 ? variables_found[0] : (VariableSymbol *) NULL);

@@ -558,6 +558,8 @@ private:
     static int primes[];
     int prime_index;
 
+    static int decimal_limit;
+
     LiteralValue *bad_value;
 
     void Rehash();
@@ -601,6 +603,8 @@ private:
 
     static int primes[];
     int prime_index;
+
+    static LongInt decimal_limit;
 
     LiteralValue *bad_value;
 

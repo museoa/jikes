@@ -8,7 +8,7 @@
 -- This software is subject to the terms of the IBM Jikes Compiler
 -- License Agreement available at the following URL:
 -- http://www.ibm.com/research/jikes.
--- Copyright (C) 1996, 1998, International Business Machines Corporation
+-- Copyright (C) 1996, 1999, International Business Machines Corporation
 -- and others.  All Rights Reserved.
 -- You must accept the terms of that agreement to use this software.
 
@@ -172,6 +172,13 @@ $MakeSuperFieldAccess
 #endif
 ./
 
+$MakeSuperDoubleFieldAccess
+/.
+#ifndef HEADERS
+    rule_action[$rule_number] = &Parser::MakeSuperDoubleFieldAccess;
+#endif
+./
+
 $MakeArrayAccess
 /.
 #ifndef HEADERS
@@ -254,7 +261,7 @@ $Terminals
     continue default do double else extends false final finally float
     for goto if implements import instanceof int
     interface long native new null package private
-    protected public return short static super switch
+    protected public return short static strictfp super switch
     synchronized this throw throws transient true try void
     volatile while
 
@@ -409,6 +416,7 @@ void Parser::InitRuleAction()
     void MakeForStatement(void);
     void MakeArrayCreationExpression(void);
     void MakeSuperFieldAccess(void);
+    void MakeSuperDoubleFieldAccess(void);
     void MakeArrayAccess(void);
     void MakeCastExpression(void);
 #endif
@@ -1960,6 +1968,8 @@ ExplicitConstructorInvocation ::= 'this' '(' ArgumentListopt ')' ';'
 void Parser::Act$rule_number(void)
 {
     AstThisCall *p = ast_pool -> NewThisCall();
+    p -> base_opt                = NULL;
+    p -> dot_token_opt           = 0;
     p -> this_token              = Token(1);
     p -> left_parenthesis_token  = Token(2);
     if (Sym(3) != NULL)
@@ -2004,6 +2014,35 @@ void Parser::Act$rule_number(void)
     }
     p -> right_parenthesis_token = Token(4);
     p -> semicolon_token         = Token(5);
+    Sym(1) = p;
+}
+./
+
+--1.2 feature
+ExplicitConstructorInvocation ::= Primary '.' 'this' '(' ArgumentListopt ')' ';'
+\:$action:\
+/.$location
+void Parser::Act$rule_number(void)
+{
+    AstThisCall *p = ast_pool -> NewThisCall();
+    p -> base_opt               = (AstExpression *) Sym(1);
+    p -> dot_token_opt          = Token(2);
+    p -> this_token             = Token(3);
+    p -> left_parenthesis_token = Token(4);
+    if (Sym(5) != NULL)
+    {
+        AstListNode *tail = (AstListNode *) Sym(5);
+        p -> AllocateArguments(tail -> index + 1);
+        AstListNode *root = tail;
+        do
+        {
+            root = root -> next;
+            p -> AddArgument((AstExpression *) root -> element);
+        } while(root != tail);
+        FreeCircularList(tail);
+    }
+    p -> right_parenthesis_token = Token(6);
+    p -> semicolon_token         = Token(7);
     Sym(1) = p;
 }
 ./
@@ -3255,7 +3294,7 @@ void Parser::Act$rule_number(void)
 }
 ./
 
-BreakStatement ::= 'break' Identifier ';'
+BreakStatement ::= 'break' 'Identifier' ';'
 \:$action:\
 /.$location
 void Parser::Act$rule_number(void)
@@ -3281,7 +3320,7 @@ void Parser::Act$rule_number(void)
 }
 ./
 
-ContinueStatement ::= 'continue' Identifier ';'
+ContinueStatement ::= 'continue' 'Identifier' ';'
 \:$action:\
 /.$location
 void Parser::Act$rule_number(void)
@@ -3820,6 +3859,27 @@ void Parser::MakeSuperFieldAccess(void)
 }
 ./
 
+--1.2 feature
+FieldAccess ::= Name '.' 'super' '.' 'Identifier'
+\:$MakeSuperDoubleFieldAccess:\
+/.$location
+void Parser::MakeSuperDoubleFieldAccess(void)
+{
+    AstFieldAccess *p = ast_pool -> NewFieldAccess();
+
+         AstFieldAccess *q = ast_pool -> NewFieldAccess(AstFieldAccess::SUPER_TAG);
+         q -> base = (AstExpression *) Sym(1);
+         q -> dot_token = Token(2);
+         q -> identifier_token = Token(3);
+
+    p -> base = q;
+    p -> dot_token = Token(4);
+    p -> identifier_token = Token(5);
+
+    Sym(1) = p;
+}
+./
+
 MethodInvocation ::= Name '(' ArgumentListopt ')'
 \:$action:\
 /.$location
@@ -3895,6 +3955,34 @@ void Parser::Act$rule_number(void)
         FreeCircularList(tail);
     }
     p -> right_parenthesis_token = Token(6);
+    Sym(1) = p;
+}
+./
+
+--1.2 feature
+MethodInvocation ::= Name '.' 'super' '.' 'Identifier' '(' ArgumentListopt ')'
+\:$action:\
+/.$location
+void Parser::Act$rule_number(void)
+{
+    MakeSuperDoubleFieldAccess();
+
+    AstMethodInvocation *p = ast_pool -> NewMethodInvocation();
+    p -> method                  = (AstExpression *) Sym(1);
+    p -> left_parenthesis_token  = Token(6);
+    if (Sym(7) != NULL)
+    {
+        AstListNode *tail = (AstListNode *) Sym(7);
+        p -> AllocateArguments(tail -> index + 1);
+        AstListNode *root = tail;
+        do
+        {
+            root = root -> next;
+            p -> AddArgument((AstExpression *) root -> element);
+        } while(root != tail);
+        FreeCircularList(tail);
+    }
+    p -> right_parenthesis_token = Token(8);
     Sym(1) = p;
 }
 ./
@@ -4773,7 +4861,6 @@ void Parser::Act$rule_number(void)
     Sym(1) = NULL;
 }
 ./
-
 
 MethodHeaderMarker ::= $empty
 \:$action:\

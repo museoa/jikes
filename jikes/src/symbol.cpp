@@ -1156,11 +1156,18 @@ assert(semantic_environment);
         // we have access to the this$0 (passed to the constructor of the inner class as parameter) but
         // not to the "this" of the inner class in question, unless it is static.
         //
-        if (this -> IsSubclass(type))
+        // 1.2 change. In 1.1, we used to allow access to any subclass of type. Now, there must
+        // be a perfect match. I.e.,
+        //
+        // "if (this -> IsSubclass(type))" becomes "if (this == type)"
+        // "if (this -> ContainingType() -> IsSubclass(type))" becomes "if (this -> ContainingType() == type)"
+        // "else if (env -> Type() -> IsSubclass(type))" becomes ""else if (env -> Type() == type)"
+        //
+        if (this == type)
             return this -> ACC_STATIC(); // "this" class is accessible only if it is static.
         if (this -> IsInner())
         {
-            if (this -> ContainingType() -> IsSubclass(type))
+            if (this -> ContainingType() == type)
                 return true;
             env = env -> previous; // skip "this" type.
         }
@@ -1170,7 +1177,7 @@ assert(semantic_environment);
     {
         if (env -> StaticRegion()) // are we in a static environment?
              break;
-        else if (env -> Type() -> IsSubclass(type)) // then, check if we reached the type in question or one of its superclasses;
+        else if (env -> Type() == type) // then, check if we reached the type in question.
              return true;
         else if (env -> Type() -> ACC_STATIC())     // next, check whether or not the current type is static...
              break;

@@ -80,6 +80,7 @@ public:
         NOT_AN_INTERFACE,
         SUPER_IS_FINAL,
         OBJECT_WITH_SUPER_TYPE,
+        OBJECT_HAS_NO_SUPER_TYPE,
         DUPLICATE_FIELD,
         DUPLICATE_METHOD,
         DUPLICATE_CONSTRUCTOR,
@@ -235,6 +236,7 @@ public:
 
         ONE_ONE_FEATURE,
         STATIC_NOT_INNER_CLASS,
+        TYPE_NOT_INNER_CLASS,
         SUPER_TYPE_NOT_INNER_CLASS,
         STATIC_FIELD_IN_INNER_CLASS,
         STATIC_METHOD_IN_INNER_CLASS,
@@ -376,6 +378,7 @@ private:
     static void PrintNOT_AN_INTERFACE(ErrorInfo &, LexStream *, Control &);
     static void PrintSUPER_IS_FINAL(ErrorInfo &, LexStream *, Control &);
     static void PrintOBJECT_WITH_SUPER_TYPE(ErrorInfo &, LexStream *, Control &);
+    static void PrintOBJECT_HAS_NO_SUPER_TYPE(ErrorInfo &, LexStream *, Control &);
     static void PrintDUPLICATE_FIELD(ErrorInfo &, LexStream *, Control &);
     static void PrintDUPLICATE_METHOD(ErrorInfo &, LexStream *, Control &);
     static void PrintDUPLICATE_CONSTRUCTOR(ErrorInfo &, LexStream *, Control &);
@@ -531,6 +534,7 @@ private:
 
     static void PrintONE_ONE_FEATURE(ErrorInfo &, LexStream *, Control &);
     static void PrintSTATIC_NOT_INNER_CLASS(ErrorInfo &, LexStream *, Control &);
+    static void PrintTYPE_NOT_INNER_CLASS(ErrorInfo &, LexStream *, Control &);
     static void PrintSUPER_TYPE_NOT_INNER_CLASS(ErrorInfo &, LexStream *, Control &);
     static void PrintSTATIC_FIELD_IN_INNER_CLASS(ErrorInfo &, LexStream *, Control &);
     static void PrintSTATIC_METHOD_IN_INNER_CLASS(ErrorInfo &, LexStream *, Control &);

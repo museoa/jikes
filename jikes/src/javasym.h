@@ -12,7 +12,7 @@
 
 enum {
       TK_BodyMarker = 100,
-      TK_Identifier = 28,
+      TK_Identifier = 29,
       TK_abstract = 57,
       TK_boolean = 32,
       TK_break = 69,
@@ -51,7 +51,8 @@ enum {
       TK_return = 74,
       TK_short = 40,
       TK_static = 63,
-      TK_super = 43,
+      TK_strictfp = 106,
+      TK_super = 41,
       TK_switch = 75,
       TK_synchronized = 55,
       TK_this = 42,
@@ -104,20 +105,20 @@ enum {
       TK_GREATER = 20,
       TK_LESS = 21,
       TK_LPAREN = 22,
-      TK_RPAREN = 29,
+      TK_RPAREN = 28,
       TK_LBRACE = 45,
       TK_RBRACE = 31,
       TK_LBRACKET = 9,
       TK_RBRACKET = 56,
       TK_SEMICOLON = 27,
       TK_QUESTION = 26,
-      TK_COLON = 41,
+      TK_COLON = 43,
       TK_COMMA = 30,
       TK_DOT = 3,
       TK_EQUAL = 79,
-      TK_ERROR = 106,
+      TK_ERROR = 107,
       TK_EOF = 95,
-      TK_EOL = 107
+      TK_EOL = 108
      };
 
 #endif /* javasym_INCLUDED */

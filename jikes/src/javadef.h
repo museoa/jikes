@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://www.ibm.com/research/jikes.
-// Copyright (C) 1996, 1998, International Business Machines Corporation
+// Copyright (C) 1996, 1999, International Business Machines Corporation
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -24,31 +24,31 @@ enum {
       SECONDARY_CODE,
       EOF_CODE,
 
-      ERROR_SYMBOL      = 106,
+      ERROR_SYMBOL      = 107,
       MAX_DISTANCE      = 30,
       MIN_DISTANCE      = 3,
       MAX_NAME_LENGTH   = 38,
       MAX_TERM_LENGTH   = 38,
-      NUM_STATES        = 551,
+      NUM_STATES        = 560,
 
-      NT_OFFSET         = 107,
+      NT_OFFSET         = 108,
       BUFF_UBOUND       = 31,
       BUFF_SIZE         = 32,
       STACK_UBOUND      = 127,
       STACK_SIZE        = 128,
-      SCOPE_UBOUND      = 53,
-      SCOPE_SIZE        = 54,
-      LA_STATE_OFFSET   = 5384,
+      SCOPE_UBOUND      = 56,
+      SCOPE_SIZE        = 57,
+      LA_STATE_OFFSET   = 5530,
       MAX_LA            = 2,
-      NUM_RULES         = 351,
-      NUM_TERMINALS     = 107,
+      NUM_RULES         = 354,
+      NUM_TERMINALS     = 108,
       NUM_NON_TERMINALS = 159,
-      NUM_SYMBOLS       = 266,
-      START_STATE       = 974,
+      NUM_SYMBOLS       = 267,
+      START_STATE       = 977,
       EOFT_SYMBOL       = 95,
       EOLT_SYMBOL       = 27,
-      ACCEPT_ACTION     = 5032,
-      ERROR_ACTION      = 5033
+      ACCEPT_ACTION     = 5175,
+      ERROR_ACTION      = 5176
      };
 
 

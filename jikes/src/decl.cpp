@@ -3279,7 +3279,7 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type, TypeSymbol *super_type
                 }
             }
         }
-        else if (control.option.Verbose)
+        else
         {
             MethodShadowSymbol *base_method_shadow = base_expanded_table.FindMethodShadowSymbol(method -> Identity());
 
@@ -3304,14 +3304,22 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type, TypeSymbol *super_type
                     else
                     {
                         AstInterfaceDeclaration *interface_declaration = ThisType() -> declaration -> InterfaceDeclarationCast();
+                        AstClassDeclaration *class_declaration = ThisType() -> declaration -> ClassDeclarationCast();
                         if (interface_declaration)
                         {
                             left_tok = right_tok = interface_declaration -> identifier_token;
                         }
+                        else if (class_declaration)
+                        {
+                            left_tok = right_tok = class_declaration -> identifier_token;
+                        }
                         else
                         {
-                            AstClassDeclaration *class_declaration = ThisType() -> declaration -> ClassDeclarationCast();
-                            left_tok = right_tok = class_declaration -> identifier_token;
+                            AstClassInstanceCreationExpression *class_creation = ThisType() -> declaration
+                                                                                            -> ClassInstanceCreationExpressionCast();
+assert(class_creation);
+                            left_tok = class_creation -> class_type -> LeftToken();
+                            right_tok = class_creation -> class_type -> RightToken();
                         }
                     }
 
@@ -3855,7 +3863,7 @@ assert(field_access);
         {
             TypeNestAccessCheck(field_access -> base);
             type = MustFindNestedType(type, field_access);
-    }
+        }
         else
         {
             PackageSymbol *package = symbol -> PackageCast();
@@ -3878,7 +3886,7 @@ assert(field_access);
                 if (type -> SourcePending())
                     control.ProcessHeaders(type -> file_symbol);
                 TypeAccessCheck(name, type);
-        }
+            }
         }
     }
 

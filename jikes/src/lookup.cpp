@@ -15,6 +15,9 @@
 #include "ast.h"
 #include "case.h"
 
+int IntLiteralTable::decimal_limit = 0x7FFFFFFF / 10;
+LongInt LongLiteralTable::decimal_limit = LongInt(0x7FFFFFFF, 0xFFFFFFFF) / 10;
+
 int DirectoryTable::primes[] = {DEFAULT_HASH_SIZE, 2039, 4093, MAX_HASH_SIZE};
 
 DirectoryTable::DirectoryTable(int estimate) : entry_pool(estimate),
@@ -684,7 +687,7 @@ LiteralValue *IntLiteralTable::FindOrInsertChar(LiteralSymbol *literal)
     if (literal -> NameLength() == 1) // an isolated quote
          return literal -> value = bad_value;
     else if (literal -> NameLength() <= 3) // a regular character of the form:  quote + char
-                                            // or                                quote + char + quote
+                                           // or                                quote + char + quote
          return literal -> value = FindOrInsert((int) name[1]);
 
     int value;
@@ -747,7 +750,7 @@ LiteralValue *IntLiteralTable::FindOrInsertHexInt(LiteralSymbol *literal)
     // hexadecimal or octal int literal does not fit in 32 bits". 
     // So, strictly speaking, we should not skip leading zeroes. However,
     // there are many publicly available code out there with leading zeroes
-    // that don't compile with jikes,...
+    // that don't compile with jikes, if ...
     //
     {
         for (++head; tail > head && *head == U_0; head++) // skip leading zeroes
@@ -815,10 +818,16 @@ LiteralValue *IntLiteralTable::FindOrInsertInt(LiteralSymbol *literal)
     {
         int value = 0;
 
-        for (wchar_t *p = name; *p && value >= 0; p++)
-            value = value * 10 + (*p - U_0);
+        wchar_t *p;
+        for (p = name; *p; p++)
+        {
+            int digit = *p - U_0;
+            if (value > decimal_limit || (value == decimal_limit && digit > 7))
+                break;
+            value = value * 10 + digit;
+        }
 
-        literal -> value = (value < 0 ? bad_value : FindOrInsert(value));
+        literal -> value = (*p ? bad_value : FindOrInsert(value));
     }
 
     return literal -> value;
@@ -850,12 +859,15 @@ LiteralValue *IntLiteralTable::FindOrInsertNegativeInt(LiteralSymbol *literal)
     int value = 0;
 
     wchar_t *p;
-    for (p = name; *p && value >= 0; p++)
-        value = value * 10 + (*p - U_0);
-    if (*p)
-        return bad_value;
+    for (p = name; *p; p++)
+    {
+        int digit = *p - U_0;
+        if (value > decimal_limit || (value == decimal_limit && digit > 8))
+            break;
+        value = value * 10 + digit;
+    }
 
-    return (value < 0 && value != (signed) 0X80000000 ? bad_value : FindOrInsert(-value));
+    return (*p ? bad_value : FindOrInsert(-value));
 }
 
 
@@ -1000,14 +1012,16 @@ LiteralValue *LongLiteralTable::FindOrInsertLong(LiteralSymbol *literal)
     {
         LongInt value = 0;
 
-        for (wchar_t *p = name; *p != U_L && *p != U_l; p++)
+        wchar_t *p;
+        for (p = name; *p != U_L && *p != U_l; p++)
         {
-            value = value * 10 + (u4) (*p - U_0);
-            if (value < 0) /* overflow */
+            u4 digit = *p - U_0;
+            if (value > decimal_limit || (value == decimal_limit && digit > 7))
                 break;
+            value = value * 10 + digit;
         }
 
-        literal -> value = (value < 0 ? bad_value : FindOrInsert(value));
+        literal -> value = (*p != U_L && *p != U_l ? bad_value : FindOrInsert(value));
     }
 
     return literal -> value;
@@ -1039,11 +1053,14 @@ LiteralValue *LongLiteralTable::FindOrInsertNegativeLong(LiteralSymbol *literal)
 
     wchar_t *p;
     for (p = name; *p != U_L && *p != U_l && value >= 0; p++)
-        value = value * 10 + (u4) (*p - U_0);
-    if (*p != U_L && *p != U_l)
-        return bad_value;
+    {
+        u4 digit = *p - U_0;
+        if (value > decimal_limit || (value == decimal_limit && digit > 8))
+            break;
+        value = value * 10 + digit;
+    }
 
-    return (value < 0 && value != LongInt(0X80000000, 0) ? bad_value : FindOrInsert(-value));
+    return (*p != U_L && *p != U_l ? bad_value : FindOrInsert(-value));
 }
 
 

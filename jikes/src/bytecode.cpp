@@ -3048,10 +3048,11 @@ int ByteCode::EmitMethodInvocation(AstMethodInvocation *expression, int copy_bas
        }
     }
     else {
-       field =expression -> method -> FieldAccessCast();
+       field = expression -> method -> FieldAccessCast();
        if (field) {
-     
-         if (field -> base -> SuperExpressionCast()) {
+         AstFieldAccess *sub_field_access = field -> base -> FieldAccessCast();
+
+         if (field -> base -> SuperExpressionCast() || (sub_field_access && sub_field_access -> IsSuperAccess())) {
            is_super=1;
          }
          if (field -> base -> MethodInvocationCast()) {
@@ -4337,8 +4338,8 @@ int ByteCode::LoadSimple (int kind,AstExpression *p)
             }
             PutU2(GenerateFieldReference(sym));
             break;
-            default: chaos("LoadSimple bad kind");
         }
+        default: chaos("LoadSimple bad kind");
     }
     return GetTypeWords(expression_type);
 }

@@ -596,6 +596,12 @@ int Scanner::ScanKeyword8(wchar_t *p1)
                 p1[5] == U_n && p1[6] == U_u && p1[7] == U_e)
                  return TK_continue;
             break;
+        case U_s:
+            if (p1[1] == U_t && p1[2] == U_r &&
+                p1[3] == U_i && p1[4] == U_c &&
+                p1[5] == U_t && p1[6] == U_f && p1[7] == U_p)
+                 return TK_strictfp;
+            break;
         case U_v:
             if (p1[1] == U_o && p1[2] == U_l &&
                 p1[3] == U_a && p1[4] == U_t &&
