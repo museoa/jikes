@@ -1,3 +1,8 @@
+2002-06-27  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/expr.cpp (CanCastConvert): Don't allow conversion to null
+	type - bug 2982.
+
 2002-06-24  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.cpp:

@@ -4505,10 +4505,17 @@ bool Semantic::CanAssignmentConvert(TypeSymbol *target_type,
 }
 
 
+//
+// Returns true if the source type can be cast into the target type, via an
+// identity, narrowing, or widening conversion. The lexical token is needed
+// in case an error is encountered when resolving the target type.
+//
 bool Semantic::CanCastConvert(TypeSymbol *target_type,
                               TypeSymbol *source_type,
                               LexStream::TokenIndex tok)
 {
+    if (target_type == control.null_type)
+        return false;
     if (source_type == target_type || source_type == control.no_type ||
         target_type == control.no_type)
     {
