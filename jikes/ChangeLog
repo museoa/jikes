@@ -1,5 +1,11 @@
 2001-02-15  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/expr.cpp (ProcessPLUS): Prevent
+	core dump when the + operator is
+	applied to the null literal.
+
+2001-02-15  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/error.cpp (StaticInitializer,
 	PrintINTERFACE_NOT_INNER_CLASS):
 	* src/error.h (SemanticError):

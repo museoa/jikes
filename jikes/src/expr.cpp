@@ -5686,7 +5686,7 @@ void Semantic::ProcessPLUS(AstBinaryExpression *expr)
         }
 
         //
-        // Perform conversion if necessary.
+        // Convert the left expression if necessary.
         //
         if (expr -> left_expression -> value == control.NullValue())
         {
@@ -5702,7 +5702,11 @@ void Semantic::ProcessPLUS(AstBinaryExpression *expr)
                                 expr -> left_expression -> RightToken());
             else expr -> left_expression = ConvertToType(expr -> left_expression, control.String());
         }
-        else if (expr -> right_expression -> value == control.NullValue())
+
+        //
+        // Convert the right expression if necessary.
+        //
+        if (expr -> right_expression -> value == control.NullValue())
         {
              expr -> right_expression -> value = control.null_literal;
              expr -> right_expression -> symbol = control.String();
