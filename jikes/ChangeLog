@@ -2,6 +2,16 @@
 
 	Release 1.20.
 
+2004-04-15  Eric Blake  <ebb9@byu.net>
+
+	* NEWS: More news blurbs.
+	* configure.ac: Bump jikes version, and update to automake 1.8.3.
+	* config.guess: Regenerate.
+	* config.sub: Regenerate.
+	* configure: Regenerate.
+	* install-sh: Regenerate.
+	* mkinstalldirs: Regenerate.
+
 2004-04-14  Chris Abbey	 <jikes@cabbey.net>
 
 	* src/error.cpp (SemanticError::InitializeMessageGroups): turn

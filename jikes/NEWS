@@ -10,6 +10,14 @@ to also allow all warnings to be considered errors (with +Z2). The
 default on vs. off state of several warnings added in 1.19 have been
 changed, by popular demand.
 
+Jikes is more robust in the face of a .java file on the command line
+that requires another .java file that has a compilation error.
+However, this area can always be improved, so we appreciate concise
+test cases where a single error is causing a chain of error messages.
+
+Jikes makes a better attempt to detect and warn the user of system
+errors, such as file not found or directory not writeable.
+
 The set of legal characters in identifiers has grown according to
 Unicode 4.0.  Now surrogate character pairs are parsed correctly,
 according to the improvements in the JDK 1.5 java.lang.Character, so
@@ -28,6 +36,12 @@ class Outer {
 }
 
 As always, several bugs from the Jikes bug database have been closed.
+
+Build support has been slightly improved.  Jikes now builds correctly
+with parallel make invocations, is better at detecting a working iconv
+that meets jikes' needs, and will use RTTI in debugging mode to help
+diagnose cast errors.  Upstream automake and autoconf improvements
+allow jikes to compile and install on more platforms.
 
 The `-target 1.5' option produces class files compatible with Sun's
 JDK 1.5 virtual machine (the biggest changes are that class literals
@@ -65,7 +79,7 @@ supported.
 though the final parameter used '[]' instead of '...'.
 - Enumerations parse correctly, but are not otherwise supported.
 - Static imports parse correctly, but are not otherwise supported.
-- Autoboxing and autoboxing are not supported.
+- Autoboxing and autounboxing are not supported.
 
 *** Jikes 1.19 was released 1 February 2004.
 

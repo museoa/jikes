@@ -5,7 +5,7 @@ dnl	Makefile in this directory.
 
 dnl Set up the name and version
 AC_INIT([jikes],[1.20])
-AM_INIT_AUTOMAKE([foreign check-news dist-bzip2 1.8.2])
+AM_INIT_AUTOMAKE([foreign check-news dist-bzip2 1.8.3])
 AC_PREREQ(2.59)
 
 AC_DEFINE(JIKES_VERSION_STRING,
