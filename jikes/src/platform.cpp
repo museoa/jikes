@@ -1279,12 +1279,16 @@ const wchar_t StringConstant::US_Comparable[] = {
     U_C, U_o, U_m, U_p, U_a, U_r, U_a, U_b, U_l, U_e, U_NU}; // L"Comparable"
 const wchar_t StringConstant::US_Double[] = {
     U_D, U_o, U_u, U_b, U_l, U_e, U_NU}; // L"Double"
+const wchar_t StringConstant::US_equals[] = {
+    U_e, U_q, U_u, U_a, U_l, U_s, U_NU}; // L"equals"
 const wchar_t StringConstant::US_Error[] = {
     U_E, U_r, U_r, U_o, U_r, U_NU}; // L"Error"
 const wchar_t StringConstant::US_Exception[] = {
     U_E, U_x, U_c, U_e, U_p, U_t, U_i, U_o, U_n, U_NU}; // L"Exception"
 const wchar_t StringConstant::US_Float[] = {
     U_F, U_l, U_o, U_a, U_t, U_NU};  // L"Float"
+const wchar_t StringConstant::US_hashCode[] = {
+    U_h, U_a, U_s, U_h, U_C, U_o, U_d, U_e, U_NU}; // L"hashCode"
 const wchar_t StringConstant::US_Integer[] = {
     U_I, U_n, U_t, U_e, U_g, U_e, U_r, U_NU}; // L"Integer"
 const wchar_t StringConstant::US_L[] = {U_L, U_NU}; // L"L"
@@ -1303,6 +1307,9 @@ const wchar_t StringConstant::US_RuntimeException[] = {
 const wchar_t StringConstant::US_Serializable[] = {
     U_S, U_e, U_r, U_i, U_a, U_l, U_i, U_z, U_a, U_b, U_l, U_e,
     U_NU}; // L"Serializable"
+const wchar_t StringConstant::US_serialVersionUID[] = {
+    U_s, U_e, U_r, U_i, U_a, U_l, U_V, U_e, U_r, U_s, U_i, U_o,
+    U_n, U_U, U_I, U_D, U_NU}; // L"serialVersionUID"
 const wchar_t StringConstant::US_Short[] = {
     U_S, U_h, U_o, U_r, U_t, U_NU}; // L"Short"
 const wchar_t StringConstant::US_String[] = {

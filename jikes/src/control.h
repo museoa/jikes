@@ -90,6 +90,9 @@ public:
     NameSymbol* object_name_symbol;
     NameSymbol* type_name_symbol;
     NameSymbol* class_name_symbol;
+    NameSymbol* equals_name_symbol;
+    NameSymbol* hashCode_name_symbol;
+    NameSymbol* serialVersionUID_name_symbol;
     NameSymbol* toString_name_symbol;
     NameSymbol* append_name_symbol;
     NameSymbol* forName_name_symbol;

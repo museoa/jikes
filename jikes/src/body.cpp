@@ -233,6 +233,26 @@ void Semantic::ProcessLocalVariableDeclarationStatement(Ast* stmt)
             if (control.IsDoubleWordType(symbol -> Type()))
                 block -> block_symbol -> max_variable_index++;
 
+            //
+            // Warn against unconventional names. Note that there's no
+            // strong convention for final local variables, so we allow
+            // both the usual style for local variables and the usual
+            // style for constant fields. We recommend the local variable
+            // style, somewhat arbitrarily.
+            //
+            if (!symbol -> ACC_FINAL() && name_symbol -> IsBadStyleForVariable())
+            {
+                ReportSemError(SemanticError::UNCONVENTIONAL_VARIABLE_NAME,
+                               name -> identifier_token, name_symbol -> Name());
+            }
+            else if (symbol -> ACC_FINAL() &&
+                     (name_symbol -> IsBadStyleForVariable() &&
+                      name_symbol -> IsBadStyleForConstantField()))
+            {
+                ReportSemError(SemanticError::UNCONVENTIONAL_VARIABLE_NAME,
+                               name -> identifier_token, name_symbol -> Name());
+            }
+            
             ProcessVariableInitializer(variable_declarator);
         }
     }
@@ -992,33 +1012,38 @@ void Semantic::ProcessReturnStatement(Ast* stmt)
     }
     else if (return_statement -> expression_opt)
     {
-        ProcessExpressionOrStringConstant(return_statement -> expression_opt);
+        AstExpression* expression = return_statement -> expression_opt;
+        ProcessExpressionOrStringConstant(expression);
+        TypeSymbol* method_type = this_method -> Type();
+        TypeSymbol* expression_type = expression -> Type();
 
-        if (this_method -> Type() == control.void_type ||
+        if (method_type == control.void_type ||
             this_method -> name_symbol == control.init_name_symbol)
         {
             ReportSemError(SemanticError::MISPLACED_RETURN_WITH_EXPRESSION,
                            return_statement);
         }
-        else if (return_statement -> expression_opt -> Type() !=
-                 control.no_type)
+        else if (expression_type == control.null_type &&
+                 method_type -> IsArray())
         {
-            if (this_method -> Type() !=
-                return_statement -> expression_opt -> Type())
+            ReportSemError(SemanticError::EJ_RETURN_OF_NULL_ARRAY,
+                           return_statement);
+        }
+        else if (expression_type != control.no_type)
+        {
+            if (method_type != expression_type)
             {
-                if (CanAssignmentConvert(this_method -> Type(),
-                                         return_statement -> expression_opt))
+                if (CanAssignmentConvert(method_type, expression))
                     return_statement -> expression_opt =
-                        ConvertToType(return_statement -> expression_opt,
-                                      this_method -> Type());
+                        ConvertToType(expression, method_type);
                 else
                 {
                     ReportSemError(SemanticError::MISMATCHED_RETURN_AND_METHOD_TYPE,
-                                   return_statement -> expression_opt,
-                                   return_statement -> expression_opt -> Type() -> ContainingPackageName(),
-                                   return_statement -> expression_opt -> Type() -> ExternalName(),
-                                   this_method -> Type() -> ContainingPackageName(),
-                                   this_method -> Type() -> ExternalName());
+                                   expression,
+                                   expression_type -> ContainingPackageName(),
+                                   expression_type -> ExternalName(),
+                                   method_type -> ContainingPackageName(),
+                                   method_type -> ExternalName());
                 }
             }
         }
@@ -1297,6 +1322,14 @@ void Semantic::ProcessTryStatement(Ast* stmt)
         max_variable_index = block_body -> block_symbol -> max_variable_index;
 
         //
+        // Warn about empty finally blocks.
+        //
+        if (block_body -> NumStatements() == 0)
+        {
+            ReportSemError(SemanticError::EJ_EMPTY_FINALLY_BLOCK, block_body);
+        }
+        
+        //
         // If the finally ends abruptly, then it discards any throw generated
         // by the try or catch blocks.
         //
@@ -1358,6 +1391,15 @@ void Semantic::ProcessTryStatement(Ast* stmt)
         }
 
         AstBlock* block_body = clause -> block;
+        
+        //
+        // Warn about empty catch blocks.
+        //
+        if (control.option.pedantic && block_body -> NumStatements() == 0)
+        {
+            ReportSemError(SemanticError::EJ_EMPTY_CATCH_BLOCK, block_body);
+        }
+
         //
         // Guess that the number of elements in the table will not exceed the
         // number of statements + the clause parameter.
@@ -1974,6 +2016,12 @@ void Semantic::CheckThrow(AstTypeName* throw_expression,
         ReportSemError(SemanticError::TYPE_NOT_THROWABLE, throw_expression,
                        throw_type -> ContainingPackageName(),
                        throw_type -> ExternalName());
+    }
+    else if (throw_type == control.Exception() ||
+             throw_type == control.Throwable())
+    {
+        ReportSemError(SemanticError::EJ_OVERLY_GENERAL_THROWS_CLAUSE,
+                       throw_expression);
     }
     else if (control.option.pedantic)
     {

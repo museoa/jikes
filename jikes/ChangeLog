@@ -1,3 +1,48 @@
+2004-01-25  Chris Abbey  <jikes@cabbey.net>
+
+	* src/error.cpp (PrintNamedWarnings): indicate default states with +P
+	(REDUNDANT_MODIFIER, RECOMMENDED_MODIFER_ORDER): remove from
+	default +P set, must ask for these explicitly now.
+	* src/error.h:
+	* src/error.cpp: add a meta +P switch for all naming convention warnings
+	* src/scanner.cpp: make the new l vs L warning pedantic 
+	
+2004-01-25  Elliott Hughes  <enh@acm.org>
+
+	* src/error.cpp (SemanticError::Report): fix +Z option
+	* src/body.cpp: Ignore the unconventional constant field name
+	'serialVersionUID' which ought to be 'SERIAL_VERSION_UID',
+	but has to be 'serialVersionUID' because of existing practice
+	in class versioning.
+	* src/control.h:
+	* src/platform.cpp:
+	* src/platform.h: Add 'serialVersionUID' symbol.
+	* src/error.cpp: Improves the message for unconventional names.
+	* src/decl.cpp: Ignore empty classes when suggesting private constructors
+	for utility classes.
+	* src/body.cpp: Warn about unconventional names, returning null instead
+	of a zero-length array, empty catch and finally blocks, and overly
+	general throws clauses.
+	* src/control.h: Add 'equals' and 'hashCode' symbols.
+	* src/semantic.h:
+	* src/decl.cpp: Warn about unconventional names, overloaded equals
+	methods, equals without hashCode and vice versa, use of Latin, utility
+	classes without a private constructor, interfaces that don't define types,
+	and public static final array fields.
+	* src/error.cpp:
+	* src/error.h: Add all the new errors.
+	* src/lookup.cpp:
+	* src/lookup.h: Add NameSymbol methods for finding unconventional names.
+	* src/platform.cpp:
+	* src/platform.h: Add 'equals' and 'hashCode' string constants.
+	* src/scanner.cpp: Warn about use of l instead of L as a suffix.
+	* src/stream.cpp:
+	* src/stream.h: Add the "l instead of L" error.
+	* src/system.cpp: Add 'equals' and 'hashCode' name symbols.
+	* src/error.cpp: Change message string for INVALID_CAST_CONVERSION
+	which was giving incorrect diagnostic output.
+	* src/lookup.h: Fix spelling mistakes.
+
 2004-01-24  Eric Blake  <ebb9@byu.net>
 
 	* src/decl.cpp (FindTypeInEnvironment): Delete unused method.

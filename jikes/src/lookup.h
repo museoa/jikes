@@ -447,6 +447,12 @@ public:
     {
         return Utf8_literal ? Utf8_literal -> length : 0;
     }
+    
+    bool IsBadStyleForClass() const;
+    bool IsBadStyleForConstantField() const;
+    bool IsBadStyleForField() const;
+    bool IsBadStyleForMethod() const;
+    bool IsBadStyleForVariable() const;
 
     NameSymbol() : name_(NULL) {}
     virtual ~NameSymbol() { delete [] name_; }
@@ -468,6 +474,7 @@ public:
     }
 
 private:
+    bool Contains(wchar_t character) const;
 
     friend class NameLookupTable;
 

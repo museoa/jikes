@@ -75,6 +75,9 @@ const wchar_t* StreamError::getErrorMessage()
             L"discouraged, since it can conflict with compiler-generated "
             L"names. If you are trying to access a nested type, use \".\" "
             L"instead of \"$\".";
+    case FAVOR_CAPITAL_L_SUFFIX:
+        return L"The L suffix is preferred over the l suffix because l "
+            L"(lowercase L) is easily confused with 1 (the digit 1).";
     default:
         assert(false);
     }

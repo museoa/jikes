@@ -178,6 +178,25 @@ public:
         ZERO_DIVIDE_CAUTION,
         VOID_TO_STRING,
 
+        // "Effective Java" warnings.
+        EJ_AVOID_OVERLOADING_EQUALS,
+        EJ_EMPTY_CATCH_BLOCK,
+        EJ_EMPTY_FINALLY_BLOCK,
+        EJ_EQUALS_WITHOUT_HASH_CODE,
+        EJ_HASH_CODE_WITHOUT_EQUALS,
+        EJ_INTERFACE_DOES_NOT_DEFINE_TYPE,
+        EJ_MISSING_PRIVATE_CONSTRUCTOR,
+        EJ_OVERLY_GENERAL_THROWS_CLAUSE,
+        EJ_PUBLIC_STATIC_FINAL_ARRAY_FIELD,
+        EJ_RETURN_OF_NULL_ARRAY,
+        
+        // Naming convention warnings.
+        UNCONVENTIONAL_CLASS_NAME,
+        UNCONVENTIONAL_CONSTANT_FIELD_NAME,
+        UNCONVENTIONAL_FIELD_NAME,
+        UNCONVENTIONAL_METHOD_NAME,
+        UNCONVENTIONAL_VARIABLE_NAME,
+        
         // Type and package related errors.
         DUPLICATE_INNER_TYPE_NAME,
         DUPLICATE_TYPE_DECLARATION,
@@ -376,7 +395,17 @@ public:
         ENCLOSING_INSTANCE_NOT_ACCESSIBLE,
         INVALID_ENCLOSING_INSTANCE,
 
-        _num_kinds
+	//this counts the number of legitimate types in the enum
+	// it must follow all of the real error types
+        _num_kinds,
+
+	//this is a made up, bogus, error type. It is used as
+	// token for *all* of the UNCONVENTIONAL_*_NAME errors
+	// above, but ONLY in the argument processing logic,
+	// where it is used as a token, but not as an index into
+	// the tables that are indexed by the above... no point
+	// wasting space in those tables for it.
+	UNCONVENTIONAL_NAMES
     };
 
     //

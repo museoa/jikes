@@ -205,6 +205,9 @@ void Control::ProcessGlobals()
     type_name_symbol = FindOrInsertName(US_TYPE, wcslen(US_TYPE));
     class_name_symbol = FindOrInsertName(US_class_DOLLAR,
                                          wcslen(US_class_DOLLAR));
+    equals_name_symbol = FindOrInsertName(US_equals, wcslen(US_equals));
+    hashCode_name_symbol = FindOrInsertName(US_hashCode, wcslen(US_hashCode));
+    serialVersionUID_name_symbol = FindOrInsertName(US_serialVersionUID, wcslen(US_serialVersionUID));
     toString_name_symbol = FindOrInsertName(US_toString, wcslen(US_toString));
     append_name_symbol = FindOrInsertName(US_append, wcslen(US_append));
     forName_name_symbol = FindOrInsertName(US_forName, wcslen(US_forName));

@@ -187,6 +187,15 @@ void Semantic::ProcessTypeNames()
                         type -> semantic_environment;
                     CheckNestedMembers(type, declaration -> class_body);
                 }
+                
+                //
+                // Warn against unconventional names.
+                //
+                if (name_symbol -> IsBadStyleForClass())
+                {
+                    ReportSemError(SemanticError::UNCONVENTIONAL_CLASS_NAME,
+                                   identifier_token, name_symbol -> Name());
+                }
             }
         }
 
@@ -456,6 +465,16 @@ TypeSymbol* Semantic::ProcessNestedTypeName(TypeSymbol* containing_type,
             outermost_type -> non_local = new SymbolSet;
         outermost_type -> non_local -> AddElement(inner_type);
     }
+    
+    //
+    // Warn against unconventional names.
+    //
+    if (name_symbol -> IsBadStyleForClass())
+    {
+        ReportSemError(SemanticError::UNCONVENTIONAL_CLASS_NAME,
+                       class_body -> identifier_token, name_symbol -> Name());
+    }
+    
     declaration -> class_body -> semantic_environment =
         inner_type -> semantic_environment;
     CheckNestedMembers(inner_type, class_body);
@@ -894,6 +913,150 @@ inline void Semantic::ProcessFieldMembers(AstClassBody* class_body)
 }
 
 
+void Semantic::ProcessClassBodyForEffectiveJavaChecks(AstClassBody* class_body)
+{
+    TypeSymbol* this_type = ThisType();
+    assert(this_type -> HeaderProcessed());
+    
+    //
+    // Find out about this class' constructors:
+    // Does it have any non-default constructors?
+    // Does it have a private constructor?
+    //
+    bool has_private_constructor = false;
+    bool has_non_default_constructor = false;
+    for (int i = 0; i < class_body -> NumConstructors(); ++i)
+    {
+        MethodSymbol* constructor = class_body -> Constructor(i) ->
+                                    constructor_symbol;
+        if (constructor -> ACC_PRIVATE())
+        {
+            has_private_constructor = true;
+        }
+            
+        if (class_body -> default_constructor == NULL ||
+            constructor != class_body -> default_constructor -> constructor_symbol)
+        {
+            has_non_default_constructor = true;
+        }
+    }
+    
+    //
+    // Find out about equals and hashCode, and count how many instance methods
+    // we have (the NumMethods member function returns the sum of both the
+    // class and instance methods).
+    //
+    bool has_correct_equals_method = false;
+    AstMethodDeclaration* equals_method = NULL;
+    AstMethodDeclaration* hashCode_method = NULL;
+    int instance_method_count = 0;
+    
+    for (unsigned i = 0; i < class_body -> NumMethods(); ++i)
+    {
+        AstMethodDeclaration* method_declaration = class_body -> Method(i);
+        MethodSymbol* method = method_declaration -> method_symbol;
+        if (! method -> ACC_STATIC())
+        {
+            ++instance_method_count;
+        }
+        if (! this_type -> ACC_INTERFACE() && ! method -> ACC_ABSTRACT())
+        {
+            //
+            // Is it "boolean equals(T other)" for some type T?
+            //
+            if (method -> name_symbol == control.equals_name_symbol &&
+                method -> Type() == control.boolean_type &&
+                method -> NumFormalParameters() == 1 &&
+                ! has_correct_equals_method)
+            {
+                equals_method = method_declaration;
+                has_correct_equals_method = (method -> FormalParameter(0) ->
+                                             Type() == control.Object());
+            }
+            
+            //
+            // Is it "int hashCode()"?
+            //
+            if (method -> name_symbol == control.hashCode_name_symbol &&
+                method -> Type() == control.int_type &&
+                method -> NumFormalParameters() == 0)
+            {
+                hashCode_method = method_declaration;
+            }
+        }
+    }
+    
+    //
+    // Warn about problems with equals and hashCode.
+    //
+    if (equals_method != NULL && ! has_correct_equals_method)
+    {
+        ReportSemError(SemanticError::EJ_AVOID_OVERLOADING_EQUALS,
+                       equals_method -> method_declarator -> identifier_token,
+                       this_type -> Name());
+    }
+    if (equals_method != NULL && hashCode_method == NULL)
+    {
+        ReportSemError(SemanticError::EJ_EQUALS_WITHOUT_HASH_CODE,
+                       equals_method -> method_declarator -> identifier_token,
+                       this_type -> Name());
+    }
+    if (equals_method == NULL && hashCode_method != NULL)
+    {
+        ReportSemError(SemanticError::EJ_HASH_CODE_WITHOUT_EQUALS,
+                       hashCode_method -> method_declarator -> identifier_token,
+                       this_type -> Name());
+    }
+    
+    //
+    // Warn against utility classes that don't have a private constructor.
+    // Empty classes don't count. They're not very useful, but they do
+    // exist. The jacks test suite uses one to check the compiler's
+    // working, and Sun use them in the Swing Windows plaf, for example.
+    //
+    bool is_non_empty_class = (class_body -> NumClassVariables() > 0 ||
+                               class_body -> NumInstanceVariables() > 0 ||
+                               class_body -> NumMethods() > 0);
+    bool has_instance_members = (class_body -> NumInstanceVariables() > 0 ||
+                                 instance_method_count > 0);
+    if (is_non_empty_class &&
+        ! has_instance_members &&
+        ! this_type -> ACC_INTERFACE() &&
+        ! this_type -> ACC_ABSTRACT() &&
+        ! this_type -> Anonymous() &&
+        ! has_non_default_constructor &&
+        ! has_private_constructor &&
+        this_type -> super == control.Object())
+    {
+        ReportSemError(SemanticError::EJ_MISSING_PRIVATE_CONSTRUCTOR,
+                       class_body -> identifier_token,
+                       this_type -> Name());
+    }
+    
+    //
+    // Warn against interfaces that don't define any behavior.
+    //
+    if (this_type -> ACC_INTERFACE() &&
+        this_type -> super == control.Object() &&
+        class_body -> NumMethods() == 0)
+    {
+        //
+        // Tag interfaces such as java.io.Serializable are okay, so we need
+        // to check that there is actually something in this interface
+        // before we complain about it.
+        //
+        int field_count = class_body -> NumClassVariables() +
+                          class_body -> NumInstanceVariables();
+        if (field_count != 0)
+        {
+            ReportSemError(SemanticError::EJ_INTERFACE_DOES_NOT_DEFINE_TYPE,
+                           class_body -> identifier_token,
+                           this_type -> Name());
+        }
+    }
+}
+
+
 void Semantic::ProcessMembers(AstClassBody* class_body)
 {
     state_stack.Push(class_body -> semantic_environment);
@@ -907,6 +1070,7 @@ void Semantic::ProcessMembers(AstClassBody* class_body)
     ProcessConstructorMembers(class_body);
     ProcessMethodMembers(class_body);
     ProcessFieldMembers(class_body);
+    ProcessClassBodyForEffectiveJavaChecks(class_body);
 
     delete this_type -> innertypes_closure; // save some space !!!
     this_type -> innertypes_closure = NULL;
@@ -1738,6 +1902,17 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration* import_d
 }
 
 
+//
+// Helper method for Semantic::ProcessFieldDeclaration.
+//
+bool Semantic::FieldDeclarationIsNotSerialVersionUID(NameSymbol* name_symbol,
+                                                     TypeSymbol* field_type)
+{
+    return (name_symbol != control.serialVersionUID_name_symbol ||
+            field_type != control.long_type);
+}
+
+
 void Semantic::ProcessFieldDeclaration(AstFieldDeclaration* field_declaration)
 {
     TypeSymbol* this_type = ThisType();
@@ -1825,6 +2000,40 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration* field_declaration)
             variable -> SetLocation();
             if (deprecated_declarations)
                 variable -> MarkDeprecated();
+        }
+        
+        //
+        // Warn against public static final array fields.
+        //
+        bool is_constant_field = (access_flags.ACC_FINAL() &&
+                                  access_flags.ACC_STATIC());
+        if (access_flags.ACC_PUBLIC() &&
+            is_constant_field &&
+            field_type -> IsArray())
+        {
+            // FIXME: shouldn't warn if it's a zero-length array.
+            ReportSemError(SemanticError::EJ_PUBLIC_STATIC_FINAL_ARRAY_FIELD,
+                           name -> identifier_token,
+                           name_symbol -> Name());
+        }
+        
+        //
+        // Warn against unconventional names. We need to ignore fields called
+        // serialVersionUID, because that name is used in versioned classes
+        // for a static final long field.
+        //
+        if (is_constant_field &&
+            name_symbol -> IsBadStyleForConstantField() &&
+            FieldDeclarationIsNotSerialVersionUID(name_symbol, field_type))
+        {
+            ReportSemError(SemanticError::UNCONVENTIONAL_CONSTANT_FIELD_NAME,
+                           name -> identifier_token, name_symbol -> Name());
+        }
+        else if (! is_constant_field &&
+                 name_symbol -> IsBadStyleForField())
+        {
+            ReportSemError(SemanticError::UNCONVENTIONAL_FIELD_NAME,
+                           name -> identifier_token, name_symbol -> Name());
         }
     }
 }
@@ -2972,6 +3181,16 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration* method_declaration
     {
         ReportSemError(SemanticError::METHOD_WITH_CONSTRUCTOR_NAME,
                        method_declaration -> type -> LeftToken(),
+                       method_declarator -> identifier_token,
+                       name_symbol -> Name());
+    }
+    
+    //
+    // Warn against unconventional names.
+    //
+    if (name_symbol -> IsBadStyleForMethod())
+    {
+        ReportSemError(SemanticError::UNCONVENTIONAL_METHOD_NAME,
                        method_declarator -> identifier_token,
                        name_symbol -> Name());
     }

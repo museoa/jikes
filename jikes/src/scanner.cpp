@@ -1177,6 +1177,13 @@ void Scanner::ClassifyNumericLiteral()
     {
         if (*ptr == U_l || *ptr == U_L)
         {
+            if (*ptr == U_l && control.option.pedantic)
+            {
+                lex -> ReportMessage(StreamError::FAVOR_CAPITAL_L_SUFFIX,
+                                     current_token -> Location(),
+                                     ptr - lex -> InputBuffer());
+            }
+            
             len = ++ptr - cursor;
             current_token ->
                 SetSymbol(control.long_table.FindOrInsertLiteral(cursor, len));

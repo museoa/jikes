@@ -13,6 +13,7 @@
 #include "code.h"
 #include "ast.h"
 #include "case.h"
+#include <cwchar>
 
 #ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes { // Open namespace Jikes block
@@ -1667,6 +1668,56 @@ LiteralSymbol* LiteralLookupTable::FindOrInsertLiteral(const wchar_t* str,
     if (symbol_pool.Length() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
         Rehash();
     return symbol;
+}
+
+bool NameSymbol::Contains(wchar_t character) const
+{
+    for (wchar_t* ptr = name_; *ptr; ptr++)
+    {
+        if (*ptr == character)
+            return true;
+    }
+    return false;
+}
+
+//
+// JLS2 6.8 describes the well-established Java naming conventions.
+// See also "Effective Java", item 38.
+//
+
+bool NameSymbol::IsBadStyleForClass() const
+{
+    // JLS2 6.8.2
+    return Code::IsLower(*name_) || Contains(U_UNDERSCORE);
+}
+
+bool NameSymbol::IsBadStyleForConstantField() const
+{
+    // JLS2 6.8.5
+    for (wchar_t* ptr = name_; *ptr; ptr++)
+    {
+        if (Code::IsLower(*ptr))
+        return true;
+    }
+    return false;
+}
+
+bool NameSymbol::IsBadStyleForField() const
+{
+    // JLS2 6.8.4
+    return IsBadStyleForVariable();
+}
+
+bool NameSymbol::IsBadStyleForMethod() const
+{
+    // JLS2 6.8.3
+    return IsBadStyleForVariable();
+}
+
+bool NameSymbol::IsBadStyleForVariable() const
+{
+    // JLS2 6.8.3, 6.8.4, 6.8.6
+    return Code::IsUpper(*name_) || Contains(U_UNDERSCORE);
 }
 
 #ifdef HAVE_JIKES_NAMESPACE

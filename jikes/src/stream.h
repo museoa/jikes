@@ -61,7 +61,8 @@ public:
         LAST_CHARACTER_NOT_NEWLINE, // pedantic only
         DEPRECATED_IDENTIFIER_ASSERT, // from here, these are warnings only
         DEPRECATED_IDENTIFIER_ENUM,
-        DOLLAR_IN_IDENTIFIER
+        DOLLAR_IN_IDENTIFIER,
+        FAVOR_CAPITAL_L_SUFFIX
     };
 
 private:

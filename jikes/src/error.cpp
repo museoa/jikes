@@ -264,30 +264,37 @@ void SemanticError::Report(SemanticErrorKind msg_code,
     assert(msg_code < _num_kinds);
     if (clone_count)
         return;
+
+    //
+    // Some warning severities are dependent on command-line options, and
+    // may need rewriting from what we have in warning[].
+    //
     switch (warning[msg_code])
     {
     case NAMED_WEAK_OFF:
     case NAMED_STRONG_OFF:
-        warning[msg_code] = DISABLED;
-        // fallthrough
     case DISABLED:
+        warning[msg_code] = DISABLED;
         return;
     case NAMED_WEAK_ON:
-        warning[msg_code] = WEAK_WARNING;
-        // fallthrough
     case WEAK_WARNING:
-        if (control.option.nowarn)
-            return;
+        warning[msg_code] = WEAK_WARNING;
         break;
     case NAMED_STRONG_ON:
-        warning[msg_code] = STRONG_WARNING;
-        // fallthrough
     case STRONG_WARNING:
-        if (control.option.nowarn && ! control.option.zero_defect)
-            return;
+        warning[msg_code] = control.option.zero_defect ? MANDATORY_ERROR
+                                                       : STRONG_WARNING;
         break;
     case MANDATORY_ERROR:
         break;
+    }
+
+    //
+    // Don't report non-mandatory errors if we're in -nowarn mode.
+    //
+    if (control.option.nowarn && warning[msg_code] != MANDATORY_ERROR)
+    {
+        return;
     }
 
     int i = error.NextIndex();
@@ -508,7 +515,30 @@ void SemanticError::StaticInitializer()
         WEAK_WARNING;
 
     //
-    // Something stronger warnings, but code will be generated anyway.
+    // Warnings based on advice in the book "Effective Java" by Josh Bloch.
+    //
+    warning[EJ_AVOID_OVERLOADING_EQUALS] = STRONG_WARNING;
+    warning[EJ_EMPTY_CATCH_BLOCK] = WEAK_WARNING;
+    warning[EJ_EMPTY_FINALLY_BLOCK] = STRONG_WARNING;
+    warning[EJ_EQUALS_WITHOUT_HASH_CODE] = STRONG_WARNING;
+    warning[EJ_HASH_CODE_WITHOUT_EQUALS] = STRONG_WARNING;
+    warning[EJ_INTERFACE_DOES_NOT_DEFINE_TYPE] = WEAK_WARNING;
+    warning[EJ_MISSING_PRIVATE_CONSTRUCTOR] = WEAK_WARNING;
+    warning[EJ_OVERLY_GENERAL_THROWS_CLAUSE] = WEAK_WARNING;
+    warning[EJ_PUBLIC_STATIC_FINAL_ARRAY_FIELD] = WEAK_WARNING;
+    warning[EJ_RETURN_OF_NULL_ARRAY] = WEAK_WARNING;
+    
+    //
+    // Naming convention warnings.
+    //
+    warning[UNCONVENTIONAL_CLASS_NAME] = WEAK_WARNING;
+    warning[UNCONVENTIONAL_CONSTANT_FIELD_NAME] = WEAK_WARNING;
+    warning[UNCONVENTIONAL_FIELD_NAME] = WEAK_WARNING;
+    warning[UNCONVENTIONAL_METHOD_NAME] = WEAK_WARNING;
+    warning[UNCONVENTIONAL_VARIABLE_NAME] = WEAK_WARNING;
+
+    //
+    // Somewhat stronger warnings, but code will be generated anyway.
     //
     warning[OBSOLESCENT_BRACKETS] = STRONG_WARNING;
     warning[BAD_INPUT_FILE] = STRONG_WARNING;
@@ -544,11 +574,15 @@ void SemanticError::StaticInitializer()
 SemanticError::NamedError SemanticError::named_errors[] =
 {
     { "modifier-order", "modifiers appearing out of order",
-      RECOMMENDED_MODIFIER_ORDER, NAMED_WEAK_ON },
+      RECOMMENDED_MODIFIER_ORDER, NAMED_WEAK_OFF },
     { "redundant-modifiers", "modifiers which are implied",
-      REDUNDANT_MODIFIER, NAMED_WEAK_ON },
+      REDUNDANT_MODIFIER, NAMED_WEAK_OFF },
     { "switchcheck", "fallthrough between switch statement cases",
       SWITCH_FALLTHROUGH, NAMED_WEAK_ON },
+    //this next one is really a meta switch, it is special cased below
+    // to turn on/off several flags instead of just one
+    { "naming-convention", "names which differ from standard convention",
+      UNCONVENTIONAL_NAMES, NAMED_WEAK_ON },
 
     // The table must end with this entry. New items *MUST* be added above.
     { 0, 0, BAD_ERROR, DISABLED }
@@ -566,7 +600,8 @@ void SemanticError::PrintNamedWarnings()
         printf("+P[no-]%-*s", SPACE_FOR_NAME, pair -> name);
         if (strlen(pair -> name) >= SPACE_FOR_NAME)
             printf("\n                      ");
-        printf("warn about %s\n", pair -> reason);
+        printf("warn about %s, %sactivated by +P\n", pair -> reason,
+	       ((pair->level == NAMED_WEAK_OFF)?"not ":""));
     }
 }
 
@@ -581,7 +616,19 @@ void SemanticError::EnableDefaultWarnings()
     {
         assert(pair -> level > DISABLED);
         if (warning[pair -> code] > DISABLED)
-            warning[pair -> code] = pair -> level;
+	    if (pair -> code == UNCONVENTIONAL_NAMES)
+	    {
+		//This is a meta flag for several warnings actually
+		warning[UNCONVENTIONAL_CLASS_NAME] = pair -> level;
+		warning[UNCONVENTIONAL_CONSTANT_FIELD_NAME] = pair -> level;
+		warning[UNCONVENTIONAL_FIELD_NAME] = pair -> level;
+		warning[UNCONVENTIONAL_METHOD_NAME] = pair -> level;
+		warning[UNCONVENTIONAL_VARIABLE_NAME] = pair -> level;
+	    }
+	    else
+	    {
+		warning[pair -> code] = pair -> level;
+	    }
     }
 }
 
@@ -599,30 +646,54 @@ bool SemanticError::ProcessWarningSwitch(const char* image)
 {
     StaticInitializer();
     bool enable = true;
+    SemanticError::WarningLevel name_value;
     if (strncmp(image, "no-", 3) == 0)
     {
         image += 3;
         enable = false;
     }
-
     for (NamedError* pair = named_errors; pair -> name; ++pair)
     {
-        if (strcmp(pair -> name, image) == 0)
-        {
-            switch(pair -> level)
-            {
-            case NAMED_STRONG_ON:
-            case NAMED_STRONG_OFF:
-                warning[pair -> code] = enable ? STRONG_WARNING : DISABLED;
-                return true;
-            case NAMED_WEAK_ON:
-            case NAMED_WEAK_OFF:
-                warning[pair -> code] = enable ? WEAK_WARNING : DISABLED;
-                return true;
-            default:
-                assert(false && "Invalid default level for named warning");
-            }
-        }
+	if (strcmp(pair -> name, image) == 0)
+	{
+	    if (pair -> code == UNCONVENTIONAL_NAMES)
+	    {
+		//This is a meta flag for several warnings actually
+		if (enable && (pair -> level == NAMED_STRONG_ON ||
+			       pair -> level == NAMED_STRONG_OFF)  )
+		    name_value = STRONG_WARNING;
+		else if (enable && (pair -> level == NAMED_WEAK_ON ||
+				     pair -> level == NAMED_WEAK_OFF)  )
+		    name_value = STRONG_WARNING;
+		else
+		{
+		    assert((!enable) && "how did we get here?");
+		    name_value = DISABLED;
+		}
+		warning[UNCONVENTIONAL_CLASS_NAME] = name_value;
+		warning[UNCONVENTIONAL_CONSTANT_FIELD_NAME] = name_value;
+		warning[UNCONVENTIONAL_FIELD_NAME] = name_value;
+		warning[UNCONVENTIONAL_METHOD_NAME] = name_value;
+		warning[UNCONVENTIONAL_VARIABLE_NAME] = name_value;
+		return true;
+	    }
+	    else
+	    {
+		switch(pair -> level)
+		{
+		    case NAMED_STRONG_ON:
+		    case NAMED_STRONG_OFF:
+			warning[pair -> code] = enable ? STRONG_WARNING : DISABLED;
+			return true;
+		    case NAMED_WEAK_ON:
+		    case NAMED_WEAK_OFF:
+			warning[pair -> code] = enable ? WEAK_WARNING : DISABLED;
+			return true;
+		    default:
+			assert(false && "Invalid default level for named warning");
+		}
+	    }
+	}
     }
     return false;
 }
@@ -1168,6 +1239,69 @@ void SemanticError::InitializeMessages()
     messages[VOID_TO_STRING] =
         "Attempt to convert a void expression into java.lang.String.";
 
+    // "Effective Java" warnings.
+    messages[EJ_AVOID_OVERLOADING_EQUALS] =
+        "The class \"%1\" has an \"equals\" method with parameter of a type "
+        "other than \"java.lang.Object\". This will overload, rather than "
+        "override, \"java.lang.Object.equals\". "
+        "(See item 7 of \"Effective Java\".)";
+    messages[EJ_EMPTY_CATCH_BLOCK] =
+        "An empty catch block defeats the purpose of exceptions. "
+        "(See item 47 of \"Effective Java\".)";
+    messages[EJ_EMPTY_FINALLY_BLOCK] =
+        "An empty finally block is unnecessary and misleading.";
+    messages[EJ_EQUALS_WITHOUT_HASH_CODE] =
+        "The class \"%1\" overrides \"equals\" without overriding "
+        "\"hashCode\". "
+        "Equal objects must return equal values from \"hashCode\", so always "
+        "override \"hashCode\" when you override \"equals\". "
+        "(See item 8 of \"Effective Java\".)";
+    messages[EJ_HASH_CODE_WITHOUT_EQUALS] =
+        "The class \"%1\" overrides \"hashCode\" without overriding "
+        "\"equals\". "
+        "Equal objects must return equal values from \"hashCode\", and "
+        "though this may still be the case here, overriding \"hashCode\" "
+        "without overriding \"equals\" is usually a mistake. "
+        "(See item 8 of \"Effective Java\".)";
+    messages[EJ_INTERFACE_DOES_NOT_DEFINE_TYPE] =
+        "An interface should define a type with behavior. "
+        "Should \"%1\" have been an enum or a noninstantiable utility class? "
+        "(See item 7 of \"Effective Java\".)";
+    messages[EJ_MISSING_PRIVATE_CONSTRUCTOR] =
+        "A private constructor would enforce the noninstantiability of \"%1\". "
+        "(See item 3 of \"Effective Java\".)";
+    messages[EJ_OVERLY_GENERAL_THROWS_CLAUSE] =
+        "An overly-general throws clause obscures which exceptions may "
+        "actually be thrown. "
+        "(See item 44 of \"Effective Java\".)";
+    messages[EJ_PUBLIC_STATIC_FINAL_ARRAY_FIELD] =
+        "The field \"%1\" can be modified by clients. It is nearly always "
+        "wrong to have a public static final array field. The public array "
+        "should be replaced by a private array and a public immutable "
+        "\"java.util.List\". "
+        "(See item 12 of \"Effective Java\".)";
+    messages[EJ_RETURN_OF_NULL_ARRAY] =
+        "Return a zero-length array instead of null. This avoids the need "
+        "for special-case code in the caller. "
+        "(See item 27 of \"Effective Java\".)";
+    
+    // Naming convention warnings.
+    messages[UNCONVENTIONAL_CLASS_NAME] =
+        "Use names ThatLookLikeThis for classes such as \"%1\". "
+        "(See item 38 of \"Effective Java\".)";
+    messages[UNCONVENTIONAL_CONSTANT_FIELD_NAME] =
+        "Use names THAT_LOOK_LIKE_THIS for fields such as \"%1\". "
+        "(See item 38 of \"Effective Java\".)";
+    messages[UNCONVENTIONAL_FIELD_NAME] =
+        "Use names thatLookLikeThis for fields such as \"%1\". "
+        "(See item 38 of \"Effective Java\".)";
+    messages[UNCONVENTIONAL_METHOD_NAME] =
+        "Use names thatLookLikeThis for methods such as \"%1\". "
+        "(See item 38 of \"Effective Java\".)";
+    messages[UNCONVENTIONAL_VARIABLE_NAME] =
+        "Use names thatLookLikeThis for variables such as \"%1\". "
+        "(See item 38 of \"Effective Java\".)";
+    
     // Type and package related errors.
     messages[DUPLICATE_INNER_TYPE_NAME] =
         "The nested type name \"%1\" is illegal, as it is enclosed in "

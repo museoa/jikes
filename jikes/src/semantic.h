@@ -835,6 +835,7 @@ private:
     void ProcessTypeHeaders(TypeSymbol*, AstClassBody*);
     void ProcessConstructorMembers(AstClassBody*);
     void ProcessMethodMembers(AstClassBody*);
+    void ProcessClassBodyForEffectiveJavaChecks(AstClassBody*);
     void ProcessFieldMembers(AstClassBody*);
     void ProcessMembers(AstClassBody*);
     void CompleteSymbolTable(AstClassBody*);
@@ -976,12 +977,13 @@ private:
     AccessFlags ProcessInterfaceMethodModifiers(AstMethodDeclaration*);
     AccessFlags ProcessInitializerModifiers(AstInitializerDeclaration*);
 
-    // Implemented in body.cpp - process method bodies
+    // Implemented in decl.cpp - process declarations
     void AddDefaultConstructor(TypeSymbol*);
     void ProcessConstructorDeclaration(AstConstructorDeclaration*);
     void ProcessMethodDeclaration(AstMethodDeclaration*);
     void ProcessFieldDeclaration(AstFieldDeclaration*);
     void ProcessFormalParameters(BlockSymbol*, AstMethodDeclarator*);
+    bool FieldDeclarationIsNotSerialVersionUID(NameSymbol*, TypeSymbol*);
     TypeSymbol* ImportType(LexStream::TokenIndex, NameSymbol*);
     TypeSymbol* FindPrimitiveType(AstPrimitiveType*);
     TypeSymbol* FindType(LexStream::TokenIndex);
