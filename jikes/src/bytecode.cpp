@@ -1356,7 +1356,6 @@ void ByteCode::EmitBlockStatement(AstBlock *block)
     //
     if (IsLabelUsed(method_stack -> TopBreakLabel())) // need define only if used
         DefineLabel(method_stack -> TopBreakLabel());
-
     CompleteLabel(method_stack -> TopBreakLabel());
 
     if (this_control.option.g)
@@ -1365,14 +1364,14 @@ void ByteCode::EmitBlockStatement(AstBlock *block)
         {
             VariableSymbol *variable = block -> LocallyDefinedVariable(i);
 
+#ifdef TEST
+            assert(method_stack -> StartPc(variable) != 0xFFFF);
+#endif
 #ifdef DUMP
 Coutput << "(56) The symbol \"" << variable -> Name()
         << "\" numbered " << variable -> LocalVariableIndex()
         << " was released\n";
 Coutput.flush();
-#endif
-#ifdef TEST
-            assert(method_stack -> StartPc(variable) != 0xFFFF);
 #endif
             local_variable_table_attribute -> AddLocalVariable(method_stack -> StartPc(variable),
                                                                code_attribute -> CodeLength(),
@@ -1642,14 +1641,14 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
             {
                 VariableSymbol *variable = switch_block_statement -> LocallyDefinedVariable(i);
 
+#ifdef TEST
+                assert(method_stack -> StartPc(variable) != 0xFFFF);
+#endif
 #ifdef DUMP
 Coutput << "(57) The symbol \"" << variable -> Name()
         << "\" numbered " << variable -> LocalVariableIndex()
         << " was released\n";
 Coutput.flush();
-#endif
-#ifdef TEST
-                assert(method_stack -> StartPc(variable) != 0xFFFF);
 #endif
                 local_variable_table_attribute -> AddLocalVariable(method_stack -> StartPc(variable),
                                                                    code_attribute -> CodeLength(),
@@ -1674,14 +1673,14 @@ Coutput.flush();
         {
             VariableSymbol *variable = switch_block -> LocallyDefinedVariable(i);
 
+#ifdef TEST
+            assert(method_stack -> StartPc(variable) != 0xFFFF);
+#endif
 #ifdef DUMP
 Coutput << "(58) The symbol \"" << variable -> Name()
         << "\" numbered " << variable -> LocalVariableIndex()
         << " was released\n";
 Coutput.flush();
-#endif
-#ifdef TEST
-            assert(method_stack -> StartPc(variable) != 0xFFFF);
 #endif
             local_variable_table_attribute -> AddLocalVariable(method_stack -> StartPc(variable),
                                                                code_attribute -> CodeLength(),
@@ -1707,21 +1706,21 @@ Coutput.flush();
         CompleteLabel(case_labels[j]);
     }
 
+    //
+    // If the switch statement contains a default case, we clean up
+    // the default label here.
+    //
     if (switch_statement -> default_case.switch_block_statement)
         CompleteLabel(default_label);
 
-    // define target of break label
+    //
+    // If this switch statement can be "broken", we define the break label here.
+    //
     if (IsLabelUsed(method_stack -> TopBreakLabel())) // need define only if used
+    {
         DefineLabel(method_stack -> TopBreakLabel());
-
-    if (switch_statement -> default_case.switch_block_statement)
-        CompleteLabel(default_label);
-
-    //
-    // define target of break label
-    //
-    if (IsLabelUsed(method_stack -> TopBreakLabel())) // need define only if used
         CompleteLabel(method_stack -> TopBreakLabel());
+    }
 
     delete [] case_labels;
 
@@ -1736,6 +1735,15 @@ Coutput.flush();
 //
 void ByteCode::EmitTryStatement(AstTryStatement *statement)
 {
+    //
+    // If the finally label in the surrounding block is used by a try statement,
+    // it is cleared after the finally block associated with the try statement
+    // has been processed.
+    //
+    assert(method_stack -> TopFinallyLabel().uses.Length() == 0);
+    assert(method_stack -> TopFinallyLabel().defined == false);
+    assert(method_stack -> TopFinallyLabel().definition == 0);
+
     int start_try_block_pc = code_attribute -> CodeLength(); // start pc
 
     EmitBlockStatement(statement -> block);
@@ -1753,13 +1761,8 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
     int end_try_block_pc = code_attribute -> CodeLength(),
         special_end_pc = end_try_block_pc; // end_pc for "special" handler
 
-    assert(method_stack -> TopFinallyLabel().uses.Length() == 0 &&
-           method_stack -> TopFinallyLabel().defined == false &&
-           method_stack -> TopFinallyLabel().definition == 0);
-
     Label &finally_label = method_stack -> TopFinallyLabel(), // use the label in the block immediately enclosing try statement.
           end_label;
-
     if (statement -> block -> can_complete_normally)
     {
         if (statement -> finally_clause_opt)
@@ -1899,10 +1902,9 @@ void ByteCode::ProcessAbruptExit(int to_lev, TypeSymbol *return_type)
         int nesting_level = method_stack -> NestingLevel(i),
             enclosing_level = method_stack -> NestingLevel(i - 1);
         AstBlock *block = method_stack -> Block(nesting_level);
-
-        if (return_type)
+        if (block -> block_tag == AstBlock::TRY_CLAUSE_WITH_FINALLY)
         {
-            if (block -> block_tag == AstBlock::TRY_CLAUSE_WITH_FINALLY)
+            if (return_type)
             {
                 Label &finally_label = method_stack -> FinallyLabel(enclosing_level);
                 int variable_index = method_stack -> Block(enclosing_level) -> block_symbol -> try_variable_index + 2;
@@ -1914,7 +1916,15 @@ void ByteCode::ProcessAbruptExit(int to_lev, TypeSymbol *return_type)
 
                 LoadLocal(variable_index, return_type);
             }
-            else if (block -> block_tag == AstBlock::SYNCHRONIZED)
+            else
+            {
+                PutOp(OP_JSR);
+                UseLabel(method_stack -> FinallyLabel(enclosing_level), 2, 1);
+            }
+        }
+        else if (block -> block_tag == AstBlock::SYNCHRONIZED)
+        {
+            if (return_type)
             {
                 Label &monitor_label = method_stack -> MonitorLabel(enclosing_level);
                 int variable_index = block -> block_symbol -> synchronized_variable_index + 2;
@@ -1926,15 +1936,11 @@ void ByteCode::ProcessAbruptExit(int to_lev, TypeSymbol *return_type)
 
                 LoadLocal(variable_index, return_type);
             }
-        }
-        else
-        {
-            PutOp(OP_JSR);
-
-            if (block -> block_tag == AstBlock::TRY_CLAUSE_WITH_FINALLY)
-                 UseLabel(method_stack -> FinallyLabel(enclosing_level), 2, 1);
-            else if (block -> block_tag == AstBlock::SYNCHRONIZED)
-                 UseLabel(method_stack -> MonitorLabel(enclosing_level), 2, 1);
+            else
+            {
+                PutOp(OP_JSR);
+                UseLabel(method_stack -> MonitorLabel(enclosing_level), 2, 1);
+            }
         }
     }
 

@@ -83,39 +83,53 @@ public:
     {
         if (top_index > 0)
         {
-#ifdef TEST
-            nesting_level[top_index - 1] = 0;
-            break_labels[top_index - 1].uses.Reset();
-            continue_labels[top_index - 1].uses.Reset();
-            finally_labels[top_index - 1].uses.Reset();
-            monitor_labels[top_index - 1].uses.Reset();
-            blocks[top_index - 1] = NULL;
-            (void) memset(local_variables_start_pc[nesting_level[top_index - 1]], 0xFF, size * sizeof(u2));
-#endif
             top_index--;
+#ifdef TEST
+            int level = nesting_level[top_index];
+
+            nesting_level[top_index] = 0;
+            break_labels[level].Reset();
+            continue_labels[level].Reset();
+            finally_labels[level].Reset();
+            monitor_labels[level].Reset();
+            blocks[level] = NULL;
+            (void) memset(local_variables_start_pc[level], 0xFF, size * sizeof(u2));
+#endif
         }
         else assert(false);
     }
 
     int Size() { return top_index; }
 
+#ifdef TEST
+    void AssertIndex(int k)
+    {
+        for (int i = 0; i < Size(); i++)
+            if (nesting_level[i] == k)
+                return;
+        assert(0);
+    }
+#else
+#define AssertIndex(x)
+#endif
+
     int TopNestingLevel()   { assert(top_index > 0); return nesting_level[top_index - 1]; }
-    int NestingLevel(int i) { assert(i >= 0 && i < stack_size); return nesting_level[i]; }
+    int NestingLevel(int i) { AssertIndex(i); return nesting_level[i]; }
 
     Label &TopBreakLabel()    { return break_labels[TopNestingLevel()]; }
-    Label &BreakLabel(int i)    { assert(i >= 0 && i < stack_size); return break_labels[i]; }
+    Label &BreakLabel(int i)  { AssertIndex(i); return break_labels[i]; }
 
-    Label &TopContinueLabel() { return continue_labels[TopNestingLevel()]; }
-    Label &ContinueLabel(int i) { assert(i >= 0 && i < stack_size); return continue_labels[i]; }
+    Label &TopContinueLabel()   { return continue_labels[TopNestingLevel()]; }
+    Label &ContinueLabel(int i) { AssertIndex(i); return continue_labels[i]; }
 
     Label &TopFinallyLabel()    { return finally_labels[TopNestingLevel()]; }
-    Label &FinallyLabel(int i)  { assert(i >= 0 && i < stack_size); return finally_labels[i]; }
+    Label &FinallyLabel(int i)  { AssertIndex(i); return finally_labels[i]; }
 
     Label &TopMonitorLabel()   { return monitor_labels[TopNestingLevel()]; }
-    Label &MonitorLabel(int i) { assert(i >= 0 && i < stack_size); return monitor_labels[i]; }
+    Label &MonitorLabel(int i) { AssertIndex(i); return monitor_labels[i]; }
 
     AstBlock *TopBlock()   { return blocks[TopNestingLevel()]; }
-    AstBlock *Block(int i) { assert(i >= 0 && i < stack_size); return blocks[i]; }
+    AstBlock *Block(int i) { AssertIndex(i); return blocks[i]; }
 
     //
     //
@@ -187,10 +201,6 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         last_label_pc,        // pc for last (closest to end) label
         last_op_pc,           // pc of last operation emitted
         last_op_nop,          // set if last operation was NOP.
-    //
-    // TODO: REMOVE THIS
-    //
-    //        this_block_depth,     // depth of current block
         stack_depth,          // current stack depth;
         max_stack,
         max_block_depth,
@@ -210,10 +220,6 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         last_label_pc = 0;
         last_op_pc = 0;
         last_op_nop = 0;
-    //
-    // TODO: REMOVE THIS
-    //
-    //        this_block_depth = 0;
 
         stack_depth = 0;
 
