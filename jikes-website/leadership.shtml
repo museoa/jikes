@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>
   <head>
-    <TITLE>IBM - developerWorks - Open Source Software - Jikes - Leadership</TITLE>
+    <TITLE>Jikes - Leadership</TITLE>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
   </head>
   <BODY bgcolor="#ffffff">
@@ -66,7 +66,7 @@ a few months.
 <p>Contributors are listed on the <a href="people.shtml#contrib">people page</a>.
 
 <h1>Copyright notice for contributions</h1>
-<p>Jikes is covered by the <A HREF="/developerworks/opensource/license10.html">IBM Public License</A>.
+<p>Jikes is covered by the <A HREF="http://oss.software.ibm.com/developerworks/opensource/license10.html">IBM Public License</A>.
 All further contributions must be made under the same terms. All contributions must contain the following
 copyright notice:
 <BLOCKQUOTE><code>Copyright &copy; <FONT COLOR="GREEN">{date} {name of contributor}</FONT> and others. All rights reserved.<BR CLEAR="LEFT">
