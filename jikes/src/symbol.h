@@ -24,6 +24,7 @@
 #include "depend.h"
 #include "access.h"
 #include "tuple.h"
+#include "case.h"
 
 class Semantic;
 class SemanticEnvironment;
@@ -558,7 +559,6 @@ public:
                                      : (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0));
     }
 
-    void SetFlags(AccessFlags variable_access) { access_flags = variable_access.access_flags; }
     void SetContainingType(TypeSymbol *containing_type_) { containing_type = containing_type_; }
     void SetBlockSymbol(BlockSymbol *block_symbol_) { block_symbol = block_symbol_; }
     void SetSignature(Control &, VariableSymbol * = NULL);
@@ -909,8 +909,6 @@ public:
 
     PackageSymbol *ContainingPackage() { return outermost_type -> owner -> PackageCast(); }
 
-    void SetFlags(AccessFlags variable_access) { access_flags = variable_access.access_flags; }
-
     bool IsNestedIn(TypeSymbol *);
 
     bool IsNested() { return outermost_type != this; }
@@ -1050,6 +1048,7 @@ private:
     NameSymbol *external_name_symbol;
 
     SymbolTable *table;
+    SymbolMap *local_shadow_map;
 
     unsigned short status;
 
@@ -1153,7 +1152,7 @@ private:
 class VariableSymbol : public Symbol, public AccessFlags
 { 
 public:
-    Ast *declarator;
+    AstVariableDeclarator *declarator;
 
     NameSymbol *name_symbol;
     Symbol     *owner;
@@ -1213,7 +1212,6 @@ public:
 
     virtual ~VariableSymbol() { delete [] signature_string; }
 
-    void SetFlags(AccessFlags variable_access) { access_flags = variable_access.access_flags; }
     void SetOwner(Symbol *owner_) { owner = owner_; }
 
     void SetLocalVariableIndex(int index)
