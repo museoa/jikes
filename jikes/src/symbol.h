@@ -931,7 +931,15 @@ public:
 
     bool IsNested() { return outermost_type != this; }
 
-    bool IsInner() { return IsLocal() || Anonymous() || (IsNested() && (! ACC_STATIC())); }
+    //
+    // FIXME: Technically, JLS2 8.1.2 states that ALL local and anonymous
+    // classes are inner classes, even when they occur in a static context.
+    // However, other locations in jikes currently rely on the current broken
+    // behavior of IsInner returning false if the class is in a static
+    // context; this should be fixed after jikes 1.15.
+    //
+    bool IsInner() { return /*IsLocal() || Anonymous() || */
+                         (IsNested() && (! ACC_STATIC())); }
 
     bool IsLocal()
     {

@@ -1,3 +1,9 @@
+2001-09-14  Jerry Veldhuis  <jerry@invidi.com>
+
+	* src/symbol.h (IsInner): Fix a regression caused by patch 90.
+	This patch is a hack, and a cleaner version should be made before
+	jikes 1.16 - patch 185, from bug 1895.
+
 2001-09-13  Eric Blake  <ebb9@email.byu.edu>
 	    Michael Ernst  <mernst@lcs.mit.edu>
 	
