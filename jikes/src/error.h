@@ -157,6 +157,7 @@ class SemanticError
         IMPORT_FROM_UNNAMED_PACKAGE,
         DUPLICATE_ON_DEMAND_IMPORT,
         UNKNOWN_ON_DEMAND_IMPORT,
+        IMPORT_NOT_CANONICAL,
         NOT_A_TYPE,
         NOT_A_CLASS,
         NOT_AN_INTERFACE,
@@ -463,6 +464,7 @@ private:
     static wchar_t *PrintIMPORT_FROM_UNNAMED_PACKAGE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintDUPLICATE_ON_DEMAND_IMPORT(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNKNOWN_ON_DEMAND_IMPORT(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintIMPORT_NOT_CANONICAL(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNOT_A_TYPE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNOT_A_CLASS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNOT_AN_INTERFACE(ErrorInfo &, LexStream *, Control &);

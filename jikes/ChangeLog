@@ -4,6 +4,17 @@
 
 2002-07-08  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/decl.cpp (ProcessTypeHeader, ProcessTypeHeaders),
+	(ProcessImportQualifiedName, ProcessSingleTypeImportDeclaration),
+	(ProcessTypeImportOnDemandDeclaration, ImportType),
+	(ProcessInterface, CheckNestedTypeDuplication): Improve detection
+	of inaccessible supertypes and bad type importing - bugs 122, 412,
+	2686, 2688, 2695.
+	* src/error.h:
+	* src/error.cpp (IMPORT_NOT_CANONICAL): Add new error.
+	
+2002-07-08  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/class.h (SetMax): New function.
 	* src/bytecode.cpp (EmitStatement, DefineLabel): Improve dead
 	branch handling in if statements - bug 2895.

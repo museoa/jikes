@@ -489,9 +489,17 @@ void Semantic::CheckNestedTypeDuplication(SemanticEnvironment *env,
     //
     // First check to see if we have a duplication at the same level...
     //
-    TypeSymbol *old_type = (env -> symbol_table.Size() > 0
-                            ? env -> symbol_table.Top() -> FindTypeSymbol(name_symbol)
-                            : env -> Type() -> FindTypeSymbol(name_symbol));
+    TypeSymbol *old_type = NULL;
+    if (env -> symbol_table.Size() > 0)
+    {
+        for (int i = env -> symbol_table.Size(); --i >= 0; )
+        {
+            old_type = env -> symbol_table[i] -> FindTypeSymbol(name_symbol);
+            if (old_type)
+                break;
+        }
+    }
+    else old_type = env -> Type() -> FindTypeSymbol(name_symbol);
     if (old_type)
     {
         ReportSemError(SemanticError::DUPLICATE_TYPE_DECLARATION,
@@ -872,24 +880,33 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration *class_declaration)
                            this_type -> ContainingPackage() -> PackageName(),
                            this_type -> ExternalName());
         }
-        else if (this_type -> super -> ACC_INTERFACE())
+        else if (super_type -> ACC_INTERFACE())
         {
             ReportSemError(SemanticError::NOT_A_CLASS,
                            class_declaration -> super_opt -> LeftToken(),
                            class_declaration -> super_opt -> RightToken(),
-                           this_type -> super -> ContainingPackage() -> PackageName(),
-                           this_type -> super -> ExternalName());
+                           super_type -> ContainingPackage() -> PackageName(),
+                           super_type -> ExternalName());
 
             SetObjectSuperType(this_type,
                                class_declaration -> identifier_token);
         }
-        else if (this_type -> super -> ACC_FINAL())
+        else if (super_type -> ACC_FINAL())
         {
              ReportSemError(SemanticError::SUPER_IS_FINAL,
                             class_declaration -> super_opt -> LeftToken(),
                             class_declaration -> super_opt -> RightToken(),
-                            this_type -> super -> ContainingPackage() -> PackageName(),
-                            this_type -> super -> ExternalName());
+                            super_type -> ContainingPackage() -> PackageName(),
+                            super_type -> ExternalName());
+        }
+        if ((! super_type -> ACC_PUBLIC() &&
+             super_type -> ContainingPackage() != this_package) ||
+            (super_type -> ACC_PRIVATE() &&
+             super_type -> outermost_type != this_type -> outermost_type))
+        {
+            ReportTypeInaccessible(class_declaration -> super_opt -> LeftToken(),
+                                   class_declaration -> super_opt -> RightToken(),
+                                   super_type);
         }
     }
 
@@ -1217,18 +1234,6 @@ void Semantic::ProcessTypeHeaders(AstClassDeclaration *class_declaration)
                           (class_declaration -> super_opt
                            ? class_declaration -> super_opt -> LeftToken()
                            : class_declaration -> identifier_token));
-             //
-             // Also, check whether or not the super type of this outermost
-             // type is accessible.
-             //
-             if (class_declaration -> super_opt)
-             {
-                 // we need an environment for the type check.
-                 state_stack.Push(this_type -> semantic_environment);
-                 TypeAccessCheck(class_declaration -> super_opt,
-                                 this_type -> super);
-                 state_stack.Pop();
-             }
        }
 
         for (int i = 0; i < class_declaration -> NumInterfaces(); i++)
@@ -2203,34 +2208,53 @@ void Semantic::ProcessImportQualifiedName(AstExpression *name)
         Symbol *symbol = field_access -> base -> symbol;
 
         TypeSymbol *type = symbol -> TypeCast();
+        NameSymbol *name_symbol =
+            lex_stream -> NameSymbol(field_access -> identifier_token);
         if (type) // The base name is a type
         {
+            TypeSymbol *inner_type = NULL;
             if (type == control.no_type) // Avoid chain-reaction errors.
             {
                 field_access -> symbol = control.no_type;
                 return;
             }
-
-            if (! type -> NestedTypesProcessed())
-                type -> ProcessNestedTypeSignatures(this,
-                                                    field_access -> identifier_token);
-            NameSymbol *name_symbol =
-                lex_stream -> NameSymbol(field_access -> identifier_token);
-            TypeSymbol *inner_type = type -> FindTypeSymbol(name_symbol);
-            if (! inner_type)
-                inner_type = GetBadNestedType(type,
+            if (! type -> expanded_type_table)
+                ComputeTypesClosure(type, field_access -> identifier_token);
+            TypeShadowSymbol *type_shadow_symbol = type ->
+                expanded_type_table -> FindTypeShadowSymbol(name_symbol);
+            if (type_shadow_symbol)
+            {
+                //
+                // Only canonical names may be used in import statements, hence
+                // the extra filter on the containing type being correct.
+                //
+                inner_type = FindTypeInShadow(type_shadow_symbol,
                                               field_access -> identifier_token);
-            else if (! (inner_type -> ACC_PUBLIC() ||
-                        inner_type -> ContainingPackage() == this_package))
-                 ReportTypeInaccessible(field_access, inner_type);
+            }
+
+            if (! inner_type)
+                inner_type = control.no_type;
+            else if (type != inner_type -> owner)
+            {
+                ReportSemError(SemanticError::IMPORT_NOT_CANONICAL,
+                               field_access -> LeftToken(),
+                               field_access -> RightToken(),
+                               name_symbol -> Name(),
+                               inner_type -> ContainingPackage() -> PackageName(),
+                               inner_type -> ExternalName());
+            }
+            else if (inner_type -> ACC_PRIVATE() ||
+                     (! inner_type -> ACC_PUBLIC() &&
+                      inner_type -> ContainingPackage() != this_package))
+            {
+                ReportTypeInaccessible(field_access, inner_type);
+            }
             type = inner_type;
             field_access -> symbol = type; // save the type to which this expression was resolved for later use...
         }
         else
         {
             PackageSymbol *package = symbol -> PackageCast();
-            NameSymbol *name_symbol =
-                lex_stream -> NameSymbol(field_access -> identifier_token);
             type = package -> FindTypeSymbol(name_symbol);
             if (! type)
             {
@@ -2241,18 +2265,23 @@ void Semantic::ProcessImportQualifiedName(AstExpression *name)
                                     field_access -> identifier_token);
             }
             else if (type -> SourcePending())
-                 control.ProcessHeaders(type -> file_symbol);
+                control.ProcessHeaders(type -> file_symbol);
 
             //
             // If the field_access was resolved to a type, save it later use.
             // Otherwise, assume the field_access is a package name.
             //
             if (type)
-                 field_access -> symbol = type;
+            {
+                if (! type -> ACC_PUBLIC() &&
+                    type -> ContainingPackage() != this_package)
+                {
+                    ReportTypeInaccessible(field_access, type);
+                }
+                field_access -> symbol = type;
+            }
             else
             {
-                NameSymbol *name_symbol =
-                    lex_stream -> NameSymbol(field_access -> identifier_token);
                 PackageSymbol *subpackage =
                     package -> FindPackageSymbol(name_symbol);
                 if (! subpackage)
@@ -2400,8 +2429,13 @@ void Semantic::ProcessTypeImportOnDemandDeclaration(AstImportDeclaration *import
 
     //
     // Two or more type-import-on-demand may name the same package; the effect
-    // is as if there were only one such declaration.
+    // is as if there were only one such declaration. Likewise, importing the
+    // current package or java.lang.* is ok, although useless.
+    // TODO: In pedantic mode, warn about duplicate imports of the same package,
+    // of the current package, or of java.lang.*.
     //
+    if (symbol == this_package)
+        return;
     for (int i = 0; i < import_on_demand_packages.Length(); i++)
     {
         if (symbol == import_on_demand_packages[i])
@@ -2644,9 +2678,6 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_d
                            file_location.location);
         }
     }
-
-    if (! (type -> ACC_PUBLIC() || type -> ContainingPackage() == this_package))
-        ReportTypeInaccessible(import_declaration -> name, type);
 
     //
     //
@@ -4047,70 +4078,94 @@ TypeSymbol *Semantic::FindPrimitiveType(AstPrimitiveType *primitive_type)
 TypeSymbol *Semantic::ImportType(LexStream::TokenIndex identifier_token,
                                  NameSymbol *name_symbol)
 {
+    //
+    // Inaccessible types are ignored. However, for a nicer error message, we
+    // keep track of the first inaccessible type found, while leaving location
+    // as NULL, in case we don't find an accessible type. Once location is set,
+    // we are guaranteed an accessible type, and start looking for duplicates.
+    //
     TypeSymbol *type = NULL;
-    PackageSymbol *package = NULL;
-    FileSymbol *file_symbol = NULL;
+    PackageSymbol *location = NULL;
 
     for (int i = 0; i < import_on_demand_packages.Length(); i++)
     {
         PackageSymbol *import_package =
             import_on_demand_packages[i] -> PackageCast();
+        TypeSymbol *possible_type = NULL;
 
         if (import_package)
         {
-            FileSymbol *symbol =
-                Control::GetFile(control, import_package, name_symbol);
-            if (symbol)
+            possible_type = import_package -> FindTypeSymbol(name_symbol);
+            if (! possible_type)
             {
-                if (! package)
-                {
-                    file_symbol = symbol;
-                    package = import_package;
-                }
-                else
-                {
-                    ReportSemError(SemanticError::DUPLICATE_ON_DEMAND_IMPORT,
-                                   identifier_token,
-                                   identifier_token,
-                                   name_symbol -> Name(),
-                                   package -> PackageName(),
-                                   import_package -> PackageName());
-                }
+                FileSymbol *file_symbol =
+                    Control::GetFile(control, import_package, name_symbol);
+                if (file_symbol)
+                    possible_type = ReadType(file_symbol, import_package,
+                                             name_symbol, identifier_token);
             }
+            else if (possible_type -> SourcePending())
+                control.ProcessHeaders(possible_type -> file_symbol);
         }
         else
         {
             TypeSymbol *import_type =
                 (TypeSymbol *) import_on_demand_packages[i];
-
             if (! import_type -> expanded_type_table)
                 ComputeTypesClosure(import_type, identifier_token);
-            TypeShadowSymbol *type_shadow_symbol =
-                import_type -> expanded_type_table -> FindTypeShadowSymbol(name_symbol);
+            TypeShadowSymbol *type_shadow_symbol = import_type ->
+                expanded_type_table -> FindTypeShadowSymbol(name_symbol);
             if (type_shadow_symbol)
-                type = FindTypeInShadow(type_shadow_symbol, identifier_token);
+            {
+                //
+                // Only canonical names may be used in import statements, hence
+                // the extra filter on the containing type being correct.
+                //
+                possible_type = FindTypeInShadow(type_shadow_symbol,
+                                                 identifier_token);
+                if (possible_type && ! possible_type -> ACC_PRIVATE() &&
+                    import_type == possible_type -> owner)
+                {
+                    import_package = import_type -> ContainingPackage();
+                }
+            }
         }
-    }
-
-    if (! type)
-    {
-        if (package)
+        if (possible_type)
         {
-            type = package -> FindTypeSymbol(name_symbol);
-            if (! type)
-                 type = ReadType(file_symbol, package, name_symbol,
-                                 identifier_token);
-            else if (type -> SourcePending())
-                 control.ProcessHeaders(type -> file_symbol);
+            if (location && import_package &&
+                (possible_type -> ACC_PUBLIC() ||
+                 import_package == this_package))
+            {
+                ReportSemError(SemanticError::DUPLICATE_ON_DEMAND_IMPORT,
+                               identifier_token,
+                               identifier_token,
+                               name_symbol -> Name(),
+                               location -> PackageName(),
+                               import_package -> PackageName());
+            }
+            else
+            {
+                type = possible_type;
+                if (type -> ACC_PUBLIC() || import_package == this_package)
+                    location = import_package;
+            }
         }
     }
 
-    if (type && (! (type -> ACC_PUBLIC() ||
-                    type -> ContainingPackage() == this_package)))
+    if (type && ! location)
     {
-        ReportTypeInaccessible(identifier_token, identifier_token, type);
+        if (! type -> ACC_PRIVATE() &&
+            (type -> ACC_PUBLIC() ||
+             type -> ContainingPackage() == this_package))
+        {
+            ReportSemError(SemanticError::IMPORT_NOT_CANONICAL,
+                           identifier_token, identifier_token,
+                           type -> Name(),
+                           type -> ContainingPackage() -> PackageName(),
+                           type -> ExternalName());
+        }
+        else ReportTypeInaccessible(identifier_token, identifier_token, type);
     }
-
     return type;
 }
 
@@ -4441,6 +4496,14 @@ void Semantic::ProcessInterface(TypeSymbol *base_type, AstExpression *name)
 
                 return;
             }
+        }
+        if ((! interf -> ACC_PUBLIC() &&
+             interf -> ContainingPackage() != this_package) ||
+            (interf -> ACC_PRIVATE() &&
+             interf -> outermost_type != base_type -> outermost_type))
+        {
+            ReportTypeInaccessible(name -> LeftToken(), name -> RightToken(),
+                                   interf);
         }
 
         name -> symbol = interf; // save type name in ast.

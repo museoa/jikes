@@ -547,6 +547,7 @@ void SemanticError::StaticInitializer()
     print_message[IMPORT_FROM_UNNAMED_PACKAGE] = PrintIMPORT_FROM_UNNAMED_PACKAGE;
     print_message[DUPLICATE_ON_DEMAND_IMPORT] = PrintDUPLICATE_ON_DEMAND_IMPORT;
     print_message[UNKNOWN_ON_DEMAND_IMPORT] = PrintUNKNOWN_ON_DEMAND_IMPORT;
+    print_message[IMPORT_NOT_CANONICAL] = PrintIMPORT_NOT_CANONICAL;
     print_message[NOT_A_TYPE] = PrintNOT_A_TYPE;
     print_message[NOT_A_CLASS] = PrintNOT_A_CLASS;
     print_message[NOT_AN_INTERFACE] = PrintNOT_AN_INTERFACE;
@@ -1847,8 +1848,8 @@ wchar_t *SemanticError::PrintDUPLICATE_ON_DEMAND_IMPORT(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "Type " << err.insert1 << " is imported on demand from package "
-      << err.insert2 << " and package " << err.insert3 << '.';
+    s << "Type " << err.insert1 << " is imported on demand from "
+      << err.insert2 << " and " << err.insert3 << '.';
 
     return s.Array();
 }
@@ -1862,6 +1863,22 @@ wchar_t *SemanticError::PrintUNKNOWN_ON_DEMAND_IMPORT(ErrorInfo &err,
 
     s << "The import \"" << err.insert1
       << "\" is not valid, since it does not name a type in a package.";
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintIMPORT_NOT_CANONICAL(ErrorInfo &err,
+                                                  LexStream *lex_stream,
+                                                  Control &control)
+{
+    ErrorString s;
+
+    s << "The import for nested type \"" << err.insert1
+      << "\" is not valid, since it does not use the canonical name \"";
+    if (NotDot(err.insert2))
+        s << err.insert2 << '.';
+    s << err.insert3 << "\".";
 
     return s.Array();
 }
