@@ -1786,19 +1786,9 @@ void Semantic::ProcessThisCall(AstThisCall *this_call)
 
             //
             // Not all shadowed variables are known yet, but there is no
-            // need to save context, as whatever shadow parameters are added
-            // are also added to the constructor that this defers to. Instead,
-            // we need to save the offset at which shadow parameters appear
-            // in the method signature.
+            // need to save context, since all shadow variables required by
+            // the target constructor can just be passed along.
             //
-            u2 offset = this_type -> EnclosingType() ? 2 : 1;
-            MethodSymbol *this_method = ThisMethod();
-            for (i = 0; i < this_method -> NumFormalParameters(); i++)
-            {
-                TypeSymbol *parm = this_method -> FormalParameter(i) -> Type();
-                offset += control.IsDoubleWordType(parm) ? 2 : 1;
-            }
-            this_call -> shadow_parameter_offset = offset;
         }
     }
 
@@ -1883,101 +1873,101 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
         no_bad_argument = no_bad_argument && expr -> Type() != control.no_type;
     }
 
+    MethodSymbol *constructor = NULL;
     if (no_bad_argument)
     {
-        MethodSymbol *constructor =
-            FindConstructor(super_type, super_call,
-                            super_call -> super_token,
-                            super_call -> RightToken());
+        constructor = FindConstructor(super_type, super_call,
+                                      super_call -> super_token,
+                                      super_call -> RightToken());
+    }
 
-        if (constructor)
+    if (constructor)
+    {
+        if (constructor -> ACC_PRIVATE())
         {
-            if (constructor -> ACC_PRIVATE())
-            {
-                //
-                // Create accessor constructor, and add extra null
-                // to the constructor invocation.
-                //
-                constructor =
-                    super_type -> GetReadAccessConstructor(constructor);
-                super_call -> AddNullArgument();
-            }
-
-            super_call -> symbol = constructor;
-
-            if (super_call -> base_opt)
-            {
-                assert(CanAssignmentConvertReference(super_type -> EnclosingType(),
-                                                     super_call -> base_opt -> Type()));
-
-                super_call -> base_opt =
-                    ConvertToType(super_call -> base_opt,
-                                  super_type -> EnclosingType());
-            }
-
-            for (int i = 0; i < super_call -> NumArguments(); i++)
-            {
-                AstExpression *expr = super_call -> Argument(i);
-                TypeSymbol *ctor_param_type =
-                    constructor -> FormalParameter(i) -> Type();
-                if (expr -> Type() != ctor_param_type)
-                    super_call -> Argument(i) = ConvertToType(expr,
-                                                              ctor_param_type);
-            }
-
             //
-            // Make sure that the throws signature of the constructor is
-            // processed.
+            // Create accessor constructor, and add extra null
+            // to the constructor invocation.
             //
-            for (int k = constructor -> NumThrows() - 1; k >= 0; k--)
-            {
-                TypeSymbol *exception = constructor -> Throws(k);
-                if (UncaughtException(exception))
-                    ReportSemError(SemanticError::UNCAUGHT_EXPLICIT_SUPER_EXCEPTION,
-                                   super_call -> LeftToken(),
-                                   super_call -> RightToken(),
-                                   exception -> ContainingPackage() -> PackageName(),
-                                   exception -> ExternalName(),
-                                   constructor -> containing_type -> ContainingPackage() -> PackageName(),
-                                   constructor -> containing_type -> ExternalName());
-            }
+            constructor = super_type -> GetReadAccessConstructor(constructor);
+            super_call -> AddNullArgument();
+        }
 
-            //
-            // A local super type may use enclosed local variables. If so, we
-            // must add the parameters which allow the local type to
-            // initialize its shadows.
-            //
-            if (super_type -> IsLocal())
+        super_call -> symbol = constructor;
+        if (super_call -> base_opt)
+        {
+            assert(CanAssignmentConvertReference(super_type -> EnclosingType(),
+                                                 super_call -> base_opt -> Type()));
+
+            super_call -> base_opt =
+                ConvertToType(super_call -> base_opt,
+                              super_type -> EnclosingType());
+        }
+
+        for (int i = 0; i < super_call -> NumArguments(); i++)
+        {
+            AstExpression *expr = super_call -> Argument(i);
+            TypeSymbol *ctor_param_type =
+                constructor -> FormalParameter(i) -> Type();
+            if (expr -> Type() != ctor_param_type)
+                super_call -> Argument(i) =
+                    ConvertToType(expr, ctor_param_type);
+        }
+
+        //
+        // Make sure that the throws signature of the constructor is
+        // processed.
+        //
+        for (int k = constructor -> NumThrows() - 1; k >= 0; k--)
+        {
+            TypeSymbol *exception = constructor -> Throws(k);
+            if (UncaughtException(exception))
+                ReportSemError(SemanticError::UNCAUGHT_EXPLICIT_SUPER_EXCEPTION,
+                               super_call -> LeftToken(),
+                               super_call -> RightToken(),
+                               exception -> ContainingPackage() -> PackageName(),
+                               exception -> ExternalName(),
+                               constructor -> containing_type -> ContainingPackage() -> PackageName(),
+                               constructor -> containing_type -> ExternalName());
+        }
+
+        //
+        // A local super type may use enclosed local variables. If so, we
+        // must add the parameters which allow the local type to
+        // initialize its shadows.
+        //
+        if (super_type -> IsLocal())
+        {
+            int param_count = super_type -> NumConstructorParameters();
+            if (super_type -> LocalClassProcessingCompleted() && param_count)
             {
-                if (super_type -> LocalClassProcessingCompleted())
-                {
-                    int param_count = super_type -> NumConstructorParameters();
-                    if (param_count > 0)
-                        super_call -> AllocateLocalArguments(param_count);
-                    for (int i = 0; i < param_count; i++)
-                    {
-                        VariableSymbol *local = super_type ->
-                            ConstructorParameter(i) -> accessed_local;
-                        AstSimpleName *simple_name = compilation_unit ->
-                            ast_pool -> GenSimpleName(super_call -> super_token);
-                        //
-                        // We may need to create a shadow in the outermost
-                        // local class enclosing the variable.
-                        //
-                        simple_name -> symbol = FindLocalVariable(local,
-                                                                  this_type);
-                        super_call -> AddLocalArgument(simple_name);
-                    }
-                }
-                else
+                super_call -> AllocateLocalArguments(param_count);
+                for (int i = 0; i < param_count; i++)
                 {
                     //
-                    // We are within body of super_type; save processing for
-                    // later, since not all shadows may be known yet. See
-                    // ProcessClassDeclaration.
+                    // We may need to create a shadow in the outermost
+                    // local class enclosing the variable.
                     //
-                    super_type -> AddLocalConstructorCallEnvironment(GetEnvironment(super_call));
+                    AstSimpleName *simple_name = compilation_unit ->
+                        ast_pool -> GenSimpleName(super_call -> super_token);
+                    VariableSymbol *accessor =
+                        FindLocalVariable(super_type -> ConstructorParameter(i),
+                                          this_type);
+                    simple_name -> symbol = accessor;
+                    TypeSymbol *owner = accessor -> ContainingType();
+                    if (owner != this_type)
+                        CreateAccessToScopedVariable(simple_name, owner);
+                    super_call -> AddLocalArgument(simple_name);
                 }
+            }
+            else
+            {
+                //
+                // We are within body of super_type; save processing for
+                // later, since not all shadows may be known yet. See
+                // ProcessClassDeclaration.
+                //
+                super_type -> AddLocalConstructorCallEnvironment(GetEnvironment(super_call));
             }
         }
     }

@@ -1468,6 +1468,13 @@ public:
 
     void SetOwner(Symbol *owner_) { owner = owner_; }
 
+    TypeSymbol *ContainingType()
+    {
+        MethodSymbol *method_owner = owner -> MethodCast();
+        return method_owner ? method_owner -> containing_type
+            : owner -> TypeCast();
+    }
+
     void SetLocalVariableIndex(int index)
     {
         local_variable_index = index;
@@ -1475,15 +1482,9 @@ public:
     }
     int LocalVariableIndex() { return local_variable_index; }
 
-    bool IsTyped()
-    {
-        return type_ != NULL;
-    }
+    bool IsTyped() { return type_ != NULL; }
 
-    void SetType(TypeSymbol *_type)
-    {
-        type_ = _type;
-    }
+    void SetType(TypeSymbol *_type) { type_ = _type; }
 
     void ProcessVariableSignature(Semantic *, LexStream::TokenIndex);
 

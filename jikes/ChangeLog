@@ -1,3 +1,17 @@
+2002-06-28  Eric B Blake  <eblake@ee.byu.edu>
+
+	* src/ast.h (shadow_parameter_offset): Delete from here...
+	* src/body.cpp (ProcessThisCall, ProcessSuperCall): Ditto.
+	* src/bytecode.h (shadow_parameter_offset): ... and move to here,
+	to fix bug 3001.
+	* src/bytecode.cpp (CompileConstructor, EmitThisInvocation),
+	(ByteCode): Ditto.
+	* src/symbol.h (VariableSymbol::ContainingType): Add.
+	* src/semantic.h: Some formatting improvements, use new method.
+	* src/expr.cpp: Ditto.
+	(GetAnonymousType):
+	* src/symbol.cpp (GetReadAccessConstructor): More of the bug fix.
+
 2002-06-28  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/expr.cpp (ProcessMOD): Fix bug from incomplete patch on the

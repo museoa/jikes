@@ -2264,7 +2264,8 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *ctor)
         AstMethodBody *constructor_block = ast_pool -> GenMethodBody();
         // This symbol table will be empty.
         constructor_block -> block_symbol = new BlockSymbol(0);
-        constructor_block -> block_symbol -> InsertBlockSymbol(1);
+        constructor_block -> block_symbol -> max_variable_index =
+            block_symbol -> max_variable_index;
         constructor_block -> left_brace_token = loc;
         constructor_block -> right_brace_token = loc;
         constructor_block -> AllocateBlockStatements(1);

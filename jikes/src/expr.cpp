@@ -1153,10 +1153,10 @@ VariableSymbol *Semantic::FindVariableInType(TypeSymbol *type,
                        field_access -> LeftToken(),
                        field_access -> RightToken(),
                        name_symbol -> Name(),
-                       variable_set[0] -> owner -> TypeCast() -> ContainingPackage() -> PackageName(),
-                       variable_set[0] -> owner -> TypeCast() -> ExternalName(),
-                       variable_set[1] -> owner -> TypeCast() -> ContainingPackage() -> PackageName(),
-                       variable_set[1] -> owner -> TypeCast() -> ExternalName());
+                       variable_set[0] -> ContainingType() -> ContainingPackage() -> PackageName(),
+                       variable_set[0] -> ContainingType() -> ExternalName(),
+                       variable_set[1] -> ContainingType() -> ContainingPackage() -> PackageName(),
+                       variable_set[1] -> ContainingType() -> ExternalName());
     }
 
     variable = variable_set[0];
@@ -1166,20 +1166,20 @@ VariableSymbol *Semantic::FindVariableInType(TypeSymbol *type,
                        field_access -> LeftToken(),
                        field_access -> RightToken(),
                        variable -> Name(),
-                       variable -> owner -> TypeCast() -> ContainingPackage() -> PackageName(),
-                       variable -> owner -> TypeCast() -> ExternalName());
+                       variable -> ContainingType() -> ContainingPackage() -> PackageName(),
+                       variable -> ContainingType() -> ExternalName());
     }
 
     if (control.option.deprecation &&
         variable -> IsDeprecated() &&
-        variable -> owner -> TypeCast() -> outermost_type != type -> outermost_type)
+        variable -> ContainingType() -> outermost_type != type -> outermost_type)
     {
         ReportSemError(SemanticError::DEPRECATED_FIELD,
                        field_access -> LeftToken(),
                        field_access -> RightToken(),
                        variable -> Name(),
-                       variable -> owner -> TypeCast() -> ContainingPackage() -> PackageName(),
-                       variable -> owner -> TypeCast() -> ExternalName());
+                       variable -> ContainingType() -> ContainingPackage() -> PackageName(),
+                       variable -> ContainingType() -> ExternalName());
     }
 
     return variable;
@@ -1407,7 +1407,8 @@ VariableSymbol *Semantic::FindVariableInEnvironment(SemanticEnvironment *&where_
                     //
                     variable_symbol = FindLocalVariable(variable_symbol,
                                                         stack -> Type());
-                    TypeSymbol *shadow_owner = variable_symbol -> owner -> TypeCast();
+                    TypeSymbol *shadow_owner =
+                        variable_symbol -> ContainingType();
                     assert(shadow_owner);
                     where_found = shadow_owner -> semantic_environment;
                 }
@@ -1482,24 +1483,24 @@ VariableSymbol *Semantic::FindVariableInEnvironment(SemanticEnvironment *&where_
                        identifier_token,
                        identifier_token,
                        variable_symbol -> Name(),
-                       variable_symbol -> owner -> TypeCast() -> ContainingPackage() -> PackageName(),
-                       variable_symbol -> owner -> TypeCast() -> ExternalName(),
-                       variables_found[i] -> owner -> TypeCast() -> ContainingPackage() -> PackageName(),
-                       variables_found[i] -> owner -> TypeCast() -> ExternalName());
+                       variable_symbol -> ContainingType() -> ContainingPackage() -> PackageName(),
+                       variable_symbol -> ContainingType() -> ExternalName(),
+                       variables_found[i] -> ContainingType() -> ContainingPackage() -> PackageName(),
+                       variables_found[i] -> ContainingType() -> ExternalName());
     }
 
     if (variable_symbol)
     {
         if (control.option.deprecation &&
             variable_symbol -> IsDeprecated() &&
-            variable_symbol -> owner -> TypeCast() -> outermost_type != ThisType() -> outermost_type)
+            variable_symbol -> ContainingType() -> outermost_type != ThisType() -> outermost_type)
         {
             ReportSemError(SemanticError::DEPRECATED_FIELD,
                            identifier_token,
                            identifier_token,
                            variable_symbol -> Name(),
-                           variable_symbol -> owner -> TypeCast() -> ContainingPackage() -> PackageName(),
-                           variable_symbol -> owner -> TypeCast() -> ExternalName());
+                           variable_symbol -> ContainingType() -> ContainingPackage() -> PackageName(),
+                           variable_symbol -> ContainingType() -> ExternalName());
         }
 
         if (! variable_symbol -> IsTyped())
@@ -1696,7 +1697,7 @@ void Semantic::CreateAccessToScopedVariable(AstSimpleName *simple_name,
     {
         assert(variable -> owner -> TypeCast());
 
-        TypeSymbol *containing_type = variable -> owner -> TypeCast();
+        TypeSymbol *containing_type = variable -> ContainingType();
 
         if (variable -> ACC_PRIVATE() ||
             (variable -> ACC_PROTECTED() &&
@@ -2045,7 +2046,7 @@ bool Semantic::MemberAccessCheck(AstFieldAccess *field_access,
     assert(variable_symbol || method_symbol);
 
     AccessFlags *flags = (variable_symbol ? (AccessFlags *) variable_symbol : (AccessFlags *) method_symbol);
-    TypeSymbol *containing_type = (variable_symbol ? variable_symbol -> owner -> TypeCast() : method_symbol -> containing_type);
+    TypeSymbol *containing_type = (variable_symbol ? variable_symbol -> ContainingType() : method_symbol -> containing_type);
 
     assert(containing_type);
 
@@ -2737,7 +2738,8 @@ void Semantic::ProcessAmbiguousName(Ast *name)
             else
             {
                 FindVariableMember(type, field_access);
-                TypeSymbol *parent_type = (type -> IsArray() ? type -> base_type : type);
+                TypeSymbol *parent_type = (type -> IsArray()
+                                           ? type -> base_type : type);
                 if (! parent_type -> Primitive())
                     AddDependence(this_type, parent_type,
                                   field_access -> identifier_token,
@@ -3714,6 +3716,7 @@ TypeSymbol *Semantic::GetAnonymousType(AstClassInstanceCreationExpression *class
     // instance if it is not in a static context.
     //
     anon_type -> SetACC_FINAL();
+    anon_type -> SetACC_SUPER();
     if (! StaticRegion())
         anon_type -> InsertThis0();
 

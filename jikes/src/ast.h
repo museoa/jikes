@@ -1837,11 +1837,8 @@ public:
     LexStream::TokenIndex right_parenthesis_token;
     LexStream::TokenIndex semicolon_token;
 
-    u2 shadow_parameter_offset;
-
     AstThisCall(StoragePool *pool_) : arguments(NULL),
-                                      symbol(NULL),
-                                      shadow_parameter_offset(0)
+                                      symbol(NULL)
     {
         Ast::kind = Ast::THIS_CALL;
         Ast::class_tag = Ast::STATEMENT;

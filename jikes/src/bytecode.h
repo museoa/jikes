@@ -239,6 +239,11 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     bool string_overflow,
          library_method_not_found,
          last_op_goto;        // set if last operation was GOTO or GOTO_W.
+    //
+    // This variable is non-zero only in constructors of local classes; it
+    // gives the offset where variable shadow parameters begin.
+    //
+    u2 shadow_parameter_offset;
 
     Code_attribute *code_attribute; // code for current method ?
     LineNumberTable_attribute *line_number_table_attribute;
@@ -498,7 +503,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         assert(variable_symbol -> owner -> TypeCast());
 
-        return RegisterFieldref(variable_symbol -> owner -> TypeCast() -> fully_qualified_name,
+        return RegisterFieldref(variable_symbol -> ContainingType() -> fully_qualified_name,
                                 variable_symbol -> ExternalIdentity() -> Utf8_literal,
                                 variable_symbol -> Type() -> signature);
     }

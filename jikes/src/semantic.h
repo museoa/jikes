@@ -223,7 +223,8 @@ public:
     int Size()  { return info.Length(); }
     Tuple <AstExpression *> &Top()
     {
-        if (info.Length() == 0) assert(false); return info[info.Length() - 1];
+        assert(info.Length());
+        return info[info.Length() - 1];
     }
 
 private:
@@ -493,21 +494,33 @@ private:
 
 
 //
+// This class stores the semantic environment associated with the current type
+// being processed. A stack of these objects is maintained, so that when an
+// inner or anonymous class is encountered, a new environment is used.
 //
+// This class can also be cloned. A local class must update constructors to
+// add val$name shadows of final local variables, but may encounter the use of
+// local variables after the constructor was encountered. So, the clone serves
+// as a snapshot of the state in effect at the time the constructor is first
+// called, to reuse that state when the constructor call is later updated.
 //
 class SemanticEnvironment
 {
 public:
 
+    // The semantic processor, should be identical for all environments on the
+    // state stack.
     Semantic *sem;
-    SemanticEnvironment *previous;
+    SemanticEnvironment *previous; // Environment of the enclosing class, if any
 
+    // The current class member being compiled.
     MethodSymbol *this_method;
     VariableSymbol *this_variable;
     AstStatement *explicit_constructor;
     Ast *ast_construct;
 
-    SymbolTableStack symbol_table; // Points to symbol table on top of stack
+    // Stacks used within the current method.
+    SymbolTableStack symbol_table;
     ExceptionTableStack try_exception_table_stack;
     StatementStack try_statement_stack,
                    breakable_statement_stack,
@@ -523,7 +536,7 @@ public:
           this_variable(NULL),
           explicit_constructor(NULL),
           ast_construct(NULL),
-          _type(type_),
+          type(type_),
           next(NULL)
     {}
 
@@ -541,7 +554,7 @@ public:
     //
     SemanticEnvironment *GetEnvironment(Ast *ast)
     {
-        SemanticEnvironment *clone = new SemanticEnvironment(sem, _type);
+        SemanticEnvironment *clone = new SemanticEnvironment(sem, type);
         clone -> this_method = this_method;
         clone -> this_variable = this_variable;
         clone -> explicit_constructor = explicit_constructor;
@@ -554,7 +567,7 @@ public:
         return clone;
     }
 
-    TypeSymbol *Type() { return _type; }
+    TypeSymbol *Type() { return type; }
 
     //
     // Are we in a region with no current instance? This applies to all
@@ -570,7 +583,7 @@ public:
 
 private:
 
-    TypeSymbol *_type;
+    TypeSymbol *type;
     SemanticEnvironment *next; // use to link an environment to its clones.
 };
 
@@ -1194,7 +1207,8 @@ private:
 
     VariableSymbol *DefiniteFinal(AstFieldAccess *);
 
-    DefiniteAssignmentSet *(Semantic::*DefiniteExpr[Ast::_num_expression_kinds])(AstExpression *, DefinitePair &);
+    DefiniteAssignmentSet *(Semantic::*DefiniteExpr[Ast::_num_expression_kinds])
+        (AstExpression *, DefinitePair &);
     DefiniteAssignmentSet *DefiniteSimpleName(AstExpression *, DefinitePair &);
     DefiniteAssignmentSet *DefiniteArrayAccess(AstExpression *,
                                                DefinitePair &);
@@ -1363,7 +1377,7 @@ private:
         // If the expression is of type String, check whether or not it is
         // constant, and if so, compute the result.
         //
-        if (expr -> symbol == control.String() && (! expr -> IsConstant()))
+        if (expr -> symbol == control.String() && ! expr -> IsConstant())
             control.Utf8_pool.CheckStringConstant(expr);
     }
 

@@ -398,6 +398,18 @@ void ByteCode::CompileConstructor(AstConstructorDeclaration *constructor,
     int method_index = methods.NextIndex(); // index for method
     BeginMethod(method_index, method_symbol);
 
+    //
+    // Set up the index to account for this, this$0, and normal parameters,
+    // so we know where the local variable shadows begin.
+    //
+    shadow_parameter_offset = unit_type -> EnclosingType() ? 2 : 1;
+    if (unit_type -> NumConstructorParameters() > 0)
+    {
+        for (int j = 0; j < method_symbol -> NumFormalParameters(); j++)
+            shadow_parameter_offset +=
+                GetTypeWords(method_symbol -> FormalParameter(j) -> Type());
+    }
+
     if (control.option.target < JikesOption::SDK1_4)
     {
         //
@@ -430,28 +442,17 @@ void ByteCode::CompileConstructor(AstConstructorDeclaration *constructor,
             PutU2(RegisterFieldref(this0_parameter));
         }
 
-        if (unit_type -> NumConstructorParameters() > 0)
+        for (int i = 0, index = shadow_parameter_offset;
+             i < unit_type -> NumConstructorParameters(); i++)
         {
-            //
-            // Set up the index to account for this, this$0, and normal
-            // parameters, then initialize local variable shadows.
-            //
-            int index = unit_type -> EnclosingType() ? 2 : 1;
-            for (int j = 0; j < method_symbol -> NumFormalParameters(); j++)
-                index += GetTypeWords(method_symbol -> FormalParameter(j) ->
-                                      Type());
-
-            for (int i = 0; i < unit_type -> NumConstructorParameters(); i++)
-            {
-                VariableSymbol *shadow = unit_type -> ConstructorParameter(i);
-                PutOp(OP_ALOAD_0);
-                LoadLocal(index, shadow -> Type());
-                PutOp(OP_PUTFIELD);
-                if (control.IsDoubleWordType(shadow -> Type()))
-                    ChangeStack(-1);
-                PutU2(RegisterFieldref(shadow));
-                index += GetTypeWords(shadow -> Type());
-            }
+            VariableSymbol *shadow = unit_type -> ConstructorParameter(i);
+            PutOp(OP_ALOAD_0);
+            LoadLocal(index, shadow -> Type());
+            PutOp(OP_PUTFIELD);
+            if (control.IsDoubleWordType(shadow -> Type()))
+                ChangeStack(-1);
+            PutU2(RegisterFieldref(shadow));
+            index += GetTypeWords(shadow -> Type());
         }
     }
 
@@ -472,6 +473,7 @@ void ByteCode::CompileConstructor(AstConstructorDeclaration *constructor,
     //
     // Compile instance initializers unless the constructor calls this().
     //
+    shadow_parameter_offset = 0;
     if (has_instance_initializer &&
         constructor_block -> explicit_constructor_opt &&
         ! constructor_block -> explicit_constructor_opt -> ThisCallCast())
@@ -5247,15 +5249,17 @@ void ByteCode::EmitThisInvocation(AstThisCall *this_call)
     // about an extra null argument, as there are no accessibility issues
     // when invoking this().
     //
-    assert(this_call -> shadow_parameter_offset);
-    for (int offset = this_call -> shadow_parameter_offset, i = 0;
-         i < unit_type -> NumConstructorParameters(); i++)
+    if (shadow_parameter_offset)
     {
-        VariableSymbol *shadow = unit_type -> ConstructorParameter(i);
-        LoadLocal(offset, shadow -> Type());
-        int words = GetTypeWords(shadow -> Type());
-        offset += words;
-        stack_words += words;
+        int offset = shadow_parameter_offset;
+        for (int i = 0; i < unit_type -> NumConstructorParameters(); i++)
+        {
+            VariableSymbol *shadow = unit_type -> ConstructorParameter(i);
+            LoadLocal(offset, shadow -> Type());
+            int words = GetTypeWords(shadow -> Type());
+            offset += words;
+            stack_words += words;
+        }
     }
 
     PutOp(OP_INVOKESPECIAL);
@@ -5474,6 +5478,8 @@ ByteCode::ByteCode(TypeSymbol *unit_type)
       semantic(*unit_type -> semantic_environment -> sem),
       string_overflow(false),
       library_method_not_found(false),
+      last_op_goto(false),
+      shadow_parameter_offset(0),
       double_constant_pool_index(NULL),
       integer_constant_pool_index(NULL),
       long_constant_pool_index(NULL),
