@@ -412,7 +412,9 @@ Option::Option(ArgumentExpander &arguments) :
                  makefile = true;
                  dependence_report=true;
                  full_check = true;
-                 dependence_report_name = &arguments.argv[i][4];
+		 dependence_report_name =
+		     new char[strlen(&arguments.argv[i][4]) + 1];
+		 strcpy(dependence_report_name, &arguments.argv[i][4]);
             }
             else if (strcmp(arguments.argv[i], "+O") == 0)
             {
@@ -537,6 +539,8 @@ Option::~Option()
 {
     for (int i = 0; i < bad_options.Length(); i++)
         delete bad_options[i];
+
+    delete [] dependence_report_name;
 
 #ifdef WIN32_FILE_SYSTEM
     for (char c = 'a'; c <= 'z'; c++)

@@ -1,4 +1,10 @@
-2000-01-16  Mo DeJong  <mdejong@redhat.com>
+2001-01-26  C. Scott Ananian  <cananian@lesser-magoo.lcs.mit.edu>
+
+	* src/option.cpp (Option, ~Option): Create a copy
+	of the argument string for the dependence_report_name
+	field. Deallocate it when finished.
+
+2001-01-16  Mo DeJong  <mdejong@redhat.com>
 
 	* src/bytecode.cpp: Add additional
 	cast so that both branches of the ?:
@@ -16,13 +22,13 @@
 	for the wint_t type using out own
 	#include files.
 
-2000-01-14  Christopher Abbey  <cabbey@bresnanlink.net>
+2001-01-14  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* src/dump.cpp:
 	* src/unparse.cpp: Fix for build problems
 	when JIKES_DEBUG is defined.
 
-2000-01-10  Mo DeJong  <mdejong@redhat.com>
+2001-01-10  Mo DeJong  <mdejong@redhat.com>
 
 	* src/jikesapi.cpp:
 	* src/platform.h: Move include of
@@ -30,19 +36,19 @@
 	* src/unparse.cpp: Comment out headers
 	that are already included in platform.h.
 
-2000-01-10  Mo DeJong  <mdejong@redhat.com>
+2001-01-10  Mo DeJong  <mdejong@redhat.com>
 
 	* src/stream.cpp (LexStream::LiteralSymbol,
 	LexStream::NameSymbol): Added class qualifier
 	to fix compiler error when LexStream was
 	defined in the Jikes namespace.
 
-2000-01-10  Christopher Abbey  <cabbey@bresnanlink.net>
+2001-01-10  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* src/jikesapi.cpp: Move DefaultFileReader and
 	DefaultFileWriter classes into the Jikes namespace.
 
-2000-01-10  Mo DeJong  <mdejong@redhat.com>
+2001-01-10  Mo DeJong  <mdejong@redhat.com>
 
 	* src/ast.cpp:
 	* src/body.cpp:
@@ -85,7 +91,7 @@
 	This moves most of the classes and methods defined
 	by Jikes into the Jikes namespace.
 
-2000-01-04  Mo DeJong  <mdejong@redhat.com>
+2001-01-04  Mo DeJong  <mdejong@redhat.com>
 
 	* configure.in: Replace check for
 	namespace support with check for
@@ -168,7 +174,7 @@
 	* src/zip.h: Replace check for
 	HAVE_NAMESPACES with HAVE_JIKES_NAMESPACE.
 
-2000-01-03  Mo DeJong  <mdejong@redhat.com>
+2001-01-03  Mo DeJong  <mdejong@redhat.com>
 
 	* configure.in: Don't check for iostream.h.
 	* src/platform.h: Remove HAVE_IOSTREAM_H
