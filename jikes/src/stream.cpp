@@ -889,6 +889,9 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                     size_t   chl  = 2;
                     size_t   srcl = 1;
                     size_t n = iconv(control.option.converter,
+#ifdef HAVE_ERROR_CALL_ICONV_CONST
+                                     (char **)
+#endif
                                      &source_ptr, &srcl,
                                      (char **)&chp, &chl
                     );

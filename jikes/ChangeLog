@@ -1,3 +1,11 @@
+2000-10-09  Mo DeJong  <mdejong@redhat.com>
+
+	* acinclude.m4: Include iconv macro file.
+	* configure.in: Move iconv related tests to AC_CHECK_ICONV.
+	* src/stream.cpp (ProcessInputUnicode): Cast the 2nd argument
+	to iconv to a non const if the compiler would generate an error.
+	* src/m4/ac_check_iconv.m4: Add AC_CHECK_ICONV macro.
+
 2000-09-11  Mo DeJong  <mdejong@redhat.com>
 
 	* src/error.cpp (PrintUNREACHABLE_DEFAULT_CATCH_CLAUSE):
