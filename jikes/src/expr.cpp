@@ -3512,6 +3512,10 @@ void Semantic::ProcessParenthesizedExpression(Ast *expr)
 {
     AstParenthesizedExpression *parenthesized = (AstParenthesizedExpression *) expr;
 
+    //
+    // Do not use ProcessExpressionOrStringConstant here, to avoid generating
+    // intermediate Strings - see CheckConstantString in lookup.cpp
+    //
     ProcessExpression(parenthesized -> expression);
     parenthesized -> value = parenthesized -> expression -> value;
     parenthesized -> symbol = parenthesized -> expression -> symbol;
@@ -5318,6 +5322,10 @@ void Semantic::ProcessCastExpression(Ast *expr)
         exception_set -> AddElement(control.RuntimeException());
     }
 
+    //
+    // Do not use ProcessExpressionOrStringConstant here, to avoid generating
+    // intermediate Strings - see CheckConstantString in lookup.cpp
+    //
     ProcessExpression(cast_expression -> expression);
 
     TypeSymbol *source_type = cast_expression -> expression -> Type();
@@ -5655,6 +5663,10 @@ void Semantic::BinaryNumericPromotion(AstConditionalExpression *conditional_expr
 
 void Semantic::ProcessPLUS(AstBinaryExpression *expr)
 {
+    //
+    // Do not use ProcessExpressionOrStringConstant here, to avoid generating
+    // intermediate Strings - see CheckConstantString in lookup.cpp
+    //
     ProcessExpression(expr -> left_expression);
     ProcessExpression(expr -> right_expression);
 
@@ -6827,7 +6839,7 @@ void Semantic::ProcessMOD(AstBinaryExpression *expr)
 
 void Semantic::ProcessINSTANCEOF(AstBinaryExpression *expr)
 {
-    ProcessExpression(expr -> left_expression);
+    ProcessExpressionOrStringConstant(expr -> left_expression);
     ProcessExpression(expr -> right_expression);
 
     TypeSymbol *left_type  = expr -> left_expression -> Type(),
