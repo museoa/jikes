@@ -30,4 +30,6 @@ c test2 test2
 a -encoding UnicodeLittle
 c utf16le utf16le
 c utf16lex utf16lex
+a -encoding latin1
+e umlaut umlaut
 #

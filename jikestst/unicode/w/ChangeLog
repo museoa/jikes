@@ -1,3 +1,8 @@
+2000-03-13  Vadim Zaliva  <lord@crocodile.org>
+
+	* Added tests for umlauts handling in 'latin1' encoding.
+	Test case submitted by Pedro Dantas <p.dantas@intershop.de>.
+
 2000-02-18  Vadim Zaliva  <lord@crocodile.org>
 
 	* added tests for UTF16 little Endian file (w/o BOM)
