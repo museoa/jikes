@@ -2702,20 +2702,39 @@ void ByteCode::EmitAssertStatement(AstAssertStatement *assertion)
         {
             EmitExpression(assertion -> message_opt);
             TypeSymbol *type = assertion -> message_opt -> Type();
-            constructor = (type == control.char_type ? control.AssertionError_InitWithCharMethod()
-                           : type == control.boolean_type ? control.AssertionError_InitWithBooleanMethod()
-                           : (type == control.int_type ||
-                              type == control.short_type ||
-                              type == control.byte_type) ? control.AssertionError_InitWithIntMethod()
-                           : type == control.long_type ? control.AssertionError_InitWithLongMethod()
-                           : type == control.float_type ? control.AssertionError_InitWithFloatMethod()
-                           : type == control.double_type ? control.AssertionError_InitWithDoubleMethod()
-                           : (type == control.null_type ||
-                              IsReferenceType(type)) ? control.AssertionError_InitWithObjectMethod()
-                           : control.AssertionError_InitMethod()); // for assertion
+	    
+	    if (! control.AssertionError() -> Bad() ) { //then we found the class, now can we find the method?
+		if (type == control.char_type) {
+		    constructor = control.AssertionError_InitWithCharMethod();
+		} else if (type == control.boolean_type) {
+		    constructor = control.AssertionError_InitWithBooleanMethod();
+		} else if (type == control.int_type ||
+			   type == control.short_type ||
+			   type == control.byte_type) {
+		    constructor = control.AssertionError_InitWithIntMethod();
+		} else if (type == control.long_type) {
+		    constructor = control.AssertionError_InitWithLongMethod();
+		} else if (type == control.float_type) {
+		    constructor = control.AssertionError_InitWithFloatMethod();
+		} else if (type == control.double_type) {
+		    constructor = control.AssertionError_InitWithDoubleMethod();
+		} else if (type == control.null_type || IsReferenceType(type)) {
+		    constructor = control.AssertionError_InitWithObjectMethod();
+		} else {
+		    assert (false && "We just tried all the types of ctors we know on AssertionError, and none matched!");
+		}
+		if (NULL == constructor) //we didn't find it; suckage.... 
+		    //TODO: this error ought to include what we were looking for
+		    semantic.ReportSemError(SemanticError::LIBRARY_METHOD_NOT_FOUND,
+					    assertion -> LeftToken(),
+					    assertion -> RightToken(),
+					    unit_type -> ContainingPackage() -> PackageName(),
+					    unit_type -> ExternalName());
 
-            assert(constructor != control.AssertionError_InitMethod() &&
-                   "unable to find right constructor for assertion error");
+	    } else {
+                //the type for AssertionError is BAD, that means it wasn't found! but the calls to 
+		//control.AssertionError() above will file a semantic error for us, no need to here.
+	    }
             ChangeStack(- GetTypeWords(type));
         }
         else constructor = control.AssertionError_InitMethod();

@@ -1,3 +1,11 @@
+2002-06-05  Chris Abbey  <jikes@cabbey.net>
+
+	* src/bytecode.cpp (EmitAssertStatement): produce proper error
+	instead of assertion if user requests -source 1.4 and uses asserts
+	in their code but doesn't have Ljava/lang/AssertionError;
+	available because they used a 1.3 rt.jar in BOOTCLASSPATH for
+	example.
+
 2002-06-04  Andrew G. Tereschenko  <tag@ibis.odessa.ua>
 
 	* src/double.cpp: additional parenthesis near shift operators
