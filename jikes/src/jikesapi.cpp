@@ -111,7 +111,11 @@ JikesOption::JikesOption():
     classpath(NULL),
     sourcepath(NULL),
     directory(NULL),
+#ifdef HAVE_LANGINFO_H
+    encoding(nl_langinfo(CODESET)),
+#else
     encoding(NULL),
+#endif
     nowrite(false),
     deprecation(false),
     O(false),

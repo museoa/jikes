@@ -73,6 +73,9 @@ You must accept the terms of that agreement to use this software. */
 /* Define Jikes functions in a namespace */
 #undef HAVE_JIKES_NAMESPACE
 
+/* Define if you have the <langinfo.h> header file. */
+#undef HAVE_LANGINFO_H
+
 /* use unix style mkdir(str, S_IRWXU) */
 #undef HAVE_LIBC5_MKDIR
 
@@ -87,6 +90,9 @@ You must accept the terms of that agreement to use this software. */
 
 /* Define if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
+
+/* Define if you have the <locale.h> header file. */
+#undef HAVE_LOCALE_H
 
 /* use mac style mkdir(str,0) from <stat.mac.h> */
 #undef HAVE_MAC_MKDIR

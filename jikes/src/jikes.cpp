@@ -27,7 +27,13 @@ int main(int argc, char *argv[])
     JikesAPI *compiler = new JikesAPI();
 
     int    return_code;    
-    char **files = compiler->parseOptions(argc, argv);
+    char **files;
+
+#ifdef HAVE_LOCALE_H
+    setlocale(LC_ALL, "");
+#endif
+
+    files = compiler->parseOptions(argc, argv);
     
     if (files)
     {

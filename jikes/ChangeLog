@@ -1,3 +1,13 @@
+2001-09-06  Takashi Okamoto  <tora@debian.org>
+
+	* configure.in: check for needed headers.
+	* configure:
+	* src/config.h.in: Regenerate.
+	* src/jikesapp.cpp:
+	* src/jikes.cpp:
+	* src/platform.h: set character encoding based on the one for the
+	default locale - patch 168.
+
 2001-09-06  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/Makefile.am: Added src/gencode.java to the .tar
