@@ -8,7 +8,7 @@ If you modify any of the files used by the autotools build
 process (Makefile.am, configure.in, and so on), you should
 regenerate the configure script by running ./autogen.sh
 (this passes --ignore-deps to automake).  Jikes requires
-autoconf 2.50 or newer and automake 1.4 or newer. Consider
+autoconf 2.53 or newer and automake 1.6 or newer. Consider
 configuring with --enable-maintainer-mode to automatically
 update all the generated files.
 
@@ -24,22 +24,35 @@ Generator (jikespg).
 
 Rules to Live By:
 
-Never allocate objects on the stack. Always allocate
-objects using the new operator, even if the object
-will only be used inside a function. Objects
-allocated on the stack can become corrupted and
-take the stack along with it, making debugging
+Never allocate objects on the stack. Always allocate objects
+using the new operator, even if the object will only be used
+inside a function. Objects allocated on the stack can become
+corrupted and take the stack along with it, making debugging
 very difficult.
 
 
 Before you send in that patch:
 
-Patches to the Jikes compiler should be accompanied
-by test cases for Jacks, the automated regression
-test suite used by the Jikes project. The Jacks
-cvs module is "jacks", the CVSROOT is the same
-as the one used by Jikes.
+Patches to the Jikes compiler should be accompanied by test
+cases for Jacks, the automated regression test suite used by
+the Jikes project. The Jacks cvs module is "jacks", the
+CVSROOT is the same as the one used by Jikes.
 
+When creating the patch, use diff -uN against CVS (or your local
+backup copy), and do so from the top directory (ie. from jikes/, not
+jikes/src/). Make a ChangeLog entry, following the format already
+present in ChangeLog, but attach it separately instead of with the
+diff (as ChangeLog diffs do not always merge correctly). If you are
+using emacs, you may find the keyboard shortcut "C-x 4 a" useful to
+auto-format a ChangeLog entry as you make your edits. The preferred
+patch submission location is the website, although you may want to
+make mention of your patch on the jikes-dev mailing list (and when the
+web submission page is broken, the mailing list is your only option).
+
+Other things to remember when hacking: If you modify command-line
+options, be sure to update the documentation of those options. Try to
+stay consistent with existing formatting (note that it is not the
+standard GNU formatting), and keep to 80-column lines where possible.
 
 
 Some handy CXXFLAGS you may want to use g++:
