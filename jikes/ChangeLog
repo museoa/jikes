@@ -1,5 +1,12 @@
 2004-05-03  Elliott Hughes  <enh@acm.org>
 
+	* src/class.h: fixes compilation with libgcj3.3.jar; gcj-compiled
+	classes have an extra attribute "gnu.gcj.gcj-compiled". A fencepost
+	error in GetN was causing us to reject the class file. (Also fixes
+	the analogous error in SkipN.)
+
+2004-05-03  Elliott Hughes  <enh@acm.org>
+
 	* src/class.h, src/class.cpp: Always call MarkInvalid rather than
 	sometimes manipulating the field directly, and switch from a simple
 	boolean to a description of the problem we found...

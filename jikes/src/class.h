@@ -3115,7 +3115,7 @@ public:
     //
     inline u4 GetN(u1*& bytes, u4 len)
     {
-        if (buffer + len >= buffer_tail)
+        if (buffer + len > buffer_tail)
         {
             MarkInvalid("couldn't get n bytes");
             len = buffer_tail - buffer;
@@ -3129,9 +3129,9 @@ public:
     }
     inline void SkipN(u4 len)
     {
-        if (buffer + len >= buffer_tail)
+        if (buffer + len > buffer_tail)
         {
-            MarkInvalid("couldn't skip N");
+            MarkInvalid("couldn't skip n bytes");
             buffer = buffer_tail;
         }
         else buffer += len;
