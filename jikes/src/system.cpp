@@ -820,8 +820,9 @@ void Control::ProcessExtDirs()
                     char* directory_name = new char[input_name_length + 3];
                     strcpy(directory_name, head);
                     if (directory_name[input_name_length - 1] != U_SLASH)
-                        strcat(directory_name, StringConstant::U8S_SL);
-                    strcat(directory_name, StringConstant::U8S_ST);
+                        directory_name[input_name_length++] = U_SLASH;
+                    directory_name[input_name_length++] = U_STAR;
+                    directory_name[input_name_length] = U_NULL;
 
                     WIN32_FIND_DATA entry;
                     HANDLE file_handle = FindFirstFile(directory_name, &entry);

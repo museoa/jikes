@@ -1,5 +1,12 @@
 2004-02-26  Eric Blake  <ebb9@byu.net>
 
+	* src/option.cpp (SaveCurrentDirectoryOnDisk, nocleanup): Fix
+	mingw build.
+	* src/symbol.cpp (ReadDirectory): Ditto.
+	* src/system.cpp (ProcessExtDirs): Ditto.
+
+2004-02-26  Eric Blake  <ebb9@byu.net>
+
 	* src/ast.h (AstFormalParameter::ellipsis_token_opt): New field.
 	* src/ast.cpp (AstFormalParameter::Clone, Print): Support it.
 	* src/unparse.cpp (AstFormalParameter::Unparse): Ditto.

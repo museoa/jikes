@@ -872,11 +872,13 @@ void DirectorySymbol::ReadDirectory()
 #elif defined(WIN32_FILE_SYSTEM)
 
         // +2 for "/*" +1 for '\0'
-        char* directory_name = new char[DirectoryNameLength() + 3];
+        int dir_name_len = DirectoryNameLength();
+        char* directory_name = new char[dir_name_len + 3];
         strcpy(directory_name, DirectoryName());
-        if (directory_name[DirectoryNameLength() - 1] != U_SLASH)
-            strcat(directory_name, StringConstant::U8S_SL);
-        strcat(directory_name, StringConstant::U8S_ST);
+        if (directory_name[dir_name_len - 1] != U_SLASH)
+            directory_name[dir_name_len++] = U_SLASH;
+        directory_name[dir_name_len++] = U_STAR;
+        directory_name[dir_name_len] = U_NULL;
 
         WIN32_FIND_DATA entry;
         HANDLE file_handle = FindFirstFile(directory_name, &entry);

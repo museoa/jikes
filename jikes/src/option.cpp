@@ -261,7 +261,8 @@ void Option::SaveCurrentDirectoryOnDisk(char c)
         if (! disk_directory)
         {
             disk_directory = new char[2];
-            strcpy(disk_directory, StringConstant::U8S_DO);
+            disk_directory[0] = U_DOT;
+            disk_directory[1] = U_NULL;
         }
 
         current_directory[Case::ToAsciiLower(c)] = disk_directory;
@@ -349,7 +350,8 @@ Option::Option(ArgumentExpander& arguments,
                                        main_current_directory);
     if (length > directory_length)
     {
-        strcpy(main_current_directory, StringConstant::U8S_DO);
+        main_current_directory[0] = U_DOT;
+        main_current_directory[1] = U_NULL;
         main_disk = 0;
     }
     else
