@@ -2100,16 +2100,11 @@ void Semantic::FindVariableMember(TypeSymbol *type, TypeSymbol *environment_type
             assert(variable_symbol -> IsTyped());
 
             //
-            // If a variable is FINAL and initialized with a constant expression,
-            // we substitute the expression here. JLS section 15.27, pp 381-382.
+            // If a variable is FINAL, initialized with a constant expression,
+            // and of the form TypeName.Identifier, we substitute the
+            // expression here. - JLS 15.28
             //
-            // TODO: Note that the JLS is a bit ambiguous and that a strict reading
-            // of 15.27 would prohibit substitution of a final constant value here.
-            // However, javac seems to accept it and as the section on qualified name
-            // only mentions "final" but not "static" and as it is not possible to derefence
-            // a non-static final with a TypeName, we decided to relax the rules also.
-            //
-            if (variable_symbol -> ACC_FINAL() && field_access -> base -> IsName())
+            if (variable_symbol -> ACC_FINAL() && field_access -> base -> TypeExpressionCast())
             {
                 //
                 // If the field declaration of the type has been completely processed,

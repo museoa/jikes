@@ -1,5 +1,10 @@
 2001-04-04  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/expr.cpp: comply with JLS 15.28 by substituting
+	final expressions of type TypeName.identifier.
+
+2001-04-04  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/bytecode.h: parenthesized expressions can
 	be constant expressions. fixes Jacks 3.10.5-runtime-1
 	and bug 66.
