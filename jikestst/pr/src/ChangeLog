@@ -1,5 +1,20 @@
 1999-06-08    <shields@jikes.watson.ibm.com>
 
+	* pr304a.java: 
+	* pr304b.java:
+	* pr308a.java:
+	* pr308b.java:
+	* pr308c.java:
+	* pr309a.java:
+	* pr309b.java:
+	* pr313a.java:
+	* pr313b.java:
+	* pr317a.java:
+	* pr317b.java:
+	* pr340a.java:
+	* pr340b.java:
+	Add more tests
+
 	* pr199a.java: 
 	* pr199e.java:
 	* pr199f.java:
