@@ -357,7 +357,7 @@ DefaultFileReader::~DefaultFileReader()
         {
             if (buffer)
             {
-                UnmapViewOfFile(buffer);
+                UnmapViewOfFile((void *) buffer);
             }
             CloseHandle(mapfile);
         }
@@ -368,7 +368,7 @@ DefaultFileReader::~DefaultFileReader()
 
 // Create a windows file and map the file onto processor memory.
 DefaultFileWriter::DefaultFileWriter(const char *fileName,size_t maxSize):
-    WriteObject(maxSize)
+    FileWriter(maxSize)
 {
     valid  = false;
     dataWritten    = 0;
