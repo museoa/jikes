@@ -423,7 +423,7 @@ void LexStream::ProcessInput(char *buffer, long filesize)
 
         while(source_ptr <= source_tail)
         {
-            *(++input_ptr) = *source_ptr++;
+            *(++input_ptr) = (*source_ptr++) & 0x00ff; // The (& 0x00ff) guarantees that quantity is copied as unsigned value
 
             if (*input_ptr == U_CARRIAGE_RETURN)
             {
