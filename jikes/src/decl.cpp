@@ -2591,6 +2591,18 @@ void Semantic::CheckMethodOverride(MethodSymbol* method,
         base_type -> MarkBad();
     }
 
+    //
+    // Warn if a method we have source for is overriding a deprecated method.
+    //
+    if (control.option.deprecation &&
+        hidden_method -> IsDeprecated() &&
+        ! method -> containing_type -> file_symbol -> IsClassOnly())
+    {
+        ReportSemError(SemanticError::DEPRECATED_METHOD_OVERRIDE,
+                       left_tok, right_tok, method -> Header(),
+                       hidden_method -> containing_type -> ContainingPackageName(),
+                       hidden_method -> containing_type -> ExternalName());
+    }
 
     //
     // Both or neither versions must be static.

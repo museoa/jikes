@@ -1,3 +1,8 @@
+2004-09-26  Elliott Hughes  <enh@acm.org>
+
+	* src/decl.cpp, src/error.cpp, src/error.h: bug #4046; warn when
+	overriding a deprecated method.
+
 2004-09-13  Elliott Hughes  <enh@acm.org>
 
 	* src/decl.cpp: bug #4042; constructors and default constructors
