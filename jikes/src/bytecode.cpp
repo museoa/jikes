@@ -2835,7 +2835,7 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
             case AstBinaryExpression::LEFT_SHIFT:
             case AstBinaryExpression::RIGHT_SHIFT:
             case AstBinaryExpression::UNSIGNED_RIGHT_SHIFT:
-                 if (this_control.IsSimpleIntegerValueType(right_type))
+                 if (this_control.IsSimpleIntegerValueType(right_type) || right_type == this_control.boolean_type)
                      LoadShort(0);
                  else
                  {
@@ -2887,7 +2887,7 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
                  return GetTypeWords(expression -> Type());
             case AstBinaryExpression::STAR:
             case AstBinaryExpression::AND: // here for cases that evaluate to zero
-                 if (this_control.IsSimpleIntegerValueType(left_type))
+                 if (this_control.IsSimpleIntegerValueType(left_type) || left_type == this_control.boolean_type)
                       LoadShort(0);
                  else
                  {
@@ -4937,7 +4937,7 @@ void ByteCode::StoreLocalVariable(VariableSymbol *var)
 
 void ByteCode::StoreLocal(int varno, TypeSymbol *type)
 {
-    if (this_control.IsSimpleIntegerValueType(type)|| type == this_control.boolean_type)
+    if (this_control.IsSimpleIntegerValueType(type) || type == this_control.boolean_type)
     {
          if (varno <= 3)
               PutOp(OP_ISTORE_0 + varno);

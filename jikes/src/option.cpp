@@ -31,19 +31,17 @@ bool ArgumentExpander::ArgumentExpanded(Tuple<char *> &arguments, char *file_nam
             //
             // isgraph(c) is true if c is any printing character except space.
             //
-            while ((! isgraph(buffer[k])) && buffer[k] != '\n' && buffer[k] != '\r')
+            while (buffer[k] == U_SPACE || buffer[k] == U_LINE_FEED || buffer[k] == U_CARRIAGE_RETURN)
                 k++;
-            if (buffer[k] != '\n' && buffer[k] != '\r')
-            {
-                int n;
-                for (n = k + 1; buffer[n] != '\n' && buffer[n] != '\r'; n++)
-                    ;
-                buffer[n] = U_NULL;
-                char *str = new char[n - k + 1];
-                strcpy(str, &buffer[k]);
-                arguments.Next() = str;
-                k = n;
-            }
+
+            int n;
+            for (n = k + 1; ! (buffer[n] == U_SPACE || buffer[n] == U_LINE_FEED || buffer[n] == U_CARRIAGE_RETURN); n++)
+                ;
+            buffer[n] = U_NULL;
+            char *str = new char[n - k + 1];
+            strcpy(str, &buffer[k]);
+            arguments.Next() = str;
+            k = n;
         }
         delete [] buffer;
         fclose(afile);

@@ -19,9 +19,7 @@
 //
 inline void TypeCycleChecker::ReverseTypeList()
 {
-    int head,
-        tail;
-    for (head = 0, tail = type_list.Length() - 1; head < tail; head++, tail--)
+    for (int head = 0, tail = type_list.Length() - 1; head < tail; head++, tail--)
     {
         TypeSymbol *temp = type_list[head];
         type_list[head] = type_list[tail];
@@ -47,16 +45,14 @@ void TypeCycleChecker::PartialOrder(Tuple<Semantic *> &semantic, int start)
         {
             AstClassDeclaration *class_declaration = sem -> compilation_unit -> TypeDeclaration(k) -> ClassDeclarationCast();
             AstInterfaceDeclaration *interface_declaration = sem -> compilation_unit -> TypeDeclaration(k) -> InterfaceDeclarationCast();
-            if (class_declaration || interface_declaration)
+            SemanticEnvironment *env = (class_declaration ? class_declaration -> semantic_environment
+                                                          : (interface_declaration ? interface_declaration -> semantic_environment
+                                                                                   : (SemanticEnvironment *) NULL));
+            if (env) // type was successfully compiled thus far?
             {
-                SemanticEnvironment *env = (class_declaration ? class_declaration -> semantic_environment
-                                                              : interface_declaration -> semantic_environment);
-                if (env) // type was successfully compiled thus far?
-                {
-                    TypeSymbol *type = env -> Type();
-                    if (type -> index == OMEGA)
-                       ProcessSubtypes(type);
-                }
+                TypeSymbol *type = env -> Type();
+                if (type -> index == OMEGA)
+                   ProcessSubtypes(type);
             }
         }
     }

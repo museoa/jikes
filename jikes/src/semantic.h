@@ -743,8 +743,8 @@ private:
     void CleanUp();
     void CleanUpType(TypeSymbol *);
 
-    void ProcessOuterType(AstClassDeclaration *);
-    void ProcessOuterType(AstInterfaceDeclaration *);
+    void SetDefaultSuperType(AstClassDeclaration *);
+    void SetDefaultSuperType(AstInterfaceDeclaration *);
     void ProcessTypeHeader(AstClassDeclaration *);
     void MarkCircularNest(TypeSymbol *);
     void ProcessSuperTypesOfOuterType(TypeSymbol *);
@@ -844,7 +844,7 @@ private:
     TypeSymbol *FindTypeInEnvironment(SemanticEnvironment *, NameSymbol *);
     TypeSymbol *FindType(LexStream::TokenIndex);
     TypeSymbol *MustFindType(Ast *);
-    void ProcessInterface(AstExpression *);
+    void ProcessInterface(TypeSymbol *, AstExpression *);
 
     void InitializeVariable(AstFieldDeclaration *, Tuple<VariableSymbol *> &);
     void ProcessInitializer(AstBlock *, AstBlock *, MethodSymbol *, Tuple<VariableSymbol *> &);
@@ -1125,24 +1125,27 @@ public:
 
 inline void Semantic::AddDependence(TypeSymbol *base_type_, TypeSymbol *parent_type_, LexStream::TokenIndex tok, bool static_access)
 {
-    TypeSymbol *base_type = base_type_ -> outermost_type,
-               *parent_type = parent_type_ -> outermost_type; 
-
-    parent_type -> dependents -> AddElement(base_type);
-    if (static_access)
-         base_type -> static_parents -> AddElement(parent_type);
-    else base_type -> parents -> AddElement(parent_type);
-
-    if (control.option.pedantic)
+    if (base_type_ != control.no_type)
     {
-        if (parent_type -> ContainingPackage() == control.unnamed_package &&
-            base_type -> ContainingPackage() != control.unnamed_package)
+        TypeSymbol *base_type = base_type_ -> outermost_type,
+                   *parent_type = parent_type_ -> outermost_type; 
+
+        parent_type -> dependents -> AddElement(base_type);
+        if (static_access)
+             base_type -> static_parents -> AddElement(parent_type);
+        else base_type -> parents -> AddElement(parent_type);
+
+        if (control.option.pedantic)
         {
-            error -> Report(SemanticError::PARENT_TYPE_IN_UNNAMED_PACKAGE,
-                            tok,
-                            tok,
-                            parent_type_ -> ContainingPackage() -> PackageName(),
-                            parent_type_ -> ExternalName());
+            if (parent_type -> ContainingPackage() == control.unnamed_package &&
+                base_type -> ContainingPackage() != control.unnamed_package)
+            {
+                error -> Report(SemanticError::PARENT_TYPE_IN_UNNAMED_PACKAGE,
+                                tok,
+                                tok,
+                                parent_type_ -> ContainingPackage() -> PackageName(),
+                                parent_type_ -> ExternalName());
+            }
         }
     }
 

@@ -1444,7 +1444,10 @@ void Semantic::ProcessClassDeclaration(Ast *stmt)
 
     CheckClassMembers(inner_type, class_body);
 
-    ProcessTypeHeaders(class_declaration);
+    ProcessTypeHeader(class_declaration);
+    ProcessNestedTypeHeaders(inner_type, class_declaration -> class_body);
+    ProcessSuperTypesOfOuterType(inner_type);
+
     ProcessMembers(class_declaration -> semantic_environment, class_body);
     CompleteSymbolTable(class_declaration -> semantic_environment, class_declaration -> identifier_token, class_body);
     ProcessExecutableBodies(class_declaration -> semantic_environment, class_body);

@@ -241,6 +241,7 @@ void SemanticError::StaticInitializer()
 
     warning[INVALID_OPTION] = 1;
     warning[CANNOT_OPEN_ZIP_FILE] = 1;
+    warning[CANNOT_OPEN_PATH_DIRECTORY] = 1;
 
     warning[EMPTY_DECLARATION] = 1;
     warning[REDUNDANT_ABSTRACT] = 1;
@@ -303,6 +304,7 @@ void SemanticError::StaticInitializer()
     print_message[UNSUPPORTED_OPTION] = PrintUNSUPPORTED_OPTION;
     print_message[NO_CURRENT_DIRECTORY] = PrintNO_CURRENT_DIRECTORY;
     print_message[CANNOT_OPEN_ZIP_FILE] = PrintCANNOT_OPEN_ZIP_FILE;
+    print_message[CANNOT_OPEN_PATH_DIRECTORY] = PrintCANNOT_OPEN_PATH_DIRECTORY;
     print_message[PACKAGE_NOT_FOUND] = PrintPACKAGE_NOT_FOUND;
     print_message[CANNOT_OPEN_DIRECTORY] = PrintCANNOT_OPEN_DIRECTORY;
     print_message[BAD_INPUT_FILE] = PrintBAD_INPUT_FILE;
@@ -1027,6 +1029,16 @@ void SemanticError::PrintCANNOT_OPEN_ZIP_FILE(ErrorInfo &err, LexStream *lex_str
     cout << "The file \"";
     Unicode::Cout(err.insert1);
     cout << "\" is not a valid zip file.";
+
+    return;
+}
+
+
+void SemanticError::PrintCANNOT_OPEN_PATH_DIRECTORY(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "The file \"";
+    Unicode::Cout(err.insert1);
+    cout << "\" is not a valid directory.";
 
     return;
 }

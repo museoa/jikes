@@ -151,7 +151,12 @@ Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
     //
     for (int l = 0; l < bad_zip_filenames.Length(); l++)
     {
-        system_semantic -> ReportSemError(SemanticError::CANNOT_OPEN_ZIP_FILE,
+        wchar_t *tail = &bad_zip_filenames[l][wcslen(bad_zip_filenames[l]) - 3];
+
+        system_semantic -> ReportSemError(Case::StringSegmentEqual(tail, StringConstant::US__zip, 3) ||
+                                          Case::StringSegmentEqual(tail, StringConstant::US__jar, 3)
+                                               ? SemanticError::CANNOT_OPEN_ZIP_FILE
+                                               : SemanticError::CANNOT_OPEN_PATH_DIRECTORY,
                                           0,
                                           0,
                                           bad_zip_filenames[l]);

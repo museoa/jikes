@@ -697,7 +697,7 @@ void Semantic::ProcessSuperTypes()
                         }
                     }
 
-                    ProcessOuterType(class_declaration);
+                    SetDefaultSuperType(class_declaration);
                 }
                 break;
             }
@@ -714,7 +714,7 @@ void Semantic::ProcessSuperTypes()
                             super_type -> subtypes -> AddElement(type);
                     }
 
-                    ProcessOuterType(interface_declaration);
+                    SetDefaultSuperType(interface_declaration);
                 }
                 break;
             }
@@ -776,7 +776,7 @@ void Semantic::ProcessSuperTypes()
 }
 
 
-void Semantic::ProcessOuterType(AstClassDeclaration *class_declaration)
+void Semantic::SetDefaultSuperType(AstClassDeclaration *class_declaration)
 {
     TypeSymbol *type = class_declaration -> semantic_environment -> Type();
 
@@ -796,21 +796,21 @@ void Semantic::ProcessOuterType(AstClassDeclaration *class_declaration)
     {
         AstClassDeclaration *inner_class_declaration = class_body -> NestedClass(i);
         if (inner_class_declaration -> semantic_environment)
-            ProcessOuterType(inner_class_declaration);
+            SetDefaultSuperType(inner_class_declaration);
     }
 
     for (int j = 0; j < class_body -> NumNestedInterfaces(); j++)
     {
         AstInterfaceDeclaration *inner_interface_declaration = class_body -> NestedInterface(j);
         if (inner_interface_declaration -> semantic_environment)
-            ProcessOuterType(inner_interface_declaration);
+            SetDefaultSuperType(inner_interface_declaration);
     }
 
     return;
 }
 
 
-void Semantic::ProcessOuterType(AstInterfaceDeclaration *interface_declaration)
+void Semantic::SetDefaultSuperType(AstInterfaceDeclaration *interface_declaration)
 {
     TypeSymbol *type = interface_declaration -> semantic_environment -> Type();
 
@@ -824,14 +824,14 @@ void Semantic::ProcessOuterType(AstInterfaceDeclaration *interface_declaration)
     {
         AstClassDeclaration *inner_class_declaration = interface_declaration -> NestedClass(i);
         if (inner_class_declaration -> semantic_environment)
-            ProcessOuterType(inner_class_declaration);
+            SetDefaultSuperType(inner_class_declaration);
     }
 
     for (int j = 0; j < interface_declaration -> NumNestedInterfaces(); j++)
     {
         AstInterfaceDeclaration *inner_interface_declaration = interface_declaration -> NestedInterface(j);
         if (inner_interface_declaration -> semantic_environment)
-            ProcessOuterType(inner_interface_declaration);
+            SetDefaultSuperType(inner_interface_declaration);
     }
 
     return;
@@ -843,11 +843,13 @@ void Semantic::ProcessOuterType(AstInterfaceDeclaration *interface_declaration)
 //
 void Semantic::ProcessTypeHeader(AstClassDeclaration *class_declaration)
 {
-    state_stack.Push(class_declaration -> semantic_environment);
-    TypeSymbol *this_type = ThisType();
+    TypeSymbol *this_type = class_declaration -> semantic_environment -> Type();
 
     assert(! this_type -> HeaderProcessed() || this_type -> Bad());
 
+    //
+    // If the class does not have a super type then ...
+    //
     if (! class_declaration -> super_opt)
     {
         if (this_type -> Identity() != control.object_name_symbol ||
@@ -904,11 +906,9 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration *class_declaration)
     }
 
     for (int i = 0; i < class_declaration -> NumInterfaces(); i++)
-        ProcessInterface(class_declaration -> Interface(i));
+        ProcessInterface(this_type, class_declaration -> Interface(i));
 
     this_type -> MarkHeaderProcessed();
-
-    state_stack.Pop();
 
     return;
 }
@@ -916,14 +916,13 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration *class_declaration)
 
 void Semantic::ProcessTypeHeader(AstInterfaceDeclaration *interface_declaration)
 {
-    state_stack.Push(interface_declaration -> semantic_environment);
-    TypeSymbol *this_type = ThisType();
+    TypeSymbol *this_type = interface_declaration -> semantic_environment -> Type();
 
     assert(! this_type -> HeaderProcessed() || this_type -> Bad());
 
     SetObjectSuperType(this_type, interface_declaration -> identifier_token);
     for (int k = 0; k < interface_declaration -> NumExtendsInterfaces(); k++)
-        ProcessInterface(interface_declaration -> ExtendsInterface(k));
+        ProcessInterface(this_type, interface_declaration -> ExtendsInterface(k));
 
     assert(this_type -> subtypes_closure);
 
@@ -943,8 +942,6 @@ void Semantic::ProcessTypeHeader(AstInterfaceDeclaration *interface_declaration)
     }
 
     this_type -> MarkHeaderProcessed();
-
-    state_stack.Pop();
 
     return;
 }
@@ -1176,7 +1173,21 @@ void Semantic::ProcessSuperTypesOfInnerType(TypeSymbol *type, Tuple<TypeSymbol *
 
 void Semantic::ProcessTypeHeaders(AstClassDeclaration *class_declaration)
 {
+    //
+    // We need to create a phony environment for an outermost type, 
+    // in order to properly lookup its super type and super interfaces.
+    // We cannot use the environment of this_type as this would cause us
+    // to first look for the super type inside this_type.
+    //
+    assert(state_stack.Size() == 0);
+
+    SemanticEnvironment environment((Semantic *) this, control.no_type);
+    state_stack.Push(&environment);
+
     ProcessTypeHeader(class_declaration);
+
+    state_stack.Pop();
+
     ProcessNestedTypeHeaders(class_declaration -> semantic_environment -> Type(), class_declaration -> class_body);
     ProcessSuperTypesOfOuterType(class_declaration -> semantic_environment -> Type());
 
@@ -1186,7 +1197,21 @@ void Semantic::ProcessTypeHeaders(AstClassDeclaration *class_declaration)
 
 void Semantic::ProcessTypeHeaders(AstInterfaceDeclaration *interface_declaration)
 {
+    //
+    // We need to create a phony environment for an outermost type, 
+    // in order to properly lookup its super type and super interfaces.
+    // We cannot use the environment of this_type as this would cause us
+    // to first look for the super type inside this_type.
+    //
+    assert(state_stack.Size() == 0);
+
+    SemanticEnvironment environment((Semantic *) this, control.no_type);
+    state_stack.Push(&environment);
+
     ProcessTypeHeader(interface_declaration);
+
+    state_stack.Pop();
+
     ProcessNestedTypeHeaders(interface_declaration);
     ProcessSuperTypesOfOuterType(interface_declaration -> semantic_environment -> Type());
 
@@ -4100,7 +4125,7 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
 }
 
 
-void Semantic::ProcessInterface(AstExpression *name)
+void Semantic::ProcessInterface(TypeSymbol *base_type, AstExpression *name)
 {
     TypeSymbol *interf = MustFindType(name);
 
@@ -4119,24 +4144,21 @@ void Semantic::ProcessInterface(AstExpression *name)
     }
     else
     {
-        TypeSymbol *this_type = ThisType();
-        int k;
-        for (k = 0; k < this_type -> NumInterfaces(); k++)
-            if (this_type -> Interface(k) == interf)
-                break;
-        if (k < this_type -> NumInterfaces())
+        for (int k = 0; k < base_type -> NumInterfaces(); k++)
         {
-            ReportSemError(SemanticError::DUPLICATE_INTERFACE,
-                           name -> LeftToken(),
-                           name -> RightToken(),
-                           interf -> ContainingPackage() -> PackageName(),
-                           interf -> ExternalName(),
-                           this_type -> ExternalName());
+            if (base_type -> Interface(k) == interf)
+            {
+                ReportSemError(SemanticError::DUPLICATE_INTERFACE,
+                               name -> LeftToken(),
+                               name -> RightToken(),
+                               interf -> ContainingPackage() -> PackageName(),
+                               interf -> ExternalName(),
+                               base_type -> ExternalName());
+                return;
+            }
         }
-        else
-        {
-            this_type -> AddInterface(interf);
-        }
+
+        base_type -> AddInterface(interf);
     }
 
     return;

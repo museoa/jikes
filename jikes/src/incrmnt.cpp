@@ -336,6 +336,7 @@ void Control::ComputeRecompilationSet(TypeDependenceChecker &dependence_checker)
         TypeSymbol *type = type_list[k];
 
         type -> index = CycleChecker::OMEGA;
+        type -> unit_index = CycleChecker::OMEGA;
         type -> incremental_index = CycleChecker::OMEGA;
         delete type -> dependents_closure;
         type -> dependents_closure = NULL;

@@ -624,12 +624,16 @@ public:
     TypeSymbol *outermost_type; // An nested class identifies the outer most type that contains it.
                                 // If a class is not nested then it identifies itself as its outer
                                 // most type.
-    TypeSymbol *super;
-    TypeSymbol *base_type; // indicates the base type (type of elements in the last dimension) of an array
+    TypeSymbol *super,
+               *base_type; // indicates the base type (type of elements in the last dimension) of an array
                            // For a normal type base_type is NULL. If base_type is a "bad" type it points
                            // to itsself (this).
-    int index,             // The first two variables is used in TypeCycleChecker to determine if this class or interface
-                           // forms a cycle in its "extends" or "implements" relationship.
+    int index,             // This variable is used in TypeCycleChecker to determine if this type
+                           // forms an inter-type cycle in its "extends" or "implements" relationship.
+                           //
+        unit_index,        // This variable is used in TypeCycleChecker to check if this type
+                           // forms an intra-type cycle in its "extends" or "implements" relationship;
+                           //
         incremental_index; // This variable is used in TypeCycleChecker to determine which types (files)
                            // need to be recompiled based on the "dependent" relationship.
 

@@ -37,6 +37,7 @@ public:
 
         NO_CURRENT_DIRECTORY,
         CANNOT_OPEN_ZIP_FILE,
+        CANNOT_OPEN_PATH_DIRECTORY,
         PACKAGE_NOT_FOUND,
         CANNOT_OPEN_DIRECTORY,
         BAD_INPUT_FILE,
@@ -356,6 +357,7 @@ private:
     static void PrintUNSUPPORTED_OPTION(ErrorInfo &, LexStream *, Control &);
     static void PrintNO_CURRENT_DIRECTORY(ErrorInfo &, LexStream *, Control &);
     static void PrintCANNOT_OPEN_ZIP_FILE(ErrorInfo &, LexStream *, Control &);
+    static void PrintCANNOT_OPEN_PATH_DIRECTORY(ErrorInfo &, LexStream *, Control &);
     static void PrintPACKAGE_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
     static void PrintCANNOT_OPEN_DIRECTORY(ErrorInfo &, LexStream *, Control &);
     static void PrintBAD_INPUT_FILE(ErrorInfo &, LexStream *, Control &);
