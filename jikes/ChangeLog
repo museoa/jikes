@@ -1,3 +1,10 @@
+2001-11-02  Mo DeJong  <supermo@bayarea.net>
+
+	* configure.in: Add --enable-jikes-namespace flag. Jikes classes
+	and functions will be defined in a C++ namespace when enabled.
+	* configure: Regen.
+	* src/config.h.in: Regen. Patch 220.
+
 2001-11-01  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/option.cpp (enum ParseState): Inline into the single method

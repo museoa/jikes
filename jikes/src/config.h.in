@@ -73,7 +73,7 @@ You must accept the terms of that agreement to use this software. */
 /* Define if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
-/* Define Jikes functions in a namespace */
+/* Define Jikes classes in a C++ namespace */
 #undef HAVE_JIKES_NAMESPACE
 
 /* Define if you have the <langinfo.h> header file. */
