@@ -53,8 +53,11 @@ $CVSROOT       = $ENV{'CVSROOT'};
 #this is a workaround for the fact that sby can't get mail routing right
 #should probably remove the acceptable_aliases filed from mailman config
 #as well when this is removed.
-$MAIL_TO       = 'cvs-list-hack-around-sby-stupidity@cabbey.net';
-#$MAIL_TO       = 'jikes-cvs@www-126.ibm.com';
+#I've left this commented out for when they break it again, and the
+#all that has to happen is to uncomment this and comment out the
+#other one, then we'll be in business again.
+#$MAIL_TO       = 'cvs-list-hack-around-sby-stupidity@cabbey.net';
+$MAIL_TO       = 'jikes-cvs@www-126.ibm.com';
 
 ############################################################
 #
