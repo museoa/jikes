@@ -285,7 +285,7 @@ void Operators::OpLine(Tuple<cp_info *> &constant_pool, const char *hdr,
     {
         case INFO_CONST:
              Coutput << " ";
-             if (info_index <= 0 || info_index > constant_pool.Length())
+             if (info_index <= 0 || info_index > (int) constant_pool.Length())
                 Coutput << "OUT-OF_BOUNDS CONSTANT_POOL-INDEX " << info_index;
             else {
 //              constant_pool[info_index] -> describe(constant_pool);
@@ -307,7 +307,7 @@ void Operators::OpLine(Tuple<cp_info *> &constant_pool, const char *hdr,
 void Operators::OpDmp(Tuple<cp_info *> &constant_pool, Tuple<u1> &code)
 {
     int pc = 0;
-    while (pc < code.Length())
+    while (pc < (int) code.Length())
     {
         int info_kind = INFO_NONE; // assume no extra info
         int info_index = 0;

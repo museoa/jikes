@@ -872,7 +872,8 @@ DoubleToString::DoubleToString(const IEEEdouble &d)
     BigInt b(d, be, bbits);
     LongInt x;
     i = d.SplitInto(x);
-    d1 = IEEEdouble(x) / IEEEdouble(LongInt(1) << IEEEdouble::FractSize());
+    d1 = IEEEdouble(x) /
+        IEEEdouble(LongInt(LongInt(1) << IEEEdouble::FractSize()));
     denorm = i <= -IEEEdouble::Bias();
     //
     // log(x)   ~=~ log(1.5) + (x-1.5)/1.5

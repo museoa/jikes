@@ -1,5 +1,10 @@
 2002-12-10  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/platform.cpp (DoubleToString):
+	* src/op.cpp (OpLine, OpDmp): Fix regressions in last commit.
+
+2002-12-10  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/tuple.h: Backport and improve generics-branch handling of
 	tuples; length is now unsigned instead of int.
 	* src/access.h:
