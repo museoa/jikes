@@ -1,3 +1,21 @@
+2001-12-08  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/symbol.h:
+	* src/symbol.cpp:
+	* src/expr.cpp: Code cleanup from -Wall.
+	(ProcessClassInstanceCreationExpression): Propagate exceptions
+	from anonymous class instance creation expressions outward.
+	* src/error.h:
+	* src/error.cpp (UNCAUGHT_METHOD_CHECKED_EXCEPTION),
+	(UNCAUGHT_CONSTRUCTOR_CHECKED_EXCEPTION): Rename from
+	UNCATCHABLE_*_THROWN_CHECKED_EXCEPTION.
+	(UNCAUGHT_ANONYMOUS_CONSTRUCTOR_CHECKED_EXCEPTION): New error.
+	* src/semantic.h: Reformat comments to 80 columns.
+	(CheckedException): Add bad types to list of unchecked exceptions.
+	* src/body.cpp (CatchableException): Update the behavior of
+	exceptions in anonymous classes and instance initializers - bugs
+	46, 359, 2472, patch 238.
+
 2001-12-07  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/access.h:

@@ -3260,7 +3260,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                 TypeSymbol *exception = method -> Throws(k);
                 if (! CatchableException(exception))
                 {
-                    ReportSemError(SemanticError::UNCATCHABLE_METHOD_THROWN_CHECKED_EXCEPTION,
+                    ReportSemError(SemanticError::UNCAUGHT_METHOD_CHECKED_EXCEPTION,
                                    method_call -> LeftToken(),
                                    method_call -> RightToken(),
                                    method -> Header(),
@@ -4284,7 +4284,12 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
             }
 
             if (class_creation -> class_body_opt)
+            {
                 anonymous_type = GetAnonymousType(class_creation, type);
+                method = anonymous_type -> FindConstructorSymbol();
+                if (method -> LocalConstructor())
+                    method = method -> LocalConstructor();
+            }
             else
             {
                 if (type -> ACC_INTERFACE())
@@ -4306,28 +4311,24 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
                 }
 
                 class_creation -> class_type -> symbol = method;
+            }
 
+            for (int i = method -> NumThrows() - 1; i >= 0; i--)
+            {
+                TypeSymbol *exception = method -> Throws(i);
                 if (exception_set)
-                {
-                    for (int i = method -> NumThrows() - 1; i >= 0; i--)
-                        exception_set -> AddElement(method -> Throws(i));
-                }
+                    exception_set -> AddElement(exception);
 
-                if (! (ThisType() -> Anonymous() && ThisMethod() && ThisMethod() -> Identity() == control.block_init_name_symbol))
+                if (! CatchableException(exception))
                 {
-                    for (int k = method -> NumThrows() - 1; k >= 0; k--)
-                    {
-                        TypeSymbol *exception = method -> Throws(k);
-                        if (! CatchableException(exception))
-                        {
-                            ReportSemError(SemanticError::UNCATCHABLE_CONSTRUCTOR_THROWN_CHECKED_EXCEPTION,
-                                           actual_type -> LeftToken(),
-                                           actual_type -> RightToken(),
-                                           type -> ExternalName(),
-                                           exception -> ContainingPackage() -> PackageName(),
-                                           exception -> ExternalName());
-                        }
-                    }
+                    ReportSemError((class_creation -> class_body_opt
+                                    ? SemanticError::UNCAUGHT_CONSTRUCTOR_CHECKED_EXCEPTION
+                                    : SemanticError::UNCAUGHT_ANONYMOUS_CONSTRUCTOR_CHECKED_EXCEPTION),
+                                   actual_type -> LeftToken(),
+                                   actual_type -> RightToken(),
+                                   type -> ExternalName(),
+                                   exception -> ContainingPackage() -> PackageName(),
+                                   exception -> ExternalName());
                 }
             }
 
@@ -6908,10 +6909,7 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
         }
 
         if (read_method)
-        {
-            VariableSymbol *symbol = (VariableSymbol *) read_method -> accessed_member;
             assignment_expression -> write_method = read_method -> containing_type -> GetWriteAccessFromReadAccess(read_method);
-        }
     }
     else // the left-hand-side is an array access
     {

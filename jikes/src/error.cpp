@@ -695,8 +695,9 @@ void SemanticError::StaticInitializer()
     print_message[SUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION] = PrintSUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION;
     print_message[INNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION] = PrintINNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION;
     print_message[EXPRESSION_NOT_CONSTANT] = PrintEXPRESSION_NOT_CONSTANT;
-    print_message[UNCATCHABLE_METHOD_THROWN_CHECKED_EXCEPTION] = PrintUNCATCHABLE_METHOD_THROWN_CHECKED_EXCEPTION;
-    print_message[UNCATCHABLE_CONSTRUCTOR_THROWN_CHECKED_EXCEPTION] = PrintUNCATCHABLE_CONSTRUCTOR_THROWN_CHECKED_EXCEPTION;
+    print_message[UNCAUGHT_METHOD_CHECKED_EXCEPTION] = PrintUNCAUGHT_METHOD_CHECKED_EXCEPTION;
+    print_message[UNCAUGHT_CONSTRUCTOR_CHECKED_EXCEPTION] = PrintUNCAUGHT_CONSTRUCTOR_CHECKED_EXCEPTION;
+    print_message[UNCAUGHT_ANONYMOUS_CONSTRUCTOR_CHECKED_EXCEPTION] = PrintUNCAUGHT_ANONYMOUS_CONSTRUCTOR_CHECKED_EXCEPTION;
     print_message[UNREACHABLE_CATCH_CLAUSE] = PrintUNREACHABLE_CATCH_CLAUSE;
     print_message[UNREACHABLE_DEFAULT_CATCH_CLAUSE] = PrintUNREACHABLE_DEFAULT_CATCH_CLAUSE;
     print_message[UNREACHABLE_STATEMENT] = PrintUNREACHABLE_STATEMENT;
@@ -3997,9 +3998,9 @@ wchar_t *SemanticError::PrintEXPRESSION_NOT_CONSTANT(ErrorInfo &err,
 }
 
 
-wchar_t *SemanticError::PrintUNCATCHABLE_METHOD_THROWN_CHECKED_EXCEPTION(ErrorInfo &err,
-                                                                         LexStream *lex_stream,
-                                                                         Control &control)
+wchar_t *SemanticError::PrintUNCAUGHT_METHOD_CHECKED_EXCEPTION(ErrorInfo &err,
+                                                               LexStream *lex_stream,
+                                                               Control &control)
 {
     ErrorString s;
 
@@ -4015,9 +4016,9 @@ wchar_t *SemanticError::PrintUNCATCHABLE_METHOD_THROWN_CHECKED_EXCEPTION(ErrorIn
 }
 
 
-wchar_t *SemanticError::PrintUNCATCHABLE_CONSTRUCTOR_THROWN_CHECKED_EXCEPTION(ErrorInfo &err,
-                                                                              LexStream *lex_stream,
-                                                                              Control &control)
+wchar_t *SemanticError::PrintUNCAUGHT_CONSTRUCTOR_CHECKED_EXCEPTION(ErrorInfo &err,
+                                                                    LexStream *lex_stream,
+                                                                    Control &control)
 {
     ErrorString s;
 
@@ -4025,7 +4026,25 @@ wchar_t *SemanticError::PrintUNCATCHABLE_CONSTRUCTOR_THROWN_CHECKED_EXCEPTION(Er
       << "\" can throw the checked exception \"";
     if (NotDot(err.insert2))
         s << err.insert2 << "/";
-    s << err.insert3 << "\", but its invocation is neither enclosed in a "
+    s << err.insert3 << "\", but the class creation is neither enclosed in a "
+      << "try statement that can catch that exception nor in the body of a "
+      << "method or constructor that \"throws\" that exception.";
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintUNCAUGHT_ANONYMOUS_CONSTRUCTOR_CHECKED_EXCEPTION(ErrorInfo &err,
+                                                                              LexStream *lex_stream,
+                                                                              Control &control)
+{
+    ErrorString s;
+
+    s << "The constructor in the anonymous subclass of \"" << err.insert1
+      << "\" can throw the checked exception \"";
+    if (NotDot(err.insert2))
+        s << err.insert2 << "/";
+    s << err.insert3 << "\", but the class creation is neither enclosed in a "
       << "try statement that can catch that exception nor in the body of a "
       << "method or constructor that \"throws\" that exception.";
 

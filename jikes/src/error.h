@@ -299,8 +299,9 @@ class SemanticError
         SUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
         INNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
         EXPRESSION_NOT_CONSTANT,
-        UNCATCHABLE_METHOD_THROWN_CHECKED_EXCEPTION,
-        UNCATCHABLE_CONSTRUCTOR_THROWN_CHECKED_EXCEPTION,
+        UNCAUGHT_METHOD_CHECKED_EXCEPTION,
+        UNCAUGHT_CONSTRUCTOR_CHECKED_EXCEPTION,
+        UNCAUGHT_ANONYMOUS_CONSTRUCTOR_CHECKED_EXCEPTION,
         UNREACHABLE_CATCH_CLAUSE,
         UNREACHABLE_DEFAULT_CATCH_CLAUSE,
         UNREACHABLE_STATEMENT,
@@ -608,8 +609,9 @@ private:
     static wchar_t *PrintSUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintEXPRESSION_NOT_CONSTANT(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintUNCATCHABLE_METHOD_THROWN_CHECKED_EXCEPTION(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintUNCATCHABLE_CONSTRUCTOR_THROWN_CHECKED_EXCEPTION(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintUNCAUGHT_METHOD_CHECKED_EXCEPTION(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintUNCAUGHT_CONSTRUCTOR_CHECKED_EXCEPTION(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintUNCAUGHT_ANONYMOUS_CONSTRUCTOR_CHECKED_EXCEPTION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNREACHABLE_CATCH_CLAUSE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNREACHABLE_DEFAULT_CATCH_CLAUSE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNREACHABLE_STATEMENT(ErrorInfo &, LexStream *, Control &);

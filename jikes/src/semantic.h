@@ -42,8 +42,9 @@ public:
     SymbolTable *operator[](const int i) { return table[i]; } /*  */
 
     //
-    // Search for a variable in a stack of symbol tables starting at the current symbol table
-    // and ending with the symbol table of the method from which this call originates.
+    // Search for a variable in a stack of symbol tables starting at the
+    // current symbol table and ending with the symbol table of the method
+    // from which this call originates.
     //
     VariableSymbol *FindVariableSymbol(NameSymbol *name_symbol)
     {
@@ -57,8 +58,9 @@ public:
     }
 
     //
-    // Search for a type in a stack of symbol tables starting at the current symbol table
-    // and ending with the symbol table of the method from which this call originates.
+    // Search for a type in a stack of symbol tables starting at the current
+    // symbol table and ending with the symbol table of the method from which
+    // this call originates.
     //
     TypeSymbol* FindTypeSymbol(NameSymbol *name_symbol)
     {
@@ -72,8 +74,9 @@ public:
     }
 
     //
-    // Search for a label in a stack of symbol tables starting at the current symbol table
-    // and ending with the symbol table of the method from which this call originates.
+    // Search for a label in a stack of symbol tables starting at the current
+    // symbol table and ending with the symbol table of the method from which
+    // this call originates.
     //
     LabelSymbol* FindLabelSymbol(NameSymbol *name_symbol)
     {
@@ -415,15 +418,16 @@ public:
                    continuable_statement_stack;
     BlockStack block_stack;
 
-    SemanticEnvironment(Semantic *sem_, TypeSymbol *type_, SemanticEnvironment *previous_ = NULL)
-            : sem(sem_),
-              previous(previous_),
-              this_method(NULL),
-              this_variable(NULL),
-              explicit_constructor_invocation(NULL),
-              ast_construct(NULL),
-              _type(type_),
-              next(NULL)
+    SemanticEnvironment(Semantic *sem_,
+                        TypeSymbol *type_,
+                        SemanticEnvironment *previous_ = NULL) : sem(sem_),
+                                                                 previous(previous_),
+                                                                 this_method(NULL),
+                                                                 this_variable(NULL),
+                                                                 explicit_constructor_invocation(NULL),
+                                                                 ast_construct(NULL),
+                                                                 _type(type_),
+                                                                 next(NULL)
     {}
 
 
@@ -433,9 +437,9 @@ public:
     }
 
     //
-    // Clone the immediate environment of "this" Semantic environment.
-    // The immediate environment consists primarily of the stack of symbol
-    // tables that are necessary for looking up local variables in the immediate
+    // Clone the immediate environment of "this" Semantic environment. The
+    // immediate environment consists primarily of the stack of symbol tables
+    // that are necessary for looking up local variables in the immediate
     // environment.
     //
     SemanticEnvironment *GetEnvironment(Ast *ast)
@@ -455,7 +459,7 @@ public:
     TypeSymbol *Type() { return _type; }
 
     //
-    // Are we in a static area ?
+    // Are we in a static area?
     //
     inline bool StaticRegion()
     {
@@ -522,22 +526,23 @@ public:
 
     LiteralValue *ComputeFinalValue(AstVariableDeclarator *);
 
-    Semantic(Control &control_, FileSymbol *file_symbol_) : control(control_),
-                                                            source_file_symbol(file_symbol_),
-                                                            lex_stream(file_symbol_ -> lex_stream),
-                                                            compilation_unit(file_symbol_ -> compilation_unit),
-                                                            directory_symbol(file_symbol_ -> directory_symbol),
-                                                            return_code(0),
-                                                            error(NULL),
-                                                            this_package(file_symbol_ -> package),
-                                                            definitely_assigned_variables(NULL),
-                                                            universe(NULL),
-                                                            blank_finals(NULL),
-                                                            definite_block_stack(NULL),
-                                                            definite_try_stack(NULL),
-                                                            definite_final_assignment_stack(NULL),
-                                                            definite_visible_variables(NULL),
-                                                            processing_simple_assignment(false)
+    Semantic(Control &control_,
+             FileSymbol *file_symbol_) : control(control_),
+                                         source_file_symbol(file_symbol_),
+                                         lex_stream(file_symbol_ -> lex_stream),
+                                         compilation_unit(file_symbol_ -> compilation_unit),
+                                         directory_symbol(file_symbol_ -> directory_symbol),
+                                         return_code(0),
+                                         error(NULL),
+                                         this_package(file_symbol_ -> package),
+                                         definitely_assigned_variables(NULL),
+                                         universe(NULL),
+                                         blank_finals(NULL),
+                                         definite_block_stack(NULL),
+                                         definite_try_stack(NULL),
+                                         definite_final_assignment_stack(NULL),
+                                         definite_visible_variables(NULL),
+                                         processing_simple_assignment(false)
     {
         ProcessExprOrStmt[Ast::LOCAL_VARIABLE_DECLARATION] = &Semantic::ProcessLocalVariableDeclarationStatement;
         ProcessExprOrStmt[Ast::BLOCK]                      = &Semantic::ProcessBlock;
@@ -814,18 +819,66 @@ private:
     //
     PackageSymbol  *this_package;
 
-    TypeSymbol *ThisType()                        { assert(state_stack.Size()); return state_stack.Top() -> Type(); }
-    MethodSymbol *&ThisMethod()                   { assert(state_stack.Size()); return state_stack.Top() -> this_method; }
-    VariableSymbol *&ThisVariable()               { assert(state_stack.Size()); return state_stack.Top() -> this_variable; }
-    Ast *&ExplicitConstructorInvocation()         { assert(state_stack.Size()); return state_stack.Top() -> explicit_constructor_invocation; }
-    SymbolTableStack &LocalSymbolTable()          { assert(state_stack.Size()); return state_stack.Top() -> symbol_table; }
-    ExceptionTableStack &TryExceptionTableStack() { assert(state_stack.Size()); return state_stack.Top() -> try_exception_table_stack; }
-    StatementStack &TryStatementStack()           { assert(state_stack.Size()); return state_stack.Top() -> try_statement_stack; }
-    StatementStack &BreakableStatementStack()     { assert(state_stack.Size()); return state_stack.Top() -> breakable_statement_stack; }
-    StatementStack &ContinuableStatementStack()   { assert(state_stack.Size()); return state_stack.Top() -> continuable_statement_stack; }
-    BlockStack &LocalBlockStack()                 { assert(state_stack.Size()); return state_stack.Top() -> block_stack; }
-    SemanticEnvironment *GetEnvironment(Ast *ast) { assert(state_stack.Size()); return state_stack.Top() -> GetEnvironment(ast); }
-    bool StaticRegion()                           { assert(state_stack.Size()); return state_stack.Top() -> StaticRegion(); }
+    TypeSymbol *ThisType()
+    {
+        assert(state_stack.Size());
+        return state_stack.Top() -> Type();
+    }
+    MethodSymbol *&ThisMethod()
+    {
+        assert(state_stack.Size());
+        return state_stack.Top() -> this_method;
+    }
+    VariableSymbol *&ThisVariable()
+    {
+        assert(state_stack.Size());
+        return state_stack.Top() -> this_variable;
+    }
+    Ast *&ExplicitConstructorInvocation()
+    {
+        assert(state_stack.Size());
+        return state_stack.Top() -> explicit_constructor_invocation;
+    }
+    SymbolTableStack &LocalSymbolTable()
+    {
+        assert(state_stack.Size());
+        return state_stack.Top() -> symbol_table;
+    }
+    ExceptionTableStack &TryExceptionTableStack()
+    {
+        assert(state_stack.Size());
+        return state_stack.Top() -> try_exception_table_stack;
+    }
+    StatementStack &TryStatementStack()
+    {
+        assert(state_stack.Size());
+        return state_stack.Top() -> try_statement_stack;
+    }
+    StatementStack &BreakableStatementStack()
+    {
+        assert(state_stack.Size());
+        return state_stack.Top() -> breakable_statement_stack;
+    }
+    StatementStack &ContinuableStatementStack()
+    {
+        assert(state_stack.Size());
+        return state_stack.Top() -> continuable_statement_stack;
+    }
+    BlockStack &LocalBlockStack()
+    {
+        assert(state_stack.Size());
+        return state_stack.Top() -> block_stack;
+    }
+    SemanticEnvironment *GetEnvironment(Ast *ast)
+    {
+        assert(state_stack.Size());
+        return state_stack.Top() -> GetEnvironment(ast);
+    }
+    bool StaticRegion()
+    {
+        assert(state_stack.Size());
+        return state_stack.Top() -> StaticRegion();
+    }
 
     SemanticEnvironmentStack state_stack;
 
@@ -1132,12 +1185,15 @@ private:
     void ReadClassFile(TypeSymbol *, LexStream::TokenIndex);
 
     //
-    // Any exception that is neither RuntimeException or one of its subclasses nor
-    // Error or one of its subclasses is a checked exception.
+    // Any exception that is neither RuntimeException or one of its subclasses
+    // nor Error or one of its subclasses is a checked exception. This also
+    // ignores invalid types.
     //
     inline bool CheckedException(TypeSymbol *exception)
     {
-        return (! (exception -> IsSubclass(control.RuntimeException()) || exception -> IsSubclass(control.Error())));
+        return (! exception -> IsSubclass(control.RuntimeException()) &&
+                ! exception -> IsSubclass(control.Error()) &&
+                exception != control.no_type);
     }
 
 public:
@@ -1183,13 +1239,15 @@ inline void Semantic::AddDependence(TypeSymbol *base_type,
     }
 }
 
-inline void Semantic::SetObjectSuperType(TypeSymbol *type, LexStream::TokenIndex tok)
+inline void Semantic::SetObjectSuperType(TypeSymbol *type,
+                                         LexStream::TokenIndex tok)
 {
     type -> super = control.Object();
     AddDependence(type, type -> super, tok);
 }
 
-inline void Semantic::AddStringConversionDependence(TypeSymbol *type, LexStream::TokenIndex tok)
+inline void Semantic::AddStringConversionDependence(TypeSymbol *type,
+                                                    LexStream::TokenIndex tok)
 {
     if (type == control.null_type)
          ;

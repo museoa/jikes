@@ -224,8 +224,6 @@ void TypeSymbol::RemoveCompilationReferences()
                 table -> AnonymousSym(l) -> declaration = NULL;
         }
     }
-
-    return;
 }
 
 
@@ -324,8 +322,6 @@ void TypeSymbol::SetLocation()
                                                            : ((AstClassInstanceCreationExpression *) declaration)
                                                                                            -> class_body_opt -> left_brace_token)));
     }
-
-    return;
 }
 
 
@@ -369,8 +365,6 @@ void TypeSymbol::SetSignature(Control &control)
         if (! (Anonymous() || IsLocal()))
             control.type_table.InsertType((TypeSymbol *) this);
     }
-
-    return;
 }
 
 
@@ -422,8 +416,6 @@ void SymbolTable::Rehash()
             base[i] = symbol;
         }
     }
-
-    return;
 }
 
 
@@ -496,8 +488,6 @@ if (hash_size < total)
         delete OtherSym(m);
     delete other_symbol_pool;
     delete [] base;
-
-    return;
 }
 
 
@@ -522,8 +512,6 @@ void PackageSymbol::SetPackageName()
     wcscat(package_name, Name());
 
     assert(wcslen(package_name) == package_name_length);
-
-    return;
 }
 
 
@@ -735,8 +723,6 @@ void DirectorySymbol::SetDirectoryName()
     }
 
     assert(strlen(directory_name) == directory_name_length);
-
-    return;
 }
 
 
@@ -851,8 +837,6 @@ void DirectorySymbol::ReadDirectory()
         delete [] directory_name;
 #endif
     }
-
-    return;
 }
 
 
@@ -892,8 +876,6 @@ void FileSymbol::SetFileName()
         strcat(file_name, StringConstant::U8S_RP);
 
     assert(strlen(file_name) == file_name_length);
-
-    return;
 }
 
 
@@ -914,8 +896,6 @@ void FileSymbol::SetFileNameLiteral(Control *control)
             file_name_length = FileNameLength() - file_name_start;
         file_name_literal = control -> Utf8_pool.FindOrInsert(file_name + file_name_start, file_name_length);
     }
-
-    return;
 }
 
 
@@ -932,8 +912,6 @@ void FileSymbol::CleanUp()
 
     delete semantic;
     semantic = NULL;
-
-    return;
 }
 
 
@@ -975,8 +953,6 @@ void TypeSymbol::SetClassName()
     strcat(class_name, FileSymbol::class_suffix);
 
     assert(strlen(class_name) <= length);
-
-    return;
 }
 
 
@@ -991,8 +967,6 @@ void TypeSymbol::ProcessNestedTypeSignatures(Semantic *sem, LexStream::TokenInde
 
     delete nested_type_signatures;
     nested_type_signatures = NULL;
-
-    return;
 }
 
 
@@ -1018,8 +992,6 @@ void MethodSymbol::ProcessMethodThrows(Semantic *sem, LexStream::TokenIndex tok)
         delete throws_signatures;
         throws_signatures = NULL;
     }
-
-    return;
 }
 
 
@@ -1057,8 +1029,6 @@ void MethodSymbol::SetSignature(Control &control, VariableSymbol *this0_variable
     signature = control.Utf8_pool.FindOrInsert(method_signature, len);
 
     delete [] method_signature;
-
-    return;
 }
 
 
@@ -1140,8 +1110,6 @@ void MethodSymbol::ProcessMethodSignature(Semantic *sem, LexStream::TokenIndex t
         block_symbol -> CompressSpace(); // space optimization
         SetBlockSymbol(block_symbol);
     }
-
-    return;
 }
 
 
@@ -1181,8 +1149,6 @@ void VariableSymbol::ProcessVariableSignature(Semantic *sem, LexStream::TokenInd
 
         SetType(sem -> ProcessSignature((TypeSymbol *) owner, signature_string, token_location));
     }
-
-    return;
 }
 
 

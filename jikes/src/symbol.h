@@ -104,8 +104,6 @@ public:
 
         DirectoryEntry *entry = entries -> InsertEntry((DirectorySymbol *) this, name, length);
         entries -> InsertCaseInsensitiveEntry(entry);
-
-        return;
     }
 #endif
 
@@ -317,8 +315,6 @@ public:
         for (int j = 0; j < line_no.Length(); j++)
             location[length++] = line_no.String()[j];
         location[length] = U_NULL;
-
-        return;
     }
 
     FileLocation (FileSymbol *file_symbol)
@@ -330,8 +326,6 @@ public:
             location[i] = (wchar_t) file_name[i];
         }
         location[length] = U_NULL;
-
-        return;
     }
 
     ~FileLocation()
@@ -1033,8 +1027,6 @@ public:
         MarkFieldMembersProcessed();
         MarkLocalClassProcessingCompleted();
         MarkSourceNoLongerPending();
-
-        return;
     }
     bool Bad() { return (status & (unsigned short) 0x0200) != 0; }
 
@@ -1042,7 +1034,6 @@ public:
     {
         status |= (unsigned short) 0x0400;
         MarkBad();
-        return;
     }
     void MarkNonCircular() { status &= (~ ((unsigned short) 0x0400)); }
     bool Circular() { return (status & (unsigned short) 0x0400) != 0; }
@@ -1499,8 +1490,6 @@ public:
             (void) variable_symbol_pool -> Array();
         if (other_symbol_pool)
             (void) other_symbol_pool -> Array();
-
-        return;
     }
 
 private:
@@ -1926,8 +1915,6 @@ inline void SymbolTable::DeleteTypeSymbol(TypeSymbol *type)
     type_symbol_pool -> Reset(last_index); // remove last slot in symbol_pool
 
     delete type;
-
-    return;
 }
 
 
@@ -1944,8 +1931,6 @@ inline void SymbolTable::DeleteAnonymousTypes()
         delete AnonymousSym(i);
     delete anonymous_symbol_pool;
     anonymous_symbol_pool = NULL;
-
-    return;
 }
 
 
@@ -2050,8 +2035,6 @@ inline void SymbolTable::InsertMethodSymbol(MethodSymbol *method_symbol)
     //
     if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
-
-    return;
 }
 
 
@@ -2164,8 +2147,6 @@ inline void SymbolTable::InsertVariableSymbol(VariableSymbol *variable_symbol)
     //
     if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
-
-    return;
 }
 
 
@@ -2291,8 +2272,6 @@ inline void SymbolTable::Overload(MethodSymbol *base_method, MethodSymbol *overl
     overload_method -> next = overload_method; // mark overloaded method
     overload_method -> next_method = base_method -> next_method;
     base_method -> next_method = overload_method;
-
-    return;
 }
 
 inline void TypeSymbol::Overload(MethodSymbol *base_method, MethodSymbol *overload_method)

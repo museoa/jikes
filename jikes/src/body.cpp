@@ -979,9 +979,9 @@ void Semantic::ProcessReturnStatement(Ast *stmt)
 bool Semantic::CatchableException(TypeSymbol *exception)
 {
     //
-    // An unchecked exception or an error is ok !!
+    // An unchecked exception or a bad type is ok !!
     //
-    if (! CheckedException(exception) || exception == control.no_type)
+    if (! CheckedException(exception))
         return true;
 
     //
@@ -993,12 +993,15 @@ bool Semantic::CatchableException(TypeSymbol *exception)
         AstTryStatement *try_statement = (AstTryStatement *) TryStatementStack()[i];
 
         //
-        // If a try statement contains a finally clause that can complete
-        // abruptly then any exception that can reach it is assumed to be
+        // If a try statement contains a finally clause that can't complete
+        // normally then the exception is discarded, hence it is considered
         // catchable. See Spec 11.3.
         //
-        if (try_statement -> finally_clause_opt && (! try_statement -> finally_clause_opt -> block -> can_complete_normally))
+        if (try_statement -> finally_clause_opt &&
+            ! try_statement -> finally_clause_opt -> block -> can_complete_normally)
+        {
             return true;
+        }
 
         //
         // Check each catch clause in turn.
@@ -1013,39 +1016,75 @@ bool Semantic::CatchableException(TypeSymbol *exception)
     }
 
     //
-    // If we are processing the initialization expression of a field,
-    // ThisMethod() is not defined.
+    // Check if the current method declares this in the throws clause (note
+    // that field initializers are not in a current method).
     //
     MethodSymbol *this_method = ThisMethod();
     if (this_method)
     {
         for (int l = this_method -> NumThrows() - 1; l >= 0; l--)
         {
-            if (CanAssignmentConvertReference(this_method -> Throws(l), exception))
-                return true;
-        }
-
-        if (this_method -> NumInitializerConstructors() > 0)
-        {
-            int j;
-            for (j = this_method -> NumInitializerConstructors() - 1; j >= 0; j--)
-            {
-                MethodSymbol *method = this_method -> InitializerConstructor(j);
-                int k;
-                for (k = method -> NumThrows() - 1; k >= 0; k--)
-                {
-                    if (CanAssignmentConvertReference(method -> Throws(k), exception))
-                        break;
-                }
-                if (k < 0) // no hit was found in method.
-                    return false;
-            }
-            if (j < 0) // all the relevant constructors can catch the exception
+            if (CanAssignmentConvertReference(this_method -> Throws(l),
+                                              exception))
                 return true;
         }
     }
 
-    return false;
+    //
+    // In the special case of instance field initializers, and instance
+    // initializer blocks, check if all constructors declare the exception
+    // in the throws clause.
+    //
+    if ((this_method &&
+         this_method -> Identity() == control.block_init_name_symbol) ||
+        (ThisVariable() && ! ThisVariable() -> ACC_STATIC()))
+    {
+        TypeSymbol *this_type = ThisType();
+        MethodSymbol *ctor = this_type -> FindConstructorSymbol();
+        if (this_type -> declaration -> ClassDeclarationCast())
+        {
+            for ( ; ctor; ctor = (MethodSymbol *) ctor -> next)
+            {
+                int k;
+                for (k = ctor -> NumThrows() - 1; k >= 0; k--)
+                {
+                    if (CanAssignmentConvertReference(ctor -> Throws(k),
+                                                      exception))
+                        break;
+                }
+                if (k < 0) // No hit was found in constructor.
+                    break;
+            }
+            return ctor == NULL; // Did all constructors catch exception?
+        }
+        else
+        {
+            assert(this_type -> declaration -> ClassInstanceCreationExpressionCast() &&
+                   this_type -> Anonymous() && ctor);
+            if (ctor -> LocalConstructor())
+                ctor = ctor -> LocalConstructor();
+
+            int k = 0;
+            for (k = ctor -> NumThrows() - 1; k >= 0; k--)
+            {
+                if (CanAssignmentConvertReference(ctor -> Throws(k),
+                                                  exception))
+                    break;
+            }
+            //
+            // Anonymous classes must generate the constructor to handle all
+            // possible initialization exceptions; this is possible because
+            // a class instance can only be created at one point, so the
+            // exception can be caught in the enclosing class. If we don't
+            // find the exception, we must add it.
+            //
+            if (k < 0)
+                ctor -> AddThrows(exception);
+            return true;
+        }
+    }
+
+    return false; // Nothing can catch the exception.
 }
 
 
