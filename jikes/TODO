@@ -35,3 +35,19 @@ Check into the fix for bug 102, we reverted it because of
 crashes, but it would be nice to look into the fix again.
 
 
+Move the jikes/project/index.html file from the
+webserver into the CVS. We need to be able to
+track changes.
+
+
+Drop OLDCSO support from Jikes.
+
+
+Why are catching of exceptions that are not thrown
+treated as warnings? I thought these would be errors.
+
+
+Make sure the java.g file is included in the .tar ball.
+It seems this did not happen for 1.12.
+
+
