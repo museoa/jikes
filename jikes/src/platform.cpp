@@ -213,7 +213,17 @@ void FloatingPointCheck()
 
 int SystemStat(const char *name, struct stat *stat_struct)
 {
-  return ::stat(name, stat_struct);
+    int result = ::stat(name, stat_struct);
+#ifdef HAVE_SYS_CYGWIN_H
+    //
+    // Up through cygwin 1.3.10, the hash function which determines inodes
+    // was not strong enough, so java/net and java/nio occasionally get the
+    // same inode without this hack.
+    //
+    if (result == 0)
+        stat_struct -> st_ino += name[strlen(name) - 1];
+#endif // HAVE_SYS_CYGWIN_H
+    return result;
 }
 FILE *SystemFopen(const char *name, const char *mode)
 {
