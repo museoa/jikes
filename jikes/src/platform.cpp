@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 2000, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 2000, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 //
@@ -1481,10 +1480,12 @@ wchar_t StringConstant::US_while[] = {
 //
 wchar_t StringConstant::US_EOF[] = {U_E, U_O, U_F, U_NU}; // L"EOF"
 
-char StringConstant::U8S_help_header[] = "Jikes Compiler - " JIKES_VERSION_STRING
-        "\n(C) Copyright IBM Corp. 1997, 1998, 1999, 2000, 2001, 2002.\n"
-        "- Licensed Materials - Program Property of IBM - All Rights Reserved.\n";
-char StringConstant::U8S_command_format[] = "use: jikes [options] [@files] file.java...\n";
+char StringConstant::U8S_help_header[] =
+    "Jikes Compiler - " JIKES_VERSION_STRING
+    "\nCopyright (C) IBM Corporation 1997-2003, 2004.\n"
+    "- Licensed Materials - Program Property of IBM - All Rights Reserved.\n";
+char StringConstant::U8S_command_format[] =
+    "use: jikes [options] [@files] file.java...\n";
 
 //
 // Constant pool entries.

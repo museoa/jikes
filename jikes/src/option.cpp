@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -174,7 +173,7 @@ const wchar_t* OptionError::GetErrorMessage()
         s << '\"' << name << "\" requires an argument.";
         break;
     case INVALID_SOURCE_ARGUMENT:
-        s << "\"-source\" only recognizes Java releases 1.3 (no new features) "
+        s << "\"-source\" only recognizes Java releases 1.3 (JLS 2 features) "
           << "and 1.4 (assert statement).";
         break;
     case INVALID_TARGET_ARGUMENT:
@@ -591,7 +590,7 @@ Option::Option(ArgumentExpander& arguments,
                                         arguments.argv[i]);
                     continue;
                 }
-                // For now, this defaults to SDK1_3 if not specified.
+                // See below for setting the default.
                 i++;
                 if (strcmp(arguments.argv[i], "1.3") == 0)
                     source = SDK1_3;
@@ -629,8 +628,7 @@ Option::Option(ArgumentExpander& arguments,
                                         arguments.argv[i]);
                     continue;
                 }
-                // This defaults to the value of source if not specified, or
-                // specified to a value less than source.
+                // See below for setting the default.
                 i++;
                 if (strcmp(arguments.argv[i], "1.1") == 0)
                     target = SDK1_1;
@@ -908,12 +906,23 @@ Option::Option(ArgumentExpander& arguments,
     // Specify defaults for -source and -target.
     if (source == UNKNOWN)
     {
-        if (target == UNKNOWN)
+        switch (target)
         {
+        case SDK1_1:
+        case SDK1_2:
+        case SDK1_3:
             source = SDK1_3;
-            target = SDK1_3;
+            break;
+        case UNKNOWN:
+            target = SDK1_4_2;
+            // fallthrough
+        case SDK1_4:
+        case SDK1_4_2:
+            source = SDK1_4;
+            break;
+        default:
+            assert(false && "Unexpected target level");
         }
-        else source = target;
     }
     else if (target == UNKNOWN)
         target = source;

@@ -1,3 +1,13 @@
+2004-01-07  Eric Blake  <ebb9@byu.net>
+
+	* doc/jikes.1: Add defaults to options with arguments. Bump
+	copyright year.
+	(-source): Bump default to 1.4.
+	(-target): Bump default to 1.4.2.
+	* src/jikes.cpp (main): Add defaults to options with arguments.
+	* src/option.cpp (Option): Bump default for -source and -target.
+	* src/platform.cpp (U8S_help_header): Bump copyright year.
+
 2004-01-02  Eric Blake  <ebb9@byu.net>
 
 	* autogen.sh: Add --copy to automake invocation.

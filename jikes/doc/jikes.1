@@ -31,7 +31,7 @@ form \fB\+T\=n\fP, it can also be specified as \fB\+T n\fP or even
 \fB\-\-bootclasspath\fP \fIpath\fP
 Use path for the bootclasspath. This path is searched first for
 library class files, and is usually set to \fBjava/lib/classes.zip\fP
-or \fBjava/jre/lib/rt.jar\fP.
+or \fBjava/jre/lib/rt.jar\fP.  This defaults to an empty path.
 
 .TP
 \fB\-classpath\fP \fIpath\fP
@@ -40,7 +40,7 @@ or \fBjava/jre/lib/rt.jar\fP.
 .TP
 \fB\-\-classpath\fP \fIpath\fP
 Use path for CLASSPATH. This path is searched for both user source and
-compiled class files.
+compiled class files. This defaults to the current directory.
 .\" Someone should better document the search algorithm used.
 
 .TP
@@ -48,7 +48,8 @@ compiled class files.
 .TP
 \fB\-\-target\-directory\fP \fIdirectory\fP
 Write class files in the specified directory. Note that this directory is
-NOT in your classpath unless you list it there as well.
+NOT in your classpath unless you list it there as well. This defaults
+to the current directory.
 
 .TP
 \fB\-debug
@@ -80,14 +81,16 @@ is not an adequate transcoding library available on all platforms by
 default. You can tell if a binary has encoding support or not by
 running \fIjikes \-\-help\fP and looking for the \-\-encoding option:
 if it is not listed, then this binary does NOT include support for
-encoding.
+encoding. This defaults to a platform-dependent encoding (such as
+ASCII).
 
 .TP
 \fB\-extdirs\fP \fIpath\fP
 .TP
 \fB\-\-extdirs\fP \fIpath\fP
 Use path for extensions directories. This is typically set to grab jar
-and zip extension files located in \fBjava/jre/lib/ext\fP.
+and zip extension files located in \fBjava/jre/lib/ext\fP. This
+defaults to an empty path.
 
 .TP
 \fB\-g
@@ -101,7 +104,8 @@ this is not specified, the default is
 file in the class file, \fBlines\fP adds line number tracking to tie
 bytecodes to their location in the source file, and \fBvars\fP adds a
 table in the class file which stores the name of local variables and
-parameters, as well as their scope.
+parameters, as well as their scope. This defaults to line and source
+information, but not vars.
 
 .TP
 \fB\-help
@@ -147,22 +151,25 @@ nothing.
 .TP
 \fB\-\-source\fP \fIrelease\fP
 Specify which Java SDK release the source syntax obeys. For example,
-to use the \fIassert\fP keyword, you can use \fB\-source
-1.4\fP. Setting a lower target results in backward compatibility
-compilation of old source files.  Valid releases are 1.3 (Java
-Language Specification, 2nd edition), and 1.4 (addition of the assert
-statement, JSR 41).  Plans are underway to eventually support 1.5
-(addition of generics, JSR 14; and other language features under
-consideration for the Java Language Specification, 3rd edition). If
-not specified, this defaults to the value specified for \fB-target\fP,
-and if that is not specified, this defaults to 1.3.
+to treat the \fIassert\fP keyword as a normal identifier, you can use
+\fB\-source 1.3\fP. Setting a lower target results in backward
+compatibility compilation of old source files.  Valid releases are 1.3
+(Java Language Specification, 2nd edition), and 1.4 (addition of the
+assert statement, JSR 41).  Plans are underway to eventually support
+1.5 (addition of generics: JSR 14; autoboxing, enhanced for-loop,
+static import, enums, and varargs: JSR 201; metadata: JSR 175; and
+updated .class file format: JSR 202; ultimately the Java Language
+Specification, 3rd edition). If not specified, this defaults to the
+valid value closest to the one specified or defaulted for
+\fB-target\fP (typically 1.4).
 
 .TP
 \fB\-sourcepath\fP path
 .TP
 \fB\-\-sourcepath\fP path
 Use path for specifying user "source only" directories. Class files in
-this path are ignored unless listed in other paths.
+this path are ignored unless listed in other paths. This defaults to
+the empty path.
 
 .TP
 \fB\-target\fP \fIrelease\fP
@@ -172,20 +179,21 @@ Specify which Java SDK release the bytecode should target.  For
 example, exception chaining was introduced in the 1.4 release, so a
 failed class literal can chain the NoClassDefFoundError to its
 original ClassNotFoundException; while the behavior in the 1.3 release
-simply discards the original exception.  To get the new behavior, you
-can use \fB\-target 1.4\fP.  Setting a lower target results in forward
+simply discards the original exception.  To get the old behavior, you
+can use \fB\-target 1.3\fP.  Setting a lower target results in forward
 compatibility to older virtual machines, and some source constructs
 will be compiled to less efficient workarounds in order to avoid known
 virtual machine bugs or deficiencies.  However, a lower target may
 occaisionally produce incorrect semantic behavior.  Furthermore, some
 language features require virtual machine support, where there are no
 known workarounds in earlier releases: the assert statement requires
-1.4 (unless you also use \fB\-noassert\fP), and the planned addition of
-typesafe enumerations will require 1.5. The planned addition of type
-parameterization (also known as generics) will work with 1.1.  Valid
-releases are 1.1, 1.2, 1.3, 1.4, and 1.4.2; plans are underway to
-support 1.5.  If not specified, this defaults to the value specified
-for \fB-source\fP, and if that is not specified, this defaults to 1.3.
+1.4 (unless you also use \fB\-noassert\fP), and the planned addition
+of typesafe enumerations will require 1.5. The planned addition of
+type parameterization (also known as generics) will work with 1.1.
+Valid releases are 1.1, 1.2, 1.3, 1.4, and 1.4.2; plans are underway
+to support 1.5.  If not specified, this defaults to the value
+specified for \fB-source\fP, and if that is not specified, this
+defaults to 1.4.2.
 
 .TP
 \fB\-verbose
@@ -355,8 +363,7 @@ for news of recent developments, to download new versions, to report
 bugs, or to learn how to participate in the development process.
 
 .SH COPYRIGHT
-Copyright \(co 1996, 1997, 1998, 1999, 2000, 2001, 2002
-International Business Machines Corporation and others. All Rights Reserved.
+Copyright \(co 1996-2003, 2004 IBM Corporation and others. All Rights Reserved.
 
 .PP
 \fBJikes\fP is licensed under the \fIIBM Public License\fP, included
