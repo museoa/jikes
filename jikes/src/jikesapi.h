@@ -93,7 +93,7 @@ public:
     virtual const wchar_t *getErrorMessage() = 0;
 
     /**
-     * Returns formatter error report.
+     * Returns formatted error report.
      */
     virtual const wchar_t *getErrorReport() = 0;
 

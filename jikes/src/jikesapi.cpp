@@ -98,25 +98,26 @@ JikesOption::~JikesOption()
     delete [] sourcepath;
 }
 
-JikesOption::JikesOption() : bootclasspath(NULL),
-                             extdirs(NULL),
-                             classpath(NULL),
-                             sourcepath(NULL),
-                             directory(NULL),
-                             encoding(NULL),
-                             nowrite(false),
-                             deprecation(false),
-                             optimize(false),
-                             verbose(false),
-                             depend(false),
-                             nowarn(false),
-                             old_classpath_search_order(false),
-                             zero_defect(false),
-                             help(false),
-                             version(false),
-                             g(SOURCE | LINES),
-                             source(UNKNOWN),
-                             target(UNKNOWN)
+JikesOption::JikesOption()
+    : bootclasspath(NULL),
+      extdirs(NULL),
+      classpath(NULL),
+      sourcepath(NULL),
+      directory(NULL),
+      encoding(NULL),
+      nowrite(false),
+      deprecation(false),
+      optimize(false),
+      verbose(false),
+      depend(false),
+      nowarn(false),
+      old_classpath_search_order(false),
+      zero_defect(false),
+      help(false),
+      version(false),
+      g(SOURCE | LINES),
+      source(UNKNOWN),
+      target(UNKNOWN)
 {
 }
 

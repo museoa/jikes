@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
                "+OLDCSO             perform original Jikes classpath order for compatibility\n"
                "+P                  pedantic compilation - issues lots of warnings\n"
                "+Pno-modifier-order disable pedantic warnings about modifier order\n"
-               "+Td...d             set value of tab d...d spaces; each d is a decimal digit\n"
+               "+T=n                set value of tab to n spaces, defaults to 8\n"
                "+U                  do full dependence check including Zip and Jar files\n"
                "+Z                  treat cautions as errors\n"
 #ifdef JIKES_DEBUG
