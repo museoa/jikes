@@ -1,6 +1,6 @@
 <HTML>
   <head>
-    <TITLE>IBM - developerWorks - Open Source Software - Jikes - Steering Committee</TITLE>
+    <TITLE>IBM - developerWorks - Open Source Software - Jikes - Leadership</TITLE>
   </head>
   <BODY bgcolor="ffffff">
     <p align="center"><img src="images/jikes.png" width=600 height=54 border=0 align=center alt="Jikes<sup><small>TM</small></sup>"><BR>&nbsp;</p>
@@ -50,11 +50,7 @@ have been actively contributing to the project for at least a year.
 <!--except chris, who seems to have given himself a promotion in the
 process of rewriting this web page-->
 
-<P>The current Project Adminstraitors are listed on the
-<a href="people.shtml#admin">people page</a>.
-
-
-<h1>Jikes contributors</h1>
+<h1>Jikes Contributors</h1>
 <p>Contributors are individual or company-affiliated developers who have
 registered developer level access to the Jikes Project in developerWorks.
 New Jikes contributors are added when a developer is recognized by the

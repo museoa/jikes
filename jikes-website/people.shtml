@@ -57,7 +57,7 @@
     whose principal function is to approve the nomination of new project leaders.</blockquote>
     <p>This is not to say that they contributions made by this team are irrelevant, quite the
     contrary in fact, they are crucial. The "core team" has now been renamed the
-    <a href="steering.shtml"><strong>Steering Committee</strong></a>, so without further ado,
+    <a href="leadership.shtml"><strong>Steering Committee</strong></a>, so without further ado,
     the members of the committee in addition to Dave, Philippe, and Vadim are:
     
     <P><b>Name:</b> Ken Coar<BR>
@@ -109,18 +109,22 @@
            <b>Occupation:</b> Code Artist<BR>
            <b>Location:</b> San Francisco, CA, USA<BR>
            <b>Comments:</b> I prefer // to /**/<BR>
-           <b>Contributions:</b> autoconf based build subsystem; compatibility with cygwin and mingw as well as cross compilation support; patch manager, final code reviewer and tree owner; lots more than I <small>(Chris)</small> will ever remember.</p>
-      
+           <b>Contributions:</b> autoconf based build subsystem; compatibility with cygwin and mingw as
+	   well as cross compilation support; patch manager, final code reviewer and tree owner; lots
+	   more than I <small>(Chris)</small> will ever remember.</p>
+
         <P><b>Name:</b> Chris Abbey<BR>
            <b>Email:</b> <A HREF="mailto:jikes-dev@oss.software.ibm.com">on jikes-dev list</A><BR>
            <b>URL:</b> <A HREF="http://www.software.ibm.com/ad/sanfrancisco/">SanFrancisco</A><BR>
            <b>Organization:</b> IBM Corp - <small>not working on jikes officially, only in personal time</small><BR>
-           <b>Occupation:</b> Staff Software Engineer, SanFrancisco Distributed Object Infrastructure Development and Support<BR>
+           <b>Occupation:</b> Staff Software Engineer, eServer iSeries LPAR &amp; Linux (on assignment to dw/OSS at the moment)<BR>
            <b>Location:</b> Rochester, MN, USA<BR>
            <b>Comments:</b> java geek, open source bigot, linux advocate, thorn in management's side<BR>
-           <b>Contributions:</b> AIX support &amp; binary, a few patches, some testcases, support structure liaison. Note that I defer all code related matter to Mo, so if he rejects a patch, don't appeal to me... take a reasoned argument to jikes-dev.</p>
+           <b>Contributions:</b> AIX support &amp; binary, a few patches, some testcases, support structure liaison.
+	   Note that I defer all code related matter to Mo, so if he rejects a patch, don't appeal to me...
+	   instead you should take a reasoned argument to jikes-dev.</p>
         
-      <a name=contrib"><h2>Project Contributors</h2></a>
+      <a name="contrib"><h2>Project Contributors</h2></a>
         <p>Folks who have through their repeated contributions to and outstanding participation
         in the project have gained the notice of the project administration. (in some semblence of chronology)
         
@@ -148,7 +152,6 @@
            <b>Organization:</b> <A href="http://www.ibis.odessa.ua">Integrated Banking Information Systems</A> <BR>
            <b>Occupation:</b> Software Engineer<BR>
            <b>Location:</b> Odessa, Ukraine<BR>
-           <b>Comments:</b> <BR>
            <b>Contributions:</b> Finding bugs, providing patches, MSVC++ builds</p>
 
         <P><b>Name:</b> Eric Blake<BR>
