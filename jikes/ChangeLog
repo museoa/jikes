@@ -1,3 +1,9 @@
+2002-08-21  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/bytecode.cpp (StripNops): Minor bytecode optimization -
+	assignment conversion to superinterfaces was emitting useless
+	checkcast.
+
 2002-08-15  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/error.cpp:

@@ -4777,6 +4777,7 @@ AstExpression *ByteCode::StripNops(AstExpression *expr)
             AstCastExpression *cast_expr = (AstCastExpression *) expr;
             AstExpression *sub_expr = StripNops(cast_expr -> expression);
             if (sub_expr -> Type() -> IsSubclass(expr -> Type()) ||
+                sub_expr -> Type() -> Implements(expr -> Type()) ||
                 (sub_expr -> Type() == control.null_type &&
                  expr -> Type() -> num_dimensions <= 255))
             {
