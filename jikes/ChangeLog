@@ -1,3 +1,9 @@
+2001-12-18  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/expr.cpp (ProcessAmbiguousName): Report invalid package name
+	sooner, rather than creating and discarding the package. As a
+	result, more error messages can detect mispelled names.
+
 2001-12-14  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/expr.cpp (ProcessMethodName): Fix another core dump from my

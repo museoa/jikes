@@ -2438,8 +2438,10 @@ void Semantic::ProcessAmbiguousName(Ast *name)
              simple_name -> symbol = type;
         //
         // ...Otherwise, the Ambiguous name is reclassified as a PackageName.
-        // A later step determines whether or not a package of that name
-        // actually exists.
+        // While the JLS claims a later step determines whether or not 
+        // a package of that name actually exists, it is pointless to defer
+        // the error that long, as a package cannot qualify a method or field
+        // access, and a subpackage requires the base package to exist.
         //
         else
         {
@@ -2449,9 +2451,8 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                 simple_name -> symbol = package;
             else
             {
-                package = control.external_table.InsertPackageSymbol(name_symbol, NULL);
-                control.FindPathsToDirectory(package);
-                simple_name -> symbol = package;
+                ReportVariableNotFound(simple_name, this_type);
+                simple_name -> symbol = control.no_type;
             }
         }
     }
@@ -2664,18 +2665,26 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                     }
                     //
                     // ... Otherwise, this AmbiguousName is reclassified as a
-                    // PackageName. A later step determines whether or not a
-                    // package of that name actually exists...
+                    // PackageName. While the JLS claims a later step
+                    // determines whether or not a package of that name
+                    // actually exists, it is pointless to defer the error
+                    // that long, as a package cannot qualify a method or field
+                    // access, and a subpackage requires the base package to
+                    // exist.
                     //
                     else
                     {
                         PackageSymbol *subpackage = package -> FindPackageSymbol(name_symbol);
-                        if (! subpackage) // A new package ?
+                        if (subpackage)
+                            field_access -> symbol = subpackage;
+                        else
                         {
-                            subpackage = package -> InsertPackageSymbol(name_symbol);
-                            control.FindPathsToDirectory(subpackage);
+                            ReportSemError(SemanticError::UNKNOWN_AMBIGUOUS_NAME,
+                                           field_access -> LeftToken(),
+                                           field_access -> RightToken(),
+                                           name_symbol -> Name());
+                            field_access -> symbol = control.no_type;
                         }
-                        field_access -> symbol = subpackage;
                     }
                 }
             }
