@@ -4,7 +4,7 @@ dnl This check will check for the math.h include file and see if the
 dnl math library -lm needs to be added to the compiler LIBS.
 dnl
 dnl @version $Id$
-dnl @author Mo DeJong
+dnl @author Mo DeJong <mdejong@cygnus.com>
 dnl
 AC_DEFUN(AC_CHECK_MATHLIB,
 [
@@ -33,3 +33,4 @@ if test "$ac_cv_need_math_lib" = "yes" ; then
 fi
 ]
 )
+

@@ -5,7 +5,7 @@ dnl argument causes a compiler error. If it does then discarding
 dnl a const qualifier is treated as an error by this compiler.
 dnl
 dnl @version $Id$
-dnl @author Mo DeJong
+dnl @author Mo DeJong <mdejong@cygnus.com>
 dnl
 AC_DEFUN(AC_CHECK_ERROR_DISCARD_CONST,
 [AC_CACHE_CHECK(for compiler error on discard of const qualifier,

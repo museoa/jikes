@@ -3,7 +3,7 @@ dnl
 dnl Check to see if the wcs family of wide string (unicode)
 dnl is defined.
 dnl @version $Id$
-dnl @author Mo DeJong
+dnl @author Mo DeJong <mdejong@cygnus.com>
 dnl
 dnl This macro depends on AC_CHECK_ERROR_DISCARD_CONST
 dnl This file also defines the macro AC_CHECK_EXTENDED_WCS_FUNCS
