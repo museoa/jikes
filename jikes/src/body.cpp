@@ -1713,7 +1713,7 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
                 {
                      if (! constructor -> LocalConstructor())
                      {
-                         constructor = super_type -> GetReadAccessMethod(constructor);
+                         constructor = super_type -> GetReadAccessConstructor(constructor);
 
                          //
                          // Add extra argument for read access constructor;
@@ -1721,23 +1721,25 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
                          super_call -> AddNullArgument();
                      }
                 }
-                else ReportSemError(SemanticError::PRIVATE_CONSTRUCTOR_NOT_ACCESSIBLE,
+                else ReportSemError(SemanticError::CONSTRUCTOR_NOT_ACCESSIBLE,
                                     super_call -> LeftToken(),
                                     super_call -> RightToken(),
                                     constructor -> Header(),
                                     super_type -> ContainingPackage() -> PackageName(),
-                                    super_type -> ExternalName());
+                                    super_type -> ExternalName(),
+                                    StringConstant::US_private);
             }
             else if (! (constructor -> ACC_PUBLIC() || constructor -> ACC_PROTECTED()))
             {
                 if (! (this_type -> outermost_type == super_type -> outermost_type ||
                        super_type -> ContainingPackage() == this_package))
-                    ReportSemError(SemanticError::DEFAULT_CONSTRUCTOR_NOT_ACCESSIBLE,
+                    ReportSemError(SemanticError::CONSTRUCTOR_NOT_ACCESSIBLE,
                                    super_call -> super_token,
                                    super_call -> super_token,
                                    constructor -> Header(),
                                    super_type -> ContainingPackage() -> PackageName(),
-                                   super_type -> ExternalName());
+                                   super_type -> ExternalName(),
+                                   StringConstant::US_default);
             }
 
             super_call -> symbol = constructor;

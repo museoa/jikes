@@ -576,16 +576,13 @@ See comment above...
 
             if (super_type)
             {
-                ReportSemError((method_shadow -> method_symbol -> ACC_PRIVATE()
-                                               ? SemanticError::METHOD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE
-                                               : SemanticError::METHOD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE),
+                ReportSemError(SemanticError::METHOD_NOT_ACCESSIBLE,
                                method_call -> LeftToken(),
                                method_call -> RightToken(),
                                method_shadow -> method_symbol -> Header(),
                                super_type -> ContainingPackage() -> PackageName(),
                                super_type -> ExternalName(),
-                               ThisType() -> ContainingPackage() -> PackageName(),
-                               ThisType() -> ExternalName());
+                               (method_shadow -> method_symbol -> ACC_PRIVATE() ? StringConstant::US_private : StringConstant::US_default));
             }
             else
             {
@@ -609,7 +606,7 @@ See comment above...
                                         type -> ContainingPackage() -> PackageName(),
                                         type -> ExternalName(),
                                         method -> Name());
-                    else ReportSemError(SemanticError::METHOD_NAME_NOT_FOUND_IN_TYPE,
+                    else ReportSemError(SemanticError::METHOD_NAME_NOT_FOUND,
                                         method_call -> LeftToken(),
                                         method_call -> RightToken(),
                                         name_symbol -> Name(),
@@ -897,16 +894,13 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
 
                 if (super_type)
                 {
-                    ReportSemError((method_shadow -> method_symbol -> ACC_PRIVATE()
-                                                   ? SemanticError::METHOD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE
-                                                   : SemanticError::METHOD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE),
+                    ReportSemError(SemanticError::METHOD_NOT_ACCESSIBLE,
                                    method_call -> LeftToken(),
                                    method_call -> RightToken(),
                                    name_symbol -> Name(),
                                    super_type -> ContainingPackage() -> PackageName(),
                                    super_type -> ExternalName(),
-                                   type -> ContainingPackage() -> PackageName(),
-                                   type -> ExternalName());
+                                   (method_shadow -> method_symbol -> ACC_PRIVATE() ? StringConstant::US_private : StringConstant::US_default));
                     symbol_found = true;
                     break;
                 }
@@ -941,7 +935,7 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
                                     this_type -> ContainingPackage() -> PackageName(),
                                     this_type -> ExternalName(),
                                     method -> Name());
-                else ReportSemError(SemanticError::METHOD_NAME_NOT_FOUND_IN_TYPE,
+                else ReportSemError(SemanticError::METHOD_NAME_NOT_FOUND,
                                     method_call -> LeftToken(),
                                     method_call -> RightToken(),
                                     name_symbol -> Name(),
@@ -1080,16 +1074,13 @@ void Semantic::ReportAccessedFieldNotFound(AstFieldAccess *field_access, TypeSym
     if (super_type)
     {
         VariableSymbol *variable_symbol = variable_shadow_symbol -> variable_symbol;
-        ReportSemError((variable_symbol -> ACC_PRIVATE()
-                                         ? SemanticError::FIELD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE
-                                         : SemanticError::FIELD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE),
+        ReportSemError(SemanticError::FIELD_NOT_ACCESSIBLE,
                        field_access -> LeftToken(),
                        field_access -> RightToken(),
                        variable_symbol -> Name(),
                        super_type -> ContainingPackage() -> PackageName(),
                        super_type -> ExternalName(),
-                       type -> ContainingPackage() -> PackageName(),
-                       type -> ExternalName());
+                       (variable_symbol -> ACC_PRIVATE() ? StringConstant::US_private : StringConstant::US_default));
     }
     else
     {
@@ -1778,10 +1769,12 @@ void Semantic::ProcessSimpleName(Ast *expr)
                                 this_type -> ContainingPackage() -> PackageName(),
                                 this_type -> ExternalName(),
                                 variable -> Name());
-            else ReportSemError(SemanticError::NAME_NOT_FOUND,
+            else ReportSemError(SemanticError::FIELD_NAME_NOT_FOUND,
                                 simple_name -> identifier_token,
                                 simple_name -> identifier_token,
-                                lex_stream -> NameString(simple_name -> identifier_token));
+                                lex_stream -> NameString(simple_name -> identifier_token),
+                                this_type -> ContainingPackage() -> PackageName(),
+                                this_type -> ExternalName());
         }
         simple_name -> symbol = control.no_type;
     }
@@ -1865,33 +1858,36 @@ void Semantic::ConstructorAccessCheck(AstClassInstanceCreationExpression *class_
     {
         if (constructor -> ACC_PRIVATE())
         {
-            ReportSemError(SemanticError::PRIVATE_CONSTRUCTOR_NOT_ACCESSIBLE,
+            ReportSemError(SemanticError::CONSTRUCTOR_NOT_ACCESSIBLE,
                            class_creation -> class_type -> LeftToken(),
                            class_creation -> right_parenthesis_token,
                            constructor -> Header(),
                            containing_type -> ContainingPackage() -> PackageName(),
-                           containing_type -> ExternalName());
+                           containing_type -> ExternalName(),
+                           StringConstant::US_private);
         }
         else if (constructor -> ACC_PROTECTED() &&
                  containing_type -> ContainingPackage() != this_package)
         {
             if (! class_creation -> symbol -> TypeCast() -> Anonymous())
-                ReportSemError(SemanticError::PROTECTED_CONSTRUCTOR_NOT_ACCESSIBLE,
+                ReportSemError(SemanticError::CONSTRUCTOR_NOT_ACCESSIBLE,
                                class_creation -> class_type -> LeftToken(),
                                class_creation -> right_parenthesis_token,
                                constructor -> Header(),
                                containing_type -> ContainingPackage() -> PackageName(),
-                               containing_type -> ExternalName());
+                               containing_type -> ExternalName(),
+                               StringConstant::US_protected);
         }
         else if (! constructor -> ACC_PUBLIC() &&
                  containing_type -> ContainingPackage() != this_package)
         {
-            ReportSemError(SemanticError::DEFAULT_CONSTRUCTOR_NOT_ACCESSIBLE,
+            ReportSemError(SemanticError::CONSTRUCTOR_NOT_ACCESSIBLE,
                            class_creation -> class_type -> LeftToken(),
                            class_creation -> right_parenthesis_token,
                            constructor -> Header(),
                            containing_type -> ContainingPackage() -> PackageName(),
-                           containing_type -> ExternalName());
+                           containing_type -> ExternalName(),
+                           StringConstant::US_default);
         }
     }
 }
@@ -1929,13 +1925,14 @@ void Semantic::MemberAccessCheck(AstFieldAccess *field_access, TypeSymbol *base_
     {
         if (flags -> ACC_PRIVATE())
         {
-            ReportSemError((variable_symbol ? SemanticError::PRIVATE_FIELD_NOT_ACCESSIBLE
-                                            : SemanticError::PRIVATE_METHOD_NOT_ACCESSIBLE),
+            ReportSemError((variable_symbol ? SemanticError::FIELD_NOT_ACCESSIBLE
+                                            : SemanticError::METHOD_NOT_ACCESSIBLE),
                            field_access -> identifier_token,
                            field_access -> identifier_token,
                            lex_stream -> NameString(field_access -> identifier_token),
                            containing_type -> ContainingPackage() -> PackageName(),
-                           containing_type -> ExternalName());
+                           containing_type -> ExternalName(),
+                           StringConstant::US_private);
         }
         else if (flags -> ACC_PROTECTED())
         {
@@ -1957,14 +1954,6 @@ void Semantic::MemberAccessCheck(AstFieldAccess *field_access, TypeSymbol *base_
                 while (expr -> ParenthesizedExpressionCast())
                     expr = expr -> ParenthesizedExpressionCast() -> expression;
 
-                if (! (expr -> ThisExpressionCast() || expr -> SuperExpressionCast()))
-                    ReportSemError((variable_symbol ? SemanticError::STATIC_PROTECTED_FIELD_ACCESS
-                                                    : SemanticError::STATIC_PROTECTED_METHOD_ACCESS),
-                                   field_access -> LeftToken(),
-                                   field_access -> RightToken(),
-                                   lex_stream -> NameString(field_access -> identifier_token),
-                                   containing_type -> ContainingPackage() -> PackageName(),
-                                   containing_type -> ExternalName());
             } else
 
             //
@@ -1977,24 +1966,26 @@ void Semantic::MemberAccessCheck(AstFieldAccess *field_access, TypeSymbol *base_
                    (this_type -> HasProtectedAccessTo(containing_type) &&
                     (base_type -> IsSubclass(this_type) || base_type -> IsOwner(this_type)))))
             {
-                ReportSemError((variable_symbol ? SemanticError::PROTECTED_FIELD_NOT_ACCESSIBLE
-                                                : SemanticError::PROTECTED_METHOD_NOT_ACCESSIBLE),
+                ReportSemError((variable_symbol ? SemanticError::FIELD_NOT_ACCESSIBLE
+                                                : SemanticError::METHOD_NOT_ACCESSIBLE),
                                field_access -> identifier_token,
                                field_access -> identifier_token,
                                lex_stream -> NameString(field_access -> identifier_token),
                                containing_type -> ContainingPackage() -> PackageName(),
-                               containing_type -> ExternalName());
+                               containing_type -> ExternalName(),
+                               StringConstant::US_protected);
             }
         }
         else if (! (flags -> ACC_PUBLIC() || containing_type -> ContainingPackage() == this_package))
         {
-            ReportSemError((variable_symbol ? SemanticError::DEFAULT_FIELD_NOT_ACCESSIBLE
-                                            : SemanticError::DEFAULT_METHOD_NOT_ACCESSIBLE),
+            ReportSemError((variable_symbol ? SemanticError::FIELD_NOT_ACCESSIBLE
+                                            : SemanticError::METHOD_NOT_ACCESSIBLE),
                            field_access -> identifier_token,
                            field_access -> identifier_token,
                            lex_stream -> NameString(field_access -> identifier_token),
                            containing_type -> ContainingPackage() -> PackageName(),
-                           containing_type -> ExternalName());
+                           containing_type -> ExternalName(),
+                           StringConstant::US_default);
         }
     }
 
@@ -2020,42 +2011,41 @@ void Semantic::SimpleNameAccessCheck(AstSimpleName *simple_name, TypeSymbol *con
     {
         if (flags -> ACC_PRIVATE())
         {
-            ReportSemError((variable_symbol ? SemanticError::PRIVATE_FIELD_NOT_ACCESSIBLE
-                                            : SemanticError::PRIVATE_METHOD_NOT_ACCESSIBLE),
+            ReportSemError((variable_symbol ? SemanticError::FIELD_NOT_ACCESSIBLE
+                                            : SemanticError::METHOD_NOT_ACCESSIBLE),
                            simple_name -> identifier_token,
                            simple_name -> identifier_token,
                            lex_stream -> NameString(simple_name -> identifier_token),
                            containing_type -> ContainingPackage() -> PackageName(),
-                           containing_type -> ExternalName());
+                           containing_type -> ExternalName(),
+                           StringConstant::US_private);
         }
         else if (flags -> ACC_PROTECTED())
         {
             if (! (containing_type -> ContainingPackage() == this_package || this_type -> IsSubclass(containing_type)))
             {
-                ReportSemError((variable_symbol ? SemanticError::PROTECTED_FIELD_NOT_ACCESSIBLE
-                                                : SemanticError::PROTECTED_METHOD_NOT_ACCESSIBLE),
+                ReportSemError((variable_symbol ? SemanticError::FIELD_NOT_ACCESSIBLE
+                                                : SemanticError::METHOD_NOT_ACCESSIBLE),
                                simple_name -> identifier_token,
                                simple_name -> identifier_token,
                                lex_stream -> NameString(simple_name -> identifier_token),
                                containing_type -> ContainingPackage() -> PackageName(),
-                               containing_type -> ExternalName());
+                               containing_type -> ExternalName(),
+                               StringConstant::US_protected);
             }
         }
         else if (! (flags -> ACC_PUBLIC() || containing_type -> ContainingPackage() == this_package))
         {
-            ReportSemError((variable_symbol ? SemanticError::DEFAULT_FIELD_NOT_ACCESSIBLE
-                                            : SemanticError::DEFAULT_METHOD_NOT_ACCESSIBLE),
+            ReportSemError((variable_symbol ? SemanticError::FIELD_NOT_ACCESSIBLE
+                                            : SemanticError::METHOD_NOT_ACCESSIBLE),
                            simple_name -> identifier_token,
                            simple_name -> identifier_token,
                            lex_stream -> NameString(simple_name -> identifier_token),
                            containing_type -> ContainingPackage() -> PackageName(),
-                           containing_type -> ExternalName());
+                           containing_type -> ExternalName(),
+                           StringConstant::US_default);
         }
     }
-
-
-
-    return;
 }
 
 

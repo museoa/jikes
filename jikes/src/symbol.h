@@ -483,8 +483,10 @@ public:
 
     TypeSymbol *Type()
     {
-        assert(type_); // make sure that the method signature associated with this method is processed prior to invoking
-                       // this function. ( "this -> ProcessMethodSignature(sem, tok);" )
+        // Make sure that the method signature associated with this method is
+        // processed prior to invoking this function.
+        //  ( "this -> ProcessMethodSignature(sem, tok);" )
+        assert(type_);
 
         return type_;
     }
@@ -622,7 +624,13 @@ class TypeSymbol : public Symbol, public AccessFlags
 {
 public:
     SemanticEnvironment *semantic_environment;
-    Ast *declaration;  // AstClassDeclaration or AstInterfaceDeclaration
+
+    //
+    // AstClassDeclaration, AstInterfaceDeclaration, or
+    // AstClassInstanceCreationExpression
+    //
+    Ast *declaration;
+
     FileSymbol *file_symbol;
     FileLocation *file_location;
     NameSymbol *name_symbol;
@@ -852,6 +860,7 @@ public:
     VariableSymbol *FindOrInsertAssertVariable();
 
     MethodSymbol *GetReadAccessMethod(MethodSymbol *);
+    MethodSymbol *GetReadAccessConstructor(MethodSymbol *);
     MethodSymbol *GetReadAccessMethod(VariableSymbol *);
     MethodSymbol *GetWriteAccessMethod(VariableSymbol *);
 
@@ -885,13 +894,16 @@ public:
                 return method -> containing_type;
         }
 
-        return NULL;
+        return (TypeSymbol *) NULL;
     }
 
     bool CanAccess(TypeSymbol *);
 
     bool HasProtectedAccessTo(TypeSymbol *);
 
+    //
+    // Note that this test considers a class a subclass of itself.
+    //
     bool IsSubclass(TypeSymbol *super_class)
     {
         return (this == super_class ? true : (super == NULL ? false : super -> IsSubclass(super_class)));
@@ -1124,7 +1136,7 @@ private:
     // enclosing classes, one (or two) access method(s) to read (and/or write)
     // the private member is (are) generated.
     //
-    // The maps read_method and write_method are used to keep track of the
+    // The maps read_methods and write_methods are used to keep track of the
     // read and write method to which a member has been mapped.
     //
     Tuple<MethodSymbol *> *private_access_methods,
@@ -1135,11 +1147,11 @@ private:
     inline void MapSymbolToWriteMethod(VariableSymbol *, MethodSymbol *);
     inline MethodSymbol *WriteMethod(VariableSymbol *);
 
-    SymbolMap *read_method,
-              *write_method;
+    SymbolMap *read_methods,
+              *write_methods;
 
     //
-    // For an accessible inner class the first elememt in this array
+    // For an accessible inner class the first element in this array
     // identifies the "this$0" pointer of the containing type. For a local
     // class, in addition to the this$0 pointer (if it is needed), all local
     // variables that are referred to in the local type are passed as argument

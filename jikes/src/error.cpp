@@ -470,8 +470,6 @@ void SemanticError::StaticInitializer()
     // TODO: Review the cases below. They should be flagged as errors.
     //       However, since javac does not flag them at all, we only issue
     //       a warning.
-    warning[STATIC_PROTECTED_FIELD_ACCESS] = 2;
-    warning[STATIC_PROTECTED_METHOD_ACCESS] = 2;
     warning[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL] = 2;
     warning[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER] = 2;
     warning[PRIVATE_METHOD_OVERRIDE] = 1;
@@ -591,19 +589,15 @@ void SemanticError::StaticInitializer()
     print_message[FIELD_IS_TYPE] = PrintFIELD_IS_TYPE;
     print_message[FIELD_NOT_FOUND] = PrintFIELD_NOT_FOUND;
     print_message[FIELD_NAME_MISSPELLED] = PrintFIELD_NAME_MISSPELLED;
-    print_message[FIELD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE] = PrintFIELD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE;
-    print_message[FIELD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE] = PrintFIELD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE;
-    print_message[NAME_NOT_FOUND] = PrintNAME_NOT_FOUND;
+    print_message[FIELD_NAME_NOT_FOUND] = PrintFIELD_NAME_NOT_FOUND;
     print_message[METHOD_NOT_FIELD] = PrintMETHOD_NOT_FIELD;
     print_message[NAME_NOT_YET_AVAILABLE] = PrintNAME_NOT_YET_AVAILABLE;
     print_message[NAME_NOT_VARIABLE] = PrintNAME_NOT_VARIABLE;
     print_message[NAME_NOT_CLASS_VARIABLE] = PrintNAME_NOT_CLASS_VARIABLE;
     print_message[NOT_A_NUMERIC_VARIABLE] = PrintNOT_A_NUMERIC_VARIABLE;
     print_message[METHOD_NOT_FOUND] = PrintMETHOD_NOT_FOUND;
-    print_message[METHOD_NAME_NOT_FOUND_IN_TYPE] = PrintMETHOD_NAME_NOT_FOUND_IN_TYPE;
+    print_message[METHOD_NAME_NOT_FOUND] = PrintMETHOD_NAME_NOT_FOUND;
     print_message[METHOD_NAME_MISSPELLED] = PrintMETHOD_NAME_MISSPELLED;
-    print_message[METHOD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE] = PrintMETHOD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE;
-    print_message[METHOD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE] = PrintMETHOD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE;
     print_message[HIDDEN_METHOD_IN_ENCLOSING_CLASS] = PrintHIDDEN_METHOD_IN_ENCLOSING_CLASS;
     print_message[FIELD_NOT_METHOD] = PrintFIELD_NOT_METHOD;
     print_message[TYPE_NOT_METHOD] = PrintTYPE_NOT_METHOD;
@@ -676,15 +670,11 @@ void SemanticError::StaticInitializer()
     print_message[CIRCULAR_INTERFACE] = PrintCIRCULAR_INTERFACE;
     print_message[CIRCULAR_CLASS] = PrintCIRCULAR_CLASS;
     print_message[TYPE_NOT_ACCESSIBLE] = PrintTYPE_NOT_ACCESSIBLE;
-    print_message[PRIVATE_FIELD_NOT_ACCESSIBLE] = PrintPRIVATE_FIELD_NOT_ACCESSIBLE;
-    print_message[PROTECTED_FIELD_NOT_ACCESSIBLE] = PrintPROTECTED_FIELD_NOT_ACCESSIBLE;
-    print_message[DEFAULT_FIELD_NOT_ACCESSIBLE] = PrintDEFAULT_FIELD_NOT_ACCESSIBLE;
-    print_message[PRIVATE_METHOD_NOT_ACCESSIBLE] = PrintPRIVATE_METHOD_NOT_ACCESSIBLE;
-    print_message[PROTECTED_METHOD_NOT_ACCESSIBLE] = PrintPROTECTED_METHOD_NOT_ACCESSIBLE;
-    print_message[DEFAULT_METHOD_NOT_ACCESSIBLE] = PrintDEFAULT_METHOD_NOT_ACCESSIBLE;
-    print_message[PRIVATE_CONSTRUCTOR_NOT_ACCESSIBLE] = PrintPRIVATE_CONSTRUCTOR_NOT_ACCESSIBLE;
-    print_message[PROTECTED_CONSTRUCTOR_NOT_ACCESSIBLE] = PrintPROTECTED_CONSTRUCTOR_NOT_ACCESSIBLE;
-    print_message[DEFAULT_CONSTRUCTOR_NOT_ACCESSIBLE] = PrintDEFAULT_CONSTRUCTOR_NOT_ACCESSIBLE;
+    print_message[FIELD_NOT_ACCESSIBLE] = PrintFIELD_NOT_ACCESSIBLE;
+    print_message[PROTECTED_INSTANCE_FIELD_NOT_ACCESSIBLE] = PrintPROTECTED_INSTANCE_FIELD_NOT_ACCESSIBLE;
+    print_message[METHOD_NOT_ACCESSIBLE] = PrintMETHOD_NOT_ACCESSIBLE;
+    print_message[PROTECTED_INSTANCE_METHOD_NOT_ACCESSIBLE] = PrintPROTECTED_INSTANCE_METHOD_NOT_ACCESSIBLE;
+    print_message[CONSTRUCTOR_NOT_ACCESSIBLE] = PrintCONSTRUCTOR_NOT_ACCESSIBLE;
     print_message[CONSTRUCTOR_DOES_NOT_THROW_THIS_EXCEPTION] = PrintCONSTRUCTOR_DOES_NOT_THROW_THIS_EXCEPTION;
     print_message[CONSTRUCTOR_DOES_NOT_THROW_SUPER_EXCEPTION] = PrintCONSTRUCTOR_DOES_NOT_THROW_SUPER_EXCEPTION;
     print_message[PARAMETER_REDECLARED] = PrintPARAMETER_REDECLARED;
@@ -755,8 +745,6 @@ void SemanticError::StaticInitializer()
     print_message[STATIC_TYPE_IN_INNER_CLASS] = PrintSTATIC_TYPE_IN_INNER_CLASS;
     print_message[STATIC_INITIALIZER_IN_INNER_CLASS] = PrintSTATIC_INITIALIZER_IN_INNER_CLASS;
     print_message[INNER_CLASS_REFERENCE_TO_NON_FINAL_LOCAL_VARIABLE] = PrintINNER_CLASS_REFERENCE_TO_NON_FINAL_LOCAL_VARIABLE;
-    print_message[STATIC_PROTECTED_FIELD_ACCESS] = PrintSTATIC_PROTECTED_FIELD_ACCESS;
-    print_message[STATIC_PROTECTED_METHOD_ACCESS] = PrintSTATIC_PROTECTED_METHOD_ACCESS;
     print_message[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL] = PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL;
     print_message[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER] = PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER;
     print_message[ILLEGAL_THIS_FIELD_ACCESS] = PrintILLEGAL_THIS_FIELD_ACCESS;
@@ -2369,65 +2357,16 @@ wchar_t *SemanticError::PrintFIELD_NAME_MISSPELLED(ErrorInfo &err, LexStream *le
 }
 
 
-wchar_t *SemanticError::PrintFIELD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
+wchar_t *SemanticError::PrintFIELD_NAME_NOT_FOUND(ErrorInfo &err,
+                                                  LexStream *lex_stream,
+                                                  Control &control)
 {
     ErrorString s;
 
-    s << "The field \""
-            << err.insert1
-            << "\" contained in class \"";
+    s << "No field named \"" << err.insert1 << "\" was found in type \"";
     if (NotDot(err.insert2))
-    {
-        s << err.insert2
-                << "/";
-    }
-    s << err.insert3
-            << "\" has private access. Therefore, it is not accessible in class \"";
-    if (NotDot(err.insert4))
-    {
-        s << err.insert4
-                << "/";
-    }
-    s << err.insert5
-            << "\".";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintFIELD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
-{
-    ErrorString s;
-
-    s << "The field \""
-            << err.insert1
-            << "\" contained in class \"";
-    if (NotDot(err.insert2))
-    {
-        s << err.insert2
-                << "/";
-    }
-    s << err.insert3
-            << "\" has default access. Therefore, it is not accessible in class \"";
-    if (NotDot(err.insert4))
-    {
-        s << err.insert4
-                << "/";
-    }
-    s << err.insert5
-            << "\" which is in a different package.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintNAME_NOT_FOUND(ErrorInfo &err, LexStream *lex_stream, Control &control)
-{
-    ErrorString s;
-    
-    s << "No entity named \""
-            << err.insert1
-            << "\" was found in this environment.";
+        s << err.insert2 << "/";
+    s << err.insert3 << "\".";
 
     return s.Array();
 }
@@ -2471,7 +2410,7 @@ wchar_t *SemanticError::PrintMETHOD_NOT_FOUND(ErrorInfo &err, LexStream *lex_str
 }
 
 
-wchar_t *SemanticError::PrintMETHOD_NAME_NOT_FOUND_IN_TYPE(ErrorInfo &err, LexStream *lex_stream, Control &control)
+wchar_t *SemanticError::PrintMETHOD_NAME_NOT_FOUND(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
     ErrorString s;
 
@@ -2508,58 +2447,6 @@ wchar_t *SemanticError::PrintMETHOD_NAME_MISSPELLED(ErrorInfo &err, LexStream *l
             << "\" whose name closely matches the name \""
             << err.insert1
             << "\".";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintMETHOD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
-{
-    ErrorString s;
-
-    s << "Method \""
-            << err.insert1
-            << "\" in class \"";
-    if (NotDot(err.insert2))
-    {
-        s << err.insert2
-                << "/";
-    }
-    s << err.insert3
-            << "\" has private access. Therefore, it is not accessible in class \"";
-    if (NotDot(err.insert4))
-    {
-        s << err.insert4
-                << "/";
-    }
-    s << err.insert5
-            << "\".";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintMETHOD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
-{
-    ErrorString s;
-
-    s << "Method \""
-            << err.insert1
-            << "\" in class \"";
-    if (NotDot(err.insert2))
-    {
-        s << err.insert2
-                << "/";
-    }
-    s << err.insert3
-            << "\" has protected or default access. Therefore, it is not accessible in class \"";
-    if (NotDot(err.insert4))
-    {
-        s << err.insert4
-                << "/";
-    }
-    s << err.insert5
-            << "\" which is in a different package.";
 
     return s.Array();
 }
@@ -3100,9 +2987,9 @@ wchar_t *SemanticError::PrintMISPLACED_SUPER_EXPRESSION(ErrorInfo &err, LexStrea
 {
     ErrorString s;
     
-    s << "A \"super\" expression may only appear in the body of a class that has a super class and"
-               " it must be enclosed in the body of an instance method or constructor or in the initializer"
-               " of an instance variable.";
+    s << "A \"super\" expression may only be used in the body of an instance "
+      << "method, constructor (after any explicit constructor invocation), "
+      << "initializer block, or in an instance variable initializer.";
 
     return s.Array();
 }
@@ -3649,191 +3536,101 @@ wchar_t *SemanticError::PrintCIRCULAR_INTERFACE(ErrorInfo &err, LexStream *lex_s
 }
 
 
-wchar_t *SemanticError::PrintTYPE_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
+wchar_t *SemanticError::PrintTYPE_NOT_ACCESSIBLE(ErrorInfo &err,
+                                                 LexStream *lex_stream,
+                                                 Control &control)
 {
     ErrorString s;
 
     s << "The type \"";
     if (NotDot(err.insert1))
-    {
-        s << err.insert1
-                << '/';
-    }
-    s << err.insert2
-            << "\" with "
-            << err.insert3
-            << " access is not visible here.";
+        s << err.insert1 << '/';
+    s << err.insert2 << "\" with " << err.insert3
+      << " access is not accessible here.";
 
     return s.Array();
 }
 
 
-wchar_t *SemanticError::PrintPRIVATE_FIELD_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
+wchar_t *SemanticError::PrintFIELD_NOT_ACCESSIBLE(ErrorInfo &err,
+                                                  LexStream *lex_stream,
+                                                  Control &control)
 {
     ErrorString s;
 
-    s << "The field \""
-            << err.insert1
-            << "\" in type \"";
+    s << "The field \"" << err.insert1 << "\" in type \"";
     if (NotDot(err.insert2))
-    {
-        s << err.insert2
-                << '/';
-    }
-    s << err.insert3
-            << "\" is private and not accessible here.";
+        s << err.insert2 << '/';
+    s << err.insert3 << "\" with " << err.insert4
+      << " access is not accessible here.";
 
     return s.Array();
 }
 
 
-wchar_t *SemanticError::PrintPROTECTED_FIELD_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
+wchar_t *SemanticError::PrintPROTECTED_INSTANCE_FIELD_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
     ErrorString s;
 
-    s << "The field \""
-            << err.insert1
-            << "\" in type \"";
+    s << "The instance field \"" << err.insert1 << "\" in type \"";
     if (NotDot(err.insert2))
-    {
-        s << err.insert2
-                << '/';
-    }
+        s << err.insert2 << '/';
     s << err.insert3
-            << "\" is protected and not accessible here.";
+      << "\" has protected access, but the qualifying expression is not of "
+      << "type \"";
+    if (NotDot(err.insert4))
+        s << err.insert4 << '/';
+    s << err.insert5 << "\" or any of its enclosing types.";
 
     return s.Array();
 }
 
 
-wchar_t *SemanticError::PrintDEFAULT_FIELD_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
+wchar_t *SemanticError::PrintMETHOD_NOT_ACCESSIBLE(ErrorInfo &err,
+                                                   LexStream *lex_stream,
+                                                   Control &control)
 {
     ErrorString s;
 
-    s << "The field \""
-            << err.insert1
-            << "\" in type \"";
+    s << "The method \"" << err.insert1 << "\" in type \"";
     if (NotDot(err.insert2))
-    {
-        s << err.insert2
-                << '/';
-    }
-    s << err.insert3
-            << "\" has default access and is not accessible here.";
+        s << err.insert2 << '/';
+    s << err.insert3 << "\" with " << err.insert4
+      << " access is not accessible here.";
 
     return s.Array();
 }
 
 
-wchar_t *SemanticError::PrintPRIVATE_METHOD_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
+wchar_t *SemanticError::PrintPROTECTED_INSTANCE_METHOD_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
     ErrorString s;
 
-    s << "Method \""
-            << err.insert1
-            << "\" in type \"";
+    s << "The instance method \"" << err.insert1 << "\" in type \"";
     if (NotDot(err.insert2))
-    {
-        s << err.insert2
-                << '/';
-    }
+        s << err.insert2 << '/';
     s << err.insert3
-            << "\" is private and not accessible here.";
+      << "\" has protected access, but the qualifying expression is not of "
+      << "type \"";
+    if (NotDot(err.insert4))
+        s << err.insert4 << '/';
+    s << err.insert5 << "\" or any of its enclosing types.";
 
     return s.Array();
 }
 
 
-wchar_t *SemanticError::PrintPROTECTED_METHOD_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
+wchar_t *SemanticError::PrintCONSTRUCTOR_NOT_ACCESSIBLE(ErrorInfo &err,
+                                                        LexStream *lex_stream,
+                                                        Control &control)
 {
     ErrorString s;
 
-    s << "Method \""
-            << err.insert1
-            << "\" in type \"";
+    s << "The constructor \"" << err.insert1 << "\" in type \"";
     if (NotDot(err.insert2))
-    {
-        s << err.insert2
-                << '/';
-    }
-    s << err.insert3
-            << "\" is protected and not accessible here.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintDEFAULT_METHOD_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
-{
-    ErrorString s;
-
-    s << "Method \""
-            << err.insert1
-            << "\" in type \"";
-    if (NotDot(err.insert2))
-    {
-        s << err.insert2
-                << '/';
-    }
-    s << err.insert3
-            << "\" has default access and is not accessible here.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintPRIVATE_CONSTRUCTOR_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
-{
-    ErrorString s;
-
-    s << "The constructor \""
-            << err.insert1
-            << "\" in type \"";
-    if (NotDot(err.insert2))
-    {
-        s << err.insert2
-                << '/';
-    }
-    s << err.insert3
-            << "\" is private. Therefore, it is not accessible here.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintPROTECTED_CONSTRUCTOR_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
-{
-    ErrorString s;
-
-    s << "The constructor \""
-            << err.insert1
-            << "\" in type \"";
-    if (NotDot(err.insert2))
-    {
-        s << err.insert2
-                << '/';
-    }
-    s << err.insert3
-            << "\" is protected. Therefore, it is not accessible here.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintDEFAULT_CONSTRUCTOR_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
-{
-    ErrorString s;
-
-    s << "The constructor \""
-            << err.insert1
-            << "\" in type \"";
-    if (NotDot(err.insert2))
-    {
-        s << err.insert2
-                << '/';
-    }
-    s << err.insert3
-            << "\" has default access. Therefore, it is not accessible here.";
+        s << err.insert2 << '/';
+    s << err. insert3 << "\" with " << err.insert4
+      << " access is not accessible here.";
 
     return s.Array();
 }
@@ -5045,48 +4842,6 @@ wchar_t *SemanticError::PrintINNER_CLASS_REFERENCE_TO_NON_FINAL_LOCAL_VARIABLE(E
             << "\", declared in method \""
             << err.insert4
             << "\".";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintSTATIC_PROTECTED_FIELD_ACCESS(ErrorInfo &err, LexStream *lex_stream, Control &control)
-{
-    ErrorString s;
-
-    s << "The field \""
-            << err.insert1
-            << "\" in type \"";
-    if (NotDot(err.insert2))
-    {
-        s << err.insert2
-                << '/';
-    }
-    s << err.insert3
-            << "\" is a protected field contained in a different package than this one. "
-               "Therefore, even though it may be accessible here as a simple name (if it is not hidden), "
-               "it is not accessible via a field access.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintSTATIC_PROTECTED_METHOD_ACCESS(ErrorInfo &err, LexStream *lex_stream, Control &control)
-{
-    ErrorString s;
-
-    s << "The method \""
-            << err.insert1
-            << "\" in type \"";
-    if (NotDot(err.insert2))
-    {
-        s << err.insert2
-                << '/';
-    }
-    s << err.insert3
-            << "\" is a protected method contained in a different package than this one. "
-               "Therefore, even though it may be accessible here as a simple name (if it is not hidden), "
-               "it is not accessible via a field access.";
 
     return s.Array();
 }

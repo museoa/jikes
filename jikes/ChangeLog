@@ -1,5 +1,24 @@
 2001-11-06  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/error.h:
+	* src/error.cpp (FIELD_NAME_NOT_FOUND, METHOD_NAME_NOT_FOUND):
+	Rename from NAME_NOT_FOUND, METHOD_NAME_NOT_FOUND_IN_TYPE.
+	(FIELD_NOT_ACCESSIBLE, METHOD_NOT_ACCESSIBLE),
+	(CONSTRUCTOR_NOT_ACCESSIBLE): Consolidate from several similar
+	errors.
+	(PROTECTED_INSTANCE_FIELD_NOT_ACCESSIBLE),
+	(PROTECTED_INSTANCE_METHOD_NOT_ACCESSIBLE): Add to give better
+	error message in protected access violation.
+	(STATIC_PROTECTED_FIELD_ACCESS, STATIC_PROTECTED_METHOD_ACCESS):
+	Delete these errors, as JLS2 made them legal.	
+	* src/symbol.h: 
+	* src/symbol.cpp (GetReadAccessConstructor): Split from
+	GetReadAccessMethod.
+	* src/expr.cpp:
+	* src/body.cpp (ProcessSuperCall): Update to use above changes.
+
+2001-11-06  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/body.cpp (ProcessExecutableBodies): Supress spurious warning
 	messages about finals not assigned in a constructor which contains
 	semantic errors, bug 669.

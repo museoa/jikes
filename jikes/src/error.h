@@ -186,19 +186,15 @@ class SemanticError
         FIELD_IS_TYPE,
         FIELD_NOT_FOUND,
         FIELD_NAME_MISSPELLED,
-        FIELD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE,
-        FIELD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE,
-        NAME_NOT_FOUND,
+        FIELD_NAME_NOT_FOUND,
         METHOD_NOT_FIELD,
         NAME_NOT_YET_AVAILABLE,
         NAME_NOT_VARIABLE,
         NAME_NOT_CLASS_VARIABLE,
         NOT_A_NUMERIC_VARIABLE,
         METHOD_NOT_FOUND,
-        METHOD_NAME_NOT_FOUND_IN_TYPE,
+        METHOD_NAME_NOT_FOUND,
         METHOD_NAME_MISSPELLED,
-        METHOD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE,
-        METHOD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE,
         HIDDEN_METHOD_IN_ENCLOSING_CLASS,
         FIELD_NOT_METHOD,
         TYPE_NOT_METHOD,
@@ -271,15 +267,11 @@ class SemanticError
         CIRCULAR_INTERFACE,
         CIRCULAR_CLASS,
         TYPE_NOT_ACCESSIBLE,
-        PRIVATE_FIELD_NOT_ACCESSIBLE,
-        PROTECTED_FIELD_NOT_ACCESSIBLE,
-        DEFAULT_FIELD_NOT_ACCESSIBLE,
-        PRIVATE_METHOD_NOT_ACCESSIBLE,
-        PROTECTED_METHOD_NOT_ACCESSIBLE,
-        DEFAULT_METHOD_NOT_ACCESSIBLE,
-        PRIVATE_CONSTRUCTOR_NOT_ACCESSIBLE,
-        PROTECTED_CONSTRUCTOR_NOT_ACCESSIBLE,
-        DEFAULT_CONSTRUCTOR_NOT_ACCESSIBLE,
+        FIELD_NOT_ACCESSIBLE,
+        PROTECTED_INSTANCE_FIELD_NOT_ACCESSIBLE,
+        METHOD_NOT_ACCESSIBLE,
+        PROTECTED_INSTANCE_METHOD_NOT_ACCESSIBLE,
+        CONSTRUCTOR_NOT_ACCESSIBLE,
         CONSTRUCTOR_DOES_NOT_THROW_THIS_EXCEPTION,
         CONSTRUCTOR_DOES_NOT_THROW_SUPER_EXCEPTION,
         PARAMETER_REDECLARED,
@@ -350,8 +342,6 @@ class SemanticError
         STATIC_TYPE_IN_INNER_CLASS,
         STATIC_INITIALIZER_IN_INNER_CLASS,
         INNER_CLASS_REFERENCE_TO_NON_FINAL_LOCAL_VARIABLE,
-        STATIC_PROTECTED_FIELD_ACCESS,
-        STATIC_PROTECTED_METHOD_ACCESS,
         INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL,
         INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER,
         ILLEGAL_THIS_FIELD_ACCESS,
@@ -512,19 +502,15 @@ private:
     static wchar_t *PrintFIELD_IS_TYPE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintFIELD_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintFIELD_NAME_MISSPELLED(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintFIELD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintFIELD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintNAME_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintFIELD_NAME_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMETHOD_NOT_FIELD(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNAME_NOT_YET_AVAILABLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNAME_NOT_VARIABLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNAME_NOT_CLASS_VARIABLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNOT_A_NUMERIC_VARIABLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMETHOD_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintMETHOD_NAME_NOT_FOUND_IN_TYPE(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintMETHOD_NAME_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMETHOD_NAME_MISSPELLED(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintMETHOD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintMETHOD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintHIDDEN_METHOD_IN_ENCLOSING_CLASS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintFIELD_NOT_METHOD(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintTYPE_NOT_METHOD(ErrorInfo &, LexStream *, Control &);
@@ -597,15 +583,11 @@ private:
     static wchar_t *PrintCIRCULAR_INTERFACE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintCIRCULAR_CLASS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintTYPE_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintPRIVATE_FIELD_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintPROTECTED_FIELD_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintDEFAULT_FIELD_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintPRIVATE_METHOD_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintPROTECTED_METHOD_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintDEFAULT_METHOD_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintPRIVATE_CONSTRUCTOR_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintPROTECTED_CONSTRUCTOR_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintDEFAULT_CONSTRUCTOR_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintFIELD_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintPROTECTED_INSTANCE_FIELD_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintMETHOD_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintPROTECTED_INSTANCE_METHOD_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintCONSTRUCTOR_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintCONSTRUCTOR_DOES_NOT_THROW_THIS_EXCEPTION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintCONSTRUCTOR_DOES_NOT_THROW_SUPER_EXCEPTION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintPARAMETER_REDECLARED(ErrorInfo &, LexStream *, Control &);
@@ -671,8 +653,6 @@ private:
     static wchar_t *PrintSTATIC_TYPE_IN_INNER_CLASS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintSTATIC_INITIALIZER_IN_INNER_CLASS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINNER_CLASS_REFERENCE_TO_NON_FINAL_LOCAL_VARIABLE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintSTATIC_PROTECTED_FIELD_ACCESS(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintSTATIC_PROTECTED_METHOD_ACCESS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintILLEGAL_THIS_FIELD_ACCESS(ErrorInfo &, LexStream *, Control &);

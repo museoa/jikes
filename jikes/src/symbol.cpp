@@ -568,8 +568,8 @@ TypeSymbol::TypeSymbol(NameSymbol *name_symbol_) : semantic_environment(NULL),
                                                    local_constructor_call_environments(NULL),
                                                    private_access_methods(NULL),
                                                    private_access_constructors(NULL),
-                                                   read_method(NULL),
-                                                   write_method(NULL),
+                                                   read_methods(NULL),
+                                                   write_methods(NULL),
                                                    constructor_parameters(NULL),
                                                    generated_constructors(NULL),
                                                    enclosing_instances(NULL),
@@ -586,8 +586,8 @@ TypeSymbol::TypeSymbol(NameSymbol *name_symbol_) : semantic_environment(NULL),
 
 TypeSymbol::~TypeSymbol()
 {
-    if (read_method) delete read_method;
-    if (write_method) delete write_method;
+    if (read_methods) delete read_methods;
+    if (write_methods) delete write_methods;
     delete semantic_environment;
     delete local;
     delete non_local;
@@ -1602,30 +1602,30 @@ assert(variable -> accessed_local == local);
 
 inline void TypeSymbol::MapSymbolToReadMethod(Symbol *symbol, MethodSymbol *method)
 {
-    if (! read_method)
-        read_method = new SymbolMap();
-    read_method -> Map(symbol, method);
+    if (! read_methods)
+        read_methods = new SymbolMap();
+    read_methods -> Map(symbol, method);
 
     return;
 }
 
 inline MethodSymbol *TypeSymbol::ReadMethod(Symbol *symbol)
 {
-    return (MethodSymbol *) (read_method ? read_method -> Image(symbol) : NULL);
+    return (MethodSymbol *) (read_methods ? read_methods -> Image(symbol) : NULL);
 }
 
 inline void TypeSymbol::MapSymbolToWriteMethod(VariableSymbol *symbol, MethodSymbol *method)
 {
-    if (! write_method)
-        write_method = new SymbolMap();
-    write_method -> Map(symbol, method);
+    if (! write_methods)
+        write_methods = new SymbolMap();
+    write_methods -> Map(symbol, method);
 
     return;
 }
 
 inline MethodSymbol *TypeSymbol::WriteMethod(VariableSymbol *symbol)
 {
-    return (MethodSymbol *) (write_method ? write_method -> Image(symbol) : NULL);
+    return (MethodSymbol *) (write_methods ? write_methods -> Image(symbol) : NULL);
 }
 
 MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
@@ -1646,8 +1646,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
         Control &control = sem -> control;
         StoragePool *ast_pool = sem -> compilation_unit -> ast_pool;
 
-        IntToWstring value(member -> Identity() == control.init_name_symbol ? this_type -> NumPrivateAccessConstructors()
-                                                                            : this_type -> NumPrivateAccessMethods());
+        IntToWstring value(this_type -> NumPrivateAccessMethods());
 
         int length = 7 + value.Length(); // +7 for access$
         wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
@@ -1668,115 +1667,172 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
         //
         //
         //
-        if (member -> Identity() != control.init_name_symbol) // not a constructor
+        read_method -> SetACC_STATIC();
+        block_symbol -> max_variable_index = 0;
+
+        if (! member -> ACC_STATIC())
         {
-            read_method -> SetACC_STATIC();
-            block_symbol -> max_variable_index = 0;
-
-            if (! member -> ACC_STATIC())
-            {
-                VariableSymbol *instance = block_symbol -> InsertVariableSymbol(control.MakeParameter(1));
-                instance -> MarkSynthetic();
-                instance -> SetType(this_type);
-                instance -> SetOwner(read_method);
-                instance -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
-                read_method -> AddFormalParameter(instance);
-            }
-
-            for (int i = 0; i < member -> NumFormalParameters(); i++)
-            {
-                VariableSymbol *parm = block_symbol -> InsertVariableSymbol(member -> FormalParameter(i) -> Identity());
-                parm -> MarkSynthetic();
-                parm -> SetType(member -> FormalParameter(i) -> Type());
-                parm -> SetOwner(read_method);
-                parm -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
-                if (control.IsDoubleWordType(parm -> Type()))
-                    block_symbol -> max_variable_index++;
-                read_method -> AddFormalParameter(parm);
-            }
-            read_method -> SetSignature(control);
-            // A read access method has no throws clause !
-
-            this_type -> AddPrivateAccessMethod(read_method);
+            VariableSymbol *instance = block_symbol -> InsertVariableSymbol(control.MakeParameter(1));
+            instance -> MarkSynthetic();
+            instance -> SetType(this_type);
+            instance -> SetOwner(read_method);
+            instance -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+            read_method -> AddFormalParameter(instance);
         }
-        else
+
+        for (int i = 0; i < member -> NumFormalParameters(); i++)
         {
-            //
-            // A constructor in a local class already has a
-            // "LocalConstructor()" associated with it that can be used as a
-            // read access method.
-            //
-            assert(! this_type -> IsLocal());
-
-            //
-            //
-            //
-            block_symbol -> max_variable_index = 1;
-            read_method -> SetExternalIdentity(member -> Identity());
-
-            Ast *declaration = member -> method_or_constructor_declaration;
-            AstMethodDeclaration *method_declaration = declaration -> MethodDeclarationCast();
-            AstMethodDeclarator *declarator = (method_declaration
-                                                     ? method_declaration -> method_declarator
-                                                     : ((AstConstructorDeclaration *) declaration) -> constructor_declarator);
-            LexStream::TokenIndex loc = declarator -> identifier_token;
-
-            //
-            // Create a new anonymous type in order to create a unique
-            // substitute constructor.
-            //
-            AstClassInstanceCreationExpression *class_creation = ast_pool -> GenClassInstanceCreationExpression();
-            class_creation -> base_opt      = NULL;
-            class_creation -> dot_token_opt = 0;
-            class_creation -> new_token = loc;
-
-                AstSimpleName *ast_type = ast_pool -> GenSimpleName(loc);
-
-            class_creation -> class_type = ast_pool -> GenTypeExpression(ast_type);
-            class_creation -> left_parenthesis_token  = loc;
-            class_creation -> right_parenthesis_token = loc;
-
-                AstClassBody *class_body = ast_pool -> GenClassBody();
-                class_body -> left_brace_token = loc;
-                class_body -> right_brace_token = loc;
-
-            class_creation -> class_body_opt = class_body;
-
-            TypeSymbol *anonymous_type = sem -> GetAnonymousType(class_creation, control.Object());
-
-            //
-            //
-            //
-            AstMethodDeclarator *method_declarator       = ast_pool -> GenMethodDeclarator();
-            method_declarator -> identifier_token        = loc;
-            method_declarator -> left_parenthesis_token  = declarator -> LeftToken();
-            method_declarator -> right_parenthesis_token = declarator -> RightToken();
-
-            AstThisCall *this_call = ast_pool -> GenThisCall();
-            this_call -> this_token              = loc;
-            this_call -> left_parenthesis_token  = loc;
-            this_call -> right_parenthesis_token = loc;
-            this_call -> semicolon_token         = loc;
-            this_call -> symbol = member;
-
-            VariableSymbol *this0_variable = NULL;
-            if (this_type -> IsInner())
-            {
-                this0_variable = block_symbol -> InsertVariableSymbol(control.this0_name_symbol);
-                this0_variable -> MarkSynthetic();
-                this0_variable -> SetType(this_type -> ContainingType());
-                this0_variable -> SetOwner(read_method);
-                this0_variable -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
-            }
-
-            //
-            // Add extra parameter with anonymous type...
-            //
-            VariableSymbol *parm = block_symbol -> InsertVariableSymbol(control.MakeParameter(1));
+            VariableSymbol *parm = block_symbol -> InsertVariableSymbol(member -> FormalParameter(i) -> Identity());
             parm -> MarkSynthetic();
-            parm -> SetType(anonymous_type);
+            parm -> SetType(member -> FormalParameter(i) -> Type());
             parm -> SetOwner(read_method);
             parm -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+            if (control.IsDoubleWordType(parm -> Type()))
+                block_symbol -> max_variable_index++;
+            read_method -> AddFormalParameter(parm);
+        }
+        read_method -> SetSignature(control);
+        // A read access method has no throws clause !
+
+        this_type -> AddPrivateAccessMethod(read_method);
+
+        read_method -> accessed_member = member;
+        this_type -> MapSymbolToReadMethod(member, read_method);
+
+        delete [] name;
+    }
+
+    return read_method;
+}
+
+MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *member)
+{
+    TypeSymbol *this_type = (TypeSymbol *) this,
+               *containing_type = member -> containing_type;
+
+    assert((member -> ACC_PRIVATE() && this_type == containing_type) || (member -> ACC_PROTECTED() && this_type != containing_type));
+
+    MethodSymbol *read_method = this_type -> ReadMethod(member);
+
+    if (! read_method)
+    {
+        Semantic *sem = this_type -> semantic_environment -> sem;
+
+        assert(sem);
+
+        Control &control = sem -> control;
+        StoragePool *ast_pool = sem -> compilation_unit -> ast_pool;
+
+        IntToWstring value(this_type -> NumPrivateAccessConstructors());
+
+        int length = 7 + value.Length(); // +7 for access$
+        wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
+        wcscpy(name, StringConstant::US__access_DOLLAR);
+        wcscat(name, value.String());
+
+        BlockSymbol *block_symbol = new BlockSymbol(member -> NumFormalParameters() + 3);
+
+        read_method = this_type -> InsertMethodSymbol(control.FindOrInsertName(name, length));
+        read_method -> MarkSynthetic();
+        read_method -> SetType(member -> Type());
+        read_method -> SetContainingType(this_type);
+        read_method -> SetBlockSymbol(block_symbol);
+
+        for (int i = 0; i < member -> NumThrows(); i++)
+            read_method -> AddThrows(member -> Throws(i));
+
+        //
+        // A constructor in a local class already has a
+        // "LocalConstructor()" associated with it that can be used as a
+        // read access method.
+        //
+        assert(! this_type -> IsLocal());
+
+        //
+        //
+        //
+        block_symbol -> max_variable_index = 1;
+        read_method -> SetExternalIdentity(member -> Identity());
+
+        Ast *declaration = member -> method_or_constructor_declaration;
+        AstMethodDeclaration *method_declaration = declaration -> MethodDeclarationCast();
+        AstMethodDeclarator *declarator = (method_declaration
+                                           ? method_declaration -> method_declarator
+                                           : ((AstConstructorDeclaration *) declaration) -> constructor_declarator);
+        LexStream::TokenIndex loc = declarator -> identifier_token;
+
+        //
+        // Create a new anonymous type in order to create a unique
+        // substitute constructor.
+        //
+        AstClassInstanceCreationExpression *class_creation = ast_pool -> GenClassInstanceCreationExpression();
+        class_creation -> base_opt      = NULL;
+        class_creation -> dot_token_opt = 0;
+        class_creation -> new_token = loc;
+
+        AstSimpleName *ast_type = ast_pool -> GenSimpleName(loc);
+
+        class_creation -> class_type = ast_pool -> GenTypeExpression(ast_type);
+        class_creation -> left_parenthesis_token  = loc;
+        class_creation -> right_parenthesis_token = loc;
+
+        AstClassBody *class_body = ast_pool -> GenClassBody();
+        class_body -> left_brace_token = loc;
+        class_body -> right_brace_token = loc;
+
+        class_creation -> class_body_opt = class_body;
+
+        TypeSymbol *anonymous_type = sem -> GetAnonymousType(class_creation, control.Object());
+
+        //
+        //
+        //
+        AstMethodDeclarator *method_declarator       = ast_pool -> GenMethodDeclarator();
+        method_declarator -> identifier_token        = loc;
+        method_declarator -> left_parenthesis_token  = declarator -> LeftToken();
+        method_declarator -> right_parenthesis_token = declarator -> RightToken();
+
+        AstThisCall *this_call = ast_pool -> GenThisCall();
+        this_call -> this_token              = loc;
+        this_call -> left_parenthesis_token  = loc;
+        this_call -> right_parenthesis_token = loc;
+        this_call -> semicolon_token         = loc;
+        this_call -> symbol = member;
+
+        VariableSymbol *this0_variable = NULL;
+        if (this_type -> IsInner())
+        {
+            this0_variable = block_symbol -> InsertVariableSymbol(control.this0_name_symbol);
+            this0_variable -> MarkSynthetic();
+            this0_variable -> SetType(this_type -> ContainingType());
+            this0_variable -> SetOwner(read_method);
+            this0_variable -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+        }
+
+        //
+        // Add extra parameter with anonymous type...
+        //
+        VariableSymbol *parm = block_symbol -> InsertVariableSymbol(control.MakeParameter(1));
+        parm -> MarkSynthetic();
+        parm -> SetType(anonymous_type);
+        parm -> SetOwner(read_method);
+        parm -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+        read_method -> AddFormalParameter(parm);
+
+        //
+        // Since private_access_constructors will be compiled (see
+        // body.cpp), we must create valid ast_simple_names for its
+        // parameters.
+        //
+        for (int i = 0; i < member -> NumFormalParameters(); i++)
+        {
+            parm = block_symbol -> InsertVariableSymbol(member -> FormalParameter(i) -> Identity());
+            parm -> MarkSynthetic();
+            parm -> SetType(member -> FormalParameter(i) -> Type());
+            parm -> SetOwner(read_method);
+            parm -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+            if (control.IsDoubleWordType(parm -> Type()))
+                block_symbol -> max_variable_index++;
             read_method -> AddFormalParameter(parm);
 
             //
@@ -1784,62 +1840,44 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
             // body.cpp), we must create valid ast_simple_names for its
             // parameters.
             //
-            for (int i = 0; i < member -> NumFormalParameters(); i++)
-            {
-                parm = block_symbol -> InsertVariableSymbol(member -> FormalParameter(i) -> Identity());
-                parm -> MarkSynthetic();
-                parm -> SetType(member -> FormalParameter(i) -> Type());
-                parm -> SetOwner(read_method);
-                parm -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
-                if (control.IsDoubleWordType(parm -> Type()))
-                    block_symbol -> max_variable_index++;
-                read_method -> AddFormalParameter(parm);
-
-                //
-                // Since private_access_constructors will be compiled (see
-                // body.cpp), we must create valid ast_simple_names for its
-                // parameters.
-                //
-                AstVariableDeclaratorId *variable_declarator_name = declarator -> FormalParameter(i)
-                                                                               -> formal_declarator -> variable_declarator_name;
-                AstSimpleName *simple_name = ast_pool -> GenSimpleName(variable_declarator_name -> identifier_token);
-                simple_name -> symbol = parm;
-                this_call -> AddArgument(simple_name);
-            }
-            read_method -> SetSignature(control, this0_variable);
-            // A read access method has no throws clause !
-
-            AstReturnStatement *return_statement = ast_pool -> GenReturnStatement();
-            return_statement -> return_token = loc;
-            return_statement -> expression_opt = NULL;
-            return_statement -> semicolon_token = loc;
-            return_statement -> is_reachable = true;
-
-            AstBlock *block = ast_pool -> GenBlock();
-            block -> AllocateBlockStatements(1); // this block contains one statement
-            block -> left_brace_token  = loc;
-            block -> right_brace_token = loc;
-
-            block -> block_symbol = new BlockSymbol(0); // the symbol table associated with this block will contain no element
-            block -> is_reachable = true;
-            block -> can_complete_normally = false;
-            block -> AddStatement(return_statement);
-
-            AstConstructorBlock *constructor_block                   = ast_pool -> GenConstructorBlock();
-            constructor_block -> left_brace_token                    = loc;
-            constructor_block -> explicit_constructor_invocation_opt = this_call;
-            constructor_block -> block                               = block;
-            constructor_block -> right_brace_token                   = loc;
-
-            AstConstructorDeclaration *constructor_declaration  = ast_pool -> GenConstructorDeclaration();
-            constructor_declaration -> constructor_declarator   = method_declarator;
-            constructor_declaration -> constructor_body         = constructor_block;
-
-            constructor_declaration -> constructor_symbol = read_method;
-            read_method -> method_or_constructor_declaration = constructor_declaration;
-
-            this_type -> AddPrivateAccessConstructor(read_method);
+            AstVariableDeclaratorId *variable_declarator_name = declarator -> FormalParameter(i) -> formal_declarator -> variable_declarator_name;
+            AstSimpleName *simple_name = ast_pool -> GenSimpleName(variable_declarator_name -> identifier_token);
+            simple_name -> symbol = parm;
+            this_call -> AddArgument(simple_name);
         }
+        read_method -> SetSignature(control, this0_variable);
+        // A read access method has no throws clause !
+
+        AstReturnStatement *return_statement = ast_pool -> GenReturnStatement();
+        return_statement -> return_token = loc;
+        return_statement -> expression_opt = NULL;
+        return_statement -> semicolon_token = loc;
+        return_statement -> is_reachable = true;
+
+        AstBlock *block = ast_pool -> GenBlock();
+        block -> AllocateBlockStatements(1); // this block contains one statement
+        block -> left_brace_token  = loc;
+        block -> right_brace_token = loc;
+
+        block -> block_symbol = new BlockSymbol(0); // the symbol table associated with this block will contain no element
+        block -> is_reachable = true;
+        block -> can_complete_normally = false;
+        block -> AddStatement(return_statement);
+
+        AstConstructorBlock *constructor_block                   = ast_pool -> GenConstructorBlock();
+        constructor_block -> left_brace_token                    = loc;
+        constructor_block -> explicit_constructor_invocation_opt = this_call;
+        constructor_block -> block                               = block;
+        constructor_block -> right_brace_token                   = loc;
+
+        AstConstructorDeclaration *constructor_declaration  = ast_pool -> GenConstructorDeclaration();
+        constructor_declaration -> constructor_declarator   = method_declarator;
+        constructor_declaration -> constructor_body         = constructor_block;
+
+        constructor_declaration -> constructor_symbol = read_method;
+        read_method -> method_or_constructor_declaration = constructor_declaration;
+
+        this_type -> AddPrivateAccessConstructor(read_method);
 
         read_method -> accessed_member = member;
         this_type -> MapSymbolToReadMethod(member, read_method);
