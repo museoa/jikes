@@ -1541,8 +1541,7 @@ MethodSymbol *Control::Object_getClassMethod()
             {
                 system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
                                                   0,
-                                                  0,
-                                                  Object_type -> ContainingPackage() -> PackageName(),
+                                                  Object_type -> ContainingPackageName(),
                                                   Object_type -> ExternalName());
                 Object_type -> MarkBad();
             }

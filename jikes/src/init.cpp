@@ -66,9 +66,9 @@ void Semantic::ProcessVariableInitializer(AstVariableDeclarator *variable_declar
                 ReportSemError(SemanticError::INCOMPATIBLE_TYPE_FOR_ASSIGNMENT,
                                variable_declarator -> LeftToken(),
                                init -> RightToken(),
-                               field_type -> ContainingPackage() -> PackageName(),
+                               field_type -> ContainingPackageName(),
                                field_type -> ExternalName(),
-                               init -> Type() -> ContainingPackage() -> PackageName(),
+                               init -> Type() -> ContainingPackageName(),
                                init -> Type() -> ExternalName());
                 init -> value = NULL;
             }
@@ -155,9 +155,9 @@ void Semantic::ProcessArrayInitializer(AstArrayInitializer *array_initializer,
                         ReportSemError(SemanticError::INCOMPATIBLE_TYPE_FOR_INITIALIZATION,
                                        init -> LeftToken(),
                                        init -> RightToken(),
-                                       array_subtype -> ContainingPackage() -> PackageName(),
+                                       array_subtype -> ContainingPackageName(),
                                        array_subtype -> ExternalName(),
-                                       init -> Type() -> ContainingPackage() -> PackageName(),
+                                       init -> Type() -> ContainingPackageName(),
                                        init -> Type() -> ExternalName());
                     }
                 }

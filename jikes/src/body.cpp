@@ -356,7 +356,7 @@ void Semantic::ProcessIfStatement(Ast *stmt)
         ReportSemError(SemanticError::TYPE_NOT_BOOLEAN,
                        if_statement -> expression -> LeftToken(),
                        if_statement -> expression -> RightToken(),
-                       cond_type -> ContainingPackage() -> PackageName(),
+                       cond_type -> ContainingPackageName(),
                        cond_type -> ExternalName());
     }
 
@@ -418,7 +418,7 @@ void Semantic::ProcessWhileStatement(Ast *stmt)
         ReportSemError(SemanticError::TYPE_NOT_BOOLEAN,
                        while_statement -> expression -> LeftToken(),
                        while_statement -> expression -> RightToken(),
-                       cond_type -> ContainingPackage() -> PackageName(),
+                       cond_type -> ContainingPackageName(),
                        cond_type -> ExternalName());
     }
 
@@ -505,7 +505,7 @@ void Semantic::ProcessForStatement(Ast *stmt)
             ReportSemError(SemanticError::TYPE_NOT_BOOLEAN,
                            for_statement -> end_expression_opt -> LeftToken(),
                            for_statement -> end_expression_opt -> RightToken(),
-                           cond_type -> ContainingPackage() -> PackageName(),
+                           cond_type -> ContainingPackageName(),
                            cond_type -> ExternalName());
         }
     }
@@ -567,7 +567,7 @@ void Semantic::ProcessSwitchStatement(Ast *stmt)
         ReportSemError(SemanticError::TYPE_NOT_INTEGER,
                        switch_statement -> expression -> LeftToken(),
                        switch_statement -> expression -> RightToken(),
-                       type -> ContainingPackage() -> PackageName(),
+                       type -> ContainingPackageName(),
                        type -> ExternalName());
         type = control.no_type;
     }
@@ -612,7 +612,7 @@ void Semantic::ProcessSwitchStatement(Ast *stmt)
                     ReportSemError(SemanticError::TYPE_NOT_INTEGER,
                                    case_label -> expression -> LeftToken(),
                                    case_label -> expression -> RightToken(),
-                                   case_type -> ContainingPackage() -> PackageName(),
+                                   case_type -> ContainingPackageName(),
                                    case_type -> ExternalName());
                     case_label -> expression -> symbol = control.no_type;
                 }
@@ -819,7 +819,7 @@ void Semantic::ProcessDoStatement(Ast *stmt)
         ReportSemError(SemanticError::TYPE_NOT_BOOLEAN,
                        do_statement -> expression -> LeftToken(),
                        do_statement -> expression -> RightToken(),
-                       type -> ContainingPackage() -> PackageName(),
+                       type -> ContainingPackageName(),
                        type -> ExternalName());
     }
 
@@ -1035,9 +1035,9 @@ void Semantic::ProcessReturnStatement(Ast *stmt)
                     ReportSemError(SemanticError::MISMATCHED_RETURN_AND_METHOD_TYPE,
                                    return_statement -> expression_opt -> LeftToken(),
                                    return_statement -> expression_opt -> RightToken(),
-                                   return_statement -> expression_opt -> Type() -> ContainingPackage() -> PackageName(),
+                                   return_statement -> expression_opt -> Type() -> ContainingPackageName(),
                                    return_statement -> expression_opt -> Type() -> ExternalName(),
-                                   this_method -> Type() -> ContainingPackage() -> PackageName(),
+                                   this_method -> Type() -> ContainingPackageName(),
                                    this_method -> Type() -> ExternalName());
                 }
             }
@@ -1240,7 +1240,7 @@ void Semantic::ProcessThrowStatement(Ast *stmt)
         ReportSemError(SemanticError::UNCAUGHT_THROWN_EXCEPTION,
                        throw_statement -> LeftToken(),
                        throw_statement -> RightToken(),
-                       type -> ContainingPackage() -> PackageName(),
+                       type -> ContainingPackageName(),
                        type -> ExternalName(),
                        UncaughtExceptionContext());
 }
@@ -1367,7 +1367,7 @@ void Semantic::ProcessTryStatement(Ast *stmt)
             ReportSemError(SemanticError::TYPE_NOT_THROWABLE,
                            parameter -> LeftToken(),
                            parameter -> RightToken(),
-                           parm_type -> ContainingPackage() -> PackageName(),
+                           parm_type -> ContainingPackageName(),
                            parm_type -> ExternalName());
         }
 
@@ -1551,7 +1551,7 @@ void Semantic::ProcessTryStatement(Ast *stmt)
             ReportSemError(SemanticError::UNREACHABLE_CATCH_CLAUSE,
                            clause -> formal_parameter -> LeftToken(),
                            clause -> formal_parameter -> RightToken(),
-                           type -> ContainingPackage() -> PackageName(),
+                           type -> ContainingPackageName(),
                            type -> ExternalName());
         }
         else
@@ -1578,9 +1578,9 @@ void Semantic::ProcessTryStatement(Ast *stmt)
                 ReportSemError(SemanticError::BLOCKED_CATCH_CLAUSE,
                                clause -> formal_parameter -> LeftToken(),
                                clause -> formal_parameter -> RightToken(),
-                               type -> ContainingPackage() -> PackageName(),
+                               type -> ContainingPackageName(),
                                type -> ExternalName(),
-                               prev_type -> ContainingPackage() -> PackageName(),
+                               prev_type -> ContainingPackageName(),
                                prev_type -> ExternalName(),
                                loc.location);
             }
@@ -1634,7 +1634,7 @@ void Semantic::ProcessAssertStatement(Ast *stmt)
         ReportSemError(SemanticError::TYPE_NOT_BOOLEAN,
                        assert_statement -> condition -> LeftToken(),
                        assert_statement -> condition -> RightToken(),
-                       type -> ContainingPackage() -> PackageName(),
+                       type -> ContainingPackageName(),
                        type -> ExternalName());
     }
     //
@@ -1818,7 +1818,7 @@ void Semantic::ProcessThisCall(AstThisCall *this_call)
                     ReportSemError(SemanticError::UNCAUGHT_EXPLICIT_THIS_EXCEPTION,
                                    this_call -> this_token,
                                    this_call -> this_token,
-                                   exception -> ContainingPackage() -> PackageName(),
+                                   exception -> ContainingPackageName(),
                                    exception -> ExternalName());
             }
 
@@ -1882,11 +1882,11 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
                     ReportSemError(SemanticError::SUPER_TYPE_NOT_INNER_CLASS,
                                    super_call -> base_opt -> LeftToken(),
                                    super_call -> base_opt -> RightToken(),
-                                   super_type -> ContainingPackage() -> PackageName(),
+                                   super_type -> ContainingPackageName(),
                                    super_type -> ExternalName(),
-                                   this_type -> ContainingPackage() -> PackageName(),
+                                   this_type -> ContainingPackageName(),
                                    this_type -> ExternalName(),
-                                   expr_type -> ContainingPackage() -> PackageName(),
+                                   expr_type -> ContainingPackageName(),
                                    expr_type -> ExternalName());
                 super_call -> base_opt -> symbol = control.no_type;
             }
@@ -1899,11 +1899,11 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
                 ReportSemError(SemanticError::INVALID_ENCLOSING_INSTANCE,
                                super_call -> base_opt -> LeftToken(),
                                super_call -> base_opt -> RightToken(),
-                               this_type -> ContainingPackage() -> PackageName(),
+                               this_type -> ContainingPackageName(),
                                this_type -> ExternalName(),
-                               containing_type -> ContainingPackage() -> PackageName(),
+                               containing_type -> ContainingPackageName(),
                                containing_type -> ExternalName(),
-                               expr_type -> ContainingPackage() -> PackageName(),
+                               expr_type -> ContainingPackageName(),
                                expr_type -> ExternalName());
                 super_call -> base_opt -> symbol = control.no_type;
             }
@@ -1986,9 +1986,9 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
                 ReportSemError(SemanticError::UNCAUGHT_EXPLICIT_SUPER_EXCEPTION,
                                super_call -> LeftToken(),
                                super_call -> RightToken(),
-                               exception -> ContainingPackage() -> PackageName(),
+                               exception -> ContainingPackageName(),
                                exception -> ExternalName(),
-                               constructor -> containing_type -> ContainingPackage() -> PackageName(),
+                               constructor -> containing_type -> ContainingPackageName(),
                                constructor -> containing_type -> ExternalName());
         }
 
@@ -2058,7 +2058,7 @@ void Semantic::CheckThrow(AstExpression *throw_expression,
         ReportSemError(SemanticError::NOT_A_CLASS,
                        throw_expression -> LeftToken(),
                        throw_expression -> RightToken(),
-                       throw_type -> ContainingPackage() -> PackageName(),
+                       throw_type -> ContainingPackageName(),
                        throw_type -> ExternalName());
     }
     else if (! throw_type -> IsSubclass(control.Throwable()))
@@ -2066,7 +2066,7 @@ void Semantic::CheckThrow(AstExpression *throw_expression,
         ReportSemError(SemanticError::TYPE_NOT_THROWABLE,
                        throw_expression -> LeftToken(),
                        throw_expression -> RightToken(),
-                       throw_type -> ContainingPackage() -> PackageName(),
+                       throw_type -> ContainingPackageName(),
                        throw_type -> ExternalName());
     }
     else if (control.option.pedantic)
@@ -2076,7 +2076,7 @@ void Semantic::CheckThrow(AstExpression *throw_expression,
             ReportSemError(SemanticError::UNCHECKED_THROWS_CLAUSE_CLASS,
                            throw_expression -> LeftToken(),
                            throw_expression -> RightToken(),
-                           throw_type -> ContainingPackage() -> PackageName(),
+                           throw_type -> ContainingPackageName(),
                            throw_type -> ExternalName());
         else
         {
@@ -2090,7 +2090,7 @@ void Semantic::CheckThrow(AstExpression *throw_expression,
                     ReportSemError(SemanticError::DUPLICATE_THROWS_CLAUSE_CLASS,
                                    throw_expression -> LeftToken(),
                                    throw_expression -> RightToken(),
-                                   throw_type -> ContainingPackage() -> PackageName(),
+                                   throw_type -> ContainingPackageName(),
                                    throw_type -> ExternalName());
                     add = false;
                 }
@@ -2099,9 +2099,9 @@ void Semantic::CheckThrow(AstExpression *throw_expression,
                     ReportSemError(SemanticError::REDUNDANT_THROWS_CLAUSE_CLASS,
                                    throw_expression -> LeftToken(),
                                    throw_expression -> RightToken(),
-                                   throw_type -> ContainingPackage() -> PackageName(),
+                                   throw_type -> ContainingPackageName(),
                                    throw_type -> ExternalName(),
-                                   other_type -> ContainingPackage() -> PackageName(),
+                                   other_type -> ContainingPackageName(),
                                    other_type -> ExternalName());
                     add = false;
                 }
@@ -2110,9 +2110,9 @@ void Semantic::CheckThrow(AstExpression *throw_expression,
                     ReportSemError(SemanticError::REDUNDANT_THROWS_CLAUSE_CLASS,
                                    other_expr -> LeftToken(),
                                    other_expr -> RightToken(),
-                                   other_type -> ContainingPackage() -> PackageName(),
+                                   other_type -> ContainingPackageName(),
                                    other_type -> ExternalName(),
-                                   throw_type -> ContainingPackage() -> PackageName(),
+                                   throw_type -> ContainingPackageName(),
                                    throw_type -> ExternalName());
                     //
                     // Remove other type from the list, to reduce extra errors.

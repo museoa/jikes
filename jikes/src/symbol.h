@@ -1065,9 +1065,14 @@ public:
         class_literal_name = class_literal_name_;
     }
 
-    PackageSymbol *ContainingPackage()
+    PackageSymbol* ContainingPackage()
     {
         return outermost_type -> owner -> PackageCast();
+    }
+    // Returns the fully-qualified '/' separated package name.
+    const wchar_t* ContainingPackageName()
+    {
+        return outermost_type -> owner -> PackageCast() -> PackageName();
     }
 
     bool IsNestedIn(TypeSymbol *);

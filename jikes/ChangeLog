@@ -1,3 +1,16 @@
+2002-11-11  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/symbol.h (ContainingPackageName): New method.
+	* src/body.cpp:
+	* src/bytecode.cpp:
+	* src/control.cpp:
+	* src/decl.cpp:
+	* src/definite.cpp:
+	* src/expr.cpp:
+	* src/init.cpp:
+	* src/symbol.cpp:
+	* src/system.cpp: Use the method.
+
 2002-11-09  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.cpp (AppendString): String concatenation broken

@@ -273,8 +273,7 @@ void Control::InitClassInfo()
         {
             system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
                                               0,
-                                              0,
-                                              Class_type -> ContainingPackage() -> PackageName(),
+                                              Class_type -> ContainingPackageName(),
                                               Class_type -> ExternalName());
         }
     }
@@ -300,8 +299,7 @@ void Control::InitClassInfo()
         {
             system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
                                               0,
-                                              0,
-                                              Class_type -> ContainingPackage() -> PackageName(),
+                                              Class_type -> ContainingPackageName(),
                                               Class_type -> ExternalName());
         }
 
@@ -329,8 +327,7 @@ void Control::InitClassInfo()
             {
                 system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
                                                   0,
-                                                  0,
-                                                  Class_type -> ContainingPackage() -> PackageName(),
+                                                  Class_type -> ContainingPackageName(),
                                                   Class_type -> ExternalName());
             }
         }
@@ -382,8 +379,7 @@ void Control::InitAssertionErrorInfo()
         {
             system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
                                               0,
-                                              0,
-                                              AssertionError_type -> ContainingPackage() -> PackageName(),
+                                              AssertionError_type -> ContainingPackageName(),
                                               AssertionError_type -> ExternalName());
         }
     }
@@ -438,8 +434,7 @@ void Control::InitThrowableInfo()
         {
             system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
                                               0,
-                                              0,
-                                              Throwable_type -> ContainingPackage() -> PackageName(),
+                                              Throwable_type -> ContainingPackageName(),
                                               Throwable_type -> ExternalName());
         }
     }
@@ -471,8 +466,7 @@ void Control::InitNoClassDefFoundErrorInfo()
         {
             system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
                                               0,
-                                              0,
-                                              NoClassDefFoundError_type -> ContainingPackage() -> PackageName(),
+                                              NoClassDefFoundError_type -> ContainingPackageName(),
                                               NoClassDefFoundError_type -> ExternalName());
         }
     }
@@ -566,8 +560,7 @@ void Control::InitStringBufferInfo()
         {
             system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
                                               0,
-                                              0,
-                                              StringBuffer_type -> ContainingPackage() -> PackageName(),
+                                              StringBuffer_type -> ContainingPackageName(),
                                               StringBuffer_type -> ExternalName());
         }
     }

@@ -489,7 +489,7 @@ void TypeSymbol::SetSignature(Control &control)
     }
     else
     {
-        wchar_t *package_name = ContainingPackage() -> PackageName();
+        const wchar_t* package_name = ContainingPackageName();
         wchar_t *type_name = ExternalName();
 
         // +1 for 'L' +1 for '/' +1 for ';' +1 for '\0'

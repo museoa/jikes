@@ -1460,7 +1460,7 @@ void Semantic::DefiniteMethodBody(AstMethodDeclaration *method_declaration)
     if (control.option.g & JikesOption::VARS)
         Coutput << "(9) Processing method \""
                 << method_declaration -> method_symbol -> Name() << "\" in "
-                << ThisType() -> ContainingPackage() -> PackageName()
+                << ThisType() -> ContainingPackageName()
                 << "/" << ThisType() -> ExternalName() << endl;
 #endif // DUMP
     AstBlock *block_body = (AstBlock *) method_declaration -> method_body;
@@ -1535,7 +1535,7 @@ void Semantic::DefiniteConstructorBody(AstConstructorDeclaration *constructor_de
         Coutput << "(12) Processing constructor \""
                 << constructor_declaration -> constructor_symbol -> Name()
                 << "\" in "
-                << ThisType() -> ContainingPackage() -> PackageName() << "/"
+                << ThisType() -> ContainingPackageName() << "/"
                 << ThisType() -> ExternalName() << endl;
 #endif // DUMP
     AstMethodBody *block_body = constructor_declaration -> constructor_body;
@@ -1620,7 +1620,7 @@ void Semantic::DefiniteBlockInitializer(AstBlock *block_body, int stack_size)
 #ifdef DUMP
     if (control.option.g & JikesOption::VARS)
         Coutput << "(15) Processing Initializer block in "
-                << ThisType() -> ContainingPackage() -> PackageName() << "/"
+                << ThisType() -> ContainingPackageName() << "/"
                 << ThisType() -> ExternalName() << endl;
 #endif // DUMP
     int size = block_body -> block_symbol -> max_variable_index +

@@ -233,7 +233,7 @@ void ByteCode::CompileClass()
         semantic.ReportSemError(SemanticError::CONSTANT_POOL_OVERFLOW,
                                 unit_type -> declaration -> LeftToken(),
                                 unit_type -> declaration -> RightToken(),
-                                unit_type -> ContainingPackage() -> PackageName(),
+                                unit_type -> ContainingPackageName(),
                                 unit_type -> ExternalName());
     }
 
@@ -255,7 +255,7 @@ void ByteCode::CompileClass()
         semantic.ReportSemError(SemanticError::INTERFACES_OVERFLOW,
                                 left -> LeftToken(),
                                 right -> RightToken(),
-                                unit_type -> ContainingPackage() -> PackageName(),
+                                unit_type -> ContainingPackageName(),
                                 unit_type -> ExternalName());
     }
 
@@ -264,7 +264,7 @@ void ByteCode::CompileClass()
         semantic.ReportSemError(SemanticError::FIELDS_OVERFLOW,
                                 unit_type -> declaration -> LeftToken(),
                                 unit_type -> declaration -> RightToken(),
-                                unit_type -> ContainingPackage() -> PackageName(),
+                                unit_type -> ContainingPackageName(),
                                 unit_type -> ExternalName());
     }
 
@@ -273,7 +273,7 @@ void ByteCode::CompileClass()
         semantic.ReportSemError(SemanticError::METHODS_OVERFLOW,
                                 unit_type -> declaration -> LeftToken(),
                                 unit_type -> declaration -> RightToken(),
-                                unit_type -> ContainingPackage() -> PackageName(),
+                                unit_type -> ContainingPackageName(),
                                 unit_type -> ExternalName());
     }
 
@@ -282,7 +282,7 @@ void ByteCode::CompileClass()
         semantic.ReportSemError(SemanticError::STRING_OVERFLOW,
                                 unit_type -> declaration -> LeftToken(),
                                 unit_type -> declaration -> RightToken(),
-                                unit_type -> ContainingPackage() -> PackageName(),
+                                unit_type -> ContainingPackageName(),
                                 unit_type -> ExternalName());
     }
 
@@ -291,7 +291,7 @@ void ByteCode::CompileClass()
         semantic.ReportSemError(SemanticError::LIBRARY_METHOD_NOT_FOUND,
                                 unit_type -> declaration -> LeftToken(),
                                 unit_type -> declaration -> RightToken(),
-                                unit_type -> ContainingPackage() -> PackageName(),
+                                unit_type -> ContainingPackageName(),
                                 unit_type -> ExternalName());
     }
 
@@ -379,7 +379,7 @@ void ByteCode::CompileInterface()
          semantic.ReportSemError(SemanticError::CONSTANT_POOL_OVERFLOW,
                                  unit_type -> declaration -> LeftToken(),
                                  unit_type -> declaration -> RightToken(),
-                                 unit_type -> ContainingPackage() -> PackageName(),
+                                 unit_type -> ContainingPackageName(),
                                  unit_type -> ExternalName());
     }
 
@@ -554,13 +554,13 @@ void ByteCode::BeginMethod(int method_index, MethodSymbol *msym)
     if (control.option.g)
         Coutput << "(51) Generating code for method \"" << msym -> Name()
                 << "\" in "
-                << unit_type -> ContainingPackage() -> PackageName() << "/"
+                << unit_type -> ContainingPackageName() << "/"
                 << unit_type -> ExternalName() << endl;
 #endif // DUMP
 #ifdef JIKES_DEBUG
     if (control.option.debug_trace_stack_change)
         Coutput << endl << "Generating method "
-                << unit_type -> ContainingPackage() -> PackageName() << '.'
+                << unit_type -> ContainingPackageName() << '.'
                 << unit_type -> ExternalName() << '.' << msym -> Name()
                 << msym -> signature -> value << endl;
 #endif // JIKES_DEBUG
@@ -655,7 +655,7 @@ void ByteCode::BeginMethod(int method_index, MethodSymbol *msym)
                                     declarator -> left_parenthesis_token,
                                     declarator -> right_parenthesis_token,
                                     msym -> Header(),
-                                    unit_type -> ContainingPackage() -> PackageName(),
+                                    unit_type -> ContainingPackageName(),
                                     unit_type -> ExternalName());
         }
     }
@@ -678,7 +678,7 @@ void ByteCode::EndMethod(int method_index, MethodSymbol *msym)
                                     msym -> declaration -> LeftToken(),
                                     msym -> declaration -> RightToken(),
                                     msym -> Header(),
-                                    unit_type -> ContainingPackage() -> PackageName(),
+                                    unit_type -> ContainingPackageName(),
                                     unit_type -> ExternalName());
         }
 
@@ -688,7 +688,7 @@ void ByteCode::EndMethod(int method_index, MethodSymbol *msym)
                                     msym -> declaration -> LeftToken(),
                                     msym -> declaration -> RightToken(),
                                     msym -> Header(),
-                                    unit_type -> ContainingPackage() -> PackageName(),
+                                    unit_type -> ContainingPackageName(),
                                     unit_type -> ExternalName());
         }
 
@@ -698,7 +698,7 @@ void ByteCode::EndMethod(int method_index, MethodSymbol *msym)
                                     msym -> declaration -> LeftToken(),
                                     msym -> declaration -> RightToken(),
                                     msym -> Header(),
-                                    unit_type -> ContainingPackage() -> PackageName(),
+                                    unit_type -> ContainingPackageName(),
                                     unit_type -> ExternalName());
         }
 
@@ -3031,7 +3031,7 @@ void ByteCode::EmitAssertStatement(AstAssertStatement *assertion)
                     semantic.ReportSemError(SemanticError::LIBRARY_METHOD_NOT_FOUND,
                                             assertion -> LeftToken(),
                                             assertion -> RightToken(),
-                                            unit_type -> ContainingPackage() -> PackageName(),
+                                            unit_type -> ContainingPackageName(),
                                             unit_type -> ExternalName());
 
             }
