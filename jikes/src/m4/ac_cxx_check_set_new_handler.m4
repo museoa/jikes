@@ -58,22 +58,7 @@ AC_DEFUN([AC_CXX_CHECK_SET_NEW_HANDLER],
 AC_REQUIRE([AC_CXX_HAVE_STD])
 AC_CACHE_CHECK([for VC++ style set_new_handler], [ac_cv_vcpp_set_new_handler],
 [ AC_LANG_PUSH([C++])
-  AC_LINK_IFELSE([AC_LANG_PROGRAM([
-#include <new.h>
-int OutOfMemory(size_t) { return 0; }
-], [ _set_new_handler(OutOfMemory); ])],
-  [ac_cv_vcpp_set_new_handler=yes],
-  [ac_cv_vcpp_set_new_handler=no])
-  AC_LANG_POP([C++])
-])
-
-AS_IF([test "$ac_cv_vcpp_set_new_handler" = "yes"],
-      [AC_DEFINE(HAVE_VCPP_SET_NEW_HANDLER, ,
-        [Use Visual C++ version of set_new_handler])],
-      [dnl Double check that the standard set_new_handler actually works.
-AC_CACHE_CHECK([for standard set_new_handler],
-               [ac_cv_standard_set_new_handler],
-               [AC_LINK_IFELSE([AC_LANG_PROGRAM([
+set_new_handler_includes="
 #ifdef HAVE_STD
 # include <new>
 # ifdef HAVE_NAMESPACES
@@ -81,11 +66,26 @@ AC_CACHE_CHECK([for standard set_new_handler],
 # endif
 #else
 # include <new.h>
-#endif
+#endif"
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([$set_new_handler_includes
+int OutOfMemory(size_t) { return 0; }
+], [ _set_new_handler(OutOfMemory); ])],
+  [ac_cv_vcpp_set_new_handler=yes],
+  [ac_cv_vcpp_set_new_handler=no])
+  AC_LANG_POP([C++])
+])
+
+AS_IF([test "$ac_cv_vcpp_set_new_handler" = yes],
+      [AC_DEFINE(HAVE_VCPP_SET_NEW_HANDLER, ,
+        [Use Visual C++ version of set_new_handler])],
+      [dnl Double check that the standard set_new_handler actually works.
+AC_CACHE_CHECK([for standard set_new_handler],
+               [ac_cv_standard_set_new_handler],
+               [AC_LINK_IFELSE([AC_LANG_PROGRAM([$set_new_handler_includes
 void OutOfMemory() { return; }
 ], [ set_new_handler(OutOfMemory); ])],
    [ac_cv_standard_set_new_handler=yes],
    [ac_cv_standard_set_new_handler=no])])
- AS_IF([test "$ac_cv_standard_set_new_handler" != "yes"],
+ AS_IF([test "$ac_cv_standard_set_new_handler" != yes],
        [AC_MSG_ERROR([Could not find standard set_new_handler function])])
 ])])

@@ -20,14 +20,12 @@ AC_CACHE_VAL(acx_cv_pathname_style_dos,
 
 acx_cv_pathname_style_dos="no"
 case ${host_os} in
-  *djgpp | *mingw32* | *windows32* | *emx*) acx_cv_pathname_style_dos="yes" ;;
+  *djgpp | *mingw32* | *windows32* | *emx*) acx_cv_pathname_style_dos=yes ;;
 esac
 ])
 AC_MSG_RESULT($acx_cv_pathname_style_dos)
-if test "$acx_cv_pathname_style_dos" = "yes"; then
-  AC_DEFINE(HAVE_PATHNAME_STYLE_DOS,,[defined if running on a system with dos style paths])
-  AC_DEFINE(PATH_SEPARATOR, ';', [used to seperate elements on the PATH])
-else
-  AC_DEFINE(PATH_SEPARATOR, ':', [used to seperate elements on the PATH])
-fi
-])
+AS_IF([test "$acx_cv_pathname_style_dos" = yes],
+ [AC_DEFINE([HAVE_PATHNAME_STYLE_DOS],,
+   [defined if running on a system with dos style paths])
+  AC_DEFINE(PATH_SEPARATOR, ';', [used to seperate elements on the PATH])],
+ [AC_DEFINE(PATH_SEPARATOR, ':', [used to seperate elements on the PATH])])])

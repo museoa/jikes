@@ -7,36 +7,29 @@ dnl @version $Id$
 dnl @author Christopher Abbey <chris_abbey@yahoo.com>
 
 AC_DEFUN([AC_TRY_AN_ENCODING], [
-
   checkmsg="$1 as an encoding"
-  if test "$2" = "yes" ; then
-    byte_swap=1
-    checkmsg="$checkmsg with byteswapping"
-  else
-    byte_swap=0
-  fi
+  AS_IF([test "$2" = yes], [byte_swap=1
+         checkmsg="$checkmsg with byteswapping"],
+        [byte_swap=0])
   AC_MSG_CHECKING([$checkmsg])
-  AC_RUN_IFELSE([AC_LANG_SOURCE([[
-
-    #ifdef HAVE_STRING_H
-    # if !STDC_HEADERS && HAVE_MEMORY_H
-    #  include <memory.h>
-    # endif
-    # include <string.h>
-    #else
-    # ifdef HAVE_STRINGS_H
-    #  include <strings.h>
-    # endif
-    #endif
-    #ifdef HAVE_WCHAR_H
-    # include <wchar.h>
-    #endif
-    #ifdef HAVE_ICONV_H
-    # include <iconv.h>
-    #endif
-
-int main (int, char**) {
-  const char * src = "abc\0";
+  AC_RUN_IFELSE([AC_LANG_PROGRAM([
+#ifdef HAVE_STRING_H
+# if !STDC_HEADERS && HAVE_MEMORY_H
+#  include <memory.h>
+# endif
+# include <string.h>
+#else
+# ifdef HAVE_STRINGS_H
+#  include <strings.h>
+# endif
+#endif
+#ifdef HAVE_WCHAR_H
+# include <wchar.h>
+#endif
+#ifdef HAVE_ICONV_H
+# include <iconv.h>
+#endif
+], [[const char * src = "abc\0";
   size_t dstspace = 4*sizeof(wchar_t);
   size_t srcspace = strlen(src);
   char * dst = new char[dstspace];
@@ -52,7 +45,7 @@ int main (int, char**) {
 #ifdef HAVE_ERROR_CALL_ICONV_CONST
 	 (char **)
 #endif
-	 &src, &srcspace , &dst_ptr, &dstspace);
+	 &src, &srcspace, &dst_ptr, &dstspace);
   if (r == (size_t) -1)
     return 2;
   wchar_t * test = (wchar_t *) dst;
@@ -80,10 +73,9 @@ int main (int, char**) {
     return 0;
   else
     return 4;
-    }]])],
-  [ is_good=$1
-    AC_MSG_RESULT(works)],
-  [ AC_MSG_RESULT(nope)],
-  [ AC_MSG_RESULT([cross-compiling, you must supply correct answer in cache])])
-]
-)
+  ]])],
+  [is_good=$1
+   AC_MSG_RESULT(works)],
+  [AC_MSG_RESULT(nope)],
+  [AC_MSG_RESULT([cross-compiling, you must supply correct answer in cache])])
+])

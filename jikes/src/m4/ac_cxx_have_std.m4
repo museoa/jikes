@@ -18,11 +18,10 @@ ac_cv_cxx_have_std,
 #ifdef HAVE_NAMESPACES
 using namespace std;
 #endif
-],[return 0;])],
+])],
  [ac_cv_cxx_have_std=yes], [ac_cv_cxx_have_std=no])
  AC_LANG_POP([C++])
 ])
-if test "$ac_cv_cxx_have_std" = yes; then
-  AC_DEFINE(HAVE_STD,,[define if the compiler supports ISO C++ standard library])
-fi
-])
+AS_IF([test "$ac_cv_cxx_have_std" = yes],
+  [AC_DEFINE(HAVE_STD,,
+        [define if the compiler supports ISO C++ standard library])])])

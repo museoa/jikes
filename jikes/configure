@@ -2649,14 +2649,14 @@ else
 
 acx_cv_pathname_style_dos="no"
 case ${host_os} in
-  *djgpp | *mingw32* | *windows32* | *emx*) acx_cv_pathname_style_dos="yes" ;;
+  *djgpp | *mingw32* | *windows32* | *emx*) acx_cv_pathname_style_dos=yes ;;
 esac
 
 fi
 
 echo "$as_me:$LINENO: result: $acx_cv_pathname_style_dos" >&5
 echo "${ECHO_T}$acx_cv_pathname_style_dos" >&6
-if test "$acx_cv_pathname_style_dos" = "yes"; then
+if test "$acx_cv_pathname_style_dos" = yes; then
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_PATHNAME_STYLE_DOS
@@ -3803,6 +3803,13 @@ cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 namespace Outer { namespace Inner { int i = 0; }}
+int
+main ()
+{
+using namespace Outer::Inner; return i;
+  ;
+  return 0;
+}
 _ACEOF
 rm -f conftest.$ac_objext
 if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
@@ -3939,7 +3946,7 @@ ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
- cat >conftest.$ac_ext <<_ACEOF
+  cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
 cat confdefs.h >>conftest.$ac_ext
@@ -3950,6 +3957,13 @@ int f(int  x){return x;}
 int f(char x){return x;}
 int f(bool x){return x;}
 
+int
+main ()
+{
+bool b = true; return f(b);
+  ;
+  return 0;
+}
 _ACEOF
 rm -f conftest.$ac_objext
 if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
@@ -3981,17 +3995,16 @@ sed 's/^/| /' conftest.$ac_ext >&5
 ac_cv_cxx_bool=no
 fi
 rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
- ac_ext=cc
+  ac_ext=cc
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
-
 fi
 echo "$as_me:$LINENO: result: $ac_cv_cxx_bool" >&5
 echo "${ECHO_T}$ac_cv_cxx_bool" >&6
-if test "$ac_cv_cxx_bool" = "yes"; then
+if test "$ac_cv_cxx_bool" = yes; then
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_BOOL
@@ -4013,14 +4026,22 @@ ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
+set_new_handler_includes="
+#ifdef HAVE_STD
+# include <new>
+# ifdef HAVE_NAMESPACES
+    using namespace std;
+# endif
+#else
+# include <new.h>
+#endif"
   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
-
-#include <new.h>
+$set_new_handler_includes
 int OutOfMemory(size_t) { return 0; }
 
 int
@@ -4073,7 +4094,7 @@ fi
 echo "$as_me:$LINENO: result: $ac_cv_vcpp_set_new_handler" >&5
 echo "${ECHO_T}$ac_cv_vcpp_set_new_handler" >&6
 
-if test "$ac_cv_vcpp_set_new_handler" = "yes"; then
+if test "$ac_cv_vcpp_set_new_handler" = yes; then
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_VCPP_SET_NEW_HANDLER
@@ -4091,15 +4112,7 @@ _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
-
-#ifdef HAVE_STD
-# include <new>
-# ifdef HAVE_NAMESPACES
-    using namespace std;
-# endif
-#else
-# include <new.h>
-#endif
+$set_new_handler_includes
 void OutOfMemory() { return; }
 
 int
@@ -4144,7 +4157,7 @@ rm -f conftest.err conftest.$ac_objext \
 fi
 echo "$as_me:$LINENO: result: $ac_cv_standard_set_new_handler" >&5
 echo "${ECHO_T}$ac_cv_standard_set_new_handler" >&6
- if test "$ac_cv_standard_set_new_handler" != "yes"; then
+ if test "$ac_cv_standard_set_new_handler" != yes; then
   { { echo "$as_me:$LINENO: error: Could not find standard set_new_handler function" >&5
 echo "$as_me: error: Could not find standard set_new_handler function" >&2;}
    { (exit 1); exit 1; }; }
@@ -4166,8 +4179,8 @@ cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 
-void foo(char * arg) {}
-void const_foo(const char * arg) { foo(arg); }
+char * foo(char * arg) { return arg; }
+const char * const_foo(const char * arg) { return foo(arg); }
 
 _ACEOF
 rm -f conftest.$ac_objext
@@ -4204,14 +4217,13 @@ rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
 fi
 echo "$as_me:$LINENO: result: $ac_cv_error_discard_const" >&5
 echo "${ECHO_T}$ac_cv_error_discard_const" >&6
-if test "$ac_cv_error_discard_const" = "yes"; then
+if test "$ac_cv_error_discard_const" = yes; then
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_ERROR_DISCARD_CONST
 _ACEOF
 
 fi
-
 
 
 
@@ -4556,7 +4568,7 @@ else
   ac_cv_type_wint_t=no
 fi
 
-if test "$ac_cv_type_wint_t" = "yes" ; then
+if test "$ac_cv_type_wint_t" = yes; then
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_WINT_T 1
@@ -4564,19 +4576,26 @@ _ACEOF
 
 fi
 
+
 echo "$as_me:$LINENO: checking call wcslen" >&5
 echo $ECHO_N "checking call wcslen... $ECHO_C" >&6
 if test "${ac_cv_call_wcslen+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
-
-cat >conftest.$ac_ext <<_ACEOF
+  cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 $wcs_funcs_includes
+int
+main ()
+{
+wcslen(NULL)
+  ;
+  return 0;
+}
 _ACEOF
 rm -f conftest.$ac_objext
 if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
@@ -4613,11 +4632,8 @@ fi
 echo "$as_me:$LINENO: result: $ac_cv_call_wcslen" >&5
 echo "${ECHO_T}$ac_cv_call_wcslen" >&6
 
-
-
-if test "$ac_cv_call_wcslen" = "yes" ; then
-
-echo "$as_me:$LINENO: checking for error calling wcslen with const argument" >&5
+if test "$ac_cv_call_wcslen" = yes; then
+   echo "$as_me:$LINENO: checking for error calling wcslen with const argument" >&5
 echo $ECHO_N "checking for error calling wcslen with const argument... $ECHO_C" >&6
 if test "${ac_cv_error_call_wcslen_const+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -4629,6 +4645,16 @@ cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 $wcs_funcs_includes
+int
+main ()
+{
+
+const wchar_t * s = NULL;
+wcslen(s);
+
+  ;
+  return 0;
+}
 _ACEOF
 rm -f conftest.$ac_objext
 if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
@@ -4664,9 +4690,7 @@ rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
 fi
 echo "$as_me:$LINENO: result: $ac_cv_error_call_wcslen_const" >&5
 echo "${ECHO_T}$ac_cv_error_call_wcslen_const" >&6
-
-if test "$ac_cv_error_call_wcslen_const" = "yes"; then
-
+ if test "$ac_cv_error_call_wcslen_const" = yes; then
 
 
 cat >>confdefs.h <<\_ACEOF
@@ -4674,8 +4698,7 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 
-
-  echo "$as_me:$LINENO: checking fix for calling wcslen with non const argument" >&5
+    echo "$as_me:$LINENO: checking fix for calling wcslen with non const argument" >&5
 echo $ECHO_N "checking fix for calling wcslen with non const argument... $ECHO_C" >&6
 if test "${ac_cv_call_wcslen_non_const+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -4687,6 +4710,20 @@ cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 $wcs_funcs_includes
+int
+main ()
+{
+
+  const wchar_t * s = NULL;
+  wcslen(
+  #ifdef HAVE_ERROR_CALL_WCSLEN_CONST
+           (wchar_t *)
+  #endif
+         s);
+
+  ;
+  return 0;
+}
 _ACEOF
 rm -f conftest.$ac_objext
 if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
@@ -4724,11 +4761,10 @@ rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
 fi
 echo "$as_me:$LINENO: result: $ac_cv_call_wcslen_non_const" >&5
 echo "${ECHO_T}$ac_cv_call_wcslen_non_const" >&6
-
 fi
 
-fi
 
+fi
 
 
 echo "$as_me:$LINENO: checking for presence of ostream << const unsigned char *" >&5
@@ -4743,7 +4779,12 @@ cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 
-#include <iostream.h>
+#ifdef HAVE_STD
+# include <iostream>
+using namespace std;
+#else
+# include <iostream.h>
+#endif
 void foo(const unsigned char *arg) { cerr << arg; }
 
 _ACEOF
@@ -4781,7 +4822,7 @@ rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
 fi
 echo "$as_me:$LINENO: result: $ac_cv_cxx_ostream_const_unsigned_char_ptr" >&5
 echo "${ECHO_T}$ac_cv_cxx_ostream_const_unsigned_char_ptr" >&6
-if test "$ac_cv_cxx_ostream_const_unsigned_char_ptr" = "yes"; then
+if test "$ac_cv_cxx_ostream_const_unsigned_char_ptr" = yes; then
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_OSTREAM_CONST_UNSIGNED_CHAR_PTR
@@ -4844,7 +4885,6 @@ if diff $cache_file confcache >/dev/null 2>&1; then :; else
   fi
 fi
 rm -f confcache
-
 
 
 for ac_header in iconv.h
@@ -4997,9 +5037,7 @@ fi
 done
 
 
-
-if test "$ac_cv_header_iconv_h" = "yes" ; then
-
+if test "$ac_cv_header_iconv_h" = yes; then
 
 echo "$as_me:$LINENO: checking for iconv in -liconv" >&5
 echo $ECHO_N "checking for iconv in -liconv... $ECHO_C" >&6
@@ -5166,8 +5204,7 @@ iconv_includes="
 #endif
 #ifdef HAVE_ICONV_H
 # include <iconv.h>
-#endif
-"
+#endif"
 
 echo "$as_me:$LINENO: checking simple call to iconv" >&5
 echo $ECHO_N "checking simple call to iconv... $ECHO_C" >&6
@@ -5182,6 +5219,13 @@ cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 $iconv_includes
+int
+main ()
+{
+iconv(0, NULL, NULL, NULL, NULL)
+  ;
+  return 0;
+}
 _ACEOF
 rm -f conftest.$ac_objext
 if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
@@ -5230,6 +5274,16 @@ cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 $iconv_includes
+int
+main ()
+{
+
+const char ** s = NULL;
+iconv(0, s, NULL, NULL, NULL);
+
+  ;
+  return 0;
+}
 _ACEOF
 rm -f conftest.$ac_objext
 if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
@@ -5266,17 +5320,14 @@ fi
 echo "$as_me:$LINENO: result: $ac_cv_error_call_iconv_const" >&5
 echo "${ECHO_T}$ac_cv_error_call_iconv_const" >&6
 
-if test "$ac_cv_error_call_iconv_const" = "yes"; then
-
-
+if test "$ac_cv_error_call_iconv_const" = yes; then
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_ERROR_CALL_ICONV_CONST
 _ACEOF
 
 
-
-  echo "$as_me:$LINENO: checking fix for calling iconv with non const argument" >&5
+    echo "$as_me:$LINENO: checking fix for calling iconv with non const argument" >&5
 echo $ECHO_N "checking fix for calling iconv with non const argument... $ECHO_C" >&6
 if test "${ac_cv_call_iconv_non_const+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -5288,6 +5339,20 @@ cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 $iconv_includes
+int
+main ()
+{
+
+  const wchar_t * s = NULL;
+  iconv( 0,
+  #ifdef HAVE_ERROR_CALL_ICONV_CONST
+           (char **)
+  #endif
+         s, NULL, NULL, NULL);
+
+  ;
+  return 0;
+}
 _ACEOF
 rm -f conftest.$ac_objext
 if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
@@ -5325,8 +5390,8 @@ rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
 fi
 echo "$as_me:$LINENO: result: $ac_cv_call_iconv_non_const" >&5
 echo "${ECHO_T}$ac_cv_call_iconv_non_const" >&6
-
 fi
+
 
 echo "$as_me:$LINENO: checking for wchar_t" >&5
 echo $ECHO_N "checking for wchar_t... $ECHO_C" >&6
@@ -5734,11 +5799,12 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
-if test $ac_cv_sizeof_wchar_t -lt 2 ; then
+if test $ac_cv_sizeof_wchar_t -lt 2; then
   { { echo "$as_me:$LINENO: error: wchar_t must be at least two bytes wide" >&5
 echo "$as_me: error: wchar_t must be at least two bytes wide" >&2;}
    { (exit 1); exit 1; }; }
 fi
+
 
 
 
@@ -5753,18 +5819,18 @@ fi
 
 for enc in $list ; do
 
-
   checkmsg="$enc as an encoding"
-  if test "" = "yes" ; then
-    byte_swap=1
-    checkmsg="$checkmsg with byteswapping"
-  else
-    byte_swap=0
-  fi
+  if test "" = yes; then
+  byte_swap=1
+         checkmsg="$checkmsg with byteswapping"
+else
+  byte_swap=0
+fi
+
   echo "$as_me:$LINENO: checking $checkmsg" >&5
 echo $ECHO_N "checking $checkmsg... $ECHO_C" >&6
   if test "$cross_compiling" = yes; then
-   echo "$as_me:$LINENO: result: cross-compiling, you must supply correct answer in cache" >&5
+  echo "$as_me:$LINENO: result: cross-compiling, you must supply correct answer in cache" >&5
 echo "${ECHO_T}cross-compiling, you must supply correct answer in cache" >&6
 else
   cat >conftest.$ac_ext <<_ACEOF
@@ -5774,26 +5840,27 @@ cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 
+#ifdef HAVE_STRING_H
+# if !STDC_HEADERS && HAVE_MEMORY_H
+#  include <memory.h>
+# endif
+# include <string.h>
+#else
+# ifdef HAVE_STRINGS_H
+#  include <strings.h>
+# endif
+#endif
+#ifdef HAVE_WCHAR_H
+# include <wchar.h>
+#endif
+#ifdef HAVE_ICONV_H
+# include <iconv.h>
+#endif
 
-    #ifdef HAVE_STRING_H
-    # if !STDC_HEADERS && HAVE_MEMORY_H
-    #  include <memory.h>
-    # endif
-    # include <string.h>
-    #else
-    # ifdef HAVE_STRINGS_H
-    #  include <strings.h>
-    # endif
-    #endif
-    #ifdef HAVE_WCHAR_H
-    # include <wchar.h>
-    #endif
-    #ifdef HAVE_ICONV_H
-    # include <iconv.h>
-    #endif
-
-int main (int, char**) {
-  const char * src = "abc\0";
+int
+main ()
+{
+const char * src = "abc\0";
   size_t dstspace = 4*sizeof(wchar_t);
   size_t srcspace = strlen(src);
   char * dst = new char[dstspace];
@@ -5809,7 +5876,7 @@ int main (int, char**) {
 #ifdef HAVE_ERROR_CALL_ICONV_CONST
 	 (char **)
 #endif
-	 &src, &srcspace , &dst_ptr, &dstspace);
+	 &src, &srcspace, &dst_ptr, &dstspace);
   if (r == (size_t) -1)
     return 2;
   wchar_t * test = (wchar_t *) dst;
@@ -5837,7 +5904,10 @@ int main (int, char**) {
     return 0;
   else
     return 4;
-    }
+
+  ;
+  return 0;
+}
 _ACEOF
 rm -f conftest$ac_exeext
 if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
@@ -5850,8 +5920,8 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-   is_good=$enc
-    echo "$as_me:$LINENO: result: works" >&5
+  is_good=$enc
+   echo "$as_me:$LINENO: result: works" >&5
 echo "${ECHO_T}works" >&6
 else
   echo "$as_me: program exited with status $ac_status" >&5
@@ -5859,12 +5929,11 @@ echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
 ( exit $ac_status )
- echo "$as_me:$LINENO: result: nope" >&5
+echo "$as_me:$LINENO: result: nope" >&5
 echo "${ECHO_T}nope" >&6
 fi
 rm -f core *.core gmon.out bb.out conftest$ac_exeext conftest.$ac_objext conftest.$ac_ext
 fi
-
 
   if test "$is_good" = "$enc" ; then
 
@@ -5878,18 +5947,18 @@ done
 if test -z "$is_good" ; then
   for enc in $list ; do
 
-
   checkmsg="$enc as an encoding"
-  if test "yes" = "yes" ; then
-    byte_swap=1
-    checkmsg="$checkmsg with byteswapping"
-  else
-    byte_swap=0
-  fi
+  if test "yes" = yes; then
+  byte_swap=1
+         checkmsg="$checkmsg with byteswapping"
+else
+  byte_swap=0
+fi
+
   echo "$as_me:$LINENO: checking $checkmsg" >&5
 echo $ECHO_N "checking $checkmsg... $ECHO_C" >&6
   if test "$cross_compiling" = yes; then
-   echo "$as_me:$LINENO: result: cross-compiling, you must supply correct answer in cache" >&5
+  echo "$as_me:$LINENO: result: cross-compiling, you must supply correct answer in cache" >&5
 echo "${ECHO_T}cross-compiling, you must supply correct answer in cache" >&6
 else
   cat >conftest.$ac_ext <<_ACEOF
@@ -5899,26 +5968,27 @@ cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 
+#ifdef HAVE_STRING_H
+# if !STDC_HEADERS && HAVE_MEMORY_H
+#  include <memory.h>
+# endif
+# include <string.h>
+#else
+# ifdef HAVE_STRINGS_H
+#  include <strings.h>
+# endif
+#endif
+#ifdef HAVE_WCHAR_H
+# include <wchar.h>
+#endif
+#ifdef HAVE_ICONV_H
+# include <iconv.h>
+#endif
 
-    #ifdef HAVE_STRING_H
-    # if !STDC_HEADERS && HAVE_MEMORY_H
-    #  include <memory.h>
-    # endif
-    # include <string.h>
-    #else
-    # ifdef HAVE_STRINGS_H
-    #  include <strings.h>
-    # endif
-    #endif
-    #ifdef HAVE_WCHAR_H
-    # include <wchar.h>
-    #endif
-    #ifdef HAVE_ICONV_H
-    # include <iconv.h>
-    #endif
-
-int main (int, char**) {
-  const char * src = "abc\0";
+int
+main ()
+{
+const char * src = "abc\0";
   size_t dstspace = 4*sizeof(wchar_t);
   size_t srcspace = strlen(src);
   char * dst = new char[dstspace];
@@ -5934,7 +6004,7 @@ int main (int, char**) {
 #ifdef HAVE_ERROR_CALL_ICONV_CONST
 	 (char **)
 #endif
-	 &src, &srcspace , &dst_ptr, &dstspace);
+	 &src, &srcspace, &dst_ptr, &dstspace);
   if (r == (size_t) -1)
     return 2;
   wchar_t * test = (wchar_t *) dst;
@@ -5962,7 +6032,10 @@ int main (int, char**) {
     return 0;
   else
     return 4;
-    }
+
+  ;
+  return 0;
+}
 _ACEOF
 rm -f conftest$ac_exeext
 if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
@@ -5975,8 +6048,8 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-   is_good=$enc
-    echo "$as_me:$LINENO: result: works" >&5
+  is_good=$enc
+   echo "$as_me:$LINENO: result: works" >&5
 echo "${ECHO_T}works" >&6
 else
   echo "$as_me: program exited with status $ac_status" >&5
@@ -5984,12 +6057,11 @@ echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
 ( exit $ac_status )
- echo "$as_me:$LINENO: result: nope" >&5
+echo "$as_me:$LINENO: result: nope" >&5
 echo "${ECHO_T}nope" >&6
 fi
 rm -f core *.core gmon.out bb.out conftest$ac_exeext conftest.$ac_objext conftest.$ac_ext
 fi
-
 
     if test "$is_good" = "$enc" ; then
 
@@ -6013,10 +6085,7 @@ echo "$as_me: error: Configure was unable to locate a functional iconv encoding,
 
       fi
 
-
 fi
-
-
 
 
 
@@ -6305,6 +6374,13 @@ cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 class C {public: static const int i = 0;}; const int C::i;
+int
+main ()
+{
+return C::i;
+  ;
+  return 0;
+}
 _ACEOF
 rm -f conftest.$ac_objext
 if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
@@ -6373,6 +6449,13 @@ cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 class A{public:explicit A(double){}};
+int
+main ()
+{
+double c = 5.0;A x(c);return 0;
+  ;
+  return 0;
+}
 _ACEOF
 rm -f conftest.$ac_objext
 if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
@@ -6455,6 +6538,16 @@ class Derived : public Base { public :
                               virtual int f () { return 1; }
                             };
 
+int
+main ()
+{
+Derived d;
+Base *ptr = &d;
+return typeid (*ptr) == typeid (Derived);
+
+  ;
+  return 0;
+}
 _ACEOF
 rm -f conftest.$ac_objext
 if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
@@ -6523,6 +6616,13 @@ cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 
+int
+main ()
+{
+int x = 0;const int& y = x;int& z = const_cast<int&>(y);return z;
+  ;
+  return 0;
+}
 _ACEOF
 rm -f conftest.$ac_objext
 if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
@@ -6592,6 +6692,13 @@ cat >>conftest.$ac_ext <<_ACEOF
 #include <typeinfo>
 class Base { public : Base () {} virtual void f () = 0;};
 class Derived : public Base { public : Derived () {} virtual void f () {} };
+int
+main ()
+{
+Derived d; Base& b=d; return dynamic_cast<Derived*>(&b) ? 0 : 1;
+  ;
+  return 0;
+}
 _ACEOF
 rm -f conftest.$ac_objext
 if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
@@ -6663,6 +6770,15 @@ class Base { public : Base () {} virtual void f () = 0;};
 class Derived : public Base { public : Derived () {} virtual void f () {} };
 class Unrelated { public : Unrelated () {} };
 int g (Unrelated&) { return 0; }
+int
+main ()
+{
+
+Derived d;Base& b=d;
+Unrelated& e=reinterpret_cast<Unrelated&>(b);return g(e);
+  ;
+  return 0;
+}
 _ACEOF
 rm -f conftest.$ac_objext
 if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
@@ -6733,6 +6849,15 @@ cat >>conftest.$ac_ext <<_ACEOF
 class Base { public : Base () {} virtual void f () = 0; };
 class Derived : public Base { public : Derived () {} virtual void f () {} };
 int g (Derived&) { return 0; }
+int
+main ()
+{
+
+Derived d; Base& b = d;
+Derived& s = static_cast<Derived&> (b); return g (s);
+  ;
+  return 0;
+}
 _ACEOF
 rm -f conftest.$ac_objext
 if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5

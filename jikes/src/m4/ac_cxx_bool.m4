@@ -9,18 +9,15 @@ dnl @version $Id$
 dnl @author Luc Maisonobe
 dnl
 AC_DEFUN([AC_CXX_BOOL],
-[AC_CACHE_CHECK(whether the compiler recognizes bool as a built-in type,
-ac_cv_cxx_bool,
-[AC_LANG_PUSH([C++])
- AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+[AC_CACHE_CHECK([whether the compiler recognizes bool as a built-in type],
+ [ac_cv_cxx_bool],
+ [AC_LANG_PUSH([C++])
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
 int f(int  x){return x;}
 int f(char x){return x;}
 int f(bool x){return x;}
 ],[bool b = true; return f(b);])],
  [ac_cv_cxx_bool=yes], [ac_cv_cxx_bool=no])
- AC_LANG_POP([C++])
-])
-if test "$ac_cv_cxx_bool" = "yes"; then
-  AC_DEFINE(HAVE_BOOL,,[defined if bool is a built-in C++ type])
-fi
-])
+  AC_LANG_POP([C++])])
+AS_IF([test "$ac_cv_cxx_bool" = yes],
+  [AC_DEFINE(HAVE_BOOL,,[defined if bool is a built-in C++ type])])])
