@@ -1239,6 +1239,7 @@ private:
     void ProcessExpressionOrStringConstant(AstExpression* expr);
 
     // Implemented in body.cpp - statement processing
+    void CheckForAssignmentUsedAsTruthValue(Ast*);
     void ProcessLocalVariableStatement(Ast*);
     void ProcessBlock(Ast*);
     void ProcessForStatement(Ast*);

@@ -1,3 +1,9 @@
+2004-03-11  Elliott Hughes  <enh@acm.org>
+
+	* src/body.cpp, src/semantic.h: add warnings about boolean assignment
+	used as a truth value in an if, while, or do expression.
+	* src/error.cpp, src/error.h: new diagnostic.
+
 2004-03-10  Eric Blake  <ebb9@byu.net>
 
 	* src/decl.cpp (ReadType): Bug 3852 - fix at least the simple test

@@ -400,6 +400,29 @@ void Semantic::ProcessSynchronizedStatement(Ast* stmt)
 }
 
 
+void Semantic::CheckForAssignmentUsedAsTruthValue(Ast* expression)
+{
+    //
+    // Warn about boolean assignments within if/while guards, i.e.
+    // code such as "if (booleanLocal = booleanMethod())"
+    // instead of "if (booleanLocal == booleanMethod())".
+    //
+    // We deliberately don't do anything like StripNops because
+    // we want to allow the same compiler-quitening fix as gcc:
+    // "if ((booleanLocal = booleanMethod()))".
+    //
+    AstAssignmentExpression* assignment_expression =
+        expression -> AssignmentExpressionCast();
+    if (assignment_expression &&
+        assignment_expression -> SimpleAssignment() &&
+        assignment_expression -> Type() == control.boolean_type)
+    {
+        ReportSemError(SemanticError::ASSIGNMENT_USED_AS_TRUTH_VALUE,
+                       expression);
+    }
+}
+
+
 void Semantic::ProcessIfStatement(Ast* stmt)
 {
     AstIfStatement* if_statement = (AstIfStatement*) stmt;
@@ -414,6 +437,7 @@ void Semantic::ProcessIfStatement(Ast* stmt)
                        cond_type -> ContainingPackageName(),
                        cond_type -> ExternalName());
     }
+    CheckForAssignmentUsedAsTruthValue(if_statement -> expression);
 
     //
     // Recall that the parser enclosed both true and false statements in
@@ -474,6 +498,7 @@ void Semantic::ProcessWhileStatement(Ast* stmt)
                        cond_type -> ContainingPackageName(),
                        cond_type -> ExternalName());
     }
+    CheckForAssignmentUsedAsTruthValue(while_statement -> expression);
 
     ProcessBlock(enclosed_statement);
 
@@ -1024,6 +1049,7 @@ void Semantic::ProcessDoStatement(Ast* stmt)
                        type -> ContainingPackageName(),
                        type -> ExternalName());
     }
+    CheckForAssignmentUsedAsTruthValue(do_statement -> expression);
 
     //
     // A do statement can complete normally, iff at least one of the following

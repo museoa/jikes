@@ -184,6 +184,7 @@ public:
         CONSTANT_OVERFLOW,
         LOCAL_SHADOWS_FIELD,
         HIDDEN_FIELD,
+        ASSIGNMENT_USED_AS_TRUTH_VALUE,
 
         // "Effective Java" warnings.
         EJ_AVOID_OVERLOADING_EQUALS,

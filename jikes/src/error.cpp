@@ -517,6 +517,7 @@ void SemanticError::StaticInitializer()
         WEAK_WARNING;
     warning[CLASS_METHOD_INVOKED_VIA_INSTANCE] = WEAK_WARNING;
     warning[CLASS_FIELD_ACCESSED_VIA_INSTANCE] = WEAK_WARNING;
+    warning[ASSIGNMENT_USED_AS_TRUTH_VALUE] = WEAK_WARNING;
 
     //
     // serialVersionUID warnings.
@@ -1338,6 +1339,9 @@ void SemanticError::InitializeMessages()
         "Local \"%1\" shadows a field of the same name in \"%T2\".";
     messages[HIDDEN_FIELD] =
         "Field \"%1\" shadows a field of the same name in \"%T2\".";
+    messages[ASSIGNMENT_USED_AS_TRUTH_VALUE] =
+        "Suggest parentheses around assignment used as truth value.";
+
 
     // "Effective Java" warnings.
     messages[EJ_AVOID_OVERLOADING_EQUALS] =
