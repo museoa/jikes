@@ -1024,7 +1024,8 @@ private:
     void CheckThrow(AstExpression *);
     void ProcessMethodBody(AstMethodDeclaration *);
     void ProcessConstructorBody(AstConstructorDeclaration *);
-    bool CatchableException(TypeSymbol *);
+    bool UncaughtException(TypeSymbol *);
+    wchar_t *UncaughtExceptionContext();
     void ReportConstructorNotFound(Ast *, TypeSymbol *);
     void ReportMethodNotFound(AstMethodInvocation *, TypeSymbol *);
     MethodSymbol *FindConstructor(TypeSymbol *, Ast *, LexStream::TokenIndex, LexStream::TokenIndex);

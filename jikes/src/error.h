@@ -256,9 +256,7 @@ class SemanticError
         INVALID_CONTINUE_TARGET,
         NON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD,
         NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD,
-        NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD_FROM_ABSTRACT_CLASS,
         NON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD,
-        NO_ABSTRACT_METHOD_IMPLEMENTATION,
         DUPLICATE_INTERFACE,
         UNKNOWN_AMBIGUOUS_NAME,
         CIRCULAR_INTERFACE,
@@ -270,8 +268,6 @@ class SemanticError
         PROTECTED_INSTANCE_METHOD_NOT_ACCESSIBLE,
         PROTECTED_INTERFACE_METHOD_NOT_ACCESSIBLE,
         CONSTRUCTOR_NOT_ACCESSIBLE,
-        CONSTRUCTOR_DOES_NOT_THROW_THIS_EXCEPTION,
-        CONSTRUCTOR_DOES_NOT_THROW_SUPER_EXCEPTION,
         PARAMETER_REDECLARED,
         BAD_ABSTRACT_METHOD_MODIFIER,
         ABSTRACT_METHOD_MODIFIER_CONFLICT,
@@ -299,9 +295,12 @@ class SemanticError
         SUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
         INNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
         EXPRESSION_NOT_CONSTANT,
-        UNCAUGHT_METHOD_CHECKED_EXCEPTION,
-        UNCAUGHT_CONSTRUCTOR_CHECKED_EXCEPTION,
-        UNCAUGHT_ANONYMOUS_CONSTRUCTOR_CHECKED_EXCEPTION,
+        UNCAUGHT_METHOD_EXCEPTION,
+        UNCAUGHT_CONSTRUCTOR_EXCEPTION,
+        UNCAUGHT_ANONYMOUS_CONSTRUCTOR_EXCEPTION,
+        UNCAUGHT_THROWN_EXCEPTION,
+        UNCAUGHT_EXPLICIT_THIS_EXCEPTION,
+        UNCAUGHT_EXPLICIT_SUPER_EXCEPTION,
         UNREACHABLE_CATCH_CLAUSE,
         UNREACHABLE_DEFAULT_CATCH_CLAUSE,
         UNREACHABLE_STATEMENT,
@@ -557,18 +556,13 @@ private:
     static wchar_t *PrintMISPLACED_RETURN_WITH_NO_EXPRESSION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISMATCHED_RETURN_AND_METHOD_TYPE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintEXPRESSION_NOT_THROWABLE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintBAD_THROWABLE_EXPRESSION_IN_TRY(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintBAD_THROWABLE_EXPRESSION_IN_METHOD(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintBAD_THROWABLE_EXPRESSION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISPLACED_BREAK_STATEMENT(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISPLACED_CONTINUE_STATEMENT(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISPLACED_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINVALID_CONTINUE_TARGET(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD_FROM_ABSTRACT_CLASS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintNO_ABSTRACT_METHOD_IMPLEMENTATION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintDUPLICATE_INTERFACE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNKNOWN_AMBIGUOUS_NAME(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintCIRCULAR_INTERFACE(ErrorInfo &, LexStream *, Control &);
@@ -580,8 +574,6 @@ private:
     static wchar_t *PrintPROTECTED_INSTANCE_METHOD_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintPROTECTED_INTERFACE_METHOD_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintCONSTRUCTOR_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintCONSTRUCTOR_DOES_NOT_THROW_THIS_EXCEPTION(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintCONSTRUCTOR_DOES_NOT_THROW_SUPER_EXCEPTION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintPARAMETER_REDECLARED(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintBAD_ABSTRACT_METHOD_MODIFIER(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintABSTRACT_METHOD_MODIFIER_CONFLICT(ErrorInfo &, LexStream *, Control &);
@@ -609,9 +601,12 @@ private:
     static wchar_t *PrintSUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintEXPRESSION_NOT_CONSTANT(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintUNCAUGHT_METHOD_CHECKED_EXCEPTION(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintUNCAUGHT_CONSTRUCTOR_CHECKED_EXCEPTION(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintUNCAUGHT_ANONYMOUS_CONSTRUCTOR_CHECKED_EXCEPTION(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintUNCAUGHT_METHOD_EXCEPTION(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintUNCAUGHT_CONSTRUCTOR_EXCEPTION(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintUNCAUGHT_ANONYMOUS_CONSTRUCTOR_EXCEPTION(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintUNCAUGHT_THROWN_EXCEPTION(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintUNCAUGHT_EXPLICIT_THIS_EXCEPTION(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintUNCAUGHT_EXPLICIT_SUPER_EXCEPTION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNREACHABLE_CATCH_CLAUSE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNREACHABLE_DEFAULT_CATCH_CLAUSE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNREACHABLE_STATEMENT(ErrorInfo &, LexStream *, Control &);

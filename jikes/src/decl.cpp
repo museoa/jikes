@@ -1672,15 +1672,7 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment,
                         method -> ProcessMethodSignature((Semantic *) this,
                                                          identifier_token);
 
-                    //
-                    // If the method is contained in an abstract type read from
-                    // a class file, then it is possible that the abstract
-                    // method is just out-of-date and needs to be recompiled.
-                    //
-                    ReportSemError((! containing_type -> ACC_INTERFACE()) &&
-                                   (containing_type -> file_symbol && containing_type -> file_symbol -> IsClass())
-                                        ? SemanticError::NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD_FROM_ABSTRACT_CLASS
-                                        : SemanticError::NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD,
+                    ReportSemError(SemanticError::NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD,
                                    identifier_token,
                                    identifier_token,
                                    method -> Header(),

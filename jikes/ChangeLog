@@ -1,5 +1,23 @@
 2001-12-08  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/error.h:
+	* src/error.cpp (NO_ABSTRACT_METHOD_IMPLEMENTATION),
+	(NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD_FROM_ABSTRACT_CLASS):
+	Remove dead code as followup to patch 236 on Miranda methods.
+	(UNCAUGHT_*_EXCEPTION): Rename from UNCAUGHT_*_CHECKED_EXCEPTION.
+	(UNCAUGHT_EXPLICIT_*_EXCEPTION): Rename from
+	CONSTRUCTOR_DOES_NOT_THROW_*_EXCEPTION.
+	(UNCAUGHT_THROWN_EXCEPTION): Rename and collapse BAD_THROWABLE*.
+	* src/semantic.h (UncaughtException): Rename and reverse sense
+	from CatchableException.
+	(UncaughtExceptionContext): Add method to make error messages more
+	versatile - followup to previous commit.
+	* src/decl.cpp:
+	* src/expr.cpp:
+	* src/body.cpp: Incoporate above changes - patch 238.
+
+2001-12-08  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/symbol.h:
 	* src/symbol.cpp:
 	* src/expr.cpp: Code cleanup from -Wall.

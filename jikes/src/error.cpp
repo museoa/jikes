@@ -643,18 +643,13 @@ void SemanticError::StaticInitializer()
     print_message[MISPLACED_RETURN_WITH_NO_EXPRESSION] = PrintMISPLACED_RETURN_WITH_NO_EXPRESSION;
     print_message[MISMATCHED_RETURN_AND_METHOD_TYPE] = PrintMISMATCHED_RETURN_AND_METHOD_TYPE;
     print_message[EXPRESSION_NOT_THROWABLE] = PrintEXPRESSION_NOT_THROWABLE;
-    print_message[BAD_THROWABLE_EXPRESSION_IN_TRY] = PrintBAD_THROWABLE_EXPRESSION_IN_TRY;
-    print_message[BAD_THROWABLE_EXPRESSION_IN_METHOD] = PrintBAD_THROWABLE_EXPRESSION_IN_METHOD;
-    print_message[BAD_THROWABLE_EXPRESSION] = PrintBAD_THROWABLE_EXPRESSION;
     print_message[MISPLACED_BREAK_STATEMENT] = PrintMISPLACED_BREAK_STATEMENT;
     print_message[MISPLACED_CONTINUE_STATEMENT] = PrintMISPLACED_CONTINUE_STATEMENT;
     print_message[MISPLACED_EXPLICIT_CONSTRUCTOR_INVOCATION] = PrintMISPLACED_EXPLICIT_CONSTRUCTOR_INVOCATION;
     print_message[INVALID_CONTINUE_TARGET] = PrintINVALID_CONTINUE_TARGET;
     print_message[NON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD] = PrintNON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD;
     print_message[NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD] = PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD;
-    print_message[NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD_FROM_ABSTRACT_CLASS] = PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD_FROM_ABSTRACT_CLASS;
     print_message[NON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD] = PrintNON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD;
-    print_message[NO_ABSTRACT_METHOD_IMPLEMENTATION] = PrintNO_ABSTRACT_METHOD_IMPLEMENTATION;
     print_message[DUPLICATE_INTERFACE] = PrintDUPLICATE_INTERFACE;
     print_message[UNKNOWN_AMBIGUOUS_NAME] = PrintUNKNOWN_AMBIGUOUS_NAME;
     print_message[CIRCULAR_INTERFACE] = PrintCIRCULAR_INTERFACE;
@@ -666,8 +661,6 @@ void SemanticError::StaticInitializer()
     print_message[PROTECTED_INSTANCE_METHOD_NOT_ACCESSIBLE] = PrintPROTECTED_INSTANCE_METHOD_NOT_ACCESSIBLE;
     print_message[PROTECTED_INTERFACE_METHOD_NOT_ACCESSIBLE] = PrintPROTECTED_INTERFACE_METHOD_NOT_ACCESSIBLE;
     print_message[CONSTRUCTOR_NOT_ACCESSIBLE] = PrintCONSTRUCTOR_NOT_ACCESSIBLE;
-    print_message[CONSTRUCTOR_DOES_NOT_THROW_THIS_EXCEPTION] = PrintCONSTRUCTOR_DOES_NOT_THROW_THIS_EXCEPTION;
-    print_message[CONSTRUCTOR_DOES_NOT_THROW_SUPER_EXCEPTION] = PrintCONSTRUCTOR_DOES_NOT_THROW_SUPER_EXCEPTION;
     print_message[PARAMETER_REDECLARED] = PrintPARAMETER_REDECLARED;
     print_message[BAD_ABSTRACT_METHOD_MODIFIER] = PrintBAD_ABSTRACT_METHOD_MODIFIER;
     print_message[ABSTRACT_METHOD_MODIFIER_CONFLICT] = PrintABSTRACT_METHOD_MODIFIER_CONFLICT;
@@ -695,9 +688,12 @@ void SemanticError::StaticInitializer()
     print_message[SUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION] = PrintSUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION;
     print_message[INNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION] = PrintINNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION;
     print_message[EXPRESSION_NOT_CONSTANT] = PrintEXPRESSION_NOT_CONSTANT;
-    print_message[UNCAUGHT_METHOD_CHECKED_EXCEPTION] = PrintUNCAUGHT_METHOD_CHECKED_EXCEPTION;
-    print_message[UNCAUGHT_CONSTRUCTOR_CHECKED_EXCEPTION] = PrintUNCAUGHT_CONSTRUCTOR_CHECKED_EXCEPTION;
-    print_message[UNCAUGHT_ANONYMOUS_CONSTRUCTOR_CHECKED_EXCEPTION] = PrintUNCAUGHT_ANONYMOUS_CONSTRUCTOR_CHECKED_EXCEPTION;
+    print_message[UNCAUGHT_METHOD_EXCEPTION] = PrintUNCAUGHT_METHOD_EXCEPTION;
+    print_message[UNCAUGHT_CONSTRUCTOR_EXCEPTION] = PrintUNCAUGHT_CONSTRUCTOR_EXCEPTION;
+    print_message[UNCAUGHT_ANONYMOUS_CONSTRUCTOR_EXCEPTION] = PrintUNCAUGHT_ANONYMOUS_CONSTRUCTOR_EXCEPTION;
+    print_message[UNCAUGHT_THROWN_EXCEPTION] = PrintUNCAUGHT_THROWN_EXCEPTION;
+    print_message[UNCAUGHT_EXPLICIT_THIS_EXCEPTION] = PrintUNCAUGHT_EXPLICIT_THIS_EXCEPTION;
+    print_message[UNCAUGHT_EXPLICIT_SUPER_EXCEPTION] = PrintUNCAUGHT_EXPLICIT_SUPER_EXCEPTION;
     print_message[UNREACHABLE_CATCH_CLAUSE] = PrintUNREACHABLE_CATCH_CLAUSE;
     print_message[UNREACHABLE_DEFAULT_CATCH_CLAUSE] = PrintUNREACHABLE_DEFAULT_CATCH_CLAUSE;
     print_message[UNREACHABLE_STATEMENT] = PrintUNREACHABLE_STATEMENT;
@@ -3163,63 +3159,6 @@ wchar_t *SemanticError::PrintEXPRESSION_NOT_THROWABLE(ErrorInfo &err,
 }
 
 
-wchar_t *SemanticError::PrintBAD_THROWABLE_EXPRESSION_IN_TRY(ErrorInfo &err,
-                                                             LexStream *lex_stream,
-                                                             Control &control)
-{
-    ErrorString s;
-
-    s << "The type of the expression in this throw statement, \"";
-    if (NotDot(err.insert1))
-        s << err.insert1 << '/';
-    s << err.insert2 << "\", is not catchable by the enclosing try statement;";
-    if (wcslen(err.insert3) > 0)
-    {
-        s << " nor is it assignable to an exception in the throws clause of "
-          << "the enclosing method or constructor \"" << err.insert3 << "\";";
-    }
-    s << " nor is it a subclass of java.lang.RuntimeException or "
-      << "java.lang.Error.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintBAD_THROWABLE_EXPRESSION_IN_METHOD(ErrorInfo &err,
-                                                                LexStream *lex_stream,
-                                                                Control &control)
-{
-    ErrorString s;
-
-    s << "The type of the expression in this throw statement, \"";
-    if (NotDot(err.insert1))
-        s << err.insert1 << '/';
-    s << err.insert2 << "\", is not assignable to an exception in the "
-      << "throws clause of the enclosing method or constructor \""
-      << err.insert3
-      << "\"; nor is it a subclass of java.lang.RuntimeException or "
-      << "java.lang.Error.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintBAD_THROWABLE_EXPRESSION(ErrorInfo &err,
-                                                      LexStream *lex_stream,
-                                                      Control &control)
-{
-    ErrorString s;
-
-    s << "The type of the expression in this throw statement, \"";
-    if (NotDot(err.insert1))
-        s << err.insert1 << '/';
-    s << err.insert2 << "\", is not a subclass of java.lang.RuntimeException "
-      << "or java.lang.Error.";
-
-    return s.Array();
-}
-
-
 wchar_t *SemanticError::PrintMISPLACED_BREAK_STATEMENT(ErrorInfo &err,
                                                        LexStream *lex_stream,
                                                        Control &control)
@@ -3279,8 +3218,8 @@ wchar_t *SemanticError::PrintNON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD(ErrorInf
     ErrorString s;
 
     s << "The abstract method \"" << err.insert1
-      << "\" is enclosed in a type, \"" << err.insert2
-      << "\", that is not abstract.";
+      << "\" is enclosed in class \"" << err.insert2
+      << "\" which is not abstract.";
 
     return s.Array();
 }
@@ -3305,32 +3244,6 @@ wchar_t *SemanticError::PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD(ErrorInf
 }
 
 
-wchar_t *SemanticError::PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD_FROM_ABSTRACT_CLASS(ErrorInfo &err,
-                                                                                            LexStream *lex_stream,
-                                                                                            Control &control)
-{
-    ErrorString s;
-
-    s << "The abstract method \"" << err.insert1
-      << "\", inherited from type \"";
-    if (NotDot(err.insert2))
-        s << err.insert2 << '/';
-    s << err.insert3 << "\", is not implemented in the non-abstract class \"";
-    if (NotDot(err.insert4))
-        s << err.insert4 << '/';
-    s << err.insert5 << "\". Since the type \"";
-    if (NotDot(err.insert2))
-        s << err.insert2 << '/';
-    s << err.insert3 << "\" was read from a class file, it is possible that "
-      << "it just needs to be recompiled because after having "
-      << "inherited method \"" << err.insert1
-      << "\" from an interface, the method was subsequently removed from "
-      << "that interface.";
-
-    return s.Array();
-}
-
-
 wchar_t *SemanticError::PrintNON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD(ErrorInfo &err,
                                                                                        LexStream *lex_stream,
                                                                                        Control &control)
@@ -3347,22 +3260,6 @@ wchar_t *SemanticError::PrintNON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_
     if (NotDot(err.insert4))
         s << err.insert4 << '/';
     s << err.insert5 << "\".";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintNO_ABSTRACT_METHOD_IMPLEMENTATION(ErrorInfo &err,
-                                                               LexStream *lex_stream,
-                                                               Control &control)
-{
-    ErrorString s;
-
-    s << "No implementation of the abstract method \"" << err.insert1
-      << "\" declared in type \"";
-    if (NotDot(err.insert2))
-        s << err.insert2 << '/';
-    s << err.insert3 << "\" was found in class \"" << err.insert4 << "\".";
 
     return s.Array();
 }
@@ -3539,45 +3436,6 @@ wchar_t *SemanticError::PrintCONSTRUCTOR_NOT_ACCESSIBLE(ErrorInfo &err,
         s << err.insert2 << '/';
     s << err. insert3 << "\" with " << err.insert4
       << " access is not accessible here.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintCONSTRUCTOR_DOES_NOT_THROW_THIS_EXCEPTION(ErrorInfo &err,
-                                                                       LexStream *lex_stream,
-                                                                       Control &control)
-{
-    ErrorString s;
-
-    s << "The constructor invoked here can throw the exception \"";
-    if (NotDot(err.insert1))
-        s << err.insert1 << "/";
-    s << err.insert2
-      << "\" which is not thrown by the constructor containing this call.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintCONSTRUCTOR_DOES_NOT_THROW_SUPER_EXCEPTION(ErrorInfo &err,
-                                                                        LexStream *lex_stream,
-                                                                        Control &control)
-{
-    ErrorString s;
-
-    s << "A constructor associated with this ";
-    if (wcslen(err.insert1) == 0)
-        s << "anonymous type";
-    else
-        s << "type, \"" << err.insert1 << "\",";
-    s << " does not throw the exception \"";
-    if (NotDot(err.insert2))
-        s << err.insert2 << "/";
-    s << err.insert3 << "\" thrown by its super type, \"";
-    if (NotDot(err.insert4))
-        s << err.insert4 << "/";
-    s << err.insert5 << "\".";
 
     return s.Array();
 }
@@ -3998,9 +3856,9 @@ wchar_t *SemanticError::PrintEXPRESSION_NOT_CONSTANT(ErrorInfo &err,
 }
 
 
-wchar_t *SemanticError::PrintUNCAUGHT_METHOD_CHECKED_EXCEPTION(ErrorInfo &err,
-                                                               LexStream *lex_stream,
-                                                               Control &control)
+wchar_t *SemanticError::PrintUNCAUGHT_METHOD_EXCEPTION(ErrorInfo &err,
+                                                       LexStream *lex_stream,
+                                                       Control &control)
 {
     ErrorString s;
 
@@ -4008,17 +3866,15 @@ wchar_t *SemanticError::PrintUNCAUGHT_METHOD_CHECKED_EXCEPTION(ErrorInfo &err,
       << "\" can throw the checked exception \"";
     if (NotDot(err.insert2))
         s << err.insert2 << "/";
-    s << err.insert3 << "\", but its invocation is neither enclosed in a "
-      << "try statement that can catch that exception nor in the body of a "
-      << "method or constructor that \"throws\" that exception.";
+    s << err.insert3 << "\", so its invocation" << err.insert4;
 
     return s.Array();
 }
 
 
-wchar_t *SemanticError::PrintUNCAUGHT_CONSTRUCTOR_CHECKED_EXCEPTION(ErrorInfo &err,
-                                                                    LexStream *lex_stream,
-                                                                    Control &control)
+wchar_t *SemanticError::PrintUNCAUGHT_CONSTRUCTOR_EXCEPTION(ErrorInfo &err,
+                                                            LexStream *lex_stream,
+                                                            Control &control)
 {
     ErrorString s;
 
@@ -4026,17 +3882,15 @@ wchar_t *SemanticError::PrintUNCAUGHT_CONSTRUCTOR_CHECKED_EXCEPTION(ErrorInfo &e
       << "\" can throw the checked exception \"";
     if (NotDot(err.insert2))
         s << err.insert2 << "/";
-    s << err.insert3 << "\", but the class creation is neither enclosed in a "
-      << "try statement that can catch that exception nor in the body of a "
-      << "method or constructor that \"throws\" that exception.";
+    s << err.insert3 << "\", so the class creation" << err.insert4;
 
     return s.Array();
 }
 
 
-wchar_t *SemanticError::PrintUNCAUGHT_ANONYMOUS_CONSTRUCTOR_CHECKED_EXCEPTION(ErrorInfo &err,
-                                                                              LexStream *lex_stream,
-                                                                              Control &control)
+wchar_t *SemanticError::PrintUNCAUGHT_ANONYMOUS_CONSTRUCTOR_EXCEPTION(ErrorInfo &err,
+                                                                      LexStream *lex_stream,
+                                                                      Control &control)
 {
     ErrorString s;
 
@@ -4044,9 +3898,55 @@ wchar_t *SemanticError::PrintUNCAUGHT_ANONYMOUS_CONSTRUCTOR_CHECKED_EXCEPTION(Er
       << "\" can throw the checked exception \"";
     if (NotDot(err.insert2))
         s << err.insert2 << "/";
-    s << err.insert3 << "\", but the class creation is neither enclosed in a "
-      << "try statement that can catch that exception nor in the body of a "
-      << "method or constructor that \"throws\" that exception.";
+    s << err.insert3 << "\", so the class creation" << err.insert4;
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintUNCAUGHT_THROWN_EXCEPTION(ErrorInfo &err,
+                                                       LexStream *lex_stream,
+                                                       Control &control)
+{
+    ErrorString s;
+
+    s << "This throw statement throws the checked exception \"";
+    if (NotDot(err.insert1))
+        s << err.insert1 << '/';
+    s << err.insert2 << "\", so it" << err.insert3;
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintUNCAUGHT_EXPLICIT_THIS_EXCEPTION(ErrorInfo &err,
+                                                              LexStream *lex_stream,
+                                                              Control &control)
+{
+    ErrorString s;
+
+    s << "This constructor must declare the checked exception \"";
+    if (NotDot(err.insert1))
+        s << err.insert1 << "/";
+    s << err.insert2 << "\" thrown by the explicit this() call.";
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintUNCAUGHT_EXPLICIT_SUPER_EXCEPTION(ErrorInfo &err,
+                                                               LexStream *lex_stream,
+                                                               Control &control)
+{
+    ErrorString s;
+
+    s << "This constructor must declare the checked exception \"";
+    if (NotDot(err.insert1))
+        s << err.insert1 << "/";
+    s << err.insert2 << "\" thrown by the explicit super() call to type \"";
+    if (NotDot(err.insert3))
+        s << err.insert3 << "/";
+    s << err.insert4 << "\".";
 
     return s.Array();
 }

@@ -976,13 +976,13 @@ void Semantic::ProcessReturnStatement(Ast *stmt)
 }
 
 
-bool Semantic::CatchableException(TypeSymbol *exception)
+bool Semantic::UncaughtException(TypeSymbol *exception)
 {
     //
     // An unchecked exception or a bad type is ok !!
     //
     if (! CheckedException(exception))
-        return true;
+        return false;
 
     //
     // Firstly, check the stack of try statements to see if the exception in
@@ -1000,7 +1000,7 @@ bool Semantic::CatchableException(TypeSymbol *exception)
         if (try_statement -> finally_clause_opt &&
             ! try_statement -> finally_clause_opt -> block -> can_complete_normally)
         {
-            return true;
+            return false;
         }
 
         //
@@ -1011,7 +1011,7 @@ bool Semantic::CatchableException(TypeSymbol *exception)
             AstCatchClause *clause = try_statement -> CatchClause(k);
             VariableSymbol *symbol = clause -> parameter_symbol;
             if (CanAssignmentConvertReference(symbol -> Type(), exception))
-                return true;
+                return false;
         }
     }
 
@@ -1026,7 +1026,7 @@ bool Semantic::CatchableException(TypeSymbol *exception)
         {
             if (CanAssignmentConvertReference(this_method -> Throws(l),
                                               exception))
-                return true;
+                return false;
         }
     }
 
@@ -1043,7 +1043,7 @@ bool Semantic::CatchableException(TypeSymbol *exception)
         MethodSymbol *ctor = this_type -> FindConstructorSymbol();
         if (this_type -> declaration -> ClassDeclarationCast())
         {
-            for ( ; ctor; ctor = (MethodSymbol *) ctor -> next)
+            for ( ; ctor; ctor = ctor -> next_method)
             {
                 int k;
                 for (k = ctor -> NumThrows() - 1; k >= 0; k--)
@@ -1055,7 +1055,7 @@ bool Semantic::CatchableException(TypeSymbol *exception)
                 if (k < 0) // No hit was found in constructor.
                     break;
             }
-            return ctor == NULL; // Did all constructors catch exception?
+            return ctor != NULL; // Did all constructors catch exception?
         }
         else
         {
@@ -1080,11 +1080,57 @@ bool Semantic::CatchableException(TypeSymbol *exception)
             //
             if (k < 0)
                 ctor -> AddThrows(exception);
-            return true;
+            return false;
         }
     }
 
-    return false; // Nothing can catch the exception.
+    return true; // Nothing can catch the exception.
+}
+
+
+wchar_t *Semantic::UncaughtExceptionContext()
+{
+    ErrorString s;
+    MethodSymbol *this_method = ThisMethod();
+    if (this_method)
+    {
+        s << " must be enclosed in a try statement that catches the "
+          << "exception, ";
+        if (this_method -> Identity() == control.clinit_name_symbol)
+        {
+            s << "since static initializers cannot throw checked exceptions.";
+        }
+        else
+        {
+            if (this_method -> Identity() == control.block_init_name_symbol)
+            {
+                assert(! ThisType() -> Anonymous());
+                s << "or else every constructor in this class";
+            }
+            else if (this_method -> Identity() == control.init_name_symbol)
+                s << "or else this constructor";
+            else s << "or else this method";
+            s << " must be declared to throw the exception.";
+        }
+    }
+    else
+    {
+        VariableSymbol *this_variable = ThisVariable();
+        assert(this_variable);
+        if (this_variable -> ACC_STATIC())
+            s << "must be moved to a static initializer and enclosed in a try "
+              << "statement which catches the exception, since static "
+              << "initializers cannot throw checked exceptions.";
+        else
+        {
+            assert(! ThisType() -> Anonymous());
+            s << "must be moved to an instance initializer or constructor and "
+              << "enclosed in a try statement which catches the exception, or "
+              << "else every constructor in this class must be declared to "
+              << "throw the exception.";
+        }
+    }
+    return s.Array();
 }
 
 
@@ -1106,34 +1152,13 @@ void Semantic::ProcessThrowStatement(Ast *stmt)
     if (exception_set)
         exception_set -> AddElement(type);
 
-    if (! CatchableException(type))
-    {
-        MethodSymbol *this_method = ThisMethod();
-        MethodSymbol *method = (this_method && this_method -> Identity() != control.clinit_name_symbol
-                                            && this_method -> Identity() != control.block_init_name_symbol
-                                                            ? this_method
-                                                            : (MethodSymbol *) NULL);
-
-        if (TryStatementStack().Size() > 0)
-            ReportSemError(SemanticError::BAD_THROWABLE_EXPRESSION_IN_TRY,
-                           throw_statement -> LeftToken(),
-                           throw_statement -> RightToken(),
-                           type -> ContainingPackage() -> PackageName(),
-                           type -> ExternalName(),
-                           (method ? method -> Header() : StringConstant::US_EMPTY));
-        else if (method)
-             ReportSemError(SemanticError::BAD_THROWABLE_EXPRESSION_IN_METHOD,
-                            throw_statement -> LeftToken(),
-                            throw_statement -> RightToken(),
-                            type -> ContainingPackage() -> PackageName(),
-                            type -> ExternalName(),
-                            method -> Header());
-        else ReportSemError(SemanticError::BAD_THROWABLE_EXPRESSION,
-                            throw_statement -> LeftToken(),
-                            throw_statement -> RightToken(),
-                            type -> ContainingPackage() -> PackageName(),
-                            type -> ExternalName());
-    }
+    if (UncaughtException(type))
+        ReportSemError(SemanticError::UNCAUGHT_THROWN_EXCEPTION,
+                       throw_statement -> LeftToken(),
+                       throw_statement -> RightToken(),
+                       type -> ContainingPackage() -> PackageName(),
+                       type -> ExternalName(),
+                       UncaughtExceptionContext());
 }
 
 
@@ -1181,8 +1206,8 @@ void Semantic::ProcessTryStatement(Ast *stmt)
         // Note that the finally block must be processed prior to the other
         // blocks in the try statement, because the computation of whether or
         // not an exception is catchable in a try statement depends on the
-        // termination status of the associated finally block. See
-        // CatchableException function. In addition, any variables used in
+        // termination status of the associated finally block. See the
+        // UncaughtException function. In addition, any variables used in
         // the finally block cannot be safely used in the other blocks.
         //
         AstBlock *block_body = try_statement -> finally_clause_opt -> block;
@@ -1632,14 +1657,12 @@ void Semantic::ProcessThisCall(AstThisCall *this_call)
             for (int k = constructor -> NumThrows() - 1; k >= 0; k--)
             {
                 TypeSymbol *exception = constructor -> Throws(k);
-                if (! CatchableException(exception))
-                {
-                    ReportSemError(SemanticError::CONSTRUCTOR_DOES_NOT_THROW_THIS_EXCEPTION,
+                if (UncaughtException(exception))
+                    ReportSemError(SemanticError::UNCAUGHT_EXPLICIT_THIS_EXCEPTION,
                                    this_call -> this_token,
                                    this_call -> this_token,
                                    exception -> ContainingPackage() -> PackageName(),
                                    exception -> ExternalName());
-                }
             }
 
             if (this_type -> IsLocal()) // a local type may use enclosed local variables?
@@ -1806,17 +1829,14 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
             for (int k = constructor -> NumThrows() - 1; k >= 0; k--)
             {
                 TypeSymbol *exception = constructor -> Throws(k);
-                if (! CatchableException(exception))
-                {
-                    ReportSemError(SemanticError::CONSTRUCTOR_DOES_NOT_THROW_SUPER_EXCEPTION,
+                if (UncaughtException(exception))
+                    ReportSemError(SemanticError::UNCAUGHT_EXPLICIT_SUPER_EXCEPTION,
                                    super_call -> LeftToken(),
                                    super_call -> RightToken(),
-                                   this_type -> Name(),
                                    exception -> ContainingPackage() -> PackageName(),
                                    exception -> ExternalName(),
                                    constructor -> containing_type -> ContainingPackage() -> PackageName(),
                                    constructor -> containing_type -> ExternalName());
-                }
             }
 
             if (super_type -> IsLocal()) // a local type may use enclosed local variables?

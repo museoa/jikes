@@ -3248,26 +3248,17 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
             //
         }
 
-        //
-        // Recall that an instance initializer in the body of an anonymous
-        // type can throw any exception. The test below allows us to skip
-        // such blocks.
-        //
-        if (! (this_type -> Anonymous() && ThisMethod() && ThisMethod() -> Identity() == control.block_init_name_symbol))
+        for (int k = method -> NumThrows() - 1; k >= 0; k--)
         {
-            for (int k = method -> NumThrows() - 1; k >= 0; k--)
-            {
-                TypeSymbol *exception = method -> Throws(k);
-                if (! CatchableException(exception))
-                {
-                    ReportSemError(SemanticError::UNCAUGHT_METHOD_CHECKED_EXCEPTION,
-                                   method_call -> LeftToken(),
-                                   method_call -> RightToken(),
-                                   method -> Header(),
-                                   exception -> ContainingPackage() -> PackageName(),
-                                   exception -> ExternalName());
-                }
-            }
+            TypeSymbol *exception = method -> Throws(k);
+            if (UncaughtException(exception))
+                ReportSemError(SemanticError::UNCAUGHT_METHOD_EXCEPTION,
+                               method_call -> LeftToken(),
+                               method_call -> RightToken(),
+                               method -> Header(),
+                               exception -> ContainingPackage() -> PackageName(),
+                               exception -> ExternalName(),
+                               UncaughtExceptionContext());
         }
     }
 }
@@ -4319,17 +4310,16 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
                 if (exception_set)
                     exception_set -> AddElement(exception);
 
-                if (! CatchableException(exception))
-                {
+                if (UncaughtException(exception))
                     ReportSemError((class_creation -> class_body_opt
-                                    ? SemanticError::UNCAUGHT_CONSTRUCTOR_CHECKED_EXCEPTION
-                                    : SemanticError::UNCAUGHT_ANONYMOUS_CONSTRUCTOR_CHECKED_EXCEPTION),
+                                    ? SemanticError::UNCAUGHT_CONSTRUCTOR_EXCEPTION
+                                    : SemanticError::UNCAUGHT_ANONYMOUS_CONSTRUCTOR_EXCEPTION),
                                    actual_type -> LeftToken(),
                                    actual_type -> RightToken(),
                                    type -> ExternalName(),
                                    exception -> ContainingPackage() -> PackageName(),
-                                   exception -> ExternalName());
-                }
+                                   exception -> ExternalName(),
+                                   UncaughtExceptionContext());
             }
 
             class_creation -> symbol = (anonymous_type ? anonymous_type : type);
