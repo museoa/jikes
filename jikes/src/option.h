@@ -107,7 +107,9 @@ public:
     {
         return current_directory[main_disk];
     }
-    
+
+    void SaveCurrentDirectoryOnDisk(char c);
+
 #endif
 
 public:
