@@ -1932,16 +1932,26 @@ void Semantic::MemberAccessCheck(AstFieldAccess *field_access, TypeSymbol *base_
             // that we decided to accept it while issuing a strong "Caution" message
             // to encourage the user to not use it.
             //
-            if (flags -> ACC_STATIC() && this_type -> IsSubclass(containing_type))
+            if (flags -> ACC_STATIC() &&
+                this_type -> IsSubclass(containing_type) &&
+                this_package != containing_type -> ContainingPackage())
             {
-                ReportSemError((variable_symbol ? SemanticError::STATIC_PROTECTED_FIELD_ACCESS
-                                                : SemanticError::STATIC_PROTECTED_METHOD_ACCESS),
-                               field_access -> LeftToken(),
-                               field_access -> RightToken(),
-                               lex_stream -> NameString(field_access -> identifier_token),
-                               containing_type -> ContainingPackage() -> PackageName(),
-                               containing_type -> ExternalName());
-            }else
+                //
+                // Since "this" is a primary, it can be parenthesized. We remove all such parentheses here.
+                //
+                AstExpression *expr = base;
+                while(expr -> ParenthesizedExpressionCast())
+                    expr = expr -> ParenthesizedExpressionCast() -> expression;
+
+                if (! (expr -> ThisExpressionCast() || expr -> SuperExpressionCast()))
+                    ReportSemError((variable_symbol ? SemanticError::STATIC_PROTECTED_FIELD_ACCESS
+                                                    : SemanticError::STATIC_PROTECTED_METHOD_ACCESS),
+                                   field_access -> LeftToken(),
+                                   field_access -> RightToken(),
+                                   lex_stream -> NameString(field_access -> identifier_token),
+                                   containing_type -> ContainingPackage() -> PackageName(),
+                                   containing_type -> ExternalName());
+            } else
 
             //
             // TODO: This whole area is very Murky!!! This is the only test that is required
