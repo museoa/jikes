@@ -4342,7 +4342,8 @@ void Semantic::ProcessPLUS(AstPreUnaryExpression* expr)
 
 void Semantic::ProcessMINUS(AstPreUnaryExpression* expr)
 {
-    AstIntegerLiteral* int_literal = expr -> expression -> IntegerLiteralCast();
+    AstIntegerLiteral* int_literal =
+        expr -> expression -> IntegerLiteralCast();
     AstLongLiteral* long_literal = expr -> expression -> LongLiteralCast();
 
     if (int_literal)
@@ -4403,7 +4404,7 @@ void Semantic::ProcessMINUS(AstPreUnaryExpression* expr)
                 expr -> value =
                     control.long_pool.FindOrInsert(-literal -> value);
             }
-            else
+            else if (expr -> Type() == control.int_type)
             {
                 IntLiteralValue* literal = DYNAMIC_CAST<IntLiteralValue*>
                     (expr -> expression -> value);
@@ -5327,8 +5328,7 @@ void Semantic::ProcessPLUS(AstBinaryExpression* expr)
                 LongLiteralValue* right_value =
                     DYNAMIC_CAST<LongLiteralValue*> (right -> value);
 
-                CheckIntegerAddition(this, expr,
-                                     left_value -> value,
+                CheckIntegerAddition(this, expr, left_value -> value,
                                      right_value -> value);
                 expr -> value =
                     control.long_pool.FindOrInsert(left_value -> value +
@@ -5340,15 +5340,12 @@ void Semantic::ProcessPLUS(AstBinaryExpression* expr)
                     DYNAMIC_CAST<IntLiteralValue*> (left -> value);
                 IntLiteralValue* right_value =
                     DYNAMIC_CAST<IntLiteralValue*> (right -> value);
-
-                CheckIntegerAddition(this, expr,
-                                     left_value -> value,
+                CheckIntegerAddition(this, expr, left_value -> value,
                                      right_value -> value);
                 expr -> value =
                     control.int_pool.FindOrInsert(left_value -> value +
                                                   right_value -> value);
             }
-            else assert(false);
         }
     }
 }
@@ -6376,7 +6373,6 @@ void Semantic::ProcessSTAR(AstBinaryExpression* expr)
                 (expr -> left_expression -> value);
             LongLiteralValue* right = DYNAMIC_CAST<LongLiteralValue*>
                 (expr -> right_expression -> value);
-
             CheckIntegerMultiplication(this, expr,
                                        left -> value, right -> value);
             expr -> value =
@@ -6389,7 +6385,6 @@ void Semantic::ProcessSTAR(AstBinaryExpression* expr)
                 (expr -> left_expression -> value);
             IntLiteralValue* right = DYNAMIC_CAST<IntLiteralValue*>
                 (expr -> right_expression -> value);
-
             CheckIntegerMultiplication(this, expr,
                                        left -> value, right -> value);
             expr -> value =
@@ -6437,7 +6432,6 @@ void Semantic::ProcessMINUS(AstBinaryExpression* expr)
                 (expr -> left_expression -> value);
             LongLiteralValue* right = DYNAMIC_CAST<LongLiteralValue*>
                 (expr -> right_expression -> value);
-
             CheckIntegerSubtraction(this, expr, left -> value, right -> value);
             expr -> value =
                 control.long_pool.FindOrInsert(left -> value -
@@ -6449,11 +6443,9 @@ void Semantic::ProcessMINUS(AstBinaryExpression* expr)
                 (expr -> left_expression -> value);
             IntLiteralValue* right = DYNAMIC_CAST<IntLiteralValue*>
                 (expr -> right_expression -> value);
-
             CheckIntegerSubtraction(this, expr, left -> value, right -> value);
             expr -> value =
-                control.int_pool.FindOrInsert(left -> value -
-                                              right -> value);
+                control.int_pool.FindOrInsert(left -> value - right -> value);
         }
     }
 }
@@ -6515,8 +6507,8 @@ void Semantic::ProcessSLASH(AstBinaryExpression* expr)
                     (left_expression -> value);
                 LongLiteralValue* right = DYNAMIC_CAST<LongLiteralValue*>
                     (right_expression -> value);
-
-                CheckIntegerDivision(this, expr, left -> value, right -> value);
+                CheckIntegerDivision(this, expr, left -> value,
+                                     right -> value);
                 expr -> value =
                     control.long_pool.FindOrInsert(left -> value /
                                                    right -> value);
@@ -6527,8 +6519,8 @@ void Semantic::ProcessSLASH(AstBinaryExpression* expr)
                     (left_expression -> value);
                 IntLiteralValue* right = DYNAMIC_CAST<IntLiteralValue*>
                     (right_expression -> value);
-
-                CheckIntegerDivision(this, expr, left -> value, right -> value);
+                CheckIntegerDivision(this, expr, left -> value,
+                                     right -> value);
                 //
                 // There is a bug in the intel hardware where if one tries
                 // to compute ((2**32-1) / -1), he gets a ZeroDivide
@@ -6538,10 +6530,10 @@ void Semantic::ProcessSLASH(AstBinaryExpression* expr)
                 //  expr -> value = control.int_pool
                 //      .FindOrInsert(left -> value / right -> value);
                 //
-                expr -> value =
-                    control.int_pool.FindOrInsert(right -> value == -1
-                                                  ? -(left -> value)
-                                                  : left -> value / right -> value);
+                expr -> value = control.int_pool
+                    .FindOrInsert(right -> value == -1
+                                  ? -(left -> value)
+                                  : left -> value / right -> value);
             }
         }
     }
@@ -6625,10 +6617,10 @@ void Semantic::ProcessMOD(AstBinaryExpression* expr)
                 // expr -> value = control.int_pool
                 //     .FindOrInsert(left -> value % right -> value);
                 //
-                expr -> value =
-                    control.int_pool.FindOrInsert((left -> value  == (signed) 0x80000000 &&
-                                                   right -> value == (signed) 0xffffffff)
-                                                  ? 0 : left -> value % right -> value);
+                expr -> value = control.int_pool
+                    .FindOrInsert((left -> value  == (signed) 0x80000000 &&
+                                   right -> value == (signed) 0xffffffff)
+                                  ? 0 : left -> value % right -> value);
             }
         }
     }

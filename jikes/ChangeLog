@@ -1,5 +1,10 @@
 2004-02-26  Eric Blake  <ebb9@byu.net>
 
+	* src/expr.cpp (ProcessPLUS): Remove bad assertion ('true +
+	false', while illegal, can reach this point).
+
+2004-02-26  Eric Blake  <ebb9@byu.net>
+
 	* AUTHORS: Give credit where due.
 	* src/bytecode.cpp (EmitAssignmentExpression),
 	(EmitBinaryExpression, ConcatenateString, EmitStringAppendMethod):
