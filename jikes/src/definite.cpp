@@ -1433,7 +1433,10 @@ void Semantic::DefiniteReturnStatement(Ast *stmt)
     // this return statement. Note that this set is only relevant to the method or
     // constructor block containing this statement.
     //
-    definite_block_stack -> TopReturnSet() *= (*definitely_assigned_variables);
+    // TODO: Do we really need this?
+    //
+    //    definite_block_stack -> TopReturnSet() *= (*definitely_assigned_variables);
+    //
 
     //
     // Compute the set of variables that are possibly assigned prior to executing this return statement.
@@ -1505,7 +1508,10 @@ void Semantic::DefiniteThrowStatement(Ast *stmt)
     // this throw statement. Note that this set is only relevant to the method or
     // constructor block containing this statement.
     //
-    definite_block_stack -> TopThrowSet() *= (*definitely_assigned_variables);
+    // TODO: Do we really need this?
+    //
+    //    definite_block_stack -> TopThrowSet() *= (*definitely_assigned_variables);
+    //
 
     //
     // Compute the set of variables that are possibly assigned prior to executing this throw statement

@@ -45,6 +45,12 @@ public:
         CANNOT_REOPEN_FILE,
         CANNOT_WRITE_FILE,
         CONSTANT_POOL_OVERFLOW,
+        INTERFACES_OVERFLOW,
+        METHODS_OVERFLOW,
+        STRING_OVERFLOW,
+        PARAMETER_OVERFLOW,
+        ARRAY_OVERFLOW,
+        FIELDS_OVERFLOW,
         LOCAL_VARIABLES_OVERFLOW,
         STACK_OVERFLOW,
         CODE_OVERFLOW,
@@ -275,6 +281,8 @@ public:
         STATIC_TYPE_IN_INNER_CLASS,
         STATIC_INITIALIZER_IN_INNER_CLASS,
         INNER_CLASS_REFERENCE_TO_NON_FINAL_LOCAL_VARIABLE,
+        STATIC_PROTECTED_FIELD_ACCESS,
+        STATIC_PROTECTED_METHOD_ACCESS,
         INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL,
         INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER,
         ILLEGAL_THIS_FIELD_ACCESS,
@@ -375,6 +383,12 @@ private:
     static void PrintCANNOT_REOPEN_FILE(ErrorInfo &, LexStream *, Control &);
     static void PrintCANNOT_WRITE_FILE(ErrorInfo &, LexStream *, Control &);
     static void PrintCONSTANT_POOL_OVERFLOW(ErrorInfo &, LexStream *, Control &);
+    static void PrintINTERFACES_OVERFLOW(ErrorInfo &, LexStream *, Control &);
+    static void PrintMETHODS_OVERFLOW(ErrorInfo &, LexStream *, Control &);
+    static void PrintSTRING_OVERFLOW(ErrorInfo &, LexStream *, Control &);
+    static void PrintPARAMETER_OVERFLOW(ErrorInfo &, LexStream *, Control &);
+    static void PrintARRAY_OVERFLOW(ErrorInfo &, LexStream *, Control &);
+    static void PrintFIELDS_OVERFLOW(ErrorInfo &, LexStream *, Control &);
     static void PrintLOCAL_VARIABLES_OVERFLOW(ErrorInfo &, LexStream *, Control &);
     static void PrintSTACK_OVERFLOW(ErrorInfo &, LexStream *, Control &);
     static void PrintCODE_OVERFLOW(ErrorInfo &, LexStream *, Control &);
@@ -606,6 +620,8 @@ private:
     static void PrintSTATIC_TYPE_IN_INNER_CLASS(ErrorInfo &, LexStream *, Control &);
     static void PrintSTATIC_INITIALIZER_IN_INNER_CLASS(ErrorInfo &, LexStream *, Control &);
     static void PrintINNER_CLASS_REFERENCE_TO_NON_FINAL_LOCAL_VARIABLE(ErrorInfo &, LexStream *, Control &);
+    static void PrintSTATIC_PROTECTED_FIELD_ACCESS(ErrorInfo &, LexStream *, Control &);
+    static void PrintSTATIC_PROTECTED_METHOD_ACCESS(ErrorInfo &, LexStream *, Control &);
     static void PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL(ErrorInfo &, LexStream *, Control &);
     static void PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER(ErrorInfo &, LexStream *, Control &);
     static void PrintILLEGAL_THIS_FIELD_ACCESS(ErrorInfo &, LexStream *, Control &);

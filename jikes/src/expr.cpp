@@ -1898,8 +1898,8 @@ void Semantic::MemberAccessCheck(AstFieldAccess *field_access, TypeSymbol *base_
     assert(containing_type);
 
     AstExpression *base = field_access -> base;
-    if (! (containing_type -> ACC_PUBLIC() || base_type -> ContainingPackage() == containing_type -> ContainingPackage()))
-        ReportTypeInaccessible(base, containing_type);
+    if (! (base_type -> ACC_PUBLIC() || base_type -> ContainingPackage() == this_package))
+        ReportTypeInaccessible(base, base_type);
 
     if (this_type -> outermost_type != containing_type -> outermost_type)
     {
@@ -1916,12 +1916,25 @@ void Semantic::MemberAccessCheck(AstFieldAccess *field_access, TypeSymbol *base_
         else if (flags -> ACC_PROTECTED())
         {
             //
-            // TODO: we have filed a query to Sun regarding which test is required here!
-            //       there also appears to be a mistake in the Language Spec in section
-            //       6.6.2 re. access to protected members. The phrase "Q is S or a subclass of S"
-            //       should have been "Q is S or a superclass of S".
-            //       
-            // if (! (containing_type -> ContainingPackage() == this_package || this_type -> IsSubclass(containing_type)))
+            // TODO: This whole area is very Murky!!! This "feature" is not valid
+            // according to the language spec. However, its use is so widespread
+            // that we decided to accept it while issuing a strong "Caution" message
+            // to encourage the user to not use it.
+            //
+            if (flags -> ACC_STATIC() && this_type -> IsSubclass(containing_type))
+            {
+                ReportSemError((variable_symbol ? SemanticError::STATIC_PROTECTED_FIELD_ACCESS
+                                                : SemanticError::STATIC_PROTECTED_METHOD_ACCESS),
+                               field_access -> LeftToken(),
+                               field_access -> RightToken(),
+                               lex_stream -> NameString(field_access -> identifier_token),
+                               containing_type -> ContainingPackage() -> PackageName(),
+                               containing_type -> ExternalName());
+            }else
+
+            //
+            // TODO: This whole area is very Murky!!! This is the only test that is required
+            // according to the language spec and the inner classes document.
             //
             if (! (base -> IsSuperExpression() ||
                    containing_type -> ContainingPackage() == this_package ||
@@ -3364,7 +3377,7 @@ void Semantic::ProcessMethodInvocation(Ast *expr)
     for (int i = 0; i < method_call -> NumArguments(); i++)
     {
         AstExpression *expr = method_call -> Argument(i);
-        ProcessExpression(expr); // TODO: ProcessExpressionOrStringConstant(expr);
+        ProcessExpressionOrStringConstant(expr);
         no_bad_argument = no_bad_argument && (expr -> symbol != control.no_type);
     }
 
@@ -4301,7 +4314,7 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
     for (int i = 0; i < class_creation -> NumArguments(); i++)
     {
         AstExpression *expr = class_creation -> Argument(i);
-        ProcessExpression(expr); // TODO: ProcessExpressionOrStringConstant(expr);
+        ProcessExpressionOrStringConstant(expr);
         no_bad_argument = no_bad_argument && (expr -> symbol != control.no_type);
     }
 

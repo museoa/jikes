@@ -919,10 +919,12 @@ Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
         Coutput << "#" << this -> id << " ("
                 << (label_token_opt ? lex_stream.NameString(label_token_opt) : L"")
                 << (label_token_opt ? ": " : "")
-                << "Block at level " << nesting_level  
-                << ", max_variable_index " << block_symbol -> max_variable_index 
-                << ", try_variable_index " << block_symbol -> try_variable_index 
-                << ")";
+                << "Block at level " << nesting_level;
+        if (block_symbol)
+             Coutput << ", max_variable_index " << block_symbol -> max_variable_index
+                     << ", try_variable_index " << block_symbol -> try_variable_index;
+        else Coutput << ", BLOCK_SYMBOL NOT SET";
+        Coutput << ")";
 
         if (NumStatements() > 0)
         {
@@ -1607,14 +1609,14 @@ Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
         if (base_opt)
         {
             Coutput << "#" << base_opt -> id
-                    << lex_stream.NameString(dot_token_opt);
+                    << lex_stream.NameString(dot_token_opt) << " ";
         }
         Coutput << lex_stream.NameString(new_token)
                 << " #" << class_type -> id
                 << " (";
         for (int i = 0; i < this -> NumArguments(); i++)
             Coutput << " #" << this -> Argument(i) -> id;
-        Coutput << " ) \n"
+        Coutput << " ) "
                 << "#" << (class_body_opt ? class_body_opt -> id : 0) << "\n";
 
         if (base_opt)

@@ -300,7 +300,7 @@ public:
         return p;
     }
 
-public:
+private:
     VariableShadowSymbol **base;
     int hash_size;
 };
@@ -429,7 +429,7 @@ public:
         return (MethodShadowSymbol *) NULL;
     }
 
-public:
+private:
     MethodShadowSymbol **base;
     int hash_size;
 };

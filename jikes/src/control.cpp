@@ -57,7 +57,6 @@ Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
                                                                , line_count(0), 
                                                                  class_files_read(0),
                                                                  class_files_written(0),
-                                                                 class_file_id(0),
                                                                  input_files_processed(0)
 #endif
 {
@@ -357,7 +356,7 @@ Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
                 }
 
                 //
-                // Clean up all the file that have just been compiled i this new batch.
+                // Clean up all the files that have just been compiled in this new batch.
                 //
                 for (file_symbol = (FileSymbol *) input_java_file_set.FirstElement();
                      file_symbol;

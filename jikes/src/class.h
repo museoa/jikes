@@ -1486,6 +1486,8 @@ public:
             output_buffer.PutB2(constant_pool.Length());
             for (int i = 1; i < constant_pool.Length(); i++)
             {
+                assert(constant_pool[i]);
+
                 constant_pool[i] -> Put(output_buffer);
                 if (constant_pool[i] -> Tag()  ==  CONSTANT_Long || constant_pool[i] -> Tag()  ==  CONSTANT_Double)
                     i++;; // skip the next entry for eight-byte constants

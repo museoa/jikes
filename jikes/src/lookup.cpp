@@ -322,6 +322,7 @@ IntLiteralTable::IntLiteralTable(LiteralValue *bad_value_) : symbol_pool(16384),
                                                              hash_size(primes[0])
 {
     base = (IntLiteralValue **) memset(new IntLiteralValue *[hash_size], 0, hash_size * sizeof(IntLiteralValue *));
+    symbol_pool.Next() = NULL; // do not use the 0th element
 }
 
 IntLiteralTable::~IntLiteralTable()
@@ -375,6 +376,7 @@ LongLiteralTable::LongLiteralTable(LiteralValue *bad_value_) : symbol_pool(16384
                                                                hash_size(primes[0])
 {
     base = (LongLiteralValue **) memset(new LongLiteralValue *[hash_size], 0, hash_size * sizeof(LongLiteralValue *));
+    symbol_pool.Next() = NULL; // do not use the 0th element
 }
 
 LongLiteralTable::~LongLiteralTable()
@@ -428,6 +430,7 @@ FloatLiteralTable::FloatLiteralTable(LiteralValue *bad_value_) : symbol_pool(163
                                                                  hash_size(primes[0])
 {
     base = (FloatLiteralValue **) memset(new FloatLiteralValue *[hash_size], 0, hash_size * sizeof(FloatLiteralValue *));
+    symbol_pool.Next() = NULL; // do not use the 0th element
 }
 
 FloatLiteralTable::~FloatLiteralTable()
@@ -481,6 +484,7 @@ DoubleLiteralTable::DoubleLiteralTable(LiteralValue *bad_value_) : symbol_pool(1
                                                                    hash_size(primes[0])
 {
     base = (DoubleLiteralValue **) memset(new DoubleLiteralValue *[hash_size], 0, hash_size * sizeof(DoubleLiteralValue *));
+    symbol_pool.Next() = NULL; // do not use the 0th element
 }
 
 DoubleLiteralTable::~DoubleLiteralTable()
@@ -533,6 +537,7 @@ Utf8LiteralTable::Utf8LiteralTable(LiteralValue *bad_value_) : symbol_pool(16384
                                                                hash_size(primes[0])
 {
     base = (Utf8LiteralValue **) memset(new Utf8LiteralValue *[hash_size], 0, hash_size * sizeof(Utf8LiteralValue *));
+    symbol_pool.Next() = NULL; // do not use the 0th element
 }
 
 
@@ -877,7 +882,10 @@ void IntLiteralTable::Rehash()
     delete [] base;
     base = (IntLiteralValue **) memset(new IntLiteralValue *[hash_size], 0, hash_size * sizeof(IntLiteralValue *));
 
-    for (int i = 0; i < symbol_pool.Length(); i++)
+    //
+    // Recall that the 0th element is unused.
+    //
+    for (int i = 1; i < symbol_pool.Length(); i++)
     {
         IntLiteralValue *ilv = symbol_pool[i];
         int k = ((unsigned) ilv -> value) % hash_size; // The unsigned casting turns the negative values into positive values
@@ -1070,7 +1078,10 @@ void LongLiteralTable::Rehash()
     delete [] base;
     base = (LongLiteralValue **) memset(new LongLiteralValue *[hash_size], 0, hash_size * sizeof(LongLiteralValue *));
 
-    for (int i = 0; i < symbol_pool.Length(); i++)
+    //
+    // Recall that the 0th element is unused.
+    //
+    for (int i = 1; i < symbol_pool.Length(); i++)
     {
         LongLiteralValue *llv = symbol_pool[i];
         int k = (((ULongInt) llv -> value) % ULongInt(0, hash_size)).LowWord(); // The ULongInt turns negative values positive
@@ -1137,7 +1148,10 @@ void FloatLiteralTable::Rehash()
     delete [] base;
     base = (FloatLiteralValue **) memset(new FloatLiteralValue *[hash_size], 0, hash_size * sizeof(FloatLiteralValue *));
 
-    for (int i = 0; i < symbol_pool.Length(); i++)
+    //
+    // Recall that the 0th element is unused.
+    //
+    for (int i = 1; i < symbol_pool.Length(); i++)
     {
         FloatLiteralValue *flv = symbol_pool[i];
         int k = Hash(flv -> value) % hash_size; // the hash function for float values is cheap so we don't need to save it.
@@ -1204,7 +1218,10 @@ void DoubleLiteralTable::Rehash()
     delete [] base;
     base = (DoubleLiteralValue **) memset(new DoubleLiteralValue *[hash_size], 0, hash_size * sizeof(DoubleLiteralValue *));
 
-    for (int i = 0; i < symbol_pool.Length(); i++)
+    //
+    // Recall that the 0th element is unused.
+    //
+    for (int i = 1; i < symbol_pool.Length(); i++)
     {
         DoubleLiteralValue *dlv = symbol_pool[i];
         int k = Hash(dlv -> value) % hash_size; // the hash function for double values is cheap so we don't need to save it.
@@ -1401,7 +1418,10 @@ void Utf8LiteralTable::Rehash()
     delete [] base;
     base = (Utf8LiteralValue **) memset(new Utf8LiteralValue *[hash_size], 0, hash_size * sizeof(Utf8LiteralValue *));
 
-    for (int i = 0; i < symbol_pool.Length(); i++)
+    //
+    // Recall that the 0th element is unused.
+    //
+    for (int i = 1; i < symbol_pool.Length(); i++)
     {
         Utf8LiteralValue *ulv = symbol_pool[i];
         int k = ulv -> hash_address % hash_size;

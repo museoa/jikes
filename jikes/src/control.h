@@ -383,8 +383,6 @@ public:
         line_count;
 #endif
 
-    int class_file_id;
-
     PackageSymbol *ProcessPackage(wchar_t *);
 
     DirectorySymbol *FindSubdirectory(PathSymbol *, wchar_t *, int);

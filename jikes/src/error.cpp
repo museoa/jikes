@@ -272,6 +272,8 @@ void SemanticError::StaticInitializer()
     // TODO: Review the cases below. They should be flagged as errors.
     //       However, since javac does not flag them at all, we only issue
     //       a warning.
+    warning[STATIC_PROTECTED_FIELD_ACCESS] = 2;
+    warning[STATIC_PROTECTED_METHOD_ACCESS] = 2;
     warning[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL] = 2;
     warning[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER] = 2;
     warning[PRIVATE_METHOD_OVERRIDE] = 1;
@@ -316,6 +318,12 @@ void SemanticError::StaticInitializer()
     print_message[CANNOT_REOPEN_FILE] = PrintCANNOT_REOPEN_FILE;
     print_message[CANNOT_WRITE_FILE] = PrintCANNOT_WRITE_FILE;
     print_message[CONSTANT_POOL_OVERFLOW] = PrintCONSTANT_POOL_OVERFLOW;
+    print_message[INTERFACES_OVERFLOW] = PrintINTERFACES_OVERFLOW;
+    print_message[METHODS_OVERFLOW] = PrintMETHODS_OVERFLOW;
+    print_message[STRING_OVERFLOW] = PrintSTRING_OVERFLOW;
+    print_message[PARAMETER_OVERFLOW] = PrintPARAMETER_OVERFLOW;
+    print_message[ARRAY_OVERFLOW] = PrintARRAY_OVERFLOW;
+    print_message[FIELDS_OVERFLOW] = PrintFIELDS_OVERFLOW;
     print_message[LOCAL_VARIABLES_OVERFLOW] = PrintLOCAL_VARIABLES_OVERFLOW;
     print_message[STACK_OVERFLOW] = PrintSTACK_OVERFLOW;
     print_message[CODE_OVERFLOW] = PrintCODE_OVERFLOW;
@@ -546,6 +554,8 @@ void SemanticError::StaticInitializer()
     print_message[STATIC_TYPE_IN_INNER_CLASS] = PrintSTATIC_TYPE_IN_INNER_CLASS;
     print_message[STATIC_INITIALIZER_IN_INNER_CLASS] = PrintSTATIC_INITIALIZER_IN_INNER_CLASS;
     print_message[INNER_CLASS_REFERENCE_TO_NON_FINAL_LOCAL_VARIABLE] = PrintINNER_CLASS_REFERENCE_TO_NON_FINAL_LOCAL_VARIABLE;
+    print_message[STATIC_PROTECTED_FIELD_ACCESS] = PrintSTATIC_PROTECTED_FIELD_ACCESS;
+    print_message[STATIC_PROTECTED_METHOD_ACCESS] = PrintSTATIC_PROTECTED_METHOD_ACCESS;
     print_message[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL] = PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL;
     print_message[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER] = PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER;
     print_message[ILLEGAL_THIS_FIELD_ACCESS] = PrintILLEGAL_THIS_FIELD_ACCESS;
@@ -1150,7 +1160,92 @@ void SemanticError::PrintCONSTANT_POOL_OVERFLOW(ErrorInfo &err, LexStream *lex_s
                 << "/";
     }
     Coutput << err.insert2
-            << "\", produced a constant pool that exceeded the limit of 65536 elements.";
+            << "\", produced a constant pool that exceeded the limit of 65535 elements.";
+
+    return;
+}
+
+
+void SemanticError::PrintINTERFACES_OVERFLOW(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    Coutput << "The type \"";
+    if (NotDot(err.insert1))
+    {
+        Coutput << err.insert1
+                << "/";
+    }
+    Coutput << err.insert2
+            << "\" implements more than 65535 interfaces.";
+
+    return;
+}
+
+
+void SemanticError::PrintMETHODS_OVERFLOW(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    Coutput << "The type \"";
+    if (NotDot(err.insert1))
+    {
+        Coutput << err.insert1
+                << "/";
+    }
+    Coutput << err.insert2
+            << "\" contains more than 65535 methods.";
+
+    return;
+}
+
+
+void SemanticError::PrintSTRING_OVERFLOW(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    Coutput << "The type \"";
+    if (NotDot(err.insert1))
+    {
+        Coutput << err.insert1
+                << "/";
+    }
+    Coutput << err.insert2
+            << "\" generated one or more strings whose length exceeds the maximum length of 65535 Utf8 chacracters.";
+
+    return;
+}
+
+
+void SemanticError::PrintPARAMETER_OVERFLOW(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    Coutput << "Method \""
+            << err.insert1
+            << "\" in type \"";
+    if (NotDot(err.insert2))
+    {
+        Coutput << err.insert2
+                << "/";
+    }
+    Coutput << err.insert3
+            << "\" contains more than 255 formal parameters. Note that a parameter of type long or double counts as 2 parameters.";
+
+    return;
+}
+
+
+void SemanticError::PrintARRAY_OVERFLOW(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    Coutput << "The number of dimensions in an array is limited to 255.";
+
+    return;
+}
+
+
+void SemanticError::PrintFIELDS_OVERFLOW(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    Coutput << "The type \"";
+    if (NotDot(err.insert1))
+    {
+        Coutput << err.insert1
+                << "/";
+    }
+    Coutput << err.insert2
+            << "\" contains more than 65535 fields.";
 
     return;
 }
@@ -1175,7 +1270,7 @@ void SemanticError::PrintLOCAL_VARIABLES_OVERFLOW(ErrorInfo &err, LexStream *lex
 
 void SemanticError::PrintSTACK_OVERFLOW(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    Coutput << "Processing of the method \""
+    Coutput << "Processing of the method or constructor \""
             << err.insert1
             << "\" in type \"";
     if (NotDot(err.insert2))
@@ -1192,7 +1287,7 @@ void SemanticError::PrintSTACK_OVERFLOW(ErrorInfo &err, LexStream *lex_stream, C
 
 void SemanticError::PrintCODE_OVERFLOW(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    Coutput << "Processing of the method \""
+    Coutput << "Processing of the method or constructor \""
             << err.insert1
             << "\" in type \"";
     if (NotDot(err.insert2))
@@ -1201,7 +1296,7 @@ void SemanticError::PrintCODE_OVERFLOW(ErrorInfo &err, LexStream *lex_stream, Co
                 << "/";
     }
     Coutput << err.insert3
-            << "\" produced a code attribute that exceeds the code limit of 65534 elements.";
+            << "\" produced a code attribute that exceeds the code limit of 65535 elements.";
 
     return;
 }
@@ -4340,6 +4435,44 @@ void SemanticError::PrintINNER_CLASS_REFERENCE_TO_NON_FINAL_LOCAL_VARIABLE(Error
             << "\", declared in method \""
             << err.insert4
             << "\".";
+
+    return;
+}
+
+
+void SemanticError::PrintSTATIC_PROTECTED_FIELD_ACCESS(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    Coutput << "The field \""
+            << err.insert1
+            << "\" in type \"";
+    if (NotDot(err.insert2))
+    {
+        Coutput << err.insert2
+                << '/';
+    }
+    Coutput << err.insert3
+            << "\" is a protected field contained in a different package than this one. "
+               "Therefore, even though it may be accessible here as a simple name (if it is not hidden), "
+               "it is not accessible via a field access.";
+
+    return;
+}
+
+
+void SemanticError::PrintSTATIC_PROTECTED_METHOD_ACCESS(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    Coutput << "The method \""
+            << err.insert1
+            << "\" in type \"";
+    if (NotDot(err.insert2))
+    {
+        Coutput << err.insert2
+                << '/';
+    }
+    Coutput << err.insert3
+            << "\" is a protected method contained in a different package than this one. "
+               "Therefore, even though it may be accessible here as a simple name (if it is not hidden), "
+               "it is not accessible via a field access.";
 
     return;
 }

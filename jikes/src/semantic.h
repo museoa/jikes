@@ -1019,7 +1019,7 @@ private:
     {
         (this ->* ProcessExprOrStmt[expr -> kind])(expr);
         //
-        // If the expression is ot type String, check whether or not it is
+        // If the expression is of type String, check whether or not it is
         // constant, and if so, compute the result.
         //
         if (expr -> symbol == control.String() && (! expr -> IsConstant()))

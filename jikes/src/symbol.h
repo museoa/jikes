@@ -622,7 +622,7 @@ public:
     TypeSymbol *super,
                *base_type; // indicates the base type (type of elements in the last dimension) of an array
                            // For a normal type base_type is NULL. If base_type is a "bad" type it points
-                           // to itsself (this).
+                           // to itself (this).
     int index,             // This variable is used in TypeCycleChecker to determine if this type
                            // forms an inter-type cycle in its "extends" or "implements" relationship.
                            //
