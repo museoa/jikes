@@ -33,23 +33,12 @@ bool Semantic::IsIntValueRepresentableInType(AstExpression *expr, TypeSymbol *ty
     IntLiteralValue *literal = (IntLiteralValue *) expr -> value;
 
     return (expr -> IsConstant() &&
-            //
-            // TODO: the test:
-            //
-            //    control.IsSimpleIntegerValueType(expr -> type())) &&
-            //
-            // makes more sense than the test:
-            //
-            //    expr -> Type() == control.int_type) &&
-            //
-            // below which is specified in the JLS.
-            //
-            expr -> Type() == control.int_type) &&
+            control.IsSimpleIntegerValueType(expr -> Type()) &&
             (type == control.int_type ||
              type == control.no_type  ||
-             (type == control.char_type && (literal -> value >= 0)  && (literal -> value <= 65535)) ||
+             (type == control.char_type && (literal -> value >= 0) && (literal -> value <= 65535)) ||
              (type == control.byte_type && (literal -> value >= -128) && (literal -> value <= 127)) ||
-             (type == control.short_type && (literal -> value >= -32768)  && (literal -> value <= 32767)));
+             (type == control.short_type && (literal -> value >= -32768) && (literal -> value <= 32767))));
 }
 
 

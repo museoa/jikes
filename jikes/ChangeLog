@@ -1,6 +1,11 @@
 2001-05-01  Eric Blake  <ebb9@email.byu.edu>
 
-	* expr.cppL: A string expression was not
+	* expr.cpp: use control.IsSimpleIntegerValueType(x)
+	instead of x == control.int_type.
+
+2001-05-01  Eric Blake  <ebb9@email.byu.edu>
+
+	* expr.cpp: A string expression was not
 	being treated as a constant, thus breaking
 	some instanceof tests.
 
