@@ -582,6 +582,7 @@ void SemanticError::StaticInitializer()
     print_message[DUPLICATE_CONSTRUCTOR] = PrintDUPLICATE_CONSTRUCTOR;
     print_message[MISMATCHED_INHERITED_METHOD] = PrintMISMATCHED_INHERITED_METHOD;
     print_message[MISMATCHED_INHERITED_METHOD_EXTERNALLY] = PrintMISMATCHED_INHERITED_METHOD_EXTERNALLY;
+    print_message[MISMATCHED_INHERITED_METHODS_IN_BASE] = PrintMISMATCHED_INHERITED_METHODS_IN_BASE;
     print_message[DUPLICATE_FORMAL_PARAMETER] = PrintDUPLICATE_FORMAL_PARAMETER;
     print_message[MISMATCHED_CONSTRUCTOR_NAME] = PrintMISMATCHED_CONSTRUCTOR_NAME;
     print_message[METHOD_WITH_CONSTRUCTOR_NAME] = PrintMETHOD_WITH_CONSTRUCTOR_NAME;
@@ -2186,6 +2187,34 @@ wchar_t *SemanticError::PrintMISMATCHED_INHERITED_METHOD_EXTERNALLY(ErrorInfo &e
     return s.Array();
 }
 
+wchar_t *SemanticError::PrintMISMATCHED_INHERITED_METHODS_IN_BASE(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    ErrorString s;
+    
+    s << "In class \""
+            << err.insert1
+            << "\", the method \""
+            << err.insert2
+            << "\", inherited from type \"";
+    if (NotDot(err.insert3))
+    {
+        s << err.insert3
+                << "/";
+    }
+    s << err.insert4
+            << "\", does not have the same return type as the method \""
+            << err.insert5
+            << "\", inherited from type \"";
+    if (NotDot(err.insert6))
+    {
+        s << err.insert6
+                << "/";
+    }
+    s << err.insert7
+            << "\".";
+
+    return s.Array();
+}
 
 wchar_t *SemanticError::PrintDUPLICATE_CONSTRUCTOR(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {

@@ -173,6 +173,7 @@ class SemanticError
         DUPLICATE_CONSTRUCTOR,
         MISMATCHED_INHERITED_METHOD,
         MISMATCHED_INHERITED_METHOD_EXTERNALLY,
+        MISMATCHED_INHERITED_METHODS_IN_BASE,
         DUPLICATE_FORMAL_PARAMETER,
         MISMATCHED_CONSTRUCTOR_NAME,
         METHOD_WITH_CONSTRUCTOR_NAME,
@@ -413,7 +414,12 @@ private:
     static unsigned char warning[];
     static wchar_t *(*print_message[_num_kinds])(ErrorInfo &, LexStream *, Control &);
 
-    static bool NotDot(wchar_t *str) { return (! (wcslen(str) == 0 || wcscmp(str, StringConstant::US__DO) == 0)); }
+    static bool NotDot(wchar_t *str)
+        {
+            return str ?
+                (! (wcslen(str) == 0 || wcscmp(str, StringConstant::US__DO) == 0)) :
+                false;
+        }
 
     static wchar_t *PrintBAD_ERROR(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintDEFAULT_ERROR(ErrorInfo &, LexStream *, Control &);
@@ -497,6 +503,7 @@ private:
     static wchar_t *PrintDUPLICATE_CONSTRUCTOR(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISMATCHED_INHERITED_METHOD(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISMATCHED_INHERITED_METHOD_EXTERNALLY(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintMISMATCHED_INHERITED_METHODS_IN_BASE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintDUPLICATE_FORMAL_PARAMETER(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISMATCHED_CONSTRUCTOR_NAME(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMETHOD_WITH_CONSTRUCTOR_NAME(ErrorInfo &, LexStream *, Control &);
