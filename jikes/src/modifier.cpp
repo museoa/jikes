@@ -270,7 +270,14 @@ AccessFlags Semantic::ProcessStaticNestedClassModifiers(AstClassDeclaration *cla
                                     modifier -> modifier_kind_token,
                                     modifier -> modifier_kind_token);
                  }
-                 else access_flags.SetACC_PUBLIC();
+                 else
+                 {
+                     if (control.option.pedantic)
+                         ReportSemError(SemanticError::REDUNDANT_PUBLIC,
+                                        modifier -> modifier_kind_token,
+                                        modifier -> modifier_kind_token);
+                     access_flags.SetACC_PUBLIC();
+                 }
                  break;
             case Ast::STATIC:
                  if (access_flags.ACC_STATIC())
@@ -279,7 +286,14 @@ AccessFlags Semantic::ProcessStaticNestedClassModifiers(AstClassDeclaration *cla
                                     modifier -> modifier_kind_token,
                                     modifier -> modifier_kind_token);
                  }
-                 else access_flags.SetACC_STATIC();
+                 else
+                 {
+                     if (control.option.pedantic)
+                         ReportSemError(SemanticError::REDUNDANT_STATIC,
+                                        modifier -> modifier_kind_token,
+                                        modifier -> modifier_kind_token);
+                     access_flags.SetACC_STATIC();
+                 }
                  break;
             default:
                  ReportSemError(SemanticError::INVALID_INNER_CLASS_MODIFIER,
@@ -318,7 +332,13 @@ AccessFlags Semantic::ProcessInterfaceModifiers(AstInterfaceDeclaration *interfa
                                     modifier -> modifier_kind_token,
                                     modifier -> modifier_kind_token);
                  }
-                 else access_flags.SetACC_ABSTRACT();
+                 else
+                 {
+                     ReportSemError(SemanticError::OBSOLESCENT_ABSTRACT,
+                                    modifier -> modifier_kind_token,
+                                    modifier -> modifier_kind_token);
+                     access_flags.SetACC_ABSTRACT();
+                 }
                  break;
             case Ast::PUBLIC:
                  if (access_flags.ACC_PUBLIC())
@@ -362,7 +382,13 @@ AccessFlags Semantic::ProcessNestedInterfaceModifiers(AstInterfaceDeclaration *i
                                     modifier -> modifier_kind_token,
                                     modifier -> modifier_kind_token);
                  }
-                 else access_flags.SetACC_ABSTRACT();
+                 else
+                 {
+                     ReportSemError(SemanticError::OBSOLESCENT_ABSTRACT,
+                                    modifier -> modifier_kind_token,
+                                    modifier -> modifier_kind_token);
+                     access_flags.SetACC_ABSTRACT();
+                 }
                  break;
             case Ast::PUBLIC:
                  if (access_flags.ACC_PUBLIC() || access_flags.ACC_PROTECTED() || access_flags.ACC_PRIVATE())
@@ -398,7 +424,14 @@ AccessFlags Semantic::ProcessNestedInterfaceModifiers(AstInterfaceDeclaration *i
                                     modifier -> modifier_kind_token,
                                     modifier -> modifier_kind_token);
                  }
-                 else access_flags.SetACC_STATIC();
+                 else
+                 {
+                     if (control.option.pedantic)
+                         ReportSemError(SemanticError::REDUNDANT_STATIC,
+                                        modifier -> modifier_kind_token,
+                                        modifier -> modifier_kind_token);
+                     access_flags.SetACC_STATIC();
+                 }
                  break;
             default:
                  ReportSemError(SemanticError::INVALID_INTERFACE_MODIFIER,
@@ -739,7 +772,14 @@ AccessFlags Semantic::ProcessAbstractMethodModifiers(AstMethodDeclaration *metho
                                     modifier -> modifier_kind_token,
                                     modifier -> modifier_kind_token);
                  }
-                 else access_flags.SetACC_PUBLIC();
+                 else
+                 {
+                     if (control.option.pedantic)
+                         ReportSemError(SemanticError::REDUNDANT_PUBLIC,
+                                        modifier -> modifier_kind_token,
+                                        modifier -> modifier_kind_token);
+                     access_flags.SetACC_PUBLIC();
+                 }
                  break;
             case Ast::ABSTRACT:
                  if (access_flags.ACC_ABSTRACT())
@@ -748,7 +788,14 @@ AccessFlags Semantic::ProcessAbstractMethodModifiers(AstMethodDeclaration *metho
                                     modifier -> modifier_kind_token,
                                     modifier -> modifier_kind_token);
                  }
-                 else access_flags.SetACC_ABSTRACT();
+                 else
+                 {
+                     if (control.option.pedantic)
+                         ReportSemError(SemanticError::REDUNDANT_ABSTRACT,
+                                        modifier -> modifier_kind_token,
+                                        modifier -> modifier_kind_token);
+                     access_flags.SetACC_ABSTRACT();
+                 }
                  break;
             default:
                  ReportSemError(SemanticError::INVALID_SIGNATURE_MODIFIER,
@@ -836,7 +883,14 @@ AccessFlags Semantic::ProcessConstantModifiers(AstFieldDeclaration *field_declar
                                     modifier -> modifier_kind_token,
                                     modifier -> modifier_kind_token);
                  }
-                 else access_flags.SetACC_PUBLIC();
+                 else
+                 {
+                     if (control.option.pedantic)
+                         ReportSemError(SemanticError::REDUNDANT_PUBLIC,
+                                        modifier -> modifier_kind_token,
+                                        modifier -> modifier_kind_token);
+                     access_flags.SetACC_PUBLIC();
+                 }
                  break;
             case Ast::STATIC:
                  if (access_flags.ACC_STATIC())
@@ -845,7 +899,14 @@ AccessFlags Semantic::ProcessConstantModifiers(AstFieldDeclaration *field_declar
                                     modifier -> modifier_kind_token,
                                     modifier -> modifier_kind_token);
                  }
-                 else access_flags.SetACC_STATIC();
+                 else
+                 {
+                     if (control.option.pedantic)
+                         ReportSemError(SemanticError::REDUNDANT_STATIC,
+                                        modifier -> modifier_kind_token,
+                                        modifier -> modifier_kind_token);
+                     access_flags.SetACC_STATIC();
+                 }
                  break;
             case Ast::FINAL:
                  if (access_flags.ACC_FINAL())
@@ -854,7 +915,14 @@ AccessFlags Semantic::ProcessConstantModifiers(AstFieldDeclaration *field_declar
                                     modifier -> modifier_kind_token,
                                     modifier -> modifier_kind_token);
                  }
-                 else access_flags.SetACC_FINAL();
+                 else
+                 {
+                     if (control.option.pedantic)
+                         ReportSemError(SemanticError::REDUNDANT_FINAL,
+                                        modifier -> modifier_kind_token,
+                                        modifier -> modifier_kind_token);
+                     access_flags.SetACC_FINAL();
+                 }
                  break;
             default:
                  ReportSemError(SemanticError::INVALID_CONSTANT_MODIFIER,

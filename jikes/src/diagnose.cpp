@@ -15,6 +15,7 @@
 #include "semantic.h"
 #include "unicode.h"
 #include "case.h"
+#include "misspell.h"
  
 void DiagnoseParser::ReallocateStacks()
 {
@@ -1164,125 +1165,26 @@ int DiagnoseParser::GetNtermIndex(int start, int sym, int buffer_position)
 /*****************************************************************/
 int DiagnoseParser::Misspell(int sym, TokenObject tok)
 {
-    int len,
-        i,
-        j,
-        n,
-        m,
-        count = 0,
-        prefix_length = 0,
-        num_errors = 0;
- 
-    char s1[MAX_TERM_LENGTH + 1],
-         s2[MAX_TERM_LENGTH + 1],
-         c;
-
-    len = lex_stream -> NameLength(tok);
-
-    n = name_length[terminal_index[sym]];
-    i = name_start[terminal_index[sym]];
-    for (j = 0; j < n; j++)
+    int len = name_length[terminal_index[sym]];
+        
+    wchar_t *keyword = new wchar_t[len + 1];
+    for (int i = name_start[terminal_index[sym]], j = 0; j < len; i++, j++)
     {
-        c = string_buffer[i++];
+        wchar_t c = string_buffer[i];
 #ifdef EBCDIC
         c = Code::ToASCII(c);
 #endif
-        s1[j] = Case::ToAsciiLower(c);
+        keyword[j] = c;
     }
-    s1[n] = U_NULL;
- 
-    m = Min(len, MAX_TERM_LENGTH);
-    for (j = 0; j < m; j++)
-    {
-        c = (char) lex_stream -> Name(tok)[j];
-        s2[j] = Case::ToAsciiLower(c);
-    }
-    s2[m] = U_NULL;
- 
-    if (n == 1  &&  m == 1)
-    {
-        /*****************************************************/
-        /*  Singleton mispellings:                           */
-        /*                                                   */
-        /*  ;      <---->     ,                              */
-        /*                                                   */
-        /*  ;      <---->     :                              */
-        /*                                                   */
-        /*  .      <---->     ,                              */
-        /*                                                   */
-        /*  '      <---->     "                              */
-        /*                                                   */
-        /*****************************************************/
-        if ((s1[0] == U_SEMICOLON    &&  s2[0] == U_COMMA)  ||
-            (s1[0] == U_COMMA        &&  s2[0] == U_SEMICOLON)  ||
-            (s1[0] == U_SEMICOLON    &&  s2[0] == U_COLON)  ||
-            (s1[0] == U_COLON        &&  s2[0] == U_SEMICOLON)  ||
-            (s1[0] == U_DOT          &&  s2[0] == U_COMMA)  ||
-            (s1[0] == U_COMMA        &&  s2[0] == U_DOT)  ||
-            (s1[0] == U_SINGLE_QUOTE &&  s2[0] == U_DOUBLE_QUOTE)  ||
-            (s1[0] == U_DOUBLE_QUOTE &&  s2[0] == U_SINGLE_QUOTE))
-                return 3;
-    }
- 
-/*****************************************************************/
-/* Scan the two strings. Increment "match" count for each match. */
-/* When a transposition is encountered, increase "match" count   */
-/* by two but count it as an error. When a typo is found, skip   */
-/* it and count it as an error. Otherwise we have a mismatch; if */
-/* one of the strings is longer, increment its index, otherwise, */
-/* increment both indices and continue.                          */
-/*                                                               */
-/* This algorithm is an adaptation of a boolean misspelling      */
-/* algorithm proposed by Juergen Uhl.                            */
-/*****************************************************************/
-    i = 0;
-    j = 0;
-    while ((i < n)  &&  (j < m))
-    {
-        if (s1[i] == s2[j])
-        {
-            count++;
-            i++;
-            j++;
-            if (num_errors == 0)
-                prefix_length++;
-        }
-        else if (s1[i+1] == s2[j]  &&  s1[i] == s2[j+1])
-        {
-            count += 2;
-            i += 2;
-            j += 2;
-            num_errors++;
-        }
-        else if (s1[i+1] == s2[j+1])
-        {
-            i++;
-            j++;
-            num_errors++;
-        }
-        else
-        {
-            if ((n - i) > (m - j))
-                 i++;
-            else if ((m - j) > (n - i))
-                 j++;
-            else
-            {
-                i++;
-                j++;
-            }
-            num_errors++;
-        }
-    }
- 
-    if (i < n  ||  j < m)
-        num_errors++;
- 
-    if (num_errors > (Min(n, m) / 6 + 1))
-         count = prefix_length;
- 
-    return(count * 10 / (Max(n, len) + num_errors));
+    keyword[len] = U_NULL;
+
+    int index = Misspell::Index(lex_stream -> Name(tok), keyword);
+
+    delete [] keyword;
+
+    return index;
 }
+ 
  
 /*****************************************************************/
 /*****************************************************************/

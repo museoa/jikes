@@ -947,12 +947,14 @@ private:
     bool MoreSpecific(MethodSymbol *, Tuple<MethodSymbol *> &);
     bool NoMethodMoreSpecific(Tuple<MethodSymbol *> &, MethodSymbol *);
     void SearchForMethodInEnvironment(Tuple<MethodSymbol *> &, SemanticEnvironment *&, SemanticEnvironment *, AstMethodInvocation *);
+    MethodSymbol *FindMisspelledMethodName(TypeSymbol *, AstMethodInvocation *, NameSymbol *);
     MethodSymbol *FindMethodInEnvironment(SemanticEnvironment *&, SemanticEnvironment *, AstMethodInvocation *);
     MethodSymbol *FindMethodInType(TypeSymbol *, AstMethodInvocation *, NameSymbol * = NULL);
 
     void ReportAccessedFieldNotFound(AstFieldAccess *, TypeSymbol *);
     void SearchForVariableInEnvironment(Tuple<VariableSymbol *> &, SemanticEnvironment *&,
                                         SemanticEnvironment *, NameSymbol *, LexStream::TokenIndex);
+    VariableSymbol *FindMisspelledVariableName(TypeSymbol *, LexStream::TokenIndex);
     VariableSymbol *FindVariableInEnvironment(SemanticEnvironment *&, SemanticEnvironment *, LexStream::TokenIndex);
     VariableSymbol *FindVariableInType(TypeSymbol *, AstFieldAccess *, NameSymbol * = NULL);
     VariableSymbol *FindInstance(TypeSymbol *, TypeSymbol *);

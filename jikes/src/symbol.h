@@ -903,6 +903,8 @@ assert(NumConstructorParameters() > 0);
 
     void SetFlags(AccessFlags variable_access) { access_flags = variable_access.access_flags; }
 
+    bool IsNestedIn(TypeSymbol *);
+
     bool IsNested() { return outermost_type != this; }
 
     bool IsTopLevel() { return (! IsNested()) || this -> ACC_STATIC(); }

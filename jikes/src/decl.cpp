@@ -440,7 +440,7 @@ void Semantic::CheckNestedTypeDuplication(SemanticEnvironment *env, LexStream::T
                        identifier_token,
                        identifier_token,
                        name_symbol -> Name(),
-                       old_type -> FileLoc());
+                       env -> Type() -> FileLoc());
     }
     else
     {
@@ -466,7 +466,7 @@ void Semantic::CheckNestedTypeDuplication(SemanticEnvironment *env, LexStream::T
                                identifier_token,
                                identifier_token,
                                name_symbol -> Name(),
-                               old_type -> FileLoc());
+                               env -> Type() -> FileLoc());
                 break;
             }
         }
@@ -2498,7 +2498,33 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_d
                        lex_stream -> Name(import_declaration -> name -> RightToken()),
                        old_type -> FileLoc());
     }
-    else single_type_imports.Next() = type;
+    else
+    {
+        int i = 0;
+        for (i = 0; i < compilation_unit -> NumImportDeclarations(); i++)
+        {
+            TypeSymbol *other_type = compilation_unit -> ImportDeclaration(i) -> name -> Type();
+            if ((compilation_unit -> ImportDeclaration(i) == import_declaration) ||
+                (other_type && other_type -> Identity() == type -> Identity()))
+                break;
+        }
+
+assert(i < compilation_unit -> NumImportDeclarations());
+        if (compilation_unit -> ImportDeclaration(i) == import_declaration) // No duplicate found
+        {
+            import_declaration -> name -> symbol = type;
+            single_type_imports.Next() = type;
+        }
+        else
+        {
+            FileLocation file_location(lex_stream, compilation_unit -> ImportDeclaration(i) -> LeftToken());
+            ReportSemError(SemanticError::DUPLICATE_TYPE_DECLARATION,
+                           import_declaration -> name -> LeftToken(),
+                           import_declaration -> name -> RightToken(),
+                           lex_stream -> Name(import_declaration -> name -> RightToken()),
+                           file_location.location);
+        }
+    }
 
     if (! (type -> ACC_PUBLIC() || type -> ContainingPackage() == this_package))
         ReportTypeInaccessible(import_declaration -> name, type);
@@ -2791,7 +2817,7 @@ void Semantic::AddDefaultConstructor(TypeSymbol *type)
                               right_loc = (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
                                                                           : class_declaration -> identifier_token);
 
-        AstMethodDeclarator *method_declarator      = compilation_unit -> ast_pool -> GenMethodDeclarator();
+        AstMethodDeclarator *method_declarator       = compilation_unit -> ast_pool -> GenMethodDeclarator();
         method_declarator -> identifier_token        = left_loc;
         method_declarator -> left_parenthesis_token  = left_loc;
         method_declarator -> right_parenthesis_token = right_loc;
@@ -3539,6 +3565,17 @@ assert(modifier);
     TypeSymbol *method_type = (primitive_type ? FindPrimitiveType(primitive_type) : MustFindType(actual_type));
 
     AstMethodDeclarator *method_declarator = method_declaration -> method_declarator;
+    if (method_declarator -> NumBrackets() > 0)
+    {
+        if (method_type == control.void_type)
+             ReportSemError(SemanticError::VOID_ARRAY,
+                            method_declaration -> type -> LeftToken(),
+                            method_declarator -> RightToken());
+        else ReportSemError(SemanticError::OBSOLESCENT_BRACKETS,
+                            method_declarator -> LeftToken(),
+                            method_declarator -> RightToken());
+    }
+
     NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(method_declarator -> identifier_token);
 
     if (name_symbol == this_type -> Identity())
@@ -3578,7 +3615,9 @@ assert(modifier);
         method = this_type -> Overload(method);
     }
 
-    int num_dimensions = (array_type ? array_type -> NumBrackets() : 0) + method_declarator -> NumBrackets();
+    int num_dimensions = (method_type == control.void_type
+                                       ? 0
+                                       : (array_type ? array_type -> NumBrackets() : 0) + method_declarator -> NumBrackets());
     if (num_dimensions == 0)
          method -> SetType(method_type);
     else method -> SetType(method_type -> GetArrayType((Semantic *) this, num_dimensions));
@@ -3964,6 +4003,16 @@ inline void Semantic::ProcessInitializer(AstBlock *initializer_block, AstBlock *
     LocalSymbolTable().Push(init_method -> block_symbol -> Table());
 
     int start_num_errors = NumErrors();
+
+    AstConstructorBlock *constructor_block = block_body -> ConstructorBlockCast();
+    if (constructor_block)
+    {
+assert(constructor_block -> explicit_constructor_invocation_opt);
+        ReportSemError(SemanticError::MISPLACED_EXPLICIT_CONSTRUCTOR_INVOCATION,
+                       constructor_block -> explicit_constructor_invocation_opt -> LeftToken(),
+                       constructor_block -> explicit_constructor_invocation_opt -> RightToken());
+    }
+
     ProcessBlock(block_body);
 
     if (NumErrors() == start_num_errors)

@@ -45,6 +45,12 @@ public:
         CANNOT_WRITE_FILE,
         CANNOT_COMPUTE_COLUMNS,
         EMPTY_DECLARATION,
+        REDUNDANT_ABSTRACT,
+        REDUNDANT_FINAL,
+        REDUNDANT_PUBLIC,
+        REDUNDANT_STATIC,
+        OBSOLESCENT_ABSTRACT,
+        OBSOLESCENT_BRACKETS,
         NO_TYPES,
         MULTIPLE_PUBLIC_TYPES,
         TYPE_IN_MULTIPLE_FILES,
@@ -100,6 +106,7 @@ public:
         AMBIGUOUS_NAME,
         FIELD_IS_TYPE,
         FIELD_NOT_FOUND,
+        FIELD_NAME_MISSPELLED,
         FIELD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE,
         FIELD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE,
         NAME_NOT_FOUND,
@@ -109,6 +116,8 @@ public:
         NAME_NOT_CLASS_VARIABLE,
         NOT_A_NUMERIC_VARIABLE,
         METHOD_NOT_FOUND,
+        METHOD_NAME_NOT_FOUND_IN_TYPE,
+        METHOD_NAME_MISSPELLED,
         METHOD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE,
         METHOD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE,
         HIDDEN_METHOD_IN_ENCLOSING_CLASS,
@@ -128,6 +137,7 @@ public:
         INCOMPATIBLE_TYPE_FOR_ASSIGNMENT,
         INCOMPATIBLE_TYPE_FOR_BINARY_EXPRESSION,
         INCOMPATIBLE_TYPE_FOR_CONDITIONAL_EXPRESSION,
+        VOID_ARRAY,
         VOID_TYPE_IN_EQUALITY_EXPRESSION,
         TYPE_NOT_THROWABLE,
         TYPE_NOT_PRIMITIVE,
@@ -168,6 +178,7 @@ public:
         BAD_THROWABLE_EXPRESSION,
         MISPLACED_BREAK_STATEMENT,
         MISPLACED_CONTINUE_STATEMENT,
+        MISPLACED_EXPLICIT_CONSTRUCTOR_INVOCATION,
         INVALID_CONTINUE_TARGET,
         NON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD,
         NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD,
@@ -348,6 +359,12 @@ private:
     static void PrintCANNOT_COMPUTE_COLUMNS(ErrorInfo &, LexStream *, Control &);
 
     static void PrintEMPTY_DECLARATION(ErrorInfo &, LexStream *, Control &);
+    static void PrintREDUNDANT_ABSTRACT(ErrorInfo &, LexStream *, Control &);
+    static void PrintREDUNDANT_FINAL(ErrorInfo &, LexStream *, Control &);
+    static void PrintREDUNDANT_PUBLIC(ErrorInfo &, LexStream *, Control &);
+    static void PrintREDUNDANT_STATIC(ErrorInfo &, LexStream *, Control &);
+    static void PrintOBSOLESCENT_ABSTRACT(ErrorInfo &, LexStream *, Control &);
+    static void PrintOBSOLESCENT_BRACKETS(ErrorInfo &, LexStream *, Control &);
     static void PrintNO_TYPES(ErrorInfo &, LexStream *, Control &);
     static void PrintMULTIPLE_PUBLIC_TYPES(ErrorInfo &, LexStream *, Control &);
     static void PrintTYPE_IN_MULTIPLE_FILES(ErrorInfo &, LexStream *, Control &);
@@ -403,6 +420,7 @@ private:
     static void PrintAMBIGUOUS_NAME(ErrorInfo &, LexStream *, Control &);
     static void PrintFIELD_IS_TYPE(ErrorInfo &, LexStream *, Control &);
     static void PrintFIELD_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
+    static void PrintFIELD_NAME_MISSPELLED(ErrorInfo &, LexStream *, Control &);
     static void PrintFIELD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
     static void PrintFIELD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
     static void PrintNAME_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
@@ -412,6 +430,8 @@ private:
     static void PrintNAME_NOT_CLASS_VARIABLE(ErrorInfo &, LexStream *, Control &);
     static void PrintNOT_A_NUMERIC_VARIABLE(ErrorInfo &, LexStream *, Control &);
     static void PrintMETHOD_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
+    static void PrintMETHOD_NAME_NOT_FOUND_IN_TYPE(ErrorInfo &, LexStream *, Control &);
+    static void PrintMETHOD_NAME_MISSPELLED(ErrorInfo &, LexStream *, Control &);
     static void PrintMETHOD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
     static void PrintMETHOD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
     static void PrintHIDDEN_METHOD_IN_ENCLOSING_CLASS(ErrorInfo &, LexStream *, Control &);
@@ -431,6 +451,7 @@ private:
     static void PrintINCOMPATIBLE_TYPE_FOR_ASSIGNMENT(ErrorInfo &, LexStream *, Control &);
     static void PrintINCOMPATIBLE_TYPE_FOR_BINARY_EXPRESSION(ErrorInfo &, LexStream *, Control &);
     static void PrintINCOMPATIBLE_TYPE_FOR_CONDITIONAL_EXPRESSION(ErrorInfo &, LexStream *, Control &);
+    static void PrintVOID_ARRAY(ErrorInfo &, LexStream *, Control &);
     static void PrintVOID_TYPE_IN_EQUALITY_EXPRESSION(ErrorInfo &, LexStream *, Control &);
     static void PrintTYPE_NOT_THROWABLE(ErrorInfo &, LexStream *, Control &);
     static void PrintTYPE_NOT_PRIMITIVE(ErrorInfo &, LexStream *, Control &);
@@ -471,6 +492,7 @@ private:
     static void PrintBAD_THROWABLE_EXPRESSION(ErrorInfo &, LexStream *, Control &);
     static void PrintMISPLACED_BREAK_STATEMENT(ErrorInfo &, LexStream *, Control &);
     static void PrintMISPLACED_CONTINUE_STATEMENT(ErrorInfo &, LexStream *, Control &);
+    static void PrintMISPLACED_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
     static void PrintINVALID_CONTINUE_TARGET(ErrorInfo &, LexStream *, Control &);
     static void PrintNON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD(ErrorInfo &, LexStream *, Control &);
     static void PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD(ErrorInfo &, LexStream *, Control &);

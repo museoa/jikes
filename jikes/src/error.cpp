@@ -243,6 +243,12 @@ void SemanticError::StaticInitializer()
     warning[CANNOT_OPEN_ZIP_FILE] = 1;
 
     warning[EMPTY_DECLARATION] = 1;
+    warning[REDUNDANT_ABSTRACT] = 1;
+    warning[REDUNDANT_FINAL] = 1;
+    warning[REDUNDANT_PUBLIC] = 1;
+    warning[REDUNDANT_STATIC] = 1;
+    warning[OBSOLESCENT_ABSTRACT] = 1;
+    warning[OBSOLESCENT_BRACKETS] = 1;
     warning[NO_TYPES] = 1;
     warning[PARENT_TYPE_IN_UNNAMED_PACKAGE] = 1;
 
@@ -304,6 +310,12 @@ void SemanticError::StaticInitializer()
     print_message[CANNOT_WRITE_FILE] = PrintCANNOT_WRITE_FILE;
     print_message[CANNOT_COMPUTE_COLUMNS] = PrintCANNOT_COMPUTE_COLUMNS;
     print_message[EMPTY_DECLARATION] = PrintEMPTY_DECLARATION;
+    print_message[REDUNDANT_ABSTRACT] = PrintREDUNDANT_ABSTRACT;
+    print_message[REDUNDANT_FINAL] = PrintREDUNDANT_FINAL;
+    print_message[REDUNDANT_PUBLIC] = PrintREDUNDANT_PUBLIC;
+    print_message[REDUNDANT_STATIC] = PrintREDUNDANT_STATIC;
+    print_message[OBSOLESCENT_ABSTRACT] = PrintOBSOLESCENT_ABSTRACT;
+    print_message[OBSOLESCENT_BRACKETS] = PrintOBSOLESCENT_BRACKETS;
     print_message[NO_TYPES] = PrintNO_TYPES;
     print_message[MULTIPLE_PUBLIC_TYPES] = PrintMULTIPLE_PUBLIC_TYPES;
     print_message[TYPE_IN_MULTIPLE_FILES] = PrintTYPE_IN_MULTIPLE_FILES;
@@ -359,6 +371,7 @@ void SemanticError::StaticInitializer()
     print_message[AMBIGUOUS_NAME] = PrintAMBIGUOUS_NAME;
     print_message[FIELD_IS_TYPE] = PrintFIELD_IS_TYPE;
     print_message[FIELD_NOT_FOUND] = PrintFIELD_NOT_FOUND;
+    print_message[FIELD_NAME_MISSPELLED] = PrintFIELD_NAME_MISSPELLED;
     print_message[FIELD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE] = PrintFIELD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE;
     print_message[FIELD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE] = PrintFIELD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE;
     print_message[NAME_NOT_FOUND] = PrintNAME_NOT_FOUND;
@@ -368,6 +381,8 @@ void SemanticError::StaticInitializer()
     print_message[NAME_NOT_CLASS_VARIABLE] = PrintNAME_NOT_CLASS_VARIABLE;
     print_message[NOT_A_NUMERIC_VARIABLE] = PrintNOT_A_NUMERIC_VARIABLE;
     print_message[METHOD_NOT_FOUND] = PrintMETHOD_NOT_FOUND;
+    print_message[METHOD_NAME_NOT_FOUND_IN_TYPE] = PrintMETHOD_NAME_NOT_FOUND_IN_TYPE;
+    print_message[METHOD_NAME_MISSPELLED] = PrintMETHOD_NAME_MISSPELLED;
     print_message[METHOD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE] = PrintMETHOD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE;
     print_message[METHOD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE] = PrintMETHOD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE;
     print_message[HIDDEN_METHOD_IN_ENCLOSING_CLASS] = PrintHIDDEN_METHOD_IN_ENCLOSING_CLASS;
@@ -387,6 +402,7 @@ void SemanticError::StaticInitializer()
     print_message[INCOMPATIBLE_TYPE_FOR_ASSIGNMENT] = PrintINCOMPATIBLE_TYPE_FOR_ASSIGNMENT;
     print_message[INCOMPATIBLE_TYPE_FOR_BINARY_EXPRESSION] = PrintINCOMPATIBLE_TYPE_FOR_BINARY_EXPRESSION;
     print_message[INCOMPATIBLE_TYPE_FOR_CONDITIONAL_EXPRESSION] = PrintINCOMPATIBLE_TYPE_FOR_CONDITIONAL_EXPRESSION;
+    print_message[VOID_ARRAY] = PrintVOID_ARRAY;
     print_message[VOID_TYPE_IN_EQUALITY_EXPRESSION] = PrintVOID_TYPE_IN_EQUALITY_EXPRESSION;
     print_message[TYPE_NOT_THROWABLE] = PrintTYPE_NOT_THROWABLE;
     print_message[TYPE_NOT_PRIMITIVE] = PrintTYPE_NOT_PRIMITIVE;
@@ -427,6 +443,7 @@ void SemanticError::StaticInitializer()
     print_message[BAD_THROWABLE_EXPRESSION] = PrintBAD_THROWABLE_EXPRESSION;
     print_message[MISPLACED_BREAK_STATEMENT] = PrintMISPLACED_BREAK_STATEMENT;
     print_message[MISPLACED_CONTINUE_STATEMENT] = PrintMISPLACED_CONTINUE_STATEMENT;
+    print_message[MISPLACED_EXPLICIT_CONSTRUCTOR_INVOCATION] = PrintMISPLACED_EXPLICIT_CONSTRUCTOR_INVOCATION;
     print_message[INVALID_CONTINUE_TARGET] = PrintINVALID_CONTINUE_TARGET;
     print_message[NON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD] = PrintNON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD;
     print_message[NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD] = PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD;
@@ -1096,9 +1113,57 @@ void SemanticError::PrintCANNOT_COMPUTE_COLUMNS(ErrorInfo &err, LexStream *lex_s
 }
 
 
+void SemanticError::PrintREDUNDANT_ABSTRACT(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "The use of the \"abstract\" modifier in this context is redundant and strongly discouraged as a matter of style";
+
+    return;
+}
+
+
+void SemanticError::PrintREDUNDANT_FINAL(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "The use of the \"final\" modifier in this context is redundant and strongly discouraged as a matter of style";
+
+    return;
+}
+
+
+void SemanticError::PrintREDUNDANT_PUBLIC(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "The use of the \"public\" modifier in this context is redundant and strongly discouraged as a matter of style";
+
+    return;
+}
+
+
+void SemanticError::PrintREDUNDANT_STATIC(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "The use of the \"static\" modifier in this context is redundant and strongly discouraged as a matter of style";
+
+    return;
+}
+
+
 void SemanticError::PrintEMPTY_DECLARATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
     cout << "An EmptyDeclaration is a deprecated feature that should not be used - \";\" ignored";
+
+    return;
+}
+
+
+void SemanticError::PrintOBSOLESCENT_ABSTRACT(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "Every interface in implicitly abstract. This modifier is obsolete and should not be used in new Java programs";
+
+    return;
+}
+
+
+void SemanticError::PrintOBSOLESCENT_BRACKETS(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "The use of empty bracket pairs following a MethodDeclarator should not be used in new Java programs";
 
     return;
 }
@@ -1784,9 +1849,37 @@ void SemanticError::PrintFIELD_IS_TYPE(ErrorInfo &err, LexStream *lex_stream, Co
 
 void SemanticError::PrintFIELD_NOT_FOUND(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The field named \"";
+    cout << "No field named \"";
     Unicode::Cout(err.insert1);
-    cout << "\" was not found";
+    cout << "\" was found in type \"";
+    if (NotDot(err.insert2))
+    {
+        Unicode::Cout(err.insert2);
+        cout << "/";
+    }
+    Unicode::Cout(err.insert3);
+    cout << "\"";
+
+    return;
+}
+
+
+void SemanticError::PrintFIELD_NAME_MISSPELLED(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "No field named \"";
+    Unicode::Cout(err.insert1);
+    cout << "\" was found in type \"";
+    if (NotDot(err.insert2))
+    {
+        Unicode::Cout(err.insert2);
+        cout << "/";
+    }
+    Unicode::Cout(err.insert3);
+    cout << "\". However, there is an accessible field \"";
+    Unicode::Cout(err.insert4);
+    cout << "\" whose name closely matches the name \"";
+    Unicode::Cout(err.insert1);
+    cout << "\"";
 
     return;
 }
@@ -1842,9 +1935,9 @@ void SemanticError::PrintFIELD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE(ErrorInfo &err
 
 void SemanticError::PrintNAME_NOT_FOUND(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The name \"";
+    cout << "No entity named \"";
     Unicode::Cout(err.insert1);
-    cout << "\" was not found";
+    cout << "\" was found in this environment";
 
     return;
 }
@@ -1875,6 +1968,44 @@ void SemanticError::PrintNAME_NOT_VARIABLE(ErrorInfo &err, LexStream *lex_stream
 void SemanticError::PrintMETHOD_NOT_FOUND(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
     cout << "No match was found for method \"";
+    Unicode::Cout(err.insert1);
+    cout << "\"";
+
+    return;
+}
+
+
+void SemanticError::PrintMETHOD_NAME_NOT_FOUND_IN_TYPE(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "No method named \"";
+    Unicode::Cout(err.insert1);
+    cout << "\" was found in type \"";
+    if (NotDot(err.insert2))
+    {
+        Unicode::Cout(err.insert2);
+        cout << "/";
+    }
+    Unicode::Cout(err.insert3);
+    cout << "\"";
+
+    return;
+}
+
+
+void SemanticError::PrintMETHOD_NAME_MISSPELLED(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "No method named \"";
+    Unicode::Cout(err.insert1);
+    cout << "\" was found in type \"";
+    if (NotDot(err.insert2))
+    {
+        Unicode::Cout(err.insert2);
+        cout << "/";
+    }
+    Unicode::Cout(err.insert3);
+    cout << "\". However, there is an accessible method \"";
+    Unicode::Cout(err.insert4);
+    cout << "\" whose name closely matches the name \"";
     Unicode::Cout(err.insert1);
     cout << "\"";
 
@@ -1942,7 +2073,7 @@ void SemanticError::PrintHIDDEN_METHOD_IN_ENCLOSING_CLASS(ErrorInfo &err, LexStr
     }
     Unicode::Cout(err.insert3);
     cout << "\" is a perfect match for this method call."
-            " However, it is not visible here because a method with the same name is hiding it";
+            " However, it is not visible in this nested class because a method with the same name is hiding it";
 
     return;
 }
@@ -2164,6 +2295,14 @@ void SemanticError::PrintINCOMPATIBLE_TYPE_FOR_CONDITIONAL_EXPRESSION(ErrorInfo 
     }
     Unicode::Cout(err.insert4);
     cout << "\"";
+
+    return;
+}
+
+
+void SemanticError::PrintVOID_ARRAY(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "Arrays of type \"void\" are not legal";
 
     return;
 }
@@ -2637,6 +2776,14 @@ void SemanticError::PrintMISPLACED_BREAK_STATEMENT(ErrorInfo &err, LexStream *le
 void SemanticError::PrintMISPLACED_CONTINUE_STATEMENT(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
     cout << "A \"continue\" statement must be enclosed in a \"while\", \"do\" or \"for\" statement";
+
+    return;
+}
+
+
+void SemanticError::PrintMISPLACED_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "Misplaced explicit constructor invocation";
 
     return;
 }
