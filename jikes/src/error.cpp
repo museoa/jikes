@@ -679,6 +679,7 @@ void SemanticError::InitializeMessageGroups()
 //
 void SemanticError::PrintNamedWarnings()
 {
+    static const char* LEADING = "                      ";
     StaticInitializer();
     for (unsigned i = 0; i < message_groups.Length(); ++i)
     {
@@ -687,9 +688,13 @@ void SemanticError::PrintNamedWarnings()
         static const unsigned SPACE_FOR_NAME = 15;
         printf("+P[no-]%-*s", SPACE_FOR_NAME, group -> name);
         if (strlen(group -> name) >= SPACE_FOR_NAME)
-            printf("\n                      ");
-        printf("warn about %s, %sactivated by +P\n", group -> reason,
-               ((group -> level == NAMED_WEAK_OFF) ? "not " : ""));
+            printf("\n%s", LEADING);
+        printf("warn about %s\n", group -> reason);
+        if (group -> level == NAMED_WEAK_ON ||
+            group -> level == NAMED_STRONG_ON)
+        {
+            printf("%s(on by default)\n", LEADING);
+        }
     }
 }
 
@@ -729,6 +734,10 @@ void SemanticError::EnableDefaultWarnings()
 bool SemanticError::ProcessWarningSwitch(const char* image)
 {
     StaticInitializer();
+
+    // +Pall turns everything on.
+    bool override = (strcmp(image, "all") == 0);
+
     bool enable = true;
     if (strncmp(image, "no-", 3) == 0)
     {
@@ -740,7 +749,7 @@ bool SemanticError::ProcessWarningSwitch(const char* image)
     for (unsigned g = 0; g < message_groups.Length(); ++g)
     {
         MessageGroup* group = message_groups[g];
-        if (strcmp(group -> name, image) == 0)
+        if (override || strcmp(group -> name, image) == 0)
         {
             switch_recognized = true;
             for (unsigned c = 0; c < group -> codes.Length(); ++c)

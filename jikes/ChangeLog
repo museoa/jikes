@@ -1,3 +1,17 @@
+2004-02-29  Elliott Hughes  <enh@acm.org>
+
+	* src/error.cpp: Fix "jikes --help" to show which +P groups are enabled
+	by default, rather than misleadingly trying (and failing) to show what
+	bare +P does. This whole area is something of a mess, so I expect to
+	be back soon.
+	Also add a new +Pall option to allow command-lines of the form "jikes
+	+Pall +Pno-redundant-modifier +Pno-modifier-order +Pno-serial", for
+	people who'd rather enable everything and explicitly disable what they
+	don't like than explicitly enable everything they want.
+	* doc/jikes.1: Document new +Pall option. The whole +P section was
+	rather misleading and inaccurate, so I've rewritten it to correspond
+	jikes' current behavior.
+
 2004-02-28  Elliott Hughes  <enh@acm.org>
 
 	* NEWS: Try to keep track of what I've done, so I don't have to

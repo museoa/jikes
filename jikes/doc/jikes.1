@@ -292,12 +292,16 @@ Jikes (for compatibility).
 .\" Someone should document how this differs from regular search order.
 
 .TP
-\fB\+P\fP[\fIflags\fP]
-Pedantic compilation - issues lots of warnings. This option may be
-listed multiple times, with cumulative effect. With no flags, this
-turns on the default set of pedantic warnings. Specifying a flag will
-then turn on or off a particular warning, depending on the presence of
-the \fIno-\fP prefix. At present, the recognized flags are
+\fB\+P\fP[\fIgroup-name\fP]
+Pedantic compilation - issues lots of warnings.
+With no group name, this
+turns on a default set of pedantic warnings which does not correspond
+to any of the named groups of warnings.
+Specifying a group name turns on or off that particular named group of
+warnings, depending on the presence of the \fIno-\fP prefix. Some named
+groups are enabled by default. These are marked as such in the output
+of \fBjikes --help\fP.
+At present, the recognized group names are
 \fBeffective-java\fP, which warns about the anti-patterns mentioned
 in Joshua Bloch's book "Effective Java";
 \fBmodifier-order\fP, which warns about the recommended ordering of
@@ -315,11 +319,11 @@ naming conventions;
 import statements;
 and \fBunused-package-imports\fP, which warns about unused package
 import statements.
-Only switchcheck and naming-convention are
-included in plain \fB\+P\fP; the others must be asked for by
-name. Multiple \fB\+P\fP options are cumulative in effect. For
+The option \fB+Pall\fP enables all available groups of named warnings,
+but not the anonymous group controlled by \fB+P\fP.
+Multiple \fB\+P\fP options are cumulative in effect. For
 example, to get all pedantic warnings except modifier ordering, use
-\fB\+P \+Pno-modifier-order\fP. To get just warnings about redundant
+\fB\+P \+Pall \+Pno-modifier-order\fP. To get just warnings about redundant
 modifiers, without other pedantic warnings, use
 \fB\+Predundant-modifiers\fP.
 
