@@ -1,3 +1,8 @@
+2001-05-11  Chris Abbey  <cabbey@bresnanlink.net>
+
+	* jikes.spec: takes Dave's name out so people stop claiming
+	to be him. Also update the version to 1.14
+
 2001-05-10  Chris Abbey  <cabbey@bresnanlink.net>
 
 	* src/option.cpp (Option::Option): make sure classpath,
