@@ -1,3 +1,47 @@
+2004-03-25  Eric Blake  <ebb9@byu.net>
+
+	* configure.ac (AC_CXX_RTTI): Compilers have improved in 2 years,
+	don't cripple the RTTI check.
+	* aclocal.m4: Regenerate with automake 1.8.3.
+	* Makefile.in: Regenerate.
+	* configure: Ditto.
+	* doc/Makefile.in: Ditto.
+	* src/Makefile.in: Ditto.
+
+	* src/stream.h (TokenIndex, BadToken): Move to...
+	* src/platform.h (TokenIndex, BAD_TOKEN): ...here. This reduces
+	the number of files that depend on stream.h.
+	* src/ast.cpp: Use the new TokenIndex.
+	* src/ast.h: Ditto.
+	* src/body.cpp: Ditto.
+	* src/class.cpp: Ditto.
+	* src/control.cpp: Ditto.
+	* src/decl.cpp: Ditto.
+	* src/depend.cpp: Ditto.
+	* src/diagnose.cpp: Ditto.
+	* src/diagnose.h: Ditto.
+	* src/error.cpp: Ditto.
+	* src/error.h: Ditto.
+	* src/expr.cpp: Ditto.
+	* src/incrmnt.cpp: Ditto.
+	* src/init.cpp: Ditto.
+	* src/java.g: Ditto.
+	* src/lpginput.h: Ditto.
+	* src/modifier.cpp: Ditto.
+	* src/option.cpp: Ditto.
+	* src/parser.cpp: Ditto.
+	* src/parser.h: Ditto.
+	* src/scanner.cpp: Ditto.
+	* src/scanner.h: Ditto.
+	* src/semantic.h: Ditto.
+	* src/stream.cpp: Ditto.
+	* src/symbol.cpp: Ditto.
+	* src/symbol.h: Ditto.
+	* src/system.cpp: Ditto.
+	* src/table.h: Ditto.
+	* src/unparse.cpp: Ditto.
+	* src/javaact.cpp: Regenerate.
+
 2004-03-23  Eric Blake  <ebb9@byu.net>
 
 	* src/ast.h (AstEnumDeclaration, AstEnumConstant),

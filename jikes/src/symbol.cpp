@@ -939,6 +939,13 @@ DirectorySymbol* FileSymbol::OutputDirectory()
 }
 
 
+FileSymbol::~FileSymbol()
+{
+    delete [] file_name;
+    delete lex_stream;
+}
+
+
 void FileSymbol::SetFileName()
 {
     PathSymbol* path_symbol = PathSym();
@@ -1032,6 +1039,23 @@ void FileSymbol::CleanUp()
 }
 
 
+FileLocation::FileLocation(LexStream* lex_stream, TokenIndex token_index)
+{
+    char* file_name = lex_stream -> FileName();
+    unsigned length = lex_stream -> FileNameLength();
+    location = new wchar_t[length + 13];
+    for (unsigned i = 0; i < length; i++)
+        location[i] = (wchar_t) file_name[i];
+    location[length++] = U_COLON;
+
+    IntToWstring line_no(lex_stream -> Line(token_index));
+
+    for (int j = 0; j < line_no.Length(); j++)
+        location[length++] = line_no.String()[j];
+    location[length] = U_NULL;
+}
+
+
 void TypeSymbol::SetClassName()
 {
     size_t length;
@@ -1078,8 +1102,7 @@ void TypeSymbol::SetClassName()
 }
 
 
-void TypeSymbol::ProcessNestedTypeSignatures(Semantic* sem,
-                                             LexStream::TokenIndex tok)
+void TypeSymbol::ProcessNestedTypeSignatures(Semantic* sem, TokenIndex tok)
 {
     for (unsigned i = 0; i < NumNestedTypeSignatures(); i++)
     {
@@ -1095,8 +1118,7 @@ void TypeSymbol::ProcessNestedTypeSignatures(Semantic* sem,
 }
 
 
-void MethodSymbol::ProcessMethodThrows(Semantic* sem,
-                                       LexStream::TokenIndex tok)
+void MethodSymbol::ProcessMethodThrows(Semantic* sem, TokenIndex tok)
 {
     if (throws_signatures)
     {
@@ -1224,7 +1246,7 @@ void MethodSymbol::SetSignature(Control& control, TypeSymbol* placeholder)
 
 
 void MethodSymbol::ProcessMethodSignature(Semantic* sem,
-                                          LexStream::TokenIndex token_location)
+                                          TokenIndex token_location)
 {
     if (! type_)
     {
@@ -1348,7 +1370,7 @@ void VariableSymbol::SetLocation()
 }
 
 void VariableSymbol::ProcessVariableSignature(Semantic* sem,
-                                              LexStream::TokenIndex token_location)
+                                              TokenIndex token_location)
 {
     if (! type_)
     {
@@ -1906,7 +1928,7 @@ MethodSymbol* TypeSymbol::GetReadAccessMethod(MethodSymbol* member,
         //
         // Use the location of the class name for all elements of this method.
         //
-        LexStream::TokenIndex loc = declaration -> identifier_token;
+        TokenIndex loc = declaration -> identifier_token;
 
         unsigned parameter_count = member -> NumFormalParameters();
 
@@ -2168,7 +2190,7 @@ MethodSymbol* TypeSymbol::GetReadAccessConstructor(MethodSymbol* ctor)
         AstMethodDeclarator* declarator =
             ((AstConstructorDeclaration*) declaration) -> constructor_declarator;
         assert(declarator);
-        LexStream::TokenIndex loc = declarator -> identifier_token;
+        TokenIndex loc = declarator -> identifier_token;
 
         AstMethodDeclarator* method_declarator =
             ast_pool -> GenMethodDeclarator();
@@ -2324,7 +2346,7 @@ MethodSymbol* TypeSymbol::GetReadAccessMethod(VariableSymbol* member,
         //
         // Use the location of the class name for all elements of this method.
         //
-        LexStream::TokenIndex loc = declaration -> identifier_token;
+        TokenIndex loc = declaration -> identifier_token;
 
         //
         // Add the method instead of inserting it, so it is not an overload
@@ -2492,7 +2514,7 @@ MethodSymbol* TypeSymbol::GetWriteAccessMethod(VariableSymbol* member,
         //
         // Use the location of the class name for all elements of this method.
         //
-        LexStream::TokenIndex loc = declaration -> identifier_token;
+        TokenIndex loc = declaration -> identifier_token;
 
         //
         // Add the method instead of inserting it, so it is not an overload
@@ -2661,7 +2683,7 @@ TypeSymbol* TypeSymbol::GetPlaceholderType()
         //
         Semantic* sem = semantic_environment -> sem;
         sem -> state_stack.Push(semantic_environment);
-        LexStream::TokenIndex loc = declaration -> identifier_token;
+        TokenIndex loc = declaration -> identifier_token;
         Control& control = sem -> control;
         StoragePool* ast_pool = sem -> compilation_unit -> ast_pool;
 

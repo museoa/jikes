@@ -11,7 +11,6 @@
 #define error_INCLUDED
 
 #include "platform.h"
-#include "stream.h"
 #include "tuple.h"
 #include "jikesapi.h"
 
@@ -21,6 +20,7 @@ namespace Jikes { // Open namespace Jikes block
 
 class Control;
 class LexStream;
+class FileSymbol;
 class SymbolSet;
 class Semantic;
 class SemanticError;
@@ -91,8 +91,8 @@ private:
     int right_line_no;
     int right_column_no;
 
-    LexStream::TokenIndex left_token;
-    LexStream::TokenIndex right_token;
+    TokenIndex left_token;
+    TokenIndex right_token;
 
     enum { MAX_INSERTS = 9 };
     const wchar_t* insert[MAX_INSERTS];
@@ -452,7 +452,7 @@ public:
         // It is not used as an index into
         // the tables that are indexed by the above... no point
         // wasting space in those tables for it.
-        END,
+        END
     };
 
     static void StaticInitializer();
@@ -464,12 +464,12 @@ public:
     static void PrintNamedWarnings();
     static void EnableDefaultWarnings();
 
-    void Report(SemanticErrorKind, LexStream::TokenIndex,
-                LexStream::TokenIndex, const wchar_t* = NULL,
+    void Report(SemanticErrorKind, TokenIndex, TokenIndex,
                 const wchar_t* = NULL, const wchar_t* = NULL,
                 const wchar_t* = NULL, const wchar_t* = NULL,
                 const wchar_t* = NULL, const wchar_t* = NULL,
-                const wchar_t* = NULL, const wchar_t* = NULL);
+                const wchar_t* = NULL, const wchar_t* = NULL,
+                const wchar_t* = NULL);
 
     SemanticError(Control&, FileSymbol*);
     ~SemanticError()
@@ -478,8 +478,8 @@ public:
             delete [] buffer[i];
     }
 
-    int num_errors,
-        num_warnings;
+    int num_errors;
+    int num_warnings;
 
     void EnteringClone() { clone_count++; }
     void ExitingClone() { clone_count--; }

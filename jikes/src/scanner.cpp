@@ -144,7 +144,7 @@ void Scanner::Initialize(FileSymbol* file_symbol)
         LexStream::Comment* current_comment = &(lex -> comment_stream.Next());
         current_comment -> string = NULL;
         current_comment -> length = 0;
-        current_comment -> previous_token = LexStream::BadToken();
+        current_comment -> previous_token = BAD_TOKEN;
         current_comment -> location = 0;
     }
 #endif // JIKES_DEBUG
@@ -247,7 +247,7 @@ void Scanner::Scan()
     //
     assert(current_token_index == lex -> token_stream.Length() - 1);
 
-    for (LexStream::TokenIndex left_brace = brace_stack.Top();
+    for (TokenIndex left_brace = brace_stack.Top();
          left_brace; left_brace = brace_stack.Top())
     {
         lex -> token_stream[left_brace].SetRightBrace(current_token_index);
@@ -1535,7 +1535,7 @@ void Scanner::ClassifyRbrace()
     // When its matching right brace in encountered, we pop the left brace
     // and make it point to its matching right brace.
     //
-    LexStream::TokenIndex left_brace = brace_stack.Top();
+    TokenIndex left_brace = brace_stack.Top();
     if (left_brace) // This right brace is matched by a left one
     {
         lex -> token_stream[left_brace].SetRightBrace(current_token_index);

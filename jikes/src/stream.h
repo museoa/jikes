@@ -194,12 +194,9 @@ protected:
 //
 class LexStream : public Stream
 {
-
     friend class StreamError;
 
 public:
-    typedef unsigned TypeIndex;
-    typedef unsigned TokenIndex;
     typedef unsigned CommentIndex;
     enum { LEX_INFINITY = INT_MAX }; // the largest value for TokenIndex
 
@@ -218,8 +215,6 @@ public:
         return index = (index < end_token ? Next(index)
                         : token_stream.Length() - 1);
     }
-
-    inline static TokenIndex BadToken() { return 0; }
 
     inline unsigned Kind(TokenIndex i)
     {

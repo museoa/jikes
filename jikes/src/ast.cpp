@@ -1246,6 +1246,9 @@ Ast* AstAssignmentExpression::Clone(StoragePool* ast_pool)
 
 
 #ifdef JIKES_DEBUG
+
+#include "stream.h"
+
 //
 // These methods allow printing the Ast structure to Coutput (usually stdout).
 //
@@ -1298,11 +1301,8 @@ void AstPrimitiveType::Print(LexStream& lex_stream)
 void AstBrackets::Print(LexStream& lex_stream)
 {
     Coutput << '#' << id << " (Brackets, dims=" << dims << "):  ";
-    for (LexStream::TokenIndex i = left_bracket_token;
-         i <= right_bracket_token; i++)
-    {
+    for (TokenIndex i = left_bracket_token; i <= right_bracket_token; i++)
         Coutput << lex_stream.NameString(i);
-    }
     Coutput << endl;
 }
 
@@ -2281,4 +2281,3 @@ void AstAssignmentExpression::Print(LexStream& lex_stream)
 #ifdef HAVE_JIKES_NAMESPACE
 } // Close namespace Jikes block
 #endif
-

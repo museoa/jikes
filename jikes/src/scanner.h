@@ -43,7 +43,7 @@ private:
     bool deprecated; // true if the next token should be marked deprecated
 
     LexStream::Token* current_token;
-    LexStream::TokenIndex current_token_index;
+    TokenIndex current_token_index;
 
     void Initialize(FileSymbol*);
     void Scan();
@@ -68,20 +68,20 @@ private:
     class BraceStack
     {
     public:
-        void Push(LexStream::TokenIndex brace) { table.Next() = brace; }
+        void Push(TokenIndex brace) { table.Next() = brace; }
         void Pop()
         {
             if (table.Length() > 0)
                 table.Reset(table.Length() - 1);
         }
         int Size() { return table.Length(); }
-        LexStream::TokenIndex Top()
+        TokenIndex Top()
         {
             return table.Length() > 0 ? table[table.Length() - 1] : 0;
         }
 
     private:
-        Tuple<LexStream::TokenIndex> table;
+        Tuple<TokenIndex> table;
     } brace_stack;
 
     void (Scanner::*classify_token[128 + 1])();

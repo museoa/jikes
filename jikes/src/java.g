@@ -802,6 +802,7 @@ void Parser::InitRuleAction()
 #include "platform.h"
 #include "parser.h"
 #include "ast.h"
+#include "stream.h"
 
 #undef HEADERS
 #include "javaact.h"

@@ -11,7 +11,6 @@
 #define symbol_INCLUDED
 
 #include "platform.h"
-#include "stream.h"
 #include "lookup.h"
 #include "access.h"
 #include "tuple.h"
@@ -33,6 +32,7 @@ class AstVariableDeclarator;
 class ExpandedTypeTable;
 class ExpandedFieldTable;
 class ExpandedMethodTable;
+class LexStream;
 class SymbolTable;
 class SymbolSet;
 class SymbolMap;
@@ -226,11 +226,7 @@ public:
          Symbol::_kind = _FILE;
     }
 
-    virtual ~FileSymbol()
-    {
-        delete [] file_name;
-        delete lex_stream;
-    }
+    virtual ~FileSymbol();
 
     FileSymbol* Clone()
     {
@@ -321,24 +317,9 @@ class FileLocation
 public:
     wchar_t* location;
 
-    FileLocation (LexStream* lex_stream, LexStream::TokenIndex token_index)
-    {
-        char* file_name = lex_stream -> FileName();
-        unsigned length = lex_stream -> FileNameLength();
-        location = new wchar_t[length + 13];
-        for (unsigned i = 0; i < length; i++) {
-            location[i] = (wchar_t) file_name[i];
-        }
-        location[length++] = U_COLON;
+    FileLocation(LexStream* lex_stream, TokenIndex token_index);
 
-        IntToWstring line_no(lex_stream -> Line(token_index));
-
-        for (int j = 0; j < line_no.Length(); j++)
-            location[length++] = line_no.String()[j];
-        location[length] = U_NULL;
-    }
-
-    FileLocation (FileSymbol* file_symbol)
+    FileLocation(FileSymbol* file_symbol)
     {
         char* file_name = file_symbol -> FileName();
         unsigned length = file_symbol -> FileNameLength();
@@ -515,8 +496,8 @@ public:
         type_ = _type;
     }
 
-    void ProcessMethodSignature(Semantic*, LexStream::TokenIndex);
-    void ProcessMethodThrows(Semantic*, LexStream::TokenIndex);
+    void ProcessMethodSignature(Semantic*, TokenIndex);
+    void ProcessMethodThrows(Semantic*, TokenIndex);
 
     TypeSymbol* Type()
     {
@@ -1215,7 +1196,7 @@ public:
     void MarkNonCircular() { status &= ~ CIRCULAR; }
     bool Circular() const { return (status & CIRCULAR) != 0; }
 
-    void ProcessNestedTypeSignatures(Semantic*, LexStream::TokenIndex);
+    void ProcessNestedTypeSignatures(Semantic*, TokenIndex);
 
     bool NestedTypesProcessed() { return nested_type_signatures == NULL; }
 
@@ -1510,7 +1491,7 @@ public:
         signature = type_ -> signature;
     }
 
-    void ProcessVariableSignature(Semantic*, LexStream::TokenIndex);
+    void ProcessVariableSignature(Semantic*, TokenIndex);
 
     TypeSymbol* Type()
     {

@@ -11,6 +11,7 @@
 #include "semantic.h"
 #include "control.h"
 #include "option.h"
+#include "stream.h"
 
 #ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes { // Open namespace Jikes block
@@ -133,7 +134,7 @@ void Semantic::ProcessBlock(Ast* stmt)
     //     l: a = b;
     //     l: b = c;
     //
-    if (block_body -> label_opt != lex_stream -> BadToken())
+    if (block_body -> label_opt != BAD_TOKEN)
     {
         NameSymbol* name_symbol =
             lex_stream -> NameSymbol(block_body -> label_opt);
@@ -2427,7 +2428,7 @@ void Semantic::ProcessConstructorBody(AstConstructorDeclaration* constructor_dec
     }
     else if (super_type)
     {
-        LexStream::TokenIndex loc = constructor_block -> LeftToken();
+        TokenIndex loc = constructor_block -> LeftToken();
         super_call = compilation_unit -> ast_pool -> GenSuperCall();
         super_call -> super_token = loc;
         super_call -> arguments =

@@ -14,6 +14,7 @@
 #include "diagnose.h"
 #include "option.h"
 #include "jikesapi.h"
+#include "stream.h"
 
 #ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes { // Open namespace Jikes block
@@ -249,8 +250,7 @@ SemanticError::SemanticError(Control& control_,
 // the message into an array: error.
 //
 void SemanticError::Report(SemanticErrorKind msg_code,
-                           LexStream::TokenIndex left_token,
-                           LexStream::TokenIndex right_token,
+                           TokenIndex left_token, TokenIndex right_token,
                            const wchar_t* insert1, const wchar_t* insert2,
                            const wchar_t* insert3, const wchar_t* insert4,
                            const wchar_t* insert5, const wchar_t* insert6,
@@ -940,7 +940,7 @@ int SemanticError::PrintMessages()
             name[length] = U_NULL;
             control.system_semantic ->
                 ReportSemError(SemanticError::CANNOT_REOPEN_FILE,
-                               LexStream::BadToken(), name);
+                               BAD_TOKEN, name);
             delete [] name;
         }
     }

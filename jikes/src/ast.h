@@ -11,7 +11,6 @@
 #define ast_INCLUDED
 
 #include "platform.h"
-#include "stream.h"
 #include "depend.h"
 
 #ifdef HAVE_JIKES_NAMESPACE
@@ -21,6 +20,7 @@ namespace Jikes { // Open namespace Jikes block
 
 class Parser;
 class SemanticEnvironment;
+class LexStream;
 class LiteralValue;
 class Symbol;
 class BlockSymbol;
@@ -626,8 +626,8 @@ public:
     //
     // These functions return the left and right tokens of this tree branch.
     //
-    virtual LexStream::TokenIndex LeftToken() = 0;
-    virtual LexStream::TokenIndex RightToken() = 0;
+    virtual TokenIndex LeftToken() = 0;
+    virtual TokenIndex RightToken() = 0;
 };
 
 
@@ -723,14 +723,8 @@ public:
     virtual void Unparse(Ostream&, LexStream*) { assert(false); }
 #endif // JIKES_DEBUG
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return element -> LeftToken();
-    }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return element -> RightToken();
-    }
+    virtual TokenIndex LeftToken() { return element -> LeftToken(); }
+    virtual TokenIndex RightToken() { return element -> RightToken(); }
 };
 
 
@@ -840,7 +834,7 @@ public:
     {}
     ~AstType() {}
 
-    virtual LexStream::TokenIndex IdentifierToken() = 0;
+    virtual TokenIndex IdentifierToken() = 0;
 };
 
 
@@ -873,9 +867,9 @@ public:
     BlockSymbol* block_symbol;
     unsigned nesting_level;
 
-    LexStream::TokenIndex label_opt;
-    LexStream::TokenIndex left_brace_token;
-    LexStream::TokenIndex right_brace_token;
+    TokenIndex label_opt;
+    TokenIndex left_brace_token;
+    TokenIndex right_brace_token;
 
     bool no_braces;
 
@@ -917,8 +911,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return left_brace_token; }
-    virtual LexStream::TokenIndex RightToken() { return right_brace_token; }
+    virtual TokenIndex LeftToken() { return left_brace_token; }
+    virtual TokenIndex RightToken() { return right_brace_token; }
 
 protected:
     void CloneBlock(StoragePool*, AstBlock*);
@@ -932,7 +926,7 @@ class AstName : public AstExpression
 {
 public:
     AstName* base_opt;
-    LexStream::TokenIndex identifier_token;
+    TokenIndex identifier_token;
 
     //
     // When a name refers to a member in an enclosing scope, it is mapped
@@ -940,7 +934,7 @@ public:
     //
     AstExpression* resolution_opt;
 
-    inline AstName(LexStream::TokenIndex token)
+    inline AstName(TokenIndex token)
         : AstExpression(NAME)
         , identifier_token(token)
     {}
@@ -953,11 +947,11 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken()
     {
         return base_opt ? base_opt -> LeftToken() : identifier_token;
     }
-    virtual LexStream::TokenIndex RightToken() { return identifier_token; }
+    virtual TokenIndex RightToken() { return identifier_token; }
 };
 
 
@@ -977,9 +971,9 @@ public:
 class AstPrimitiveType : public AstType
 {
 public:
-    LexStream::TokenIndex primitive_kind_token;
+    TokenIndex primitive_kind_token;
 
-    inline AstPrimitiveType(AstKind k, LexStream::TokenIndex token)
+    inline AstPrimitiveType(AstKind k, TokenIndex token)
         : AstType(k, PRIMITIVE_TYPE)
         , primitive_kind_token(token)
     {}
@@ -992,12 +986,9 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return primitive_kind_token; }
-    virtual LexStream::TokenIndex RightToken() { return primitive_kind_token; }
-    virtual LexStream::TokenIndex IdentifierToken()
-    {
-        return primitive_kind_token;
-    }
+    virtual TokenIndex LeftToken() { return primitive_kind_token; }
+    virtual TokenIndex RightToken() { return primitive_kind_token; }
+    virtual TokenIndex IdentifierToken() { return primitive_kind_token; }
 };
 
 
@@ -1007,12 +998,12 @@ public:
 class AstBrackets : public Ast
 {
 public:
-    LexStream::TokenIndex left_bracket_token;
-    LexStream::TokenIndex right_bracket_token;
+    TokenIndex left_bracket_token;
+    TokenIndex right_bracket_token;
 
     unsigned dims;
 
-    inline AstBrackets(LexStream::TokenIndex l, LexStream::TokenIndex r)
+    inline AstBrackets(TokenIndex l, TokenIndex r)
         : Ast(BRACKETS)
         , left_bracket_token(l)
         , right_bracket_token(r)
@@ -1027,8 +1018,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return left_bracket_token; }
-    virtual LexStream::TokenIndex RightToken() { return right_bracket_token; }
+    virtual TokenIndex LeftToken() { return left_bracket_token; }
+    virtual TokenIndex RightToken() { return right_bracket_token; }
 };
 
 
@@ -1066,15 +1057,9 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return type -> LeftToken(); }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return brackets -> right_bracket_token;
-    }
-    virtual LexStream::TokenIndex IdentifierToken()
-    {
-        return type -> IdentifierToken();
-    }
+    virtual TokenIndex LeftToken() { return type -> LeftToken(); }
+    virtual TokenIndex RightToken() { return brackets -> right_bracket_token; }
+    virtual TokenIndex IdentifierToken() { return type -> IdentifierToken(); }
 };
 
 
@@ -1086,13 +1071,13 @@ public:
 class AstWildcard : public AstType
 {
 public:
-    LexStream::TokenIndex question_token;
+    TokenIndex question_token;
     // 0 or 1 of the next two fields, but never both
-    LexStream::TokenIndex extends_token_opt;
-    LexStream::TokenIndex super_token_opt;
+    TokenIndex extends_token_opt;
+    TokenIndex super_token_opt;
     AstType* bounds_opt; // AstArrayType, AstTypeName
 
-    inline AstWildcard(LexStream::TokenIndex t)
+    inline AstWildcard(TokenIndex t)
         : AstType(WILDCARD)
         , question_token(t)
     {}
@@ -1105,12 +1090,12 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return question_token; }
-    virtual LexStream::TokenIndex RightToken()
+    virtual TokenIndex LeftToken() { return question_token; }
+    virtual TokenIndex RightToken()
     {
         return bounds_opt ? bounds_opt -> RightToken() : question_token;
     }
-    virtual LexStream::TokenIndex IdentifierToken() { return question_token; }
+    virtual TokenIndex IdentifierToken() { return question_token; }
 };
 
 
@@ -1127,11 +1112,10 @@ class AstTypeArguments : public Ast
     AstArray<AstType*>* type_arguments;
 
 public:
-    LexStream::TokenIndex left_angle_token;
-    LexStream::TokenIndex right_angle_token;
+    TokenIndex left_angle_token;
+    TokenIndex right_angle_token;
 
-    inline AstTypeArguments(StoragePool* p,
-                            LexStream::TokenIndex l, LexStream::TokenIndex r)
+    inline AstTypeArguments(StoragePool* p, TokenIndex l, TokenIndex r)
         : Ast(TYPE_ARGUMENTS)
         , pool(p)
         , left_angle_token(l)
@@ -1155,8 +1139,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return left_angle_token; }
-    virtual LexStream::TokenIndex RightToken() { return right_angle_token; }
+    virtual TokenIndex LeftToken() { return left_angle_token; }
+    virtual TokenIndex RightToken() { return right_angle_token; }
 };
 
 
@@ -1195,16 +1179,16 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken()
     {
         return base_opt ? base_opt -> LeftToken() : name -> LeftToken();
     }
-    virtual LexStream::TokenIndex RightToken()
+    virtual TokenIndex RightToken()
     {
         return type_arguments_opt ? type_arguments_opt -> right_angle_token
             :  name -> identifier_token;
     }
-    virtual LexStream::TokenIndex IdentifierToken()
+    virtual TokenIndex IdentifierToken()
     {
         return name -> identifier_token;
     }
@@ -1218,7 +1202,7 @@ public:
 class AstMemberValuePair : public Ast
 {
 public:
-    LexStream::TokenIndex identifier_token_opt;
+    TokenIndex identifier_token_opt;
     AstMemberValue* member_value;
 
     MethodSymbol* name_symbol; // The annotation method this value maps to.
@@ -1235,15 +1219,12 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken()
     {
         return identifier_token_opt ? identifier_token_opt
             : member_value -> LeftToken();
     }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return member_value -> RightToken();
-    }
+    virtual TokenIndex RightToken() { return member_value -> RightToken(); }
 };
 
 
@@ -1257,9 +1238,9 @@ class AstAnnotation : public AstMemberValue
     AstArray<AstMemberValuePair*>* member_value_pairs;
 
 public:
-    LexStream::TokenIndex at_token;
+    TokenIndex at_token;
     AstName* name;
-    LexStream::TokenIndex right_paren_token_opt;
+    TokenIndex right_paren_token_opt;
 
     inline AstAnnotation(StoragePool* p)
         : AstMemberValue(ANNOTATION)
@@ -1285,8 +1266,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return at_token; }
-    virtual LexStream::TokenIndex RightToken()
+    virtual TokenIndex LeftToken() { return at_token; }
+    virtual TokenIndex RightToken()
     {
         return right_paren_token_opt ? right_paren_token_opt
             : name -> identifier_token;
@@ -1301,9 +1282,9 @@ public:
 class AstModifierKeyword : public Ast
 {
 public:
-    LexStream::TokenIndex modifier_token;
+    TokenIndex modifier_token;
 
-    AstModifierKeyword(LexStream::TokenIndex token)
+    AstModifierKeyword(TokenIndex token)
         : Ast(MODIFIER_KEYWORD)
         , modifier_token(token)
     {}
@@ -1316,8 +1297,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return modifier_token; }
-    virtual LexStream::TokenIndex RightToken() { return modifier_token; }
+    virtual TokenIndex LeftToken() { return modifier_token; }
+    virtual TokenIndex RightToken() { return modifier_token; }
 };
 
 
@@ -1332,7 +1313,7 @@ class AstModifiers : public Ast
     
 public:
     // Allows sorting between static and non-static declarations.
-    LexStream::TokenIndex static_token_opt;
+    TokenIndex static_token_opt;
 
     inline AstModifiers(StoragePool* p)
         : Ast(MODIFIERS)
@@ -1360,11 +1341,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return Modifier(0) -> LeftToken();
-    }
-    virtual LexStream::TokenIndex RightToken()
+    virtual TokenIndex LeftToken() { return Modifier(0) -> LeftToken(); }
+    virtual TokenIndex RightToken()
     {
         return Modifier(NumModifiers() - 1) -> RightToken();
     }
@@ -1379,9 +1357,9 @@ class AstPackageDeclaration : public Ast
 {
 public:
     AstModifiers* modifiers_opt;
-    LexStream::TokenIndex package_token;
+    TokenIndex package_token;
     AstName* name;
-    LexStream::TokenIndex semicolon_token;
+    TokenIndex semicolon_token;
 
     inline AstPackageDeclaration()
         : Ast(PACKAGE)
@@ -1395,11 +1373,11 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken()
     {
         return modifiers_opt ? modifiers_opt -> LeftToken() : package_token;
     }
-    virtual LexStream::TokenIndex RightToken() { return semicolon_token; }
+    virtual TokenIndex RightToken() { return semicolon_token; }
 };
 
 
@@ -1409,11 +1387,11 @@ public:
 class AstImportDeclaration : public Ast
 {
 public:
-    LexStream::TokenIndex import_token;
-    LexStream::TokenIndex static_token_opt;
+    TokenIndex import_token;
+    TokenIndex static_token_opt;
     AstName* name;
-    LexStream::TokenIndex star_token_opt;
-    LexStream::TokenIndex semicolon_token;
+    TokenIndex star_token_opt;
+    TokenIndex semicolon_token;
 
     inline AstImportDeclaration()
         : Ast(IMPORT)
@@ -1427,8 +1405,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return import_token; }
-    virtual LexStream::TokenIndex RightToken() { return semicolon_token; }
+    virtual TokenIndex LeftToken() { return import_token; }
+    virtual TokenIndex RightToken() { return semicolon_token; }
 };
 
 
@@ -1495,7 +1473,7 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken()
     {
         if (package_declaration_opt)
             return package_declaration_opt -> package_token;
@@ -1505,7 +1483,7 @@ public:
             return TypeDeclaration(0) -> LeftToken();
         return 0;
     }
-    virtual LexStream::TokenIndex RightToken()
+    virtual TokenIndex RightToken()
     {
         if (NumTypeDeclarations())
             return TypeDeclaration(NumTypeDeclarations() - 1) -> RightToken();
@@ -1525,9 +1503,9 @@ public:
 class AstEmptyDeclaration : public AstDeclaredType
 {
 public:
-    LexStream::TokenIndex semicolon_token;
+    TokenIndex semicolon_token;
 
-    inline AstEmptyDeclaration(LexStream::TokenIndex token)
+    inline AstEmptyDeclaration(TokenIndex token)
         : AstDeclaredType(EMPTY_DECLARATION)
         , semicolon_token(token)
     {}
@@ -1540,8 +1518,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return semicolon_token; }
-    virtual LexStream::TokenIndex RightToken() { return semicolon_token; }
+    virtual TokenIndex LeftToken() { return semicolon_token; }
+    virtual TokenIndex RightToken() { return semicolon_token; }
 };
 
 
@@ -1588,13 +1566,13 @@ public:
     // including enum constants.
     //
     AstDeclaredType* owner;
-    LexStream::TokenIndex identifier_token;
+    TokenIndex identifier_token;
 
     //
     // The actual delimiters of the class body.
     //
-    LexStream::TokenIndex left_brace_token;
-    LexStream::TokenIndex right_brace_token;
+    TokenIndex left_brace_token;
+    TokenIndex right_brace_token;
 
     inline AstClassBody(StoragePool* p)
         : Ast(CLASS_BODY)
@@ -1743,8 +1721,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return left_brace_token; }
-    virtual LexStream::TokenIndex RightToken() { return right_brace_token; }
+    virtual TokenIndex LeftToken() { return left_brace_token; }
+    virtual TokenIndex RightToken() { return right_brace_token; }
 };
 
 
@@ -1757,11 +1735,11 @@ class AstTypeParameter : public Ast
     AstArray<AstTypeName*>* bounds;
 
 public:
-    LexStream::TokenIndex identifier_token;
+    TokenIndex identifier_token;
 
     TypeSymbol* symbol;
 
-    inline AstTypeParameter(StoragePool* p, LexStream::TokenIndex token)
+    inline AstTypeParameter(StoragePool* p, TokenIndex token)
         : Ast(TYPE_PARAM)
         , pool(p)
         , identifier_token(token)
@@ -1780,8 +1758,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return identifier_token; }
-    virtual LexStream::TokenIndex RightToken()
+    virtual TokenIndex LeftToken() { return identifier_token; }
+    virtual TokenIndex RightToken()
     {
         return NumBounds() ? Bound(NumBounds() - 1) -> RightToken()
             : identifier_token;
@@ -1799,8 +1777,8 @@ class AstTypeParameters : public Ast
     AstArray<AstTypeParameter*>* parameters;
 
 public:
-    LexStream::TokenIndex left_angle_token;
-    LexStream::TokenIndex right_angle_token;
+    TokenIndex left_angle_token;
+    TokenIndex right_angle_token;
 
     inline AstTypeParameters(StoragePool* p)
         : Ast(PARAM_LIST)
@@ -1826,8 +1804,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return left_angle_token; }
-    virtual LexStream::TokenIndex RightToken() { return right_angle_token; }
+    virtual TokenIndex LeftToken() { return left_angle_token; }
+    virtual TokenIndex RightToken() { return right_angle_token; }
 };
 
 
@@ -1840,7 +1818,7 @@ class AstClassDeclaration : public AstDeclaredType
     AstArray<AstTypeName*>* interfaces;
 
 public:
-    LexStream::TokenIndex class_token;
+    TokenIndex class_token;
     AstTypeParameters* type_parameters_opt;
     AstTypeName* super_opt;
 
@@ -1865,14 +1843,11 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken()
     {
         return modifiers_opt ? modifiers_opt -> LeftToken() : class_token;
     }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return class_body -> right_brace_token;
-    }
+    virtual TokenIndex RightToken() { return class_body -> right_brace_token; }
 };
 
 
@@ -1885,8 +1860,8 @@ class AstArrayInitializer : public AstMemberValue
     AstArray<AstMemberValue*>* variable_initializers;
 
 public:
-    LexStream::TokenIndex left_brace_token;
-    LexStream::TokenIndex right_brace_token;
+    TokenIndex left_brace_token;
+    TokenIndex right_brace_token;
 
     inline AstArrayInitializer(StoragePool* p)
         : AstMemberValue(ARRAY_INITIALIZER)
@@ -1912,8 +1887,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return left_brace_token; }
-    virtual LexStream::TokenIndex RightToken() { return right_brace_token; }
+    virtual TokenIndex LeftToken() { return left_brace_token; }
+    virtual TokenIndex RightToken() { return right_brace_token; }
 };
 
 
@@ -1924,7 +1899,7 @@ public:
 class AstVariableDeclaratorId : public Ast
 {
 public:
-    LexStream::TokenIndex identifier_token;
+    TokenIndex identifier_token;
     AstBrackets* brackets_opt;
 
     inline AstVariableDeclaratorId()
@@ -1944,8 +1919,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return identifier_token; }
-    virtual LexStream::TokenIndex RightToken()
+    virtual TokenIndex LeftToken() { return identifier_token; }
+    virtual TokenIndex RightToken()
     {
         return brackets_opt ? brackets_opt -> right_bracket_token
             : identifier_token;
@@ -1985,11 +1960,11 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken()
     {
         return variable_declarator_name -> LeftToken();
     }
-    virtual LexStream::TokenIndex RightToken()
+    virtual TokenIndex RightToken()
     {
         return variable_initializer_opt
             ? variable_initializer_opt -> RightToken()
@@ -2018,7 +1993,7 @@ public:
     };
 
     AstType* type;
-    LexStream::TokenIndex semicolon_token;
+    TokenIndex semicolon_token;
 
     inline AstFieldDeclaration(StoragePool* p)
         : AstDeclared(FIELD)
@@ -2046,12 +2021,12 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken()
     {
         return modifiers_opt ? modifiers_opt -> LeftToken()
             : type -> LeftToken();
     }
-    virtual LexStream::TokenIndex RightToken() { return semicolon_token; }
+    virtual TokenIndex RightToken() { return semicolon_token; }
 };
 
 
@@ -2063,7 +2038,7 @@ class AstFormalParameter : public Ast
 public:
     AstModifiers* modifiers_opt;
     AstType* type;
-    LexStream::TokenIndex ellipsis_token_opt;
+    TokenIndex ellipsis_token_opt;
     AstVariableDeclarator* formal_declarator;
 
     inline AstFormalParameter()
@@ -2078,12 +2053,12 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken()
     {
         return modifiers_opt ? modifiers_opt -> LeftToken()
             : type -> LeftToken();
     }
-    virtual LexStream::TokenIndex RightToken()
+    virtual TokenIndex RightToken()
     {
         return formal_declarator -> RightToken();
     }
@@ -2100,9 +2075,9 @@ class AstMethodDeclarator : public Ast
     AstArray<AstFormalParameter*>* formal_parameters;
 
 public:
-    LexStream::TokenIndex identifier_token;
-    LexStream::TokenIndex left_parenthesis_token;
-    LexStream::TokenIndex right_parenthesis_token;
+    TokenIndex identifier_token;
+    TokenIndex left_parenthesis_token;
+    TokenIndex right_parenthesis_token;
     AstBrackets* brackets_opt;
 
     inline AstMethodDeclarator(StoragePool* p)
@@ -2134,8 +2109,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return identifier_token; }
-    virtual LexStream::TokenIndex RightToken()
+    virtual TokenIndex LeftToken() { return identifier_token; }
+    virtual TokenIndex RightToken()
     {
         return brackets_opt ? brackets_opt -> right_bracket_token
             : right_parenthesis_token;
@@ -2188,7 +2163,7 @@ public:
     AstMethodDeclarator* method_declarator;
     AstMemberValue* default_value_opt;
     AstMethodBody* method_body_opt;
-    LexStream::TokenIndex semicolon_token_opt;
+    TokenIndex semicolon_token_opt;
 
     inline AstMethodDeclaration(StoragePool* p)
         : AstDeclared(METHOD)
@@ -2212,13 +2187,13 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken()
     {
         return modifiers_opt ? modifiers_opt -> LeftToken()
             : type_parameters_opt ? type_parameters_opt -> left_angle_token
             : type -> LeftToken();
     }
-    virtual LexStream::TokenIndex RightToken()
+    virtual TokenIndex RightToken()
     {
         return method_body_opt ? method_body_opt -> right_brace_token
             : semicolon_token_opt;
@@ -2255,15 +2230,12 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken()
     {
         return modifiers_opt ? modifiers_opt -> LeftToken()
             : block -> left_brace_token;
     }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return block -> right_brace_token;
-    }
+    virtual TokenIndex RightToken() { return block -> right_brace_token; }
 };
 
 
@@ -2280,11 +2252,10 @@ class AstArguments : public Ast
     AstArray<AstName*>* shadow_arguments;
 
 public:
-    LexStream::TokenIndex left_parenthesis_token;
-    LexStream::TokenIndex right_parenthesis_token;
+    TokenIndex left_parenthesis_token;
+    TokenIndex right_parenthesis_token;
 
-    inline AstArguments(StoragePool* p,
-                        LexStream::TokenIndex l, LexStream::TokenIndex r)
+    inline AstArguments(StoragePool* p, TokenIndex l, TokenIndex r)
         : Ast(ARGUMENTS)
         , pool(p)
         , left_parenthesis_token(l)
@@ -2321,14 +2292,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return left_parenthesis_token;
-    }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return right_parenthesis_token;
-    }
+    virtual TokenIndex LeftToken() { return left_parenthesis_token; }
+    virtual TokenIndex RightToken() { return right_parenthesis_token; }
 };
 
 
@@ -2341,9 +2306,9 @@ public:
     MethodSymbol* symbol;
 
     AstTypeArguments* type_arguments_opt;
-    LexStream::TokenIndex this_token;
+    TokenIndex this_token;
     AstArguments* arguments;
-    LexStream::TokenIndex semicolon_token;
+    TokenIndex semicolon_token;
 
     inline AstThisCall()
         : AstStatement(THIS_CALL, true, true)
@@ -2357,12 +2322,12 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken()
     {
         return type_arguments_opt ? type_arguments_opt -> left_angle_token
             : this_token;
     }
-    virtual LexStream::TokenIndex RightToken() { return semicolon_token; }
+    virtual TokenIndex RightToken() { return semicolon_token; }
 };
 
 
@@ -2376,9 +2341,9 @@ public:
 
     AstExpression* base_opt;
     AstTypeArguments* type_arguments_opt;
-    LexStream::TokenIndex super_token;
+    TokenIndex super_token;
     AstArguments* arguments;
-    LexStream::TokenIndex semicolon_token;
+    TokenIndex semicolon_token;
 
     inline AstSuperCall()
         : AstStatement(SUPER_CALL, true, true)
@@ -2392,13 +2357,13 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken()
     {
         return base_opt ? base_opt -> LeftToken()
             : type_arguments_opt ? type_arguments_opt -> left_angle_token
             : super_token;
     }
-    virtual LexStream::TokenIndex RightToken() { return semicolon_token; }
+    virtual TokenIndex RightToken() { return semicolon_token; }
 };
 
 
@@ -2454,13 +2419,13 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken()
     {
         return modifiers_opt ? modifiers_opt -> LeftToken()
             : type_parameters_opt ? type_parameters_opt -> left_angle_token
             : constructor_declarator -> identifier_token;
     }
-    virtual LexStream::TokenIndex RightToken()
+    virtual TokenIndex RightToken()
     {
         return constructor_body -> right_brace_token;
     }
@@ -2477,7 +2442,7 @@ class AstEnumDeclaration : public AstDeclaredType
     AstArray<AstEnumConstant*>* enum_constants;
 
 public:
-    LexStream::TokenIndex enum_token;
+    TokenIndex enum_token;
 
     inline AstEnumDeclaration(StoragePool* p)
         : AstDeclaredType(ENUM_TYPE)
@@ -2514,14 +2479,11 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken()
     {
         return modifiers_opt ? modifiers_opt -> LeftToken() : enum_token;
     }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return class_body -> right_brace_token;
-    }
+    virtual TokenIndex RightToken() { return class_body -> right_brace_token; }
 };
 
 
@@ -2531,7 +2493,7 @@ public:
 class AstEnumConstant : public AstDeclared
 {
 public:
-    LexStream::TokenIndex identifier_token;
+    TokenIndex identifier_token;
     AstArguments* arguments_opt;
     AstClassBody* class_body_opt;
 
@@ -2539,7 +2501,7 @@ public:
     VariableSymbol* field_symbol; // the field the constant lives in
     MethodSymbol* ctor_symbol; // the constructor that builds the constant
 
-    inline AstEnumConstant(LexStream::TokenIndex t)
+    inline AstEnumConstant(TokenIndex t)
         : AstDeclared(ENUM)
         , identifier_token(t)
     {}
@@ -2552,11 +2514,11 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken()
     {
         return modifiers_opt ? modifiers_opt -> LeftToken() : identifier_token;
     }
-    virtual LexStream::TokenIndex RightToken()
+    virtual TokenIndex RightToken()
     {
         return class_body_opt ? class_body_opt -> right_brace_token
             : arguments_opt ? arguments_opt -> right_parenthesis_token
@@ -2574,7 +2536,7 @@ class AstInterfaceDeclaration : public AstDeclaredType
     AstArray<AstTypeName*>* interfaces;
 
 public:
-    LexStream::TokenIndex interface_token;
+    TokenIndex interface_token;
     AstTypeParameters* type_parameters_opt;
 
     inline AstInterfaceDeclaration(StoragePool* p)
@@ -2601,14 +2563,11 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken()
     {
         return modifiers_opt ? modifiers_opt -> LeftToken() : interface_token;
     }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return class_body -> right_brace_token;
-    }
+    virtual TokenIndex RightToken() { return class_body -> right_brace_token; }
 };
 
 
@@ -2618,9 +2577,9 @@ public:
 class AstAnnotationDeclaration : public AstDeclaredType
 {
 public:
-    LexStream::TokenIndex interface_token;
+    TokenIndex interface_token;
 
-    inline AstAnnotationDeclaration(LexStream::TokenIndex t)
+    inline AstAnnotationDeclaration(TokenIndex t)
         : AstDeclaredType(ANNOTATION_TYPE)
         , interface_token(t)
     {}
@@ -2633,15 +2592,12 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken()
     {
         return modifiers_opt ? modifiers_opt -> LeftToken()
             : interface_token - 1;
     }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return class_body -> right_brace_token;
-    }
+    virtual TokenIndex RightToken() { return class_body -> right_brace_token; }
 };
 
 
@@ -2656,7 +2612,7 @@ class AstLocalVariableStatement : public AstStatement
 public:
     AstModifiers* modifiers_opt;
     AstType* type;
-    LexStream::TokenIndex semicolon_token_opt;
+    TokenIndex semicolon_token_opt;
 
     inline AstLocalVariableStatement(StoragePool* p)
         : AstStatement(LOCAL_VARIABLE_DECLARATION)
@@ -2682,12 +2638,12 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken()
     {
         return modifiers_opt ? modifiers_opt -> LeftToken()
             : type -> LeftToken();
     }
-    virtual LexStream::TokenIndex RightToken()
+    virtual TokenIndex RightToken()
     {
         return semicolon_token_opt ? semicolon_token_opt
             : (VariableDeclarator(NumVariableDeclarators() - 1) ->
@@ -2721,11 +2677,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return declaration -> LeftToken();
-    }
-    virtual LexStream::TokenIndex RightToken()
+    virtual TokenIndex LeftToken() { return declaration -> LeftToken(); }
+    virtual TokenIndex RightToken()
     {
         return declaration -> class_body -> right_brace_token;
     }
@@ -2739,7 +2692,7 @@ public:
 class AstIfStatement : public AstStatement
 {
 public:
-    LexStream::TokenIndex if_token;
+    TokenIndex if_token;
     AstExpression* expression;
     AstBlock* true_statement;
     AstBlock* false_statement_opt;
@@ -2756,11 +2709,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return if_token;
-    }
-    virtual LexStream::TokenIndex RightToken()
+    virtual TokenIndex LeftToken() { return if_token; }
+    virtual TokenIndex RightToken()
     {
         return false_statement_opt ? false_statement_opt -> RightToken()
             : true_statement -> RightToken();
@@ -2774,9 +2724,9 @@ public:
 class AstEmptyStatement : public AstStatement
 {
 public:
-    LexStream::TokenIndex semicolon_token;
+    TokenIndex semicolon_token;
 
-    inline AstEmptyStatement(LexStream::TokenIndex token)
+    inline AstEmptyStatement(TokenIndex token)
         : AstStatement(EMPTY_STATEMENT)
         , semicolon_token(token)
     {}
@@ -2789,8 +2739,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return semicolon_token; }
-    virtual LexStream::TokenIndex RightToken() { return semicolon_token; }
+    virtual TokenIndex LeftToken() { return semicolon_token; }
+    virtual TokenIndex RightToken() { return semicolon_token; }
 };
 
 
@@ -2802,7 +2752,7 @@ class AstExpressionStatement : public AstStatement
 {
 public:
     AstExpression* expression;
-    LexStream::TokenIndex semicolon_token_opt;
+    TokenIndex semicolon_token_opt;
 
     inline AstExpressionStatement()
         : AstStatement(EXPRESSION_STATEMENT)
@@ -2816,11 +2766,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return expression -> LeftToken();
-    }
-    virtual LexStream::TokenIndex RightToken()
+    virtual TokenIndex LeftToken() { return expression -> LeftToken(); }
+    virtual TokenIndex RightToken()
     {
         return semicolon_token_opt ? semicolon_token_opt
             : expression -> RightToken();
@@ -2834,9 +2781,9 @@ public:
 class AstSwitchLabel : public Ast
 {
 public:
-    LexStream::TokenIndex case_token;
+    TokenIndex case_token;
     AstExpression* expression_opt;
-    LexStream::TokenIndex colon_token;
+    TokenIndex colon_token;
 
     //
     // The sorted index of this label in the overall switch. Default cases
@@ -2856,8 +2803,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return case_token; }
-    virtual LexStream::TokenIndex RightToken() { return colon_token; }
+    virtual TokenIndex LeftToken() { return case_token; }
+    virtual TokenIndex RightToken() { return colon_token; }
 };
 
 
@@ -2893,10 +2840,7 @@ public:
 #endif // JIKES_DEBUG
 
     virtual Ast* Clone(StoragePool*);
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return SwitchLabel(0) -> case_token;
-    }
+    virtual TokenIndex LeftToken() { return SwitchLabel(0) -> case_token; }
     // Inherited RightToken() is adequate.
 };
 
@@ -2943,7 +2887,7 @@ class AstSwitchStatement : public AstStatement
 #endif // JIKES_DEBUG
 
 public:
-    LexStream::TokenIndex switch_token;
+    TokenIndex switch_token;
     AstExpression* expression;
     AstBlock* switch_block;
 
@@ -2979,8 +2923,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return switch_token; }
-    virtual LexStream::TokenIndex RightToken()
+    virtual TokenIndex LeftToken() { return switch_token; }
+    virtual TokenIndex RightToken()
     {
         return switch_block -> right_brace_token;
     }
@@ -2993,7 +2937,7 @@ public:
 class AstWhileStatement : public AstStatement
 {
 public:
-    LexStream::TokenIndex while_token;
+    TokenIndex while_token;
     AstExpression* expression;
     AstBlock* statement;
 
@@ -3009,14 +2953,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return while_token;
-    }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return statement -> right_brace_token;
-    }
+    virtual TokenIndex LeftToken() { return while_token; }
+    virtual TokenIndex RightToken() { return statement -> right_brace_token; }
 };
 
 
@@ -3026,11 +2964,11 @@ public:
 class AstDoStatement : public AstStatement
 {
 public:
-    LexStream::TokenIndex do_token;
+    TokenIndex do_token;
     AstBlock* statement;
-    LexStream::TokenIndex while_token;
+    TokenIndex while_token;
     AstExpression* expression;
-    LexStream::TokenIndex semicolon_token;
+    TokenIndex semicolon_token;
 
     inline AstDoStatement()
         : AstStatement(DO)
@@ -3044,11 +2982,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return do_token;
-    }
-    virtual LexStream::TokenIndex RightToken() { return semicolon_token; }
+    virtual TokenIndex LeftToken() { return do_token; }
+    virtual TokenIndex RightToken() { return semicolon_token; }
 };
 
 
@@ -3064,7 +2999,7 @@ class AstForStatement : public AstStatement
     AstArray<AstExpressionStatement*>* for_update_statements;
 
 public:
-    LexStream::TokenIndex for_token;
+    TokenIndex for_token;
     AstExpression* end_expression_opt;
     AstBlock* statement;
 
@@ -3103,14 +3038,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return for_token;
-    }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return statement -> right_brace_token;
-    }
+    virtual TokenIndex LeftToken() { return for_token; }
+    virtual TokenIndex RightToken() { return statement -> right_brace_token; }
 };
 
 
@@ -3123,7 +3052,7 @@ public:
 class AstForeachStatement : public AstStatement
 {
 public:
-    LexStream::TokenIndex for_token;
+    TokenIndex for_token;
     AstFormalParameter* formal_parameter;
     AstExpression* expression;
     AstBlock* statement;
@@ -3140,14 +3069,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return for_token;
-    }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return statement -> right_brace_token;
-    }
+    virtual TokenIndex LeftToken() { return for_token; }
+    virtual TokenIndex RightToken() { return statement -> right_brace_token; }
 };
 
 
@@ -3158,9 +3081,9 @@ public:
 class AstBreakStatement : public AstStatement
 {
 public:
-    LexStream::TokenIndex break_token;
-    LexStream::TokenIndex identifier_token_opt;
-    LexStream::TokenIndex semicolon_token;
+    TokenIndex break_token;
+    TokenIndex identifier_token_opt;
+    TokenIndex semicolon_token;
     unsigned nesting_level;
 
     inline AstBreakStatement()
@@ -3175,11 +3098,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return break_token;
-    }
-    virtual LexStream::TokenIndex RightToken() { return semicolon_token; }
+    virtual TokenIndex LeftToken() { return break_token; }
+    virtual TokenIndex RightToken() { return semicolon_token; }
 };
 
 
@@ -3190,9 +3110,9 @@ public:
 class AstContinueStatement : public AstStatement
 {
 public:
-    LexStream::TokenIndex continue_token;
-    LexStream::TokenIndex identifier_token_opt;
-    LexStream::TokenIndex semicolon_token;
+    TokenIndex continue_token;
+    TokenIndex identifier_token_opt;
+    TokenIndex semicolon_token;
     unsigned nesting_level;
 
     inline AstContinueStatement()
@@ -3207,11 +3127,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return continue_token;
-    }
-    virtual LexStream::TokenIndex RightToken() { return semicolon_token; }
+    virtual TokenIndex LeftToken() { return continue_token; }
+    virtual TokenIndex RightToken() { return semicolon_token; }
 };
 
 
@@ -3222,9 +3139,9 @@ public:
 class AstReturnStatement : public AstStatement
 {
 public:
-    LexStream::TokenIndex return_token;
+    TokenIndex return_token;
     AstExpression* expression_opt;
-    LexStream::TokenIndex semicolon_token;
+    TokenIndex semicolon_token;
 
     inline AstReturnStatement()
         : AstStatement(RETURN)
@@ -3238,11 +3155,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return return_token;
-    }
-    virtual LexStream::TokenIndex RightToken() { return semicolon_token; }
+    virtual TokenIndex LeftToken() { return return_token; }
+    virtual TokenIndex RightToken() { return semicolon_token; }
 };
 
 
@@ -3252,9 +3166,9 @@ public:
 class AstThrowStatement : public AstStatement
 {
 public:
-    LexStream::TokenIndex throw_token;
+    TokenIndex throw_token;
     AstExpression* expression;
-    LexStream::TokenIndex semicolon_token;
+    TokenIndex semicolon_token;
 
     inline AstThrowStatement()
         : AstStatement(THROW)
@@ -3268,11 +3182,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return throw_token;
-    }
-    virtual LexStream::TokenIndex RightToken() { return semicolon_token; }
+    virtual TokenIndex LeftToken() { return throw_token; }
+    virtual TokenIndex RightToken() { return semicolon_token; }
 };
 
 
@@ -3283,7 +3194,7 @@ public:
 class AstSynchronizedStatement : public AstStatement
 {
 public:
-    LexStream::TokenIndex synchronized_token;
+    TokenIndex synchronized_token;
     AstExpression* expression;
     AstBlock* block;
 
@@ -3299,14 +3210,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return synchronized_token;
-    }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return block -> right_brace_token;
-    }
+    virtual TokenIndex LeftToken() { return synchronized_token; }
+    virtual TokenIndex RightToken() { return block -> right_brace_token; }
 };
 
 
@@ -3318,8 +3223,8 @@ public:
 class AstAssertStatement : public AstStatement
 {
 public:
-    LexStream::TokenIndex assert_token;
-    LexStream::TokenIndex semicolon_token;
+    TokenIndex assert_token;
+    TokenIndex semicolon_token;
     AstExpression* condition;
     AstExpression* message_opt;
 
@@ -3337,8 +3242,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return assert_token; }
-    virtual LexStream::TokenIndex RightToken() { return semicolon_token; }
+    virtual TokenIndex LeftToken() { return assert_token; }
+    virtual TokenIndex RightToken() { return semicolon_token; }
 };
 
 
@@ -3350,7 +3255,7 @@ class AstCatchClause : public Ast
 public:
     VariableSymbol* parameter_symbol;
 
-    LexStream::TokenIndex catch_token;
+    TokenIndex catch_token;
     AstFormalParameter* formal_parameter;
     AstBlock* block;
 
@@ -3366,11 +3271,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return catch_token; }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return block -> right_brace_token;
-    }
+    virtual TokenIndex LeftToken() { return catch_token; }
+    virtual TokenIndex RightToken() { return block -> right_brace_token; }
 };
 
 
@@ -3380,7 +3282,7 @@ public:
 class AstFinallyClause : public Ast
 {
 public:
-    LexStream::TokenIndex finally_token;
+    TokenIndex finally_token;
     AstBlock* block;
 
     inline AstFinallyClause()
@@ -3395,11 +3297,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return finally_token; }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return block -> right_brace_token;
-    }
+    virtual TokenIndex LeftToken() { return finally_token; }
+    virtual TokenIndex RightToken() { return block -> right_brace_token; }
 };
 
 
@@ -3413,7 +3312,7 @@ class AstTryStatement : public AstStatement
     AstArray<AstCatchClause*>* catch_clauses;
 
 public:
-    LexStream::TokenIndex try_token;
+    TokenIndex try_token;
     AstBlock* block;
     AstFinallyClause* finally_clause_opt;
     bool processing_try_block;
@@ -3442,16 +3341,9 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken() { return try_token; }
+    virtual TokenIndex RightToken()
     {
-        return try_token;
-    }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        //
-        // when the Finally clause is null, there must be one or more catch
-        // clauses
-        //
         return finally_clause_opt ? finally_clause_opt -> RightToken()
             : CatchClause(NumCatchClauses() - 1) -> RightToken();
     }
@@ -3464,9 +3356,9 @@ public:
 class AstIntegerLiteral : public AstExpression
 {
 public:
-    LexStream::TokenIndex integer_literal_token;
+    TokenIndex integer_literal_token;
 
-    inline AstIntegerLiteral(LexStream::TokenIndex token)
+    inline AstIntegerLiteral(TokenIndex token)
         : AstExpression(INTEGER_LITERAL)
         , integer_literal_token(token)
     {}
@@ -3479,11 +3371,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return integer_literal_token; }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return integer_literal_token;
-    }
+    virtual TokenIndex LeftToken() { return integer_literal_token; }
+    virtual TokenIndex RightToken() { return integer_literal_token; }
 };
 
 
@@ -3493,9 +3382,9 @@ public:
 class AstLongLiteral : public AstExpression
 {
 public:
-    LexStream::TokenIndex long_literal_token;
+    TokenIndex long_literal_token;
 
-    inline AstLongLiteral(LexStream::TokenIndex token)
+    inline AstLongLiteral(TokenIndex token)
         : AstExpression(LONG_LITERAL)
         , long_literal_token(token)
     {}
@@ -3508,8 +3397,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return long_literal_token; }
-    virtual LexStream::TokenIndex RightToken() { return long_literal_token; }
+    virtual TokenIndex LeftToken() { return long_literal_token; }
+    virtual TokenIndex RightToken() { return long_literal_token; }
 };
 
 
@@ -3519,9 +3408,9 @@ public:
 class AstFloatLiteral : public AstExpression
 {
 public:
-    LexStream::TokenIndex float_literal_token;
+    TokenIndex float_literal_token;
 
-    inline AstFloatLiteral(LexStream::TokenIndex token)
+    inline AstFloatLiteral(TokenIndex token)
         : AstExpression(FLOAT_LITERAL)
         , float_literal_token(token)
     {}
@@ -3534,8 +3423,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return float_literal_token; }
-    virtual LexStream::TokenIndex RightToken() { return float_literal_token; }
+    virtual TokenIndex LeftToken() { return float_literal_token; }
+    virtual TokenIndex RightToken() { return float_literal_token; }
 };
 
 
@@ -3545,9 +3434,9 @@ public:
 class AstDoubleLiteral : public AstExpression
 {
 public:
-    LexStream::TokenIndex double_literal_token;
+    TokenIndex double_literal_token;
 
-    inline AstDoubleLiteral(LexStream::TokenIndex token)
+    inline AstDoubleLiteral(TokenIndex token)
         : AstExpression(DOUBLE_LITERAL)
         , double_literal_token(token)
     {}
@@ -3560,8 +3449,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return double_literal_token; }
-    virtual LexStream::TokenIndex RightToken() { return double_literal_token; }
+    virtual TokenIndex LeftToken() { return double_literal_token; }
+    virtual TokenIndex RightToken() { return double_literal_token; }
 };
 
 
@@ -3571,9 +3460,9 @@ public:
 class AstTrueLiteral : public AstExpression
 {
 public:
-    LexStream::TokenIndex true_literal_token;
+    TokenIndex true_literal_token;
 
-    inline AstTrueLiteral(LexStream::TokenIndex token)
+    inline AstTrueLiteral(TokenIndex token)
         : AstExpression(TRUE_LITERAL)
         , true_literal_token(token)
     {}
@@ -3586,8 +3475,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return true_literal_token; }
-    virtual LexStream::TokenIndex RightToken() { return true_literal_token; }
+    virtual TokenIndex LeftToken() { return true_literal_token; }
+    virtual TokenIndex RightToken() { return true_literal_token; }
 };
 
 
@@ -3597,9 +3486,9 @@ public:
 class AstFalseLiteral : public AstExpression
 {
 public:
-    LexStream::TokenIndex false_literal_token;
+    TokenIndex false_literal_token;
 
-    inline AstFalseLiteral(LexStream::TokenIndex token)
+    inline AstFalseLiteral(TokenIndex token)
         : AstExpression(FALSE_LITERAL)
         , false_literal_token(token)
     {}
@@ -3612,8 +3501,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return false_literal_token; }
-    virtual LexStream::TokenIndex RightToken() { return false_literal_token; }
+    virtual TokenIndex LeftToken() { return false_literal_token; }
+    virtual TokenIndex RightToken() { return false_literal_token; }
 };
 
 
@@ -3623,9 +3512,9 @@ public:
 class AstStringLiteral : public AstExpression
 {
 public:
-    LexStream::TokenIndex string_literal_token;
+    TokenIndex string_literal_token;
 
-    inline AstStringLiteral(LexStream::TokenIndex token)
+    inline AstStringLiteral(TokenIndex token)
         : AstExpression(STRING_LITERAL)
         , string_literal_token(token)
     {}
@@ -3638,8 +3527,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return string_literal_token; }
-    virtual LexStream::TokenIndex RightToken() { return string_literal_token; }
+    virtual TokenIndex LeftToken() { return string_literal_token; }
+    virtual TokenIndex RightToken() { return string_literal_token; }
 };
 
 
@@ -3649,9 +3538,9 @@ public:
 class AstCharacterLiteral : public AstExpression
 {
 public:
-    LexStream::TokenIndex character_literal_token;
+    TokenIndex character_literal_token;
 
-    inline AstCharacterLiteral(LexStream::TokenIndex token)
+    inline AstCharacterLiteral(TokenIndex token)
         : AstExpression(CHARACTER_LITERAL)
         , character_literal_token(token)
     {}
@@ -3664,14 +3553,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return character_literal_token;
-    }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return character_literal_token;
-    }
+    virtual TokenIndex LeftToken() { return character_literal_token; }
+    virtual TokenIndex RightToken() { return character_literal_token; }
 };
 
 
@@ -3681,9 +3564,9 @@ public:
 class AstNullLiteral : public AstExpression
 {
 public:
-    LexStream::TokenIndex null_token;
+    TokenIndex null_token;
 
-    inline AstNullLiteral(LexStream::TokenIndex token)
+    inline AstNullLiteral(TokenIndex token)
         : AstExpression(NULL_LITERAL)
         , null_token(token)
     {}
@@ -3696,8 +3579,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return null_token; }
-    virtual LexStream::TokenIndex RightToken() { return null_token; }
+    virtual TokenIndex LeftToken() { return null_token; }
+    virtual TokenIndex RightToken() { return null_token; }
 };
 
 
@@ -3708,7 +3591,7 @@ class AstClassLiteral : public AstExpression
 {
 public:
     AstType* type;
-    LexStream::TokenIndex class_token;
+    TokenIndex class_token;
 
     //
     // If this expression requires a caching variable and a call to class$(),
@@ -3716,7 +3599,7 @@ public:
     //
     AstExpression* resolution_opt;
 
-    inline AstClassLiteral(LexStream::TokenIndex token)
+    inline AstClassLiteral(TokenIndex token)
         : AstExpression(CLASS_LITERAL)
         , class_token(token)
     {}
@@ -3729,8 +3612,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return type -> LeftToken(); }
-    virtual LexStream::TokenIndex RightToken() { return class_token; }
+    virtual TokenIndex LeftToken() { return type -> LeftToken(); }
+    virtual TokenIndex RightToken() { return class_token; }
 };
 
 
@@ -3741,7 +3624,7 @@ class AstThisExpression : public AstExpression
 {
 public:
     AstTypeName* base_opt;
-    LexStream::TokenIndex this_token;
+    TokenIndex this_token;
 
     //
     // If this expression accesses an enclosing instance, the resolution
@@ -3749,7 +3632,7 @@ public:
     //
     AstExpression* resolution_opt;
 
-    inline AstThisExpression(LexStream::TokenIndex token)
+    inline AstThisExpression(TokenIndex token)
         : AstExpression(THIS_EXPRESSION)
         , this_token(token)
     {}
@@ -3762,11 +3645,11 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken()
     {
         return base_opt ? base_opt -> LeftToken() : this_token;
     }
-    virtual LexStream::TokenIndex RightToken() { return this_token; }
+    virtual TokenIndex RightToken() { return this_token; }
 };
 
 
@@ -3777,7 +3660,7 @@ class AstSuperExpression : public AstExpression
 {
 public:
     AstTypeName* base_opt;
-    LexStream::TokenIndex super_token;
+    TokenIndex super_token;
 
     //
     // If this expression accesses an enclosing instance, the resolution
@@ -3785,7 +3668,7 @@ public:
     //
     AstExpression* resolution_opt;
 
-    inline AstSuperExpression(LexStream::TokenIndex token)
+    inline AstSuperExpression(TokenIndex token)
         : AstExpression(SUPER_EXPRESSION)
         , super_token(token)
     {}
@@ -3798,11 +3681,11 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken()
     {
         return base_opt ? base_opt -> LeftToken() : super_token;
     }
-    virtual LexStream::TokenIndex RightToken() { return super_token; }
+    virtual TokenIndex RightToken() { return super_token; }
 };
 
 
@@ -3813,9 +3696,9 @@ public:
 class AstParenthesizedExpression : public AstExpression
 {
 public:
-    LexStream::TokenIndex left_parenthesis_token;
+    TokenIndex left_parenthesis_token;
     AstExpression* expression;
-    LexStream::TokenIndex right_parenthesis_token;
+    TokenIndex right_parenthesis_token;
 
     inline AstParenthesizedExpression()
         : AstExpression(PARENTHESIZED_EXPRESSION)
@@ -3829,14 +3712,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return left_parenthesis_token;
-    }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return right_parenthesis_token;
-    }
+    virtual TokenIndex LeftToken() { return left_parenthesis_token; }
+    virtual TokenIndex RightToken() { return right_parenthesis_token; }
 };
 
 
@@ -3851,7 +3728,7 @@ class AstClassCreationExpression : public AstExpression
 {
 public:
     AstExpression* base_opt;
-    LexStream::TokenIndex new_token;
+    TokenIndex new_token;
     AstTypeArguments* type_arguments_opt;
     AstTypeName* class_type;
     AstArguments* arguments;
@@ -3876,11 +3753,11 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken()
     {
         return base_opt ? base_opt -> LeftToken() : new_token;
     }
-    virtual LexStream::TokenIndex RightToken()
+    virtual TokenIndex RightToken()
     {
         return class_body_opt ? class_body_opt -> right_brace_token
             : arguments -> right_parenthesis_token;
@@ -3894,9 +3771,9 @@ public:
 class AstDimExpr : public Ast
 {
 public:
-    LexStream::TokenIndex left_bracket_token;
+    TokenIndex left_bracket_token;
     AstExpression* expression;
-    LexStream::TokenIndex right_bracket_token;
+    TokenIndex right_bracket_token;
 
     inline AstDimExpr()
         : Ast(DIM)
@@ -3910,8 +3787,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return left_bracket_token; }
-    virtual LexStream::TokenIndex RightToken() { return right_bracket_token; }
+    virtual TokenIndex LeftToken() { return left_bracket_token; }
+    virtual TokenIndex RightToken() { return right_bracket_token; }
 };
 
 
@@ -3925,7 +3802,7 @@ class AstArrayCreationExpression : public AstExpression
     AstArray<AstDimExpr*>* dim_exprs;
 
 public:
-    LexStream::TokenIndex new_token;
+    TokenIndex new_token;
     AstType* array_type;
     AstBrackets* brackets_opt;
     AstArrayInitializer* array_initializer_opt;
@@ -3956,8 +3833,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return new_token; }
-    virtual LexStream::TokenIndex RightToken()
+    virtual TokenIndex LeftToken() { return new_token; }
+    virtual TokenIndex RightToken()
     {
         return array_initializer_opt
             ? array_initializer_opt -> right_brace_token
@@ -3974,7 +3851,7 @@ class AstFieldAccess : public AstExpression
 {
 public:
     AstExpression* base; // Not AstName.
-    LexStream::TokenIndex identifier_token;
+    TokenIndex identifier_token;
 
     //
     // If the base expression of FieldAccess expression is of the form
@@ -3996,8 +3873,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return base -> LeftToken(); }
-    virtual LexStream::TokenIndex RightToken() { return identifier_token; }
+    virtual TokenIndex LeftToken() { return base -> LeftToken(); }
+    virtual TokenIndex RightToken() { return identifier_token; }
 };
 
 
@@ -4011,7 +3888,7 @@ class AstMethodInvocation : public AstExpression
 public:
     AstExpression* base_opt;
     AstTypeArguments* type_arguments_opt;
-    LexStream::TokenIndex identifier_token;
+    TokenIndex identifier_token;
     AstArguments* arguments;
 
     //
@@ -4021,7 +3898,7 @@ public:
     //
     AstExpression* resolution_opt;
 
-    inline AstMethodInvocation(LexStream::TokenIndex t)
+    inline AstMethodInvocation(TokenIndex t)
         : AstExpression(CALL)
         , identifier_token(t)
     {}
@@ -4034,13 +3911,13 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
+    virtual TokenIndex LeftToken()
     {
         if (type_arguments_opt)
             assert(base_opt);
         return base_opt ? base_opt -> LeftToken() : identifier_token;
     }
-    virtual LexStream::TokenIndex RightToken()
+    virtual TokenIndex RightToken()
     {
         return arguments -> right_parenthesis_token;
     }
@@ -4054,9 +3931,9 @@ class AstArrayAccess : public AstExpression
 {
 public:
     AstExpression* base;
-    LexStream::TokenIndex left_bracket_token;
+    TokenIndex left_bracket_token;
     AstExpression* expression;
-    LexStream::TokenIndex right_bracket_token;
+    TokenIndex right_bracket_token;
 
     inline AstArrayAccess()
         : AstExpression(ARRAY_ACCESS)
@@ -4070,8 +3947,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return base -> LeftToken(); }
-    virtual LexStream::TokenIndex RightToken() { return right_bracket_token; }
+    virtual TokenIndex LeftToken() { return base -> LeftToken(); }
+    virtual TokenIndex RightToken() { return right_bracket_token; }
 };
 
 
@@ -4099,7 +3976,7 @@ public:
     };
 
     AstExpression* expression;
-    LexStream::TokenIndex post_operator_token;
+    TokenIndex post_operator_token;
 
     //
     // When the left-hand side of an assignment is a name that refers
@@ -4127,14 +4004,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return expression -> LeftToken();
-    }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return post_operator_token;
-    }
+    virtual TokenIndex LeftToken() { return expression -> LeftToken(); }
+    virtual TokenIndex RightToken() { return post_operator_token; }
 };
 
 
@@ -4161,7 +4032,7 @@ public:
         _num_kinds
     };
 
-    LexStream::TokenIndex pre_operator_token;
+    TokenIndex pre_operator_token;
     AstExpression* expression;
 
     //
@@ -4190,14 +4061,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return pre_operator_token;
-    }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return expression -> RightToken();
-    }
+    virtual TokenIndex LeftToken() { return pre_operator_token; }
+    virtual TokenIndex RightToken() { return expression -> RightToken(); }
 };
 
 
@@ -4210,9 +4075,9 @@ public:
 class AstCastExpression : public AstExpression
 {
 public:
-    LexStream::TokenIndex left_parenthesis_token;
+    TokenIndex left_parenthesis_token;
     AstType* type;
-    LexStream::TokenIndex right_parenthesis_token;
+    TokenIndex right_parenthesis_token;
     AstExpression* expression;
 
     inline AstCastExpression()
@@ -4227,14 +4092,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return left_parenthesis_token;
-    }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return expression -> RightToken();
-    }
+    virtual TokenIndex LeftToken() { return left_parenthesis_token; }
+    virtual TokenIndex RightToken() { return expression -> RightToken(); }
 };
 
 
@@ -4283,7 +4142,7 @@ public:
     };
 
     AstExpression* left_expression;
-    LexStream::TokenIndex binary_operator_token;
+    TokenIndex binary_operator_token;
     AstExpression* right_expression;
 
     inline AstBinaryExpression(BinaryExpressionTag tag)
@@ -4305,11 +4164,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return left_expression -> LeftToken();
-    }
-    virtual LexStream::TokenIndex RightToken()
+    virtual TokenIndex LeftToken() { return left_expression -> LeftToken(); }
+    virtual TokenIndex RightToken()
     {
         return right_expression -> RightToken();
     }
@@ -4323,7 +4179,7 @@ class AstInstanceofExpression : public AstExpression
 {
 public:
     AstExpression* expression;
-    LexStream::TokenIndex instanceof_token;
+    TokenIndex instanceof_token;
     AstType* type; // AstArrayType, AstTypeName
 
     inline AstInstanceofExpression()
@@ -4338,14 +4194,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return expression -> LeftToken();
-    }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return type -> RightToken();
-    }
+    virtual TokenIndex LeftToken() { return expression -> LeftToken(); }
+    virtual TokenIndex RightToken() { return type -> RightToken(); }
 };
 
 
@@ -4357,9 +4207,9 @@ class AstConditionalExpression : public AstExpression
 {
 public:
     AstExpression* test_expression;
-    LexStream::TokenIndex question_token;
+    TokenIndex question_token;
     AstExpression* true_expression;
-    LexStream::TokenIndex colon_token;
+    TokenIndex colon_token;
     AstExpression* false_expression;
 
     inline AstConditionalExpression()
@@ -4374,11 +4224,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return test_expression -> LeftToken();
-    }
-    virtual LexStream::TokenIndex RightToken()
+    virtual TokenIndex LeftToken() { return test_expression -> LeftToken(); }
+    virtual TokenIndex RightToken()
     {
         return false_expression -> RightToken();
     }
@@ -4436,13 +4283,12 @@ public:
     MethodSymbol* write_method;
 
     AstExpression* left_hand_side;
-    LexStream::TokenIndex assignment_operator_token;
+    TokenIndex assignment_operator_token;
     AstExpression* expression;
 
-    inline AstAssignmentExpression(AssignmentExpressionTag tag,
-                                   LexStream::TokenIndex token)
+    inline AstAssignmentExpression(AssignmentExpressionTag tag, TokenIndex t)
         : AstExpression(ASSIGNMENT)
-        , assignment_operator_token(token)
+        , assignment_operator_token(t)
     {
         other_tag = tag;
     }
@@ -4461,14 +4307,8 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return left_hand_side -> LeftToken();
-    }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return expression -> RightToken();
-    }
+    virtual TokenIndex LeftToken() { return left_hand_side -> LeftToken(); }
+    virtual TokenIndex RightToken() { return expression -> RightToken(); }
 };
 
 
@@ -4677,19 +4517,17 @@ public:
         return new (this) AstBlock(this);
     }
 
-    inline AstName* NewName(LexStream::TokenIndex token)
+    inline AstName* NewName(TokenIndex token)
     {
         return new (this) AstName(token);
     }
 
-    inline AstPrimitiveType* NewPrimitiveType(Ast::AstKind kind,
-                                              LexStream::TokenIndex token)
+    inline AstPrimitiveType* NewPrimitiveType(Ast::AstKind kind, TokenIndex t)
     {
-        return new (this) AstPrimitiveType(kind, token);
+        return new (this) AstPrimitiveType(kind, t);
     }
 
-    inline AstBrackets* NewBrackets(LexStream::TokenIndex left,
-                                    LexStream::TokenIndex right)
+    inline AstBrackets* NewBrackets(TokenIndex left, TokenIndex right)
     {
         return new (this) AstBrackets(left, right);
     }
@@ -4699,15 +4537,14 @@ public:
         return new (this) AstArrayType(type, brackets);
     }
 
-    inline AstWildcard* NewWildcard(LexStream::TokenIndex question)
+    inline AstWildcard* NewWildcard(TokenIndex question)
     {
         return new (this) AstWildcard(question);
     }
 
-    inline AstTypeArguments* NewTypeArguments(LexStream::TokenIndex left,
-                                              LexStream::TokenIndex right)
+    inline AstTypeArguments* NewTypeArguments(TokenIndex l, TokenIndex r)
     {
-        return new (this) AstTypeArguments(this, left, right);
+        return new (this) AstTypeArguments(this, l, r);
     }
 
     inline AstTypeName* NewTypeName(AstName* name)
@@ -4725,7 +4562,7 @@ public:
         return new (this) AstAnnotation(this);
     }
 
-    inline AstModifierKeyword* NewModifierKeyword(LexStream::TokenIndex token)
+    inline AstModifierKeyword* NewModifierKeyword(TokenIndex token)
     {
         return new (this) AstModifierKeyword(token);
     }
@@ -4750,7 +4587,7 @@ public:
         return new (this) AstCompilationUnit(this);
     }
 
-    inline AstEmptyDeclaration* NewEmptyDeclaration(LexStream::TokenIndex t)
+    inline AstEmptyDeclaration* NewEmptyDeclaration(TokenIndex t)
     {
         return new (this) AstEmptyDeclaration(t);
     }
@@ -4760,7 +4597,7 @@ public:
         return new (this) AstClassBody(this);
     }
 
-    inline AstTypeParameter* NewTypeParameter(LexStream::TokenIndex token)
+    inline AstTypeParameter* NewTypeParameter(TokenIndex token)
     {
         return new (this) AstTypeParameter(this, token);
     }
@@ -4820,8 +4657,7 @@ public:
         return new (this) AstInitializerDeclaration();
     }
 
-    inline AstArguments* NewArguments(LexStream::TokenIndex left,
-                                      LexStream::TokenIndex right)
+    inline AstArguments* NewArguments(TokenIndex left, TokenIndex right)
     {
         return new (this) AstArguments(this, left, right);
     }
@@ -4846,7 +4682,7 @@ public:
         return new (this) AstEnumDeclaration(this);
     }
 
-    inline AstEnumConstant* NewEnumConstant(LexStream::TokenIndex t)
+    inline AstEnumConstant* NewEnumConstant(TokenIndex t)
     {
         return new (this) AstEnumConstant(t);
     }
@@ -4856,7 +4692,7 @@ public:
         return new (this) AstInterfaceDeclaration(this);
     }
 
-    inline AstAnnotationDeclaration* NewAnnotationDeclaration(LexStream::TokenIndex t)
+    inline AstAnnotationDeclaration* NewAnnotationDeclaration(TokenIndex t)
     {
         return new (this) AstAnnotationDeclaration(t);
     }
@@ -4881,7 +4717,7 @@ public:
         return new (this) AstIfStatement();
     }
 
-    inline AstEmptyStatement* NewEmptyStatement(LexStream::TokenIndex token)
+    inline AstEmptyStatement* NewEmptyStatement(TokenIndex token)
     {
         return new (this) AstEmptyStatement(token);
     }
@@ -4971,62 +4807,62 @@ public:
         return new (this) AstTryStatement(this);
     }
 
-    inline AstIntegerLiteral* NewIntegerLiteral(LexStream::TokenIndex token)
+    inline AstIntegerLiteral* NewIntegerLiteral(TokenIndex token)
     {
         return new (this) AstIntegerLiteral(token);
     }
 
-    inline AstLongLiteral* NewLongLiteral(LexStream::TokenIndex token)
+    inline AstLongLiteral* NewLongLiteral(TokenIndex token)
     {
         return new (this) AstLongLiteral(token);
     }
 
-    inline AstFloatLiteral* NewFloatLiteral(LexStream::TokenIndex token)
+    inline AstFloatLiteral* NewFloatLiteral(TokenIndex token)
     {
         return new (this) AstFloatLiteral(token);
     }
 
-    inline AstDoubleLiteral* NewDoubleLiteral(LexStream::TokenIndex token)
+    inline AstDoubleLiteral* NewDoubleLiteral(TokenIndex token)
     {
         return new (this) AstDoubleLiteral(token);
     }
 
-    inline AstTrueLiteral* NewTrueLiteral(LexStream::TokenIndex token)
+    inline AstTrueLiteral* NewTrueLiteral(TokenIndex token)
     {
         return new (this) AstTrueLiteral(token);
     }
 
-    inline AstFalseLiteral* NewFalseLiteral(LexStream::TokenIndex token)
+    inline AstFalseLiteral* NewFalseLiteral(TokenIndex token)
     {
         return new (this) AstFalseLiteral(token);
     }
 
-    inline AstStringLiteral* NewStringLiteral(LexStream::TokenIndex token)
+    inline AstStringLiteral* NewStringLiteral(TokenIndex token)
     {
         return new (this) AstStringLiteral(token);
     }
 
-    inline AstCharacterLiteral* NewCharacterLiteral(LexStream::TokenIndex token)
+    inline AstCharacterLiteral* NewCharacterLiteral(TokenIndex token)
     {
         return new (this) AstCharacterLiteral(token);
     }
 
-    inline AstNullLiteral* NewNullLiteral(LexStream::TokenIndex token)
+    inline AstNullLiteral* NewNullLiteral(TokenIndex token)
     {
         return new (this) AstNullLiteral(token);
     }
 
-    inline AstClassLiteral* NewClassLiteral(LexStream::TokenIndex token)
+    inline AstClassLiteral* NewClassLiteral(TokenIndex token)
     {
         return new (this) AstClassLiteral(token);
     }
 
-    inline AstThisExpression* NewThisExpression(LexStream::TokenIndex token)
+    inline AstThisExpression* NewThisExpression(TokenIndex token)
     {
         return new (this) AstThisExpression(token);
     }
 
-    inline AstSuperExpression* NewSuperExpression(LexStream::TokenIndex token)
+    inline AstSuperExpression* NewSuperExpression(TokenIndex token)
     {
         return new (this) AstSuperExpression(token);
     }
@@ -5056,7 +4892,7 @@ public:
         return new (this) AstFieldAccess();
     }
 
-    inline AstMethodInvocation* NewMethodInvocation(LexStream::TokenIndex t)
+    inline AstMethodInvocation* NewMethodInvocation(TokenIndex t)
     {
         return new (this) AstMethodInvocation(t);
     }
@@ -5097,7 +4933,7 @@ public:
     }
 
     inline AstAssignmentExpression* NewAssignmentExpression(AstAssignmentExpression::AssignmentExpressionTag tag,
-                                                            LexStream::TokenIndex token)
+                                                            TokenIndex token)
     {
         return new (this) AstAssignmentExpression(tag, token);
     }
@@ -5125,23 +4961,21 @@ public:
         return p;
     }
 
-    inline AstName* GenName(LexStream::TokenIndex token)
+    inline AstName* GenName(TokenIndex token)
     {
         AstName* p = NewName(token);
         p -> generated = true;
         return p;
     }
 
-    inline AstPrimitiveType* GenPrimitiveType(Ast::AstKind kind,
-                                              LexStream::TokenIndex token)
+    inline AstPrimitiveType* GenPrimitiveType(Ast::AstKind kind, TokenIndex t)
     {
-        AstPrimitiveType* p = NewPrimitiveType(kind, token);
+        AstPrimitiveType* p = NewPrimitiveType(kind, t);
         p -> generated = true;
         return p;
     }
 
-    inline AstBrackets* GenBrackets(LexStream::TokenIndex left,
-                                    LexStream::TokenIndex right)
+    inline AstBrackets* GenBrackets(TokenIndex left, TokenIndex right)
     {
         AstBrackets* p = NewBrackets(left, right);
         p -> generated = true;
@@ -5155,17 +4989,16 @@ public:
         return p;
     }
 
-    inline AstWildcard* GenWildcard(LexStream::TokenIndex question)
+    inline AstWildcard* GenWildcard(TokenIndex question)
     {
         AstWildcard* p = NewWildcard(question);
         p -> generated = true;
         return p;
     }
 
-    inline AstTypeArguments* GenTypeArguments(LexStream::TokenIndex left,
-                                              LexStream::TokenIndex right)
+    inline AstTypeArguments* GenTypeArguments(TokenIndex l, TokenIndex r)
     {
-        AstTypeArguments* p = NewTypeArguments(left, right);
+        AstTypeArguments* p = NewTypeArguments(l, r);
         p -> generated = true;
         return p;
     }
@@ -5191,7 +5024,7 @@ public:
         return p;
     }
 
-    inline AstModifierKeyword* GenModifierKeyword(LexStream::TokenIndex token)
+    inline AstModifierKeyword* GenModifierKeyword(TokenIndex token)
     {
         AstModifierKeyword* p = NewModifierKeyword(token);
         p -> generated = true;
@@ -5226,7 +5059,7 @@ public:
         return p;
     }
 
-    inline AstEmptyDeclaration* GenEmptyDeclaration(LexStream::TokenIndex t)
+    inline AstEmptyDeclaration* GenEmptyDeclaration(TokenIndex t)
     {
         AstEmptyDeclaration* p = NewEmptyDeclaration(t);
         p -> generated = true;
@@ -5240,7 +5073,7 @@ public:
         return p;
     }
 
-    inline AstTypeParameter* GenTypeParameter(LexStream::TokenIndex token)
+    inline AstTypeParameter* GenTypeParameter(TokenIndex token)
     {
         AstTypeParameter* p = NewTypeParameter(token);
         p -> generated = true;
@@ -5324,8 +5157,7 @@ public:
         return p;
     }
 
-    inline AstArguments* GenArguments(LexStream::TokenIndex left,
-                                      LexStream::TokenIndex right)
+    inline AstArguments* GenArguments(TokenIndex left, TokenIndex right)
     {
         AstArguments* p = NewArguments(left, right);
         p -> generated = true;
@@ -5360,7 +5192,7 @@ public:
         return p;
     }
 
-    inline AstEnumConstant* GenEnumConstant(LexStream::TokenIndex t)
+    inline AstEnumConstant* GenEnumConstant(TokenIndex t)
     {
         AstEnumConstant* p = NewEnumConstant(t);
         p -> generated = true;
@@ -5374,7 +5206,7 @@ public:
         return p;
     }
 
-    inline AstAnnotationDeclaration* GenAnnotationDeclaration(LexStream::TokenIndex t)
+    inline AstAnnotationDeclaration* GenAnnotationDeclaration(TokenIndex t)
     {
         AstAnnotationDeclaration* p = NewAnnotationDeclaration(t);
         p -> generated = true;
@@ -5409,7 +5241,7 @@ public:
         return p;
     }
 
-    inline AstEmptyStatement* GenEmptyStatement(LexStream::TokenIndex token)
+    inline AstEmptyStatement* GenEmptyStatement(TokenIndex token)
     {
         AstEmptyStatement* p = NewEmptyStatement(token);
         p -> generated = true;
@@ -5535,84 +5367,84 @@ public:
         return p;
     }
 
-    inline AstIntegerLiteral* GenIntegerLiteral(LexStream::TokenIndex token)
+    inline AstIntegerLiteral* GenIntegerLiteral(TokenIndex token)
     {
         AstIntegerLiteral* p = NewIntegerLiteral(token);
         p -> generated = true;
         return p;
     }
 
-    inline AstLongLiteral* GenLongLiteral(LexStream::TokenIndex token)
+    inline AstLongLiteral* GenLongLiteral(TokenIndex token)
     {
         AstLongLiteral* p = NewLongLiteral(token);
         p -> generated = true;
         return p;
     }
 
-    inline AstFloatLiteral* GenFloatLiteral(LexStream::TokenIndex token)
+    inline AstFloatLiteral* GenFloatLiteral(TokenIndex token)
     {
         AstFloatLiteral* p = NewFloatLiteral(token);
         p -> generated = true;
         return p;
     }
 
-    inline AstDoubleLiteral* GenDoubleLiteral(LexStream::TokenIndex token)
+    inline AstDoubleLiteral* GenDoubleLiteral(TokenIndex token)
     {
         AstDoubleLiteral* p = NewDoubleLiteral(token);
         p -> generated = true;
         return p;
     }
 
-    inline AstTrueLiteral* GenTrueLiteral(LexStream::TokenIndex token)
+    inline AstTrueLiteral* GenTrueLiteral(TokenIndex token)
     {
         AstTrueLiteral* p = NewTrueLiteral(token);
         p -> generated = true;
         return p;
     }
 
-    inline AstFalseLiteral* GenFalseLiteral(LexStream::TokenIndex token)
+    inline AstFalseLiteral* GenFalseLiteral(TokenIndex token)
     {
         AstFalseLiteral* p = NewFalseLiteral(token);
         p -> generated = true;
         return p;
     }
 
-    inline AstStringLiteral* GenStringLiteral(LexStream::TokenIndex token)
+    inline AstStringLiteral* GenStringLiteral(TokenIndex token)
     {
         AstStringLiteral* p = NewStringLiteral(token);
         p -> generated = true;
         return p;
     }
 
-    inline AstCharacterLiteral* GenCharacterLiteral(LexStream::TokenIndex token)
+    inline AstCharacterLiteral* GenCharacterLiteral(TokenIndex token)
     {
         AstCharacterLiteral* p = NewCharacterLiteral(token);
         p -> generated = true;
         return p;
     }
 
-    inline AstNullLiteral* GenNullLiteral(LexStream::TokenIndex token)
+    inline AstNullLiteral* GenNullLiteral(TokenIndex token)
     {
         AstNullLiteral* p = NewNullLiteral(token);
         p -> generated = true;
         return p;
     }
 
-    inline AstClassLiteral* GenClassLiteral(LexStream::TokenIndex token)
+    inline AstClassLiteral* GenClassLiteral(TokenIndex token)
     {
         AstClassLiteral* p = NewClassLiteral(token);
         p -> generated = true;
         return p;
     }
 
-    inline AstThisExpression* GenThisExpression(LexStream::TokenIndex token)
+    inline AstThisExpression* GenThisExpression(TokenIndex token)
     {
         AstThisExpression* p = NewThisExpression(token);
         p -> generated = true;
         return p;
     }
 
-    inline AstSuperExpression* GenSuperExpression(LexStream::TokenIndex token)
+    inline AstSuperExpression* GenSuperExpression(TokenIndex token)
     {
         AstSuperExpression* p = NewSuperExpression(token);
         p -> generated = true;
@@ -5654,7 +5486,7 @@ public:
         return p;
     }
 
-    inline AstMethodInvocation* GenMethodInvocation(LexStream::TokenIndex t)
+    inline AstMethodInvocation* GenMethodInvocation(TokenIndex t)
     {
         AstMethodInvocation* p = NewMethodInvocation(t);
         p -> generated = true;
@@ -5711,7 +5543,7 @@ public:
     }
 
     inline AstAssignmentExpression* GenAssignmentExpression(AstAssignmentExpression::AssignmentExpressionTag tag,
-                                                            LexStream::TokenIndex token)
+                                                            TokenIndex token)
     {
         AstAssignmentExpression* p = NewAssignmentExpression(tag, token);
         p -> generated = true;

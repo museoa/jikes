@@ -16,6 +16,7 @@
 #include "tuple.h"
 #include "spell.h"
 #include "option.h"
+#include "stream.h"
 
 #ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes { // Open namespace Jikes block
@@ -321,7 +322,7 @@ void Semantic::ReportMethodNotFound(AstMethodInvocation* method_call,
     SemanticEnvironment* top_env = state_stack.Top();
     assert((base == NULL) == (type == NULL));
 
-    LexStream::TokenIndex id_token = method_call -> identifier_token;
+    TokenIndex id_token = method_call -> identifier_token;
     NameSymbol* name_symbol = lex_stream -> NameSymbol(id_token);
     MethodShadowSymbol* method_shadow;
 
@@ -552,7 +553,7 @@ void Semantic::ReportConstructorNotFound(Ast* ast, TypeSymbol* type)
         ast -> ClassCreationExpressionCast();
     AstSuperCall* super_call = ast -> SuperCallCast();
     AstArguments* args;
-    LexStream::TokenIndex left_tok;
+    TokenIndex left_tok;
 
     if (class_creation)
     {
@@ -574,7 +575,7 @@ void Semantic::ReportConstructorNotFound(Ast* ast, TypeSymbol* type)
         left_tok = this_call -> this_token;
     }
     unsigned num_arguments = args -> NumArguments();
-    LexStream::TokenIndex right_tok = args -> right_parenthesis_token;
+    TokenIndex right_tok = args -> right_parenthesis_token;
 
     //
     // Search for an accessible constructor with different arguments. Favor
@@ -698,8 +699,8 @@ void Semantic::ReportConstructorNotFound(Ast* ast, TypeSymbol* type)
 
 
 MethodSymbol* Semantic::FindConstructor(TypeSymbol* containing_type, Ast* ast,
-                                        LexStream::TokenIndex left_tok,
-                                        LexStream::TokenIndex right_tok)
+                                        TokenIndex left_tok,
+                                        TokenIndex right_tok)
 {
     if (containing_type == control.no_type)
         return NULL;
@@ -823,7 +824,7 @@ VariableSymbol* Semantic::FindMisspelledVariableName(TypeSymbol* type,
         field_name ? field_name -> base_opt : field_access -> base;
     VariableSymbol* misspelled_variable = NULL;
     int index = 0;
-    LexStream::TokenIndex identifier_token = expr -> RightToken();
+    TokenIndex identifier_token = expr -> RightToken();
     const wchar_t* name = lex_stream -> NameString(identifier_token);
 
     for (unsigned k = 0;
@@ -875,7 +876,7 @@ MethodSymbol* Semantic::FindMisspelledMethodName(TypeSymbol* type,
     AstExpression* base = method_call -> base_opt;
     MethodSymbol* misspelled_method = NULL;
     int index = 0;
-    LexStream::TokenIndex identifier_token = method_call -> identifier_token;
+    TokenIndex identifier_token = method_call -> identifier_token;
 
     for (unsigned k = 0;
          k < type -> expanded_method_table -> symbol_pool.Length(); k++)
@@ -944,7 +945,7 @@ MethodShadowSymbol* Semantic::FindMethodInType(TypeSymbol* type,
 {
     Tuple<MethodShadowSymbol*> method_set(2); // Stores method overloads.
     AstExpression* base = method_call -> base_opt;
-    LexStream::TokenIndex id_token = method_call -> identifier_token;
+    TokenIndex id_token = method_call -> identifier_token;
     assert(base);
     if (! name_symbol)
         name_symbol = lex_stream -> NameSymbol(id_token);
@@ -1049,7 +1050,7 @@ void Semantic::FindMethodInEnvironment(Tuple<MethodShadowSymbol*>& methods_found
                                        AstMethodInvocation* method_call)
 {
     assert(! method_call -> base_opt);
-    LexStream::TokenIndex id_token = method_call -> identifier_token;
+    TokenIndex id_token = method_call -> identifier_token;
     NameSymbol* name_symbol = lex_stream -> NameSymbol(id_token);
 
     for (SemanticEnvironment* env = envstack; env; env = env -> previous)
@@ -1303,7 +1304,7 @@ VariableSymbol* Semantic::FindVariableInType(TypeSymbol* type,
 //
 void Semantic::ReportVariableNotFound(AstExpression* access, TypeSymbol* type)
 {
-    LexStream::TokenIndex id_token = access -> RightToken();
+    TokenIndex id_token = access -> RightToken();
     NameSymbol* name_symbol = lex_stream -> NameSymbol(id_token);
     VariableShadowSymbol* variable_shadow;
 
@@ -1432,7 +1433,7 @@ void Semantic::FindVariableInEnvironment(Tuple<VariableSymbol*>& variables_found
                                          SemanticEnvironment*& where_found,
                                          SemanticEnvironment* envstack,
                                          NameSymbol* name_symbol,
-                                         LexStream::TokenIndex identifier_token)
+                                         TokenIndex identifier_token)
 {
     variables_found.Reset();
     where_found = (SemanticEnvironment*) NULL;
@@ -1478,7 +1479,7 @@ void Semantic::FindVariableInEnvironment(Tuple<VariableSymbol*>& variables_found
 
 
 VariableSymbol* Semantic::FindVariableInEnvironment(SemanticEnvironment*& where_found,
-                                                    LexStream::TokenIndex identifier_token)
+                                                    TokenIndex identifier_token)
 {
     Tuple<VariableSymbol*> variables_found(2);
     NameSymbol* name_symbol = lex_stream -> NameSymbol(identifier_token);
@@ -1676,7 +1677,7 @@ AstExpression* Semantic::FindEnclosingInstance(AstExpression* base,
         return NULL;
     }
 
-    LexStream::TokenIndex tok = base -> RightToken();
+    TokenIndex tok = base -> RightToken();
 
     AstFieldAccess* field_access =
         compilation_unit -> ast_pool -> GenFieldAccess();
@@ -1701,8 +1702,8 @@ AstExpression* Semantic::CreateAccessToType(Ast* source,
 {
     TypeSymbol* this_type = ThisType();
 
-    LexStream::TokenIndex left_tok;
-    LexStream::TokenIndex right_tok;
+    TokenIndex left_tok;
+    TokenIndex right_tok;
 
     AstName* variable = source -> NameCast();
     AstMethodInvocation* method = source -> MethodInvocationCast();
@@ -1864,7 +1865,7 @@ void Semantic::CreateAccessToScopedVariable(AstName* name,
                    (variable -> ACC_PROTECTED() &&
                     environment_type -> IsSubclass(containing_type)));
 
-            LexStream::TokenIndex loc = name -> identifier_token;
+            TokenIndex loc = name -> identifier_token;
             AstArguments* args =
                 compilation_unit -> ast_pool -> GenArguments(loc, loc);
             if (! variable -> ACC_STATIC())
@@ -2225,7 +2226,7 @@ void Semantic::FindVariableMember(TypeSymbol* type, AstExpression* expr)
     AstFieldAccess* field_access = expr -> FieldAccessCast();
     AstName* name = expr -> NameCast();
     AstExpression* base = name ? name -> base_opt : field_access -> base;
-    LexStream::TokenIndex id_token = expr -> RightToken();
+    TokenIndex id_token = expr -> RightToken();
     bool base_is_type = base -> symbol -> TypeCast() && base -> NameCast();
 
     if (type -> Bad())
@@ -2849,7 +2850,7 @@ MethodShadowSymbol* Semantic::FindMethodMember(TypeSymbol* type,
                                                AstMethodInvocation* method_call)
 {
     AstExpression* base = method_call -> base_opt;
-    LexStream::TokenIndex id_token = method_call -> identifier_token;
+    TokenIndex id_token = method_call -> identifier_token;
     assert(base);
     //
     // TypeCast() returns true for super, this, and instance creation as
@@ -2994,7 +2995,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation* method_call)
 {
     TypeSymbol* this_type = ThisType();
     AstExpression* base = method_call -> base_opt;
-    LexStream::TokenIndex id_token = method_call -> identifier_token;
+    TokenIndex id_token = method_call -> identifier_token;
     TypeSymbol* base_type;
     MethodShadowSymbol* method_shadow;
     if (! base)
@@ -3593,9 +3594,8 @@ void Semantic::UpdateLocalConstructors(TypeSymbol* inner_type)
 void Semantic::GetAnonymousConstructor(AstClassCreationExpression* class_creation,
                                        TypeSymbol* anonymous_type)
 {
-    LexStream::TokenIndex left_loc =
-        class_creation -> class_type -> LeftToken();
-    LexStream::TokenIndex right_loc =
+    TokenIndex left_loc = class_creation -> class_type -> LeftToken();
+    TokenIndex right_loc =
         class_creation -> arguments -> right_parenthesis_token;
 
     state_stack.Push(anonymous_type -> semantic_environment);
@@ -4680,9 +4680,8 @@ bool Semantic::CanAssignmentConvert(const TypeSymbol* target_type,
 // identity, narrowing, or widening conversion. The lexical token is needed
 // in case an error is encountered when resolving the target type.
 //
-bool Semantic::CanCastConvert(TypeSymbol* target_type,
-                              TypeSymbol* source_type,
-                              LexStream::TokenIndex tok)
+bool Semantic::CanCastConvert(TypeSymbol* target_type, TypeSymbol* source_type,
+                              TokenIndex tok)
 {
     if (target_type == control.null_type)
         return false;
@@ -5082,7 +5081,7 @@ AstExpression* Semantic::ConvertToType(AstExpression* expr,
         return expr;
     }
 
-    LexStream::TokenIndex loc = expr -> LeftToken();
+    TokenIndex loc = expr -> LeftToken();
 
     AstCastExpression* result =
         compilation_unit -> ast_pool -> GenCastExpression();

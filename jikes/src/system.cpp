@@ -1325,8 +1325,7 @@ MethodSymbol* Control::ProcessSystemMethod(TypeSymbol* type,
         {
             system_semantic ->
                 ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
-                               LexStream::BadToken(),
-                               type -> ContainingPackageName(),
+                               BAD_TOKEN, type -> ContainingPackageName(),
                                type -> ExternalName());
         }
         method = type -> InsertMethodSymbol(name_symbol);
@@ -1352,8 +1351,7 @@ VariableSymbol* Control::ProcessSystemField(TypeSymbol* type,
     {
         field = type -> FindVariableSymbol(name_symbol);
         if (! field -> IsTyped())
-            field -> ProcessVariableSignature(system_semantic,
-                                              LexStream::BadToken());
+            field -> ProcessVariableSignature(system_semantic, BAD_TOKEN);
         field -> MarkInitialized();
     }
     if (! field)
@@ -1362,8 +1360,7 @@ VariableSymbol* Control::ProcessSystemField(TypeSymbol* type,
         {
             system_semantic ->
                 ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
-                               LexStream::BadToken(),
-                               type -> ContainingPackageName(),
+                               BAD_TOKEN, type -> ContainingPackageName(),
                                type -> ExternalName());
         }
         field = type -> InsertVariableSymbol(name_symbol);

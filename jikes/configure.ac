@@ -153,17 +153,8 @@ AC_CXX_MEMBER_CONSTANTS()
 dnl	Check to see if the explicit C++ keyword is supported
 AC_CXX_EXPLICIT()
 
-dnl	Check to see if RTTI is implemented, it is needed
-dnl	to support dynamic casting and type queries. RTTI
-dnl	is known to be buggy so it is disabled by default,
-dnl	you can force testing for it by setting the cache
-dnl	variable to test, or set it directly to whatever
-dnl	you want (yes is the only other logical setting).
-if test "x" = "x$ac_cv_cxx_rtti" ; then
-    ac_cv_cxx_rtti=no
-elif test "xtest" = "x$ac_cv_cxx_rtti" ; then
-    unset ac_cv_cxx_rtti
-fi
+dnl	Check to see if RTTI is implemented, it is needed for better dynamic
+dnl     casting.
 AC_CXX_RTTI()
 
 dnl	Check for newer C++ style cast support

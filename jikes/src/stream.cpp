@@ -1353,7 +1353,7 @@ void LexStream::PrintMessages()
                 name[length] = U_NULL;
                 control.system_semantic ->
                     ReportSemError(SemanticError::CANNOT_REOPEN_FILE,
-                                   BadToken(), name);
+                                   BAD_TOKEN, name);
                 delete [] name;
             }
             else

@@ -1311,8 +1311,7 @@ void ClassFile::Write(TypeSymbol* unit_type) const
 // parsed.
 //
 TypeSymbol* Semantic::ProcessSignature(TypeSymbol* base_type,
-                                       const char*& signature,
-                                       LexStream::TokenIndex tok)
+                                       const char*& signature, TokenIndex tok)
 {
     TypeSymbol* type;
     int num_dimensions = 0;
@@ -1382,7 +1381,7 @@ TypeSymbol* Semantic::ProcessSignature(TypeSymbol* base_type,
 //
 TypeSymbol* Semantic::GetType(TypeSymbol* base_type, CPClassInfo* class_info,
                               const ConstantPool& constant_pool,
-                              LexStream::TokenIndex tok)
+                              TokenIndex tok)
 {
     if (! class_info -> Type())
     {
@@ -1405,7 +1404,7 @@ TypeSymbol* Semantic::GetType(TypeSymbol* base_type, CPClassInfo* class_info,
 //
 TypeSymbol* Semantic::ProcessNestedType(TypeSymbol* base_type,
                                         NameSymbol* name_symbol,
-                                        LexStream::TokenIndex tok)
+                                        TokenIndex tok)
 {
     TypeSymbol* inner_type = base_type -> FindTypeSymbol(name_symbol);
     if (! inner_type)
@@ -1460,8 +1459,7 @@ TypeSymbol* Semantic::ProcessNestedType(TypeSymbol* base_type,
 // the type nesting separator.
 //
 TypeSymbol* Semantic::RetrieveNestedTypes(TypeSymbol* base_type,
-                                          wchar_t* signature,
-                                          LexStream::TokenIndex tok)
+                                          wchar_t* signature, TokenIndex tok)
 {
     int len;
     for (len = 0;
@@ -1481,8 +1479,7 @@ TypeSymbol* Semantic::RetrieveNestedTypes(TypeSymbol* base_type,
 //
 TypeSymbol* Semantic::ReadTypeFromSignature(TypeSymbol* base_type,
                                             const char* utf8_signature,
-                                            int length,
-                                            LexStream::TokenIndex tok)
+                                            int length, TokenIndex tok)
 {
     TypeSymbol* type = control.type_table.FindType(utf8_signature, length);
 
@@ -1616,7 +1613,7 @@ TypeSymbol* Semantic::ReadTypeFromSignature(TypeSymbol* base_type,
 // This is called when a type needs to be read from a .class file. It reads
 // the file and fills in the symbol table of type.
 //
-void Semantic::ReadClassFile(TypeSymbol* type, LexStream::TokenIndex tok)
+void Semantic::ReadClassFile(TypeSymbol* type, TokenIndex tok)
 {
 #ifdef JIKES_DEBUG
     control.class_files_read++;
@@ -1691,8 +1688,7 @@ void Semantic::ReadClassFile(TypeSymbol* type, LexStream::TokenIndex tok)
 // Attempts to read in a type from a buffer representing a .class file.
 //
 void Semantic::ProcessClassFile(TypeSymbol* type, const char* buffer,
-                                unsigned buffer_size,
-                                LexStream::TokenIndex tok)
+                                unsigned buffer_size, TokenIndex tok)
 {
     assert(! type -> HeaderProcessed());
     ClassFile* class_data = new ClassFile(buffer, buffer_size);

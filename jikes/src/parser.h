@@ -127,7 +127,7 @@ protected:
     // xi => ti w.
     //
     //********************************************************************
-    inline LexStream::TokenIndex Token(int i)
+    inline TokenIndex Token(int i)
     {
         return location_stack[state_stack_top + (i - 1)];
     }

@@ -12,6 +12,7 @@
 #include "ast.h"
 #include "semantic.h"
 #include "option.h"
+#include "stream.h"
 
 #ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes { // Open namespace Jikes block

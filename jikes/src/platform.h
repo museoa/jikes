@@ -200,6 +200,8 @@ typedef int32_t i4;
 typedef uint64_t u8;
 typedef int64_t i8;
 #endif // HAVE_64BIT_TYPES
+typedef u4 TokenIndex;
+static const TokenIndex BAD_TOKEN = (TokenIndex) 0;
 
 // Rename for readability in double.h.
 #ifdef TYPE_INT32_T_IS_INT
@@ -211,12 +213,10 @@ typedef int64_t i8;
 // and its possible values: "false" and "true"
 //
 #ifndef HAVE_BOOL
-//======================================================================
 // We define the type "bool" and the constants "false" and "true".
 // The type bool as well as the constants false and true are expected
 // to become standard C++. When that happens, these declarations should
 // be removed.
-//======================================================================
 typedef unsigned char bool;
 enum { false = 0, true = 1 };
 #endif
@@ -270,29 +270,28 @@ inline TO DYNAMIC_CAST(FROM f)
 //
 
 #ifndef HAVE_WCSLEN
-    extern size_t wcslen(const wchar_t *);
+    extern size_t wcslen(const wchar_t*);
 #endif
 
 #ifndef HAVE_WCSCPY
-    extern wchar_t *wcscpy(wchar_t *, const wchar_t *);
+    extern wchar_t* wcscpy(wchar_t*, const wchar_t*);
 #endif
 
 #ifndef HAVE_WCSNCPY
-    extern wchar_t *wcsncpy(wchar_t *, const wchar_t *, size_t);
+    extern wchar_t* wcsncpy(wchar_t*, const wchar_t*, size_t);
 #endif
 
 #ifndef HAVE_WCSCAT
-    extern wchar_t *wcscat(wchar_t *, const wchar_t *);
+    extern wchar_t* wcscat(wchar_t*, const wchar_t*);
 #endif
 
 #ifndef HAVE_WCSCMP
-    extern int wcscmp(const wchar_t *, const wchar_t *);
+    extern int wcscmp(const wchar_t*, const wchar_t*);
 #endif
 
 #ifndef HAVE_WCSNCMP
-    extern int wcsncmp(const wchar_t *, const wchar_t *, size_t);
+    extern int wcsncmp(const wchar_t*, const wchar_t*, size_t);
 #endif
-
 
 
 //
@@ -318,11 +317,11 @@ extern void FloatingPointCheck();
 // variants of system functions
 // are declared here and defined in code.cpp
 //
-extern int SystemStat(const char *name, struct stat *stat_struct);
-extern FILE *SystemFopen(const char *name, const char *mode);
-extern size_t SystemFread(char *ptr, size_t element_size, size_t count,
-                          FILE *stream);
-extern int SystemIsDirectory(char *name);
+extern int SystemStat(const char* name, struct stat* stat_struct);
+extern FILE* SystemFopen(const char* name, const char* mode);
+extern size_t SystemFread(char* ptr, size_t element_size, size_t count,
+                          FILE* stream);
+extern int SystemIsDirectory(char* name);
 
 //
 // The symbol used in this environment for separating argument in a system
@@ -330,14 +329,12 @@ extern int SystemIsDirectory(char *name);
 // are separated by a ':', whereas in win95 it is ';'.
 //
 extern char PathSeparator();
-extern int SystemMkdir(char *);
-extern int SystemMkdirhier(char *);
-extern int SystemMkdirhierForFile(char *);
+extern int SystemMkdir(char*);
+extern int SystemMkdirhier(char*);
+extern int SystemMkdirhierForFile(char*);
 
-extern char * strcat3(const char *, const char *, const char *);
-extern char * wstring2string(wchar_t * in);
-
-
+extern char* strcat3(const char*, const char*, const char*);
+extern char* wstring2string(wchar_t* in);
 
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -346,7 +343,6 @@ extern char * wstring2string(wchar_t * in);
 // in this file should work on any system
 //
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 
 
 // The following comment was part of the original config.h, it explains why
@@ -767,13 +763,13 @@ class IEEEdouble;
 class DoubleToString
 {
 public:
-    DoubleToString(const IEEEdouble &);
+    DoubleToString(const IEEEdouble&);
 
-    const char *String() const { return str; }
+    const char* String() const { return str; }
     int Length() const { return length; }
 
 private:
-    void Format(char *, int, bool);
+    void Format(char*, int, bool);
 
     enum
     {
@@ -793,13 +789,13 @@ class IEEEfloat;
 class FloatToString
 {
 public:
-    FloatToString(const IEEEfloat &);
+    FloatToString(const IEEEfloat&);
 
-    const char *String() const { return str; }
+    const char* String() const { return str; }
     int Length() const   { return length; }
 
 private:
-    void Format(char *, int, bool);
+    void Format(char*, int, bool);
 
     enum
     {
@@ -813,7 +809,6 @@ private:
 };
 
 
-
 class LongInt;
 class ULongInt;
 //
@@ -821,7 +816,7 @@ class ULongInt;
 //
 class Ostream
 {
-    ostream *os;
+    ostream* os;
 
     bool expand_wchar;
 
@@ -831,8 +826,9 @@ public:
                 expand_wchar(false)
     {}
 
-    Ostream(ostream *_os) : os(_os),
-                            expand_wchar(false)
+    Ostream(ostream* _os)
+        : os(_os)
+        , expand_wchar(false)
     {}
 
     void StandardOutput() { os = &cout; }
@@ -840,7 +836,7 @@ public:
     void SetExpandWchar(bool val = true) { expand_wchar = val; }
     bool ExpandWchar() { return expand_wchar; }
 
-    Ostream &operator<<(wchar_t ch)
+    Ostream& operator<<(wchar_t ch)
     {
         // output only printable characters directly
         if (ch == U_CARRIAGE_RETURN || ch == U_LINE_FEED)
@@ -877,51 +873,51 @@ public:
         return *this;
     }
 
-    Ostream &operator<<(const wchar_t *str)
+    Ostream& operator<<(const wchar_t* str)
     {
-        for (; *str; str++)
+        for ( ; *str; str++)
             (*this) << *str;
         return *this;
     }
 
 
-    Ostream &operator<<(char c)
+    Ostream& operator<<(char c)
     {
         *os << c;
         return *this;
     }
 
-    Ostream &operator<<(signed char c)
+    Ostream& operator<<(signed char c)
     {
         *os << c;
         return *this;
     }
 
-    Ostream &operator<<(unsigned char c)
+    Ostream& operator<<(unsigned char c)
     {
         *os << c;
         return *this;
     }
 
-    Ostream &operator<<(const char *c)
+    Ostream& operator<<(const char* c)
     {
         *os << c;
         return *this;
     }
 
-    Ostream &operator<<(const signed char *c)
+    Ostream& operator<<(const signed char* c)
     {
         *os << c;
         return *this;
     }
 
-    Ostream &operator<<(const unsigned char *c)
+    Ostream& operator<<(const unsigned char* c)
     {
 #ifndef HAVE_OSTREAM_CONST_UNSIGNED_CHAR_PTR
 # ifdef HAVE_CONST_CAST
-        *os << const_cast<unsigned char *> (c);
+        *os << const_cast<unsigned char*> (c);
 # else
-        *os << (unsigned char *) c;
+        *os << (unsigned char*) c;
 # endif
 #else
         *os << c;
@@ -929,40 +925,40 @@ public:
         return *this;
     }
 
-    Ostream &operator<<(int a)
+    Ostream& operator<<(int a)
     {
         *os << a;
         return *this;
     }
 
-    Ostream &operator<<(unsigned int a)
+    Ostream& operator<<(unsigned int a)
     {
         *os << a;
         return *this;
     }
 
-    Ostream &operator<<(long a)
+    Ostream& operator<<(long a)
     {
         *os << a;
         return *this;
     }
 
-    Ostream &operator<<(unsigned long a)
+    Ostream& operator<<(unsigned long a)
     {
         *os << a;
         return *this;
     }
 
-    Ostream &operator<<(LongInt);
-    Ostream &operator<<(ULongInt);
+    Ostream& operator<<(LongInt);
+    Ostream& operator<<(ULongInt);
 
-    Ostream &operator<<(float f)
+    Ostream& operator<<(float f)
     {
         *os << f;
         return *this;
     }
 
-    Ostream &operator<<(double d)
+    Ostream& operator<<(double d)
     {
         *os << d;
         return *this;
@@ -970,7 +966,7 @@ public:
 
     char fill(char c) { return os -> fill(c); }
 
-    Ostream &flush()
+    Ostream& flush()
     {
         os -> flush();
         return *this;
@@ -981,13 +977,13 @@ public:
         return os -> width(w);
     }
 
-    Ostream &operator<<(ios &(*f)(ios&))
+    Ostream& operator<<(ios& (*f)(ios&))
     {
         (*f)(*os);
         return *this;
     }
 
-    Ostream &operator<<(ostream &(*f)(ostream&))
+    Ostream& operator<<(ostream& (*f)(ostream&))
     {
         (*f)(*os);
         return *this;

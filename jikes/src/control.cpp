@@ -234,13 +234,12 @@ Control::Control(char** arguments, Option& option_)
     {
         system_semantic ->
             ReportSemError(SemanticError::CANNOT_OPEN_PATH_DIRECTORY,
-                           LexStream::BadToken(), bad_dirnames[i]);
+                           BAD_TOKEN, bad_dirnames[i]);
     }
     for (i = 0; i < bad_zip_filenames.Length(); i++)
     {
         system_semantic -> ReportSemError(SemanticError::CANNOT_OPEN_ZIP_FILE,
-                                          LexStream::BadToken(),
-                                          bad_zip_filenames[i]);
+                                          BAD_TOKEN, bad_zip_filenames[i]);
     }
 
     //
@@ -249,7 +248,7 @@ Control::Control(char** arguments, Option& option_)
     if (lang_package -> directory.Length() == 0)
     {
         system_semantic -> ReportSemError(SemanticError::PACKAGE_NOT_FOUND,
-                                          LexStream::BadToken(),
+                                          BAD_TOKEN,
                                           StringConstant::US_java_SL_lang);
     }
 
@@ -285,7 +284,7 @@ Control::Control(char** arguments, Option& option_)
                     name[j] = option.directory[j];
                 name[length] = U_NULL;
                 system_semantic -> ReportSemError(SemanticError::CANNOT_OPEN_DIRECTORY,
-                                                  LexStream::BadToken(), name);
+                                                  BAD_TOKEN, name);
                 delete [] name;
             }
         }
@@ -297,8 +296,7 @@ Control::Control(char** arguments, Option& option_)
     for (i = 0; i < bad_input_filenames.Length(); i++)
     {
         system_semantic -> ReportSemError(SemanticError::BAD_INPUT_FILE,
-                                          LexStream::BadToken(),
-                                          bad_input_filenames[i]);
+                                          BAD_TOKEN, bad_input_filenames[i]);
     }
 
     //
@@ -307,7 +305,7 @@ Control::Control(char** arguments, Option& option_)
     for (i = 0; i < unreadable_input_filenames.Length(); i++)
     {
         system_semantic -> ReportSemError(SemanticError::UNREADABLE_INPUT_FILE,
-                                          LexStream::BadToken(),
+                                          BAD_TOKEN,
                                           unreadable_input_filenames[i]);
     }
 
@@ -379,8 +377,7 @@ Control::Control(char** arguments, Option& option_)
                 {
                     system_semantic ->
                         ReportSemError(SemanticError::BAD_INPUT_FILE,
-                                       LexStream::BadToken(),
-                                       bad_input_filenames[i]);
+                                       BAD_TOKEN, bad_input_filenames[i]);
                 }
 
                 //
@@ -390,7 +387,7 @@ Control::Control(char** arguments, Option& option_)
                 {
                     system_semantic ->
                         ReportSemError(SemanticError::UNREADABLE_INPUT_FILE,
-                                       LexStream::BadToken(),
+                                       BAD_TOKEN,
                                        unreadable_input_filenames[i]);
                 }
 
@@ -1478,7 +1475,7 @@ void Control::ProcessPackageDeclaration(FileSymbol* file_symbol,
 
     for (unsigned i = 0; i < file_symbol -> lex_stream -> NumTypes(); i++)
     {
-        LexStream::TokenIndex identifier_token = file_symbol -> lex_stream ->
+        TokenIndex identifier_token = file_symbol -> lex_stream ->
             Next(file_symbol -> lex_stream -> Type(i));
         if (file_symbol -> lex_stream -> Kind(identifier_token) ==
             TK_Identifier)

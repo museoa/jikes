@@ -747,7 +747,7 @@ public:
 
     // Report a multi-token semantic warning or error.
     void ReportSemError(SemanticError::SemanticErrorKind kind,
-                        LexStream::TokenIndex ltok, LexStream::TokenIndex rtok,
+                        TokenIndex ltok, TokenIndex rtok,
                         const wchar_t* s1 = NULL, const wchar_t* s2 = NULL,
                         const wchar_t* s3 = NULL, const wchar_t* s4 = NULL,
                         const wchar_t* s5 = NULL, const wchar_t* s6 = NULL,
@@ -774,8 +774,7 @@ public:
     }
 
     // Report a single-token semantic warning or error.
-    void ReportSemError(SemanticError::SemanticErrorKind kind,
-                        LexStream::TokenIndex tok,
+    void ReportSemError(SemanticError::SemanticErrorKind kind, TokenIndex tok,
                         const wchar_t* s1 = NULL, const wchar_t* s2 = NULL,
                         const wchar_t* s3 = NULL, const wchar_t* s4 = NULL,
                         const wchar_t* s5 = NULL, const wchar_t* s6 = NULL,
@@ -802,19 +801,16 @@ public:
     void CheckPackage();
     void ProcessTypeNames();
     void ProcessImports();
-    TypeSymbol* ReadType(FileSymbol*, PackageSymbol*, NameSymbol*,
-                         LexStream::TokenIndex);
+    TypeSymbol* ReadType(FileSymbol*, PackageSymbol*, NameSymbol*, TokenIndex);
 
     // Implemented in init.cpp - determines values of final fields.
     void ComputeFinalValue(VariableSymbol*);
 
     // Implemented in class.cpp - reads in a .class file.
-    TypeSymbol* ProcessSignature(TypeSymbol*, const char*&,
-                                 LexStream::TokenIndex);
+    TypeSymbol* ProcessSignature(TypeSymbol*, const char*&, TokenIndex);
     TypeSymbol* ReadTypeFromSignature(TypeSymbol*, const char*, int,
-                                      LexStream::TokenIndex);
-    TypeSymbol* ProcessNestedType(TypeSymbol*, NameSymbol*,
-                                  LexStream::TokenIndex);
+                                      TokenIndex);
+    TypeSymbol* ProcessNestedType(TypeSymbol*, NameSymbol*, TokenIndex);
 
     // Implemented in expr.cpp - semantic checks of expressions
     bool IsConstantTrue(AstExpression* expr);
@@ -953,23 +949,21 @@ private:
 
     // Implemented in decl.cpp - nested class processing
     void CheckNestedMembers(TypeSymbol*, AstClassBody*);
-    void CheckNestedTypeDuplication(SemanticEnvironment*,
-                                    LexStream::TokenIndex);
+    void CheckNestedTypeDuplication(SemanticEnvironment*, TokenIndex);
     TypeSymbol* ProcessNestedTypeName(TypeSymbol*, AstDeclaredType*);
-    TypeSymbol* FindTypeInShadow(TypeShadowSymbol*, LexStream::TokenIndex);
-    void ReportTypeInaccessible(LexStream::TokenIndex, LexStream::TokenIndex,
-                                TypeSymbol*);
+    TypeSymbol* FindTypeInShadow(TypeShadowSymbol*, TokenIndex);
+    void ReportTypeInaccessible(TokenIndex, TokenIndex, TypeSymbol*);
     void ReportTypeInaccessible(Ast* ast, TypeSymbol* type)
     {
         ReportTypeInaccessible(ast -> LeftToken(), ast -> RightToken(), type);
     }
-    TypeSymbol* GetBadNestedType(TypeSymbol*, LexStream::TokenIndex);
-    TypeSymbol* FindNestedType(TypeSymbol*, LexStream::TokenIndex);
+    TypeSymbol* GetBadNestedType(TypeSymbol*, TokenIndex);
+    TypeSymbol* FindNestedType(TypeSymbol*, TokenIndex);
     TypeSymbol* MustFindNestedType(TypeSymbol*, AstName*);
     void ProcessImportQualifiedName(AstName*);
     void ProcessPackageOrType(AstName*);
     void ProcessTypeImportOnDemandDeclaration(AstImportDeclaration*);
-    TypeSymbol* FindSimpleNameType(PackageSymbol*, LexStream::TokenIndex);
+    TypeSymbol* FindSimpleNameType(PackageSymbol*, TokenIndex);
     void ProcessSingleTypeImportDeclaration(AstImportDeclaration*);
 
     // Implemented in modifier.cpp - process declaration modifiers
@@ -997,9 +991,9 @@ private:
     void CheckFieldDeclaration(AstFieldDeclaration*, AstVariableDeclaratorId*,
                                const AccessFlags&);
     void CheckFieldName(AstVariableDeclaratorId*, NameSymbol*, bool);
-    TypeSymbol* ImportType(LexStream::TokenIndex, NameSymbol*);
+    TypeSymbol* ImportType(TokenIndex, NameSymbol*);
     TypeSymbol* FindPrimitiveType(AstPrimitiveType*);
-    TypeSymbol* FindType(LexStream::TokenIndex);
+    TypeSymbol* FindType(TokenIndex);
     TypeSymbol* FindInaccessibleType(AstName*);
     TypeSymbol* MustFindType(AstName*);
     void ProcessType(AstType*);
@@ -1016,8 +1010,7 @@ private:
                                             const TypeSymbol*);
     inline bool CanNarrowingPrimitiveConvert(const TypeSymbol*,
                                              const TypeSymbol*);
-    bool CanCastConvert(TypeSymbol*, TypeSymbol*,
-                        LexStream::TokenIndex = LexStream::BadToken());
+    bool CanCastConvert(TypeSymbol*, TypeSymbol*, TokenIndex = 0);
     bool CanMethodInvocationConvert(const TypeSymbol*, const TypeSymbol*);
     bool CanAssignmentConvert(const TypeSymbol*, AstExpression*);
     bool CanAssignmentConvertReference(const TypeSymbol*, const TypeSymbol*);
@@ -1147,9 +1140,7 @@ private:
     wchar_t* Header(const NameSymbol*, AstArguments*);
     void ReportConstructorNotFound(Ast*, TypeSymbol*);
     void ReportMethodNotFound(AstMethodInvocation*, TypeSymbol*);
-    MethodSymbol* FindConstructor(TypeSymbol*, Ast*,
-                                  LexStream::TokenIndex,
-                                  LexStream::TokenIndex);
+    MethodSymbol* FindConstructor(TypeSymbol*, Ast*, TokenIndex, TokenIndex);
     inline bool MoreSpecific(MethodSymbol*, MethodSymbol*);
     inline bool MoreSpecific(MethodSymbol*, Tuple<MethodSymbol*>&);
     inline bool NoMethodMoreSpecific(Tuple<MethodSymbol*>&, MethodSymbol*);
@@ -1171,11 +1162,11 @@ private:
     void FindVariableInEnvironment(Tuple<VariableSymbol*>&,
                                    SemanticEnvironment*&,
                                    SemanticEnvironment*, NameSymbol*,
-                                   LexStream::TokenIndex);
+                                   TokenIndex);
     VariableSymbol* FindMisspelledVariableName(TypeSymbol*,
                                                AstExpression*);
     VariableSymbol* FindVariableInEnvironment(SemanticEnvironment*&,
-                                              LexStream::TokenIndex);
+                                              TokenIndex);
     VariableSymbol* FindVariableInType(TypeSymbol*, AstExpression*,
                                        NameSymbol* = NULL);
     VariableSymbol* FindLocalVariable(VariableSymbol*, TypeSymbol*);
@@ -1318,20 +1309,17 @@ private:
     void CheckMethodOverride(MethodSymbol*, MethodSymbol*, TypeSymbol*);
     void AddInheritedTypes(TypeSymbol*, TypeSymbol*);
     void AddInheritedFields(TypeSymbol*, TypeSymbol*);
-    void AddInheritedMethods(TypeSymbol*, TypeSymbol*,
-                             LexStream::TokenIndex);
-    void ComputeTypesClosure(TypeSymbol*, LexStream::TokenIndex);
-    void ComputeFieldsClosure(TypeSymbol*, LexStream::TokenIndex);
-    void ComputeMethodsClosure(TypeSymbol*, LexStream::TokenIndex);
+    void AddInheritedMethods(TypeSymbol*, TypeSymbol*, TokenIndex);
+    void ComputeTypesClosure(TypeSymbol*, TokenIndex);
+    void ComputeFieldsClosure(TypeSymbol*, TokenIndex);
+    void ComputeMethodsClosure(TypeSymbol*, TokenIndex);
 
     // Implemented in class.cpp - reads in a .class file.
-    TypeSymbol* RetrieveNestedTypes(TypeSymbol*, wchar_t*,
-                                    LexStream::TokenIndex);
+    TypeSymbol* RetrieveNestedTypes(TypeSymbol*, wchar_t*, TokenIndex);
     TypeSymbol* GetType(TypeSymbol*, CPClassInfo*, const ConstantPool&,
-                        LexStream::TokenIndex);
-    void ProcessClassFile(TypeSymbol*, const char*, unsigned,
-                          LexStream::TokenIndex);
-    void ReadClassFile(TypeSymbol*, LexStream::TokenIndex);
+                        TokenIndex);
+    void ProcessClassFile(TypeSymbol*, const char*, unsigned, TokenIndex);
+    void ReadClassFile(TypeSymbol*, TokenIndex);
 
     // Implemented in depend.cpp - class dependence tracking.
     void AddDependence(TypeSymbol*, TypeSymbol*, bool = false);

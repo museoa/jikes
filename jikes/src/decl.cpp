@@ -14,6 +14,7 @@
 #include "tuple.h"
 #include "spell.h"
 #include "option.h"
+#include "stream.h"
 
 #ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes { // Open namespace Jikes block
@@ -98,7 +99,7 @@ void Semantic::ProcessTypeNames()
     {
         for (unsigned i = 0; i < lex_stream -> NumTypes(); i++)
         {
-            LexStream::TokenIndex identifier_token =
+            TokenIndex identifier_token =
                 lex_stream -> Next(lex_stream -> Type(i));
             NameSymbol* name_symbol =
                 lex_stream -> NameSymbol(identifier_token);
@@ -134,7 +135,7 @@ void Semantic::ProcessTypeNames()
     //
     for (unsigned k = 0; k < compilation_unit -> NumTypeDeclarations(); k++)
     {
-        LexStream::TokenIndex identifier_token = LexStream::BadToken();
+        TokenIndex identifier_token = BAD_TOKEN;
         TypeSymbol* type = NULL;
         AstDeclaredType* declaration = compilation_unit -> TypeDeclaration(k);
         if (! declaration -> EmptyDeclarationCast())
@@ -326,7 +327,7 @@ void Semantic::CheckNestedMembers(TypeSymbol* containing_type,
 // an error for any other accessible types.
 //
 inline TypeSymbol* Semantic::FindTypeInShadow(TypeShadowSymbol* type_shadow_symbol,
-                                              LexStream::TokenIndex identifier_token)
+                                              TokenIndex identifier_token)
 {
     TypeSymbol* type = type_shadow_symbol -> type_symbol;
     unsigned i = 0;
@@ -357,7 +358,7 @@ inline TypeSymbol* Semantic::FindTypeInShadow(TypeShadowSymbol* type_shadow_symb
 
 
 void Semantic::CheckNestedTypeDuplication(SemanticEnvironment* env,
-                                          LexStream::TokenIndex identifier_token)
+                                          TokenIndex identifier_token)
 {
     NameSymbol* name_symbol = lex_stream -> NameSymbol(identifier_token);
 
@@ -865,8 +866,8 @@ TypeSymbol* Semantic::ProcessTypeHeaders(AstClassBody* body,
 }
 
 
-void Semantic::ReportTypeInaccessible(LexStream::TokenIndex left_tok,
-                                      LexStream::TokenIndex right_tok,
+void Semantic::ReportTypeInaccessible(TokenIndex left_tok,
+                                      TokenIndex right_tok,
                                       TypeSymbol* type)
 {
     ReportSemError(SemanticError::TYPE_NOT_ACCESSIBLE, left_tok, right_tok,
@@ -881,7 +882,7 @@ void Semantic::ReportTypeInaccessible(LexStream::TokenIndex left_tok,
 // caller is responsible for searching for inaccessible member types.
 //
 TypeSymbol* Semantic::FindNestedType(TypeSymbol* type,
-                                     LexStream::TokenIndex identifier_token)
+                                     TokenIndex identifier_token)
 {
     if (type == control.null_type || type -> Bad() || type -> Primitive())
     {
@@ -1227,7 +1228,7 @@ void Semantic::CompleteSymbolTable(AstClassBody* class_body)
 
     state_stack.Push(class_body -> semantic_environment);
     TypeSymbol* this_type = ThisType();
-    LexStream::TokenIndex identifier = class_body -> identifier_token;
+    TokenIndex identifier = class_body -> identifier_token;
 
     assert(this_type -> ConstructorMembersProcessed());
     assert(this_type -> MethodMembersProcessed());
@@ -1464,10 +1465,8 @@ void Semantic::CleanUpType(TypeSymbol* type)
 }
 
 
-TypeSymbol* Semantic::ReadType(FileSymbol* file_symbol,
-                               PackageSymbol* package,
-                               NameSymbol* name_symbol,
-                               LexStream::TokenIndex tok)
+TypeSymbol* Semantic::ReadType(FileSymbol* file_symbol, PackageSymbol* package,
+                               NameSymbol* name_symbol, TokenIndex tok)
 {
     TypeSymbol* type;
 
@@ -1559,7 +1558,7 @@ TypeSymbol* Semantic::ReadType(FileSymbol* file_symbol,
 
 
 TypeSymbol* Semantic::GetBadNestedType(TypeSymbol* type,
-                                       LexStream::TokenIndex identifier_token)
+                                       TokenIndex identifier_token)
 {
     NameSymbol* name_symbol = lex_stream -> NameSymbol(identifier_token);
 
@@ -1883,7 +1882,7 @@ void Semantic::ProcessTypeImportOnDemandDeclaration(AstImportDeclaration* import
 
 
 TypeSymbol* Semantic::FindSimpleNameType(PackageSymbol* package,
-                                         LexStream::TokenIndex identifier_token)
+                                         TokenIndex identifier_token)
 {
     NameSymbol* name_symbol = lex_stream -> NameSymbol(identifier_token);
     TypeSymbol* type = package -> FindTypeSymbol(name_symbol);
@@ -2376,8 +2375,8 @@ void Semantic::AddDefaultConstructor(TypeSymbol* type)
     AstClassBody* class_body = type -> declaration;
     if (class_body)
     {
-        LexStream::TokenIndex left_loc = class_body -> identifier_token;
-        LexStream::TokenIndex right_loc = class_body -> left_brace_token - 1;
+        TokenIndex left_loc = class_body -> identifier_token;
+        TokenIndex right_loc = class_body -> left_brace_token - 1;
 
         AstMethodDeclarator* method_declarator =
             compilation_unit -> ast_pool -> GenMethodDeclarator();
@@ -2453,8 +2452,8 @@ void Semantic::CheckMethodOverride(MethodSymbol* method,
         return;
     }
 
-    LexStream::TokenIndex left_tok;
-    LexStream::TokenIndex right_tok;
+    TokenIndex left_tok;
+    TokenIndex right_tok;
 
     if (method -> containing_type == base_type && ThisType() == base_type)
     {
@@ -2907,8 +2906,7 @@ void Semantic::AddInheritedFields(TypeSymbol* base_type,
 
 
 void Semantic::AddInheritedMethods(TypeSymbol* base_type,
-                                   TypeSymbol* super_type,
-                                   LexStream::TokenIndex tok)
+                                   TypeSymbol* super_type, TokenIndex tok)
 {
     if (super_type -> Bad())
     {
@@ -3033,9 +3031,10 @@ void Semantic::AddInheritedMethods(TypeSymbol* base_type,
                 // override or hide the old. Warn the user about this fact,
                 // although it is usually not an error.
                 //
-                assert(shadow -> method_symbol -> containing_type == base_type);
-                LexStream::TokenIndex left_tok,
-                                      right_tok;
+                assert(shadow -> method_symbol -> containing_type ==
+                       base_type);
+                TokenIndex left_tok;
+                TokenIndex right_tok;
 
                 if (ThisType() == base_type)
                 {
@@ -3117,7 +3116,7 @@ void Semantic::AddInheritedMethods(TypeSymbol* base_type,
 }
 
 
-void Semantic::ComputeTypesClosure(TypeSymbol* type, LexStream::TokenIndex tok)
+void Semantic::ComputeTypesClosure(TypeSymbol* type, TokenIndex tok)
 {
     if (! type -> HeaderProcessed())
         type -> ProcessTypeHeaders();
@@ -3155,8 +3154,7 @@ void Semantic::ComputeTypesClosure(TypeSymbol* type, LexStream::TokenIndex tok)
 }
 
 
-void Semantic::ComputeFieldsClosure(TypeSymbol* type,
-                                    LexStream::TokenIndex tok)
+void Semantic::ComputeFieldsClosure(TypeSymbol* type, TokenIndex tok)
 {
     type -> expanded_field_table = new ExpandedFieldTable();
 
@@ -3195,8 +3193,7 @@ void Semantic::ComputeFieldsClosure(TypeSymbol* type,
 }
 
 
-void Semantic::ComputeMethodsClosure(TypeSymbol* type,
-                                     LexStream::TokenIndex tok)
+void Semantic::ComputeMethodsClosure(TypeSymbol* type, TokenIndex tok)
 {
     type -> expanded_method_table = new ExpandedMethodTable();
 
@@ -3491,7 +3488,7 @@ TypeSymbol* Semantic::FindPrimitiveType(AstPrimitiveType* primitive_type)
 // accessible ones. It will issue an error if the only way an accessible type
 // was found is non-canonical. If no type is found, NULL is returned.
 //
-TypeSymbol* Semantic::ImportType(LexStream::TokenIndex identifier_token,
+TypeSymbol* Semantic::ImportType(TokenIndex identifier_token,
                                  NameSymbol* name_symbol)
 {
     //
@@ -3592,7 +3589,7 @@ TypeSymbol* Semantic::ImportType(LexStream::TokenIndex identifier_token,
 // process. Note that inaccessible types are skipped - if the caller wishes
 // to use an inaccessible type, they must search for it.
 //
-TypeSymbol* Semantic::FindType(LexStream::TokenIndex identifier_token)
+TypeSymbol* Semantic::FindType(TokenIndex identifier_token)
 {
     TypeSymbol* type;
     NameSymbol* name_symbol = lex_stream -> NameSymbol(identifier_token);
@@ -4044,7 +4041,7 @@ MethodSymbol* Semantic::GetStaticInitializerMethod(unsigned estimate)
         return this_type -> static_initializer_method;
 
     StoragePool* ast_pool = compilation_unit -> ast_pool;
-    LexStream::TokenIndex loc = this_type -> declaration -> identifier_token;
+    TokenIndex loc = this_type -> declaration -> identifier_token;
 
     // The symbol table associated with this block has no elements.
     BlockSymbol* block_symbol = new BlockSymbol(0);
@@ -4205,7 +4202,7 @@ void Semantic::ProcessInstanceInitializers(AstClassBody* class_body)
     TypeSymbol* this_type = ThisType();
     LocalBlockStack().max_size = 1;
     StoragePool* ast_pool = compilation_unit -> ast_pool;
-    LexStream::TokenIndex loc = this_type -> declaration -> identifier_token;
+    TokenIndex loc = this_type -> declaration -> identifier_token;
 
     // The symbol table associated with this block has one element, the
     // current instance 'this'.
