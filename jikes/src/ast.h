@@ -756,6 +756,7 @@ public:
     {
         NONE,
         TRY_CLAUSE_WITH_FINALLY,
+        TRY_CLAUSE_WITH_CATCH,
         ABRUPT_TRY_FINALLY,
         FINALLY,
         SYNCHRONIZED,

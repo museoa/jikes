@@ -80,6 +80,8 @@ public:
         break_labels[block -> nesting_level].uses.Reset();
         continue_labels[block -> nesting_level].uses.Reset();
         finally_labels[block -> nesting_level].uses.Reset();
+        handler_range_start[block -> nesting_level].Reset();
+        handler_range_end[block -> nesting_level].Reset();
         blocks[block -> nesting_level] = block;
         if (size)
             memset(local_variables_start_pc[block -> nesting_level],
@@ -99,6 +101,8 @@ public:
             break_labels[level].Reset();
             continue_labels[level].Reset();
             finally_labels[level].Reset();
+            handler_range_start[level].Reset();
+            handler_range_end[level].Reset();
             blocks[level] = NULL;
             if (size)
                 memset(local_variables_start_pc[level], 0xFF,
@@ -138,15 +142,25 @@ public:
     Label &TopFinallyLabel() { return finally_labels[TopNestingLevel()]; }
     Label &FinallyLabel(int i) { AssertIndex(i); return finally_labels[i]; }
 
-    u2 &TopMonitorHandlerPc() { return monitor_handler_pc[TopNestingLevel()]; }
-    u2 &MonitorHandlerPc(int i)
+    Tuple<u2> &TopHandlerRangeStart()
+    {
+        return handler_range_start[TopNestingLevel()];
+    }
+    Tuple<u2> &HandlerRangeStart(int i)
     {
         AssertIndex(i);
-        return monitor_handler_pc[i];
+        return handler_range_start[i];
     }
 
-    u2 &TopMonitorStartPc() { return monitor_start_pc[TopNestingLevel()]; }
-    u2 &MonitorStartPc(int i) { AssertIndex(i); return monitor_start_pc[i]; }
+    Tuple<u2> &TopHandlerRangeEnd()
+    {
+        return handler_range_end[TopNestingLevel()];
+    }
+    Tuple<u2> &HandlerRangeEnd(int i)
+    {
+        AssertIndex(i);
+        return handler_range_end[i];
+    }
 
     AstBlock *TopBlock() { return blocks[TopNestingLevel()]; }
     AstBlock *Block(int i) { AssertIndex(i); return blocks[i]; }
@@ -170,8 +184,8 @@ public:
         break_labels = new Label[stack_size];
         continue_labels = new Label[stack_size];
         finally_labels = new Label[stack_size];
-        monitor_handler_pc = new u2[stack_size];
-        monitor_start_pc = new u2[stack_size];
+        handler_range_start = new Tuple<u2>[stack_size];
+        handler_range_end = new Tuple<u2>[stack_size];
         blocks = new AstBlock *[stack_size];
 
         local_variables_start_pc = new u2 *[stack_size];
@@ -184,8 +198,8 @@ public:
         delete [] break_labels;
         delete [] continue_labels;
         delete [] finally_labels;
-        delete [] monitor_handler_pc;
-        delete [] monitor_start_pc;
+        delete [] handler_range_start;
+        delete [] handler_range_end;
         delete [] blocks;
 
         for (int i = 0; i < stack_size; i++)
@@ -199,8 +213,8 @@ private:
     Label *break_labels;
     Label *continue_labels;
     Label *finally_labels;
-    u2 *monitor_handler_pc;
-    u2 *monitor_start_pc;
+    Tuple<u2> *handler_range_start;
+    Tuple<u2> *handler_range_end;
 
     AstBlock **blocks; // block symbols for current block
 

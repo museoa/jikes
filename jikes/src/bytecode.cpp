@@ -1650,6 +1650,9 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
     assert(method_stack -> TopFinallyLabel().definition == 0);
 
     u2 start_try_block_pc = code_attribute -> CodeLength(); // start pc
+    assert(method_stack -> TopHandlerRangeStart().Length() == 0 &&
+           method_stack -> TopHandlerRangeEnd().Length() == 0);
+    method_stack -> TopHandlerRangeStart().Push(start_try_block_pc);
     bool emit_finally_clause = (statement -> finally_clause_opt &&
                                 ! IsNop(statement -> finally_clause_opt -> block));
 
@@ -1658,7 +1661,9 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
     // TRY_CLAUSE_WITH_FINALLY so that abrupt completions do not emit JSR.
     // On the other hand, if the finally clause cannot complete normally,
     // change the tag to ABRUPT_TRY_FINALLY so that abrupt completions emit
-    // a GOTO instead of a JSR.
+    // a GOTO instead of a JSR. Also, mark a try block which has a catch
+    // clause but no finally clause, in case an abrupt exit forces a split
+    // in the range of protected code.
     //
     if (statement -> finally_clause_opt)
         if (! emit_finally_clause)
@@ -1668,6 +1673,11 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
         {
             statement -> block -> block_tag = AstBlock::ABRUPT_TRY_FINALLY;
         }
+    if (statement -> block -> block_tag == AstBlock::NONE &&
+        statement -> NumCatchClauses())
+    {
+        statement -> block -> block_tag = AstBlock::TRY_CLAUSE_WITH_CATCH;
+    }
     bool abrupt = EmitBlockStatement(statement -> block);
 
     //
@@ -1677,6 +1687,10 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
     // statement.
     //
     u2 end_try_block_pc = code_attribute -> CodeLength();
+    Tuple<u2> handler_starts(method_stack -> TopHandlerRangeStart());
+    Tuple<u2> handler_ends(method_stack -> TopHandlerRangeEnd());
+    handler_ends.Push(end_try_block_pc);
+    assert(handler_starts.Length() == handler_ends.Length());
 
     //
     // If try block is not empty, process catch clauses, including "special"
@@ -1708,9 +1722,13 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
             stack_depth = 1; // account for the exception already on the stack
             StoreLocal(parameter_symbol -> LocalVariableIndex(),
                        parameter_symbol -> Type());
-            code_attribute ->
-                AddException(start_try_block_pc, end_try_block_pc, handler_pc,
-                             RegisterClass(parameter_symbol -> Type()));
+            u2 handler_type = RegisterClass(parameter_symbol -> Type());
+            for (int j = handler_starts.Length(); --j >= 0; )
+            {
+                code_attribute ->
+                    AddException(handler_starts[j], handler_ends[j],
+                                 handler_pc, handler_type);
+            }
 
             //
             // If we determined the finally clause is a nop, remove the tag
@@ -1785,8 +1803,16 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
                 //
                 PutOp(OP_POP);
             }
-            code_attribute -> AddException(start_try_block_pc, special_end_pc,
-                                           finally_start_pc, 0);
+            method_stack -> TopHandlerRangeEnd().Push(special_end_pc);
+            int count = method_stack -> TopHandlerRangeStart().Length();
+            assert(count == method_stack -> TopHandlerRangeEnd().Length());
+            while (count--)
+            {
+                code_attribute ->
+                    AddException(method_stack -> TopHandlerRangeStart().Pop(),
+                                 method_stack -> TopHandlerRangeEnd().Pop(),
+                                 finally_start_pc, 0);
+            }
 
             //
             // Generate code for finally clause. If the finally block can
@@ -1838,11 +1864,14 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
         else
         {
             //
-            // Finally block is not present, advance to next statement.
+            // Finally block is not present, advance to next statement, and
+            // clean up the handler start/end ranges.
             //
             assert(! IsLabelUsed(finally_label));
             DefineLabel(end_label);
             CompleteLabel(end_label);
+            method_stack -> TopHandlerRangeStart().Reset();
+            method_stack -> TopHandlerRangeEnd().Reset();
         }
     }
     else
@@ -1905,6 +1934,8 @@ bool ByteCode::ProcessAbruptExit(int level, u2 width, TypeSymbol *return_type)
         {
             EmitBranch(OP_JSR, method_stack -> FinallyLabel(enclosing_level),
                        method_stack -> Block(enclosing_level));
+            method_stack -> HandlerRangeEnd(enclosing_level).
+                Push(code_attribute -> CodeLength());
         }
         else if (block -> block_tag == AstBlock::ABRUPT_TRY_FINALLY)
         {
@@ -1915,6 +1946,8 @@ bool ByteCode::ProcessAbruptExit(int level, u2 width, TypeSymbol *return_type)
             width = 0;
             EmitBranch(OP_GOTO, method_stack -> FinallyLabel(enclosing_level),
                        method_stack -> Block(enclosing_level));
+            method_stack -> HandlerRangeEnd(enclosing_level).
+                Push(code_attribute -> CodeLength());
             break;
         }
         else if (block -> block_tag == AstBlock::SYNCHRONIZED)
@@ -1926,13 +1959,15 @@ bool ByteCode::ProcessAbruptExit(int level, u2 width, TypeSymbol *return_type)
             //
             int variable_index = method_stack -> Block(enclosing_level) ->
                 block_symbol -> try_or_synchronized_variable_index;
-            u2 start_pc = method_stack -> MonitorStartPc(enclosing_level);
-            u2 handler_pc = method_stack -> MonitorHandlerPc(enclosing_level);
-
             LoadLocal(variable_index, control.Object());
             PutOp(OP_MONITOREXIT);
-            u2 end_pc = code_attribute -> CodeLength();
-            code_attribute -> AddException(start_pc, end_pc, handler_pc, 0);
+            method_stack -> HandlerRangeEnd(enclosing_level).
+                Push(code_attribute -> CodeLength());
+        }
+        else if (block -> block_tag == AstBlock::TRY_CLAUSE_WITH_CATCH)
+        {
+            method_stack -> HandlerRangeEnd(enclosing_level).
+                Push(code_attribute -> CodeLength());
         }
     }
 
@@ -1944,11 +1979,19 @@ bool ByteCode::ProcessAbruptExit(int level, u2 width, TypeSymbol *return_type)
         int nesting_level = method_stack -> NestingLevel(j),
             enclosing_level = method_stack -> NestingLevel(j - 1);
         AstBlock *block = method_stack -> Block(nesting_level);
-        if (block -> block_tag == AstBlock::SYNCHRONIZED)
-            method_stack -> MonitorStartPc(enclosing_level) =
-                code_attribute -> CodeLength() + width;
+        if (block -> block_tag == AstBlock::SYNCHRONIZED ||
+            block -> block_tag == AstBlock::TRY_CLAUSE_WITH_CATCH ||
+            block -> block_tag == AstBlock::TRY_CLAUSE_WITH_FINALLY)
+        {
+            method_stack -> HandlerRangeStart(enclosing_level).
+                Push(code_attribute -> CodeLength() + width);
+        }
         else if (block -> block_tag == AstBlock::ABRUPT_TRY_FINALLY)
+        {
+            method_stack -> HandlerRangeStart(enclosing_level).
+                Push(code_attribute -> CodeLength());
             return false;
+        }
     }
     return true;
 }
@@ -2684,7 +2727,6 @@ bool ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
     //
     EmitBranch(OP_GOTO, start_label, NULL);
     u2 handler_pc = code_attribute -> CodeLength();
-    method_stack -> TopMonitorHandlerPc() = handler_pc;
     assert(stack_depth == 0);
     stack_depth = 1; // account for the exception already on the stack
     LoadLocal(variable_index, control.Object()); // reload monitor
@@ -2704,11 +2746,9 @@ bool ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
     StoreLocal(variable_index, control.Object()); // save address of object
     PutOp(OP_MONITORENTER); // enter monitor associated with object
 
-    //
-    // TopMonitorStartPc() will be modified if there are any abrupt exits
-    // within the block statement.
-    //
-    method_stack -> TopMonitorStartPc() = code_attribute -> CodeLength();
+    assert(method_stack -> TopHandlerRangeStart().Length() == 0 &&
+           method_stack -> TopHandlerRangeEnd().Length() == 0);
+    method_stack -> TopHandlerRangeStart().Push(code_attribute -> CodeLength());
     bool abrupt = EmitBlockStatement(statement -> block);
 
     if (! abrupt)
@@ -2717,9 +2757,16 @@ bool ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
         PutOp(OP_MONITOREXIT);
     }
     u2 end_pc = code_attribute -> CodeLength();
-    if (end_pc != method_stack -> TopMonitorStartPc())
-        code_attribute -> AddException(method_stack -> TopMonitorStartPc(),
-                                       end_pc, handler_pc, 0);
+    method_stack -> TopHandlerRangeEnd().Push(end_pc);
+    int count = method_stack -> TopHandlerRangeStart().Length();
+    assert(count == method_stack -> TopHandlerRangeEnd().Length());
+    while (count--)
+    {
+        code_attribute ->
+            AddException(method_stack -> TopHandlerRangeStart().Pop(),
+                         method_stack -> TopHandlerRangeEnd().Pop(),
+                         handler_pc, 0);
+    }
     return abrupt;
 }
 

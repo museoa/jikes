@@ -716,12 +716,25 @@ public:
 
     void AddException(u2 start_pc, u2 end_pc, u2 handler_pc, u2 catch_type)
     {
-        int exception_index = exception_table.NextIndex();
-
-        exception_table[exception_index].start_pc = start_pc;
-        exception_table[exception_index].end_pc = end_pc;
-        exception_table[exception_index].handler_pc = handler_pc;
-        exception_table[exception_index].catch_type = catch_type;
+        if (start_pc == end_pc)
+            return;
+        int exception_index = exception_table.Length() - 1;
+        if (exception_index >= 0 &&
+            end_pc == exception_table[exception_index].start_pc &&
+            handler_pc == exception_table[exception_index].handler_pc &&
+            catch_type == exception_table[exception_index].catch_type)
+        {
+            exception_table[exception_index].start_pc = start_pc;
+        }
+        else
+        {
+            exception_index++;
+            exception_table.NextIndex();
+            exception_table[exception_index].start_pc = start_pc;
+            exception_table[exception_index].end_pc = end_pc;
+            exception_table[exception_index].handler_pc = handler_pc;
+            exception_table[exception_index].catch_type = catch_type;
+        }
     }
 
     u2 AttributesCount() { return attributes.Length(); }

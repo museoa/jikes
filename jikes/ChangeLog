@@ -2,6 +2,18 @@
 
 	* 1.16 release.
 
+2002-07-10  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/class.h (AddException): Add optimizations.
+	* src/bytecode.h (handler_range_start, handler_range_end): New
+	fields to allow better handling of exception handler ranges.
+	(monitor_handler_pc, monitor_start_pc): Remove, as their
+	functionality was duplicated by new fields.
+	* src/bytecode.cpp (EmitTryStatement, ProcessAbruptExit),
+	(EmitSynchronizedStatement): Use newer form of exception handling,
+	to solve bug 3055.
+	* src/ast.h (AstBlock::TRY_CLAUSE_WITH_CATCH): New block tag.
+	
 2002-07-09  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/definite.cpp (DefiniteAssignmentExpression),
@@ -755,9 +767,8 @@
 
 2002-02-06  Eric Blake  <ebb9@email.byu.edu>
 
-	* src/scanner.cpp:
-	* src/scanner.: Silence '$' in identifier warnings when -nowarn
-	specified.
+	* src/scanner.cpp: Silence '$' in identifier warnings when
+	-nowarn specified.
 	* src/parser.cpp (PackageHeaderParse): Allocate memory to prevent
 	core dump when compiling GNU's Classpath.
 	* src/lookup.cpp (IsConstantString): 
