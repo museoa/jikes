@@ -15,8 +15,8 @@
 #include "ast.h"
 #include "case.h"
 
-int IntLiteralTable::decimal_limit = 0x7FFFFFFF / 10;
-LongInt LongLiteralTable::decimal_limit = LongInt(0x7FFFFFFF, 0xFFFFFFFF) / 10;
+int IntLiteralTable::int32_limit = 0x7FFFFFFF / 10;
+LongInt LongLiteralTable::int64_limit = LongInt(0x7FFFFFFF, 0xFFFFFFFF) / 10;
 
 int DirectoryTable::primes[] = {DEFAULT_HASH_SIZE, 2039, 4093, MAX_HASH_SIZE};
 
@@ -822,7 +822,7 @@ LiteralValue *IntLiteralTable::FindOrInsertInt(LiteralSymbol *literal)
         for (p = name; *p; p++)
         {
             int digit = *p - U_0;
-            if (value > decimal_limit || (value == decimal_limit && digit > 7))
+            if (value > int32_limit || (value == int32_limit && digit > 7))
                 break;
             value = value * 10 + digit;
         }
@@ -862,7 +862,7 @@ LiteralValue *IntLiteralTable::FindOrInsertNegativeInt(LiteralSymbol *literal)
     for (p = name; *p; p++)
     {
         int digit = *p - U_0;
-        if (value > decimal_limit || (value == decimal_limit && digit > 8))
+        if (value > int32_limit || (value == int32_limit && digit > 8))
             break;
         value = value * 10 + digit;
     }
@@ -1016,7 +1016,7 @@ LiteralValue *LongLiteralTable::FindOrInsertLong(LiteralSymbol *literal)
         for (p = name; *p != U_L && *p != U_l; p++)
         {
             u4 digit = *p - U_0;
-            if (value > decimal_limit || (value == decimal_limit && digit > 7))
+            if (value > int64_limit || (value == int64_limit && digit > 7))
                 break;
             value = value * 10 + digit;
         }
@@ -1055,7 +1055,7 @@ LiteralValue *LongLiteralTable::FindOrInsertNegativeLong(LiteralSymbol *literal)
     for (p = name; *p != U_L && *p != U_l && value >= 0; p++)
     {
         u4 digit = *p - U_0;
-        if (value > decimal_limit || (value == decimal_limit && digit > 8))
+        if (value > int64_limit || (value == int64_limit && digit > 8))
             break;
         value = value * 10 + digit;
     }
@@ -1305,29 +1305,27 @@ LiteralValue *Utf8LiteralTable::FindOrInsertString(LiteralSymbol *literal)
             }
             else if (Code::IsDigit(name[i + 1]))
             {
-                int d1 = name[i + 1] - U_0;
-                ch = (d1 < 8 ? d1 : -1);
+                int digit = name[++i] - U_0;
 
-                if (ch >= 0)
+                if (digit > 7) // The first digit must be an octal digit 
+                    ch = -1;
+                else
                 {
-                    i++;
+                    ch = digit;
                     if (Code::IsDigit(name[i + 1]))
                     {
-                        int d2 = name[i + 1] - U_0;
-
-                        if (d2 < 8)
+                        digit = name[i + 1] - U_0;
+                        if (digit < 8)
                         {
+                            ch = ch * 8 + digit;
                             i++;
-                            ch = ch * 8 + d2;
-
                             if (Code::IsDigit(name[i + 1]))
                             {
-                                int d3 = name[i + 1] - U_0;
-
-                                if (d3 < 8)
+                                digit = name[i + 1] - U_0;
+                                if (ch <= 0x1F && digit < 8)
                                 {
+                                    ch = ch * 8 + digit;
                                     i++;
-                                    ch = (d1 < 4 ? ch * 8 + d3 : -1);
                                 }
                             }
                         }

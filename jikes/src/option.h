@@ -74,7 +74,6 @@ public:
 class Option
 {
 #ifdef WIN32_FILE_SYSTEM
-    static char bad_disk[2];
     char main_disk,
          *current_directory[128];
 

@@ -501,7 +501,8 @@ void ByteCode::DeclareField(VariableSymbol * symbol, int is_synthetic)
     fields[field_index].name_index = RegisterUtf8(symbol -> ExternalIdentity() -> Utf8_literal);
     fields[field_index].descriptor_index = RegisterUtf8(symbol -> Type() -> signature);
 
-    if (symbol -> ACC_FINAL() && symbol -> initial_value) {
+    TypeSymbol *type = symbol -> Type();
+    if (symbol -> ACC_FINAL() && symbol -> initial_value && (type -> Primitive() || type == this_control.String())) {
         u4 constant_value_attribute_length = 2;
         int lit_index = GetConstant(symbol -> initial_value, symbol -> Type());
 
@@ -4120,7 +4121,7 @@ int ByteCode::LoadLiteral(LiteralValue* litp, TypeSymbol *type)
     else lit_index = 0;
     // see if can load without using LDC even if have literal index; otherwise generate constant pool entry
     // if one has not yet been generated.
-    if (type == this_control.null_type) {
+    if (litp == this_control.NullValue()) {
         PutOp(OP_ACONST_NULL);
         return 1;
     }

@@ -165,7 +165,7 @@ void LexStream::InitializeColumns()
                 if (input_buffer[i] == U_HORIZONTAL_TAB)
                 {
                     int offset = (i - start) - 1;
-                    start -= ((Tab::TABSIZE - 1) - offset % Tab::TABSIZE);
+                    start -= ((Tab::TabSize() - 1) - offset % Tab::TabSize());
                 }
                 else if (tokens[k].Location() == i)
                 {

@@ -528,6 +528,11 @@ public:
     IntLiteralTable(LiteralValue *);
     ~IntLiteralTable();
 
+    LiteralValue *FindOrInsertNull()
+    {
+        return FindOrInsert(0);
+    }
+
     LiteralValue *FindOrInsertChar(LiteralSymbol *);
     LiteralValue *FindOrInsertInt(LiteralSymbol *);
     LiteralValue *FindOrInsertHexInt(LiteralSymbol *);
@@ -558,7 +563,7 @@ private:
     static int primes[];
     int prime_index;
 
-    static int decimal_limit;
+    static int int32_limit;
 
     LiteralValue *bad_value;
 
@@ -604,7 +609,7 @@ private:
     static int primes[];
     int prime_index;
 
-    static LongInt decimal_limit;
+    static LongInt int64_limit;
 
     LiteralValue *bad_value;
 

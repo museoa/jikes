@@ -158,13 +158,28 @@ void Control::ProcessUnnamedPackage()
 
 void Control::ProcessPath()
 {
+    NameSymbol *dot_path_name_symbol;
+
+#ifdef UNIX_FILE_SYSTEM
+    dot_path_name_symbol = dot_name_symbol;
+#elif defined(WIN32_FILE_SYSTEM)
+    char *main_current_directory = option.GetMainCurrentDirectory();
+    int dot_path_name_length = strlen(main_current_directory);
+    wchar_t *dot_path_name = new wchar_t[dot_path_name_length + 1];
+    for (int i = 0; i < dot_path_name_length; i++)
+        dot_path_name[i] = main_current_directory[i];
+    dot_path_name[dot_path_name_length] = U_NULL;
+    dot_path_name_symbol = FindOrInsertName(dot_path_name, dot_path_name_length);
+    delete [] dot_path_name;
+#endif
+
     //
     // We need a place to start. Allocate a "." directory with no owner initially. (Hence, the null argument.)
     // Allocate a "." path whose associated directory is the "." directory.
     // Identify the "." path as the owner of the "." directory.
     //
     DirectorySymbol *dot_directory = new DirectorySymbol(dot_name_symbol, NULL);
-    classpath.Next() = classpath_table.InsertPathSymbol(dot_name_symbol, dot_directory);
+    classpath.Next() = classpath_table.InsertPathSymbol(dot_path_name_symbol, dot_directory);
     dot_directory -> ResetDirectory(); // Note that main_root_directory is reset after it has been assigned an owner above
     root_directories.Next() = dot_directory;
 

@@ -9,6 +9,7 @@
 //
 
 #include <ctype.h>
+#include "config.h"
 #include "option.h"
 #include "javasym.h"
 #include "error.h"
@@ -115,8 +116,6 @@ ArgumentExpander::ArgumentExpander(Tuple<char> &line)
 
 
 #ifdef WIN32_FILE_SYSTEM
-char Option::bad_disk[] = { U_DOT, U_NULL };
-
 void Option::SaveCurrentDirectoryOnDisk(char c)
 {
     if (! current_directory[c])
@@ -193,7 +192,7 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
     if (length > directory_length)
     {
         delete [] main_current_directory;
-        main_current_directory = bad_disk;
+        main_current_directory = StringConstant::U8S__DO_;
         main_disk = 0;
     }
     else
@@ -370,7 +369,22 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
                  debug_trap_op = atoi(arguments.argv[i+1]);
                  i++;
             }
-            else if (strcmp(arguments.argv[i], "+T") == 0)
+            else if (arguments.argv[i][0] == U_PLUS && arguments.argv[i][1] == U_T)
+            {
+                int tab_size = 0;
+                char *image = arguments.argv[i] + 2,
+                     *p;
+                for (p = image; *p && Code::IsDigit(*p); p++)
+                {
+                    int digit = *p - U_0;
+                    tab_size = tab_size * 10 + digit;
+                }
+
+                if (*p)
+                     bad_options.Next() = new OptionError(SemanticError::INVALID_TAB_VALUE, image);
+                Tab::SetTabSize(tab_size == 0 ? Tab::DEFAULT_TAB_SIZE : tab_size);
+            }
+            else if (strcmp(arguments.argv[i], "+L") == 0)
                  debug_dump_lex = true;
             else if (strcmp(arguments.argv[i],"+U") == 0)
             {

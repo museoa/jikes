@@ -17,26 +17,15 @@
 class Tab
 {
 public:
-    enum { TABSIZE = 8 };
+    enum { DEFAULT_TAB_SIZE = 8 };
 
-    //
-    // Compute the length of a wide character string segment
-    // after expanding tabs.
-    //
-    static int Wcslen(wchar_t *line, int start, int end)
-    {
-        for (int i = start--; i <= end; i++)
-        {
-            if (line[i] == U_HORIZONTAL_TAB)
-            {
-                int offset = (i - start) - 1;
-                start -= ((TABSIZE - 1) - offset % TABSIZE);
-            }
-        }
+    inline static int TabSize() { return tab_size; }
+    inline static void SetTabSize(int value) { tab_size = value; }
 
-        return (end - start);
-    }
+    static int Wcslen(wchar_t *line, int start, int end);
+
+private:
+    static int tab_size;
 };
-
 #endif
 

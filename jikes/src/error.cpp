@@ -289,6 +289,7 @@ void SemanticError::StaticInitializer()
     print_message[INVALID_OPTION] = PrintINVALID_OPTION;
     print_message[INVALID_K_OPTION] = PrintINVALID_K_OPTION;
     print_message[INVALID_K_TARGET] = PrintINVALID_K_TARGET;
+    print_message[INVALID_TAB_VALUE] = PrintINVALID_TAB_VALUE;
     print_message[INVALID_DIRECTORY] = PrintINVALID_DIRECTORY;
     print_message[UNSUPPORTED_OPTION] = PrintUNSUPPORTED_OPTION;
     print_message[NO_CURRENT_DIRECTORY] = PrintNO_CURRENT_DIRECTORY;
@@ -948,6 +949,16 @@ void SemanticError::PrintINVALID_K_TARGET(ErrorInfo &err, LexStream *lex_stream,
     cout << '\"';
     Unicode::Cout(err.insert1);
     cout << "\" is not a valid target in a +K option. The target must be a numeric type or boolean";
+
+    return;
+}
+
+
+void SemanticError::PrintINVALID_TAB_VALUE(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << '\"';
+    Unicode::Cout(err.insert1);
+    cout << "\" is not a valid tab size. An integer value is expected";
 
     return;
 }

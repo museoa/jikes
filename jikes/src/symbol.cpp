@@ -242,8 +242,6 @@ TypeSymbol *TypeSymbol::GetArrayType(Semantic *sem, int num_dimensions_)
     wchar_t *name = new wchar_t[this -> ExternalNameLength() + (num_dimensions_ * 2) + 1];
     wcscpy(name, previous_array_type -> ExternalName());
 
-    TypeSymbol *Serializable = sem -> control.Serializable();
-
     for (int num = array -> Length(), len = previous_array_type -> ExternalNameLength() + 2;
          num <= num_dimensions_;
          num++, len = len + 2)
@@ -268,13 +266,11 @@ TypeSymbol *TypeSymbol::GetArrayType(Semantic *sem, int num_dimensions_)
         type -> SetFlags(acc_flags);
         type -> super = sem -> control.Object();
         //
-        // TODO: This is an undocumented feature, but this fix appears to make sense. 
+        // All arrays implement the interfaces java.io.Serializable and
+        // java.io.Cloneable
         //
-        // If the base type of the array is serializable, then
-        // so is the array.
-        //
-        if (sem -> control.option.one_one && (this == Serializable || this -> Implements(Serializable)))
-            type -> AddInterface(Serializable);
+        if (sem -> control.option.one_one)
+            type -> AddInterface(sem -> control.Serializable());
         type -> AddInterface(sem -> control.Cloneable());
         type -> base_type = this;
         type -> num_dimensions = num;

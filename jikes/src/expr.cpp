@@ -2849,6 +2849,7 @@ void Semantic::ProcessMethodInvocation(Ast *expr)
 void Semantic::ProcessNullLiteral(Ast *expr)
 {
     AstNullLiteral *null_literal = (AstNullLiteral *) expr;
+    null_literal -> value = control.NullValue();
     null_literal -> symbol = control.null_type;
 
     return;
@@ -4603,7 +4604,9 @@ LiteralValue *Semantic::CastPrimitiveValue(TypeSymbol *target_type, AstExpressio
 //
 inline LiteralValue *Semantic::CastValue(TypeSymbol *target_type, AstExpression *expr)
 {
-    return (LiteralValue *) (expr -> IsConstant() && target_type -> Primitive() ? CastPrimitiveValue(target_type, expr) : NULL);
+    return (LiteralValue *) (expr -> IsConstant() && target_type -> Primitive()
+                                                   ? CastPrimitiveValue(target_type, expr)
+                                                   : (expr -> value == control.NullValue() ? expr -> value : NULL));
 }
 
 

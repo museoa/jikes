@@ -254,6 +254,11 @@ public:
     bool IncrementalRecompilation();
 
     //
+    // The one and only null value constant.
+    //
+    LiteralValue *NullValue() { return &null_value; }
+
+    //
     // Note that only names are converted here and not literals, since
     // no error can occur in a name.
     // A literal is converted during the semantic pass so that an
@@ -349,6 +354,8 @@ public:
     DirectorySymbol *ProcessSubdirectories(wchar_t *, int);
 
 private:
+
+    LiteralValue null_value;
 
     static int ConvertUnicodeToUtf8(wchar_t *, char *);
 

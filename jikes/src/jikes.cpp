@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://www.ibm.com/research/jikes.
-// Copyright (C) 1996, 1998, International Business Machines Corporation
+// Copyright (C) 1996, 1999, International Business Machines Corporation
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -69,10 +69,11 @@ int main(int argc, char *argv[])
              << "+F                 do full dependence check except for Zip and Jar files\n"
              << "+Kname=TypeKeyWord map name to type keyword\n"
              << "+M                 generate makefile dependencies\n"
+             << "+Td...d            set value of tab d...d spaces; each d is a decimal digit\n"
              << "+U                 do full dependence check including Zip and Jar files\n"
              << "+V                 generate veracious listing\n"
              << "+Z                 treat cautions as errors\n"
-             << "\nVersion 0.43 (10 Feb 98)"
+             << "\nVersion 0.43 (12 Feb 98)"
              << " by Philippe Charles and David Shields, IBM Research.\n";
         cerr << "Please report problems to shields@watson.ibm.com.\n" ;
     cerr << "or via browser at http://www.ibm.com/research/jikes\n";
