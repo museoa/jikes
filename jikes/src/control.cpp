@@ -225,7 +225,7 @@ Control::Control(char** arguments, Option& option_)
     if (option.BadMainDisk())
     {
         system_semantic -> ReportSemError(SemanticError::NO_CURRENT_DIRECTORY,
-                                          LexStream::BadToken());
+                                          BAD_TOKEN);
     }
 #endif // WIN32_FILE_SYSTEM
 
