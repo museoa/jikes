@@ -9,48 +9,37 @@ Fix problem with debug line number tables. Newer
 versions of java don't like our line numbers.
 This is commonly known as "Jikes and JPDA".
 
-(first fix in hand, need to see if it exposes more problems)
+(partially fixed, got a new test case at the last minute
+that shows antoehr failure)
 
 correct numerous constant, floating point and String
 concatentaion problems.
 
-(fixes in hand)
+(fixed)
 
 It is not clear if iconv is only a little
 broken or totally busted.
 
-More testing is needed to figure out
-if this is an endian issue. It works
-on an Intel box but fails on a Solaris
-Sparc so I think it is a byte order issue.
-
-http://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=19647
-
-While some iconv tests fail under Red Hat 6.2, they
-all fail on Red Hat 7.0, which is what this bug
-report is talking about.
+(it was totally busted by glibc2.2 as compared to
+glibc 2.1.x which was under development churn, some
+quick hackery was done for 1.14, I think I got it working
+on all platforms, but we'll have to wait and see... also
+working on a major streaming rewrite for 1.15... actually
+hoped for 1.14 but found more stuff broken at every turn.)
 
 Also, would it be better to convert a bunch
 of chars in a buffer instead of doing them
 one at a time?
 
-Check into the problems discussed with the
-onceagain boolean. Could this blow up if
-we don't set ch? Also what if the
-ErrorDecode..() method return true but
-the earlier assign to ch returned 0,
-that would set ch to zero right? I
-don't think that is really what we
-would have wanted.
+(it would, this is part of the stream changes I'm working on)
 
-(postponed from last release)
 
 
 command line UI issues, including the classpath
 handling options, to make us a drop in replacement
 for javac (as near as possible)
 
-
+(the classpath issues are in 1.14)
 
 
 Use new casting operations instead of C style
@@ -79,7 +68,7 @@ assert( ap != NULL );
 B*  bp2 = dynamic_cast<B*>(ap);
 assert( bp2 != NULL );
 
-(left over from last release... #ifdefs need to be put in for these)
+(I think this is done.)
 
 
 
@@ -93,7 +82,8 @@ to be done in a more general stream class not
 one that does lexing. That way, it could also
 be used in the Option class to process @ files.
 
-(FIXED but reverted since it caused other problems )
+(FIXED but reverted since it caused other problems,
+which remain uninvestigated )
 
 
 Make the floating point emulation code default.
@@ -118,7 +108,7 @@ is "invalid" (implies it was corrupted).
 but should be done at some point....
 
 
-remove code from header files.
+remove code from header files. (please)
 
 
 Add a configure check to make sure
