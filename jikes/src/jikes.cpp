@@ -18,10 +18,6 @@ int main(int argc, char *argv[])
 {
     int return_code;
 
-#ifdef EBCDIC
-    Code::Conversion();
-#endif
-
     SetNewHandler();
 
     FloatingPointCheck();
@@ -52,6 +48,7 @@ int main(int argc, char *argv[])
                 "\n\n"
                 "-classpath path    use path for CLASSPATH\n"
                 "-d dir             write class files in directory dir\n"
+                "-encoding encoding specify character encoding used by source files\n"
                 "-debug             no effect (recognized for compatibility)\n"
                 "-depend | -Xdepend recompile all used classes\n"
                 "-deprecation       report uses of deprecated features\n"
