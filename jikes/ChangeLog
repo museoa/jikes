@@ -1,3 +1,9 @@
+2000-07-12  Mo DeJong  <mdejong@redhat.com>
+
+	* missing:
+	* mkinstalldirs: Added files that did not
+	make it into the CVS for some strange reason.
+
 2000-07-09  C. Scott Ananian  <cananian@lesser-magoo.lcs.mit.edu>
 
 	* src/stream.cpp (ProcessInputUnicode): Fix for
