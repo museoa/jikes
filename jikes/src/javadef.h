@@ -16,14 +16,14 @@ namespace Jikes { // Open namespace Jikes block
 #endif
 
 enum {
-      ERROR_SYMBOL      = 108,
+      ERROR_SYMBOL      = 111,
       MAX_DISTANCE      = 30,
       MIN_DISTANCE      = 3,
       MAX_NAME_LENGTH   = 38,
       MAX_TERM_LENGTH   = 38,
       NUM_STATES        = 457,
 
-      NT_OFFSET         = 108,
+      NT_OFFSET         = 111,
       BUFF_UBOUND       = 30,
       BUFF_SIZE         = 31,
       STACK_UBOUND      = 127,
@@ -33,9 +33,9 @@ enum {
       LA_STATE_OFFSET   = 5691,
       MAX_LA            = 1,
       NUM_RULES         = 410,
-      NUM_TERMINALS     = 108,
+      NUM_TERMINALS     = 111,
       NUM_NON_TERMINALS = 169,
-      NUM_SYMBOLS       = 277,
+      NUM_SYMBOLS       = 280,
       START_STATE       = 706,
       EOFT_SYMBOL       = 94,
       EOLT_SYMBOL       = 94,

@@ -1201,11 +1201,14 @@ Ostream& Ostream::operator<<(ULongInt a)
 const wchar_t StringConstant::US_AND[] = {U_AM, U_NU}; // L"&"
 const wchar_t StringConstant::US_AND_AND[] = {U_AM, U_AM, U_NU}; // L"&&"
 const wchar_t StringConstant::US_AND_EQUAL[] = {U_AM, U_EQ, U_NU}; // L"&="
+const wchar_t StringConstant::US_AT[] = {U_AT, U_NU}; // L"@"
 const wchar_t StringConstant::US_COLON[] = {U_CO, U_NU}; // L":"
 const wchar_t StringConstant::US_COMMA[] = {U_CM, U_NU}; // L","
 const wchar_t StringConstant::US_DIVIDE[] = {U_SL, U_NU}; // L"/"
 const wchar_t StringConstant::US_DIVIDE_EQUAL[] = {U_SL, U_EQ, U_NU}; // L"/="
 const wchar_t StringConstant::US_DOT[] = {U_DO, U_NU}; // L"."
+const wchar_t StringConstant::US_DOT_DOT_DOT[] = {
+    U_DO, U_DO, U_DO, U_NU}; // L"..."
 const wchar_t StringConstant::US_EMPTY[] = {U_NU}; // L""
 const wchar_t StringConstant::US_EQUAL[] = {U_EQ, U_NU}; // L"="
 const wchar_t StringConstant::US_EQUAL_EQUAL[] = {U_EQ, U_EQ, U_NU}; // L"=="
@@ -1407,6 +1410,8 @@ const wchar_t StringConstant::US_double[] = {
     U_d, U_o, U_u, U_b, U_l, U_e, U_NU}; // L"double"
 const wchar_t StringConstant::US_else[] = {
     U_e, U_l, U_s, U_e, U_NU}; // L"else"
+const wchar_t StringConstant::US_enum[] = {
+    U_e, U_n, U_u, U_m, U_NU}; // L"enum"
 const wchar_t StringConstant::US_extends[] = {
     U_e, U_x, U_t, U_e, U_n, U_d, U_s, U_NU}; // L"extends"
 const wchar_t StringConstant::US_false[] = {

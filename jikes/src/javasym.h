@@ -120,9 +120,12 @@ enum {
       TK_DOT = 19,
       TK_EQUAL = 79,
       TK_BodyMarker = 105,
-      TK_const = 106,
-      TK_goto = 107,
-      TK_ERROR = 108,
+      TK_enum = 106,
+      TK_AT = 107,
+      TK_ELLIPSIS = 108,
+      TK_const = 109,
+      TK_goto = 110,
+      TK_ERROR = 111,
       TK_EOF = 94
      };
 

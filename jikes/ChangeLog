@@ -1,3 +1,26 @@
+2004-01-23  Eric Blake  <ebb9@byu.net>
+
+	* src/java.g: Add 'enum', '@', and '...' tokens in preparation for
+	JDK 1.5.
+	* src/dump.cpp (token_type): Add support for new tokens.
+	* src/platform.h (US_AT, US_DOT_DOT_DOT, US_enum): Ditto.
+	* src/platform.cpp: Ditto.
+	* src/scanner.h (ClassifyDocComment, ClassifyPound): Remove unused
+	declarations.
+	(ClassifyAt): Add.
+	* src/scanner.cpp (Scanner, ScanKeyword4, ClassifyIdOrKeyword),
+	(ClassifyPeriod, ClassifyAt): Scan new keywords. Treat enum as
+	identifier for now, with a warning.
+	* src/stream.h (DEPRECATED_IDENTIFIER_ENUM): Add.
+	* src/stream.cpp (getErrorMessage, KeywordName): Use.
+	* NEWS: Document this.
+	* src/javaact.cpp: Regenerate.
+	* src/javaact.h: Ditto.
+	* src/javadcl.h: Ditto.
+	* src/javadef.h: Ditto.
+	* src/javaprs.h: Ditto.
+	* src/javasym.h: Ditto.
+
 2004-01-22  Eric Blake  <ebb9@byu.net>
 
 	* src/semantic.h (DefiniteLocalClassDeclarationStatement): Add.

@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -133,6 +132,7 @@ Scanner::Scanner(Control& control_)
     classify_token[U_COMMA] = &Scanner::ClassifyComma;
     classify_token[U_DOT] = &Scanner::ClassifyPeriod;
     classify_token[U_EQUAL] = &Scanner::ClassifyEqual;
+    classify_token[U_AT] = &Scanner::ClassifyAt;
 }
 
 
@@ -518,6 +518,8 @@ int Scanner::ScanKeyword4(const wchar_t* p1)
     case U_e:
         if (p1[1] == U_l && p1[2] == U_s && p1[3] == U_e)
             return TK_else;
+        if (p1[1] == U_n && p1[2] == U_u && p1[3] == U_m)
+            return TK_enum;
         break;
     case U_g:
         if (p1[1] == U_o && p1[2] == U_t && p1[3] == U_o)
@@ -974,6 +976,14 @@ void Scanner::ClassifyIdOrKeyword()
                              current_token -> Location() + len - 1);
         current_token -> SetKind(TK_Identifier);
     }
+    if (current_token -> Kind() == TK_enum &&
+        control.option.source < JikesOption::SDK1_5)
+    {
+        lex -> ReportMessage(StreamError::DEPRECATED_IDENTIFIER_ENUM,
+                             current_token -> Location(),
+                             current_token -> Location() + len - 1);
+        current_token -> SetKind(TK_Identifier);
+    }
     if (has_dollar && ! dollar_warning_given)
     {
         dollar_warning_given = true;
@@ -1399,6 +1409,12 @@ void Scanner::ClassifyPeriod()
 {
     if (Code::IsDigit(cursor[1])) // Is period immediately followed by digit?
         ClassifyNumericLiteral();
+    else if (cursor[1] == U_DOT && cursor[2] == U_DOT)
+    {
+        // Added for Java 1.5, varargs, by JSR 201.
+        current_token -> SetKind(TK_ELLIPSIS);
+        cursor += 3;
+    }
     else
     {
         current_token -> SetKind(TK_DOT);
@@ -1483,6 +1499,14 @@ void Scanner::ClassifyRbracket()
 void Scanner::ClassifyComplement()
 {
     current_token -> SetKind(TK_TWIDDLE);
+    cursor++;
+}
+
+
+void Scanner::ClassifyAt()
+{
+    // Added for Java 1.5, attributes, by JSR 175.
+    current_token -> SetKind(TK_AT);
     cursor++;
 }
 

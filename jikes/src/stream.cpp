@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -68,6 +67,9 @@ const wchar_t* StreamError::getErrorMessage()
         return L"The use of \"assert\" as an identifier is deprecated, "
             L"as it is now a keyword. Use -source 1.4 if you intended "
             L"to make use of assertions.";
+    case DEPRECATED_IDENTIFIER_ENUM:
+        return L"The use of \"enum\" as an identifier is deprecated, "
+            L"as it will be a keyword once -source 1.5 is implemented.";
     case DOLLAR_IN_IDENTIFIER:
         return L"The use of \"$\" in an identifier, while legal, is strongly "
             L"discouraged, since it can conflict with compiler-generated "
@@ -364,6 +366,7 @@ const wchar_t* LexStream::KeywordName(int kind)
     case TK_do: return StringConstant::US_do;
     case TK_double: return StringConstant::US_double;
     case TK_else: return StringConstant::US_else;
+    case TK_enum: return StringConstant::US_enum;
     case TK_extends: return StringConstant::US_extends;
     case TK_false: return StringConstant::US_false;
     case TK_final: return StringConstant::US_final;
@@ -451,6 +454,8 @@ const wchar_t* LexStream::KeywordName(int kind)
     case TK_COLON: return StringConstant::US_COLON;
     case TK_COMMA: return StringConstant::US_COMMA;
     case TK_DOT: return StringConstant::US_DOT;
+    case TK_ELLIPSIS: return StringConstant::US_DOT_DOT_DOT;
+    case TK_AT: return StringConstant::US_AT;
     case TK_EQUAL: return StringConstant::US_EQUAL;
     case TK_EOF: return StringConstant::US_EOF;
     default: break;

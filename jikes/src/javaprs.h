@@ -46,8 +46,8 @@ public:
     static const unsigned short name_start[];
     static const unsigned char  name_length[];
     static const          char  string_buffer[];
-    static const unsigned char  terminal_index[];
-    static const unsigned char  non_terminal_index[];
+    static const unsigned short terminal_index[];
+    static const unsigned short non_terminal_index[];
     static const unsigned short scope_prefix[];
     static const unsigned short scope_suffix[];
     static const unsigned short scope_lhs[];

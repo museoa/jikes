@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -39,6 +38,7 @@ static const char* token_type(unsigned char kind)
     case TK_do: return "TK_do";
     case TK_double: return "TK_double";
     case TK_else: return "TK_else";
+    case TK_enum: return "TK_enum";
     case TK_extends: return "TK_extends";
     case TK_false: return "TK_false";
     case TK_final: return "TK_final";
@@ -127,6 +127,8 @@ static const char* token_type(unsigned char kind)
     case TK_COLON: return "TK_COLON";
     case TK_COMMA: return "TK_COMMA";
     case TK_DOT: return "TK_DOT";
+    case TK_ELLIPSIS: return "TK_ELLIPSIS";
+    case TK_AT: return "TK_AT";
     case TK_EQUAL: return "TK_EQUAL";
     case TK_ERROR: return "TK_ERROR";
     case TK_EOF: return "TK_EOF";

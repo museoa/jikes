@@ -6,7 +6,7 @@
 -- This software is subject to the terms of the IBM Jikes Compiler
 -- License Agreement available at the following URL:
 -- http://ibm.com/developerworks/opensource/jikes.
--- Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
+-- Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 -- You must accept the terms of that agreement to use this software.
 
 ------------------------------------------------------------------------
@@ -497,6 +497,11 @@ $Terminals
 -- This is a special token that allows us to do a 2-pass parse.
     BodyMarker
 
+-- These tokens will be used in JDK 1.5, but are not used now.
+    enum
+    AT
+    ELLIPSIS
+
 -- These remaining tokens are not used in the grammar.
     const
     goto
@@ -552,6 +557,9 @@ $Alias
     '.'    ::= DOT
     '='    ::= EQUAL
 
+    '@'    ::= AT
+    '...'  ::= ELLIPSIS
+
     $EOF   ::= EOF
     $ERROR ::= ERROR
 
@@ -568,7 +576,7 @@ $Rules
 // This software is subject to the terms of the IBM Jikes Compiler Open
 // Source License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -642,7 +650,7 @@ void Parser::InitRuleAction()
 // This software is subject to the terms of the IBM Jikes Compiler Open
 // Source License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -4418,6 +4426,8 @@ COLON ::= ':'
 COMMA ::= ','
 DOT ::= '.'
 EQUAL ::= '='
+AT ::= '@'
+ELLIPSIS ::= '...'
 
 StatementNoShortIf ::= 'Statement'
 StatementWithoutTrailingSubstatement ::= 'Statement'
