@@ -1,5 +1,13 @@
 2001-10-16  Michael Ernst  <mernst@alum.mit.edu>
 
+	* src/decl.cpp (ProcessFieldDeclaration): 
+	* src/diagnose.cpp (getErrorMessage):
+	* src/stream.cpp (ProcessInputUnicode): Explicitly initialize some
+	variables, restrict scope of temporaries, and fix some comment
+	typos - patches 202, 203.
+
+2001-10-16  Michael Ernst  <mernst@alum.mit.edu>
+
 	* src/platform.h: Add prototype SystemMkdirhierForFile.
 	* src/platform.cpp (SystemMkdirhierForFile): Add definition.
 	* src/unparse.cpp (Unparse): Use SystemMkdirhierForFile - patch

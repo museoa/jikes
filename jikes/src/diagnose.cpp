@@ -2055,7 +2055,7 @@ const char *ParseErrorInfo::getFileName()
 const wchar_t *ParseErrorInfo::getErrorMessage() 
 {
     ErrorString s;
-    const char *name;
+    const char *name = NULL;
     int i, len = 0;
 
 #if defined(FULL_DIAGNOSIS)

@@ -2669,9 +2669,13 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration *field_declaration)
     //
     bool deprecated_declarations = lex_stream -> IsDeprecated(lex_stream -> Previous(field_declaration -> LeftToken()));
     AstArrayType *array_type = field_declaration -> type -> ArrayTypeCast();
-    Ast *actual_type = (array_type ? array_type -> type : field_declaration -> type);
-    AstPrimitiveType *primitive_type = actual_type -> PrimitiveTypeCast();
-    TypeSymbol *field_type = (primitive_type ? FindPrimitiveType(primitive_type) : MustFindType(actual_type));
+    TypeSymbol *field_type;
+    {
+        Ast *actual_type = (array_type ? array_type -> type : field_declaration -> type);
+        AstPrimitiveType *primitive_type = actual_type -> PrimitiveTypeCast();
+        field_type = (primitive_type ? FindPrimitiveType(primitive_type) : MustFindType(actual_type));
+    }
+
     for (int i = 0; i < field_declaration -> NumVariableDeclarators(); i++)
     {
         AstVariableDeclarator *variable_declarator = field_declaration -> VariableDeclarator(i);

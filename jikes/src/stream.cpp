@@ -989,12 +989,16 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
 
     if (buffer)
     {
-        int      escape_value;
-        wchar_t *escape_ptr;
+        int escape_value = 0;
+        wchar_t *escape_ptr = NULL;
 
         UnicodeLexerState saved_state = START;
         UnicodeLexerState state = START;
         bool oncemore = false;
+
+        // If oncemore is true, ch holds the current character, otherwise
+        // it is updated to the next character
+        wchar_t ch = 0;
 
         if (control.option.encoding)
         {
@@ -1008,38 +1012,39 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
 
         while (HasMoreData() || oncemore)
         {
-            // On each iteration we advance input_ptr maximun 2 postions.
-            // Here we check if we are close to the end of input_buffer
-            if (input_ptr>=input_tail)
+            // On each iteration we advance input_ptr maximun 2 positions.
+            // Here we check if we are close to the end of input_buffer.
+            if (input_ptr >= input_tail)
             {
-                // If this happen, reallocate it with some more space.
+                // If this happens, reallocate it with some more space.
                 // This is very rare case, which could happen if
-                // one code page character is represened by several 
+                // one code page character is represented by several 
                 // unicode characters. One of exaples of such
                 // situation is unicode "surrogates".
                 //
                 // If such reallocation will be required, it will indeed
                 // slow down compilation a bit.
-                size_t cursize = input_ptr-input_buffer;
-                size_t newsize = cursize+cursize/10+4; // add 10%
+                size_t cursize = input_ptr - input_buffer;
+                size_t newsize = cursize + cursize / 10 + 4; // add 10%
                 wchar_t *tmp   = new wchar_t[newsize]; 
-                memcpy (tmp, input_buffer, cursize*sizeof(wchar_t));
+                memcpy (tmp, input_buffer, cursize * sizeof(wchar_t));
                 delete [] input_buffer;
                 input_buffer = tmp;
                 input_tail = input_buffer + newsize - 1;
                 input_ptr  = input_buffer + cursize;
             }
             
-            wchar_t ch;
-            
-            if (!oncemore)
+            if (! oncemore)
             {
-                ch=DecodeNextCharacter();
+                ch = DecodeNextCharacter();
 
-                if (ErrorDecodeNextCharacter()) {
+                if (ErrorDecodeNextCharacter())
+                {
                     break;
                 }
-            } else {
+            }
+            else
+            {
                 oncemore = false;
             }
 
@@ -1067,9 +1072,10 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
             case UNICODE_ESCAPE:
                 if (isxdigit(ch))
                 {
-                    state=UNICODE_ESCAPE_DIGIT_0;
-                    escape_value=hexvalue(ch)*16*16*16;
-                } else if (ch!=U_u)
+                    state = UNICODE_ESCAPE_DIGIT_0;
+                    escape_value = hexvalue(ch) << 12;
+                }
+                else if (ch != U_u)
                 {
                     if (initial_reading_of_input)
                         bad_tokens.Next().Initialize(StreamError::INVALID_UNICODE_ESCAPE,
@@ -1081,9 +1087,10 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
             case UNICODE_ESCAPE_DIGIT_0:
                 if (isxdigit(ch))
                 {
-                    state=UNICODE_ESCAPE_DIGIT_1;
-                    escape_value+=hexvalue(ch)*16*16;
-                } else  
+                    state = UNICODE_ESCAPE_DIGIT_1;
+                    escape_value += hexvalue(ch) << 8;
+                }
+                else
                 {
                     if (initial_reading_of_input)
                         bad_tokens.Next().Initialize(StreamError::INVALID_UNICODE_ESCAPE,
@@ -1095,9 +1102,10 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
             case UNICODE_ESCAPE_DIGIT_1:
                 if (isxdigit(ch))
                 {
-                    state=UNICODE_ESCAPE_DIGIT_2;
-                    escape_value+=hexvalue(ch)*16;
-                } else  
+                    state = UNICODE_ESCAPE_DIGIT_2;
+                    escape_value += hexvalue(ch) << 4;
+                }
+                else
                 {
                     if (initial_reading_of_input)
                         bad_tokens.Next().Initialize(StreamError::INVALID_UNICODE_ESCAPE,
@@ -1109,11 +1117,12 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
             case UNICODE_ESCAPE_DIGIT_2:
                 if (isxdigit(ch))
                 {
-                    ch       = escape_value+hexvalue(ch);
+                    ch       = escape_value + hexvalue(ch);
                     state    = saved_state;
                     saved_state = UNICODE_ESCAPE_DIGIT_2;
                     oncemore = true;
-                } else  
+                }
+                else
                 {
                     if (initial_reading_of_input)
                         bad_tokens.Next().Initialize(StreamError::INVALID_UNICODE_ESCAPE,
@@ -1140,17 +1149,17 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                 } else
                 {
                     state = RAW;
-                    *(++input_ptr)=ch;                    
+                    *(++input_ptr) = ch;                    
                 }
-               // clear saved_state == UNICODE_ESCAPE_DIGIT_2 status
-               saved_state = CR;
+                // clear saved_state == UNICODE_ESCAPE_DIGIT_2 status
+                saved_state = CR;
                 break;
 
             case START:
                 // if for some reason converter produced or passed
                 // byte order mark, it have to be ignored.
                 state = RAW;
-                if (ch==U_BOM || ch==U_REVERSE_BOM)
+                if (ch == U_BOM || ch == U_REVERSE_BOM)
                     break; //ignore
                     
             case RAW:
@@ -1163,7 +1172,7 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                     *(++input_ptr) = U_LINE_FEED;
                 } else
                 {
-                    *(++input_ptr)=ch;                    
+                    *(++input_ptr) = ch;
                 }
                 saved_state = RAW;
                 break;
