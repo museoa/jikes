@@ -1,6 +1,7 @@
 The files in this directory and its contained subdirectories
 collectively comprise the distribution of the IBM Jikes Compiler,
-http://ibm.com/developerworks/opensource.
+http://ibm.com/developerworks/opensource
+http://oss.software.ibm.com/developerworks/opensource/jikes/project/index.html
 
 This distribution is covered by the "IBM Public License Version
 Version 1.0 - Jikes" contained in the file license.htm.  You must
@@ -9,7 +10,9 @@ accept the terms of the license agreement to use this software.
 See the ChangeLog for file revision history.
 
 To configure and build jikes just run ./configure ; make in the
-toplevel directory. Run "make install" to install jikes.
+toplevel directory. Run "make install" to install jikes. If you
+ever need to modify configure.in or other config files, you need
+to run ./autogen.sh script to generate a new ./configure script.
 
 Documentation files provided in 'doc' directory include:
 
@@ -28,4 +31,29 @@ contrib.html: names of contributors, including the Jikes Project Core
 Team.
 
 jikes.spec: "spec" file for use with RPM (Red Hat Package Manager).
+
+Complete program source is provided in the 'src' subdirectory.
+
+However, note that some of the files are machine-generated.
+Any changes that require edits to the file ./java.g will also
+require you to obtain a copy of the Jikes Parser Generator (jikespg).
+
+http://oss.software.ibm.com/developerworks/opensource/jikes/project/pub/index.html
+
+If you want to build jikes on a system that does not support
+autoconf, you can try the editing the src/Makefile.hand to
+create a Makefile for your system. There are a number of
+clauses at the start of Makefile.hand giving the options
+needed for several systems.  All the clauses have
+been commented out. You need to uncomment the clause for
+your system before using this file, or create a clause
+using the ones available as a guide.
+
+You can also obtain set of test programs (jikestst) from
+http://oss.software.ibm.com/developerworks/opensource/jikes/project/pub/index.html
+
+If you have further questions, you can consult the archives of the
+Jikes mailing lists, or subscribe to the Jikes list and then seek
+help. See this URL for info on how to sign up for the mailing lists.
+http://oss.software.ibm.com/developerworks/opensource/jikes/project/subscribe.html
 

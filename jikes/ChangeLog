@@ -1,11 +1,16 @@
+2000-05-05  Mo DeJong  <mdejong@cygnus.com>
+
+	* README: Merged in contents from src/README.
+	* src/README: Removed.
+
 2000-05-04  Vadim Zaliva  <lord@crocodile.org>
 
 	* src/Makefile.in: Add code to install jikesapi.h on 'install' goal.
 
 	* src/jikesapi.h:
-	* src/jikesapi.cpp: DefaultFileReader and DefaultFileWriter have been moved
-	from jikesapi.h to jikesapi.cpp to avoid platform dependant code in API
-	headers.
+	* src/jikesapi.cpp: DefaultFileReader and DefaultFileWriter have
+	been moved from jikesapi.h to jikesapi.cpp to avoid platform
+	dependant code in API headers.
 
 2000-05-04  Mo DeJong  <mdejong@cygnus.com>
 
