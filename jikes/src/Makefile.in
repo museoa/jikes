@@ -10,7 +10,6 @@
 SHELL=@SHELL@
 
 VPATH		= @srcdir@
-top_srcdir	= @top_srcdir@
 srcdir		= @srcdir@
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
@@ -50,7 +49,7 @@ clean:
 	$(ERASE) gencode.class
 
 distclean: clean
-	$(ERASE) Makefile TAGS
+	$(ERASE) Makefile config.h TAGS
 	$(ERASE) *~
 
 install: all install-nostrip install-docs install-api
@@ -69,15 +68,12 @@ install-docs: all
 
 install-api:
 	$(MKDIR) $(prefix)/include
-	cp jikesapi.h $(prefix)/include
+	cp $(srcdir)/jikesapi.h $(prefix)/include
 
 uninstall:
 	$(ERASE) $(exec_prefix)/bin/$(EXECUTABLE)
 	$(ERASE) $(prefix)/man/man1/jikes.1
 	$(ERASE) $(prefix)/include/jikesapi.h
-
-Makefile: $(srcdir)/Makefile.in
-	cd $(top_srcdir); ./config.status
 
 jikespg:
 	cd $(srcdir)

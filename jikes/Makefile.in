@@ -39,7 +39,11 @@ distclean:
 	$(ERASE) config.cache config.log config.h config.status Makefile
 	cd src ;\
 	make distclean
+	rmdir src
 
 Makefile: $(srcdir)/Makefile.in
+	./config.status
+
+src/Makefile: $(srcdir)/src/Makefile.in
 	./config.status
 
