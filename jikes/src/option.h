@@ -29,7 +29,7 @@ public:
     int argc;
     char **argv;
 
-    ArgumentExpander::ArgumentExpander(int, char **);
+    ArgumentExpander(int, char **);
 
     ArgumentExpander(Tuple<char> &);
 
