@@ -537,7 +537,7 @@ void ByteCode::DeclareField(VariableSymbol * symbol)
     return;
 }
             
-void ByteCode::GenerateAccessMethod(MethodSymbol * method_symbol)
+void ByteCode::GenerateAccessMethod(MethodSymbol *method_symbol)
 {
 assert(method_symbol -> ACC_STATIC());
     // generate code for access method to private member of containing class
@@ -545,11 +545,13 @@ assert(method_symbol -> ACC_STATIC());
     int stack_words = 0;
     int argument_offset = 0; // offset to start of argument
     code_attribute -> max_locals = 0; // DS fix this 01 dec 97 (set to 1) ; PC fix this 18 Mar 99 (set to 0)
-    TypeSymbol *parameter_type;
 
-    for (int i = 0; i < method_symbol -> NumFormalParameters(); i++)
+    //
+    // Load the parameters
+    //
+    for (int i = 0; i < method_symbol -> NumFormalParameters(); i++) // generate code for the arguments
     {
-        TypeSymbol * local_type = method_symbol -> FormalParameter(i) -> Type();
+        TypeSymbol *local_type = method_symbol -> FormalParameter(i) -> Type();
         code_attribute -> max_locals += GetTypeWords(local_type);
         stack_words += GetTypeWords(local_type);
         LoadLocal(argument_offset, local_type);
@@ -557,71 +559,48 @@ assert(method_symbol -> ACC_STATIC());
     }
 
     MethodSymbol *method_sym = method_symbol -> accessed_member -> MethodCast();
-    // generate code according to type of method
     if (method_sym)
     {
-        PutOp(OP_INVOKESTATIC);  // must be static
+        PutOp(method_sym -> ACC_STATIC() ? OP_INVOKESTATIC : OP_INVOKENONVIRTUAL);  
         CompleteCall(method_sym, stack_words, 0);
     }
     else
     {
         VariableSymbol *field_sym = method_symbol -> accessed_member -> VariableCast();
 
-        if (method_type == this_control.void_type) // writing to a field
+        if (method_symbol -> Type() == this_control.void_type) // writing to a field
         {
-            // need method to assign value to field
-            if (method_symbol -> NumFormalParameters() == 0) {
-                chaos("assignment access method requires parameter");
-            }  
-            parameter_type = method_symbol -> FormalParameter(0) -> Type();
-            code_attribute -> max_locals += GetTypeWords(parameter_type);
-            
-            if (field_sym -> ACC_STATIC())
-            {
-                LoadLocal(0, parameter_type);
-                PutOp(OP_PUTSTATIC);
-            }
-            else
-            {
-                PutOp(OP_ALOAD_0); // get this for field access
-                LoadLocal(1, parameter_type);
-                PutOp(OP_PUTFIELD);
-            }
-            ChangeStack(this_control.IsDoubleWordType(parameter_type) ? -2 : -1);
+            TypeSymbol *parameter_type = method_symbol -> FormalParameter(field_sym -> ACC_STATIC() ? 0 : 1) -> Type();
+            PutOp(field_sym -> ACC_STATIC() ? OP_PUTSTATIC : OP_PUTFIELD);
             PutU2(GenerateFieldReference(field_sym));
+            ChangeStack(this_control.IsDoubleWordType(parameter_type) ? -2 : -1);
         }
-        else
+        else // reading a field
         {
             // need method to retrieve value of field
-            if (field_sym -> ACC_STATIC())
-            {
-                PutOp(OP_GETSTATIC);
-                ChangeStack(this_control.IsDoubleWordType(method_type) ? 2 : 1);
-            }
-            else {
-                PutOp(OP_ALOAD_0); // get this for field access
-                PutOp(OP_GETFIELD);
-                ChangeStack(this_control.IsDoubleWordType(method_type) ? 1 : 0);
-            }
+            PutOp(field_sym -> ACC_STATIC() ? OP_GETSTATIC : OP_GETFIELD);
             PutU2(GenerateFieldReference(field_sym));
+            ChangeStack(this_control.IsDoubleWordType(method_symbol -> Type()) ? 2 : 1);
         }
     }
     
     // method returns void, generate return unless last statement is return
-    if (method_type == this_control.void_type)
+    if (method_symbol -> Type() == this_control.void_type)
     {
         //  int line_index;
         // line_index = line_number_table_attribute -> line_number_table.NextIndex();
         // line_number_table_attribute -> line_number_table[line_index]
         PutOp(OP_RETURN);// guarantee return at end of body
     }
-    else GenerateReturn(method_type);
+    else GenerateReturn(method_symbol -> Type());
 
     if (last_label_pc >= code_attribute -> code.Length())
     {
         // here to emit noop if would otherwise EmitBranch past end
         PutNop(0);
     }
+
+    return;
 }
 
 void ByteCode::GenerateReturn(TypeSymbol * type)
@@ -1354,7 +1333,7 @@ void ByteCode::EmitStatementExpression(AstExpression * expression)
                 }
                 break;
         case Ast::CALL:
-            (void) EmitMethodInvocation((AstMethodInvocation *)expression, 0);
+            EmitMethodInvocation((AstMethodInvocation *) expression);
             if (expression-> Type()!=this_control.void_type) {
                 if (this_control.IsDoubleWordType(expression-> Type())) {
                     PutOp(OP_POP2);
@@ -2136,7 +2115,7 @@ int ByteCode::EmitExpression(AstExpression *expression)
             if (expression -> SimpleNameCast() && expression -> SimpleNameCast() -> resolution_opt) {
                 return EmitExpression(expression -> SimpleNameCast() -> resolution_opt);
             }
-            return LoadSimple(GetLHSKind(expression, (MethodSymbol *)0),expression);
+            return LoadSimple(GetLHSKind(expression), expression);
         case Ast::INTEGER_LITERAL:
         case Ast::LONG_LITERAL:
         case Ast::FLOATING_POINT_LITERAL:
@@ -2175,7 +2154,8 @@ int ByteCode::EmitExpression(AstExpression *expression)
         {
             AstMethodInvocation *method_call = expression -> MethodInvocationCast();
             method_call = (method_call -> resolution_opt ? method_call -> resolution_opt -> MethodInvocationCast() : method_call);
-            return EmitMethodInvocation(method_call, 0);
+            EmitMethodInvocation(method_call);
+            return GetTypeWords(method_call -> Type());
         }
         case Ast::ARRAY_ACCESS:             // if seen alone this will be as RHS
             return EmitArrayAccessRHS((AstArrayAccess *) expression);
@@ -2450,9 +2430,18 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *expression,int n
         left_hand_side = expression -> left_hand_side;
         op_type = expression_type;
     }
-    left_type = left_hand_side-> Type();
-    kind = GetLHSKind(expression -> left_hand_side, expression -> write_method);
-    if (expression -> assignment_tag == AstAssignmentExpression::EQUAL) {
+    left_type = left_hand_side -> Type();
+
+    VariableSymbol *accessed_member = NULL;
+    if (expression -> write_method)
+    {
+         accessed_member = expression -> write_method -> accessed_member -> VariableCast();
+         kind = LHS_METHOD;
+    }
+    else kind = GetLHSKind(expression -> left_hand_side);
+
+    if (expression -> assignment_tag == AstAssignmentExpression::EQUAL)
+    {
         switch(kind) {
             case LHS_ARRAY:
                 EmitArrayAccessLHS(left_hand_side -> ArrayAccessCast()); // lhs must be array access
@@ -2460,12 +2449,18 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *expression,int n
             case LHS_FIELD:
                 EmitFieldAccessLHSBase(left_hand_side); // load base for field access
                 break;
-            case LHS_CLASS_METHOD:
-                // need to load address of object, obtained from resolution
-                ResolveAccess(left_hand_side, 0); // just get address
-                break;
-            case LHS_STATIC_METHOD:
-                // nothing to do for static method at this point
+            case LHS_METHOD:
+                if (! accessed_member -> ACC_STATIC()) // need to load address of object, obtained from resolution
+                {
+                    AstExpression *resolve = (left_hand_side -> FieldAccessCast()
+                                                              ? left_hand_side -> FieldAccessCast() -> resolution_opt
+                                                              : left_hand_side -> SimpleNameCast() -> resolution_opt);
+
+assert(resolve);
+                    AstFieldAccess *field_expression = resolve -> MethodInvocationCast() -> method -> FieldAccessCast();
+assert(field_expression);
+                    EmitExpression(field_expression -> base);
+                }
                 break;
         }
         EmitExpression(expression -> expression);
@@ -2488,13 +2483,11 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *expression,int n
                 (void) LoadSimple(kind,left_hand_side);
                 ChangeStack(this_control.IsDoubleWordType(left_type) ? 1: 0); // CHECK_THIS? Is this really necessary
                 break;
-            case LHS_CLASS_METHOD:
-                // need to load address of object, obtained from resolution, saving a copy on the stack
-                ResolveAccess(left_hand_side, 1); // get address and value
-                break;
-            case LHS_STATIC_METHOD:
-                // get value by invoking the appropriate resolution
-                EmitExpression(left_hand_side -> SimpleNameCast() -> resolution_opt); // get value
+            case LHS_METHOD:
+                if (accessed_member -> ACC_STATIC()) // get value by invoking appropriate resolution
+                    EmitExpression(left_hand_side); // get value
+                else // need to load address of object, obtained from resolution, saving a copy on the stack
+                    ResolveAccess(left_hand_side); // get address and value
                 break;
         }
 
@@ -2573,6 +2566,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *expression,int n
             }
         }
     }
+
     // Update left operand, saving value of right operand if it is needed.
     switch(kind) {
         case LHS_ARRAY:
@@ -2585,39 +2579,36 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *expression,int n
             StoreArrayElement(expression_type);
             break;
         case LHS_FIELD:
-        case LHS_CLASS_METHOD:
             if (need_value) {
                 if (this_control.IsDoubleWordType(left_type)) {
                     PutOp(OP_DUP2_X1);
                 }
                 else PutOp(OP_DUP_X1);
             }
-            if (kind==LHS_CLASS_METHOD) {
-                stack_words = this_control.IsDoubleWordType(left_type) ? 2: 1;
-                PutOp(OP_INVOKEVIRTUAL);
-                CompleteCall(expression -> write_method, stack_words, 0);
+            StoreField(left_hand_side);
+
+            break;
+        case LHS_METHOD:
+            if (need_value)
+            {
+                if (accessed_member -> ACC_STATIC())
+                     PutOp(this_control.IsDoubleWordType(left_type) ? OP_DUP2 : OP_DUP);
+                else PutOp(this_control.IsDoubleWordType(left_type) ? OP_DUP2_X1 : OP_DUP_X1);
             }
-            else {
-                StoreField(left_hand_side);
-            }
+            stack_words = (this_control.IsDoubleWordType(left_type) ? 2 : 1) + (accessed_member -> ACC_STATIC() ? 0 : 1);
+            PutOp(OP_INVOKESTATIC);
+            CompleteCall(expression -> write_method, stack_words, 0);
+
             break;
         case LHS_LOCAL:
         case LHS_STATIC:
-        case LHS_STATIC_METHOD:
             if (need_value) {
                 if (this_control.IsDoubleWordType(left_type)) {
                     PutOp(OP_DUP2);
                 }
                 else PutOp(OP_DUP);
             }
-            if (kind==LHS_STATIC_METHOD) {
-                stack_words = this_control.IsDoubleWordType(left_type) ? 2: 1;
-                PutOp(OP_INVOKESTATIC);
-                CompleteCall(expression -> write_method, stack_words, 0);
-            }
-            else {
-                StoreSimple(kind,left_hand_side);
-            }
+            StoreSimple(kind, left_hand_side);
 
             break;
     }
@@ -3047,21 +3038,17 @@ void ByteCode::EmitCloneArray(AstMethodInvocation *expression)
 
 }
 
-int ByteCode::EmitMethodInvocation(AstMethodInvocation *expression, int copy_base) 
+void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression) 
 {
-    MethodSymbol * msym = (MethodSymbol *) expression -> symbol;
-    AstSimpleName * simple_name;
-    TypeSymbol * res_type = expression-> Type(); // result type
-    int is_private = msym -> ACC_PRIVATE();
-    int is_static = msym -> ACC_STATIC();
-    int is_super=0; // set if super call
-    int is_interface = msym -> containing_type -> ACC_INTERFACE();
-    AstFieldAccess * field;
-    int stack_words = 0; // words on stack needed for arguments
-    if (msym -> ExternalIdentity() == this_control.clone_name_symbol) {
-        if (msym -> containing_type -> IsArray()) {
+    MethodSymbol *msym = (MethodSymbol *) expression -> symbol;
+    bool is_super = false; // set if super call
+
+    if (msym -> ExternalIdentity() == this_control.clone_name_symbol)
+    {
+        if (msym -> containing_type -> IsArray())
+        {
             EmitCloneArray(expression);
-            return GetTypeWords(res_type);
+            return;
         }
 #ifdef TBSL
         else {
@@ -3069,58 +3056,58 @@ int ByteCode::EmitMethodInvocation(AstMethodInvocation *expression, int copy_bas
         }
 #endif
     }
-    if (is_static) {
-       if (expression -> method -> FieldAccessCast()) {
-           field = expression -> method -> FieldAccessCast();
-           if (field -> base -> MethodInvocationCast()) {
-              (void) EmitMethodInvocation(field -> base -> MethodInvocationCast(), 0);
-              PutOp(OP_POP); // discard value (only evaluating for side effect)
-           }
-    
-       }
-    }
-    else {
-       field = expression -> method -> FieldAccessCast();
-       if (field) {
-         AstFieldAccess *sub_field_access = field -> base -> FieldAccessCast();
 
-         if (field -> base -> SuperExpressionCast() || (sub_field_access && sub_field_access -> IsSuperAccess())) {
-           is_super=1;
-         }
-         if (field -> base -> MethodInvocationCast()) {
-             (void) EmitMethodInvocation(field -> base -> MethodInvocationCast(), 0);
-         }
-         else {
-           EmitExpression(field -> base);
-         }
+    if (msym -> ACC_STATIC())
+    {
+        if (expression -> method -> FieldAccessCast())
+        {
+            AstFieldAccess *field = expression -> method -> FieldAccessCast();
+            if (field -> base -> MethodInvocationCast())
+            {
+                EmitMethodInvocation(field -> base -> MethodInvocationCast());
+                PutOp(OP_POP); // discard value (only evaluating for side effect)
+            }
+        }
+    }
+    else
+    {
+       AstFieldAccess *field = expression -> method -> FieldAccessCast();
+       if (field)
+       {
+           AstFieldAccess *sub_field_access = field -> base -> FieldAccessCast();
+           is_super = field -> base -> SuperExpressionCast() || (sub_field_access && sub_field_access -> IsSuperAccess());
+
+           if (field -> base -> MethodInvocationCast())
+                EmitMethodInvocation(field -> base -> MethodInvocationCast());
+           else EmitExpression(field -> base);
        }
-       else if (expression -> method -> SimpleNameCast()) {
-           simple_name = expression -> method -> SimpleNameCast();
-           if (simple_name -> resolution_opt) {  // use resolution if available
-               (void) EmitExpression(simple_name -> resolution_opt);
-           }
-           else {
-               // must be field of current object, so load this
+       else if (expression -> method -> SimpleNameCast())
+       {
+           AstSimpleName *simple_name = expression -> method -> SimpleNameCast();
+           if (simple_name -> resolution_opt) // use resolution if available
+                EmitExpression(simple_name -> resolution_opt);
+           else // must be field of current object, so load this
                PutOp(OP_ALOAD_0);
-           }
        }
-       else {
-          chaos("unexpected argument to field access");
-       }
+       else chaos("unexpected argument to field access");
+    }
 
-    }
-    if (!is_static && copy_base) { // if need to save object ref for method invocation
-        PutOp(OP_DUP);
-    }
-    for (int i=0; i < expression -> NumArguments();i++) {
+    int stack_words = 0; // words on stack needed for arguments
+    for (int i = 0; i < expression -> NumArguments(); i++)
+    {
         stack_words += EmitExpression((AstExpression *) expression -> Argument(i));
     }
-    PutOp(msym -> ACC_STATIC() ? OP_INVOKESTATIC 
-         : (is_super | is_private)  ? OP_INVOKENONVIRTUAL
-         : is_interface ? OP_INVOKEINTERFACE 
-         : OP_INVOKEVIRTUAL);
-     CompleteCall(msym,stack_words, is_interface);
-    return GetTypeWords(res_type);
+
+    bool is_interface = msym -> containing_type -> ACC_INTERFACE();
+    PutOp(msym -> ACC_STATIC()
+                ? OP_INVOKESTATIC 
+                : (is_super || msym -> ACC_PRIVATE())
+                             ? OP_INVOKENONVIRTUAL
+                             : is_interface ? OP_INVOKEINTERFACE 
+                                            : OP_INVOKEVIRTUAL);
+    CompleteCall(msym, stack_words, is_interface);
+
+    return;
 }
 void ByteCode::CompleteCall(MethodSymbol * msym,int stack_words, int is_interface)
 {
@@ -3200,22 +3187,29 @@ void ByteCode::EmitNewArray(int dims,TypeSymbol * type)
     }
 }
 
-int ByteCode::EmitPostUnaryExpression(AstPostUnaryExpression *expression,int need_value) 
+int ByteCode::EmitPostUnaryExpression(AstPostUnaryExpression *expression, int need_value) 
 {
             // POST_UNARY
     int kind;
-        switch(kind=GetLHSKind(expression -> expression, expression -> write_method)) {
+    switch(kind = expression -> write_method ? LHS_METHOD : GetLHSKind(expression -> expression))
+    {
         case LHS_LOCAL:
         case LHS_STATIC:
-        case LHS_STATIC_METHOD:
             EmitPostUnaryExpressionSimple(kind,expression,need_value);
             break;
         case LHS_ARRAY:
             EmitPostUnaryExpressionArray(expression, need_value);
             break;
         case LHS_FIELD:
-        case LHS_CLASS_METHOD:
-            EmitPostUnaryExpressionField(kind,expression,need_value);
+            EmitPostUnaryExpressionField(kind,expression, need_value);
+            break;
+        case LHS_METHOD:
+            {
+                VariableSymbol *accessed_member = expression -> write_method -> accessed_member -> VariableCast();
+                if (accessed_member -> ACC_STATIC())
+                     EmitPostUnaryExpressionSimple(kind,expression, need_value);
+                else EmitPostUnaryExpressionField(kind,expression, need_value);
+            }
             break;
         default:
             chaos("unknown lhs kind for assignment");
@@ -3234,11 +3228,11 @@ void ByteCode::EmitPostUnaryExpressionField(int kind,AstPostUnaryExpression *exp
     TypeSymbol * expression_type = expression-> Type();
     bool plus = (expression -> post_unary_tag  ==  AstPostUnaryExpression::PLUSPLUS) ? true : false;
 
-    if (kind==LHS_FIELD) {
-        EmitFieldAccessLHS(expression -> expression);
+    if (kind == LHS_METHOD) {
+        ResolveAccess(expression -> expression); // get address and value
     }
     else {
-        ResolveAccess(expression -> expression, 1); // get address and value
+        EmitFieldAccessLHS(expression -> expression);
     }
 
     if (need_value) {
@@ -3247,6 +3241,7 @@ void ByteCode::EmitPostUnaryExpressionField(int kind,AstPostUnaryExpression *exp
         }
         else PutOp(OP_DUP_X1);
     }
+
     if (this_control.IsSimpleIntegerValueType(expression_type)) {   // TBSL: use iinc eventually
             PutOp(OP_ICONST_1);
             PutOp(plus ? OP_IADD : OP_ISUB);
@@ -3263,15 +3258,18 @@ void ByteCode::EmitPostUnaryExpressionField(int kind,AstPostUnaryExpression *exp
         PutOp(OP_DCONST_1);                // load 1.0
         PutOp(plus ? OP_DADD : OP_DSUB);
     }
-    if (kind==LHS_FIELD) {
+
+    if (kind == LHS_METHOD)
+    {
+        int stack_words = (this_control.IsDoubleWordType(expression_type) ? 2 : 1) + 1;
+        PutOp(OP_INVOKESTATIC);
+        CompleteCall(expression -> write_method, stack_words, 0);
+    }
+    else // assert(kind == LHS_FIELD)
+    {
         PutOp(OP_PUTFIELD);
         ChangeStack(this_control.IsDoubleWordType(expression_type) ? -3: -2);
         PutU2(GenerateFieldReference(sym));
-    }
-    else {
-        int stack_words = this_control.IsDoubleWordType(expression_type) ? 2: 1;
-        PutOp(OP_INVOKEVIRTUAL);
-        CompleteCall(expression -> write_method, stack_words, 0);
     }
 }
 
@@ -3301,6 +3299,7 @@ void ByteCode::EmitPostUnaryExpressionSimple(int kind, AstPostUnaryExpression *e
         }
         else PutOp(OP_DUP);
     }
+
     if (this_control.IsSimpleIntegerValueType(expression_type)) {               // TBSL: use iinc eventually
             PutOp(OP_ICONST_1);
             PutOp(plus ? OP_IADD : OP_ISUB);
@@ -3318,14 +3317,19 @@ void ByteCode::EmitPostUnaryExpressionSimple(int kind, AstPostUnaryExpression *e
         PutOp(OP_DCONST_1);                // load 1.0
         PutOp(plus ? OP_DADD : OP_DSUB);
     }
-    if (kind==LHS_STATIC_METHOD) {
-        int stack_words = this_control.IsDoubleWordType(expression_type) ? 2: 1;
+
+    if (kind == LHS_METHOD)
+    {
+        int stack_words = this_control.IsDoubleWordType(expression_type) ? 2 : 1;
         PutOp(OP_INVOKESTATIC);
         CompleteCall(expression -> write_method, stack_words, 0);
     }
-    else {
+    else
+    {
         StoreSimple(kind,expression -> expression);
     }
+
+    return;
 }
 
 
@@ -3451,19 +3455,26 @@ void ByteCode::EmitPreUnaryIncrementExpression(AstPreUnaryExpression *expression
 {
             // PRE_UNARY with side effects (++X or --X)
     int kind;
-        switch(kind=GetLHSKind(expression, expression -> write_method)) {
+    switch(kind = expression -> write_method ? LHS_METHOD : GetLHSKind(expression))
+    {
         case LHS_LOCAL:
         case LHS_STATIC:
-        case LHS_STATIC_METHOD:
             EmitPreUnaryIncrementExpressionSimple(kind,expression,need_value);
             break;
         case LHS_ARRAY:
             EmitPreUnaryIncrementExpressionArray(expression,need_value);
             break;
         case LHS_FIELD:
-        case LHS_CLASS_METHOD:
             EmitPreUnaryIncrementExpressionField(kind, expression,need_value);
-        break;
+            break;
+        case LHS_METHOD:
+            {
+                VariableSymbol *accessed_member = expression -> write_method -> accessed_member -> VariableCast();
+                if (accessed_member -> ACC_STATIC())
+                     EmitPreUnaryIncrementExpressionSimple(kind, expression, need_value);
+                else EmitPreUnaryIncrementExpressionField(kind, expression, need_value);
+            }
+            break;
         default:
             chaos("unknown lhs kind for assignment");
     }
@@ -3510,14 +3521,19 @@ void ByteCode::EmitPreUnaryIncrementExpressionSimple(int kind,AstPreUnaryExpress
         PutOp(plus ? OP_DADD : OP_DSUB);
         if (need_value) PutOp(OP_DUP2);
     }
-    if (kind==LHS_STATIC_METHOD) {
-        int stack_words = this_control.IsDoubleWordType(type) ? 2: 1;
+
+    if (kind == LHS_METHOD)
+    {
+        int stack_words = this_control.IsDoubleWordType(type) ? 2 : 1;
         PutOp(OP_INVOKESTATIC);
         CompleteCall(expression -> write_method, stack_words, 0);
     }
-    else {
+    else
+    {
         StoreSimple(kind,expression);
     }
+
+    return;
 }
 
 void ByteCode::EmitPreUnaryIncrementExpressionArrayCode(int load_op,
@@ -3581,19 +3597,22 @@ void ByteCode::EmitPreUnaryIncrementExpressionArray(AstPreUnaryExpression *expre
 void ByteCode::EmitPreUnaryIncrementExpressionField(int kind, AstPreUnaryExpression *expression, int need_value) 
 {
     // Pre Unary for which operand is field (instance variable)
-//    AstExpression *expression;
+    // AstExpression *expression;
     bool plus = (expression -> pre_unary_tag  ==  AstPreUnaryExpression::PLUSPLUS) ? true : false;
     VariableSymbol * sym = (VariableSymbol *) expression -> symbol;
     TypeSymbol * type = (TypeSymbol *) sym -> owner;
     TypeSymbol * expression_type = expression-> Type();
-    if (kind==LHS_CLASS_METHOD) {
-        // need to load address of object, obtained from resolution, saving a copy on the stack
-        ResolveAccess(expression -> expression, 1); // get address and value
+
+    if (kind == LHS_METHOD)
+    {
+        ResolveAccess(expression -> expression); // get address and value
     }
-    else {
+    else // need to load address of object, obtained from resolution, saving a copy on the stack
+    {
         EmitFieldAccessLHS(expression -> expression);
     }
-        if (this_control.IsSimpleIntegerValueType(expression_type)) {
+
+    if (this_control.IsSimpleIntegerValueType(expression_type)) {
         PutOp(OP_ICONST_1);
         PutOp(plus ? OP_IADD : OP_ISUB);
         EmitCast(expression_type, this_control.int_type);
@@ -3615,16 +3634,21 @@ void ByteCode::EmitPreUnaryIncrementExpressionField(int kind, AstPreUnaryExpress
         if (need_value)PutOp(OP_DUP2_X1);
     }
     else    chaos("unsupported PreUnary type");
-    if (kind==LHS_CLASS_METHOD) {
-        int stack_words = this_control.IsDoubleWordType(expression_type) ? 2: 1;
-        PutOp(OP_INVOKEVIRTUAL);
+
+    if (kind == LHS_METHOD)
+    {
+        int stack_words = (this_control.IsDoubleWordType(expression_type) ? 2: 1) + 1;
+        PutOp(OP_INVOKESTATIC);
         CompleteCall(expression -> write_method, stack_words, 0);
     }
-    else {
+    else
+    {
         PutOp(OP_PUTFIELD);
         ChangeStack(this_control.IsDoubleWordType(expression_type) ? -3: -2);
         PutU2(GenerateFieldReference(sym));
     }
+
+    return;
 }
 
 void ByteCode::EmitThisInvocation(AstThisCall *this_call)
@@ -4061,15 +4085,8 @@ int ByteCode::GetTypeWords(TypeSymbol * type)
     return this_control.IsDoubleWordType(type) ? 2: 1;
 }
 
-int ByteCode::GetLHSKind(AstExpression * expression, MethodSymbol * msym)
+int ByteCode::GetLHSKind(AstExpression *expression)
 {
-    if (msym) { // if has write_method
-        if (msym -> ACC_STATIC())
-            return LHS_STATIC_METHOD;
-        else
-            return LHS_CLASS_METHOD;
-    }
-            
     if (expression -> CastExpressionCast()) {
         expression = expression -> CastExpressionCast() -> expression;
     }
@@ -4080,17 +4097,18 @@ int ByteCode::GetLHSKind(AstExpression * expression, MethodSymbol * msym)
         expression = expression -> PostUnaryExpressionCast() -> expression;
     }
 
-        //
-        // A left-hand side is either an array access,
-        // a field access or a name. In the case of a FieldAccess
-        // or name, the left-hand side is resolved into a variable.
-        // In the case of an array access, it is resolved into a type.
-        // 
-    VariableSymbol * sym = expression -> symbol -> VariableCast();
-    if (! sym) return LHS_ARRAY;
-    else if (sym -> owner -> MethodCast()) return LHS_LOCAL;
-    else if (sym -> ACC_STATIC()) return LHS_STATIC;
-    else return LHS_FIELD;
+    //
+    // A left-hand side is either an array access,
+    // a field access or a name. In the case of a FieldAccess
+    // or name, the left-hand side is resolved into a variable.
+    // In the case of an array access, it is resolved into a type.
+    // 
+    VariableSymbol *sym = expression -> symbol -> VariableCast();
+    if (! sym)
+         return LHS_ARRAY;
+    else if (sym -> owner -> MethodCast())
+         return LHS_LOCAL;
+    return (sym -> ACC_STATIC() ? LHS_STATIC : LHS_FIELD);
 }
 
 //  Methods to load values
@@ -4315,38 +4333,25 @@ void ByteCode::LoadShort(int val)
         chaos("bcShort operand not short!");
     }
 }
-void ByteCode::ResolveAccess(AstExpression *p, int need_value)
+
+
+//
+// Call to an access method for a compound operator such as ++, --,
+// or "op=".
+//
+void ByteCode::ResolveAccess(AstExpression *p)
 {
-    // if need_value zero, then just get address for access of private member
-    // else get value with an extra copy of the needed address below the value
-    AstExpression * resolve;
-    if (p -> FieldAccessCast()) {
-        resolve = p -> FieldAccessCast() -> resolution_opt;
-    }
-    else if (p -> SimpleNameCast()) {
-        resolve = p -> SimpleNameCast() -> resolution_opt;
-    }
-    if (resolve -> MethodInvocationCast()) {
-        if (need_value) {
-            EmitMethodInvocation(resolve -> MethodInvocationCast(), 1);
-        }
-        else {
-    // next does too much, getting base and field value; just want base
-            //Expression(resolve -> MethodInvocationCast() -> method);
-        if (resolve -> MethodInvocationCast() -> method -> FieldAccessCast()) {
-            AstFieldAccess * field_expression = 
-             resolve -> MethodInvocationCast() -> method -> FieldAccessCast();
-    //   VariableSymbol * sym = (VariableSymbol *) field_expression -> owner;
-         EmitExpression (field_expression -> base);
-        }
-        else {
-          chaos("field access expected in method resolution");
-        }
-        }
-    }
-    else {
-        chaos("method invocation expected here");
-    }
+    AstMethodInvocation *resolve = (p -> FieldAccessCast()
+                                       ? p -> FieldAccessCast() -> resolution_opt
+                                       : p -> SimpleNameCast() -> resolution_opt) -> MethodInvocationCast();
+assert(resolve && resolve -> NumArguments() == 1); // a read method must have exactly one argument: the object in question.
+
+    int stack_words = EmitExpression((AstExpression *) resolve -> Argument(0));
+    PutOp(OP_DUP);
+    PutOp(OP_INVOKESTATIC);
+    CompleteCall(resolve -> symbol -> MethodCast(), stack_words, 0);
+
+    return;
 }
     
 int ByteCode::LoadSimple (int kind,AstExpression *p)
@@ -4358,7 +4363,7 @@ int ByteCode::LoadSimple (int kind,AstExpression *p)
         case LHS_LOCAL:
             LoadLocal(sym -> LocalVariableIndex(), expression_type);
             break;
-        case LHS_STATIC_METHOD:
+        case LHS_METHOD:
             EmitExpression(p); // will do resolution
             break;
         case LHS_FIELD:

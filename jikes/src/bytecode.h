@@ -76,21 +76,24 @@ class ByteCode : public ClassFile, public StringConstant
     InnerClasses_attribute * inner_classes_attribute;
     MethodSymbol * class_literal_method;
 
-#define METHOD_CLONE 0
-#define METHOD_CLONE_GETMESSAGE 1
-#define METHOD_CLONE_INIT    2
-#define METHOD_STRINGBUFFER_TOSTRING     3
-#define METHOD_STRINGBUFFER_INIT    4
-#define METHOD_STRINGBUFFER_APPENDCHARARRAY 5    
-#define METHOD_STRINGBUFFER_APPENDCHAR 6        
-#define METHOD_STRINGBUFFER_APPENDBOOLEAN 7        
-#define METHOD_STRINGBUFFER_APPENDINT    8        
-#define METHOD_STRINGBUFFER_APPENDLONG    9        
-#define METHOD_STRINGBUFFER_APPENDFLOAT    10        
-#define METHOD_STRINGBUFFER_APPENDDOUBLE    11        
-#define METHOD_STRINGBUFFER_APPENDSTRING    12    
-#define METHOD_STRINGBUFFER_APPENDOBJECT    13
-#define METHOD_NUMBER 14  
+    enum 
+    {
+        METHOD_CLONE = 0,
+        METHOD_CLONE_GETMESSAGE = 1,
+        METHOD_CLONE_INIT = 2,
+        METHOD_STRINGBUFFER_TOSTRING = 3,
+        METHOD_STRINGBUFFER_INIT = 4,
+        METHOD_STRINGBUFFER_APPENDCHARARRAY = 5,
+        METHOD_STRINGBUFFER_APPENDCHAR = 6,
+        METHOD_STRINGBUFFER_APPENDBOOLEAN = 7,
+        METHOD_STRINGBUFFER_APPENDINT = 8,
+        METHOD_STRINGBUFFER_APPENDLONG = 9,
+        METHOD_STRINGBUFFER_APPENDFLOAT = 10,
+        METHOD_STRINGBUFFER_APPENDDOUBLE = 11,
+        METHOD_STRINGBUFFER_APPENDSTRING = 12,
+        METHOD_STRINGBUFFER_APPENDOBJECT = 13,
+        METHOD_NUMBER = 14
+    };
     
     int registered_methods[METHOD_NUMBER];
     
@@ -127,7 +130,7 @@ int     IsNull(AstExpression *p);
 int     IsReferenceType(TypeSymbol *p);
 int     IsDefaultValue(AstExpression *p);
 int     IsZero(AstExpression *p);
-int     GetLHSKind(AstExpression *, MethodSymbol *);
+int     GetLHSKind(AstExpression *);
 int     GetTypeWords(TypeSymbol *);
 
 // methods to load and store values
@@ -185,12 +188,15 @@ Deprecated_attribute * CreateDeprecatedAttribute();
         // constant (literal)
         // name (includes local varable, or class variable, or field access)
         // array
-#define LHS_LOCAL  0    // local variable
-#define LHS_ARRAY  1    // array (of any kind)
-#define LHS_FIELD  2    // instance variable
-#define LHS_STATIC 3    // class variable
-#define LHS_CLASS_METHOD 4  // access to private variable via class method call
-#define LHS_STATIC_METHOD 5 // access to private variable via static method call
+enum
+{
+    LHS_LOCAL =  0, // local variable
+    LHS_ARRAY =  1, // array (of any kind)
+    LHS_FIELD =  2, // instance variable
+    LHS_STATIC = 3, // class variable
+    LHS_METHOD = 4 // access to private variable
+};
+
     // Methods in bc_expr.cpp        
 int     EmitExpression(AstExpression * ast);
 void    EmitArrayAccessLHS(AstArrayAccess *);
@@ -206,7 +212,7 @@ int     EmitConditionalExpression(AstConditionalExpression *);
 int     EmitFieldAccess(AstFieldAccess *);
 void    EmitFieldAccessLHS(AstExpression *);
 void    EmitFieldAccessLHSBase(AstExpression *);
-int     EmitMethodInvocation(AstMethodInvocation *, int);
+void    EmitMethodInvocation(AstMethodInvocation *);
 void    EmitNewArray(int,TypeSymbol *);
 void    EmitCloneArray(AstMethodInvocation *);
 int     EmitPostUnaryExpression(AstPostUnaryExpression *,int);
@@ -231,7 +237,7 @@ void    EmitStringAppendMethod(TypeSymbol *);
 void    GenerateAccessMethod(MethodSymbol *);
 int     GenerateFieldReference(VariableSymbol *);
 void    ChangeStack (int);
-void    ResolveAccess(AstExpression *, int);
+void    ResolveAccess(AstExpression *);
 int     GenerateClassAccess(AstFieldAccess *);
 void    GenerateClassAccessMethod(MethodSymbol *);
 
@@ -241,12 +247,17 @@ void    CompileClass(TypeSymbol *);
 //void    SetConstructorParameter(VariableSymbol *);
 void    CompileInterface(TypeSymbol *);
 void    CompileConstructor(AstConstructorDeclaration *, Tuple<AstVariableDeclarator *> &);
-#define METHOD_KIND_ORDINARY 0
-#define METHOD_KIND_CONSTRUCTOR 1
-#define METHOD_KIND_GENERATED_CONSTRUCTOR 2
-#define METHOD_KIND_INTERFACE 3
-#define METHOD_KIND_ACCESS 4
-#define METHOD_KIND_ACCESS_CLASS 5
+
+enum
+{
+    METHOD_KIND_ORDINARY = 0,
+    METHOD_KIND_CONSTRUCTOR = 1,
+    METHOD_KIND_GENERATED_CONSTRUCTOR = 2,
+    METHOD_KIND_INTERFACE = 3,
+    METHOD_KIND_ACCESS = 4,
+    METHOD_KIND_ACCESS_CLASS = 5
+};
+
 int     BeginMethod(int, MethodSymbol *);
 void    EndMethod(int,int, MethodSymbol *);
 void    DeclareField(VariableSymbol *);
