@@ -3936,9 +3936,21 @@ void Semantic::ProcessType(AstType* type_expr)
         }
     }
     if (type -> Bad() && NumErrors() == error_count)
-        ReportSemError(SemanticError::INVALID_TYPE_FOUND, actual_type,
-                       lex_stream -> NameString(type_expr ->
-                                                IdentifierToken()));
+    {
+        if (type == control.no_type)
+        {
+            ReportSemError(SemanticError::TYPE_NOT_FOUND, actual_type,
+                           NULL,
+                           lex_stream -> NameString(type_expr ->
+                                                    IdentifierToken()));
+        }
+        else
+        {
+            ReportSemError(SemanticError::INVALID_TYPE_FOUND, actual_type,
+                           lex_stream -> NameString(type_expr ->
+                                                    IdentifierToken()));
+        }
+    }
     if (array_type)
         type = type -> GetArrayType(this, array_type -> NumBrackets());
     type_expr -> symbol = type;

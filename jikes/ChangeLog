@@ -1,3 +1,11 @@
+2004-06-22  Elliott Hughes  <enh@acm.org>
+
+	* src/decl.cpp: bug #3424; distinguish between invalid types
+	and placeholders for not-found types (i.e. keep saying "type not
+	found" rather than switching to "a candidate was found, but it is
+	invalid and needs to be fixed before this type will successfully
+	compile."
+
 2004-06-21  Elliott Hughes  <enh@acm.org>
 
 	* src/decl.cpp: bug #3986; don't compile covariant return types
