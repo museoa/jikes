@@ -459,11 +459,13 @@ AccessFlags Semantic::ProcessStaticNestedInterfaceModifiers(AstInterfaceDeclarat
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token);
             }
-            else if(control.option.pedantic)
+            else 
             {
-                ReportSemError(SemanticError::REDUNDANT_STATIC,
-                               modifier -> modifier_kind_token,
-                               modifier -> modifier_kind_token);
+                if(control.option.pedantic)
+                    ReportSemError(SemanticError::REDUNDANT_STATIC,
+                                   modifier -> modifier_kind_token,
+                                   modifier -> modifier_kind_token);
+                access_flags.SetACC_STATIC();
             }
             break;
         case Ast::STRICTFP:
@@ -555,6 +557,7 @@ AccessFlags Semantic::ProcessNestedInterfaceModifiers(AstInterfaceDeclaration *i
                 ReportSemError(SemanticError::REDUNDANT_STATIC,
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token);
+                access_flags.SetACC_STATIC();
             }
 
             break;

@@ -1,6 +1,8 @@
 2000-03-14  Vadim Zaliva  <lord@crocodile.org>
 
 	* modifier.cpp (ProcessStaticNestedInterfaceModifiers): simplification.
+	(ProcessNestedInterfaceModifiers): possibility of specifying duplicate 'static' 
+	declarations removed.
 
 2000-03-08 Ziqiang Tang   <ztang@lcs.mit.edu>
 
