@@ -1,5 +1,9 @@
 1999-09-17    <shields@jikes.watson.ibm.com>
 
+	* jikes.spec (Summary): 
+	Update version number to 1.06, add proper URL for source at
+	New Project URL (www10...)
+
 	* jikes.1: document -Xdepend (synomym for -depend)
 
 	* contrib.htm: 
