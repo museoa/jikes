@@ -24,7 +24,7 @@ bool Semantic::IsIntValueRepresentableInType(AstExpression *expr, TypeSymbol *ty
 {
     IntLiteralValue *literal = (IntLiteralValue *) expr -> value;
 
-    return (expr -> IsConstant() && 
+    return (expr -> IsConstant() &&
             //
             // TODO: the test:
             //
@@ -198,7 +198,7 @@ MethodSymbol *Semantic::FindConstructor(TypeSymbol *containing_type, Ast *ast,
     Tuple<MethodSymbol *> constructor_set(2);
 
     int num_arguments;
-    AstExpression **argument; 
+    AstExpression **argument;
 
     AstClassInstanceCreationExpression *class_creation;
     AstThisCall *this_call;
@@ -452,7 +452,7 @@ bool Semantic::IsMethodAccessible(AstFieldAccess *field_access, TypeSymbol *base
             method_symbol -> ACC_PUBLIC() ||
             ((! method_symbol -> ACC_PRIVATE()) && containing_type -> ContainingPackage() == this_package) ||
             (method_symbol -> ACC_PROTECTED() && (field_access -> base -> IsSuperExpression() ||
-                                                  (this_type -> HasProtectedAccessTo(containing_type) && 
+                                                  (this_type -> HasProtectedAccessTo(containing_type) &&
                                                    (base_type -> IsSubclass(this_type) || base_type -> IsOwner(this_type)))));
 }
 
@@ -461,7 +461,7 @@ bool Semantic::IsMethodAccessible(AstFieldAccess *field_access, TypeSymbol *base
 // Search the type in question for a method. Note that name_symbol is an optional argument.
 // If it was not passed to this function then its default value is NULL (see semantic.h) and
 // we assume that the name to search for is the name specified in the field_access of the
-// method_call. 
+// method_call.
 //
 MethodSymbol *Semantic::FindMethodInType(TypeSymbol *type, AstMethodInvocation *method_call, NameSymbol *name_symbol)
 {
@@ -695,7 +695,7 @@ void Semantic::SearchForMethodInEnvironment(Tuple<MethodSymbol *> &methods_found
         // If this environment contained a method with the right name, the search stops:
         //
         //    "Class scoping does not influence overloading: if the inner class has one
-        //     print method, the simple method name 'print' refers to that method, not 
+        //     print method, the simple method name 'print' refers to that method, not
         //     any of the ten 'print' methods in the enclosing class."
         //
         MethodShadowSymbol *method_shadow = type -> expanded_method_table -> FindMethodShadowSymbol(name_symbol);
@@ -845,7 +845,7 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
         }
 
         //
-        // If a method in an enclosing class was not found. Search for a similar visible field 
+        // If a method in an enclosing class was not found. Search for a similar visible field
         // or a private method with the name.
         //
         for (SemanticEnvironment *env2 = stack; env2 && (! symbol_found); env2 = env2 -> previous)
@@ -918,7 +918,7 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
                                    type -> ExternalName());
                     symbol_found = true;
                     break;
-                }    
+                }
             }
         }
 
@@ -1096,7 +1096,7 @@ void Semantic::ReportAccessedFieldNotFound(AstFieldAccess *field_access, TypeSym
                        super_type -> ExternalName(),
                        type -> ContainingPackage() -> PackageName(),
                        type -> ExternalName());
-    }    
+    }
     else
     {
         VariableSymbol *variable = FindMisspelledVariableName(type, field_access -> identifier_token);
@@ -1143,7 +1143,7 @@ void Semantic::SearchForVariableInEnvironment(Tuple<VariableSymbol *> &variables
         if (! type -> expanded_field_table)
             ComputeFieldsClosure(type, identifier_token);
         VariableShadowSymbol *variable_shadow_symbol = type -> expanded_field_table -> FindVariableShadowSymbol(name_symbol);
-        if (variable_shadow_symbol) 
+        if (variable_shadow_symbol)
         {
             //
             // Since type -> IsOwner(this_type()), i.e., type encloses this_type(),
@@ -1679,7 +1679,7 @@ void Semantic::ProcessSimpleName(Ast *expr)
                 // pending (to avoid looping) and it has a simple expression initializer.
                 //
                 if (declarator &&
-                    (! declarator -> pending) && 
+                    (! declarator -> pending) &&
                     declarator -> variable_initializer_opt &&
                     (! declarator -> variable_initializer_opt -> ArrayInitializerCast()))
                 {
@@ -1726,7 +1726,7 @@ void Semantic::ProcessSimpleName(Ast *expr)
             if (method -> NumFormalParameters() == 0)
                 break;
         }
-                                                   
+
         if (method_shadow)
         {
              ReportSemError(SemanticError::METHOD_NOT_FIELD,
@@ -1948,7 +1948,7 @@ void Semantic::MemberAccessCheck(AstFieldAccess *field_access, TypeSymbol *base_
             //
             if (! (base -> IsSuperExpression() ||
                    containing_type -> ContainingPackage() == this_package ||
-                   (this_type -> HasProtectedAccessTo(containing_type) && 
+                   (this_type -> HasProtectedAccessTo(containing_type) &&
                     (base_type -> IsSubclass(this_type) || base_type -> IsOwner(this_type)))))
             {
                 ReportSemError((variable_symbol ? SemanticError::PROTECTED_FIELD_NOT_ACCESSIBLE
@@ -2046,7 +2046,7 @@ void Semantic::FindVariableMember(TypeSymbol *type, TypeSymbol *environment_type
         exception_set -> AddElement(control.RuntimeException());
         exception_set -> AddElement(control.Error());
     }
-    
+
     if (type -> Bad())
     {
         //
@@ -2081,7 +2081,7 @@ void Semantic::FindVariableMember(TypeSymbol *type, TypeSymbol *environment_type
             // we substitute the expression here. JLS section 15.27, pp 381-382.
             //
             // TODO: Note that the JLS is a bit ambiguous and that a strict reading
-            // of 15.27 would prohibit substitution of a final constant value here. 
+            // of 15.27 would prohibit substitution of a final constant value here.
             // However, javac seems to accept it and as the section on qualified name
             // only mentions "final" but not "static" and as it is not possible to derefence
             // a non-static final with a TypeName, we decided to relax the rules also.
@@ -2092,7 +2092,7 @@ void Semantic::FindVariableMember(TypeSymbol *type, TypeSymbol *environment_type
                 // If the field declaration of the type has been completely processed,
                 // simply retrieve the value. Otherwise, compute the value of the
                 // initialization expression in question on the fly if the variable
-                // in question is not in the same type. Recall that static variables 
+                // in question is not in the same type. Recall that static variables
                 // must be processed in the textual order in which they appear in the
                 // body of a type. Therefore, if the static initialization of a field
                 // refers to another variable in the same type it must have appeared
@@ -2108,7 +2108,7 @@ void Semantic::FindVariableMember(TypeSymbol *type, TypeSymbol *environment_type
                     // If the variable declarator in question exists and its computation is not
                     // pending (to avoid looping) and it has a simple expression initializer.
                     //
-                    if (declarator && (! declarator -> pending) && 
+                    if (declarator && (! declarator -> pending) &&
                         declarator -> variable_initializer_opt &&
                         (! declarator -> variable_initializer_opt -> ArrayInitializerCast()))
                     {
@@ -2595,7 +2595,7 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                     {
                         assert(variable_symbol -> IsTyped());
 
-                        if (base -> IsName()) // a type name (as opposed to an expression) ? 
+                        if (base -> IsName()) // a type name (as opposed to an expression) ?
                         {
                             if (variable_symbol -> ACC_STATIC())
                             {
@@ -2610,7 +2610,7 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                                     // If the field declaration of the type has been completely processed,
                                     // simply retrieve the value. Otherwise, compute the value of the
                                     // initialization expression in question on the fly if the variable
-                                    // in question is not in the same type. Recall that static variables 
+                                    // in question is not in the same type. Recall that static variables
                                     // must be processed in the textual order in which they appear in the
                                     // body of a type. Therefore, if the static initialization of a field
                                     // refers to another variable in the same type it must have appeared
@@ -2627,7 +2627,7 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                                         // pending (to avoid looping) and it has a simple expression initializer.
                                         //
                                         if (declarator &&
-                                            (! declarator -> pending) && 
+                                            (! declarator -> pending) &&
                                             declarator -> variable_initializer_opt &&
                                             (! declarator -> variable_initializer_opt -> ArrayInitializerCast()))
                                         {
@@ -2686,7 +2686,7 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                             MemberAccessCheck(field_access, type, variable_symbol);
                         }
                     }
-                    else 
+                    else
                     {
                         TypeSymbol *inner_type = FindNestedType(type, field_access -> identifier_token);
                         if (inner_type)
@@ -3116,7 +3116,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                         //
                         // If the method in question is an instance method
                         // that is declared in this_type (this_type is definitely
-                        // a class) or one of its super classes, then we have an error -> 
+                        // a class) or one of its super classes, then we have an error ->
                         //
                         ReportSemError(SemanticError::INSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
                                        method_call -> LeftToken(),
@@ -3157,7 +3157,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
         Symbol *symbol = base -> symbol;
 
         //
-        // If the base is a "super" field access, resolve it before proceeding 
+        // If the base is a "super" field access, resolve it before proceeding
         //
         if (sub_field_access && sub_field_access -> IsSuperAccess())
         {
@@ -3465,7 +3465,7 @@ void Semantic::ProcessParenthesizedExpression(Ast *expr)
     ProcessExpression(parenthesized -> expression);
     parenthesized -> value = parenthesized -> expression -> value;
     parenthesized -> symbol = parenthesized -> expression -> symbol;
-}              
+}
 
 
 void Semantic::UpdateGeneratedLocalConstructor(MethodSymbol *constructor)
@@ -4318,7 +4318,7 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
             class_creation -> base_opt = CreateAccessToType(class_creation, type -> ContainingType());
         }
     }
- 
+
     bool no_bad_argument = true;
     for (int i = 0; i < class_creation -> NumArguments(); i++)
     {
@@ -4351,7 +4351,7 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
             assert(method -> IsTyped());
 
             if (class_creation -> base_opt &&
-                (class_creation -> base_opt -> symbol != control.no_type) && 
+                (class_creation -> base_opt -> symbol != control.no_type) &&
                 (class_creation -> base_opt -> Type() != method -> containing_type -> ContainingType()))
             {
                 assert(method -> containing_type);
@@ -4368,7 +4368,7 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
                 AstExpression *expr = class_creation -> Argument(i);
                 if (expr -> Type() != method -> FormalParameter(i) -> Type())
                     class_creation -> Argument(i) = ConvertToType(expr, method -> FormalParameter(i) -> Type());
-            }        
+            }
 
             if (class_creation -> class_body_opt)
                 anonymous_type = GetAnonymousType(class_creation, type);
@@ -4437,7 +4437,7 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
             else ConstructorAccessCheck(class_creation, method);
 
             //
-            // A local type may use enclosed local variables. So, we at least allocate the 
+            // A local type may use enclosed local variables. So, we at least allocate the
             // space for adding these extra arguments. If the type being created has already been
             // fully processed, add the extra arguments here.
             //
@@ -4871,7 +4871,7 @@ bool Semantic::CanMethodInvocationConvert(TypeSymbol *target_type, TypeSymbol *s
             return (target_type == control.Object() ||
                     target_type == control.Cloneable() ||
                     //
-                    // TODO: This is an undocumented feature, but this fix appears to make sense. 
+                    // TODO: This is an undocumented feature, but this fix appears to make sense.
                     //
                     (control.option.one_one && target_type == control.Serializable() && source_type -> Implements(target_type)));
         }
@@ -4899,7 +4899,7 @@ bool Semantic::CanMethodInvocationConvert(TypeSymbol *target_type, TypeSymbol *s
 
 bool Semantic::CanAssignmentConvertReference(TypeSymbol *target_type, TypeSymbol *source_type)
 {
-    return (target_type == control.no_type || 
+    return (target_type == control.no_type ||
             source_type == control.no_type ||
             CanMethodInvocationConvert(target_type, source_type)
            );
@@ -4908,7 +4908,7 @@ bool Semantic::CanAssignmentConvertReference(TypeSymbol *target_type, TypeSymbol
 
 bool Semantic::CanAssignmentConvert(TypeSymbol *target_type, AstExpression *expr)
 {
-    return (target_type == control.no_type || 
+    return (target_type == control.no_type ||
             expr -> symbol == control.no_type ||
             CanMethodInvocationConvert(target_type, expr -> Type()) ||
             IsIntValueRepresentableInType(expr, target_type)
@@ -4946,7 +4946,7 @@ bool Semantic::CanCastConvert(TypeSymbol *target_type, TypeSymbol *source_type, 
             return (target_type == control.Object() ||
                     target_type == control.Cloneable() ||
                     //
-                    // TODO: This is an undocumented feature, but this fix appears to make sense. 
+                    // TODO: This is an undocumented feature, but this fix appears to make sense.
                     //
                     (control.option.one_one && target_type == control.Serializable() && source_type -> Implements(target_type)));
         }
@@ -5312,7 +5312,7 @@ void Semantic::ProcessCastExpression(Ast *expr)
 
     int num_dimensions = cast_expression -> NumBrackets();
     target_type = (num_dimensions == 0 ? target_type : target_type -> GetArrayType((Semantic *) this, num_dimensions));
-    
+
     if (CanAssignmentConvert(target_type, cast_expression -> expression))
     {
         cast_expression -> symbol = target_type;
@@ -5500,7 +5500,7 @@ void Semantic::BinaryNumericPromotion(AstAssignmentExpression *assignment_expres
     {
         if (left_type != control.double_type)
             assignment_expression -> left_hand_side = ConvertToType(assignment_expression -> left_hand_side, control.double_type);
-    }   
+    }
     else if (left_type == control.float_type)
     {
         if (right_type != control.float_type)
@@ -6386,7 +6386,7 @@ void Semantic::ProcessEQUAL_EQUAL(AstBinaryExpression *expr)
                                expr -> right_expression -> Type() -> ExternalName());
             }
         }
-        else 
+        else
         {
             if (left_type == control.void_type)
                 ReportSemError(SemanticError::VOID_TYPE_IN_EQUALITY_EXPRESSION,
@@ -6455,7 +6455,7 @@ void Semantic::ProcessNOT_EQUAL(AstBinaryExpression *expr)
                                expr -> right_expression -> Type() -> ExternalName());
             }
         }
-        else 
+        else
         {
             if (left_type == control.void_type)
                 ReportSemError(SemanticError::VOID_TYPE_IN_EQUALITY_EXPRESSION,

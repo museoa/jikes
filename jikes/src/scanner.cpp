@@ -55,9 +55,9 @@ Scanner::Scanner(Control &control_) : control(control_)
     //
 
     //
-    // CLASSIFY_TOKEN is a mapping from each character into a     
-    // classification routine that is invoked when that character 
-    // is the first character encountered in a token.             
+    // CLASSIFY_TOKEN is a mapping from each character into a
+    // classification routine that is invoked when that character
+    // is the first character encountered in a token.
     //
     for (int c = 0; c < 128; c++)
     {
@@ -85,7 +85,7 @@ Scanner::Scanner(Control &control_) : control(control_)
     classify_token[U_t] = &Scanner::ClassifyIdOrKeyword;
     classify_token[U_v] = &Scanner::ClassifyIdOrKeyword;
     classify_token[U_w] = &Scanner::ClassifyIdOrKeyword;
-    
+
     classify_token[U_SINGLE_QUOTE]       = &Scanner::ClassifyCharLiteral;
     classify_token[U_DOUBLE_QUOTE]       = &Scanner::ClassifyStringLiteral;
 
@@ -184,7 +184,7 @@ void Scanner::Scan(FileSymbol *file_symbol)
         if (control.option.dump_errors)
         {
             lex -> SortMessages();
-            for (int i = 0; i < lex -> bad_tokens.Length(); i++) 
+            for (int i = 0; i < lex -> bad_tokens.Length(); i++)
                 lex -> PrintEmacsMessage(i);
             Coutput.flush();
         }
@@ -235,7 +235,7 @@ void Scanner::Scan()
 
     //
     // If the brace_stack is not empty, then there are unmatched left
-    // braces in the input. Each unmatched left brace should point to 
+    // braces in the input. Each unmatched left brace should point to
     // the EOF token as a substitute for a matching right brace.
     //
     assert(current_token_index == lex -> token_stream.Length() - 1);
@@ -251,8 +251,8 @@ void Scanner::Scan()
 
 
 //
-// CURSOR points to the starting position of a comment.  Scan the      
-// the comment and return the location of the character immediately   
+// CURSOR points to the starting position of a comment.  Scan the
+// the comment and return the location of the character immediately
 // following it. CURSOR is advanced accordingly.
 //
 void Scanner::ScanStarComment()
@@ -292,7 +292,7 @@ void Scanner::ScanStarComment()
                 cursor++;
             }
 
-            if (*cursor == U_STAR) // Potential comment closer 
+            if (*cursor == U_STAR) // Potential comment closer
             {
                 while (*++cursor == U_STAR)
                     ;
@@ -305,7 +305,7 @@ void Scanner::ScanStarComment()
                     return;
                 }
             }
-            else if (Code::IsNewline(*cursor)) // Record new line 
+            else if (Code::IsNewline(*cursor)) // Record new line
             {
                 cursor++;
                 lex -> line_location.Next() = cursor - lex -> InputBuffer();
@@ -320,7 +320,7 @@ void Scanner::ScanStarComment()
             while (*cursor != U_STAR && (! Code::IsNewline(*cursor)) && *cursor != U_CTL_Z)
                 cursor++;
 
-            if (*cursor == U_STAR) // Potential comment closer 
+            if (*cursor == U_STAR) // Potential comment closer
             {
                 while (*++cursor == U_STAR)
                     ;
@@ -333,7 +333,7 @@ void Scanner::ScanStarComment()
                     return;
                 }
             }
-            else if (Code::IsNewline(*cursor)) // Record new line 
+            else if (Code::IsNewline(*cursor)) // Record new line
             {
                 cursor++;
                 lex -> line_location.Next() = cursor - lex -> InputBuffer();
@@ -381,10 +381,10 @@ void Scanner::ScanSlashComment()
 
 
 //
-// This procedure is invoked to skip useless spaces in the input.     
-// It assumes upon entry that CURSOR points to the next character to   
-// be scanned.  Before returning it sets CURSOR to the location of the 
-// first non-space character following its initial position.          
+// This procedure is invoked to skip useless spaces in the input.
+// It assumes upon entry that CURSOR points to the next character to
+// be scanned.  Before returning it sets CURSOR to the location of the
+// first non-space character following its initial position.
 //
 inline void Scanner::SkipSpaces()
 {
@@ -392,7 +392,7 @@ inline void Scanner::SkipSpaces()
     {
         while (Code::IsSpaceButNotNewline(*cursor))
             cursor++;
-        while (Code::IsNewline(*cursor))        // starting a new line? 
+        while (Code::IsNewline(*cursor))        // starting a new line?
         {
             cursor++;
             lex -> line_location.Next() = cursor - lex -> InputBuffer();
@@ -769,7 +769,7 @@ void Scanner::ClassifyCharLiteral()
     while (*ptr != U_SINGLE_QUOTE && (! Code::IsNewline(*ptr)))
     {
         if (*ptr++ == U_BACKSLASH)   // In any case, skip the character
-        {                            // If it was a backslash, 
+        {                            // If it was a backslash,
             if (! Code::IsNewline(*ptr)) // if the next char is not eol, skip it.
                 ptr++;
         }
@@ -819,7 +819,7 @@ void Scanner::ClassifyStringLiteral()
     while (*ptr != U_DOUBLE_QUOTE && (! Code::IsNewline(*ptr)))
     {
         if (*ptr++ == U_BACKSLASH)   // In any case, skip the character
-        {                            // If it was a backslash, 
+        {                            // If it was a backslash,
             if (! Code::IsNewline(*ptr)) // if the next char is not eol, skip it.
                 ptr++;
         }
@@ -1033,7 +1033,7 @@ void Scanner::ClassifyNumericLiteral()
     /* A numeric constant may be suffixed by a letter that further    */
     /* qualifies what kind of a constant it is. We check for these    */
     /* suffixes here.                                                 */
-    /******************************************************************/ 
+    /******************************************************************/
     int len;
 
     if (*ptr == U_f || *ptr == U_F)

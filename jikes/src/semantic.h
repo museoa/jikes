@@ -638,17 +638,17 @@ public:
         //****************************************************************************************
         //
         // To: Martin Odersky <Martin.Odersky@epfl.ch>
-        // cc: David Shields/Watson/IBM@IBMUS, compiler@eng.sun.com, 
-        // gilad.bracha@eng.sun.com, jrose@eng.sun.com, 
-        // innerclass-comments@lukasiewicz.eng.sun.com, guy.steele@east.sun.com, 
-        // peter.kessler@eng.sun.com 
+        // cc: David Shields/Watson/IBM@IBMUS, compiler@eng.sun.com,
+        // gilad.bracha@eng.sun.com, jrose@eng.sun.com,
+        // innerclass-comments@lukasiewicz.eng.sun.com, guy.steele@east.sun.com,
+        // peter.kessler@eng.sun.com
         // Subject: Re: Query #32 to Sun: Verification problem
-        // 
-        // 
-        // 
-        // 
+        //
+        //
+        //
+        //
         // On Thu, 29 Jul 1999, Martin Odersky wrote:
-        // 
+        //
         // > It seems a very undesirable state of affairs if the Java spec for |,
         // > &, ^ and the JVM spec for iand, ior, ixor differ in their definite
         // > assignment properties. Assuming that it's unreasonable to make the
@@ -656,43 +656,43 @@ public:
         // > possible to tighten the JLS so that definite assignment for |, & ,^ is
         // > done in the way the verifier does it? I doubt that such a tightening
         // > would invalidate any real Java programs.
-        // 
+        //
         // Gilad and I decided today that ammending the JLS was the best course of
         // action, and then discovered that Guy had already done so in our working
-        // draft of the revised specification.  We anticipate that when a draft is 
+        // draft of the revised specification.  We anticipate that when a draft is
         // made
         // available for public review, it will drop sections 16.1.6, 16.1.7, and
         // 16.1.8, which specify special-case rules for the &, |, and ^ operators.
         // They will be covered instead by the general case for expressions with
         // subexpressions, which reads as follows in the current working draft:
-        // 
+        //
         //  If the expression has subexpressions, V is [un]assigned
         //  after the expression iff V is [un]assigned after its rightmost
         //  immediate subexpression.
-        // 
+        //
         // Note that the when-true and when-false cases, currently distinguished
         // for these operators, are now coalesced, as in the general case.
-        // 
+        //
         // Pending an official change to the specification, we recommend that
         // compiler implementors follow the proposed ammendments.
-        // 
+        //
         // Due to the fact that 'javac' has never been in compliance with the
         // current JLS on this issue, nor will much (all?) code that
         // relies on the difference actually verify and execute, compatibility
         // implications should be minimal.
-        // 
+        //
         // --Bill
-        // 
+        //
         //------------------------------------------------------------------------------------------------
-        // 
+        //
         // To: David Shields/Watson/IBM@IBMUS
-        // cc: Martin Odersky <Martin.Odersky@epfl.ch>, compiler@eng.sun.com, gilad.bracha@eng.sun.com, 
-        // jrose@eng.sun.com, innerclass-comments@lukasiewicz.eng.sun.com, guy.steele@east.sun.com, 
-        // peter.kessler@eng.sun.com 
+        // cc: Martin Odersky <Martin.Odersky@epfl.ch>, compiler@eng.sun.com, gilad.bracha@eng.sun.com,
+        // jrose@eng.sun.com, innerclass-comments@lukasiewicz.eng.sun.com, guy.steele@east.sun.com,
+        // peter.kessler@eng.sun.com
         // Subject: Re: Query #32 to Sun: Verification problem
-        // 
+        //
         // On Mon, 2 Aug 1999 shieldsd@us.ibm.com wrote:
-        // 
+        //
         // > Do you still plan to retain 16.1.3, 16.1.4 and 16.1.11? Since we follow them as
         // > currently written, we accept some of the positive 1.2 JCK tests that javac
         // > currently rejects, but the resulting class files fail verification. Examples
@@ -700,17 +700,17 @@ public:
         // > dasg04501, dasg04601, dasg04701 and dasg05001).
         // >
         // > dave and philippe
-        // 
+        //
         // We plan to keep these.  However, the special rules for '==' (16.1.9) and
         // '!=' (16.1.10) have also been dropped, again because the bytecodes for these
         // operators create materialized boolean values on the stack at runtime.
-        // 
+        //
         // Guy and Gilad:  In my copy of the draft, the second-to-last sentence on
         // page p.395 claims otherwise, but sections 16.1.9 and 16.1.10 have in fact
         // been deleted.
-        // 
+        //
         // --Bill
-        // 
+        //
         DefiniteBinaryExpr[AstBinaryExpression::AND]                  = &Semantic::DefiniteDefaultBinaryExpression;// &Semantic::DefiniteAND;
         DefiniteBinaryExpr[AstBinaryExpression::XOR]                  = &Semantic::DefiniteDefaultBinaryExpression;// &Semantic::DefiniteXOR;
         DefiniteBinaryExpr[AstBinaryExpression::IOR]                  = &Semantic::DefiniteDefaultBinaryExpression;// &Semantic::DefiniteIOR;
@@ -1223,7 +1223,7 @@ inline void Semantic::AddDependence(TypeSymbol *base_type_, TypeSymbol *parent_t
     if (base_type_ != control.no_type)
     {
         TypeSymbol *base_type = base_type_ -> outermost_type,
-                   *parent_type = parent_type_ -> outermost_type; 
+                   *parent_type = parent_type_ -> outermost_type;
 
         parent_type -> dependents -> AddElement(base_type);
         if (static_access)

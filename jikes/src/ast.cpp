@@ -30,7 +30,7 @@ void AstSwitchStatement::SortCases()
         upper,
         lostack[32],
         histack[32];
- 
+
     int top,
         i,
         j;
@@ -42,13 +42,13 @@ void AstSwitchStatement::SortCases()
     top = 0;
     lostack[top] = 0;
     histack[top] = map.Length() - 1;
- 
+
     while(top >= 0)
     {
         lower = lostack[top];
         upper = histack[top];
         top--;
- 
+
         while(upper > lower)
         {
             //
@@ -58,14 +58,14 @@ void AstSwitchStatement::SortCases()
             i = (lower + upper) / 2;
             pivot = *map[i];
             *map[i] = *map[lower];
- 
+
             //
             // Split the array section indicated by LOWER and UPPER
             // using ARRAY(LOWER) as the pivot.
             //
             i = lower;
             for (j = lower + 1; j <= upper; j++)
-                if (map[j] -> Value() < pivot.Value() || 
+                if (map[j] -> Value() < pivot.Value() ||
                     (map[j] -> Value() == pivot.Value() && map[j] -> index < pivot.index)) // keep the sort stable
                 {
                     temp = *map[++i];
@@ -219,7 +219,7 @@ Ast *AstClassDeclaration::Clone(StoragePool *ast_pool)
         clone -> AddClassModifier((AstModifier *) this -> ClassModifier(i) -> Clone(ast_pool));
     clone -> class_token = this -> class_token;
     clone -> identifier_token = this -> identifier_token;
-    clone -> super_opt = (Ast *) (this -> super_opt ? this -> super_opt -> Clone(ast_pool) : NULL); 
+    clone -> super_opt = (Ast *) (this -> super_opt ? this -> super_opt -> Clone(ast_pool) : NULL);
     for (int k = 0; k < this -> NumInterfaces(); k++)
         clone -> AddInterface((AstExpression *) this -> Interface(k) -> Clone(ast_pool));
     clone -> class_body = (AstClassBody *) this -> class_body -> Clone(ast_pool);
@@ -383,7 +383,7 @@ Ast *AstConstructorBlock::Clone(StoragePool *ast_pool)
     AstConstructorBlock *clone = ast_pool -> GenConstructorBlock();
 
     clone -> left_brace_token = this -> left_brace_token;
-    clone -> explicit_constructor_invocation_opt = (Ast *) 
+    clone -> explicit_constructor_invocation_opt = (Ast *)
                                                    (this -> explicit_constructor_invocation_opt
                                                           ? this -> explicit_constructor_invocation_opt -> Clone(ast_pool)
                                                           : NULL);
@@ -446,7 +446,7 @@ Ast *AstIfStatement::Clone(StoragePool *ast_pool)
     clone -> if_token = this -> if_token;
     clone -> expression = (AstExpression *) this -> expression -> Clone(ast_pool);
     clone -> true_statement = (AstStatement *) this -> true_statement -> Clone(ast_pool);
-    clone -> false_statement_opt = (AstStatement *) 
+    clone -> false_statement_opt = (AstStatement *)
                                    (this -> false_statement_opt
                                           ? this -> false_statement_opt -> Clone(ast_pool)
                                           : NULL);
@@ -1102,7 +1102,7 @@ Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
         variable_declarator_name -> Print(lex_stream);
         if (variable_initializer_opt)
             variable_initializer_opt -> Print(lex_stream);
-        
+
     }
 
     void AstFieldDeclaration::Print(LexStream& lex_stream)
@@ -1144,7 +1144,7 @@ Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
                 << lex_stream.NameString(identifier_token)
                 << " (";
         for (int k = 0; k < this -> NumFormalParameters(); k++)
-            Coutput << " #" << this -> FormalParameter(k) -> id; 
+            Coutput << " #" << this -> FormalParameter(k) -> id;
         Coutput << " )";
         for (int i = 0; i < NumBrackets(); i++)
              Coutput << " []";
@@ -1197,7 +1197,7 @@ Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
         for (int i = 0; i < this -> NumArguments(); i++)
             Coutput << " #" << this -> Argument(i) -> id;
         Coutput << " ) \n";
-        
+
         if (base_opt)
             base_opt -> Print(lex_stream);
 
@@ -1383,7 +1383,7 @@ Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
         Coutput << "default case: index " << default_case.index << "\n";
         for (int i = 0; i < cases -> Length(); i++)
         {
-            Coutput << "case: " << i << "  index: " << (*cases)[i] -> index << "  value: " << (*cases)[i] -> Value() << "\n";   
+            Coutput << "case: " << i << "  index: " << (*cases)[i] -> index << "  value: " << (*cases)[i] -> Value() << "\n";
         }
 
         expression -> Print(lex_stream);
@@ -1675,7 +1675,7 @@ Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
         for (int i = 0; i < this -> NumArguments(); i++)
             Coutput << " #" << this -> Argument(i) -> id;
         Coutput << " ) \n";
-        
+
         method -> Print(lex_stream);
         for (int j = 0; j < NumArguments(); j++)
             this -> Argument(j) -> Print(lex_stream);
@@ -1805,7 +1805,7 @@ AstSimpleName::~AstSimpleName()
     assert(false);
     //    delete resolution_opt;
 }
- 
+
 AstPackageDeclaration::~AstPackageDeclaration()
 {
     assert(false);

@@ -57,7 +57,7 @@ public:
                 (s1[0] == U_DOUBLE_QUOTE &&  s2[0] == U_SINGLE_QUOTE))
                     return 3;
         }
- 
+
         //
         // Scan the two strings. Increment "match" count for each match.
         // When a transposition is encountered, increase "match" count

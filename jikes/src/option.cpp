@@ -82,7 +82,7 @@ ArgumentExpander::ArgumentExpander(Tuple<char> &line)
 {
     Tuple<char *> arguments(8192);
 
-    int end = 0; 
+    int end = 0;
     do
     {
         for (; end < line.Length() && line[end] == U_SPACE; end++)
@@ -224,7 +224,7 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
             }
             else if (strcmp(arguments.argv[i], "-depend") == 0)
                  depend = true;
-            else if (strcmp(arguments.argv[i],"-verbose") == 0) 
+            else if (strcmp(arguments.argv[i],"-verbose") == 0)
                  verbose = true;
             else if (strcmp(arguments.argv[i],"-g") == 0)
                  g = true;
@@ -348,7 +348,7 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
                         keyword_map[i].length = image - name - 1;
                         keyword_map[i].name = new wchar_t[keyword_map[i].length];
                         for (int k = 0; k < keyword_map[i].length; k++)
-                            keyword_map[i].name[k] = name[k]; 
+                            keyword_map[i].name[k] = name[k];
                     }
                 }
             }
@@ -356,12 +356,12 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
                  one_one = false;
             else if (strcmp(arguments.argv[i],"+F") == 0)
                  full_check = true;
-            else if (strcmp(arguments.argv[i],"+M") == 0) 
+            else if (strcmp(arguments.argv[i],"+M") == 0)
             {
                  makefile = true;
                  full_check = true;
             }
-            else if (strncmp(arguments.argv[i], "+M=", 3) == 0) 
+            else if (strncmp(arguments.argv[i], "+M=", 3) == 0)
             {
                  makefile = true;
                  full_check = true;

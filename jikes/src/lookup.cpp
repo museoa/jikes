@@ -52,7 +52,7 @@ void SystemTable::Rehash()
     {
         Element *element = directories[k];
 
-        int i = hash(element -> device, element -> inode); 
+        int i = hash(element -> device, element -> inode);
         element -> next = base[i];
         base[i] = element;
     }
@@ -827,7 +827,7 @@ LiteralValue *IntLiteralTable::FindOrInsertHexInt(LiteralSymbol *literal)
 
     //
     // According to the JLS 3.10.1, "A compile-time error occurs if ... a
-    // hexadecimal or octal int literal does not fit in 32 bits". 
+    // hexadecimal or octal int literal does not fit in 32 bits".
     // So, strictly speaking, we should not skip leading zeroes. However,
     // there are many publicly available code out there with leading zeroes
     // that don't compile with jikes, if ...
@@ -856,7 +856,7 @@ LiteralValue *IntLiteralTable::FindOrInsertOctalInt(LiteralSymbol *literal)
     u4 uvalue = 0;
     //
     // According to the JLS 3.10.1, "A compile-time error occurs if ... a
-    // hexadecimal or octal int literal does not fit in 32 bits". 
+    // hexadecimal or octal int literal does not fit in 32 bits".
     // So, strictly speaking, we should not skip leading zeroes. However,
     // there are many publicly available code out there with leading zeroes
     // that don't compile with jikes,...
@@ -1029,7 +1029,7 @@ LiteralValue *LongLiteralTable::FindOrInsertHexLong(LiteralSymbol *literal)
 
     //
     // According to the JLS 3.10.1, "A compile-time error occurs if ... a
-    // hexadecimal or octal int literal does not fit in 32 bits". 
+    // hexadecimal or octal int literal does not fit in 32 bits".
     // So, strictly speaking, we should not skip leading zeroes. However,
     // there are many publicly available code out there with leading zeroes
     // that don't compile with jikes,...
@@ -1064,7 +1064,7 @@ LiteralValue *LongLiteralTable::FindOrInsertOctalLong(LiteralSymbol *literal)
     ULongInt uvalue = 0;
     //
     // According to the JLS 3.10.1, "A compile-time error occurs if ... a
-    // hexadecimal or octal int literal does not fit in 32 bits". 
+    // hexadecimal or octal int literal does not fit in 32 bits".
     // So, strictly speaking, we should not skip leading zeroes. However,
     // there are many publicly available code out there with leading zeroes
     // that don't compile with jikes,...
@@ -1396,12 +1396,12 @@ LiteralValue *Utf8LiteralTable::FindOrInsertString(LiteralSymbol *literal)
                 ch = U_CARRIAGE_RETURN;
             }
             else if (name[i + 1] == U_DOUBLE_QUOTE)
-            {          
+            {
                 i++;
                 ch = U_DOUBLE_QUOTE;
             }
             else if (name[i + 1] == U_SINGLE_QUOTE)
-            {          
+            {
                 i++;
                 ch = U_SINGLE_QUOTE;
             }
@@ -1414,7 +1414,7 @@ LiteralValue *Utf8LiteralTable::FindOrInsertString(LiteralSymbol *literal)
             {
                 int digit = name[++i] - U_0;
 
-                if (digit > 7) // The first digit must be an octal digit 
+                if (digit > 7) // The first digit must be an octal digit
                     ch = -1;
                 else
                 {

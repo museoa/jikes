@@ -74,7 +74,7 @@ void ByteCode::CompileClass()
             }
         }
     }
-    
+
     //
     // Process instance variables.
     //
@@ -203,7 +203,7 @@ void ByteCode::CompileClass()
     {
         int method_index = methods.NextIndex(); // index for method
         BeginMethod(method_index, block_init_method);
-   
+
         int fi = 0,
             bi = 0;
         while (fi < initialized_instance_fields.Length() && bi < class_body -> NumBlocks())
@@ -212,20 +212,20 @@ void ByteCode::CompileClass()
                  InitializeInstanceVariable(initialized_instance_fields[fi++]);
             else EmitStatement(class_body -> Block(bi++));
         }
-                       
+
         while (fi < initialized_instance_fields.Length())
             InitializeInstanceVariable(initialized_instance_fields[fi++]);
-    
+
         //
         // compile any initialization blocks
         //
         while (bi < class_body -> NumBlocks())
             EmitStatement(class_body -> Block(bi++));
-        
+
         PutOp(OP_RETURN);
         EndMethod(method_index, block_init_method);
     }
-    
+
     //
     //
     //
@@ -240,7 +240,7 @@ void ByteCode::CompileClass()
                 AstConstructorDeclaration *constructor = class_body -> Constructor(i);
                 CompileConstructor(constructor, initialized_instance_fields);
             }
-       
+
             for (int k = 0; k < unit_type -> NumPrivateAccessConstructors(); k++)
             {
                 MethodSymbol *constructor_sym = unit_type -> PrivateAccessConstructor(k);
@@ -266,7 +266,7 @@ void ByteCode::CompileClass()
             BeginMethod(method_index, this_constructor_symbol);
 
             UpdateBlockInfo(this_constructor_symbol -> block_symbol);
-                
+
             assert(constructor_block -> explicit_constructor_invocation_opt);
 
             EmitStatement((AstStatement *) constructor_block -> explicit_constructor_invocation_opt);
@@ -296,7 +296,7 @@ void ByteCode::CompileClass()
                     for (int si = 0; si < block -> NumStatements(); si++)
                         EmitStatement((AstStatement *) block -> Statement(si));
                 }
-                
+
                 if (! unit_type -> block_initializer_method)
                 {
                     int fi = 0,
@@ -312,7 +312,7 @@ void ByteCode::CompileClass()
                                 EmitStatement((AstStatement *) block -> Statement(si));
                         }
                     }
-                        
+
                     while (fi < initialized_instance_fields.Length())
                         InitializeInstanceVariable(initialized_instance_fields[fi++]);
 
@@ -332,7 +332,7 @@ void ByteCode::CompileClass()
                     // generate a call to the parameterless function block_initializer_function
                     //
                     PutOp(OP_ALOAD_0); // load address of object on which method is to be invoked
-                    PutOp(OP_INVOKENONVIRTUAL);  
+                    PutOp(OP_INVOKENONVIRTUAL);
                     CompleteCall(unit_type -> block_initializer_method, 0);
                 }
             }
@@ -354,7 +354,7 @@ void ByteCode::CompileClass()
             EndMethod(method_index, local_constructor_symbol);
         }
     }
-    
+
     //
     // If we need to generate a static initializer...
     //
@@ -376,10 +376,10 @@ void ByteCode::CompileClass()
                  EmitStatement(class_body -> StaticInitializer(fi++) -> block);
             else InitializeClassVariable(initialized_static_fields[bi++]);
         }
-                       
+
         while (fi < class_body -> NumStaticInitializers())
             EmitStatement(class_body -> StaticInitializer(fi++) -> block);
-    
+
         while (bi < initialized_static_fields.Length())
             InitializeClassVariable(initialized_static_fields[bi++]);
 
@@ -605,10 +605,10 @@ void ByteCode::CompileConstructor(AstConstructorDeclaration *constructor, Tuple<
                         EmitStatement((AstStatement *) block -> Statement(si));
                 }
             }
-                
+
             while (fi < initialized_fields.Length())
                 InitializeInstanceVariable(initialized_fields[fi++]);
-    
+
             // compile any initialization blocks
             while (bi < class_body -> NumBlocks())
             {
@@ -620,7 +620,7 @@ void ByteCode::CompileConstructor(AstConstructorDeclaration *constructor, Tuple<
         else // generate a call to the parameterless function block_initializer_function
         {
             PutOp(OP_ALOAD_0); // load address of object on which method is to be invoked
-            PutOp(OP_INVOKENONVIRTUAL);  
+            PutOp(OP_INVOKENONVIRTUAL);
             CompleteCall(type -> block_initializer_method, 0);
         }
     }
@@ -684,7 +684,7 @@ void ByteCode::DeclareField(VariableSymbol *symbol)
 
     return;
 }
-            
+
 
 //
 // Generate code for access method to private member of containing class
@@ -710,7 +710,7 @@ void ByteCode::GenerateAccessMethod(MethodSymbol *method_symbol)
     MethodSymbol *method_sym = method_symbol -> accessed_member -> MethodCast();
     if (method_sym)
     {
-        PutOp(method_sym -> ACC_STATIC() ? OP_INVOKESTATIC : OP_INVOKENONVIRTUAL);  
+        PutOp(method_sym -> ACC_STATIC() ? OP_INVOKESTATIC : OP_INVOKENONVIRTUAL);
         CompleteCall(method_sym, stack_words);
     }
     else
@@ -750,7 +750,7 @@ void ByteCode::GenerateAccessMethod(MethodSymbol *method_symbol)
 }
 
 
-void ByteCode::BeginMethod(int method_index, MethodSymbol *msym) 
+void ByteCode::BeginMethod(int method_index, MethodSymbol *msym)
 {
     assert(msym);
 
@@ -830,15 +830,15 @@ void ByteCode::BeginMethod(int method_index, MethodSymbol *msym)
 }
 
 
-void ByteCode::EndMethod(int method_index, MethodSymbol *msym) 
+void ByteCode::EndMethod(int method_index, MethodSymbol *msym)
 {
     assert(msym);
 
     if (! (msym -> ACC_ABSTRACT() || msym -> ACC_NATIVE()))
     {
-        //            
+        //
         // Make sure that no component in the code attribute exceeded its limit.
-        //            
+        //
         if (msym -> block_symbol -> max_variable_index > 65535)
         {
             this_semantic.ReportSemError(SemanticError::LOCAL_VARIABLES_OVERFLOW,
@@ -869,26 +869,26 @@ void ByteCode::EndMethod(int method_index, MethodSymbol *msym)
                                          unit_type -> ExternalName());
         }
 
-        //            
         //
-        //            
+        //
+        //
         code_attribute -> SetMaxStack(max_stack);
 
         if (last_label_pc >= code_attribute -> CodeLength()) // here to emit noop if would otherwise branch past end
             PutNop(0);
 
-        //            
+        //
         // attribute length:
         // need to review how to make attribute_name and attribute_length
         // only write line number attribute if -O not specified and there
         // are line numbers to write.
-        //            
+        //
         if ((! this_control.option.O) && line_number_table_attribute -> LineNumberTableLength() > 0)
              code_attribute -> AddAttribute(line_number_table_attribute);
         else delete line_number_table_attribute; // line_number_table_attribute not needed, so delete it now
 
         //
-        // debug & not dealing with generated accessed method 
+        // debug & not dealing with generated accessed method
         //
         if (this_control.option.g && (! msym -> accessed_member) && (msym -> Identity() != this_control.class_name_symbol))
         {
@@ -1015,12 +1015,12 @@ void ByteCode::InitializeArray(TypeSymbol *type, AstArrayInitializer *array_init
 
             InitializeArray(subtype, entry -> ArrayInitializerCast());
         }
-      
+
         StoreArrayElement(subtype);
     }
 
     return;
-}     
+}
 
 
 //
@@ -1065,11 +1065,11 @@ void ByteCode::DeclareLocalVariable(AstVariableDeclarator *declarator)
 // Labels allocated but never used incur no extra cost in the generated
 // byte code, only in additional execution expense during compilation.
 //
-void ByteCode::EmitStatement(AstStatement *statement) 
+void ByteCode::EmitStatement(AstStatement *statement)
 {
     if (! statement -> BlockCast())
     {
-        line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(), 
+        line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
                                                      this_semantic.lex_stream -> Line(statement -> LeftToken()));
     }
 
@@ -1216,10 +1216,10 @@ void ByteCode::EmitStatement(AstStatement *statement)
         case Ast::RETURN: // JLS 13.15
              EmitReturnStatement(statement -> ReturnStatementCast());
              break;
-        case Ast::SUPER_CALL: 
+        case Ast::SUPER_CALL:
              EmitSuperInvocation((AstSuperCall *) statement);
              break;
-        case Ast::THIS_CALL: 
+        case Ast::THIS_CALL:
              EmitThisInvocation((AstThisCall *) statement);
              break;
         case Ast::THROW: // JLS 13.16
@@ -1280,7 +1280,7 @@ void ByteCode::EmitReturnStatement(AstReturnStatement *statement)
             }
         }
 
-        assert(synch_index > 0); // unable to find synchronization block: block #0 is method block. 
+        assert(synch_index > 0); // unable to find synchronization block: block #0 is method block.
 
         var_index = block_symbols[synch_index] -> synchronized_variable_index + 2;
     }
@@ -1298,10 +1298,10 @@ void ByteCode::EmitReturnStatement(AstReturnStatement *statement)
 
         assert(finally_index > 0); // unable to find finally block: block #0 is method block
 
-        var_index = (has_finally_clause[finally_index] - 1) + 2; // +2 to move to start of area to save value 
+        var_index = (has_finally_clause[finally_index] - 1) + 2; // +2 to move to start of area to save value
     }
 
-    if (var_index >= 0) // if need to save before abrupt exit 
+    if (var_index >= 0) // if need to save before abrupt exit
     {
         StoreLocal(var_index, method_type);
         ProcessAbruptExit(0);
@@ -1424,7 +1424,7 @@ void ByteCode::EmitStatementExpression(AstExpression *expression)
 //  case 4: goto defa:
 //  case 5:6:   act2; break;
 //  defa:
-//  default: defact; 
+//  default: defact;
 // }
 //
 void ByteCode::EmitSwitchStatement(AstSwitchStatement *sws)
@@ -1489,7 +1489,7 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *sws)
              code_attribute -> CodeLength() - op_start);
 
     //
-    // 
+    //
     //
     Label *case_labels = new Label[(use_lookup ? ncases : nlabels) + 1];
     if (use_lookup)
@@ -1660,7 +1660,7 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
         has_finally_clause[final_depth] = 1 + block_symbol -> try_variable_index;
         finally_blocks++;
     }
-    
+
     EmitStatement(statement -> block);
 
     //
@@ -1719,10 +1719,10 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
 
         if (catch_clause -> block -> can_complete_normally)
         {
-            //        
+            //
             // If there are more catch clauses, or a finally clause, then emit branch to
             // skip over their code and on to the next statement.
-            //        
+            //
             if (statement -> finally_clause_opt || i < (statement -> NumCatchClauses() - 1))
                 EmitBranch(OP_GOTO, end_label);
         }
@@ -1798,7 +1798,7 @@ void ByteCode::UpdateBlockInfo(BlockSymbol *block_symbol)
 
             if (last_op_pc > sym -> local_program_counter) // only make entry if defined within range
             {
-                local_variable_table_attribute -> AddLocalVariable(sym -> local_program_counter, 
+                local_variable_table_attribute -> AddLocalVariable(sym -> local_program_counter,
                                                                    last_op_pc - sym -> local_program_counter,
                                                                    RegisterUtf8(sym -> ExternalIdentity() -> Utf8_literal),
                                                                    RegisterUtf8(sym -> Type() -> signature),
@@ -1950,7 +1950,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
              }
              else
              {
-                 Label skip;  
+                 Label skip;
                  EmitBranchIfExpression(left, true, skip);
                  EmitBranchIfExpression(right, false, lab);
                  DefineLabel(skip);
@@ -1996,7 +1996,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
 
                      left_type = left -> Type();
                      right_type = right -> Type();
-                 } 
+                 }
 
                  EmitExpression(left);
 
@@ -2010,7 +2010,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
              //
              // both operands are integer
              //
-             if ((this_control.IsSimpleIntegerValueType(left_type)  || left_type == this_control.boolean_type) && 
+             if ((this_control.IsSimpleIntegerValueType(left_type)  || left_type == this_control.boolean_type) &&
                  (this_control.IsSimpleIntegerValueType(right_type) || right_type == this_control.boolean_type))
              {
                  EmitExpression(left);
@@ -2068,9 +2068,9 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
              return;
     }
 
-    // 
-    // 
-    // 
+    //
+    //
+    //
     unsigned opcode = 0,
              op_true,
              op_false;
@@ -2196,7 +2196,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
     {
         EmitExpression(left);
         EmitExpression(right);
-   
+
         switch (bp -> binary_tag)
         {
             case AstBinaryExpression::EQUAL_EQUAL:
@@ -2310,7 +2310,7 @@ void ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
         max_stack++;
         int handler_pc = code_attribute -> CodeLength();
         LoadLocal(var_index, this_control.Object()); // load address of object onto stack
-        PutOp(OP_MONITOREXIT); 
+        PutOp(OP_MONITOREXIT);
         PutOp(OP_ATHROW);
 
         code_attribute -> AddException(start_pc, handler_pc, handler_pc, 0);
@@ -2321,7 +2321,7 @@ void ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
         int loc_index = var_index + 1; // local variable index to save address
         StoreLocal(loc_index, this_control.Object()); // save return address
         LoadLocal(var_index, this_control.Object()); // load address of object onto stack
-        PutOp(OP_MONITOREXIT); 
+        PutOp(OP_MONITOREXIT);
         PutOpWide(OP_RET, loc_index);  // return using saved address
 
         DefineLabel(end_label);
@@ -2338,7 +2338,7 @@ void ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
 //
 // Expressions: Chapter 14 of JLS
 //
-int ByteCode::EmitExpression(AstExpression *expression) 
+int ByteCode::EmitExpression(AstExpression *expression)
 {
     if (expression -> IsConstant())
     {
@@ -2455,7 +2455,7 @@ TypeSymbol *ByteCode::VariableTypeResolution(AstExpression *expression, Variable
     // the base_type is used.
     //
     return ((base_type -> ACC_INTERFACE() && owner_type == this_control.Object()) ||
-            (owner_type -> ACC_INTERFACE() && 
+            (owner_type -> ACC_INTERFACE() &&
               (owner_type -> ACC_PUBLIC() || owner_type -> ContainingPackage() == unit_type -> ContainingPackage()))
                                            ? owner_type
                                            : base_type);
@@ -2480,7 +2480,7 @@ TypeSymbol *ByteCode::MethodTypeResolution(AstExpression *method_name, MethodSym
     return ((base_type -> ACC_INTERFACE() && owner_type == this_control.Object())
                                            ? owner_type
                                            : base_type);
-}                              
+}
 
 
 void ByteCode::EmitFieldAccessLhsBase(AstExpression *expression)
@@ -2564,7 +2564,7 @@ void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
     PutOp(OP_INVOKENONVIRTUAL);
     ChangeStack(-1);
     PutU2(RegisterLibraryMethodref(this_control.NoClassDefFoundError_InitMethod()));
-                            
+
     ChangeStack(1);
     PutOp(OP_ATHROW);
 
@@ -2687,7 +2687,7 @@ int ByteCode::GenerateClassAccess(AstFieldAccess *field_access)
 //
 // see also OP_MULTINEWARRAY
 //
-int ByteCode::EmitArrayCreationExpression(AstArrayCreationExpression *expression) 
+int ByteCode::EmitArrayCreationExpression(AstArrayCreationExpression *expression)
 {
     int num_dims = expression -> NumDimExprs();
 
@@ -2820,7 +2820,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
                  // Otherwise, in addition to getting the value, we need to load address of the object,
                  // obtained from the resolution, saving a copy on the stack.
                  //
-                 if (accessed_member -> ACC_STATIC()) 
+                 if (accessed_member -> ACC_STATIC())
                       EmitExpression(left_hand_side);
                  else ResolveAccess(left_hand_side);
                  break;
@@ -2995,7 +2995,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
 
             EmitExpression(assignment_expression -> expression);
 
-            PutOp(opc);  
+            PutOp(opc);
 
             if (casted_left_hand_side) // now cast result back to type of result
                 EmitCast(left_type, casted_left_hand_side -> Type());
@@ -3048,7 +3048,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
 //
 // BINARY: Similar code patterns are used for the ordered comparisons
 //
-int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression) 
+int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
 {
     switch (expression -> binary_tag) // process boolean-results first
     {
@@ -3265,7 +3265,7 @@ int ByteCode::EmitCastExpression(AstCastExpression *expression)
     //
     // convert from numeric type src to destination type dest
     //
-    EmitExpression(expression -> expression); 
+    EmitExpression(expression -> expression);
 
     TypeSymbol *dest_type = expression -> Type(),
                *source_type = expression -> expression -> Type();
@@ -3375,9 +3375,9 @@ void ByteCode::EmitCast(TypeSymbol *dest_type, TypeSymbol *source_type)
 
     return;
 }
-    
 
-int ByteCode::EmitClassInstanceCreationExpression(AstClassInstanceCreationExpression *expression, bool need_value) 
+
+int ByteCode::EmitClassInstanceCreationExpression(AstClassInstanceCreationExpression *expression, bool need_value)
 {
     MethodSymbol *constructor = (MethodSymbol *) expression -> class_type -> symbol;
 
@@ -3399,7 +3399,7 @@ int ByteCode::EmitClassInstanceCreationExpression(AstClassInstanceCreationExpres
         Label lab1;
         EmitBranch(OP_IFNONNULL, lab1);
         PutOp(OP_ACONST_NULL); // need to test for null, raising NullPointerException if so. So just do athrow
-        PutOp(OP_ATHROW); 
+        PutOp(OP_ATHROW);
         DefineLabel(lab1);
         CompleteLabel(lab1);
     }
@@ -3426,7 +3426,7 @@ int ByteCode::EmitClassInstanceCreationExpression(AstClassInstanceCreationExpres
         stack_words += EmitExpression((AstExpression *) expression -> Argument(k));
 
     PutOp(OP_INVOKENONVIRTUAL);
-    ChangeStack(-stack_words); 
+    ChangeStack(-stack_words);
     PutU2(RegisterMethodref(expression -> Type() -> fully_qualified_name,
                             this_control.init_name_symbol -> Utf8_literal,
                             constructor -> signature));
@@ -3452,7 +3452,7 @@ int ByteCode::EmitConditionalExpression(AstConditionalExpression *expression)
 }
 
 
-int ByteCode::EmitFieldAccess(AstFieldAccess *expression) 
+int ByteCode::EmitFieldAccess(AstFieldAccess *expression)
 {
     assert(! expression -> IsConstant());
 
@@ -3551,7 +3551,7 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
 
     TypeSymbol *type = MethodTypeResolution(method_call -> method, msym);
     PutOp(msym -> ACC_STATIC()
-                ? OP_INVOKESTATIC 
+                ? OP_INVOKESTATIC
                 : (is_super || msym -> ACC_PRIVATE())
                              ? OP_INVOKENONVIRTUAL
                              : type -> ACC_INTERFACE() ? OP_INVOKEINTERFACE : OP_INVOKEVIRTUAL);
@@ -3586,7 +3586,7 @@ void ByteCode::CompleteCall(MethodSymbol *msym, int stack_words, TypeSymbol *bas
     ChangeStack(this_control.IsDoubleWordType(msym -> Type()) ? 2 : msym -> Type() == this_control.void_type ? 0 : 1);
 
     return;
-}   
+}
 
 
 void ByteCode::EmitNewArray(int num_dims, TypeSymbol *type)
@@ -3635,7 +3635,7 @@ void ByteCode::EmitNewArray(int num_dims, TypeSymbol *type)
 //
 // POST_UNARY
 //
-int ByteCode::EmitPostUnaryExpression(AstPostUnaryExpression *expression, bool need_value) 
+int ByteCode::EmitPostUnaryExpression(AstPostUnaryExpression *expression, bool need_value)
 {
     int kind = GetLhsKind(expression);
 
@@ -3673,7 +3673,7 @@ int ByteCode::EmitPostUnaryExpression(AstPostUnaryExpression *expression, bool n
 // load value of field, duplicate, do increment or decrement, then store back, leaving original value
 // on top of stack.
 //
-void ByteCode::EmitPostUnaryExpressionField(int kind, AstPostUnaryExpression *expression, bool need_value) 
+void ByteCode::EmitPostUnaryExpressionField(int kind, AstPostUnaryExpression *expression, bool need_value)
 {
     if (kind == LHS_METHOD)
          ResolveAccess(expression -> expression); // get address and value
@@ -3729,7 +3729,7 @@ void ByteCode::EmitPostUnaryExpressionField(int kind, AstPostUnaryExpression *ex
 // load value of variable, duplicate, do increment or decrement, then store back, leaving original value
 // on top of stack.
 //
-void ByteCode::EmitPostUnaryExpressionSimple(int kind, AstPostUnaryExpression *expression, bool need_value) 
+void ByteCode::EmitPostUnaryExpressionSimple(int kind, AstPostUnaryExpression *expression, bool need_value)
 {
     TypeSymbol *expression_type = expression -> Type();
     if (kind == LHS_LOCAL && expression_type == this_control.int_type) // can we use IINC ??
@@ -3785,7 +3785,7 @@ void ByteCode::EmitPostUnaryExpressionSimple(int kind, AstPostUnaryExpression *e
 // assignment for which lhs is array element
 //    AstExpression *expression;
 //
-void ByteCode::EmitPostUnaryExpressionArray(AstPostUnaryExpression *expression, bool need_value) 
+void ByteCode::EmitPostUnaryExpressionArray(AstPostUnaryExpression *expression, bool need_value)
 {
     EmitArrayAccessLhs((AstArrayAccess *) expression -> expression); // lhs must be array access
     PutOp(OP_DUP2); // save array base and index for later store
@@ -3866,7 +3866,7 @@ void ByteCode::EmitPostUnaryExpressionArray(AstPostUnaryExpression *expression, 
 //
 // PRE_UNARY
 //
-int ByteCode::EmitPreUnaryExpression(AstPreUnaryExpression *expression, bool need_value) 
+int ByteCode::EmitPreUnaryExpression(AstPreUnaryExpression *expression, bool need_value)
 {
     TypeSymbol *type = expression -> Type();
     if (expression -> pre_unary_tag == AstPreUnaryExpression::PLUSPLUS ||
@@ -3890,7 +3890,7 @@ int ByteCode::EmitPreUnaryExpression(AstPreUnaryExpression *expression, bool nee
                          type == this_control.float_type ||
                          type == this_control.double_type) && "unary minus on unsupported type");
 
-                 PutOp(this_control.IsSimpleIntegerValueType(type) 
+                 PutOp(this_control.IsSimpleIntegerValueType(type)
                            ? OP_INEG
                            : type == this_control.long_type
                                    ? OP_LNEG
@@ -3914,7 +3914,7 @@ int ByteCode::EmitPreUnaryExpression(AstPreUnaryExpression *expression, bool nee
                  }
                  else assert(false && "unary ~ on unsupported type");
                  break;
-            case AstPreUnaryExpression::NOT: 
+            case AstPreUnaryExpression::NOT:
                 assert(type == this_control.boolean_type);
 
                 {
@@ -3938,12 +3938,12 @@ int ByteCode::EmitPreUnaryExpression(AstPreUnaryExpression *expression, bool nee
 
     return GetTypeWords(type);
 }
-    
+
 
 //
 // PRE_UNARY with side effects (++X or --X)
 //
-void ByteCode::EmitPreUnaryIncrementExpression(AstPreUnaryExpression *expression, bool need_value) 
+void ByteCode::EmitPreUnaryIncrementExpression(AstPreUnaryExpression *expression, bool need_value)
 {
     int kind = GetLhsKind(expression);
 
@@ -3981,7 +3981,7 @@ void ByteCode::EmitPreUnaryIncrementExpression(AstPreUnaryExpression *expression
 // load value of variable, do increment or decrement, duplicate, then store back, leaving original value
 // on top of stack.
 //
-void ByteCode::EmitPreUnaryIncrementExpressionSimple(int kind, AstPreUnaryExpression *expression, bool need_value) 
+void ByteCode::EmitPreUnaryIncrementExpressionSimple(int kind, AstPreUnaryExpression *expression, bool need_value)
 {
     TypeSymbol *type = expression -> Type();
     if (kind == LHS_LOCAL && type == this_control.int_type)
@@ -4042,7 +4042,7 @@ void ByteCode::EmitPreUnaryIncrementExpressionSimple(int kind, AstPreUnaryExpres
 // assignment for which lhs is array element
 //    AstExpression *expression;
 //
-void ByteCode::EmitPreUnaryIncrementExpressionArray(AstPreUnaryExpression *expression, bool need_value) 
+void ByteCode::EmitPreUnaryIncrementExpressionArray(AstPreUnaryExpression *expression, bool need_value)
 {
     EmitArrayAccessLhs((AstArrayAccess *) expression -> expression); // lhs must be array access
 
@@ -4125,7 +4125,7 @@ void ByteCode::EmitPreUnaryIncrementExpressionArray(AstPreUnaryExpression *expre
 // Pre Unary for which operand is field (instance variable)
 // AstExpression *expression;
 //
-void ByteCode::EmitPreUnaryIncrementExpressionField(int kind, AstPreUnaryExpression *expression, bool need_value) 
+void ByteCode::EmitPreUnaryIncrementExpressionField(int kind, AstPreUnaryExpression *expression, bool need_value)
 {
     if (kind == LHS_METHOD)
         ResolveAccess(expression -> expression); // get address and value
@@ -4214,7 +4214,7 @@ void ByteCode::EmitThisInvocation(AstThisCall *this_call)
 
     return;
 }
- 
+
 
 void ByteCode::EmitSuperInvocation(AstSuperCall *super_call)
 {
@@ -4245,7 +4245,7 @@ void ByteCode::EmitSuperInvocation(AstSuperCall *super_call)
 
     return;
 }
- 
+
 
 //
 //  Methods for string concatenation
@@ -4278,7 +4278,7 @@ void ByteCode::ConcatenateString(AstBinaryExpression *expression)
         PutOp(OP_INVOKENONVIRTUAL);
         PutU2(RegisterLibraryMethodref(this_control.StringBuffer_InitMethod()));
 
-        AppendString(expression -> left_expression); 
+        AppendString(expression -> left_expression);
     }
 
     AppendString(expression -> right_expression);
@@ -4307,7 +4307,7 @@ void ByteCode::AppendString(AstExpression *p)
             AppendString(binexpr -> right_expression);
 
             return;
-        } 
+        }
     }
 
     if (p -> ParenthesizedExpressionCast())
@@ -4327,7 +4327,7 @@ void ByteCode::AppendString(AstExpression *p)
     }
 
     //
-    // replace explicit reference to "null" by 
+    // replace explicit reference to "null" by
     // corresponding string.
     //
     TypeSymbol *type = p -> Type();
@@ -4355,12 +4355,12 @@ void ByteCode::AppendString(AstExpression *p)
 }
 
 
-void ByteCode::EmitStringAppendMethod(TypeSymbol *type) 
+void ByteCode::EmitStringAppendMethod(TypeSymbol *type)
 {
     //
     // Find appropriate append routine to add to string buffer
     //
-    MethodSymbol *append_method = 
+    MethodSymbol *append_method =
             (type -> num_dimensions == 1 && type -> base_type == this_control.char_type
                    ? this_control.StringBuffer_append_char_arrayMethod()
                    : type == this_control.char_type
@@ -4445,7 +4445,7 @@ ByteCode::ByteCode(TypeSymbol *unit_type) : ClassFile(unit_type),
     this -> ResetACC_STATIC();
     this -> ResetACC_PRIVATE();
     this -> SetACC_SUPER(); // must always set ACC_SUPER for class (cf page 96 of revised JVM Spec)
-    
+
     magic = 0xcafebabe;
     major_version = 45;             // use Sun JDK 1.0 version numbers
     minor_version = 3;
@@ -4486,7 +4486,7 @@ void ByteCode::CompleteLabel(Label& lab)
     if (lab.uses.Length() > 0)
     {
         assert((lab.defined) && "label used but with no definition");
-                
+
         //
         // patch byte code reference to label to reflect it's definition
         // as 16-bit signed offset.
@@ -4583,7 +4583,7 @@ void ByteCode::LoadLocal(int varno, TypeSymbol *type)
 // if one has not yet been generated.
 //
 //
-void ByteCode::LoadLiteral(LiteralValue *litp, TypeSymbol *type) 
+void ByteCode::LoadLiteral(LiteralValue *litp, TypeSymbol *type)
 {
     if (litp == this_control.NullValue())
     {
@@ -4696,7 +4696,7 @@ void ByteCode::ResolveAccess(AstExpression *p)
 
     return;
 }
-    
+
 
 int ByteCode::LoadVariable(int kind, AstExpression *expr)
 {
@@ -4740,7 +4740,7 @@ int ByteCode::LoadVariable(int kind, AstExpression *expr)
 // load reference from local variable.
 // otherwise will use getstatic or getfield.
 //
-void ByteCode::LoadReference(AstExpression *expression) 
+void ByteCode::LoadReference(AstExpression *expression)
 {
     if (expression -> ParenthesizedExpressionCast())
         expression = UnParenthesize(expression);
@@ -4835,7 +4835,7 @@ void ByteCode::StoreArrayElement(TypeSymbol *type)
 //
 //  Method to generate field reference
 //
-void ByteCode::StoreField(AstExpression *expression) 
+void ByteCode::StoreField(AstExpression *expression)
 {
     VariableSymbol *sym = (VariableSymbol *) expression -> symbol;
     TypeSymbol *expression_type = expression -> Type();
@@ -4980,7 +4980,7 @@ void ByteCode::FinishCode(TypeSymbol *type)
                                                             : RegisterUtf8(outer -> name_symbol -> Utf8_literal),
                                                      outer -> Flags());
         }
-          
+
         for (int k = 0; k < type -> NumNestedTypes(); k++)
         {
             TypeSymbol *nested = type -> NestedType(k);
@@ -5243,7 +5243,7 @@ void ByteCode::PutOpWide(unsigned char opc, u2 var)
         PutOp(opc);
         PutU2(var);
     }
-    
+
     return;
 }
 
@@ -5299,7 +5299,7 @@ void ByteCode::PrintCode()
     Coutput << "\n"
             << " this_class " << (unsigned) this_class << "  super_class " << (unsigned) super_class <<"\n"
             << " constant_pool: " << constant_pool.Length() << "\n";
-    
+
     {
         for (int i = 1; i < constant_pool.Length(); i++)
         {
@@ -5346,5 +5346,5 @@ void ByteCode::PrintCode()
     Coutput << "\n";
 
     return;
-} 
+}
 #endif

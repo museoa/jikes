@@ -188,7 +188,7 @@ void Control::ComputeRecompilationSet(TypeDependenceChecker &dependence_checker)
     }
 
     //
-    // Declare the closure set, and initialize it with the Union over the closure of the 
+    // Declare the closure set, and initialize it with the Union over the closure of the
     // types in the trash_bin. Essentially, we want to catch all "compiled" types in the
     // compilation that has a dependence on these bad types.
     //
@@ -279,7 +279,7 @@ void Control::ComputeRecompilationSet(TypeDependenceChecker &dependence_checker)
                 }
             }
         }
- 
+
         //
         // Iterate over the dependents_closure set. For each type T, add it to the trash pile.
         // If the file with which it is associated had not yet been processed, mark it as having
@@ -378,7 +378,7 @@ bool Control::IncrementalRecompilation()
 
         new_arguments = new ArgumentExpander(line);
         char q[2] = {U_q, U_NU};
-        if (new_arguments -> argc == 1 && (Case::StringEqual(new_arguments -> argv[0], U8S_quit) || 
+        if (new_arguments -> argc == 1 && (Case::StringEqual(new_arguments -> argv[0], U8S_quit) ||
                                            Case::StringSegmentEqual(new_arguments -> argv[0], q, 2)))
         {
             delete new_arguments;

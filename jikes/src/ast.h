@@ -49,7 +49,7 @@ class SemanticEnvironment;
 // the substring "_token" represents tokens in the source file. The suffix "_opt"
 // indicates that a symbol is optional. For example, if Super_opt appears in a
 // rule, it indicates that either Super or null can be expected. When a symbol
-// is plural (e.g., Modifiers), it indicates zero or more instances of such a 
+// is plural (e.g., Modifiers), it indicates zero or more instances of such a
 // symbol (a list to be precise) can be expected. Thus, when "Modifiers" is
 // specified in the right-hand side of a rule either no Modifier or a sequence
 // of them may appear.
@@ -507,7 +507,7 @@ public:
 
     //
     // This function is used to reset the size of a Ast array without
-    // allocating or deallocting space. It may be invoked with an integer 
+    // allocating or deallocting space. It may be invoked with an integer
     // argument n which indicates the new size or with no argument which
     // indicates that the size should be reset to 0.
     //
@@ -545,7 +545,7 @@ public:
 
     //
     // Add an element to the Ast array and return a reference to
-    // that new element. 
+    // that new element.
     //
     T& Next() { int i = NextIndex(); return base[i >> log_blksize][i]; }
 
@@ -593,7 +593,7 @@ public:
 
     //
     // Note that for efficiency reasons AstStatement does not have a constructor.
-    // Therefore, subclasses that are derived from AstStatement are expected to 
+    // Therefore, subclasses that are derived from AstStatement are expected to
     // initialize the fields is_reachable and can_complete_normally appropriately.
     //
 
@@ -614,7 +614,7 @@ public:
 
     //
     // Note that for efficiency reasons AstExpression does not have a constructor.
-    // However, subclasses that are derived from AstExpression are expected to 
+    // However, subclasses that are derived from AstExpression are expected to
     // initialize the fields value and symbol to NULL as indicated below:
     //
     // AstExpression() : value(NULL),
@@ -648,7 +648,7 @@ public:
 
 //
 // Block --> <BLOCK, {_token, BlockStatements, }_token>
-// 
+//
 // BlockStatement --> LocalVariableDeclarationStatement
 //                  | Statement
 //
@@ -703,18 +703,18 @@ public:
     virtual LexStream::TokenIndex LeftToken()  { return left_brace_token; }
     virtual LexStream::TokenIndex RightToken() { return right_brace_token; }
 };
- 
+
 //
 // Type --> PrimitiveType
 //        | ReferenceType
-// 
+//
 // PrimitiveType --> <PrimitiveKind, PrimitiveName>
-// 
+//
 // PrimitiveKind --> BYTE | SHORT | INT | LONG | CHAR | FLOAT | DOUBLE | BOOLEAN | VOID
 //
 // PrimitiveName --> byte_token | short_token | int_token | long_token |
 //                   char_token | float_token | double_token | boolean_token | void_token
-// 
+//
 class AstPrimitiveType : public Ast
 {
 public:
@@ -742,7 +742,7 @@ public:
 
 //
 // Brackets --> <BRACKETS, [_token, ]_token>
-// 
+//
 class AstBrackets : public Ast
 {
 public:
@@ -773,15 +773,15 @@ public:
 //
 // ReferenceType --> ClassType
 //                 | ArrayType
-// 
+//
 // ClassType --> Name
 //
 // ArrayType --> <ARRAY, ArrayKind, [_token, ]_token>
-// 
+//
 // ArrayKind --> PrimitiveType
 //             | Name
 //             | ArrayType
-// 
+//
 class AstArrayType : public Ast
 {
 private:
@@ -821,9 +821,9 @@ public:
 //
 // Name --> SimpleName
 //        | FieldAccess
-// 
+//
 // SimpleName --> <IDENTIFIER, identifier_token>
-// 
+//
 class AstSimpleName : public AstExpression
 {
 public:
@@ -858,7 +858,7 @@ public:
     virtual LexStream::TokenIndex RightToken() { return identifier_token; }
 };
 
-// 
+//
 // PackageDeclaration --> <PACKAGE, package_token, Name, ;_token>
 //
 class AstPackageDeclaration : public Ast
@@ -889,7 +889,7 @@ public:
 
 //
 // ImportDeclaration --> <IMPORT, import_token, Name, *_token_opt, ;_token>
-// 
+//
 class AstImportDeclaration : public Ast
 {
 public:
@@ -921,7 +921,7 @@ public:
 // CompilationUnit --> <COMPILATION,     PackageDeclaration_opt, ImportDeclarations, TypeDeclarations>
 //                   | <BAD_COMPILATION, PackageDeclaration_opt, ImportDeclarations, TypeDeclarations>
 //                   | <EMPTY_COMPILATION, PackageDeclaration_opt, ImportDeclarations, TypeDeclarations>
-// 
+//
 class AstCompilationUnit : public Ast
 {
 private:
@@ -996,10 +996,10 @@ public:
 //
 // ModifierKind --> PUBLIC | PROTECTED | PRIVATE | STATIC | ABSTRACT | FINAL | NATIVE
 //                  SYNCHRONIZED | TRANSIENT | VOLATILE
-// 
+//
 // ModifierName --> public_token | protected_token | private_token | static_token | abstract_token |
 //                  final_token | native_token | synchronized_token | transient_token | volatile_token
-// 
+//
 class AstModifier : public Ast
 {
 public:
@@ -1027,7 +1027,7 @@ public:
 
 //
 // EmptyDeclaration --> <EMPTY_DECLARATION, ;_token>
-// 
+//
 class AstEmptyDeclaration : public Ast
 {
 public:
@@ -1054,7 +1054,7 @@ public:
 
 //
 // ClassBody --> <CLASS_BODY, {_token, ClassBodyDeclarations, }_token>
-// 
+//
 class AstClassBody : public Ast
 {
 private:
@@ -1176,16 +1176,16 @@ public:
 // ClassDeclaration --> <CLASS, ClassModifiers, class_token, identifier_token, Super_opt, Interfaces, ClassBody>
 //
 // Super --> Name
-// 
+//
 // Interface --> Name
-// 
+//
 // ClassModifier --> Modifier  (ABSTRACT, FINAL or PUBLIC)
-// 
+//
 // ClassBodyDeclaration --> FieldDeclaration
 //                        | MethodDeclaration
 //                        | ConstructorDeclaration
 //                        | StaticInitializer
-// 
+//
 class AstClassDeclaration : public AstStatement
 {
     StoragePool *pool;
@@ -1248,9 +1248,9 @@ public:
 //
 // VariableInitializer --> Expression
 //                       | ArrayInitializer
-// 
+//
 // ArrayInitializer --> <ARRAY_INITIALIZER, {_token, VariableInitializers, }_token>
-// 
+//
 class AstArrayInitializer : public Ast
 {
 private:
@@ -1290,7 +1290,7 @@ public:
 
 //
 // VariableDeclaratorId --> <VARIABLE_DECLARATOR_NAME, identifier_token, Brackets>
-// 
+//
 class AstVariableDeclaratorId : public Ast
 {
 private:
@@ -1331,7 +1331,7 @@ public:
 };
 
 
-// 
+//
 // VariableDeclarator --> <VARIABLE_DECLARATOR, VariableDeclaratorId, VariableInitializer_opt>
 //
 class AstVariableDeclarator : public Ast
@@ -1424,9 +1424,9 @@ public:
 };
 
 
-// 
+//
 // FormalParameter --> <PARAMETER, Type, VariableDeclaratorId>
-// 
+//
 class AstFormalParameter : public Ast
 {
     StoragePool *pool;
@@ -1465,10 +1465,10 @@ public:
     virtual LexStream::TokenIndex RightToken() { return formal_declarator -> RightToken(); }
 };
 
- 
+
 //
 // MethodDeclarator --> <METHOD_DECLARATOR, identifier_token, (_token, FormalParameters, )_token, Brackets>
-// 
+//
 class AstMethodDeclarator : public Ast
 {
 private:
@@ -1517,17 +1517,17 @@ public:
     }
 };
 
- 
+
 //
 // MethodDeclaration --> <METHOD, MethodModifiers, Type, MethodDeclarator, Throws, MethodBody>
 //
 // MethodModifier --> Modifier (PUBLIC, PROTECTED, PRIVATE, STATIC, ABSTRACT, FINAL, NATIVE or SYNCHRONIZED)
-// 
+//
 // Throws --> Names
-// 
+//
 // MethodBody --> Block
 //              | EmptyStatement
-// 
+//
 class AstMethodDeclaration : public Ast
 {
     StoragePool *pool;
@@ -1582,7 +1582,7 @@ public:
 
 //
 // StaticInitializer --> <STATIC_INITIALIZER, static_token, Block>
-// 
+//
 class AstStaticInitializer : public Ast
 {
 public:
@@ -1608,12 +1608,12 @@ public:
     virtual LexStream::TokenIndex RightToken() { return block -> RightToken(); }
 };
 
- 
-// 
+
+//
 // ThisCall --> <THIS_CALL, this_token, (_token, Arguments, )_token, ;_token>
 //
 // Argument --> Expression
-// 
+//
 class AstThisCall : public AstStatement
 {
 private:
@@ -1670,7 +1670,7 @@ public:
 //
 // SuperCall --> <SUPER_CALL, super_token, (_token, Arguments, )_token, ;_token>
 //             | <SUPER_CALL, SuperField, (_token, Arguments, )_token, ;_token>
-// 
+//
 class AstSuperCall : public AstStatement
 {
 private:
@@ -1732,12 +1732,12 @@ public:
 
 //
 // ConstructorDeclaration --> <CONSTRUCTOR, Constructormodifiers, MethodDeclarator, Throws, ConstructorBody>
-// 
+//
 // ConstructorBody --> <CONSTRUCTOR_BLOCK, {_token, ExplicitConstructorInvocation, BlockStatements, }_token>
 //                   | MethodBody
-// 
+//
 // ConstructorModifier --> Modifier (PUBLIC, PROTECTED or PRIVATE)
-// 
+//
 // ExplicitConstructorInvocation --> ThisCall
 //                                 | SuperCall
 //
@@ -1842,24 +1842,24 @@ public:
 
 //
 // InterfaceDeclaration --> <INTERFACE, Interfacemodifiers, interface_token, identifier_token, ExtendsInterfaces, {_token, InterfaceMemberDeclarations, }_token>
-// 
+//
 // InterfaceModifier --> Modifier (PUBLIC, ABSTRACT)
-// 
+//
 // ExtendsInterfaces --> Names
-// 
-// 
+//
+//
 // InterfaceMemberDeclaration --> ConstantDeclaration
 //                              | AbstractMethodDeclaration
 //
 // ConstantDeclaration --> FieldDeclaration (where the FieldModifierList is a Constantmodifiers)
-// 
+//
 // ConstantModifier --> Modifier (PUBLIC, STATIC or FINAL)
 //
-// AbstractMethodDeclaration --> MethodDeclaration (where MethodModifierList is a SignatureModifierList and the 
+// AbstractMethodDeclaration --> MethodDeclaration (where MethodModifierList is a SignatureModifierList and the
 //                                                  MethodBody is an EmptyStatement)
-// 
+//
 // SignatureModifier --> Modifier (PUBLIC or ABSTRACT)
-// 
+//
 class AstInterfaceDeclaration : public Ast
 {
 private:
@@ -2014,7 +2014,7 @@ public:
         return (semicolon_token_opt ? semicolon_token_opt : VariableDeclarator(NumVariableDeclarators() - 1) -> RightToken());
     }
 };
- 
+
 //
 // Statement --> IfStatement
 //             | WhileStatement
@@ -2032,13 +2032,13 @@ public:
 //             | TryStatement
 //
 // Label --> identifier_token
-// 
+//
 // IfStatement --> <IF, Label_opt, if_token, Expression, TrueStatement, FalseStatement_opt>
-// 
+//
 // TrueStatement --> Statement
-// 
+//
 // FalseStatement --> Statement
-// 
+//
 class AstIfStatement : public AstStatement
 {
 public:
@@ -2078,7 +2078,7 @@ public:
 
 //
 // EmptyStatement --> <EMPTY_STATEMENT, Label_opt, ;_token>
-// 
+//
 class AstEmptyStatement : public AstStatement
 {
 public:
@@ -2111,7 +2111,7 @@ public:
 
 //
 // ExpressionStatement --> <EXPRESSION_STATEMENT, Label_opt, Expression, ;_token_opt>
-// 
+//
 class AstExpressionStatement : public AstStatement
 {
 public:
@@ -2149,7 +2149,7 @@ public:
 //
 // SwitchLabel --> CaseLabel
 //               | DefaultLabel
-// 
+//
 // CaseLabel --> <CASE, case_token, Expression, :_token>
 //
 class AstCaseLabel : public Ast
@@ -2179,10 +2179,10 @@ public:
     virtual LexStream::TokenIndex RightToken() { return colon_token; }
 };
 
- 
+
 //
 // DefaultLabel --> <DEFAULT, default_token, :_token>
-// 
+//
 class AstDefaultLabel : public Ast
 {
 public:
@@ -2209,9 +2209,9 @@ public:
 };
 
 
-// 
+//
 // SwitchBlockStatement --> <SWITCH_BLOCK, SwitchLabels, BlockStatements>
-// 
+//
 class AstSwitchBlockStatement : public Ast
 {
 private:
@@ -2275,7 +2275,7 @@ public:
 
 //
 // SwitchStatement --> <SWITCH, Label_opt, switch_token, Expression, {_token, SwitchBlockStatements, SwitchLabels_opt, }_token>
-// 
+//
 class AstSwitchStatement : public AstStatement
 {
     StoragePool *pool;
@@ -2321,9 +2321,9 @@ public:
 };
 
 
-// 
+//
 // WhileStatement --> <WHILE, Label_opt, while_token, Expression, Statement>
-// 
+//
 class AstWhileStatement : public AstStatement
 {
 public:
@@ -2356,9 +2356,9 @@ public:
 };
 
 
-// 
+//
 // DoStatement --> <DO, Label_opt, do_token, Expression, Statement, ;_token>
-// 
+//
 class AstDoStatement : public AstStatement
 {
 public:
@@ -2393,14 +2393,14 @@ public:
 };
 
 
-// 
+//
 // ForStatement --> <FOR, Label_opt, for_token, ForInits, Expression_opt, ForUpdates, Statement>
-// 
+//
 // ForInit --> ExpressionStatement
 //           | LocalVariableDeclarationStatement
-// 
+//
 // ForUpdate --> ExpressionStatement
-// 
+//
 class AstForStatement : public AstStatement
 {
 private:
@@ -2451,9 +2451,9 @@ public:
 };
 
 
-// 
+//
 // BreakStatement --> <BREAK, Label_opt, break_token, identifier_token_opt, ;_token>
-// 
+//
 class AstBreakStatement : public AstStatement
 {
 public:
@@ -2486,9 +2486,9 @@ public:
     virtual LexStream::TokenIndex RightToken() { return semicolon_token; }
 };
 
-// 
+//
 // ContinueStatement --> <CONTINUE, Label_opt, continue_token, SimpleName_opt, ;_token>
-// 
+//
 class AstContinueStatement : public AstStatement
 {
 public:
@@ -2522,9 +2522,9 @@ public:
 };
 
 
-// 
+//
 // ReturnStatement --> <RETURN, Label_opt, return_token, Expression_opt, ;_token>
-// 
+//
 class AstReturnStatement : public AstStatement
 {
 public:
@@ -2557,9 +2557,9 @@ public:
 };
 
 
-// 
+//
 // ThrowStatement --> <THROW, Label_opt, throw_token, Expression, ;_token>
-// 
+//
 class AstThrowStatement : public AstStatement
 {
 public:
@@ -2592,9 +2592,9 @@ public:
 };
 
 
-// 
+//
 // SynchronizedStatement --> <SYNCHRONIZED_STATEMENT, Label_opt, synchronized_token, Expression, Block>
-// 
+//
 class AstSynchronizedStatement : public AstStatement
 {
 public:
@@ -2627,9 +2627,9 @@ public:
 };
 
 
-// 
+//
 // CatchClause --> <CATCH, catch_token, FormalParameter, Block>
-// 
+//
 class AstCatchClause : public Ast
 {
 public:
@@ -2659,9 +2659,9 @@ public:
 };
 
 
-// 
+//
 // FinallyClause --> <FINALLY, finally_token, Block>
-// 
+//
 class AstFinallyClause : public Ast
 {
 public:
@@ -2688,9 +2688,9 @@ public:
 };
 
 
-// 
+//
 // TryStatement --> <TRY, Label_opt, try-token, Block CatchClauses, FinallyClause_opt>
-// 
+//
 class AstTryStatement : public AstStatement
 {
 private:
@@ -2739,13 +2739,13 @@ public:
     }
 };
 
-// 
+//
 // Expression --> Primary
 //              | UnaryExpression
 //              | BinaryExpression
 //              | ConditionalExpression
 //              | AssignmentExpression
-// 
+//
 // Primary --> Literal
 //           | NullLiteral
 //           | ThisExpression
@@ -2756,7 +2756,7 @@ public:
 //           | FieldAccess
 //           | MethodInvocation
 //           | ArrayAccess
-// 
+//
 // Literal --> IntegerLiteral
 //           | LongLiteral
 //           | FloatingPointLiteral
@@ -2769,9 +2769,9 @@ public:
 //                  | FalseLiteral
 //
 
-// 
+//
 // IntegerLiteral --> <INTEGER_LITERAL, integer_literal_token, value>
-// 
+//
 class AstIntegerLiteral : public AstExpression
 {
 public:
@@ -2799,9 +2799,9 @@ public:
 };
 
 
-// 
+//
 // LongLiteral --> <LONG_LITERAL, long_literal_token, value>
-// 
+//
 class AstLongLiteral : public AstExpression
 {
 public:
@@ -2831,7 +2831,7 @@ public:
 
 //
 // FloatingPointLiteral --> <FLOATING_POINT_LITERAL, Literal, value>
-// 
+//
 class AstFloatingPointLiteral : public AstExpression
 {
 public:
@@ -2860,7 +2860,7 @@ public:
 
 //
 // DoubleLiteral --> <DOUBLE_LITERAL, Literal, value>
-// 
+//
 class AstDoubleLiteral : public AstExpression
 {
 public:
@@ -2974,9 +2974,9 @@ public:
     virtual LexStream::TokenIndex RightToken() { return string_literal_token; }
 };
 
-// 
+//
 // CharacterLiteral --> <CHARACTER_LITERAL, literal_token, value>
-// 
+//
 class AstCharacterLiteral : public AstExpression
 {
 public:
@@ -3003,9 +3003,9 @@ public:
     virtual LexStream::TokenIndex RightToken() { return character_literal_token; }
 };
 
-// 
+//
 // NullLiteral --> <NULL_EXPRESSION, null_token>
-// 
+//
 class AstNullLiteral : public AstExpression
 {
 public:
@@ -3032,7 +3032,7 @@ public:
     virtual LexStream::TokenIndex RightToken() { return null_token; }
 };
 
-// 
+//
 // ThisExpression --> <THIS, this_token>
 //
 class AstThisExpression : public AstExpression
@@ -3061,7 +3061,7 @@ public:
     virtual LexStream::TokenIndex RightToken() { return this_token; }
 };
 
- 
+
 //
 // SuperExpression --> <SUPER, super_token>
 //
@@ -3092,9 +3092,9 @@ public:
 };
 
 
-// 
+//
 // ParenthesizedExpression --> <PARENTHESIZED_EXPRESSION, (_token, Expression, )_token>
-// 
+//
 class AstParenthesizedExpression : public AstExpression
 {
 public:
@@ -3126,7 +3126,7 @@ public:
 
 //
 // TypeExpression --> <TYPE, Type>
-// 
+//
 class AstTypeExpression : public AstExpression
 {
 public:
@@ -3312,7 +3312,7 @@ public:
 //               | <DOT, TypeExpression, ._token, this_token>
 //
 // SuperField --> <DOT, TypeExpression, ._token, super_token>
-// 
+//
 // Base --> Primary
 //        | Name
 //
@@ -3382,7 +3382,7 @@ private:
 
 //
 // MethodInvocation --> <CALL, Method, (_token, Arguments, )_token>
-// 
+//
 // Method --> SimpleName
 //          | FieldAccess
 //
@@ -3434,7 +3434,7 @@ public:
 };
 
 
-// 
+//
 // ArrayAccess --> <ARRAY_ACCESS, Base, [_token, Expression, ]_token>
 //
 class AstArrayAccess : public AstExpression
@@ -3471,11 +3471,11 @@ public:
 // UnaryExpression --> PreUnaryExpression
 //                   | PostUnaryExpression
 //                   | CastExpression
-// 
+//
 // PostUnaryExpression --> <POST_UNARY, PostUnaryTag, Expression, PostOperator>
-// 
+//
 // PostUnaryTag --> PLUSPLUS | MINUSMINUS
-// 
+//
 // PostOperator --> ++_token | --_token
 //
 class AstPostUnaryExpression : public AstExpression
@@ -3526,11 +3526,11 @@ public:
 
 //
 // PreUnaryExpression -->  <PRE_UNARY, PreUnaryTag, PreOperator, Expression>
-// 
+//
 // PreUnaryTag --> PLUS | MINUS | TWIDDLE | NOT | PLUSPLUS | MINUSMINUS
-// 
+//
 // PreOperator --> +_token | -_token | ~_token | !_token | ++_token | --_token
-// 
+//
 class AstPreUnaryExpression : public AstExpression
 {
 public:
@@ -3633,12 +3633,12 @@ public:
     virtual LexStream::TokenIndex RightToken() { return expression -> RightToken(); }
 };
 
- 
-// 
+
+//
 // BinaryExpression --> <BINARY, BinaryTag, LeftExpression, BinaryOperator, RightExpression>
-// 
+//
 // LeftExpression --> Expression
-// 
+//
 // RightExpression --> Expression
 //                   | type
 //
@@ -3649,7 +3649,7 @@ public:
 // BinaryOperator --> *_token | /_token | %_token | +_token | -_token | <<_token | >>_token | >>>_token |
 //                    instanceof_token | <_token | >_token | <=_token | >=_token | ==_token | !=_token |
 //                    &_token | ^_token | |_token | &&_token | ||_token
-// 
+//
 class AstBinaryExpression : public AstExpression
 {
 public:
@@ -3708,9 +3708,9 @@ public:
 };
 
 
-// 
+//
 // ConditionalExpression --> <CONDITIONAL, Expression, ?_token, Expression, :_token, Expression>
-// 
+//
 class AstConditionalExpression : public AstExpression
 {
 public:
@@ -3742,9 +3742,9 @@ public:
 };
 
 
-// 
+//
 // Assignment --> <ASSIGNMENT, AssignmentTag, LeftHandSide, AssignmentOperator, Expression>
-// 
+//
 // AssignmentTag --> EQUAL | STAR_EQUAL | SLASH_EQUAL | MOD_EQUAL | PLUS_EQUAL | MINUS_EQUAL |
 //                   LEFT_SHIFT_EQUAL | RIGHT_SHIFT_EQUAL | UNSIGNED_RIGHT_SHIFT_EQUAL |
 //                   AND_EQUAL | XOR_EQUAL | IOR_EQUAL
@@ -3924,10 +3924,10 @@ private:
         {
             int old_base_size = base_size;
             Cell **old_base = base;
-    
+
             base_size += base_increment;
             base = ::new Cell*[base_size];
-    
+
             if (old_base != NULL)
             {
                 memmove(base, old_base, old_base_size * sizeof(Cell *));
@@ -3935,10 +3935,10 @@ private:
             }
             memset(&base[old_base_size], 0, (base_size - old_base_size) * sizeof(Cell *));
         }
-    
+
         //
         // If the slot "k" does not already contain a segment,
-        // we allocate a new segment and place its adjusted address in 
+        // we allocate a new segment and place its adjusted address in
         // base[k]. The adjustment allows us to index the segment directly,
         // instead of having to perform a subtraction for each reference.
         // See operator[] below.
@@ -3973,7 +3973,7 @@ public:
         size_t estimate = num_tokens * 10; // recall that each cell is a-byte word. So, 10 * 4 = 40
 
         //
-        // Find a block of size 2**log_blksize that is large enough 
+        // Find a block of size 2**log_blksize that is large enough
         // to satisfy our estimate.
         //
         for (log_blksize = 8; (((unsigned) 1 << log_blksize) < estimate) && (log_blksize < 31); log_blksize++)
@@ -4031,7 +4031,7 @@ public:
             base[k] += size;
             delete [] base[k];
         }
-    
+
         delete [] base;
     }
 
@@ -4086,11 +4086,11 @@ public:
             delete [] base[k];
             base[k] = NULL;
         }
-    
+
         delete [] base;
         base = NULL;
         base_size = 0;
-    
+
         Reset();
 
         return;
@@ -5714,7 +5714,7 @@ template <class T>
         //
         //
         int k = size >> log_blksize; /* which segment? */
-    
+
         //
         // If the base is overflowed, reallocate it and initialize the new elements to NULL.
         //
@@ -5724,11 +5724,11 @@ template <class T>
             T **old_base = base;
 
             base_size += base_increment;
-    
+
             assert(base_size <= pool -> Blksize()); // There must be enough room to allocate base
 
             base = (T **) pool -> Alloc(sizeof(T *) * base_size);
-    
+
             if (old_base != NULL)
             {
                 memmove(base, old_base, old_base_size * sizeof(T *));
@@ -5737,9 +5737,9 @@ template <class T>
             }
             memset(&base[old_base_size], 0, (base_size - old_base_size) * sizeof(T *));
         }
-    
+
         //
-        // We allocate a new segment and place its adjusted address in 
+        // We allocate a new segment and place its adjusted address in
         // base[k]. The adjustment allows us to index the segment directly,
         // instead of having to perform a subtraction for each reference.
         // See operator[] below.
@@ -5748,12 +5748,12 @@ template <class T>
 
         base[k] = (T *) pool -> Alloc(sizeof(T) * Blksize());
         base[k] -= size;
-    
+
         //
         // Finally, we update size.
         //
         size += Blksize();
-    
+
         return;
     }
 

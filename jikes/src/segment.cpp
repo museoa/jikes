@@ -55,7 +55,7 @@ u2 &Pair::operator[](const u2 target)
         //
         base_size = k + (old_base_size == 0 ? 2 : 16);
         base = new PairSegment*[base_size];
-    
+
         if (old_base != NULL)
         {
             memmove(base, old_base, old_base_size * sizeof(PairSegment *));
@@ -112,7 +112,7 @@ u2 &Triplet::Image(const u2 target, const u2 target2)
 
         base_size = k + 4;
         base = new TripletSegment*[base_size];
-    
+
         if (old_base != NULL)
         {
             memmove(base, old_base, old_base_size * sizeof(TripletSegment *));

@@ -17,7 +17,7 @@
 // cannot. To test if the double quantity "a" fits in a long range we will test whether
 // or not:
 //         (a >= min_long) && (-a > min_long)
-// 
+//
 BaseLong::operator LongInt()
 {
     return LongInt(HighWord(), LowWord());
@@ -528,7 +528,7 @@ LongInt::LongInt(IEEEfloat a) : BaseLong(0,0)
     LowWord() = lvalue.LowWord();
     return;
 }
-    
+
 LongInt::LongInt(IEEEdouble a) : BaseLong (0,0)
 {
     if (a.HighWord() == 0x7fffffff && a.LowWord() == 0xffffffff) // if NaN

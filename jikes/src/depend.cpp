@@ -169,7 +169,7 @@ void ConstructorCycleChecker::CheckConstructorCycles(AstConstructorDeclaration *
         //
         else
         {
-            do 
+            do
             {
                 called_constructor_declaration = stack.Top();
                 stack.Pop();
@@ -285,7 +285,7 @@ void TypeDependenceChecker::OutputMake(FILE *outfile, char *output_name, Tuple<F
 #else
         fprintf(outfile, "%s : %s\n", output_name, java_name);
 #endif
-            
+
         if (i > 0) // Not the first file in the list
         {
 

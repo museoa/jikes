@@ -25,7 +25,7 @@ class AstClassBody;
 class AstInterfaceDeclaration;
 class Ast;
 class AstListNode;
- 
+
 struct SecondaryRepairInfo
 {
     int code,
@@ -34,13 +34,13 @@ struct SecondaryRepairInfo
         stack_position,
         num_deletions,
         symbol;
- 
+
     bool recovery_on_next_stack;
 };
 
 class Parser : public javaprs_table
 {
-public:     
+public:
 
     Parser() : ast_pool(NULL),
                parse_package_header_only(false),
@@ -54,7 +54,7 @@ public:
         InitRuleAction();
         return;
     }
- 
+
     ~Parser()
     {
         delete [] stack;
@@ -62,7 +62,7 @@ public:
         delete [] parse_stack;
         delete [] temp_stack;
     }
- 
+
     AstPackageDeclaration *PackageHeaderParse(LexStream *, StoragePool *);
     AstCompilationUnit *HeaderParse(LexStream *, StoragePool * = NULL);
     bool InitializerParse(LexStream *, AstClassBody *);
@@ -150,7 +150,7 @@ protected:
     int stack_length,
         state_stack_top,
         *stack,
- 
+
         temp_stack_top,
         *temp_stack;
 

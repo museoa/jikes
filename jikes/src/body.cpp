@@ -22,7 +22,7 @@ void Semantic::ProcessBlockStatements(AstBlock *block_body)
     // complete normally.
     //
     if (block_body -> NumStatements() == 0)
-         block_body -> can_complete_normally = block_body -> is_reachable; 
+         block_body -> can_complete_normally = block_body -> is_reachable;
     else
     {
         //
@@ -795,7 +795,7 @@ void Semantic::ProcessDoStatement(Ast *stmt)
     //
     AstBlock *block_body = (AstBlock *) BreakableStatementStack().Top();
     do_statement -> can_complete_normally = (enclosed_statement -> can_complete_normally && ((! literal) || literal -> value == 0)) ||
-                                            block_body -> can_complete_normally; 
+                                            block_body -> can_complete_normally;
 
     BreakableStatementStack().Pop();
     ContinuableStatementStack().Pop();
@@ -1115,7 +1115,7 @@ void Semantic::ProcessTryStatement(Ast *stmt)
     //
     // A try_statement containing a finally clause requires some extra local
     // variables in its immediately enclosing block. If it is enclosed in a method
-    // that returns void then 2 extra elements are needed. If the method 
+    // that returns void then 2 extra elements are needed. If the method
     // returns a long or a double value, two additional elements are needed.
     // Otherwise, one additional element is needed.
     // If this try_statement is the first try_statement with a finally clause
@@ -1574,7 +1574,7 @@ void Semantic::ProcessThisCall(AstThisCall *this_call)
 
     ExplicitConstructorInvocation() = NULL; // signal that we are no longer processing an explicit constructor invocation
 
-    this_call -> can_complete_normally = this_call -> is_reachable; 
+    this_call -> can_complete_normally = this_call -> is_reachable;
 
     return;
 }
@@ -1750,7 +1750,7 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
 
                     //
                     // Recall that as a side-effect, when a local shadow is created in a type
-                    // an argument that will be used to initialize the local shadow that has 
+                    // an argument that will be used to initialize the local shadow that has
                     // the same identity must be passed to every constructor in the type. Since
                     // we are currently processing a constructor, such an argument must be available.
                     //
@@ -1778,7 +1778,7 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
 
     ExplicitConstructorInvocation() = NULL; // signal that we are no longer processing an explicit constructor invocation
 
-    super_call -> can_complete_normally = super_call -> is_reachable; 
+    super_call -> can_complete_normally = super_call -> is_reachable;
 
     return;
 }
@@ -1882,7 +1882,7 @@ void Semantic::ProcessMethodBody(AstMethodDeclaration *method_declaration)
         block_body -> nesting_level = LocalBlockStack().Size();
         LocalBlockStack().Push(block_body);
 
-        ProcessBlockStatements(block_body); 
+        ProcessBlockStatements(block_body);
 
         LocalBlockStack().Pop();
 
@@ -2045,7 +2045,7 @@ void Semantic::ProcessConstructorBody(AstConstructorDeclaration *constructor_dec
     block_body -> nesting_level = LocalBlockStack().Size();
     LocalBlockStack().Push(block_body);
 
-    ProcessBlockStatements(block_body); 
+    ProcessBlockStatements(block_body);
 
     if (block_body -> can_complete_normally)
     {
@@ -2135,7 +2135,7 @@ void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment, AstClas
             ThisMethod() -> max_block_depth = LocalBlockStack().max_size;
         }
     }
-    else 
+    else
     {
         for (int i = 0; i < class_body -> NumConstructors(); i++)
         {
@@ -2271,7 +2271,7 @@ void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment, AstClas
     //
     for (int i = 0; i <  this_type -> NumConstructorParameters(); i++)
         this_type -> ConstructorParameter(i) -> SetACC_FINAL();
- 
+
     for (int l = 0; l <  this_type -> NumEnclosingInstances(); l++)
         this_type -> EnclosingInstance(l) -> SetACC_FINAL();
 

@@ -14,7 +14,7 @@
 #include "symbol.h"
 
 class VariableShadowSymbol
-{ 
+{
 public:
     VariableSymbol *variable_symbol;
 
@@ -59,12 +59,12 @@ private:
             if ((*conflict)[k] == conflict_symbol)
                 return true;
         return false;
-    }    
+    }
 };
 
 
 class MethodShadowSymbol
-{ 
+{
 public:
     MethodSymbol *method_symbol;
     MethodShadowSymbol *next_method;
@@ -89,12 +89,12 @@ public:
         if ((method_symbol != conflict_symbol) && (! Find(conflict_symbol)))
             conflict -> Next() = conflict_symbol;
         return;
-    }    
+    }
     inline void RemoveConflicts()
     {
         delete conflict;
         conflict = NULL;
-    }    
+    }
 
     inline void CompressSpace()
     {
@@ -116,12 +116,12 @@ private:
             if ((*conflict)[k] == conflict_symbol)
                 return true;
         return false;
-    }    
+    }
 };
 
 
 class TypeShadowSymbol
-{ 
+{
 public:
     TypeSymbol *type_symbol;
 
@@ -168,7 +168,7 @@ private:
             if ((*conflict)[k] == conflict_symbol)
                 return true;
         return false;
-    }    
+    }
 };
 
 
@@ -221,7 +221,7 @@ public:
         p -> next = base[i];
         base[i] = p;
         symbol_pool.Next() = p;
-        
+
         return p;
     }
 

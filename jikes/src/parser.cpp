@@ -16,19 +16,19 @@
 void Parser::ReallocateStacks()
 {
     int old_stack_length = stack_length;
- 
+
     stack_length += STACK_INCREMENT;
 
     assert(stack_length <= SHRT_MAX);
 
-    int *old_stack = stack; 
+    int *old_stack = stack;
     stack = (int *) memmove(new int[stack_length], stack, old_stack_length * sizeof(int));
     delete [] old_stack;
 
-    Location *old_location_stack = location_stack; 
+    Location *old_location_stack = location_stack;
     location_stack = (Location *) memmove(new Location[stack_length], location_stack, old_stack_length * sizeof(Location));
     delete [] old_location_stack;
- 
+
     Ast **old_parse_stack = parse_stack;
     parse_stack = (Ast **) memmove(new Ast *[stack_length], parse_stack, old_stack_length * sizeof(Ast *));
     delete [] old_parse_stack;
@@ -40,12 +40,12 @@ void Parser::ReallocateStacks()
 
     return;
 }
- 
+
 
 AstListNode *Parser::AllocateListNode()
 {
     AstListNode *p;
- 
+
     if (free_list_nodes)
     {
         p = free_list_nodes;
@@ -144,7 +144,7 @@ Ast *Parser::HeaderParse()
     TokenObject curtok = lex_stream -> Gettoken();
     int act = START_STATE,
               current_kind = lex_stream -> Kind(curtok);
- 
+
 /*****************************************************************/
 /* Start parsing.                                                */
 /*****************************************************************/
@@ -152,17 +152,17 @@ Ast *Parser::HeaderParse()
 
     //
     // Process a terminal
-    // 
+    //
     for (;;)
     {
         if (++state_stack_top >= stack_length)
             ReallocateStacks();
- 
+
         stack[state_stack_top] = act;
         location_stack[state_stack_top] = Loc(curtok);
- 
+
         act = t_action(act, current_kind, lex_stream);
- 
+
         if (act <= NUM_RULES)
             state_stack_top--; // make reduction look like a shift-reduce
         else if (act > ERROR_ACTION)
@@ -293,7 +293,7 @@ bool Parser::Body(AstClassBody *class_body)
                 else
                 {
                     //
-                    // The block associated with the method may syntactically be either a 
+                    // The block associated with the method may syntactically be either a
                     // block or a constructor block. If it is a block, nest it inside the
                     // initial block. If it is a constructor block, replace the initial block
                     // by the constructor block.
@@ -464,25 +464,25 @@ Ast *Parser::ParseSegment(TokenObject start_token)
     TokenObject curtok = start_token; // get the location of the start_token
     int act = START_STATE,
               current_kind = TK_BodyMarker;
- 
+
 /*****************************************************************/
 /* Start parsing.                                                */
 /*****************************************************************/
     state_stack_top = -1;
- 
+
     //
     // Process a terminal
-    // 
+    //
     for (;;)
     {
         if (++state_stack_top >= stack_length)
             ReallocateStacks();
- 
+
         stack[state_stack_top] = act;
         location_stack[state_stack_top] = Loc(curtok);
- 
+
         act = t_action(act, current_kind, lex_stream);
- 
+
         if (act <= NUM_RULES)
             state_stack_top--; // make reduction look like a shift-reduce
         else if (act > ERROR_ACTION)
@@ -507,7 +507,7 @@ Ast *Parser::ParseSegment(TokenObject start_token)
 
         //
         // Process a nonterminal
-        // 
+        //
         do
         {
             state_stack_top -= (rhs[act] - 1);
@@ -562,17 +562,17 @@ void Parser::RepairParse(TokenObject curtok)
 
         //
         // Process a terminal
-        // 
+        //
         for (;;)
         {
             if (++state_stack_top >= stack_length)
                  ReallocateStacks();
- 
+
             stack[state_stack_top] = act;
             location_stack[state_stack_top] = Loc(curtok);
- 
+
             act = t_action(act, current_kind, lex_stream);
- 
+
             if (act <= NUM_RULES)
                 state_stack_top--; // make reduction look like a shift-reduce
             else if (act > ERROR_ACTION)
@@ -581,7 +581,7 @@ void Parser::RepairParse(TokenObject curtok)
 //                token_action(curtok);
                 curtok = lex_stream -> Gettoken(end_token);
                 current_kind = lex_stream -> Kind(curtok);
- 
+
                 act -= ERROR_ACTION;
             }
             else if (act < ACCEPT_ACTION)
@@ -603,7 +603,7 @@ void Parser::RepairParse(TokenObject curtok)
 
             //
             // Process a nonterminal
-            // 
+            //
             do
             {
                 state_stack_top -= (rhs[act] - 1);
@@ -625,25 +625,25 @@ void Parser::RepairParse(TokenObject curtok)
 void Parser::ErrorRepair(TokenObject error_token)
 {
     SecondaryRepairInfo repair;
- 
+
     repair.code = 0;
     do
     {
         repair.distance = 0;
         repair.num_deletions = state_stack_top + BUFF_UBOUND;
- 
+
         buffer[1] = error_token;
         buffer[0] = lex_stream -> Previous(buffer[1]);
- 
+
         for (int k = 2; k < BUFF_SIZE; k++)
             buffer[k] = lex_stream -> Next(buffer[k - 1]);
- 
+
         int last_index;
         for (last_index = MAX_DISTANCE - 1;
              last_index >= 1 && lex_stream -> Kind(buffer[last_index]) == EOFT_SYMBOL;
              last_index--);
         last_index++;
- 
+
         repair = ErrorSurgery(stack, state_stack_top, last_index, repair);
         error_token = buffer[MAX_DISTANCE - MIN_DISTANCE + 2];
     } while (repair.code == 0);
@@ -659,8 +659,8 @@ void Parser::ErrorRepair(TokenObject error_token)
 
     return;
 }
- 
- 
+
+
 //
 // Keep cutting "stuff" out around the error until a stable configuration
 // is found.
@@ -677,11 +677,11 @@ SecondaryRepairInfo Parser::ErrorSurgery
         if (location_stack[top] < previous_loc)
             stack_deletions++;
         previous_loc = location_stack[top];
- 
+
         for (int i = 1; i <= last_index && repair.num_deletions >= (stack_deletions + i - 1); i++)
         {
             int j = ParseCheck(stck, top, lex_stream -> Kind(buffer[i]), i + 1);
- 
+
             if ((j - i + 1) > MIN_DISTANCE)
             {
                 int k = stack_deletions + i - 1;
@@ -714,7 +714,7 @@ int Parser::ParseCheck(int stck[], int stack_top, int first_token, int buffer_po
         ct,
         act,
         lhs_symbol;
- 
+
 /*****************************************************************/
 /* Initialize pointer for temp_stack and initialize maximum      */
 /* position of state stack that is still useful.                 */
@@ -740,15 +740,15 @@ int Parser::ParseCheck(int stck[], int stack_top, int first_token, int buffer_po
         ct = first_token;
         lex_stream -> Reset(buffer[buffer_position]);
     }
- 
+
     process_terminal: for (;;)
     {
         if (++temp_stack_top >= stack_length)  /* Stack overflow!!! */
             return indx;
         temp_stack[temp_stack_top] = act;
- 
+
         act = t_action(act, ct, lex_stream);
- 
+
         if (act <= NUM_RULES)                   /* reduce action */
             temp_stack_top--;
         else if (act < ACCEPT_ACTION ||          /* shift action */
@@ -766,7 +766,7 @@ int Parser::ParseCheck(int stck[], int stack_top, int first_token, int buffer_po
         else if (act == ACCEPT_ACTION)           /* accept action */
              return MAX_DISTANCE;
         else return indx;                         /* error action */
- 
+
         process_non_terminal:
         do
         {
@@ -777,7 +777,7 @@ int Parser::ParseCheck(int stck[], int stack_top, int first_token, int buffer_po
                                   : stck[temp_stack_top]);
             act = nt_action(act, lhs_symbol);
         } while(act <= NUM_RULES);
- 
+
         max_pos = Min(max_pos, temp_stack_top);
     } // process_terminal;
 

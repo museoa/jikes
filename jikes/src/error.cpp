@@ -230,7 +230,7 @@ void SemanticError::Report(SemanticErrorKind msg_code,
         error.Reset(1); // we need at least 1 error in order for the return code to be set properly. See print_messages
         Coutput.flush();
     }
- 
+
     return;
 }
 
@@ -587,7 +587,7 @@ void SemanticError::SortMessages()
          upper,
          lostack[32],
          histack[32];
- 
+
      int top,
          i,
          j;
@@ -597,13 +597,13 @@ void SemanticError::SortMessages()
      top = 0;
      lostack[top] = 0;
      histack[top] = error.Length() - 1;
- 
+
      while(top >= 0)
      {
          lower = lostack[top];
          upper = histack[top];
          top--;
- 
+
          while(upper > lower)
          {
              //
@@ -613,7 +613,7 @@ void SemanticError::SortMessages()
              i = (lower + upper) / 2;
              pivot = error[i];
              error[i] = error[lower];
- 
+
              //
              // Split the array section indicated by LOWER and UPPER
              // using ARRAY(LOWER) as the pivot.
@@ -699,7 +699,7 @@ int SemanticError::PrintMessages()
                     return return_code;
 
                 Coutput << "\nIssued "
-                        << num_warnings 
+                        << num_warnings
                         << (lex_stream -> file_symbol -> semantic == control.system_semantic ? " system" : " semantic")
                         << " warning" << (num_warnings <= 1 ? "" : "s");
             }
@@ -709,7 +709,7 @@ int SemanticError::PrintMessages()
                         << num_errors
                         << (lex_stream -> file_symbol -> semantic == control.system_semantic ? " system" : " semantic")
                         << " error" << (num_errors <= 1 ? "" : "s");
-                if (num_warnings > 0 && !control.option.nowarn) 
+                if (num_warnings > 0 && !control.option.nowarn)
                 {
                      Coutput << " and issued "
                              << num_warnings << " warning" << (num_warnings <= 1 ? "" : "s");
@@ -815,7 +815,7 @@ void SemanticError::PrintEmacsMessage(int k)
         right_column_no += (error[k].right_string_length - 1); // point to last character in right token
 
     Coutput << lex_stream -> FileName()
-            << ':' << left_line_no  << ':' << left_column_no 
+            << ':' << left_line_no  << ':' << left_column_no
             << ':' << right_line_no << ':' << right_column_no
             << (warning[error[k].msg_code] == 1
                        ? ": Warning: "
@@ -841,7 +841,7 @@ void SemanticError::PrintLargeSource(int k)
         left_column_no  = lex_stream -> Column(error[k].left_token),
         right_line_no   = lex_stream -> Line(error[k].right_token),
         right_column_no = lex_stream -> Column(error[k].right_token);
- 
+
     if (left_line_no == right_line_no)
     {
         if (left_line_no == 0)
@@ -899,10 +899,10 @@ void SemanticError::PrintLargeSource(int k)
         Coutput << ">";
         Coutput.fill(' ');
     }
- 
+
     return;
 }
- 
+
 //
 // This procedure is invoked to print a small message that may
 // only span a single line. The parameter k points to the error
@@ -940,7 +940,7 @@ void SemanticError::PrintSmallSource(int k)
             Coutput.fill(' ');
         }
     }
- 
+
     return;
 }
 
@@ -2492,7 +2492,7 @@ void SemanticError::PrintCONSTRUCTOR_NOT_FOUND(ErrorInfo &err, LexStream *lex_st
             << "\".";
 
     return;
-} 
+}
 
 
 void SemanticError::PrintMETHOD_FOUND_FOR_CONSTRUCTOR(ErrorInfo &err, LexStream *lex_stream, Control &control)
@@ -2504,7 +2504,7 @@ void SemanticError::PrintMETHOD_FOUND_FOR_CONSTRUCTOR(ErrorInfo &err, LexStream 
             << '.';
 
     return;
-} 
+}
 
 
 void SemanticError::PrintINCOMPATIBLE_TYPE_FOR_INITIALIZATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
@@ -4005,7 +4005,7 @@ void SemanticError::PrintINNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(Er
                 << "/";
     }
     Coutput << err.insert4
-            << "\"."; 
+            << "\".";
 
     return;
 }

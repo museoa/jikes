@@ -44,7 +44,7 @@ public:
 
     SystemTable *system_table;
     Tuple<DirectorySymbol *> system_directories;
-                     
+
     Semantic *system_semantic;
     Tuple<Semantic *> semantic;
     Tuple<TypeSymbol *> needs_body_work,
@@ -70,7 +70,7 @@ public:
                        float_table,
                        double_table;
     NameLookupTable name_table;
- 
+
     //
     //
     //

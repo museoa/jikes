@@ -77,7 +77,7 @@ Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
                                                                  Utf8_pool(&bad_value)
 
 #ifdef TEST
-                                                               , line_count(0), 
+                                                               , line_count(0),
                                                                  class_files_read(0),
                                                                  class_files_written(0),
                                                                  input_files_processed(0)
@@ -124,7 +124,7 @@ Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
     }
 
     //
-    // 
+    //
     //
     FileSymbol *main_file_clone;
     if (num_files > 0)
@@ -289,7 +289,7 @@ Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
         }
 
         //
-        // If more messages were added to system_semantic, print them... 
+        // If more messages were added to system_semantic, print them...
         //
         system_semantic -> PrintMessages();
         if (system_semantic -> return_code > 0 || bad_input_filenames.Length() > 0 || unreadable_input_filenames.Length() > 0)
@@ -332,7 +332,7 @@ Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
                 FileSymbol *file_symbol;
 
                 num_files = 0;
-                delete [] input_files; // delete previous copy 
+                delete [] input_files; // delete previous copy
                 input_files = new FileSymbol*[recompilation_file_set.Size()];
                 for (file_symbol = (FileSymbol *) recompilation_file_set.FirstElement();
                      file_symbol;
@@ -558,7 +558,7 @@ Control::~Control()
     {
         Coutput << line_count << " source lines read\n\n"
                 << class_files_read << " \".class\" files read\n"
-                << class_files_written << " \".class\" files written\n" 
+                << class_files_written << " \".class\" files written\n"
                 << input_files_processed << " \".java\" files processed\n";
     }
 #endif
@@ -1094,9 +1094,9 @@ void Control::ProcessMembers()
             cycle_checker.PartialOrder(semantic, start);
             start = semantic.Length(); // next starting point
 
-            // 
+            //
             // Process the extends and implements clauses.
-            // 
+            //
             for (int j = 0; j < partially_ordered_types.Length(); j++)
             {
                 TypeSymbol *type = partially_ordered_types[j];
@@ -1251,7 +1251,7 @@ void Control::ProcessBodies(TypeSymbol *type)
             }
 
             //
-            // If no error was detected while generating code, then 
+            // If no error was detected while generating code, then
             // start cleaning up.
             //
             if (sem -> NumErrors() == 0)

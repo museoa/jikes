@@ -21,19 +21,19 @@ struct PrimaryRepairInfo
         misspell_index,
         symbol;
 };
- 
+
 struct RepairCandidate
 {
     int symbol;
     Location location;
 };
- 
+
 struct StateInfo
 {
     int state,
         next;
 };
- 
+
 
 class ParseError : public javaprs_table
 {
@@ -66,7 +66,7 @@ private:
         unsigned char         msg_code;
         unsigned              scope_name_index;
     };
- 
+
     Tuple<ErrorInfo> errors;
 
     void PrintLargeMessage(int k);
@@ -78,7 +78,7 @@ private:
 
 class DiagnoseParser : public Parser
 {
-public:     
+public:
 
     DiagnoseParser(Control &control_, LexStream *lex_stream_) : error(control_, lex_stream_),
                                                                 next_stack(NULL),
@@ -93,7 +93,7 @@ public:
 
         return;
     }
- 
+
     ~DiagnoseParser()
     {
         delete [] next_stack;
@@ -101,25 +101,25 @@ public:
         delete [] scope_index;
         delete [] scope_position;
     }
- 
+
 private:
 
     int next_stack_top,
         *next_stack,
- 
+
         prev_stack_top,
         *prev_stack,
- 
+
         scope_stack_top,
         *scope_index,
         *scope_position;
- 
+
     int list[NUM_SYMBOLS + 1];
- 
+
     enum { NIL = -1 };
     Tuple<StateInfo> state_pool;
     int *state_seen; // this variable is managed entirely by the function "scope_trial"
- 
+
     ParseError error;
 
     void DiagnoseParse();
@@ -149,7 +149,7 @@ private:
               int last_index,
               SecondaryRepairInfo repair, bool stack_flag);
     void SecondaryDiagnosis(SecondaryRepairInfo repair);
- 
+
     void RepairParse(TokenObject);
 
     PrimaryRepairInfo ScopeTrial(int stack[], int stack_top,

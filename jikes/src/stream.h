@@ -61,7 +61,7 @@ public:
 
 
 //
-// LexStream holds a stream of tokens generated from an input and 
+// LexStream holds a stream of tokens generated from an input and
 // provides methods to retrieve information from the stream.
 //
 class LexStream
@@ -73,7 +73,7 @@ public:
     enum { INFINITY = INT_MAX }; // the largest possible value for TokenIndex
 
     FileSymbol *file_symbol;
- 
+
     inline TokenIndex Next(TokenIndex i)
          { return (++i < token_stream.Length() ? i : token_stream.Length() - 1); }
 

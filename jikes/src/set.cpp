@@ -76,7 +76,7 @@ void SymbolSet::Union(SymbolSet &set)
                 AddElement(symbol);
         }
     }
- 
+
     return;
 }
 
@@ -105,7 +105,7 @@ void SymbolSet::Intersection(SymbolSet &set)
                 AddElement(old_symbol_pool[j]);
         }
     }
- 
+
     return;
 }
 
@@ -124,7 +124,7 @@ bool SymbolSet::Intersects(SymbolSet &set)
             if (IsElement(symbol))
                 return true;
     }
- 
+
     return false;
 }
 

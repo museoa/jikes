@@ -4,10 +4,10 @@
 // NOTE: Jikes incorporates compression code from the Info-ZIP
 // group. There are no extra charges or costs due to the use of
 // this code, and the original compression sources are freely
-// available from http://www.cdrom/com/pub/infozip/ or 
+// available from http://www.cdrom/com/pub/infozip/ or
 // ftp://ftp.cdrom.com/pub/infozip/ on the Internet.
-// The sole use by Jikes of this compression code is contained in the 
-// files unzip.h and unzip.cpp, which are based on Info-ZIP's inflate.c and 
+// The sole use by Jikes of this compression code is contained in the
+// files unzip.h and unzip.cpp, which are based on Info-ZIP's inflate.c and
 // associated header files.
 //
 

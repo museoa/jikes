@@ -15,7 +15,7 @@
 #include "symbol.h"
 
 class ShadowSymbol
-{ 
+{
 public:
     ShadowSymbol *next;
     Symbol *symbol;
@@ -41,7 +41,7 @@ public:
         if ((symbol != conflict_symbol) && (! Find(conflict_symbol)))
             conflict -> Next() = conflict_symbol;
         return;
-    }    
+    }
 
     inline void RemoveConflict(int k)
     {
@@ -63,7 +63,7 @@ private:
             if ((*conflict)[k] == conflict_symbol)
                 return true;
         return false;
-    }    
+    }
 };
 
 
@@ -451,7 +451,7 @@ public:
 
         for (int i = (set_size - 1) / cell_size; i >= 0; i--)
             hash_address += s[i];
- 
+
         return hash_address % table_size;
     }
 

@@ -55,9 +55,9 @@ class Hash
 {
 public:
     //
-    // HASH takes as argument a pointer to a character string    
-    // and its length which it hashes it into a location in the name  
-    // hash table.                                                    
+    // HASH takes as argument a pointer to a character string
+    // and its length which it hashes it into a location in the name
+    // hash table.
     //
     inline static unsigned Function(wchar_t *head, int len)
     {
@@ -104,7 +104,7 @@ public:
 
 
 class DirectoryEntry
-{ 
+{
 public:
     DirectoryEntry *next;
     int length;
@@ -174,7 +174,7 @@ public:
 
 
 class SystemTable
-{ 
+{
     enum
     {
         DEFAULT_HASH_SIZE = 13,
@@ -257,7 +257,7 @@ private:
 
 
 class Symbol
-{ 
+{
 public:
     Symbol  *next;
 
@@ -306,7 +306,7 @@ protected:
 
 
 class LiteralValue
-{ 
+{
 public:
     LiteralValue *next;
     int index;
@@ -316,7 +316,7 @@ public:
 
 
 class IntLiteralValue : public LiteralValue
-{ 
+{
 public:
     int value;
 
@@ -331,7 +331,7 @@ public:
 
 
 class LongLiteralValue : public LiteralValue
-{ 
+{
 public:
     LongInt value;
 
@@ -346,7 +346,7 @@ public:
 
 
 class FloatLiteralValue : public LiteralValue
-{ 
+{
 public:
     IEEEfloat value;
 
@@ -361,7 +361,7 @@ public:
 
 
 class DoubleLiteralValue : public LiteralValue
-{ 
+{
 public:
     IEEEdouble value;
 
@@ -376,7 +376,7 @@ public:
 
 
 class Utf8LiteralValue : public LiteralValue
-{ 
+{
 public:
     char *value;
     int  length;
@@ -409,7 +409,7 @@ private:
 
 
 class NameSymbol : public Symbol
-{ 
+{
 public:
     int index;
     Utf8LiteralValue *Utf8_literal;
@@ -485,7 +485,7 @@ private:
 
 
 class LiteralSymbol : public Symbol
-{ 
+{
 public:
     LiteralValue *value;
 

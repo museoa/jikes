@@ -28,7 +28,7 @@ class OutputBuffer;
 // blocks of size 2**LOG_BLKSIZE. In declaring a tuple the user
 // may specify an estimate of how many elements he expects.
 // Based on that estimate, suitable value will be calsulated log_blksize
-// and base_increment. If these estimates are off, more space will be 
+// and base_increment. If these estimates are off, more space will be
 // allocated.
 //
 template <class T>
@@ -69,7 +69,7 @@ protected:
         //
         //
         int k = size >> log_blksize; /* which segment? */
-    
+
         //
         // If the base is overflowed, reallocate it and initialize the new elements to NULL.
         //
@@ -77,10 +77,10 @@ protected:
         {
             int old_base_size = base_size;
             T **old_base = base;
-    
+
             base_size += base_increment;
             base = new T*[base_size];
-    
+
             if (old_base != NULL)
             {
                 memmove(base, old_base, old_base_size * sizeof(T *));
@@ -88,21 +88,21 @@ protected:
             }
             memset(&base[old_base_size], 0, (base_size - old_base_size) * sizeof(T *));
         }
-    
+
         //
-        // We allocate a new segment and place its adjusted address in 
+        // We allocate a new segment and place its adjusted address in
         // base[k]. The adjustment allows us to index the segment directly,
         // instead of having to perform a subtraction for each reference.
         // See operator[] below.
         //
         base[k] = new T[Blksize()];
         base[k] -= size;
-    
+
         //
         // Finally, we update SIZE.
         //
         size += Blksize();
-    
+
         return;
     }
 
@@ -136,7 +136,7 @@ public:
             // slot is the index of the base element whose block
             // will contain the (n-1)th element.
             int slot = (n <= 0 ? -1 : (n - 1) >> log_blksize);
-    
+
             for (int k = (size >> log_blksize) - 1; k > slot; k--)
             {
                 size -= Blksize();
@@ -144,7 +144,7 @@ public:
                 delete [] base[k];
                 base[k] = NULL;
             }
-    
+
             if (slot < 0)
             {
                 delete [] base;
@@ -152,13 +152,13 @@ public:
                 base_size = 0;
             }
         }
-    
+
         top  = n;
     }
 
     //
     // This function is used to reset the size of a dynamic array without
-    // allocating or deallocting space. It may be invoked with an integer 
+    // allocating or deallocting space. It may be invoked with an integer
     // argument n which indicates the new size or with no argument which
     // indicates that the size should be reset to 0.
     //
@@ -201,7 +201,7 @@ public:
 
     //
     // Add an element to the dynamic array and return a reference to
-    // that new element. 
+    // that new element.
     //
     inline T& Next() { int i = NextIndex(); return base[i >> log_blksize][i]; }
 
@@ -346,7 +346,7 @@ public:
             delete [] (Tuple<T>::base[n] + processed_size);
             delete [] Tuple<T>::base;
             Tuple<T>::base = NULL;
-            Tuple<T>::size = 0; 
+            Tuple<T>::size = 0;
         }
 
         return array;
@@ -392,7 +392,7 @@ public:
     inline void PutB1(u1 u) { buffer.Next() = u; }
 
     inline void PutB2(u2 u)
-    {    
+    {
         buffer.Next() = u >> 8;
         buffer.Next() = u & 0xff;
     }

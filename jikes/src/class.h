@@ -89,7 +89,7 @@ public:
     {
         Coutput << "Class:";  constant_pool[name_index] -> Describe(constant_pool);
     }
-#endif    
+#endif
 };
 
 
@@ -128,7 +128,7 @@ public:
     {
         Coutput << "D:";
     }
-#endif    
+#endif
 };
 
 
@@ -173,7 +173,7 @@ public:
         Coutput << ".";
         constant_pool[name_and_type_index] -> Describe(constant_pool);
     }
-#endif    
+#endif
 };
 
 
@@ -209,7 +209,7 @@ public:
     {
         Coutput << "F:";
     }
-#endif    
+#endif
 };
 
 
@@ -248,7 +248,7 @@ public:
     {
         Coutput << "I:";
     }
-#endif    
+#endif
 };
 
 
@@ -293,7 +293,7 @@ public:
         Coutput << ".";
         constant_pool[name_and_type_index] -> Describe(constant_pool);
     }
-#endif    
+#endif
 };
 
 
@@ -332,7 +332,7 @@ public:
     {
         Coutput << "L:";
     }
-#endif    
+#endif
 };
 
 
@@ -377,7 +377,7 @@ public:
         Coutput << ".";
         constant_pool[name_and_type_index] -> Describe(constant_pool);
     }
-#endif    
+#endif
 };
 
 
@@ -422,7 +422,7 @@ public:
         Coutput << " ";
         constant_pool[descriptor_index] -> Describe(constant_pool);
     }
-#endif    
+#endif
 };
 
 
@@ -518,7 +518,7 @@ public:
             Coutput << (char) bytes[i];
         Coutput << "\"";
     }
-#endif    
+#endif
 };
 
 
@@ -544,7 +544,7 @@ protected:
     //
 
 public:
-    enum 
+    enum
     {
         Generic,
         Code,
@@ -579,7 +579,7 @@ public:
         Coutput.flush();
         assert(false); // abstract method: should not be invoked.
     }
-#endif    
+#endif
 };
 
 
@@ -706,10 +706,10 @@ public:
         output_buffer.PutB2(attribute_name_index);
         output_buffer.PutB4(AttributeLength());
         output_buffer.PutB2(max_stack);
-        output_buffer.PutB2(max_locals); 
+        output_buffer.PutB2(max_locals);
         output_buffer.PutB4(code.Length());
 
-        for (int i = 0; i < code.Length(); i++) 
+        for (int i = 0; i < code.Length(); i++)
             output_buffer.PutB1(code[i]);
         output_buffer.PutB2(exception_table.Length());
 
@@ -727,7 +727,7 @@ public:
 
         return;
     }
-                
+
 #ifdef TEST
     virtual void  Print(Tuple<cp_info *> &constant_pool)
     {
@@ -768,13 +768,13 @@ public:
         for (int i = 0; i < attributes.Length(); i++)
             attributes[i] -> Print(constant_pool);
     }
-#endif    
+#endif
 };
 
 
 class ConstantValue_attribute : public attribute_info
 {
-    //    
+    //
     //    u2 attribute_name_index;
     //
     // The field attribute_name_index is inherited from attribute_info
@@ -802,7 +802,7 @@ public:
         output_buffer.PutB4(AttributeLength());
         output_buffer.PutB2(constantvalue_index);
     }
-                
+
 #ifdef TEST
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
@@ -814,7 +814,7 @@ public:
                 << (unsigned) constantvalue_index
                 << "\n";
     }
-#endif    
+#endif
 };
 
 
@@ -879,7 +879,7 @@ public:
                     << (unsigned) exception_index_table[i];
         Coutput << "\n";
     }
-#endif    
+#endif
 };
 
 
@@ -975,7 +975,7 @@ public:
                     << "\n";
         }
     }
-#endif    
+#endif
 };
 
 
@@ -1064,7 +1064,7 @@ public:
                     << "\n";
         }
     }
-#endif    
+#endif
 };
 
 
@@ -1139,7 +1139,7 @@ public:
             output_buffer.PutB2(local_variable_table[i].index);
         }
     }
-                
+
 #ifdef TEST
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
@@ -1169,7 +1169,7 @@ public:
                     << "\n";
         }
     }
-#endif    
+#endif
 };
 
 
@@ -1201,7 +1201,7 @@ public:
         output_buffer.PutB4(AttributeLength());
         output_buffer.PutB2(sourcefile_index);
     }
-                
+
 #ifdef TEST
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
@@ -1213,7 +1213,7 @@ public:
                 << (unsigned) sourcefile_index
                 << "\n";
     }
-#endif    
+#endif
 };
 
 
@@ -1242,7 +1242,7 @@ public:
         output_buffer.PutB2(attribute_name_index);
         output_buffer.PutB4(AttributeLength());
     }
-                
+
 #ifdef TEST
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
@@ -1252,7 +1252,7 @@ public:
                 << AttributeLength()
                 << "\n";
     }
-#endif    
+#endif
 };
 
 
@@ -1281,7 +1281,7 @@ public:
         output_buffer.PutB2(attribute_name_index);
         output_buffer.PutB4(AttributeLength());
     }
-                
+
 #ifdef TEST
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
@@ -1291,7 +1291,7 @@ public:
                 << AttributeLength()
                 << "\n";
     }
-#endif    
+#endif
 };
 
 
@@ -1350,7 +1350,7 @@ public:
             attributes[i] -> Print(constant_pool);
         Coutput << "\n";
     }
-#endif    
+#endif
 };
 
 
@@ -1409,7 +1409,7 @@ public:
             attributes[i] -> Print(constant_pool);
         Coutput << "\n";
     }
-#endif    
+#endif
 };
 
 

@@ -109,7 +109,7 @@ ZipFile::ZipFile(FileSymbol *file_symbol) : buffer(NULL)
 #elif defined(WIN32_FILE_SYSTEM)
     file_buffer = &zip -> zipbuffer[file_symbol -> offset];
 #endif
-    
+
     Skip(8); // u4 magic                     = GetU4();
              // u2 version_needed_to_extract = GetU2();
              // u2 general_purpose_bits      = GetU2();
@@ -122,7 +122,7 @@ ZipFile::ZipFile(FileSymbol *file_symbol) : buffer(NULL)
     u2 filename_length                       = GetU2();
     u2 extra_field_length                    = GetU2();
     Skip(filename_length + extra_field_length);
-     
+
 #ifdef UNIX_FILE_SYSTEM
     this -> buffer = new char[file_symbol -> uncompressed_size];
     if (! uncompress_file[compression_method < 9 ? compression_method : 9](zipfile, this -> buffer, file_symbol -> uncompressed_size))

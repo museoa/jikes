@@ -540,7 +540,7 @@ void LexStream::SortMessages()
          upper,
          lostack[32],
          histack[32];
- 
+
      int top,
          i,
          j;
@@ -550,13 +550,13 @@ void LexStream::SortMessages()
      top = 0;
      lostack[top] = 0;
      histack[top] = bad_tokens.Length() - 1;
- 
+
      while(top >= 0)
      {
          lower = lostack[top];
          upper = histack[top];
          top--;
- 
+
          while(upper > lower)
          {
              //
@@ -566,7 +566,7 @@ void LexStream::SortMessages()
              i = (lower + upper) / 2;
              pivot = bad_tokens[i];
              bad_tokens[i] = bad_tokens[lower];
- 
+
              //
              // Split the array section indicated by LOWER and UPPER
              // using ARRAY(LOWER) as the pivot.
@@ -640,7 +640,7 @@ void LexStream::PrintMessages()
             }
             else
             {
-                for (int i = 0; i < bad_tokens.Length(); i++) 
+                for (int i = 0; i < bad_tokens.Length(); i++)
                 {
                     if (FindLine(bad_tokens[i].start_location) == FindLine(bad_tokens[i].end_location))
                          PrintSmallSource(i);
@@ -654,7 +654,7 @@ void LexStream::PrintMessages()
         }
         else
         {
-            for (int i = 0; i < bad_tokens.Length(); i++) 
+            for (int i = 0; i < bad_tokens.Length(); i++)
                 PrintEmacsMessage(i);
         }
 
@@ -726,7 +726,7 @@ void LexStream::PrintSmallSource(int k)
         Coutput << ">";
         Coutput.fill(' ');
     }
- 
+
     return;
 }
 
@@ -743,7 +743,7 @@ void LexStream::PrintLargeSource(int k)
         left_column_no  = FindColumn(bad_tokens[k].start_location),
         right_line_no   = FindLine(bad_tokens[k].end_location),
         right_column_no = FindColumn(bad_tokens[k].end_location);
- 
+
     if (left_line_no == right_line_no)
     {
         if (left_line_no == 0)
@@ -815,10 +815,10 @@ void LexStream::PrintLargeSource(int k)
         Coutput << ">";
         Coutput.fill(' ');
     }
- 
+
     return;
 }
- 
+
 
 void LexStream::PrintMessage(StreamError::StreamErrorKind kind)
 {

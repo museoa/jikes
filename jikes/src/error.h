@@ -353,7 +353,7 @@ private:
         short    msg_code;
         short    right_string_length;
     };
- 
+
     Tuple<wchar_t *> buffer;
     Tuple<ErrorInfo> error;
 

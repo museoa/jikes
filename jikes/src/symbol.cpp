@@ -355,7 +355,7 @@ void TypeSymbol::SetSignature(Control &control)
         wcscat(type_signature, type_name);
         this -> fully_qualified_name = control.ConvertUnicodeToUtf8(type_signature + 1); // +1 to skip the initial L'L'
 
-        wcscat(type_signature, StringConstant::US__SC); 
+        wcscat(type_signature, StringConstant::US__SC);
         this -> signature = control.ConvertUnicodeToUtf8(type_signature);
 
         delete [] type_signature;
@@ -771,7 +771,7 @@ void DirectorySymbol::ReadDirectory()
 
                 //
                 // Check if the file is a java source, a java class file or a subdirectory.
-                // Since packages cannot start with '.', we skip all files that start with 
+                // Since packages cannot start with '.', we skip all files that start with
                 // a dot. That includes this directory "." and its parent ".."
                 //
                 if ((length > FileSymbol::java_suffix_length &&
@@ -802,7 +802,7 @@ void DirectorySymbol::ReadDirectory()
 
                 //
                 // Check if the file is a java source, a java class file or a subdirectory.
-                // Since packages cannot start with '.', we skip all files that start with 
+                // Since packages cannot start with '.', we skip all files that start with
                 // a dot. That includes this directory "." and its parent ".."
                 //
                 bool is_java  = (length > FileSymbol::java_suffix_length &&
@@ -1022,7 +1022,7 @@ void MethodSymbol::SetSignature(Control &control, VariableSymbol *this0_variable
         TypeSymbol *formal_type = this -> FormalParameter(i) -> Type();
         len += strlen(formal_type -> SignatureString());
     }
-        
+
     char *method_signature = new char[len + 1]; // +1 for '\0'
     method_signature[0] = U_LEFT_PARENTHESIS;
     int k = 1;
@@ -1241,7 +1241,7 @@ bool TypeSymbol::CanAccess(TypeSymbol *type)
 bool TypeSymbol::HasProtectedAccessTo(TypeSymbol *target_type)
 {
     assert(semantic_environment);
-    
+
     for (SemanticEnvironment *env = this -> semantic_environment; env != NULL; env = env -> previous)
     {
         TypeSymbol *main_type = env -> Type();
@@ -1418,7 +1418,7 @@ VariableSymbol *TypeSymbol::FindOrInsertClassLiteral(TypeSymbol *type)
 
     Semantic *sem = semantic_environment -> sem;
     Control &control = sem -> control;
- 
+
     (void) this -> FindOrInsertClassLiteralMethod(control);
 
     (void) type -> FindOrInsertClassLiteralName(control);
@@ -1490,7 +1490,7 @@ VariableSymbol *TypeSymbol::FindOrInsertLocalShadow(VariableSymbol *local)
     //
     // Note that since this function is always invoked after the symbol
     // table for the type in question has been extended, the local shadow will
-    // not appear in the expanded_field_table. Creating a shadow in the 
+    // not appear in the expanded_field_table. Creating a shadow in the
     // expanded_field_table as well would cut down on the number of calls to
     // this function. However, the reason why we don't create such a shadow is
     // that since the new symbol is assigned a new name on the fly, its

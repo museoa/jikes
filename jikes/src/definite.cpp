@@ -18,7 +18,7 @@ DefiniteAssignmentSet *Semantic::DefiniteExpression(AstExpression *expr, BitSet 
 
     //
     // Is the expression a constant expression of type boolean?
-    // Recall that a constant expression may not contain an 
+    // Recall that a constant expression may not contain an
     // assignment statement.
     //
     if (expr -> IsConstant() && expr -> Type() == control.boolean_type)
@@ -30,7 +30,7 @@ DefiniteAssignmentSet *Semantic::DefiniteExpression(AstExpression *expr, BitSet 
             definite -> true_set  = set;
             definite -> false_set = *universe;
         }
-        else 
+        else
         {
             definite -> true_set  = *universe;
             definite -> false_set = set;
@@ -194,7 +194,7 @@ inline VariableSymbol *Semantic::DefiniteFinal(AstFieldAccess *field_access)
         {
             if (variable -> ACC_STATIC()) // there is exactly one copy of a static variable, so, it's always the right one.
                 return variable;
-        
+
             AstFieldAccess *sub_field_access = field_access -> base -> FieldAccessCast();
             if (field_access -> base -> ThisExpressionCast() || (sub_field_access && sub_field_access -> IsThisAccess()))
                 return variable;
@@ -300,7 +300,7 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentAND(TypeSymbol *type,
                                                        DefiniteAssignmentSet *after_left,
                                                        DefiniteAssignmentSet *after_right)
 {
-    if (after_left || after_right) // one of the subexpressions is a complex boolean expression 
+    if (after_left || after_right) // one of the subexpressions is a complex boolean expression
     {
         if (! after_left)
         {
@@ -331,12 +331,12 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentAND(TypeSymbol *type,
 
 
 DefiniteAssignmentSet *Semantic::DefiniteAssignmentIOR(TypeSymbol *type,
-                                                       BitSet *before_right, 
+                                                       BitSet *before_right,
                                                        BitSet &set,
                                                        DefiniteAssignmentSet *after_left,
                                                        DefiniteAssignmentSet *after_right)
 {
-    if (after_left || after_right) // one of the subexpressions is a complex boolean expression 
+    if (after_left || after_right) // one of the subexpressions is a complex boolean expression
     {
         if (! after_left)
         {
@@ -374,7 +374,7 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentXOR(TypeSymbol *type,
 {
     DefiniteAssignmentSet *definite = NULL;
 
-    if (after_left || after_right) // one of the subexpressions is a complex boolean expression 
+    if (after_left || after_right) // one of the subexpressions is a complex boolean expression
     {
         definite = new DefiniteAssignmentSet(universe -> Size());
 
@@ -396,7 +396,7 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentXOR(TypeSymbol *type,
         // compute definitely assigned after right.
         //
         definite -> true_set = definite -> false_set = (after_right -> true_set * after_right -> false_set);
-        
+
         //
         // compute definitely assigned after left when true and after right when true
         // compute definitely assigned after left when false and after right when false
@@ -560,7 +560,7 @@ DefiniteAssignmentSet *Semantic::DefiniteEQUAL_EQUAL(AstBinaryExpression *expr, 
 
     DefiniteAssignmentSet *definite = NULL;
 
-    if (after_left || after_right) // one of the subexpressions is a complex boolean expression 
+    if (after_left || after_right) // one of the subexpressions is a complex boolean expression
     {
         definite = new DefiniteAssignmentSet(universe -> Size());
 
@@ -813,7 +813,7 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentExpression(AstExpression *exp
     // The left-hand-side of an assignment expression is either a simple name,
     // a field access or an array access.
     //
-    if (! simple_name) 
+    if (! simple_name)
     {
         AstFieldAccess *field_access = left_hand_side -> FieldAccessCast();
         after_left = DefiniteExpression((field_access ? field_access -> base : left_hand_side), set);
@@ -828,7 +828,7 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentExpression(AstExpression *exp
     if (left_hand_side -> Type() == control.boolean_type)
     {
         DefiniteAssignmentSet *definite = NULL;
-    
+
         if (assignment_expression -> assignment_tag == AstAssignmentExpression::AND_EQUAL)
              definite = DefiniteAssignmentAND(control.boolean_type, before_right, set, after_left, after_right);
         else if (assignment_expression -> assignment_tag == AstAssignmentExpression::XOR_EQUAL)
@@ -1080,7 +1080,7 @@ void Semantic::DefiniteIfStatement(Ast *stmt)
                                                                      ? (IntLiteralValue *) if_statement -> expression -> value
                                                                      : (IntLiteralValue *) NULL);
     //
-    // If either the expression is not constant or its value is true, then 
+    // If either the expression is not constant or its value is true, then
     // check the statement that make up the true part of the if statement
     //
     if ((! if_constant_expr) || if_constant_expr -> value)
@@ -1266,7 +1266,7 @@ void Semantic::DefiniteForStatement(Ast *stmt)
 
     //
     // Compute the set of variables that belongs to both sets below:
-    // 
+    //
     //    . the universe if no condition expression is present;
     //      otherwise, the set of variables that is definitely assigned when
     //      the condition expression is false.
@@ -1393,7 +1393,7 @@ void Semantic::DefiniteBreakStatement(Ast *stmt)
     definite_block_stack -> FinalBreakSet(break_statement -> nesting_level) += (*possibly_assigned_finals);
 
     //
-    // After execution of a break statement, it is vacuously true 
+    // After execution of a break statement, it is vacuously true
     // that every variable has definitely been assigned and no final
     // variable has been possibly assigned (as nothing is reachable
     // any way).
@@ -1416,7 +1416,7 @@ void Semantic::DefiniteContinueStatement(Ast *stmt)
     definite_block_stack -> FinalContinueSet(continue_statement -> nesting_level) += (*possibly_assigned_finals);
 
     //
-    // After execution of a continue statement, it is vacuously true 
+    // After execution of a continue statement, it is vacuously true
     // that every variable has definitely been assigned and no final
     // variable has been possibly assigned (as nothing is reachable
     // any way).
@@ -1494,7 +1494,7 @@ void Semantic::DefiniteReturnStatement(Ast *stmt)
     }
 
     //
-    // After execution of a return statement, it is vacuously true 
+    // After execution of a return statement, it is vacuously true
     // that every variable has definitely been assigned and no final
     // variable has been possibly assigned (as nothing is reachable
     // any way).
@@ -1530,7 +1530,7 @@ void Semantic::DefiniteThrowStatement(Ast *stmt)
     //
     // We have a few cases to consider:
     //
-    //    1. The throw statement is not contained in a try statement - the possibly-assigned 
+    //    1. The throw statement is not contained in a try statement - the possibly-assigned
     //       set is only relevant to the enclosing method (or constructor) block. If the
     //       containing function in question is a method (i.e., not a constructor) then the
     //       definitely assigned set is updated as if the throw statement was a break statement
@@ -1593,7 +1593,7 @@ void Semantic::DefiniteThrowStatement(Ast *stmt)
     }
 
     //
-    // After execution of a throw statement, it is vacuously true 
+    // After execution of a throw statement, it is vacuously true
     // that every variable has definitely been assigned and no final
     // variable has been possibly assigned (as nothing is reachable
     // any way).

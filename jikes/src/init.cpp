@@ -30,7 +30,7 @@ void Semantic::ProcessVariableInitializer(AstVariableDeclarator *variable_declar
             exception_set -> AddElement(control.RuntimeException());
             exception_set -> AddElement(control.Error());
         }
-        
+
         ProcessArrayInitializer(array_initializer, symbol -> Type());
     }
     else

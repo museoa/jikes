@@ -66,7 +66,7 @@ public:
     // Compare two character strings segments of length n in the strings
     // s1 and s2 to check whether or not they are equal. Note that unlike
     // the builtin function "strncmp" the comparison always checks n characters
-    // and does not terminate if it encounters a NULL character. 
+    // and does not terminate if it encounters a NULL character.
     //
     static inline bool StringSegmentEqual(char *s1, const char *s2, int n)
     {

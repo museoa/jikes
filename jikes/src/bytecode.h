@@ -163,7 +163,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     bool IsNull(AstExpression *p)
     {
         return (p -> CastExpressionCast() ? (p -> CastExpressionCast() -> expression -> Type() == this_control.null_type) : false);
-    }   
+    }
 
 
     //
@@ -230,7 +230,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         // a field access or a name. In the case of a FieldAccess
         // or name, the left-hand side is resolved into a variable.
         // In the case of an array access, it is resolved into a type.
-        // 
+        //
         VariableSymbol *var = (sym ? sym -> VariableCast() : (VariableSymbol *) NULL);
         return ((! lhs) ? LHS_METHOD
                         : (! var) ? LHS_ARRAY
@@ -569,13 +569,13 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         return new Deprecated_attribute(RegisterUtf8(this_control.Deprecated_literal));
     }
-    
+
 
     Synthetic_attribute *CreateSyntheticAttribute()
     {
         return new Synthetic_attribute(RegisterUtf8(this_control.Synthetic_literal));
     }
-    
+
 
     //
     // Methods to generate expressions.
@@ -662,7 +662,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     }
 
 
-    int EmitArrayAccessRhs(AstArrayAccess *expression) 
+    int EmitArrayAccessRhs(AstArrayAccess *expression)
     {
         EmitArrayAccessLhs(expression); // get array address and index
         return LoadArrayElement(expression -> Type());
@@ -752,7 +752,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
 
 
     //
-    // emit NOP. The NOP can be replaced by the next instruction if 
+    // emit NOP. The NOP can be replaced by the next instruction if
     // optional is set; otherwise it must be kept.
     //
     void PutNop(int optional)

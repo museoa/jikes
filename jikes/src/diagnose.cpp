@@ -15,23 +15,23 @@
 #include "semantic.h"
 #include "case.h"
 #include "spell.h"
- 
+
 void DiagnoseParser::ReallocateStacks()
 {
     int old_stack_length = stack_length;
- 
+
     stack_length += STACK_INCREMENT;
 
     assert(stack_length <= SHRT_MAX);
 
-    int *old_stack = stack; 
+    int *old_stack = stack;
     stack = (int *) memmove(new int[stack_length], stack, old_stack_length * sizeof(int));
     delete [] old_stack;
 
-    Location *old_location_stack = location_stack; 
+    Location *old_location_stack = location_stack;
     location_stack = (Location *) memmove(new Location[stack_length], location_stack, old_stack_length * sizeof(Location));
     delete [] old_location_stack;
- 
+
     Ast **old_parse_stack = parse_stack;
     parse_stack = (Ast **) memmove(new Ast *[stack_length], parse_stack, old_stack_length * sizeof(Ast *));
     delete [] old_parse_stack;
@@ -43,22 +43,22 @@ void DiagnoseParser::ReallocateStacks()
     int *old_next_stack = next_stack;
     next_stack = (int *) memmove(new int[stack_length], next_stack, old_stack_length * sizeof(int));
     delete [] old_next_stack;
- 
+
     int *old_prev_stack = prev_stack;
     prev_stack = (int *) memmove(new int[stack_length], prev_stack, old_stack_length * sizeof(int));
     delete [] old_prev_stack;
- 
+
     int *old_scope_index = scope_index;
     scope_index = (int *) memmove(new int[stack_length], scope_index, old_stack_length * sizeof(int));
     delete [] old_scope_index;
- 
+
     int *old_scope_position = scope_position;
     scope_position = (int *) memmove(new int[stack_length], scope_position, old_stack_length * sizeof(int));
     delete [] old_scope_position;
- 
+
     return;
 }
- 
+
 
 void DiagnoseParser::DiagnoseParse()
 {
@@ -82,13 +82,13 @@ void DiagnoseParser::DiagnoseParse()
 /*****************************************************************/
     state_stack_top = 0;
     stack[state_stack_top] = act;
- 
+
     tok = lex_stream -> Kind(curtok);
     location_stack[state_stack_top] = Loc(curtok);
- 
+
     //
     // Process a terminal
-    // 
+    //
     do
     {
         /*************************************************************/
@@ -96,15 +96,15 @@ void DiagnoseParser::DiagnoseParse()
         /*************************************************************/
         prev_pos = -1;
         prev_stack_top = -1;
- 
+
         next_pos = -1;
         next_stack_top = -1;
- 
+
         pos = state_stack_top;
         temp_stack_top = state_stack_top - 1;
         for (i = 0; i <= state_stack_top; i++)
             temp_stack[i] = stack[i];
- 
+
         act = t_action(act, tok, lex_stream);
 /*****************************************************************/
 /* When a reduce action is encountered, we compute all REDUCE    */
@@ -134,7 +134,7 @@ void DiagnoseParser::DiagnoseParse()
             temp_stack[temp_stack_top + 1] = act;
             act = t_action(act, tok, lex_stream);
         }
- 
+
 /*****************************************************************/
 /* At this point, we have a shift, shift-reduce, accept or error */
 /* action.  STACK contains the configuration of the state stack  */
@@ -150,10 +150,10 @@ void DiagnoseParser::DiagnoseParse()
             next_stack_top = temp_stack_top + 1;
             for (i = next_pos + 1; i <= next_stack_top; i++)
                 next_stack[i] = temp_stack[i];
- 
+
             for (i = pos + 1; i <= next_stack_top; i++)
                 location_stack[i] = location_stack[state_stack_top];
- 
+
             /*****************************************************/
             /* If we have a shift-reduce, process it as well as  */
             /* the goto-reduce actions that follow it.           */
@@ -172,14 +172,14 @@ void DiagnoseParser::DiagnoseParse()
                 } while(act <= NUM_RULES);
                 pos = Min(pos, next_stack_top);
             }
- 
+
             if (next_stack_top + 1 >= stack_length)
                 ReallocateStacks();
- 
+
             temp_stack_top = next_stack_top;
             next_stack[++next_stack_top] = act;
             next_pos = next_stack_top;
- 
+
             /********************************************************/
             /* Simulate the parser through the next token without   */
             /* destroying STACK or next_stack.                      */
@@ -206,7 +206,7 @@ void DiagnoseParser::DiagnoseParse()
                                : next_stack[temp_stack_top]);
                     act = nt_action(act, lhs_symbol);
                 }   while(act <= NUM_RULES);
- 
+
                 /*************************************************/
                 /* ... Update the maximum useful position of the */
                 /* (STATE_)STACK, push GOTO state into stack, and*/
@@ -214,12 +214,12 @@ void DiagnoseParser::DiagnoseParse()
                 /*************************************************/
                 if (temp_stack_top + 1 >= stack_length)
                     ReallocateStacks();
- 
+
                 next_pos = Min(next_pos, temp_stack_top);
                 temp_stack[temp_stack_top + 1] = act;
                 act = t_action(act, tok, lex_stream);
             }
- 
+
             /*****************************************************/
             /* No error was detected, Read next token into       */
             /* PREVTOK element, advance CURTOK pointer and       */
@@ -231,7 +231,7 @@ void DiagnoseParser::DiagnoseParse()
                 for (i = prev_pos + 1; i <= prev_stack_top; i++)
                     prev_stack[i] = stack[i];
                 prev_pos = pos;
- 
+
                 state_stack_top = next_stack_top;
                 for (i = pos + 1; i <= state_stack_top; i++)
                     stack[i] = next_stack[i];
@@ -239,7 +239,7 @@ void DiagnoseParser::DiagnoseParse()
                 pos = next_pos;
             }
         }
- 
+
         /*********************************************************/
         /* At this stage, either we have an ACCEPT or an ERROR   */
         /* action.                                               */
@@ -251,9 +251,9 @@ void DiagnoseParser::DiagnoseParse()
             //
 
             RepairCandidate candidate = ErrorRecovery(curtok);
- 
+
             act = stack[state_stack_top];
- 
+
 /*****************************************************************/
 /* If the recovery was successful on a nonterminal candidate,    */
 /* parse through that candidate and "read" the next token.       */
@@ -281,13 +281,13 @@ void DiagnoseParser::DiagnoseParse()
             }
         }
     } while (act != ACCEPT_ACTION);
- 
+
     error.PrintMessages();
 
     return;
 }
- 
- 
+
+
 /*****************************************************************/
 /*  This routine is invoked when an error is encountered.  It    */
 /* tries to diagnose the error and recover from it.  If it is    */
@@ -318,11 +318,11 @@ RepairCandidate DiagnoseParser::ErrorRecovery(TokenObject error_token)
     candidate = PrimaryPhase(error_token);
     if (candidate.symbol)
         return candidate;
- 
+
     candidate = SecondaryPhase(error_token);
     if (candidate.symbol)
         return candidate;
- 
+
     if (lex_stream -> Kind(error_token) == EOFT_SYMBOL)
     {
         error.Report(0, EOF_CODE, terminal_index[EOFT_SYMBOL],
@@ -331,7 +331,7 @@ RepairCandidate DiagnoseParser::ErrorRecovery(TokenObject error_token)
         candidate.location = Loc(error_token);
         return candidate;
     }
- 
+
 /*****************************************************************/
 /* At this point, primary and (initial attempt at) secondary     */
 /* recovery did not work.  We will now get into "panic mode" and */
@@ -345,7 +345,7 @@ RepairCandidate DiagnoseParser::ErrorRecovery(TokenObject error_token)
         if (candidate.symbol)
             return candidate;
     }
- 
+
 /*****************************************************************/
 /* We reached the end of the file while panicking. Delete all    */
 /* remaining tokens in the input.                                */
@@ -353,17 +353,17 @@ RepairCandidate DiagnoseParser::ErrorRecovery(TokenObject error_token)
     int i;
     for (i = BUFF_UBOUND; lex_stream -> Kind(buffer[i]) == EOFT_SYMBOL; i--)
         ;
- 
+
     error.Report(0, DELETION_CODE, terminal_index[lex_stream -> Kind(prevtok)],
                                    Loc(error_token), buffer[i]);
- 
+
     candidate.symbol = 0;
     candidate.location = Loc(buffer[i]);
- 
+
     return candidate;
 }
- 
- 
+
+
 /*****************************************************************/
 /* This function tries primary and scope recovery on each        */
 /* available configuration.  If a successful recovery is found   */
@@ -375,28 +375,28 @@ RepairCandidate DiagnoseParser::PrimaryPhase(TokenObject error_token)
 {
     PrimaryRepairInfo repair,
                       new_repair;
- 
+
     RepairCandidate candidate;
- 
+
     repair.distance = 0;
     repair.misspell_index = 0;
     repair.code = 0;
- 
+
     candidate.symbol = 0;
- 
+
 /*****************************************************************/
 /* Initialize the buffer.                                        */
 /*****************************************************************/
     int i = (next_stack_top >= 0 ? 3 : 2);
     buffer[i] = error_token;
- 
+
     int k;
     for (k = i; k > 0; k--)
         buffer[k - 1] = lex_stream -> Previous(buffer[k]);
- 
+
     for (k = i + 1; k < BUFF_SIZE; k++)
         buffer[k] = lex_stream -> Next(buffer[k - 1]);
- 
+
 /*****************************************************************/
 /* If NEXT_STACK_TOP > 0 then the parse was successful on CURTOK */
 /* and the error was detected on the successor of CURTOK. In     */
@@ -408,18 +408,18 @@ RepairCandidate DiagnoseParser::PrimaryPhase(TokenObject error_token)
         repair.buffer_position = 3;
         repair = CheckPrimaryDistance(next_stack, next_stack_top, repair);
     }
- 
+
 /*****************************************************************/
 /* ... Next, try primary recovery on the current token...        */
 /*****************************************************************/
     new_repair = repair;
- 
+
     new_repair.buffer_position = 2;
     new_repair = CheckPrimaryDistance(stack, state_stack_top, new_repair);
     if (new_repair.distance > repair.distance ||
         new_repair.misspell_index > repair.misspell_index)
         repair = new_repair;
- 
+
 /*****************************************************************/
 /* Finally, if prev_stack_top >= 0 then try primary recovery on  */
 /* the prev_stack configuration.                                 */
@@ -434,7 +434,7 @@ RepairCandidate DiagnoseParser::PrimaryPhase(TokenObject error_token)
             new_repair.misspell_index > repair.misspell_index)
             repair = new_repair;
     }
- 
+
 /*****************************************************************/
 /* Before accepting the best primary phase recovery obtained,    */
 /* ensure that we cannot do better with a similar secondary      */
@@ -447,7 +447,7 @@ RepairCandidate DiagnoseParser::PrimaryPhase(TokenObject error_token)
     }
     else if (SecondaryCheck(stack, state_stack_top, 2, repair.distance))
              return candidate;
- 
+
 /*****************************************************************/
 /* First, adjust distance if the recovery is on the error token; */
 /* it is important that the adjustment be made here and not at   */
@@ -456,7 +456,7 @@ RepairCandidate DiagnoseParser::PrimaryPhase(TokenObject error_token)
 /* more input tokens...                                          */
 /*****************************************************************/
     repair.distance = repair.distance - repair.buffer_position + 1;
- 
+
 /*****************************************************************/
 /* ...Next, adjust the distance if the recovery is a deletion or */
 /* (some form of) substitution...                                */
@@ -466,7 +466,7 @@ RepairCandidate DiagnoseParser::PrimaryPhase(TokenObject error_token)
         repair.code == SUBSTITUTION_CODE ||
         repair.code == MERGE_CODE)
          repair.distance--;
- 
+
 /*****************************************************************/
 /* ... After adjustment, check if the most successful primary    */
 /* recovery can be applied.  If not, continue with more radical  */
@@ -474,7 +474,7 @@ RepairCandidate DiagnoseParser::PrimaryPhase(TokenObject error_token)
 /*****************************************************************/
     if (repair.distance < MIN_DISTANCE)
         return candidate;
- 
+
 /*****************************************************************/
 /* When processing an insertion error, if the token preceeding   */
 /* the error token is not available, we change the repair code   */
@@ -487,7 +487,7 @@ RepairCandidate DiagnoseParser::PrimaryPhase(TokenObject error_token)
         if (! lex_stream -> Kind(buffer[repair.buffer_position - 1]))
             repair.code = BEFORE_CODE;
     }
- 
+
 /*****************************************************************/
 /* Select the proper sequence of states on which to recover,     */
 /* update stack accordingly and call diagnostic routine.         */
@@ -505,11 +505,11 @@ RepairCandidate DiagnoseParser::PrimaryPhase(TokenObject error_token)
             stack[i] = next_stack[i];
         location_stack[state_stack_top] = Loc(buffer[3]);
     }
- 
+
     return PrimaryDiagnosis(repair);
 }
- 
- 
+
+
 /*****************************************************************/
 /*     This function checks whether or not a given state has a   */
 /* candidate, whose string representaion is a merging of the two */
@@ -524,7 +524,7 @@ bool DiagnoseParser::MergeCandidate(int state, int buffer_position)
         len,
         len1,
         len2;
- 
+
     const wchar_t *p1,
                   *p2;
 
@@ -537,28 +537,28 @@ bool DiagnoseParser::MergeCandidate(int state, int buffer_position)
     for (p2 = lex_stream -> NameString(buffer[buffer_position + 1]); *p2; p2++)
         len2++;
     len  = len1 + len2;
- 
+
     p1 = lex_stream -> NameString(buffer[buffer_position]);
     p2 = lex_stream -> NameString(buffer[buffer_position + 1]);
 
     if (len <= MAX_TERM_LENGTH)
     {
         wchar_t *p0;
- 
+
         p0 = &str[0];
         for (i = 0; i < len1; i++)
             *(p0++) = p1[i];
         for (i = 0; i < len2; i++)
             *(p0++) = p2[i];
         *p0 = U_NULL;
- 
+
         for (i = asi(state); asr[i] != 0; i++)
         {
             k = terminal_index[asr[i]];
             if (len == name_length[k])
             {
                 const char *p3 = &string_buffer[name_start[k]];
- 
+
                 p0 = &str[0];
                 while (*p0 != U_NULL)
                 {
@@ -566,7 +566,7 @@ bool DiagnoseParser::MergeCandidate(int state, int buffer_position)
 #ifdef EBCDIC
                     c = Code::ToASCII(c);
 #endif
- 
+
                     if (Case::ToAsciiLower(*p0) != Case::ToAsciiLower(c))
                         break;
                     p0++;
@@ -576,11 +576,11 @@ bool DiagnoseParser::MergeCandidate(int state, int buffer_position)
             }
         }
     }
- 
+
     return 0;
 }
- 
- 
+
+
 /*****************************************************************/
 /* This procedure takes as arguments a parsing configuration     */
 /* consisting of a state stack (stack and stack_top) and a fixed */
@@ -611,7 +611,7 @@ PrimaryRepairInfo DiagnoseParser::CheckPrimaryDistance
         root,
         symbol,
         tok;
- 
+
 /*****************************************************************/
 /*  First, try scope and manual recovery.                        */
 /*****************************************************************/
@@ -620,7 +620,7 @@ PrimaryRepairInfo DiagnoseParser::CheckPrimaryDistance
     if (scope_repair.distance > repair.distance)
         repair = scope_repair;
 #endif
- 
+
 /*****************************************************************/
 /*  Next, try merging the error token with its successor.        */
 /*****************************************************************/
@@ -638,7 +638,7 @@ PrimaryRepairInfo DiagnoseParser::CheckPrimaryDistance
             repair.code = MERGE_CODE;
         }
     }
- 
+
 /*****************************************************************/
 /* Next, try deletion of the error token.                        */
 /*****************************************************************/
@@ -655,7 +655,7 @@ PrimaryRepairInfo DiagnoseParser::CheckPrimaryDistance
         repair.code = DELETION_CODE;
         repair.distance = j;
     }
- 
+
 /*****************************************************************/
 /* Update the error configuration by simulating all reduce and   */
 /* goto actions induced by the error token. Then assign the top  */
@@ -664,7 +664,7 @@ PrimaryRepairInfo DiagnoseParser::CheckPrimaryDistance
     next_state = stck[stack_top];
     max_pos = stack_top;
     temp_stack_top = stack_top - 1;
- 
+
     tok = lex_stream -> Kind(buffer[repair.buffer_position]);
     lex_stream -> Reset(buffer[repair.buffer_position + 1]);
     act = t_action(next_state, tok, lex_stream);
@@ -684,7 +684,7 @@ PrimaryRepairInfo DiagnoseParser::CheckPrimaryDistance
         next_state = act;
         act = t_action(next_state, tok, lex_stream);
     }
- 
+
 /*****************************************************************/
 /*  Next, place the list of candidates in proper order.          */
 /*****************************************************************/
@@ -704,7 +704,7 @@ PrimaryRepairInfo DiagnoseParser::CheckPrimaryDistance
             root = symbol;
         }
     }
- 
+
     if (stck[stack_top] != next_state)
     {
         for (i = asi(stck[stack_top]); asr[i] != 0; i++)
@@ -724,11 +724,11 @@ PrimaryRepairInfo DiagnoseParser::CheckPrimaryDistance
             }
         }
     }
- 
+
     i = list[root];
     list[root] = 0;
     root = i;
- 
+
 /*****************************************************************/
 /*  Next, try insertion for each possible candidate available in */
 /* the current state, except EOFT and ERROR_SYMBOL.              */
@@ -756,10 +756,10 @@ PrimaryRepairInfo DiagnoseParser::CheckPrimaryDistance
             repair.symbol = symbol;
             repair.code = INSERTION_CODE;
         }
- 
+
         symbol = list[symbol];
     }
- 
+
 /*****************************************************************/
 /*  Next, Try substitution for each possible candidate available */
 /* in the current state, except EOFT and ERROR_SYMBOL.           */
@@ -790,8 +790,8 @@ PrimaryRepairInfo DiagnoseParser::CheckPrimaryDistance
         symbol = list[symbol];
         list[i] = 0;                             /* reset element */
     }
- 
- 
+
+
 /*****************************************************************/
 /* Next, we try to insert a nonterminal candidate in front of the*/
 /* error token, or substituting a nonterminal candidate for the  */
@@ -809,7 +809,7 @@ PrimaryRepairInfo DiagnoseParser::CheckPrimaryDistance
              repair.symbol = symbol;
              repair.code = INVALID_CODE;
          }
- 
+
          j = ParseCheck(stck, stack_top, symbol, repair.buffer_position);
          if ((j > repair.distance) ||
              (j == repair.distance && repair.code == INVALID_CODE))
@@ -820,11 +820,11 @@ PrimaryRepairInfo DiagnoseParser::CheckPrimaryDistance
              repair.code = INSERTION_CODE;
          }
      }
- 
+
     return repair;
 }
- 
- 
+
+
 /*****************************************************************/
 /* This procedure is invoked to issue a diagnostic message and   */
 /* adjust the input buffer.  The recovery in question is either  */
@@ -836,15 +836,15 @@ PrimaryRepairInfo DiagnoseParser::CheckPrimaryDistance
 RepairCandidate DiagnoseParser::PrimaryDiagnosis(PrimaryRepairInfo repair)
 {
     RepairCandidate candidate;
- 
+
     int name_index;
- 
+
 /*****************************************************************/
 /*  Issue diagnostic.                                            */
 /*****************************************************************/
     TokenObject prevtok = buffer[repair.buffer_position - 1],
                 curtok  = buffer[repair.buffer_position];
- 
+
     switch(repair.code)
     {
         case INSERTION_CODE: case BEFORE_CODE:
@@ -865,7 +865,7 @@ RepairCandidate DiagnoseParser::PrimaryDiagnosis(PrimaryRepairInfo repair)
 //                     repair.code = BEFORE_CODE;
 //                else t = prevtok;
 //            }
-// 
+//
 //            error.report(0, repair.code, name_index, Loc(t), t);
 //
             TokenObject t = (repair.code == INSERTION_CODE ? prevtok : curtok);
@@ -932,7 +932,7 @@ RepairCandidate DiagnoseParser::PrimaryDiagnosis(PrimaryRepairInfo repair)
                                          Loc(curtok), curtok);
         }
     }
- 
+
 /*****************************************************************/
 /*  Update buffer.                                               */
 /*****************************************************************/
@@ -946,25 +946,25 @@ RepairCandidate DiagnoseParser::PrimaryDiagnosis(PrimaryRepairInfo repair)
             candidate.symbol = repair.symbol;
             candidate.location = Loc(buffer[repair.buffer_position]);
             lex_stream -> Reset(buffer[repair.buffer_position]);
- 
+
             break;
         }
- 
+
         case INVALID_CODE: case SUBSTITUTION_CODE:
         {
             candidate.symbol = repair.symbol;
             candidate.location = Loc(buffer[repair.buffer_position]);
             lex_stream -> Reset(buffer[repair.buffer_position + 1]);
- 
+
             break;
         }
- 
+
         case MERGE_CODE:
         {
             candidate.symbol = repair.symbol;
             candidate.location = Loc(buffer[repair.buffer_position]);
             lex_stream -> Reset(buffer[repair.buffer_position + 2]);
- 
+
             break;
         }
 
@@ -974,15 +974,15 @@ RepairCandidate DiagnoseParser::PrimaryDiagnosis(PrimaryRepairInfo repair)
             candidate.symbol =
                       lex_stream -> Kind(buffer[repair.buffer_position + 1]);
             lex_stream -> Reset(buffer[repair.buffer_position + 2]);
- 
+
             break;
         }
     }
- 
+
     return candidate;
 }
- 
- 
+
+
 /*****************************************************************/
 /* This function takes as parameter an integer STACK_TOP that    */
 /* points to a STACK element containing the state on which a     */
@@ -1004,9 +1004,9 @@ int DiagnoseParser::GetTermIndex(int stck[], int stack_top,
     int act = stck[stack_top],
         max_pos = stack_top,
         highest_symbol = tok;
- 
+
     temp_stack_top = stack_top - 1;
- 
+
 /*****************************************************************/
 /* Compute all reduce and associated actions induced by the      */
 /* candidate until a SHIFT or SHIFT-REDUCE is computed. ERROR    */
@@ -1039,7 +1039,7 @@ int DiagnoseParser::GetTermIndex(int stck[], int stack_top,
         temp_stack[temp_stack_top + 1] = act;
         act = t_action(act, tok, lex_stream);
     }
- 
+
 /********************************************************************/
 /* At this stage, we have simulated all actions induced by the      */
 /* candidate and we are ready to shift or shift-reduce it. First,   */
@@ -1055,10 +1055,10 @@ int DiagnoseParser::GetTermIndex(int stck[], int stack_top,
     temp_stack_top++;   /* adjust top of stack to reflect last goto */
                         /* next move is shift or shift-reduce.      */
     int threshold = temp_stack_top;
- 
+
     tok = lex_stream -> Kind(buffer[buffer_position]);
     lex_stream -> Reset(buffer[buffer_position + 1]);
- 
+
     if (act > ERROR_ACTION)   /* shift-reduce on candidate? */
         act -= ERROR_ACTION;
     else                      /* shift on candidate ! */
@@ -1066,7 +1066,7 @@ int DiagnoseParser::GetTermIndex(int stck[], int stack_top,
         temp_stack[temp_stack_top + 1] = act;
         act = t_action(act, tok, lex_stream);
     }
- 
+
     while(act <= NUM_RULES)
     {
         /*********************************************************/
@@ -1076,10 +1076,10 @@ int DiagnoseParser::GetTermIndex(int stck[], int stack_top,
         do
         {
             temp_stack_top -= (rhs[act]-1);
- 
+
             if (temp_stack_top < threshold)
                 goto quit;
- 
+
             int lhs_symbol = lhs[act];
             if (temp_stack_top == threshold)
                 highest_symbol = lhs_symbol + NT_OFFSET;
@@ -1088,17 +1088,17 @@ int DiagnoseParser::GetTermIndex(int stck[], int stack_top,
                                   : stck[temp_stack_top]);
             act = nt_action(act, lhs_symbol);
         } while(act <= NUM_RULES);
- 
+
         temp_stack[temp_stack_top + 1] = act;
         act = t_action(act, tok, lex_stream);
     }
- 
+
  quit:
     return (highest_symbol > NT_OFFSET
                            ? non_terminal_index[highest_symbol - NT_OFFSET]
                            : terminal_index[highest_symbol]);
 }
- 
+
 /*****************************************************************/
 /* This function takes as parameter a starting state number:     */
 /* start, a nonterminal symbol, A (candidate), and an integer,   */
@@ -1114,26 +1114,26 @@ int DiagnoseParser::GetNtermIndex(int start, int sym, int buffer_position)
     int act,
         tok,
         highest_symbol;
- 
+
     highest_symbol = sym - NT_OFFSET;
- 
+
     tok = lex_stream -> Kind(buffer[buffer_position]);
     lex_stream -> Reset(buffer[buffer_position + 1]);
- 
+
 /*****************************************************************/
 /* Initialize stack index of temp_stack and initialize maximum   */
 /* position of state stack that is still useful.                 */
 /*****************************************************************/
     temp_stack_top = 0;
     temp_stack[temp_stack_top] = start;
- 
+
     act = nt_action(start, highest_symbol);
     if (act > NUM_RULES) /* goto action? */
     {
         temp_stack[temp_stack_top + 1] = act;
         act = t_action(act, tok, lex_stream);
     }
- 
+
     while(act <= NUM_RULES)
     {
         /*********************************************************/
@@ -1152,11 +1152,11 @@ int DiagnoseParser::GetNtermIndex(int start, int sym, int buffer_position)
         temp_stack[temp_stack_top + 1] = act;
         act = t_action(act, tok, lex_stream);
     }
- 
+
     return non_terminal_index[highest_symbol];
 }
- 
- 
+
+
 /*****************************************************************/
 /*     Check whether or not there is a high probability that a   */
 /* given string is a misspelling of another.                     */
@@ -1166,7 +1166,7 @@ int DiagnoseParser::GetNtermIndex(int start, int sym, int buffer_position)
 int DiagnoseParser::Misspell(int sym, TokenObject tok)
 {
     int len = name_length[terminal_index[sym]];
-        
+
     wchar_t *keyword = new wchar_t[len + 1];
     for (int i = name_start[terminal_index[sym]], j = 0; j < len; i++, j++)
     {
@@ -1184,8 +1184,8 @@ int DiagnoseParser::Misspell(int sym, TokenObject tok)
 
     return index;
 }
- 
- 
+
+
 /*****************************************************************/
 /*****************************************************************/
 PrimaryRepairInfo DiagnoseParser::ScopeTrial(int stck[], int stack_top,
@@ -1194,9 +1194,9 @@ PrimaryRepairInfo DiagnoseParser::ScopeTrial(int stck[], int stack_top,
     state_seen = new int[stack_length];
     for (int i = 0; i < stack_length; i++)
         state_seen[i] = NIL;
- 
+
     ScopeTrialCheck(stck, stack_top, repair, 0);
- 
+
     delete [] state_seen;
     state_pool.Reset();
 
@@ -1205,8 +1205,8 @@ PrimaryRepairInfo DiagnoseParser::ScopeTrial(int stck[], int stack_top,
 
     return repair;
 }
- 
- 
+
+
 /*****************************************************************/
 /* SCOPE_TRIAL_CHECK is a recursive procedure that takes as arguments  */
 /* a state configuration: STACK and STACK_TOP, and an integer:   */
@@ -1235,18 +1235,18 @@ void DiagnoseParser::ScopeTrialCheck(int stck[], int stack_top,
         act,
         tok,
         lhs_symbol;
- 
+
     act = stck[stack_top];
- 
+
     for (i = state_seen[stack_top]; i != NIL; i = state_pool[i].next)
         if (state_pool[i].state == act)
             return;
- 
+
     i = state_pool.NextIndex();
     state_pool[i].state = act;
     state_pool[i].next  = state_seen[stack_top];
     state_seen[stack_top] = i;
- 
+
     for (i = 0; i < SCOPE_SIZE; i++)
     {
         /*********************************************************/
@@ -1280,7 +1280,7 @@ void DiagnoseParser::ScopeTrialCheck(int stck[], int stack_top,
             temp_stack[temp_stack_top + 1] = act;
             act = t_action(act, tok, lex_stream);
         }
- 
+
         /*********************************************************/
         /* If the lookahead symbol is parsable, then we check    */
         /* whether or not we have a match between the scope      */
@@ -1357,7 +1357,7 @@ void DiagnoseParser::ScopeTrialCheck(int stck[], int stack_top,
                             act = nt_action(stck[top], lhs[act]);
                         }
                         top++;
- 
+
                         j = act;
                         act = stck[top];  /* save */
                         stck[top] = j;    /* swap */
@@ -1369,7 +1369,7 @@ void DiagnoseParser::ScopeTrialCheck(int stck[], int stack_top,
                         scope_stack_top = indx;
                         repair.distance = distance;
                     }
- 
+
                     if (lex_stream -> Kind(buffer[repair.buffer_position]) ==
                         EOFT_SYMBOL &&
                         repair.distance == previous_distance)
@@ -1377,7 +1377,7 @@ void DiagnoseParser::ScopeTrialCheck(int stck[], int stack_top,
                         scope_stack_top = indx;
                         repair.distance = MAX_DISTANCE;
                     }
- 
+
                     /*********************************************/
                     /* If this scope recovery has beaten the     */
                     /* previous distance, then we have found a   */
@@ -1396,10 +1396,10 @@ void DiagnoseParser::ScopeTrialCheck(int stck[], int stack_top,
             }
         }
     }
- 
+
     return;
 }
- 
+
 /*****************************************************************/
 /* This function computes the ParseCheck distance for the best   */
 /* possible secondary recovery for a given configuration that    */
@@ -1414,10 +1414,10 @@ bool DiagnoseParser::SecondaryCheck(int stck[], int stack_top,
                                     int buffer_position, int distance)
 {
     PrimaryRepairInfo repair;
-    
+
     int top,
         j;
- 
+
     for (top = stack_top - 1; top >= 0; top--)
     {
         j = ParseCheck(stck, top,
@@ -1427,7 +1427,7 @@ bool DiagnoseParser::SecondaryCheck(int stck[], int stack_top,
             (j > distance))
             return true;
     }
- 
+
 #if defined(SCOPE_REPAIR)
     repair.buffer_position = buffer_position + 1;
     repair.distance = distance;
@@ -1443,11 +1443,11 @@ bool DiagnoseParser::SecondaryCheck(int stck[], int stack_top,
 //        manual_distance > distance)
 //         return true;
 #endif
- 
+
     return false;
 }
- 
- 
+
+
 /*****************************************************************/
 /* Secondary_phase is a boolean function that checks whether or  */
 /* not some form of secondary recovery is applicable to one of   */
@@ -1462,25 +1462,25 @@ RepairCandidate DiagnoseParser::SecondaryPhase(TokenObject error_token)
 {
     SecondaryRepairInfo repair,
                           misplaced;
- 
+
     RepairCandidate candidate;
- 
+
     int i,
         j,
         k,
         top,
         next_last_index,
         last_index;
- 
+
     candidate.symbol = 0;
- 
+
     repair.code = 0;
     repair.distance = 0;
     repair.recovery_on_next_stack = false;
- 
+
     misplaced.distance = 0;
     misplaced.recovery_on_next_stack = false;
- 
+
 /*****************************************************************/
 /* If the next_stack is available, try misplaced and secondary   */
 /* recovery on it first.                                         */
@@ -1488,16 +1488,16 @@ RepairCandidate DiagnoseParser::SecondaryPhase(TokenObject error_token)
     if (next_stack_top >= 0)
     {
         Location  save_location;
- 
+
         buffer[2] = error_token;
         buffer[1] = lex_stream -> Previous(buffer[2]);
         buffer[0] = lex_stream -> Previous(buffer[1]);
- 
+
         for (k = 3; k < BUFF_UBOUND; k++)
             buffer[k] = lex_stream -> Next(buffer[k - 1]);
- 
+
         buffer[BUFF_UBOUND] = lex_stream -> Badtoken();/* elmt not available */
- 
+
         /*********************************************************/
         /* If we are at the end of the input stream, compute the */
         /* index position of the first EOFT symbol (last useful  */
@@ -1508,7 +1508,7 @@ RepairCandidate DiagnoseParser::SecondaryPhase(TokenObject error_token)
              lex_stream -> Kind(buffer[next_last_index]) == EOFT_SYMBOL;
              next_last_index--);
         next_last_index = next_last_index + 1;
- 
+
         save_location = location_stack[next_stack_top];
         location_stack[next_stack_top] = Loc(buffer[2]);
         misplaced.num_deletions = next_stack_top;
@@ -1517,14 +1517,14 @@ RepairCandidate DiagnoseParser::SecondaryPhase(TokenObject error_token)
                                          misplaced, true);
         if (misplaced.recovery_on_next_stack)
             misplaced.distance++;
- 
+
         repair.num_deletions = next_stack_top + BUFF_UBOUND;
         repair = SecondaryRecovery(next_stack, next_stack_top,
                                    next_last_index,
                                    repair, true);
         if (repair.recovery_on_next_stack)
             repair.distance++;
- 
+
         location_stack[next_stack_top] = save_location;
     }
     else             /* next_stack not available, initialize ... */
@@ -1532,31 +1532,31 @@ RepairCandidate DiagnoseParser::SecondaryPhase(TokenObject error_token)
         misplaced.num_deletions = state_stack_top;
         repair.num_deletions = state_stack_top + BUFF_UBOUND;
     }
- 
+
 /*****************************************************************/
 /* Try secondary recovery on the "stack" configuration.          */
 /*****************************************************************/
     buffer[3] = error_token;
- 
+
     buffer[2] = lex_stream -> Previous(buffer[3]);
     buffer[1] = lex_stream -> Previous(buffer[2]);
     buffer[0] = lex_stream -> Previous(buffer[1]);
- 
+
     for (k = 4; k < BUFF_SIZE; k++)
         buffer[k] = lex_stream -> Next(buffer[k - 1]);
- 
+
     for (last_index = MAX_DISTANCE - 1;
          last_index >= 1 && lex_stream -> Kind(buffer[last_index]) == EOFT_SYMBOL;
          last_index--);
     last_index++;
- 
+
     misplaced = MisplacementRecovery(stack, state_stack_top,
                                      last_index,
                                      misplaced, false);
- 
+
     repair = SecondaryRecovery(stack, state_stack_top,
                                last_index, repair, false);
- 
+
 /*****************************************************************/
 /* If a successful misplaced recovery was found, compare it with */
 /* the most successful secondary recovery.  If the misplaced     */
@@ -1577,7 +1577,7 @@ RepairCandidate DiagnoseParser::SecondaryPhase(TokenObject error_token)
             repair.recovery_on_next_stack = misplaced.recovery_on_next_stack;
         }
     }
- 
+
 /*****************************************************************/
 /* If the successful recovery was on next_stack, update: stack,  */
 /* buffer, location_stack and last_index.                        */
@@ -1587,20 +1587,20 @@ RepairCandidate DiagnoseParser::SecondaryPhase(TokenObject error_token)
         state_stack_top = next_stack_top;
         for (i = 0; i <= state_stack_top; i++)
             stack[i] = next_stack[i];
- 
+
         buffer[2] = error_token;
         buffer[1] = lex_stream -> Previous(buffer[2]);
         buffer[0] = lex_stream -> Previous(buffer[1]);
- 
+
         for (k = 3; k < BUFF_UBOUND; k++)
             buffer[k] = lex_stream -> Next(buffer[k - 1]);
- 
+
         buffer[BUFF_UBOUND] = lex_stream -> Badtoken();/* elmt not available */
- 
+
         location_stack[next_stack_top] = Loc(buffer[2]);
         last_index = next_last_index;
     }
- 
+
 #if defined(SCOPE_REPAIR)
 /*****************************************************************/
 /* Next, try scope recoveries after deletion of one, two, three, */
@@ -1610,7 +1610,7 @@ RepairCandidate DiagnoseParser::SecondaryPhase(TokenObject error_token)
         repair.code == DELETION_CODE)
     {
         PrimaryRepairInfo scope_repair;
-        
+
         scope_repair.distance = 0;
         for (scope_repair.buffer_position = 2;
              scope_repair.buffer_position <= repair.buffer_position &&
@@ -1632,7 +1632,7 @@ RepairCandidate DiagnoseParser::SecondaryPhase(TokenObject error_token)
             }
         }
     }
- 
+
 /*****************************************************************/
 /* If no successful recovery is found and we have reached the    */
 /* end of the file, check whether or not scope recovery is       */
@@ -1660,18 +1660,18 @@ RepairCandidate DiagnoseParser::SecondaryPhase(TokenObject error_token)
             }
         }
     }
- 
+
 #endif
- 
+
 /*****************************************************************/
 /* If a successful repair was not found, quit!  Otherwise, issue */
 /* diagnosis and adjust configuration...                         */
 /*****************************************************************/
     if (repair.code == 0)
         return candidate;
- 
+
     SecondaryDiagnosis(repair);
- 
+
 /*****************************************************************/
 /* Update buffer based on number of elements that are deleted.   */
 /*****************************************************************/
@@ -1681,29 +1681,29 @@ RepairCandidate DiagnoseParser::SecondaryPhase(TokenObject error_token)
              candidate.location = Loc(buffer[2]);
              candidate.symbol = lex_stream -> Kind(buffer[2]);
              lex_stream -> Reset(lex_stream -> Next(buffer[2]));
- 
+
              break;
- 
+
         case DELETION_CODE:
              candidate.location = Loc(buffer[repair.buffer_position]);
              candidate.symbol =
                        lex_stream -> Kind(buffer[repair.buffer_position]);
              lex_stream -> Reset(lex_stream -> Next(buffer[repair.buffer_position]));
- 
+
              break;
- 
+
         default: /* SCOPE_CODE || SECONDARY_CODE */
              candidate.symbol = repair.symbol;
              candidate.location = Loc(buffer[repair.buffer_position]);
              lex_stream -> Reset(buffer[repair.buffer_position]);
- 
+
              break;
     }
- 
+
     return candidate;
 }
- 
- 
+
+
 /*****************************************************************/
 /* This boolean function checks whether or not a given           */
 /* configuration yields a better misplacement recovery than      */
@@ -1721,7 +1721,7 @@ SecondaryRepairInfo DiagnoseParser::MisplacementRecovery
         if (location_stack[top] < previous_loc)
             stack_deletions++;
         previous_loc = location_stack[top];
- 
+
         int j = ParseCheck(stck, top, lex_stream -> Kind(buffer[2]), 3);
         if (j == MAX_DISTANCE)
              j = last_index;
@@ -1735,11 +1735,11 @@ SecondaryRepairInfo DiagnoseParser::MisplacementRecovery
             repair.recovery_on_next_stack = stack_flag;
         }
     }
- 
+
     return repair;
 }
- 
- 
+
+
 /*****************************************************************/
 /* This boolean function checks whether or not a given           */
 /* configuration yields a better secondary recovery than the     */
@@ -1756,9 +1756,9 @@ SecondaryRepairInfo DiagnoseParser::SecondaryRecovery
         symbol,
         stack_deletions,
         top;
- 
+
     Location  previous_loc;
- 
+
     stack_deletions = 0;
     previous_loc = Loc(buffer[2]);
     for (top = stack_top;
@@ -1767,13 +1767,13 @@ SecondaryRepairInfo DiagnoseParser::SecondaryRecovery
         if (location_stack[top] < previous_loc)
             stack_deletions++;
         previous_loc = location_stack[top];
- 
+
         for (i = 2;
              i <= (last_index - MIN_DISTANCE + 1) &&
              (repair.num_deletions >= (stack_deletions + i - 1)); i++)
         {
             j = ParseCheck(stck, top, lex_stream -> Kind(buffer[i]), i + 1);
- 
+
             if (j == MAX_DISTANCE)
                  j = last_index;
             if ((j - i + 1) > MIN_DISTANCE)
@@ -1793,7 +1793,7 @@ SecondaryRepairInfo DiagnoseParser::SecondaryRecovery
                     repair.recovery_on_next_stack = stack_flag;
                 }
             }
- 
+
             for (l = nasi(stck[top]); l >= 0 && nasr[l] != 0; l++)
             {
                 symbol = nasr[l] + NT_OFFSET;
@@ -1819,11 +1819,11 @@ SecondaryRepairInfo DiagnoseParser::SecondaryRecovery
             }
         }
     }
- 
+
     return repair;
 }
- 
- 
+
+
 /*****************************************************************/
 /* This procedure is invoked to issue a secondary diagnosis and  */
 /* adjust the input buffer.  The recovery in question is either  */
@@ -1884,7 +1884,7 @@ void DiagnoseParser::SecondaryDiagnosis(SecondaryRepairInfo repair)
             state_stack_top = repair.stack_position;
         }
     }
- 
+
     return;
 }
 
@@ -1899,22 +1899,22 @@ void ParseError::SortMessages()
          upper,
          lostack[32],
          histack[32];
- 
+
      int top,
          i,
          j;
      ErrorInfo pivot, temp;
- 
+
      top = 0;
      lostack[top] = 0;
      histack[top] = errors.Length() - 1;
- 
+
      while(top >= 0)
      {
          lower = lostack[top];
          upper = histack[top];
          top--;
- 
+
          while(upper > lower)
          {
              /*********************************************************/
@@ -1924,7 +1924,7 @@ void ParseError::SortMessages()
              i = (lower + upper) / 2;
              pivot = errors[i];
              errors[i] = errors[lower];
- 
+
              /*********************************************************/
              /* Split the array section indicated by LOWER and UPPER  */
              /* using ARRAY(LOWER) as the pivot.                      */
@@ -2005,7 +2005,7 @@ void ParseError::Report(int msg_level,
                         int scope_name_index)
 {
     int i = errors.NextIndex();
- 
+
     errors[i].msg_level           = msg_level;
     errors[i].msg_code            = msg_code;
     errors[i].name_index          = name_index;
@@ -2014,7 +2014,7 @@ void ParseError::Report(int msg_level,
     errors[i].right_token         = Loc(right_token);
     errors[i].right_string_length = lex_stream -> NameStringLength(right_token);
     errors[i].scope_name_index    = scope_name_index;
- 
+
     if (control.option.dump_errors)
     {
         if (errors[i].left_token < errors[i].right_token)
@@ -2091,7 +2091,7 @@ void ParseError::PrintMessages()
             left_column_no  = lex_stream -> Column(errors[k].left_token),
             right_column_no = lex_stream -> Column(errors[k].right_token),
             msg_code        = errors[k].msg_code;
- 
+
         Location left_token = errors[k].left_token;
 
         for (; stack_top >= 0 && (errors[error_stack[stack_top]].right_token <= left_token); stack_top--)
@@ -2112,7 +2112,7 @@ void ParseError::PrintMessages()
                      PrintLargeMessage(i);
              }
         }
- 
+
         if (errors[k].left_token < errors[k].right_token)
         {
             stack_top++;
@@ -2167,11 +2167,11 @@ void ParseError::PrintMessages()
                     Coutput.fill(' ');
                 }
             }
- 
+
             PrintPrimaryMessage(k);
         }
     }
- 
+
     for (; stack_top > 0; stack_top--)
     {
         int i = error_stack[stack_top],
@@ -2187,7 +2187,7 @@ void ParseError::PrintMessages()
         PrintLargeMessage(error_stack[stack_top]);
 
     Coutput.flush();
- 
+
     delete [] error_stack;
 
     if (control.option.errors)
@@ -2211,7 +2211,7 @@ void ParseError::PrintLargeMessage(int k)
             left_column_no  = lex_stream -> Column(errors[k].left_token),
             right_line_no   = lex_stream -> Line(errors[k].right_token),
             right_column_no = lex_stream -> Column(errors[k].right_token);
- 
+
         if (left_line_no == right_line_no)
         {
             Coutput << "\n\n";
@@ -2270,7 +2270,7 @@ void ParseError::PrintLargeMessage(int k)
 
     return;
 }
- 
+
 //
 // This procedure is invoked to form a primary error message. The
 // parameter k identifies the error to be processed.  The global
@@ -2281,7 +2281,7 @@ void ParseError::PrintPrimaryMessage(int k)
     const char *name;
     int i,
         len = 0;
- 
+
 #if defined(FULL_DIAGNOSIS)
     if (errors[k].name_index >= 0)
     {
@@ -2301,12 +2301,12 @@ void ParseError::PrintPrimaryMessage(int k)
             right_column_no += (errors[k].right_string_length - 1); // point to last character in right token
 
         Coutput << lex_stream -> FileName()
-                << ':' << left_line_no  << ':' << left_column_no 
+                << ':' << left_line_no  << ':' << left_column_no
                 << ':' << right_line_no << ':' << right_column_no
                 << ":\n    Syntax: ";
     }
     else Coutput << "*** Syntax Error: ";
- 
+
     switch(errors[k].msg_code)
     {
         case ERROR_CODE:
@@ -2399,12 +2399,12 @@ void ParseError::PrintPrimaryMessage(int k)
              }
              break;
     }
- 
+
     Coutput << '\n';
 
     return;
 }
- 
+
 //
 // This procedure is invoked to form a secondary error message.
 // The parameter k identifies the error to be processed.  The
@@ -2415,7 +2415,7 @@ void ParseError::PrintSecondaryMessage(int k)
     const char *name;
     int i,
         len = 0;
- 
+
 #if defined(FULL_DIAGNOSIS)
     if (errors[k].name_index >= 0)
     {
@@ -2423,7 +2423,7 @@ void ParseError::PrintSecondaryMessage(int k)
         name = &string_buffer[name_start[errors[k].name_index]];
     }
 #endif
- 
+
     if (! control.option.errors)
     {
         int left_line_no    = lex_stream -> Line(errors[k].left_token),
@@ -2435,12 +2435,12 @@ void ParseError::PrintSecondaryMessage(int k)
             right_column_no += (errors[k].right_string_length - 1); // point to last character in right token
 
         Coutput << lex_stream -> FileName()
-                << ':' << left_line_no  << ':' << left_column_no 
+                << ':' << left_line_no  << ':' << left_column_no
                 << ':' << right_line_no << ':' << right_column_no
                 << ":\n    Syntax: ";
     }
     else Coutput << "*** Syntax Error: ";
- 
+
     switch(errors[k].msg_code)
     {
         case MISPLACED_CODE:
@@ -2493,7 +2493,7 @@ void ParseError::PrintSecondaryMessage(int k)
                 Coutput << " expected instead";
             }
     }
- 
+
     Coutput << '\n';
 
     return;

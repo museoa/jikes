@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 #ifdef EBCDIC
     Code::Conversion();
 #endif
-    
+
     SetNewHandler();
 
     FloatingPointCheck();
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
         //
         fprintf(stderr,
                 "\nIBM Research Jikes Compiler"
-                "\n(C) Copyright IBM Corp. 1996, 1999.\n"
+                "\n(C) Copyright IBM Corp. 1997, 1999.\n"
                 "- Licensed Materials - Program Property of IBM - All Rights Reserved.\n\n");
         fprintf(stderr, "%s", StringConstant::U8S_command_format);
         fprintf(stderr,
@@ -74,10 +74,10 @@ int main(int argc, char *argv[])
                 "+Td...d            set value of tab d...d spaces; each d is a decimal digit\n"
                 "+U                 do full dependence check including Zip and Jar files\n"
                 "+Z                 treat cautions as errors\n"
-                "\nVersion 1.01 (25 Aug 99)"
+                "\nVersion 0.56 (19 Aug 99)"
                 " by Philippe Charles and David Shields, IBM Research.\n"
-                "Please report problems to shields@watson.ibm.com.\n" 
-                );
+                "Please report problems to shields@watson.ibm.com.\n"
+                "or via browser at http://www.ibm.com/research/jikes\n");
 
         return_code = 1;
     }

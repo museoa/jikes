@@ -602,7 +602,7 @@ void Control::ProcessSystemInformation()
     double_type = GetPrimitiveType(US_double, U8S_D);
 
     return;
-}    
+}
 
 
 DirectorySymbol *Control::GetOutputDirectory(FileSymbol *file_symbol)
@@ -632,7 +632,7 @@ DirectorySymbol *Control::GetOutputDirectory(FileSymbol *file_symbol)
             strcat(directory_name, utf8_name);
             delete [] utf8_name;
 
-            if (! ::SystemIsDirectory(directory_name)) // The directory does not yet exist. 
+            if (! ::SystemIsDirectory(directory_name)) // The directory does not yet exist.
             {
                 for (char *ptr = &directory_name[directory_prefix_length + 1]; *ptr; ptr++)
                 {
@@ -649,7 +649,7 @@ DirectorySymbol *Control::GetOutputDirectory(FileSymbol *file_symbol)
         }
 
         //
-        // Read the directory and insert the directory symbol. Note that since 
+        // Read the directory and insert the directory symbol. Note that since
         // the original length computation was an estimate, we compute the real
         // length here.
         //
@@ -747,7 +747,7 @@ FileSymbol *Control::GetFile(Control &control, PackageSymbol *package, NameSymbo
             {
                 file_symbol = directory_symbol -> InsertFileSymbol(name_symbol);
                 file_symbol -> directory_symbol = directory_symbol;
-                
+
                 if (java_entry && ((! class_entry) || class_entry -> Mtime() < java_entry -> Mtime()))
                 {
                     file_symbol -> SetJava();

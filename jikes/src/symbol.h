@@ -46,7 +46,7 @@ class Zip;
 class PackageSymbol;
 
 class PathSymbol : public Symbol
-{ 
+{
 public:
     NameSymbol *name_symbol;
     Zip *zipfile;
@@ -71,7 +71,7 @@ private:
 
 
 class DirectorySymbol : public Symbol
-{ 
+{
 public:
     Symbol *owner;
     NameSymbol *name_symbol;
@@ -151,7 +151,7 @@ private:
 
 
 class FileSymbol : public Symbol
-{ 
+{
 private:
     enum FileKind
     {
@@ -263,7 +263,7 @@ public:
     }
 
     inline Utf8LiteralValue *FileNameLiteral() { assert(file_name_literal); return file_name_literal; }
- 
+
     void SetFileNameLiteral(Control *);
 
     DirectorySymbol *OutputDirectory();
@@ -284,7 +284,7 @@ public:
 
 
 class FileLocation
-{ 
+{
 public:
     wchar_t *location;
 
@@ -328,7 +328,7 @@ public:
 
 
 class PackageSymbol : public Symbol
-{ 
+{
 public:
     Tuple<DirectorySymbol *> directory;
     PackageSymbol *owner;
@@ -384,7 +384,7 @@ private:
 
 
 class MethodSymbol : public Symbol, public AccessFlags
-{ 
+{
 public:
     Ast *method_or_constructor_declaration; // AstMethodDeclaration or AstConstructorDeclaration
     NameSymbol *name_symbol;
@@ -609,7 +609,7 @@ private:
 
 
 class TypeSymbol : public Symbol, public AccessFlags
-{ 
+{
 public:
     SemanticEnvironment *semantic_environment;
     Ast *declaration;  // AstClassDeclaration or AstInterfaceDeclaration
@@ -1072,7 +1072,7 @@ private:
     // For a local type, when we first encounter an embedded call
     // to one of its constructors or a constructor of one of its inner
     // types, either via a ClassInstanceCreation or an ExplicitConstructorInvocation,
-    // we record it and resolve it after we have computed all necessary 
+    // we record it and resolve it after we have computed all necessary
     // information about the type and its inner types.
     //
     Tuple<SemanticEnvironment *> *local_constructor_call_environments;
@@ -1152,12 +1152,12 @@ private:
         if (! array)
             array = new Tuple<TypeSymbol *>(4);
         array -> Next() = type_symbol;
-    }    
+    }
 };
 
 
 class VariableSymbol : public Symbol, public AccessFlags
-{ 
+{
 public:
     AstVariableDeclarator *declarator;
 
@@ -1207,7 +1207,7 @@ public:
                                                type_(NULL),
                                                signature_string(NULL),
                                                initial_value(NULL),
-                                               local_variable_index_(-1), 
+                                               local_variable_index_(-1),
                                                constant_pool_index(0),
                                                constant_pool_class(0),
                                                local_program_counter(0),
@@ -1291,7 +1291,7 @@ private:
 
 
 class BlockSymbol : public Symbol
-{ 
+{
 public:
     int max_variable_index,
         synchronized_variable_index,
@@ -1319,7 +1319,7 @@ private:
 
 
 class LabelSymbol : public Symbol
-{ 
+{
 public:
     AstBlock *block; // the block that is labeled by this symbol
     NameSymbol *name_symbol;
@@ -2173,7 +2173,7 @@ inline LabelSymbol *SymbolTable::FindLabelSymbol(NameSymbol *name_symbol)
     }
 
     return (LabelSymbol *) NULL;
-} 
+}
 
 inline BlockSymbol *SymbolTable::InsertBlockSymbol(int hash_size = 0)
 {
