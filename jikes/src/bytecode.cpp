@@ -3929,19 +3929,51 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression* expression,
         }
         else if (expression -> binary_tag == AstBinaryExpression::OR_OR)
         {
-            Label lab1;
-            EmitBranchIfExpression(expression -> left_expression, true, lab1);
-            EmitExpression(expression -> right_expression, false);
-            DefineLabel(lab1);
-            CompleteLabel(lab1);
+            //
+            // if (cond && true); => cond;
+            // if (cond && false); => cond;
+            //
+            if (expression -> right_expression -> IsConstant())
+            {
+                EmitExpression(expression -> left_expression, false);
+            }
+            //
+            // if (true && cond); => nop
+            // if (a && b); => if (a) b;
+            //
+            else if (! IsOne(expression -> left_expression))
+            {
+                Label label;
+                EmitBranchIfExpression(expression -> left_expression, true,
+                                       label);
+                EmitExpression(expression -> right_expression, false);
+                DefineLabel(label);
+                CompleteLabel(label);
+            }
         }
         else if (expression -> binary_tag == AstBinaryExpression::AND_AND)
         {
-            Label lab2;
-            EmitBranchIfExpression(expression -> left_expression, false, lab2);
-            EmitExpression(expression -> right_expression, false);
-            DefineLabel(lab2);
-            CompleteLabel(lab2);
+            //
+            // if (cond || true); => cond;
+            // if (cond || false); => cond;
+            //
+            if (expression -> right_expression -> IsConstant())
+            {
+                EmitExpression(expression -> left_expression, false);
+            }
+            //
+            // if (false || cond); => nop
+            // if (a || b); => if (!a) b;
+            //
+            else if (! IsZero(expression -> left_expression))
+            {
+                Label label;
+                EmitBranchIfExpression(expression -> left_expression, false,
+                                       label);
+                EmitExpression(expression -> right_expression, false);
+                DefineLabel(label);
+                CompleteLabel(label);
+            }
         }
         else
         {
