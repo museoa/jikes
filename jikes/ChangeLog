@@ -1,3 +1,10 @@
+2000-05-04  Vadim Zaliva  <lord@crocodile.org>
+
+	* src/jikesapi.h:
+	* src/jikesapi.cpp: DefaultFileReader and DefaultFileWriter have been moved
+	from jikesapi.h to jikesapi.cpp to avoid platform dependant code in API
+	headers.
+
 2000-05-04  Mo DeJong  <mdejong@cygnus.com>
 
 	* Makefile.in:
