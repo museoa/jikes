@@ -50,7 +50,8 @@ $SUMMARY_FILE  = "$TMPDIR/${FILE_PREFIX}files.summary";
 
 $CVSROOT       = $ENV{'CVSROOT'};
 
-$MAIL_TO       = 'jikes-cvs@www-126.ibm.com';
+$MAIL_TO       = 'jikes@cabbey.net';
+#$MAIL_TO       = 'jikes-cvs@www-126.ibm.com';
 
 ############################################################
 #
