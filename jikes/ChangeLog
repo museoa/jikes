@@ -1,3 +1,8 @@
+2002-05-15  Andrew Pimlott  <jikes-dev@andrew.pimlott.net>
+
+	* src/bytecode.cpp (EmitConditionalExpression): Fix bug in
+	the patch on 11 May.
+
 2002-05-15  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/dump.cpp (token_type): Missed a case in previous commit.

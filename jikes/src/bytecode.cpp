@@ -4529,7 +4529,8 @@ int ByteCode::EmitConditionalExpression(AstConditionalExpression *expression,
         }
         else
         {
-            assert(control.IsSimpleIntegerValueType(expression -> Type()));
+            assert(control.IsSimpleIntegerValueType(expression -> Type()) ||
+                   expression -> Type() == control.boolean_type);
             IntLiteralValue *left = DYNAMIC_CAST<IntLiteralValue *>
                 (expression -> true_expression -> value);
             IntLiteralValue *right = DYNAMIC_CAST<IntLiteralValue *>
