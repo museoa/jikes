@@ -1,5 +1,10 @@
 2001-09-05  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/bytecode.cpp (EmitSwitchStatement): Fix assertion failure
+	when -g is enabled - patch 143, from bug 136.
+
+2001-09-05  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/body.cpp (ProcessSynchronizedStatement, ProcessReturnStatement):
 	* src/expr.cpp (ProcessAmbiguousName, ProcessMethodName):
 	Fix remaining cases of string constants not being

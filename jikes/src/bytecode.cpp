@@ -32,8 +32,8 @@
 #endif
 */
 
-#ifdef	HAVE_JIKES_NAMESPACE
-namespace Jikes {	// Open namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+namespace Jikes { // Open namespace Jikes block
 #endif
 
 void ByteCode::CompileClass()
@@ -943,8 +943,8 @@ void ByteCode::EndMethod(int method_index, MethodSymbol *msym)
             if (local_variable_table_attribute -> LocalVariableTableLength() > 0)
                  code_attribute -> AddAttribute(local_variable_table_attribute);
             else delete local_variable_table_attribute; // local_variable_table_attribute not needed, so delete it now
-        } else if (local_variable_table_attribute)// delete if we're dealing w/
-	  delete local_variable_table_attribute;  // a generated access method.
+        } else if (local_variable_table_attribute) // delete when dealing with
+            delete local_variable_table_attribute;  // a generated access method.
 
         methods[method_index].AddAttribute(code_attribute);
 
@@ -1523,6 +1523,12 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
     }
 
     //
+    // Set up the environment for the switch block.  This must be done before
+    // emitting the expression, in case the expression is an assignment.
+    //
+    method_stack -> Push(switch_block);
+
+    //
     // Reset the line number before evaluating the expression
     //
     line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
@@ -1538,11 +1544,6 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
     //
     while(code_attribute -> CodeLength() % 4 != 0)
         PutNop(0);
-
-    //
-    // Set up the environment for the switch block.
-    //
-    method_stack -> Push(switch_block);
 
     //
     // Note that if no default clause in switch statement, must allocate
@@ -1678,9 +1679,11 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
             for (int i = 0; i < switch_block_statement -> NumLocallyDefinedVariables(); i++)
             {
                 VariableSymbol *variable = switch_block_statement -> LocallyDefinedVariable(i);
+                if (method_stack -> StartPc(variable) > op_start)
+                {
 
 #ifdef JIKES_DEBUG
-                assert(method_stack -> StartPc(variable) != 0xFFFF);
+                    assert(method_stack -> StartPc(variable) != 0xFFFF);
 #endif
 #ifdef DUMP
 Coutput << "(57) The symbol \"" << variable -> Name()
@@ -1688,14 +1691,15 @@ Coutput << "(57) The symbol \"" << variable -> Name()
         << " was released" << endl;
 Coutput.flush();
 #endif
-                local_variable_table_attribute -> AddLocalVariable(method_stack -> StartPc(variable),
-                                                                   code_attribute -> CodeLength(),
-                                                                   RegisterUtf8(variable -> ExternalIdentity() -> Utf8_literal),
-                                                                   RegisterUtf8(variable -> Type() -> signature),
-                                                                   variable -> LocalVariableIndex());
+                    local_variable_table_attribute -> AddLocalVariable(method_stack -> StartPc(variable),
+                                                                       code_attribute -> CodeLength(),
+                                                                       RegisterUtf8(variable -> ExternalIdentity() -> Utf8_literal),
+                                                                       RegisterUtf8(variable -> Type() -> signature),
+                                                                       variable -> LocalVariableIndex());
 #ifdef JIKES_DEBUG
-                method_stack -> StartPc(variable) = 0xFFFF;
+                    method_stack -> StartPc(variable) = 0xFFFF;
 #endif
+                }
             }
         }
     }
@@ -1710,9 +1714,11 @@ Coutput.flush();
         for (int i = 0; i < switch_block -> NumLocallyDefinedVariables(); i++)
         {
             VariableSymbol *variable = switch_block -> LocallyDefinedVariable(i);
+            if (method_stack -> StartPc(variable) > op_start)
+            {
 
 #ifdef JIKES_DEBUG
-            assert(method_stack -> StartPc(variable) != 0xFFFF);
+                assert(method_stack -> StartPc(variable) != 0xFFFF);
 #endif
 #ifdef DUMP
 Coutput << "(58) The symbol \"" << variable -> Name()
@@ -1720,11 +1726,12 @@ Coutput << "(58) The symbol \"" << variable -> Name()
         << " was released" << endl;
 Coutput.flush();
 #endif
-            local_variable_table_attribute -> AddLocalVariable(method_stack -> StartPc(variable),
-                                                               code_attribute -> CodeLength(),
-                                                               RegisterUtf8(variable -> ExternalIdentity() -> Utf8_literal),
-                                                               RegisterUtf8(variable -> Type() -> signature),
-                                                               variable -> LocalVariableIndex());
+                local_variable_table_attribute -> AddLocalVariable(method_stack -> StartPc(variable),
+                                                                   code_attribute -> CodeLength(),
+                                                                   RegisterUtf8(variable -> ExternalIdentity() -> Utf8_literal),
+                                                                   RegisterUtf8(variable -> Type() -> signature),
+                                                                   variable -> LocalVariableIndex());
+            }
         }
     }
 
@@ -5566,7 +5573,7 @@ void ByteCode::PrintCode()
 }
 #endif
 
-#ifdef	HAVE_JIKES_NAMESPACE
-}			// Close namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+} // Close namespace Jikes block
 #endif
 
