@@ -1,5 +1,10 @@
 2002-07-31  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/symbol.cpp (FindOrInsertClassLiteral): Fix coredump with
+	class literal in static local class, reported on jikes list.
+
+2002-07-31  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/option.cpp (Option): Formatting, and some option
 	improvements. Fix memory leak on repeated options - bug 2813.
 	* src/jikesapi.h:

@@ -1624,7 +1624,7 @@ VariableSymbol *TypeSymbol::FindOrInsertClassLiteral(TypeSymbol *type)
     //
     TypeSymbol *owner = this;
     while (owner -> IsInner())
-        owner = owner -> EnclosingType();
+        owner = owner -> ContainingType();
     if (owner -> ACC_INTERFACE())
         owner = outermost_type -> FindOrInsertClassLiteralClass();
     owner -> FindOrInsertClassLiteralMethod(control);
