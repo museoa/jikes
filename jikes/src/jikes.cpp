@@ -47,7 +47,12 @@ int main(int argc, char *argv[])
                 "-debug             no effect (recognized for compatibility)\n"
                 "-depend | -Xdepend recompile all used classes\n"
                 "-deprecation       report uses of deprecated features\n"
+#if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
                 "-encoding encoding use specified encoding to read source files\n"
+# if defined(HAVE_LIB_ICU_UC)
+                "                   this binary requires the ICU library\n"
+# endif
+#endif
                 "-g                 debug (generate LocalVariableTable)\n"
                 "-nowarn            do not issue warning messages\n"
                 "-nowrite           do not write any class files\n"

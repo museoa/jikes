@@ -1,3 +1,31 @@
+2001-02-19  Mo DeJong  <mdejong@redhat.com>
+
+	* src/jikes.cpp (main): Only print the
+	-encoding option when compiled with
+	iconv or icu support.
+	* src/option.cpp (Option):
+	Move iconv and icu code to Stream class.
+	Use encoding field to store the name
+	of the encoding in use. Remove converter
+	field, use encoding instead. Call
+	Stream::IsSupportedEncoding method to
+	determine if a given encoding is valid.
+	* src/option.h (Option): Remove
+	iconv and icu headers and the
+	converter field.
+	* src/platform.cpp (U8S_command_format):
+	Only print the -encoding option when
+	compiled with iconv or icu support.
+	* src/stream.cpp (Stream, ~Stream,
+	IsSupportedEncoding, SetEncoding,
+	DestroyEncoding, LexStream,
+	ProcessInputAscii, ProcessInputUnicode):
+	Extract new Stream class from LexStream.
+	Stream will handle encoding issues.
+	* src/stream.h (Stream): Add iconv
+	and icu includes. Add Stream class,
+	LexStream inherits from Stream.
+
 2001-02-18  Andrew M. Inggs  <aminggs@yahoo.co.uk>
 
 	* src/jikes.cpp (main): Update

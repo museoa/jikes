@@ -30,6 +30,8 @@
 namespace Jikes {	// Open namespace Jikes block
 #endif
 
+// Class StreamError
+
 JikesError::JikesErrorSeverity StreamError::getSeverity        () 
 { 
     //All Lexical errors are ERRORs.
@@ -269,6 +271,93 @@ StreamError::StreamError():initialized(false)
 }
 
 
+// Class Stream
+
+Stream::Stream()
+:   input_buffer(NULL),
+    input_buffer_length(0),
+#if defined(HAVE_LIB_ICU_UC)
+    _converter(NULL)
+#elif defined(HAVE_ICONV_H)
+    _converter((iconv_t)-1)
+#endif
+{
+}
+
+Stream::~Stream()
+{
+    DestroyInput();
+    DestroyEncoding();
+}
+
+#if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
+
+// This method will return true is the given encoding
+// can be supported, it is static because we need to
+// be able to query encodings without an instance.
+
+bool Stream::IsSupportedEncoding(char* encoding)
+{
+    bool supported;
+    // Create a tmp object instead of duplicating
+    // the code in SetEncoding and DestroyEncoding
+    Stream* tmp = new Stream();
+    supported = tmp->SetEncoding(encoding);
+    delete tmp;
+    return supported;
+}
+
+bool Stream::SetEncoding(char* encoding)
+{
+    assert(encoding);
+    DestroyEncoding();
+
+#if defined(HAVE_LIB_ICU_UC)
+    UErrorCode err = U_ZERO_ERROR;
+
+    _converter = ucnv_open(encoding, &err);
+    if (!_converter)
+    {
+        return false;
+    }
+    else {
+        return true;
+    }
+#elif defined(HAVE_ICONV_H)
+    _converter = iconv_open("utf-16", encoding);
+    if (_converter == (iconv_t)-1)
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+#endif
+}
+
+void Stream::DestroyEncoding()
+{
+#if defined(HAVE_LIB_ICU_UC)
+    if (_converter)
+    {
+        ucnv_close(_converter);
+        _converter = NULL;
+    }
+#elif defined(HAVE_ICONV_H)
+    if (_converter != (iconv_t)-1)
+    {
+        iconv_close(_converter);
+        _converter = (iconv_t)-1;
+    }
+#endif
+}
+
+#endif // defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
+
+
+// Class LexStream
+
 LexStream::LexStream(Control &control_, FileSymbol *file_symbol_) : file_symbol(file_symbol_),
 #ifdef JIKES_DEBUG
     file_read(0),
@@ -281,8 +370,6 @@ LexStream::LexStream(Control &control_, FileSymbol *file_symbol_) : file_symbol(
     locations(NULL),
     line_location(12, 8),
     initial_reading_of_input(true),
-    input_buffer(NULL),
-    input_buffer_length(0),
     comment_buffer(NULL),
     control(control_)
 {
@@ -688,8 +775,7 @@ void LexStream::ProcessInputAscii(const char *buffer, long filesize)
     file_read++;
 #endif
 
-    input_buffer = new wchar_t[filesize + 4];
-    wchar_t *input_ptr = input_buffer;
+    wchar_t *input_ptr = AllocateInputBuffer( filesize );
     *input_ptr = U_LINE_FEED; // add an initial '\n';
 
     if (buffer)
@@ -816,10 +902,8 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
     file_read++;
 #endif
 
-    input_buffer       = new wchar_t[filesize + 4];
-    wchar_t *input_tail = input_buffer + filesize;
-    
-    wchar_t *input_ptr = input_buffer;
+    wchar_t *input_ptr = AllocateInputBuffer( filesize );
+    wchar_t *input_tail = input_ptr + filesize;
     *input_ptr = U_LINE_FEED; // add an initial '\n';
 
     if(buffer)
@@ -836,6 +920,12 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
         UErrorCode err = U_ZERO_ERROR;
 #endif
         bool oncemore = false;
+
+        if(control.option.encoding)
+        {
+            // The encoding should have been validated by now
+            assert( SetEncoding(control.option.encoding) );
+        }
 
         while((source_ptr <= source_tail) || oncemore)
         {
@@ -865,12 +955,12 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
             
             if(!oncemore)
             {
-                if(control.option.converter)
+                if(control.option.encoding)
                 {
                     const char *before = source_ptr;
 
 #ifdef HAVE_LIB_ICU_UC
-                    ch=ucnv_getNextUChar (control.option.converter,
+                    ch=ucnv_getNextUChar (_converter,
                                           &source_ptr,
                                           source_tail+1,
                                           &err);
@@ -892,7 +982,7 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                     wchar_t* wchp = (wchar_t *) chp;
                     size_t   chl  = 2;
                     size_t   srcl = 1;
-                    size_t n = iconv(control.option.converter,
+                    size_t n = iconv(_converter,
 #ifdef HAVE_ERROR_CALL_ICONV_CONST
                                      (char **)
 #endif

@@ -219,9 +219,6 @@ void Option::SaveCurrentDirectoryOnDisk(char c)
 
 
 Option::Option(ArgumentExpander &arguments) :
-#if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
-                                              converter(NULL),
-#endif
                                               first_file_index(arguments.argc),
                                               debug_trap_op(0),
                                               debug_dump_lex(false),
@@ -294,30 +291,21 @@ Option::Option(ArgumentExpander &arguments) :
             }
             else if (strcmp(arguments.argv[i], "-depend") == 0 || strcmp(arguments.argv[i], "-Xdepend") == 0)
                  depend = true;
+#if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
             else if (strcmp(arguments.argv[i], "-encoding") == 0 && ((i + 1) < arguments.argc))
             {
-#if defined(HAVE_LIB_ICU_UC)
-                encoding = new char[strlen(arguments.argv[++i]) + 1];
-                strcpy(encoding, arguments.argv[i]);
-                UErrorCode err=U_ZERO_ERROR;
-                converter=ucnv_open(encoding, &err);
-                if(!converter)
-                    bad_options.Next() = new OptionError(SemanticError::UNSUPPORTED_ENCODING, encoding); 
-#elif defined(HAVE_ICONV_H)
-                encoding = new char[strlen(arguments.argv[++i]) + 1];
-                strcpy(encoding, arguments.argv[i]);
-                converter=iconv_open("utf-16", encoding);
-                if(converter==(iconv_t)-1)
-                {
-                    converter = NULL;
-                    bad_options.Next() = new OptionError(SemanticError::UNSUPPORTED_ENCODING, encoding); 
-                }
-#else
-                bad_options.Next() = new OptionError(SemanticError::UNSUPPORTED_OPTION, "-encoding"); 
                 i++;
-#endif
+                encoding = new char[strlen(arguments.argv[i]) + 1];
+                strcpy(encoding, arguments.argv[i]);
+                if (! Stream::IsSupportedEncoding(encoding))
+                {
+                    bad_options.Next() =
+                        new OptionError(SemanticError::UNSUPPORTED_ENCODING, encoding);
+                }
+
                 continue;
             }
+#endif // defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
             else if (strcmp(arguments.argv[i],"-verbose") == 0)
                  verbose = true;
             else if (strcmp(arguments.argv[i],"-g") == 0)
@@ -602,11 +590,6 @@ Option::~Option()
         delete [] current_directory[c];
 #endif
 
-// Currently we use ICU even if iconv is present.
-#if defined(HAVE_ICONV_H) && !defined(HAVE_LIB_ICU_UC)
-    if(converter)
-        iconv_close(converter);
-#endif
     return;
 }
 

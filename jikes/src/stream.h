@@ -26,6 +26,12 @@
 #include <stdio.h>
 */
 
+#if defined(HAVE_LIB_ICU_UC)
+# include <unicode/ucnv.h>
+#elif defined(HAVE_ICONV_H)
+# include <iconv.h>
+#endif
+
 #ifdef	HAVE_JIKES_NAMESPACE
 namespace Jikes {	// Open namespace Jikes block
 #endif
@@ -99,11 +105,58 @@ class StreamError : public JikesError
 };
 
 
+// The stream class encapsulates details related to reading
+// a stream of possibly encoded data from the file system.
+
+class Stream
+{
+public:
+  
+    Stream();
+    ~Stream();
+
+    void DestroyInput() {
+        delete [] input_buffer;
+        input_buffer = NULL;
+    }
+
+    inline wchar_t* InputBuffer() { return input_buffer; }
+    inline size_t InputBufferLength() { return input_buffer_length; }
+
+    inline wchar_t* AllocateInputBuffer( size_t size ) {
+        return input_buffer = new wchar_t[size + 4];
+    }
+
+#if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
+    static bool IsSupportedEncoding(char* encoding);
+    bool SetEncoding(char* encoding);
+#endif
+
+protected:
+
+    wchar_t *input_buffer;
+    size_t input_buffer_length;
+
+//private: // FIXME : Make vars private once extracted from LexStream!
+
+#if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
+
+#if defined(HAVE_LIB_ICU_UC)
+     UConverter * _converter;
+#elif defined(HAVE_ICONV_H)
+     iconv_t _converter;
+#endif
+
+    void DestroyEncoding();
+#endif
+};
+
+
 //
 // LexStream holds a stream of tokens generated from an input and
 // provides methods to retrieve information from the stream.
 //
-class LexStream
+class LexStream : public Stream
 {
 
     friend class StreamError;
@@ -206,9 +259,6 @@ class LexStream
         return WcharOffset(start, end);
     }
 
-    wchar_t *InputBuffer() { return input_buffer; }
-    size_t InputBufferLength() { return input_buffer_length; }
-
     CommentIndex FirstComment(TokenIndex);
 
     inline int NumTypes() { return type_index.Length(); }
@@ -254,8 +304,7 @@ class LexStream
 
     void DestroyInput()
     {
-        delete [] input_buffer;
-        input_buffer = NULL;
+        Stream::DestroyInput();
 
         delete [] comment_buffer;
         comment_buffer = NULL;
@@ -406,8 +455,6 @@ private:
 
     bool initial_reading_of_input;
 
-    wchar_t *input_buffer;
-    size_t input_buffer_length;
     wchar_t *comment_buffer;
 
     Control &control;

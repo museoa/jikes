@@ -19,12 +19,6 @@
 //FIXME: include stuff
 //#include <ctype.h>
 
-#if defined(HAVE_LIB_ICU_UC)
-# include <unicode/ucnv.h>
-#elif defined(HAVE_ICONV_H)
-# include <iconv.h>
-#endif
-
 #ifdef	HAVE_JIKES_NAMESPACE
 namespace Jikes {	// Open namespace Jikes block
 #endif
@@ -117,12 +111,6 @@ public:
 #endif
 
 public:
-
-#if defined(HAVE_LIB_ICU_UC)
-         UConverter *converter;
-#elif defined(HAVE_ICONV_H)
-         iconv_t converter;
-#endif
          
     Tuple<KeywordMap> keyword_map;
     Tuple<OptionError *> bad_options;
