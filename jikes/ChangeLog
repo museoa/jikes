@@ -1,5 +1,16 @@
 2004-03-14  Elliott Hughes  <enh@acm.org>
 
+	* src/decl.cpp, src/semantic.h: Bug 3378 - the previous fix made the
+	diagnostic worse in the case where the problem was an inaccessible
+	field, because it would report 'type not found' rather than
+	'no accessible field'. A new method, FindInaccessibleType, finds only
+	inaccessible types (unlike FindType), and doesn't report anything
+	directly (unlike MustFindType). MustFindType uses the newly-extracted
+	method.
+	* src/expr.cpp (ReportVariableNotFound): use new method.
+
+2004-03-14  Elliott Hughes  <enh@acm.org>
+
 	* src/expr.cpp (ReportVariableNotFound): fix for bug 3378; if we can't
 	find an accessible type, look for an inaccessible one as a plausible
 	cause of the error.

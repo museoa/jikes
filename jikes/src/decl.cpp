@@ -3678,6 +3678,36 @@ TypeSymbol* Semantic::FindType(LexStream::TokenIndex identifier_token)
 
 
 //
+// Returns an inaccessible type of the given name, or 0 if there is none.
+// No errors are reported by this method.
+//
+TypeSymbol* Semantic::FindInaccessibleType(AstName* name)
+{
+    assert(! name -> base_opt);
+    NameSymbol* name_symbol =
+        lex_stream -> NameSymbol(name -> identifier_token);
+
+    // Check for inaccessible member type.
+    if (state_stack.Size())
+    {
+        for (TypeSymbol* super_type = ThisType() -> super;
+             super_type; super_type = super_type -> super)
+        {
+            assert(super_type -> expanded_type_table);
+            TypeShadowSymbol* type_shadow_symbol = super_type ->
+                expanded_type_table -> FindTypeShadowSymbol(name_symbol);
+            if (type_shadow_symbol)
+            {
+                return type_shadow_symbol -> type_symbol;
+            }
+        }
+    }
+    // Check for an inaccessible import.
+    return ImportType(name -> identifier_token, name_symbol);
+}
+
+
+//
 // Finds a type by the given name, and add the dependence information. If one
 // exists, but is not accessible, it is returned after an error. After other
 // errors, control.no_type is returned.
@@ -3696,26 +3726,7 @@ TypeSymbol* Semantic::MustFindType(AstName* name)
         //
         if (! type)
         {
-            // Check for inaccessible member type.
-            if (state_stack.Size())
-            {
-                for (TypeSymbol* super_type = ThisType() -> super;
-                     super_type; super_type = super_type -> super)
-                {
-                    assert(super_type -> expanded_type_table);
-                    TypeShadowSymbol* type_shadow_symbol = super_type ->
-                        expanded_type_table -> FindTypeShadowSymbol(name_symbol);
-                    if (type_shadow_symbol)
-                    {
-                        type = type_shadow_symbol -> type_symbol;
-                        break;
-                    }
-                }
-            }
-            // Check for an inaccessible import.
-            if (! type)
-                type = ImportType(name -> identifier_token, name_symbol);
-            // Report the error.
+            type = FindInaccessibleType(name);
             if (type)
                 ReportTypeInaccessible(name, type);
             else

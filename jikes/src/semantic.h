@@ -996,6 +996,7 @@ private:
     TypeSymbol* ImportType(LexStream::TokenIndex, NameSymbol*);
     TypeSymbol* FindPrimitiveType(AstPrimitiveType*);
     TypeSymbol* FindType(LexStream::TokenIndex);
+    TypeSymbol* FindInaccessibleType(AstName*);
     TypeSymbol* MustFindType(AstName*);
     void ProcessType(AstType*);
     void ProcessInterface(TypeSymbol*, AstTypeName*);

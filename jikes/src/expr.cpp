@@ -1382,6 +1382,7 @@ void Semantic::ReportVariableNotFound(AstExpression* access, TypeSymbol* type)
     //
     // Try various possibilities of what the user might have meant.
     //
+    TypeSymbol* inaccessible_type = FindInaccessibleType(access -> NameCast());
     VariableSymbol* variable = FindMisspelledVariableName(type, access);
     if (variable)
     {
@@ -1402,14 +1403,12 @@ void Semantic::ReportVariableNotFound(AstExpression* access, TypeSymbol* type)
         ReportSemError(SemanticError::TYPE_NOT_FIELD,
                        id_token, name_symbol -> Name());
     }
-    else if (access -> NameCast() && MustFindType(access -> NameCast()))
+    else if (inaccessible_type)
     {
         //
         // There is an inaccessible type of the same name.
         //
-        // MustFindType will have reported a suitable error already if
-        // it found an inaccessible type, so there's nothing to do here.
-        //
+        ReportTypeInaccessible(access -> NameCast(), inaccessible_type);
     }
     else if (access -> symbol && access -> symbol -> PackageCast())
     {
