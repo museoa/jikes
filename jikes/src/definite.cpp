@@ -836,14 +836,8 @@ void Semantic::DefiniteIfStatement(Ast *stmt)
 }
 
 
-void Semantic::DefiniteLoopBody(AstStatement *statement)
+void Semantic::DefiniteLoopBody(BitSet *starting_set)
 {
-    definite_final_assignment_stack -> Push();
-
-    BitSet starting_set(definitely_assigned_variables -> du_set);
-
-    DefiniteStatement(statement);
-
     BitSet exit_set(definitely_assigned_variables -> du_set);
     exit_set *= definite_block_stack -> TopContinuePair().du_set;
 
@@ -851,8 +845,7 @@ void Semantic::DefiniteLoopBody(AstStatement *statement)
     // Find the set of variables that were DU before the loop, but not DU
     // before a continue or at the loop end.
     //
-    BitSet new_set(starting_set);
-    new_set -= exit_set;
+    *starting_set -= exit_set;
 
     for (int k = 0; k < definite_final_assignment_stack -> Top().Length(); k++)
     {
@@ -860,7 +853,7 @@ void Semantic::DefiniteLoopBody(AstStatement *statement)
         VariableSymbol *variable = (VariableSymbol *) name -> symbol;
 
         if (definite_visible_variables -> IsElement(variable) &&
-            new_set[variable -> LocalVariableIndex()])
+            (*starting_set)[variable -> LocalVariableIndex()])
         {
             ReportSemError(((*blank_finals)[variable -> LocalVariableIndex()]
                             ? SemanticError::VARIABLE_NOT_DEFINITELY_UNASSIGNED_IN_LOOP
@@ -871,7 +864,8 @@ void Semantic::DefiniteLoopBody(AstStatement *statement)
         }
     }
 
-    definitely_assigned_variables -> du_set = exit_set * definite_block_stack -> TopBreakPair().du_set;
+    definitely_assigned_variables -> du_set =
+        exit_set * definite_block_stack -> TopBreakPair().du_set;
     definite_final_assignment_stack -> Pop();
 }
 
@@ -882,30 +876,29 @@ void Semantic::DefiniteWhileStatement(Ast *stmt)
 
     BreakableStatementStack().Push(definite_block_stack -> TopBlock());
     ContinuableStatementStack().Push(stmt);
+    definite_final_assignment_stack -> Push();
 
-    DefiniteAssignmentSet *after_expr = DefiniteBooleanExpression(while_statement -> expression, *definitely_assigned_variables);
+    BitSet *starting_set = new BitSet(definitely_assigned_variables -> du_set);
+    DefiniteAssignmentSet *after_expr =
+        DefiniteBooleanExpression(while_statement -> expression,
+                                  *definitely_assigned_variables);
+    DefinitePair before_statement(universe -> Size());
 
     if (after_expr)
-    {
         *definitely_assigned_variables = after_expr -> true_pair;
-        //
-        // We have already given a warning if the statement is unreachable
-        //
-        if (while_statement -> statement -> is_reachable)
-            DefiniteLoopBody(while_statement -> statement);
-        *definitely_assigned_variables = after_expr -> false_pair * definite_block_stack -> TopBreakPair();
-        delete after_expr;
-    }
-    else
-    {
-        DefinitePair starting_pair(*definitely_assigned_variables);
-        //
-        // We have already given a warning if the statement is unreachable
-        //
-        if (while_statement -> statement -> is_reachable)
-            DefiniteLoopBody(while_statement -> statement);
-        *definitely_assigned_variables = starting_pair * definite_block_stack -> TopBreakPair();
-    }
+    else before_statement = *definitely_assigned_variables;
+
+    //
+    // We have already given a warning if the statement is unreachable
+    //
+    if (while_statement -> statement -> is_reachable)
+        DefiniteStatement(while_statement -> statement);
+    DefiniteLoopBody(starting_set);
+    *definitely_assigned_variables = definite_block_stack -> TopBreakPair() *
+        (after_expr ? after_expr -> false_pair : before_statement);
+
+    delete after_expr;
+    delete starting_set;
 
     ContinuableStatementStack().Pop();
     BreakableStatementStack().Pop();
@@ -935,31 +928,37 @@ void Semantic::DefiniteForStatement(Ast *stmt)
 
     BreakableStatementStack().Push(definite_block_stack -> TopBlock());
     ContinuableStatementStack().Push(stmt);
+    definite_final_assignment_stack -> Push();
 
+    BitSet *starting_set = new BitSet(definitely_assigned_variables -> du_set);
     DefiniteAssignmentSet *after_end_expression = NULL;
     DefinitePair before_statement(universe -> Size());
 
     if (for_statement -> end_expression_opt)
-        after_end_expression = DefiniteBooleanExpression(for_statement -> end_expression_opt, *definitely_assigned_variables);
+        after_end_expression =
+            DefiniteBooleanExpression(for_statement -> end_expression_opt,
+                                      *definitely_assigned_variables);
 
     if (after_end_expression)
-         *definitely_assigned_variables = after_end_expression -> true_pair;
+        *definitely_assigned_variables = after_end_expression -> true_pair;
     else before_statement = *definitely_assigned_variables;
 
     //
     // We have already given a warning if the statement is unreachable
     //
     if (for_statement -> statement -> is_reachable)
-        DefiniteLoopBody(for_statement -> statement);
+        DefiniteStatement(for_statement -> statement);
 
     //
     // Compute the set of variables that are definitely assigned after the
     // contained statement and after every continue statement that may exit
     // the body of the for statement.
     //
-    *definitely_assigned_variables *= definite_block_stack -> TopContinuePair();
+    *definitely_assigned_variables *=
+        definite_block_stack -> TopContinuePair();
     for (int j = 0; j < for_statement -> NumForUpdateStatements(); j++)
         DefiniteExpressionStatement(for_statement -> ForUpdateStatement(j));
+    DefiniteLoopBody(starting_set);
 
     //
     // Compute the set of variables that belongs to both sets below:
@@ -972,15 +971,18 @@ void Semantic::DefiniteForStatement(Ast *stmt)
     //      break statement that may exit the for statement.
     //
     *definitely_assigned_variables = (for_statement -> end_expression_opt
-                                                     ? (after_end_expression ? after_end_expression -> false_pair : before_statement)
-                                                     : *universe); // set of variables that depend on the condition
+                                      ? (after_end_expression
+                                         ? after_end_expression -> false_pair
+                                         : before_statement)
+                                      : *universe);
 
     //
     // The replacement
     //
     *definitely_assigned_variables *= definite_block_stack -> TopBreakPair();
 
-    delete after_end_expression; // nothing happens if after_end_expression is NULL
+    delete after_end_expression; // harmless if NULL
+    delete starting_set;
 
     ContinuableStatementStack().Pop();
     BreakableStatementStack().Pop();
@@ -993,20 +995,30 @@ void Semantic::DefiniteDoStatement(Ast *stmt)
 
     BreakableStatementStack().Push(definite_block_stack -> TopBlock());
     ContinuableStatementStack().Push(stmt);
+    definite_final_assignment_stack -> Push();
 
-    if (! IsConstantFalse(do_statement -> expression))
-         DefiniteLoopBody(do_statement -> statement);
-    else DefiniteStatement(do_statement -> statement); // The expression is always false therefore, loop will execute exactly once.
+    BitSet *starting_set = new BitSet(definitely_assigned_variables -> du_set);
+
+    DefiniteStatement(do_statement -> statement);
 
     DefinitePair after_stmt(*definitely_assigned_variables);
-    *definitely_assigned_variables *= definite_block_stack -> TopContinuePair();
-    DefiniteAssignmentSet *after_expr = DefiniteBooleanExpression(do_statement -> expression, *definitely_assigned_variables);
+    *definitely_assigned_variables *=
+        definite_block_stack -> TopContinuePair();
+    DefiniteAssignmentSet *after_expr =
+        DefiniteBooleanExpression(do_statement -> expression,
+                                  *definitely_assigned_variables);
+    DefinitePair after_loop(universe -> Size());
+
     if (after_expr)
-    {
-        *definitely_assigned_variables = after_expr -> false_pair * definite_block_stack -> TopBreakPair();
-        delete after_expr;
-    }
-    else *definitely_assigned_variables *= definite_block_stack -> TopBreakPair();
+        *definitely_assigned_variables = after_expr -> true_pair;
+    else after_loop = *definitely_assigned_variables;
+    DefiniteLoopBody(starting_set);
+
+    *definitely_assigned_variables = definite_block_stack -> TopBreakPair() *
+        (after_expr ? after_expr -> false_pair : after_loop);
+
+    delete after_expr;
+    delete starting_set;
 
     ContinuableStatementStack().Pop();
     BreakableStatementStack().Pop();

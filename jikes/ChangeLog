@@ -1,3 +1,10 @@
+2002-02-25  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/semantic.h (DefiniteLoopBody): Update signature.
+	* src/definite.cpp (DefiniteLoopBody, DefiniteWhileStatement),
+	(DefiniteForStatement, DefiniteDoStatement): Fix loop semantics
+	for definite unassignment - bug 2675, patch 265.
+
 2002-02-21  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/expr.cpp (ProcessMethodInvocation): Check for void

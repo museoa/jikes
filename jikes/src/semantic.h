@@ -983,7 +983,7 @@ private:
     void (Semantic::*DefiniteStmt[Ast::_num_kinds])(Ast *);
     inline void DefiniteStatement(Ast *);
 
-    void DefiniteLoopBody(AstStatement *);
+    void DefiniteLoopBody(BitSet *);
 
     void DefiniteBlock(Ast *);
     void DefiniteLocalVariableDeclarationStatement(Ast *);
