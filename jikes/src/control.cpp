@@ -392,6 +392,7 @@ Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
                 // Clean up all the files that have just been compiled in this new batch.
                 //
                 for (file_symbol = (FileSymbol *) input_java_file_set.FirstElement();
+                    // delete file_symbol
                      file_symbol;
                      file_symbol = (FileSymbol *) input_java_file_set.NextElement())
                 {

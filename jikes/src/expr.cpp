@@ -93,7 +93,7 @@ void Semantic::ReportMethodNotFound(Ast *ast, wchar_t *name)
     AstExpression **argument;
 
     AstMethodInvocation *method_call;
-    if (method_call = ast -> MethodInvocationCast())
+    if ((method_call = ast -> MethodInvocationCast()))
     {
         kind = SemanticError::METHOD_NOT_FOUND;
         num_arguments = method_call -> NumArguments();
@@ -203,14 +203,14 @@ MethodSymbol *Semantic::FindConstructor(TypeSymbol *containing_type, Ast *ast,
     AstClassInstanceCreationExpression *class_creation;
     AstSuperCall *super_call;
 
-    if (class_creation = ast -> ClassInstanceCreationExpressionCast())
+    if ((class_creation = ast -> ClassInstanceCreationExpressionCast()))
     {
         num_arguments = class_creation -> NumArguments();
         argument = new AstExpression*[num_arguments + 1];
         for (int i = 0; i < num_arguments; i++)
             argument[i] = class_creation -> Argument(i);
     }
-    else if (super_call = ast -> SuperCallCast())
+    else if ((super_call = ast -> SuperCallCast()))
     {
         num_arguments = super_call -> NumArguments();
         argument = new AstExpression*[num_arguments + 1];
@@ -3121,7 +3121,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
     }
 
     AstSimpleName *simple_name;
-    if (simple_name = method_call -> method -> SimpleNameCast())
+    if ((simple_name = method_call -> method -> SimpleNameCast()))
     {
         SemanticEnvironment *where_found;
         MethodSymbol *method = FindMethodInEnvironment(where_found, state_stack.Top(), method_call);
@@ -4699,7 +4699,7 @@ void Semantic::ProcessMINUS(AstPreUnaryExpression *expr)
     AstIntegerLiteral *int_literal;
     AstLongLiteral *long_literal;
 
-    if (int_literal = expr -> expression -> IntegerLiteralCast())
+    if ((int_literal = expr -> expression -> IntegerLiteralCast()))
     {
         LiteralSymbol *literal = lex_stream -> LiteralSymbol(int_literal -> integer_literal_token);
 
@@ -4713,7 +4713,7 @@ void Semantic::ProcessMINUS(AstPreUnaryExpression *expr)
         }
         else expr -> symbol = control.int_type;
     }
-    else if (long_literal = expr -> expression -> LongLiteralCast())
+    else if ((long_literal = expr -> expression -> LongLiteralCast()))
     {
         LiteralSymbol *literal = lex_stream -> LiteralSymbol(long_literal -> long_literal_token);
 
