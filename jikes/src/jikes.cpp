@@ -2,7 +2,7 @@
 //
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
-// http://www.ibm.com/research/jikes.
+// http://ibm.com/developerworks/opensource/jikes.
 // Copyright (C) 1996, 1999, International Business Machines Corporation
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
                 "Originally written by Philippe Charles and David Shields \n"
                 "of IBM Research, Jikes is now maintained and refined by the\n"
                 "Jikes Project at:\n"
-                "http://oss.software.ibm.com/developerworks/opensource/jikes\n"
+                "http://ibm.com/developerworks/opensource/jikes\n"
                 "Please consult this URL for more information and to learn \n"
                 "how to report problems.\n");
 
