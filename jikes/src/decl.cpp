@@ -30,7 +30,8 @@ inline void Semantic::CheckPackage()
     if (compilation_unit -> package_declaration_opt)
     {
         //
-        // Make sure that the package or any of its parents does not match the name of a type.
+        // Make sure that the package or any of its parents does not match the
+        // name of a type.
         //
         for (PackageSymbol *subpackage = this_package, *package = subpackage -> owner;
             package;
@@ -63,7 +64,8 @@ inline void Semantic::CheckPackage()
 
 
 //
-// Pass 1: Introduce the main package, the current package and all types specified into their proper scope
+// Pass 1: Introduce the main package, the current package and all types
+// specified into their proper scope
 //
 void Semantic::ProcessTypeNames()
 {
@@ -182,7 +184,8 @@ void Semantic::ProcessTypeNames()
                         type -> declaration = class_declaration;
                         type -> SetFlags(ProcessClassModifiers(class_declaration));
                         //
-                        // Add 3 extra elements for padding. May need a default constructor and other support elements.
+                        // Add 3 extra elements for padding. May need a default
+                        // constructor and other support elements.
                         //
                         type -> SetSymbolTable(class_declaration -> class_body -> NumClassBodyDeclarations() + 3);
                         type -> SetLocation();
@@ -315,8 +318,8 @@ void Semantic::ProcessTypeNames()
     ProcessImports();
 
     //
-    // Process outer type of superclasses and interfaces and make sure that compilation unit
-    // contains exactly one public type.
+    // Process outer type of superclasses and interfaces and make sure that
+    // compilation unit contains exactly one public type.
     //
     TypeSymbol *public_type = NULL;
     for (int i = 0; i < type_list.Length(); i++)
@@ -412,9 +415,10 @@ void Semantic::CheckClassMembers(TypeSymbol *containing_type, AstClassBody *clas
 inline TypeSymbol *Semantic::FindTypeInShadow(TypeShadowSymbol *type_shadow_symbol, LexStream::TokenIndex identifier_token)
 {
     //
-    // Recall that even an inaccessible member x of a super class (or interface) S,
-    // in addition to not been inherited by a subclass, hides all other occurrences of x that may
-    // appear in a super class (or super interface) of S (see 8.3).
+    // Recall that even an inaccessible member x of a super class (or
+    // interface) S, in addition to not been inherited by a subclass, hides
+    // all other occurrences of x that may appear in a super class (or super
+    // interface) of S (see 8.3).
     //
     TypeSymbol *type_symbol = type_shadow_symbol -> type_symbol;
 
@@ -435,7 +439,7 @@ inline TypeSymbol *Semantic::FindTypeInShadow(TypeShadowSymbol *type_shadow_symb
 
 
 //
-// Look for a type within an environment stack, without regard to inheritance !!!
+// Look for a type within an environment stack, without regard to inheritance.
 //
 TypeSymbol *Semantic::FindTypeInEnvironment(SemanticEnvironment *env_stack, NameSymbol *name_symbol)
 {
@@ -523,7 +527,8 @@ TypeSymbol *Semantic::ProcessNestedClassName(TypeSymbol *containing_type, AstCla
                                             : ProcessNestedClassModifiers(class_declaration));
     inner_type -> SetOwner(containing_type);
     //
-    // Add 3 extra elements for padding. May need a default constructor and other support elements.
+    // Add 3 extra elements for padding. May need a default constructor and
+    // other support elements.
     //
     inner_type -> SetSymbolTable(class_declaration -> class_body -> NumClassBodyDeclarations() + 3);
     inner_type -> SetLocation();
@@ -669,7 +674,8 @@ void Semantic::ProcessImports()
 
 
 //
-// Pass 1.3: Process outer types in "extends" and "implements" clauses associated with the types.
+// Pass 1.3: Process outer types in "extends" and "implements" clauses
+// associated with the types.
 //
 void Semantic::ProcessSuperTypeDependences(AstClassDeclaration *class_declaration)
 {
@@ -1120,9 +1126,10 @@ void Semantic::ProcessTypeHeaders(AstClassDeclaration *class_declaration)
     ProcessSuperTypesOfOuterType(this_type);
 
     //
-    // Note that if we are processing an outermost type, no environment is set before we
-    // invoke ProcessTypeHeader to process its super types. Therefore, the dependence map
-    // is not updated with the super type information. In that case, we do so here.
+    // Note that if we are processing an outermost type, no environment is set
+    // before we invoke ProcessTypeHeader to process its super types.
+    // Therefore, the dependence map is not updated with the super type
+    // information. In that case, we do so here.
     //
     if (state_stack.Size() == 0)
     {
@@ -1133,7 +1140,8 @@ void Semantic::ProcessTypeHeaders(AstClassDeclaration *class_declaration)
                           (class_declaration -> super_opt ? class_declaration -> super_opt -> LeftToken()
                                                           : class_declaration -> identifier_token));
              //
-             // Also, check whether or not the super type of this outermost type is accessible.
+             // Also, check whether or not the super type of this outermost
+             // type is accessible.
              //
              if (class_declaration -> super_opt)
              {
@@ -1167,9 +1175,9 @@ void Semantic::ProcessTypeHeaders(AstInterfaceDeclaration *interface_declaration
     ProcessSuperTypesOfOuterType(interface_declaration -> semantic_environment -> Type());
 
     //
-    // Note that no environment is set before we invoke ProcessTypeHeader to process the
-    // super types of this_type. As a result, the dependence map is not updated with tha
-    // information. We do so here.
+    // Note that no environment is set before we invoke ProcessTypeHeader to
+    // process the super types of this_type. As a result, the dependence map
+    // is not updated with that information. We do so here.
     //
     for (int i = 0; i < interface_declaration -> NumExtendsInterfaces(); i++)
     {
@@ -1228,15 +1236,17 @@ TypeSymbol *Semantic::MustFindNestedType(TypeSymbol *type, Ast *name)
 
 
 //
-// The Ast name is a qualified name (simple name or a field access). The function FindTypeInLayer
-// searches for the first subname that is the name of a type contained in the set inner_types.
-// If such a type is found, it is returned. Otherwise, the whole qualified name is resolved to
-// a symbol that is returned.
+// The Ast name is a qualified name (simple name or a field access). The
+// function FindTypeInLayer searches for the first subname that is the name of
+// a type contained in the set inner_types. If such a type is found, it is
+// returned. Otherwise, the whole qualified name is resolved to a symbol that
+// is returned.
 //
 TypeSymbol *Semantic::FindTypeInLayer(Ast *name, SymbolSet &inner_types)
 {
     //
-    // Unwind all the field accesses until we get to a base that is a simple name
+    // Unwind all the field accesses until we get to a base that is a simple
+    // name
     //
     Tuple<AstFieldAccess *> field;
     for (AstFieldAccess *field_access = name -> FieldAccessCast(); field_access; field_access = field_access -> base -> FieldAccessCast())
@@ -1246,8 +1256,8 @@ TypeSymbol *Semantic::FindTypeInLayer(Ast *name, SymbolSet &inner_types)
     }
 
     //
-    // If the simple_name base is a type that is an element in the inner_types set
-    // return it. Otherwise, assume it is a package name...
+    // If the simple_name base is a type that is an element in the inner_types
+    // set return it. Otherwise, assume it is a package name...
     //
     AstSimpleName *simple_name = name -> SimpleNameCast();
 
@@ -1478,9 +1488,9 @@ void Semantic::ProcessNestedTypeHeaders(AstInterfaceDeclaration *interface_decla
 
 
 //
-// Pass 3: Process all method and constructor declarations within the compilation unit so that
-//         any field initialization enclosed in the compilation unit can invoke any constructor or
-//         method within the unit.
+// Pass 3: Process all method and constructor declarations within the
+// compilation unit so that any field initialization enclosed in the
+// compilation unit can invoke any constructor or method within the unit.
 //
 inline void Semantic::ProcessConstructorMembers(AstClassBody *class_body)
 {
@@ -1718,9 +1728,9 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment, LexStream::
                         method -> ProcessMethodSignature((Semantic *) this, identifier_token);
 
                     //
-                    // If the method is contained in an abstract type read from a class file,
-                    // then it is possible that the abstract method is just out-of-date and needs
-                    // to be recompiled.
+                    // If the method is contained in an abstract type read from
+                    // a class file, then it is possible that the abstract
+                    // method is just out-of-date and needs to be recompiled.
                     //
                     ReportSemError((! containing_type -> ACC_INTERFACE()) &&
                                    (containing_type -> file_symbol && containing_type -> file_symbol -> IsClass())
@@ -1739,9 +1749,9 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment, LexStream::
 
         //
         // If the super class of this_type is abstract and it is contained in a
-        // different package, check to see if its members include abstract methods
-        // with default access. If so, we must issue error messages for them also
-        // as they cannot be overridden.
+        // different package, check to see if its members include abstract
+        // methods with default access. If so, we must issue error messages
+        // for them also as they cannot be overridden.
         //
         if (this_type != control.Object() && this_type -> super -> ACC_ABSTRACT() &&
             (this_type -> ContainingPackage() != this_type -> super -> ContainingPackage()))
@@ -1760,9 +1770,9 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment, LexStream::
                         method -> ProcessMethodSignature((Semantic *) this, identifier_token);
 
                     //
-                    // If the method is contained in an abstract type read from a class file,
-                    // then it is possible that the abstract method is just out-of-date and needs
-                    // to be recompiled.
+                    // If the method is contained in an abstract type read
+                    // from a class file, then it is possible that the abstract
+                    // method is just out-of-date and needs to be recompiled.
                     //
                     ReportSemError(SemanticError::NON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD,
                                    identifier_token,
@@ -1921,7 +1931,8 @@ void Semantic::CompleteSymbolTable(AstInterfaceDeclaration *interface_declaratio
     }
 
     //
-    // Compute the set of final variables (all fields in an interface are final) in this type.
+    // Compute the set of final variables (all fields in an interface are
+    // final) in this type.
     //
     Tuple<VariableSymbol *> finals(this_type -> NumVariableSymbols());
     for (int j = 0; j < this_type -> NumVariableSymbols(); j++)
@@ -1931,7 +1942,8 @@ void Semantic::CompleteSymbolTable(AstInterfaceDeclaration *interface_declaratio
     }
 
     //
-    // Initialize each variable, in turn, and check to see if we need to declare a static initialization method: <clinit>.
+    // Initialize each variable, in turn, and check to see if we need to
+    // declare a static initialization method: <clinit>.
     //
     MethodSymbol *init_method = NULL;
     for (int k = 0; k < interface_declaration -> NumClassVariables(); k++)
@@ -1939,9 +1951,9 @@ void Semantic::CompleteSymbolTable(AstInterfaceDeclaration *interface_declaratio
         InitializeVariable(interface_declaration -> ClassVariable(k), finals);
 
         //
-        // We need a static constructor-initializer if we encounter at least one class
-        // variable that is declared with an initialization expression that is not a
-        // constant expression.
+        // We need a static constructor-initializer if we encounter at least
+        // one class variable that is declared with an initialization
+        // expression that is not a constant expression.
         //
         if ((! init_method) && NeedsInitializationMethod(interface_declaration -> ClassVariable(k)))
         {
@@ -2254,9 +2266,10 @@ void Semantic::ProcessImportQualifiedName(AstExpression *name)
         //
         // From the 1.1 document:
         //
-        //    Nested classes of all sorts (top-level or inner) can be imported by either kind of
-        //    import statement. Class names in import statements must be fully package
-        //    qualified, and be resolvable without reference to inheritance relations...
+        //    Nested classes of all sorts (top-level or inner) can be imported
+        //    by either kind of import statement. Class names in import
+        //    statements must be fully package qualified, and be resolvable
+        //    without reference to inheritance relations...
         //
         TypeSymbol *type;
         if (compilation_unit -> package_declaration_opt)
@@ -2273,7 +2286,8 @@ void Semantic::ProcessImportQualifiedName(AstExpression *name)
         else type = FindSimpleNameType(control.unnamed_package, simple_name -> identifier_token);
 
         //
-        // If the simple_name is a type, save it. Otherwise, assume it is a package
+        // If the simple_name is a type, save it. Otherwise, assume it is a
+        // package
         //
         if (type)
         {
@@ -2383,8 +2397,8 @@ void Semantic::ProcessTypeImportOnDemandDeclaration(AstImportDeclaration *import
     }
 
     //
-    // Two or more type-import-on-demand may name the same package; the effect is as if there
-    // were only one such declaration.
+    // Two or more type-import-on-demand may name the same package; the effect
+    // is as if there were only one such declaration.
     //
     for (int i = 0; i < import_on_demand_packages.Length(); i++)
     {
@@ -2414,8 +2428,8 @@ void Semantic::ProcessTypeImportOnDemandDeclaration(AstImportDeclaration *import
 //
 // The Ast name is a name expression (either a qualified name or a simplename)
 // FindFirstType traverses the name tree and returns the first subtree that it
-// finds that matches a type. As a side-effect, each subtree that matches a package
-// or a type has that package or type recorded in its "symbol" field.
+// finds that matches a type. As a side-effect, each subtree that matches a
+// package or a type has that package or type recorded in its "symbol" field.
 //
 AstExpression *Semantic::FindFirstType(Ast *name)
 {
@@ -2486,8 +2500,8 @@ TypeSymbol *Semantic::FindSimpleNameType(PackageSymbol *package, LexStream::Toke
     else
     {
         //
-        // Check whether or not the type was declared in another compilation unit
-        // in the main package.
+        // Check whether or not the type was declared in another compilation
+        // unit in the main package.
         //
         FileSymbol *file_symbol = Control::GetFile(control, package, name_symbol);
         if (file_symbol)
@@ -2514,9 +2528,10 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_d
     TypeSymbol *type = symbol -> TypeCast();
 
     //
-    // If two single-type-import declarations in the same compilation unit attempt to
-    // import types with the same simple name, then a compile-time error occurs, unless
-    // the two types are the same type, in which case the duplicate declaration is ignored.
+    // If two single-type-import declarations in the same compilation unit
+    // attempt to import types with the same simple name, then a compile-time
+    // error occurs, unless the two types are the same type, in which case the
+    // duplicate declaration is ignored.
     //
     for (int i = 0; i < single_type_imports.Length(); i++)
     {
@@ -2734,15 +2749,15 @@ void Semantic::GenerateLocalConstructor(MethodSymbol *constructor)
     TypeSymbol *local_type = constructor -> containing_type;
 
     //
-    // Make up external name for constructor as we shall turn it into a regular method later.
-    // Note that the method needs to be PRIVATE and FINAL so that:
+    // Make up external name for constructor as we shall turn it into a regular
+    // method later. Note that the method needs to be PRIVATE and FINAL so that:
     //
     //    1. virtual calls are not made to it
     //
     //    2. it might be inlined later.
     //
-    // This resetting destroys the original access flags specified by the user. We shall
-    // say more about this later...
+    // This resetting destroys the original access flags specified by the user.
+    // We shall say more about this later...
     //
     IntToWstring value(local_type -> NumGeneratedConstructors());
 
@@ -2758,16 +2773,19 @@ void Semantic::GenerateLocalConstructor(MethodSymbol *constructor)
     delete [] external_name;
 
     //
-    // Make generated constructor symbol. The associated symbol table will not contain too many elements.
+    // Make generated constructor symbol. The associated symbol table will not
+    // contain too many elements.
     //
     BlockSymbol *block_symbol = new BlockSymbol(local_type -> NumConstructorParameters() +
                                                 constructor -> NumFormalParameters() + 3);
     block_symbol -> max_variable_index = 1; // All types need a spot for "this"
 
     //
-    // Note that the local constructor does not inherit the access flags of the specified constructor.
-    // This is because it acts more like a read_access method. The synthetic attribute that is associated
-    // with the constructor allows the compiler to prevent an illegal access from an unauthorized environment.
+    // Note that the local constructor does not inherit the access flags of the
+    // specified constructor. This is because it acts more like a read_access
+    // method. The synthetic attribute that is associated with the constructor
+    // allows the compiler to prevent an illegal access from an unauthorized
+    // environment.
     //
     MethodSymbol *local_constructor = local_type -> LocalConstructorOverload(constructor);
     local_constructor -> MarkSynthetic();
@@ -2862,8 +2880,9 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration *construc
     }
 
     //
-    // As the body of the constructor may not have been parsed yet, we estimate a size
-    // for its symbol table based on the number of lines in the body + a margin for one-liners.
+    // As the body of the constructor may not have been parsed yet, we estimate
+    // a size for its symbol table based on the number of lines in the body + a
+    // margin for one-liners.
     //
     BlockSymbol *block_symbol = new BlockSymbol(constructor_declarator -> NumFormalParameters() + 3);
     block_symbol -> max_variable_index = 1; // All types need a spot for "this".
@@ -3358,8 +3377,9 @@ void Semantic::AddInheritedTypes(TypeSymbol *base_type, TypeSymbol *super_type)
         TypeSymbol *type_symbol = type_shadow_symbol -> type_symbol;
 
         //
-        // Note that since all fields in an interface are implicitly public, all other fields
-        // encountered here are enclosed in a type that is a super class of base_type.
+        // Note that since all fields in an interface are implicitly public,
+        // all other fields encountered here are enclosed in a type that is a
+        // super class of base_type.
         //
         if (type_symbol -> ACC_PUBLIC() ||
             type_symbol -> ACC_PROTECTED() ||
@@ -3382,9 +3402,9 @@ void Semantic::AddInheritedTypes(TypeSymbol *base_type, TypeSymbol *super_type)
                 }
             }
             //
-            // TODO: maybe? if base_type is a nested type check if a type with the same
-            //       name appears in one of the enclosed lexical scopes. If so, add
-            //       it to the shadow!
+            // TODO: maybe? if base_type is a nested type check if a type with
+            // the same name appears in one of the enclosed lexical scopes. If
+            // so, add it to the shadow!
             //
         }
     }
@@ -3403,8 +3423,9 @@ void Semantic::AddInheritedFields(TypeSymbol *base_type, TypeSymbol *super_type)
         VariableShadowSymbol *variable_shadow_symbol = super_expanded_table.symbol_pool[i];
         VariableSymbol *variable_symbol = variable_shadow_symbol -> variable_symbol;
         //
-        // Note that since all fields in an interface are implicitly public, all other fields
-        // encountered here are enclosed in a type that is a super class of base_type.
+        // Note that since all fields in an interface are implicitly public,
+        // all other fields encountered here are enclosed in a type that is a
+        // super class of base_type.
         //
         if (variable_symbol -> ACC_PUBLIC() ||
             variable_symbol -> ACC_PROTECTED() ||
@@ -3468,8 +3489,8 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type, TypeSymbol *super_type
                     shadow -> AddConflict(method);
 
                     //
-                    // If main method in question does not override all other methods,
-                    // add all other conflicting methods.
+                    // If main method in question does not override all other
+                    // methods, add all other conflicting methods.
                     //
                     if (method -> containing_type != super_type)
                     {
@@ -3775,8 +3796,9 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
     }
 
     //
-    // As the body of the method may not have been parsed yet, we estimate a size
-    // for its symbol table based on the number of lines in the body + a margin for one-liners.
+    // As the body of the method may not have been parsed yet, we estimate a
+    // size for its symbol table based on the number of lines in the body + a
+    // margin for one-liners.
     //
     BlockSymbol *block_symbol = new BlockSymbol(method_declarator -> NumFormalParameters());
     block_symbol -> max_variable_index = (access_flags.ACC_STATIC() ? 0 : 1);
@@ -4000,7 +4022,8 @@ TypeSymbol *Semantic::FindType(LexStream::TokenIndex identifier_token)
                 }
 
                 //
-                // If a different type of the same name was found in an enclosing scope.
+                // If a different type of the same name was found in an
+                // enclosing scope.
                 //
                 if (outer_type && outer_type != type)
                 {
@@ -4063,8 +4086,9 @@ TypeSymbol *Semantic::FindType(LexStream::TokenIndex identifier_token)
     // If a valid type can be imported on demand, chose that type.
     // Otherwise, if a type was found at all, do some final checks on it.
     //
-    // Note that a type T contained in a package P is always accessible to all other
-    // types contained in P. I.e., we do not need to perform access check for type...
+    // Note that a type T contained in a package P is always accessible to all
+    // other types contained in P. I.e., we do not need to perform access check
+    // for type...
     //
     //
     if (imported_type)
@@ -4108,7 +4132,8 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
         type = FindType(identifier_token);
 
         //
-        // If the type was not found, try to read it again to generate an appropriate error message.
+        // If the type was not found, try to read it again to generate an
+        // appropriate error message.
         //
         if (! type)
         {
@@ -4117,10 +4142,10 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
             FileSymbol *file_symbol = Control::GetFile(control, package, name_symbol);
 
             //
-            // If there is no file associated with the name of the type then the type does
-            // not exist. Before invoking ReadType to issue a "type not found" error message,
-            // check whether or not the user is not attempting to access an inaccessible
-            // private type.
+            // If there is no file associated with the name of the type then
+            // the type does not exist. Before invoking ReadType to issue a
+            // "type not found" error message, check whether or not the user is
+            // not attempting to access an inaccessible private type.
             //
             if ((! file_symbol) && state_stack.Size() > 0)
             {
@@ -4251,7 +4276,7 @@ void Semantic::ProcessInterface(TypeSymbol *base_type, AstExpression *name)
             }
         }
 
-        name -> symbol = interf; // save type  name in ast.
+        name -> symbol = interf; // save type name in ast.
         base_type -> AddInterface(interf);
     }
 
@@ -4317,8 +4342,8 @@ inline void Semantic::ProcessInitializer(AstBlock *initializer_block, AstBlock *
         DefiniteBlockInitializer(block_body, LocalBlockStack().max_size, finals);
 
     //
-    // If an enclosed block has a higher max_variable_index than the current block,
-    // update max_variable_index in the current_block, accordingly.
+    // If an enclosed block has a higher max_variable_index than the current
+    // block, update max_variable_index in the current_block, accordingly.
     //
     if (init_method -> block_symbol -> max_variable_index < LocalBlockStack().TopMaxEnclosedVariableIndex())
         init_method -> block_symbol -> max_variable_index = LocalBlockStack().TopMaxEnclosedVariableIndex();
@@ -4333,8 +4358,9 @@ inline void Semantic::ProcessInitializer(AstBlock *initializer_block, AstBlock *
 bool Semantic::NeedsInitializationMethod(AstFieldDeclaration *field_declaration)
 {
     //
-    // We need a static constructor-initializer if we encounter at least one class
-    // variable that is declared with an initializer is not a constant expression.
+    // We need a static constructor-initializer if we encounter at least one
+    // class variable that is declared with an initializer is not a constant
+    // expression.
     //
     for (int i = 0; i < field_declaration -> NumVariableDeclarators(); i++)
     {
@@ -4346,11 +4372,13 @@ bool Semantic::NeedsInitializationMethod(AstFieldDeclaration *field_declaration)
                 return true;
 
             //
-            // TODO: there seems to be a contradiction between the language spec and the VM spec.
-            // The language spec seems to require that a variable be initialized (in the class file)
-            // with a "ConstantValue" only if it is static. The VM spec, on the other hand, states
-            // that a static need not be final to be initialized with a ConstantValue.
-            // As of now, we are following the language spec - ergo, this extra test.
+            // TODO: there seems to be a contradiction between the language
+            // spec and the VM spec. The language spec seems to require that a
+            // variable be initialized (in the class file) with a
+            // "ConstantValue" only if it is static. The VM spec, on the other
+            // hand, states that a static need not be final to be initialized
+            // with a ConstantValue. As of now, we are following the language
+            // spec - ergo, this extra test.
             //
             if (variable_declarator -> symbol && (! variable_declarator -> symbol -> ACC_FINAL()))
                 return true;
@@ -4407,19 +4435,20 @@ void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
         }
 
         //
-        // The static initializers and class variable initializers are executed in textual order... 8.5
+        // The static initializers and class variable initializers are executed
+        // in textual order... 8.5
         //
         int j,
             k;
         for (j = 0, k = 0; j < class_body -> NumClassVariables() && k < class_body -> NumStaticInitializers(); )
         {
             //
-            // Note that since there cannot be any overlap in the
-            // declarations, we can use either location position.
-            // The RightToken of the field declaration is used because it
-            // does not have to be computed (it is the terminating semicolon).
-            // Similarly, the LeftToken of the static initializer is used
-            // because it is the initial "static" keyword that marked the initializer.
+            // Note that since there cannot be any overlap in the declarations,
+            // we can use either location position. The RightToken of the field
+            // declaration is used because it does not have to be computed (it
+            // is the terminating semicolon). Similarly, the LeftToken of the
+            // static initializer is used because it is the initial "static"
+            // keyword that marked the initializer.
             //
             //    if (class_body -> InstanceVariables(j) -> RightToken() < class_body -> Block(k) -> LeftToken())
             //
@@ -4433,9 +4462,9 @@ void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
                 AstBlock *block_body = class_body -> StaticInitializer(k) -> block;
 
                 //
-                // The first block that is the body of an initializer is reachable
-                // A subsequent block is reachable iff its predecessor can complete
-                // normally
+                // The first block that is the body of an initializer is
+                // reachable. A subsequent block is reachable iff its
+                // predecessor can complete normally
                 //
                 block_body -> is_reachable = (k == 0
                                                  ? true
@@ -4492,12 +4521,13 @@ void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
         if (! init_method)
         {
             //
-            // Check whether or not we need a static initializer method. We need a static
-            // constructor-initializer iff:
+            // Check whether or not we need a static initializer method. We
+            // need a static constructor-initializer iff:
             //
-            //     . we have at least one static initializer (this case is processed above)
-            //     . we have at least one static variable that is not initialized with a
-            //       constant expression.
+            //     . we have at least one static initializer (this case is
+            //       processed above)
+            //     . we have at least one static variable that is not
+            //       initialized with a constant expression.
             //
             for (int i = 0; i < class_body -> NumClassVariables(); i++)
             {
@@ -4518,9 +4548,9 @@ void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
         }
 
         //
-        // If an initialization method has been defined, update its max_block_depth.
-        // Otherwise, deallocate the block symbol as nobody would be pointing to it
-        // after this point.
+        // If an initialization method has been defined, update its
+        // max_block_depth. Otherwise, deallocate the block symbol as nobody
+        // would be pointing to it after this point.
         //
         if (init_method)
         {
@@ -4625,9 +4655,9 @@ void Semantic::ProcessBlockInitializers(AstClassBody *class_body)
                 AstBlock *block_body = class_body -> Block(k);
 
                 //
-                // The first block that is the body of an initializer is reachable
-                // A subsequent block is reachable iff its predecessor can complete
-                // normally
+                // The first block that is the body of an initializer is
+                // reachable. A subsequent block is reachable iff its
+                // predecessor can complete normally
                 //
                 block_body -> is_reachable = (k == 0 ? true : class_body -> Block(k - 1) -> can_complete_normally);
 
@@ -4655,10 +4685,10 @@ void Semantic::ProcessBlockInitializers(AstClassBody *class_body)
         init_method -> block_symbol -> CompressSpace(); // space optimization
 
         //
-        // Note that unlike the case of static fields. We do not ensure here that
-        // each final instance variable has been initialized at this point, because
-        // the user may chose instead to initialize such a final variable in every
-        // constructor instead. See body.cpp
+        // Note that unlike the case of static fields. We do not ensure here
+        // that each final instance variable has been initialized at this
+        // point, because the user may chose instead to initialize such a
+        // final variable in every constructor instead. See body.cpp
         //
 
 // STG:

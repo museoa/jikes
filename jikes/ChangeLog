@@ -1,5 +1,9 @@
 2001-11-02  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/decl.cpp: Reformat comments to 80 columns.
+
+2001-11-02  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/expr.cpp (TypeAccessCheck):
 	* src/symbol.cpp (HasProtectedAccessTo): Update to be in line with
 	JLS 6.6.1 for array types, bug 675 - patch 222.
