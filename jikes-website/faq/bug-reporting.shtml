@@ -131,9 +131,13 @@
         you're running on we can't tell you if it's a known issue on that platform, or possibly recreate it if it's a previously unknown
         quirk.</dd>
       <dt>Full Error Message</dt>
-       <dd>What was the <strong>full</strong> error message? Did Jikes drop core? What signal did it catch? Was it an abort? What was
-        the assertion that lead to the abort? If you're on a real operating system and get a core file, what does the debugger tell you
-        about the core file? (For those on Windows, you'll have to rely on Dr. Watson or Quincy to see what the stack trace is, sorry.)</dd>
+       <dd>What was the <strong>full</strong> error message? Did Jikes leave a
+        file called core in the directory you ran it from? Did Jikes abort?
+        What was the assertion that lead to the abort? If you're using a
+        Unix-like operating system and Jikes crashed, follow the steps below
+        for collecting useful information after crashes. (For those on Windows,
+        you'll have to rely on Dr. Watson or Quincy to see what the stack trace
+        is, sorry.)</dd>
       <dt>Testcase</dt>
        <dd>We have to know how to recreate the problem in order to debug it. Testcases should preferably be in jacks format; however,
         this is not a hard and fast rule. Testcases must however be COMPLETE and SELF-CONTAINED. Testcases should also include an
@@ -147,6 +151,38 @@
         as that. The new dW/osssf system we use to collect bugs has one advantage... you can't submit a bug without verifiable contact
         information.</dd>
      </dl>     
+
+     <h1>Gathering useful information after a crash</h1>
+     <p>If Jikes crashes, it's best if you can provide a small test case that
+     repeatably causes Jikes to crash. Doing this gives you the best chance
+     of having the bug fixed.</p>
+     <p>If you can't come up with a small repeatable test case, we'll want a
+     stack trace. When a C++ program such as Jikes crashes, you don't
+     automatically get a stack trace as you would with Java. Here are the
+     steps for collecting a stack trace:</p>
+     <ol style="text-align:left;">
+     <li>Download and unpack the Jikes source.
+     <li><tt>./configure --enable-debug</tt>
+     <li><tt>make</tt>
+     <li>Unset any limits on core dump size, usually with the
+     command <tt>ulimit -c unlimited</tt>
+     <li>Use the resulting build untill it falls over. This should leave you
+     with a file called <tt>core</tt>, usually in the current directory but
+     in <tt>/cores</tt> on Mac&nbsp;OS&nbsp;X (where all cores are numbered).
+     <li>Capture the output when it dies, especially any assertion messages
+     that appear right at the end.
+     <li>Use <tt>gdb</tt> to get a stack trace of the failure. You
+     run <tt>gdb</tt> like this: <tt>gdb /path/to/jikes /path/to/core</tt>.
+     The only two commands you need are <tt>bt</tt> (backtrace) and
+     <tt>quit</tt>.
+     </ol>
+     <p>You can use the information from steps 6 and 7 to look at the
+     existing bugs for any similar ones, or open a new one. Sometimes
+     knowing where it died will help in writing a smaller test case that
+     you can post in your bug report. Looking at the stack traces can also
+     help you recognize if you're hitting the same problem over and over,
+     or if you keep finding new ones (and crashing in very different
+     places).</p>
      
      <h1>Report the bug</h1>
      <p>This is the <strong>easy</strong> part. Just go to the <a href="/developerworks/bugs/?func=addbug&amp;group_id=10">submission page</a>
