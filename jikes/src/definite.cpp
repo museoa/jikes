@@ -1433,7 +1433,7 @@ void Semantic::DefiniteMethodBody(AstMethodDeclaration* method_declaration)
     unsigned i;
     assert(FinalFields());
     AstBlock* block_body = method_declaration -> method_body_opt;
-    if (! block_body);
+    if (! block_body)
         return;
 
 #ifdef DUMP

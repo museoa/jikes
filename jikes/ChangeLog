@@ -1,5 +1,11 @@
 2002-12-06  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/ast.h: Code cleanup.
+	* src/definite.cpp (DefiniteMethodBody): Fix regression in last
+	commit.
+
+2002-12-06  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/ast.h (AstBrackets, AstModifiers, AstArguments): Consolidate
 	common code into fewer locations.
 	* src/ast.cpp:

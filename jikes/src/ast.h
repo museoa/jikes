@@ -37,11 +37,11 @@ class VariableSymbolArray
 
     T** base;
     size_t base_size;
-    int top,
-        size;
+    int top;
+    int size;
     StoragePool* pool;
-    unsigned short log_blksize,
-                   base_increment;
+    unsigned short log_blksize;
+    unsigned short base_increment;
 
     inline size_t Blksize() { return 1 << log_blksize; }
 
@@ -587,11 +587,11 @@ class AstArray
 {
     T** base;
     size_t base_size;
-    int top,
-        size;
+    int top;
+    int size;
     StoragePool* pool;
-    unsigned short log_blksize,
-                   base_increment;
+    unsigned short log_blksize;
+    unsigned short base_increment;
 
     inline size_t Blksize() { return 1 << log_blksize; }
 
@@ -822,7 +822,7 @@ protected:
 
 private:
     AstArray<AstStatement*>* block_statements;
-    VariableSymbolArray* locally_defined_variables;
+    VariableSymbolArray* defined_variables;
 
 public:
     enum BlockTag
@@ -838,8 +838,8 @@ public:
     BlockTag block_tag;
 
     BlockSymbol* block_symbol;
-
     unsigned nesting_level;
+
     LexStream::TokenIndex label_opt;
     LexStream::TokenIndex left_brace_token;
     LexStream::TokenIndex right_brace_token;
@@ -849,7 +849,7 @@ public:
     AstBlock(StoragePool* p)
         : pool(p),
           block_statements(NULL),
-          locally_defined_variables(NULL),
+          defined_variables(NULL),
           block_tag(NONE),
           block_symbol(NULL),
           nesting_level(0),
@@ -876,12 +876,11 @@ public:
 
     inline VariableSymbol*& LocallyDefinedVariable(unsigned i)
     {
-        return (*locally_defined_variables)[i];
+        return (*defined_variables)[i];
     }
     inline unsigned NumLocallyDefinedVariables()
     {
-        return (locally_defined_variables
-                ? locally_defined_variables -> Length() : 0);
+        return defined_variables ? defined_variables -> Length() : 0;
     }
     inline void AllocateLocallyDefinedVariables(unsigned estimate = 1);
     inline void AddLocallyDefinedVariable(VariableSymbol*);
@@ -992,6 +991,7 @@ class AstBrackets : public Ast
 public:
     LexStream::TokenIndex left_bracket_token;
     LexStream::TokenIndex right_bracket_token;
+
     unsigned dims;
 
     AstBrackets(LexStream::TokenIndex l, LexStream::TokenIndex r)
@@ -1171,7 +1171,6 @@ public:
 //
 class AstCompilationUnit : public Ast
 {
-    StoragePool* pool;
     AstArray<AstImportDeclaration*>* import_declarations;
     AstArray<AstDeclaredType*>* type_declarations;
 
@@ -1181,9 +1180,9 @@ public:
     AstPackageDeclaration* package_declaration_opt;
 
     AstCompilationUnit(StoragePool* p)
-        : pool(p),
-          import_declarations(NULL),
+        : import_declarations(NULL),
           type_declarations(NULL),
+          ast_pool(p),
           package_declaration_opt(NULL)
     {
         kind = COMPILATION;
@@ -1388,8 +1387,8 @@ public:
     }
     inline unsigned NumClassBodyDeclarations()
     {
-        return (class_body_declarations
-                ? class_body_declarations -> Length() : 0);
+        return class_body_declarations
+            ? class_body_declarations -> Length() : 0;
     }
     inline void AllocateClassBodyDeclarations(unsigned estimate = 1);
     inline void AddClassBodyDeclaration(AstDeclared*);
@@ -1544,8 +1543,8 @@ public:
 
     virtual LexStream::TokenIndex LeftToken()
     {
-        return (modifiers_opt ? modifiers_opt -> left_modifier_token
-                : class_token);
+        return modifiers_opt ? modifiers_opt -> left_modifier_token
+            : class_token;
     }
     virtual LexStream::TokenIndex RightToken()
     {
@@ -1635,8 +1634,8 @@ public:
     virtual LexStream::TokenIndex LeftToken() { return identifier_token; }
     virtual LexStream::TokenIndex RightToken()
     {
-        return (brackets_opt ? brackets_opt -> right_bracket_token
-                : identifier_token);
+        return brackets_opt ? brackets_opt -> right_bracket_token
+            : identifier_token;
     }
 };
 
@@ -1687,9 +1686,9 @@ public:
     }
     virtual LexStream::TokenIndex RightToken()
     {
-        return (variable_initializer_opt ?
-                variable_initializer_opt -> RightToken() :
-                variable_declarator_name -> RightToken());
+        return variable_initializer_opt
+            ? variable_initializer_opt -> RightToken()
+            : variable_declarator_name -> RightToken();
     }
 };
 
@@ -1742,8 +1741,8 @@ public:
 
     virtual LexStream::TokenIndex LeftToken()
     {
-        return (modifiers_opt ? modifiers_opt -> left_modifier_token
-                : type -> LeftToken());
+        return modifiers_opt ? modifiers_opt -> left_modifier_token
+            : type -> LeftToken();
     }
     virtual LexStream::TokenIndex RightToken() { return semicolon_token; }
 };
@@ -1776,8 +1775,8 @@ public:
 
     virtual LexStream::TokenIndex LeftToken()
     {
-        return (modifiers_opt ? modifiers_opt -> left_modifier_token
-                : type -> LeftToken());
+        return modifiers_opt ? modifiers_opt -> left_modifier_token
+            : type -> LeftToken();
     }
     virtual LexStream::TokenIndex RightToken()
     {
@@ -1837,8 +1836,8 @@ public:
     virtual LexStream::TokenIndex LeftToken() { return identifier_token; }
     virtual LexStream::TokenIndex RightToken()
     {
-        return (brackets_opt ? brackets_opt -> right_bracket_token
-                : right_parenthesis_token);
+        return brackets_opt ? brackets_opt -> right_bracket_token
+            : right_parenthesis_token;
     }
 };
 
@@ -1929,8 +1928,8 @@ public:
 
     virtual LexStream::TokenIndex LeftToken()
     {
-        return (modifiers_opt ? modifiers_opt -> left_modifier_token
-                : type -> LeftToken());
+        return modifiers_opt ? modifiers_opt -> left_modifier_token
+            : type -> LeftToken();
     }
     virtual LexStream::TokenIndex RightToken()
     {
@@ -2185,12 +2184,12 @@ public:
 
     virtual LexStream::TokenIndex LeftToken()
     {
-        return (modifiers_opt ? modifiers_opt -> left_modifier_token
-                : constructor_declarator -> LeftToken());
+        return modifiers_opt ? modifiers_opt -> left_modifier_token
+            : constructor_declarator -> identifier_token;
     }
     virtual LexStream::TokenIndex RightToken()
     {
-        return constructor_body -> RightToken();
+        return constructor_body -> right_brace_token;
     }
 };
 
@@ -2256,8 +2255,8 @@ public:
 
     virtual LexStream::TokenIndex LeftToken()
     {
-        return (modifiers_opt ? modifiers_opt -> left_modifier_token
-                : interface_token);
+        return modifiers_opt ? modifiers_opt -> left_modifier_token
+            : interface_token;
     }
     virtual LexStream::TokenIndex RightToken()
     {
@@ -2312,14 +2311,14 @@ public:
 
     virtual LexStream::TokenIndex LeftToken()
     {
-        return (modifiers_opt ? modifiers_opt -> left_modifier_token
-                : type -> LeftToken());
+        return modifiers_opt ? modifiers_opt -> left_modifier_token
+            : type -> LeftToken();
     }
     virtual LexStream::TokenIndex RightToken()
     {
-        return (semicolon_token_opt ? semicolon_token_opt
-                : (VariableDeclarator(NumVariableDeclarators() - 1) ->
-                   RightToken()));
+        return semicolon_token_opt ? semicolon_token_opt
+            : (VariableDeclarator(NumVariableDeclarators() - 1) ->
+               RightToken());
     }
 };
 
@@ -2413,8 +2412,8 @@ public:
     }
     virtual LexStream::TokenIndex RightToken()
     {
-        return (false_statement_opt ? false_statement_opt -> RightToken()
-                : true_statement -> RightToken());
+        return false_statement_opt ? false_statement_opt -> RightToken()
+            : true_statement -> RightToken();
     }
 };
 
@@ -2482,8 +2481,8 @@ public:
     }
     virtual LexStream::TokenIndex RightToken()
     {
-        return (semicolon_token_opt ? semicolon_token_opt
-                : expression -> RightToken());
+        return semicolon_token_opt ? semicolon_token_opt
+            : expression -> RightToken();
     }
 };
 
@@ -3137,8 +3136,8 @@ public:
         // when the Finally clause is null, there must be one or more catch
         // clauses
         //
-        return (finally_clause_opt ? finally_clause_opt -> RightToken()
-                : CatchClause(NumCatchClauses() - 1) -> RightToken());
+        return finally_clause_opt ? finally_clause_opt -> RightToken()
+            : CatchClause(NumCatchClauses() - 1) -> RightToken();
     }
 };
 
@@ -3747,10 +3746,10 @@ public:
     virtual LexStream::TokenIndex LeftToken() { return new_token; }
     virtual LexStream::TokenIndex RightToken()
     {
-        return (array_initializer_opt
-                ? array_initializer_opt -> right_brace_token
-                : brackets_opt ? brackets_opt -> right_bracket_token
-                : DimExpr(NumDimExprs() - 1) -> right_bracket_token);
+        return array_initializer_opt
+            ? array_initializer_opt -> right_brace_token
+            : brackets_opt ? brackets_opt -> right_bracket_token
+            : DimExpr(NumDimExprs() - 1) -> right_bracket_token;
     }
 };
 
@@ -4360,11 +4359,11 @@ public:
 private:
     Cell** base;
     size_t base_size;
-    int top,
-        size;
+    int top;
+    int size;
 
-    size_t log_blksize,
-           base_increment;
+    size_t log_blksize;
+    size_t base_increment;
 
     //
     // Allocate another block of storage for the storage pool
@@ -6042,21 +6041,22 @@ inline void AstBlock::AddStatement(AstStatement* statement)
 
 inline void AstBlock::AllocateLocallyDefinedVariables(unsigned estimate)
 {
-    if(! locally_defined_variables)
-        locally_defined_variables = pool -> NewVariableSymbolArray(estimate);
+    if(! defined_variables)
+        defined_variables = pool -> NewVariableSymbolArray(estimate);
 }
 
 inline void AstBlock::AddLocallyDefinedVariable(VariableSymbol* variable_symbol)
 {
-    if (! locally_defined_variables)
+    if (! defined_variables)
         AllocateLocallyDefinedVariables(1);
-    locally_defined_variables -> Next() = variable_symbol;
+    defined_variables -> Next() = variable_symbol;
 }
 
 inline void AstCompilationUnit::AllocateImportDeclarations(unsigned estimate)
 {
     assert(! import_declarations);
-    import_declarations = NewAstArray<AstImportDeclaration*> (pool, estimate);
+    import_declarations =
+        NewAstArray<AstImportDeclaration*> (ast_pool, estimate);
 }
 
 inline void AstCompilationUnit::AddImportDeclaration(AstImportDeclaration* import_declaration)
@@ -6068,7 +6068,7 @@ inline void AstCompilationUnit::AddImportDeclaration(AstImportDeclaration* impor
 inline void AstCompilationUnit::AllocateTypeDeclarations(unsigned estimate)
 {
     assert(! type_declarations);
-    type_declarations = NewAstArray<AstDeclaredType*> (pool, estimate);
+    type_declarations = NewAstArray<AstDeclaredType*> (ast_pool, estimate);
 }
 
 inline void AstCompilationUnit::AddTypeDeclaration(AstDeclaredType* type_declaration)
@@ -6236,6 +6236,66 @@ inline void AstFieldDeclaration::AddVariableDeclarator(AstVariableDeclarator* va
     variable_declarators -> Next() = variable_declarator;
 }
 
+inline void AstMethodDeclarator::AllocateFormalParameters(unsigned estimate)
+{
+    assert(! formal_parameters);
+    formal_parameters = NewAstArray<AstFormalParameter*> (pool, estimate);
+}
+
+inline void AstMethodDeclarator::AddFormalParameter(AstFormalParameter* formal_parameter)
+{
+    assert(formal_parameters);
+    formal_parameters -> Next() = formal_parameter;
+}
+
+inline void AstMethodDeclaration::AllocateThrows(unsigned estimate)
+{
+    assert(! throws);
+    throws = NewAstArray<AstTypeName*> (pool, estimate);
+}
+
+inline void AstMethodDeclaration::AddThrow(AstTypeName* exception)
+{
+    assert(throws);
+    throws -> Next() = exception;
+}
+
+inline void AstArguments::AllocateArguments(unsigned estimate)
+{
+    assert(! arguments);
+    arguments = NewAstArray<AstExpression*> (pool, estimate);
+}
+
+inline void AstArguments::AddArgument(AstExpression* argument)
+{
+    assert(arguments);
+    arguments -> Next() = argument;
+}
+
+inline void AstArguments::AllocateLocalArguments(unsigned estimate)
+{
+    assert(! shadow_arguments);
+    shadow_arguments = NewAstArray<AstExpression*> (pool, estimate);
+}
+
+inline void AstArguments::AddLocalArgument(AstExpression* argument)
+{
+    assert(shadow_arguments);
+    shadow_arguments -> Next() = argument;
+}
+
+inline void AstConstructorDeclaration::AllocateThrows(unsigned estimate)
+{
+    assert(! throws);
+    throws = NewAstArray<AstTypeName*> (pool, estimate);
+}
+
+inline void AstConstructorDeclaration::AddThrow(AstTypeName* exception)
+{
+    assert(throws);
+    throws -> Next() = exception;
+}
+
 inline void AstInterfaceDeclaration::AllocateInterfaces(unsigned estimate)
 {
     assert(! interfaces);
@@ -6246,6 +6306,19 @@ inline void AstInterfaceDeclaration::AddInterface(AstTypeName* interf)
 {
     assert(interfaces);
     interfaces -> Next() = interf;
+}
+
+inline void AstLocalVariableDeclarationStatement::AllocateVariableDeclarators(unsigned estimate)
+{
+    assert(! variable_declarators);
+    variable_declarators =
+        NewAstArray<AstVariableDeclarator*> (pool, estimate);
+}
+
+inline void AstLocalVariableDeclarationStatement::AddVariableDeclarator(AstVariableDeclarator* variable_declarator)
+{
+    assert(variable_declarators);
+    variable_declarators -> Next() = variable_declarator;
 }
 
 inline void AstSwitchBlockStatement::AllocateSwitchLabels(unsigned estimate)
@@ -6323,79 +6396,6 @@ inline void AstArrayCreationExpression::AddDimExpr(AstDimExpr* dim_expr)
 {
     assert(dim_exprs);
     dim_exprs -> Next() = dim_expr;
-}
-
-inline void AstArguments::AllocateArguments(unsigned estimate)
-{
-    assert(! arguments);
-    arguments = NewAstArray<AstExpression*> (pool, estimate);
-}
-
-inline void AstArguments::AddArgument(AstExpression* argument)
-{
-    assert(arguments);
-    arguments -> Next() = argument;
-}
-
-inline void AstArguments::AllocateLocalArguments(unsigned estimate)
-{
-    assert(! shadow_arguments);
-    shadow_arguments = NewAstArray<AstExpression*> (pool, estimate);
-}
-
-inline void AstArguments::AddLocalArgument(AstExpression* argument)
-{
-    assert(shadow_arguments);
-    shadow_arguments -> Next() = argument;
-}
-
-inline void AstMethodDeclaration::AllocateThrows(unsigned estimate)
-{
-    assert(! throws);
-    throws = NewAstArray<AstTypeName*> (pool, estimate);
-}
-
-inline void AstMethodDeclaration::AddThrow(AstTypeName* exception)
-{
-    assert(throws);
-    throws -> Next() = exception;
-}
-
-inline void AstConstructorDeclaration::AllocateThrows(unsigned estimate)
-{
-    assert(! throws);
-    throws = NewAstArray<AstTypeName*> (pool, estimate);
-}
-
-inline void AstConstructorDeclaration::AddThrow(AstTypeName* exception)
-{
-    assert(throws);
-    throws -> Next() = exception;
-}
-
-inline void AstMethodDeclarator::AllocateFormalParameters(unsigned estimate)
-{
-    assert(! formal_parameters);
-    formal_parameters = NewAstArray<AstFormalParameter*> (pool, estimate);
-}
-
-inline void AstMethodDeclarator::AddFormalParameter(AstFormalParameter* formal_parameter)
-{
-    assert(formal_parameters);
-    formal_parameters -> Next() = formal_parameter;
-}
-
-inline void AstLocalVariableDeclarationStatement::AllocateVariableDeclarators(unsigned estimate)
-{
-    assert(! variable_declarators);
-    variable_declarators =
-        NewAstArray<AstVariableDeclarator*> (pool, estimate);
-}
-
-inline void AstLocalVariableDeclarationStatement::AddVariableDeclarator(AstVariableDeclarator* variable_declarator)
-{
-    assert(variable_declarators);
-    variable_declarators -> Next() = variable_declarator;
 }
 
 // ******************************************
