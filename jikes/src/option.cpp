@@ -398,8 +398,14 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
             }
             else if (strcmp(arguments.argv[i],"++") == 0)
             {
+                 //
+                 // TODO:
+                 //
+                 bad_options.Next() = new OptionError(SemanticError::DISABLED_OPTION, arguments.argv[i]);
+                 /*
                  incremental = true;
                  full_check = true;
+                 */
             }
             else if (strcmp(arguments.argv[i], "+Z") == 0)
                  zero_defect = true;
