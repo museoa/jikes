@@ -195,6 +195,12 @@ private:
 
 class ByteCode : public ClassFile, public StringConstant, public Operators
 {
+    // A heuristic level for generating code to handle conditional branches
+    // crossing more than 32767 bytes of code. In one test case, 54616 was
+    // required to generate that much code, so 10000 seems like a conservative
+    // value.
+    enum { TOKEN_WIDTH_REQUIRING_GOTOW = 10000 };
+
     Control& this_control;
     Semantic& this_semantic;
 
@@ -722,7 +728,8 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void EmitStatementExpression(AstExpression *);
     void EmitSwitchStatement(AstSwitchStatement *);
     void EmitTryStatement(AstTryStatement *);
-    void EmitBranchIfExpression(AstExpression *, bool, Label &);
+    void EmitBranchIfExpression(AstExpression *, bool, Label &, AstStatement *);
+    void EmitBranch(unsigned int opc, Label& lab, AstStatement *over);
     void CompleteCall(MethodSymbol *, int, TypeSymbol * = NULL);
 
 
@@ -754,6 +761,12 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         return LoadArrayElement(expression -> Type());
     }
 
+    // Return the OP_IF... bytecode that has the opposite meaning 
+    unsigned int InvertIfOpCode(unsigned int opc) 
+    {
+        assert(OP_IFEQ <= opc && opc <= OP_IF_ACMPNE);
+        return ((opc + 1) ^ 1) - 1;
+    }
 
     void EmitBranch(unsigned int opc, Label& lab)
     {

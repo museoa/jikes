@@ -1193,13 +1193,13 @@ Coutput.flush();
                  {
                      Label label1,
                            label2;
-                     EmitBranchIfExpression(if_statement -> expression, false, label1);
+                     AstStatement *true_statement = if_statement -> true_statement;
+                     EmitBranchIfExpression(if_statement -> expression, false, label1, true_statement);
                      stack_depth = 0;
 
-                     AstStatement *true_statement = if_statement -> true_statement;
                      EmitStatement(true_statement);
                      if (true_statement -> can_complete_normally)
-                         EmitBranch(OP_GOTO, label2);
+                         EmitBranch(OP_GOTO, label2, if_statement -> false_statement_opt);
 
                      DefineLabel(label1);
                      EmitStatement(if_statement -> false_statement_opt);
@@ -1213,7 +1213,7 @@ Coutput.flush();
                  else // if no false part
                  {
                      Label label1;
-                     EmitBranchIfExpression(if_statement -> expression, false, label1);
+                     EmitBranchIfExpression(if_statement -> expression, false, label1, if_statement -> true_statement);
                      stack_depth = 0;
                      EmitStatement(if_statement -> true_statement);
                      DefineLabel(label1);
@@ -1240,7 +1240,8 @@ Coutput.flush();
                  // body of the loop we can fall through into it after each
                  // loop iteration without the need for an additional branch.
                  //
-                 EmitBranch(OP_GOTO, method_stack -> TopContinueLabel());
+                 EmitBranch(OP_GOTO, method_stack -> TopContinueLabel(),
+                            wp -> statement);
                  Label begin_label;
                  DefineLabel(begin_label);
                  EmitStatement(wp -> statement);
@@ -1253,7 +1254,8 @@ Coutput.flush();
                  line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
                                                               this_semantic.lex_stream -> Line(wp -> expression -> LeftToken()));
 
-                 EmitBranchIfExpression(wp -> expression, true, begin_label);
+                 EmitBranchIfExpression(wp -> expression, true, begin_label,
+                                        wp -> statement);
                  CompleteLabel(begin_label);
                  CompleteLabel(method_stack -> TopContinueLabel());
              }
@@ -1273,7 +1275,8 @@ Coutput.flush();
                  line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
                                                               this_semantic.lex_stream -> Line(sp -> expression -> LeftToken()));
 
-                 EmitBranchIfExpression(sp -> expression, true, begin_label);
+                 EmitBranchIfExpression(sp -> expression, true, begin_label,
+                                        sp -> statement);
                  CompleteLabel(begin_label);
                  CompleteLabel(method_stack -> TopContinueLabel());
              }
@@ -1285,7 +1288,7 @@ Coutput.flush();
                      EmitStatement(for_statement -> ForInitStatement(i));
                  Label begin_label,
                        test_label;
-                 EmitBranch(OP_GOTO, test_label);
+                 EmitBranch(OP_GOTO, test_label, for_statement -> statement);
                  DefineLabel(begin_label);
                  EmitStatement(for_statement -> statement);
                  DefineLabel(method_stack -> TopContinueLabel());
@@ -1304,9 +1307,10 @@ Coutput.flush();
                      line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
                                                                   this_semantic.lex_stream -> Line(end_expr -> LeftToken()));
 
-                     EmitBranchIfExpression(end_expr, true, begin_label);
+                     EmitBranchIfExpression(end_expr, true, begin_label,
+                                            for_statement -> statement);
                  }
-                 else EmitBranch(OP_GOTO, begin_label);
+                 else EmitBranch(OP_GOTO, begin_label, for_statement -> statement);
 
                  CompleteLabel(begin_label);
                  CompleteLabel(test_label);
@@ -1987,6 +1991,35 @@ void ByteCode::ProcessAbruptExit(int to_lev, TypeSymbol *return_type)
     return;
 }
 
+void ByteCode::EmitBranch(unsigned int opc, Label& lab, AstStatement *over)
+{
+    // Use the number of tokens as a heuristic for the size of the statement
+    // we're jumping over. If the statement is large enough, write out
+    // a branch around a goto_w to handle jumps greater than 32767 bytes.
+    int sizeHeuristic = !over ? 0
+                              : over -> RightToken() - over -> LeftToken();
+    if (sizeHeuristic < TOKEN_WIDTH_REQUIRING_GOTOW) {
+        EmitBranch(opc, lab);
+        return;
+    }
+    if (opc == OP_GOTO) {
+        PutOp(OP_GOTO_W);
+        UseLabel(lab, 4, 1);
+        return;
+    }
+    // if op lab
+    //  =>
+    // if !op label2
+    // goto_w lab
+    // label2:
+    PutOp(InvertIfOpCode(opc));
+    Label label2;
+    UseLabel(label2, 2, 1);
+    PutOp(OP_GOTO_W);
+    UseLabel(lab, 4, 1);
+    DefineLabel(label2);
+    CompleteLabel(label2);
+}
 
 //
 // java provides a variety of conditional branch instructions, so
@@ -1999,7 +2032,8 @@ void ByteCode::ProcessAbruptExit(int to_lev, TypeSymbol *return_type)
 // Other expressions are just evaluated and the appropriate
 // branch emitted.
 //
-void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
+void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
+                                      AstStatement *over)
 {
     if (p -> ParenthesizedExpressionCast())
         p = UnParenthesize(p);
@@ -2020,7 +2054,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
         // effect of negation
         assert(pre -> pre_unary_tag == AstPreUnaryExpression::NOT);
 
-        EmitBranchIfExpression(pre -> expression, (! cond), lab);
+        EmitBranchIfExpression(pre -> expression, (! cond), lab, over);
         return;
     }
 
@@ -2032,7 +2066,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
     if (! bp)
     {
         EmitExpression(p);
-        EmitBranch((cond ? OP_IFNE : OP_IFEQ), lab);
+        EmitBranch((cond ? OP_IFNE : OP_IFEQ), lab, over);
         return;
     }
 
@@ -2059,7 +2093,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
                  PutU2(instanceof_type -> num_dimensions > 0 ? RegisterClass(instanceof_type -> signature)
                                                              : RegisterClass(instanceof_type -> fully_qualified_name));
 
-                 EmitBranch((cond ? OP_IFNE : OP_IFEQ), lab);
+                 EmitBranch((cond ? OP_IFNE : OP_IFEQ), lab, over);
              }
              return;
         case AstBinaryExpression::AND_AND:
@@ -2075,15 +2109,15 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
              if (cond)
              {
                  Label skip;
-                 EmitBranchIfExpression(left, false, skip);
-                 EmitBranchIfExpression(right, true, lab);
+                 EmitBranchIfExpression(left, false, skip, over);
+                 EmitBranchIfExpression(right, true, lab, over);
                  DefineLabel(skip);
                  CompleteLabel(skip);
              }
              else
              {
-                 EmitBranchIfExpression(left, false, lab);
-                 EmitBranchIfExpression(right, false, lab);
+                 EmitBranchIfExpression(left, false, lab, over);
+                 EmitBranchIfExpression(right, false, lab, over);
              }
              return;
         case AstBinaryExpression::OR_OR:
@@ -2099,14 +2133,14 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
              //
              if (cond)
              {
-                 EmitBranchIfExpression(left, true, lab);
-                 EmitBranchIfExpression(right, true, lab);
+                 EmitBranchIfExpression(left, true, lab, over);
+                 EmitBranchIfExpression(right, true, lab, over);
              }
              else
              {
                  Label skip;
-                 EmitBranchIfExpression(left, true, skip);
-                 EmitBranchIfExpression(right, false, lab);
+                 EmitBranchIfExpression(left, true, skip, over);
+                 EmitBranchIfExpression(right, false, lab, over);
                  DefineLabel(skip);
                  CompleteLabel(skip);
              }
@@ -2131,8 +2165,8 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
                  EmitExpression(left);
 
                  if (bp -> binary_tag == AstBinaryExpression::EQUAL_EQUAL)
-                      EmitBranch(cond ? OP_IFNULL : OP_IFNONNULL, lab);
-                 else EmitBranch(cond ? OP_IFNONNULL : OP_IFNULL, lab);
+                      EmitBranch(cond ? OP_IFNULL : OP_IFNONNULL, lab, over);
+                 else EmitBranch(cond ? OP_IFNONNULL : OP_IFNULL, lab, over);
 
                  return;
              }
@@ -2155,8 +2189,8 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
                  EmitExpression(left);
 
                  if (bp -> binary_tag == AstBinaryExpression::EQUAL_EQUAL)
-                      EmitBranch((cond ? OP_IFEQ : OP_IFNE), lab);
-                 else EmitBranch((cond ? OP_IFNE : OP_IFEQ), lab);
+                      EmitBranch((cond ? OP_IFEQ : OP_IFNE), lab, over);
+                 else EmitBranch((cond ? OP_IFNE : OP_IFEQ), lab, over);
 
                  return;
              }
@@ -2171,8 +2205,8 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
                  EmitExpression(right);
 
                  if (bp -> binary_tag == AstBinaryExpression::EQUAL_EQUAL)
-                      EmitBranch((cond ? OP_IF_ICMPEQ : OP_IF_ICMPNE), lab);
-                 else EmitBranch((cond ? OP_IF_ICMPNE : OP_IF_ICMPEQ), lab);
+                      EmitBranch((cond ? OP_IF_ICMPEQ : OP_IF_ICMPNE), lab, over);
+                 else EmitBranch((cond ? OP_IF_ICMPNE : OP_IF_ICMPEQ), lab, over);
 
                  return;
              }
@@ -2186,8 +2220,8 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
                  EmitExpression(right);
 
                  if (bp -> binary_tag == AstBinaryExpression::EQUAL_EQUAL)
-                      EmitBranch((cond ? OP_IF_ACMPEQ : OP_IF_ACMPNE), lab);
-                 else EmitBranch((cond ? OP_IF_ACMPNE : OP_IF_ACMPEQ), lab);
+                      EmitBranch((cond ? OP_IF_ACMPEQ : OP_IF_ACMPNE), lab, over);
+                 else EmitBranch((cond ? OP_IF_ACMPNE : OP_IF_ACMPEQ), lab, over);
 
                  return;
              }
@@ -2218,7 +2252,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
              // of the expression and branch on the result
              //
              EmitExpression(p);
-             EmitBranch(cond ? OP_IFNE : OP_IFEQ, lab);
+             EmitBranch(cond ? OP_IFNE : OP_IFEQ, lab, over);
              return;
     }
 
@@ -2446,7 +2480,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
     if (opcode)
         PutOp(opcode); // if need to emit comparison before branch
 
-    EmitBranch (cond ? op_true : op_false, lab);
+    EmitBranch (cond ? op_true : op_false, lab, over);
 
     return;
 }
@@ -3291,11 +3325,11 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
              {
                  Label lab1,
                        lab2;
-                 EmitBranchIfExpression(expression, true, lab1);
+                 EmitBranchIfExpression(expression, true, lab1, 0);
                  PutOp(OP_ICONST_0);                // push false
                  EmitBranch(OP_GOTO, lab2);
                  DefineLabel(lab1);
-                 PutOp(OP_ICONST_1);                // push false
+                 PutOp(OP_ICONST_1);                // push true 
                  DefineLabel(lab2);
                  CompleteLabel(lab1);
                  CompleteLabel(lab2);
@@ -3684,7 +3718,7 @@ int ByteCode::EmitConditionalExpression(AstConditionalExpression *expression)
 {
     Label lab1,
           lab2;
-    EmitBranchIfExpression(expression -> test_expression, false, lab1);
+    EmitBranchIfExpression(expression -> test_expression, false, lab1, 0);
     EmitExpression(expression -> true_expression);
     EmitBranch(OP_GOTO, lab2);
     DefineLabel(lab1);
@@ -4734,7 +4768,7 @@ void ByteCode::CompleteLabel(Label& lab)
         assert((lab.defined) && "label used but with no definition");
 
         //
-        // patch byte code reference to label to reflect it's definition
+        // patch byte code reference to label to reflect its definition
         // as 16-bit signed offset.
         //
         for (int i = 0; i < lab.uses.Length(); i++)
@@ -4744,6 +4778,7 @@ void ByteCode::CompleteLabel(Label& lab)
                 offset = lab.definition - start;
             if (lab.uses[i].use_length == 2) // here if short offset
             {
+                assert(offset < 32768 && "needed longer branch offset");
                 code_attribute -> ResetCode(luse, (offset >> 8) & 0xFF);
                 code_attribute -> ResetCode(luse + 1, offset & 0xFF);
             }

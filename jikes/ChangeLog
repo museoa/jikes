@@ -1,3 +1,13 @@
+2001-09-08  Norris Boyd  <nboyd@atg.com>
+
+	* src/bytecode.h:
+	* src/bytecode.cpp: Instrument wide jump capabilities into
+	branches.  For branching opcodes like ifeq, if the branch offset
+	requires more than two bytes, generate a branch around a
+	goto_w. Uses the hueristic of the number of tokens branched over,
+	to avoid the difficulty of regenerating or patching code in order
+	to insert the additional goto_w op - patch 167, from bug 161.
+
 2001-09-08  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/body.cpp (ProcessSynchronizedStatement, ProcessIfStatement):
