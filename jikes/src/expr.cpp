@@ -3757,12 +3757,14 @@ void Semantic::UpdateLocalConstructors(TypeSymbol *inner_type)
                             for (int j = (target_local_type -> ACC_STATIC() ? 0 : 1);
                                  j < target_local_type -> NumConstructorParameters(); j++)
                             {
-                                VariableSymbol *local = target_local_type -> ConstructorParameter(j) -> accessed_local;
                                 AstSimpleName *simple_name = compilation_unit -> ast_pool
                                                                               -> GenSimpleName(class_creation -> new_token);
-                                simple_name -> symbol = local;
+                                VariableSymbol *variable_symbol = target_local_type -> ConstructorParameter(j);
+                                simple_name -> symbol = variable_symbol;
                                 if (source_local_type != target_local_type)
                                 {
+                                    simple_name -> symbol = variable_symbol -> accessed_local;
+
                                     state_stack.Push(source_local_type -> semantic_environment);
                                     CreateAccessToScopedVariable(simple_name, target_local_type);
                                     state_stack.Pop();
