@@ -478,6 +478,7 @@ void SemanticError::StaticInitializer()
     warning[NEGATIVE_ARRAY_SIZE] = 2;
     warning[UNNECESSARY_PARENTHESIS] = 2;
     warning[ZERO_DIVIDE_CAUTION] = 2;
+    warning[UNIMPLEMENTABLE_INTERFACE] = 2;
 
 #ifdef JIKES_DEBUG
     for (int i = 0; i < _num_kinds; i++)
@@ -557,6 +558,7 @@ void SemanticError::StaticInitializer()
     print_message[DUPLICATE_CONSTRUCTOR] = PrintDUPLICATE_CONSTRUCTOR;
     print_message[MISMATCHED_INHERITED_METHOD] = PrintMISMATCHED_INHERITED_METHOD;
     print_message[MISMATCHED_IMPLICIT_METHOD] = PrintMISMATCHED_IMPLICIT_METHOD;
+    print_message[UNIMPLEMENTABLE_INTERFACE] = PrintUNIMPLEMENTABLE_INTERFACE;
     print_message[MISMATCHED_INHERITED_METHOD_EXTERNALLY] = PrintMISMATCHED_INHERITED_METHOD_EXTERNALLY;
     print_message[DUPLICATE_FORMAL_PARAMETER] = PrintDUPLICATE_FORMAL_PARAMETER;
     print_message[MISSPELLED_CONSTRUCTOR_NAME] = PrintMISSPELLED_CONSTRUCTOR_NAME;
@@ -1999,6 +2001,20 @@ wchar_t *SemanticError::PrintMISMATCHED_IMPLICIT_METHOD(ErrorInfo &err,
     s << "The return type of method \"" << err.insert1
       << "\" does not match the return type of method \"" << err.insert2
       << "\" declared implicitly for interfaces.";
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintUNIMPLEMENTABLE_INTERFACE(ErrorInfo &err,
+                                                       LexStream *lex_stream,
+                                                       Control &control)
+{
+    ErrorString s;
+
+    s << "The interface is legal, but cannot be implemented: method \""
+      << err.insert1 << "\" has a different return type than \""
+      << err.insert2 << "\" declared in Object.";
 
     return s.Array();
 }

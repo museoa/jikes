@@ -2895,24 +2895,19 @@ void Semantic::CheckMethodOverride(MethodSymbol *method,
                 hidden_method -> containing_type == control.Object())
             {
                 //
-                // TODO: Review this when JLS3 is published.  JLS2 9.2 claims
-                // that only public methods are implicitly declared in
-                // interfaces, ie. clone() and finalize() are not
-                // automatically in interfaces, and can therefore be
-                // overridden with a new return type, even though that makes
-                // the interface non-instantiable. However, Sun's compiler has
-                // never permitted an interface to have a clone() or
-                // finalize() with a conflicting return type.  For now, we
-                // take the conservative stance, and reject an attempt to
-                // clash with clone() or finalize().
+                // TODO: Review this when JLS3 is published.  See Sun bug
+                // 4479715, which explains our current stance of allowing
+                // int clone() throws MyException; or Object finalize();.
                 //
-                // if (hidden_method -> ACC_PUBLIC())
-                //
-                ReportSemError(SemanticError::MISMATCHED_IMPLICIT_METHOD,
+                ReportSemError((hidden_method -> ACC_PUBLIC()
+                                ? SemanticError::MISMATCHED_IMPLICIT_METHOD
+                                : SemanticError::UNIMPLEMENTABLE_INTERFACE),
                                left_tok,
                                right_tok,
                                method -> Header(),
                                hidden_method -> Header());
+                if (hidden_method -> ACC_PUBLIC())
+                    base_type -> MarkBad();
             }
             else
             {
@@ -2923,6 +2918,7 @@ void Semantic::CheckMethodOverride(MethodSymbol *method,
                                hidden_method -> Header(),
                                hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
                                hidden_method -> containing_type -> ExternalName());
+                base_type -> MarkBad();
             }
         }
         else
@@ -2937,8 +2933,8 @@ void Semantic::CheckMethodOverride(MethodSymbol *method,
                            hidden_method -> Header(),
                            hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
                            hidden_method -> containing_type -> ExternalName());
+            base_type -> MarkBad();
         }
-        base_type -> MarkBad();
     }
 
 
@@ -3109,25 +3105,19 @@ void Semantic::CheckMethodOverride(MethodSymbol *method,
                     hidden_method -> containing_type == control.Object())
                 {
                     //
-                    // TODO: Review this when JLS3 is published.  JLS2 9.2
-                    // claims that only public methods are implicitly declared
-                    // in interfaces, ie. clone() and finalize() are not
-                    // automatically in interfaces, and can therefore have a
-                    // conflicting throws clause (although that concept is not
-                    // well-defined in JLS 9). However, Sun's compiler has
-                    // never permitted an interface to have a clone() with a
-                    // conflicting throws clause.  For now, we take the
-                    // conservative stance, and reject an attempt to clash with
-                    // clone(). Note that finalize() is not a problem, since
-                    // it throws Throwable.
+                    // TODO: Review this when JLS3 is published.  See Sun bug
+                    // 4479715, which explains our current stance of allowing
+                    // int clone() throws MyException; or Object finalize();.
                     //
-                    // if (hidden_method -> ACC_PUBLIC())
-                    //
-                    ReportSemError(SemanticError::MISMATCHED_IMPLICIT_OVERRIDDEN_EXCEPTION,
-                                   left_tok,
-                                   right_tok,
-                                   exception -> Name(),
-                                   method -> Header());
+                    if (hidden_method -> ACC_PUBLIC())
+                    {
+                        ReportSemError(SemanticError::MISMATCHED_IMPLICIT_OVERRIDDEN_EXCEPTION,
+                                       left_tok,
+                                       right_tok,
+                                       exception -> Name(),
+                                       method -> Header());
+                        base_type -> MarkBad();
+                    }
                 }
                 else
                 {
@@ -3138,6 +3128,7 @@ void Semantic::CheckMethodOverride(MethodSymbol *method,
                                    hidden_method -> Header(),
                                    hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
                                    hidden_method -> containing_type -> ExternalName());
+                    base_type -> MarkBad();
                 }
             }
             else
@@ -3153,8 +3144,8 @@ void Semantic::CheckMethodOverride(MethodSymbol *method,
                                hidden_method -> Header(),
                                hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
                                hidden_method -> containing_type -> ExternalName());
+                base_type -> MarkBad();
             }
-            base_type -> MarkBad();
         }
     }
 }

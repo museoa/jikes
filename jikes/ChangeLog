@@ -1,5 +1,12 @@
 2002-05-22  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/decl.cpp: Allow interface int clone(); - see bug 2878.
+	* src/error.cpp: Add new UNIMPLEMENTABLE_INTERFACE warning.
+	* src/error.h: Ditto.
+	* src/symbol.cpp: Fix core dump caused by last patch.
+
+2002-05-22  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/ast.h: Minor touchups to previous patch.
 	* src/body.cpp:
 	* src/bytecode.cpp:

@@ -33,8 +33,26 @@ wchar_t *MethodSymbol::Header()
 
     if (! header)
     {
-        bool is_constructor = Identity() == containing_type ->
-            semantic_environment -> sem -> control.init_name_symbol;
+        bool is_constructor = false;
+        if (containing_type -> semantic_environment &&
+            Identity() == (containing_type -> semantic_environment ->
+                           sem -> control.init_name_symbol))
+        {
+            is_constructor = true;
+        }
+        else
+        {
+            MethodSymbol *ctor;
+            for (ctor = containing_type -> FindConstructorSymbol();
+                 ctor; ctor = ctor -> next_method)
+            {
+                if (this == ctor)
+                {
+                    is_constructor = true;
+                    break;
+                }
+            }
+        }
 
         int length = (Type() -> ContainingPackage() -> PackageNameLength() +
                       Type() -> ExternalNameLength() +
@@ -52,13 +70,24 @@ wchar_t *MethodSymbol::Header()
             // ',' and ' ' to separate this formal parameter from the next one
         }
 
-        for (int j = 0; j < NumThrows(); j++)
+        if (throws_signatures && NumThrowsSignatures())
         {
-            TypeSymbol *exception = Throws(j);
-            length += (exception -> ContainingPackage() -> PackageNameLength() +
-                       exception -> ExternalNameLength() + 10);
-            // +10 for " throws", '.' after package_name,
-            // ',' and ' ' to separate this throws clause from the next one
+            length += 7; // for " throws"
+            for (int j = 0; j < NumThrowsSignatures(); j++)
+                length += strlen(ThrowsSignature(j)) + 2; // +2 for ", "
+        }
+        else if (NumThrows())
+        {
+            length += 7; // for " throws"
+            for (int j = 0; j < NumThrows(); j++)
+            {
+                TypeSymbol *exception = Throws(j);
+                length += (exception -> ContainingPackage() ->
+                           PackageNameLength() +
+                           exception -> ExternalNameLength() + 3);
+                // +3 for " throws", '.' after package_name, and ',' and
+                // ' ' to separate this throws clause from the next one
+            }
         }
 
         header = new wchar_t[length + 1]; // +1 for '\0'
@@ -123,7 +152,7 @@ wchar_t *MethodSymbol::Header()
         }
         *s++ = U_RIGHT_PARENTHESIS;
 
-        if (NumThrows() > 0)
+        if (throws_signatures && NumThrowsSignatures())
         {
             *s++ = U_SPACE;
             *s++ = U_t;
@@ -132,13 +161,35 @@ wchar_t *MethodSymbol::Header()
             *s++ = U_o;
             *s++ = U_w;
             *s++ = U_s;
+            for (int k = 0; k < NumThrowsSignatures(); k++)
+            {
+                *s++ = U_SPACE;
+                for (char *signature = ThrowsSignature(k);
+                     *signature; signature++)
+                {
+                    *s++ = (*signature == U_SLASH ? (wchar_t) U_DOT
+                            : *signature);
+                }
+                *s++ = U_COMMA;
+            }
+            s--; // remove the last ','
+        }
+        else if (NumThrows() > 0)
+        {
             *s++ = U_SPACE;
+            *s++ = U_t;
+            *s++ = U_h;
+            *s++ = U_r;
+            *s++ = U_o;
+            *s++ = U_w;
+            *s++ = U_s;
             for (int k = 0; k < NumThrows(); k++)
             {
                 TypeSymbol *exception = Throws(k);
 
                 PackageSymbol *package = exception -> ContainingPackage();
                 wchar_t *package_name = package -> PackageName();
+                *s++ = U_SPACE;
                 if (package -> PackageNameLength() > 0 &&
                     wcscmp(package_name, StringConstant::US_DO) != 0)
                 {
@@ -154,10 +205,9 @@ wchar_t *MethodSymbol::Header()
                 for (wchar_t *s2 = exception -> ExternalName(); *s2; s2++)
                     *s++ = *s2;
                 *s++ = U_COMMA;
-                *s++ = U_SPACE;
             }
 
-            s -= 2; // remove the last ',' and ' '
+            s--; // remove the last ','
         }
 
         *s++ = U_SEMICOLON;
