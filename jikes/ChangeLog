@@ -1,3 +1,8 @@
+2004-01-30  Eric Blake  <ebb9@byu.net>
+
+	* src/bytecode.cpp (ConcatenateString): Jikes bug 3501.
+	(EmitTryStatement): Minor optimization when catch block is empty.
+
 2004-01-28  Chris Abbey  <jikes@cabbey.net>
 
 	* src/system.cpp (Control::ProcessExtDirs): Don't spew

@@ -1734,8 +1734,12 @@ void ByteCode::EmitTryStatement(AstTryStatement* statement)
 
             assert(stack_depth == 0);
             stack_depth = 1; // account for the exception already on the stack
-            StoreLocal(parameter_symbol -> LocalVariableIndex(),
-                       parameter_symbol -> Type());
+            if (! IsNop(catch_clause -> block))
+            {
+                StoreLocal(parameter_symbol -> LocalVariableIndex(),
+                           parameter_symbol -> Type());
+            }
+            else PutOp(OP_POP);
             u2 handler_type = RegisterClass(parameter_symbol -> Type());
             for (int j = handler_starts.Length(); --j >= 0; )
             {
@@ -1803,10 +1807,10 @@ void ByteCode::EmitTryStatement(AstTryStatement* statement)
             if (statement -> finally_clause_opt -> block ->
                 can_complete_normally)
             {
-                StoreLocal(variable_index, control.Object()); // Save exception
+                StoreLocal(variable_index, control.Throwable()); // Save,
                 EmitBranch(OP_JSR, finally_label, statement);
                 special_end_pc = code_attribute -> CodeLength();
-                LoadLocal(variable_index, control.Object()); // Reload and
+                LoadLocal(variable_index, control.Throwable()); // reload, and
                 PutOp(OP_ATHROW); // rethrow exception.
             }
             else
@@ -5802,7 +5806,11 @@ void ByteCode::ConcatenateString(AstBinaryExpression* expression,
         {
             PutOp(OP_INVOKESPECIAL);
             PutU2(RegisterLibraryMethodref(control.StringBuffer_InitMethod()));
-            AppendString(left_expr, need_value);
+            //
+            // Don't pass stripped left_expr, or ((int)char)+"" would be
+            // treated as a char append rather than int append.
+            //
+            AppendString(expression -> left_expression, need_value);
         }
     }
 
