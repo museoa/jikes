@@ -1,3 +1,8 @@
+2002-05-31  Chris Abbey  <jikes@cabbey.net>
+
+	* src/stream.cpp (getErrorMessage): clarify error message
+	for assert as a keyword.
+
 2002-05-23  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/definite.cpp (DefinitePLUSPLUSOrMINUSMINUS): Yet another
