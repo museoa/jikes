@@ -9,8 +9,7 @@ dnl
 AC_DEFUN([AC_CXX_RTTI],
 [AC_CACHE_CHECK(whether the compiler supports Run-Time Type Identification,
 ac_cv_cxx_rtti,
-[AC_LANG_SAVE
- AC_LANG_CPLUSPLUS
+[AC_LANG_PUSH([C++])
  AC_TRY_COMPILE([#include <typeinfo>
 class Base { public :
              Base () {}
@@ -25,7 +24,7 @@ Base *ptr = &d;
 return typeid (*ptr) == typeid (Derived);
 ],
  ac_cv_cxx_rtti=yes, ac_cv_cxx_rtti=no)
- AC_LANG_RESTORE
+ AC_LANG_POP([C++])
 ])
 if test "$ac_cv_cxx_rtti" = yes; then
   AC_DEFINE(HAVE_RTTI,,

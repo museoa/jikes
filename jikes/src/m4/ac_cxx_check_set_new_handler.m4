@@ -57,16 +57,14 @@ AC_DEFUN(AC_CXX_CHECK_SET_NEW_HANDLER,
 [
 AC_REQUIRE([AC_CXX_HAVE_STD])
 AC_CACHE_CHECK(for VC++ style set_new_handler, ac_cv_vcpp_set_new_handler,
-[
-  AC_LANG_SAVE
-  AC_LANG_CPLUSPLUS
+[ AC_LANG_PUSH([C++])
   AC_TRY_LINK([
 #include <new.h>
 int OutOfMemory(size_t) { return 0; }
 ], [ _set_new_handler(OutOfMemory); ],
   ac_cv_vcpp_set_new_handler=yes,
   ac_cv_vcpp_set_new_handler=no)
-  AC_LANG_RESTORE
+  AC_LANG_POP([C++])
 ])
 
 if test "$ac_cv_vcpp_set_new_handler" = "yes" ; then

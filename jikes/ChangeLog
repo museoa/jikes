@@ -1,10 +1,32 @@
 2002-11-12  Eric Blake  <ebb9@email.byu.edu>
 
-	* configure.in: Modify version, update to automake 2.54.
-	* configure:
-	* Makefile.in:
+	* configure.in: Modify version, update to autoconf 2.54 and
+	friends.
+	* src/m4/ac_cxx_bool.m4:
+	* src/m4/ac_cxx_check_set_new_handler.m4:
+	* src/m4/ac_cxx_const_cast.m4:
+	* src/m4/ac_cxx_dynamic_cast.m4:
+	* src/m4/ac_cxx_exceptions.m4:
+	* src/m4/ac_cxx_explicit.m4:
+	* src/m4/ac_cxx_have_std.m4:
+	* src/m4/ac_cxx_member_constants.m4:
+	* src/m4/ac_cxx_namespaces.m4:
+	* src/m4/ac_cxx_reinterpret_cast.m4:
+	* src/m4/ac_cxx_rtti.m4:
+	* src/m4/ac_cxx_static_cast.m4: Update obsolete autoconf-isms.
+	* COPYING:
+	* INSTALL:
 	* aclocal.m4:
+	* config.guess:
+	* config.sub:
+	* configure:
+	* depcomp:
+	* install-sh:
+	* missing:
+	* mkinstalldirs:
+	* Makefile.in:
 	* doc/Makefile.in:
+	* src/config.h.in:
 	* src/Makefile.in: Regenerate.
 
 2002-11-11  Eric Blake  <ebb9@email.byu.edu>
