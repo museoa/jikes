@@ -975,6 +975,17 @@ void ByteCode::InitializeClassVariable(AstVariableDeclarator *vd)
 
         if (expression -> IsConstant() && vd -> symbol -> ACC_FINAL())  // if already initialized
             return;
+
+        // Here, we add a line number attribute for this initializer for 
+        // this expression.  It seems that some debuggers (notably
+        // Sun's JDB) will not allow setting breakpoints at a specific line of code if a class contains
+        // initialized class variables but _no_ static initializer block.  We now add a line number attribute
+        // to appease that debugger.
+        
+        printf("one\n");
+        line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
+                                                     this_semantic.lex_stream -> Line(expression -> LeftToken()));
+
         EmitExpression(expression);
     }
     else
@@ -982,6 +993,15 @@ void ByteCode::InitializeClassVariable(AstVariableDeclarator *vd)
         AstArrayInitializer *array_initializer = vd -> variable_initializer_opt -> ArrayInitializerCast();
 
         assert(array_initializer);
+
+        // Like the case above, we add a line number attribute for this initializer. In this case, the initializer
+        // is an array. It seems that some debuggers (notably Sun's JDB) will not allow setting breakpoints at a
+        // specific line of code if a class contains initialized class variables but _no_ static initializer block.
+        // We now add a line number attribute to appease that debugger.
+        
+        printf("two\n");
+        line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
+                                                     this_semantic.lex_stream -> Line(array_initializer->LeftToken()));
 
         InitializeArray(vd -> symbol -> Type(), array_initializer);
     }
