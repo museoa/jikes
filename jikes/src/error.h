@@ -299,7 +299,6 @@ class SemanticError
         UNCAUGHT_EXPLICIT_THIS_EXCEPTION,
         UNCAUGHT_EXPLICIT_SUPER_EXCEPTION,
         UNREACHABLE_CATCH_CLAUSE,
-        UNREACHABLE_DEFAULT_CATCH_CLAUSE,
         UNREACHABLE_STATEMENT,
         UNREACHABLE_STATEMENTS,
         BLOCKED_CATCH_CLAUSE,
@@ -605,7 +604,6 @@ private:
     static wchar_t *PrintUNCAUGHT_EXPLICIT_THIS_EXCEPTION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNCAUGHT_EXPLICIT_SUPER_EXCEPTION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNREACHABLE_CATCH_CLAUSE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintUNREACHABLE_DEFAULT_CATCH_CLAUSE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNREACHABLE_STATEMENT(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNREACHABLE_STATEMENTS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintBLOCKED_CATCH_CLAUSE(ErrorInfo &, LexStream *, Control &);

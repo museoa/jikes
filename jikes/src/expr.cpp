@@ -2188,15 +2188,6 @@ void Semantic::FindVariableMember(TypeSymbol *type,
     bool base_is_type = field_access -> base -> symbol -> TypeCast() != NULL &&
                         field_access -> base -> IsName();
 
-    //
-    // TODO: Is this needed ?
-    //
-    // This operation may throw NullPointerException
-    //
-    SymbolSet *exception_set = TryExceptionTableStack().Top();
-    if (exception_set && ! field_access -> base -> symbol -> TypeCast())
-        exception_set -> AddElement(control.RuntimeException());
-
     if (type -> Bad())
     {
         //
@@ -2900,17 +2891,6 @@ void Semantic::ProcessArrayAccess(Ast *expr)
 {
     AstArrayAccess *array_access = (AstArrayAccess *) expr;
 
-    //
-    // TODO: Is this needed ?
-    //
-    // This operation may throw NullPointerException or IndefOutOfBoundsException
-    //
-    SymbolSet *exception_set = TryExceptionTableStack().Top();
-    if (exception_set)
-    {
-        exception_set -> AddElement(control.RuntimeException());
-    }
-
     ProcessExpression(array_access -> base);
     ProcessExpression(array_access -> expression);
     array_access -> expression = PromoteUnaryNumericExpression(array_access -> expression);
@@ -3070,22 +3050,6 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
 {
     TypeSymbol *this_type = ThisType();
 
-    //
-    // TODO: Is this needed ?
-    //
-    // This operation may throw:
-    //
-    //        OutOfMemoryError
-    //        NoSuchMethodError
-    //        IllegalAccessError
-    //        IncompatibleClassChangeError
-    //
-    SymbolSet *exception_set = TryExceptionTableStack().Top();
-    if (exception_set)
-    {
-        exception_set -> AddElement(control.Error());
-    }
-
     AstSimpleName *simple_name = method_call -> method -> SimpleNameCast();
     if (simple_name)
     {
@@ -3216,31 +3180,10 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
     {
         MethodSymbol *method = (MethodSymbol *) method_call -> symbol;
 
+        SymbolSet *exception_set = TryExceptionTableStack().Top();
         if (exception_set)
-        {
             for (int i = method -> NumThrows() - 1; i >= 0; i--)
                 exception_set -> AddElement(method -> Throws(i));
-
-            //
-            // This operation may throw:
-            //
-            //        NullPointerException
-            //
-            if (! method -> ACC_STATIC())
-                exception_set -> AddElement(control.RuntimeException());
-
-            //
-            // This operation may throw:
-            //
-            //        UnsatisfiedLinkError
-            //
-            // However Error was already added to the exception set for other
-            // possible causes. See Above
-            //
-            // if (method -> ACC_NATIVE())
-            //    exception_set -> AddElement(control.Error());
-            //
-        }
 
         for (int k = method -> NumThrows() - 1; k >= 0; k--)
         {
@@ -4133,17 +4076,6 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
 {
     AstClassInstanceCreationExpression *class_creation = (AstClassInstanceCreationExpression *) expr;
 
-    //
-    // TODO: Is this needed ?
-    //
-    // This operation may throw OutOfMemoryError
-    //
-    SymbolSet *exception_set = TryExceptionTableStack().Top();
-    if (exception_set)
-    {
-        exception_set -> AddElement(control.Error());
-    }
-
     Ast *actual_type = class_creation -> class_type -> type;
     TypeSymbol *type;
     if (class_creation -> base_opt)
@@ -4298,6 +4230,7 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
                 class_creation -> class_type -> symbol = method;
             }
 
+            SymbolSet *exception_set = TryExceptionTableStack().Top();
             for (int i = method -> NumThrows() - 1; i >= 0; i--)
             {
                 TypeSymbol *exception = method -> Throws(i);
@@ -4381,18 +4314,6 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
 void Semantic::ProcessArrayCreationExpression(Ast *expr)
 {
     AstArrayCreationExpression *array_creation = (AstArrayCreationExpression *) expr;
-
-    //
-    // TODO: Is this needed ?
-    //
-    // This operation may throw OutOfMemoryError or NegativeArraySizeException
-    //
-    SymbolSet *exception_set = TryExceptionTableStack().Top();
-    if (exception_set)
-    {
-        exception_set -> AddElement(control.RuntimeException());
-        exception_set -> AddElement(control.Error());
-    }
 
     AstArrayType *array_type;
 
@@ -5126,17 +5047,6 @@ void Semantic::ProcessCastExpression(Ast *expr)
     AstCastExpression *cast_expression = (AstCastExpression *) expr;
 
     //
-    // TODO: Is this needed ?
-    //
-    // This operation may throw ClassCastException
-    //
-    SymbolSet *exception_set = TryExceptionTableStack().Top();
-    if (exception_set)
-    {
-        exception_set -> AddElement(control.RuntimeException());
-    }
-
-    //
     // Do not use ProcessExpressionOrStringConstant here, to avoid generating
     // intermediate Strings - see CheckConstantString in lookup.cpp
     //
@@ -5483,17 +5393,6 @@ void Semantic::ProcessPLUS(AstBinaryExpression *expr)
         expr -> symbol = control.no_type;
     else if (left_type == control.String() || right_type == control.String())
     {
-        //
-        // TODO: Is this needed ?
-        //
-        // This operation may throw OutOfMemoryError
-        //
-        SymbolSet *exception_set = TryExceptionTableStack().Top();
-        if (exception_set)
-        {
-            exception_set -> AddElement(control.Error());
-        }
-
         //
         // Convert the left expression if necessary.
         //
@@ -6446,17 +6345,6 @@ void Semantic::ProcessSLASH(AstBinaryExpression *expr)
     {
         BinaryNumericPromotion(expr);
 
-        //
-        // TODO: Is this needed ?
-        //
-        // This operation may throw ArithmeticException
-        //
-        SymbolSet *exception_set = TryExceptionTableStack().Top();
-        if (exception_set)
-        {
-            exception_set -> AddElement(control.RuntimeException());
-        }
-
         AstExpression *left_expression = expr -> left_expression,
                       *right_expression = expr -> right_expression;
         if (right_expression -> IsConstant())
@@ -6533,17 +6421,6 @@ void Semantic::ProcessMOD(AstBinaryExpression *expr)
     else
     {
         BinaryNumericPromotion(expr);
-
-        //
-        // TODO: Is this needed ?
-        //
-        // This operation may throw ArithmeticException
-        //
-        SymbolSet *exception_set = TryExceptionTableStack().Top();
-        if (exception_set)
-        {
-            exception_set -> AddElement(control.RuntimeException());
-        }
 
         AstExpression *left_expression = expr -> left_expression,
                       *right_expression = expr -> right_expression;
@@ -6890,19 +6767,6 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
 
         if (read_method)
             assignment_expression -> write_method = read_method -> containing_type -> GetWriteAccessFromReadAccess(read_method);
-    }
-    else // the left-hand-side is an array access
-    {
-        //
-        // TODO: Is this needed ?
-        //
-        // This operation may throw ArrayStoreException
-        //
-        SymbolSet *exception_set = TryExceptionTableStack().Top();
-        if (exception_set && (! left_type -> Primitive()))
-        {
-            exception_set -> AddElement(control.RuntimeException());
-        }
     }
 
     if (assignment_expression -> assignment_tag == AstAssignmentExpression::SIMPLE_EQUAL)

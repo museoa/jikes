@@ -131,6 +131,25 @@ private:
 //
 //
 //
+class NestingLevelStack
+{
+public:
+    void Push(int nesting) { info.Next() = nesting; }
+    void Pop()             { if (info.Length() > 0) info.Reset(info.Length() - 1); }
+    int Size()             { return info.Length(); }
+    // Top returns 0 if the stack is empty, a valid value for no nesting depth
+    int Top()              { return (int) (info.Length() > 0 ? info[info.Length() - 1] : 0); }
+
+    int operator[](const int i) { return info[i]; }
+
+private:
+    Tuple<int> info;
+};
+
+
+//
+//
+//
 class BlockStack
 {
 public:
@@ -416,6 +435,7 @@ public:
     StatementStack try_statement_stack,
                    breakable_statement_stack,
                    continuable_statement_stack;
+    NestingLevelStack abrupt_finally_stack;
     BlockStack block_stack;
 
     SemanticEnvironment(Semantic *sem_,
@@ -863,6 +883,11 @@ private:
     {
         assert(state_stack.Size());
         return state_stack.Top() -> continuable_statement_stack;
+    }
+    NestingLevelStack &AbruptFinallyStack()
+    {
+        assert(state_stack.Size());
+        return state_stack.Top() -> abrupt_finally_stack;
     }
     BlockStack &LocalBlockStack()
     {

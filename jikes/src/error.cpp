@@ -477,14 +477,7 @@ void SemanticError::StaticInitializer()
     //
     warning[BAD_INPUT_FILE] = 2;
     warning[UNREADABLE_INPUT_FILE] = 2;
-    warning[UNREACHABLE_DEFAULT_CATCH_CLAUSE] = 2;
     warning[ZERO_DIVIDE_CAUTION] = 2;
-
-//
-// TODO: Let this condition be flagged as errors now.
-//
-//    warning[UNREACHABLE_CATCH_CLAUSE] = 2;
-//
 
 #ifdef JIKES_DEBUG
     for (int i = 0; i < _num_kinds; i++)
@@ -695,7 +688,6 @@ void SemanticError::StaticInitializer()
     print_message[UNCAUGHT_EXPLICIT_THIS_EXCEPTION] = PrintUNCAUGHT_EXPLICIT_THIS_EXCEPTION;
     print_message[UNCAUGHT_EXPLICIT_SUPER_EXCEPTION] = PrintUNCAUGHT_EXPLICIT_SUPER_EXCEPTION;
     print_message[UNREACHABLE_CATCH_CLAUSE] = PrintUNREACHABLE_CATCH_CLAUSE;
-    print_message[UNREACHABLE_DEFAULT_CATCH_CLAUSE] = PrintUNREACHABLE_DEFAULT_CATCH_CLAUSE;
     print_message[UNREACHABLE_STATEMENT] = PrintUNREACHABLE_STATEMENT;
     print_message[UNREACHABLE_STATEMENTS] = PrintUNREACHABLE_STATEMENTS;
     print_message[BLOCKED_CATCH_CLAUSE] = PrintBLOCKED_CATCH_CLAUSE;
@@ -3958,26 +3950,12 @@ wchar_t *SemanticError::PrintUNREACHABLE_CATCH_CLAUSE(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "This catch block may be unreachable because there is no exception "
+    s << "This catch block is unreachable because there is no exception "
       << "whose type is assignable to \"";
     if (NotDot(err.insert1))
         s << err.insert1 << "/";
     s << err.insert2 << "\" that can be thrown during execution of the "
       << "body of the try block.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintUNREACHABLE_DEFAULT_CATCH_CLAUSE(ErrorInfo &err,
-                                                              LexStream *lex_stream,
-                                                              Control &control)
-{
-    ErrorString s;
-
-    s << "This try block cannot throw a \"checked exception\" (JLS section "
-      << "14.7) that can be caught here. You may have intended to catch a "
-      << "java.lang.RuntimeException instead of a java.lang.Exception.";
 
     return s.Array();
 }

@@ -25,23 +25,7 @@ void Semantic::ProcessVariableInitializer(AstVariableDeclarator *variable_declar
 
     AstArrayInitializer *array_initializer = variable_declarator -> variable_initializer_opt -> ArrayInitializerCast();
     if (array_initializer)
-    {
-        //
-        // TODO: This code is not needed
-        //
-        // REMOVE:
-        //
-        // This operation may throw OutOfMemoryError
-        //
-        // SymbolSet *exception_set = TryExceptionTableStack().Top();
-        // if (exception_set)
-        // {
-        //     exception_set -> AddElement(control.RuntimeException());
-        //     exception_set -> AddElement(control.Error());
-        // }
-
         ProcessArrayInitializer(array_initializer, symbol -> Type());
-    }
     else
     {
         AstExpression *init = (AstExpression *) variable_declarator -> variable_initializer_opt;

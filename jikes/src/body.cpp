@@ -810,8 +810,11 @@ void Semantic::ProcessBreakStatement(Ast *stmt)
             // If the break occurs in a try or catch block with a finally
             // block that completes abruptly, the break is discarded.
             //
-            if (block_body && break_statement -> is_reachable)
+            if (block_body && break_statement -> is_reachable &&
+                AbruptFinallyStack().Top() < block_body -> nesting_level)
+            {
                 block_body -> can_complete_normally = true;
+            }
         }
         else
         {
@@ -825,13 +828,17 @@ void Semantic::ProcessBreakStatement(Ast *stmt)
     }
     else
     {
-        AstBlock *block_body = (AstBlock *) (BreakableStatementStack().Size() > 0 ? BreakableStatementStack().Top()
-                                                                                  : LocalBlockStack().TopBlock());
+        AstBlock *block_body = (AstBlock *) (BreakableStatementStack().Size() > 0
+                                             ? BreakableStatementStack().Top()
+                                             : LocalBlockStack().TopBlock());
         break_statement -> nesting_level = block_body -> nesting_level;
         if (BreakableStatementStack().Size() > 0)
         {
-            if (break_statement -> is_reachable)
+            if (break_statement -> is_reachable &&
+                AbruptFinallyStack().Top() < block_body -> nesting_level)
+            {
                 block_body -> can_complete_normally = true;
+            }
         }
         else ReportSemError(SemanticError::MISPLACED_BREAK_STATEMENT,
                             break_statement -> LeftToken(),
@@ -902,7 +909,10 @@ void Semantic::ProcessContinueStatement(Ast *stmt)
                                                                           : (while_statement ? while_statement -> statement
                                                                                              : (AstStatement *) NULL)));
         if (enclosed_statement)
-            enclosed_statement -> can_complete_normally = true;
+        {
+            if (AbruptFinallyStack().Top() < continue_statement -> nesting_level)
+                enclosed_statement -> can_complete_normally = true;
+        }
         else
         {
             assert(continue_statement -> identifier_token_opt);
@@ -1131,7 +1141,8 @@ void Semantic::ProcessThrowStatement(Ast *stmt)
     ProcessExpression(throw_statement -> expression);
     TypeSymbol *type = throw_statement -> expression -> Type();
 
-    if (type != control.no_type && (! CanAssignmentConvertReference(control.Throwable(), type)))
+    if (type != control.no_type &&
+        ! CanAssignmentConvertReference(control.Throwable(), type))
     {
         ReportSemError(SemanticError::EXPRESSION_NOT_THROWABLE,
                        throw_statement -> LeftToken(),
@@ -1204,6 +1215,16 @@ void Semantic::ProcessTryStatement(Ast *stmt)
         block_body -> is_reachable = try_statement -> is_reachable;
         ProcessBlock(block_body);
         max_variable_index = block_body -> block_symbol -> max_variable_index;
+
+        //
+        // If the finally ends abruptly, then it discards any throw generated
+        // by the try or catch blocks.
+        //
+        if (! block_body -> can_complete_normally)
+        {
+            TryExceptionTableStack().Push(new SymbolSet());
+            AbruptFinallyStack().Push(block_body -> nesting_level);
+        }
     }
 
     //
@@ -1355,11 +1376,10 @@ void Semantic::ProcessTryStatement(Ast *stmt)
 
     //
     // A catch block is reachable iff both of the following are true:
-    //
     //     . Some expression or throw statement in the try block is reachable
     //       and can throw an exception that is assignable to the parameter
-    //       of the catch clause C.
-    //
+    //       of the catch clause C. Note that every try block, including an
+    //       empty one, is considered to throw unchecked exceptions.
     //     . There is no earlier catch block A in the try statement such that
     //       the type of C's parameter is the same as or a subclass of the
     //       type of A's parameter.
@@ -1370,88 +1390,78 @@ void Semantic::ProcessTryStatement(Ast *stmt)
     // stated as follows:
     //
     //    . Catchable Exception:
-    //      some expression or throw statement in the try block is reachable
+    //      Some expression or throw statement in the try block is reachable
     //      and can throw an exception S that is assignable to the parameter
     //      with type T (S is a subclass of T) of the catch clause C.
-    //
     //      In this case, when S is thrown it will definitely be caught by
     //      clause C.
     //
     //    . Convertible Exception:
-    //      the type T of the parameter of the catch clause C is assignable to
+    //      The type T of the parameter of the catch clause C is assignable to
     //      the type S (T is a subclass of S) of an exception that can be
     //      thrown by some expression or throw statement in the try block that
-    //      is reachable.
-    //      
-    //      This rule captures the idea that at run time an object declared to
-    //      be of type S can actually be an instance of an object of type T in
-    //      which case it will be caught by clause C.
-    //
+    //      is reachable. This rule captures the idea that at run time an
+    //      object declared to be of type S can actually be an instance of an
+    //      object of type T in which case it will be caught by clause C.
     //
     Tuple<TypeSymbol *> catchable_exceptions,
                         convertible_exceptions;
+    exception_set -> AddElement(control.Error());
+    exception_set -> AddElement(control.RuntimeException());
     for (int l = 0; l < try_statement -> NumCatchClauses(); l++)
     {
         AstCatchClause *clause = try_statement -> CatchClause(l);
-        VariableSymbol *symbol = clause -> parameter_symbol;
-        if (CheckedException(symbol -> Type()))
+        TypeSymbol *type = clause -> parameter_symbol -> Type();
+        int initial_length = (catchable_exceptions.Length() +
+                              convertible_exceptions.Length());
+
+        for (TypeSymbol *exception = (TypeSymbol *) exception_set -> FirstElement();
+             exception;
+             exception = (TypeSymbol *) exception_set -> NextElement())
         {
-            int initial_length = catchable_exceptions.Length() + convertible_exceptions.Length();
+            if (CanAssignmentConvertReference(type, exception))
+                catchable_exceptions.Next() = exception;
+            else if (CanAssignmentConvertReference(exception, type))
+                convertible_exceptions.Next() = exception;
+        }
 
-            for (TypeSymbol *exception = (TypeSymbol *) exception_set -> FirstElement();
-                 exception;
-                 exception = (TypeSymbol *) exception_set -> NextElement())
-            {
-                if (CanAssignmentConvertReference(symbol -> Type(), exception))
-                     catchable_exceptions.Next() = exception;
-                else if (CanAssignmentConvertReference(exception, symbol -> Type()))
-                     convertible_exceptions.Next() = exception;
-            }
-
+        //
+        // No exception was found which can be caught by this clause.
+        //
+        if (catchable_exceptions.Length() + convertible_exceptions.Length() ==
+            initial_length)
+        {
+            ReportSemError(SemanticError::UNREACHABLE_CATCH_CLAUSE,
+                           clause -> formal_parameter -> LeftToken(),
+                           clause -> formal_parameter -> RightToken(),
+                           type -> ContainingPackage() -> PackageName(),
+                           type -> ExternalName());
+        }
+        else
+        {
             //
-            // No clause was found whose parameter can possibly accept this
-            // exception.
+            // Search to see if this clause duplicates a prior one.
             //
-            if ((catchable_exceptions.Length() + convertible_exceptions.Length()) == initial_length)
+            AstCatchClause *previous_clause;
+            int k;
+            for (k = 0; k < l; k++)
             {
-                if (symbol -> Type() == control.Throwable() || symbol -> Type() == control.Exception())
-                     ReportSemError(SemanticError::UNREACHABLE_DEFAULT_CATCH_CLAUSE,
-                                    clause -> formal_parameter -> LeftToken(),
-                                    clause -> formal_parameter -> RightToken(),
-                                    symbol -> Type() -> ContainingPackage() -> PackageName(),
-                                    symbol -> Type() -> ExternalName());
-                else ReportSemError(SemanticError::UNREACHABLE_CATCH_CLAUSE,
-                                    clause -> formal_parameter -> LeftToken(),
-                                    clause -> formal_parameter -> RightToken(),
-                                    symbol -> Type() -> ContainingPackage() -> PackageName(),
-                                    symbol -> Type() -> ExternalName());
+                previous_clause = try_statement -> CatchClause(k);
+                if (type -> IsSubclass(previous_clause -> parameter_symbol -> Type()))
+                    break;
             }
-            else
-            {
-                //
-                // TODO: I know, I know, this is a sequential search...
-                //
-                AstCatchClause *previous_clause;
-                int k;
-                for (k = 0; k < l; k++)
-                {
-                    previous_clause = try_statement -> CatchClause(k);
-                    if (symbol -> Type() -> IsSubclass(previous_clause -> parameter_symbol -> Type()))
-                        break;
-                }
 
-                if (k < l)
-                {
-                     FileLocation loc(lex_stream, previous_clause -> formal_parameter -> RightToken());
-                     ReportSemError(SemanticError::BLOCKED_CATCH_CLAUSE,
-                                    clause -> formal_parameter -> LeftToken(),
-                                    clause -> formal_parameter -> RightToken(),
-                                    symbol -> Type() -> ContainingPackage() -> PackageName(),
-                                    symbol -> Type() -> ExternalName(),
-                                    loc.location);
-                }
-                else clause -> block -> is_reachable = true;
+            if (k < l)
+            {
+                FileLocation loc(lex_stream, previous_clause -> formal_parameter -> RightToken());
+                ReportSemError(SemanticError::BLOCKED_CATCH_CLAUSE,
+                               clause -> formal_parameter -> LeftToken(),
+                               clause -> formal_parameter -> RightToken(),
+                               type -> ContainingPackage() -> PackageName(),
+                               type -> ExternalName(),
+                               loc.location);
             }
+            else clause -> block -> is_reachable = true;
         }
     }
 
@@ -1472,10 +1482,16 @@ void Semantic::ProcessTryStatement(Ast *stmt)
 
     //
     // A try statement cannot complete normally if it contains a finally
-    // clause that cannot complete normally.
+    // clause that cannot complete normally. Clean up from above.
     //
-    if (try_statement -> finally_clause_opt && (! try_statement -> finally_clause_opt -> block -> can_complete_normally))
+    if (try_statement -> finally_clause_opt &&
+        ! try_statement -> finally_clause_opt -> block -> can_complete_normally)
+    {
         try_statement -> can_complete_normally = false;
+        delete TryExceptionTableStack().Top();
+        TryExceptionTableStack().Pop();
+        AbruptFinallyStack().Pop();
+    }
 }
 
 

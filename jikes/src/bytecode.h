@@ -747,7 +747,8 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void EmitBranch(unsigned int opc, Label& lab, AstStatement *over);
     void CompleteCall(MethodSymbol *, int, TypeSymbol * = NULL);
 
-    AstExpression *StripNops(AstExpression *expr);
+    AstExpression *StripNops(AstExpression *);
+    bool IsNop(AstBlock *);
 
     void EmitArrayAccessLhs(AstArrayAccess *expression)
     {

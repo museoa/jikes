@@ -1,3 +1,23 @@
+2001-12-09  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/body.cpp (ProcessTryStatement): Update finally blocks to
+	"interrupt" other abrupt completions when the finally block itself
+	completes abruptly. Also, check for duplicated unchecked
+	exceptions in catch clauses - bug 1858.
+	* src/bytecode.cpp (EmitTryStatement, ProcessAbruptExit, IsNop):
+	Add optimizations for empty finally statement.
+	* src/bytecode.h (IsNop): New method.
+	* src/error.h:
+	* src/error.cpp (UNREACHABLE_DEFAULT_CATCH_CLAUSE): Delete, since
+	it is no longer possible to detect.
+	* src/expr.cpp:
+	* src/init.cpp: Remove attempts to track unchecked exceptions in
+	the TryExceptionTableStack: since Sun claims that all
+	non-duplicate unchecked exception clauses are reachable, it was
+	not worth the extra effort.
+	* src/semantic.h (class NestingLevelStack): Added to track abrupt
+	finally clauses - patch 240.
+
 2001-12-08  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/java.g: Update parser to track generated blocks.

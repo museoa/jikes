@@ -1768,7 +1768,15 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
     assert(method_stack -> TopFinallyLabel().definition == 0);
 
     int start_try_block_pc = code_attribute -> CodeLength(); // start pc
+    bool emit_finally_clause = (statement -> finally_clause_opt &&
+                                ! IsNop(statement -> finally_clause_opt -> block));
 
+    //
+    // If we determined the finally clause is a nop, remove the tag
+    // TRY_CLAUSE_WITH_FINALLY so that abrupt completions do not emit JSR.
+    //
+    if (statement -> finally_clause_opt && ! emit_finally_clause)
+        statement -> block -> block_tag = AstBlock::NONE;
     EmitBlockStatement(statement -> block);
 
     //
@@ -1784,13 +1792,11 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
           end_label;
     if (statement -> block -> can_complete_normally)
     {
-        if (statement -> finally_clause_opt)
-        {
-            //
-            // Call finally block if have finally handler.
-            //
+        //
+        // Call finally block if have finally handler.
+        //
+        if (emit_finally_clause)
             EmitBranch(OP_JSR, finally_label, statement);
-        }
 
         EmitBranch(OP_GOTO, end_label);
     }
@@ -1809,8 +1815,11 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
 
             assert(stack_depth == 0);
             stack_depth = 1; // account for the exception already on the stack
-            StoreLocal(parameter_symbol -> LocalVariableIndex(), parameter_symbol -> Type());
+            StoreLocal(parameter_symbol -> LocalVariableIndex(),
+                       parameter_symbol -> Type());
 
+            if (statement -> finally_clause_opt && ! emit_finally_clause)
+                catch_clause -> block -> block_tag = AstBlock::NONE;
             EmitBlockStatement(catch_clause -> block);
 
             if (control.option.g & JikesOption::VARS)
@@ -1831,21 +1840,22 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
 
             if (catch_clause -> block -> can_complete_normally)
             {
-                if (statement -> finally_clause_opt)
-                {
-                    //
-                    // Call finally block if have finally handler.
-                    //
+                //
+                // Call finally block if have finally handler.
+                //
+                if (emit_finally_clause)
                     EmitBranch(OP_JSR, finally_label, statement);
-                }
 
                 //
                 // If there are more catch clauses, or a finally clause, then
                 // emit branch to skip over their code and on to the next
                 // statement.
                 //
-                if (statement -> finally_clause_opt || i < (statement -> NumCatchClauses() - 1))
+                if (emit_finally_clause ||
+                    i < (statement -> NumCatchClauses() - 1))
+                {
                     EmitBranch(OP_GOTO, end_label);
+                }
             }
         }
     }
@@ -1853,7 +1863,7 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
     //
     // If this try statement contains a finally clause, then ...
     //
-    if (statement -> finally_clause_opt)
+    if (emit_finally_clause)
     {
         int variable_index = method_stack -> TopBlock() -> block_symbol -> try_or_synchronized_variable_index;
 
@@ -1896,7 +1906,7 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
         EmitBlockStatement(statement -> finally_clause_opt -> block);
 
         //
-        // If a finally block can complete normally, after executing itsbody,
+        // If a finally block can complete normally, after executing its body,
         // we return to the caller using the return address saved earlier.
         //
         if (statement -> finally_clause_opt -> block -> can_complete_normally)
@@ -1915,7 +1925,8 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
 //
 void ByteCode::ProcessAbruptExit(int to_lev, TypeSymbol *return_type)
 {
-    for (int i = method_stack -> Size() - 1; i > 0 && method_stack -> NestingLevel(i) != to_lev; i--)
+    for (int i = method_stack -> Size() - 1;
+         i > 0 && method_stack -> NestingLevel(i) != to_lev; i--)
     {
         int nesting_level = method_stack -> NestingLevel(i),
             enclosing_level = method_stack -> NestingLevel(i - 1);
@@ -4069,6 +4080,24 @@ AstExpression *ByteCode::StripNops(AstExpression *expr)
     }
 
     return expr;
+}
+
+
+bool ByteCode::IsNop(AstBlock *block)
+{
+    for (int i = block -> NumStatements() - 1; i >= 0; i--)
+    {
+        Ast *statement = block -> Statement(i);
+        if (statement -> EmptyStatementCast() ||
+            (statement -> BlockCast() && IsNop((AstBlock *) statement)))
+            continue;
+        //
+        // TODO: Is it worth adding checks for bypassed code in if(false)
+        // and similar sections?
+        //
+        return false;
+    }
+    return true;
 }
 
 
