@@ -355,6 +355,8 @@ class LexStream : public Stream
 
     void SetUpComments()
     {
+        if (comment_buffer)
+            return;
         RereadInput();
         //
         // Calculate the length of the string required to save the comments.
