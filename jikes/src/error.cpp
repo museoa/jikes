@@ -4647,16 +4647,8 @@ wchar_t *SemanticError::PrintUNREACHABLE_DEFAULT_CATCH_CLAUSE(ErrorInfo &err, Le
 {
     ErrorString s;
 
-    s << "This catch block may be unreachable because there is no exception "
-               "whose type is assignable to \"";
-    if (NotDot(err.insert1))
-    {
-        s << err.insert1
-                << "/";
-    }
-    s << err.insert2
-            << "\" that can be thrown during execution of the body of the try block."
-               " However, this being a base exception class, compilation will proceed.";
+    s << "This try block cannot throw a \"checked exception\" (JLS section 14.7),"
+         " you may have intended to catch a RuntimeException instead of an Exception.";
 
     return s.Array();
 }

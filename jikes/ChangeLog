@@ -1,3 +1,10 @@
+2000-08-21  Mo DeJong  <mdejong@redhat.com>
+
+	* src/error.cpp (PrintUNREACHABLE_DEFAULT_CATCH_CLAUSE):
+	Reword warning for try block that catches Exception
+	but does not contain a method that can raise a
+	checked exception.
+
 2000-08-13  Chris Abbey <cabbey@bresnanlink.net>
 
 	* src/stream.cpp (~LexStream): Set columns to NULL
