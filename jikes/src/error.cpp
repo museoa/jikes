@@ -350,15 +350,9 @@ void SemanticError::StaticInitializer()
     warning[ONE_UNNAMED_PACKAGE] = 1;
     warning[RECOMPILATION] = 1;
     warning[METHOD_WITH_CONSTRUCTOR_NAME] = 1;
-
     warning[DEFAULT_METHOD_NOT_OVERRIDDEN] = 1;
-
-    //
-    // TODO: Review the cases below. They should be flagged as errors.
-    //       However, since javac does not flag them at all, we only issue
-    //       a warning.
-    warning[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL] = 2;
-    warning[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER] = 2;
+    warning[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL] = 1;
+    warning[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER] = 1;
 
     //
     // Something stronger than a warning, but code will be generated anyway
@@ -370,6 +364,7 @@ void SemanticError::StaticInitializer()
     warning[ZERO_DIVIDE_CAUTION] = 2;
     warning[UNIMPLEMENTABLE_INTERFACE] = 2;
     warning[UNIMPLEMENTABLE_CLASS] = 2;
+    warning[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_TYPE] = 2;
 
 #ifdef JIKES_DEBUG
     for (int i = 0; i < _num_kinds; i++)
@@ -697,6 +692,8 @@ void SemanticError::StaticInitializer()
         PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL;
     print_message[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER] =
         PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER;
+    print_message[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_TYPE] =
+        PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_TYPE;
     print_message[ILLEGAL_THIS_FIELD_ACCESS] = PrintILLEGAL_THIS_FIELD_ACCESS;
     print_message[CONSTRUCTOR_FOUND_IN_ANONYMOUS_CLASS] =
         PrintCONSTRUCTOR_FOUND_IN_ANONYMOUS_CLASS;
@@ -1485,9 +1482,9 @@ wchar_t *SemanticError::PrintDUPLICATE_INNER_TYPE_NAME(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "The inner type named \"" << err.insert1
-      << "\" is nested in an outer class of the same name at location "
-      << err.insert2 << '.';
+    s << "The nested type name \"" << err.insert1
+      << "\" is illegal, as it is enclosed in another class with the same "
+      << "simple name at location " << err.insert2 << '.';
 
     return s.Array();
 }
@@ -4435,12 +4432,13 @@ wchar_t *SemanticError::PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL
 {
     ErrorString s;
 
-    s << "Ambiguous reference to member named \"" << err.insert1
-      << "\" inherited from type \"";
+    s << "The unqualified usage of \"" << err.insert1
+      << "\" refers to the member inherited from type \"";
     if (NotDot(err.insert2))
         s << err.insert2 << "/";
-    s << err.insert3 << "\" but also declared in the enclosing method \""
-      << err.insert4 << "\". Renaming the enclosing version is suggested.";
+    s << err.insert3
+      << "\", and not the local version in the enclosing method \""
+      << err.insert4 << "\". Renaming the local version is suggested.";
 
     return s.Array();
 }
@@ -4452,12 +4450,31 @@ wchar_t *SemanticError::PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBE
 {
     ErrorString s;
 
-    s << "Ambiguous reference to member named \"" << err.insert1
-      << "\" inherited from type \"";
+    s << "The unqualified usage of \"" << err.insert1
+      << "\" refers to the member inherited from type \"";
     if (NotDot(err.insert2))
         s << err.insert2 << "/";
     s << err.insert3
-      << "\" but also declared or inherited in the enclosing type \"";
+      << "\", and not the version declared in the enclosing type \"";
+    if (NotDot(err.insert4))
+        s << err.insert4 << "/";
+    s << err.insert5 << "\". Explicit qualification is suggested.";
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_TYPE(ErrorInfo &err,
+                                                                                LexStream *lex_stream,
+                                                                                Control &control)
+{
+    ErrorString s;
+
+    s << "The unqualified usage of \"" << err.insert1
+      << "\" refers to the inherited member type \"";
+    if (NotDot(err.insert2))
+        s << err.insert2 << "/";
+    s << err.insert3 << "\", and not the enclosing type \"";
     if (NotDot(err.insert4))
         s << err.insert4 << "/";
     s << err.insert5 << "\". Explicit qualification is suggested.";

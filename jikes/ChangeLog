@@ -1,5 +1,15 @@
 2002-09-03  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/expr.cpp (FindMethodInEnvironment, FindVariableInEnvironment):
+	Reduce shadowing warnings to pedantic level - bugs 119, 324, 2145.
+	* src/decl.cpp (FindType): According to Neal Gafter, inherited
+	member types shadow the current type.
+	* src/error.h:
+	* src/error.cpp (INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_TYPE):
+	Add a caution to detect this case (which is opposite C++).
+
+2002-09-03  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/decl.cpp (ProcessTypeHeader, ProcessTypeHeaders),
 	(ComputeTypesClosure): Make member types visible early enough.
 	(ProcessSingleTypeImportDeclaration): Create place-holder type for

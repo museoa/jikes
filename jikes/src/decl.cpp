@@ -3860,9 +3860,6 @@ TypeSymbol *Semantic::FindType(LexStream::TokenIndex identifier_token)
             break;
 
         type = env -> Type();
-        if (name_symbol == type -> Identity()) // Recall that a type may not have the same name as one of its enclosing types.
-            break;
-
         if (! type -> expanded_type_table)
             ComputeTypesClosure(type, identifier_token);
         TypeShadowSymbol *type_shadow_symbol =
@@ -3877,49 +3874,57 @@ TypeSymbol *Semantic::FindType(LexStream::TokenIndex identifier_token)
     if (env) // The type was found in some enclosing environment?
     {
         //
-        // If the type is an inherited type, make sure that there is not a
+        // If the type was inherited, give a warning if it shadowed another
         // type of the same name within an enclosing lexical scope.
         //
         if (type -> owner -> TypeCast() && type -> owner != env -> Type())
         {
-            for (SemanticEnvironment *env2 = env -> previous; env2;
-                 env2 = env2 -> previous)
+            TypeSymbol *supertype = (TypeSymbol *) type -> owner;
+            for ( ; env; env = env -> previous)
             {
-                TypeSymbol *outer_type =
-                    env2 -> symbol_table.FindTypeSymbol(name_symbol); // check local type
-                if (! outer_type) // if local type not found, check inner type...
+                // First, check the enclosing type name
+                if (name_symbol == env -> Type() -> Identity() &&
+                    env -> Type() != type)
                 {
-                    if (! env2 -> Type() -> expanded_type_table)
-                        ComputeTypesClosure(env2 -> Type(), identifier_token);
-                    TypeShadowSymbol *type_shadow_symbol =
-                        env2 -> Type() -> expanded_type_table ->
-                        FindTypeShadowSymbol(name_symbol);
-                    if (type_shadow_symbol)
-                        outer_type = FindTypeInShadow(type_shadow_symbol,
-                                                      identifier_token);
+                    ReportSemError(SemanticError::INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_TYPE,
+                                   identifier_token,
+                                   identifier_token,
+                                   lex_stream -> NameString(identifier_token),
+                                   type -> ContainingPackage() -> PackageName(),
+                                   type -> ExternalName(),
+                                   env -> Type() -> ContainingPackage() -> PackageName(),
+                                   env -> Type() -> ExternalName());
+                    break;
                 }
-
-                //
-                // If a different type of the same name was found in an
-                // enclosing scope.
-                //
-                TypeSymbol *supertype = type -> owner -> TypeCast();
-                if (outer_type && outer_type != type)
+                if (env -> previous && control.option.pedantic)
                 {
-                    MethodSymbol *method = outer_type -> owner -> MethodCast();
-
-                    if (method)
+                    // Next, in pedantic mode, check local type
+                    SemanticEnvironment *env2 = env -> previous;
+                    TypeSymbol *outer_type =
+                        env2 -> symbol_table.FindTypeSymbol(name_symbol);
+                    if (outer_type)
                     {
+                        assert(outer_type -> owner -> MethodCast());
                         ReportSemError(SemanticError::INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL,
                                        identifier_token,
                                        identifier_token,
                                        lex_stream -> NameString(identifier_token),
                                        supertype -> ContainingPackage() -> PackageName(),
                                        supertype -> ExternalName(),
-                                       method -> Name());
+                                       ((MethodSymbol *) outer_type -> owner) -> Name());
                         break;
                     }
-                    else
+                    // if local type not found, check inner type
+                    if (! env2 -> Type() -> expanded_type_table)
+                        ComputeTypesClosure(env2 -> Type(), identifier_token);
+                    TypeShadowSymbol *type_shadow_symbol =
+                        env2 -> Type() -> expanded_type_table ->
+                        FindTypeShadowSymbol(name_symbol);
+                    if (! type_shadow_symbol)
+                        outer_type = FindTypeInShadow(type_shadow_symbol,
+                                                      identifier_token);
+                    if (outer_type && outer_type != type &&
+                        outer_type -> owner == env2 -> Type())
                     {
                         ReportSemError(SemanticError::INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER,
                                        identifier_token,
@@ -3939,9 +3944,8 @@ TypeSymbol *Semantic::FindType(LexStream::TokenIndex identifier_token)
     }
 
     //
-    // check whether or not the type is in the current compilation unit
-    // either because it was declared as a class or interface or it was
-    // imported by a single-type-import declaration.
+    // Search for the type in the current compilation unit it was declared as
+    // a class or interface or imported by a single-type-import declaration.
     //
     for (int i = 0; i < single_type_imports.Length(); i++)
     {
