@@ -1059,7 +1059,6 @@ private:
     void UpdateGeneratedLocalConstructor(MethodSymbol *);
     void UpdateLocalConstructors(TypeSymbol *);
     void GetAnonymousConstructor(AstClassInstanceCreationExpression *, TypeSymbol *);
-    TypeSymbol *GetClassLiteralClass(LexStream::TokenIndex);
     TypeSymbol *GetAnonymousType(AstClassInstanceCreationExpression *, TypeSymbol *);
     void ProcessClassInstanceCreationExpression(Ast *);
     void ProcessArrayCreationExpression(Ast *);

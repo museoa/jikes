@@ -1,7 +1,7 @@
 // $Id$
 //
-// This software is subject to the terms of the IBM Jikes Compiler
-// License Agreement available at the following URL:
+// This software is subject to the terms of the IBM Jikes Compiler Open
+// Source License Agreement available at the following URL:
 // http://www.ibm.com/research/jikes.
 // Copyright (C) 1996, 1998, International Business Machines Corporation
 // and others.  All Rights Reserved.
@@ -725,7 +725,6 @@ public:
 
     Utf8LiteralValue *signature;
     Utf8LiteralValue *fully_qualified_name;
-    Utf8LiteralValue *class_literal_name;
 
     ExpandedTypeTable *expanded_type_table;
     ExpandedFieldTable *expanded_field_table;
@@ -733,9 +732,6 @@ public:
 
     int num_dimensions;
 
-    TypeSymbol *class_literal_class;
-
-    MethodSymbol *class_literal_method;
     MethodSymbol *static_initializer_method;
     MethodSymbol *block_initializer_method;
 
@@ -789,7 +785,21 @@ assert(NumConstructorParameters() > 0);
     }
     VariableSymbol *InsertThis(int k);
 
-    void InsertClassLiteralMethod(Control &);
+    TypeSymbol *FindOrInsertClassLiteralClass(LexStream::TokenIndex);
+    TypeSymbol *ClassLiteralClass()
+    {
+        return class_literal_class;
+    }
+    MethodSymbol *FindOrInsertClassLiteralMethod(Control &);
+    MethodSymbol *ClassLiteralMethod()
+    {
+        return class_literal_method;
+    }
+    Utf8LiteralValue *FindOrInsertClassLiteralName(Control &);
+    Utf8LiteralValue *ClassLiteralName()
+    {
+        return class_literal_name;
+    }
     VariableSymbol *FindOrInsertClassLiteral(TypeSymbol *);
     VariableSymbol *FindOrInsertLocalShadow(VariableSymbol *);
 
@@ -1026,6 +1036,10 @@ private:
     char *class_name;
 
     void SetClassName();
+
+    TypeSymbol *class_literal_class;
+    MethodSymbol *class_literal_method;
+    Utf8LiteralValue *class_literal_name;
 
     //
     // For a local type, when we first encounter an embedded call

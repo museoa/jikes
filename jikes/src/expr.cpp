@@ -1458,7 +1458,8 @@ assert(variable_symbol || method_symbol);
             //
             // if (! (containing_type -> ContainingPackage() == this_package || this_type -> IsSubclass(containing_type)))
             //
-            if (! (containing_type -> ContainingPackage() == this_package ||
+            if (! (base -> SuperExpressionCast() ||
+                   containing_type -> ContainingPackage() == this_package ||
                    (this_type -> HasProtectedAccessTo(containing_type) && 
                     (base_type -> IsSubclass(this_type) || base_type -> IsOwner(this_type)))))
             {
@@ -1722,7 +1723,7 @@ assert(field_access -> symbol);
 
                 if (outermost_type -> ACC_INTERFACE())
                 {
-                    TypeSymbol *class_literal_type = GetClassLiteralClass(field_access -> identifier_token);
+                    TypeSymbol *class_literal_type = outermost_type -> FindOrInsertClassLiteralClass(field_access -> identifier_token);
                     AddDependence(this_type, class_literal_type, field_access -> identifier_token);
 
                     AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(field_access -> identifier_token);
@@ -1734,7 +1735,7 @@ assert(field_access -> symbol);
                     method_access -> identifier_token = field_access -> identifier_token;
 
                     AstStringLiteral *string_literal = compilation_unit -> ast_pool -> GenStringLiteral(field_access -> identifier_token);
-                    string_literal -> value = type -> signature;
+                    string_literal -> value = type -> FindOrInsertClassLiteralName(control);
                     string_literal -> symbol = control.String();
 
                     AstMethodInvocation *method_call       = compilation_unit -> ast_pool -> GenMethodInvocation();
@@ -1742,7 +1743,7 @@ assert(field_access -> symbol);
                     method_call -> left_parenthesis_token  = field_access -> identifier_token;
                     method_call -> AddArgument(string_literal);
                     method_call -> right_parenthesis_token = field_access -> identifier_token;
-                    method_call -> symbol                  = class_literal_type -> class_literal_method;
+                    method_call -> symbol                  = class_literal_type -> ClassLiteralMethod();
 
                     field_access -> resolution_opt = method_call;
                     field_access -> symbol = (method_call -> symbol ? method_call -> symbol : control.no_type);
@@ -3500,41 +3501,6 @@ assert((! ThisMethod()) || LocalSymbolTable().Top());
     inner_type -> ResetACC_FINAL();
 
     return inner_type;
-}
-
-
-TypeSymbol *Semantic::GetClassLiteralClass(LexStream::TokenIndex tok)
-{
-    TypeSymbol *outermost_type = ThisType() -> outermost_type;
-
-    if (! outermost_type -> class_literal_class)
-    {
-        AstClassInstanceCreationExpression *class_creation = compilation_unit -> ast_pool -> GenClassInstanceCreationExpression();
-        class_creation -> base_opt      = NULL;
-        class_creation -> dot_token_opt = 0;
-        class_creation -> new_token = tok;
-
-             AstSimpleName *ast_type= compilation_unit -> ast_pool -> GenSimpleName(tok);
-
-        class_creation -> class_type = compilation_unit -> ast_pool -> GenTypeExpression(ast_type);
-        class_creation -> left_parenthesis_token  = tok;
-        class_creation -> right_parenthesis_token = tok;
-
-            AstClassBody *class_body = compilation_unit -> ast_pool -> GenClassBody();
-            class_body -> left_brace_token = tok;
-            class_body -> right_brace_token = tok;
-
-        class_creation -> class_body_opt = class_body;
-
-        TypeSymbol *class_literal_type = GetAnonymousType(class_creation, control.Object());
-        class_literal_type -> InsertClassLiteralMethod(control);
-
-        AddDependence(class_literal_type, control.Class(), tok);
-
-        outermost_type -> class_literal_class = class_literal_type;
-    }
-
-    return outermost_type -> class_literal_class;
 }
 
 

@@ -59,7 +59,7 @@ void ByteCode::CompileClass(TypeSymbol * type)
     VariableSymbol * vsym;
     MethodSymbol * msym;
     AstStaticInitializer * static_initializer;
-    class_literal_method = type -> outermost_type -> class_literal_method;
+    class_literal_method = type -> outermost_type -> ClassLiteralMethod();
     
     for (i=0; i < class_body -> NumClassVariables(); i++) {
         field_decl = class_body -> ClassVariable(i);
@@ -144,8 +144,8 @@ void ByteCode::CompileClass(TypeSymbol * type)
         EndMethod(METHOD_KIND_ACCESS,method_index, method_sym);
     }
 
-    if (type -> class_literal_method) {
-        MethodSymbol * class_literal_sym = type -> class_literal_method;
+    if (type -> ClassLiteralMethod()) {
+        MethodSymbol * class_literal_sym = type -> ClassLiteralMethod();
         // generate the class$ identity method used for class literal-related garbage mumbo-jumbo initialization
         method_index = BeginMethod(METHOD_KIND_ACCESS_CLASS, class_literal_sym);
         GenerateClassAccessMethod(class_literal_sym);
@@ -2311,7 +2311,7 @@ int ByteCode::GenerateClassAccess(AstFieldAccess * field_access)
         EmitBranch(OP_GOTO, lab2);
         DefineLabel(lab1);
         // generate load of constant naming the class
-        LoadLiteral(field_access -> base-> Type() -> class_literal_name, this_control.String());
+        LoadLiteral(field_access -> base-> Type() -> ClassLiteralName(), this_control.String());
         PutOp(OP_INVOKESTATIC);
         CompleteCall(class_literal_method, 1, 0);
         PutOp(OP_DUP);
@@ -2346,7 +2346,7 @@ int ByteCode::GenerateClassAccess(AstFieldAccess * field_access)
         EmitBranch(OP_GOTO, lab2);
         DefineLabel(lab1);
         // generate load of constant naming the class
-        LoadLiteral(field_access -> base-> Type() -> class_literal_name, this_control.String());
+        LoadLiteral(field_access -> base-> Type() -> ClassLiteralName(), this_control.String());
         PutOp(OP_INVOKESTATIC);
         CompleteCall(class_literal_method, 1, 0);
         PutOp(OP_DUP);

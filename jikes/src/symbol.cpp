@@ -1,7 +1,7 @@
 // $Id$
 //
-// This software is subject to the terms of the IBM Jikes Compiler
-// License Agreement available at the following URL:
+// This software is subject to the terms of the IBM Jikes Compiler Open
+// Source License Agreement available at the following URL:
 // http://www.ibm.com/research/jikes.
 // Copyright (C) 1996, 1998, International Business Machines Corporation
 // and others.  All Rights Reserved.
@@ -1269,7 +1269,46 @@ assert(NumEnclosingInstances() == n);
 }
 
 
-void TypeSymbol::InsertClassLiteralMethod(Control &control)
+TypeSymbol *TypeSymbol::FindOrInsertClassLiteralClass(LexStream::TokenIndex tok)
+{
+    Semantic *sem = semantic_environment -> sem;
+    AstCompilationUnit *compilation_unit = sem -> compilation_unit;
+    Control &control = sem -> control;
+
+assert(this == outermost_type);
+
+    if (! this -> class_literal_class)
+    {
+        AstClassInstanceCreationExpression *class_creation = compilation_unit -> ast_pool -> GenClassInstanceCreationExpression();
+        class_creation -> base_opt      = NULL;
+        class_creation -> dot_token_opt = 0;
+        class_creation -> new_token = tok;
+
+             AstSimpleName *ast_type= compilation_unit -> ast_pool -> GenSimpleName(tok);
+
+        class_creation -> class_type = compilation_unit -> ast_pool -> GenTypeExpression(ast_type);
+        class_creation -> left_parenthesis_token  = tok;
+        class_creation -> right_parenthesis_token = tok;
+
+            AstClassBody *class_body = compilation_unit -> ast_pool -> GenClassBody();
+            class_body -> left_brace_token = tok;
+            class_body -> right_brace_token = tok;
+
+        class_creation -> class_body_opt = class_body;
+
+        TypeSymbol *class_literal_type = sem -> GetAnonymousType(class_creation, control.Object());
+        (void) class_literal_type -> FindOrInsertClassLiteralMethod(control);
+
+        sem -> AddDependence(class_literal_type, control.Class(), tok);
+
+        this -> class_literal_class = class_literal_type;
+    }
+
+    return this -> class_literal_class;
+}
+
+
+MethodSymbol *TypeSymbol::FindOrInsertClassLiteralMethod(Control &control)
 {
     if (! class_literal_method)
     {
@@ -1294,7 +1333,25 @@ void TypeSymbol::InsertClassLiteralMethod(Control &control)
         class_literal_method -> SetSignature(control);
     }
 
-    return;
+    return class_literal_method;
+}
+
+
+Utf8LiteralValue *TypeSymbol::FindOrInsertClassLiteralName(Control &control)
+{
+    if (! class_literal_name)
+    {
+        int length = fully_qualified_name -> length;
+        char *slashed_name = fully_qualified_name -> value;
+        char *name = new char[length + 1];
+        for (int i = 0; i < length; i++)
+            name[i] = (slashed_name[i] == U_SLASH ? (wchar_t) U_DOT : slashed_name[i]);
+        name[length] = U_NULL;
+        class_literal_name = control.Utf8_pool.FindOrInsert(name, length);
+        delete [] name;
+    }
+
+    return class_literal_name;
 }
 
 
@@ -1304,19 +1361,9 @@ assert(IsTopLevel() && (! type -> Primitive()));
     Semantic *sem = semantic_environment -> sem;
     Control &control = sem -> control;
  
-    this -> InsertClassLiteralMethod(control);
+    (void) this -> FindOrInsertClassLiteralMethod(control);
 
-    if (! type -> class_literal_name)
-    {
-        int length = type -> fully_qualified_name -> length;
-        char *slashed_name = type -> fully_qualified_name -> value;
-        char *name = new char[length + 1];
-        for (int i = 0; i < length; i++)
-            name[i] = (slashed_name[i] == U_SLASH ? (wchar_t) U_DOT : slashed_name[i]);
-        name[length] = U_NULL;
-        type -> class_literal_name = control.Utf8_pool.FindOrInsert(name, length);
-        delete [] name;
-    }
+    (void) type -> FindOrInsertClassLiteralName(control);
 
     NameSymbol *name_symbol = NULL;
     char *signature = type -> SignatureString();
