@@ -1615,7 +1615,7 @@ bool ByteCode::EmitSwitchStatement(AstSwitchStatement* switch_statement)
     // order. We must respect order in which blocks are seen so that blocks
     // lacking a terminal break fall through to the proper place.
     //
-    abrupt = true;
+    abrupt = false;
     for (i = 0; (int) i < switch_block -> NumStatements(); i++)
     {
         AstSwitchBlockStatement* switch_block_statement =
@@ -1633,9 +1633,20 @@ bool ByteCode::EmitSwitchStatement(AstSwitchStatement* switch_statement)
                     (switch_label -> expression_opt -> value) -> value;
                 DefineLabel(case_labels[value - low]);
             }
-            else DefineLabel(case_labels[nlabels]);
+            else
+            {
+                DefineLabel(case_labels[nlabels]);
+                //
+                // We must also point all inserted cases to the default.
+                //
+                unsigned j = 1;
+                i4 k = low + 1;
+                for ( ; j < switch_statement -> NumCases(); j++, k++)
+                    while (k != switch_statement -> Case(j) -> value)
+                        DefineLabel(case_labels[k++ - low]);
+            }
         }
-        abrupt &= EmitSwitchBlockStatement(switch_block_statement, false);
+        abrupt = EmitSwitchBlockStatement(switch_block_statement, false);
     }
 
     CloseSwitchLocalVariables(switch_block, op_start);

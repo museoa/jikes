@@ -1,3 +1,9 @@
+2002-11-30  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/bytecode.cpp (EmitSwitchStatement):
+	* src/body.cpp (ProcessSwitchStatement): Fix regression in switch
+	statements from recent commit.
+
 2002-11-27  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/ast.h:

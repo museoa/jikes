@@ -578,7 +578,7 @@ void Semantic::ProcessSwitchStatement(Ast* stmt)
     unsigned num_case_labels = 0;
     for (int i = 0; i < block_body -> NumStatements(); i++)
         num_case_labels += switch_statement -> Block(i) -> NumSwitchLabels();
-    switch_statement -> AllocateCases(num_case_labels);
+    switch_statement -> AllocateCases(num_case_labels - 1);
 
     //
     // A switch block is reachable iff its switch statement is reachable.
@@ -639,7 +639,7 @@ void Semantic::ProcessSwitchStatement(Ast* stmt)
             {
                 switch_statement -> DefaultCase() =
                     compilation_unit -> ast_pool -> GenCaseElement(j, k);
-                switch_label -> map_index = num_case_labels;
+                switch_label -> map_index = num_case_labels - 1;
             }
             else
             {
