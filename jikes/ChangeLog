@@ -1,3 +1,60 @@
+2001-02-12  Eric Blake  <ebb9@email.byu.edu>
+
+	* configure.in: Add --enable-fp-emulation
+	flag to configure.
+	* src/double.cpp (IEEEFloat, IEEEDouble):
+	* src/double.h (IEEEFloat, IEEEDouble):
+	Add emulation code for IEEE 754 compliance.
+	Rename FloatValue() and DoubleValue() to
+	FloatView(), DoubleView().
+	Remove unused FloatRoundedValue() and
+	DoubleRoundedValue().
+	IEEEDouble now extends BaseLong, for easier
+	manipulation of 64 bit data.
+	Replace Fmodulus() and Divide() with operator%
+	and operator/.
+	Add equals(), hashCode(), and compareTo(), which
+	follow the semantics of java.lang.Float, Double.
+	Add ctor(char *, boolean) to allow detection of
+	underflow or overflow.
+	* src/expr.cpp (ProcessLEFT_SHIFT, ProcessRIGHT_SHIFT,
+	ProcessUNSIGNED_RIGHT_SHIFT, ProcessMOD):
+	Simplify calls to shift operations using
+	unsigned right shift. Simplify calls to double
+	and float modulus to using modulus operator
+	instead of Fmodulus.
+	* src/long.cpp (BaseLong, LongInt, ULongInt):
+	* src/long.h (BaseLong, LongInt, ULongInt):
+	Add use of native 64 bit operations when
+	HAVE_UNSIGNED_LONG_LONG is defined.
+	Fix bugs in shift operators and in multiply.
+	Add hashCode(), which mirrors java.lang.Long.
+	* src/lookup.cpp (LongLiteralTable::Rehash,
+	LongLiteralTable::FindOrInsert,
+	FloatLiteralTable::FindOrInsertFloat,
+	FloatLiteralTable::FindOrInsert,
+	DoubleLiteralTable::FindOrInsertDouble,
+	DoubleLiteralTable::FindOrInsert):
+	Make use of new Hash method to simplify
+	finding of a hash index.
+	Check for NaN when inserting into the float
+	or double table.
+	Use new IEEEfloat and IEEEdouble equals
+	method instead of operator equals.
+	Use new flag in IEEEFloat, IEEEDouble
+	ctors to detect overflow, underflow.
+	* src/lookup.h (Hash::Function,
+	LongLiteralTable::Hash): Use hashCode
+	method for IEEEfloat and IEEEdouble classes.
+	Add new Hash method to LongLiteralTable.
+	* src/platform.cpp (FloatToString,
+	DoubleToString): Replace use of FloatValue
+	with FloatView and DoubleValue with
+	DoubleView.
+	* src/platform.h: Add i8 datatype via
+	signed long long typedef. Fix up some
+	comments that got the ranges wrong.
+
 2001-02-01  Mo DeJong  <mdejong@redhat.com>
 
 	* TODO: Note that deps have been added

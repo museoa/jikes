@@ -448,7 +448,7 @@ FloatToString::FloatToString(IEEEfloat &num)
         // Otherwise, we write it out in standard form.
         //
         int decimal_exponent = 0;
-        float f = (num.IsNegative() ? -num.FloatValue() : num.FloatValue());
+        float f = (num.IsNegative() ? -num.FloatView() : num.FloatView());
         if (f < 1E-3 || f >= 1E+7)
         {
             //
@@ -611,7 +611,7 @@ DoubleToString::DoubleToString(IEEEdouble &num)
         // Otherwise, we write it out in standard form.
         //
         int decimal_exponent = 0;
-        double d = (num.IsNegative() ? -num.DoubleValue() : num.DoubleValue());
+        double d = (num.IsNegative() ? -num.DoubleView() : num.DoubleView());
         if (d < 1E-3 || d >= 1E+7)
         {
             //

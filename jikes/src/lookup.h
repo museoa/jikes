@@ -100,15 +100,19 @@ public:
         return hash_value;
     }
 
+    inline static unsigned Function(LongInt value)
+    {
+        return value.hashCode();
+    }
+
     inline static unsigned Function(IEEEfloat value)
     {
-        return value.Word();
+        return value.hashCode();
     }
 
     inline static unsigned Function(IEEEdouble value)
     {
-        unsigned result = value.HighWord() + value.LowWord();
-        return result;
+        return value.hashCode();
     }
 };
 
@@ -689,6 +693,8 @@ private:
     static LongInt int64_limit;
 
     LiteralValue *bad_value;
+
+    inline static unsigned Hash(LongInt value) { return Hash::Function(value); }
 
     void Rehash();
 };

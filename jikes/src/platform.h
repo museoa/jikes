@@ -157,10 +157,18 @@ Currently, we do not use this one
 
 #ifdef HAVE_32BIT_TYPES
 
-#ifdef HAVE_UNSIGNED_LONG_LONG
-// Range 0..1.84467440737e+19
+//
+// FIXME: Someone with Microsoft VC++ should add __int64 support
+//
+
+# ifdef HAVE_UNSIGNED_LONG_LONG
+// Range 0..18446744073709551615
 typedef unsigned long long u8;
-#endif // HAVE_UNSIGNED_LONG_LONG
+
+// Range -9223372036854775808..9223372036854775807
+typedef signed long long i8;
+
+# endif // HAVE_UNSIGNED_LONG_LONG
 
 // Range 0..4294967295
 typedef unsigned int u4;
@@ -171,7 +179,7 @@ typedef signed int i4;
 // Range 0..65535
 typedef unsigned short u2;
 
-// Range -32767..+32768
+// Range -32768..32767
 typedef signed short i2;
 
 // Range 0..255 in this system
@@ -180,7 +188,7 @@ typedef unsigned char u1;
 // Range -128..+127 in this system
 typedef signed char i1;
 
-#endif
+#endif // HAVE_32BIT_TYPES
 
 
 //

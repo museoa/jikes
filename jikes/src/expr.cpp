@@ -5916,22 +5916,17 @@ void Semantic::ProcessUNSIGNED_RIGHT_SHIFT(AstBinaryExpression *expr)
             {
                 LongLiteralValue *left = (LongLiteralValue *) expr -> left_expression -> value;
                 IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
-                int right_value = right -> value & 0x3F;
 
-                LongInt value = left -> value >> right_value;
-                if (left -> value < 0)
-                    value += (LongInt(2) << (63 - right_value));
-                expr -> value = control.long_pool.FindOrInsert(value);
+                expr -> value = control.long_pool.FindOrInsert((LongInt)
+                    ((ULongInt) left -> value >> (right -> value & 0x3F)));
             }
             else // assert(expr -> Type() == control.int_type)
             {
                 IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
                 IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
 
-                int value = left -> value >> (0x1F & right -> value);
-                if (left -> value < 0)
-                     value += (2 << (31 - (0x1F & right -> value)));
-                expr -> value = control.int_pool.FindOrInsert(value);
+                expr -> value = control.int_pool.FindOrInsert((i4)
+                    ((u4) left -> value >> (right -> value & 0x1F)));
             }
         }
     }
@@ -6769,19 +6764,15 @@ void Semantic::ProcessMOD(AstBinaryExpression *expr)
                 {
                     DoubleLiteralValue *left = (DoubleLiteralValue *) left_expression -> value;
                     DoubleLiteralValue *right = (DoubleLiteralValue *) right_expression -> value;
-                    IEEEdouble result = IEEEdouble((u4) 0);
-                    IEEEdouble::Fmodulus(left -> value, right -> value, result);
-
-                    expr -> value = control.double_pool.FindOrInsert(result);
+                    
+                    expr -> value = control.double_pool.FindOrInsert(left -> value % right -> value);
                 }
                 else if (expr -> Type() == control.float_type)
                 {
                     FloatLiteralValue *left = (FloatLiteralValue *) left_expression -> value;
                     FloatLiteralValue *right = (FloatLiteralValue *) right_expression -> value;
-                    IEEEfloat result = IEEEfloat(0);
-                    IEEEfloat::Fmodulus(left -> value, right -> value, result);
 
-                    expr -> value = control.float_pool.FindOrInsert(result);
+                    expr -> value = control.float_pool.FindOrInsert(left -> value % right -> value);
                 }
                 else if (expr -> Type() == control.long_type)
                 {

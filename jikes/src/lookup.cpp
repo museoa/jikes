@@ -1036,7 +1036,7 @@ void LongLiteralTable::Rehash()
     for (int i = 1; i < symbol_pool.Length(); i++)
     {
         LongLiteralValue *llv = symbol_pool[i];
-        int k = (((ULongInt) llv -> value) % ULongInt(0, hash_size)).LowWord(); // The ULongInt turns negative values positive
+        int k = Hash(llv -> value) % hash_size; // the hash function for LongInt values is cheap so we don't need to save it.
         llv -> next = base[k];
         base[k] = llv;
     }
@@ -1047,7 +1047,7 @@ void LongLiteralTable::Rehash()
 
 LongLiteralValue *LongLiteralTable::FindOrInsert(LongInt value)
 {
-    int k = (((ULongInt) value) % ULongInt(0, hash_size)).LowWord();  // The ULongInt cast turns negative values into positive values
+    int k = Hash(value) % hash_size;
 
     LongLiteralValue *lit;
     for (lit = base[k]; lit; lit = (LongLiteralValue *) lit -> next)
@@ -1135,9 +1135,14 @@ LiteralValue *FloatLiteralTable::FindOrInsertFloat(LiteralSymbol *literal)
         name[i] = (char) literal -> Name()[i];
     name[literal -> NameLength()] = U_NULL;
 
-    IEEEfloat value = IEEEfloat(name);
+    //
+    // JLS 3.10.2 states it is an error for a literal to round to infinity or 0
+    // Passing the second parameter tells the constructor to set value to NaN
+    // if the literal is invalid.
+    //
+    IEEEfloat value = IEEEfloat(name, true);
 
-    literal -> value = FindOrInsert(value);
+    literal -> value = (value.IsNaN() ? bad_value : FindOrInsert(value));
 
     delete [] name;
 
@@ -1174,7 +1179,7 @@ FloatLiteralValue *FloatLiteralTable::FindOrInsert(IEEEfloat value)
     FloatLiteralValue *lit;
     for (lit = base[k]; lit; lit = (FloatLiteralValue *) lit -> next)
     {
-        if (lit -> value == value)
+        if (lit -> value.equals(value))
             return lit;
     }
 
@@ -1256,9 +1261,14 @@ LiteralValue *DoubleLiteralTable::FindOrInsertDouble(LiteralSymbol *literal)
         name[i] = (char) literal -> Name()[i];
     name[literal -> NameLength()] = U_NULL;
 
-    IEEEdouble value = IEEEdouble(name);
+    //
+    // JLS 3.10.2 states it is an error for a literal to round to infinity or 0
+    // Passing the second parameter tells the constructor to set value to NaN
+    // if the literal is invalid.
+    //
+    IEEEdouble value = IEEEdouble(name, true);
 
-    literal -> value = FindOrInsert(value);
+    literal -> value = (value.IsNaN() ? bad_value : FindOrInsert(value));
 
     delete [] name;
 
@@ -1295,7 +1305,7 @@ DoubleLiteralValue *DoubleLiteralTable::FindOrInsert(IEEEdouble value)
     DoubleLiteralValue *lit;
     for (lit = base[k]; lit; lit = (DoubleLiteralValue *) lit -> next)
     {
-        if (lit -> value == value)
+        if (lit -> value.equals(value))
             return lit;
     }
 
