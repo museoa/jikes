@@ -51,7 +51,7 @@ install: all
 	strip $(EXECUTABLE)
 	cp $(EXECUTABLE) $(prefix)/bin
 	mkdir -p $(prefix)/man/man1
-	cp ../jikes.1 $(prefix)/man/man1
+	cp ../doc/jikes.1 $(prefix)/man/man1
 
 OBJECTS=jikes.@O@ scanner.@O@ code.@O@ zip.@O@ unzip.@O@ \
         ast.@O@ diagnose.@O@ parser.@O@ lpginput.@O@ javaact.@O@ \
