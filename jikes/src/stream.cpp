@@ -708,16 +708,14 @@ unsigned LexStream::FindColumn(unsigned loc)
 
 void LexStream::ReadInput()
 {
-    if (file_symbol -> buffer)
+    if (file_symbol -> IsZip())
     {
-        ProcessInput(file_symbol -> buffer, strlen(file_symbol -> buffer));
-    }
-    else if (file_symbol -> IsZip()) {
         ZipFile *zipfile = new ZipFile(file_symbol);
 
         if (zipfile -> Buffer() == NULL)
         {
-            fprintf(stderr, "chaos: Don\'t know how to process compressed (\".java\") source in a zip file\n");
+            fprintf(stderr, "chaos: Don\'t know how to process compressed "
+                    "(\".java\") source in a zip file\n");
             assert(false);
         }
         else if (! file_symbol -> lex_stream)
@@ -725,7 +723,8 @@ void LexStream::ReadInput()
             // Once the zip file is loaded, it never changes. So, we only read
             // it the first time
             file_symbol -> lex_stream = this;
-            ProcessInput(zipfile -> Buffer(), file_symbol -> uncompressed_size);
+            ProcessInput(zipfile -> Buffer(),
+                         file_symbol -> uncompressed_size);
         }
         delete zipfile;
     }
@@ -754,20 +753,14 @@ void LexStream::RereadInput()
 {
     if (input_buffer) // if input already available, do nothing
         ;
-#ifdef JIKES_DEBUG
-    else if (file_symbol -> buffer)
-    {
-      fprintf(stderr, "chaos: Don\'t know how to RereadInput a buffer\n");
-      assert(false);
-    }
-#endif
     else if (file_symbol -> IsZip())
     {
         ZipFile *zipfile = new ZipFile(file_symbol);
 
         if (zipfile -> Buffer() == NULL)
         {
-            fprintf(stderr, "chaos: Don\'t know how to process compressed (\".java\") source in a zip file\n");
+            fprintf(stderr, "chaos: Don\'t know how to process compressed "
+                    "(\".java\") source in a zip file\n");
             assert(false);
         }
         else ProcessInput(zipfile -> Buffer(),

@@ -205,13 +205,6 @@ public:
     //
     time_t mtime;
 
-    //
-    // This field is used for buffer "files".
-    //
-    // FIXME: This field does not seem to be set anywhere,
-    // but it is read in symbol.cpp and stream.cpp
-    char *buffer;
-
     LexStream *lex_stream;
     AstCompilationUnit *compilation_unit;
     Semantic *semantic;
@@ -225,7 +218,6 @@ public:
                                            directory_symbol(NULL),
                                            package(NULL),
                                            mtime(0),
-                                           buffer(NULL),
                                            lex_stream(NULL),
                                            compilation_unit(NULL),
                                            semantic(NULL),
@@ -237,7 +229,6 @@ public:
     virtual ~FileSymbol()
     {
         delete [] file_name;
-        delete [] buffer;
         delete lex_stream;
     }
 

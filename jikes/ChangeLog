@@ -1,3 +1,13 @@
+2002-12-06  Elliott Hughes <enh@acm.org>
+
+	* src/stream.cpp (ReadInput, RereadInput): 
+	* src/symbol.h (buffer): Remove dead code pertaining to buffer
+	files, whatever they were.
+
+2002-12-06  Chris Dennis  <chris.dennis@invidi.com>
+
+	* src/control.cpp (ProcessBodies): Fix compile error in Windows.
+
 2002-12-05  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/ast.h (AstDeclaredType, AstInitializerDeclaration): More

@@ -1296,16 +1296,9 @@ void Control::ProcessBodies(TypeSymbol *type)
                 for (int i = 0; i < length; i++)
                     entry_name[i] = entry -> name[i];
                 entry_name[entry -> length] = U_NULL;
-                LexStream::TokenIndex identifier_token =
-                    (interface_declaration
-                     ? interface_declaration -> identifier_token
-                     : class_declaration -> identifier_token);
-
                 sem -> ReportSemError(SemanticError::FILE_FILE_CONFLICT,
-                                      identifier_token,
-                                      identifier_token,
-                                      type -> Name(),
-                                      entry_name,
+                                      type -> declaration -> identifier_token,
+                                      type -> Name(), entry_name,
                                       directory -> Name());
 
                 delete [] entry_name;
