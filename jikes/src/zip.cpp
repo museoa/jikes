@@ -324,12 +324,12 @@ Zip::Zip(Control &control_, char *zipfile_name) : control(control_),
     zipfile = SystemFopen(zipfile_name, "rb");
     if (zipfile)
     {
-        int rc = fseek(zipfile, -22, SEEK_END);
+        int rc = fseek(zipfile, -END_SIZE, SEEK_END);
         if (rc == 0)
         {
-            zipbuffer = new char[22];
+            zipbuffer = new char[END_SIZE];
             buffer_ptr = zipbuffer;
-            SystemFread(buffer_ptr, sizeof(char), 22, zipfile);
+            SystemFread(buffer_ptr, sizeof(char), END_SIZE, zipfile);
 
             magic = GetU4();
         }
@@ -342,11 +342,132 @@ Zip::Zip(Control &control_, char *zipfile_name) : control(control_),
         zipbuffer = (mapfile == INVALID_HANDLE_VALUE ? NULL : (char *) MapViewOfFile(mapfile, FILE_MAP_READ, 0, 0, 0));
         if (zipbuffer)
         {
-            buffer_ptr = &zipbuffer[GetFileSize(zipfile, NULL) - 22];
+            buffer_ptr = &zipbuffer[GetFileSize(zipfile, NULL) - END_SIZE];
             magic = GetU4();
         }
     }
 #endif
+
+    // This may or may not be a valid zip file. The zip file might have
+    // a file comment so we can't be sure where the END header is located.
+    // We check for the LOC header at byte 0 to make sure this is a valid
+    // zip file and then scan over the file backwards in search of the
+    // END header.
+
+    if (! IsValid()) {
+        u4 sig = 0;
+
+#ifdef UNIX_FILE_SYSTEM
+        int res = fseek(zipfile, 0, SEEK_SET);
+        assert(res == 0);
+
+        char *tmpbuffer = new char[LOC_SIZE];
+        buffer_ptr = tmpbuffer;
+        SystemFread(buffer_ptr, sizeof(char), LOC_SIZE, zipfile);
+        sig = GetU4();
+        delete [] tmpbuffer;
+        buffer_ptr = NULL;
+
+        if (sig == LOC_SIG)
+        {
+            int block_size = 8192;
+            tmpbuffer = new char[block_size];
+            char *holdbuffer = new char[8];
+            char *index_ptr;
+
+            res = fseek(zipfile, 0, SEEK_END);
+            assert(res == 0);
+
+            long zip_file_size = ftell(zipfile);
+            int num_loops = zip_file_size / block_size;
+            magic = 0;
+
+            for (; magic == 0 && num_loops >= 0 ; num_loops--) {
+
+                if ((ftell(zipfile) - block_size) < 0)
+                {
+                    block_size = ftell(zipfile);
+                    res = fseek(zipfile, 0L, SEEK_SET);
+                }
+                else
+                {
+                    res = fseek(zipfile, -block_size, SEEK_CUR);
+                }
+
+                assert(res == 0);
+                SystemFread(tmpbuffer, sizeof(char), block_size, zipfile);
+                res = fseek(zipfile, -block_size, SEEK_CUR); // undo fread
+                assert(res == 0);
+
+                for (index_ptr = tmpbuffer + block_size - 1;
+                     index_ptr >= tmpbuffer;
+                     index_ptr--)
+                {
+                    if (*index_ptr == 'P')
+                    {
+                        // Check for header signature that spans buffer
+                        int span = (tmpbuffer + block_size) - index_ptr;
+
+                        if (span < 4)
+                        {
+                            memmove(holdbuffer+span, holdbuffer, 3);
+                            memmove(holdbuffer, index_ptr, span);
+                            buffer_ptr = holdbuffer;
+                        }
+                        else
+                        {
+                            buffer_ptr = index_ptr;
+                        }
+
+                        sig = GetU4();
+
+                        if (sig == END_SIG)
+                        {
+                            // Found the END header, put it in zipbuffer.
+                            buffer_ptr = zipbuffer;
+                            fseek(zipfile, block_size-span, SEEK_CUR);
+                            SystemFread(buffer_ptr, sizeof(char),
+                                END_SIZE, zipfile);
+
+                            magic = GetU4();
+                            break;
+                        }
+                    }
+                }
+
+                // Copy first 3 bytes into holdbuffer in case sig spans
+                holdbuffer[0] = tmpbuffer[0];
+                holdbuffer[1] = tmpbuffer[1];
+                holdbuffer[2] = tmpbuffer[2];
+            }
+
+            delete [] tmpbuffer; 
+            delete [] holdbuffer;
+        }
+#elif defined(WIN32_FILE_SYSTEM)
+        buffer_ptr = &zipbuffer[0];
+        sig = GetU4();
+
+        if (sig == LOC_SIG)
+        {
+            buffer_ptr = &zipbuffer[GetFileSize(zipfile, NULL) - END_SIZE];
+            for ( ; buffer_ptr >= zipbuffer; buffer_ptr--)
+            {
+                if (*buffer_ptr == 'P')
+                {                
+                    sig = GetU4();
+                    if (sig == END_SIG)
+                    {
+                       magic = sig;
+                       break;
+                    }
+                    else
+                       buffer_ptr -= 4;
+                }
+            }
+        }
+#endif
+    }
 
     ReadDirectory();
 
@@ -379,7 +500,8 @@ Zip::~Zip()
 
 //
 // Upon successful termination of this function, IsValid() should yield true.
-// I.e., we should be able to assert that (magic == 0x06054b50)
+// Each CEN header would have been read so the magic number would get reset
+// when the END header is again read.
 //
 void Zip::ReadDirectory()
 {
@@ -395,18 +517,22 @@ void Zip::ReadDirectory()
         u4 central_directory_size                       = GetU4();
 
 #ifdef UNIX_FILE_SYSTEM
-        int rc = fseek(zipfile, -((int) central_directory_size + 22), SEEK_END);
+        u4 central_directory_offset                     = GetU4();
+        Skip(2); // u2 comment_length                   = GetU2();
+        int rc = fseek(zipfile, central_directory_offset, SEEK_SET);
 
         assert(rc == 0);
 
         delete [] zipbuffer;
-        zipbuffer = new char[central_directory_size + 22];
+        zipbuffer = new char[central_directory_size + END_SIZE];
         buffer_ptr = zipbuffer;
-        SystemFread(buffer_ptr, sizeof(char), central_directory_size + 22, zipfile);
+        SystemFread(buffer_ptr, sizeof(char), central_directory_size + END_SIZE, zipfile);
 #elif defined(WIN32_FILE_SYSTEM)
-        buffer_ptr -= (central_directory_size + 16);
+        Skip(6); // u4 central_directory_offset         = GetU4();
+                 // u2 comment_length                   = GetU2();
+        buffer_ptr -= END_SIZE + central_directory_size;
 #endif
-        for (magic = GetU4(); magic == 0x02014b50; magic = GetU4())
+        for (magic = GetU4(); magic == CEN_SIG; magic = GetU4())
              ProcessDirectoryEntry();
     }
 

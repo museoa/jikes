@@ -1,3 +1,13 @@
+2001-12-12  Mo DeJong  <supermo@bayarea.net>
+
+	* src/zip.cpp (Zip, ReadDirectory): Use constants instead of hard
+	coded numbers. If a valid END header can't be found at the end of
+	the file we need to scan the file backwards. This matches the
+	implementation of the command line unzip utility. The Zip file
+	format is so brain damaged that this is the only option.
+	* src/zip.h (Zip, IsValid): Add enum constants for ZIP header
+	sizes and magic numbers - bug 261, patch 246.
+
 2001-12-12  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.cpp (AppendString): Fix regression from patch 237,
