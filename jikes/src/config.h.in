@@ -61,6 +61,9 @@
 /* Define if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
 
+/* use mac style mkdir(str,0) from <stat.mac.h> */
+#undef HAVE_MAC_MKDIR
+
 /* Define if you have the <math.h> header file. */
 #undef HAVE_MATH_H
 

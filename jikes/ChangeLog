@@ -1,5 +1,12 @@
 2000-05-08  Mo DeJong  <mdejong@cygnus.com>
 
+        * configure:
+	* configure.in:
+	* src/config.h.in: Added autoconf
+	test for Mac style mkdir().
+
+2000-05-08  Mo DeJong  <mdejong@cygnus.com>
+
 	* src/jikesapi.cpp(~DefaultFileReader): Added
 	(void *) cast to fix strict const error raised
 	by g++. Also fixed an old constructor call in
