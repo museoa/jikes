@@ -768,8 +768,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void EmitSwitchStatement(AstSwitchStatement *);
     void EmitTryStatement(AstTryStatement *);
     void EmitAssertStatement(AstAssertStatement *);
-    void EmitBranchIfExpression(AstExpression *, bool, Label &, AstStatement *);
-    void EmitBranch(unsigned int opc, Label& lab, AstStatement *over);
+    void EmitBranchIfExpression(AstExpression *, bool, Label &,
+                                AstStatement * = NULL);
+    void EmitBranch(Opcode, Label &, AstStatement * = NULL);
     void CompleteCall(MethodSymbol *, int, TypeSymbol * = NULL);
 
     AstExpression *StripNops(AstExpression *);
@@ -789,7 +790,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     }
 
     // Return the OP_IF... bytecode that has the opposite meaning 
-    unsigned int InvertIfOpCode(unsigned int opc) 
+    Opcode InvertIfOpCode(Opcode opc) 
     {
         //
         // Unfortunately, the JVMS does not nicely specify symmetric opcodes;
@@ -798,18 +799,11 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         if (opc >= OP_IFNULL)
         {
             assert(opc <= OP_IFNONNULL);
-            return opc ^ 1;
+            return (Opcode) (opc ^ 1);
         }
         assert(OP_IFEQ <= opc && opc <= OP_IF_ACMPNE);
-        return ((opc + 1) ^ 1) - 1;
+        return (Opcode) (((opc + 1) ^ 1) - 1);
     }
-
-    void EmitBranch(unsigned int opc, Label& lab)
-    {
-        PutOp(opc);
-        UseLabel(lab, 2, 1);
-    }
-
 
     void GenerateReturn(TypeSymbol *type)
     {
@@ -826,9 +820,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void PrintCode();
 #endif
 
-    void PutOp(unsigned char opc);
+    void PutOp(Opcode);
 
-    void PutOpWide(unsigned char opc, u2 var);
+    void PutOpWide(Opcode, u2 var);
 
     void PutOpIINC(u2 var, int val);
 

@@ -1,3 +1,16 @@
+2002-01-31  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/class.h:
+	* src/op.h:
+	* src/op.cpp: Format to 80 columns, and standardize
+	capitalization to rest of Jikes. Use Opcode enum for type safety
+	and easier debugging.
+	* src/bytecode.h (EmitBranch(unsigned, Label&)): Inline into the
+	more powerful EmitBranch(Opcode, Label&, AstStatement*).
+	* src/bytecode.cpp: Fix more cases where EmitBranch was not
+	checking for wide jumps - bug 2538.
+	(EmitTryStatement): More optimizations - patch 258.
+
 2002-01-11  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/expr.cpp (ProcessSLASH, ProcessMOD): Fix core dump when

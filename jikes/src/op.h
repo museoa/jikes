@@ -24,7 +24,7 @@ class cp_info;
 class Operators
 {
 public:
-    enum operators
+    enum Opcode
     {
         OP_NOP = 0x00,
         OP_ACONST_NULL = 0x01,
@@ -232,7 +232,7 @@ public:
         OP_HARDWARE = 0xff
     };
 
-    static void opdmp(Tuple<cp_info *> &, Tuple<u1> &);
+    static void OpDmp(Tuple<cp_info *> &, Tuple<u1> &);
 
 protected:
 
@@ -249,40 +249,40 @@ private:
     };
 
 protected:
-    static void opdesc (int opc, const char **name, const char **desc);
+    static void OpDesc(Opcode, const char **name, const char **desc);
 
 private:
-    inline static signed char get_i1(Tuple<u1> &code, int pc)
+    inline static signed char GetI1(Tuple<u1> &code, int pc)
     {
         return code[pc];
     }
 
-    inline static short get_i2(Tuple<u1> &code, int pc)
+    inline static short GetI2(Tuple<u1> &code, int pc)
     {
         return  code[pc] << 8 | code[pc + 1];
     }
 
-    inline static int get_i4(Tuple<u1> &code, int pc)
+    inline static int GetI4(Tuple<u1> &code, int pc)
     {
         return  code[pc] << 24 | code[pc + 1] << 16 | code[pc + 2] << 8 | code[pc + 3];
     }
 
-    inline static unsigned get_u1(Tuple<u1> &code, int pc)
+    inline static unsigned GetU1(Tuple<u1> &code, int pc)
     {
         return code[pc];
     }
 
-    inline static unsigned get_u2(Tuple<u1> &code, int pc)
+    inline static unsigned GetU2(Tuple<u1> &code, int pc)
     {
         return (unsigned) (code[pc] << 8 | code[pc + 1]);
     }
 
-    inline static unsigned get_u4(Tuple<u1> &code, int pc)
+    inline static unsigned GetU4(Tuple<u1> &code, int pc)
     {
         return (unsigned) (code[pc] << 24 | code[pc + 1] << 16 | code[pc + 2] << 8 | code[pc + 3]);
     }
 
-    static void opline(Tuple<cp_info *> &, const char *, int, int,
+    static void OpLine(Tuple<cp_info *> &, const char *, int, Opcode,
                        const char *, char *, const char *, int, int);
 };
 

@@ -1329,12 +1329,20 @@ void ByteCode::EmitStatement(AstStatement *statement)
         }
         break;
     case Ast::BREAK: // JLS 14.13
-        ProcessAbruptExit(statement -> BreakStatementCast() -> nesting_level);
-        EmitBranch(OP_GOTO, method_stack -> BreakLabel(statement -> BreakStatementCast() -> nesting_level));
+        {
+            int nesting_level = statement -> BreakStatementCast() -> nesting_level;
+            ProcessAbruptExit(nesting_level);
+            EmitBranch(OP_GOTO, method_stack -> BreakLabel(nesting_level),
+                       method_stack -> Block(nesting_level));
+        }
         break;
     case Ast::CONTINUE: // JLS 14.14
-        ProcessAbruptExit(statement -> ContinueStatementCast() -> nesting_level);
-        EmitBranch(OP_GOTO, method_stack -> ContinueLabel(statement -> ContinueStatementCast() -> nesting_level));
+        {
+            int nesting_level = statement -> ContinueStatementCast() -> nesting_level;
+            ProcessAbruptExit(nesting_level);
+            EmitBranch(OP_GOTO, method_stack -> ContinueLabel(nesting_level),
+                       method_stack -> Block(nesting_level));
+        }
         break;
     case Ast::RETURN: // JLS 14.15
         EmitReturnStatement(statement -> ReturnStatementCast());
@@ -1791,24 +1799,25 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
     int end_try_block_pc = code_attribute -> CodeLength(),
         special_end_pc = end_try_block_pc; // end_pc for "special" handler
 
-    Label &finally_label = method_stack -> TopFinallyLabel(), // use the label in the block immediately enclosing try statement.
-          end_label;
-    if (statement -> block -> can_complete_normally)
-    {
-        //
-        // Call finally block if have finally handler.
-        //
-        if (emit_finally_clause)
-            EmitBranch(OP_JSR, finally_label, statement);
-
-        EmitBranch(OP_GOTO, end_label);
-    }
-
     //
-    // Process catch clauses, but only if try block is not empty.
+    // If try block is not empty, process catch clauses, including "special"
+    // clause for finally.
     //
     if (start_try_block_pc != end_try_block_pc)
     {
+        // Use the label in the block immediately enclosing try statement.
+        Label &finally_label = method_stack -> TopFinallyLabel(),
+              end_label;
+
+        //
+        // If try block completes normally, skip code for catch blocks.
+        //
+        if (statement -> block -> can_complete_normally &&
+            (emit_finally_clause || statement -> NumCatchClauses()))
+        {
+            EmitBranch(OP_GOTO, end_label, statement);
+        }
+
         for (int i = 0; i < statement -> NumCatchClauses(); i++)
         {
             int handler_pc = code_attribute -> CodeLength();
@@ -1821,6 +1830,11 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
             StoreLocal(parameter_symbol -> LocalVariableIndex(),
                        parameter_symbol -> Type());
 
+            //
+            // If we determined the finally clause is a nop, remove the tag
+            // TRY_CLAUSE_WITH_FINALLY so that abrupt completions do not emit
+            // JSR.
+            //
             if (statement -> finally_clause_opt && ! emit_finally_clause)
                 catch_clause -> block -> block_tag = AstBlock::NONE;
             EmitBlockStatement(catch_clause -> block);
@@ -1841,43 +1855,29 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
 
             special_end_pc = code_attribute -> CodeLength();
 
-            if (catch_clause -> block -> can_complete_normally)
+            //
+            // If catch block completes normally, skip further catch blocks.
+            //
+            if (catch_clause -> block -> can_complete_normally &&
+                (emit_finally_clause ||
+                 i < (statement -> NumCatchClauses() - 1)))
             {
-                //
-                // Call finally block if have finally handler.
-                //
-                if (emit_finally_clause)
-                    EmitBranch(OP_JSR, finally_label, statement);
-
-                //
-                // If there are more catch clauses, or a finally clause, then
-                // emit branch to skip over their code and on to the next
-                // statement.
-                //
-                if (emit_finally_clause ||
-                    i < (statement -> NumCatchClauses() - 1))
-                {
-                    EmitBranch(OP_GOTO, end_label);
-                }
+                EmitBranch(OP_GOTO, end_label, statement);
             }
         }
-    }
-
-    //
-    // If this try statement contains a finally clause, then ...
-    //
-    if (emit_finally_clause)
-    {
-        int variable_index = method_stack -> TopBlock() -> block_symbol -> try_or_synchronized_variable_index;
 
         //
-        // Emit code for "special" handler to make sure finally clause is
-        // invoked in case an otherwise uncaught exception is thrown in the
-        // try block, or an exception is thrown from within a catch block.
+        // If this try statement contains a finally clause, then ...
         //
-        // No special handler is needed if the try block is empty.
-        if (start_try_block_pc != end_try_block_pc) // If try-block not empty
+        if (emit_finally_clause)
         {
+            int variable_index = method_stack -> TopBlock() -> block_symbol -> try_or_synchronized_variable_index;
+
+            //
+            // Emit code for "special" handler to make sure finally clause is
+            // invoked in case an otherwise uncaught exception is thrown in the
+            // try block, or an exception is thrown from within a catch block.
+            //
             code_attribute -> AddException(start_try_block_pc,
                                            special_end_pc,
                                            code_attribute -> CodeLength(),
@@ -1888,37 +1888,66 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
             EmitBranch(OP_JSR, finally_label, statement);
             LoadLocal(variable_index, control.Object()); // Reload exception,
             PutOp(OP_ATHROW); // and rethrow it.
+
+            //
+            // Generate code for finally clause. If the finally block can
+            // complete normally, save the return address. Otherwise, we pop
+            // the return address from the stack, and try and catch blocks
+            // which complete normally just jump here.
+            //
+            DefineLabel(finally_label);
+            assert(stack_depth == 0);
+            stack_depth = 1; // account for the return location already on stack
+            if (statement -> finally_clause_opt -> block -> can_complete_normally)
+                StoreLocal(variable_index + 1, control.Object());
+            else
+            {
+                PutOp(OP_POP);
+                if (IsLabelUsed(end_label))
+                    DefineLabel(end_label);
+            }
+            EmitBlockStatement(statement -> finally_clause_opt -> block);
+
+            //
+            // If a finally block can complete normally, return to the saved
+            // address of the caller.
+            //
+            if (statement -> finally_clause_opt -> block -> can_complete_normally)
+            {
+                PutOpWide(OP_RET, variable_index + 1);
+
+                //
+                // Now, if the try or catch blocks complete normally, execute
+                // the finally block before advancing to next statement.
+                //
+                if (IsLabelUsed(end_label))
+                {
+                    DefineLabel(end_label);
+                    EmitBranch(OP_JSR, finally_label,
+                               statement -> finally_clause_opt -> block);
+                }
+            }
         }
-
-        //
-        // Generate code for finally clause.
-        //
-        DefineLabel(finally_label);
+        else
+        {
+            //
+            // Finally block is not present, advance to next statement.
+            //
+            assert(! IsLabelUsed(finally_label));
+            DefineLabel(end_label);
+        }
         CompleteLabel(finally_label);
-
-        //
-        // If the finally block can complete normally, save the return address.
-        // Otherwise, we pop the return address from the stack.
-        //
-        assert(stack_depth == 0);
-        stack_depth = 1; // account for the return location already on stack
-        if (statement -> finally_clause_opt -> block -> can_complete_normally)
-             StoreLocal(variable_index + 1, control.Object());
-        else PutOp(OP_POP);
-
-        EmitBlockStatement(statement -> finally_clause_opt -> block);
-
-        //
-        // If a finally block can complete normally, after executing its body,
-        // we return to the caller using the return address saved earlier.
-        //
-        if (statement -> finally_clause_opt -> block -> can_complete_normally)
-            PutOpWide(OP_RET, variable_index + 1);
+        CompleteLabel(end_label);
     }
-
-    if (IsLabelUsed(end_label))
-        DefineLabel(end_label);
-    CompleteLabel(end_label);
+    else
+    {
+        //
+        // Try block was empty; skip all catch blocks, and a finally block
+        // is treated normally.
+        //
+        if (emit_finally_clause)
+            EmitBlockStatement(statement -> finally_clause_opt -> block);
+    }
 }
 
 
@@ -1938,12 +1967,19 @@ void ByteCode::ProcessAbruptExit(int to_lev, TypeSymbol *return_type)
         {
             if (return_type)
             {
-                Label &finally_label = method_stack -> FinallyLabel(enclosing_level);
+                //
+                // Note: If the finally block cannot complete normally,
+                // this leaves some dead code after the jsr. But it is not
+                // a common situation. If the finally block can complete
+                // normally, save the return value, call the jsr, then
+                // restore return value.
+                //
                 int variable_index = method_stack -> Block(enclosing_level) -> block_symbol -> try_or_synchronized_variable_index + 2;
 
                 StoreLocal(variable_index, return_type);
 
-                EmitBranch(OP_JSR, finally_label, 
+                EmitBranch(OP_JSR, 
+                           method_stack -> FinallyLabel(enclosing_level),
                            method_stack -> Block(enclosing_level));
 
                 LoadLocal(variable_index, return_type);
@@ -1966,15 +2002,16 @@ void ByteCode::ProcessAbruptExit(int to_lev, TypeSymbol *return_type)
     }
 }
 
-void ByteCode::EmitBranch(unsigned int opc, Label& lab, AstStatement *over)
+void ByteCode::EmitBranch(Opcode opc, Label& lab, AstStatement *over)
 {
     // Use the number of tokens as a heuristic for the size of the statement
     // we're jumping over. If the statement is large enough, either change
     // to the 4-byte branch opcode or write out a branch around a goto_w for
     // branch opcodes that don't have a long form.
-    int sizeHeuristic = ! over ? 0 : over -> RightToken() - over -> LeftToken();
+    int sizeHeuristic = over ? over -> RightToken() - over -> LeftToken() : 0;
     if (sizeHeuristic < TOKEN_WIDTH_REQUIRING_GOTOW) {
-        EmitBranch(opc, lab);
+        PutOp(opc);
+        UseLabel(lab, 2, 1);
         return;
     }
     if (opc == OP_GOTO) {
@@ -2418,9 +2455,9 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
     //
     //
     //
-    unsigned opcode = 0,
-             op_true,
-             op_false;
+    Opcode opcode = OP_NOP,
+           op_true,
+           op_false;
     assert(left_type != control.boolean_type);
     if (control.IsSimpleIntegerValueType(left_type))
     {
@@ -2637,7 +2674,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
     }
     else assert(false && "comparison of unsupported type");
 
-    if (opcode)
+    if (opcode != OP_NOP)
         PutOp(opcode); // if need to emit comparison before branch
 
     EmitBranch (cond ? op_true : op_false, lab, over);
@@ -2668,9 +2705,10 @@ void ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
 
     if (start_synchronized_pc != end_synchronized_pc) // if the synchronized block is not empty.
     {
+        // branch around exception handler
         Label end_label;
         if (statement -> block -> can_complete_normally)
-            EmitBranch(OP_GOTO, end_label); // branch around exception handler
+            EmitBranch(OP_GOTO, end_label, NULL);
 
         //
         // Reach here if any exception thrown.
@@ -2706,7 +2744,7 @@ void ByteCode::EmitAssertStatement(AstAssertStatement *assertion)
         PutU2(RegisterFieldref(assertion -> assert_variable));
         Label label;
         EmitBranch(OP_IFNE, label);
-        EmitBranchIfExpression(assertion -> condition, true, label, NULL);
+        EmitBranchIfExpression(assertion -> condition, true, label);
 
         PutOp(OP_NEW);
         PutU2(RegisterClass(control.AssertionError() -> fully_qualified_name));
@@ -3353,7 +3391,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
         //
         else
         {
-            int opc;
+            Opcode opc;
 
             TypeSymbol *op_type = (casted_left_hand_side
                                    ? casted_left_hand_side -> Type()
@@ -3910,7 +3948,7 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
             // Assume false, and update if true.
             Label label;
             PutOp(OP_ICONST_0); // push false
-            EmitBranchIfExpression(expression, false, label, NULL);
+            EmitBranchIfExpression(expression, false, label);
             PutOp(OP_POP); // pop the false
             PutOp(OP_ICONST_1); // push true 
             DefineLabel(label);
@@ -4022,12 +4060,12 @@ void ByteCode::EmitCast(TypeSymbol *dest_type, TypeSymbol *source_type)
         {
             return; // no conversion needed
         }
-        Operators::operators op_kind = (dest_type == control.long_type ? OP_I2L
-                                        : dest_type == control.float_type ? OP_I2F
-                                        : dest_type == control.double_type ? OP_I2D
-                                        : dest_type == control.char_type ? OP_I2C
-                                        : dest_type == control.byte_type ? OP_I2B
-                                        : OP_I2S); // short_type
+        Opcode op_kind = (dest_type == control.long_type ? OP_I2L
+                          : dest_type == control.float_type ? OP_I2F
+                          : dest_type == control.double_type ? OP_I2D
+                          : dest_type == control.char_type ? OP_I2C
+                          : dest_type == control.byte_type ? OP_I2B
+                          : OP_I2S); // short_type
         // If the type we wanted to cast to could not be matched then
         // the cast is invalid. For example, one might be trying
         // to cast an int to a Object.
@@ -4037,9 +4075,9 @@ void ByteCode::EmitCast(TypeSymbol *dest_type, TypeSymbol *source_type)
     }
     else if (source_type == control.long_type)
     {
-        Operators::operators op_kind = (dest_type == control.float_type ? OP_L2F
-                                        : dest_type == control.double_type ? OP_L2D
-                                        : OP_L2I);
+        Opcode op_kind = (dest_type == control.float_type ? OP_L2F
+                          : dest_type == control.double_type ? OP_L2D
+                          : OP_L2I);
         PutOp(op_kind);
 
         if (op_kind == OP_L2I && dest_type != control.int_type)
@@ -4053,9 +4091,9 @@ void ByteCode::EmitCast(TypeSymbol *dest_type, TypeSymbol *source_type)
     }
     else if (source_type == control.float_type)
     {
-        Operators::operators op_kind = (dest_type == control.long_type ? OP_F2L
-                                        : dest_type == control.double_type ? OP_F2D
-                                        : OP_F2I);
+        Opcode op_kind = (dest_type == control.long_type ? OP_F2L
+                          : dest_type == control.double_type ? OP_F2D
+                          : OP_F2I);
         PutOp(op_kind);
 
         if (op_kind == OP_F2I && dest_type != control.int_type)
@@ -4069,9 +4107,9 @@ void ByteCode::EmitCast(TypeSymbol *dest_type, TypeSymbol *source_type)
     }
     else if (source_type == control.double_type)
     {
-        Operators::operators op_kind = (dest_type == control.long_type ? OP_D2L
-                                        : dest_type == control.float_type ? OP_D2F
-                                        : OP_D2I);
+        Opcode op_kind = (dest_type == control.long_type ? OP_D2L
+                          : dest_type == control.float_type ? OP_D2F
+                          : OP_D2I);
 
         PutOp(op_kind);
 
@@ -4213,8 +4251,7 @@ int ByteCode::EmitConditionalExpression(AstConditionalExpression *expression,
     {
         Label lab1,
               lab2;
-        EmitBranchIfExpression(expression -> test_expression, false,
-                               lab1, NULL);
+        EmitBranchIfExpression(expression -> test_expression, false, lab1);
         EmitExpression(expression -> true_expression, need_value);
         EmitBranch(OP_GOTO, lab2);
         if (need_value) // restore the stack size
@@ -5349,7 +5386,8 @@ void ByteCode::CompleteLabel(Label& lab)
                 offset = lab.definition - start;
             if (lab.uses[i].use_length == 2) // here if short offset
             {
-                assert(offset < 32768 && "needed longer branch offset");
+                assert(offset < 32768 && offset >= -32768 &&
+                       "needed longer branch offset");
                 code_attribute -> ResetCode(luse, (offset >> 8) & 0xFF);
                 code_attribute -> ResetCode(luse + 1, offset & 0xFF);
             }
@@ -5392,31 +5430,31 @@ void ByteCode::LoadLocal(int varno, TypeSymbol *type)
     if (control.IsSimpleIntegerValueType(type) || type == control.boolean_type)
     {
          if (varno <= 3)
-              PutOp(OP_ILOAD_0 + varno);
+             PutOp((Opcode) (OP_ILOAD_0 + varno)); // Exploit opcode encodings
          else PutOpWide(OP_ILOAD, varno);
     }
     else if (type == control.long_type)
     {
          if (varno <= 3)
-              PutOp(OP_LLOAD_0 + varno);
+             PutOp((Opcode) (OP_LLOAD_0 + varno)); // Exploit opcode encodings
          else PutOpWide(OP_LLOAD, varno);
     }
     else if (type == control.float_type)
     {
          if (varno <= 3)
-              PutOp(OP_FLOAD_0 + varno);
+             PutOp((Opcode) (OP_FLOAD_0 + varno)); // Exploit opcode encodings
          else PutOpWide(OP_FLOAD, varno);
     }
     else if (type == control.double_type)
     {
          if (varno <= 3)
-              PutOp(OP_DLOAD_0 + varno);
+             PutOp((Opcode) (OP_DLOAD_0 + varno)); // Exploit opcode encodings
          else PutOpWide(OP_DLOAD, varno);
     }
     else // assume reference
     {
          if (varno <= 3)
-              PutOp(OP_ALOAD_0 + varno);
+             PutOp((Opcode) (OP_ALOAD_0 + varno)); // Exploit opcode encodings
          else PutOpWide(OP_ALOAD, varno);
     }
 }
@@ -5484,7 +5522,7 @@ void ByteCode::LoadLiteral(LiteralValue *litp, TypeSymbol *type)
 void ByteCode::LoadImmediateInteger(int val)
 {
     if (val >= -1 && val <= 5)
-        PutOp(OP_ICONST_0 + val); // exploit opcode encoding
+        PutOp((Opcode) (OP_ICONST_0 + val)); // exploit opcode encoding
     else if (val >= -128 && val < 128)
     {
         PutOp(OP_BIPUSH);
@@ -5632,31 +5670,31 @@ void ByteCode::StoreLocal(int varno, TypeSymbol *type)
     if (control.IsSimpleIntegerValueType(type) || type == control.boolean_type)
     {
          if (varno <= 3)
-              PutOp(OP_ISTORE_0 + varno);
+             PutOp((Opcode) (OP_ISTORE_0 + varno)); // Exploit opcode encodings
          else PutOpWide(OP_ISTORE, varno);
     }
     else if (type == control.long_type)
     {
          if (varno <= 3)
-              PutOp(OP_LSTORE_0 + varno);
+             PutOp((Opcode) (OP_LSTORE_0 + varno)); // Exploit opcode encodings
          else PutOpWide(OP_LSTORE, varno);
     }
     else if (type == control.float_type)
     {
          if (varno <= 3)
-              PutOp(OP_FSTORE_0 + varno);
+             PutOp((Opcode) (OP_FSTORE_0 + varno)); // Exploit opcode encodings
          else PutOpWide(OP_FSTORE, varno);
     }
     else if (type == control.double_type)
     {
          if (varno <= 3)
-              PutOp(OP_DSTORE_0 + varno);
+             PutOp((Opcode) (OP_DSTORE_0 + varno)); // Exploit opcode encodings
          else PutOpWide(OP_DSTORE, varno);
     }
     else // assume reference
     {
          if (varno <= 3)
-              PutOp(OP_ASTORE_0 + varno);
+             PutOp((Opcode) (OP_ASTORE_0 + varno)); // Exploit opcode encodings
          else PutOpWide(OP_ASTORE, varno);
     }
 }
@@ -5763,7 +5801,7 @@ void ByteCode::FinishCode(TypeSymbol *type)
 }
 
 
-void ByteCode::PutOp(unsigned char opc)
+void ByteCode::PutOp(Opcode opc)
 {
 #ifdef JIKES_DEBUG
     if (control.option.debug_trap_op > 0 &&
@@ -5775,7 +5813,7 @@ void ByteCode::PutOp(unsigned char opc)
     if (control.option.debug_trace_stack_change)
     {
         const char *opname;
-        opdesc(opc, &opname, NULL);
+        OpDesc(opc, &opname, NULL);
         Coutput << "opcode: " << opname << endl;
     }
 #endif // JIKES_DEBUG
@@ -5786,7 +5824,7 @@ void ByteCode::PutOp(unsigned char opc)
     ChangeStack(stack_effect[opc]);
 }
 
-void ByteCode::PutOpWide(unsigned char opc, u2 var)
+void ByteCode::PutOpWide(Opcode opc, u2 var)
 {
     if (var <= 255)  // if can use standard form
     {

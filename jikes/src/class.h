@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -29,9 +29,9 @@ protected:
     //
     //    u1 info[]
     //
-    // cp_info can be viewed as a generic (abstract, in Java talk) class that must
-    // be "extended" to implement the real constant pool objects. The real objects
-    // contain the info...
+    // cp_info can be viewed as a generic (abstract, in Java talk) class that
+    // must be "extended" to implement the real constant pool objects. The real
+    // objects contain the info...
     //
 
 public:
@@ -85,12 +85,14 @@ public:
 #ifdef JIKES_DEBUG
     virtual void Print(Tuple<cp_info *>& constant_pool)
     {
-        Coutput << "CONSTANT_Class_info: name_index " << (unsigned) name_index << endl;
+        Coutput << "CONSTANT_Class_info: name_index "
+                << (unsigned) name_index << endl;
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
     {
-        Coutput << "Class:";  constant_pool[name_index] -> Describe(constant_pool);
+        Coutput << "Class:";
+        constant_pool[name_index] -> Describe(constant_pool);
     }
 #endif
 };
@@ -108,9 +110,11 @@ class CONSTANT_Double_info : public cp_info
 
 public:
 
-    CONSTANT_Double_info(u1 _tag, u4 _high_bytes, u4 _low_bytes) : cp_info(_tag),
-                                                                   high_bytes(_high_bytes),
-                                                                   low_bytes(_low_bytes)
+    CONSTANT_Double_info(u1 _tag,
+                         u4 _high_bytes,
+                         u4 _low_bytes) : cp_info(_tag),
+                                          high_bytes(_high_bytes),
+                                          low_bytes(_low_bytes)
     {}
     virtual ~CONSTANT_Double_info() {}
 
@@ -124,7 +128,8 @@ public:
 #ifdef JIKES_DEBUG
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
-        Coutput << "CONSTANT_Double_info: bytes " << BaseLong(high_bytes, low_bytes).DoubleView() << endl;
+        Coutput << "CONSTANT_Double_info: bytes "
+                << BaseLong(high_bytes, low_bytes).DoubleView() << endl;
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
@@ -147,9 +152,11 @@ class CONSTANT_Fieldref_info : public cp_info
 
 public:
 
-    CONSTANT_Fieldref_info(u1 _tag, u2 _class_index, u2 _name_and_type_index) : cp_info(_tag),
-                                                                                class_index(_class_index),
-                                                                                name_and_type_index(_name_and_type_index)
+    CONSTANT_Fieldref_info(u1 _tag,
+                           u2 _class_index,
+                           u2 _name_and_type_index) : cp_info(_tag),
+                                                      class_index(_class_index),
+                                                      name_and_type_index(_name_and_type_index)
     {}
     virtual ~CONSTANT_Fieldref_info() {}
 
@@ -241,7 +248,10 @@ public:
 #ifdef JIKES_DEBUG
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
-        int val = ((bytes >> 24) & 0xff) << 24 | ((bytes >> 16) & 0xff) << 16 | ((bytes >> 8) & 0xff) << 8 | (bytes & 0xff);
+        int val = ((bytes >> 24) & 0xff) << 24 |
+            ((bytes >> 16) & 0xff) << 16 |
+            ((bytes >> 8) & 0xff) << 8 |
+            (bytes & 0xff);
         Coutput << "CONSTANT_Integer_info: bytes "
                 << val
                 << endl;
@@ -267,9 +277,11 @@ class CONSTANT_InterfaceMethodref_info : public cp_info
 
 public:
 
-    CONSTANT_InterfaceMethodref_info(u1 _tag, u2 _class_index, u2 _name_and_type_index) : cp_info(_tag),
-                                                                                          class_index(_class_index),
-                                                                                          name_and_type_index(_name_and_type_index)
+    CONSTANT_InterfaceMethodref_info(u1 _tag,
+                                     u2 _class_index,
+                                     u2 _name_and_type_index) : cp_info(_tag),
+                                                                class_index(_class_index),
+                                                                name_and_type_index(_name_and_type_index)
     {}
     virtual ~CONSTANT_InterfaceMethodref_info() {}
 
@@ -312,9 +324,11 @@ class CONSTANT_Long_info : public cp_info
 
 public:
 
-    CONSTANT_Long_info(u1 _tag, u4 _high_bytes, u4 _low_bytes) : cp_info(_tag),
-                                                                 high_bytes(_high_bytes),
-                                                                 low_bytes(_low_bytes)
+    CONSTANT_Long_info(u1 _tag,
+                       u4 _high_bytes,
+                       u4 _low_bytes) : cp_info(_tag),
+                                        high_bytes(_high_bytes),
+                                        low_bytes(_low_bytes)
     {}
     virtual ~CONSTANT_Long_info() {}
 
@@ -351,9 +365,11 @@ class CONSTANT_Methodref_info : public cp_info
 
 public:
 
-    CONSTANT_Methodref_info(u1 _tag, u2 _class_index, u2 _name_and_type_index) : cp_info(_tag),
-                                                                                 class_index(_class_index),
-                                                                                 name_and_type_index(_name_and_type_index)
+    CONSTANT_Methodref_info(u1 _tag,
+                            u2 _class_index,
+                            u2 _name_and_type_index) : cp_info(_tag),
+                                                       class_index(_class_index),
+                                                       name_and_type_index(_name_and_type_index)
     {}
     virtual ~CONSTANT_Methodref_info() {}
 
@@ -396,9 +412,11 @@ class CONSTANT_NameAndType_info : public cp_info
 
 public:
 
-    CONSTANT_NameAndType_info(u1 _tag, u2 _name_index, u2 _descriptor_index) : cp_info(_tag),
-                                                                               name_index(_name_index),
-                                                                               descriptor_index(_descriptor_index)
+    CONSTANT_NameAndType_info(u1 _tag,
+                              u2 _name_index,
+                              u2 _descriptor_index) : cp_info(_tag),
+                                                      name_index(_name_index),
+                                                      descriptor_index(_descriptor_index)
     {}
     virtual ~CONSTANT_NameAndType_info() {}
 
@@ -439,8 +457,9 @@ class CONSTANT_String_info : public cp_info
     u2 string_index;
 
 public:
-    CONSTANT_String_info(u1 _tag, u2 _string_index) : cp_info(_tag),
-                                                      string_index(_string_index)
+    CONSTANT_String_info(u1 _tag,
+                         u2 _string_index) : cp_info(_tag),
+                                             string_index(_string_index)
     {}
     virtual ~CONSTANT_String_info() {}
 
@@ -526,8 +545,8 @@ public:
 
 
 //
-// field_info and method_info should be defined here, but they contain attributes, so it is necessary
-// to define the attributes first.
+// field_info and method_info should be defined here, but they contain
+// attributes, so it is necessary to define the attributes first.
 //
 
 class attribute_info
@@ -541,9 +560,9 @@ protected:
     //    u2 attribute_length;
     //    u1 info[attribute_length];
     //
-    // attribute_info can be viewed as a generic (abstract, in Java talk) class that must
-    // be "extended" to implement the real attribute objects. The real objects
-    // contain the info...
+    // attribute_info can be viewed as a generic (abstract, in Java talk) class
+    // that must be "extended" to implement the real attribute objects. The
+    // real objects contain the info...
     //
 
 public:
@@ -628,13 +647,14 @@ class Code_attribute : public attribute_info
 
 public:
 
-    Code_attribute(u2 _name_index, u2 _max_locals) : attribute_info(Code, _name_index),
-                                                     attribute_length(0),
-                                                     max_stack(0),
-                                                     max_locals(_max_locals),
-                                                     code(8, 4),
-                                                     exception_table(6, 16),
-                                                     attributes(6, 16)
+    Code_attribute(u2 _name_index,
+                   u2 _max_locals) : attribute_info(Code, _name_index),
+                                     attribute_length(0),
+                                     max_stack(0),
+                                     max_locals(_max_locals),
+                                     code(8, 4),
+                                     exception_table(6, 16),
+                                     attributes(6, 16)
     {}
     virtual ~Code_attribute()
     {
@@ -766,7 +786,7 @@ public:
             }
         }
 
-        Operators::opdmp(constant_pool, code);
+        Operators::OpDmp(constant_pool, code);
 
         Coutput << "  " << endl;
 
@@ -792,8 +812,9 @@ class ConstantValue_attribute : public attribute_info
 
 public:
 
-    ConstantValue_attribute(u2 _name_index, u2 _constantvalue_index) : attribute_info(ConstantValue, _name_index),
-                                                                       constantvalue_index(_constantvalue_index)
+    ConstantValue_attribute(u2 _name_index,
+                            u2 _constantvalue_index) : attribute_info(ConstantValue, _name_index),
+                                                       constantvalue_index(_constantvalue_index)
     {}
     virtual ~ConstantValue_attribute() {}
 
@@ -832,11 +853,13 @@ class Exceptions_attribute : public attribute_info
     //
     //    u4 attribute_length;
     //
-    // The value of attribute_length is derived from the exception_index_table. See below
+    // The value of attribute_length is derived from the exception_index_table.
+    // See below
     //
     //    u2 number_of_exceptions;
     //
-    // The value of number_of_exceptions is derived from the exception_index_table. See below
+    // The value of number_of_exceptions is derived from the
+    // exception_index_table. See below
     //
 
     Tuple<u2> exception_index_table; /* exception_index_table[number_of_exceptions] */
@@ -993,11 +1016,13 @@ class LineNumberTable_attribute : public attribute_info
     //
     //    u4 attribute_length;
     //
-    // The value of attribute_length is derived from line_number_table. See below
+    // The value of attribute_length is derived from line_number_table. See
+    // below
     //
     //    u2 line_number_table_length;
     //
-    // The value of line_number_table_length is derived from line_number_table. See below
+    // The value of line_number_table_length is derived from line_number_table.
+    // See below
     //
 
     struct line_number_element
@@ -1082,11 +1107,13 @@ class LocalVariableTable_attribute : public attribute_info
     //
     //    u4 attribute_length;
     //
-    // The value of attribute_length is derived from local_variable_table. See below
+    // The value of attribute_length is derived from local_variable_table. See
+    // below
     //
     //    u2 local_variable_length;
     //
-    // The value of local_variable_length is derived from local_variable_length. See below
+    // The value of local_variable_length is derived from
+    // local_variable_length. See below
     //
 
     struct local_variable_element
@@ -1234,7 +1261,8 @@ class Synthetic_attribute : public attribute_info
     //
     //    u2 attribute_name_index;
     //
-    // The fields attribute_name_index and attribute_length are inherited from attribute_info
+    // The fields attribute_name_index and attribute_length are inherited from
+    // attribute_info
     //
     // The attribute_length is always 0.
     //
@@ -1273,7 +1301,8 @@ class Deprecated_attribute : public attribute_info
     //
     //    u2 attribute_name_index;
     //
-    // The fields attribute_name_index and attribute_length are inherited from attribute_info
+    // The fields attribute_name_index and attribute_length are inherited from
+    // attribute_info
     //
     // The attribute_length is always 0.
     //
