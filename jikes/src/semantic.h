@@ -29,7 +29,8 @@ class cp_info;
 class TypeShadowSymbol;
 
 //
-//
+// Maintains a stack of symbol tables, for storing the different variables
+// which are in scope in a method.
 //
 class SymbolTableStack
 {
@@ -100,7 +101,8 @@ private:
 
 
 //
-//
+// Maintain a stack of exceptions, which tracks the checked exceptions possible
+// and thus the reachability of catch blocks and necessity of throws clauses.
 //
 class ExceptionTableStack
 {
@@ -120,7 +122,7 @@ private:
 
 
 //
-//
+// A stack of statements.
 //
 class StatementStack
 {
@@ -141,7 +143,7 @@ private:
 
 
 //
-//
+// A stack of integers, denoting the nesting level of a block.
 //
 class NestingLevelStack
 {
@@ -163,7 +165,7 @@ private:
 
 
 //
-//
+// A stack of blocks, and their associated data.
 //
 class BlockStack
 {
@@ -213,7 +215,7 @@ private:
 
 
 //
-//
+// A stack of expressions where assignment occurred to a final variable.
 //
 class DefiniteFinalAssignmentStack
 {
@@ -233,42 +235,7 @@ private:
 
 
 //
-//
-//
-class DefinitePairs
-{
-public:
-    DefinitePairs(int set_size) : break_pair(set_size),
-                                  continue_pair(set_size),
-                                  return_pair(set_size),
-                                  throw_pair(set_size)
-    {}
-
-    DefinitePair break_pair,
-                 continue_pair,
-                 return_pair,
-                 throw_pair;
-
-    void UniverseInit()
-    {
-        break_pair.SetUniverse();
-        continue_pair.SetUniverse();
-        return_pair.SetUniverse();
-        throw_pair.SetUniverse();
-    }
-
-    void EmptyInit()
-    {
-        break_pair.SetEmpty();
-        continue_pair.SetEmpty();
-        return_pair.SetEmpty();
-        throw_pair.SetEmpty();
-    }
-};
-
-
-//
-//
+// A stack of blocks, and related data for definite assignment analysis.
 //
 class DefiniteBlockStack
 {
@@ -276,36 +243,16 @@ public:
 
     void Push(AstBlock *block_)
     {
-        definite_pairs[top_index] -> UniverseInit();
+        break_pairs[top_index].SetUniverse();
+        continue_pairs[top_index].SetUniverse();
 
-        if (locally_defined_variables)
-        {
-            if (top_index == 0)
-            {
-                memset(local_variables[top_index], 0,
-                       (locally_defined_variables[top_index] -> Size() *
-                        sizeof(VariableSymbol *)));
-                locally_defined_variables[top_index] -> SetEmpty();
-            }
-            else
-            {
-                memmove(local_variables[top_index],
-                        local_variables[top_index - 1],
-                        (locally_defined_variables[top_index] -> Size() *
-                         sizeof(VariableSymbol *)));
-                *locally_defined_variables[top_index] =
-                    *locally_defined_variables[top_index - 1];
-            }
-        }
-
-        block[top_index] = block_;
-        top_index++;
+        block[top_index++] = block_;
     }
 
     void Pop()
     {
         if (top_index > 0)
-             top_index--;
+            top_index--;
         else assert(false);
     }
 
@@ -317,179 +264,62 @@ public:
         return block[top_index - 1];
     }
 
-    VariableSymbol **TopLocalVariables()
-    {
-        assert(top_index > 0 && local_variables);
-        return local_variables[top_index - 1];
-    }
-    BitSet *TopLocallyDefinedVariables()
-    {
-        assert(top_index > 0 && locally_defined_variables);
-        return locally_defined_variables[top_index - 1];
-    }
-
     DefinitePair &BreakPair(int i)
     {
-        return definite_pairs[i] -> break_pair;
+        return break_pairs[i];
     }
     DefinitePair &ContinuePair(int i)
     {
-        return definite_pairs[i] -> continue_pair;
-    }
-    DefinitePair &ReturnPair(int i)
-    {
-        return definite_pairs[i] -> return_pair;
-    }
-    DefinitePair &ThrowPair(int i)
-    {
-        return definite_pairs[i] -> throw_pair;
+        return continue_pairs[i];
     }
 
     DefinitePair &TopBreakPair()
     {
         assert(top_index > 0);
-        return definite_pairs[top_index - 1] -> break_pair;
+        return break_pairs[top_index - 1];
     }
     DefinitePair &TopContinuePair()
     {
         assert(top_index > 0);
-        return definite_pairs[top_index - 1] -> continue_pair;
-    }
-    DefinitePair &TopReturnPair()
-    {
-        assert(top_index > 0);
-        return definite_pairs[top_index - 1] -> return_pair;
-    }
-    DefinitePair &TopThrowPair()
-    {
-        assert(top_index > 0);
-        return definite_pairs[top_index - 1] -> throw_pair;
+        return continue_pairs[top_index - 1];
     }
 
-    DefinitePair &TopExitPair(DefinitePair &start_pair)
+    DefinitePair &ReturnPair()
     {
-        assert(top_index > 0);
-
-        exit_pair  = start_pair;
-        exit_pair *= TopBreakPair();
-        exit_pair *= TopContinuePair();
-        exit_pair *= TopReturnPair();
-        exit_pair *= TopThrowPair();
-
-        return exit_pair;
+        return return_pair;
     }
 
     DefiniteBlockStack(Control &control, int stack_size_, int set_size)
         : stack_size(stack_size_),
           top_index(0),
-          exit_pair(set_size)
+          return_pair(set_size, BitSet::UNIVERSE)
     {
         block = new AstBlock*[stack_size];
-        definite_pairs = new DefinitePairs*[stack_size];
-        local_variables =
-            (VariableSymbol ***) ((control.option.g & JikesOption::VARS)
-                                  ? new VariableSymbol**[stack_size] : NULL);
-        locally_defined_variables =
-            (BitSet **) ((control.option.g & JikesOption::VARS)
-                         ? new BitSet*[stack_size] : NULL);
+        break_pairs = new DefinitePair[stack_size];
+        continue_pairs = new DefinitePair[stack_size];
 
         for (int i = 0; i < stack_size; i++)
         {
-            definite_pairs[i] = new DefinitePairs(set_size);
-            if (local_variables)
-            {
-                local_variables[i] = new VariableSymbol*[set_size];
-                locally_defined_variables[i] = new BitSet(set_size);
-            }
+            break_pairs[i].Resize(set_size);
+            continue_pairs[i].Resize(set_size);
         }
     }
 
     ~DefiniteBlockStack()
     {
-        for (int i = 0; i < stack_size; i++)
-        {
-            delete definite_pairs[i];
-            if (local_variables)
-            {
-                delete [] local_variables[i];
-                delete locally_defined_variables[i];
-            }
-        }
-
         delete [] block;
-        delete [] definite_pairs;
-        delete [] local_variables;
-        delete [] locally_defined_variables;
+        delete [] break_pairs;
+        delete [] continue_pairs;
     }
 
 private:
-
     int stack_size,
         top_index;
     AstBlock **block;
 
-    DefinitePairs **definite_pairs;
-
-    BitSet **locally_defined_variables;
-    VariableSymbol ***local_variables;
-
-    DefinitePair exit_pair;
-};
-
-
-//
-//
-//
-class DefiniteTryStack
-{
-public:
-
-    void Push(AstTryStatement *try_statement_)
-    {
-        this -> try_statement[top_index] = try_statement_;
-        top_index++;
-    }
-
-    void Pop()
-    {
-        if (top_index > 0)
-             top_index--;
-        else assert(false);
-    }
-
-    int Size() { return top_index; }
-    AstTryStatement *TryStatement(int i) { return try_statement[i]; }
-    AstBlock *Block(int i) { return block[i]; }
-    AstBlock *TopBlock()
-    {
-        assert(top_index > 0);
-        return block[top_index - 1];
-    }
-    void SetTopBlock(AstBlock *block_)
-    {
-        assert(top_index > 0);
-        block[top_index - 1] = block_;
-    }
-
-    DefiniteTryStack(int stack_size_) : stack_size(stack_size_),
-                                        top_index(0)
-    {
-        block = new AstBlock*[stack_size];
-        try_statement = new AstTryStatement*[stack_size];
-    }
-
-    ~DefiniteTryStack()
-    {
-        delete [] block;
-        delete [] try_statement;
-    }
-
-private:
-
-    int stack_size,
-        top_index;
-    AstBlock **block;
-    AstTryStatement **try_statement;
+    DefinitePair *break_pairs;
+    DefinitePair *continue_pairs;
+    DefinitePair return_pair;
 };
 
 
@@ -534,11 +364,10 @@ public:
     //
     DefinitePair *definitely_assigned_variables,
                  *universe;
-    BitSet *blank_finals;
+    BitSet *blank_finals,
+           *reachable_assignments;
     DefiniteBlockStack *definite_block_stack;
-    DefiniteTryStack *definite_try_stack;
     DefiniteFinalAssignmentStack *definite_final_assignment_stack;
-    SymbolSet *definite_visible_variables;
     Tuple<VariableSymbol *> *final_fields;
     bool processing_simple_assignment;
 
@@ -553,10 +382,9 @@ public:
           definitely_assigned_variables(NULL),
           universe(NULL),
           blank_finals(NULL),
+          reachable_assignments(NULL),
           definite_block_stack(NULL),
-          definite_try_stack(NULL),
           definite_final_assignment_stack(NULL),
-          definite_visible_variables(NULL),
           final_fields(NULL),
           processing_simple_assignment(false),
           type(type_),
@@ -612,7 +440,7 @@ private:
 
 
 //
-//
+// A stack of semantic environments.
 //
 class SemanticEnvironmentStack
 {
@@ -1119,21 +947,17 @@ private:
     }
     DefinitePair *&Universe() { return state_stack.Top() -> universe; }
     BitSet *&BlankFinals() { return state_stack.Top() -> blank_finals; }
+    BitSet *&ReachableAssignments()
+    {
+        return state_stack.Top() -> reachable_assignments;
+    }
     DefiniteBlockStack *&DefiniteBlocks()
     {
         return state_stack.Top() -> definite_block_stack;
     }
-    DefiniteTryStack *&DefiniteTrys()
-    {
-        return state_stack.Top() -> definite_try_stack;
-    }
     DefiniteFinalAssignmentStack *&DefiniteFinalAssignments()
     {
         return state_stack.Top() -> definite_final_assignment_stack;
-    }
-    SymbolSet *&DefiniteVisibleVariables()
-    {
-        return state_stack.Top() -> definite_visible_variables;
     }
     Tuple<VariableSymbol *> *&FinalFields()
     {
@@ -1230,7 +1054,7 @@ private:
     void (Semantic::*DefiniteStmt[Ast::_num_kinds])(Ast *);
     inline void DefiniteStatement(Ast *);
 
-    void DefiniteLoopBody(BitSet *);
+    void DefiniteLoopBody(BitSet &);
 
     void DefiniteBlock(Ast *);
     void DefiniteLocalVariableDeclarationStatement(Ast *);

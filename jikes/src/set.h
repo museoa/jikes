@@ -810,8 +810,8 @@ public:
     //
     // Other useful constructors.
     //
-    inline DefinitePair(unsigned size) : da_set(size, BitSet::EMPTY),
-                                         du_set(size, BitSet::UNIVERSE)
+    inline DefinitePair(unsigned size = 0) : da_set(size, BitSet::EMPTY),
+                                             du_set(size, BitSet::UNIVERSE)
     {}
 
     inline DefinitePair(unsigned size, int init) : da_set(size, init),

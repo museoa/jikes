@@ -1,3 +1,14 @@
+2002-07-25  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/definite.cpp: Improve definite assignment analysis to use
+	the updated rules of try-catch blocks - bug 3125. In the process,
+	remove lots of dead code.
+	* src/semantic.h (DefinitePairs, DefiniteTryStack): Delete unused
+	classes.
+	(DefiniteBlocks): Prune unused structures.
+	(ReachableAssignments): New for try-catch blocks.
+	* src/set.h (DefinitePair): Add default constructor.
+
 2002-07-23  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/definite.cpp (DefiniteBreakStatement),
