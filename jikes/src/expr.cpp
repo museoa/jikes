@@ -3909,6 +3909,16 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression *class
 TypeSymbol *Semantic::GetAnonymousType(AstClassInstanceCreationExpression *class_creation,
                                        TypeSymbol *super_type)
 {
+    //
+    // In a clone, simply return control.no_type. We are in a clone only when
+    // doing something like evaluating a forward reference to a final field for
+    // its constant value, but an anonymous class has no constant value. In
+    // such cases, this method will again be invoked when we finally reach the
+    // field, and then it is finally appropriate to create the class.
+    //
+    if (error && error -> InClone())
+        return control.no_type;
+
     TypeSymbol *this_type = ThisType();
     AstClassBody *class_body = class_creation -> class_body_opt;
     assert(class_body);
@@ -4735,41 +4745,8 @@ bool Semantic::CanMethodInvocationConvert(TypeSymbol *target_type,
 
     if (target_type -> Primitive())
         return false;
-
-    if (source_type -> IsArray())
-    {
-        if (target_type -> IsArray())
-        {
-            TypeSymbol *source_subtype = source_type -> ArraySubtype();
-            TypeSymbol *target_subtype = target_type -> ArraySubtype();
-            return ((source_subtype -> Primitive() &&
-                     target_subtype -> Primitive())
-                    ? (source_subtype == target_subtype)
-                    : CanMethodInvocationConvert(target_subtype,
-                                                 source_subtype));
-        }
-        return (target_type == control.Object() ||
-                target_type == control.Cloneable() ||
-                target_type == control.Serializable());
-    }
-
-    if (source_type -> ACC_INTERFACE())
-    {
-        if (target_type -> ACC_INTERFACE())
-            return source_type -> IsSubinterface(target_type);
-        return target_type == control.Object();
-    }
-
-    if (source_type != control.null_type) // source_type is a class
-    {
-        if (target_type -> IsArray())
-            return false;
-        if (target_type -> ACC_INTERFACE())
-            return source_type -> Implements(target_type);
-        return source_type -> IsSubclass(target_type);
-    }
-
-    return true;
+    return source_type == control.null_type ||
+        source_type -> IsSubtype(target_type);
 }
 
 
@@ -4782,7 +4759,6 @@ bool Semantic::CanAssignmentConvertReference(TypeSymbol *target_type,
                                              TypeSymbol *source_type)
 {
     return (target_type == control.no_type ||
-            source_type == control.no_type ||
             CanMethodInvocationConvert(target_type, source_type));
 }
 
@@ -4829,92 +4805,64 @@ bool Semantic::CanCastConvert(TypeSymbol *target_type,
     if (target_type -> Primitive())
         return false;
 
-    if (source_type -> IsArray())
+    // Now that primitives are removed, check if one subtypes the other.
+    if (source_type == control.null_type ||
+        target_type -> IsSubtype(source_type) ||
+        source_type -> IsSubtype(target_type))
     {
-        if (target_type -> IsArray())
-        {
-            TypeSymbol *source_subtype = source_type -> ArraySubtype();
-            TypeSymbol *target_subtype = target_type -> ArraySubtype();
-            return ((source_subtype -> Primitive() &&
-                     target_subtype -> Primitive())
-                    ? (source_subtype == target_subtype)
-                    : CanCastConvert(target_subtype, source_subtype, tok));
-        }
-        return (target_type == control.Object() ||
-                target_type == control.Cloneable() ||
-                target_type == control.Serializable());
+        return true;
     }
 
-    if (source_type -> ACC_INTERFACE())
+    // If we are left with arrays, see if the base types are compatible.
+    if (source_type -> IsArray() || target_type -> IsArray())
     {
-        if (target_type -> ACC_INTERFACE())
-        {
-            if (! source_type -> expanded_method_table)
-                ComputeMethodsClosure(source_type, tok);
-            if (! target_type -> expanded_method_table)
-                ComputeMethodsClosure(target_type, tok);
-
-            //
-            // Iterate over all methods in the source symbol table of the
-            // source_type interface; For each such method, if the
-            // target_type contains a method with the same signature, then
-            // make sure that the two methods have the same return type.
-            //
-            ExpandedMethodTable *source_method_table =
-                source_type -> expanded_method_table;
-            int i;
-            for (i = 0; i < source_method_table -> symbol_pool.Length(); i++)
-            {
-                MethodSymbol *method1 =
-                    source_method_table -> symbol_pool[i] -> method_symbol;
-                MethodShadowSymbol *method_shadow2 =
-                    target_type -> expanded_method_table ->
-                    FindOverloadMethodShadow(method1, this, tok);
-                if (method_shadow2)
-                {
-                    if (! method1 -> IsTyped())
-                        method1 -> ProcessMethodSignature(this, tok);
-
-                    MethodSymbol *method2 = method_shadow2 -> method_symbol;
-                    if (! method2 -> IsTyped())
-                        method2 -> ProcessMethodSignature(this, tok);
-                    if (method1 -> Type() != method2 -> Type())
-                        break;
-                }
-            }
-
-            // All the methods passed the test.
-            return (i == source_method_table -> symbol_pool.Length());
-        }
-        else if (target_type -> ACC_FINAL() &&
-                 ! target_type -> Implements(source_type))
-        {
-                 return false;
-        }
-    }
-    else if (source_type != control.null_type) // source_type is a class
-    {
-        if (target_type -> IsArray())
-        {
-            if (source_type != control.Object())
-                return false;
-        }
-        else if (target_type -> ACC_INTERFACE())
-        {
-            if (source_type -> ACC_FINAL() &&
-                ! source_type -> Implements(target_type))
-            {
-                return false;
-            }
-        }
-        else if (! source_type -> IsSubclass(target_type) &&
-                 ! target_type -> IsSubclass(source_type))
-        {
+        if (source_type -> num_dimensions != target_type -> num_dimensions)
             return false;
-        }
+        source_type = source_type -> base_type;
+        target_type = target_type -> base_type;
+        if (source_type -> Primitive() || target_type -> Primitive())
+            return false;
+        assert(source_type -> ACC_INTERFACE() ||
+               target_type -> ACC_INTERFACE());
     }
 
-    return true;
+    //
+    // Here, we are left with a class and an interface, or two interfaces. If
+    // the class is final, it does not implement the interface. Otherwise, a
+    // class is considered ok (even if it has conflicting signatures). With
+    // two interfaces, check for conflicting signatures.
+    //
+    if (source_type -> ACC_FINAL() || target_type -> ACC_FINAL())
+        return false;
+    if (! source_type -> ACC_INTERFACE() || ! target_type -> ACC_INTERFACE())
+        return true;
+    if (! source_type -> expanded_method_table)
+        ComputeMethodsClosure(source_type, tok);
+    if (! target_type -> expanded_method_table)
+        ComputeMethodsClosure(target_type, tok);
+    ExpandedMethodTable *source_method_table =
+        source_type -> expanded_method_table;
+    int i;
+    for (i = 0; i < source_method_table -> symbol_pool.Length(); i++)
+    {
+        MethodSymbol *method1 =
+            source_method_table -> symbol_pool[i] -> method_symbol;
+        MethodShadowSymbol *method_shadow2 =
+            target_type -> expanded_method_table ->
+            FindOverloadMethodShadow(method1, this, tok);
+        if (method_shadow2)
+        {
+            if (! method1 -> IsTyped())
+                method1 -> ProcessMethodSignature(this, tok);
+
+            MethodSymbol *method2 = method_shadow2 -> method_symbol;
+            if (! method2 -> IsTyped())
+                method2 -> ProcessMethodSignature(this, tok);
+            if (method1 -> Type() != method2 -> Type())
+                return false;
+        }
+    }
+    return true; // All the methods passed the test.
 }
 
 

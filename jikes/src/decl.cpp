@@ -2688,8 +2688,8 @@ void Semantic::CheckMethodOverride(MethodSymbol *method,
         // however, we enforce exact return type matching.
         //
         if (method -> containing_type -> file_symbol -> IsClass() &&
-            hidden_method -> Type() -> IsSubclass(control.Object()) &&
-            method -> Type() -> IsSubclass(hidden_method -> Type()))
+            hidden_method -> Type() -> IsSubtype(control.Object()) &&
+            method -> Type() -> IsSubtype(hidden_method -> Type()))
         {
             // Silent acceptance. TODO: Should we add a pedantic warning?
         }

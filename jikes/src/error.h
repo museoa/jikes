@@ -373,7 +373,8 @@ public:
         num_warnings;
 
     void EnteringClone() { clone_count++; }
-    void ExitingClone()  { clone_count--; }
+    void ExitingClone() { clone_count--; }
+    bool InClone() { return clone_count > 0; }
 
     int PrintMessages();
 

@@ -980,7 +980,8 @@ public:
     bool HasProtectedAccessTo(TypeSymbol *);
 
     //
-    // Note that this test considers a class a subclass of itself.
+    // Note that this test considers a class a subclass of itself, and also
+    // interfaces are a subclass of Object. See also IsSubtype.
     //
     bool IsSubclass(TypeSymbol *super_class)
     {
@@ -991,7 +992,8 @@ public:
     }
 
     //
-    // Note that this test considers an interface a subtype of itself.
+    // Note that this test considers an interface a subtype of itself, but
+    // does not work for classes. See also IsSubtype.
     //
     bool IsSubinterface(TypeSymbol *super_interface)
     {
@@ -1005,6 +1007,9 @@ public:
         return false;
     }
 
+    //
+    // This test works for classes, but not for interfaces. See also IsSubtype.
+    //
     bool Implements(TypeSymbol *inter)
     {
         for (int i = 0; i < NumInterfaces(); i++)
@@ -1013,6 +1018,30 @@ public:
                 return true;
         }
         return super && super -> Implements(inter);
+    }
+
+    //
+    // The most generic subtype relation. This correctly checks a class's
+    // superclasses and superinterfaces, an interfaces's superinterfaces and
+    // Object, and an array's compatible types (smaller dimensions of Object,
+    // Cloneable, Serializable, and all equal dimension arrays where the
+    // element type is a subtype). For simplicity, a type subtypes itself.
+    //
+    bool IsSubtype(TypeSymbol *type)
+    {
+        if (ACC_INTERFACE())
+            return (type -> ACC_INTERFACE() && IsSubinterface(type)) ||
+                super == type;
+        if (num_dimensions)
+        {
+            TypeSymbol *base = type -> base_type ? type -> base_type : type;
+            return (num_dimensions > type -> num_dimensions &&
+                    ((base -> ACC_INTERFACE() && Implements(base)) ||
+                     super == base)) ||
+                (num_dimensions == type -> num_dimensions &&
+                 base_type -> IsSubtype(base));
+        }
+        return type -> ACC_INTERFACE() ? Implements(type) : IsSubclass(type);
     }
 
     wchar_t *FileLoc()
@@ -1028,7 +1057,7 @@ public:
 
     TypeSymbol *ArraySubtype()
     {
-        return this -> base_type -> Array(this -> num_dimensions - 1);
+        return base_type -> Array(num_dimensions - 1);
     }
 
     void SetSignature(Control &);
@@ -1831,7 +1860,7 @@ inline DirectorySymbol *DirectorySymbol::InsertDirectorySymbol(NameSymbol *name_
                                                                bool source_dir)
 {
     DirectorySymbol *subdirectory_symbol = Table() -> InsertDirectorySymbol(name_symbol, this, source_dir);
-    this -> subdirectories.Next() = subdirectory_symbol;
+    subdirectories.Next() = subdirectory_symbol;
 
     return subdirectory_symbol;
 }
@@ -2204,8 +2233,8 @@ inline MethodSymbol *SymbolTable::InsertConstructorSymbol(NameSymbol *name_symbo
 {
     assert(! constructor);
 
-    this -> constructor = InsertMethodSymbol(name_symbol);
-    return this -> constructor;
+    constructor = InsertMethodSymbol(name_symbol);
+    return constructor;
 }
 
 
@@ -2246,7 +2275,7 @@ inline void SymbolTable::InsertConstructorSymbol(MethodSymbol *method_symbol)
 {
     assert(! constructor);
 
-    this -> constructor = method_symbol;
+    constructor = method_symbol;
     InsertMethodSymbol(method_symbol);
 }
 
@@ -2285,7 +2314,7 @@ inline MethodSymbol *TypeSymbol::FindMethodSymbol(NameSymbol *name_symbol)
 
 inline MethodSymbol *SymbolTable::FindConstructorSymbol()
 {
-    return this -> constructor;
+    return constructor;
 }
 
 inline MethodSymbol *TypeSymbol::FindConstructorSymbol()

@@ -834,7 +834,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     // Methods to generate expressions.
     //
     int EmitExpression(AstExpression *, bool = true);
-    int EmitArrayCreationExpression(AstArrayCreationExpression *);
+    int EmitArrayCreationExpression(AstArrayCreationExpression *, bool = true);
     int EmitAssignmentExpression(AstAssignmentExpression *, bool);
     int EmitBinaryExpression(AstBinaryExpression *);
     int EmitCastExpression(AstCastExpression *, bool);
@@ -885,7 +885,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void EndMethod(int, MethodSymbol *);
     void DeclareField(VariableSymbol *);
     void InitializeVariable(AstVariableDeclarator *);
-    void InitializeArray(TypeSymbol *, AstArrayInitializer *);
+    void InitializeArray(TypeSymbol *, AstArrayInitializer *, bool = true);
     void DeclareLocalVariable(AstVariableDeclarator *);
     bool EmitStatement(AstStatement *);
     void EmitReturnStatement(AstReturnStatement *);

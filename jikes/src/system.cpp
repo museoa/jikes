@@ -1478,7 +1478,8 @@ void Control::ProcessSystemInformation()
 
     //
     // Create an entry for each primitive type. Note that the type void is
-    // treated as a primitive.
+    // treated as a primitive. We do not set up any subtyping relationships,
+    // as that would violate the assumptions made elsewhere.
     //
     void_type = GetPrimitiveType(US_void, U8S_V);
     boolean_type = GetPrimitiveType(US_boolean, U8S_Z);

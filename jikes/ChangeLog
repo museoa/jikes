@@ -1,3 +1,20 @@
+2002-09-11  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/bytecode.h:
+	* src/bytecode.cpp (InitializeArray, EmitArrayCreationExpression):
+	Allow for discarded creation in instanceof - bug 3267.
+	(EmitBranchIfExpression, EmitConditionalExpression): Further
+	optimizations of ?:, including a fix for VerifyError - bug 3271.
+	(EmitCastExpression, StripNops): Elide further unnecessary
+	widening casts.
+	* src/decl.cpp (CheckMethodOverride): More covariance.
+	* src/error.h (InClone): New method.
+	* src/expr.cpp (GetAnonymousType): In context of a clone, do not
+	process anonymous classes - bug 3273.
+	(CanMethodInvocationConvert, CanAssignmentConvertReference),
+	(CanCastConvert): Simplify type comparison checks.
+	* src/symbol.h (IsSubtype): New method.
+
 2002-09-09  Eric Blake  <ebb9@email.byu.edu>
 
 	General type-handling improvements, including bug 413, 426:

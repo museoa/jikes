@@ -811,12 +811,16 @@ void ByteCode::InitializeVariable(AstVariableDeclarator *vd)
 
 
 void ByteCode::InitializeArray(TypeSymbol *type,
-                               AstArrayInitializer *array_initializer)
+                               AstArrayInitializer *array_initializer,
+                               bool need_value)
 {
     TypeSymbol *subtype = type -> ArraySubtype();
 
-    LoadImmediateInteger(array_initializer -> NumVariableInitializers());
-    EmitNewArray(1, type); // make the array
+    if (need_value)
+    {
+        LoadImmediateInteger(array_initializer -> NumVariableInitializers());
+        EmitNewArray(1, type); // make the array
+    }
     for (int i = 0; i < array_initializer -> NumVariableInitializers(); i++)
     {
         Ast *entry = array_initializer -> VariableInitializer(i);
@@ -827,18 +831,21 @@ void ByteCode::InitializeArray(TypeSymbol *type,
             continue;
         }
 
-        PutOp(OP_DUP);
-        LoadImmediateInteger(i);
+        if (need_value)
+        {
+            PutOp(OP_DUP);
+            LoadImmediateInteger(i);
+        }
         if (expr)
-             EmitExpression(expr);
+             EmitExpression(expr, need_value);
         else
         {
             assert(entry -> ArrayInitializerCast());
-
-            InitializeArray(subtype, entry -> ArrayInitializerCast());
+            InitializeArray(subtype, entry -> ArrayInitializerCast(),
+                            need_value);
         }
-
-        StoreArrayElement(subtype);
+        if (need_value)
+            StoreArrayElement(subtype);
     }
 }
 
@@ -2153,57 +2160,159 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
     AstConditionalExpression *conditional = p -> ConditionalExpressionCast();
     if (conditional)
     {
-        //
-        // branch_if(true?a:b, cond, lab) => branch_if(a, cond, lab);
-        // branch_if(false?a:b, cond, lab) => branch_if(b, cond, lab);
-        //
         if (conditional -> test_expression -> IsConstant())
         {
+            //
+            // branch_if(true?a:b, cond, lab) => branch_if(a, cond, lab);
+            // branch_if(false?a:b, cond, lab) => branch_if(b, cond, lab);
+            //
             EmitBranchIfExpression((IsZero(conditional -> test_expression)
                                     ? conditional -> false_expression
                                     : conditional -> true_expression),
                                    cond, lab, over);
-            return;
         }
-        //
-        // branch_if(expr?true:false, c, l) => branch_if(expr, c, l);
-        // branch_if(expr?false:true, c, l) => branch_if(expr, ! c, l);
-        // branch_if(expr?true:true, c, l) => expr, branch if c
-        // branch_if(expr?false:false, c, l) => expr, branch if ! c
-        //
-        if (conditional -> true_expression -> IsConstant() &&
-            conditional -> false_expression -> IsConstant())
+        else if (IsOne(conditional -> true_expression))
         {
-            if (IsOne(conditional -> true_expression))
+            //
+            // branch_if(expr?true:true, c, l) => expr, branch if c
+            // branch_if(expr?true:false, c, l) => branch_if(expr, c, l);
+            // branch_if(expr?true:b, c, l) => branch_if(expr || b, c, l);
+            //
+            if (IsOne(conditional -> false_expression))
             {
-                if (IsOne(conditional -> false_expression))
-                {
-                    EmitExpression(conditional -> test_expression, false);
-                    if (cond)
-                        EmitBranch(OP_GOTO, lab, over);
-                }
-                else
-                {
-                    EmitBranchIfExpression(conditional -> test_expression,
-                                           cond, lab, over);
-                }
+                EmitExpression(conditional -> test_expression, false);
+                if (cond)
+                    EmitBranch(OP_GOTO, lab, over);
+            }
+            else if (IsZero(conditional -> false_expression))
+            {
+                EmitBranchIfExpression(conditional -> test_expression,
+                                       cond, lab, over);
+            }
+            else if (cond)
+            {
+                EmitBranchIfExpression(conditional -> test_expression, true,
+                                       lab, over);
+                EmitBranchIfExpression(conditional -> false_expression, true,
+                                       lab, over);
             }
             else
             {
-                if (IsOne(conditional -> false_expression))
-                {
-                    EmitBranchIfExpression(conditional -> test_expression,
-                                           ! cond, lab, over);
-                }
-                else
-                {
-                    EmitExpression(conditional -> test_expression, false);
-                    if (! cond)
-                        EmitBranch(OP_GOTO, lab, over);
-                }
+                Label skip;
+                EmitBranchIfExpression(conditional -> test_expression, true,
+                                       skip, over);
+                EmitBranchIfExpression(conditional -> false_expression, false,
+                                       lab, over);
+                DefineLabel(skip);
+                CompleteLabel(skip);
             }
-            return;
         }
+        else if (IsZero(conditional -> true_expression))
+        {
+            //
+            // branch_if(expr?false:true, c, l) => branch_if(expr, ! c, l);
+            // branch_if(expr?false:false, c, l) => expr, branch if ! c
+            // branch_if(expr?false:b, c, l) => branch_if(!expr && b, c, l);
+            //
+            if (IsOne(conditional -> false_expression))
+            {
+                EmitBranchIfExpression(conditional -> test_expression,
+                                       ! cond, lab, over);
+            }
+            else if (IsZero(conditional -> false_expression))
+            {
+                EmitExpression(conditional -> test_expression, false);
+                if (! cond)
+                    EmitBranch(OP_GOTO, lab, over);
+            }
+            else if (! cond)
+            {
+                EmitBranchIfExpression(conditional -> test_expression, true,
+                                       lab, over);
+                EmitBranchIfExpression(conditional -> false_expression, false,
+                                       lab, over);
+            }
+            else
+            {
+                Label skip;
+                EmitBranchIfExpression(conditional -> test_expression, true,
+                                       skip, over);
+                EmitBranchIfExpression(conditional -> false_expression, true,
+                                       lab, over);
+                DefineLabel(skip);
+                CompleteLabel(skip);
+            }
+        }
+        else if (IsOne(conditional -> false_expression))
+        {
+            //
+            // branch_if(expr?a:true, c, l) => branch_if(!expr || a, c, l);
+            //
+            if (cond)
+            {
+                EmitBranchIfExpression(conditional -> test_expression, false,
+                                       lab, over);
+                EmitBranchIfExpression(conditional -> true_expression, true,
+                                       lab, over);
+            }
+            else
+            {
+                Label skip;
+                EmitBranchIfExpression(conditional -> test_expression, false,
+                                       skip, over);
+                EmitBranchIfExpression(conditional -> true_expression, false,
+                                       lab, over);
+                DefineLabel(skip);
+                CompleteLabel(skip);
+            }
+        }
+        else if (IsZero(conditional -> false_expression))
+        {
+            //
+            // branch_if(expr?a:false, c, l) => branch_if(expr && a, c, l);
+            //
+            if (! cond)
+            {
+                EmitBranchIfExpression(conditional -> test_expression, false,
+                                       lab, over);
+                EmitBranchIfExpression(conditional -> true_expression, false,
+                                       lab, over);
+            }
+            else
+            {
+                Label skip;
+                EmitBranchIfExpression(conditional -> test_expression, false,
+                                       skip, over);
+                EmitBranchIfExpression(conditional -> true_expression, true,
+                                       lab, over);
+                DefineLabel(skip);
+                CompleteLabel(skip);
+            }
+        }
+        else
+        {
+            //
+            // branch_if(expr?a:b, c, l) =>
+            //   branch_if(expr, false, lab1)
+            //   branch_if(a, c, l)
+            //   goto lab2
+            //   lab1: branch_if(b, c, l)
+            //   lab2:
+            //
+            Label lab1, lab2;
+            EmitBranchIfExpression(conditional -> test_expression, false, lab1,
+                                   over);
+            EmitBranchIfExpression(conditional -> true_expression, cond, lab,
+                                   over);
+            EmitBranch(OP_GOTO, lab2, over);
+            DefineLabel(lab1);
+            CompleteLabel(lab1);
+            EmitBranchIfExpression(conditional -> false_expression, cond, lab,
+                                   over);
+            DefineLabel(lab2);
+            CompleteLabel(lab2);
+        }
+        return;
     }
 
     //
@@ -2262,8 +2371,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
                       left -> IsSuperExpression() ||
                       left -> ClassInstanceCreationExpressionCast() ||
                       left -> ArrayCreationExpressionCast()) &&
-                     (left_type -> IsSubclass(right_type) ||
-                      left_type -> Implements(right_type)))
+                     left_type -> IsSubtype(right_type))
             {
                 //
                 // We know the result: true, since the expression is non-null.
@@ -2989,8 +3097,7 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
     case Ast::CLASS_CREATION:
         return EmitInstanceCreationExpression((AstClassInstanceCreationExpression *) expression, need_value);
     case Ast::ARRAY_CREATION:
-        assert(need_value && "array can't qualify static member");
-        return EmitArrayCreationExpression((AstArrayCreationExpression *) expression);
+        return EmitArrayCreationExpression((AstArrayCreationExpression *) expression, need_value);
     case Ast::DOT:
         {
             AstFieldAccess *field_access = (AstFieldAccess *) expression;
@@ -3418,7 +3525,8 @@ void ByteCode::GenerateAssertVariableInitializer(TypeSymbol *tsym,
 //
 // see also OP_MULTIANEWARRAY
 //
-int ByteCode::EmitArrayCreationExpression(AstArrayCreationExpression *expression)
+int ByteCode::EmitArrayCreationExpression(AstArrayCreationExpression *expression,
+                                          bool need_value)
 {
     int num_dims = expression -> NumDimExprs();
 
@@ -3432,20 +3540,43 @@ int ByteCode::EmitArrayCreationExpression(AstArrayCreationExpression *expression
     if (expression -> array_initializer_opt)
     {
         InitializeArray(expression -> Type(),
-                        expression -> array_initializer_opt);
+                        expression -> array_initializer_opt, need_value);
     }
     else
     {
         //
-        // need to push value of dimension(s)
+        // Need to push value of dimension(s) and create array. This can be
+        // skipped if we don't need a value, but only if we know that all
+        // dimensions are non-negative.
         //
-        for (int i = 0; i < num_dims; i++)
-            EmitExpression(expression -> DimExpr(i) -> expression);
-
-        EmitNewArray(num_dims, expression -> Type());
+        bool create_array = need_value;
+        for (int i = 0; ! create_array && i < num_dims; i++)
+        {
+            AstExpression *expr =
+                StripNops(expression -> DimExpr(i) -> expression);
+            if (expr -> IsConstant())
+            {
+                if (DYNAMIC_CAST<IntLiteralValue *> (expr -> value) ->
+                    value < 0)
+                {
+                    create_array = true;
+                }
+            }
+            else if (expr -> Type() != control.char_type)
+                create_array = true;
+        }
+        for (int j = 0; j < num_dims; j++)
+            EmitExpression(expression -> DimExpr(j) -> expression,
+                           create_array);
+        if (create_array)
+        {
+            EmitNewArray(num_dims, expression -> Type());
+            if (! need_value)
+                PutOp(OP_POP);
+        }
     }
 
-    return 1;
+    return need_value ? 1 : 0;
 }
 
 
@@ -3855,8 +3986,8 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
                  expression -> left_expression -> BinaryExpressionCast())
         {
             //
-            // We know the result: true, since the expression is non-null
-            // and String is a final class.
+            // We know the result: true, since the string literals and string
+            // concats are non-null and String is a final class.
             //
             assert(left_type == control.String());
             EmitExpression(expression -> left_expression, false);
@@ -3866,8 +3997,7 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
                   expression -> left_expression -> IsSuperExpression() ||
                   expression -> left_expression -> ClassInstanceCreationExpressionCast() ||
                   expression -> left_expression -> ArrayCreationExpressionCast()) &&
-                 (left_type -> IsSubclass(right_type) ||
-                  left_type -> Implements(right_type)))
+                 left_type -> IsSubtype(right_type))
         {
             //
             // We know the result: true, since the expression is non-null.
@@ -4291,14 +4421,14 @@ int ByteCode::EmitCastExpression(AstCastExpression *expression,
     // Object downcasts must be emitted, in case of a ClassCastException.
     //
     EmitExpression(expression -> expression,
-                   need_value || dest_type -> IsSubclass(source_type));
+                   need_value || dest_type -> IsSubtype(source_type));
 
-    if (need_value || dest_type -> IsSubclass(source_type))
+    if (need_value || dest_type -> IsSubtype(source_type))
     {
         EmitCast(dest_type, source_type);
         if (! need_value)
         {
-            assert(source_type -> IsSubclass(control.Object()));
+            assert(source_type -> IsSubtype(control.Object()));
             PutOp(OP_POP);
         }
     }
@@ -4309,7 +4439,7 @@ int ByteCode::EmitCastExpression(AstCastExpression *expression,
 
 void ByteCode::EmitCast(TypeSymbol *dest_type, TypeSymbol *source_type)
 {
-    if (source_type -> IsSubclass(dest_type) ||
+    if (source_type -> IsSubtype(dest_type) ||
         source_type == control.null_type)
     {
         return; // done if nothing to do
@@ -4579,20 +4709,21 @@ int ByteCode::EmitConditionalExpression(AstConditionalExpression *expression,
         }
         else if ((control.IsSimpleIntegerValueType(expression -> Type()) ||
                   expression -> Type() == control.boolean_type) &&
-                 IsOne(expression -> true_expression))
+                 (IsOne(expression -> true_expression) ||
+                  IsZero(expression -> true_expression)))
         {
             //
             // Optimize (cond ? 1 : b) to (cond || b)
+            // Optimize (cond ? 0 : b) to (!cond && b)
             //
             Label label;
-            EmitExpression(expression -> test_expression);
             if (need_value)
-            {
-                PutOp(OP_DUP);
-                EmitBranch(OP_IFNE, label);
+                PutOp(IsZero(expression -> true_expression)
+                      ? OP_ICONST_0 : OP_ICONST_1);
+            EmitExpression(expression -> test_expression);
+            EmitBranch(OP_IFNE, label);
+            if (need_value)
                 PutOp(OP_POP);
-            }
-            else EmitBranch(OP_IFNE, label);
             EmitExpression(expression -> false_expression, need_value);
             DefineLabel(label);
             CompleteLabel(label);
@@ -4601,20 +4732,21 @@ int ByteCode::EmitConditionalExpression(AstConditionalExpression *expression,
     }
     else if ((control.IsSimpleIntegerValueType(expression -> Type()) ||
               expression -> Type() == control.boolean_type) &&
-             IsZero(expression -> false_expression))
+             (IsOne(expression -> false_expression) ||
+              IsZero(expression -> false_expression)))
     {
         //
         // Optimize (cond ? a : 0) to (cond && a)
+        // Optimize (cond ? a : 1) to (!cond || a)
         //
         Label label;
-        EmitExpression(expression -> test_expression);
         if (need_value)
-        {
-            PutOp(OP_DUP);
-            EmitBranch(OP_IFEQ, label);
+            PutOp(IsZero(expression -> false_expression)
+                  ? OP_ICONST_0 : OP_ICONST_1);
+        EmitExpression(expression -> test_expression);
+        EmitBranch(OP_IFEQ, label);
+        if (need_value)
             PutOp(OP_POP);
-        }
-        else EmitBranch(OP_IFEQ, label);
         EmitExpression(expression -> true_expression, need_value);
         DefineLabel(label);
         CompleteLabel(label);
@@ -4775,11 +4907,18 @@ AstExpression *ByteCode::StripNops(AstExpression *expr)
         else if (expr -> CastExpressionCast())
         {
             AstCastExpression *cast_expr = (AstCastExpression *) expr;
+            TypeSymbol *cast_type = expr -> Type();
             AstExpression *sub_expr = StripNops(cast_expr -> expression);
-            if (sub_expr -> Type() -> IsSubclass(expr -> Type()) ||
-                sub_expr -> Type() -> Implements(expr -> Type()) ||
-                (sub_expr -> Type() == control.null_type &&
-                 expr -> Type() -> num_dimensions <= 255))
+            TypeSymbol *sub_type = sub_expr -> Type();
+            if (sub_type -> IsSubtype(cast_type) ||
+                (sub_type == control.byte_type &&
+                 (cast_type == control.short_type ||
+                  cast_type == control.int_type)) ||
+                ((sub_type == control.short_type ||
+                  sub_type == control.char_type) &&
+                 cast_type == control.int_type) ||
+                (sub_type == control.null_type &&
+                 cast_type -> num_dimensions <= 255))
             {
                 return sub_expr;
             }
