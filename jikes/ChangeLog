@@ -1,3 +1,12 @@
+2002-06-17  Eric B Blake  <eblake@ee.byu.edu>
+
+	* src/bytecode.cpp (EmitSwitchStatement, EmitBlockStatement),
+	(DeclareLocalVariable):
+	* src/bytecode.h (Push, Pop): Mark local variables uninitialized
+	regardless of JIKES_DEBUG, and fix problems when a declaration
+	statement is not executed because a prior statement ended abruptly
+	- bug 2907.
+
 2002-06-17  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.cpp (EmitSwitchStatement): Don't optimize gotos

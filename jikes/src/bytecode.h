@@ -81,11 +81,9 @@ public:
         continue_labels[block -> nesting_level].uses.Reset();
         finally_labels[block -> nesting_level].uses.Reset();
         blocks[block -> nesting_level] = block;
-
-#ifdef JIKES_DEBUG
-        memset(local_variables_start_pc[block -> nesting_level],
-               0xFF, size * sizeof(u2));
-#endif
+        if (size)
+          memset(local_variables_start_pc[block -> nesting_level],
+                 0xFF, size * sizeof(u2));
         top_index++;
     }
 
@@ -102,7 +100,9 @@ public:
             continue_labels[level].Reset();
             finally_labels[level].Reset();
             blocks[level] = NULL;
-            memset(local_variables_start_pc[level], 0xFF, size * sizeof(u2));
+            if (size)
+                memset(local_variables_start_pc[level], 0xFF,
+                       size * sizeof(u2));
 #endif
         }
         else assert(false);

@@ -812,7 +812,8 @@ void ByteCode::DeclareLocalVariable(AstVariableDeclarator *declarator)
     if (control.option.g & JikesOption::VARS)
     {
 #ifdef JIKES_DEBUG
-        assert(method_stack -> StartPc(declarator -> symbol) == 0xFFFF); // must be uninitialized
+        // Must be uninitialized.
+        assert(method_stack -> StartPc(declarator -> symbol) == 0xFFFF);
 #endif // JIKES_DEBUG
 #ifdef DUMP
         Coutput << "(53) Variable \"" << declarator -> symbol -> Name()
@@ -1245,9 +1246,8 @@ bool ByteCode::EmitBlockStatement(AstBlock *block)
         for (int i = 0; i < block -> NumLocallyDefinedVariables(); i++)
         {
             VariableSymbol *variable = block -> LocallyDefinedVariable(i);
-#ifdef JIKES_DEBUG
-            assert(method_stack -> StartPc(variable) != 0xFFFF);
-#endif // JIKES_DEBUG
+            if (method_stack -> StartPc(variable) == 0xFFFF) // never used
+                continue;
 #ifdef DUMP
             Coutput << "(56) The symbol \"" << variable -> Name()
                     << "\" numbered " << variable -> LocalVariableIndex()
@@ -1536,9 +1536,8 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
             VariableSymbol *variable = switch_block -> LocallyDefinedVariable(i);
             if (method_stack -> StartPc(variable) > op_start)
             {
-#ifdef JIKES_DEBUG
-                assert(method_stack -> StartPc(variable) != 0xFFFF);
-#endif // JIKES_DEBUG
+                if (method_stack -> StartPc(variable) == 0xFFFF) // never used
+                    continue;
 #ifdef DUMP
                 Coutput << "(58) The symbol \"" << variable -> Name()
                         << "\" numbered " << variable -> LocalVariableIndex()
@@ -6160,7 +6159,7 @@ void ByteCode::PrintCode()
     }
     Coutput << endl;
 }
-#endif
+#endif // JIKES_DEBUG
 
 #ifdef HAVE_JIKES_NAMESPACE
 } // Close namespace Jikes block
