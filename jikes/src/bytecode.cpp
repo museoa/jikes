@@ -56,6 +56,20 @@ void ByteCode::CompileClass()
                     AstExpression *init = variable_declarator -> variable_initializer_opt -> ExpressionCast();
                     if (! (init && init -> IsConstant()))
                         initialized_static_fields.Next() = variable_declarator;
+
+                    //
+                    // TODO: there seems to be a contradiction between the language spec and the VM spec.
+                    // The language spec seems to require that a variable be initialized (in the class file)
+                    // with a "ConstantValue" only if it is static. The VM spec, on the other hand, states
+                    // that a static need not be final to be initialized with a ConstantValue.
+                    // As of now, we are following the language spec - ergo, this extra test.
+                    //
+                    else
+                    {
+                        assert(variable_declarator -> symbol);
+                        if (! variable_declarator -> symbol -> ACC_FINAL())
+                            initialized_static_fields.Next() = variable_declarator;
+                    }
                 }
             }
         }
@@ -250,7 +264,7 @@ void ByteCode::CompileClass()
             //
             int method_index = methods.NextIndex(); // index for method
             BeginMethod(method_index, this_constructor_symbol);
-            methods[method_index].SetNameIndex(RegisterUtf8(U8S_LT_init_GT, strlen(U8S_LT_init_GT)));
+            methods[method_index].SetNameIndex(RegisterUtf8(this_control.LT_init_GT_literal));
 
             UpdateBlockInfo(this_constructor_symbol -> block_symbol);
                 
@@ -258,9 +272,9 @@ void ByteCode::CompileClass()
             {
                 PutOp(OP_ALOAD_0);
                 PutOp(OP_INVOKENONVIRTUAL);   // no args, hence no need to call ChangeStack()
-                PutU2(BuildMethodref(super_class,
-                                     BuildNameAndType(RegisterUtf8(U8S_LT_init_GT, strlen(U8S_LT_init_GT)),
-                                                      RegisterUtf8(U8S_LP_RP_V, strlen(U8S_LP_RP_V)))));
+                PutU2(RegisterMethodref(unit_type -> super -> fully_qualified_name,
+                                        this_control.LT_init_GT_literal,
+                                        this_control.LP_RP_V_literal));
             }
             else EmitStatement((AstStatement *) constructor_block -> explicit_constructor_invocation_opt);
 
@@ -280,7 +294,7 @@ void ByteCode::CompileClass()
                     PutOp(OP_ALOAD_0); // load address of object on which method is to be invoked
                     LoadLocal(1, this0_parameter -> Type());
                     PutOp(OP_PUTFIELD);
-                    PutU2(GenerateFieldReference(this0_parameter));
+                    PutU2(RegisterFieldref(this0_parameter));
                 }
 
                 if (class_body -> this_block) // compile explicit 'this' call if present
@@ -384,11 +398,20 @@ void ByteCode::CompileClass()
 
     FinishCode(unit_type);
 
-    Write();
+    if (constant_pool.Length() > 65535)
+    {
+         this_semantic.ReportSemError(SemanticError::CONSTANT_POOL_OVERFLOW,
+                                      unit_type -> declaration -> LeftToken(),
+                                      unit_type -> declaration -> RightToken(),
+                                      unit_type -> ContainingPackage() -> PackageName(),
+                                      unit_type -> ExternalName());
+    }
 
+    if (this_semantic.NumErrors() == 0)
+         Write();
 #ifdef TEST
-    if (this_control.option.debug_dump_class)
-        PrintCode();
+    else if (this_control.option.debug_dump_class)
+         PrintCode();
 #endif
 }
 
@@ -458,11 +481,20 @@ void ByteCode::CompileInterface()
 
     FinishCode(unit_type);
 
-    Write();
+    if (constant_pool.Length() > 65535)
+    {
+         this_semantic.ReportSemError(SemanticError::CONSTANT_POOL_OVERFLOW,
+                                      unit_type -> declaration -> LeftToken(),
+                                      unit_type -> declaration -> RightToken(),
+                                      unit_type -> ContainingPackage() -> PackageName(),
+                                      unit_type -> ExternalName());
+    }
 
+    if (this_semantic.NumErrors() == 0)
+         Write();
 #ifdef TEST
-    if (this_control.option.debug_dump_class)
-        PrintCode();
+    else if (this_control.option.debug_dump_class)
+         PrintCode();
 #endif
 
     return;
@@ -482,7 +514,7 @@ void ByteCode::CompileConstructor(AstConstructorDeclaration *constructor, Tuple<
 
     int method_index = methods.NextIndex(); // index for method
     BeginMethod(method_index, method_symbol);
-    methods[method_index].SetNameIndex(RegisterUtf8(U8S_LT_init_GT, strlen(U8S_LT_init_GT)));
+    methods[method_index].SetNameIndex(RegisterUtf8(this_control.LT_init_GT_literal));
 
     UpdateBlockInfo(method_symbol -> block_symbol);
 
@@ -493,9 +525,9 @@ void ByteCode::CompileConstructor(AstConstructorDeclaration *constructor, Tuple<
         {
             PutOp(OP_ALOAD_0);
             PutOp(OP_INVOKENONVIRTUAL);   // no args, hence no need to call ChangeStack()
-            PutU2(BuildMethodref(super_class,
-                                 BuildNameAndType(RegisterUtf8(U8S_LT_init_GT, strlen(U8S_LT_init_GT)),
-                                 RegisterUtf8(U8S_LP_RP_V, strlen(U8S_LP_RP_V)))));
+            PutU2(RegisterMethodref(unit_type -> super -> fully_qualified_name,
+                                    this_control.LT_init_GT_literal,
+                                    this_control.LP_RP_V_literal));
         }
     }
     else EmitStatement((AstStatement *) constructor_block -> explicit_constructor_invocation_opt);
@@ -511,7 +543,7 @@ void ByteCode::CompileConstructor(AstConstructorDeclaration *constructor, Tuple<
             PutOp(OP_ALOAD_0); // load address of object on which method is to be invoked
             LoadLocal(1, this0_parameter -> Type());
             PutOp(OP_PUTFIELD);
-            PutU2(GenerateFieldReference(this0_parameter));
+            PutU2(RegisterFieldref(this0_parameter));
         }
 
         if (class_body -> this_block) // compile explicit 'this' call if present
@@ -584,8 +616,16 @@ void ByteCode::DeclareField(VariableSymbol *symbol)
         TypeSymbol *type = symbol -> Type();
         if (initial_value && (type -> Primitive() || (type == this_control.String() && initial_value != this_control.NullValue())))
         {
-            fields[field_index].AddAttribute(new ConstantValue_attribute(RegisterUtf8(U8S_ConstantValue, U8S_ConstantValue_length),
-                                                                         GetConstant(initial_value, type)));
+            //
+            // TODO: there seems to be a contradiction between the language spec and the VM spec.
+            // The language spec seems to require that a variable be initialized (in the class file)
+            // with a "ConstantValue" only if it is static. The VM spec, on the other hand, states
+            // that a static need not be final to be initialized with a ConstantValue.
+            // As of now, we are following the language spec - ergo, this extra test.
+            //
+            if (symbol -> ACC_FINAL())
+                fields[field_index].AddAttribute(new ConstantValue_attribute(RegisterUtf8(this_control.ConstantValue_literal),
+                                                                             GetConstant(initial_value, type)));
         }
     }
 
@@ -634,13 +674,13 @@ void ByteCode::GenerateAccessMethod(MethodSymbol *method_symbol)
         {
             TypeSymbol *parameter_type = method_symbol -> FormalParameter(field_sym -> ACC_STATIC() ? 0 : 1) -> Type();
             PutOp(field_sym -> ACC_STATIC() ? OP_PUTSTATIC : OP_PUTFIELD);
-            PutU2(GenerateFieldReference(field_sym));
+            PutU2(RegisterFieldref(field_sym));
             ChangeStack(this_control.IsDoubleWordType(parameter_type) ? -2 : -1);
         }
         else // reading a field: need method to retrieve value of field
         {
             PutOp(field_sym -> ACC_STATIC() ? OP_GETSTATIC : OP_GETFIELD);
-            PutU2(GenerateFieldReference(field_sym));
+            PutU2(RegisterFieldref(field_sym));
             ChangeStack(this_control.IsDoubleWordType(method_symbol -> Type()) ? 2 : 1);
         }
     }
@@ -672,8 +712,8 @@ void ByteCode::BeginMethod(int method_index, MethodSymbol *msym)
 
     if (msym -> Identity() == this_control.clinit_name_symbol) // Generated constructor for static init.
     {
-         methods[method_index].SetNameIndex(RegisterUtf8(U8S_LT_clinit_GT, strlen(U8S_LT_clinit_GT)));
-         methods[method_index].SetDescriptorIndex(RegisterUtf8(U8S_LP_RP_V, strlen(U8S_LP_RP_V)));
+         methods[method_index].SetNameIndex(RegisterUtf8(this_control.LT_clinit_GT_literal));
+         methods[method_index].SetDescriptorIndex(RegisterUtf8(this_control.LP_RP_V_literal));
     }
     else if (msym -> Identity() == this_control.init_name_symbol) // a constructor, caller sets name
          methods[method_index].SetDescriptorIndex(RegisterUtf8(msym -> signature));
@@ -699,7 +739,7 @@ void ByteCode::BeginMethod(int method_index, MethodSymbol *msym)
     //
     if (msym -> NumThrows())
     {
-        Exceptions_attribute *exceptions_attribute = new Exceptions_attribute(RegisterUtf8(U8S_Exceptions, U8S_Exceptions_length));
+        Exceptions_attribute *exceptions_attribute = new Exceptions_attribute(RegisterUtf8(this_control.Exceptions_literal));
         for (int i = 0; i < msym -> NumThrows(); i++)
             exceptions_attribute -> AddExceptionIndex(RegisterClass(msym -> Throws(i) -> fully_qualified_name));
         methods[method_index].AddAttribute(exceptions_attribute);
@@ -716,17 +756,16 @@ void ByteCode::BeginMethod(int method_index, MethodSymbol *msym)
     // here if need code and associated attributes.
     //
     if (this_control.option.g)
-        local_variable_table_attribute = new LocalVariableTable_attribute(RegisterUtf8(U8S_LocalVariableTable,
-                                                                                       U8S_LocalVariableTable_length));
+        local_variable_table_attribute = new LocalVariableTable_attribute(RegisterUtf8(this_control.LocalVariableTable_literal));
 
     if (! (msym -> ACC_ABSTRACT() || msym -> ACC_NATIVE()))
     {
         AllocateMethodInfo(msym -> max_block_depth);
 
-        code_attribute = new Code_attribute(RegisterUtf8(U8S_Code, U8S_Code_length), msym -> block_symbol -> max_variable_index);
+        code_attribute = new Code_attribute(RegisterUtf8(this_control.Code_literal), msym -> block_symbol -> max_variable_index);
 
         line_number = 0;
-        line_number_table_attribute = new LineNumberTable_attribute(RegisterUtf8(U8S_LineNumberTable, U8S_LineNumberTable_length));
+        line_number_table_attribute = new LineNumberTable_attribute(RegisterUtf8(this_control.LineNumberTable_literal));
     }
 
     last_parameter_index = (msym -> NumFormalParameters()
@@ -743,6 +782,44 @@ void ByteCode::EndMethod(int method_index, MethodSymbol *msym)
 
     if (! (msym -> ACC_ABSTRACT() || msym -> ACC_NATIVE()))
     {
+        //            
+        // Make sure that no component in the code attribute exceeded its limit.
+        //            
+        if (msym -> block_symbol -> max_variable_index > 65535)
+        {
+            this_semantic.ReportSemError(SemanticError::LOCAL_VARIABLES_OVERFLOW,
+                                         msym -> method_or_constructor_declaration -> LeftToken(),
+                                         msym -> method_or_constructor_declaration -> RightToken(),
+                                         msym -> Header(),
+                                         unit_type -> ContainingPackage() -> PackageName(),
+                                         unit_type -> ExternalName());
+        }
+
+        if (max_stack > 65535)
+        {
+            this_semantic.ReportSemError(SemanticError::STACK_OVERFLOW,
+                                         msym -> method_or_constructor_declaration -> LeftToken(),
+                                         msym -> method_or_constructor_declaration -> RightToken(),
+                                         msym -> Header(),
+                                         unit_type -> ContainingPackage() -> PackageName(),
+                                         unit_type -> ExternalName());
+        }
+
+        if (code_attribute -> CodeLength() > 65534)
+        {
+            this_semantic.ReportSemError(SemanticError::CODE_OVERFLOW,
+                                         msym -> method_or_constructor_declaration -> LeftToken(),
+                                         msym -> method_or_constructor_declaration -> RightToken(),
+                                         msym -> Header(),
+                                         unit_type -> ContainingPackage() -> PackageName(),
+                                         unit_type -> ExternalName());
+        }
+
+        //            
+        //
+        //            
+        code_attribute -> SetMaxStack(max_stack);
+
         if (last_label_pc >= code_attribute -> CodeLength()) // here to emit noop if would otherwise branch past end
             PutNop(0);
 
@@ -765,7 +842,7 @@ void ByteCode::EndMethod(int method_index, MethodSymbol *msym)
             {
                 local_variable_table_attribute -> AddLocalVariable(0,
                                                                    code_attribute -> CodeLength(),
-                                                                   RegisterUtf8(U8S_this, strlen(U8S_this)),
+                                                                   RegisterUtf8(this_control.this_literal),
                                                                    RegisterUtf8(msym -> containing_type -> signature),
                                                                    0);
             }
@@ -804,7 +881,18 @@ void ByteCode::InitializeClassVariable(AstVariableDeclarator *vd)
     AstExpression *expression = vd -> variable_initializer_opt -> ExpressionCast();
     if (expression)
     {
-        if (expression -> IsConstant())  // if already initialized
+        //
+        // TODO: there seems to be a contradiction between the language spec and the VM spec.
+        // The language spec seems to require that a variable be initialized (in the class file)
+        // with a "ConstantValue" only if it is static. The VM spec, on the other hand, states
+        // that a static need not be final to be initialized with a ConstantValue.
+        // As of now, we are following the language spec - ergo, this extra test.
+        //
+        // if (expression -> IsConstant())  // if already initialized
+        //
+        assert(vd -> symbol);
+
+        if (expression -> IsConstant() && vd -> symbol -> ACC_FINAL())  // if already initialized
             return;
         EmitExpression(expression);
     }
@@ -819,7 +907,7 @@ void ByteCode::InitializeClassVariable(AstVariableDeclarator *vd)
 
     PutOp(OP_PUTSTATIC);
     ChangeStack(expression && this_control.IsDoubleWordType(expression -> Type()) ? -2 : -1);
-    PutU2(GenerateFieldReference(vd -> symbol));
+    PutU2(RegisterFieldref(vd -> symbol));
 
     return;
 }
@@ -847,7 +935,7 @@ void ByteCode::InitializeInstanceVariable(AstVariableDeclarator *vd)
 
     PutOp(OP_PUTFIELD);
     ChangeStack(expression && this_control.IsDoubleWordType(expression -> Type()) ? -2 : -1);
-    PutU2(GenerateFieldReference(vd -> symbol));
+    PutU2(RegisterFieldref(vd -> symbol));
 
     return;
 }
@@ -1526,7 +1614,7 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
     //
     // increment max_stack in case exception thrown while stack at greatest depth
     //
-    code_attribute -> max_stack++;
+    max_stack++;
     if (statement -> finally_clause_opt) // call finally block if have finally handler
     {
         PutOp(OP_JSR);
@@ -1612,13 +1700,6 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
 void ByteCode::UpdateBlockInfo(BlockSymbol *block_symbol)
 {
     assert(block_symbol);
-
-    //
-    // TODO: Assert that this is always the case
-    //
-    //    if (code_attribute -> MaxLocals() < block_symbol -> max_variable_index)
-    //        code_attribute -> ResetMaxLocals(block_symbol -> max_variable_index);
-    assert(code_attribute -> MaxLocals() >= block_symbol -> max_variable_index);
 
     if (this_control.option.g) // compute local variable table
     {
@@ -2137,7 +2218,7 @@ void ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
         //
         // Reach here if any increment. max_stack in case exception thrown while stack at greatest depth
         //
-        code_attribute -> max_stack++;
+        max_stack++;
         int handler_pc = code_attribute -> CodeLength();
         LoadLocal(var_index, this_control.Object()); // load address of object onto stack
         PutOp(OP_MONITOREXIT); 
@@ -2316,41 +2397,38 @@ void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
     PutOp(OP_ALOAD_0);
     PutOp(OP_INVOKESTATIC);
     ChangeStack(-1);
-    PutU2(BuildMethodref(RegisterClass(U8S_java_SL_lang_SL_Class, strlen(U8S_java_SL_lang_SL_Class)),
-                         BuildNameAndType(RegisterUtf8(U8S_forName, strlen(U8S_forName)),
-                                          RegisterUtf8(U8S_LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_Class_SC,
-                                                       strlen(U8S_LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_Class_SC)))));
+    PutU2(RegisterMethodref(this_control.java_SL_lang_SL_Class_literal,
+                            this_control.forName_literal,
+                            this_control.LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_Class_SC_literal));
     ChangeStack(1);
 
     PutOp(OP_ARETURN);
     PutOp(OP_ASTORE_1);
     PutOp(OP_NEW);
-    PutU2(RegisterClass(U8S_java_SL_lang_SL_NoClassDefFoundError, strlen(U8S_java_SL_lang_SL_NoClassDefFoundError)));
+    PutU2(RegisterClass(this_control.java_SL_lang_SL_NoClassDefFoundError_literal));
     PutOp(OP_DUP);
     PutOp(OP_ALOAD_1);
     PutOp(OP_INVOKEVIRTUAL);
     ChangeStack(-1);
-    PutU2(BuildMethodref(RegisterClass(U8S_java_SL_lang_SL_Throwable, strlen(U8S_java_SL_lang_SL_Throwable)),
-                         BuildNameAndType(RegisterUtf8(U8S_getMessage, strlen(U8S_getMessage)),
-                                          RegisterUtf8(U8S_LP_RP_Ljava_SL_lang_SL_String_SC,
-                                                       strlen(U8S_LP_RP_Ljava_SL_lang_SL_String_SC)))));
+    PutU2(RegisterMethodref(this_control.java_SL_lang_SL_Throwable_literal,
+                            this_control.getMessage_literal,
+                            this_control.LP_RP_Ljava_SL_lang_SL_String_SC_literal));
     ChangeStack(1);
 
     PutOp(OP_INVOKENONVIRTUAL);
     ChangeStack(-1);
-    PutU2(BuildMethodref(RegisterClass(U8S_java_SL_lang_SL_NoClassDefFoundError, strlen(U8S_java_SL_lang_SL_NoClassDefFoundError)),
-                         BuildNameAndType(RegisterUtf8(U8S_LT_init_GT, strlen(U8S_LT_init_GT)),
-                                          RegisterUtf8(U8S_LP_Ljava_SL_lang_SL_String_SC_RP_V,
-                                                       strlen(U8S_LP_Ljava_SL_lang_SL_String_SC_RP_V)))));
+    PutU2(RegisterMethodref(this_control.java_SL_lang_SL_NoClassDefFoundError_literal,
+                            this_control.LT_init_GT_literal,
+                            this_control.LP_Ljava_SL_lang_SL_String_SC_RP_V_literal));
     ChangeStack(1);
     PutOp(OP_ATHROW);
-    code_attribute -> max_stack = 3;
+
+    max_stack = 3;
 
     code_attribute -> AddException(0,
                                    5,
                                    5,
-                                   RegisterClass(U8S_java_SL_lang_SL_ClassNotFoundException,
-                                                 strlen(U8S_java_SL_lang_SL_ClassNotFoundException)));
+                                   RegisterClass(this_control.java_SL_lang_SL_ClassNotFoundException_literal));
 
     return;
 }
@@ -2386,11 +2464,11 @@ int ByteCode::GenerateClassAccess(AstFieldAccess *field_access)
         VariableSymbol *sym = field_access -> symbol -> VariableCast();
 
         PutOp(OP_GETSTATIC);
-        PutU2(GenerateFieldReference(sym));
+        PutU2(RegisterFieldref(sym));
         ChangeStack(1);
         EmitBranch(OP_IFNULL, lab1);
         PutOp(OP_GETSTATIC);
-        PutU2(GenerateFieldReference(sym));
+        PutU2(RegisterFieldref(sym));
         ChangeStack(1);
         EmitBranch(OP_GOTO, lab2);
         DefineLabel(lab1);
@@ -2403,7 +2481,7 @@ int ByteCode::GenerateClassAccess(AstFieldAccess *field_access)
         CompleteCall(unit_type -> outermost_type -> ClassLiteralMethod(), 1);
         PutOp(OP_DUP);
         PutOp(OP_PUTSTATIC);
-        PutU2(GenerateFieldReference(sym));
+        PutU2(RegisterFieldref(sym));
         ChangeStack(-1);
     }
     else // here in nested case, where must invoke access methods for the field
@@ -2424,9 +2502,9 @@ int ByteCode::GenerateClassAccess(AstFieldAccess *field_access)
         //
 
         PutOp(OP_INVOKESTATIC);
-        u2 read_ref = BuildMethodref(RegisterClass(read_symbol -> containing_type -> fully_qualified_name),
-                                     BuildNameAndType(RegisterUtf8(read_symbol -> ExternalIdentity() -> Utf8_literal),
-                                                      RegisterUtf8(read_symbol -> signature)));
+        u2 read_ref = RegisterMethodref(read_symbol -> containing_type -> fully_qualified_name,
+                                        read_symbol -> ExternalIdentity() -> Utf8_literal,
+                                        read_symbol -> signature);
         PutU2(read_ref);
         ChangeStack(1);
 
@@ -2446,9 +2524,9 @@ int ByteCode::GenerateClassAccess(AstFieldAccess *field_access)
         PutOp(OP_DUP);
         PutOp(OP_INVOKESTATIC);
 
-        u2 write_ref = BuildMethodref(RegisterClass(write_symbol -> containing_type -> fully_qualified_name),
-                                      BuildNameAndType(RegisterUtf8(write_symbol -> ExternalIdentity() -> Utf8_literal),
-                                                       RegisterUtf8(write_symbol -> signature)));
+        u2 write_ref = RegisterMethodref(write_symbol -> containing_type -> fully_qualified_name,
+                                         write_symbol -> ExternalIdentity() -> Utf8_literal,
+                                         write_symbol -> signature);
         PutU2(write_ref);
         ChangeStack(-1); // to indicate argument popped
     }
@@ -3181,16 +3259,9 @@ int ByteCode::EmitClassInstanceCreationExpression(AstClassInstanceCreationExpres
 
     PutOp(OP_INVOKENONVIRTUAL);
     ChangeStack(-stack_words); 
-    if (constructor -> constant_pool_index == 0 || constructor -> constant_pool_class != class_id) // build method ref for method
-    {
-        constructor -> constant_pool_index =
-                       BuildMethodref(RegisterClass(expression -> Type() -> fully_qualified_name),
-                                      BuildNameAndType(RegisterUtf8(this_control.init_name_symbol -> Utf8_literal),
-                                                       RegisterUtf8(constructor -> signature)));
-        constructor -> constant_pool_class = class_id;
-    }
-    
-    PutU2(constructor -> constant_pool_index);
+    PutU2(RegisterMethodref(expression -> Type() -> fully_qualified_name,
+                                                               this_control.init_name_symbol -> Utf8_literal,
+                                                               constructor -> signature));
 
     return 1;
 }
@@ -3260,7 +3331,7 @@ int ByteCode::EmitFieldAccess(AstFieldAccess *expression)
         ChangeStack(this_control.IsDoubleWordType(expression_type) ? 1 : 0);
     }
 
-    PutU2(GenerateFieldReference(sym));
+    PutU2(RegisterFieldref(sym));
 
     return GetTypeWords(expression_type);
 }
@@ -3301,7 +3372,7 @@ void ByteCode::EmitCloneArray(AstMethodInvocation *expression)
     ChangeStack(1); 
     StoreLocal(1, this_control.Object());
     PutOp(OP_NEW); 
-    PutU2(RegisterClass(U8S_java_SL_lang_SL_InternalError, strlen(U8S_java_SL_lang_SL_InternalError)));
+    PutU2(RegisterClass(this_control.java_SL_lang_SL_InternalError_literal));
     PutOp(OP_DUP);
     LoadLocal(1, this_control.Object());
     PutOp(OP_INVOKEVIRTUAL);
@@ -3318,8 +3389,7 @@ void ByteCode::EmitCloneArray(AstMethodInvocation *expression)
     code_attribute -> AddException(start_pc,
                                    end_pc,
                                    end_pc,
-                                   RegisterClass(U8S_java_SL_lang_SL_CloneNotSupportedException,
-                                                 strlen(U8S_java_SL_lang_SL_CloneNotSupportedException)));
+                                   RegisterClass(this_control.java_SL_lang_SL_CloneNotSupportedException_literal));
 
     return;
 }
@@ -3344,9 +3414,10 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
 
     bool is_super = false; // set if super call
 
+    AstFieldAccess *field = method_call -> method -> FieldAccessCast();
+    AstSimpleName *simple_name = method_call -> method -> SimpleNameCast();
     if (msym -> ACC_STATIC())
     {
-        AstFieldAccess *field = method_call -> method -> FieldAccessCast();
         if (field)
         {
             if (field -> base -> MethodInvocationCast())
@@ -3362,7 +3433,6 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
     }
     else
     {
-        AstFieldAccess *field = method_call -> method -> FieldAccessCast();
         if (field)
         {
             AstFieldAccess *sub_field_access = field -> base -> FieldAccessCast();
@@ -3374,7 +3444,6 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
         }
         else if (method_call -> method -> SimpleNameCast())
         {
-            AstSimpleName *simple_name = method_call -> method -> SimpleNameCast();
             if (simple_name -> resolution_opt) // use resolution if available
                 EmitExpression(simple_name -> resolution_opt);
             else // must be field of current object, so load this
@@ -3393,34 +3462,27 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
                              ? OP_INVOKENONVIRTUAL
                              : msym -> containing_type -> ACC_INTERFACE() ? OP_INVOKEINTERFACE 
                                                                           : OP_INVOKEVIRTUAL);
-    CompleteCall(msym, stack_words);
+
+    CompleteCall(msym, stack_words, (field ? field -> base -> Type()
+                                           : (simple_name -> resolution_opt ? simple_name -> resolution_opt -> Type()
+                                                                            : unit_type)) -> fully_qualified_name);
 
     return;
 }
 
 
-void ByteCode::CompleteCall(MethodSymbol *msym, int stack_words)
+void ByteCode::CompleteCall(MethodSymbol *msym, int stack_words, Utf8LiteralValue *class_literal)
 {
     ChangeStack(-stack_words);
 
-    //
-    // need to get method index, the constant_pool index for a
-    // reference to this method (a Methodref);
-    //
-    if (msym -> constant_pool_index == 0 || msym -> constant_pool_class != class_id) // build method ref for method
-    {
-        msym -> constant_pool_index =
-                (msym -> containing_type -> ACC_INTERFACE()
-                       ? BuildInterfaceMethodref(RegisterClass(msym -> containing_type -> fully_qualified_name),
-                                                 BuildNameAndType(RegisterUtf8(msym -> ExternalIdentity() -> Utf8_literal),
-                                                                  RegisterUtf8(msym -> signature)))
-                       : BuildMethodref(RegisterClass(msym -> containing_type -> fully_qualified_name),
-                                        BuildNameAndType(RegisterUtf8(msym -> ExternalIdentity() -> Utf8_literal),
-                                                         RegisterUtf8(msym -> signature))));
-        msym -> constant_pool_class = class_id;
-    }
-    
-    PutU2(msym -> constant_pool_index);
+    PutU2(msym -> containing_type -> ACC_INTERFACE()
+                ? RegisterInterfaceMethodref((class_literal ? class_literal : msym -> containing_type -> fully_qualified_name),
+                                             msym -> ExternalIdentity() -> Utf8_literal,
+                                             msym -> signature)
+                : RegisterMethodref((class_literal ? class_literal : msym -> containing_type -> fully_qualified_name),
+                                    msym -> ExternalIdentity() -> Utf8_literal,
+                                    msym -> signature));
+
     if (msym -> containing_type -> ACC_INTERFACE())
     {
         PutU1(stack_words + 1);
@@ -3561,7 +3623,7 @@ void ByteCode::EmitPostUnaryExpressionField(int kind, AstPostUnaryExpression *ex
     {
         PutOp(OP_PUTFIELD);
         ChangeStack(this_control.IsDoubleWordType(expression_type) ? -3 : -2);
-        PutU2(GenerateFieldReference((VariableSymbol *) expression -> symbol));
+        PutU2(RegisterFieldref((VariableSymbol *) expression -> symbol));
     }
 
     return;
@@ -4028,7 +4090,7 @@ void ByteCode::EmitPreUnaryIncrementExpressionField(int kind, AstPreUnaryExpress
     {
         PutOp(OP_PUTFIELD);
         ChangeStack(this_control.IsDoubleWordType(expression_type) ? -3 : -2);
-        PutU2(GenerateFieldReference((VariableSymbol *) expression -> symbol));
+        PutU2(RegisterFieldref((VariableSymbol *) expression -> symbol));
     }
 
     return;
@@ -4060,21 +4122,9 @@ void ByteCode::EmitThisInvocation(AstThisCall *this_call)
     PutOp(OP_INVOKENONVIRTUAL);
     ChangeStack(-stack_words);
 
-    //
-    // need to get method index, the constant_pool index for a
-    // reference to this method (a Methodref);
-    // caller will supply methodref
-    //
-    MethodSymbol *msym = this_call -> symbol;
-    if (msym -> constant_pool_index == 0 || msym -> constant_pool_class != class_id) // build method ref for method
-    {
-        msym -> constant_pool_index = BuildMethodref(this_class,
-                                                     BuildNameAndType(RegisterUtf8(msym -> ExternalIdentity() -> Utf8_literal),
-                                                                      RegisterUtf8(msym -> signature)));
-        msym -> constant_pool_class = class_id;
-    }
-    
-    PutU2(msym -> constant_pool_index);
+    PutU2(RegisterMethodref(unit_type -> fully_qualified_name,
+                            this_call -> symbol -> ExternalIdentity() -> Utf8_literal,
+                            this_call -> symbol -> signature));
 
     return;
 }
@@ -4103,21 +4153,9 @@ void ByteCode::EmitSuperInvocation(AstSuperCall *super_call)
     PutOp(OP_INVOKENONVIRTUAL);
     ChangeStack(-stack_words);
 
-    //
-    // need to get method index, the constant_pool index for a
-    // reference to this method (a methodref);
-    // caller will supply methodref
-    //
-    MethodSymbol *msym = super_call -> symbol;
-    if (msym -> constant_pool_index == 0 || msym -> constant_pool_class != class_id) // build method ref for method
-    {
-        msym -> constant_pool_index = BuildMethodref(super_class,
-                                                     BuildNameAndType(RegisterUtf8(msym -> ExternalIdentity() -> Utf8_literal),
-                                                                      RegisterUtf8(msym -> signature)));
-        msym -> constant_pool_class = class_id;
-    }
-    
-    PutU2(msym -> constant_pool_index);
+    PutU2(RegisterMethodref(unit_type -> super -> fully_qualified_name,
+                            super_call -> symbol -> ExternalIdentity() -> Utf8_literal,
+                            super_call -> symbol -> signature));
 
     return;
 }
@@ -4163,7 +4201,7 @@ void ByteCode::EmitCallStringToString()
 void ByteCode::EmitStringBuffer()
 {
     PutOp(OP_NEW);
-    PutU2(RegisterClass(U8S_java_SL_lang_SL_StringBuffer, strlen(U8S_java_SL_lang_SL_StringBuffer)));
+    PutU2(RegisterClass(this_control.java_SL_lang_SL_StringBuffer_literal));
     PutOp(OP_DUP);
     PutOp(OP_INVOKENONVIRTUAL);
     PutU2(RegisterMethodStringbufferInit());
@@ -4211,15 +4249,17 @@ void ByteCode::AppendString(AstExpression *p)
     TypeSymbol *type = p -> Type();
     if (type == this_control.null_type)
     {
-        if (NameStringNull() <= 255)
+        u2 null_string_index = RegisterString(this_control.null_literal);
+
+        if (null_string_index <= 255)
         {
             PutOp(OP_LDC);
-            PutU1((u1) NameStringNull());
+            PutU1((u1) null_string_index);
         }
         else
         {
             PutOp(OP_LDC_W);
-            PutU2(NameStringNull());
+            PutU2(null_string_index);
         }
         type = this_control.String();
     }
@@ -4286,7 +4326,16 @@ static void op_trap()
 ByteCode::ByteCode(TypeSymbol *unit_type) : ClassFile(unit_type),
                                             this_semantic(*unit_type -> semantic_environment -> sem),
                                             this_control(unit_type -> semantic_environment -> sem -> control),
-                                            name_string_null(0),
+                                            double_constant_pool_index(NULL),
+                                            float_constant_pool_index(NULL),
+                                            integer_constant_pool_index(NULL),
+                                            long_constant_pool_index(NULL),
+                                            string_constant_pool_index(NULL),
+                                            utf8_constant_pool_index(NULL),
+                                            class_constant_pool_index(NULL),
+                                            fieldref_constant_pool_index(NULL),
+                                            methodref_constant_pool_index(NULL),
+                                            name_and_type_constant_pool_index(NULL),
                                             method_clone_index(0),
                                             method_clone_getmessage_index(0),
                                             method_clone_init_index(0),
@@ -4472,39 +4521,32 @@ int ByteCode::GetConstant(LiteralValue *litp, TypeSymbol *type)
     if (type == this_control.String())
     {
         Utf8LiteralValue *vp = (Utf8LiteralValue *) litp;
-        lit_index = (vp -> constant_pool_index_String != 0 && vp -> constant_pool_class == class_id
-                                                       ? vp -> constant_pool_index_String
-                                                       : RegisterString(vp));
+        lit_index = RegisterString(vp);
     }
     else
     {
-        if (litp -> constant_pool_index != 0 && litp -> constant_pool_class == class_id)
-            lit_index = litp -> constant_pool_index;
-        else // load literal using literal value
+        if (this_control.IsSimpleIntegerValueType(type) || type == this_control.boolean_type)
         {
-            if (this_control.IsSimpleIntegerValueType(type) || type == this_control.boolean_type)
-            {
-                IntLiteralValue *vp = (IntLiteralValue *) litp;
-                lit_index = RegisterInteger(vp);
-            }
-            else if (type == this_control.float_type)
-            {
-                FloatLiteralValue *vp = (FloatLiteralValue *) litp;
-                IEEEfloat val = vp -> value;
-                lit_index = RegisterFloat(vp);
-            }
-            else if (type == this_control.long_type)
-            {
-                LongLiteralValue *vp = (LongLiteralValue *) litp;
-                lit_index = RegisterLong(vp);
-            }
-            else if (type == this_control.double_type)
-            {
-                DoubleLiteralValue *vp = (DoubleLiteralValue *) litp;
-                lit_index = RegisterDouble(vp);
-            }
-            else assert(false && "unexpected GetConstant kind");
+            IntLiteralValue *vp = (IntLiteralValue *) litp;
+            lit_index = RegisterInteger(vp);
         }
+        else if (type == this_control.float_type)
+        {
+            FloatLiteralValue *vp = (FloatLiteralValue *) litp;
+            IEEEfloat val = vp -> value;
+            lit_index = RegisterFloat(vp);
+        }
+        else if (type == this_control.long_type)
+        {
+            LongLiteralValue *vp = (LongLiteralValue *) litp;
+            lit_index = RegisterLong(vp);
+        }
+        else if (type == this_control.double_type)
+        {
+            DoubleLiteralValue *vp = (DoubleLiteralValue *) litp;
+            lit_index = RegisterDouble(vp);
+        }
+        else assert(false && "unexpected GetConstant kind");
     }
 
     return lit_index;
@@ -4516,17 +4558,15 @@ int ByteCode::GetConstant(LiteralValue *litp, TypeSymbol *type)
 // if one has not yet been generated.
 //
 //
-int ByteCode::LoadLiteral(LiteralValue* litp, TypeSymbol *type) 
+int ByteCode::LoadLiteral(LiteralValue *litp, TypeSymbol *type) 
 {
-    int lit_index = (litp -> constant_pool_index > 0 && litp -> constant_pool_class == class_id
-                                                      ? litp -> constant_pool_index
-                                                      : 0);
     if (litp == this_control.NullValue())
     {
         PutOp(OP_ACONST_NULL);
         return 1;
     }
 
+    int lit_index = 0;
     if (type == this_control.String()) // register index as string if this has not yet been done
     {
         lit_index = RegisterString((Utf8LiteralValue *) litp);
@@ -4818,7 +4858,7 @@ int ByteCode::LoadSimple(int kind, AstExpression *expr)
                  ChangeStack(GetTypeWords(expression_type) - 1);
              }
 
-             PutU2(GenerateFieldReference(sym));
+             PutU2(RegisterFieldref(sym));
              break;
         default:
              assert(false && "LoadSimple bad kind");
@@ -4866,7 +4906,7 @@ void ByteCode::LoadReference(AstExpression *expression)
             ChangeStack(0);
         }
 
-        PutU2(GenerateFieldReference(sym));
+        PutU2(RegisterFieldref(sym));
     }
     else if (expression -> ArrayAccessCast()) // nested array reference
     {
@@ -4942,7 +4982,7 @@ void ByteCode::StoreField(AstExpression *expression)
         ChangeStack(this_control.IsDoubleWordType(expression_type) ? -3 : -2);
     }
 
-    PutU2(GenerateFieldReference(sym));
+    PutU2(RegisterFieldref(sym));
 
     return;
 }
@@ -5051,28 +5091,6 @@ void ByteCode::StoreLocal(int varno, TypeSymbol *type)
 }
 
 
-//
-// generate a field reg from symbol and class literal
-// build field ref for field
-// the field ref requires Utf8 entries for the containing
-// class, the field name and the field signature, the latter
-// two expressed as a NameAndTypeEntry
-//
-int ByteCode::GenerateFieldReference(VariableSymbol *sym)
-{
-    if (sym -> constant_pool_index == 0 || sym -> constant_pool_class != class_id)
-    {
-        TypeSymbol *owner = (TypeSymbol *) sym -> owner;
-        sym -> constant_pool_index = BuildFieldref(RegisterClass(owner -> fully_qualified_name),
-                                                   BuildNameAndType(RegisterUtf8(sym -> ExternalIdentity()-> Utf8_literal),
-                                                                    RegisterUtf8(sym -> Type() -> signature)));
-        sym -> constant_pool_class = class_id;
-    }
-
-    return sym -> constant_pool_index;
-}
-
-
 void ByteCode::StoreSimple(int kind, AstExpression *p)
 {
     VariableSymbol *sym = (VariableSymbol *) p -> symbol;
@@ -5096,7 +5114,7 @@ void ByteCode::StoreSimple(int kind, AstExpression *p)
                  ChangeStack(this_control.IsDoubleWordType(expression_type) ? -3 : -2);
              }
 
-             PutU2(GenerateFieldReference(sym));
+             PutU2(RegisterFieldref(sym));
              break;
         default:
             assert(false && "StoreSimple bad kind");
@@ -5112,27 +5130,15 @@ void ByteCode::StoreSimple(int kind, AstExpression *p)
 //
 void ByteCode::FinishCode(TypeSymbol *type)
 {
-    char *file_name = this_semantic.lex_stream -> FileName();
-
-    int i;
-    for (i = this_semantic.lex_stream -> FileNameLength() - 1; i >= 0; i--)
-    {
-        if (file_name[i] == U_SLASH)
-            break;
-    }
-
-    int file_name_start = i + 1,
-        file_name_length = this_semantic.lex_stream -> FileNameLength() - file_name_start;
-
-    attributes.Next() = new SourceFile_attribute(RegisterUtf8(U8S_Sourcefile, U8S_Sourcefile_length),
-                                                 BuildUtf8(file_name + file_name_start, file_name_length));
+    attributes.Next() = new SourceFile_attribute(RegisterUtf8(this_control.Sourcefile_literal),
+                                                 RegisterUtf8(type -> file_symbol -> FileNameLiteral()));
 
     if (type == NULL)
         return; // return if interface type
 
     if (type -> IsLocal() || type -> IsNested() || type -> NumNestedTypes() > 0) // here to generate InnerClasses attribute
     {
-        inner_classes_attribute = new InnerClasses_attribute(RegisterUtf8(U8S_InnerClasses, U8S_InnerClasses_length));
+        inner_classes_attribute = new InnerClasses_attribute(RegisterUtf8(this_control.InnerClasses_literal));
 
         //
         // need to build chain from this type to its owner all the way to the containing type
@@ -5412,8 +5418,8 @@ void ByteCode::ChangeStack(int i)
     if (stack_depth < 0)
         stack_depth = 0;
 
-    if (i > 0 && stack_depth > code_attribute -> max_stack)
-        code_attribute -> max_stack = stack_depth;
+    if (i > 0 && stack_depth > max_stack)
+        max_stack = stack_depth;
 
 #ifdef TRACE_STACK_CHANGE
     Coutput << "stack change: pc "
@@ -5423,7 +5429,7 @@ void ByteCode::ChangeStack(int i)
             << "  stack_depth "
             << stack_depth
             << "  max_stack: "
-            << code_attribute -> max_stack
+            << max_stack
             << "\n";
 #endif
 

@@ -61,7 +61,7 @@ Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
                                                                  input_files_processed(0)
 #endif
 {
-    ProcessGlobalNameSymbols();
+    ProcessGlobals();
 
     ProcessUnnamedPackage();
 
@@ -270,7 +270,7 @@ Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
         // If more messages were added to system_semantic, print them... 
         //
         system_semantic -> PrintMessages();
-        if (system_semantic -> return_code > 0)
+        if (system_semantic -> return_code > 0 || bad_input_filenames.Length() > 0 || unreadable_input_filenames.Length() > 0)
             return_code = 1;
 
         //
@@ -370,7 +370,7 @@ Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
                 // If any system error or warning was detected, print it...
                 //
                 system_semantic -> PrintMessages();
-                if (system_semantic -> return_code > 0)
+                if (system_semantic -> return_code > 0 || bad_input_filenames.Length() > 0 || unreadable_input_filenames.Length() > 0)
                     return_code = 1;
             }
         }
@@ -1200,32 +1200,49 @@ void Control::ProcessBodies(TypeSymbol *type)
                 }
             }
 
-            for (int k = 0; k < types -> Length(); k++)
+	    //
+	    // If we are supposed to generate code, do so now !!!
+	    //
+            if (option.bytecode)
             {
-                TypeSymbol *type = (*types)[k];
-
-                if (option.bytecode)
+                for (int k = 0; k < types -> Length(); k++)
                 {
+                    TypeSymbol *type = (*types)[k];
+
+                    type -> file_symbol -> SetFileNameLiteral((Control *) this); // make sure the literal is available for bytecode
+
                     ByteCode *code = new ByteCode(type);
                     code -> GenerateCode();
 
                     delete code;
                 }
+            }
 
-                delete type -> semantic_environment;
-                type -> semantic_environment = NULL;
-
-                if (type -> ACC_INTERFACE())
+            //
+            // If no error was detected while generating code, then 
+            // start cleaning up.
+            //
+            if (sem -> NumErrors() == 0)
+            {
+                for (int k = 0; k < types -> Length(); k++)
                 {
-                    AstInterfaceDeclaration *interface_declaration = (AstInterfaceDeclaration *) type -> declaration;
-                    interface_declaration -> semantic_environment = NULL;
-                }
-                else
-                {
-                    AstClassDeclaration *class_declaration = type -> declaration -> ClassDeclarationCast();
+                    TypeSymbol *type = (*types)[k];
 
-                    if (class_declaration)
-                        class_declaration -> semantic_environment = NULL;
+                    delete type -> semantic_environment;
+                    type -> semantic_environment = NULL;
+
+                    if (type -> ACC_INTERFACE())
+                    {
+                        AstInterfaceDeclaration *interface_declaration = (AstInterfaceDeclaration *) type -> declaration;
+                        interface_declaration -> semantic_environment = NULL;
+                    }
+                    else
+                    {
+                        AstClassDeclaration *class_declaration = type -> declaration -> ClassDeclarationCast();
+
+                        if (class_declaration)
+                            class_declaration -> semantic_environment = NULL;
+                    }
                 }
             }
 

@@ -2998,7 +2998,7 @@ void Semantic::AddDefaultConstructor(TypeSymbol *type)
         {
             super_call                            = compilation_unit -> ast_pool -> GenSuperCall();
             super_call -> base_opt                = NULL;
-            super_call -> dot_token_opt           = left_loc;
+            super_call -> dot_token_opt           = 0;
             super_call -> super_token             = left_loc;
             super_call -> left_parenthesis_token  = left_loc;
             super_call -> right_parenthesis_token = right_loc;
@@ -4346,6 +4346,16 @@ bool Semantic::NeedsInitializationMethod(AstFieldDeclaration *field_declaration)
         {
             AstExpression *init = variable_declarator -> variable_initializer_opt -> ExpressionCast();
             if (! (init && init -> IsConstant()))
+                return true;
+
+            //
+            // TODO: there seems to be a contradiction between the language spec and the VM spec.
+            // The language spec seems to require that a variable be initialized (in the class file)
+            // with a "ConstantValue" only if it is static. The VM spec, on the other hand, states
+            // that a static need not be final to be initialized with a ConstantValue.
+            // As of now, we are following the language spec - ergo, this extra test.
+            //
+            if (variable_declarator -> symbol && (! variable_declarator -> symbol -> ACC_FINAL()))
                 return true;
         }
     }

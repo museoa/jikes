@@ -901,8 +901,8 @@ IntLiteralValue *IntLiteralTable::FindOrInsert(int value)
     }
 
     lit = new IntLiteralValue();
+    lit -> Initialize(value, symbol_pool.Length());
     symbol_pool.Next() = lit;
-    lit -> Initialize(value);
 
     lit -> next = base[k];
     base[k] = lit;
@@ -1094,8 +1094,8 @@ LongLiteralValue *LongLiteralTable::FindOrInsert(LongInt value)
     }
 
     lit = new LongLiteralValue();
+    lit -> Initialize(value, symbol_pool.Length());
     symbol_pool.Next() = lit;
-    lit -> Initialize(value);
 
     lit -> next = base[k];
     base[k] = lit;
@@ -1161,8 +1161,8 @@ FloatLiteralValue *FloatLiteralTable::FindOrInsert(IEEEfloat value)
     }
 
     lit = new FloatLiteralValue();
+    lit -> Initialize(value, symbol_pool.Length());
     symbol_pool.Next() = lit;
-    lit -> Initialize(value);
 
     lit -> next = base[k];
     base[k] = lit;
@@ -1228,8 +1228,8 @@ DoubleLiteralValue *DoubleLiteralTable::FindOrInsert(IEEEdouble value)
     }
 
     lit = new DoubleLiteralValue();
+    lit -> Initialize(value, symbol_pool.Length());
     symbol_pool.Next() = lit;
-    lit -> Initialize(value);
 
     lit -> next = base[k];
     base[k] = lit;
@@ -1429,8 +1429,8 @@ Utf8LiteralValue *Utf8LiteralTable::FindOrInsert(char *str, int len)
     }
 
     lit = new Utf8LiteralValue();
+    lit -> Initialize(str, len, hash_address, symbol_pool.Length());
     symbol_pool.Next() = lit;
-    lit -> Initialize(str, len, hash_address);
 
     lit -> next = base[k];
     base[k] = lit;

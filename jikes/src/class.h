@@ -591,7 +591,7 @@ class Code_attribute : public attribute_info
     // The attribut_name_index is inherited from attribute_info
     //
     u4 attribute_length;
-//    u2 max_stack;
+    u2 max_stack;
     u2 max_locals;
 
     //
@@ -662,9 +662,8 @@ public:
         return attribute_length;
     }
 
-    u2 max_stack; // ???
     u2 MaxStack() { return max_stack; }
-    void ResetMaxStack(u2 val) { max_stack = val; }
+    void SetMaxStack(u2 val) { max_stack = val; }
 
     u2 MaxLocals() { return max_locals; }
     void ResetMaxLocals(u2 val) { max_locals = val; }
@@ -1417,7 +1416,7 @@ public:
 class ClassFile : public AccessFlags
 {
 public:
-    enum 
+    enum ConstantKind
     {
         CONSTANT_Class              = 7,
         CONSTANT_Fieldref           = 9,
@@ -1472,7 +1471,8 @@ public:
 
     void Write()
     {
-        Control &control = unit_type -> semantic_environment -> sem -> control;
+        Semantic *sem = unit_type -> semantic_environment -> sem;
+        Control &control = sem -> control;
 
         if (! control.option.nowrite)
         {
@@ -1538,10 +1538,11 @@ public:
                 for (int i = 0; i < length; i++)
                     name[i] = class_file_name[i];
                 name[length] = U_NULL;
-                control.system_semantic -> ReportSemError(SemanticError::CANNOT_WRITE_FILE,
-                                                          0,
-                                                          0,
-                                                          name);
+
+                sem -> ReportSemError(SemanticError::CANNOT_WRITE_FILE,
+                                     unit_type -> declaration -> LeftToken(),
+                                     unit_type -> declaration -> RightToken(),
+                                     name);
                 delete [] name;
             }
         }

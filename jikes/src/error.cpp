@@ -315,6 +315,10 @@ void SemanticError::StaticInitializer()
     print_message[UNREADABLE_INPUT_FILE] = PrintUNREADABLE_INPUT_FILE;
     print_message[CANNOT_REOPEN_FILE] = PrintCANNOT_REOPEN_FILE;
     print_message[CANNOT_WRITE_FILE] = PrintCANNOT_WRITE_FILE;
+    print_message[CONSTANT_POOL_OVERFLOW] = PrintCONSTANT_POOL_OVERFLOW;
+    print_message[LOCAL_VARIABLES_OVERFLOW] = PrintLOCAL_VARIABLES_OVERFLOW;
+    print_message[STACK_OVERFLOW] = PrintSTACK_OVERFLOW;
+    print_message[CODE_OVERFLOW] = PrintCODE_OVERFLOW;
     print_message[CANNOT_COMPUTE_COLUMNS] = PrintCANNOT_COMPUTE_COLUMNS;
     print_message[EMPTY_DECLARATION] = PrintEMPTY_DECLARATION;
     print_message[REDUNDANT_ABSTRACT] = PrintREDUNDANT_ABSTRACT;
@@ -1132,6 +1136,72 @@ void SemanticError::PrintCANNOT_WRITE_FILE(ErrorInfo &err, LexStream *lex_stream
     Coutput << "Unable to write file \""
             << err.insert1
             << "\".";
+
+    return;
+}
+
+
+void SemanticError::PrintCONSTANT_POOL_OVERFLOW(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    Coutput << "Processing of this type, \"";
+    if (NotDot(err.insert1))
+    {
+        Coutput << err.insert1
+                << "/";
+    }
+    Coutput << err.insert2
+            << "\", produced a constant pool that exceeded the limit of 65536 elements.";
+
+    return;
+}
+
+
+void SemanticError::PrintLOCAL_VARIABLES_OVERFLOW(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    Coutput << "Method \""
+            << err.insert1
+            << "\" in type \"";
+    if (NotDot(err.insert2))
+    {
+        Coutput << err.insert2
+                << "/";
+    }
+    Coutput << err.insert3
+            << "\" contains more than 65535 local variables.";
+
+    return;
+}
+
+
+void SemanticError::PrintSTACK_OVERFLOW(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    Coutput << "Processing of the method \""
+            << err.insert1
+            << "\" in type \"";
+    if (NotDot(err.insert2))
+    {
+        Coutput << err.insert2
+                << "/";
+    }
+    Coutput << err.insert3
+            << "\" requires a stack that exceeds the maximum limit of 65535.";
+
+    return;
+}
+
+
+void SemanticError::PrintCODE_OVERFLOW(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    Coutput << "Processing of the method \""
+            << err.insert1
+            << "\" in type \"";
+    if (NotDot(err.insert2))
+    {
+        Coutput << err.insert2
+                << "/";
+    }
+    Coutput << err.insert3
+            << "\" produced a code attribute that exceeds the code limit of 65534 elements.";
 
     return;
 }

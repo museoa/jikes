@@ -847,7 +847,7 @@ void FileSymbol::SetFileName()
     bool dot_directory = (strcmp(directory_name, StringConstant::U8S__DO) == 0);
     this -> file_name_length = (dot_directory ? 0 : directory_name_length) +
                                this -> Utf8NameLength()   +
-                               (path_symbol -> IsZip() // For zip files we need "()" for regular directory, we need 1 '/'
+                               (path_symbol -> IsZip() // For zip files, we need "()"; for regular directory, we need 1 '/'
                                              ? 2
                                              : (dot_directory || directory_name[directory_name_length - 1] == U_SLASH ? 0 : 1)) +
                                (kind == JAVA ? java_suffix_length : class_suffix_length);
@@ -869,6 +869,28 @@ void FileSymbol::SetFileName()
         strcat(file_name, StringConstant::U8S__RP);
 
     assert(strlen(this -> file_name) == this -> file_name_length);
+
+    return;
+}
+
+
+void FileSymbol::SetFileNameLiteral(Control *control)
+{
+    if (! file_name_literal)
+    {
+        char *file_name = FileName();
+
+        int i;
+        for (i = FileNameLength() - 1; i >= 0; i--)
+        {
+            if (file_name[i] == U_SLASH)
+                break;
+        }
+
+        int file_name_start = i + 1,
+            file_name_length = FileNameLength() - file_name_start;
+        file_name_literal = control -> Utf8_pool.FindOrInsert(file_name + file_name_start, file_name_length);
+    }
 
     return;
 }

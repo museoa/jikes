@@ -231,6 +231,51 @@ public:
     DoubleLiteralTable double_pool;
     Utf8LiteralTable   Utf8_pool;
 
+    Utf8LiteralValue *LP_C_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal,
+                     *LP_D_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal,
+                     *LP_F_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal,
+                     *LP_I_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal,
+                     *LP_J_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal,
+                     *LP_LB_C_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal,
+                     *LP_Ljava_SL_lang_SL_Object_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal,
+                     *LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal,
+                     *LP_Ljava_SL_lang_SL_String_SC_RP_V_literal,
+                     *LP_RP_Ljava_SL_lang_SL_Object_SC_literal,
+                     *LP_RP_Ljava_SL_lang_SL_String_SC_literal,
+                     *LP_RP_V_literal,
+                     *LP_Z_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal,
+                     *LT_init_GT_literal,
+                     *append_literal,
+                     *clone_literal,
+                     *getMessage_literal,
+                     *java_SL_lang_SL_InternalError_literal,
+                     *java_SL_lang_SL_Object_literal,
+                     *java_SL_lang_SL_StringBuffer_literal,
+                     *java_SL_lang_SL_Throwable_literal,
+                     *toString_literal,
+
+                     *java_SL_lang_SL_ClassNotFoundException_literal,
+                     *java_SL_lang_SL_Class_literal,
+                     *java_SL_lang_SL_CloneNotSupportedException_literal,
+                     *java_SL_lang_SL_NoClassDefFoundError_literal,
+
+                     *ConstantValue_literal,
+                     *Exceptions_literal,
+                     *InnerClasses_literal,
+                     *Synthetic_literal,
+                     *Deprecated_literal,
+                     *LineNumberTable_literal,
+                     *LocalVariableTable_literal,
+                     *Code_literal,
+                     *Sourcefile_literal,
+
+                     *LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_Class_SC_literal,
+                     *LT_clinit_GT_literal,
+                     *forName_literal,
+                     *null_literal,
+                     *this_literal;
+
+
     Control(ArgumentExpander &, Option &);
     ~Control();
 
@@ -351,7 +396,7 @@ private:
 
     static int ConvertUnicodeToUtf8(wchar_t *, char *);
 
-    void ProcessGlobalNameSymbols();
+    void ProcessGlobals();
     void ProcessUnnamedPackage();
     void ProcessPath();
     TypeSymbol *GetPrimitiveType(wchar_t *, char *);

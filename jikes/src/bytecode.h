@@ -31,19 +31,26 @@ public:
 
     LabelUse() : use_length(0), op_offset(0), use_offset(0) {}
 
-    LabelUse(int _length, int _op_offset, int _use) : 
-        use_length(_length), op_offset(_op_offset), use_offset(_use) {}
+    LabelUse(int _length, int _op_offset, int _use) : use_length(_length), op_offset(_op_offset), use_offset(_use) {}
 };
 
 
 class Label
 {
 public:
-     bool defined;    // boolean, set when value is known
-     int definition; // offset of definition point of label
-     Tuple<LabelUse> uses;
+    bool defined;    // boolean, set when value is known
+    int definition; // offset of definition point of label
+    Tuple<LabelUse> uses;
 
-     Label() : defined(false), definition(0) {}
+    Label() : defined(false), definition(0) {}
+};
+
+
+class TargetIndexPair
+{
+public:
+    u2 target,
+       index;
 };
 
 
@@ -62,6 +69,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         last_op_nop,          // set if last operation was NOP.
         this_block_depth,     // depth of current block
         stack_depth,          // current stack depth;
+        max_stack,
         max_block_depth,
         last_parameter_index; // set to local variable index of last parameter
 
@@ -80,20 +88,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
 
         stack_depth = 0;
 
-        return;
-    }
+        max_stack = 0;
 
-    //
-    // name_string_null is used to point to the string "null" in the constant
-    // pool, in case the null constant is appended to a string. Not that if
-    // the string does not yet exist in the pool, is it added.
-    //
-    u2 name_string_null;
-    u2 NameStringNull()
-    {
-        if (name_string_null == 0)
-            name_string_null = BuildString(RegisterUtf8(U8S_null, strlen(U8S_null)));
-        return name_string_null;
+        return;
     }
 
     Label *begin_labels,
@@ -298,101 +295,17 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         return LoadLiteral(p -> value, p -> Type());
     }
 
-    //
-    // These methods build entries in the constant pool.
-    //
-    u2 BuildDouble(IEEEdouble d)
-    {
-        int index = constant_pool.NextIndex();
-        constant_pool[index] = new CONSTANT_Double_info(CONSTANT_Double, d.HighWord(), d.LowWord());
-        constant_pool.Next() = 0; // extra slop for double-word entry
+    u2 *double_constant_pool_index,
+       *float_constant_pool_index,
+       *integer_constant_pool_index,
+       *long_constant_pool_index,
+       *string_constant_pool_index,
+       *utf8_constant_pool_index,
+       *class_constant_pool_index;
 
-        return index;
-    }
-
-
-    u2 BuildFieldref(u2 cl_index, u2 nt_index)
-    {
-        int index = constant_pool.NextIndex();
-        constant_pool[index] = new CONSTANT_Fieldref_info(CONSTANT_Fieldref, cl_index, nt_index);
-
-        return index;
-    }
-
-
-    u2 BuildFloat(IEEEfloat val)
-    {
-        int index = constant_pool.NextIndex();
-        constant_pool[index] = new CONSTANT_Float_info(CONSTANT_Float, val.Word());
-
-        return index;
-    }
-
-
-    u2 BuildInteger(int val)
-    {
-        int index = constant_pool.NextIndex();
-        u4 bytes = (((unsigned) (val >> 24)) << 24) | ((val >> 16 & 0xff) << 16) | ((val >> 8 & 0xff) ) << 8 | (val & 0xff);
-        constant_pool[index] = new CONSTANT_Integer_info(CONSTANT_Integer, bytes);
-
-        return index;
-    }
-
-
-    u2 BuildInterfaceMethodref(u2 cl_index, u2 nt_index)
-    {
-        int index = constant_pool.NextIndex();
-        constant_pool[index] = new CONSTANT_InterfaceMethodref_info(CONSTANT_InterfaceMethodref, cl_index, nt_index);
-
-        return index;
-    }
-
-
-    u2  BuildLong(LongInt  val)
-    {
-        int index = constant_pool.NextIndex();
-        constant_pool[index] = new CONSTANT_Long_info(CONSTANT_Long, val.HighWord(), val.LowWord());
-        constant_pool.Next() = 0; // extra slop for double-word entry
-
-        return index;
-    }
-
-
-    u2 BuildMethodref(u2 cl_index, u2 nt_index)
-    {
-        int index = constant_pool.NextIndex();
-        constant_pool[index] = new CONSTANT_Methodref_info(CONSTANT_Methodref, cl_index, nt_index);
-
-        return index;
-    }
-
-
-    u2 BuildNameAndType(u2 name, u2 type)
-    {
-        int index = constant_pool.NextIndex();
-        constant_pool[index] = new CONSTANT_NameAndType_info(CONSTANT_NameAndType, name, type);
-
-        return index;
-    }
-
-
-    u2 BuildString(u2 si)
-    {
-        int index = constant_pool.NextIndex();
-        constant_pool[index] = new CONSTANT_String_info(CONSTANT_String, si);
-
-        return index;
-    }
-
-
-    u2 BuildUtf8(char *s, int len)
-    {
-        int index = constant_pool.NextIndex();
-        constant_pool[index] = new CONSTANT_Utf8_info(CONSTANT_Utf8, s, len);
-
-        return index;
-    }
-
+    Tuple<TargetIndexPair> **fieldref_constant_pool_index,
+                           **methodref_constant_pool_index,
+                           **name_and_type_constant_pool_index;
 
     //
     // unlike most methods, which always build a new entry, the
@@ -418,11 +331,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         if (method_clone_index == 0)
         {
-            method_clone_index =
-                BuildMethodref(RegisterClass(U8S_java_SL_lang_SL_Object, U8S_java_SL_lang_SL_Object_length),
-                               BuildNameAndType(RegisterUtf8(U8S_clone, U8S_clone_length),
-                                                RegisterUtf8(U8S_LP_RP_Ljava_SL_lang_SL_Object_SC,
-                                                             U8S_LP_RP_Ljava_SL_lang_SL_Object_SC_length)));
+            method_clone_index = RegisterMethodref(this_control.java_SL_lang_SL_Object_literal,
+                                                   this_control.clone_literal,
+                                                   this_control.LP_RP_Ljava_SL_lang_SL_Object_SC_literal);
         }
 
         return method_clone_index;
@@ -433,11 +344,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         if (method_clone_getmessage_index == 0)
         {
-            method_clone_getmessage_index =
-                BuildMethodref(RegisterClass(U8S_java_SL_lang_SL_Throwable, U8S_java_SL_lang_SL_Throwable_length),
-                               BuildNameAndType(RegisterUtf8(U8S_getMessage, U8S_getMessage_length),
-                                                RegisterUtf8(U8S_LP_RP_Ljava_SL_lang_SL_String_SC,
-                                                             U8S_LP_RP_Ljava_SL_lang_SL_String_SC_length)));
+            method_clone_getmessage_index = RegisterMethodref(this_control.java_SL_lang_SL_Throwable_literal,
+                                                              this_control.getMessage_literal,
+                                                              this_control.LP_RP_Ljava_SL_lang_SL_String_SC_literal);
         }
 
         return method_clone_getmessage_index;
@@ -448,11 +357,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         if (method_clone_init_index == 0)
         {
-            method_clone_init_index =
-                BuildMethodref(RegisterClass(U8S_java_SL_lang_SL_InternalError, U8S_java_SL_lang_SL_InternalError_length),
-                               BuildNameAndType(RegisterUtf8(U8S_LT_init_GT, U8S_LT_init_GT_length),
-                                                RegisterUtf8(U8S_LP_Ljava_SL_lang_SL_String_SC_RP_V,
-                                                             U8S_LP_Ljava_SL_lang_SL_String_SC_RP_V_length)));
+            method_clone_init_index = RegisterMethodref(this_control.java_SL_lang_SL_InternalError_literal,
+                                                        this_control.LT_init_GT_literal,
+                                                        this_control.LP_Ljava_SL_lang_SL_String_SC_RP_V_literal);
         }
 
         return method_clone_init_index;
@@ -463,11 +370,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         if (method_stringbuffer_tostring_index == 0)
         {
-            method_stringbuffer_tostring_index =
-                BuildMethodref(RegisterClass(U8S_java_SL_lang_SL_StringBuffer, U8S_java_SL_lang_SL_StringBuffer_length),
-                               BuildNameAndType(RegisterUtf8(U8S_toString, U8S_toString_length),
-                                                RegisterUtf8(U8S_LP_RP_Ljava_SL_lang_SL_String_SC,
-                                                             U8S_LP_RP_Ljava_SL_lang_SL_String_SC_length)));
+            method_stringbuffer_tostring_index = RegisterMethodref(this_control.java_SL_lang_SL_StringBuffer_literal,
+                                                                   this_control.toString_literal,
+                                                                   this_control.LP_RP_Ljava_SL_lang_SL_String_SC_literal);
         }
 
         return method_stringbuffer_tostring_index;
@@ -478,10 +383,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         if (method_stringbuffer_init_index == 0)
         {
-            method_stringbuffer_init_index =
-                BuildMethodref(RegisterClass(U8S_java_SL_lang_SL_StringBuffer, U8S_java_SL_lang_SL_StringBuffer_length),
-                               BuildNameAndType(RegisterUtf8(U8S_LT_init_GT, U8S_LT_init_GT_length),
-                                                RegisterUtf8(U8S_LP_RP_V, U8S_LP_RP_V_length)));
+            method_stringbuffer_init_index = RegisterMethodref(this_control.java_SL_lang_SL_StringBuffer_literal,
+                                                               this_control.LT_init_GT_literal,
+                                                               this_control.LP_RP_V_literal);
         }
 
         return method_stringbuffer_init_index;
@@ -493,10 +397,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         if (method_stringbuffer_appendchararray_index == 0)
         {
             method_stringbuffer_appendchararray_index =
-                BuildMethodref(RegisterClass(U8S_java_SL_lang_SL_StringBuffer, U8S_java_SL_lang_SL_StringBuffer_length),
-                               BuildNameAndType(RegisterUtf8(U8S_append, U8S_append_length),
-                                                RegisterUtf8(U8S_LP_LB_C_RP_Ljava_SL_lang_SL_StringBuffer_SC,
-                                                             U8S_LP_LB_C_RP_Ljava_SL_lang_SL_StringBuffer_SC_length)));
+                   RegisterMethodref(this_control.java_SL_lang_SL_StringBuffer_literal,
+                                     this_control.append_literal,
+                                     this_control.LP_LB_C_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal);
         }
 
         return method_stringbuffer_appendchararray_index;
@@ -507,11 +410,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         if (method_stringbuffer_appendchar_index == 0)
         {
-            method_stringbuffer_appendchar_index =
-                BuildMethodref(RegisterClass(U8S_java_SL_lang_SL_StringBuffer, U8S_java_SL_lang_SL_StringBuffer_length),
-                               BuildNameAndType(RegisterUtf8(U8S_append, U8S_append_length),
-                                                RegisterUtf8(U8S_LP_C_RP_Ljava_SL_lang_SL_StringBuffer_SC,
-                                                             U8S_LP_C_RP_Ljava_SL_lang_SL_StringBuffer_SC_length)));
+            method_stringbuffer_appendchar_index = RegisterMethodref(this_control.java_SL_lang_SL_StringBuffer_literal,
+                                                                     this_control.append_literal,
+                                                                     this_control.LP_C_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal);
         }
 
         return method_stringbuffer_appendchar_index;
@@ -523,10 +424,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         if (method_stringbuffer_appendboolean_index == 0)
         {
             method_stringbuffer_appendboolean_index =
-                BuildMethodref(RegisterClass(U8S_java_SL_lang_SL_StringBuffer, U8S_java_SL_lang_SL_StringBuffer_length),
-                               BuildNameAndType(RegisterUtf8(U8S_append, U8S_append_length),
-                                                RegisterUtf8(U8S_LP_Z_RP_Ljava_SL_lang_SL_StringBuffer_SC,
-                                                             U8S_LP_Z_RP_Ljava_SL_lang_SL_StringBuffer_SC_length)));
+                   RegisterMethodref(this_control.java_SL_lang_SL_StringBuffer_literal,
+                                     this_control.append_literal,
+                                     this_control.LP_Z_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal);
         }
 
         return method_stringbuffer_appendboolean_index;
@@ -537,11 +437,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         if (method_stringbuffer_appendint_index == 0)
         {
-            method_stringbuffer_appendint_index =
-                BuildMethodref(RegisterClass(U8S_java_SL_lang_SL_StringBuffer, U8S_java_SL_lang_SL_StringBuffer_length),
-                               BuildNameAndType(RegisterUtf8(U8S_append, U8S_append_length),
-                                                RegisterUtf8(U8S_LP_I_RP_Ljava_SL_lang_SL_StringBuffer_SC,
-                                                             U8S_LP_I_RP_Ljava_SL_lang_SL_StringBuffer_SC_length)));
+            method_stringbuffer_appendint_index = RegisterMethodref(this_control.java_SL_lang_SL_StringBuffer_literal,
+                                                                    this_control.append_literal,
+                                                                    this_control.LP_I_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal);
         }
 
         return method_stringbuffer_appendint_index;
@@ -552,11 +450,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         if (method_stringbuffer_appendlong_index == 0)
         {
-            method_stringbuffer_appendlong_index =
-                BuildMethodref(RegisterClass(U8S_java_SL_lang_SL_StringBuffer, U8S_java_SL_lang_SL_StringBuffer_length),
-                               BuildNameAndType(RegisterUtf8(U8S_append, U8S_append_length),
-                                                RegisterUtf8(U8S_LP_J_RP_Ljava_SL_lang_SL_StringBuffer_SC,
-                                                             U8S_LP_J_RP_Ljava_SL_lang_SL_StringBuffer_SC_length)));
+            method_stringbuffer_appendlong_index = RegisterMethodref(this_control.java_SL_lang_SL_StringBuffer_literal,
+                                                                     this_control.append_literal,
+                                                                     this_control.LP_J_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal);
         }
 
         return method_stringbuffer_appendlong_index;
@@ -567,11 +463,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         if (method_stringbuffer_appendfloat_index == 0)
         {
-            method_stringbuffer_appendfloat_index =
-                BuildMethodref(RegisterClass(U8S_java_SL_lang_SL_StringBuffer, U8S_java_SL_lang_SL_StringBuffer_length),
-                               BuildNameAndType(RegisterUtf8(U8S_append, U8S_append_length),
-                                                RegisterUtf8(U8S_LP_F_RP_Ljava_SL_lang_SL_StringBuffer_SC,
-                                                             U8S_LP_F_RP_Ljava_SL_lang_SL_StringBuffer_SC_length)));
+            method_stringbuffer_appendfloat_index = RegisterMethodref(this_control.java_SL_lang_SL_StringBuffer_literal,
+                                                                      this_control.append_literal,
+                                                                      this_control.LP_F_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal);
         }
 
         return method_stringbuffer_appendfloat_index;
@@ -582,11 +476,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         if (method_stringbuffer_appenddouble_index == 0)
         {
-            method_stringbuffer_appenddouble_index =
-                BuildMethodref(RegisterClass(U8S_java_SL_lang_SL_StringBuffer, U8S_java_SL_lang_SL_StringBuffer_length),
-                               BuildNameAndType(RegisterUtf8(U8S_append, U8S_append_length),
-                                                RegisterUtf8(U8S_LP_D_RP_Ljava_SL_lang_SL_StringBuffer_SC,
-                                                             U8S_LP_D_RP_Ljava_SL_lang_SL_StringBuffer_SC_length)));
+            method_stringbuffer_appenddouble_index = RegisterMethodref(this_control.java_SL_lang_SL_StringBuffer_literal,
+                                                                       this_control.append_literal,
+                                                                       this_control.LP_D_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal);
         }
 
         return method_stringbuffer_appenddouble_index;
@@ -598,10 +490,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         if (method_stringbuffer_appendstring_index == 0)
         {
             method_stringbuffer_appendstring_index =
-                BuildMethodref(RegisterClass(U8S_java_SL_lang_SL_StringBuffer, U8S_java_SL_lang_SL_StringBuffer_length),
-                               BuildNameAndType(RegisterUtf8(U8S_append, U8S_append_length),
-                                                RegisterUtf8(U8S_LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC,
-                                                             U8S_LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC_length)));
+                   RegisterMethodref(this_control.java_SL_lang_SL_StringBuffer_literal,
+                                     this_control.append_literal,
+                                     this_control.LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal);
         }
 
         return method_stringbuffer_appendstring_index;
@@ -613,13 +504,162 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         if (method_stringbuffer_appendobject_index == 0)
         {
             method_stringbuffer_appendobject_index =
-                BuildMethodref(RegisterClass(U8S_java_SL_lang_SL_StringBuffer, U8S_java_SL_lang_SL_StringBuffer_length),
-                               BuildNameAndType(RegisterUtf8(U8S_append, U8S_append_length),
-                                                RegisterUtf8(U8S_LP_Ljava_SL_lang_SL_Object_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC,
-                                                             U8S_LP_Ljava_SL_lang_SL_Object_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC_length)));
+                   RegisterMethodref(this_control.java_SL_lang_SL_StringBuffer_literal,
+                                     this_control.append_literal,
+                                     this_control.LP_Ljava_SL_lang_SL_Object_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal);
         }
 
         return method_stringbuffer_appendobject_index;
+    }
+
+
+    u2 RegisterNameAndType(Utf8LiteralValue *name, Utf8LiteralValue *type_name)
+    {
+        assert((name != NULL && type_name != NULL) && "null argument to RegisterNameAndType");
+
+#ifdef TEST
+        static 
+#endif
+        int length;
+        if (! name_and_type_constant_pool_index)
+        {
+            length = this_control.Utf8_pool.symbol_pool.Length();
+            name_and_type_constant_pool_index = (Tuple<TargetIndexPair> **)
+                                                memset(new Tuple<TargetIndexPair> *[length],
+                                                       0,
+                                                       length * sizeof(Tuple<TargetIndexPair> *));
+        }
+#ifdef TEST
+        else assert(length == this_control.Utf8_pool.symbol_pool.Length()); // nothing else was added to table
+#endif
+
+        if (! name_and_type_constant_pool_index[name -> index])
+            name_and_type_constant_pool_index[name -> index] = new Tuple<TargetIndexPair>;
+
+        u2 type_index = RegisterUtf8(type_name);
+        Tuple<TargetIndexPair> &list = *name_and_type_constant_pool_index[name -> index];
+        for (int i = 0; i < list.Length(); i++)
+        {
+            if (list[i].target == type_index)
+                return list[i].index;
+        }
+
+        int index = constant_pool.NextIndex();
+        constant_pool[index] = new CONSTANT_NameAndType_info(CONSTANT_NameAndType, RegisterUtf8(name), type_index);
+
+        int k = list.NextIndex();
+        list[k].target = type_index;
+        list[k].index = index;
+
+        return (u2) index;
+    }
+
+
+    u2 RegisterFieldref(VariableSymbol *variable_symbol)
+    {
+        assert(variable_symbol -> owner -> TypeCast());
+        Utf8LiteralValue *class_name = variable_symbol -> owner -> TypeCast() -> fully_qualified_name,
+                         *field_name = variable_symbol -> ExternalIdentity() -> Utf8_literal,
+                         *field_type_name = variable_symbol -> Type() -> signature;
+
+        assert((class_name != NULL && field_name != NULL && field_type_name != NULL) && "null argument to RegisterFieldref");
+
+#ifdef TEST
+        static 
+#endif
+        int length;
+        if (! fieldref_constant_pool_index)
+        {
+            length = this_control.Utf8_pool.symbol_pool.Length();
+            fieldref_constant_pool_index = (Tuple<TargetIndexPair> **)
+                                            memset(new Tuple<TargetIndexPair> *[length],
+                                                   0,
+                                                   length * sizeof(Tuple<TargetIndexPair> *));
+        }
+#ifdef TEST
+        else assert(length == this_control.Utf8_pool.symbol_pool.Length()); // nothing else was added to table
+#endif
+
+        if (! fieldref_constant_pool_index[class_name -> index])
+            fieldref_constant_pool_index[class_name -> index] = new Tuple<TargetIndexPair>;
+
+        u2 name_type_index = RegisterNameAndType(field_name, field_type_name);
+        Tuple<TargetIndexPair> &list = *fieldref_constant_pool_index[class_name -> index];
+        for (int i = 0; i < list.Length(); i++)
+        {
+            if (list[i].target == name_type_index)
+                return list[i].index;
+        }
+
+        int index = constant_pool.NextIndex();
+        constant_pool[index] = new CONSTANT_Fieldref_info(CONSTANT_Fieldref, RegisterClass(class_name), name_type_index);
+
+        int k = list.NextIndex();
+        list[k].target = name_type_index;
+        list[k].index = index;
+
+        return (u2) index;
+    }
+
+
+    u2 RegisterMethodref(ConstantKind kind,
+                         Utf8LiteralValue *class_name,
+                         Utf8LiteralValue *method_name,
+                         Utf8LiteralValue *method_type_name)
+    {
+        assert((class_name != NULL && method_name != NULL && method_type_name != NULL) && "null argument to RegisterMethodref");
+
+#ifdef TEST
+        static 
+#endif
+        int length;
+        if (! methodref_constant_pool_index)
+        {
+            length = this_control.Utf8_pool.symbol_pool.Length();
+            methodref_constant_pool_index = (Tuple<TargetIndexPair> **)
+                                            memset(new Tuple<TargetIndexPair> *[length],
+                                                   0,
+                                                   length * sizeof(Tuple<TargetIndexPair> *));
+        }
+#ifdef TEST
+        else assert(length == this_control.Utf8_pool.symbol_pool.Length()); // nothing else was added to table
+#endif
+
+        if (! methodref_constant_pool_index[class_name -> index])
+            methodref_constant_pool_index[class_name -> index] = new Tuple<TargetIndexPair>;
+
+        u2 name_type_index = RegisterNameAndType(method_name, method_type_name);
+        Tuple<TargetIndexPair> &list = *methodref_constant_pool_index[class_name -> index];
+        for (int i = 0; i < list.Length(); i++)
+        {
+            if (list[i].target == name_type_index)
+                return list[i].index;
+        }
+
+        int index = constant_pool.NextIndex();
+        constant_pool[index] = (kind == CONSTANT_Methodref
+                                      ? (cp_info *) new CONSTANT_Methodref_info(CONSTANT_Methodref,
+                                                                                RegisterClass(class_name),
+                                                                                name_type_index)
+                                      : (cp_info *) new CONSTANT_InterfaceMethodref_info(CONSTANT_InterfaceMethodref,
+                                                                                         RegisterClass(class_name),
+                                                                                         name_type_index));
+        int k = list.NextIndex();
+        list[k].target = name_type_index;
+        list[k].index = index;
+
+        return (u2) index;
+    }
+
+
+    u2 RegisterMethodref(Utf8LiteralValue *class_name, Utf8LiteralValue *method_name, Utf8LiteralValue *method_type_name)
+    {
+        return RegisterMethodref(CONSTANT_Methodref, class_name, method_name, method_type_name);
+    }
+
+    u2 RegisterInterfaceMethodref(Utf8LiteralValue *class_name, Utf8LiteralValue *method_name, Utf8LiteralValue *method_type_name)
+    {
+        return RegisterMethodref(CONSTANT_InterfaceMethodref, class_name, method_name, method_type_name);
     }
 
 
@@ -627,40 +667,72 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         assert((lit != NULL) && "null argument to RegisterClass");
 
-        if (lit -> constant_pool_class != class_id) // kill values assigned in prior class
+#ifdef TEST
+        static 
+#endif
+        int length;
+        if (! class_constant_pool_index)
         {
-            lit -> constant_pool_index_Class = 0;
-            lit -> constant_pool_index_String = 0;
-            lit -> constant_pool_index = 0;
+            length = this_control.Utf8_pool.symbol_pool.Length();
+            class_constant_pool_index = (u2 *) memset(new u2[length], 0, length * sizeof(u2));
         }
+#ifdef TEST
+        else assert(length == this_control.Utf8_pool.symbol_pool.Length()); // nothing else was added to table
+#endif
 
-        if (lit -> constant_pool_index_Class == 0)
+        u2 &index = class_constant_pool_index[lit -> index];
+        if (index == 0)
         {
-            lit -> constant_pool_class = class_id;
-            lit -> constant_pool_index_Class = constant_pool.NextIndex();
-            constant_pool[lit -> constant_pool_index_Class] = new CONSTANT_Class_info(CONSTANT_Class, RegisterUtf8(lit));
-        }
+            int i = constant_pool.NextIndex(); // This is necessary in case i exceeds the u2 limit
+            index = i;
+            constant_pool[i] = new CONSTANT_Class_info(CONSTANT_Class, RegisterUtf8(lit));
+	}
 
-        return lit -> constant_pool_index_Class;
+        return index;
     }
 
-
-    u2 RegisterClass(char *str, int len)
-    {
-        return RegisterClass(this_control.Utf8_pool.FindOrInsert(str, len));
-    }
 
     u2 RegisterDouble(DoubleLiteralValue *lit)
     {
         assert((lit != NULL) && "null argument to RegisterDouble");
 
-        if (lit -> constant_pool_index == 0 || lit -> constant_pool_class != class_id)
+#ifdef TEST
+        static 
+#endif
+        int length;
+        if (! double_constant_pool_index)
         {
-            lit -> constant_pool_index = BuildDouble(lit -> value);
-            lit -> constant_pool_class = class_id;
+            length = this_control.double_pool.symbol_pool.Length();
+            double_constant_pool_index = (u2 *) memset(new u2[length], 0, length * sizeof(u2));
         }
+#ifdef TEST
+        else assert(length == this_control.double_pool.symbol_pool.Length()); // nothing else was added to table
+#endif
 
-        return lit -> constant_pool_index;
+        u2 &index = double_constant_pool_index[lit -> index];
+        if (index == 0)
+        {
+            int i = constant_pool.NextIndex(); // This is necessary in case i exceeds the u2 limit
+            index = i;
+            constant_pool[i] = new CONSTANT_Double_info(CONSTANT_Double, lit -> value.HighWord(), lit -> value.LowWord());
+            constant_pool.Next() = NULL; // extra slop for double-word entry
+	}
+
+        return index;
+    }
+
+
+    //
+    // TODO: Currently need this function only for arrays: see LoadInteger.
+    //       See if we can get rid of it by having the front-end ...
+    //
+    u2 BuildInteger(int val)
+    {
+        int index = constant_pool.NextIndex();
+        u4 bytes = (((unsigned) (val >> 24)) << 24) | ((val >> 16 & 0xff) << 16) | ((val >> 8 & 0xff) ) << 8 | (val & 0xff);
+        constant_pool[index] = new CONSTANT_Integer_info(CONSTANT_Integer, bytes);
+
+        return index;
     }
 
 
@@ -668,13 +740,30 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         assert((lit != NULL) && "null argument to RegisterInteger");
 
-        if (lit -> constant_pool_index == 0 || lit -> constant_pool_class != class_id)
+#ifdef TEST
+        static 
+#endif
+        int length;
+        if (! integer_constant_pool_index)
         {
-            lit -> constant_pool_index = BuildInteger(lit -> value);
-            lit -> constant_pool_class = class_id;
+            length = this_control.int_pool.symbol_pool.Length();
+            integer_constant_pool_index = (u2 *) memset(new u2[length], 0, length * sizeof(u2));
         }
+#ifdef TEST
+        else assert(length == this_control.int_pool.symbol_pool.Length()); // nothing else was added to table
+#endif
 
-        return lit -> constant_pool_index;
+        u2 &index = integer_constant_pool_index[lit -> index];
+        if (index == 0)
+        {
+            int i = constant_pool.NextIndex(); // This is necessary in case i exceeds the u2 limit
+            index = i;
+            int val = lit -> value;
+            u4 bytes = (((unsigned) (val >> 24)) << 24) | ((val >> 16 & 0xff) << 16) | ((val >> 8 & 0xff) ) << 8 | (val & 0xff);
+            constant_pool[i] = new CONSTANT_Integer_info(CONSTANT_Integer, bytes);
+	}
+
+        return index;
     }
 
 
@@ -682,13 +771,29 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         assert((lit != NULL) && "null argument to RegisterLong");
 
-        if (lit -> constant_pool_index == 0|| lit -> constant_pool_class != class_id)
+#ifdef TEST
+        static 
+#endif
+        int length;
+        if (! long_constant_pool_index)
         {
-            lit -> constant_pool_index = BuildLong(lit -> value);
-            lit -> constant_pool_class = class_id;
+            length = this_control.long_pool.symbol_pool.Length();
+            long_constant_pool_index = (u2 *) memset(new u2[length], 0, length * sizeof(u2));
         }
+#ifdef TEST
+        else assert(length == this_control.long_pool.symbol_pool.Length()); // nothing else was added to table
+#endif
 
-        return lit -> constant_pool_index;
+        u2 &index = long_constant_pool_index[lit -> index];
+        if (index == 0)
+        {
+            int i = constant_pool.NextIndex(); // This is necessary in case i exceeds the u2 limit
+            index = i;
+            constant_pool[i] = new CONSTANT_Long_info(CONSTANT_Long, lit -> value.HighWord(), lit -> value.LowWord());
+            constant_pool.Next() = NULL; // extra slop for double-word entry
+	}
+
+        return index;
     }
 
 
@@ -696,13 +801,28 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         assert((lit != NULL) && "null argument to RegisterFloat");
 
-        if (lit -> constant_pool_index == 0 || lit -> constant_pool_class != class_id)
+#ifdef TEST
+        static 
+#endif
+        int length;
+        if (! float_constant_pool_index)
         {
-            lit -> constant_pool_index = BuildFloat(lit -> value);
-            lit -> constant_pool_class = class_id;
+            length = this_control.float_pool.symbol_pool.Length();
+            float_constant_pool_index = (u2 *) memset(new u2[length], 0, length * sizeof(u2));
         }
+#ifdef TEST
+        else assert(length == this_control.float_pool.symbol_pool.Length()); // nothing else was added to table
+#endif
 
-        return lit -> constant_pool_index;
+        u2 &index = float_constant_pool_index[lit -> index];
+        if (index == 0)
+        {
+            int i = constant_pool.NextIndex(); // This is necessary in case i exceeds the u2 limit
+            index = i;
+            constant_pool[i] = new CONSTANT_Float_info(CONSTANT_Float, lit -> value.Word());
+	}
+
+        return index;
     }
 
 
@@ -710,17 +830,28 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         assert((lit != NULL) && "null argument to RegisterString");
 
-        if (lit -> constant_pool_class != class_id) // kill values assigned in prior class
+#ifdef TEST
+        static 
+#endif
+        int length;
+        if (! string_constant_pool_index)
         {
-            lit -> constant_pool_index_Class = 0;
-            lit -> constant_pool_index_String = 0;
-            lit -> constant_pool_index = 0;
+            length = this_control.Utf8_pool.symbol_pool.Length();
+            string_constant_pool_index = (u2 *) memset(new u2[length], 0, length * sizeof(u2));
         }
+#ifdef TEST
+        else assert(length == this_control.Utf8_pool.symbol_pool.Length()); // nothing else was added to table
+#endif
 
-        if (lit -> constant_pool_index_String == 0)
-            lit -> constant_pool_index_String = BuildString(RegisterUtf8(lit));
+        u2 &index = string_constant_pool_index[lit -> index];
+        if (index == 0)
+        {
+            int i = constant_pool.NextIndex(); // This is necessary in case i exceeds the u2 limit
+            index = i;
+            constant_pool[i] = new CONSTANT_String_info(CONSTANT_String, RegisterUtf8(lit));
+	}
 
-        return lit -> constant_pool_index_String;
+        return index;
     }
 
 
@@ -728,26 +859,28 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         assert((lit != NULL) && "null argument to RegisterUtf8");
 
-        if (lit -> constant_pool_class != class_id) // kill values assigned in prior class
+#ifdef TEST
+        static 
+#endif
+        int length;
+        if (! utf8_constant_pool_index)
         {
-            lit -> constant_pool_index_Class = 0;
-            lit -> constant_pool_index_String = 0;
-            lit -> constant_pool_index = 0;
+            length = this_control.Utf8_pool.symbol_pool.Length();
+            utf8_constant_pool_index = (u2 *) memset(new u2[length], 0, length * sizeof(u2));
         }
+#ifdef TEST
+        else assert(length == this_control.Utf8_pool.symbol_pool.Length()); // nothing else was added to table
+#endif
 
-        if (lit -> constant_pool_index  == 0)
+        u2 &index = utf8_constant_pool_index[lit -> index];
+        if (index == 0)
         {
-            lit -> constant_pool_index = BuildUtf8(lit -> value,lit -> length);
-            lit -> constant_pool_class = class_id;
-        }
+            int i = constant_pool.NextIndex(); // This is necessary in case i exceeds the u2 limit
+            index = i;
+            constant_pool[i] = new CONSTANT_Utf8_info(CONSTANT_Utf8, lit -> value, lit -> length);
+	}
 
-        return lit -> constant_pool_index;
-    }
-
-
-    u2 RegisterUtf8(char *str, int len)
-    {
-        return RegisterUtf8(this_control.Utf8_pool.FindOrInsert(str,len));
+        return index;
     }
 
 
@@ -756,13 +889,13 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     Deprecated_attribute *CreateDeprecatedAttribute()
     {
-        return new Deprecated_attribute(RegisterUtf8(U8S_Deprecated, strlen(U8S_Deprecated)));
+        return new Deprecated_attribute(RegisterUtf8(this_control.Deprecated_literal));
     }
     
 
     Synthetic_attribute *CreateSyntheticAttribute()
     {
-        return new Synthetic_attribute(RegisterUtf8(U8S_Synthetic, strlen(U8S_Synthetic)));
+        return new Synthetic_attribute(RegisterUtf8(this_control.Synthetic_literal));
     }
     
 
@@ -799,7 +932,6 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void AppendString(AstExpression *);
     void EmitStringAppendMethod(TypeSymbol *);
     void GenerateAccessMethod(MethodSymbol *);
-    int  GenerateFieldReference(VariableSymbol *);
     void ChangeStack (int);
     void ResolveAccess(AstExpression *);
     int  GenerateClassAccess(AstFieldAccess *);
@@ -826,7 +958,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void UpdateBlockInfo(BlockSymbol *);
     void EmitTryStatement(AstTryStatement *);
     void EmitBranchIfExpression(AstExpression *, bool, Label &);
-    void CompleteCall(MethodSymbol *, int);
+    void CompleteCall(MethodSymbol *, int, Utf8LiteralValue * = NULL);
 
 
     //
@@ -873,7 +1005,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         PutOp(OP_DUP);     // save base address of field for later store
         PutOp(OP_GETFIELD);
         ChangeStack(this_control.IsDoubleWordType(expression -> Type()) ? 1 : 0);
-        PutU2(GenerateFieldReference((VariableSymbol *) expression -> symbol));
+        PutU2(RegisterFieldref((VariableSymbol *) expression -> symbol));
 
         return;
     }
@@ -981,6 +1113,40 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
 
 public:
     ByteCode(TypeSymbol *);
+
+    ~ByteCode()
+    {
+        delete [] double_constant_pool_index;
+        delete [] float_constant_pool_index;
+        delete [] integer_constant_pool_index;
+        delete [] long_constant_pool_index;
+        delete [] string_constant_pool_index;
+        delete [] utf8_constant_pool_index;
+        delete [] class_constant_pool_index;
+
+        if (fieldref_constant_pool_index)
+        {
+            for (int i = 0; i < this_control.Utf8_pool.symbol_pool.Length(); i++)
+                delete fieldref_constant_pool_index[i];
+            delete [] fieldref_constant_pool_index;
+        }
+
+        if (methodref_constant_pool_index)
+        {
+            for (int i = 0; i < this_control.Utf8_pool.symbol_pool.Length(); i++)
+                delete methodref_constant_pool_index[i];
+            delete [] methodref_constant_pool_index;
+        }
+
+        if (name_and_type_constant_pool_index)
+        {
+            for (int i = 0; i < this_control.Utf8_pool.symbol_pool.Length(); i++)
+                delete name_and_type_constant_pool_index[i];
+            delete [] name_and_type_constant_pool_index;
+        }
+
+        return;
+    }
 
     inline void GenerateCode()
     {

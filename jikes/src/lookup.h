@@ -264,8 +264,7 @@ class LiteralValue
 { 
 public:
     LiteralValue *next;
-    int constant_pool_index,
-        constant_pool_class;
+    int index;
 
     virtual ~LiteralValue() {}
 };
@@ -278,11 +277,10 @@ public:
 
     virtual ~IntLiteralValue() {}
 
-    void Initialize(int value_)
+    void Initialize(int value_, int index_)
     {
         value = value_;
-        LiteralValue::constant_pool_index = 0;
-        LiteralValue::constant_pool_class = 0;
+        index = index_;
     }
 };
 
@@ -294,11 +292,10 @@ public:
 
     virtual ~LongLiteralValue() {}
 
-    void Initialize(LongInt value_)
+    void Initialize(LongInt value_, int index_)
     {
         value = value_;
-        LiteralValue::constant_pool_index = 0;
-        LiteralValue::constant_pool_class = 0;
+        index = index_;
     }
 };
 
@@ -310,11 +307,10 @@ public:
 
     virtual ~FloatLiteralValue() {}
 
-    void Initialize(IEEEfloat value_)
+    void Initialize(IEEEfloat value_, int index_)
     {
         value = value_;
-        LiteralValue::constant_pool_index = 0;
-        LiteralValue::constant_pool_class = 0;
+        index = index_;
     }
 };
 
@@ -326,11 +322,10 @@ public:
 
     virtual ~DoubleLiteralValue() {}
 
-    void Initialize(IEEEdouble value_)
+    void Initialize(IEEEdouble value_, int index_)
     {
         value = value_;
-        LiteralValue::constant_pool_index = 0;
-        LiteralValue::constant_pool_class = 0;
+        index = index_;
     }
 };
 
@@ -340,8 +335,6 @@ class Utf8LiteralValue : public LiteralValue
 public:
     char *value;
     int  length;
-    int  constant_pool_index_String, // index when used as String
-         constant_pool_index_Class;  // index when used as Class
 
     Utf8LiteralValue() : value(NULL)
     {}
@@ -351,19 +344,15 @@ public:
         delete [] value;
     }
 
-    void Initialize(char *value_, int length_, unsigned hash_address_)
+    void Initialize(char *value_, int length_, unsigned hash_address_, int index_)
     {
-        LiteralValue::constant_pool_index = 0;
-        LiteralValue::constant_pool_class = 0;
-        constant_pool_index_String = 0;
-        constant_pool_index_Class = 0;
-
         length = length_;
         value = new char[length + 1];
         memmove(value, value_, length * sizeof(char));
         value[length] = U_NULL;
 
         hash_address = hash_address_;
+        index = index_;
     }
 
 private:

@@ -44,6 +44,10 @@ public:
         UNREADABLE_INPUT_FILE,
         CANNOT_REOPEN_FILE,
         CANNOT_WRITE_FILE,
+        CONSTANT_POOL_OVERFLOW,
+        LOCAL_VARIABLES_OVERFLOW,
+        STACK_OVERFLOW,
+        CODE_OVERFLOW,
         CANNOT_COMPUTE_COLUMNS,
         EMPTY_DECLARATION,
         REDUNDANT_ABSTRACT,
@@ -370,6 +374,10 @@ private:
     static void PrintUNREADABLE_INPUT_FILE(ErrorInfo &, LexStream *, Control &);
     static void PrintCANNOT_REOPEN_FILE(ErrorInfo &, LexStream *, Control &);
     static void PrintCANNOT_WRITE_FILE(ErrorInfo &, LexStream *, Control &);
+    static void PrintCONSTANT_POOL_OVERFLOW(ErrorInfo &, LexStream *, Control &);
+    static void PrintLOCAL_VARIABLES_OVERFLOW(ErrorInfo &, LexStream *, Control &);
+    static void PrintSTACK_OVERFLOW(ErrorInfo &, LexStream *, Control &);
+    static void PrintCODE_OVERFLOW(ErrorInfo &, LexStream *, Control &);
     static void PrintCANNOT_COMPUTE_COLUMNS(ErrorInfo &, LexStream *, Control &);
 
     static void PrintEMPTY_DECLARATION(ErrorInfo &, LexStream *, Control &);

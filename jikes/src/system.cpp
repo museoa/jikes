@@ -110,19 +110,137 @@ void Control::FindPathsToDirectory(PackageSymbol *package)
 }
 
 
-void Control::ProcessGlobalNameSymbols()
+void Control::ProcessGlobals()
 {
-    this -> dot_name_symbol        = FindOrInsertName(US__DO, wcslen(US__DO));
-    this -> dot_dot_name_symbol    = FindOrInsertName(US__DO__DO, wcslen(US__DO__DO));
-    this -> length_name_symbol     = FindOrInsertName(US_length, wcslen(US_length));
-    this -> init_name_symbol       = FindOrInsertName(US__LT_init_GT, wcslen(US__LT_init_GT));
-    this -> clinit_name_symbol     = FindOrInsertName(US__LT_clinit_GT, wcslen(US__LT_clinit_GT));
-    this -> block_init_name_symbol = FindOrInsertName(US_block_DOLLAR, wcslen(US_block_DOLLAR));
-    this -> this0_name_symbol      = FindOrInsertName(US_this0, wcslen(US_this0));
-    this -> clone_name_symbol      = FindOrInsertName(US_clone, wcslen(US_clone));
-    this -> object_name_symbol     = FindOrInsertName(US_Object, wcslen(US_Object));
-    this -> type_name_symbol       = FindOrInsertName(US_TYPE, wcslen(US_TYPE));
-    this -> class_name_symbol      = FindOrInsertName(US__class_DOLLAR, wcslen(US__class_DOLLAR));
+    dot_name_symbol        = FindOrInsertName(US__DO, wcslen(US__DO));
+    dot_dot_name_symbol    = FindOrInsertName(US__DO__DO, wcslen(US__DO__DO));
+    length_name_symbol     = FindOrInsertName(US_length, wcslen(US_length));
+    init_name_symbol       = FindOrInsertName(US__LT_init_GT, wcslen(US__LT_init_GT));
+    clinit_name_symbol     = FindOrInsertName(US__LT_clinit_GT, wcslen(US__LT_clinit_GT));
+    block_init_name_symbol = FindOrInsertName(US_block_DOLLAR, wcslen(US_block_DOLLAR));
+    this0_name_symbol      = FindOrInsertName(US_this0, wcslen(US_this0));
+    clone_name_symbol      = FindOrInsertName(US_clone, wcslen(US_clone));
+    object_name_symbol     = FindOrInsertName(US_Object, wcslen(US_Object));
+    type_name_symbol       = FindOrInsertName(US_TYPE, wcslen(US_TYPE));
+    class_name_symbol      = FindOrInsertName(US__class_DOLLAR, wcslen(US__class_DOLLAR));
+
+    LP_C_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal =
+        Utf8_pool.FindOrInsert(U8S_LP_C_RP_Ljava_SL_lang_SL_StringBuffer_SC,
+                               U8S_LP_C_RP_Ljava_SL_lang_SL_StringBuffer_SC_length);
+
+    LP_D_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal =
+        Utf8_pool.FindOrInsert(U8S_LP_D_RP_Ljava_SL_lang_SL_StringBuffer_SC,
+                               U8S_LP_D_RP_Ljava_SL_lang_SL_StringBuffer_SC_length);
+
+    LP_F_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal =
+        Utf8_pool.FindOrInsert(U8S_LP_F_RP_Ljava_SL_lang_SL_StringBuffer_SC,
+                               U8S_LP_F_RP_Ljava_SL_lang_SL_StringBuffer_SC_length);
+
+    LP_I_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal =
+        Utf8_pool.FindOrInsert(U8S_LP_I_RP_Ljava_SL_lang_SL_StringBuffer_SC,
+                               U8S_LP_I_RP_Ljava_SL_lang_SL_StringBuffer_SC_length);
+
+    LP_J_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal =
+        Utf8_pool.FindOrInsert(U8S_LP_J_RP_Ljava_SL_lang_SL_StringBuffer_SC,
+                               U8S_LP_J_RP_Ljava_SL_lang_SL_StringBuffer_SC_length);
+
+    LP_LB_C_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal =
+        Utf8_pool.FindOrInsert(U8S_LP_LB_C_RP_Ljava_SL_lang_SL_StringBuffer_SC,
+                               U8S_LP_LB_C_RP_Ljava_SL_lang_SL_StringBuffer_SC_length);
+
+    LP_Ljava_SL_lang_SL_Object_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal =
+        Utf8_pool.FindOrInsert(U8S_LP_Ljava_SL_lang_SL_Object_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC,
+                               U8S_LP_Ljava_SL_lang_SL_Object_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC_length);
+
+    LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal =
+        Utf8_pool.FindOrInsert(U8S_LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC,
+                               U8S_LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC_length);
+
+    LP_Ljava_SL_lang_SL_String_SC_RP_V_literal =
+        Utf8_pool.FindOrInsert(U8S_LP_Ljava_SL_lang_SL_String_SC_RP_V,
+                               U8S_LP_Ljava_SL_lang_SL_String_SC_RP_V_length);
+
+    LP_RP_Ljava_SL_lang_SL_Object_SC_literal =
+        Utf8_pool.FindOrInsert(U8S_LP_RP_Ljava_SL_lang_SL_Object_SC,
+                               U8S_LP_RP_Ljava_SL_lang_SL_Object_SC_length);
+
+    LP_RP_Ljava_SL_lang_SL_String_SC_literal =
+        Utf8_pool.FindOrInsert(U8S_LP_RP_Ljava_SL_lang_SL_String_SC,
+                               U8S_LP_RP_Ljava_SL_lang_SL_String_SC_length);
+
+    LP_RP_V_literal = Utf8_pool.FindOrInsert(U8S_LP_RP_V, U8S_LP_RP_V_length);
+
+    LP_Z_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal =
+        Utf8_pool.FindOrInsert(U8S_LP_Z_RP_Ljava_SL_lang_SL_StringBuffer_SC,
+                               U8S_LP_Z_RP_Ljava_SL_lang_SL_StringBuffer_SC_length);
+
+    LT_init_GT_literal = Utf8_pool.FindOrInsert(U8S_LT_init_GT, U8S_LT_init_GT_length);
+
+    append_literal = Utf8_pool.FindOrInsert(U8S_append, U8S_append_length);
+
+    clone_literal = Utf8_pool.FindOrInsert(U8S_clone, U8S_clone_length);
+
+    getMessage_literal = Utf8_pool.FindOrInsert(U8S_getMessage, U8S_getMessage_length);
+
+    java_SL_lang_SL_InternalError_literal =
+        Utf8_pool.FindOrInsert(U8S_java_SL_lang_SL_InternalError,
+                               U8S_java_SL_lang_SL_InternalError_length);
+
+    java_SL_lang_SL_Object_literal = Utf8_pool.FindOrInsert(U8S_java_SL_lang_SL_Object, U8S_java_SL_lang_SL_Object_length);
+
+    java_SL_lang_SL_StringBuffer_literal =
+        Utf8_pool.FindOrInsert(U8S_java_SL_lang_SL_StringBuffer,
+                               U8S_java_SL_lang_SL_StringBuffer_length);
+
+    java_SL_lang_SL_Throwable_literal = Utf8_pool.FindOrInsert(U8S_java_SL_lang_SL_Throwable, U8S_java_SL_lang_SL_Throwable_length);
+
+    toString_literal = Utf8_pool.FindOrInsert(U8S_toString, U8S_toString_length);
+
+    java_SL_lang_SL_ClassNotFoundException_literal =
+         Utf8_pool.FindOrInsert(U8S_java_SL_lang_SL_ClassNotFoundException,
+                                U8S_java_SL_lang_SL_ClassNotFoundException_length);
+
+    java_SL_lang_SL_Class_literal =
+         Utf8_pool.FindOrInsert(U8S_java_SL_lang_SL_Class,
+                                U8S_java_SL_lang_SL_Class_length);
+
+    java_SL_lang_SL_CloneNotSupportedException_literal =
+         Utf8_pool.FindOrInsert(U8S_java_SL_lang_SL_CloneNotSupportedException,
+                                U8S_java_SL_lang_SL_CloneNotSupportedException_length);
+
+    java_SL_lang_SL_NoClassDefFoundError_literal =
+         Utf8_pool.FindOrInsert(U8S_java_SL_lang_SL_NoClassDefFoundError,
+                                U8S_java_SL_lang_SL_NoClassDefFoundError_length);
+
+    ConstantValue_literal = Utf8_pool.FindOrInsert(U8S_ConstantValue, U8S_ConstantValue_length);
+
+    Exceptions_literal = Utf8_pool.FindOrInsert(U8S_Exceptions, U8S_Exceptions_length);
+
+    InnerClasses_literal = Utf8_pool.FindOrInsert(U8S_InnerClasses, U8S_InnerClasses_length);
+
+    Synthetic_literal = Utf8_pool.FindOrInsert(U8S_Synthetic, U8S_Synthetic_length);
+
+    Deprecated_literal = Utf8_pool.FindOrInsert(U8S_Deprecated, U8S_Deprecated_length);
+
+    LineNumberTable_literal = Utf8_pool.FindOrInsert(U8S_LineNumberTable, U8S_LineNumberTable_length);
+
+    LocalVariableTable_literal = Utf8_pool.FindOrInsert(U8S_LocalVariableTable, U8S_LocalVariableTable_length);
+
+    Code_literal = Utf8_pool.FindOrInsert(U8S_Code, U8S_Code_length);
+
+    Sourcefile_literal = Utf8_pool.FindOrInsert(U8S_Sourcefile, U8S_Sourcefile_length);
+
+    LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_Class_SC_literal =
+         Utf8_pool.FindOrInsert(U8S_LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_Class_SC,
+                                U8S_LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_Class_SC_length);
+
+    LT_clinit_GT_literal = Utf8_pool.FindOrInsert(U8S_LT_clinit_GT, U8S_LT_clinit_GT_length);
+
+    forName_literal = Utf8_pool.FindOrInsert(U8S_forName, U8S_forName_length);
+
+    null_literal = Utf8_pool.FindOrInsert(U8S_null, U8S_null_length);
+
+    this_literal = Utf8_pool.FindOrInsert(U8S_this, U8S_this_length);
 
     return;
 }

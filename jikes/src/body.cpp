@@ -120,7 +120,14 @@ void Semantic::ProcessBlock(Ast *stmt)
     if (block_body -> label_token_opt)
     {
         NameSymbol *name_symbol = lex_stream -> NameSymbol(block_body -> label_token_opt);
-        Symbol *symbol = LocalSymbolTable().FindLabelSymbol(name_symbol);
+        Symbol *symbol = NULL;
+        for (SemanticEnvironment *env = state_stack.Top(); env; env = env -> previous)
+        {
+            symbol = env -> symbol_table.FindLabelSymbol(name_symbol);
+            if (symbol)
+                break;
+        }
+
         if (symbol)
         {
             ReportSemError(SemanticError::DUPLICATE_LABEL,
@@ -1280,6 +1287,7 @@ void Semantic::ProcessTryStatement(Ast *stmt)
     //       type of C's parameter is the same as or a subclass of the type of A's
     //       parameter.
     //
+    Tuple<TypeSymbol *> thrown_exceptions;
     for (int l = 0; l < try_statement -> NumCatchClauses(); l++)
     {
         AstCatchClause *clause = try_statement -> CatchClause(l);
@@ -1296,15 +1304,6 @@ void Semantic::ProcessTryStatement(Ast *stmt)
                     break;
             }
 
-            AstCatchClause *previous_clause;
-            int k;
-            for (k = 0; k < l; k++)
-            {
-                previous_clause = try_statement -> CatchClause(k);
-                if (symbol -> Type() -> IsSubclass(previous_clause -> parameter_symbol -> Type()))
-                    break;
-            }
-
             if (! exception) // no assignable exception was found
             {
                  ReportSemError(SemanticError::UNREACHABLE_CATCH_CLAUSE,
@@ -1313,24 +1312,47 @@ void Semantic::ProcessTryStatement(Ast *stmt)
                                 symbol -> Type() -> ContainingPackage() -> PackageName(),
                                 symbol -> Type() -> ExternalName());
             }
-            else if (k < l)
+            else
             {
-                 FileLocation loc(lex_stream, previous_clause -> formal_parameter -> RightToken());
-                 ReportSemError(SemanticError::BLOCKED_CATCH_CLAUSE,
-                                clause -> formal_parameter -> LeftToken(),
-                                clause -> formal_parameter -> RightToken(),
-                                symbol -> Type() -> ContainingPackage() -> PackageName(),
-                                symbol -> Type() -> ExternalName(),
-                                loc.location);
+                thrown_exceptions.Next() = exception;
+
+                AstCatchClause *previous_clause;
+                int k;
+                for (k = 0; k < l; k++)
+                {
+                    previous_clause = try_statement -> CatchClause(k);
+                    if (symbol -> Type() -> IsSubclass(previous_clause -> parameter_symbol -> Type()))
+                        break;
+                }
+
+                if (k < l)
+                {
+                     FileLocation loc(lex_stream, previous_clause -> formal_parameter -> RightToken());
+                     ReportSemError(SemanticError::BLOCKED_CATCH_CLAUSE,
+                                    clause -> formal_parameter -> LeftToken(),
+                                    clause -> formal_parameter -> RightToken(),
+                                    symbol -> Type() -> ContainingPackage() -> PackageName(),
+                                    symbol -> Type() -> ExternalName(),
+                                    loc.location);
+                }
+                else clause -> block -> is_reachable = true;
             }
-            else clause -> block -> is_reachable = true;
         }
     }
 
     TryStatementStack().Pop();
     TryExceptionTableStack().Pop();
     if (TryExceptionTableStack().Top())
+    {
+        //
+        // First, remove all the thrown exceptions that are caught by the enclosing
+        // try statement. Then, add the remaining ones to the set that must be caught
+        // by the immediately enclosing try statement.
+        //
+        for (int i = 0; i < thrown_exceptions.Length(); i++)
+            exception_set -> RemoveElement(thrown_exceptions[i]);
         TryExceptionTableStack().Top() -> Union(*exception_set);
+    }
     delete exception_set;
 
     //

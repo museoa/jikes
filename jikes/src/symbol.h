@@ -162,6 +162,7 @@ private:
     DirectorySymbol *output_directory;
     char *file_name;
     int file_name_length;
+    Utf8LiteralValue *file_name_literal;
 
 public:
     NameSymbol *name_symbol;
@@ -187,16 +188,17 @@ public:
 
     Tuple<TypeSymbol *> types;
 
-    FileSymbol(NameSymbol *name_symbol_, NameSymbol *dirname_symbol = NULL) : name_symbol(name_symbol_),
-                                                                              output_directory(NULL),
-                                                                              directory_symbol(NULL),
-                                                                              package(NULL),
-                                                                              file_name(NULL),
-                                                                              mtime(0),
-                                                                              lex_stream(NULL),
-                                                                              compilation_unit(NULL),
-                                                                              semantic(NULL),
-                                                                              types(4)
+    FileSymbol(NameSymbol *name_symbol_) : name_symbol(name_symbol_),
+                                           output_directory(NULL),
+                                           directory_symbol(NULL),
+                                           package(NULL),
+                                           file_name(NULL),
+                                           file_name_literal(NULL),
+                                           mtime(0),
+                                           lex_stream(NULL),
+                                           compilation_unit(NULL),
+                                           semantic(NULL),
+                                           types(4)
     {
          Symbol::_kind = _FILE;
     }
@@ -258,6 +260,10 @@ public:
             SetFileName();
         return file_name_length;
     }
+
+    inline Utf8LiteralValue *FileNameLiteral() { assert(file_name_literal); return file_name_literal; }
+ 
+    void SetFileNameLiteral(Control *);
 
     DirectorySymbol *OutputDirectory();
 
