@@ -68,7 +68,7 @@ $action
 #ifndef HEADERS
     rule_action[$rule_number] = &Parser::Act$rule_number;
 #else
-    void Act$rule_number(void);
+    void Act$rule_number();
 #endif
 ./
 
@@ -143,6 +143,13 @@ $MakeIfThenElseStatement
 /.
 #ifndef HEADERS
     rule_action[$rule_number] = &Parser::MakeIfThenElseStatement;
+#endif
+./
+
+$MakeSwitchLabel
+/.
+#ifndef HEADERS
+    rule_action[$rule_number] = &Parser::MakeSwitchLabel;
 #endif
 ./
 
@@ -244,7 +251,7 @@ $shared_NoAction
 //
 // Rule $rule_number:  $rule_text
 //
-// void NoAction(void);
+// void NoAction();
 //./
 
 --
@@ -257,7 +264,7 @@ $shared_NullAction
 //
 // Rule $rule_number:  $rule_text
 //
-// void NullAction(void);
+// void NullAction();
 //./
 
 $Terminals
@@ -412,27 +419,31 @@ void Parser::InitRuleAction()
 {
     rule_action[0] = &Parser::BadAction;
 #else // HEADERS
-    void BadAction(void);
-    void NoAction(void);
-    void NullAction(void);
-    void MakeArrayType(void);
-    void MakeSimpleName(void);
-    void MakeFieldAccess(void);
-    void MakeQualifiedSuper(void);
-    void MakeQualifiedNew(void);
-    void SetSym1ToSym2(void);
-    void MakeMethodDeclaration(void);
-    void MakeLabeledStatement(void);
-    void MakeExpressionStatement(void);
-    void MakeIfThenElseStatement(void);
-    void MakeWhileStatement(void);
-    void MakeForStatement(void);
-    void MakeAssertStatement(void);
-    void MakeArrayCreationExpression(void);
-    void MakeSuperFieldAccess(void);
-    void MakeSuperDoubleFieldAccess(void);
-    void MakeArrayAccess(void);
-    void MakeCastExpression(void);
+    AstStatement* MakeSwitchBlockStatement(AstListNode* labels,
+                                           AstListNode* statements = NULL);
+
+    void BadAction();
+    void NoAction();
+    void NullAction();
+    void MakeArrayType();
+    void MakeSimpleName();
+    void MakeFieldAccess();
+    void MakeQualifiedSuper();
+    void MakeQualifiedNew();
+    void SetSym1ToSym2();
+    void MakeMethodDeclaration();
+    void MakeLabeledStatement();
+    void MakeExpressionStatement();
+    void MakeIfThenElseStatement();
+    void MakeSwitchLabel();
+    void MakeWhileStatement();
+    void MakeForStatement();
+    void MakeAssertStatement();
+    void MakeArrayCreationExpression();
+    void MakeSuperFieldAccess();
+    void MakeSuperDoubleFieldAccess();
+    void MakeArrayAccess();
+    void MakeCastExpression();
 #endif // HEADERS
 
 :\
@@ -481,8 +492,8 @@ Goal -> CompilationUnit
 //
 // Do nothing - Whatever Ast was produced for x1 is inherited by A.
 //
-void Parser::BadAction(void) { assert(false); }
-void Parser::NoAction(void) {}
+void Parser::BadAction() { assert(false); }
+void Parser::NoAction() {}
 ./
 
 Goal ::= BodyMarker MethodBody
@@ -498,7 +509,7 @@ Goal ::= BodyMarker MethodBody
 // BodyMarker terminal must be inserted in front of the input stream
 // containing the body in question.
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = Sym(2);
 }
@@ -513,7 +524,7 @@ void Parser::Act$rule_number(void)
 Literal ::= IntegerLiteral
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewIntegerLiteral(Token(1));
 }
@@ -522,7 +533,7 @@ void Parser::Act$rule_number(void)
 Literal ::= LongLiteral
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewLongLiteral(Token(1));
 }
@@ -531,7 +542,7 @@ void Parser::Act$rule_number(void)
 Literal ::= FloatLiteral
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewFloatLiteral(Token(1));
 }
@@ -540,7 +551,7 @@ void Parser::Act$rule_number(void)
 Literal ::= DoubleLiteral
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewDoubleLiteral(Token(1));
 }
@@ -553,7 +564,7 @@ Literal -> BooleanLiteral
 Literal ::= CharacterLiteral
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewCharacterLiteral(Token(1));
 }
@@ -562,7 +573,7 @@ void Parser::Act$rule_number(void)
 Literal ::= StringLiteral
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewStringLiteral(Token(1));
 }
@@ -571,7 +582,7 @@ void Parser::Act$rule_number(void)
 Literal ::= null
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewNullLiteral(Token(1));
 }
@@ -580,7 +591,7 @@ void Parser::Act$rule_number(void)
 BooleanLiteral ::= true
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewTrueLiteral(Token(1));
 }
@@ -589,7 +600,7 @@ void Parser::Act$rule_number(void)
 BooleanLiteral ::= false
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewFalseLiteral(Token(1));
 }
@@ -612,7 +623,7 @@ PrimitiveType -> NumericType
 PrimitiveType ::= 'boolean'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::BOOLEAN, Token(1));
 }
@@ -629,7 +640,7 @@ NumericType -> FloatingPointType
 IntegralType ::= 'byte'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::BYTE, Token(1));
 }
@@ -638,7 +649,7 @@ void Parser::Act$rule_number(void)
 IntegralType ::= 'short'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::SHORT, Token(1));
 }
@@ -647,7 +658,7 @@ void Parser::Act$rule_number(void)
 IntegralType ::= 'int'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::INT, Token(1));
 }
@@ -656,7 +667,7 @@ void Parser::Act$rule_number(void)
 IntegralType ::= 'long'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::LONG, Token(1));
 }
@@ -665,7 +676,7 @@ void Parser::Act$rule_number(void)
 IntegralType ::= 'char'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::CHAR, Token(1));
 }
@@ -674,7 +685,7 @@ void Parser::Act$rule_number(void)
 FloatingPointType ::= 'float'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::FLOAT, Token(1));
 }
@@ -683,7 +694,7 @@ void Parser::Act$rule_number(void)
 FloatingPointType ::= 'double'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::DOUBLE, Token(1));
 }
@@ -712,7 +723,7 @@ ClassOrInterfaceType -> Name
 ArrayType ::= PrimitiveType Dims
 \:$MakeArrayType:\
 /.$location
-void Parser::MakeArrayType(void)
+void Parser::MakeArrayType()
 {
     AstArrayType *p = ast_pool -> NewArrayType();
     p -> type = Sym(1);
@@ -738,7 +749,7 @@ ArrayType ::= Name Dims
 \:$MakeArrayType:\
 /.$shared_function
 //
-// void MakeArrayType(void);
+// void MakeArrayType();
 //./
 
 ClassType -> ClassOrInterfaceType
@@ -762,7 +773,7 @@ Name -> QualifiedName
 SimpleName ::= 'Identifier'
 \:$MakeSimpleName:\
 /.$location
-void Parser::MakeSimpleName(void)
+void Parser::MakeSimpleName()
 {
     Sym(1) = ast_pool -> NewSimpleName(Token(1));
 }
@@ -771,7 +782,7 @@ void Parser::MakeSimpleName(void)
 QualifiedName ::= Name '.' 'Identifier'
 \:$MakeFieldAccess:\
 /.$location
-void Parser::MakeFieldAccess(void)
+void Parser::MakeFieldAccess()
 {
     AstFieldAccess *p = ast_pool -> NewFieldAccess();
     p -> base = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -786,7 +797,7 @@ void Parser::MakeFieldAccess(void)
 CompilationUnit ::= PackageDeclarationopt ImportDeclarationsopt TypeDeclarationsopt
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstCompilationUnit *p = ast_pool -> NewCompilationUnit();
     p -> package_declaration_opt = DYNAMIC_CAST<AstPackageDeclaration *> (Sym(1));
@@ -824,7 +835,7 @@ ImportDeclarations ::= ImportDeclaration
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -841,7 +852,7 @@ ImportDeclarations ::= ImportDeclarations ImportDeclaration
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(1));
 
@@ -862,7 +873,7 @@ TypeDeclarations ::= TypeDeclaration
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -879,7 +890,7 @@ TypeDeclarations ::= TypeDeclarations TypeDeclaration
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(1));
 
@@ -897,7 +908,7 @@ void Parser::Act$rule_number(void)
 PackageDeclaration ::= 'package' Name PackageHeaderMarker ';'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstPackageDeclaration *p = ast_pool -> NewPackageDeclaration();
     p -> package_token = Token(1);
@@ -918,7 +929,7 @@ ImportDeclaration -> TypeImportOnDemandDeclaration
 SingleTypeImportDeclaration ::= 'import' Name ';'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstImportDeclaration *p = ast_pool -> NewImportDeclaration();
     p -> import_token = Token(1);
@@ -932,7 +943,7 @@ void Parser::Act$rule_number(void)
 TypeImportOnDemandDeclaration ::= 'import' Name '.' '*' ';'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstImportDeclaration *p = ast_pool -> NewImportDeclaration();
     p -> import_token = Token(1);
@@ -954,7 +965,7 @@ TypeDeclaration -> InterfaceDeclaration
 TypeDeclaration ::= ';'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewEmptyDeclaration(Token(1));
 }
@@ -968,7 +979,7 @@ Modifiers ::= Modifier
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -985,7 +996,7 @@ Modifiers ::= Modifiers Modifier
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(1));
 
@@ -1003,7 +1014,7 @@ void Parser::Act$rule_number(void)
 Modifier ::= 'public'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewModifier(Ast::PUBLIC, Token(1));
 }
@@ -1012,7 +1023,7 @@ void Parser::Act$rule_number(void)
 Modifier ::= 'protected'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewModifier(Ast::PROTECTED, Token(1));
 }
@@ -1021,7 +1032,7 @@ void Parser::Act$rule_number(void)
 Modifier ::= 'private'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewModifier(Ast::PRIVATE, Token(1));
 }
@@ -1030,7 +1041,7 @@ void Parser::Act$rule_number(void)
 Modifier ::= 'static'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewModifier(Ast::STATIC, Token(1));
 }
@@ -1039,7 +1050,7 @@ void Parser::Act$rule_number(void)
 Modifier ::= 'abstract'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewModifier(Ast::ABSTRACT, Token(1));
 }
@@ -1048,7 +1059,7 @@ void Parser::Act$rule_number(void)
 Modifier ::= 'final'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewModifier(Ast::FINAL, Token(1));
 }
@@ -1057,7 +1068,7 @@ void Parser::Act$rule_number(void)
 Modifier ::= 'native'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewModifier(Ast::NATIVE, Token(1));
 }
@@ -1066,7 +1077,7 @@ void Parser::Act$rule_number(void)
 Modifier ::= 'strictfp'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewModifier(Ast::STRICTFP, Token(1));
 }
@@ -1075,7 +1086,7 @@ void Parser::Act$rule_number(void)
 Modifier ::= 'synchronized'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewModifier(Ast::SYNCHRONIZED, Token(1));
 }
@@ -1084,7 +1095,7 @@ void Parser::Act$rule_number(void)
 Modifier ::= 'transient'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewModifier(Ast::TRANSIENT, Token(1));
 }
@@ -1093,7 +1104,7 @@ void Parser::Act$rule_number(void)
 Modifier ::= 'volatile'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewModifier(Ast::VOLATILE, Token(1));
 }
@@ -1109,7 +1120,7 @@ void Parser::Act$rule_number(void)
 ClassDeclaration ::= Modifiersopt 'class' 'Identifier' Superopt Interfacesopt ClassBody
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstClassDeclaration *p = ast_pool -> NewClassDeclaration();
     if (Sym(1) != NULL)
@@ -1147,14 +1158,14 @@ void Parser::Act$rule_number(void)
 Super ::= 'extends' ClassType
 \:$SetSym1ToSym2:\
 /.$location
-void Parser::SetSym1ToSym2(void) { Sym(1) = Sym(2); }
+void Parser::SetSym1ToSym2() { Sym(1) = Sym(2); }
 ./
 
 Interfaces ::= 'implements' InterfaceTypeList
 \:$SetSym1ToSym2:\
 /.$shared_function
 //
-// void SetSym1ToSym2(void);
+// void SetSym1ToSym2();
 //./
 
 InterfaceTypeList ::= InterfaceType
@@ -1163,7 +1174,7 @@ InterfaceTypeList ::= InterfaceType
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -1180,7 +1191,7 @@ InterfaceTypeList ::= InterfaceTypeList ',' InterfaceType
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(1));
 
@@ -1198,7 +1209,7 @@ void Parser::Act$rule_number(void)
 ClassBody ::= '{' ClassBodyDeclarationsopt '}'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstClassBody *p = ast_pool -> NewClassBody();
     if (parse_header_only)
@@ -1339,7 +1350,7 @@ ClassBodyDeclarations ::= ClassBodyDeclaration
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -1356,7 +1367,7 @@ ClassBodyDeclarations ::= ClassBodyDeclarations ClassBodyDeclaration
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(1));
 
@@ -1387,7 +1398,7 @@ ClassBodyDeclaration -> ConstructorDeclaration
 ClassBodyDeclaration ::= MethodHeaderMarker MethodBody
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = Sym(2);
 }
@@ -1414,7 +1425,7 @@ ClassMemberDeclaration -> InterfaceDeclaration
 ClassMemberDeclaration ::= ';'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewEmptyDeclaration(Token(1));
 }
@@ -1433,7 +1444,7 @@ void Parser::Act$rule_number(void)
 FieldDeclaration ::= Modifiersopt Type VariableDeclarators ';'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstFieldDeclaration *p = ast_pool -> NewFieldDeclaration();
     if (Sym(1) != NULL)
@@ -1474,7 +1485,7 @@ VariableDeclarators ::= VariableDeclarator
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -1491,7 +1502,7 @@ VariableDeclarators ::= VariableDeclarators ',' VariableDeclarator
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(1));
 
@@ -1509,7 +1520,7 @@ void Parser::Act$rule_number(void)
 VariableDeclarator ::= VariableDeclaratorId
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstVariableDeclarator *p = ast_pool -> NewVariableDeclarator();
     p -> variable_declarator_name = DYNAMIC_CAST<AstVariableDeclaratorId *> (Sym(1));
@@ -1521,7 +1532,7 @@ void Parser::Act$rule_number(void)
 VariableDeclarator ::= VariableDeclaratorId '=' VariableInitializer
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstVariableDeclarator *p = ast_pool -> NewVariableDeclarator();
     p -> variable_declarator_name = DYNAMIC_CAST<AstVariableDeclaratorId *> (Sym(1));
@@ -1533,7 +1544,7 @@ void Parser::Act$rule_number(void)
 VariableDeclaratorId ::= 'Identifier' Dimsopt
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstVariableDeclaratorId *p = ast_pool -> NewVariableDeclaratorId();
     p -> identifier_token = Token(1);
@@ -1583,7 +1594,7 @@ VariableInitializer -> ArrayInitializer
 MethodDeclaration ::= MethodHeader MethodHeaderMarker MethodBody
 \:$MakeMethodDeclaration:\
 /.$shared_function
-void Parser::MakeMethodDeclaration(void)
+void Parser::MakeMethodDeclaration()
 {
     DYNAMIC_CAST<AstMethodDeclaration *> (Sym(1)) -> method_body =
         DYNAMIC_CAST<AstStatement *> (Sym(3));
@@ -1594,13 +1605,13 @@ MethodDeclaration ::= MethodHeader MethodHeaderMarker EmptyStatement
 \:$MakeMethodDeclaration:\
 /.$shared_function
 //
-// void MakeMethodDeclaration(void);
+// void MakeMethodDeclaration();
 //./
 
 MethodHeader ::= Modifiersopt Type MethodDeclarator Throwsopt
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstMethodDeclaration *p = ast_pool -> NewMethodDeclaration();
     if (Sym(1) != NULL)
@@ -1636,7 +1647,7 @@ void Parser::Act$rule_number(void)
 MethodHeader ::= Modifiersopt 'void' MethodDeclarator Throwsopt
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstMethodDeclaration *p = ast_pool -> NewMethodDeclaration();
     if (Sym(1) != NULL)
@@ -1672,7 +1683,7 @@ void Parser::Act$rule_number(void)
 MethodDeclarator ::= 'Identifier' '(' FormalParameterListopt ')' Dimsopt
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstMethodDeclarator *p = ast_pool -> NewMethodDeclarator();
     p -> identifier_token = Token(1);
@@ -1712,7 +1723,7 @@ FormalParameterList ::= FormalParameter
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -1729,7 +1740,7 @@ FormalParameterList ::= FormalParameterList ',' FormalParameter
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(1));
 
@@ -1747,7 +1758,7 @@ void Parser::Act$rule_number(void)
 FormalParameter ::= Type VariableDeclaratorId
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstFormalParameter *p = ast_pool -> NewFormalParameter();
     p -> type = Sym(1);
@@ -1766,7 +1777,7 @@ void Parser::Act$rule_number(void)
 FormalParameter ::= Modifiers Type VariableDeclaratorId
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstFormalParameter *p = ast_pool -> NewFormalParameter();
     //
@@ -1800,7 +1811,7 @@ Throws ::= 'throws' ClassTypeList
 \:$SetSym1ToSym2:\
 /.$shared_function
 //
-// void SetSym1ToSym2(void);
+// void SetSym1ToSym2();
 //./
 
 ClassTypeList ::= ClassType
@@ -1809,7 +1820,7 @@ ClassTypeList ::= ClassType
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -1826,7 +1837,7 @@ ClassTypeList ::= ClassTypeList ',' ClassType
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(1));
 
@@ -1850,7 +1861,7 @@ void Parser::Act$rule_number(void)
 MethodBody ::= '{' BlockStatementsopt '}'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstMethodBody *p = ast_pool -> NewMethodBody();
     p -> left_brace_token = Token(1);
@@ -1859,7 +1870,7 @@ void Parser::Act$rule_number(void)
     if (Sym(2) != NULL)
     {
         AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(2));
-        p -> AllocateBlockStatements(tail -> index + 1);
+        p -> AllocateStatements(tail -> index + 1);
         AstListNode *root = tail -> next;
         if (root -> element -> IsExplicitConstructorInvocation())
             p -> explicit_constructor_opt = DYNAMIC_CAST<AstStatement *> (root -> element);
@@ -1888,7 +1899,7 @@ void Parser::Act$rule_number(void)
 StaticInitializer ::= 'static' MethodHeaderMarker MethodBody
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstStaticInitializer *p = ast_pool -> NewStaticInitializer();
     p -> static_token = Token(1);
@@ -1915,7 +1926,7 @@ void Parser::Act$rule_number(void)
 ConstructorDeclaration ::= Modifiersopt ConstructorDeclarator Throwsopt MethodHeaderMarker MethodBody
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstConstructorDeclaration *p = ast_pool -> NewConstructorDeclaration();
 
@@ -1961,7 +1972,7 @@ void Parser::Act$rule_number(void)
 ConstructorDeclarator ::= 'Identifier' '(' FormalParameterListopt ')'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstMethodDeclarator *p = ast_pool -> NewMethodDeclarator();
     p -> identifier_token = Token(1);
@@ -1996,7 +2007,7 @@ void Parser::Act$rule_number(void)
 ExplicitConstructorInvocation ::= 'this' '(' ArgumentListopt ')' ';'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstThisCall *p = ast_pool -> NewThisCall();
     p -> this_token = Token(1);
@@ -2022,7 +2033,7 @@ void Parser::Act$rule_number(void)
 ExplicitConstructorInvocation ::= 'super' '(' ArgumentListopt ')' ';'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstSuperCall *p = ast_pool -> NewSuperCall();
     p -> base_opt = NULL;
@@ -2051,7 +2062,7 @@ void Parser::Act$rule_number(void)
 ExplicitConstructorInvocation ::= Primary '.' 'super' '(' ArgumentListopt ')' ';'
 \:$MakeQualifiedSuper:\
 /.$location
-void Parser::MakeQualifiedSuper(void)
+void Parser::MakeQualifiedSuper()
 {
     AstSuperCall *p = ast_pool -> NewSuperCall();
     p -> base_opt = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -2081,7 +2092,7 @@ ExplicitConstructorInvocation ::= Name '.' 'super' '(' ArgumentListopt ')' ';'
 \:$MakeQualifiedSuper:\
 /.$shared_function
 //
-// void MakeQualifiedSuper(void);
+// void MakeQualifiedSuper();
 //./
 
 --18.9 Productions from 9: Interface Declarations
@@ -2094,7 +2105,7 @@ ExplicitConstructorInvocation ::= Name '.' 'super' '(' ArgumentListopt ')' ';'
 InterfaceDeclaration ::= Modifiersopt 'interface' 'Identifier' ExtendsInterfacesopt InterfaceBody
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstInterfaceDeclaration *p = DYNAMIC_CAST<AstInterfaceDeclaration *> (Sym(5));
     if (Sym(1) != NULL)
@@ -2131,13 +2142,13 @@ ExtendsInterfaces ::= 'extends' InterfaceTypeList
 \:$SetSym1ToSym2:\
 /.$shared_function
 //
-// void SetSym1ToSym2(void);
+// void SetSym1ToSym2();
 //./
 
 InterfaceBody ::= '{' InterfaceMemberDeclarationsopt '}'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstInterfaceDeclaration *p = ast_pool -> NewInterfaceDeclaration();
     if (parse_header_only)
@@ -2232,7 +2243,7 @@ InterfaceMemberDeclarations ::= InterfaceMemberDeclaration
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -2249,7 +2260,7 @@ InterfaceMemberDeclarations ::= InterfaceMemberDeclarations InterfaceMemberDecla
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(1));
 
@@ -2285,7 +2296,7 @@ InterfaceMemberDeclaration -> InterfaceDeclaration
 InterfaceMemberDeclaration ::= ';'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewEmptyDeclaration(Token(1));
 }
@@ -2298,7 +2309,7 @@ ConstantDeclaration -> FieldDeclaration
 AbstractMethodDeclaration ::= MethodHeader ';'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     DYNAMIC_CAST<AstMethodDeclaration *> (Sym(1)) -> method_body =
         ast_pool -> NewEmptyStatement(Token(2));
@@ -2316,7 +2327,7 @@ void Parser::Act$rule_number(void)
 ArrayInitializer ::= '{' ,opt '}'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstArrayInitializer *p = ast_pool -> NewArrayInitializer();
     p -> left_brace_token = Token(1);
@@ -2328,7 +2339,7 @@ void Parser::Act$rule_number(void)
 ArrayInitializer ::= '{' VariableInitializers '}'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstArrayInitializer *p = ast_pool -> NewArrayInitializer();
     p -> left_brace_token = Token(1);
@@ -2352,7 +2363,7 @@ void Parser::Act$rule_number(void)
 ArrayInitializer ::= '{' VariableInitializers , '}'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstArrayInitializer *p = ast_pool -> NewArrayInitializer();
     p -> left_brace_token = Token(1);
@@ -2379,7 +2390,7 @@ VariableInitializers ::= VariableInitializer
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -2396,7 +2407,7 @@ VariableInitializers ::= VariableInitializers ',' VariableInitializer
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(1));
 
@@ -2416,14 +2427,14 @@ void Parser::Act$rule_number(void)
 Block ::= '{' BlockStatementsopt '}'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBlock *p = ast_pool -> NewBlock();
     p -> left_brace_token = Token(1);
     if (Sym(2) != NULL)
     {
         AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(2));
-        p -> AllocateBlockStatements(tail -> index + 1);
+        p -> AllocateStatements(tail -> index + 1);
         AstListNode *root = tail;
         do
         {
@@ -2443,7 +2454,7 @@ BlockStatements ::= BlockStatement
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -2460,7 +2471,7 @@ BlockStatements ::= BlockStatements BlockStatement
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(1));
 
@@ -2500,7 +2511,7 @@ BlockStatement -> ExplicitConstructorInvocation
 LocalVariableDeclarationStatement ::= LocalVariableDeclaration ';'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     DYNAMIC_CAST<AstLocalVariableDeclarationStatement *> (Sym(1)) -> semicolon_token_opt = Token(2);
 }
@@ -2509,7 +2520,7 @@ void Parser::Act$rule_number(void)
 LocalVariableDeclaration ::= Type VariableDeclarators
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstLocalVariableDeclarationStatement *p = ast_pool -> NewLocalVariableDeclarationStatement();
     p -> type = Sym(1);
@@ -2536,7 +2547,7 @@ void Parser::Act$rule_number(void)
 LocalVariableDeclaration ::= Modifiers Type VariableDeclarators
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstLocalVariableDeclarationStatement *p = ast_pool -> NewLocalVariableDeclarationStatement();
     //
@@ -2668,7 +2679,7 @@ StatementWithoutTrailingSubstatement -> AssertStatement
 EmptyStatement ::= ';'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewEmptyStatement(Token(1));
 }
@@ -2677,7 +2688,7 @@ void Parser::Act$rule_number(void)
 LabeledStatement ::= 'Identifier' ':' Statement
 \:$MakeLabeledStatement:\
 /.$location
-void Parser::MakeLabeledStatement(void)
+void Parser::MakeLabeledStatement()
 {
     AstBlock *p = Sym(3) -> BlockCast();
 
@@ -2690,7 +2701,7 @@ void Parser::MakeLabeledStatement(void)
         // level... See ProcessBlock, ProcessStatement,...
         //
         p = ast_pool -> NewBlock();
-        p -> AllocateBlockStatements(1); // allocate 1 element
+        p -> AllocateStatements(1); // allocate 1 element
         p -> left_brace_token = Token(1);
         p -> AddStatement(DYNAMIC_CAST<AstStatement *> (Sym(3)));
         p -> right_brace_token = Sym(3) -> RightToken();
@@ -2706,13 +2717,13 @@ LabeledStatementNoShortIf ::= 'Identifier' ':' StatementNoShortIf
 \:$MakeLabeledStatement:\
 /.$shared_function
 //
-// void MakeLabeledStatement(void);
+// void MakeLabeledStatement();
 //./
 
 ExpressionStatement ::= StatementExpression ';'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     DYNAMIC_CAST<AstExpressionStatement *> (Sym(1)) -> semicolon_token_opt = Token(2);
 }
@@ -2721,7 +2732,7 @@ void Parser::Act$rule_number(void)
 StatementExpression ::= Assignment
 \:$MakeExpressionStatement:\
 /.$location
-void Parser::MakeExpressionStatement(void)
+void Parser::MakeExpressionStatement()
 {
     AstExpressionStatement *p = ast_pool -> NewExpressionStatement();
     p -> expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -2734,54 +2745,54 @@ StatementExpression ::= PreIncrementExpression
 \:$MakeExpressionStatement:\
 /.$shared_function
 //
-// void MakeExpressionStatement(void);
+// void MakeExpressionStatement();
 //./
 
 StatementExpression ::= PreDecrementExpression
 \:$MakeExpressionStatement:\
 /.$shared_function
 //
-// void MakeExpressionStatement(void);
+// void MakeExpressionStatement();
 //./
 
 StatementExpression ::= PostIncrementExpression
 \:$MakeExpressionStatement:\
 /.$shared_function
 //
-// void MakeExpressionStatement(void);
+// void MakeExpressionStatement();
 //./
 
 StatementExpression ::= PostDecrementExpression
 \:$MakeExpressionStatement:\
 /.$shared_function
 //
-// void MakeExpressionStatement(void);
+// void MakeExpressionStatement();
 //./
 
 StatementExpression ::= MethodInvocation
 \:$MakeExpressionStatement:\
 /.$shared_function
 //
-// void MakeExpressionStatement(void);
+// void MakeExpressionStatement();
 //./
 
 StatementExpression ::= ClassInstanceCreationExpression
 \:$MakeExpressionStatement:\
 /.$shared_function
 //
-// void MakeExpressionStatement(void);
+// void MakeExpressionStatement();
 //./
 
 IfThenStatement ::= 'if' '(' Expression ')' Statement
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBlock *block = Sym(5) -> BlockCast();
     if (! block)
     {
         block = ast_pool -> NewBlock();
-        block -> AllocateBlockStatements(1); // allocate 1 element
+        block -> AllocateStatements(1); // allocate 1 element
         block -> left_brace_token = Token(5);
         block -> AddStatement(DYNAMIC_CAST<AstStatement *> (Sym(5)));
         block -> right_brace_token = Sym(5) -> RightToken();
@@ -2800,13 +2811,13 @@ void Parser::Act$rule_number(void)
 IfThenElseStatement ::= 'if' '(' Expression ')' StatementNoShortIf 'else' Statement
 \:$MakeIfThenElseStatement:\
 /.$location
-void Parser::MakeIfThenElseStatement(void)
+void Parser::MakeIfThenElseStatement()
 {
     AstBlock *true_block = Sym(5) -> BlockCast();
     if (! true_block)
     {
         true_block = ast_pool -> NewBlock();
-        true_block -> AllocateBlockStatements(1); // allocate 1 element
+        true_block -> AllocateStatements(1); // allocate 1 element
         true_block -> left_brace_token = Token(5);
         true_block -> AddStatement(DYNAMIC_CAST<AstStatement *> (Sym(5)));
         true_block -> right_brace_token = Sym(5) -> RightToken();
@@ -2817,7 +2828,7 @@ void Parser::MakeIfThenElseStatement(void)
     if (! false_block)
     {
         false_block = ast_pool -> NewBlock();
-        false_block -> AllocateBlockStatements(1); // allocate 1 element
+        false_block -> AllocateStatements(1); // allocate 1 element
         false_block -> left_brace_token = Token(7);
         false_block -> AddStatement(DYNAMIC_CAST<AstStatement *> (Sym(7)));
         false_block -> right_brace_token = Sym(7) -> RightToken();
@@ -2837,13 +2848,13 @@ IfThenElseStatementNoShortIf ::= 'if' '(' Expression ')' StatementNoShortIf 'els
 \:$MakeIfThenElseStatement:\
 /.$shared_function
 //
-// void MakeIfThenElseStatement(void);
+// void MakeIfThenElseStatement();
 //./
 
 SwitchStatement ::= 'switch' '(' Expression ')' SwitchBlock
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstSwitchStatement *p = DYNAMIC_CAST<AstSwitchStatement *> (Sym(5));
     p -> switch_token = Token(1);
@@ -2852,136 +2863,52 @@ void Parser::Act$rule_number(void)
 }
 ./
 
-SwitchBlock ::= '{' '}'
+--
+-- To avoid ambiguity with consecutive optional items, and to special
+-- case trailing labels, we expand this inline.
+--
+--SwitchBlock ::= '{' SwitchBlockStatementsopt SwitchLabelsopt '}'
+--
+SwitchBlock ::= '{' SwitchBlockStatements SwitchLabelsopt '}'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
-    AstSwitchStatement *p = ast_pool -> NewSwitchStatement();
-
-    AstBlock *block = ast_pool -> NewBlock();
+    AstSwitchStatement* p = ast_pool -> NewSwitchStatement();
+    AstBlock* block = ast_pool -> NewBlock();
     block -> left_brace_token = Token(1);
-    block -> right_brace_token = Token(2);
-    block -> block_tag = AstBlock::SWITCH;
-
-    p -> switch_block = block;
-
-    Sym(1) = p;
-}
-./
-
-SwitchBlock ::= '{' SwitchBlockStatements '}'
-\:$action:\
-/.$location
-void Parser::Act$rule_number(void)
-{
-    AstSwitchStatement *p = ast_pool -> NewSwitchStatement();
-
-    AstBlock *block = ast_pool -> NewBlock();
-    block -> left_brace_token = Token(1);
-    if (Sym(2) != NULL)
+    AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(2));
+    block -> AllocateStatements(tail -> index + (Sym(3) ? 2 : 1));
+    AstListNode* root = tail;
+    do
     {
-        AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(2));
-        block -> AllocateBlockStatements(tail -> index + 1);
-        AstListNode *root = tail;
-        do
-        {
-            root = root -> next;
-            block -> AddStatement(DYNAMIC_CAST<AstStatement *> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
-    block -> right_brace_token = Token(3);
-    block -> block_tag = AstBlock::SWITCH;
-
-    p -> switch_block = block;
-
-    Sym(1) = p;
-}
-./
-
-SwitchBlock ::= '{' SwitchLabels '}'
-\:$action:\
-/.$location
-void Parser::Act$rule_number(void)
-{
-    AstSwitchStatement *p = ast_pool -> NewSwitchStatement();
-
-    AstSwitchBlockStatement *q = ast_pool -> NewSwitchBlockStatement();
-    q -> AddStatement(ast_pool -> NewEmptyStatement(Sym(2) -> RightToken()));
-
-    //
-    // The list of SwitchBlockStatements is never null
-    //
-    {
-        AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(2));
-        q -> AllocateSwitchLabels(tail -> index + 1);
-        AstListNode *root = tail;
-        do
-        {
-            root = root -> next;
-            q -> AddSwitchLabel(root -> element);
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
-
-    AstBlock *block = ast_pool -> NewBlock();
-    block -> AllocateBlockStatements(1); // allocate 1 element
-    block -> left_brace_token = Token(1);
-    block -> AddStatement(q);
-    block -> right_brace_token = Token(3);
-    block -> block_tag = AstBlock::SWITCH;
-
-    p -> switch_block = block;
-
-    Sym(1) = p;
-}
-./
-
-SwitchBlock ::= '{' SwitchBlockStatements SwitchLabels '}'
-\:$action:\
-/.$location
-void Parser::Act$rule_number(void)
-{
-    AstSwitchStatement *p = ast_pool -> NewSwitchStatement();
-
-    AstBlock *block = ast_pool -> NewBlock();
-    block -> left_brace_token = Token(1);
-    //
-    // The list of SwitchBlockStatements is never null
-    //
-    {
-        AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(2));
-        block -> AllocateBlockStatements(tail -> index + 2); // +1 because of extra statement for additional SwithLabels
-        AstListNode *root = tail;
-        do
-        {
-            root = root -> next;
-            block -> AddStatement(DYNAMIC_CAST<AstStatement *> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
-
-    AstSwitchBlockStatement *q = ast_pool -> NewSwitchBlockStatement();
-    q -> AddStatement(ast_pool -> NewEmptyStatement(Sym(3) -> RightToken()));
-
-    //
-    // The list of SwitchLabels is never null
-    //
-    {
-        AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(3));
-        q -> AllocateSwitchLabels(tail -> index + 1);
-        AstListNode *root = tail;
-        do
-        {
-            root = root -> next;
-            q -> AddSwitchLabel(root -> element);
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
-
-    block -> AddStatement(q);
+        root = root -> next;
+        block -> AddStatement(DYNAMIC_CAST<AstStatement*> (root -> element));
+    } while (root != tail);
+    FreeCircularList(tail);
+    if (Sym(3))
+        block -> AddStatement
+            (MakeSwitchBlockStatement(DYNAMIC_CAST<AstListNode*> (Sym(3))));
     block -> right_brace_token = Token(4);
+    block -> block_tag = AstBlock::SWITCH;
+    p -> switch_block = block;
+    Sym(1) = p;
+}
+./
+
+SwitchBlock ::= '{' SwitchLabelsopt '}'
+\:$action:\
+/.$location
+void Parser::Act$rule_number()
+{
+    AstSwitchStatement* p = ast_pool -> NewSwitchStatement();
+    AstBlock* block = ast_pool -> NewBlock();
+    block -> AllocateStatements(1); // allocate 1 element
+    block -> left_brace_token = Token(1);
+    if (Sym(2))
+        block -> AddStatement
+            (MakeSwitchBlockStatement(DYNAMIC_CAST<AstListNode*> (Sym(2))));
+    block -> right_brace_token = Token(3);
     block -> block_tag = AstBlock::SWITCH;
 
     p -> switch_block = block;
@@ -2996,7 +2923,7 @@ SwitchBlockStatements ::= SwitchBlockStatement
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -3013,7 +2940,7 @@ SwitchBlockStatements ::= SwitchBlockStatements SwitchBlockStatement
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(1));
 
@@ -3031,39 +2958,43 @@ void Parser::Act$rule_number(void)
 SwitchBlockStatement ::= SwitchLabels BlockStatements
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
-    AstSwitchBlockStatement *p = ast_pool -> NewSwitchBlockStatement();
-    //
-    // The list of SwitchLabels is never null
-    //
-    {
-        AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(1));
-        p -> AllocateSwitchLabels(tail -> index + 1);
-        AstListNode *root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddSwitchLabel(root -> element);
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+    Sym(1) = MakeSwitchBlockStatement(DYNAMIC_CAST<AstListNode*> (Sym(1)),
+                                      DYNAMIC_CAST<AstListNode*> (Sym(2)));
+}
 
-    //
-    // The list of SwitchBlockStatements is never null
-    //
+AstStatement* Parser::MakeSwitchBlockStatement(AstListNode* labels,
+                                               AstListNode* statements)
+{
+    AstSwitchBlockStatement* p = ast_pool -> NewSwitchBlockStatement();
+    assert(labels);
+    AstListNode* tail = labels;
+    p -> AllocateSwitchLabels(tail -> index + 1);
+    AstListNode* root = tail;
+    do
     {
-        AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(2));
-        p -> AllocateBlockStatements(tail -> index + 1);
-        AstListNode *root = tail;
+        root = root -> next;
+        p -> AddSwitchLabel(DYNAMIC_CAST<AstSwitchLabel*> (root -> element));
+    } while (root != tail);
+    FreeCircularList(tail);
+    if (statements)
+    {
+        tail = statements;
+        p -> AllocateStatements(tail -> index + 1);
+        root = tail;
         do
         {
             root = root -> next;
-            p -> AddStatement(DYNAMIC_CAST<AstStatement *> (root -> element));
+            p -> AddStatement(DYNAMIC_CAST<AstStatement*> (root -> element));
         } while (root != tail);
         FreeCircularList(tail);
     }
-    Sym(1) = p;
+    else p -> AddStatement(ast_pool ->
+                           GenEmptyStatement(labels -> RightToken()));
+    p -> right_brace_token =
+        p -> Statement(p -> NumStatements() - 1) -> RightToken();
+    return p;
 }
 ./
 
@@ -3073,7 +3004,7 @@ SwitchLabels ::= SwitchLabel
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -3090,7 +3021,7 @@ SwitchLabels ::= SwitchLabels SwitchLabel
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(1));
 
@@ -3105,35 +3036,38 @@ void Parser::Act$rule_number(void)
 }
 ./
 
-SwitchLabel ::= 'case' ConstantExpression ':'
-\:$action:\
+--
+-- Simplify.
+--
+--SwitchLabel ::= 'case' ConstantExpression ':'
+SwitchLabel ::= 'case' Expression ':'
+\:$MakeSwitchLabel:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::MakeSwitchLabel()
 {
-    AstCaseLabel *p = ast_pool -> NewCaseLabel();
+    AstSwitchLabel* p =
+        ast_pool -> NewSwitchLabel(DYNAMIC_CAST<AstExpression*> (Sym(2)));
     p -> case_token = Token(1);
-    p -> expression = DYNAMIC_CAST<AstExpression *> (Sym(2));
     p -> colon_token = Token(3);
     Sym(1) = p;
 }
 ./
 
-SwitchLabel ::= 'default' ':'
-\:$action:\
-/.$location
-void Parser::Act$rule_number(void)
-{
-    AstDefaultLabel *p = ast_pool -> NewDefaultLabel();
-    p -> default_token = Token(1);
-    p -> colon_token = Token(2);
-    Sym(1) = p;
-}
-./
+--
+-- The use of Marker allows us to share code.
+--
+--SwitchLabel ::= 'default' ':'
+SwitchLabel ::= 'default' Marker ':'
+\:$MakeSwitchLabel:\
+/.$shared_function
+//
+// void MakeSwitchLabel();
+//./
 
 WhileStatement ::= 'while' '(' Expression ')' Statement
 \:$MakeWhileStatement:\
 /.$location
-void Parser::MakeWhileStatement(void)
+void Parser::MakeWhileStatement()
 {
     AstWhileStatement *p = ast_pool -> NewWhileStatement();
     p -> while_token = Token(1);
@@ -3141,7 +3075,7 @@ void Parser::MakeWhileStatement(void)
     p -> statement = DYNAMIC_CAST<AstStatement *> (Sym(5));
 
     AstBlock *block = ast_pool -> NewBlock();
-    block -> AllocateBlockStatements(1); // allocate 1 element
+    block -> AllocateStatements(1); // allocate 1 element
     block -> left_brace_token = Token(1); // point to 'WHILE' keyword
     block -> AddStatement(p);
     block -> right_brace_token = Sym(5) -> RightToken(); // point to last token in statement
@@ -3155,13 +3089,13 @@ WhileStatementNoShortIf ::= 'while' '(' Expression ')' StatementNoShortIf
 \:$MakeWhileStatement:\
 /.$shared_function
 //
-// void MakeWhileStatement(void);
+// void MakeWhileStatement();
 //./
 
 DoStatement ::= 'do' Statement 'while' '(' Expression ')' ';'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstDoStatement *p = ast_pool -> NewDoStatement();
     p -> do_token = Token(1);
@@ -3171,7 +3105,7 @@ void Parser::Act$rule_number(void)
     p -> semicolon_token = Token(7);
 
     AstBlock *block = ast_pool -> NewBlock();
-    block -> AllocateBlockStatements(1); // allocate 1 element
+    block -> AllocateStatements(1); // allocate 1 element
     block -> left_brace_token = Token(1);
     block -> AddStatement(p);
     block -> right_brace_token = Token(7);
@@ -3184,7 +3118,7 @@ void Parser::Act$rule_number(void)
 ForStatement ::= 'for' '(' ForInitopt ';' Expressionopt ';' ForUpdateopt ')' Statement
 \:$MakeForStatement:\
 /.$location
-void Parser::MakeForStatement(void)
+void Parser::MakeForStatement()
 {
     AstForStatement *p = ast_pool -> NewForStatement();
     p -> for_token = Token(1);
@@ -3216,7 +3150,7 @@ void Parser::MakeForStatement(void)
     p -> statement = DYNAMIC_CAST<AstStatement *> (Sym(9));
 
     AstBlock *block = ast_pool -> NewBlock();
-    block -> AllocateBlockStatements(1); // allocate 1 element
+    block -> AllocateStatements(1); // allocate 1 element
     block -> left_brace_token = Token(1);
     block -> AddStatement(p);
     block -> right_brace_token = Sym(9) -> RightToken();
@@ -3230,7 +3164,7 @@ ForStatementNoShortIf ::= 'for' '(' ForInitopt ';' Expressionopt ';' ForUpdateop
 \:$MakeForStatement:\
 /.$shared_function
 //
-// void MakeForStatement(void);
+// void MakeForStatement();
 //./
 
 ForInit -> StatementExpressionList
@@ -3243,7 +3177,7 @@ ForInit ::= LocalVariableDeclaration
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -3264,7 +3198,7 @@ StatementExpressionList ::= StatementExpression
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -3281,7 +3215,7 @@ StatementExpressionList ::= StatementExpressionList ',' StatementExpression
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(1));
 
@@ -3302,7 +3236,7 @@ void Parser::Act$rule_number(void)
 AssertStatement ::= 'assert' Expression ';'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstAssertStatement *p = ast_pool -> NewAssertStatement();
     p -> assert_token = Token(1);
@@ -3316,7 +3250,7 @@ void Parser::Act$rule_number(void)
 AssertStatement ::= 'assert' Expression ':' Expression ';'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstAssertStatement *p = ast_pool -> NewAssertStatement();
     p -> assert_token = Token(1);
@@ -3337,7 +3271,7 @@ void Parser::Act$rule_number(void)
 BreakStatement ::= 'break' ';'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBreakStatement *p = ast_pool -> NewBreakStatement();
     p -> break_token = Token(1);
@@ -3350,7 +3284,7 @@ void Parser::Act$rule_number(void)
 BreakStatement ::= 'break' 'Identifier' ';'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBreakStatement *p = ast_pool -> NewBreakStatement();
     p -> break_token = Token(1);
@@ -3363,7 +3297,7 @@ void Parser::Act$rule_number(void)
 ContinueStatement ::= 'continue' ';'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstContinueStatement *p = ast_pool -> NewContinueStatement();
     p -> continue_token = Token(1);
@@ -3376,7 +3310,7 @@ void Parser::Act$rule_number(void)
 ContinueStatement ::= 'continue' 'Identifier' ';'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstContinueStatement *p = ast_pool -> NewContinueStatement();
     p -> continue_token = Token(1);
@@ -3389,7 +3323,7 @@ void Parser::Act$rule_number(void)
 ReturnStatement ::= 'return' Expressionopt ';'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstReturnStatement *p = ast_pool -> NewReturnStatement();
     p -> return_token = Token(1);
@@ -3402,7 +3336,7 @@ void Parser::Act$rule_number(void)
 ThrowStatement ::= 'throw' Expression ';'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstThrowStatement *p = ast_pool -> NewThrowStatement();
     p -> throw_token = Token(1);
@@ -3415,7 +3349,7 @@ void Parser::Act$rule_number(void)
 SynchronizedStatement ::= 'synchronized' '(' Expression ')' Block
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstSynchronizedStatement *p = ast_pool -> NewSynchronizedStatement();
     p -> synchronized_token = Token(1);
@@ -3430,7 +3364,7 @@ void Parser::Act$rule_number(void)
 TryStatement ::= 'try' Block Catches
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstTryStatement *p = ast_pool -> NewTryStatement();
     p -> try_token = Token(1);
@@ -3458,7 +3392,7 @@ void Parser::Act$rule_number(void)
 TryStatement ::= 'try' Block Catchesopt Finally
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstTryStatement *p = ast_pool -> NewTryStatement();
     p -> try_token = Token(1);
@@ -3493,7 +3427,7 @@ Catches ::= CatchClause
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -3510,7 +3444,7 @@ Catches ::= Catches CatchClause
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(1));
 
@@ -3528,7 +3462,7 @@ void Parser::Act$rule_number(void)
 CatchClause ::= 'catch' '(' FormalParameter ')' Block
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstCatchClause *p = ast_pool -> NewCatchClause();
     p -> catch_token = Token(1);
@@ -3542,7 +3476,7 @@ void Parser::Act$rule_number(void)
 Finally ::= 'finally' Block
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstFinallyClause *p = ast_pool -> NewFinallyClause();
     p -> finally_token = Token(1);
@@ -3583,7 +3517,7 @@ PrimaryNoNewArray -> Literal
 PrimaryNoNewArray ::= this
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewThisExpression(Token(1));
 }
@@ -3592,7 +3526,7 @@ void Parser::Act$rule_number(void)
 PrimaryNoNewArray ::= '(' Expression ')'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstParenthesizedExpression *p = ast_pool -> NewParenthesizedExpression();
     p -> left_parenthesis_token = Token(1);
@@ -3616,7 +3550,7 @@ PrimaryNoNewArray -> FieldAccess
 PrimaryNoNewArray ::= Name '.' 'this'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstFieldAccess *p = ast_pool -> NewFieldAccess(AstFieldAccess::THIS_TAG);
     p -> base = ast_pool -> NewTypeExpression(Sym(1));
@@ -3630,7 +3564,7 @@ void Parser::Act$rule_number(void)
 PrimaryNoNewArray ::= Type '.' 'class'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstFieldAccess *p = ast_pool -> NewFieldAccess(AstFieldAccess::CLASS_TAG);
     p -> base = ast_pool -> NewTypeExpression(Sym(1));
@@ -3644,7 +3578,7 @@ void Parser::Act$rule_number(void)
 PrimaryNoNewArray ::= 'void' '.' 'class'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstFieldAccess *p = ast_pool -> NewFieldAccess(AstFieldAccess::CLASS_TAG);
     p -> base = ast_pool -> NewTypeExpression(ast_pool -> NewPrimitiveType(Ast::VOID_TYPE, Token(1)));
@@ -3670,7 +3604,7 @@ PrimaryNoNewArray -> ArrayAccess
 ClassInstanceCreationExpression ::= 'new' ClassType '(' ArgumentListopt ')' ClassBodyopt
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstClassInstanceCreationExpression *p = ast_pool -> NewClassInstanceCreationExpression();
     p -> base_opt = NULL;
@@ -3700,7 +3634,7 @@ void Parser::Act$rule_number(void)
 ClassInstanceCreationExpression ::= Primary '.' 'new' SimpleName '(' ArgumentListopt ')' ClassBodyopt
 \:$MakeQualifiedNew:\
 /.$location
-void Parser::MakeQualifiedNew(void)
+void Parser::MakeQualifiedNew()
 {
     AstClassInstanceCreationExpression *p = ast_pool -> NewClassInstanceCreationExpression();
     p -> base_opt = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -3731,7 +3665,7 @@ ClassInstanceCreationExpression ::= Name '.' 'new' SimpleName '(' ArgumentListop
 \:$MakeQualifiedNew:\
 /.$shared_function
 //
-// void MakeQualifiedNew(void);
+// void MakeQualifiedNew();
 //./
 
 ArgumentList ::= Expression
@@ -3740,7 +3674,7 @@ ArgumentList ::= Expression
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -3757,7 +3691,7 @@ ArgumentList ::= ArgumentList ',' Expression
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(1));
 
@@ -3783,7 +3717,7 @@ void Parser::Act$rule_number(void)
 ArrayCreationUninitialized ::= 'new' PrimitiveType DimExprs Dimsopt
 \:$MakeArrayCreationExpression:\
 /.$location
-void Parser::MakeArrayCreationExpression(void)
+void Parser::MakeArrayCreationExpression()
 {
     AstArrayCreationExpression *p = ast_pool -> NewArrayCreationExpression();
     p -> new_token = Token(1);
@@ -3827,7 +3761,7 @@ ArrayCreationUninitialized ::= 'new' ClassOrInterfaceType DimExprs Dimsopt
 \:$MakeArrayCreationExpression:\
 /.$shared_function
 //
-// void MakeArrayCreationExpression(void);
+// void MakeArrayCreationExpression();
 //./
 
 --1.1 feature
@@ -3837,7 +3771,7 @@ ArrayCreationUninitialized ::= 'new' ClassOrInterfaceType DimExprs Dimsopt
 ArrayCreationInitialized ::= 'new' ArrayType ArrayInitializer
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstArrayCreationExpression *p = ast_pool -> NewArrayCreationExpression();
     p -> new_token = Token(1);
@@ -3853,7 +3787,7 @@ DimExprs ::= DimExpr
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -3870,7 +3804,7 @@ DimExprs ::= DimExprs DimExpr
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(1));
 
@@ -3888,7 +3822,7 @@ void Parser::Act$rule_number(void)
 DimExpr ::= '[' Expression ']'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstDimExpr *p = ast_pool -> NewDimExpr();
     p -> left_bracket_token = Token(1);
@@ -3904,7 +3838,7 @@ Dims ::= '[' ']'
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -3921,7 +3855,7 @@ Dims ::= Dims '[' ']'
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstListNode *tail = DYNAMIC_CAST<AstListNode *> (Sym(1));
 
@@ -3940,13 +3874,13 @@ FieldAccess ::= Primary '.' 'Identifier'
 \:$MakeFieldAccess:\
 /.$shared_function
 //
-// void MakeFieldAccess(void);
+// void MakeFieldAccess();
 //./
 
 FieldAccess ::= 'super' '.' 'Identifier'
 \:$MakeSuperFieldAccess:\
 /.$location
-void Parser::MakeSuperFieldAccess(void)
+void Parser::MakeSuperFieldAccess()
 {
     Sym(1) = ast_pool -> NewSuperExpression(Token(1));
 
@@ -3960,7 +3894,7 @@ void Parser::MakeSuperFieldAccess(void)
 FieldAccess ::= Name '.' 'super' '.' 'Identifier'
 \:$MakeSuperDoubleFieldAccess:\
 /.$location
-void Parser::MakeSuperDoubleFieldAccess(void)
+void Parser::MakeSuperDoubleFieldAccess()
 {
     AstFieldAccess *p = ast_pool -> NewFieldAccess();
 
@@ -3980,7 +3914,7 @@ void Parser::MakeSuperDoubleFieldAccess(void)
 MethodInvocation ::= Name '(' ArgumentListopt ')'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstMethodInvocation *p = ast_pool -> NewMethodInvocation();
     p -> method = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4005,7 +3939,7 @@ void Parser::Act$rule_number(void)
 MethodInvocation ::= Primary '.' 'Identifier' '(' ArgumentListopt ')'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     MakeFieldAccess();
 
@@ -4032,7 +3966,7 @@ void Parser::Act$rule_number(void)
 MethodInvocation ::= 'super' '.' 'Identifier' '(' ArgumentListopt ')'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     MakeSuperFieldAccess();
 
@@ -4062,7 +3996,7 @@ void Parser::Act$rule_number(void)
 MethodInvocation ::= Name '.' 'super' '.' 'Identifier' '(' ArgumentListopt ')'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     MakeSuperDoubleFieldAccess();
 
@@ -4089,7 +4023,7 @@ void Parser::Act$rule_number(void)
 ArrayAccess ::= Name '[' Expression ']'
 \:$MakeArrayAccess:\
 /.$location
-void Parser::MakeArrayAccess(void)
+void Parser::MakeArrayAccess()
 {
     AstArrayAccess *p = ast_pool -> NewArrayAccess();
     p -> base = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4104,7 +4038,7 @@ ArrayAccess ::= PrimaryNoNewArray '[' Expression ']'
 \:$MakeArrayAccess:\
 /.$shared_function
 //
-// void MakeArrayAccess(void);
+// void MakeArrayAccess();
 //./
 
 --
@@ -4115,7 +4049,7 @@ ArrayAccess ::= ArrayCreationInitialized '[' Expression ']'
 \:$MakeArrayAccess:\
 /.$shared_function
 //
-// void MakeArrayAccess(void);
+// void MakeArrayAccess();
 //./
 
 PostfixExpression -> Primary
@@ -4137,7 +4071,7 @@ PostfixExpression -> PostDecrementExpression
 PostIncrementExpression ::= PostfixExpression '++'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstPostUnaryExpression *p = ast_pool -> NewPostUnaryExpression(AstPostUnaryExpression::PLUSPLUS);
     p -> expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4149,7 +4083,7 @@ void Parser::Act$rule_number(void)
 PostDecrementExpression ::= PostfixExpression '--'
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstPostUnaryExpression *p = ast_pool -> NewPostUnaryExpression(AstPostUnaryExpression::MINUSMINUS);
     p -> expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4169,7 +4103,7 @@ UnaryExpression -> PreDecrementExpression
 UnaryExpression ::= '+' UnaryExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstPreUnaryExpression *p = ast_pool -> NewPreUnaryExpression(AstPreUnaryExpression::PLUS);
     p -> pre_operator_token = Token(1);
@@ -4181,7 +4115,7 @@ void Parser::Act$rule_number(void)
 UnaryExpression ::= '-' UnaryExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstPreUnaryExpression *p = ast_pool -> NewPreUnaryExpression(AstPreUnaryExpression::MINUS);
     p -> pre_operator_token = Token(1);
@@ -4197,7 +4131,7 @@ UnaryExpression -> UnaryExpressionNotPlusMinus
 PreIncrementExpression ::= '++' UnaryExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstPreUnaryExpression *p = ast_pool -> NewPreUnaryExpression(AstPreUnaryExpression::PLUSPLUS);
     p -> pre_operator_token = Token(1);
@@ -4209,7 +4143,7 @@ void Parser::Act$rule_number(void)
 PreDecrementExpression ::= '--' UnaryExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstPreUnaryExpression *p = ast_pool -> NewPreUnaryExpression(AstPreUnaryExpression::MINUSMINUS);
     p -> pre_operator_token = Token(1);
@@ -4225,7 +4159,7 @@ UnaryExpressionNotPlusMinus -> PostfixExpression
 UnaryExpressionNotPlusMinus ::= '~' UnaryExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstPreUnaryExpression *p = ast_pool -> NewPreUnaryExpression(AstPreUnaryExpression::TWIDDLE);
     p -> pre_operator_token = Token(1);
@@ -4237,7 +4171,7 @@ void Parser::Act$rule_number(void)
 UnaryExpressionNotPlusMinus ::= '!' UnaryExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstPreUnaryExpression *p = ast_pool -> NewPreUnaryExpression(AstPreUnaryExpression::NOT);
     p -> pre_operator_token = Token(1);
@@ -4253,7 +4187,7 @@ UnaryExpressionNotPlusMinus -> CastExpression
 CastExpression ::= '(' PrimitiveType Dimsopt ')' UnaryExpression
 \:$MakeCastExpression:\
 /.$location
-void Parser::MakeCastExpression(void)
+void Parser::MakeCastExpression()
 {
     AstCastExpression *p = ast_pool -> NewCastExpression();
     p -> left_parenthesis_token_opt = Token(1);
@@ -4279,7 +4213,7 @@ void Parser::MakeCastExpression(void)
 CastExpression ::= '(' Expression ')' UnaryExpressionNotPlusMinus
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     //
     // Note that Expression must be a name - i.e., Sym(2) -> isName() == true
@@ -4299,7 +4233,7 @@ CastExpression ::= '(' Name Dims ')' UnaryExpressionNotPlusMinus
 \:$MakeCastExpression:\
 /.$shared_function
 //
-// void MakeCastExpression(void);
+// void MakeCastExpression();
 //./
 
 MultiplicativeExpression -> UnaryExpression
@@ -4309,7 +4243,7 @@ MultiplicativeExpression -> UnaryExpression
 MultiplicativeExpression ::= MultiplicativeExpression '*' UnaryExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::STAR);
     p -> left_expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4322,7 +4256,7 @@ void Parser::Act$rule_number(void)
 MultiplicativeExpression ::= MultiplicativeExpression '/' UnaryExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::SLASH);
     p -> left_expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4335,7 +4269,7 @@ void Parser::Act$rule_number(void)
 MultiplicativeExpression ::= MultiplicativeExpression '%' UnaryExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::MOD);
     p -> left_expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4352,7 +4286,7 @@ AdditiveExpression -> MultiplicativeExpression
 AdditiveExpression ::= AdditiveExpression '+' MultiplicativeExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::PLUS);
     p -> left_expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4365,7 +4299,7 @@ void Parser::Act$rule_number(void)
 AdditiveExpression ::= AdditiveExpression '-' MultiplicativeExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::MINUS);
     p -> left_expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4382,7 +4316,7 @@ ShiftExpression -> AdditiveExpression
 ShiftExpression ::= ShiftExpression '<<'  AdditiveExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::LEFT_SHIFT);
     p -> left_expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4395,7 +4329,7 @@ void Parser::Act$rule_number(void)
 ShiftExpression ::= ShiftExpression '>>'  AdditiveExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::RIGHT_SHIFT);
     p -> left_expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4408,7 +4342,7 @@ void Parser::Act$rule_number(void)
 ShiftExpression ::= ShiftExpression '>>>' AdditiveExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::UNSIGNED_RIGHT_SHIFT);
     p -> left_expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4425,7 +4359,7 @@ RelationalExpression -> ShiftExpression
 RelationalExpression ::= RelationalExpression '<'  ShiftExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::LESS);
     p -> left_expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4438,7 +4372,7 @@ void Parser::Act$rule_number(void)
 RelationalExpression ::= RelationalExpression '>'  ShiftExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::GREATER);
     p -> left_expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4451,7 +4385,7 @@ void Parser::Act$rule_number(void)
 RelationalExpression ::= RelationalExpression '<=' ShiftExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::LESS_EQUAL);
     p -> left_expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4464,7 +4398,7 @@ void Parser::Act$rule_number(void)
 RelationalExpression ::= RelationalExpression '>=' ShiftExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::GREATER_EQUAL);
     p -> left_expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4477,7 +4411,7 @@ void Parser::Act$rule_number(void)
 RelationalExpression ::= RelationalExpression 'instanceof' ReferenceType
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::INSTANCEOF);
     p -> left_expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4494,7 +4428,7 @@ EqualityExpression -> RelationalExpression
 EqualityExpression ::= EqualityExpression '==' RelationalExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::EQUAL_EQUAL);
     p -> left_expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4507,7 +4441,7 @@ void Parser::Act$rule_number(void)
 EqualityExpression ::= EqualityExpression '!=' RelationalExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::NOT_EQUAL);
     p -> left_expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4525,7 +4459,7 @@ AndExpression -> EqualityExpression
 AndExpression ::= AndExpression '&' EqualityExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::AND);
     p -> left_expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4542,7 +4476,7 @@ ExclusiveOrExpression -> AndExpression
 ExclusiveOrExpression ::= ExclusiveOrExpression '^' AndExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::XOR);
     p -> left_expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4559,7 +4493,7 @@ InclusiveOrExpression -> ExclusiveOrExpression
 InclusiveOrExpression ::= InclusiveOrExpression '|' ExclusiveOrExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::IOR);
     p -> left_expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4576,7 +4510,7 @@ ConditionalAndExpression -> InclusiveOrExpression
 ConditionalAndExpression ::= ConditionalAndExpression '&&' InclusiveOrExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::AND_AND);
     p -> left_expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4593,7 +4527,7 @@ ConditionalOrExpression -> ConditionalAndExpression
 ConditionalOrExpression ::= ConditionalOrExpression '||' ConditionalAndExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::OR_OR);
     p -> left_expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4610,7 +4544,7 @@ ConditionalExpression -> ConditionalOrExpression
 ConditionalExpression ::= ConditionalOrExpression '?' Expression ':' ConditionalExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstConditionalExpression *p = ast_pool -> NewConditionalExpression();
     p -> test_expression = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4639,7 +4573,7 @@ AssignmentExpression -> Assignment
 Assignment ::= PostfixExpression AssignmentOperator AssignmentExpression
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     AstAssignmentExpression *p = DYNAMIC_CAST<AstAssignmentExpression *> (Sym(2));
     p -> left_hand_side = DYNAMIC_CAST<AstExpression *> (Sym(1));
@@ -4666,7 +4600,7 @@ void Parser::Act$rule_number(void)
 AssignmentOperator ::= '='
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::SIMPLE_EQUAL, Token(1));
 }
@@ -4675,7 +4609,7 @@ void Parser::Act$rule_number(void)
 AssignmentOperator ::= '*='
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::STAR_EQUAL, Token(1));
 }
@@ -4684,7 +4618,7 @@ void Parser::Act$rule_number(void)
 AssignmentOperator ::= '/='
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::SLASH_EQUAL, Token(1));
 }
@@ -4693,7 +4627,7 @@ void Parser::Act$rule_number(void)
 AssignmentOperator ::= '%='
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::MOD_EQUAL, Token(1));
 }
@@ -4702,7 +4636,7 @@ void Parser::Act$rule_number(void)
 AssignmentOperator ::= '+='
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::PLUS_EQUAL, Token(1));
 }
@@ -4711,7 +4645,7 @@ void Parser::Act$rule_number(void)
 AssignmentOperator ::= '-='
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::MINUS_EQUAL, Token(1));
 }
@@ -4720,7 +4654,7 @@ void Parser::Act$rule_number(void)
 AssignmentOperator ::= '<<='
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::LEFT_SHIFT_EQUAL, Token(1));
 }
@@ -4729,7 +4663,7 @@ void Parser::Act$rule_number(void)
 AssignmentOperator ::= '>>='
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::RIGHT_SHIFT_EQUAL, Token(1));
 }
@@ -4738,7 +4672,7 @@ void Parser::Act$rule_number(void)
 AssignmentOperator ::= '>>>='
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::UNSIGNED_RIGHT_SHIFT_EQUAL, Token(1));
 }
@@ -4747,7 +4681,7 @@ void Parser::Act$rule_number(void)
 AssignmentOperator ::= '&='
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::AND_EQUAL, Token(1));
 }
@@ -4756,7 +4690,7 @@ void Parser::Act$rule_number(void)
 AssignmentOperator ::= '^='
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::XOR_EQUAL, Token(1));
 }
@@ -4765,7 +4699,7 @@ void Parser::Act$rule_number(void)
 AssignmentOperator ::= '|='
 \:$action:\
 /.$location
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::IOR_EQUAL, Token(1));
 }
@@ -4775,9 +4709,10 @@ Expression -> AssignmentExpression
 \:$NoAction:\
 /.$shared_NoAction./
 
-ConstantExpression -> Expression
-\:$NoAction:\
-/.$shared_NoAction./
+--
+-- Simplify the syntax tree.
+--
+--ConstantExpression ::= Expression
 
 -----------------------------------------------------------------------------
 --
@@ -4793,7 +4728,7 @@ PackageDeclarationopt ::= $empty
 //
 // Construct a NULL Ast for A.
 //
-void Parser::NullAction(void) { Sym(1) = NULL; }
+void Parser::NullAction() { Sym(1) = NULL; }
 ./
 
 PackageDeclarationopt -> PackageDeclaration
@@ -4902,6 +4837,14 @@ ArgumentListopt -> ArgumentList
 \:$NoAction:\
 /.$shared_NoAction./
 
+SwitchLabelsopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+SwitchLabelsopt ::= SwitchLabels
+\:$NoAction:\
+/.$shared_NoAction./
+
 Throwsopt ::= $empty
 \:$NullAction:\
 /.$shared_NullAction./
@@ -4973,7 +4916,7 @@ PackageHeaderMarker ::= $empty
 // When this function is invoked, if the "parse_package_header_only" flag
 // is turned on, we skip to the end-of-file token.
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     if (parse_package_header_only)
         lex_stream -> Reset(lex_stream -> NumTokens() - 1); // point to the EOF token
@@ -4988,7 +4931,7 @@ MethodHeaderMarker ::= $empty
 // When this function is invoked, if the "parse_header_only" flag
 // is turned on, the body of the method being parsed is skipped.
 //
-void Parser::Act$rule_number(void)
+void Parser::Act$rule_number()
 {
     if (parse_header_only)
     {
@@ -5007,13 +4950,21 @@ void Parser::Act$rule_number(void)
 }
 ./
 
+--
+-- This rule exists solely to put NULL on the symbol stack, allowing us to
+-- share productions that differ by the presence or absence of a rule.
+--
+Marker ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+
+------ Finish off the files
 /.
 #ifdef HAVE_JIKES_NAMESPACE
 } // Close namespace Jikes block
 #endif
 ./
-
-----------------------------------------------------------------------------
 
 \:
 #ifndef HEADERS

@@ -890,7 +890,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     bool EmitSynchronizedStatement(AstSynchronizedStatement *);
     bool EmitBlockStatement(AstBlock *);
     void EmitStatementExpression(AstExpression *);
-    void EmitSwitchStatement(AstSwitchStatement *);
+    bool EmitSwitchStatement(AstSwitchStatement*);
+    bool EmitSwitchBlockStatement(AstSwitchBlockStatement*, bool);
+    void CloseSwitchLocalVariables(AstBlock*, u2 op_start);
     void EmitTryStatement(AstTryStatement *);
     void EmitAssertStatement(AstAssertStatement *);
     void EmitBranchIfExpression(AstExpression *, bool, Label &,

@@ -27,6 +27,7 @@ class AstClassBody;
 class AstInterfaceDeclaration;
 class AstListNode;
 class AstMethodBody;
+class AstStatement;
 
 enum ParseErrorCode
 {

@@ -419,7 +419,7 @@ bool Parser::Initializer(AstClassBody *class_body)
             //
             initializer -> explicit_constructor_opt =
                 block -> explicit_constructor_opt;
-            initializer -> AllocateBlockStatements(block -> NumStatements());
+            initializer -> AllocateStatements(block -> NumStatements());
             for (int j = 0; j < block -> NumStatements(); j++)
                 initializer -> AddStatement(block -> Statement(j));
         }

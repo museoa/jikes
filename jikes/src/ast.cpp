@@ -114,14 +114,10 @@ void AstCompilationUnit::FreeAst()
      delete ast_pool;
 }
 
-int CaseElement::Value()
-{
-    return ((IntLiteralValue*) (expression -> value)) -> value;
-}
-
 //
-// This procedure uses a quick sort algorithm to sort the cases
-// in a switch statement.
+// This procedure uses a quick sort algorithm to sort the cases in a switch
+// statement. Element 0 is not sorted, because it is the default case (and
+// may be NULL).
 //
 void AstSwitchStatement::SortCases()
 {
@@ -139,7 +135,7 @@ void AstSwitchStatement::SortCases()
     AstArray<CaseElement *> &map = *cases;
 
     top = 0;
-    lostack[top] = 0;
+    lostack[top] = 1;
     histack[top] = map.Length() - 1;
 
     while (top >= 0)
@@ -154,7 +150,7 @@ void AstSwitchStatement::SortCases()
             // The array is most-likely almost sorted. Therefore,
             // we use the middle element as the pivot element.
             //
-            i = (lower + upper) / 2;
+            i = (lower + upper) >> 1;
             pivot = *map[i];
             *map[i] = *map[lower];
 
@@ -164,8 +160,7 @@ void AstSwitchStatement::SortCases()
             //
             i = lower;
             for (j = lower + 1; j <= upper; j++)
-                if (map[j] -> Value() < pivot.Value() ||
-                    (map[j] -> Value() == pivot.Value() && map[j] -> index < pivot.index)) // keep the sort stable
+                if (*map[j] < pivot)
                 {
                     temp = *map[++i];
                     *map[i] = *map[j];
@@ -191,13 +186,36 @@ void AstSwitchStatement::SortCases()
     }
 }
 
+//
+// Performs a binary search to locate the correct case (including the
+// default case) for a constant expression value. Returns NULL if the switch
+// is a no-op for this constant.
+//
+CaseElement* AstSwitchStatement::CaseForValue(i4 value)
+{
+    unsigned lower = 1;
+    unsigned upper = cases -> Length() - 1;
+    while (lower <= upper)
+    {
+        unsigned mid = (lower + upper) >> 1;
+        CaseElement* elt = (*cases)[mid];
+        if (elt -> value == value)
+            return elt;
+        if (elt -> value > value)
+            upper = mid - 1;
+        else
+            lower = mid + 1;
+    }
+    return (*cases)[0];
+}
+
 
 Ast *Ast::Clone(StoragePool *ast_pool)
 {
     return (Ast *) NULL;
 }
 
-Ast *AstBlock::Clone(StoragePool *ast_pool)
+AstBlock* AstBlock::Clone(StoragePool* ast_pool)
 {
     AstBlock *clone = ast_pool -> GenBlock();
     CloneInto(clone, ast_pool);
@@ -239,7 +257,7 @@ Ast *AstArrayType::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstSimpleName::Clone(StoragePool *ast_pool)
+AstSimpleName* AstSimpleName::Clone(StoragePool* ast_pool)
 {
     AstSimpleName *clone = ast_pool -> GenSimpleName(identifier_token);
     clone -> resolution_opt = (AstExpression *) (resolution_opt ? resolution_opt -> Clone(ast_pool) : NULL);
@@ -311,7 +329,7 @@ Ast *AstClassBody::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstClassDeclaration::Clone(StoragePool *ast_pool)
+AstStatement* AstClassDeclaration::Clone(StoragePool* ast_pool)
 {
     AstClassDeclaration *clone = ast_pool -> GenClassDeclaration();
 
@@ -358,7 +376,7 @@ Ast *AstVariableDeclaratorId::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstVariableDeclarator::Clone(StoragePool *ast_pool)
+AstVariableDeclarator* AstVariableDeclarator::Clone(StoragePool* ast_pool)
 {
     AstVariableDeclarator *clone = ast_pool -> GenVariableDeclarator();
 
@@ -443,7 +461,7 @@ Ast *AstStaticInitializer::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstThisCall::Clone(StoragePool *ast_pool)
+AstThisCall* AstThisCall::Clone(StoragePool* ast_pool)
 {
     AstThisCall *clone = ast_pool -> GenThisCall();
 
@@ -458,7 +476,7 @@ Ast *AstThisCall::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstSuperCall::Clone(StoragePool *ast_pool)
+AstSuperCall* AstSuperCall::Clone(StoragePool* ast_pool)
 {
     AstSuperCall *clone = ast_pool -> GenSuperCall();
 
@@ -478,7 +496,7 @@ Ast *AstSuperCall::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstMethodBody::Clone(StoragePool *ast_pool)
+AstMethodBody* AstMethodBody::Clone(StoragePool* ast_pool)
 {
     AstMethodBody *clone = ast_pool -> GenMethodBody();
     CloneInto(clone, ast_pool);
@@ -522,7 +540,7 @@ Ast *AstInterfaceDeclaration::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstLocalVariableDeclarationStatement::Clone(StoragePool *ast_pool)
+AstLocalVariableDeclarationStatement* AstLocalVariableDeclarationStatement::Clone(StoragePool* ast_pool)
 {
     AstLocalVariableDeclarationStatement *clone = ast_pool -> GenLocalVariableDeclarationStatement();
 
@@ -536,7 +554,7 @@ Ast *AstLocalVariableDeclarationStatement::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstIfStatement::Clone(StoragePool *ast_pool)
+AstIfStatement* AstIfStatement::Clone(StoragePool* ast_pool)
 {
     AstIfStatement *clone = ast_pool -> GenIfStatement();
 
@@ -551,14 +569,14 @@ Ast *AstIfStatement::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstEmptyStatement::Clone(StoragePool *ast_pool)
+AstEmptyStatement* AstEmptyStatement::Clone(StoragePool* ast_pool)
 {
     AstEmptyStatement *clone = ast_pool -> GenEmptyStatement(semicolon_token);
 
     return clone;
 }
 
-Ast *AstExpressionStatement::Clone(StoragePool *ast_pool)
+AstExpressionStatement* AstExpressionStatement::Clone(StoragePool* ast_pool)
 {
     AstExpressionStatement *clone = ast_pool -> GenExpressionStatement();
 
@@ -568,31 +586,20 @@ Ast *AstExpressionStatement::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstCaseLabel::Clone(StoragePool *ast_pool)
+AstSwitchLabel* AstSwitchLabel::Clone(StoragePool* ast_pool)
 {
-    AstCaseLabel *clone = ast_pool -> GenCaseLabel();
-
+    AstSwitchLabel* clone = ast_pool ->
+        GenSwitchLabel(expression_opt ? expression_opt -> Clone(ast_pool)
+                       : (AstExpression*) NULL);
     clone -> case_token = case_token;
-    clone -> expression = (AstExpression *) expression -> Clone(ast_pool);
     clone -> colon_token = colon_token;
     clone -> map_index = map_index;
-
     return clone;
 }
 
-Ast *AstDefaultLabel::Clone(StoragePool *ast_pool)
+AstSwitchBlockStatement* AstSwitchBlockStatement::Clone(StoragePool* ast_pool)
 {
-    AstDefaultLabel *clone = ast_pool -> GenDefaultLabel();
-
-    clone -> default_token = default_token;
-    clone -> colon_token = colon_token;
-
-    return clone;
-}
-
-Ast *AstSwitchBlockStatement::Clone(StoragePool *ast_pool)
-{
-    AstSwitchBlockStatement *clone = ast_pool -> GenSwitchBlockStatement();
+    AstSwitchBlockStatement* clone = ast_pool -> GenSwitchBlockStatement();
     CloneInto(clone, ast_pool);
     clone -> AllocateSwitchLabels(NumSwitchLabels());
     for (int i = 0; i < NumSwitchLabels(); i++)
@@ -600,18 +607,28 @@ Ast *AstSwitchBlockStatement::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstSwitchStatement::Clone(StoragePool *ast_pool)
+AstSwitchStatement* AstSwitchStatement::Clone(StoragePool* ast_pool)
 {
-    AstSwitchStatement *clone = ast_pool -> GenSwitchStatement();
-
+    AstSwitchStatement* clone = ast_pool -> GenSwitchStatement();
     clone -> switch_token = switch_token;
-    clone -> expression = (AstExpression *) expression -> Clone(ast_pool);
-    clone -> switch_block = (AstBlock *) switch_block -> Clone(ast_pool);
-
+    clone -> expression = expression -> Clone(ast_pool);
+    clone -> switch_block = switch_block -> Clone(ast_pool);
+    clone -> AllocateCases(NumCases());
+    if (DefaultCase())
+    {
+        clone -> DefaultCase() = ast_pool -> GenCaseElement(0, 0);
+        *clone -> DefaultCase() = *DefaultCase();
+    }
+    for (unsigned i = 0; i < NumCases(); i++)
+    {
+        CaseElement* elt = ast_pool -> GenCaseElement(0, 0);
+        *elt = *Case(i);
+        clone -> AddCase(elt);
+    }
     return clone;
 }
 
-Ast *AstWhileStatement::Clone(StoragePool *ast_pool)
+AstWhileStatement* AstWhileStatement::Clone(StoragePool* ast_pool)
 {
     AstWhileStatement *clone = ast_pool -> GenWhileStatement();
 
@@ -622,7 +639,7 @@ Ast *AstWhileStatement::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstDoStatement::Clone(StoragePool *ast_pool)
+AstDoStatement* AstDoStatement::Clone(StoragePool* ast_pool)
 {
     AstDoStatement *clone = ast_pool -> GenDoStatement();
 
@@ -635,7 +652,7 @@ Ast *AstDoStatement::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstForStatement::Clone(StoragePool *ast_pool)
+AstForStatement* AstForStatement::Clone(StoragePool* ast_pool)
 {
     AstForStatement *clone = ast_pool -> GenForStatement();
 
@@ -653,7 +670,7 @@ Ast *AstForStatement::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstBreakStatement::Clone(StoragePool *ast_pool)
+AstBreakStatement* AstBreakStatement::Clone(StoragePool* ast_pool)
 {
     AstBreakStatement *clone = ast_pool -> GenBreakStatement();
 
@@ -665,7 +682,7 @@ Ast *AstBreakStatement::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstContinueStatement::Clone(StoragePool *ast_pool)
+AstContinueStatement* AstContinueStatement::Clone(StoragePool* ast_pool)
 {
     AstContinueStatement *clone = ast_pool -> GenContinueStatement();
 
@@ -677,7 +694,7 @@ Ast *AstContinueStatement::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstReturnStatement::Clone(StoragePool *ast_pool)
+AstReturnStatement* AstReturnStatement::Clone(StoragePool* ast_pool)
 {
     AstReturnStatement *clone = ast_pool -> GenReturnStatement();
 
@@ -688,7 +705,7 @@ Ast *AstReturnStatement::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstThrowStatement::Clone(StoragePool *ast_pool)
+AstThrowStatement* AstThrowStatement::Clone(StoragePool* ast_pool)
 {
     AstThrowStatement *clone = ast_pool -> GenThrowStatement();
 
@@ -699,7 +716,7 @@ Ast *AstThrowStatement::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstSynchronizedStatement::Clone(StoragePool *ast_pool)
+AstSynchronizedStatement* AstSynchronizedStatement::Clone(StoragePool* ast_pool)
 {
     AstSynchronizedStatement *clone = ast_pool -> GenSynchronizedStatement();
 
@@ -710,7 +727,7 @@ Ast *AstSynchronizedStatement::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstAssertStatement::Clone(StoragePool *ast_pool)
+AstAssertStatement* AstAssertStatement::Clone(StoragePool* ast_pool)
 {
     AstAssertStatement *clone = ast_pool -> GenAssertStatement();
 
@@ -745,7 +762,7 @@ Ast *AstFinallyClause::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstTryStatement::Clone(StoragePool *ast_pool)
+AstTryStatement* AstTryStatement::Clone(StoragePool* ast_pool)
 {
     AstTryStatement *clone = ast_pool -> GenTryStatement();
 
@@ -761,84 +778,84 @@ Ast *AstTryStatement::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstIntegerLiteral::Clone(StoragePool *ast_pool)
+AstIntegerLiteral* AstIntegerLiteral::Clone(StoragePool* ast_pool)
 {
     AstIntegerLiteral *clone = ast_pool -> GenIntegerLiteral(integer_literal_token);
 
     return clone;
 }
 
-Ast *AstLongLiteral::Clone(StoragePool *ast_pool)
+AstLongLiteral* AstLongLiteral::Clone(StoragePool* ast_pool)
 {
     AstLongLiteral *clone = ast_pool -> GenLongLiteral(long_literal_token);
 
     return clone;
 }
 
-Ast *AstFloatLiteral::Clone(StoragePool *ast_pool)
+AstFloatLiteral* AstFloatLiteral::Clone(StoragePool* ast_pool)
 {
     AstFloatLiteral *clone = ast_pool -> GenFloatLiteral(float_literal_token);
 
     return clone;
 }
 
-Ast *AstDoubleLiteral::Clone(StoragePool *ast_pool)
+AstDoubleLiteral* AstDoubleLiteral::Clone(StoragePool* ast_pool)
 {
     AstDoubleLiteral *clone = ast_pool -> GenDoubleLiteral(double_literal_token);
 
     return clone;
 }
 
-Ast *AstTrueLiteral::Clone(StoragePool *ast_pool)
+AstTrueLiteral* AstTrueLiteral::Clone(StoragePool* ast_pool)
 {
     AstTrueLiteral *clone = ast_pool -> GenTrueLiteral(true_literal_token);
 
     return clone;
 }
 
-Ast *AstFalseLiteral::Clone(StoragePool *ast_pool)
+AstFalseLiteral* AstFalseLiteral::Clone(StoragePool* ast_pool)
 {
     AstFalseLiteral *clone = ast_pool -> GenFalseLiteral(false_literal_token);
 
     return clone;
 }
 
-Ast *AstStringLiteral::Clone(StoragePool *ast_pool)
+AstStringLiteral* AstStringLiteral::Clone(StoragePool* ast_pool)
 {
     AstStringLiteral *clone = ast_pool -> GenStringLiteral(string_literal_token);
 
     return clone;
 }
 
-Ast *AstCharacterLiteral::Clone(StoragePool *ast_pool)
+AstCharacterLiteral* AstCharacterLiteral::Clone(StoragePool* ast_pool)
 {
     AstCharacterLiteral *clone = ast_pool -> GenCharacterLiteral(character_literal_token);
 
     return clone;
 }
 
-Ast *AstNullLiteral::Clone(StoragePool *ast_pool)
+AstNullLiteral* AstNullLiteral::Clone(StoragePool* ast_pool)
 {
     AstNullLiteral *clone = ast_pool -> GenNullLiteral(null_token);
 
     return clone;
 }
 
-Ast *AstThisExpression::Clone(StoragePool *ast_pool)
+AstThisExpression* AstThisExpression::Clone(StoragePool* ast_pool)
 {
     AstThisExpression *clone = ast_pool -> GenThisExpression(this_token);
 
     return clone;
 }
 
-Ast *AstSuperExpression::Clone(StoragePool *ast_pool)
+AstSuperExpression* AstSuperExpression::Clone(StoragePool* ast_pool)
 {
     AstSuperExpression *clone = ast_pool -> GenSuperExpression(super_token);
 
     return clone;
 }
 
-Ast *AstParenthesizedExpression::Clone(StoragePool *ast_pool)
+AstParenthesizedExpression* AstParenthesizedExpression::Clone(StoragePool* ast_pool)
 {
     AstParenthesizedExpression *clone = ast_pool -> GenParenthesizedExpression();
 
@@ -849,14 +866,14 @@ Ast *AstParenthesizedExpression::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstTypeExpression::Clone(StoragePool *ast_pool)
+AstTypeExpression* AstTypeExpression::Clone(StoragePool* ast_pool)
 {
     AstTypeExpression *clone = ast_pool -> GenTypeExpression(type -> Clone(ast_pool));
 
     return clone;
 }
 
-Ast *AstClassInstanceCreationExpression::Clone(StoragePool *ast_pool)
+AstClassInstanceCreationExpression* AstClassInstanceCreationExpression::Clone(StoragePool* ast_pool)
 {
     AstClassInstanceCreationExpression *clone = ast_pool -> GenClassInstanceCreationExpression();
 
@@ -888,7 +905,7 @@ Ast *AstDimExpr::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstArrayCreationExpression::Clone(StoragePool *ast_pool)
+AstArrayCreationExpression* AstArrayCreationExpression::Clone(StoragePool* ast_pool)
 {
     AstArrayCreationExpression *clone = ast_pool -> GenArrayCreationExpression();
 
@@ -906,7 +923,7 @@ Ast *AstArrayCreationExpression::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstFieldAccess::Clone(StoragePool *ast_pool)
+AstFieldAccess* AstFieldAccess::Clone(StoragePool* ast_pool)
 {
     AstFieldAccess *clone = ast_pool -> GenFieldAccess(field_access_tag);
 
@@ -918,7 +935,7 @@ Ast *AstFieldAccess::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstMethodInvocation::Clone(StoragePool *ast_pool)
+AstMethodInvocation* AstMethodInvocation::Clone(StoragePool* ast_pool)
 {
     AstMethodInvocation *clone = ast_pool -> GenMethodInvocation();
 
@@ -933,7 +950,7 @@ Ast *AstMethodInvocation::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstArrayAccess::Clone(StoragePool *ast_pool)
+AstArrayAccess* AstArrayAccess::Clone(StoragePool* ast_pool)
 {
     AstArrayAccess *clone = ast_pool -> GenArrayAccess();
 
@@ -945,7 +962,7 @@ Ast *AstArrayAccess::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstPostUnaryExpression::Clone(StoragePool *ast_pool)
+AstPostUnaryExpression* AstPostUnaryExpression::Clone(StoragePool* ast_pool)
 {
     AstPostUnaryExpression *clone = ast_pool -> GenPostUnaryExpression(post_unary_tag);
 
@@ -955,7 +972,7 @@ Ast *AstPostUnaryExpression::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstPreUnaryExpression::Clone(StoragePool *ast_pool)
+AstPreUnaryExpression* AstPreUnaryExpression::Clone(StoragePool* ast_pool)
 {
     AstPreUnaryExpression *clone = ast_pool -> GenPreUnaryExpression(pre_unary_tag);
 
@@ -965,7 +982,7 @@ Ast *AstPreUnaryExpression::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstCastExpression::Clone(StoragePool *ast_pool)
+AstCastExpression* AstCastExpression::Clone(StoragePool* ast_pool)
 {
     AstCastExpression *clone = ast_pool -> GenCastExpression();
 
@@ -980,7 +997,7 @@ Ast *AstCastExpression::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstBinaryExpression::Clone(StoragePool *ast_pool)
+AstBinaryExpression* AstBinaryExpression::Clone(StoragePool* ast_pool)
 {
     AstBinaryExpression *clone = ast_pool -> GenBinaryExpression(binary_tag);
 
@@ -991,7 +1008,7 @@ Ast *AstBinaryExpression::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstConditionalExpression::Clone(StoragePool *ast_pool)
+AstConditionalExpression* AstConditionalExpression::Clone(StoragePool* ast_pool)
 {
     AstConditionalExpression *clone = ast_pool -> GenConditionalExpression();
 
@@ -1004,7 +1021,7 @@ Ast *AstConditionalExpression::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
+AstAssignmentExpression* AstAssignmentExpression::Clone(StoragePool* ast_pool)
 {
     AstAssignmentExpression *clone = ast_pool -> GenAssignmentExpression(assignment_tag, assignment_operator_token);
 
@@ -1434,20 +1451,13 @@ void AstExpressionStatement::Print(LexStream& lex_stream)
     expression -> Print(lex_stream);
 }
 
-void AstCaseLabel::Print(LexStream& lex_stream)
+void AstSwitchLabel::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (CaseLabel):  "
-            << lex_stream.NameString(case_token)
-            << " #" << expression -> id << ":" << endl;
-    expression -> Print(lex_stream);
-    Coutput << "    map_index: " << map_index << endl;
-}
-
-void AstDefaultLabel::Print(LexStream& lex_stream)
-{
-    Coutput << "#" << id << " (DefaultLabel):  "
-            << lex_stream.NameString(default_token)
-            << ":" << endl;
+    Coutput << '#' << id << " (SwitchLabel, map_index " << map_index << "):  "
+            << lex_stream.NameString(case_token) << '#'
+            << (expression_opt ? expression_opt -> id : 0) << ':' << endl;
+    if (expression_opt)
+        expression_opt -> Print(lex_stream);
 }
 
 void AstSwitchBlockStatement::Print(LexStream& lex_stream)
@@ -1470,14 +1480,17 @@ void AstSwitchStatement::Print(LexStream& lex_stream)
 {
     Coutput << "#" << id << " (SwitchStatement):  "
             << lex_stream.NameString(switch_token)
-            << " ( #" << expression -> id << " ) #" << switch_block -> id << endl;
-
-    Coutput << "default case: index " << default_case.index << endl;
+            << " ( #" << expression -> id << " ) #" << switch_block -> id
+            << endl;
     for (int i = 0; i < cases -> Length(); i++)
     {
-        Coutput << "case: " << i << "  index: " << (*cases)[i] -> index << "  value: " << (*cases)[i] -> Value() << endl;
+        Coutput << " case index: " << i;
+        if ((*cases)[i])
+            Coutput << "  block: " << (*cases)[i] -> block_index
+                    << "  label: " << (*cases)[i] -> case_index
+                    << "  value: " << (*cases)[i] -> value << endl;
+        else Coutput << "(none)" << endl;
     }
-
     expression -> Print(lex_stream);
     switch_block -> Print(lex_stream);
 }
@@ -2058,26 +2071,6 @@ AstEmptyStatement::~AstEmptyStatement()
 }
 
 AstExpressionStatement::~AstExpressionStatement()
-{
-    assert(false);
-}
-
-AstCaseLabel::~AstCaseLabel()
-{
-    assert(false);
-}
-
-AstDefaultLabel::~AstDefaultLabel()
-{
-    assert(false);
-}
-
-AstSwitchBlockStatement::~AstSwitchBlockStatement()
-{
-    assert(false);
-}
-
-AstSwitchStatement::~AstSwitchStatement()
 {
     assert(false);
 }

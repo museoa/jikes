@@ -1130,11 +1130,11 @@ void Semantic::DefiniteDoStatement(Ast *stmt)
 }
 
 
-void Semantic::DefiniteSwitchStatement(Ast *stmt)
+void Semantic::DefiniteSwitchStatement(Ast* stmt)
 {
-    AstSwitchStatement *switch_statement = (AstSwitchStatement *) stmt;
+    AstSwitchStatement* switch_statement = (AstSwitchStatement*) stmt;
 
-    AstBlock *block_body = switch_statement -> switch_block;
+    AstBlock* block_body = switch_statement -> switch_block;
     DefiniteBlocks() -> Push(block_body);
 
     DefiniteExpression(switch_statement -> expression,
@@ -1149,8 +1149,8 @@ void Semantic::DefiniteSwitchStatement(Ast *stmt)
     int i;
     for (i = 0; i < block_body -> NumStatements(); i++)
     {
-        AstSwitchBlockStatement *switch_block_statement =
-            (AstSwitchBlockStatement *) block_body -> Statement(i);
+        AstSwitchBlockStatement* switch_block_statement =
+            (AstSwitchBlockStatement*) block_body -> Statement(i);
 
         *DefinitelyAssignedVariables() *= starting_pair;
         DefiniteBlockStatements(switch_block_statement);
@@ -1160,7 +1160,7 @@ void Semantic::DefiniteSwitchStatement(Ast *stmt)
     // TODO: What if the switch enumerates all 256 byte cases without a
     // default label?
     //
-    if (switch_statement -> default_case.switch_block_statement)
+    if (switch_statement -> DefaultCase())
         *DefinitelyAssignedVariables() *= DefiniteBlocks() -> TopBreakPair();
     else *DefinitelyAssignedVariables() = starting_pair;
 
@@ -1169,7 +1169,7 @@ void Semantic::DefiniteSwitchStatement(Ast *stmt)
     //
     for (i = 0; i < block_body -> block_symbol -> NumVariableSymbols(); i++)
     {
-        VariableSymbol *variable =
+        VariableSymbol* variable =
             block_body -> block_symbol -> VariableSym(i);
         int index = variable -> LocalVariableIndex(this);
 

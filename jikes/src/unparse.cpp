@@ -530,24 +530,16 @@ void AstExpressionStatement::Unparse(Ostream& os, LexStream* lex_stream)
         os << "/*:AstExpressionStatement#" << id << "*/";
 }
 
-void AstCaseLabel::Unparse(Ostream& os, LexStream* lex_stream)
+void AstSwitchLabel::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstCaseLabel:#" << id << "*/";
+        os << "/*AstSwitchLabel:#" << id << "*/";
     os << lex_stream -> NameString(case_token) << ' ';
-    expression -> Unparse(os, lex_stream);
+    if (expression_opt)
+        expression_opt -> Unparse(os, lex_stream);
     os << ':' << endl;
     if (Ast::debug_unparse)
-        os << "/*:AstCaseLabel#" << id << "*/";
-}
-
-void AstDefaultLabel::Unparse(Ostream& os, LexStream* lex_stream)
-{
-    if (Ast::debug_unparse)
-        os << "/*AstDefaultLabel:#" << id << "*/";
-    os << lex_stream -> NameString(default_token) << ':' << endl;
-    if (Ast::debug_unparse)
-        os << "/*:AstDefaultLabel#" << id << "*/";
+        os << "/*:AstSwitchLabel#" << id << "*/";
 }
 
 void AstSwitchBlockStatement::Unparse(Ostream& os, LexStream* lex_stream)

@@ -1,3 +1,55 @@
+2002-11-26  Eric Blake  <ebb9@email.byu.edu>
+
+	* doc/jikes.1 (-Xswitchcheck): Document new option added for javac
+	compatibility - patch 374..
+	* src/ast.h (AstSwitchLabel): Consolidate AstCaseLabel and
+	AstDefaultLabel into one class.
+	(CaseElement, AstSwitchStatement): Rework the sorting and storage
+	of labels to allow for better emission of switch statements.
+	(Clone()) Partial backport of covariant clone method from
+	generics-branch.
+	* src/bytecode.cpp (EmitSwitchStatement): Optimize simple forms of
+	switch statements.
+	(EmitSwitchBlockStatement, CloseSwitchLocalVariables): New methods.
+	* src/error.h (SemanticError::WarningLevel) Increase capabilities,
+	to allow more flexibility with named warnings.
+	(SemanticError::NamedError) Move here from error.cpp.
+	(SWITCH_FALLTHROUGH): New warning message.
+	* src/error.cpp (EnableDefaultWarnings): Improve handling of named
+	warnings.
+	* src/option.cpp: Add support for -Xswitchcheck (and +Pswitchcheck).
+	* src/semantic.h (SemanticStack): Consolidate ExceptionTableStack,
+	StatementStack, and NestingLevelStack into one typesafe template.
+	(ReportSemError): Add version that takes single AST node.
+	* src/double.h (Fraction): Silence compiler warning.
+	* src/stream.cpp (getErrorMessage): Fix formatting.
+	* src/ast.cpp:
+	* src/body.cpp (ProcessSwitchStatement):
+	* src/bytecode.h:
+	* src/decl.cpp:
+	* src/definite.cpp:
+	* src/java.g:
+	* src/modifier.cpp:
+	* src/parser.cpp:
+	* src/parser.h:
+	* src/symbol.cpp:
+	* src/unparse.cpp: Update to changes in AST and semantic.
+	* src/javaact.cpp:
+	* src/javaact.h:
+	* src/javadcl.h:
+	* src/javadef.h:
+	* src/javaprs.h:
+	* src/javasym.h: Regenerate.
+
+2002-11-25  Eric Blake  <ebb9@email.byu.edu>
+
+	* configure.in: Bump version following the 1.18 release.
+	* configure:
+	* src/config.h.in: Regenerate.
+	* src/ast.h (DYNAMIC_CAST<>) Move to...
+	* src/platform.h: Here.
+	Fix up includes of standard headers.
+
 2002-11-21  Eric Blake  <ebb9@email.byu.edu>
 
 	* 1.18 release.

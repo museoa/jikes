@@ -36,7 +36,7 @@ void Semantic::ProcessBlockStatements(AstBlock *block_body)
         // switch block is reachable iff the statement preceeding S
         // can complete normally.
         //
-        AstStatement *statement = (AstStatement *) block_body -> Statement(0);
+        AstStatement* statement = block_body -> Statement(0);
         statement -> is_reachable = block_body -> is_reachable;
         AstStatement *first_unreachable_statement =
             (AstStatement *) (statement -> is_reachable ? NULL : statement);
@@ -44,7 +44,7 @@ void Semantic::ProcessBlockStatements(AstBlock *block_body)
         for (int i = 1; i < block_body -> NumStatements(); i++)
         {
             AstStatement *previous_statement = statement;
-            statement = (AstStatement *) block_body -> Statement(i);
+            statement = block_body -> Statement(i);
             statement -> is_reachable =
                 previous_statement -> can_complete_normally;
             if (! statement -> is_reachable &&
@@ -438,7 +438,7 @@ void Semantic::ProcessWhileStatement(Ast *stmt)
     // here only for completeness, as marking the enclosing block is
     // enough to propagate the proper information upward.
     //
-    AstBlock *block_body = (AstBlock *) BreakableStatementStack().Top();
+    AstBlock* block_body = BreakableStatementStack().Top();
     if (block_body -> can_complete_normally)
         while_statement -> can_complete_normally = true;
 
@@ -529,7 +529,7 @@ void Semantic::ProcessForStatement(Ast *stmt)
     // here only for completeness, as marking the enclosing block is
     // enough to propagate the proper information upward.
     //
-    AstBlock *block_body = (AstBlock *) BreakableStatementStack().Top();
+    AstBlock* block_body = BreakableStatementStack().Top();
     if (block_body -> can_complete_normally)
         for_statement -> can_complete_normally = true;
 
@@ -538,18 +538,18 @@ void Semantic::ProcessForStatement(Ast *stmt)
 }
 
 
-void Semantic::ProcessSwitchStatement(Ast *stmt)
+void Semantic::ProcessSwitchStatement(Ast* stmt)
 {
-    AstSwitchStatement *switch_statement = (AstSwitchStatement *) stmt;
+    AstSwitchStatement* switch_statement = (AstSwitchStatement*) stmt;
 
-    AstBlock *enclosing_block = LocalBlockStack().TopBlock();
+    AstBlock* enclosing_block = LocalBlockStack().TopBlock();
 
     //
     // We estimate a size for the switch symbol table based on the number of
     // lines in it.
     //
-    AstBlock *block_body = switch_statement -> switch_block;
-    BlockSymbol *block = LocalSymbolTable().Top() -> InsertBlockSymbol();
+    AstBlock* block_body = switch_statement -> switch_block;
+    BlockSymbol* block = LocalSymbolTable().Top() -> InsertBlockSymbol();
     block -> max_variable_index =
         enclosing_block -> block_symbol -> max_variable_index;
     LocalSymbolTable().Push(block -> Table());
@@ -560,7 +560,7 @@ void Semantic::ProcessSwitchStatement(Ast *stmt)
     BreakableStatementStack().Push(block_body);
 
     ProcessExpression(switch_statement -> expression);
-    TypeSymbol *type = switch_statement -> expression -> Type();
+    TypeSymbol* type = switch_statement -> expression -> Type();
 
     if (! control.IsSimpleIntegerValueType(type) && type != control.no_type)
     {
@@ -572,18 +572,12 @@ void Semantic::ProcessSwitchStatement(Ast *stmt)
         type = control.no_type;
     }
 
-    switch_statement -> default_case.switch_block_statement = NULL;
-
     //
     // Count the number case labels in this switch statement
     //
-    int num_case_labels = 0;
+    unsigned num_case_labels = 0;
     for (int i = 0; i < block_body -> NumStatements(); i++)
-    {
-        AstSwitchBlockStatement *switch_block_statement =
-            (AstSwitchBlockStatement *) block_body -> Statement(i);
-        num_case_labels += switch_block_statement -> NumSwitchLabels();
-    }
+        num_case_labels += switch_statement -> Block(i) -> NumSwitchLabels();
     switch_statement -> AllocateCases(num_case_labels);
 
     //
@@ -592,73 +586,65 @@ void Semantic::ProcessSwitchStatement(Ast *stmt)
     block_body -> is_reachable = switch_statement -> is_reachable;
     for (int j = 0; j < block_body -> NumStatements(); j++)
     {
-        AstSwitchBlockStatement *switch_block_statement =
-            (AstSwitchBlockStatement *) block_body -> Statement(j);
-
-        for (int k = 0; k < switch_block_statement -> NumSwitchLabels(); k++)
+        AstSwitchBlockStatement* switch_block_statement =
+            switch_statement -> Block(j);
+        for (int k = 0;
+             k < switch_block_statement -> NumSwitchLabels(); k++)
         {
-            AstCaseLabel *case_label =
-                switch_block_statement -> SwitchLabel(k) -> CaseLabelCast();
-
-            if (case_label)
+            AstSwitchLabel* switch_label =
+                switch_block_statement -> SwitchLabel(k);
+            if (switch_label -> expression_opt)
             {
-                ProcessExpression(case_label -> expression);
-                TypeSymbol *case_type = case_label -> expression -> Type();
+                ProcessExpression(switch_label -> expression_opt);
+                TypeSymbol* case_type = switch_label -> expression_opt -> Type();
                 if (case_type == control.no_type)
                     continue;
-
                 if (! control.IsSimpleIntegerValueType(case_type))
                 {
                     ReportSemError(SemanticError::TYPE_NOT_INTEGER,
-                                   case_label -> expression -> LeftToken(),
-                                   case_label -> expression -> RightToken(),
+                                   switch_label -> expression_opt,
                                    case_type -> ContainingPackageName(),
                                    case_type -> ExternalName());
-                    case_label -> expression -> symbol = control.no_type;
+                    switch_label -> expression_opt -> symbol = control.no_type;
                 }
-                else if (! case_label -> expression -> IsConstant())
+                else if (! switch_label -> expression_opt -> IsConstant())
                 {
                     ReportSemError(SemanticError::EXPRESSION_NOT_CONSTANT,
-                                   case_label -> expression -> LeftToken(),
-                                   case_label -> expression -> RightToken());
-                    case_label -> expression -> symbol = control.no_type;
+                                   switch_label -> expression_opt);
+                    switch_label -> expression_opt -> symbol = control.no_type;
                 }
-                else if (CanAssignmentConvert(type, case_label -> expression))
+                else if (CanAssignmentConvert(type,
+                                              switch_label -> expression_opt))
                 {
-                    case_label -> expression =
-                        ConvertToType(case_label -> expression, type);
-                    case_label -> map_index = switch_statement -> NumCases();
-
-                    CaseElement *case_element =
-                        compilation_unit -> ast_pool -> GenCaseElement();
+                    switch_label -> expression_opt =
+                        ConvertToType(switch_label -> expression_opt, type);
+                    CaseElement* case_element =
+                        compilation_unit -> ast_pool -> GenCaseElement(j, k);
                     switch_statement -> AddCase(case_element);
-                    case_element -> expression = case_label -> expression;
-                    case_element -> switch_block_statement =
-                        switch_block_statement;
-                    // use this index to keep sort stable !
-                    case_element -> index = case_label -> map_index;
+                    case_element -> value = DYNAMIC_CAST<IntLiteralValue*>
+                        (switch_label -> expression_opt -> value) -> value;
                 }
                 else
                 {
-                    IntToWstring value(DYNAMIC_CAST<IntLiteralValue *>
-                                       (case_label -> expression -> value) -> value);
+                    IntToWstring value(DYNAMIC_CAST<IntLiteralValue*>
+                                       (switch_label -> expression_opt ->
+                                        value) -> value);
                     ReportSemError(SemanticError::VALUE_NOT_REPRESENTABLE_IN_SWITCH_TYPE,
-                                   case_label -> expression -> LeftToken(),
-                                   case_label -> expression -> RightToken(),
+                                   switch_label -> expression_opt,
                                    value.String(),
                                    type -> Name());
                 }
             }
-            else if (! switch_statement -> default_case.switch_block_statement)
+            else if (! switch_statement -> DefaultCase())
             {
-                switch_statement -> default_case.switch_block_statement =
-                    switch_block_statement;
+                switch_statement -> DefaultCase() =
+                    compilation_unit -> ast_pool -> GenCaseElement(j, k);
+                switch_label -> map_index = num_case_labels;
             }
             else
             {
                 ReportSemError(SemanticError::MULTIPLE_DEFAULT_LABEL,
-                               switch_block_statement -> SwitchLabel(k) -> LeftToken(),
-                               switch_block_statement -> SwitchLabel(k) -> RightToken());
+                               switch_block_statement -> SwitchLabel(k));
             }
         }
 
@@ -669,55 +655,20 @@ void Semantic::ProcessSwitchStatement(Ast *stmt)
         // artificial "empty" statement is added by the parser.
         //
         assert(switch_block_statement -> NumStatements() > 0);
-
-        //
-        // A statement in a switch block is reachable iff its
-        // switch statement is reachable and at least one of the
-        // following is true:
-        //
-        // . it bears a case or default label
-        // . there is a statement preceeding it in the switch block and that
-        // preceeding  statement can compile normally.
-        //
-        AstStatement *statement =
-            (AstStatement *) switch_block_statement -> Statement(0);
-        statement -> is_reachable = switch_statement -> is_reachable;
-        AstStatement *first_unreachable_statement =
-            (AstStatement *) (statement -> is_reachable ? NULL : statement);
-        ProcessStatement(statement);
-        for (int j = 1; j < switch_block_statement -> NumStatements(); j++)
+        switch_block_statement -> block_symbol = block;
+        switch_block_statement -> nesting_level = LocalBlockStack().Size() - 1;
+        switch_block_statement -> is_reachable =
+            switch_statement -> is_reachable;
+        ProcessBlockStatements(switch_block_statement);
+        if (switch_block_statement -> can_complete_normally &&
+            j != block_body -> NumStatements() - 1)
         {
-            AstStatement *previous_statement = statement;
-            statement =
-                (AstStatement *) switch_block_statement -> Statement(j);
-            if (switch_statement -> is_reachable)
-            {
-                statement -> is_reachable =
-                    previous_statement -> can_complete_normally;
-                if (! statement -> is_reachable &&
-                    first_unreachable_statement == NULL)
-                {
-                    first_unreachable_statement = statement;
-                }
-            }
-
-            ProcessStatement(statement);
-        }
-
-        if (first_unreachable_statement)
-        {
-            if (first_unreachable_statement == statement)
-            {
-                ReportSemError(SemanticError::UNREACHABLE_STATEMENT,
-                               statement -> LeftToken(),
-                               statement -> RightToken());
-            }
-            else
-            {
-                ReportSemError(SemanticError::UNREACHABLE_STATEMENTS,
-                               first_unreachable_statement -> LeftToken(),
-                               statement -> RightToken());
-            }
+            //
+            // TODO: Improve the parser to allow this warning to be locally
+            // disabled by adding a comment similar to "// fallthrough".
+            //
+            ReportSemError(SemanticError::SWITCH_FALLTHROUGH,
+                           switch_block_statement);
         }
     }
 
@@ -733,36 +684,49 @@ void Semantic::ProcessSwitchStatement(Ast *stmt)
     // . There is a reachable break statement that exits the switch
     //   statement. (See ProcessBreakStatement)
     //
-    if (block_body -> can_complete_normally)
+    if (block_body -> can_complete_normally ||
+        ! switch_statement -> DefaultCase())
+    {
         switch_statement -> can_complete_normally = true;
-    else if (switch_statement -> default_case.switch_block_statement == NULL)
-        switch_statement -> can_complete_normally = true;
+    }
     else
     {
-        AstSwitchBlockStatement *last_switch_block_statement =
-            (AstSwitchBlockStatement *) block_body ->
-            Statement(block_body -> NumStatements() - 1);
+        AstSwitchBlockStatement* last_switch_block_statement =
+            switch_statement -> Block(block_body -> NumStatements() - 1);
 
         assert(last_switch_block_statement -> NumStatements() > 0);
 
-        AstStatement *last_statement =
-            (AstStatement *) last_switch_block_statement ->
+        AstStatement* last_statement = last_switch_block_statement ->
             Statement(last_switch_block_statement -> NumStatements() - 1);
         if (last_statement -> can_complete_normally)
             switch_statement -> can_complete_normally = true;
     }
 
-    switch_statement -> SortCases();
-    for (int k = 1; k < switch_statement -> NumCases(); k++)
+    //
+    // Iterate over the sorted cases, checking for duplicates, and setting
+    // the map_index field of each AstCaseLabel (1-based, in order to leave
+    // room for the default label).
+    //
+    if (switch_statement -> NumCases())
     {
-        if (switch_statement -> Case(k) -> Value() ==
-            switch_statement -> Case(k - 1) -> Value())
+        switch_statement -> SortCases();
+        CaseElement* first_case = switch_statement -> Case(0);
+        switch_statement -> Block(first_case -> block_index) ->
+            SwitchLabel(first_case -> case_index) -> map_index = 0;
+    }
+    for (unsigned k = 1; k < switch_statement -> NumCases(); k++)
+    {
+        CaseElement* case_elt = switch_statement -> Case(k);
+        switch_statement -> Block(case_elt -> block_index) ->
+            SwitchLabel(case_elt -> case_index) -> map_index = k;
+        if (case_elt -> value == switch_statement -> Case(k - 1) -> value)
         {
-            IntToWstring value(switch_statement -> Case(k) -> Value());
-
+            IntToWstring value(case_elt -> value);
             ReportSemError(SemanticError::DUPLICATE_CASE_VALUE,
-                           switch_statement -> Case(k) -> expression -> LeftToken(),
-                           switch_statement -> Case(k) -> expression -> RightToken(),
+                           (switch_statement ->
+                            Block(case_elt -> block_index) ->
+                            SwitchLabel(case_elt -> case_index) ->
+                            expression_opt),
                            value.String());
         }
     }
@@ -1066,8 +1030,7 @@ bool Semantic::UncaughtException(TypeSymbol *exception)
     //
     for (int i = TryStatementStack().Size() - 1; i >= 0; i--)
     {
-        AstTryStatement *try_statement =
-            (AstTryStatement *) TryStatementStack()[i];
+        AstTryStatement* try_statement = TryStatementStack()[i];
 
         //
         // If a try statement contains a finally clause that can't complete

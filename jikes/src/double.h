@@ -157,7 +157,7 @@ public:
     inline int  Sign(void) const     { return value.word >> 31; }
     inline int  Exponent(void) const { return ((value.word & EXP_BITS) >> FRACT_SIZE) - BIAS; }
     inline u4   Fraction(void) const { return (value.word & FRACT_BITS)
-                                          | (ExpBits() ? MIN_FRACT : 0); }
+                                          | (ExpBits() ? (u4) MIN_FRACT : 0); }
     static inline int Bias(void)      { return BIAS; }
     static inline int FractSize(void) { return FRACT_SIZE; }
 
@@ -364,7 +364,8 @@ public:
     inline int     Exponent(void) const { return ((HighWord() & EXP_BITS) >> (FRACT_SIZE_HI)) - BIAS; }
     inline LongInt Fraction(void) const
     {
-        return LongInt((HighWord() & FRACT_BITS) | (ExpBits() ? MIN_FRACT : 0),
+        return LongInt(((HighWord() & FRACT_BITS) |
+                        (ExpBits() ? (u4) MIN_FRACT : 0)),
                        LowWord());
     }
     static inline int Bias(void)      { return BIAS; }

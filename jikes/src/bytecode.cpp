@@ -1028,14 +1028,12 @@ bool ByteCode::EmitStatement(AstStatement *statement)
             return false;
         }
     case Ast::SWITCH: // JLS 14.9
-        EmitSwitchStatement(statement -> SwitchStatementCast());
-        return ! statement -> can_complete_normally;
+        return EmitSwitchStatement(statement -> SwitchStatementCast());
     case Ast::SWITCH_BLOCK: // JLS 14.9
-    case Ast::CASE:
-    case Ast::DEFAULT:
+    case Ast::SWITCH_LABEL:
         //
         // These nodes are handled by SwitchStatement and
-        // are not directly visited
+        // are not directly visited.
         //
         assert(false && "faulty logic encountered");
         return false;
@@ -1394,18 +1392,15 @@ void ByteCode::EmitStatementExpression(AstExpression *expression)
 // choose between LOOKUPSWITCH and TABLESWITCH by picking that
 // opcode that takes the least number of bytes in the byte code.
 //
-//
-// note that if using table, then must provide slot for every
-// entry in the range low..high, even though the user may not
-// have provided an explicit entry, in which case the default
-// action is to be taken. For example
+// With TABLESWITCH, a target must be provided for every entry in the range
+// low..high, even though the user may not have provided an explicit entry,
+// in which case the default action is to be taken. For example
 // switch (e) {
 //  case 1:2:3: act1; break;
 //  case 5:6:   act2; break;
 //  default: defact; break;
 // }
-// translated as
-// switch (e)
+// translates as
 // switch (e) {
 //  case 1:2:3: act1; break;
 //  case 4: goto defa:
@@ -1414,47 +1409,159 @@ void ByteCode::EmitStatementExpression(AstExpression *expression)
 //  default: defact;
 // }
 //
-void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
+bool ByteCode::EmitSwitchStatement(AstSwitchStatement* switch_statement)
 {
-    AstBlock *switch_block = switch_statement -> switch_block;
+    AstBlock* switch_block = switch_statement -> switch_block;
+    u2 op_start = code_attribute -> CodeLength();
+    unsigned i;
+    bool abrupt;
 
     assert(stack_depth == 0); // stack empty at start of statement
 
     //
-    // Use tableswitch if have exact match or size of tableswitch
-    // case is no more than 30 bytes more code than lookup case
+    // Optimization: When switching on a constant, emit only those blocks
+    // that it will flow through.
+    // switch (constant) { ... } => single code path
+    //
+    if (switch_statement -> expression -> IsConstant())
+    {
+        CaseElement* target = switch_statement ->
+            CaseForValue(DYNAMIC_CAST<IntLiteralValue*>
+                         (switch_statement -> expression -> value) -> value);
+        if (! target)
+            return false;
+        //
+        // Bring all previously-declared variables into scope, then compile
+        // until we run out of blocks or else complete abruptly.
+        //
+        method_stack -> Push(switch_block);
+        for (i = 0; i < target -> block_index; i++)
+            EmitSwitchBlockStatement(switch_statement -> Block(i), true);
+        abrupt = false;
+        for ( ; ! abrupt && i < switch_statement -> NumBlocks(); i++)
+        {
+            abrupt =
+                EmitSwitchBlockStatement(switch_statement -> Block(i), abrupt);
+        }
+
+        CloseSwitchLocalVariables(switch_block, op_start);
+        if (IsLabelUsed(method_stack -> TopBreakLabel()))
+        {
+            abrupt = false;
+            DefineLabel(method_stack -> TopBreakLabel());
+            CompleteLabel(method_stack -> TopBreakLabel());
+        }
+        method_stack -> Pop();
+        return abrupt;
+    }
+
+    //
+    // Optimization: When there are zero blocks, emit the expression.
+    // switch (expr) {} => expr;
+    //
+    if (! switch_statement -> NumBlocks())
+    {
+        EmitExpression(switch_statement -> expression, false);
+        return false;
+    }
+
+    //
+    // Optimization: When there is one block labeled by default, emit it.
+    // switch (expr) { default: block; } => expr, block
+    // switch (expr) { case a: default: block; } => expr, block
+    //
+    if (switch_statement -> NumBlocks() == 1 &&
+        switch_statement -> DefaultCase())
+    {
+        EmitExpression(switch_statement -> expression, false);
+        return EmitBlockStatement(switch_statement -> Block(0)); //ebb
+//          method_stack -> Push(switch_block);
+//          abrupt = EmitBlockStatement(switch_statement -> Block(0));
+//          if (IsLabelUsed(method_stack -> TopBreakLabel()))
+//          {
+//              abrupt = false;
+//              DefineLabel(method_stack -> TopBreakLabel());
+//              CompleteLabel(method_stack -> TopBreakLabel());
+//          }
+//          method_stack -> Pop();
+//          return abrupt;
+    }
+
+    //
+    // Optimization: If there is one non-default label, turn this into an
+    // if statement.
+    //
+    if (switch_statement -> NumCases() == 1)
+    {
+        //
+        // switch (expr) { case a: block; } => if (expr == a) block;
+        //
+        if (! switch_statement -> DefaultCase())
+        {
+            EmitExpression(switch_statement -> expression);
+            Label lab;
+//              method_stack -> Push(switch_block);
+            if (switch_statement -> Case(0) -> value)
+            {
+                LoadImmediateInteger(switch_statement -> Case(0) -> value);
+//                  EmitBranch(OP_IF_ICMPNE, method_stack -> TopBreakLabel(),
+//                             switch_block);
+                EmitBranch(OP_IF_ICMPNE, lab, switch_block);
+            }
+            else EmitBranch(OP_IFNE, lab, switch_block);
+//              else EmitBranch(OP_IFNE, method_stack -> TopBreakLabel(),
+//                              switch_block);
+            EmitBlockStatement(switch_statement -> Block(0));
+//              DefineLabel(method_stack -> TopBreakLabel());
+//              CompleteLabel(method_stack -> TopBreakLabel());
+//              method_stack -> Pop();
+            DefineLabel(lab);
+            CompleteLabel(lab);
+            return false;
+        }
+        //
+        // TODO: Implement these optimizations.
+        // switch (expr) { case a: fallthrough_block; default: block; }
+        //  => if (expr == a) fallthrough_block; block;
+        // switch (expr) { case a: abrupt_block; default: block; }
+        //  => if (expr == a) abrupt_block; else block;
+        // switch (expr) { default: fallthrough_block; case a: block; }
+        //  => if (expr != a) fallthrough_block; block;
+        // switch (expr) { default: abrupt_block; case a: block; }
+        //  => if (expr != a) abrupt_block; else block;
+        //
+    }
+
+    //
+    // Use tableswitch if size of tableswitch case is no more than 32 bytes
+    // (8 words) more code than lookup case.
     //
     bool use_lookup = true; // set if using LOOKUPSWITCH opcode
-    int ncases = switch_statement -> NumCases(),
-        nlabels = ncases;
+    unsigned ncases = switch_statement -> NumCases();
+    unsigned nlabels = ncases;
     i4 high = 0,
        low = 0;
     if (ncases > 0)
     {
-        low = switch_statement -> Case(0) -> Value();
-        high = switch_statement -> Case(ncases - 1) -> Value();
+        low = switch_statement -> Case(0) -> value;
+        high = switch_statement -> Case(ncases - 1) -> value;
+        assert(low <= high);
 
+        //
         // Workaround for Sun JVM TABLESWITCH bug in JDK 1.2, 1.3
         // when case values of 0x7ffffff0 through 0x7fffffff are used.
         // Force the generation of a LOOKUPSWITCH in these circumstances.
-
-        assert(low <= high);
-
-        if ((unsigned long)high < 0x7ffffff0UL)
+        //
+        if (high < 0x7ffffff0L ||
+            control.option.target >= JikesOption::SDK1_4)
         {
-            // want to compute
-            //  (2 + high-low + 1) < (1 + ncases * 2 + 30)
-            // but must guard against overflow, so factor out
-            //  high - low < ncases * 2 + 28
-            // but can't have number of labels < number of cases
-
-            LongInt range = LongInt(high) - low + 1;
-            if (range < (ncases * 2 + 28))
+            // We want to compute (1 + (high - low + 1)) < (ncases * 2 + 8).
+            // However, we must beware of integer overflow.
+            i4 range = high - low + 1;
+            if (range > 0 && (unsigned) range < (ncases * 2 + 8))
             {
                 use_lookup = false; // use tableswitch
-                nlabels = range.LowWord();
-
-                assert(range.HighWord() == 0);
+                nlabels = range;
                 assert(nlabels >= ncases);
             }
         }
@@ -1471,192 +1578,152 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
     //
     line_number_table_attribute ->
         AddLineNumber(code_attribute -> CodeLength(),
-                      semantic.lex_stream -> Line(switch_statement -> expression -> LeftToken()));
+                      semantic.lex_stream -> Line(switch_statement ->
+                                                  expression -> LeftToken()));
     EmitExpression(switch_statement -> expression);
 
     PutOp(use_lookup ? OP_LOOKUPSWITCH : OP_TABLESWITCH);
-    u2 op_start = last_op_pc; // pc at start of instruction
+    op_start = last_op_pc; // pc at start of instruction
 
     //
-    // supply any needed padding
+    // Supply any needed padding.
     //
     while (code_attribute -> CodeLength() % 4 != 0)
         PutU1(0);
 
     //
-    // Note that if no default clause in switch statement, must allocate
+    // Note that if there is no default clause in switch statement, we create
     // one that corresponds to do nothing and branches to start of next
-    // statement.
+    // statement. The default label is case_labels[nlabels].
     //
-    Label *case_labels = new Label[(use_lookup ? ncases : nlabels) + 1],
-          default_label;
-    UseLabel((switch_statement -> default_case.switch_block_statement
-              ? default_label : method_stack -> TopBreakLabel()),
-             4,
+    Label* case_labels = new Label[nlabels + 1];
+    UseLabel(case_labels[nlabels], 4,
              code_attribute -> CodeLength() - op_start);
 
-    //
-    //
-    //
     if (use_lookup)
     {
         PutU4(ncases);
-
-        for (int i = 0; i < ncases; i++)
+        for (i = 0; i < ncases; i++)
         {
-            PutU4(switch_statement -> Case(i) -> Value());
-            UseLabel(case_labels[switch_statement -> Case(i) -> index],
-                     4, code_attribute -> CodeLength() - op_start);
+            PutU4(switch_statement -> Case(i) -> value);
+            UseLabel(case_labels[i], 4,
+                     code_attribute -> CodeLength() - op_start);
         }
     }
     else
     {
-        bool *has_tag = new bool[nlabels + 1];
-
-        for (int i = 0; i < nlabels; i++)
-            has_tag[i] = false;
-
         PutU4(low);
         PutU4(high);
-
-        //
-        // mark cases for which no case tag available, i.e., default cases
-        //
-        for (int j = 0; j < switch_block -> NumStatements(); j++)
+        for (i = 0; i < nlabels; i++)
         {
-            AstSwitchBlockStatement *switch_block_statement =
-                (AstSwitchBlockStatement *) switch_block -> Statement(j);
-
-            //
-            // process labels for this block
-            //
-            for (int li = 0;
-                 li < switch_block_statement -> NumSwitchLabels(); li++)
-            {
-                AstCaseLabel *case_label = switch_block_statement ->
-                    SwitchLabel(li) -> CaseLabelCast();
-                if (case_label)
-                {
-                    int label_index = switch_statement ->
-                        Case(case_label -> map_index) -> Value() - low;
-                    has_tag[label_index] = true;
-                }
-            }
-        }
-
-        //
-        // Now emit labels in instruction, using appropriate index
-        //
-        for (int k = 0; k < nlabels; k++)
-        {
-            UseLabel(has_tag[k] ? case_labels[k]
-                     : (switch_statement -> default_case.switch_block_statement
-                        ? default_label : method_stack -> TopBreakLabel()),
-                     4,
+            UseLabel(case_labels[i], 4,
                      code_attribute -> CodeLength() - op_start);
         }
-
-        delete [] has_tag;
     }
 
     //
-    // March through switch block statements, compiling blocks in
-    // proper order. We must respect order in which blocks are seen
-    // so that blocks lacking a terminal break fall through to the
-    // proper place.
+    // March through switch block statements, compiling blocks in proper
+    // order. We must respect order in which blocks are seen so that blocks
+    // lacking a terminal break fall through to the proper place.
     //
-    for (int i = 0; i < switch_block -> NumStatements(); i++)
+    abrupt = true;
+    for (i = 0; (int) i < switch_block -> NumStatements(); i++)
     {
-        AstSwitchBlockStatement *switch_block_statement =
-            (AstSwitchBlockStatement *) switch_block -> Statement(i);
-
-        //
-        // process labels for this block
-        //
-        for (int li = 0; li < switch_block_statement -> NumSwitchLabels(); li++)
+        AstSwitchBlockStatement* switch_block_statement =
+            switch_statement -> Block(i);
+        for (int li = 0;
+             li < switch_block_statement -> NumSwitchLabels(); li++)
         {
-            AstCaseLabel *case_label =
-                switch_block_statement -> SwitchLabel(li) -> CaseLabelCast();
-            if (case_label)
+            AstSwitchLabel* switch_label =
+                switch_block_statement -> SwitchLabel(li);
+            if (use_lookup)
+                DefineLabel(case_labels[switch_label -> map_index]);
+            else if (switch_label -> expression_opt)
             {
-                int map_index = case_label -> map_index;
-
-                if (use_lookup)
-                    DefineLabel(case_labels[map_index]);
-                else
-                {
-                    //
-                    // TODO: Do this more efficiently ??? !!!
-                    //
-                    for (int di = 0; di < switch_statement -> NumCases(); di++)
-                    {
-                        if (switch_statement -> Case(di) -> index == map_index)
-                        {
-                            int ci =
-                                switch_statement -> Case(di) -> Value() - low;
-                            DefineLabel(case_labels[ci]);
-                            break;
-                        }
-                    }
-                }
+                i4 value = DYNAMIC_CAST<IntLiteralValue*>
+                    (switch_label -> expression_opt -> value) -> value;
+                DefineLabel(case_labels[value - low]);
             }
-            else
-            {
-                assert(switch_block_statement -> SwitchLabel(li) ->
-                       DefaultLabelCast());
-                assert(switch_statement -> default_case.switch_block_statement);
-                DefineLabel(default_label);
-            }
+            else DefineLabel(case_labels[nlabels]);
         }
+        abrupt &= EmitSwitchBlockStatement(switch_block_statement, false);
+    }
 
-        //
-        // Compile code for this case.
-        //
-        bool abrupt = false;
-        for (int si = 0; si < switch_block_statement -> NumStatements(); si++)
+    CloseSwitchLocalVariables(switch_block, op_start);
+    for (i = 0; i <= nlabels; i++)
+    {
+        if (! case_labels[i].defined)
         {
-            if (! abrupt)
-                abrupt = EmitStatement(switch_block_statement ->
-                                       Statement(si) -> StatementCast());
-            else if (switch_block_statement -> Statement(si) ->
-                     LocalVariableDeclarationStatementCast())
+            abrupt = false;
+            DefineLabel(case_labels[i]);
+        }
+        CompleteLabel(case_labels[i]);
+    }
+    //
+    // If this switch statement was "broken", we define the break label here.
+    //
+    if (IsLabelUsed(method_stack -> TopBreakLabel()))
+    {
+        // need define only if used
+        DefineLabel(method_stack -> TopBreakLabel());
+        CompleteLabel(method_stack -> TopBreakLabel());
+        abrupt = false;
+    }
+
+    delete [] case_labels;
+    method_stack -> Pop();
+    assert(abrupt || switch_statement -> can_complete_normally);
+    return abrupt;
+}
+
+
+bool ByteCode::EmitSwitchBlockStatement(AstSwitchBlockStatement* block,
+                                        bool abrupt)
+{
+    for (int i = 0; i < block -> NumStatements(); i++)
+    {
+        if (! abrupt)
+            abrupt = EmitStatement(block -> Statement(i));
+        else if (block -> Statement(i) ->
+                 LocalVariableDeclarationStatementCast())
+        {
+            //
+            // In a switch statement, local variable declarations are
+            // accessible in other case labels even if the declaration
+            // itself is unreachable.
+            //
+            AstLocalVariableDeclarationStatement* lvds =
+                (AstLocalVariableDeclarationStatement*) block -> Statement(i);
+            for (int j = 0; j < lvds -> NumVariableDeclarators(); j++)
             {
-                //
-                // In a switch statement, local variable declarations are
-                // accessible in other case labels even if the declaration
-                // itself is unreachable.
-                //
-                AstLocalVariableDeclarationStatement *lvds =
-                    (AstLocalVariableDeclarationStatement *)
-                    switch_block_statement -> Statement(si);
-                for (int j = 0; j < lvds -> NumVariableDeclarators(); j++)
+                AstVariableDeclarator* declarator =
+                    lvds -> VariableDeclarator(j);
+                if (control.option.g & JikesOption::VARS)
                 {
-                    AstVariableDeclarator *declarator =
-                        lvds -> VariableDeclarator(j);
-                    if (control.option.g & JikesOption::VARS)
-                    {
-                        method_stack -> StartPc(declarator -> symbol) =
-                            code_attribute -> CodeLength();
-                    }
-                    if (declarator -> symbol -> Type() -> num_dimensions > 255)
-                    {
-                        semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW,
-                                                declarator -> LeftToken(),
-                                                declarator -> RightToken());
-                    }
+                    method_stack -> StartPc(declarator -> symbol) =
+                        code_attribute -> CodeLength();
+                }
+                if (declarator -> symbol -> Type() -> num_dimensions > 255)
+                {
+                    semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW,
+                                            declarator);
                 }
             }
         }
     }
+    return abrupt;
+}
 
-    //
-    // Close the range of the locally defined variables.
-    //
+
+void ByteCode::CloseSwitchLocalVariables(AstBlock* switch_block,
+                                         u2 op_start)
+{
     if (control.option.g & JikesOption::VARS)
     {
-        for (int i = 0; i < switch_block -> NumLocallyDefinedVariables(); i++)
+        for (int i = 0;
+             i < switch_block -> NumLocallyDefinedVariables(); i++)
         {
-            VariableSymbol *variable =
+            VariableSymbol* variable =
                 switch_block -> LocallyDefinedVariable(i);
             if (method_stack -> StartPc(variable) > op_start)
             {
@@ -1676,45 +1743,6 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
             }
         }
     }
-
-    //
-    //
-    //
-    for (int j = 0; j < nlabels; j++)
-    {
-        if ((case_labels[j].uses.Length() > 0) && (! case_labels[j].defined))
-        {
-            case_labels[j].defined = true;
-            case_labels[j].definition =
-                (switch_statement -> default_case.switch_block_statement
-                 ? default_label.definition
-                 : method_stack -> TopBreakLabel().definition);
-        }
-
-        CompleteLabel(case_labels[j]);
-    }
-
-    //
-    // If the switch statement contains a default case, we clean up
-    // the default label here.
-    //
-    if (switch_statement -> default_case.switch_block_statement)
-        CompleteLabel(default_label);
-
-    //
-    // If this switch statement can be "broken", we define the break label
-    // here.
-    //
-    if (IsLabelUsed(method_stack -> TopBreakLabel()))
-    {
-        // need define only if used
-        DefineLabel(method_stack -> TopBreakLabel());
-        CompleteLabel(method_stack -> TopBreakLabel());
-    }
-
-    delete [] case_labels;
-
-    method_stack -> Pop();
 }
 
 
@@ -6283,11 +6311,19 @@ int ByteCode::LoadVariable(VariableCategory kind, AstExpression *expr,
         }
         if (field_access && field_access -> base -> Type() -> IsArray())
         {
-            assert(sym -> name_symbol == control.length_name_symbol &&
-                   need_value);
+            assert(sym -> name_symbol == control.length_name_symbol);
+            if (field_access -> base -> ArrayCreationExpressionCast() &&
+                ! need_value)
+            {
+                EmitExpression(field_access -> base, false);
+                return 0;
+            }
             EmitExpression(field_access -> base);
-            PutOp(OP_ARRAYLENGTH);
-            return 1;
+            PutOp(OP_ARRAYLENGTH); 
+            if (need_value)
+                return 1;
+            PutOp(OP_POP);
+            return 0;
         }
 
         if (sym -> ACC_STATIC())

@@ -38,7 +38,7 @@ public:
     int Size() { return table.Length(); }
     SymbolTable *Top()
     {
-        return (SymbolTable *) (table.Length() > 0
+        return (SymbolTable*) (table.Length() > 0
                                 ? table[table.Length() - 1] : NULL);
     }
 
@@ -58,7 +58,7 @@ public:
             if (symbol)
                 return symbol;
         }
-        return (VariableSymbol *) NULL;
+        return NULL;
     }
 
     //
@@ -74,7 +74,7 @@ public:
             if (symbol)
                 return symbol;
         }
-        return (TypeSymbol *) NULL;
+        return NULL;
     }
 
     //
@@ -90,75 +90,36 @@ public:
             if (label)
                 return label;
         }
-        return (LabelSymbol *) NULL;
+        return NULL;
     }
 
 private:
-    Tuple<SymbolTable *> table;
+    Tuple<SymbolTable*> table;
 };
 
 
 //
-// Maintain a stack of exceptions, which tracks the checked exceptions possible
-// and thus the reachability of catch blocks and necessity of throws clauses.
+// Maintains a stack of information used by Semantic.
 //
-class ExceptionTableStack
+template <typename T>
+class SemanticStack
 {
 public:
-    void Push(SymbolSet *set) { table.Next() = set; }
-    void Pop() { if (table.Length() > 0) table.Reset(table.Length() - 1); }
-    int Size() { return table.Length(); }
-    SymbolSet *Top()
+    void Push(T next = T()) { info.Next() = next; }
+    void Pop()
     {
-        return (SymbolSet *) (table.Length() > 0
-                              ? table[table.Length() - 1] : NULL);
+        if (info.Length())
+            info.Reset(info.Length() - 1);
     }
+    unsigned Size() { return info.Length(); }
+    T Top()
+    {
+        return info.Length() ? info[info.Length() - 1] : T();
+    }
+    T operator[](const unsigned i) { return info[i]; }
 
 private:
-    Tuple<SymbolSet *> table;
-};
-
-
-//
-// A stack of statements.
-//
-class StatementStack
-{
-public:
-    void Push(Ast *stmt) { info.Next() = stmt; }
-    void Pop() { if (info.Length() > 0) info.Reset(info.Length() - 1); }
-    int Size() { return info.Length(); }
-    Ast *Top()
-    {
-        return (Ast *) (info.Length() > 0 ? info[info.Length() - 1] : NULL);
-    }
-
-    Ast *operator[](const int i) { return info[i]; }
-
-private:
-    Tuple<Ast *> info;
-};
-
-
-//
-// A stack of integers, denoting the nesting level of a block.
-//
-class NestingLevelStack
-{
-public:
-    void Push(int nesting) { info.Next() = nesting; }
-    void Pop() { if (info.Length() > 0) info.Reset(info.Length() - 1); }
-    int Size() { return info.Length(); }
-    // Top returns 0 if the stack is empty, a valid value for no nesting depth
-    int Top()
-    {
-        return (int) (info.Length() > 0 ? info[info.Length() - 1] : 0);
-    }
-
-    int operator[](const int i) { return info[i]; }
-
-private:
-    Tuple<int> info;
+    Tuple<T> info;
 };
 
 
@@ -170,7 +131,7 @@ class BlockStack
 public:
     int max_size;
 
-    void Push(AstBlock *block_)
+    void Push(AstBlock* block_)
     {
         block.Next() = block_;
         index.Next() = 0;
@@ -191,13 +152,13 @@ public:
     int Size() { return block.Length(); }
     AstBlock *TopBlock()
     {
-        return (AstBlock *) (block.Length() > 0
+        return (AstBlock*) (block.Length() > 0
                              ? block[block.Length() - 1] : NULL);
     }
 
-    AstBlock *operator[](const int i) { return block[i]; }
+    AstBlock* operator[](const int i) { return block[i]; }
 
-    int &TopMaxEnclosedVariableIndex()
+    int& TopMaxEnclosedVariableIndex()
     {
         if (index.Length() <= 0)
             assert(false);
@@ -207,7 +168,7 @@ public:
     BlockStack() : max_size(0) {}
 
 private:
-    Tuple<AstBlock *> block;
+    Tuple<AstBlock*> block;
     Tuple<int> index;
 };
 
@@ -219,16 +180,20 @@ class DefiniteFinalAssignmentStack
 {
 public:
     void Push() { info.Next().Reset(); }
-    void Pop()  { if (info.Length() > 0) info.Reset(info.Length() - 1); }
-    int Size()  { return info.Length(); }
-    Tuple <AstExpression *> &Top()
+    void Pop()
+    {
+        if (info.Length())
+            info.Reset(info.Length() - 1);
+    }
+    unsigned Size() { return info.Length(); }
+    Tuple<AstExpression*>& Top()
     {
         assert(info.Length());
         return info[info.Length() - 1];
     }
 
 private:
-    Tuple< Tuple<AstExpression *> > info;
+    Tuple<Tuple<AstExpression*> > info;
 };
 
 
@@ -349,28 +314,28 @@ public:
 
     // Stacks used within the current method.
     SymbolTableStack symbol_table;
-    ExceptionTableStack try_exception_table_stack;
-    StatementStack try_statement_stack,
-                   breakable_statement_stack,
-                   continuable_statement_stack;
-    NestingLevelStack abrupt_finally_stack;
+    SemanticStack<SymbolSet*> try_exception_table_stack;
+    SemanticStack<AstTryStatement*> try_statement_stack;
+    SemanticStack<AstBlock*> breakable_statement_stack;
+    SemanticStack<AstBlock*> continuable_statement_stack;
+    SemanticStack<int> abrupt_finally_stack;
     BlockStack block_stack;
 
     //
     // This set of fields is used in definite assignment analysis; they should
     // not need to be cloned.
     //
-    DefinitePair *definitely_assigned_variables,
-                 *universe;
-    BitSet *blank_finals,
-           *reachable_assignments;
-    DefiniteBlockStack *definite_block_stack;
-    DefiniteFinalAssignmentStack *definite_final_assignment_stack;
-    Tuple<VariableSymbol *> *final_fields;
+    DefinitePair* definitely_assigned_variables;
+    DefinitePair* universe;
+    BitSet* blank_finals;
+    BitSet* reachable_assignments;
+    DefiniteBlockStack* definite_block_stack;
+    DefiniteFinalAssignmentStack* definite_final_assignment_stack;
+    Tuple<VariableSymbol*>* final_fields;
     bool processing_simple_assignment;
 
-    SemanticEnvironment(Semantic *sem_, TypeSymbol *type_,
-                        SemanticEnvironment *previous_ = NULL)
+    SemanticEnvironment(Semantic* sem_, TypeSymbol* type_,
+                        SemanticEnvironment* previous_ = NULL)
         : sem(sem_),
           previous(previous_),
           this_method(NULL),
@@ -462,7 +427,7 @@ public:
     SemanticEnvironment *operator[](const int i) { return info[i]; }
 
 private:
-    Tuple<SemanticEnvironment *> info;
+    Tuple<SemanticEnvironment*> info;
 };
 
 
@@ -753,6 +718,20 @@ public:
         error -> Report(kind, ltok, rtok, s1, s2, s3, s4, s5, s6, s7, s8, s9);
     }
 
+    // Report a semantic warning or error on a syntax tree branch..
+    void ReportSemError(SemanticError::SemanticErrorKind kind, Ast* ast,
+                        const wchar_t* s1 = NULL, const wchar_t* s2 = NULL,
+                        const wchar_t* s3 = NULL, const wchar_t* s4 = NULL,
+                        const wchar_t* s5 = NULL, const wchar_t* s6 = NULL,
+                        const wchar_t* s7 = NULL, const wchar_t* s8 = NULL,
+                        const wchar_t* s9 = NULL)
+    {
+        if (! error)
+            error = new SemanticError(control, source_file_symbol);
+        error -> Report(kind, ast -> LeftToken(), ast -> RightToken(),
+                        s1, s2, s3, s4, s5, s6, s7, s8, s9);
+    }
+
     // Report a single-token semantic warning or error.
     void ReportSemError(SemanticError::SemanticErrorKind kind,
                         LexStream::TokenIndex tok,
@@ -786,7 +765,7 @@ public:
                          LexStream::TokenIndex);
 
     // Implemented in init.cpp - determines values of final fields.
-    void ComputeFinalValue(VariableSymbol *);
+    void ComputeFinalValue(VariableSymbol*);
 
     // Implemented in getclass.cpp - reads in a .class file.
     TypeSymbol *ProcessSignature(TypeSymbol *, const char *,
@@ -801,13 +780,13 @@ public:
     {
         return expr -> IsConstant() &&
             expr -> Type() == control.boolean_type &&
-            DYNAMIC_CAST<IntLiteralValue *> (expr -> value) -> value;
+            DYNAMIC_CAST<IntLiteralValue*> (expr -> value) -> value;
     }
     inline bool IsConstantFalse(AstExpression *expr)
     {
         return expr -> IsConstant() &&
             expr -> Type() == control.boolean_type &&
-            ! DYNAMIC_CAST<IntLiteralValue *> (expr -> value) -> value;
+            ! DYNAMIC_CAST<IntLiteralValue*> (expr -> value) -> value;
     }
 
 private:
@@ -821,7 +800,7 @@ private:
 
     // Implemented in decl.cpp - clean up after parsing
     void CleanUp();
-    void CleanUpType(TypeSymbol *);
+    void CleanUpType(TypeSymbol*);
 
     // Implemented in decl.cpp - process a .java file for declarations
     void ProcessTypeHeader(AstClassDeclaration *);
@@ -862,45 +841,45 @@ private:
             (ThisMethod() && ThisMethod() -> IsDeprecated()) ||
             (ThisVariable() && ThisVariable() -> IsDeprecated());
     }
-    TypeSymbol *ThisType() { return state_stack.Top() -> Type(); }
-    MethodSymbol *&ThisMethod() { return state_stack.Top() -> this_method; }
-    VariableSymbol *&ThisVariable()
+    TypeSymbol* ThisType() { return state_stack.Top() -> Type(); }
+    MethodSymbol*& ThisMethod() { return state_stack.Top() -> this_method; }
+    VariableSymbol*& ThisVariable()
     {
         return state_stack.Top() -> this_variable;
     }
-    AstStatement *&ExplicitConstructorInvocation()
+    AstStatement*& ExplicitConstructorInvocation()
     {
         return state_stack.Top() -> explicit_constructor;
     }
-    SymbolTableStack &LocalSymbolTable()
+    SymbolTableStack& LocalSymbolTable()
     {
         return state_stack.Top() -> symbol_table;
     }
-    ExceptionTableStack &TryExceptionTableStack()
+    SemanticStack<SymbolSet*>& TryExceptionTableStack()
     {
         return state_stack.Top() -> try_exception_table_stack;
     }
-    StatementStack &TryStatementStack()
+    SemanticStack<AstTryStatement*>& TryStatementStack()
     {
         return state_stack.Top() -> try_statement_stack;
     }
-    StatementStack &BreakableStatementStack()
+    SemanticStack<AstBlock*>& BreakableStatementStack()
     {
         return state_stack.Top() -> breakable_statement_stack;
     }
-    StatementStack &ContinuableStatementStack()
+    SemanticStack<AstBlock*>& ContinuableStatementStack()
     {
         return state_stack.Top() -> continuable_statement_stack;
     }
-    NestingLevelStack &AbruptFinallyStack()
+    SemanticStack<int>& AbruptFinallyStack()
     {
         return state_stack.Top() -> abrupt_finally_stack;
     }
-    BlockStack &LocalBlockStack()
+    BlockStack& LocalBlockStack()
     {
         return state_stack.Top() -> block_stack;
     }
-    SemanticEnvironment *GetEnvironment(Ast *ast)
+    SemanticEnvironment* GetEnvironment(Ast* ast)
     {
         return state_stack.Top() -> GetEnvironment(ast);
     }
@@ -909,29 +888,29 @@ private:
         return state_stack.Top() -> StaticRegion();
     }
 
-    DefinitePair *&DefinitelyAssignedVariables()
+    DefinitePair*& DefinitelyAssignedVariables()
     {
         return state_stack.Top() -> definitely_assigned_variables;
     }
-    DefinitePair *&Universe() { return state_stack.Top() -> universe; }
-    BitSet *&BlankFinals() { return state_stack.Top() -> blank_finals; }
-    BitSet *&ReachableAssignments()
+    DefinitePair*& Universe() { return state_stack.Top() -> universe; }
+    BitSet*& BlankFinals() { return state_stack.Top() -> blank_finals; }
+    BitSet*& ReachableAssignments()
     {
         return state_stack.Top() -> reachable_assignments;
     }
-    DefiniteBlockStack *&DefiniteBlocks()
+    DefiniteBlockStack*& DefiniteBlocks()
     {
         return state_stack.Top() -> definite_block_stack;
     }
-    DefiniteFinalAssignmentStack *&DefiniteFinalAssignments()
+    DefiniteFinalAssignmentStack*& DefiniteFinalAssignments()
     {
         return state_stack.Top() -> definite_final_assignment_stack;
     }
-    Tuple<VariableSymbol *> *&FinalFields()
+    Tuple<VariableSymbol*>*& FinalFields()
     {
         return state_stack.Top() -> final_fields;
     }
-    bool &ProcessingSimpleAssignment()
+    bool& ProcessingSimpleAssignment()
     {
         return state_stack.Top() -> processing_simple_assignment;
     }
@@ -940,7 +919,7 @@ private:
     SemanticEnvironmentStack state_stack;
 
     // Implemented in expr.cpp - semantic checks of expressions
-    bool IsIntValueRepresentableInType(AstExpression *, TypeSymbol *);
+    bool IsIntValueRepresentableInType(AstExpression*, TypeSymbol*);
 
     // Implemented in decl.cpp - nested class processing
     void CheckClassMembers(TypeSymbol *, AstClassBody *);
@@ -985,8 +964,8 @@ private:
     AccessFlags ProcessInterfaceMethodModifiers(AstMethodDeclaration *);
 
     // Implemented in body.cpp - process method bodies
-    void AddDefaultConstructor(TypeSymbol *);
-    void ProcessConstructorDeclaration(AstConstructorDeclaration *);
+    void AddDefaultConstructor(TypeSymbol*);
+    void ProcessConstructorDeclaration(AstConstructorDeclaration*);
     void ProcessMethodDeclaration(AstMethodDeclaration *);
     void ProcessFieldDeclaration(AstFieldDeclaration *);
     void ProcessFormalParameters(BlockSymbol *, AstMethodDeclarator *);
@@ -1123,11 +1102,11 @@ private:
                                   LexStream::TokenIndex,
                                   LexStream::TokenIndex);
     bool MoreSpecific(MethodSymbol *, MethodSymbol *);
-    bool MoreSpecific(MethodSymbol *, Tuple<MethodSymbol *> &);
-    bool NoMethodMoreSpecific(Tuple<MethodSymbol *> &, MethodSymbol *);
-    bool MoreSpecific(MethodSymbol *, Tuple<MethodShadowSymbol *> &);
-    bool NoMethodMoreSpecific(Tuple<MethodShadowSymbol *> &, MethodSymbol *);
-    void FindMethodInEnvironment(Tuple<MethodShadowSymbol *> &,
+    bool MoreSpecific(MethodSymbol *, Tuple<MethodSymbol*> &);
+    bool NoMethodMoreSpecific(Tuple<MethodSymbol*> &, MethodSymbol *);
+    bool MoreSpecific(MethodSymbol *, Tuple<MethodShadowSymbol*> &);
+    bool NoMethodMoreSpecific(Tuple<MethodShadowSymbol*> &, MethodSymbol *);
+    void FindMethodInEnvironment(Tuple<MethodShadowSymbol*> &,
                                  SemanticEnvironment *&,
                                  SemanticEnvironment *, AstMethodInvocation *);
     MethodSymbol *FindMisspelledMethodName(TypeSymbol *,
@@ -1140,7 +1119,7 @@ private:
                                          NameSymbol * = NULL);
 
     void ReportVariableNotFound(AstExpression *, TypeSymbol *);
-    void FindVariableInEnvironment(Tuple<VariableSymbol *> &,
+    void FindVariableInEnvironment(Tuple<VariableSymbol*>&,
                                    SemanticEnvironment *&,
                                    SemanticEnvironment *, NameSymbol *,
                                    LexStream::TokenIndex);

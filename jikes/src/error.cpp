@@ -263,13 +263,32 @@ void SemanticError::Report(SemanticErrorKind msg_code,
     // Don't report warnings that have been turned off on the command-line.
     //
     assert(msg_code < _num_kinds);
-    if (clone_count > 0 || warning[msg_code] == DISABLED ||
-        (control.option.nowarn &&
-         (warning[msg_code] == WEAK_WARNING ||
-          (warning[msg_code] == STRONG_WARNING &&
-           ! control.option.zero_defect))))
-    {
+    if (clone_count)
         return;
+    switch (warning[msg_code])
+    {
+    case NAMED_WEAK_OFF:
+    case NAMED_STRONG_OFF:
+        warning[msg_code] = DISABLED;
+        // fallthrough
+    case DISABLED:
+        return;
+    case NAMED_WEAK_ON:
+        warning[msg_code] = WEAK_WARNING;
+        // fallthrough
+    case WEAK_WARNING:
+        if (control.option.nowarn)
+            return;
+        break;
+    case NAMED_STRONG_ON:
+        warning[msg_code] = STRONG_WARNING;
+        // fallthrough
+    case STRONG_WARNING:
+        if (control.option.nowarn && ! control.option.zero_defect)
+            return;
+        break;
+    case MANDATORY_ERROR:
+        break;
     }
 
     int i = error.NextIndex();
@@ -436,7 +455,7 @@ void SemanticError::Report(SemanticErrorKind msg_code,
             buffer.Reset();
         }
         // we need at least 1 error in order for the return code to be
-        // set properly. See print_messages
+        // set properly. See PrintMessages().
         error.Reset(1);
     }
 }
@@ -451,12 +470,21 @@ void SemanticError::StaticInitializer()
 
     memset(warning, MANDATORY_ERROR, _num_kinds * sizeof(unsigned char));
 
+    //
+    // Named warnings. These must be given one of the NAMED_* enum values,
+    // which will be used as the default state if no +P options are specified.
+    //
+    warning[REDUNDANT_MODIFIER] = NAMED_WEAK_OFF;
+    warning[RECOMMENDED_MODIFIER_ORDER] = NAMED_WEAK_OFF;
+    warning[SWITCH_FALLTHROUGH] = NAMED_WEAK_OFF;
+
+    //
+    // Weak warnings.
+    //
     warning[CANNOT_OPEN_ZIP_FILE] = WEAK_WARNING;
     warning[CANNOT_OPEN_PATH_DIRECTORY] = WEAK_WARNING;
 
     warning[EMPTY_DECLARATION] = WEAK_WARNING;
-    warning[REDUNDANT_MODIFIER] = WEAK_WARNING;
-    warning[RECOMMENDED_MODIFIER_ORDER] = WEAK_WARNING;
     warning[DUPLICATE_THROWS_CLAUSE_CLASS] = WEAK_WARNING;
     warning[REDUNDANT_THROWS_CLAUSE_CLASS] = WEAK_WARNING;
     warning[UNCHECKED_THROWS_CLAUSE_CLASS] = WEAK_WARNING;
@@ -499,35 +527,32 @@ void SemanticError::StaticInitializer()
 
 
 //
-// Describes an error code for the purpose of turning it on or off by name.
-// The name is used on the command-line, in Jikes' -help output.
-//
-struct NamedError
-{
-    const char* name;
-    const char* reason;
-    SemanticError::SemanticErrorKind code;
-};
-
-//
 // HOWTO: Add a +Pno-<something> flag to selectively enable/disable a warning.
 //
-// Add an entry to the 'namedErrors' array. The three items are the text to
-// appear after "+Pno-" on the command-line, the text to appear after
-// "warn about " in the -help output, and the SemanticErrorKind enum value for
-// the warning in question.
+// Add an entry to the 'named_errors' array. The four items are the text to
+// appear after "+P[no-]" on the command-line, the text to appear after
+// "warn about " in the -help output, the SemanticErrorKind enum value for
+// the warning in question, and the WarningLevel::NAMED_* enum value which
+// determines the default state of the warning when plain +P is used and no
+// prior +P option was used.
+//
+// Update the warning[] entry for the SemanticErrorKind to be one of the
+// WarningLevel::NAMED_* enum values. This will specify the default state of
+// the warning when no +P option is used.
 //
 // Update the documentation in docs/jikes.1 to reflect the new option.
 //
-static NamedError namedErrors[] =
+SemanticError::NamedError SemanticError::named_errors[] =
 {
     { "modifier-order", "modifiers appearing out of order",
-      SemanticError::RECOMMENDED_MODIFIER_ORDER },
+      RECOMMENDED_MODIFIER_ORDER, NAMED_WEAK_ON },
     { "redundant-modifiers", "modifiers which are implied",
-      SemanticError::REDUNDANT_MODIFIER },
+      REDUNDANT_MODIFIER, NAMED_WEAK_ON },
+    { "switchcheck", "fallthrough between switch statement cases",
+      SWITCH_FALLTHROUGH, NAMED_WEAK_ON },
 
     // The table must end with this entry. New items *MUST* be added above.
-    { 0, 0, SemanticError::BAD_ERROR }
+    { 0, 0, BAD_ERROR, DISABLED }
 };
 
 //
@@ -536,7 +561,7 @@ static NamedError namedErrors[] =
 //
 void SemanticError::PrintNamedWarnings()
 {
-    for (NamedError* pair = namedErrors; pair -> name; ++pair)
+    for (NamedError* pair = named_errors; pair -> name; ++pair)
     {
         static const unsigned SPACE_FOR_NAME = 15;
         printf("+P[no-]%-*s", SPACE_FOR_NAME, pair -> name);
@@ -547,15 +572,18 @@ void SemanticError::PrintNamedWarnings()
 }
 
 //
-// Turns all named warnings to their default level, used by the plain +P
-// pedantic command-line flag.
-// TODO: Should we add in smarts to have some warnings left out of +P, or
-// to default to STRONG warnings?
+// Turns all named warnings not previously initialized to their plain +P
+// default level, using NamedError::level (see documentation of named_errors).
 //
 void SemanticError::EnableDefaultWarnings()
 {
-    for (NamedError* pair = namedErrors; pair -> name; ++pair)
-        warning[pair -> code] = WEAK_WARNING;
+    StaticInitializer();
+    for (NamedError* pair = named_errors; pair -> name; ++pair)
+    {
+        assert(pair -> level > DISABLED);
+        if (warning[pair -> code] > DISABLED)
+            warning[pair -> code] = pair -> level;
+    }
 }
 
 //
@@ -565,7 +593,8 @@ void SemanticError::EnableDefaultWarnings()
 // Command-line options are of the form +P<name> or +Pno-<name> to
 // enable or disable the warning <name> respectively.
 //
-// The 'image' parameter should not include the "+P" prefix.
+// The 'image' parameter should not include the "+P" prefix (partly because
+// synonyms like -Xswitchcheck also use this method).
 //
 bool SemanticError::ProcessWarningSwitch(const char* image)
 {
@@ -577,13 +606,23 @@ bool SemanticError::ProcessWarningSwitch(const char* image)
         enable = false;
     }
 
-    for (NamedError* pair = namedErrors; pair -> name; ++pair)
+    for (NamedError* pair = named_errors; pair -> name; ++pair)
     {
         if (strcmp(pair -> name, image) == 0)
         {
-            assert(warning[pair -> code] != MANDATORY_ERROR);
-            warning[pair -> code] = enable ? WEAK_WARNING : DISABLED;
-            return true;
+            switch(pair -> level)
+            {
+            case NAMED_STRONG_ON:
+            case NAMED_STRONG_OFF:
+                warning[pair -> code] = enable ? STRONG_WARNING : DISABLED;
+                return true;
+            case NAMED_WEAK_ON:
+            case NAMED_WEAK_OFF:
+                warning[pair -> code] = enable ? WEAK_WARNING : DISABLED;
+                return true;
+            default:
+                assert(false && "Invalid default level for named warning");
+            }
         }
     }
     return false;
@@ -1089,11 +1128,14 @@ void SemanticError::InitializeMessages()
         "An EmptyDeclaration is useless. \";\" ignored.";
     messages[REDUNDANT_MODIFIER] =
         "The use of the \"%1\" modifier in this context "
-        "is redundant and strongly discouraged as a matter of style.";
+        "is redundant and is discouraged as a matter of style.";
     messages[RECOMMENDED_MODIFIER_ORDER] =
-        "The modifier \"%1\" did not appear in the recommended order "
+        "The modifier \"%1\" did not appear in the recommended order: "
         "public/protected/private, abstract, static, final, synchronized, "
-        "transient, volatile, strictfp.";
+        "transient, volatile, native, strictfp.";
+    messages[SWITCH_FALLTHROUGH] =
+        "This switch block can fall through to the next case. Did you forget "
+        "a break statement?";
     messages[OBSOLESCENT_BRACKETS] =
         "The use of empty bracket pairs following a MethodDeclarator should "
         "not be used in new Java programs.";

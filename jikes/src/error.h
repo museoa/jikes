@@ -121,7 +121,11 @@ public:
         MANDATORY_ERROR = ErrorInfo::JIKES_ERROR,
         STRONG_WARNING = ErrorInfo::JIKES_CAUTION,
         WEAK_WARNING = ErrorInfo::JIKES_WARNING,
-        DISABLED
+        DISABLED,
+        NAMED_STRONG_ON,
+        NAMED_STRONG_OFF,
+        NAMED_WEAK_ON,
+        NAMED_WEAK_OFF
     };
 
     enum SemanticErrorKind
@@ -161,6 +165,7 @@ public:
         EMPTY_DECLARATION,
         REDUNDANT_MODIFIER,
         RECOMMENDED_MODIFIER_ORDER,
+        SWITCH_FALLTHROUGH,
         OBSOLESCENT_BRACKETS,
         NO_TYPES,
         MULTIPLE_PUBLIC_TYPES,
@@ -376,6 +381,19 @@ public:
 
         _num_kinds
     };
+
+    //
+    // Describes an error code for the purpose of turning it on or off by name.
+    // The name is used on the command-line, in Jikes' -help output.
+    //
+    struct NamedError
+    {
+        const char* name;
+        const char* reason;
+        SemanticErrorKind code;
+        WarningLevel level;
+    };
+    static NamedError named_errors[];
 
     static void StaticInitializer();
     static void InitializeMessages();

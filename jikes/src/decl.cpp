@@ -2585,7 +2585,7 @@ void Semantic::AddDefaultConstructor(TypeSymbol *type)
         constructor_block -> block_symbol = new BlockSymbol(0);
         constructor_block -> left_brace_token  = left_loc;
         constructor_block -> right_brace_token = right_loc;
-        constructor_block -> AllocateBlockStatements(1);
+        constructor_block -> AllocateStatements(1);
         constructor_block -> AddStatement(return_statement);
         constructor_block -> explicit_constructor_opt = super_call;
 
@@ -4232,7 +4232,7 @@ MethodSymbol *Semantic::GetStaticInitializerMethod(int estimate)
     block -> left_brace_token = loc;
     block -> right_brace_token = loc;
     block -> block_symbol = block_symbol;
-    block -> AllocateBlockStatements(estimate);
+    block -> AllocateStatements(estimate);
 
     // The return type (void).
     AstSimpleName *return_type = ast_pool -> GenSimpleName(loc);
@@ -4452,7 +4452,7 @@ void Semantic::ProcessInstanceInitializers(AstClassBody *class_body)
         k = 0;
     int estimate = class_body -> NumInstanceVariables() +
         class_body -> NumInstanceInitializers();
-    block -> AllocateBlockStatements(estimate);
+    block -> AllocateStatements(estimate);
     while (j < class_body -> NumInstanceVariables() &&
            k < class_body -> NumInstanceInitializers())
     {

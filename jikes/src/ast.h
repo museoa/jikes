@@ -29,6 +29,7 @@ class VariableSymbol;
 class MethodSymbol;
 class TypeSymbol;
 class StoragePool;
+struct CaseElement;
 
 class VariableSymbolArray
 {
@@ -196,8 +197,7 @@ class AstLocalVariableDeclarationStatement;
 class AstIfStatement;
 class AstEmptyStatement;
 class AstExpressionStatement;
-class AstCaseLabel;
-class AstDefaultLabel;
+class AstSwitchLabel;
 class AstSwitchBlockStatement;
 class AstSwitchStatement;
 class AstWhileStatement;
@@ -237,8 +237,6 @@ class AstBinaryExpression;
 class AstTypeExpression;
 class AstConditionalExpression;
 class AstAssignmentExpression;
-
-class CaseElement;
 
 //
 // The Ast base node.
@@ -345,14 +343,13 @@ public:
         SUPER_CALL,
         BLOCK,
         METHOD_BODY,
+        SWITCH_LABEL,
         LOCAL_VARIABLE_DECLARATION,
         IF,
         EMPTY_STATEMENT,
         EXPRESSION_STATEMENT,
         SWITCH,
         SWITCH_BLOCK,
-        CASE,
-        DEFAULT,
         WHILE,
         DO,
         FOR,
@@ -400,8 +397,8 @@ public:
     virtual ~Ast();
 
 #ifdef JIKES_DEBUG
-    virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream *);
+    virtual void Print(LexStream&) = 0;
+    virtual void Unparse(Ostream&, LexStream*) = 0;
 #endif
 
     //
@@ -501,8 +498,7 @@ public:
     inline AstIfStatement *IfStatementCast();
     inline AstEmptyStatement *EmptyStatementCast();
     inline AstExpressionStatement *ExpressionStatementCast();
-    inline AstCaseLabel *CaseLabelCast();
-    inline AstDefaultLabel *DefaultLabelCast();
+    inline AstSwitchLabel *SwitchLabelCast();
     inline AstSwitchBlockStatement *SwitchBlockStatementCast();
     inline AstSwitchStatement *SwitchStatementCast();
     inline AstWhileStatement *WhileStatementCast();
@@ -543,10 +539,20 @@ public:
     inline AstConditionalExpression *ConditionalExpressionCast();
     inline AstAssignmentExpression *AssignmentExpressionCast();
 
-    virtual Ast *Clone(StoragePool *);
+    //
+    // It would be nice if this could always be covariant, as it would allow
+    // less casting. But various compilers can't yet handle covariant return
+    // types in the face of multiple inheritance (bummer).
+    // Clones are used for various things, such as pre-evaluating final
+    // constant values.
+    //
+    virtual Ast* Clone(StoragePool*) = 0;
 
-    virtual LexStream::TokenIndex LeftToken()  { assert(0); return 0; }
-    virtual LexStream::TokenIndex RightToken() { assert(0); return 0; }
+    //
+    // These functions return the left and right tokens of this tree branch.
+    //
+    virtual LexStream::TokenIndex LeftToken() = 0;
+    virtual LexStream::TokenIndex RightToken() = 0;
 };
 
 
@@ -668,6 +674,16 @@ public:
 
     ~AstListNode() {}
 
+    //
+    // These next three functions should never be called, since list nodes
+    // only exist long enough to create the AST tree and then are reclaimed.
+    //
+    virtual Ast* Clone(StoragePool*) { assert(false); return NULL; }
+#ifdef JIKES_DEBUG
+    virtual void Print(LexStream&) { assert(false); }
+    virtual void Unparse(Ostream&, LexStream*) { assert(false); }
+#endif
+
     virtual LexStream::TokenIndex LeftToken()
     {
         return element -> LeftToken();
@@ -701,7 +717,7 @@ public:
     //
     virtual ~AstStatement();
 
-    virtual Ast *Clone(StoragePool *) { return (Ast *) NULL; }
+    virtual AstStatement* Clone(StoragePool*) = 0;
 
     inline VariableSymbol *&DefinedVariable(int i)
     {
@@ -713,9 +729,6 @@ public:
     }
     inline void AllocateDefinedVariables(int estimate = 0);
     inline void AddDefinedVariable(VariableSymbol *);
-
-    virtual LexStream::TokenIndex LeftToken()  { assert(0); return 0; }
-    virtual LexStream::TokenIndex RightToken() { assert(0); return 0; }
 };
 
 
@@ -742,10 +755,7 @@ public:
 
     TypeSymbol *Type();
 
-    virtual Ast *Clone(StoragePool *) { return (Ast *) NULL; }
-
-    virtual LexStream::TokenIndex LeftToken()  { assert(0); return 0; }
-    virtual LexStream::TokenIndex RightToken() { assert(0); return 0; }
+    virtual AstExpression* Clone(StoragePool*) = 0;
 };
 
 
@@ -808,7 +818,7 @@ public:
     {
         return (block_statements ? block_statements -> Length() : 0);
     }
-    inline void AllocateBlockStatements(int estimate = 0);
+    inline void AllocateStatements(int estimate = 0);
     inline void AddStatement(AstStatement *);
 
     inline VariableSymbol *&LocallyDefinedVariable(int i)
@@ -828,9 +838,9 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstBlock* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()  { return left_brace_token; }
+    virtual LexStream::TokenIndex LeftToken() { return left_brace_token; }
     virtual LexStream::TokenIndex RightToken() { return right_brace_token; }
 
 protected:
@@ -999,7 +1009,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstSimpleName* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()  { return identifier_token; }
     virtual LexStream::TokenIndex RightToken() { return identifier_token; }
@@ -1399,7 +1409,8 @@ public:
 //                   | InterfaceDeclaration
 //                   | EmptyDeclaration
 //
-// ClassDeclaration --> <CLASS, ClassModifiers, class_token, identifier_token, Super_opt, Interfaces, ClassBody>
+// ClassDeclaration --> <CLASS, ClassModifiers, class_token, identifier_token,
+// Super_opt, Interfaces, ClassBody>
 //
 // Super --> Name
 //
@@ -1469,7 +1480,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstStatement* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -1487,7 +1498,8 @@ public:
 // VariableInitializer --> Expression
 //                       | ArrayInitializer
 //
-// ArrayInitializer --> <ARRAY_INITIALIZER, {_token, VariableInitializers, }_token>
+// ArrayInitializer --> <ARRAY_INITIALIZER, {_token, VariableInitializers,
+// }_token>
 //
 class AstArrayInitializer : public Ast
 {
@@ -1534,7 +1546,8 @@ public:
 
 
 //
-// VariableDeclaratorId --> <VARIABLE_DECLARATOR_NAME, identifier_token, Brackets>
+// VariableDeclaratorId --> <VARIABLE_DECLARATOR_NAME, identifier_token,
+// Brackets>
 //
 class AstVariableDeclaratorId : public Ast
 {
@@ -1620,7 +1633,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstVariableDeclarator* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -1636,9 +1649,11 @@ public:
 
 
 //
-// FieldDeclaration --> <FIELD, VariableModifiers, Type, VariableDeclarators, ;_token>
+// FieldDeclaration --> <FIELD, VariableModifiers, Type, VariableDeclarators,
+// ;_token>
 //
-// FieldModifier --> Modifier (PUBLIC, PROTECTED, PRIVATE, FINAL, STATIC, TRANSIENT or VOLATILE)
+// FieldModifier --> Modifier (PUBLIC, PROTECTED, PRIVATE, FINAL, STATIC,
+// TRANSIENT or VOLATILE)
 //
 class AstFieldDeclaration : public Ast
 {
@@ -1857,7 +1872,7 @@ public:
 
     bool IsValid() { return method_symbol != NULL; }
 
-    bool IsSignature() { return (method_body -> EmptyStatementCast() != NULL); }
+    bool IsSignature() { return method_body -> EmptyStatementCast() != NULL; }
 
     inline AstModifier *&MethodModifier(int i)
     {
@@ -1922,7 +1937,8 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstMethodBody* Clone(StoragePool*);
+    // Inherited LeftToken(), RightToken() are adequate.
 };
 
 
@@ -2001,7 +2017,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstThisCall* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken() { return this_token; }
     virtual LexStream::TokenIndex RightToken() { return semicolon_token; }
@@ -2009,7 +2025,8 @@ public:
 
 
 //
-// SuperCall --> <SUPER_CALL, super_token, (_token, Arguments, )_token, ;_token>
+// SuperCall --> <SUPER_CALL, super_token, (_token, Arguments, )_token,
+// ;_token>
 //             | <SUPER_CALL, SuperField, (_token, Arguments, )_token, ;_token>
 //
 class AstSuperCall : public AstStatement
@@ -2076,7 +2093,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstSuperCall* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -2170,7 +2187,9 @@ public:
 
 
 //
-// InterfaceDeclaration --> <INTERFACE, Interfacemodifiers, interface_token, identifier_token, ExtendsInterfaces, {_token, InterfaceMemberDeclarations, }_token>
+// InterfaceDeclaration --> <INTERFACE, Interfacemodifiers, interface_token,
+// identifier_token, ExtendsInterfaces, {_token, InterfaceMemberDeclarations,
+// }_token>
 //
 // InterfaceModifier --> Modifier (PUBLIC, ABSTRACT)
 //
@@ -2389,7 +2408,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstLocalVariableDeclarationStatement* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -2454,7 +2473,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstIfStatement* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -2495,7 +2514,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstEmptyStatement* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -2506,7 +2525,8 @@ public:
 
 
 //
-// ExpressionStatement --> <EXPRESSION_STATEMENT, Label_opt, Expression, ;_token_opt>
+// ExpressionStatement --> <EXPRESSION_STATEMENT, Label_opt, Expression,
+// ;_token_opt>
 //
 class AstExpressionStatement : public AstStatement
 {
@@ -2532,7 +2552,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstExpressionStatement* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -2547,66 +2567,37 @@ public:
 
 
 //
-// SwitchLabel --> CaseLabel
-//               | DefaultLabel
+// Represents "case <constant> :" and "default :".
 //
-// CaseLabel --> <CASE, case_token, Expression, :_token>
-//
-class AstCaseLabel : public Ast
+class AstSwitchLabel : public Ast
 {
 public:
     LexStream::TokenIndex case_token;
-    AstExpression *expression;
+    AstExpression* expression_opt;
     LexStream::TokenIndex colon_token;
-    int map_index;
 
-    AstCaseLabel()
+    //
+    // The sorted index of this label in the overall switch. Default cases
+    // are set to NumCases().
+    //
+    unsigned map_index;
+
+    AstSwitchLabel(AstExpression* expr)
+        : expression_opt(expr)
     {
-        Ast::kind = Ast::CASE;
-        Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = false;
+        kind = SWITCH_LABEL;
+        class_tag = NO_TAG;
+        generated = false;
     }
 
-    virtual ~AstCaseLabel();
-
 #ifdef JIKES_DEBUG
-    virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream *);
+    virtual void Print(LexStream&);
+    virtual void Unparse(Ostream&, LexStream*);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstSwitchLabel* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken() { return case_token; }
-    virtual LexStream::TokenIndex RightToken() { return colon_token; }
-};
-
-
-//
-// DefaultLabel --> <DEFAULT, default_token, :_token>
-//
-class AstDefaultLabel : public Ast
-{
-public:
-    LexStream::TokenIndex default_token;
-    LexStream::TokenIndex colon_token;
-
-    AstDefaultLabel()
-    {
-        Ast::kind = Ast::DEFAULT;
-        Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = false;
-    }
-
-    virtual ~AstDefaultLabel();
-
-#ifdef JIKES_DEBUG
-    virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream *);
-#endif
-
-    virtual Ast *Clone(StoragePool *);
-
-    virtual LexStream::TokenIndex LeftToken() { return default_token; }
     virtual LexStream::TokenIndex RightToken() { return colon_token; }
 };
 
@@ -2617,52 +2608,76 @@ public:
 class AstSwitchBlockStatement : public AstBlock
 {
 private:
-    AstArray<Ast *> *switch_labels;
+    AstArray<AstSwitchLabel*>* switch_labels;
 
 public:
-    AstSwitchBlockStatement(StoragePool *pool_)
-        : AstBlock(pool_),
+    AstSwitchBlockStatement(StoragePool* p)
+        : AstBlock(p),
           switch_labels(NULL)
     {
-        Ast::kind = Ast::SWITCH_BLOCK;
+        kind = SWITCH_BLOCK;
         no_braces = true;
     }
 
-    virtual ~AstSwitchBlockStatement();
-
-    inline Ast *&SwitchLabel(int i) { return (*switch_labels)[i]; }
+    inline AstSwitchLabel*& SwitchLabel(unsigned i)
+    {
+        return (*switch_labels)[i];
+    }
     inline int NumSwitchLabels()
     {
         return (switch_labels ? switch_labels -> Length() : 0);
     }
-    inline void AllocateSwitchLabels(int estimate = 0);
-    inline void AddSwitchLabel(Ast *);
+    inline void AllocateSwitchLabels(unsigned estimate = 1);
+    inline void AddSwitchLabel(AstSwitchLabel*);
 
 #ifdef JIKES_DEBUG
-    virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream *);
+    virtual void Print(LexStream&);
+    virtual void Unparse(Ostream&, LexStream*);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstSwitchBlockStatement* Clone(StoragePool*);
+    virtual LexStream::TokenIndex LeftToken()
+    {
+        return SwitchLabel(0) -> case_token;
+    }
+    // Inherited RightToken() is adequate.
 };
 
 
-class CaseElement
+//
+// This structure allows a switch statement to sort its case labels. It should
+// be a plain-old-data type (POD) for efficient copying.
+//
+struct CaseElement
 {
-public:
-    AstSwitchBlockStatement *switch_block_statement;
-    AstExpression *expression;
-    int index;
+    unsigned block_index; // which SwitchBlockStatement
+    unsigned case_index; // which case label within the block
+    i4 value; // the value of the case's expression
 
-    int Value();
+    //
+    // This keeps the sort stable, so that duplicates stay later in the list.
+    //
+    inline bool operator<(CaseElement& right)
+    {
+        return value < right.value ||
+            (value == right.value &&
+             (block_index < right.block_index ||
+              (block_index == right.block_index &&
+               case_index < right.case_index)));
+    }
 };
 
 //
-// SwitchStatement --> <SWITCH, Label_opt, switch_token, Expression, {_token, SwitchBlockStatements, SwitchLabels_opt, }_token>
+// SwitchStatement --> <SWITCH, Label_opt, switch_token, Expression, {_token,
+// SwitchBlockStatements, SwitchLabels_opt, }_token>
 //
 class AstSwitchStatement : public AstStatement
 {
-    AstArray<CaseElement *> *cases;
+    //
+    // The sorted list of case label values. Index 0 is reserved for the
+    // default case.
+    //
+    AstArray<CaseElement*>* cases;
 
 public:
     CaseElement default_case;
@@ -2671,40 +2686,44 @@ public:
     AstExpression *expression;
     AstBlock *switch_block;
 
-    AstSwitchStatement(StoragePool *pool_) : cases(NULL)
+    AstSwitchStatement(StoragePool*p)
+        : cases(NULL)
     {
-        Ast::kind = Ast::SWITCH;
-        Ast::class_tag = Ast::STATEMENT;
-        Ast::generated = false;
-        AstStatement::pool = pool_;
-        AstStatement::is_reachable = false;
-        AstStatement::can_complete_normally = false;
-        AstStatement::defined_variables = NULL;
+        kind = SWITCH;
+        class_tag = STATEMENT;
+        generated = false;
+        pool = p;
+        is_reachable = false;
+        can_complete_normally = false;
+        defined_variables = NULL;
     }
 
-    virtual ~AstSwitchStatement();
+    inline CaseElement*& Case(unsigned i) { return (*cases)[i + 1]; }
+    inline CaseElement*& DefaultCase() { return (*cases)[0]; }
+    inline unsigned NumCases() { return cases -> Length() - 1; }
+    inline void AllocateCases(unsigned estimate = 1);
+    inline void AddCase(CaseElement*);
 
-    inline CaseElement *&Case(int i) { return (*cases)[i]; }
-    inline int NumCases() { return (cases ? cases -> Length() : 0); }
-    inline void AllocateCases(int estimate = 0);
-    inline void AddCase(CaseElement *);
+    inline AstSwitchBlockStatement* Block(unsigned i)
+    {
+        return (AstSwitchBlockStatement*) switch_block -> Statement(i);
+    }
+    inline unsigned NumBlocks() { return switch_block -> NumStatements(); }
 
     void SortCases();
+    CaseElement* CaseForValue(i4 value);
 
 #ifdef JIKES_DEBUG
-    virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream *);
+    virtual void Print(LexStream&);
+    virtual void Unparse(Ostream&, LexStream*);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstSwitchStatement* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return switch_token;
-    }
+    virtual LexStream::TokenIndex LeftToken() { return switch_token; }
     virtual LexStream::TokenIndex RightToken()
     {
-        return switch_block -> RightToken();
+        return switch_block -> right_brace_token;
     }
 };
 
@@ -2737,7 +2756,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstWhileStatement* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -2780,7 +2799,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstDoStatement* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -2791,7 +2810,8 @@ public:
 
 
 //
-// ForStatement --> <FOR, Label_opt, for_token, ForInits, Expression_opt, ForUpdates, Statement>
+// ForStatement --> <FOR, Label_opt, for_token, ForInits, Expression_opt,
+// ForUpdates, Statement>
 //
 // ForInit --> ExpressionStatement
 //           | LocalVariableDeclarationStatement
@@ -2852,7 +2872,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstForStatement* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -2866,7 +2886,8 @@ public:
 
 
 //
-// BreakStatement --> <BREAK, Label_opt, break_token, identifier_token_opt, ;_token>
+// BreakStatement --> <BREAK, Label_opt, break_token, identifier_token_opt,
+// ;_token>
 //
 class AstBreakStatement : public AstStatement
 {
@@ -2895,7 +2916,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstBreakStatement* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -2905,7 +2926,8 @@ public:
 };
 
 //
-// ContinueStatement --> <CONTINUE, Label_opt, continue_token, SimpleName_opt, ;_token>
+// ContinueStatement --> <CONTINUE, Label_opt, continue_token, SimpleName_opt,
+// ;_token>
 //
 class AstContinueStatement : public AstStatement
 {
@@ -2934,7 +2956,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstContinueStatement* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -2945,7 +2967,8 @@ public:
 
 
 //
-// ReturnStatement --> <RETURN, Label_opt, return_token, Expression_opt, ;_token>
+// ReturnStatement --> <RETURN, Label_opt, return_token, Expression_opt,
+// ;_token>
 //
 class AstReturnStatement : public AstStatement
 {
@@ -2972,7 +2995,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstReturnStatement* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -3010,7 +3033,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstThrowStatement* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -3021,7 +3044,8 @@ public:
 
 
 //
-// SynchronizedStatement --> <SYNCHRONIZED_STATEMENT, Label_opt, synchronized_token, Expression, Block>
+// SynchronizedStatement --> <SYNCHRONIZED_STATEMENT, Label_opt,
+// synchronized_token, Expression, Block>
 //
 class AstSynchronizedStatement : public AstStatement
 {
@@ -3048,19 +3072,23 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstSynchronizedStatement* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
         return synchronized_token;
     }
-    virtual LexStream::TokenIndex RightToken() { return block -> RightToken(); }
+    virtual LexStream::TokenIndex RightToken()
+    {
+        return block -> right_brace_token;
+    }
 };
 
 
 //
 // AssertStatement --> <ASSERT, Label_opt, assert_token, Expression, ;_token>
-//                 --> <ASSERT, Label_opt, assert_token, Expression, :_token, Expression, ;_token>
+//                 --> <ASSERT, Label_opt, assert_token, Expression, :_token,
+// Expression, ;_token>
 //
 class AstAssertStatement : public AstStatement
 {
@@ -3089,7 +3117,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstAssertStatement* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken() { return assert_token; }
     virtual LexStream::TokenIndex RightToken() { return semicolon_token; }
@@ -3125,7 +3153,10 @@ public:
     virtual Ast *Clone(StoragePool *);
 
     virtual LexStream::TokenIndex LeftToken() { return catch_token; }
-    virtual LexStream::TokenIndex RightToken() { return block -> RightToken(); }
+    virtual LexStream::TokenIndex RightToken()
+    {
+        return block -> right_brace_token;
+    }
 };
 
 
@@ -3155,12 +3186,16 @@ public:
     virtual Ast *Clone(StoragePool *);
 
     virtual LexStream::TokenIndex LeftToken() { return finally_token; }
-    virtual LexStream::TokenIndex RightToken() { return block -> RightToken(); }
+    virtual LexStream::TokenIndex RightToken()
+    {
+        return block -> right_brace_token;
+    }
 };
 
 
 //
-// TryStatement --> <TRY, Label_opt, try-token, Block CatchClauses, FinallyClause_opt>
+// TryStatement --> <TRY, Label_opt, try-token, Block CatchClauses,
+// FinallyClause_opt>
 //
 class AstTryStatement : public AstStatement
 {
@@ -3202,7 +3237,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstTryStatement* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -3274,7 +3309,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstIntegerLiteral* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()  { return integer_literal_token; }
     virtual LexStream::TokenIndex RightToken() { return integer_literal_token; }
@@ -3305,7 +3340,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstLongLiteral* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()  { return long_literal_token; }
     virtual LexStream::TokenIndex RightToken() { return long_literal_token; }
@@ -3336,7 +3371,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstFloatLiteral* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()  { return float_literal_token; }
     virtual LexStream::TokenIndex RightToken() { return float_literal_token; }
@@ -3367,7 +3402,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstDoubleLiteral* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()  { return double_literal_token; }
     virtual LexStream::TokenIndex RightToken() { return double_literal_token; }
@@ -3397,7 +3432,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstTrueLiteral* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()  { return true_literal_token; }
     virtual LexStream::TokenIndex RightToken() { return true_literal_token; }
@@ -3427,7 +3462,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstFalseLiteral* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()  { return false_literal_token; }
     virtual LexStream::TokenIndex RightToken() { return false_literal_token; }
@@ -3458,7 +3493,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstStringLiteral* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()  { return string_literal_token; }
     virtual LexStream::TokenIndex RightToken() { return string_literal_token; }
@@ -3489,7 +3524,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstCharacterLiteral* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -3525,7 +3560,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstNullLiteral* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()  { return null_token; }
     virtual LexStream::TokenIndex RightToken() { return null_token; }
@@ -3555,7 +3590,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstThisExpression* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()  { return this_token; }
     virtual LexStream::TokenIndex RightToken() { return this_token; }
@@ -3586,7 +3621,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstSuperExpression* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()  { return super_token; }
     virtual LexStream::TokenIndex RightToken() { return super_token; }
@@ -3594,7 +3629,8 @@ public:
 
 
 //
-// ParenthesizedExpression --> <PARENTHESIZED_EXPRESSION, (_token, Expression, )_token>
+// ParenthesizedExpression --> <PARENTHESIZED_EXPRESSION, (_token, Expression,
+// )_token>
 //
 class AstParenthesizedExpression : public AstExpression
 {
@@ -3619,7 +3655,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstParenthesizedExpression* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -3656,7 +3692,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstTypeExpression* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()  { return type -> LeftToken(); }
     virtual LexStream::TokenIndex RightToken() { return type -> RightToken(); }
@@ -3744,7 +3780,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstClassInstanceCreationExpression* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -3790,7 +3826,8 @@ public:
 
 
 //
-// ArrayCreationExpression --> <ARRAY_CREATION, new_token, Type, DimExprs, Brackets>
+// ArrayCreationExpression --> <ARRAY_CREATION, new_token, Type, DimExprs,
+// Brackets>
 //
 class AstArrayCreationExpression : public AstExpression
 {
@@ -3834,7 +3871,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstArrayCreationExpression* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()  { return new_token; }
     virtual LexStream::TokenIndex RightToken()
@@ -3907,7 +3944,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstFieldAccess* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()  { return base -> LeftToken(); }
     virtual LexStream::TokenIndex RightToken() { return identifier_token; }
@@ -3968,7 +4005,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstMethodInvocation* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken() { return method -> LeftToken(); }
     virtual LexStream::TokenIndex RightToken()
@@ -4005,7 +4042,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstArrayAccess* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken() { return base -> LeftToken(); }
     virtual LexStream::TokenIndex RightToken() { return right_bracket_token; }
@@ -4063,7 +4100,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstPostUnaryExpression* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -4127,7 +4164,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstPreUnaryExpression* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -4141,9 +4178,10 @@ public:
 
 
 //
-// CastExpression --> <cAstkind, (_token_opt, Type_opt, Brackets )_token_opt, Expression>
+// CastExpression --> <castkind, (_token_opt, Type_opt, Brackets )_token_opt,
+// Expression>
 //
-// cAstkind --> CAST
+// castkind --> CAST
 //
 // NOTE that the optional symbols above are absent only when the compiler
 // inserts a CAST conversion node into the program.
@@ -4184,7 +4222,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstCastExpression* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -4269,7 +4307,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstBinaryExpression* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -4310,7 +4348,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstConditionalExpression* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -4324,7 +4362,8 @@ public:
 
 
 //
-// Assignment --> <ASSIGNMENT, AssignmentTag, LeftHandSide, AssignmentOperator, Expression>
+// Assignment --> <ASSIGNMENT, AssignmentTag, LeftHandSide, AssignmentOperator,
+// Expression>
 //
 // AssignmentTag --> EQUAL | STAR_EQUAL | SLASH_EQUAL | MOD_EQUAL |
 //                   PLUS_EQUAL | MINUS_EQUAL | LEFT_SHIFT_EQUAL |
@@ -4332,9 +4371,12 @@ public:
 //                   AND_EQUAL | XOR_EQUAL | IOR_EQUAL
 //
 // LeftHandSide --> Name | FieldAccess | ArrayAccess
-//                | <cAstkind, (_token_opt, Type_opt, Brackets )_token_opt, Name>
-//                | <cAstkind, (_token_opt, Type_opt, Brackets )_token_opt, FieldAccess>
-//                | <cAstkind, (_token_opt, Type_opt, Brackets )_token_opt, ArrayAccess>
+//                | <castkind, (_token_opt, Type_opt, Brackets )_token_opt,
+// Name>
+//                | <castkind, (_token_opt, Type_opt, Brackets )_token_opt,
+// FieldAccess>
+//                | <castkind, (_token_opt, Type_opt, Brackets )_token_opt,
+// ArrayAccess>
 //
 // NOTE: that a LeftHandSide appears as a cast node only when the
 // assignment_operator in question is of the form "op=" and the application
@@ -4401,7 +4443,7 @@ public:
     virtual void Unparse(Ostream &, LexStream *);
 #endif
 
-    virtual Ast *Clone(StoragePool *);
+    virtual AstAssignmentExpression* Clone(StoragePool*);
 
     virtual LexStream::TokenIndex LeftToken()
     {
@@ -4837,7 +4879,8 @@ public:
 
     inline AstFormalParameter *NewFormalParameter()
     {
-        return new (Alloc(sizeof(AstFormalParameter))) AstFormalParameter(this);
+        return new (Alloc(sizeof(AstFormalParameter)))
+            AstFormalParameter(this);
     }
 
     inline AstMethodDeclarator *NewMethodDeclarator()
@@ -4907,14 +4950,9 @@ public:
             AstExpressionStatement(this);
     }
 
-    inline AstCaseLabel *NewCaseLabel()
+    inline AstSwitchLabel* NewSwitchLabel(AstExpression* expr)
     {
-        return new (Alloc(sizeof(AstCaseLabel))) AstCaseLabel();
-    }
-
-    inline AstDefaultLabel *NewDefaultLabel()
-    {
-        return new (Alloc(sizeof(AstDefaultLabel))) AstDefaultLabel();
+        return new (Alloc(sizeof(AstSwitchLabel))) AstSwitchLabel(expr);
     }
 
     inline AstSwitchBlockStatement *NewSwitchBlockStatement()
@@ -4925,7 +4963,8 @@ public:
 
     inline AstSwitchStatement *NewSwitchStatement()
     {
-        return new (Alloc(sizeof(AstSwitchStatement))) AstSwitchStatement(this);
+        return new (Alloc(sizeof(AstSwitchStatement)))
+            AstSwitchStatement(this);
     }
 
     inline AstWhileStatement *NewWhileStatement()
@@ -4956,7 +4995,8 @@ public:
 
     inline AstReturnStatement *NewReturnStatement()
     {
-        return new (Alloc(sizeof(AstReturnStatement))) AstReturnStatement(this);
+        return new (Alloc(sizeof(AstReturnStatement)))
+            AstReturnStatement(this);
     }
 
     inline AstThrowStatement *NewThrowStatement()
@@ -4972,7 +5012,8 @@ public:
 
     inline AstAssertStatement *NewAssertStatement()
     {
-        return new (Alloc(sizeof(AstAssertStatement))) AstAssertStatement(this);
+        return new (Alloc(sizeof(AstAssertStatement)))
+            AstAssertStatement(this);
     }
 
     inline AstCatchClause *NewCatchClause()
@@ -5134,9 +5175,13 @@ public:
     // Since they are not Ast nodes they do not need to
     // be marked.
     //
-    inline CaseElement *GenCaseElement()
+    inline CaseElement* GenCaseElement(unsigned block_index,
+                                       unsigned case_index)
     {
-        return new (Alloc(sizeof(CaseElement))) CaseElement();
+        CaseElement* p = new (Alloc(sizeof(CaseElement))) CaseElement();
+        p -> block_index = block_index;
+        p -> case_index = case_index;
+        return p;
     }
 
     inline AstBlock *GenBlock()
@@ -5345,16 +5390,9 @@ public:
         return p;
     }
 
-    inline AstCaseLabel *GenCaseLabel()
+    inline AstSwitchLabel* GenSwitchLabel(AstExpression* expr)
     {
-        AstCaseLabel *p = NewCaseLabel();
-        p -> generated = true;
-        return p;
-    }
-
-    inline AstDefaultLabel *GenDefaultLabel()
-    {
-        AstDefaultLabel *p = NewDefaultLabel();
+        AstSwitchLabel* p = NewSwitchLabel(expr);
         p -> generated = true;
         return p;
     }
@@ -5891,16 +5929,9 @@ inline AstExpressionStatement *Ast::ExpressionStatementCast()
         (kind == EXPRESSION_STATEMENT ? this : NULL);
 }
 
-inline AstCaseLabel *Ast::CaseLabelCast()
+inline AstSwitchLabel* Ast::SwitchLabelCast()
 {
-    return DYNAMIC_CAST<AstCaseLabel *>
-        (kind == CASE ? this : NULL);
-}
-
-inline AstDefaultLabel *Ast::DefaultLabelCast()
-{
-    return DYNAMIC_CAST<AstDefaultLabel *>
-        (kind == DEFAULT ? this : NULL);
+    return DYNAMIC_CAST<AstSwitchLabel*> (kind == SWITCH_LABEL ? this : NULL);
 }
 
 inline AstSwitchBlockStatement *Ast::SwitchBlockStatementCast()
@@ -6431,7 +6462,7 @@ inline void AstLocalVariableDeclarationStatement::AddLocalModifier(AstModifier *
     local_modifiers -> Next() = local_modifier;
 }
 
-inline void AstBlock::AllocateBlockStatements(int estimate)
+inline void AstBlock::AllocateStatements(int estimate)
 {
     if (! block_statements)
         block_statements =
@@ -6441,7 +6472,7 @@ inline void AstBlock::AllocateBlockStatements(int estimate)
 inline void AstBlock::AddStatement(AstStatement *statement)
 {
     if (! block_statements)
-        AllocateBlockStatements();
+        AllocateStatements();
     block_statements -> Next() = statement;
 }
 
@@ -6471,31 +6502,32 @@ inline void AstStatement::AddDefinedVariable(VariableSymbol *variable_symbol)
     defined_variables -> Next() = variable_symbol;
 }
 
-inline void AstSwitchBlockStatement::AllocateSwitchLabels(int estimate)
+inline void AstSwitchBlockStatement::AllocateSwitchLabels(unsigned estimate)
 {
     if (! switch_labels)
-        switch_labels = NewAstArray<Ast *> (pool, estimate);
+        switch_labels = NewAstArray<AstSwitchLabel*> (pool, estimate);
 }
 
-inline void AstSwitchBlockStatement::AddSwitchLabel(Ast *case_or_default_label)
+inline void AstSwitchBlockStatement::AddSwitchLabel(AstSwitchLabel* case_label)
 {
-    assert(case_or_default_label -> kind == CASE ||
-           case_or_default_label -> kind == DEFAULT);
     if (! switch_labels)
         AllocateSwitchLabels();
-    switch_labels -> Next() = case_or_default_label;
+    switch_labels -> Next() = case_label;
 }
 
-inline void AstSwitchStatement::AllocateCases(int estimate)
+inline void AstSwitchStatement::AllocateCases(unsigned estimate)
 {
-    if (! cases)
-        cases = NewAstArray<CaseElement *> (pool, estimate);
+    //
+    // Reserve element 0 for the default case.
+    //
+    assert(! cases);
+    cases = NewAstArray<CaseElement*> (pool, estimate + 1);
+    cases -> Next() = NULL;
 }
 
-inline void AstSwitchStatement::AddCase(CaseElement *case_element)
+inline void AstSwitchStatement::AddCase(CaseElement* case_element)
 {
-    if (! cases)
-        AllocateCases();
+    assert(cases);
     cases -> Next() = case_element;
 }
 

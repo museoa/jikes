@@ -37,7 +37,7 @@ const char *StreamError::getFileName()
     return lex_stream -> FileName();
 }
 
-const wchar_t *StreamError::getErrorMessage()
+const wchar_t* StreamError::getErrorMessage()
 {
     switch (kind)
     {
@@ -65,9 +65,9 @@ const wchar_t *StreamError::getErrorMessage()
         return L"While not necessary, it is a good idea to end a file with a "
             L"line terminator.";
     case DEPRECATED_IDENTIFIER_ASSERT:
-        return L"The use of \"assert\" as an identifier is deprecated,"
-            L" as it is now a keyword. Use -source 1.4 if you intended "
-            L" to make use of assertions.";
+        return L"The use of \"assert\" as an identifier is deprecated, "
+            L"as it is now a keyword. Use -source 1.4 if you intended "
+            L"to make use of assertions.";
     case DOLLAR_IN_IDENTIFIER:
         return L"The use of \"$\" in an identifier, while legal, is strongly "
             L"discouraged, since it can conflict with compiler-generated "

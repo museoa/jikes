@@ -2091,7 +2091,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
             expression_statement -> can_complete_normally = true;
 
             // this block contains two statements
-            block -> AllocateBlockStatements(2);
+            block -> AllocateStatements(2);
             block -> AddStatement(expression_statement);
         }
         else
@@ -2099,7 +2099,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
             return_statement -> expression_opt = method_invocation;
 
             // this block contains one statement
-            block -> AllocateBlockStatements(1);
+            block -> AllocateStatements(1);
         }
         block -> AddStatement(return_statement);
 
@@ -2299,7 +2299,7 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *ctor)
             block_symbol -> max_variable_index;
         constructor_block -> left_brace_token = loc;
         constructor_block -> right_brace_token = loc;
-        constructor_block -> AllocateBlockStatements(1);
+        constructor_block -> AllocateStatements(1);
         constructor_block -> AddStatement(return_statement);
         constructor_block -> explicit_constructor_opt = this_call;
 
@@ -2460,7 +2460,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member,
         block -> block_symbol = new BlockSymbol(0);
         block -> is_reachable = true;
         // this block contains one statement
-        block -> AllocateBlockStatements(1);
+        block -> AllocateStatements(1);
         block -> AddStatement(return_statement);
 
         AstMethodDeclaration *method_declaration =
@@ -2645,7 +2645,7 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member,
         block -> block_symbol = new BlockSymbol(0);
         block -> is_reachable = true;
         // this block contains two statements
-        block -> AllocateBlockStatements(2);
+        block -> AllocateStatements(2);
         block -> AddStatement(expression_statement);
         block -> AddStatement(return_statement);
 

@@ -663,9 +663,16 @@ Option::Option(ArgumentExpander& arguments,
                 // flag to direct output to stdout instead of stderr.
                 //
                 Coutput.StandardOutput();
+            else if (strcmp(arguments.argv[i], "-Xswitchcheck") == 0)
+            {
+                const char* image = arguments.argv[i] + 2;
+                bool success = SemanticError::ProcessWarningSwitch(image);
+                assert(success);
+            }
             else if (arguments.argv[i][1] == 'X')
             {
-                // Note that we've already consumed -Xdepend and -Xstdout
+                // Note that we've already consumed -Xdepend, -Xstdout,
+                // and -Xswitchcheck.
                 bad_options.Next() =
                     new OptionError(OptionError::UNSUPPORTED_OPTION,
                                     arguments.argv[i]);
