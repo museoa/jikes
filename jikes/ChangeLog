@@ -1,3 +1,10 @@
+2000-07-26  Mo DeJong  <mdejong@redhat.com>
+
+	* src/unparse.cpp: Uncomment #includes,
+	they need to be moved to platform.h but
+	without them the compile would fail if
+	-DJIKES_DEBUG was set.
+
 2000-07-25  Mo DeJong  <mdejong@redhat.com>
 
 	* src/configure:

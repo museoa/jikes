@@ -9,9 +9,10 @@
 //
 #include "platform.h"
 #include "ast.h"
+
 //FIXME: need to move to platform.h
-//#include <iostream.h>
-//#include <fstream.h>
+#include <iostream.h>
+#include <fstream.h>
 
 #ifdef	HAVE_NAMESPACES
 using namespace Jikes;
