@@ -74,7 +74,7 @@
 	constant string expressions should now
 	be correct.
 
-2001-05-04  ??  <vajoczki@yahoo.com>
+2001-05-04  Andrew Vajoczki  <vajoczki@yahoo.com>
 
 	* src/bytecode.cpp (EmitSwitchStatement):
 	Workaround for Sun JVM TABLESWITCH bug in JDK
