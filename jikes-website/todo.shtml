@@ -17,10 +17,9 @@
     <a href="/developerworks/mail/?group_id=10">Jikes-Dev list</a>. <small>(and yes, it's also to keep us honest ;)</small></p>
 
     <ul>
-      <li>Migrate old jitterbug bugs to new system. (TAG, EricB, CAbbey, more welcome)
       <li>Finish the FAQ. (Pascal, Andrew Inggs)
-      <li>Finish bringing new web pages online. (CAbbey)
-      <li>document the new bug system categories, priorities and groups. (cabbey)
+      <li>Finish bringing new web pages online. (Pascal)
+      <li>complete the documentation of bug system categories, priorities and groups. (cabbey)
       <li>Bring Jikes up to Java2 classpath handling. (Adam Hawthorne)
       <li>Convert the old Jikestst tests into Jacks tests.
       <li>Write a class introspector in TCL for use in Jacks testcases. (earmarked for cabbey)
