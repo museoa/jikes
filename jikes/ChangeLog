@@ -1,5 +1,10 @@
 2001-09-08  Norris Boyd  <nboyd@atg.com>
 
+	* src/bytecode.cpp: Follow-on patch to the previous, to cover
+	jsr_w as well - patch 177.
+
+2001-09-08  Norris Boyd  <nboyd@atg.com>
+
 	* src/bytecode.h:
 	* src/bytecode.cpp: Instrument wide jump capabilities into
 	branches.  For branching opcodes like ifeq, if the branch offset

@@ -1830,8 +1830,7 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
             //
             // Call finally block if have finally handler.
             //
-            PutOp(OP_JSR);
-            UseLabel(finally_label, 2, 1);
+            EmitBranch(OP_JSR, finally_label, statement);
         }
 
         EmitBranch(OP_GOTO, end_label);
@@ -1876,8 +1875,7 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
                     //
                     // Call finally block if have finally handler.
                     //
-                    PutOp(OP_JSR);
-                    UseLabel(finally_label, 2, 1);
+                    EmitBranch(OP_JSR, finally_label, statement);
                 }
 
                 //
@@ -1910,8 +1908,7 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
                                            code_attribute -> CodeLength(),
                                            0);
             StoreLocal(variable_index, this_control.Object()); // Save exception
-            PutOp(OP_JSR); // Jump to finally block.
-            UseLabel(finally_label, 2, 1);
+            EmitBranch(OP_JSR, finally_label, statement);
             LoadLocal(variable_index, this_control.Object()); // Reload exception,
             PutOp(OP_ATHROW); // and rethrow it.
         }
@@ -1967,15 +1964,16 @@ void ByteCode::ProcessAbruptExit(int to_lev, TypeSymbol *return_type)
 
                 StoreLocal(variable_index, return_type);
 
-                PutOp(OP_JSR);
-                UseLabel(finally_label, 2, 1);
+                EmitBranch(OP_JSR, finally_label, 
+                           method_stack -> Block(enclosing_level));
 
                 LoadLocal(variable_index, return_type);
             }
             else
             {
-                PutOp(OP_JSR);
-                UseLabel(method_stack -> FinallyLabel(enclosing_level), 2, 1);
+                EmitBranch(OP_JSR, 
+                           method_stack -> FinallyLabel(enclosing_level),
+                           method_stack -> Block(enclosing_level));
             }
         }
         else if (block -> block_tag == AstBlock::SYNCHRONIZED)
@@ -1994,8 +1992,9 @@ void ByteCode::ProcessAbruptExit(int to_lev, TypeSymbol *return_type)
 void ByteCode::EmitBranch(unsigned int opc, Label& lab, AstStatement *over)
 {
     // Use the number of tokens as a heuristic for the size of the statement
-    // we're jumping over. If the statement is large enough, write out
-    // a branch around a goto_w to handle jumps greater than 32767 bytes.
+    // we're jumping over. If the statement is large enough, either change
+    // to the 4-byte branch opcode or write out a branch around a goto_w for
+    // branch opcodes that don't have a long form.
     int sizeHeuristic = !over ? 0
                               : over -> RightToken() - over -> LeftToken();
     if (sizeHeuristic < TOKEN_WIDTH_REQUIRING_GOTOW) {
@@ -2004,6 +2003,11 @@ void ByteCode::EmitBranch(unsigned int opc, Label& lab, AstStatement *over)
     }
     if (opc == OP_GOTO) {
         PutOp(OP_GOTO_W);
+        UseLabel(lab, 4, 1);
+        return;
+    }
+    if (opc == OP_JSR) {
+        PutOp(OP_JSR_W);
         UseLabel(lab, 4, 1);
         return;
     }
