@@ -30,7 +30,7 @@ protected:
         MAX_INT    = 0x7FFFFFFF, // max value of i4
         MIN_INT    = 0x80000000, // min value of i4
         SHORT_MASK = 0xFFFF,     // mask for lower half of i4
-        SIGN_BIT   = 0x80000000, // sign bit
+        SIGN_BIT   = 0x80000000 // sign bit
     };
 
     union
