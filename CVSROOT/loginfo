@@ -27,5 +27,5 @@
 ALL		$CVSROOT/CVSROOT/log_accum.pl %s
 
 jikes-website ((sleep 2 && cd /www/software10/html/jikes && cvs update -P \
-                >! /tmp/jikes.last.www.commit 2>&1) &)
+                > /tmp/jikes.last.www.commit 2>&1) &)
 
