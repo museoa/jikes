@@ -1159,12 +1159,14 @@ class AstImportDeclaration : public Ast
 {
 public:
     LexStream::TokenIndex import_token;
+    LexStream::TokenIndex static_token_opt;
     AstName* name;
     LexStream::TokenIndex star_token_opt;
     LexStream::TokenIndex semicolon_token;
 
     AstImportDeclaration()
-        : star_token_opt(LexStream::BadToken())
+        : static_token_opt(LexStream::BadToken())
+        , star_token_opt(LexStream::BadToken())
     {
         kind = IMPORT;
         class_tag = NO_TAG;

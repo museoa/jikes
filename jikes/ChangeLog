@@ -1,4 +1,21 @@
-2004-02-26  Eric Blake  <ebb9@byu.net>
+2004-02-27  Eric Blake  <ebb9@byu.net>
+
+	* src/ast.h (AstImportDeclaration::static_token_opt): New field.
+	* src/ast.cpp (AstImportDeclaration::Clone, Print): Support it.
+	* src/unparse.cpp (AstImportDeclaration::Unparse): Ditto.
+	* src/decl.cpp (ProcessImports): Note that static imports are not
+	supported yet.
+	* src/error.h (STATIC_IMPORT_UNSUPPORTED): New error.
+	* src/error.cpp: Ditto.
+	* src/java.g (ImportDeclaration): Parse static imports, from JSR
+	201.
+	* src/javaact.cpp: Regenerate.
+	* src/javaact.h: Ditto.
+	* src/javadcl.h: Ditto.
+	* src/javadef.h: Ditto.
+	* src/javasym.h: Ditto.
+
+2004-02-27  Eric Blake  <ebb9@byu.net>
 
 	* src/option.cpp (SaveCurrentDirectoryOnDisk, nocleanup): Fix
 	mingw build.

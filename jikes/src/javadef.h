@@ -21,7 +21,7 @@ enum {
       MIN_DISTANCE      = 3,
       MAX_NAME_LENGTH   = 38,
       MAX_TERM_LENGTH   = 38,
-      NUM_STATES        = 504,
+      NUM_STATES        = 511,
 
       NT_OFFSET         = 111,
       BUFF_UBOUND       = 30,
@@ -30,17 +30,17 @@ enum {
       STACK_SIZE        = 128,
       SCOPE_UBOUND      = 58,
       SCOPE_SIZE        = 59,
-      LA_STATE_OFFSET   = 6120,
+      LA_STATE_OFFSET   = 6098,
       MAX_LA            = 1,
-      NUM_RULES         = 424,
+      NUM_RULES         = 428,
       NUM_TERMINALS     = 111,
-      NUM_NON_TERMINALS = 173,
-      NUM_SYMBOLS       = 284,
-      START_STATE       = 492,
+      NUM_NON_TERMINALS = 175,
+      NUM_SYMBOLS       = 286,
+      START_STATE       = 505,
       EOFT_SYMBOL       = 95,
       EOLT_SYMBOL       = 95,
-      ACCEPT_ACTION     = 6119,
-      ERROR_ACTION      = 6120
+      ACCEPT_ACTION     = 6097,
+      ERROR_ACTION      = 6098
      };
 
 

@@ -1139,26 +1139,70 @@ ImportDeclaration ::= TypeImportOnDemandDeclaration
 /.$shared_NoAction./
 
 --
+-- Static imports were added in JSR 201.
+--
+ImportDeclaration ::= SingleStaticImportDeclaration
+\:$NoAction:\
+/.$shared_NoAction./
+
+--
+-- Static imports were added in JSR 201.
+--
+ImportDeclaration ::= StaticImportOnDemandDeclaration
+\:$NoAction:\
+/.$shared_NoAction./
+
+--
 -- Note that semantically, Name must be qualified to be valid (since simple
 -- type names are not in scope). However, the grammar accepts simple names.
 -- The use of Marker allows us to share code.
 --
---SingleTypeImportDeclaration ::= 'import' Name ';'
-SingleTypeImportDeclaration ::= 'import' Name Marker Marker ';'
+--SingleTypeImportDeclaration ::= 'import' TypeName ';'
+SingleTypeImportDeclaration ::= 'import' Marker Name Marker Marker ';'
 \:$MakeImportDeclaration:\
 /.$location
 void Parser::MakeImportDeclaration()
 {
     AstImportDeclaration* p = ast_pool -> NewImportDeclaration();
     p -> import_token = Token(1);
-    p -> name = DYNAMIC_CAST<AstName*> (Sym(2));
-    p -> star_token_opt = Token(3) == Token(4) ? 0 : Token(4);
-    p -> semicolon_token = Token(5);
+    p -> static_token_opt = Token(2) == Token(3) ? 0 : Token(2);
+    p -> name = DYNAMIC_CAST<AstName*> (Sym(3));
+    p -> star_token_opt = Token(4) == Token(5) ? 0 : Token(5);
+    p -> semicolon_token = Token(6);
     Sym(1) = p;
 }
 ./
 
-TypeImportOnDemandDeclaration ::= 'import' Name '.' '*' ';'
+--
+-- The use of Marker allows us to share code.
+--
+--TypeImportOnDemandDeclaration ::= 'import' PackageOrTypeName '.' '*' ';'
+TypeImportOnDemandDeclaration ::= 'import' Marker Name '.' '*' ';'
+\:$MakeImportDeclaration:\
+/.$shared_function
+//
+// void MakeImportDeclaration();
+//./
+
+--
+-- Static imports were added in JSR 201.
+-- The use of Marker allows us to share code.
+--
+--SingleStaticImportDeclaration ::= 'import' 'static' TypeName '.'
+--                                  'Identifier' ';'
+SingleStaticImportDeclaration ::= 'import' 'static' Name Marker Marker ';'
+\:$MakeImportDeclaration:\
+/.$shared_function
+//
+// void MakeImportDeclaration();
+//./
+
+--
+-- Static imports were added in JSR 201.
+-- The use of Marker allows us to share code.
+--
+--StaticImportOnDemandDeclaration ::= 'import' 'static' TypeName '.' '*' ';'
+StaticImportOnDemandDeclaration ::= 'import' 'static' Name '.' '*' ';'
 \:$MakeImportDeclaration:\
 /.$shared_function
 //

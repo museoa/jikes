@@ -124,10 +124,11 @@ void AstImportDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
     if (debug_unparse)
         os << "/*AstImportDeclaration:#" << id << "*/";
     os << lex_stream -> NameString(import_token) << ' ';
+    if (static_token_opt)
+        os << lex_stream -> NameString(static_token_opt) << ' ';
     name -> Unparse(os, lex_stream);
-    os << (star_token_opt ? "." : "");
     if (star_token_opt)
-        os << lex_stream -> NameString(star_token_opt);
+        os << '.' << lex_stream -> NameString(star_token_opt);
     os << ';' << endl;
     if (debug_unparse)
         os << "/*:AstImportDeclaration#" << id << "*/";

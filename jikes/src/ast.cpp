@@ -301,6 +301,7 @@ Ast* AstImportDeclaration::Clone(StoragePool* ast_pool)
 {
     AstImportDeclaration* clone = ast_pool -> GenImportDeclaration();
     clone -> import_token = import_token;
+    clone -> static_token_opt = static_token_opt;
     clone -> name = (AstName*) name -> Clone(ast_pool);
     clone -> star_token_opt = star_token_opt;
     clone -> semicolon_token = semicolon_token;
@@ -1159,8 +1160,10 @@ void AstPackageDeclaration::Print(LexStream& lex_stream)
 
 void AstImportDeclaration::Print(LexStream& lex_stream)
 {
-    Coutput << '#' << id << " (ImportDeclaration):  "
-            << lex_stream.NameString(import_token)
+    Coutput << '#' << id << " (ImportDeclaration):  ";
+    if (static_token_opt)
+        Coutput << lex_stream.NameString(static_token_opt) << ' ';
+    Coutput << lex_stream.NameString(import_token)
             << " #" << name -> id;
     if (star_token_opt)
         Coutput << '.' << lex_stream.NameString(star_token_opt);

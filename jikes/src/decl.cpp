@@ -492,6 +492,12 @@ void Semantic::ProcessImports()
     {
         AstImportDeclaration* import_declaration =
             compilation_unit -> ImportDeclaration(i);
+        if (import_declaration -> static_token_opt)
+        {
+            // TODO: Add static import support for 1.5.
+            ReportSemError(SemanticError::STATIC_IMPORT_UNSUPPORTED,
+                           import_declaration -> static_token_opt);
+        }
         if (import_declaration -> star_token_opt)
             ProcessTypeImportOnDemandDeclaration(import_declaration);
         else ProcessSingleTypeImportDeclaration(import_declaration);
