@@ -115,7 +115,6 @@ class JikesAPI
      */
     virtual void reportError(JikesError *error);
     
- protected:
     
     /**
      * Define the virtual base class for all Readers.
@@ -197,8 +196,6 @@ class JikesAPI
             size_t    dataWritten;
 #endif
         };
-
- public:
     
     virtual int stat(const char *filename, struct stat *status);
     

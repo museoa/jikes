@@ -1,3 +1,9 @@
+2000-05-03  Mo DeJong  <mdejong@cygnus.com>
+
+	* src/src/jikesapi.h: Moved inner classed
+	into the public scope. This was causing
+	compiler errors with non g++ compilers.
+
 2000-05-02  Mo DeJong  <mdejong@cygnus.com>
 
 	* src/config.h:
