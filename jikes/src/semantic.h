@@ -1155,17 +1155,19 @@ private:
     bool MoreSpecific(MethodSymbol *, MethodSymbol *);
     bool MoreSpecific(MethodSymbol *, Tuple<MethodSymbol *> &);
     bool NoMethodMoreSpecific(Tuple<MethodSymbol *> &, MethodSymbol *);
-    void FindMethodInEnvironment(Tuple<MethodSymbol *> &,
+    bool MoreSpecific(MethodSymbol *, Tuple<MethodShadowSymbol *> &);
+    bool NoMethodMoreSpecific(Tuple<MethodShadowSymbol *> &, MethodSymbol *);
+    void FindMethodInEnvironment(Tuple<MethodShadowSymbol *> &,
                                  SemanticEnvironment *&,
                                  SemanticEnvironment *, AstMethodInvocation *);
     MethodSymbol *FindMisspelledMethodName(TypeSymbol *,
                                            AstMethodInvocation *,
                                            NameSymbol *);
-    MethodSymbol *FindMethodInEnvironment(SemanticEnvironment *&,
-                                          SemanticEnvironment *,
-                                          AstMethodInvocation *);
-    MethodSymbol *FindMethodInType(TypeSymbol *, AstMethodInvocation *,
-                                   NameSymbol * = NULL);
+    MethodShadowSymbol *FindMethodInEnvironment(SemanticEnvironment *&,
+                                                SemanticEnvironment *,
+                                                AstMethodInvocation *);
+    MethodShadowSymbol *FindMethodInType(TypeSymbol *, AstMethodInvocation *,
+                                         NameSymbol * = NULL);
 
     void ReportVariableNotFound(AstExpression *, TypeSymbol *);
     void FindVariableInEnvironment(Tuple<VariableSymbol *> &,
@@ -1221,7 +1223,7 @@ private:
     void ProcessMOD(AstBinaryExpression *);
     void ProcessINSTANCEOF(AstBinaryExpression *);
 
-    void FindMethodMember(TypeSymbol *, AstMethodInvocation *);
+    MethodShadowSymbol *FindMethodMember(TypeSymbol *, AstMethodInvocation *);
     void ProcessMethodName(AstMethodInvocation *);
 
     //

@@ -1,3 +1,13 @@
+2002-07-29  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/semantic.h: Various method signature updates.
+	* src/expr.cpp (MoreSpecific, NoMethodMoreSpecific),
+	(FindMethodInType, FindMethodInEnvironment, FindMethodMember),
+	(ProcessMethodName): When a type inherits multiple methods with
+	the same signature, merge the throws clauses together - bug 2395.
+	* src/bytecode.cpp (GenerateClassAccess): Optimize class literal
+	when result is not needed.
+
 2002-07-26  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/symbol.h (class_literal_class): Share with placeholder

@@ -107,6 +107,42 @@ inline bool Semantic::NoMethodMoreSpecific(Tuple<MethodSymbol *> &maximally_spec
 
 
 //
+// Returns true if a method is more specific than the current set of maximally
+// specific methods.
+//
+inline bool Semantic::MoreSpecific(MethodSymbol *method,
+                                   Tuple<MethodShadowSymbol *> &maximally_specific_method)
+{
+    for (int i = 0; i < maximally_specific_method.Length(); i++)
+    {
+        if (! MoreSpecific(method,
+                           maximally_specific_method[i] -> method_symbol))
+            return false;
+    }
+
+    return true;
+}
+
+
+//
+// Returns true if no method in the current set of maximally specific methods
+// is more specific than the given method, meaning that the given method should
+// be added to the set.
+//
+inline bool Semantic::NoMethodMoreSpecific(Tuple<MethodShadowSymbol *> &maximally_specific_method,
+                                           MethodSymbol *method)
+{
+    for (int i = 0; i < maximally_specific_method.Length(); i++)
+    {
+        if (MoreSpecific(maximally_specific_method[i] -> method_symbol, method))
+            return false;
+    }
+
+    return true;
+}
+
+
+//
 // Called when no accessible method was found. This checks in order: an
 // accessible method of the same name but different parameters, favoring
 // methods with the same parameter count; for a no-arg method, an accessible
@@ -350,7 +386,7 @@ void Semantic::ReportConstructorNotFound(Ast *ast, TypeSymbol *type)
          method; method = method -> next_method)
     {
         if (! method -> IsTyped())
-            method -> ProcessMethodSignature((Semantic *) this, right_tok);
+            method -> ProcessMethodSignature(this, right_tok);
 
         if (num_arguments == method -> NumFormalParameters())
         {
@@ -571,7 +607,7 @@ MethodSymbol *Semantic::FindConstructor(TypeSymbol *containing_type, Ast *ast,
     // If this constructor came from a class file, make sure that its throws
     // clause has been processed.
     //
-    constructor_symbol -> ProcessMethodThrows((Semantic *) this, right_tok);
+    constructor_symbol -> ProcessMethodThrows(this, right_tok);
 
     if (control.option.deprecation && constructor_symbol -> IsDeprecated() &&
         ! InDeprecatedContext())
@@ -686,14 +722,15 @@ MethodSymbol *Semantic::FindMisspelledMethodName(TypeSymbol *type,
 // value is NULL (see semantic.h) and we assume that the name to search for
 // is the name specified in the field_access of the method_call.
 //
-MethodSymbol *Semantic::FindMethodInType(TypeSymbol *type,
-                                         AstMethodInvocation *method_call,
-                                         NameSymbol *name_symbol)
+MethodShadowSymbol *Semantic::FindMethodInType(TypeSymbol *type,
+                                               AstMethodInvocation *method_call,
+                                               NameSymbol *name_symbol)
 {
-    Tuple<MethodSymbol *> method_set(2); // Stores method overloads.
+    Tuple<MethodShadowSymbol *> method_set(2); // Stores method overloads.
     AstFieldAccess *field_access = method_call -> method -> FieldAccessCast();
     if (! name_symbol)
-        name_symbol = lex_stream -> NameSymbol(field_access -> identifier_token);
+        name_symbol =
+            lex_stream -> NameSymbol(field_access -> identifier_token);
 
     if (! type -> expanded_method_table)
         ComputeMethodsClosure(type, field_access -> identifier_token);
@@ -704,7 +741,8 @@ MethodSymbol *Semantic::FindMethodInType(TypeSymbol *type,
     // interfaces, so either the original method implements them all, or it
     // is also abstract and we are free to choose which one to use.
     //
-    for (MethodShadowSymbol *method_shadow = type -> expanded_method_table -> FindMethodShadowSymbol(name_symbol);
+    for (MethodShadowSymbol *method_shadow = type -> expanded_method_table ->
+             FindMethodShadowSymbol(name_symbol);
          method_shadow; method_shadow = method_shadow -> next_method)
     {
         MethodSymbol *method = method_shadow -> method_symbol;
@@ -728,10 +766,10 @@ MethodSymbol *Semantic::FindMethodInType(TypeSymbol *type,
                 if (MoreSpecific(method, method_set))
                 {
                     method_set.Reset();
-                    method_set.Next() = method;
+                    method_set.Next() = method_shadow;
                 }
                 else if (NoMethodMoreSpecific(method_set, method))
-                    method_set.Next() = method;
+                    method_set.Next() = method_shadow;
             }
         }
     }
@@ -739,7 +777,7 @@ MethodSymbol *Semantic::FindMethodInType(TypeSymbol *type,
     if (method_set.Length() == 0)
     {
         ReportMethodNotFound(method_call, type);
-        return (MethodSymbol *) NULL;
+        return (MethodShadowSymbol *) NULL;
     }
     else if (method_set.Length() > 1)
     {
@@ -747,15 +785,15 @@ MethodSymbol *Semantic::FindMethodInType(TypeSymbol *type,
                        method_call -> LeftToken(),
                        method_call -> RightToken(),
                        name_symbol -> Name(),
-                       method_set[0] -> Header(),
-                       method_set[0] -> containing_type -> ContainingPackage() -> PackageName(),
-                       method_set[0] -> containing_type -> ExternalName(),
-                       method_set[1] -> Header(),
-                       method_set[1] -> containing_type -> ContainingPackage() -> PackageName(),
-                       method_set[1] -> containing_type -> ExternalName());
+                       method_set[0] -> method_symbol -> Header(),
+                       method_set[0] -> method_symbol -> containing_type -> ContainingPackage() -> PackageName(),
+                       method_set[0] -> method_symbol -> containing_type -> ExternalName(),
+                       method_set[1] -> method_symbol -> Header(),
+                       method_set[1] -> method_symbol -> containing_type -> ContainingPackage() -> PackageName(),
+                       method_set[1] -> method_symbol -> containing_type -> ExternalName());
     }
 
-    MethodSymbol *method = method_set[0];
+    MethodSymbol *method = method_set[0] -> method_symbol;
     if (method -> IsSynthetic())
     {
         ReportSemError(SemanticError::SYNTHETIC_METHOD_INVOCATION,
@@ -783,11 +821,11 @@ MethodSymbol *Semantic::FindMethodInType(TypeSymbol *type,
                        method -> containing_type -> ExternalName());
     }
 
-    return method;
+    return method_set[0];
 }
 
 
-void Semantic::FindMethodInEnvironment(Tuple<MethodSymbol *> &methods_found,
+void Semantic::FindMethodInEnvironment(Tuple<MethodShadowSymbol *> &methods_found,
                                        SemanticEnvironment *&where_found,
                                        SemanticEnvironment *stack,
                                        AstMethodInvocation *method_call)
@@ -813,7 +851,8 @@ void Semantic::FindMethodInEnvironment(Tuple<MethodSymbol *> &methods_found,
         //     refers to that method, not any of the ten 'print' methods in
         //     the enclosing class."
         //
-        MethodShadowSymbol *method_shadow = type -> expanded_method_table -> FindMethodShadowSymbol(name_symbol);
+        MethodShadowSymbol *method_shadow = type -> expanded_method_table ->
+            FindMethodShadowSymbol(name_symbol);
         if (method_shadow)
         {
             for (; method_shadow; method_shadow = method_shadow -> next_method)
@@ -828,24 +867,28 @@ void Semantic::FindMethodInEnvironment(Tuple<MethodSymbol *> &methods_found,
                 // Since type -> IsOwner(this_type()), i.e., type encloses
                 // this_type(), method is accessible, even if it is private.
                 //
-                if (method_call -> NumArguments() == method -> NumFormalParameters())
+                if (method_call -> NumArguments() ==
+                    method -> NumFormalParameters())
                 {
                     int i;
                     for (i = 0; i < method_call -> NumArguments(); i++)
                     {
                         AstExpression *expr = method_call -> Argument(i);
-                        if (! CanMethodInvocationConvert(method -> FormalParameter(i) -> Type(), expr -> Type()))
+                        if (! CanMethodInvocationConvert(method -> FormalParameter(i) -> Type(),
+                                                         expr -> Type()))
+                        {
                             break;
+                        }
                     }
                     if (i == method_call -> NumArguments())
                     {
                         if (MoreSpecific(method, methods_found))
                         {
                             methods_found.Reset();
-                            methods_found.Next() = method;
+                            methods_found.Next() = method_shadow;
                         }
                         else if (NoMethodMoreSpecific(methods_found, method))
-                            methods_found.Next() = method;
+                            methods_found.Next() = method_shadow;
                     }
                 }
             }
@@ -853,21 +896,24 @@ void Semantic::FindMethodInEnvironment(Tuple<MethodSymbol *> &methods_found,
             //
             // If a match was found, save the environment
             //
-            where_found = (methods_found.Length() > 0 ? env : (SemanticEnvironment *) NULL);
+            where_found = (methods_found.Length() > 0 ? env
+                           : (SemanticEnvironment *) NULL);
             break;
         }
     }
 }
 
 
-MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_found,
-                                                SemanticEnvironment *stack,
-                                                AstMethodInvocation *method_call)
+MethodShadowSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_found,
+                                                      SemanticEnvironment *stack,
+                                                      AstMethodInvocation *method_call)
 {
-    Tuple<MethodSymbol *> methods_found(2);
+    Tuple<MethodShadowSymbol *> methods_found(2);
     FindMethodInEnvironment(methods_found, where_found, stack, method_call);
 
-    MethodSymbol *method_symbol = (methods_found.Length() > 0 ? methods_found[0] : (MethodSymbol *) NULL);
+    MethodSymbol *method_symbol = (methods_found.Length() > 0
+                                   ? methods_found[0] -> method_symbol
+                                   : (MethodSymbol *) NULL);
     if (method_symbol)
     {
         for (int i = 1; i < methods_found.Length(); i++)
@@ -876,12 +922,12 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
                            method_call -> LeftToken(),
                            method_call -> RightToken(),
                            method_symbol -> Name(),
-                           methods_found[0] -> Header(),
+                           methods_found[0] -> method_symbol -> Header(),
                            method_symbol -> containing_type -> ContainingPackage() -> PackageName(),
                            method_symbol -> containing_type -> ExternalName(),
-                           methods_found[i] -> Header(),
-                           methods_found[i] -> containing_type -> ContainingPackage() -> PackageName(),
-                           methods_found[i] -> containing_type -> ExternalName());
+                           methods_found[i] -> method_symbol -> Header(),
+                           methods_found[i] -> method_symbol -> containing_type -> ContainingPackage() -> PackageName(),
+                           methods_found[i] -> method_symbol -> containing_type -> ExternalName());
         }
 
         if (method_symbol -> containing_type != where_found -> Type())  // is symbol an inherited field?
@@ -897,7 +943,7 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
             }
             else if (! where_found -> Type() -> ACC_STATIC())
             {
-                Tuple<MethodSymbol *> others(2);
+                Tuple<MethodShadowSymbol *> others(2);
                 SemanticEnvironment *found_other,
                                     *previous_env = where_found -> previous;
                 FindMethodInEnvironment(others, found_other, previous_env,
@@ -908,7 +954,8 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
                 {
                     for (int i = 0; i < others.Length();  i++)
                     {
-                        if (! (others[i] == method_symbol && method_symbol -> ACC_STATIC()))
+                        if (! (others[i] -> method_symbol == method_symbol &&
+                               method_symbol -> ACC_STATIC()))
                         {
                             ReportSemError(SemanticError::INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER,
                                            method_call -> LeftToken(),
@@ -938,7 +985,7 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
         assert(stack);
         for (SemanticEnvironment *env = stack -> previous; env; env = env -> previous)
         {
-            Tuple<MethodSymbol *> others(2);
+            Tuple<MethodShadowSymbol *> others(2);
             SemanticEnvironment *found_other;
             FindMethodInEnvironment(others, found_other, env, method_call);
 
@@ -947,9 +994,9 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
                 ReportSemError(SemanticError::HIDDEN_METHOD_IN_ENCLOSING_CLASS,
                                method_call -> LeftToken(),
                                method_call -> RightToken(),
-                               others[0] -> Header(),
-                               others[0] -> containing_type -> ContainingPackage() -> PackageName(),
-                               others[0] -> containing_type -> ExternalName());
+                               others[0] -> method_symbol -> Header(),
+                               others[0] -> method_symbol -> containing_type -> ContainingPackage() -> PackageName(),
+                               others[0] -> method_symbol -> containing_type -> ExternalName());
 
                 symbol_found = true;
                 break;
@@ -1090,7 +1137,8 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
         }
     }
 
-    return method_symbol;
+    return methods_found.Length() > 0 ? methods_found[0]
+        : (MethodShadowSymbol *) NULL;
 }
 
 
@@ -2903,8 +2951,8 @@ void Semantic::ProcessArrayAccess(Ast *expr)
 }
 
 
-void Semantic::FindMethodMember(TypeSymbol *type,
-                                AstMethodInvocation *method_call)
+MethodShadowSymbol *Semantic::FindMethodMember(TypeSymbol *type,
+                                               AstMethodInvocation *method_call)
 {
     AstFieldAccess *field_access = method_call -> method -> FieldAccessCast();
 
@@ -2915,6 +2963,7 @@ void Semantic::FindMethodMember(TypeSymbol *type,
     assert(field_access && field_access -> base);
     bool base_is_type = field_access -> base -> symbol -> TypeCast() != NULL &&
                         field_access -> base -> IsName();
+    MethodShadowSymbol *shadow = NULL;
 
     if (type -> Bad())
     {
@@ -2942,10 +2991,12 @@ void Semantic::FindMethodMember(TypeSymbol *type,
         if (! TypeAccessCheck(field_access -> base, type))
         {
             method_call -> symbol = control.no_type;
-            return;
+            return shadow;
         }
 
-        MethodSymbol *method = FindMethodInType(type, method_call);
+        shadow = FindMethodInType(type, method_call);
+        MethodSymbol *method = (shadow ? shadow -> method_symbol
+                                : (MethodSymbol *) NULL);
         if (method)
         {
             assert(method -> IsTyped());
@@ -2957,7 +3008,7 @@ void Semantic::FindMethodMember(TypeSymbol *type,
                                field_access -> identifier_token,
                                lex_stream -> NameString(field_access -> identifier_token));
                 method_call -> symbol = control.no_type;
-                return;
+                return shadow;
             }
 
             //
@@ -3030,6 +3081,7 @@ void Semantic::FindMethodMember(TypeSymbol *type,
             method_call -> symbol = control.no_type;
         }
     }
+    return shadow;
 }
 
 
@@ -3038,17 +3090,17 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
     TypeSymbol *this_type = ThisType();
 
     AstSimpleName *simple_name = method_call -> method -> SimpleNameCast();
+    MethodShadowSymbol *method_shadow;
     if (simple_name)
     {
         SemanticEnvironment *where_found;
-        MethodSymbol *method = FindMethodInEnvironment(where_found,
-                                                       state_stack.Top(),
-                                                       method_call);
-
-        if (! method)
+        method_shadow = FindMethodInEnvironment(where_found, state_stack.Top(),
+                                                method_call);
+        if (! method_shadow)
             method_call -> symbol = control.no_type;
         else
         {
+            MethodSymbol *method = method_shadow -> method_symbol;
             assert(method -> IsTyped());
 
             if (! method -> ACC_STATIC())
@@ -3113,7 +3165,8 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
         // ProcessFieldAccess, since we already know what context the name
         // is in.
         //
-        AstFieldAccess *field_access = method_call -> method -> FieldAccessCast();
+        AstFieldAccess *field_access =
+            method_call -> method -> FieldAccessCast();
         AstExpression* base = field_access -> base;
         if (base -> FieldAccessCast() || base -> SimpleNameCast())
             ProcessAmbiguousName(base);
@@ -3138,10 +3191,9 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
             method_call -> symbol = control.no_type;
             return;
         }
+        method_shadow = FindMethodMember(type, method_call);
         if (base -> IsSuperExpression())
         {
-            FindMethodMember(type, method_call);
-
             //
             // JLS2 15.12.3 requires this test
             //
@@ -3156,35 +3208,79 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
         }
         else
         {
-            FindMethodMember(type, method_call);
-
-            TypeSymbol *parent_type = (type -> IsArray() ? type -> base_type : type);
+            TypeSymbol *parent_type = (type -> IsArray() ? type -> base_type
+                                       : type);
             if (! parent_type -> Primitive())
                 AddDependence(this_type, parent_type);
         }
     }
 
-    if (method_call -> symbol != control.no_type)
+    if (method_shadow)
     {
         MethodSymbol *method = (MethodSymbol *) method_call -> symbol;
-
-        SymbolSet *exception_set = TryExceptionTableStack().Top();
-        if (exception_set)
-            for (int i = method -> NumThrows() - 1; i >= 0; i--)
-                exception_set -> AddElement(method -> Throws(i));
-
-        for (int k = method -> NumThrows() - 1; k >= 0; k--)
+        SymbolSet exceptions(method -> NumThrows());
+        int i, j;
+        // First, the base set
+        for (i = method -> NumThrows(); --i >= 0; )
+            exceptions.AddElement(method -> Throws(i));
+        // Next, add all subclasses thrown in method conflicts
+        for (i = method_shadow -> NumConflicts(); --i >= 0; )
         {
-            TypeSymbol *exception = method -> Throws(k);
-            if (UncaughtException(exception))
+            MethodSymbol *conflict = method_shadow -> Conflict(i);
+            conflict -> ProcessMethodThrows(this, (method_call -> method ->
+                                                   RightToken()));
+            for (j = conflict -> NumThrows(); --j >= 0; )
+            {
+                TypeSymbol *candidate = conflict -> Throws(j);
+                for (TypeSymbol *ex = (TypeSymbol *) exceptions.FirstElement();
+                     ex; ex = (TypeSymbol *) exceptions.NextElement())
+                {
+                    if (candidate -> IsSubclass(ex))
+                    {
+                        exceptions.AddElement(candidate);
+                        break;
+                    }
+                }
+            }
+        }
+        // Finally, prune all methods not thrown by all conflicts, and report
+        // uncaught exceptions.
+        TypeSymbol *ex = (TypeSymbol *) exceptions.FirstElement();
+        while (ex)
+        {
+            bool remove = false;
+            for (i = method_shadow -> NumConflicts(); --i >= 0; )
+            {
+                MethodSymbol *conflict = method_shadow -> Conflict(i);
+                for (j = conflict -> NumThrows(); --j >= 0; )
+                {
+                    TypeSymbol *candidate = conflict -> Throws(j);
+                    if (ex -> IsSubclass(candidate))
+                        break;
+                }
+                if (j < 0)
+                {
+                    remove = true;
+                    break;
+                }
+            }
+            TypeSymbol *temp = (TypeSymbol *) exceptions.NextElement();
+            if (remove)
+                exceptions.RemoveElement(ex);
+            else if (UncaughtException(ex))
                 ReportSemError(SemanticError::UNCAUGHT_METHOD_EXCEPTION,
                                method_call -> LeftToken(),
                                method_call -> RightToken(),
                                method -> Header(),
-                               exception -> ContainingPackage() -> PackageName(),
-                               exception -> ExternalName(),
+                               ex -> ContainingPackage() -> PackageName(),
+                               ex -> ExternalName(),
                                UncaughtExceptionContext());
+            ex = temp;
         }
+
+        SymbolSet *exception_set = TryExceptionTableStack().Top();
+        if (exception_set)
+            exception_set -> Union(exceptions);
     }
 }
 

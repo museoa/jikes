@@ -3256,10 +3256,12 @@ int ByteCode::GenerateClassAccess(AstFieldAccess *field_access,
 
     PutOp(OP_GETSTATIC);
     PutU2(field_index);
-    PutOp(OP_DUP);
+    if (need_value)
+        PutOp(OP_DUP);
     EmitBranch(OP_IFNONNULL, label);
 
-    PutOp(OP_POP);
+    if (need_value)
+        PutOp(OP_POP);
     TypeSymbol *type = field_access -> base -> Type();
     bool is_array = type -> IsArray();
     if (! is_array)
@@ -3269,19 +3271,15 @@ int ByteCode::GenerateClassAccess(AstFieldAccess *field_access,
     PutOp(is_array ? OP_ICONST_1 : OP_ICONST_0);
     PutOp(OP_INVOKESTATIC);
     CompleteCall(cache -> ContainingType() -> ClassLiteralMethod(), 2);
-    PutOp(OP_DUP);
+    if (need_value)
+        PutOp(OP_DUP);
     PutOp(OP_PUTSTATIC);
     PutU2(field_index);
 
     DefineLabel(label);
     CompleteLabel(label);
 
-    if (! need_value)
-    {
-        PutOp(OP_POP);
-        return 0;
-    }
-    return 1; // return one-word (reference) result
+    return need_value ? 1 : 0;
 }
 
 
