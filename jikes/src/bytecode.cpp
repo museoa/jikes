@@ -792,7 +792,7 @@ void ByteCode::DeclareLocalVariable(AstVariableDeclarator* declarator)
             // used as an array access base.
             //
             if (control.option.target < JikesOption::SDK1_5 &&
-                type -> num_dimensions > 1 &&
+                IsMultiDimensionalArray(type) &&
                 (StripNops(expr) -> Type() == control.null_type))
             {
                 PutOp(OP_CHECKCAST);
@@ -3865,7 +3865,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression* assignment_expre
         // or directly used as an array access base.
         //
         if (control.option.target < JikesOption::SDK1_5 &&
-            left_type -> num_dimensions > 1 &&
+            IsMultiDimensionalArray(left_type) &&
             (StripNops(assignment_expression -> expression) -> Type() ==
              control.null_type))
         {
@@ -5056,7 +5056,8 @@ void ByteCode::EmitArrayAccessLhs(AstArrayAccess* expression)
     AstExpression* base = StripNops(expression -> base);
     EmitExpression(base);
     if (control.option.target < JikesOption::SDK1_5 &&
-        base_type -> num_dimensions > 1 && base -> Type() == control.null_type)
+        IsMultiDimensionalArray(base_type) &&
+        base -> Type() == control.null_type)
     {
         //
         // Prior to JDK 1.5, VMs incorrectly complained if assigning an array
@@ -5975,7 +5976,7 @@ ByteCode::ByteCode(TypeSymbol* type)
 
     switch (control.option.target)
     {
-    default: // use Sun JDK 1.1 version numbers
+    case JikesOption::SDK1_1:
         major_version = 45;
         minor_version = 3;
         break;
@@ -5987,18 +5988,21 @@ ByteCode::ByteCode(TypeSymbol* type)
         major_version = 47;
         minor_version = 0;
         break;
-    case JikesOption::SDK1_4_2:
     case JikesOption::SDK1_4:
+    case JikesOption::SDK1_4_2:
         major_version = 48;
         minor_version = 0;
+        break;
+    default:
+        assert(false && "unknown version for target");
     }
 
 #ifdef JIKES_DEBUG
     if (control.option.verbose)
 	Coutput << "[generating code for class "
 		<< unit_type -> fully_qualified_name -> value << " as version "
-		<< major_version << "." <<minor_version << " ]" << endl;
-#endif
+		<< major_version << '.' << minor_version << ']' << endl;
+#endif // JIKES_DEBUG
 
     this_class = RegisterClass(unit_type);
     super_class = (unit_type -> super ? RegisterClass(unit_type -> super) : 0);

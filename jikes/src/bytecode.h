@@ -304,6 +304,16 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         return ! p -> Primitive() && p != control.null_type;
     }
+    //
+    // Does p refer to an array type that can be assigned arrays?
+    //
+    bool IsMultiDimensionalArray(TypeSymbol* p)
+    {
+        return p -> num_dimensions > 1 ||
+            p -> base_type == control.Object() ||
+            p -> base_type == control.Cloneable() ||
+            p -> base_type == control.Serializable();
+    }
 
 
     //

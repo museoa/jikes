@@ -1,3 +1,11 @@
+2004-01-28  Eric Blake  <ebb9@byu.net>
+
+	* src/bytecode.h (IsMultiDimensionalArray): New method.
+	* src/bytecode.cpp (DeclareLocalVariable),
+	(EmitAssignmentExpression, EmitArrayAccessLhs): Use it; fully
+	solves jikes bug 3295 (my last patch here missed some cases).
+	(Bytecode): Robustify Chris's patch for class-file version.
+
 2004-01-26  Eric Blake  <ebb9@byu.net>
 
 	* src/init.cpp (ComputeFinalValue): Jikes bug 3797.
