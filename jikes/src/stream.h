@@ -21,17 +21,35 @@
 #include "tuple.h"
 #include "tab.h"
 #include "lookup.h"
+#include "jikesapi.h"
 
-class Control;
-class Input_info;
-class Scanner;
-class Symbol;
-class FileSymbol;
-class ZipFile;
+class Control    ;
+class Input_info ;
+class Scanner    ;
+class Symbol     ;
+class FileSymbol ;
+class ZipFile    ;
+class LexStream  ;
 
-class StreamError
+class StreamError : public JikesError
 {
-public:
+    friend class LexStream;
+
+ public:
+
+    StreamError();
+    
+    virtual const wchar_t *getErrorMessage();
+    virtual const wchar_t *getErrorReport();
+    
+    virtual JikesErrorSeverity getSeverity();
+    virtual const char *getFileName();
+    
+    virtual int getLeftLineNo      ();
+    virtual int getLeftColumnNo    ();
+    virtual int getRightLineNo     ();
+    virtual int getRightColumnNo   ();
+    
     enum StreamErrorKind
     {
         BAD_TOKEN,
@@ -45,18 +63,32 @@ public:
         INVALID_UNICODE_ESCAPE
     };
 
-    unsigned start_location,
-             end_location;
-    StreamErrorKind kind;
+    void Initialize(StreamErrorKind kind_, unsigned start_location_, unsigned end_location_, LexStream *);
 
-    void Initialize(StreamErrorKind kind_, unsigned start_location_, unsigned end_location_)
-    {
-        kind = kind_;
-        start_location = start_location_;
-        end_location = end_location_;
+ protected:
 
-        return;
-    }
+ private:
+
+    unsigned        start_location ;
+    unsigned        end_location   ;
+    StreamErrorKind kind           ;
+    
+    static  bool    emacs_style_report;
+    LexStream      *lex_stream;
+
+    int left_line_no    ;
+    int left_column_no  ;
+    int right_line_no   ;
+    int right_column_no ;
+
+    wchar_t *regularErrorString();
+    wchar_t *emacsErrorString();
+    
+    void PrintLargeSource(ErrorString &s);
+    void PrintSmallSource(ErrorString &s);
+
+    bool initialized;
+    
 };
 
 
@@ -66,7 +98,11 @@ public:
 //
 class LexStream
 {
-public:
+
+    friend class StreamError;
+    
+ public:
+    
     typedef int TypeIndex;
     typedef int TokenIndex;
     typedef int CommentIndex;
@@ -192,23 +228,7 @@ public:
     //*
     //* Constructors and Destructor.
     //*
-    LexStream(Control &control_, FileSymbol *file_symbol_) : file_symbol(file_symbol_),
-#ifdef TEST
-                                                             file_read(0),
-#endif
-                                                             tokens(NULL),
-                                                             columns(NULL),
-                                                             token_stream(12, 16),
-                                                             comments(NULL),
-                                                             comment_stream(10, 8),
-                                                             locations(NULL),
-                                                             line_location(12, 8),
-                                                             initial_reading_of_input(true),
-                                                             input_buffer(NULL),
-                                                             input_buffer_length(0),
-                                                             comment_buffer(NULL),
-                                                             control(control_)
-    {}
+    LexStream(Control &control_, FileSymbol *file_symbol_);
 
     bool ComputeColumns()
     {
@@ -236,10 +256,6 @@ public:
 
     void SortMessages();
     void PrintMessages();
-    void PrintEmacsMessage(int);
-    void PrintSmallSource(int);
-    void PrintLargeSource(int);
-    void PrintMessage(StreamError::StreamErrorKind);
 
     void SetUpComments()
     {

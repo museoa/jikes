@@ -53,7 +53,7 @@ install: all
 	mkdir -p $(prefix)/man/man1
 	cp ../doc/jikes.1 $(prefix)/man/man1
 
-OBJECTS=jikes.@O@ scanner.@O@ code.@O@ zip.@O@ unzip.@O@ \
+OBJECTS=jikes.@O@ jikesapi.@O@ scanner.@O@ code.@O@ zip.@O@ unzip.@O@ \
         ast.@O@ diagnose.@O@ parser.@O@ lpginput.@O@ javaact.@O@ \
         error.@O@ set.@O@ symbol.@O@ lookup.@O@ long.@O@ depend.@O@ \
         stream.@O@ op.@O@ control.@O@ modifier.@O@ system.@O@ \
@@ -277,8 +277,12 @@ javaact.@O@: $(srcdir)/javaact.cpp $(srcdir)/config.h $(srcdir)/parser.h \
 	     $(srcdir)/depend.h $(srcdir)/access.h 
 	$(CXX) $(CXXFLAGS) $(srcdir)/javaact.cpp
 
+
+jikesapi.@O@:  $(srcdir)/jikesapi.cpp $(srcdir)/jikesapi.h 
+
 jikes.@O@:  $(srcdir)/jikes.cpp $(srcdir)/config.h $(srcdir)/control.h \
             $(srcdir)/option.h $(srcdir)/code.h \
+            $(srcdir)/jikesapi.h \
             $(srcdir)/tuple.h $(srcdir)/symbol.h $(srcdir)/stream.h \
             $(srcdir)/javadef.h $(srcdir)/javasym.h $(srcdir)/tab.h \
             $(srcdir)/lookup.h $(srcdir)/long.h $(srcdir)/double.h \

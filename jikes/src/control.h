@@ -398,7 +398,7 @@ public:
                      *null_literal,
                      *this_literal;
 
-    Control(ArgumentExpander &, Option &);
+    Control(char **, Option &);
     ~Control();
 
     Utf8LiteralValue *ConvertUnicodeToUtf8(wchar_t *source)
@@ -594,7 +594,7 @@ private:
     void ProcessMembers();
     void ProcessBodies(TypeSymbol *);
 
-    void ProcessNewInputFiles(SymbolSet &, ArgumentExpander &, int = 0);
+    void ProcessNewInputFiles(SymbolSet &, char **, int = 0);
 
     FileSymbol *FindOrInsertJavaInputFile(DirectorySymbol *, NameSymbol *);
     FileSymbol *FindOrInsertJavaInputFile(wchar_t *, int);

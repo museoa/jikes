@@ -1,3 +1,19 @@
+2000-02-14  Vadim Zaliva  <lord@crocodile.org>
+
+	* config.h:
+	* config.cpp:
+	* stream.h:
+	* stream.cpp: funneling Lexical errors thrue JikesAPI.
+
+2000-02-13  Vadim Zaliva  <lord@crocodile.org>
+
+	* error.h:
+	* error.cpp:
+	* jikes.cpp:
+	* jikesapi.cpp:
+	* jikesapi.h: initial version of API for integration
+	of jikes into various IDEs.
+
 2000-02-03  Vadim Zaliva  <lord@crocodile.org>
 
 	* stream.cpp (ProcessInputUnicode): 

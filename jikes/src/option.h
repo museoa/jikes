@@ -18,6 +18,8 @@
 #include "code.h"
 #include "tuple.h"
 
+#include "jikesapi.h"
+
 #if defined(HAVE_LIB_ICU_UC)
 # include <ucnv.h>
 #elif defined(HAVE_ICONV_H)
@@ -75,28 +77,24 @@ public:
     ~OptionError() { delete [] name; }
 };
 
-
 class Ostream;
 
-class Option
-{
+class Option: public JikesOption
+ {
+
 #ifdef WIN32_FILE_SYSTEM
-    char main_disk,
-         *current_directory[128];
+
+    char main_disk, *current_directory[128];
 
 public:
+
     bool BadMainDisk() { return main_disk == 0; }
-
-    bool IsMainDisk(char c) { return c != 0 && current_directory[c] == current_directory[main_disk]; }
-
-    void SaveCurrentDirectoryOnDisk(char);
 
     void ResetCurrentDirectoryOnDisk(char d)
     {
         if (d != 0)
         {
             assert(current_directory[d]);
-
             SetCurrentDirectory(current_directory[d]);
         }
     }
@@ -104,18 +102,15 @@ public:
     {
         SetCurrentDirectory(current_directory[main_disk]);
     }
+    
     char *GetMainCurrentDirectory()
     {
         return current_directory[main_disk];
     }
+    
 #endif
 
 public:
-    char *default_path,
-         *classpath,
-         *directory,
-         *dependence_report_name,
-         *encoding;
 
 #if defined(HAVE_LIB_ICU_UC)
          UConverter *converter;
@@ -126,15 +121,6 @@ public:
     Tuple<KeywordMap> keyword_map;
     Tuple<OptionError *> bad_options;
 
-    bool nowrite,
-         deprecation,
-         O,
-         g,
-         verbose,
-         depend,
-         nowarn,
-         classpath_search_order,
-         zero_defect;
     int first_file_index;
 
     int debug_trap_op;
@@ -155,6 +141,8 @@ public:
          errors,
          comments,
          pedantic;
+
+    char *dependence_report_name;
 
     Option(ArgumentExpander &);
 

@@ -23,6 +23,263 @@
 # include <errno.h>
 #endif
 
+JikesError::JikesErrorSeverity StreamError::getSeverity        () 
+{ 
+    //All Lexical errors are ERRORs.
+    return JikesError::ERROR; 
+}
+
+int StreamError::getLeftLineNo      () { return left_line_no    ; }
+int StreamError::getLeftColumnNo    () { return left_column_no  ; }
+int StreamError::getRightLineNo     () { return right_line_no   ; }
+int StreamError::getRightColumnNo   () { return right_column_no ; }
+
+const char *StreamError::getFileName() 
+{ 
+    assert(lex_stream);
+    return lex_stream -> FileName();   
+}
+
+const wchar_t *StreamError::getErrorMessage() 
+{
+    switch(kind)
+    {
+    case StreamError::BAD_TOKEN:
+        return L"Illegal token\n";
+        break;
+    case StreamError::BAD_OCTAL_CONSTANT:
+        return L"Octal constant contains invalid digit\n";
+        break;
+    case StreamError::EMPTY_CHARACTER_CONSTANT:
+        return L"Empty character constant\n";
+        break;
+    case StreamError::UNTERMINATED_CHARACTER_CONSTANT:
+        return L"Character constant not properly terminated\n";
+        break;
+    case StreamError::UNTERMINATED_COMMENT:
+        return L"Comment not properly terminated\n";
+        break;
+    case StreamError::UNTERMINATED_STRING_CONSTANT:
+        return L"String constant not properly terminated\n";
+        break;
+    case StreamError::INVALID_HEX_CONSTANT:
+        return L"The prefix 0x must be followed by at least one hex digit\n";
+        break;
+    case StreamError::INVALID_FLOATING_CONSTANT_EXPONENT:
+        return L"floating-constant exponent has no digit\n";
+        break;
+    case StreamError::INVALID_UNICODE_ESCAPE:
+        return L"Invalid unicode escape character\n";
+        break;
+    default:
+        assert(false);
+    }
+}
+
+bool StreamError::emacs_style_report=false;
+
+const wchar_t *StreamError::getErrorReport() 
+{
+    /*
+     * We need to use this lazy initialization,
+     * because we can't to it in Initialize() method. Reason
+     * is that Find* methods are unusalble until
+     * LexStream::CompressSpace is called, which
+     * is not happend until later after scanning is done
+     * and all errors are reported.
+     * (lord)
+     */
+    if(!initialized)
+    {
+        left_line_no    = lex_stream->FindLine   ( start_location );
+        left_column_no  = lex_stream->FindColumn ( start_location );
+        right_line_no   = lex_stream->FindLine   ( end_location   );
+        right_column_no = lex_stream->FindColumn ( end_location   );
+        initialized     = true;
+    }
+
+    return emacs_style_report?emacsErrorString():regularErrorString();
+}
+
+wchar_t *StreamError::emacsErrorString()
+{
+    ErrorString s;
+
+    s << getFileName()
+      << ':' << left_line_no  << ':' << left_column_no
+      << ':' << right_line_no << ':' << right_column_no
+      << ": Lexical: " << getErrorMessage();
+    
+    return s.Array();    
+}
+
+
+wchar_t *StreamError::regularErrorString() 
+{
+    ErrorString s;
+
+    assert(lex_stream);
+    if(left_line_no == right_line_no)
+        PrintSmallSource(s);
+    else 
+        PrintLargeSource(s);
+    
+    s << "\n*** Lexical Error: "
+      << getErrorMessage();
+        
+    return s.Array();
+}
+
+//
+// This procedure is invoked to print a small message that may
+// only span a single line. The parameter k points to the error
+// message in the error structure.
+//
+void StreamError::PrintSmallSource(ErrorString &s)
+{
+    s << "\n\n";
+    s.width(6);
+    s << left_line_no;
+    s << ". ";
+    for (int i = lex_stream->LineStart(left_line_no); i <= lex_stream->LineEnd(left_line_no); i++)
+        s << lex_stream->InputBuffer()[i];
+
+    s.width(left_column_no + 7);
+    s << "";
+    if (left_column_no == right_column_no)
+        s << '^';
+    else
+    {
+        int offset = 0;
+        for (size_t i = start_location; i <= end_location; i++)
+        {
+            if (lex_stream->InputBuffer()[i] > 0xff)
+                offset += 5;
+        }
+
+        s << '<';
+        s.width(right_column_no - left_column_no + offset);
+        s.fill('-');
+        s << ">";
+        s.fill(' ');
+    }
+}
+
+
+//
+// This procedure is invoked to print a large message that may
+// span more than one line. The parameter message points to the
+// starting line. The parameter k points to the error message in
+// the error structure.
+//
+void StreamError::PrintLargeSource(ErrorString &s)
+{
+    if (left_line_no == right_line_no)
+    {
+        if (left_line_no == 0)
+            s << "\n";
+        else
+        {
+            s << "\n\n";
+            s.width(6);
+            s << left_line_no << ". ";
+            for (int i = lex_stream -> LineStart(left_line_no); i <= lex_stream -> LineEnd(left_line_no); i++)
+                s << lex_stream -> InputBuffer()[i];
+
+            int offset = 0;
+            for (size_t j = start_location; j <= end_location; j++)
+            {
+                if (lex_stream -> InputBuffer()[j] > 0xff)
+                    offset += 5;
+            }
+
+            s.width(left_column_no + 8);
+            s << "<";
+            s.width(right_column_no - left_column_no + offset);
+            s.fill('-');
+            s << ">";
+            s.fill(' ');
+        }
+    }
+    else
+    {
+        s << "\n\n";
+        s.width(left_column_no + 8);
+        s << "<";
+        
+        int segment_size = Tab::Wcslen(lex_stream->input_buffer, start_location,
+                                       lex_stream->LineEnd(lex_stream->FindLine(start_location)));
+        s.width(segment_size - 1);
+        s.fill('-');
+        s << "\n";
+        s.fill(' ');
+
+        s.width(6);
+        s << left_line_no << ". ";
+        for (int i = lex_stream -> LineStart(left_line_no); i <= lex_stream -> LineEnd(left_line_no); i++)
+            s << lex_stream -> InputBuffer()[i];
+
+        if (right_line_no > left_line_no + 1)
+        {
+            s.width(left_column_no + 7);
+            s << " ";
+            s << ". . .\n";
+        }
+
+        s.width(6);
+        s << right_line_no << ". ";
+
+        int offset = 0;
+        for (int j = lex_stream -> LineStart(right_line_no); j <= lex_stream -> LineEnd(right_line_no); j++)
+        {
+            wchar_t c = lex_stream -> InputBuffer()[j];
+            if (c > 0xff)
+                offset += 5;
+            s << c;
+        }
+
+        s.width(8);
+        s << "";
+        s.width(right_column_no - 1 + offset);
+        s.fill('-');
+        s << ">";
+        s.fill(' ');
+    }
+}
+
+void StreamError::Initialize(StreamErrorKind kind_, unsigned start_location_, unsigned end_location_, LexStream *l)
+{
+    kind           = kind_           ;
+    start_location = start_location_ ;
+    end_location   = end_location_   ;
+    lex_stream     = l               ;
+}
+
+StreamError::StreamError():initialized(false)
+{
+}
+
+
+LexStream::LexStream(Control &control_, FileSymbol *file_symbol_) : file_symbol(file_symbol_),
+#ifdef TEST
+    file_read(0),
+#endif
+    tokens(NULL),
+    columns(NULL),
+    token_stream(12, 16),
+    comments(NULL),
+    comment_stream(10, 8),
+    locations(NULL),
+    line_location(12, 8),
+    initial_reading_of_input(true),
+    input_buffer(NULL),
+    input_buffer_length(0),
+    comment_buffer(NULL),
+    control(control_)
+{
+    StreamError::emacs_style_report=!control_.option.errors;
+}
+
 wchar_t *LexStream::KeywordName(int kind)
 {
     switch(kind)
@@ -213,13 +470,14 @@ void LexStream::InitializeColumns()
 //
 void LexStream::CompressSpace()
 {
-    tokens = token_stream.Array();
-    if (control.option.dump_errors)
+    tokens    = token_stream   .Array();
+    comments  = comment_stream .Array();
+    locations = line_location  .Array();
+    types     = type_index     .Array();
+    
+    if(control.option.dump_errors)
         InitializeColumns();
-    comments = comment_stream.Array();
-    locations = line_location.Array();
-    types = type_index.Array();
-
+    
     return;
 }
 
@@ -262,7 +520,8 @@ unsigned LexStream::FindLine(unsigned location)
     int lo = 0,
         hi = line_location.Length() - 1;
 
-assert(locations);
+    assert(locations);
+
     //
     // we can place the exit test at the bottom of the loop
     // since the line_location array will always contain at least
@@ -528,7 +787,7 @@ void LexStream::ProcessInputAscii(const char *buffer, long filesize)
                         if (initial_reading_of_input)
                             bad_tokens.Next().Initialize(StreamError::INVALID_UNICODE_ESCAPE,
                                                          (unsigned) (input_ptr - input_buffer),
-                                                         (unsigned) (input_ptr - input_buffer) + (source_ptr - u_ptr));
+                                                         (unsigned) (input_ptr - input_buffer) + (source_ptr - u_ptr), this);
 
                         source_ptr = u_ptr;
                         *input_ptr = U_BACKSLASH;
@@ -723,7 +982,7 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                     if(initial_reading_of_input)
                         bad_tokens.Next().Initialize(StreamError::INVALID_UNICODE_ESCAPE,
                                                      (unsigned) (escape_ptr - input_buffer),
-                                                     (unsigned) (input_ptr - input_buffer));
+                                                     (unsigned) (input_ptr - input_buffer), this);
                 }
                 break;
             case UNICODE_ESCAPE_DIGIT_0:
@@ -736,7 +995,7 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                     if(initial_reading_of_input)
                         bad_tokens.Next().Initialize(StreamError::INVALID_UNICODE_ESCAPE,
                                                      (unsigned) (escape_ptr - input_buffer),
-                                                     (unsigned) (input_ptr - input_buffer));
+                                                     (unsigned) (input_ptr - input_buffer), this);
                 }
                 break;
             case UNICODE_ESCAPE_DIGIT_1:
@@ -749,7 +1008,7 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                     if(initial_reading_of_input)
                         bad_tokens.Next().Initialize(StreamError::INVALID_UNICODE_ESCAPE,
                                                      (unsigned) (escape_ptr - input_buffer),
-                                                     (unsigned) (input_ptr - input_buffer));
+                                                     (unsigned) (input_ptr - input_buffer), this);
                 }
                 break;
             case UNICODE_ESCAPE_DIGIT_2:
@@ -764,7 +1023,7 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                     if(initial_reading_of_input)
                         bad_tokens.Next().Initialize(StreamError::INVALID_UNICODE_ESCAPE,
                                                      (unsigned) (escape_ptr - input_buffer),
-                                                     (unsigned) (input_ptr - input_buffer));
+                                                     (unsigned) (input_ptr - input_buffer), this);
                 }
                 break;
             case CR:
@@ -928,20 +1187,14 @@ void LexStream::PrintMessages()
             {
                 for (int i = 0; i < bad_tokens.Length(); i++)
                 {
-                    if (FindLine(bad_tokens[i].start_location) == FindLine(bad_tokens[i].end_location))
-                         PrintSmallSource(i);
-                    else PrintLargeSource(i);
-
-                    Coutput << "\n*** Lexical Error: ";
-
-                    PrintMessage(bad_tokens[i].kind);
+                    JikesAPI::getInstance()->reportError(&bad_tokens[i]);
                 }
             }
         }
         else
         {
             for (int i = 0; i < bad_tokens.Length(); i++)
-                PrintEmacsMessage(i);
+                JikesAPI::getInstance()->reportError(&bad_tokens[i]);
         }
 
         DestroyInput();
@@ -952,197 +1205,4 @@ void LexStream::PrintMessages()
     return;
 }
 
-
-//
-//
-//
-void LexStream::PrintEmacsMessage(int k)
-{
-    int left_line_no    = FindLine(bad_tokens[k].start_location),
-        left_column_no  = FindColumn(bad_tokens[k].start_location),
-        right_line_no   = FindLine(bad_tokens[k].end_location),
-        right_column_no = FindColumn(bad_tokens[k].end_location);
-
-    Coutput << FileName()
-            << ':' << left_line_no  << ':' << left_column_no
-            << ':' << right_line_no << ':' << right_column_no
-            << ":\n    Lexical: ";
-
-    PrintMessage(bad_tokens[k].kind);
-
-    return;
-}
-
-
-//
-// This procedure is invoked to print a small message that may
-// only span a single line. The parameter k points to the error
-// message in the error structure.
-//
-void LexStream::PrintSmallSource(int k)
-{
-    int left_line_no = FindLine(bad_tokens[k].start_location);
-
-    Coutput << "\n\n";
-    Coutput.width(6);
-    Coutput << left_line_no;
-    Coutput << ". ";
-    for (int i = this -> LineStart(left_line_no); i <= this -> LineEnd(left_line_no); i++)
-        Coutput << this -> InputBuffer()[i];
-
-    int left_column_no = FindColumn(bad_tokens[k].start_location),
-        right_column_no = FindColumn(bad_tokens[k].end_location);
-
-    Coutput.width(left_column_no + 7);
-    Coutput << "";
-    if (left_column_no == right_column_no)
-        Coutput << '^';
-    else
-    {
-        int offset = 0;
-        for (size_t i = bad_tokens[k].start_location; i <= bad_tokens[k].end_location; i++)
-        {
-            if (this -> InputBuffer()[i] > 0xff)
-                offset += 5;
-        }
-
-        Coutput << '<';
-        Coutput.width(right_column_no - left_column_no + offset);
-        Coutput.fill('-');
-        Coutput << ">";
-        Coutput.fill(' ');
-    }
-
-    return;
-}
-
-
-//
-// This procedure is invoked to print a large message that may
-// span more than one line. The parameter message points to the
-// starting line. The parameter k points to the error message in
-// the error structure.
-//
-void LexStream::PrintLargeSource(int k)
-{
-    int left_line_no    = FindLine(bad_tokens[k].start_location),
-        left_column_no  = FindColumn(bad_tokens[k].start_location),
-        right_line_no   = FindLine(bad_tokens[k].end_location),
-        right_column_no = FindColumn(bad_tokens[k].end_location);
-
-    if (left_line_no == right_line_no)
-    {
-        if (left_line_no == 0)
-            Coutput << "\n";
-        else
-        {
-            Coutput << "\n\n";
-            Coutput.width(6);
-            Coutput << left_line_no << ". ";
-            for (int i = this -> LineStart(left_line_no); i <= this -> LineEnd(left_line_no); i++)
-                Coutput << this -> InputBuffer()[i];
-
-            int offset = 0;
-            for (size_t j = bad_tokens[k].start_location; j <= bad_tokens[k].end_location; j++)
-            {
-                if (this -> InputBuffer()[j] > 0xff)
-                    offset += 5;
-            }
-
-            Coutput.width(left_column_no + 8);
-            Coutput << "<";
-            Coutput.width(right_column_no - left_column_no + offset);
-            Coutput.fill('-');
-            Coutput << ">";
-            Coutput.fill(' ');
-        }
-    }
-    else
-    {
-        Coutput << "\n\n";
-        Coutput.width(left_column_no + 8);
-        Coutput << "<";
-
-        int segment_size = Tab::Wcslen(input_buffer, bad_tokens[k].start_location,
-                                                     LineEnd(FindLine(bad_tokens[k].start_location)));
-        Coutput.width(segment_size - 1);
-        Coutput.fill('-');
-        Coutput << "\n";
-        Coutput.fill(' ');
-
-        Coutput.width(6);
-        Coutput << left_line_no << ". ";
-        for (int i = this -> LineStart(left_line_no); i <= this -> LineEnd(left_line_no); i++)
-            Coutput << this -> InputBuffer()[i];
-
-        if (right_line_no > left_line_no + 1)
-        {
-            Coutput.width(left_column_no + 7);
-            Coutput << " ";
-            Coutput << ". . .\n";
-        }
-
-        Coutput.width(6);
-        Coutput << right_line_no << ". ";
-
-        int offset = 0;
-        for (int j = this -> LineStart(right_line_no); j <= this -> LineEnd(right_line_no); j++)
-        {
-            wchar_t c = this -> InputBuffer()[j];
-            if (c > 0xff)
-                offset += 5;
-            Coutput << c;
-        }
-
-        Coutput.width(8);
-        Coutput << "";
-        Coutput.width(right_column_no - 1 + offset);
-        Coutput.fill('-');
-        Coutput << ">";
-        Coutput.fill(' ');
-    }
-
-    return;
-}
-
-
-void LexStream::PrintMessage(StreamError::StreamErrorKind kind)
-{
-    switch(kind)
-    {
-        case StreamError::BAD_TOKEN:
-             Coutput << "Illegal token";
-             break;
-        case StreamError::BAD_OCTAL_CONSTANT:
-             Coutput << "Octal constant contains invalid digit";
-             break;
-        case StreamError::EMPTY_CHARACTER_CONSTANT:
-             Coutput << "Empty character constant";
-             break;
-        case StreamError::UNTERMINATED_CHARACTER_CONSTANT:
-             Coutput << "Character constant not properly terminated";
-             break;
-        case StreamError::UNTERMINATED_COMMENT:
-             Coutput << "Comment not properly terminated";
-             break;
-        case StreamError::UNTERMINATED_STRING_CONSTANT:
-             Coutput << "String constant not properly terminated";
-             break;
-        case StreamError::INVALID_HEX_CONSTANT:
-             Coutput << "The prefix 0x must be followed by at least one hex digit";
-             break;
-        case StreamError::INVALID_FLOATING_CONSTANT_EXPONENT:
-             Coutput << "floating-constant exponent has no digit";
-             break;
-        case StreamError::INVALID_UNICODE_ESCAPE:
-             Coutput << "Invalid unicode escape character";
-             break;
-        default:
-             assert(false);
-    }
-
-    Coutput << '\n';
-
-    return;
-}
 

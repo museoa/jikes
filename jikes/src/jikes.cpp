@@ -8,31 +8,24 @@
 // You must accept the terms of that agreement to use this software.
 //
 
-#include "config.h"
 #include <iostream.h>
 #include <assert.h>
-#include "control.h"
 #include <stdio.h>
+
+#include "config.h"
+#include "jikesapi.h"
 
 int main(int argc, char *argv[])
 {
     int return_code;
+    JikesAPI compiler;
 
-    SetNewHandler();
+    char **files = compiler.parseOptions(argc, argv);
 
-    FloatingPointCheck();
-
-    ArgumentExpander *arguments = new ArgumentExpander(argc, argv);
-
-    Option *option = new Option(*arguments);
-
-    if (option -> first_file_index < arguments -> argc)
+    if(files)
     {
-        Control *control = new Control(*arguments, *option);
-        return_code = control -> return_code;
-#ifdef NO_LEAKS
-        delete control;
-#endif
+        return_code = compiler.compile(files);
+        delete []files;
     }
     else
     {
@@ -87,11 +80,6 @@ int main(int argc, char *argv[])
 
         return_code = 1;
     }
-
-#ifdef NO_LEAKS
-    delete arguments;
-    delete option;
-#endif
 
     return return_code;
 }

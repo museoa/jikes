@@ -155,22 +155,10 @@ void Option::SaveCurrentDirectoryOnDisk(char c)
 
 
 Option::Option(ArgumentExpander &arguments) : 
-                                              classpath(NULL),
-                                              directory(NULL),
                                               dependence_report_name(NULL),
-                                              encoding(NULL),
 #if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
                                               converter(NULL),
 #endif
-                                              nowrite(false),
-                                              deprecation(false),
-                                              O(false),
-                                              g(false),
-                                              verbose(false),
-                                              depend(false),
-                                              nowarn(false),
-                                              classpath_search_order(false),
-                                              zero_defect(false),
                                               first_file_index(arguments.argc),
                                               debug_trap_op(0),
                                               debug_dump_lex(false),
@@ -349,7 +337,9 @@ Option::Option(ArgumentExpander &arguments) :
                  errors = false;
             }
             else if (strcmp(arguments.argv[i],"+E") == 0)
-                 errors = false;
+            {
+                errors = false;
+            }
             else if (arguments.argv[i][0] == '+' && arguments.argv[i][1] == 'K')
             {
                 char *name = arguments.argv[i] + 2,
@@ -526,9 +516,6 @@ Option::~Option()
 {
     for (int i = 0; i < bad_options.Length(); i++)
         delete bad_options[i];
-
-    delete [] classpath;
-    delete [] directory;
 
 #ifdef WIN32_FILE_SYSTEM
     for (char c = 'a'; c <= 'z'; c++)

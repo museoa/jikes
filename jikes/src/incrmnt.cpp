@@ -371,31 +371,37 @@ bool Control::IncrementalRecompilation()
         fprintf(stderr, "\nIncremental Jikes: Press Enter to continue or [Q]uit + Enter to exit: ");
         fflush(stderr);
 
-        Tuple<char> line;
+        int  l = strlen(U8S_quit)+2;
+        int  n = 0;
+        char line[l];
         char ch;
-        cin.get(ch);
-        while(ch != U_ESCAPE && ch != U_LINE_FEED)
-        {
-            line.Next() = ch;
-            cin.get(ch);
-        }
-        if (ch == U_ESCAPE)
-            return false;
 
-        new_arguments = new ArgumentExpander(line);
+        while(n<l)
+        {
+            cin.get(ch);
+            if(ch == U_ESCAPE && ch == U_LINE_FEED)
+                break;
+            else
+                line[n++] = ch;
+        }
+        line[n]='\0';
+
+        if(line[0] == U_ESCAPE)
+            return false;
+        
         char q[2] = {U_q, U_NU};
-        if (new_arguments -> argc == 1 && (Case::StringEqual(new_arguments -> argv[0], U8S_quit) ||
-                                           Case::StringSegmentEqual(new_arguments -> argv[0], q, 2)))
+        
+        if(Case::StringEqual(line, U8S_quit) || Case::StringSegmentEqual(line, q, 2))
         {
             delete new_arguments;
             return false;
         }
-
+        
         candidates = input_java_file_set;
         candidates.Union(input_class_file_set);
     }
 
-    if ((! candidates.IsEmpty()) || (new_arguments && new_arguments -> argc > 0))
+    if(!candidates.IsEmpty())
     {
         TypeDependenceChecker dependence_checker((Control *) this, candidates, type_trash_bin);
         dependence_checker.PartialOrder();
@@ -404,9 +410,9 @@ bool Control::IncrementalRecompilation()
         // Compute the initial set of files that need to be recompiled. Place them in recompilation_file_set.
         //
         RereadDirectories();
-
+        
         if (new_arguments)
-            ProcessNewInputFiles(recompilation_file_set, *new_arguments);
+            ProcessNewInputFiles(recompilation_file_set, NULL);
 
         ComputeRecompilationSet(dependence_checker);
     }
