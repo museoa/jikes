@@ -20,7 +20,7 @@ file that contains the following text near the beginning:
 
 
 
-You must accept the terms of the IBM Jikes Parse Generator
+You must accept the terms of the IBM Jikes Parser Generator
 License Agreement to use this software.
 
 See the file jikespg.htm for documentation in FAQ (Frequently Asked
