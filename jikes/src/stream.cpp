@@ -638,20 +638,16 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                     const char *before = source_ptr;
                     ch=ucnv_getNextUChar (control.option.converter,
                                           &source_ptr,
-                                          source_tail,
+                                          source_tail+1,
                                           &err);
                     if(U_FAILURE(err))
                     {
-                        fprintf(stderr,"conversion error!\n");
+                        fprintf(stderr,"Conversion error: %s at byte %d\n", 
+                                errorName(err),
+                                int(before-buffer)
+                        );
                         break;
                     }
-
-//                     fprintf(stderr,"Converted: %d bytes [", (source_ptr-before));
-//                     for(int i=0;i<(source_ptr-before);i++)
-//                         fprintf(stderr,"%x ",*(before+i));
-//                     fprintf(stderr,"]\n");
-//                     fprintf(stderr,"to unicode char %x\n", (int)ch);
-
                 }
                 else
                 {
