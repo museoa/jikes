@@ -1,17 +1,17 @@
 2001-03-28  Eric Blake  <ebb9@email.byu.edu>
 
-        * configure.in
-        * acinclude.m4
-        * src/config.h.in
-        * src/m4/ac_check_broken_ostream.m4 : add detection
-        for HP/UX's broken ostream class that can't handle
-        << const unsigned char *.
+	* configure.in
+	* acinclude.m4
+	* src/config.h.in
+	* src/m4/ac_check_broken_ostream.m4 : add detection
+	for HP/UX's broken ostream class that can't handle
+	<< const unsigned char *.
 
 2001-03-28  Chris Abbey  <cabbey@bresnanlink.net>
 
-        * configure.in
-        * src/m4/ac_check_iconv.m4 : add configure support for
-        Bruno Haible's libiconv (cygwin)
+	* configure.in
+	* src/m4/ac_check_iconv.m4 : add configure support for
+	Bruno Haible's libiconv (cygwin)
 
 2001-03-27  Pascal Davoust  <davoustp@yahoo.com>
 
