@@ -1,3 +1,10 @@
+2000-06-06  Mo DeJong  <mdejong@redhat.com>
+
+	* configure: Regen to fix Solaris build.
+	* configure.in: Removed some comments,
+	fixed up a minor path issue.
+	* src/stamp-h.in: Regen.
+
 2000-06-03  Mo DeJong  <mdejong@redhat.com>
 
 	* src/decl.cpp (CheckPackage): Removed
