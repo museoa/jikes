@@ -99,7 +99,8 @@ JikesOption::JikesOption():
 
 JikesAPI * JikesAPI::instance = NULL;
 
-JikesAPI::JikesAPI():option(NULL)
+JikesAPI::JikesAPI()
+:option(NULL)
 {
     SetNewHandler();
     FloatingPointCheck();
@@ -114,17 +115,28 @@ JikesAPI * JikesAPI::getInstance()
 
 JikesAPI::~JikesAPI()
 {
+    cleanupOptions();
+}
+
+void JikesAPI::cleanupOptions() {
     delete option;
+
+    if (parsedOptions) {
+        for(char ** parsed = parsedOptions; *parsed != NULL ; parsed++) {
+            delete [] *parsed;
+        }
+        delete [] parsedOptions;
+    }
 }
 
 char ** JikesAPI::parseOptions(int argc, char **argv)
 {
-    delete option;
+    cleanupOptions();
 
-    ArgumentExpander *args = new ArgumentExpander(argc, argv);
-    Option* opt = new Option(*args);
+    ArgumentExpander args(argc, argv);
+    Option* opt = new Option(args);
     option = opt;
-    int n = args->argc - opt->first_file_index;
+    int n = args.argc - opt->first_file_index;
 
     if(n <= 0)
     {
@@ -135,7 +147,7 @@ char ** JikesAPI::parseOptions(int argc, char **argv)
         char **res = new char*[n+1];
         for(int i=0; i<n; i++)
         {
-            const char *o = args->argv[opt->first_file_index+i];
+            const char *o = args.argv[opt->first_file_index+i];
             if(o)
             {
                 res[i] = new char[strlen(o)+1];

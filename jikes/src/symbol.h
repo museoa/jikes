@@ -184,6 +184,9 @@ public:
     //
     // These fields are used for buffer "files".
     //
+
+    // FIXME: This field does not seem to be set anywhere,
+    // but it is read in symbol.cpp and stream.cpp
     char *buffer;
 
     LexStream *lex_stream;
@@ -211,7 +214,7 @@ public:
     virtual ~FileSymbol()
     {
         delete [] file_name;
-        if (buffer) delete buffer;
+        delete [] buffer;
         delete lex_stream;
     }
 

@@ -87,6 +87,9 @@ class JikesAPI
      * corresponding to given command line parameters.
      *
      * @return list of java file names found on command line
+     * Caller should not attempt to manage the memory returned
+     * by this method as it can be freed during another call
+     * to parseOptions() or when this object is destroyed.
      */
     virtual char** parseOptions(int argc, char **argv) ;
 
@@ -146,7 +149,11 @@ class JikesAPI
     
  private:
 
+    void cleanupOptions(); // Helper to delete option and parsedOptions
+
+    char **parsedOptions;
     JikesOption *option;
+
     static JikesAPI *instance;
 };
 

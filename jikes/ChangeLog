@@ -1,3 +1,16 @@
+2000-11-27  Mo DeJong  <mdejong@redhat.com>
+
+	* src/jikes.cpp (main): Don't attempt to
+	manage memory returned by JikesAPI::parseOptions().
+	* src/jikesapi.cpp (cleanupOptions, parseOptions):
+	Add new method to delete memory allocated to options.
+	Construct an ArgumentExpander on the stack to avoid
+	a memory leak.
+	* src/jikesapi.h (parseOptions, cleanupOptions):
+	Add note to documentation for parseOptions() method.
+	Add declaration of private cleanupOptions() method.
+	* src/symbol.h (~FileSymbol): Call array delete.
+
 2000-11-26  Mo DeJong  <mdejong@redhat.com>
 
 	* src/Makefile.am: Add efence rule. This rule will

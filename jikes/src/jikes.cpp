@@ -25,14 +25,13 @@ int main(int argc, char *argv[])
 {
     // Here we are creating instance of default API
     JikesAPI *compiler = new JikesAPI();
-    
+
+    int    return_code;    
     char **files = compiler->parseOptions(argc, argv);
-    int    return_code;
     
-    if(files)
+    if (files)
     {
         return_code = compiler->compile(files);
-        delete []files;
     }
     else
     {
