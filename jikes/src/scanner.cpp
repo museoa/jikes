@@ -37,7 +37,8 @@ int (*Scanner::scan_keyword[13]) (wchar_t *p1) =
 //
 // The constructor initializes all utility variables.
 //
-Scanner::Scanner(Control &control_) : control(control_)
+Scanner::Scanner(Control &control_) : control(control_),
+                                      dollar_warning_given(false)
 {
     //
     // If this assertion fails, the Token structure in stream.h must be
@@ -932,11 +933,14 @@ void Scanner::ClassifyIdOrKeyword()
                                             lex);
         current_token -> SetKind(TK_Identifier);
     }
-    if (has_dollar)
+    if (has_dollar && ! dollar_warning_given && ! control.option.nowarn)
+    {
+        dollar_warning_given = true;
         lex -> bad_tokens.Next().Initialize(StreamError::DOLLAR_IN_IDENTIFIER,
                                             current_token -> Location(),
                                             (unsigned) (current_token -> Location() + len - 1),
                                             lex);
+    }
 
     if (current_token -> Kind() == TK_Identifier)
     {
@@ -981,11 +985,14 @@ void Scanner::ClassifyId()
 
     int len = ptr - cursor;
 
-    if (has_dollar)
+    if (has_dollar && ! dollar_warning_given && ! control.option.nowarn)
+    {
+        dollar_warning_given = true;
         lex -> bad_tokens.Next().Initialize(StreamError::DOLLAR_IN_IDENTIFIER,
                                             current_token -> Location(),
                                             (unsigned) (current_token -> Location() + len - 1),
                                             lex);
+    }
 
     current_token -> SetKind(TK_Identifier);
     current_token -> SetSymbol(control.FindOrInsertName(cursor, len));

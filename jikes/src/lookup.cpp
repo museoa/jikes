@@ -1677,16 +1677,29 @@ bool Utf8LiteralTable::IsConstantString(AstExpression *expression)
     AstParenthesizedExpression *parenthesized_expression = expression -> ParenthesizedExpressionCast();
     if (binary_expression)
     {
+        //
+        // If either subexpression is a constant but not a String, we have
+        // already assigned it a Utf8LiteralValue.  But if a subexpression
+        // is of type String, we don't know if it is constant yet.  Therefore,
+        // we recurse to append the constant String for a primitive
+        // expression, as well as to check if a String expression is constant.
+        // This relies on the fact that this binary expression is of type
+        // String.
+        //
         int left_start_marker = utf8_literals -> Length();
 
         AstExpression *left  = binary_expression -> left_expression,
                       *right = binary_expression -> right_expression;
 
-        bool left_is_constant = IsConstantString(left);
+        bool left_is_constant = ((left -> IsConstant() ||
+                                  left -> Type() == expression -> Type())
+                                 ? IsConstantString(left) : false);
 
         int left_end_marker = utf8_literals -> Length();
 
-        bool right_is_constant = IsConstantString(right);
+        bool right_is_constant = ((right -> IsConstant() ||
+                                   right -> Type() == expression -> Type())
+                                  ? IsConstantString(right) : false);
         if (left_is_constant && right_is_constant)
              return true;
 

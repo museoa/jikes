@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -1651,7 +1651,8 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment,
         ComputeMethodsClosure(this_type, identifier_token);
 
     ExpandedMethodTable &expanded_table = *(this_type -> expanded_method_table);
-    if (! this_type -> ACC_ABSTRACT() && ! this_type -> Bad())
+    if (this_type -> super && ! this_type -> ACC_ABSTRACT() &&
+        ! this_type -> Bad())
     {
         //
         // Check that every abstract method that is inherited is overridden.

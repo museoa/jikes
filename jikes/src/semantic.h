@@ -1077,7 +1077,7 @@ private:
     void ConstructorAccessCheck(AstClassInstanceCreationExpression *, MethodSymbol *);
     bool MemberAccessCheck(AstFieldAccess *, TypeSymbol *, Symbol *);
     void SimpleNameAccessCheck(AstSimpleName *, TypeSymbol *, Symbol *);
-    bool ProtectedAccessCheck(TypeSymbol *, TypeSymbol *);
+    bool ProtectedAccessCheck(TypeSymbol *);
 
     void (Semantic::*ProcessPreUnaryExpr[AstPreUnaryExpression::_num_kinds])(AstPreUnaryExpression *);
     void ProcessPLUS(AstPreUnaryExpression *);

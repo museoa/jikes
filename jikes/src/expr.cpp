@@ -24,15 +24,21 @@ namespace Jikes { // Open namespace Jikes block
 bool Semantic::IsIntValueRepresentableInType(AstExpression *expr,
                                              TypeSymbol *type)
 {
+    if (! expr -> IsConstant() ||
+        ! control.IsSimpleIntegerValueType(expr -> Type()))
+    {
+        return false;
+    }
+
     IntLiteralValue *literal = DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
 
-    return (expr -> IsConstant() &&
-            control.IsSimpleIntegerValueType(expr -> Type()) &&
-            (type == control.int_type ||
-             type == control.no_type  ||
-             (type == control.char_type && (literal -> value >= 0) && (literal -> value <= 65535)) ||
-             (type == control.byte_type && (literal -> value >= -128) && (literal -> value <= 127)) ||
-             (type == control.short_type && (literal -> value >= -32768) && (literal -> value <= 32767))));
+    return (type == control.int_type || type == control.no_type ||
+            (type == control.char_type && (literal -> value >= 0) &&
+             (literal -> value <= 65535)) ||
+             (type == control.byte_type && (literal -> value >= -128) &&
+              (literal -> value <= 127)) ||
+             (type == control.short_type && (literal -> value >= -32768) &&
+              (literal -> value <= 32767)));
 }
 
 
@@ -1678,7 +1684,7 @@ void Semantic::CreateAccessToScopedVariable(AstSimpleName *simple_name, TypeSymb
 
         if (variable -> ACC_PRIVATE() ||
             (variable -> ACC_PROTECTED() &&
-             (! ProtectedAccessCheck(environment_type, containing_type))))
+             ! ProtectedAccessCheck(containing_type)))
         {
             assert((variable -> ACC_PRIVATE() &&
                     environment_type == containing_type) ||
@@ -1747,7 +1753,7 @@ void Semantic::CreateAccessToScopedMethod(AstMethodInvocation *method_call, Type
 
         if (method -> ACC_PRIVATE() ||
             (method -> ACC_PROTECTED() &&
-             (! ProtectedAccessCheck(environment_type, containing_type))))
+             ! ProtectedAccessCheck(containing_type)))
         {
             assert((method -> ACC_PRIVATE() &&
                     environment_type == containing_type) ||
@@ -2145,30 +2151,16 @@ void Semantic::SimpleNameAccessCheck(AstSimpleName *simple_name,
 
 
 //
-// Returns true if the current type can access a protected member of the
-// target type, declared in the containing type, without an accessor method.
-// This does not test whether the target type and member are accessible, since
-// those checks are assumed to be already done.
+// Returns true if the current type can access a protected member declared in
+// the containing type, without an accessor method. This does not test
+// whether the target type and member are accessible, since those checks are
+// assumed to be already done.
 //
-bool Semantic::ProtectedAccessCheck(TypeSymbol *target_type,
-                                    TypeSymbol *containing_type)
+bool Semantic::ProtectedAccessCheck(TypeSymbol *containing_type)
 {
-    assert(target_type -> IsSubclass(containing_type));
-
     TypeSymbol *this_type = ThisType();
-    if (this_type -> IsSubclass(containing_type) ||
-        target_type -> IsSubclass(this_type))
-    {
-        return true;
-    }
-
-    PackageSymbol *this_package = this_type -> ContainingPackage();
-
-    for ( ; target_type != containing_type; target_type = target_type -> super)
-        if (target_type -> ContainingPackage() != this_package)
-            return false;
-
-    return containing_type -> ContainingPackage() == this_package;
+    return (this_type -> IsSubclass(containing_type) ||
+            this_type -> ContainingPackage() == containing_type -> ContainingPackage());
 }
 
 
@@ -2282,7 +2274,7 @@ void Semantic::FindVariableMember(TypeSymbol *type,
             if (this_type != containing_type &&
                 (variable -> ACC_PRIVATE() ||
                  (variable -> ACC_PROTECTED() &&
-                  (! ProtectedAccessCheck(type, containing_type)))))
+                  ! ProtectedAccessCheck(containing_type))))
             {
                 if (field_access -> IsConstant())
                     field_access -> symbol = variable;
@@ -3002,7 +2994,7 @@ void Semantic::FindMethodMember(TypeSymbol *type,
             if (this_type != containing_type &&
                 (method -> ACC_PRIVATE() ||
                  (method -> ACC_PROTECTED() &&
-                  ! ProtectedAccessCheck(type, containing_type)) ||
+                  ! ProtectedAccessCheck(containing_type)) ||
                  (field_access -> base -> IsSuperExpression() &&
                   ! method -> ACC_STATIC() &&
                   ! this_type -> IsSubclass(containing_type))))
@@ -4728,8 +4720,7 @@ bool Semantic::CanAssignmentConvert(TypeSymbol *target_type, AstExpression *expr
     return (target_type == control.no_type ||
             expr -> symbol == control.no_type ||
             CanMethodInvocationConvert(target_type, expr -> Type()) ||
-            IsIntValueRepresentableInType(expr, target_type)
-           );
+            IsIntValueRepresentableInType(expr, target_type));
 }
 
 
@@ -4833,7 +4824,7 @@ bool Semantic::CanCastConvert(TypeSymbol *target_type, TypeSymbol *source_type, 
 // We only need to cast the value of constant primitive expressions.
 //
 LiteralValue *Semantic::CastValue(TypeSymbol *target_type,
-                                         AstExpression *expr)
+                                  AstExpression *expr)
 {
     TypeSymbol *source_type = expr -> Type();
 
@@ -4843,6 +4834,8 @@ LiteralValue *Semantic::CastValue(TypeSymbol *target_type,
         assert(target_type == source_type || ! expr -> value);
         return expr -> value;
     }
+    if (source_type == control.String())
+        return NULL; // A string cast to a supertype is not constant.
 
     LiteralValue *literal_value = NULL;
     if (target_type == control.String())

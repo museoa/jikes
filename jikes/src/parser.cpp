@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -78,6 +78,8 @@ AstPackageDeclaration *Parser::PackageHeaderParse(LexStream *lex_stream_, Storag
     if (lex_stream_ -> Kind(lex_stream_ -> Peek()) == TK_package)
     {
         ast_pool = ast_pool_;
+        list_node_pool = new StoragePool(lex_stream_ -> NumTokens());
+        free_list_nodes = NULL;
 
         parse_package_header_only = true;
         end_token = LexStream::LEX_INFINITY; // We are parsing the whole input and not just a segment.
@@ -91,6 +93,8 @@ AstPackageDeclaration *Parser::PackageHeaderParse(LexStream *lex_stream_, Storag
             if (compilation_unit && (! compilation_unit -> BadCompilationUnitCast()))
                 package_declaration = compilation_unit -> package_declaration_opt;
         }
+
+        delete list_node_pool;
     }
 
     return package_declaration;

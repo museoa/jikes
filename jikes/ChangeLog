@@ -1,3 +1,19 @@
+2002-02-06  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/scanner.cpp:
+	* src/scanner.: Silence '$' in identifier warnings when -nowarn
+	specified.
+	* src/parser.cpp (PackageHeaderParse): Allocate memory to prevent
+	core dump when compiling GNU's Classpath.
+	* src/lookup.cpp (IsConstantString): 
+	* src/expr.cpp (CastValue, IsIntValueRepresentableInType): Fix
+	missing cases in previous commit, exposed by Classpath.
+	(ProtectedAccessCheck):
+	* src/semantic.h (ProtectedAccessCheck): Update rules to fix bug
+	exposed by Classpath.
+	* src/decl.cpp (CompleteSymbolTable): Special case
+	java.lang.Object when checking concrete classes.	
+
 2002-02-05  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/definite.cpp (DefiniteExpression): Optimize DA/DU analysis
@@ -6,7 +22,7 @@
 	* src/bytecode.cpp:
 	* src/bytecode.h:
 	* src/expr.cpp: Use IsConstantTrue and IsConstantFalse in more
-	places, and convert LiteralValue* casts to DYNAMIC_CASTS.
+	places, and convert LiteralValue* casts to DYNAMIC_CASTs.
 	* src/lookup.cpp:
 	* src/lookup.h (IsConstantString): Rename from IsConstant, and
 	update to work with string concat changes.
