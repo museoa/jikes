@@ -1,5 +1,10 @@
 2004-05-03  Elliott Hughes  <enh@acm.org>
 
+	* src/init.cpp: fix bug #3948 by ignoring fields of array types
+	when looking for final fields that could be made static.
+
+2004-05-03  Elliott Hughes  <enh@acm.org>
+
 	* src/class.cpp, src/error.cpp: ensures we also print the path to
 	the class file within the JAR file (i.e. include the package) in
 	diagnostics about invalid class files.
