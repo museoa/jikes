@@ -2300,13 +2300,6 @@ void Semantic::ProcessAmbiguousName(Ast *name)
 
         if (field_access -> IsClassAccess())
         {
-            if (! control.option.one_one)
-            {
-                ReportSemError(SemanticError::ONE_ONE_FEATURE,
-                               field_access -> LeftToken(),
-                               field_access -> RightToken());
-            }
-
             AddDependence(this_type, control.NoClassDefFoundError(), field_access -> identifier_token);
             AddDependence(this_type, control.ClassNotFoundException(), field_access -> identifier_token);
 
@@ -2469,13 +2462,6 @@ void Semantic::ProcessAmbiguousName(Ast *name)
 
             if (field_access -> IsThisAccess() || field_access -> IsSuperAccess())
             {
-                if (! control.option.one_one)
-                {
-                    ReportSemError(SemanticError::ONE_ONE_FEATURE,
-                                   field_access -> LeftToken(),
-                                   field_access -> RightToken());
-                }
-
                 TypeSymbol *enclosing_type = symbol -> TypeCast();
                 if (enclosing_type == control.no_type)
                     field_access -> symbol = control.no_type;
@@ -4319,16 +4305,6 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
 {
     AstClassInstanceCreationExpression *class_creation = (AstClassInstanceCreationExpression *) expr;
 
-    if (class_creation -> base_opt || class_creation -> class_body_opt)
-    {
-        if (! control.option.one_one)
-        {
-            ReportSemError(SemanticError::ONE_ONE_FEATURE,
-                           class_creation -> LeftToken(),
-                           class_creation -> RightToken());
-        }
-    }
-
     //
     // TODO: Is this needed ?
     //
@@ -4585,13 +4561,6 @@ void Semantic::ProcessArrayCreationExpression(Ast *expr)
 
     if ((array_type = array_creation -> array_type -> ArrayTypeCast()))
     {
-        if (! control.option.one_one)
-        {
-            ReportSemError(SemanticError::ONE_ONE_FEATURE,
-                           array_creation -> LeftToken(),
-                           array_creation -> RightToken());
-        }
-
         AstPrimitiveType *primitive_type = array_type -> type -> PrimitiveTypeCast();
         type = (primitive_type ? FindPrimitiveType(primitive_type) : MustFindType(array_type -> type));
     }
@@ -4962,7 +4931,7 @@ bool Semantic::CanMethodInvocationConvert(TypeSymbol *target_type, TypeSymbol *s
                     //
                     // TODO: This is an undocumented feature, but this fix appears to make sense.
                     //
-                    (control.option.one_one && target_type == control.Serializable() && source_type -> Implements(target_type)));
+                    (target_type == control.Serializable() && source_type -> Implements(target_type)));
         }
         else if (source_type -> ACC_INTERFACE())
         {
@@ -5037,7 +5006,7 @@ bool Semantic::CanCastConvert(TypeSymbol *target_type, TypeSymbol *source_type, 
                     //
                     // TODO: This is an undocumented feature, but this fix appears to make sense.
                     //
-                    (control.option.one_one && target_type == control.Serializable() && source_type -> Implements(target_type)));
+                    (target_type == control.Serializable() && source_type -> Implements(target_type)));
         }
         else if (source_type -> ACC_INTERFACE())
         {

@@ -170,7 +170,6 @@ Option::Option(ArgumentExpander &arguments) :
                                               depend(false),
                                               nowarn(false),
                                               classpath_search_order(false),
-                                              one_one(true),
                                               zero_defect(false),
                                               first_file_index(arguments.argc),
                                               debug_trap_op(0),
@@ -384,8 +383,6 @@ Option::Option(ArgumentExpander &arguments) :
                     }
                 }
             }
-            else if (strcmp(arguments.argv[i],"+1.0") == 0)
-                 one_one = false;
             else if (strcmp(arguments.argv[i],"+F") == 0)
                  full_check = true;
             else if (strcmp(arguments.argv[i],"+M") == 0)

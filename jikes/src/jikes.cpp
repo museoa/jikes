@@ -55,7 +55,6 @@ int main(int argc, char *argv[])
         "-O                 do not write LineNumberTable\n"
         "-verbose           list files read and written\n"
         "-Xstdout           redirect output listings to stdout\n"
-        "+1.0               recognize only 1.0.2 language\n"
         "++                 compile in incremental mode\n"
         "+B                 do not invoke bytecode generator\n"
         "+c                 do not discard comments from lexer output\n"
