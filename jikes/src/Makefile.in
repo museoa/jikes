@@ -215,7 +215,7 @@ $(DEPDIR)/segment.Po $(DEPDIR)/set.Po $(DEPDIR)/stream.Po \
 $(DEPDIR)/symbol.Po $(DEPDIR)/system.Po $(DEPDIR)/tab.Po \
 $(DEPDIR)/unparse.Po $(DEPDIR)/unzip.Po $(DEPDIR)/zip.Po
 DIST_COMMON =  $(noinst_HEADERS) ./stamp-h.in Makefile.am Makefile.in \
-config.h.in configure configure.in depcomp
+config.h.in depcomp
 
 
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
