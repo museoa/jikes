@@ -1,5 +1,8 @@
 1999-10-18    <shields@jikes.watson.ibm.com> 
 
+	* jikes.spec (Summary): 
+	Add news_v1.html to list of documentation files.
+
 	-- Release 1.08 --
 	* jikes.1: Drop BUGS section since incremental again supported.
 	* Save old "Research News" as news_v1.html (new file).
