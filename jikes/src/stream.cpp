@@ -409,8 +409,7 @@ LexStream::~LexStream()
     DestroyInput();
 
     delete [] columns;
-    delete [] comment_buffer;
-    comment_buffer = NULL;
+    columns = NULL;
 }
 
 
