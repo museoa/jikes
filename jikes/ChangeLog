@@ -1,3 +1,17 @@
+2001-02-17  Mo DeJong  <mdejong@redhat.com>
+
+	* src/option.cpp (ArgumentExpanded,
+	ArgumentExpander): Rename the
+	ArgumentExpanded method to
+	ExpandAtFileArgument. Implement
+	proper string trimming for
+	file names in ExpandAtFileArgument.
+	Reformat some lines so they fit
+	in one screen width.
+	* src/option.h (ArgumentExpander):
+	Update class declaration to reflect
+	ExpandAtFileArgument name change.
+
 2001-02-16  Mo DeJong  <mdejong@redhat.com>
 
 	* src/lookup.cpp (EvaluateConstant,
