@@ -373,12 +373,12 @@ void Semantic::ProcessWhileStatement(Ast* stmt)
 
     //
     // Recall that each while statement is enclosed in a unique block by the
-    // parser
+    // parser, as is the loop body.
     //
     BreakableStatementStack().Push(LocalBlockStack().TopBlock());
     ContinuableStatementStack().Push(LocalBlockStack().TopBlock());
 
-    AstStatement* enclosed_statement = while_statement -> statement;
+    AstBlock* enclosed_statement = while_statement -> statement;
     enclosed_statement -> is_reachable = while_statement -> is_reachable;
 
     ProcessExpression(while_statement -> expression);
@@ -405,7 +405,7 @@ void Semantic::ProcessWhileStatement(Ast* stmt)
                        cond_type -> ExternalName());
     }
 
-    ProcessStatement(enclosed_statement);
+    ProcessBlock(enclosed_statement);
 
     if (! enclosed_statement -> is_reachable &&
         while_statement -> is_reachable)
@@ -450,7 +450,7 @@ void Semantic::ProcessForStatement(Ast* stmt)
 
     //
     // Recall that each for statement is enclosed in a unique block by the
-    // parser
+    // parser, as is the loop body.
     //
     BreakableStatementStack().Push(LocalBlockStack().TopBlock());
     ContinuableStatementStack().Push(LocalBlockStack().TopBlock());
@@ -461,7 +461,7 @@ void Semantic::ProcessForStatement(Ast* stmt)
     // condition (end) expression is a constant FALSE expression we will
     // change the assumption...
     //
-    AstStatement* enclosed_statement = for_statement -> statement;
+    AstBlock* enclosed_statement = for_statement -> statement;
     enclosed_statement -> is_reachable = for_statement -> is_reachable;
 
     if (for_statement -> end_expression_opt)
@@ -491,7 +491,7 @@ void Semantic::ProcessForStatement(Ast* stmt)
         }
     }
 
-    ProcessStatement(enclosed_statement);
+    ProcessBlock(enclosed_statement);
 
     if (! enclosed_statement -> is_reachable &&
         for_statement -> is_reachable)
@@ -745,15 +745,15 @@ void Semantic::ProcessDoStatement(Ast* stmt)
 
     //
     // Recall that each Do statement is enclosed in a unique block by the
-    // parser
+    // parser, as is the loop body.
     //
     BreakableStatementStack().Push(LocalBlockStack().TopBlock());
     ContinuableStatementStack().Push(LocalBlockStack().TopBlock());
 
-    AstStatement* enclosed_statement = do_statement -> statement;
+    AstBlock* enclosed_statement = do_statement -> statement;
     enclosed_statement -> is_reachable = do_statement -> is_reachable;
 
-    ProcessStatement(enclosed_statement);
+    ProcessBlock(enclosed_statement);
 
     ProcessExpression(do_statement -> expression);
 
@@ -898,9 +898,10 @@ void Semantic::ProcessContinueStatement(Ast* stmt)
 
     //
     // If this is a valid continue statement, it is associated with a loop
-    // statement. Since the loop can be continued, its enclosed statement
-    // "can complete normally". However, if the continue occurs in a try or
-    // catch block that completes abruptly, the continue is discarded.
+    // statement. The parser created a block, if necessary, so that the loop
+    // body is always a block, and we mark it as "can complete normally".
+    // However, if the continue occurs in a try or catch block with a
+    // corresponding abrupt finally clause, the continue is discarded.
     //
     if (loop_statement)
     {
@@ -909,13 +910,13 @@ void Semantic::ProcessContinueStatement(Ast* stmt)
         AstWhileStatement* while_statement =
             loop_statement -> WhileStatementCast();
 
-        AstStatement* enclosed_statement = (do_statement
-                                            ? do_statement -> statement
-                                            : for_statement
-                                            ? for_statement -> statement
-                                            : while_statement
-                                            ? while_statement -> statement
-                                            : (AstStatement*) NULL);
+        AstBlock* enclosed_statement = (do_statement
+                                        ? do_statement -> statement
+                                        : for_statement
+                                        ? for_statement -> statement
+                                        : while_statement
+                                        ? while_statement -> statement
+                                        : (AstBlock*) NULL);
         if (enclosed_statement)
         {
             if (AbruptFinallyStack().Top() <
@@ -1197,7 +1198,6 @@ void Semantic::ProcessTryStatement(Ast* stmt)
     AstBlock* enclosing_block = LocalBlockStack().TopBlock();
     int max_variable_index =
         enclosing_block -> block_symbol -> max_variable_index;
-    bool continue_in_finally = false;
 
     if (try_statement -> finally_clause_opt)
     {
@@ -1243,13 +1243,6 @@ void Semantic::ProcessTryStatement(Ast* stmt)
             TryExceptionTableStack().Push(new SymbolSet());
             AbruptFinallyStack().Push(block_body -> nesting_level);
         }
-        //
-        // If the try statement can now complete normally, then it is the
-        // only statement in a do-while block, and the finally block contained
-        // a continue statement. Remember this for later, since the do-while
-        // loop depends on knowing if its statement completed normally.
-        //
-        continue_in_finally = try_statement -> can_complete_normally;
     }
 
     //
@@ -1529,8 +1522,7 @@ void Semantic::ProcessTryStatement(Ast* stmt)
     if (try_statement -> finally_clause_opt &&
         ! try_statement -> finally_clause_opt -> block -> can_complete_normally)
     {
-        if (! continue_in_finally)
-            try_statement -> can_complete_normally = false;
+        try_statement -> can_complete_normally = false;
         delete TryExceptionTableStack().Top();
         TryExceptionTableStack().Pop();
         AbruptFinallyStack().Pop();

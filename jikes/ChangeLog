@@ -1,3 +1,21 @@
+2003-10-06  Eric Blake  <ebb9@byu.net>
+
+	* src/ast.h (AstWhileStatement, AstDoStatement, AstForStatement):
+	Change loop bodies to always be blocks (resolves bug 3587).
+	* src/ast.cpp: Use updates.
+	* src/body.cpp (ProcessWhileStatement, ProcessDoStatement),
+	(ProcessForStatement, ProcessContinueStatement): Ditto.
+	(ProcessTryStatement): Undo old hack for try statements fixed by
+	this update.
+	* src/bytecode.cpp (EmitStatement): Use updates.
+	* src/bytecode.h (Label::~Label): Add, to prevent regressions.
+	* src/definite.cpp: Use updates.
+	* src/java.g (MakeBlock): New function, use to implement AST
+	updates.
+	* src/javaact.cpp: Regenerate.
+	* src/javaact.h: Ditto.
+	* src/parser.h: Use updates.
+
 2003-10-03  Eric Blake  <ebb9@byu.net>
 
 	* src/body.cpp: Formatting.

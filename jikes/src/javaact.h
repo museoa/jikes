@@ -23,6 +23,7 @@ void Parser::InitRuleAction()
     AstArguments* MakeArguments(int tokennum);
     void MakeLocalVariable(AstModifiers* modifiers, AstType* type,
                            AstListNode* variables);
+    AstBlock* MakeBlock(int tokennum);
     AstStatement* MakeSwitchBlockStatement(AstListNode* labels,
                                            AstListNode* statements = NULL);
     void MakeMethodInvocation(int tokennum);

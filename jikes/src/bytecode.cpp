@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -952,7 +951,7 @@ bool ByteCode::EmitStatement(AstStatement* statement)
                                            method_stack -> TopBreakLabel(),
                                            wp -> statement);
                 }
-                EmitStatement(wp -> statement);
+                EmitBlockStatement(wp -> statement);
                 assert(stack_depth == 0);
                 return abrupt;
             }
@@ -969,7 +968,7 @@ bool ByteCode::EmitStatement(AstStatement* statement)
             Label begin_label;
             DefineLabel(begin_label);
             u2 begin_pc = code_attribute -> CodeLength();
-            abrupt |= EmitStatement(wp -> statement);
+            abrupt |= EmitBlockStatement(wp -> statement);
             bool empty = (begin_pc == code_attribute -> CodeLength());
             DefineLabel(continue_label);
             assert(stack_depth == 0);
@@ -993,7 +992,7 @@ bool ByteCode::EmitStatement(AstStatement* statement)
             AstDoStatement* sp = statement -> DoStatementCast();
             Label begin_label;
             DefineLabel(begin_label);
-            bool abrupt = EmitStatement(sp -> statement);
+            bool abrupt = EmitBlockStatement(sp -> statement);
             if (IsLabelUsed(method_stack -> TopContinueLabel()))
             {
                 DefineLabel(method_stack -> TopContinueLabel());
@@ -1052,7 +1051,7 @@ bool ByteCode::EmitStatement(AstStatement* statement)
                                                for_statement -> statement);
                     }
                 }
-                EmitStatement(for_statement -> statement);
+                EmitBlockStatement(for_statement -> statement);
                 assert(stack_depth == 0);
                 return abrupt;
             }
@@ -1069,7 +1068,7 @@ bool ByteCode::EmitStatement(AstStatement* statement)
                 abrupt = true;
             DefineLabel(begin_label);
             u2 begin_pc = code_attribute -> CodeLength();
-            abrupt |= EmitStatement(for_statement -> statement);
+            abrupt |= EmitBlockStatement(for_statement -> statement);
             bool empty = (begin_pc == code_attribute -> CodeLength());
             DefineLabel(continue_label);
             for (unsigned j = 0; j < for_statement -> NumForUpdateStatements(); j++)

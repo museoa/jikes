@@ -2,8 +2,7 @@
 //
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -51,6 +50,12 @@ public:
     Tuple<LabelUse> uses;
 
     Label() : defined(false), definition(0) {}
+
+    //
+    // All used labels should have been completed and reset, otherwise a goto
+    // will cause an infinite loop because it was emitted with an offset of 0.
+    //
+    ~Label() { assert(! uses.Length()); }
 
     void Reset()
     {

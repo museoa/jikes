@@ -587,6 +587,7 @@ void Parser::InitRuleAction()
     AstArguments* MakeArguments(int tokennum);
     void MakeLocalVariable(AstModifiers* modifiers, AstType* type,
                            AstListNode* variables);
+    AstBlock* MakeBlock(int tokennum);
     AstStatement* MakeSwitchBlockStatement(AstListNode* labels,
                                            AstListNode* statements = NULL);
     void MakeMethodInvocation(int tokennum);
@@ -2397,36 +2398,26 @@ void Parser::MakeIfThenElseStatement()
     // We wrap the true and false statements in a block, to make the semantic
     // pass easier.
     //
-    AstBlock* true_block = Sym(5) -> BlockCast();
-    if (! true_block)
-    {
-        true_block = ast_pool -> GenBlock();
-        true_block -> AllocateStatements(1); // allocate 1 element
-        true_block -> left_brace_token = Token(5);
-        true_block -> AddStatement(DYNAMIC_CAST<AstStatement*> (Sym(5)));
-        true_block -> right_brace_token = Sym(5) -> RightToken();
-    }
-
-    AstBlock* false_block = NULL;
-    if (Sym(7))
-    {
-        false_block = Sym(7) -> BlockCast();
-        if (! false_block)
-        {
-            false_block = ast_pool -> GenBlock();
-            false_block -> AllocateStatements(1); // allocate 1 element
-            false_block -> left_brace_token = Token(7);
-            false_block -> AddStatement(DYNAMIC_CAST<AstStatement*> (Sym(7)));
-            false_block -> right_brace_token = Sym(7) -> RightToken();
-        }
-    }
-
     AstIfStatement* p = ast_pool -> NewIfStatement();
     p -> if_token = Token(1);
     p -> expression = DYNAMIC_CAST<AstExpression*> (Sym(3));
-    p -> true_statement = true_block;
-    p -> false_statement_opt = false_block;
+    p -> true_statement = MakeBlock(5);
+    p -> false_statement_opt = Sym(7) ? MakeBlock(7) : NULL;
     Sym(1) = p;
+}
+
+AstBlock* Parser::MakeBlock(int tokennum)
+{
+    AstBlock* block = Sym(tokennum) -> BlockCast();
+    if (! block)
+    {
+        block = ast_pool -> GenBlock();
+        block -> AllocateStatements(1); // allocate 1 element
+        block -> left_brace_token = Token(tokennum);
+        block -> AddStatement(DYNAMIC_CAST<AstStatement*> (Sym(tokennum)));
+        block -> right_brace_token = Sym(tokennum) -> RightToken();
+    }
+    return block;
 }
 ./
 
@@ -2608,13 +2599,16 @@ WhileStatement ::= 'while' '(' Expression ')' Statement
 /.$location
 void Parser::MakeWhileStatement()
 {
+    //
+    // We wrap the loop statement in a block, to make the semantic pass easier.
+    //
     AstWhileStatement* p = ast_pool -> NewWhileStatement();
     p -> while_token = Token(1);
     p -> expression = DYNAMIC_CAST<AstExpression*> (Sym(3));
-    p -> statement = DYNAMIC_CAST<AstStatement*> (Sym(5));
+    p -> statement = MakeBlock(5);
 
     //
-    // We wrap the loop in a block, to make the semantic pass easier.
+    // We also wrap the loop in a block, to make the semantic pass easier.
     //
     AstBlock* block = ast_pool -> GenBlock();
     block -> AllocateStatements(1); // allocate 1 element
@@ -2637,15 +2631,18 @@ DoStatement ::= 'do' Statement 'while' '(' Expression ')' ';'
 /.$location
 void Parser::Act$rule_number()
 {
+    //
+    // We wrap the loop statement in a block, to make the semantic pass easier.
+    //
     AstDoStatement* p = ast_pool -> NewDoStatement();
     p -> do_token = Token(1);
-    p -> statement = DYNAMIC_CAST<AstStatement*> (Sym(2));
+    p -> statement = MakeBlock(2);
     p -> while_token = Token(3);
     p -> expression = DYNAMIC_CAST<AstExpression*> (Sym(5));
     p -> semicolon_token = Token(7);
 
     //
-    // We wrap the loop in a block, to make the semantic pass easier.
+    // We also wrap the loop in a block, to make the semantic pass easier.
     //
     AstBlock* block = ast_pool -> GenBlock();
     block -> AllocateStatements(1); // allocate 1 element
@@ -2662,6 +2659,9 @@ ForStatement ::= 'for' '(' ForInitopt ';' Expressionopt ';' ForUpdateopt ')'
 /.$location
 void Parser::MakeForStatement()
 {
+    //
+    // We wrap the loop statement in a block, to make the semantic pass easier.
+    //
     AstForStatement* p = ast_pool -> NewForStatement();
     p -> for_token = Token(1);
     if (Sym(3))
@@ -2691,10 +2691,10 @@ void Parser::MakeForStatement()
         } while (root != tail);
         FreeCircularList(tail);
     }
-    p -> statement = DYNAMIC_CAST<AstStatement*> (Sym(9));
+    p -> statement = MakeBlock(9);
 
     //
-    // We wrap the loop in a block, to make the semantic pass easier. In
+    // We also wrap the loop in a block, to make the semantic pass easier. In
     // particular, this lets us correctly handle "for(int i;;);for(int i;;);".
     //
     AstBlock* block = ast_pool -> NewBlock();

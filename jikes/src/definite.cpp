@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 #include "platform.h"
@@ -988,7 +987,7 @@ void Semantic::DefiniteWhileStatement(Ast* stmt)
     // We have already given a warning if the statement is unreachable
     //
     if (while_statement -> statement -> is_reachable)
-        DefiniteStatement(while_statement -> statement);
+        DefiniteBlock(while_statement -> statement);
     *DefinitelyAssignedVariables() *= DefiniteBlocks() -> TopContinuePair();
     DefiniteLoopBody(starting_set);
     *DefinitelyAssignedVariables() = DefiniteBlocks() -> TopBreakPair() *
@@ -1037,7 +1036,7 @@ void Semantic::DefiniteForStatement(Ast* stmt)
     // We have already given a warning if the statement is unreachable
     //
     if (for_statement -> statement -> is_reachable)
-        DefiniteStatement(for_statement -> statement);
+        DefiniteBlock(for_statement -> statement);
 
     //
     // Compute the set of variables that are definitely assigned after the
@@ -1077,7 +1076,7 @@ void Semantic::DefiniteDoStatement(Ast* stmt)
 
     BitSet starting_set(DefinitelyAssignedVariables() -> du_set);
 
-    DefiniteStatement(do_statement -> statement);
+    DefiniteBlock(do_statement -> statement);
 
     DefinitePair after_stmt(*DefinitelyAssignedVariables());
     *DefinitelyAssignedVariables() *= DefiniteBlocks() -> TopContinuePair();

@@ -2693,7 +2693,7 @@ class AstWhileStatement : public AstStatement
 public:
     LexStream::TokenIndex while_token;
     AstExpression* expression;
-    AstStatement* statement;
+    AstBlock* statement;
 
     AstWhileStatement()
     {
@@ -2730,7 +2730,7 @@ class AstDoStatement : public AstStatement
 {
 public:
     LexStream::TokenIndex do_token;
-    AstStatement* statement;
+    AstBlock* statement;
     LexStream::TokenIndex while_token;
     AstExpression* expression;
     LexStream::TokenIndex semicolon_token;
@@ -2778,7 +2778,7 @@ class AstForStatement : public AstStatement
 public:
     LexStream::TokenIndex for_token;
     AstExpression* end_expression_opt;
-    AstStatement* statement;
+    AstBlock* statement;
 
     AstForStatement(StoragePool* p)
         : pool(p),
