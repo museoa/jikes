@@ -142,10 +142,25 @@ public:
         return Serializable_type;
     }
 
+    void InitObjectInfo();
     inline TypeSymbol *Object()
     {
-        return (Object_type ? Object_type : Object_type = GetType(system_package, StringConstant::US_Object));
+        if (! Object_type)
+        {
+            Object_type = GetType(system_package, StringConstant::US_Object);
+            InitObjectInfo();
+        }
+
+        return Object_type;
     }
+
+    MethodSymbol *Object_cloneMethod()
+    {
+        if (! Object_clone_method)
+            (void) Object();
+        return Object_clone_method;
+    }
+
 
     inline TypeSymbol *Cloneable()
     {
@@ -541,7 +556,9 @@ private:
 
     LiteralValue null_value;
 
-    MethodSymbol *Class_forName_method,
+    MethodSymbol *Object_clone_method,
+
+                 *Class_forName_method,
 
                  *Throwable_getMessage_method,
 

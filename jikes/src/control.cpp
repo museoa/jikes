@@ -51,6 +51,8 @@ Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
                                                                  NoClassDefFoundError_type(NULL),
                                                                  StringBuffer_type(NULL),
 
+                                                                 Object_clone_method(NULL),
+
                                                                  Class_forName_method(NULL),
 
                                                                  Throwable_getMessage_method(NULL),

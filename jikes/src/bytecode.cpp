@@ -2476,13 +2476,11 @@ TypeSymbol *ByteCode::MethodTypeResolution(AstExpression *method_name, MethodSym
                                    : (simple_name -> resolution_opt ? simple_name -> resolution_opt -> Type() : owner_type));
 
     //
-    // If the base_type is an interface and the real owner of the method is Object
-    // then the type used in the methodref should be Object. Otherwise, the base_type
+    // If the real owner of the method is Object or an array type,
+    // then Object is used in the methodref. Otherwise, the base_type
     // is used.
     //
-    return ((base_type -> ACC_INTERFACE() && owner_type == this_control.Object())
-                                           ? owner_type
-                                           : base_type);
+    return ((owner_type == this_control.Object() || owner_type -> IsArray()) ? this_control.Object() : base_type);
 }
 
 

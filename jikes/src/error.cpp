@@ -47,7 +47,12 @@ void SemanticError::Report(SemanticErrorKind msg_code,
                            wchar_t *insert8,
                            wchar_t *insert9)
 {
-    if (clone_count > 0) // do not report errors detected while processing a clone !!!
+    //
+    // Do not report errors detected while processing a clone !!!
+    // If we have a warning and the nowarn option is set, ignore it.
+    //
+    if (clone_count > 0 ||
+        (control.option.nowarn && (warning[msg_code] == 1 || (warning[msg_code] == 2 && (! control.option.zero_defect)))))
         return;
 
     int i = error.NextIndex();

@@ -3344,28 +3344,6 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
 //                exception_set -> AddElement(control.UnsatisfiedLinkError());
         }
 
-        for (int i = 0; i < method_call -> NumArguments(); i++)
-        {
-            AstExpression *expr = method_call -> Argument(i);
-            if (expr -> Type() != method -> FormalParameter(i) -> Type())
-                method_call -> Argument(i) = ConvertToType(expr, method -> FormalParameter(i) -> Type());
-        }
-
-        //
-        // If the method was resolved, process the parameters in the resolution node.
-        //
-        AstMethodInvocation *new_method_call = (AstMethodInvocation *) method_call -> resolution_opt;
-        if (new_method_call)
-        {
-            MethodSymbol *new_method = (MethodSymbol *) new_method_call -> symbol;
-            for (int i = 0; i < new_method_call -> NumArguments(); i++)
-            {
-                AstExpression *expr = new_method_call -> Argument(i);
-                if (expr -> Type() != new_method -> FormalParameter(i) -> Type())
-                    new_method_call -> Argument(i) = ConvertToType(expr, new_method -> FormalParameter(i) -> Type());
-            }
-        }
-
         //
         // Recall that an instance initializer in the body of an anonymous type can
         // throw any exception. The test below allows us to skip such blocks.
@@ -3385,6 +3363,21 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                                    exception -> ExternalName());
                 }
             }
+        }
+
+        //
+        // If the method was resolved to another method, process the resolved method.
+        //
+        method_call = (method_call -> resolution_opt ? (AstMethodInvocation *) method_call -> resolution_opt : method_call);
+        method = (MethodSymbol *) method_call -> symbol;
+
+        assert(method_call -> NumArguments() == method -> NumFormalParameters());
+
+        for (int i = 0; i < method_call -> NumArguments(); i++)
+        {
+            AstExpression *expr = method_call -> Argument(i);
+            if (expr -> Type() != method -> FormalParameter(i) -> Type())
+                method_call -> Argument(i) = ConvertToType(expr, method -> FormalParameter(i) -> Type());
         }
     }
 
