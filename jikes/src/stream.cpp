@@ -282,7 +282,7 @@ Stream::DecodeNextCharacter() {
 
 # if JIKES_ICONV_NEEDS_BYTE_SWAP
     char tmp;
-    char *targ = (char *)chp;
+    char *targ = (char *)&next;
 #  if SIZEOF_WCHAR_T == 2
     tmp = targ[0];
     targ[0]=targ[1];

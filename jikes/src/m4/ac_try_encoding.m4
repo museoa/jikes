@@ -45,7 +45,7 @@ int main (int argc, char** argv) {
   if (d == (iconv_t) -1) {
     d = iconv_open( "$1" , "ISO8859-1");
     if (d == (iconv_t) -1) {
-      return -1;
+      return 1;
     }
   }
   size_t r = iconv( d,
@@ -54,7 +54,7 @@ int main (int argc, char** argv) {
 #endif
 	 &src, &srcspace , &dst_ptr, &dstspace);
   if (r == (size_t) -1)
-    return -2;
+    return 2;
   wchar_t * test = (wchar_t *) dst;
 #if $byte_swap
   char tmp;
@@ -72,14 +72,14 @@ int main (int argc, char** argv) {
     targ[1]=targ[2];
     targ[2]=tmp;
 # else
-    return -3;
+    return 3;
 # endif //sizeof(wchar_t)
   }
 #endif //byte_swap
   if (test[0] == 'a' && test[1] == 'b' && test[2] == 'c')
     return 0;
   else
-    return -4;
+    return 4;
     }],
   [ is_good=$1
     AC_MSG_RESULT(works)],
