@@ -25,7 +25,6 @@
 -->
             <li><a href="/developerworks/bugs/?group_id=10&set=custom&_assigned_to=0&_status=1&_category=100&_bug_group=100&SUBMIT=Browse">View open bugs</a><!-- this is a hack to work around the next/prev 50 bug -->
             <li><a href="/developerworks/bugs/?func=addbug&group_id=10">Report Bugs Here</a>
-            <li>...
           </ul>
           <hr>
           For Developers
@@ -37,11 +36,11 @@
 	      <li><a href="patchguide.shtml"><small>Patch Guidelines</small></a>
             </ul>
 	    <li><a href="todo.shtml">Todo list</a>
-            <li>...
           </ul>
 	      <hr>
           General Interest
           <ul>
+	    <li><a href="lists.shtml">Mailing Lists</a>
             <li><a href="people.shtml">People</a>
 	    <li><a href="leadership.shtml">Leadership</a>
 	    <li><a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf">Old discussion database<br>at IBM Research</a> <small>includes<br>the "Queries to Sun".</small>
@@ -49,8 +48,8 @@
           <hr>
           Related Links
           <ul>
-            <li><a href="/developerworks/projects/jacks/">Jacks Project</a>
-            <li><a href="http://www.ergnosis.com/java-spec-report/">Java Spec Report</a>
+<!-- wait 'till Mo has this ready            <li><a href="/developerworks/projects/jacks/">Jacks Project</a>
+-->            <li><a href="http://www.ergnosis.com/java-spec-report/">Java Spec Report</a>
 	    <li><a href="http://ibm.com/java/jdk/">The Best JVMs on the net</a>
 	    <li><a href="http://www.java.sun.com/docs/books/jls">Language Spec.</a>
 	    <li><a href="http://www.java.sun.com/docs/books/vmspec">Virtual Machine Spec.</a>
@@ -89,7 +88,7 @@ the Linux and Java communities:
         <LI><em>Strictly Java compatible</em>. Jikes adheres to both The Java
             Language Specification and The Java Virtual Machine Specification as
             tightly as possible, and does not support subsets, supersets, or
-            other variations of the language. The <A HREF="faq.shtml">FAQ</A> describes
+            other variations of the language. The <!--A HREF="faq.shtml"-->FAQ<!--/A--> describes
             some of the side effects of this strict language conformance.</LI>
         <LI><em>High performance</em>. Jikes is a high-performance compiler, making
             it ideal for use with larger projects.</LI>
@@ -97,7 +96,7 @@ the Linux and Java communities:
             your code that provides two very useful features: Incremental builds
             and makefile generation.</LI>
     </UL></p>
-<p>Abridged from <a href="faq.shtml">a FAQ entry</A> which was adapted from
+<p>Abridged from <!--a href="faq.shtml"-->a FAQ entry<!--/A--> which was adapted from
 some material by Lou Grinzo for an article he wrote, the link I have for which is no longer valid.</p>
 
 <p>It's worth pointing out that Jikes is not, and is not intended to be, a complete
