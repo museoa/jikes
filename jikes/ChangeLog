@@ -1,3 +1,17 @@
+2001-02-27  Mo DeJong  <mdejong@redhat.com>
+
+	* HACKING:
+	* INSTALL:
+	* README:
+	* jikes.spec: Update URLs and
+	instructions for 1.13 release.
+	* doc/Makefile.am: Removed
+	file in doc dir.
+	* doc/contrib.html:
+	* doc/jikes.gif:
+	* doc/jikes.html:
+	* doc/news.html: Removed.
+
 2001-02-26  Mo DeJong  <mdejong@redhat.com>
 
 	* src/jikesapi.cpp (DefaultFileReader):
