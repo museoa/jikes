@@ -1,5 +1,33 @@
 2001-09-07  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/decl.cpp (ProcessMembers, ProcessFieldDeclaration)
+	(ProcessMethodDeclaration, ProcessStaticInitializers): Improve the
+	error handling of inner classes and static members - patch 86,
+	from bugs 247, 343, 348, 349.
+	* src/error.h:
+	* src/error.cpp (PrintSTATIC_FIELD_IN_INNER_CLASS):
+	Split into:
+	(PrintSTATIC_FIELD_IN_INNER_CLASS_NOT_FINAL)
+	(PrintSTATIC_FIELD_IN_INNER_CLASS_NOT_CONSTANT):
+	Report error messages on static fields in inner types located in
+	static context (bug 348).
+	(PrintSTATIC_METHOD_IN_INNER_CLASS, PrintSTATIC_TYPE_IN_INNER_CLASS)
+	(PrintSTATIC_INITIALIZER_IN_INNER_CLASS):
+	Improved the error message wording to be consistent.
+	* src/symbol.cpp:
+	* src/symbol.h (TypeSymbol): Deleted IsTopLevel(), since it was
+	redundant with IsInner().  Fixed IsInner() to correctly detect
+	local and anonymous classes in static contexts.
+	* src/body.cpp (ProcessClassDeclaration): 
+	Local classes should never have the ACC_STATIC attribute set when
+	emitting bytecode.
+	(ProcessExecutableBodies): Remove cause of assertion failure when
+	called after syntax errors in anonymous class (bug 343).
+	* src/init.cpp (ProcessVariableInitializer): Fix error detection
+	of non-constant static fields in inner classes (bug 247).
+
+2001-09-07  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/error.h:
 	* src/error.cpp:
 	Added PrintSTRICTFP_NATIVE_METHOD().

@@ -1412,7 +1412,7 @@ Utf8LiteralValue *TypeSymbol::FindOrInsertClassLiteralName(Control &control)
 
 VariableSymbol *TypeSymbol::FindOrInsertClassLiteral(TypeSymbol *type)
 {
-    assert(IsTopLevel() && (! type -> Primitive()));
+    assert((! IsInner()) && (! type -> Primitive()));
 
     Semantic *sem = semantic_environment -> sem;
     Control &control = sem -> control;

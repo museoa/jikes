@@ -351,7 +351,8 @@ class SemanticError
         STATIC_NOT_INNER_CLASS,
         TYPE_NOT_INNER_CLASS,
         SUPER_TYPE_NOT_INNER_CLASS,
-        STATIC_FIELD_IN_INNER_CLASS,
+        STATIC_FIELD_IN_INNER_CLASS_NOT_FINAL,
+        STATIC_FIELD_IN_INNER_CLASS_NOT_CONSTANT,
         STATIC_METHOD_IN_INNER_CLASS,
         STATIC_TYPE_IN_INNER_CLASS,
         STATIC_INITIALIZER_IN_INNER_CLASS,
@@ -678,7 +679,8 @@ private:
     static wchar_t *PrintSTATIC_NOT_INNER_CLASS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintTYPE_NOT_INNER_CLASS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintSUPER_TYPE_NOT_INNER_CLASS(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintSTATIC_FIELD_IN_INNER_CLASS(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintSTATIC_FIELD_IN_INNER_CLASS_NOT_FINAL(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintSTATIC_FIELD_IN_INNER_CLASS_NOT_CONSTANT(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintSTATIC_METHOD_IN_INNER_CLASS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintSTATIC_TYPE_IN_INNER_CLASS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintSTATIC_INITIALIZER_IN_INNER_CLASS(ErrorInfo &, LexStream *, Control &);

@@ -45,22 +45,23 @@ void Semantic::ProcessVariableInitializer(AstVariableDeclarator *variable_declar
     {
         AstExpression *init = (AstExpression *) variable_declarator -> variable_initializer_opt;
         ProcessExpressionOrStringConstant(init);
+        TypeSymbol *field_type = symbol -> Type();
 
-        if (symbol -> Type() != init -> Type() && init -> Type() != control.no_type)
+        if (field_type != init -> Type() && init -> Type() != control.no_type)
         {
-            if (CanAssignmentConvert(symbol -> Type(), init))
+            if (CanAssignmentConvert(field_type, init))
             {
-                init = ConvertToType(init, symbol -> Type());
+                init = ConvertToType(init, field_type);
                 variable_declarator -> variable_initializer_opt = init;
             }
             else if (init -> IsConstant() && control.IsSimpleIntegerValueType(init -> Type())
-                                          && control.IsSimpleIntegerValueType(symbol -> Type()))
+                                          && control.IsSimpleIntegerValueType(field_type))
             {
-                if (symbol -> Type() == control.byte_type)
+                if (field_type == control.byte_type)
                      ReportSemError(SemanticError::INVALID_BYTE_VALUE,
                                     init -> LeftToken(),
                                     init -> RightToken());
-                else if (symbol -> Type() == control.char_type)
+                else if (field_type == control.char_type)
                      ReportSemError(SemanticError::INVALID_CHARACTER_VALUE,
                                     init -> LeftToken(),
                                     init -> RightToken());
@@ -73,15 +74,30 @@ void Semantic::ProcessVariableInitializer(AstVariableDeclarator *variable_declar
                 ReportSemError(SemanticError::INCOMPATIBLE_TYPE_FOR_ASSIGNMENT,
                                variable_declarator -> LeftToken(),
                                init -> RightToken(),
-                               symbol -> Type() -> ContainingPackage() -> PackageName(),
-                               symbol -> Type() -> ExternalName(),
+                               field_type -> ContainingPackage() -> PackageName(),
+                               field_type -> ExternalName(),
                                init -> Type() -> ContainingPackage() -> PackageName(),
                                init -> Type() -> ExternalName());
             }
         }
-
-        if (symbol -> ACC_FINAL() && init -> IsConstant())
-            symbol -> initial_value = init -> value;
+    
+        if (symbol -> ACC_FINAL() &&
+            (field_type -> Primitive() || field_type == control.String()))
+        {
+            if (init -> IsConstant())
+            {
+                symbol -> initial_value = init -> value;
+            }
+            else if (symbol -> ACC_STATIC() && ThisType() -> IsInner())
+            {
+                ReportSemError(SemanticError::STATIC_FIELD_IN_INNER_CLASS_NOT_CONSTANT,
+                               variable_declarator -> LeftToken(),
+                               variable_declarator -> RightToken(),
+                               lex_stream -> NameString(variable_declarator -> variable_declarator_name -> identifier_token),
+                               ThisType() -> Name(),
+                               ThisType() -> FileLoc());
+            }
+        }
     }
 
     return;

@@ -1550,7 +1550,7 @@ void Semantic::ProcessMembers(SemanticEnvironment *environment, AstClassBody *cl
     delete this_type -> innertypes_closure; // save some space !!!
     this_type -> innertypes_closure = NULL;
 
-    if (! this_type -> IsTopLevel())
+    if (this_type -> IsInner())
     {
         for (int i = 0; i < class_body -> NumStaticInitializers(); i++)
         {
@@ -1572,23 +1572,17 @@ void Semantic::ProcessMembers(SemanticEnvironment *environment, AstClassBody *cl
 
             ProcessMembers(interface_declaration);
 
-            if (! this_type -> IsTopLevel())
+            if (this_type -> IsInner() && interface_declaration -> semantic_environment)
             {
                 //
-                // TODO: 1.1 assumption
+                // Nested interfaces are implicitly static
                 //
-                // As every field in an interface is static, we presume that all interfaces
-                // should be treated as static entities
-                //
-                if (interface_declaration -> semantic_environment)
-                {
-                    ReportSemError(SemanticError::STATIC_TYPE_IN_INNER_CLASS,
-                                   interface_declaration -> identifier_token,
-                                   interface_declaration -> identifier_token,
-                                   lex_stream -> NameString(interface_declaration -> identifier_token),
-                                   this_type -> Name(),
-                                   this_type -> FileLoc());
-                }
+                ReportSemError(SemanticError::STATIC_TYPE_IN_INNER_CLASS,
+                               interface_declaration -> identifier_token,
+                               interface_declaration -> identifier_token,
+                               lex_stream -> NameString(interface_declaration -> identifier_token),
+                               this_type -> Name(),
+                               this_type -> FileLoc());
             }
         }
         else
@@ -1597,17 +1591,15 @@ void Semantic::ProcessMembers(SemanticEnvironment *environment, AstClassBody *cl
 
             ProcessMembers(class_declaration -> semantic_environment, class_declaration -> class_body);
 
-            if (! this_type -> IsTopLevel())
+            if (this_type -> IsInner() && class_declaration -> semantic_environment &&
+                class_declaration -> semantic_environment -> Type() -> ACC_STATIC())
             {
-                if (class_declaration -> semantic_environment && class_declaration -> semantic_environment -> Type() -> ACC_STATIC())
-                {
-                    ReportSemError(SemanticError::STATIC_TYPE_IN_INNER_CLASS,
-                                   class_declaration -> identifier_token,
-                                   class_declaration -> identifier_token,
-                                   lex_stream -> NameString(class_declaration -> identifier_token),
-                                   this_type -> Name(),
-                                   this_type -> FileLoc());
-                }
+                ReportSemError(SemanticError::STATIC_TYPE_IN_INNER_CLASS,
+                               class_declaration -> identifier_token,
+                               class_declaration -> identifier_token,
+                               lex_stream -> NameString(class_declaration -> identifier_token),
+                               this_type -> Name(),
+                               this_type -> FileLoc());
             }
         }
     }
@@ -2637,23 +2629,38 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration *field_declaration)
                                            : ProcessFieldModifiers(field_declaration));
 
     //
-    // New feature in java 1.2 that is undocumented in the 1.1 document.
-    // A field may be declared static iff it is final and not blank-final...
+    // JLS2 8.1.2 - Inner classes may not have static fields unless they are
+    // final and initialized by a constant.  Hence, the type of the static
+    // field may only be a primitive or String.  Here, we check that the
+    // entire declaration is final, then that each variableDeclarator is
+    // of the right type and is initialized.  Later, when processing the
+    // initializer, we check that it is indeed a compile-time constant
+    // (see init.cpp, Semantic::ProcessVariableInitializer)
     //
-    if (access_flags.ACC_STATIC() && (! access_flags.ACC_FINAL()) && this_type -> IsInner())
+    bool must_be_constant = false;
+    if (this_type -> IsInner() && access_flags.ACC_STATIC())
     {
-        AstModifier *modifier = NULL;
-        for (int i = 0; i < field_declaration -> NumVariableModifiers(); i++)
+        if (access_flags.ACC_FINAL())
         {
-            if (field_declaration -> VariableModifier(i) -> kind == Ast::STATIC)
-                modifier = field_declaration -> VariableModifier(i);
+            must_be_constant = true;
         }
-
-        assert(modifier);
-
-        ReportSemError(SemanticError::STATIC_FIELD_IN_INNER_CLASS,
-                       modifier -> modifier_kind_token,
-                       modifier -> modifier_kind_token);
+        else
+        {
+            AstModifier *modifier = NULL;
+            for (int i = 0; i < field_declaration -> NumVariableModifiers(); i++)
+            {
+                if (field_declaration -> VariableModifier(i) -> kind == Ast::STATIC)
+                    modifier = field_declaration -> VariableModifier(i);
+            }
+            
+            assert(modifier);
+            
+            ReportSemError(SemanticError::STATIC_FIELD_IN_INNER_CLASS_NOT_FINAL,
+                           modifier -> modifier_kind_token,
+                           modifier -> modifier_kind_token,
+                           this_type -> Name(),
+                           this_type -> FileLoc());
+        }
     }
 
     //
@@ -2690,6 +2697,20 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration *field_declaration)
             variable -> declarator = variable_declarator;
             variable -> MarkIncomplete(); // the declaration of a field is not complete until its initializer
                                           // (if any) has been processed.
+            if (must_be_constant)
+            {
+                if (num_dimensions != 0 || (! variable_declarator -> variable_initializer_opt) ||
+                    (! field_type -> Primitive() && field_type != control.String()))
+                {
+                    ReportSemError(SemanticError::STATIC_FIELD_IN_INNER_CLASS_NOT_CONSTANT,
+                                   name -> identifier_token,
+                                   name -> identifier_token,
+                                   name_symbol -> Name(),
+                                   this_type -> Name(),
+                                   this_type -> FileLoc());
+                }
+            }
+
             variable_declarator -> symbol = variable;
 
             if (deprecated_declarations)
@@ -3678,7 +3699,10 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
 
         ReportSemError(SemanticError::STATIC_METHOD_IN_INNER_CLASS,
                        modifier -> modifier_kind_token,
-                       modifier -> modifier_kind_token);
+                       modifier -> modifier_kind_token,
+                       lex_stream -> NameString(method_declaration -> method_declarator -> identifier_token),
+                       this_type -> Name(),
+                       this_type -> FileLoc());
     }
 
     //
@@ -4402,15 +4426,21 @@ void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
 
         //
         // Check that each static final variables has been initialized by now.
-        // If not, issue an error and assume it is.
+        // If not, issue an error and assume it is.  Notice that for inner
+        // classes, we have already reported that a non-constant static
+        // field is illegal, so we only need an error here for top-level
+        // and static classes.
         //
         for (int l = 0; l < finals.Length(); l++)
         {
             if (finals[l] -> ACC_STATIC() && (! finals[l] -> IsDefinitelyAssigned()))
             {
-                ReportSemError(SemanticError::UNINITIALIZED_STATIC_FINAL_VARIABLE,
-                               finals[l] -> declarator -> LeftToken(),
-                               finals[l] -> declarator -> RightToken());
+                if (! this_type -> IsInner())
+                {
+                    ReportSemError(SemanticError::UNINITIALIZED_STATIC_FINAL_VARIABLE,
+                                   finals[l] -> declarator -> LeftToken(),
+                                   finals[l] -> declarator -> RightToken());
+                }
                 finals[l] -> MarkDefinitelyAssigned();
             }
         }

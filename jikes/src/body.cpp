@@ -1507,6 +1507,10 @@ void Semantic::ProcessClassDeclaration(Ast *stmt)
     inner_type -> SetLocation();
     inner_type -> SetSignature(control);
 
+    //
+    // Local classes are never static; however, for error checking, it is
+    // easier to temporarily mark it as such.  We reset it below...
+    //
     if (StaticRegion())
          inner_type -> SetACC_STATIC();
     else inner_type -> InsertThis(0);
@@ -1522,6 +1526,11 @@ void Semantic::ProcessClassDeclaration(Ast *stmt)
     ProcessExecutableBodies(class_declaration -> semantic_environment, class_body);
 
     UpdateLocalConstructors(inner_type);
+
+    //
+    // Local classes are not static. See above.
+    //
+    inner_type -> ResetACC_STATIC();
 
     return;
 }
@@ -2077,6 +2086,9 @@ void Semantic::ProcessConstructorBody(AstConstructorDeclaration *constructor_dec
 
 void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment, AstClassBody *class_body)
 {
+    if (compilation_unit -> kind == Ast::BAD_COMPILATION)
+        return; // errors were detected, exit now
+
     state_stack.Push(environment);
     TypeSymbol *this_type = ThisType();
 

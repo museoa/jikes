@@ -760,7 +760,8 @@ void SemanticError::StaticInitializer()
     print_message[STATIC_NOT_INNER_CLASS] = PrintSTATIC_NOT_INNER_CLASS;
     print_message[TYPE_NOT_INNER_CLASS] = PrintTYPE_NOT_INNER_CLASS;
     print_message[SUPER_TYPE_NOT_INNER_CLASS] = PrintSUPER_TYPE_NOT_INNER_CLASS;
-    print_message[STATIC_FIELD_IN_INNER_CLASS] = PrintSTATIC_FIELD_IN_INNER_CLASS;
+    print_message[STATIC_FIELD_IN_INNER_CLASS_NOT_FINAL] = PrintSTATIC_FIELD_IN_INNER_CLASS_NOT_FINAL;
+    print_message[STATIC_FIELD_IN_INNER_CLASS_NOT_CONSTANT] = PrintSTATIC_FIELD_IN_INNER_CLASS_NOT_CONSTANT;
     print_message[STATIC_METHOD_IN_INNER_CLASS] = PrintSTATIC_METHOD_IN_INNER_CLASS;
     print_message[STATIC_TYPE_IN_INNER_CLASS] = PrintSTATIC_TYPE_IN_INNER_CLASS;
     print_message[STATIC_INITIALIZER_IN_INNER_CLASS] = PrintSTATIC_INITIALIZER_IN_INNER_CLASS;
@@ -5044,11 +5045,31 @@ wchar_t *SemanticError::PrintSUPER_TYPE_NOT_INNER_CLASS(ErrorInfo &err, LexStrea
 }
 
 
-wchar_t *SemanticError::PrintSTATIC_FIELD_IN_INNER_CLASS(ErrorInfo &err, LexStream *lex_stream, Control &control)
+wchar_t *SemanticError::PrintSTATIC_FIELD_IN_INNER_CLASS_NOT_FINAL(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
     ErrorString s;
     
-    s << "An inner class may not contain a static field that is not final.";
+    s << "This static variable declaration is invalid, because it is not final, but is enclosed in an inner class, \""
+            << err.insert1
+            << "\", located at "
+            << err.insert2
+            << '.';
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintSTATIC_FIELD_IN_INNER_CLASS_NOT_CONSTANT(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    ErrorString s;
+    
+    s << "The static final field \""
+            << err.insert1
+            << "\" is invalid, because it does not represent a compile-time constant, but is enclosed in an inner class, \""
+            << err.insert2
+            << "\", located at "
+            << err.insert3
+            << '.';
 
     return s.Array();
 }
@@ -5058,7 +5079,13 @@ wchar_t *SemanticError::PrintSTATIC_METHOD_IN_INNER_CLASS(ErrorInfo &err, LexStr
 {
     ErrorString s;
     
-    s << "Inner class may not contain static method.";
+    s << "The static method \""
+            << err.insert1
+            << "\" is invalid, because it is enclosed in an inner class, \""
+            << err.insert2
+            << "\", located at "
+            << err.insert3
+            << '.';
 
     return s.Array();
 }
@@ -5070,7 +5097,7 @@ wchar_t *SemanticError::PrintSTATIC_TYPE_IN_INNER_CLASS(ErrorInfo &err, LexStrea
     
     s << "The static type \""
             << err.insert1
-            << "\" is enclosed in an inner class, \""
+            << "\" is invalid, because it is enclosed in an inner class, \""
             << err.insert2
             << "\", located at "
             << err.insert3
@@ -5084,7 +5111,7 @@ wchar_t *SemanticError::PrintSTATIC_INITIALIZER_IN_INNER_CLASS(ErrorInfo &err, L
 {
     ErrorString s;
     
-    s << "This static initializer is enclosed in an inner class, \""
+    s << "This static initializer is invalid, because it is enclosed in an inner class, \""
             << err.insert1
             << "\", located at "
             << err.insert2

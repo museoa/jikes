@@ -930,9 +930,7 @@ public:
 
     bool IsNested() { return outermost_type != this; }
 
-    bool IsTopLevel() { return (! IsNested()) || this -> ACC_STATIC(); }
-
-    bool IsInner() { return (! IsTopLevel()); }
+    bool IsInner() { return IsLocal() || Anonymous() || (IsNested() && (! ACC_STATIC())); }
 
     bool IsLocal()
     {
