@@ -5115,44 +5115,21 @@ LiteralValue *Semantic::CastPrimitiveValue(TypeSymbol *target_type, AstExpressio
         {
             if (source_type == control.double_type)
             {
-                //
-                // TODO: Check correctness !!!
-                //
                 DoubleLiteralValue *literal = (DoubleLiteralValue *) expr -> value;
-                // sprintf(output_string, "%E", literal -> value);
-                literal -> value.String(output_string);
-                len = strlen(output_string);
-                literal_value = control.Utf8_pool.FindOrInsert(output_string, len);
+                DoubleToString ieee_double(literal -> value);
+                literal_value = control.Utf8_pool.FindOrInsert(ieee_double.String(), ieee_double.Length());
             }
             else if (source_type == control.float_type)
             {
-                //
-                // TODO: Check correctness !!!
-                //
                 FloatLiteralValue *literal = (FloatLiteralValue *) expr -> value;
-                // sprintf(output_string, "%E", literal -> value);
-                literal -> value.String(output_string);
-                len = strlen(output_string);
-                //
-                // javac does not add the L suffix
-                //
-                // output_string[len++] = U_F;
-                //
-                output_string[len] = U_NULL;
-                literal_value = control.Utf8_pool.FindOrInsert(output_string, len);
+                FloatToString ieee_float(literal -> value);
+                literal_value = control.Utf8_pool.FindOrInsert(ieee_float.String(), ieee_float.Length());
             }
             else if (source_type == control.long_type)
             {
                 LongLiteralValue *literal = (LongLiteralValue *) expr -> value;
-                literal -> value.DecString(output_string);
-                len = strlen(output_string);
-                //
-                // javac does not add the L suffix
-                //
-                // output_string[len++] = U_L;
-                //
-                output_string[len] = U_NULL;
-                literal_value = control.Utf8_pool.FindOrInsert(output_string, len);
+                LongToDecString long_integer(literal -> value);
+                literal_value = control.Utf8_pool.FindOrInsert(long_integer.String(), long_integer.Length());
             }
             else if (source_type == control.char_type)
             {
@@ -5183,13 +5160,9 @@ LiteralValue *Semantic::CastPrimitiveValue(TypeSymbol *target_type, AstExpressio
             }
             else if (control.IsSimpleIntegerValueType(source_type))
             {
-                //
-                // TODO: Check correctness !!!
-                //
                 IntLiteralValue *literal = (IntLiteralValue *) expr -> value;
-                sprintf(output_string, "%i", literal -> value);
-                len = strlen(output_string);
-                literal_value = control.Utf8_pool.FindOrInsert(output_string, len);
+                IntToString integer(literal -> value);
+                literal_value = control.Utf8_pool.FindOrInsert(integer.String(), integer.Length());
             }
             else if (expr -> value == control.NullValue())
                 literal_value = expr -> value;

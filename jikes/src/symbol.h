@@ -305,10 +305,10 @@ public:
         }
         location[length++] = U_COLON;
 
-        char str[13];
-        sprintf(str, "%i", lex_stream -> Line(token_index));
-        for (int j = 0; str[j]; j++)
-            location[length++] = str[j];
+        IntToWstring line_no(lex_stream -> Line(token_index));
+
+        for (int j = 0; j < line_no.Length(); j++)
+            location[length++] = line_no.String()[j];
         location[length] = U_NULL;
 
         return;
@@ -1214,10 +1214,10 @@ public:
                                                name_symbol(name_symbol_),
                                                owner(NULL),
                                                initial_value(NULL),
+                                               local_variable_index_(-1),
                                                accessed_local(NULL),
                                                external_name_symbol(NULL),
                                                status(0),
-                                               local_variable_index_(-1),
                                                type_(NULL),
                                                signature_string(NULL)
     {

@@ -934,7 +934,7 @@ LiteralValue *LongLiteralTable::FindOrInsertOctalLong(LiteralSymbol *literal)
     // hexadecimal or octal int literal does not fit in 32 bits".
     // So, strictly speaking, we should not skip leading zeroes. However,
     // there are many publicly available code out there with leading zeroes
-    // that don't compile with jikes,...
+    // that wouldn't otherwise compile with jikes,...
     //
     {
         for (++head; tail > head && *head == U_0; head++) // skip leading zeroes
@@ -955,7 +955,7 @@ LiteralValue *LongLiteralTable::FindOrInsertOctalLong(LiteralSymbol *literal)
         if (d <= 1) // max number that can fit in 1 bit
         {
             tail--;
-            uvalue.HighWord() |= (d << 31);
+            uvalue |= ULongInt((d << 31), 0);
         }
     }
 
@@ -1615,7 +1615,6 @@ void Utf8LiteralTable::EvaluateConstant(AstExpression *expression, int start, in
 
         delete [] str;
     }
-
     return;
 }
 
@@ -1631,7 +1630,7 @@ bool Utf8LiteralTable::IsConstant(AstExpression *expression)
     AstBinaryExpression *binary_expression;
     AstCastExpression *cast_expression;
     AstParenthesizedExpression *parenthesized_expression;
-    if ((binary_expression = expression -> BinaryExpressionCast()))
+    if (binary_expression = expression -> BinaryExpressionCast())
     {
         int left_start_marker = expr -> Length();
 
@@ -1653,13 +1652,14 @@ bool Utf8LiteralTable::IsConstant(AstExpression *expression)
 
         expr -> Reset(left_start_marker);
     }
-    else if ((cast_expression = expression -> CastExpressionCast()))
+    else if (cast_expression = expression -> CastExpressionCast())
          return IsConstant(cast_expression -> expression);
-    else if ((parenthesized_expression = expression -> ParenthesizedExpressionCast()))
+    else if (parenthesized_expression = expression -> ParenthesizedExpressionCast())
          return IsConstant(parenthesized_expression -> expression);
 
     return false; // Not a constant String expression
 }
+
 
 
 void Utf8LiteralTable::CheckStringConstant(AstExpression *expression)
