@@ -319,7 +319,7 @@ VariableSymbol *Semantic::FindMisspelledVariableName(TypeSymbol *type, LexStream
 {
     VariableSymbol *misspelled_variable = NULL;
     int index = 0;
-    wchar_t *name = lex_stream -> Name(identifier_token);
+    wchar_t *name = lex_stream -> NameString(identifier_token);
 
     for (int k = 0; k < type -> expanded_field_table -> symbol_pool.Length(); k++)
     {
@@ -537,8 +537,8 @@ assert(enclosing_type);
                 if (FindNestedType(type, field_access -> identifier_token))
                 {
                     ReportSemError(SemanticError::TYPE_NOT_METHOD,
-                                   method_call -> LeftToken(),
-                                   method_call -> RightToken(),
+                                   field_access -> identifier_token,
+                                   field_access -> identifier_token,
                                    name_symbol -> Name());
                 }
                 else if (type -> expanded_method_table -> FindMethodShadowSymbol(name_symbol))
@@ -851,8 +851,8 @@ assert(enclosing_type);
             if (FindType(simple_name -> identifier_token))
             {
                 ReportSemError(SemanticError::TYPE_NOT_METHOD,
-                               method_call -> LeftToken(),
-                               method_call -> RightToken(),
+                               simple_name -> identifier_token,
+                               simple_name -> identifier_token,
                                name_symbol -> Name());
             }
             else if (this_type -> expanded_method_table -> FindMethodShadowSymbol(name_symbol))
@@ -994,7 +994,7 @@ void Semantic::ReportAccessedFieldNotFound(AstFieldAccess *field_access, TypeSym
         else ReportSemError(SemanticError::FIELD_NOT_FOUND,
                             field_access -> LeftToken(),
                             field_access -> RightToken(),
-                            lex_stream -> Name(field_access -> identifier_token),
+                            lex_stream -> NameString(field_access -> identifier_token),
                             type -> ContainingPackage() -> PackageName(),
                             type -> ExternalName());
     }
@@ -1076,7 +1076,7 @@ VariableSymbol *Semantic::FindVariableInEnvironment(SemanticEnvironment *&where_
                                    identifier_token,
                                    type -> ContainingPackage() -> PackageName(),
                                    type -> ExternalName(),
-                                   lex_stream -> Name(identifier_token),
+                                   lex_stream -> NameString(identifier_token),
                                    //
                                    // TODO: What if the method is a constructor ?
                                    //        if (method -> Identity() != control.init_symbol &&
@@ -1129,7 +1129,7 @@ assert(variable_symbol);
                                 ReportSemError(SemanticError::INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL,
                                                identifier_token,
                                                identifier_token,
-                                               lex_stream -> Name(identifier_token),
+                                               lex_stream -> NameString(identifier_token),
                                                type -> ContainingPackage() -> PackageName(),
                                                type -> ExternalName(),
                                                method -> Name());
@@ -1140,7 +1140,7 @@ assert(variable_symbol);
                                 ReportSemError(SemanticError::INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER,
                                                identifier_token,
                                                identifier_token,
-                                               lex_stream -> Name(identifier_token),
+                                               lex_stream -> NameString(identifier_token),
                                                type -> ContainingPackage() -> PackageName(),
                                                type -> ExternalName(),
                                                found_other -> Type() -> ContainingPackage() -> PackageName(),
@@ -1209,11 +1209,8 @@ assert(class_declaration || class_creation);
 
         VariableSymbol *variable_symbol = (VariableSymbol *) type -> FindThis(0);
 
-        AstSimpleName *method_base = compilation_unit -> ast_pool -> GenSimpleName(loc);
-        method_base -> symbol = parm -> Type();
-
         AstFieldAccess *method_name = compilation_unit -> ast_pool -> GenFieldAccess();
-        method_name -> base = method_base;
+        method_name -> base = parm;
         method_name -> dot_token = loc;
         method_name -> identifier_token = loc;
         method_name -> symbol = variable_symbol; // the variable in question
@@ -1223,7 +1220,8 @@ assert(class_declaration || class_creation);
         rhs -> left_parenthesis_token  = loc;
         rhs -> right_parenthesis_token = loc;
         rhs -> symbol                  = TypeSymbol::GetReadAccessMethod(variable_symbol);
-        rhs -> AddArgument(parm);
+        rhs -> AddArgument(parm); // TODO: WARNING: sharing of Ast subtree !!!
+
 
         AstSimpleName *lhs = compilation_unit -> ast_pool -> GenSimpleName(loc);
         VariableSymbol *variable = base_type -> FindThis(k);
@@ -1288,23 +1286,22 @@ AstExpression *Semantic::CreateAccessToType(Ast *source, TypeSymbol *environment
         resolution = compilation_unit -> ast_pool -> GenSimpleName(tok);
         resolution -> symbol = control.no_type;
     }
-    else if (ExplicitConstructorInvocation() && ExplicitConstructorInvocation() -> SuperCallCast())
+    else if (ExplicitConstructorInvocation())
     {
         VariableSymbol *variable = LocalSymbolTable().FindVariableSymbol(control.this0_name_symbol);
-        if (variable)
+assert(variable);
+        resolution = compilation_unit -> ast_pool -> GenSimpleName(tok);
+        resolution -> symbol = variable;
+
+        if (ExplicitConstructorInvocation() -> SuperCallCast())
         {
-            resolution = compilation_unit -> ast_pool -> GenSimpleName(tok);
-            resolution -> symbol = variable;
             TypeSymbol *containing_type = this_type -> ContainingType();
             if (! containing_type -> IsSubclass(environment_type))
             {
                 variable = FindInstance(containing_type, environment_type);
 
-                AstSimpleName *method_base = compilation_unit -> ast_pool -> GenSimpleName(tok);
-                method_base -> symbol = resolution -> Type();
-
                 AstFieldAccess *method_name = compilation_unit -> ast_pool -> GenFieldAccess();
-                method_name -> base = method_base;
+                method_name -> base = resolution; // TODO: WARNING: sharing of Ast subtree !!!
                 method_name -> dot_token = tok;
                 method_name -> identifier_token = tok;
                 method_name -> symbol = variable;
@@ -1318,12 +1315,6 @@ AstExpression *Semantic::CreateAccessToType(Ast *source, TypeSymbol *environment
 
                 resolution = method_call;
             }
-        }
-        else
-        {
-assert(this_type -> ACC_STATIC());
-            resolution = compilation_unit -> ast_pool -> GenThisExpression(tok);
-            resolution -> symbol = this_type;
         }
     }
     else if (this_type -> IsSubclass(environment_type))
@@ -1365,11 +1356,8 @@ assert(environment_type -> IsOwner(ThisType()));
         //
         if (variable_symbol -> ACC_PRIVATE())
         {
-            AstSimpleName *method_base = compilation_unit -> ast_pool -> GenSimpleName(simple_name -> identifier_token);
-            method_base -> symbol = access_expression -> Type();
-
             AstFieldAccess *method_name = compilation_unit -> ast_pool -> GenFieldAccess();
-            method_name -> base = method_base;
+            method_name -> base = access_expression;
             method_name -> dot_token = simple_name -> identifier_token;
             method_name -> identifier_token = simple_name -> identifier_token;
             method_name -> symbol = variable_symbol;
@@ -1381,7 +1369,7 @@ assert(environment_type -> IsOwner(ThisType()));
             method_call -> symbol                  = TypeSymbol::GetReadAccessMethod(variable_symbol);
 
             if (! variable_symbol -> ACC_STATIC())
-                method_call -> AddArgument(access_expression);
+                method_call -> AddArgument(access_expression); // TODO: WARNING: sharing of Ast subtree !!!
 
             simple_name -> resolution_opt = method_call;
         }
@@ -1441,7 +1429,10 @@ assert(simple_name -> SimpleNameCast());
                 method_call -> right_parenthesis_token = old_method_call -> right_parenthesis_token;
                 method_call -> symbol                  = TypeSymbol::GetReadAccessMethod(method);
                 method_call -> AddArgument(access_expression);
+                for (int i = 0; i < old_method_call -> NumArguments(); i++)
+                    method_call -> AddArgument(old_method_call -> Argument(i));
 
+                old_method_call -> symbol = method;
                 old_method_call -> resolution_opt = method_call;
             }
         }
@@ -1511,14 +1502,14 @@ void Semantic::ProcessSimpleName(Ast *expr)
                     ReportSemError(SemanticError::NAME_NOT_CLASS_VARIABLE,
                                    simple_name -> identifier_token,
                                    simple_name -> identifier_token,
-                                   lex_stream -> Name(simple_name -> identifier_token));
+                                   lex_stream -> NameString(simple_name -> identifier_token));
                 }
                 else if (! variable_symbol -> IsDeclarationComplete())
                 {
                     ReportSemError(SemanticError::NAME_NOT_YET_AVAILABLE,
                                    simple_name -> identifier_token,
                                    simple_name -> identifier_token,
-                                   lex_stream -> Name(simple_name -> identifier_token));
+                                   lex_stream -> NameString(simple_name -> identifier_token));
                 }
             }
             else if (! variable_symbol -> ACC_STATIC()) // an instance variable?
@@ -1532,7 +1523,7 @@ void Semantic::ProcessSimpleName(Ast *expr)
                         ReportSemError(SemanticError::NAME_NOT_YET_AVAILABLE,
                                        simple_name -> identifier_token,
                                        simple_name -> identifier_token,
-                                       lex_stream -> Name(simple_name -> identifier_token));
+                                       lex_stream -> NameString(simple_name -> identifier_token));
                     }
                     else if (ExplicitConstructorInvocation() && where_found == state_stack.Top())
                     {
@@ -1544,7 +1535,7 @@ void Semantic::ProcessSimpleName(Ast *expr)
                         ReportSemError(SemanticError::INSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
                                        simple_name -> identifier_token,
                                        simple_name -> identifier_token,
-                                       lex_stream -> Name(simple_name -> identifier_token),
+                                       lex_stream -> NameString(simple_name -> identifier_token),
                                        containing_type -> Name());
                     }
                 }
@@ -1577,7 +1568,7 @@ void Semantic::ProcessSimpleName(Ast *expr)
              ReportSemError(SemanticError::METHOD_NOT_FIELD,
                             simple_name -> identifier_token,
                             simple_name -> identifier_token,
-                            lex_stream -> Name(simple_name -> identifier_token),
+                            lex_stream -> NameString(simple_name -> identifier_token),
                             method -> containing_type -> ContainingPackage() -> PackageName(),
                             method -> containing_type -> ExternalName());
         }
@@ -1586,7 +1577,7 @@ void Semantic::ProcessSimpleName(Ast *expr)
              ReportSemError(SemanticError::TYPE_NOT_FIELD,
                             simple_name -> identifier_token,
                             simple_name -> identifier_token,
-                            lex_stream -> Name(simple_name -> identifier_token));
+                            lex_stream -> NameString(simple_name -> identifier_token));
         }
         else
         {
@@ -1602,7 +1593,7 @@ void Semantic::ProcessSimpleName(Ast *expr)
             else ReportSemError(SemanticError::NAME_NOT_FOUND,
                                 simple_name -> identifier_token,
                                 simple_name -> identifier_token,
-                                lex_stream -> Name(simple_name -> identifier_token));
+                                lex_stream -> NameString(simple_name -> identifier_token));
         }
         simple_name -> symbol = control.no_type;
     }
@@ -1747,7 +1738,7 @@ assert(variable_symbol || method_symbol);
                                             : SemanticError::PRIVATE_METHOD_NOT_ACCESSIBLE),
                            field_access -> identifier_token,
                            field_access -> identifier_token,
-                           lex_stream -> Name(field_access -> identifier_token),
+                           lex_stream -> NameString(field_access -> identifier_token),
                            containing_type -> ContainingPackage() -> PackageName(),
                            containing_type -> ExternalName());
         }
@@ -1770,7 +1761,7 @@ assert(variable_symbol || method_symbol);
                                                 : SemanticError::PROTECTED_METHOD_NOT_ACCESSIBLE),
                                field_access -> identifier_token,
                                field_access -> identifier_token,
-                               lex_stream -> Name(field_access -> identifier_token),
+                               lex_stream -> NameString(field_access -> identifier_token),
                                containing_type -> ContainingPackage() -> PackageName(),
                                containing_type -> ExternalName());
             }
@@ -1781,7 +1772,7 @@ assert(variable_symbol || method_symbol);
                                             : SemanticError::DEFAULT_METHOD_NOT_ACCESSIBLE),
                            field_access -> identifier_token,
                            field_access -> identifier_token,
-                           lex_stream -> Name(field_access -> identifier_token),
+                           lex_stream -> NameString(field_access -> identifier_token),
                            containing_type -> ContainingPackage() -> PackageName(),
                            containing_type -> ExternalName());
         }
@@ -1811,7 +1802,7 @@ assert(variable_symbol || method_symbol);
                                             : SemanticError::PRIVATE_METHOD_NOT_ACCESSIBLE),
                            simple_name -> identifier_token,
                            simple_name -> identifier_token,
-                           lex_stream -> Name(simple_name -> identifier_token),
+                           lex_stream -> NameString(simple_name -> identifier_token),
                            containing_type -> ContainingPackage() -> PackageName(),
                            containing_type -> ExternalName());
         }
@@ -1823,7 +1814,7 @@ assert(variable_symbol || method_symbol);
                                                 : SemanticError::PROTECTED_METHOD_NOT_ACCESSIBLE),
                                simple_name -> identifier_token,
                                simple_name -> identifier_token,
-                               lex_stream -> Name(simple_name -> identifier_token),
+                               lex_stream -> NameString(simple_name -> identifier_token),
                                containing_type -> ContainingPackage() -> PackageName(),
                                containing_type -> ExternalName());
             }
@@ -1834,7 +1825,7 @@ assert(variable_symbol || method_symbol);
                                             : SemanticError::DEFAULT_METHOD_NOT_ACCESSIBLE),
                            simple_name -> identifier_token,
                            simple_name -> identifier_token,
-                           lex_stream -> Name(simple_name -> identifier_token),
+                           lex_stream -> NameString(simple_name -> identifier_token),
                            containing_type -> ContainingPackage() -> PackageName(),
                            containing_type -> ExternalName());
         }
@@ -1936,11 +1927,8 @@ void Semantic::FindVariableMember(TypeSymbol *type, AstFieldAccess *field_access
                     field_access -> symbol = variable_symbol;
                 else
                 {
-                    AstSimpleName *method_base = compilation_unit -> ast_pool -> GenSimpleName(field_access -> identifier_token);
-                    method_base -> symbol = field_access -> base -> Type();
-
                     AstFieldAccess *method_name = compilation_unit -> ast_pool -> GenFieldAccess();
-                    method_name -> base = method_base;
+                    method_name -> base = field_access -> base; // TODO: WARNING: sharing of Ast subtree !!!
                     method_name -> dot_token = field_access -> identifier_token;
                     method_name -> identifier_token = field_access -> identifier_token;
                     method_name -> symbol = variable_symbol;
@@ -1952,7 +1940,7 @@ void Semantic::FindVariableMember(TypeSymbol *type, AstFieldAccess *field_access
                     p -> symbol                  = TypeSymbol::GetReadAccessMethod(variable_symbol);
 
                     if (! variable_symbol -> ACC_STATIC())
-                        p -> AddArgument(field_access -> base); // TODO: WARNING: sharing of Ast subtree !!!
+                        p -> AddArgument(field_access -> base);
 
                     field_access -> resolution_opt = p;
                     field_access -> symbol = p -> symbol;
@@ -1971,7 +1959,7 @@ void Semantic::FindVariableMember(TypeSymbol *type, AstFieldAccess *field_access
                  ReportSemError(SemanticError::FIELD_IS_TYPE,
                                 field_access -> identifier_token,
                                 field_access -> identifier_token,
-                                lex_stream -> Name(field_access -> identifier_token));
+                                lex_stream -> NameString(field_access -> identifier_token));
             else ReportAccessedFieldNotFound(field_access, type);
 
             field_access -> symbol = control.no_type;
@@ -2032,14 +2020,14 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                     ReportSemError(SemanticError::NAME_NOT_CLASS_VARIABLE,
                                    simple_name -> identifier_token,
                                    simple_name -> identifier_token,
-                                   lex_stream -> Name(simple_name -> identifier_token));
+                                   lex_stream -> NameString(simple_name -> identifier_token));
                 }
                 else if (! variable_symbol -> IsDeclarationComplete())
                 {
                     ReportSemError(SemanticError::NAME_NOT_YET_AVAILABLE,
                                    simple_name -> identifier_token,
                                    simple_name -> identifier_token,
-                                   lex_stream -> Name(simple_name -> identifier_token));
+                                   lex_stream -> NameString(simple_name -> identifier_token));
                 }
             }
 
@@ -2056,7 +2044,7 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                     ReportSemError(SemanticError::INSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
                                    simple_name -> identifier_token,
                                    simple_name -> identifier_token,
-                                   lex_stream -> Name(simple_name -> identifier_token),
+                                   lex_stream -> NameString(simple_name -> identifier_token),
                                    type -> Name());
                 }
             }
@@ -2159,6 +2147,7 @@ assert(field_access -> symbol);
             }
             else
             {
+                TypeAccessCheck(base, array_type ? type -> base_type : type);
                 base -> symbol = type;
 
                 if (outermost_type -> ACC_INTERFACE())
@@ -2247,7 +2236,7 @@ assert(variable_symbol -> ACC_STATIC());
                 return;
             }
 
-            wchar_t *identifier_name = lex_stream -> Name(field_access -> identifier_token);
+            wchar_t *identifier_name = lex_stream -> NameString(field_access -> identifier_token);
             PackageSymbol *package;
 
             Symbol *symbol = base -> symbol;
@@ -2799,7 +2788,7 @@ MethodSymbol *Semantic::FindMethodMember(TypeSymbol *type, AstMethodInvocation *
         // messages.
         //
         if (NumErrors() == 0)
-            ReportMethodNotFound(method_call, lex_stream -> Name(field_access -> identifier_token));
+            ReportMethodNotFound(method_call, lex_stream -> NameString(field_access -> identifier_token));
         method_call -> symbol = control.no_type;
     }
     else if (type == control.null_type || type -> Primitive())
@@ -2837,7 +2826,10 @@ MethodSymbol *Semantic::FindMethodMember(TypeSymbol *type, AstMethodInvocation *
                     method_call -> right_parenthesis_token = old_method_call -> right_parenthesis_token;
                     method_call -> symbol = TypeSymbol::GetReadAccessMethod(method);
                     method_call -> AddArgument(field_access -> base);
+                    for (int i = 0; i < old_method_call -> NumArguments(); i++)
+                        method_call -> AddArgument(old_method_call -> Argument(i));
 
+                    old_method_call -> symbol = method;
                     old_method_call -> resolution_opt = method_call;
                 }
             }
@@ -2901,7 +2893,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                     ReportSemError(SemanticError::METHOD_NOT_CLASS_METHOD,
                                    simple_name -> identifier_token,
                                    method_call -> right_parenthesis_token,
-                                   lex_stream -> Name(simple_name -> identifier_token));
+                                   lex_stream -> NameString(simple_name -> identifier_token));
                 }
                 else if (ExplicitConstructorInvocation())
                 {
@@ -2980,7 +2972,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                     ReportSemError(SemanticError::ABSTRACT_METHOD_INVOCATION,
                                    field_access -> LeftToken(),
                                    field_access -> identifier_token,
-                                   lex_stream -> Name(field_access -> identifier_token));
+                                   lex_stream -> NameString(field_access -> identifier_token));
                 }
             }
         }
@@ -2995,7 +2987,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                 // messages.
                 //
                 if (NumErrors() == 0)
-                    ReportMethodNotFound(method_call, lex_stream -> Name(field_access -> identifier_token));
+                    ReportMethodNotFound(method_call, lex_stream -> NameString(field_access -> identifier_token));
                 method_call -> symbol = control.no_type;
             }
             else if (type == control.null_type || type -> Primitive())
@@ -3019,7 +3011,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                         ReportSemError(SemanticError::METHOD_NOT_CLASS_METHOD,
                                        field_access -> LeftToken(),
                                        field_access -> identifier_token,
-                                       lex_stream -> Name(field_access -> identifier_token));
+                                       lex_stream -> NameString(field_access -> identifier_token));
                     }
                     //
                     // TODO: This test was added in order to pass the test in section 8.4.3.1, page 159.
@@ -3030,7 +3022,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                         ReportSemError(SemanticError::ABSTRACT_METHOD_INVOCATION,
                                        field_access -> LeftToken(),
                                        field_access -> identifier_token,
-                                       lex_stream -> Name(field_access -> identifier_token));
+                                       lex_stream -> NameString(field_access -> identifier_token));
 
                     if (method -> ACC_PRIVATE() && this_type != method -> containing_type
                                                 && this_type -> outermost_type == method -> containing_type -> outermost_type)
@@ -3050,7 +3042,10 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                             method_call -> right_parenthesis_token = old_method_call -> right_parenthesis_token;
                             method_call -> symbol = TypeSymbol::GetReadAccessMethod(method);
                             method_call -> AddArgument(field_access -> base);
+                            for (int i = 0; i < old_method_call -> NumArguments(); i++)
+                                method_call -> AddArgument(old_method_call -> Argument(i));
 
+                            old_method_call -> symbol = method;
                             old_method_call -> resolution_opt = method_call;
                         }
                     }
@@ -3081,8 +3076,8 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                             Control::GetFile(package, name_symbol, control.option.depend)))
             {
                 ReportSemError(SemanticError::TYPE_NOT_METHOD,
-                               method_call -> LeftToken(),
-                               method_call -> RightToken(),
+                               field_access -> identifier_token,
+                               field_access -> identifier_token,
                                name_symbol -> Name());
             }
             else
@@ -3206,7 +3201,7 @@ void Semantic::ProcessThisExpression(Ast *expr)
         ReportSemError(SemanticError::THIS_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
                        this_expression -> LeftToken(),
                        this_expression -> RightToken(),
-                       lex_stream -> Name(this_expression -> this_token));
+                       lex_stream -> NameString(this_expression -> this_token));
         this_expression -> symbol = control.no_type;
     }
     else this_expression -> symbol = ThisType();
@@ -3231,7 +3226,7 @@ void Semantic::ProcessSuperExpression(Ast *expr)
         ReportSemError(SemanticError::THIS_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
                        super_expression -> LeftToken(),
                        super_expression -> RightToken(),
-                       lex_stream -> Name(super_expression -> super_token));
+                       lex_stream -> NameString(super_expression -> super_token));
          super_expression -> symbol = control.no_type;
     }
     else super_expression -> symbol = ThisType() -> super;
@@ -4008,9 +4003,27 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
     {
         type = MustFindType(actual_type);
         if (type -> IsInner())
-            class_creation -> base_opt = CreateAccessToType(class_creation, type -> ContainingType());
-    }
+        {
+            //
+            // Within an explicit constructor invocation, a class that is immediately nested
+            // in the class being created is not accessible.
+            //
+            if (ExplicitConstructorInvocation() && type -> ContainingType() == ThisType())
+            {
+                ReportSemError(SemanticError::INNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
+                               class_creation -> LeftToken(),
+                               class_creation -> RightToken(),
+                               type -> ContainingPackage() -> PackageName(),
+                               type -> ExternalName(),
+                               ThisType() -> ContainingPackage() -> PackageName(),
+                               ThisType() -> ExternalName());
+                class_creation -> symbol = control.no_type;
+                return;
+            }
 
+            class_creation -> base_opt = CreateAccessToType(class_creation, type -> ContainingType());
+        }
+    }
  
     bool no_bad_argument = true;
     for (int i = 0; i < class_creation -> NumArguments(); i++)
@@ -6696,17 +6709,23 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
             if (CanAssignmentConvert(left_type, assignment_expression -> expression))
                 assignment_expression -> expression = ConvertToType(assignment_expression -> expression, left_type);
             else if (assignment_expression -> expression -> IsConstant() &&
+                     control.IsSimpleIntegerValueType(left_type) &&
                      control.IsSimpleIntegerValueType(assignment_expression -> expression -> Type()))
             {
                 if (left_type == control.byte_type)
                      ReportSemError(SemanticError::INVALID_BYTE_VALUE,
                                     assignment_expression -> expression -> LeftToken(),
                                     assignment_expression -> expression -> RightToken());
-                else if (left_type == control.char_type)
-                     ReportSemError(SemanticError::INVALID_CHARACTER_VALUE,
+                else if (left_type == control.short_type)
+                     ReportSemError(SemanticError::INVALID_SHORT_VALUE,
                                     assignment_expression -> expression -> LeftToken(),
                                     assignment_expression -> expression -> RightToken());
-                else ReportSemError(SemanticError::INVALID_SHORT_VALUE,
+                else if (left_type == control.int_type)
+                     ReportSemError(SemanticError::INVALID_INT_VALUE,
+                                    assignment_expression -> expression -> LeftToken(),
+                                    assignment_expression -> expression -> RightToken());
+                else // assert(left_type == control.char_type);
+                     ReportSemError(SemanticError::INVALID_CHARACTER_VALUE,
                                     assignment_expression -> expression -> LeftToken(),
                                     assignment_expression -> expression -> RightToken());
             }
