@@ -50,6 +50,12 @@
 #undef PACKAGE_NAME
 #undef VERSION
 
+// A macro for generating <cname> vs. <name.h> as appropriate.
+#ifdef HAVE_STD
+# define STD_LIB_NAME(name) <c ## name>
+#else
+# define STD_LIB_NAME(name) <name.h>
+#endif // ! HAVE_STD
 
 /* Boilerplate autoconf checking */
 
@@ -57,25 +63,26 @@
 //FIXME: all stat stuff should be included in the platform.cpp file!
 #include <sys/stat.h>
 #ifdef STDC_HEADERS
-# include <stdlib.h>
-# include <stddef.h>
-#else
+# include STD_LIB_NAME(stdlib)
+# include STD_LIB_NAME(stddef)
+#else // ! STDC_HEADERS
 # ifdef HAVE_STDLIB_H
 #  include <stdlib.h>
 # endif
-#endif
+#endif // ! STDC_HEADERS
+
 #ifdef HAVE_STRING_H
 # ifndef STDC_HEADERS
 #  ifdef HAVE_MEMORY_H
 #   include <memory.h>
 #  endif
-# endif
-# include <string.h>
-#else
+# endif // ! STDC_HEADERS
+# include STD_LIB_NAME(string)
+#else // ! HAVE_STRING_H
 # ifdef HAVE_STRINGS_H
 #  include <strings.h>
 # endif
-#endif
+#endif // ! HAVE_STRING_H
 
 #ifdef HAVE_SYS_CYGWIN_H
 #include <sys/cygwin.h>
@@ -85,7 +92,7 @@
 # include <unicode/ucnv.h>
 #elif defined(HAVE_ICONV_H)
 # include <iconv.h>
-# include <errno.h>
+# include STD_LIB_NAME(errno)
 #endif
 
 #ifdef HAVE_UNISTD_H
@@ -110,35 +117,35 @@ typedef unsigned int wint_t;
 #endif
 
 #ifdef HAVE_WCHAR_H
-# include <wchar.h>
+# include STD_LIB_NAME(wchar)
 #endif
 
 #ifdef HAVE_CTYPE_H
-# include <ctype.h>
+# include STD_LIB_NAME(ctype)
 #endif
 
 #ifdef HAVE_ASSERT_H
-# include <assert.h>
+# include STD_LIB_NAME(assert)
 #endif
 
 #ifdef HAVE_STDIO_H
-# include <stdio.h>
+# include STD_LIB_NAME(stdio)
 #endif
 
 #ifdef HAVE_LIMITS_H
-# include <limits.h>
+# include STD_LIB_NAME(limits)
 #endif
 
 #ifdef HAVE_MATH_H
-# include <math.h>
+# include STD_LIB_NAME(math)
 #endif
 
 #ifdef HAVE_FLOAT_H
-# include <float.h>
+# include STD_LIB_NAME(float)
 #endif
 
 #ifdef HAVE_TIME_H
-# include <time.h>
+# include STD_LIB_NAME(time)
 #endif
 
 // C++ standard support
@@ -149,7 +156,7 @@ typedef unsigned int wint_t;
 #else
 # include <iostream.h>
 # include <fstream.h>
-#endif
+#endif // ! HAVE_STD
 
 // VC++ pretends to support the C++ standard, but it does not.
 // The set_new_handler method in <new> is not implemented so
@@ -162,8 +169,8 @@ typedef unsigned int wint_t;
 #  include <new>
 # else
 #  include <new.h>
-# endif
-#endif
+# endif // ! HAVE_STD
+#endif // ! HAVE_VCPP_SET_NEW_HANDLER
 
 #ifdef HAVE_STD
 # ifdef HAVE_NAMESPACES
@@ -222,9 +229,47 @@ enum { false = 0, true = 1 };
 #endif
 
 
+//
+// Define a templatized function for dynamic_cast<> operator.
+// This is slightly scary, but we need to do it so that we
+// can continue to support older compilers that don't implement
+// the dynamic_cast<> operator. We also do extra checking
+// of the result when RTTI is supported. This does add some
+// overhead, but if we catch a downcast bug as a result it
+// is worth it. Downcast bugs were to blame for a number of
+// core dumps in Jikes.
+//
+#ifdef HAVE_RTTI
+# include <typeinfo>
+#endif
+
 #ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes { // Open namespace Jikes block
 #endif
+
+template <typename TO, typename FROM>
+inline TO DYNAMIC_CAST(FROM f)
+{
+#ifndef HAVE_DYNAMIC_CAST
+    return (TO) f;
+#else
+    // If NULL, return NULL to support dynamic_cast semantics
+    if (!f)
+        return (TO) NULL;
+    TO ptr = dynamic_cast<TO> (f);
+
+    if (! ptr)
+    {
+# ifdef HAVE_RTTI
+        const type_info& t = typeid(f);
+        const char* name = t.name();
+        fprintf(stderr, "DYNAMIC_CAST argument type was \"%s\"\n", name);
+# endif // HAVE_RTTI
+        assert(ptr && "Failed dynamic_cast<> in DYNAMIC_CAST");
+    }
+    return ptr;
+#endif // HAVE_DYNAMIC_CAST
+}
 
 //
 // The configure scripts check each of these to see if we need our own

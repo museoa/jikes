@@ -5664,45 +5664,6 @@ inline AstArray<T> *NewAstArray(StoragePool *pool, unsigned size = 0)
 }
 
 //
-// Define a templatized function for dynamic_cast<> operator.
-// This is slightly scary, but we need to do it so that we
-// can continue to support older compilers that don't implement
-// the dynamic_cast<> operator. We also do extra checking
-// of the result when RTTI is supported. This does add some
-// overhead, but if we catch a downcast bug as a result it
-// is worth it. Downcast bugs were to blame for a number of
-// core dumps in Jikes.
-//
-
-#ifdef HAVE_RTTI
-#include <typeinfo>
-#endif
-
-template <typename TO, typename FROM>
-inline TO DYNAMIC_CAST(FROM f)
-{
-#ifndef HAVE_DYNAMIC_CAST
-    return (TO) f;
-#else
-    // If NULL, return NULL to support dynamic_cast semantics
-    if (!f)
-        return (TO) NULL;
-    TO ptr = dynamic_cast<TO> (f);
-
-    if (! ptr)
-    {
-#ifdef HAVE_RTTI
-        const type_info& t = typeid(f);
-        const char *name = t.name();
-        fprintf(stderr, "DYNAMIC_CAST argument type was \"%s\"\n", name);
-#endif
-        assert(ptr && "Failed dynamic_cast<> in DYNAMIC_CAST");
-    }
-    return ptr;
-#endif
-}
-
-//
 // Cast conversions for Ast
 //
 

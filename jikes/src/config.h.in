@@ -207,7 +207,7 @@ You must accept the terms of that agreement to use this software. */
 /* Used to test results of stat call to see if it is a directory */
 #undef JIKES_STAT_S_IFDIR
 
-/* A string to indicate the release of jikes: Version 1.17 - 27 Sept 2002 */
+/* A string to indicate the release of jikes: Version 1.18 - 21 Nov 2002 */
 #undef JIKES_VERSION_STRING
 
 /* Name of package */
