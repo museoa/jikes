@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -2096,13 +2096,29 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
                 if (! cond)
                     EmitBranch(OP_GOTO, lab, over);
             }
-            else if (left -> IsConstant() &&
-                     left_type -> IsSubclass(right_type))
+            else if (left -> IsConstant() || // a String constant
+                     left -> BinaryExpressionCast()) // a String concat
             {
                 //
-                // We know the result: true.
+                // We know the result: true, since the expression is non-null
+                // and String is a final class.
                 //
                 assert(left_type == control.String());
+                EmitExpression(left, false);
+                if (cond)
+                    EmitBranch(OP_GOTO, lab, over);
+            }
+            else if ((left -> IsThisExpression() ||
+                      left -> IsSuperExpression() ||
+                      left -> ClassInstanceCreationExpressionCast() ||
+                      left -> ArrayCreationExpressionCast()) &&
+                     (left_type -> IsSubclass(right_type) ||
+                      left_type -> Implements(right_type)))
+            {
+                //
+                // We know the result: true, since the expression is non-null.
+                //
+                EmitExpression(left, false);
                 if (cond)
                     EmitBranch(OP_GOTO, lab, over);
             }
@@ -2226,6 +2242,9 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
             CompleteLabel(skip);
         }
         return;
+    case AstBinaryExpression::XOR: // ^ on booleans is equavalent to !=
+        assert(left_type == control.boolean_type);
+        // Fallthrough!
     case AstBinaryExpression::EQUAL_EQUAL:
     case AstBinaryExpression::NOT_EQUAL:
         //
@@ -2279,7 +2298,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
                     // One of the operands is false. Branch on the other.
                     //
                     EmitBranchIfExpression(IsZero(left) ? right : left,
-                                           cond == (bp -> binary_tag == AstBinaryExpression::NOT_EQUAL),
+                                           cond == (bp -> binary_tag != AstBinaryExpression::EQUAL_EQUAL),
                                            lab, over);
                 }
                 else
@@ -2324,7 +2343,50 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
         }
 
         break;
+    case AstBinaryExpression::IOR:
+        //
+        // One argument is false. Branch on other.
+        //
+        if (IsZero(left) || IsZero(right))
+        {
+            EmitBranchIfExpression(IsZero(left) ? right : left,
+                                   cond, lab, over);
+            return;
+        }
 
+        //
+        // One argument is true. Emit the other, and result is true.
+        //
+        if (IsOne(left) || IsOne(right))
+        {
+            EmitExpression(IsOne(left) ? right : left, false);
+            if (cond)
+                EmitBranch(OP_GOTO, lab, over);
+            return;
+        }
+        break;
+    case AstBinaryExpression::AND:
+        //
+        // One argument is true. Branch on other.
+        //
+        if (IsOne(left) || IsOne(right))
+        {
+            EmitBranchIfExpression(IsOne(left) ? right : left,
+                                   cond, lab, over);
+            return;
+        }
+
+        //
+        // One argument is false. Emit the other, and result is false.
+        //
+        if (IsZero(left) || IsZero(right))
+        {
+            EmitExpression(IsZero(left) ? right : left, false);
+            if (! cond)
+                EmitBranch(OP_GOTO, lab, over);
+            return;
+        }
+        break;
     default:
         break;
     }
@@ -3515,13 +3577,28 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
             EmitExpression(expression -> left_expression, false);
             PutOp(OP_ICONST_0);
         }
-        else if (expression -> left_expression -> IsConstant() &&
-                 left_type -> IsSubclass(right_type))
+        else if (expression -> left_expression -> IsConstant() ||
+                 expression -> left_expression -> BinaryExpressionCast())
         {
             //
-            // We know the result: true.
+            // We know the result: true, since the expression is non-null
+            // and String is a final class.
             //
             assert(left_type == control.String());
+            EmitExpression(expression -> left_expression, false);
+            PutOp(OP_ICONST_1);
+        }
+        else if ((expression -> left_expression -> IsThisExpression() ||
+                  expression -> left_expression -> IsSuperExpression() ||
+                  expression -> left_expression -> ClassInstanceCreationExpressionCast() ||
+                  expression -> left_expression -> ArrayCreationExpressionCast()) &&
+                 (left_type -> IsSubclass(right_type) ||
+                  left_type -> Implements(right_type)))
+        {
+            //
+            // We know the result: true, since the expression is non-null.
+            //
+            EmitExpression(expression -> left_expression, false);
             PutOp(OP_ICONST_1);
         }
         else
@@ -4027,19 +4104,33 @@ void ByteCode::EmitCheckForNull(AstExpression *expression)
 {
     expression = StripNops(expression);
 
-    if (! expression -> ClassInstanceCreationExpressionCast() &&
-        ! expression -> ThisExpressionCast())
+    if (expression -> Type() == control.null_type)
     {
+        //
+        // It's already null, so throw it now. Adjust the stack, since the
+        // calling context does not realize that this will always complete
+        // abruptly, and expects the stack to be unchanged.
+        //
+        PutOp(OP_ATHROW);
+        ChangeStack(1);
+    }
+    else if (! (expression -> ClassInstanceCreationExpressionCast() ||
+                expression -> IsThisExpression() ||
+                expression -> IsSuperExpression()))
+    {
+        //
+        // It is uncertain whether the expression can be null, so check. If
+        // the base was null, so we need to raise a NullPointerException. But
+        // the fastest way to do that is throwing null. Notice that the
+        // verifier remembers what type the existing null on the stack has, so
+        // we must use a fresh one. We did not bother checking for other
+        // guaranteed non-null conditions: IsConstant(), string concats, and
+        // ArrayCreationExpressionCast(), since none of these can qualify
+        // a constructor invocation.
+        //
         PutOp(OP_DUP);
         Label lab1;
         EmitBranch(OP_IFNONNULL, lab1);
-
-        //
-        // The base was null, so we need to raise a NullPointerException. But
-        // the fastest way to do that is throwing null. Notice that the
-        // verifier remembers what type the existing null on the stack has, so
-        // we must use a fresh one.
-        //
         PutOp(OP_ACONST_NULL);
         PutOp(OP_ATHROW);
         DefineLabel(lab1);
@@ -4322,8 +4413,11 @@ AstExpression *ByteCode::StripNops(AstExpression *expr)
         {
             AstCastExpression *cast_expr = (AstCastExpression *) expr;
             AstExpression *sub_expr = StripNops(cast_expr -> expression);
-            if (sub_expr -> Type() -> IsSubclass(expr -> Type()))
+            if (sub_expr -> Type() -> IsSubclass(expr -> Type()) ||
+                sub_expr -> Type() == control.null_type)
+            {
                 expr = sub_expr;
+            }
             else return expr;
         }
         else return expr;
@@ -4977,7 +5071,17 @@ void ByteCode::EmitSuperInvocation(AstSuperCall *super_call)
     if (super_call -> base_opt)
     {
         stack_words += EmitExpression(super_call -> base_opt);
-        EmitCheckForNull(super_call -> base_opt);
+        if (unit_type -> Anonymous())
+        {
+            //
+            // Special case - in the generated anonymous class constructor,
+            // the base of the super call is null only if the original base
+            // of the class instance creation expression is.
+            //
+            AstClassInstanceCreationExpression *creation = (AstClassInstanceCreationExpression *) unit_type -> declaration;
+            EmitCheckForNull(creation -> Argument(0));
+        }
+        else EmitCheckForNull(super_call -> base_opt);
     }
 
     for (int i = 0; i < super_call -> NumLocalArguments(); i++)
@@ -5029,12 +5133,13 @@ void ByteCode::ConcatenateString(AstBinaryExpression *expression)
         {
             //
             // Optimizations: if the left term is "", just append the right
-            // term. Otherwise, use new StringBuffer(String) on the left term.
-            // This is not normally safe, as new StringBuffer(null) throws
-            // a NullPointerException, but constants are non-null!
+            // term to an empty StringBuffer. If the left term is not "",
+            // use new StringBuffer(String) to create a StringBuffer
+            // that includes the left term. No need to worry about
+            // new StringBuffer(null) raising a NullPointerException
+            // since string constants are never null.
             //
-            assert(left_expr -> Type() == control.String() &&
-                   ! expression -> right_expression -> IsConstant());
+            assert(left_expr -> Type() == control.String());
             if (((Utf8LiteralValue *) left_expr -> value) -> length == 0)
             {
                 PutOp(OP_INVOKESPECIAL);

@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -183,9 +183,11 @@ public:
     inline void CompressSpace()
     {
         hash_size = symbol_pool.Length();
-        hash_size = (hash_size <= 0 ? 1 : (hash_size > MAX_HASH_SIZE ? MAX_HASH_SIZE : hash_size));
+        hash_size = (hash_size <= 0 ? 1
+                     : (hash_size > MAX_HASH_SIZE ? MAX_HASH_SIZE : hash_size));
         delete [] base;
-        base = (TypeShadowSymbol **) memset(new TypeShadowSymbol *[hash_size], 0, hash_size * sizeof(TypeShadowSymbol *));
+        base = (TypeShadowSymbol **) memset(new TypeShadowSymbol *[hash_size],
+                                            0, hash_size * sizeof(TypeShadowSymbol *));
 
         TypeShadowSymbol **array = symbol_pool.Array();
         for (int i = 0; i < symbol_pool.Length(); i++)
@@ -200,8 +202,10 @@ public:
 
     ExpandedTypeTable(int hash_size_ = DEFAULT_HASH_SIZE) : symbol_pool(10, 4)
     {
-        hash_size = (hash_size_ <= 0 ? 1 : (hash_size_ > MAX_HASH_SIZE ? MAX_HASH_SIZE : hash_size_));
-        base = (TypeShadowSymbol **) memset(new TypeShadowSymbol *[hash_size], 0, hash_size * sizeof(TypeShadowSymbol *));
+        hash_size = (hash_size_ <= 0 ? 1 :
+                     (hash_size_ > MAX_HASH_SIZE ? MAX_HASH_SIZE : hash_size_));
+        base = (TypeShadowSymbol **) memset(new TypeShadowSymbol *[hash_size],
+                                            0, hash_size * sizeof(TypeShadowSymbol *));
     }
 
     ~ExpandedTypeTable()
@@ -250,9 +254,11 @@ public:
     inline void CompressSpace()
     {
         hash_size = symbol_pool.Length();
-        hash_size = (hash_size <= 0 ? 1 : (hash_size > MAX_HASH_SIZE ? MAX_HASH_SIZE : hash_size));
+        hash_size = (hash_size <= 0 ? 1 :
+                     (hash_size > MAX_HASH_SIZE ? MAX_HASH_SIZE : hash_size));
         delete [] base;
-        base = (VariableShadowSymbol **) memset(new VariableShadowSymbol *[hash_size], 0, hash_size * sizeof(VariableShadowSymbol *));
+        base = (VariableShadowSymbol **) memset(new VariableShadowSymbol *[hash_size],
+                                                0, hash_size * sizeof(VariableShadowSymbol *));
 
         VariableShadowSymbol **array = symbol_pool.Array();
         for (int i = 0; i < symbol_pool.Length(); i++)
@@ -267,8 +273,10 @@ public:
 
     ExpandedFieldTable(int hash_size_ = DEFAULT_HASH_SIZE) : symbol_pool(10, 4)
     {
-        hash_size = (hash_size_ <= 0 ? 1 : (hash_size_ > MAX_HASH_SIZE ? MAX_HASH_SIZE : hash_size_));
-        base = (VariableShadowSymbol **) memset(new VariableShadowSymbol *[hash_size], 0, hash_size * sizeof(VariableShadowSymbol *));
+        hash_size = (hash_size_ <= 0 ? 1 :
+                     (hash_size_ > MAX_HASH_SIZE ? MAX_HASH_SIZE : hash_size_));
+        base = (VariableShadowSymbol **) memset(new VariableShadowSymbol *[hash_size],
+                                                0, hash_size * sizeof(VariableShadowSymbol *));
     }
     ~ExpandedFieldTable()
     {
@@ -317,9 +325,11 @@ public:
     inline void CompressSpace()
     {
         hash_size = symbol_pool.Length();
-        hash_size = (hash_size <= 0 ? 1 : (hash_size > MAX_HASH_SIZE ? MAX_HASH_SIZE : hash_size));
+        hash_size = (hash_size <= 0 ? 1 :
+                     (hash_size > MAX_HASH_SIZE ? MAX_HASH_SIZE : hash_size));
         delete [] base;
-        base = (MethodShadowSymbol **) memset(new MethodShadowSymbol *[hash_size], 0, hash_size * sizeof(MethodShadowSymbol *));
+        base = (MethodShadowSymbol **) memset(new MethodShadowSymbol *[hash_size],
+                                              0, hash_size * sizeof(MethodShadowSymbol *));
 
         MethodShadowSymbol **array = symbol_pool.Array();
         for (int i = 0; i < symbol_pool.Length(); i++)
@@ -345,8 +355,10 @@ public:
 
     ExpandedMethodTable(int hash_size_ = DEFAULT_HASH_SIZE) : symbol_pool(10, 4)
     {
-        hash_size = (hash_size_ <= 0 ? 1 : (hash_size_ > MAX_HASH_SIZE ? MAX_HASH_SIZE : hash_size_));
-        base = (MethodShadowSymbol **) memset(new MethodShadowSymbol *[hash_size], 0, hash_size * sizeof(MethodShadowSymbol *));
+        hash_size = (hash_size_ <= 0 ? 1 :
+                     (hash_size_ > MAX_HASH_SIZE ? MAX_HASH_SIZE : hash_size_));
+        base = (MethodShadowSymbol **) memset(new MethodShadowSymbol *[hash_size],
+                                              0, hash_size * sizeof(MethodShadowSymbol *));
     }
     ~ExpandedMethodTable()
     {
@@ -376,8 +388,13 @@ public:
         return p;
     }
 
-    inline void Overload(MethodShadowSymbol *base_shadow, MethodSymbol *overload_method)
+    inline void Overload(MethodShadowSymbol *base_shadow,
+                         MethodSymbol *overload_method)
     {
+        //
+        // Insert the new overload as the second list element, to preserve
+        // the existing base, while making Overload(MethodSymbol *) work.
+        //
         MethodShadowSymbol *shadow = new MethodShadowSymbol(overload_method);
         symbol_pool.Next() = shadow;
         shadow -> next_method = base_shadow -> next_method;
@@ -390,15 +407,22 @@ public:
         if (! base_shadow)
             return InsertMethodShadowSymbol(overload_method);
         Overload(base_shadow, overload_method);
-        return base_shadow;
+        //
+        // Return the newly created overload; this relies on the current
+        // behavior of Overload(MethodSymbol *, MethodSymbol *).
+        //
+        return base_shadow -> next_method;
     }
 
-    MethodShadowSymbol *FindOverloadMethodShadow(MethodSymbol *overload_method, Semantic *sem, LexStream::TokenIndex tok)
+    MethodShadowSymbol *FindOverloadMethodShadow(MethodSymbol *overload_method,
+                                                 Semantic *sem,
+                                                 LexStream::TokenIndex tok)
     {
         if (! overload_method -> IsTyped())
             overload_method -> ProcessMethodSignature(sem, tok);
 
-        for (MethodShadowSymbol *method_shadow = FindMethodShadowSymbol(overload_method -> name_symbol);
+        MethodShadowSymbol *method_shadow;
+        for (method_shadow = FindMethodShadowSymbol(overload_method -> name_symbol);
              method_shadow;
              method_shadow = method_shadow -> next_method)
         {
@@ -415,8 +439,11 @@ public:
                 int i;
                 for (i = method -> NumFormalParameters() - 1; i >= 0; i--)
                 {
-                    if (method -> FormalParameter(i) -> Type() != overload_method -> FormalParameter(i) -> Type())
+                    if (method -> FormalParameter(i) -> Type() !=
+                        overload_method -> FormalParameter(i) -> Type())
+                    {
                         break;
+                    }
                 }
 
                 if (i < 0)
@@ -424,7 +451,7 @@ public:
             }
         }
 
-        return (MethodShadowSymbol *) NULL;
+        return method_shadow;
     }
 
 private:

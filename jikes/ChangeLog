@@ -1,3 +1,14 @@
+2002-01-06  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/bytecode.cpp (EmitBranchIfExpression, EmitBinaryExpression):
+	More optimizations of boolean result operations.
+	(EmitCheckForNull, EmitSuperInvocation): Remove redundant check
+	for null in anonymous constructors.
+	(ConcatenateString): Fix overzealous assertion (idea courtesy of
+	Mo DeJong) - bug 2540.
+	* src/table.h (Overload): Fix subtle logic error which caused
+	assertion failure - bug 2536, patch 253.
+
 2001-12-21  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.cpp (EmitBranchIfExpression): Another bug detected
