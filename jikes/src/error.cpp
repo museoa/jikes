@@ -433,7 +433,7 @@ void SemanticError::Report(SemanticErrorKind msg_code,
 
 void SemanticError::StaticInitializer()
 {
-    memset(warning, 0, _num_kinds * sizeof(bool));
+    memset(warning, 0, _num_kinds * sizeof(unsigned char));
 
     warning[INVALID_OPTION] = 1;
     warning[DISABLED_OPTION] = 1;
