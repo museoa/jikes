@@ -666,8 +666,9 @@ void ByteCode::DeclareField(VariableSymbol *symbol)
         LiteralValue *initial_value = (init ? init -> value : (LiteralValue *) NULL);
 
         TypeSymbol *type = symbol -> Type();
-        if (initial_value && (type -> Primitive() || (type == this_control.String() && initial_value != this_control.NullValue())))
+        if (initial_value)
         {
+            assert(type -> Primitive() || type == this_control.String());
             //
             // TODO: there seems to be a contradiction between the language spec and the VM spec.
             // The language spec seems to require that a variable be initialized (in the class file)
@@ -2546,6 +2547,9 @@ int ByteCode::EmitExpression(AstExpression *expression)
              return EmitConditionalExpression((AstConditionalExpression *) expression);
         case Ast::ASSIGNMENT:
              return EmitAssignmentExpression((AstAssignmentExpression *) expression, true);
+        case Ast::NULL_LITERAL:
+             PutOp(OP_ACONST_NULL);
+             return 1;
         default:
              assert(false && "unknown expression kind");
              break;
@@ -4520,6 +4524,7 @@ void ByteCode::EmitStringAppendMethod(TypeSymbol *type)
     // Find appropriate append routine to add to string buffer
     // Do not use append(char[]), because that inserts the contents instead
     // of the correct char[].toString()
+    // Treating null as a String is slightly more efficient than as an Object
     //
     MethodSymbol *append_method =
             (type == this_control.char_type
@@ -4536,7 +4541,8 @@ void ByteCode::EmitStringAppendMethod(TypeSymbol *type)
                                               ? this_control.StringBuffer_append_floatMethod()
                                               : type == this_control.double_type
                                                      ? this_control.StringBuffer_append_doubleMethod()
-                                                     : type == this_control.String()
+                                                     : type == this_control.String() ||
+                                                       type == this_control.null_type
                                                             ? this_control.StringBuffer_append_stringMethod()
                                                             : IsReferenceType(type)
                                                                    ? this_control.StringBuffer_append_objectMethod()
@@ -4739,11 +4745,7 @@ void ByteCode::LoadLocal(int varno, TypeSymbol *type)
 //
 void ByteCode::LoadLiteral(LiteralValue *litp, TypeSymbol *type)
 {
-    if (litp == this_control.NullValue())
-    {
-        PutOp(OP_ACONST_NULL);
-    }
-    else if (this_control.IsSimpleIntegerValueType(type) || type == this_control.boolean_type) // load literal using literal value
+    if (this_control.IsSimpleIntegerValueType(type) || type == this_control.boolean_type) // load literal using literal value
     {
         IntLiteralValue *vp = (IntLiteralValue *) litp;
         int val = vp -> value;

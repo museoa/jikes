@@ -442,11 +442,6 @@ public:
     bool IncrementalRecompilation();
 
     //
-    // The one and only null value constant.
-    //
-    LiteralValue *NullValue() { return &null_value; }
-
-    //
     // The one and only bad value constant.
     //
     LiteralValue *BadValue() { return &bad_value; }
@@ -544,8 +539,7 @@ public:
 
 private:
 
-    LiteralValue null_value,
-                 bad_value;
+    LiteralValue bad_value;
 
     TypeSymbol *Serializable_type,
 

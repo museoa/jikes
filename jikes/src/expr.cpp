@@ -3455,8 +3455,10 @@ void Semantic::ProcessMethodInvocation(Ast *expr)
 
 void Semantic::ProcessNullLiteral(Ast *expr)
 {
+    //
+    // Null is not a compile-time constant, so don't give it a value
+    //
     AstNullLiteral *null_literal = (AstNullLiteral *) expr;
-    null_literal -> value = control.NullValue();
     null_literal -> symbol = control.null_type;
 
     return;
@@ -5142,8 +5144,6 @@ LiteralValue *Semantic::CastPrimitiveValue(TypeSymbol *target_type, AstExpressio
                 IntToString integer(literal -> value);
                 literal_value = control.Utf8_pool.FindOrInsert(integer.String(), integer.Length());
             }
-            else if (expr -> value == control.NullValue())
-                literal_value = expr -> value;
         }
         else if (target_type == control.double_type)
         {
@@ -5684,12 +5684,7 @@ void Semantic::ProcessPLUS(AstBinaryExpression *expr)
         //
         // Convert the left expression if necessary.
         //
-        if (expr -> left_expression -> value == control.NullValue())
-        {
-             expr -> left_expression -> value = control.null_literal;
-             expr -> left_expression -> symbol = control.String();
-        }
-        else if (left_type != control.String())
+        if (left_type != control.String())
         {
             AddStringConversionDependence(left_type, expr -> binary_operator_token);
             if (left_type == control.void_type)
@@ -5702,12 +5697,7 @@ void Semantic::ProcessPLUS(AstBinaryExpression *expr)
         //
         // Convert the right expression if necessary.
         //
-        if (expr -> right_expression -> value == control.NullValue())
-        {
-             expr -> right_expression -> value = control.null_literal;
-             expr -> right_expression -> symbol = control.String();
-        }
-        else if (right_type != control.String())
+        if (right_type != control.String())
         {
             AddStringConversionDependence(right_type, expr -> binary_operator_token);
             if (right_type == control.void_type)
@@ -7050,15 +7040,15 @@ void Semantic::ProcessConditionalExpression(Ast *expr)
         // If all the subexpressions are constants, compute the results and
         // set the value of the expression accordingly.
         //
-        // FIXME: Since null should not be a compile-time constant, the assert
-        // should not need to check for null type
+        // Since null should not be a compile-time constant anymore, the assert
+        // should not need to check for null type, so it was removed....
         //
         if (conditional_expression -> test_expression -> IsConstant() &&
             conditional_expression -> true_expression -> IsConstant() &&
             conditional_expression -> false_expression -> IsConstant())
         {
-            assert(conditional_expression -> symbol == control.String() ||
-                   conditional_expression -> symbol == control.null_type);
+            assert(conditional_expression -> symbol == control.String());
+            //  || conditional_expression -> symbol == control.null_type);
 
             IntLiteralValue *test = (IntLiteralValue *) conditional_expression -> test_expression -> value;
             
@@ -7178,12 +7168,7 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
     //
     if (left_type == control.String() && assignment_expression -> assignment_tag == AstAssignmentExpression::PLUS_EQUAL)
     {
-        if (assignment_expression -> expression -> value == control.NullValue())
-        {
-            assignment_expression -> expression -> value = control.null_literal;
-            assignment_expression -> expression -> symbol = control.String();
-        }
-        else if (right_type != control.String())
+        if (right_type != control.String())
         {
             if (right_type == control.void_type)
                  ReportSemError(SemanticError::VOID_TO_STRING,

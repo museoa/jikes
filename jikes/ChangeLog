@@ -1,3 +1,17 @@
+2001-04-04  Eric Blake  <ebb9@email.byu.edu>
+
+        * src/control.h (Control):
+	Remove NullLiteral(), as it is not needed when
+	null is not compile-time constant.
+	* src/bytecode.cpp (DeclareField, EmitExpression)
+	(EmitStringAppendMethod, LoadLiteral):
+	* src/expr.cpp (ProcessNullLiteral)
+	(CastPrimitiveValue, ProcessPLUS)
+	(ProcessAssignmentExpression):
+	Remove references to NullLiteral().  Now
+	null is not a compile-time constant.  Fixes
+	bug 62.
+
 2001-04-03  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/expr.cpp: Make const expressions involving binary
