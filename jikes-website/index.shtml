@@ -75,8 +75,9 @@
 
 
 <!-- content, main - still needs cleanup -->
-
- <p><a href="http://www.opensource.org/docs/certification_mark.html"><img src="http://opensource.org/trademarks/osi-certified/web/transparent/osi-certified-120x100-t.png" width="120" height="100" alt="[OSI Certified Logo]" border="0" align=right hspace=4 vspace=4></a>
+<table border=0 cellspacing=0 cellpadding=> <!-- a table within a table, how low have I sunken? -->
+<tr><td>
+<p>
     The Jikes Homepage has been reorganized to take advantage of the new support
     infrastructure offered by <a href="http://ibm.com/?origin=jikes">IBM's</a>
     <a href="http://ibm.com/developerworks/?origin=jikes">developerWorks</a>
@@ -84,7 +85,10 @@
     These pages will continue to provide user support to the Jikes community; however,
     development related issues have been moved to the our space in the
     <a href="/developerworks/projects/jikes/">dW/OSS</a>.</p>
-<br clear=all>
+</td><td>
+<a href="http://www.ibm.com/events/ibmdeveloperworkslive/r/ibmwebdw?origin=jikes"><img src="http://www-106.ibm.com/developerworks/i/ad-dwlive.gif" width="150" height="50" alt="dW Live! 2003" border="0" align=right hspace=4 vspace=4></a>
+</td></tr></table>
+
 <hr>
 <p>What is Jikes?</p>
 <P>Jikes<small><sup>TM</sup></small> is a compiler that translates Java<small><sup>TM</sup></small> source files as defined in
@@ -98,6 +102,7 @@ into the bytecoded instruction set and binary format defined in
 You may wonder why the world needs another Java compiler, considering that Sun provides
 javac free with its SDK. Jikes has four advantages that make it a valuable contribution to
 the Java community:
+<a href="http://www.opensource.org/docs/certification_mark.html"><img src="http://opensource.org/trademarks/osi-certified/web/transparent/osi-certified-120x100-t.png" width="120" height="100" alt="[OSI Certified Logo]" border="0" align=right hspace=4 vspace=4></a>
     <UL>
         <LI><em>Open source</em>. <STRONG>Jikes is <A HREF="http://www.opensource.org/docs/certification_mark.html">OSI Certified Open Source Software</A>.</strong>
             OSI Certified is a certification mark of the 
