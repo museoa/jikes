@@ -1,0 +1,72 @@
+<!-- DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd" -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><!-- #BeginTemplate "/Templates/DevFAQTemplate.dwt" -->
+<head>
+<!-- #BeginEditable "doctitle" --> 
+<title>Jikes Dev FAQ</title>
+<!-- #EndEditable --> 
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel="stylesheet" href="../styles/jikes-faq.css">
+</head>
+
+<body>
+<table width="750" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td><img src="../images/dev-faq-logo.png" width="150" height="54" alt="Jikes Developer FAQ"></td>
+    <td><img src="../images/jikes.png" width="600" height="54" alt="Jikes"></td>
+  </tr>
+  <tr> 
+    <td class="NavBar"> 
+      <p>&nbsp;</p>
+      <!-- The 'align="center"' attribute here is NOT 4.01 Strict compliant
+        but is needed to workaround a bug in Gecko (centering table with style
+        'text-align: center' doesn't work). Gecko is used by Mozilla and Netscape 6.
+        This workaround can be found multiple times in this file.
+      -->
+      <table width="130" border="0" cellspacing="0" cellpadding="0" align="center">
+        <tr>
+          <td>
+            <p style="text-indent: 0px"><a href="dev-index.html">Home</a></p>
+            <p style="text-indent: 0px"><a href="../Templates/user-index.html">User FAQ</a></p>
+            <p style="text-indent: 0px">Mailing Lists</p>
+            <p style="text-indent: 0px"><a href="dev-license.html">Licensing</a></p>
+            <p style="text-indent: 0px"><a href="dev-source-control.html">Source 
+              control</a><br>
+              <a href="dev-compiling.html">Compiling</a><br>
+              <a href="dev-cross-compiling.html">Cross-compiling</a><br>
+              <a href="dev-testing.html">Testing</a><br>
+              <a href="dev-patching.html">Patching</a><br>
+              <a href="dev-patch-submit.html">Submitting a patch</a></p>
+            <p style="text-indent: 0px">Platforms<br>
+              &nbsp;&nbsp;<a href="dev-aix.html">AIX</a><br>
+              &nbsp;&nbsp;<a href="dev-hp-ux.html">HP-UX</a><br>
+              &nbsp;&nbsp;<a href="dev-linux.html">Linux</a><br>
+              &nbsp;&nbsp;<a href="dev-mac.html">Mac</a><br>
+              &nbsp;&nbsp;<a href="dev-solaris.html">Solaris</a><br>
+              &nbsp;&nbsp;<a href="dev-win32.html">Win32</a> </p>
+            <p style="text-align: left; text-indent: 0px"><a href="dev-faq-update.html">Something 
+              wrong or missing?</a></p>
+            <p>&nbsp;</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+    <td class="TopicContent">
+      <p>&nbsp;</p>
+      <table width="580" border="0" cellspacing="0" cellpadding="0" align="center">
+        <tr>
+          <td><!-- #BeginEditable "TopicContent" -->
+            <h1>Jikes on Linux</h1>
+            <p>&nbsp;</p>
+            <p><i>Not written yet.</i></p>
+            <p><i>No information about it: normal ?</i></p>
+            <p>&nbsp;</p>
+            <!-- #EndEditable --></td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+</body>
+<!-- #EndTemplate --></html>

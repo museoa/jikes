@@ -1,0 +1,133 @@
+<!-- DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd" -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><!-- #BeginTemplate "/Templates/DevFAQTemplate.dwt" -->
+<head>
+<!-- #BeginEditable "doctitle" --> 
+<title>Jikes Dev FAQ</title>
+<!-- #EndEditable --> 
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel="stylesheet" href="../styles/jikes-faq.css">
+</head>
+
+<body>
+<table width="750" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td><img src="../images/dev-faq-logo.png" width="150" height="54" alt="Jikes Developer FAQ"></td>
+    <td><img src="../images/jikes.png" width="600" height="54" alt="Jikes"></td>
+  </tr>
+  <tr> 
+    <td class="NavBar"> 
+      <p>&nbsp;</p>
+      <!-- The 'align="center"' attribute here is NOT 4.01 Strict compliant
+        but is needed to workaround a bug in Gecko (centering table with style
+        'text-align: center' doesn't work). Gecko is used by Mozilla and Netscape 6.
+        This workaround can be found multiple times in this file.
+      -->
+      <table width="130" border="0" cellspacing="0" cellpadding="0" align="center">
+        <tr>
+          <td>
+            <p style="text-indent: 0px"><a href="dev-index.html">Home</a></p>
+            <p style="text-indent: 0px"><a href="../Templates/user-index.html">User FAQ</a></p>
+            <p style="text-indent: 0px">Mailing Lists</p>
+            <p style="text-indent: 0px"><a href="dev-license.html">Licensing</a></p>
+            <p style="text-indent: 0px"><a href="dev-source-control.html">Source 
+              control</a><br>
+              <a href="dev-compiling.html">Compiling</a><br>
+              <a href="dev-cross-compiling.html">Cross-compiling</a><br>
+              <a href="dev-testing.html">Testing</a><br>
+              <a href="dev-patching.html">Patching</a><br>
+              <a href="dev-patch-submit.html">Submitting a patch</a></p>
+            <p style="text-indent: 0px">Platforms<br>
+              &nbsp;&nbsp;<a href="dev-aix.html">AIX</a><br>
+              &nbsp;&nbsp;<a href="dev-hp-ux.html">HP-UX</a><br>
+              &nbsp;&nbsp;<a href="dev-linux.html">Linux</a><br>
+              &nbsp;&nbsp;<a href="dev-mac.html">Mac</a><br>
+              &nbsp;&nbsp;<a href="dev-solaris.html">Solaris</a><br>
+              &nbsp;&nbsp;<a href="dev-win32.html">Win32</a> </p>
+            <p style="text-align: left; text-indent: 0px"><a href="dev-faq-update.html">Something 
+              wrong or missing?</a></p>
+            <p>&nbsp;</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+    <td class="TopicContent">
+      <p>&nbsp;</p>
+      <table width="580" border="0" cellspacing="0" cellpadding="0" align="center">
+        <tr>
+          <td><!-- #BeginEditable "TopicContent" --> 
+            <h1>Jikes on AIX</h1>
+            <h2>Source control</h2>
+            <p>No specific tuning. See the <a href="dev-source-control.html">Source 
+              control</a> section for the general guidelines for setting it up.</p>
+            <p>&nbsp;</p>
+            <h2>Compile chain</h2>
+            <p>Nothing special for the GNU compile chain.</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground">Install or check 
+                          the compile chain:<br>
+                          make ??.?? (<a href="http://www.gnu.org/software/make/make.html">http://www.gnu.org/software/make/make.html</a>)<br>
+                          ... </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>Needed: does it compile using gcc ?</p>
+            <p>The "official" AIX binaries are produced using the <b>xlC</b> compiler 
+              obtained from the VACPP v5 product. Note that Jikes may well compile 
+              in v4, but many people refuse to deal with the GUI front end to 
+              the compiler: just <a href="dev-faq-update.html">drop us a note</a> 
+              if you find it doesn't work. Note that Jikes <b>will not</b> compile 
+              with the older v3.6 xlC, as it is way too old to support all the 
+              new fangled C++ structures used in Jikes.</p>
+            <p style="text-decoration: underline">Official AIX build command line:</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground"> <code>./configure 
+                          CXX=/usr/vacpp/bin/xlC \<br>
+                          CXXFLAGS="-qlanglvl=ansi -qnotempinc -+ -qinlglue"</code><br>
+                          <br>
+                          <code>./make</code> </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              <p>&nbsp;</p>
+              <p>Needed: do we need all these extra switches with the 1.13? Maybe 
+                the HAVE_JIKES_NAMESPACE=1 only?</p>
+              <p>&nbsp;</p>
+            </div>
+            <h2>Encoding support</h2>
+            <p><code>Iconv</code> (encoding library used by Jikes) is installed 
+              on AIX by default so you should get full system <code>-encoding</code> 
+              support without effort. </p>
+            <p>&nbsp;</p>
+            <h2>Testing with Jacks</h2>
+            <p>Nothing special, but make sure you using the right version of <code>tcl</code> 
+              (8.3)</p>
+            <p>However, it is best to NOT run <code>jacks</code> from within an 
+              <code>ATK</code> Typescript: <code>tcl</code> does something which 
+              causes the typescript to loose it's child process. This problem 
+              is not Jacks-specific. </p>
+            <p>&nbsp;</p>
+            <!-- #EndEditable --></td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+</body>
+<!-- #EndTemplate --></html>

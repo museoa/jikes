@@ -1,0 +1,351 @@
+<!-- DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd" -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><!-- #BeginTemplate "/Templates/DevFAQTemplate.dwt" -->
+<head>
+<!-- #BeginEditable "doctitle" --> 
+<title>Jikes Dev FAQ</title>
+<!-- #EndEditable --> 
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel="stylesheet" href="../styles/jikes-faq.css">
+</head>
+
+<body>
+<table width="750" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td><img src="../images/dev-faq-logo.png" width="150" height="54" alt="Jikes Developer FAQ"></td>
+    <td><img src="../images/jikes.png" width="600" height="54" alt="Jikes"></td>
+  </tr>
+  <tr> 
+    <td class="NavBar"> 
+      <p>&nbsp;</p>
+      <!-- The 'align="center"' attribute here is NOT 4.01 Strict compliant
+        but is needed to workaround a bug in Gecko (centering table with style
+        'text-align: center' doesn't work). Gecko is used by Mozilla and Netscape 6.
+        This workaround can be found multiple times in this file.
+      -->
+      <table width="130" border="0" cellspacing="0" cellpadding="0" align="center">
+        <tr>
+          <td>
+            <p style="text-indent: 0px"><a href="dev-index.html">Home</a></p>
+            <p style="text-indent: 0px"><a href="../Templates/user-index.html">User FAQ</a></p>
+            <p style="text-indent: 0px">Mailing Lists</p>
+            <p style="text-indent: 0px"><a href="dev-license.html">Licensing</a></p>
+            <p style="text-indent: 0px"><a href="dev-source-control.html">Source 
+              control</a><br>
+              <a href="dev-compiling.html">Compiling</a><br>
+              <a href="dev-cross-compiling.html">Cross-compiling</a><br>
+              <a href="dev-testing.html">Testing</a><br>
+              <a href="dev-patching.html">Patching</a><br>
+              <a href="dev-patch-submit.html">Submitting a patch</a></p>
+            <p style="text-indent: 0px">Platforms<br>
+              &nbsp;&nbsp;<a href="dev-aix.html">AIX</a><br>
+              &nbsp;&nbsp;<a href="dev-hp-ux.html">HP-UX</a><br>
+              &nbsp;&nbsp;<a href="dev-linux.html">Linux</a><br>
+              &nbsp;&nbsp;<a href="dev-mac.html">Mac</a><br>
+              &nbsp;&nbsp;<a href="dev-solaris.html">Solaris</a><br>
+              &nbsp;&nbsp;<a href="dev-win32.html">Win32</a> </p>
+            <p style="text-align: left; text-indent: 0px"><a href="dev-faq-update.html">Something 
+              wrong or missing?</a></p>
+            <p>&nbsp;</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+    <td class="TopicContent">
+      <p>&nbsp;</p>
+      <table width="580" border="0" cellspacing="0" cellpadding="0" align="center">
+        <tr>
+          <td><!-- #BeginEditable "TopicContent" --> 
+            <h1>Source Control</h1>
+            <p>The source code of Jikes, like many Open-Source projects, is controlled 
+              by a CVS repository. CVS is a source-control tool which means &quot;Concurrent 
+              Versions System&quot;. It allows several people to work on the same 
+              items (understand files) at the same time, thus handling the subsequent 
+              conflicts automatically (most of the time). To each item is attached 
+              a version number: it allows to keep track of what's been done into 
+              the source, to compare two different versions of the same item and 
+              to revert to previous states if needed. For more information on 
+              how CVS works, you may want to go to <a href="http://wwwinfo.cern.ch/asd/cvs/">the 
+              CERN Web site about CVS</a> (http://wwwinfo.cern.ch/asd/cvs/), or 
+              to <a href="http://cvshome.org">the Official CVS Web site</a> (http://cvshome.org).</p>
+            <p>&nbsp;</p>
+            <h2>Official Releases source</h2>
+            <p>If you want to compile your Jikes based on the source tree of an 
+              official release of Jikes, it's already packed and available as 
+              a single download file in the Jikes download page. You don't need 
+              the CVS source control tool described here.</p>
+            <p><i>Needed</i>: URL to Jikes download page?</p>
+            <p>&nbsp;</p>
+            <h2>WebCVS Interface</h2>
+            <p>The WebCVS Interface is the easiest way of getting your hands onto 
+              Jikes source code. It's a Web-based front-end on top of a CVS-enabled 
+              server: it allows you to get the latest version of the master source 
+              tree, or browse it online. You don't have to do any CVS client setup: 
+              the use of CVS as the source-control tool is completely transparent 
+              to you. It also allows basic features (revision history, revisions 
+              differences, tags...), see here for a more detailed list WebCVS 
+              features.</p>
+            <div style="text-align: center">
+              <table width="400" border="0" cellspacing="0" cellpadding="1" align="center">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground"><a href="http://oss.software.ibm.com/developerworks/opensource/cvs/jikes/">http://oss.software.ibm.com/developerworks/opensource/cvs/jikes/</a></td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>&nbsp;</p>
+            <h2>CVS Client Setup</h2>
+            <p>If you want to correctly develop and/or contribute to Jikes, you'll 
+              need a CVS Client to perform more advanced operations. The appropriate 
+              CVS Client is of course platform-dependent, and you'll find the 
+              correct resources in the topic related to your platform on the left.</p>
+            <p><i>Needed</i>: minimum CVS Client version ?</p>
+            <div style="text-align: center">
+              <table border="0" cellspacing="0" cellpadding="1" align="center">
+                <tr> 
+                  <td align="center" class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground"> Download 
+                          and install the correct CVS Client for your platform: 
+                          <br>
+                          <a href="ftp://ftp.cvshome.org/pub/">ftp://ftp.cvshome.org/pub/</a> 
+                          (binary or source)</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p style="text-decoration: underline">Note:</p>
+            <p>CVS is known to not work properly when used on machines behind 
+              firewalls (no tunneling available). Some people use some kind of 
+              hacking involving ssh and an external machine, but there's no real 
+              support for such security topologies in CVS (well, it can work if 
+              you manage to get your security admin to open the appropriate port 
+              on the firewall, but it's nothing close to probable). Use <a href="http://oss.software.ibm.com/developerworks/opensource/cvs/jikes/">WebCVS</a> 
+              instead.</p>
+            <p>The CVS client on the developer machine has to be configured to 
+              connect correctly to the Jikes repository. The way of doing so may 
+              vary from one platform to another, but most of the time it's done 
+              by setting the CVSROOT environment variable:</p>
+            <div style="text-align: center">
+              <table border="0" cellspacing="0" cellpadding="1" align="center">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground">set 
+                          <code>CVSROOT</code> to <code>:pserver:anoncvs@oss.software.ibm.com:/usr/cvs/jikes</code></td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>When using the CVS client, you'll probably want to use the following 
+              default options (for your own comfort):</p>
+            <p> 
+            <ul>
+              <li>ask CVS to be quiet and output only needed messages (global 
+                option -q)</li>
+              <li>use some compression but not too much to not overload the server 
+                (global option -z3)</li>
+              <li>prune empty directories when asking for a checkout or updating 
+                (update and checkout option -P). This way, you'll always get a 
+                clean source tree</li>
+              <li>use unidiff for extracting changes made to the source tree (diff 
+                options -uN), it's much easier to read and review when submitted. 
+                Mandatory to submit a patch.</li>
+            </ul>
+            <p><i>Needed</i>: what does -N means for diff ?</p>
+            <p>An easy way of enforcing this once and for all is to use a user 
+              preference file for CVS. Just dump the few lines below in a file 
+              called <code>.cvsrc</code> at the root of your account, and CVS 
+              will use these options when appropriate, without bothering you any 
+              more:</p>
+            <div style="text-align: center">
+              <table border="0" cellspacing="0" cellpadding="1" width="400" align="center">
+                <tr> 
+                  <td class="DimmedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="DimmedFrameBackground">Content 
+                          of <code>.cvsrc</code>:<br>
+                          <code>cvs -q -z3<br>
+                          diff -uN<br>
+                          update -P<br>
+                          checkout -P</code></td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>&nbsp;</p>
+            <h2>Login into the server</h2>
+            <p>Now that the CVS client is correctly configured to connect to the 
+              Jikes repository, you'll have to login into the CVS server before 
+              doing any operation. You do it by invoking the <code>login</code> 
+              command of CVS (if you're using a command-line CVS client; if not, 
+              a menu item probably allows you to do the same thing):</p>
+            <div style="text-align: center">
+              <table border="0" cellspacing="0" cellpadding="1" width="400" align="center">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground"><code>cvs 
+                          login</code><br>
+                          the requested password is "<code>anoncvs</code>" (without 
+                          the quotes)</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>&nbsp;</p>
+            <h2>Retrieving Jikes source code (first time)</h2>
+            <p>The next step is to retrieve the source code itself. The first 
+              time, you'll need to perform a 'checkout' on each of the module 
+              of Jikes to retrieve a local copy of the master source tree.</p>
+            <p>First, go to the directory where you want the Jikes source to be 
+              stored on your filesystem. Then, checkout the modules of Jikes you 
+              are interested into (most of you will checkout <code>jikes</code> 
+              and <code>jacks</code>):</p>
+            <div style="text-align: center">
+              <table border="0" cellspacing="0" cellpadding="1" width="400" align="center">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground"><code>cvs 
+                          checkout jikes jacks</code></td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>The associated directories should now have been created: <code>jikes</code> 
+              and <code>jacks</code> in this example.</p>
+            <p>You're now <a href="dev-compiling.html">ready to compile</a>.</p>
+            <p>&nbsp;</p>
+            <h2>Jikes modules</h2>
+            <p>Here's the list of Jikes modules available through CVS:</p>
+            <div style="text-align: center">
+              <table border="0" cellspacing="0" cellpadding="1" align="center">
+                <tr> 
+                  <td class="DimmedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="DimmedFrameBackground"> 
+                          <table border="0" cellspacing="0" cellpadding="0">
+                            <tr> 
+                              <td><code>jikes</code></td>
+                              <td>the main compiler source code</td>
+                            </tr>
+                            <tr> 
+                              <td><code>jacks</code></td>
+                              <td>Jacks is an Automated Compiler Killing Suite (test 
+                                suite)</td>
+                            </tr>
+                            <tr> 
+                              <td><code>jiketst</code></td>
+                              <td>the old Jikes test package code</td>
+                            </tr>
+                            <tr> 
+                              <td><code>jikespg</code></td>
+                              <td>the Jikes Parser Generator source code</td>
+                            </tr>
+                            <tr> 
+                              <td><code>jikes-website</code>&nbsp;</td>
+                              <td>the project Web pages </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>&nbsp;</p>
+            <h2>Updating Jikes source code</h2>
+            <p>Whenever you want to retrieve the latest modifications made to 
+              the source and update your local source tree copy, you'll need to 
+              use the 'update' command of CVS. Assuming you already logged into 
+              the CVS server, go into the directory corresponding to the module 
+              you want to update, then launch the update CVS command (this example 
+              updates the <code>jikes</code> module):</p>
+            <div style="text-align: center">
+              <table border="0" cellspacing="0" cellpadding="1" width="400" align="center">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground"><code>cd 
+                          jikes</code><br>
+                          <code>cvs update jikes</code></td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>After that, your module has been updated.</p>
+            <p>&nbsp;</p>
+            <h2>Coping with conflicts</h2>
+            <p>If you made some changes to your local copy of the source tree 
+              and then updated it, a conflict arises if a commiter (a person in 
+              charge of injecting modifications into the master source repository) 
+              made a change to the same file. Most of the time CVS will take care 
+              of resolving that conflict automatically for you. But if the same 
+              portion of code was modified by you (locally) and the commiter (in 
+              the repository), CVS cannot decide which code it's supposed to keep 
+              or how to merge them: CVS reports it to you by saying that an unresolved 
+              conflict occured.</p>
+            <p>In this situation, you'll need to perform the merging action yourself. 
+              To help you in that process, CVS includes both source codes in the 
+              file itself, like this:</p>
+            <p style="text-indent: 0px; margin-left: 50px"><code>&lt;&lt;&lt;&lt;&lt; file.cpp<br>
+              [the code you modified locally]<br>
+              =====<br>
+              [the code modified by the commiter] <br>
+              &gt;&gt;&gt;&gt;&gt; 1.23</code></p>
+            <p>You just have to replace these conflicting sections by the appropriate 
+              code, by hand, to resolve the conflict.</p>
+            <p>&nbsp;</p>
+            <h2>Additional resources</h2>
+            <p>You'll find additional information on how to use the powerful features 
+              of CVS here:</p>
+            <div style="text-align: center">
+              <table border="0" cellspacing="0" cellpadding="1" width="400" align="center">
+                <tr> 
+                  <td class="DimmedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="DimmedFrameBackground"> <a href="http://www.loria.fr/%7Emolli/cvs/doc/cvs_toc.html">Version 
+                          Management with CVS</a></td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>&nbsp;</p>
+            <!-- #EndEditable --></td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+</body>
+<!-- #EndTemplate --></html>

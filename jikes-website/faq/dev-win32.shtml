@@ -1,0 +1,584 @@
+<!-- DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd" -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><!-- #BeginTemplate "/Templates/DevFAQTemplate.dwt" -->
+<head>
+<!-- #BeginEditable "doctitle" --> 
+<title>Jikes Dev FAQ</title>
+<!-- #EndEditable --> 
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link rel="stylesheet" href="../styles/jikes-faq.css">
+</head>
+
+<body>
+<table width="750" border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td><img src="../images/dev-faq-logo.png" width="150" height="54" alt="Jikes Developer FAQ"></td>
+    <td><img src="../images/jikes.png" width="600" height="54" alt="Jikes"></td>
+  </tr>
+  <tr> 
+    <td class="NavBar"> 
+      <p>&nbsp;</p>
+      <!-- The 'align="center"' attribute here is NOT 4.01 Strict compliant
+        but is needed to workaround a bug in Gecko (centering table with style
+        'text-align: center' doesn't work). Gecko is used by Mozilla and Netscape 6.
+        This workaround can be found multiple times in this file.
+      -->
+      <table width="130" border="0" cellspacing="0" cellpadding="0" align="center">
+        <tr>
+          <td>
+            <p style="text-indent: 0px"><a href="dev-index.html">Home</a></p>
+            <p style="text-indent: 0px"><a href="../Templates/user-index.html">User FAQ</a></p>
+            <p style="text-indent: 0px">Mailing Lists</p>
+            <p style="text-indent: 0px"><a href="dev-license.html">Licensing</a></p>
+            <p style="text-indent: 0px"><a href="dev-source-control.html">Source 
+              control</a><br>
+              <a href="dev-compiling.html">Compiling</a><br>
+              <a href="dev-cross-compiling.html">Cross-compiling</a><br>
+              <a href="dev-testing.html">Testing</a><br>
+              <a href="dev-patching.html">Patching</a><br>
+              <a href="dev-patch-submit.html">Submitting a patch</a></p>
+            <p style="text-indent: 0px">Platforms<br>
+              &nbsp;&nbsp;<a href="dev-aix.html">AIX</a><br>
+              &nbsp;&nbsp;<a href="dev-hp-ux.html">HP-UX</a><br>
+              &nbsp;&nbsp;<a href="dev-linux.html">Linux</a><br>
+              &nbsp;&nbsp;<a href="dev-mac.html">Mac</a><br>
+              &nbsp;&nbsp;<a href="dev-solaris.html">Solaris</a><br>
+              &nbsp;&nbsp;<a href="dev-win32.html">Win32</a> </p>
+            <p style="text-align: left; text-indent: 0px"><a href="dev-faq-update.html">Something 
+              wrong or missing?</a></p>
+            <p>&nbsp;</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+    <td class="TopicContent">
+      <p>&nbsp;</p>
+      <table width="580" border="0" cellspacing="0" cellpadding="0" align="center">
+        <tr>
+          <td><!-- #BeginEditable "TopicContent" --> 
+            <h1>Jikes on Win32 </h1>
+            <p>Several options are possible to build a Jikes executable on the 
+              Win32 platform. </p>
+            <h2><a name="source-control"></a>Source Control</h2>
+            <p>If you choose to use a CVS client instead of just downloading the 
+              source through WebCVS, two CVS clients can be used on the Win32 
+              platform. The first is a command-line version, available in the 
+              CygWin port of the GNU tools, and the second is a Win32 graphical 
+              application, WinCvs. You can use both of them, without any distinction.</p>
+            <h3>WinCvs</h3>
+            <p>The WinCvs tool is a graphical front-end of the command-line CVS 
+              client. The GUI offers many convenient controls (right-click menus, 
+              for instance), which is quite interesting compared to the command-line 
+              CVS client (at least if you're not used to command-line tools). 
+              You may find additional information on WinCvs on <a href="http://www.wincvs.org">their 
+              Web site</a> or directly into the online help that comes with the 
+              tool itself.</p>
+            <p>The 1.1b17 release is known to work properly, but previous versions 
+              may also work.</p>
+            <div style="text-align: center"> 
+              <table width="400" border="0" cellspacing="0" cellpadding="1" align="center">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground">WinCvs General 
+                          download area:<br>
+                          <a href="http://www.wincvs.org/download.html">http://www.wincvs.org/download.html</a><br>
+                          <br>
+                          Release 1.1b17 available from:<br>
+                          <a href="http://download.sourceforge.net/cvsgui/WinCvs11b17.zip">http://download.sourceforge.net/cvsgui/WinCvs11b17.zip</a><br>
+                          or:<br>
+                          <a href="ftp://ftp.sunet.se/pub/non-gnu/cvsgui/WinCvs11b17.zip">ftp://ftp.sunet.se/pub/non-gnu/cvsgui/WinCvs11b17.zip</a> 
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>The tool comes with the usual Setup that you'll need to run to 
+              install the tool.</p>
+            <p>Now, you need to configure WinCvs, as any CVS client. This is done 
+              by using the Preferences dialog box:</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground">Admin / Preferences... 
+                          / General:<br>
+                          CVSROOT = <code>:pserver:anoncvs@oss.software.ibm.com:/usr/cvs/jikes</code><br>
+                          Authentication = <code>&quot;password&quot; file on 
+                          the cvs server</code><br>
+                          Use version = <code>cvs 1.10 (standard)</code><br>
+                          <br>
+                          Admin / Preferences... / WinCvs:<br>
+                          HOME folder = [choose a directory]</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>Note: you can use a proxy with WinCvs (Admin / Preferences... / 
+              Proxy tab), but be aware that if your proxy doesn't allow to use 
+              the cvs protocol, you won't be able to connect to the CVS server 
+              (many security admins only allow http and ftp protocols to go through 
+              their proxies or firewalls). Use <a href="http://oss.software.ibm.com/developerworks/opensource/cvs/jikes/">WebCVS</a> 
+              instead.</p>
+            <p><i>Needed</i>: anybody knows what's the protocol used by cvs ?</p>
+            <p>Then an optional (though recommended) <code>.cvsrc</code> file 
+              can be specified to store CVS-related switches once and for all. 
+              This file must be created (if it doesn't already exist) in the HOME 
+              folder you specified in the Admin / Preferences... tab. It cannot 
+              be created using Windows Explorer directly, because Explorer considers 
+              that a file with an extension and without a name (before the extension) 
+              is not legal. Use a MS-DOS command as stated below to create it, 
+              and then edit it with your favorite text editor, like any other 
+              file in Windows.</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center" width="400">
+                <tr> 
+                  <td class="DimmedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="DimmedFrameBackground">Type:<br>
+                          <code> echo &gt; .cvsrc</code> (in the <code>[HOME folder]</code> 
+                          directory)<br>
+                          <br>
+                          Edit the <code>[HOME folder]/.cvsrc</code> file:<br>
+                          <code>cvs -q -z3<br>
+                          diff -uN<br>
+                          update -P<br>
+                          checkout -P</code></td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>You finally have to retrieve the source code of Jikes.</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center" width="400">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground">Create / Checkout 
+                          module...:<br>
+                          Modules names = <code>jikes jacks</code><br>
+                          Local folder = <code>[choose a directory]</code></td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>Two directories must now have been created under the local folder 
+              you chose: <code>jikes</code> and <code>jacks</code>.</p>
+            <h3>Cygwin CVS</h3>
+            <p>This command-line version of the CVS client is part of the Cygwin 
+              distribution. To get it, just select the 'cvs' package in the list 
+              of packages to install. </p>
+            <p>&nbsp;</p>
+            <h2>Build environment setup </h2>
+            <p>Running the configure script to produce the correct build environment 
+              requires to install CygWin.</p>
+            <p>&nbsp;</p>
+            <h2>Installing Cygwin</h2>
+            <p>This section is dedicated to Cygwin, since this package of tools 
+              is mandatory to build a working Jikes. It's used for setting the 
+              build environment up and, optionally, to <a href="#source-control">get 
+              your hands on Jikes source code</a>.</p>
+            <h3>What is Cygwin?</h3>
+            <p>Cygwin is a POSIX emulation layer for Windows. It works with Windows 
+              NT, 2000 or 95/98 (but NT and 2000 works better). Cygwin is free 
+              software, it is licensed under the GPL (GNU Public License) with 
+              a special exception for projects that meet the OSD (Open Source 
+              D????), like Jikes.</p>
+            <p>Using a Cygwin based executable means you can use Windows style 
+              <code>C:\foo</code> or Unix style <code>/tmp</code> paths. A Cygwin 
+              program must be able to find <code>cygwin1.dll</code> on the <code>PATH</code>. 
+              It is not possible to compile static C++ executables that will run 
+              on any system using the Cygwin compiler.</p>
+            <h3>How do I install Cygwin?</h3>
+            <p>It is very simple. Cygwin provides a GUI based installer that will 
+              automatically download the requested packages and install them. 
+              All you need to do is download the installer and run it. </p>
+            <h3>Detailed step by step install instructions</h3>
+            <p>First, download the CygWin installer and save it to your disk. 
+              Watch out! You may have problems if you are behind a firewall that 
+              does not allow "active" FTP sessions, they seem to be the default 
+              when using Netscape under NT. If you are having these sorts of problems, 
+              you might want to try the HTTP based download:</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground">Download the CygWin 
+                          Installer from:<br>
+                          <a href="http://ftp.eq.uc.pt/software/pc/prog/cygwin/latest/setup.exe">http://ftp.eq.uc.pt/software/pc/prog/cygwin/latest/setup.exe</a><br>
+                          or:<br>
+                          <a href="ftp://ftp.freesoftware.com/pub/sourceware/cygwin/latest/setup.exe">ftp://ftp.freesoftware.com/pub/sourceware/cygwin/latest/setup.exe</a></td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <h3>Running the Cygwin Installer</h3>
+            <p>Double click on the downloaded <code>setup.exe</code> installer 
+              and choose the "Install from Internet" option. Hit the Next button 
+              and you will be asked for a &quot;Local package directory&quot;. 
+              The default should be the directory where you saved the installer, 
+              and since that is the directory you probably want to save files 
+              in (for future installations) you can press the Next button. This 
+              way, it will be installed on your machine, and you'll also have 
+              the downloaded binaries on your hard-drive in case you should rerun 
+              the setup again.</p>
+            <p>Now you are presented with the "Select install root directory" 
+              dialog. This is the directory that you want to install Cygwin into. 
+              The "root directory" you select will be the / directory visible 
+              from Cygwin applications. Beware of directories containing whitespaces! 
+              Cygwin doesn't like this at all for its installation directory.</p>
+            <p>The defaults for the file type (Unix) and the install for option 
+              (All) are fine. The &quot;All&quot; option is available only if 
+              you've got administration priviledges: it allows regular users to 
+              be able to run Cygwin. If you are installing as a regular user you 
+              might want to change the &quot;Install for&quot; option and choose 
+              &quot;Just me&quot; instead.</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground">Run <code>setup.exe</code> 
+                          &lt;Next&gt;<br>
+                          Select &quot;Install from Internet&quot; &lt;Next&gt;<br>
+                          [Optional : choose a directory to store the distribution] 
+                          &lt;Next&gt;<br>
+                          Choose the Cygwin installation directory<br>
+                          Select the &quot;Install for&quot; appropriate to your 
+                          priviledges and needs &lt;Next&gt;</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>At the next screen, you have a couple of options. Most folks will 
+              want to choose the "Direct Connection" option (when you dial up 
+              your Internet Service Provider using a modem, for example). If you're 
+              behind a firewall, the Installer can retrieve the connection properties 
+              from Internet Explorer (assuming it's setup correctly): select "Use 
+              IE Settings" in this case. If none of the option works for you, 
+              then explicitly specify the proxy settings by choosing the &quot;Use 
+              HTTP/FTP proxy&quot; option.</p>
+            <p>You are now presented with a mirrors list. You might want to pick 
+              any of them close to you, but the ftp.freesoftware.com mirror is 
+              a good default.</p>
+            <p>Once the mirror is selected, a dialog box shows you all the packages 
+              available in the Cygwin distribution. If you are not worried about 
+              disk space and enjoy a high-speed connection, just install all the 
+              packages. A full install takes up about 230 Megs of space. Not installing 
+              some packages will speed up the install process since the files 
+              will not need to be downloaded. If you have a slow connection this 
+              could be a major concern. Don't worry you can always install more 
+              packages later by running the Installer again, it tracks which packages 
+              you have installed.</p>
+            <p>Once the installer has downloaded and installed everything, it 
+              will ask you if you want to create a start menu entry and a desktop 
+              shortcut. Select whatever you want.</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground">Select the correct 
+                          connection settings (Use IE Settings if you don't know) 
+                          &lt;Next&gt;<br>
+                          Select a mirror site (ftp.freesoftware.com) &lt;Next&gt;<br>
+                          Select the packages to download and install &lt;Next&gt;<br>
+                          Choose shortcuts creation options</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p> Cygwin is now installed and ready to run!</p>
+            <h3>Using Cygwin</h3>
+            <p>There are two ways of using Cygwin. You can use the Cygwin shell 
+              to perform all your command-line operations, or use a regular Windows 
+              MS-DOS (Command Prompt) window.</p>
+            <p>Using the Cygwin <code>bash</code> shell is straightforward: the 
+              Installer creates a start menu shortcut to it. Just launch it to 
+              run the shell.</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground">Using Cygwin <code>bash</code> 
+                          Shell:<br>
+                          run <code>Start / Programs / Cygnus Solutions / Cygwin 
+                          Bash Shell</code></td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>When you want to able to benefit from the Cygwin tools from a regular 
+              (MS-DOS) prompt, you only have to include the path to the <code>[Cygwin 
+              install dir]/bin</code> directory into the <code>PATH</code> environement 
+              variable, so that the appropriate Cygwin executable (and <code>cygwin1.dll</code>) 
+              can be found when invoking a Cygwin tool.</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground">Using Cygwin tools 
+                          in a regular Command window (one shot):<br>
+                          at the prompt: <code>set PATH=%PATH%;[Cygwin install 
+                          dir]/bin</code><br>
+                          <br>
+                          Using Cygwin tools in regular Command windows (permanently):<br>
+                          add <code>[Cygwin install dir]/bin</code> to <code>PATH</code> 
+                          (WinNT/2k)<br>
+                          or: <br>
+                          add <code>set PATH=%PATH%;[Cygwin install dir]/bin</code> 
+                          to <code>autoexec.bat</code> (Win9x/ME)</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>&nbsp;</p>
+            <h2>Official Release</h2>
+            <p>The Win32 official release of Jikes is not produced on the Win32 
+              platform as expected (at least until now). This is done by using 
+              a feature of some compilers known as cross-compiling (please refer 
+              to the appropriate section to <a href="dev-cross-compiling.html">learn 
+              about cross-compiling Jikes</a>). It's actually built on a Unix 
+              machine, using the <code>gcc</code> compiler with the <code>mingw</code> 
+              backend to produce a Win32 binary.</p>
+            <p><i>Needed</i>: what's the exact command line to build Jikes for 
+              the Win32 platform ? -O3 is used for optimisation, but what about 
+              symbol stripping? </p>
+            <p>However, building Jikes with the same <code>gcc</code> and <code>mingw</code> 
+              combination running on the Win32 platform (as described <a href="#cygwin-gcc-mingw-compiling">here</a>) 
+              is perfectly valid (it's still a cross-compile, but the build is 
+              Cygwin instead of Unix). You don't need to reproduce the exact same 
+              hardware and software environment to generate a Jikes compiler as 
+              reliable as the official one (except for the modifications you may 
+              bring to the source code, of course!).</p>
+            <p>&nbsp;</p>
+            <p>Prefer having compiler specified with a path on the command-line 
+              rather than adding path to it in the PATH env var.</p>
+            <p>&nbsp;</p>
+            <h2>Compiling for Cygwin environment</h2>
+            <p> First, you will need to check the Jikes source code out of the 
+              CVS. Start up the Cygwin shell (bash) by clicking on the desktop 
+              shortcut or selecting the start menu item.</p>
+            <p> You should start in your users home directory, mine is /home/mdejong. 
+              Now create a directory that you will keep the source code in and 
+              a directory where you will build<br>
+              the Cygwin version of Jikes.</p>
+            <p> mkdir project<br>
+              cd project</p>
+            <p> Now you can check the Jikes source code out using the CVS clients.</p>
+            <p> export CVSROOT=:pserver:anoncvs@oss.software.ibm.com:/usr/cvs/jikes<br>
+              cvs login (password is anoncvs)<br>
+              cvs checkout jikes</p>
+            <p> Now build the source code. I always use a separate build directory 
+              when building code. The following commands will build jikes in the 
+              ~/build/jikes directory with debugging enabled and no optimization.</p>
+            <p> cd ~<br>
+              mkdir -p build/jikes<br>
+              cd build/jikes<br>
+              ../../project/jikes/configure CXXFLAGS=-g<br>
+              make</p>
+            <p> The configure script will automatically detect that you are building 
+              under Cygwin and it will set compilation options accordingly. All 
+              you have to do it type "make" and wait for the compile to finish. 
+              It will produce a jikes.exe file in the ~/build/jikes/src dir when 
+              it is finished.</p>
+            <p> That is all there is to it. You should now be able to run Jikes 
+              from the command line just like you would on any Unix system.</p>
+            <p> export JIKESPATH=D:/JDK1.3/jre/lib/rt.jar<br>
+              jikes Example.java</p>
+            <p> If you are interested in debugging Jikes, you can use the Insight 
+              GUI front end to GDB like so:</p>
+            <p> cd ~/build/jikes/src<br>
+              gdb jikes</p>
+            <p> That will start up Insight in GUI mode, if you want to run in 
+              plain gdb command line mode just use:</p>
+            <p> gdb -nw jikes</p>
+            <p>&nbsp;</p>
+            <h2><a name="cygwin-gcc-mingw-compiling"></a>Compiling with gcc and 
+              mingw (GNU gcc for Windows)</h2>
+            <p> The following instructions describe the process of building the 
+              Jikes Java compiler from source on a Windows machine. The resulting 
+              jikes.exe executable will run on any Windows machine without the 
+              need for additional dlls.</p>
+            <p> First, install Cygwin on your Windows box. Cygwin comes with its 
+              own version of gcc, but you will not be using that version since 
+              it would create an executable that depends on Cygwin.</p>
+            <p> You will need to download the mingw binaries. The first is the 
+              mingw runtime libs. The second is the binutils package (used by 
+              the compiler to create binaries). The last is the gcc compiler.</p>
+            <p> The files you will need to grab are:</p>
+            <p> mingw-msvcrt-20000203.zip<br>
+              binutils-19990818-1-msvcrt.zip<br>
+              gcc-2.95.2-1-msvcrt.zip</p>
+            <p> The URLs are:</p>
+            <p> ftp://ftp.nanotech.wisc.edu/pub/khan/gnu-win32/mingw32/snapshots/gcc-2.95.2-1/mingw-msvcrt-20000203.zip<br>
+              ftp://ftp.nanotech.wisc.edu/pub/khan/gnu-win32/mingw32/snapshots/gcc-2.95.2-1/binutils-19990818-1-msvcrt.zip<br>
+              ftp://ftp.nanotech.wisc.edu/pub/khan/gnu-win32/mingw32/snapshots/gcc-2.95.2-1/gcc-2.95.2-1-msvcrt.zip</p>
+            <p> Create a /usr/local/mingw directory (That's D:\cygwin\usr\local\mingw 
+              on my system) and save the .zip files in this newly created directory. 
+              Extract each of the zip files into the mingw directory. It is important 
+              that each of them extract directly into the /usr/local/mingw directory, 
+              you don't want a subdirectory for each zip file. If a dialog like 
+              "replace C++filt with new file" pops up while extracting, just hit 
+              "yes to all".</p>
+            <p> The /usr/local/mingw directory should now contain the following 
+              directories.</p>
+            <p> i386-mingw32msvc/<br>
+              lib/<br>
+              bin/<br>
+              include/</p>
+            <p> You should now be able to run the mingw version of gcc, check 
+              that your output matches the following:</p>
+            <p> $ /usr/local/mingw/bin/gcc.exe -v<br>
+              Reading specs from <br>
+              D:\cygwin\usr\local\mingw\bin\..\lib\gcc-lib\i386-mingw32msvc\2.95.2\specs<br>
+              gcc version 2.95.2 19991024 (release)</p>
+            <p> Now you are ready to grab the Jikes source code from the CVS. 
+              If you are using a released version, just extract the .tar file 
+              instead of getting the CVS version.</p>
+            <p> $ mkdir ~/project ; cd ~/project<br>
+              $ export CVSROOT=:pserver:anoncvs@oss.software.ibm.com:/usr/cvs/jikes<br>
+              $ cvs login (password is anoncvs)<br>
+              $ cvs co jikes</p>
+            <p> You should now have a ~/project/jikes directory, it contains all 
+              the source code to Jikes. You are now ready to build the source 
+              code.</p>
+            <p> The first step is to run the configure script. There are a couple 
+              things to note. You will need to tell the configure script that 
+              you want to use the mingw g++ instead of the Cygwin version by passing 
+              a CXX=... argument to configure. You will also need to pass the 
+              "host system" (the environment the final executable runs in) to 
+              the configure script since this is a cross compile. The --host=mingw32 
+              argument does just that.</p>
+            <p> $ cd jikes<br>
+              $ ./configure --host=mingw32 CXX=/usr/local/mingw/bin/g++</p>
+            <p> When you run configure, something like the following should be 
+              printed in the first few lines of output. Don't worry about the 
+              initial warning about --host, it is just there to scare off folks 
+              that don't know what they are doing :)</p>
+            <p> ...<br>
+              checking build system type... i686-pc-cygwin<br>
+              checking host system type... i386-unknown-mingw32<br>
+              ...</p>
+            <p> This is good, it means the configure script correctly detected 
+              that the build system (Cygwin) is different from the host system 
+              (Mingw). Now all you need to do is run make and a jikes.exe file 
+              will be created for you.</p>
+            <p> $ make</p>
+            <p> You can verify that the jikes.exe does not depend on any Cygwin 
+              libraries by running the following command:</p>
+            <p> $ cygcheck.exe jikes.exe<br>
+              Found: .\jikes.exe<br>
+              .\jikes.exe<br>
+              C:\WINNT\System32\KERNEL32.dll<br>
+              C:\WINNT\System32\ntdll.dll<br>
+              C:\WINNT\System32\msvcrt.dll</p>
+            <p> This shows that the executable only depends on dlls that are already 
+              installed on a Windows system.<br>
+              <br>
+              <br>
+            </p>
+            <p>&nbsp;</p>
+            <p>> You can't build in a directory other than the<br>
+              > srcdir with mingw. I am not sure what the problem is<br>
+              <br>
+              the problem is the -I paths in posix form... it's in Mumit's<br>
+              capable hands now.<br>
+              <br>
+              (workaround, -save-temps, pass all the .ii files through a<br>
+              sed script to replace \\ in files paths on lines begining<br>
+              with # to /, then finish compiling the .ii files.)<br>
+              <br>
+              (better workaround, let Mumit fix mingw)<br>
+            </p>
+            <p>&nbsp;</p>
+            <p>I just tried to build Jikes using mingw with the<br>
+              slight modification of putting the mingw gcc on the<br>
+              path ahead of the cygwin gcc. It worked just fine,<br>
+              so I think we should use that approach instead<br>
+              of having folks set CXX and stuff. A new user will<br>
+              want the most simple instructions possible, so<br>
+              the FAQ should look like:<br>
+              <br>
+              Install Cygwin and Mingw .... (from other post)<br>
+              <br>
+              Place Mingw gcc on the path ahead of Cygwin gcc:<br>
+              <br>
+              cd /usr/local/mingw/bin<br>
+              export PATH=`pwd`:${PATH}<br>
+              <br>
+              Compile the Jikes source code to create jikes.exe<br>
+              <br>
+              $ cd jikes<br>
+              $ ./configure --host=mingw32<br>
+              ...<br>
+              checking build system type... i686-pc-cygwin<br>
+              checking host system type... i386-pc-mingw32<br>
+              ...<br>
+              <br>
+              Note that the host should now be "i386-pc-mingw32",<br>
+              the other stuff should remain the same. Of course,<br>
+              the bits where "/usr/local/mingw/bin/g++ -v" were<br>
+              run can be replaced by "g++ -v".<br>
+              <br>
+            </p>
+            <p>&nbsp;</p>
+            <p>&nbsp; </p>
+            <p>&nbsp;</p>
+            <p>Q : Will we provide an automated detection of the msvc platform 
+              ? Or should state what to patch individually to do so ?</p>
+            <p>Option :</p>
+            <p>> The 'configure' script uses a 'conftest.cc' file for testing 
+              the compiler, > but VC++ does not recognize such an extension as 
+              a C++ source file. > => Fix : don't know yet, there's maybe a way 
+              of specifying to MSVC that a > .cc file is a C++ source file. Hack 
+              to make it run : replace 'ac_ext=cc' by > 'ac_ext=cpp' in the script. 
+              You need to pass the -TP flag to cl.exe so that it treats the file 
+              as C++. This is something that we really need to fix in autoconf. 
+            </p>
+            <p>Well, it would be better to get it added to autoconf. Do you have 
+              time to do some autoconf hacking? I have not done too much to get 
+              VC++ working under autoconf cause I just don't care about that compiler. 
+            </p>
+            <p>&nbsp; </p>
+            <p>&nbsp; </p>
+            <!-- #EndEditable --></td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+</body>
+<!-- #EndTemplate --></html>
