@@ -1,3 +1,8 @@
+2002-10-10  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/scanner.cpp (ScanKeyword7): Fix fallthrough that treated
+	"befault" as a keyword.
+
 2002-10-07  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/m4/ac_define_integer_bits.m4: New file.

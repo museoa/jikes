@@ -696,6 +696,7 @@ int Scanner::ScanKeyword7(wchar_t *p1)
             if (p1[1] == U_o && p1[2] == U_o && p1[3] == U_l &&
                 p1[4] == U_e && p1[5] == U_a && p1[6] == U_n)
                 return TK_boolean;
+            break;
         case U_d:
             if (p1[1] == U_e && p1[2] == U_f && p1[3] == U_a &&
                 p1[4] == U_u && p1[5] == U_l && p1[6] == U_t)
