@@ -348,7 +348,7 @@ Dump(wchar_t* wstr) {
     wchar_t *ptr = wstr;
     while (*ptr) {
         wchar_t c = *ptr;
-        if (c <= 128) {
+        if (c < 128) {
             str.Next() = (char) c;
         } else {
             str.Next() = '\\';

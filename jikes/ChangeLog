@@ -1,3 +1,9 @@
+2001-03-03  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/dump.cpp (Dump): Fix typo,
+	the ASCII range does not include
+	128.
+
 2000-03-03  Mo DeJong  <mdejong@redhat.com>
 
 	* src/dump.cpp (Dump): Add debugging
