@@ -260,16 +260,15 @@ static inline char* makeStrippedCopy(char* value)
     if (value == NULL)
         return NULL;
 
-    char* result = NULL;
     while (isspace(*value))
         value++;
 
-    if (*value)
-    {
-        result = new char[strlen(value) + 1];
-        strcpy(result, value);
+    char* result = new char[strlen(value) + 1];
+    strcpy(result, value);
 
 #ifdef HAVE_CYGWIN_WIN32_TO_POSIX_PATH_LIST
+    if (*value)
+    {
         //
         // Under Cygwin, we convert a Windows-style path into a UNIX-style
         // path.  A path like "C:\Cygwin\tmp;C:\Windows" is converted into
@@ -283,8 +282,8 @@ static inline char* makeStrippedCopy(char* value)
             delete[] result;
             result = temp;
         }
-#endif // CYGWIN_WIN32_TO_POSIX_PATH_LIST
     }
+#endif // CYGWIN_WIN32_TO_POSIX_PATH_LIST
     return result;
 }
 
