@@ -1994,16 +1994,15 @@ bool Semantic::ConstructorAccessCheck(Ast *invocation,
     }
 
     //
-    // An anonymous class can access protected constructors. But it is the
-    // anonymous class doing the access; the class instance creation is
-    // accessing the accessible generated constructor in the anonymous class,
-    // so we just use the normal rule that class instance creation cannot
-    // access protected constructors outside the package.
+    // Default constructors are not accessible outside the package, and
+    // protected constructors can only be accessed by a call to super(). This
+    // includes anonymous classes, where we will later generate a super() call.
     //
     if (containing_type -> ContainingPackage() != this_package &&
         ! constructor -> ACC_PUBLIC())
     {
-        return ! class_creation && constructor -> ACC_PROTECTED();
+        return constructor -> ACC_PROTECTED() &&
+            (! class_creation || class_creation -> class_body_opt);
     }
     return true;
 }

@@ -1,3 +1,8 @@
+2002-06-18  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/expr.cpp (ConstructorAccessCheck): Fix regressions not
+	covered by patch 280 - still bug 2899.
+
 2002-06-18  Eric B Blake  <eblake@ee.byu.edu>
 
 	* src/symbol.h (HasEnclosingInstance):
