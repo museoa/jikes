@@ -159,7 +159,7 @@ Option::Option(ArgumentExpander &arguments) :
                                               directory(NULL),
                                               dependence_report_name(NULL),
                                               encoding(NULL),
-#ifdef HAVE_LIB_ICU_UC
+#if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
                                               converter(NULL),
 #endif
                                               nowrite(false),
@@ -236,13 +236,22 @@ Option::Option(ArgumentExpander &arguments) :
                  depend = true;
             else if (strcmp(arguments.argv[i], "-encoding") == 0 && ((i + 1) < arguments.argc))
             {
-#ifdef HAVE_LIB_ICU_UC
+#if defined(HAVE_LIB_ICU_UC)
                 encoding = new char[strlen(arguments.argv[++i]) + 1];
                 strcpy(encoding, arguments.argv[i]);
                 UErrorCode err=U_ZERO_ERROR;
                 converter=ucnv_open(encoding, &err);
                 if(!converter)
                     bad_options.Next() = new OptionError(SemanticError::UNSUPPORTED_ENCODING, encoding); 
+#elif defined(HAVE_ICONV_H)
+                encoding = new char[strlen(arguments.argv[++i]) + 1];
+                strcpy(encoding, arguments.argv[i]);
+                converter=iconv_open("utf-16", encoding);
+                if(converter==(iconv_t)-1)
+                {
+                    converter = NULL;
+                    bad_options.Next() = new OptionError(SemanticError::UNSUPPORTED_ENCODING, encoding); 
+                }
 #else
                 bad_options.Next() = new OptionError(SemanticError::UNSUPPORTED_OPTION, "-encoding"); 
                 i++;
@@ -526,5 +535,9 @@ Option::~Option()
         delete [] current_directory[c];
 #endif
 
+#ifdef HAVE_ICONV_H
+    if(converter)
+        iconv_close(converter);
+#endif
     return;
 }

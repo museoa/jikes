@@ -16,8 +16,11 @@
 #include "control.h"
 #include "semantic.h"
 
-#ifdef HAVE_LIB_ICU_UC
+#if defined(HAVE_LIB_ICU_UC)
 # include <ucnv.h>
+#elif defined(HAVE_ICONV_H)
+# include <iconv.h>
+# include <errno.h>
 #endif
 
 wchar_t *LexStream::KeywordName(int kind)
@@ -442,7 +445,7 @@ int LexStream::hexvalue(wchar_t ch)
 //
 void LexStream::ProcessInput(char *buffer, long filesize)
 {
-#ifdef HAVE_LIB_ICU_UC
+#if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
     LexStream::ProcessInputUnicode(buffer,filesize);
 #else
     LexStream::ProcessInputAscii(buffer, filesize);
@@ -575,7 +578,7 @@ void LexStream::ProcessInputAscii(const char *buffer, long filesize)
     return;
 }
 
-#ifdef HAVE_LIB_ICU_UC
+#if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
 //
 // Read file_size Ascii characters from srcfile, convert them to unicode, and
 // store them in input_buffer.
@@ -602,7 +605,9 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
 
         UnicodeLexerState saved_state;
         UnicodeLexerState state = RAW;
+#ifdef HAVE_LIB_ICU_UC
         UErrorCode err = U_ZERO_ERROR;
+#endif
         bool oncemore = false;
 
         while((source_ptr <= source_tail) || oncemore)
@@ -637,6 +642,7 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                 {
                     const char *before = source_ptr;
 
+#ifdef HAVE_LIB_ICU_UC
                     ch=ucnv_getNextUChar (control.option.converter,
                                           &source_ptr,
                                           source_tail+1,
@@ -650,7 +656,32 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                         );
                         break;
                     }
+#else
+#   ifdef HAVE_ICONV_H
+                    unsigned char chd[2];
+                    unsigned char *chp  = chd;
+                    size_t   chl  = 2;
+                    size_t   srcl = (source_ptr-source_tail)+1;
+                    size_t n = iconv(control.option.converter,
+                                     &source_ptr, &srcl,
+                                     (char **)&chp, &chl
+                    );
 
+#        ifdef WORDS_BIGENDIAN
+                    ch=chd[0] + chd[1]*256;
+#        else
+                    ch=chd[1] + chd[0]*256;
+#        endif
+
+                    if(n==-1 && (errno != E2BIG))
+                    {
+                        fprintf(stderr,"Charset conversion error at offset : ", int(before-buffer));
+                        perror("");
+                        break;
+                    }
+                    
+#   endif
+#endif
                     if(before==source_ptr)
                     {
                         //End of conversion
@@ -783,7 +814,7 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
 
     return;
 }
-#endif // HAVE_LIB_ICU_UC
+#endif // defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
 
 //
 // This procedure uses a  quick sort algorithm to sort the stream ERRORS

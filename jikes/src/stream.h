@@ -291,7 +291,7 @@ private:
 
     int hexvalue(wchar_t ch);
     
-#ifdef HAVE_LIB_ICU_UC
+#if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
     enum UnicodeLexerState
     {
         RAW,
@@ -391,7 +391,7 @@ private:
     void ReadInput();
     void ProcessInput(char *, long);
     void ProcessInputAscii(const char *, long);
-#ifdef HAVE_LIB_ICU_UC
+#if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
     void ProcessInputUnicode(const char *, long);
 #endif  
 

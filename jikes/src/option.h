@@ -18,8 +18,10 @@
 #include "code.h"
 #include "tuple.h"
 
-#ifdef HAVE_LIB_ICU_UC
+#if defined(HAVE_LIB_ICU_UC)
 # include <ucnv.h>
+#elif defined(HAVE_ICONV_H)
+# include <iconv.h>
 #endif
 
 class ArgumentExpander
@@ -115,8 +117,10 @@ public:
          *dependence_report_name,
          *encoding;
 
-#ifdef HAVE_LIB_ICU_UC
+#if defined(HAVE_LIB_ICU_UC)
          UConverter *converter;
+#elif defined(HAVE_ICONV_H)
+         iconv_t converter;
 #endif
          
     Tuple<KeywordMap> keyword_map;

@@ -244,7 +244,6 @@ void SemanticError::StaticInitializer()
 
     warning[INVALID_OPTION] = 1;
     warning[DISABLED_OPTION] = 1;
-    warning[UNSUPPORTED_ENCODING] = 1;
     warning[CANNOT_OPEN_ZIP_FILE] = 1;
     warning[CANNOT_OPEN_PATH_DIRECTORY] = 1;
 
