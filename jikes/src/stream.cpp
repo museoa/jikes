@@ -275,11 +275,11 @@ StreamError::StreamError():initialized(false)
 
 Stream::Stream()
 :   input_buffer(NULL),
-    input_buffer_length(0),
+    input_buffer_length(0)
 #if defined(HAVE_LIB_ICU_UC)
-    _converter(NULL)
+    ,_converter(NULL)
 #elif defined(HAVE_ICONV_H)
-    _converter((iconv_t)-1)
+    ,_converter((iconv_t)-1)
 #endif
 {
 }
@@ -287,7 +287,9 @@ Stream::Stream()
 Stream::~Stream()
 {
     DestroyInput();
+#if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
     DestroyEncoding();
+#endif
 }
 
 #if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
