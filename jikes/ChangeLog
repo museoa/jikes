@@ -1,5 +1,12 @@
 2000-05-03  Mo DeJong  <mdejong@cygnus.com>
 
+	* src/incrmnt.cpp: Fixed use of dynamically
+	sized buffer on stack. It was not legal code
+	even though g++ accepted it. Also fixed up
+	some small style issues (if () instead of if()).
+
+2000-05-03  Mo DeJong  <mdejong@cygnus.com>
+
 	* src/stream.cpp: Use memcpy instead of
 	wmemcpy which is not supported on all systems.
 

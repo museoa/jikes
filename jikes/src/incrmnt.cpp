@@ -373,10 +373,11 @@ bool Control::IncrementalRecompilation()
 
         int  l = strlen(U8S_quit)+2;
         int  n = 0;
-        char line[l];
+        // FIXME: replace use of char * with u1 * later
+        char* line = new char[l];
         char ch;
 
-        while(n<l)
+        while (n<l)
         {
             cin.get(ch);
             if(ch == U_ESCAPE && ch == U_LINE_FEED)
@@ -386,22 +387,27 @@ bool Control::IncrementalRecompilation()
         }
         line[n]='\0';
 
-        if(line[0] == U_ESCAPE)
+        if (line[0] == U_ESCAPE) {
+            delete line;
             return false;
+        }
         
         char q[2] = {U_q, U_NU};
         
-        if(Case::StringEqual(line, U8S_quit) || Case::StringSegmentEqual(line, q, 2))
+        if (Case::StringEqual(line, U8S_quit) || Case::StringSegmentEqual(line, q, 2))
         {
+            delete line;
             delete new_arguments;
             return false;
         }
         
         candidates = input_java_file_set;
         candidates.Union(input_class_file_set);
+
+        delete line;
     }
 
-    if(!candidates.IsEmpty())
+    if (!candidates.IsEmpty())
     {
         TypeDependenceChecker dependence_checker((Control *) this, candidates, type_trash_bin);
         dependence_checker.PartialOrder();
