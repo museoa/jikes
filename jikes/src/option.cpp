@@ -523,6 +523,7 @@ Option::Option(ArgumentExpander &arguments) :
                 bootclasspath++;
 
             if (*bootclasspath == U_NULL) {
+	        // potential memory leak here, if that incr above executed.
                 delete [] bootclasspath;
                 bootclasspath = NULL;
             }
@@ -552,6 +553,7 @@ Option::Option(ArgumentExpander &arguments) :
                 extdirs++;
 
             if (*extdirs == U_NULL) {
+	        // potential memory leak here, if that incr above executed.
                 delete [] extdirs;
                 extdirs = NULL;
             }
@@ -583,6 +585,7 @@ Option::Option(ArgumentExpander &arguments) :
                 classpath++;
 
             if (*classpath == U_NULL) {
+	        // potential memory leak here, if that incr above executed.
                 delete [] classpath;
                 classpath = NULL;
             }
@@ -619,6 +622,7 @@ Option::Option(ArgumentExpander &arguments) :
                 sourcepath++;
 
             if (*sourcepath == U_NULL) {
+	        // potential memory leak here, if that incr above executed.
                 delete [] sourcepath;
                 sourcepath = NULL;
             }
@@ -640,29 +644,36 @@ Option::Option(ArgumentExpander &arguments) :
     // style path. A path like "C:\Cygwin\tmp;C:\Windows" is converted
     // into "/tmp:/cygdrive/c/Windows" (assuming C:\Cygwin is cygroot).
     // We can then parse it using the unix path seperator char ':'
-    paths_buffer = new char[cygwin_win32_to_posix_path_list_buf_size(classpath)];
-    cygwin_win32_to_posix_path_list(classpath, paths_buffer);
-    delete [] classpath;
-    classpath = paths_buffer;
+    if (classpath) {
+      paths_buffer = new char[cygwin_win32_to_posix_path_list_buf_size(classpath)];
+      cygwin_win32_to_posix_path_list(classpath, paths_buffer);
+      delete [] classpath;
+      classpath = paths_buffer;
+    }
 
     // Do the same for all the other paths.
-    paths_buffer = new
+    if (bootclasspath) {
+      paths_buffer = new
         char[cygwin_win32_to_posix_path_list_buf_size(bootclasspath)];
-    cygwin_win32_to_posix_path_list(bootclasspath, paths_buffer);
-    delete[] bootclasspath;
-    bootclasspath = paths_buffer;
+      cygwin_win32_to_posix_path_list(bootclasspath, paths_buffer);
+      delete[] bootclasspath;
+      bootclasspath = paths_buffer;
+    }
 
-    paths_buffer = new char[cygwin_win32_to_posix_path_list_buf_size(extdirs)];
-    cygwin_win32_to_posix_path_list(extdirs, paths_buffer);
-    delete[] extdirs;
-    extdirs = paths_buffer;
+    if (extdirs) {
+      paths_buffer = new char[cygwin_win32_to_posix_path_list_buf_size(extdirs)];
+      cygwin_win32_to_posix_path_list(extdirs, paths_buffer);
+      delete[] extdirs;
+      extdirs = paths_buffer;
+    }
 
-    sourcepath = paths_buffer;
-    paths_buffer = new
+    if (sourcepath) {
+      paths_buffer = new
         char[cygwin_win32_to_posix_path_list_buf_size(sourcepath)];
-    cygwin_win32_to_posix_path_list(sourcepath, paths_buffer);
-    delete[] sourcepath;
-    sourcepath = paths_buffer;
+      cygwin_win32_to_posix_path_list(sourcepath, paths_buffer);
+      delete[] sourcepath;
+      sourcepath = paths_buffer;
+    }
 #endif
 
     //

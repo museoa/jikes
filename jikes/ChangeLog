@@ -1,3 +1,10 @@
+2001-05-10  Chris Abbey  <cabbey@bresnanlink.net>
+
+	* src/option.cpp (Option::Option): make sure classpath,
+	bootclasspath, sourcepath and extdirs are not null before
+	being handed over to cygwin to convert the paths. Also
+	flagged some potential memory leaks.
+
 2001-05-09  Chris Abbey  <cabbey@bresnanlink.net>
 
 	* acinclude.m4:
