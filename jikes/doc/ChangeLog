@@ -2,6 +2,7 @@
 
 	* stream.cpp (ProcessInputUnicode): better conversion error reporting.
 	corrected problem with buffer underflow on last character.
+	Better handling of end of input data while converting to Unicode.
 
 	* option.cpp (nowrite): better handling of -encoding option when 
 	compiled w/o ICU.

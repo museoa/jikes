@@ -592,14 +592,14 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
     
     wchar_t *input_ptr = input_buffer;
     *input_ptr = U_LINE_FEED; // add an initial '\n';
-    
+
     if(buffer)
     {
         int      escape_value;
         wchar_t *escape_ptr;
         const char *source_ptr  = buffer;
         const char *source_tail = buffer + filesize - 1; // point to last character read from the file.
-        
+
         UnicodeLexerState saved_state;
         UnicodeLexerState state = RAW;
         UErrorCode err = U_ZERO_ERROR;
@@ -636,16 +636,24 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                 if(control.option.converter)
                 {
                     const char *before = source_ptr;
+
                     ch=ucnv_getNextUChar (control.option.converter,
                                           &source_ptr,
                                           source_tail+1,
                                           &err);
+
                     if(U_FAILURE(err))
                     {
                         fprintf(stderr,"Conversion error: %s at byte %d\n", 
                                 errorName(err),
                                 int(before-buffer)
                         );
+                        break;
+                    }
+
+                    if(before==source_ptr)
+                    {
+                        //End of conversion
                         break;
                     }
                 }
