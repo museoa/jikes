@@ -1,0 +1,14 @@
+This directory will hold a variety of subdirectories for projects that we will
+build as part of a 'make check' cycle. Ideally we will use well known build
+versions of these projects, but if that's not possible, well, we'll just have
+to deal with the possibility that these test can be broken by forces outside
+of our control.
+
+For now the "interface" is for each of these dirs to have a "doit" script to
+actually do the test, and a "cleanup" script to, well, cleanup after the fact.
+
+Ideally this would be in Makefile form... but well... it's just too simple to
+do these as shell scripts and trying to make them Makefiles just makes my
+head hurt. Anyone that can convert these to an equivalent functioning Makefile
+that takes "check" and "clean" as input is welcome to do so.
+

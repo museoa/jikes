@@ -1,0 +1,59 @@
+#!/bin/sh
+
+if [ -z "$BOOTCLASSPATH" ] ; then
+    echo "$0 WARNING: You may need to set the BOOTCLASSPATH..."
+fi
+
+#where is the project's code kept
+export CVSROOT=:pserver:anonymous@cvs.sourceforge.net:/cvsroot/robocode
+
+#ideally we'd also have a tag that we could pull, rather than head.
+#export CVSTAG=
+
+if [ -d robocode ] ; then
+  #start clean (done before up so as to reduce the ? lines)
+  find robocode -name \*\.class | xargs rm
+  cd robocode
+  cvs -qz3 up -dAP
+else
+  cvs -qz3 co robocode
+  cd robocode
+fi
+
+#Sadly robocode doesn't give us a Makefile or anything, but then if it did, we'd
+# spend more time in Make than in Jikes.... The following takes 3 seconds on my
+# workstation.
+
+#generate an input list
+find robocode -name \*.java > robocode.sources
+
+#ok, we'll assume for now that jikes lives in src, if you built with a different objdir,
+# hmm, should handle that sometime, not to mention convert this script to a Makefile.
+
+#the +Z0 is just to keep from filling the screen with output, like the -q above on cvs
+../../../src/jikes +Z0 @robocode.sources
+
+echo jikes return code $?
+
+#figure out what we built
+find . -name \*.class > robocode.classes
+
+#and compare it to what we expected to build, also check the input,
+# just in case the reasons the output check failed was because of
+# the input changing.
+sha1sum -c <<EOF
+4d67062ce14521d0debe664140512fe287c61aa5  robocode.classes
+9bf225cea202ff2503831af278587da76e0d901c  robocode.sources
+EOF
+
+if [ $? -ne 0 ] ; then
+    echo " "
+    echo "FAILURE.  Note that if neither robocode.classes nor"
+    echo " robocode.sources are listed as OK above, then it's quite"
+    echo " likely that robocode has added classes since this test"
+    echo " was developed and we need to update the checksums. If"
+    echo " only the robocode.classes line is bad then it's likely"
+    echo " that your jikes is broken; please fix it before commiting"
+    echo " whatever changes you're working on."
+    echo " "
+fi
