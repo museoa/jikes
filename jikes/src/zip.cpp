@@ -13,7 +13,7 @@
 #include "symbol.h"
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 //************************************************************************************************
@@ -412,4 +412,7 @@ void Zip::ReadDirectory()
     return;
 }
 
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
 

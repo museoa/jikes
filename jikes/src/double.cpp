@@ -12,7 +12,7 @@
 #include "long.h"
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 IEEEfloat::IEEEfloat(float d)
@@ -345,3 +345,8 @@ IEEEdouble::IEEEdouble(LongInt& a)
 {
     value.double_value = a.Double();
 }
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+

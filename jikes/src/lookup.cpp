@@ -15,7 +15,7 @@
 #include "case.h"
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 int SystemTable::primes[] = {DEFAULT_HASH_SIZE, 101, 401, MAX_HASH_SIZE};
@@ -1760,3 +1760,8 @@ LiteralSymbol *LiteralLookupTable::FindOrInsertLiteral(wchar_t *str, size_t len)
 
     return symbol;
 }
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+

@@ -13,7 +13,7 @@
 #include "control.h"
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 void Semantic::ProcessBlockStatements(AstBlock *block_body)
@@ -2346,3 +2346,8 @@ void Semantic::ProcessExecutableBodies(AstInterfaceDeclaration *interface_declar
 
     return;
 }
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+

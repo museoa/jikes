@@ -13,7 +13,7 @@
 #include "double.h"
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 // Define the PathSeparator() function with the proper
@@ -1103,4 +1103,8 @@ void ErrorString::fill(const char c)
 {
     fill_char = c;
 }
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
 

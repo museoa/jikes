@@ -35,7 +35,7 @@
 #include "unzip.h"
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 unsigned long Unzip::global_bb;                         /* bit buffer */
@@ -914,5 +914,10 @@ int Unzip::inflate_free()
     {
         return 0;
     }
+#endif
+
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
 #endif
 

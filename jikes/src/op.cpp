@@ -19,7 +19,7 @@
 */
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 
@@ -790,3 +790,8 @@ int Operators::stack_effect[] =
     0,  // OP_SOFTWARE
     0   // OP_HARDWARE
 };
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+

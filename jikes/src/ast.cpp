@@ -11,7 +11,7 @@
 #include "ast.h"
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 #ifdef JIKES_DEBUG
@@ -2347,3 +2347,8 @@ AstAssignmentExpression::~AstAssignmentExpression()
     //    delete left_hand_side;
     //    delete expression;
 }
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+

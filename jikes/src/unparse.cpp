@@ -7,6 +7,8 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
+#ifdef JIKES_DEBUG
+
 #include "platform.h"
 #include "ast.h"
 
@@ -15,15 +17,12 @@
 #include <fstream.h>
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
-#endif
-
-#ifdef JIKES_DEBUG
-    bool Ast::debug_unparse = false;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 
-#ifdef JIKES_DEBUG
+bool Ast::debug_unparse = false;
+
 // Special top-level form
 void AstCompilationUnit::Unparse(LexStream& lex_stream, char *directory)
 {
@@ -1092,4 +1091,9 @@ void AstAssignmentExpression::Unparse(Ostream& os, LexStream& lex_stream)
     if (Ast::debug_unparse)
         os << "/*:AstAssignmentExpression#" << this-> id << "*/";
 }
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
 #endif
+
+#endif // JIKES_DEBUG

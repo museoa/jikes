@@ -11,6 +11,3 @@
 #include "lpginput.h"
 #include "javadcl.h"
 
-#ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
-#endif

@@ -11,7 +11,7 @@
 #include "ast.h"
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 void Parser::ReallocateStacks()
@@ -784,3 +784,8 @@ int Parser::ParseCheck(int stck[], int stack_top, int first_token, int buffer_po
 
     return 0;
 }
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+

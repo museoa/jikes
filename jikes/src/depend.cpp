@@ -17,7 +17,7 @@
 #endif
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 //
@@ -477,3 +477,8 @@ TopologicalSort::~TopologicalSort()
 {
     delete pending;
 }
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+

@@ -12,7 +12,7 @@
 #include "double.h"
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 //
@@ -602,4 +602,8 @@ double LongInt::Double()
 
     return val;
 }
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
 

@@ -25,9 +25,8 @@
 */
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
-
 
 bool Semantic::IsIntValueRepresentableInType(AstExpression *expr, TypeSymbol *type)
 {
@@ -7227,3 +7226,8 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
 
     return;
 }
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+

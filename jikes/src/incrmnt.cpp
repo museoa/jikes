@@ -16,7 +16,7 @@
 #include "set.h"
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 void Control::RemoveTrashedTypes(SymbolSet &type_trash_set)
@@ -417,3 +417,8 @@ bool Control::IncrementalRecompilation()
 
     return true;
 }
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+

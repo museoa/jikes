@@ -16,7 +16,7 @@
 #include "case.h"
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 Control::Control(char **arguments, Option &option_) : return_code(0),
@@ -1387,3 +1387,8 @@ void Control::CleanUp(FileSymbol *file_symbol)
 
     return;
 }
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+

@@ -20,7 +20,7 @@
 */
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 void DiagnoseParser::ReallocateStacks()
@@ -2440,3 +2440,8 @@ void ParseError::PrintSecondaryMessage(int k)
     errors[k].Initialize(lex_stream);
     JikesAPI::getInstance()->reportError(&errors[k]);
 }
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+

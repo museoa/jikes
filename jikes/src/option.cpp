@@ -23,7 +23,7 @@
 #endif
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 //
@@ -550,3 +550,8 @@ Option::~Option()
 #endif
     return;
 }
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+

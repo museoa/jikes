@@ -27,7 +27,7 @@
 #endif
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 JikesError::JikesErrorSeverity StreamError::getSeverity        () 
@@ -1199,4 +1199,7 @@ void LexStream::PrintMessages()
     return;
 }
 
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
 

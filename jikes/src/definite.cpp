@@ -11,7 +11,7 @@
 #include "semantic.h"
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 DefiniteAssignmentSet *Semantic::DefiniteExpression(AstExpression *expr, BitSet &set)
@@ -2341,3 +2341,8 @@ void Semantic::DefiniteVariableInitializer(AstVariableDeclarator *variable_decla
 
     return;
 }
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+

@@ -12,7 +12,7 @@
 #include "semantic.h"
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 AccessFlags Semantic::ProcessClassModifiers(AstClassDeclaration *class_declaration)
@@ -1092,3 +1092,8 @@ AccessFlags Semantic::ProcessConstantModifiers(AstFieldDeclaration *field_declar
 
     return access_flags;
 }
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+

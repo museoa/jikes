@@ -21,9 +21,8 @@
 */
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
-
 
 static char*
       TK_notoken_STRING      = "TK_notoken",
@@ -329,4 +328,10 @@ void LexStream::Dump()
     return;
 }
 
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
 #endif
+
+#endif // JIKES_DEBUG
+

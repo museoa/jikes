@@ -1,3 +1,46 @@
+2000-01-10  Mo DeJong  <mdejong@redhat.com>
+
+	* src/ast.cpp:
+	* src/body.cpp:
+	* src/bytecode.cpp:
+	* src/case.cpp:
+	* src/code.cpp:
+	* src/control.cpp:
+	* src/decl.cpp:
+	* src/definite.cpp:
+	* src/depend.cpp:
+	* src/diagnose.cpp:
+	* src/double.cpp:
+	* src/dump.cpp:
+	* src/error.cpp:
+	* src/expr.cpp:
+	* src/getclass.cpp:
+	* src/incrmnt.cpp:
+	* src/init.cpp:
+	* src/javaact.cpp:
+	* src/jikesapi.cpp:
+	* src/long.cpp:
+	* src/lookup.cpp:
+	* src/lpginput.cpp:
+	* src/modifier.cpp:
+	* src/op.cpp:
+	* src/option.cpp:
+	* src/parser.cpp:
+	* src/platform.cpp:
+	* src/scanner.cpp:
+	* src/segment.cpp:
+	* src/set.cpp:
+	* src/stream.cpp:
+	* src/symbol.cpp:
+	* src/system.cpp:
+	* src/tab.cpp:
+	* src/unparse.cpp:
+	* src/unzip.cpp:
+	* src/zip.cpp: Replace "using namespace Jikes"
+	statements with "namespace Jikes { ... }" blocks.
+	This moves most of the classes and methods defined
+	by Jikes into the Jikes namespace.
+
 2000-01-04  Mo DeJong  <mdejong@redhat.com>
 
 	* configure.in: Replace check for

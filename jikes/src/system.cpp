@@ -13,7 +13,7 @@
 #include "zip.h"
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 //
@@ -943,4 +943,8 @@ TypeSymbol *Control::GetType(PackageSymbol *package, wchar_t *name)
 
     return type;
 }
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
 

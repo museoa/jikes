@@ -14,7 +14,7 @@
 #include "ast.h"
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 unsigned char SemanticError::warning[SemanticError::_num_kinds] = { 0 };
@@ -5337,3 +5337,8 @@ wchar_t *SemanticError::PrintCONSTRUCTOR_FOUND_IN_ANONYMOUS_CLASS(ErrorInfo &err
 
     return s.Array();
 }
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+

@@ -18,7 +18,7 @@
 #include "case.h"
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 char *FileSymbol::java_suffix = StringConstant::U8S__DO_java;
@@ -1921,4 +1921,7 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member)
     return write_method;
 }
 
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
 

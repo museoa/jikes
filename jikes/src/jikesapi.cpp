@@ -23,6 +23,11 @@
 using namespace Jikes;
 #endif
 
+// Note: JikesAPI classes only use the Jikes namespace above, they
+// are never defined in the Jikes namespace. The use of the Jikes
+// namespace is a compile time option and jikesapi.h can not
+// include build files like platform.h or config.h
+
 /**
  * A default implementation of ReadObject that read from the file sysytem.
  */ 

@@ -12,7 +12,7 @@
 #include "control.h"
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 void Semantic::ProcessVariableInitializer(AstVariableDeclarator *variable_declarator)
@@ -190,3 +190,8 @@ LiteralValue *Semantic::ComputeFinalValue(AstVariableDeclarator *variable_declar
 
     return value;
 }
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+

@@ -15,7 +15,7 @@
 #include "tuple.h"
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 //
@@ -4600,3 +4600,8 @@ void Semantic::ProcessBlockInitializers(AstClassBody *class_body)
 
     return;
 }
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+

@@ -12,7 +12,7 @@
 #include "error.h"
 
 #ifdef	HAVE_JIKES_NAMESPACE
-using namespace Jikes;
+namespace Jikes {	// Open namespace Jikes block
 #endif
 
 int (*Scanner::scan_keyword[13]) (wchar_t *p1) =
@@ -1575,4 +1575,7 @@ void Scanner::ClassifyNonAsciiUnicode()
     return;
 }
 
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
 
