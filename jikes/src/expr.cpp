@@ -2591,10 +2591,7 @@ void Semantic::ProcessAmbiguousName(AstName* name)
         else
         {
             FindVariableMember(type, name);
-            TypeSymbol* parent_type = (type -> IsArray()
-                                       ? type -> base_type : type);
-            if (! parent_type -> Primitive())
-                AddDependence(this_type, parent_type, name -> IsConstant());
+            AddDependence(this_type, type, name -> IsConstant());
         }
     }
 }
@@ -2614,9 +2611,7 @@ void Semantic::ProcessFieldAccess(Ast* expr)
         return;
     }
     FindVariableMember(type, field_access);
-    TypeSymbol* parent_type = type -> IsArray() ? type -> base_type : type;
-    if (! parent_type -> Primitive())
-        AddDependence(ThisType(), parent_type);
+    AddDependence(ThisType(), type);
 
     if (field_access -> symbol != control.no_type)
     {
@@ -3092,14 +3087,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation* method_call)
                                lex_stream -> NameString(id_token));
             }
         }
-        else
-        {
-            TypeSymbol* parent_type = (base_type -> IsArray()
-                                       ? base_type -> base_type
-                                       : base_type);
-            if (! parent_type -> Primitive())
-                AddDependence(this_type, parent_type);
-        }
+        else AddDependence(this_type, base_type);
     }
 
     //
@@ -3917,7 +3905,6 @@ TypeSymbol* Semantic::GetAnonymousType(AstClassCreationExpression* class_creatio
     {
         anon_type -> AddInterface(super_type);
         anon_type -> super = control.Object();
-        AddDependence(anon_type, control.Object());
         control.Object() -> subtypes -> AddElement(anon_type);
     }
     else anon_type -> super = super_type;

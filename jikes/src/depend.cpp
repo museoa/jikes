@@ -498,18 +498,28 @@ TopologicalSort::~TopologicalSort()
 }
 
 
+//
+// Depend on the base enclosing class. For example, with class A { class B{} },
+// using the type A.B[] will add a dependence on A, because it is A.java that
+// must exist for the compiler to redefine B.class, and B.class that will be
+// used by the VM to define B[]. We cannot add dependences on the primitive
+// types, because there is no .java file that defines them.
+// 
 void Semantic::AddDependence(TypeSymbol* base_type, TypeSymbol* parent_type,
                              bool static_access)
 {
+    assert(! base_type -> IsArray() && ! base_type -> Primitive());
+    if (parent_type -> IsArray())
+    {
+        parent_type = parent_type -> base_type;
+    }
     if (base_type -> Bad() || parent_type -> Bad() ||
-        parent_type == control.null_type)
+        parent_type == control.null_type || parent_type -> Primitive())
     {
         return;
     }
-    assert(! parent_type -> Primitive());
     base_type = base_type -> outermost_type;
     parent_type = parent_type -> outermost_type;
-
     parent_type -> dependents -> AddElement(base_type);
     if (static_access)
         base_type -> static_parents -> AddElement(parent_type);

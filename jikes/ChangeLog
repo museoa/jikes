@@ -1,3 +1,11 @@
+2004-04-07  Eric Blake  <ebb9@byu.net>
+
+	* src/depend.cpp (AddDependence): Move array, primitive processing
+	here from elsewhere. Once again allows int[].class in a package.
+	* src/expr.cpp (ProcessAmbiguousName, ProcessFieldAccess),
+	(ProcessMethodName, GetAnonymousType): Use updates to
+	AddDependence.
+
 2004-04-04  Eric Blake  <ebb9@byu.net>
 
 	* src/class.cpp (Init): Silence compiler warning.
