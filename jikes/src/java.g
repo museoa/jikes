@@ -2689,6 +2689,7 @@ void Parser::MakeLabeledStatement(void)
         p -> left_brace_token  = Token(1);
         p -> AddStatement((AstStatement *) Sym(3));
         p -> right_brace_token = Sym(3) -> RightToken();
+        p -> no_braces = true;
     }
 
     p -> label_opt = Token(1); // add label to statement
@@ -2779,6 +2780,7 @@ void Parser::Act$rule_number(void)
         block -> left_brace_token  = Token(5);
         block -> AddStatement((AstStatement *) Sym(5));
         block -> right_brace_token = Sym(5) -> RightToken();
+        block -> no_braces = true;
     }
 
     AstIfStatement *p = ast_pool -> NewIfStatement();
@@ -2803,6 +2805,7 @@ void Parser::MakeIfThenElseStatement(void)
         true_block -> left_brace_token  = Token(5);
         true_block -> AddStatement((AstStatement *) Sym(5));
         true_block -> right_brace_token = Sym(5) -> RightToken();
+        true_block -> no_braces = true;
     }
 
     AstBlock *false_block = Sym(7) -> BlockCast();
@@ -2813,6 +2816,7 @@ void Parser::MakeIfThenElseStatement(void)
         false_block -> left_brace_token  = Token(7);
         false_block -> AddStatement((AstStatement *) Sym(7));
         false_block -> right_brace_token = Sym(7) -> RightToken();
+        false_block -> no_braces = true;
     }
 
     AstIfStatement *p = ast_pool -> NewIfStatement();
@@ -3136,6 +3140,7 @@ void Parser::MakeWhileStatement(void)
     block -> left_brace_token  = Token(1); // point to 'WHILE' keyword
     block -> AddStatement(p);
     block -> right_brace_token = Sym(5) -> RightToken(); // point to last token in statement
+    block -> no_braces = true;
 
     Sym(1) = block;
 }
@@ -3165,6 +3170,7 @@ void Parser::Act$rule_number(void)
     block -> left_brace_token  = Token(1);
     block -> AddStatement(p);
     block -> right_brace_token = Token(7);
+    block -> no_braces = true;
 
     Sym(1) = block;
 }
@@ -3209,6 +3215,7 @@ void Parser::MakeForStatement(void)
     block -> left_brace_token  = Token(1);
     block -> AddStatement(p);
     block -> right_brace_token = Sym(9) -> RightToken();
+    block -> no_braces = true;
 
     Sym(1) = block;
 }

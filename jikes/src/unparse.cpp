@@ -54,20 +54,14 @@ void Ast::Unparse(Ostream& os, LexStream* lex_stream)
 void AstBlock::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstBlock:#" << id << "*/";
-    if (Ast::debug_unparse)
-        os << "/*no_braces:" << (int) no_braces << "*/";
-    if (! no_braces)
-        os << "{" << endl;
-    // Open brace, if any, must precede labels (e.g., to avoid separating
-    // labels from following for statement).
+        os << "/*AstBlock:#" << id << "*/"
+           << "/*no_braces:" << (int) no_braces << "*/";
     if (label_opt)
         os << lex_stream -> NameString(label_opt) << ": ";
-
+    if (! no_braces)
+        os << "{" << endl;
     for (int is = 0; is < NumStatements(); is++)
-    {
         Statement(is) -> Unparse(os, lex_stream);
-    }
     if (!no_braces)
         os << "}" << endl;
     if (Ast::debug_unparse)
@@ -758,7 +752,7 @@ void AstAssertStatement::Unparse(Ostream& os, LexStream* lex_stream)
         os << " : ";
         message_opt -> Unparse(os, lex_stream);
     }
-    os << ";\n";
+    os << ";" << endl;
     if (Ast::debug_unparse)
         os << "/*:AstAssertStatement#" << id << "*/";
 }

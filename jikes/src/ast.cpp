@@ -15,7 +15,7 @@ namespace Jikes { // Open namespace Jikes block
 #endif
 
 #ifdef JIKES_DEBUG
-    unsigned Ast::count = 0;
+unsigned Ast::count = 0;
 #endif
 
 //
@@ -77,8 +77,6 @@ void VariableSymbolArray::AllocateMoreSpace()
     // Finally, we update size.
     //
     size += Blksize();
-
-    return;
 }
 
 
@@ -185,8 +183,6 @@ void AstSwitchStatement::SortCases()
             }
         }
     }
-
-    return;
 }
 
 
@@ -210,6 +206,7 @@ Ast *AstBlock::Clone(StoragePool *ast_pool)
             clone -> AddStatement(Statement(j) -> Clone(ast_pool));
     }
     clone -> right_brace_token = right_brace_token;
+    clone -> no_braces = no_braces;
 
     return clone;
 }
@@ -1030,8 +1027,10 @@ void AstBlock::Print(LexStream& lex_stream)
         Coutput << lex_stream.NameString(label_opt) << ": ";
     Coutput << "Block at level " << nesting_level;
     if (block_symbol)
-        Coutput << ", max_variable_index " << block_symbol -> max_variable_index
-                << ", try_or_synchronized_variable_index " << block_symbol -> try_or_synchronized_variable_index;
+        Coutput << ", max_variable_index "
+                << block_symbol -> max_variable_index
+                << ", try_or_synchronized_variable_index "
+                << block_symbol -> try_or_synchronized_variable_index;
     else Coutput << ", BLOCK_SYMBOL NOT SET";
     Coutput << ")";
 
@@ -1055,25 +1054,25 @@ void AstBlock::Print(LexStream& lex_stream)
 void AstPrimitiveType::Print(LexStream& lex_stream)
 {
     Coutput << "#" << id << " (PrimitiveType):  "
-            << lex_stream.NameString(primitive_kind_token)
-            << endl;
+            << lex_stream.NameString(primitive_kind_token) << endl;
 }
 
 void AstArrayType::Print(LexStream& lex_stream)
 {
     Coutput << "#" << id << " (ArrayType):  "
-            << "#" << type -> id;
+            << "#" << type -> id << " (";
     for (int i = 0; i < NumBrackets(); i++)
-        Coutput << " []";
-    Coutput << endl;
+        Coutput << " #" << Brackets(i) -> id;
+    Coutput << ")" << endl;
     type -> Print(lex_stream);
+    for (int j = 0; j < NumBrackets(); j++)
+        Brackets(j) -> Print(lex_stream);
 }
 
 void AstSimpleName::Print(LexStream& lex_stream)
 {
     Coutput << "#" << id << " (SimpleName):  "
-            << lex_stream.NameString(identifier_token)
-            << endl;
+            << lex_stream.NameString(identifier_token) << endl;
 }
 
 void AstPackageDeclaration::Print(LexStream& lex_stream)
@@ -1088,9 +1087,10 @@ void AstImportDeclaration::Print(LexStream& lex_stream)
 {
     Coutput << "#" << id << " (ImportDeclaration):  "
             << lex_stream.NameString(import_token)
-            << " #" << name -> id << (star_token_opt ? "." : "")
-            << (star_token_opt ? lex_stream.NameString(star_token_opt) : L"")
-            << endl;
+            << " #" << name -> id;
+    if (star_token_opt)
+        Coutput << "." << lex_stream.NameString(star_token_opt);
+    Coutput << endl;
     name -> Print(lex_stream);
 }
 
@@ -1120,15 +1120,13 @@ void AstCompilationUnit::Print(LexStream& lex_stream)
 void AstModifier::Print(LexStream& lex_stream)
 {
     Coutput << "#" << id << " (Modifier):  "
-            << lex_stream.NameString(modifier_kind_token)
-            << endl;
+            << lex_stream.NameString(modifier_kind_token) << endl;
 }
 
 void AstEmptyDeclaration::Print(LexStream& lex_stream)
 {
     Coutput << "#" << id << " (EmptyDeclaration):  "
-            << lex_stream.NameString(semicolon_token)
-            << endl;
+            << lex_stream.NameString(semicolon_token) << endl;
 }
 
 void AstClassBody::Print(LexStream& lex_stream)
@@ -1155,11 +1153,9 @@ void AstClassDeclaration::Print(LexStream& lex_stream)
         Coutput << lex_stream.NameString(ClassModifier(i) -> modifier_kind_token)
                 << " ";
     }
-    Coutput << lex_stream.NameString(class_token)
-            << " "
+    Coutput << lex_stream.NameString(class_token) << " "
             << lex_stream.NameString(identifier_token)
-            << " #" << (super_opt ? super_opt -> id : 0)
-            << "(";
+            << " #" << (super_opt ? super_opt -> id : 0) << "(";
     for (int j = 0; j < NumInterfaces(); j++)
         Coutput << " #" << Interface(j) -> id;
     Coutput << ") #" << class_body -> id << endl;
@@ -1189,22 +1185,28 @@ void AstArrayInitializer::Print(LexStream& lex_stream)
 
 void AstBrackets::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (Brackets):  []" << endl;
+    Coutput << "#" << id << " (Brackets):  "
+            << lex_stream.NameString(left_bracket_token)
+            << lex_stream.NameString(right_bracket_token) << endl;
 }
 
 void AstVariableDeclaratorId::Print(LexStream& lex_stream)
 {
     Coutput << "#" << id << " (VariableDeclaratorId):  "
-            << lex_stream.NameString(identifier_token);
+            << lex_stream.NameString(identifier_token) << "(";
     for (int i = 0; i < NumBrackets(); i++)
-        Coutput << " []";
-    Coutput << endl;
+        Coutput << " #" << Brackets(i) -> id;
+    Coutput << " )" << endl;
+    for (int j = 0; j < NumBrackets(); j++)
+        Brackets(j) -> Print(lex_stream);
 }
 
 void AstVariableDeclarator::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (VariableDeclarator):  " << "#" << variable_declarator_name -> id << " #" <<
-        (variable_initializer_opt ? variable_initializer_opt -> id : 0) << endl;
+    Coutput << "#" << id << " (VariableDeclarator):  " << "#"
+            << variable_declarator_name -> id << " #"
+            << (variable_initializer_opt ? variable_initializer_opt -> id : 0)
+            << endl;
     variable_declarator_name -> Print(lex_stream);
     if (variable_initializer_opt)
         variable_initializer_opt -> Print(lex_stream);
@@ -1219,8 +1221,7 @@ void AstFieldDeclaration::Print(LexStream& lex_stream)
         Coutput << lex_stream.NameString(VariableModifier(i) -> modifier_kind_token)
                 << " ";
     }
-    Coutput << " #" << type -> id
-            << "(";
+    Coutput << " #" << type -> id << "(";
     for (int j = 0; j < NumVariableDeclarators(); j++)
         Coutput << " #" << VariableDeclarator(j) -> id;
     Coutput << ")" << endl;
@@ -1251,13 +1252,15 @@ void AstMethodDeclarator::Print(LexStream& lex_stream)
             << " (";
     for (int k = 0; k < NumFormalParameters(); k++)
         Coutput << " #" << FormalParameter(k) -> id;
-    Coutput << " )";
+    Coutput << " ) (";
     for (int i = 0; i < NumBrackets(); i++)
-        Coutput << " []";
-    Coutput <<  endl;
+        Coutput << " #" << Brackets(i) -> id;
+    Coutput << " )" << endl;
 
     for (int j = 0; j < NumFormalParameters(); j++)
         FormalParameter(j) -> Print(lex_stream);
+    for (int l = 0; l < NumBrackets(); l++)
+        Brackets(l) -> Print(lex_stream);
 }
 
 void AstMethodDeclaration::Print(LexStream& lex_stream)
@@ -1583,7 +1586,8 @@ void AstAssertStatement::Print(LexStream& lex_stream)
             << " ( #" << condition -> id;
     if (message_opt)
         Coutput << " : " << message_opt -> id;
-    Coutput << " ;\n";
+    else Coutput << " #0";
+    Coutput << " ;" << endl;
     condition -> Print(lex_stream);
     if (message_opt)
         message_opt -> Print(lex_stream);
@@ -1756,17 +1760,20 @@ void AstArrayCreationExpression::Print(LexStream& lex_stream)
 {
     Coutput << "#" << id << " (ArrayCreationExpression):  "
             << lex_stream.NameString(new_token)
-            << " #" << array_type -> id;
+            << " #" << array_type -> id << "( ";
     for (int i = 0; i < NumDimExprs(); i++)
         Coutput << " [#" << DimExpr(i) -> id << "]";
+    Coutput << " ) (";
     for (int k = 0; k < NumBrackets(); k++)
-        Coutput << " []";
-    Coutput << " "
-            << "#" << (array_initializer_opt ? array_initializer_opt -> id : 0) << endl;
+        Coutput << " #" << Brackets(k) -> id;
+    Coutput << " ) #"
+            << (array_initializer_opt ? array_initializer_opt -> id : 0) << endl;
 
     array_type -> Print(lex_stream);
     for (int j = 0; j < NumDimExprs(); j++)
         DimExpr(j) -> Print(lex_stream);
+    for (int l = 0; l < NumBrackets(); l++)
+        Brackets(l) -> Print(lex_stream);
 }
 
 void AstFieldAccess::Print(LexStream& lex_stream)
@@ -1824,15 +1831,19 @@ void AstPreUnaryExpression::Print(LexStream& lex_stream)
 
 void AstCastExpression::Print(LexStream& lex_stream)
 {
-    if (left_parenthesis_token_opt)
+    if (type_opt)
     {
-        Coutput << "#" << id << (kind == CAST ? " (CastExpression: just cast):  " : " (CastExpression: check and cast):  ")
-                << "( #" << (type_opt ? type_opt -> id : 0);
+        Coutput << "#" << id
+                << (kind == CAST ? " (CastExpression: just cast):  "
+                    : " (CastExpression: check and cast):  ")
+                << "( #" << type_opt -> id;
         for (int i = 0; i < NumBrackets(); i++)
-            Coutput << " []";
+            Coutput << " #" << Brackets(i) -> id;
         Coutput << " ) #" << expression -> id << endl;
         if (type_opt)
             type_opt -> Print(lex_stream);
+        for (int j = 0; j < NumBrackets(); j++)
+            Brackets(j) -> Print(lex_stream);
     }
     else
     {

@@ -1,5 +1,13 @@
 2001-12-08  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/java.g: Update parser to track generated blocks.
+	* src/javaact.cpp: Regenerate.
+	* src/ast.cpp: Fix some AST display issues.
+	* src/unparse.cpp (AstBlock::Unparse): Revert patch 134, while
+	still ensuring that bug 638 does not have problems.
+
+2001-12-08  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/java.g: Update parser to have only one label per block.
 	* src/javaact.cpp: Regenerate.
 	* src/ast.cpp:
