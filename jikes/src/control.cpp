@@ -470,8 +470,11 @@ Control::Control(char **arguments, Option &option_)
                                     // If the type is contained in a type that
                                     // is not one of the input files, save it
                                     //
-                                    if (static_parent -> file_symbol -> IsClass())
+                                    if (static_parent -> file_symbol &&
+                                        static_parent -> file_symbol -> IsClass())
+                                    {
                                         types_in_new_files.AddElement(static_parent);
+                                    }
                                 }
                             }
 
@@ -487,8 +490,11 @@ Control::Control(char **arguments, Option &option_)
                                 // If the type is contained in a type that is
                                 // not one of the input files, save it
                                 //
-                                if (parent -> file_symbol -> IsClass())
+                                if (parent -> file_symbol &&
+                                    parent -> file_symbol -> IsClass())
+                                {
                                     types_in_new_files.AddElement(parent);
+                                }
                             }
                         }
                     }

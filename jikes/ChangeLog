@@ -1,3 +1,8 @@
+2002-03-06  Andrew M. Inggs  <aminggs@yahoo.co.uk>
+
+	* src/control.cpp (Control): Check for null in +DR reports - bug
+	1792, patch 262.
+
 2002-03-06  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/ast.h: 
