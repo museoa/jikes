@@ -1,3 +1,8 @@
+2002-11-14  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/Makefile.in: Regenerate after fixing a bug in automake 1.7.1
+	- see patch 371.
+
 2002-11-12  Eric Blake  <ebb9@email.byu.edu>
 
 	* configure.in: Modify version, update to autoconf 2.54 and
