@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -803,7 +803,7 @@ private:
 
     Tuple<Utf8LiteralValue *> *utf8_literals;
     void EvaluateConstant(AstExpression *, int, int);
-    bool IsConstant(AstExpression *, TypeSymbol *);
+    bool IsConstantString(AstExpression *);
 
     enum
     {

@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -125,8 +125,6 @@ void SystemTable::Rehash()
         element -> next = base[i];
         base[i] = element;
     }
-
-    return;
 }
 
 DirectorySymbol *SystemTable::FindDirectorySymbol(dev_t device, ino_t inode)
@@ -159,8 +157,6 @@ void SystemTable::InsertDirectorySymbol(dev_t device, ino_t inode, DirectorySymb
     //
     if ((directories.Length() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
-
-    return;
 }
 
 int DirectoryTable::primes[] = {DEFAULT_HASH_SIZE, 2039, 4093, MAX_HASH_SIZE};
@@ -240,8 +236,6 @@ void DirectoryTable::Rehash()
         e -> next = base[k];
         base[k] = e;
     }
-
-    return;
 }
 
 
@@ -325,8 +319,6 @@ void DirectoryTable::InsertCaseInsensitiveEntry(DirectoryEntry *image)
     }
 
     delete [] lower_name;
-
-    return;
 }
 #endif
 
@@ -418,8 +410,6 @@ void NameLookupTable::Rehash()
         ns -> next = base[k];
         base[k] = ns;
     }
-
-    return;
 }
 
 
@@ -518,8 +508,6 @@ void TypeLookupTable::Rehash()
         type -> next_type = base[k];
         base[k] = type;
     }
-
-    return;
 }
 
 
@@ -567,8 +555,6 @@ void TypeLookupTable::InsertType(TypeSymbol *type)
     //
     if ((symbol_pool.Length() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
-
-    return;
 }
 
 
@@ -843,8 +829,6 @@ void IntLiteralTable::Rehash()
         ilv -> next = base[k];
         base[k] = ilv;
     }
-
-    return;
 }
 
 
@@ -1107,8 +1091,6 @@ void LongLiteralTable::Rehash()
         llv -> next = base[k];
         base[k] = llv;
     }
-
-    return;
 }
 
 
@@ -1234,8 +1216,6 @@ void FloatLiteralTable::Rehash()
         flv -> next = base[k];
         base[k] = flv;
     }
-
-    return;
 }
 
 
@@ -1360,8 +1340,6 @@ void DoubleLiteralTable::Rehash()
         dlv -> next = base[k];
         base[k] = dlv;
     }
-
-    return;
 }
 
 
@@ -1560,8 +1538,6 @@ void Utf8LiteralTable::Rehash()
         ulv -> next = base[k];
         base[k] = ulv;
     }
-
-    return;
 }
 
 
@@ -1679,47 +1655,38 @@ void Utf8LiteralTable::EvaluateConstant(AstExpression *expression, int start, in
 
         delete [] str;
     }
-    return;
 }
 
 
-bool Utf8LiteralTable::IsConstant(AstExpression *expression,
-                                  TypeSymbol *string_type)
+bool Utf8LiteralTable::IsConstantString(AstExpression *expression)
 {
-    if (expression -> Type() != string_type)
-        return false;
     if (expression -> IsConstant())
     {
-        // The EvaluateConstant method only works with
-        // Utf8LiteralValue* types.
-
-        assert(expression -> value);
-
+        // EvaluateConstant only works with Utf8LiteralValue* types.
         Utf8LiteralValue *literal =
             DYNAMIC_CAST<Utf8LiteralValue *, LiteralValue *>
                 (expression -> value);
-
         assert(literal -> value);
 
         utf8_literals -> Next() = literal;
         return true;
     }
 
-    AstBinaryExpression *binary_expression;
-    AstCastExpression *cast_expression;
-    AstParenthesizedExpression *parenthesized_expression;
-    if ((binary_expression = expression -> BinaryExpressionCast()))
+    AstBinaryExpression *binary_expression = expression -> BinaryExpressionCast();
+    AstCastExpression *cast_expression = expression -> CastExpressionCast();
+    AstParenthesizedExpression *parenthesized_expression = expression -> ParenthesizedExpressionCast();
+    if (binary_expression)
     {
         int left_start_marker = utf8_literals -> Length();
 
         AstExpression *left  = binary_expression -> left_expression,
                       *right = binary_expression -> right_expression;
 
-        bool left_is_constant = IsConstant(left, string_type);
+        bool left_is_constant = IsConstantString(left);
 
         int left_end_marker = utf8_literals -> Length();
 
-        bool right_is_constant = IsConstant(right, string_type);
+        bool right_is_constant = IsConstantString(right);
         if (left_is_constant && right_is_constant)
              return true;
 
@@ -1731,11 +1698,10 @@ bool Utf8LiteralTable::IsConstant(AstExpression *expression,
 
         utf8_literals -> Reset(left_start_marker);
     }
-    else if ((cast_expression = expression -> CastExpressionCast()))
-         return IsConstant(cast_expression -> expression, string_type);
-    else if ((parenthesized_expression = expression -> ParenthesizedExpressionCast()))
-         return IsConstant(parenthesized_expression -> expression,
-                           string_type);
+    else if (cast_expression)
+         return IsConstantString(cast_expression -> expression);
+    else if (parenthesized_expression)
+         return IsConstantString(parenthesized_expression -> expression);
 
     return false; // Not a constant String expression
 }
@@ -1744,20 +1710,14 @@ bool Utf8LiteralTable::IsConstant(AstExpression *expression,
 
 void Utf8LiteralTable::CheckStringConstant(AstExpression *expression)
 {
-    // This tuple object is used in the IsConstant() method,
+    // This tuple object is used in the IsConstantString() method,
     // it flattens the expresion tree into a set of utf8 literals.
     utf8_literals = new Tuple<Utf8LiteralValue *>(256);
 
-    //
-    // Pass the type of this expression, which is known to be String, for
-    // use in IsConstant() to avoid casting problems.
-    //
-    if (IsConstant(expression, expression -> Type()))
+    if (IsConstantString(expression))
         EvaluateConstant(expression, 0, utf8_literals -> Length());
 
     delete utf8_literals;
-
-    return;
 }
 
 
@@ -1824,8 +1784,6 @@ void LiteralLookupTable::Rehash()
         ls -> next = base[k];
         base[k] = ls;
     }
-
-    return;
 }
 
 

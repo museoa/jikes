@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -365,18 +365,17 @@ void Semantic::ProcessWhileStatement(Ast *stmt)
     ProcessExpression(while_statement -> expression);
     if (while_statement -> expression -> Type() == control.boolean_type)
     {
-        if (while_statement -> expression -> IsConstant())
+        if (IsConstantFalse(while_statement -> expression))
         {
-            IntLiteralValue *literal = (IntLiteralValue *) while_statement -> expression -> value;
-            if (! literal -> value)
-            {
-                 if (while_statement -> is_reachable)
-                     while_statement -> can_complete_normally = true;
-                 enclosed_statement -> is_reachable = false;
-            }
+            if (while_statement -> is_reachable)
+                while_statement -> can_complete_normally = true;
+            enclosed_statement -> is_reachable = false;
         }
-        else if (while_statement -> is_reachable)
-             while_statement -> can_complete_normally = true;
+        else if (! IsConstantTrue(while_statement -> expression) &&
+                 while_statement -> is_reachable)
+        {
+            while_statement -> can_complete_normally = true;
+        }
     }
     else if (while_statement -> expression -> Type() != control.no_type)
     {
@@ -450,18 +449,17 @@ void Semantic::ProcessForStatement(Ast *stmt)
         ProcessExpression(for_statement -> end_expression_opt);
         if (for_statement -> end_expression_opt -> Type() == control.boolean_type)
         {
-            if (for_statement -> end_expression_opt -> IsConstant())
+            if (IsConstantFalse(for_statement -> end_expression_opt))
             {
-                IntLiteralValue *literal = (IntLiteralValue *) for_statement -> end_expression_opt -> value;
-                if (! literal -> value)
-                {
-                     if (for_statement -> is_reachable)
-                         for_statement -> can_complete_normally = true;
-                     enclosed_statement -> is_reachable = false;
-                }
+                if (for_statement -> is_reachable)
+                    for_statement -> can_complete_normally = true;
+                enclosed_statement -> is_reachable = false;
             }
-            else if (for_statement -> is_reachable)
-                 for_statement -> can_complete_normally = true;
+            else if (! IsConstantTrue(for_statement -> end_expression_opt) &&
+                     for_statement -> is_reachable)
+            {
+                for_statement -> can_complete_normally = true;
+            }
         }
         else if (for_statement -> end_expression_opt -> Type() != control.no_type)
         {
@@ -754,13 +752,8 @@ void Semantic::ProcessDoStatement(Ast *stmt)
 
     ProcessExpression(do_statement -> expression);
 
-    IntLiteralValue *literal = NULL;
-    if (do_statement -> expression -> Type() == control.boolean_type)
-    {
-        if (do_statement -> expression -> IsConstant())
-            literal = (IntLiteralValue *) do_statement -> expression -> value;
-    }
-    else if (do_statement -> expression -> Type() != control.no_type)
+    if (do_statement -> expression -> Type() != control.boolean_type &&
+        do_statement -> expression -> Type() != control.no_type)
     {
         ReportSemError(SemanticError::TYPE_NOT_BOOLEAN,
                        do_statement -> expression -> LeftToken(),
@@ -774,13 +767,14 @@ void Semantic::ProcessDoStatement(Ast *stmt)
     //     1. The contained statement can complete normally and the condition
     //        expression is not a constant expression with the value true
     //     2. There is a reachable break statement that exits the do statement
-    //        (This condition is true is the block that immediately encloses
+    //        (This condition is true if the block that immediately encloses
     //        this do statement can complete normally. See
     //        ProcessBreakStatement)
     //
     AstBlock *block_body = (AstBlock *) BreakableStatementStack().Top();
-    do_statement -> can_complete_normally = (enclosed_statement -> can_complete_normally && ((! literal) || literal -> value == 0)) ||
-                                            block_body -> can_complete_normally;
+    do_statement -> can_complete_normally = ((enclosed_statement -> can_complete_normally &&
+                                              ! IsConstantTrue(do_statement -> expression)) || 
+                                             block_body -> can_complete_normally);
 
     BreakableStatementStack().Pop();
     ContinuableStatementStack().Pop();

@@ -24,7 +24,7 @@ namespace Jikes { // Open namespace Jikes block
 bool Semantic::IsIntValueRepresentableInType(AstExpression *expr,
                                              TypeSymbol *type)
 {
-    IntLiteralValue *literal = (IntLiteralValue *) expr -> value;
+    IntLiteralValue *literal = DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
 
     return (expr -> IsConstant() &&
             control.IsSimpleIntegerValueType(expr -> Type()) &&
@@ -4483,22 +4483,22 @@ void Semantic::ProcessMINUS(AstPreUnaryExpression *expr)
 
             if ((type == control.double_type))
             {
-                DoubleLiteralValue *literal = (DoubleLiteralValue *) expr -> expression -> value;
+                DoubleLiteralValue *literal = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> expression -> value);
                 expr -> value = control.double_pool.FindOrInsert(-literal -> value);
             }
             else if ((type == control.float_type))
             {
-                FloatLiteralValue *literal = (FloatLiteralValue *) expr -> expression -> value;
+                FloatLiteralValue *literal = DYNAMIC_CAST<FloatLiteralValue *> (expr -> expression -> value);
                 expr -> value = control.float_pool.FindOrInsert(-literal -> value);
             }
             else if ((type == control.long_type))
             {
-                LongLiteralValue *literal = (LongLiteralValue *) expr -> expression -> value;
+                LongLiteralValue *literal = DYNAMIC_CAST<LongLiteralValue *> (expr -> expression -> value);
                 expr -> value = control.long_pool.FindOrInsert(-literal -> value);
             }
             else
             {
-                IntLiteralValue *literal = (IntLiteralValue *) expr -> expression -> value;
+                IntLiteralValue *literal = DYNAMIC_CAST<IntLiteralValue *> (expr -> expression -> value);
                 expr -> value = control.int_pool.FindOrInsert(-literal -> value);
             }
         }
@@ -4526,12 +4526,12 @@ void Semantic::ProcessTWIDDLE(AstPreUnaryExpression *expr)
         {
             if (expr -> expression -> Type() == control.long_type)
             {
-                LongLiteralValue *literal = (LongLiteralValue *) expr -> expression -> value;
+                LongLiteralValue *literal = DYNAMIC_CAST<LongLiteralValue *> (expr -> expression -> value);
                 expr -> value = control.long_pool.FindOrInsert(~literal -> value);
             }
             else // assert(expr -> expression -> Type() == control.int_type)
             {
-                IntLiteralValue *literal = (IntLiteralValue *) expr -> expression -> value;
+                IntLiteralValue *literal = DYNAMIC_CAST<IntLiteralValue *> (expr -> expression -> value);
                 expr -> value = control.int_pool.FindOrInsert(~literal -> value);
             }
         }
@@ -4555,10 +4555,7 @@ void Semantic::ProcessNOT(AstPreUnaryExpression *expr)
     else
     {
         if (expr -> expression -> IsConstant())
-        {
-            IntLiteralValue *literal = (IntLiteralValue *) expr -> expression -> value;
-            expr -> value = control.int_pool.FindOrInsert(literal -> value ? 0 : 1);
-        }
+            expr -> value = control.int_pool.FindOrInsert(IsConstantTrue(expr -> expression) ? 0 : 1);
         expr -> symbol = control.boolean_type;
     }
 }
@@ -4832,232 +4829,227 @@ bool Semantic::CanCastConvert(TypeSymbol *target_type, TypeSymbol *source_type, 
 }
 
 
-LiteralValue *Semantic::CastPrimitiveValue(TypeSymbol *target_type, AstExpression *expr)
-{
-    LiteralValue *literal_value = NULL;
-    TypeSymbol *source_type = expr -> Type();
-
-    if (target_type == source_type)
-        literal_value = expr -> value;
-    else if (source_type != control.no_type)
-    {
-        char output_string[25];
-        int len;
-
-        if (target_type == control.String())
-        {
-            if (source_type == control.double_type)
-            {
-                DoubleLiteralValue *literal = (DoubleLiteralValue *) expr -> value;
-                DoubleToString ieee_double(literal -> value);
-                literal_value = control.Utf8_pool.FindOrInsert(ieee_double.String(), ieee_double.Length());
-            }
-            else if (source_type == control.float_type)
-            {
-                FloatLiteralValue *literal = (FloatLiteralValue *) expr -> value;
-                FloatToString ieee_float(literal -> value);
-                literal_value = control.Utf8_pool.FindOrInsert(ieee_float.String(), ieee_float.Length());
-            }
-            else if (source_type == control.long_type)
-            {
-                LongLiteralValue *literal = (LongLiteralValue *) expr -> value;
-                LongToDecString long_integer(literal -> value);
-                literal_value = control.Utf8_pool.FindOrInsert(long_integer.String(), long_integer.Length());
-            }
-            else if (source_type == control.char_type)
-            {
-                IntLiteralValue *literal = (IntLiteralValue *) expr -> value;
-                literal_value = control.Utf8_pool.FindOrInsert(literal -> value);
-            }
-            else if (source_type == control.boolean_type)
-            {
-                IntLiteralValue *literal = (IntLiteralValue *) expr -> value;
-                if (literal -> value == 0)
-                {
-                    output_string[0] = U_f;
-                    output_string[1] = U_a;
-                    output_string[2] = U_l;
-                    output_string[3] = U_s;
-                    output_string[4] = U_e;
-                    len = 5;
-                }
-                else
-                {
-                    output_string[0] = U_t;
-                    output_string[1] = U_r;
-                    output_string[2] = U_u;
-                    output_string[3] = U_e;
-                    len = 4;
-                }
-                literal_value = control.Utf8_pool.FindOrInsert(output_string, len);
-            }
-            else if (control.IsSimpleIntegerValueType(source_type))
-            {
-                IntLiteralValue *literal = (IntLiteralValue *) expr -> value;
-                IntToString integer(literal -> value);
-                literal_value = control.Utf8_pool.FindOrInsert(integer.String(), integer.Length());
-            }
-        }
-        else if (target_type == control.double_type)
-        {
-            if (source_type == control.float_type)
-            {
-                FloatLiteralValue *literal = (FloatLiteralValue *) expr -> value;
-                literal_value = control.double_pool.FindOrInsert(literal -> value.DoubleValue());
-            }
-            else if (source_type == control.long_type)
-            {
-                LongLiteralValue *literal = (LongLiteralValue *) expr -> value;
-                IEEEdouble value(literal -> value);
-                literal_value = control.double_pool.FindOrInsert(value);
-            }
-            else
-            {
-                IntLiteralValue *literal = (IntLiteralValue *) expr -> value;
-                IEEEdouble value(literal -> value);
-                literal_value = control.double_pool.FindOrInsert(value);
-            }
-        }
-        else if (target_type == control.float_type)
-        {
-            if (source_type == control.double_type)
-            {
-                DoubleLiteralValue *literal = (DoubleLiteralValue *) expr -> value;
-                literal_value = control.float_pool.FindOrInsert(literal -> value.FloatValue());
-            }
-            else if (source_type == control.long_type)
-            {
-                LongLiteralValue *literal = (LongLiteralValue *) expr -> value;
-                IEEEfloat value(literal -> value);
-                literal_value = control.float_pool.FindOrInsert(value);
-            }
-            else
-            {
-                IntLiteralValue *literal = (IntLiteralValue *) expr -> value;
-                IEEEfloat value(literal -> value);
-                literal_value = control.float_pool.FindOrInsert(value);
-            }
-        }
-        else if (target_type == control.long_type)
-        {
-            if (source_type == control.double_type)
-            {
-                DoubleLiteralValue *literal = (DoubleLiteralValue *) expr -> value;
-                literal_value = control.long_pool.FindOrInsert(literal -> value.LongValue());
-            }
-            else if (source_type == control.float_type)
-            {
-                FloatLiteralValue *literal = (FloatLiteralValue *) expr -> value;
-                literal_value = control.long_pool.FindOrInsert(literal -> value.LongValue());
-            }
-            else
-            {
-                IntLiteralValue *literal = (IntLiteralValue *) expr -> value;
-                literal_value = control.long_pool.FindOrInsert((LongInt) literal -> value);
-            }
-        }
-        else if (target_type == control.int_type)
-        {
-            if (source_type == control.double_type)
-            {
-                DoubleLiteralValue *literal = (DoubleLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((literal -> value).IntValue());
-            }
-            else if (source_type == control.float_type)
-            {
-                FloatLiteralValue *literal = (FloatLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert(literal -> value.IntValue());
-            }
-            else if (source_type == control.long_type)
-            {
-                LongLiteralValue *literal = (LongLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((i4) (literal -> value).LowWord());
-            }
-            else literal_value = expr -> value;
-        }
-        else if (target_type == control.char_type)
-        {
-            if (source_type == control.double_type)
-            {
-                DoubleLiteralValue *literal = (DoubleLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((i4) (u2) (literal -> value.IntValue()));
-            }
-            else if (source_type == control.float_type)
-            {
-                FloatLiteralValue *literal = (FloatLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((i4) (u2) (literal -> value.IntValue()));
-            }
-            else if (source_type == control.long_type)
-            {
-                LongLiteralValue *literal = (LongLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((i4) (u2) (literal -> value).LowWord());
-            }
-            else
-            {
-                IntLiteralValue *literal = (IntLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((i4) (u2) literal -> value);
-            }
-        }
-        else if (target_type == control.short_type)
-        {
-            if (source_type == control.double_type)
-            {
-                DoubleLiteralValue *literal = (DoubleLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((i4) (i2) (literal -> value.IntValue()));
-            }
-            else if (source_type == control.float_type)
-            {
-                FloatLiteralValue *literal = (FloatLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((i4) (i2) (literal -> value.IntValue()));
-            }
-            else if (source_type == control.long_type)
-            {
-                LongLiteralValue *literal = (LongLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((i4) (i2) (literal -> value).LowWord());
-            }
-            else
-            {
-                IntLiteralValue *literal = (IntLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((i4) (i2) literal -> value);
-            }
-        }
-        else if (target_type == control.byte_type)
-        {
-            if (source_type == control.double_type)
-            {
-                DoubleLiteralValue *literal = (DoubleLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((i4) (i1) (literal -> value.IntValue()));
-            }
-            else if (source_type == control.float_type)
-            {
-                FloatLiteralValue *literal = (FloatLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((i4) (i1) (literal -> value.IntValue()));
-            }
-            else if (source_type == control.long_type)
-            {
-                LongLiteralValue *literal = (LongLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((int) (i1) (literal -> value).LowWord());
-            }
-            else
-            {
-                IntLiteralValue *literal = (IntLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((i4) (i1) literal -> value);
-            }
-        }
-    }
-
-    return literal_value;
-}
-
-
 //
 // We only need to cast the value of constant primitive expressions.
 //
-inline LiteralValue *Semantic::CastValue(TypeSymbol *target_type, AstExpression *expr)
+LiteralValue *Semantic::CastValue(TypeSymbol *target_type,
+                                         AstExpression *expr)
 {
-    return (LiteralValue *) (expr -> IsConstant() && (target_type -> Primitive() || target_type == control.String())
-                                                   ? CastPrimitiveValue(target_type, expr)
-                                                   : NULL);
+    TypeSymbol *source_type = expr -> Type();
+
+    if (target_type == source_type || source_type == control.no_type ||
+        ! expr -> IsConstant())
+    {
+        assert(target_type == source_type || ! expr -> value);
+        return expr -> value;
+    }
+
+    LiteralValue *literal_value = NULL;
+    if (target_type == control.String())
+    {
+        char output_string[25];
+        int len;
+        if (source_type == control.double_type)
+        {
+            DoubleLiteralValue *literal = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> value);
+            DoubleToString ieee_double(literal -> value);
+            literal_value = control.Utf8_pool.FindOrInsert(ieee_double.String(), ieee_double.Length());
+        }
+        else if (source_type == control.float_type)
+        {
+            FloatLiteralValue *literal = DYNAMIC_CAST<FloatLiteralValue *> (expr -> value);
+            FloatToString ieee_float(literal -> value);
+            literal_value = control.Utf8_pool.FindOrInsert(ieee_float.String(), ieee_float.Length());
+        }
+        else if (source_type == control.long_type)
+        {
+            LongLiteralValue *literal = DYNAMIC_CAST<LongLiteralValue *> (expr -> value);
+            LongToDecString long_integer(literal -> value);
+            literal_value = control.Utf8_pool.FindOrInsert(long_integer.String(), long_integer.Length());
+        }
+        else if (source_type == control.char_type)
+        {
+            IntLiteralValue *literal = DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
+            literal_value = control.Utf8_pool.FindOrInsert(literal -> value);
+        }
+        else if (source_type == control.boolean_type)
+        {
+            if (IsConstantFalse(expr))
+            {
+                output_string[0] = U_f;
+                output_string[1] = U_a;
+                output_string[2] = U_l;
+                output_string[3] = U_s;
+                output_string[4] = U_e;
+                len = 5;
+            }
+            else
+            {
+                assert(IsConstantTrue(expr));
+                output_string[0] = U_t;
+                output_string[1] = U_r;
+                output_string[2] = U_u;
+                output_string[3] = U_e;
+                len = 4;
+            }
+            literal_value = control.Utf8_pool.FindOrInsert(output_string, len);
+        }
+        else if (control.IsSimpleIntegerValueType(source_type))
+        {
+            IntLiteralValue *literal = DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
+            IntToString integer(literal -> value);
+            literal_value = control.Utf8_pool.FindOrInsert(integer.String(), integer.Length());
+        }
+    }
+    else if (target_type == control.double_type)
+    {
+        if (source_type == control.float_type)
+        {
+            FloatLiteralValue *literal = DYNAMIC_CAST<FloatLiteralValue *> (expr -> value);
+            literal_value = control.double_pool.FindOrInsert(literal -> value.DoubleValue());
+        }
+        else if (source_type == control.long_type)
+        {
+            LongLiteralValue *literal = DYNAMIC_CAST<LongLiteralValue *> (expr -> value);
+            IEEEdouble value(literal -> value);
+            literal_value = control.double_pool.FindOrInsert(value);
+        }
+        else
+        {
+            IntLiteralValue *literal = DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
+            IEEEdouble value(literal -> value);
+            literal_value = control.double_pool.FindOrInsert(value);
+        }
+    }
+    else if (target_type == control.float_type)
+    {
+        if (source_type == control.double_type)
+        {
+            DoubleLiteralValue *literal = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> value);
+            literal_value = control.float_pool.FindOrInsert(literal -> value.FloatValue());
+        }
+        else if (source_type == control.long_type)
+        {
+            LongLiteralValue *literal = DYNAMIC_CAST<LongLiteralValue *> (expr -> value);
+            IEEEfloat value(literal -> value);
+            literal_value = control.float_pool.FindOrInsert(value);
+        }
+        else
+        {
+            IntLiteralValue *literal = DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
+            IEEEfloat value(literal -> value);
+            literal_value = control.float_pool.FindOrInsert(value);
+        }
+    }
+    else if (target_type == control.long_type)
+    {
+        if (source_type == control.double_type)
+        {
+            DoubleLiteralValue *literal = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> value);
+            literal_value = control.long_pool.FindOrInsert(literal -> value.LongValue());
+        }
+        else if (source_type == control.float_type)
+        {
+            FloatLiteralValue *literal = DYNAMIC_CAST<FloatLiteralValue *> (expr -> value);
+            literal_value = control.long_pool.FindOrInsert(literal -> value.LongValue());
+        }
+        else
+        {
+            IntLiteralValue *literal = DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
+            literal_value = control.long_pool.FindOrInsert((LongInt) literal -> value);
+        }
+    }
+    else if (target_type == control.int_type)
+    {
+        if (source_type == control.double_type)
+        {
+            DoubleLiteralValue *literal = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> value);
+            literal_value = control.int_pool.FindOrInsert((literal -> value).IntValue());
+        }
+        else if (source_type == control.float_type)
+        {
+            FloatLiteralValue *literal = DYNAMIC_CAST<FloatLiteralValue *> (expr -> value);
+            literal_value = control.int_pool.FindOrInsert(literal -> value.IntValue());
+        }
+        else if (source_type == control.long_type)
+        {
+            LongLiteralValue *literal = DYNAMIC_CAST<LongLiteralValue *> (expr -> value);
+            literal_value = control.int_pool.FindOrInsert((i4) (literal -> value).LowWord());
+        }
+        else literal_value = expr -> value;
+    }
+    else if (target_type == control.char_type)
+    {
+        if (source_type == control.double_type)
+        {
+            DoubleLiteralValue *literal = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> value);
+            literal_value = control.int_pool.FindOrInsert((i4) (u2) (literal -> value.IntValue()));
+        }
+        else if (source_type == control.float_type)
+        {
+            FloatLiteralValue *literal = DYNAMIC_CAST<FloatLiteralValue *> (expr -> value);
+            literal_value = control.int_pool.FindOrInsert((i4) (u2) (literal -> value.IntValue()));
+        }
+        else if (source_type == control.long_type)
+        {
+            LongLiteralValue *literal = DYNAMIC_CAST<LongLiteralValue *> (expr -> value);
+            literal_value = control.int_pool.FindOrInsert((i4) (u2) (literal -> value).LowWord());
+        }
+        else
+        {
+            IntLiteralValue *literal = DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
+            literal_value = control.int_pool.FindOrInsert((i4) (u2) literal -> value);
+        }
+    }
+    else if (target_type == control.short_type)
+    {
+        if (source_type == control.double_type)
+        {
+            DoubleLiteralValue *literal = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> value);
+            literal_value = control.int_pool.FindOrInsert((i4) (i2) (literal -> value.IntValue()));
+        }
+        else if (source_type == control.float_type)
+        {
+            FloatLiteralValue *literal = DYNAMIC_CAST<FloatLiteralValue *> (expr -> value);
+            literal_value = control.int_pool.FindOrInsert((i4) (i2) (literal -> value.IntValue()));
+        }
+        else if (source_type == control.long_type)
+        {
+            LongLiteralValue *literal = DYNAMIC_CAST<LongLiteralValue *> (expr -> value);
+            literal_value = control.int_pool.FindOrInsert((i4) (i2) (literal -> value).LowWord());
+        }
+        else
+        {
+            IntLiteralValue *literal = DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
+            literal_value = control.int_pool.FindOrInsert((i4) (i2) literal -> value);
+        }
+    }
+    else if (target_type == control.byte_type)
+    {
+        if (source_type == control.double_type)
+        {
+            DoubleLiteralValue *literal = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> value);
+            literal_value = control.int_pool.FindOrInsert((i4) (i1) (literal -> value.IntValue()));
+        }
+        else if (source_type == control.float_type)
+        {
+            FloatLiteralValue *literal = DYNAMIC_CAST<FloatLiteralValue *> (expr -> value);
+            literal_value = control.int_pool.FindOrInsert((i4) (i1) (literal -> value.IntValue()));
+        }
+        else if (source_type == control.long_type)
+        {
+            LongLiteralValue *literal = DYNAMIC_CAST<LongLiteralValue *> (expr -> value);
+            literal_value = control.int_pool.FindOrInsert((int) (i1) (literal -> value).LowWord());
+        }
+        else
+        {
+            IntLiteralValue *literal = DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
+            literal_value = control.int_pool.FindOrInsert((i4) (i1) literal -> value);
+        }
+    }
+
+    assert(literal_value);
+    return literal_value;
 }
 
 
@@ -5094,18 +5086,23 @@ void Semantic::ProcessCastExpression(Ast *expr)
     }
 
     int num_dimensions = cast_expression -> NumBrackets();
-    target_type = (num_dimensions == 0 ? target_type : target_type -> GetArrayType((Semantic *) this, num_dimensions));
+    target_type = (num_dimensions == 0 ? target_type
+                   : target_type -> GetArrayType((Semantic *) this,
+                                                 num_dimensions));
 
     if (CanAssignmentConvert(target_type, cast_expression -> expression))
     {
         cast_expression -> symbol = target_type;
-        cast_expression -> value = CastValue(target_type, cast_expression -> expression);
+        cast_expression -> value = CastValue(target_type,
+                                             cast_expression -> expression);
     }
-    else if (CanCastConvert(target_type, source_type, cast_expression -> right_parenthesis_token_opt))
+    else if (CanCastConvert(target_type, source_type,
+                            cast_expression -> right_parenthesis_token_opt))
     {
         cast_expression -> kind = Ast::CHECK_AND_CAST;
         cast_expression -> symbol = target_type;
-        cast_expression -> value = CastValue(target_type, cast_expression -> expression);
+        cast_expression -> value = CastValue(target_type,
+                                             cast_expression -> expression);
     }
     else
     {
@@ -5455,7 +5452,7 @@ void Semantic::ProcessPLUS(AstBinaryExpression *expr)
                  ReportSemError(SemanticError::VOID_TO_STRING,
                                 expr -> left_expression -> LeftToken(),
                                 expr -> left_expression -> RightToken());
-            else expr -> left_expression = ConvertToType(expr -> left_expression, control.String());
+            else expr -> left_expression -> value = CastValue(control.String(), expr -> left_expression);
         }
 
         //
@@ -5468,7 +5465,7 @@ void Semantic::ProcessPLUS(AstBinaryExpression *expr)
                  ReportSemError(SemanticError::VOID_TO_STRING,
                                 expr -> right_expression -> LeftToken(),
                                 expr -> right_expression -> RightToken());
-            else expr -> right_expression = ConvertToType(expr -> right_expression, control.String());
+            else expr -> right_expression -> value = CastValue(control.String(), expr -> right_expression);
         }
 
         AddDependence(ThisType(), control.StringBuffer(), expr -> binary_operator_token);
@@ -5496,29 +5493,29 @@ void Semantic::ProcessPLUS(AstBinaryExpression *expr)
         {
              if (expr -> Type() == control.double_type)
              {
-                 DoubleLiteralValue *left = (DoubleLiteralValue *) expr -> left_expression -> value;
-                 DoubleLiteralValue *right = (DoubleLiteralValue *) expr -> right_expression -> value;
+                 DoubleLiteralValue *left = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> left_expression -> value);
+                 DoubleLiteralValue *right = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> right_expression -> value);
 
                  expr -> value = control.double_pool.FindOrInsert(left -> value + right -> value);
              }
              else if (expr -> Type() == control.float_type)
              {
-                 FloatLiteralValue *left = (FloatLiteralValue *) expr -> left_expression -> value;
-                 FloatLiteralValue *right = (FloatLiteralValue *) expr -> right_expression -> value;
+                 FloatLiteralValue *left = DYNAMIC_CAST<FloatLiteralValue *> (expr -> left_expression -> value);
+                 FloatLiteralValue *right = DYNAMIC_CAST<FloatLiteralValue *> (expr -> right_expression -> value);
 
                  expr -> value = control.float_pool.FindOrInsert(left -> value + right -> value);
              }
              else if (expr -> Type() == control.long_type)
              {
-                 LongLiteralValue *left = (LongLiteralValue *) expr -> left_expression -> value;
-                 LongLiteralValue *right = (LongLiteralValue *) expr -> right_expression -> value;
+                 LongLiteralValue *left = DYNAMIC_CAST<LongLiteralValue *> (expr -> left_expression -> value);
+                 LongLiteralValue *right = DYNAMIC_CAST<LongLiteralValue *> (expr -> right_expression -> value);
 
                  expr -> value = control.long_pool.FindOrInsert(left -> value + right -> value);
              }
              else // assert(expr -> Type() == control.int_type)
              {
-                 IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
-                 IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+                 IntLiteralValue *left = DYNAMIC_CAST<IntLiteralValue *> (expr -> left_expression -> value);
+                 IntLiteralValue *right = DYNAMIC_CAST<IntLiteralValue *> (expr -> right_expression -> value);
 
                  expr -> value = control.int_pool.FindOrInsert(left -> value + right -> value);
              }
@@ -5565,15 +5562,15 @@ void Semantic::ProcessLEFT_SHIFT(AstBinaryExpression *expr)
         {
             if (expr -> Type() == control.long_type)
             {
-                LongLiteralValue *left = (LongLiteralValue *) expr -> left_expression -> value;
-                IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+                LongLiteralValue *left = DYNAMIC_CAST<LongLiteralValue *> (expr -> left_expression -> value);
+                IntLiteralValue *right = DYNAMIC_CAST<IntLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.long_pool.FindOrInsert(left -> value << (right -> value & LONG_SHIFT_MASK));
             }
             else // assert(expr -> Type() == control.int_type)
             {
-                IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
-                IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+                IntLiteralValue *left = DYNAMIC_CAST<IntLiteralValue *> (expr -> left_expression -> value);
+                IntLiteralValue *right = DYNAMIC_CAST<IntLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value << (right -> value & INT_SHIFT_MASK));
             }
@@ -5620,15 +5617,15 @@ void Semantic::ProcessRIGHT_SHIFT(AstBinaryExpression *expr)
         {
             if (expr -> Type() == control.long_type)
             {
-                LongLiteralValue *left = (LongLiteralValue *) expr -> left_expression -> value;
-                IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+                LongLiteralValue *left = DYNAMIC_CAST<LongLiteralValue *> (expr -> left_expression -> value);
+                IntLiteralValue *right = DYNAMIC_CAST<IntLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.long_pool.FindOrInsert(left -> value >> (right -> value & LONG_SHIFT_MASK));
             }
             else // assert(expr -> Type() == control.int_type)
             {
-                IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
-                IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+                IntLiteralValue *left = DYNAMIC_CAST<IntLiteralValue *> (expr -> left_expression -> value);
+                IntLiteralValue *right = DYNAMIC_CAST<IntLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value >> (right -> value & INT_SHIFT_MASK));
             }
@@ -5675,16 +5672,16 @@ void Semantic::ProcessUNSIGNED_RIGHT_SHIFT(AstBinaryExpression *expr)
         {
             if (expr -> Type() == control.long_type)
             {
-                LongLiteralValue *left = (LongLiteralValue *) expr -> left_expression -> value;
-                IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+                LongLiteralValue *left = DYNAMIC_CAST<LongLiteralValue *> (expr -> left_expression -> value);
+                IntLiteralValue *right = DYNAMIC_CAST<IntLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.long_pool.FindOrInsert((LongInt)
                     ((ULongInt) left -> value >> (right -> value & LONG_SHIFT_MASK)));
             }
             else // assert(expr -> Type() == control.int_type)
             {
-                IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
-                IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+                IntLiteralValue *left = DYNAMIC_CAST<IntLiteralValue *> (expr -> left_expression -> value);
+                IntLiteralValue *right = DYNAMIC_CAST<IntLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert((i4)
                     ((u4) left -> value >> (right -> value & INT_SHIFT_MASK)));
@@ -5710,29 +5707,29 @@ void Semantic::ProcessLESS(AstBinaryExpression *expr)
         {
             if (expr -> Type() == control.double_type)
             {
-                DoubleLiteralValue *left = (DoubleLiteralValue *) expr -> left_expression -> value;
-                DoubleLiteralValue *right = (DoubleLiteralValue *) expr -> right_expression -> value;
+                DoubleLiteralValue *left = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> left_expression -> value);
+                DoubleLiteralValue *right = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value < right -> value ? 1 : 0);
             }
             else if (expr -> Type() == control.float_type)
             {
-                FloatLiteralValue *left = (FloatLiteralValue *) expr -> left_expression -> value;
-                FloatLiteralValue *right = (FloatLiteralValue *) expr -> right_expression -> value;
+                FloatLiteralValue *left = DYNAMIC_CAST<FloatLiteralValue *> (expr -> left_expression -> value);
+                FloatLiteralValue *right = DYNAMIC_CAST<FloatLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value < right -> value ? 1 : 0);
             }
             else if (expr -> Type() == control.long_type)
            {
-                LongLiteralValue *left = (LongLiteralValue *) expr -> left_expression -> value;
-                LongLiteralValue *right = (LongLiteralValue *) expr -> right_expression -> value;
+                LongLiteralValue *left = DYNAMIC_CAST<LongLiteralValue *> (expr -> left_expression -> value);
+                LongLiteralValue *right = DYNAMIC_CAST<LongLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value < right -> value ? 1 : 0);
             }
             else // assert(expr -> Type() == control.int_type)
             {
-                IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
-                IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+                IntLiteralValue *left = DYNAMIC_CAST<IntLiteralValue *> (expr -> left_expression -> value);
+                IntLiteralValue *right = DYNAMIC_CAST<IntLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value < right -> value ? 1 : 0);
             }
@@ -5759,29 +5756,29 @@ void Semantic::ProcessGREATER(AstBinaryExpression *expr)
         {
             if (expr -> Type() == control.double_type)
             {
-                DoubleLiteralValue *left = (DoubleLiteralValue *) expr -> left_expression -> value;
-                DoubleLiteralValue *right = (DoubleLiteralValue *) expr -> right_expression -> value;
+                DoubleLiteralValue *left = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> left_expression -> value);
+                DoubleLiteralValue *right = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value > right -> value ? 1 : 0);
             }
             else if (expr -> Type() == control.float_type)
             {
-                FloatLiteralValue *left = (FloatLiteralValue *) expr -> left_expression -> value;
-                FloatLiteralValue *right = (FloatLiteralValue *) expr -> right_expression -> value;
+                FloatLiteralValue *left = DYNAMIC_CAST<FloatLiteralValue *> (expr -> left_expression -> value);
+                FloatLiteralValue *right = DYNAMIC_CAST<FloatLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value > right -> value ? 1 : 0);
             }
             else if (expr -> Type() == control.long_type)
             {
-                LongLiteralValue *left = (LongLiteralValue *) expr -> left_expression -> value;
-                LongLiteralValue *right = (LongLiteralValue *) expr -> right_expression -> value;
+                LongLiteralValue *left = DYNAMIC_CAST<LongLiteralValue *> (expr -> left_expression -> value);
+                LongLiteralValue *right = DYNAMIC_CAST<LongLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value > right -> value ? 1 : 0);
             }
             else // assert(expr -> Type() == control.int_type)
             {
-                IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
-                IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+                IntLiteralValue *left = DYNAMIC_CAST<IntLiteralValue *> (expr -> left_expression -> value);
+                IntLiteralValue *right = DYNAMIC_CAST<IntLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value > right -> value ? 1 : 0);
             }
@@ -5808,29 +5805,29 @@ void Semantic::ProcessLESS_EQUAL(AstBinaryExpression *expr)
         {
             if (expr -> Type() == control.double_type)
             {
-                DoubleLiteralValue *left = (DoubleLiteralValue *) expr -> left_expression -> value;
-                DoubleLiteralValue *right = (DoubleLiteralValue *) expr -> right_expression -> value;
+                DoubleLiteralValue *left = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> left_expression -> value);
+                DoubleLiteralValue *right = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value <= right -> value ? 1 : 0);
             }
             else if (expr -> Type() == control.float_type)
             {
-                FloatLiteralValue *left = (FloatLiteralValue *) expr -> left_expression -> value;
-                FloatLiteralValue *right = (FloatLiteralValue *) expr -> right_expression -> value;
+                FloatLiteralValue *left = DYNAMIC_CAST<FloatLiteralValue *> (expr -> left_expression -> value);
+                FloatLiteralValue *right = DYNAMIC_CAST<FloatLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value <= right -> value ? 1 : 0);
             }
             else if (expr -> Type() == control.long_type)
             {
-                LongLiteralValue *left = (LongLiteralValue *) expr -> left_expression -> value;
-                LongLiteralValue *right = (LongLiteralValue *) expr -> right_expression -> value;
+                LongLiteralValue *left = DYNAMIC_CAST<LongLiteralValue *> (expr -> left_expression -> value);
+                LongLiteralValue *right = DYNAMIC_CAST<LongLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value <= right -> value ? 1 : 0);
             }
             else // assert(expr -> Type() == control.int_type)
             {
-                IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
-                IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+                IntLiteralValue *left = DYNAMIC_CAST<IntLiteralValue *> (expr -> left_expression -> value);
+                IntLiteralValue *right = DYNAMIC_CAST<IntLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value <= right -> value ? 1 : 0);
             }
@@ -5857,29 +5854,29 @@ void Semantic::ProcessGREATER_EQUAL(AstBinaryExpression *expr)
         {
             if (expr -> Type() == control.double_type)
             {
-                DoubleLiteralValue *left = (DoubleLiteralValue *) expr -> left_expression -> value;
-                DoubleLiteralValue *right = (DoubleLiteralValue *) expr -> right_expression -> value;
+                DoubleLiteralValue *left = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> left_expression -> value);
+                DoubleLiteralValue *right = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value >= right -> value ? 1 : 0);
             }
             else if (expr -> Type() == control.float_type)
             {
-                FloatLiteralValue *left = (FloatLiteralValue *) expr -> left_expression -> value;
-                FloatLiteralValue *right = (FloatLiteralValue *) expr -> right_expression -> value;
+                FloatLiteralValue *left = DYNAMIC_CAST<FloatLiteralValue *> (expr -> left_expression -> value);
+                FloatLiteralValue *right = DYNAMIC_CAST<FloatLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value >= right -> value ? 1 : 0);
             }
             else if (expr -> Type() == control.long_type)
             {
-                LongLiteralValue *left = (LongLiteralValue *) expr -> left_expression -> value;
-                LongLiteralValue *right = (LongLiteralValue *) expr -> right_expression -> value;
+                LongLiteralValue *left = DYNAMIC_CAST<LongLiteralValue *> (expr -> left_expression -> value);
+                LongLiteralValue *right = DYNAMIC_CAST<LongLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value >= right -> value ? 1 : 0);
             }
             else // assert(expr -> Type() == control.int_type)
             {
-                IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
-                IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+                IntLiteralValue *left = DYNAMIC_CAST<IntLiteralValue *> (expr -> left_expression -> value);
+                IntLiteralValue *right = DYNAMIC_CAST<IntLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value >= right -> value ? 1 : 0);
             }
@@ -5902,14 +5899,17 @@ void Semantic::ProcessAND(AstBinaryExpression *expr)
         expr -> symbol = control.no_type;
     else
     {
-        if (left_type == control.boolean_type && right_type == control.boolean_type)
+        if (left_type == control.boolean_type &&
+            right_type == control.boolean_type)
         {
              expr -> symbol = control.boolean_type;
-             if (expr -> left_expression -> IsConstant() && expr -> right_expression -> IsConstant())
+             if (expr -> left_expression -> IsConstant() &&
+                 expr -> right_expression -> IsConstant())
              {
-                 IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
-                 IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
-                 expr -> value = control.int_pool.FindOrInsert(left -> value & right -> value);
+                 expr -> value =
+                     control.int_pool.FindOrInsert((IsConstantTrue(expr -> left_expression) &&
+                                                    IsConstantTrue(expr -> right_expression))
+                                                   ? 1 : 0);
              }
         }
         else
@@ -5932,15 +5932,15 @@ void Semantic::ProcessAND(AstBinaryExpression *expr)
                 {
                     if (expr_type == control.long_type)
                     {
-                        LongLiteralValue *left = (LongLiteralValue *) expr -> left_expression -> value;
-                        LongLiteralValue *right = (LongLiteralValue *) expr -> right_expression -> value;
+                        LongLiteralValue *left = DYNAMIC_CAST<LongLiteralValue *> (expr -> left_expression -> value);
+                        LongLiteralValue *right = DYNAMIC_CAST<LongLiteralValue *> (expr -> right_expression -> value);
 
                         expr -> value = control.long_pool.FindOrInsert(left -> value & right -> value);
                     }
                     else // assert(expr_type == control.int_type)
                     {
-                        IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
-                        IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+                        IntLiteralValue *left = DYNAMIC_CAST<IntLiteralValue *> (expr -> left_expression -> value);
+                        IntLiteralValue *right = DYNAMIC_CAST<IntLiteralValue *> (expr -> right_expression -> value);
 
                         expr -> value = control.int_pool.FindOrInsert(left -> value & right -> value);
                     }
@@ -5963,14 +5963,17 @@ void Semantic::ProcessXOR(AstBinaryExpression *expr)
         expr -> symbol = control.no_type;
     else
     {
-        if (left_type == control.boolean_type && right_type == control.boolean_type)
+        if (left_type == control.boolean_type &&
+            right_type == control.boolean_type)
         {
              expr -> symbol = control.boolean_type;
-             if (expr -> left_expression -> IsConstant() && expr -> right_expression -> IsConstant())
+             if (expr -> left_expression -> IsConstant() &&
+                 expr -> right_expression -> IsConstant())
              {
-                 IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
-                 IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
-                 expr -> value = control.int_pool.FindOrInsert(left -> value ^ right -> value);
+                 expr -> value =
+                     control.int_pool.FindOrInsert((IsConstantTrue(expr -> left_expression) !=
+                                                    IsConstantTrue(expr -> right_expression))
+                                                   ? 1 : 0);
              }
         }
         else
@@ -5993,15 +5996,15 @@ void Semantic::ProcessXOR(AstBinaryExpression *expr)
                 {
                     if (expr_type == control.long_type)
                     {
-                        LongLiteralValue *left = (LongLiteralValue *) expr -> left_expression -> value;
-                        LongLiteralValue *right = (LongLiteralValue *) expr -> right_expression -> value;
+                        LongLiteralValue *left = DYNAMIC_CAST<LongLiteralValue *> (expr -> left_expression -> value);
+                        LongLiteralValue *right = DYNAMIC_CAST<LongLiteralValue *> (expr -> right_expression -> value);
 
                         expr -> value = control.long_pool.FindOrInsert(left -> value ^ right -> value);
                     }
                     else // assert(expr_type == control.int_type)
                     {
-                        IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
-                        IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+                        IntLiteralValue *left = DYNAMIC_CAST<IntLiteralValue *> (expr -> left_expression -> value);
+                        IntLiteralValue *right = DYNAMIC_CAST<IntLiteralValue *> (expr -> right_expression -> value);
 
                         expr -> value = control.int_pool.FindOrInsert(left -> value ^ right -> value);
                     }
@@ -6024,14 +6027,17 @@ void Semantic::ProcessIOR(AstBinaryExpression *expr)
         expr -> symbol = control.no_type;
     else
     {
-        if (left_type == control.boolean_type && right_type == control.boolean_type)
+        if (left_type == control.boolean_type &&
+            right_type == control.boolean_type)
         {
              expr -> symbol = control.boolean_type;
-             if (expr -> left_expression -> IsConstant() && expr -> right_expression -> IsConstant())
+             if (expr -> left_expression -> IsConstant() &&
+                 expr -> right_expression -> IsConstant())
              {
-                 IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
-                 IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
-                 expr -> value = control.int_pool.FindOrInsert(left -> value | right -> value);
+                 expr -> value =
+                     control.int_pool.FindOrInsert((IsConstantTrue(expr -> left_expression) ||
+                                                    IsConstantTrue(expr -> right_expression))
+                                                   ? 1 : 0);
              }
         }
         else
@@ -6054,15 +6060,15 @@ void Semantic::ProcessIOR(AstBinaryExpression *expr)
                 {
                     if (expr_type == control.long_type)
                     {
-                        LongLiteralValue *left = (LongLiteralValue *) expr -> left_expression -> value;
-                        LongLiteralValue *right = (LongLiteralValue *) expr -> right_expression -> value;
+                        LongLiteralValue *left = DYNAMIC_CAST<LongLiteralValue *> (expr -> left_expression -> value);
+                        LongLiteralValue *right = DYNAMIC_CAST<LongLiteralValue *> (expr -> right_expression -> value);
 
                         expr -> value = control.long_pool.FindOrInsert(left -> value | right -> value);
                     }
                     else // assert(expr_type == control.int_type)
                     {
-                        IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
-                        IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+                        IntLiteralValue *left = DYNAMIC_CAST<IntLiteralValue *> (expr -> left_expression -> value);
+                        IntLiteralValue *right = DYNAMIC_CAST<IntLiteralValue *> (expr -> right_expression -> value);
 
                         expr -> value = control.int_pool.FindOrInsert(left -> value | right -> value);
                     }
@@ -6097,15 +6103,17 @@ void Semantic::ProcessAND_AND(AstBinaryExpression *expr)
                            expr -> right_expression -> RightToken(),
                            right_type -> Name());
         }
-        else if (expr -> left_expression -> IsConstant() && expr -> right_expression -> IsConstant())
+        else if (expr -> left_expression -> IsConstant() &&
+                 expr -> right_expression -> IsConstant())
         {
             //
             // Even when evaluating false && x, x must be constant for && to
             // be constant
             //
-            IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
-            IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
-            expr -> value = control.int_pool.FindOrInsert(left -> value && right -> value ? 1 : 0);
+            expr -> value =
+                control.int_pool.FindOrInsert((IsConstantTrue(expr -> left_expression) &&
+                                               IsConstantTrue(expr -> left_expression))
+                                              ? 1 : 0);
         }
     }
 
@@ -6137,15 +6145,17 @@ void Semantic::ProcessOR_OR(AstBinaryExpression *expr)
                            expr -> right_expression -> RightToken(),
                            right_type -> Name());
         }
-        else if (expr -> left_expression -> IsConstant() && expr -> right_expression -> IsConstant())
+        else if (expr -> left_expression -> IsConstant() &&
+                 expr -> right_expression -> IsConstant())
         {
             //
             // Even when evaluating true || x, x must be constant for && to
             // be constant
             //
-            IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
-            IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
-            expr -> value = control.int_pool.FindOrInsert(left -> value || right -> value ? 1 : 0);
+            expr -> value =
+                control.int_pool.FindOrInsert((IsConstantTrue(expr -> left_expression) ||
+                                               IsConstantTrue(expr -> right_expression))
+                                              ? 1 : 0);
         }
     }
 
@@ -6200,15 +6210,15 @@ void Semantic::ProcessEQUAL_EQUAL(AstBinaryExpression *expr)
 
             if (expr -> Type() == control.double_type)
             {
-                DoubleLiteralValue *left = (DoubleLiteralValue *) expr -> left_expression -> value;
-                DoubleLiteralValue *right = (DoubleLiteralValue *) expr -> right_expression -> value;
+                DoubleLiteralValue *left = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> left_expression -> value);
+                DoubleLiteralValue *right = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value == right -> value ? 1 : 0);
             }
             else if (expr -> Type() == control.float_type)
             {
-                FloatLiteralValue *left = (FloatLiteralValue *) expr -> left_expression -> value;
-                FloatLiteralValue *right = (FloatLiteralValue *) expr -> right_expression -> value;
+                FloatLiteralValue *left = DYNAMIC_CAST<FloatLiteralValue *> (expr -> left_expression -> value);
+                FloatLiteralValue *right = DYNAMIC_CAST<FloatLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value == right -> value ? 1 : 0);
             }
@@ -6265,15 +6275,15 @@ void Semantic::ProcessNOT_EQUAL(AstBinaryExpression *expr)
 
             if (expr -> Type() == control.double_type)
             {
-                DoubleLiteralValue *left = (DoubleLiteralValue *) expr -> left_expression -> value;
-                DoubleLiteralValue *right = (DoubleLiteralValue *) expr -> right_expression -> value;
+                DoubleLiteralValue *left = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> left_expression -> value);
+                DoubleLiteralValue *right = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value != right -> value ? 1 : 0);
             }
             else if (expr -> Type() == control.float_type)
             {
-                FloatLiteralValue *left = (FloatLiteralValue *) expr -> left_expression -> value;
-                FloatLiteralValue *right = (FloatLiteralValue *) expr -> right_expression -> value;
+                FloatLiteralValue *left = DYNAMIC_CAST<FloatLiteralValue *> (expr -> left_expression -> value);
+                FloatLiteralValue *right = DYNAMIC_CAST<FloatLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value != right -> value ? 1 : 0);
             }
@@ -6303,29 +6313,29 @@ void Semantic::ProcessSTAR(AstBinaryExpression *expr)
         {
             if (expr -> Type() == control.double_type)
             {
-                DoubleLiteralValue *left = (DoubleLiteralValue *) expr -> left_expression -> value;
-                DoubleLiteralValue *right = (DoubleLiteralValue *) expr -> right_expression -> value;
+                DoubleLiteralValue *left = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> left_expression -> value);
+                DoubleLiteralValue *right = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.double_pool.FindOrInsert(left -> value * right -> value);
             }
             else if (expr -> Type() == control.float_type)
             {
-                FloatLiteralValue *left = (FloatLiteralValue *) expr -> left_expression -> value;
-                FloatLiteralValue *right = (FloatLiteralValue *) expr -> right_expression -> value;
+                FloatLiteralValue *left = DYNAMIC_CAST<FloatLiteralValue *> (expr -> left_expression -> value);
+                FloatLiteralValue *right = DYNAMIC_CAST<FloatLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.float_pool.FindOrInsert(left -> value * right -> value);
             }
             else if (expr -> Type() == control.long_type)
             {
-                LongLiteralValue *left = (LongLiteralValue *) expr -> left_expression -> value;
-                LongLiteralValue *right = (LongLiteralValue *) expr -> right_expression -> value;
+                LongLiteralValue *left = DYNAMIC_CAST<LongLiteralValue *> (expr -> left_expression -> value);
+                LongLiteralValue *right = DYNAMIC_CAST<LongLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.long_pool.FindOrInsert(left -> value * right -> value);
             }
             else if (expr -> Type() == control.int_type)
             {
-                IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
-                IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+                IntLiteralValue *left = DYNAMIC_CAST<IntLiteralValue *> (expr -> left_expression -> value);
+                IntLiteralValue *right = DYNAMIC_CAST<IntLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value * right -> value);
             }
@@ -6352,29 +6362,29 @@ void Semantic::ProcessMINUS(AstBinaryExpression *expr)
         {
             if (expr -> Type() == control.double_type)
             {
-                DoubleLiteralValue *left = (DoubleLiteralValue *) expr -> left_expression -> value;
-                DoubleLiteralValue *right = (DoubleLiteralValue *) expr -> right_expression -> value;
+                DoubleLiteralValue *left = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> left_expression -> value);
+                DoubleLiteralValue *right = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.double_pool.FindOrInsert(left -> value - right -> value);
             }
             else if (expr -> Type() == control.float_type)
             {
-                FloatLiteralValue *left = (FloatLiteralValue *) expr -> left_expression -> value;
-                FloatLiteralValue *right = (FloatLiteralValue *) expr -> right_expression -> value;
+                FloatLiteralValue *left = DYNAMIC_CAST<FloatLiteralValue *> (expr -> left_expression -> value);
+                FloatLiteralValue *right = DYNAMIC_CAST<FloatLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.float_pool.FindOrInsert(left -> value - right -> value);
             }
             else if (expr -> Type() == control.long_type)
             {
-                LongLiteralValue *left = (LongLiteralValue *) expr -> left_expression -> value;
-                LongLiteralValue *right = (LongLiteralValue *) expr -> right_expression -> value;
+                LongLiteralValue *left = DYNAMIC_CAST<LongLiteralValue *> (expr -> left_expression -> value);
+                LongLiteralValue *right = DYNAMIC_CAST<LongLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.long_pool.FindOrInsert(left -> value - right -> value);
             }
             else if (expr -> Type() == control.int_type)
             {
-                IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
-                IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+                IntLiteralValue *left = DYNAMIC_CAST<IntLiteralValue *> (expr -> left_expression -> value);
+                IntLiteralValue *right = DYNAMIC_CAST<IntLiteralValue *> (expr -> right_expression -> value);
 
                 expr -> value = control.int_pool.FindOrInsert(left -> value - right -> value);
             }
@@ -6407,9 +6417,9 @@ void Semantic::ProcessSLASH(AstBinaryExpression *expr)
             // subexpressions are constant, calculate result.
             //
             if ((expr -> Type() == control.int_type &&
-                 ((IntLiteralValue *) right_expression -> value) -> value == 0) ||
+                 DYNAMIC_CAST<IntLiteralValue *> (right_expression -> value) -> value == 0) ||
                 (expr -> Type() == control.long_type &&
-                 ((LongLiteralValue *) right_expression -> value) -> value == 0))
+                 DYNAMIC_CAST<LongLiteralValue *> (right_expression -> value) -> value == 0))
             {
                 ReportSemError((left_expression -> IsConstant()
                                 ? SemanticError::ZERO_DIVIDE_ERROR
@@ -6423,29 +6433,29 @@ void Semantic::ProcessSLASH(AstBinaryExpression *expr)
             {
                 if (expr -> Type() == control.double_type)
                 {
-                    DoubleLiteralValue *left = (DoubleLiteralValue *) left_expression -> value;
-                    DoubleLiteralValue *right = (DoubleLiteralValue *) right_expression -> value;
+                    DoubleLiteralValue *left = DYNAMIC_CAST<DoubleLiteralValue *> (left_expression -> value);
+                    DoubleLiteralValue *right = DYNAMIC_CAST<DoubleLiteralValue *> (right_expression -> value);
 
                     expr -> value = control.double_pool.FindOrInsert(left -> value / right -> value);
                 }
                 else if (expr -> Type() == control.float_type)
                 {
-                    FloatLiteralValue *left = (FloatLiteralValue *) left_expression -> value;
-                    FloatLiteralValue *right = (FloatLiteralValue *) right_expression -> value;
+                    FloatLiteralValue *left = DYNAMIC_CAST<FloatLiteralValue *> (left_expression -> value);
+                    FloatLiteralValue *right = DYNAMIC_CAST<FloatLiteralValue *> (right_expression -> value);
 
                     expr -> value = control.float_pool.FindOrInsert(left -> value / right -> value);
                 }
                 else if (expr -> Type() == control.long_type)
                 {
-                    LongLiteralValue *left = (LongLiteralValue *) left_expression -> value;
-                    LongLiteralValue *right = (LongLiteralValue *) right_expression -> value;
+                    LongLiteralValue *left = DYNAMIC_CAST<LongLiteralValue *> (left_expression -> value);
+                    LongLiteralValue *right = DYNAMIC_CAST<LongLiteralValue *> (right_expression -> value);
 
                     expr -> value = control.long_pool.FindOrInsert(left -> value / right -> value);
                 }
                 else if (expr -> Type() == control.int_type)
                 {
-                    IntLiteralValue *left = (IntLiteralValue *) left_expression -> value;
-                    IntLiteralValue *right = (IntLiteralValue *) right_expression -> value;
+                    IntLiteralValue *left = DYNAMIC_CAST<IntLiteralValue *> (left_expression -> value);
+                    IntLiteralValue *right = DYNAMIC_CAST<IntLiteralValue *> (right_expression -> value);
 
                     //
                     // There is a bug in the intel hardware where if one tries
@@ -6488,9 +6498,9 @@ void Semantic::ProcessMOD(AstBinaryExpression *expr)
             // subexpressions are constant, calculate result.
             //
             if ((expr -> Type() == control.int_type &&
-                 ((IntLiteralValue *) right_expression -> value) -> value == 0) ||
+                 DYNAMIC_CAST<IntLiteralValue *> (right_expression -> value) -> value == 0) ||
                 (expr -> Type() == control.long_type &&
-                 ((LongLiteralValue *) right_expression -> value) -> value == 0))
+                 DYNAMIC_CAST<LongLiteralValue *> (right_expression -> value) -> value == 0))
             {
                 ReportSemError((left_expression -> IsConstant()
                                 ? SemanticError::ZERO_DIVIDE_ERROR
@@ -6504,29 +6514,29 @@ void Semantic::ProcessMOD(AstBinaryExpression *expr)
             {
                 if (expr -> Type() == control.double_type)
                 {
-                    DoubleLiteralValue *left = (DoubleLiteralValue *) left_expression -> value;
-                    DoubleLiteralValue *right = (DoubleLiteralValue *) right_expression -> value;
+                    DoubleLiteralValue *left = DYNAMIC_CAST<DoubleLiteralValue *> (left_expression -> value);
+                    DoubleLiteralValue *right = DYNAMIC_CAST<DoubleLiteralValue *> (right_expression -> value);
                     
                     expr -> value = control.double_pool.FindOrInsert(left -> value % right -> value);
                 }
                 else if (expr -> Type() == control.float_type)
                 {
-                    FloatLiteralValue *left = (FloatLiteralValue *) left_expression -> value;
-                    FloatLiteralValue *right = (FloatLiteralValue *) right_expression -> value;
+                    FloatLiteralValue *left = DYNAMIC_CAST<FloatLiteralValue *> (left_expression -> value);
+                    FloatLiteralValue *right = DYNAMIC_CAST<FloatLiteralValue *> (right_expression -> value);
 
                     expr -> value = control.float_pool.FindOrInsert(left -> value % right -> value);
                 }
                 else if (expr -> Type() == control.long_type)
                 {
-                    LongLiteralValue *left = (LongLiteralValue *) left_expression -> value;
-                    LongLiteralValue *right = (LongLiteralValue *) right_expression -> value;
+                    LongLiteralValue *left = DYNAMIC_CAST<LongLiteralValue *> (left_expression -> value);
+                    LongLiteralValue *right = DYNAMIC_CAST<LongLiteralValue *> (right_expression -> value);
 
                     expr -> value = control.long_pool.FindOrInsert(left -> value % right -> value);
                 }
                 else if (expr -> Type() == control.int_type)
                 {
-                    IntLiteralValue *left = (IntLiteralValue *) left_expression -> value;
-                    IntLiteralValue *right = (IntLiteralValue *) right_expression -> value;
+                    IntLiteralValue *left = DYNAMIC_CAST<IntLiteralValue *> (left_expression -> value);
+                    IntLiteralValue *right = DYNAMIC_CAST<IntLiteralValue *> (right_expression -> value);
 
                     //
                     // There is a bug in the intel hardware where if one tries
@@ -6618,8 +6628,12 @@ void Semantic::ProcessConditionalExpression(Ast *expr)
     TypeSymbol *true_type  = conditional_expression -> true_expression -> Type();
     TypeSymbol *false_type = conditional_expression -> false_expression -> Type();
 
-    if (test_type == control.no_type || true_type == control.no_type || false_type == control.no_type)
+    if (test_type == control.no_type ||
+        true_type == control.no_type ||
+        false_type == control.no_type)
+    {
         conditional_expression -> symbol = control.no_type;
+    }
     else if (test_type != control.boolean_type)
     {
         ReportSemError(SemanticError::TYPE_NOT_BOOLEAN,
@@ -6647,7 +6661,9 @@ void Semantic::ProcessConditionalExpression(Ast *expr)
     else if (true_type -> Primitive())
     {
         if (! false_type -> Primitive() ||
-            (true_type != false_type && (true_type == control.boolean_type || false_type == control.boolean_type)))
+            (true_type != false_type &&
+             (true_type == control.boolean_type ||
+              false_type == control.boolean_type)))
         {
             ReportSemError(SemanticError::INCOMPATIBLE_TYPE_FOR_CONDITIONAL_EXPRESSION,
                            conditional_expression -> false_expression -> LeftToken(),
@@ -6664,13 +6680,15 @@ void Semantic::ProcessConditionalExpression(Ast *expr)
                 conditional_expression -> symbol = true_type;
             else // must be a numeric type
             {
-                if (true_type == control.byte_type && false_type == control.short_type)
+                if (true_type == control.byte_type &&
+                    false_type == control.short_type)
                 {
                     conditional_expression -> true_expression =
                                 ConvertToType(conditional_expression -> true_expression, control.short_type);
                     conditional_expression -> symbol = control.short_type;
                 }
-                else if (true_type == control.short_type && false_type == control.byte_type)
+                else if (true_type == control.short_type &&
+                         false_type == control.byte_type)
                 {
                     conditional_expression -> false_expression =
                         ConvertToType(conditional_expression -> false_expression, control.short_type);
@@ -6695,15 +6713,12 @@ void Semantic::ProcessConditionalExpression(Ast *expr)
             // If all the subexpressions are constants, compute the results and
             // set the value of the expression accordingly.
             //
-            if (conditional_expression -> test_expression -> IsConstant() &&
-                conditional_expression -> true_expression -> IsConstant() &&
+            if (conditional_expression -> true_expression -> IsConstant() &&
                 conditional_expression -> false_expression -> IsConstant())
             {
-                IntLiteralValue *test = (IntLiteralValue *) conditional_expression -> test_expression -> value;
-
-                if (test -> value)
+                if (IsConstantTrue(conditional_expression -> test_expression))
                      conditional_expression -> value = conditional_expression -> true_expression -> value;
-                else
+                else if (IsConstantFalse(conditional_expression -> test_expression))
                      conditional_expression -> value = conditional_expression -> false_expression -> value;
             }
         }
@@ -6757,18 +6772,15 @@ void Semantic::ProcessConditionalExpression(Ast *expr)
         // Since null should not be a compile-time constant anymore, the assert
         // should not need to check for null type, so it was removed....
         //
-        if (conditional_expression -> test_expression -> IsConstant() &&
-            conditional_expression -> true_expression -> IsConstant() &&
+        if (conditional_expression -> true_expression -> IsConstant() &&
             conditional_expression -> false_expression -> IsConstant())
         {
             assert(conditional_expression -> symbol == control.String());
             //  || conditional_expression -> symbol == control.null_type);
-
-            IntLiteralValue *test = (IntLiteralValue *) conditional_expression -> test_expression -> value;
             
-            if (test -> value)
+            if (IsConstantTrue(conditional_expression -> test_expression))
                 conditional_expression -> value = conditional_expression -> true_expression -> value;
-            else
+            else if (IsConstantFalse(conditional_expression -> test_expression))
                 conditional_expression -> value = conditional_expression -> false_expression -> value;
         }
     }
@@ -6888,7 +6900,7 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
                  ReportSemError(SemanticError::VOID_TO_STRING,
                                 assignment_expression -> expression -> LeftToken(),
                                 assignment_expression -> expression -> RightToken());
-            else assignment_expression -> expression = ConvertToType(assignment_expression -> expression, control.String());
+            else assignment_expression -> expression -> value = CastValue(control.String(), assignment_expression -> expression);
         }
 
         return;
@@ -6932,10 +6944,10 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
                     //
                     if (control.IsIntegral(left_type) &&
                         (right_expression -> Type() == control.int_type &&
-                         DYNAMIC_CAST<IntLiteralValue *, LiteralValue *>
+                         DYNAMIC_CAST<IntLiteralValue *>
                          (right_expression -> value) -> value == 0) ||
                         (right_expression -> Type() == control.long_type &&
-                         DYNAMIC_CAST<LongLiteralValue *, LiteralValue *>
+                         DYNAMIC_CAST<LongLiteralValue *>
                          (right_expression -> value) -> value == 0))
                     {
                         ReportSemError(SemanticError::ZERO_DIVIDE_CAUTION,

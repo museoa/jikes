@@ -1,3 +1,22 @@
+2002-02-05  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/definite.cpp (DefiniteExpression): Optimize DA/DU analysis
+	of constant expressions.
+	* src/body.cpp:
+	* src/bytecode.cpp:
+	* src/bytecode.h:
+	* src/expr.cpp: Use IsConstantTrue and IsConstantFalse in more
+	places, and convert LiteralValue* casts to DYNAMIC_CASTS.
+	* src/lookup.cpp:
+	* src/lookup.h (IsConstantString): Rename from IsConstant, and
+	update to work with string concat changes.
+	* src/semantic.h:
+	* src/expr.cpp (CastPrimitiveValue): Inline into CastValue.
+	(ProcessPLUS, ProcessAssignmentExpression):
+	* src/bytecode.cpp (AppendString): Update string concatenation to
+	avoid useless compiler-generated cast in the middle, the cause of
+	bug 2625 - patch 259.
+
 2002-01-31  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/class.h:

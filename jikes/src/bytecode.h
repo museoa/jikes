@@ -273,16 +273,16 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
             if (control.IsSimpleIntegerValueType(type) ||
                 type == control.boolean_type)
             {
-                return ((IntLiteralValue *) (p -> value)) -> value == 0;
+                return (DYNAMIC_CAST<IntLiteralValue *> (p -> value)) -> value == 0;
             }
             else if (type == control.long_type)
-                return ((LongLiteralValue *) (p -> value)) -> value == 0;
+                return (DYNAMIC_CAST<LongLiteralValue *> (p -> value)) -> value == 0;
             else if (type == control.float_type)
-                return ((FloatLiteralValue *) (p -> value)) -> value == 0;
+                return (DYNAMIC_CAST<FloatLiteralValue *> (p -> value)) -> value == 0;
             else
             {
                 assert(type == control.double_type);
-                return ((DoubleLiteralValue *) (p -> value)) -> value == 0;
+                return (DYNAMIC_CAST<DoubleLiteralValue *> (p -> value)) -> value == 0;
             }
         }
         return false;
@@ -300,16 +300,16 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
             if (control.IsSimpleIntegerValueType(type) ||
                 type == control.boolean_type)
             {
-                return ((IntLiteralValue *) (p -> value)) -> value == 1;
+                return (DYNAMIC_CAST<IntLiteralValue *> (p -> value)) -> value == 1;
             }
             else if (type == control.long_type)
-                return ((LongLiteralValue *) (p -> value)) -> value == 1;
+                return (DYNAMIC_CAST<LongLiteralValue *> (p -> value)) -> value == 1;
             else if (type == control.float_type)
-                return ((FloatLiteralValue *) (p -> value)) -> value == 1;
+                return (DYNAMIC_CAST<FloatLiteralValue *> (p -> value)) -> value == 1;
             else
             {
                 assert(type == control.double_type);
-                return ((DoubleLiteralValue *) (p -> value)) -> value == 1;
+                return (DYNAMIC_CAST<DoubleLiteralValue *> (p -> value)) -> value == 1;
             }
         }
         return false;

@@ -643,11 +643,15 @@ void ByteCode::DeclareField(VariableSymbol *symbol)
         assert(symbol -> ACC_FINAL());
         assert(type -> Primitive() || type == control.String());
         u2 index = ((control.IsSimpleIntegerValueType(type) ||
-                     type == control.boolean_type) ? RegisterInteger((IntLiteralValue *) symbol -> initial_value)
-                    : type == control.String() ? RegisterString((Utf8LiteralValue *) symbol -> initial_value)
-                    : type == control.float_type ? RegisterFloat((FloatLiteralValue *) symbol -> initial_value)
-                    : type == control.long_type ? RegisterLong((LongLiteralValue *) symbol -> initial_value)
-                    : RegisterDouble((DoubleLiteralValue *) symbol -> initial_value));
+                     type == control.boolean_type)
+                    ? RegisterInteger(DYNAMIC_CAST<IntLiteralValue *> (symbol -> initial_value))
+                    : type == control.String()
+                    ? RegisterString(DYNAMIC_CAST<Utf8LiteralValue *> (symbol -> initial_value))
+                    : type == control.float_type
+                    ? RegisterFloat(DYNAMIC_CAST<FloatLiteralValue *> (symbol -> initial_value))
+                    : type == control.long_type
+                    ? RegisterLong(DYNAMIC_CAST<LongLiteralValue *> (symbol -> initial_value))
+                    : RegisterDouble(DYNAMIC_CAST<DoubleLiteralValue *> (symbol -> initial_value)));
         u2 attribute_index = RegisterUtf8(control.ConstantValue_literal);
         fields[field_index].AddAttribute(new ConstantValue_attribute(attribute_index, index));
     }
@@ -3335,7 +3339,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
                 (assignment_expression -> assignment_tag == AstAssignmentExpression::PLUS_EQUAL ||
                  assignment_expression -> assignment_tag == AstAssignmentExpression::MINUS_EQUAL))
             {
-                IntLiteralValue *vp = (IntLiteralValue *) assignment_expression -> expression -> value;
+                IntLiteralValue *vp = DYNAMIC_CAST<IntLiteralValue *> (assignment_expression -> expression -> value);
                 int val = (assignment_expression -> assignment_tag == AstAssignmentExpression::MINUS_EQUAL
                            ? -(vp -> value) // we treat "a -= x" as "a += (-x)"
                            : vp -> value);
@@ -3702,13 +3706,13 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
             {
                 if (expression -> left_expression -> Type() == control.float_type)
                 {
-                    FloatLiteralValue *value = (FloatLiteralValue *) expression -> left_expression -> value;
+                    FloatLiteralValue *value = DYNAMIC_CAST<FloatLiteralValue *> (expression -> left_expression -> value);
                     if (value -> value.IsPositiveZero())
                         break;
                 }
                 else if (expression -> left_expression -> Type() == control.double_type)
                 {
-                    DoubleLiteralValue *value = (DoubleLiteralValue *) expression -> left_expression -> value;
+                    DoubleLiteralValue *value = DYNAMIC_CAST<DoubleLiteralValue *> (expression -> left_expression -> value);
                     if (value -> value.IsPositiveZero())
                         break;
                 }
@@ -3742,13 +3746,13 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
             {
                 if (expression -> left_expression -> Type() == control.float_type)
                 {
-                    FloatLiteralValue *value = (FloatLiteralValue *) expression -> left_expression -> value;
+                    FloatLiteralValue *value = DYNAMIC_CAST<FloatLiteralValue *> (expression -> left_expression -> value);
                     if (value -> value.IsPositiveZero())
                         break;
                 }
                 else if (expression -> left_expression -> Type() == control.double_type)
                 {
-                    DoubleLiteralValue *value = (DoubleLiteralValue *) expression -> left_expression -> value;
+                    DoubleLiteralValue *value = DYNAMIC_CAST<DoubleLiteralValue *> (expression -> left_expression -> value);
                     if (value -> value.IsPositiveZero())
                         break;
                 }
@@ -3846,14 +3850,14 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
             {
                 if (expression -> right_expression -> Type() == control.float_type)
                 {
-                    FloatLiteralValue *value = (FloatLiteralValue *) expression -> right_expression -> value;
+                    FloatLiteralValue *value = DYNAMIC_CAST<FloatLiteralValue *> (expression -> right_expression -> value);
                     if (value -> value.IsPositiveZero() ==
                         (expression -> binary_tag == AstBinaryExpression::PLUS))
                         break;
                 }
                 else if (expression -> right_expression -> Type() == control.double_type)
                 {
-                    DoubleLiteralValue *value = (DoubleLiteralValue *) expression -> right_expression -> value;
+                    DoubleLiteralValue *value = DYNAMIC_CAST<DoubleLiteralValue *> (expression -> right_expression -> value);
                     if (value -> value.IsPositiveZero() ==
                         (expression -> binary_tag == AstBinaryExpression::PLUS))
                         break;
@@ -5178,15 +5182,15 @@ void ByteCode::ConcatenateString(AstBinaryExpression *expression)
             // new StringBuffer(null) raising a NullPointerException
             // since string constants are never null.
             //
-            assert(left_expr -> Type() == control.String());
-            if (((Utf8LiteralValue *) left_expr -> value) -> length == 0)
+            Utf8LiteralValue *value = DYNAMIC_CAST<Utf8LiteralValue *> (left_expr -> value);
+            if (value -> length == 0)
             {
                 PutOp(OP_INVOKESPECIAL);
                 PutU2(RegisterLibraryMethodref(control.StringBuffer_InitMethod()));
             }
             else
             {
-                EmitExpression(left_expr);
+                LoadConstantAtIndex(RegisterString(value));
                 PutOp(OP_INVOKESPECIAL);
                 PutU2(RegisterLibraryMethodref(control.StringBuffer_InitWithStringMethod()));
                 ChangeStack(-1); // account for the argument
@@ -5211,9 +5215,7 @@ void ByteCode::AppendString(AstExpression *expression)
 
     if (expression -> IsConstant())
     {
-        assert(type == control.String());
-        Utf8LiteralValue *value = (Utf8LiteralValue *) expression -> value;
-
+        Utf8LiteralValue *value = DYNAMIC_CAST<Utf8LiteralValue *> (expression -> value);
         if (value -> length == 0)
             return;  // Optimization: do nothing when appending "".
         LoadConstantAtIndex(RegisterString(value));
@@ -5226,14 +5228,6 @@ void ByteCode::AppendString(AstExpression *expression)
             assert(binary_expression -> binary_tag == AstBinaryExpression::PLUS);
             AppendString(binary_expression -> left_expression);
             AppendString(binary_expression -> right_expression);
-            return;
-        }
-
-        AstCastExpression *cast_expression = expression -> CastExpressionCast();
-        if (cast_expression && type == control.String())
-        {
-            EmitExpression(cast_expression -> expression);
-            EmitStringAppendMethod(cast_expression -> expression -> Type());
             return;
         }
 
@@ -5469,16 +5463,16 @@ void ByteCode::LoadLiteral(LiteralValue *litp, TypeSymbol *type)
 {
     if (control.IsSimpleIntegerValueType(type) || type == control.boolean_type) // load literal using literal value
     {
-        IntLiteralValue *vp = (IntLiteralValue *) litp;
+        IntLiteralValue *vp = DYNAMIC_CAST<IntLiteralValue *> (litp);
         LoadImmediateInteger(vp -> value);
     }
     else if (type == control.String()) // register index as string if this has not yet been done
     {
-        LoadConstantAtIndex(RegisterString((Utf8LiteralValue *) litp));
+        LoadConstantAtIndex(RegisterString(DYNAMIC_CAST<Utf8LiteralValue *> (litp)));
     }
     else if (type == control.long_type)
     {
-        LongLiteralValue *vp = (LongLiteralValue *) litp;
+        LongLiteralValue *vp = DYNAMIC_CAST<LongLiteralValue *> (litp);
         if (vp -> value == 0)
              PutOp(OP_LCONST_0);
         else if (vp -> value == 1)
@@ -5491,7 +5485,7 @@ void ByteCode::LoadLiteral(LiteralValue *litp, TypeSymbol *type)
     }
     else if (type == control.float_type)
     {
-        FloatLiteralValue *vp = (FloatLiteralValue *) litp;
+        FloatLiteralValue *vp = DYNAMIC_CAST<FloatLiteralValue *> (litp);
         IEEEfloat val = vp -> value;
         if (val.Word() == 0) // if float 0.0
              PutOp(OP_FCONST_0);
@@ -5503,7 +5497,7 @@ void ByteCode::LoadLiteral(LiteralValue *litp, TypeSymbol *type)
     }
     else if (type == control.double_type)
     {
-        DoubleLiteralValue *vp = (DoubleLiteralValue *) litp;
+        DoubleLiteralValue *vp = DYNAMIC_CAST<DoubleLiteralValue *> (litp);
         IEEEdouble val = vp -> value;
         if (val.HighWord() == 0 && val.LowWord() == 0)
              PutOp(OP_DCONST_0);
