@@ -5055,7 +5055,7 @@ LiteralValue *Semantic::CastPrimitiveValue(TypeSymbol *target_type, AstExpressio
             else if (source_type == control.long_type)
             {
                 LongLiteralValue *literal = (LongLiteralValue *) expr -> value;
-                literal -> value.String(output_string);
+                literal -> value.DecString(output_string);
                 len = strlen(output_string);
                 //
                 // javac does not add the L suffix

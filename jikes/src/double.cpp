@@ -11,6 +11,9 @@
 #include <iostream.h>
 #include "double.h"
 #include "long.h"
+
+IEEEdouble IEEEdouble::min_long = IEEEdouble(0xc3e00000, 0x00000000);
+
 IEEEfloat::IEEEfloat(float d)
 {
     FloatValue() = d;
@@ -39,8 +42,6 @@ int IEEEfloat::LongValue()
 {
     return (long) FloatValue();
 }
-
-IEEEdouble IEEEdouble::min_long = IEEEdouble(0xc3e00000, 0x00000000);
 
 IEEEdouble::IEEEdouble(double d)
 {

@@ -112,7 +112,9 @@ public:
 
     double Double();           // convert ULongInt value to a double value
 
-    void String(char *);     // convert LongInt value to its character string representation
+    void OctString(char *, bool = false); // convert LongInt value to its character string representation in octal format
+    void DecString(char *);               // convert LongInt value to its character string representation in decimal format
+    void HexString(char *, bool = false); // convert LongInt value to its character string representation in hexadecimal format
 };
 
 
@@ -140,7 +142,10 @@ public:
     bool   operator>= (ULongInt); // greater-than or equal
 
     double Double();      // convert LongInt value to a double value
-    void String(char *);  // convert ULongInt value to its character string representation
+
+    void OctString(char *, bool = false); // convert ULongInt value to its character string representation in octal format
+    void DecString(char *);               // convert ULongInt value to its character string representation in decimal format
+    void HexString(char *, bool = false); // convert ULongInt value to its character string representation in hexadecimal format
 };
 
 

@@ -120,9 +120,9 @@ BaseLong& BaseLong::operator<<= (BaseLong op)
 BaseLong BaseLong::operator+ (BaseLong op)
 {
     u4 ushort1 = (LowWord() & 0xFFFF) + (op.LowWord() & 0xFFFF),
-    ushort2 = (ushort1 >> 16) + (LowWord() >> 16) + (op.LowWord() >> 16),
-    ushort3 = (ushort2 >> 16) + (HighWord() & 0xFFFF) + (op.HighWord() & 0xFFFF),
-    ushort4 = (ushort3 >> 16) + (HighWord() >> 16) + (op.HighWord() >> 16);
+       ushort2 = (ushort1 >> 16) + (LowWord() >> 16) + (op.LowWord() >> 16),
+       ushort3 = (ushort2 >> 16) + (HighWord() & 0xFFFF) + (op.HighWord() & 0xFFFF),
+       ushort4 = (ushort3 >> 16) + (HighWord() >> 16) + (op.HighWord() >> 16);
 
     return BaseLong((ushort3 & 0xFFFF) | (ushort4 << 16), (ushort1 & 0xFFFF) | (ushort2 << 16));
 }
@@ -178,17 +178,17 @@ BaseLong BaseLong::operator-- ()
 BaseLong BaseLong::operator* (BaseLong op)
 {
     u4 x0 = this -> LowWord()   & 0xFFFF,
-    x1 = this -> LowWord()  >> 16,
-    x2 = this -> HighWord()  & 0xFFFF,
-    x3 = this -> HighWord() >> 16;
+       x1 = this -> LowWord()  >> 16,
+       x2 = this -> HighWord()  & 0xFFFF,
+       x3 = this -> HighWord() >> 16,
 
-    u4 y0 = op.LowWord()   & 0xFFFF,
-    y1 = op.LowWord()  >> 16,
-    y2 = op.HighWord()  & 0xFFFF,
-    y3 = op.HighWord() >> 16;
+       y0 = op.LowWord()   & 0xFFFF,
+       y1 = op.LowWord()  >> 16,
+       y2 = op.HighWord()  & 0xFFFF,
+       y3 = op.HighWord() >> 16;
 
-    BaseLong result = BaseLong(0, x0 * y0);
-    BaseLong part1  = BaseLong(0, x0 * y1);
+    BaseLong result = BaseLong(0, x0 * y0),
+             part1  = BaseLong(0, x0 * y1);
     part1  <<= (1 << 4);
     result += part1;
     BaseLong part2  = BaseLong(0, x0 * y2);
@@ -308,7 +308,34 @@ void BaseLong::Divide(BaseLong dividend, BaseLong divisor, BaseLong &quotient, B
 }
 
 
-void ULongInt::String(char *result)
+void ULongInt::OctString(char *result, bool show_base)
+{
+    ULongInt val = *this;
+    char *ptr = result;
+
+    do
+    {
+        *ptr++ = '0' + (val % 8).LowWord();
+        val /= 8;
+    } while (val != 0);
+
+    if (show_base)
+        *ptr++ = '0';
+
+    *ptr = U_NULL;
+
+    for (char *tail = ptr - 1; tail > result; tail--, result++)
+    {
+        char c = *tail;
+        *tail = *result;
+        *result = c;
+    }
+
+    return;
+}
+
+
+void ULongInt::DecString(char *result)
 {
     ULongInt val = *this;
     char *ptr = result;
@@ -332,7 +359,37 @@ void ULongInt::String(char *result)
 }
 
 
-void LongInt::String(char *result)
+void ULongInt::HexString(char *result, bool show_base)
+{
+    ULongInt val = *this;
+    char *ptr = result;
+
+    do
+    {
+        *ptr++ = '0' + (val % 16).LowWord();
+        val /= 16;
+    } while (val != 0);
+
+    if (show_base)
+    {
+        *ptr++ = 'x';
+        *ptr++ = '0';
+    }
+
+    *ptr = U_NULL;
+
+    for (char *tail = ptr - 1; tail > result; tail--, result++)
+    {
+        char c = *tail;
+        *tail = *result;
+        *result = c;
+    }
+
+    return;
+}
+
+
+void LongInt::OctString(char *result, bool show_base)
 {
     ULongInt val;
 
@@ -343,7 +400,39 @@ void LongInt::String(char *result)
     }
     else val = *this;
 
-    val.String(result);
+    val.OctString(result, show_base);
+
+    return;
+}
+
+void LongInt::DecString(char *result)
+{
+    ULongInt val;
+
+    if (HighWord() & 0x80000000)
+    {
+        *result++ = '-';
+        val = -(*this);
+    }
+    else val = *this;
+
+    val.DecString(result);
+
+    return;
+}
+
+void LongInt::HexString(char *result, bool show_base)
+{
+    ULongInt val;
+
+    if (HighWord() & 0x80000000)
+    {
+        *result++ = '-';
+        val = -(*this);
+    }
+    else val = *this;
+
+    val.HexString(result, show_base);
 
     return;
 }
@@ -358,7 +447,7 @@ ULongInt& ULongInt::operator/= (ULongInt op)
 ULongInt ULongInt::operator/ (ULongInt op)
 {
     BaseLong quotient,
-    remainder;
+             remainder;
 
     Divide(*this, op, quotient, remainder);
 
@@ -368,7 +457,7 @@ ULongInt ULongInt::operator/ (ULongInt op)
 ULongInt ULongInt::operator% (ULongInt op)
 {
     BaseLong quotient,
-    remainder;
+             remainder;
 
     Divide(*this, op, quotient, remainder);
 
@@ -487,9 +576,9 @@ LongInt LongInt::operator/ (LongInt op)
          negative_divisor  = ((op.HighWord() & 0x80000000) != 0);
 
     BaseLong a = (negative_dividend ? -(*this) : (BaseLong) *this),
-    b = (negative_divisor  ? -(op)    : (BaseLong) op),
-    quotient,
-    remainder;
+             b = (negative_divisor  ? -(op)    : (BaseLong) op),
+             quotient,
+             remainder;
 
     Divide(a, b, quotient, remainder);
 
@@ -508,9 +597,9 @@ LongInt LongInt::operator% (LongInt op)
     negative_divisor  = ((op.HighWord() & 0x80000000) != 0);
 
     BaseLong a = (negative_dividend ? -(*this) : (BaseLong) *this),
-    b = (negative_divisor  ? -(op)    : (BaseLong) op),
-    quotient,
-    remainder;
+             b = (negative_divisor  ? -(op)    : (BaseLong) op),
+             quotient,
+             remainder;
 
     Divide(a, b, quotient, remainder);
 
@@ -578,9 +667,9 @@ bool LongInt::operator>= (LongInt op)
 
 double ULongInt::Double()
 {
-    double val = 0.0;
+    double val = 0.0,
+           multiplier = 1.0;
     ULongInt num = *this;
-    double multiplier = 1.0;
 
     while (num > 0)
     {
