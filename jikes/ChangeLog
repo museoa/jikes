@@ -1,3 +1,7 @@
+2000-07-15  Mo DeJong  <mdejong@redhat.com>
+
+	* src/depcomp: Added missing file.
+
 2000-07-12  Mo DeJong  <mdejong@redhat.com>
 
 	* configure.in: Add JIKES_VERSION_STRING.
