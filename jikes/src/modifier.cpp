@@ -79,17 +79,20 @@ void Semantic::ProcessAccessFlag(AccessFlags& access_flags,
     else
     {
         // We have a valid flag if it is alone.
-        if (control.option.pedantic && (flag & implicit_flags))
+        if (control.option.pedantic)
         {
-            ReportSemError(SemanticError::REDUNDANT_MODIFIER, token_index,
-                           lex_stream -> NameString(token_index),
-                           declaration_kind_name);
-        }
-        if (control.option.pedantic_modifier_order &&
-            ! access_flags.RecommendedOrder(flag))
-        {
-            ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
-                           token_index, lex_stream -> NameString(token_index));
+            if ((flag & implicit_flags) != 0)
+            {
+                ReportSemError(SemanticError::REDUNDANT_MODIFIER, token_index,
+                               lex_stream -> NameString(token_index),
+                               declaration_kind_name);
+            }
+            if (! access_flags.RecommendedOrder(flag))
+            {
+                ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
+                               token_index,
+                               lex_stream -> NameString(token_index));
+            }
         }
         access_flags.SetFlags(flag);
         if (access_flags.ACC_FINAL())

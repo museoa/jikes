@@ -1,3 +1,27 @@
+2002-11-02  Elliott Hughes  <enh@acm.org>
+
+	* src/error.cpp:
+	* src/error.h: Massive rewrite. Use printf style strings and
+	consolidate formatting into common routines. Improves output of
+	filenames, and adds some infrastructure for naming (and thus
+	suppressing) arbitrary errors - based on patch 368.
+	(ErrorString::Array): Fix a memory leak.
+	* src/body.cpp:
+	* src/diagnose.h:
+	* src/diagnose.cpp:
+	* src/jikes.cpp:
+	* src/jikesapi.h:
+	* src/modifier.cpp:
+	* src/option.cpp:
+	* src/option.h:
+	* src/semantic.h:
+	* src/stream.cpp:
+	* src/stream.h:
+	* doc/jikes.1: Fallout from the error changes. More const safety,
+	slight changes to command line arguments.
+	* src/Makefile.am: Update dependences.
+	* src/Makefile.in: Regenerate.
+
 2002-11-02  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/semantic.h (class Semantic): Fix prototype.

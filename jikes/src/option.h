@@ -81,7 +81,7 @@ public:
 
     ~OptionError() { delete [] name; }
 
-    wchar_t* GetErrorMessage();
+    const wchar_t* GetErrorMessage();
 
 private:
     OptionErrorKind kind;
@@ -146,16 +146,8 @@ public:
          full_check,
          unzip,
          dump_errors,
-         errors;
-
-    //
-    // This next section covers pedantic warnings. Named warnings are
-    // specified by flags to the +P command-line option; the last variable
-    // covers all unnamed warnings. This list is designed to grow when new
-    // pedantic warning categories are added (often from user complaints).
-    //
-    bool pedantic_modifier_order, // suggested modifier ordering
-         pedantic; // all other warnings
+         errors,
+         pedantic;
 
     char *dependence_report_name;
 

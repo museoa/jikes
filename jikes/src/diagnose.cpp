@@ -2178,7 +2178,7 @@ const wchar_t *ParseErrorInfo::getErrorReport()
     return emacs_style_report ? emacsErrorString() : regularErrorString();
 }
 
-wchar_t *ParseErrorInfo::regularErrorString()
+const wchar_t* ParseErrorInfo::regularErrorString()
 {
     ErrorString s;
 
@@ -2189,7 +2189,7 @@ wchar_t *ParseErrorInfo::regularErrorString()
     return s.Array();
 }
 
-wchar_t *ParseErrorInfo::emacsErrorString()
+const wchar_t* ParseErrorInfo::emacsErrorString()
 {
     ErrorString s;
 

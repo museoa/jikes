@@ -540,7 +540,7 @@ javaact.$(OBJEXT): javaact.cpp platform.h parser.h lpginput.h stream.h \
   depend.h
 jikesapi.$(OBJEXT): jikesapi.cpp platform.h control.h symbol.h stream.h \
   tuple.h jikesapi.h lookup.h long.h double.h access.h set.h option.h
-jikes.$(OBJEXT): jikes.cpp platform.h jikesapi.h
+jikes.$(OBJEXT): jikes.cpp platform.h jikesapi.h error.h stream.h tuple.h
 long.$(OBJEXT): long.cpp long.h platform.h double.h
 lookup.$(OBJEXT): lookup.cpp lookup.h platform.h tuple.h jikesapi.h \
   long.h double.h control.h symbol.h stream.h access.h set.h code.h ast.h \

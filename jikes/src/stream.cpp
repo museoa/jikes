@@ -82,7 +82,7 @@ const wchar_t *StreamError::getErrorMessage()
 
 bool StreamError::emacs_style_report = false;
 
-const wchar_t *StreamError::getErrorReport()
+const wchar_t* StreamError::getErrorReport()
 {
     //
     // We need to use this lazy initialization, because we can't to it in
@@ -102,7 +102,7 @@ const wchar_t *StreamError::getErrorReport()
     return emacs_style_report ? emacsErrorString() : regularErrorString();
 }
 
-wchar_t *StreamError::emacsErrorString()
+const wchar_t* StreamError::emacsErrorString()
 {
     ErrorString s;
 
@@ -115,7 +115,7 @@ wchar_t *StreamError::emacsErrorString()
 }
 
 
-wchar_t *StreamError::regularErrorString()
+const wchar_t* StreamError::regularErrorString()
 {
     ErrorString s;
 

@@ -1165,7 +1165,7 @@ bool Semantic::UncaughtException(TypeSymbol *exception)
 }
 
 
-wchar_t *Semantic::UncaughtExceptionContext()
+const wchar_t* Semantic::UncaughtExceptionContext()
 {
     ErrorString s;
     MethodSymbol *this_method = ThisMethod();

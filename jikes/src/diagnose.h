@@ -56,8 +56,8 @@ private:
 
     void Initialize(LexStream *);
 
-    wchar_t *regularErrorString();
-    wchar_t *emacsErrorString();
+    const wchar_t* regularErrorString();
+    const wchar_t* emacsErrorString();
 
     LexStream::TokenIndex left_token;
     LexStream::TokenIndex right_token;

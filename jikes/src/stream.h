@@ -78,8 +78,8 @@ private:
     int right_line_no;
     int right_column_no;
 
-    wchar_t *regularErrorString();
-    wchar_t *emacsErrorString();
+    const wchar_t* regularErrorString();
+    const wchar_t* emacsErrorString();
 
     bool initialized;
 

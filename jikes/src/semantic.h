@@ -1114,7 +1114,7 @@ private:
     void ProcessMethodBody(AstMethodDeclaration *);
     void ProcessConstructorBody(AstConstructorDeclaration *);
     bool UncaughtException(TypeSymbol *);
-    wchar_t *UncaughtExceptionContext();
+    const wchar_t* UncaughtExceptionContext();
 
     // Implemented in expr.cpp - expression processing
     void ReportConstructorNotFound(Ast *, TypeSymbol *);
