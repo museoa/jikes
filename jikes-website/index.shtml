@@ -41,16 +41,16 @@
           <ul>
             <li><a href="people.shtml">People</a>
 	    <li><a href="steering.shtml">Jikes Steering Committee</a>
-	    <li><a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf">Old discusion<br>database at<br>IBM Research</a> <small>includes the queries<br>to Sun about<br>the JLS.</small>
+	    <li><a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf">Old discussion database<br>at IBM Research</a> <small>includes<br>the "Queries to Sun".</small>
           </ul>
           <hr>
           Related Links
           <ul>
             <li><a href="/developerworks/projects/jacks/">Jacks Project</a>
             <li><a href="http://www.ergnosis.com/java-spec-report/">Java Spec Report</a>
-	    <li><a href="http://ibm.com/java/jdk/">The Best JVMs on the planet</a>
-	    <li><a href="http://www.java.sun.com/docs/books/jls">The Java Language Specification</a>
-	    <li><a href="http://www.java.sun.com/docs/books/vmspec">The Java Virtual Machine Specification</a>
+	    <li><a href="http://ibm.com/java/jdk/">The Best JVMs on the net</a>
+	    <li><a href="http://www.java.sun.com/docs/books/jls">Language Spec.</a>
+	    <li><a href="http://www.java.sun.com/docs/books/vmspec">Virtual Machine Spec.</a>
           </ul>
         </td>
         <TD BGCOLOR="ccCCff" WIDTH=6>&nbsp;</TD><!--padding-->
@@ -64,7 +64,8 @@
     infrastructure offered by IBM's developerWorks Open Source Software zone. These
     pages will continue to provide user support to the Jikes community; however,
     development related issues will be moved to the
-    <a href="/developerworks/projects/jikes/">dW/OSS</a> system.
+    <a href="/developerworks/projects/jikes/">dW/OSS</a> system as much and as soon
+    as possible.
 
 <hr>
 <p>What is Jikes<sup>TM</sup>?</p>
@@ -93,7 +94,7 @@ the Linux and Java communities:
             your code that provides two very useful features: Incremental builds
             and makefile generation.</LI>
     </UL></p>
-<p>Abriged from <a href="faq.shtml">a FAQ entry</A> which was adapted from
+<p>Abridged from <a href="faq.shtml">a FAQ entry</A> which was adapted from
 some material by Lou Grinzo for an article he wrote, the link I have for which is no longer valid.</p>
 
 <p>It's worth pointing out that Jikes is not, and is not intended to be, a complete
@@ -128,7 +129,7 @@ been approved by the <a href="http://www.opensource.org/">OSI</a>
 The project provides access to the complete <A HREF="cvs.shtml">CVS</A>
 development tree, which includes not only Jikes, but also the source for the Jacks
 Test Suite and the Jikes Parser Generator used to build Jikes. Members of the community
-contribute <A HREF="downloads/">binaries</A> for their platforms of choice, additonaly
+contribute <A HREF="downloads/">binaries</A> for their platforms of choice, additonally
 Jikes is included in many <A HREF="distribs.shtml">Open Source Operating Systems</A>.
 The Jacks Test Suite is a replacement for the Jikestst package, and it is expected
 to replace it over time.</p>
