@@ -1,3 +1,14 @@
+2001-12-21  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/bytecode.cpp (EmitBranchIfExpression): Another bug detected
+	by test cases written for bug 2530.
+
+2001-12-21  Mo DeJong  <supermo@bayarea.net>
+
+	* src/bytecode.h (IsZero, IsOne): Include the byte, short, and
+	char types in the checks made by these methods - bug 2530, patch
+	252.
+
 2001-12-19  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/java.g: Fix core dump caused by patch on Dec 8 - bug 2518.

@@ -2020,6 +2020,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
                                       AstStatement *over)
 {
     p = StripNops(p);
+    assert(p -> Type() == control.boolean_type);
 
     if (p -> IsConstant())
     {
@@ -2250,31 +2251,14 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
         }
 
         //
-        // One of the operands is zero. Only emit the other operand.
-        //
-        if (IsZero(left) || IsZero(right))
-        {
-            EmitExpression(IsZero(left) ? right : left);
-
-            if (bp -> binary_tag == AstBinaryExpression::EQUAL_EQUAL)
-                EmitBranch((cond ? OP_IFEQ : OP_IFNE), lab, over);
-            else EmitBranch((cond ? OP_IFNE : OP_IFEQ), lab, over);
-
-            return;
-        }
-
-        //
-        // One of the operands is true. Only emit the other operand.
+        // One of the operands is true. Branch on the other.
         //
         if (left_type == control.boolean_type &&
             (IsOne(left) || IsOne(right)))
         {
-            EmitExpression(IsOne(left) ? right : left);
-
-            if (bp -> binary_tag == AstBinaryExpression::NOT_EQUAL)
-                EmitBranch((cond ? OP_IFEQ : OP_IFNE), lab, over);
-            else EmitBranch((cond ? OP_IFNE : OP_IFEQ), lab, over);
-
+            EmitBranchIfExpression(IsOne(left) ? right : left,
+                                   cond == (bp -> binary_tag == AstBinaryExpression::EQUAL_EQUAL),
+                                   lab, over);
             return;
         }
 
@@ -2286,12 +2270,39 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
         {
             assert(control.IsSimpleIntegerValueType(right_type) ||
                    right_type == control.boolean_type);
-            EmitExpression(left);
-            EmitExpression(right);
 
-            if (bp -> binary_tag == AstBinaryExpression::EQUAL_EQUAL)
-                EmitBranch((cond ? OP_IF_ICMPEQ : OP_IF_ICMPNE), lab, over);
-            else EmitBranch((cond ? OP_IF_ICMPNE : OP_IF_ICMPEQ), lab, over);
+            if (IsZero(left) || IsZero(right))
+            {
+                if (left_type == control.boolean_type)
+                {
+                    //
+                    // One of the operands is false. Branch on the other.
+                    //
+                    EmitBranchIfExpression(IsZero(left) ? right : left,
+                                           cond == (bp -> binary_tag == AstBinaryExpression::NOT_EQUAL),
+                                           lab, over);
+                }
+                else
+                {
+                    //
+                    // One of the operands is zero. Only emit the other.
+                    //
+                    EmitExpression(IsZero(left) ? right : left);
+
+                    if (bp -> binary_tag == AstBinaryExpression::EQUAL_EQUAL)
+                        EmitBranch((cond ? OP_IFEQ : OP_IFNE), lab, over);
+                    else EmitBranch((cond ? OP_IFNE : OP_IFEQ), lab, over);
+                }
+            }
+            else
+            {
+                EmitExpression(left);
+                EmitExpression(right);
+
+                if (bp -> binary_tag == AstBinaryExpression::EQUAL_EQUAL)
+                    EmitBranch((cond ? OP_IF_ICMPEQ : OP_IF_ICMPNE), lab, over);
+                else EmitBranch((cond ? OP_IF_ICMPNE : OP_IF_ICMPEQ), lab, over);
+            }
 
             return;
         }

@@ -270,8 +270,11 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         TypeSymbol *type = p -> Type();
         if (p -> IsConstant() && type != control.String())
         {
-            if (type == control.int_type || type == control.boolean_type)
+            if (control.IsSimpleIntegerValueType(type) ||
+                type == control.boolean_type)
+            {
                 return ((IntLiteralValue *) (p -> value)) -> value == 0;
+            }
             else if (type == control.long_type)
                 return ((LongLiteralValue *) (p -> value)) -> value == 0;
             else if (type == control.float_type)
@@ -294,8 +297,11 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         TypeSymbol *type = p -> Type();
         if (p -> IsConstant() && type != control.String())
         {
-            if (type == control.int_type || type == control.boolean_type)
+            if (control.IsSimpleIntegerValueType(type) ||
+                type == control.boolean_type)
+            {
                 return ((IntLiteralValue *) (p -> value)) -> value == 1;
+            }
             else if (type == control.long_type)
                 return ((LongLiteralValue *) (p -> value)) -> value == 1;
             else if (type == control.float_type)
