@@ -1,4 +1,11 @@
 2001-09-04  Eric Blake  <ebb9@email.byu.edu>
+
+	* depcomp: One more autotool file, but only useful when
+	configuring with dependency tracking enabled.
+	* src/.cvsignore: Add gencode.class.
+	* ChangeLog: Fix some whitespace issues.
+
+2001-09-04  Eric Blake  <ebb9@email.byu.edu>
 	    Chris Abbey  <jikes@cabbey.net>
 
 	* .cvsignore:
@@ -419,11 +426,11 @@
 	* src/semantic.h (Semantic):
 	Fixed enum to not end in trailing comma (it's
 	valid in C99, but not C++98); not all compilers
-        support this extension to the language yet.
+	support this extension to the language yet.
 	* src/platform.cpp (Format):
 	Move declaration of int i out of for loop inside
 	switch statement, since some compilers (aCC, VC++)
-        are broken and don't do scoping correctly.
+	are broken and don't do scoping correctly.
 
 2001-04-16  Eric Blake  <ebb9@email.byu.edu>
 
@@ -2095,12 +2102,12 @@
 	(inconsistency reported	by Chris Abbey <cabbey@home.net>)
 
 2000-03-09 Joe Berkovitz <joeb@atg.com>	
-	* option.h	      
-	* option.cpp	    
-	* jikes.cpp	     
-	* system.cpp: rename +CSO option and classpath_search_order	     
-	  variable to +OLDCSO and old_classpath_search_order, and invert
-	  sense of option correspondingly.	
+	* option.h:
+	* option.cpp:
+	* jikes.cpp:
+	* system.cpp: rename +CSO option and classpath_search_order
+	variable to +OLDCSO and old_classpath_search_order, and invert
+	sense of option correspondingly.	
 	 
 2000-02-29  Vadim Zaliva  <lord@crocodile.org>
 
@@ -2134,11 +2141,11 @@
 	1) The  default read object now always opens files with the mode "rb".
 	2) The classes to manipulate files have been renamed:	   
 
-	FileReader	   (Reader was causing problems)	      
-	DefaultFileReader	       
+	FileReader	   (Reader was causing problems)
+	DefaultFileReader
 
-	FileWriter	   (Writer was causing problems)	      
-	DefaultFileWriter	       
+	FileWriter	   (Writer was causing problems)
+	DefaultFileWriter
 
 	3) Small fixes that I had overlooked in the UNIX code	   
 	since I was working on an NT box.	   
