@@ -1,5 +1,11 @@
 2001-01-31  Mo DeJong  <mdejong@redhat.com>
 
+	* config.guess:
+	* config.sub: Update from GNU sources.
+	* configure.in: Minor comment fixup.
+
+2001-01-31  Mo DeJong  <mdejong@redhat.com>
+
 	* TODO: Update TODO list.
 
 2001-01-28  Mo DeJong  <mdejong@redhat.com>
