@@ -9,6 +9,9 @@
 /* defined if bool is a built-in C++ type */
 #undef HAVE_BOOL
 
+/* compiler is missing ostream << const unsigned char * */
+#undef HAVE_BROKEN_OSTREAM
+
 /* known to be broken on mingwin beta 20 */
 #undef HAVE_BROKEN_USHRT_MAX
 
@@ -56,7 +59,7 @@
 /* Define if you have the <iconv.h> header file. */
 #undef HAVE_ICONV_H
 
-/* Defined when Jikes is built with native floating support */
+/* Defined, by default, when Jikes is built with native floating support */
 #undef HAVE_IEEE754
 
 /* Define Jikes functions in a namespace */

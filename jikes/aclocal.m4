@@ -37,6 +37,7 @@ builtin(include,src/m4/ac_cxx_const_cast.m4)
 builtin(include,src/m4/ac_cxx_dynamic_cast.m4)
 builtin(include,src/m4/ac_cxx_reinterpret_cast.m4)
 builtin(include,src/m4/ac_cxx_static_cast.m4)
+builtin(include,src/m4/ac_check_broken_ostream.m4)
 
 dnl builtin(include,src/m4/)
 

@@ -12,6 +12,9 @@ AC_CHECK_HEADERS(iconv.h)
 dnl	Check if iconv library is present
 AC_CHECK_LIB(iconv, iconv)
 
+dnl	Check if we need to link the iconv lib (cygwin)
+AC_CHECK_LIB(iconv, libiconv_open)
+
 iconv_includes="
 #ifdef HAVE_STRING_H
 # if !STDC_HEADERS && HAVE_MEMORY_H

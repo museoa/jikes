@@ -1,3 +1,30 @@
+2001-03-28  Eric Blake  <ebb9@email.byu.edu>
+
+        * configure.in
+        * acinclude.m4
+        * src/config.h.in
+        * src/m4/ac_check_broken_ostream.m4 : add detection
+        for HP/UX's broken ostream class that can't handle
+        << const unsigned char *.
+
+2001-03-28  Chris Abbey  <cabbey@bresnanlink.net>
+
+        * configure.in
+        * src/m4/ac_check_iconv.m4 : add configure support for
+        Bruno Haible's libiconv (cygwin)
+
+2001-03-27  Pascal Davoust  <davoustp@yahoo.com>
+
+	* configure.in : Fix ICC FP bug detection
+	so compiler name is tested before trying to compile
+	the code snippet (garbage was printed when using
+	VC++ on Win32).
+
+2001-03-27  Eric Blake  <ebb9@email.byu.edu>
+
+	* configure.in : Fix typos related to UINT_MAX
+	needed for aCC on HP/UX
+	
 2001-03-19  Mo DeJong  <mdejong@redhat.com>
 
 	* src/m4/ac_cxx_check_set_new_handler.m4:
