@@ -4701,7 +4701,7 @@ LiteralValue* Semantic::CastValue(const TypeSymbol* target_type,
         {
             LongLiteralValue* literal =
                 DYNAMIC_CAST<LongLiteralValue*> (expr -> value);
-            LongToDecString long_integer(literal -> value);
+            LongToString long_integer(literal -> value);
             literal_value =
                 control.Utf8_pool.FindOrInsert(long_integer.String(),
                                                long_integer.Length());

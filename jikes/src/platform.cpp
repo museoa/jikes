@@ -329,126 +329,91 @@ char* wstring2string(wchar_t* in)
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-IntToString::IntToString(int num)
-{
-    if (0x80000000 == (unsigned int) num)
-    {
-        str = info;
-        strcpy(str, StringConstant::U8S_smallest_int);
-    }
-    else
-    {
-        str = &info[TAIL_INDEX];
-        *str = U_NULL;
-        int n = (num < 0 ? -num : num);
-        do
-        {
-            *--str = (U_0 + n % 10);
-            n /= 10;
-        } while (n != 0);
-
-        if (num < 0)
-            *--str = U_MINUS;
-    }
-}
-
-
-IntToWstring::IntToWstring(int num)
-{
-    if (0x80000000 == (unsigned int) num)
-    {
-        wstr = winfo;
-        wcscpy(wstr,  StringConstant::US_smallest_int);
-    }
-    else
-    {
-        wstr = &winfo[TAIL_INDEX];
-        *wstr = U_NULL;
-        int n = (num < 0 ? -num : num);
-        do
-        {
-            *--wstr = (U_0 + n % 10);
-            n /= 10;
-        } while (n != 0);
-
-        if (num < 0)
-            *--wstr = U_MINUS;
-    }
-}
-
-
-ULongToDecString::ULongToDecString(ULongInt &num)
+IntToString::IntToString(i4 num)
 {
     str = &info[TAIL_INDEX];
     *str = U_NULL;
+    u4 n = num < 0 ? - num : num;
+    do
+    {
+        *--str = U_0 + n % 10;
+        n /= 10;
+    } while (n != 0);
+    if (num < 0)
+        *--str = U_MINUS;
+}
 
-    ULongInt n = num; // make a copy in order to not destroy reference argument
+IntToString::IntToString(u4 num, int width)
+{
+    str = &info[width];
+    *str = U_NULL;
+    do
+    {
+        char c = num & 0xf;
+        *--str = c < 10 ? U_0 + c : U_a - 10 + c;
+        num >>= 4;
+    } while (str != info);
+}
+
+
+IntToWstring::IntToWstring(i4 num)
+{
+    wstr = &winfo[TAIL_INDEX];
+    *wstr = U_NULL;
+    u4 n = num < 0 ? - num : num;
+    do
+    {
+        *--wstr = U_0 + n % 10;
+        n /= 10;
+    } while (n != 0);
+    if (num < 0)
+        *--wstr = U_MINUS;
+}
+
+
+LongToString::LongToString(const LongInt &num)
+{
+    str = &info[TAIL_INDEX];
+    *str = U_NULL;
+    ULongInt n = num < 0 ? (ULongInt) - num : (ULongInt) num;
     do
     {
         *--str = U_0 + (n % 10).LowWord();
         n /= 10;
     } while (n != 0);
+    if (num.HighWord() & 0x80000000)
+        *--str = U_MINUS;
+    base = str;
 }
 
-
-LongToOctString::LongToOctString(BaseLong &num)
+LongToString::LongToString(const ULongInt &num)
 {
     str = &info[TAIL_INDEX];
     *str = U_NULL;
-
-    ULongInt n = num; // make a copy in order to not destroy reference argument
+    ULongInt n = num;
     do
     {
-        *--str = U_0 + (n % 8).LowWord();
-        n /= 8;
+        *--str = U_0 + (n % 10).LowWord();
+        n /= 10;
     } while (n != 0);
-
-    *--str = U_0;
+    base = str;
 }
 
-
-LongToHexString::LongToHexString(BaseLong &num)
+LongToString::LongToString(const BaseLong& num, bool octal)
 {
     str = &info[TAIL_INDEX];
     *str = U_NULL;
-
-    ULongInt n = num; // make a copy in order to not destroy reference argument
+    ULongInt value = num;
     do
     {
-        *--str = U_0 + (n % 16).LowWord();
-        n /= 16;
-    } while (n != 0);
-
-    *--str = U_x;
-    *--str = U_0;
-}
-
-
-LongToDecString::LongToDecString(LongInt &num)
-{
-    if (num.HighWord() == 0x80000000 && num.LowWord() == 0x00000000)
-    {
-        str = info;
-        strcpy(str,  StringConstant::U8S_smallest_long_int);
-    }
-    else
-    {
-        str = &info[TAIL_INDEX];
-        *str = U_NULL;
-
-        // compute absolute value
-        ULongInt n = (num.HighWord() & 0x80000000 ?
-            (ULongInt) -num : (ULongInt) num);
-
-        do
-        {
-            *--str = U_0 + (n % 10).LowWord();
-            n /= 10;
-        } while (n != 0);
-
-        if (num.HighWord() & 0x80000000)
-            *--str = U_MINUS;
-    }
+        char c = value.LowWord() & (octal ? 7 : 0xf);
+        *--str = c < 10 ? U_0 + c : U_a - 10 + c;
+        value >>= (octal ? 3 : 4);
+    } while (value != 0);
+    base = str - 1;
+    if (! octal)
+        *base-- = U_x;
+    *base = U_0;
 }
 
 
@@ -1189,18 +1154,18 @@ Ostream &Ostream::operator<<(LongInt a)
 {
     if (os -> flags() & os -> dec)
     {
-        LongToDecString long_int(a);
+        LongToString long_int(a);
         *os << long_int.String();
     }
     else if (os -> flags() & os -> oct)
     {
-        LongToOctString long_int(a);
+        LongToString long_int(a, true);
         *os << (os -> flags() & os -> showbase
                 ? long_int.StringWithBase() : long_int.String());
     }
     else if (os -> flags() & os -> hex)
     {
-        LongToHexString long_int(a);
+        LongToString long_int(a, false);
         *os << (os -> flags() & os -> showbase
                 ? long_int.StringWithBase() : long_int.String());
     }
@@ -1217,18 +1182,18 @@ Ostream &Ostream::operator<<(ULongInt a)
 {
     if (os -> flags() & os -> dec)
     {
-        ULongToDecString ulong_int(a);
+        LongToString ulong_int(a);
         *os << ulong_int.String();
     }
     else if (os -> flags() & os -> oct)
     {
-        LongToOctString ulong_int(a);
+        LongToString ulong_int(a, true);
         *os << (os -> flags() & os -> showbase
                 ? ulong_int.StringWithBase() : ulong_int.String());
     }
     else if (os -> flags() & os -> hex)
     {
-        LongToHexString ulong_int(a);
+        LongToString ulong_int(a, false);
         *os << (os -> flags() & os -> showbase
                 ? ulong_int.StringWithBase() : ulong_int.String());
     }
@@ -1516,10 +1481,6 @@ wchar_t StringConstant::US_while[] = {
 //
 wchar_t StringConstant::US_EOF[] = {U_E, U_O, U_F, U_NU}; // L"EOF"
 
-wchar_t StringConstant::US_smallest_int[] = {
-    U_MINUS, U_2, U_1, U_4, U_7, U_4, U_8, U_3, U_6, U_4, U_8,
-    U_NU}; // L"-2147483648"
-
 char StringConstant::U8S_help_header[] = "Jikes Compiler - " JIKES_VERSION_STRING
         "\n(C) Copyright IBM Corp. 1997, 1998, 1999, 2000, 2001, 2002.\n"
         "- Licensed Materials - Program Property of IBM - All Rights Reserved.\n";
@@ -1676,12 +1637,6 @@ char StringConstant::U8S_LP_Object_RP_StringBuffer[] = {
     U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_f, U_f, U_e, U_r, U_SC,
     U_NU}; // "(Ljava/lang/Object;)Ljava/lang/StringBuffer;"
 
-char StringConstant::U8S_smallest_int[] = {
-    U_MINUS, U_2, U_1, U_4, U_7, U_4, U_8, U_3, U_6, U_4, U_8,
-    U_NU}; // "-2147483648"
-char StringConstant::U8S_smallest_long_int[] = {
-    U_MINUS, U_9, U_2, U_2, U_3, U_3, U_7, U_2, U_0, U_3, U_6, U_8, U_5,
-    U_4, U_7, U_7, U_5, U_8, U_0, U_8, U_NU}; // "-9223372036854775808"
 char StringConstant::U8S_NaN[] = {U_N, U_a, U_N, U_NU}; // "NaN"
 char StringConstant::U8S_pos_Infinity[] = {
     U_I, U_n, U_f, U_i, U_n, U_i, U_t, U_y, U_NU}; // "Infinity"

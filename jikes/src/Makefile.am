@@ -141,8 +141,8 @@ bytecode.$(OBJEXT): bytecode.cpp bytecode.h platform.h tuple.h \
   jikesapi.h ast.h stream.h depend.h class.h semantic.h error.h symbol.h \
   lookup.h long.h double.h access.h control.h set.h op.h option.h \
   segment.h table.h
-case.$(OBJEXT): case.cpp case.h platform.h config.h
-code.$(OBJEXT): code.cpp code.h platform.h config.h
+case.$(OBJEXT): case.cpp case.h platform.h
+code.$(OBJEXT): code.cpp code.h platform.h
 control.$(OBJEXT): control.cpp control.h platform.h symbol.h stream.h \
   tuple.h jikesapi.h lookup.h long.h double.h access.h set.h scanner.h \
   parser.h lpginput.h javasym.h javadef.h javaprs.h javaact.h semantic.h \
@@ -185,9 +185,10 @@ init.$(OBJEXT): init.cpp platform.h semantic.h ast.h stream.h tuple.h \
 javaact.$(OBJEXT): javaact.cpp platform.h parser.h lpginput.h stream.h \
   tuple.h jikesapi.h javasym.h javadef.h javaprs.h javaact.h ast.h \
   depend.h
+jikes.$(OBJEXT): jikes.cpp platform.h jikesapi.h error.h stream.h \
+  tuple.h
 jikesapi.$(OBJEXT): jikesapi.cpp platform.h control.h symbol.h stream.h \
   tuple.h jikesapi.h lookup.h long.h double.h access.h set.h option.h
-jikes.$(OBJEXT): jikes.cpp platform.h jikesapi.h error.h stream.h tuple.h
 long.$(OBJEXT): long.cpp long.h platform.h double.h
 lookup.$(OBJEXT): lookup.cpp lookup.h platform.h tuple.h jikesapi.h \
   long.h double.h control.h symbol.h stream.h access.h set.h code.h ast.h \
@@ -220,9 +221,9 @@ symbol.$(OBJEXT): symbol.cpp symbol.h platform.h stream.h tuple.h \
 system.$(OBJEXT): system.cpp platform.h control.h symbol.h stream.h \
   tuple.h jikesapi.h lookup.h long.h double.h access.h set.h semantic.h \
   ast.h depend.h error.h zip.h unzip.h option.h case.h
-tab.$(OBJEXT): tab.cpp tab.h platform.h config.h
+tab.$(OBJEXT): tab.cpp tab.h platform.h
 unparse.$(OBJEXT): unparse.cpp ast.h platform.h stream.h tuple.h \
   jikesapi.h depend.h
-unzip.$(OBJEXT): unzip.cpp unzip.h platform.h config.h
+unzip.$(OBJEXT): unzip.cpp unzip.h platform.h
 zip.$(OBJEXT): zip.cpp zip.h platform.h tuple.h jikesapi.h unzip.h \
   control.h symbol.h stream.h lookup.h long.h double.h access.h set.h

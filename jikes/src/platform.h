@@ -696,8 +696,6 @@ public:
     //
     static wchar_t US_EOF[]; // L"EOF"
 
-    static wchar_t US_smallest_int[]; // L"-2147483648"
-
     static char U8S_help_header[];
     static char U8S_command_format[];
 
@@ -784,9 +782,7 @@ public:
                 U8S_LP_String_RP_StringBuffer[], // "(Ljava/lang/String;)Ljava/lang/StringBuffer;"
                 U8S_LP_Object_RP_StringBuffer[]; // "(Ljava/lang/Object;)Ljava/lang/StringBuffer;"
 
-    static char U8S_smallest_int[],      // "-2147483648"
-                U8S_smallest_long_int[], // "-9223372036854775808"
-                U8S_NaN[],               // "NaN"
+    static char U8S_NaN[],               // "NaN"
                 U8S_pos_Infinity[],      // "Infinity"
                 U8S_neg_Infinity[],      // "-Infinity"
                 U8S_pos_Zero[],          // "0.0"
@@ -800,122 +796,65 @@ public:
 class IntToString
 {
 public:
-    IntToString(int);
+    IntToString(i4); // Signed decimal conversion.
+    IntToString(u4, int width); // Unsigned zero-padded hexadecimal.
 
-    char *String() { return str; }
-    int Length()   { return (&info[TAIL_INDEX]) - str; }
+    const char* String() { return str; }
+    int Length() { return (&info[TAIL_INDEX]) - str; }
 
 private:
     enum { TAIL_INDEX = 1 + 10 }; // 1 for sign, +10 significant digits
 
-    char info[TAIL_INDEX + 1], // +1 for '\0'
-         *str;
+    char info[TAIL_INDEX + 1]; // +1 for '\0'
+    char* str;
 };
 
 
 //
-// Same as IntToString for wide strings
+// Same as IntToString for wide strings.
 //
 class IntToWstring
 {
 public:
     IntToWstring(int);
 
-    wchar_t *String() { return wstr; }
-    int Length()      { return (&winfo[TAIL_INDEX]) - wstr; }
+    const wchar_t* String() { return wstr; }
+    int Length() { return (&winfo[TAIL_INDEX]) - wstr; }
 
 private:
     enum { TAIL_INDEX = 1 + 10 }; // 1 for sign, +10 significant digits
 
-    wchar_t winfo[TAIL_INDEX + 1], // 1 for sign, +10 significant digits + '\0'
-            *wstr;
+    wchar_t winfo[TAIL_INDEX + 1]; // 1 for sign, +10 significant digits + '\0'
+    wchar_t* wstr;
 };
 
 
 //
-// Convert an unsigned Long integer to its character string representation in
-// decimal.
-//
-class ULongInt;
-class ULongToDecString
-{
-public:
-    ULongToDecString(ULongInt &);
-
-    char *String() { return str; }
-    int Length()   { return (&info[TAIL_INDEX]) - str; }
-
-private:
-    enum { TAIL_INDEX = 20 }; // 20 significant digits
-
-    char info[TAIL_INDEX + 1], // +1 for '\0'
-         *str;
-};
-
-
-//
-// Convert a signed or unsigned Long integer to its character string
-// representation in octal.
+// Convert a Long integer to its character string representation.
 //
 class BaseLong;
-class LongToOctString
-{
-public:
-    LongToOctString(BaseLong &);
-
-    char *String() { return str + 1; } // +1 to skip initial '0'
-    char *StringWithBase() { return str; }
-    int Length()   { return (&info[TAIL_INDEX]) - str; }
-
-private:
-    enum { TAIL_INDEX = 1 + 22 }; // 1 for initial '0', +22 significant digits
-
-    char info[TAIL_INDEX + 1], // + 1 for '\0'
-         *str;
-};
-
-
-//
-// Convert a signed or unsigned Long integer to its character string
-// representation in hexadecimal.
-//
-class LongToHexString
-{
-public:
-    LongToHexString(BaseLong &);
-
-    char *String() { return str + 2; } // +2 to skip initial "0x"
-    char *StringWithBase() { return str; }
-    int Length()   { return (&info[TAIL_INDEX]) - str; }
-
-private:
-    // 1 for initial '0', +1 for 'x', + 16 significant digits
-    enum { TAIL_INDEX = 1 + 1 + 16 };
-
-    char info[TAIL_INDEX + 1], // +1 for '\0'
-         *str;
-};
-
-
-//
-// Convert a signed Long integer to its character string representation in
-// decimal.
-//
+class ULongInt;
 class LongInt;
-class LongToDecString
+class LongToString
 {
 public:
-    LongToDecString(LongInt &);
+    LongToString(const LongInt&); // Signed decimal conversion.
+    LongToString(const ULongInt&); // Unsigned decimal conversion.
+    // Unsigned hexadecimal or octal, with optional base designator.
+    LongToString(const BaseLong&, bool octal = false);
 
-    char *String() { return str; }
-    int Length()   { return (&info[TAIL_INDEX]) - str; }
+    const char* String() { return str; }
+    const char* StringWithBase() { return base; }
+    int Length() { return (&info[TAIL_INDEX]) - str; }
 
 private:
-    enum { TAIL_INDEX = 1 + 19 }; // 1 for sign, +19 significant digits
+    enum { TAIL_INDEX = 23 }; // 22 octal digits + base designator
 
-    char info[TAIL_INDEX + 1], // + 1 for '\0'
-         *str;
+    char info[TAIL_INDEX + 1]; // +1 for '\0'
+    char* str;
+    char* base;
 };
+
 
 //
 // Convert an double to its character string representation.

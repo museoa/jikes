@@ -1,3 +1,20 @@
+2002-12-18  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/platform.h (IntToString, LongToString): Backport from
+	generics-branch.
+	* src/expr.cpp: 
+	* src/platform.cpp: Use updated tostring classes.
+	* configure.in: Bump version number.
+	* src/Makefile.am: Improve compile dependences.
+	* Makefile.in:
+	* aclocal.m4:
+	* config.guess:
+	* config.sub:
+	* configure:
+	* install-sh:
+	* doc/Makefile.in:
+	* src/Makefile.in: Regenerate with newer autotools versions.
+
 2002-12-13  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/getclass.cpp (ProcessClassFile): Fix segfault when class
