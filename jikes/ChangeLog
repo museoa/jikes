@@ -1,5 +1,10 @@
 2002-05-14  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/expr.cpp (ProcessAmbiguousName): Fix name parsing to load
+	packages that weren't imported - bug 2550.
+
+2002-05-14  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/class.h (AddLocalVariable): Remove dead code.
 
 2002-05-11  Max Gilead  <gilead@yellow.dyndns.org>

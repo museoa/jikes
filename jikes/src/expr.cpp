@@ -2448,7 +2448,15 @@ void Semantic::ProcessAmbiguousName(Ast *name)
         {
             NameSymbol *name_symbol = lex_stream -> NameSymbol(simple_name -> identifier_token);
             PackageSymbol *package = control.external_table.FindPackageSymbol(name_symbol);
-            if (package)
+            if (! package)
+            {
+                //
+                // One last check in case the package was not imported.
+                //
+                package = control.external_table.InsertPackageSymbol(name_symbol, NULL);
+                control.FindPathsToDirectory(package);
+            }
+            if (package -> directory.Length())
                 simple_name -> symbol = package;
             else
             {
@@ -2688,7 +2696,16 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                     else
                     {
                         PackageSymbol *subpackage = package -> FindPackageSymbol(name_symbol);
-                        if (subpackage)
+                        if (! subpackage)
+                        {
+                            //
+                            // One last check in case the subpackage was not
+                            // imported.
+                            //
+                            subpackage = package -> InsertPackageSymbol(name_symbol);
+                            control.FindPathsToDirectory(subpackage);
+                        }
+                        if (subpackage -> directory.Length())
                             field_access -> symbol = subpackage;
                         else
                         {
