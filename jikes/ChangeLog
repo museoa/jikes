@@ -1,5 +1,12 @@
 2002-06-27  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/bytecode.cpp: Minor formatting improvements.
+	(EmitTryStatement): Emit exception handlers in correct order -
+	jikes bug 3003.
+	(EmitCheckForNull): Update emitted code to match javac.
+
+2002-06-27  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/symbol.cpp (EnclosingType): Update logic to work for classes
 	read from .class file - bug 2995.
 

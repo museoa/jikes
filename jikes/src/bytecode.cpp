@@ -680,6 +680,7 @@ void ByteCode::EndMethod(int method_index, MethodSymbol *msym)
         // Sanity check - make sure nothing jumped past here
         //
         assert((u2) last_label_pc < code_attribute -> CodeLength());
+        assert(stack_depth == 0);
 
         //
         // attribute length:
@@ -832,21 +833,28 @@ void ByteCode::DeclareLocalVariable(AstVariableDeclarator *declarator)
         //
         if (! (control.option.g & JikesOption::VARS))
             return;
-        LoadLiteral(declarator -> symbol -> initial_value, declarator -> symbol -> Type());
+        LoadLiteral(declarator -> symbol -> initial_value,
+                    declarator -> symbol -> Type());
     }
     else if (declarator -> variable_initializer_opt)
     {
-        AstArrayCreationExpression *ace = declarator -> variable_initializer_opt -> ArrayCreationExpressionCast();
+        AstArrayCreationExpression *ace = declarator ->
+            variable_initializer_opt -> ArrayCreationExpressionCast();
         if (ace)
             EmitArrayCreationExpression(ace);
-        else if (declarator -> variable_initializer_opt -> ArrayInitializerCast())
-            InitializeArray(declarator -> symbol -> Type(), declarator -> variable_initializer_opt -> ArrayInitializerCast());
+        else if (declarator -> variable_initializer_opt ->
+                 ArrayInitializerCast())
+        {
+            InitializeArray(declarator -> symbol -> Type(),
+                            declarator -> variable_initializer_opt -> ArrayInitializerCast());
+        }
         else // evaluation as expression
             EmitExpression(declarator -> variable_initializer_opt -> ExpressionCast());
     }
     else return; // if nothing to initialize
 
-    StoreLocal(declarator -> symbol -> LocalVariableIndex(), declarator -> symbol -> Type());
+    StoreLocal(declarator -> symbol -> LocalVariableIndex(),
+               declarator -> symbol -> Type());
 }
 
 
@@ -1687,6 +1695,9 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
             stack_depth = 1; // account for the exception already on the stack
             StoreLocal(parameter_symbol -> LocalVariableIndex(),
                        parameter_symbol -> Type());
+            code_attribute ->
+                AddException(start_try_block_pc, end_try_block_pc, handler_pc,
+                             RegisterClass(parameter_symbol -> Type()));
 
             //
             // If we determined the finally clause is a nop, remove the tag
@@ -1715,11 +1726,6 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
                                      RegisterUtf8(parameter_symbol -> Type() -> signature),
                                      parameter_symbol -> LocalVariableIndex());
             }
-
-            code_attribute -> AddException(start_try_block_pc,
-                                           end_try_block_pc, handler_pc,
-                                           RegisterClass(parameter_symbol ->
-                                                         Type()));
 
             //
             // If catch block completes normally, skip further catch blocks.
@@ -2833,9 +2839,6 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
     case Ast::ARRAY_CREATION:
         assert(need_value && "array can't qualify static member");
         return EmitArrayCreationExpression((AstArrayCreationExpression *) expression);
-    case Ast::DIM:
-        assert(need_value && "dimension can't qualify static member");
-        return EmitExpression(((AstDimExpr *) expression) -> expression);
     case Ast::DOT:
         {
             AstFieldAccess *field_access = (AstFieldAccess *) expression;
@@ -3055,7 +3058,7 @@ void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
 
     //
     // Since the VM does not have a nice way of finding a class without a
-    // runtime object, we use this approach.  Notice that getClass can throw
+    // runtime object, we use this approach.  Notice that forName can throw
     // a checked exception, but JLS semantics do not allow this, so we must
     // add a catch block to convert the problem to an unchecked Error.
     //
@@ -4200,22 +4203,18 @@ void ByteCode::EmitCheckForNull(AstExpression *expression)
                 expression -> IsSuperExpression()))
     {
         //
-        // It is uncertain whether the expression can be null, so check. If
-        // the base was null, so we need to raise a NullPointerException. But
-        // the fastest way to do that is throwing null. Notice that the
-        // verifier remembers what type the existing null on the stack has, so
-        // we must use a fresh one. We did not bother checking for other
+        // It is uncertain whether the expression can be null, so check. This
+        // follows the lead of javac 1.4.1, in using a discarded instance method
+        // to perform the check. We did not bother checking for other
         // guaranteed non-null conditions: IsConstant(), string concats, and
         // ArrayCreationExpressionCast(), since none of these can qualify
         // a constructor invocation.
         //
         PutOp(OP_DUP);
-        Label lab1;
-        EmitBranch(OP_IFNONNULL, lab1);
-        PutOp(OP_ACONST_NULL);
-        PutOp(OP_ATHROW);
-        DefineLabel(lab1);
-        CompleteLabel(lab1);
+        PutOp(OP_INVOKEVIRTUAL);
+        ChangeStack(1); // for returned value
+        PutU2(RegisterLibraryMethodref(control.Object_getClassMethod()));
+        PutOp(OP_POP);
     }
 }
 
@@ -4400,14 +4399,15 @@ int ByteCode::EmitFieldAccess(AstFieldAccess *expression, bool need_value)
     AstExpression *base = expression -> base;
     VariableSymbol *sym = expression -> symbol -> VariableCast();
 
-    if (expression -> resolution_opt) // resolve reference through enclosing class
+    if (expression -> resolution_opt)
     {
         //
-        // If the access is qualified by an arbitrary base
-        // expression, evaluate it for side effects.
-        // Normally, this will be done when evaluating the accessor method.
-        // However, if this is a static field, and need_value is false,
-        // the access will not have a side effect, so we can bypass it.
+        // A resolution exists if the field belongs to an enclosing class and
+        // has an accessor method. If the access is qualified by an arbitrary
+        // base expression, evaluate it for side effects. Normally, this will
+        // be done when evaluating the accessor method. However, if this is a
+        // static field, and need_value is false, the access will not have a
+        // side effect, so we can bypass it.
         //
         MethodSymbol *method = expression -> symbol -> MethodCast();
         if (! need_value && method && ! method -> AccessesInstanceMember())
