@@ -1,3 +1,7 @@
+2002-07-02  Chris Dennis  <chris.dennis@invidi.com>
+
+	* src/definite.cpp (DefiniteSetup): Another VC++ scoping patch.
+
 2002-07-02  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/set.h (Resize): Followup to patch 310: Fix a thinko that was

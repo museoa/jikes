@@ -2211,11 +2211,11 @@ void Semantic::DefiniteSetup()
     DefiniteVisibleVariables() = new SymbolSet(size);
     DefinitelyAssignedVariables() = new DefinitePair(size);
     BlankFinals() = new BitSet(size, BitSet::EMPTY);
-    for (int i = 0; i < size; i++)
+    for (int j = 0; j < size; j++)
     {
-        VariableSymbol *final_var = (*FinalFields())[i];
+        VariableSymbol *final_var = (*FinalFields())[j];
         if (! final_var -> declarator -> variable_initializer_opt)
-            BlankFinals() -> AddElement(i);
+            BlankFinals() -> AddElement(j);
         DefiniteVisibleVariables() -> AddElement(final_var);
     }
 }
