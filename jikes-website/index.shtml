@@ -79,13 +79,17 @@
 <table border=0 cellspacing=0 cellpadding=0> <!-- a table within a table, how low have I sunken? -->
 <tr><td>
 <p>
-    The Jikes Homepage has been reorganized to take advantage of the new support
+    As you can see, Jikes has moved again. We're now hosted at <a href="http://sourceforge.net/">
+    SourceForge&reg;</a>. This move was a result of IBM's decision to pull out
+    of the project hosting space. Since there was a great amount of similarity
+    between sf.net and dw/oss, the change will be mostly cosmetic.
+<!--    The Jikes Homepage has been reorganized to take advantage of the new support
     infrastructure offered by <a href="http://ibm.com/?origin=jikes">IBM's</a>
     <a href="http://ibm.com/developerworks/?origin=jikes">developerWorks</a>
     <a href="http://ibm.com/developerworks/oss/?origin=jikes">Open Source Software zone</a>.
     These pages will continue to provide user support to the Jikes community; however,
     development related issues have been moved to the our space in the
-    <a href="/developerworks/projects/jikes/">dW/OSS</a>.</p>
+    <a href="/developerworks/projects/jikes/">dW/OSS</a>. --> </p>
 </td><td>
 <a href="http://www-306.ibm.com/software/info/students/contests/acm/?origin=jikes"><img
     src="http://t1d.www-306.cacheibm.com/software/info/university/images/linkback/acm-linkback.gif"
@@ -168,7 +172,7 @@ work on Jikes as part of their job description. Jikes survives today soley based
 the free time contributions of members of the open source community.
 
 <P>The source code is available under
-<a href="/developerworks/opensource/license10.html">IBM's Public License</a>,
+<a href="http://oss.software.ibm.com/developerworks/opensource/license10.html">IBM's Public License</a>,
 which has been approved by the <a href="http://www.opensource.org/">OSI</a>
 (Open Source Initiative) as a fully certified open source license.
 The project provides access to the complete <A HREF="cvs.shtml">CVS</A>
