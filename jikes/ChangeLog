@@ -1,3 +1,18 @@
+2004-01-31  Eric Blake  <ebb9@byu.net>
+
+	* NEWS: Fill in more information for 1.19.
+	* doc/jikes.1: Ditto.
+	* configure.ac: Prepare for 1.19 (with tentative release of Jan
+	31). Upgrade to automake 1.8.2.
+	* Makefile.in: Regenerate.
+	* aclocal.m4: Ditto.
+	* config.guess: Ditto.
+	* config.sub: Ditto.
+	* configure: Ditto.
+	* install-sh: Ditto.
+	* doc/Makefile.in: Ditto.
+	* src/Makefile.in: Ditto.
+
 2004-01-30  Eric Blake  <ebb9@byu.net>
 
 	* src/expr.cpp (FindMisspelledMethodName): Jikes bug 3613.

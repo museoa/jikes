@@ -4,12 +4,12 @@ dnl	generate the file "configure", which is run to configure the
 dnl	Makefile in this directory.
 
 dnl Set up the name and version
-AC_INIT([jikes],[1.18c])
-AM_INIT_AUTOMAKE([foreign check-news dist-bzip2 1.8])
+AC_INIT([jikes],[1.19])
+AM_INIT_AUTOMAKE([foreign check-news dist-bzip2 1.8.2])
 AC_PREREQ(2.59)
 
 AC_DEFINE(JIKES_VERSION_STRING,
-          "Version 1.18c (CVS) - sometime after 24 December 2003",
+          "Version 1.19 - 31 January 2004",
     [A string to indicate the release of jikes: Version 1.18 - 21 Nov 2002])
 
 dnl AC_CACHE_LOAD

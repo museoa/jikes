@@ -299,10 +299,12 @@ then turn on or off a particular warning, depending on the presence of
 the \fIno-\fP prefix. At present, the recognized flags are
 \fBmodifier-order\fP, which warns about the recommended ordering of
 multiple modifiers; \fBredundant-modifiers\fP, which warns about
-explicitly mentioning an implied modifier; and \fBswitchcheck\fP,
-which warns about fallthrough between cases of switch statements.  All
-of these are turned on by default in pedantic compilation
-mode. Multiple \fB\+P\fP options are cumulative in effect. For
+explicitly mentioning an implied modifier; \fBswitchcheck\fP, which
+warns about fallthrough between cases of switch statements; and
+\fBnaming-convention\fP, which warns about names that violate Java
+naming conventions.  Only switchcheck and naming-convention are
+included in plain \fB\+P\fP; the others must be asked for by
+name. Multiple \fB\+P\fP options are cumulative in effect. For
 example, to get all pedantic warnings except modifier ordering, use
 \fB\+P \+Pno-modifier-order\fP. To get just warnings about redundant
 modifiers, without other pedantic warnings, use
