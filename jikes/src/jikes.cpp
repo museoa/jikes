@@ -82,7 +82,8 @@ int main(int argc, char *argv[])
 		"\n"
                 "Originally written by Philippe Charles and David Shields \n"
                 "of IBM Research, Jikes is now maintained and refined by the\n"
-                "Jikes Project at http://oss.software.ibm.com/developerworks/opensource/jikes/project.\n"
+                "Jikes Project at:\n"
+                "http://oss.software.ibm.com/developerworks/opensource/jikes\n"
                 "Please consult this URL for more information and to learn \n"
                 "how to report problems.\n");
 
