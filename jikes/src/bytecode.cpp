@@ -2254,9 +2254,24 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
         //
         if (IsZero(left) || IsZero(right))
         {
-              EmitExpression(IsZero(left) ? right : left);
+            EmitExpression(IsZero(left) ? right : left);
 
             if (bp -> binary_tag == AstBinaryExpression::EQUAL_EQUAL)
+                EmitBranch((cond ? OP_IFEQ : OP_IFNE), lab, over);
+            else EmitBranch((cond ? OP_IFNE : OP_IFEQ), lab, over);
+
+            return;
+        }
+
+        //
+        // One of the operands is true. Only emit the other operand.
+        //
+        if (left_type == control.boolean_type &&
+            (IsOne(left) || IsOne(right)))
+        {
+            EmitExpression(IsOne(left) ? right : left);
+
+            if (bp -> binary_tag == AstBinaryExpression::NOT_EQUAL)
                 EmitBranch((cond ? OP_IFEQ : OP_IFNE), lab, over);
             else EmitBranch((cond ? OP_IFNE : OP_IFEQ), lab, over);
 
@@ -2333,8 +2348,8 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
     unsigned opcode = 0,
              op_true,
              op_false;
-    if (control.IsSimpleIntegerValueType(left_type) ||
-        left_type == control.boolean_type)
+    assert(left_type != control.boolean_type);
+    if (control.IsSimpleIntegerValueType(left_type))
     {
         //
         // we have already dealt with EQUAL_EQUAL and NOT_EQUAL for the case

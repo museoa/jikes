@@ -1,5 +1,10 @@
 2001-12-18  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/bytecode.cpp (EmitBranchIfExpression): Missed a case in the
+	prior commit.
+
+2001-12-18  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/expr.cpp (BinaryNumericPromotion): Improve formatting and
 	delete useless conditionals.
 	* src/bytecode.h (IsNull): Delete dead code.
