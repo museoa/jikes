@@ -20,16 +20,17 @@
 namespace Jikes { // Open namespace Jikes block
 #endif
 
+class OptionError;
+class Ostream;
+
 class ArgumentExpander
 {
 public:
 
     int argc;
-    char **argv;
+    char** argv;
 
-    ArgumentExpander(int, char **);
-
-    ArgumentExpander(Tuple<char> &);
+    ArgumentExpander(int, char **, Tuple<OptionError *>& bad_options);
 
     ~ArgumentExpander()
     {
@@ -38,7 +39,8 @@ public:
         delete [] argv;
     }
 
-    bool ExpandAtFileArgument(Tuple<char *> & arguments, char * file_name);
+    void ExpandAtFileArgument(Tuple<char *>& arguments, char* file_name,
+                              Tuple<OptionError *>& bad_options);
 };
 
 
@@ -62,6 +64,9 @@ public:
         INVALID_K_TARGET,
         INVALID_TAB_VALUE,
         INVALID_DIRECTORY,
+        INVALID_AT_FILE,
+        UNTERMINATED_QUOTE,
+        NESTED_AT_FILE,
         UNSUPPORTED_ENCODING,
         UNSUPPORTED_OPTION,
         DISABLED_OPTION
@@ -82,8 +87,6 @@ private:
     OptionErrorKind kind;
     char *name;
 };
-
-class Ostream;
 
 class Option: public JikesOption
  {
@@ -121,7 +124,6 @@ public:
 public:
          
     Tuple<KeywordMap> keyword_map;
-    Tuple<OptionError *> bad_options;
 
     int first_file_index;
 
@@ -146,7 +148,7 @@ public:
 
     char *dependence_report_name;
 
-    Option(ArgumentExpander &);
+    Option(ArgumentExpander &, Tuple<OptionError *>&);
 
     ~Option();
 };

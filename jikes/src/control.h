@@ -590,7 +590,7 @@ private:
     void ProcessMembers();
     void ProcessBodies(TypeSymbol *);
 
-    void ProcessNewInputFiles(SymbolSet &, char **, int = 0);
+    void ProcessNewInputFiles(SymbolSet &, char **);
 
     FileSymbol *FindOrInsertJavaInputFile(DirectorySymbol *, NameSymbol *);
     FileSymbol *FindOrInsertJavaInputFile(wchar_t *, int);

@@ -18,112 +18,166 @@ namespace Jikes { // Open namespace Jikes block
 #endif
 
 //
-// Look for arguments in a file and add them to the passed
-// in tuple. If the file does not exist or cannot be read
-// return false. Return true otherwise.
+// For use in ExpandAtFileArgument.
 //
-bool ArgumentExpander::ExpandAtFileArgument(Tuple<char *> &arguments,
-    char *file_name)
+enum ParseState
+{
+    WHITESPACE,
+    NORMAL,
+    SINGLE_QUOTE,
+    DOUBLE_QUOTE
+};
+
+//
+// Look for arguments in a file and add them to the passed in tuple. If
+// the file does not exist, cannot be read, or contains invalid entries,
+// update the list of bad_options. We follow Sun's example of tokenizing
+// whitespace separated entries as arguments, except for quoted filenames
+// which may contain spaces.
+//
+void ArgumentExpander::ExpandAtFileArgument(Tuple<char *>& arguments,
+                                            char *file_name,
+                                            Tuple<OptionError *>& bad_options)
 {
     struct stat status;
     FILE *afile = SystemFopen(file_name, "r");
-    bool foundFile = false;
 
     if (afile && (SystemStat(file_name, &status) == 0))
     {
         char *buffer;
         int file_size;
-        char *start = NULL;
-        char *end = NULL;
-        char *eol = NULL;
+        char* start = NULL;
 
-        foundFile = true;
         buffer = new char[status.st_size + 2];
         file_size = SystemFread(buffer, 1, status.st_size, afile);
         //assert(status.st_size == file_size); // Fails under Cygwin (fopen "b" flag)
-        buffer[file_size] = '\n';
-        buffer[file_size+1] = '\0';
+        buffer[file_size] = U_LINE_FEED;
+        buffer[file_size + 1] = U_NULL;
 
-        for (char *ptr = buffer; *ptr; )
+        char* ptr = buffer;
+        ParseState state = WHITESPACE;
+
+        while (*ptr)
         {
-            // Skip spaces, tabs, and EOL until we find some text
-
-            while (start == NULL && *ptr) {
-                switch (*ptr) {
-                case U_SPACE:
-                case U_HORIZONTAL_TAB:
-                case U_LINE_FEED:
-                case U_CARRIAGE_RETURN:
-                    break; // Out of the switch not the while
-                default:
-                    start = ptr;
-                    end = ptr;
-                }
-                ptr++;
-            }
-
-            // If at end of the buffer, no arguments are left
-            if (! *ptr)
-                break;
-
-            // Find the end of this line, save last non space
-            // or tab position in the end ptr
-
-            while (eol == NULL)
+            switch (*ptr)
             {
-                switch (*ptr)
+            case U_SPACE:
+            case U_HORIZONTAL_TAB:
+            case U_FORM_FEED:
+            case U_LINE_FEED:
+            case U_CARRIAGE_RETURN:
+                if (state == NORMAL)
                 {
-                case U_LINE_FEED:
-                case U_CARRIAGE_RETURN:
-                    eol = ptr;
-                    break;
-                case U_SPACE:
-                case U_HORIZONTAL_TAB:
-                    break; // ignore tabs and spaces
-                default:
-                    end = ptr;
+                    // End the current token.
+                    *ptr = U_NULL;
+                    char *arg = new char[strlen(start) + 1];
+                    strcpy(arg, start);
+                    arguments.Next() = arg;
+                    start = NULL;
+                    state = WHITESPACE;
                 }
-                ptr++;
-
+                break;
+            case U_SINGLE_QUOTE:
+                if (state == SINGLE_QUOTE)
+                {
+                    // End current quoted token.
+                    *ptr = U_NULL;
+                    char *arg = new char[strlen(start) + 1];
+                    strcpy(arg, start);
+                    arguments.Next() = arg;
+                    start = NULL;
+                    state = WHITESPACE;
+                }
+                else
+                {
+                    // Start new token, ending previous if needed.
+                    if (state == NORMAL)
+                    {
+                        *ptr = U_NULL;
+                        char *arg = new char[strlen(start) + 1];
+                        strcpy(arg, start);
+                        arguments.Next() = arg;
+                    }
+                    start = ptr + 1;
+                    state = SINGLE_QUOTE;
+                }
+                break;
+            case U_DOUBLE_QUOTE:
+                if (state == DOUBLE_QUOTE)
+                {
+                    // End current quoted token.
+                    *ptr = U_NULL;
+                    char *arg = new char[strlen(start) + 1];
+                    strcpy(arg, start);
+                    arguments.Next() = arg;
+                    start = NULL;
+                    state = WHITESPACE;
+                }
+                else
+                {
+                    // Start new token, ending previous if needed.
+                    if (state == NORMAL)
+                    {
+                        *ptr = U_NULL;
+                        char *arg = new char[strlen(start) + 1];
+                        strcpy(arg, start);
+                        arguments.Next() = arg;
+                    }
+                    start = ptr + 1;
+                    state = DOUBLE_QUOTE;
+                }
+                break;
+            case U_AT:
+                if (state == WHITESPACE)
+                {
+                    bad_options.Next() = new OptionError(OptionError::NESTED_AT_FILE, file_name);
+                    *(ptr + 1) = U_NULL;
+                }
+                break;
+            default:
+                if (state == WHITESPACE)
+                {
+                    // Start new token.
+                    start = ptr;
+                    state = NORMAL;
+                }
             }
-
-            // Ignore double quotes so "Foo Bar.java" works.
-
-            if (start < end &&
-                *start == U_DOUBLE_QUOTE &&
-                *end == U_DOUBLE_QUOTE) {
-                start++;
-                end--;
-            }
-
-            // Copy arg into new string and add to tuple
-            *(end+1) = '\0';
-            char *arg = new char[strlen(start) + 1];
-            strcpy(arg, start);
-            arguments.Next() = arg;
-
-            // Reinit the pointers
-            start = NULL;
-            end = NULL;
-            eol = NULL;
+            ptr++;
         }
+
+        //
+        // Note: Sun's JDK 1.4 just treats an unterminated quote as a legal
+        // token, but that seems counterintuitive.
+        //
+        if (state > NORMAL)
+            bad_options.Next() = new OptionError(OptionError::UNTERMINATED_QUOTE, file_name);
 
         delete [] buffer;
     }
+    else
+    {
+        bad_options.Next() = new OptionError(OptionError::INVALID_AT_FILE,
+                                             file_name);
+    }
+
     if (afile != NULL)
         fclose(afile);
-
-    return foundFile;
+    return;
 }
 
 
-ArgumentExpander::ArgumentExpander(int argc_, char *argv_[])
+ArgumentExpander::ArgumentExpander(int argc_, char *argv_[],
+                                   Tuple<OptionError *>& bad_options)
 {
     Tuple<char *> arguments(8192);
     for (int i = 0; i < argc_; i++)
     {
         char *argument = argv_[i];
-        if (argument[0] != '@' || (! ExpandAtFileArgument(arguments, argument + 1)))
+        if (argument[0] == '@')
+        {
+            ExpandAtFileArgument(arguments, argument + 1, bad_options);
+        }
+        else
         {
             char *str = new char[strlen(argument) + 1];
             strcpy(str, argument);
@@ -141,51 +195,10 @@ ArgumentExpander::ArgumentExpander(int argc_, char *argv_[])
 }
 
 
-ArgumentExpander::ArgumentExpander(Tuple<char> &line)
-{
-    Tuple<char *> arguments(8192);
-
-    int end = 0;
-    do
-    {
-        for (; end < line.Length() && line[end] == U_SPACE; end++)
-            ;
-        if (end < line.Length())
-        {
-            int start = end;
-            for (end++; end < line.Length() && line[end] != U_SPACE; end++)
-                ;
-            int length = end - start;
-            char *argument = new char[length + 1];
-            for (int i = 0, k = start; k < end; i++, k++)
-                argument[i] = line[k];
-            argument[length] = U_NULL;
-
-            if (argument[0] == '@' &&
-                ExpandAtFileArgument(arguments, argument + 1))
-            {
-                delete [] argument;
-            }
-            else
-            {
-                arguments.Next() = argument;
-            }
-        }
-    } while (end < line.Length());
-
-    argc = arguments.Length();
-    argv = new char*[argc];
-
-    for (int k = 0; k < argc; k++)
-        argv[k] = arguments[k];
-
-    return;
-}
-
-
 wchar_t* OptionError::GetErrorMessage()
 {
     ErrorString s;
+    s << "Error: ";
 
     switch (kind)
     {
@@ -210,6 +223,18 @@ wchar_t* OptionError::GetErrorMessage()
         s << "The directory specified in the \"-d\" option, \"" << name
           << "\", is either invalid or it could not be expanded.";
         break;
+    case INVALID_AT_FILE:
+        s << "The @ file \"" << name
+          << "\", is either invalid or it could not be located.";
+        break;
+    case UNTERMINATED_QUOTE:
+        s << "The @ file \"" << name
+          << "\" contains an unterminated quote.";
+        break;
+    case NESTED_AT_FILE:
+        s << "The @ file \"" << name
+          << "\" must not reference another @ file.";
+        break;
     case UNSUPPORTED_ENCODING:
         s << "Unsupported encoding: \"" << name << "\".";
         break;
@@ -218,7 +243,7 @@ wchar_t* OptionError::GetErrorMessage()
           << "\" is unsupported in this build.";
         break;
     case DISABLED_OPTION:
-        s << "This option \"" << name
+        s << "The option \"" << name
           << "\" has been temporarily disabled.";
         break;
     default:
@@ -303,26 +328,26 @@ static inline char* makeStrippedCopy(char* value)
     return result;
 }
 
-Option::Option(ArgumentExpander &arguments) :
-                                              first_file_index(arguments.argc),
-                                              debug_trap_op(0),
-                                              debug_dump_lex(false),
-                                              debug_dump_ast(false),
-                                              debug_unparse_ast(false),
-                                              debug_unparse_ast_debug(false),
-                                              debug_dump_class(false),
-                                              nocleanup(false),
-                                              incremental(false),
-                                              makefile(false),
-                                              dependence_report(false),
-                                              bytecode(true),
-                                              full_check(false),
-                                              unzip(false),
-                                              dump_errors(false),
-                                              errors(true),
-                                              comments(false),
-                                              pedantic(false),
-                                              dependence_report_name(NULL)
+Option::Option(ArgumentExpander& arguments,
+               Tuple<OptionError *>& bad_options) : first_file_index(arguments.argc),
+                                                    debug_trap_op(0),
+                                                    debug_dump_lex(false),
+                                                    debug_dump_ast(false),
+                                                    debug_unparse_ast(false),
+                                                    debug_unparse_ast_debug(false),
+                                                    debug_dump_class(false),
+                                                    nocleanup(false),
+                                                    incremental(false),
+                                                    makefile(false),
+                                                    dependence_report(false),
+                                                    bytecode(true),
+                                                    full_check(false),
+                                                    unzip(false),
+                                                    dump_errors(false),
+                                                    errors(true),
+                                                    comments(false),
+                                                    pedantic(false),
+                                                    dependence_report_name(NULL)
 {
 #ifdef WIN32_FILE_SYSTEM
     for (int j = 0; j < 128; j++)
@@ -766,9 +791,10 @@ Option::Option(ArgumentExpander &arguments) :
     }
 
     //
-    // Initially, first_file_index is set to argc. Since the array filename_index
-    // contains the indices of all the input files in arguments in reverse order,
-    // we reverse the order here again to get the original list...
+    // Initially, first_file_index is set to argc. Since the array
+    // filename_index contains the indices of all the input files in
+    // arguments in reverse order, we reverse the order here again to get
+    // the original list...
     //
     for (int k = filename_index.Length() - 1; k >= 0; k--)
     {
@@ -793,9 +819,6 @@ Option::Option(ArgumentExpander &arguments) :
 
 Option::~Option()
 {
-    for (int i = 0; i < bad_options.Length(); i++)
-        delete bad_options[i];
-
     delete [] dependence_report_name;
 
 #ifdef WIN32_FILE_SYSTEM

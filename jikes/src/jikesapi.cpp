@@ -155,44 +155,40 @@ void JikesAPI::cleanupOptions()
     }
 }
 
-char** JikesAPI::parseOptions(int argc, char **argv)
+char** JikesAPI::parseOptions(int argc, char** argv)
 {
     cleanupOptions();
 
-    ArgumentExpander *args = new ArgumentExpander(argc, argv);
-    Option* opt = new Option(*args);
+    Tuple<OptionError *> bad_options;
+    ArgumentExpander *args = new ArgumentExpander(argc, argv, bad_options);
+    Option* opt = new Option(*args, bad_options);
     option = opt;
-    int n = args -> argc - opt -> first_file_index;
-    int i;
 
-    if (n <= 0 || opt -> bad_options.Length() > 0)
+    if (bad_options.Length() > 0)
     {
-        for (i = 0; i < opt -> bad_options.Length(); i++)
-            Coutput << opt -> bad_options[i] -> GetErrorMessage() << endl;
-        delete args;
-        return NULL;
+        for (int i = 0; i < bad_options.Length(); i++)
+            Coutput << bad_options[i] -> GetErrorMessage() << endl;
+        parsedOptions = NULL;
     }
     else
     {
+        int n = args -> argc - opt -> first_file_index;
         parsedOptions = new char*[n + 1];
-        for (i = 0; i < n; i++)
+        for (int i = 0; i < n; i++)
         {
             const char *o = args -> argv[opt -> first_file_index + i];
-            if (o)
-            {
-                parsedOptions[i] = new char[strlen(o) + 1];
-                strcpy(parsedOptions[i], o);
-            }
-            else
-            {
-                parsedOptions[i] = NULL;
-                break;
-            }
+            assert(o);
+            parsedOptions[i] = new char[strlen(o) + 1];
+            strcpy(parsedOptions[i], o);
         }
         parsedOptions[n] = NULL;
-        delete args;
-        return parsedOptions;
     }
+
+    for (int i = 0; i < bad_options.Length(); i++)
+        delete bad_options[i];
+
+    delete args;
+    return parsedOptions;
 }
 
 JikesOption* JikesAPI::getOptions()
@@ -203,7 +199,7 @@ JikesOption* JikesAPI::getOptions()
 /**
  * Compile given list of files.
  */
-int JikesAPI::compile(char **filenames)
+int JikesAPI::compile(char** filenames)
 {
     // Cast the JikesOption to an Option instance.
     // Note that the reason we don't use an Option

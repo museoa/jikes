@@ -102,7 +102,7 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
     //
     // Process all file names specified in command line
     //
-    ProcessNewInputFiles(input_java_file_set, arguments, option.first_file_index);
+    ProcessNewInputFiles(input_java_file_set, arguments);
 
     //
     // For each input file, copy it into the input_files array and process
@@ -162,11 +162,6 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
                                           0);
     }
 #endif
-
-    //
-    // By this point, JikesAPI should have already handled bad options.
-    //
-    assert(option.bad_options.Length() == 0);
 
     if (java_util_package -> directory.Length() == 0)
     {
@@ -832,8 +827,7 @@ DirectorySymbol *Control::FindSubdirectory(PathSymbol *path_symbol, wchar_t *nam
 #endif
 
 
-void Control::ProcessNewInputFiles(SymbolSet &file_set, char **arguments,
-                                   int first_index)
+void Control::ProcessNewInputFiles(SymbolSet &file_set, char **arguments)
 {
     for (int i = 0; i < bad_input_filenames.Length(); i++)
         delete [] bad_input_filenames[i];
@@ -844,11 +838,13 @@ void Control::ProcessNewInputFiles(SymbolSet &file_set, char **arguments,
     unreadable_input_filenames.Reset();
 
     //
-    // Process all file names specified in command line
+    // Process all file names specified in command line. By this point, only
+    // filenames should remain in arguments - constructing the Option should
+    // have filtered out all options and expanded @files.
     //
     if (arguments)
     {
-        int j=0;
+        int j = 0;
         while (arguments[j])
         {
             char *file_name = arguments[j++];
