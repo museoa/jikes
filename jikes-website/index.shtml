@@ -25,14 +25,14 @@
           <p align=center><big>Quick Links</big></p>
 	  <hr>
           General Interest
-          <ul style="color: purple; margin-left: -1.33em;">
+          <ul>
             <li><a href="/developerworks/mail/?group_id=10">Mailing Lists</a>
             <li><a href="people.shtml">People</a>
 	    <li><a href="leadership.shtml">Leadership</a>
           </ul>
           <hr>
           For Users
-          <ul style="color: purple; margin-left: -1.33em;">
+          <ul>
             <li><a href="faq/user-index.shtml">User's FAQ</a>
             <li><a href="/developerworks/news/index.php?group_id=10">News</a>
             <li><a href="distribs.shtml">Distributions</a>
@@ -43,7 +43,7 @@
           </ul>
           <hr>
           For Developers
-          <ul style="color: purple; margin-left: -1.33em;">
+          <ul>
 	    <li><a href="faq/dev-index.shtml">Developer's FAQ</a>
             <li><a href="cvs.shtml">CVS</a>
             <li><a href="/developerworks/patch/?group_id=10">Patch Queue</a>
@@ -54,7 +54,7 @@
           </ul>
           <hr>
           Related Links
-          <ul style="color: purple; margin-left: -1.33em;">
+          <ul>
 <!-- wait 'till Mo has this ready            <li><a href="/developerworks/projects/jacks/">Jacks Project</a>
 -->            <li><a href="http://www.ergnosis.com/java-spec-report/">Java Spec Report</a>
 	    <li><a href="http://ibm.com/java/jdk/">The Best JVMs on the net</a>
