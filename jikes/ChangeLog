@@ -1,5 +1,10 @@
 2000-07-30  Mo DeJong  <mdejong@redhat.com>
 
+	* TODO: Updated TODO list with things
+	we did not get done before 1.12 release.
+
+2000-07-30  Mo DeJong  <mdejong@redhat.com>
+
 	* src/option.cpp (ArgumentExpanded): Fix core dump
 	when processing a @file argument that contains
 	the sequence "\n\n".

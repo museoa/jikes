@@ -15,6 +15,9 @@ extern size_t iconv __P ((iconv_t __cd,
                           char **__restrict __outbuf,
                           size_t *__restrict __outbytesleft));
 
+Irix Sig:  iconv(iconv_t, char **, size_t *, char **, size_t *)
+Linux Sig: iconv(iconv_t, __const char **, char **, size_t *)
+
 
 We need a solution like those for wcslen but for iconv.
 
@@ -23,4 +26,12 @@ Add test cases for the typos in error.cpp that were fixed
 just before the release. In fact, it would be nice if we
 could generate a test case for every error condition and
 test the compiler output.
+
+
+See if the -fhonor-std flag helps with the namespace
+problems with g++.
+
+Check into the fix for bug 102, we reverted it because of
+crashes, but it would be nice to look into the fix again.
+
 
