@@ -14,7 +14,6 @@ This was omitted in the 1.12 release.
 (FIXED)
 
 
-
 Fix namespaces. People need
 to be able to compile on
 systems that require namespace
@@ -25,31 +24,6 @@ from working.
 ./configure HAVE_JIKES_NAMESPACE=1
 
 (FIXED)
-
-
-
-
-It is not clear if iconv is only a little
-broken or totally busted.
-
-More testing is needed to figure out
-if this is an endian issue. It works
-on an Intel box but fails on a Solaris
-Sparc so I think it is a byte order issue.
-
-http://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=19647
-
-While some iconv tests fail under Red Hat 6.2, they
-all fail on Red Hat 7.0, which is what this bug
-report is talking about.
-
-Also, would it be better to convert a bunch
-of chars in a buffer instead of doing them
-one at a time?
-
-
-
-
 
 
 Use new casting operations instead of C style
@@ -79,7 +53,7 @@ B*  bp2 = dynamic_cast<B*>(ap);
 assert( bp2 != NULL );
 
 
-(FIXED)
+(FIXED : still need to actually use them in #ifdefs)
 
 
 
@@ -108,16 +82,13 @@ to be done in a more general stream class not
 one that does lexing. That way, it could also
 be used in the Option class to process @ files.
 
+(FIXED)
 
 
 Add new floating point emulation support code.
 
 (FIXED)
 
-
-Fix problem with debug line number tables. Newer
-versions of java don't like our line numbers.
-This is commonly known as "Jikes and JPDA".
 
 
 Fix problems with double class use of
@@ -131,10 +102,49 @@ there is an external def too.
 
 *** Things that will not be done in 1.13
 
+
+
+It is not clear if iconv is only a little
+broken or totally busted.
+
+More testing is needed to figure out
+if this is an endian issue. It works
+on an Intel box but fails on a Solaris
+Sparc so I think it is a byte order issue.
+
+http://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=19647
+
+While some iconv tests fail under Red Hat 6.2, they
+all fail on Red Hat 7.0, which is what this bug
+report is talking about.
+
+Also, would it be better to convert a bunch
+of chars in a buffer instead of doing them
+one at a time?
+
+Check into the problems discussed with the
+onceagain boolean. Could this blow up if
+we don't set ch? Also what if the
+ErrorDecode..() method return true but
+the earlier assign to ch returned 0,
+that would set ch to zero right? I
+don't think that is really what we
+would have wanted.
+
+(Will not fix in this release)
+
+
+
 Add a configure check to make sure
 folks do not attempt to build under
 Cygwin with the -mno-cygwin flag.
 (Will not fix in this release)
+
+
+
+Fix problem with debug line number tables. Newer
+versions of java don't like our line numbers.
+This is commonly known as "Jikes and JPDA".
 
 
 
