@@ -1883,7 +1883,8 @@ inline DirectorySymbol* DirectorySymbol::InsertDirectorySymbol(const NameSymbol*
                                                                bool source_dir)
 {
     DirectorySymbol* subdirectory_symbol =
-        Table() -> InsertDirectorySymbol(name_symbol, this, source_dir);
+        Table() -> InsertDirectorySymbol(name_symbol, this,
+                                         source_dir && source_dir_only);
     subdirectories.Next() = subdirectory_symbol;
     return subdirectory_symbol;
 }
