@@ -3,7 +3,7 @@
 corect configure script for LIB_ICU, HP/UX, and ICC fp
 bug on other compilers.
 
-(fixes in hand)
+(fixed)
 
 Fix problem with debug line number tables. Newer
 versions of java don't like our line numbers.
@@ -93,11 +93,11 @@ to be done in a more general stream class not
 one that does lexing. That way, it could also
 be used in the Option class to process @ files.
 
-(FIXED, reverted since it caused other problems )
+(FIXED but reverted since it caused other problems )
 
 
 Make the floating point emulation code default.
-                                                
+(done)                                                
 
 
 If a zip file can not be found,
@@ -115,7 +115,10 @@ is "invalid" (implies it was corrupted).
 
 
 *** Things that will not be done in 1.14
+but should be done at some point....
 
+
+remove code from header files.
 
 
 Add a configure check to make sure
@@ -142,10 +145,14 @@ just before the 1.12 release. In fact, it would be nice if we
 could generate a test case for every error condition and
 test the compiler output.
 
+
 Check into the fix for bug 102, we reverted it because of
 crashes, but it would be nice to look into the fix again.
 
-Drop OLDCSO support from the compiler.
+
+Drop OLDCSO support from the compiler, but not untill after
+major public discusion... there are a number of major users who
+swear by this feature as much as some of us swore *at* it.
 
 
 Why does jikes treat the catching of exceptions
