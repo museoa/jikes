@@ -1,3 +1,7 @@
+2001-11-26  ??  <H.Zeller@acm.org>
+
+	* jikes.spec: Mandrake compresses man-pages with bzip, not gzip.
+
 2001-11-25  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.h:
