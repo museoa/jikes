@@ -20,7 +20,7 @@ namespace Jikes { // Open namespace Jikes block
 bool Ast::debug_unparse = false;
 
 // Special top-level form
-void AstCompilationUnit::Unparse(LexStream* lex_stream, const char* directory)
+void AstCompilationUnit::Unparse(LexStream* lex_stream, const char* const directory)
 {
     char *in_file_name = lex_stream -> FileName();
     // char *suffix = ".unparse";

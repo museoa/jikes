@@ -1,3 +1,9 @@
+2002-06-15  Chris Abbey  <cabbey@cabbey.net>
+
+	* arc/unparse.cpp (AstCompilationUnit::Unparse): fix definition
+	signature to match declaration signature in ast.h; AIX's xlC
+	compiler isn't as sloppy as gcc about signature constnes.
+
 2002-06-05  Chris Abbey  <jikes@cabbey.net>
 
 	* src/bytecode.cpp (EmitAssertStatement): produce proper error
