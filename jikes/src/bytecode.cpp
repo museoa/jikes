@@ -4720,8 +4720,7 @@ int ByteCode::EmitConditionalExpression(AstConditionalExpression *expression,
             if (need_value)
                 PutOp(IsZero(expression -> true_expression)
                       ? OP_ICONST_0 : OP_ICONST_1);
-            EmitExpression(expression -> test_expression);
-            EmitBranch(OP_IFNE, label);
+            EmitBranchIfExpression(expression -> test_expression, true, label);
             if (need_value)
                 PutOp(OP_POP);
             EmitExpression(expression -> false_expression, need_value);
@@ -4743,8 +4742,7 @@ int ByteCode::EmitConditionalExpression(AstConditionalExpression *expression,
         if (need_value)
             PutOp(IsZero(expression -> false_expression)
                   ? OP_ICONST_0 : OP_ICONST_1);
-        EmitExpression(expression -> test_expression);
-        EmitBranch(OP_IFEQ, label);
+        EmitBranchIfExpression(expression -> test_expression, false, label);
         if (need_value)
             PutOp(OP_POP);
         EmitExpression(expression -> true_expression, need_value);
