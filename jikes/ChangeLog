@@ -1,3 +1,8 @@
+2000-12-29  Mo DeJong  <mdejong@redhat.com>
+
+	* src/platform.cpp: Fix minor typo in comment. No
+	functional changes made.
+
 2000-12-29  Diane Holt  <holtdl@yahoo.com>
 
 	* src/error.cpp (SemanticError::PrintPACKAGE_NOT_FOUND):
