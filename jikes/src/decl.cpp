@@ -1848,9 +1848,8 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment, LexStream::
         }
     }
 
-    ProcessStaticInitializers(class_body);
-
     ProcessBlockInitializers(class_body);
+    ProcessStaticInitializers(class_body);
 
     //
     // Reset the this_variable and this_method may have been set in
@@ -4302,8 +4301,10 @@ void Semantic::InitializeVariable(AstFieldDeclaration *field_declaration, Tuple<
 
                 ProcessVariableInitializer(variable_declarator);
                 if (NumErrors() == start_num_errors)
-                     DefiniteVariableInitializer(variable_declarator, finals);
-                else variable_declarator -> symbol -> MarkDefinitelyAssigned(); // assume variable is assigned
+                    DefiniteVariableInitializer(variable_declarator, finals);
+                else
+                    // Suppress further error messages.
+                    variable_declarator -> symbol -> MarkDefinitelyAssigned();
 
                 variable_declarator -> pending = false;
             }
@@ -4320,6 +4321,8 @@ inline void Semantic::ProcessInitializer(AstBlock *initializer_block, AstBlock *
 {
     ThisVariable() = NULL;
     ThisMethod() = init_method;
+
+    assert(initializer_block && block_body);
 
     LocalBlockStack().Push(initializer_block);
     LocalSymbolTable().Push(init_method -> block_symbol -> Table());
@@ -4389,42 +4392,76 @@ bool Semantic::NeedsInitializationMethod(AstFieldDeclaration *field_declaration)
 }
 
 
+//
+// Lazily create and return the static initializer for this type
+//
+MethodSymbol *Semantic::GetStaticInitializerMethod()
+{
+    TypeSymbol *this_type = ThisType();
+    if (this_type -> static_initializer_method)
+        return this_type -> static_initializer_method;
+
+    BlockSymbol *block_symbol = new BlockSymbol(0); // the symbol table associated with this block will contain no element
+    block_symbol -> max_variable_index = 0;         // if we need this, it will be associated with a static initializer.
+
+    MethodSymbol *init_method;
+    init_method = this_type -> InsertMethodSymbol(control.clinit_name_symbol);
+    init_method -> SetType(control.void_type);
+    init_method -> SetACC_FINAL();
+    init_method -> SetACC_STATIC();
+    init_method -> SetContainingType(this_type);
+    init_method -> SetBlockSymbol(block_symbol);
+    init_method -> SetSignature(control);
+
+    this_type -> static_initializer_method = init_method;
+    return init_method;
+}
+
+
 void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
 {
-    if (class_body -> NumStaticInitializers() > 0 || class_body -> NumClassVariables() > 0)
+    //
+    // Notice that the bodies of methods have not been processed yet when this
+    // is called.  If any method contains an assert, it will generate a static
+    // initializer for the $noassert variable as needed.  On the other hand, if
+    // we already encountered an assert statement in an instance initializer,
+    // the static initializer already exists.  The assert variable initializer
+    // is magically implemented by bytecode.cpp, rather than adding all the AST
+    // structure to the block of the static initializer.
+    //
+    if (class_body -> NumStaticInitializers() > 0 ||
+        class_body -> NumClassVariables() > 0)
     {
         TypeSymbol *this_type = ThisType();
 
-        BlockSymbol *block_symbol = new BlockSymbol(0); // the symbol table associated with this block will contain no element
-        block_symbol -> max_variable_index = 0;         // if we need this, it will be associated with a static function.
-
-        AstBlock *initializer_block = compilation_unit -> ast_pool -> GenBlock();
-        initializer_block -> left_brace_token  = class_body -> left_brace_token;
-        initializer_block -> right_brace_token = class_body -> left_brace_token;
-        initializer_block -> block_symbol = block_symbol;
-        initializer_block -> nesting_level = LocalBlockStack().Size();
+        BlockSymbol *block_symbol = NULL;
+        AstBlock *initializer_block = NULL;
 
         LocalBlockStack().max_size = 0;
 
         //
-        // If the class being processed contains any static
-        // initializer then, it needs a static initializer function?
+        // If the class being processed contains any static initializer, or we
+        // already know we have assert statements, then the class needs a
+        // static initializer function. There is also the case, covered below,
+        // where there are no asserts or static initializer blocks, but where
+        // a static field is initialized with a non-constant value.
         //
         MethodSymbol *init_method = NULL;
         if (class_body -> NumStaticInitializers() > 0)
         {
-              init_method = this_type -> InsertMethodSymbol(control.clinit_name_symbol);
+            init_method = GetStaticInitializerMethod();
+            block_symbol = init_method -> block_symbol;
 
-              init_method -> SetType(control.void_type);
-              init_method -> SetACC_FINAL();
-              init_method -> SetACC_STATIC();
-              init_method -> SetContainingType(this_type);
-              init_method -> SetBlockSymbol(block_symbol);
-              init_method -> SetSignature(control);
+            initializer_block = compilation_unit -> ast_pool -> GenBlock();
+            initializer_block -> left_brace_token  = class_body -> left_brace_token;
+            initializer_block -> right_brace_token = class_body -> left_brace_token;
+            initializer_block -> block_symbol = block_symbol;
+            initializer_block -> nesting_level = LocalBlockStack().Size();
         }
 
         //
-        // Compute the set of final variables declared by the user in this type.
+        // Compute the set of final variables declared by the user in this
+        // type.
         //
         Tuple<VariableSymbol *> finals(this_type -> NumVariableSymbols());
         for (int i = 0; i < this_type -> NumVariableSymbols(); i++)
@@ -4436,7 +4473,7 @@ void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
 
         //
         // The static initializers and class variable initializers are executed
-        // in textual order... 8.5
+        // in textual order, with one exception... 8.5
         //
         int j,
             k;
@@ -4449,8 +4486,6 @@ void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
             // is the terminating semicolon). Similarly, the LeftToken of the
             // static initializer is used because it is the initial "static"
             // keyword that marked the initializer.
-            //
-            //    if (class_body -> InstanceVariables(j) -> RightToken() < class_body -> Block(k) -> LeftToken())
             //
             if (class_body -> ClassVariable(j) -> semicolon_token < class_body -> StaticInitializer(k) -> static_token)
             {
@@ -4533,14 +4568,7 @@ void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
             {
                 if (NeedsInitializationMethod(class_body -> ClassVariable(i)))
                 {
-                    init_method = this_type -> InsertMethodSymbol(control.clinit_name_symbol);
-
-                    init_method -> SetType(control.void_type);
-                    init_method -> SetACC_FINAL();
-                    init_method -> SetACC_STATIC();
-                    init_method -> SetContainingType(this_type);
-                    init_method -> SetBlockSymbol(block_symbol);
-                    init_method -> SetSignature(control);
+                    init_method = GetStaticInitializerMethod();
 
                     break;
                 }
@@ -4549,23 +4577,16 @@ void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
 
         //
         // If an initialization method has been defined, update its
-        // max_block_depth. Otherwise, deallocate the block symbol as nobody
-        // would be pointing to it after this point.
+        // max_block_depth.
         //
         if (init_method)
         {
              init_method -> max_block_depth = LocalBlockStack().max_size;
-             this_type -> static_initializer_method = init_method;
-
-             block_symbol -> CompressSpace(); // space optimization
+             if (block_symbol)
+                 block_symbol -> CompressSpace(); // space optimization
         }
         else delete block_symbol;
-
-// STG:
-//        delete initializer_block;
     }
-
-    return;
 }
 
 

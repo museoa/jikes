@@ -17,9 +17,10 @@
 -- This Java grammar is almost identical to the grammar defined in
 -- chapter 19 of the first edition of the Java Language Specification
 -- manual.  It has been updated with additional rules added with the
--- 1.1. amendment and second edition JLS (chapter 18 of the second
--- edition is completely broken, so the grammar follows the
--- expository text within the remaining chapters). It is written here
+-- 1.1 amendment and second edition JLS (chapter 18 of the second
+-- edition is completely broken, so the grammar follows the expository
+-- text within the remaining chapters), as well as the addition of
+-- assert (JSR 41 in the Java Community Process). It is written here
 -- in JIKES PG format with semantic actions following each rule. In
 -- specifying the rules we enclosed all terminal symbols in single
 -- quotes so that they can be quickly distinguished from
@@ -159,6 +160,13 @@ $MakeForStatement
 #endif
 ./
 
+$MakeAssertStatement
+/.
+#ifndef HEADERS
+    rule_action[$rule_number] = &Parser::MakeAssertStatement;
+#endif
+./
+
 $MakeArrayCreationExpression
 /.
 #ifndef HEADERS
@@ -258,7 +266,7 @@ $Terminals
 
     Identifier
 
-    abstract boolean break byte case catch char class const
+    abstract assert boolean break byte case catch char class const
     continue default do double else extends false final finally float
     for goto if implements import instanceof int
     interface long native new null package private
@@ -422,6 +430,7 @@ void Parser::InitRuleAction()
     void MakeIfThenElseStatement(void);
     void MakeWhileStatement(void);
     void MakeForStatement(void);
+    void MakeAssertStatement(void);
     void MakeArrayCreationExpression(void);
     void MakeSuperFieldAccess(void);
     void MakeSuperDoubleFieldAccess(void);
@@ -2649,6 +2658,10 @@ StatementWithoutTrailingSubstatement -> TryStatement
 \:$NoAction:\
 /.$shared_NoAction./
 
+StatementWithoutTrailingSubstatement -> AssertStatement
+\:$NoAction:\
+/.$shared_NoAction./
+
 EmptyStatement ::= ';'
 \:$MakeEmptyStatement:\
 /.$shared_function
@@ -3273,6 +3286,38 @@ void Parser::Act$rule_number(void)
     Sym(1) = p;
 }
 ./
+
+--
+-- Assert statements were added in JDK 1.4, as part of JSR 41.
+--
+AssertStatement ::= 'assert' Expression ';'
+\:$action:\
+/.$location
+void Parser::Act$rule_number(void)
+{
+    AstAssertStatement *p = ast_pool -> NewAssertStatement();
+    p -> assert_token = Token(1);
+    p -> condition = (AstExpression *) Sym(2);
+    p -> message_opt = NULL;
+    p -> semicolon_token = Token(3);
+    Sym(1) = p;
+}
+./
+
+AssertStatement ::= 'assert' Expression ':' Expression ';'
+\:$action:\
+/.$location
+void Parser::Act$rule_number(void)
+{
+    AstAssertStatement *p = ast_pool -> NewAssertStatement();
+    p -> assert_token = Token(1);
+    p -> condition = (AstExpression *) Sym(2);
+    p -> message_opt = (AstExpression *) Sym(4);
+    p -> semicolon_token = Token(5);
+    Sym(1) = p;
+}
+./
+
 
 --
 -- NOTE that the rule Identifieropt was expanded in line in the two
@@ -4710,11 +4755,11 @@ ConstantExpression -> Expression
 \:$NoAction:\
 /.$shared_NoAction./
 
----------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 --
 -- The following rules are for optional nonterminals.
 --
----------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
 PackageDeclarationopt ::= $empty
 \:$NullAction:\
@@ -4757,7 +4802,7 @@ ClassBodyopt -> ClassBody
 \:$NoAction:\
 /.$shared_NoAction./
 
----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 --
 -- The rules below are for optional terminal symbols.  An optional comma,
 -- is only used in the context of an array initializer - It is a
@@ -4767,7 +4812,7 @@ ClassBodyopt -> ClassBody
 -- is produced. When the identifier is present, the user should use the
 -- corresponding Token(i) method. See break statement as an example.
 --
----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 
 ,opt ::= $empty
 \:$NullAction:\
@@ -4944,7 +4989,7 @@ void Parser::Act$rule_number(void)
 #endif
 ./
 
----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 
 \:
 #ifndef HEADERS

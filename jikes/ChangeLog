@@ -1,5 +1,46 @@
 2001-11-05  Eric Blake  <ebb9@email.byu.edu>
 
+	Patch 139.
+	* src/scanner.cpp (ScanKeyword6, ClassifyIdOrKeyword)
+	(ClassifyId):
+	* src/stream.h:
+	* src/stream.cpp:
+	* src/java.g (AssertStatement): Add syntax rules for assert
+	statement: bug 602. Also, add lexical warning for use of $ in
+	identifier: bug 505.
+	* src/javaact.cpp:
+	* src/javaact.h:
+	* src/javadcl.h:
+	* src/javadef.h:
+	* src/javaprs.h:
+	* src/javasym.h: Regenerate.
+	* src/unparse.cpp:
+	* src/ast.cpp:
+	* src/ast.h (AstAssertStatement): Add AstAssertStatement, the AST
+	object.
+	* src/semantic.h:
+	* src/definite.cpp (DefiniteAssertStatement):
+	* src/decl.cpp (ProcessStaticInitializers)
+	(GetStaticInitializerMethod):
+	* src/symbol.h:
+	* src/symbol.cpp (FindOrInsertAssertVariable, AssertVariable):
+	* src/body.cpp (ProcessAssertStatement): Add semantic rules for
+	assert statement.
+	* src/bytecode.h:
+	* src/bytecode.cpp (EmitAssertStatement): Add bytecode emission
+	for assert statement.
+	* src/control.h:
+	* src/control.cpp (Object, Class, AssertionError):
+	* src/system.cpp:
+	* src/platform.h:
+	* src/platform.cpp (StringConstant): Add necessary hooks for
+	getting strings and library methods used in compiling assert
+	statement.
+	* src/error.cpp:
+	* src/platform.h (ErrorString): Use endl instead of '\n'.
+
+2001-11-05  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/bytecode.cpp: Reformat comments to 80 columns. Update
 	stack_depth tracing to actually trace stack depth, bug
 	211. Optimize generation of class literals. Also, update field and
@@ -87,8 +128,8 @@
 
 	* src/option.h:
 	* src/option.cpp (ArgumentExpander): Update @file parsing to match
-	Sun's javac. Rearrange error reporting so that parse errors can be
-	easily detected.
+	Sun's javac, bug 1905. Rearrange error reporting so that parse
+	errors can be easily detected.
 	* src/jikesapi.cpp (parseOptions):
 	* src/control.h (ProcessNewInputFiles):
 	* src/control.cpp (ProcessNewInputFiles): Update to account for

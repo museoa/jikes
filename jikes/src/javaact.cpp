@@ -1,4 +1,4 @@
-#line 435 "java.g"
+#line 444 "java.g"
 // $Id$
 // DO NOT MODIFY THIS FILE - it is generated using jikespg on java.g.
 //
@@ -34,7 +34,7 @@ namespace Jikes { // Open namespace Jikes block
 //
 // Rule 1:  Goal -> CompilationUnit
 //
-#line 473 "java.g"
+#line 482 "java.g"
 //
 // Given a rule of the form A ::= x1 x2 ... xn        n >= 1
 //
@@ -46,7 +46,7 @@ void Parser::NoAction(void) {}
 //
 // Rule 2:  Goal ::= BodyMarker ConstructorBody
 //
-#line 485 "java.g"
+#line 494 "java.g"
 //
 // This rule was added to allow the parser to recognize the body of a
 // funtion (constructor or method, as the definition of the body of a
@@ -65,7 +65,7 @@ void Parser::Act2(void)
 //
 // Rule 3:  Literal ::= IntegerLiteral
 //
-#line 510 "java.g"
+#line 519 "java.g"
 void Parser::Act3(void)
 {
     Sym(1) = ast_pool -> NewIntegerLiteral(Token(1));
@@ -74,7 +74,7 @@ void Parser::Act3(void)
 //
 // Rule 4:  Literal ::= LongLiteral
 //
-#line 519 "java.g"
+#line 528 "java.g"
 void Parser::Act4(void)
 {
     Sym(1) = ast_pool -> NewLongLiteral(Token(1));
@@ -83,7 +83,7 @@ void Parser::Act4(void)
 //
 // Rule 5:  Literal ::= FloatingPointLiteral
 //
-#line 528 "java.g"
+#line 537 "java.g"
 void Parser::Act5(void)
 {
     Sym(1) = ast_pool -> NewFloatingPointLiteral(Token(1));
@@ -92,7 +92,7 @@ void Parser::Act5(void)
 //
 // Rule 6:  Literal ::= DoubleLiteral
 //
-#line 537 "java.g"
+#line 546 "java.g"
 void Parser::Act6(void)
 {
     Sym(1) = ast_pool -> NewDoubleLiteral(Token(1));
@@ -107,7 +107,7 @@ void Parser::Act6(void)
 //
 // Rule 8:  Literal ::= CharacterLiteral
 //
-#line 550 "java.g"
+#line 559 "java.g"
 void Parser::Act8(void)
 {
     Sym(1) = ast_pool -> NewCharacterLiteral(Token(1));
@@ -116,7 +116,7 @@ void Parser::Act8(void)
 //
 // Rule 9:  Literal ::= StringLiteral
 //
-#line 559 "java.g"
+#line 568 "java.g"
 void Parser::Act9(void)
 {
     Sym(1) = ast_pool -> NewStringLiteral(Token(1));
@@ -125,7 +125,7 @@ void Parser::Act9(void)
 //
 // Rule 10:  Literal ::= null
 //
-#line 568 "java.g"
+#line 577 "java.g"
 void Parser::Act10(void)
 {
     Sym(1) = ast_pool -> NewNullLiteral(Token(1));
@@ -134,7 +134,7 @@ void Parser::Act10(void)
 //
 // Rule 11:  BooleanLiteral ::= true
 //
-#line 577 "java.g"
+#line 586 "java.g"
 void Parser::Act11(void)
 {
     Sym(1) = ast_pool -> NewTrueLiteral(Token(1));
@@ -143,7 +143,7 @@ void Parser::Act11(void)
 //
 // Rule 12:  BooleanLiteral ::= false
 //
-#line 586 "java.g"
+#line 595 "java.g"
 void Parser::Act12(void)
 {
     Sym(1) = ast_pool -> NewFalseLiteral(Token(1));
@@ -170,7 +170,7 @@ void Parser::Act12(void)
 //
 // Rule 16:  PrimitiveType ::= boolean
 //
-#line 609 "java.g"
+#line 618 "java.g"
 void Parser::Act16(void)
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::BOOLEAN, Token(1));
@@ -191,7 +191,7 @@ void Parser::Act16(void)
 //
 // Rule 19:  IntegralType ::= byte
 //
-#line 626 "java.g"
+#line 635 "java.g"
 void Parser::Act19(void)
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::BYTE, Token(1));
@@ -200,7 +200,7 @@ void Parser::Act19(void)
 //
 // Rule 20:  IntegralType ::= short
 //
-#line 635 "java.g"
+#line 644 "java.g"
 void Parser::Act20(void)
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::SHORT, Token(1));
@@ -209,7 +209,7 @@ void Parser::Act20(void)
 //
 // Rule 21:  IntegralType ::= int
 //
-#line 644 "java.g"
+#line 653 "java.g"
 void Parser::Act21(void)
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::INT, Token(1));
@@ -218,7 +218,7 @@ void Parser::Act21(void)
 //
 // Rule 22:  IntegralType ::= long
 //
-#line 653 "java.g"
+#line 662 "java.g"
 void Parser::Act22(void)
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::LONG, Token(1));
@@ -227,7 +227,7 @@ void Parser::Act22(void)
 //
 // Rule 23:  IntegralType ::= char
 //
-#line 662 "java.g"
+#line 671 "java.g"
 void Parser::Act23(void)
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::CHAR, Token(1));
@@ -236,7 +236,7 @@ void Parser::Act23(void)
 //
 // Rule 24:  FloatingPointType ::= float
 //
-#line 671 "java.g"
+#line 680 "java.g"
 void Parser::Act24(void)
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::FLOAT, Token(1));
@@ -245,7 +245,7 @@ void Parser::Act24(void)
 //
 // Rule 25:  FloatingPointType ::= double
 //
-#line 680 "java.g"
+#line 689 "java.g"
 void Parser::Act25(void)
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::DOUBLE, Token(1));
@@ -272,7 +272,7 @@ void Parser::Act25(void)
 //
 // Rule 29:  ArrayType ::= PrimitiveType Dims
 //
-#line 709 "java.g"
+#line 718 "java.g"
 void Parser::MakeArrayType(void)
 {
     AstArrayType *p = ast_pool -> NewArrayType();
@@ -327,7 +327,7 @@ void Parser::MakeArrayType(void)
 //
 // Rule 35:  SimpleName ::= Identifier
 //
-#line 759 "java.g"
+#line 768 "java.g"
 void Parser::MakeSimpleName(void)
 {
     Sym(1) = ast_pool -> NewSimpleName(Token(1));
@@ -336,7 +336,7 @@ void Parser::MakeSimpleName(void)
 //
 // Rule 36:  QualifiedName ::= Name DOT Identifier
 //
-#line 768 "java.g"
+#line 777 "java.g"
 void Parser::MakeFieldAccess(void)
 {
     AstFieldAccess *p = ast_pool -> NewFieldAccess();
@@ -349,7 +349,7 @@ void Parser::MakeFieldAccess(void)
 //
 // Rule 37:  CompilationUnit ::= PackageDeclarationopt ImportDeclarationsopt TypeDeclarationsopt
 //
-#line 783 "java.g"
+#line 792 "java.g"
 void Parser::Act37(void)
 {
     AstCompilationUnit *p = ast_pool -> NewCompilationUnit();
@@ -384,7 +384,7 @@ void Parser::Act37(void)
 //
 // Rule 38:  ImportDeclarations ::= ImportDeclaration
 //
-#line 818 "java.g"
+#line 827 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
@@ -401,7 +401,7 @@ void Parser::Act38(void)
 //
 // Rule 39:  ImportDeclarations ::= ImportDeclarations ImportDeclaration
 //
-#line 835 "java.g"
+#line 844 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
@@ -422,7 +422,7 @@ void Parser::Act39(void)
 //
 // Rule 40:  TypeDeclarations ::= TypeDeclaration
 //
-#line 856 "java.g"
+#line 865 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
@@ -439,7 +439,7 @@ void Parser::Act40(void)
 //
 // Rule 41:  TypeDeclarations ::= TypeDeclarations TypeDeclaration
 //
-#line 873 "java.g"
+#line 882 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
@@ -460,7 +460,7 @@ void Parser::Act41(void)
 //
 // Rule 42:  PackageDeclaration ::= package Name PackageHeaderMarker SEMICOLON
 //
-#line 894 "java.g"
+#line 903 "java.g"
 void Parser::Act42(void)
 {
     AstPackageDeclaration *p = ast_pool -> NewPackageDeclaration();
@@ -485,7 +485,7 @@ void Parser::Act42(void)
 //
 // Rule 45:  SingleTypeImportDeclaration ::= import Name SEMICOLON
 //
-#line 915 "java.g"
+#line 924 "java.g"
 void Parser::Act45(void)
 {
     AstImportDeclaration *p = ast_pool -> NewImportDeclaration();
@@ -499,7 +499,7 @@ void Parser::Act45(void)
 //
 // Rule 46:  TypeImportOnDemandDeclaration ::= import Name DOT MULTIPLY SEMICOLON
 //
-#line 929 "java.g"
+#line 938 "java.g"
 void Parser::Act46(void)
 {
     AstImportDeclaration *p = ast_pool -> NewImportDeclaration();
@@ -525,7 +525,7 @@ void Parser::Act46(void)
 //
 // Rule 49:  TypeDeclaration ::= SEMICOLON
 //
-#line 951 "java.g"
+#line 960 "java.g"
 void Parser::Act49(void)
 {
     Sym(1) = ast_pool -> NewEmptyDeclaration(Token(1));
@@ -534,7 +534,7 @@ void Parser::Act49(void)
 //
 // Rule 50:  Modifiers ::= Modifier
 //
-#line 962 "java.g"
+#line 971 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
@@ -551,7 +551,7 @@ void Parser::Act50(void)
 //
 // Rule 51:  Modifiers ::= Modifiers Modifier
 //
-#line 979 "java.g"
+#line 988 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
@@ -572,7 +572,7 @@ void Parser::Act51(void)
 //
 // Rule 52:  Modifier ::= public
 //
-#line 1000 "java.g"
+#line 1009 "java.g"
 void Parser::Act52(void)
 {
     Sym(1) = ast_pool -> NewModifier(Ast::PUBLIC, Token(1));
@@ -581,7 +581,7 @@ void Parser::Act52(void)
 //
 // Rule 53:  Modifier ::= protected
 //
-#line 1009 "java.g"
+#line 1018 "java.g"
 void Parser::Act53(void)
 {
     Sym(1) = ast_pool -> NewModifier(Ast::PROTECTED, Token(1));
@@ -590,7 +590,7 @@ void Parser::Act53(void)
 //
 // Rule 54:  Modifier ::= private
 //
-#line 1018 "java.g"
+#line 1027 "java.g"
 void Parser::Act54(void)
 {
     Sym(1) = ast_pool -> NewModifier(Ast::PRIVATE, Token(1));
@@ -599,7 +599,7 @@ void Parser::Act54(void)
 //
 // Rule 55:  Modifier ::= static
 //
-#line 1027 "java.g"
+#line 1036 "java.g"
 void Parser::Act55(void)
 {
     Sym(1) = ast_pool -> NewModifier(Ast::STATIC, Token(1));
@@ -608,7 +608,7 @@ void Parser::Act55(void)
 //
 // Rule 56:  Modifier ::= abstract
 //
-#line 1036 "java.g"
+#line 1045 "java.g"
 void Parser::Act56(void)
 {
     Sym(1) = ast_pool -> NewModifier(Ast::ABSTRACT, Token(1));
@@ -617,7 +617,7 @@ void Parser::Act56(void)
 //
 // Rule 57:  Modifier ::= final
 //
-#line 1045 "java.g"
+#line 1054 "java.g"
 void Parser::Act57(void)
 {
     Sym(1) = ast_pool -> NewModifier(Ast::FINAL, Token(1));
@@ -626,7 +626,7 @@ void Parser::Act57(void)
 //
 // Rule 58:  Modifier ::= native
 //
-#line 1054 "java.g"
+#line 1063 "java.g"
 void Parser::Act58(void)
 {
     Sym(1) = ast_pool -> NewModifier(Ast::NATIVE, Token(1));
@@ -635,7 +635,7 @@ void Parser::Act58(void)
 //
 // Rule 59:  Modifier ::= strictfp
 //
-#line 1063 "java.g"
+#line 1072 "java.g"
 void Parser::Act59(void)
 {
     Sym(1) = ast_pool -> NewModifier(Ast::STRICTFP, Token(1));
@@ -644,7 +644,7 @@ void Parser::Act59(void)
 //
 // Rule 60:  Modifier ::= synchronized
 //
-#line 1072 "java.g"
+#line 1081 "java.g"
 void Parser::Act60(void)
 {
     Sym(1) = ast_pool -> NewModifier(Ast::SYNCHRONIZED, Token(1));
@@ -653,7 +653,7 @@ void Parser::Act60(void)
 //
 // Rule 61:  Modifier ::= transient
 //
-#line 1081 "java.g"
+#line 1090 "java.g"
 void Parser::Act61(void)
 {
     Sym(1) = ast_pool -> NewModifier(Ast::TRANSIENT, Token(1));
@@ -662,7 +662,7 @@ void Parser::Act61(void)
 //
 // Rule 62:  Modifier ::= volatile
 //
-#line 1090 "java.g"
+#line 1099 "java.g"
 void Parser::Act62(void)
 {
     Sym(1) = ast_pool -> NewModifier(Ast::VOLATILE, Token(1));
@@ -671,7 +671,7 @@ void Parser::Act62(void)
 //
 // Rule 63:  ClassDeclaration ::= Modifiersopt class Identifier Superopt Interfacesopt ClassBody
 //
-#line 1106 "java.g"
+#line 1115 "java.g"
 void Parser::Act63(void)
 {
     AstClassDeclaration *p = ast_pool -> NewClassDeclaration();
@@ -709,7 +709,7 @@ void Parser::Act63(void)
 //
 // Rule 64:  Super ::= extends ClassType
 //
-#line 1144 "java.g"
+#line 1153 "java.g"
 void Parser::SetSym1ToSym2(void) { Sym(1) = Sym(2); }
 
 //
@@ -721,7 +721,7 @@ void Parser::SetSym1ToSym2(void) { Sym(1) = Sym(2); }
 //
 // Rule 66:  InterfaceTypeList ::= InterfaceType
 //
-#line 1157 "java.g"
+#line 1166 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
@@ -738,7 +738,7 @@ void Parser::Act66(void)
 //
 // Rule 67:  InterfaceTypeList ::= InterfaceTypeList COMMA InterfaceType
 //
-#line 1174 "java.g"
+#line 1183 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
@@ -759,7 +759,7 @@ void Parser::Act67(void)
 //
 // Rule 68:  ClassBody ::= LBRACE ClassBodyDeclarationsopt RBRACE
 //
-#line 1195 "java.g"
+#line 1204 "java.g"
 void Parser::Act68(void)
 {
     AstClassBody *p = ast_pool -> NewClassBody();
@@ -897,7 +897,7 @@ void Parser::Act68(void)
 //
 // Rule 69:  ClassBodyDeclarations ::= ClassBodyDeclaration
 //
-#line 1333 "java.g"
+#line 1342 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
@@ -914,7 +914,7 @@ void Parser::Act69(void)
 //
 // Rule 70:  ClassBodyDeclarations ::= ClassBodyDeclarations ClassBodyDeclaration
 //
-#line 1350 "java.g"
+#line 1359 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
@@ -953,7 +953,7 @@ void Parser::Act70(void)
 //
 // Rule 74:  ClassBodyDeclaration ::= MethodHeaderMarker Block
 //
-#line 1384 "java.g"
+#line 1393 "java.g"
 void Parser::Act74(void)
 {
     Sym(1) = Sym(2);
@@ -986,7 +986,7 @@ void Parser::Act74(void)
 //
 // Rule 79:  ClassMemberDeclaration ::= SEMICOLON
 //
-#line 1411 "java.g"
+#line 1420 "java.g"
 void Parser::Act79(void)
 {
     Sym(1) = ast_pool -> NewEmptyDeclaration(Token(1));
@@ -995,7 +995,7 @@ void Parser::Act79(void)
 //
 // Rule 80:  FieldDeclaration ::= Modifiersopt Type VariableDeclarators SEMICOLON
 //
-#line 1430 "java.g"
+#line 1439 "java.g"
 void Parser::Act80(void)
 {
     AstFieldDeclaration *p = ast_pool -> NewFieldDeclaration();
@@ -1033,7 +1033,7 @@ void Parser::Act80(void)
 //
 // Rule 81:  VariableDeclarators ::= VariableDeclarator
 //
-#line 1468 "java.g"
+#line 1477 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
@@ -1050,7 +1050,7 @@ void Parser::Act81(void)
 //
 // Rule 82:  VariableDeclarators ::= VariableDeclarators COMMA VariableDeclarator
 //
-#line 1485 "java.g"
+#line 1494 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
@@ -1071,7 +1071,7 @@ void Parser::Act82(void)
 //
 // Rule 83:  VariableDeclarator ::= VariableDeclaratorId
 //
-#line 1506 "java.g"
+#line 1515 "java.g"
 void Parser::Act83(void)
 {
     AstVariableDeclarator *p = ast_pool -> NewVariableDeclarator();
@@ -1083,7 +1083,7 @@ void Parser::Act83(void)
 //
 // Rule 84:  VariableDeclarator ::= VariableDeclaratorId EQUAL VariableInitializer
 //
-#line 1518 "java.g"
+#line 1527 "java.g"
 void Parser::Act84(void)
 {
     AstVariableDeclarator *p = ast_pool -> NewVariableDeclarator();
@@ -1095,7 +1095,7 @@ void Parser::Act84(void)
 //
 // Rule 85:  VariableDeclaratorId ::= Identifier Dimsopt
 //
-#line 1530 "java.g"
+#line 1539 "java.g"
 void Parser::Act85(void)
 {
     AstVariableDeclaratorId *p = ast_pool -> NewVariableDeclaratorId();
@@ -1130,7 +1130,7 @@ void Parser::Act85(void)
 //
 // Rule 88:  MethodDeclaration ::= MethodHeader MethodHeaderMarker MethodBody
 //
-#line 1578 "java.g"
+#line 1587 "java.g"
 void Parser::Act88(void)
 {
     ((AstMethodDeclaration *) Sym(1)) -> method_body = (AstStatement *) Sym(3);
@@ -1139,7 +1139,7 @@ void Parser::Act88(void)
 //
 // Rule 89:  MethodHeader ::= Modifiersopt Type MethodDeclarator Throwsopt
 //
-#line 1587 "java.g"
+#line 1596 "java.g"
 void Parser::Act89(void)
 {
     AstMethodDeclaration *p = ast_pool -> NewMethodDeclaration();
@@ -1175,7 +1175,7 @@ void Parser::Act89(void)
 //
 // Rule 90:  MethodHeader ::= Modifiersopt void MethodDeclarator Throwsopt
 //
-#line 1623 "java.g"
+#line 1632 "java.g"
 void Parser::Act90(void)
 {
     AstMethodDeclaration *p = ast_pool -> NewMethodDeclaration();
@@ -1211,7 +1211,7 @@ void Parser::Act90(void)
 //
 // Rule 91:  MethodDeclarator ::= Identifier LPAREN FormalParameterListopt RPAREN Dimsopt
 //
-#line 1659 "java.g"
+#line 1668 "java.g"
 void Parser::Act91(void)
 {
     AstMethodDeclarator *p = ast_pool -> NewMethodDeclarator();
@@ -1248,7 +1248,7 @@ void Parser::Act91(void)
 //
 // Rule 92:  FormalParameterList ::= FormalParameter
 //
-#line 1696 "java.g"
+#line 1705 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
@@ -1265,7 +1265,7 @@ void Parser::Act92(void)
 //
 // Rule 93:  FormalParameterList ::= FormalParameterList COMMA FormalParameter
 //
-#line 1713 "java.g"
+#line 1722 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
@@ -1286,7 +1286,7 @@ void Parser::Act93(void)
 //
 // Rule 94:  FormalParameter ::= Type VariableDeclaratorId
 //
-#line 1734 "java.g"
+#line 1743 "java.g"
 void Parser::Act94(void)
 {
     AstFormalParameter *p = ast_pool -> NewFormalParameter();
@@ -1304,7 +1304,7 @@ void Parser::Act94(void)
 //
 // Rule 95:  FormalParameter ::= Modifiers Type VariableDeclaratorId
 //
-#line 1753 "java.g"
+#line 1762 "java.g"
 void Parser::Act95(void)
 {
     AstFormalParameter *p = ast_pool -> NewFormalParameter();
@@ -1343,7 +1343,7 @@ void Parser::Act95(void)
 //
 // Rule 97:  ClassTypeList ::= ClassType
 //
-#line 1793 "java.g"
+#line 1802 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
@@ -1360,7 +1360,7 @@ void Parser::Act97(void)
 //
 // Rule 98:  ClassTypeList ::= ClassTypeList COMMA ClassType
 //
-#line 1810 "java.g"
+#line 1819 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
@@ -1387,7 +1387,7 @@ void Parser::Act98(void)
 //
 // Rule 100:  MethodBody ::= SEMICOLON
 //
-#line 1835 "java.g"
+#line 1844 "java.g"
 void Parser::MakeEmptyStatement(void)
 {
     Sym(1) = ast_pool -> NewEmptyStatement(Token(1));
@@ -1396,7 +1396,7 @@ void Parser::MakeEmptyStatement(void)
 //
 // Rule 101:  StaticInitializer ::= static MethodHeaderMarker Block
 //
-#line 1846 "java.g"
+#line 1855 "java.g"
 void Parser::Act101(void)
 {
     AstStaticInitializer *p = ast_pool -> NewStaticInitializer();
@@ -1408,7 +1408,7 @@ void Parser::Act101(void)
 //
 // Rule 102:  ConstructorDeclaration ::= Modifiersopt ConstructorDeclarator Throwsopt MethodHeaderMarker ConstructorBody
 //
-#line 1871 "java.g"
+#line 1880 "java.g"
 void Parser::Act102(void)
 {
     AstConstructorBlock *block = Sym(5) -> ConstructorBlockCast();
@@ -1456,7 +1456,7 @@ void Parser::Act102(void)
 //
 // Rule 103:  ConstructorDeclarator ::= Identifier LPAREN FormalParameterListopt RPAREN
 //
-#line 1927 "java.g"
+#line 1936 "java.g"
 void Parser::Act103(void)
 {
     AstMethodDeclarator *p = ast_pool -> NewMethodDeclarator();
@@ -1487,7 +1487,7 @@ void Parser::Act103(void)
 //
 // Rule 105:  ConstructorBody ::= LBRACE ExplicitConstructorInvocation BlockStatementsopt RBRACE
 //
-#line 1962 "java.g"
+#line 1971 "java.g"
 void Parser::Act105(void)
 {
     AstBlock *block = ast_pool -> NewBlock();
@@ -1522,7 +1522,7 @@ void Parser::Act105(void)
 //
 // Rule 106:  ExplicitConstructorInvocation ::= this LPAREN ArgumentListopt RPAREN SEMICOLON
 //
-#line 1997 "java.g"
+#line 2006 "java.g"
 void Parser::Act106(void)
 {
     AstThisCall *p = ast_pool -> NewThisCall();
@@ -1548,7 +1548,7 @@ void Parser::Act106(void)
 //
 // Rule 107:  ExplicitConstructorInvocation ::= super LPAREN ArgumentListopt RPAREN SEMICOLON
 //
-#line 2023 "java.g"
+#line 2032 "java.g"
 void Parser::Act107(void)
 {
     AstSuperCall *p = ast_pool -> NewSuperCall();
@@ -1576,7 +1576,7 @@ void Parser::Act107(void)
 //
 // Rule 108:  ExplicitConstructorInvocation ::= Primary DOT super LPAREN ArgumentListopt RPAREN SEMICOLON
 //
-#line 2052 "java.g"
+#line 2061 "java.g"
 void Parser::MakeQualifiedSuper(void)
 {
     AstSuperCall *p = ast_pool -> NewSuperCall();
@@ -1610,7 +1610,7 @@ void Parser::MakeQualifiedSuper(void)
 //
 // Rule 110:  InterfaceDeclaration ::= Modifiersopt interface Identifier ExtendsInterfacesopt InterfaceBody
 //
-#line 2095 "java.g"
+#line 2104 "java.g"
 void Parser::Act110(void)
 {
     AstInterfaceDeclaration *p = (AstInterfaceDeclaration *) Sym(5);
@@ -1652,7 +1652,7 @@ void Parser::Act110(void)
 //
 // Rule 112:  InterfaceBody ::= LBRACE InterfaceMemberDeclarationsopt RBRACE
 //
-#line 2138 "java.g"
+#line 2147 "java.g"
 void Parser::Act112(void)
 {
     AstInterfaceDeclaration *p = ast_pool -> NewInterfaceDeclaration();
@@ -1744,7 +1744,7 @@ void Parser::Act112(void)
 //
 // Rule 113:  InterfaceMemberDeclarations ::= InterfaceMemberDeclaration
 //
-#line 2230 "java.g"
+#line 2239 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
@@ -1761,7 +1761,7 @@ void Parser::Act113(void)
 //
 // Rule 114:  InterfaceMemberDeclarations ::= InterfaceMemberDeclarations InterfaceMemberDeclaration
 //
-#line 2247 "java.g"
+#line 2256 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
@@ -1806,7 +1806,7 @@ void Parser::Act114(void)
 //
 // Rule 119:  InterfaceMemberDeclaration ::= SEMICOLON
 //
-#line 2286 "java.g"
+#line 2295 "java.g"
 void Parser::Act119(void)
 {
     Sym(1) = ast_pool -> NewEmptyDeclaration(Token(1));
@@ -1821,7 +1821,7 @@ void Parser::Act119(void)
 //
 // Rule 121:  AbstractMethodDeclaration ::= MethodHeader SEMICOLON
 //
-#line 2299 "java.g"
+#line 2308 "java.g"
 void Parser::Act121(void)
 {
     ((AstMethodDeclaration *) Sym(1)) -> method_body = ast_pool -> NewEmptyStatement(Token(2));
@@ -1830,7 +1830,7 @@ void Parser::Act121(void)
 //
 // Rule 122:  ArrayInitializer ::= LBRACE ,opt RBRACE
 //
-#line 2316 "java.g"
+#line 2325 "java.g"
 void Parser::Act122(void)
 {
     AstArrayInitializer *p = ast_pool -> NewArrayInitializer();
@@ -1842,7 +1842,7 @@ void Parser::Act122(void)
 //
 // Rule 123:  ArrayInitializer ::= LBRACE VariableInitializers RBRACE
 //
-#line 2328 "java.g"
+#line 2337 "java.g"
 void Parser::Act123(void)
 {
     AstArrayInitializer *p = ast_pool -> NewArrayInitializer();
@@ -1866,7 +1866,7 @@ void Parser::Act123(void)
 //
 // Rule 124:  ArrayInitializer ::= LBRACE VariableInitializers COMMA RBRACE
 //
-#line 2352 "java.g"
+#line 2361 "java.g"
 void Parser::Act124(void)
 {
     AstArrayInitializer *p = ast_pool -> NewArrayInitializer();
@@ -1890,7 +1890,7 @@ void Parser::Act124(void)
 //
 // Rule 125:  VariableInitializers ::= VariableInitializer
 //
-#line 2376 "java.g"
+#line 2385 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
@@ -1907,7 +1907,7 @@ void Parser::Act125(void)
 //
 // Rule 126:  VariableInitializers ::= VariableInitializers COMMA VariableInitializer
 //
-#line 2393 "java.g"
+#line 2402 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
@@ -1928,7 +1928,7 @@ void Parser::Act126(void)
 //
 // Rule 127:  Block ::= LBRACE BlockStatementsopt RBRACE
 //
-#line 2416 "java.g"
+#line 2425 "java.g"
 void Parser::Act127(void)
 {
     AstBlock *p = ast_pool -> NewBlock();
@@ -1952,7 +1952,7 @@ void Parser::Act127(void)
 //
 // Rule 128:  BlockStatements ::= BlockStatement
 //
-#line 2440 "java.g"
+#line 2449 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
@@ -1969,7 +1969,7 @@ void Parser::Act128(void)
 //
 // Rule 129:  BlockStatements ::= BlockStatements BlockStatement
 //
-#line 2457 "java.g"
+#line 2466 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
@@ -2008,7 +2008,7 @@ void Parser::Act129(void)
 //
 // Rule 133:  LocalVariableDeclarationStatement ::= LocalVariableDeclaration SEMICOLON
 //
-#line 2491 "java.g"
+#line 2500 "java.g"
 void Parser::Act133(void)
 {
     ((AstLocalVariableDeclarationStatement *) Sym(1)) -> semicolon_token_opt = Token(2);
@@ -2017,7 +2017,7 @@ void Parser::Act133(void)
 //
 // Rule 134:  LocalVariableDeclaration ::= Type VariableDeclarators
 //
-#line 2500 "java.g"
+#line 2509 "java.g"
 void Parser::Act134(void)
 {
     AstLocalVariableDeclarationStatement *p = ast_pool -> NewLocalVariableDeclarationStatement();
@@ -2043,7 +2043,7 @@ void Parser::Act134(void)
 //
 // Rule 135:  LocalVariableDeclaration ::= Modifiers Type VariableDeclarators
 //
-#line 2527 "java.g"
+#line 2536 "java.g"
 void Parser::Act135(void)
 {
     AstLocalVariableDeclarationStatement *p = ast_pool -> NewLocalVariableDeclarationStatement();
@@ -2213,15 +2213,21 @@ void Parser::Act135(void)
 //
 
 //
-// Rule 158:  EmptyStatement ::= SEMICOLON
+// Rule 158:  StatementWithoutTrailingSubstatement -> AssertStatement
+//
+// void NoAction(void);
+//
+
+//
+// Rule 159:  EmptyStatement ::= SEMICOLON
 //
 // void MakeEmptyStatement(void);
 //
 
 //
-// Rule 159:  LabeledStatement ::= Identifier COLON Statement
+// Rule 160:  LabeledStatement ::= Identifier COLON Statement
 //
-#line 2662 "java.g"
+#line 2675 "java.g"
 void Parser::MakeLabeledStatement(void)
 {
     AstBlock *p = Sym(3) -> BlockCast();
@@ -2249,24 +2255,24 @@ void Parser::MakeLabeledStatement(void)
 }
 
 //
-// Rule 160:  LabeledStatementNoShortIf ::= Identifier COLON StatementNoShortIf
+// Rule 161:  LabeledStatementNoShortIf ::= Identifier COLON StatementNoShortIf
 //
 // void MakeLabeledStatement(void);
 //
 
 //
-// Rule 161:  ExpressionStatement ::= StatementExpression SEMICOLON
+// Rule 162:  ExpressionStatement ::= StatementExpression SEMICOLON
 //
-#line 2699 "java.g"
-void Parser::Act161(void)
+#line 2712 "java.g"
+void Parser::Act162(void)
 {
     ((AstExpressionStatement *) Sym(1)) -> semicolon_token_opt = Token(2);
 }
 
 //
-// Rule 162:  StatementExpression ::= Assignment
+// Rule 163:  StatementExpression ::= Assignment
 //
-#line 2708 "java.g"
+#line 2721 "java.g"
 void Parser::MakeExpressionStatement(void)
 {
     AstExpressionStatement *p = ast_pool -> NewExpressionStatement();
@@ -2276,46 +2282,46 @@ void Parser::MakeExpressionStatement(void)
 }
 
 //
-// Rule 163:  StatementExpression ::= PreIncrementExpression
+// Rule 164:  StatementExpression ::= PreIncrementExpression
 //
 // void MakeExpressionStatement(void);
 //
 
 //
-// Rule 164:  StatementExpression ::= PreDecrementExpression
+// Rule 165:  StatementExpression ::= PreDecrementExpression
 //
 // void MakeExpressionStatement(void);
 //
 
 //
-// Rule 165:  StatementExpression ::= PostIncrementExpression
+// Rule 166:  StatementExpression ::= PostIncrementExpression
 //
 // void MakeExpressionStatement(void);
 //
 
 //
-// Rule 166:  StatementExpression ::= PostDecrementExpression
+// Rule 167:  StatementExpression ::= PostDecrementExpression
 //
 // void MakeExpressionStatement(void);
 //
 
 //
-// Rule 167:  StatementExpression ::= MethodInvocation
+// Rule 168:  StatementExpression ::= MethodInvocation
 //
 // void MakeExpressionStatement(void);
 //
 
 //
-// Rule 168:  StatementExpression ::= ClassInstanceCreationExpression
+// Rule 169:  StatementExpression ::= ClassInstanceCreationExpression
 //
 // void MakeExpressionStatement(void);
 //
 
 //
-// Rule 169:  IfThenStatement ::= if LPAREN Expression RPAREN Statement
+// Rule 170:  IfThenStatement ::= if LPAREN Expression RPAREN Statement
 //
-#line 2762 "java.g"
-void Parser::Act169(void)
+#line 2775 "java.g"
+void Parser::Act170(void)
 {
     AstBlock *block = Sym(5) -> BlockCast();
     if (! block)
@@ -2336,9 +2342,9 @@ void Parser::Act169(void)
 }
 
 //
-// Rule 170:  IfThenElseStatement ::= if LPAREN Expression RPAREN StatementNoShortIf else Statement
+// Rule 171:  IfThenElseStatement ::= if LPAREN Expression RPAREN StatementNoShortIf else Statement
 //
-#line 2786 "java.g"
+#line 2799 "java.g"
 void Parser::MakeIfThenElseStatement(void)
 {
     AstBlock *true_block = Sym(5) -> BlockCast();
@@ -2370,16 +2376,16 @@ void Parser::MakeIfThenElseStatement(void)
 }
 
 //
-// Rule 171:  IfThenElseStatementNoShortIf ::= if LPAREN Expression RPAREN StatementNoShortIf else StatementNoShortIf
+// Rule 172:  IfThenElseStatementNoShortIf ::= if LPAREN Expression RPAREN StatementNoShortIf else StatementNoShortIf
 //
 // void MakeIfThenElseStatement(void);
 //
 
 //
-// Rule 172:  SwitchStatement ::= switch LPAREN Expression RPAREN SwitchBlock
+// Rule 173:  SwitchStatement ::= switch LPAREN Expression RPAREN SwitchBlock
 //
-#line 2827 "java.g"
-void Parser::Act172(void)
+#line 2840 "java.g"
+void Parser::Act173(void)
 {
     AstSwitchStatement *p = (AstSwitchStatement *) Sym(5);
     p -> switch_token = Token(1);
@@ -2388,10 +2394,10 @@ void Parser::Act172(void)
 }
 
 //
-// Rule 173:  SwitchBlock ::= LBRACE RBRACE
+// Rule 174:  SwitchBlock ::= LBRACE RBRACE
 //
-#line 2839 "java.g"
-void Parser::Act173(void)
+#line 2852 "java.g"
+void Parser::Act174(void)
 {
     AstSwitchStatement *p = ast_pool -> NewSwitchStatement();
 
@@ -2406,10 +2412,10 @@ void Parser::Act173(void)
 }
 
 //
-// Rule 174:  SwitchBlock ::= LBRACE SwitchBlockStatements RBRACE
+// Rule 175:  SwitchBlock ::= LBRACE SwitchBlockStatements RBRACE
 //
-#line 2857 "java.g"
-void Parser::Act174(void)
+#line 2870 "java.g"
+void Parser::Act175(void)
 {
     AstSwitchStatement *p = ast_pool -> NewSwitchStatement();
 
@@ -2436,10 +2442,10 @@ void Parser::Act174(void)
 }
 
 //
-// Rule 175:  SwitchBlock ::= LBRACE SwitchLabels RBRACE
+// Rule 176:  SwitchBlock ::= LBRACE SwitchLabels RBRACE
 //
-#line 2887 "java.g"
-void Parser::Act175(void)
+#line 2900 "java.g"
+void Parser::Act176(void)
 {
     AstSwitchStatement *p = ast_pool -> NewSwitchStatement();
 
@@ -2474,10 +2480,10 @@ void Parser::Act175(void)
 }
 
 //
-// Rule 176:  SwitchBlock ::= LBRACE SwitchBlockStatements SwitchLabels RBRACE
+// Rule 177:  SwitchBlock ::= LBRACE SwitchBlockStatements SwitchLabels RBRACE
 //
-#line 2925 "java.g"
-void Parser::Act176(void)
+#line 2938 "java.g"
+void Parser::Act177(void)
 {
     AstSwitchStatement *p = ast_pool -> NewSwitchStatement();
 
@@ -2526,13 +2532,13 @@ void Parser::Act176(void)
 }
 
 //
-// Rule 177:  SwitchBlockStatements ::= SwitchBlockStatement
+// Rule 178:  SwitchBlockStatements ::= SwitchBlockStatement
 //
-#line 2977 "java.g"
+#line 2990 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act177(void)
+void Parser::Act178(void)
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -2543,13 +2549,13 @@ void Parser::Act177(void)
 }
 
 //
-// Rule 178:  SwitchBlockStatements ::= SwitchBlockStatements SwitchBlockStatement
+// Rule 179:  SwitchBlockStatements ::= SwitchBlockStatements SwitchBlockStatement
 //
-#line 2994 "java.g"
+#line 3007 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act178(void)
+void Parser::Act179(void)
 {
     AstListNode *tail = (AstListNode *) Sym(1);
 
@@ -2564,10 +2570,10 @@ void Parser::Act178(void)
 }
 
 //
-// Rule 179:  SwitchBlockStatement ::= SwitchLabels BlockStatements
+// Rule 180:  SwitchBlockStatement ::= SwitchLabels BlockStatements
 //
-#line 3015 "java.g"
-void Parser::Act179(void)
+#line 3028 "java.g"
+void Parser::Act180(void)
 {
     AstSwitchBlockStatement *p = ast_pool -> NewSwitchBlockStatement();
     //
@@ -2603,13 +2609,13 @@ void Parser::Act179(void)
 }
 
 //
-// Rule 180:  SwitchLabels ::= SwitchLabel
+// Rule 181:  SwitchLabels ::= SwitchLabel
 //
-#line 3054 "java.g"
+#line 3067 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act180(void)
+void Parser::Act181(void)
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -2620,13 +2626,13 @@ void Parser::Act180(void)
 }
 
 //
-// Rule 181:  SwitchLabels ::= SwitchLabels SwitchLabel
+// Rule 182:  SwitchLabels ::= SwitchLabels SwitchLabel
 //
-#line 3071 "java.g"
+#line 3084 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act181(void)
+void Parser::Act182(void)
 {
     AstListNode *tail = (AstListNode *) Sym(1);
 
@@ -2641,10 +2647,10 @@ void Parser::Act181(void)
 }
 
 //
-// Rule 182:  SwitchLabel ::= case ConstantExpression COLON
+// Rule 183:  SwitchLabel ::= case ConstantExpression COLON
 //
-#line 3092 "java.g"
-void Parser::Act182(void)
+#line 3105 "java.g"
+void Parser::Act183(void)
 {
     AstCaseLabel *p = ast_pool -> NewCaseLabel();
     p -> case_token  = Token(1);
@@ -2654,10 +2660,10 @@ void Parser::Act182(void)
 }
 
 //
-// Rule 183:  SwitchLabel ::= default COLON
+// Rule 184:  SwitchLabel ::= default COLON
 //
-#line 3105 "java.g"
-void Parser::Act183(void)
+#line 3118 "java.g"
+void Parser::Act184(void)
 {
     AstDefaultLabel *p = ast_pool -> NewDefaultLabel();
     p -> default_token = Token(1);
@@ -2666,9 +2672,9 @@ void Parser::Act183(void)
 }
 
 //
-// Rule 184:  WhileStatement ::= while LPAREN Expression RPAREN Statement
+// Rule 185:  WhileStatement ::= while LPAREN Expression RPAREN Statement
 //
-#line 3117 "java.g"
+#line 3130 "java.g"
 void Parser::MakeWhileStatement(void)
 {
     AstWhileStatement *p = ast_pool -> NewWhileStatement();
@@ -2686,16 +2692,16 @@ void Parser::MakeWhileStatement(void)
 }
 
 //
-// Rule 185:  WhileStatementNoShortIf ::= while LPAREN Expression RPAREN StatementNoShortIf
+// Rule 186:  WhileStatementNoShortIf ::= while LPAREN Expression RPAREN StatementNoShortIf
 //
 // void MakeWhileStatement(void);
 //
 
 //
-// Rule 186:  DoStatement ::= do Statement while LPAREN Expression RPAREN SEMICOLON
+// Rule 187:  DoStatement ::= do Statement while LPAREN Expression RPAREN SEMICOLON
 //
-#line 3144 "java.g"
-void Parser::Act186(void)
+#line 3157 "java.g"
+void Parser::Act187(void)
 {
     AstDoStatement *p = ast_pool -> NewDoStatement();
     p -> do_token        = Token(1);
@@ -2714,9 +2720,9 @@ void Parser::Act186(void)
 }
 
 //
-// Rule 187:  ForStatement ::= for LPAREN ForInitopt SEMICOLON Expressionopt SEMICOLON ForUpdateopt RPAREN Statement
+// Rule 188:  ForStatement ::= for LPAREN ForInitopt SEMICOLON Expressionopt SEMICOLON ForUpdateopt RPAREN Statement
 //
-#line 3166 "java.g"
+#line 3179 "java.g"
 void Parser::MakeForStatement(void)
 {
     AstForStatement *p = ast_pool -> NewForStatement();
@@ -2758,25 +2764,25 @@ void Parser::MakeForStatement(void)
 }
 
 //
-// Rule 188:  ForStatementNoShortIf ::= for LPAREN ForInitopt SEMICOLON Expressionopt SEMICOLON ForUpdateopt RPAREN...
+// Rule 189:  ForStatementNoShortIf ::= for LPAREN ForInitopt SEMICOLON Expressionopt SEMICOLON ForUpdateopt RPAREN...
 //
 // void MakeForStatement(void);
 //
 
 //
-// Rule 189:  ForInit -> StatementExpressionList
+// Rule 190:  ForInit -> StatementExpressionList
 //
 // void NoAction(void);
 //
 
 //
-// Rule 190:  ForInit ::= LocalVariableDeclaration
+// Rule 191:  ForInit ::= LocalVariableDeclaration
 //
-#line 3221 "java.g"
+#line 3234 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act190(void)
+void Parser::Act191(void)
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -2787,36 +2793,36 @@ void Parser::Act190(void)
 }
 
 //
-// Rule 191:  ForUpdate -> StatementExpressionList
+// Rule 192:  ForUpdate -> StatementExpressionList
 //
 // void NoAction(void);
 //
 
 //
-// Rule 192:  StatementExpressionList ::= StatementExpression
+// Rule 193:  StatementExpressionList ::= StatementExpression
 //
-#line 3242 "java.g"
-//
-// Note that the list is circular so as to preserve the order of the elements
-//
-void Parser::Act192(void)
-{
-    AstListNode *p = AllocateListNode();
-    p -> next = p;
-    p -> element = Sym(1);
-    p -> index = 0;
-
-    Sym(1) = p;
-}
-
-//
-// Rule 193:  StatementExpressionList ::= StatementExpressionList COMMA StatementExpression
-//
-#line 3259 "java.g"
+#line 3255 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
 void Parser::Act193(void)
+{
+    AstListNode *p = AllocateListNode();
+    p -> next = p;
+    p -> element = Sym(1);
+    p -> index = 0;
+
+    Sym(1) = p;
+}
+
+//
+// Rule 194:  StatementExpressionList ::= StatementExpressionList COMMA StatementExpression
+//
+#line 3272 "java.g"
+//
+// Note that the list is circular so as to preserve the order of the elements
+//
+void Parser::Act194(void)
 {
     AstListNode *tail = (AstListNode *) Sym(1);
 
@@ -2831,24 +2837,52 @@ void Parser::Act193(void)
 }
 
 //
-// Rule 194:  BreakStatement ::= break SEMICOLON
+// Rule 195:  AssertStatement ::= assert Expression SEMICOLON
 //
-#line 3286 "java.g"
-void Parser::Act194(void)
-{
-    AstBreakStatement *p = ast_pool -> NewBreakStatement();
-    p -> break_token          = Token(1);
-    p -> identifier_token_opt = 0;
-    p -> semicolon_token      = Token(2);
-    Sym(1) = p;
-}
-
-//
-// Rule 195:  BreakStatement ::= break Identifier SEMICOLON
-//
-#line 3299 "java.g"
+#line 3296 "java.g"
 void Parser::Act195(void)
 {
+    AstAssertStatement *p = ast_pool -> NewAssertStatement();
+    p -> assert_token = Token(1);
+    p -> condition = (AstExpression *) Sym(2);
+    p -> message_opt = NULL;
+    p -> semicolon_token = Token(3);
+    Sym(1) = p;
+}
+
+//
+// Rule 196:  AssertStatement ::= assert Expression COLON Expression SEMICOLON
+//
+#line 3310 "java.g"
+void Parser::Act196(void)
+{
+    AstAssertStatement *p = ast_pool -> NewAssertStatement();
+    p -> assert_token = Token(1);
+    p -> condition = (AstExpression *) Sym(2);
+    p -> message_opt = (AstExpression *) Sym(4);
+    p -> semicolon_token = Token(5);
+    Sym(1) = p;
+}
+
+//
+// Rule 197:  BreakStatement ::= break SEMICOLON
+//
+#line 3331 "java.g"
+void Parser::Act197(void)
+{
+    AstBreakStatement *p = ast_pool -> NewBreakStatement();
+    p -> break_token          = Token(1);
+    p -> identifier_token_opt = 0;
+    p -> semicolon_token      = Token(2);
+    Sym(1) = p;
+}
+
+//
+// Rule 198:  BreakStatement ::= break Identifier SEMICOLON
+//
+#line 3344 "java.g"
+void Parser::Act198(void)
+{
     AstBreakStatement *p = ast_pool -> NewBreakStatement();
     p -> break_token          = Token(1);
     p -> identifier_token_opt = Token(2);
@@ -2857,10 +2891,10 @@ void Parser::Act195(void)
 }
 
 //
-// Rule 196:  ContinueStatement ::= continue SEMICOLON
+// Rule 199:  ContinueStatement ::= continue SEMICOLON
 //
-#line 3312 "java.g"
-void Parser::Act196(void)
+#line 3357 "java.g"
+void Parser::Act199(void)
 {
     AstContinueStatement *p = ast_pool -> NewContinueStatement();
     p -> continue_token       = Token(1);
@@ -2870,10 +2904,10 @@ void Parser::Act196(void)
 }
 
 //
-// Rule 197:  ContinueStatement ::= continue Identifier SEMICOLON
+// Rule 200:  ContinueStatement ::= continue Identifier SEMICOLON
 //
-#line 3325 "java.g"
-void Parser::Act197(void)
+#line 3370 "java.g"
+void Parser::Act200(void)
 {
     AstContinueStatement *p = ast_pool -> NewContinueStatement();
     p -> continue_token       = Token(1);
@@ -2883,10 +2917,10 @@ void Parser::Act197(void)
 }
 
 //
-// Rule 198:  ReturnStatement ::= return Expressionopt SEMICOLON
+// Rule 201:  ReturnStatement ::= return Expressionopt SEMICOLON
 //
-#line 3338 "java.g"
-void Parser::Act198(void)
+#line 3383 "java.g"
+void Parser::Act201(void)
 {
     AstReturnStatement *p = ast_pool -> NewReturnStatement();
     p -> return_token    = Token(1);
@@ -2896,10 +2930,10 @@ void Parser::Act198(void)
 }
 
 //
-// Rule 199:  ThrowStatement ::= throw Expression SEMICOLON
+// Rule 202:  ThrowStatement ::= throw Expression SEMICOLON
 //
-#line 3351 "java.g"
-void Parser::Act199(void)
+#line 3396 "java.g"
+void Parser::Act202(void)
 {
     AstThrowStatement *p = ast_pool -> NewThrowStatement();
     p -> throw_token     = Token(1);
@@ -2909,10 +2943,10 @@ void Parser::Act199(void)
 }
 
 //
-// Rule 200:  SynchronizedStatement ::= synchronized LPAREN Expression RPAREN Block
+// Rule 203:  SynchronizedStatement ::= synchronized LPAREN Expression RPAREN Block
 //
-#line 3364 "java.g"
-void Parser::Act200(void)
+#line 3409 "java.g"
+void Parser::Act203(void)
 {
     AstSynchronizedStatement *p = ast_pool -> NewSynchronizedStatement();
     p -> synchronized_token = Token(1);
@@ -2924,10 +2958,10 @@ void Parser::Act200(void)
 }
 
 //
-// Rule 201:  TryStatement ::= try Block Catches
+// Rule 204:  TryStatement ::= try Block Catches
 //
-#line 3379 "java.g"
-void Parser::Act201(void)
+#line 3424 "java.g"
+void Parser::Act204(void)
 {
     AstTryStatement *p = ast_pool -> NewTryStatement();
     p -> try_token          = Token(1);
@@ -2952,10 +2986,10 @@ void Parser::Act201(void)
 }
 
 //
-// Rule 202:  TryStatement ::= try Block Catchesopt Finally
+// Rule 205:  TryStatement ::= try Block Catchesopt Finally
 //
-#line 3407 "java.g"
-void Parser::Act202(void)
+#line 3452 "java.g"
+void Parser::Act205(void)
 {
     AstTryStatement *p = ast_pool -> NewTryStatement();
     p -> try_token      = Token(1);
@@ -2984,13 +3018,13 @@ void Parser::Act202(void)
 }
 
 //
-// Rule 203:  Catches ::= CatchClause
+// Rule 206:  Catches ::= CatchClause
 //
-#line 3439 "java.g"
+#line 3484 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act203(void)
+void Parser::Act206(void)
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -3001,13 +3035,13 @@ void Parser::Act203(void)
 }
 
 //
-// Rule 204:  Catches ::= Catches CatchClause
+// Rule 207:  Catches ::= Catches CatchClause
 //
-#line 3456 "java.g"
+#line 3501 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act204(void)
+void Parser::Act207(void)
 {
     AstListNode *tail = (AstListNode *) Sym(1);
 
@@ -3022,10 +3056,10 @@ void Parser::Act204(void)
 }
 
 //
-// Rule 205:  CatchClause ::= catch LPAREN FormalParameter RPAREN Block
+// Rule 208:  CatchClause ::= catch LPAREN FormalParameter RPAREN Block
 //
-#line 3477 "java.g"
-void Parser::Act205(void)
+#line 3522 "java.g"
+void Parser::Act208(void)
 {
     AstCatchClause *p = ast_pool -> NewCatchClause();
     p -> catch_token      = Token(1);
@@ -3036,10 +3070,10 @@ void Parser::Act205(void)
 }
 
 //
-// Rule 206:  Finally ::= finally Block
+// Rule 209:  Finally ::= finally Block
 //
-#line 3491 "java.g"
-void Parser::Act206(void)
+#line 3536 "java.g"
+void Parser::Act209(void)
 {
     AstFinallyClause *p     = ast_pool -> NewFinallyClause();
     p -> finally_token      = Token(1);
@@ -3050,43 +3084,43 @@ void Parser::Act206(void)
 }
 
 //
-// Rule 207:  Primary -> PrimaryNoNewArray
+// Rule 210:  Primary -> PrimaryNoNewArray
 //
 // void NoAction(void);
 //
 
 //
-// Rule 208:  Primary -> ArrayCreationUninitialized
+// Rule 211:  Primary -> ArrayCreationUninitialized
 //
 // void NoAction(void);
 //
 
 //
-// Rule 209:  Primary -> ArrayCreationInitialized
+// Rule 212:  Primary -> ArrayCreationInitialized
 //
 // void NoAction(void);
 //
 
 //
-// Rule 210:  PrimaryNoNewArray -> Literal
+// Rule 213:  PrimaryNoNewArray -> Literal
 //
 // void NoAction(void);
 //
 
 //
-// Rule 211:  PrimaryNoNewArray ::= this
+// Rule 214:  PrimaryNoNewArray ::= this
 //
-#line 3532 "java.g"
-void Parser::Act211(void)
+#line 3577 "java.g"
+void Parser::Act214(void)
 {
     Sym(1) = ast_pool -> NewThisExpression(Token(1));
 }
 
 //
-// Rule 212:  PrimaryNoNewArray ::= LPAREN Expression RPAREN
+// Rule 215:  PrimaryNoNewArray ::= LPAREN Expression RPAREN
 //
-#line 3541 "java.g"
-void Parser::Act212(void)
+#line 3586 "java.g"
+void Parser::Act215(void)
 {
     AstParenthesizedExpression *p = ast_pool -> NewParenthesizedExpression();
     p -> left_parenthesis_token = Token(1);
@@ -3096,22 +3130,22 @@ void Parser::Act212(void)
 }
 
 //
-// Rule 213:  PrimaryNoNewArray -> ClassInstanceCreationExpression
+// Rule 216:  PrimaryNoNewArray -> ClassInstanceCreationExpression
 //
 // void NoAction(void);
 //
 
 //
-// Rule 214:  PrimaryNoNewArray -> FieldAccess
+// Rule 217:  PrimaryNoNewArray -> FieldAccess
 //
 // void NoAction(void);
 //
 
 //
-// Rule 215:  PrimaryNoNewArray ::= Name DOT this
+// Rule 218:  PrimaryNoNewArray ::= Name DOT this
 //
-#line 3563 "java.g"
-void Parser::Act215(void)
+#line 3608 "java.g"
+void Parser::Act218(void)
 {
     AstFieldAccess *p = ast_pool -> NewFieldAccess(AstFieldAccess::THIS_TAG);
     p -> base = (AstExpression *) Sym(1);
@@ -3121,10 +3155,10 @@ void Parser::Act215(void)
 }
 
 //
-// Rule 216:  PrimaryNoNewArray ::= Type DOT class
+// Rule 219:  PrimaryNoNewArray ::= Type DOT class
 //
-#line 3577 "java.g"
-void Parser::Act216(void)
+#line 3622 "java.g"
+void Parser::Act219(void)
 {
     AstFieldAccess *p = ast_pool -> NewFieldAccess(AstFieldAccess::CLASS_TAG);
     p -> base = ast_pool -> NewTypeExpression(Sym(1));
@@ -3134,10 +3168,10 @@ void Parser::Act216(void)
 }
 
 //
-// Rule 217:  PrimaryNoNewArray ::= void DOT class
+// Rule 220:  PrimaryNoNewArray ::= void DOT class
 //
-#line 3591 "java.g"
-void Parser::Act217(void)
+#line 3636 "java.g"
+void Parser::Act220(void)
 {
     AstFieldAccess *p = ast_pool -> NewFieldAccess(AstFieldAccess::CLASS_TAG);
     p -> base = ast_pool -> NewTypeExpression(ast_pool -> NewPrimitiveType(Ast::VOID_TYPE, Token(1)));
@@ -3147,22 +3181,22 @@ void Parser::Act217(void)
 }
 
 //
-// Rule 218:  PrimaryNoNewArray -> MethodInvocation
+// Rule 221:  PrimaryNoNewArray -> MethodInvocation
 //
 // void NoAction(void);
 //
 
 //
-// Rule 219:  PrimaryNoNewArray -> ArrayAccess
+// Rule 222:  PrimaryNoNewArray -> ArrayAccess
 //
 // void NoAction(void);
 //
 
 //
-// Rule 220:  ClassInstanceCreationExpression ::= new ClassType LPAREN ArgumentListopt RPAREN ClassBodyopt
+// Rule 223:  ClassInstanceCreationExpression ::= new ClassType LPAREN ArgumentListopt RPAREN ClassBodyopt
 //
-#line 3617 "java.g"
-void Parser::Act220(void)
+#line 3662 "java.g"
+void Parser::Act223(void)
 {
     AstClassInstanceCreationExpression *p = ast_pool -> NewClassInstanceCreationExpression();
     p -> base_opt                = NULL;
@@ -3188,9 +3222,9 @@ void Parser::Act220(void)
 }
 
 //
-// Rule 221:  ClassInstanceCreationExpression ::= Primary DOT new SimpleName LPAREN ArgumentListopt RPAREN ClassBodyopt
+// Rule 224:  ClassInstanceCreationExpression ::= Primary DOT new SimpleName LPAREN ArgumentListopt RPAREN ClassBodyopt
 //
-#line 3647 "java.g"
+#line 3692 "java.g"
 void Parser::MakeQualifiedNew(void)
 {
     AstClassInstanceCreationExpression *p = ast_pool -> NewClassInstanceCreationExpression();
@@ -3217,19 +3251,19 @@ void Parser::MakeQualifiedNew(void)
 }
 
 //
-// Rule 222:  ClassInstanceCreationExpression ::= Name DOT new SimpleName LPAREN ArgumentListopt RPAREN ClassBodyopt
+// Rule 225:  ClassInstanceCreationExpression ::= Name DOT new SimpleName LPAREN ArgumentListopt RPAREN ClassBodyopt
 //
 // void MakeQualifiedNew(void);
 //
 
 //
-// Rule 223:  ArgumentList ::= Expression
+// Rule 226:  ArgumentList ::= Expression
 //
-#line 3684 "java.g"
+#line 3729 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act223(void)
+void Parser::Act226(void)
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -3240,13 +3274,13 @@ void Parser::Act223(void)
 }
 
 //
-// Rule 224:  ArgumentList ::= ArgumentList COMMA Expression
+// Rule 227:  ArgumentList ::= ArgumentList COMMA Expression
 //
-#line 3701 "java.g"
+#line 3746 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act224(void)
+void Parser::Act227(void)
 {
     AstListNode *tail = (AstListNode *) Sym(1);
 
@@ -3261,9 +3295,9 @@ void Parser::Act224(void)
 }
 
 //
-// Rule 225:  ArrayCreationUninitialized ::= new PrimitiveType DimExprs Dimsopt
+// Rule 228:  ArrayCreationUninitialized ::= new PrimitiveType DimExprs Dimsopt
 //
-#line 3730 "java.g"
+#line 3775 "java.g"
 void Parser::MakeArrayCreationExpression(void)
 {
     AstArrayCreationExpression *p = ast_pool -> NewArrayCreationExpression();
@@ -3301,16 +3335,16 @@ void Parser::MakeArrayCreationExpression(void)
 }
 
 //
-// Rule 226:  ArrayCreationUninitialized ::= new ClassOrInterfaceType DimExprs Dimsopt
+// Rule 229:  ArrayCreationUninitialized ::= new ClassOrInterfaceType DimExprs Dimsopt
 //
 // void MakeArrayCreationExpression(void);
 //
 
 //
-// Rule 227:  ArrayCreationInitialized ::= new ArrayType ArrayInitializer
+// Rule 230:  ArrayCreationInitialized ::= new ArrayType ArrayInitializer
 //
-#line 3784 "java.g"
-void Parser::Act227(void)
+#line 3829 "java.g"
+void Parser::Act230(void)
 {
     AstArrayCreationExpression *p = ast_pool -> NewArrayCreationExpression();
     p -> new_token             = Token(1);
@@ -3320,13 +3354,13 @@ void Parser::Act227(void)
 }
 
 //
-// Rule 228:  DimExprs ::= DimExpr
+// Rule 231:  DimExprs ::= DimExpr
 //
-#line 3797 "java.g"
+#line 3842 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act228(void)
+void Parser::Act231(void)
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -3337,13 +3371,13 @@ void Parser::Act228(void)
 }
 
 //
-// Rule 229:  DimExprs ::= DimExprs DimExpr
+// Rule 232:  DimExprs ::= DimExprs DimExpr
 //
-#line 3814 "java.g"
+#line 3859 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act229(void)
+void Parser::Act232(void)
 {
     AstListNode *tail = (AstListNode *) Sym(1);
 
@@ -3358,10 +3392,10 @@ void Parser::Act229(void)
 }
 
 //
-// Rule 230:  DimExpr ::= LBRACKET Expression RBRACKET
+// Rule 233:  DimExpr ::= LBRACKET Expression RBRACKET
 //
-#line 3835 "java.g"
-void Parser::Act230(void)
+#line 3880 "java.g"
+void Parser::Act233(void)
 {
     AstDimExpr *p = ast_pool -> NewDimExpr();
     p -> left_bracket_token  = Token(1);
@@ -3371,13 +3405,13 @@ void Parser::Act230(void)
 }
 
 //
-// Rule 231:  Dims ::= LBRACKET RBRACKET
+// Rule 234:  Dims ::= LBRACKET RBRACKET
 //
-#line 3848 "java.g"
+#line 3893 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act231(void)
+void Parser::Act234(void)
 {
     AstListNode *p = AllocateListNode();
     p -> next = p;
@@ -3388,13 +3422,13 @@ void Parser::Act231(void)
 }
 
 //
-// Rule 232:  Dims ::= Dims LBRACKET RBRACKET
+// Rule 235:  Dims ::= Dims LBRACKET RBRACKET
 //
-#line 3865 "java.g"
+#line 3910 "java.g"
 //
 // Note that the list is circular so as to preserve the order of the elements
 //
-void Parser::Act232(void)
+void Parser::Act235(void)
 {
     AstListNode *tail = (AstListNode *) Sym(1);
 
@@ -3409,15 +3443,15 @@ void Parser::Act232(void)
 }
 
 //
-// Rule 233:  FieldAccess ::= Primary DOT Identifier
+// Rule 236:  FieldAccess ::= Primary DOT Identifier
 //
 // void MakeFieldAccess(void);
 //
 
 //
-// Rule 234:  FieldAccess ::= super DOT Identifier
+// Rule 237:  FieldAccess ::= super DOT Identifier
 //
-#line 3893 "java.g"
+#line 3938 "java.g"
 void Parser::MakeSuperFieldAccess(void)
 {
     Sym(1) = ast_pool -> NewSuperExpression(Token(1));
@@ -3426,9 +3460,9 @@ void Parser::MakeSuperFieldAccess(void)
 }
 
 //
-// Rule 235:  FieldAccess ::= Name DOT super DOT Identifier
+// Rule 238:  FieldAccess ::= Name DOT super DOT Identifier
 //
-#line 3905 "java.g"
+#line 3950 "java.g"
 void Parser::MakeSuperDoubleFieldAccess(void)
 {
     AstFieldAccess *p = ast_pool -> NewFieldAccess();
@@ -3446,10 +3480,10 @@ void Parser::MakeSuperDoubleFieldAccess(void)
 }
 
 //
-// Rule 236:  MethodInvocation ::= Name LPAREN ArgumentListopt RPAREN
+// Rule 239:  MethodInvocation ::= Name LPAREN ArgumentListopt RPAREN
 //
-#line 3925 "java.g"
-void Parser::Act236(void)
+#line 3970 "java.g"
+void Parser::Act239(void)
 {
     AstMethodInvocation *p = ast_pool -> NewMethodInvocation();
     p -> method                  = (AstExpression *) Sym(1);
@@ -3471,10 +3505,10 @@ void Parser::Act236(void)
 }
 
 //
-// Rule 237:  MethodInvocation ::= Primary DOT Identifier LPAREN ArgumentListopt RPAREN
+// Rule 240:  MethodInvocation ::= Primary DOT Identifier LPAREN ArgumentListopt RPAREN
 //
-#line 3950 "java.g"
-void Parser::Act237(void)
+#line 3995 "java.g"
+void Parser::Act240(void)
 {
     MakeFieldAccess();
 
@@ -3498,10 +3532,10 @@ void Parser::Act237(void)
 }
 
 //
-// Rule 238:  MethodInvocation ::= super DOT Identifier LPAREN ArgumentListopt RPAREN
+// Rule 241:  MethodInvocation ::= super DOT Identifier LPAREN ArgumentListopt RPAREN
 //
-#line 3977 "java.g"
-void Parser::Act238(void)
+#line 4022 "java.g"
+void Parser::Act241(void)
 {
     MakeSuperFieldAccess();
 
@@ -3525,10 +3559,10 @@ void Parser::Act238(void)
 }
 
 //
-// Rule 239:  MethodInvocation ::= Name DOT super DOT Identifier LPAREN ArgumentListopt RPAREN
+// Rule 242:  MethodInvocation ::= Name DOT super DOT Identifier LPAREN ArgumentListopt RPAREN
 //
-#line 4005 "java.g"
-void Parser::Act239(void)
+#line 4050 "java.g"
+void Parser::Act242(void)
 {
     MakeSuperDoubleFieldAccess();
 
@@ -3552,9 +3586,9 @@ void Parser::Act239(void)
 }
 
 //
-// Rule 240:  ArrayAccess ::= Name LBRACKET Expression RBRACKET
+// Rule 243:  ArrayAccess ::= Name LBRACKET Expression RBRACKET
 //
-#line 4032 "java.g"
+#line 4077 "java.g"
 void Parser::MakeArrayAccess(void)
 {
     AstArrayAccess *p = ast_pool -> NewArrayAccess();
@@ -3566,46 +3600,46 @@ void Parser::MakeArrayAccess(void)
 }
 
 //
-// Rule 241:  ArrayAccess ::= PrimaryNoNewArray LBRACKET Expression RBRACKET
+// Rule 244:  ArrayAccess ::= PrimaryNoNewArray LBRACKET Expression RBRACKET
 //
 // void MakeArrayAccess(void);
 //
 
 //
-// Rule 242:  ArrayAccess ::= ArrayCreationInitialized LBRACKET Expression RBRACKET
+// Rule 245:  ArrayAccess ::= ArrayCreationInitialized LBRACKET Expression RBRACKET
 //
 // void MakeArrayAccess(void);
 //
 
 //
-// Rule 243:  PostfixExpression -> Primary
+// Rule 246:  PostfixExpression -> Primary
 //
 // void NoAction(void);
 //
 
 //
-// Rule 244:  PostfixExpression -> Name
+// Rule 247:  PostfixExpression -> Name
 //
 // void NoAction(void);
 //
 
 //
-// Rule 245:  PostfixExpression -> PostIncrementExpression
+// Rule 248:  PostfixExpression -> PostIncrementExpression
 //
 // void NoAction(void);
 //
 
 //
-// Rule 246:  PostfixExpression -> PostDecrementExpression
+// Rule 249:  PostfixExpression -> PostDecrementExpression
 //
 // void NoAction(void);
 //
 
 //
-// Rule 247:  PostIncrementExpression ::= PostfixExpression PLUS_PLUS
+// Rule 250:  PostIncrementExpression ::= PostfixExpression PLUS_PLUS
 //
-#line 4080 "java.g"
-void Parser::Act247(void)
+#line 4125 "java.g"
+void Parser::Act250(void)
 {
     AstPostUnaryExpression *p = ast_pool -> NewPostUnaryExpression(AstPostUnaryExpression::PLUSPLUS);
     p -> expression          = (AstExpression *) Sym(1);
@@ -3614,10 +3648,10 @@ void Parser::Act247(void)
 }
 
 //
-// Rule 248:  PostDecrementExpression ::= PostfixExpression MINUS_MINUS
+// Rule 251:  PostDecrementExpression ::= PostfixExpression MINUS_MINUS
 //
-#line 4092 "java.g"
-void Parser::Act248(void)
+#line 4137 "java.g"
+void Parser::Act251(void)
 {
     AstPostUnaryExpression *p = ast_pool -> NewPostUnaryExpression(AstPostUnaryExpression::MINUSMINUS);
     p -> expression          = (AstExpression *) Sym(1);
@@ -3626,22 +3660,22 @@ void Parser::Act248(void)
 }
 
 //
-// Rule 249:  UnaryExpression -> PreIncrementExpression
+// Rule 252:  UnaryExpression -> PreIncrementExpression
 //
 // void NoAction(void);
 //
 
 //
-// Rule 250:  UnaryExpression -> PreDecrementExpression
+// Rule 253:  UnaryExpression -> PreDecrementExpression
 //
 // void NoAction(void);
 //
 
 //
-// Rule 251:  UnaryExpression ::= PLUS UnaryExpression
+// Rule 254:  UnaryExpression ::= PLUS UnaryExpression
 //
-#line 4112 "java.g"
-void Parser::Act251(void)
+#line 4157 "java.g"
+void Parser::Act254(void)
 {
     AstPreUnaryExpression *p = ast_pool -> NewPreUnaryExpression(AstPreUnaryExpression::PLUS);
     p -> pre_operator_token = Token(1);
@@ -3650,10 +3684,10 @@ void Parser::Act251(void)
 }
 
 //
-// Rule 252:  UnaryExpression ::= MINUS UnaryExpression
+// Rule 255:  UnaryExpression ::= MINUS UnaryExpression
 //
-#line 4124 "java.g"
-void Parser::Act252(void)
+#line 4169 "java.g"
+void Parser::Act255(void)
 {
     AstPreUnaryExpression *p = ast_pool -> NewPreUnaryExpression(AstPreUnaryExpression::MINUS);
     p -> pre_operator_token = Token(1);
@@ -3662,16 +3696,16 @@ void Parser::Act252(void)
 }
 
 //
-// Rule 253:  UnaryExpression -> UnaryExpressionNotPlusMinus
+// Rule 256:  UnaryExpression -> UnaryExpressionNotPlusMinus
 //
 // void NoAction(void);
 //
 
 //
-// Rule 254:  PreIncrementExpression ::= PLUS_PLUS UnaryExpression
+// Rule 257:  PreIncrementExpression ::= PLUS_PLUS UnaryExpression
 //
-#line 4140 "java.g"
-void Parser::Act254(void)
+#line 4185 "java.g"
+void Parser::Act257(void)
 {
     AstPreUnaryExpression *p = ast_pool -> NewPreUnaryExpression(AstPreUnaryExpression::PLUSPLUS);
     p -> pre_operator_token = Token(1);
@@ -3680,10 +3714,10 @@ void Parser::Act254(void)
 }
 
 //
-// Rule 255:  PreDecrementExpression ::= MINUS_MINUS UnaryExpression
+// Rule 258:  PreDecrementExpression ::= MINUS_MINUS UnaryExpression
 //
-#line 4152 "java.g"
-void Parser::Act255(void)
+#line 4197 "java.g"
+void Parser::Act258(void)
 {
     AstPreUnaryExpression *p = ast_pool -> NewPreUnaryExpression(AstPreUnaryExpression::MINUSMINUS);
     p -> pre_operator_token = Token(1);
@@ -3692,16 +3726,16 @@ void Parser::Act255(void)
 }
 
 //
-// Rule 256:  UnaryExpressionNotPlusMinus -> PostfixExpression
+// Rule 259:  UnaryExpressionNotPlusMinus -> PostfixExpression
 //
 // void NoAction(void);
 //
 
 //
-// Rule 257:  UnaryExpressionNotPlusMinus ::= TWIDDLE UnaryExpression
+// Rule 260:  UnaryExpressionNotPlusMinus ::= TWIDDLE UnaryExpression
 //
-#line 4168 "java.g"
-void Parser::Act257(void)
+#line 4213 "java.g"
+void Parser::Act260(void)
 {
     AstPreUnaryExpression *p = ast_pool -> NewPreUnaryExpression(AstPreUnaryExpression::TWIDDLE);
     p -> pre_operator_token = Token(1);
@@ -3710,10 +3744,10 @@ void Parser::Act257(void)
 }
 
 //
-// Rule 258:  UnaryExpressionNotPlusMinus ::= NOT UnaryExpression
+// Rule 261:  UnaryExpressionNotPlusMinus ::= NOT UnaryExpression
 //
-#line 4180 "java.g"
-void Parser::Act258(void)
+#line 4225 "java.g"
+void Parser::Act261(void)
 {
     AstPreUnaryExpression *p = ast_pool -> NewPreUnaryExpression(AstPreUnaryExpression::NOT);
     p -> pre_operator_token = Token(1);
@@ -3722,15 +3756,15 @@ void Parser::Act258(void)
 }
 
 //
-// Rule 259:  UnaryExpressionNotPlusMinus -> CastExpression
+// Rule 262:  UnaryExpressionNotPlusMinus -> CastExpression
 //
 // void NoAction(void);
 //
 
 //
-// Rule 260:  CastExpression ::= LPAREN PrimitiveType Dimsopt RPAREN UnaryExpression
+// Rule 263:  CastExpression ::= LPAREN PrimitiveType Dimsopt RPAREN UnaryExpression
 //
-#line 4196 "java.g"
+#line 4241 "java.g"
 void Parser::MakeCastExpression(void)
 {
     AstCastExpression *p = ast_pool -> NewCastExpression();
@@ -3754,10 +3788,10 @@ void Parser::MakeCastExpression(void)
 }
 
 //
-// Rule 261:  CastExpression ::= LPAREN Expression RPAREN UnaryExpressionNotPlusMinus
+// Rule 264:  CastExpression ::= LPAREN Expression RPAREN UnaryExpressionNotPlusMinus
 //
-#line 4222 "java.g"
-void Parser::Act261(void)
+#line 4267 "java.g"
+void Parser::Act264(void)
 {
     //
     // Note that Expression must be a name - i.e., Sym(2) -> isName() == true
@@ -3773,22 +3807,22 @@ void Parser::Act261(void)
 }
 
 //
-// Rule 262:  CastExpression ::= LPAREN Name Dims RPAREN UnaryExpressionNotPlusMinus
+// Rule 265:  CastExpression ::= LPAREN Name Dims RPAREN UnaryExpressionNotPlusMinus
 //
 // void MakeCastExpression(void);
 //
 
 //
-// Rule 263:  MultiplicativeExpression -> UnaryExpression
+// Rule 266:  MultiplicativeExpression -> UnaryExpression
 //
 // void NoAction(void);
 //
 
 //
-// Rule 264:  MultiplicativeExpression ::= MultiplicativeExpression MULTIPLY UnaryExpression
+// Rule 267:  MultiplicativeExpression ::= MultiplicativeExpression MULTIPLY UnaryExpression
 //
-#line 4252 "java.g"
-void Parser::Act264(void)
+#line 4297 "java.g"
+void Parser::Act267(void)
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::STAR);
     p -> left_expression       = (AstExpression *) Sym(1);
@@ -3798,10 +3832,10 @@ void Parser::Act264(void)
 }
 
 //
-// Rule 265:  MultiplicativeExpression ::= MultiplicativeExpression DIVIDE UnaryExpression
+// Rule 268:  MultiplicativeExpression ::= MultiplicativeExpression DIVIDE UnaryExpression
 //
-#line 4265 "java.g"
-void Parser::Act265(void)
+#line 4310 "java.g"
+void Parser::Act268(void)
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::SLASH);
     p -> left_expression       = (AstExpression *) Sym(1);
@@ -3811,10 +3845,10 @@ void Parser::Act265(void)
 }
 
 //
-// Rule 266:  MultiplicativeExpression ::= MultiplicativeExpression REMAINDER UnaryExpression
+// Rule 269:  MultiplicativeExpression ::= MultiplicativeExpression REMAINDER UnaryExpression
 //
-#line 4278 "java.g"
-void Parser::Act266(void)
+#line 4323 "java.g"
+void Parser::Act269(void)
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::MOD);
     p -> left_expression       = (AstExpression *) Sym(1);
@@ -3824,16 +3858,16 @@ void Parser::Act266(void)
 }
 
 //
-// Rule 267:  AdditiveExpression -> MultiplicativeExpression
+// Rule 270:  AdditiveExpression -> MultiplicativeExpression
 //
 // void NoAction(void);
 //
 
 //
-// Rule 268:  AdditiveExpression ::= AdditiveExpression PLUS MultiplicativeExpression
+// Rule 271:  AdditiveExpression ::= AdditiveExpression PLUS MultiplicativeExpression
 //
-#line 4295 "java.g"
-void Parser::Act268(void)
+#line 4340 "java.g"
+void Parser::Act271(void)
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::PLUS);
     p -> left_expression       = (AstExpression *) Sym(1);
@@ -3843,10 +3877,10 @@ void Parser::Act268(void)
 }
 
 //
-// Rule 269:  AdditiveExpression ::= AdditiveExpression MINUS MultiplicativeExpression
+// Rule 272:  AdditiveExpression ::= AdditiveExpression MINUS MultiplicativeExpression
 //
-#line 4308 "java.g"
-void Parser::Act269(void)
+#line 4353 "java.g"
+void Parser::Act272(void)
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::MINUS);
     p -> left_expression       = (AstExpression *) Sym(1);
@@ -3856,16 +3890,16 @@ void Parser::Act269(void)
 }
 
 //
-// Rule 270:  ShiftExpression -> AdditiveExpression
+// Rule 273:  ShiftExpression -> AdditiveExpression
 //
 // void NoAction(void);
 //
 
 //
-// Rule 271:  ShiftExpression ::= ShiftExpression LEFT_SHIFT AdditiveExpression
+// Rule 274:  ShiftExpression ::= ShiftExpression LEFT_SHIFT AdditiveExpression
 //
-#line 4325 "java.g"
-void Parser::Act271(void)
+#line 4370 "java.g"
+void Parser::Act274(void)
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::LEFT_SHIFT);
     p -> left_expression       = (AstExpression *) Sym(1);
@@ -3875,10 +3909,10 @@ void Parser::Act271(void)
 }
 
 //
-// Rule 272:  ShiftExpression ::= ShiftExpression RIGHT_SHIFT AdditiveExpression
+// Rule 275:  ShiftExpression ::= ShiftExpression RIGHT_SHIFT AdditiveExpression
 //
-#line 4338 "java.g"
-void Parser::Act272(void)
+#line 4383 "java.g"
+void Parser::Act275(void)
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::RIGHT_SHIFT);
     p -> left_expression       = (AstExpression *) Sym(1);
@@ -3888,10 +3922,10 @@ void Parser::Act272(void)
 }
 
 //
-// Rule 273:  ShiftExpression ::= ShiftExpression UNSIGNED_RIGHT_SHIFT AdditiveExpression
+// Rule 276:  ShiftExpression ::= ShiftExpression UNSIGNED_RIGHT_SHIFT AdditiveExpression
 //
-#line 4351 "java.g"
-void Parser::Act273(void)
+#line 4396 "java.g"
+void Parser::Act276(void)
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::UNSIGNED_RIGHT_SHIFT);
     p -> left_expression       = (AstExpression *) Sym(1);
@@ -3901,16 +3935,16 @@ void Parser::Act273(void)
 }
 
 //
-// Rule 274:  RelationalExpression -> ShiftExpression
+// Rule 277:  RelationalExpression -> ShiftExpression
 //
 // void NoAction(void);
 //
 
 //
-// Rule 275:  RelationalExpression ::= RelationalExpression LESS ShiftExpression
+// Rule 278:  RelationalExpression ::= RelationalExpression LESS ShiftExpression
 //
-#line 4368 "java.g"
-void Parser::Act275(void)
+#line 4413 "java.g"
+void Parser::Act278(void)
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::LESS);
     p -> left_expression       = (AstExpression *) Sym(1);
@@ -3920,10 +3954,10 @@ void Parser::Act275(void)
 }
 
 //
-// Rule 276:  RelationalExpression ::= RelationalExpression GREATER ShiftExpression
+// Rule 279:  RelationalExpression ::= RelationalExpression GREATER ShiftExpression
 //
-#line 4381 "java.g"
-void Parser::Act276(void)
+#line 4426 "java.g"
+void Parser::Act279(void)
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::GREATER);
     p -> left_expression       = (AstExpression *) Sym(1);
@@ -3933,10 +3967,10 @@ void Parser::Act276(void)
 }
 
 //
-// Rule 277:  RelationalExpression ::= RelationalExpression LESS_EQUAL ShiftExpression
+// Rule 280:  RelationalExpression ::= RelationalExpression LESS_EQUAL ShiftExpression
 //
-#line 4394 "java.g"
-void Parser::Act277(void)
+#line 4439 "java.g"
+void Parser::Act280(void)
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::LESS_EQUAL);
     p -> left_expression       = (AstExpression *) Sym(1);
@@ -3946,10 +3980,10 @@ void Parser::Act277(void)
 }
 
 //
-// Rule 278:  RelationalExpression ::= RelationalExpression GREATER_EQUAL ShiftExpression
+// Rule 281:  RelationalExpression ::= RelationalExpression GREATER_EQUAL ShiftExpression
 //
-#line 4407 "java.g"
-void Parser::Act278(void)
+#line 4452 "java.g"
+void Parser::Act281(void)
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::GREATER_EQUAL);
     p -> left_expression       = (AstExpression *) Sym(1);
@@ -3959,10 +3993,10 @@ void Parser::Act278(void)
 }
 
 //
-// Rule 279:  RelationalExpression ::= RelationalExpression instanceof ReferenceType
+// Rule 282:  RelationalExpression ::= RelationalExpression instanceof ReferenceType
 //
-#line 4420 "java.g"
-void Parser::Act279(void)
+#line 4465 "java.g"
+void Parser::Act282(void)
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::INSTANCEOF);
     p -> left_expression       = (AstExpression *) Sym(1);
@@ -3972,16 +4006,16 @@ void Parser::Act279(void)
 }
 
 //
-// Rule 280:  EqualityExpression -> RelationalExpression
+// Rule 283:  EqualityExpression -> RelationalExpression
 //
 // void NoAction(void);
 //
 
 //
-// Rule 281:  EqualityExpression ::= EqualityExpression EQUAL_EQUAL RelationalExpression
+// Rule 284:  EqualityExpression ::= EqualityExpression EQUAL_EQUAL RelationalExpression
 //
-#line 4437 "java.g"
-void Parser::Act281(void)
+#line 4482 "java.g"
+void Parser::Act284(void)
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::EQUAL_EQUAL);
     p -> left_expression       = (AstExpression *) Sym(1);
@@ -3991,10 +4025,10 @@ void Parser::Act281(void)
 }
 
 //
-// Rule 282:  EqualityExpression ::= EqualityExpression NOT_EQUAL RelationalExpression
+// Rule 285:  EqualityExpression ::= EqualityExpression NOT_EQUAL RelationalExpression
 //
-#line 4450 "java.g"
-void Parser::Act282(void)
+#line 4495 "java.g"
+void Parser::Act285(void)
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::NOT_EQUAL);
     p -> left_expression       = (AstExpression *) Sym(1);
@@ -4004,16 +4038,16 @@ void Parser::Act282(void)
 }
 
 //
-// Rule 283:  AndExpression -> EqualityExpression
+// Rule 286:  AndExpression -> EqualityExpression
 //
 // void NoAction(void);
 //
 
 //
-// Rule 284:  AndExpression ::= AndExpression AND EqualityExpression
+// Rule 287:  AndExpression ::= AndExpression AND EqualityExpression
 //
-#line 4468 "java.g"
-void Parser::Act284(void)
+#line 4513 "java.g"
+void Parser::Act287(void)
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::AND);
     p -> left_expression       = (AstExpression *) Sym(1);
@@ -4023,16 +4057,16 @@ void Parser::Act284(void)
 }
 
 //
-// Rule 285:  ExclusiveOrExpression -> AndExpression
+// Rule 288:  ExclusiveOrExpression -> AndExpression
 //
 // void NoAction(void);
 //
 
 //
-// Rule 286:  ExclusiveOrExpression ::= ExclusiveOrExpression XOR AndExpression
+// Rule 289:  ExclusiveOrExpression ::= ExclusiveOrExpression XOR AndExpression
 //
-#line 4485 "java.g"
-void Parser::Act286(void)
+#line 4530 "java.g"
+void Parser::Act289(void)
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::XOR);
     p -> left_expression       = (AstExpression *) Sym(1);
@@ -4042,16 +4076,16 @@ void Parser::Act286(void)
 }
 
 //
-// Rule 287:  InclusiveOrExpression -> ExclusiveOrExpression
+// Rule 290:  InclusiveOrExpression -> ExclusiveOrExpression
 //
 // void NoAction(void);
 //
 
 //
-// Rule 288:  InclusiveOrExpression ::= InclusiveOrExpression OR ExclusiveOrExpression
+// Rule 291:  InclusiveOrExpression ::= InclusiveOrExpression OR ExclusiveOrExpression
 //
-#line 4502 "java.g"
-void Parser::Act288(void)
+#line 4547 "java.g"
+void Parser::Act291(void)
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::IOR);
     p -> left_expression       = (AstExpression *) Sym(1);
@@ -4061,16 +4095,16 @@ void Parser::Act288(void)
 }
 
 //
-// Rule 289:  ConditionalAndExpression -> InclusiveOrExpression
+// Rule 292:  ConditionalAndExpression -> InclusiveOrExpression
 //
 // void NoAction(void);
 //
 
 //
-// Rule 290:  ConditionalAndExpression ::= ConditionalAndExpression AND_AND InclusiveOrExpression
+// Rule 293:  ConditionalAndExpression ::= ConditionalAndExpression AND_AND InclusiveOrExpression
 //
-#line 4519 "java.g"
-void Parser::Act290(void)
+#line 4564 "java.g"
+void Parser::Act293(void)
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::AND_AND);
     p -> left_expression       = (AstExpression *) Sym(1);
@@ -4080,16 +4114,16 @@ void Parser::Act290(void)
 }
 
 //
-// Rule 291:  ConditionalOrExpression -> ConditionalAndExpression
+// Rule 294:  ConditionalOrExpression -> ConditionalAndExpression
 //
 // void NoAction(void);
 //
 
 //
-// Rule 292:  ConditionalOrExpression ::= ConditionalOrExpression OR_OR ConditionalAndExpression
+// Rule 295:  ConditionalOrExpression ::= ConditionalOrExpression OR_OR ConditionalAndExpression
 //
-#line 4536 "java.g"
-void Parser::Act292(void)
+#line 4581 "java.g"
+void Parser::Act295(void)
 {
     AstBinaryExpression *p = ast_pool -> NewBinaryExpression(AstBinaryExpression::OR_OR);
     p -> left_expression       = (AstExpression *) Sym(1);
@@ -4099,16 +4133,16 @@ void Parser::Act292(void)
 }
 
 //
-// Rule 293:  ConditionalExpression -> ConditionalOrExpression
+// Rule 296:  ConditionalExpression -> ConditionalOrExpression
 //
 // void NoAction(void);
 //
 
 //
-// Rule 294:  ConditionalExpression ::= ConditionalOrExpression QUESTION Expression COLON ConditionalExpression
+// Rule 297:  ConditionalExpression ::= ConditionalOrExpression QUESTION Expression COLON ConditionalExpression
 //
-#line 4553 "java.g"
-void Parser::Act294(void)
+#line 4598 "java.g"
+void Parser::Act297(void)
 {
     AstConditionalExpression *p = ast_pool -> NewConditionalExpression();
     p -> test_expression  = (AstExpression *) Sym(1);
@@ -4120,22 +4154,22 @@ void Parser::Act294(void)
 }
 
 //
-// Rule 295:  AssignmentExpression -> ConditionalExpression
+// Rule 298:  AssignmentExpression -> ConditionalExpression
 //
 // void NoAction(void);
 //
 
 //
-// Rule 296:  AssignmentExpression -> Assignment
+// Rule 299:  AssignmentExpression -> Assignment
 //
 // void NoAction(void);
 //
 
 //
-// Rule 297:  Assignment ::= LeftHandSide AssignmentOperator AssignmentExpression
+// Rule 300:  Assignment ::= LeftHandSide AssignmentOperator AssignmentExpression
 //
-#line 4576 "java.g"
-void Parser::Act297(void)
+#line 4621 "java.g"
+void Parser::Act300(void)
 {
     AstAssignmentExpression *p = (AstAssignmentExpression *) Sym(2);
     p -> left_hand_side = (AstExpression *) Sym(1);
@@ -4144,147 +4178,147 @@ void Parser::Act297(void)
 }
 
 //
-// Rule 298:  LeftHandSide -> Name
+// Rule 301:  LeftHandSide -> Name
 //
 // void NoAction(void);
 //
 
 //
-// Rule 299:  LeftHandSide -> FieldAccess
+// Rule 302:  LeftHandSide -> FieldAccess
 //
 // void NoAction(void);
 //
 
 //
-// Rule 300:  LeftHandSide -> ArrayAccess
+// Rule 303:  LeftHandSide -> ArrayAccess
 //
 // void NoAction(void);
 //
 
 //
-// Rule 301:  AssignmentOperator ::= EQUAL
+// Rule 304:  AssignmentOperator ::= EQUAL
 //
-#line 4600 "java.g"
-void Parser::Act301(void)
+#line 4645 "java.g"
+void Parser::Act304(void)
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::SIMPLE_EQUAL, Token(1));
 }
 
 //
-// Rule 302:  AssignmentOperator ::= MULTIPLY_EQUAL
+// Rule 305:  AssignmentOperator ::= MULTIPLY_EQUAL
 //
-#line 4609 "java.g"
-void Parser::Act302(void)
+#line 4654 "java.g"
+void Parser::Act305(void)
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::STAR_EQUAL, Token(1));
 }
 
 //
-// Rule 303:  AssignmentOperator ::= DIVIDE_EQUAL
+// Rule 306:  AssignmentOperator ::= DIVIDE_EQUAL
 //
-#line 4618 "java.g"
-void Parser::Act303(void)
+#line 4663 "java.g"
+void Parser::Act306(void)
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::SLASH_EQUAL, Token(1));
 }
 
 //
-// Rule 304:  AssignmentOperator ::= REMAINDER_EQUAL
+// Rule 307:  AssignmentOperator ::= REMAINDER_EQUAL
 //
-#line 4627 "java.g"
-void Parser::Act304(void)
+#line 4672 "java.g"
+void Parser::Act307(void)
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::MOD_EQUAL, Token(1));
 }
 
 //
-// Rule 305:  AssignmentOperator ::= PLUS_EQUAL
+// Rule 308:  AssignmentOperator ::= PLUS_EQUAL
 //
-#line 4636 "java.g"
-void Parser::Act305(void)
+#line 4681 "java.g"
+void Parser::Act308(void)
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::PLUS_EQUAL, Token(1));
 }
 
 //
-// Rule 306:  AssignmentOperator ::= MINUS_EQUAL
+// Rule 309:  AssignmentOperator ::= MINUS_EQUAL
 //
-#line 4645 "java.g"
-void Parser::Act306(void)
+#line 4690 "java.g"
+void Parser::Act309(void)
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::MINUS_EQUAL, Token(1));
 }
 
 //
-// Rule 307:  AssignmentOperator ::= LEFT_SHIFT_EQUAL
+// Rule 310:  AssignmentOperator ::= LEFT_SHIFT_EQUAL
 //
-#line 4654 "java.g"
-void Parser::Act307(void)
+#line 4699 "java.g"
+void Parser::Act310(void)
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::LEFT_SHIFT_EQUAL, Token(1));
 }
 
 //
-// Rule 308:  AssignmentOperator ::= RIGHT_SHIFT_EQUAL
+// Rule 311:  AssignmentOperator ::= RIGHT_SHIFT_EQUAL
 //
-#line 4663 "java.g"
-void Parser::Act308(void)
+#line 4708 "java.g"
+void Parser::Act311(void)
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::RIGHT_SHIFT_EQUAL, Token(1));
 }
 
 //
-// Rule 309:  AssignmentOperator ::= UNSIGNED_RIGHT_SHIFT_EQUAL
+// Rule 312:  AssignmentOperator ::= UNSIGNED_RIGHT_SHIFT_EQUAL
 //
-#line 4672 "java.g"
-void Parser::Act309(void)
+#line 4717 "java.g"
+void Parser::Act312(void)
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::UNSIGNED_RIGHT_SHIFT_EQUAL, Token(1));
 }
 
 //
-// Rule 310:  AssignmentOperator ::= AND_EQUAL
+// Rule 313:  AssignmentOperator ::= AND_EQUAL
 //
-#line 4681 "java.g"
-void Parser::Act310(void)
+#line 4726 "java.g"
+void Parser::Act313(void)
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::AND_EQUAL, Token(1));
 }
 
 //
-// Rule 311:  AssignmentOperator ::= XOR_EQUAL
+// Rule 314:  AssignmentOperator ::= XOR_EQUAL
 //
-#line 4690 "java.g"
-void Parser::Act311(void)
+#line 4735 "java.g"
+void Parser::Act314(void)
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::XOR_EQUAL, Token(1));
 }
 
 //
-// Rule 312:  AssignmentOperator ::= OR_EQUAL
+// Rule 315:  AssignmentOperator ::= OR_EQUAL
 //
-#line 4699 "java.g"
-void Parser::Act312(void)
+#line 4744 "java.g"
+void Parser::Act315(void)
 {
     Sym(1) = ast_pool -> NewAssignmentExpression(AstAssignmentExpression::IOR_EQUAL, Token(1));
 }
 
 //
-// Rule 313:  Expression -> AssignmentExpression
+// Rule 316:  Expression -> AssignmentExpression
 //
 // void NoAction(void);
 //
 
 //
-// Rule 314:  ConstantExpression -> Expression
+// Rule 317:  ConstantExpression -> Expression
 //
 // void NoAction(void);
 //
 
 //
-// Rule 315:  PackageDeclarationopt ::=
+// Rule 318:  PackageDeclarationopt ::=
 //
-#line 4722 "java.g"
+#line 4767 "java.g"
 //
 // Given a rule of the form A ::= x1 x2 ... xn
 //
@@ -4293,248 +4327,248 @@ void Parser::Act312(void)
 void Parser::NullAction(void) { Sym(1) = NULL; }
 
 //
-// Rule 316:  PackageDeclarationopt -> PackageDeclaration
+// Rule 319:  PackageDeclarationopt -> PackageDeclaration
 //
 // void NoAction(void);
 //
 
 //
-// Rule 317:  Superopt ::=
+// Rule 320:  Superopt ::=
 //
 // void NullAction(void);
 //
 
 //
-// Rule 318:  Superopt -> Super
+// Rule 321:  Superopt -> Super
 //
 // void NoAction(void);
 //
 
 //
-// Rule 319:  Expressionopt ::=
+// Rule 322:  Expressionopt ::=
 //
 // void NullAction(void);
 //
 
 //
-// Rule 320:  Expressionopt -> Expression
+// Rule 323:  Expressionopt -> Expression
 //
 // void NoAction(void);
 //
 
 //
-// Rule 321:  ClassBodyopt ::=
+// Rule 324:  ClassBodyopt ::=
 //
 // void NullAction(void);
 //
 
 //
-// Rule 322:  ClassBodyopt -> ClassBody
+// Rule 325:  ClassBodyopt -> ClassBody
 //
 // void NoAction(void);
 //
 
 //
-// Rule 323:  ,opt ::=
+// Rule 326:  ,opt ::=
 //
 // void NullAction(void);
 //
 
 //
-// Rule 324:  ,opt -> COMMA
+// Rule 327:  ,opt -> COMMA
 //
 // void NoAction(void);
 //
 
 //
-// Rule 325:  ImportDeclarationsopt ::=
+// Rule 328:  ImportDeclarationsopt ::=
 //
 // void NullAction(void);
 //
 
 //
-// Rule 326:  ImportDeclarationsopt -> ImportDeclarations
+// Rule 329:  ImportDeclarationsopt -> ImportDeclarations
 //
 // void NoAction(void);
 //
 
 //
-// Rule 327:  TypeDeclarationsopt ::=
+// Rule 330:  TypeDeclarationsopt ::=
 //
 // void NullAction(void);
 //
 
 //
-// Rule 328:  TypeDeclarationsopt -> TypeDeclarations
+// Rule 331:  TypeDeclarationsopt -> TypeDeclarations
 //
 // void NoAction(void);
 //
 
 //
-// Rule 329:  ClassBodyDeclarationsopt ::=
+// Rule 332:  ClassBodyDeclarationsopt ::=
 //
 // void NullAction(void);
 //
 
 //
-// Rule 330:  ClassBodyDeclarationsopt -> ClassBodyDeclarations
+// Rule 333:  ClassBodyDeclarationsopt -> ClassBodyDeclarations
 //
 // void NoAction(void);
 //
 
 //
-// Rule 331:  Modifiersopt ::=
+// Rule 334:  Modifiersopt ::=
 //
 // void NullAction(void);
 //
 
 //
-// Rule 332:  Modifiersopt -> Modifiers
+// Rule 335:  Modifiersopt -> Modifiers
 //
 // void NoAction(void);
 //
 
 //
-// Rule 333:  BlockStatementsopt ::=
+// Rule 336:  BlockStatementsopt ::=
 //
 // void NullAction(void);
 //
 
 //
-// Rule 334:  BlockStatementsopt -> BlockStatements
+// Rule 337:  BlockStatementsopt -> BlockStatements
 //
 // void NoAction(void);
 //
 
 //
-// Rule 335:  Dimsopt ::=
+// Rule 338:  Dimsopt ::=
 //
 // void NullAction(void);
 //
 
 //
-// Rule 336:  Dimsopt -> Dims
+// Rule 339:  Dimsopt -> Dims
 //
 // void NoAction(void);
 //
 
 //
-// Rule 337:  ArgumentListopt ::=
+// Rule 340:  ArgumentListopt ::=
 //
 // void NullAction(void);
 //
 
 //
-// Rule 338:  ArgumentListopt -> ArgumentList
+// Rule 341:  ArgumentListopt -> ArgumentList
 //
 // void NoAction(void);
 //
 
 //
-// Rule 339:  Throwsopt ::=
+// Rule 342:  Throwsopt ::=
 //
 // void NullAction(void);
 //
 
 //
-// Rule 340:  Throwsopt -> Throws
+// Rule 343:  Throwsopt -> Throws
 //
 // void NoAction(void);
 //
 
 //
-// Rule 341:  FormalParameterListopt ::=
+// Rule 344:  FormalParameterListopt ::=
 //
 // void NullAction(void);
 //
 
 //
-// Rule 342:  FormalParameterListopt -> FormalParameterList
+// Rule 345:  FormalParameterListopt -> FormalParameterList
 //
 // void NoAction(void);
 //
 
 //
-// Rule 343:  Interfacesopt ::=
+// Rule 346:  Interfacesopt ::=
 //
 // void NullAction(void);
 //
 
 //
-// Rule 344:  Interfacesopt -> Interfaces
+// Rule 347:  Interfacesopt -> Interfaces
 //
 // void NoAction(void);
 //
 
 //
-// Rule 345:  InterfaceMemberDeclarationsopt ::=
+// Rule 348:  InterfaceMemberDeclarationsopt ::=
 //
 // void NullAction(void);
 //
 
 //
-// Rule 346:  InterfaceMemberDeclarationsopt -> InterfaceMemberDeclarations
+// Rule 349:  InterfaceMemberDeclarationsopt -> InterfaceMemberDeclarations
 //
 // void NoAction(void);
 //
 
 //
-// Rule 347:  ForInitopt ::=
+// Rule 350:  ForInitopt ::=
 //
 // void NullAction(void);
 //
 
 //
-// Rule 348:  ForInitopt -> ForInit
+// Rule 351:  ForInitopt -> ForInit
 //
 // void NoAction(void);
 //
 
 //
-// Rule 349:  ForUpdateopt ::=
+// Rule 352:  ForUpdateopt ::=
 //
 // void NullAction(void);
 //
 
 //
-// Rule 350:  ForUpdateopt -> ForUpdate
+// Rule 353:  ForUpdateopt -> ForUpdate
 //
 // void NoAction(void);
 //
 
 //
-// Rule 351:  ExtendsInterfacesopt ::=
+// Rule 354:  ExtendsInterfacesopt ::=
 //
 // void NullAction(void);
 //
 
 //
-// Rule 352:  ExtendsInterfacesopt -> ExtendsInterfaces
+// Rule 355:  ExtendsInterfacesopt -> ExtendsInterfaces
 //
 // void NoAction(void);
 //
 
 //
-// Rule 353:  Catchesopt ::=
+// Rule 356:  Catchesopt ::=
 //
 // void NullAction(void);
 //
 
 //
-// Rule 354:  Catchesopt -> Catches
+// Rule 357:  Catchesopt -> Catches
 //
 // void NoAction(void);
 //
 
 //
-// Rule 355:  PackageHeaderMarker ::=
+// Rule 358:  PackageHeaderMarker ::=
 //
-#line 4903 "java.g"
+#line 4948 "java.g"
 //
 // When this function is invoked, if the "parse_package_header_only" flag
 // is turned on, we skip to the end-of-file token.
 //
-void Parser::Act355(void)
+void Parser::Act358(void)
 {
     if (parse_package_header_only)
         lex_stream -> Reset(lex_stream -> NumTokens() - 1); // point to the EOF token
@@ -4542,14 +4576,14 @@ void Parser::Act355(void)
 }
 
 //
-// Rule 356:  MethodHeaderMarker ::=
+// Rule 359:  MethodHeaderMarker ::=
 //
-#line 4918 "java.g"
+#line 4963 "java.g"
 //
 // When this function is invoked, if the "parse_header_only" flag
 // is turned on, the body of the method being parsed is skipped.
 //
-void Parser::Act356(void)
+void Parser::Act359(void)
 {
     if (parse_header_only)
     {

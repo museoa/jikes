@@ -707,6 +707,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void ResolveAccess(AstExpression *);
     int  GenerateClassAccess(AstFieldAccess *, bool);
     void GenerateClassAccessMethod(MethodSymbol *);
+    void GenerateAssertVariableInitializer(TypeSymbol *, VariableSymbol *);
     void EmitCheckForNull(AstExpression *);
 
     //
@@ -728,6 +729,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void EmitStatementExpression(AstExpression *);
     void EmitSwitchStatement(AstSwitchStatement *);
     void EmitTryStatement(AstTryStatement *);
+    void EmitAssertStatement(AstAssertStatement *);
     void EmitBranchIfExpression(AstExpression *, bool, Label &, AstStatement *);
     void EmitBranch(unsigned int opc, Label& lab, AstStatement *over);
     void CompleteCall(MethodSymbol *, int, TypeSymbol * = NULL);

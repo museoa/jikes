@@ -198,6 +198,9 @@ void Control::ProcessGlobals()
     append_name_symbol     = FindOrInsertName(US_append, wcslen(US_append));
     forName_name_symbol    = FindOrInsertName(US_forName, wcslen(US_forName));
     getMessage_name_symbol = FindOrInsertName(US_getMessage, wcslen(US_getMessage));
+    getClass_name_symbol   = FindOrInsertName(US_getClass, wcslen(US_getClass));
+    getComponentType_name_symbol       = FindOrInsertName(US_getComponentType, wcslen(US_getComponentType));
+    desiredAssertionStatus_name_symbol = FindOrInsertName(US_desiredAssertionStatus, wcslen(US_desiredAssertionStatus));
 
     ConstantValue_literal = Utf8_pool.FindOrInsert(U8S_ConstantValue, U8S_ConstantValue_length);
     Exceptions_literal = Utf8_pool.FindOrInsert(U8S_Exceptions, U8S_Exceptions_length);
@@ -211,6 +214,40 @@ void Control::ProcessGlobals()
 
     null_literal = Utf8_pool.FindOrInsert(U8S_null, U8S_null_length);
     this_literal = Utf8_pool.FindOrInsert(U8S_this, U8S_this_length);
+
+    return;
+}
+
+
+void Control::InitObjectInfo()
+{
+    if (! Object_type -> Bad())
+    {
+        //
+        // Search for relevant getClass method
+        //
+        for (MethodSymbol *method = Object_type -> FindMethodSymbol(getClass_name_symbol);
+             method;
+             method = method -> next_method)
+        {
+            char *signature = method -> SignatureString();
+
+            if (strcmp(signature, StringConstant::U8S_LP_RP_Ljava_SL_lang_SL_Class_SC) == 0)
+            {
+                Object_getClass_method = method;
+                break;
+            }
+        }
+
+        if (! Object_getClass_method)
+        {
+            system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
+                                              0,
+                                              0,
+                                              Object_type -> ContainingPackage() -> PackageName(),
+                                              Object_type -> ExternalName());
+        }
+    }
 
     return;
 }
@@ -246,7 +283,109 @@ void Control::InitClassInfo()
         }
     }
 
-    return;
+        //
+        // Search for relevent getComponentType method
+        //
+        for (MethodSymbol *method = Class_type -> FindMethodSymbol(getComponentType_name_symbol);
+             method;
+             method = method -> next_method)
+        {
+            char *signature = method -> SignatureString();
+
+            if (strcmp(signature, StringConstant::U8S_LP_RP_Ljava_SL_lang_SL_Class_SC) == 0)
+            {
+                Class_getComponentType_method = method;
+                break;
+            }
+       }
+
+        if (! Class_getComponentType_method)
+        {
+            system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
+                                             0,
+                                              0,
+                                              Class_type -> ContainingPackage() -> PackageName(),
+                                              Class_type -> ExternalName());
+        }
+
+        //
+        // Search for relevent desiredAssertionStatus method, in Java SDK 1.4
+        // or later
+        //
+        if (option.target >= JikesOption::SDK1_4)
+        {
+            for (MethodSymbol *method = Class_type -> FindMethodSymbol(desiredAssertionStatus_name_symbol);
+                 method;
+                 method = method -> next_method)
+            {
+                char *signature = method -> SignatureString();
+
+                if (strcmp(signature, StringConstant::U8S_LP_RP_Z) == 0)
+                {
+                    Class_desiredAssertionStatus_method = method;
+                    break;
+                }
+            }
+
+            if (! Class_desiredAssertionStatus_method)
+            {
+                system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
+                                                  0,
+                                                  0,
+                                                  Class_type -> ContainingPackage() -> PackageName(),
+                                                  Class_type -> ExternalName());
+            }
+        }
+}
+
+
+void Control::InitAssertionErrorInfo()
+{
+    if (! AssertionError_type -> Bad())
+    {
+        //
+        // Search for relevant constructors
+        //
+        for (MethodSymbol *constructor = AssertionError_type -> FindConstructorSymbol();
+             constructor;
+             constructor = constructor -> next_method)
+        {
+            char *signature = constructor -> SignatureString();
+
+            if (strcmp(signature, StringConstant::U8S_LP_RP_V) == 0)
+                AssertionError_Init_method = constructor;
+            else if (strcmp(signature, StringConstant::U8S_LP_C_RP_V) == 0)
+                AssertionError_InitWithChar_method = constructor;
+            else if (strcmp(signature, StringConstant::U8S_LP_Z_RP_V) == 0)
+                AssertionError_InitWithBoolean_method = constructor;
+            else if (strcmp(signature, StringConstant::U8S_LP_I_RP_V) == 0)
+                AssertionError_InitWithInt_method = constructor;
+            else if (strcmp(signature, StringConstant::U8S_LP_J_RP_V) == 0)
+                AssertionError_InitWithLong_method = constructor;
+            else if (strcmp(signature, StringConstant::U8S_LP_F_RP_V) == 0)
+                AssertionError_InitWithFloat_method = constructor;
+            else if (strcmp(signature, StringConstant::U8S_LP_D_RP_V) == 0)
+                AssertionError_InitWithDouble_method = constructor;
+            else if (strcmp(signature, StringConstant::U8S_LP_Ljava_SL_lang_SL_Object_SC_RP_V) == 0)
+                AssertionError_InitWithObject_method = constructor;
+        }
+
+        if (! (AssertionError_Init_method &&
+               AssertionError_InitWithChar_method &&
+               AssertionError_InitWithBoolean_method &&
+               AssertionError_InitWithInt_method &&
+               AssertionError_InitWithLong_method &&
+               AssertionError_InitWithFloat_method &&
+               AssertionError_InitWithDouble_method &&
+               AssertionError_InitWithObject_method))
+        {
+            system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
+                                              0,
+                                              0,
+                                              AssertionError_type -> ContainingPackage() -> PackageName(),
+                                              AssertionError_type -> ExternalName());
+        }
+    }
 }
 
 
@@ -357,9 +496,7 @@ void Control::InitStringBufferInfo()
         {
             char *signature = append_method -> SignatureString();
 
-            if (strcmp(signature, StringConstant::U8S_LP_LB_C_RP_Ljava_SL_lang_SL_StringBuffer_SC) == 0)
-                 StringBuffer_append_char_array_method = append_method;
-            else if (strcmp(signature, StringConstant::U8S_LP_C_RP_Ljava_SL_lang_SL_StringBuffer_SC) == 0)
+            if (strcmp(signature, StringConstant::U8S_LP_C_RP_Ljava_SL_lang_SL_StringBuffer_SC) == 0)
                  StringBuffer_append_char_method = append_method;
             else if (strcmp(signature, StringConstant::U8S_LP_Z_RP_Ljava_SL_lang_SL_StringBuffer_SC) == 0)
                  StringBuffer_append_boolean_method = append_method;
@@ -380,7 +517,6 @@ void Control::InitStringBufferInfo()
         if (! (StringBuffer_Init_method &&
                StringBuffer_InitWithString_method &&
                StringBuffer_toString_method &&
-               StringBuffer_append_char_array_method &&
                StringBuffer_append_char_method &&
                StringBuffer_append_boolean_method &&
                StringBuffer_append_int_method &&
@@ -1194,7 +1330,6 @@ void Control::ProcessSystemInformation()
     // Add entry for system package
     //
     system_package = ProcessPackage(StringConstant::US_java_SL_lang);
-    java_util_package = ProcessPackage(StringConstant::US_java_SL_util);
 
     //
     // Create an entry for each primitive type. Note that the type void is treated as a primitive.

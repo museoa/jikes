@@ -60,7 +60,9 @@ class StreamError : public JikesError
         UNTERMINATED_STRING_CONSTANT,
         INVALID_HEX_CONSTANT,
         INVALID_FLOATING_CONSTANT_EXPONENT,
-        INVALID_UNICODE_ESCAPE
+        INVALID_UNICODE_ESCAPE,
+        DEPRECATED_IDENTIFIER_ASSERT, // from here, these are warnings only
+        DOLLAR_IN_IDENTIFIER
     };
 
     void Initialize(StreamErrorKind kind_, unsigned start_location_, unsigned end_location_, LexStream *);
@@ -303,7 +305,15 @@ class LexStream : public Stream
 
     inline int CommentStringLength(CommentIndex i)   { return comments[i].length; }
 
-    inline int NumBadTokens() { return bad_tokens.Length(); }
+    inline int NumBadTokens()
+    {
+        int count = 0;
+        for (int i=0; i<bad_tokens.Length(); i++)
+            if (bad_tokens[i].getSeverity() == JikesError::JIKES_ERROR)
+                count++;
+        return count;
+    }
+    inline int NumWarnTokens() { return bad_tokens.Length() - NumBadTokens(); }
 
 #ifdef JIKES_DEBUG
     bool file_read;

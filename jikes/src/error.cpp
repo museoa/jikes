@@ -91,7 +91,7 @@ wchar_t *ErrorInfo::regularErrorString()
     else 
         PrintSmallSource(s);
     
-    s << "\n*** " << getSeverityString() << ": "
+    s << endl << "*** " << getSeverityString() << ": "
       << getErrorMessage();
     
     return s.Array();
@@ -108,10 +108,10 @@ void ErrorInfo::PrintLargeSource(ErrorString &s)
     if (left_line_no == right_line_no)
     {
         if (left_line_no == 0)
-            s << '\n';
+            s << endl;
         else
         {
-            s << "\n\n";
+            s << endl << endl;
             s.width(6);
             s << left_line_no << ". ";
             for (int i = lex_stream -> LineStart(left_line_no); i <= lex_stream -> LineEnd(left_line_no); i++)
@@ -128,13 +128,13 @@ void ErrorInfo::PrintLargeSource(ErrorString &s)
     }
     else
     {
-        s << "\n\n";
+        s << endl << endl;
         s.width(left_column_no + 8);
         s << "<";
 
         s.width(lex_stream -> LineSegmentLength(left_token));
         s.fill('-');
-        s << '\n';
+        s << endl;
         s.fill(' ');
 
         s.width(6);
@@ -145,8 +145,7 @@ void ErrorInfo::PrintLargeSource(ErrorString &s)
         if (right_line_no > left_line_no + 1)
         {
             s.width(left_column_no + 7);
-            s << " ";
-            s << ". . .\n";
+            s << " . . ." << endl;
         }
 
         s.width(6);
@@ -172,10 +171,10 @@ void ErrorInfo::PrintLargeSource(ErrorString &s)
 void ErrorInfo::PrintSmallSource(ErrorString &s)
 {
     if (left_line_no == 0)
-        s << '\n';
+        s << endl;
     else
     {
-        s << "\n\n";
+        s << endl << endl;
         s.width(6);
         s << left_line_no;
         s << ". ";
@@ -1091,16 +1090,15 @@ wchar_t *SemanticError::PrintPACKAGE_NOT_FOUND(ErrorInfo &err, LexStream *lex_st
 {
     ErrorString s;
 
-    s << "Could not find package \""
-      << err.insert1
-      << "\" in:\n";
+    s << "You need to modify your classpath, sourcepath, bootclasspath, "
+      << "and/or extdirs setup. Package \""
+      << err.insert1 << "\" could not be found in:" << endl;
 
     for (int i = 1; i < control.classpath.Length(); i++)
     {
         PathSymbol *path_symbol = control.classpath[i];
         wchar_t *path = path_symbol -> Name();
-        s << "                "
-          << path << '\n';
+        s << "                " << path << endl;
     }
 
     return s.Array();

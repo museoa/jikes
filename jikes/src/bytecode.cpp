@@ -114,6 +114,14 @@ void ByteCode::CompileClass()
     }
 
     //
+    // Supply needed field declaration for "$noassert" flag (used in assert
+    // statements if present).
+    //
+    VariableSymbol *assert_variable = unit_type -> AssertVariable();
+    if (assert_variable)
+        DeclareField(assert_variable);
+
+    //
     // compile method bodies
     //
     {
@@ -191,6 +199,7 @@ void ByteCode::CompileClass()
     }
 
     //
+    //
     // Compile the instance initializer blocks.
     //
     MethodSymbol *block_init_method = unit_type -> block_initializer_method;
@@ -223,6 +232,7 @@ void ByteCode::CompileClass()
 
     //
     // Compile generated constructors.
+    //
     //
     if (unit_type -> NumGeneratedConstructors() == 0)
     {
@@ -353,10 +363,15 @@ void ByteCode::CompileClass()
     //
     if (unit_type -> static_initializer_method)
     {
-        assert(class_body -> NumStaticInitializers() > 0 || initialized_static_fields.Length() > 0);
+        assert(class_body -> NumStaticInitializers() > 0 ||
+               initialized_static_fields.Length() > 0 ||
+               assert_variable);
 
         int method_index = methods.NextIndex(); // index for method
         BeginMethod(method_index, unit_type -> static_initializer_method);
+
+        if (assert_variable)
+            GenerateAssertVariableInitializer(unit_type -> outermost_type, assert_variable);
 
         //
         // revisit members that are part of class initialization
@@ -379,7 +394,9 @@ void ByteCode::CompileClass()
         PutOp(OP_RETURN);
         EndMethod(method_index, unit_type -> static_initializer_method);
     }
-    else assert(class_body -> NumStaticInitializers() == 0 && initialized_static_fields.Length() == 0);
+    else assert(class_body -> NumStaticInitializers() == 0 &&
+                initialized_static_fields.Length() == 0 &&
+                ! assert_variable);
 
     FinishCode(unit_type);
 
@@ -1364,6 +1381,9 @@ void ByteCode::EmitStatement(AstStatement *statement)
              break;
         case Ast::TRY: // JLS 14.18
              EmitTryStatement((AstTryStatement *) statement);
+             break;
+        case Ast::ASSERT: // JDK 1.4 (JSR 41)
+             EmitAssertStatement((AstAssertStatement *) statement);
              break;
         case Ast::CLASS: // Class Declaration
         case Ast::INTERFACE: // InterfaceDeclaration
@@ -2609,6 +2629,73 @@ void ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
 }
 
 
+void ByteCode::EmitAssertStatement(AstAssertStatement *assertion)
+{
+    //
+    // When constant true, the assert statement is a no-op.
+    // Otherwise, assert a : b; is syntactic sugar for:
+    //
+    // while (! ($noassert && (a)))
+    //     throw new java.lang.AssertionError(b);
+    //
+    if (! this_semantic.IsConstantTrue(assertion -> condition))
+    {
+        PutOp(OP_GETSTATIC);
+        PutU2(RegisterFieldref(assertion -> assert_variable));
+        ChangeStack(1);
+        Label label;
+        EmitBranch(OP_IFNE, label);
+        EmitBranchIfExpression(assertion -> condition, true, label, NULL);
+
+        PutOp(OP_NEW);
+        PutU2(RegisterClass(this_control.AssertionError() -> fully_qualified_name));
+        ChangeStack(1);
+        PutOp(OP_DUP);
+        ChangeStack(1);
+
+        MethodSymbol *constructor = NULL;
+        int stack_change = -1;
+        if (assertion -> message_opt)
+        {
+            EmitExpression(assertion -> message_opt);
+            TypeSymbol *type = assertion -> message_opt -> Type();
+            constructor = (type == this_control.char_type
+                           ? this_control.AssertionError_InitWithCharMethod()
+                           : type == this_control.boolean_type
+                               ? this_control.AssertionError_InitWithBooleanMethod()
+                               : type == this_control.int_type ||
+                                 type == this_control.short_type ||
+                                 type == this_control.byte_type
+                                   ? this_control.AssertionError_InitWithIntMethod()
+                                   : type == this_control.long_type
+                                       ? this_control.AssertionError_InitWithLongMethod()
+                                       : type == this_control.float_type
+                                           ? this_control.AssertionError_InitWithFloatMethod()
+                                           : type == this_control.double_type
+                                               ? this_control.AssertionError_InitWithDoubleMethod()
+                                               : type == this_control.null_type ||
+                                                 IsReferenceType(type)
+                                                   ? this_control.AssertionError_InitWithObjectMethod()
+                                                   : this_control.AssertionError_InitMethod()); // for assertion
+
+            assert(constructor != this_control.AssertionError_InitMethod() &&
+                   "unable to find right constructor for assertion error");
+            stack_change -= (this_control.IsDoubleWordType(type) ? 2 : 1);
+        }
+        else constructor = this_control.AssertionError_InitMethod();
+    
+        PutOp(OP_INVOKESPECIAL);
+        PutU2(RegisterLibraryMethodref(constructor));
+        ChangeStack(stack_change);
+        PutOp(OP_ATHROW);
+        ChangeStack(-1);
+
+        DefineLabel(label);
+        CompleteLabel(label);
+    }
+}
+
+
 //
 // JLS is Java Language Specification
 // JVM is Java Virtual Machine
@@ -2905,6 +2992,8 @@ void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
     line_number_table_attribute -> AddLineNumber(0, 0);
 
     //
+    // The code takes the form:
+    //
     // Since the VM does not have a nice way of finding a class without a
     // runtime object, we use this approach.  Notice that getClass can throw
     // a checked exception, but JLS semantics do not allow this, so we must
@@ -3020,6 +3109,58 @@ int ByteCode::GenerateClassAccess(AstFieldAccess *field_access, bool need_value)
     CompleteLabel(label);
 
     return 1; // return one-word (reference) result
+}
+
+
+//
+// Generate code for initializing assert variable
+//
+void ByteCode::GenerateAssertVariableInitializer(TypeSymbol *tsym,
+                                                 VariableSymbol *vsym)
+{
+    //
+    // Create the field initializer. This approach avoids using a class
+    // literal, for two reasons:
+    //   - we use fewer bytecodes if the rest of the class does not use class
+    //     literals (and we need no try-catch block)
+    //   - determining assertion status will not initialize an enclosing class.
+    //
+    // Unfortunately, until the VM supports easier determination of classes
+    // from a static context, we must create an empty garbage array.
+    // We initialize to the opposite of desiredAssertionStatus to obey the
+    // semantics of assert - until class initialization starts, the default
+    // value of false in this variable will enable asserts anywhere in the
+    // class.
+    //
+    // private static final boolean $noassert = ! new <outermostClass>[0]
+    //     .getClass().getComponentType().desiredAssertionStatus();
+    //
+    //  iconst_0
+    //  anewarray        <outermostClass>
+    //  invokevirtual    java/lang/Object.getClass()java/lang/Class
+    //  invokevirtual    java/lang/Class.getComponentType()java/lang/Class
+    //  invokevirtual    java/lang/Class.desiredAssertionStatus()Z
+    //  iconst_1
+    //  ixor             result ^ true <=> !result
+    //  putstatic        <thisClass>.$noassert
+    //
+    PutOp(OP_ICONST_0);
+    ChangeStack(1);
+    PutOp(OP_ANEWARRAY);
+    PutU2(RegisterClass(tsym -> fully_qualified_name));
+    PutOp(OP_INVOKEVIRTUAL);
+    PutU2(RegisterLibraryMethodref(this_control.Object_getClassMethod()));
+    PutOp(OP_INVOKEVIRTUAL);
+    PutU2(RegisterLibraryMethodref(this_control.Class_getComponentTypeMethod()));
+    PutOp(OP_INVOKEVIRTUAL);
+    PutU2(RegisterLibraryMethodref(this_control.Class_desiredAssertionStatusMethod()));
+    PutOp(OP_ICONST_1);
+    ChangeStack(1);
+    PutOp(OP_IXOR);
+    ChangeStack(-1);
+    PutOp(OP_PUTSTATIC);
+    PutU2(RegisterFieldref(vsym));
+    ChangeStack(-1);
 }
 
 

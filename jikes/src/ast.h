@@ -209,6 +209,7 @@ class AstContinueStatement;
 class AstReturnStatement;
 class AstThrowStatement;
 class AstSynchronizedStatement;
+class AstAssertStatement;
 class AstCatchClause;
 class AstFinallyClause;
 class AstTryStatement;
@@ -362,6 +363,7 @@ public:
         RETURN,
         THROW,
         SYNCHRONIZED_STATEMENT,
+        ASSERT,
         TRY,
         CATCH,
         FINALLY,
@@ -511,6 +513,7 @@ public:
     inline AstReturnStatement *ReturnStatementCast();
     inline AstThrowStatement *ThrowStatementCast();
     inline AstSynchronizedStatement *SynchronizedStatementCast();
+    inline AstAssertStatement *AssertStatementCast();
     inline AstCatchClause *CatchClauseCast();
     inline AstFinallyClause *FinallyClauseCast();
     inline AstTryStatement *TryStatementCast();
@@ -2825,6 +2828,44 @@ public:
 
 
 //
+// AssertStatement --> <ASSERT, Label_opt, assert_token, Expression, ;_token>
+//                 --> <ASSERT, Label_opt, assert_token, Expression, :_token, Expression, ;_token>
+//
+class AstAssertStatement : public AstStatement
+{
+public:
+    LexStream::TokenIndex assert_token,
+                          semicolon_token;
+    AstExpression *condition,
+                  *message_opt;
+    VariableSymbol *assert_variable;
+
+    AstAssertStatement(StoragePool *pool_) : assert_variable(NULL)
+    {
+        Ast::kind = Ast::ASSERT;
+        Ast::class_tag = Ast::STATEMENT;
+        Ast::generated = 0;
+        AstStatement::pool = pool_;
+        AstStatement::is_reachable = false;
+        AstStatement::can_complete_normally = false;
+        AstStatement::defined_variables = NULL;
+    }
+
+    virtual ~AstAssertStatement();
+
+#ifdef JIKES_DEBUG
+    virtual void Print(LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
+#endif
+
+    virtual Ast *Clone(StoragePool *);
+
+    virtual LexStream::TokenIndex LeftToken() { return assert_token; }
+    virtual LexStream::TokenIndex RightToken() { return semicolon_token; }
+};
+
+
+//
 // CatchClause --> <CATCH, catch_token, FormalParameter, Block>
 //
 class AstCatchClause : public Ast
@@ -4573,6 +4614,11 @@ public:
         return new (Alloc(sizeof(AstSynchronizedStatement))) AstSynchronizedStatement((StoragePool *) this);
     }
 
+    inline AstAssertStatement *NewAssertStatement()
+    {
+        return new (Alloc(sizeof(AstAssertStatement))) AstAssertStatement((StoragePool *) this);
+    }
+
     inline AstCatchClause *NewCatchClause()
     {
         return new (Alloc(sizeof(AstCatchClause))) AstCatchClause();
@@ -5008,6 +5054,13 @@ public:
     inline AstSynchronizedStatement *GenSynchronizedStatement()
     {
         AstSynchronizedStatement *p = NewSynchronizedStatement();
+        p -> generated = 1;
+        return p;
+    }
+
+    inline AstAssertStatement *GenAssertStatement()
+    {
+        AstAssertStatement *p = NewAssertStatement();
         p -> generated = 1;
         return p;
     }
@@ -5562,6 +5615,12 @@ inline AstSynchronizedStatement *Ast::SynchronizedStatementCast()
 {
     return DYNAMIC_CAST<AstSynchronizedStatement *, Ast *>
         (kind == SYNCHRONIZED_STATEMENT ? this : NULL);
+}
+
+inline AstAssertStatement *Ast::AssertStatementCast()
+{
+    return DYNAMIC_CAST<AstAssertStatement *, Ast *>
+        (kind == ASSERT ? this : NULL);
 }
 
 inline AstCatchClause *Ast::CatchClauseCast()

@@ -17,31 +17,31 @@ namespace Jikes { // Open namespace Jikes block
 #endif
 
 enum {
-      ERROR_SYMBOL      = 107,
+      ERROR_SYMBOL      = 108,
       MAX_DISTANCE      = 30,
       MIN_DISTANCE      = 3,
       MAX_NAME_LENGTH   = 38,
       MAX_TERM_LENGTH   = 38,
-      NUM_STATES        = 559,
+      NUM_STATES        = 563,
 
-      NT_OFFSET         = 108,
+      NT_OFFSET         = 109,
       BUFF_UBOUND       = 31,
       BUFF_SIZE         = 32,
       STACK_UBOUND      = 127,
       STACK_SIZE        = 128,
-      SCOPE_UBOUND      = 56,
-      SCOPE_SIZE        = 57,
-      LA_STATE_OFFSET   = 5597,
+      SCOPE_UBOUND      = 59,
+      SCOPE_SIZE        = 60,
+      LA_STATE_OFFSET   = 5737,
       MAX_LA            = 2,
-      NUM_RULES         = 356,
-      NUM_TERMINALS     = 108,
-      NUM_NON_TERMINALS = 160,
-      NUM_SYMBOLS       = 268,
-      START_STATE       = 982,
-      EOFT_SYMBOL       = 96,
+      NUM_RULES         = 359,
+      NUM_TERMINALS     = 109,
+      NUM_NON_TERMINALS = 161,
+      NUM_SYMBOLS       = 270,
+      START_STATE       = 992,
+      EOFT_SYMBOL       = 97,
       EOLT_SYMBOL       = 27,
-      ACCEPT_ACTION     = 5240,
-      ERROR_ACTION      = 5241
+      ACCEPT_ACTION     = 5377,
+      ERROR_ACTION      = 5378
      };
 
 

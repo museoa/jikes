@@ -40,7 +40,8 @@ int (*Scanner::scan_keyword[13]) (wchar_t *p1) =
 Scanner::Scanner(Control &control_) : control(control_)
 {
     //
-    // If this assertion fails, the Token structure in stream.h must be redesigned !!!
+    // If this assertion fails, the Token structure in stream.h must be
+    // redesigned !!!
     //
     assert(NUM_TERMINALS < 128);
 
@@ -50,14 +51,15 @@ Scanner::Scanner(Control &control_) : control(control_)
     assert(Code::CodeCheck());
 
     //
-    // -------------------------------------------------------------------------------
+    // ----------------------------------------------------------------------
     // We are pulling this code out because we are tired of defending it. We
-    // tought it was obvious that either $ should not have been used for compiler
-    // generated variables or that users should not be allowed to use in variable names...
-    // -------------------------------------------------------------------------------
+    // tought it was obvious that either $ should not have been used for
+    // compiler generated variables or that users should not be allowed to
+    // use in variable names...
+    // ----------------------------------------------------------------------
     //
-    // For version 1.1 or above a $ may not be used as part of an identifier name
-    // unless the user specifically requests that it be allowed.
+    // Uncommenting this makes the use of $ a hard lexical error.  However,
+    // when this is not an error, we will issue a warning in ClassifyId below.
     //
     //    if (! control.option.dollar)
     //        Code::SetBadCode(U_DOLLAR);
@@ -607,6 +609,11 @@ int Scanner::ScanKeyword6(wchar_t *p1)
 {
     switch (*p1)
     {
+        case U_a:
+            if (p1[1] == U_s && p1[2] == U_s &&
+                p1[3] == U_e && p1[4] == U_r && p1[5] == U_t)
+                return TK_assert;
+            break;
         case U_d:
             if (p1[1] == U_o && p1[2] == U_u &&
                      p1[3] == U_b && p1[4] == U_l && p1[5] == U_e)
@@ -913,12 +920,32 @@ void Scanner::ClassifyStringLiteral()
 void Scanner::ClassifyIdOrKeyword()
 {
     wchar_t *ptr = cursor + 1;
+    bool has_dollar = false;
 
     while (Code::IsAlnum(*ptr))
+    {
+        has_dollar = has_dollar || (*ptr == U_DS);
         ptr++;
+    }
     int len = ptr - cursor;
 
     current_token -> SetKind(len < 13 ? (scan_keyword[len])(cursor) : TK_Identifier);
+
+    if (current_token -> Kind() == TK_assert &&
+        control.option.source < JikesOption::SDK1_4)
+    {
+        lex -> bad_tokens.Next().Initialize(StreamError::DEPRECATED_IDENTIFIER_ASSERT,
+                                            current_token -> Location(),
+                                            (unsigned) (current_token -> Location() + len - 1),
+                                            lex);
+        current_token -> SetKind(TK_Identifier);
+    }
+    if (has_dollar)
+        lex -> bad_tokens.Next().Initialize(StreamError::DOLLAR_IN_IDENTIFIER,
+                                            current_token -> Location(),
+                                            (unsigned) (current_token -> Location() + len - 1),
+                                            lex);
+
     if (current_token -> Kind() == TK_Identifier)
     {
         current_token -> SetSymbol(control.FindOrInsertName(cursor, len));
@@ -953,12 +980,22 @@ void Scanner::ClassifyIdOrKeyword()
 /**********************************************************************/
 void Scanner::ClassifyId()
 {
+    bool has_dollar = (*cursor == U_DS);
     wchar_t *ptr = cursor + 1;
 
     while (Code::IsAlnum(*ptr))
+    {
+        has_dollar = has_dollar || (*ptr == U_DS);
         ptr++;
+    }
 
     int len = ptr - cursor;
+
+    if (has_dollar)
+        lex -> bad_tokens.Next().Initialize(StreamError::DOLLAR_IN_IDENTIFIER,
+                                            current_token -> Location(),
+                                            (unsigned) (current_token -> Location() + len - 1),
+                                            lex);
 
     current_token -> SetKind(TK_Identifier);
     current_token -> SetSymbol(control.FindOrInsertName(cursor, len));

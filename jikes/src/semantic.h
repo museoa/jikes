@@ -555,6 +555,7 @@ public:
         ProcessExprOrStmt[Ast::RETURN]                     = &Semantic::ProcessReturnStatement;
         ProcessExprOrStmt[Ast::THROW]                      = &Semantic::ProcessThrowStatement;
         ProcessExprOrStmt[Ast::TRY]                        = &Semantic::ProcessTryStatement;
+        ProcessExprOrStmt[Ast::ASSERT]                     = &Semantic::ProcessAssertStatement;
         ProcessExprOrStmt[Ast::EMPTY_STATEMENT]            = &Semantic::ProcessEmptyStatement;
         ProcessExprOrStmt[Ast::CLASS]                      = &Semantic::ProcessClassDeclaration;
 
@@ -598,6 +599,7 @@ public:
         DefiniteStmt[Ast::RETURN]                     = &Semantic::DefiniteReturnStatement;
         DefiniteStmt[Ast::THROW]                      = &Semantic::DefiniteThrowStatement;
         DefiniteStmt[Ast::TRY]                        = &Semantic::DefiniteTryStatement;
+        DefiniteStmt[Ast::ASSERT]                     = &Semantic::DefiniteAssertStatement;
         DefiniteStmt[Ast::EMPTY_STATEMENT]            = &Semantic::DefiniteEmptyStatement;
         DefiniteStmt[Ast::CLASS]                      = &Semantic::DefiniteClassDeclaration;
 
@@ -725,6 +727,8 @@ public:
                 lex_stream -> PrintMessages();
                 return_code = 1;
             }
+            else if (lex_stream -> NumWarnTokens() > 0)
+                lex_stream -> PrintMessages();
 
             if ((! compilation_unit) || compilation_unit -> BadCompilationUnitCast())
             {
@@ -887,6 +891,7 @@ private:
     bool NeedsInitializationMethod(AstFieldDeclaration *);
     void ProcessStaticInitializers(AstClassBody *);
     void ProcessBlockInitializers(AstClassBody *);
+    MethodSymbol *GetStaticInitializerMethod();
 
     bool CanWideningPrimitiveConvert(TypeSymbol *, TypeSymbol *);
     bool CanNarrowingPrimitiveConvert(TypeSymbol *, TypeSymbol *);
@@ -921,6 +926,7 @@ private:
     void DefiniteReturnStatement(Ast *);
     void DefiniteThrowStatement(Ast *);
     void DefiniteTryStatement(Ast *);
+    void DefiniteAssertStatement(Ast *);
     void DefiniteEmptyStatement(Ast *);
     void DefiniteClassDeclaration(Ast *);
 
@@ -1067,6 +1073,7 @@ private:
     void ProcessBreakStatement(Ast *);
     void ProcessContinueStatement(Ast *);
     void ProcessReturnStatement(Ast *);
+    void ProcessAssertStatement(Ast *);
     void ProcessEmptyStatement(Ast *);
     TypeSymbol *GetLocalType(AstClassDeclaration *);
     void ProcessClassDeclaration(Ast *);

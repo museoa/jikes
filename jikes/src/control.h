@@ -37,7 +37,6 @@ public:
                 external_table;
 
     PackageSymbol *system_package,
-                  *java_util_package,
                   *unnamed_package;
     int dot_classpath_index;
     Tuple<PathSymbol *> classpath;
@@ -93,7 +92,10 @@ public:
                *toString_name_symbol,
                *append_name_symbol,
                *forName_name_symbol,
-               *getMessage_name_symbol;
+               *getMessage_name_symbol,
+               *desiredAssertionStatus_name_symbol,
+               *getClass_name_symbol,
+               *getComponentType_name_symbol;
 
     //
     //
@@ -125,9 +127,23 @@ public:
         return Serializable_type;
     }
 
+    void InitObjectInfo();
     inline TypeSymbol *Object()
     {
-        return (Object_type ? Object_type : Object_type = GetType(system_package, StringConstant::US_Object));
+        if (! Object_type)
+        {
+            Object_type = GetType(system_package, StringConstant::US_Object);
+            InitObjectInfo();
+        }
+
+        return Object_type;
+    }
+
+    MethodSymbol *Object_getClassMethod()
+    {
+        if (! Object_getClass_method)
+            (void) Object();
+        return Object_getClass_method;
     }
 
     inline TypeSymbol *Cloneable()
@@ -185,6 +201,80 @@ public:
         return (Double_type ? Double_type : Double_type = GetType(system_package, StringConstant::US_Double));
     }
 
+    inline TypeSymbol *Comparable()
+    {
+        return (Comparable_type ? Comparable_type : Comparable_type = GetType(system_package, StringConstant::US_Comparable));
+    }
+
+    void InitAssertionErrorInfo();
+    inline TypeSymbol *AssertionError()
+    {
+        if (! AssertionError_type)
+        {
+            AssertionError_type = GetType(system_package,
+                                          StringConstant::US_AssertionError);
+            InitAssertionErrorInfo();
+        }
+
+        return AssertionError_type;
+    }
+
+    MethodSymbol *AssertionError_InitMethod()
+    {
+        if (! AssertionError_Init_method)
+            (void) AssertionError();
+        return AssertionError_Init_method;
+    }
+
+    MethodSymbol *AssertionError_InitWithCharMethod()
+    {
+        if (! AssertionError_InitWithChar_method)
+            (void) AssertionError();
+        return AssertionError_InitWithChar_method;
+    }
+
+    MethodSymbol *AssertionError_InitWithBooleanMethod()
+    {
+        if (! AssertionError_InitWithBoolean_method)
+            (void) AssertionError();
+        return AssertionError_InitWithBoolean_method;
+    }
+
+    MethodSymbol *AssertionError_InitWithIntMethod()
+    {
+        if (! AssertionError_InitWithInt_method)
+            (void) AssertionError();
+        return AssertionError_InitWithInt_method;
+    }
+
+    MethodSymbol *AssertionError_InitWithLongMethod()
+    {
+        if (! AssertionError_InitWithLong_method)
+            (void) AssertionError();
+        return AssertionError_InitWithLong_method;
+    }
+
+    MethodSymbol *AssertionError_InitWithFloatMethod()
+    {
+        if (! AssertionError_InitWithFloat_method)
+            (void) AssertionError();
+        return AssertionError_InitWithFloat_method;
+    }
+
+    MethodSymbol *AssertionError_InitWithDoubleMethod()
+    {
+        if (! AssertionError_InitWithDouble_method)
+            (void) AssertionError();
+        return AssertionError_InitWithDouble_method;
+    }
+
+    MethodSymbol *AssertionError_InitWithObjectMethod()
+    {
+        if (! AssertionError_InitWithObject_method)
+            (void) AssertionError();
+        return AssertionError_InitWithObject_method;
+    }
+
     void InitClassInfo();
     inline TypeSymbol *Class()
     {
@@ -202,6 +292,20 @@ public:
         if (! Class_forName_method)
             (void) Class();
         return Class_forName_method;
+    }
+
+    MethodSymbol *Class_getComponentTypeMethod()
+    {
+        if (! Class_getComponentType_method)
+            (void) Class();
+        return Class_getComponentType_method;
+    }
+
+    MethodSymbol *Class_desiredAssertionStatusMethod()
+    {
+        if (! Class_desiredAssertionStatus_method)
+            (void) Class();
+        return Class_desiredAssertionStatus_method;
     }
 
 
@@ -304,14 +408,6 @@ public:
         if (! StringBuffer_InitWithString_method)
             (void) StringBuffer();
         return StringBuffer_toString_method;
-    }
-
-
-    MethodSymbol *StringBuffer_append_char_arrayMethod()
-    {
-        if (! StringBuffer_InitWithString_method)
-            (void) StringBuffer();
-        return StringBuffer_append_char_array_method;
     }
 
 
@@ -546,6 +642,8 @@ private:
                *Long_type,
                *Float_type,
                *Double_type,
+               *Comparable_type,
+               *AssertionError_type,
                *Class_type,
                *Throwable_type,
                *Exception_type,
@@ -555,7 +653,20 @@ private:
                *NoClassDefFoundError_type,
                *StringBuffer_type;
 
-    MethodSymbol *Class_forName_method,
+    MethodSymbol *Object_getClass_method,
+
+                 *Class_forName_method,
+                 *Class_getComponentType_method,
+                 *Class_desiredAssertionStatus_method,
+
+                 *AssertionError_Init_method,
+                 *AssertionError_InitWithChar_method,
+                 *AssertionError_InitWithBoolean_method,
+                 *AssertionError_InitWithInt_method,
+                 *AssertionError_InitWithLong_method,
+                 *AssertionError_InitWithFloat_method,
+                 *AssertionError_InitWithDouble_method,
+                 *AssertionError_InitWithObject_method,
 
                  *Throwable_getMessage_method,
 
@@ -564,7 +675,6 @@ private:
                  *StringBuffer_Init_method,
                  *StringBuffer_InitWithString_method,
                  *StringBuffer_toString_method,
-                 *StringBuffer_append_char_array_method,
                  *StringBuffer_append_char_method,
                  *StringBuffer_append_boolean_method,
                  *StringBuffer_append_int_method,

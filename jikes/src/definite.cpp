@@ -1548,6 +1548,92 @@ void Semantic::DefiniteTryStatement(Ast *stmt)
 }
 
 
+void Semantic::DefiniteAssertStatement(Ast *stmt)
+{
+    AstAssertStatement *assert_statement = (AstAssertStatement *) stmt;
+
+    //
+    // Remember what variables were assigned beforehand.
+    //
+    DefinitePair *before_assert = new DefinitePair(*definitely_assigned_variables);
+
+    DefiniteAssignmentSet *after_condition = DefiniteBooleanExpression(assert_statement -> condition, *definitely_assigned_variables);
+
+    if (after_condition)
+    {
+        //
+        // The second expression is evaluated only when the first is false
+        // Don't modify da, but update du, since asserts might be on or off
+        //
+        *definitely_assigned_variables = after_condition -> false_pair;
+        before_assert -> du_set = after_condition -> DUSet();
+    }
+    else
+        before_assert -> du_set = definitely_assigned_variables -> du_set;
+
+    if (assert_statement -> message_opt)
+        DefiniteExpression(assert_statement -> message_opt, *definitely_assigned_variables);
+
+    //
+    // Update the set of variables that are possibly assigned at the time
+    // an assert completes abruptly, which affects any definite assignment
+    // of catch and finally clauses of enclosing try statements. The assert
+    // can only complete abruptly if the condition is not constant true.
+    //
+    if (! IsConstantTrue(assert_statement -> condition))
+    {
+        for (int i = definite_try_stack -> Size() - 1; i >= 0; i--)
+        {
+            AstTryStatement *try_statement = definite_try_stack -> TryStatement(i);
+            //
+            // Is the assert statement enclosed in a try block or catch block
+            // that contains a finally clause? Note that a try statement is
+            // removed from the definite_try_stack before its finally clause
+            // is processed; thus, an assert statement that is enclosed in a
+            // finally clause will appear in any enclosing try statement...
+            //
+            if (try_statement -> block == definite_try_stack -> Block(i)) // In the main try block?
+            {
+                int k;
+                for (k = definite_block_stack -> Size() - 1;
+                     definite_block_stack -> Block(k) != definite_try_stack -> Block(i);
+                     k--)
+                    ;
+
+                assert(k >= 0);
+
+                definite_block_stack -> ThrowPair(k) *= *definitely_assigned_variables;
+                break;
+            }
+            else if (try_statement -> finally_clause_opt)
+            {
+                int k;
+                for (k = definite_block_stack -> Size() - 1;
+                     definite_block_stack -> Block(k) != definite_try_stack -> Block(i);
+                     k--)
+                    ;
+
+                assert(k >= 0);
+
+                definite_block_stack -> ThrowPair(k) *= *definitely_assigned_variables;
+                break;
+            }
+        }
+     }
+ 
+    //
+    // Restore definitely assigned variables to what they were before,
+    // since asserts may be disabled
+    //
+    *definitely_assigned_variables = *before_assert;
+
+    // harmless if NULL
+    delete before_assert;
+    delete after_condition;
+    return;
+}
+
+
 void Semantic::DefiniteEmptyStatement(Ast *stmt)
 {
     return;

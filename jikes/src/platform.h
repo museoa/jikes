@@ -557,12 +557,14 @@ public:
                    US_XOR[], // "^"
                    US_XOR_EQUAL[], // "^="
 
+                   US_AssertionError[], // "AssertionError"
                    US_Boolean[], // "Boolean"
                    US_Byte[], // "Byte"
                    US_Character[], // "Character"
                    US_Class[], // "Class"
                    US_ClassNotFoundException[], // "ClassNotFoundException"
                    US_Cloneable[], // "Cloneable"
+                   US_Comparable[], // "Comparable"
                    US_Double[], // "Double"
                    US_Error[], // "Error"
                    US_Exception[], // "Exception"
@@ -594,6 +596,7 @@ public:
                    US__zip[], // "zip"
                    US__jar[], // "jar"
 
+                   US__DOLLAR_noassert[], // "$noassert"
                    US__array[], // "array"
                    US__access_DOLLAR[], // "access$"
                    US__class_DOLLAR[], // "class$"
@@ -603,6 +606,7 @@ public:
 
                    US_abstract[], // "abstract"
                    US_append[], // "append"
+                   US_assert[], // "assert"
                    US_block_DOLLAR[], // "block$"
                    US_boolean[], // "boolean"
                    US_break[], // "break"
@@ -615,6 +619,7 @@ public:
                    US_const[], // "const"
                    US_continue[], // "continue"
                    US_default[], // "default"
+                   US_desiredAssertionStatus[], // "desiredAssertionStatus"
                    US_do[], // "do"
                    US_double[], // "double"
                    US_else[], // "else"
@@ -625,6 +630,8 @@ public:
                    US_float[], // "float"
                    US_for[], // "for"
                    US_forName[], // "forName"
+                   US_getClass[], // "getClass"
+                   US_getComponentType[], // "getComponentType"
                    US_getMessage[], // "getMessage"
                    US_goto[], // "goto"
                    US_if[], // "if"
@@ -694,10 +701,19 @@ public:
                 U8S_I[], // "I"
                 U8S_InnerClasses[], // "InnerClasses"
                 U8S_J[],  // "J"
+                U8S_LP_C_RP_V[], // "(C)V"
+                U8S_LP_D_RP_V[], // "(D)V"
+                U8S_LP_F_RP_V[], // "(F)V"
+                U8S_LP_I_RP_V[], // "(I)V"
+                U8S_LP_J_RP_V[], // "(J)V"
+                U8S_LP_Ljava_SL_lang_SL_Object_SC_RP_V[], // "(Ljava/lang/Object;)V"
                 U8S_LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_Class_SC[], // "(Ljava/lang/String;)Ljava/lang/Class;"
                 U8S_LP_Ljava_SL_lang_SL_String_SC_RP_V[], // "(Ljava/lang/String;)V"
+                U8S_LP_RP_Ljava_SL_lang_SL_Class_SC[], // "()Ljava/lang/Class;"
                 U8S_LP_RP_Ljava_SL_lang_SL_String_SC[], // "()Ljava/lang/String;"
                 U8S_LP_RP_V[], // "()V"
+                U8S_LP_RP_Z[], // "()Z"
+                U8S_LP_Z_RP_V[], // "(Z)V"
                 U8S_LineNumberTable[], // "LineNumberTable"
                 U8S_LocalVariableTable[], // "LocalVariableTable"
                 U8S_S[], // "S"
@@ -729,7 +745,6 @@ public:
                 U8S_quit[], // "quit"
                 U8S_this[], // "this"
 
-                U8S_LP_LB_C_RP_Ljava_SL_lang_SL_StringBuffer_SC[], // "([C)Ljava/lang/StringBuffer;"
                 U8S_LP_C_RP_Ljava_SL_lang_SL_StringBuffer_SC[], // "(C)Ljava/lang/StringBuffer;"
                 U8S_LP_Z_RP_Ljava_SL_lang_SL_StringBuffer_SC[], // "(Z)Ljava/lang/StringBuffer;"
                 U8S_LP_I_RP_Ljava_SL_lang_SL_StringBuffer_SC[], // "(I)Ljava/lang/StringBuffer;"
@@ -1125,10 +1140,15 @@ class ErrorString: public ConvertibleArray<wchar_t>
     ErrorString(); 
     
     ErrorString &operator<<(const wchar_t *s);
-    ErrorString &operator<<(const wchar_t c );
-    ErrorString &operator<<(const char    *s);
-    ErrorString &operator<<(const char    c );
+    ErrorString &operator<<(const wchar_t c);
+    ErrorString &operator<<(const char *s);
+    ErrorString &operator<<(const char c);
     ErrorString &operator<<(int n);
+    ErrorString &operator<<(ostream &(*f)(ostream&))
+    {
+        assert(f == endl);
+        return *this << '\n';
+    }
 
     void width(int w);
     void fill(const char c);
@@ -1138,8 +1158,8 @@ class ErrorString: public ConvertibleArray<wchar_t>
  private:
 
     void do_fill(int n);
-    char fill_char   ;
-    int  field_width ;
+    char fill_char;
+    int  field_width;
 };
 
 #ifdef HAVE_JIKES_NAMESPACE

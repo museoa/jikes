@@ -1428,6 +1428,44 @@ void Semantic::ProcessTryStatement(Ast *stmt)
 }
 
 
+void Semantic::ProcessAssertStatement(Ast *stmt)
+{
+    AstAssertStatement *assert_statement = (AstAssertStatement *) stmt;
+
+    ProcessExpression(assert_statement -> condition);
+
+    if (assert_statement -> condition -> Type() != control.no_type &&
+        assert_statement -> condition -> Type() != control.boolean_type)
+    {
+        ReportSemError(SemanticError::TYPE_NOT_BOOLEAN,
+                       assert_statement -> condition -> LeftToken(),
+                       assert_statement -> condition -> RightToken(),
+                       assert_statement -> condition -> Type() -> Name());
+    }
+    //
+    // If the condition is not constant true, store a reference to this class's
+    // assert variable (creating it if necessary as a side-effect)
+    //
+    else if (! IsConstantTrue(assert_statement -> condition))
+        assert_statement -> assert_variable = ThisType() -> FindOrInsertAssertVariable();
+
+    if (assert_statement -> message_opt)
+    {
+        ProcessExpression(assert_statement -> message_opt);
+        if (assert_statement -> message_opt -> Type() == control.void_type)
+            ReportSemError(SemanticError::TYPE_IS_VOID,
+                           assert_statement -> message_opt -> LeftToken(),
+                           assert_statement -> message_opt -> RightToken(),
+                           assert_statement -> message_opt -> Type() -> Name());
+    }
+
+    //
+    // Asserts can complete normally iff reachable.
+    //
+    assert_statement -> can_complete_normally = assert_statement -> is_reachable;
+}
+
+
 void Semantic::ProcessEmptyStatement(Ast *stmt)
 {
     AstEmptyStatement *empty_statement = (AstEmptyStatement *) stmt;

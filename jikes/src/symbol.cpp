@@ -564,6 +564,7 @@ TypeSymbol::TypeSymbol(NameSymbol *name_symbol_) : semantic_environment(NULL),
                                                    class_literal_class(NULL),
                                                    class_literal_method(NULL),
                                                    class_literal_name(NULL),
+                                                   assert_variable(NULL),
                                                    local_constructor_call_environments(NULL),
                                                    private_access_methods(NULL),
                                                    private_access_constructors(NULL),
@@ -1496,6 +1497,44 @@ VariableSymbol *TypeSymbol::FindOrInsertClassLiteral(TypeSymbol *type)
     }
 
     return variable_symbol;
+}
+
+
+VariableSymbol *TypeSymbol::FindOrInsertAssertVariable()
+{
+    if (! assert_variable)
+    {
+        assert(! (Primitive() || ACC_INTERFACE() || IsArray()));
+
+        Semantic *sem = semantic_environment -> sem;
+        Control &control = sem -> control;
+
+        NameSymbol *name_symbol = NULL;
+        int length = wcslen(StringConstant::US__DOLLAR_noassert);
+        wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
+        wcscpy(name, StringConstant::US__DOLLAR_noassert);
+        name_symbol = control.FindOrInsertName(name, length);
+        delete [] name;
+
+        assert_variable = InsertVariableSymbol(name_symbol);
+        assert_variable -> MarkSynthetic();
+        assert_variable -> SetType(control.boolean_type);
+        assert_variable -> SetACC_PRIVATE();
+        assert_variable -> SetACC_STATIC();
+        assert_variable -> SetACC_FINAL();
+        assert_variable -> SetOwner((TypeSymbol *) this);
+        assert_variable -> MarkComplete();
+        assert_variable -> MarkDefinitelyAssigned();
+
+        //
+        // We'll create the field initializer later in bytecode.cpp, but we
+        // create the static initializer that will contain the field
+        // initializer now, if it was not already created.
+        //
+        sem -> GetStaticInitializerMethod();
+    }
+
+    return assert_variable;
 }
 
 

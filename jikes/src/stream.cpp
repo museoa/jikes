@@ -21,16 +21,18 @@ namespace Jikes { // Open namespace Jikes block
 
 // Class StreamError
 
-JikesError::JikesErrorSeverity StreamError::getSeverity        () 
+JikesError::JikesErrorSeverity StreamError::getSeverity() 
 { 
-    //All Lexical errors are ERRORs.
-    return JikesError::JIKES_ERROR; 
+    // Most Lexical errors are ERRORs.
+    return kind >= StreamError::DEPRECATED_IDENTIFIER_ASSERT
+        ? JikesError::JIKES_WARNING
+        : JikesError::JIKES_ERROR; 
 }
 
-int StreamError::getLeftLineNo      () { return left_line_no    ; }
-int StreamError::getLeftColumnNo    () { return left_column_no  ; }
-int StreamError::getRightLineNo     () { return right_line_no   ; }
-int StreamError::getRightColumnNo   () { return right_column_no ; }
+int StreamError::getLeftLineNo() { return left_line_no; }
+int StreamError::getLeftColumnNo() { return left_column_no; }
+int StreamError::getRightLineNo() { return right_line_no; }
+int StreamError::getRightColumnNo() { return right_column_no; }
 
 const char *StreamError::getFileName() 
 { 
@@ -43,32 +45,31 @@ const wchar_t *StreamError::getErrorMessage()
     switch (kind)
     {
     case StreamError::BAD_TOKEN:
-        return L"Illegal token";
-        break;
+        return L"Illegal token.";
     case StreamError::BAD_OCTAL_CONSTANT:
-        return L"Octal constant contains invalid digit";
-        break;
+        return L"Octal constant contains invalid digit.";
     case StreamError::EMPTY_CHARACTER_CONSTANT:
-        return L"Empty character constant";
-        break;
+        return L"Empty character constant.";
     case StreamError::UNTERMINATED_CHARACTER_CONSTANT:
-        return L"Character constant not properly terminated";
-        break;
+        return L"Character constant not properly terminated.";
     case StreamError::UNTERMINATED_COMMENT:
-        return L"Comment not properly terminated";
-        break;
+        return L"Comment not properly terminated.";
     case StreamError::UNTERMINATED_STRING_CONSTANT:
-        return L"String constant not properly terminated";
-        break;
+        return L"String constant not properly terminated.";
     case StreamError::INVALID_HEX_CONSTANT:
-        return L"The prefix 0x must be followed by at least one hex digit";
-        break;
+        return L"The prefix 0x must be followed by at least one hex digit.";
     case StreamError::INVALID_FLOATING_CONSTANT_EXPONENT:
-        return L"floating-constant exponent has no digit";
-        break;
+        return L"floating-constant exponent has no digit.";
     case StreamError::INVALID_UNICODE_ESCAPE:
-        return L"Invalid unicode escape character";
-        break;
+        return L"Invalid unicode escape character.";
+    case StreamError::DEPRECATED_IDENTIFIER_ASSERT:
+        return L"The use of \"assert\" as an identifier is deprecated, as it "
+            L"is now a keyword.";
+    case StreamError::DOLLAR_IN_IDENTIFIER:
+        return L"The use of \"$\" in an identifier, while legal, is strongly "
+            L"discouraged, since it can conflict with compiler-generated "
+            L"names. If you are trying to access a nested type, use \".\" "
+            L"instead of \"$\".";
     default:
         assert(false);
     }
@@ -124,7 +125,7 @@ wchar_t *StreamError::regularErrorString()
     else 
         PrintLargeSource(s);
     
-    s << "\n*** Lexical Error: "
+    s << "\n*** Lexical " << getSeverityString() << ": "
       << getErrorMessage();
         
     return s.Array();
@@ -460,9 +461,10 @@ wchar_t *LexStream::KeywordName(int kind)
     switch (kind)
     {
         case TK_abstract:     return StringConstant::US_abstract; break;
-        case TK_boolean:      return StringConstant::US_boolean;  break;
-        case TK_break:        return StringConstant::US_break;    break;
-        case TK_byte:         return StringConstant::US_byte;     break;
+        case TK_assert:       return StringConstant::US_assert; break;
+        case TK_boolean:      return StringConstant::US_boolean; break;
+        case TK_break:        return StringConstant::US_break; break;
+        case TK_byte:         return StringConstant::US_byte; break;
         case TK_case:         return StringConstant::US_case; break;
         case TK_catch:        return StringConstant::US_catch; break;
         case TK_char:         return StringConstant::US_char; break;
@@ -1287,10 +1289,24 @@ void LexStream::PrintMessages()
         {
             char *file_name = FileName();
 
-            Coutput << "\nFound " << NumBadTokens() << " lexical error" << (NumBadTokens() == 1 ? "" : "s")
-                    << " in \""
-                    << file_name
-                    << "\":";
+            int error_count = NumBadTokens(),
+                warning_count = NumWarnTokens();
+            if (error_count)
+            {
+                Coutput << endl << "Found " << error_count << " lexical error"
+                        << (error_count == 1 ? "" : "s");
+            }
+            if (warning_count && (! control.option.nowarn))
+            {
+                if (error_count)
+                    Coutput << "and issued ";
+                else
+                    Coutput << endl << "Issued ";
+                Coutput << warning_count << " lexical warning"
+                        << (warning_count == 1 ? "" : "s");
+            }
+            if (error_count || (warning_count && (! control.option.nowarn)))
+                Coutput << " in \"" << file_name << "\":";
 
             if (! input_buffer)
             {

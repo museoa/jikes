@@ -35,92 +35,92 @@ void AstCompilationUnit::Unparse(LexStream* lex_stream, const char* directory)
         abort();
     }
     Ostream os(&os_base);
-    this -> Unparse(os, lex_stream);
+    Unparse(os, lex_stream);
     delete[] out_file_name;
 }
 
 void Ast::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (debug_unparse)
-        os << "/*Ast:#" << this-> id << "*/";
+        os << "/*Ast:#" << id << "*/";
     os << "***** TO DO *****";
-    os << "#" << this -> id << " (Ast):  "
+    os << "#" << id << " (Ast):  "
        << "Node kind " << (int) kind << " does not contain an unparse routine"
        << endl;
     if (debug_unparse)
-        os << "/*:Ast#" << this-> id << "*/";
+        os << "/*:Ast#" << id << "*/";
 }
 
 void AstBlock::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstBlock:#" << this-> id << "*/";
+        os << "/*AstBlock:#" << id << "*/";
     if (Ast::debug_unparse)
         os << "/*no_braces:" << (int) no_braces << "*/";
     if (! no_braces)
         os << "{" << endl;
     // Open brace, if any, must precede labels (e.g., to avoid separating
     // labels from following for statement).
-    for (int il = 0; il < this -> NumLabels(); il++)
+    for (int il = 0; il < NumLabels(); il++)
     {
-        os << lex_stream -> NameString(this -> Label(il)) << ": ";
+        os << lex_stream -> NameString(Label(il)) << ": ";
     }
 
-    for (int is = 0; is < this -> NumStatements(); is++)
+    for (int is = 0; is < NumStatements(); is++)
     {
-        this -> Statement(is) -> Unparse(os, lex_stream);
+        Statement(is) -> Unparse(os, lex_stream);
     }
     if (!no_braces)
         os << "}" << endl;
     if (Ast::debug_unparse)
-        os << "/*:AstBlock#" << this-> id << "*/";
+        os << "/*:AstBlock#" << id << "*/";
 }
 
 void AstPrimitiveType::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstPrimitiveType:#" << this-> id << "*/";
+        os << "/*AstPrimitiveType:#" << id << "*/";
     os << lex_stream -> NameString(primitive_kind_token);
     if (Ast::debug_unparse)
-        os << "/*:AstPrimitiveType#" << this-> id << "*/";
+        os << "/*:AstPrimitiveType#" << id << "*/";
 }
 
 void AstArrayType::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstArrayType:#" << this-> id << "*/";
+        os << "/*AstArrayType:#" << id << "*/";
     type -> Unparse(os, lex_stream);
-    for (int i = 0; i < this -> NumBrackets(); i++)
+    for (int i = 0; i < NumBrackets(); i++)
         os << "[]";
     if (Ast::debug_unparse)
-        os << "/*:AstArrayType#" << this-> id << "*/";
+        os << "/*:AstArrayType#" << id << "*/";
 }
 
 void AstSimpleName::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstSimpleName:#" << this-> id << "*/";
+        os << "/*AstSimpleName:#" << id << "*/";
     os << lex_stream -> NameString(identifier_token);
     if (Ast::debug_unparse)
-        os << "/*:AstSimpleName#" << this-> id << "*/";
+        os << "/*:AstSimpleName#" << id << "*/";
 }
 
 void AstPackageDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstPackageDeclaration:#" << this-> id << "*/";
+        os << "/*AstPackageDeclaration:#" << id << "*/";
     os << lex_stream -> NameString(package_token);
     os << " ";
     name -> Unparse(os, lex_stream);
     os << ";" << endl;
     if (Ast::debug_unparse)
-        os << "/*:AstPackageDeclaration#" << this-> id << "*/";
+        os << "/*:AstPackageDeclaration#" << id << "*/";
 }
 
 void AstImportDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstImportDeclaration:#" << this-> id << "*/";
+        os << "/*AstImportDeclaration:#" << id << "*/";
     os << lex_stream -> NameString(import_token);
     os << " ";
     name -> Unparse(os, lex_stream);
@@ -129,64 +129,64 @@ void AstImportDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
         os << lex_stream -> NameString(star_token_opt);
     os << ";" << endl;
     if (Ast::debug_unparse)
-        os << "/*:AstImportDeclaration#" << this-> id << "*/";
+        os << "/*:AstImportDeclaration#" << id << "*/";
 }
 
 void AstCompilationUnit::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstCompilationUnit:#" << this-> id << "*/";
+        os << "/*AstCompilationUnit:#" << id << "*/";
     // The file is
     // os << lex_stream -> FileName();
     if (package_declaration_opt)
         package_declaration_opt -> Unparse(os, lex_stream);
-    for (int m = 0; m < this -> NumImportDeclarations(); m++)
-        this -> ImportDeclaration(m) -> Unparse(os, lex_stream);
-    for (int n = 0; n < this -> NumTypeDeclarations(); n++)
-        this -> TypeDeclaration(n) -> Unparse(os, lex_stream);
+    for (int m = 0; m < NumImportDeclarations(); m++)
+        ImportDeclaration(m) -> Unparse(os, lex_stream);
+    for (int n = 0; n < NumTypeDeclarations(); n++)
+        TypeDeclaration(n) -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
-        os << "/*:AstCompilationUnit#" << this-> id << "*/";
+        os << "/*:AstCompilationUnit#" << id << "*/";
 }
 
 void AstModifier::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstModifier:#" << this-> id << "*/";
+        os << "/*AstModifier:#" << id << "*/";
     os << lex_stream -> NameString(modifier_kind_token);
     os << " ";
     if (Ast::debug_unparse)
-       os << "/*:AstModifier#" << this-> id << "*/";
+       os << "/*:AstModifier#" << id << "*/";
 }
 
 void AstEmptyDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-       os << "/*AstEmptyDeclaration:#" << this-> id << "*/";
+       os << "/*AstEmptyDeclaration:#" << id << "*/";
     os << lex_stream -> NameString(semicolon_token);
     os << endl;
     if (Ast::debug_unparse)
-    os << "/*:AstEmptyDeclaration#" << this-> id << "*/";
+    os << "/*:AstEmptyDeclaration#" << id << "*/";
 }
 
 void AstClassBody::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstClassBody:#" << this-> id << "*/";
+        os << "/*AstClassBody:#" << id << "*/";
     os << "{" << endl;
-    for (int k = 0; k < this -> NumClassBodyDeclarations(); k++)
-        this -> ClassBodyDeclaration(k) -> Unparse(os, lex_stream);
+    for (int k = 0; k < NumClassBodyDeclarations(); k++)
+        ClassBodyDeclaration(k) -> Unparse(os, lex_stream);
     os << "}" << endl << endl;
     if (Ast::debug_unparse)
-        os << "/*:AstClassBody#" << this-> id << "*/";
+        os << "/*:AstClassBody#" << id << "*/";
 }
 
 void AstClassDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstClassDeclaration:#" << this-> id << "*/";
-    for (int i = 0; i < this -> NumClassModifiers(); i++)
+        os << "/*AstClassDeclaration:#" << id << "*/";
+    for (int i = 0; i < NumClassModifiers(); i++)
     {
-        os << lex_stream -> NameString(this -> ClassModifier(i) -> modifier_kind_token);
+        os << lex_stream -> NameString(ClassModifier(i) -> modifier_kind_token);
         os << " ";
     }
     os << lex_stream -> NameString(class_token);
@@ -206,56 +206,56 @@ void AstClassDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
         {
             if (j>0)
                 os << ", ";
-            this -> Interface(j) -> Unparse(os, lex_stream);
+            Interface(j) -> Unparse(os, lex_stream);
         }
         os << " ";
     }
     // os << ") #" << class_body -> id << endl;
     class_body -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
-        os << "/*:AstClassDeclaration#" << this-> id << "*/";
+        os << "/*:AstClassDeclaration#" << id << "*/";
 }
 
 void AstArrayInitializer::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstArrayInitializer:#" << this-> id << "*/";
+        os << "/*AstArrayInitializer:#" << id << "*/";
     os << endl << "{ ";
     for (int k = 0; k < NumVariableInitializers(); k++)
     {
         if (k>0)
             os << ", ";
-        this -> VariableInitializer(k) -> Unparse(os, lex_stream);
+        VariableInitializer(k) -> Unparse(os, lex_stream);
     }
     os << " }";
     if (Ast::debug_unparse)
-        os << "/*:AstArrayInitializer#" << this-> id << "*/";
+        os << "/*:AstArrayInitializer#" << id << "*/";
 }
 
 void AstBrackets::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstBrackets:#" << this-> id << "*/";
+        os << "/*AstBrackets:#" << id << "*/";
     os << "[]";
     if (Ast::debug_unparse)
-        os << "/*:AstBrackets#" << this-> id << "*/";
+        os << "/*:AstBrackets#" << id << "*/";
 }
 
 void AstVariableDeclaratorId::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstVariableDeclaratorId:#" << this-> id << "*/";
+        os << "/*AstVariableDeclaratorId:#" << id << "*/";
     os << lex_stream -> NameString(identifier_token);
     for (int i = 0; i < NumBrackets(); i++)
         os << "[]";
     if (Ast::debug_unparse)
-        os << "/*:AstVariableDeclaratorId#" << this-> id << "*/";
+        os << "/*:AstVariableDeclaratorId#" << id << "*/";
 }
 
 void AstVariableDeclarator::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstVariableDeclarator:#" << this-> id << "*/";
+        os << "/*AstVariableDeclarator:#" << id << "*/";
     variable_declarator_name -> Unparse(os, lex_stream);
     if (variable_initializer_opt)
     {
@@ -263,73 +263,73 @@ void AstVariableDeclarator::Unparse(Ostream& os, LexStream* lex_stream)
         variable_initializer_opt -> Unparse(os, lex_stream);
     }
     if (Ast::debug_unparse)
-        os << "/*:AstVariableDeclarator#" << this-> id << "*/";
+        os << "/*:AstVariableDeclarator#" << id << "*/";
 }
 
 void AstFieldDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstFieldDeclaration:#" << this-> id << "*/";
-    for (int i = 0; i < this -> NumVariableModifiers(); i++)
+        os << "/*AstFieldDeclaration:#" << id << "*/";
+    for (int i = 0; i < NumVariableModifiers(); i++)
     {
-        os << lex_stream -> NameString(this -> VariableModifier(i) -> modifier_kind_token);
+        os << lex_stream -> NameString(VariableModifier(i) -> modifier_kind_token);
         os << " ";
     }
     type -> Unparse(os, lex_stream);
     os << " ";
-    for (int k = 0; k < this -> NumVariableDeclarators(); k++)
+    for (int k = 0; k < NumVariableDeclarators(); k++)
     {
         if (k>0)
             os << " ,";
-        this -> VariableDeclarator(k) -> Unparse(os, lex_stream);
+        VariableDeclarator(k) -> Unparse(os, lex_stream);
     }
     os << ";" << endl;
     if (Ast::debug_unparse)
-        os << "/*:AstFieldDeclaration#" << this-> id << "*/";
+        os << "/*:AstFieldDeclaration#" << id << "*/";
 }
 
 void AstFormalParameter::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstFormalParameter:#" << this-> id << "*/";
-    for (int i = 0; i < this -> NumParameterModifiers(); i++)
+        os << "/*AstFormalParameter:#" << id << "*/";
+    for (int i = 0; i < NumParameterModifiers(); i++)
     {
-        os << lex_stream -> NameString(this -> ParameterModifier(i) -> modifier_kind_token);
+        os << lex_stream -> NameString(ParameterModifier(i) -> modifier_kind_token);
         os << " ";
     }
     type -> Unparse(os, lex_stream);
     os << " ";
     formal_declarator -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
-        os << "/*:AstFormalParameter#" << this-> id << "*/";
+        os << "/*:AstFormalParameter#" << id << "*/";
 }
 
 void AstMethodDeclarator::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstMethodDeclarator:#" << this-> id << "*/";
+        os << "/*AstMethodDeclarator:#" << id << "*/";
     os << lex_stream -> NameString(identifier_token);
     os << " (";
-    for (int k = 0; k < this -> NumFormalParameters(); k++)
+    for (int k = 0; k < NumFormalParameters(); k++)
     {
         if (k>0)
             os << ", ";
-        this -> FormalParameter(k) -> Unparse(os, lex_stream);
+        FormalParameter(k) -> Unparse(os, lex_stream);
     }
     os << ") ";
     for (int i = 0; i < NumBrackets(); i++)
         os << "[]";
     if (Ast::debug_unparse)
-        os << "/*:AstMethodDeclarator#" << this-> id << "*/";
+        os << "/*:AstMethodDeclarator#" << id << "*/";
 }
 
 void AstMethodDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstMethodDeclaration:#" << this-> id << "*/";
-    for (int i = 0; i < this -> NumMethodModifiers(); i++)
+        os << "/*AstMethodDeclaration:#" << id << "*/";
+    for (int i = 0; i < NumMethodModifiers(); i++)
     {
-        os << lex_stream -> NameString(this -> MethodModifier(i) -> modifier_kind_token);
+        os << lex_stream -> NameString(MethodModifier(i) -> modifier_kind_token);
         os << " ";
     }
     type -> Unparse(os, lex_stream);
@@ -338,49 +338,49 @@ void AstMethodDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
     if (NumThrows() > 0)
     {
         os << " throws ";
-        for (int k = 0; k < this -> NumThrows(); k++)
+        for (int k = 0; k < NumThrows(); k++)
         {
             if (k>0)
                 os << ", ";
-            this -> Throw(k) -> Unparse(os, lex_stream);
+            Throw(k) -> Unparse(os, lex_stream);
         }
     }
     method_body -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
-        os << "/*:AstMethodDeclaration#" << this-> id << "*/";
+        os << "/*:AstMethodDeclaration#" << id << "*/";
 }
 
 void AstStaticInitializer::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstStaticInitializer:#" << this-> id << "*/";
+        os << "/*AstStaticInitializer:#" << id << "*/";
     os << lex_stream -> NameString(static_token);
     block -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
-        os << "/*:AstStaticInitializer#" << this-> id << "*/";
+        os << "/*:AstStaticInitializer#" << id << "*/";
 }
 
 void AstThisCall::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstThisCall:#" << this-> id << "*/";
+        os << "/*AstThisCall:#" << id << "*/";
     os << lex_stream -> NameString(this_token);
     os << " (";
-    for (int i = 0; i < this -> NumArguments(); i++)
+    for (int i = 0; i < NumArguments(); i++)
     {
         if (i>0)
             os << ", ";
-        this -> Argument(i) -> Unparse(os, lex_stream);
+        Argument(i) -> Unparse(os, lex_stream);
     }
     os << ");" << endl;
     if (Ast::debug_unparse)
-        os << "/*:AstThisCall#" << this-> id << "*/";
+        os << "/*:AstThisCall#" << id << "*/";
 }
 
 void AstSuperCall::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstSuperCall:#" << this-> id << "*/";
+        os << "/*AstSuperCall:#" << id << "*/";
     if (wcscmp(lex_stream -> NameString(super_token), L"super") == 0)
     {
         // If base_opt is set but dot_token_opt is not, then base_opt
@@ -396,20 +396,20 @@ void AstSuperCall::Unparse(Ostream& os, LexStream* lex_stream)
         {
             if (j>0)
                 os << ", ";
-            this -> Argument(j) -> Unparse(os, lex_stream);
+            Argument(j) -> Unparse(os, lex_stream);
         }
         os << lex_stream -> NameString(right_parenthesis_token);
         os << lex_stream -> NameString(semicolon_token);
         os << endl;
     }
     if (Ast::debug_unparse)
-         os << "/*:AstSuperCall#" << this-> id << "*/";
+         os << "/*:AstSuperCall#" << id << "*/";
 }
 
 void AstConstructorBlock::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstConstructorBlock:#" << this-> id << "*/";
+        os << "/*AstConstructorBlock:#" << id << "*/";
     if (explicit_constructor_invocation_opt)
     {
         os << "{" << endl;
@@ -420,41 +420,41 @@ void AstConstructorBlock::Unparse(Ostream& os, LexStream* lex_stream)
     if (explicit_constructor_invocation_opt)
         os << "}" << endl;
     if (Ast::debug_unparse)
-        os << "/*:AstConstructorBlock#" << this-> id << "*/";
+        os << "/*:AstConstructorBlock#" << id << "*/";
 }
 
 void AstConstructorDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstConstructorDeclaration:#" << this-> id << "*/";
-    for (int i = 0; i < this -> NumConstructorModifiers(); i++)
+        os << "/*AstConstructorDeclaration:#" << id << "*/";
+    for (int i = 0; i < NumConstructorModifiers(); i++)
     {
-        os << lex_stream -> NameString(this -> ConstructorModifier(i) -> modifier_kind_token);
+        os << lex_stream -> NameString(ConstructorModifier(i) -> modifier_kind_token);
         os << " ";
     }
     constructor_declarator -> Unparse(os, lex_stream);
     if (NumThrows() > 0)
     {
         os << " throws ";
-        for (int k = 0; k < this -> NumThrows(); k++)
+        for (int k = 0; k < NumThrows(); k++)
         {
             if (k>0)
                 os << ", ";
-            this -> Throw(k) -> Unparse(os, lex_stream);
+            Throw(k) -> Unparse(os, lex_stream);
         }
     }
     constructor_body -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
-        os << "/*:AstConstructorDeclaration#" << this-> id << "*/";
+        os << "/*:AstConstructorDeclaration#" << id << "*/";
 }
 
 void AstInterfaceDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstInterfaceDeclaration:#" << this-> id << "*/";
-    for (int i = 0; i < this -> NumInterfaceModifiers(); i++)
+        os << "/*AstInterfaceDeclaration:#" << id << "*/";
+    for (int i = 0; i < NumInterfaceModifiers(); i++)
     {
-        os << lex_stream -> NameString(this -> InterfaceModifier(i) -> modifier_kind_token);
+        os << lex_stream -> NameString(InterfaceModifier(i) -> modifier_kind_token);
         os << " ";
     }
     os << lex_stream -> NameString(interface_token);
@@ -467,47 +467,47 @@ void AstInterfaceDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
         {
             if (j>0)
                 os << ", ";
-            this -> ExtendsInterface(j) -> Unparse(os, lex_stream);
+            ExtendsInterface(j) -> Unparse(os, lex_stream);
         }
     }
     os << " {" << endl;
     for (int k = 0; k < NumInterfaceMemberDeclarations(); k++)
     {
-        this -> InterfaceMemberDeclaration(k) -> Unparse(os, lex_stream);
+        InterfaceMemberDeclaration(k) -> Unparse(os, lex_stream);
         os << endl;
     }
     os << "}" << endl;
     if (Ast::debug_unparse)
-        os << "/*:AstInterfaceDeclaration#" << this-> id << "*/";
+        os << "/*:AstInterfaceDeclaration#" << id << "*/";
 }
 
 void AstLocalVariableDeclarationStatement::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstLocalVariableDeclarationStatement:#" << this-> id << "*/";
-    for (int i = 0; i < this -> NumLocalModifiers(); i++)
+        os << "/*AstLocalVariableDeclarationStatement:#" << id << "*/";
+    for (int i = 0; i < NumLocalModifiers(); i++)
     {
-        os << lex_stream -> NameString(this -> LocalModifier(i) -> modifier_kind_token);
+        os << lex_stream -> NameString(LocalModifier(i) -> modifier_kind_token);
         os << " ";
     }
     type -> Unparse(os, lex_stream);
     os << " ";
-    for (int k = 0; k < this -> NumVariableDeclarators(); k++)
+    for (int k = 0; k < NumVariableDeclarators(); k++)
     {
         if (k>0)
             os << ",";
-        this -> VariableDeclarator(k) -> Unparse(os, lex_stream);
+        VariableDeclarator(k) -> Unparse(os, lex_stream);
     }
     if (semicolon_token_opt)
         os << ";" << endl;
     if (Ast::debug_unparse)
-        os << "/*:AstLocalVariableDeclarationStatement#" << this-> id << "*/";
+        os << "/*:AstLocalVariableDeclarationStatement#" << id << "*/";
 }
 
 void AstIfStatement::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstIfStatement:#" << this-> id << "*/";
+        os << "/*AstIfStatement:#" << id << "*/";
     os << lex_stream -> NameString(if_token);
     AstParenthesizedExpression *parenth = expression -> ParenthesizedExpressionCast();
     if (!parenth)
@@ -524,68 +524,68 @@ void AstIfStatement::Unparse(Ostream& os, LexStream* lex_stream)
     }
     os << endl;
     if (Ast::debug_unparse)
-        os << "/*:AstIfStatement#" << this-> id << "*/";
+        os << "/*:AstIfStatement#" << id << "*/";
 }
 
 void AstEmptyStatement::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstEmptyStatement:#" << this-> id << "*/";
+        os << "/*AstEmptyStatement:#" << id << "*/";
     os << lex_stream -> NameString(semicolon_token);
     os << endl;
     if (Ast::debug_unparse)
-        os << "/*:AstEmptyStatement#" << this-> id << "*/";
+        os << "/*:AstEmptyStatement#" << id << "*/";
 }
 
 void AstExpressionStatement::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstExpressionStatement:#" << this-> id << "*/";
+        os << "/*AstExpressionStatement:#" << id << "*/";
     expression -> Unparse(os, lex_stream);
     if (semicolon_token_opt)
         os << ";" << endl;
     if (Ast::debug_unparse)
-        os << "/*:AstExpressionStatement#" << this-> id << "*/";
+        os << "/*:AstExpressionStatement#" << id << "*/";
 }
 
 void AstCaseLabel::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstCaseLabel:#" << this-> id << "*/";
+        os << "/*AstCaseLabel:#" << id << "*/";
     os << lex_stream -> NameString(case_token);
     os << " ";
     expression -> Unparse(os, lex_stream);
     os << ":" << endl;
     if (Ast::debug_unparse)
-        os << "/*:AstCaseLabel#" << this-> id << "*/";
+        os << "/*:AstCaseLabel#" << id << "*/";
 }
 
 void AstDefaultLabel::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstDefaultLabel:#" << this-> id << "*/";
+        os << "/*AstDefaultLabel:#" << id << "*/";
     os << lex_stream -> NameString(default_token);
     os << ":" << endl;
     if (Ast::debug_unparse)
-        os << "/*:AstDefaultLabel#" << this-> id << "*/";
+        os << "/*:AstDefaultLabel#" << id << "*/";
 }
 
 void AstSwitchBlockStatement::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstSwitchBlockStatement:#" << this-> id << "*/";
+        os << "/*AstSwitchBlockStatement:#" << id << "*/";
     for (int j = 0; j < NumSwitchLabels(); j++)
-        this -> SwitchLabel(j) -> Unparse(os, lex_stream);
+        SwitchLabel(j) -> Unparse(os, lex_stream);
     for (int l = 0; l < NumStatements(); l++)
-        this -> Statement(l) -> Unparse(os, lex_stream);
+        Statement(l) -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
-        os << "/*:AstSwitchBlockStatement#" << this-> id << "*/";
+        os << "/*:AstSwitchBlockStatement#" << id << "*/";
 }
 
 void AstSwitchStatement::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstSwitchStatement:#" << this-> id << "*/";
+        os << "/*AstSwitchStatement:#" << id << "*/";
   // What about the label_opt??
     os << lex_stream -> NameString(switch_token);
     AstParenthesizedExpression *parenth = expression -> ParenthesizedExpressionCast();
@@ -600,13 +600,13 @@ void AstSwitchStatement::Unparse(Ostream& os, LexStream* lex_stream)
     // what about switch_labels_opt?
     // os << "}" << endl;
     if (Ast::debug_unparse)
-        os << "/*:AstSwitchStatement#" << this-> id << "*/";
+        os << "/*:AstSwitchStatement#" << id << "*/";
 }
 
 void AstWhileStatement::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstWhileStatement:#" << this-> id << "*/";
+        os << "/*AstWhileStatement:#" << id << "*/";
     os << lex_stream -> NameString(while_token);
     // What about Label_opt?
     os << " ";
@@ -619,13 +619,13 @@ void AstWhileStatement::Unparse(Ostream& os, LexStream* lex_stream)
     os << endl;
     statement -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
-        os << "/*:AstWhileStatement#" << this-> id << "*/";
+        os << "/*:AstWhileStatement#" << id << "*/";
 }
 
 void AstDoStatement::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstDoStatement:#" << this-> id << "*/";
+        os << "/*AstDoStatement:#" << id << "*/";
     os << lex_stream -> NameString(do_token);
     os << endl;
     statement -> Unparse(os, lex_stream);
@@ -639,41 +639,41 @@ void AstDoStatement::Unparse(Ostream& os, LexStream* lex_stream)
     os << lex_stream -> NameString(semicolon_token);
     os << endl;
     if (Ast::debug_unparse)
-        os << "/*:AstDoStatement#" << this-> id << "*/";
+        os << "/*:AstDoStatement#" << id << "*/";
 }
 
 void AstForStatement::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstForStatement:#" << this-> id << "*/";
+        os << "/*AstForStatement:#" << id << "*/";
     os << lex_stream -> NameString(for_token);
     os << " (";
-    for (int i = 0; i < this -> NumForInitStatements(); i++)
+    for (int i = 0; i < NumForInitStatements(); i++)
     {
         if (i>0)
             os << ", ";
-        this -> ForInitStatement(i) -> Unparse(os, lex_stream);
+        ForInitStatement(i) -> Unparse(os, lex_stream);
     }
     os << "; ";
     if (end_expression_opt)
         end_expression_opt -> Unparse(os, lex_stream);
     os << "; ";
-    for (int k = 0; k < this -> NumForUpdateStatements(); k++)
+    for (int k = 0; k < NumForUpdateStatements(); k++)
     {
         if (k>0)
             os << ", ";
-        this -> ForUpdateStatement(k) -> Unparse(os, lex_stream);
+        ForUpdateStatement(k) -> Unparse(os, lex_stream);
     }
     os << ")" << endl;
     statement -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
-        os << "/*:AstForStatement#" << this-> id << "*/";
+        os << "/*:AstForStatement#" << id << "*/";
 }
 
 void AstBreakStatement::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstBreakStatement:#" << this-> id << "*/";
+        os << "/*AstBreakStatement:#" << id << "*/";
     os << lex_stream -> NameString(break_token);
     if (identifier_token_opt)
     {
@@ -682,13 +682,13 @@ void AstBreakStatement::Unparse(Ostream& os, LexStream* lex_stream)
     }
     os << ";" << endl;
     if (Ast::debug_unparse)
-        os << "/*:AstBreakStatement#" << this-> id << "*/";
+        os << "/*:AstBreakStatement#" << id << "*/";
 }
 
 void AstContinueStatement::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstContinueStatement:#" << this-> id << "*/";
+        os << "/*AstContinueStatement:#" << id << "*/";
     os << lex_stream -> NameString(continue_token);
     if (identifier_token_opt)
     {
@@ -697,13 +697,13 @@ void AstContinueStatement::Unparse(Ostream& os, LexStream* lex_stream)
     }
     os << ";" << endl;
     if (Ast::debug_unparse)
-        os << "/*:AstContinueStatement#" << this-> id << "*/";
+        os << "/*:AstContinueStatement#" << id << "*/";
 }
 
 void AstReturnStatement::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstReturnStatement:#" << this-> id << "*/";
+        os << "/*AstReturnStatement:#" << id << "*/";
     // Do NOT use this; when the return statement is not literally
     // present in the source, the return_token points at the next "}".
     // os << lex_stream -> NameString(return_token);
@@ -715,25 +715,25 @@ void AstReturnStatement::Unparse(Ostream& os, LexStream* lex_stream)
     }
     os << ";" << endl;
     if (Ast::debug_unparse)
-        os << "/*:AstReturnStatement#" << this-> id << "*/";
+        os << "/*:AstReturnStatement#" << id << "*/";
 }
 
 void AstThrowStatement::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstThrowStatement:#" << this-> id << "*/";
+        os << "/*AstThrowStatement:#" << id << "*/";
     os << lex_stream -> NameString(throw_token);
     os << " ";
     expression -> Unparse(os, lex_stream);
     os << ";" << endl;
     if (Ast::debug_unparse)
-        os << "/*:AstThrowStatement#" << this-> id << "*/";
+        os << "/*:AstThrowStatement#" << id << "*/";
 }
 
 void AstSynchronizedStatement::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstSynchronizedStatement:#" << this-> id << "*/";
+        os << "/*AstSynchronizedStatement:#" << id << "*/";
     os << lex_stream -> NameString(synchronized_token);
     os << " ";
     AstParenthesizedExpression *parenth = expression -> ParenthesizedExpressionCast();
@@ -745,106 +745,123 @@ void AstSynchronizedStatement::Unparse(Ostream& os, LexStream* lex_stream)
     os << endl;
     block -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
-        os << "/*:AstSynchronizedStatement#" << this-> id << "*/";
+        os << "/*:AstSynchronizedStatement#" << id << "*/";
+}
+
+void AstAssertStatement::Unparse(Ostream& os, LexStream* lex_stream)
+{
+    if (Ast::debug_unparse)
+        os << "/*AstAssertStatement:#" << id << "*/";
+    os << lex_stream -> NameString(assert_token);
+    os << " ";
+    condition -> Unparse(os, lex_stream);
+    if (message_opt)
+    {
+        os << " : ";
+        message_opt -> Unparse(os, lex_stream);
+    }
+    os << ";\n";
+    if (Ast::debug_unparse)
+        os << "/*:AstAssertStatement#" << id << "*/";
 }
 
 void AstCatchClause::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstCatchClause:#" << this-> id << "*/";
+        os << "/*AstCatchClause:#" << id << "*/";
     os << lex_stream -> NameString(catch_token);
     os << " (";
     formal_parameter -> Unparse(os, lex_stream);
     os << ")" << endl;
     block -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
-        os << "/*:AstCatchClause#" << this-> id << "*/";
+        os << "/*:AstCatchClause#" << id << "*/";
 }
 
 void AstFinallyClause::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstFinallyClause:#" << this-> id << "*/";
+        os << "/*AstFinallyClause:#" << id << "*/";
     os << lex_stream -> NameString(finally_token);
     os << endl;
     block -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
-        os << "/*:AstFinallyClause#" << this-> id << "*/";
+        os << "/*:AstFinallyClause#" << id << "*/";
 }
 
 void AstTryStatement::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstTryStatement:#" << this-> id << "*/";
+        os << "/*AstTryStatement:#" << id << "*/";
     os << lex_stream -> NameString(try_token);
     os << endl;
     block -> Unparse(os, lex_stream);
-    for (int k = 0; k < this -> NumCatchClauses(); k++)
-        this -> CatchClause(k) -> Unparse(os, lex_stream);
+    for (int k = 0; k < NumCatchClauses(); k++)
+        CatchClause(k) -> Unparse(os, lex_stream);
     if (finally_clause_opt)
         finally_clause_opt -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
-        os << "/*:AstTryStatement#" << this-> id << "*/";
+        os << "/*:AstTryStatement#" << id << "*/";
 }
 
 void AstIntegerLiteral::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstIntegerLiteral:#" << this-> id << "*/";
+        os << "/*AstIntegerLiteral:#" << id << "*/";
     os << lex_stream -> NameString(integer_literal_token);
     if (Ast::debug_unparse)
-        os << "/*:AstIntegerLiteral#" << this-> id << "*/";
+        os << "/*:AstIntegerLiteral#" << id << "*/";
 }
 
 void AstLongLiteral::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstLongLiteral:#" << this-> id << "*/";
+        os << "/*AstLongLiteral:#" << id << "*/";
     os << lex_stream -> NameString(long_literal_token);
     if (Ast::debug_unparse)
-        os << "/*:AstLongLiteral#" << this-> id << "*/";
+        os << "/*:AstLongLiteral#" << id << "*/";
 }
 
 void AstFloatingPointLiteral::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstFloatingPointLiteral:#" << this-> id << "*/";
+        os << "/*AstFloatingPointLiteral:#" << id << "*/";
     os << lex_stream -> NameString(floating_point_literal_token);
     if (Ast::debug_unparse)
-        os << "/*:AstFloatingPointLiteral#" << this-> id << "*/";
+        os << "/*:AstFloatingPointLiteral#" << id << "*/";
 }
 
 void AstDoubleLiteral::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstDoubleLiteral:#" << this-> id << "*/";
+        os << "/*AstDoubleLiteral:#" << id << "*/";
     os << lex_stream -> NameString(double_literal_token);
     if (Ast::debug_unparse)
-        os << "/*:AstDoubleLiteral#" << this-> id << "*/";
+        os << "/*:AstDoubleLiteral#" << id << "*/";
 }
 
 void AstTrueLiteral::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstTrueLiteral:#" << this-> id << "*/";
+        os << "/*AstTrueLiteral:#" << id << "*/";
     os << lex_stream -> NameString(true_literal_token);
     if (Ast::debug_unparse)
-        os << "/*:AstTrueLiteral#" << this-> id << "*/";
+        os << "/*:AstTrueLiteral#" << id << "*/";
 }
 
 void AstFalseLiteral::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstFalseLiteral:#" << this-> id << "*/";
+        os << "/*AstFalseLiteral:#" << id << "*/";
     os << lex_stream -> NameString(false_literal_token);
     if (Ast::debug_unparse)
-        os << "/*:AstFalseLiteral#" << this-> id << "*/";
+        os << "/*:AstFalseLiteral#" << id << "*/";
 }
 
 void AstStringLiteral::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstStringLiteral:#" << this-> id << "*/";
+        os << "/*AstStringLiteral:#" << id << "*/";
     {
         bool old_expand = os.ExpandWchar();
         os.SetExpandWchar(true);
@@ -852,13 +869,13 @@ void AstStringLiteral::Unparse(Ostream& os, LexStream* lex_stream)
         os.SetExpandWchar(old_expand);
     }
     if (Ast::debug_unparse)
-        os << "/*:AstStringLiteral#" << this-> id << "*/";
+        os << "/*:AstStringLiteral#" << id << "*/";
 }
 
 void AstCharacterLiteral::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstCharacterLiteral:#" << this-> id << "*/";
+        os << "/*AstCharacterLiteral:#" << id << "*/";
     {
         bool old_expand = os.ExpandWchar();
         os.SetExpandWchar(true);
@@ -866,60 +883,60 @@ void AstCharacterLiteral::Unparse(Ostream& os, LexStream* lex_stream)
         os.SetExpandWchar(old_expand);
     }
     if (Ast::debug_unparse)
-        os << "/*:AstCharacterLiteral#" << this-> id << "*/";
+        os << "/*:AstCharacterLiteral#" << id << "*/";
 }
 
 void AstNullLiteral::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstNullLiteral:#" << this-> id << "*/";
+        os << "/*AstNullLiteral:#" << id << "*/";
     os << lex_stream -> NameString(null_token);
     if (Ast::debug_unparse)
-        os << "/*:AstNullLiteral#" << this-> id << "*/";
+        os << "/*:AstNullLiteral#" << id << "*/";
 }
 
 void AstThisExpression::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstThisExpression:#" << this-> id << "*/";
+        os << "/*AstThisExpression:#" << id << "*/";
     os << lex_stream -> NameString(this_token);
     if (Ast::debug_unparse)
-        os << "/*:AstThisExpression#" << this-> id << "*/";
+        os << "/*:AstThisExpression#" << id << "*/";
 }
 
 void AstSuperExpression::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstSuperExpression:#" << this-> id << "*/";
+        os << "/*AstSuperExpression:#" << id << "*/";
     os << lex_stream -> NameString(super_token);
     if (Ast::debug_unparse)
-        os << "/*:AstSuperExpression#" << this-> id << "*/";
+        os << "/*:AstSuperExpression#" << id << "*/";
 }
 
 void AstParenthesizedExpression::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstParenthesizedExpression:#" << this-> id << "*/";
+        os << "/*AstParenthesizedExpression:#" << id << "*/";
     os << lex_stream -> NameString(left_parenthesis_token);
     expression -> Unparse(os, lex_stream);
     os << lex_stream -> NameString(right_parenthesis_token);
     if (Ast::debug_unparse)
-        os << "/*:AstParenthesizedExpression#" << this-> id << "*/";
+        os << "/*:AstParenthesizedExpression#" << id << "*/";
 }
 
 void AstTypeExpression::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstTypeExpression:#" << this-> id << "*/";
+        os << "/*AstTypeExpression:#" << id << "*/";
     type -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
-        os << "/*:AstTypeExpression#" << this-> id << "*/";
+        os << "/*:AstTypeExpression#" << id << "*/";
 }
 
 void AstClassInstanceCreationExpression::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstClassInstanceCreationExpression:#" << this-> id << "*/";
+        os << "/*AstClassInstanceCreationExpression:#" << id << "*/";
     if (dot_token_opt /* base_opt - see ast.h for explanation */)
         base_opt -> Unparse(os, lex_stream);
     os << lex_stream -> NameString(new_token);
@@ -930,31 +947,31 @@ void AstClassInstanceCreationExpression::Unparse(Ostream& os, LexStream* lex_str
     {
         if (j>0)
             os << ", ";
-        this -> Argument(j) -> Unparse(os, lex_stream);
+        Argument(j) -> Unparse(os, lex_stream);
     }
     os << " )";
 
     if (class_body_opt)
         class_body_opt -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
-        os << "/*:AstClassInstanceCreationExpression#" << this-> id << "*/";
+        os << "/*:AstClassInstanceCreationExpression#" << id << "*/";
 }
 
 void AstDimExpr::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstDimExpr:#" << this-> id << "*/";
+        os << "/*AstDimExpr:#" << id << "*/";
     os << "[";
     expression -> Unparse(os, lex_stream);
     os << "]";
     if (Ast::debug_unparse)
-        os << "/*:AstDimExpr#" << this-> id << "*/";
+        os << "/*:AstDimExpr#" << id << "*/";
 }
 
 void AstArrayCreationExpression::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstArrayCreationExpression:#" << this-> id << "*/";
+        os << "/*AstArrayCreationExpression:#" << id << "*/";
     os << lex_stream -> NameString(new_token);
     os << " ";
     array_type -> Unparse(os, lex_stream);
@@ -965,73 +982,73 @@ void AstArrayCreationExpression::Unparse(Ostream& os, LexStream* lex_stream)
     if (array_initializer_opt)
         array_initializer_opt -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
-        os << "/*:AstArrayCreationExpression#" << this-> id << "*/";
+        os << "/*:AstArrayCreationExpression#" << id << "*/";
 }
 
 void AstFieldAccess::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstFieldAccess:#" << this-> id << "*/";
+        os << "/*AstFieldAccess:#" << id << "*/";
     base -> Unparse(os, lex_stream);
     os << lex_stream -> NameString(dot_token);
     os << lex_stream -> NameString(identifier_token);
     if (Ast::debug_unparse)
-        os << "/*:AstFieldAccess#" << this-> id << "*/";
+        os << "/*:AstFieldAccess#" << id << "*/";
 }
 
 void AstMethodInvocation::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstMethodInvocation:#" << this-> id << "*/";
+        os << "/*AstMethodInvocation:#" << id << "*/";
     method -> Unparse(os, lex_stream);
     os << "(";
-    for (int i = 0; i < this -> NumArguments(); i++)
+    for (int i = 0; i < NumArguments(); i++)
     {
         if (i>0)
             os << ", ";
-        this -> Argument(i) -> Unparse(os, lex_stream);
+        Argument(i) -> Unparse(os, lex_stream);
     }
     os << ")";
     if (Ast::debug_unparse)
-        os << "/*:AstMethodInvocation#" << this-> id << "*/";
+        os << "/*:AstMethodInvocation#" << id << "*/";
 }
 
 void AstArrayAccess::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstArrayAccess:#" << this-> id << "*/";
+        os << "/*AstArrayAccess:#" << id << "*/";
     base -> Unparse(os, lex_stream);
     os << "[";
     expression -> Unparse(os, lex_stream);
     os << "]";
     if (Ast::debug_unparse)
-        os << "/*:AstArrayAccess#" << this-> id << "*/";
+        os << "/*:AstArrayAccess#" << id << "*/";
 }
 
 void AstPostUnaryExpression::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstPostUnaryExpression:#" << this-> id << "*/";
+        os << "/*AstPostUnaryExpression:#" << id << "*/";
     expression -> Unparse(os, lex_stream);
     os << lex_stream -> NameString(post_operator_token);
     if (Ast::debug_unparse)
-        os << "/*:AstPostUnaryExpression#" << this-> id << "*/";
+        os << "/*:AstPostUnaryExpression#" << id << "*/";
 }
 
 void AstPreUnaryExpression::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstPreUnaryExpression:#" << this-> id << "*/";
+        os << "/*AstPreUnaryExpression:#" << id << "*/";
     os << lex_stream -> NameString(pre_operator_token);
     expression -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
-        os << "/*:AstPreUnaryExpression#" << this-> id << "*/";
+        os << "/*:AstPreUnaryExpression#" << id << "*/";
 }
 
 void AstCastExpression::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstCastExpression:#" << this-> id << "*/";
+        os << "/*AstCastExpression:#" << id << "*/";
     if (left_parenthesis_token_opt && type_opt)
     {
         os << "(";
@@ -1043,46 +1060,46 @@ void AstCastExpression::Unparse(Ostream& os, LexStream* lex_stream)
 
     expression -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
-        os << "/*:AstCastExpression#" << this-> id << "*/";
+        os << "/*:AstCastExpression#" << id << "*/";
 }
 
 void AstBinaryExpression::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstBinaryExpression:#" << this-> id << "*/";
+        os << "/*AstBinaryExpression:#" << id << "*/";
     left_expression -> Unparse(os, lex_stream);
     os << " ";
     os << lex_stream -> NameString(binary_operator_token);
     os << " ";
     right_expression -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
-        os << "/*:AstBinaryExpression#" << this-> id << "*/";
+        os << "/*:AstBinaryExpression#" << id << "*/";
 }
 
 void AstConditionalExpression::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstConditionalExpression:#" << this-> id << "*/";
+        os << "/*AstConditionalExpression:#" << id << "*/";
     test_expression -> Unparse(os, lex_stream);
     os << " ? ";
     true_expression -> Unparse(os, lex_stream);
     os << " : ";
     false_expression -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
-        os << "/*:AstConditionalExpression#" << this-> id << "*/";
+        os << "/*:AstConditionalExpression#" << id << "*/";
 }
 
 void AstAssignmentExpression::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstAssignmentExpression:#" << this-> id << "*/";
+        os << "/*AstAssignmentExpression:#" << id << "*/";
     left_hand_side -> Unparse(os, lex_stream);
     os << " ";
     os << lex_stream -> NameString(assignment_operator_token);
     os << " ";
     expression -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
-        os << "/*:AstAssignmentExpression#" << this-> id << "*/";
+        os << "/*:AstAssignmentExpression#" << id << "*/";
 }
 
 #ifdef HAVE_JIKES_NAMESPACE

@@ -407,10 +407,10 @@ public:
     Utf8LiteralValue *signature;
 
     //
-    // If this method is a method that is generated in order to process initializer
-    // blocks contained in the body of a class, it needs to know the set of
-    // constructors that might invoke it in order to figure out which exceptions
-    // can be safely thrown within an initializer block.
+    // If this method is a method that is generated in order to process
+    // initializer blocks contained in the body of a class, it needs to know
+    // the set of constructors that might invoke it in order to figure out
+    // which exceptions can be safely thrown within an initializer block.
     //
     int NumInitializerConstructors()
     {
@@ -604,8 +604,8 @@ private:
     Tuple<MethodSymbol *> *initializer_constructors;
 
     //
-    // If the method in question is a constructor of a local type, we may need to construct
-    // another constructor that accepts extra local parameters.
+    // If the method in question is a constructor of a local type, we may need
+    // to construct another constructor that accepts extra local parameters.
     //
     MethodSymbol *local_constructor;
 
@@ -627,21 +627,29 @@ public:
     FileLocation *file_location;
     NameSymbol *name_symbol;
     Symbol *owner;
-    TypeSymbol *outermost_type; // A nested class identifies the outer most type that contains it.
-                                // If a class is not nested then it identifies itself as its outer
-                                // most type.
-    TypeSymbol *super,
-               *base_type; // indicates the base type (type of elements in the last dimension) of an array
-                           // For a normal type base_type is NULL. If base_type is a "bad" type it points
-                           // to itself (this).
-    int index,             // This variable is used in TypeCycleChecker to determine if this type
-                           // forms an inter-type cycle in its "extends" or "implements" relationship.
-                           //
-        unit_index,        // This variable is used in TypeCycleChecker to check if this type
-                           // forms an intra-type cycle in its "extends" or "implements" relationship;
-                           //
-        incremental_index; // This variable is used in TypeCycleChecker to determine which types (files)
-                           // need to be recompiled based on the "dependent" relationship.
+
+    // A nested class identifies the outer most type that contains it. If a
+    // class is not nested then it identifies itself as its outermost type.
+    TypeSymbol *outermost_type;
+
+    TypeSymbol *super;
+
+    // Indicates the base type (type of elements in the last dimension) of an
+    // array. For a normal type base_type is NULL. If base_type is a "bad"
+    // type it points to itself (this).
+    TypeSymbol *base_type;
+
+    // This variable is used in TypeCycleChecker to determine if this type
+    // forms an inter-type cycle in its "extends" or "implements" relationship.
+    int index;
+    
+    // This variable is used in TypeCycleChecker to check if this type
+    // forms an intra-type cycle in its "extends" or "implements" relationship;
+    int unit_index;
+
+    // This variable is used in TypeCycleChecker to determine which types
+    // (files) need to be recompiled based on the "dependent" relationship.
+    int incremental_index;
 
     int NumLocalConstructorCallEnvironments() { return (local_constructor_call_environments ? local_constructor_call_environments -> Length() : 0); }
     SemanticEnvironment *&LocalConstructorCallEnvironment(int i) { return (*local_constructor_call_environments)[i]; }
@@ -706,6 +714,8 @@ public:
         class_literals -> Next() = literal_symbol;
     }
 
+    VariableSymbol *AssertVariable() { return assert_variable; }
+
     int NumNestedTypes() { return (nested_types ? nested_types -> Length() : 0); }
     TypeSymbol *&NestedType(int i) { return (*nested_types)[i]; }
     void AddNestedType(TypeSymbol *type_symbol)
@@ -753,7 +763,9 @@ public:
               *dependents_closure,  // processed in cycle.cpp
               *parents_closure;     // processed in cycle.cpp
 
-    int pool_index; // index of element in symbol_pool (in the relevant symbol table) that points to this type
+    // Index of element in symbol_pool (in the relevant symbol table) that
+    // points to this type.
+    int pool_index;
 
     Utf8LiteralValue *signature;
     Utf8LiteralValue *fully_qualified_name;
@@ -836,6 +848,8 @@ public:
     }
     VariableSymbol *FindOrInsertClassLiteral(TypeSymbol *);
     VariableSymbol *FindOrInsertLocalShadow(VariableSymbol *);
+
+    VariableSymbol *FindOrInsertAssertVariable();
 
     MethodSymbol *GetReadAccessMethod(MethodSymbol *);
     MethodSymbol *GetReadAccessMethod(VariableSymbol *);
@@ -1070,8 +1084,9 @@ public:
 
 private:
     //
-    // The fields hash_address and next_type are used in the class TypeLookupTable
-    // to contruct a mapping from each fully_qualified name into the type that it defines.
+    // The fields hash_address and next_type are used in the class
+    // TypeLookupTable to contruct a mapping from each fully_qualified name
+    // into the type that it defines.
     //
     friend class TypeLookupTable;
     unsigned hash_address;
@@ -1093,22 +1108,24 @@ private:
     MethodSymbol *class_literal_method;
     Utf8LiteralValue *class_literal_name;
 
+    VariableSymbol *assert_variable;
+
     //
-    // For a local type, when we first encounter an embedded call
-    // to one of its constructors or a constructor of one of its inner
-    // types, either via a ClassInstanceCreation or an ExplicitConstructorInvocation,
-    // we record it and resolve it after we have computed all necessary
-    // information about the type and its inner types.
+    // For a local type, when we first encounter an embedded call to one of
+    // its constructors or a constructor of one of its inner types, either via
+    // a ClassInstanceCreation or an ExplicitConstructorInvocation, we record
+    // it and resolve it after we have computed all necessary information
+    // about the type and its inner types.
     //
     Tuple<SemanticEnvironment *> *local_constructor_call_environments;
 
     //
-    // When an inner class tries to access a private member of one of its enclosing
-    // classes, one (or two) access method(s) to read (and/or write) the private member
-    // is (are) generated.
+    // When an inner class tries to access a private member of one of its
+    // enclosing classes, one (or two) access method(s) to read (and/or write)
+    // the private member is (are) generated.
     //
-    // The maps read_method and write_method are used to keep track of the read and
-    // write method to which a member has been mapped.
+    // The maps read_method and write_method are used to keep track of the
+    // read and write method to which a member has been mapped.
     //
     Tuple<MethodSymbol *> *private_access_methods,
                           *private_access_constructors;
@@ -1126,8 +1143,8 @@ private:
     // identifies the "this$0" pointer of the containing type. For a local
     // class, in addition to the this$0 pointer (if it is needed), all local
     // variables that are referred to in the local type are passed as argument
-    // to the local type and copied in the constructor into a local field. These
-    // local variables are stored in constructor_parameters.
+    // to the local type and copied in the constructor into a local field.
+    // These local variables are stored in constructor_parameters.
     //
     // The array enclosing_instances is there for optimization purposes.
     // If this type is deeply nested within several other types and it makes
@@ -1135,8 +1152,8 @@ private:
     // be useful to keep a reference to each of these enclosing
     // instances in the form of this$0, this$1, this$2, ...
     //
-    // The array class_identities is used to store static variables of type Class
-    // that contain the proper value for a given type.
+    // The array class_identities is used to store static variables of type
+    // Class that contain the proper value for a given type.
     //
     Tuple<VariableSymbol *> *constructor_parameters;
     Tuple<MethodSymbol *> *generated_constructors;
@@ -1261,8 +1278,10 @@ public:
 
     TypeSymbol *Type()
     {
-        assert(type_); // make sure that the method signature associated with this method is processed prior to invoking
-                       // this function. ( "this -> ProcessVariableSignature(sem, tok);" )
+        // Make sure that the method signature associated with this method is
+        // processed prior to invoking this function.
+        // ( "this -> ProcessVariableSignature(sem, tok);" )
+        assert(type_);
 
         return type_;
     }
@@ -1279,8 +1298,8 @@ public:
     bool IsFinal(TypeSymbol *type)     { return (owner == type && ACC_FINAL()); }
 
     //
-    // These functions are used to identify when the declaration of a field in the body of a class is
-    // complete.
+    // These functions are used to identify when the declaration of a field
+    // in the body of a class is complete.
     //
     void MarkIncomplete()         { status &= (~((unsigned char) 0x01)); }
     void MarkComplete()           { status |= (unsigned char) 0x01; }
@@ -1562,9 +1581,10 @@ inline PathSymbol *SymbolTable::InsertPathSymbol(NameSymbol *name_symbol, Direct
     base[k] = symbol;
 
     //
-    // If the set is "adjustable" and the number of unique elements in it exceeds
-    // 2 times the size of the base, and we have not yet reached the maximum
-    // allowable size for a base, reallocate a larger base and rehash the elements.
+    // If the set is "adjustable" and the number of unique elements in it
+    // exceeds 2 times the size of the base, and we have not yet reached the
+    // maximum allowable size for a base, reallocate a larger base and rehash
+    // the elements.
     //
     if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
@@ -1599,9 +1619,10 @@ inline DirectorySymbol *SymbolTable::InsertDirectorySymbol(NameSymbol *name_symb
     base[k] = symbol;
 
     //
-    // If the set is "adjustable" and the number of unique elements in it exceeds
-    // 2 times the size of the base, and we have not yet reached the maximum
-    // allowable size for a base, reallocate a larger base and rehash the elements.
+    // If the set is "adjustable" and the number of unique elements in it
+    // exceeds 2 times the size of the base, and we have not yet reached the
+    // maximum allowable size for a base, reallocate a larger base and rehash
+    // the elements.
     //
     if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
@@ -1655,9 +1676,10 @@ inline FileSymbol *SymbolTable::InsertFileSymbol(NameSymbol *name_symbol)
     base[k] = symbol;
 
     //
-    // If the set is "adjustable" and the number of unique elements in it exceeds
-    // 2 times the size of the base, and we have not yet reached the maximum
-    // allowable size for a base, reallocate a larger base and rehash the elements.
+    // If the set is "adjustable" and the number of unique elements in it
+    // exceeds 2 times the size of the base, and we have not yet reached the
+    // maximum allowable size for a base, reallocate a larger base and rehash
+    // the elements.
     //
     if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
@@ -1708,9 +1730,10 @@ inline PackageSymbol *SymbolTable::InsertPackageSymbol(NameSymbol *name_symbol, 
     base[k] = symbol;
 
     //
-    // If the set is "adjustable" and the number of unique elements in it exceeds
-    // 2 times the size of the base, and we have not yet reached the maximum
-    // allowable size for a base, reallocate a larger base and rehash the elements.
+    // If the set is "adjustable" and the number of unique elements in it
+    // exceeds 2 times the size of the base, and we have not yet reached the
+    // maximum allowable size for a base, reallocate a larger base and rehash
+    // the elements.
     //
     if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
@@ -1776,9 +1799,10 @@ inline TypeSymbol *SymbolTable::InsertSystemTypeSymbol(NameSymbol *name_symbol)
     base[k] = symbol;
 
     //
-    // If the set is "adjustable" and the number of unique elements in it exceeds
-    // 2 times the size of the base, and we have not yet reached the maximum
-    // allowable size for a base, reallocate a larger base and rehash the elements.
+    // If the set is "adjustable" and the number of unique elements in it
+    // exceeds 2 times the size of the base, and we have not yet reached the
+    // maximum allowable size for a base, reallocate a larger base and rehash
+    // the elements.
     //
     if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
@@ -1806,9 +1830,10 @@ inline TypeSymbol *SymbolTable::InsertOuterTypeSymbol(NameSymbol *name_symbol)
     base[k] = symbol;
 
     //
-    // If the set is "adjustable" and the number of unique elements in it exceeds
-    // 2 times the size of the base, and we have not yet reached the maximum
-    // allowable size for a base, reallocate a larger base and rehash the elements.
+    // If the set is "adjustable" and the number of unique elements in it
+    // exceeds 2 times the size of the base, and we have not yet reached the
+    // maximum allowable size for a base, reallocate a larger base and rehash
+    // the elements.
     //
     if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
@@ -1836,9 +1861,10 @@ inline TypeSymbol *SymbolTable::InsertNestedTypeSymbol(NameSymbol *name_symbol)
     base[k] = symbol;
 
     //
-    // If the set is "adjustable" and the number of unique elements in it exceeds
-    // 2 times the size of the base, and we have not yet reached the maximum
-    // allowable size for a base, reallocate a larger base and rehash the elements.
+    // If the set is "adjustable" and the number of unique elements in it
+    // exceeds 2 times the size of the base, and we have not yet reached the
+    // maximum allowable size for a base, reallocate a larger base and rehash
+    // the elements.
     //
     if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
@@ -1870,7 +1896,9 @@ inline void SymbolTable::DeleteTypeSymbol(TypeSymbol *type)
 
     int last_index = NumTypeSymbols() - 1;
     if (type -> pool_index != last_index)
-    {// move last element to position previously occupied by element being deleted
+    {
+        // Move last element to position previously occupied by element being
+        // deleted
         TypeSym(last_index) -> pool_index = type -> pool_index;
         TypeSym(type -> pool_index) = TypeSym(last_index);
     }
@@ -1951,9 +1979,10 @@ inline MethodSymbol *SymbolTable::InsertMethodSymbol(NameSymbol *name_symbol)
     base[k] = symbol;
 
     //
-    // If the set is "adjustable" and the number of unique elements in it exceeds
-    // 2 times the size of the base, and we have not yet reached the maximum
-    // allowable size for a base, reallocate a larger base and rehash the elements.
+    // If the set is "adjustable" and the number of unique elements in it
+    // exceeds 2 times the size of the base, and we have not yet reached the
+    // maximum allowable size for a base, reallocate a larger base and rehash
+    // the elements.
     //
     if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
@@ -1994,9 +2023,10 @@ inline void SymbolTable::InsertMethodSymbol(MethodSymbol *method_symbol)
     base[k] = method_symbol;
 
     //
-    // If the set is "adjustable" and the number of unique elements in it exceeds
-    // 2 times the size of the base, and we have not yet reached the maximum
-    // allowable size for a base, reallocate a larger base and rehash the elements.
+    // If the set is "adjustable" and the number of unique elements in it
+    // exceeds 2 times the size of the base, and we have not yet reached the
+    // maximum allowable size for a base, reallocate a larger base and rehash
+    // the elements.
     //
     if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
@@ -2072,9 +2102,10 @@ inline VariableSymbol *SymbolTable::InsertVariableSymbol(NameSymbol *name_symbol
     base[k] = symbol;
 
     //
-    // If the set is "adjustable" and the number of unique elements in it exceeds
-    // 2 times the size of the base, and we have not yet reached the maximum
-    // allowable size for a base, reallocate a larger base and rehash the elements.
+    // If the set is "adjustable" and the number of unique elements in it
+    // exceeds 2 times the size of the base, and we have not yet reached the
+    // maximum allowable size for a base, reallocate a larger base and rehash
+    // the elements.
     //
     if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();
@@ -2106,9 +2137,10 @@ inline void SymbolTable::InsertVariableSymbol(VariableSymbol *variable_symbol)
     base[k] = variable_symbol;
 
     //
-    // If the set is "adjustable" and the number of unique elements in it exceeds
-    // 2 times the size of the base, and we have not yet reached the maximum
-    // allowable size for a base, reallocate a larger base and rehash the elements.
+    // If the set is "adjustable" and the number of unique elements in it
+    // exceeds 2 times the size of the base, and we have not yet reached the
+    // maximum allowable size for a base, reallocate a larger base and rehash
+    // the elements.
     //
     if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
         Rehash();

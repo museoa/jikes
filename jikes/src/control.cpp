@@ -55,6 +55,8 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
                                                       Long_type(NULL),
                                                       Float_type(NULL),
                                                       Double_type(NULL),
+                                                      Comparable_type(NULL),
+                                                      AssertionError_type(NULL),
                                                       Class_type(NULL),
                                                       Throwable_type(NULL),
                                                       Exception_type(NULL),
@@ -63,8 +65,19 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
                                                       Error_type(NULL),
                                                       NoClassDefFoundError_type(NULL),
                                                       StringBuffer_type(NULL),
-
+                                                      Object_getClass_method(NULL),
                                                       Class_forName_method(NULL),
+                                                      Class_getComponentType_method(NULL),
+                                                      Class_desiredAssertionStatus_method(NULL),
+
+                                                      AssertionError_Init_method(NULL),
+                                                      AssertionError_InitWithChar_method(NULL),
+                                                      AssertionError_InitWithBoolean_method(NULL),
+                                                      AssertionError_InitWithInt_method(NULL),
+                                                      AssertionError_InitWithLong_method(NULL),
+                                                      AssertionError_InitWithFloat_method(NULL),
+                                                      AssertionError_InitWithDouble_method(NULL),
+                                                      AssertionError_InitWithObject_method(NULL),
 
                                                       Throwable_getMessage_method(NULL),
 
@@ -73,7 +86,6 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
                                                       StringBuffer_Init_method(NULL),
                                                       StringBuffer_InitWithString_method(NULL),
                                                       StringBuffer_toString_method(NULL),
-                                                      StringBuffer_append_char_array_method(NULL),
                                                       StringBuffer_append_char_method(NULL),
                                                       StringBuffer_append_boolean_method(NULL),
                                                       StringBuffer_append_int_method(NULL),
@@ -163,14 +175,6 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
     }
 #endif
 
-    if (java_util_package -> directory.Length() == 0)
-    {
-        system_semantic -> ReportSemError(SemanticError::PACKAGE_NOT_FOUND,
-                                          0,
-                                          0,
-                                          StringConstant::US_java_SL_util);
-    }
-
     //
     //
     //
@@ -187,7 +191,7 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
     }
 
     //
-    //
+    // Require the existence of java.lang.
     //
     if (system_package -> directory.Length() == 0)
     {
