@@ -746,7 +746,7 @@ int Operators::stack_effect[] =
    -2,  // OP_IF_ACMPEQ
    -2,  // OP_IF_ACMPNE
     0,  // OP_GOTO
-    1,  // OP_JSR
+    0,  // OP_JSR, caller must adjust stack by +1 at jsr target
     0,  // OP_RET
    -1,  // OP_TABLESWITCH
    -1,  // OP_LOOKUPSWITCH
@@ -756,30 +756,30 @@ int Operators::stack_effect[] =
    -2,  // OP_DRETURN
    -1,  // OP_ARETURN
     0,  // OP_RETURN
-    0,  // OP_GETSTATIC, caller must adjust if long or double
-    0,  // OP_PUTSTATIC, caller must adjust if long or double
-    0,  // OP_GETFIELD, caller must adjust if long or double
-    0,  // OP_PUTFIELD, caller must adjust if long or double
-   -1,  // OP_INVOKEVIRTUAL,   actually  -1-args_length
-   -1,  // OP_INVOKESPECIAL,    actually  -1-args_length
-    0,  // OP_INVOKESTATIC, actually -args_length
-   -1,  // OP_INVOKEINTERFACE, actually -1 -args_length
+    1,  // OP_GETSTATIC, caller must adjust +1 if long or double
+   -1,  // OP_PUTSTATIC, caller must adjust -1 if long or double
+    0,  // OP_GETFIELD,  caller must adjust +1 if long or double
+   -2,  // OP_PUTFIELD,  caller must adjust -1 if long or double
+   -1,  // OP_INVOKEVIRTUAL,   caller must adjust +return-args_length
+   -1,  // OP_INVOKESPECIAL,   caller must adjust +return-args_length
+    0,  // OP_INVOKESTATIC,    caller must adjust +return-args_length
+   -1,  // OP_INVOKEINTERFACE, caller must adjust +return-args_length
     0,  // OP_XXXUNUSEDXXX
     1,  // OP_NEW
     0,  // OP_NEWARRAY
     0,  // OP_ANEWARRAY
     0,  // OP_ARRAYLENGTH
-    0,  // OP_ATHROW
+   -1,  // OP_ATHROW
     0,  // OP_CHECKCAST
     0,  // OP_INSTANCEOF
    -1,  // OP_MONITORENTER
    -1,  // OP_MONITOREXIT
     0,  // OP_WIDE
-    0,  // OP_MULTIANEWARRAY, actually dims-1
+    0,  // OP_MULTIANEWARRAY, caller must adjust 1-dims
    -1,  // OP_IFNULL
    -1,  // OP_IFNONNULL
     0,  // OP_GOTO_W
-    1,  // OP_JSR_W
+    0,  // OP_JSR_W, caller must adjust stack by +1 at jsr target
     0,  // OP_SOFTWARE
     0   // OP_HARDWARE
 };

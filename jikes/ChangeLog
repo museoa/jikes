@@ -1,7 +1,18 @@
 2001-11-05  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/bytecode.cpp: Reformat comments to 80 columns. Update
+	stack_depth tracing to actually trace stack depth, bug
+	211. Optimize generation of class literals. Also, update field and
+	method references to point to their qualifying class type, per JLS
+	13.1, bug 353.
+	* src/op.cpp: Update to correctly track stack depth.
+	* src/symbol.cpp: Update generation of class literals. Update some
+	code formatting - patch 225.
+
+2001-11-05  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/bytecode.cpp (DeclareField): Correct the use of
-	ConstantValue attributes to obey JLS2, bug 183, patch 224.
+	ConstantValue attributes to obey JLS2, bug 183 - patch 224.
 
 2001-11-04  Eric Blake  <ebb9@email.byu.edu>
 
