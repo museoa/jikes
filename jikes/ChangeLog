@@ -1,5 +1,12 @@
 2002-08-06  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/lookup.h (Hash): Improve hash function for strings.
+	* src/lookup.cpp: Use improved hashing for compilation speed-up on
+	large number of classes with similar string constants (for
+	example, the code in bug 222).
+
+2002-08-06  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/ast.h:
 	* src/bytecode.cpp: Formatting.
 	(EndMethod): Fix assertion with oversize method body.
