@@ -1676,7 +1676,8 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
 
     assert((member -> ACC_PRIVATE() && this == containing_type) ||
            (member -> ACC_PROTECTED() &&
-            (! semantic_environment -> sem -> ProtectedAccessCheck(base_type, containing_type))));
+            ! semantic_environment -> sem -> ProtectedAccessCheck(base_type, containing_type)) ||
+           containing_type == super);
 
     MethodSymbol *read_method = ReadMethod(member, base_type);
 
@@ -1760,17 +1761,18 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
         AstSimpleName *base = ast_pool -> GenSimpleName(loc);
 
         AstFieldAccess::FieldAccessTag tag = AstFieldAccess::NONE;
-        if (! member -> ACC_STATIC() && member -> ACC_PROTECTED() &&
-            base_type == super)
+        if (! member -> ACC_STATIC() && base_type == super)
         {
             //
-            // Special case - for Outer.super.m() where m() is a protected
-            // instance method, we mark the field access as a super access, to
+            // Special case - for Outer.super.m() where m() is an instance
+            // method, we mark the field access as a super access, to
             // make sure we emit invokespecial instead of invokevirtual in
             // bytecode.cpp.  Notice that in this case,
-            // ((Super) Outer.this).m() is necessarily inaccessible,
-            // so we don't have to worry about a conflict in accessor methods
-            // for the same base type.
+            // ((Super) Outer.this).m() cannot generate an accessor method
+            // (either m() is public or in the same package and thus already
+            // accessible, or m is protected in a different package and
+            // therefore inaccessible), so we don't have to worry about a
+            // conflict in accessor methods for the same base type.
             //
             tag = AstFieldAccess::SUPER_TAG;
         }

@@ -2955,7 +2955,7 @@ void Semantic::FindMethodMember(TypeSymbol *type,
     // TypeCast() returns true for super, this, and instance creation as
     // well as true type names, hence the extra check
     //
-    assert(field_access -> base);
+    assert(field_access && field_access -> base);
     bool base_is_type = field_access -> base -> symbol -> TypeCast() != NULL &&
                         field_access -> base -> IsName();
 
@@ -3022,16 +3022,19 @@ void Semantic::FindMethodMember(TypeSymbol *type,
             if (this_type != containing_type &&
                 (method -> ACC_PRIVATE() ||
                  (method -> ACC_PROTECTED() &&
-                  (! ProtectedAccessCheck(type, containing_type)))))
+                  ! ProtectedAccessCheck(type, containing_type)) ||
+                 (field_access -> base -> IsSuperExpression() &&
+                  ! method -> ACC_STATIC() &&
+                  ! this_type -> IsSubclass(containing_type))))
             {
                 //
                 // Find the right enclosing class to place the accessor method
                 // in. For private methods, the containing type; for protected
-                // methods, an enclosing class which is related to the
-                // containing type.
+                // methods or superclass methods, an enclosing class which is
+                // related to the containing type.
                 //
                 TypeSymbol *environment_type = containing_type;
-                if (method -> ACC_PROTECTED())
+                if (! method -> ACC_PRIVATE())
                 {
                     for (SemanticEnvironment *env = this_type -> semantic_environment;
                          env; env = env -> previous)
