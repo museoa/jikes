@@ -1,5 +1,10 @@
 2002-07-02  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/set.h (Resize): Followup to patch 310: Fix a thinko that was
+	causing a coredump on jacks 4.10-jvms-12.
+
+2002-07-02  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/ast.cpp:
 	* src/ast.h (original_constructor_invocation),
 	(local_init_statments): Delete unused fields.

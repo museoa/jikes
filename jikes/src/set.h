@@ -756,7 +756,7 @@ public:
         {
             int new_cell_count = (new_size + cell_size - 1) / cell_size;
             int old_cell_count = (max_set_size + cell_size - 1) / cell_size;
-            if (new_cell_count > old_cell_count && old_cell_count > 0)
+            if (new_cell_count > old_cell_count && new_cell_count > 1)
             {
                 // Must grow the storage for the set.
                 CELL *tmp = s;
@@ -772,16 +772,18 @@ public:
             int i = (new_size - 1) / cell_size;
             while (i > ((int) set_size - 1) / cell_size)
                 s[i--] = init == EMPTY ? (CELL) 0 : ~((CELL) 0);
-            if (! set_size)
-                s[0] = init == EMPTY ? (CELL) 0 : ~((CELL) 0);
-            else if (init == EMPTY)
-                s[i] &= (set_size % cell_size
-                         ? ((CELL) 1 << (set_size % cell_size)) - (CELL) 1
-                         : ~((CELL) 0));
-            else
-                s[i] |= (set_size % cell_size
-                         ? ~(((CELL) 1 << (set_size % cell_size)) - (CELL) 1)
-                         : (CELL) 0);
+            if (set_size)
+            {
+                if (init == EMPTY)
+                    s[i] &= (set_size % cell_size
+                             ? ((CELL) 1 << (set_size % cell_size)) - (CELL) 1
+                             : ~((CELL) 0));
+                else
+                    s[i] |= (set_size % cell_size
+                             ? ~(((CELL) 1 << (set_size % cell_size))
+                                 - (CELL) 1)
+                             : (CELL) 0);
+            }
         }
         set_size = new_size;
     }
