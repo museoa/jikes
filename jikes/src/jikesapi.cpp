@@ -112,11 +112,6 @@ JikesOption::JikesOption():
     old_classpath_search_order(false),
     zero_defect(false)
 {
-#ifdef HAVE_LANGINFO_H
-    const char* tmp = nl_langinfo(CODESET);
-    encoding = new char[strlen(tmp) + 1]; // +1 for '\0'
-    strcpy(encoding, tmp);
-#endif
 }
 
 JikesAPI * JikesAPI::instance = NULL;

@@ -1,3 +1,10 @@
+2001-09-17  Eric B Blake  <eblake@ee.byu.edu>
+
+	* src/jikesapi.cpp:
+	* src/jikes.cpp:
+	* src/platform.h: Revert patch 168.  Too many complaints.  See bug
+	1900, among others.
+
 2001-09-15  Chris Abbey  <jikes@cabbey.net>
 
 	* src/m4/ac_try_encoding.m4: Add fallback test for ISO8859-1 to
@@ -251,7 +258,7 @@
 	* configure.in: check for needed headers.
 	* configure:
 	* src/config.h.in: Regenerate.
-	* src/jikesapp.cpp:
+	* src/jikesapi.cpp:
 	* src/jikes.cpp:
 	* src/platform.h: set character encoding based on the one for the
 	default locale - patch 168.

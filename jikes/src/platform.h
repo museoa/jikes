@@ -143,14 +143,6 @@ typedef unsigned int wint_t;
 # include <float.h>
 #endif
 
-#ifdef HAVE_LANGINFO_H
-# include <langinfo.h>
-#endif
-
-#ifdef HAVE_LOCALE_H
-# include <locale.h>
-#endif
-
 #ifdef HAVE_TIME_H
 # include <time.h>
 #endif

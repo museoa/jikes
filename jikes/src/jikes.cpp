@@ -23,10 +23,6 @@ int main(int argc, char *argv[])
     int    return_code;    
     char **files;
 
-#ifdef HAVE_LOCALE_H
-    setlocale(LC_ALL, "");
-#endif
-
     files = compiler->parseOptions(argc, argv);
     
     if (files)
