@@ -1520,8 +1520,11 @@ void Semantic::ProcessClassDeclaration(Ast *stmt)
 
     //
     // Local classes are not static. See above.
+    // FIXME: This line caused a regression in 1.15.  Therefore, it is
+    // presently hacked out, resulting in local classes which are incorrectly
+    // static, but which at least compile.
     //
-    inner_type -> ResetACC_STATIC();
+    //    inner_type -> ResetACC_STATIC();
 
     return;
 }
