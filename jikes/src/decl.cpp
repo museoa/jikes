@@ -2161,7 +2161,8 @@ void Semantic::CheckFieldDeclaration(AstFieldDeclaration* field_declaration,
         }
         else if (field_type != control.long_type ||
                  is_constant_field == false ||
-                 ! access_flags.ACC_PRIVATE())
+                 access_flags.ACC_PUBLIC() ||
+                 access_flags.ACC_PROTECTED())
         {
             ReportSemError(SemanticError::BAD_SERIAL_VERSION_UID,
                            field_declaration);

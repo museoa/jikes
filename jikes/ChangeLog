@@ -1,5 +1,12 @@
 2004-03-28  Elliott Hughes  <enh@acm.org>
 
+	* src/decl.cpp: Accept default access for serialVersionUID; it's
+	common existing practice.
+	* src/error.cpp: Put all the serialization-related warnings
+	together in the +Pserial group.
+
+2004-03-28  Elliott Hughes  <enh@acm.org>
+
 	* src/expr.cpp: Fix another assertion compiling Sun's
 	JDK 1.4.1 source; don't ask FindInaccessibleType to try with an
 	AstName whose base_opt is non-null, because it doesn't handle

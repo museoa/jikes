@@ -520,12 +520,6 @@ void SemanticError::StaticInitializer()
     warning[ASSIGNMENT_USED_AS_TRUTH_VALUE] = WEAK_WARNING;
 
     //
-    // serialVersionUID warnings.
-    //
-    warning[UNNEEDED_SERIAL_VERSION_UID] = WEAK_WARNING;
-    warning[BAD_SERIAL_VERSION_UID] = WEAK_WARNING;
-
-    //
     // Somewhat stronger warnings, but code will be generated anyway.
     //
     warning[OBSOLESCENT_BRACKETS] = STRONG_WARNING;
@@ -608,10 +602,12 @@ void SemanticError::InitializeMessageGroups()
     message_groups.Push(group);
 
     group = new MessageGroup("serial",
-                             "serializable classes without serialVersionUIDs",
+                             "serialization warnings",
                              NAMED_WEAK_OFF);
+    group -> AddMessage(BAD_SERIAL_VERSION_UID);
     group -> AddMessage(EJ_SERIALIZABLE_INNER_CLASS);
     group -> AddMessage(MISSING_SERIAL_VERSION_UID);
+    group -> AddMessage(UNNEEDED_SERIAL_VERSION_UID);
     message_groups.Push(group);
 
     group = new MessageGroup("shadow", "shadowed and hidden fields",
