@@ -1,3 +1,8 @@
+2004-01-21  Eric Blake  <ebb9@byu.net>
+
+	* src/option.cpp (Option): Fix Windows fallout from const-ifying
+	StringConstant.
+
 2004-01-20  Eric Blake  <ebb9@byu.net>
 
 	* src/bytecode.h (ArrayAccessLhs): Move to bytecode.cpp.

@@ -343,9 +343,7 @@ Option::Option(ArgumentExpander& arguments,
                                        main_current_directory);
     if (length > directory_length)
     {
-        // FIXME: missing a delete of main_current_directory ???
-        delete [] main_current_directory;
-        main_current_directory = StringConstant::U8S_DO;
+        strcpy(main_current_directory, StringConstant::U8S_DO);
         main_disk = 0;
     }
     else
