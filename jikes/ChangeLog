@@ -1,3 +1,9 @@
+2004-01-26  Eric Blake  <ebb9@byu.net>
+
+	* src/init.cpp (ComputeFinalValue): Jikes bug 3797.
+	* src/decl.cpp (ProcessClassBodyForEffectiveJavaChecks): Fix
+	compiler warning.
+
 2004-01-26  Chris Abbey	 <jikes@cabbey.net>
 
 	* src/bytecode.cpp (ctor): use same class file versions for 1.4.2

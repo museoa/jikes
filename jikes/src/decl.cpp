@@ -925,7 +925,7 @@ void Semantic::ProcessClassBodyForEffectiveJavaChecks(AstClassBody* class_body)
     //
     bool has_private_constructor = false;
     bool has_non_default_constructor = false;
-    for (int i = 0; i < class_body -> NumConstructors(); ++i)
+    for (unsigned i = 0; i < class_body -> NumConstructors(); ++i)
     {
         MethodSymbol* constructor = class_body -> Constructor(i) ->
                                     constructor_symbol;
