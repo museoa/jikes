@@ -4204,7 +4204,7 @@ void ByteCode::EmitCheckForNull(AstExpression *expression)
     VariableSymbol *variable = expression -> symbol -> VariableCast();
     if (expression -> ClassInstanceCreationExpressionCast() ||
         expression -> IsThisExpression() ||
-        expression -> IsSuperExpression()) ||
+        expression -> IsSuperExpression() ||
         (variable && variable -> IsSynthetic() &&
          variable -> Identity() == control.this0_name_symbol))
     {
