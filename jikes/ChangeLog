@@ -1,5 +1,13 @@
 2002-06-18  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/bytecode.cpp (CompileConstructor),
+	(GenerateClassAccessMethod): Make compile output decisions based
+	on target JVM level, not source JDK level.
+	(EmitSwitchStatement): Remove dead code in switch statements -
+	followup to patch 279.
+
+2002-06-18  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/expr.cpp (ConstructorAccessCheck): Fix regressions not
 	covered by patch 280 - still bug 2899.
 

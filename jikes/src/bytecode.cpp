@@ -398,7 +398,7 @@ void ByteCode::CompileConstructor(AstConstructorDeclaration *constructor,
     int method_index = methods.NextIndex(); // index for method
     BeginMethod(method_index, method_symbol);
 
-    if (control.option.source < JikesOption::SDK1_4)
+    if (control.option.target < JikesOption::SDK1_4)
     {
         //
         // Prior to JDK 1.4, VMs incorrectly complained if shadow
@@ -455,7 +455,7 @@ void ByteCode::CompileConstructor(AstConstructorDeclaration *constructor,
         }
     }
 
-    if (control.option.source >= JikesOption::SDK1_4)
+    if (control.option.target >= JikesOption::SDK1_4)
     {
         //
         // Since JDK 1.4, VMs correctly allow shadow initialization before
@@ -1520,10 +1520,32 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
         }
 
         //
-        // compile code for this case
+        // Compile code for this case.
         //
+        bool abrupt = false;
         for (int si = 0; si < switch_block_statement -> NumStatements(); si++)
-            EmitStatement(switch_block_statement -> Statement(si) -> StatementCast());
+        {
+            if (! abrupt)
+                abrupt = EmitStatement(switch_block_statement ->
+                                       Statement(si) -> StatementCast());
+            else if ((control.option.g & JikesOption::VARS) &&
+                     switch_block_statement -> Statement(si) ->
+                     LocalVariableDeclarationStatementCast())
+            {
+                //
+                // In a switch statement, local variable declarations are
+                // accessible in other case labels even if the declaration
+                // itself is unreachable.
+                //
+                AstLocalVariableDeclarationStatement *lvds =
+                    (AstLocalVariableDeclarationStatement *)
+                    switch_block_statement -> Statement(si);
+                for (int j = 0; j < lvds -> NumVariableDeclarators(); j++)
+                    method_stack ->
+                        StartPc(lvds -> VariableDeclarator(j) -> symbol) =
+                        code_attribute -> CodeLength();
+            }
+        }
     }
 
     //
@@ -3087,7 +3109,7 @@ void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
                                    RegisterClass(control.ClassNotFoundException()));
 
     ChangeStack(1); // account for the exception on the stack
-    if (control.option.source < JikesOption::SDK1_4)
+    if (control.option.target < JikesOption::SDK1_4)
     {
         PutOp(OP_INVOKEVIRTUAL);
         PutU2(RegisterLibraryMethodref(control.Throwable_getMessageMethod()));
