@@ -2375,6 +2375,11 @@ void Semantic::ProcessAmbiguousName(Ast *name)
             // A variable_symbol that is FINAL may have an initial value.
             // If variable_symbol is not final then its initial value is NULL.
             //
+            if (variable_symbol -> ACC_FINAL() &&
+                ! variable_symbol -> IsInitialized())
+            {
+                ComputeFinalValue(variable_symbol);
+            }
             simple_name -> value = variable_symbol -> initial_value;
             simple_name -> symbol = variable_symbol;
 

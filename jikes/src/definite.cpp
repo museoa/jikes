@@ -1253,8 +1253,11 @@ void Semantic::DefiniteBreakStatement(Ast *stmt)
     // executing the break, including if the break occurs in a try or catch
     // block.
     //
-    DefiniteBlocks() -> BreakPair(break_statement -> nesting_level) *=
-        *DefinitelyAssignedVariables();
+    if (AbruptFinallyStack().Top() < break_statement -> nesting_level)
+    {
+        DefiniteBlocks() -> BreakPair(break_statement -> nesting_level) *=
+            *DefinitelyAssignedVariables();
+    }
     if (DefiniteTrys() -> Size() > 0)
     {
         for (int i = DefiniteTrys() -> Size() - 1; i >= 0; i--)
@@ -1315,8 +1318,12 @@ void Semantic::DefiniteContinueStatement(Ast *stmt)
     // executing the continue, including if the continue occurs in a try or
     // catch block.
     //
-    DefiniteBlocks() -> ContinuePair(continue_statement -> nesting_level) *=
-        *DefinitelyAssignedVariables();
+    if (AbruptFinallyStack().Top() < continue_statement -> nesting_level)
+    {
+        DefiniteBlocks() -> ContinuePair(continue_statement ->
+                                         nesting_level) *=
+            *DefinitelyAssignedVariables();
+    }
     if (DefiniteTrys() -> Size() > 0)
     {
         for (int i = DefiniteTrys() -> Size() - 1; i >= 0; i--)
@@ -1572,6 +1579,13 @@ void Semantic::DefiniteTryStatement(Ast *stmt)
 {
     AstTryStatement *try_statement = (AstTryStatement *) stmt;
     DefiniteTrys() -> Push(try_statement);
+    if (try_statement -> finally_clause_opt &&
+        (! try_statement -> finally_clause_opt -> block ->
+         can_complete_normally))
+    {
+        AbruptFinallyStack().Push(try_statement -> finally_clause_opt ->
+                                  block -> nesting_level);
+    }
 
     DefinitePair starting_pair(*DefinitelyAssignedVariables());
 
@@ -1750,10 +1764,13 @@ void Semantic::DefiniteTryStatement(Ast *stmt)
     //
     if (try_statement -> finally_clause_opt)
     {
+        if (! try_statement -> finally_clause_opt -> block ->
+            can_complete_normally)
+        {
+            AbruptFinallyStack().Pop();
+        }
         DefinitelyAssignedVariables() -> da_set = starting_pair.da_set;
-
         DefiniteBlock(try_statement -> finally_clause_opt -> block);
-
         DefinitelyAssignedVariables() -> da_set += after_blocks;
     }
     else DefinitelyAssignedVariables() -> da_set = after_blocks;

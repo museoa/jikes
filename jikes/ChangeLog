@@ -1,3 +1,12 @@
+2002-07-23  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/definite.cpp (DefiniteBreakStatement),
+	(DefiniteContinueStatement, DefiniteTryStatement): Fix definite
+	assignment when break or continue is interrupted by an abrupt
+	finally clause - bug 3117.
+	* src/expr.cpp (ProcessAmbiguousName): Fix bug when method is
+	qualified by constant string variable - bug 3124.
+
 2002-07-22  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/expr.cpp (CheckSimpleName): Fix use of shadow variables in
@@ -4932,8 +4941,6 @@ that
 	* configure.in:
 	* configure:
 	I have applied Mo's patch to add Cygwin support.
-	
-
 
 1999-09-15    <shields@jikes.watson.ibm.com>
 
@@ -5001,7 +5008,6 @@ that
 	Added #if defined(CYGWIN) blocks for wchar functions
 	    that are not implemented in cygwin.
 
-
 1999-10-13    <shields@jikes.watson.ibm.com>
 
 	vz1014: more unicode patches from Vadim, this one should have been
@@ -5034,9 +5040,6 @@ that
 	Anyway, even though not tested, I suggest to include this code. It will not make
 	current implementation worse (currently it dumps core if such character
 	will be used in source).
-
-
-
 
 	* class.h:
 	* pc1013b: add code that should have been in pc1013a.
@@ -5457,9 +5460,7 @@ that
 	Mo DeJong
 	dejong@cs.umn.edu
 
-
 1999-07-26    <shields@jikes.watson.ibm.com>
-
 
 	* ast.cpp:
 	* bytecode.cpp:
@@ -5496,7 +5497,6 @@ that
 	Subject: Patch for jikes to auto-determine -DTYPE_bool
 	To: jikes-bugs@watson.ibm.com
 
-
 	I've added a test in your configure.in script in jikes-052 to
 	auto-detect the presense of the "bool" keyword (ANSI C++).  This was
 	necessary for me to get Jikes to compile on Compaq Tru64 Unix
@@ -5512,12 +5512,11 @@ that
 
 	     CXX=cxx ./configure
 
-	This should work with other platforms supporting the "bool" keyword as
-  well, as there is nothing really Compaq-specific in the test that I
-  have added.
+	This should work with other platforms supporting the "bool"
+	keyword as well, as there is nothing really Compaq-specific in the
+	test that I have added.
 
-  Feel free to incorporate this into a future release of Jikes.
-
+	Feel free to incorporate this into a future release of Jikes.
 
 1999-07-13    <shields@jikes.watson.ibm.com>
 
@@ -5879,7 +5878,6 @@ that
 
 	* README.TXT: Add short description of build process
 
-
 1999-03-08    <shields@jikes.watson.ibm.com>
 
 	* java.g:
@@ -5929,7 +5927,6 @@ that
 	* Makefile: Add IRIX/gcc clause from Moses DeJong (dejong@cs.umn.edu)
 
 1999-02-24    <shields@jikes.watson.ibm.com>
-
 
 	* jikes.cpp (main): update version number to v0.45
 
@@ -6076,7 +6073,6 @@ that
 	* Makefile:
 	Add clause for Sun Solaris CC (SunOS), provided by
 	mo dejong (dejong at cs.umn.edu), 2 Feb 1999
-
 
 1999-02-02    <shields@jikes.watson.ibm.com>
 
