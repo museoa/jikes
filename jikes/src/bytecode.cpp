@@ -923,7 +923,14 @@ bool ByteCode::EmitStatement(AstStatement *statement)
             {
                 if (IsNop(if_statement -> true_statement -> BlockCast()))
                 {
-                    EmitExpression(if_statement -> expression, false);
+                    Label label;
+                    EmitBranchIfExpression(if_statement -> expression,
+                                           true, label,
+                                           if_statement -> false_statement_opt);
+                    assert(stack_depth == 0);
+                    EmitStatement(if_statement -> false_statement_opt);
+                    DefineLabel(label);
+                    CompleteLabel(label);
                     return false;
                 }
                 Label label1,
@@ -1531,11 +1538,6 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
                 assert(switch_block_statement -> SwitchLabel(li) ->
                        DefaultLabelCast());
                 assert(switch_statement -> default_case.switch_block_statement);
-                //
-                // Bug 2895: If previous label ended in break, and the default
-                // label is a no-op, optimizing the goto is incorrect.
-                //
-                last_op_goto = false;
                 DefineLabel(default_label);
             }
         }
@@ -1880,6 +1882,7 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
         // Try block was empty; skip all catch blocks, and a finally block
         // is treated normally.
         //
+        method_stack -> TopHandlerRangeStart().Reset();
         if (emit_finally_clause)
             EmitBlockStatement(statement -> finally_clause_opt -> block);
     }
@@ -3477,7 +3480,9 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
         //
         // Here for string concatenation.
         //
-        if (assignment_expression -> assignment_tag == AstAssignmentExpression::PLUS_EQUAL && left_type == control.String())
+        if ((assignment_expression -> assignment_tag ==
+             AstAssignmentExpression::PLUS_EQUAL) &&
+            left_type == control.String())
         {
             PutOp(OP_NEW);
             PutU2(RegisterClass(control.StringBuffer()));
@@ -3818,8 +3823,8 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
                         break;
                 }
             }
-
-            EmitExpression(right_expr);
+            // Use promoted version, not the stripped right_expr.
+            EmitExpression(expression -> right_expression);
             return GetTypeWords(type);
         case AstBinaryExpression::STAR:
         case AstBinaryExpression::AND:
@@ -3858,8 +3863,8 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
                         break;
                 }
             }
-
-            EmitExpression(right_expr);
+            // Use promoted version, not the stripped right_expr.
+            EmitExpression(expression -> right_expression);
 
             PutOp(control.IsSimpleIntegerValueType(type) ? OP_INEG
                   : type == control.long_type ? OP_LNEG
@@ -3964,6 +3969,7 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
                         break;
                 }
             }
+            // Use promoted version, not the stripped left_expr.
             EmitExpression(expression -> left_expression);
             return GetTypeWords(type);
         case AstBinaryExpression::STAR:
@@ -5556,13 +5562,16 @@ void ByteCode::DefineLabel(Label& lab)
 
     //
     // Optimize if previous instruction was unconditional jump to this label.
+    // However, we cannot perform the optimization if another label was also
+    // defined at this location.
     //
     int index = lab.uses.Length() - 1;
     if (last_op_goto && index >= 0)
     {
         unsigned int luse = lab.uses[index].use_offset;
         int start = luse - lab.uses[index].op_offset;
-        if (start == last_op_pc)
+        if (start == last_op_pc &&
+            code_attribute -> CodeLength() != last_label_pc)
         {
 #ifdef JIKES_DEBUG
             if (control.option.debug_trace_stack_change)
@@ -5572,12 +5581,13 @@ void ByteCode::DefineLabel(Label& lab)
                                          lab.uses[index].use_length);
             lab.uses.Reset(index);
             line_number_table_attribute -> SetMax(start);
-            last_label_pc = start;
             last_op_goto = false;
         }
     }
     lab.defined = true;
     lab.definition = code_attribute -> CodeLength();
+    if (lab.uses.Length())
+        last_label_pc = lab.definition;
 }
 
 
@@ -5599,8 +5609,6 @@ void ByteCode::CompleteLabel(Label& lab)
         //
         if (lab.definition > code_attribute -> CodeLength())
             lab.definition = code_attribute -> CodeLength();
-        if (lab.definition > last_label_pc)
-            last_label_pc = lab.definition;
 
         //
         // patch byte code reference to label to reflect its definition

@@ -2033,7 +2033,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
             VariableSymbol *instance =
                 block_symbol -> InsertVariableSymbol(instance_name);
             instance -> MarkSynthetic();
-            instance -> SetType(base_type);
+            instance -> SetType(base_type == super ? this : base_type);
             instance -> SetOwner(read_method);
             instance -> SetLocalVariableIndex(block_symbol ->
                                               max_variable_index++);
