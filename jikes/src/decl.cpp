@@ -19,54 +19,42 @@ using namespace Jikes;
 #endif
 
 //
-// If this compilation unit contains a package declaration, make sure the package
-// is associated with a directory and that the name of the package is not also
-// associated with a type.
+// If this compilation unit contains a package declaration, make sure
+// the package is not also associated with a type. We used to also
+// require that the package exist at compile time, but this was
+// changed so that we are compatible with other Java compilers.
 //
 inline void Semantic::CheckPackage()
 {
     if (compilation_unit -> package_declaration_opt)
     {
         //
-        // Make sure that the package actually exists.
+        // Make sure that the package or any of its parents does not match the name of a type.
         //
-        if (this_package -> directory.Length() == 0 && control.option.directory == NULL)
+        for (PackageSymbol *subpackage = this_package, *package = subpackage -> owner;
+            package;
+            subpackage = package, package = package -> owner)
         {
-            ReportSemError(SemanticError::PACKAGE_NOT_FOUND,
-                           compilation_unit -> package_declaration_opt -> name -> LeftToken(),
-                           compilation_unit -> package_declaration_opt -> name -> RightToken(),
-                           this_package -> PackageName());
-        }
-        else
-        {
-            //
-            // Make sure that the package or any of its parents does not match the name of a type.
-            //
-            for (PackageSymbol *subpackage = this_package, *package = subpackage -> owner;
-                 package;
-                 subpackage = package, package = package -> owner)
+            FileSymbol *file_symbol = Control::GetFile(control, package, subpackage -> Identity());
+            if (file_symbol)
             {
-                FileSymbol *file_symbol = Control::GetFile(control, package, subpackage -> Identity());
-                if (file_symbol)
-                {
-                    char *file_name = file_symbol -> FileName();
-                    int length = file_symbol -> FileNameLength();
-                    wchar_t *error_name = new wchar_t[length + 1];
-                    for (int i = 0; i < length; i++)
-                        error_name[i] = file_name[i];
-                    error_name[length] = U_NULL;
+                char *file_name = file_symbol -> FileName();
+                int length = file_symbol -> FileNameLength();
+                wchar_t *error_name = new wchar_t[length + 1];
+                for (int i = 0; i < length; i++)
+                    error_name[i] = file_name[i];
+                error_name[length] = U_NULL;
 
-                    ReportSemError(SemanticError::PACKAGE_TYPE_CONFLICT,
-                                   compilation_unit -> package_declaration_opt -> name -> LeftToken(),
-                                   compilation_unit -> package_declaration_opt -> name -> RightToken(),
-                                   package -> PackageName(),
-                                   subpackage -> Name(),
-                                   error_name);
+                ReportSemError(SemanticError::PACKAGE_TYPE_CONFLICT,
+                    compilation_unit -> package_declaration_opt -> name -> LeftToken(),
+                    compilation_unit -> package_declaration_opt -> name -> RightToken(),
+                    package -> PackageName(),
+                    subpackage -> Name(),
+                    error_name);
 
-                    delete [] error_name;
-                }
+                delete [] error_name;
             }
-        }
+         }
     }
 
     return;
