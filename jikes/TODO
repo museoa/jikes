@@ -21,7 +21,9 @@ Also, would it be better to convert a bunch
 of chars in a buffer instead of doing them
 one at a time?
 
-(it would, this is part of the stream changes I'm working on)
+(it would, this is part of the stream changes cabbey was
+working on before he lost his raid, just got access back,
+and will continue to investigate.)
 
 
 command line UI issues, including the classpath
