@@ -588,6 +588,7 @@ void SemanticError::StaticInitializer()
     print_message[MISMATCHED_INHERITED_METHOD_EXTERNALLY] = PrintMISMATCHED_INHERITED_METHOD_EXTERNALLY;
     print_message[MISMATCHED_INHERITED_METHODS_IN_BASE] = PrintMISMATCHED_INHERITED_METHODS_IN_BASE;
     print_message[DUPLICATE_FORMAL_PARAMETER] = PrintDUPLICATE_FORMAL_PARAMETER;
+    print_message[MISSPELLED_CONSTRUCTOR_NAME] = PrintMISSPELLED_CONSTRUCTOR_NAME;
     print_message[MISMATCHED_CONSTRUCTOR_NAME] = PrintMISMATCHED_CONSTRUCTOR_NAME;
     print_message[METHOD_WITH_CONSTRUCTOR_NAME] = PrintMETHOD_WITH_CONSTRUCTOR_NAME;
     print_message[DUPLICATE_LOCAL_VARIABLE_DECLARATION] = PrintDUPLICATE_LOCAL_VARIABLE_DECLARATION;
@@ -2213,9 +2214,23 @@ wchar_t *SemanticError::PrintDUPLICATE_CONSTRUCTOR(ErrorInfo &err, LexStream *le
 {
     ErrorString s;
     
-    s << "Duplicate declaration of this constructor in type \""
+    s << "Duplicate declaration of this constructor signature in type \""
             << err.insert1
             << "\".";
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintMISSPELLED_CONSTRUCTOR_NAME(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    ErrorString s;
+    
+    s << "The name of the constructor \""
+            << err.insert1
+            << "\" does not match the name of the class \""
+            << err.insert2
+            << "\". Assuming it is misspelled.";
 
     return s.Array();
 }
@@ -2229,7 +2244,7 @@ wchar_t *SemanticError::PrintMISMATCHED_CONSTRUCTOR_NAME(ErrorInfo &err, LexStre
             << err.insert1
             << "\" does not match the name of the class \""
             << err.insert2
-            << "\".";
+            << "\". Assuming it is a method with missing return type.";
 
     return s.Array();
 }
@@ -5387,7 +5402,9 @@ wchar_t *SemanticError::PrintCONSTRUCTOR_FOUND_IN_ANONYMOUS_CLASS(ErrorInfo &err
 {
     ErrorString s;
     
-    s << "An anonymous class cannot have a constructor.";
+    s << "An anonymous class cannot have a constructor. Assuming that \""
+            << err.insert1
+            << "\" is a method with missing return type.";
 
     return s.Array();
 }

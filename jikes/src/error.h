@@ -179,6 +179,7 @@ class SemanticError
         MISMATCHED_INHERITED_METHOD_EXTERNALLY,
         MISMATCHED_INHERITED_METHODS_IN_BASE,
         DUPLICATE_FORMAL_PARAMETER,
+        MISSPELLED_CONSTRUCTOR_NAME,
         MISMATCHED_CONSTRUCTOR_NAME,
         METHOD_WITH_CONSTRUCTOR_NAME,
         DUPLICATE_LOCAL_VARIABLE_DECLARATION,
@@ -512,6 +513,7 @@ private:
     static wchar_t *PrintMISMATCHED_INHERITED_METHOD_EXTERNALLY(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISMATCHED_INHERITED_METHODS_IN_BASE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintDUPLICATE_FORMAL_PARAMETER(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintMISSPELLED_CONSTRUCTOR_NAME(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISMATCHED_CONSTRUCTOR_NAME(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMETHOD_WITH_CONSTRUCTOR_NAME(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintDUPLICATE_LOCAL_VARIABLE_DECLARATION(ErrorInfo &, LexStream *, Control &);

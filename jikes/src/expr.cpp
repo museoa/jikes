@@ -3403,6 +3403,9 @@ void Semantic::ProcessParenthesizedExpression(Ast *expr)
 
 void Semantic::UpdateGeneratedLocalConstructor(MethodSymbol *constructor)
 {
+    if (! constructor) // because of an earlier error
+        return;
+
     TypeSymbol *local_type = constructor -> containing_type;
     MethodSymbol *local_constructor = constructor -> LocalConstructor();
 

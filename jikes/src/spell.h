@@ -17,6 +17,12 @@
 namespace Jikes {	// Open namespace Jikes block
 #endif
 
+//
+// This is a helper class which hueristically determines the probability
+// that one string is a match for another.  The static function Index
+// returns an integer from 0 to 10; for example, a return of 6 indicates
+// a 60% chance that one string is a misspelled match of the other.
+//
 class Spell
 {
     static inline int Min(int x, int y) { return (x < y ? x : y); }

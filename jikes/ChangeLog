@@ -1,5 +1,23 @@
 2001-09-08  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/expr.cpp (UpdateGeneratedLocalConstructor): 
+	Removed the cause of a core dump when a method omits a
+	return type in a local class - patch 91, from bug 179.
+	* src/error.h:
+	* src/error.cpp (PrintMISSPELLED_CONSTRUCTOR_NAME): 
+	Added an error to differentiate between behavior
+	taken when bad constructor is interpreted as
+	misspelling instead of missing return type.
+	Improved the wording of various constructor-related
+	error messages.
+	* src/decl.cpp (ProcessConstructorDeclaration): 
+	Added some better handling of misspelled name vs.
+	missing return type.
+	* src/spell.h (Spell): Added some documentation
+	to better explain this (useful) class.
+
+2001-09-08  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/jikesapi.cpp (JikesOption): Attempt a workaround to a segv
 	encountered with bad encoding from patch 168.
 

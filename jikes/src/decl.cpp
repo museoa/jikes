@@ -13,6 +13,7 @@
 #include "depend.h"
 #include "table.h"
 #include "tuple.h"
+#include "spell.h"
 
 #ifdef	HAVE_JIKES_NAMESPACE
 namespace Jikes {	// Open namespace Jikes block
@@ -2810,27 +2811,48 @@ void Semantic::GenerateLocalConstructor(MethodSymbol *constructor)
 void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration *constructor_declaration)
 {
     TypeSymbol *this_type = ThisType();
-    if (this_type -> Anonymous())
-    {
-        ReportSemError(SemanticError::CONSTRUCTOR_FOUND_IN_ANONYMOUS_CLASS,
-                       constructor_declaration -> LeftToken(),
-                       constructor_declaration -> RightToken());
-        return;
-    }
 
     AccessFlags access_flags = ProcessConstructorModifiers(constructor_declaration);
 
     AstMethodDeclarator *constructor_declarator = constructor_declaration -> constructor_declarator;
     wchar_t *constructor_name = lex_stream -> NameString(constructor_declarator -> identifier_token);
 
-    if (lex_stream -> NameSymbol(constructor_declarator -> identifier_token) != this_type -> Identity())
+    //
+    // A bad name indicates either a misspelling, or a method missing
+    // a return type.  In an anonymous class, assume a missing return
+    // type.  In all other classes, if the probability of misspelling
+    // >= 50%, correct the name, otherwise treat it as a method with
+    // bad return type.
+    //
+    bool treat_as_method = false;
+    if (this_type -> Anonymous())
     {
-        ReportSemError(SemanticError::MISMATCHED_CONSTRUCTOR_NAME,
-                       constructor_declarator -> identifier_token,
-                       constructor_declarator -> identifier_token,
-                       constructor_name,
-                       this_type -> Name());
-        constructor_name = this_type -> Name(); // assume the proper name !
+        ReportSemError(SemanticError::CONSTRUCTOR_FOUND_IN_ANONYMOUS_CLASS,
+                       constructor_declarator -> LeftToken(),
+                       constructor_declarator -> RightToken(),
+                       constructor_name);
+        treat_as_method = true;
+    }
+    else if (lex_stream -> NameSymbol(constructor_declarator -> identifier_token) != this_type -> Identity())
+    {
+        if (Spell::Index(constructor_name, this_type -> Name()) >= 5)
+        {
+            ReportSemError(SemanticError::MISSPELLED_CONSTRUCTOR_NAME,
+                           constructor_declarator -> identifier_token,
+                           constructor_declarator -> identifier_token,
+                           constructor_name,
+                           this_type -> Name());
+            constructor_name = this_type -> Name(); // correct the name
+        }
+        else
+        {
+            ReportSemError(SemanticError::MISMATCHED_CONSTRUCTOR_NAME,
+                           constructor_declarator -> identifier_token,
+                           constructor_declarator -> identifier_token,
+                           constructor_name,
+                           this_type -> Name());
+            treat_as_method = true;
+        }
     }
 
     //
@@ -2843,12 +2865,19 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration *construc
     ProcessFormalParameters(block_symbol, constructor_declarator);
 
     //
-    // Note that constructors are always named "<init>"
+    // Note that constructors are always named "<init>", but if this is a
+    // method with missing return type, we use the method name.
     //
-    MethodSymbol *constructor = this_type -> FindMethodSymbol(control.init_name_symbol);
+    NameSymbol *name_symbol = treat_as_method
+        ? lex_stream -> NameSymbol(constructor_declarator -> identifier_token)
+        : control.init_name_symbol;
+    MethodSymbol *constructor = this_type -> FindMethodSymbol(name_symbol);
 
     if (! constructor) // there exists a constructor already in type -> table.
-         constructor = this_type -> InsertConstructorSymbol(control.init_name_symbol);
+        if (! treat_as_method)
+            constructor = this_type -> InsertConstructorSymbol(name_symbol);
+        else
+            constructor = this_type -> InsertMethodSymbol(name_symbol);
     else
     {
         if (this_type -> FindOverloadMethod(constructor, constructor_declarator))
@@ -2867,7 +2896,7 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration *construc
     //
     // If the method is not static, leave a slot for the "this" pointer.
     //
-    constructor -> SetType(control.void_type);
+    constructor -> SetType(treat_as_method ? control.no_type : control.void_type);
     constructor -> SetFlags(access_flags);
     constructor -> SetContainingType(this_type);
     constructor -> SetBlockSymbol(block_symbol);
