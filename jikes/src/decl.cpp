@@ -262,7 +262,11 @@ void Semantic::ProcessTypeNames()
                 break;
             }
         default:
+#ifdef ERNST
+// It is an open question if the next assert is appropriate.
+// Mike Ernst will sort this out.
         assert(false);
+#endif
         break;
         }
 
