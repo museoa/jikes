@@ -1,3 +1,9 @@
+2003-05-31  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/case.h:
+	* src/getclass.cpp: Fix comparisons between wchar_t and int to
+	avoid warnings.
+
 2003-05-15  Chris Abbey  <jikes@cabbey.net>
 
 	* Makefile.in: add HACKING file to dist list	

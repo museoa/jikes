@@ -62,7 +62,8 @@ public:
     }
     static inline bool IsAsciiAlpha(wchar_t c)
     {
-        return (c == lower[(int) c] || c == upper[(int) c]);
+        return (c == (wchar_t) lower[(int) c] || c ==
+                (wchar_t) upper[(int) c]);
     }
 
     //
@@ -73,7 +74,7 @@ public:
     {
         for (int i = 0; *s != U_NULL; i++, s++)
         {
-            if (*s == c)
+            if ((wchar_t) *s == c)
                 return i;
         }
         return -1;
@@ -109,7 +110,7 @@ public:
     {
         for (int i = 0; i < n; i++)
         {
-            if (ToAsciiLower(s1[i]) != ToAsciiLower(s2[i]))
+            if (ToAsciiLower(s1[i]) != (wchar_t) ToAsciiLower(s2[i]))
                 return false;
         }
         return true;
@@ -119,7 +120,7 @@ public:
     {
         for (int i = 0; i < n; i++)
         {
-            if (ToAsciiLower(s1[i]) != ToAsciiLower(s2[i]))
+            if ((wchar_t) ToAsciiLower(s1[i]) != ToAsciiLower(s2[i]))
                 return false;
         }
         return true;
@@ -157,10 +158,10 @@ public:
         int i;
         for (i = 0; s1[i] && s2[i]; i++)
         {
-            if (ToAsciiLower(s1[i]) != ToAsciiLower(s2[i]))
+            if (ToAsciiLower(s1[i]) != (wchar_t) ToAsciiLower(s2[i]))
                 return false;
         }
-        return (s1[i] == s2[i]);
+        return (s1[i] == (wchar_t) s2[i]);
     }
 
     static inline bool StringEqual(char *s1, const wchar_t *s2)
@@ -168,10 +169,10 @@ public:
         int i;
         for (i = 0; s1[i] && s2[i]; i++)
         {
-            if (ToAsciiLower(s1[i]) != ToAsciiLower(s2[i]))
+            if ((wchar_t) ToAsciiLower(s1[i]) != ToAsciiLower(s2[i]))
                 return false;
         }
-        return (s1[i] == s2[i]);
+        return ((wchar_t) s1[i] == s2[i]);
     }
 
     static inline bool StringEqual(wchar_t *s1, const wchar_t *s2)
