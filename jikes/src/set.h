@@ -770,7 +770,7 @@ public:
         {
             // Initialize new bits.
             int i = (new_size - 1) / cell_size;
-            while (i > ((int) set_size - 1) / cell_size)
+            while (i > ((int) set_size + cell_size - 1) / cell_size - 1)
                 s[i--] = init == EMPTY ? (CELL) 0 : ~((CELL) 0);
             if (set_size)
             {
