@@ -1166,7 +1166,7 @@ extern Ostream Coutput;
 // (lord).
 class ErrorString: public ConvertibleArray<wchar_t>
 {
- public:
+public:
     ErrorString();
 
     ErrorString &operator<<(const wchar_t *s);
@@ -1185,7 +1185,7 @@ class ErrorString: public ConvertibleArray<wchar_t>
 
     wchar_t *Array();
 
- private:
+private:
 
     void do_fill(int n);
     char fill_char;

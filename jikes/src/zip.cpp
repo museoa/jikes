@@ -479,7 +479,7 @@ Zip::Zip(Control &control_, char *zipfile_name) : control(control_),
                 holdbuffer[2] = tmpbuffer[2];
             }
 
-            delete [] tmpbuffer; 
+            delete [] tmpbuffer;
             delete [] holdbuffer;
         }
 #elif defined(WIN32_FILE_SYSTEM)
@@ -492,7 +492,7 @@ Zip::Zip(Control &control_, char *zipfile_name) : control(control_),
             for ( ; buffer_ptr >= zipbuffer; buffer_ptr--)
             {
                 if (*buffer_ptr == 'P')
-                {                
+                {
                     sig = GetU4();
                     if (sig == END_SIG)
                     {

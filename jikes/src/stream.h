@@ -38,18 +38,18 @@ class StreamError : public JikesError
 public:
 
     StreamError();
-    
+
     virtual const wchar_t *getErrorMessage();
     virtual const wchar_t *getErrorReport();
-    
+
     virtual JikesErrorSeverity getSeverity();
     virtual const char *getFileName();
-    
+
     virtual int getLeftLineNo();
     virtual int getLeftColumnNo();
     virtual int getRightLineNo();
     virtual int getRightColumnNo();
-    
+
     enum StreamErrorKind
     {
         BAD_TOKEN,
@@ -69,7 +69,7 @@ private:
     unsigned start_location;
     unsigned end_location;
     StreamErrorKind kind;
-    
+
     static bool emacs_style_report;
     LexStream *lex_stream;
 
@@ -80,12 +80,12 @@ private:
 
     wchar_t *regularErrorString();
     wchar_t *emacsErrorString();
-    
+
     void PrintLargeSource(ErrorString &s);
     void PrintSmallSource(ErrorString &s);
 
     bool initialized;
-    
+
     void Initialize(StreamErrorKind kind_, unsigned start_location_,
                     unsigned end_location_, LexStream *);
 
@@ -98,7 +98,7 @@ private:
 class Stream
 {
 public:
-  
+
     Stream();
     ~Stream();
 
@@ -187,9 +187,8 @@ class LexStream : public Stream
 {
 
     friend class StreamError;
-    
- public:
-    
+
+public:
     typedef int TypeIndex;
     typedef int TokenIndex;
     typedef int CommentIndex;
@@ -447,7 +446,7 @@ void Dump(); // temporary function used to dump token stream.
 private:
 
     int hexvalue(wchar_t ch);
-    
+
 #if defined(HAVE_ENCODING)
     enum UnicodeLexerState
     {
@@ -461,7 +460,7 @@ private:
         UNICODE_ESCAPE_DIGIT_2
     };
 #endif
-    
+
     friend class Scanner;
 
     class Token

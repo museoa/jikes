@@ -416,7 +416,8 @@ public:
 
     inline bool WriteToFile(char *file_name)
     {
-        JikesAPI::FileWriter *file = JikesAPI::getInstance()->write(file_name,buffer.top);
+        JikesAPI::FileWriter *file
+          = JikesAPI::getInstance() -> write(file_name, buffer.top);
 
         if (file == NULL) // NB if file was invalid it would already have been destroyed by write()
             return false;
@@ -432,7 +433,7 @@ public:
         file->write(buffer.base[n] + size, (buffer.top - size));
 
         delete file;
-       
+
         return true;
     }
 

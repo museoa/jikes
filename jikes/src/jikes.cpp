@@ -20,11 +20,11 @@ int main(int argc, char *argv[])
     // Here we are creating instance of default API
     JikesAPI *compiler = new JikesAPI();
 
-    int    return_code;    
+    int return_code;
     char **files;
 
     files = compiler -> parseOptions(argc, argv);
-    
+
     if (compiler -> getOptions() -> help)
     {
         printf("%s%s", StringConstant::U8S_help_header,

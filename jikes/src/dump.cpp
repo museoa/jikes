@@ -267,7 +267,7 @@ void LexStream::Dump()
     {
         fprintf(tokfile, "*%5d ", com);
         // print file name
-        fprintf(tokfile, "%s",FileName());
+        fprintf(tokfile, "%s", FileName());
         fprintf(tokfile, ", line %d.%d: ",
                          FindLine(comments[com].location),
                          FindColumn(comments[com].location));
@@ -281,7 +281,7 @@ void LexStream::Dump()
         tok = Gettoken();
 
         fprintf(tokfile, "%6d ", tok);
-        fprintf(tokfile, " %s",FileName());
+        fprintf(tokfile, " %s", FileName());
         fprintf(tokfile, ", %cline %d.%d: %s %s  ",
                          (AfterEol(tok) ? '*' : ' '),
                          Line(tok),
@@ -294,8 +294,8 @@ void LexStream::Dump()
 
         for (LexStream::CommentIndex com = FirstComment(tok); com < NumComments() && PrecedingToken(com) == tok; com++)
         {
-            fprintf(tokfile, "*%5d ",com);
-        fprintf(tokfile, " %s",FileName());
+            fprintf(tokfile, "*%5d ", com);
+        fprintf(tokfile, " %s", FileName());
             fprintf(tokfile, ", line %d.%d: ",
                              FindLine(comments[com].location),
                              FindColumn(comments[com].location));
@@ -322,8 +322,6 @@ void LexStream::Dump()
         fclose(tokfile);
 
     delete [] tokfile_name;
-
-    return;
 }
 
 

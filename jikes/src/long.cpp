@@ -317,8 +317,6 @@ void BaseLong::Divide(const BaseLong &dividend, const BaseLong &divisor,
     }
 
     quotient = BaseLong(high, low);
-
-    return;
 #endif // HAVE_64BIT_TYPES
 }
 
@@ -524,7 +522,7 @@ LongInt LongInt::operator>> (int op) const
 
     if (n == 0)
         return *this;
-    
+
     i4 hi = HighWord();
     u4 shift = (hi & SIGN_BIT) ? 0xffffffff : 0;
 

@@ -617,7 +617,7 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentExpression(AstExpression *exp
     // The left-hand-side of an assignment expression is either a simple name,
     // a field access or an array access.  A simple name does not need further
     // action, a field access needs to descend into all qualifying expressions,
-    // and an array access needs to descend into the entire expression. 
+    // and an array access needs to descend into the entire expression.
     //
     if (! simple_name)
     {
@@ -794,7 +794,6 @@ inline void Semantic::DefiniteVariableInitializer(AstVariableDeclarator *variabl
         BlankFinals() -> AddElement(variable_declarator -> symbol ->
                                    LocalVariableIndex(this));
     }
-    
 }
 
 

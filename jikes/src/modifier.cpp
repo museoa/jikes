@@ -769,7 +769,7 @@ AccessFlags Semantic::ProcessStaticNestedInterfaceModifiers(AstInterfaceDeclarat
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token,
                                StringConstant::US_public);
-            else 
+            else
             {
                 if (control.option.pedantic)
                     ReportSemError(SemanticError::REDUNDANT_MODIFIER,
@@ -1645,7 +1645,6 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
                 ReportSemError(SemanticError::STRICTFP_NATIVE_METHOD,
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token);
-            
             break;
         case Ast::SYNCHRONIZED:
             if (access_flags.ACC_SYNCHRONIZED())
@@ -1685,7 +1684,7 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
             break;
         }
     }
-    
+
     return access_flags;
 }
 

@@ -707,7 +707,7 @@ public:
     // This variable is used in TypeCycleChecker to determine if this type
     // forms an inter-type cycle in its "extends" or "implements" relationship.
     int index;
-    
+
     // This variable is used in TypeCycleChecker to check if this type
     // forms an intra-type cycle in its "extends" or "implements" relationship;
     int unit_index;

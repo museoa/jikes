@@ -130,10 +130,12 @@ int Unzip::huft_build(unsigned *b,unsigned n, unsigned s, unsigned short *d, uns
 
   /* Generate counts for each bit length */
   el = n > 256 ? b[256] : BMAX; /* set length of EOB code, if any */
-  memset((char *)c,0, sizeof(c));
-  p = b;  i = n;
+  memset((char *)c, 0, sizeof(c));
+  p = b;
+  i = n;
   do {
-    c[*p]++; p++;               /* assume all entries <= BMAX */
+    c[*p]++;
+    p++;               /* assume all entries <= BMAX */
   } while (--i);
   if (c[0] == n)                /* null input--all zero length codes */
   {
@@ -176,8 +178,9 @@ int Unzip::huft_build(unsigned *b,unsigned n, unsigned s, unsigned short *d, uns
 
 
   /* Make a table of values in order of bit lengths */
-  memset((char *)v,0, sizeof(v));
-  p = b;  i = 0;
+  memset((char *) v, 0, sizeof(v));
+  p = b;
+  i = 0;
   do {
     if ((j = *p++) != 0)
       v[x[j]++] = i;
@@ -310,7 +313,7 @@ int Unzip::huft_free(struct huft *t)
 }
 
 
-int Unzip::inflate_codes(struct huft *tl,struct huft * td, int  bl,int bd)
+int Unzip::inflate_codes(struct huft *tl, struct huft * td, int  bl, int bd)
 /*struct huft *tl, *td literal/length and distance decoder tables */
 /* int bl, bd;              number of bits decoded by tl[] and td[] */
 /* inflate (decompress) the codes in a deflated (compressed) block.

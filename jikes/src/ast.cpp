@@ -717,7 +717,7 @@ Ast *AstAssertStatement::Clone(StoragePool *ast_pool)
 
     return clone;
 }
-                            
+
 Ast *AstCatchClause::Clone(StoragePool *ast_pool)
 {
     AstCatchClause *clone = ast_pool -> GenCatchClause();

@@ -1,3 +1,38 @@
+2002-07-30  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/ast.cpp:
+	* src/control.cpp:
+	* src/decl.cpp:
+	* src/definite.cpp:
+	* src/depend.cpp:
+	* src/diagnose.cpp:
+	* src/diagnose.h:
+	* src/double.h:
+	* src/dump.cpp:
+	* src/error.h:
+	* src/getclass.cpp:
+	* src/init.cpp:
+	* src/javaprs.h:
+	* src/jikes.cpp:
+	* src/jikesapi.cpp:
+	* src/jikesapi.h:
+	* src/long.cpp:
+	* src/long.h:
+	* src/modifier.cpp:
+	* src/op.cpp:
+	* src/option.cpp:
+	* src/parser.h:
+	* src/platform.cpp:
+	* src/platform.h:
+	* src/scanner.cpp:
+	* src/stream.cpp:
+	* src/stream.h:
+	* src/symbol.h:
+	* src/tuple.h:
+	* src/unzip.cpp:
+	* src/unzip.h:
+	* src/zip.cpp: Formatting changes.
+
 2002-07-29  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/semantic.h: Various method signature updates.

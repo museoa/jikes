@@ -47,7 +47,7 @@ enum ParseErrorCode
 struct PrimaryRepairInfo
 {
     ParseErrorCode code;
-    
+
     int distance,
         buffer_position,
         misspell_index,

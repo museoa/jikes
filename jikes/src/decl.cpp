@@ -2550,7 +2550,7 @@ void Semantic::CheckMethodOverride(MethodSymbol *method,
                                    MethodSymbol *hidden_method,
                                    TypeSymbol *base_type)
 {
-    assert(! hidden_method -> ACC_PRIVATE());           
+    assert(! hidden_method -> ACC_PRIVATE());
 
     //
     // If we inherit the same method from multiple paths (including methods

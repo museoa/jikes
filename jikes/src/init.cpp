@@ -73,7 +73,7 @@ void Semantic::ProcessVariableInitializer(AstVariableDeclarator *variable_declar
                 init -> value = NULL;
             }
         }
-    
+
         if (symbol -> ACC_FINAL() &&
             (field_type -> Primitive() || field_type == control.String()))
         {
@@ -185,7 +185,6 @@ void Semantic::ComputeFinalValue(VariableSymbol *variable)
 
         //
         // Create a clone and process that, to avoid triggering errors now.
-        // Process the initializer in the 
         // Later, we will issue the errors for real when processing the field
         // initializer when we get to its source file.
         //

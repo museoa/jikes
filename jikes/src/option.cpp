@@ -123,7 +123,6 @@ void ArgumentExpander::ExpandAtFileArgument(Tuple<char *>& arguments,
 
     if (afile != NULL)
         fclose(afile);
-    return;
 }
 
 
@@ -151,8 +150,6 @@ ArgumentExpander::ArgumentExpander(int argc_, char *argv_[],
 
     for (int k = 0; k < argc; k++)
         argv[k] = arguments[k];
-
-    return;
 }
 
 
@@ -247,13 +244,11 @@ void Option::SaveCurrentDirectoryOnDisk(char c)
         current_directory[Case::ToAsciiLower(c)] = disk_directory;
         current_directory[Case::ToAsciiUpper(c)] = disk_directory;
     }
-
-    return;
 }
 #endif // WIN32_FILE_SYSTEM
 
 
-// 
+//
 // Skip leading whitespace and copy the rest to a new string
 // so we don't have to worry about affecting the environment
 // variable. If input value is NULL or consists of only whitespace
@@ -792,8 +787,6 @@ Option::Option(ArgumentExpander& arguments,
     //
     if (errors && (! dump_errors))
         Coutput.SetExpandWchar();
-
-    return;
 }
 
 
@@ -805,8 +798,6 @@ Option::~Option()
     for (char c = 'a'; c <= 'z'; c++)
         delete [] current_directory[c];
 #endif // WIN32_FILE_SYSTEM
-
-    return;
 }
 
 #ifdef HAVE_JIKES_NAMESPACE

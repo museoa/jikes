@@ -341,7 +341,7 @@ void TypeDependenceChecker::OutputMake(FileSymbol *file_symbol)
         DirectorySymbol *dir_symbol = file_symbol -> OutputDirectory();
         char *dir_name = dir_symbol -> DirectoryName();
         int dir_length = strlen(dir_name);
-        
+
         buf = new char[length + FileSymbol::class_suffix_length + dir_length +
                       2];
         strcpy(buf, dir_name);

@@ -45,8 +45,6 @@ void Parser::ReallocateStacks()
     temp_stack = (int *) memmove(new int[stack_length], temp_stack,
                                  old_stack_length * sizeof(int));
     delete [] old_temp_stack;
-
-    return;
 }
 
 
@@ -70,8 +68,6 @@ void Parser::FreeCircularList(AstListNode *tail)
     AstListNode *root = tail -> next;
     tail -> next = free_list_nodes;
     free_list_nodes = root;
-
-    return;
 }
 
 
@@ -636,8 +632,6 @@ void Parser::RepairParse(TokenObject curtok)
             } while (act <= NUM_RULES);
         } /* process_terminal */
     }
-
-    return;
 }
 
 
@@ -681,8 +675,6 @@ void Parser::ErrorRepair(TokenObject error_token)
 
     state_stack_top = repair.stack_position;
     lex_stream -> Reset(buffer[repair.buffer_position]);
-
-    return;
 }
 
 

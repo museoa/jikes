@@ -30,9 +30,8 @@ class SemanticError;
 class ErrorInfo : public JikesError
 {
     friend class SemanticError;
-    
- public:
-    
+
+public:
     virtual const wchar_t *getErrorMessage();
     virtual const wchar_t *getErrorReport();
 
@@ -47,17 +46,15 @@ class ErrorInfo : public JikesError
     ErrorInfo();
     virtual ~ErrorInfo();
 
- protected:
-
- private:
+private:
     int left_line_no;
     int left_column_no;
     int right_line_no;
     int right_column_no;
-    
+
     LexStream::TokenIndex left_token;
     LexStream::TokenIndex right_token;
-    
+
     wchar_t *insert1,
         *insert2,
         *insert3,
@@ -91,7 +88,7 @@ class SemanticError
     friend class ErrorInfo;
     friend class JikesAPI;
 
- public:
+public:
     enum SemanticErrorKind
     {
         BAD_ERROR,

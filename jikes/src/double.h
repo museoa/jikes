@@ -25,7 +25,7 @@
 //
 // Developed at SunSoft, a Sun Microsystems, Inc. business.
 // Permission to use, copy, modify, and distribute this
-// software is freely granted, provided that this notice 
+// software is freely granted, provided that this notice
 // is preserved.
 // ====================================================
 //
@@ -289,7 +289,7 @@ public:
                        : (IsZero() && op.IsZero()) ? op.Sign() - Sign()
                                                    : (*this < op) ? -1
                                                                   : *this > op;
-    }        
+    }
 };
 
 
@@ -365,7 +365,7 @@ public:
     inline LongInt Fraction(void) const
     {
         return LongInt((HighWord() & FRACT_BITS) | (ExpBits() ? MIN_FRACT : 0),
-                       LowWord()); 
+                       LowWord());
     }
     static inline int Bias(void)      { return BIAS; }
     static inline int FractSize(void) { return FRACT_SIZE; }
@@ -510,7 +510,7 @@ public:
                        : (IsZero() && op.IsZero()) ? op.Sign() - Sign()
                                                    : (*this < op) ? -1
                                                                   : *this > op;
-    }        
+    }
 };
 
 

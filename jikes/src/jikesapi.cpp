@@ -26,16 +26,17 @@ using namespace Jikes;
 namespace Jikes {
 #endif
 
-/**
- * A default implementation of ReadObject that read from the file sysytem.
- */ 
+
+//
+// A default implementation of ReadObject that read from the file sysytem.
+//
 class DefaultFileReader: public JikesAPI::FileReader
 {
 public:
-    
+
     DefaultFileReader(const char *fileName);
-    virtual  ~DefaultFileReader();
-    
+    virtual ~DefaultFileReader();
+
     virtual const char* getBuffer() { return buffer; }
     virtual size_t getBufferSize() { return size; }
 
@@ -45,21 +46,21 @@ private:
     size_t size;
 
 // FIXME : need to move into platform.h
-#ifdef   WIN32_FILE_SYSTEM
+#ifdef WIN32_FILE_SYSTEM
     HANDLE srcfile;
     HANDLE mapfile;
-#endif 
+#endif // WIN32_FILE_SYSTEM
 };
 
-/**
- * A default implementation of WriteObject that writes to the file system.
- */
+//
+// A default implementation of WriteObject that writes to the file system.
+//
 class DefaultFileWriter: public JikesAPI::FileWriter
 {
 public:
     DefaultFileWriter(const char *fileName, size_t maxSize);
     virtual ~DefaultFileWriter();
-    
+
     virtual int isValid();
 
 private:
@@ -221,7 +222,7 @@ void JikesAPI::reportError(JikesError *error)
     Coutput << error -> getErrorReport() << endl;
 }
 
-const char *JikesError::getSeverityString() 
+const char *JikesError::getSeverityString()
 {
     switch (getSeverity())
     {
@@ -258,7 +259,7 @@ JikesAPI::FileReader *JikesAPI::read(const char *fileName)
     // NB even if a file is empty (0 bytes)
     // This will return a pointer to 0 length array
     // and should not be NULL.
-    if (result && (result->getBuffer() == NULL))  
+    if (result && (result->getBuffer() == NULL))
     {
         delete result;
         result  = NULL;
@@ -266,13 +267,13 @@ JikesAPI::FileReader *JikesAPI::read(const char *fileName)
     return result;
 }
 
-/**
- * By Default return an object that reads from the file system.
- */
-JikesAPI::FileWriter *JikesAPI::write(const char *fileName, size_t bytes) 
+//
+// By Default return an object that reads from the file system.
+//
+JikesAPI::FileWriter *JikesAPI::write(const char *fileName, size_t bytes)
 {
     FileWriter *result  = new DefaultFileWriter(fileName, bytes);
-    
+
     if (result && (! result -> isValid()))
     {
         delete result;
@@ -294,7 +295,7 @@ size_t JikesAPI::FileWriter::write(const unsigned char *data, size_t size)
         result = doWrite(data, size);
         maxSize -= size;
     }
-   
+
     return result;
 }
 
@@ -310,10 +311,10 @@ namespace Jikes {
 // the subsequent section.
 
 
-/**
- * When the ReadObject is created. read the whole file into a buffer
- * held by the object.
- */ 
+//
+// When the ReadObject is created. read the whole file into a buffer
+// held by the object.
+//
 DefaultFileReader::DefaultFileReader(const char *fileName)
 {
     size = 0;
@@ -424,8 +425,8 @@ DefaultFileReader::~DefaultFileReader()
 
 
 // Create a windows file and map the file onto processor memory.
-DefaultFileWriter::DefaultFileWriter(const char *fileName,size_t maxSize):
-    FileWriter(maxSize)
+DefaultFileWriter::DefaultFileWriter(const char *fileName, size_t maxSize)
+    : FileWriter(maxSize)
 {
     valid = false;
     dataWritten = 0;
@@ -458,7 +459,7 @@ DefaultFileWriter::~DefaultFileWriter()
     }
 }
 
-int DefaultFileWriter::isValid()  
+int DefaultFileWriter::isValid()
 {
     return valid;
 }

@@ -1528,7 +1528,7 @@ void Scanner::ClassifyNonAsciiUnicode()
 {
     if (Code::IsAlpha(*cursor)) // Some kind of non-ascii unicode letter
         ClassifyId();
-    else 
+    else
         ClassifyBadToken();
 }
 

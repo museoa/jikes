@@ -475,7 +475,7 @@ void Operators::OpDmp(Tuple<cp_info *> &constant_pool, Tuple<u1> &code)
                          val = GetI4(code, pc);
                          sprintf(argdesc, "match:%d offset:%d",
                                  low++, val + pc_start);
-                         OpLine(constant_pool,"*",pc_this, op_this, name,
+                         OpLine(constant_pool, "*", pc_this, op_this, name,
                                 argdesc, desc, INFO_NONE, 0);
                          pc += 4;
                          len--;
@@ -546,8 +546,8 @@ void Operators::OpDmp(Tuple<cp_info *> &constant_pool, Tuple<u1> &code)
 
                      assert((! au1) && "...zero byte required in this position");
 
-                     sprintf(argdesc, "%d %d", nargs,info_index);
-                     info_kind=INFO_CONST;
+                     sprintf(argdesc, "%d %d", nargs, info_index);
+                     info_kind = INFO_CONST;
                  }
                  break;
             case OP_NEWARRAY:
