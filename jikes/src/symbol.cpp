@@ -23,12 +23,12 @@
 namespace Jikes { // Open namespace Jikes block
 #endif
 
-char *FileSymbol::java_suffix = StringConstant::U8S_DO_java;
-int FileSymbol::java_suffix_length = strlen(java_suffix);
-char *FileSymbol::class_suffix = StringConstant::U8S_DO_class;
-int FileSymbol::class_suffix_length = strlen(class_suffix);
+char* FileSymbol::java_suffix = StringConstant::U8S_DO_java;
+unsigned FileSymbol::java_suffix_length = strlen(java_suffix);
+char* FileSymbol::class_suffix = StringConstant::U8S_DO_class;
+unsigned FileSymbol::class_suffix_length = strlen(class_suffix);
 
-wchar_t *MethodSymbol::Header()
+wchar_t* MethodSymbol::Header()
 {
     assert(type_);
 
@@ -62,7 +62,7 @@ wchar_t *MethodSymbol::Header()
                       + 5); // +5 for '.' after package_name, ' ' after type,
                             // '(' after name, ')' after all parameters,
                             // ';' to terminate
-        for (int i = 0; i < NumFormalParameters(); i++)
+        for (unsigned i = 0; i < NumFormalParameters(); i++)
         {
             VariableSymbol *formal = FormalParameter(i);
             length += (formal -> Type() -> ContainingPackage() -> PackageNameLength() +
@@ -75,13 +75,13 @@ wchar_t *MethodSymbol::Header()
         if (throws_signatures && NumThrowsSignatures())
         {
             length += 7; // for " throws"
-            for (int j = 0; j < NumThrowsSignatures(); j++)
+            for (unsigned j = 0; j < NumThrowsSignatures(); j++)
                 length += strlen(ThrowsSignature(j)) + 2; // +2 for ", "
         }
         else if (NumThrows())
         {
             length += 7; // for " throws"
-            for (int j = 0; j < NumThrows(); j++)
+            for (unsigned j = 0; j < NumThrows(); j++)
             {
                 TypeSymbol *exception = Throws(j);
                 length += (exception -> ContainingPackage() ->
@@ -125,7 +125,7 @@ wchar_t *MethodSymbol::Header()
         *s++ = U_LEFT_PARENTHESIS;
         if (NumFormalParameters() > 0)
         {
-            for (int k = 0; k < NumFormalParameters(); k++)
+            for (unsigned k = 0; k < NumFormalParameters(); k++)
             {
                 VariableSymbol *formal = FormalParameter(k);
 
@@ -169,7 +169,7 @@ wchar_t *MethodSymbol::Header()
             *s++ = U_o;
             *s++ = U_w;
             *s++ = U_s;
-            for (int k = 0; k < NumThrowsSignatures(); k++)
+            for (unsigned k = 0; k < NumThrowsSignatures(); k++)
             {
                 *s++ = U_SPACE;
                 for (char *signature = ThrowsSignature(k);
@@ -191,7 +191,7 @@ wchar_t *MethodSymbol::Header()
             *s++ = U_o;
             *s++ = U_w;
             *s++ = U_s;
-            for (int k = 0; k < NumThrows(); k++)
+            for (unsigned k = 0; k < NumThrows(); k++)
             {
                 TypeSymbol *exception = Throws(k);
 
@@ -254,65 +254,39 @@ MethodSymbol *SymbolTable::FindOverloadMethod(MethodSymbol *base_method,
                 return method;
         }
     }
-
-    return (MethodSymbol *) NULL;
+    return NULL;
 }
 
 
 void TypeSymbol::ProcessTypeHeaders()
 {
-    AstClassDeclaration *class_declaration =
-        declaration -> ClassDeclarationCast();
-
-    if (class_declaration)
-        semantic_environment -> sem -> ProcessTypeHeaders(class_declaration);
+    AstClassDeclaration* class_decl =
+        declaration -> owner -> ClassDeclarationCast();
+    AstInterfaceDeclaration* interf_decl =
+        declaration -> owner -> InterfaceDeclarationCast();
+    if (class_decl)
+        semantic_environment -> sem -> ProcessTypeHeaders(class_decl);
     else
-        semantic_environment -> sem ->
-            ProcessTypeHeaders((AstInterfaceDeclaration *) declaration);
+    {
+        assert(interf_decl);
+        semantic_environment -> sem -> ProcessTypeHeaders(interf_decl);
+    }
 }
 
 void TypeSymbol::ProcessMembers()
 {
-    AstClassDeclaration *class_declaration =
-        declaration -> ClassDeclarationCast();
-
-    if (class_declaration)
-        semantic_environment -> sem ->
-            ProcessMembers(class_declaration -> semantic_environment,
-                           class_declaration -> class_body);
-    else
-        semantic_environment -> sem ->
-            ProcessMembers((AstInterfaceDeclaration *) declaration);
+    semantic_environment -> sem -> ProcessMembers(declaration);
 }
 
 void TypeSymbol::CompleteSymbolTable()
 {
-    AstClassDeclaration *class_declaration =
-        declaration -> ClassDeclarationCast();
-
-    if (class_declaration)
-        semantic_environment -> sem ->
-            CompleteSymbolTable(class_declaration -> semantic_environment,
-                                class_declaration -> identifier_token,
-                                class_declaration -> class_body);
-    else
-        semantic_environment -> sem ->
-            CompleteSymbolTable((AstInterfaceDeclaration *) declaration);
+    semantic_environment -> sem -> CompleteSymbolTable(declaration);
 }
 
 
 void TypeSymbol::ProcessExecutableBodies()
 {
-    AstClassDeclaration *class_declaration =
-        declaration -> ClassDeclarationCast();
-
-    if (class_declaration)
-        semantic_environment -> sem ->
-            ProcessExecutableBodies(class_declaration -> semantic_environment,
-                                    class_declaration -> class_body);
-    else
-        semantic_environment -> sem ->
-            ProcessExecutableBodies((AstInterfaceDeclaration *) declaration);
+    semantic_environment -> sem -> ProcessExecutableBodies(declaration);
 }
 
 
@@ -328,23 +302,21 @@ void TypeSymbol::RemoveCompilationReferences()
         //
         if (table)
         {
-            for (int i = 0; i < table -> NumVariableSymbols(); i++)
+            unsigned i;
+            for (i = 0; i < table -> NumVariableSymbols(); i++)
                 table -> VariableSym(i) -> declarator = NULL;
-
-            for (int j = 0; j < table -> NumMethodSymbols(); j++)
-                table -> MethodSym(j) -> declaration = NULL;
-
-            for (int k = 0; k < table -> NumTypeSymbols(); k++)
-                table -> TypeSym(k) -> declaration = NULL;
-
-            for (int l = 0; l < table -> NumAnonymousSymbols(); l++)
-                table -> AnonymousSym(l) -> declaration = NULL;
+            for (i = 0; i < table -> NumMethodSymbols(); i++)
+                table -> MethodSym(i) -> declaration = NULL;
+            for (i = 0; i < table -> NumTypeSymbols(); i++)
+                table -> TypeSym(i) -> declaration = NULL;
+            for (i = 0; i < table -> NumAnonymousSymbols(); i++)
+                table -> AnonymousSym(i) -> declaration = NULL;
         }
     }
 }
 
 
-TypeSymbol* TypeSymbol::GetArrayType(Semantic* sem, int dims)
+TypeSymbol* TypeSymbol::GetArrayType(Semantic* sem, unsigned dims)
 {
     if (dims == num_dimensions)
         return this;
@@ -361,7 +333,7 @@ TypeSymbol* TypeSymbol::GetArrayType(Semantic* sem, int dims)
     wchar_t* name = new wchar_t[ExternalNameLength() + (dims * 2) + 1];
     wcscpy(name, previous_array_type -> ExternalName());
 
-    for (int num = array -> Length(),
+    for (unsigned num = array -> Length(),
              len = previous_array_type -> ExternalNameLength() + 2;
          num <= dims;
          num++, len = len + 2)
@@ -436,42 +408,14 @@ void TypeSymbol::SetLocation()
         file_location = new FileLocation(file_symbol);
     else
     {
-        AstClassDeclaration *class_declaration =
-            declaration -> ClassDeclarationCast();
-        AstInterfaceDeclaration *interface_declaration =
-            declaration -> InterfaceDeclarationCast();
-
         file_location =
             new FileLocation(semantic_environment -> sem -> lex_stream,
-                             (class_declaration
-                              ? class_declaration -> identifier_token
-                              : (interface_declaration
-                                 ? interface_declaration -> identifier_token
-                                 : ((AstClassInstanceCreationExpression *) declaration)
-                                 -> class_body_opt -> left_brace_token)));
+                             declaration -> identifier_token);
     }
 }
 
 
-LexStream::TokenIndex TypeSymbol::GetLocation()
-{
-    LexStream::TokenIndex loc = LexStream::BadToken();
-    if (declaration -> ClassDeclarationCast())
-        loc = ((AstClassDeclaration *) declaration) -> identifier_token;
-    else if (declaration -> InterfaceDeclarationCast())
-        loc = ((AstInterfaceDeclaration *) declaration) -> identifier_token;
-    else if (declaration -> ClassInstanceCreationExpressionCast())
-    {
-        assert(((AstClassInstanceCreationExpression *) declaration) ->
-               class_body_opt);
-        loc = ((AstClassInstanceCreationExpression *) declaration) ->
-            class_body_opt -> left_brace_token;
-    }
-    assert(loc != LexStream::BadToken());
-    return loc;
-}
-
-void TypeSymbol::SetSignature(Control &control)
+void TypeSymbol::SetSignature(Control& control)
 {
     if (num_dimensions > 0)
     {
@@ -518,7 +462,7 @@ void TypeSymbol::SetSignature(Control &control)
 }
 
 
-int SymbolTable::primes[] = {DEFAULT_HASH_SIZE, 101, 401, MAX_HASH_SIZE};
+unsigned SymbolTable::primes[] = {DEFAULT_HASH_SIZE, 101, 401, MAX_HASH_SIZE};
 
 void SymbolTable::Rehash()
 {
@@ -526,9 +470,9 @@ void SymbolTable::Rehash()
 
     delete [] base;
     base = (Symbol **) memset(new Symbol *[hash_size], 0,
-                              hash_size * sizeof(Symbol *));
+                              hash_size * sizeof(Symbol*));
 
-    int k;
+    unsigned k;
     for (k = 0; k < NumTypeSymbols(); k++)
     {
         TypeSymbol *symbol = TypeSym(k);
@@ -570,12 +514,13 @@ void SymbolTable::Rehash()
 }
 
 
-SymbolTable::SymbolTable(int hash_size_) : type_symbol_pool(NULL),
-                                           anonymous_symbol_pool(NULL),
-                                           method_symbol_pool(NULL),
-                                           variable_symbol_pool(NULL),
-                                           other_symbol_pool(NULL),
-                                           constructor(NULL)
+SymbolTable::SymbolTable(unsigned hash_size_)
+    : type_symbol_pool(NULL),
+      anonymous_symbol_pool(NULL),
+      method_symbol_pool(NULL),
+      variable_symbol_pool(NULL),
+      other_symbol_pool(NULL),
+      constructor(NULL)
 {
     hash_size = (hash_size_ <= 0 ? 1 : hash_size_);
 
@@ -587,26 +532,27 @@ SymbolTable::SymbolTable(int hash_size_) : type_symbol_pool(NULL),
         prime_index++;
     } while (primes[prime_index] < MAX_HASH_SIZE);
 
-    base = (Symbol **) memset(new Symbol *[hash_size], 0,
-                              hash_size * sizeof(Symbol *));
+    base = (Symbol**) memset(new Symbol *[hash_size], 0,
+                             hash_size * sizeof(Symbol*));
 }
 
 SymbolTable::~SymbolTable()
 {
-    for (int i = 0; i < NumAnonymousSymbols(); i++)
+    unsigned i;
+    for (i = 0; i < NumAnonymousSymbols(); i++)
         delete AnonymousSym(i);
     delete anonymous_symbol_pool;
-    for (int j = 0; j < NumTypeSymbols(); j++)
-        delete TypeSym(j);
+    for (i = 0; i < NumTypeSymbols(); i++)
+        delete TypeSym(i);
     delete type_symbol_pool;
-    for (int k = 0; k < NumMethodSymbols(); k++)
-        delete MethodSym(k);
+    for (i = 0; i < NumMethodSymbols(); i++)
+        delete MethodSym(i);
     delete method_symbol_pool;
-    for (int l = 0; l < NumVariableSymbols(); l++)
-        delete VariableSym(l);
+    for (i = 0; i < NumVariableSymbols(); i++)
+        delete VariableSym(i);
     delete variable_symbol_pool;
-    for (int m = 0; m < NumOtherSymbols(); m++)
-        delete OtherSym(m);
+    for (i = 0; i < NumOtherSymbols(); i++)
+        delete OtherSym(i);
     delete other_symbol_pool;
     delete [] base;
 }
@@ -696,7 +642,7 @@ TypeSymbol::TypeSymbol(NameSymbol *name_symbol_)
     Symbol::_kind = TYPE;
 }
 
-int TypeSymbol::NumLocalTypes()
+unsigned TypeSymbol::NumLocalTypes()
 {
     return local ? local -> Size() : 0;
 }
@@ -723,9 +669,9 @@ TypeSymbol::~TypeSymbol()
     delete expanded_method_table;
     delete file_location;
     delete [] class_name;
-    for (int i = 1; i < NumArrays(); i++)
+    for (unsigned i = 1; i < NumArrays(); i++)
         delete Array(i);
-    for (int k = 0; k < NumNestedTypeSignatures(); k++)
+    for (unsigned k = 0; k < NumNestedTypeSignatures(); k++)
         delete [] NestedTypeSignature(k);
     delete nested_type_signatures;
 
@@ -743,7 +689,7 @@ TypeSymbol::~TypeSymbol()
 
 MethodSymbol::~MethodSymbol()
 {
-    for (int i = 0; i < NumThrowsSignatures(); i++)
+    for (unsigned i = 0; i < NumThrowsSignatures(); i++)
         delete [] ThrowsSignature(i);
     delete throws_signatures;
     delete formal_parameters;
@@ -754,10 +700,10 @@ MethodSymbol::~MethodSymbol()
 }
 
 
-BlockSymbol::BlockSymbol(int hash_size)
+BlockSymbol::BlockSymbol(unsigned hash_size)
     : max_variable_index(-1),
       try_or_synchronized_variable_index(-1),
-      table(hash_size > 0 ? new SymbolTable(hash_size) : (SymbolTable *) NULL)
+      table(hash_size > 0 ? new SymbolTable(hash_size) : (SymbolTable*) NULL)
 {
     Symbol::_kind = BLOCK;
 }
@@ -898,7 +844,7 @@ void DirectorySymbol::ReadDirectory()
             for (dirent *entry = readdir(directory); entry;
                  entry = readdir(directory))
             {
-                int length = strlen(entry -> d_name);
+                unsigned length = strlen(entry -> d_name);
 
                 //
                 // Check if the file is a java source, a java class file or a
@@ -1135,7 +1081,7 @@ void TypeSymbol::SetClassName()
 void TypeSymbol::ProcessNestedTypeSignatures(Semantic *sem,
                                              LexStream::TokenIndex tok)
 {
-    for (int i = 0; i < NumNestedTypeSignatures(); i++)
+    for (unsigned i = 0; i < NumNestedTypeSignatures(); i++)
     {
         NameSymbol *name_symbol =
             sem -> control.ConvertUtf8ToUnicode(NestedTypeSignature(i),
@@ -1158,7 +1104,7 @@ void MethodSymbol::ProcessMethodThrows(Semantic *sem, LexStream::TokenIndex tok)
         //
         // Process throws clause
         //
-        for (int i = 0; i < NumThrowsSignatures(); i++)
+        for (unsigned i = 0; i < NumThrowsSignatures(); i++)
         {
             TypeSymbol *type =
                 sem -> ReadTypeFromSignature(containing_type,
@@ -1181,7 +1127,7 @@ void MethodSymbol::ProcessMethodThrows(Semantic *sem, LexStream::TokenIndex tok)
 //
 void MethodSymbol::SetSignature(Control& control, TypeSymbol* placeholder)
 {
-    int i;
+    unsigned i;
     bool is_constructor = Identity() == control.init_name_symbol;
     int len = is_constructor ? 3 : 2 + strlen(Type() -> SignatureString());
     // +1 for '(' +1 for ')'; constructors have type 'V'
@@ -1374,7 +1320,7 @@ void MethodSymbol::CleanUp()
     // Make a copy of each parameter into the new pared-down symbol table and
     // fix the FormalParameter information to identify the new symbol.
     //
-    for (int k = 0; k < NumFormalParameters(); k++)
+    for (unsigned k = 0; k < NumFormalParameters(); k++)
     {
         VariableSymbol *formal_parameter = (*formal_parameters)[k],
                        *symbol = block -> InsertVariableSymbol(formal_parameter -> Identity());
@@ -1412,7 +1358,7 @@ void VariableSymbol::ProcessVariableSignature(Semantic *sem,
     {
         assert(sem);
 
-        SetType(sem -> ProcessSignature((TypeSymbol *) owner, signature_string,
+        SetType(sem -> ProcessSignature((TypeSymbol*) owner, signature_string,
                                         token_location));
     }
 }
@@ -1765,7 +1711,7 @@ VariableSymbol *TypeSymbol::FindOrInsertLocalShadow(VariableSymbol *local)
     Control &control = semantic_environment -> sem -> control;
     VariableSymbol *variable = NULL;
     if (local_shadow_map)
-        variable = (VariableSymbol *) local_shadow_map -> Image(local);
+        variable = (VariableSymbol*) local_shadow_map -> Image(local);
 
     //
     // For a local/anonymous class, if it does not yet have a shadow for a
@@ -1880,8 +1826,7 @@ inline MethodSymbol *TypeSymbol::ReadMethod(Symbol *symbol,
         if (map)
             return map -> Image(base_type);
     }
-
-    return (MethodSymbol *) NULL;
+    return NULL;
 }
 
 inline void TypeSymbol::MapSymbolToWriteMethod(VariableSymbol *symbol,
@@ -1911,8 +1856,7 @@ inline MethodSymbol *TypeSymbol::WriteMethod(VariableSymbol *symbol,
         if (map)
             return map -> Image(base_type);
     }
-
-    return (MethodSymbol *) NULL;
+    return NULL;
 }
 
 MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
@@ -1979,7 +1923,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
         //
         // Use the location of the class name for all elements of this method.
         //
-        LexStream::TokenIndex loc = GetLocation();
+        LexStream::TokenIndex loc = declaration -> identifier_token;
 
         int parameter_count = member -> NumFormalParameters();
 
@@ -2002,8 +1946,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
                             (member -> ACC_STATIC() ? 0 : 1));
         block_symbol -> max_variable_index = 0;
         read_method -> SetBlockSymbol(block_symbol);
-
-        for (int j = 0; j < member -> NumThrows(); j++)
+        for (unsigned j = 0; j < member -> NumThrows(); j++)
             read_method -> AddThrows(member -> Throws(j));
 
         AstExpression *base;
@@ -2063,7 +2006,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
             instance -> MarkComplete();
             read_method -> AddFormalParameter(instance);
             base -> symbol = (base_type == super
-                              ? (Symbol *) super : (Symbol *) instance);
+                              ? (Symbol*) super : (Symbol*) instance);
         }
 
         for (int i = 0; i < parameter_count; i++)
@@ -2114,8 +2057,6 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
         else
         {
             return_statement -> expression_opt = method_invocation;
-
-            // this block contains one statement
             block -> AllocateStatements(1);
         }
         block -> AddStatement(return_statement);
@@ -2223,13 +2164,13 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *ctor)
 
         read_method = InsertMethodSymbol(control.init_name_symbol);
         read_method -> MarkSynthetic();
-        read_method -> SetType(control.void_type);
+        read_method -> SetType(this);
         read_method -> SetContainingType(this);
         read_method -> SetBlockSymbol(block_symbol);
         if (ctor -> ACC_STRICTFP())
             read_method -> SetACC_STRICTFP();
 
-        for (int j = 0; j < ctor -> NumThrows(); j++)
+        for (unsigned j = 0; j < ctor -> NumThrows(); j++)
             read_method -> AddThrows(ctor -> Throws(j));
 
         block_symbol -> max_variable_index = 1;
@@ -2237,7 +2178,7 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *ctor)
 
         Ast *declaration = ctor -> declaration;
         AstMethodDeclarator *declarator =
-            ((AstConstructorDeclaration *) declaration) -> constructor_declarator;
+            ((AstConstructorDeclaration*) declaration) -> constructor_declarator;
         assert(declarator);
         LexStream::TokenIndex loc = declarator -> identifier_token;
 
@@ -2255,6 +2196,7 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *ctor)
         this_call -> right_parenthesis_token = loc;
         this_call -> semicolon_token = loc;
         this_call -> symbol = ctor;
+        this_call -> AllocateArguments(ctor -> NumFormalParameters());
 
         VariableSymbol *this0_variable = NULL;
         if (EnclosingType())
@@ -2275,7 +2217,7 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *ctor)
         // parameters.
         //
         VariableSymbol *parm;
-        for (int i = 0; i < ctor -> NumFormalParameters(); i++)
+        for (unsigned i = 0; i < ctor -> NumFormalParameters(); i++)
         {
             parm = block_symbol -> InsertVariableSymbol(ctor -> FormalParameter(i) -> Identity());
             parm -> MarkSynthetic();
@@ -2390,7 +2332,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member,
         //
         // Use the location of the class name for all elements of this method
         //
-        LexStream::TokenIndex loc = GetLocation();
+        LexStream::TokenIndex loc = declaration -> identifier_token;
 
         read_method = InsertMethodSymbol(control.FindOrInsertName(name,
                                                                   length));
@@ -2457,7 +2399,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member,
             instance -> MarkComplete();
             read_method -> AddFormalParameter(instance);
             base -> symbol = (base_type == super
-                              ? (Symbol *) super : (Symbol *) instance);
+                              ? (Symbol*) super : (Symbol*) instance);
         }
 
         // A read access method has no throws clause !
@@ -2551,7 +2493,7 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member,
         //
         // Use the location of the class name for all elements of this method
         //
-        LexStream::TokenIndex loc = GetLocation();
+        LexStream::TokenIndex loc = declaration -> identifier_token;
 
         write_method = InsertMethodSymbol(control.FindOrInsertName(name,
                                                                    length));
@@ -2597,7 +2539,6 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member,
         if (member -> ACC_STATIC())
         {
             method_declarator -> AllocateFormalParameters(1);
-
             base -> symbol = base_type;
         }
         else
@@ -2616,7 +2557,7 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member,
             instance -> MarkComplete();
             write_method -> AddFormalParameter(instance);
             base -> symbol = (base_type == super
-                              ? (Symbol *) super : (Symbol *) instance);
+                              ? (Symbol*) super : (Symbol*) instance);
         }
 
         VariableSymbol *symbol =
@@ -2687,16 +2628,16 @@ MethodSymbol *TypeSymbol::GetWriteAccessFromReadAccess(MethodSymbol *read_method
     assert(read_method && read_method -> IsSynthetic() &&
            read_method -> containing_type == this);
     VariableSymbol *variable =
-        (VariableSymbol *) read_method -> accessed_member;
+        (VariableSymbol*) read_method -> accessed_member;
     assert(variable);
 
     AstMethodDeclaration *method_declaration =
-        (AstMethodDeclaration *) read_method -> declaration;
-    AstBlock *block = (AstBlock *) method_declaration -> method_body;
+        (AstMethodDeclaration*) read_method -> declaration;
+    AstBlock *block = (AstBlock*) method_declaration -> method_body;
     AstReturnStatement *return_statement =
-        (AstReturnStatement *) block -> Statement(0);
+        (AstReturnStatement*) block -> Statement(0);
     AstFieldAccess *field_access =
-        (AstFieldAccess *) return_statement -> expression_opt;
+        (AstFieldAccess*) return_statement -> expression_opt;
 
     return GetWriteAccessMethod(variable, field_access -> base -> Type());
 }
@@ -2718,7 +2659,7 @@ TypeSymbol *TypeSymbol::GetPlaceholderType()
         //
         Semantic *sem = semantic_environment -> sem;
         sem -> state_stack.Push(semantic_environment);
-        LexStream::TokenIndex loc = GetLocation();
+        LexStream::TokenIndex loc = declaration -> identifier_token;
         Control &control = sem -> control;
         StoragePool *ast_pool = sem -> compilation_unit -> ast_pool;
 

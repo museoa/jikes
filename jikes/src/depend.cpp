@@ -35,7 +35,7 @@ inline void TypeCycleChecker::ReverseTypeList()
 }
 
 
-void TypeCycleChecker::PartialOrder(Tuple<Semantic *> &semantic, int start)
+void TypeCycleChecker::PartialOrder(Tuple<Semantic*>& semantic, int start)
 {
     type_list.Reset();
 
@@ -45,25 +45,19 @@ void TypeCycleChecker::PartialOrder(Tuple<Semantic *> &semantic, int start)
     //
     for (int i = start; i < semantic.Length(); i++)
     {
-        Semantic *sem = semantic[i];
-
-        for (int k = 0; k < sem -> compilation_unit -> NumTypeDeclarations();
-             k++)
+        Semantic* sem = semantic[i];
+        for (unsigned k = 0;
+             k < sem -> compilation_unit -> NumTypeDeclarations(); k++)
         {
-            AstClassDeclaration *class_declaration =
-                sem -> compilation_unit -> TypeDeclaration(k) ->
-                ClassDeclarationCast();
-            AstInterfaceDeclaration *interface_declaration =
-                sem -> compilation_unit -> TypeDeclaration(k) ->
-                InterfaceDeclarationCast();
-            SemanticEnvironment *env =
-                class_declaration ? class_declaration -> semantic_environment
-                : interface_declaration
-                ? interface_declaration -> semantic_environment
-                : (SemanticEnvironment *) NULL;
+            AstDeclaredType* declared =
+                sem -> compilation_unit -> TypeDeclaration(k);
+            if (declared -> EmptyDeclarationCast())
+                continue;
+            SemanticEnvironment* env =
+                declared -> class_body -> semantic_environment;
             if (env) // type was successfully compiled thus far?
             {
-                TypeSymbol *type = env -> Type();
+                TypeSymbol* type = env -> Type();
                 if (type -> index == OMEGA)
                    ProcessSubtypes(type);
             }
@@ -132,7 +126,7 @@ void TypeCycleChecker::ProcessSubtypes(TypeSymbol *type)
 
 ConstructorCycleChecker::ConstructorCycleChecker(AstClassBody *class_body)
 {
-    for (int k = 0; k < class_body -> NumConstructors(); k++)
+    for (unsigned k = 0; k < class_body -> NumConstructors(); k++)
     {
         AstConstructorDeclaration *constructor_declaration =
             class_body -> Constructor(k);

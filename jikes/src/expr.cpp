@@ -259,7 +259,7 @@ void Semantic::ReportMethodNotFound(AstMethodInvocation *method_call,
             if (method_call -> NumArguments() ==
                 method -> NumFormalParameters())
             {
-                int i;
+                unsigned i;
                 for (i = 0; i < method_call -> NumArguments(); i++)
                 {
                     AstExpression *expr = method_call -> Argument(i);
@@ -350,14 +350,14 @@ void Semantic::ReportMethodNotFound(AstMethodInvocation *method_call,
 }
 
 
-void Semantic::ReportConstructorNotFound(Ast *ast, TypeSymbol *type)
+void Semantic::ReportConstructorNotFound(Ast* ast, TypeSymbol* type)
 {
-    int num_arguments;
-    AstExpression **argument;
+    unsigned num_arguments;
+    AstExpression** argument;
 
-    AstClassInstanceCreationExpression *class_creation =
+    AstClassInstanceCreationExpression* class_creation =
         ast -> ClassInstanceCreationExpressionCast();
-    AstSuperCall *super_call = ast -> SuperCallCast();
+    AstSuperCall* super_call = ast -> SuperCallCast();
     LexStream::TokenIndex left_tok;
     LexStream::TokenIndex right_tok;
 
@@ -365,7 +365,7 @@ void Semantic::ReportConstructorNotFound(Ast *ast, TypeSymbol *type)
     {
         num_arguments = class_creation -> NumArguments();
         argument = new AstExpression*[num_arguments + 1];
-        for (int i = 0; i < num_arguments; i++)
+        for (unsigned i = 0; i < num_arguments; i++)
             argument[i] = class_creation -> Argument(i);
         left_tok = class_creation -> new_token;
         right_tok = class_creation -> right_parenthesis_token;
@@ -374,7 +374,7 @@ void Semantic::ReportConstructorNotFound(Ast *ast, TypeSymbol *type)
     {
         num_arguments = super_call -> NumArguments();
         argument = new AstExpression*[num_arguments + 1];
-        for (int i = 0; i < num_arguments; i++)
+        for (unsigned i = 0; i < num_arguments; i++)
             argument[i] = super_call -> Argument(i);
         left_tok = super_call -> super_token;
         right_tok = super_call -> right_parenthesis_token;
@@ -386,7 +386,7 @@ void Semantic::ReportConstructorNotFound(Ast *ast, TypeSymbol *type)
 
         num_arguments = this_call -> NumArguments();
         argument = new AstExpression*[num_arguments + 1];
-        for (int i = 0; i < num_arguments; i++)
+        for (unsigned i = 0; i < num_arguments; i++)
             argument[i] = this_call -> Argument(i);
         left_tok = this_call -> this_token;
         right_tok = this_call -> right_parenthesis_token;
@@ -436,7 +436,7 @@ void Semantic::ReportConstructorNotFound(Ast *ast, TypeSymbol *type)
     {
         if (num_arguments == ctor -> NumFormalParameters())
         {
-            int i;
+            unsigned i;
             for (i = 0; i < num_arguments; i++)
             {
                 AstExpression *expr = argument[i];
@@ -472,7 +472,7 @@ void Semantic::ReportConstructorNotFound(Ast *ast, TypeSymbol *type)
 
         if (num_arguments == method -> NumFormalParameters())
         {
-            int i;
+            unsigned i;
             for (i = 0; i < num_arguments; i++)
             {
                 if (! CanMethodInvocationConvert(method -> FormalParameter(i) -> Type(),
@@ -515,12 +515,12 @@ void Semantic::ReportConstructorNotFound(Ast *ast, TypeSymbol *type)
     //
     // Give up. We didn't find it.
     //
-    wchar_t *name = type -> Name();
+    wchar_t* name = type -> Name();
     int length = type -> NameLength();
 
-    for (int i = 0; i < num_arguments; i++)
+    for (unsigned i = 0; i < num_arguments; i++)
     {
-        TypeSymbol *arg_type = argument[i] -> Type();
+        TypeSymbol* arg_type = argument[i] -> Type();
         // '/' after package_name ',' and ' ' to separate this formal
         // parameter from the next one
         length += arg_type -> ContainingPackage() -> PackageNameLength() +
@@ -536,7 +536,7 @@ void Semantic::ReportConstructorNotFound(Ast *ast, TypeSymbol *type)
     *s++ = U_LEFT_PARENTHESIS;
     if (num_arguments > 0)
     {
-        for (int i = 0; i < num_arguments; i++)
+        for (unsigned i = 0; i < num_arguments; i++)
         {
             TypeSymbol *arg_type = argument[i] -> Type();
 
@@ -575,46 +575,43 @@ void Semantic::ReportConstructorNotFound(Ast *ast, TypeSymbol *type)
 }
 
 
-MethodSymbol *Semantic::FindConstructor(TypeSymbol *containing_type, Ast *ast,
+MethodSymbol* Semantic::FindConstructor(TypeSymbol* containing_type, Ast* ast,
                                         LexStream::TokenIndex left_tok,
                                         LexStream::TokenIndex right_tok)
 {
     if (containing_type == control.no_type)
         return NULL;
 
-    Tuple<MethodSymbol *> constructor_set(2); // Stores constructor overloads.
+    //
+    // If this type is anonymous, we have just generated the constructor,
+    // so we know it is the right one.
+    //
+    if (containing_type -> Anonymous())
+    {
+        return containing_type -> declaration -> default_constructor ->
+            constructor_symbol;
+    }
 
-    int num_arguments;
-    AstExpression **argument;
+    unsigned num_arguments;
+    AstExpression** argument;
+    Tuple<MethodSymbol*> constructor_set(2); // Stores constructor overloads.
 
-    AstClassInstanceCreationExpression *class_creation =
+    AstClassInstanceCreationExpression* class_creation =
         ast -> ClassInstanceCreationExpressionCast();
-    AstSuperCall *super_call = ast -> SuperCallCast();
+    AstSuperCall* super_call = ast -> SuperCallCast();
 
     if (class_creation)
     {
-        //
-        // If this type is anonymous, we have just generated the constructor,
-        // so we know it is the right one.
-        //
-        if (containing_type -> Anonymous())
-        {
-            if (class_creation -> class_type -> symbol == control.no_type)
-                return NULL;
-            assert(class_creation -> class_type -> symbol -> MethodCast());
-            return (MethodSymbol *) class_creation -> class_type -> symbol;
-        }
-
         num_arguments = class_creation -> NumArguments();
         argument = new AstExpression*[num_arguments + 1];
-        for (int i = 0; i < num_arguments; i++)
+        for (unsigned i = 0; i < num_arguments; i++)
             argument[i] = class_creation -> Argument(i);
     }
     else if (super_call)
     {
         num_arguments = super_call -> NumArguments();
         argument = new AstExpression*[num_arguments + 1];
-        for (int i = 0; i < num_arguments; i++)
+        for (unsigned i = 0; i < num_arguments; i++)
             argument[i] = super_call -> Argument(i);
     }
     else
@@ -625,7 +622,7 @@ MethodSymbol *Semantic::FindConstructor(TypeSymbol *containing_type, Ast *ast,
 
         num_arguments = this_call -> NumArguments();
         argument = new AstExpression*[num_arguments + 1];
-        for (int i = 0; i < num_arguments; i++)
+        for (unsigned i = 0; i < num_arguments; i++)
             argument[i] = this_call -> Argument(i);
     }
 
@@ -640,7 +637,7 @@ MethodSymbol *Semantic::FindConstructor(TypeSymbol *containing_type, Ast *ast,
         if (num_arguments == ctor -> NumFormalParameters() &&
             ConstructorAccessCheck(ast, ctor))
         {
-            int i;
+            unsigned i;
             for (i = 0; i < num_arguments; i++)
             {
                 if (! CanMethodInvocationConvert(ctor -> FormalParameter(i) -> Type(),
@@ -777,7 +774,7 @@ MethodSymbol *Semantic::FindMisspelledMethodName(TypeSymbol *type,
 
         if (method_call -> NumArguments() == method -> NumFormalParameters())
         {
-            int i;
+            unsigned i;
             for (i = 0; i < method_call -> NumArguments(); i++)
             {
                 AstExpression *expr = method_call -> Argument(i);
@@ -861,7 +858,7 @@ MethodShadowSymbol *Semantic::FindMethodInType(TypeSymbol *type,
             (MemberAccessCheck(field_access, type, method) ||
              method_shadow -> NumConflicts() > 0))
         {
-            int i;
+            unsigned i;
             for (i = 0; i < method_call -> NumArguments(); i++)
             {
                 AstExpression *expr = method_call -> Argument(i);
@@ -981,7 +978,7 @@ void Semantic::FindMethodInEnvironment(Tuple<MethodShadowSymbol *> &methods_foun
                 if (method_call -> NumArguments() ==
                     method -> NumFormalParameters())
                 {
-                    int i;
+                    unsigned i;
                     for (i = 0; i < method_call -> NumArguments(); i++)
                     {
                         AstExpression *expr = method_call -> Argument(i);
@@ -1176,7 +1173,7 @@ MethodShadowSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&wher
                         if (method_call -> NumArguments() ==
                             method -> NumFormalParameters())
                         {
-                            int i;
+                            unsigned i;
                             for (i = 0; i < method_call -> NumArguments(); i++)
                             {
                                 AstExpression *expr =
@@ -1946,8 +1943,11 @@ void Semantic::CreateAccessToScopedVariable(AstSimpleName *simple_name,
                 environment_type -> GetReadAccessMethod(variable);
 
             if (! variable -> ACC_STATIC())
+            {
                 // TODO: WARNING: sharing of Ast subtree !!!
+                accessor -> AllocateArguments(1);
                 accessor -> AddArgument(access_expression);
+            }
 
             simple_name -> resolution_opt = accessor;
         }
@@ -2011,8 +2011,13 @@ void Semantic::CreateAccessToScopedMethod(AstMethodInvocation *method_call,
                 environment_type -> GetReadAccessMethod(method);
 
             if (! method -> ACC_STATIC())
+            {
+                accessor -> AllocateArguments(method_call -> NumArguments() +
+                                              1);
                 accessor -> AddArgument(access_expression);
-            for (int i = 0; i < method_call -> NumArguments(); i++)
+            }
+            else accessor -> AllocateArguments(method_call -> NumArguments());
+            for (unsigned i = 0; i < method_call -> NumArguments(); i++)
                 accessor -> AddArgument(method_call -> Argument(i));
 
             method_call -> symbol = method;
@@ -2449,7 +2454,10 @@ void Semantic::FindVariableMember(TypeSymbol* type,
                                             field_access -> base -> Type());
 
                     if (! variable -> ACC_STATIC())
+                    {
+                        accessor -> AllocateArguments(1);
                         accessor -> AddArgument(field_access -> base);
+                    }
 
                     field_access -> resolution_opt = accessor;
                     field_access -> symbol = accessor -> symbol;
@@ -3011,7 +3019,7 @@ MethodShadowSymbol* Semantic::FindMethodMember(TypeSymbol* type,
             assert(method_call -> NumArguments() ==
                    method -> NumFormalParameters());
 
-            for (int i = 0; i < method_call -> NumArguments(); i++)
+            for (unsigned i = 0; i < method_call -> NumArguments(); i++)
             {
                 AstExpression *expr = method_call -> Argument(i);
                 method_call -> Argument(i) =
@@ -3075,8 +3083,14 @@ MethodShadowSymbol* Semantic::FindMethodMember(TypeSymbol* type,
                     GetReadAccessMethod(method, field_access -> base -> Type());
 
                 if (! method -> ACC_STATIC())
+                {
+                    accessor ->
+                        AllocateArguments(method_call -> NumArguments() + 1);
                     accessor -> AddArgument(field_access -> base);
-                for (int i = 0; i < method_call -> NumArguments(); i++)
+                }
+                else accessor -> AllocateArguments(method_call ->
+                                                   NumArguments());
+                for (unsigned i = 0; i < method_call -> NumArguments(); i++)
                     accessor -> AddArgument(method_call -> Argument(i));
 
                 method_call -> symbol = method;
@@ -3156,7 +3170,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
             //
             assert(method_call -> NumArguments() == method -> NumFormalParameters());
 
-            for (int i = 0; i < method_call -> NumArguments(); i++)
+            for (unsigned i = 0; i < method_call -> NumArguments(); i++)
             {
                 AstExpression *expr = method_call -> Argument(i);
                 method_call -> Argument(i) =
@@ -3331,7 +3345,7 @@ void Semantic::ProcessMethodInvocation(Ast *expr)
 
     bool bad_argument = false;
 
-    for (int i = 0; i < method_call -> NumArguments(); i++)
+    for (unsigned i = 0; i < method_call -> NumArguments(); i++)
     {
         AstExpression *expr = method_call -> Argument(i);
         ProcessExpressionOrStringConstant(expr);
@@ -3671,7 +3685,8 @@ void Semantic::UpdateLocalConstructors(TypeSymbol* inner_type)
         {
             ctor -> SetSignature(control);
         }
-        for (int j = 0; j < inner_type -> NumPrivateAccessConstructors(); j++)
+        for (unsigned j = 0;
+             j < inner_type -> NumPrivateAccessConstructors(); j++)
         {
             inner_type -> PrivateAccessConstructor(j) ->
                 SetSignature(control, (inner_type -> outermost_type ->
@@ -3684,7 +3699,7 @@ void Semantic::UpdateLocalConstructors(TypeSymbol* inner_type)
     // These calls are necessarily located within the body of inner_type, and
     // are calling a constructor in inner_type.
     //
-    for (int i = 0;
+    for (unsigned i = 0;
          i < inner_type -> NumLocalConstructorCallEnvironments(); i++)
     {
         SemanticEnvironment* env =
@@ -3807,7 +3822,7 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression* class
     // superclass; but this list may be expanded later since the anonymous
     // constructor also throws anything possible in instance initializers.
     //
-    for (int i = 0; i < super_constructor -> NumThrows(); i++)
+    for (unsigned i = 0; i < super_constructor -> NumThrows(); i++)
         constructor -> AddThrows(super_constructor -> Throws(i));
 
     //
@@ -3867,6 +3882,7 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression* class
     constructor_block -> left_brace_token = class_body -> left_brace_token;
     constructor_block -> right_brace_token = class_body -> left_brace_token;
     constructor_block -> explicit_constructor_opt = super_call;
+    constructor_block -> AllocateStatements(1); // for the generated return
 
     AstMethodDeclarator* method_declarator =
         compilation_unit -> ast_pool -> GenMethodDeclarator();
@@ -3909,11 +3925,13 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression* class
         super_call -> base_opt = simple_name;
     }
     else resolution -> AllocateArguments(class_creation -> NumArguments());
+    super_call -> AllocateArguments(super_constructor ->
+                                    NumFormalParameters());
 
     //
     // Next, simply pass all parameters through to the superclass.
     //
-    for (int j = 0; j < super_constructor -> NumFormalParameters(); j++)
+    for (unsigned j = 0; j < super_constructor -> NumFormalParameters(); j++)
     {
         VariableSymbol* param = super_constructor -> FormalParameter(j);
         VariableSymbol* symbol =
@@ -4027,7 +4045,9 @@ TypeSymbol* Semantic::GetAnonymousType(AstClassInstanceCreationExpression* class
     anon_type -> subtypes_closure = new SymbolSet;
     anon_type -> semantic_environment =
         new SemanticEnvironment(this, anon_type, state_stack.Top());
-    anon_type -> declaration = class_creation;
+    anon_type -> declaration = class_body;
+    anon_type -> declaration -> semantic_environment =
+        anon_type -> semantic_environment;
     anon_type -> file_symbol = source_file_symbol;
     anon_type -> SetOwner(ThisMethod() ? (Symbol*) ThisMethod()
                           : (Symbol*) this_type);
@@ -4071,13 +4091,6 @@ TypeSymbol* Semantic::GetAnonymousType(AstClassInstanceCreationExpression* class
 
     this_type -> AddAnonymousType(anon_type);
 
-    AstClassDeclaration* class_declaration =
-        compilation_unit -> ast_pool -> GenClassDeclaration();
-    class_declaration -> class_token = class_body -> left_brace_token;
-    class_declaration -> identifier_token = class_body -> left_brace_token;
-    class_declaration -> class_body = class_body;
-    class_creation -> anonymous_declaration = class_declaration;
-
     //
     // Provide the default constructor. For now, we don't worry about accessors
     // to final local variables; those are inserted later when completing
@@ -4091,7 +4104,7 @@ TypeSymbol* Semantic::GetAnonymousType(AstClassInstanceCreationExpression* class
     //
     // Now process the body of the anonymous class !!!
     //
-    CheckClassMembers(anon_type, class_body);
+    CheckNestedMembers(anon_type, class_body);
     ProcessTypeHeaders(anon_type, class_body);
 
     //
@@ -4103,23 +4116,19 @@ TypeSymbol* Semantic::GetAnonymousType(AstClassInstanceCreationExpression* class
              compilation_unit -> kind = Ast::BAD_COMPILATION;
         else
         {
-            ProcessMembers(anon_type -> semantic_environment, class_body);
-            CompleteSymbolTable(anon_type -> semantic_environment,
-                                class_body -> left_brace_token, class_body);
+            ProcessMembers(class_body);
+            CompleteSymbolTable(class_body);
         }
 
         if (! control.parser -> BodyParse(lex_stream, class_body))
             compilation_unit -> kind = Ast::BAD_COMPILATION;
-        else ProcessExecutableBodies(anon_type -> semantic_environment,
-                                     class_body);
+        else ProcessExecutableBodies(class_body);
     }
     else // The relevant bodies have already been parsed
     {
-        ProcessMembers(anon_type -> semantic_environment, class_body);
-        CompleteSymbolTable(anon_type -> semantic_environment,
-                            class_body -> left_brace_token, class_body);
-        ProcessExecutableBodies(anon_type -> semantic_environment,
-                                class_body);
+        ProcessMembers(class_body);
+        CompleteSymbolTable(class_body);
+        ProcessExecutableBodies(class_body);
     }
 
     //
@@ -4146,14 +4155,14 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast* expr)
 {
     AstClassInstanceCreationExpression* class_creation =
         (AstClassInstanceCreationExpression*) expr;
-    int i;
+    unsigned i;
 
     //
     // For an anonymous type, the qualifier determines the enclosing instance
     // of the supertype; as the enclosing instance of the anonymous class (if
     // present) is the current class. We update actual_type after this.
     //
-    Ast* actual_type = class_creation -> class_type -> name;
+    AstExpression* actual_type = class_creation -> class_type -> name;
     TypeSymbol* type;
     if (class_creation -> base_opt)
     {
@@ -4278,7 +4287,7 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast* expr)
         // Process the throws clause.
         //
         SymbolSet* exception_set = TryExceptionTableStack().Top();
-        for (i = ctor -> NumThrows() - 1; i >= 0; i--)
+        for (i = 0; i < ctor -> NumThrows(); i++)
         {
             TypeSymbol* exception = ctor -> Throws(i);
             if (exception_set)
@@ -4326,9 +4335,8 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast* expr)
     {
         if (type -> LocalClassProcessingCompleted())
         {
-            int param_count = type -> NumConstructorParameters();
-            if (param_count > 0)
-                class_creation -> AllocateLocalArguments(param_count);
+            unsigned param_count = type -> NumConstructorParameters();
+            class_creation -> AllocateLocalArguments(param_count);
             for (i = 0; i < param_count; i++)
             {
                 //
@@ -4382,7 +4390,7 @@ void Semantic::ProcessArrayCreationExpression(Ast* expr)
     type = type -> GetArrayType(this, dims);
     array_creation -> symbol = type;
 
-    for (int i = 0; i < array_creation -> NumDimExprs(); i++)
+    for (unsigned i = 0; i < array_creation -> NumDimExprs(); i++)
     {
         AstDimExpr* dim_expr = array_creation -> DimExpr(i);
         ProcessExpression(dim_expr -> expression);
@@ -5202,6 +5210,16 @@ void Semantic::ProcessCastExpression(Ast* expr)
 {
     AstCastExpression* cast_expression = (AstCastExpression*) expr;
 
+    if (cast_expression -> type -> TypeNameCast() &&
+        ! cast_expression -> type -> TypeNameCast() -> name -> IsName())
+    {
+        ReportSemError(SemanticError::INVALID_CAST_TYPE,
+                       cast_expression -> type);
+        cast_expression -> symbol = control.no_type;
+        ProcessExpression(cast_expression -> expression);
+        return;
+    }
+
     //
     // Do not use ProcessExpressionOrStringConstant here, to avoid generating
     // intermediate Strings - see CheckConstantString in lookup.cpp
@@ -5212,14 +5230,7 @@ void Semantic::ProcessCastExpression(Ast* expr)
     TypeSymbol* source_type = cast_expression -> expression -> Type();
     TypeSymbol* target_type = cast_expression -> type -> symbol;
 
-    if (cast_expression -> type -> TypeNameCast() &&
-        ! cast_expression -> type -> TypeNameCast() -> name -> IsName())
-    {
-        ReportSemError(SemanticError::INVALID_CAST_TYPE,
-                       cast_expression -> type);
-        cast_expression -> symbol = control.no_type;
-    }
-    else if (CanCastConvert(target_type, source_type,
+    if (CanCastConvert(target_type, source_type,
                             cast_expression -> right_parenthesis_token))
     {
         cast_expression -> symbol = target_type;

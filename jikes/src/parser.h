@@ -153,7 +153,7 @@ protected:
     // shifted tokens should also have a valid subtree.
     //
     //********************************************************************
-    inline void TokenAction(TokenObject curtok) { Sym(1) = NULL; }
+    inline void TokenAction(TokenObject) { Sym(1) = NULL; }
 
     LexStream *lex_stream;
 

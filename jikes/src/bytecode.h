@@ -16,6 +16,7 @@
 #include "class.h"
 #include "op.h"
 #include "segment.h"
+#include "control.h"
 
 #ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes { // Open namespace Jikes block
@@ -93,7 +94,7 @@ public:
         {
             top_index--;
 #ifdef JIKES_DEBUG
-            int level = nesting_level[top_index];
+            unsigned level = nesting_level[top_index];
 
             nesting_level[top_index] = 0;
             break_labels[level].Reset();
@@ -105,46 +106,57 @@ public:
             if (size)
                 memset(local_variables_start_pc[level], 0xFF,
                        size * sizeof(u2));
-#endif
+#endif // ! JIKES_DEBUG
         }
         else assert(false);
     }
 
-    int Size() { return top_index; }
+    unsigned Size() { return top_index; }
 
 #ifdef JIKES_DEBUG
-    void AssertIndex(int k)
+    void AssertIndex(unsigned k)
     {
-        for (int i = 0; i < Size(); i++)
+        for (unsigned i = 0; i < Size(); i++)
             if (nesting_level[i] == k)
                 return;
         assert(0);
     }
 #else
-#define AssertIndex(x) /* nop */
-#endif
+# define AssertIndex(x) /* nop */
+#endif // ! JIKES_DEBUG
 
-    int TopNestingLevel()
+    unsigned TopNestingLevel()
     {
         assert(top_index > 0);
         return nesting_level[top_index - 1];
     }
-    int NestingLevel(int i) { AssertIndex(i); return nesting_level[i]; }
+    unsigned NestingLevel(unsigned i)
+    {
+        AssertIndex(i); return nesting_level[i];
+    }
 
     Label& TopBreakLabel() { return break_labels[TopNestingLevel()]; }
-    Label& BreakLabel(int i) { AssertIndex(i); return break_labels[i]; }
+    Label& BreakLabel(unsigned i) { AssertIndex(i); return break_labels[i]; }
 
     Label& TopContinueLabel() { return continue_labels[TopNestingLevel()]; }
-    Label& ContinueLabel(int i) { AssertIndex(i); return continue_labels[i]; }
+    Label& ContinueLabel(unsigned i)
+    {
+        AssertIndex(i);
+        return continue_labels[i];
+    }
 
     Label& TopFinallyLabel() { return finally_labels[TopNestingLevel()]; }
-    Label& FinallyLabel(int i) { AssertIndex(i); return finally_labels[i]; }
+    Label& FinallyLabel(unsigned i)
+    {
+        AssertIndex(i);
+        return finally_labels[i];
+    }
 
     Tuple<u2>& TopHandlerRangeStart()
     {
         return handler_range_start[TopNestingLevel()];
     }
-    Tuple<u2>& HandlerRangeStart(int i)
+    Tuple<u2>& HandlerRangeStart(unsigned i)
     {
         AssertIndex(i);
         return handler_range_start[i];
@@ -154,14 +166,14 @@ public:
     {
         return handler_range_end[TopNestingLevel()];
     }
-    Tuple<u2>& HandlerRangeEnd(int i)
+    Tuple<u2>& HandlerRangeEnd(unsigned i)
     {
         AssertIndex(i);
         return handler_range_end[i];
     }
 
     AstBlock* TopBlock() { return blocks[TopNestingLevel()]; }
-    AstBlock* Block(int i) { AssertIndex(i); return blocks[i]; }
+    AstBlock* Block(unsigned i) { AssertIndex(i); return blocks[i]; }
 
     u2* TopLocalVariablesStartPc()
     {
@@ -170,15 +182,16 @@ public:
     u2& StartPc(VariableSymbol* variable)
     {
         assert(variable -> LocalVariableIndex() >= 0 &&
-               variable -> LocalVariableIndex() < size);
+               variable -> LocalVariableIndex() < (int) size);
         return TopLocalVariablesStartPc()[variable -> LocalVariableIndex()];
     }
 
-    MethodStack(int stack_size_, int size_) : stack_size(stack_size_),
-                                              size(size_),
-                                              top_index(0)
+    MethodStack(unsigned stack_size_, unsigned size_)
+        : stack_size(stack_size_),
+          size(size_),
+          top_index(0)
     {
-        nesting_level = new int[stack_size];
+        nesting_level = new unsigned[stack_size];
         break_labels = new Label[stack_size];
         continue_labels = new Label[stack_size];
         finally_labels = new Label[stack_size];
@@ -187,7 +200,7 @@ public:
         blocks = new AstBlock*[stack_size];
 
         local_variables_start_pc = new u2*[stack_size];
-        for (int i = 0; i < stack_size; i++)
+        for (unsigned i = 0; i < stack_size; i++)
             local_variables_start_pc[i] = new u2[size];
     }
     ~MethodStack()
@@ -200,13 +213,13 @@ public:
         delete [] handler_range_end;
         delete [] blocks;
 
-        for (int i = 0; i < stack_size; i++)
+        for (unsigned i = 0; i < stack_size; i++)
             delete [] local_variables_start_pc[i];
         delete [] local_variables_start_pc;
     }
 
 private:
-    int* nesting_level;
+    unsigned* nesting_level;
 
     Label* break_labels;
     Label* continue_labels;
@@ -214,12 +227,12 @@ private:
     Tuple<u2>* handler_range_start;
     Tuple<u2>* handler_range_end;
 
-    AstBlock* *blocks; // block symbols for current block
+    AstBlock** blocks; // block symbols for current block
 
-    u2* *local_variables_start_pc;
-    int stack_size,
-        size,
-        top_index;
+    u2** local_variables_start_pc;
+    unsigned stack_size;
+    unsigned size;
+    unsigned top_index;
 };
 
 
@@ -235,9 +248,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
 
     Control& control;
     Semantic& semantic;
-
-    void CompileClass();
-    void CompileInterface();
+    TypeSymbol* unit_type;
 
     int line_number,
         last_label_pc,        // pc for last (closest to end) label
@@ -270,7 +281,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         max_stack = 0;
     }
 
-    bool ProcessAbruptExit(int, u2, TypeSymbol* = NULL);
+    bool ProcessAbruptExit(unsigned, u2, TypeSymbol* = NULL);
     void CompleteLabel(Label& lab);
     void DefineLabel(Label& lab);
     void UseLabel(Label& lab, int length, int op_offset);
@@ -368,20 +379,23 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     enum VariableCategory
     {
-        LHS_LOCAL =  0, // local variable
-        LHS_ARRAY =  1, // array (of any kind)
-        LHS_FIELD =  2, // instance variable
-        LHS_STATIC = 3, // class variable
-        LHS_METHOD = 4 // access to private variable
+        LOCAL_VAR =  0, // local variable
+        ARRAY_VAR =  1, // array (of any kind)
+        FIELD_VAR =  2, // instance variable
+        STATIC_VAR = 3, // class variable
+        ACCESSED_VAR = 4 // access to private variable
     };
 
-    VariableCategory GetLhsKind(AstExpression* expression)
+    VariableCategory GetVariableKind(AstExpression* expression)
     {
         AstAssignmentExpression* assignment =
             expression -> AssignmentExpressionCast();
         AstPreUnaryExpression* pre = expression -> PreUnaryExpressionCast();
         AstPostUnaryExpression* post = expression -> PostUnaryExpressionCast();
 
+        //
+        // Get the expression containing the variable (avoid accessor methods).
+        //
         AstExpression* lhs = (assignment
                               ? (assignment -> write_method
                                  ? (AstExpression*) NULL
@@ -414,11 +428,11 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         //
         VariableSymbol* var = (sym ? sym -> VariableCast()
                                : (VariableSymbol*) NULL);
-        return (! lhs ? LHS_METHOD
-                : ! var ? LHS_ARRAY
-                : var -> owner -> MethodCast() ? LHS_LOCAL
-                : var -> ACC_STATIC() ? LHS_STATIC
-                : LHS_FIELD);
+        return (! lhs ? ACCESSED_VAR
+                : ! var ? ARRAY_VAR
+                : var -> owner -> MethodCast() ? LOCAL_VAR
+                : var -> ACC_STATIC() ? STATIC_VAR
+                : FIELD_VAR);
     }
 
 
@@ -848,7 +862,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void EmitFieldAccessLhsBase(AstExpression*);
     void EmitFieldAccessLhs(AstExpression*);
     void EmitMethodInvocation(AstMethodInvocation*);
-    void EmitNewArray(int, TypeSymbol*);
+    void EmitNewArray(unsigned, TypeSymbol*);
     int EmitPostUnaryExpression(AstPostUnaryExpression*, bool);
     void EmitPostUnaryExpressionArray(AstPostUnaryExpression*, bool);
     void EmitPostUnaryExpressionField(VariableCategory,
@@ -986,7 +1000,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         code_attribute -> AddCode(u & 0xff);
     }
 
-    void FinishCode(TypeSymbol*);
+    void FinishCode();
 
     void Reset()
     {
@@ -1013,12 +1027,7 @@ public:
         delete methodref_constant_pool_index;
     }
 
-    inline void GenerateCode()
-    {
-        if (unit_type -> ACC_INTERFACE())
-             CompileInterface();
-        else CompileClass();
-    }
+    void GenerateCode();
 };
 
 #ifdef HAVE_JIKES_NAMESPACE

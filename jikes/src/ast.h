@@ -51,7 +51,6 @@ class VariableSymbolArray
     void AllocateMoreSpace();
 
 public:
-
     //
     // This function is used to reset the size of a VariableSymbol array
     // without allocating or deallocting space. It may be invoked with an
@@ -167,6 +166,8 @@ public:
 class Ast;
 template <typename T> class AstArray;
 class AstListNode;
+class AstDeclared;
+class AstDeclaredType;
 class AstStatement;
 class AstExpression;
 class AstType;
@@ -192,7 +193,7 @@ class AstFormalParameter;
 class AstMethodDeclarator;
 class AstMethodDeclaration;
 class AstMethodBody;
-class AstStaticInitializer;
+class AstInitializerDeclaration;
 class AstThisCall;
 class AstSuperCall;
 class AstConstructorDeclaration;
@@ -429,30 +430,27 @@ public:
     //
     // However, if p points to a ClassBodyDeclaration which may be
     // either a FieldDeclaration, MethodDeclaration, ConstructorDeclaration,
-    // StaticInitializer, ClassDeclaration, InterfaceDeclaration or a block
+    // InitializerDeclaration, ClassDeclaration, or an InterfaceDeclaration,
     // then the following sequence of code may be used:
     //
     //    AstFieldDeclaration* fp;
     //    AstMethodDeclaration* mp;
     //    AstConstructorDeclaration* cp;
-    //    AstStaticInitializer* sp;
+    //    AstInitializerDeclaration* sp;
     //    AstClassDeclaration* Cp; // 1.1 only
     //    AstInterfaceDeclaration* Ip; // 1.1 only
-    //    AstBlock* Bp; // 1.1 only
     //
-    //    if (fp = p -> FieldDeclaration())
+    //    if (fp = p -> FieldDeclarationCast())
     //        ...
-    //    else if (mp = p -> MethodDeclaration())
+    //    else if (mp = p -> MethodDeclarationCast())
     //        ...
-    //    else if (cp = p -> ConstructorDeclaration())
+    //    else if (cp = p -> ConstructorDeclarationCast())
     //        ...
-    //    else if (sp = p -> StaticInitializer())
+    //    else if (sp = p -> InitializerDeclarationCast())
     //        ...
-    //    else if (Cp = p -> ClassDeclaration())
+    //    else if (Cp = p -> ClassDeclarationCast())
     //        ...
-    //    else if (Ip = p -> InterfaceDeclaration())
-    //        ...
-    //    else if (Bp = p -> Block())
+    //    else if (Ip = p -> InterfaceDeclarationCast())
     //        ...
     //
 
@@ -466,8 +464,8 @@ public:
     inline AstPrimitiveType* PrimitiveTypeCast();
     inline AstModifier* ModifierCast();
     inline AstFieldDeclaration* StaticFieldCast();
+    inline AstInitializerDeclaration* StaticInitializerCast();
     inline AstClassBody* UnparsedClassBodyCast();
-    inline AstInterfaceDeclaration* UnparsedInterfaceBodyCast();
     inline AstCompilationUnit* BadCompilationUnitCast();
     inline AstCompilationUnit* EmptyCompilationUnitCast();
 
@@ -495,7 +493,7 @@ public:
     inline AstMethodDeclarator* MethodDeclaratorCast();
     inline AstMethodDeclaration* MethodDeclarationCast();
     inline AstMethodBody* MethodBodyCast();
-    inline AstStaticInitializer* StaticInitializerCast();
+    inline AstInitializerDeclaration* InitializerDeclarationCast();
     inline AstThisCall* ThisCallCast();
     inline AstSuperCall* SuperCallCast();
     inline AstConstructorDeclaration* ConstructorDeclarationCast();
@@ -598,7 +596,6 @@ class AstArray
     void AllocateMoreSpace();
 
 public:
-
     //
     // This function is used to reset the size of a Ast array without
     // allocating or deallocting space. It may be invoked with an integer
@@ -712,15 +709,39 @@ public:
 };
 
 
+//
+// This empty class adds some type safety. It represents all member
+// declarations in types. See AstFieldDeclaration, AstMethodDeclaration,
+// AstConstructorDeclaration, AstInitializerDeclaration, DeclaredType.
+//
+class AstDeclared : public Ast
+{
+};
+
+
+//
+// This class adds some type safety. It represents all type declarations.
+// See AstClassDeclaration, AstInterfaceDeclaration, AstEmptyDeclaration.
+//
+class AstDeclaredType : public AstDeclared
+{
+public:
+    AstClassBody* class_body;
+
+    inline bool IsValid();
+};
+
+
+//
+// This class represents statements.
+//
 class AstStatement : public Ast
 {
 protected:
-
     StoragePool* pool;
     VariableSymbolArray* defined_variables;
 
 public:
-
     bool is_reachable,
          can_complete_normally;
 
@@ -731,15 +752,15 @@ public:
     // can_complete_normally appropriately.
     //
 
-    inline VariableSymbol*& DefinedVariable(int i)
+    inline VariableSymbol*& DefinedVariable(unsigned i)
     {
         return (*defined_variables)[i];
     }
-    inline int NumDefinedVariables()
+    inline unsigned NumDefinedVariables()
     {
         return (defined_variables ? defined_variables -> Length() : 0);
     }
-    inline void AllocateDefinedVariables(int estimate = 0);
+    inline void AllocateDefinedVariables(unsigned estimate = 1);
     inline void AddDefinedVariable(VariableSymbol*);
 };
 
@@ -811,7 +832,7 @@ public:
 
     BlockSymbol* block_symbol;
 
-    int nesting_level;
+    unsigned nesting_level;
     LexStream::TokenIndex left_brace_token;
     LexStream::TokenIndex right_brace_token;
     LexStream::TokenIndex label_opt;
@@ -836,24 +857,27 @@ public:
         defined_variables = NULL;
     }
 
-    inline AstStatement*& Statement(int i) { return (*block_statements)[i]; }
-    inline int NumStatements()
+    inline AstStatement*& Statement(unsigned i)
+    {
+        return (*block_statements)[i];
+    }
+    inline unsigned NumStatements()
     {
         return (block_statements ? block_statements -> Length() : 0);
     }
-    inline void AllocateStatements(int estimate = 0);
+    inline void AllocateStatements(unsigned estimate = 1);
     inline void AddStatement(AstStatement*);
 
-    inline VariableSymbol*& LocallyDefinedVariable(int i)
+    inline VariableSymbol*& LocallyDefinedVariable(unsigned i)
     {
         return (*locally_defined_variables)[i];
     }
-    inline int NumLocallyDefinedVariables()
+    inline unsigned NumLocallyDefinedVariables()
     {
         return (locally_defined_variables
                 ? locally_defined_variables -> Length() : 0);
     }
-    inline void AllocateLocallyDefinedVariables(int estimate = 0);
+    inline void AllocateLocallyDefinedVariables(unsigned estimate = 1);
     inline void AddLocallyDefinedVariable(VariableSymbol*);
 
 #ifdef JIKES_DEBUG
@@ -883,14 +907,13 @@ public:
     LexStream::TokenIndex identifier_token;
 
     //
-    // When a simple_name refers to a member in an enclosing scope,
-    // it is mapped into a new expression that creates a path to
-    // the member in question.
+    // When a name refers to a member in an enclosing scope, it is mapped
+    // into an expression that creates a path to the member in question.
     //
     AstExpression* resolution_opt;
 
-    AstSimpleName(LexStream::TokenIndex token_)
-        : identifier_token(token_),
+    AstSimpleName(LexStream::TokenIndex token)
+        : identifier_token(token),
           resolution_opt(NULL)
     {
         kind = IDENTIFIER;
@@ -930,8 +953,8 @@ class AstPrimitiveType : public AstType
 public:
     LexStream::TokenIndex primitive_kind_token;
 
-    AstPrimitiveType(Kind k, LexStream::TokenIndex t)
-        : primitive_kind_token(t)
+    AstPrimitiveType(Kind k, LexStream::TokenIndex token)
+        : primitive_kind_token(token)
     {
         kind = k;
         class_tag = PRIMITIVE_TYPE;
@@ -1005,10 +1028,10 @@ class AstArrayType : public AstType
 public:
     AstType* type; // AstPrimitiveType, AstTypeName
 
-    AstArrayType(StoragePool* p, AstType* t)
+    AstArrayType(StoragePool* p, AstType* token)
         : pool(p),
           brackets(NULL),
-          type(t)
+          type(token)
     {
         kind = ARRAY;
         class_tag = NO_TAG;
@@ -1016,9 +1039,12 @@ public:
         symbol = NULL;
     }
 
-    inline AstBrackets*& Brackets(int i) { return (*brackets)[i]; }
-    inline int NumBrackets() { return (brackets ? brackets -> Length() : 0); }
-    inline void AllocateBrackets(int estimate = 0);
+    inline AstBrackets*& Brackets(unsigned i) { return (*brackets)[i]; }
+    inline unsigned NumBrackets()
+    {
+        return brackets ? brackets -> Length() : 0;
+    }
+    inline void AllocateBrackets(unsigned estimate = 1);
     inline void AddBrackets(AstBrackets*);
 
 #ifdef JIKES_DEBUG
@@ -1031,7 +1057,7 @@ public:
     virtual LexStream::TokenIndex LeftToken() { return type -> LeftToken(); }
     virtual LexStream::TokenIndex RightToken()
     {
-        return Brackets(NumBrackets() - 1) -> RightToken();
+        return Brackets(NumBrackets() - 1) -> right_bracket_token;
     }
     virtual LexStream::TokenIndex IdentifierToken()
     {
@@ -1047,14 +1073,11 @@ public:
 //
 class AstTypeName : public AstType
 {
-    StoragePool* pool;
-
 public:
     AstExpression* name;
 
-    AstTypeName(StoragePool* p, AstExpression* n)
-        : pool(p),
-          name(n)
+    AstTypeName(StoragePool*, AstExpression* n)
+        : name(n)
     {
         kind = TYPE;
         class_tag = NO_TAG;
@@ -1151,7 +1174,7 @@ class AstCompilationUnit : public Ast
 {
     StoragePool* pool;
     AstArray<AstImportDeclaration*>* import_declarations;
-    AstArray<Ast*>* type_declarations;
+    AstArray<AstDeclaredType*>* type_declarations;
 
 public:
     StoragePool* ast_pool;
@@ -1171,28 +1194,32 @@ public:
 
     void FreeAst();
 
-    inline AstImportDeclaration*& ImportDeclaration(int i)
+    inline AstImportDeclaration*& ImportDeclaration(unsigned i)
     {
         return (*import_declarations)[i];
     }
-    inline int NumImportDeclarations()
+    inline unsigned NumImportDeclarations()
     {
         return (import_declarations ? import_declarations -> Length() : 0);
     }
-    inline void AllocateImportDeclarations(int estimate = 0);
+    inline void AllocateImportDeclarations(unsigned estimate = 1);
     inline void AddImportDeclaration(AstImportDeclaration*);
 
-    inline void ResetTypeDeclarations(int n)
+    inline void ResetTypeDeclarations(unsigned n)
     {
-        if (type_declarations) type_declarations -> Reset(n);
+        if (type_declarations)
+            type_declarations -> Reset(n);
     }
-    inline Ast*& TypeDeclaration(int i) { return (*type_declarations)[i]; }
-    inline int NumTypeDeclarations()
+    inline AstDeclaredType*& TypeDeclaration(unsigned i)
+    {
+        return (*type_declarations)[i];
+    }
+    inline unsigned NumTypeDeclarations()
     {
         return (type_declarations ? type_declarations -> Length() : 0);
     }
-    inline void AllocateTypeDeclarations(int estimate = 0);
-    inline void AddTypeDeclaration(Ast*);
+    inline void AllocateTypeDeclarations(unsigned estimate = 1);
+    inline void AddTypeDeclaration(AstDeclaredType*);
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -1207,24 +1234,22 @@ public:
     virtual LexStream::TokenIndex LeftToken()
     {
         if (package_declaration_opt)
-             return package_declaration_opt -> LeftToken();
-        else if (NumImportDeclarations() > 0)
-             return ImportDeclaration(0) -> LeftToken();
-        else if (NumTypeDeclarations() > 0)
-             return TypeDeclaration(0) -> LeftToken();
-
+            return package_declaration_opt -> package_token;
+        if (NumImportDeclarations())
+            return ImportDeclaration(0) -> import_token;
+        if (NumTypeDeclarations())
+            return TypeDeclaration(0) -> LeftToken();
         return 0;
     }
     virtual LexStream::TokenIndex RightToken()
     {
-        if (NumTypeDeclarations() > 0)
+        if (NumTypeDeclarations())
             return TypeDeclaration(NumTypeDeclarations() - 1) -> RightToken();
-        else if (NumImportDeclarations() > 0)
+        if (NumImportDeclarations())
             return ImportDeclaration(NumImportDeclarations() - 1) ->
-                RightToken();
-        else if (package_declaration_opt)
-            return package_declaration_opt -> RightToken();
-
+                semicolon_token;
+        if (package_declaration_opt)
+            return package_declaration_opt -> semicolon_token;
         return 0;
     }
 };
@@ -1246,8 +1271,8 @@ class AstModifier : public Ast
 public:
     LexStream::TokenIndex modifier_token;
 
-    AstModifier(LexStream::TokenIndex t)
-        : modifier_token(t)
+    AstModifier(LexStream::TokenIndex token)
+        : modifier_token(token)
     {
         kind = MODIFIER;
         class_tag = NO_TAG;
@@ -1269,7 +1294,7 @@ public:
 //
 // EmptyDeclaration --> <EMPTY_DECLARATION, ;_token>
 //
-class AstEmptyDeclaration : public Ast
+class AstEmptyDeclaration : public AstDeclaredType
 {
 public:
     LexStream::TokenIndex semicolon_token;
@@ -1280,6 +1305,7 @@ public:
         kind = EMPTY_DECLARATION;
         class_tag = NO_TAG;
         generated = false;
+        class_body = NULL;
     }
 
 #ifdef JIKES_DEBUG
@@ -1302,26 +1328,35 @@ class AstClassBody : public Ast
     friend class Parser;
 
     StoragePool* pool;
-    AstArray<Ast*>* class_body_declarations;
+    AstArray<AstDeclared*>* class_body_declarations;
 
     AstArray<AstFieldDeclaration*>* instance_variables;
     AstArray<AstFieldDeclaration*>* class_variables;
     AstArray<AstMethodDeclaration*>* methods;
     AstArray<AstConstructorDeclaration*>* constructors;
-    AstArray<AstStaticInitializer*>* static_initializers;
+    AstArray<AstInitializerDeclaration*>* static_initializers;
+    AstArray<AstInitializerDeclaration*>* instance_initializers;
     AstArray<AstClassDeclaration*>* inner_classes;
     AstArray<AstInterfaceDeclaration*>* inner_interfaces;
-    AstArray<AstMethodBody*>* instance_initializers;
     AstArray<AstEmptyDeclaration*>* empty_declarations;
 
 public:
+    SemanticEnvironment* semantic_environment;
     AstConstructorDeclaration* default_constructor;
 
+    //
+    // Filled in by the owning AstClassDeclaration, AstInterfaceDeclaration,
+    // or AstClassInstanceCreationExpression to allow nicer error messages.
+    // Note that owner is null for anonymous classes.
+    //
+    AstDeclaredType* owner;
+    LexStream::TokenIndex identifier_token;
+
+    //
+    // The actual delimiters of the class body.
+    //
     LexStream::TokenIndex left_brace_token;
     LexStream::TokenIndex right_brace_token;
-
-    inline void MarkUnparsed() { class_tag = UNPARSED; }
-    inline void MarkParsed() { class_tag = NO_TAG; }
 
     AstClassBody(StoragePool* p)
         : pool(p),
@@ -1331,121 +1366,129 @@ public:
           methods(NULL),
           constructors(NULL),
           static_initializers(NULL),
+          instance_initializers(NULL),
           inner_classes(NULL),
           inner_interfaces(NULL),
-          instance_initializers(NULL),
           empty_declarations(NULL),
-          default_constructor(NULL)
+          semantic_environment(NULL),
+          default_constructor(NULL),
+          identifier_token(LexStream::BadToken())
     {
         kind = CLASS_BODY;
         class_tag = NO_TAG;
         generated = false;
     }
 
-    inline Ast*& ClassBodyDeclaration(int i)
+    inline void MarkUnparsed() { class_tag = UNPARSED; }
+    inline void MarkParsed() { class_tag = NO_TAG; }
+
+    inline AstDeclared*& ClassBodyDeclaration(unsigned i)
     {
         return (*class_body_declarations)[i];
     }
-    inline int NumClassBodyDeclarations()
+    inline unsigned NumClassBodyDeclarations()
     {
         return (class_body_declarations
                 ? class_body_declarations -> Length() : 0);
     }
-    inline void AllocateClassBodyDeclarations(int estimate = 0);
-    inline void AddClassBodyDeclaration(Ast*);
-    inline void AddClassBodyDeclarationNicely(Ast*);
+    inline void AllocateClassBodyDeclarations(unsigned estimate = 1);
+    inline void AddClassBodyDeclaration(AstDeclared*);
+    inline void AddClassBodyDeclarationNicely(AstDeclared*);
 
-    inline AstFieldDeclaration*& InstanceVariable(int i)
+    inline AstFieldDeclaration*& InstanceVariable(unsigned i)
     {
         return (*instance_variables)[i];
     }
-    inline int NumInstanceVariables()
+    inline unsigned NumInstanceVariables()
     {
         return (instance_variables ? instance_variables -> Length() : 0);
     }
-    inline void AllocateInstanceVariables(int estimate = 0);
+    inline void AllocateInstanceVariables(unsigned estimate = 1);
     inline void AddInstanceVariable(AstFieldDeclaration*);
 
-    inline AstFieldDeclaration*& ClassVariable(int i)
+    inline AstFieldDeclaration*& ClassVariable(unsigned i)
     {
         return (*class_variables)[i];
     }
-    inline int NumClassVariables()
+    inline unsigned NumClassVariables()
     {
         return (class_variables ? class_variables -> Length() : 0);
     }
-    inline void AllocateClassVariables(int estimate = 0);
+    inline void AllocateClassVariables(unsigned estimate = 1);
     inline void AddClassVariable(AstFieldDeclaration*);
 
-    inline AstMethodDeclaration*& Method(int i) { return (*methods)[i]; }
-    inline int NumMethods() { return (methods ? methods -> Length() : 0); }
-    inline void AllocateMethods(int estimate = 0);
+    inline AstMethodDeclaration*& Method(unsigned i) { return (*methods)[i]; }
+    inline unsigned NumMethods()
+    {
+        return (methods ? methods -> Length() : 0);
+    }
+    inline void AllocateMethods(unsigned estimate = 1);
     inline void AddMethod(AstMethodDeclaration*);
 
-    inline AstConstructorDeclaration*& Constructor(int i)
+    inline AstConstructorDeclaration*& Constructor(unsigned i)
     {
         return (*constructors)[i];
     }
-    inline int NumConstructors()
+    inline unsigned NumConstructors()
     {
         return (constructors ? constructors -> Length() : 0);
     }
-    inline void AllocateConstructors(int estimate = 0);
+    inline void AllocateConstructors(unsigned estimate = 1);
     inline void AddConstructor(AstConstructorDeclaration*);
 
-    inline AstStaticInitializer*& StaticInitializer(int i)
+    inline AstInitializerDeclaration*& StaticInitializer(unsigned i)
     {
         return (*static_initializers)[i];
     }
-    inline int NumStaticInitializers()
+    inline unsigned NumStaticInitializers()
     {
         return (static_initializers ? static_initializers -> Length() : 0);
     }
-    inline void AllocateStaticInitializers(int estimate = 0);
-    inline void AddStaticInitializer(AstStaticInitializer*);
+    inline void AllocateStaticInitializers(unsigned estimate = 1);
+    inline void AddStaticInitializer(AstInitializerDeclaration*);
 
-    inline AstClassDeclaration*& NestedClass(int i)
-    {
-        return (*inner_classes)[i];
-    }
-    inline int NumNestedClasses()
-    {
-        return (inner_classes ? inner_classes -> Length() : 0);
-    }
-    inline void AllocateNestedClasses(int estimate = 0);
-    inline void AddNestedClass(AstClassDeclaration*);
-
-    inline AstInterfaceDeclaration*& NestedInterface(int i)
-    {
-        return (*inner_interfaces)[i];
-    }
-    inline int NumNestedInterfaces()
-    {
-        return (inner_interfaces ? inner_interfaces -> Length() : 0);
-    }
-    inline void AllocateNestedInterfaces(int estimate = 0);
-    inline void AddNestedInterface(AstInterfaceDeclaration*);
-
-    inline AstMethodBody*& InstanceInitializer(int i)
+    inline AstInitializerDeclaration*& InstanceInitializer(unsigned i)
     {
         return (*instance_initializers)[i];
     }
-    inline int NumInstanceInitializers()
+    inline unsigned NumInstanceInitializers()
     {
         return (instance_initializers ? instance_initializers -> Length() : 0);
     }
-    inline void AllocateInstanceInitializers(int estimate = 0);
-    inline void AddInstanceInitializer(AstMethodBody*);
+    inline void AllocateInstanceInitializers(unsigned estimate = 1);
+    inline void AddInstanceInitializer(AstInitializerDeclaration*);
 
-    inline AstEmptyDeclaration*& EmptyDeclaration(int i)
+    inline AstClassDeclaration*& NestedClass(unsigned i)
+    {
+        return (*inner_classes)[i];
+    }
+    inline unsigned NumNestedClasses()
+    {
+        return (inner_classes ? inner_classes -> Length() : 0);
+    }
+    inline void AllocateNestedClasses(unsigned estimate = 1);
+    inline void AddNestedClass(AstClassDeclaration*);
+
+    inline AstInterfaceDeclaration*& NestedInterface(unsigned i)
+    {
+        return (*inner_interfaces)[i];
+    }
+    inline unsigned NumNestedInterfaces()
+    {
+        return (inner_interfaces ? inner_interfaces -> Length() : 0);
+    }
+    inline void AllocateNestedInterfaces(unsigned estimate = 1);
+    inline void AddNestedInterface(AstInterfaceDeclaration*);
+
+    inline AstEmptyDeclaration*& EmptyDeclaration(unsigned i)
     {
         return (*empty_declarations)[i];
     }
-    inline int NumEmptyDeclarations()
+    inline unsigned NumEmptyDeclarations()
     {
         return (empty_declarations ? empty_declarations -> Length() : 0);
     }
-    inline void AllocateEmptyDeclarations(int estimate = 0);
+    inline void AllocateEmptyDeclarations(unsigned estimate = 1);
     inline void AddEmptyDeclaration(AstEmptyDeclaration*);
 
 #ifdef JIKES_DEBUG
@@ -1480,26 +1523,20 @@ public:
 //                        | ConstructorDeclaration
 //                        | StaticInitializer
 //
-class AstClassDeclaration : public Ast
+class AstClassDeclaration : public AstDeclaredType
 {
     StoragePool* pool;
-    AstArray<AstModifier*>* class_modifiers;
+    AstArray<AstModifier*>* modifiers;
     AstArray<AstTypeName*>* interfaces;
 
 public:
-    SemanticEnvironment* semantic_environment;
-
     LexStream::TokenIndex class_token;
-    LexStream::TokenIndex identifier_token;
     AstTypeName* super_opt;
-
-    AstClassBody* class_body;
 
     AstClassDeclaration(StoragePool* p)
         : pool(p),
-          class_modifiers(NULL),
+          modifiers(NULL),
           interfaces(NULL),
-          semantic_environment(NULL),
           super_opt(NULL)
     {
         kind = CLASS;
@@ -1507,22 +1544,20 @@ public:
         generated = false;
     }
 
-    bool IsValid() { return semantic_environment != NULL; }
-
-    inline AstModifier*& ClassModifier(int i) { return (*class_modifiers)[i]; }
-    inline int NumClassModifiers()
+    inline AstModifier*& Modifier(unsigned i) { return (*modifiers)[i]; }
+    inline unsigned NumModifiers()
     {
-        return (class_modifiers ? class_modifiers -> Length() : 0);
+        return modifiers ? modifiers -> Length() : 0;
     }
-    inline void AllocateClassModifiers(int estimate = 0);
-    inline void AddClassModifier(AstModifier*);
+    inline void AllocateModifiers(unsigned estimate = 1);
+    inline void AddModifier(AstModifier*);
 
-    inline AstTypeName*& Interface(int i) { return (*interfaces)[i]; }
-    inline int NumInterfaces()
+    inline AstTypeName*& Interface(unsigned i) { return (*interfaces)[i]; }
+    inline unsigned NumInterfaces()
     {
         return (interfaces ? interfaces -> Length() : 0);
     }
-    inline void AllocateInterfaces(int estimate = 0);
+    inline void AllocateInterfaces(unsigned estimate = 1);
     inline void AddInterface(AstTypeName*);
 
 #ifdef JIKES_DEBUG
@@ -1534,12 +1569,12 @@ public:
 
     virtual LexStream::TokenIndex LeftToken()
     {
-        return (NumClassModifiers() > 0
-                ? (*class_modifiers)[0] -> LeftToken() : class_token);
+        return (NumModifiers() ? Modifier(0) -> modifier_token
+                : class_token);
     }
     virtual LexStream::TokenIndex RightToken()
     {
-        return class_body -> RightToken();
+        return class_body -> right_brace_token;
     }
 };
 
@@ -1569,15 +1604,15 @@ public:
         generated = false;
     }
 
-    inline Ast*& VariableInitializer(int i)
+    inline Ast*& VariableInitializer(unsigned i)
     {
         return (*variable_initializers)[i];
     }
-    inline int NumVariableInitializers()
+    inline unsigned NumVariableInitializers()
     {
         return (variable_initializers ? variable_initializers -> Length() : 0);
     }
-    inline void AllocateVariableInitializers(int estimate = 0);
+    inline void AllocateVariableInitializers(unsigned estimate = 1);
     inline void AddVariableInitializer(Ast*);
 
 #ifdef JIKES_DEBUG
@@ -1602,7 +1637,6 @@ class AstVariableDeclaratorId : public Ast
     AstArray<AstBrackets*>* brackets;
 
 public:
-
     LexStream::TokenIndex identifier_token;
 
     AstVariableDeclaratorId(StoragePool* p)
@@ -1614,9 +1648,12 @@ public:
         generated = false;
     }
 
-    inline AstBrackets*& Brackets(int i) { return (*brackets)[i]; }
-    inline int NumBrackets() { return (brackets ? brackets -> Length() : 0); }
-    inline void AllocateBrackets(int estimate = 0);
+    inline AstBrackets*& Brackets(unsigned i) { return (*brackets)[i]; }
+    inline unsigned NumBrackets()
+    {
+        return (brackets ? brackets -> Length() : 0);
+    }
+    inline void AllocateBrackets(unsigned estimate = 1);
     inline void AddBrackets(AstBrackets*);
 
 #ifdef JIKES_DEBUG
@@ -1629,8 +1666,8 @@ public:
     virtual LexStream::TokenIndex LeftToken() { return identifier_token; }
     virtual LexStream::TokenIndex RightToken()
     {
-        return (NumBrackets() > 0
-                ? (*brackets)[NumBrackets() - 1] -> RightToken()
+        return (NumBrackets()
+                ? Brackets(NumBrackets() - 1) -> right_bracket_token
                 : identifier_token);
     }
 };
@@ -1698,20 +1735,19 @@ public:
 // FieldModifier --> Modifier (PUBLIC, PROTECTED, PRIVATE, FINAL, STATIC,
 // TRANSIENT or VOLATILE)
 //
-class AstFieldDeclaration : public Ast
+class AstFieldDeclaration : public AstDeclared
 {
     StoragePool* pool;
-    AstArray<AstModifier*>* variable_modifiers;
+    AstArray<AstModifier*>* modifiers;
     AstArray<AstVariableDeclarator*>* variable_declarators;
 
 public:
-
     AstType* type;
     LexStream::TokenIndex semicolon_token;
 
     AstFieldDeclaration(StoragePool* p)
         : pool(p),
-          variable_modifiers(NULL),
+          modifiers(NULL),
           variable_declarators(NULL)
     {
         kind = FIELD;
@@ -1721,26 +1757,26 @@ public:
 
     inline void MarkStatic() { class_tag = STATIC; }
 
-    inline AstModifier*& VariableModifier(int i)
+    inline AstModifier*& Modifier(unsigned i)
     {
-        return (*variable_modifiers)[i];
+        return (*modifiers)[i];
     }
-    inline int NumVariableModifiers()
+    inline unsigned NumModifiers()
     {
-        return (variable_modifiers ? variable_modifiers -> Length() : 0);
+        return modifiers ? modifiers -> Length() : 0;
     }
-    inline void AllocateVariableModifiers(int estimate = 0);
-    inline void AddVariableModifier(AstModifier*);
+    inline void AllocateModifiers(unsigned estimate = 1);
+    inline void AddModifier(AstModifier*);
 
-    inline AstVariableDeclarator*& VariableDeclarator(int i)
+    inline AstVariableDeclarator*& VariableDeclarator(unsigned i)
     {
         return (*variable_declarators)[i];
     }
-    inline int NumVariableDeclarators()
+    inline unsigned NumVariableDeclarators()
     {
         return (variable_declarators ? variable_declarators -> Length() : 0);
     }
-    inline void AllocateVariableDeclarators(int estimate = 0);
+    inline void AllocateVariableDeclarators(unsigned estimate = 1);
     inline void AddVariableDeclarator(AstVariableDeclarator*);
 
 #ifdef JIKES_DEBUG
@@ -1752,8 +1788,7 @@ public:
 
     virtual LexStream::TokenIndex LeftToken()
     {
-        return (NumVariableModifiers() > 0
-                ? (*variable_modifiers)[0] -> LeftToken()
+        return (NumModifiers() ? Modifier(0) -> modifier_token
                 : type -> LeftToken());
     }
     virtual LexStream::TokenIndex RightToken() { return semicolon_token; }
@@ -1766,32 +1801,28 @@ public:
 class AstFormalParameter : public Ast
 {
     StoragePool* pool;
-    AstArray<AstModifier*>* parameter_modifiers;
+    AstArray<AstModifier*>* modifiers;
 
 public:
-
     AstType* type;
     AstVariableDeclarator* formal_declarator;
 
     AstFormalParameter(StoragePool* p)
         : pool(p),
-          parameter_modifiers(NULL)
+          modifiers(NULL)
     {
         kind = PARAMETER;
         class_tag = NO_TAG;
         generated = false;
     }
 
-    inline AstModifier*& ParameterModifier(int i)
+    inline AstModifier*& Modifier(unsigned i) { return (*modifiers)[i]; }
+    inline unsigned NumModifiers()
     {
-        return (*parameter_modifiers)[i];
+        return modifiers ? modifiers -> Length() : 0;
     }
-    inline int NumParameterModifiers()
-    {
-        return (parameter_modifiers ? parameter_modifiers -> Length() : 0);
-    }
-    inline void AllocateParameterModifiers(int estimate = 0);
-    inline void AddParameterModifier(AstModifier*);
+    inline void AllocateModifiers(unsigned estimate = 1);
+    inline void AddModifier(AstModifier*);
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -1802,9 +1833,8 @@ public:
 
     virtual LexStream::TokenIndex LeftToken()
     {
-       return (NumParameterModifiers() > 0
-               ? (*parameter_modifiers)[0] -> LeftToken()
-               : type -> LeftToken());
+        return (NumModifiers() ? Modifier(0) -> modifier_token
+                : type -> LeftToken());
     }
     virtual LexStream::TokenIndex RightToken()
     {
@@ -1838,20 +1868,23 @@ public:
         generated = false;
     }
 
-    inline AstBrackets*& Brackets(int i) { return (*brackets)[i]; }
-    inline int NumBrackets() { return (brackets ? brackets -> Length() : 0); }
-    inline void AllocateBrackets(int estimate = 0);
+    inline AstBrackets*& Brackets(unsigned i) { return (*brackets)[i]; }
+    inline unsigned NumBrackets()
+    {
+        return (brackets ? brackets -> Length() : 0);
+    }
+    inline void AllocateBrackets(unsigned estimate = 1);
     inline void AddBrackets(AstBrackets*);
 
-    inline AstFormalParameter*& FormalParameter(int i)
+    inline AstFormalParameter*& FormalParameter(unsigned i)
     {
         return (*formal_parameters)[i];
     }
-    inline int NumFormalParameters()
+    inline unsigned NumFormalParameters()
     {
         return (formal_parameters ? formal_parameters -> Length() : 0);
     }
-    inline void AllocateFormalParameters(int estimate = 0);
+    inline void AllocateFormalParameters(unsigned estimate = 1);
     inline void AddFormalParameter(AstFormalParameter*);
 
 #ifdef JIKES_DEBUG
@@ -1865,7 +1898,7 @@ public:
     virtual LexStream::TokenIndex RightToken()
     {
         return (NumBrackets()
-                ? Brackets(NumBrackets() - 1) -> RightToken()
+                ? Brackets(NumBrackets() - 1) -> right_bracket_token
                 : right_parenthesis_token);
     }
 };
@@ -1883,10 +1916,10 @@ public:
 // MethodBody --> Block
 //              | EmptyStatement
 //
-class AstMethodDeclaration : public Ast
+class AstMethodDeclaration : public AstDeclared
 {
     StoragePool* pool;
-    AstArray<AstModifier*>* method_modifiers;
+    AstArray<AstModifier*>* modifiers;
     AstArray<AstTypeName*>* throws;
 
 public:
@@ -1898,7 +1931,7 @@ public:
 
     AstMethodDeclaration(StoragePool* p)
         : pool(p),
-          method_modifiers(NULL),
+          modifiers(NULL),
           throws(NULL),
           method_symbol(NULL)
     {
@@ -1911,20 +1944,17 @@ public:
 
     bool IsSignature() { return method_body -> EmptyStatementCast() != NULL; }
 
-    inline AstModifier*& MethodModifier(int i)
+    inline AstModifier*& Modifier(unsigned i) { return (*modifiers)[i]; }
+    inline unsigned NumModifiers()
     {
-        return (*method_modifiers)[i];
+        return modifiers ? modifiers -> Length() : 0;
     }
-    inline int NumMethodModifiers()
-    {
-        return (method_modifiers ? method_modifiers -> Length() : 0);
-    }
-    inline void AllocateMethodModifiers(int estimate = 0);
-    inline void AddMethodModifier(AstModifier*);
+    inline void AllocateModifiers(unsigned estimate = 1);
+    inline void AddModifier(AstModifier*);
 
-    inline AstTypeName*& Throw(int i) { return (*throws)[i]; }
-    inline int NumThrows() { return (throws ? throws -> Length() : 0); }
-    inline void AllocateThrows(int estimate = 0);
+    inline AstTypeName*& Throw(unsigned i) { return (*throws)[i]; }
+    inline unsigned NumThrows() { return (throws ? throws -> Length() : 0); }
+    inline void AllocateThrows(unsigned estimate = 1);
     inline void AddThrow(AstTypeName*);
 
 #ifdef JIKES_DEBUG
@@ -1936,8 +1966,8 @@ public:
 
     virtual LexStream::TokenIndex LeftToken()
     {
-        return (NumMethodModifiers() > 0
-                ? (*method_modifiers)[0] -> LeftToken() : type -> LeftToken());
+        return (NumModifiers() ? Modifier(0) -> modifier_token
+                : type -> LeftToken());
     }
     virtual LexStream::TokenIndex RightToken()
     {
@@ -1980,15 +2010,20 @@ public:
 
 
 //
-// StaticInitializer --> <INITIALIZER, static_token, Block>
+// This class represents static and instance initializers. It also accepts
+// other modifiers, to give a nicer error message.
 //
-class AstStaticInitializer : public Ast
+class AstInitializerDeclaration : public AstDeclared
 {
+    StoragePool* pool;
+    AstArray<AstModifier*>* modifiers;
+
 public:
-    LexStream::TokenIndex static_token;
     AstMethodBody* block;
 
-    AstStaticInitializer()
+    AstInitializerDeclaration(StoragePool* p)
+        : pool(p),
+          modifiers(NULL)
     {
         kind = INITIALIZER;
         class_tag = NO_TAG;
@@ -1997,6 +2032,14 @@ public:
 
     inline void MarkStatic() { class_tag = STATIC; }
 
+    inline AstModifier*& Modifier(unsigned i) { return (*modifiers)[i]; }
+    inline unsigned NumModifiers()
+    {
+        return modifiers ? modifiers -> Length() : 0;
+    }
+    inline void AllocateModifiers(unsigned estimate = 1);
+    inline void AddModifier(AstModifier*);
+
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
     virtual void Unparse(Ostream&, LexStream*);
@@ -2004,10 +2047,14 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return static_token; }
+    virtual LexStream::TokenIndex LeftToken()
+    {
+        return NumModifiers() ? Modifier(0) -> modifier_token
+            : block -> left_brace_token;
+    }
     virtual LexStream::TokenIndex RightToken()
     {
-        return block -> RightToken();
+        return block -> right_brace_token;
     }
 };
 
@@ -2042,12 +2089,12 @@ public:
         defined_variables = NULL;
     }
 
-    inline AstExpression*& Argument(int i) { return (*arguments)[i]; }
-    inline int NumArguments()
+    inline AstExpression*& Argument(unsigned i) { return (*arguments)[i]; }
+    inline unsigned NumArguments()
     {
         return (arguments ? arguments -> Length() : 0);
     }
-    inline void AllocateArguments(int estimate = 0);
+    inline void AllocateArguments(unsigned estimate = 1);
     inline void AddArgument(AstExpression*);
 
 #ifdef JIKES_DEBUG
@@ -2100,23 +2147,23 @@ public:
         defined_variables = NULL;
     }
 
-    inline AstExpression*& Argument(int i) { return (*arguments)[i]; }
-    inline int NumArguments()
+    inline AstExpression*& Argument(unsigned i) { return (*arguments)[i]; }
+    inline unsigned NumArguments()
     {
         return (arguments ? arguments -> Length() : 0);
     }
-    inline void AllocateArguments(int estimate = 0);
+    inline void AllocateArguments(unsigned estimate = 1);
     inline void AddArgument(AstExpression*);
 
-    inline AstExpression*& LocalArgument(int i)
+    inline AstExpression*& LocalArgument(unsigned i)
     {
         return (*local_arguments_opt)[i];
     }
-    inline int NumLocalArguments()
+    inline unsigned NumLocalArguments()
     {
         return (local_arguments_opt ? local_arguments_opt -> Length() : 0);
     }
-    inline void AllocateLocalArguments(int estimate = 0);
+    inline void AllocateLocalArguments(unsigned estimate = 1);
     inline void AddLocalArgument(AstExpression*);
 
     inline void AddNullArgument() { add_null_argument = true; }
@@ -2155,10 +2202,10 @@ public:
 // and in the bytecode, constructors are just methods with a special
 // name.
 //
-class AstConstructorDeclaration : public Ast
+class AstConstructorDeclaration : public AstDeclared
 {
     StoragePool* pool;
-    AstArray<AstModifier*>* constructor_modifiers;
+    AstArray<AstModifier*>* modifiers;
     AstArray<AstTypeName*>* throws;
 
 public:
@@ -2170,7 +2217,7 @@ public:
 
     AstConstructorDeclaration(StoragePool* p)
         : pool(p),
-          constructor_modifiers(NULL),
+          modifiers(NULL),
           throws(NULL),
           constructor_symbol(NULL),
           index(ConstructorCycleChecker::OMEGA)
@@ -2182,20 +2229,17 @@ public:
 
     bool IsValid() { return constructor_symbol != NULL; }
 
-    inline AstModifier*& ConstructorModifier(int i)
+    inline AstModifier*& Modifier(unsigned i) { return (*modifiers)[i]; }
+    inline unsigned NumModifiers()
     {
-        return (*constructor_modifiers)[i];
+        return modifiers ? modifiers -> Length() : 0;
     }
-    inline int NumConstructorModifiers()
-    {
-        return (constructor_modifiers ? constructor_modifiers -> Length() : 0);
-    }
-    inline void AllocateConstructorModifiers(int estimate = 0);
-    inline void AddConstructorModifier(AstModifier*);
+    inline void AllocateModifiers(unsigned estimate = 1);
+    inline void AddModifier(AstModifier*);
 
-    inline AstTypeName*& Throw(int i) { return (*throws)[i]; }
-    inline int NumThrows() { return (throws ? throws -> Length() : 0); }
-    inline void AllocateThrows(int estimate = 0);
+    inline AstTypeName*& Throw(unsigned i) { return (*throws)[i]; }
+    inline unsigned NumThrows() { return (throws ? throws -> Length() : 0); }
+    inline void AllocateThrows(unsigned estimate = 1);
     inline void AddThrow(AstTypeName*);
 
 #ifdef JIKES_DEBUG
@@ -2207,8 +2251,7 @@ public:
 
     virtual LexStream::TokenIndex LeftToken()
     {
-        return (NumConstructorModifiers() > 0
-                ? (*constructor_modifiers)[0] -> LeftToken()
+        return (NumModifiers() ? Modifier(0) -> modifier_token
                 : constructor_declarator -> LeftToken());
     }
     virtual LexStream::TokenIndex RightToken()
@@ -2241,134 +2284,43 @@ public:
 //
 // SignatureModifier --> Modifier (PUBLIC or ABSTRACT)
 //
-class AstInterfaceDeclaration : public Ast
+class AstInterfaceDeclaration : public AstDeclaredType
 {
-    friend class Parser;
-
     StoragePool* pool;
-    AstArray<AstModifier*>* interface_modifiers;
-    AstArray<AstTypeName*>* extends_interfaces;
-    AstArray<Ast*>* interface_member_declarations;
-
-    AstArray<AstFieldDeclaration*>* class_variables;
-    AstArray<AstMethodDeclaration*>* methods;
-    AstArray<AstClassDeclaration*>* inner_classes;
-    AstArray<AstInterfaceDeclaration*>* inner_interfaces;
-    AstArray<AstEmptyDeclaration*>* empty_declarations;
+    AstArray<AstModifier*>* modifiers;
+    AstArray<AstTypeName*>* interfaces;
 
 public:
-
-    SemanticEnvironment* semantic_environment;
-
     LexStream::TokenIndex interface_token;
-    LexStream::TokenIndex identifier_token;
-    LexStream::TokenIndex left_brace_token;
-    LexStream::TokenIndex right_brace_token;
-
-    inline void MarkUnparsed() { class_tag = UNPARSED; }
-    inline void MarkParsed() { class_tag = NO_TAG; }
 
     AstInterfaceDeclaration(StoragePool* p)
         : pool(p),
-          interface_modifiers(NULL),
-          extends_interfaces(NULL),
-          interface_member_declarations(NULL),
-          class_variables(NULL),
-          methods(NULL),
-          inner_classes(NULL),
-          inner_interfaces(NULL),
-          empty_declarations(NULL),
-          semantic_environment(NULL)
+          modifiers(NULL),
+          interfaces(NULL)
     {
         kind = INTERFACE;
         class_tag = NO_TAG;
         generated = false;
     }
 
-    bool IsValid() { return semantic_environment != NULL; }
+    inline AstModifier*& Modifier(unsigned i) { return (*modifiers)[i]; }
+    inline unsigned NumModifiers()
+    {
+        return modifiers ? modifiers -> Length() : 0;
+    }
+    inline void AllocateModifiers(unsigned estimate = 1);
+    inline void AddModifier(AstModifier*);
 
-    inline AstModifier*& InterfaceModifier(int i)
+    inline AstTypeName*& Interface(unsigned i)
     {
-        return (*interface_modifiers)[i];
+        return (*interfaces)[i];
     }
-    inline int NumInterfaceModifiers()
+    inline unsigned NumInterfaces()
     {
-        return (interface_modifiers ? interface_modifiers -> Length() : 0);
+        return interfaces ? interfaces -> Length() : 0;
     }
-    inline void AllocateInterfaceModifiers(int estimate = 0);
-    inline void AddInterfaceModifier(AstModifier*);
-
-    inline AstTypeName*& ExtendsInterface(int i)
-    {
-        return (*extends_interfaces)[i];
-    }
-    inline int NumExtendsInterfaces()
-    {
-        return (extends_interfaces ? extends_interfaces -> Length() : 0);
-    }
-    inline void AllocateExtendsInterfaces(int estimate = 0);
-    inline void AddExtendsInterface(AstTypeName*);
-
-    inline Ast*& InterfaceMemberDeclaration(int i)
-    {
-        return (*interface_member_declarations)[i];
-    }
-    inline int NumInterfaceMemberDeclarations()
-    {
-        return (interface_member_declarations
-                ? interface_member_declarations -> Length() : 0);
-    }
-    inline void AllocateInterfaceMemberDeclarations(int estimate = 0);
-    inline void AddInterfaceMemberDeclaration(Ast*);
-
-    inline AstFieldDeclaration*& ClassVariable(int i)
-    {
-        return (*class_variables)[i];
-    }
-    inline int NumClassVariables()
-    {
-        return (class_variables ? class_variables -> Length() : 0);
-    }
-    inline void AllocateClassVariables(int estimate = 0);
-    inline void AddClassVariable(AstFieldDeclaration*);
-
-    inline AstMethodDeclaration*& Method(int i) { return (*methods)[i]; }
-    inline int NumMethods() { return (methods ? methods -> Length() : 0); }
-    inline void AllocateMethods(int estimate = 0);
-    inline void AddMethod(AstMethodDeclaration*);
-
-    inline AstClassDeclaration*& NestedClass(int i)
-    {
-        return (*inner_classes)[i];
-    }
-    inline int NumNestedClasses()
-    {
-        return (inner_classes ? inner_classes -> Length() : 0);
-    }
-    inline void AllocateNestedClasses(int estimate = 0);
-    inline void AddNestedClass(AstClassDeclaration*);
-
-    inline AstInterfaceDeclaration*& NestedInterface(int i)
-    {
-        return (*inner_interfaces)[i];
-    }
-    inline int NumNestedInterfaces()
-    {
-        return (inner_interfaces ? inner_interfaces -> Length() : 0);
-    }
-    inline void AllocateNestedInterfaces(int estimate = 0);
-    inline void AddNestedInterface(AstInterfaceDeclaration*);
-
-    inline AstEmptyDeclaration*& EmptyDeclaration(int i)
-    {
-        return (*empty_declarations)[i];
-    }
-    inline int NumEmptyDeclarations()
-    {
-        return (empty_declarations ? empty_declarations -> Length() : 0);
-    }
-    inline void AllocateEmptyDeclarations(int estimate = 0);
-    inline void AddEmptyDeclaration(AstEmptyDeclaration*);
+    inline void AllocateInterfaces(unsigned estimate = 1);
+    inline void AddInterface(AstTypeName*);
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -2379,10 +2331,13 @@ public:
 
     virtual LexStream::TokenIndex LeftToken()
     {
-        return (NumInterfaceModifiers() > 0
-                ? (*interface_modifiers)[0] -> LeftToken() : interface_token);
+        return (NumModifiers() ? Modifier(0) -> modifier_token
+                : interface_token);
     }
-    virtual LexStream::TokenIndex RightToken() { return right_brace_token; }
+    virtual LexStream::TokenIndex RightToken()
+    {
+        return class_body -> right_brace_token;
+    }
 };
 
 
@@ -2391,7 +2346,7 @@ public:
 //
 class AstLocalVariableDeclarationStatement : public AstStatement
 {
-    AstArray<AstModifier*>* local_modifiers;
+    AstArray<AstModifier*>* modifiers;
     AstArray<AstVariableDeclarator*>* variable_declarators;
 
 public:
@@ -2399,7 +2354,7 @@ public:
     LexStream::TokenIndex semicolon_token_opt;
 
     AstLocalVariableDeclarationStatement(StoragePool* p)
-        : local_modifiers(NULL),
+        : modifiers(NULL),
           variable_declarators(NULL),
           semicolon_token_opt(LexStream::BadToken())
     {
@@ -2412,23 +2367,23 @@ public:
         defined_variables = NULL;
     }
 
-    inline AstModifier*& LocalModifier(int i) { return (*local_modifiers)[i]; }
-    inline int NumLocalModifiers()
+    inline AstModifier*& Modifier(unsigned i) { return (*modifiers)[i]; }
+    inline unsigned NumModifiers()
     {
-        return (local_modifiers ? local_modifiers -> Length() : 0);
+        return modifiers ? modifiers -> Length() : 0;
     }
-    inline void AllocateLocalModifiers(int estimate = 0);
-    inline void AddLocalModifier(AstModifier*);
+    inline void AllocateModifiers(unsigned estimate = 1);
+    inline void AddModifier(AstModifier*);
 
-    inline AstVariableDeclarator*& VariableDeclarator(int i)
+    inline AstVariableDeclarator*& VariableDeclarator(unsigned i)
     {
         return (*variable_declarators)[i];
     }
-    inline int NumVariableDeclarators()
+    inline unsigned NumVariableDeclarators()
     {
         return (variable_declarators ? variable_declarators -> Length() : 0);
     }
-    inline void AllocateVariableDeclarators(int estimate = 0);
+    inline void AllocateVariableDeclarators(unsigned estimate = 1);
     inline void AddVariableDeclarator(AstVariableDeclarator*);
 
 #ifdef JIKES_DEBUG
@@ -2440,8 +2395,8 @@ public:
 
     virtual LexStream::TokenIndex LeftToken()
     {
-        return (NumLocalModifiers() > 0
-                ? (*local_modifiers)[0] -> LeftToken() : type -> LeftToken());
+        return (NumModifiers() ? Modifier(0) -> modifier_token
+                : type -> LeftToken());
     }
     virtual LexStream::TokenIndex RightToken()
     {
@@ -2460,14 +2415,13 @@ class AstLocalClassDeclarationStatement : public AstStatement
 public:
     AstClassDeclaration* declaration;
 
-    AstLocalClassDeclarationStatement(StoragePool* p,
-                                      AstClassDeclaration* decl)
+    AstLocalClassDeclarationStatement(AstClassDeclaration* decl)
         : declaration(decl)
     {
         kind = LOCAL_CLASS;
         class_tag = STATEMENT;
         generated = false;
-        pool = p;
+        pool = NULL;
         is_reachable = false;
         can_complete_normally = true;
         defined_variables = NULL;
@@ -2486,7 +2440,7 @@ public:
     }
     virtual LexStream::TokenIndex RightToken()
     {
-        return declaration -> RightToken();
+        return declaration -> class_body -> right_brace_token;
     }
 };
 
@@ -2518,16 +2472,16 @@ class AstIfStatement : public AstStatement
 public:
     LexStream::TokenIndex if_token;
     AstExpression* expression;
-    AstStatement* true_statement;
-    AstStatement* false_statement_opt;
+    AstBlock* true_statement;
+    AstBlock* false_statement_opt;
 
-    AstIfStatement(StoragePool* p)
+    AstIfStatement()
         : false_statement_opt(NULL)
     {
         kind = IF;
         class_tag = STATEMENT;
         generated = false;
-        pool = p;
+        pool = NULL;
         is_reachable = false;
         can_complete_normally = false;
         defined_variables = NULL;
@@ -2560,16 +2514,16 @@ class AstEmptyStatement : public AstStatement
 public:
     LexStream::TokenIndex semicolon_token;
 
-    AstEmptyStatement(StoragePool* p, LexStream::TokenIndex token)
+    AstEmptyStatement(LexStream::TokenIndex token)
         : semicolon_token(token)
     {
-        Ast::kind = Ast::EMPTY_STATEMENT;
-        Ast::class_tag = Ast::STATEMENT;
-        Ast::generated = false;
-        AstStatement::pool = p;
-        AstStatement::is_reachable = false;
-        AstStatement::can_complete_normally = false;
-        AstStatement::defined_variables = NULL;
+        kind = EMPTY_STATEMENT;
+        class_tag = STATEMENT;
+        generated = false;
+        pool = NULL;
+        is_reachable = false;
+        can_complete_normally = false;
+        defined_variables = NULL;
     }
 
 #ifdef JIKES_DEBUG
@@ -2594,13 +2548,13 @@ public:
     AstExpression* expression;
     LexStream::TokenIndex semicolon_token_opt;
 
-    AstExpressionStatement(StoragePool* p)
+    AstExpressionStatement()
         : semicolon_token_opt(LexStream::BadToken())
     {
         kind = EXPRESSION_STATEMENT;
         class_tag = STATEMENT;
         generated = false;
-        pool = p;
+        pool = NULL;
         is_reachable = false;
         can_complete_normally = false;
         defined_variables = NULL;
@@ -2681,7 +2635,7 @@ public:
     {
         return (*switch_labels)[i];
     }
-    inline int NumSwitchLabels()
+    inline unsigned NumSwitchLabels()
     {
         return (switch_labels ? switch_labels -> Length() : 0);
     }
@@ -2795,12 +2749,12 @@ public:
     AstExpression* expression;
     AstStatement* statement;
 
-    AstWhileStatement(StoragePool* p)
+    AstWhileStatement()
     {
         kind = WHILE;
         class_tag = STATEMENT;
         generated = false;
-        pool = p;
+        pool = NULL;
         is_reachable = false;
         can_complete_normally = false;
         defined_variables = NULL;
@@ -2836,12 +2790,12 @@ public:
     AstExpression* expression;
     LexStream::TokenIndex semicolon_token;
 
-    AstDoStatement(StoragePool* p)
+    AstDoStatement()
     {
         kind = DO;
         class_tag = STATEMENT;
         generated = false;
-        pool = p;
+        pool = NULL;
         is_reachable = false;
         can_complete_normally = false;
         defined_variables = NULL;
@@ -2895,26 +2849,26 @@ public:
         defined_variables = NULL;
     }
 
-    inline AstStatement*& ForInitStatement(int i)
+    inline AstStatement*& ForInitStatement(unsigned i)
     {
         return (*for_init_statements)[i];
     }
-    inline int NumForInitStatements()
+    inline unsigned NumForInitStatements()
     {
         return (for_init_statements ? for_init_statements -> Length() : 0);
     }
-    inline void AllocateForInitStatements(int estimate = 0);
+    inline void AllocateForInitStatements(unsigned estimate = 1);
     inline void AddForInitStatement(AstStatement*);
 
-    inline AstExpressionStatement*& ForUpdateStatement(int i)
+    inline AstExpressionStatement*& ForUpdateStatement(unsigned i)
     {
         return (*for_update_statements)[i];
     }
-    inline int NumForUpdateStatements()
+    inline unsigned NumForUpdateStatements()
     {
         return (for_update_statements ? for_update_statements -> Length() : 0);
     }
-    inline void AllocateForUpdateStatements(int estimate = 0);
+    inline void AllocateForUpdateStatements(unsigned estimate = 1);
     inline void AddForUpdateStatement(AstExpressionStatement*);
 
 #ifdef JIKES_DEBUG
@@ -2945,16 +2899,16 @@ public:
     LexStream::TokenIndex break_token;
     LexStream::TokenIndex identifier_token_opt;
     LexStream::TokenIndex semicolon_token;
-    int nesting_level;
+    unsigned nesting_level;
 
-    AstBreakStatement(StoragePool* p)
+    AstBreakStatement()
         : identifier_token_opt(LexStream::BadToken()),
           nesting_level(0)
     {
         kind = BREAK;
         class_tag = STATEMENT;
         generated = false;
-        pool = p;
+        pool = NULL;
         is_reachable = false;
         can_complete_normally = false;
         defined_variables = NULL;
@@ -2985,16 +2939,16 @@ public:
     LexStream::TokenIndex continue_token;
     LexStream::TokenIndex identifier_token_opt;
     LexStream::TokenIndex semicolon_token;
-    int nesting_level;
+    unsigned nesting_level;
 
-    AstContinueStatement(StoragePool* p)
+    AstContinueStatement()
         : identifier_token_opt(LexStream::BadToken()),
           nesting_level(0)
     {
         kind = CONTINUE;
         class_tag = STATEMENT;
         generated = false;
-        pool = p;
+        pool = NULL;
         is_reachable = false;
         can_complete_normally = false;
         defined_variables = NULL;
@@ -3026,13 +2980,13 @@ public:
     AstExpression* expression_opt;
     LexStream::TokenIndex semicolon_token;
 
-    AstReturnStatement(StoragePool* p)
+    AstReturnStatement()
         : expression_opt(NULL)
     {
         kind = RETURN;
         class_tag = STATEMENT;
         generated = false;
-        pool = p;
+        pool = NULL;
         is_reachable = false;
         can_complete_normally = false;
         defined_variables = NULL;
@@ -3063,15 +3017,15 @@ public:
     AstExpression* expression;
     LexStream::TokenIndex semicolon_token;
 
-    AstThrowStatement(StoragePool* pool_)
+    AstThrowStatement()
     {
-        Ast::kind = Ast::THROW;
-        Ast::class_tag = Ast::STATEMENT;
-        Ast::generated = false;
-        AstStatement::pool = pool_;
-        AstStatement::is_reachable = false;
-        AstStatement::can_complete_normally = false;
-        AstStatement::defined_variables = NULL;
+        kind = THROW;
+        class_tag = STATEMENT;
+        generated = false;
+        pool = NULL;
+        is_reachable = false;
+        can_complete_normally = false;
+        defined_variables = NULL;
     }
 
 #ifdef JIKES_DEBUG
@@ -3100,15 +3054,15 @@ public:
     AstExpression* expression;
     AstBlock* block;
 
-    AstSynchronizedStatement(StoragePool* pool_)
+    AstSynchronizedStatement()
     {
-        Ast::kind = Ast::SYNCHRONIZED_STATEMENT;
-        Ast::class_tag = Ast::STATEMENT;
-        Ast::generated = false;
-        AstStatement::pool = pool_;
-        AstStatement::is_reachable = false;
-        AstStatement::can_complete_normally = false;
-        AstStatement::defined_variables = NULL;
+        kind = SYNCHRONIZED_STATEMENT;
+        class_tag = STATEMENT;
+        generated = false;
+        pool = NULL;
+        is_reachable = false;
+        can_complete_normally = false;
+        defined_variables = NULL;
     }
 
 #ifdef JIKES_DEBUG
@@ -3144,14 +3098,14 @@ public:
 
     VariableSymbol* assert_variable;
 
-    AstAssertStatement(StoragePool* p)
+    AstAssertStatement()
         : message_opt(NULL),
           assert_variable(NULL)
     {
         kind = ASSERT;
         class_tag = STATEMENT;
         generated = false;
-        pool = p;
+        pool = NULL;
         is_reachable = false;
         can_complete_normally = false;
         defined_variables = NULL;
@@ -3183,9 +3137,9 @@ public:
 
     AstCatchClause() : parameter_symbol(NULL)
     {
-        Ast::kind = Ast::CATCH;
-        Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = false;
+        kind = CATCH;
+        class_tag = NO_TAG;
+        generated = false;
     }
 
 #ifdef JIKES_DEBUG
@@ -3214,9 +3168,9 @@ public:
 
     AstFinallyClause()
     {
-        Ast::kind = Ast::FINALLY;
-        Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = false;
+        kind = FINALLY;
+        class_tag = NO_TAG;
+        generated = false;
     }
 
 #ifdef JIKES_DEBUG
@@ -3262,12 +3216,15 @@ public:
         defined_variables = NULL;
     }
 
-    inline AstCatchClause*& CatchClause(int i) { return (*catch_clauses)[i]; }
-    inline int NumCatchClauses()
+    inline AstCatchClause*& CatchClause(unsigned i)
+    {
+        return (*catch_clauses)[i];
+    }
+    inline unsigned NumCatchClauses()
     {
         return (catch_clauses ? catch_clauses -> Length() : 0);
     }
-    inline void AllocateCatchClauses(int estimate = 0);
+    inline void AllocateCatchClauses(unsigned estimate = 1);
     inline void AddCatchClause(AstCatchClause*);
 
 #ifdef JIKES_DEBUG
@@ -3331,14 +3288,14 @@ class AstIntegerLiteral : public AstExpression
 public:
     LexStream::TokenIndex integer_literal_token;
 
-    AstIntegerLiteral(LexStream::TokenIndex token_)
-        : integer_literal_token(token_)
+    AstIntegerLiteral(LexStream::TokenIndex token)
+        : integer_literal_token(token)
     {
-        Ast::kind = Ast::INTEGER_LITERAL;
-        Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = false;
-        AstExpression::value = NULL;
-        AstExpression::symbol = NULL;
+        kind = INTEGER_LITERAL;
+        class_tag = EXPRESSION;
+        generated = false;
+        value = NULL;
+        symbol = NULL;
     }
 
 #ifdef JIKES_DEBUG
@@ -3364,13 +3321,14 @@ class AstLongLiteral : public AstExpression
 public:
     LexStream::TokenIndex long_literal_token;
 
-    AstLongLiteral(LexStream::TokenIndex token_) : long_literal_token(token_)
+    AstLongLiteral(LexStream::TokenIndex token)
+        : long_literal_token(token)
     {
-        Ast::kind = Ast::LONG_LITERAL;
-        Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = false;
-        AstExpression::value = NULL;
-        AstExpression::symbol = NULL;
+        kind = LONG_LITERAL;
+        class_tag = EXPRESSION;
+        generated = false;
+        value = NULL;
+        symbol = NULL;
     }
 
 #ifdef JIKES_DEBUG
@@ -3393,13 +3351,14 @@ class AstFloatLiteral : public AstExpression
 public:
     LexStream::TokenIndex float_literal_token;
 
-    AstFloatLiteral(LexStream::TokenIndex token_) : float_literal_token(token_)
+    AstFloatLiteral(LexStream::TokenIndex token)
+        : float_literal_token(token)
     {
-        Ast::kind = Ast::FLOAT_LITERAL;
-        Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = false;
-        AstExpression::value = NULL;
-        AstExpression::symbol = NULL;
+        kind = FLOAT_LITERAL;
+        class_tag = EXPRESSION;
+        generated = false;
+        value = NULL;
+        symbol = NULL;
     }
 
 #ifdef JIKES_DEBUG
@@ -3422,14 +3381,14 @@ class AstDoubleLiteral : public AstExpression
 public:
     LexStream::TokenIndex double_literal_token;
 
-    AstDoubleLiteral(LexStream::TokenIndex token_)
-        : double_literal_token(token_)
+    AstDoubleLiteral(LexStream::TokenIndex token)
+        : double_literal_token(token)
     {
-        Ast::kind = Ast::DOUBLE_LITERAL;
-        Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = false;
-        AstExpression::value = NULL;
-        AstExpression::symbol = NULL;
+        kind = DOUBLE_LITERAL;
+        class_tag = EXPRESSION;
+        generated = false;
+        value = NULL;
+        symbol = NULL;
     }
 
 #ifdef JIKES_DEBUG
@@ -3452,13 +3411,14 @@ class AstTrueLiteral : public AstExpression
 public:
     LexStream::TokenIndex true_literal_token;
 
-    AstTrueLiteral(LexStream::TokenIndex token_) : true_literal_token(token_)
+    AstTrueLiteral(LexStream::TokenIndex token)
+        : true_literal_token(token)
     {
-        Ast::kind = Ast::TRUE_LITERAL;
-        Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = false;
-        AstExpression::value = NULL;
-        AstExpression::symbol = NULL;
+        kind = TRUE_LITERAL;
+        class_tag = EXPRESSION;
+        generated = false;
+        value = NULL;
+        symbol = NULL;
     }
 
 #ifdef JIKES_DEBUG
@@ -3481,13 +3441,14 @@ class AstFalseLiteral : public AstExpression
 public:
     LexStream::TokenIndex false_literal_token;
 
-    AstFalseLiteral(LexStream::TokenIndex token_) : false_literal_token(token_)
+    AstFalseLiteral(LexStream::TokenIndex token)
+        : false_literal_token(token)
     {
-        Ast::kind = Ast::FALSE_LITERAL;
-        Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = false;
-        AstExpression::value = NULL;
-        AstExpression::symbol = NULL;
+        kind = FALSE_LITERAL;
+        class_tag = EXPRESSION;
+        generated = false;
+        value = NULL;
+        symbol = NULL;
     }
 
 #ifdef JIKES_DEBUG
@@ -3510,14 +3471,14 @@ class AstStringLiteral : public AstExpression
 public:
     LexStream::TokenIndex string_literal_token;
 
-    AstStringLiteral(LexStream::TokenIndex token_)
-        : string_literal_token(token_)
+    AstStringLiteral(LexStream::TokenIndex token)
+        : string_literal_token(token)
     {
-        Ast::kind = Ast::STRING_LITERAL;
-        Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = false;
-        AstExpression::value = NULL;
-        AstExpression::symbol = NULL;
+        kind = STRING_LITERAL;
+        class_tag = EXPRESSION;
+        generated = false;
+        value = NULL;
+        symbol = NULL;
     }
 
 #ifdef JIKES_DEBUG
@@ -3540,14 +3501,14 @@ class AstCharacterLiteral : public AstExpression
 public:
     LexStream::TokenIndex character_literal_token;
 
-    AstCharacterLiteral(LexStream::TokenIndex token_)
-        : character_literal_token(token_)
+    AstCharacterLiteral(LexStream::TokenIndex token)
+        : character_literal_token(token)
     {
-        Ast::kind = Ast::CHARACTER_LITERAL;
-        Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = false;
-        AstExpression::value = NULL;
-        AstExpression::symbol = NULL;
+        kind = CHARACTER_LITERAL;
+        class_tag = EXPRESSION;
+        generated = false;
+        value = NULL;
+        symbol = NULL;
     }
 
 #ifdef JIKES_DEBUG
@@ -3576,13 +3537,14 @@ class AstNullLiteral : public AstExpression
 public:
     LexStream::TokenIndex null_token;
 
-    AstNullLiteral(LexStream::TokenIndex token_) : null_token(token_)
+    AstNullLiteral(LexStream::TokenIndex token)
+        : null_token(token)
     {
-        Ast::kind = Ast::NULL_LITERAL;
-        Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = false;
-        AstExpression::value = NULL;
-        AstExpression::symbol = NULL;
+        kind = NULL_LITERAL;
+        class_tag = EXPRESSION;
+        generated = false;
+        value = NULL;
+        symbol = NULL;
     }
 
 #ifdef JIKES_DEBUG
@@ -3636,7 +3598,7 @@ public:
 
 
 //
-// ThisExpression --> <THIS, this_token>
+// Represents qualified and simple 'this'.
 //
 class AstThisExpression : public AstExpression
 {
@@ -3678,7 +3640,7 @@ public:
 
 
 //
-// SuperExpression --> <SUPER, super_token>
+// Represents qualified and simple 'super'.
 //
 class AstSuperExpression : public AstExpression
 {
@@ -3732,11 +3694,11 @@ public:
 
     AstParenthesizedExpression()
     {
-        Ast::kind = Ast::PARENTHESIZED_EXPRESSION;
-        Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = false;
-        AstExpression::value = NULL;
-        AstExpression::symbol = NULL;
+        kind = PARENTHESIZED_EXPRESSION;
+        class_tag = EXPRESSION;
+        generated = false;
+        value = NULL;
+        symbol = NULL;
     }
 
 #ifdef JIKES_DEBUG
@@ -3782,7 +3744,6 @@ public:
     LexStream::TokenIndex right_parenthesis_token;
     AstClassBody* class_body_opt;
 
-    AstClassDeclaration* anonymous_declaration;
     //
     // For anonymous classes, we resolve the original statement into a new
     // one that does not have a class_body_opt. This is necessary to get
@@ -3797,7 +3758,6 @@ public:
           add_null_argument(false),
           base_opt(NULL),
           class_body_opt(NULL),
-          anonymous_declaration(NULL),
           resolution_opt(NULL)
     {
         kind = CLASS_CREATION;
@@ -3807,23 +3767,23 @@ public:
         symbol = NULL;
     }
 
-    inline AstExpression*& Argument(int i) { return (*arguments)[i]; }
-    inline int NumArguments()
+    inline AstExpression*& Argument(unsigned i) { return (*arguments)[i]; }
+    inline unsigned NumArguments()
     {
         return (arguments ? arguments -> Length() : 0);
     }
-    inline void AllocateArguments(int estimate = 0);
+    inline void AllocateArguments(unsigned estimate = 1);
     inline void AddArgument(AstExpression*);
 
-    inline AstExpression*& LocalArgument(int i)
+    inline AstExpression*& LocalArgument(unsigned i)
     {
         return (*local_arguments_opt)[i];
     }
-    inline int NumLocalArguments()
+    inline unsigned NumLocalArguments()
     {
         return (local_arguments_opt ? local_arguments_opt -> Length() : 0);
     }
-    inline void AllocateLocalArguments(int estimate = 0);
+    inline void AllocateLocalArguments(unsigned estimate = 1);
     inline void AddLocalArgument(AstExpression*);
 
     inline void AddNullArgument() { add_null_argument = true; }
@@ -3860,9 +3820,9 @@ public:
 
     AstDimExpr()
     {
-        Ast::kind = Ast::DIM;
-        Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = false;
+        kind = DIM;
+        class_tag = NO_TAG;
+        generated = false;
     }
 
 #ifdef JIKES_DEBUG
@@ -3892,30 +3852,33 @@ public:
     AstType* array_type;
     AstArrayInitializer* array_initializer_opt;
 
-    AstArrayCreationExpression(StoragePool* pool_)
-        : pool(pool_),
+    AstArrayCreationExpression(StoragePool* p)
+        : pool(p),
           brackets(NULL),
           dim_exprs(NULL),
           array_initializer_opt(NULL)
     {
-        Ast::kind = Ast::ARRAY_CREATION;
-        Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = false;
-        AstExpression::value = NULL;
-        AstExpression::symbol = NULL;
+        kind = ARRAY_CREATION;
+        class_tag = EXPRESSION;
+        generated = false;
+        value = NULL;
+        symbol = NULL;
     }
 
-    inline AstBrackets*& Brackets(int i) { return (*brackets)[i]; }
-    inline int NumBrackets() { return (brackets ? brackets -> Length() : 0); }
-    inline void AllocateBrackets(int estimate = 0);
+    inline AstBrackets*& Brackets(unsigned i) { return (*brackets)[i]; }
+    inline unsigned NumBrackets()
+    {
+        return (brackets ? brackets -> Length() : 0);
+    }
+    inline void AllocateBrackets(unsigned estimate = 1);
     inline void AddBrackets(AstBrackets*);
 
-    inline AstDimExpr*& DimExpr(int i) { return (*dim_exprs)[i]; }
-    inline int NumDimExprs()
+    inline AstDimExpr*& DimExpr(unsigned i) { return (*dim_exprs)[i]; }
+    inline unsigned NumDimExprs()
     {
         return (dim_exprs ? dim_exprs -> Length() : 0);
     }
-    inline void AllocateDimExprs(int estimate = 0);
+    inline void AllocateDimExprs(unsigned estimate = 1);
     inline void AddDimExpr(AstDimExpr*);
 
 #ifdef JIKES_DEBUG
@@ -3928,10 +3891,11 @@ public:
     virtual LexStream::TokenIndex LeftToken() { return new_token; }
     virtual LexStream::TokenIndex RightToken()
     {
-        return (array_initializer_opt ? array_initializer_opt -> RightToken()
-                : (NumBrackets() > 0
-                   ? Brackets(NumBrackets() - 1) -> RightToken()
-                   : DimExpr(NumDimExprs() - 1) -> RightToken()));
+        return (array_initializer_opt
+                ? array_initializer_opt -> right_brace_token
+                : NumBrackets()
+                ? Brackets(NumBrackets() - 1) -> right_bracket_token
+                : DimExpr(NumDimExprs() - 1) -> right_bracket_token);
     }
 };
 
@@ -3998,23 +3962,24 @@ public:
     //
     AstExpression* resolution_opt;
 
-    AstMethodInvocation(StoragePool* pool_) : pool(pool_),
-                                              arguments(NULL),
-                                              resolution_opt(NULL)
+    AstMethodInvocation(StoragePool* p)
+        : pool(p),
+          arguments(NULL),
+          resolution_opt(NULL)
     {
-        Ast::kind = Ast::CALL;
-        Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = false;
-        AstExpression::value = NULL;
-        AstExpression::symbol = NULL;
+        kind = CALL;
+        class_tag = EXPRESSION;
+        generated = false;
+        value = NULL;
+        symbol = NULL;
     }
 
-    inline AstExpression*& Argument(int i) { return (*arguments)[i]; }
-    inline int NumArguments()
+    inline AstExpression*& Argument(unsigned i) { return (*arguments)[i]; }
+    inline unsigned NumArguments()
     {
         return (arguments ? arguments -> Length() : 0);
     }
-    inline void AllocateArguments(int estimate = 0);
+    inline void AllocateArguments(unsigned estimate = 1);
     inline void AddArgument(AstExpression*);
 
 #ifdef JIKES_DEBUG
@@ -4045,11 +4010,11 @@ public:
 
     AstArrayAccess()
     {
-        Ast::kind = Ast::ARRAY_ACCESS;
-        Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = false;
-        AstExpression::value = NULL;
-        AstExpression::symbol = NULL;
+        kind = ARRAY_ACCESS;
+        class_tag = EXPRESSION;
+        generated = false;
+        value = NULL;
+        symbol = NULL;
     }
 
 #ifdef JIKES_DEBUG
@@ -4098,14 +4063,15 @@ public:
     //
     MethodSymbol* write_method;
 
-    AstPostUnaryExpression(PostUnaryExpressionTag tag_) : post_unary_tag(tag_),
-                                                          write_method(NULL)
+    AstPostUnaryExpression(PostUnaryExpressionTag tag)
+        : post_unary_tag(tag),
+          write_method(NULL)
     {
-        Ast::kind = Ast::POST_UNARY;
-        Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = false;
-        AstExpression::value = NULL;
-        AstExpression::symbol = NULL;
+        kind = POST_UNARY;
+        class_tag = EXPRESSION;
+        generated = false;
+        value = NULL;
+        symbol = NULL;
     }
 
 #ifdef JIKES_DEBUG
@@ -4160,14 +4126,15 @@ public:
     //
     MethodSymbol* write_method;
 
-    AstPreUnaryExpression(PreUnaryExpressionTag tag_) : pre_unary_tag(tag_),
-                                                        write_method(NULL)
+    AstPreUnaryExpression(PreUnaryExpressionTag tag)
+        : pre_unary_tag(tag),
+          write_method(NULL)
     {
-        Ast::kind = Ast::PRE_UNARY;
-        Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = false;
-        AstExpression::value = NULL;
-        AstExpression::symbol = NULL;
+        kind = PRE_UNARY;
+        class_tag = EXPRESSION;
+        generated = false;
+        value = NULL;
+        symbol = NULL;
     }
 
 #ifdef JIKES_DEBUG
@@ -4196,9 +4163,6 @@ public:
 //
 class AstCastExpression : public AstExpression
 {
-    StoragePool* pool;
-    AstArray<AstBrackets*>* brackets;
-
 public:
     LexStream::TokenIndex left_parenthesis_token;
     AstType* type;
@@ -4282,13 +4246,14 @@ public:
     LexStream::TokenIndex binary_operator_token;
     AstExpression* right_expression;
 
-    AstBinaryExpression(BinaryExpressionTag tag_) : binary_tag(tag_)
+    AstBinaryExpression(BinaryExpressionTag tag)
+        : binary_tag(tag)
     {
-        Ast::kind = Ast::BINARY;
-        Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = false;
-        AstExpression::value = NULL;
-        AstExpression::symbol = NULL;
+        kind = BINARY;
+        class_tag = EXPRESSION;
+        generated = false;
+        value = NULL;
+        symbol = NULL;
     }
 
 #ifdef JIKES_DEBUG
@@ -4361,11 +4326,11 @@ public:
 
     AstConditionalExpression()
     {
-        Ast::kind = Ast::CONDITIONAL;
-        Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = false;
-        AstExpression::value = NULL;
-        AstExpression::symbol = NULL;
+        kind = CONDITIONAL;
+        class_tag = EXPRESSION;
+        generated = false;
+        value = NULL;
+        symbol = NULL;
     }
 
 #ifdef JIKES_DEBUG
@@ -4447,11 +4412,11 @@ public:
           assignment_tag(tag),
           assignment_operator_token(token)
     {
-        Ast::kind = Ast::ASSIGNMENT;
-        Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = false;
-        AstExpression::value = NULL;
-        AstExpression::symbol = NULL;
+        kind = ASSIGNMENT;
+        class_tag = EXPRESSION;
+        generated = false;
+        value = NULL;
+        symbol = NULL;
     }
 
     inline bool SimpleAssignment() { return assignment_tag == SIMPLE_EQUAL; }
@@ -4507,7 +4472,7 @@ inline bool Ast::IsSimpleNameOrFieldAccess()
 
 
 //
-// Given an Ast tree, check whether or not it is a Name - simple or qualified.
+// Given an Ast tree, check whether it is a variable (not a value).
 //
 inline bool Ast::IsLeftHandSide()
 {
@@ -4552,7 +4517,6 @@ public:
     inline size_t Blksize() { return (1 << log_blksize); }
 
 private:
-
     Cell** base;
     size_t base_size;
     int top,
@@ -4622,7 +4586,6 @@ private:
     }
 
 public:
-
     //
     // Constructor of a storage pool
     //
@@ -4907,10 +4870,10 @@ public:
         return new (Alloc(sizeof(AstMethodBody))) AstMethodBody(this);
     }
 
-    inline AstStaticInitializer* NewStaticInitializer()
+    inline AstInitializerDeclaration* NewInitializerDeclaration()
     {
-        return new (Alloc(sizeof(AstStaticInitializer)))
-            AstStaticInitializer();
+        return new (Alloc(sizeof(AstInitializerDeclaration)))
+            AstInitializerDeclaration(this);
     }
 
     inline AstThisCall* NewThisCall()
@@ -4944,24 +4907,24 @@ public:
     inline AstLocalClassDeclarationStatement* NewLocalClassDeclarationStatement(AstClassDeclaration* decl)
     {
         return new (Alloc(sizeof(AstLocalClassDeclarationStatement)))
-            AstLocalClassDeclarationStatement(this, decl);
+            AstLocalClassDeclarationStatement(decl);
     }
 
     inline AstIfStatement* NewIfStatement()
     {
-        return new (Alloc(sizeof(AstIfStatement))) AstIfStatement(this);
+        return new (Alloc(sizeof(AstIfStatement))) AstIfStatement();
     }
 
     inline AstEmptyStatement* NewEmptyStatement(LexStream::TokenIndex token)
     {
         return new (Alloc(sizeof(AstEmptyStatement)))
-            AstEmptyStatement(this, token);
+            AstEmptyStatement(token);
     }
 
     inline AstExpressionStatement* NewExpressionStatement()
     {
         return new (Alloc(sizeof(AstExpressionStatement)))
-            AstExpressionStatement(this);
+            AstExpressionStatement();
     }
 
     inline AstSwitchLabel* NewSwitchLabel()
@@ -4983,12 +4946,12 @@ public:
 
     inline AstWhileStatement* NewWhileStatement()
     {
-        return new (Alloc(sizeof(AstWhileStatement))) AstWhileStatement(this);
+        return new (Alloc(sizeof(AstWhileStatement))) AstWhileStatement();
     }
 
     inline AstDoStatement* NewDoStatement()
     {
-        return new (Alloc(sizeof(AstDoStatement))) AstDoStatement(this);
+        return new (Alloc(sizeof(AstDoStatement))) AstDoStatement();
     }
 
     inline AstForStatement* NewForStatement()
@@ -4998,36 +4961,36 @@ public:
 
     inline AstBreakStatement* NewBreakStatement()
     {
-        return new (Alloc(sizeof(AstBreakStatement))) AstBreakStatement(this);
+        return new (Alloc(sizeof(AstBreakStatement))) AstBreakStatement();
     }
 
     inline AstContinueStatement* NewContinueStatement()
     {
         return new (Alloc(sizeof(AstContinueStatement)))
-            AstContinueStatement(this);
+            AstContinueStatement();
     }
 
     inline AstReturnStatement* NewReturnStatement()
     {
         return new (Alloc(sizeof(AstReturnStatement)))
-            AstReturnStatement(this);
+            AstReturnStatement();
     }
 
     inline AstThrowStatement* NewThrowStatement()
     {
-        return new (Alloc(sizeof(AstThrowStatement))) AstThrowStatement(this);
+        return new (Alloc(sizeof(AstThrowStatement))) AstThrowStatement();
     }
 
     inline AstSynchronizedStatement* NewSynchronizedStatement()
     {
         return new (Alloc(sizeof(AstSynchronizedStatement)))
-            AstSynchronizedStatement(this);
+            AstSynchronizedStatement();
     }
 
     inline AstAssertStatement* NewAssertStatement()
     {
         return new (Alloc(sizeof(AstAssertStatement)))
-            AstAssertStatement(this);
+            AstAssertStatement();
     }
 
     inline AstCatchClause* NewCatchClause()
@@ -5353,9 +5316,9 @@ public:
         return p;
     }
 
-    inline AstStaticInitializer* GenStaticInitializer()
+    inline AstInitializerDeclaration* GenInitializerDeclaration()
     {
-        AstStaticInitializer* p = NewStaticInitializer();
+        AstInitializerDeclaration* p = NewInitializerDeclaration();
         p -> generated = true;
         return p;
     }
@@ -5774,16 +5737,16 @@ inline AstFieldDeclaration* Ast::StaticFieldCast()
         (kind == FIELD && class_tag == STATIC ? this : NULL);
 }
 
+inline AstInitializerDeclaration* Ast::StaticInitializerCast()
+{
+    return DYNAMIC_CAST<AstInitializerDeclaration*>
+        (kind == INITIALIZER && class_tag == STATIC ? this : NULL);
+}
+
 inline AstClassBody* Ast::UnparsedClassBodyCast()
 {
     return DYNAMIC_CAST<AstClassBody*>
         (kind == CLASS_BODY && class_tag == UNPARSED ? this : NULL);
-}
-
-inline AstInterfaceDeclaration* Ast::UnparsedInterfaceBodyCast()
-{
-    return DYNAMIC_CAST<AstInterfaceDeclaration*>
-        (kind == INTERFACE && class_tag == UNPARSED ? this : NULL);
 }
 
 inline AstCompilationUnit* Ast::BadCompilationUnitCast()
@@ -5797,7 +5760,6 @@ inline AstCompilationUnit* Ast::EmptyCompilationUnitCast()
     return DYNAMIC_CAST<AstCompilationUnit*>
         (kind == EMPTY_COMPILATION ? this : NULL);
 }
-
 
 //
 // These cast functions are used for classes that represent exactly
@@ -5929,9 +5891,9 @@ inline AstMethodBody* Ast::MethodBodyCast()
         (kind == METHOD_BODY ? this : NULL);
 }
 
-inline AstStaticInitializer* Ast::StaticInitializerCast()
+inline AstInitializerDeclaration* Ast::InitializerDeclarationCast()
 {
-    return DYNAMIC_CAST<AstStaticInitializer*>
+    return DYNAMIC_CAST<AstInitializerDeclaration*>
         (kind == INITIALIZER ? this : NULL);
 }
 
@@ -6236,7 +6198,7 @@ inline AstAssignmentExpression* Ast::AssignmentExpressionCast()
 
 // **********************************************
 
-inline void AstStatement::AllocateDefinedVariables(int estimate)
+inline void AstStatement::AllocateDefinedVariables(unsigned estimate)
 {
     if (! defined_variables)
         defined_variables = pool -> NewVariableSymbolArray(estimate);
@@ -6245,504 +6207,388 @@ inline void AstStatement::AllocateDefinedVariables(int estimate)
 inline void AstStatement::AddDefinedVariable(VariableSymbol* variable_symbol)
 {
     if (! defined_variables)
-        AllocateDefinedVariables();
+        AllocateDefinedVariables(1);
     defined_variables -> Next() = variable_symbol;
 }
 
-inline void AstBlock::AllocateStatements(int estimate)
+inline bool AstDeclaredType::IsValid()
 {
-    if (! block_statements)
-        block_statements =
-            NewAstArray<AstStatement*> (pool, estimate);
+    return class_body && class_body -> semantic_environment;
+}
+
+inline void AstBlock::AllocateStatements(unsigned estimate)
+{
+    assert(! block_statements);
+    block_statements = NewAstArray<AstStatement*> (pool, estimate);
 }
 
 inline void AstBlock::AddStatement(AstStatement* statement)
 {
-    if (! block_statements)
-        AllocateStatements();
+    assert(block_statements);
     block_statements -> Next() = statement;
 }
 
-inline void AstBlock::AllocateLocallyDefinedVariables(int estimate)
+inline void AstBlock::AllocateLocallyDefinedVariables(unsigned estimate)
 {
-    if (! locally_defined_variables)
+    if(! locally_defined_variables)
         locally_defined_variables = pool -> NewVariableSymbolArray(estimate);
 }
 
 inline void AstBlock::AddLocallyDefinedVariable(VariableSymbol* variable_symbol)
 {
     if (! locally_defined_variables)
-        AllocateLocallyDefinedVariables();
+        AllocateLocallyDefinedVariables(1);
     locally_defined_variables -> Next() = variable_symbol;
 }
 
-inline void AstArrayType::AllocateBrackets(int estimate)
+inline void AstArrayType::AllocateBrackets(unsigned estimate)
 {
-    if (! brackets)
-        brackets =
-            NewAstArray<AstBrackets*> (pool, estimate);
+    assert(! brackets);
+    brackets = NewAstArray<AstBrackets*> (pool, estimate);
 }
 
 inline void AstArrayType::AddBrackets(AstBrackets* bracket)
 {
-    if (! brackets)
-        AllocateBrackets();
+    assert(brackets);
     brackets -> Next() = bracket;
 }
 
-inline void AstCompilationUnit::AllocateImportDeclarations(int estimate)
+inline void AstCompilationUnit::AllocateImportDeclarations(unsigned estimate)
 {
-    if (! import_declarations)
-        import_declarations =
-            NewAstArray<AstImportDeclaration*> (pool, estimate);
+    assert(! import_declarations);
+    import_declarations = NewAstArray<AstImportDeclaration*> (pool, estimate);
 }
 
 inline void AstCompilationUnit::AddImportDeclaration(AstImportDeclaration* import_declaration)
 {
-    if (! import_declarations)
-        AllocateImportDeclarations();
+    assert(import_declarations);
     import_declarations -> Next() = import_declaration;
 }
 
-inline void AstCompilationUnit::AllocateTypeDeclarations(int estimate)
+inline void AstCompilationUnit::AllocateTypeDeclarations(unsigned estimate)
 {
-    if (! type_declarations)
-        type_declarations = NewAstArray<Ast*> (pool, estimate);
+    assert(! type_declarations);
+    type_declarations = NewAstArray<AstDeclaredType*> (pool, estimate);
 }
 
-inline void AstCompilationUnit::AddTypeDeclaration(Ast* type_declaration)
+inline void AstCompilationUnit::AddTypeDeclaration(AstDeclaredType* type_declaration)
 {
-    if (! type_declarations)
-        AllocateTypeDeclarations();
+    assert(type_declarations);
     type_declarations -> Next() = type_declaration;
 }
 
-inline void AstClassBody::AllocateInstanceVariables(int estimate)
+inline void AstClassBody::AllocateClassBodyDeclarations(unsigned estimate)
 {
-    if (! instance_variables)
-        instance_variables =
-            NewAstArray<AstFieldDeclaration*> (pool, estimate);
+    assert(! class_body_declarations);
+    class_body_declarations = NewAstArray<AstDeclared*> (pool, estimate);
+}
+
+inline void AstClassBody::AddClassBodyDeclaration(AstDeclared* member)
+{
+    assert(class_body_declarations);
+    class_body_declarations -> Next() = member;
+}
+
+inline void AstClassBody::AllocateInstanceVariables(unsigned estimate)
+{
+    assert(! instance_variables);
+    instance_variables = NewAstArray<AstFieldDeclaration*> (pool, estimate);
 }
 
 inline void AstClassBody::AddInstanceVariable(AstFieldDeclaration* field_declaration)
 {
-    if (! instance_variables)
-        AllocateInstanceVariables(1);
+    assert(instance_variables);
     instance_variables -> Next() = field_declaration;
 }
 
-inline void AstClassBody::AllocateClassVariables(int estimate)
+inline void AstClassBody::AllocateClassVariables(unsigned estimate)
 {
-    if (! class_variables)
-        class_variables =
-            NewAstArray<AstFieldDeclaration*> (pool, estimate);
+    assert(! class_variables);
+    class_variables = NewAstArray<AstFieldDeclaration*> (pool, estimate);
 }
 
 inline void AstClassBody::AddClassVariable(AstFieldDeclaration* field_declaration)
 {
-    if (! class_variables)
-        AllocateClassVariables(1);
+    assert(class_variables);
     class_variables -> Next() = field_declaration;
 }
 
-inline void AstClassBody::AllocateMethods(int estimate)
+inline void AstClassBody::AllocateMethods(unsigned estimate)
 {
-    if (! methods)
-        methods =
-            NewAstArray<AstMethodDeclaration*> (pool, estimate);
+    assert(! methods);
+    methods = NewAstArray<AstMethodDeclaration*> (pool, estimate);
 }
 
 inline void AstClassBody::AddMethod(AstMethodDeclaration* method_declaration)
 {
-    if (! methods)
-        AllocateMethods(1);
+    assert(methods);
     methods -> Next() = method_declaration;
 }
 
-inline void AstClassBody::AllocateInstanceInitializers(int estimate)
+inline void AstClassBody::AllocateConstructors(unsigned estimate)
 {
-    if (! instance_initializers)
-        instance_initializers =
-            NewAstArray<AstMethodBody*> (pool, estimate);
-}
-
-inline void AstClassBody::AddInstanceInitializer(AstMethodBody* block)
-{
-    if (! instance_initializers)
-        AllocateInstanceInitializers(1);
-    instance_initializers -> Next() = block;
-}
-
-inline void AstClassBody::AllocateNestedInterfaces(int estimate)
-{
-    if (! inner_interfaces)
-        inner_interfaces =
-            NewAstArray<AstInterfaceDeclaration*> (pool, estimate);
-}
-
-inline void AstClassBody::AddNestedInterface(AstInterfaceDeclaration* interface_declaration)
-{
-    if (! inner_interfaces)
-        AllocateNestedInterfaces(1);
-    inner_interfaces -> Next() = interface_declaration;
-}
-
-inline void AstClassBody::AllocateNestedClasses(int estimate)
-{
-    if (! inner_classes)
-        inner_classes =
-            NewAstArray<AstClassDeclaration*> (pool, estimate);
-}
-
-inline void AstClassBody::AddNestedClass(AstClassDeclaration* class_declaration)
-{
-    if (! inner_classes)
-        AllocateNestedClasses(1);
-    inner_classes -> Next() = class_declaration;
-}
-
-inline void AstClassBody::AllocateStaticInitializers(int estimate)
-{
-    if (! static_initializers)
-        static_initializers =
-            NewAstArray<AstStaticInitializer*> (pool, estimate);
-}
-
-inline void AstClassBody::AddStaticInitializer(AstStaticInitializer* static_initializer)
-{
-    if (! static_initializers)
-        AllocateStaticInitializers(1);
-    static_initializers -> Next() = static_initializer;
-}
-
-inline void AstClassBody::AllocateConstructors(int estimate)
-{
-    if (! constructors)
-        constructors =
-            NewAstArray<AstConstructorDeclaration*> (pool, estimate);
+    assert(! constructors);
+    constructors = NewAstArray<AstConstructorDeclaration*> (pool, estimate);
 }
 
 inline void AstClassBody::AddConstructor(AstConstructorDeclaration* constructor_declaration)
 {
-    if (! constructors)
-        AllocateConstructors(1);
+    assert(constructors);
     constructors -> Next() = constructor_declaration;
 }
 
-inline void AstClassBody::AllocateEmptyDeclarations(int estimate)
+inline void AstClassBody::AllocateStaticInitializers(unsigned estimate)
 {
-    if (! empty_declarations)
-        empty_declarations =
-            NewAstArray<AstEmptyDeclaration*> (pool, estimate);
+    assert(! static_initializers);
+    static_initializers =
+        NewAstArray<AstInitializerDeclaration*> (pool, estimate);
+}
+
+inline void AstClassBody::AddStaticInitializer(AstInitializerDeclaration* initializer)
+{
+    assert(static_initializers);
+    static_initializers -> Next() = initializer;
+}
+
+inline void AstClassBody::AllocateInstanceInitializers(unsigned estimate)
+{
+    assert(! instance_initializers);
+    instance_initializers =
+        NewAstArray<AstInitializerDeclaration*> (pool, estimate);
+}
+
+inline void AstClassBody::AddInstanceInitializer(AstInitializerDeclaration* initializer)
+{
+    assert(instance_initializers);
+    instance_initializers -> Next() = initializer;
+}
+
+inline void AstClassBody::AllocateNestedClasses(unsigned estimate)
+{
+    assert(! inner_classes);
+    inner_classes = NewAstArray<AstClassDeclaration*> (pool, estimate);
+}
+
+inline void AstClassBody::AddNestedClass(AstClassDeclaration* class_declaration)
+{
+    assert(inner_classes);
+    inner_classes -> Next() = class_declaration;
+}
+
+inline void AstClassBody::AllocateNestedInterfaces(unsigned estimate)
+{
+    assert(! inner_interfaces);
+    inner_interfaces = NewAstArray<AstInterfaceDeclaration*> (pool, estimate);
+}
+
+inline void AstClassBody::AddNestedInterface(AstInterfaceDeclaration* interface_declaration)
+{
+    assert(inner_interfaces);
+    inner_interfaces -> Next() = interface_declaration;
+}
+
+inline void AstClassBody::AllocateEmptyDeclarations(unsigned estimate)
+{
+    assert(! empty_declarations);
+    empty_declarations = NewAstArray<AstEmptyDeclaration*> (pool, estimate);
 }
 
 inline void AstClassBody::AddEmptyDeclaration(AstEmptyDeclaration* empty_declaration)
 {
-    if (! empty_declarations)
-        AllocateEmptyDeclarations(1);
+    assert(empty_declarations);
     empty_declarations -> Next() = empty_declaration;
 }
 
-inline void AstClassBody::AllocateClassBodyDeclarations(int estimate)
+inline void AstClassDeclaration::AllocateModifiers(unsigned estimate)
 {
-    if (! class_body_declarations)
-        class_body_declarations = NewAstArray<Ast*> (pool, estimate);
+    assert(! modifiers);
+    modifiers = NewAstArray<AstModifier*> (pool, estimate);
 }
 
-inline void AstClassBody::AddClassBodyDeclaration(Ast* member)
+inline void AstClassDeclaration::AddModifier(AstModifier* modifier)
 {
-    if (! class_body_declarations)
-        AllocateClassBodyDeclarations();
-    class_body_declarations -> Next() = member;
+    assert(modifiers);
+    modifiers -> Next() = modifier;
 }
 
-inline void AstClassDeclaration::AllocateClassModifiers(int estimate)
+inline void AstClassDeclaration::AllocateInterfaces(unsigned estimate)
 {
-    if (! class_modifiers)
-        class_modifiers =
-            NewAstArray<AstModifier*> (pool, estimate);
-}
-
-inline void AstClassDeclaration::AddClassModifier(AstModifier* class_modifier)
-{
-    if (! class_modifiers)
-        AllocateClassModifiers(4); // there are only 10 modifiers.
-    class_modifiers -> Next() = class_modifier;
-}
-
-inline void AstClassDeclaration::AllocateInterfaces(int estimate)
-{
-    if (! interfaces)
-        interfaces = NewAstArray<AstTypeName*> (pool, estimate);
+    assert(! interfaces);
+    interfaces = NewAstArray<AstTypeName*> (pool, estimate);
 }
 
 inline void AstClassDeclaration::AddInterface(AstTypeName* interf)
 {
-    if (! interfaces)
-        AllocateInterfaces();
+    assert(interfaces);
     interfaces -> Next() = interf;
 }
 
-inline void AstArrayInitializer::AllocateVariableInitializers(int estimate)
+inline void AstArrayInitializer::AllocateVariableInitializers(unsigned estimate)
 {
-    if (! variable_initializers)
-        variable_initializers = NewAstArray<Ast*> (pool, estimate);
+    assert(! variable_initializers);
+    variable_initializers = NewAstArray<Ast*> (pool, estimate);
 }
 
 inline void AstArrayInitializer::AddVariableInitializer(Ast* initializer)
 {
-    if (! variable_initializers)
-        AllocateVariableInitializers();
+    assert(variable_initializers);
     variable_initializers -> Next() = initializer;
 }
 
-inline void AstVariableDeclaratorId::AllocateBrackets(int estimate)
+inline void AstVariableDeclaratorId::AllocateBrackets(unsigned estimate)
 {
-    if (! brackets)
-        brackets =
-            NewAstArray<AstBrackets*> (pool, estimate);
+    assert(! brackets);
+    brackets = NewAstArray<AstBrackets*> (pool, estimate);
 }
 
 inline void AstVariableDeclaratorId::AddBrackets(AstBrackets* bracket)
 {
-    if (! brackets)
-        AllocateBrackets();
+    assert(brackets);
     brackets -> Next() = bracket;
 }
 
-inline void AstFieldDeclaration::AllocateVariableModifiers(int estimate)
+inline void AstFieldDeclaration::AllocateModifiers(unsigned estimate)
 {
-    if (! variable_modifiers)
-        variable_modifiers =
-            NewAstArray<AstModifier*> (pool, estimate);
+    assert(! modifiers);
+    modifiers = NewAstArray<AstModifier*> (pool, estimate);
 }
 
-inline void AstFieldDeclaration::AddVariableModifier(AstModifier* variable_modifier)
+inline void AstFieldDeclaration::AddModifier(AstModifier* modifier)
 {
-    if (! variable_modifiers)
-        AllocateVariableModifiers(4); // there are only 10 modifiers.
-    variable_modifiers -> Next() = variable_modifier;
+    assert(modifiers);
+    modifiers -> Next() = modifier;
 }
 
-inline void AstFieldDeclaration::AllocateVariableDeclarators(int estimate)
+inline void AstFieldDeclaration::AllocateVariableDeclarators(unsigned estimate)
 {
-    if (! variable_declarators)
-        variable_declarators =
-            NewAstArray<AstVariableDeclarator*> (pool, estimate);
+    assert(! variable_declarators);
+    variable_declarators =
+        NewAstArray<AstVariableDeclarator*> (pool, estimate);
 }
 
 inline void AstFieldDeclaration::AddVariableDeclarator(AstVariableDeclarator* variable_declarator)
 {
-    if (! variable_declarators)
-        AllocateVariableDeclarators();
+    assert(variable_declarators);
     variable_declarators -> Next() = variable_declarator;
 }
 
-inline void AstFormalParameter::AllocateParameterModifiers(int estimate)
+inline void AstFormalParameter::AllocateModifiers(unsigned estimate)
 {
-    if (! parameter_modifiers)
-        parameter_modifiers =
-            NewAstArray<AstModifier*> (pool, estimate);
+    assert(! modifiers);
+    modifiers = NewAstArray<AstModifier*> (pool, estimate);
 }
 
-inline void AstFormalParameter::AddParameterModifier(AstModifier* parameter_modifier)
+inline void AstFormalParameter::AddModifier(AstModifier* modifier)
 {
-    if (! parameter_modifiers)
-        AllocateParameterModifiers(4); // there are only 10 modifiers.
-    parameter_modifiers -> Next() = parameter_modifier;
+    assert(modifiers);
+    modifiers -> Next() = modifier;
 }
 
-inline void AstMethodDeclarator::AllocateBrackets(int estimate)
+inline void AstMethodDeclarator::AllocateBrackets(unsigned estimate)
 {
-    if (! brackets)
-        brackets =
-            NewAstArray<AstBrackets*> (pool, estimate);
+    assert(! brackets);
+    brackets = NewAstArray<AstBrackets*> (pool, estimate);
 }
 
 inline void AstMethodDeclarator::AddBrackets(AstBrackets* bracket)
 {
-    if (! brackets)
-        AllocateBrackets();
+    assert(brackets);
     brackets -> Next() = bracket;
 }
 
-inline void AstMethodDeclaration::AllocateMethodModifiers(int estimate)
+inline void AstMethodDeclaration::AllocateModifiers(unsigned estimate)
 {
-    if (! method_modifiers)
-        method_modifiers =
-            NewAstArray<AstModifier*> (pool, estimate);
+    assert(! modifiers);
+    modifiers = NewAstArray<AstModifier*> (pool, estimate);
 }
 
-inline void AstMethodDeclaration::AddMethodModifier(AstModifier* method_modifier)
+inline void AstMethodDeclaration::AddModifier(AstModifier* modifier)
 {
-    if (! method_modifiers)
-        AllocateMethodModifiers(4); // there are only 10 modifiers.
-    method_modifiers -> Next() = method_modifier;
+    assert(modifiers);
+    modifiers -> Next() = modifier;
 }
 
-inline void AstSuperCall::AllocateArguments(int estimate)
+inline void AstInitializerDeclaration::AllocateModifiers(unsigned estimate)
 {
-    if (! arguments)
-        arguments =
-            NewAstArray<AstExpression*> (pool, estimate);
+    assert(! modifiers);
+    modifiers = NewAstArray<AstModifier*> (pool, estimate);
+}
+
+inline void AstInitializerDeclaration::AddModifier(AstModifier* modifier)
+{
+    assert(modifiers);
+    modifiers -> Next() = modifier;
+}
+
+inline void AstSuperCall::AllocateArguments(unsigned estimate)
+{
+    assert(! arguments);
+    arguments = NewAstArray<AstExpression*> (pool, estimate);
 }
 
 inline void AstSuperCall::AddArgument(AstExpression* argument)
 {
-    if (! arguments)
-        // will not be executed, as we assume arguments is already allocated
-        AllocateArguments();
+    assert(arguments);
     arguments -> Next() = argument;
 }
 
-inline void AstConstructorDeclaration::AllocateConstructorModifiers(int estimate)
+inline void AstConstructorDeclaration::AllocateModifiers(unsigned estimate)
 {
-    if (! constructor_modifiers)
-        constructor_modifiers =
-            NewAstArray<AstModifier*> (pool, estimate);
+    assert(! modifiers);
+    modifiers = NewAstArray<AstModifier*> (pool, estimate);
 }
 
-inline void AstConstructorDeclaration::AddConstructorModifier(AstModifier* constructor_modifier)
+inline void AstConstructorDeclaration::AddModifier(AstModifier* modifier)
 {
-    if (! constructor_modifiers)
-        AllocateConstructorModifiers(4); // there are only 10 modifiers.
-    constructor_modifiers -> Next() = constructor_modifier;
+    assert(modifiers);
+    modifiers -> Next() = modifier;
 }
 
-inline void AstInterfaceDeclaration::AllocateNestedInterfaces(int estimate)
+inline void AstInterfaceDeclaration::AllocateModifiers(unsigned estimate)
 {
-    if (! inner_interfaces)
-        inner_interfaces =
-            NewAstArray<AstInterfaceDeclaration*> (pool, estimate);
+    assert(! modifiers);
+    modifiers = NewAstArray<AstModifier*> (pool, estimate);
 }
 
-inline void AstInterfaceDeclaration::AddNestedInterface(AstInterfaceDeclaration* interface_declaration)
+inline void AstInterfaceDeclaration::AddModifier(AstModifier* modifier)
 {
-    if (! inner_interfaces)
-        AllocateNestedInterfaces(1);
-    inner_interfaces -> Next() = interface_declaration;
+    assert(modifiers);
+    modifiers -> Next() = modifier;
 }
 
-inline void AstInterfaceDeclaration::AllocateNestedClasses(int estimate)
+inline void AstInterfaceDeclaration::AllocateInterfaces(unsigned estimate)
 {
-    if (! inner_classes)
-        inner_classes =
-            NewAstArray<AstClassDeclaration*> (pool, estimate);
+    assert(! interfaces);
+    interfaces = NewAstArray<AstTypeName*> (pool, estimate);
 }
 
-inline void AstInterfaceDeclaration::AddNestedClass(AstClassDeclaration* class_declaration)
+inline void AstInterfaceDeclaration::AddInterface(AstTypeName* interf)
 {
-    if (! inner_classes)
-        AllocateNestedClasses(1);
-    inner_classes -> Next() = class_declaration;
+    assert(interfaces);
+    interfaces -> Next() = interf;
 }
 
-inline void AstInterfaceDeclaration::AllocateMethods(int estimate)
+inline void AstLocalVariableDeclarationStatement::AllocateModifiers(unsigned estimate)
 {
-    if (! methods)
-        methods =
-            NewAstArray<AstMethodDeclaration*> (pool, estimate);
+    assert(! modifiers);
+    modifiers = NewAstArray<AstModifier*> (pool, estimate);
 }
 
-inline void AstInterfaceDeclaration::AddMethod(AstMethodDeclaration* method_declaration)
+inline void AstLocalVariableDeclarationStatement::AddModifier(AstModifier* modifier)
 {
-    if (! methods)
-        AllocateMethods(1);
-    methods -> Next() = method_declaration;
-}
-
-inline void AstInterfaceDeclaration::AllocateClassVariables(int estimate)
-{
-    if (! class_variables)
-        class_variables =
-            NewAstArray<AstFieldDeclaration*> (pool, estimate);
-}
-
-inline void AstInterfaceDeclaration::AddClassVariable(AstFieldDeclaration* field_declaration)
-{
-    if (! class_variables)
-        AllocateClassVariables(1);
-    class_variables -> Next() = field_declaration;
-}
-
-inline void AstInterfaceDeclaration::AllocateEmptyDeclarations(int estimate)
-{
-    if (! empty_declarations)
-        empty_declarations =
-            NewAstArray<AstEmptyDeclaration*> (pool, estimate);
-}
-
-inline void AstInterfaceDeclaration::AddEmptyDeclaration(AstEmptyDeclaration* empty_declaration)
-{
-    if (! empty_declarations)
-        AllocateEmptyDeclarations(1);
-    empty_declarations -> Next() = empty_declaration;
-}
-
-inline void AstInterfaceDeclaration::AllocateInterfaceModifiers(int estimate)
-{
-    if (! interface_modifiers)
-        interface_modifiers =
-            NewAstArray<AstModifier*> (pool, estimate);
-}
-
-inline void AstInterfaceDeclaration::AddInterfaceModifier(AstModifier* interface_modifier)
-{
-    if (! interface_modifiers)
-        AllocateInterfaceModifiers(4); // there are only 10 modifiers.
-    interface_modifiers -> Next() = interface_modifier;
-}
-
-inline void AstInterfaceDeclaration::AllocateExtendsInterfaces(int estimate)
-{
-    if (! extends_interfaces)
-        extends_interfaces = NewAstArray<AstTypeName*> (pool, estimate);
-}
-
-inline void AstInterfaceDeclaration::AddExtendsInterface(AstTypeName* interf)
-{
-    if (! extends_interfaces)
-        AllocateExtendsInterfaces();
-    extends_interfaces -> Next() = interf;
-}
-
-inline void AstInterfaceDeclaration::AllocateInterfaceMemberDeclarations(int estimate)
-{
-    if (! interface_member_declarations)
-        interface_member_declarations = NewAstArray<Ast*> (pool, estimate);
-}
-
-inline void AstInterfaceDeclaration::AddInterfaceMemberDeclaration(Ast* member)
-{
-    if (! interface_member_declarations)
-        AllocateInterfaceMemberDeclarations();
-    interface_member_declarations -> Next() = member;
-}
-
-inline void AstLocalVariableDeclarationStatement::AllocateLocalModifiers(int estimate)
-{
-    if (! local_modifiers)
-        local_modifiers =
-            NewAstArray<AstModifier*> (pool, estimate);
-}
-
-inline void AstLocalVariableDeclarationStatement::AddLocalModifier(AstModifier* local_modifier)
-{
-    if (! local_modifiers)
-        AllocateLocalModifiers(4); // there are only 10 modifiers.
-    local_modifiers -> Next() = local_modifier;
+    assert(modifiers);
+    modifiers -> Next() = modifier;
 }
 
 inline void AstSwitchBlockStatement::AllocateSwitchLabels(unsigned estimate)
 {
-    if (! switch_labels)
-        switch_labels = NewAstArray<AstSwitchLabel*> (pool, estimate);
+    assert(! switch_labels);
+    switch_labels = NewAstArray<AstSwitchLabel*> (pool, estimate);
 }
 
 inline void AstSwitchBlockStatement::AddSwitchLabel(AstSwitchLabel* case_label)
 {
-    if (! switch_labels)
-        AllocateSwitchLabels();
+    assert(switch_labels);
     switch_labels -> Next() = case_label;
 }
 
@@ -6762,203 +6608,177 @@ inline void AstSwitchStatement::AddCase(CaseElement* case_element)
     cases -> Next() = case_element;
 }
 
-inline void AstForStatement::AllocateForInitStatements(int estimate)
+inline void AstForStatement::AllocateForInitStatements(unsigned estimate)
 {
-    if (! for_init_statements)
-        for_init_statements =
-            NewAstArray<AstStatement*> (pool, estimate);
+    assert(! for_init_statements);
+    for_init_statements = NewAstArray<AstStatement*> (pool, estimate);
 }
 
 inline void AstForStatement::AddForInitStatement(AstStatement* statement)
 {
-    if (! for_init_statements)
-        AllocateForInitStatements();
+    assert(for_init_statements);
     for_init_statements -> Next() = statement;
 }
 
-inline void AstForStatement::AllocateForUpdateStatements(int estimate)
+inline void AstForStatement::AllocateForUpdateStatements(unsigned estimate)
 {
-    if (! for_update_statements)
-        for_update_statements =
-            NewAstArray<AstExpressionStatement*> (pool, estimate);
+    assert(! for_update_statements);
+    for_update_statements =
+        NewAstArray<AstExpressionStatement*> (pool, estimate);
 }
 
 inline void AstForStatement::AddForUpdateStatement(AstExpressionStatement* statement)
 {
-    if (! for_update_statements)
-        AllocateForUpdateStatements();
+    assert(for_update_statements);
     for_update_statements -> Next() = statement;
 }
 
-inline void AstTryStatement::AllocateCatchClauses(int estimate)
+inline void AstTryStatement::AllocateCatchClauses(unsigned estimate)
 {
-    if (! catch_clauses)
-        catch_clauses =
-            NewAstArray<AstCatchClause*> (pool, estimate);
+    assert(! catch_clauses);
+    catch_clauses = NewAstArray<AstCatchClause*> (pool, estimate);
 }
 
 inline void AstTryStatement::AddCatchClause(AstCatchClause* catch_clause)
 {
-    if (! catch_clauses)
-        AllocateCatchClauses();
+    assert(catch_clauses);
     catch_clauses -> Next() = catch_clause;
 }
 
-inline void AstClassInstanceCreationExpression::AllocateArguments(int estimate)
+inline void AstClassInstanceCreationExpression::AllocateArguments(unsigned estimate)
 {
-    if (! arguments)
-        arguments =
-            NewAstArray<AstExpression*> (pool, estimate);
+    assert(! arguments);
+    arguments = NewAstArray<AstExpression*> (pool, estimate);
 }
 
 inline void AstClassInstanceCreationExpression::AddArgument(AstExpression* argument)
 {
-    if (! arguments)
-    // will not be executed, as we assume arguments has already been allocated
-        AllocateArguments();
+    assert(arguments);
     arguments -> Next() = argument;
 }
 
-inline void AstArrayCreationExpression::AllocateBrackets(int estimate)
+inline void AstArrayCreationExpression::AllocateBrackets(unsigned estimate)
 {
-    if (! brackets)
-        brackets =
-            NewAstArray<AstBrackets*> (pool, estimate);
+    assert(! brackets);
+    brackets = NewAstArray<AstBrackets*> (pool, estimate);
 }
 
 inline void AstArrayCreationExpression::AddBrackets(AstBrackets* bracket)
 {
-    if (! brackets)
-        AllocateBrackets();
+    assert(brackets);
     brackets -> Next() = bracket;
 }
 
-inline void AstArrayCreationExpression::AllocateDimExprs(int estimate)
+inline void AstArrayCreationExpression::AllocateDimExprs(unsigned estimate)
 {
-    if (! dim_exprs)
-        dim_exprs =
-            NewAstArray<AstDimExpr*> (pool, estimate);
+    assert(! dim_exprs);
+    dim_exprs = NewAstArray<AstDimExpr*> (pool, estimate);
 }
 
 inline void AstArrayCreationExpression::AddDimExpr(AstDimExpr* dim_expr)
 {
-    if (! dim_exprs)
-        // will not be executed, as assume dim_exprs has already been allocated
-        AllocateDimExprs();
+    assert(dim_exprs);
     dim_exprs -> Next() = dim_expr;
 }
 
-inline void AstThisCall::AllocateArguments(int estimate)
+inline void AstThisCall::AllocateArguments(unsigned estimate)
 {
-    if (! arguments)
-        arguments =
-            NewAstArray<AstExpression*> (pool, estimate);
+    assert(! arguments);
+    arguments = NewAstArray<AstExpression*> (pool, estimate);
 }
 
 inline void AstThisCall::AddArgument(AstExpression* argument)
 {
-    if (! arguments)
-        // will not be executed, as assume arguments has already been allocated
-        AllocateArguments();
+    assert(arguments);
     arguments -> Next() = argument;
 }
 
-inline void AstMethodInvocation::AllocateArguments(int estimate)
+inline void AstMethodInvocation::AllocateArguments(unsigned estimate)
 {
-    if (! arguments)
-        arguments =
-            NewAstArray<AstExpression*> (pool, estimate);
+    assert(! arguments);
+    arguments = NewAstArray<AstExpression*> (pool, estimate);
 }
 
 inline void AstMethodInvocation::AddArgument(AstExpression* argument)
 {
-    if (! arguments)
-        // will not be executed, as we assume arguments is already allocated
-        AllocateArguments();
+    assert(arguments);
     arguments -> Next() = argument;
 }
 
-inline void AstSuperCall::AllocateLocalArguments(int estimate)
+inline void AstSuperCall::AllocateLocalArguments(unsigned estimate)
 {
-    if (! local_arguments_opt)
-        local_arguments_opt =
-            NewAstArray<AstExpression*> (pool, estimate);
+    assert(! local_arguments_opt);
+    local_arguments_opt = NewAstArray<AstExpression*> (pool, estimate);
 }
 
 inline void AstSuperCall::AddLocalArgument(AstExpression* argument)
 {
-    if (! local_arguments_opt)
-        AllocateLocalArguments();
+    assert(local_arguments_opt);
     local_arguments_opt -> Next() = argument;
 }
 
-inline void AstClassInstanceCreationExpression::AllocateLocalArguments(int estimate)
+inline void AstClassInstanceCreationExpression::AllocateLocalArguments(unsigned estimate)
 {
-    if (! local_arguments_opt)
-        local_arguments_opt =
-            NewAstArray<AstExpression*> (pool, estimate);
+    assert(! local_arguments_opt);
+    local_arguments_opt = NewAstArray<AstExpression*> (pool, estimate);
 }
 
 inline void AstClassInstanceCreationExpression::AddLocalArgument(AstExpression* argument)
 {
-    if (! local_arguments_opt)
-        AllocateLocalArguments();
+    assert(local_arguments_opt);
     local_arguments_opt -> Next() = argument;
 }
 
-inline void AstMethodDeclaration::AllocateThrows(int estimate)
+inline void AstMethodDeclaration::AllocateThrows(unsigned estimate)
 {
-    if (! throws)
-        throws = NewAstArray<AstTypeName*> (pool, estimate);
+    assert(! throws);
+    throws = NewAstArray<AstTypeName*> (pool, estimate);
 }
 
 inline void AstMethodDeclaration::AddThrow(AstTypeName* exception)
 {
-    if (! throws)
-        AllocateThrows();
+    assert(throws);
     throws -> Next() = exception;
 }
 
-inline void AstConstructorDeclaration::AllocateThrows(int estimate)
+inline void AstConstructorDeclaration::AllocateThrows(unsigned estimate)
 {
-    if (! throws)
-        throws = NewAstArray<AstTypeName*> (pool, estimate);
+    assert(! throws);
+    throws = NewAstArray<AstTypeName*> (pool, estimate);
 }
 
 inline void AstConstructorDeclaration::AddThrow(AstTypeName* exception)
 {
-    if (! throws)
-        AllocateThrows();
+    assert(throws);
     throws -> Next() = exception;
 }
 
-inline void AstMethodDeclarator::AllocateFormalParameters(int estimate)
+inline void AstMethodDeclarator::AllocateFormalParameters(unsigned estimate)
 {
-    if (! formal_parameters)
-        formal_parameters =
-            NewAstArray<AstFormalParameter*> (pool, estimate);
+    assert(! formal_parameters);
+    formal_parameters = NewAstArray<AstFormalParameter*> (pool, estimate);
 }
 
 inline void AstMethodDeclarator::AddFormalParameter(AstFormalParameter* formal_parameter)
 {
-    if (! formal_parameters)
-        AllocateFormalParameters();
+    assert(formal_parameters);
     formal_parameters -> Next() = formal_parameter;
 }
 
-inline void AstLocalVariableDeclarationStatement::AllocateVariableDeclarators(int estimate)
+inline void AstLocalVariableDeclarationStatement::AllocateVariableDeclarators(unsigned estimate)
 {
-    if (! variable_declarators)
-        variable_declarators =
-            NewAstArray<AstVariableDeclarator*> (pool, estimate);
+    assert(! variable_declarators);
+    variable_declarators =
+        NewAstArray<AstVariableDeclarator*> (pool, estimate);
 }
 
 inline void AstLocalVariableDeclarationStatement::AddVariableDeclarator(AstVariableDeclarator* variable_declarator)
 {
-    if (! variable_declarators)
-        AllocateVariableDeclarators();
+    assert(variable_declarators);
     variable_declarators -> Next() = variable_declarator;
 }
+
+// ******************************************
 
 //
 // Allocate another block of storage for the ast array.

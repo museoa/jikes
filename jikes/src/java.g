@@ -1021,7 +1021,8 @@ void Parser::Act$rule_number()
         do
         {
             root = root -> next;
-            p -> AddTypeDeclaration(DYNAMIC_CAST<Ast*> (root -> element));
+            p -> AddTypeDeclaration(DYNAMIC_CAST<AstDeclaredType*>
+                                    (root -> element));
         } while (root != tail);
         FreeCircularList(tail);
     }
@@ -1277,18 +1278,16 @@ void Parser::Act$rule_number()
     if (Sym(1))
     {
         AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
-        p -> AllocateClassModifiers(tail -> index + 1);
+        p -> AllocateModifiers(tail -> index + 1);
         AstListNode* root = tail;
         do
         {
             root = root -> next;
-            p -> AddClassModifier(DYNAMIC_CAST<AstModifier*>
-                                  (root -> element));
+            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
         } while (root != tail);
         FreeCircularList(tail);
     }
     p -> class_token = Token(2);
-    p -> identifier_token = Token(3);
     p -> super_opt = DYNAMIC_CAST<AstTypeName*> (Sym(5));
     if (Sym(6))
     {
@@ -1303,6 +1302,8 @@ void Parser::Act$rule_number()
         FreeCircularList(tail);
     }
     p -> class_body = DYNAMIC_CAST<AstClassBody*> (Sym(7));
+    p -> class_body -> identifier_token = Token(3);
+    p -> class_body -> owner = p;
     Sym(1) = p;
 }
 ./
@@ -1358,9 +1359,9 @@ void Parser::MakeClassBody()
             num_methods = 0,
             num_constructors = 0,
             num_static_initializers = 0,
+            num_instance_initializers = 0,
             num_inner_classes = 0,
             num_inner_interfaces = 0,
-            num_blocks = 0,
             num_empty_declarations = 0;
 
         AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(2));
@@ -1369,36 +1370,56 @@ void Parser::MakeClassBody()
         do
         {
             root = root -> next;
-            p -> AddClassBodyDeclaration(root -> element);
-
+            AstDeclared* declaration =
+                DYNAMIC_CAST<AstDeclared*> (root -> element);
+            p -> AddClassBodyDeclaration(declaration);
             AstFieldDeclaration* field_declaration =
-                root -> element -> FieldDeclarationCast();
+                declaration -> FieldDeclarationCast();
+            AstInitializerDeclaration* initializer_declaration =
+                declaration -> InitializerDeclarationCast();
             if (field_declaration)
             {
-                for (int i = 0; i < field_declaration -> NumVariableModifiers(); i++)
+                for (unsigned i = 0;
+                     i < field_declaration -> NumModifiers(); i++)
                 {
-                    if (field_declaration -> VariableModifier(i) -> class_tag == Ast::STATIC)
+                    if (field_declaration -> Modifier(i) -> class_tag ==
+                        Ast::STATIC)
                     {
                         field_declaration -> MarkStatic();
                         break;
                     }
                 }
+                //
+                // Interface fields were already marked static.
+                //
                 if (field_declaration -> StaticFieldCast())
                     num_class_variables++;
                 else num_instance_variables++;
             }
-            else if (root -> element -> MethodDeclarationCast())
+            else if (declaration -> MethodDeclarationCast())
                 num_methods++;
-            else if (root -> element -> ConstructorDeclarationCast())
+            else if (declaration -> ConstructorDeclarationCast())
                 num_constructors++;
-            else if (root -> element -> StaticInitializerCast())
-                num_static_initializers++;
-            else if (root -> element -> ClassDeclarationCast())
+            else if (initializer_declaration)
+            {
+                for (unsigned i = 0;
+                     i < initializer_declaration -> NumModifiers(); i++)
+                {
+                    if (initializer_declaration -> Modifier(i) -> class_tag ==
+                        Ast::STATIC)
+                    {
+                        initializer_declaration -> MarkStatic();
+                        break;
+                    }
+                }
+                if (initializer_declaration -> StaticInitializerCast())
+                    num_static_initializers++;
+                else num_instance_initializers++;
+            }
+            else if (declaration -> ClassDeclarationCast())
                 num_inner_classes++;
-            else if (root -> element -> InterfaceDeclarationCast())
+            else if (declaration -> InterfaceDeclarationCast())
                 num_inner_interfaces++;
-            else if (root -> element -> BlockCast())
-                num_blocks++;
             else num_empty_declarations++;
         } while (root != tail);
 
@@ -1407,28 +1428,29 @@ void Parser::MakeClassBody()
         p -> AllocateMethods(num_methods);
         p -> AllocateConstructors(num_constructors);
         p -> AllocateStaticInitializers(num_static_initializers);
+        p -> AllocateInstanceInitializers(num_instance_initializers);
         p -> AllocateNestedClasses(num_inner_classes);
         p -> AllocateNestedInterfaces(num_inner_interfaces);
-        p -> AllocateInstanceInitializers(num_blocks);
         p -> AllocateEmptyDeclarations(num_empty_declarations);
 
         root = tail;
         do
         {
             root = root -> next;
+            AstDeclared* declaration =
+                DYNAMIC_CAST<AstDeclared*> (root -> element);
             AstFieldDeclaration* field_declaration =
-                root -> element -> FieldDeclarationCast();
+                declaration -> FieldDeclarationCast();
             AstMethodDeclaration* method_declaration =
-                root -> element -> MethodDeclarationCast();
+                declaration -> MethodDeclarationCast();
             AstConstructorDeclaration* constructor_declaration =
-                root -> element -> ConstructorDeclarationCast();
-            AstStaticInitializer* static_initializer =
-                root -> element -> StaticInitializerCast();
+                declaration -> ConstructorDeclarationCast();
+            AstInitializerDeclaration* initializer =
+                declaration -> InitializerDeclarationCast();
             AstClassDeclaration* class_declaration =
-                root -> element -> ClassDeclarationCast();
+                declaration -> ClassDeclarationCast();
             AstInterfaceDeclaration* interface_declaration =
-                root -> element -> InterfaceDeclarationCast();
-            AstMethodBody* block = root -> element -> MethodBodyCast();
+                declaration -> InterfaceDeclarationCast();
 
             if (field_declaration)
             {
@@ -1440,14 +1462,16 @@ void Parser::MakeClassBody()
                 p -> AddMethod(method_declaration);
             else if (constructor_declaration)
                 p -> AddConstructor(constructor_declaration);
-            else if (static_initializer)
-                p -> AddStaticInitializer(static_initializer);
+            else if (initializer)
+            {
+                if (initializer -> StaticInitializerCast())
+                     p -> AddStaticInitializer(initializer);
+                else p -> AddInstanceInitializer(initializer);
+            }
             else if (class_declaration)
                 p -> AddNestedClass(class_declaration);
             else if (interface_declaration)
                 p -> AddNestedInterface(interface_declaration);
-            else if (block)
-                p -> AddInstanceInitializer(block);
             else
             {
                 p -> AddEmptyDeclaration(DYNAMIC_CAST<AstEmptyDeclaration*>
@@ -1471,7 +1495,13 @@ ClassBodyDeclarations ::= ClassBodyDeclarations ClassBodyDeclaration
 \:$AddList2:\
 /.$shared_AddList2./
 
-ClassBodyDeclaration ::= ClassMemberDeclaration
+--
+-- For nicer semantic error messages, we treat class and interface
+-- members identically, giving errors if an interface forgets a field
+-- initializer or adds a method body.
+--
+--ClassBodyDeclaration ::= ClassMemberDeclaration
+ClassBodyDeclaration ::= MemberDeclaration
 \:$NoAction:\
 /.$shared_NoAction./
 
@@ -1479,23 +1509,24 @@ ClassBodyDeclaration ::= ConstructorDeclaration
 \:$NoAction:\
 /.$shared_NoAction./
 
-ClassBodyDeclaration ::= StaticInitializer
+--
+-- For nicer semantic error messages, we lump static and instance initializers
+-- together. Also, we parse arbitrary modifiers, but semantically only accept
+-- static or no modifiers.
+--
+--ClassBodyDeclaration ::= StaticInitializer
+--ClassBodyDeclaration ::= MethodBody
+ClassBodyDeclaration ::= InitializerDeclaration
 \:$NoAction:\
 /.$shared_NoAction./
 
---1.1 feature: Instance initializer
-ClassBodyDeclaration ::= MethodHeaderMarker MethodBody
-\:$SetSym1ToSym2:\
-/.$shared_function
-//
-// void SetSym1ToSym2();
-//./
-
-ClassMemberDeclaration ::= FieldDeclaration
+--ClassMemberDeclaration ::= FieldDeclaration
+MemberDeclaration ::= FieldDeclaration
 \:$NoAction:\
 /.$shared_NoAction./
 
-ClassMemberDeclaration ::= MethodDeclaration
+--ClassMemberDeclaration ::= MethodDeclaration
+MemberDeclaration ::= MethodDeclaration
 \:$NoAction:\
 /.$shared_NoAction./
 
@@ -1506,7 +1537,7 @@ ClassMemberDeclaration ::= MethodDeclaration
 --ClassMemberDeclaration ::= InterfaceDeclaration
 --ClassMemberDeclaration ::= ';'
 --
-ClassMemberDeclaration ::= TypeDeclaration
+MemberDeclaration ::= TypeDeclaration
 \:$NoAction:\
 /.$shared_NoAction./
 
@@ -1525,13 +1556,12 @@ void Parser::Act$rule_number()
     if (Sym(1))
     {
         AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
-        p -> AllocateVariableModifiers(tail -> index + 1);
+        p -> AllocateModifiers(tail -> index + 1);
         AstListNode* root = tail;
         do
         {
             root = root -> next;
-            p -> AddVariableModifier(DYNAMIC_CAST<AstModifier*>
-                                     (root -> element));
+            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
         } while (root != tail);
         FreeCircularList(tail);
     }
@@ -1657,13 +1687,12 @@ void Parser::MakeMethodHeader()
     if (Sym(1))
     {
         AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
-        p -> AllocateMethodModifiers(tail -> index + 1);
+        p -> AllocateModifiers(tail -> index + 1);
         AstListNode* root = tail;
         do
         {
             root = root -> next;
-            p -> AddMethodModifier(DYNAMIC_CAST<AstModifier*>
-                                   (root -> element));
+            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
         } while (root != tail);
         FreeCircularList(tail);
     }
@@ -1759,13 +1788,12 @@ void Parser::Act$rule_number()
     if (Sym(1))
     {
         AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
-        p -> AllocateParameterModifiers(tail -> index + 1);
+        p -> AllocateModifiers(tail -> index + 1);
         AstListNode* root = tail;
         do
         {
             root = root -> next;
-            p -> AddParameterModifier(DYNAMIC_CAST<AstModifier*>
-                                      (root -> element));
+            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
         } while (root != tail);
         FreeCircularList(tail);
     }
@@ -1810,7 +1838,8 @@ void Parser::Act$rule_number()
     if (Sym(2))
     {
         AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(2));
-        p -> AllocateStatements(tail -> index + 1);
+        // Allocate 1 extra for possible generated return statement.
+        p -> AllocateStatements(tail -> index + 2);
         AstListNode* root = tail -> next;
         if (root -> element -> IsExplicitConstructorInvocation())
             p -> explicit_constructor_opt =
@@ -1824,7 +1853,7 @@ void Parser::Act$rule_number()
         }
         FreeCircularList(tail);
     }
-
+    else p -> AllocateStatements(1);
     Sym(1) = p;
 }
 ./
@@ -1836,15 +1865,32 @@ void Parser::Act$rule_number()
 --
 
 --18.8.4 Productions from 8.5: Static Initializers
-
-StaticInitializer ::= 'static' MethodHeaderMarker MethodBody
+--
+-- For nicer error messages, we accept arbitrary modifiers. Thus this rule can
+-- parse static and instance initializers. The use of Marker allows us to
+-- share code, and MethodHeaderMarker allows the 2-pass parsing. See
+-- comments of MethodDeclaration.
+--
+--StaticInitializer ::= 'static' MethodBody
+InitializerDeclaration ::= Modifiersopt Marker MethodHeaderMarker MethodBody
 \:$action:\
 /.$location
 void Parser::Act$rule_number()
 {
-    AstStaticInitializer* p = ast_pool -> NewStaticInitializer();
-    p -> static_token = Token(1);
-    p -> block = DYNAMIC_CAST<AstMethodBody*> (Sym(3));
+    AstInitializerDeclaration* p = ast_pool -> NewInitializerDeclaration();
+    if (Sym(1))
+    {
+        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
+        p -> AllocateModifiers(tail -> index + 1);
+        AstListNode* root = tail;
+        do
+        {
+            root = root -> next;
+            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
+        } while (root != tail);
+        FreeCircularList(tail);
+    }
+    p -> block = DYNAMIC_CAST<AstMethodBody*> (Sym(4));
     Sym(1) = p;
 }
 ./
@@ -1867,13 +1913,12 @@ void Parser::MakeConstructorDeclaration()
     if (Sym(1))
     {
         AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
-        p -> AllocateConstructorModifiers(tail -> index + 1);
+        p -> AllocateModifiers(tail -> index + 1);
         AstListNode* root = tail;
         do
         {
             root = root -> next;
-            p -> AddConstructorModifier(DYNAMIC_CAST<AstModifier*>
-                                        (root -> element));
+            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
         } while (root != tail);
         FreeCircularList(tail);
     }
@@ -2019,35 +2064,35 @@ InterfaceDeclaration ::= Modifiersopt 'interface' 'Identifier' Marker
 /.$location
 void Parser::Act$rule_number()
 {
-    AstInterfaceDeclaration* p =
-        DYNAMIC_CAST<AstInterfaceDeclaration*> (Sym(6));
+    AstInterfaceDeclaration* p = ast_pool -> NewInterfaceDeclaration();
     if (Sym(1))
     {
         AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
-        p -> AllocateInterfaceModifiers(tail -> index + 1);
+        p -> AllocateModifiers(tail -> index + 1);
         AstListNode* root = tail;
         do
         {
             root = root -> next;
-            p -> AddInterfaceModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
+            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
         } while (root != tail);
         FreeCircularList(tail);
     }
     p -> interface_token = Token(2);
-    p -> identifier_token = Token(3);
     if (Sym(5))
     {
         AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(5));
-        p -> AllocateExtendsInterfaces(tail -> index + 1);
+        p -> AllocateInterfaces(tail -> index + 1);
         AstListNode* root = tail;
         do
         {
             root = root -> next;
-            p -> AddExtendsInterface(DYNAMIC_CAST<AstTypeName*>
-                                     (root -> element));
+            p -> AddInterface(DYNAMIC_CAST<AstTypeName*> (root -> element));
         } while (root != tail);
         FreeCircularList(tail);
     }
+    p -> class_body = DYNAMIC_CAST<AstClassBody*> (Sym(6));
+    p -> class_body -> identifier_token = Token(3);
+    p -> class_body -> owner = p;
     Sym(1) = p;
 }
 ./
@@ -2064,98 +2109,19 @@ ExtendsInterfaces ::= 'extends' TypeList
 //./
 
 InterfaceBody ::= '{' InterfaceMemberDeclarationsopt '}'
-\:$action:\
-/.$location
-void Parser::Act$rule_number()
-{
-    AstInterfaceDeclaration* p = ast_pool -> NewInterfaceDeclaration();
-    if (parse_header_only)
-        p -> MarkUnparsed();
+\:$MakeClassBody:\
+/.$shared_function
+//
+// void MakeClassBody();
+//./
 
-    p -> left_brace_token = Token(1);
-    if (Sym(2))
-    {
-        int num_class_variables = 0,
-            num_methods = 0,
-            num_inner_classes = 0,
-            num_inner_interfaces = 0,
-            num_empty_declarations = 0;
-
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(2));
-        p -> AllocateInterfaceMemberDeclarations(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddInterfaceMemberDeclaration(root -> element);
-
-            AstFieldDeclaration* field_declaration = root -> element -> FieldDeclarationCast();
-            if (field_declaration)
-            {
-                field_declaration -> MarkStatic();
-                num_class_variables++;
-            }
-            else if (root -> element -> MethodDeclarationCast())
-            {
-                num_methods++;
-            }
-            else if (root -> element -> ClassDeclarationCast())
-            {
-                num_inner_classes++;
-            }
-            else if (root -> element -> InterfaceDeclarationCast())
-            {
-                num_inner_interfaces++;
-            }
-            else num_empty_declarations++;
-        } while (root != tail);
-
-        p -> AllocateClassVariables(num_class_variables);
-        p -> AllocateMethods(num_methods);
-        p -> AllocateNestedClasses(num_inner_classes);
-        p -> AllocateNestedInterfaces(num_inner_interfaces);
-        p -> AllocateEmptyDeclarations(num_empty_declarations);
-
-        root = tail;
-        do
-        {
-            root = root -> next;
-
-            AstFieldDeclaration* field_declaration;
-            AstMethodDeclaration* method_declaration;
-            AstClassDeclaration* class_declaration;
-            AstInterfaceDeclaration* interface_declaration;
-
-            if ((field_declaration = root -> element -> FieldDeclarationCast()))
-            {
-                p -> AddClassVariable(field_declaration);
-            }
-            else if ((method_declaration = root -> element -> MethodDeclarationCast()))
-            {
-                p -> AddMethod(method_declaration);
-            }
-            else if ((class_declaration = root -> element -> ClassDeclarationCast()))
-            {
-                p -> AddNestedClass(class_declaration);
-            }
-            else if ((interface_declaration = root -> element -> InterfaceDeclarationCast()))
-            {
-                p -> AddNestedInterface(interface_declaration);
-            }
-            else // assert(interface_declaration = root -> element -> EmptyDeclarationCast())
-            {
-                p -> AddEmptyDeclaration(DYNAMIC_CAST<AstEmptyDeclaration*> (root -> element));
-            }
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
-    p -> right_brace_token = Token(3);
-    p -> pool = body_pool; // from now on, this is the storage pool to use for this type
-    Sym(1) = p;
-}
-./
-
-InterfaceMemberDeclarations ::= InterfaceMemberDeclaration
+--
+-- For less code duplication and better semantic messages, we treat all
+-- interface members as class members now, then do a semantic check that
+-- this was valid.
+--
+--InterfaceMemberDeclarations ::= InterfaceMemberDeclaration
+InterfaceMemberDeclarations ::= MemberDeclaration
 \:$action:\
 /.$location
 void Parser::Act$rule_number()
@@ -2167,8 +2133,10 @@ void Parser::Act$rule_number()
 }
 ./
 
+--InterfaceMemberDeclarations ::= InterfaceMemberDeclarations
+--                                InterfaceMemberDeclaration
 InterfaceMemberDeclarations ::= InterfaceMemberDeclarations
-                                InterfaceMemberDeclaration
+                                MemberDeclaration
 \:$action:\
 /.$location
 void Parser::Act$rule_number()
@@ -2180,46 +2148,16 @@ void Parser::Act$rule_number()
 }
 ./
 
-InterfaceMemberDeclaration ::= ConstantDeclaration
-\:$NoAction:\
-/.$shared_NoAction./
-
-InterfaceMemberDeclaration ::= AbstractMethodDeclaration
-\:$NoAction:\
-/.$shared_NoAction./
-
---1.1 feature
-InterfaceMemberDeclaration ::= ClassDeclaration
-\:$NoAction:\
-/.$shared_NoAction./
-
---1.1 feature
-InterfaceMemberDeclaration ::= InterfaceDeclaration
-\:$NoAction:\
-/.$shared_NoAction./
-
-InterfaceMemberDeclaration ::= ';'
-\:$action:\
-/.$location
-void Parser::Act$rule_number()
-{
-    Sym(1) = ast_pool -> NewEmptyDeclaration(Token(1));
-}
-./
-
-ConstantDeclaration ::= FieldDeclaration
-\:$NoAction:\
-/.$shared_NoAction./
-
-AbstractMethodDeclaration ::= MethodHeader ';'
-\:$action:\
-/.$location
-void Parser::Act$rule_number()
-{
-    DYNAMIC_CAST<AstMethodDeclaration*> (Sym(1)) -> method_body =
-        ast_pool -> NewEmptyStatement(Token(2));
-}
-./
+--
+-- See description of MemberDeclaration.
+--
+--InterfaceMemberDeclaration ::= ConstantDeclaration
+--InterfaceMemberDeclaration ::= AbstractMethodDeclaration
+--InterfaceMemberDeclaration ::= ClassDeclaration
+--InterfaceMemberDeclaration ::= InterfaceDeclaration
+--InterfaceMemberDeclaration ::= ';'
+--ConstantDeclaration ::= FieldDeclaration
+--AbstractMethodDeclaration ::= MethodHeader ';'
 
 --18.10 Productions from 10: Arrays
 --
@@ -2363,12 +2301,12 @@ void Parser::MakeLocalVariable(AstListNode* modifiers, AstType* type,
     if (modifiers)
     {
         AstListNode* tail = modifiers;
-        p -> AllocateLocalModifiers(tail -> index + 1);
+        p -> AllocateModifiers(tail -> index + 1);
         AstListNode* root = tail;
         do
         {
             root = root -> next;
-            p -> AddLocalModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
+            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
         } while (root != tail);
         FreeCircularList(tail);
     }
@@ -2790,8 +2728,12 @@ AstStatement* Parser::MakeSwitchBlockStatement(AstListNode* labels,
         } while (root != tail);
         FreeCircularList(tail);
     }
-    else p -> AddStatement(ast_pool ->
-                           GenEmptyStatement(labels -> RightToken()));
+    else
+    {
+        p -> AllocateStatements(1);
+        p -> AddStatement(ast_pool -> GenEmptyStatement(labels ->
+                                                        RightToken()));
+    }
     p -> right_brace_token =
         p -> Statement(p -> NumStatements() - 1) -> RightToken();
     return p;
@@ -3296,6 +3238,9 @@ void Parser::Act$rule_number()
     }
     p -> right_parenthesis_token = Token(5);
     p -> class_body_opt = DYNAMIC_CAST<AstClassBody*> (Sym(6));
+    if (p -> class_body_opt)
+        p -> class_body_opt -> identifier_token =
+            p -> class_type -> IdentifierToken();
     Sym(1) = p;
 }
 ./
@@ -3333,6 +3278,8 @@ void Parser::MakeQualifiedNew()
     }
     p -> right_parenthesis_token = Token(8);
     p -> class_body_opt = DYNAMIC_CAST<AstClassBody*> (Sym(9));
+    if (p -> class_body_opt)
+        p -> class_body_opt -> identifier_token = Token(4);
     Sym(1) = p;
 }
 ./

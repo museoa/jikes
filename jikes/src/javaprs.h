@@ -4,7 +4,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler Open
 // Source License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1997, 1998, 1999, 2001, International
+// Copyright (C) 1996, 1997, 1998, 1999, 2001, 2002 International
 // Business Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -46,8 +46,8 @@ public:
     static const unsigned short name_start[];
     static const unsigned char  name_length[];
     static const          char  string_buffer[];
-    static const unsigned short terminal_index[];
-    static const unsigned short non_terminal_index[];
+    static const unsigned char  terminal_index[];
+    static const unsigned char  non_terminal_index[];
     static const unsigned short scope_prefix[];
     static const unsigned short scope_suffix[];
     static const unsigned short scope_lhs[];
@@ -62,7 +62,7 @@ public:
         return base_action[state + sym];
     }
 
-    static int t_action(int state, int sym, LexStream *stream)
+    static int t_action(int state, int sym, LexStream *)
     {
         return term_action[term_check[base_action[state]+sym] == sym
                                ? base_action[state] + sym

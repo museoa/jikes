@@ -1276,12 +1276,6 @@ void SemanticError::InitializeMessages()
         "\"%1\" is an undeclared label.";
     messages[DUPLICATE_LABEL] =
         "Duplicate declaration of label \"%1\".";
-    messages[CATCH_PRIMITIVE_TYPE] =
-        "A primitive type cannot be used to declare a catch clause "
-        "parameter.";
-    messages[CATCH_ARRAY_TYPE] =
-        "A array type cannot be used to declare a catch clause "
-        "parameter.";
     messages[AMBIGUOUS_FIELD] =
         "Ambiguous access of field \"%1\". At least two fields are "
         "accessible from here: one declared in type \"%T2\" and "
@@ -1614,6 +1608,8 @@ void SemanticError::InitializeMessages()
     messages[SYNTHETIC_CONSTRUCTOR_INVOCATION] =
         "Illegal attempt to invoke the synthetic constructor \"%1\" from "
         "class \"%T2\".";
+    messages[SYNTHETIC_TYPE_ACCESS] =
+        "Illegal attempt to use the synthetic type \"%T1\".";
     messages[SELF_IN_EXPLICIT_CONSTRUCTOR] =
         "The expression \"%1\" is not yet initialized here.";
     messages[EXPRESSION_NOT_CONSTANT] =

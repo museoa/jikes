@@ -1,3 +1,41 @@
+2002-12-05  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/ast.h (AstDeclaredType, AstInitializerDeclaration): More
+	AST backporting from generics-branch. Also change all Num* methods
+	to return unsigned counts, instead of int.
+	* src/Makefile.am:
+	* src/ast.cpp:
+	* src/body.cpp:
+	* src/bytecode.cpp:
+	* src/bytecode.h:
+	* src/class.h:
+	* src/control.cpp:
+	* src/decl.cpp:
+	* src/definite.cpp:
+	* src/depend.cpp:
+	* src/error.cpp:
+	* src/error.h:
+	* src/expr.cpp:
+	* src/getclass.cpp:
+	* src/init.cpp:
+	* src/java.g:
+	* src/modifier.cpp:
+	* src/parser.cpp:
+	* src/parser.h:
+	* src/semantic.h:
+	* src/spell.h:
+	* src/symbol.cpp:
+	* src/symbol.h:
+	* src/unparse.cpp: Associated back-ports. Also fix all compiler
+	warnings.
+	* src/Makefile.in:
+	* src/javaact.cpp:
+	* src/javaact.h:
+	* src/javadcl.h:
+	* src/javadef.h:
+	* src/javaprs.h:
+	* src/javasym.h: Regenerate.
+
 2002-12-04  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/ast.h (AstType, AstInstanceofExpression, AstClassLiteral):

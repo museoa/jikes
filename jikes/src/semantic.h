@@ -129,39 +129,38 @@ private:
 class BlockStack
 {
 public:
-    int max_size;
+    unsigned max_size;
 
     void Push(AstBlock* block_)
     {
         block.Next() = block_;
         index.Next() = 0;
-        if (block.Length() > max_size)
+        if (block.Length() > (int) max_size)
             max_size = block.Length();
     }
 
     void Pop()
     {
-        int len = block.Length() - 1;
-        if (len >= 0)
+        unsigned len = block.Length();
+        if (len)
         {
-            block.Reset(len);
-            index.Reset(len);
+            block.Reset(len - 1);
+            index.Reset(len - 1);
         }
     }
 
-    int Size() { return block.Length(); }
+    unsigned Size() { return block.Length(); }
     AstBlock* TopBlock()
     {
         return (AstBlock*) (block.Length() > 0
-                             ? block[block.Length() - 1] : NULL);
+                            ? block[block.Length() - 1] : NULL);
     }
 
-    AstBlock* operator[](const int i) { return block[i]; }
+    AstBlock* operator[](const unsigned i) { return block[i]; }
 
     int& TopMaxEnclosedVariableIndex()
     {
-        if (index.Length() <= 0)
-            assert(false);
+        assert(index.Length());
         return index[index.Length() - 1];
     }
 
@@ -318,7 +317,7 @@ public:
     SemanticStack<AstTryStatement*> try_statement_stack;
     SemanticStack<AstBlock*> breakable_statement_stack;
     SemanticStack<AstBlock*> continuable_statement_stack;
-    SemanticStack<int> abrupt_finally_stack;
+    SemanticStack<unsigned> abrupt_finally_stack;
     BlockStack block_stack;
 
     //
@@ -779,7 +778,7 @@ public:
         error -> Report(kind, tok, tok, s1, s2, s3, s4, s5, s6, s7, s8, s9);
     }
 
-    int NumErrors() { return (error ? error -> num_errors : 0); }
+    unsigned NumErrors() { return (error ? error -> num_errors : 0); }
 
     //
     // If we had a bad compilation unit, print the parser messages.
@@ -844,17 +843,11 @@ private:
     void ProcessConstructorMembers(AstClassBody*);
     void ProcessMethodMembers(AstClassBody*);
     void ProcessFieldMembers(AstClassBody*);
-    void ProcessMembers(SemanticEnvironment*, AstClassBody*);
-    void CompleteSymbolTable(SemanticEnvironment*, LexStream::TokenIndex,
-                             AstClassBody*);
-    void ProcessMethodMembers(AstInterfaceDeclaration*);
-    void ProcessFieldMembers(AstInterfaceDeclaration*);
-    void ProcessMembers(AstInterfaceDeclaration*);
-    void CompleteSymbolTable(AstInterfaceDeclaration*);
+    void ProcessMembers(AstClassBody*);
+    void CompleteSymbolTable(AstClassBody*);
 
     // Implemented in body.cpp - process method bodies and field initializers
-    void ProcessExecutableBodies(SemanticEnvironment*, AstClassBody*);
-    void ProcessExecutableBodies(AstInterfaceDeclaration*);
+    void ProcessExecutableBodies(AstClassBody*);
 
     friend class TypeSymbol;
     friend class VariableSymbol;
@@ -905,7 +898,7 @@ private:
     {
         return state_stack.Top() -> continuable_statement_stack;
     }
-    SemanticStack<int>& AbruptFinallyStack()
+    SemanticStack<unsigned>& AbruptFinallyStack()
     {
         return state_stack.Top() -> abrupt_finally_stack;
     }
@@ -956,13 +949,10 @@ private:
     bool IsIntValueRepresentableInType(AstExpression*, TypeSymbol*);
 
     // Implemented in decl.cpp - nested class processing
-    void CheckClassMembers(TypeSymbol*, AstClassBody*);
+    void CheckNestedMembers(TypeSymbol*, AstClassBody*);
     void CheckNestedTypeDuplication(SemanticEnvironment*,
                                     LexStream::TokenIndex);
-    TypeSymbol* ProcessNestedClassName(TypeSymbol*, AstClassDeclaration*);
-    void CheckInterfaceMembers(TypeSymbol*, AstInterfaceDeclaration*);
-    TypeSymbol* ProcessNestedInterfaceName(TypeSymbol*,
-                                           AstInterfaceDeclaration*);
+    TypeSymbol* ProcessNestedTypeName(TypeSymbol*, AstDeclaredType*);
     TypeSymbol* FindTypeInShadow(TypeShadowSymbol*, LexStream::TokenIndex);
     void ReportTypeInaccessible(LexStream::TokenIndex, LexStream::TokenIndex,
                                 TypeSymbol*);
@@ -972,7 +962,7 @@ private:
     }
     TypeSymbol* GetBadNestedType(TypeSymbol*, LexStream::TokenIndex);
     TypeSymbol* FindNestedType(TypeSymbol*, LexStream::TokenIndex);
-    TypeSymbol* MustFindNestedType(TypeSymbol*, Ast*);
+    TypeSymbol* MustFindNestedType(TypeSymbol*, AstExpression*);
     void ProcessImportQualifiedName(AstExpression*);
     void ProcessPackageOrType(AstExpression*);
     void ProcessTypeImportOnDemandDeclaration(AstImportDeclaration*);
@@ -982,13 +972,9 @@ private:
     // Implemented in modifier.cpp - process declaration modifiers
     void ProcessAccessFlag(AccessFlags&, LexStream::TokenIndex,
                            const wchar_t*, u2 valid, u2 implicit = 0);
-    AccessFlags ProcessClassModifiers(AstClassDeclaration*);
+    AccessFlags ProcessTopLevelTypeModifiers(AstDeclaredType*);
+    AccessFlags ProcessNestedTypeModifiers(TypeSymbol*, AstDeclaredType*);
     AccessFlags ProcessLocalClassModifiers(AstClassDeclaration*);
-    AccessFlags ProcessNestedClassModifiers(AstClassDeclaration*);
-    AccessFlags ProcessStaticNestedClassModifiers(AstClassDeclaration*);
-    AccessFlags ProcessInterfaceModifiers(AstInterfaceDeclaration*);
-    AccessFlags ProcessNestedInterfaceModifiers(AstInterfaceDeclaration*);
-    AccessFlags ProcessStaticNestedInterfaceModifiers(AstInterfaceDeclaration*);
     AccessFlags ProcessFieldModifiers(AstFieldDeclaration*);
     AccessFlags ProcessLocalModifiers(AstLocalVariableDeclarationStatement*);
     AccessFlags ProcessFormalModifiers(AstFormalParameter*);
@@ -996,6 +982,7 @@ private:
     AccessFlags ProcessConstructorModifiers(AstConstructorDeclaration*);
     AccessFlags ProcessInterfaceFieldModifiers(AstFieldDeclaration*);
     AccessFlags ProcessInterfaceMethodModifiers(AstMethodDeclaration*);
+    AccessFlags ProcessInitializerModifiers(AstInitializerDeclaration*);
 
     // Implemented in body.cpp - process method bodies
     void AddDefaultConstructor(TypeSymbol*);
@@ -1007,13 +994,13 @@ private:
     TypeSymbol* FindPrimitiveType(AstPrimitiveType*);
     TypeSymbol* FindTypeInEnvironment(SemanticEnvironment*, NameSymbol*);
     TypeSymbol* FindType(LexStream::TokenIndex);
-    TypeSymbol* MustFindType(Ast*);
+    TypeSymbol* MustFindType(AstExpression*);
     void ProcessType(AstType*);
     void ProcessInterface(TypeSymbol*, AstTypeName*);
 
     // Implemented in decl.cpp - process initializers
     void InitializeVariable(AstFieldDeclaration*, MethodSymbol*);
-    void ProcessInitializer(AstMethodBody*, MethodSymbol*);
+    void ProcessInitializer(AstInitializerDeclaration*, MethodSymbol*);
     void ProcessStaticInitializers(AstClassBody*);
     void ProcessInstanceInitializers(AstClassBody*);
     MethodSymbol* GetStaticInitializerMethod(int estimate = 0);

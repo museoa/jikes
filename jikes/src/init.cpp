@@ -108,11 +108,12 @@ void Semantic::ProcessArrayInitializer(AstArrayInitializer *array_initializer,
     }
     else
     {
-        for (int i = 0; i < array_initializer -> NumVariableInitializers(); i++)
+        for (unsigned i = 0;
+             i < array_initializer -> NumVariableInitializers(); i++)
         {
-            AstArrayInitializer *sub_array_initializer = array_initializer ->
+            AstArrayInitializer* sub_array_initializer = array_initializer ->
                 VariableInitializer(i) -> ArrayInitializerCast();
-            TypeSymbol *array_subtype = type -> ArraySubtype();
+            TypeSymbol* array_subtype = type -> ArraySubtype();
             if (sub_array_initializer)
                  ProcessArrayInitializer(sub_array_initializer, array_subtype);
             else

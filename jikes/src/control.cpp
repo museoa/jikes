@@ -947,10 +947,10 @@ void Control::ProcessNewInputFiles(SymbolSet &file_set, char **arguments)
         while (arguments[j])
         {
             char *file_name = arguments[j++];
-            int file_name_length = strlen(file_name);
+            unsigned file_name_length = strlen(file_name);
 
             wchar_t *name = new wchar_t[file_name_length + 1];
-            for (int i = 0; i < file_name_length; i++)
+            for (unsigned i = 0; i < file_name_length; i++)
                 name[i] = (file_name[i] != U_BACKSLASH ? file_name[i]
                            : (wchar_t) U_SLASH); // Change '\' to '/'.
             name[file_name_length] = U_NULL;
@@ -1239,7 +1239,7 @@ void Control::CollectTypes(TypeSymbol *type, Tuple<TypeSymbol *> &types)
 {
     types.Next() = type;
 
-    for (int j = 0; j < type -> NumAnonymousTypes(); j++)
+    for (unsigned j = 0; j < type -> NumAnonymousTypes(); j++)
         CollectTypes(type -> AnonymousType(j), types);
 
     if (type -> local)
@@ -1271,11 +1271,6 @@ void Control::ProcessBodies(TypeSymbol *type)
     if (type -> declaration &&
         ! sem -> compilation_unit -> BadCompilationUnitCast())
     {
-        AstInterfaceDeclaration *interface_declaration =
-            type -> declaration -> InterfaceDeclarationCast();
-        AstClassDeclaration *class_declaration =
-            type -> declaration -> ClassDeclarationCast();
-
 #ifdef WIN32_FILE_SYSTEM
         if (! type -> file_symbol -> IsZip())
         {
@@ -1318,47 +1313,30 @@ void Control::ProcessBodies(TypeSymbol *type)
 
             delete [] classfile_name;
         }
-#endif
+#endif // WIN32_FILE_SYSTEM
 
-        if (interface_declaration)
+        if (! parser -> InitializerParse(sem -> lex_stream,
+                                         type -> declaration))
         {
-            if (! parser -> InitializerParse(sem -> lex_stream,
-                                             interface_declaration))
-                // Recall that syntax errors were detected.
-                sem -> compilation_unit -> kind = Ast::BAD_COMPILATION;
-            else
-            {
-                type -> CompleteSymbolTable();
-                if (! parser -> BodyParse(sem -> lex_stream,
-                                          interface_declaration))
-                    // Mark that syntax errors were detected.
-                     sem -> compilation_unit -> kind = Ast::BAD_COMPILATION;
-                else type -> ProcessExecutableBodies();
-            }
+            // Mark that syntax errors were detected.
+            sem -> compilation_unit -> kind = Ast::BAD_COMPILATION;
         }
         else
         {
-            if (! parser -> InitializerParse(sem -> lex_stream,
-                                             class_declaration -> class_body))
-                // Recall that syntax errors were detected.
-                sem -> compilation_unit -> kind = Ast::BAD_COMPILATION;
-            else
+            type -> CompleteSymbolTable();
+            if (! parser -> BodyParse(sem -> lex_stream, type -> declaration))
             {
-                type -> CompleteSymbolTable();
-                if (! parser -> BodyParse(sem -> lex_stream,
-                                          class_declaration -> class_body))
-                    // Mark that syntax errors were detected.
-                    sem -> compilation_unit -> kind = Ast::BAD_COMPILATION;
-
-                else type -> ProcessExecutableBodies();
+                // Mark that syntax errors were detected.
+                sem -> compilation_unit -> kind = Ast::BAD_COMPILATION;
             }
+            else type -> ProcessExecutableBodies();
         }
 
         if (sem -> NumErrors() == 0 &&
             sem -> lex_stream -> NumBadTokens() == 0 &&
             ! sem -> compilation_unit -> BadCompilationUnitCast())
         {
-            Tuple<TypeSymbol *> *types = new Tuple<TypeSymbol *>(1024);
+            Tuple<TypeSymbol*>* types = new Tuple<TypeSymbol*>(1024);
             CollectTypes(type, *types);
 
             //
@@ -1368,14 +1346,11 @@ void Control::ProcessBodies(TypeSymbol *type)
             {
                 for (int k = 0; k < types -> Length(); k++)
                 {
-                    TypeSymbol *type = (*types)[k];
-
+                    TypeSymbol* type = (*types)[k];
                     // Make sure the literal is available for bytecode.
                     type -> file_symbol -> SetFileNameLiteral(this);
-
-                    ByteCode *code = new ByteCode(type);
+                    ByteCode* code = new ByteCode(type);
                     code -> GenerateCode();
-
                     delete code;
                 }
             }
@@ -1386,40 +1361,23 @@ void Control::ProcessBodies(TypeSymbol *type)
             //
             if (! option.nocleanup)
             {
-            if (sem -> NumErrors() == 0)
-            {
-                for (int k = 0; k < types -> Length(); k++)
+                if (sem -> NumErrors() == 0)
                 {
-                    TypeSymbol *type = (*types)[k];
-
-                    delete type -> semantic_environment;
-                    type -> semantic_environment = NULL;
-
-                    if (type -> ACC_INTERFACE())
+                    for (int k = 0; k < types -> Length(); k++)
                     {
-                        AstInterfaceDeclaration *interface_declaration =
-                            (AstInterfaceDeclaration *) type -> declaration;
-                        interface_declaration -> semantic_environment = NULL;
-                    }
-                    else
-                    {
-                        AstClassDeclaration *class_declaration =
-                            type -> declaration -> ClassDeclarationCast();
-
-                        if (class_declaration)
-                            class_declaration -> semantic_environment = NULL;
+                        TypeSymbol* type = (*types)[k];
+                        delete type -> semantic_environment;
+                        type -> semantic_environment = NULL;
+                        type -> declaration -> semantic_environment = NULL;
                     }
                 }
+                delete types;
             }
-
-            delete types;
         }
-    }
     }
 
     sem -> types_to_be_processed.RemoveElement(type);
-    if (! option.nocleanup)
-    if (sem -> types_to_be_processed.Size() == 0)
+    if (! option.nocleanup && sem -> types_to_be_processed.Size() == 0)
     {
         // All types belonging to this compilation unit have been processed.
         CleanUp(sem -> source_file_symbol);

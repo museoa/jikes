@@ -1516,10 +1516,10 @@ public:
     u2 AttributesCount() { return attributes.Length(); }
     Tuple<attribute_info *> attributes; /* attributes[attributes_count] */
 
-    ClassFile(TypeSymbol *unit_type_) : constant_pool(8, 4),
-                                        fields(6, 16),
-                                        methods(6, 16),
-                                        unit_type(unit_type_)
+    ClassFile()
+        : constant_pool(8, 4),
+          fields(6, 16),
+          methods(6, 16)
     {}
 
     ~ClassFile()
@@ -1531,10 +1531,11 @@ public:
             delete attributes[j];
     }
 
-    void Write()
+    void Write(TypeSymbol* unit_type)
     {
         Semantic *sem = unit_type -> semantic_environment -> sem;
         Control &control = sem -> control;
+        OutputBuffer output_buffer;
 
         char *class_file_name = unit_type -> ClassName();
         if (control.option.verbose)
@@ -1605,17 +1606,11 @@ public:
                 name[length] = U_NULL;
 
                 sem -> ReportSemError(SemanticError::CANNOT_WRITE_FILE,
-                                     unit_type -> declaration -> LeftToken(),
-                                     unit_type -> declaration -> RightToken(),
-                                     name);
+                                      unit_type -> declaration, name);
                 delete [] name;
             }
         }
     }
-
-protected:
-    TypeSymbol *unit_type;
-    OutputBuffer output_buffer;
 };
 
 #ifdef HAVE_JIKES_NAMESPACE

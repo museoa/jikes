@@ -41,7 +41,7 @@ void Semantic::ProcessBlockStatements(AstBlock *block_body)
         AstStatement *first_unreachable_statement =
             (AstStatement *) (statement -> is_reachable ? NULL : statement);
         ProcessStatement(statement);
-        for (int i = 1; i < block_body -> NumStatements(); i++)
+        for (unsigned i = 1; i < block_body -> NumStatements(); i++)
         {
             AstStatement *previous_statement = statement;
             statement = block_body -> Statement(i);
@@ -70,8 +70,7 @@ void Semantic::ProcessBlockStatements(AstBlock *block_body)
             if (first_unreachable_statement == statement)
             {
                 ReportSemError(SemanticError::UNREACHABLE_STATEMENT,
-                               statement -> LeftToken(),
-                               statement -> RightToken());
+                               statement);
             }
             else
             {
@@ -143,7 +142,6 @@ void Semantic::ProcessBlock(Ast *stmt)
         {
             ReportSemError(SemanticError::DUPLICATE_LABEL,
                            block_body -> label_opt,
-                           block_body -> label_opt,
                            name_symbol -> Name());
         }
         else
@@ -175,28 +173,21 @@ void Semantic::ProcessBlock(Ast *stmt)
 }
 
 
-void Semantic::ProcessLocalVariableDeclarationStatement(Ast *stmt)
+void Semantic::ProcessLocalVariableDeclarationStatement(Ast* stmt)
 {
-    AstLocalVariableDeclarationStatement *local_decl =
-        (AstLocalVariableDeclarationStatement *) stmt;
-
-    AstArrayType *array_type = local_decl -> type -> ArrayTypeCast();
-    Ast *actual_type = (array_type ? array_type -> type : local_decl -> type);
-
+    AstLocalVariableDeclarationStatement* local_decl =
+        (AstLocalVariableDeclarationStatement*) stmt;
+    ProcessType(local_decl -> type);
+    TypeSymbol* field_type = local_decl -> type -> symbol;
     AccessFlags access_flags = ProcessLocalModifiers(local_decl);
 
-    AstPrimitiveType *primitive_type = actual_type -> PrimitiveTypeCast();
-    TypeSymbol *field_type = (primitive_type
-                              ? FindPrimitiveType(primitive_type)
-                              : MustFindType(actual_type));
-
-    for (int i = 0; i < local_decl -> NumVariableDeclarators(); i++)
+    for (unsigned i = 0; i < local_decl -> NumVariableDeclarators(); i++)
     {
-        AstVariableDeclarator *variable_declarator =
+        AstVariableDeclarator* variable_declarator =
             local_decl -> VariableDeclarator(i);
-        AstVariableDeclaratorId *name =
+        AstVariableDeclaratorId* name =
             variable_declarator -> variable_declarator_name;
-        NameSymbol *name_symbol =
+        NameSymbol* name_symbol =
             lex_stream -> NameSymbol(name -> identifier_token);
 
         //
@@ -206,27 +197,21 @@ void Semantic::ProcessLocalVariableDeclarationStatement(Ast *stmt)
         if (LocalSymbolTable().FindVariableSymbol(name_symbol))
         {
             ReportSemError(SemanticError::DUPLICATE_LOCAL_VARIABLE_DECLARATION,
-                           name -> identifier_token,
-                           name -> identifier_token,
-                           name_symbol -> Name());
+                           name -> identifier_token, name_symbol -> Name());
         }
         else
         {
-            VariableSymbol *symbol =
+            VariableSymbol* symbol =
                 LocalSymbolTable().Top() -> InsertVariableSymbol(name_symbol);
             variable_declarator -> symbol = symbol;
 
-            int num_dimensions = (array_type
-                                  ? array_type -> NumBrackets() : 0) +
-                name -> NumBrackets();
-            if (num_dimensions == 0)
-                symbol -> SetType(field_type);
-            else symbol -> SetType(field_type -> GetArrayType(this,
-                                                              num_dimensions));
+            unsigned dims =
+                field_type -> num_dimensions + name -> NumBrackets();
+            symbol -> SetType(field_type -> GetArrayType(this, dims));
             symbol -> SetFlags(access_flags);
             symbol -> SetOwner(ThisMethod());
             symbol -> declarator = variable_declarator;
-            BlockSymbol *block = LocalBlockStack().TopBlock() -> block_symbol;
+            BlockSymbol* block = LocalBlockStack().TopBlock() -> block_symbol;
 
             symbol -> SetLocalVariableIndex(block -> max_variable_index++);
             if (control.IsDoubleWordType(symbol -> Type()))
@@ -278,8 +263,7 @@ void Semantic::ProcessSynchronizedStatement(Ast *stmt)
         synchronized_statement -> expression -> symbol == control.null_type)
     {
         ReportSemError(SemanticError::TYPE_NOT_REFERENCE,
-                       synchronized_statement -> expression -> LeftToken(),
-                       synchronized_statement -> expression -> RightToken(),
+                       synchronized_statement -> expression,
                        synchronized_statement -> expression -> Type() -> Name());
     }
 
@@ -354,16 +338,14 @@ void Semantic::ProcessIfStatement(Ast *stmt)
     if (cond_type != control.boolean_type && cond_type != control.no_type)
     {
         ReportSemError(SemanticError::TYPE_NOT_BOOLEAN,
-                       if_statement -> expression -> LeftToken(),
-                       if_statement -> expression -> RightToken(),
+                       if_statement -> expression,
                        cond_type -> ContainingPackageName(),
                        cond_type -> ExternalName());
     }
 
     //
-    // Recall that the parser ensures that the statements that appear in an
-    // if-statement (both the true and false statement) are enclosed in a
-    // block.
+    // Recall that the parser enclosed both true and false statements in
+    // blocks, if necessary.
     //
     if_statement -> true_statement -> is_reachable =
         if_statement -> is_reachable;
@@ -416,8 +398,7 @@ void Semantic::ProcessWhileStatement(Ast *stmt)
     else if (cond_type != control.no_type)
     {
         ReportSemError(SemanticError::TYPE_NOT_BOOLEAN,
-                       while_statement -> expression -> LeftToken(),
-                       while_statement -> expression -> RightToken(),
+                       while_statement -> expression,
                        cond_type -> ContainingPackageName(),
                        cond_type -> ExternalName());
     }
@@ -428,8 +409,7 @@ void Semantic::ProcessWhileStatement(Ast *stmt)
         while_statement -> is_reachable)
     {
         ReportSemError(SemanticError::UNREACHABLE_STATEMENT,
-                       enclosed_statement -> LeftToken(),
-                       enclosed_statement -> RightToken());
+                       enclosed_statement);
     }
 
     //
@@ -463,7 +443,7 @@ void Semantic::ProcessForStatement(Ast *stmt)
     //     for (int i = 0; i < 10; i++);
     //     for (int i = 10; i < 20; i++);
     //
-    for (int i = 0; i < for_statement -> NumForInitStatements(); i++)
+    for (unsigned i = 0; i < for_statement -> NumForInitStatements(); i++)
         ProcessStatement(for_statement -> ForInitStatement(i));
 
     //
@@ -503,8 +483,7 @@ void Semantic::ProcessForStatement(Ast *stmt)
         else if (cond_type != control.no_type)
         {
             ReportSemError(SemanticError::TYPE_NOT_BOOLEAN,
-                           for_statement -> end_expression_opt -> LeftToken(),
-                           for_statement -> end_expression_opt -> RightToken(),
+                           for_statement -> end_expression_opt,
                            cond_type -> ContainingPackageName(),
                            cond_type -> ExternalName());
         }
@@ -516,11 +495,10 @@ void Semantic::ProcessForStatement(Ast *stmt)
         for_statement -> is_reachable)
     {
         ReportSemError(SemanticError::UNREACHABLE_STATEMENT,
-                       enclosed_statement -> LeftToken(),
-                       enclosed_statement -> RightToken());
+                       enclosed_statement);
     }
 
-    for (int j = 0; j < for_statement -> NumForUpdateStatements(); j++)
+    for (unsigned j = 0; j < for_statement -> NumForUpdateStatements(); j++)
         ProcessExpressionStatement(for_statement -> ForUpdateStatement(j));
 
     //
@@ -565,18 +543,17 @@ void Semantic::ProcessSwitchStatement(Ast* stmt)
     if (! control.IsSimpleIntegerValueType(type) && type != control.no_type)
     {
         ReportSemError(SemanticError::TYPE_NOT_INTEGER,
-                       switch_statement -> expression -> LeftToken(),
-                       switch_statement -> expression -> RightToken(),
+                       switch_statement -> expression,
                        type -> ContainingPackageName(),
                        type -> ExternalName());
         type = control.no_type;
     }
 
     //
-    // Count the number case labels in this switch statement
+    // Count the number case labels in this switch statement.
     //
     unsigned num_case_labels = 0;
-    for (int i = 0; i < block_body -> NumStatements(); i++)
+    for (unsigned i = 0; i < block_body -> NumStatements(); i++)
         num_case_labels += switch_statement -> Block(i) -> NumSwitchLabels();
     switch_statement -> AllocateCases(num_case_labels);
 
@@ -584,11 +561,11 @@ void Semantic::ProcessSwitchStatement(Ast* stmt)
     // A switch block is reachable iff its switch statement is reachable.
     //
     block_body -> is_reachable = switch_statement -> is_reachable;
-    for (int j = 0; j < block_body -> NumStatements(); j++)
+    for (unsigned j = 0; j < block_body -> NumStatements(); j++)
     {
         AstSwitchBlockStatement* switch_block_statement =
             switch_statement -> Block(j);
-        for (int k = 0;
+        for (unsigned k = 0;
              k < switch_block_statement -> NumSwitchLabels(); k++)
         {
             AstSwitchLabel* switch_label =
@@ -781,8 +758,7 @@ void Semantic::ProcessDoStatement(Ast *stmt)
     if (type != control.boolean_type && type != control.no_type)
     {
         ReportSemError(SemanticError::TYPE_NOT_BOOLEAN,
-                       do_statement -> expression -> LeftToken(),
-                       do_statement -> expression -> RightToken(),
+                       do_statement -> expression,
                        type -> ContainingPackageName(),
                        type -> ExternalName());
     }
@@ -845,7 +821,6 @@ void Semantic::ProcessBreakStatement(Ast *stmt)
             break_statement -> nesting_level = block_body -> nesting_level;
             ReportSemError(SemanticError::UNDECLARED_LABEL,
                            break_statement -> identifier_token_opt,
-                           break_statement -> identifier_token_opt,
                            lex_stream -> NameString(break_statement -> identifier_token_opt));
         }
     }
@@ -865,8 +840,7 @@ void Semantic::ProcessBreakStatement(Ast *stmt)
             }
         }
         else ReportSemError(SemanticError::MISPLACED_BREAK_STATEMENT,
-                            break_statement -> LeftToken(),
-                            break_statement -> RightToken());
+                            break_statement);
     }
 }
 
@@ -883,8 +857,7 @@ void Semantic::ProcessContinueStatement(Ast *stmt)
     if (ContinuableStatementStack().Size() <= 0)
     {
         ReportSemError(SemanticError::MISPLACED_CONTINUE_STATEMENT,
-                       continue_statement -> LeftToken(),
-                       continue_statement -> RightToken());
+                       continue_statement);
     }
     else if (continue_statement -> identifier_token_opt)
     {
@@ -907,7 +880,6 @@ void Semantic::ProcessContinueStatement(Ast *stmt)
             AstBlock *block_body = (AstBlock *) LocalBlockStack().TopBlock();
             continue_statement -> nesting_level = block_body -> nesting_level;
             ReportSemError(SemanticError::UNDECLARED_LABEL,
-                           continue_statement -> identifier_token_opt,
                            continue_statement -> identifier_token_opt,
                            lex_stream -> NameString(continue_statement -> identifier_token_opt));
         }
@@ -952,8 +924,7 @@ void Semantic::ProcessContinueStatement(Ast *stmt)
             assert(continue_statement -> identifier_token_opt);
 
             ReportSemError(SemanticError::INVALID_CONTINUE_TARGET,
-                           continue_statement -> LeftToken(),
-                           continue_statement -> RightToken(),
+                           continue_statement,
                            lex_stream -> NameString(continue_statement -> identifier_token_opt));
         }
     }
@@ -1013,7 +984,7 @@ void Semantic::ProcessReturnStatement(Ast* stmt)
 }
 
 
-bool Semantic::UncaughtException(TypeSymbol *exception)
+bool Semantic::UncaughtException(TypeSymbol* exception)
 {
     //
     // An unchecked exception or a bad type is ok !!
@@ -1045,7 +1016,7 @@ bool Semantic::UncaughtException(TypeSymbol *exception)
         // Check each catch clause in turn if we are in the try block.
         //
         if (try_statement -> processing_try_block)
-            for (int k = 0; k < try_statement -> NumCatchClauses(); k++)
+            for (unsigned k = 0; k < try_statement -> NumCatchClauses(); k++)
             {
                 AstCatchClause *clause = try_statement -> CatchClause(k);
                 VariableSymbol *symbol = clause -> parameter_symbol;
@@ -1058,7 +1029,7 @@ bool Semantic::UncaughtException(TypeSymbol *exception)
     // Check if the current method declares this in the throws clause (note
     // that field initializers are not in a current method).
     //
-    MethodSymbol *this_method = ThisMethod();
+    MethodSymbol* this_method = ThisMethod();
     if (this_method)
     {
         for (int l = this_method -> NumThrows() - 1; l >= 0; l--)
@@ -1078,9 +1049,9 @@ bool Semantic::UncaughtException(TypeSymbol *exception)
          this_method -> Identity() == control.block_init_name_symbol) ||
         (ThisVariable() && ! ThisVariable() -> ACC_STATIC()))
     {
-        TypeSymbol *this_type = ThisType();
-        MethodSymbol *ctor = this_type -> FindConstructorSymbol();
-        if (this_type -> declaration -> ClassDeclarationCast())
+        TypeSymbol* this_type = ThisType();
+        MethodSymbol* ctor = this_type -> FindConstructorSymbol();
+        if (! this_type -> Anonymous())
         {
             for ( ; ctor; ctor = ctor -> next_method)
             {
@@ -1098,9 +1069,7 @@ bool Semantic::UncaughtException(TypeSymbol *exception)
         }
         else
         {
-            assert(this_type -> declaration -> ClassInstanceCreationExpressionCast() &&
-                   this_type -> Anonymous() && ctor);
-
+            assert(ctor);
             int k = 0;
             for (k = ctor -> NumThrows() - 1; k >= 0; k--)
             {
@@ -1188,8 +1157,7 @@ void Semantic::ProcessThrowStatement(Ast *stmt)
         ! CanAssignmentConvertReference(control.Throwable(), type))
     {
         ReportSemError(SemanticError::EXPRESSION_NOT_THROWABLE,
-                       throw_statement -> LeftToken(),
-                       throw_statement -> RightToken());
+                       throw_statement);
     }
 
     SymbolSet *exception_set = TryExceptionTableStack().Top();
@@ -1198,17 +1166,14 @@ void Semantic::ProcessThrowStatement(Ast *stmt)
 
     if (UncaughtException(type))
         ReportSemError(SemanticError::UNCAUGHT_THROWN_EXCEPTION,
-                       throw_statement -> LeftToken(),
-                       throw_statement -> RightToken(),
-                       type -> ContainingPackageName(),
-                       type -> ExternalName(),
-                       UncaughtExceptionContext());
+                       throw_statement, type -> ContainingPackageName(),
+                       type -> ExternalName(), UncaughtExceptionContext());
 }
 
 
-void Semantic::ProcessTryStatement(Ast *stmt)
+void Semantic::ProcessTryStatement(Ast* stmt)
 {
-    AstTryStatement *try_statement = (AstTryStatement *) stmt;
+    AstTryStatement* try_statement = (AstTryStatement*) stmt;
 
     //
     // A try_statement containing a finally clause requires some extra local
@@ -1223,14 +1188,14 @@ void Semantic::ProcessTryStatement(Ast *stmt)
     // the finally overwrites a register holding a monitor of an enclosed
     // synchronized statement during an abrupt exit.
     //
-    AstBlock *enclosing_block = LocalBlockStack().TopBlock();
+    AstBlock* enclosing_block = LocalBlockStack().TopBlock();
     int max_variable_index =
         enclosing_block -> block_symbol -> max_variable_index;
     bool continue_in_finally = false;
 
     if (try_statement -> finally_clause_opt)
     {
-        BlockSymbol *enclosing_block_symbol = enclosing_block -> block_symbol;
+        BlockSymbol* enclosing_block_symbol = enclosing_block -> block_symbol;
         if (enclosing_block_symbol -> try_or_synchronized_variable_index < 0)
         {
             // first such statement encountered in enclosing block?
@@ -1241,7 +1206,7 @@ void Semantic::ProcessTryStatement(Ast *stmt)
             {
                 if (control.IsDoubleWordType(ThisMethod() -> Type()))
                     enclosing_block_symbol -> max_variable_index += 2;
-                else enclosing_block_symbol -> max_variable_index += 1;
+                else enclosing_block_symbol -> max_variable_index++;
             }
         }
 
@@ -1257,7 +1222,7 @@ void Semantic::ProcessTryStatement(Ast *stmt)
         // UncaughtException function. In addition, any variables used in
         // the finally block cannot be safely used in the other blocks.
         //
-        AstBlock *block_body = try_statement -> finally_clause_opt -> block;
+        AstBlock* block_body = try_statement -> finally_clause_opt -> block;
         block_body -> is_reachable = try_statement -> is_reachable;
         assert(! try_statement -> can_complete_normally);
         ProcessBlock(block_body);
@@ -1296,66 +1261,51 @@ void Semantic::ProcessTryStatement(Ast *stmt)
     // block (which may itself be a try block).
     //
     TryStatementStack().Push(try_statement);
-    for (int i = 0; i < try_statement -> NumCatchClauses(); i++)
+    for (unsigned i = 0; i < try_statement -> NumCatchClauses(); i++)
     {
-        AstCatchClause *clause = try_statement -> CatchClause(i);
-        AstFormalParameter *parameter = clause -> formal_parameter;
+        AstCatchClause* clause = try_statement -> CatchClause(i);
+        AstFormalParameter* parameter = clause -> formal_parameter;
+        AstVariableDeclaratorId* name =
+            parameter -> formal_declarator -> variable_declarator_name;
 
-        TypeSymbol *parm_type;
-
-        if (parameter -> type -> PrimitiveTypeCast())
+        ProcessType(parameter -> type);
+        TypeSymbol *parm_type = parameter -> type -> symbol;
+        if (name -> NumBrackets())
         {
-            ReportSemError(SemanticError::CATCH_PRIMITIVE_TYPE,
-                           parameter -> LeftToken(),
-                           parameter -> RightToken());
-            parm_type = control.no_type;
+            parm_type = parm_type ->
+                GetArrayType(this, (parm_type -> num_dimensions +
+                                    name -> NumBrackets()));
         }
-        else if (parameter -> type -> ArrayTypeCast() ||
-                 (parameter -> formal_declarator ->
-                  variable_declarator_name -> NumBrackets()))
-        {
-            ReportSemError(SemanticError::CATCH_ARRAY_TYPE,
-                           parameter -> LeftToken(),
-                           parameter -> RightToken());
-            parm_type = control.no_type;
-        }
-        else parm_type = MustFindType(parameter -> type);
-
         if (! parm_type -> IsSubclass(control.Throwable()) &&
             parm_type != control.no_type)
         {
-            ReportSemError(SemanticError::TYPE_NOT_THROWABLE,
-                           parameter -> LeftToken(),
-                           parameter -> RightToken(),
+            ReportSemError(SemanticError::TYPE_NOT_THROWABLE, parameter,
                            parm_type -> ContainingPackageName(),
                            parm_type -> ExternalName());
+            parm_type = control.no_type;
         }
 
-        AstVariableDeclaratorId *name =
-            parameter -> formal_declarator -> variable_declarator_name;
-        NameSymbol *name_symbol =
+        NameSymbol* name_symbol =
             lex_stream -> NameSymbol(name -> identifier_token);
         if (LocalSymbolTable().FindVariableSymbol(name_symbol))
         {
             ReportSemError(SemanticError::DUPLICATE_LOCAL_VARIABLE_DECLARATION,
-                           name -> identifier_token,
-                           name -> identifier_token,
-                           name_symbol -> Name());
+                           name -> identifier_token, name_symbol -> Name());
         }
 
-        AstBlock *block_body = clause -> block;
+        AstBlock* block_body = clause -> block;
         //
         // Guess that the number of elements in the table will not exceed the
         // number of statements + the clause parameter.
         //
-        BlockSymbol *block = LocalSymbolTable().Top() ->
+        BlockSymbol* block = LocalSymbolTable().Top() ->
             InsertBlockSymbol(block_body -> NumStatements() + 1);
         block -> max_variable_index = max_variable_index;
         LocalSymbolTable().Push(block -> Table());
 
         AccessFlags access_flags = ProcessFormalModifiers(parameter);
 
-        VariableSymbol *symbol =
+        VariableSymbol* symbol =
             LocalSymbolTable().Top() -> InsertVariableSymbol(name_symbol);
         symbol -> SetFlags(access_flags);
         symbol -> SetType(parm_type);
@@ -1483,14 +1433,14 @@ void Semantic::ProcessTryStatement(Ast *stmt)
                         convertible_exceptions;
     exception_set -> AddElement(control.Error());
     exception_set -> AddElement(control.RuntimeException());
-    for (int l = 0; l < try_statement -> NumCatchClauses(); l++)
+    for (unsigned l = 0; l < try_statement -> NumCatchClauses(); l++)
     {
         AstCatchClause *clause = try_statement -> CatchClause(l);
         TypeSymbol *type = clause -> parameter_symbol -> Type();
         if (type == control.no_type)
             continue;
-        int initial_length = (catchable_exceptions.Length() +
-                              convertible_exceptions.Length());
+        int initial_length = catchable_exceptions.Length() +
+            convertible_exceptions.Length();
 
         for (TypeSymbol *exception = (TypeSymbol *) exception_set -> FirstElement();
              exception;
@@ -1509,8 +1459,7 @@ void Semantic::ProcessTryStatement(Ast *stmt)
             initial_length)
         {
             ReportSemError(SemanticError::UNREACHABLE_CATCH_CLAUSE,
-                           clause -> formal_parameter -> LeftToken(),
-                           clause -> formal_parameter -> RightToken(),
+                           clause -> formal_parameter,
                            type -> ContainingPackageName(),
                            type -> ExternalName());
         }
@@ -1520,7 +1469,7 @@ void Semantic::ProcessTryStatement(Ast *stmt)
             // Search to see if this clause duplicates a prior one.
             //
             AstCatchClause *previous_clause;
-            int k;
+            unsigned k;
             for (k = 0; k < l; k++)
             {
                 previous_clause = try_statement -> CatchClause(k);
@@ -1536,8 +1485,7 @@ void Semantic::ProcessTryStatement(Ast *stmt)
                 TypeSymbol *prev_type =
                     previous_clause -> parameter_symbol -> Type();
                 ReportSemError(SemanticError::BLOCKED_CATCH_CLAUSE,
-                               clause -> formal_parameter -> LeftToken(),
-                               clause -> formal_parameter -> RightToken(),
+                               clause -> formal_parameter,
                                type -> ContainingPackageName(),
                                type -> ExternalName(),
                                prev_type -> ContainingPackageName(),
@@ -1592,8 +1540,7 @@ void Semantic::ProcessAssertStatement(Ast* stmt)
     if (type != control.no_type && type != control.boolean_type)
     {
         ReportSemError(SemanticError::TYPE_NOT_BOOLEAN,
-                       assert_statement -> condition -> LeftToken(),
-                       assert_statement -> condition -> RightToken(),
+                       assert_statement -> condition,
                        type -> ContainingPackageName(),
                        type -> ExternalName());
     }
@@ -1637,15 +1584,15 @@ void Semantic::ProcessEmptyStatement(Ast *stmt)
 }
 
 
-TypeSymbol *Semantic::GetLocalType(AstClassDeclaration *class_declaration)
+TypeSymbol* Semantic::GetLocalType(AstClassDeclaration* class_declaration)
 {
-    NameSymbol *name_symbol =
-        lex_stream -> NameSymbol(class_declaration -> identifier_token);
-    TypeSymbol *type =
+    NameSymbol* name_symbol = lex_stream ->
+        NameSymbol(class_declaration -> class_body -> identifier_token);
+    TypeSymbol* type =
         LocalSymbolTable().Top() -> InsertNestedTypeSymbol(name_symbol);
 
-    TypeSymbol *this_type = ThisType();
-    TypeSymbol *outermost_type = this_type -> outermost_type;
+    TypeSymbol* this_type = ThisType();
+    TypeSymbol* outermost_type = this_type -> outermost_type;
     if (! this_type -> local)
         this_type -> local = new SymbolSet;
 
@@ -1674,7 +1621,7 @@ TypeSymbol *Semantic::GetLocalType(AstClassDeclaration *class_declaration)
 }
 
 
-void Semantic::ProcessClassDeclaration(Ast *stmt)
+void Semantic::ProcessClassDeclaration(Ast* stmt)
 {
     AstLocalClassDeclarationStatement* class_statement =
         (AstLocalClassDeclarationStatement*) stmt;
@@ -1682,7 +1629,7 @@ void Semantic::ProcessClassDeclaration(Ast *stmt)
     AstClassBody* class_body = class_declaration -> class_body;
 
     CheckNestedTypeDuplication(state_stack.Top(),
-                               class_declaration -> identifier_token);
+                               class_body -> identifier_token);
 
     TypeSymbol* inner_type = GetLocalType(class_declaration);
     inner_type -> outermost_type = ThisType() -> outermost_type;
@@ -1691,7 +1638,7 @@ void Semantic::ProcessClassDeclaration(Ast *stmt)
     inner_type -> subtypes = new SymbolSet;
     inner_type -> semantic_environment =
         new SemanticEnvironment(this, inner_type, state_stack.Top());
-    inner_type -> declaration = class_declaration;
+    inner_type -> declaration = class_body;
     inner_type -> file_symbol = source_file_symbol;
     inner_type -> SetFlags(ProcessLocalClassModifiers(class_declaration));
     inner_type -> SetOwner(ThisMethod());
@@ -1711,16 +1658,13 @@ void Semantic::ProcessClassDeclaration(Ast *stmt)
         inner_type -> InsertThis0();
 
     // Save environment for processing bodies later.
-    class_declaration -> semantic_environment =
-        inner_type -> semantic_environment;
-    CheckClassMembers(inner_type, class_body);
+    class_body -> semantic_environment = inner_type -> semantic_environment;
+    CheckNestedMembers(inner_type, class_body);
     ProcessTypeHeaders(class_declaration);
 
-    ProcessMembers(class_declaration -> semantic_environment, class_body);
-    CompleteSymbolTable(class_declaration -> semantic_environment,
-                        class_declaration -> identifier_token, class_body);
-    ProcessExecutableBodies(class_declaration -> semantic_environment,
-                            class_body);
+    ProcessMembers(class_body);
+    CompleteSymbolTable(class_body);
+    ProcessExecutableBodies(class_body);
     UpdateLocalConstructors(inner_type);
 }
 
@@ -1733,7 +1677,7 @@ void Semantic::ProcessThisCall(AstThisCall *this_call)
     ExplicitConstructorInvocation() = this_call;
 
     bool bad_argument = false;
-    int i;
+    unsigned i;
 
     for (i = 0; i < this_call -> NumArguments(); i++)
     {
@@ -1744,9 +1688,7 @@ void Semantic::ProcessThisCall(AstThisCall *this_call)
         else if (expr -> Type() == control.void_type)
         {
             bad_argument = true;
-            ReportSemError(SemanticError::TYPE_IS_VOID,
-                           expr -> LeftToken(),
-                           expr -> RightToken(),
+            ReportSemError(SemanticError::TYPE_IS_VOID, expr,
                            expr -> Type() -> Name());
         }
     }
@@ -1771,12 +1713,11 @@ void Semantic::ProcessThisCall(AstThisCall *this_call)
                 }
             }
 
-            for (i = constructor -> NumThrows() - 1; i >= 0; i--)
+            for (i = 0; i < constructor -> NumThrows(); i++)
             {
                 TypeSymbol *exception = constructor -> Throws(i);
                 if (UncaughtException(exception))
                     ReportSemError(SemanticError::UNCAUGHT_EXPLICIT_THIS_EXCEPTION,
-                                   this_call -> this_token,
                                    this_call -> this_token,
                                    exception -> ContainingPackageName(),
                                    exception -> ExternalName());
@@ -1815,7 +1756,6 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
     {
         assert(this_type == control.Object());
         ReportSemError(SemanticError::OBJECT_HAS_NO_SUPER_TYPE,
-                       super_call -> super_token,
                        super_call -> super_token);
         return;
     }
@@ -1831,8 +1771,7 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
             if (expr_type -> Primitive() || expr_type == control.null_type)
             {
                 ReportSemError(SemanticError::TYPE_NOT_REFERENCE,
-                               super_call -> base_opt -> LeftToken(),
-                               super_call -> base_opt -> RightToken(),
+                               super_call -> base_opt,
                                expr_type -> ExternalName());
                 super_call -> base_opt -> symbol = control.no_type;
             }
@@ -1840,8 +1779,7 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
             {
                 if (! super_type -> Bad())
                     ReportSemError(SemanticError::SUPER_TYPE_NOT_INNER_CLASS,
-                                   super_call -> base_opt -> LeftToken(),
-                                   super_call -> base_opt -> RightToken(),
+                                   super_call -> base_opt,
                                    super_type -> ContainingPackageName(),
                                    super_type -> ExternalName(),
                                    this_type -> ContainingPackageName(),
@@ -1857,8 +1795,7 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
             else if (! expr_type -> IsSubclass(containing_type))
             {
                 ReportSemError(SemanticError::INVALID_ENCLOSING_INSTANCE,
-                               super_call -> base_opt -> LeftToken(),
-                               super_call -> base_opt -> RightToken(),
+                               super_call -> base_opt,
                                this_type -> ContainingPackageName(),
                                this_type -> ExternalName(),
                                containing_type -> ContainingPackageName(),
@@ -1877,7 +1814,7 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
     }
 
     bool bad_argument = false;
-    int i;
+    unsigned i;
     for (i = 0; i < super_call -> NumArguments(); i++)
     {
         AstExpression *expr = super_call -> Argument(i);
@@ -1887,9 +1824,7 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
         else if (expr -> Type() == control.void_type)
         {
             bad_argument = true;
-            ReportSemError(SemanticError::TYPE_IS_VOID,
-                           expr -> LeftToken(),
-                           expr -> RightToken(),
+            ReportSemError(SemanticError::TYPE_IS_VOID, expr,
                            expr -> Type() -> Name());
         }
     }
@@ -1939,13 +1874,12 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
         // Make sure that the throws signature of the constructor is
         // processed.
         //
-        for (i = constructor -> NumThrows() - 1; i >= 0; i--)
+        for (i = 0; i < constructor -> NumThrows(); i++)
         {
             TypeSymbol *exception = constructor -> Throws(i);
             if (UncaughtException(exception))
                 ReportSemError(SemanticError::UNCAUGHT_EXPLICIT_SUPER_EXCEPTION,
-                               super_call -> LeftToken(),
-                               super_call -> RightToken(),
+                               super_call,
                                exception -> ContainingPackageName(),
                                exception -> ExternalName(),
                                constructor -> containing_type -> ContainingPackageName(),
@@ -1959,7 +1893,7 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
         //
         if (super_type -> IsLocal())
         {
-            int param_count = super_type -> NumConstructorParameters();
+            unsigned param_count = super_type -> NumConstructorParameters();
             if (super_type -> LocalClassProcessingCompleted() && param_count)
             {
                 super_call -> AllocateLocalArguments(param_count);
@@ -1969,13 +1903,13 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
                     // We may need to create a shadow in the outermost
                     // local class enclosing the variable.
                     //
-                    AstSimpleName *simple_name = compilation_unit ->
+                    AstSimpleName* simple_name = compilation_unit ->
                         ast_pool -> GenSimpleName(super_call -> super_token);
-                    VariableSymbol *accessor =
+                    VariableSymbol* accessor =
                         FindLocalVariable(super_type -> ConstructorParameter(i),
                                           this_type);
                     simple_name -> symbol = accessor;
-                    TypeSymbol *owner = accessor -> ContainingType();
+                    TypeSymbol* owner = accessor -> ContainingType();
                     if (owner != this_type)
                         CreateAccessToScopedVariable(simple_name, owner);
                     super_call -> AddLocalArgument(simple_name);
@@ -2081,7 +2015,7 @@ void Semantic::CheckThrow(AstTypeName* throw_expression,
 }
 
 
-void Semantic::ProcessMethodBody(AstMethodDeclaration *method_declaration)
+void Semantic::ProcessMethodBody(AstMethodDeclaration* method_declaration)
 {
     MethodSymbol* this_method = ThisMethod();
 
@@ -2091,7 +2025,7 @@ void Semantic::ProcessMethodBody(AstMethodDeclaration *method_declaration)
         if (control.option.pedantic)
             throws_list = new Tuple<AstTypeName*>
                 (method_declaration -> NumThrows());
-        for (int k = 0; k < method_declaration -> NumThrows(); k++)
+        for (unsigned k = 0; k < method_declaration -> NumThrows(); k++)
             CheckThrow(method_declaration -> Throw(k), throws_list);
         delete throws_list;
     }
@@ -2103,8 +2037,7 @@ void Semantic::ProcessMethodBody(AstMethodDeclaration *method_declaration)
 
         if (block_body -> explicit_constructor_opt)
             ReportSemError(SemanticError::MISPLACED_EXPLICIT_CONSTRUCTOR,
-                           block_body -> explicit_constructor_opt -> LeftToken(),
-                           block_body -> explicit_constructor_opt -> RightToken());
+                           block_body -> explicit_constructor_opt);
 
         block_body -> block_symbol = this_method -> block_symbol;
         block_body -> nesting_level = LocalBlockStack().Size();
@@ -2141,26 +2074,22 @@ void Semantic::ProcessMethodBody(AstMethodDeclaration *method_declaration)
         if (this_method -> ACC_ABSTRACT() || this_method -> ACC_NATIVE())
         {
             ReportSemError(SemanticError::ABSTRACT_METHOD_WITH_BODY,
-                           method_declaration -> LeftToken(),
-                           method_declaration -> RightToken(),
-                           this_method -> Header());
+                           method_declaration, this_method -> Header());
         }
     }
     else if (! (this_method -> ACC_ABSTRACT() || this_method -> ACC_NATIVE()))
     {
         ReportSemError(SemanticError::NON_ABSTRACT_METHOD_WITHOUT_BODY,
-                       method_declaration -> LeftToken(),
-                       method_declaration -> RightToken(),
-                       this_method -> Header());
+                       method_declaration, this_method -> Header());
     }
 
     this_method -> block_symbol -> CompressSpace(); // space optimization
 }
 
 
-void Semantic::ProcessConstructorBody(AstConstructorDeclaration *constructor_declaration)
+void Semantic::ProcessConstructorBody(AstConstructorDeclaration* constructor_declaration)
 {
-    TypeSymbol *this_type = ThisType();
+    TypeSymbol* this_type = ThisType();
     MethodSymbol* this_method = ThisMethod();
 
     if (constructor_declaration -> NumThrows())
@@ -2169,7 +2098,7 @@ void Semantic::ProcessConstructorBody(AstConstructorDeclaration *constructor_dec
         if (control.option.pedantic)
             throws_list = new Tuple<AstTypeName*>
                 (constructor_declaration -> NumThrows());
-        for (int k = 0; k < constructor_declaration -> NumThrows(); k++)
+        for (unsigned k = 0; k < constructor_declaration -> NumThrows(); k++)
             CheckThrow(constructor_declaration -> Throw(k), throws_list);
         delete throws_list;
     }
@@ -2256,15 +2185,14 @@ void Semantic::ProcessConstructorBody(AstConstructorDeclaration *constructor_dec
 }
 
 
-void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment,
-                                       AstClassBody *class_body)
+void Semantic::ProcessExecutableBodies(AstClassBody* class_body)
 {
     if (compilation_unit -> kind == Ast::BAD_COMPILATION)
         return; // errors were detected, exit now
 
-    state_stack.Push(environment);
-    TypeSymbol *this_type = ThisType();
-    int i;
+    state_stack.Push(class_body -> semantic_environment);
+    TypeSymbol* this_type = ThisType();
+    unsigned i;
 
     assert(this_type -> HeaderProcessed());
     assert(this_type -> ConstructorMembersProcessed());
@@ -2272,103 +2200,102 @@ void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment,
     assert(this_type -> FieldMembersProcessed());
 
     // All variable declarations have already been processed.
-    ThisVariable() = NULL;
-
-    //
-    // Compute the set of instance final variables which must be assigned in
-    // every constructor.
-    //
-    Tuple<VariableSymbol *> unassigned_finals(FinalFields() -> Length());
-    for (i = 0; i < FinalFields() -> Length(); i++)
-    {
-        VariableSymbol *variable_symbol = (*FinalFields())[i];
-        if (! DefinitelyAssignedVariables() -> da_set[i])
-        {
-            assert(! variable_symbol -> ACC_STATIC());
-            unassigned_finals.Next() = variable_symbol;
-        }
-    }
-
-    if (class_body -> NumConstructors() == 0)
+    if (! this_type -> ACC_INTERFACE())
     {
         //
-        // Issue an error for each unassigned final.
+        // Compute the set of instance final variables which must be assigned
+        // in every constructor.
         //
-        for (i = 0; i < unassigned_finals.Length(); i++)
+        Tuple<VariableSymbol*> unassigned(FinalFields() -> Length());
+        for (i = 0; (int) i < FinalFields() -> Length(); i++)
         {
-            ReportSemError(SemanticError::UNINITIALIZED_FINAL_VARIABLE,
-                           unassigned_finals[i] -> declarator -> LeftToken(),
-                           unassigned_finals[i] -> declarator -> RightToken(),
-                           unassigned_finals[i] -> Name());
-        }
-
-        //
-        // Process the body of the default constructor, if there is one (if
-        // the class is invalid, one might not exist).
-        //
-        if (class_body -> default_constructor)
-        {
-            ThisMethod() =
-                class_body -> default_constructor -> constructor_symbol;
-            LocalSymbolTable().Push(ThisMethod() -> block_symbol -> Table());
-            ProcessConstructorBody(class_body -> default_constructor);
-            LocalSymbolTable().Pop();
-            ThisMethod() -> max_block_depth = 1;
-        }
-    }
-    else
-    {
-        DefinitePair initial_state(*DefinitelyAssignedVariables());
-        for (i = 0; i < class_body -> NumConstructors(); i++)
-        {
-            AstConstructorDeclaration *constructor_decl =
-                class_body -> Constructor(i);
-
-            MethodSymbol *this_method = constructor_decl -> constructor_symbol;
-            if (! this_method)
-                continue;
-            ThisMethod() = this_method;
-            AstMethodBody *constructor_block =
-                constructor_decl -> constructor_body;
-
-            LocalSymbolTable().Push(this_method -> block_symbol -> Table());
-            LocalBlockStack().max_size = 0;
-            ProcessConstructorBody(constructor_decl);
-
-            LocalSymbolTable().Pop();
-            this_method -> max_block_depth = LocalBlockStack().max_size;
-
-            //
-            // Each constructor starts from the same initial definite
-            // assignment status, except those which call this() start with
-            // all fields definitely assigned.
-            //
-            if (constructor_block -> explicit_constructor_opt &&
-                constructor_block -> explicit_constructor_opt -> ThisCallCast())
+            VariableSymbol* variable_symbol = (*FinalFields())[i];
+            if (! DefinitelyAssignedVariables() -> da_set[i])
             {
-                DefinitelyAssignedVariables() -> AssignAll();
-                DefiniteConstructorBody(constructor_decl);
+                assert(! variable_symbol -> ACC_STATIC());
+                unassigned.Next() = variable_symbol;
             }
-            else
+        }
+        if (class_body -> NumConstructors() == 0)
+        {
+            //
+            // Issue an error for each unassigned final.
+            //
+            for (i = 0; (int) i < unassigned.Length(); i++)
             {
-                *DefinitelyAssignedVariables() = initial_state;
-                DefiniteConstructorBody(constructor_decl);
-                for (int k = 0; k < unassigned_finals.Length(); k++)
+                ReportSemError(SemanticError::UNINITIALIZED_FINAL_VARIABLE,
+                               unassigned[i] -> declarator,
+                               unassigned[i] -> Name());
+            }
+            //
+            // Process the body of the default constructor, if there is one (if
+            // the class is invalid, one might not exist).
+            //
+            if (class_body -> default_constructor)
+            {
+                ThisMethod() =
+                    class_body -> default_constructor -> constructor_symbol;
+                LocalSymbolTable().Push(ThisMethod() -> block_symbol ->
+                                        Table());
+                ProcessConstructorBody(class_body -> default_constructor);
+                LocalSymbolTable().Pop();
+                ThisMethod() -> max_block_depth = 1;
+            }
+        }
+        else
+        {
+            DefinitePair initial_state(*DefinitelyAssignedVariables());
+            for (i = 0; i < class_body -> NumConstructors(); i++)
+            {
+                AstConstructorDeclaration* constructor_decl =
+                    class_body -> Constructor(i);
+                MethodSymbol* this_method =
+                    constructor_decl -> constructor_symbol;
+                if (! this_method)
+                    continue;
+                ThisMethod() = this_method;
+                AstMethodBody* constructor_block =
+                    constructor_decl -> constructor_body;
+
+                LocalSymbolTable().Push(this_method -> block_symbol ->
+                                        Table());
+                LocalBlockStack().max_size = 0;
+                ProcessConstructorBody(constructor_decl);
+                LocalSymbolTable().Pop();
+                this_method -> max_block_depth = LocalBlockStack().max_size;
+                //
+                // Each constructor starts from the same initial definite
+                // assignment status, except those which call this() start with
+                // all fields definitely assigned.
+                //
+                if (constructor_block -> explicit_constructor_opt &&
+                    (constructor_block -> explicit_constructor_opt ->
+                     ThisCallCast()))
                 {
-                    VariableSymbol *variable_symbol = unassigned_finals[k];
-                    if (! DefinitelyAssignedVariables() ->
-                        da_set[variable_symbol -> LocalVariableIndex()])
+                    DefinitelyAssignedVariables() -> AssignAll();
+                    DefiniteConstructorBody(constructor_decl);
+                }
+                else
+                {
+                    *DefinitelyAssignedVariables() = initial_state;
+                    DefiniteConstructorBody(constructor_decl);
+                    for (int k = 0; k < unassigned.Length(); k++)
                     {
-                        ReportSemError(SemanticError::UNINITIALIZED_FINAL_VARIABLE_IN_CONSTRUCTOR,
-                                       constructor_decl -> LeftToken(),
-                                       constructor_decl -> RightToken(),
-                                       variable_symbol -> Name());
+                        VariableSymbol* variable_symbol = unassigned[k];
+                        if (! DefinitelyAssignedVariables() ->
+                            da_set[variable_symbol -> LocalVariableIndex()])
+                        {
+                            ReportSemError(SemanticError::UNINITIALIZED_FINAL_VARIABLE_IN_CONSTRUCTOR,
+                                           constructor_decl,
+                                           variable_symbol -> Name());
+                        }
                     }
                 }
             }
+            ConstructorCycleChecker cycle_checker(class_body);
         }
-        ConstructorCycleChecker cycle_checker(class_body);
     }
+
     //
     // No need to worry about private access constructors, as we have already
     // done all necessary processing when creating them. Following all
@@ -2380,115 +2307,44 @@ void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment,
 
     for (i = 0; i < class_body -> NumMethods(); i++)
     {
-        AstMethodDeclaration *method_decl = class_body -> Method(i);
-
+        AstMethodDeclaration* method_decl = class_body -> Method(i);
         ThisMethod() = method_decl -> method_symbol;
-        MethodSymbol *this_method = ThisMethod();
+        MethodSymbol* this_method = ThisMethod();
         if (this_method)
         {
             LocalSymbolTable().Push(this_method -> block_symbol -> Table());
             LocalBlockStack().max_size = 0;
-
-            int start_num_errors = NumErrors();
+            unsigned start_num_errors = NumErrors();
             ProcessMethodBody(method_decl);
-
             LocalSymbolTable().Pop();
             this_method -> max_block_depth = LocalBlockStack().max_size;
-
             if (NumErrors() == start_num_errors)
                 DefiniteMethodBody(method_decl);
         }
     }
-
-    //
-    // We are done with all the methods, indicate that there is no method
-    // being currently compiled in this environment.
-    //
     ThisMethod() = NULL;
 
     //
-    // Recursively process all inner types
+    // Recursively process all inner types.
     //
     for (i = 0; i < class_body -> NumNestedClasses(); i++)
     {
-        AstClassDeclaration *class_declaration = class_body -> NestedClass(i);
-        if (class_declaration -> semantic_environment)
-            ProcessExecutableBodies(class_declaration -> semantic_environment,
-                                    class_declaration -> class_body);
+        AstClassDeclaration* declaration = class_body -> NestedClass(i);
+        if (declaration -> class_body -> semantic_environment)
+            ProcessExecutableBodies(declaration -> class_body);
     }
-
     for (i = 0; i < class_body -> NumNestedInterfaces(); i++)
     {
-        if (class_body -> NestedInterface(i) -> semantic_environment)
-            ProcessExecutableBodies(class_body -> NestedInterface(i));
+        AstInterfaceDeclaration* declaration =
+            class_body -> NestedInterface(i);
+        if (declaration -> class_body -> semantic_environment)
+            ProcessExecutableBodies(declaration -> class_body);
     }
 
     DefiniteCleanUp();
     state_stack.Pop();
 }
 
-
-void Semantic::ProcessExecutableBodies(AstInterfaceDeclaration *interface_declaration)
-{
-    state_stack.Push(interface_declaration -> semantic_environment);
-    TypeSymbol *this_type = ThisType();
-    int i;
-
-    assert(this_type -> HeaderProcessed());
-    assert(this_type -> MethodMembersProcessed());
-    assert(this_type -> FieldMembersProcessed());
-
-    for (i = 0; i < this_type -> NumVariableSymbols(); i++)
-    {
-        VariableSymbol *variable_symbol = this_type -> VariableSym(i);
-        if (! DefinitelyAssignedVariables() -> da_set[i])
-        {
-            ReportSemError(SemanticError::UNINITIALIZED_FINAL_VARIABLE_IN_INTERFACE,
-                           variable_symbol -> declarator -> LeftToken(),
-                           variable_symbol -> declarator -> RightToken(),
-                           variable_symbol -> Name());
-        }
-    }
-
-    for (i = 0; i < interface_declaration -> NumMethods(); i++)
-    {
-        AstMethodDeclaration *method_decl = interface_declaration -> Method(i);
-        ThisMethod() = method_decl -> method_symbol;
-        MethodSymbol *this_method = ThisMethod();
-        if (this_method)
-        {
-            LocalSymbolTable().Push(this_method -> block_symbol -> Table());
-            ProcessMethodBody(method_decl);
-            LocalSymbolTable().Pop();
-        }
-    }
-    ThisMethod() = NULL;
-
-    //
-    // Recursively process all inner types
-    //
-    for (i = 0; i < interface_declaration -> NumNestedClasses(); i++)
-    {
-        AstClassDeclaration *class_declaration =
-            interface_declaration -> NestedClass(i);
-        if (class_declaration -> semantic_environment)
-            ProcessExecutableBodies(class_declaration -> semantic_environment,
-                                    class_declaration -> class_body);
-    }
-
-    for (i = 0; i < interface_declaration -> NumNestedInterfaces(); i++)
-    {
-        if (interface_declaration -> NestedInterface(i) ->
-            semantic_environment)
-        {
-            ProcessExecutableBodies(interface_declaration ->
-                                    NestedInterface(i));
-        }
-    }
-
-    DefiniteCleanUp();
-    state_stack.Pop();
-}
 
 #ifdef HAVE_JIKES_NAMESPACE
 } // Close namespace Jikes block

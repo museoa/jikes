@@ -196,7 +196,7 @@ lpginput.$(OBJEXT): lpginput.cpp lpginput.h platform.h stream.h tuple.h \
   jikesapi.h javasym.h javadef.h javaprs.h javadcl.h
 modifier.$(OBJEXT): modifier.cpp platform.h semantic.h ast.h stream.h \
   tuple.h jikesapi.h depend.h error.h symbol.h lookup.h long.h double.h \
-  access.h control.h set.h option.h
+  access.h control.h set.h option.h javasym.h
 op.$(OBJEXT): op.cpp op.h platform.h tuple.h jikesapi.h
 option.$(OBJEXT): option.cpp option.h platform.h tuple.h jikesapi.h \
   javasym.h error.h stream.h case.h tab.h code.h

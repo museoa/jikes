@@ -41,7 +41,8 @@ void VariableSymbolArray::AllocateMoreSpace()
     size_t k = size >> log_blksize; /* which segment? */
 
     //
-    // If the base is overflowed, reallocate it and initialize the new elements to NULL.
+    // If the base is overflowed, reallocate it and initialize the new
+    // elements to NULL.
     //
     if (k == base_size)
     {
@@ -50,26 +51,26 @@ void VariableSymbolArray::AllocateMoreSpace()
 
         base_size += base_increment;
 
-        assert(base_size <= pool -> Blksize()); // There must be enough room to allocate base
+        // There must be enough room to allocate base
+        assert(base_size <= pool -> Blksize());
 
         base = (T**) pool -> Alloc(sizeof(T*) * base_size);
 
         if (old_base != NULL)
         {
             memmove(base, old_base, old_base_size * sizeof(T*));
-// STG:
-//                delete [] old_base;
         }
-        memset(&base[old_base_size], 0, (base_size - old_base_size) * sizeof(T*));
+        memset(&base[old_base_size], 0,
+               (base_size - old_base_size) * sizeof(T*));
     }
 
     //
     // We allocate a new segment and place its adjusted address in
     // base[k]. The adjustment allows us to index the segment directly,
     // instead of having to perform a subtraction for each reference.
-    // See operator[] below.
+    // See operator[] below. There must be enough room to allocate block.
     //
-    assert(Blksize() <= pool -> Blksize()); // There must be enough room to allocate block
+    assert(Blksize() <= pool -> Blksize());
 
     base[k] = (T*) pool -> Alloc(sizeof(T) * Blksize());
     base[k] -= size;
@@ -81,15 +82,20 @@ void VariableSymbolArray::AllocateMoreSpace()
 }
 
 
-VariableSymbolArray::VariableSymbolArray(StoragePool* pool_, unsigned estimate = 0) : pool(pool_)
+VariableSymbolArray::VariableSymbolArray(StoragePool* p,
+                                         unsigned estimate = 0)
+    : pool(p)
 {
-    assert(pool -> Blksize() >= 256); // There must be enough space in the storage pool to move !!!
+    // There must be enough space in the storage pool to move !!!
+    assert(pool -> Blksize() >= 256);
 
     if (estimate == 0)
         log_blksize = 6; // take a guess
     else
     {
-        for (log_blksize = 1; (((unsigned) 1 << log_blksize) < estimate) && (log_blksize < 31); log_blksize++)
+        for (log_blksize = 1;
+             ((1U << log_blksize) < estimate) && (log_blksize < 31);
+             log_blksize++)
             ;
     }
 
@@ -98,7 +104,8 @@ VariableSymbolArray::VariableSymbolArray(StoragePool* pool_, unsigned estimate =
     // be reallocated. Find a block size that is smaller that the block
     // size of the pool.
     //
-    base_increment = (Blksize() > pool -> Blksize() ? Blksize() / pool -> Blksize() : 1) * 2;
+    base_increment = (Blksize() > pool -> Blksize()
+                      ? Blksize() / pool -> Blksize() : 1) * 2;
     while (Blksize() >= pool -> Blksize())
         log_blksize--;
 
@@ -132,7 +139,7 @@ void AstSwitchStatement::SortCases()
 
     CaseElement pivot, temp;
 
-    AstArray<CaseElement*> &map = *cases;
+    AstArray<CaseElement*>& map = *cases;
 
     top = 0;
     lostack[top] = 1;
@@ -247,8 +254,9 @@ void AstBlock::CloneBlock(StoragePool* ast_pool, AstBlock* orig)
 Ast* AstSimpleName::Clone(StoragePool* ast_pool)
 {
     AstSimpleName* clone = ast_pool -> GenSimpleName(identifier_token);
-    clone -> resolution_opt = (AstExpression*) (resolution_opt ? resolution_opt -> Clone(ast_pool) : NULL);
-
+    if (resolution_opt)
+        clone -> resolution_opt =
+            (AstExpression*) resolution_opt -> Clone(ast_pool);
     return clone;
 }
 
@@ -267,7 +275,7 @@ Ast* AstArrayType::Clone(StoragePool* ast_pool)
     AstArrayType* clone =
         ast_pool -> GenArrayType((AstType*) type -> Clone(ast_pool));
     clone -> AllocateBrackets(NumBrackets());
-    for (int i = 0; i < NumBrackets(); i++)
+    for (unsigned i = 0; i < NumBrackets(); i++)
         clone -> AddBrackets((AstBrackets*) Brackets(i) -> Clone(ast_pool));
     return clone;
 }
@@ -282,39 +290,37 @@ Ast* AstTypeName::Clone(StoragePool* ast_pool)
 Ast* AstPackageDeclaration::Clone(StoragePool* ast_pool)
 {
     AstPackageDeclaration* clone = ast_pool -> GenPackageDeclaration();
-
     clone -> package_token = package_token;
     clone -> name = (AstExpression*) name -> Clone(ast_pool);
     clone -> semicolon_token = semicolon_token;
-
     return clone;
 }
 
 Ast* AstImportDeclaration::Clone(StoragePool* ast_pool)
 {
     AstImportDeclaration* clone = ast_pool -> GenImportDeclaration();
-
     clone -> import_token = import_token;
     clone -> name = (AstExpression*) name -> Clone(ast_pool);
     clone -> star_token_opt = star_token_opt;
     clone -> semicolon_token = semicolon_token;
-
     return clone;
 }
 
 Ast* AstCompilationUnit::Clone(StoragePool* ast_pool)
 {
-    int i;
+    unsigned i;
     AstCompilationUnit* clone = ast_pool -> GenCompilationUnit();
-
-    clone -> package_declaration_opt = (AstPackageDeclaration*)
-                                       (package_declaration_opt
-                                              ? package_declaration_opt -> Clone(ast_pool) : NULL);
+    if (package_declaration_opt)
+        clone -> package_declaration_opt = (AstPackageDeclaration*)
+            package_declaration_opt -> Clone(ast_pool);
+    clone -> AllocateImportDeclarations(NumImportDeclarations());
     for (i = 0; i < NumImportDeclarations(); i++)
-        clone -> AddImportDeclaration((AstImportDeclaration*) ImportDeclaration(i) -> Clone(ast_pool));
+        clone -> AddImportDeclaration((AstImportDeclaration*)
+                                      ImportDeclaration(i) -> Clone(ast_pool));
+    clone -> AllocateTypeDeclarations(NumTypeDeclarations());
     for (i = 0; i < NumTypeDeclarations(); i++)
-        clone -> AddTypeDeclaration(TypeDeclaration(i) -> Clone(ast_pool));
-
+        clone -> AddTypeDeclaration((AstDeclaredType*) TypeDeclaration(i) ->
+                                    Clone(ast_pool));
     return clone;
 }
 
@@ -325,41 +331,46 @@ Ast* AstModifier::Clone(StoragePool* ast_pool)
 
 Ast* AstEmptyDeclaration::Clone(StoragePool* ast_pool)
 {
-    AstEmptyDeclaration* clone = ast_pool -> GenEmptyDeclaration(semicolon_token);
-
-    return clone;
+    return ast_pool -> GenEmptyDeclaration(semicolon_token);
 }
 
 Ast* AstClassBody::Clone(StoragePool* ast_pool)
 {
     AstClassBody* clone = ast_pool -> GenClassBody();
-
+    clone -> identifier_token = identifier_token;
     clone -> left_brace_token = left_brace_token;
-    for (int i = 0; i < NumClassBodyDeclarations(); i++)
-        clone -> AddClassBodyDeclarationNicely(ClassBodyDeclaration(i) -> Clone(ast_pool));
+    clone -> AllocateClassBodyDeclarations(NumClassBodyDeclarations());
+    clone -> AllocateInstanceVariables(NumInstanceVariables());
+    clone -> AllocateClassVariables(NumClassVariables());
+    clone -> AllocateMethods(NumMethods());
+    clone -> AllocateConstructors(NumConstructors());
+    clone -> AllocateStaticInitializers(NumStaticInitializers());
+    clone -> AllocateInstanceInitializers(NumInstanceInitializers());
+    clone -> AllocateNestedClasses(NumNestedClasses());
+    clone -> AllocateNestedInterfaces(NumNestedInterfaces());
+    clone -> AllocateEmptyDeclarations(NumEmptyDeclarations());
+    for (unsigned i = 0; i < NumClassBodyDeclarations(); i++)
+        clone -> AddClassBodyDeclarationNicely((AstDeclaredType*)
+                                               ClassBodyDeclaration(i) ->
+                                               Clone(ast_pool));
     clone -> right_brace_token = right_brace_token;
-
     return clone;
 }
 
-void AstClassBody::AddClassBodyDeclarationNicely(Ast* member)
+void AstClassBody::AddClassBodyDeclarationNicely(AstDeclared* member)
 {
     AstFieldDeclaration* field_declaration = member -> FieldDeclarationCast();
     AstMethodDeclaration* method_declaration =
         member -> MethodDeclarationCast();
     AstConstructorDeclaration* constructor_declaration =
         member -> ConstructorDeclarationCast();
-    AstStaticInitializer* static_initializer =
-        member -> StaticInitializerCast();
+    AstInitializerDeclaration* initializer =
+        member -> InitializerDeclarationCast();
     AstClassDeclaration* class_declaration = member -> ClassDeclarationCast();
     AstInterfaceDeclaration* interface_declaration =
         member -> InterfaceDeclarationCast();
-    AstMethodBody* block = member -> MethodBodyCast();
 
     AddClassBodyDeclaration(member);
-
-
-    // This is lifted from Parser::Act68.
 
     if (field_declaration)
     {
@@ -368,196 +379,133 @@ void AstClassBody::AddClassBodyDeclarationNicely(Ast* member)
         else AddInstanceVariable(field_declaration);
     }
     else if (method_declaration)
-    {
         AddMethod(method_declaration);
-    }
     else if (constructor_declaration)
-    {
         AddConstructor(constructor_declaration);
-    }
-    else if (static_initializer)
+    else if (initializer)
     {
-        AddStaticInitializer(static_initializer);
+        if (initializer -> StaticInitializerCast())
+            AddStaticInitializer(initializer);
+        else AddInstanceInitializer(initializer);
     }
     else if (class_declaration)
-    {
         AddNestedClass(class_declaration);
-    }
     else if (interface_declaration)
-    {
         AddNestedInterface(interface_declaration);
-    }
-    else if (block)
-    {
-        AddInstanceInitializer(block);
-    }
-    else // assert(block = member -> EmptyDeclarationCast())
-    {
-        AddEmptyDeclaration((AstEmptyDeclaration*) member);
-    }
+    else AddEmptyDeclaration((AstEmptyDeclaration*) member);
 }
 
 Ast* AstClassDeclaration::Clone(StoragePool* ast_pool)
 {
-    int i;
+    unsigned i;
     AstClassDeclaration* clone = ast_pool -> GenClassDeclaration();
-    for (i = 0; i < NumClassModifiers(); i++)
-        clone -> AddClassModifier((AstModifier*) ClassModifier(i) -> Clone(ast_pool));
+    clone -> AllocateModifiers(NumModifiers());
+    for (i = 0; i < NumModifiers(); i++)
+        clone -> AddModifier((AstModifier*) Modifier(i) -> Clone(ast_pool));
     clone -> class_token = class_token;
-    clone -> identifier_token = identifier_token;
     if (super_opt)
         clone -> super_opt = (AstTypeName*) super_opt -> Clone(ast_pool);
     clone -> AllocateInterfaces(NumInterfaces());
     for (i = 0; i < NumInterfaces(); i++)
         clone -> AddInterface((AstTypeName*) Interface(i) -> Clone(ast_pool));
     clone -> class_body = (AstClassBody*) class_body -> Clone(ast_pool);
+    clone -> class_body -> owner = clone;
     return clone;
 }
 
 Ast* AstArrayInitializer::Clone(StoragePool* ast_pool)
 {
     AstArrayInitializer* clone = ast_pool -> GenArrayInitializer();
-
     clone -> left_brace_token = left_brace_token;
-    for (int i = 0; i < NumVariableInitializers(); i++)
-        clone -> AddVariableInitializer(VariableInitializer(i) -> Clone(ast_pool));
+    clone -> AllocateVariableInitializers(NumVariableInitializers());
+    for (unsigned i = 0; i < NumVariableInitializers(); i++)
+        clone -> AddVariableInitializer(VariableInitializer(i) ->
+                                        Clone(ast_pool));
     clone -> right_brace_token = right_brace_token;
-
     return clone;
 }
 
 Ast* AstVariableDeclaratorId::Clone(StoragePool* ast_pool)
 {
     AstVariableDeclaratorId* clone = ast_pool -> GenVariableDeclaratorId();
-
     clone -> identifier_token = identifier_token;
     clone -> AllocateBrackets(NumBrackets());
-    for (int i = 0; i < NumBrackets(); i++)
+    for (unsigned i = 0; i < NumBrackets(); i++)
         clone -> AddBrackets((AstBrackets*) Brackets(i) -> Clone(ast_pool));
-
     return clone;
 }
 
 Ast* AstVariableDeclarator::Clone(StoragePool* ast_pool)
 {
     AstVariableDeclarator* clone = ast_pool -> GenVariableDeclarator();
-
-    clone -> variable_declarator_name = (AstVariableDeclaratorId*) variable_declarator_name -> Clone(ast_pool);
-    clone -> variable_initializer_opt = (Ast*) (variable_initializer_opt
-                                                       ? variable_initializer_opt -> Clone(ast_pool)
-                                                       : NULL);
-
+    clone -> variable_declarator_name = (AstVariableDeclaratorId*)
+        variable_declarator_name -> Clone(ast_pool);
+    if (variable_initializer_opt)
+        clone -> variable_initializer_opt =
+            variable_initializer_opt -> Clone(ast_pool);
     return clone;
 }
 
 Ast* AstFieldDeclaration::Clone(StoragePool* ast_pool)
 {
-    int i;
+    unsigned i;
     AstFieldDeclaration* clone = ast_pool -> GenFieldDeclaration();
-
-    for (i = 0; i < NumVariableModifiers(); i++)
-        clone -> AddVariableModifier((AstModifier*) VariableModifier(i) -> Clone(ast_pool));
+    clone -> AllocateModifiers(NumModifiers());
+    for (i = 0; i < NumModifiers(); i++)
+        clone -> AddModifier((AstModifier*) Modifier(i) -> Clone(ast_pool));
     clone -> type = (AstType*) type -> Clone(ast_pool);
+    clone -> AllocateVariableDeclarators(NumVariableDeclarators());
     for (i = 0; i < NumVariableDeclarators(); i++)
-        clone -> AddVariableDeclarator((AstVariableDeclarator*) VariableDeclarator(i) -> Clone(ast_pool));
+        clone -> AddVariableDeclarator((AstVariableDeclarator*)
+                                       VariableDeclarator(i) ->
+                                       Clone(ast_pool));
     clone -> semicolon_token = semicolon_token;
-
     return clone;
 }
 
 Ast* AstFormalParameter::Clone(StoragePool* ast_pool)
 {
     AstFormalParameter* clone = ast_pool -> GenFormalParameter();
-
-    if (NumParameterModifiers() == 0)
-        clone -> parameter_modifiers = NULL;
-    else
-    {
-        for (int i = 0; i < NumParameterModifiers(); i++)
-            clone -> AddParameterModifier((AstModifier*) ParameterModifier(i) -> Clone(ast_pool));
-    }
+    clone -> AllocateModifiers(NumModifiers());
+    for (unsigned i = 0; i < NumModifiers(); i++)
+        clone -> AddModifier((AstModifier*) Modifier(i) -> Clone(ast_pool));
     clone -> type = (AstType*) type -> Clone(ast_pool);
-    clone -> formal_declarator = (AstVariableDeclarator*) formal_declarator -> Clone(ast_pool);
-
+    clone -> formal_declarator =
+        (AstVariableDeclarator*) formal_declarator -> Clone(ast_pool);
     return clone;
 }
 
 Ast* AstMethodDeclarator::Clone(StoragePool* ast_pool)
 {
-    int i;
+    unsigned i;
     AstMethodDeclarator* clone = ast_pool -> GenMethodDeclarator();
-
     clone -> identifier_token = identifier_token;
     clone -> left_parenthesis_token = left_parenthesis_token;
     clone -> AllocateFormalParameters(NumFormalParameters());
     for (i = 0; i < NumFormalParameters(); i++)
-        clone -> AddFormalParameter((AstFormalParameter*) FormalParameter(i) -> Clone(ast_pool));
+        clone -> AddFormalParameter((AstFormalParameter*)
+                                    FormalParameter(i) -> Clone(ast_pool));
     clone -> right_parenthesis_token = right_parenthesis_token;
     clone -> AllocateBrackets(NumBrackets());
     for (i = 0; i < NumBrackets(); i++)
         clone -> AddBrackets((AstBrackets*) Brackets(i) -> Clone(ast_pool));
-
     return clone;
 }
 
 Ast* AstMethodDeclaration::Clone(StoragePool* ast_pool)
 {
-    int i;
+    unsigned i;
     AstMethodDeclaration* clone = ast_pool -> GenMethodDeclaration();
-
-    for (i = 0; i < NumMethodModifiers(); i++)
-        clone -> AddMethodModifier((AstModifier*) MethodModifier(i) -> Clone(ast_pool));
+    clone -> AllocateModifiers(NumModifiers());
+    for (i = 0; i < NumModifiers(); i++)
+        clone -> AddModifier((AstModifier*) Modifier(i) -> Clone(ast_pool));
     clone -> type = (AstType*) type -> Clone(ast_pool);
-    clone -> method_declarator = (AstMethodDeclarator*) method_declarator -> Clone(ast_pool);
+    clone -> method_declarator =
+        (AstMethodDeclarator*) method_declarator -> Clone(ast_pool);
+    clone -> AllocateThrows(NumThrows());
     for (i = 0; i < NumThrows(); i++)
         clone -> AddThrow((AstTypeName*) Throw(i) -> Clone(ast_pool));
     clone -> method_body = (AstStatement*) method_body -> Clone(ast_pool);
-
-    return clone;
-}
-
-Ast* AstStaticInitializer::Clone(StoragePool* ast_pool)
-{
-    AstStaticInitializer* clone = ast_pool -> GenStaticInitializer();
-
-    clone -> static_token = static_token;
-    clone -> block = (AstMethodBody*) block -> Clone(ast_pool);
-
-    return clone;
-}
-
-Ast* AstThisCall::Clone(StoragePool* ast_pool)
-{
-    AstThisCall* clone = ast_pool -> GenThisCall();
-
-    clone -> this_token = this_token;
-    clone -> left_parenthesis_token = left_parenthesis_token;
-    clone -> AllocateArguments(NumArguments());
-    for (int i = 0; i < NumArguments(); i++)
-        clone -> AddArgument((AstExpression*) Argument(i) -> Clone(ast_pool));
-    clone -> right_parenthesis_token = right_parenthesis_token;
-    clone -> semicolon_token = semicolon_token;
-
-    return clone;
-}
-
-Ast* AstSuperCall::Clone(StoragePool* ast_pool)
-{
-    int i;
-    AstSuperCall* clone = ast_pool -> GenSuperCall();
-
-    clone -> base_opt = (AstExpression*) (base_opt ? base_opt -> Clone(ast_pool) : NULL);
-    clone -> super_token = super_token;
-    clone -> left_parenthesis_token = left_parenthesis_token;
-    clone -> AllocateArguments(NumArguments());
-    for (i = 0; i < NumArguments(); i++)
-        clone -> AddArgument((AstExpression*) Argument(i) -> Clone(ast_pool));
-    clone -> right_parenthesis_token = right_parenthesis_token;
-    clone -> semicolon_token = semicolon_token;
-    clone -> AllocateLocalArguments(NumLocalArguments());
-    for (i = 0; i < NumLocalArguments(); i++)
-        clone -> AddLocalArgument((AstExpression*) LocalArgument(i) -> Clone(ast_pool));
-
     return clone;
 }
 
@@ -571,52 +519,97 @@ Ast* AstMethodBody::Clone(StoragePool* ast_pool)
     return clone;
 }
 
+Ast* AstInitializerDeclaration::Clone(StoragePool* ast_pool)
+{
+    AstInitializerDeclaration* clone = ast_pool -> GenInitializerDeclaration();
+    clone -> AllocateModifiers(NumModifiers());
+    for (unsigned i = 0; i < NumModifiers(); i++)
+        clone -> AddModifier((AstModifier*) Modifier(i) -> Clone(ast_pool));
+    clone -> block = (AstMethodBody*) block -> Clone(ast_pool);
+    return clone;
+}
+
+Ast* AstThisCall::Clone(StoragePool* ast_pool)
+{
+    AstThisCall* clone = ast_pool -> GenThisCall();
+    clone -> this_token = this_token;
+    clone -> left_parenthesis_token = left_parenthesis_token;
+    clone -> AllocateArguments(NumArguments());
+    for (unsigned i = 0; i < NumArguments(); i++)
+        clone -> AddArgument((AstExpression*) Argument(i) -> Clone(ast_pool));
+    clone -> right_parenthesis_token = right_parenthesis_token;
+    clone -> semicolon_token = semicolon_token;
+    return clone;
+}
+
+Ast* AstSuperCall::Clone(StoragePool* ast_pool)
+{
+    unsigned i;
+    AstSuperCall* clone = ast_pool -> GenSuperCall();
+    if (base_opt)
+        clone -> base_opt = (AstExpression*) base_opt -> Clone(ast_pool);
+    clone -> super_token = super_token;
+    clone -> left_parenthesis_token = left_parenthesis_token;
+    clone -> AllocateArguments(NumArguments());
+    for (i = 0; i < NumArguments(); i++)
+        clone -> AddArgument((AstExpression*) Argument(i) -> Clone(ast_pool));
+    clone -> right_parenthesis_token = right_parenthesis_token;
+    clone -> semicolon_token = semicolon_token;
+    clone -> AllocateLocalArguments(NumLocalArguments());
+    for (i = 0; i < NumLocalArguments(); i++)
+        clone -> AddLocalArgument((AstExpression*) LocalArgument(i) ->
+                                  Clone(ast_pool));
+    return clone;
+}
+
 Ast* AstConstructorDeclaration::Clone(StoragePool* ast_pool)
 {
-    int i;
+    unsigned i;
     AstConstructorDeclaration* clone = ast_pool -> GenConstructorDeclaration();
-
-    for (i = 0; i < NumConstructorModifiers(); i++)
-        clone -> AddConstructorModifier((AstModifier*) ConstructorModifier(i) -> Clone(ast_pool));
-    clone -> constructor_declarator = (AstMethodDeclarator*) constructor_declarator -> Clone(ast_pool);
+    clone -> AllocateModifiers(NumModifiers());
+    for (i = 0; i < NumModifiers(); i++)
+        clone -> AddModifier((AstModifier*) Modifier(i) -> Clone(ast_pool));
+    clone -> constructor_declarator =
+        (AstMethodDeclarator*) constructor_declarator -> Clone(ast_pool);
+    clone -> AllocateThrows(NumThrows());
     for (i = 0; i < NumThrows(); i++)
         clone -> AddThrow((AstTypeName*) Throw(i) -> Clone(ast_pool));
-    clone -> constructor_body = (AstMethodBody*) constructor_body -> Clone(ast_pool);
-
+    clone -> constructor_body =
+        (AstMethodBody*) constructor_body -> Clone(ast_pool);
     return clone;
 }
 
 Ast* AstInterfaceDeclaration::Clone(StoragePool* ast_pool)
 {
-    int i;
+    unsigned i;
     AstInterfaceDeclaration* clone = ast_pool -> GenInterfaceDeclaration();
-    for (i = 0; i < NumInterfaceModifiers(); i++)
-        clone -> AddInterfaceModifier((AstModifier*) InterfaceModifier(i) -> Clone(ast_pool));
+    clone -> AllocateModifiers(NumModifiers());
+    for (i = 0; i < NumModifiers(); i++)
+        clone -> AddModifier((AstModifier*) Modifier(i) -> Clone(ast_pool));
     clone -> interface_token = interface_token;
-    clone -> identifier_token = identifier_token;
-    clone -> AllocateExtendsInterfaces(NumExtendsInterfaces());
-    for (i = 0; i < NumExtendsInterfaces(); i++)
-        clone -> AddExtendsInterface((AstTypeName*) ExtendsInterface(i) -> Clone(ast_pool));
-    clone -> left_brace_token = left_brace_token;
-    for (i = 0; i < NumExtendsInterfaces(); i++)
-        clone -> AddInterfaceMemberDeclaration((AstExpression*) InterfaceMemberDeclaration(i) -> Clone(ast_pool));
-    clone -> right_brace_token = right_brace_token;
-
+    clone -> AllocateInterfaces(NumInterfaces());
+    for (i = 0; i < NumInterfaces(); i++)
+        clone -> AddInterface((AstTypeName*) Interface(i) -> Clone(ast_pool));
+    clone -> class_body = (AstClassBody*) class_body -> Clone(ast_pool);
+    clone -> class_body -> owner = clone;
     return clone;
 }
 
 Ast* AstLocalVariableDeclarationStatement::Clone(StoragePool* ast_pool)
 {
-    int i;
-    AstLocalVariableDeclarationStatement* clone = ast_pool -> GenLocalVariableDeclarationStatement();
-
-    for (i = 0; i < NumLocalModifiers(); i++)
-        clone -> AddLocalModifier((AstModifier*) LocalModifier(i) -> Clone(ast_pool));
+    unsigned i;
+    AstLocalVariableDeclarationStatement* clone =
+        ast_pool -> GenLocalVariableDeclarationStatement();
+    clone -> AllocateModifiers(NumModifiers());
+    for (i = 0; i < NumModifiers(); i++)
+        clone -> AddModifier((AstModifier*) Modifier(i) -> Clone(ast_pool));
     clone -> type = (AstType*) type -> Clone(ast_pool);
+    clone -> AllocateVariableDeclarators(NumVariableDeclarators());
     for (i = 0; i < NumVariableDeclarators(); i++)
-        clone -> AddVariableDeclarator((AstVariableDeclarator*) VariableDeclarator(i) -> Clone(ast_pool));
+        clone -> AddVariableDeclarator((AstVariableDeclarator*)
+                                       VariableDeclarator(i) ->
+                                       Clone(ast_pool));
     clone -> semicolon_token_opt = semicolon_token_opt;
-
     return clone;
 }
 
@@ -630,32 +623,25 @@ Ast* AstLocalClassDeclarationStatement::Clone(StoragePool* ast_pool)
 Ast* AstIfStatement::Clone(StoragePool* ast_pool)
 {
     AstIfStatement* clone = ast_pool -> GenIfStatement();
-
     clone -> if_token = if_token;
     clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
-    clone -> true_statement = (AstStatement*) true_statement -> Clone(ast_pool);
-    clone -> false_statement_opt = (AstStatement*)
-                                   (false_statement_opt
-                                          ? false_statement_opt -> Clone(ast_pool)
-                                          : NULL);
-
+    clone -> true_statement = (AstBlock*) true_statement -> Clone(ast_pool);
+    if (false_statement_opt)
+        clone -> false_statement_opt =
+            (AstBlock*) false_statement_opt -> Clone(ast_pool);
     return clone;
 }
 
 Ast* AstEmptyStatement::Clone(StoragePool* ast_pool)
 {
-    AstEmptyStatement* clone = ast_pool -> GenEmptyStatement(semicolon_token);
-
-    return clone;
+    return ast_pool -> GenEmptyStatement(semicolon_token);
 }
 
 Ast* AstExpressionStatement::Clone(StoragePool* ast_pool)
 {
     AstExpressionStatement* clone = ast_pool -> GenExpressionStatement();
-
     clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
     clone -> semicolon_token_opt = semicolon_token_opt;
-
     return clone;
 }
 
@@ -676,7 +662,7 @@ Ast* AstSwitchBlockStatement::Clone(StoragePool* ast_pool)
     AstSwitchBlockStatement* clone = ast_pool -> GenSwitchBlockStatement();
     clone -> CloneBlock(ast_pool, this);
     clone -> AllocateSwitchLabels(NumSwitchLabels());
-    for (int i = 0; i < NumSwitchLabels(); i++)
+    for (unsigned i = 0; i < NumSwitchLabels(); i++)
         clone -> AddSwitchLabel((AstSwitchLabel*) SwitchLabel(i) ->
                                 Clone(ast_pool));
     return clone;
@@ -706,215 +692,180 @@ Ast* AstSwitchStatement::Clone(StoragePool* ast_pool)
 Ast* AstWhileStatement::Clone(StoragePool* ast_pool)
 {
     AstWhileStatement* clone = ast_pool -> GenWhileStatement();
-
     clone -> while_token = while_token;
     clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
     clone -> statement = (AstStatement*) statement -> Clone(ast_pool);
-
     return clone;
 }
 
 Ast* AstDoStatement::Clone(StoragePool* ast_pool)
 {
     AstDoStatement* clone = ast_pool -> GenDoStatement();
-
     clone -> do_token = do_token;
     clone -> statement = (AstStatement*) statement -> Clone(ast_pool);
     clone -> while_token = while_token;
     clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
     clone -> semicolon_token = semicolon_token;
-
     return clone;
 }
 
 Ast* AstForStatement::Clone(StoragePool* ast_pool)
 {
-    int i;
+    unsigned i;
     AstForStatement* clone = ast_pool -> GenForStatement();
-
     clone -> for_token = for_token;
+    clone -> AllocateForInitStatements(NumForInitStatements());
     for (i = 0; i < NumForInitStatements(); i++)
-        clone -> AddForInitStatement((AstStatement*) ForInitStatement(i) -> Clone(ast_pool));
-    clone -> end_expression_opt = (AstExpression*)
-                                  (end_expression_opt
-                                         ? end_expression_opt -> Clone(ast_pool)
-                                         : NULL);
+        clone -> AddForInitStatement((AstStatement*)
+                                     ForInitStatement(i) -> Clone(ast_pool));
+    if (end_expression_opt)
+        clone -> end_expression_opt =
+            (AstExpression*) end_expression_opt -> Clone(ast_pool);
+    clone -> AllocateForUpdateStatements(NumForUpdateStatements());
     for (i = 0; i < NumForUpdateStatements(); i++)
-        clone -> AddForUpdateStatement((AstExpressionStatement*) ForUpdateStatement(i) -> Clone(ast_pool));
+        clone -> AddForUpdateStatement((AstExpressionStatement*)
+                                       ForUpdateStatement(i) ->
+                                       Clone(ast_pool));
     clone -> statement = (AstStatement*) statement -> Clone(ast_pool);
-
     return clone;
 }
 
 Ast* AstBreakStatement::Clone(StoragePool* ast_pool)
 {
     AstBreakStatement* clone = ast_pool -> GenBreakStatement();
-
     clone -> break_token = break_token;
     clone -> identifier_token_opt = identifier_token_opt;
     clone -> semicolon_token = semicolon_token;
     clone -> nesting_level = nesting_level;
-
     return clone;
 }
 
 Ast* AstContinueStatement::Clone(StoragePool* ast_pool)
 {
     AstContinueStatement* clone = ast_pool -> GenContinueStatement();
-
     clone -> continue_token = continue_token;
     clone -> identifier_token_opt = identifier_token_opt;
     clone -> semicolon_token = semicolon_token;
     clone -> nesting_level = nesting_level;
-
     return clone;
 }
 
 Ast* AstReturnStatement::Clone(StoragePool* ast_pool)
 {
     AstReturnStatement* clone = ast_pool -> GenReturnStatement();
-
     clone -> return_token = return_token;
-    clone -> expression_opt = (AstExpression*) (expression_opt ? expression_opt -> Clone(ast_pool) : NULL);
+    if (expression_opt)
+        clone -> expression_opt =
+            (AstExpression*) expression_opt -> Clone(ast_pool);
     clone -> semicolon_token = semicolon_token;
-
     return clone;
 }
 
 Ast* AstThrowStatement::Clone(StoragePool* ast_pool)
 {
     AstThrowStatement* clone = ast_pool -> GenThrowStatement();
-
     clone -> throw_token = throw_token;
     clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
     clone -> semicolon_token = semicolon_token;
-
     return clone;
 }
 
 Ast* AstSynchronizedStatement::Clone(StoragePool* ast_pool)
 {
     AstSynchronizedStatement* clone = ast_pool -> GenSynchronizedStatement();
-
     clone -> synchronized_token = synchronized_token;
     clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
     clone -> block = (AstBlock*) block -> Clone(ast_pool);
-
     return clone;
 }
 
 Ast* AstAssertStatement::Clone(StoragePool* ast_pool)
 {
     AstAssertStatement* clone = ast_pool -> GenAssertStatement();
-
     clone -> assert_token = assert_token;
     clone -> condition = (AstExpression*) condition -> Clone(ast_pool);
-    clone -> message_opt = (message_opt
-                            ? (AstExpression*) message_opt -> Clone(ast_pool)
-                            : (AstExpression*) NULL);
+    if (message_opt)
+        clone -> message_opt = (AstExpression*) message_opt -> Clone(ast_pool);
     clone -> semicolon_token = semicolon_token;
-
     return clone;
 }
 
 Ast* AstCatchClause::Clone(StoragePool* ast_pool)
 {
     AstCatchClause* clone = ast_pool -> GenCatchClause();
-
     clone -> catch_token = catch_token;
-    clone -> formal_parameter = (AstFormalParameter*) formal_parameter -> Clone(ast_pool);
+    clone -> formal_parameter =
+        (AstFormalParameter*) formal_parameter -> Clone(ast_pool);
     clone -> block = (AstBlock*) block -> Clone(ast_pool);
-
     return clone;
 }
 
 Ast* AstFinallyClause::Clone(StoragePool* ast_pool)
 {
     AstFinallyClause* clone = ast_pool -> GenFinallyClause();
-
     clone -> finally_token = finally_token;
     clone -> block = (AstBlock*) block -> Clone(ast_pool);
-
     return clone;
 }
 
 Ast* AstTryStatement::Clone(StoragePool* ast_pool)
 {
     AstTryStatement* clone = ast_pool -> GenTryStatement();
-
     clone -> try_token = try_token;
     clone -> block = (AstBlock*) block -> Clone(ast_pool);
-    for (int i = 0; i < NumCatchClauses(); i++)
-        clone -> AddCatchClause((AstCatchClause*) CatchClause(i) -> Clone(ast_pool));
-    clone -> finally_clause_opt = (AstFinallyClause*)
-                                  (finally_clause_opt
-                                         ? finally_clause_opt -> Clone(ast_pool)
-                                         : NULL);
-
+    clone -> AllocateCatchClauses(NumCatchClauses());
+    for (unsigned i = 0; i < NumCatchClauses(); i++)
+        clone -> AddCatchClause((AstCatchClause*) CatchClause(i) ->
+                                Clone(ast_pool));
+    if (finally_clause_opt)
+        clone -> finally_clause_opt =
+            (AstFinallyClause*) finally_clause_opt -> Clone(ast_pool);
     return clone;
 }
 
 Ast* AstIntegerLiteral::Clone(StoragePool* ast_pool)
 {
-    AstIntegerLiteral* clone = ast_pool -> GenIntegerLiteral(integer_literal_token);
-
-    return clone;
+    return ast_pool -> GenIntegerLiteral(integer_literal_token);
 }
 
 Ast* AstLongLiteral::Clone(StoragePool* ast_pool)
 {
-    AstLongLiteral* clone = ast_pool -> GenLongLiteral(long_literal_token);
-
-    return clone;
+    return ast_pool -> GenLongLiteral(long_literal_token);
 }
 
 Ast* AstFloatLiteral::Clone(StoragePool* ast_pool)
 {
-    AstFloatLiteral* clone = ast_pool -> GenFloatLiteral(float_literal_token);
-
-    return clone;
+    return ast_pool -> GenFloatLiteral(float_literal_token);
 }
 
 Ast* AstDoubleLiteral::Clone(StoragePool* ast_pool)
 {
-    AstDoubleLiteral* clone = ast_pool -> GenDoubleLiteral(double_literal_token);
-
-    return clone;
+    return ast_pool -> GenDoubleLiteral(double_literal_token);
 }
 
 Ast* AstTrueLiteral::Clone(StoragePool* ast_pool)
 {
-    AstTrueLiteral* clone = ast_pool -> GenTrueLiteral(true_literal_token);
-
-    return clone;
+    return ast_pool -> GenTrueLiteral(true_literal_token);
 }
 
 Ast* AstFalseLiteral::Clone(StoragePool* ast_pool)
 {
-    AstFalseLiteral* clone = ast_pool -> GenFalseLiteral(false_literal_token);
-
-    return clone;
+    return ast_pool -> GenFalseLiteral(false_literal_token);
 }
 
 Ast* AstStringLiteral::Clone(StoragePool* ast_pool)
 {
-    AstStringLiteral* clone = ast_pool -> GenStringLiteral(string_literal_token);
-
-    return clone;
+    return ast_pool -> GenStringLiteral(string_literal_token);
 }
 
 Ast* AstCharacterLiteral::Clone(StoragePool* ast_pool)
 {
-    AstCharacterLiteral* clone = ast_pool -> GenCharacterLiteral(character_literal_token);
-
-    return clone;
+    return ast_pool -> GenCharacterLiteral(character_literal_token);
 }
 
 Ast* AstNullLiteral::Clone(StoragePool* ast_pool)
 {
-    AstNullLiteral* clone = ast_pool -> GenNullLiteral(null_token);
-
-    return clone;
+    return ast_pool -> GenNullLiteral(null_token);
 }
 
 Ast* AstClassLiteral::Clone(StoragePool* ast_pool)
@@ -951,18 +902,17 @@ Ast* AstSuperExpression::Clone(StoragePool* ast_pool)
 
 Ast* AstParenthesizedExpression::Clone(StoragePool* ast_pool)
 {
-    AstParenthesizedExpression* clone = ast_pool -> GenParenthesizedExpression();
-
+    AstParenthesizedExpression* clone =
+        ast_pool -> GenParenthesizedExpression();
     clone -> left_parenthesis_token = left_parenthesis_token;
     clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
     clone -> right_parenthesis_token = right_parenthesis_token;
-
     return clone;
 }
 
 Ast* AstClassInstanceCreationExpression::Clone(StoragePool* ast_pool)
 {
-    int i;
+    unsigned i;
     AstClassInstanceCreationExpression* clone =
         ast_pool -> GenClassInstanceCreationExpression();
     if (base_opt)
@@ -989,19 +939,17 @@ Ast* AstClassInstanceCreationExpression::Clone(StoragePool* ast_pool)
 Ast* AstDimExpr::Clone(StoragePool* ast_pool)
 {
     AstDimExpr* clone = ast_pool -> GenDimExpr();
-
     clone -> left_bracket_token = left_bracket_token;
     clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
     clone -> right_bracket_token = right_bracket_token;
-
     return clone;
 }
 
 Ast* AstArrayCreationExpression::Clone(StoragePool* ast_pool)
 {
-    int i;
-    AstArrayCreationExpression* clone = ast_pool -> GenArrayCreationExpression();
-
+    unsigned i;
+    AstArrayCreationExpression* clone =
+        ast_pool -> GenArrayCreationExpression();
     clone -> new_token = new_token;
     clone -> array_type = (AstType*) array_type -> Clone(ast_pool);
     clone -> AllocateDimExprs(NumDimExprs());
@@ -1010,9 +958,9 @@ Ast* AstArrayCreationExpression::Clone(StoragePool* ast_pool)
     clone -> AllocateBrackets(NumBrackets());
     for (i = 0; i < NumBrackets(); i++)
         clone -> AddBrackets((AstBrackets*) Brackets(i) -> Clone(ast_pool));
-    clone -> array_initializer_opt = (AstArrayInitializer*)
-                                     (array_initializer_opt ? array_initializer_opt -> Clone(ast_pool) : NULL);
-
+    if (array_initializer_opt)
+        clone -> array_initializer_opt =
+            (AstArrayInitializer*) array_initializer_opt -> Clone(ast_pool);
     return clone;
 }
 
@@ -1030,54 +978,49 @@ Ast* AstFieldAccess::Clone(StoragePool* ast_pool)
 Ast* AstMethodInvocation::Clone(StoragePool* ast_pool)
 {
     AstMethodInvocation* clone = ast_pool -> GenMethodInvocation();
-
     clone -> method = (AstExpression*) method -> Clone(ast_pool);
     clone -> left_parenthesis_token = left_parenthesis_token;
     clone -> AllocateArguments(NumArguments());
-    for (int i = 0; i < NumArguments(); i++)
+    for (unsigned i = 0; i < NumArguments(); i++)
         clone -> AddArgument((AstExpression*) Argument(i) -> Clone(ast_pool));
     clone -> right_parenthesis_token = right_parenthesis_token;
-    clone -> resolution_opt = (AstExpression*) (resolution_opt ? resolution_opt -> Clone(ast_pool) : NULL);
-
+    if (resolution_opt)
+        clone -> resolution_opt =
+            (AstExpression*) resolution_opt -> Clone(ast_pool);
     return clone;
 }
 
 Ast* AstArrayAccess::Clone(StoragePool* ast_pool)
 {
     AstArrayAccess* clone = ast_pool -> GenArrayAccess();
-
     clone -> base = (AstExpression*) base -> Clone(ast_pool);
     clone -> left_bracket_token = left_bracket_token;
     clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
     clone -> right_bracket_token = right_bracket_token;
-
     return clone;
 }
 
 Ast* AstPostUnaryExpression::Clone(StoragePool* ast_pool)
 {
-    AstPostUnaryExpression* clone = ast_pool -> GenPostUnaryExpression(post_unary_tag);
-
+    AstPostUnaryExpression* clone =
+        ast_pool -> GenPostUnaryExpression(post_unary_tag);
     clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
     clone -> post_operator_token = post_operator_token;
-
     return clone;
 }
 
 Ast* AstPreUnaryExpression::Clone(StoragePool* ast_pool)
 {
-    AstPreUnaryExpression* clone = ast_pool -> GenPreUnaryExpression(pre_unary_tag);
-
+    AstPreUnaryExpression* clone =
+        ast_pool -> GenPreUnaryExpression(pre_unary_tag);
     clone -> pre_operator_token = pre_operator_token;
     clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
-
     return clone;
 }
 
 Ast* AstCastExpression::Clone(StoragePool* ast_pool)
 {
     AstCastExpression* clone = ast_pool -> GenCastExpression();
-
     clone -> left_parenthesis_token = left_parenthesis_token;
     if (type)
         clone -> type = (AstType*) type -> Clone(ast_pool);
@@ -1089,11 +1032,11 @@ Ast* AstCastExpression::Clone(StoragePool* ast_pool)
 Ast* AstBinaryExpression::Clone(StoragePool* ast_pool)
 {
     AstBinaryExpression* clone = ast_pool -> GenBinaryExpression(binary_tag);
-
-    clone -> left_expression = (AstExpression*) left_expression -> Clone(ast_pool);
+    clone -> left_expression =
+        (AstExpression*) left_expression -> Clone(ast_pool);
     clone -> binary_operator_token = binary_operator_token;
-    clone -> right_expression = (AstExpression*) right_expression -> Clone(ast_pool);
-
+    clone -> right_expression =
+        (AstExpression*) right_expression -> Clone(ast_pool);
     return clone;
 }
 
@@ -1109,31 +1052,33 @@ Ast* AstInstanceofExpression::Clone(StoragePool* ast_pool)
 Ast* AstConditionalExpression::Clone(StoragePool* ast_pool)
 {
     AstConditionalExpression* clone = ast_pool -> GenConditionalExpression();
-
-    clone -> test_expression = (AstExpression*) test_expression -> Clone(ast_pool);
+    clone -> test_expression =
+        (AstExpression*) test_expression -> Clone(ast_pool);
     clone -> question_token = question_token;
-    clone -> true_expression = (AstExpression*) true_expression -> Clone(ast_pool);
+    clone -> true_expression =
+        (AstExpression*) true_expression -> Clone(ast_pool);
     clone -> colon_token = colon_token;
-    clone -> false_expression = (AstExpression*) false_expression -> Clone(ast_pool);
-
+    clone -> false_expression =
+        (AstExpression*) false_expression -> Clone(ast_pool);
     return clone;
 }
 
 Ast* AstAssignmentExpression::Clone(StoragePool* ast_pool)
 {
-    AstAssignmentExpression* clone = ast_pool -> GenAssignmentExpression(assignment_tag, assignment_operator_token);
-
-    clone -> left_hand_side = (AstExpression*) left_hand_side -> Clone(ast_pool);
+    AstAssignmentExpression* clone =
+        ast_pool -> GenAssignmentExpression(assignment_tag,
+                                            assignment_operator_token);
+    clone -> left_hand_side =
+        (AstExpression*) left_hand_side -> Clone(ast_pool);
     clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
-
     return clone;
 }
 
 #ifdef JIKES_DEBUG
 void AstBlock::Print(LexStream& lex_stream)
 {
-    int i;
-    Coutput << "#" << id << " (";
+    unsigned i;
+    Coutput << '#' << id << " (";
     if (label_opt)
         Coutput << lex_stream.NameString(label_opt) << ": ";
     Coutput << "Block at level " << nesting_level;
@@ -1143,7 +1088,7 @@ void AstBlock::Print(LexStream& lex_stream)
                 << ", try_or_synchronized_variable_index "
                 << block_symbol -> try_or_synchronized_variable_index;
     else Coutput << ", BLOCK_SYMBOL NOT SET";
-    Coutput << ")";
+    Coutput << ')';
 
     if (NumStatements() > 0)
     {
@@ -1158,30 +1103,29 @@ void AstBlock::Print(LexStream& lex_stream)
         for (i = 0; i < NumStatements(); i++)
             Statement(i) -> Print(lex_stream);
     }
-    else
-        Coutput << endl;
+    else Coutput << endl;
 }
 
 void AstSimpleName::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (SimpleName):  "
+    Coutput << '#' << id << " (SimpleName):  "
             << lex_stream.NameString(identifier_token) << endl;
 }
 
 void AstPrimitiveType::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (PrimitiveType):  "
+    Coutput << '#' << id << " (PrimitiveType):  "
             << lex_stream.NameString(primitive_kind_token) << endl;
 }
 
 void AstArrayType::Print(LexStream& lex_stream)
 {
-    int i;
-    Coutput << "#" << id << " (ArrayType):  "
-            << "#" << type -> id << " (";
+    unsigned i;
+    Coutput << '#' << id << " (ArrayType):  "
+            << '#' << type -> id << " (";
     for (i = 0; i < NumBrackets(); i++)
         Coutput << " #" << Brackets(i) -> id;
-    Coutput << ")" << endl;
+    Coutput << ')' << endl;
     type -> Print(lex_stream);
     for (i = 0; i < NumBrackets(); i++)
         Brackets(i) -> Print(lex_stream);
@@ -1196,7 +1140,7 @@ void AstTypeName::Print(LexStream& lex_stream)
 
 void AstPackageDeclaration::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (PackageDeclaration):  "
+    Coutput << '#' << id << " (PackageDeclaration):  "
             << lex_stream.NameString(package_token)
             << " #" << name -> id << endl;
     name -> Print(lex_stream);
@@ -1204,30 +1148,30 @@ void AstPackageDeclaration::Print(LexStream& lex_stream)
 
 void AstImportDeclaration::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (ImportDeclaration):  "
+    Coutput << '#' << id << " (ImportDeclaration):  "
             << lex_stream.NameString(import_token)
             << " #" << name -> id;
     if (star_token_opt)
-        Coutput << "." << lex_stream.NameString(star_token_opt);
+        Coutput << '.' << lex_stream.NameString(star_token_opt);
     Coutput << endl;
     name -> Print(lex_stream);
 }
 
 void AstCompilationUnit::Print(LexStream& lex_stream)
 {
-    int i;
+    unsigned i;
     Coutput << endl << "AST structure for "
             << lex_stream.FileName()
-            << ":" << endl << endl
-            << "#" << id << " (CompilationUnit):  "
-            << "#" << (package_declaration_opt ? package_declaration_opt -> id : 0)
+            << ':' << endl << endl
+            << '#' << id << " (CompilationUnit):  "
+            << '#' << (package_declaration_opt ? package_declaration_opt -> id : 0)
             << " (";
     for (i = 0; i < NumImportDeclarations(); i++)
         Coutput << " #" << ImportDeclaration(i) -> id;
     Coutput << " ) (";
     for (i = 0; i < NumTypeDeclarations(); i++)
         Coutput << " #" << TypeDeclaration(i) -> id;
-    Coutput << ")" << endl;
+    Coutput << ')' << endl;
 
     if (package_declaration_opt)
         package_declaration_opt -> Print(lex_stream);
@@ -1239,20 +1183,20 @@ void AstCompilationUnit::Print(LexStream& lex_stream)
 
 void AstModifier::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (Modifier):  "
+    Coutput << '#' << id << " (Modifier):  "
             << lex_stream.NameString(modifier_token) << endl;
 }
 
 void AstEmptyDeclaration::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (EmptyDeclaration):  "
+    Coutput << '#' << id << " (EmptyDeclaration):  "
             << lex_stream.NameString(semicolon_token) << endl;
 }
 
 void AstClassBody::Print(LexStream& lex_stream)
 {
-    int i;
-    Coutput << "#" << id << " (ClassBody):  "
+    unsigned i;
+    Coutput << '#' << id << " (ClassBody):  "
             << endl << "    {";
     for (i = 0; i < NumClassBodyDeclarations(); i++)
     {
@@ -1268,20 +1212,20 @@ void AstClassBody::Print(LexStream& lex_stream)
 
 void AstClassDeclaration::Print(LexStream& lex_stream)
 {
-    int i;
-    Coutput << "#" << id << " (ClassDeclaration):  ";
+    unsigned i;
+    Coutput << '#' << id << " (ClassDeclaration):  ";
     Coutput << " (";
-    for (i = 0; i < NumClassModifiers(); i++)
-        Coutput << " #" << ClassModifier(i) -> id;
+    for (i = 0; i < NumModifiers(); i++)
+        Coutput << " #" << Modifier(i) -> id;
     Coutput << ')';
-    Coutput << lex_stream.NameString(class_token) << " "
-            << lex_stream.NameString(identifier_token)
-            << " #" << (super_opt ? super_opt -> id : 0) << "(";
+    Coutput << lex_stream.NameString(class_token) << ' '
+            << lex_stream.NameString(class_body -> identifier_token);
+    Coutput << " #" << (super_opt ? super_opt -> id : 0) << '(';
     for (i = 0; i < NumInterfaces(); i++)
         Coutput << " #" << Interface(i) -> id;
     Coutput << ") #" << class_body -> id << endl;
-    for (i = 0; i < NumClassModifiers(); i++)
-        ClassModifier(i) -> Print(lex_stream);
+    for (i = 0; i < NumModifiers(); i++)
+        Modifier(i) -> Print(lex_stream);
     if (super_opt)
         super_opt -> Print(lex_stream);
     for (i = 0; i < NumInterfaces(); i++)
@@ -1291,8 +1235,8 @@ void AstClassDeclaration::Print(LexStream& lex_stream)
 
 void AstArrayInitializer::Print(LexStream& lex_stream)
 {
-    int i;
-    Coutput << "#" << id << " (ArrayInitializer):  "
+    unsigned i;
+    Coutput << '#' << id << " (ArrayInitializer):  "
             << endl << "    {";
     for (i = 0; i < NumVariableInitializers(); i++)
     {
@@ -1308,16 +1252,16 @@ void AstArrayInitializer::Print(LexStream& lex_stream)
 
 void AstBrackets::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (Brackets):  "
+    Coutput << '#' << id << " (Brackets):  "
             << lex_stream.NameString(left_bracket_token)
             << lex_stream.NameString(right_bracket_token) << endl;
 }
 
 void AstVariableDeclaratorId::Print(LexStream& lex_stream)
 {
-    int i;
-    Coutput << "#" << id << " (VariableDeclaratorId):  "
-            << lex_stream.NameString(identifier_token) << "(";
+    unsigned i;
+    Coutput << '#' << id << " (VariableDeclaratorId):  "
+            << lex_stream.NameString(identifier_token) << '(';
     for (i = 0; i < NumBrackets(); i++)
         Coutput << " #" << Brackets(i) -> id;
     Coutput << " )" << endl;
@@ -1327,7 +1271,7 @@ void AstVariableDeclaratorId::Print(LexStream& lex_stream)
 
 void AstVariableDeclarator::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (VariableDeclarator):  " << "#"
+    Coutput << '#' << id << " (VariableDeclarator):  " << '#'
             << variable_declarator_name -> id << " #"
             << (variable_initializer_opt ? variable_initializer_opt -> id : 0)
             << endl;
@@ -1339,18 +1283,18 @@ void AstVariableDeclarator::Print(LexStream& lex_stream)
 
 void AstFieldDeclaration::Print(LexStream& lex_stream)
 {
-    int i;
-    Coutput << "#" << id << " (FieldDeclaration):  ";
+    unsigned i;
+    Coutput << '#' << id << " (FieldDeclaration):  ";
     Coutput << " (";
-    for (i = 0; i < NumVariableModifiers(); i++)
-        Coutput << " #" << VariableModifier(i) -> id;
+    for (i = 0; i < NumModifiers(); i++)
+        Coutput << " #" << Modifier(i) -> id;
     Coutput << ')';
-    Coutput << " #" << type -> id << "(";
+    Coutput << " #" << type -> id << '(';
     for (i = 0; i < NumVariableDeclarators(); i++)
         Coutput << " #" << VariableDeclarator(i) -> id;
-    Coutput << ")" << endl;
-    for (i = 0; i < NumVariableModifiers(); i++)
-        VariableModifier(i) -> Print(lex_stream);
+    Coutput << ')' << endl;
+    for (i = 0; i < NumModifiers(); i++)
+        Modifier(i) -> Print(lex_stream);
     type -> Print(lex_stream);
     for (i = 0; i < NumVariableDeclarators(); i++)
         VariableDeclarator(i) -> Print(lex_stream);
@@ -1358,24 +1302,24 @@ void AstFieldDeclaration::Print(LexStream& lex_stream)
 
 void AstFormalParameter::Print(LexStream& lex_stream)
 {
-    int i;
-    Coutput << "#" << id << " (FormalParameter):  ";
+    unsigned i;
+    Coutput << '#' << id << " (FormalParameter):  ";
     Coutput << " (";
-    for (i = 0; i < NumParameterModifiers(); i++)
-        Coutput << " #" << ParameterModifier(i) -> id;
+    for (i = 0; i < NumModifiers(); i++)
+        Coutput << " #" << Modifier(i) -> id;
     Coutput << ')';
-    Coutput << "#" << type -> id
+    Coutput << '#' << type -> id
             << " #" << formal_declarator -> id << endl;
-    for (i = 0; i < NumParameterModifiers(); i++)
-        ParameterModifier(i) -> Print(lex_stream);
+    for (i = 0; i < NumModifiers(); i++)
+        Modifier(i) -> Print(lex_stream);
     type -> Print(lex_stream);
     formal_declarator -> Print(lex_stream);
 }
 
 void AstMethodDeclarator::Print(LexStream& lex_stream)
 {
-    int i;
-    Coutput << "#" << id << " (MethodDeclarator):  "
+    unsigned i;
+    Coutput << '#' << id << " (MethodDeclarator):  "
             << lex_stream.NameString(identifier_token)
             << " (";
     for (i = 0; i < NumFormalParameters(); i++)
@@ -1393,11 +1337,11 @@ void AstMethodDeclarator::Print(LexStream& lex_stream)
 
 void AstMethodDeclaration::Print(LexStream& lex_stream)
 {
-    int i;
-    Coutput << "#" << id << " (MethodDeclaration):  ";
+    unsigned i;
+    Coutput << '#' << id << " (MethodDeclaration):  ";
     Coutput << " (";
-    for (i = 0; i < NumMethodModifiers(); i++)
-        Coutput << " #" << MethodModifier(i) -> id;
+    for (i = 0; i < NumModifiers(); i++)
+        Coutput << " #" << Modifier(i) -> id;
     Coutput << ')';
     Coutput << " #" << type -> id
             << " #" << method_declarator -> id
@@ -1405,8 +1349,8 @@ void AstMethodDeclaration::Print(LexStream& lex_stream)
     for (i = 0; i < NumThrows(); i++)
         Coutput << " #" << Throw(i) -> id;
     Coutput << ") #" << method_body -> id << endl;
-    for (i = 0; i < NumMethodModifiers(); i++)
-        MethodModifier(i) -> Print(lex_stream);
+    for (i = 0; i < NumModifiers(); i++)
+        Modifier(i) -> Print(lex_stream);
     type -> Print(lex_stream);
     method_declarator -> Print(lex_stream);
     for (i = 0; i < NumThrows(); i++)
@@ -1414,18 +1358,36 @@ void AstMethodDeclaration::Print(LexStream& lex_stream)
     method_body -> Print(lex_stream);
 }
 
-void AstStaticInitializer::Print(LexStream& lex_stream)
+void AstMethodBody::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (StaticInitializer):  "
-            << lex_stream.NameString(static_token)
-            << " #" << block -> id << endl;
+    Coutput << '#' << id << " (MethodBody):  ";
+    if (explicit_constructor_opt)
+        Coutput << " #" << explicit_constructor_opt -> id << endl;
+    else Coutput << " #0" << endl;
+    AstBlock::Print(lex_stream);
+
+    if (explicit_constructor_opt)
+        explicit_constructor_opt -> Print(lex_stream);
+}
+
+void AstInitializerDeclaration::Print(LexStream& lex_stream)
+{
+    unsigned i;
+    Coutput << '#' << id << " (InitializerDeclaration): ";
+    Coutput << " (";
+    for (i = 0; i < NumModifiers(); i++)
+        Coutput << " #" << Modifier(i) -> id;
+    Coutput << ')';
+    Coutput << " #" << block -> id << endl;
+    for (i = 0; i < NumModifiers(); i++)
+        Modifier(i) -> Print(lex_stream);
     block -> Print(lex_stream);
 }
 
 void AstThisCall::Print(LexStream& lex_stream)
 {
-    int i;
-    Coutput << "#" << id << " (ThisCall):  "
+    unsigned i;
+    Coutput << '#' << id << " (ThisCall):  "
             << lex_stream.NameString(this_token)
             << " (";
     for (i = 0; i < NumArguments(); i++)
@@ -1438,7 +1400,7 @@ void AstThisCall::Print(LexStream& lex_stream)
 
 void AstSuperCall::Print(LexStream& lex_stream)
 {
-    int i;
+    unsigned i;
     Coutput << '#' << id << " (SuperCall):  #"
             << (base_opt ? base_opt -> id : 0) << '.'
             << lex_stream.NameString(super_token);
@@ -1452,25 +1414,13 @@ void AstSuperCall::Print(LexStream& lex_stream)
         Argument(i) -> Print(lex_stream);
 }
 
-void AstMethodBody::Print(LexStream& lex_stream)
-{
-    Coutput << "#" << id << " (MethodBody):  ";
-    if (explicit_constructor_opt)
-        Coutput << " #" << explicit_constructor_opt -> id << endl;
-    else Coutput << " #0" << endl;
-    AstBlock::Print(lex_stream);
-
-    if (explicit_constructor_opt)
-        explicit_constructor_opt -> Print(lex_stream);
-}
-
 void AstConstructorDeclaration::Print(LexStream& lex_stream)
 {
-    int i;
-    Coutput << "#" << id << " (ConstructorDeclaration):  ";
+    unsigned i;
+    Coutput << '#' << id << " (ConstructorDeclaration):  ";
     Coutput << " (";
-    for (i = 0; i < NumConstructorModifiers(); i++)
-        Coutput << " #" << ConstructorModifier(i) -> id;
+    for (i = 0; i < NumModifiers(); i++)
+        Coutput << " #" << Modifier(i) -> id;
     Coutput << ')';
     Coutput << " #" << constructor_declarator -> id
             << " throws: (";
@@ -1478,8 +1428,8 @@ void AstConstructorDeclaration::Print(LexStream& lex_stream)
         Coutput << " #" << Throw(i) -> id;
     Coutput << ") #" << constructor_body -> id
             << endl;
-    for (i = 0; i < NumConstructorModifiers(); i++)
-        ConstructorModifier(i) -> Print(lex_stream);
+    for (i = 0; i < NumModifiers(); i++)
+        Modifier(i) -> Print(lex_stream);
     constructor_declarator -> Print(lex_stream);
     for (i = 0; i < NumThrows(); i++)
         Throw(i) -> Print(lex_stream);
@@ -1488,45 +1438,40 @@ void AstConstructorDeclaration::Print(LexStream& lex_stream)
 
 void AstInterfaceDeclaration::Print(LexStream& lex_stream)
 {
-    int i;
-    Coutput << "#" << id << " (InterfaceDeclaration):  ";
+    unsigned i;
+    Coutput << '#' << id << " (InterfaceDeclaration):  ";
     Coutput << " (";
-    for (i = 0; i < NumInterfaceModifiers(); i++)
-        Coutput << " #" << InterfaceModifier(i) -> id;
+    for (i = 0; i < NumModifiers(); i++)
+        Coutput << " #" << Modifier(i) -> id;
     Coutput << ')';
-    Coutput << lex_stream.NameString(interface_token)
-            << " "
-            << lex_stream.NameString(identifier_token)
-            << "(";
-    for (i = 0; i < NumExtendsInterfaces(); i++)
-        Coutput << " #" << ExtendsInterface(i) -> id;
-    Coutput << ") {";
-    for (i = 0; i < NumInterfaceMemberDeclarations(); i++)
-        Coutput << " #" << InterfaceMemberDeclaration(i) -> id;
-    Coutput << "}" << endl;
-    for (i = 0; i < NumInterfaceModifiers(); i++)
-        InterfaceModifier(i) -> Print(lex_stream);
-    for (i = 0; i < NumExtendsInterfaces(); i++)
-        ExtendsInterface(i) -> Print(lex_stream);
-    for (i = 0; i < NumInterfaceMemberDeclarations(); i++)
-        InterfaceMemberDeclaration(i) -> Print(lex_stream);
+    Coutput << lex_stream.NameString(interface_token) << ' '
+            << lex_stream.NameString(class_body -> identifier_token);
+    Coutput << '(';
+    for (i = 0; i < NumInterfaces(); i++)
+        Coutput << " #" << Interface(i) -> id;
+    Coutput << ") #" << class_body -> id << endl;
+    for (i = 0; i < NumModifiers(); i++)
+        Modifier(i) -> Print(lex_stream);
+    for (i = 0; i < NumInterfaces(); i++)
+        Interface(i) -> Print(lex_stream);
+    class_body -> Print(lex_stream);
 }
 
 void AstLocalVariableDeclarationStatement::Print(LexStream& lex_stream)
 {
-    int i;
-    Coutput << "#" << id << " (LocalVariableDeclarationStatement):  ";
+    unsigned i;
+    Coutput << '#' << id << " (LocalVariableDeclarationStatement):  ";
     Coutput << " (";
-    for (i = 0; i < NumLocalModifiers(); i++)
-        Coutput << " #" << LocalModifier(i) -> id;
+    for (i = 0; i < NumModifiers(); i++)
+        Coutput << " #" << Modifier(i) -> id;
     Coutput << ')';
-    Coutput << "#" << type -> id
-            << "(";
+    Coutput << '#' << type -> id
+            << '(';
     for (i = 0; i < NumVariableDeclarators(); i++)
         Coutput << " #" << VariableDeclarator(i) -> id;
-    Coutput << ")" << endl;
-    for (i = 0; i < NumLocalModifiers(); i++)
-        LocalModifier(i) -> Print(lex_stream);
+    Coutput << ')' << endl;
+    for (i = 0; i < NumModifiers(); i++)
+        Modifier(i) -> Print(lex_stream);
     type -> Print(lex_stream);
     for (i = 0; i < NumVariableDeclarators(); i++)
         VariableDeclarator(i) -> Print(lex_stream);
@@ -1541,7 +1486,7 @@ void AstLocalClassDeclarationStatement::Print(LexStream& lex_stream)
 
 void AstIfStatement::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (IfStatement):  "
+    Coutput << '#' << id << " (IfStatement):  "
             << lex_stream.NameString(if_token)
             << " ( #" << expression -> id << " ) #" << true_statement -> id;
     if (false_statement_opt)
@@ -1557,14 +1502,14 @@ void AstIfStatement::Print(LexStream& lex_stream)
 
 void AstEmptyStatement::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (EmptyStatement):  "
+    Coutput << '#' << id << " (EmptyStatement):  "
             << lex_stream.NameString(semicolon_token)
             << endl;
 }
 
 void AstExpressionStatement::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (ExpressionStatement):  " << "#" << expression -> id << endl;
+    Coutput << '#' << id << " (ExpressionStatement):  " << '#' << expression -> id << endl;
     expression -> Print(lex_stream);
 }
 
@@ -1579,8 +1524,8 @@ void AstSwitchLabel::Print(LexStream& lex_stream)
 
 void AstSwitchBlockStatement::Print(LexStream& lex_stream)
 {
-    int i;
-    Coutput << "#" << id << " (SwitchBlockStatement): ";
+    unsigned i;
+    Coutput << '#' << id << " (SwitchBlockStatement): ";
     for (i = 0; i < NumSwitchLabels(); i++)
     {
         if (i % 10 == 0)
@@ -1595,7 +1540,7 @@ void AstSwitchBlockStatement::Print(LexStream& lex_stream)
 
 void AstSwitchStatement::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (SwitchStatement):  "
+    Coutput << '#' << id << " (SwitchStatement):  "
             << lex_stream.NameString(switch_token)
             << " ( #" << expression -> id << " ) #" << switch_block -> id
             << endl;
@@ -1614,7 +1559,7 @@ void AstSwitchStatement::Print(LexStream& lex_stream)
 
 void AstWhileStatement::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (WhileStatement):  "
+    Coutput << '#' << id << " (WhileStatement):  "
             << lex_stream.NameString(while_token)
             << " ( #" << expression -> id << " ) #" << statement -> id << endl;
     expression -> Print(lex_stream);
@@ -1623,7 +1568,7 @@ void AstWhileStatement::Print(LexStream& lex_stream)
 
 void AstDoStatement::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (DoStatement):  "
+    Coutput << '#' << id << " (DoStatement):  "
             << lex_stream.NameString(do_token)
             << " { #" << statement -> id << " } "
             << lex_stream.NameString(while_token)
@@ -1635,12 +1580,12 @@ void AstDoStatement::Print(LexStream& lex_stream)
 
 void AstForStatement::Print(LexStream& lex_stream)
 {
-    int i;
-    Coutput << "#" << id << " (ForStatement):  ("
+    unsigned i;
+    Coutput << '#' << id << " (ForStatement):  ("
             << lex_stream.NameString(for_token);
     for (i = 0; i < NumForInitStatements(); i++)
         Coutput << " #" << ForInitStatement(i) -> id;
-    Coutput << "; #" << (end_expression_opt ? end_expression_opt -> id : 0) << ";";
+    Coutput << "; #" << (end_expression_opt ? end_expression_opt -> id : 0) << ';';
     for (i = 0; i < NumForUpdateStatements(); i++)
         Coutput << " #" << ForUpdateStatement(i) -> id;
     Coutput << ") #" << statement -> id << endl;
@@ -1656,27 +1601,27 @@ void AstForStatement::Print(LexStream& lex_stream)
 
 void AstBreakStatement::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (BreakStatement):  "
+    Coutput << '#' << id << " (BreakStatement):  "
             << lex_stream.NameString(break_token)
-            << " "
+            << ' '
             << (identifier_token_opt ? lex_stream.NameString(identifier_token_opt) : L"")
             << " at nesting_level " << nesting_level << endl;
 }
 
 void AstContinueStatement::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (ContinueStatement):  "
+    Coutput << '#' << id << " (ContinueStatement):  "
             << lex_stream.NameString(continue_token)
-            << " "
+            << ' '
             << (identifier_token_opt ? lex_stream.NameString(identifier_token_opt) : L"")
             << " at nesting_level " << nesting_level << endl;
 }
 
 void AstReturnStatement::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (ReturnStatement):  "
+    Coutput << '#' << id << " (ReturnStatement):  "
             << lex_stream.NameString(return_token)
-            << " "
+            << ' '
             << " #" << (expression_opt ? expression_opt -> id : 0) << endl;
     if (expression_opt)
         expression_opt -> Print(lex_stream);
@@ -1684,16 +1629,16 @@ void AstReturnStatement::Print(LexStream& lex_stream)
 
 void AstThrowStatement::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (ThrowStatement):  "
+    Coutput << '#' << id << " (ThrowStatement):  "
             << lex_stream.NameString(throw_token)
-            << " "
+            << ' '
             << " #" << expression -> id << endl;
     expression -> Print(lex_stream);
 }
 
 void AstSynchronizedStatement::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (SynchronizedStatement):  "
+    Coutput << '#' << id << " (SynchronizedStatement):  "
             << lex_stream.NameString(synchronized_token)
             << " ( #" << expression -> id
             << " ) #" << block -> id << endl;
@@ -1703,7 +1648,7 @@ void AstSynchronizedStatement::Print(LexStream& lex_stream)
 
 void AstAssertStatement::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (AssertStatement):  "
+    Coutput << '#' << id << " (AssertStatement):  "
             << lex_stream.NameString(assert_token)
             << " ( #" << condition -> id;
     if (message_opt)
@@ -1717,7 +1662,7 @@ void AstAssertStatement::Print(LexStream& lex_stream)
 
 void AstCatchClause::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (CatchClause):  "
+    Coutput << '#' << id << " (CatchClause):  "
             << lex_stream.NameString(catch_token)
             << " #" << formal_parameter -> id
             << " #" << block -> id << endl;
@@ -1727,7 +1672,7 @@ void AstCatchClause::Print(LexStream& lex_stream)
 
 void AstFinallyClause::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (FinallyClause):  "
+    Coutput << '#' << id << " (FinallyClause):  "
             << lex_stream.NameString(finally_token)
             << " #" << block -> id << endl;
     block -> Print(lex_stream);
@@ -1735,14 +1680,14 @@ void AstFinallyClause::Print(LexStream& lex_stream)
 
 void AstTryStatement::Print(LexStream& lex_stream)
 {
-    int i;
-    Coutput << "#" << id << " (TryStatement):  "
+    unsigned i;
+    Coutput << '#' << id << " (TryStatement):  "
             << lex_stream.NameString(try_token)
             << " #" << block -> id
             << " catch (";
     for (i = 0; i < NumCatchClauses(); i++)
         Coutput << " #" << CatchClause(i) -> id;
-    Coutput << ") finally " << "#" << (finally_clause_opt ? finally_clause_opt -> id : 0) << endl;
+    Coutput << ") finally " << '#' << (finally_clause_opt ? finally_clause_opt -> id : 0) << endl;
 
     block -> Print(lex_stream);
     for (i = 0; i < NumCatchClauses(); i++)
@@ -1753,63 +1698,63 @@ void AstTryStatement::Print(LexStream& lex_stream)
 
 void AstIntegerLiteral::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (IntegerLiteral):  "
+    Coutput << '#' << id << " (IntegerLiteral):  "
             << lex_stream.NameString(integer_literal_token)
             << endl;
 }
 
 void AstLongLiteral::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (LongLiteral):  "
+    Coutput << '#' << id << " (LongLiteral):  "
             << lex_stream.NameString(long_literal_token)
             << endl;
 }
 
 void AstFloatLiteral::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (FloatLiteral):  "
+    Coutput << '#' << id << " (FloatLiteral):  "
             << lex_stream.NameString(float_literal_token)
             << endl;
 }
 
 void AstDoubleLiteral::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (DoubleLiteral):  "
+    Coutput << '#' << id << " (DoubleLiteral):  "
             << lex_stream.NameString(double_literal_token)
             << endl;
 }
 
 void AstTrueLiteral::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (TrueLiteral):  "
+    Coutput << '#' << id << " (TrueLiteral):  "
             << lex_stream.NameString(true_literal_token)
             << endl;
 }
 
 void AstFalseLiteral::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (FalseLiteral):  "
+    Coutput << '#' << id << " (FalseLiteral):  "
             << lex_stream.NameString(false_literal_token)
             << endl;
 }
 
 void AstStringLiteral::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (StringLiteral):  "
+    Coutput << '#' << id << " (StringLiteral):  "
             << lex_stream.NameString(string_literal_token)
             << endl;
 }
 
 void AstCharacterLiteral::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (CharacterLiteral):  "
+    Coutput << '#' << id << " (CharacterLiteral):  "
             << lex_stream.NameString(character_literal_token)
             << endl;
 }
 
 void AstNullLiteral::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (NullLiteral):  "
+    Coutput << '#' << id << " (NullLiteral):  "
             << lex_stream.NameString(null_token)
             << endl;
 }
@@ -1843,9 +1788,9 @@ void AstSuperExpression::Print(LexStream& lex_stream)
 
 void AstParenthesizedExpression::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (ParenthesizedExpression):  "
+    Coutput << '#' << id << " (ParenthesizedExpression):  "
             << lex_stream.NameString(left_parenthesis_token)
-            << "#" << expression -> id
+            << '#' << expression -> id
             << lex_stream.NameString(right_parenthesis_token)
             << endl;
     expression -> Print(lex_stream);
@@ -1853,7 +1798,7 @@ void AstParenthesizedExpression::Print(LexStream& lex_stream)
 
 void AstClassInstanceCreationExpression::Print(LexStream& lex_stream)
 {
-    int i;
+    unsigned i;
     Coutput << '#' << id << " (ClassInstanceCreationExpression):  #"
             << (base_opt ? base_opt -> id : 0) << ' '
             << lex_stream.NameString(new_token) << " #" << class_type -> id;
@@ -1873,19 +1818,19 @@ void AstClassInstanceCreationExpression::Print(LexStream& lex_stream)
 
 void AstDimExpr::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (DimExpr):  [ #" << expression -> id << " ]"
+    Coutput << '#' << id << " (DimExpr):  [ #" << expression -> id << " ]"
             << endl;
     expression -> Print(lex_stream);
 }
 
 void AstArrayCreationExpression::Print(LexStream& lex_stream)
 {
-    int i;
-    Coutput << "#" << id << " (ArrayCreationExpression):  "
+    unsigned i;
+    Coutput << '#' << id << " (ArrayCreationExpression):  "
             << lex_stream.NameString(new_token)
             << " #" << array_type -> id << "( ";
     for (i = 0; i < NumDimExprs(); i++)
-        Coutput << " [#" << DimExpr(i) -> id << "]";
+        Coutput << " [#" << DimExpr(i) -> id << ']';
     Coutput << " ) (";
     for (i = 0; i < NumBrackets(); i++)
         Coutput << " #" << Brackets(i) -> id;
@@ -1901,8 +1846,8 @@ void AstArrayCreationExpression::Print(LexStream& lex_stream)
 
 void AstFieldAccess::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (FieldAccess):  "
-            << " #" << base -> id << " "
+    Coutput << '#' << id << " (FieldAccess):  "
+            << " #" << base -> id << ' '
             << lex_stream.NameString(identifier_token)
             << endl;
 
@@ -1911,9 +1856,9 @@ void AstFieldAccess::Print(LexStream& lex_stream)
 
 void AstMethodInvocation::Print(LexStream& lex_stream)
 {
-    int i;
-    Coutput << "#" << id << " (MethodInvocation):  "
-            << "#" << method -> id
+    unsigned i;
+    Coutput << '#' << id << " (MethodInvocation):  "
+            << '#' << method -> id
             << " (";
     for (i = 0; i < NumArguments(); i++)
         Coutput << " #" << Argument(i) -> id;
@@ -1926,8 +1871,8 @@ void AstMethodInvocation::Print(LexStream& lex_stream)
 
 void AstArrayAccess::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (ArrayAccess):  "
-            << "#" << base -> id
+    Coutput << '#' << id << " (ArrayAccess):  "
+            << '#' << base -> id
             << " [ #" << expression -> id << " ]" << endl;
 
     base -> Print(lex_stream);
@@ -1936,8 +1881,8 @@ void AstArrayAccess::Print(LexStream& lex_stream)
 
 void AstPostUnaryExpression::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (PostUnaryExpression):  "
-            << "#" << expression -> id
+    Coutput << '#' << id << " (PostUnaryExpression):  "
+            << '#' << expression -> id
             << lex_stream.NameString(post_operator_token)
             << endl;
 
@@ -1946,7 +1891,7 @@ void AstPostUnaryExpression::Print(LexStream& lex_stream)
 
 void AstPreUnaryExpression::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (PreUnaryExpression):  "
+    Coutput << '#' << id << " (PreUnaryExpression):  "
             << lex_stream.NameString(pre_operator_token)
             << " #" << expression -> id << endl;
 
@@ -1962,7 +1907,7 @@ void AstCastExpression::Print(LexStream& lex_stream)
     }
     else
     {
-        Coutput << "#" << id << " (Java Semantic Cast to " << Type() -> Name()
+        Coutput << '#' << id << " (Java Semantic Cast to " << Type() -> Name()
                 << "):  #" << expression -> id << endl;
     }
     expression -> Print(lex_stream);
@@ -1970,8 +1915,8 @@ void AstCastExpression::Print(LexStream& lex_stream)
 
 void AstBinaryExpression::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (BinaryExpression):  "
-            << "#" << left_expression -> id << " "
+    Coutput << '#' << id << " (BinaryExpression):  "
+            << '#' << left_expression -> id << ' '
             << lex_stream.NameString(binary_operator_token)
             << " #" << right_expression -> id << endl;
 
@@ -1991,8 +1936,8 @@ void AstInstanceofExpression::Print(LexStream& lex_stream)
 
 void AstConditionalExpression::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (ConditionalExpression):  "
-            << "#" << test_expression -> id
+    Coutput << '#' << id << " (ConditionalExpression):  "
+            << '#' << test_expression -> id
             << " ? #" << true_expression -> id
             << " : #" << false_expression -> id << endl;
 
@@ -2003,8 +1948,8 @@ void AstConditionalExpression::Print(LexStream& lex_stream)
 
 void AstAssignmentExpression::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (AssignmentExpression):  "
-            << "#" << left_hand_side -> id << " "
+    Coutput << '#' << id << " (AssignmentExpression):  "
+            << '#' << left_hand_side -> id << ' '
             << lex_stream.NameString(assignment_operator_token)
             << " #" << expression -> id << endl;
 
