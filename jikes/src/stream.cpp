@@ -566,7 +566,6 @@ void LexStream::ProcessInput(char *buffer, long filesize)
             case RAW:
                 if(ch==U_BACKSLASH && saved_state != UNICODE_ESCAPE_DIGIT_2)
                 {
-                    saved_state = RAW;
                     state       = QUOTE;
                 } else if(ch == U_CARRIAGE_RETURN)
                 {
@@ -576,6 +575,7 @@ void LexStream::ProcessInput(char *buffer, long filesize)
                 {
                     *(++input_ptr)=ch;                    
                 }
+                saved_state = RAW;
                 break;
             }
         }
@@ -593,7 +593,7 @@ void LexStream::ProcessInput(char *buffer, long filesize)
     *(++input_ptr) = U_NULL;              // add gate
     
     input_buffer_length = input_ptr - input_buffer;
-    
+
     return;
 }
 

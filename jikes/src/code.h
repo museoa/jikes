@@ -66,25 +66,33 @@ public:
 
     static inline bool IsSpaceButNotNewline(wchar_t c)
     {
-        return base[c >> LOG_COMPLEMENT_SIZE][c] == SPACE_CODE;
+        // Since it is used only for Java Syntax parsing,
+        // we use "WhiteSpace" definition from JLS (section 3.6),
+        // not Unicode specific.
+        // (lord)
+        return c==' ' || c=='\t' || c=='\f';
     }
 
+    // This method name is little mesleading.
+    // In fact, this method checks for whitespace,
+    // including newline
+    // (lord)
     static inline bool IsSpace(wchar_t c)
     {
-#ifdef HAVE_LIB_ICU_UC
-        return u_isspace(c);
-#else
-        return base[c >> LOG_COMPLEMENT_SIZE][c] <= SPACE_CODE;
-#endif        
+        // Since it is used only for Java Syntax parsing,
+        // we use "WhiteSpace" definition from JLS (section 3.6),
+        // not Unicode specific.
+        // (lord)
+        return c==' ' || c=='\t' || c=='\f' || IsNewline(c);
     }
 
     static inline bool IsDigit(wchar_t c)
     {
-#ifdef HAVE_LIB_ICU_UC
-        return u_isdigit(c);
-#else
-        return base[c >> LOG_COMPLEMENT_SIZE][c] == DIGIT_CODE;
-#endif        
+        // Since it is used only for Java Syntax parsing,
+        // we use "Digit" definition from JLS (section 3.10.1),
+        // not Unicode specific.
+        // (lord)
+        return c>='0' && c <='9';
     }
 
     static inline bool IsUpper(wchar_t c)
@@ -108,7 +116,7 @@ public:
     static inline bool IsAlpha(wchar_t c)
     {
 #ifdef HAVE_LIB_ICU_UC
-        return u_isalpha(c);
+        return u_isalpha(c) || c=='_' || c=='$';
 #else
         return base[c >> LOG_COMPLEMENT_SIZE][c] >= LOWER_CODE;
 #endif        
