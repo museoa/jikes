@@ -1,4 +1,4 @@
-*** TBD for Jikes 1.15 release:
+*** TBD for Jikes 1.16 release:
 
 Fix problem with debug line number tables. Newer
 versions of java don't like our line numbers.
