@@ -23,7 +23,7 @@
             <li><a href="/developerworks/project/showfiles.php?group_id=10">Downloads</a>
 <!--            <li><a href="/developerworks/mail/?group_id=10">Mailing Lists</a>
 -->
-            <li><a href="/developerworks/bugs/?group_id=10&set=custom&_assigned_to=0&_status=1&_category=100&_bug_group=100&SUBMIT=Browse">View open bugs</a><!-- this is a hack to work around the next/prev 50 bug -->
+            <li><a href="/developerworks/bugs/?group_id=10">View open bugs</a>
             <li><a href="/developerworks/bugs/?func=addbug&group_id=10">Report Bugs Here</a>
           </ul>
           <hr>
