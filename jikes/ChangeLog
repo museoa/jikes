@@ -1,4 +1,15 @@
-2001-02-30  Eric Blake  <ebb9@email.byu.edu>
+2001-03-30  Chris Abbey  <cabbey@bresnanlink.net>
+
+	* src/jikes.cpp:
+	* src/option.cpp:
+	* src/platform.cpp:
+	* src/stream.cpp:
+	* src/stream.h: Change LIB_ICU to LIBICU in #defs
+	so that it matches with what autoconf emits and the
+	ICU code actually get's compiled in. One of the best
+	schroedinbugs I've seen in quite a while. :(
+
+2001-03-30  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/platform.h (operator<<): Add a cast
 	to work around broken ostream << const unsigned

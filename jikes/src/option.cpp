@@ -236,7 +236,7 @@ Option::Option(ArgumentExpander &arguments) :
             }
             else if (strcmp(arguments.argv[i], "-depend") == 0 || strcmp(arguments.argv[i], "-Xdepend") == 0)
                  depend = true;
-#if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
+#if defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
             else if (strcmp(arguments.argv[i], "-encoding") == 0 && ((i + 1) < arguments.argc))
             {
                 i++;
@@ -251,7 +251,7 @@ Option::Option(ArgumentExpander &arguments) :
 
                 continue;
             }
-#endif // defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
+#endif // defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
             else if (strcmp(arguments.argv[i],"-verbose") == 0)
                  verbose = true;
             else if (strcmp(arguments.argv[i],"-g") == 0)

@@ -26,7 +26,7 @@
 #include <stdio.h>
 */
 
-#if defined(HAVE_LIB_ICU_UC)
+#if defined(HAVE_LIBICU_UC)
 # include <unicode/ucnv.h>
 #elif defined(HAVE_ICONV_H)
 # include <iconv.h>
@@ -127,7 +127,7 @@ public:
         return input_buffer = new wchar_t[size + 4];
     }
 
-#if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
+#if defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
     static bool IsSupportedEncoding(char* encoding);
     bool SetEncoding(char* encoding);
 #endif
@@ -145,9 +145,9 @@ protected:
 
 //private: // FIXME : Make vars private once extracted from LexStream!
 
-#if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
+#if defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
 
-#if defined(HAVE_LIB_ICU_UC)
+#if defined(HAVE_LIBICU_UC)
      UConverter * _decoder;
 #elif defined(HAVE_ICONV_H)
      iconv_t _decoder;
@@ -171,14 +171,14 @@ protected:
     // Returns true if an encoding has been set
 
     inline bool HaveDecoder() {
-#if defined(HAVE_LIB_ICU_UC)
+#if defined(HAVE_LIBICU_UC)
         return (_decoder != NULL);
 #elif defined(HAVE_ICONV_H)
         return (_decoder != (iconv_t)-1);
 #endif
     }
 
-#endif // defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
+#endif // defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
 
     inline void InitializeDataBuffer(const char * buffer, long size) {
         data_buffer = buffer;
@@ -403,7 +403,7 @@ private:
 
     int hexvalue(wchar_t ch);
     
-#if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
+#if defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
     enum UnicodeLexerState
     {
         START,
@@ -501,11 +501,11 @@ private:
 
     void ReadInput();
     void ProcessInput(const char *, long);
-#if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
+#if defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
     void ProcessInputUnicode(const char *, long);
 #else
     void ProcessInputAscii(const char *, long);
-#endif // defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
+#endif // defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
 
     wchar_t *KeywordName(int);
 

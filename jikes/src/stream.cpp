@@ -19,7 +19,7 @@
 #include <ctype.h>
 #endif
 
-#if defined(HAVE_LIB_ICU_UC)
+#if defined(HAVE_LIBICU_UC)
 # include <unicode/ucnv.h>
 #elif defined(HAVE_ICONV_H)
 # include <iconv.h>
@@ -276,7 +276,7 @@ StreamError::StreamError():initialized(false)
 Stream::Stream()
 :   input_buffer(NULL),
     input_buffer_length(0)
-#if defined(HAVE_LIB_ICU_UC)
+#if defined(HAVE_LIBICU_UC)
     ,_decoder(NULL)
 #elif defined(HAVE_ICONV_H)
     ,_decoder((iconv_t)-1)
@@ -287,12 +287,12 @@ Stream::Stream()
 Stream::~Stream()
 {
     DestroyInput();
-#if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
+#if defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
     DestroyEncoding();
 #endif
 }
 
-#if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
+#if defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
 
 // This method will return true is the given encoding
 // can be supported, it is static because we need to
@@ -313,7 +313,7 @@ bool Stream::SetEncoding(char* encoding)
     assert(encoding);
     DestroyEncoding();
 
-#if defined(HAVE_LIB_ICU_UC)
+#if defined(HAVE_LIBICU_UC)
     UErrorCode err = U_ZERO_ERROR;
     _decoder = ucnv_open(encoding, &err);
 #elif defined(HAVE_ICONV_H)
@@ -327,7 +327,7 @@ void Stream::DestroyEncoding()
 {
     if (HaveDecoder())
     {
-#if defined(HAVE_LIB_ICU_UC)
+#if defined(HAVE_LIBICU_UC)
         ucnv_close(_decoder);
         _decoder = NULL;
 #elif defined(HAVE_ICONV_H)
@@ -346,7 +346,7 @@ Stream::DecodeNextCharacter() {
     wchar_t next;
     error_decode_next_character = false;
 
-#if defined(HAVE_LIB_ICU_UC)
+#if defined(HAVE_LIBICU_UC)
 
     if (!HaveDecoder()) {
         return (wchar_t) *source_ptr++;
@@ -417,7 +417,7 @@ Stream::DecodeNextCharacter() {
     return next;
 }
 
-#endif // defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
+#endif // defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
 
 
 // Class LexStream
@@ -820,14 +820,14 @@ int LexStream::hexvalue(wchar_t ch)
 // Store/convert filesize bytes from a file in the input_buffer.
 //
 
-#if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
+#if defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
 
 void LexStream::ProcessInput(const char *buffer, long filesize)
 {
     LexStream::ProcessInputUnicode(buffer,filesize);
 }
 
-#else // defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
+#else // defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
 
 void LexStream::ProcessInput(const char *buffer, long filesize)
 {
@@ -954,11 +954,11 @@ void LexStream::ProcessInputAscii(const char *buffer, long filesize)
     return;
 }
 
-#endif // defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
+#endif // defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
 
 
 
-#if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
+#if defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
 
 void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
 {
@@ -1169,7 +1169,7 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
 
     return;
 }
-#endif // defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
+#endif // defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
 
 //
 // This procedure uses a  quick sort algorithm to sort the stream ERRORS
