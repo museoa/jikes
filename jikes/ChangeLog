@@ -1,3 +1,9 @@
+2000-10-18  Mo DeJong  <mdejong@redhat.com>
+
+	* src/incrmnt.cpp (Control::IncrementalRecompilation):
+	Rewrite incremental compile loop so that only a single
+	character at a time is read.
+
 2000-10-14  Mo DeJong  <mdejong@redhat.com>
 
 	* src/lookup.cpp: Remove #ifdef JIKES_DEBUG

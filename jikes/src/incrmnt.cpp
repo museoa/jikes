@@ -377,11 +377,16 @@ bool Control::IncrementalRecompilation()
 	out << "\nIncremental: Enter to continue or q + Enter to quit: ";
 	out.flush();
 
-        u1 buffer[2];
-
-        cin.getline(buffer,2);
-        if ((buffer[0] == U_q) || (buffer[0] == U_Q)) {
-            return false;
+        u1 ch;
+        // See if the user types Q or presses enter/escape or sends an EOF
+        while (1) {
+            cin.get(ch);
+            if (cin.eof() || (ch == U_q) || (ch == U_Q)) {
+                return false;
+            }
+            if ((ch == U_ESCAPE) || (ch == U_LINE_FEED)) {
+                break;
+            }
         }
 
         candidates = input_java_file_set;
