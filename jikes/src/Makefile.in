@@ -51,7 +51,7 @@ distclean: clean
 	$(ERASE) Makefile TAGS
 	$(ERASE) *~
 
-install: all install-nostrip install-docs
+install: all install-nostrip install-docs install-api
 
 install-nostrip: all
 	$(MKDIR) $(exec_prefix)/bin
@@ -65,9 +65,14 @@ install-docs: all
 	$(MKDIR) $(prefix)/man/man1
 	cp $(srcdir)/../doc/jikes.1 $(prefix)/man/man1
 
+install-api:
+	$(MKDIR) $(prefix)/include
+	cp jikesapi.h $(prefix)/include
+
 uninstall:
 	$(ERASE) $(exec_prefix)/bin/$(EXECUTABLE)
 	$(ERASE) $(prefix)/man/man1/jikes.1
+	$(ERASE) $(prefix)/include/jikesapi.h
 
 Makefile: $(srcdir)/Makefile.in
 	cd $(top_srcdir); ./config.status
