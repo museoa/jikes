@@ -1,5 +1,12 @@
 2002-06-18  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/bytecode.cpp (AppendString): 
+	* src/expr.cpp (ProcessAssignmentExpression):
+	* src/lookup.cpp (EndsInKnownString): Correctly concatenate
+	1-character constant strings - bug 2919.
+
+2002-06-18  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/bytecode.cpp:
 	* src/bytecode.h:
 	* src/expr.cpp: Formatting.

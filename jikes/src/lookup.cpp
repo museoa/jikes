@@ -1768,6 +1768,8 @@ bool Utf8LiteralTable::EndsInKnownString(AstExpression *expression)
             {
                 leftmost_constant_expr = binary_expr;
             }
+            else
+                right -> symbol = expression -> Type();
             return true;
         }
     }

@@ -5363,31 +5363,32 @@ void ByteCode::AppendString(AstExpression *expression)
             DYNAMIC_CAST<Utf8LiteralValue *> (expression -> value);
         if (value -> length == 0)
             return;  // Optimization: do nothing when appending "".
+        assert(type == control.String());
         if (value -> length == 1)
         {
             // Optimization: append(char) more efficient than append(String)
             LoadImmediateInteger(value -> value[0]);
             type = control.char_type;
         }
-        else if(type == control.char_type)
+        else if (value -> length == 2 &&
+                 (value -> value[0] & 0x00E0) == 0x00C0)
         {
-            // Multibyte string in UTF-8, but still single character
-            if (value -> length == 2)
-                LoadImmediateInteger(((value -> value[0] & 0x001F) << 6) |
-                                     (value -> value[1] & 0x003F));
-            else
-            {
-                assert(value -> length == 3);
-                LoadImmediateInteger(((value -> value[0] & 0x000F) << 12) |
-                                     ((value -> value[1] & 0x003F) << 6) |
-                                     (value -> value[2] & 0x003F));
-            }
+            // 2-byte string in UTF-8, but still single character.
+            LoadImmediateInteger(((value -> value[0] & 0x001F) << 6) |
+                                 (value -> value[1] & 0x003F));
+            type = control.char_type;
+        }
+        else if (value -> length == 3 &&
+                 (value -> value[0] & 0x00E0) == 0x00E0)
+        {
+            // 3-byte string in UTF-8, but still single character.
+            LoadImmediateInteger(((value -> value[0] & 0x000F) << 12) |
+                                 ((value -> value[1] & 0x003F) << 6) |
+                                 (value -> value[2] & 0x003F));
+            type = control.char_type;
         }
         else
-        {
             LoadConstantAtIndex(RegisterString(value));
-            type = control.String();
-        }
     }
     else
     {

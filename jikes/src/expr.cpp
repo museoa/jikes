@@ -6972,9 +6972,17 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
                  ReportSemError(SemanticError::VOID_TO_STRING,
                                 assignment_expression -> expression -> LeftToken(),
                                 assignment_expression -> expression -> RightToken());
-            else assignment_expression -> expression -> value =
-                     CastValue(control.String(),
-                               assignment_expression -> expression);
+            else
+            {
+                assignment_expression -> expression -> value =
+                    CastValue(control.String(),
+                              assignment_expression -> expression);
+                if (assignment_expression -> expression -> IsConstant())
+                {
+                    assignment_expression -> expression -> symbol =
+                        control.String();
+                }
+            }
         }
 
         return;
