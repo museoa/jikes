@@ -1,5 +1,11 @@
 2001-05-11  Chris Abbey  <cabbey@bresnanlink.net>
 
+	* src/stream.cpp (Stream::DecodeNextCharacter): fixed
+	core fault in parser because we cast a char to a wchar_t
+	without preventing sign expansion.
+
+2001-05-11  Chris Abbey  <cabbey@bresnanlink.net>
+
 	* jikes.spec: takes Dave's name out so people stop claiming
 	to be him. Also update the version to 1.14
 

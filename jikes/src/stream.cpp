@@ -374,7 +374,11 @@ Stream::DecodeNextCharacter() {
 #elif defined(HAVE_ICONV_H)
 
     if (!HaveDecoder()) {
-        return (wchar_t) *source_ptr++;
+        // you can't just cast a char to a wchar_t, since that would
+        // sign extend the results, which if wchar_t is 4 bytes will
+        // lead the parser to segfault because it calculates a table
+        // offset based on the char.
+        return (wchar_t) ((*source_ptr++) & 0x00FF);
     }
 
     wchar_t * chp = &next;
