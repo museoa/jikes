@@ -202,12 +202,14 @@ public:
         : CPInfo(CONSTANT_Utf8)
         , len(length)
         , contents(length)
+        , valid(true)
     {
-        bytes = new u1[len ? len : 1];
+        if (len)
+            bytes = new u1[len];
         for (unsigned i = 0; i < len; i++)
             bytes[i] = (u1) _bytes[i];
-        Init();
-        assert(valid);
+        Init(len);
+        assert(valid && length <= 0xffff);
     }
     CPUtf8Info(ClassFile&);
     virtual ~CPUtf8Info()
@@ -236,7 +238,7 @@ public:
     virtual bool Check(const ConstantPool&) const { return valid; }
 
 private:
-    void Init();
+    void Init(u2);
 
 #ifdef JIKES_DEBUG
 public:
@@ -764,25 +766,22 @@ public:
         ATTRIBUTE_Generic
 
     };
+
 protected:
     const AttributeInfoTag tag;
     const u2 attribute_name_index;
     u4 attribute_length;
-private:
-    // only used for ATTRIBUTE_Generic; subclasses have their own storage
-    u1* info; // u1 info[attribute_length];
 
-public:
     AttributeInfo(AttributeInfoTag _tag, u2 _name_index, u4 length = 0)
         : tag(_tag)
         , attribute_name_index(_name_index)
         , attribute_length(length)
-        , info(NULL)
     {
         assert(tag != ATTRIBUTE_Generic);
     }
     AttributeInfo(AttributeInfoTag, ClassFile&);
-    virtual ~AttributeInfo() { delete [] info; }
+public:
+    virtual ~AttributeInfo() {}
 
     AttributeInfoTag Tag() const { return tag; }
     u2 AttributeNameIndex() const { return attribute_name_index; }
@@ -799,13 +798,10 @@ public:
     // Subclasses must override if attribute_length != 0.
     virtual void Put(OutputBuffer& out) const
     {
-        assert(tag == ATTRIBUTE_Generic
-               ? (! attribute_length || info) : ! info);
+        assert(tag != ATTRIBUTE_Generic);
         assert(attribute_name_index);
         out.PutU2(attribute_name_index);
         out.PutU4(attribute_length);
-        if (info)
-            out.PutN(info, attribute_length);
     }
 
 #ifdef JIKES_DEBUG
@@ -826,19 +822,36 @@ public:
         Coutput << ", length: " << (unsigned) attribute_length;
     }
 
-    virtual void Print(const ConstantPool& constant_pool, int fill = 0) const
+    virtual void Print(const ConstantPool& constant_pool,
+                       int fill = 0) const = 0;
+#endif // JIKES_DEBUG
+};
+
+
+//
+// An unknown attribute - we are allowed to read them from existing .class
+// files, but should never generate or write one.
+//
+class UnknownAttribute : public AttributeInfo
+{
+    u1* info; // u1 info[attribute_length];
+    u4 info_length; // in corrupted file, info_length < attribute_length
+
+public:
+    UnknownAttribute(ClassFile&);
+    virtual ~UnknownAttribute() { delete [] info; }
+
+#ifdef JIKES_DEBUG
+    virtual void Print(const ConstantPool& constant_pool, int fill) const
     {
         PrintPrefix("Unrecognized attribute", constant_pool, fill);
-        if (info)
-        {
-            Coutput << endl;
-            Coutput.width(fill);
-            Coutput << "" << " info: ";
-            for (unsigned i = 0; i < attribute_length; i++)
-                if (info[i] < 0x20 || info[i] >= 0x7f)
-                    Coutput << "\\x" << IntToString(info[i], 2).String();
-                else Coutput << (char) info[i];
-        }
+        Coutput << endl;
+        Coutput.width(fill);
+        Coutput << "" << " info: " << (unsigned) info_length << ' ';
+        for (unsigned i = 0; i < info_length; i++)
+            if (info[i] <= 0x20 || info[i] >= 0x7f)
+                Coutput << "\\x" << IntToString(info[i], 2).String();
+            else Coutput << (char) info[i];
         Coutput << endl;
     }
 #endif // JIKES_DEBUG
@@ -3091,22 +3104,27 @@ public:
         i = (i << 8) | (u1) *buffer++;
         return i;
     }
-    inline u1* GetN(u1* bytes, u4 len)
+    //
+    // Gets max(len, rest of buffer) bytes, and stores it in a new u1[] in
+    // the previously uninitialized bytes.  Returns the size of bytes.  Caller
+    // is responsible for calling delete[] on bytes.
+    //
+    inline u4 GetN(u1*& bytes, u4 len)
     {
         if (buffer + len >= buffer_tail)
         {
             valid = false;
-            u4 offset = buffer_tail - buffer;
-            memcpy(bytes, buffer, offset);
-            buffer = buffer_tail;
-            memset(bytes + offset, 0, len - offset);
+            len = buffer_tail - buffer;
         }
-        else
+        if (! len)
         {
-            memcpy(bytes, buffer, len);
-            buffer += len;
+            bytes = NULL;
+            return 0;
         }
-        return bytes;
+        bytes = new u1[len];
+        memcpy(bytes, buffer, len);
+        buffer += len;
+        return len;
     }
     inline void SkipN(u4 len)
     {

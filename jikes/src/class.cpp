@@ -124,19 +124,20 @@ CPNameAndTypeInfo::CPNameAndTypeInfo(ClassFile& buffer)
 CPUtf8Info::CPUtf8Info(ClassFile& buffer)
     : CPInfo(CONSTANT_Utf8)
     , len(buffer.GetU2())
+    , valid(true)
 {
-    bytes = new u1[len];
-    buffer.GetN(bytes, len);
-    Init();
+    u2 size = (u2) buffer.GetN(bytes, len);
+    if (size != len)
+        valid = false;
+    Init(size);
     if (! valid)
         buffer.MarkInvalid();
 }
 
-void CPUtf8Info::Init()
+void CPUtf8Info::Init(u2 size)
 {
     const char* tmp;
-    valid = true;
-    for (u2 i = 0; i < len; i++)
+    for (u2 i = 0; i < size; i++)
     {
         switch (bytes[i])
         {
@@ -191,7 +192,7 @@ void CPUtf8Info::Init()
             else if (bytes[i] <= 0xdf) // 2-byte source
             {
                 contents.Next() = '\\';
-                if (i + 1 == len || (bytes[i + 1] & 0xc0) != 0x80)
+                if (i + 1 == size || (bytes[i + 1] & 0xc0) != 0x80)
                 {
                     valid = false;
                     contents.Next() = 'x';
@@ -213,7 +214,7 @@ void CPUtf8Info::Init()
             {
                 assert((bytes[i] & 0xf0) == 0xe0);
                 contents.Next() = '\\';
-                if (i + 2 >= len ||
+                if (i + 2 >= size ||
                     (bytes[i + 1] & 0xc0) != 0x80 ||
                     (bytes[i + 2] & 0xc0) != 0x80)
                 {
@@ -454,14 +455,7 @@ AttributeInfo::AttributeInfo(AttributeInfoTag _tag, ClassFile& buffer)
     : tag(_tag)
     , attribute_name_index(buffer.GetU2())
     , attribute_length(buffer.GetU4())
-{
-    if (tag == ATTRIBUTE_Generic)
-    {
-        info = new u1[attribute_length];
-        buffer.GetN(info, attribute_length);
-    }
-    else info = NULL;
-}
+{}
 
 AttributeInfo::AttributeInfoTag AttributeInfo::Tag(const CPUtf8Info* name)
 {
@@ -546,7 +540,7 @@ AttributeInfo* AttributeInfo::AllocateAttributeInfo(ClassFile& buffer)
     if (buffer.Pool()[index] -> Tag() != CPInfo::CONSTANT_Utf8)
     {
         buffer.MarkInvalid();
-        return new AttributeInfo(ATTRIBUTE_Generic, buffer);
+        return new UnknownAttribute(buffer);
     }
     switch (Tag((CPUtf8Info*) buffer.Pool()[index]))
     {
@@ -589,8 +583,15 @@ AttributeInfo* AttributeInfo::AllocateAttributeInfo(ClassFile& buffer)
     case ATTRIBUTE_AnnotationDefault:
         return new AnnotationDefaultAttribute(buffer);
     default:
-        return new AttributeInfo(ATTRIBUTE_Generic, buffer);
+        return new UnknownAttribute(buffer);
     }
+}
+
+
+UnknownAttribute::UnknownAttribute(ClassFile& buffer)
+    : AttributeInfo(ATTRIBUTE_Generic, buffer)
+{
+    info_length = buffer.GetN(info, attribute_length);
 }
 
 

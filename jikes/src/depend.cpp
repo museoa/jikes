@@ -500,8 +500,11 @@ TopologicalSort::~TopologicalSort()
 void Semantic::AddDependence(TypeSymbol* base_type, TypeSymbol* parent_type,
                              bool static_access)
 {
-    if (base_type -> Bad() || parent_type -> Bad())
+    if (base_type -> Bad() || parent_type -> Bad() ||
+        parent_type == control.null_type)
+    {
         return;
+    }
     base_type = base_type -> outermost_type;
     parent_type = parent_type -> outermost_type;
 

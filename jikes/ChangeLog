@@ -1,3 +1,14 @@
+2004-03-27  Eric Blake  <ebb9@byu.net>
+
+	* src/depend.cpp (AddDependence): Don't create dependencies on
+	null, jikes bug 3701.
+	* src/class.h (ClassFile::GetN): Make more robust (I crashed my
+	system by 0-filling several megabytes on a short but invalid
+	.class file).
+	(UnknownAttribute): New class, split out from AttributeInfo to
+	reduce attribute memory needs.
+	* src/class.cpp: Ditto.
+
 2004-03-26  Eric Blake  <ebb9@byu.net>
 
 	* src/definite.cpp (DefiniteSwitchStatement): Fix problems with
