@@ -1,3 +1,8 @@
+2000-01-18  C. Scott Ananian <cananian@lesser-magoo.lcs.mit.edu>
+
+	* java.g (SwitchBlock): Fixed segfault when compiling certain
+ 	switch-statement constructs.
+
 2000-01-13 C. Scott Ananian <cananian@alumni.princeton.edu>
 
 	* configure.in: Fix compilation on libc5 based systems.
