@@ -110,6 +110,10 @@
 # include <dirent.h>
 #endif
 
+#ifdef HAVE_ERRNO_H
+# include STD_LIB_NAME(errno)
+#endif
+
 #ifndef HAVE_WINT_T
 /* On some systems the type wint_t is not defined in wchar.h */
 typedef unsigned int wint_t;

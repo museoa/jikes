@@ -105,7 +105,7 @@ AS_IF([test "$ok" = yes],
 dnl	Check for standard c and c++ headers and libraries
 AC_HEADER_STDC()
 
-AC_CHECK_HEADERS(stdio.h assert.h limits.h ctype.h time.h float.h)
+AC_CHECK_HEADERS(stdio.h assert.h errno.h limits.h ctype.h time.h float.h)
 
 dnl	Check for some headers which are not present on all supported platforms
 AC_CHECK_HEADERS(windows.h direct.h dirent.h sys/cygwin.h locale.h)

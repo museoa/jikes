@@ -1,3 +1,11 @@
+2004-08-20  Elliott Hughes  <enh@acm.org>
+
+	* configure.ac, src/config.h.in, src/platform.h: bug #4018;
+	include <errno.h> to fix FreeBSD 4.8 build problems.
+	* Makefile.in, aclocal.m4, config.guess, config.sub,
+	configure, depcomp, install-sh, doc/Makefile.in,
+	src/Makefile.in: regenerated.
+
 2004-08-18  Elliott Hughes  <enh@acm.org>
 
 	* src/body.cpp, src/decl.cpp, src/semantic.h: bug #3947; ignore
