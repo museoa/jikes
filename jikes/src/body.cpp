@@ -1528,10 +1528,9 @@ void Semantic::ProcessThisCall(AstThisCall *this_call)
                 TypeSymbol *exception = constructor -> Throws(k);
                 if (! CatchableException(exception))
                 {
-                    ReportSemError(SemanticError::UNCATCHABLE_CONSTRUCTOR_THROWN_CHECKED_EXCEPTION,
+                    ReportSemError(SemanticError::CONSTRUCTOR_DOES_NOT_THROW_THIS_EXCEPTION,
                                    this_call -> this_token,
                                    this_call -> this_token,
-                                   this_type -> Name(),
                                    exception -> ContainingPackage() -> PackageName(),
                                    exception -> ExternalName());
                 }
@@ -1699,12 +1698,14 @@ assert(CanMethodInvocationConvert(super_type -> ContainingType(), super_call -> 
                 TypeSymbol *exception = constructor -> Throws(k);
                 if (! CatchableException(exception))
                 {
-                    ReportSemError(SemanticError::UNCATCHABLE_CONSTRUCTOR_THROWN_CHECKED_EXCEPTION,
-                                   super_call -> super_token,
-                                   super_call -> super_token,
-                                   constructor -> containing_type -> ExternalName(),
+                    ReportSemError(SemanticError::CONSTRUCTOR_DOES_NOT_THROW_SUPER_EXCEPTION,
+                                   super_call -> LeftToken(),
+                                   super_call -> RightToken(),
+                                   this_type -> Name(),
                                    exception -> ContainingPackage() -> PackageName(),
-                                   exception -> ExternalName());
+                                   exception -> ExternalName(),
+                                   constructor -> containing_type -> ContainingPackage() -> PackageName(),
+                                   constructor -> containing_type -> ExternalName());
                 }
             }
 

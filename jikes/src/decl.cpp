@@ -1716,21 +1716,17 @@ assert(this_type -> FieldMembersProcessed());
                     // then it is possible that the abstract method is just out-of-date and needs
                     // to be recompiled.
                     //
-                    if ((! containing_type -> ACC_INTERFACE()) &&
-                        containing_type -> file_symbol &&
-                        containing_type -> file_symbol -> IsClass())
-                         ReportSemError(SemanticError::NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD_FROM_ABSTRACT_CLASS,
-                                        identifier_token,
-                                        identifier_token,
-                                        method -> Header((Semantic *) this, identifier_token),
-                                        containing_type -> Name(),
-                                        this_type -> Name());
-                    else ReportSemError(SemanticError::NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD,
-                                        identifier_token,
-                                        identifier_token,
-                                        method -> Header((Semantic *) this, identifier_token),
-                                        containing_type -> Name(),
-                                        this_type -> Name());
+                    ReportSemError((! containing_type -> ACC_INTERFACE()) &&
+                                   (containing_type -> file_symbol && containing_type -> file_symbol -> IsClass())
+                                        ? SemanticError::NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD_FROM_ABSTRACT_CLASS
+                                        : SemanticError::NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD,
+                                   identifier_token,
+                                   identifier_token,
+                                   method -> Header((Semantic *) this, identifier_token),
+                                   containing_type -> ContainingPackage() -> PackageName(),
+                                   containing_type -> ExternalName(),
+                                   this_type -> ContainingPackage() -> PackageName(),
+                                   this_type -> ExternalName());
                 }
             }
         }
@@ -2810,32 +2806,6 @@ void Semantic::AddDefaultConstructor(TypeSymbol *type)
             super_call -> left_parenthesis_token  = left_loc;
             super_call -> right_parenthesis_token = right_loc;
             super_call -> semicolon_token         = right_loc;
- 
-            TypeSymbol *super_type = type -> super;
-            if (super_type)
-            {
-                MethodSymbol *super_constructor = FindConstructor(super_type, super_call, left_loc, right_loc);
-                //
-                // If a constructor with no argument was declared by the user and it contains a throws clause...
-                //
-                if (super_constructor)
-                {
-                    int num_throws = super_constructor -> NumThrows((Semantic *) this, class_declaration -> identifier_token);
-                    if (num_throws > 0)
-                    {
-                        for (int i = 0; i < num_throws; i++)
-                        {
-                            TypeSymbol *exception = super_constructor -> Throws(i);
-                            ReportSemError(SemanticError::DEFAULT_CONSTRUCTOR_CANNOT_THROW,
-                                           left_loc,
-                                           right_loc,
-                                           exception -> ContainingPackage() -> PackageName(),
-                                           exception -> ExternalName());
-                            constructor -> AddThrows(exception);
-                        }
-                    }
-                }
-            }
         }
 
         AstReturnStatement *return_statement = compilation_unit -> ast_pool -> GenReturnStatement();

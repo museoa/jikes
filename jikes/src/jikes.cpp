@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://www.ibm.com/research/jikes.
-// Copyright (C) 1996, 1999, International Business Machines Corporation
+// Copyright (C) 1996, 1998, International Business Machines Corporation
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -44,12 +44,10 @@ int main(int argc, char *argv[])
         // Be quiet about +A and +C. Those who know, know; those who don't, don't.
         //
         cerr << "\nIBM Research Jikes Compiler"
-             << "\n(C) Copyright IBM Corp. 1997, 1998.\n"
-             << "- Licensed Materials - Program Property of IBM - All Rights Reserved.\n"
-             << "\nuse: jikes [-classpath path][-d dir][-debug][-depend][-deprecation]\n"
-             << "  [-g][-nowarn][-nowrite][-O][-verbose]"
-             << "[+1.0][][++][+B][+D][+E][+F][+M][+P][+U][+Z]" 
-             << "  file.java...\n\n"
+             << "\n(C) Copyright IBM Corp. 1997, 1999.\n"
+             << "- Licensed Materials - Program Property of IBM - All Rights Reserved.\n\n"
+             << StringConstant::U8S_command_format
+             << "\n\n"
              << "-classpath path    use path for CLASSPATH\n"
              << "-d dir             write class files in directory dir\n"
              << "-debug             no effect (recognized for compatibility)\n"
@@ -68,7 +66,7 @@ int main(int argc, char *argv[])
              << "+F                 do full dependence check except for Zip and Jar files\n"
              << "+Kname=TypeKeyWord map name to type keyword\n"
              << "+M                 generate makefile dependencies\n"
-             << "+P                 generate pedantic listing\n"
+             << "+P                 Pedantic compilation - issues lots of warnings\n"
              << "+Td...d            set value of tab d...d spaces; each d is a decimal digit\n"
              << "+U                 do full dependence check including Zip and Jar files\n"
              << "+Z                 treat cautions as errors\n"

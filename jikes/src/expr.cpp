@@ -676,7 +676,6 @@ assert(enclosing_type);
         }
     }
 
-
     return method_symbol;
 }
 
@@ -1491,7 +1490,7 @@ assert(variable_symbol || method_symbol);
             if (! (base -> SuperExpressionCast() ||
                    containing_type -> ContainingPackage() == this_package ||
                    (this_type -> HasProtectedAccessTo(containing_type) && 
-                    (this_type -> IsSubclass(base_type) || base_type -> IsOwner(this_type)))))
+                    (base_type -> IsSubclass(this_type) || base_type -> IsOwner(this_type)))))
             {
                 ReportSemError((variable_symbol ? SemanticError::PROTECTED_FIELD_NOT_ACCESSIBLE
                                                 : SemanticError::PROTECTED_METHOD_NOT_ACCESSIBLE),
@@ -3275,11 +3274,15 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression *class
         for (int i = 0; i < num_throws; i++)
         {
             TypeSymbol *exception = super_constructor -> Throws(i);
-            ReportSemError(SemanticError::DEFAULT_CONSTRUCTOR_CANNOT_THROW,
-                          left_loc,
-                          right_loc,
+            ReportSemError(SemanticError::CONSTRUCTOR_DOES_NOT_THROW_SUPER_EXCEPTION,
+                          class_creation -> new_token,
+                          class_creation -> RightToken(),
+                          StringConstant::US_EMPTY,
                           exception -> ContainingPackage() -> PackageName(),
-                          exception -> ExternalName());
+                          exception -> ExternalName(),
+                          super_constructor -> containing_type -> ContainingPackage() -> PackageName(),
+                          super_constructor -> containing_type -> ExternalName());
+
             constructor -> AddThrows(exception);
         }
     }

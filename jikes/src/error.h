@@ -187,7 +187,8 @@ public:
         PRIVATE_CONSTRUCTOR_NOT_ACCESSIBLE,
         PROTECTED_CONSTRUCTOR_NOT_ACCESSIBLE,
         DEFAULT_CONSTRUCTOR_NOT_ACCESSIBLE,
-        DEFAULT_CONSTRUCTOR_CANNOT_THROW,
+        CONSTRUCTOR_DOES_NOT_THROW_THIS_EXCEPTION,
+        CONSTRUCTOR_DOES_NOT_THROW_SUPER_EXCEPTION,
         PARAMETER_REDECLARED,
         BAD_ABSTRACT_METHOD_MODIFIER,
         ABSTRACT_METHOD_MODIFIER_CONFLICT,
@@ -324,6 +325,8 @@ private:
 
     static unsigned char warning[];
     static void (*print_message[_num_kinds])(ErrorInfo &, LexStream *, Control &);
+
+    static bool NotDot(wchar_t *str) { return (! (wcslen(str) == 0 || wcscmp(str, StringConstant::US__DO_) == 0)); }
 
     static void PrintBAD_ERROR(ErrorInfo &, LexStream *, Control &);
     static void PrintDEFAULT_ERROR(ErrorInfo &, LexStream *, Control &);
@@ -486,7 +489,8 @@ private:
     static void PrintPRIVATE_CONSTRUCTOR_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
     static void PrintPROTECTED_CONSTRUCTOR_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
     static void PrintDEFAULT_CONSTRUCTOR_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
-    static void PrintDEFAULT_CONSTRUCTOR_CANNOT_THROW(ErrorInfo &, LexStream *, Control &);
+    static void PrintCONSTRUCTOR_DOES_NOT_THROW_THIS_EXCEPTION(ErrorInfo &, LexStream *, Control &);
+    static void PrintCONSTRUCTOR_DOES_NOT_THROW_SUPER_EXCEPTION(ErrorInfo &, LexStream *, Control &);
     static void PrintPARAMETER_REDECLARED(ErrorInfo &, LexStream *, Control &);
     static void PrintBAD_ABSTRACT_METHOD_MODIFIER(ErrorInfo &, LexStream *, Control &);
     static void PrintABSTRACT_METHOD_MODIFIER_CONFLICT(ErrorInfo &, LexStream *, Control &);

@@ -231,7 +231,10 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
             else if (strcmp(arguments.argv[i], "-O") == 0)
                  O = true;
             else if (strcmp(arguments.argv[i],"-deprecation") == 0)
+            {
+                 bad_options.Next() = new OptionError(SemanticError::UNSUPPORTED_OPTION, arguments.argv[i]);
                  deprecation = true;
+            }
             else if (strcmp(arguments.argv[i],"-nowrite") == 0)
                  nowrite = true;
             else if (strcmp(arguments.argv[i],"-nowarn") == 0)
