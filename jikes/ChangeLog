@@ -1,3 +1,13 @@
+2002-06-18  Eric B Blake  <eblake@ee.byu.edu>
+
+	* src/symbol.h (HasEnclosingInstance):
+	* src/symbol.cpp (HasEnclosingInstance): 
+	* src/expr.cpp (CreateAccessToType, ProcessAmbiguousName),
+	(ProcessThisExpression, ProcessSuperExpression): Fix test of
+	enclosing instances to not bypass uninitialized current
+	instance. This is on advice from Gilad Bracha (author of JLS 2nd
+	edition), and highlights some bad Jacks tests - bug 2920.
+
 2002-06-18  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.cpp (AppendString): 

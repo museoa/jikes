@@ -1564,8 +1564,6 @@ AstExpression *Semantic::CreateAccessToType(Ast *source,
     AstSuperCall *super_call = source -> SuperCallCast();
     AstClassInstanceCreationExpression *class_creation =
         source -> ClassInstanceCreationExpressionCast();
-    bool is_super = false;
-    bool is_this = false;
 
     if (simple_name)
         left_tok = right_tok = simple_name -> identifier_token;
@@ -1575,11 +1573,8 @@ AstExpression *Semantic::CreateAccessToType(Ast *source,
         left_tok = right_tok = super_call -> super_token;
     else if (field_access)
     {
-        if (field_access -> IsSuperAccess())
-            is_super = true;
-        else if (field_access -> IsThisAccess())
-            is_this = true;
-        assert(is_super || is_this);
+        assert(field_access -> IsSuperAccess() ||
+               field_access -> IsThisAccess());
         left_tok = field_access -> base -> LeftToken();
         right_tok = field_access -> base -> RightToken();
     }
@@ -1587,7 +1582,8 @@ AstExpression *Semantic::CreateAccessToType(Ast *source,
 
     AstExpression *resolution;
 
-    if (! this_type -> HasEnclosingInstance(environment_type))
+    if (! this_type -> HasEnclosingInstance(environment_type,
+                                            field_access != NULL))
     {
         if (ExplicitConstructorInvocation())
             ReportSemError(SemanticError::ENCLOSING_INSTANCE_ACCESS_FROM_CONSTRUCTOR_INVOCATION,
@@ -1645,16 +1641,15 @@ AstExpression *Semantic::CreateAccessToType(Ast *source,
         }
         TypeSymbol *resolved_type = resolution -> Type();
         if (resolved_type != environment_type &&
-            (! resolved_type -> IsSubclass(environment_type) ||
-             is_super || is_this))
+            (! resolved_type -> IsSubclass(environment_type) || field_access))
         {
             resolution = FindEnclosingInstance(resolution,
                                                environment_type,
-                                               (! is_super && ! is_this));
+                                               ! field_access);
         }
     }
 
-    if (is_super)
+    if (field_access && field_access -> IsSuperAccess())
         environment_type = environment_type -> super;
 
     return ConvertToType(resolution, environment_type);
@@ -2620,33 +2615,34 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                                field_access -> RightToken());
                 field_access -> symbol = control.no_type;
             }
-            else if (! this_type -> IsNestedIn(enclosing_type) ||
-                     ! this_type -> HasEnclosingInstance(enclosing_type))
+            else if (ExplicitConstructorInvocation() &&
+                     enclosing_type == this_type)
             {
-                if (this_type == enclosing_type)
-                {
-                    ReportSemError((field_access -> IsThisAccess()
-                                    ? SemanticError::MISPLACED_THIS_EXPRESSION
-                                    : SemanticError::MISPLACED_SUPER_EXPRESSION),
-                                   field_access -> LeftToken(),
-                                   field_access -> RightToken());
-                }
-                else
-                {
-                    ReportSemError(SemanticError::ILLEGAL_THIS_FIELD_ACCESS,
-                                   field_access -> LeftToken(),
-                                   field_access -> RightToken(),
-                                   enclosing_type -> ContainingPackage() -> PackageName(),
-                                   enclosing_type -> ExternalName(),
-                                   this_type -> ContainingPackage() -> PackageName(),
-                                   this_type -> ExternalName());
-                }
+                ReportSemError(SemanticError::SELF_IN_EXPLICIT_CONSTRUCTOR,
+                               field_access -> LeftToken(),
+                               field_access -> RightToken(),
+                               (field_access -> IsSuperAccess() ?
+                                StringConstant::US_super :
+                                StringConstant::US_this));
+                field_access -> symbol = control.no_type;
+            }
+            else if (! this_type -> IsNestedIn(enclosing_type))
+            {
+                ReportSemError(SemanticError::ILLEGAL_THIS_FIELD_ACCESS,
+                               field_access -> LeftToken(),
+                               field_access -> RightToken(),
+                               enclosing_type -> ContainingPackage() -> PackageName(),
+                               enclosing_type -> ExternalName(),
+                               this_type -> ContainingPackage() -> PackageName(),
+                               this_type -> ExternalName());
                 field_access -> symbol = control.no_type;
             }
             else
             {
-                field_access -> resolution_opt = CreateAccessToType(field_access, enclosing_type);
-                field_access -> symbol = field_access -> resolution_opt -> symbol;
+                field_access -> resolution_opt =
+                    CreateAccessToType(field_access, enclosing_type);
+                field_access -> symbol =
+                    field_access -> resolution_opt -> symbol;
             }
         }
         //
@@ -3293,19 +3289,19 @@ void Semantic::ProcessThisExpression(Ast *expr)
 {
     AstThisExpression *this_expression = (AstThisExpression *) expr;
 
-    if (StaticRegion())
-    {
-        ReportSemError(SemanticError::MISPLACED_THIS_EXPRESSION,
-                       this_expression -> LeftToken(),
-                       this_expression -> RightToken());
-        this_expression -> symbol = control.no_type;
-    }
-    else if (ExplicitConstructorInvocation())
+    if (ExplicitConstructorInvocation())
     {
         ReportSemError(SemanticError::SELF_IN_EXPLICIT_CONSTRUCTOR,
                        this_expression -> LeftToken(),
                        this_expression -> RightToken(),
-                       lex_stream -> NameString(this_expression -> this_token));
+                       StringConstant::US_this);
+        this_expression -> symbol = control.no_type;
+    }
+    else if (StaticRegion())
+    {
+        ReportSemError(SemanticError::MISPLACED_THIS_EXPRESSION,
+                       this_expression -> LeftToken(),
+                       this_expression -> RightToken());
         this_expression -> symbol = control.no_type;
     }
     else this_expression -> symbol = ThisType();
@@ -3323,19 +3319,19 @@ void Semantic::ProcessSuperExpression(Ast *expr)
                        super_expression -> RightToken());
         super_expression -> symbol = control.no_type;
     }
-    else if (StaticRegion())
-    {
-         ReportSemError(SemanticError::MISPLACED_SUPER_EXPRESSION,
-                        super_expression -> LeftToken(),
-                        super_expression -> RightToken());
-         super_expression -> symbol = control.no_type;
-    }
     else if (ExplicitConstructorInvocation())
     {
         ReportSemError(SemanticError::SELF_IN_EXPLICIT_CONSTRUCTOR,
                        super_expression -> LeftToken(),
                        super_expression -> RightToken(),
-                       lex_stream -> NameString(super_expression -> super_token));
+                       StringConstant::US_super);
+         super_expression -> symbol = control.no_type;
+    }
+    else if (StaticRegion())
+    {
+         ReportSemError(SemanticError::MISPLACED_SUPER_EXPRESSION,
+                        super_expression -> LeftToken(),
+                        super_expression -> RightToken());
          super_expression -> symbol = control.no_type;
     }
     else super_expression -> symbol = ThisType() -> super;

@@ -1007,7 +1007,7 @@ public:
     }
 
     TypeSymbol *EnclosingType();
-    bool HasEnclosingInstance(TypeSymbol *);
+    bool HasEnclosingInstance(TypeSymbol *, bool = false);
     bool HasProtectedAccessTo(TypeSymbol *);
 
     //

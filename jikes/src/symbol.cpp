@@ -1315,12 +1315,11 @@ void VariableSymbol::ProcessVariableSignature(Semantic *sem, LexStream::TokenInd
 bool TypeSymbol::IsNestedIn(TypeSymbol *type)
 {
     for (SemanticEnvironment *env = semantic_environment;
-         env != NULL; env = env -> previous)
+         env; env = env -> previous)
     {
         if (env -> Type() == type)
-             return true;
+            return true;
     }
-
     return false;
 }
 
@@ -1342,29 +1341,24 @@ TypeSymbol *TypeSymbol::EnclosingType()
 
 //
 // Check if this type has access to an enclosing instance of the named type.
+// If exact is true, the enclosing instance must be the specified type,
+// otherwise it is the innermost instance which is a subclass of type.
 //
-bool TypeSymbol::HasEnclosingInstance(TypeSymbol *type)
+bool TypeSymbol::HasEnclosingInstance(TypeSymbol *type, bool exact)
 {
     assert(semantic_environment);
-    if (ACC_STATIC())
-        return false;
-
-    SemanticEnvironment *env = semantic_environment;
-
-    //
-    // Note that in an explicit constructor invocation, we have access to
-    // enclosing instances (via constructor parameter this$0), but no access
-    // to "this".
-    //
-    if (env -> explicit_constructor)
-        env = env -> previous; // Skip 'this' type before it is initialized.
-
-    for ( ; env; env = env -> previous)
+    for (SemanticEnvironment *env = semantic_environment;
+         env; env = env -> previous)
     {
-        if (env -> StaticRegion()) // No 'this' in current level.
-            return false;
-        if (env -> Type() -> IsSubclass(type)) // Success!
-            return true;
+        if (exact ? (env -> Type() == type)
+            : (env -> Type() -> IsSubclass(type)))
+        {
+            //
+            // We found the innermost candidate type, now see if it is an
+            // enclosing type that is fully initialized.
+            //
+            return ! env -> StaticRegion();
+        }
         if (env -> Type() -> ACC_STATIC()) // No more enclosing levels exist.
             return false;
     }
