@@ -10,6 +10,7 @@
 
     <dl>
       <dt>CVSROOT</dt><dd><code>:pserver:anoncvs@oss.software.ibm.com:/usr/cvs/jikes</code></dd>
+      <dt>R/O CVS mirror's CVSROOT</dt><dd><code>:pserver:anoncvs@cvs.sourcery.org:/cvs/jikes</code></dd>
       <dt>password</dt><dd>anoncvs</dd>
       <dt>modules</dt><dd>
         <dl>
