@@ -122,7 +122,7 @@ IEEEfloat IEEEfloat::operator/ (IEEEfloat op)
     return (op.value.float_value == 0.0
                                   ? (value.float_value < 0.0
                                                        ? NEGATIVE_INFINITY()
-                                                       : value.float_value == 0.0
+                                                       : (value.float_value == 0.0
                                                                             ? NaN()
                                                                             : POSITIVE_INFINITY()))
                                   : IEEEfloat(value.float_value / op.value.float_value));
@@ -326,13 +326,13 @@ void IEEEdouble::Divide(IEEEdouble dividend, IEEEdouble divisor, IEEEdouble &quo
 #ifndef IEEE_DIV_0
     quotient = dividend.value.double_value / divisor.value.double_value;
 #else /* IEEE_DIV_0 */
-    quotient = (divisor.value.double_value == 0
+    quotient = (divisor.value.double_value == 0.0
                                             ? (dividend.value.double_value < 0.0
                                                                            ? NEGATIVE_INFINITY()
                                                                            : dividend.value.double_value == 0.0
                                                                                                           ? NaN()
                                                                                                           : POSITIVE_INFINITY())
-                                            : dividend.value.double_value / divisor.value.double_value);
+                                            : IEEEdouble(dividend.value.double_value / divisor.value.double_value));
 #endif /* IEEE_DIV_0 */
 
     return;
