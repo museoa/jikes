@@ -1248,15 +1248,18 @@ bool ByteCode::EmitStatement(AstStatement *statement)
                 return abrupt;
             }
             if (wp -> expression -> IsConstant())
+            {
                 // must be true, or internal statement would be
                 // unreachable
                 assert(semantic.IsConstantTrue(wp -> expression));
+                abrupt = true;
+            }
             else
                 EmitBranch(OP_GOTO, method_stack -> TopContinueLabel(),
                            wp -> statement);
             Label begin_label;
             DefineLabel(begin_label);
-            abrupt = EmitStatement(wp -> statement);
+            abrupt |= EmitStatement(wp -> statement);
             DefineLabel(method_stack -> TopContinueLabel());
             CompleteLabel(method_stack -> TopContinueLabel());
             assert(stack_depth == 0);
@@ -1302,6 +1305,7 @@ bool ByteCode::EmitStatement(AstStatement *statement)
     case Ast::FOR: // JLS 14.12
         {
             AstForStatement *for_statement = statement -> ForStatementCast();
+            bool abrupt = false;
             for (int i = 0; i < for_statement -> NumForInitStatements(); i++)
                 EmitStatement(for_statement -> ForInitStatement(i));
             Label begin_label,
@@ -1312,7 +1316,7 @@ bool ByteCode::EmitStatement(AstStatement *statement)
             //
             if (! for_statement -> statement -> can_complete_normally)
             {
-                bool abrupt = true;
+                abrupt = true;
                 if (for_statement -> end_expression_opt)
                 {
                     if (for_statement -> end_expression_opt -> IsConstant())
@@ -1341,8 +1345,10 @@ bool ByteCode::EmitStatement(AstStatement *statement)
                 EmitBranch(OP_GOTO, test_label,
                            for_statement -> statement);
             }
+            else
+                abrupt = true;
             DefineLabel(begin_label);
-            bool abrupt = EmitStatement(for_statement -> statement);
+            abrupt |= EmitStatement(for_statement -> statement);
             DefineLabel(method_stack -> TopContinueLabel());
             CompleteLabel(method_stack -> TopContinueLabel());
             for (int j = 0; j < for_statement -> NumForUpdateStatements(); j++)

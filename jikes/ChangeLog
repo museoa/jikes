@@ -1,5 +1,10 @@
 2002-05-16  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/bytecode.cpp (EmitStatement): Fix bug 2871, where infinite
+	loops were not properly detected.
+
+2002-05-16  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/dump.cpp (token_type): One more update.
 
 2002-05-16  Eric Blake  <ebb9@email.byu.edu>
