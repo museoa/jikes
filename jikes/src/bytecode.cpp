@@ -212,9 +212,15 @@ void ByteCode::CompileClass()
     }
 
     //
-    // Compile generated constructors.
+    // Compile all constructors.
     //
-    if (unit_type -> NumGeneratedConstructors() == 0)
+    // TODO: The generated dummy class used as an extra parameter in private
+    // constructor accessors is currently not a valid .class file. However,
+    // as it is never loaded by the virtual machine, we can live with an
+    // invalid class for the moment.
+    //
+    if (unit_type -> NumGeneratedConstructors() == 0 ||
+        unit_type -> declaration -> IsGenerated())
     {
         if (class_body -> default_constructor)
             CompileConstructor(class_body -> default_constructor, initialized_instance_fields);
@@ -225,14 +231,13 @@ void ByteCode::CompileClass()
                 AstConstructorDeclaration *constructor = class_body -> Constructor(i);
                 CompileConstructor(constructor, initialized_instance_fields);
             }
-
-            for (int k = 0; k < unit_type -> NumPrivateAccessConstructors(); k++)
-            {
-                MethodSymbol *constructor_sym = unit_type -> PrivateAccessConstructor(k);
-                AstConstructorDeclaration *constructor =
-                       constructor_sym -> method_or_constructor_declaration -> ConstructorDeclarationCast();
-                CompileConstructor(constructor, initialized_instance_fields);
-            }
+        }
+        for (int k = 0; k < unit_type -> NumPrivateAccessConstructors(); k++)
+        {
+            MethodSymbol *constructor_sym = unit_type -> PrivateAccessConstructor(k);
+            AstConstructorDeclaration *constructor =
+                constructor_sym -> method_or_constructor_declaration -> ConstructorDeclarationCast();
+            CompileConstructor(constructor, initialized_instance_fields);
         }
     }
     else
@@ -5415,6 +5420,16 @@ void ByteCode::EmitThisInvocation(AstThisCall *this_call)
     PutOp(OP_ALOAD_0); // load 'this'
 
     int stack_words = 0; // words on stack needed for arguments
+
+    //
+    // If this is an inner class, we must also pass along the enclosing
+    // instance in addition to this.
+    //
+    if (unit_type -> IsInner())
+    {
+        PutOp(OP_ALOAD_1); // load 'this$0'
+        stack_words++;
+    }
 
     for (int i = 0; i < this_call -> NumLocalArguments(); i++)
         stack_words += EmitExpression((AstExpression *) this_call -> LocalArgument(i));

@@ -3505,8 +3505,16 @@ void Semantic::UpdateLocalConstructors(TypeSymbol *inner_type)
 
         for (int j = 0; j < outermost_type -> NumAnonymousTypes(); j++)
         {
-            if (outermost_type -> AnonymousType(j) -> CanAccess(inner_type))
-                local_classes.Next() = outermost_type -> AnonymousType(j);
+            TypeSymbol *anon_type = outermost_type -> AnonymousType(j);
+            //
+            // Skip anonymous classes created as an extra parameter for
+            // private constructor accessors, and add all others to the list.
+            //
+            if (! anon_type -> declaration -> IsGenerated() &&
+                anon_type -> CanAccess(inner_type))
+            {
+                local_classes.Next() = anon_type;
+            }
         }
 
         //

@@ -1,3 +1,16 @@
+2002-05-15  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/bytecode.cpp (CompileClass): Fix bug 2256 for default
+	private constructors, jacks test 8.8.7-runtime-default-3.
+	(CompileClass): 
+	* src/expr.cpp (UpdateLocalConstructors): Fix bug 206, when
+	accessing private superconstructor from local class.
+
+2002-05-15  David Lum  <david.lum@level8.com>
+
+	* src/bytecode.cpp (EmitThisInvocation): Workaround for bug 2256 -
+	fix constructors in local and anonymous classes.
+
 2002-05-14  Mo DeJong  <supermo@bayarea.net>
 
 	* src/bytecode.cpp (EndMethod): Invoke new
