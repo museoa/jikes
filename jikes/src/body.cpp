@@ -394,13 +394,9 @@ void Semantic::ProcessWhileStatement(Ast *stmt)
 
     if ((! enclosed_statement -> is_reachable) && (while_statement -> is_reachable))
     {
-        AstBlock *block_body = enclosed_statement -> BlockCast();
-        if (! block_body || (block_body -> NumStatements() == 0))
-        {
-            ReportSemError(SemanticError::UNREACHABLE_STATEMENT,
-                           enclosed_statement -> LeftToken(),
-                           enclosed_statement -> RightToken());
-        }
+        ReportSemError(SemanticError::UNREACHABLE_STATEMENT,
+                       enclosed_statement -> LeftToken(),
+                       enclosed_statement -> RightToken());
     }
 
     //
@@ -485,13 +481,9 @@ void Semantic::ProcessForStatement(Ast *stmt)
 
     if ((! enclosed_statement -> is_reachable) && (for_statement -> is_reachable))
     {
-        AstBlock *block_body = enclosed_statement -> BlockCast();
-        if (! block_body || (block_body -> NumStatements() == 0))
-        {
-            ReportSemError(SemanticError::UNREACHABLE_STATEMENT,
-                           enclosed_statement -> LeftToken(),
-                           enclosed_statement -> RightToken());
-        }
+        ReportSemError(SemanticError::UNREACHABLE_STATEMENT,
+                       enclosed_statement -> LeftToken(),
+                       enclosed_statement -> RightToken());
     }
 
     for (int j = 0; j < for_statement -> NumForUpdateStatements(); j++)
