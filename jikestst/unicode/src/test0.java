@@ -31,8 +31,18 @@ public class test0
     
     static void напечататьInt(int \u041F)
     {
-        System.out.println(П+" >Строка<");
+        write(П+" >Строка<");
     }
+
+    public static void write(String s)
+    {
+        StringBuffer sb=new StringBuffer();
+        for(int i=0;i<s.length();i++)
+                sb.append(" "+(int)s.charAt(i));
+        sb.append("\n");
+        System.out.println(sb.toString());
+    }
+
 };
 
 

@@ -26,7 +26,7 @@ public class test1
         
         int напечатать()
             {
-                System.out.println("Значение :"+значение);
+                write("Значение :"+значение);
                 return значение;
             }
     };
@@ -42,6 +42,16 @@ public class test1
         int res=к.напечатать();
         System.exit(res==23?0:1);
     }
+
+    public static void write(String s)
+    {
+        StringBuffer sb=new StringBuffer();
+        for(int i=0;i<s.length();i++)
+                sb.append(" "+(int)s.charAt(i));
+        sb.append("\n");
+        System.out.println(sb.toString());
+    }
+
 };
 
 

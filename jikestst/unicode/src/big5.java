@@ -4,32 +4,15 @@ public class big5
 {
     public static void main(String argv[])
     {
-        try
-        {
-            FileOutputStream file = new FileOutputStream("big5.html");
+            write("華康中黑體\">下使用的檔案管理共享軟體。");
+    }
 
-            OutputStreamWriter writer = new OutputStreamWriter(file, "Big5");
-
-            writer.write("<HTML>\r\n" +
-                         "<HEAD>\r\n" +
-                         "    <META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=BIG5\">\r\n" +
-                         "    <TITLE>big5 Characters</TITLE>\r\n" +
-                         "</HEAD>\r\n" +
-                         "<BODY>\r\n");
-
-
-
-            writer.write("Some stuff: ");
-            writer.write("華康中黑體\">下使用的檔案管理共享軟體。<BR>\r\n");
-            writer.write("</BODY>\r\n" +
-                         "</HTML>\r\n");
-
-            writer.close();
-            file.close();
-        }
-        catch (Exception exc)
-        {
-            System.err.println(exc.getMessage());
-        }
+    public static void write(String s)
+    {
+        StringBuffer sb=new StringBuffer();
+        for(int i=0;i<s.length();i++)
+                sb.append(" "+(int)s.charAt(i));
+        sb.append("\n");
+        System.out.println(sb.toString());
     }
 }

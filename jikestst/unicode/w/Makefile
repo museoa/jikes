@@ -21,6 +21,5 @@ clean:
 	rm -f *.class
 	rm -f *.[cer]
 	rm -f *.dif
-	rm -f *.html
 	rm -f core
 

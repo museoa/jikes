@@ -26,4 +26,5 @@ e utf8 utf8
 a -encoding koi8-r
 e test0 test0
 e test1 test1
-c test2
+c test2 test2
+#
