@@ -1800,6 +1800,12 @@ void Semantic::ProcessThisCall(AstThisCall *this_call)
 void Semantic::ProcessSuperCall(AstSuperCall *super_call)
 {
     TypeSymbol *this_type = ThisType();
+    if (super_call -> symbol)
+    {
+        assert(this_type -> Anonymous());
+        return;
+    }
+
     // Signal that we are about to process an explicit constructor invocation.
     ExplicitConstructorInvocation() = super_call;
 

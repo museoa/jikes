@@ -304,7 +304,8 @@ void Scanner::ScanStarComment()
             case U_LINE_FEED:
                 // Record new line.
                 lex -> line_location.Next() = cursor - lex -> InputBuffer();
-                // fallthrough
+                state = HEADER;
+                break;
             case U_SPACE:
             case U_FORM_FEED:
             case U_HORIZONTAL_TAB:

@@ -1,5 +1,15 @@
 2002-07-18  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/expr.cpp (FindConstructor, FindMethodInType),
+	(FindVariableInType, ProcessAmbiguousName),
+	(GetAnonymousConstructor): Improve error messages for @deprecated.
+	* src/body.cpp (ProcessSuperCall): Avoid repeating work, and thus
+	duplicate error messages.
+	* src/scanner.cpp (ScanStarComment): Fix @deprecated parsing - bug
+	519.
+
+2002-07-18  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/bytecode.cpp (EmitStatement): Fix case of infinite do-while
 	loop emitting dead code - bug 3085.
 	* src/expr.cpp (ProcessMethodName): Fix handling of non-inherited

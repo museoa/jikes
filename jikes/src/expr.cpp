@@ -575,9 +575,10 @@ MethodSymbol *Semantic::FindConstructor(TypeSymbol *containing_type, Ast *ast,
 
     if (control.option.deprecation &&
         constructor_symbol -> IsDeprecated() &&
-        constructor_symbol -> containing_type -> outermost_type != ThisType() -> outermost_type)
+        (constructor_symbol -> containing_type -> outermost_type !=
+         ThisType() -> outermost_type))
     {
-        ReportSemError(SemanticError::DEPRECATED_METHOD,
+        ReportSemError(SemanticError::DEPRECATED_CONSTRUCTOR,
                        left_tok,
                        right_tok,
                        constructor_symbol -> Header(),
@@ -773,8 +774,9 @@ MethodSymbol *Semantic::FindMethodInType(TypeSymbol *type,
     //
     method -> ProcessMethodThrows(this, field_access -> identifier_token);
 
-    if (control.option.deprecation &&
-        method -> IsDeprecated() && method -> containing_type -> outermost_type != ThisType() -> outermost_type)
+    if (control.option.deprecation && method -> IsDeprecated() &&
+        (method -> containing_type -> outermost_type !=
+         ThisType() -> outermost_type))
     {
         ReportSemError(SemanticError::DEPRECATED_METHOD,
                        method_call -> LeftToken(),
@@ -1170,9 +1172,9 @@ VariableSymbol *Semantic::FindVariableInType(TypeSymbol *type,
                        variable -> ContainingType() -> ExternalName());
     }
 
-    if (control.option.deprecation &&
-        variable -> IsDeprecated() &&
-        variable -> ContainingType() -> outermost_type != type -> outermost_type)
+    if (control.option.deprecation && variable -> IsDeprecated() &&
+        (variable -> ContainingType() -> outermost_type !=
+         ThisType() -> outermost_type))
     {
         ReportSemError(SemanticError::DEPRECATED_FIELD,
                        field_access -> LeftToken(),
@@ -2412,7 +2414,19 @@ void Semantic::ProcessAmbiguousName(Ast *name)
         // containing the Identifier, then a compile-time error results.
         //
         else if ((type = FindType(simple_name -> identifier_token)))
-             simple_name -> symbol = type;
+        {
+            simple_name -> symbol = type;
+            if (control.option.deprecation &&
+                type -> IsDeprecated() &&
+                (type -> outermost_type != ThisType() -> outermost_type))
+            {
+                ReportSemError(SemanticError::DEPRECATED_TYPE,
+                               simple_name -> identifier_token,
+                               simple_name -> identifier_token,
+                               type -> ContainingPackage() -> PackageName(),
+                               type -> ExternalName());
+            }
+        }
         //
         // ...Otherwise, the Ambiguous name is reclassified as a PackageName.
         // While the JLS claims a later step determines whether or not
@@ -3594,6 +3608,43 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression *class
         super_call -> AddArgument(simple_name);
     }
 
+    //
+    // Worry about shadow variables in the super type
+    //
+    if (super_type -> IsLocal())
+    {
+        int param_count = super_type -> NumConstructorParameters();
+        if (super_type -> LocalClassProcessingCompleted() && param_count)
+        {
+            super_call -> AllocateLocalArguments(param_count);
+            for (int k = 0; k < param_count; k++)
+            {
+                //
+                // We may need to create a shadow in the outermost
+                // local class enclosing the variable.
+                //
+                AstSimpleName *simple_name = compilation_unit ->
+                    ast_pool -> GenSimpleName(super_call -> super_token);
+                VariableSymbol *accessor =
+                    FindLocalVariable(super_type -> ConstructorParameter(k),
+                                      anonymous_type);
+                simple_name -> symbol = accessor;
+                TypeSymbol *owner = accessor -> ContainingType();
+                if (owner != anonymous_type)
+                    CreateAccessToScopedVariable(simple_name, owner);
+                super_call -> AddLocalArgument(simple_name);
+            }
+        }
+        else
+        {
+            //
+            // We are within body of super_type; save processing for
+            // later, since not all shadows may be known yet. See
+            // ProcessClassDeclaration.
+            //
+            super_type -> AddLocalConstructorCallEnvironment(GetEnvironment(super_call));
+        }
+    }
     //
     // We set the signature of the constructor now, although it may be modified
     // later if this is in a local constructor call environment.
