@@ -2588,7 +2588,7 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
                  return ((field_access -> IsClassAccess()) && (field_access -> resolution_opt))
                                                             ? (unit_type -> outermost_type -> ACC_INTERFACE()
                                                                           ? EmitExpression(field_access -> resolution_opt, need_value)
-                                                                          : GenerateClassAccess(field_access))
+                                                                          : GenerateClassAccess(field_access, need_value))
                                                             : EmitFieldAccess(field_access, need_value);
              }
         case Ast::CALL:
@@ -2869,8 +2869,10 @@ void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
 //
 // here to generate code to dymanically initialize the field for a class literal and then return its value
 //
-int ByteCode::GenerateClassAccess(AstFieldAccess *field_access)
+int ByteCode::GenerateClassAccess(AstFieldAccess *field_access, bool need_value)
 {
+    if (! need_value)
+        return 0;
     //
     // simple case in immediate environment, can use field on both left and right
     // (TypeSymbol *type)

@@ -1,3 +1,9 @@
+2001-10-14  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/bytecode.h:
+	* src/bytecode.cpp (GenerateClassAccess): Fix a regression
+	reported in bug 2016 with class literal - patch 206.
+
 2001-10-13  Daniel Resare  <noa@metamatrix.se>
 
 	* jikes.spec: Properly set the file ownership to root

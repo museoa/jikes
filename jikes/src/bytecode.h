@@ -705,7 +705,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void GenerateAccessMethod(MethodSymbol *);
     void ChangeStack (int);
     void ResolveAccess(AstExpression *);
-    int  GenerateClassAccess(AstFieldAccess *);
+    int  GenerateClassAccess(AstFieldAccess *, bool);
     void GenerateClassAccessMethod(MethodSymbol *);
     void EmitCheckForNull(AstExpression *);
 
