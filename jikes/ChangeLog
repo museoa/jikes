@@ -1,3 +1,11 @@
+2000-05-30  Mo DeJong  <mdejong@cygnus.com>
+
+	* src/config.cpp:
+	* src/config.h: Removed. These two
+	files were part of the old build
+	system. They should have been removed
+	when the new build system was merged.
+
 2000-05-23  Mo DeJong  <mdejong@cygnus.com>
 
 	* Makefile.in:
