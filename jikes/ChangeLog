@@ -1,3 +1,24 @@
+2001-04-01  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/ast.h:
+	* src/lookup.h:
+	* src/lookup.cpp:
+	Add use of reinterpret_cast<>() and
+	dynamic_cast<>() to remove warnings when
+	compiling with aCC.  This includes moving
+	blocks of code so that dynamic_cast<>()
+	is not operating on incomplete classes.
+	* src/op.h:
+	* src/op.cpp (Operators):
+	Changed access to string literals to be
+	through const char * instead of char *,
+	to remove warnings when compiling with
+	aCC.
+	* src/symbol.h:
+	Remove the use of overload as an identifier,
+	as it conflicts with the (obsolete) C++
+	keyword.
+
 2001-03-30  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/jikesapi.cpp (DefaultFileWriter):
@@ -7,7 +28,6 @@
 	Improved the casting calls, in particular
 	repairing one detected as an ambiguity in
 	g++ 2.7 (bug 390).
-
 	
 2001-03-30  Chris Abbey  <cabbey@bresnanlink.net>
 
@@ -1485,11 +1505,11 @@
 	illegal access to protected constructor from other pckage.
 	problem reportred by:  Garrick Olson <garrick_olson@hotmail.com>
 
-2000-03-31  Chris Abbey <cabbey@home.net>                                      
-                                                                               
-       * configure.in: enable --with-icc=PROG, also prevent gcc-isms in        
-       the tests when using icc/xlC by setting GXX accordingly.                
-                             
+2000-03-31  Chris Abbey <cabbey@home.net>      
+	       
+       * configure.in: enable --with-icc=PROG, also prevent gcc-isms in	
+       the tests when using icc/xlC by setting GXX accordingly.
+	     
 2000-04-03  Vadim Zaliva  <lord@crocodile.org>
 
 	* jikes.html: corrected +DR option description (was confused with +M).
@@ -1536,14 +1556,14 @@
 	* config.cpp: updated brief command line options description 
 	(inconsistency reported	by Chris Abbey <cabbey@home.net>)
 
-2000-03-09 Joe Berkovitz <joeb@atg.com>                                        
-        * option.h                                                              
-        * option.cpp                                                            
-        * jikes.cpp                                                             
-        * system.cpp: rename +CSO option and classpath_search_order             
-          variable to +OLDCSO and old_classpath_search_order, and invert          
-          sense of option correspondingly.                                        
-                         
+2000-03-09 Joe Berkovitz <joeb@atg.com>	
+	* option.h	      
+	* option.cpp	    
+	* jikes.cpp	     
+	* system.cpp: rename +CSO option and classpath_search_order	     
+	  variable to +OLDCSO and old_classpath_search_order, and invert
+	  sense of option correspondingly.	
+	 
 2000-02-29  Vadim Zaliva  <lord@crocodile.org>
 
 	* Switched to ICU-1.4.0
@@ -1574,16 +1594,16 @@
 	Some Vadim remarks taken in account:
 
 	1) The  default read object now always opens files with the mode "rb".
-	2) The classes to manipulate files have been renamed:                           
-                                                                                
-	FileReader           (Reader was causing problems)                              
-        DefaultFileReader                                                               
-                                                                                
-        FileWriter           (Writer was causing problems)                              
-        DefaultFileWriter                                                               
-                                                                                
-        3) Small fixes that I had overlooked in the UNIX code                           
-        since I was working on an NT box.                                           
+	2) The classes to manipulate files have been renamed:	   
+
+	FileReader	   (Reader was causing problems)	      
+	DefaultFileReader	       
+
+	FileWriter	   (Writer was causing problems)	      
+	DefaultFileWriter	       
+
+	3) Small fixes that I had overlooked in the UNIX code	   
+	since I was working on an NT box.	   
 
 	* jikes.cpp: If no object of type jikesAPI is defined then main
  	will create an object of JikesAPI and use this as the default.
@@ -1592,13 +1612,13 @@
 	* jikesapi.cpp: Made the methods JikesAPI::read() and
  	JikesAPI::write() non virtual. These methods now do error
  	checking.
-                                                                                
-        The methods 
-	
-	JikesAPI::readerFactory() and                                   
-        JikesAPI::writerFactory() 
 
-	are now the virtual methods that can be overridden.                   
+	The methods 
+	
+	JikesAPI::readerFactory() and   
+	JikesAPI::writerFactory() 
+
+	are now the virtual methods that can be overridden.   
 
 2000-02-20  Martin York <myork202@mail.mwfree.net>
 
@@ -1725,7 +1745,7 @@
        * option.cpp: Fixed an off-by-one error in a string
        allocation.  Debugging-malloc libraries are a
        Good Thing.
-                                                          
+	  
 2000-01-13  Vadim Zaliva  <lord@crocodile.org>
 
 	* jikes.spec: ChangeLog included in RPM package.
@@ -1740,13 +1760,13 @@
 2000-01-07 Vadim Zaliva  <lord@crocodile.org>
 
 	* long.cpp: Changed "(BaseLong)*this" into "+(*this)"
-        This compiles fine under CodeWarrior.
-        It also makes it look logical as a bonus :-)
+	This compiles fine under CodeWarrior.
+	It also makes it look logical as a bonus :-)
 	(suggested by Martin York <myork@oxmol.co.uk>).
 
 	* option.h:  CodeWarrior does not cope well with the definition
-        as it stands. I have commented out the bit it does not
-        like. This should not effect the meaning of the code.
+	as it stands. I have commented out the bit it does not
+	like. This should not effect the meaning of the code.
 	(suggested by Martin York <myork@oxmol.co.uk>).
 
 2000-01-06  Vadim Zaliva  <lord@crocodile.org>
@@ -1839,7 +1859,7 @@
 
 	* configure.in (EXECUTABLE): patch provided by 
 	Igor Khavkine <i_khavki@alcor.concordia.ca> will enable 
-        Jikes to build successfully on Debian GNU/Hurd.
+	Jikes to build successfully on Debian GNU/Hurd.
 
 	* jikes.cpp (main): version changed to 1.11
 
@@ -2765,13 +2785,13 @@ dejong@cs.umn.edu
 
 	     Thus, I can use:
 
-	          CXX=cxx ./configure
+	     CXX=cxx ./configure
 
-		  This should work with other platforms supporting the "bool" keyword as
-		  well, as there is nothing really Compaq-specific in the test that I
-		  have added.
+	This should work with other platforms supporting the "bool" keyword as
+  well, as there is nothing really Compaq-specific in the test that I
+  have added.
 
-		  Feel free to incorporate this into a future release of Jikes. 
+  Feel free to incorporate this into a future release of Jikes. 
 
 
 1999-07-13    <shields@jikes.watson.ibm.com>
@@ -3246,7 +3266,7 @@ dejong@cs.umn.edu
 	* option.cpp:
 	* jikes.cpp: 
 	* getclass.cpp
-        drop +$ option, change +V to +P
+	drop +$ option, change +V to +P
 
 	* bytecode.cpp: 
 	delete code causing problems with abstract
@@ -3302,7 +3322,7 @@ dejong@cs.umn.edu
 	* expr.cpp: 
 	* java.g: 
 	* javaact.cpp:
-        * javaact.h: 
+	* javaact.h: 
 	* javadcl.h: 
 	* javadef.h: 
 	* javasym.h: 

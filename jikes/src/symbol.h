@@ -2198,14 +2198,14 @@ inline BlockSymbol *BlockSymbol::InsertBlockSymbol(int hash_size = 0)
 
 inline MethodSymbol *SymbolTable::Overload(MethodSymbol *base_method)
 {
-    MethodSymbol *overload = new MethodSymbol(base_method -> Identity());
-    AddMethodSymbol(overload);
+    MethodSymbol *overload_method = new MethodSymbol(base_method -> Identity());
+    AddMethodSymbol(overload_method);
 
-    overload -> next = overload; // mark overloaded method
-    overload -> next_method = base_method -> next_method;
-    base_method -> next_method = overload;
+    overload_method -> next = overload_method; // mark overloaded method
+    overload_method -> next_method = base_method -> next_method;
+    base_method -> next_method = overload_method;
 
-    return overload;
+    return overload_method;
 }
 
 
@@ -2217,34 +2217,34 @@ inline MethodSymbol *TypeSymbol::Overload(MethodSymbol *base_method)
 }
 
 
-inline void SymbolTable::Overload(MethodSymbol *base_method, MethodSymbol *overload)
+inline void SymbolTable::Overload(MethodSymbol *base_method, MethodSymbol *overload_method)
 {
-    AddMethodSymbol(overload);
+    AddMethodSymbol(overload_method);
 
-    overload -> next = overload; // mark overloaded method
-    overload -> next_method = base_method -> next_method;
-    base_method -> next_method = overload;
+    overload_method -> next = overload_method; // mark overloaded method
+    overload_method -> next_method = base_method -> next_method;
+    base_method -> next_method = overload_method;
 
     return;
 }
 
-inline void TypeSymbol::Overload(MethodSymbol *base_method, MethodSymbol *overload)
+inline void TypeSymbol::Overload(MethodSymbol *base_method, MethodSymbol *overload_method)
 {
     assert(table);
 
-    table -> Overload(base_method, overload);
+    table -> Overload(base_method, overload_method);
 }
 
 
 inline MethodSymbol *SymbolTable::LocalConstructorOverload(MethodSymbol *base_method)
 {
-    MethodSymbol *overload = new MethodSymbol(base_method -> Identity());
-    AddMethodSymbol(overload);
+    MethodSymbol *overload_method = new MethodSymbol(base_method -> Identity());
+    AddMethodSymbol(overload_method);
 
-    overload -> next = overload; // mark overloaded method
-    overload -> SetGeneratedLocalConstructor(base_method);
+    overload_method -> next = overload_method; // mark overloaded method
+    overload_method -> SetGeneratedLocalConstructor(base_method);
 
-    return overload;
+    return overload_method;
 }
 
 
