@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
                 "+Td...d            set value of tab d...d spaces; each d is a decimal digit\n"
                 "+U                 do full dependence check including Zip and Jar files\n"
                 "+Z                 treat cautions as errors\n"
-                "\nVersion 1.05 (15 Sep 99)"
+                "\nVersion 1.05 (16 Sep 99)"
                 " by Philippe Charles and David Shields, IBM Research.\n"
                 "Please report problems to Jikes Project at http://ibm.com/developerworks/opensource.\n");
 

@@ -1,7 +1,7 @@
 Summary: java source to bytecode compiler
 %define version 1.05
 Buildroot: /var/tmp/jikes-%{version}-root
-Copyright: IBM Public License Version 1.0 - Jikes Compiler, http://ibm.com/developerworks/opensource
+Copyright: IBM Public License, http://ibm.com/developerworks/opensource
 Group: Development/Languages
 Name: jikes
 Packager: David Shields (shields@watson.ibm.com)
