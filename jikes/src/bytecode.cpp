@@ -1594,13 +1594,12 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *sws)
 void ByteCode::EmitTryStatement(AstTryStatement *statement)
 {
     int final_depth = statement -> block -> nesting_level,
+        special_end_pc = 0, // end_pc for "special" handler
         start_pc = code_attribute -> CodeLength(); // start pc
 
-    //
-    // call finally block if have finally handler
-    //
     if (statement -> finally_clause_opt)
-    { 
+    {
+        // Initialize for processing finally clause.
         assert(block_symbols[final_depth - 1]);
 
         BlockSymbol *block_symbol = block_symbols[final_depth - 1] -> BlockCast();
@@ -1615,19 +1614,26 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
     // increment max_stack in case exception thrown while stack at greatest depth
     //
     max_stack++;
-    if (statement -> finally_clause_opt) // call finally block if have finally handler
-    {
-        PutOp(OP_JSR);
-        UseLabel(final_labels[final_depth], 2, 1);
-    }
-    
+
+    // The computation of end_pc, the instruction following the last instruction in the body of the
+    // try block, does not include the code, if any, needed to call a finally block or skip to the
+    // end of the try statement.
+    int end_pc = code_attribute -> CodeLength();
+
     Label end_label;
+    special_end_pc = end_pc;
     if (statement -> block -> can_complete_normally)
+    {
+        if (statement -> finally_clause_opt)
+        {
+            // Call finally block if have finally handler.
+            PutOp(OP_JSR);
+            UseLabel(final_labels[final_depth], 2, 1);
+        }
+        // There must be at least one catch (or finally) block following
+        // this try block. Branch around that code to the next statement.
         EmitBranch(OP_GOTO, end_label);
-
-    PutNop(0); // emit NOP so end_pc will come out right
-
-    int end_pc = last_op_pc;
+    }
 
     //
     // process catch clauses
@@ -1647,51 +1653,73 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
                                        handler_pc,
                                        RegisterClass(parameter_symbol -> Type() -> fully_qualified_name));
 
+        special_end_pc = code_attribute -> CodeLength();
+
         if (statement -> finally_clause_opt) // call finally block if have finally handler
         {
-            PutOp(OP_JSR);
-            UseLabel(final_labels[final_depth], 2, 1);
+            if (catch_clause -> block -> can_complete_normally)
+            {
+                PutOp(OP_JSR);
+                UseLabel(final_labels[final_depth], 2, 1);
+            }
         }
-
+        
         if (catch_clause -> block -> can_complete_normally)
-            EmitBranch(OP_GOTO, end_label);
+        // If there are more catch clauses, or a finally clause, then emit branch to
+        // skip over their code and on to the next statement.
+            if (statement -> finally_clause_opt || i < (statement -> NumCatchClauses() - 1))
+                EmitBranch(OP_GOTO, end_label);
     }
 
     if (statement -> finally_clause_opt)
     {
-        int handler_pc = code_attribute -> CodeLength();
         has_finally_clause[final_depth] = 0; // reset once finally clause processed
         finally_blocks--;
 
         BlockSymbol *block_symbol = block_symbols[final_depth - 1] -> BlockCast();
 
-        //
-        // handler for finally()
-        // push thrown value
-        //
-        StoreLocal(block_symbol -> try_variable_index, this_control.Object());
-        PutOp(OP_JSR);
-        UseLabel(final_labels[final_depth], 2, 1);
-        LoadLocal(block_symbol -> try_variable_index, this_control.Object());
-        PutOp(OP_ATHROW); // and rethrow the value to the invoker
+        // Emit code for "special" handler to make sure finally clause is
+        // invoked in case an otherwise uncaught exception is thrown in the
+        // try block, or an exception is thrown from within a catch block.
 
+        code_attribute -> AddException(start_pc,
+                                       special_end_pc,
+                                       code_attribute -> CodeLength(),
+                                       0);
+        StoreLocal(block_symbol -> try_variable_index, this_control.Object()); // Save exception
+        PutOp(OP_JSR); // Jump to finally block.
+        UseLabel(final_labels[final_depth], 2, 1);
+        LoadLocal(block_symbol -> try_variable_index, this_control.Object()); // Reload exception,
+        PutOp(OP_ATHROW); // and rethrow it.
+
+        // Generate code for finally clause.
+        
         DefineLabel(final_labels[final_depth]);
         CompleteLabel(final_labels[final_depth]);
-        StoreLocal(block_symbol -> try_variable_index+1, this_control.Object()); // save return address
+        if (statement -> finally_clause_opt -> block -> can_complete_normally)
+        {
+            // Finally block can complete normally, so save the return address.
+            StoreLocal(block_symbol -> try_variable_index + 1, this_control.Object());
+        }
+        else
+        {
+            // Finally block cannot complete normally, so don't need the return address.
+            // Pop it from stack.
+            PutOp(OP_POP);
+        }
         EmitStatement(statement -> finally_clause_opt -> block);
-        PutOp(OP_RET);
-        PutU1(block_symbol -> try_variable_index + 1); // return using saved address
-
-        code_attribute -> AddException(start_pc, handler_pc, handler_pc, 0);
+        if (statement -> finally_clause_opt -> block -> can_complete_normally)
+        {
+            // Finally can complete normally, so return to caller using the
+            // saved return address.
+            PutOp(OP_RET);
+            PutU1(block_symbol -> try_variable_index + 1);
+        }
     }
 
     if (IsLabelUsed(end_label))
-    {
         DefineLabel(end_label);
-        CompleteLabel(end_label);
-        PutNop(1); // to make sure have code after end of try statement
-    }
-    else CompleteLabel(end_label);
+    CompleteLabel(end_label);
 
     return;
 }
