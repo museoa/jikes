@@ -5,21 +5,8 @@
 #ifndef _JIKES_API_H_FLAG_
 #define _JIKES_API_H_FLAG_
 
-#ifdef HAVE_STDLIB_H
-# include <stdlib.h>
-#endif
-
-#ifdef HAVE_STDIO_H
-# include <stdio.h>
-#endif
-
-#ifdef HAVE_WINDOWS_H
-# include <windows.h>
-#endif
-
 class JikesOption
-{
-    
+{    
  public:
     
     char *classpath    ;
@@ -134,30 +121,6 @@ class JikesAPI
         };
 
     /**
-     * A default implamentation of ReadObject that read from the file sysytem.
-     */ 
-    class DefaultFileReader: public FileReader
-        {
-    public:
-
-            DefaultFileReader(const char *fileName);
-            virtual  ~DefaultFileReader();
-            
-            virtual const char     *getBuffer()      {return(buffer);}
-            virtual       size_t    getBufferSize()  {return(size);}
-            
-    private:
-            
-            const char     *buffer;
-            size_t    size;
-// FIXME : need to move into platform.h
-#ifdef   WIN32_FILE_SYSTEM
-            HANDLE    srcfile;
-            HANDLE    mapfile;
-#endif 
-        };
-
-    /**
      * Define the virtual base class for all WriteObjects.
      * A pointer to an object of this type is returned by JikesAPI::write()
      */
@@ -175,34 +138,7 @@ class JikesAPI
             virtual  size_t    doWrite(const unsigned char *data, size_t size)   = 0;	// Garanteed not to be called with a combined total of more than maxSize bytes during the lifespan of the object.
             size_t   maxSize;
         };
-    
-    /**
-     * A default implamentaion of WriteObject that writes to the file system.
-     */
-    class DefaultFileWriter: public FileWriter
-        {
-    public:
-            DefaultFileWriter(const char *fileName,size_t maxSize);
-            virtual  ~DefaultFileWriter();
-            
-            virtual  bool      isValid();
-            
-    private:
-            
-            virtual  size_t    doWrite(const unsigned char *data,size_t size);
-            
-            bool      valid;
-// FIXME: need to clean this up, why is this not wrapped in a platform.h function?
-#ifdef UNIX_FILE_SYSTEM
-            FILE     *file;
-#elif defined(WIN32_FILE_SYSTEM)
-            HANDLE    file;
-            HANDLE    mapfile;
-            u1       *string_buffer;
-            size_t    dataWritten;
-#endif
-        };
-    
+        
     virtual int stat(const char *filename, struct stat *status);
     
     virtual FileReader  *read  (const char *filename              );

@@ -7,6 +7,68 @@
 #include "control.h"
 #include "jikesapi.h"
 
+#ifdef HAVE_STDLIB_H
+# include <stdlib.h>
+#endif
+
+#ifdef HAVE_STDIO_H
+# include <stdio.h>
+#endif
+
+#ifdef HAVE_WINDOWS_H
+# include <windows.h>
+#endif
+
+/**
+ * A default implementation of ReadObject that read from the file sysytem.
+ */ 
+class DefaultFileReader: public JikesAPI::FileReader
+{
+    public:
+    
+    DefaultFileReader(const char *fileName);
+    virtual  ~DefaultFileReader();
+    
+    virtual const char     *getBuffer()      {return(buffer);}
+    virtual       size_t    getBufferSize()  {return(size);}
+    
+    private:
+    
+    const char     *buffer;
+    size_t    size;
+// FIXME : need to move into platform.h
+#ifdef   WIN32_FILE_SYSTEM
+    HANDLE    srcfile;
+    HANDLE    mapfile;
+#endif 
+};
+
+/**
+ * A default implementaion of WriteObject that writes to the file system.
+ */
+class DefaultFileWriter: public JikesAPI::FileWriter
+{
+    public:
+    DefaultFileWriter(const char *fileName,size_t maxSize);
+    virtual  ~DefaultFileWriter();
+    
+    virtual  bool      isValid();
+    
+    private:
+    
+    virtual  size_t    doWrite(const unsigned char *data,size_t size);
+    
+    bool      valid;
+// FIXME: need to clean this up, why is this not wrapped in a platform.h function?
+#ifdef UNIX_FILE_SYSTEM
+    FILE     *file;
+#elif defined(WIN32_FILE_SYSTEM)
+    HANDLE    file;
+    HANDLE    mapfile;
+    u1       *string_buffer;
+    size_t    dataWritten;
+#endif
+};
 
 JikesOption::~JikesOption()
 {
@@ -146,7 +208,7 @@ int JikesAPI::stat(const char *fileName,struct stat *status)
  */
 JikesAPI::FileReader *JikesAPI::read(const char *fileName)
 {
-    FileReader  *result  =  new JikesAPI::DefaultFileReader(fileName);
+    FileReader  *result  =  new DefaultFileReader(fileName);
 
     // NB even if a file is empty (0 bytes)
     // This will return a pointer to 0 length array
@@ -164,7 +226,7 @@ JikesAPI::FileReader *JikesAPI::read(const char *fileName)
  */
 JikesAPI::FileWriter *JikesAPI::write(const char *fileName, size_t bytes) 
 {
-    FileWriter *result  = new JikesAPI::DefaultFileWriter(fileName, bytes);
+    FileWriter *result  = new DefaultFileWriter(fileName, bytes);
     
     if(result && (!result->isValid()))
     {
@@ -202,7 +264,7 @@ size_t JikesAPI::FileWriter::write(const unsigned char *data,size_t size)
  * When the ReadObject is created. read the whole file into a buffer
  * held by the object.
  */ 
-JikesAPI::DefaultFileReader::DefaultFileReader(const char *fileName)
+DefaultFileReader::DefaultFileReader(const char *fileName)
 {
     size   = 0;
     buffer = NULL;
@@ -224,7 +286,7 @@ JikesAPI::DefaultFileReader::DefaultFileReader(const char *fileName)
 /**
  * When the ReadObject is destroyed the release the memory buffer.
  */
-JikesAPI::DefaultFileReader::~DefaultFileReader()
+DefaultFileReader::~DefaultFileReader()
 {
     delete [] buffer;
 }
@@ -233,7 +295,7 @@ JikesAPI::DefaultFileReader::~DefaultFileReader()
 /**
  * Open a standard FILE pointer and get ready to write.
  */
-JikesAPI::DefaultFileWriter::DefaultFileWriter(const char *fileName,size_t maxSize):
+DefaultFileWriter::DefaultFileWriter(const char *fileName,size_t maxSize):
     FileWriter(maxSize)
 {
     valid  = false;
@@ -246,17 +308,17 @@ JikesAPI::DefaultFileWriter::DefaultFileWriter(const char *fileName,size_t maxSi
 /**
  * Close the file when the write object is destroyed.
  */
-JikesAPI::DefaultFileWriter::~DefaultFileWriter()
+DefaultFileWriter::~DefaultFileWriter()
 {
     fclose(file);
 }
 
-bool JikesAPI::DefaultFileWriter::isValid()  {return(valid);}
+bool DefaultFileWriter::isValid()  {return(valid);}
 
 /**
  * Copy the data buffer to the file.
  */
-size_t JikesAPI::DefaultFileWriter::doWrite(const unsigned char *data,size_t size)
+size_t DefaultFileWriter::doWrite(const unsigned char *data,size_t size)
 {
     return fwrite(data, sizeof(u1),size, file);
 }
@@ -267,7 +329,7 @@ size_t JikesAPI::DefaultFileWriter::doWrite(const unsigned char *data,size_t siz
 
 
 // Open a windows file and map the file onto processor memory.
-JikesAPI::DefaultFileReader::DefaultFileReader(const char *fileName)
+DefaultFileReader::DefaultFileReader(const char *fileName)
 {
     size   = 0;
     buffer = NULL;
@@ -287,7 +349,7 @@ JikesAPI::DefaultFileReader::DefaultFileReader(const char *fileName)
 
 // When the ReadObject is destroyed close all the associated files.
 // and unmap the memory.
-JikesAPI::DefaultFileReader::~DefaultFileReader()
+DefaultFileReader::~DefaultFileReader()
 {
     if (srcfile != INVALID_HANDLE_VALUE)
     {
@@ -305,7 +367,7 @@ JikesAPI::DefaultFileReader::~DefaultFileReader()
 
 
 // Create a windows file and map the file onto processor memory.
-JikesAPI::DefaultFileWriter::DefaultFileWriter(const char *fileName,size_t maxSize):
+DefaultFileWriter::DefaultFileWriter(const char *fileName,size_t maxSize):
     WriteObject(maxSize)
 {
     valid  = false;
@@ -325,7 +387,7 @@ JikesAPI::DefaultFileWriter::DefaultFileWriter(const char *fileName,size_t maxSi
 
 // When the WriteObject is destroyed close all the associated files,
 // Thus writting the mory to the file system.
-JikesAPI::DefaultFileWriter::~DefaultFileWriter()
+DefaultFileWriter::~DefaultFileWriter()
 {
     if (file != INVALID_HANDLE_VALUE)
     {
@@ -338,13 +400,13 @@ JikesAPI::DefaultFileWriter::~DefaultFileWriter()
     }
 }
 
-bool JikesAPI::DefaultFileWriter::isValid()  
+bool DefaultFileWriter::isValid()  
 {
     return(valid);
 }
 
 // Copy the input data to the mapped memory.
-size_t JikesAPI::DefaultFileWriter::doWrite(const unsigned char *data,size_t size)
+size_t DefaultFileWriter::doWrite(const unsigned char *data,size_t size)
 {
     memmove(&string_buffer[dataWritten], data, size * sizeof(u1));
     dataWritten += size;
