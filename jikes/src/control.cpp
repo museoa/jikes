@@ -758,20 +758,20 @@ DirectorySymbol *Control::FindSubdirectory(PathSymbol *path_symbol, wchar_t *nam
 
                     char *current_directory = option.GetMainCurrentDirectory();
                     int prefix_length = strlen(current_directory);
-                    int start = (prefix_length <= length &&
+                    int start = (prefix_length <= (int) length &&
                                  Case::StringSegmentEqual(current_directory, full_directory_name, prefix_length) &&
                                  (full_directory_name[prefix_length] == U_SLASH || full_directory_name[prefix_length] == U_NULL)
                                                 ? prefix_length + 1
                                                 : 0);
 
-                    if (start > length)
+                    if (start > (int) length)
                          name_length = 0;
-                    else if (start <= length) // note that we can assert that (start != length)
+                    else if (start <= (int) length) // note that we can assert that (start != length)
                     {
                         delete [] name;
                         name_length = length - start;
                         name = new wchar_t[name_length + 1];
-                        for (int k = 0, i = start; i < length; i++, k++)
+                        for (int k = 0, i = start; i < (int) length; i++, k++)
                             name[k] = full_directory_name[i];
                         name[name_length] = U_NULL;
                     }
