@@ -1,3 +1,12 @@
+2004-10-10  Elliott Hughes  <enh@acm.org>
+
+	* src/option.cpp, src/option.h: bug #3079; fall back to using
+	the JAVA_HOME environment variable if we wouldn't otherwise
+	have a bootclasspath. For non-Apple platforms, we pick all the
+	JAR files in $JAVA_HOME/jre/lib/. On Mac OS X, where things are
+	slightly different, we pick all the JAR files in the
+	JavaVM.framework's Classes directory.
+
 2004-10-09  Elliott Hughes  <enh@acm.org>
 
 	* src/error.cpp: bug #4059; deprecation diagnostics should be

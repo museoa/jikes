@@ -121,6 +121,8 @@ public:
 
 #endif // WIN32_FILE_SYSTEM
 
+    void SetFallBackBootClassPath();
+
 public:
 
     Tuple<KeywordMap> keyword_map;

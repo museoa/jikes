@@ -981,6 +981,8 @@ Option::Option(ArgumentExpander& arguments,
         // Create a clean copy of the bootclasspath envvar so we can modify
         //   this copy and delete it later in ~JikesOption
         bootclasspath = makeStrippedCopy(getenv("BOOTCLASSPATH"));
+    if (! bootclasspath)
+        SetFallBackBootClassPath();
     if (! extdirs)
         // Create a clean copy of the extdirs envvar so we can modify
         //   this copy and delete it later in ~JikesOption
@@ -1042,6 +1044,94 @@ Option::~Option()
     for (char c = 'a'; c <= 'z'; c++)
         delete [] current_directory[c];
 #endif // WIN32_FILE_SYSTEM
+}
+
+
+//
+// Until we can switch to using the STL (I think AIX support holds us back),
+// here's a poor man's replacement for std::ostringstream.
+//
+class OStringStream : public ConvertibleArray<char>
+{
+public:
+    OStringStream& operator<<(char ch)
+    {
+        Next() = ch;
+        return *this;
+    }
+
+    OStringStream& operator<<(const char* s)
+    {
+        assert(s != 0);
+        for (const char* p = s; *p; ++p)
+        {
+            Next() = *p;
+        }
+        return *this;
+    }
+};
+
+
+//
+// Tests whether 's' ends with 'suffix'. The comparison is case-insensitive.
+//
+static bool CStringEndsWith(const char* s, const char* suffix)
+{
+    size_t s_length = strlen(s);
+    size_t suffix_length = strlen(suffix);
+    if (s_length < suffix_length) 
+        return false;
+    return (strcasecmp(s + s_length - suffix_length, suffix) == 0);
+}
+
+
+//
+// On Mac OS X, we know where Java keeps its .jar files; on
+// other platforms, it's not unknown for developers to have
+// the JAVA_HOME environment variable set, and from there we
+// know we want "jre/lib/".
+//
+// Scan the appropriate directory for .jar files, and use
+// that as our bootclasspath. (This is only used if the
+// other methods for coming by a bootclasspath have failed.)
+//
+void Option::SetFallBackBootClassPath()
+{
+#if defined(UNIX_FILE_SYSTEM)
+    assert(bootclasspath == NULL);
+
+#ifdef __APPLE__
+    const char* classes_directory =
+        "/System/Library/Frameworks/JavaVM.framework/Classes/";
+#else
+    const char* java_home = getenv("JAVA_HOME");
+    if (java_home == NULL)
+        return;
+
+    OStringStream os;
+    os << java_home << "/jre/lib/" << '\0';
+    const char* classes_directory = os.Array();
+#endif
+
+    if (DIR* dir = opendir(classes_directory))
+    {
+        // Join all the .jar filenames together into a path.
+        OStringStream path;
+        const char* sep = "";
+        for (dirent* entry = readdir(dir); entry != NULL; entry = readdir(dir))
+        {
+            if (entry -> d_type = DT_REG &&
+                CStringEndsWith(entry -> d_name, ".jar"))
+            {
+                path << sep << classes_directory << '/' << entry -> d_name;
+                sep = ":";
+            }
+        }
+        path << '\0';
+        bootclasspath = makeStrippedCopy(path.Array());
+        closedir(dir);
+    }
+#endif
 }
 
 #ifdef HAVE_JIKES_NAMESPACE
