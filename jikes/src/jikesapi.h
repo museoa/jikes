@@ -151,8 +151,8 @@ class JikesAPI
 
     void cleanupOptions(); // Helper to delete option and parsedOptions
 
-    char **parsedOptions;
     JikesOption *option;
+    char **parsedOptions;
 
     static JikesAPI *instance;
 };
