@@ -1433,6 +1433,11 @@ TypeSymbol* Semantic::ReadType(FileSymbol* file_symbol,
                            type -> ContainingPackageName(),
                            type -> ExternalName());
         }
+        else if (file_symbol -> semantic -> NumErrors())
+        {
+            ReportSemError(SemanticError::INVALID_TYPE_FOUND, tok,
+                           name_symbol -> Name());
+        }
     }
     else if (file_symbol)
     {
@@ -1484,7 +1489,6 @@ TypeSymbol* Semantic::ReadType(FileSymbol* file_symbol,
                            type -> ExternalName());
         }
     }
-
     return type;
 }
 

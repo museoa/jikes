@@ -1,3 +1,9 @@
+2004-03-10  Eric Blake  <ebb9@byu.net>
+
+	* src/decl.cpp (ReadType): Bug 3852 - fix at least the simple test
+	case, where valid A referring to valid B referring to invalid C
+	was not caught in A.
+
 2004-03-09  Elliott Hughes  <enh@acm.org>
 
 	* src/expr.cpp (GetAnonymousType): Fix invalid assertion that was
