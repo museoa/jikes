@@ -1,3 +1,11 @@
+2002-08-26  Eric B Blake  <eblake@ee.byu.edu>
+
+	* src/symbol.cpp (GetWriteAccessMethod, GetReadAccessMethod):
+	Special case access of field via classname.super.
+	* src/expr.cpp (FindMethodMember, FindVariableMember): Check for
+	accessor methods required for classname.super when inner class and
+	enclosing class extend same superclass - bug 3240.
+
 2002-08-26  ??  <nobody@ibm.com>
 
 	* src/option.cpp (Option): Fix bad logic with drive letters in -d

@@ -2293,7 +2293,8 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member,
 
     assert((member -> ACC_PRIVATE() && this == containing_type) ||
            (member -> ACC_PROTECTED() &&
-            (! semantic_environment -> sem -> ProtectedAccessCheck(containing_type))));
+            (! semantic_environment -> sem -> ProtectedAccessCheck(containing_type) ||
+             (base_type == super && ! member -> ACC_STATIC()))));
 
     MethodSymbol *read_method = ReadMethod(member, base_type);
 
@@ -2353,7 +2354,23 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member,
         block_symbol -> max_variable_index = 0;
         read_method -> SetBlockSymbol(block_symbol);
 
-        AstSimpleName *base = ast_pool -> GenSimpleName(loc);
+        AstExpression *base;
+        if (! member -> ACC_STATIC() && base_type == super)
+        {
+            //
+            // Special case - for Outer.super.i where i is an instance field,
+            // we mark the field access as a super access, to make sure we use
+            // the correct qualifying instance.  Notice that in this case,
+            // ((Super) Outer.this).i cannot generate an accessor method
+            // (either i is public or in the same package and thus already
+            // accessible, or i is protected in a different package and
+            // therefore inaccessible), so we don't have to worry about a
+            // conflict in accessor methods for the same base type.
+            //
+            base = ast_pool -> GenSuperExpression(loc);
+        }
+        else
+            base = ast_pool -> GenSimpleName(loc);
 
         AstFieldAccess *field_access = ast_pool -> GenFieldAccess();
         field_access -> base = base;
@@ -2380,13 +2397,14 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member,
             VariableSymbol *instance =
                 block_symbol -> InsertVariableSymbol(instance_name);
             instance -> MarkSynthetic();
-            instance -> SetType(base_type);
+            instance -> SetType(base_type == super ? this : base_type);
             instance -> SetOwner(read_method);
             instance -> SetLocalVariableIndex(block_symbol ->
                                               max_variable_index++);
             instance -> MarkComplete();
             read_method -> AddFormalParameter(instance);
-            base -> symbol = instance;
+            base -> symbol = (base_type == super
+                              ? (Symbol *) super : (Symbol *) instance);
         }
 
         // A read access method has no throws clause !
@@ -2435,7 +2453,8 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member,
 
     assert((member -> ACC_PRIVATE() && this == containing_type) ||
            (member -> ACC_PROTECTED() &&
-            (! semantic_environment -> sem -> ProtectedAccessCheck(containing_type))));
+            (! semantic_environment -> sem -> ProtectedAccessCheck(containing_type) ||
+             (base_type == super && ! member -> ACC_STATIC()))));
 
     MethodSymbol *write_method = WriteMethod(member, base_type);
 
@@ -2493,7 +2512,23 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member,
         block_symbol -> max_variable_index = 0;
         write_method -> SetBlockSymbol(block_symbol);
 
-        AstSimpleName *base = ast_pool -> GenSimpleName(loc);
+        AstExpression *base;
+        if (! member -> ACC_STATIC() && base_type == super)
+        {
+            //
+            // Special case - for Outer.super.i where i is an instance field,
+            // we mark the field access as a super access, to make sure we use
+            // the correct qualifying instance.  Notice that in this case,
+            // ((Super) Outer.this).i cannot generate an accessor method
+            // (either i is public or in the same package and thus already
+            // accessible, or i is protected in a different package and
+            // therefore inaccessible), so we don't have to worry about a
+            // conflict in accessor methods for the same base type.
+            //
+            base = ast_pool -> GenSuperExpression(loc);
+        }
+        else
+            base = ast_pool -> GenSimpleName(loc);
 
         AstFieldAccess *left_hand_side = ast_pool -> GenFieldAccess();
         left_hand_side -> base = base;
@@ -2522,13 +2557,14 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member,
             VariableSymbol *instance =
                 block_symbol -> InsertVariableSymbol(instance_name);
             instance -> MarkSynthetic();
-            instance -> SetType(base_type);
+            instance -> SetType(base_type == super ? this : base_type);
             instance -> SetOwner(write_method);
             instance -> SetLocalVariableIndex(block_symbol ->
                                               max_variable_index++);
             instance -> MarkComplete();
             write_method -> AddFormalParameter(instance);
-            base -> symbol = instance;
+            base -> symbol = (base_type == super
+                              ? (Symbol *) super : (Symbol *) instance);
         }
 
         VariableSymbol *symbol =

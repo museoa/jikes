@@ -2375,13 +2375,24 @@ void Semantic::FindVariableMember(TypeSymbol *type,
             }
 
             //
-            // Access to a private or protected variable in an enclosing type ?
+            // Access to a private or protected variable in or via an enclosing
+            // type? If the base is a super expression, be sure to start from
+            // the correct enclosing instance.
             //
-            TypeSymbol *containing_type = (TypeSymbol *) variable -> owner;
-            if (this_type != containing_type &&
+            TypeSymbol *containing_type = variable -> ContainingType();
+            TypeSymbol *target_type = containing_type;
+            if (! variable -> ACC_STATIC() &&
+                field_access -> base -> IsSuperExpression() &&
+                field_access -> base -> FieldAccessCast())
+            {
+                target_type =
+                    ((AstFieldAccess *) field_access -> base) -> base -> Type();
+            }
+            if (this_type != target_type &&
                 (variable -> ACC_PRIVATE() ||
                  (variable -> ACC_PROTECTED() &&
-                  ! ProtectedAccessCheck(containing_type))))
+                  (! ProtectedAccessCheck(containing_type) ||
+                   target_type != containing_type))))
             {
                 if (field_access -> IsConstant())
                     field_access -> symbol = variable;
@@ -2400,13 +2411,14 @@ void Semantic::FindVariableMember(TypeSymbol *type,
                                  this_type -> semantic_environment;
                              env; env = env -> previous)
                         {
-                            if (env -> Type() -> IsSubclass(containing_type))
+                            if (env -> Type() -> IsSubclass(target_type))
                             {
                                 environment_type = env -> Type();
                                 break;
                             }
                         }
-                        assert(environment_type != containing_type);
+                        assert(environment_type != containing_type &&
+                               environment_type != this_type);
                     }
 
                     AstFieldAccess *method_name =
@@ -3138,16 +3150,27 @@ MethodShadowSymbol *Semantic::FindMethodMember(TypeSymbol *type,
             }
 
             //
-            // Access to a private or protected method in an enclosing type ?
+            // Access to a private or protected variable in or via an enclosing
+            // type? If the base is a super expression, be sure to start from
+            // the correct enclosing instance.
             //
-            TypeSymbol *containing_type = (TypeSymbol *) method -> containing_type;
-            if (this_type != containing_type &&
+            TypeSymbol *containing_type = method -> containing_type;
+            TypeSymbol *target_type = containing_type;
+            if (! method -> ACC_STATIC() &&
+                field_access -> base -> IsSuperExpression() &&
+                field_access -> base -> FieldAccessCast())
+            {
+                target_type =
+                    ((AstFieldAccess *) field_access -> base) -> base -> Type();
+            }
+            if (this_type != target_type &&
                 (method -> ACC_PRIVATE() ||
                  (method -> ACC_PROTECTED() &&
-                  ! ProtectedAccessCheck(containing_type)) ||
-                 (field_access -> base -> IsSuperExpression() &&
-                  ! method -> ACC_STATIC() &&
-                  ! this_type -> IsSubclass(containing_type))))
+                  (! ProtectedAccessCheck(containing_type) ||
+                   target_type != containing_type)) ||
+                 (method -> ACC_PUBLIC() &&
+                  ! this_type -> IsSubclass(target_type) &&
+                  target_type != containing_type)))
             {
                 //
                 // Find the right enclosing class to place the accessor method
@@ -3161,20 +3184,26 @@ MethodShadowSymbol *Semantic::FindMethodMember(TypeSymbol *type,
                     for (SemanticEnvironment *env = this_type -> semantic_environment;
                          env; env = env -> previous)
                     {
-                        if (env -> Type() -> IsSubclass(containing_type))
+                        if (env -> Type() -> IsSubclass(target_type))
                         {
                             environment_type = env -> Type();
                             break;
                         }
                     }
-                    assert(environment_type != containing_type);
+                    assert(environment_type != containing_type &&
+                           environment_type != this_type);
                 }
 
-                AstMethodInvocation *accessor       = compilation_unit -> ast_pool -> GenMethodInvocation();
-                accessor -> method                  = method_call -> method; // TODO: WARNING: sharing of subtrees...
-                accessor -> left_parenthesis_token  = method_call -> left_parenthesis_token;
-                accessor -> right_parenthesis_token = method_call -> right_parenthesis_token;
-                accessor -> symbol = environment_type -> GetReadAccessMethod(method, field_access -> base -> Type());
+                AstMethodInvocation *accessor =
+                    compilation_unit -> ast_pool -> GenMethodInvocation();
+                // TODO: WARNING: sharing of subtrees...
+                accessor -> method = method_call -> method;
+                accessor -> left_parenthesis_token =
+                    method_call -> left_parenthesis_token;
+                accessor -> right_parenthesis_token =
+                    method_call -> right_parenthesis_token;
+                accessor -> symbol = environment_type ->
+                    GetReadAccessMethod(method, field_access -> base -> Type());
 
                 if (! method -> ACC_STATIC())
                     accessor -> AddArgument(field_access -> base);
