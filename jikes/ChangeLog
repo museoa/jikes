@@ -1,3 +1,12 @@
+2000-07-23  Mo DeJong  <mdejong@redhat.com>
+
+	* TODO: Added a todo list.
+	* jikes.spec: Updated version to 1.12. Updated URLs. Install
+	documentation with Makfile not spec file.
+	* doc/Makefile.am: Install HTML files.
+	* doc/jikes.1: Remove dates and old URLs.
+	* src/README: Removed old README.
+
 2000-07-23  Andrew G. Tereschenko  <tag@ibis.odessa.ua>
 
 	* src/jikesapi.cpp (parseOptions): Use

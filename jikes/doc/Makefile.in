@@ -79,7 +79,18 @@ install_sh = @install_sh@
 
 
 man_MANS = jikes.1
-EXTRA_DIST = $(man_MANS)
+
+docdir = $(prefix)/doc/${PACKAGE}-${VERSION}
+
+doc_DATA = \
+contrib.html \
+jikes.gif \
+jikes.html \
+license.htm \
+news.html
+
+
+EXTRA_DIST = $(man_MANS) $(doc_DATA)
 subdir = doc
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../src/config.h
@@ -89,7 +100,9 @@ man1dir = $(mandir)/man1
 MANS = $(man_MANS)
 
 NROFF = nroff
-DIST_COMMON =  ChangeLog Makefile.am Makefile.in
+DATA =  $(doc_DATA)
+
+DIST_COMMON =  Makefile.am Makefile.in
 
 
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -145,6 +158,24 @@ install-man: $(MANS)
 uninstall-man:
 	@$(NORMAL_UNINSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) uninstall-man1
+
+install-docDATA: $(doc_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(docdir)
+	@list='$(doc_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d= ; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(INSTALL_DATA) $$d$$p $(DESTDIR)$(docdir)/$$f"; \
+	  $(INSTALL_DATA) $$d$$p $(DESTDIR)$(docdir)/$$f; \
+	done
+
+uninstall-docDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(doc_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(docdir)/$$f"; \
+	  rm -f $(DESTDIR)$(docdir)/$$f; \
+	done
 tags: TAGS
 TAGS:
 
@@ -174,20 +205,20 @@ installcheck: installcheck-am
 install-exec-am:
 install-exec: install-exec-am
 
-install-data-am: install-man
+install-data-am: install-man install-docDATA
 install-data: install-data-am
 
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 install: install-am
-uninstall-am: uninstall-man
+uninstall-am: uninstall-man uninstall-docDATA
 uninstall: uninstall-am
-all-am: Makefile $(MANS)
+all-am: Makefile $(MANS) $(DATA)
 all-redirect: all-am
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) INSTALL_STRIP_FLAG=-s install
 installdirs:
-	$(mkinstalldirs)  $(DESTDIR)$(mandir)/man1
+	$(mkinstalldirs)  $(DESTDIR)$(mandir)/man1 $(DESTDIR)$(docdir)
 
 
 mostlyclean-generic:
@@ -218,13 +249,13 @@ maintainer-clean-am:  maintainer-clean-generic distclean-am
 
 maintainer-clean: maintainer-clean-am
 
-.PHONY: install-man1 uninstall-man1 install-man uninstall-man tags \
-distdir info-am info dvi-am dvi check check-am installcheck-am \
-installcheck install-exec-am install-exec install-data-am install-data \
-install-am install uninstall-am uninstall all-redirect all-am all \
-install-strip installdirs mostlyclean-generic distclean-generic \
-clean-generic maintainer-clean-generic clean mostlyclean distclean \
-maintainer-clean
+.PHONY: install-man1 uninstall-man1 install-man uninstall-man \
+uninstall-docDATA install-docDATA tags distdir info-am info dvi-am dvi \
+check check-am installcheck-am installcheck install-exec-am \
+install-exec install-data-am install-data install-am install \
+uninstall-am uninstall all-redirect all-am all install-strip \
+installdirs mostlyclean-generic distclean-generic clean-generic \
+maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
