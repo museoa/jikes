@@ -18,17 +18,6 @@ namespace Jikes { // Open namespace Jikes block
 #endif
 
 //
-// For use in ExpandAtFileArgument.
-//
-enum ParseState
-{
-    WHITESPACE,
-    NORMAL,
-    SINGLE_QUOTE,
-    DOUBLE_QUOTE
-};
-
-//
 // Look for arguments in a file and add them to the passed in tuple. If
 // the file does not exist, cannot be read, or contains invalid entries,
 // update the list of bad_options. We follow Sun's example of tokenizing
@@ -55,7 +44,13 @@ void ArgumentExpander::ExpandAtFileArgument(Tuple<char *>& arguments,
         buffer[file_size + 1] = U_NULL;
 
         char* ptr = buffer;
-        ParseState state = WHITESPACE;
+        enum
+        {
+            WHITESPACE,
+            NORMAL,
+            SINGLE_QUOTE,
+            DOUBLE_QUOTE
+        } state = WHITESPACE;
 
         while (*ptr)
         {

@@ -1,5 +1,14 @@
 2001-11-01  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/option.cpp (enum ParseState): Inline into the single method
+	where it was used.
+	* src/scanner.h:
+	* src/scanner.cpp (ScanStarComment): Update comment scanning to
+	allow embedded Ctrl-Z, bug 2352. Also, detect @deprecated only if
+	it begins a line in the comment, bug 519 - patch 219.
+
+2001-11-01  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/option.h:
 	* src/option.cpp (ArgumentExpander): Update @file parsing to match
 	Sun's javac. Rearrange error reporting so that parse errors can be

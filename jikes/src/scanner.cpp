@@ -215,7 +215,7 @@ void Scanner::Scan(FileSymbol *file_symbol)
 //
 void Scanner::Scan()
 {
-    wchar_t *input_buffer_tail = &cursor[lex -> InputBufferLength()];
+    input_buffer_tail = &cursor[lex -> InputBufferLength()];
 
     //
     // CURSOR is assumed to point to the next character to be scanned.
@@ -273,61 +273,85 @@ void Scanner::ScanStarComment()
     cursor += 2;
 
     //
-    // If this comment starts with the prefix "/**" then, it may be a document
+    // If this comment starts with the prefix "/**" then it is a document
     // comment. Check whether or not it contains the deprecated tag and if so,
-    // mark the token preceeding it.
+    // mark the token preceeding it. The @deprecated tag must appear at the
+    // beginning of a line. According to Sun,
+    // http://java.sun.com/j2se/1.4/docs/tooldocs/win32/javadoc.html#comments,
+    // this means ignoring whitespace, *, and /** patterns. But in practice,
+    // javac doesn't quite implement it this way, completely ignoring /**
+    // separators, and rejecting \f and \t after *<space>*.
+    // This implementation also ignores /**, but treats whitespace correctly.
+    //
+    // Note that we exploit, where possible, the fact that the stream is
+    // doctored to always end in U_LINE_FEED, U_CTRL_Z; but remember this
+    // sequence can legally occur before the stream end as well.
     //
     if (*cursor == U_STAR)
     {
-        for (;;)
+        enum
         {
-            while (*cursor != U_STAR && (! Code::IsNewline(*cursor)) && *cursor != U_CTL_Z)
+            HEADER,
+            STAR,
+            REMAINDER
+        } state = HEADER;
+        while (cursor != input_buffer_tail)
+        {
+            switch (*cursor++)
             {
-                if (cursor[0] == U_AT &&
-                    cursor[1] == U_d &&
-                    cursor[2] == U_e &&
-                    cursor[3] == U_p &&
-                    cursor[4] == U_r &&
-                    cursor[5] == U_e &&
-                    cursor[6] == U_c &&
-                    cursor[7] == U_a &&
-                    cursor[8] == U_t &&
-                    cursor[9] == U_e &&
-                    cursor[10] == U_d)
+            case U_CARRIAGE_RETURN:
+                assert(false && "The stream should have converted \\r to \\n");
+            case U_LINE_FEED:
+                // Record new line.
+                lex -> line_location.Next() = cursor - lex -> InputBuffer();
+                // fallthrough
+            case U_SPACE:
+            case U_FORM_FEED:
+            case U_HORIZONTAL_TAB:
+                if (state != REMAINDER)
+                    state = HEADER;
+                break;
+            case U_STAR:
+                if (state != REMAINDER || *cursor == U_SLASH)
+                    state = STAR;
+                break;
+            case U_SLASH:
+                if (state == STAR)
                 {
-                    current_token -> SetDeprecated(); // the token that precedes this comment
-                }
-                cursor++;
-            }
-
-            if (*cursor == U_STAR) // Potential comment closer
-            {
-                while (*++cursor == U_STAR)
-                    ;
-                if (*cursor == U_SLASH)
-                {
-                    cursor++;
-                    current_comment -> length = (cursor - lex -> InputBuffer()) - current_comment -> location;
+                    current_comment -> length = ((cursor - lex -> InputBuffer()) -
+                                                 current_comment -> location);
                     if (! control.option.comments)
                         delete current_comment;
                     return;
                 }
+                // fallthrough
+            default:
+                if (state != REMAINDER)
+                {
+                    state = REMAINDER;
+                    if (cursor[-1] == U_AT &&
+                        cursor[0] == U_d &&
+                        cursor[1] == U_e &&
+                        cursor[2] == U_p &&
+                        cursor[3] == U_r &&
+                        cursor[4] == U_e &&
+                        cursor[5] == U_c &&
+                        cursor[6] == U_a &&
+                        cursor[7] == U_t &&
+                        cursor[8] == U_e &&
+                        cursor[9] == U_d)
+                    {
+                        // mark the token that precedes this comment
+                        current_token -> SetDeprecated();
+                    }
+                }
             }
-            else if (Code::IsNewline(*cursor)) // Record new line
-            {
-                cursor++;
-                lex -> line_location.Next() = cursor - lex -> InputBuffer();
-            }
-            else break;
         }
     }
     else
     {
-        for (;;)
+        while (cursor != input_buffer_tail)
         {
-            while (*cursor != U_STAR && (! Code::IsNewline(*cursor)) && *cursor != U_CTL_Z)
-                cursor++;
-
             if (*cursor == U_STAR) // Potential comment closer
             {
                 while (*++cursor == U_STAR)
@@ -343,18 +367,24 @@ void Scanner::ScanStarComment()
             }
             else if (Code::IsNewline(*cursor)) // Record new line
             {
-                cursor++;
-                lex -> line_location.Next() = cursor - lex -> InputBuffer();
+                lex -> line_location.Next() = cursor - lex -> InputBuffer() + 1;
             }
-            else break;
+            cursor++;
         }
     }
 
+    //
+    // If we got here, we are in an unterminated comment. Discard the
+    // U_LINE_FEED and U_CTRL_Z that end the stream.
+    //
+    cursor -= 2;
     lex -> bad_tokens.Next().Initialize(StreamError::UNTERMINATED_COMMENT,
                                         current_comment -> location,
-                                        (unsigned) (cursor - lex -> InputBuffer()) - 1, lex);
+                                        (unsigned) (cursor - lex -> InputBuffer()) - 1,
+                                        lex);
 
-    current_comment -> length = (cursor - lex -> InputBuffer()) - current_comment -> location;
+    current_comment -> length = ((cursor - lex -> InputBuffer()) -
+                                 current_comment -> location);
 
     if (! control.option.comments)
         delete current_comment;

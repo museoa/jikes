@@ -43,6 +43,7 @@ private:
 
     LexStream* lex;
     wchar_t *cursor;
+    wchar_t *input_buffer_tail;
 
     LexStream::Token *current_token;
     LexStream::TokenIndex current_token_index;
