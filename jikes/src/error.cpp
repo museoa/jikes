@@ -456,6 +456,7 @@ void SemanticError::Report(SemanticErrorKind msg_code,
     //
     if (control.option.dump_errors)
     {
+        lex_stream -> RereadInput();
         reportError(i);
 
         if (buffer.Length() > 0)

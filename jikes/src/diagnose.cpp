@@ -2009,6 +2009,7 @@ void ParseError::Report(int msg_level, ParseErrorCode msg_code,
 
     if (control.option.dump_errors)
     {
+        lex_stream -> RereadInput();
         PrintMessage(i);
         errors.Reset(1);
         // we only need to indicate that at least one error was detected...
