@@ -1,4 +1,12 @@
-2000-03-04  Mo DeJong  <mdejong@redhat.com>
+2001-03-19  Mo DeJong  <mdejong@redhat.com>
+
+	* src/m4/ac_cxx_check_set_new_handler.m4:
+	Use AC_TRY_LINK not AC_TRY_COMPILE. This
+	should correctly detect a C++ implementation
+	of std::set_new_handler that compiles but
+	fails to link for some odd reason.
+
+2001-03-04  Mo DeJong  <mdejong@redhat.com>
 
 	* src/stream.cpp (Stream, HaveDecoder,
 	SetEncoding, DestroyEncoding,
@@ -39,7 +47,7 @@
 	the ASCII range does not include
 	128.
 
-2000-03-03  Mo DeJong  <mdejong@redhat.com>
+2001-03-03  Mo DeJong  <mdejong@redhat.com>
 
 	* src/dump.cpp (Dump): Add debugging
 	Dump method. The method signature is
@@ -48,7 +56,7 @@
 	the chars outside the ASCII range
 	escaped with \uXXXX ids.
 
-2000-03-01  Mo DeJong  <mdejong@redhat.com>
+2001-03-01  Mo DeJong  <mdejong@redhat.com>
 
 	Released Jikes 1.13.
 

@@ -75,7 +75,7 @@ else
 
 dnl Double check that the standard set_new_handler actually works.
 AC_CACHE_CHECK(for standard set_new_handler, ac_cv_standard_set_new_handler,
-    AC_TRY_COMPILE([
+    AC_TRY_LINK([
 #ifdef HAVE_STD
 # include <new>
 # ifdef HAVE_NAMESPACES
