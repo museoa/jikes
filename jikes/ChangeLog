@@ -1,3 +1,8 @@
+2001-10-30  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/decl.cpp (AddDefaultConstructor): Default constructor should
+	have access modifier of enclosing class, bug 1889 - patch 214.
+
 2001-10-27  Chris Dennis  <Chris.Dennis@invidi.com>
 
 	* src/definite.cpp: Change all uses of pair to def_pair, to avoid

@@ -2954,7 +2954,7 @@ void Semantic::AddDefaultConstructor(TypeSymbol *type)
 {
     MethodSymbol *constructor = type -> InsertConstructorSymbol(control.init_name_symbol);
 
-    BlockSymbol *block_symbol = new BlockSymbol(1); // TODO: make sure this size is right !!!
+    BlockSymbol *block_symbol = new BlockSymbol(1);
     block_symbol -> max_variable_index = 1; // All types need a spot for "this"
 
     constructor -> SetType(control.void_type);
@@ -2962,6 +2962,10 @@ void Semantic::AddDefaultConstructor(TypeSymbol *type)
     constructor -> SetBlockSymbol(block_symbol);
     if (type -> ACC_PUBLIC())
         constructor -> SetACC_PUBLIC();
+    else if (type -> ACC_PROTECTED())
+        constructor -> SetACC_PROTECTED();
+    else if (type -> ACC_PRIVATE())
+        constructor -> SetACC_PRIVATE();
 
     VariableSymbol *this0_variable = NULL;
     if (type -> IsInner())
