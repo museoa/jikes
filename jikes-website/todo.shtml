@@ -6,12 +6,16 @@
     <p align="center"><img src="images/jikes.png" width=600 height=54 border=0 align=center alt="Jikes<sup><small>TM</small></sup>"><BR>&nbsp;</p>
 
     <h1>Jikes' ToDo List</h1>
-    <p>The items herein are work that needs to be done, if there is someone known to be working on an item then I'll list their name so as to reduce redundancy and provide a point of contact for anyone interested in helping out with this task. If you've got some time to aid any of these tasks post a note to the <a href="/developerworks/mail/?group_id=10">Jikes-Dev list</a>.</p>
+    <p>The items herein are work that needs to be done, if there is someone known to be working on an item then I'll
+    list their name so as to reduce redundancy and provide a point of contact for anyone interested in helping out
+    with this task. If you've got some time to aid any of these tasks post a note to the
+    <a href="/developerworks/mail/?group_id=10">Jikes-Dev list</a>. <small>(and yes, it's also to keep us honest ;)</small></p>
 
     <ul>
       <li>Migrate old jitterbug bugs to new system. (TAG, EricB, CAbbey, more welcome)
       <li>Update FAQ. (Pascal, Andrew Inggs)
       <li>Finish bringing new web pages online. (CAbbey)
+      <li>Bring Jikes up to Java2 classpath handling. (Adam Hawthorne)
       <li>Convert the old Jikestst tests into Jacks tests.
       <li>Write a class introspector in TCL for use in Jacks testcases. (earmarked for cabbey)
       <li>Move the old Sun Queries from the research database to a web page.
