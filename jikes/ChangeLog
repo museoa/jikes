@@ -1,5 +1,12 @@
 2004-03-11  Elliott Hughes  <enh@acm.org>
 
+	* src/error.cpp: Bug 3896 - failure to find .java files mentioned
+	on the command-line should be an error, not a warning. Non .java
+	files should also be treated as errors (most likely incorrect
+	arguments).
+
+2004-03-11  Elliott Hughes  <enh@acm.org>
+
 	* src/body.cpp, src/semantic.h: add warnings about boolean assignment
 	used as a truth value in an if, while, or do expression.
 	* src/error.cpp, src/error.h: new diagnostic.

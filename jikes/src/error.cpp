@@ -529,8 +529,6 @@ void SemanticError::StaticInitializer()
     // Somewhat stronger warnings, but code will be generated anyway.
     //
     warning[OBSOLESCENT_BRACKETS] = STRONG_WARNING;
-    warning[BAD_INPUT_FILE] = STRONG_WARNING;
-    warning[UNREADABLE_INPUT_FILE] = STRONG_WARNING;
     warning[NEGATIVE_ARRAY_SIZE] = STRONG_WARNING;
     warning[NEGATIVE_SHIFT_COUNT] = STRONG_WARNING;
     warning[SHIFT_COUNT_TOO_LARGE] = STRONG_WARNING;
