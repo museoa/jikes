@@ -1,4 +1,4 @@
-# Makefile.in generated automatically by automake 1.4e from Makefile.am.
+# Makefile.in generated automatically by automake 1.5 from Makefile.am.
 
 # Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
 # Free Software Foundation, Inc.
@@ -10,6 +10,8 @@
 # but WITHOUT ANY WARRANTY, to the extent permitted by law; without
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
+
+@SET_MAKE@
 
 SHELL = @SHELL@
 
@@ -31,11 +33,9 @@ infodir = @infodir@
 mandir = @mandir@
 includedir = @includedir@
 oldincludedir = /usr/include
-
 pkgdatadir = $(datadir)/@PACKAGE@
 pkglibdir = $(libdir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
-
 top_builddir = ..
 
 ACLOCAL = @ACLOCAL@
@@ -49,36 +49,29 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_HEADER = $(INSTALL_DATA)
 transform = @program_transform_name@
-
 NORMAL_INSTALL = :
 PRE_INSTALL = :
 POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-
 host_alias = @host_alias@
 host_triplet = @host@
-
-@SET_MAKE@
-AMDEP = @AMDEP@
 AMTAR = @AMTAR@
 AWK = @AWK@
 CXX = @CXX@
 DEPDIR = @DEPDIR@
 EXEEXT = @EXEEXT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
-INSTALL_STRIP_PROGRAM_ENV = @INSTALL_STRIP_PROGRAM_ENV@
 JIKESPG = @JIKESPG@
 MAINT = @MAINT@
-MAKEINFO = @MAKEINFO@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 STRIP = @STRIP@
 VERSION = @VERSION@
-_am_include = @_am_include@
+am__include = @am__include@
+am__quote = @am__quote@
 install_sh = @install_sh@
-
 
 bin_PROGRAMS = jikes
 
@@ -124,8 +117,8 @@ platform.cpp \
 jikesapi.h
 
 
-# FIXME : jikesapi.h does not get installed right now.
 
+# FIXME : jikesapi.h does not get installed right now.
 noinst_HEADERS = \
 access.h \
 ast.h \
@@ -166,9 +159,10 @@ unzip.h \
 zip.h
 
 
-# Include the java.g file in the .tar ball
 
+# Include the java.g file in the .tar ball
 EXTRA_DIST = java.g
+
 
 # The rest of the entries in this file are dependencies
 # manually extracted from the .h and .cpp files. We
@@ -177,7 +171,6 @@ EXTRA_DIST = java.g
 # problems with non-gcc compilers. If dependencies
 # are changed in the source code, these deps will
 # need to be manually updated.
-
 access_h = access.h platform.h
 
 ast_h = ast.h platform.h stream.h symbol.h set.h
@@ -266,58 +259,59 @@ CONFIG_CLEAN_FILES =
 bin_PROGRAMS = jikes$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 
+am_jikes_OBJECTS = ast.$(OBJEXT) body.$(OBJEXT) bytecode.$(OBJEXT) \
+	case.$(OBJEXT) code.$(OBJEXT) control.$(OBJEXT) decl.$(OBJEXT) \
+	definite.$(OBJEXT) depend.$(OBJEXT) diagnose.$(OBJEXT) \
+	double.$(OBJEXT) dump.$(OBJEXT) error.$(OBJEXT) expr.$(OBJEXT) \
+	getclass.$(OBJEXT) incrmnt.$(OBJEXT) init.$(OBJEXT) \
+	javaact.$(OBJEXT) jikes.$(OBJEXT) jikesapi.$(OBJEXT) \
+	long.$(OBJEXT) lookup.$(OBJEXT) lpginput.$(OBJEXT) \
+	modifier.$(OBJEXT) op.$(OBJEXT) option.$(OBJEXT) \
+	parser.$(OBJEXT) scanner.$(OBJEXT) segment.$(OBJEXT) \
+	set.$(OBJEXT) stream.$(OBJEXT) symbol.$(OBJEXT) \
+	system.$(OBJEXT) tab.$(OBJEXT) unparse.$(OBJEXT) \
+	unzip.$(OBJEXT) zip.$(OBJEXT) platform.$(OBJEXT)
+jikes_OBJECTS = $(am_jikes_OBJECTS)
+jikes_LDADD = $(LDADD)
+jikes_DEPENDENCIES =
+jikes_LDFLAGS =
 
-DEFS = @DEFS@ -I. -I$(srcdir) -I.
+DEFS = @DEFS@
+DEFAULT_INCLUDES =  -I. -I$(srcdir) -I.
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
-am_jikes_OBJECTS = ast.$(OBJEXT) body.$(OBJEXT) bytecode.$(OBJEXT) \
-case.$(OBJEXT) code.$(OBJEXT) control.$(OBJEXT) decl.$(OBJEXT) \
-definite.$(OBJEXT) depend.$(OBJEXT) diagnose.$(OBJEXT) double.$(OBJEXT) \
-dump.$(OBJEXT) error.$(OBJEXT) expr.$(OBJEXT) getclass.$(OBJEXT) \
-incrmnt.$(OBJEXT) init.$(OBJEXT) javaact.$(OBJEXT) jikes.$(OBJEXT) \
-jikesapi.$(OBJEXT) long.$(OBJEXT) lookup.$(OBJEXT) lpginput.$(OBJEXT) \
-modifier.$(OBJEXT) op.$(OBJEXT) option.$(OBJEXT) parser.$(OBJEXT) \
-scanner.$(OBJEXT) segment.$(OBJEXT) set.$(OBJEXT) stream.$(OBJEXT) \
-symbol.$(OBJEXT) system.$(OBJEXT) tab.$(OBJEXT) unparse.$(OBJEXT) \
-unzip.$(OBJEXT) zip.$(OBJEXT) platform.$(OBJEXT)
-jikes_OBJECTS = $(am_jikes_OBJECTS)
-jikes_LDADD = $(LDADD)
-jikes_DEPENDENCIES = 
-jikes_LDFLAGS = 
-CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
-CXXFLAGS = @CXXFLAGS@
+depcomp =
+CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 CXXLD = $(CXX)
-CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
+	-o $@
+CXXFLAGS = @CXXFLAGS@
 CFLAGS = @CFLAGS@
-COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 DIST_SOURCES = $(jikes_SOURCES)
 HEADERS = $(noinst_HEADERS)
 
-depcomp = 
 DIST_COMMON = $(noinst_HEADERS) ./stamp-h.in Makefile.am Makefile.in \
-config.h.in
-
+	config.h.in
 SOURCES = $(jikes_SOURCES)
-OBJECTS = $(am_jikes_OBJECTS)
 
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .cpp .h .o .obj
-
+.SUFFIXES: .cpp .o .obj
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
 	cd $(top_srcdir) && \
 	  $(AUTOMAKE) --gnu  --ignore-deps src/Makefile
-
 Makefile: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) && \
 	  CONFIG_HEADERS= CONFIG_LINKS= \
 	  CONFIG_FILES=$(subdir)/$@ $(SHELL) ./config.status
-
 config.h: stamp-h
 	@if test ! -f $@; then \
 		rm -f stamp-h; \
@@ -347,8 +341,10 @@ install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	$(mkinstalldirs) $(DESTDIR)$(bindir)
 	@list='$(bin_PROGRAMS)'; for p in $$list; do \
-	  if test -f $$p; then \
-	    f=`echo $$p|sed 's/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/'`; \
+	  p1=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
+	  if test -f $$p \
+	  ; then \
+	    f=`echo $$p1|sed '$(transform);s/$$/$(EXEEXT)/'`; \
 	   echo " $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/$$f"; \
 	   $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/$$f; \
 	  else :; fi; \
@@ -364,6 +360,9 @@ uninstall-binPROGRAMS:
 
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
+jikes$(EXEEXT): $(jikes_OBJECTS) $(jikes_DEPENDENCIES) 
+	@rm -f jikes$(EXEEXT)
+	$(CXXLINK) $(jikes_LDFLAGS) $(jikes_OBJECTS) $(jikes_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT) core *.core
@@ -371,13 +370,12 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-jikes$(EXEEXT): $(jikes_OBJECTS) $(jikes_DEPENDENCIES)
-	@rm -f jikes$(EXEEXT)
-	$(CXXLINK) $(jikes_LDFLAGS) $(jikes_OBJECTS) $(jikes_LDADD) $(LIBS)
 .cpp.o:
-	$(CXXCOMPILE) -c -o $@ $<
+	$(CXXCOMPILE) -c -o $@ `test -f $< || echo '$(srcdir)/'`$<
+
 .cpp.obj:
 	$(CXXCOMPILE) -c -o $@ `cygpath -w $<`
+uninstall-info-am:
 
 tags: TAGS
 
@@ -406,10 +404,10 @@ TAGS:  $(HEADERS) $(SOURCES) config.h.in $(TAGS_DEPENDENCIES) \
 GTAGS:
 	here=`CDPATH=: && cd $(top_builddir) && pwd` \
 	  && cd $(top_srcdir) \
-	  && gtags -i $$here
+	  && gtags -i $(GTAGS_ARGS) $$here
 
 distclean-tags:
-	-rm -f TAGS ID
+	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH
 
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 
@@ -418,7 +416,11 @@ distdir = $(top_distdir)/$(PACKAGE)-$(VERSION)
 
 distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
-	  d=$(srcdir); \
+	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
+	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
+	  if test "$$dir" != "$$file" && test "$$dir" != "."; then \
+	    $(mkinstalldirs) "$(distdir)/$$dir"; \
+	  fi; \
 	  if test -d $$d/$$file; then \
 	    cp -pR $$d/$$file $(distdir) \
 	    || exit 1; \
@@ -444,23 +446,20 @@ install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 
 installcheck: installcheck-am
-
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
-	  INSTALL_PROGRAM_ENV='$(INSTALL_STRIP_PROGRAM_ENV)' install
-
+	  `test -z '$(STRIP)' || \
+	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
 mostlyclean-generic:
 
 clean-generic:
 
 distclean-generic:
-	-rm -f Makefile $(CONFIG_CLEAN_FILES)
-	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
+	-rm -f Makefile $(CONFIG_CLEAN_FILES) stamp-h stamp-h[0-9]*
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-	-rm -f Makefile.in
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
@@ -470,11 +469,11 @@ distclean: distclean-am
 distclean-am: clean-am distclean-compile distclean-generic distclean-hdr \
 	distclean-tags
 
-dvi:
+dvi: dvi-am
 
 dvi-am:
 
-info:
+info: info-am
 
 info-am:
 
@@ -482,7 +481,7 @@ install-data-am:
 
 install-exec-am: install-binPROGRAMS
 
-install-info:
+install-info: install-info-am
 
 install-man:
 
@@ -496,17 +495,18 @@ mostlyclean: mostlyclean-am
 
 mostlyclean-am: mostlyclean-compile mostlyclean-generic
 
-uninstall-am: uninstall-binPROGRAMS
+uninstall-am: uninstall-binPROGRAMS uninstall-info-am
 
-.PHONY: all all-am check check-am clean clean-binPROGRAMS clean-generic \
-	distclean distclean-compile distclean-generic distclean-hdr \
-	distclean-tags distdir dvi dvi-am info info-am install \
-	install-am install-binPROGRAMS install-data install-data-am \
-	install-exec install-exec-am install-info install-man \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic tags uninstall \
-	uninstall-am uninstall-binPROGRAMS
+.PHONY: GTAGS all all-am check check-am clean clean-binPROGRAMS \
+	clean-generic distclean distclean-compile distclean-generic \
+	distclean-hdr distclean-tags distdir dvi dvi-am info info-am \
+	install install-am install-binPROGRAMS install-data \
+	install-data-am install-exec install-exec-am install-info \
+	install-info-am install-man install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic tags uninstall uninstall-am \
+	uninstall-binPROGRAMS uninstall-info-am
 
 
 # Special rule to remake autogenerated Java files
@@ -614,7 +614,6 @@ unparse.$(OBJEXT) : unparse.cpp $(ast_h)
 unzip.$(OBJEXT) : unzip.cpp $(unzip_h)
 
 zip.$(OBJEXT) : zip.cpp $(zip_h) $(control_h) $(symbol_h)
-
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

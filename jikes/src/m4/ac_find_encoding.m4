@@ -25,7 +25,9 @@ fi
 for enc in $list ; do
   AC_TRY_AN_ENCODING($enc)
   if test "$is_good" = "$enc" ; then
-    AC_DEFINE_UNQUOTED(JIKES_ICONV_ENCODING, "$enc")
+    AC_DEFINE_UNQUOTED(JIKES_ICONV_ENCODING, "$enc",
+        [Define this to the name of the unicode encoding that is the same 
+size as your wchar_t. See also the following entry for byte swapping.])
     break
   fi
 done
@@ -34,8 +36,11 @@ if test -z "$is_good" ; then
   for enc in $list ; do
     AC_TRY_AN_ENCODING($enc, yes)
     if test "$is_good" = "$enc" ; then
-      AC_DEFINE_UNQUOTED(JIKES_ICONV_ENCODING, "$enc")
-      AC_DEFINE(JIKES_ICONV_NEEDS_BYTE_SWAP)
+      AC_DEFINE_UNQUOTED(JIKES_ICONV_ENCODING, "$enc",
+        [Define this to the name of the unicode encoding that is the same
+size as your wchar_t. See also the following entry for byte swapping.])
+      AC_DEFINE(JIKES_ICONV_NEEDS_BYTE_SWAP, 1, [Define this if the encoding
+specified above does not match your platform's native endianness.])
       break
     fi
   done

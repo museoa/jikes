@@ -1,21 +1,11 @@
-*** TBD for Jikes 1.14 release:
-
-corect configure script for LIB_ICU, HP/UX, and ICC fp
-bug on other compilers.
-
-(fixed)
+*** TBD for Jikes 1.15 release:
 
 Fix problem with debug line number tables. Newer
 versions of java don't like our line numbers.
 This is commonly known as "Jikes and JPDA".
 
 (partially fixed, got a new test case at the last minute
-that shows antoehr failure)
-
-correct numerous constant, floating point and String
-concatentaion problems.
-
-(fixed)
+that shows another failure)
 
 It is not clear if iconv is only a little
 broken or totally busted.
@@ -34,12 +24,11 @@ one at a time?
 (it would, this is part of the stream changes I'm working on)
 
 
-
 command line UI issues, including the classpath
 handling options, to make us a drop in replacement
 for javac (as near as possible)
 
-(the classpath issues are in 1.14)
+(some command line flag work still remains)
 
 
 Use new casting operations instead of C style
@@ -86,10 +75,6 @@ be used in the Option class to process @ files.
 which remain uninvestigated )
 
 
-Make the floating point emulation code default.
-(done)                                                
-
-
 If a zip file can not be found,
 the error message printed should
 say that instead of saying it
@@ -98,8 +83,6 @@ is "invalid" (implies it was corrupted).
 "D:\File\with\wrong\classpath\entry\rt.jar is not a valid zip file" (BAD)
 
 "D:\File\with\wrong\classpath\entry\rt.jar not found" (GOOD)
-
-
 
 
 

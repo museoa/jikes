@@ -1,3 +1,29 @@
+2001-09-04  Eric Blake  <ebb9@email.byu.edu>
+	    Chris Abbey  <jikes@cabbey.net>
+
+	* .cvsignore:
+	* doc/.cvsignore:
+	* src/.cvsignore: Add for convenience.
+	* AUTHORS:
+	* COPYING:
+	* HACKING:
+	* INSTALL:
+	* NEWS:
+	* TODO: Some updates in preparation for 1.15.
+	* src/m4/ac_find_encoding.m4:
+	* configure.in: Fix some bugs with the autotool chain, add
+	--enable-debug to configuration - patch 127.
+	* Makefile.in:
+	* aclocal.m4:
+	* config.guess:
+	* config.sub:
+	* configure:
+	* missing:
+	* mkinstalldirs:
+	* doc/Makefile.in:
+	* src/Makefile.in:
+	* src/config.h.in: Regen with latest version of Autotools.
+
 2000-09-04  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/body.cpp (ProcessLocalVariableDeclarationStatement)

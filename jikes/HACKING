@@ -5,15 +5,16 @@ please read this file.
 Autotools based build system:
 
 If you modify any of the files used by the autotools build
-process (Makefile.am, configure.in, and so on), you will
-need to run the ./autogen.sh script to generate a new
-./configure script. The autogen.sh requires that you
-have the CVS versions of autoconf and automake installed.
-You can not use the 2.13 release of autoconf.
+process (Makefile.am, configure.in, and so on), you should
+configure with --enable-maintainer-mode.  Jikes requires
+fairly recent versions, such as autoconf 2.50 or greater,
+for the autotool chain to work correctly.
 
-The java.g file:
+
+src/java???.{h,cpp} src/code.{h,cpp}:
 
 Note that some of the files in Jikes are machine-generated.
+Make sure you edit the generator files, not the results.
 Any changes that require edits to the file src/java.g will
 also require you to obtain a copy of the Jikes Parser
 Generator (jikespg).
