@@ -3930,16 +3930,16 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression* expression,
         else if (expression -> binary_tag == AstBinaryExpression::OR_OR)
         {
             //
-            // if (cond && true); => cond;
-            // if (cond && false); => cond;
+            // if (cond || true); => cond;
+            // if (cond || false); => cond;
             //
             if (expression -> right_expression -> IsConstant())
             {
                 EmitExpression(expression -> left_expression, false);
             }
             //
-            // if (true && cond); => nop
-            // if (a && b); => if (a) b;
+            // if (true || cond); => nop
+            // if (a || b); => if (!a) b;
             //
             else if (! IsOne(expression -> left_expression))
             {
@@ -3954,16 +3954,16 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression* expression,
         else if (expression -> binary_tag == AstBinaryExpression::AND_AND)
         {
             //
-            // if (cond || true); => cond;
-            // if (cond || false); => cond;
+            // if (cond && true); => cond;
+            // if (cond && false); => cond;
             //
             if (expression -> right_expression -> IsConstant())
             {
                 EmitExpression(expression -> left_expression, false);
             }
             //
-            // if (false || cond); => nop
-            // if (a || b); => if (!a) b;
+            // if (false && cond); => nop
+            // if (a && b); => if (a) b;
             //
             else if (! IsZero(expression -> left_expression))
             {
