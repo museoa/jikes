@@ -1013,10 +1013,12 @@ void AnnotationComponentAnnotation::Put(OutputBuffer& out) const
     attr_value -> Put(out);
 }
 
+#ifdef JIKES_DEBUG
 void AnnotationComponentAnnotation::Print(const ConstantPool& pool) const
 {
     attr_value -> Print(pool);
-}        
+}
+#endif // JIKES_DEBUG
 
 
 AnnotationComponentArray::AnnotationComponentArray(ClassFile& buffer)

@@ -1,3 +1,8 @@
+2004-02-16  Elliott Hughes  <enh@acm.org>
+
+	* src/class.cpp (AnnotationComponentAnnotation::Print): Fix
+	non-JIKES_DEBUG build.
+
 2004-02-12  Eric Blake  <ebb9@byu.net>
 
 	* src/access.h (ACCESS_ANNOTATION): Add, from JSR 175? According
