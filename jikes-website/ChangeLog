@@ -1,3 +1,7 @@
+2002-12-07  Chris Abbey  <jikes@cabbey.net>
+
+	* faq/user-index.shtml: add the missing two Queries to Sun.
+
 2002-12-07  Eric Blake  <ebb9@email.byu.edu>
 
 	* faq/user-index.shtml: add entry in jikes vs javac for class

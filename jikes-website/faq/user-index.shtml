@@ -1194,7 +1194,12 @@ class C implements C.I {
             <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery32">
             Query #32 to Sun: Verification problem</a><br>
             <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery33">
-            Query #33 to Sun: Field resolution for interfaces</a>
+            Query #33 to Sun: Field resolution for interfaces</a><br>
+            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery34">
+            Query #34 to Sun: Which checked exceptions need to be checked?</a><br>
+            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery35">
+            Query #35 to Sun: Clarification of White Space (3.6)</a>
+
           </p>
 
           <h4>The Unofficial Java Spec Report</h4>
