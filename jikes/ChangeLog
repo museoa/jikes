@@ -1,3 +1,49 @@
+2001-04-16  Eric Blake  <ebb9@email.byu.edu>
+
+	* doc/jikes.1: Include mention of other
+	copyright code sources in jikes, including
+	David M. Gay's dtoa.c that inspired much
+	of this patch.
+	* src/Makefile.am:
+	* src/Makefile.in: Add dependency of
+	double.h on long.h.
+	* src/double.h:
+	* src/double.cpp:
+	Add better const support to existing
+	methods.
+	(IEEEfloat, IEEEdouble):
+	Change IEEEfloat(char *) and
+	IEEEdouble(char *) to be 100% accurate.
+	Fix a bug in conversion from negative
+	longs to floating point.
+	Clean up magic numbers, and got enum
+	constants working cleanly.
+	Add methods Bias() and FractSize().
+	(BigInt): Add the BigInt class for use
+	in string/floating-point conversions.
+	* src/expr.cpp (CastPrimitiveValue):
+	Clean up the casts to work with more
+	compilers.
+	* src/semantic.h:
+	* src/expr.cpp:
+	(Process*_SHIFT):
+	Get rid of magic numbers with shifts.
+	* src/long.h:
+	* src/long.cpp:
+	Add better const support to existing
+	methods.
+	Remove some magic numbers.
+	* src/platform.h:
+	* src/platform.cpp (FloatToString)
+	(DoubleToString): Rewrite the conversions
+	from floating point to strings to be
+	100% accurate.
+	Replace use of raw literals for "NaN"
+	and others with constants in StringConstant,
+	for use on non-ASCII machines.
+	Correct MAXIMUM_STRING_LENGTH to be large
+	enough.
+
 2001-04-15  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/expr.cpp: fix Assertion failure with string

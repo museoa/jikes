@@ -5800,14 +5800,14 @@ void Semantic::ProcessLEFT_SHIFT(AstBinaryExpression *expr)
                 LongLiteralValue *left = (LongLiteralValue *) expr -> left_expression -> value;
                 IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
 
-                expr -> value = control.long_pool.FindOrInsert(left -> value << (right -> value & 0x3F));
+                expr -> value = control.long_pool.FindOrInsert(left -> value << (right -> value & LONG_SHIFT_MASK));
             }
             else // assert(expr -> Type() == control.int_type)
             {
                 IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
                 IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
 
-                expr -> value = control.int_pool.FindOrInsert(left -> value << (0x1F & right -> value));
+                expr -> value = control.int_pool.FindOrInsert(left -> value << (right -> value & INT_SHIFT_MASK));
             }
         }
     }
@@ -5857,14 +5857,14 @@ void Semantic::ProcessRIGHT_SHIFT(AstBinaryExpression *expr)
                 LongLiteralValue *left = (LongLiteralValue *) expr -> left_expression -> value;
                 IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
 
-                expr -> value = control.long_pool.FindOrInsert(left -> value >> (right -> value & 0x3F));
+                expr -> value = control.long_pool.FindOrInsert(left -> value >> (right -> value & LONG_SHIFT_MASK));
             }
             else // assert(expr -> Type() == control.int_type)
             {
                 IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
                 IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
 
-                expr -> value = control.int_pool.FindOrInsert(left -> value >> (0x1F & right -> value));
+                expr -> value = control.int_pool.FindOrInsert(left -> value >> (right -> value & INT_SHIFT_MASK));
             }
         }
     }
@@ -5915,7 +5915,7 @@ void Semantic::ProcessUNSIGNED_RIGHT_SHIFT(AstBinaryExpression *expr)
                 IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
 
                 expr -> value = control.long_pool.FindOrInsert((LongInt)
-                    ((ULongInt) left -> value >> (right -> value & 0x3F)));
+                    ((ULongInt) left -> value >> (right -> value & LONG_SHIFT_MASK)));
             }
             else // assert(expr -> Type() == control.int_type)
             {
@@ -5923,7 +5923,7 @@ void Semantic::ProcessUNSIGNED_RIGHT_SHIFT(AstBinaryExpression *expr)
                 IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
 
                 expr -> value = control.int_pool.FindOrInsert((i4)
-                    ((u4) left -> value >> (right -> value & 0x1F)));
+                    ((u4) left -> value >> (right -> value & INT_SHIFT_MASK)));
             }
         }
     }

@@ -876,6 +876,11 @@ public:
     TypeSymbol *ProcessNestedType(TypeSymbol *, NameSymbol *, LexStream::TokenIndex);
 
 private:
+    enum
+    {
+        INT_SHIFT_MASK = 0x1f,
+        LONG_SHIFT_MASK = 0x3f,
+    };
 
     SemanticError *error;
 

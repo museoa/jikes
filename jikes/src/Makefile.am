@@ -130,7 +130,7 @@ depend_h = depend.h platform.h
 
 diagnose_h = diagnose.h platform.h parser.h jikesapi.h
 
-double_h = double.h platform.h
+double_h = double.h platform.h long.h
 
 error_h = error.h platform.h stream.h tuple.h jikesapi.h
 
