@@ -739,23 +739,32 @@ public:
 
     ~Semantic() { delete error; }
 
-    // Report a semantic warning or error
+    // Report a multi-token semantic warning or error.
     void ReportSemError(SemanticError::SemanticErrorKind kind,
-                        LexStream::TokenIndex ltok,
-                        LexStream::TokenIndex rtok,
-                        wchar_t *s1 = NULL,
-                        wchar_t *s2 = NULL,
-                        wchar_t *s3 = NULL,
-                        wchar_t *s4 = NULL,
-                        wchar_t *s5 = NULL,
-                        wchar_t *s6 = NULL,
-                        wchar_t *s7 = NULL,
-                        wchar_t *s8 = NULL,
-                        wchar_t *s9 = NULL)
+                        LexStream::TokenIndex ltok, LexStream::TokenIndex rtok,
+                        const wchar_t* s1 = NULL, const wchar_t* s2 = NULL,
+                        const wchar_t* s3 = NULL, const wchar_t* s4 = NULL,
+                        const wchar_t* s5 = NULL, const wchar_t* s6 = NULL,
+                        const wchar_t* s7 = NULL, const wchar_t* s8 = NULL,
+                        const wchar_t* s9 = NULL)
     {
         if (! error)
             error = new SemanticError(control, source_file_symbol);
         error -> Report(kind, ltok, rtok, s1, s2, s3, s4, s5, s6, s7, s8, s9);
+    }
+
+    // Report a single-token semantic warning or error.
+    void ReportSemError(SemanticError::SemanticErrorKind kind,
+                        LexStream::TokenIndex tok,
+                        const wchar_t* s1 = NULL, const wchar_t* s2 = NULL,
+                        const wchar_t* s3 = NULL, const wchar_t* s4 = NULL,
+                        const wchar_t* s5 = NULL, const wchar_t* s6 = NULL,
+                        const wchar_t* s7 = NULL, const wchar_t* s8 = NULL,
+                        const wchar_t* s9 = NULL)
+    {
+        if (! error)
+            error = new SemanticError(control, source_file_symbol);
+        error -> Report(kind, tok, tok, s1, s2, s3, s4, s5, s6, s7, s8, s9);
     }
 
     int NumErrors() { return (error ? error -> num_errors : 0); }
@@ -958,6 +967,9 @@ private:
     void ProcessSingleTypeImportDeclaration(AstImportDeclaration *);
 
     // Implemented in modifier.cpp - process declaration modifiers
+    void Semantic::ProcessAccessFlag(AccessFlags&, LexStream::TokenIndex,
+                                     Ast::Kind, const wchar_t*,
+                                     u2 valid_flags, u2 implicit_flags = 0);
     AccessFlags ProcessClassModifiers(AstClassDeclaration *);
     AccessFlags ProcessLocalClassModifiers(AstClassDeclaration *);
     AccessFlags ProcessNestedClassModifiers(AstClassDeclaration *);

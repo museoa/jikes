@@ -164,19 +164,9 @@ public:
         UNNECESSARY_TYPE_IMPORT,
         DUPLICATE_ACCESS_MODIFIER,
         DUPLICATE_MODIFIER,
-        FINAL_ABSTRACT_CLASS,
+        FINAL_ABSTRACT_ENTITY,
         VOLATILE_FINAL_FIELD,
-        INVALID_TOP_LEVEL_CLASS_MODIFIER,
-        INVALID_INNER_CLASS_MODIFIER,
-        INVALID_STATIC_INNER_CLASS_MODIFIER,
-        INVALID_LOCAL_CLASS_MODIFIER,
-        INVALID_INTERFACE_MODIFIER,
-        INVALID_FIELD_MODIFIER,
-        INVALID_LOCAL_MODIFIER,
-        INVALID_METHOD_MODIFIER,
-        INVALID_SIGNATURE_MODIFIER,
-        INVALID_CONSTRUCTOR_MODIFIER,
-        INVALID_CONSTANT_MODIFIER,
+        INVALID_MODIFIER,
         UNINITIALIZED_FIELD,
         RECOMPILATION,
         PACKAGE_NOT_TYPE,
@@ -302,7 +292,6 @@ public:
         CONSTRUCTOR_NOT_ACCESSIBLE,
         PARAMETER_REDECLARED,
         BAD_ABSTRACT_METHOD_MODIFIER,
-        ABSTRACT_METHOD_MODIFIER_CONFLICT,
         STRICTFP_NATIVE_METHOD,
         ABSTRACT_METHOD_INVOCATION,
         FINAL_METHOD_OVERRIDE,
@@ -386,15 +375,15 @@ public:
     void Report(SemanticErrorKind,
                 LexStream::TokenIndex,
                 LexStream::TokenIndex,
-                wchar_t * = NULL,
-                wchar_t * = NULL,
-                wchar_t * = NULL,
-                wchar_t * = NULL,
-                wchar_t * = NULL,
-                wchar_t * = NULL,
-                wchar_t * = NULL,
-                wchar_t * = NULL,
-                wchar_t * = NULL);
+                const wchar_t* = NULL,
+                const wchar_t* = NULL,
+                const wchar_t* = NULL,
+                const wchar_t* = NULL,
+                const wchar_t* = NULL,
+                const wchar_t* = NULL,
+                const wchar_t* = NULL,
+                const wchar_t* = NULL,
+                const wchar_t* = NULL);
 
     SemanticError(Control &, FileSymbol *);
     ~SemanticError()
@@ -478,19 +467,9 @@ private:
     static wchar_t *PrintUNNECESSARY_TYPE_IMPORT(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintDUPLICATE_ACCESS_MODIFIER(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintDUPLICATE_MODIFIER(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintFINAL_ABSTRACT_CLASS(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintFINAL_ABSTRACT_ENTITY(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintVOLATILE_FINAL_FIELD(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintINVALID_TOP_LEVEL_CLASS_MODIFIER(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintINVALID_INNER_CLASS_MODIFIER(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintINVALID_STATIC_INNER_CLASS_MODIFIER(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintINVALID_LOCAL_CLASS_MODIFIER(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintINVALID_INTERFACE_MODIFIER(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintINVALID_FIELD_MODIFIER(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintINVALID_LOCAL_MODIFIER(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintINVALID_METHOD_MODIFIER(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintINVALID_SIGNATURE_MODIFIER(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintINVALID_CONSTRUCTOR_MODIFIER(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintINVALID_CONSTANT_MODIFIER(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintINVALID_MODIFIER(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNINITIALIZED_FIELD(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintRECOMPILATION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintPACKAGE_NOT_TYPE(ErrorInfo &, LexStream *, Control &);
@@ -616,7 +595,6 @@ private:
     static wchar_t *PrintCONSTRUCTOR_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintPARAMETER_REDECLARED(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintBAD_ABSTRACT_METHOD_MODIFIER(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintABSTRACT_METHOD_MODIFIER_CONFLICT(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintSTRICTFP_NATIVE_METHOD(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintABSTRACT_METHOD_INVOCATION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintFINAL_METHOD_OVERRIDE(ErrorInfo &, LexStream *, Control &);

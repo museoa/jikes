@@ -252,15 +252,15 @@ SemanticError::SemanticError(Control &control_,
 void SemanticError::Report(SemanticErrorKind msg_code,
                            LexStream::TokenIndex left_token,
                            LexStream::TokenIndex right_token,
-                           wchar_t *insert1,
-                           wchar_t *insert2,
-                           wchar_t *insert3,
-                           wchar_t *insert4,
-                           wchar_t *insert5,
-                           wchar_t *insert6,
-                           wchar_t *insert7,
-                           wchar_t *insert8,
-                           wchar_t *insert9)
+                           const wchar_t* insert1,
+                           const wchar_t* insert2,
+                           const wchar_t* insert3,
+                           const wchar_t* insert4,
+                           const wchar_t* insert5,
+                           const wchar_t* insert6,
+                           const wchar_t* insert7,
+                           const wchar_t* insert8,
+                           const wchar_t* insert9)
 {
     //
     // Do not report errors detected while processing a clone !!!
@@ -549,24 +549,9 @@ void SemanticError::StaticInitializer()
     print_message[UNNECESSARY_TYPE_IMPORT] = PrintUNNECESSARY_TYPE_IMPORT;
     print_message[DUPLICATE_ACCESS_MODIFIER] = PrintDUPLICATE_ACCESS_MODIFIER;
     print_message[DUPLICATE_MODIFIER] = PrintDUPLICATE_MODIFIER;
-    print_message[FINAL_ABSTRACT_CLASS] = PrintFINAL_ABSTRACT_CLASS;
+    print_message[FINAL_ABSTRACT_ENTITY] = PrintFINAL_ABSTRACT_ENTITY;
     print_message[VOLATILE_FINAL_FIELD] = PrintVOLATILE_FINAL_FIELD;
-    print_message[INVALID_TOP_LEVEL_CLASS_MODIFIER] =
-        PrintINVALID_TOP_LEVEL_CLASS_MODIFIER;
-    print_message[INVALID_INNER_CLASS_MODIFIER] =
-        PrintINVALID_INNER_CLASS_MODIFIER;
-    print_message[INVALID_STATIC_INNER_CLASS_MODIFIER] =
-        PrintINVALID_STATIC_INNER_CLASS_MODIFIER;
-    print_message[INVALID_LOCAL_CLASS_MODIFIER] =
-        PrintINVALID_LOCAL_CLASS_MODIFIER;
-    print_message[INVALID_INTERFACE_MODIFIER] = PrintINVALID_INTERFACE_MODIFIER;
-    print_message[INVALID_FIELD_MODIFIER] = PrintINVALID_FIELD_MODIFIER;
-    print_message[INVALID_LOCAL_MODIFIER] = PrintINVALID_LOCAL_MODIFIER;
-    print_message[INVALID_METHOD_MODIFIER] = PrintINVALID_METHOD_MODIFIER;
-    print_message[INVALID_SIGNATURE_MODIFIER] = PrintINVALID_SIGNATURE_MODIFIER;
-    print_message[INVALID_CONSTRUCTOR_MODIFIER] =
-        PrintINVALID_CONSTRUCTOR_MODIFIER;
-    print_message[INVALID_CONSTANT_MODIFIER] = PrintINVALID_CONSTANT_MODIFIER;
+    print_message[INVALID_MODIFIER] = PrintINVALID_MODIFIER;
     print_message[UNINITIALIZED_FIELD] = PrintUNINITIALIZED_FIELD;
     print_message[RECOMPILATION] = PrintRECOMPILATION;
     print_message[PACKAGE_NOT_TYPE] = PrintPACKAGE_NOT_TYPE;
@@ -735,8 +720,6 @@ void SemanticError::StaticInitializer()
     print_message[PARAMETER_REDECLARED] = PrintPARAMETER_REDECLARED;
     print_message[BAD_ABSTRACT_METHOD_MODIFIER] =
         PrintBAD_ABSTRACT_METHOD_MODIFIER;
-    print_message[ABSTRACT_METHOD_MODIFIER_CONFLICT] =
-        PrintABSTRACT_METHOD_MODIFIER_CONFLICT;
     print_message[STRICTFP_NATIVE_METHOD] = PrintSTRICTFP_NATIVE_METHOD;
     print_message[ABSTRACT_METHOD_INVOCATION] = PrintABSTRACT_METHOD_INVOCATION;
     print_message[FINAL_METHOD_OVERRIDE] = PrintFINAL_METHOD_OVERRIDE;
@@ -1452,8 +1435,8 @@ wchar_t *SemanticError::PrintREDUNDANT_MODIFIER(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "The use of the \"" << err.insert1 << "\" modifier in this context "
-      << "is redundant and strongly discouraged as a matter of style.";
+    s << "The use of the \"" << err.insert1 << "\" modifier in "
+      << err.insert2 << " is redundant and discouraged as a matter of style.";
 
     return s.Array();
 }
@@ -1705,78 +1688,14 @@ wchar_t *SemanticError::PrintDUPLICATE_ACCESS_MODIFIER(ErrorInfo &err,
 }
 
 
-wchar_t *SemanticError::PrintINVALID_TOP_LEVEL_CLASS_MODIFIER(ErrorInfo &err,
-                                                              LexStream *lex_stream,
-                                                              Control &control)
+wchar_t *SemanticError::PrintFINAL_ABSTRACT_ENTITY(ErrorInfo &err,
+                                                   LexStream *lex_stream,
+                                                   Control &control)
 {
     ErrorString s;
 
-    s << "\"" << err.insert1
-      << "\" is not a valid modifier for a top-level class.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintINVALID_INNER_CLASS_MODIFIER(ErrorInfo &err,
-                                                          LexStream *lex_stream,
-                                                          Control &control)
-{
-    ErrorString s;
-
-    s << "\"" << err.insert1
-      << "\" is not a valid modifier for an inner class.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintINVALID_STATIC_INNER_CLASS_MODIFIER(ErrorInfo &err,
-                                                                 LexStream *lex_stream,
-                                                                 Control &control)
-{
-    ErrorString s;
-
-    s << "\"" << err.insert1
-      << "\" is not a valid modifier for an inner class that is enclosed "
-      << "in an interface.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintINVALID_LOCAL_CLASS_MODIFIER(ErrorInfo &err,
-                                                          LexStream *lex_stream,
-                                                          Control &control)
-{
-    ErrorString s;
-
-    s << "\"" << err.insert1
-      << "\" is not a valid modifier for a local inner class.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintFINAL_ABSTRACT_CLASS(ErrorInfo &err,
-                                                  LexStream *lex_stream,
-                                                  Control &control)
-{
-    ErrorString s;
-
-    s << "A class may not be declared both \"final\" and \"abstract\".";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintINVALID_INTERFACE_MODIFIER(ErrorInfo &err,
-                                                        LexStream *lex_stream,
-                                                        Control &control)
-{
-    ErrorString s;
-
-    s << "\"" << err.insert1 << "\" is not a valid interface modifier.";
+    s << "It is not possible for " << err.insert1
+      << " to be both \"final\" and \"abstract\".";
 
     return s.Array();
 }
@@ -1794,74 +1713,14 @@ wchar_t *SemanticError::PrintVOLATILE_FINAL_FIELD(ErrorInfo &err,
 }
 
 
-wchar_t *SemanticError::PrintINVALID_FIELD_MODIFIER(ErrorInfo &err,
-                                                    LexStream *lex_stream,
-                                                    Control &control)
+wchar_t *SemanticError::PrintINVALID_MODIFIER(ErrorInfo &err,
+                                              LexStream *lex_stream,
+                                              Control &control)
 {
     ErrorString s;
 
-    s << "\"" << err.insert1 << "\" is not a valid field modifier.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintINVALID_LOCAL_MODIFIER(ErrorInfo &err,
-                                                    LexStream *lex_stream,
-                                                    Control &control)
-{
-    ErrorString s;
-
-    s << "\"" << err.insert1
-      << "\" is not a valid local variable or parameter modifier.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintINVALID_METHOD_MODIFIER(ErrorInfo &err,
-                                                     LexStream *lex_stream,
-                                                     Control &control)
-{
-    ErrorString s;
-
-    s << "\"" << err.insert1 << "\" is not a valid method modifier.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintINVALID_SIGNATURE_MODIFIER(ErrorInfo &err,
-                                                        LexStream *lex_stream,
-                                                        Control &control)
-{
-    ErrorString s;
-
-    s << "\"" << err.insert1 << "\" is not a valid signature modifier.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintINVALID_CONSTRUCTOR_MODIFIER(ErrorInfo &err,
-                                                          LexStream *lex_stream,
-                                                          Control &control)
-{
-    ErrorString s;
-
-    s << "\"" << err.insert1 << "\" is not a valid constructor modifier.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintINVALID_CONSTANT_MODIFIER(ErrorInfo &err,
-                                                       LexStream *lex_stream,
-                                                       Control &control)
-{
-    ErrorString s;
-
-    s << "\"" << err.insert1 << "\" is not a valid interface field modifier.";
+    s << "\"" << err.insert1 << "\" is not valid as " << err.insert2
+      << " modifier.";
 
     return s.Array();
 }
@@ -3691,19 +3550,6 @@ wchar_t *SemanticError::PrintBAD_ABSTRACT_METHOD_MODIFIER(ErrorInfo &err,
     s << "A method declaration that contains the keyword \"abstract\" may "
       << "not contain any of the keywords: \"private\", \"static\", "
       << "\"final\", \"native\", \"strictfp\" or \"synchronized\".";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintABSTRACT_METHOD_MODIFIER_CONFLICT(ErrorInfo &err,
-                                                               LexStream *lex_stream,
-                                                               Control &control)
-{
-    ErrorString s;
-
-    s << "An \"abstract\" method may not also contain the keyword \""
-      << err.insert1 << "\".";
 
     return s.Array();
 }

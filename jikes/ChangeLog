@@ -1,3 +1,22 @@
+2002-11-02  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/expr.cpp (ReportConstructorNotFound, ProcessTypeExpression),
+	(GetAnonymousType): Minor touchups.
+	* src/bytecode.cpp (ByteCode): Move ACC_SUPER logic here...
+	* src/class.h (class ClassFile): from here, since modifier.cpp
+	should not implicitly set it.
+
+2002-11-02  Elliott Hughes  <enh@acm.org>
+
+	* src/access.h: Helper functions for the changes to modifier.cpp.
+	* src/error.cpp:
+	* src/error.h: Consolidate some modifier error messages.
+	* src/modifier.cpp: Removal of duplicate code, regularization of
+	checking.
+	* src/semantic.h (ReportSemError) A new form for the common case
+	where there's only a single token involved, not a span.
+	(ProcessAccessFlag) New prototype.
+
 2002-10-31  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/unparse.cpp (Unparse): Fix unparse output typo.

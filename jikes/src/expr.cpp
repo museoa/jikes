@@ -516,7 +516,7 @@ void Semantic::ReportConstructorNotFound(Ast *ast, TypeSymbol *type)
     // Give up. We didn't find it.
     //
     wchar_t *name = type -> Name();
-    int length = wcslen(name);
+    int length = type -> NameLength();
 
     for (int i = 0; i < num_arguments; i++)
     {
@@ -3968,7 +3968,6 @@ TypeSymbol *Semantic::GetAnonymousType(AstClassInstanceCreationExpression *class
     // instance if it is not in a static context.
     //
     anon_type -> SetACC_FINAL();
-    anon_type -> SetACC_SUPER();
     if (! StaticRegion())
         anon_type -> InsertThis0();
 
@@ -6881,7 +6880,7 @@ void Semantic::ProcessTypeExpression(Ast *expr)
     // reference Other.java which has syntax errors), but does not know to
     // report the error.
     //
-    unsigned error_count = NumErrors();
+    int error_count = NumErrors();
     TypeSymbol *type = (primitive_type ? FindPrimitiveType(primitive_type)
                         : MustFindType(actual_type));
     if (type -> Bad() && NumErrors() == error_count)

@@ -5863,11 +5863,46 @@ ByteCode::ByteCode(TypeSymbol *unit_type)
                 << unit_type -> fully_qualified_name -> value << "]" << endl;
 #endif // JIKES_DEBUG
 
+    //
+    // For compatibility reasons, protected classes are marked public, and
+    // private classes are marked default; and no class may be static or
+    // strictfp. Also, a non-access flag, the super bit, must be set for
+    // classes but not interfaces. For top-level types, this changes nothing
+    // except adding the super bit. For nested types, the correct access bits
+    // are emitted later as part of the InnerClasses attribute.
+    //
     SetFlags(unit_type -> Flags());
+    if (ACC_PROTECTED())
+    {
+        ResetACC_PROTECTED();
+        SetACC_PUBLIC();
+    }
+    else if (ACC_PRIVATE())
+        ResetACC_PRIVATE();
+    ResetACC_STATIC();
+    ResetACC_STRICTFP();
+    if (! unit_type -> ACC_INTERFACE())
+        SetACC_SUPER();
 
     magic = 0xcafebabe;
-    major_version = 45;             // use Sun JDK 1.0 version numbers
-    minor_version = 3;
+    switch (control.option.target)
+    {
+    default: // use Sun JDK 1.1 version numbers
+        major_version = 45;
+        minor_version = 3;
+        break;
+    case JikesOption::SDK1_2:
+        major_version = 46;
+        minor_version = 0;
+        break;
+    case JikesOption::SDK1_3:
+        major_version = 47;
+        minor_version = 0;
+        break;
+    case JikesOption::SDK1_4:
+        major_version = 48;
+        minor_version = 0;
+    }
     constant_pool.Next() = NULL;
     this_class = RegisterClass(unit_type);
 
