@@ -1307,10 +1307,13 @@ void Semantic::ProcessTryStatement(Ast* stmt)
 
         NameSymbol* name_symbol =
             lex_stream -> NameSymbol(name -> identifier_token);
-        if (LocalSymbolTable().FindVariableSymbol(name_symbol))
+        VariableSymbol* duplicate =
+            LocalSymbolTable().FindVariableSymbol(name_symbol);
+        if (duplicate)
         {
             ReportSemError(SemanticError::DUPLICATE_LOCAL_VARIABLE_DECLARATION,
-                           name -> identifier_token, name_symbol -> Name());
+                           name -> identifier_token, name_symbol -> Name(),
+                           duplicate -> FileLoc());
         }
 
         AstBlock* block_body = clause -> block;

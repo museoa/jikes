@@ -28,7 +28,7 @@ class SemanticError;
 //
 // Since basic_ostringstream<wchar_t> is not supported correctly by all
 // compilers, we now use this workaround class.
-// WARNING: It is not threadsafe - calling Array() in multiple threads may
+// WARNING: It is not thread-safe - calling Array() in multiple threads may
 // cause a race condition, getting the wrong string as a result.
 //
 class ErrorString : public ConvertibleArray<wchar_t>
@@ -52,7 +52,7 @@ public:
     void fill(const char c);
 
     //
-    // The returned value is not threadsafe, and is only guaranteed valid
+    // The returned value is not thread-safe, and is only guaranteed valid
     // until the next call to Array().
     //
     const wchar_t* Array();

@@ -735,7 +735,7 @@ int SemanticError::PrintMessages()
     int return_code = (num_errors > 0 ? 1 : 0);
 
     //
-    // If the errors were alread dumped, return.
+    // If the errors were already dumped, return.
     //
     if (control.option.dump_errors)
         return return_code;
@@ -1356,7 +1356,7 @@ void SemanticError::InitializeMessages()
         "The type of the left sub-expression, \"%T1\", cannot possibly "
         "be an instance of type \"%T3\".";
     messages[INVALID_CAST_CONVERSION] =
-        "An expression of type \"%1\" cannot be cast into type \"%2\".";
+        "An expression of type \"%T1\" cannot be cast into type \"%T3\".";
     messages[INCOMPATIBLE_TYPE_FOR_INITIALIZATION] =
         "The type of the initializer, \"%T3\", is not "
         "assignable to the variable, of type \"%T1\".";
@@ -1448,7 +1448,7 @@ void SemanticError::InitializeMessages()
     messages[INVALID_SHORT_VALUE] =
         "A short value must be an integer value in the range -32768..32767.";
     messages[INVALID_CHARACTER_VALUE] =
-        "A character must be an the range 0..65535 ('\\u0000'..'\\uffff').";
+        "A character must be in the range 0..65535 ('\\u0000'..'\\uffff').";
     messages[INVALID_INT_VALUE] =
         "The value of an \"int\" literal must be a decimal value in the "
         "range -2147483648..2147483647 or a hexadecimal or octal literal "

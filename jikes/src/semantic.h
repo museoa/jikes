@@ -1308,7 +1308,7 @@ private:
                                     LexStream::TokenIndex);
     TypeSymbol* GetType(TypeSymbol*, CPClassInfo*, const ConstantPool&,
                         LexStream::TokenIndex);
-    void ProcessClassFile(TypeSymbol*, const char*, size_t,
+    void ProcessClassFile(TypeSymbol*, const char*, unsigned,
                           LexStream::TokenIndex);
     void ReadClassFile(TypeSymbol*, LexStream::TokenIndex);
 

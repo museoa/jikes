@@ -1,3 +1,13 @@
+2004-01-21  Elliott Hughes  <enh@acm.org>
+
+	* src/body.cpp (ProcessTryStatement): Better error report on
+	duplicate declaration.
+	* src/error.cpp (INVALID_CHARACTER_VALUE),
+	(INVALID_CAST_CONVERSION): Fix typos.
+	* src/error.h: Ditto.
+	* src/lookup.h: Ditto.
+	* src/semantic.h (ProcessClassFile): Fix prototype.
+
 2004-01-21  Eric Blake  <ebb9@byu.net>
 
 	* src/option.cpp (Option): Fix Windows fallout from const-ifying
