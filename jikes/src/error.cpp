@@ -4398,12 +4398,12 @@ wchar_t *SemanticError::PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL
 {
     ErrorString s;
 
-    s << "Ambiguous reference to field \"" << err.insert1
-      << "\" declared in (or inherited from) type \"";
+    s << "Ambiguous reference to member named \"" << err.insert1
+      << "\" inherited from type \"";
     if (NotDot(err.insert2))
         s << err.insert2 << "/";
     s << err.insert3 << "\" but also declared in the enclosing method \""
-      << err.insert4 << "\". Explicit qualification is required.";
+      << err.insert4 << "\". Renaming the enclosing version is suggested.";
 
     return s.Array();
 }
@@ -4423,7 +4423,7 @@ wchar_t *SemanticError::PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBE
       << "\" but also declared or inherited in the enclosing type \"";
     if (NotDot(err.insert4))
         s << err.insert4 << "/";
-    s << err.insert5 << "\". Explicit qualification is required.";
+    s << err.insert5 << "\". Explicit qualification is suggested.";
 
     return s.Array();
 }

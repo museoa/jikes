@@ -3993,6 +3993,7 @@ TypeSymbol *Semantic::FindType(LexStream::TokenIndex identifier_token)
                 // If a different type of the same name was found in an
                 // enclosing scope.
                 //
+                TypeSymbol *supertype = type -> owner -> TypeCast();
                 if (outer_type && outer_type != type)
                 {
                     MethodSymbol *method = outer_type -> owner -> MethodCast();
@@ -4003,8 +4004,8 @@ TypeSymbol *Semantic::FindType(LexStream::TokenIndex identifier_token)
                                        identifier_token,
                                        identifier_token,
                                        lex_stream -> NameString(identifier_token),
-                                       env -> Type() -> ContainingPackage() -> PackageName(),
-                                       env -> Type() -> ExternalName(),
+                                       supertype -> ContainingPackage() -> PackageName(),
+                                       supertype -> ExternalName(),
                                        method -> Name());
                         break;
                     }
@@ -4014,8 +4015,8 @@ TypeSymbol *Semantic::FindType(LexStream::TokenIndex identifier_token)
                                        identifier_token,
                                        identifier_token,
                                        lex_stream -> NameString(identifier_token),
-                                       env -> Type() -> ContainingPackage() -> PackageName(),
-                                       env -> Type() -> ExternalName(),
+                                       supertype -> ContainingPackage() -> PackageName(),
+                                       supertype -> ExternalName(),
                                        env2 -> Type() -> ContainingPackage() -> PackageName(),
                                        env2 -> Type() -> ExternalName());
                         break;
