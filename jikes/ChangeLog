@@ -1,4 +1,8 @@
-2004-09-26	Bu FeiMing	<phileas_bu@hotmail.com>
+2004-10-02  Elliott Hughes  <enh@acm.org>
+
+	* NEWS: describe 1.22 and the bugs fixed between 1.21 and 1.22.
+
+2004-09-26  Bu FeiMing  <phileas_bu@hotmail.com>
 
 	* src/symbol.h (InsertDirectorySymbol): bug #495; subdirectories
 	of a class directory should not be considered source directories.
