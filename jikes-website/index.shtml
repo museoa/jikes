@@ -38,7 +38,7 @@
             <li><a href="faq/user-index.shtml">User's FAQ</a>
             <li><a href="/developerworks/news/index.php?group_id=10">News</a>
             <li><a href="distribs.shtml">Distributions</a>
-            <li><a href="/developerworks/downloads/index.php?group_id=10">Downloads</a>
+            <li><a href="/developerworks/downloads/index.php?group_id=10&recent_only=1">Downloads</a>
             <li><a href="/developerworks/bugs/?group_id=10">View open bugs</a>
             <li><a href="faq/bug-reporting.shtml">Report bugs here</a>
             <li><a href="/developerworks/opensource/license10.html">IBM Public License</a>
@@ -150,7 +150,7 @@ which has been approved by the <a href="http://www.opensource.org/">OSI</a>
 The project provides access to the complete <A HREF="cvs.shtml">CVS</A>
 development tree, which includes not only Jikes, but also the source for the Jacks
 Test Suite and the Jikes Parser Generator used to build Jikes. Members of the community
-contribute <A HREF="/developerworks/downloads/index.php?group_id=10">binaries</A>
+contribute <A HREF="/developerworks/downloads/index.php?group_id=10&recent_only=1">binaries</A>
 for their platforms of choice, additionally
 Jikes is included in many <A HREF="distribs.shtml">Open Source Operating Systems</A>.
 The Jacks Test Suite is a replacement for the Jikestst package, and it is expected
