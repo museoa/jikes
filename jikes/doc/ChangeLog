@@ -1,3 +1,15 @@
+2000-02-29  Vadim Zaliva  <lord@crocodile.org>
+
+	* Switched to ICU-1.4.0
+
+	* option.cpp (Option): small problem with compilation while both ICU and
+	ICONV are present.
+
+	* stream.cpp: 
+	* option.h: new ICU header names.
+
+	* configure.in (LDFLAGS): checking for u_getVersion to check is ICU is installed. 
+
 2000-02-21  Vadim Zaliva  <lord@crocodile.org>
 
 	* jikesapi.h (class JikesAPI): reader and writer factories removed - they are 

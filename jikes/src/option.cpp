@@ -522,7 +522,8 @@ Option::~Option()
         delete [] current_directory[c];
 #endif
 
-#ifdef HAVE_ICONV_H
+// Currently we use ICU even if iconv is present.
+#if defined(HAVE_ICONV_H) && !defined(HAVE_LIB_ICU_UC)
     if(converter)
         iconv_close(converter);
 #endif

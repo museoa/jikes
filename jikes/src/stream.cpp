@@ -17,7 +17,7 @@
 #include "semantic.h"
 
 #if defined(HAVE_LIB_ICU_UC)
-# include <ucnv.h>
+# include <unicode/ucnv.h>
 #elif defined(HAVE_ICONV_H)
 # include <iconv.h>
 # include <errno.h>
@@ -868,7 +868,7 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                     if(U_FAILURE(err))
                     {
                         fprintf(stderr,"Conversion error: %s at byte %d\n", 
-                                errorName(err),
+                                u_errorName(err),
                                 int(before-buffer)
                         );
                         break;
