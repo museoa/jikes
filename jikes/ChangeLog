@@ -1,5 +1,16 @@
 2000-07-12  Mo DeJong  <mdejong@redhat.com>
 
+	* configure.in: Add JIKES_VERSION_STRING.
+	* src/jikes.cpp: Use JIKES_VERSION_STRING,
+	update project homepage URL.
+	* src/platform.h: unset values in config.h
+	that conflict with other symbols in jikes.
+	* src/m4/acx_check_pathname_style.m4: Use
+	three argument form of AC_DEFINE to keep
+	autoheader happy.
+
+2000-07-12  Mo DeJong  <mdejong@redhat.com>
+
 	* src/Makefile.hand: Removed the Makefile
 	used in the old build system. All builds
 	should now be done with ./configure ; make.

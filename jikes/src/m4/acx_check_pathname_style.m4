@@ -26,8 +26,8 @@ esac
 AC_MSG_RESULT($acx_cv_pathname_style_dos)
 if test "$acx_cv_pathname_style_dos" = "yes"; then
   AC_DEFINE(HAVE_PATHNAME_STYLE_DOS,,[defined if running on a system with dos style paths])
-  AC_DEFINE(PATH_SEPARATOR, ';')
+  AC_DEFINE(PATH_SEPARATOR, ';', [used to seperate elements on the PATH])
 else
-  AC_DEFINE(PATH_SEPARATOR, ':')
+  AC_DEFINE(PATH_SEPARATOR, ':', [used to seperate elements on the PATH])
 fi
 ])

@@ -13,6 +13,15 @@
 
 #include <config.h>
 
+/*
+   undefine any symbols defined by the autotools
+   build process that can conflict with out symbols
+*/
+
+#undef PACKAGE
+#undef VERSION
+
+
 /* Boilerplate autoconf checking */
 
 #include <sys/types.h>

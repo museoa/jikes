@@ -142,11 +142,23 @@
 /* Used to test results of stat call to see if it is a directory */
 #undef JIKES_STAT_S_IFDIR
 
+/* A string to indicate the release of jikes: Version 1.11 1/10/2000 */
+#undef JIKES_VERSION_STRING
+
+/* Name of package */
+#undef PACKAGE
+
+/* used to seperate elements on the PATH */
+#undef PATH_SEPARATOR
+
 /* Define if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
 /* quick hack to use UNIX file system, fixme */
 #undef UNIX_FILE_SYSTEM
+
+/* Version number of package */
+#undef VERSION
 
 /* quick hack to use Win32 file system, fixme */
 #undef WIN32_FILE_SYSTEM
