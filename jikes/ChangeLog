@@ -1,3 +1,12 @@
+2001-09-08  Gregory Steuck  <greg@nest.cx>
+	    Andrew M. Inggs  <aminggs@yahoo.co.uk>
+	    Eric Blake  <ebb9@email.byu.edu>
+
+	* src/option.cpp (Option): Consolidated classpath related option
+	processing into a single routine, along with fixes that were
+	causing segfaults with cygwin.  Based in part on patches 122 and
+	129, and comments on those patches.
+
 2001-09-08  Norris Boyd  <nboyd@atg.com>
 
 	* src/bytecode.cpp: Follow-on patch to the previous, to cover

@@ -59,7 +59,7 @@ bool ArgumentExpander::ExpandAtFileArgument(Tuple<char *> &arguments,
 
             while (start == NULL && *ptr) {
                 switch (*ptr) {
-		case U_SPACE:
+                case U_SPACE:
                 case U_HORIZONTAL_TAB:
                 case U_LINE_FEED:
                 case U_CARRIAGE_RETURN:
@@ -223,8 +223,47 @@ void Option::SaveCurrentDirectoryOnDisk(char c)
 
     return;
 }
-#endif
+#endif // WIN32_FILE_SYSTEM
 
+
+// 
+// Skip leading whitespace and copy the rest to a new string
+// so we don't have to worry about affecting the environment
+// variable. If input value is NULL or consists of only whitespace
+// characters, returns NULL.
+//
+static inline char* makeStrippedCopy(char* value)
+{
+    if (value == NULL)
+        return NULL;
+
+    char* result = NULL;
+    while (isspace(*value))
+        value++;
+
+    if (*value)
+    {
+        result = new char[strlen(value) + 1];
+        strcpy(result, value);
+
+#ifdef HAVE_CYGWIN_WIN32_TO_POSIX_PATH_LIST
+        //
+        // Under Cygwin, we convert a Windows-style path into a UNIX-style
+        // path.  A path like "C:\Cygwin\tmp;C:\Windows" is converted into
+        // "/tmp:/cygdrive/c/Windows" (assuming C:\Cygwin is cygroot).  We
+        // can then parse it using the UNIX path seperator char ':'.
+        //
+        if (! cygwin_posix_path_list_p(result))
+        {
+            char* temp = new char[cygwin_win32_to_posix_path_list_buf_size(result)];
+            cygwin_win32_to_posix_path_list(result, temp);
+            delete[] result;
+            result = temp;
+        }
+#endif // CYGWIN_WIN32_TO_POSIX_PATH_LIST
+    }
+    return result;
+}
 
 Option::Option(ArgumentExpander &arguments) :
                                               first_file_index(arguments.argc),
@@ -270,7 +309,7 @@ Option::Option(ArgumentExpander &arguments) :
         current_directory[Case::ToAsciiUpper(main_disk)] = main_current_directory;
     }
     current_directory[0] = main_current_directory;
-#endif
+#endif // WIN32_FILE_SYSTEM
 
     char * paths_buffer;
     Tuple<int> filename_index(2048);
@@ -279,50 +318,56 @@ Option::Option(ArgumentExpander &arguments) :
     {
         if (arguments.argv[i][0] == '-')
         {
-            if (strcmp(arguments.argv[i],"-classpath") == 0 && ((i + 1) < arguments.argc))
+            if (strcmp(arguments.argv[i], "-classpath") == 0 &&
+                ((i + 1) < arguments.argc))
             {
                 classpath = arguments.argv[++i];
-		
+
                 // Create a copy of the -classpath argument so we can modify
                 //   this copy and delete it later in ~JikesOption
                 paths_buffer = new char[strlen(classpath)+1];
                 strcpy(paths_buffer, classpath);
                 classpath = paths_buffer;
             }
-            else if (strcmp(arguments.argv[i],"-bootclasspath") == 0 && ((i + 1) < arguments.argc))
+            else if (strcmp(arguments.argv[i], "-bootclasspath") == 0 &&
+                     ((i + 1) < arguments.argc))
             {
                 bootclasspath = arguments.argv[++i];
-		
+
                 // Create a copy of the -bootclasspath argument so we can
                 // modify this copy and delete it later in ~JikesOption
                 paths_buffer = new char[strlen(bootclasspath)+1];
                 strcpy(paths_buffer, bootclasspath);
                 bootclasspath = paths_buffer;
             }
-            else if (strcmp(arguments.argv[i],"-extdirs") == 0 && ((i + 1) < arguments.argc))
+            else if (strcmp(arguments.argv[i], "-extdirs") == 0 &&
+                     ((i + 1) < arguments.argc))
             {
                 extdirs = arguments.argv[++i];
-		
+
                 // Create a copy of the -extdirs argument so we can modify
                 // this copy and delete it later in ~JikesOption
                 paths_buffer = new char[strlen(extdirs)+1];
                 strcpy(paths_buffer, extdirs);
                 extdirs = paths_buffer;
             }
-            else if (strcmp(arguments.argv[i],"-sourcepath") == 0 && ((i + 1) < arguments.argc))
+            else if (strcmp(arguments.argv[i], "-sourcepath") == 0 &&
+                     ((i + 1) < arguments.argc))
             {
                 sourcepath = arguments.argv[++i];
-		
+
                 // Create a copy of the -sourcepath argument so we can
                 // modify this copy and delete it later in ~JikesOption
                 paths_buffer = new char[strlen(sourcepath)+1];
                 strcpy(paths_buffer, sourcepath);
                 sourcepath = paths_buffer;
             }
-            else if (strcmp(arguments.argv[i], "-depend") == 0 || strcmp(arguments.argv[i], "-Xdepend") == 0)
+            else if (strcmp(arguments.argv[i], "-depend") == 0 ||
+                     strcmp(arguments.argv[i], "-Xdepend") == 0)
                  depend = true;
 #if defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
-            else if (strcmp(arguments.argv[i], "-encoding") == 0 && ((i + 1) < arguments.argc))
+            else if (strcmp(arguments.argv[i], "-encoding") == 0 &&
+                     ((i + 1) < arguments.argc))
             {
                 i++;
                 encoding = new char[strlen(arguments.argv[i]) + 1];
@@ -337,21 +382,22 @@ Option::Option(ArgumentExpander &arguments) :
                 continue;
             }
 #endif // defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
-            else if (strcmp(arguments.argv[i],"-verbose") == 0)
+            else if (strcmp(arguments.argv[i], "-verbose") == 0)
                  verbose = true;
-            else if (strcmp(arguments.argv[i],"-g") == 0)
+            else if (strcmp(arguments.argv[i], "-g") == 0)
                  g = true;
             else if (strcmp(arguments.argv[i], "-O") == 0)
                  O = true;
-            else if (strcmp(arguments.argv[i],"-deprecation") == 0)
+            else if (strcmp(arguments.argv[i], "-deprecation") == 0)
                  deprecation = true;
-            else if (strcmp(arguments.argv[i],"-nowrite") == 0)
+            else if (strcmp(arguments.argv[i], "-nowrite") == 0)
                  nowrite = true;
-            else if (strcmp(arguments.argv[i],"-nowarn") == 0)
+            else if (strcmp(arguments.argv[i], "-nowarn") == 0)
                  nowarn = true;
-            else if (strcmp(arguments.argv[i],"-Xstdout") == 0)
+            else if (strcmp(arguments.argv[i], "-Xstdout") == 0)
                  Coutput.StandardOutput();
-            else if (strcmp(arguments.argv[i], "-d") == 0 && ((i + 1) < arguments.argc))
+            else if (strcmp(arguments.argv[i], "-d") == 0 &&
+                     ((i + 1) < arguments.argc))
             {
                 ++i;
 #if defined(UNIX_FILE_SYSTEM)
@@ -383,7 +429,7 @@ Option::Option(ArgumentExpander &arguments) :
 
                 if (! directory)
                     bad_options.Next() = new OptionError(SemanticError::INVALID_DIRECTORY, arguments.argv[i]);
-#endif
+#endif // WIN32_FILE_SYSTEM
                 if (directory)
                 {
                     for (char *ptr = directory; *ptr; ptr++)
@@ -411,16 +457,16 @@ Option::Option(ArgumentExpander &arguments) :
                  debug_dump_class = true;
             else if (strcmp(arguments.argv[i], "+OLDCSO") == 0)
                  old_classpath_search_order = true;
-            else if (strcmp(arguments.argv[i],"+D") == 0)
+            else if (strcmp(arguments.argv[i], "+D") == 0)
             {
                  dump_errors = true;
                  errors = false;
             }
-            else if (strcmp(arguments.argv[i],"+E") == 0)
+            else if (strcmp(arguments.argv[i], "+E") == 0)
             {
                 errors = false;
             }
-            else if (arguments.argv[i][0] == '+' && arguments.argv[i][1] == 'K')
+            else if (arguments.argv[i][1] == 'K')
             {
                 char *name = arguments.argv[i] + 2,
                      *image;
@@ -463,9 +509,9 @@ Option::Option(ArgumentExpander &arguments) :
                     }
                 }
             }
-            else if (strcmp(arguments.argv[i],"+F") == 0)
+            else if (strcmp(arguments.argv[i], "+F") == 0)
                  full_check = true;
-            else if (strcmp(arguments.argv[i],"+M") == 0)
+            else if (strcmp(arguments.argv[i], "+M") == 0)
             {
                  makefile = true;
                  full_check = true;
@@ -475,18 +521,18 @@ Option::Option(ArgumentExpander &arguments) :
                  makefile = true;
                  dependence_report=true;
                  full_check = true;
-		 dependence_report_name =
-		     new char[strlen(&arguments.argv[i][4]) + 1];
-		 strcpy(dependence_report_name, &arguments.argv[i][4]);
+                 dependence_report_name =
+                     new char[strlen(&arguments.argv[i][4]) + 1];
+                 strcpy(dependence_report_name, &arguments.argv[i][4]);
             }
             else if (strcmp(arguments.argv[i], "+O") == 0)
             {
                  debug_trap_op = atoi(arguments.argv[i + 1]);
                  i++;
             }
-            else if (strcmp(arguments.argv[i],"+P") == 0)
+            else if (strcmp(arguments.argv[i], "+P") == 0)
                  pedantic = true;
-            else if (arguments.argv[i][0] == U_PLUS && arguments.argv[i][1] == U_T)
+            else if (arguments.argv[i][1] == 'T')
             {
                 int tab_size = 0;
                 char *image = arguments.argv[i] + 2,
@@ -503,12 +549,12 @@ Option::Option(ArgumentExpander &arguments) :
             }
             else if (strcmp(arguments.argv[i], "+L") == 0)
                  debug_dump_lex = true;
-            else if (strcmp(arguments.argv[i],"+U") == 0)
+            else if (strcmp(arguments.argv[i], "+U") == 0)
             {
                  unzip = true;
                  full_check = true;
             }
-            else if (strcmp(arguments.argv[i],"++") == 0)
+            else if (strcmp(arguments.argv[i], "++") == 0)
             {
                  incremental = true;
                  full_check = true;
@@ -521,104 +567,18 @@ Option::Option(ArgumentExpander &arguments) :
     }
 
     if (! bootclasspath)
-    {
-        bootclasspath = getenv("BOOTCLASSPATH");
-
-        if (bootclasspath)
-        {
-            /* Create a copy of the classpath string we can modify
-               this copy without worry that it will effect the env array */
-            paths_buffer = new char[strlen(bootclasspath)+1];
-            strcpy(paths_buffer, bootclasspath);
-            bootclasspath = paths_buffer;
-
-            while (isspace(*bootclasspath))
-                bootclasspath++;
-
-            if (*bootclasspath == U_NULL) {
-	        // potential memory leak here, if that incr above executed.
-                delete [] bootclasspath;
-                bootclasspath = NULL;
-            }
-        }
-    }
-
+        bootclasspath = makeStrippedCopy(getenv("BOOTCLASSPATH"));
     if (! extdirs)
-    {
-        extdirs = getenv("EXTDIRS");
-
-        if (extdirs)
-        {
-            /* Create a copy of the extdirs string we can modify
-               this copy without worry that it will effect the env array */
-            paths_buffer = new char[strlen(extdirs)+1];
-            strcpy(paths_buffer, extdirs);
-            extdirs = paths_buffer;
-
-            while (isspace(*extdirs))
-                extdirs++;
-
-            if (*extdirs == U_NULL) {
-	        // potential memory leak here, if that incr above executed.
-                delete [] extdirs;
-                extdirs = NULL;
-            }
-        }
-    }
-
+        extdirs = makeStrippedCopy(getenv("EXTDIRS"));
     if (! classpath)
     {
-        classpath = getenv("JIKESPATH");
+        classpath = makeStrippedCopy(getenv("JIKESPATH"));
         if (! classpath)
-            classpath = getenv("CLASSPATH");
-
-        if (classpath)
-        {
-            /* Create a copy of the classpath string we can modify
-               this copy without worry that it will effect the env array */
-            paths_buffer = new char[strlen(classpath)+1];
-            strcpy(paths_buffer, classpath);
-            classpath = paths_buffer;
-
-            while (isspace(*classpath))
-                classpath++;
-
-            if (*classpath == U_NULL) {
-	        // potential memory leak here, if that incr above executed.
-                delete [] classpath;
-                classpath = NULL;
-            }
-        }
-
-        if (! classpath)
-        {
-            classpath = new char[2];
-            classpath[0] = '.';
-            classpath[1] = U_NULL;
-        }
+            classpath = makeStrippedCopy(getenv("CLASSPATH"));
     }
-
     if (! sourcepath)
     {
-        sourcepath = getenv("SOURCEPATH");
-
-        if (sourcepath)
-        {
-            /* Create a copy of the sourcepath string we can modify
-               this copy without worry that it will effect the env array */
-            paths_buffer = new char[strlen(sourcepath)+1];
-            strcpy(paths_buffer, sourcepath);
-            sourcepath = paths_buffer;
-
-            while (isspace(*sourcepath))
-                sourcepath++;
-
-            if (*sourcepath == U_NULL) {
-	        // potential memory leak here, if that incr above executed.
-                delete [] sourcepath;
-                sourcepath = NULL;
-            }
-        }
+        sourcepath = makeStrippedCopy(getenv("SOURCEPATH"));
 
         if (! sourcepath)
         {
@@ -627,46 +587,6 @@ Option::Option(ArgumentExpander &arguments) :
             sourcepath[1] = U_NULL;
         }
     }
-    
-    // If we need to do a cygwin CLASSPATH conversion do it after the env is checked
-    // so that it will work for a -classpath argument or a CLASSPATH env var.
-
-#ifdef HAVE_CYGWIN_WIN32_TO_POSIX_PATH_LIST
-    // Under Cygwin, we convert a windows style path into a unix
-    // style path. A path like "C:\Cygwin\tmp;C:\Windows" is converted
-    // into "/tmp:/cygdrive/c/Windows" (assuming C:\Cygwin is cygroot).
-    // We can then parse it using the unix path seperator char ':'
-    if (classpath) {
-      paths_buffer = new char[cygwin_win32_to_posix_path_list_buf_size(classpath)];
-      cygwin_win32_to_posix_path_list(classpath, paths_buffer);
-      delete [] classpath;
-      classpath = paths_buffer;
-    }
-
-    // Do the same for all the other paths.
-    if (bootclasspath) {
-      paths_buffer = new
-        char[cygwin_win32_to_posix_path_list_buf_size(bootclasspath)];
-      cygwin_win32_to_posix_path_list(bootclasspath, paths_buffer);
-      delete[] bootclasspath;
-      bootclasspath = paths_buffer;
-    }
-
-    if (extdirs) {
-      paths_buffer = new char[cygwin_win32_to_posix_path_list_buf_size(extdirs)];
-      cygwin_win32_to_posix_path_list(extdirs, paths_buffer);
-      delete[] extdirs;
-      extdirs = paths_buffer;
-    }
-
-    if (sourcepath) {
-      paths_buffer = new
-        char[cygwin_win32_to_posix_path_list_buf_size(sourcepath)];
-      cygwin_win32_to_posix_path_list(sourcepath, paths_buffer);
-      delete[] sourcepath;
-      sourcepath = paths_buffer;
-    }
-#endif
 
     //
     // Initially, first_file_index is set to argc. Since the array filename_index
