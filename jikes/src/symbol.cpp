@@ -733,7 +733,7 @@ void DirectorySymbol::ResetDirectory()
     // For now, we always reread the directory.
     //
     //    struct stat status;
-    //    if ((::SystemStat(this -> DirectoryName(), &status) == 0) && status.st_mtime > mtime)
+    //    if ((SystemStat(this -> DirectoryName(), &status) == 0) && status.st_mtime > mtime)
     //    {
     //        this -> mtime = status.st_mtime;
     //

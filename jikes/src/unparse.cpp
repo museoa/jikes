@@ -30,15 +30,15 @@ void AstCompilationUnit::Unparse(LexStream& lex_stream, char *directory)
     char *in_file_name = lex_stream.FileName();
     // char *suffix = ".unparse";
     char *suffix = "";
-    char *out_file_name = ::strcat3(directory, in_file_name, suffix);
+    char *out_file_name = strcat3(directory, in_file_name, suffix);
     // Create the directory if necessary
     for (int i=strlen(out_file_name); i>=0; i--) {
        if (out_file_name[i] == U_SLASH) {
            out_file_name[i] = U_NULL;
-           if (! ::SystemIsDirectory(out_file_name))
+           if (! SystemIsDirectory(out_file_name))
            {
                Ostream() << "making directory " << out_file_name << "\n";
-               ::SystemMkdirhier(out_file_name);
+               SystemMkdirhier(out_file_name);
            }
            out_file_name[i] = U_SLASH;
            break;

@@ -4145,7 +4145,7 @@ private:
             Cell **old_base = base;
 
             base_size += base_increment;
-            base = ::new Cell*[base_size];
+            base = new Cell*[base_size];
 
             if (old_base != NULL)
             {
@@ -4164,7 +4164,7 @@ private:
         //
         if (base[k] == NULL)
         {
-            base[k] = ::new Cell[Blksize()];
+            base[k] = new Cell[Blksize()];
             base[k] -= size;
         }
 

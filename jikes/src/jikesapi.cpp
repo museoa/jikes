@@ -222,7 +222,7 @@ const char *JikesError::getSeverityString()
  */
 int JikesAPI::stat(const char *fileName,struct stat *status)
 {
-    return ::SystemStat(fileName,status);
+    return SystemStat(fileName,status);
 }
 
 /**
@@ -295,11 +295,11 @@ DefaultFileReader::DefaultFileReader(const char *fileName)
     JikesAPI::getInstance()->stat(fileName, &status);
     size   = status.st_size;
 
-    FILE *srcfile = ::SystemFopen(fileName, "rb");
+    FILE *srcfile = SystemFopen(fileName, "rb");
     if (srcfile != NULL)
     {
         buffer = new char[size];
-        size_t numread = ::SystemFread(const_cast<char*>(buffer), sizeof(char), size, srcfile);
+        size_t numread = SystemFread(const_cast<char*>(buffer), sizeof(char), size, srcfile);
         assert(numread == size);
         fclose(srcfile);
     }
@@ -322,7 +322,7 @@ DefaultFileWriter::DefaultFileWriter(const char *fileName,size_t maxSize):
     FileWriter(maxSize)
 {
     valid  = false;
-    file = ::SystemFopen(fileName, "wb");
+    file = SystemFopen(fileName, "wb");
     if (file  ==  (FILE *) NULL)
         return;
     valid  = true;

@@ -33,7 +33,7 @@ bool ArgumentExpander::ArgumentExpanded(Tuple<char *> &arguments, char *file_nam
 {
     struct stat status;
     FILE *afile = fopen(file_name, "r");
-    if (afile && (::SystemStat(file_name, &status) == 0))
+    if (afile && (SystemStat(file_name, &status) == 0))
     {
         char *buffer = new char[status.st_size + 2];
         int file_size = fread(buffer, 1, status.st_size, afile);

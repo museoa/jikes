@@ -199,12 +199,12 @@ size_t SystemFread(char *ptr, size_t element_size, size_t count, FILE *stream)
 int SystemIsDirectory(char *name)
 {
   struct stat status;
-  return (((::SystemStat(name, &status) == 0) && (status.st_mode & JIKES_STAT_S_IFDIR)) ? 1 : 0);
+  return (((SystemStat(name, &status) == 0) && (status.st_mode & JIKES_STAT_S_IFDIR)) ? 1 : 0);
 }
 
 int SystemMkdirhier(char *dirname)
 {
-  if (::SystemIsDirectory(dirname))
+  if (SystemIsDirectory(dirname))
     return 0;
 
   for (char *ptr = dirname; *ptr; ptr++)
@@ -214,16 +214,16 @@ int SystemMkdirhier(char *dirname)
 	{
 	  *ptr = U_NULL;
 
-	  if (! ::SystemIsDirectory(dirname))
-	    ::SystemMkdir(dirname);
+	  if (! SystemIsDirectory(dirname))
+	    SystemMkdir(dirname);
 
 	  *ptr = delimiter;
 	}
     }
 
-  ::SystemMkdir(dirname);
+  SystemMkdir(dirname);
 
-  return (! ::SystemIsDirectory(dirname));
+  return (! SystemIsDirectory(dirname));
 }
 
 

@@ -371,7 +371,7 @@ void TypeDependenceChecker::OutputMake(FileSymbol *file_symbol)
     for (FileSymbol *symbol = (FileSymbol *) file_set.FirstElement(); symbol; symbol = (FileSymbol *) file_set.NextElement())
         file_list.Next() = symbol;
 
-    FILE *outfile = ::SystemFopen(u_name, "w");
+    FILE *outfile = SystemFopen(u_name, "w");
     if (outfile == NULL)
         Coutput << "*** Cannot open file " << u_name << "\n";
     else

@@ -321,7 +321,7 @@ Zip::Zip(Control &control_, char *zipfile_name) : control(control_),
                                                   zipbuffer(NULL)
 {
 #ifdef UNIX_FILE_SYSTEM
-    zipfile = ::SystemFopen(zipfile_name, "rb");
+    zipfile = SystemFopen(zipfile_name, "rb");
     if (zipfile)
     {
         int rc = fseek(zipfile, -22, SEEK_END);

@@ -255,7 +255,7 @@ void LexStream::Dump()
     strcpy(tokfile_name, FileName());
     strcat(tokfile_name, StringConstant::U8S__DO_tok);
 
-    if ((tokfile = ::SystemFopen(tokfile_name, "w")) == NULL)
+    if ((tokfile = SystemFopen(tokfile_name, "w")) == NULL)
     {
         Coutput << "*** Cannot open file " << tokfile_name << "\n";
         return;

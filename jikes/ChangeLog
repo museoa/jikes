@@ -1,3 +1,18 @@
+2000-12-29  Andrew G. Tereschenko  <tag@ibis.odessa.ua>
+
+	* src/ast.h:
+	* src/control.cpp:
+	* src/depend.cpp:
+	* src/dump.cpp:
+	* src/jikesapi.cpp:
+	* src/option.cpp:
+	* src/platform.cpp:
+	* src/symbol.cpp:
+	* src/system.cpp:
+	* src/unparse.cpp:
+	* src/zip.cpp: Removed extra :: qualifiers from
+	in front of method and type names.
+
 2000-12-29  Mo DeJong  <mdejong@redhat.com>
 
 	* src/platform.cpp: Fix minor typo in comment. No
