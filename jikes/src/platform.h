@@ -47,6 +47,7 @@
 */
 
 #undef PACKAGE
+#undef PACKAGE_NAME
 #undef VERSION
 
 
