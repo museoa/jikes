@@ -137,9 +137,6 @@ AstCompilationUnit *Parser::HeaderParse(LexStream *lex_stream_,
             if (compilation_unit -> NumTypeDeclarations() == 0)
                 compilation_unit -> kind = Ast::EMPTY_COMPILATION;
         }
-// STG:
-//      else delete ast;
-//
     }
 
     //
@@ -185,8 +182,6 @@ Ast *Parser::HeaderParse()
             state_stack_top--; // make reduction look like a shift-reduce
         else if (act > ERROR_ACTION)
         {
-// STG:
-//            token_action(curtok);
             curtok = lex_stream -> Gettoken();
             current_kind = lex_stream -> Kind(curtok);
 
@@ -194,8 +189,6 @@ Ast *Parser::HeaderParse()
         }
         else if (act < ACCEPT_ACTION)
         {
-// STG:
-//            token_action(curtok);
             curtok = lex_stream -> Gettoken();
             current_kind = lex_stream -> Kind(curtok);
 
@@ -227,8 +220,6 @@ Ast *Parser::HeaderParse()
             parse_stack[0] -> kind = Ast::BAD_COMPILATION;
         else
         {
-// STG:
-//            delete parse_stack[0];
             parse_stack[0] = NULL;
         }
     }
@@ -277,9 +268,6 @@ bool Parser::Body(AstClassBody *class_body)
                 errors_detected = true;
             else
             {
-// STG:
-//                delete block; // destroy old empty block
-//
                 constructor_decl -> constructor_body = new_body;
             }
         }
@@ -304,12 +292,7 @@ bool Parser::Body(AstClassBody *class_body)
                 if (! new_block) // a bad block ?
                     errors_detected = true;
                 else
-                {
-// STG:
-//                        delete block; // destroy old empty block
-                    //
-                        method_decl -> method_body = new_block;
-                }
+                    method_decl -> method_body = new_block;
             }
         }
     }
@@ -398,8 +381,9 @@ bool Parser::InitializerParse(LexStream *lex_stream_,
 bool Parser::Initializer(AstClassBody *class_body)
 {
     bool errors_detected = false;
+    int i;
 
-    for (int i = 0; i < class_body -> NumStaticInitializers(); i++)
+    for (i = 0; i < class_body -> NumStaticInitializers(); i++)
     {
          AstMethodBody *block = class_body -> StaticInitializer(i) -> block;
          end_token = block -> right_brace_token; // last token in the body
@@ -412,43 +396,42 @@ bool Parser::Initializer(AstClassBody *class_body)
             // Restore old empty block.
             class_body -> StaticInitializer(i) -> block = block;
         }
-// STG:
-//      else
-//      {
-//          delete block; // destroy old empty block
-//      }
     }
 
-    for (int j = 0; j < class_body -> NumInstanceInitializers(); j++)
+    for (i = 0; i < class_body -> NumInstanceInitializers(); i++)
     {
-         AstMethodBody *block = class_body -> InstanceInitializer(j);
-         end_token = block -> right_brace_token; // last token in the body
-         class_body -> InstanceInitializer(j) =
-             ParseSegment(block -> left_brace_token);
+        AstMethodBody *initializer = class_body -> InstanceInitializer(i);
+        end_token = initializer -> right_brace_token; // last token in the body
+        AstMethodBody *block = ParseSegment(initializer -> left_brace_token);
 
-        if (! class_body -> InstanceInitializer(j))
+        if (! block)
         {
             errors_detected = true;
-            // Restore old empty block.
-            class_body -> InstanceInitializer(j) = block;
         }
-//
-// STG: if we ever go back to a new/free model of allocating Ast nodes
-// This loop needs to be rewritten as otherwise, the new block allocated
-// here would cause a memory leak since the class_body_declarations list
-// is unaware of it. The solution is to iterate over the
-// class_body_declarations list in order to locate the old block, free it and
-// update the class_body_declarations list to point to the new block.
-//
+        else
+        {
+            //
+            // Since the instance initializer is already on more than one list,
+            // update it to contain the contents of the newly parsed block,
+            // rather than replacing the instance. We did not have to do this
+            // for static initializers or methods bodies, since the MethodBody
+            // itself was not on multiple lists.
+            //
+            initializer -> explicit_constructor_opt =
+                block -> explicit_constructor_opt;
+            initializer -> AllocateBlockStatements(block -> NumStatements());
+            for (int j = 0; j < block -> NumStatements(); j++)
+                initializer -> AddStatement(block -> Statement(j));
+        }
     }
 
-    for (int k = 0; k < class_body -> NumNestedClasses(); k++)
+    for (i = 0; i < class_body -> NumNestedClasses(); i++)
         errors_detected = errors_detected ||
-            ! Initializer(class_body -> NestedClass(k) -> class_body);
+            ! Initializer(class_body -> NestedClass(i) -> class_body);
 
-    for (int l = 0; l < class_body -> NumNestedInterfaces(); l++)
+    for (i = 0; i < class_body -> NumNestedInterfaces(); i++)
         errors_detected = errors_detected ||
-            ! Initializer(class_body -> NestedInterface(l));
+            ! Initializer(class_body -> NestedInterface(i));
 
     return ! errors_detected;
 }
@@ -505,8 +488,6 @@ AstMethodBody *Parser::ParseSegment(TokenObject start_token)
             state_stack_top--; // make reduction look like a shift-reduce
         else if (act > ERROR_ACTION)
         {
-// STG:
-//            token_action(curtok);
             curtok = lex_stream -> Gettoken(end_token);
             current_kind = lex_stream -> Kind(curtok);
 
@@ -514,8 +495,6 @@ AstMethodBody *Parser::ParseSegment(TokenObject start_token)
         }
         else if (act < ACCEPT_ACTION)
         {
-// STG:
-//            token_action(curtok);
             curtok = lex_stream -> Gettoken(end_token);
             current_kind = lex_stream -> Kind(curtok);
 
@@ -538,8 +517,6 @@ AstMethodBody *Parser::ParseSegment(TokenObject start_token)
     {
         RepairParse(curtok);
 
-// STG:
-//        delete parse_stack[0];
         parse_stack[0] = NULL;
     }
 
@@ -564,11 +541,6 @@ void Parser::RepairParse(TokenObject curtok)
         for (k = state_stack_top - 1;
              k >= 0 && location_stack[k] == Loc(curtok); k--);
         k++;
-// STG:
-//        for (int i = k; i < state_stack_top; i++)
-//        {
-//            delete parse_stack[i];
-//        }
 
         state_stack_top = k;
 
@@ -595,8 +567,6 @@ void Parser::RepairParse(TokenObject curtok)
                 state_stack_top--; // make reduction look like a shift-reduce
             else if (act > ERROR_ACTION)
             {
-// STG:
-//                token_action(curtok);
                 curtok = lex_stream -> Gettoken(end_token);
                 current_kind = lex_stream -> Kind(curtok);
 
@@ -604,8 +574,6 @@ void Parser::RepairParse(TokenObject curtok)
             }
             else if (act < ACCEPT_ACTION)
             {
-// STG:
-//                token_action(curtok);
                 curtok = lex_stream -> Gettoken(end_token);
                 current_kind = lex_stream -> Kind(curtok);
 
@@ -666,12 +634,6 @@ void Parser::ErrorRepair(TokenObject error_token)
         repair = ErrorSurgery(stack, state_stack_top, last_index, repair);
         error_token = buffer[MAX_DISTANCE - MIN_DISTANCE + 2];
     } while (repair.code == 0);
-
-// STG:
-//    for (int i = repair.stack_position; i < state_stack_top; i++)
-//    {
-//        delete parse_stack[i];
-//    }
 
     state_stack_top = repair.stack_position;
     lex_stream -> Reset(buffer[repair.buffer_position]);

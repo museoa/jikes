@@ -446,28 +446,6 @@ public:
     MethodSymbol *next_method;
     Utf8LiteralValue *signature;
 
-    //
-    // If this method is a method that is generated in order to process
-    // initializer blocks contained in the body of a class, it needs to know
-    // the set of constructors that might invoke it in order to figure out
-    // which exceptions can be safely thrown within an initializer block.
-    //
-    int NumInitializerConstructors()
-    {
-        return (initializer_constructors
-                ? initializer_constructors -> Length() : 0);
-    }
-    MethodSymbol *InitializerConstructor(int i)
-    {
-        return (*initializer_constructors)[i];
-    }
-    void AddInitializerConstructor(MethodSymbol *method)
-    {
-        if (! initializer_constructors)
-            initializer_constructors = new Tuple<MethodSymbol *>(8);
-        initializer_constructors -> Next() = method;
-    }
-
     int max_block_depth;
 
     //
@@ -508,7 +486,6 @@ public:
           formal_parameters(NULL),
           throws(NULL),
           throws_signatures(NULL),
-          initializer_constructors(NULL),
           local_constructor(NULL)
     {
         Symbol::_kind = METHOD;
@@ -651,7 +628,6 @@ private:
     Tuple<VariableSymbol *> *formal_parameters;
     Tuple<TypeSymbol *> *throws;
     Tuple<char *> *throws_signatures;
-    Tuple<MethodSymbol *> *initializer_constructors;
 
     //
     // If the method in question is a constructor of a local type, we may need

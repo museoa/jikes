@@ -299,7 +299,7 @@ Ast *AstClassBody::Clone(StoragePool *ast_pool)
 
     clone -> left_brace_token = left_brace_token;
     for (int i = 0; i < NumClassBodyDeclarations(); i++)
-        clone -> AddClassBodyDeclaration(ClassBodyDeclaration(i) -> Clone(ast_pool));
+        clone -> AddClassBodyDeclarationNicely(ClassBodyDeclaration(i) -> Clone(ast_pool));
     clone -> right_brace_token = right_brace_token;
 
     return clone;

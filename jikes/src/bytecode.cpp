@@ -226,65 +226,69 @@ void ByteCode::CompileClass()
 
     if (constant_pool.Length() > 65535)
     {
-         semantic.ReportSemError(SemanticError::CONSTANT_POOL_OVERFLOW,
-                                 unit_type -> declaration -> LeftToken(),
-                                 unit_type -> declaration -> RightToken(),
-                                 unit_type -> ContainingPackage() -> PackageName(),
-                                 unit_type -> ExternalName());
+        semantic.ReportSemError(SemanticError::CONSTANT_POOL_OVERFLOW,
+                                unit_type -> declaration -> LeftToken(),
+                                unit_type -> declaration -> RightToken(),
+                                unit_type -> ContainingPackage() -> PackageName(),
+                                unit_type -> ExternalName());
     }
 
     if (interfaces.Length() > 65535)
     {
-         AstClassDeclaration *class_declaration = unit_type -> declaration -> ClassDeclarationCast();
-         AstInterfaceDeclaration *interface_declaration = unit_type -> declaration -> InterfaceDeclarationCast();
-         int n = (class_declaration ? class_declaration -> NumInterfaces()
-                                    : interface_declaration -> NumInterfaceMemberDeclarations());
-         Ast *left = (class_declaration ? (Ast *) class_declaration -> Interface(0)
-                                        : interface_declaration -> InterfaceMemberDeclaration(0)),
-             *right = (class_declaration ? (Ast *) class_declaration -> Interface(n - 1)
-                                         : interface_declaration -> InterfaceMemberDeclaration(n - 1));
+        AstClassDeclaration *class_declaration =
+            unit_type -> declaration -> ClassDeclarationCast();
+        AstInterfaceDeclaration *interface_declaration =
+            unit_type -> declaration -> InterfaceDeclarationCast();
+        int n = (class_declaration ? class_declaration -> NumInterfaces()
+                 : interface_declaration -> NumInterfaceMemberDeclarations());
+        Ast *left = (class_declaration
+                     ? (Ast *) class_declaration -> Interface(0)
+                     : interface_declaration -> InterfaceMemberDeclaration(0)),
+            *right = (class_declaration
+                      ? (Ast *) class_declaration -> Interface(n - 1)
+                      : interface_declaration -> InterfaceMemberDeclaration(n - 1));
 
-         semantic.ReportSemError(SemanticError::INTERFACES_OVERFLOW,
-                                 left -> LeftToken(),
-                                 right -> RightToken(),
-                                 unit_type -> ContainingPackage() -> PackageName(),
-                                 unit_type -> ExternalName());
+        semantic.ReportSemError(SemanticError::INTERFACES_OVERFLOW,
+                                left -> LeftToken(),
+                                right -> RightToken(),
+                                unit_type -> ContainingPackage() -> PackageName(),
+                                unit_type -> ExternalName());
     }
 
     if (fields.Length() > 65535)
     {
-         semantic.ReportSemError(SemanticError::FIELDS_OVERFLOW,
-                                 unit_type -> declaration -> LeftToken(),
-                                 unit_type -> declaration -> RightToken(),
-                                 unit_type -> ContainingPackage() -> PackageName(),
-                                 unit_type -> ExternalName());
+        semantic.ReportSemError(SemanticError::FIELDS_OVERFLOW,
+                                unit_type -> declaration -> LeftToken(),
+                                unit_type -> declaration -> RightToken(),
+                                unit_type -> ContainingPackage() -> PackageName(),
+                                unit_type -> ExternalName());
     }
 
     if (methods.Length() > 65535)
     {
-         semantic.ReportSemError(SemanticError::METHODS_OVERFLOW,
-                                 unit_type -> declaration -> LeftToken(),
-                                 unit_type -> declaration -> RightToken(),
-                                 unit_type -> ContainingPackage() -> PackageName(),
-                                 unit_type -> ExternalName());
+        semantic.ReportSemError(SemanticError::METHODS_OVERFLOW,
+                                unit_type -> declaration -> LeftToken(),
+                                unit_type -> declaration -> RightToken(),
+                                unit_type -> ContainingPackage() -> PackageName(),
+                                unit_type -> ExternalName());
     }
 
     if (string_overflow)
     {
-         semantic.ReportSemError(SemanticError::STRING_OVERFLOW,
-                                 unit_type -> declaration -> LeftToken(),
-                                 unit_type -> declaration -> RightToken(),
-                                 unit_type -> ContainingPackage() -> PackageName(),
-                                 unit_type -> ExternalName());
+        semantic.ReportSemError(SemanticError::STRING_OVERFLOW,
+                                unit_type -> declaration -> LeftToken(),
+                                unit_type -> declaration -> RightToken(),
+                                unit_type -> ContainingPackage() -> PackageName(),
+                                unit_type -> ExternalName());
     }
 
     if (library_method_not_found)
     {
-         semantic.ReportSemError(SemanticError::LIBRARY_METHOD_NOT_FOUND,
-                                 unit_type -> declaration -> LeftToken(),
-                                 unit_type -> declaration -> RightToken(),
-                                 unit_type -> ContainingPackage() -> PackageName(),
-                                 unit_type -> ExternalName());
+        semantic.ReportSemError(SemanticError::LIBRARY_METHOD_NOT_FOUND,
+                                unit_type -> declaration -> LeftToken(),
+                                unit_type -> declaration -> RightToken(),
+                                unit_type -> ContainingPackage() -> PackageName(),
+                                unit_type -> ExternalName());
     }
 
     if (semantic.NumErrors() == 0)
@@ -492,6 +496,12 @@ void ByteCode::DeclareField(VariableSymbol *symbol)
 {
     int field_index = fields.NextIndex(); // index for field
     TypeSymbol *type = symbol -> Type();
+    if (type -> num_dimensions > 255)
+    {
+        semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW,
+                                symbol -> declarator -> LeftToken(),
+                                symbol -> declarator -> RightToken());
+    }
 
     fields[field_index].SetFlags(symbol -> Flags());
     fields[field_index].SetNameIndex(RegisterName(symbol ->
@@ -577,58 +587,73 @@ void ByteCode::BeginMethod(int method_index, MethodSymbol *msym)
     }
 
     //
-    // If the method is contained in an interface and it is not a generated
-    // static initializer, no further processing is needed
-    //
-    if (msym -> containing_type -> ACC_INTERFACE() &&
-        msym -> Identity() != control.clinit_name_symbol)
-    {
-        return;
-    }
-
-    //
     // here if need code and associated attributes.
     //
     if (! (msym -> ACC_ABSTRACT() || msym -> ACC_NATIVE()))
     {
-        method_stack = new MethodStack(msym -> max_block_depth,
-                                       msym -> block_symbol -> max_variable_index);
+        method_stack =
+            new MethodStack(msym -> max_block_depth,
+                            msym -> block_symbol -> max_variable_index);
 
-        code_attribute = new Code_attribute(RegisterUtf8(control.Code_literal),
-                                            msym -> block_symbol -> max_variable_index);
+        code_attribute =
+            new Code_attribute(RegisterUtf8(control.Code_literal),
+                               msym -> block_symbol -> max_variable_index);
 
         line_number = 0;
-        line_number_table_attribute = new LineNumberTable_attribute(RegisterUtf8(control.LineNumberTable_literal));
+        line_number_table_attribute = new LineNumberTable_attribute
+            (RegisterUtf8(control.LineNumberTable_literal));
 
-        local_variable_table_attribute =
-            ((control.option.g & JikesOption::VARS)
-             ? new LocalVariableTable_attribute(RegisterUtf8(control.LocalVariableTable_literal))
-             : (LocalVariableTable_attribute *) NULL);
+        local_variable_table_attribute = (control.option.g & JikesOption::VARS)
+            ? (new LocalVariableTable_attribute
+               (RegisterUtf8(control.LocalVariableTable_literal)))
+            : (LocalVariableTable_attribute *) NULL;
     }
 
-    VariableSymbol *last_parameter = (msym -> NumFormalParameters() ? msym -> FormalParameter(msym -> NumFormalParameters() - 1)
-                                                                    : (VariableSymbol *) NULL);
-
-    last_parameter_index = (last_parameter ? last_parameter -> LocalVariableIndex() : -1);
-
-    int num_parameter_slots = (last_parameter && control.IsDoubleWordType(last_parameter -> Type())
-                                               ? last_parameter_index + 1
-                                               : last_parameter_index);
-    if (num_parameter_slots > 255)
+    if (msym -> Type() -> num_dimensions > 255)
     {
-        assert(msym -> declaration);
+        assert(msym -> declaration -> MethodDeclarationCast());
+        Ast *type = ((AstMethodDeclaration *) msym -> declaration) -> type;
 
-        AstMethodDeclaration *method_declaration = msym -> declaration -> MethodDeclarationCast();
-        AstConstructorDeclaration *constructor_declaration = msym -> declaration -> ConstructorDeclarationCast();
-        AstMethodDeclarator *declarator = (method_declaration ? method_declaration -> method_declarator
-                                                              : constructor_declaration -> constructor_declarator);
+        semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW,
+                                type -> LeftToken(),
+                                type -> RightToken());
+    }
 
-        semantic.ReportSemError(SemanticError::PARAMETER_OVERFLOW,
-                                declarator -> left_parenthesis_token,
-                                declarator -> right_parenthesis_token,
-                                msym -> Header(),
-                                unit_type -> ContainingPackage() -> PackageName(),
-                                unit_type -> ExternalName());
+    VariableSymbol *parameter = NULL;
+    for (int i = 0; i < msym -> NumFormalParameters(); i++)
+    {
+        parameter = msym -> FormalParameter(i);
+        if (parameter -> Type() -> num_dimensions > 255)
+        {
+            semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW,
+                                    parameter -> declarator -> LeftToken(),
+                                    parameter -> declarator -> RightToken());
+        }
+    }
+    if (parameter)
+    {
+        int last_parameter_index = parameter -> LocalVariableIndex();
+        if (control.IsDoubleWordType(parameter -> Type()))
+            last_parameter_index++;
+        if (last_parameter_index >= 255)
+        {
+            assert(msym -> declaration);
+
+            AstMethodDeclaration *method_declaration =
+                msym -> declaration -> MethodDeclarationCast();
+            AstConstructorDeclaration *constructor_declaration =
+                msym -> declaration -> ConstructorDeclarationCast();
+            AstMethodDeclarator *declarator = method_declaration
+                ? method_declaration -> method_declarator
+                : constructor_declaration -> constructor_declarator;
+
+            semantic.ReportSemError(SemanticError::PARAMETER_OVERFLOW,
+                                    declarator -> left_parenthesis_token,
+                                    declarator -> right_parenthesis_token,
+                                    msym -> Header(),
+                                    unit_type -> ContainingPackage() -> PackageName(),
+                                    unit_type -> ExternalName());
+        }
     }
 }
 
@@ -825,6 +850,13 @@ void ByteCode::DeclareLocalVariable(AstVariableDeclarator *declarator)
                 << " was processed" << endl;
 #endif // DUMP
         method_stack -> StartPc(declarator -> symbol) = code_attribute -> CodeLength();
+    }
+
+    if (declarator -> symbol -> Type() -> num_dimensions > 255)
+    {
+        semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW,
+                                declarator -> LeftToken(),
+                                declarator -> RightToken());
     }
 
     if (declarator -> symbol -> initial_value)
@@ -1552,8 +1584,7 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
             if (! abrupt)
                 abrupt = EmitStatement(switch_block_statement ->
                                        Statement(si) -> StatementCast());
-            else if ((control.option.g & JikesOption::VARS) &&
-                     switch_block_statement -> Statement(si) ->
+            else if (switch_block_statement -> Statement(si) ->
                      LocalVariableDeclarationStatementCast())
             {
                 //
@@ -1565,9 +1596,21 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
                     (AstLocalVariableDeclarationStatement *)
                     switch_block_statement -> Statement(si);
                 for (int j = 0; j < lvds -> NumVariableDeclarators(); j++)
-                    method_stack ->
-                        StartPc(lvds -> VariableDeclarator(j) -> symbol) =
-                        code_attribute -> CodeLength();
+                {
+                    AstVariableDeclarator *declarator =
+                        lvds -> VariableDeclarator(j);
+                    if (control.option.g & JikesOption::VARS)
+                    {
+                        method_stack -> StartPc(declarator -> symbol) =
+                            code_attribute -> CodeLength();
+                    }
+                    if (declarator -> symbol -> Type() -> num_dimensions > 255)
+                    {
+                        semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW,
+                                                declarator -> LeftToken(),
+                                                declarator -> RightToken());
+                    }
+                }
             }
         }
     }
@@ -2156,6 +2199,12 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
     {
     case AstBinaryExpression::INSTANCEOF:
         {
+            if (right_type -> num_dimensions > 255)
+            {
+                semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW,
+                                        right -> LeftToken(),
+                                        right -> RightToken());
+            }
             if (left_type == control.null_type)
             {
                 //
@@ -2940,28 +2989,7 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
         return EmitPreUnaryExpression((AstPreUnaryExpression *) expression,
                                       need_value);
     case Ast::CAST:
-        {
-            AstCastExpression *cast_expression =
-                (AstCastExpression *) expression;
-            //
-            // Only primitive types require casting; the front end changed
-            // object downcasting to CHECK_AND_CAST.
-            //
-            return cast_expression -> expression -> Type() -> Primitive()
-                ? EmitCastExpression(cast_expression, need_value)
-                : EmitExpression(cast_expression -> expression, need_value);
-        }
-    case Ast::CHECK_AND_CAST:
-        {
-            // Must evaluate, for ClassCastException side effect.
-            int words = EmitCastExpression((AstCastExpression *) expression,
-                                           true);
-            if (need_value)
-                return words;
-            assert(expression -> Type() -> IsSubclass(control.Object()));
-            PutOp(OP_POP);
-            return 0;
-        }
+        return EmitCastExpression((AstCastExpression *) expression, need_value);
     case Ast::BINARY:
         {
             // Must evaluate for potential side effects.
@@ -3263,6 +3291,12 @@ int ByteCode::GenerateClassAccess(AstFieldAccess *field_access,
     if (need_value)
         PutOp(OP_POP);
     TypeSymbol *type = field_access -> base -> Type();
+    if (type -> num_dimensions > 255)
+    {
+        semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW,
+                                field_access -> LeftToken(),
+                                field_access -> RightToken());
+    }
     bool is_array = type -> IsArray();
     if (! is_array)
         type = type -> GetArrayType(control.system_semantic, 1);
@@ -3340,7 +3374,7 @@ int ByteCode::EmitArrayCreationExpression(AstArrayCreationExpression *expression
 {
     int num_dims = expression -> NumDimExprs();
 
-    if (num_dims > 255)
+    if (expression -> Type() -> num_dimensions > 255)
     {
         semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW,
                                 expression -> LeftToken(),
@@ -3348,7 +3382,10 @@ int ByteCode::EmitArrayCreationExpression(AstArrayCreationExpression *expression
     }
 
     if (expression -> array_initializer_opt)
-        InitializeArray(expression -> Type(), expression -> array_initializer_opt);
+    {
+        InitializeArray(expression -> Type(),
+                        expression -> array_initializer_opt);
+    }
     else
     {
         //
@@ -3736,6 +3773,12 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
     {
         TypeSymbol *left_type = expression -> left_expression -> Type();
         TypeSymbol *right_type = expression -> right_expression -> Type();
+        if (right_type -> num_dimensions > 255)
+        {
+            semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW,
+                                    expression -> right_expression -> LeftToken(),
+                                    expression -> right_expression -> RightToken());
+        }
         if (left_type == control.null_type)
         {
             //
@@ -4160,19 +4203,32 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
 int ByteCode::EmitCastExpression(AstCastExpression *expression,
                                  bool need_value)
 {
-    //
-    // Convert from src type to destination type.
-    //
-    EmitExpression(expression -> expression, need_value);
-
-    if (! need_value)
-        return 0;
-
     TypeSymbol *dest_type = expression -> Type();
     TypeSymbol *source_type = expression -> expression -> Type();
-    EmitCast(dest_type, source_type);
+    if (dest_type -> num_dimensions > 255)
+    {
+        semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW,
+                                expression -> type_opt -> LeftToken(),
+                                expression -> right_parenthesis_token_opt - 1);
+    }
 
-    return GetTypeWords(dest_type);
+    //
+    // Object downcasts must be emitted, in case of a ClassCastException.
+    //
+    EmitExpression(expression -> expression,
+                   need_value || dest_type -> IsSubclass(source_type));
+
+    if (need_value || dest_type -> IsSubclass(source_type))
+    {
+        EmitCast(dest_type, source_type);
+        if (! need_value)
+        {
+            assert(source_type -> IsSubclass(control.Object()));
+            PutOp(OP_POP);
+        }
+    }
+
+    return need_value ? GetTypeWords(dest_type) : 0;
 }
 
 
@@ -4647,9 +4703,10 @@ AstExpression *ByteCode::StripNops(AstExpression *expr)
             AstCastExpression *cast_expr = (AstCastExpression *) expr;
             AstExpression *sub_expr = StripNops(cast_expr -> expression);
             if (sub_expr -> Type() -> IsSubclass(expr -> Type()) ||
-                sub_expr -> Type() == control.null_type)
+                (sub_expr -> Type() == control.null_type &&
+                 expr -> Type() -> num_dimensions <= 255))
             {
-                expr = sub_expr;
+                return sub_expr;
             }
             else return expr;
         }

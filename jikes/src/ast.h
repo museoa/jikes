@@ -285,7 +285,6 @@ public:
         POST_UNARY,
         PRE_UNARY,
         CAST,
-        CHECK_AND_CAST,
         BINARY,
         TYPE,
         CONDITIONAL,
@@ -1752,6 +1751,7 @@ public:
         AstStatement::is_reachable = true;
         AstStatement::can_complete_normally = false;
         AstStatement::defined_variables = NULL;
+        no_braces = true;
     }
 
     virtual ~AstMethodBody();
@@ -2378,6 +2378,7 @@ public:
           switch_labels(NULL)
     {
         Ast::kind = Ast::SWITCH_BLOCK;
+        no_braces = true;
     }
 
     virtual ~AstSwitchBlockStatement();
@@ -3817,7 +3818,6 @@ public:
 // CastExpression --> <cAstkind, (_token_opt, Type_opt, Brackets )_token_opt, Expression>
 //
 // cAstkind --> CAST
-//             | CHECK_AND_CAST
 //
 // NOTE that the optional symbols above are absent only when the compiler
 // inserts a CAST conversion node into the program.
@@ -5756,7 +5756,7 @@ inline AstPreUnaryExpression *Ast::PreUnaryExpressionCast()
 inline AstCastExpression *Ast::CastExpressionCast()
 {
     return DYNAMIC_CAST<AstCastExpression *>
-        (kind == CAST || kind == CHECK_AND_CAST ? this : NULL);
+        (kind == CAST ? this : NULL);
 }
 
 inline AstBinaryExpression *Ast::BinaryExpressionCast()

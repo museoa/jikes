@@ -775,7 +775,6 @@ MethodSymbol::~MethodSymbol()
     delete throws_signatures;
     delete formal_parameters;
     delete throws;
-    delete initializer_constructors;
 
     delete block_symbol; // overload(s)
     delete [] header;

@@ -534,8 +534,6 @@ public:
         ProcessExprOrStmt[Ast::PRE_UNARY] =
             &Semantic::ProcessPreUnaryExpression;
         ProcessExprOrStmt[Ast::CAST] = &Semantic::ProcessCastExpression;
-        ProcessExprOrStmt[Ast::CHECK_AND_CAST] =
-            &Semantic::ProcessCastExpression;
         ProcessExprOrStmt[Ast::BINARY] = &Semantic::ProcessBinaryExpression;
         ProcessExprOrStmt[Ast::TYPE] = &Semantic::ProcessTypeExpression;
         ProcessExprOrStmt[Ast::CONDITIONAL] =
@@ -613,7 +611,6 @@ public:
         DefiniteExpr[Ast::POST_UNARY] = &Semantic::DefinitePostUnaryExpression;
         DefiniteExpr[Ast::PRE_UNARY] = &Semantic::DefinitePreUnaryExpression;
         DefiniteExpr[Ast::CAST] = &Semantic::DefiniteCastExpression;
-        DefiniteExpr[Ast::CHECK_AND_CAST] = &Semantic::DefiniteCastExpression;
         DefiniteExpr[Ast::BINARY] = &Semantic::DefiniteBinaryExpression;
         DefiniteExpr[Ast::CONDITIONAL] =
             &Semantic::DefiniteConditionalExpression;

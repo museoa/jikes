@@ -1,3 +1,24 @@
+2002-08-05  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/ast.cpp (AstClassBody::Clone): Correctly clone.
+	* src/bytecode.h (last_parameter_index):
+	* src/expr.cpp (ProcessCastExpression):
+	* src/semantic.h:
+	* src/symbol.h (initializer_constructors):
+	* src/symbol.cpp:
+	* src/ast.h (CHECK_AND_CAST): Delete dead code.
+	(AstMethodBody, AstSwitchBlock):
+	* src/parser.cpp (Initializer):
+	* src/unparse.cpp: Fix unparsing bugs, related to switch blocks
+	and instance initializers.
+	* src/error.cpp:
+	* src/bytecode.cpp: Add more JVMS violation tests, for array
+	dimensions and method parameter count.
+	(EmitCastExpression): Improve to handle all casts within a single
+	method.
+	* src/segment.h:
+	* src/segment.cpp: Fix constant pool overflow - bug 222.
+
 2002-08-02  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.h (EmitCheckForNull):

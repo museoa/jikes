@@ -5020,16 +5020,9 @@ void Semantic::ProcessCastExpression(Ast *expr)
     target_type = (num_dimensions == 0 ? target_type
                    : target_type -> GetArrayType(this, num_dimensions));
 
-    if (CanAssignmentConvert(target_type, cast_expression -> expression))
+    if (CanCastConvert(target_type, source_type,
+                       cast_expression -> right_parenthesis_token_opt))
     {
-        cast_expression -> symbol = target_type;
-        cast_expression -> value = CastValue(target_type,
-                                             cast_expression -> expression);
-    }
-    else if (CanCastConvert(target_type, source_type,
-                            cast_expression -> right_parenthesis_token_opt))
-    {
-        cast_expression -> kind = Ast::CHECK_AND_CAST;
         cast_expression -> symbol = target_type;
         cast_expression -> value = CastValue(target_type,
                                              cast_expression -> expression);

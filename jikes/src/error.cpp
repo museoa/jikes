@@ -1032,11 +1032,11 @@ wchar_t *SemanticError::PrintCONSTANT_POOL_OVERFLOW(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "Processing of this type, \"";
+    s << "The type \"";
     if (NotDot(err.insert1))
         s << err.insert1 << "/";
     s << err.insert2
-      << "\", produced a constant pool that exceeded the limit of 65535 "
+      << "\" produced a constant pool that exceeded the limit of 65535 "
       << "elements.";
 
     return s.Array();
@@ -1052,7 +1052,8 @@ wchar_t *SemanticError::PrintINTERFACES_OVERFLOW(ErrorInfo &err,
     s << "The type \"";
     if (NotDot(err.insert1))
         s << err.insert1 << "/";
-    s << err.insert2 << "\" implements more than 65535 interfaces.";
+    s << err.insert2
+      << "\" directly implemented more than limit of 65535 interfaces.";
 
     return s.Array();
 }
@@ -1067,7 +1068,7 @@ wchar_t *SemanticError::PrintMETHODS_OVERFLOW(ErrorInfo &err,
     s << "The type \"";
     if (NotDot(err.insert1))
         s << err.insert1 << "/";
-    s << err.insert2 << "\" contains more than 65535 methods.";
+    s << err.insert2 << "\" declared more than the limit of 65535 methods.";
 
     return s.Array();
 }
@@ -1084,7 +1085,8 @@ wchar_t *SemanticError::PrintSTRING_OVERFLOW(ErrorInfo &err,
         s << err.insert1 << "/";
     s << err.insert2
       << "\" generated one or more strings whose length exceeds the maximum "
-      << "length of 65535 Utf8 chacracters.";
+      << "length of 65535 bytes when encoded in Utf8. Lengthy identifiers, "
+      << "method signatures, and string literals can all cause this problem.";
 
     return s.Array();
 }
@@ -1100,8 +1102,8 @@ wchar_t *SemanticError::PrintPARAMETER_OVERFLOW(ErrorInfo &err,
     if (NotDot(err.insert2))
         s << err.insert2 << "/";
     s << err.insert3
-      << "\" contains more than 255 formal parameters. Note that a "
-      << "parameter of type long or double counts as 2 parameters.";
+      << "\" contained more than the limit of 255 formal parameters. Note "
+      << "that a parameter of type long or double counts as 2 parameters.";
 
     return s.Array();
 }
@@ -1128,7 +1130,7 @@ wchar_t *SemanticError::PrintFIELDS_OVERFLOW(ErrorInfo &err,
     s << "The type \"";
     if (NotDot(err.insert1))
         s << err.insert1 << "/";
-    s << err.insert2 << "\" contains more than 65535 fields.";
+    s << err.insert2 << "\" declared more than the limit of 65535 fields.";
 
     return s.Array();
 }
@@ -1143,7 +1145,8 @@ wchar_t *SemanticError::PrintLOCAL_VARIABLES_OVERFLOW(ErrorInfo &err,
     s << "Method \"" << err.insert1 << "\" in type \"";
     if (NotDot(err.insert2))
         s << err.insert2 << "/";
-    s << err.insert3 << "\" contains more than 65535 local variables.";
+    s << err.insert3
+      << "\" contained more than the limit of 65535 local variables.";
 
     return s.Array();
 }
@@ -1155,12 +1158,11 @@ wchar_t *SemanticError::PrintSTACK_OVERFLOW(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "Processing of the method or constructor \"" << err.insert1
-      << "\" in type \"";
+    s << "Method \"" << err.insert1 << "\" in type \"";
     if (NotDot(err.insert2))
         s << err.insert2 << "/";
     s << err.insert3
-      << "\" requires a stack that exceeds the maximum limit of 65535.";
+      << "\" required a stack that exceeds the limit of 65535 positions.";
 
     return s.Array();
 }
@@ -1172,8 +1174,7 @@ wchar_t *SemanticError::PrintCODE_OVERFLOW(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "Processing of the method or constructor \"" << err.insert1
-      << "\" in type \"";
+    s << "Method \"" << err.insert1 << "\" in type \"";
     if (NotDot(err.insert2))
         s << err.insert2 << "/";
     s << err.insert3 << "\" produced a code attribute that exceeds the "
