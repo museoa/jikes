@@ -4,7 +4,7 @@
 
 #include "platform.h"
 
-#ifdef	HAVE_NAMESPACE
+#ifdef	HAVE_NAMESPACES
 namespace Jikes {	// Open namespace Jikes block
 #endif
 
@@ -375,7 +375,7 @@ public:
 #endif
 }; // end class unzip
 
-#ifdef	HAVE_NAMESPACE
+#ifdef	HAVE_NAMESPACES
 }			// Close namespace Jikes block
 #endif
 

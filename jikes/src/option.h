@@ -25,7 +25,7 @@
 # include <iconv.h>
 #endif
 
-#ifdef	HAVE_NAMESPACE
+#ifdef	HAVE_NAMESPACES
 namespace Jikes {	// Open namespace Jikes block
 #endif
 
@@ -154,7 +154,7 @@ public:
     ~Option();
 };
 
-#ifdef	HAVE_NAMESPACE
+#ifdef	HAVE_NAMESPACES
 }			// Close namespace Jikes block
 #endif
 

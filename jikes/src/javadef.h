@@ -10,7 +10,7 @@
 #ifndef javadef_INCLUDED
 #define javadef_INCLUDED
 
-#ifdef	HAVE_NAMESPACE
+#ifdef	HAVE_NAMESPACES
 namespace Jikes {	// Open namespace Jikes block
 #endif
 
@@ -42,7 +42,7 @@ enum {
       ERROR_ACTION      = 5177
      };
 
-#ifdef	HAVE_NAMESPACE
+#ifdef	HAVE_NAMESPACES
 }			// Close namespace Jikes block
 #endif
 

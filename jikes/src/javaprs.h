@@ -14,7 +14,7 @@
 #define FULL_DIAGNOSIS
 #define SPACE_TABLES
 
-#ifdef	HAVE_NAMESPACE
+#ifdef	HAVE_NAMESPACES
 namespace Jikes {	// Open namespace Jikes block
 #endif
 
@@ -85,7 +85,7 @@ public:
     }
 };
 
-#ifdef	HAVE_NAMESPACE
+#ifdef	HAVE_NAMESPACES
 }			// Close namespace Jikes block
 #endif
 

@@ -14,7 +14,7 @@
 #include "parser.h"
 #include "jikesapi.h"
 
-#ifdef	HAVE_NAMESPACE
+#ifdef	HAVE_NAMESPACES
 namespace Jikes {	// Open namespace Jikes block
 #endif
 
@@ -186,7 +186,7 @@ private:
                         int buffer_position, int distance);
 };
 
-#ifdef	HAVE_NAMESPACE
+#ifdef	HAVE_NAMESPACES
 }			// Close namespace Jikes block
 #endif
 

@@ -108,7 +108,7 @@ Currently, we do not use this one
 #ifdef HAVE_STD
 # include <new>
 # include <iostream>
-# ifdef HAVE_NAMESPACE
+# ifdef HAVE_NAMESPACES
    using namespace std;
 # endif
 #else
@@ -133,8 +133,48 @@ Currently, we do not use this one
 #endif
 
 
+//
+// These limit definitions are correct for all the platforms that
+// we are currently using. When porting this code, they should
+// always be reviewed.
+//
 
-#ifdef	HAVE_NAMESPACE
+#ifdef HAVE_32BIT_TYPES
+
+#ifdef HAVE_UNSIGNED_LONG_LONG
+// Range 0..1.84467440737e+19
+typedef unsigned long long u8;
+#endif // HAVE_UNSIGNED_LONG_LONG
+
+// Range 0..4294967295
+typedef unsigned int u4;
+
+// Range -2147483648..+2147483647
+typedef signed int i4;
+
+// Range 0..65535
+typedef unsigned short u2;
+
+// Range -32767..+32768
+typedef signed short i2;
+
+// Range 0..255 in this system
+typedef unsigned char u1;
+
+// Range -128..+127 in this system
+typedef signed char i1;
+
+#endif
+
+
+// tuple.h needs the above typedefs first, but has it's own namespace block...
+// cabbey would also argue that the wsclen and family don't need to be in our
+// namespace, 'cuz if wee need to define them we aren't going to clash. ;)
+#include "tuple.h"
+
+
+
+#ifdef	HAVE_NAMESPACES
 namespace Jikes {	// Open namespace Jikes block
 #endif
 
@@ -234,42 +274,6 @@ enum { false = 0, true = 1 };
 // in this file should work on any system
 //
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
-
-
-//
-// These limit definitions are correct for all the platforms that
-// we are currently using. When porting this code, they should
-// always be reviewed.
-//
-
-#ifdef HAVE_32BIT_TYPES
-
-#ifdef HAVE_UNSIGNED_LONG_LONG
-// Range 0..1.84467440737e+19
-typedef unsigned long long u8;
-#endif // HAVE_UNSIGNED_LONG_LONG
-
-// Range 0..4294967295
-typedef unsigned int u4;
-
-// Range -2147483648..+2147483647
-typedef signed int i4;
-
-// Range 0..65535
-typedef unsigned short u2;
-
-// Range -32767..+32768
-typedef signed short i2;
-
-// Range 0..255 in this system
-typedef unsigned char u1;
-
-// Range -128..+127 in this system
-typedef signed char i1;
-
-#endif
 
 
 enum U_chars
@@ -982,13 +986,11 @@ extern Ostream Coutput;
 #define cout Please_Do_Not_Use_cout_Directly_But_use_an_instance_of_Ostream_with_cout_as_argument
 #define cerr Please_Do_Not_Use_cerr_Directly_But_use_an_instance_of_Ostream_with_cerr_as_argument
 
-#include "tuple.h"
-
-// This is temporaty solution.
+// This is temporary solution.
 // In future basic_ostringstream<wchar_t> will be used.
 // But now it is not supported by libg++.
 // (lord).
-class ErrorString:public ConvertibleArray<wchar_t> 
+class ErrorString: public ConvertibleArray<wchar_t> 
 { 
  public:
     ErrorString(); 
@@ -1011,7 +1013,7 @@ class ErrorString:public ConvertibleArray<wchar_t>
     int  field_width ;
 };
 
-#ifdef	HAVE_NAMESPACE
+#ifdef	HAVE_NAMESPACES
 }			// Close namespace Jikes block
 #endif
 

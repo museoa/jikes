@@ -26,7 +26,7 @@
 #endif
 */
 
-#ifdef	HAVE_NAMESPACE
+#ifdef	HAVE_NAMESPACES
 namespace Jikes {	// Open namespace Jikes block
 #endif
 
@@ -1316,7 +1316,7 @@ inline void Semantic::AddStringConversionDependence(TypeSymbol *type, LexStream:
          AddDependence(ThisType(), control.Double(), tok);
 }
 
-#ifdef	HAVE_NAMESPACE
+#ifdef	HAVE_NAMESPACES
 }			// Close namespace Jikes block
 #endif
 

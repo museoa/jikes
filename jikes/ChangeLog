@@ -1,3 +1,81 @@
+2000-07-25  Chris Abbey <cabbey@bresnanlink.net>
+
+	* configure.in: Disable check for namespace support.
+	* src/access.h:
+	* src/ast.cpp:
+	* src/ast.h:
+	* src/body.cpp:
+	* src/bytecode.cpp:
+	* src/bytecode.h:
+	* src/case.cpp:
+	* src/case.h:
+	* src/class.h:
+	* src/code.cpp:
+	* src/code.h:
+	* src/control.cpp:
+	* src/control.h:
+	* src/decl.cpp:
+	* src/definite.cpp:
+	* src/depend.cpp:
+	* src/depend.h:
+	* src/diagnose.cpp:
+	* src/diagnose.h:
+	* src/double.cpp:
+	* src/double.h:
+	* src/dump.cpp:
+	* src/error.cpp:
+	* src/error.h:
+	* src/expr.cpp:
+	* src/getclass.cpp:
+	* src/getclass.h:
+	* src/incrmnt.cpp:
+	* src/init.cpp:
+	* src/javaact.cpp:
+	* src/javaact.h:
+	* src/javadcl.h:
+	* src/javadef.h:
+	* src/javaprs.h:
+	* src/javasym.h:
+	* src/jikes.cpp:
+	* src/jikesapi.cpp:
+	* src/long.cpp:
+	* src/long.h:
+	* src/lookup.cpp:
+	* src/lookup.h:
+	* src/lpginput.cpp:
+	* src/lpginput.h:
+	* src/modifier.cpp:
+	* src/op.cpp:
+	* src/op.h:
+	* src/option.cpp:
+	* src/option.h:
+	* src/parser.cpp:
+	* src/parser.h:
+	* src/platform.cpp:
+	* src/platform.h:
+	* src/scanner.cpp:
+	* src/scanner.h:
+	* src/segment.cpp:
+	* src/segment.h:
+	* src/semantic.h:
+	* src/set.cpp:
+	* src/set.h:
+	* src/spell.h:
+	* src/stream.cpp:
+	* src/stream.h:
+	* src/symbol.cpp:
+	* src/symbol.h:
+	* src/system.cpp:
+	* src/tab.cpp:
+	* src/tab.h:
+	* src/table.h:
+	* src/tuple.h:
+	* src/unparse.cpp:
+	* src/unzip.cpp:
+	* src/unzip.h:
+	* src/zip.cpp:
+	* src/zip.h: Use HAVE_NAMESPACES not HAVE_NAMESPACE.
+
 2000-07-23  Mo DeJong  <mdejong@redhat.com>
 
 	* TODO: Added a todo list.

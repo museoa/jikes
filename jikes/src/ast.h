@@ -16,7 +16,7 @@
 #include "symbol.h"
 #include "set.h"
 
-#ifdef	HAVE_NAMESPACE
+#ifdef	HAVE_NAMESPACES
 namespace Jikes {	// Open namespace Jikes block
 #endif
 
@@ -6098,7 +6098,7 @@ template <class T>
         base = NULL;
     }
 
-#ifdef	HAVE_NAMESPACE
+#ifdef	HAVE_NAMESPACES
 }			// Close namespace Jikes block
 #endif
 

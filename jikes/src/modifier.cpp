@@ -11,7 +11,7 @@
 #include "platform.h"
 #include "semantic.h"
 
-#ifdef	HAVE_NAMESPACE
+#ifdef	HAVE_NAMESPACES
 using namespace Jikes;
 #endif
 

@@ -9,7 +9,7 @@
 //
 #include "tab.h"
 
-#ifdef	HAVE_NAMESPACE
+#ifdef	HAVE_NAMESPACES
 using namespace Jikes;
 #endif
 

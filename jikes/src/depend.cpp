@@ -16,7 +16,7 @@
 #include <time.h>
 #endif
 
-#ifdef	HAVE_NAMESPACE
+#ifdef	HAVE_NAMESPACES
 using namespace Jikes;
 #endif
 

@@ -10,7 +10,7 @@
 #ifndef javadcl_INCLUDED
 #define javadcl_INCLUDED
 
-#ifdef	HAVE_NAMESPACE
+#ifdef	HAVE_NAMESPACES
 namespace Jikes {	// Open namespace Jikes block
 #endif
 
@@ -2743,7 +2743,7 @@ const unsigned short CLASS_HEADER in_symb[] = {0,
             0,0,0,0,0,0,0,0,0,0
                           };
 
-#ifdef	HAVE_NAMESPACE
+#ifdef	HAVE_NAMESPACES
 }			// Close namespace Jikes block
 #endif
 
