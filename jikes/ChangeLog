@@ -1,3 +1,10 @@
+2004-04-13  Chris Abbey  <jikes@cabbey.net>
+
+	* src/symbol.ccp: revert to using strcmp and wcscmp instead of
+	comparing just the first char. Fixes bug 3920. Thanks to Elliott
+	for pointing out the subtle difference of the equivalent to
+	changing from s.equals(".") to s.startsWith(".").
+
 2004-04-12  Eric Blake  <ebb9@byu.net>
 
 	* src/error.h (STATIC_TYPE_ACCESSING_MEMBER_TYPE): New error.

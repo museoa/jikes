@@ -87,7 +87,7 @@ wchar_t* MethodSymbol::Header()
             PackageSymbol* package = Type() -> ContainingPackage();
             wchar_t* package_name = package -> PackageName();
             if (package -> PackageNameLength() > 0 &&
-                package_name[0] != U_DOT)
+                wcscmp(package_name, StringConstant::US_DOT) != 0)
             {
                 while (*package_name)
                 {
@@ -115,7 +115,7 @@ wchar_t* MethodSymbol::Header()
                     formal -> Type() -> ContainingPackage();
                 wchar_t* package_name = package -> PackageName();
                 if (package -> PackageNameLength() > 0 &&
-                    package_name[0] != U_DOT)
+                    wcscmp(package_name, StringConstant::US_DOT) != 0)
                 {
                     while (*package_name)
                     {
@@ -187,7 +187,7 @@ wchar_t* MethodSymbol::Header()
                 wchar_t* package_name = package -> PackageName();
                 *s++ = U_SPACE;
                 if (package -> PackageNameLength() > 0 &&
-                    package_name[0] != U_DOT)
+                    wcscmp(package_name, StringConstant::US_DOT) != 0)
                 {
                     while (*package_name)
                     {
@@ -437,7 +437,7 @@ void TypeSymbol::SetSignature(Control& control)
         type_signature[0] = U_L;
         type_signature[1] = U_NU;
         if (ContainingPackage() -> PackageNameLength() > 0 &&
-            package_name[0] != U_DOT)
+            wcscmp(package_name, StringConstant::US_DOT) != 0)
         {
             wcscat(type_signature, package_name);
             wcscat(type_signature, StringConstant::US_SL);
@@ -769,7 +769,7 @@ void DirectorySymbol::SetDirectoryName()
     PathSymbol* path_symbol = owner -> PathCast();
     if (path_symbol)
     {
-        if (path_symbol -> Utf8Name()[0] == U_DOT)
+        if (strcmp(path_symbol -> Utf8Name(), ".") == 0)
         {
             directory_name_length = Utf8NameLength();
             directory_name = new char[directory_name_length + 1]; // +1: '\0'
@@ -788,7 +788,7 @@ void DirectorySymbol::SetDirectoryName()
     {
         DirectorySymbol* owner_directory = owner -> DirectoryCast();
         if (Name()[NameLength() - 1] == U_SLASH ||
-            owner_directory -> DirectoryName()[0] == U_DOT)
+            strcmp(owner_directory -> DirectoryName(), ".") == 0)
         {
             // An absolute file name, or is the owner "." ?
             directory_name_length = Utf8NameLength();
@@ -970,7 +970,7 @@ void FileSymbol::SetFileName()
     PathSymbol* path_symbol = PathSym();
     char* directory_name = directory_symbol -> DirectoryName();
     size_t directory_name_length = directory_symbol -> DirectoryNameLength();
-    bool dot_directory = directory_name[0] == U_DOT;
+    bool dot_directory = (strcmp(directory_name, ".") == 0);
     file_name_length = (dot_directory ? 0 : directory_name_length) +
         Utf8NameLength() +
         (path_symbol -> IsZip() ? 2 // For zip files, we need "()";
