@@ -397,6 +397,9 @@ public:
 
     MethodShadowSymbol *FindOverloadMethodShadow(MethodSymbol *overload_method, Semantic *sem, LexStream::TokenIndex tok)
     {
+        if (! overload_method -> IsTyped())
+            overload_method -> ProcessMethodSignature(sem, tok);
+
         for (MethodShadowSymbol *method_shadow = FindMethodShadowSymbol(overload_method -> name_symbol);
              method_shadow;
              method_shadow = method_shadow -> next_method)
@@ -406,7 +409,10 @@ public:
             if (overload_method == method)
                 return method_shadow;
 
-            if (overload_method -> NumFormalParameters(sem, tok) == method -> NumFormalParameters(sem, tok))
+            if (! method -> IsTyped())
+                method -> ProcessMethodSignature(sem, tok);
+
+            if (overload_method -> NumFormalParameters() == method -> NumFormalParameters())
             {
                 int i;
                 for (i = method -> NumFormalParameters() - 1; i >= 0; i--)

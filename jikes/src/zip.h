@@ -26,6 +26,7 @@ class Zip;
 class DirectorySymbol;
 class FileSymbol;
 
+
 class ZipFile : public Unzip
 {
 public:
@@ -54,22 +55,26 @@ private:
 #endif
 };
 
+
 class Zip
 {
 public:
-    Control &control;
-
     Zip(Control &, char *);
     ~Zip();
 
-    void ReadDirectory(DirectorySymbol *);
-
     bool IsValid() { return magic == 0x06054b50; }
+
+    DirectorySymbol *RootDirectory() { return root_directory; }
 
 private:
     friend class ZipFile;
 
+    Control &control;
+
     u4 magic;
+
+    DirectorySymbol *root_directory;
+
     char *zipbuffer,
          *buffer_ptr;
 
@@ -78,9 +83,11 @@ private:
     u4 GetU4();
     void Skip(u4 length);
 
+    void ReadDirectory();
+
     NameSymbol *ProcessFilename(char *, int);
     DirectorySymbol *ProcessSubdirectoryEntries(DirectorySymbol *, char *, int);
-    void ProcessDirectoryEntry(DirectorySymbol *);
+    void ProcessDirectoryEntry();
 
 #ifdef UNIX_FILE_SYSTEM
     FILE *zipfile;
@@ -89,3 +96,4 @@ private:
 #endif
 };
 #endif /* zip_INCLUDED */
+

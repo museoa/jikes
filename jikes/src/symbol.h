@@ -39,6 +39,7 @@ class ExpandedFieldTable;
 class ExpandedMethodTable;
 class SymbolTable;
 class SymbolSet;
+class SymbolMap;
 class Zip;
 
 class PackageSymbol;
@@ -410,12 +411,6 @@ public:
         constant_pool_class;
 
     //
-    // If the method in question is a private member, we may need to construct
-    // another method that allows it to be accessed by inner classes. 
-    //
-    MethodSymbol *read_method;
-
-    //
     // If this method is a method that permits access to a private member of an
     // enclosing type then accessed_member identifies the member in question.
     //
@@ -442,7 +437,6 @@ public:
                                              constant_pool_index(0),
                                              constant_pool_class(0),
                                              local_constructor(NULL),
-                                             read_method(NULL),
                                              accessed_member(NULL),
                                              formal_parameters(NULL),
                                              throws(NULL),
@@ -469,21 +463,16 @@ public:
     void ProcessMethodSignature(Semantic *, LexStream::TokenIndex);
     void ProcessMethodThrows(Semantic *, LexStream::TokenIndex);
 
-    TypeSymbol *Type(Semantic *sem = NULL, LexStream::TokenIndex tok = 0)
+    TypeSymbol *Type()
     {
-        if (! type_)
-            ProcessMethodSignature(sem, tok);
-
-        assert(type_);
+        assert(type_); // make sure that the method signature associated with this method is processed prior to invoking
+                       // this function. ( "this -> ProcessMethodSignature(sem, tok);" )
 
         return type_;
     }
 
-    int NumFormalParameters(Semantic *sem = NULL, LexStream::TokenIndex tok = 0)
+    int NumFormalParameters()
     {
-        if (! type_)
-            ProcessMethodSignature(sem, tok);
-
         assert(type_);
 
         return (formal_parameters ? formal_parameters -> Length() : 0);
@@ -499,11 +488,8 @@ public:
         formal_parameters -> Next() = variable;
     }
 
-    int NumThrows(Semantic *sem = NULL, LexStream::TokenIndex tok = 0)
+    int NumThrows()
     {
-        if (throws_signatures)
-            ProcessMethodThrows(sem, tok);
-
         assert(! throws_signatures);
 
         return (throws ? throws -> Length() : 0);
@@ -578,7 +564,7 @@ public:
     void SetSignature(Control &, VariableSymbol * = NULL);
     void SetSignature(Utf8LiteralValue *signature_) { signature = signature_; }
     char *SignatureString() { return signature -> value; }
-    wchar_t *Header(Semantic * = NULL, LexStream::TokenIndex = 0);
+    wchar_t *Header();
 
     void CleanUp();
 
@@ -830,9 +816,9 @@ public:
     VariableSymbol *FindOrInsertClassLiteral(TypeSymbol *);
     VariableSymbol *FindOrInsertLocalShadow(VariableSymbol *);
 
-    static MethodSymbol *GetReadAccessMethod(MethodSymbol *);
-    static MethodSymbol *GetReadAccessMethod(VariableSymbol *);
-    static MethodSymbol *GetWriteAccessMethod(VariableSymbol *);
+    MethodSymbol *GetReadAccessMethod(MethodSymbol *);
+    MethodSymbol *GetReadAccessMethod(VariableSymbol *);
+    MethodSymbol *GetWriteAccessMethod(VariableSymbol *);
 
     bool IsArray() { return (num_dimensions > 0); }
 
@@ -1084,8 +1070,19 @@ private:
     // classes, one (or two) access method(s) to read (and/or write) the private member
     // is (are) generated.
     //
-    Tuple<MethodSymbol *> *private_access_methods;
-    Tuple<MethodSymbol *> *private_access_constructors;
+    // The maps read_method and write_method are used to keep track of the read and
+    // write method to which a member has been mapped.
+    //
+    Tuple<MethodSymbol *> *private_access_methods,
+                          *private_access_constructors;
+
+    inline void MapSymbolToReadMethod(Symbol *, MethodSymbol *);
+    inline MethodSymbol *ReadMethod(Symbol *);
+    inline void MapSymbolToWriteMethod(VariableSymbol *, MethodSymbol *);
+    inline MethodSymbol *WriteMethod(VariableSymbol *);
+
+    SymbolMap *read_method,
+              *write_method;
 
     //
     // For an accessible inner class the first elememt in this array
@@ -1160,8 +1157,6 @@ public:
         local_program_counter;
 
     VariableSymbol *accessed_local;
-    MethodSymbol *read_method,
-                 *write_method;
 
     virtual wchar_t *Name() { return name_symbol -> Name(); }
     virtual int NameLength() { return name_symbol -> NameLength(); }
@@ -1205,8 +1200,6 @@ public:
                                                constant_pool_class(0),
                                                local_program_counter(0),
                                                accessed_local(NULL),
-                                               read_method(NULL),
-                                               write_method(NULL),
                                                status(0)
     {
         Symbol::_kind = VARIABLE;
@@ -1236,12 +1229,10 @@ public:
 
     void ProcessVariableSignature(Semantic *, LexStream::TokenIndex);
 
-    TypeSymbol *Type(Semantic *sem = NULL, LexStream::TokenIndex tok = 0)
+    TypeSymbol *Type()
     {
-        if (! type_)
-            ProcessVariableSignature(sem, tok);
-
-        assert(type_);
+        assert(type_); // make sure that the method signature associated with this method is processed prior to invoking
+                       // this function. ( "this -> ProcessVariableSignature(sem, tok);" )
 
         return type_;
     }

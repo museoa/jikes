@@ -39,28 +39,29 @@ inline void Semantic::CheckPackage()
             //
             // Make sure that the package or any of its parents does not match the name of a type.
             //
-            AstPackageDeclaration *package_declaration = compilation_unit -> package_declaration_opt;
-            AstExpression *name = FindFirstType(package_declaration -> name);
-            TypeSymbol *type = name -> symbol -> TypeCast();
-            if (type && (! type -> Bad()))
+            for (PackageSymbol *subpackage = this_package, *package = subpackage -> owner;
+                 package;
+                 subpackage = package, package = package -> owner)
             {
-                assert(type -> file_symbol);
+                FileSymbol *file_symbol = Control::GetFile(control, package, subpackage -> Identity());
+                if (file_symbol)
+                {
+                    char *file_name = file_symbol -> FileName();
+                    int length = file_symbol -> FileNameLength();
+                    wchar_t *error_name = new wchar_t[length + 1];
+                    for (int i = 0; i < length; i++)
+                        error_name[i] = file_name[i];
+                    error_name[length] = U_NULL;
+    
+                    ReportSemError(SemanticError::PACKAGE_TYPE_CONFLICT,
+                                   compilation_unit -> package_declaration_opt -> name -> LeftToken(),
+                                   compilation_unit -> package_declaration_opt -> name -> RightToken(),
+                                   package -> PackageName(),
+                                   subpackage -> Name(),
+                                   error_name);
 
-                char *file_name = type -> file_symbol -> FileName();
-                int length = type -> file_symbol -> FileNameLength();
-                wchar_t *error_name = new wchar_t[length + 1];
-                for (int i = 0; i < length; i++)
-                    error_name[i] = file_name[i];
-                error_name[length] = U_NULL;
-
-                ReportSemError(SemanticError::PACKAGE_TYPE_CONFLICT,
-                               name -> LeftToken(),
-                               name -> RightToken(),
-                               type -> ContainingPackage() -> PackageName(),
-                               type -> Name(),
-                               error_name);
-
-                delete [] error_name;
+                    delete [] error_name;
+                }
             }
         }
     }
@@ -302,7 +303,7 @@ void Semantic::ProcessTypeNames()
 
     CheckPackage();
     ProcessImports();
-    ProcessSuperTypes();
+    ProcessSuperTypeDependences();
 
     return;
 }
@@ -425,45 +426,14 @@ void Semantic::CheckNestedTypeDuplication(SemanticEnvironment *env, LexStream::T
                        name_symbol -> Name(),
                        old_type -> FileLoc());
     }
-    else if (env -> symbol_table.Size() > 0)
-    {
-        old_type = env -> symbol_table.FindTypeSymbol(name_symbol); // check the whole stack !
-        if (old_type)
-        {
-            ReportSemError(SemanticError::DUPLICATE_LOCAL_TYPE_DECLARATION,
-                           identifier_token,
-                           identifier_token,
-                           name_symbol -> Name(),
-                           old_type -> FileLoc());
-        }
-    }
-    else if (env -> Type() -> Identity() == name_symbol)
-    {
-        ReportSemError(SemanticError::DUPLICATE_INNER_TYPE_NAME,
-                       identifier_token,
-                       identifier_token,
-                       name_symbol -> Name(),
-                       env -> Type() -> FileLoc());
-    }
     else
     {
         //
         // ... Then check the enclosing environments...
         //
-        for (env = env -> previous; env; env = env -> previous)
+        for (; env; env = env -> previous)
         {
-            TypeSymbol *old_type = (env -> symbol_table.Size() > 0
-                                         ? env -> symbol_table.FindTypeSymbol(name_symbol)
-                                         : (TypeSymbol *) NULL);
-            if (old_type)
-            {
-                ReportSemError(SemanticError::DUPLICATE_LOCAL_TYPE_DECLARATION,
-                               identifier_token,
-                               identifier_token,
-                               name_symbol -> Name());
-                break;
-            }
-            else if (env -> Type() -> Identity() == name_symbol)
+            if (env -> Type() -> Identity() == name_symbol)
             {
                 ReportSemError(SemanticError::DUPLICATE_INNER_TYPE_NAME,
                                identifier_token,
@@ -659,7 +629,69 @@ void Semantic::ProcessImports()
 //
 // Pass 1.3: Process outer types in "extends" and "implements" clauses associated with the types.
 //
-void Semantic::ProcessSuperTypes()
+void Semantic::ProcessNestedSuperTypeDependences(AstClassDeclaration *class_declaration)
+{
+    if (class_declaration -> semantic_environment)
+    {
+        TypeSymbol *type = class_declaration -> semantic_environment -> Type();
+        if (class_declaration -> super_opt)
+        {
+            TypeSymbol *super_type = FindFirstType(class_declaration -> super_opt) -> symbol -> TypeCast();
+            if (super_type)
+                super_type -> subtypes -> AddElement(type -> outermost_type);
+        }
+
+        for (int k = 0; k < class_declaration -> NumInterfaces(); k++)
+        {
+            TypeSymbol *super_type = FindFirstType(class_declaration -> Interface(k)) -> symbol -> TypeCast();
+            if (super_type)
+            {
+                assert(super_type -> subtypes);
+
+                super_type -> subtypes -> AddElement(type -> outermost_type);
+            }
+        }
+
+        SetDefaultSuperType(class_declaration);
+
+        AstClassBody *class_body = class_declaration -> class_body;
+        for (int i = 0; i < class_body -> NumNestedClasses(); i++)
+            ProcessNestedSuperTypeDependences(class_body -> NestedClass(i));
+
+        for (int j = 0; j < class_body -> NumNestedInterfaces(); j++)
+            ProcessNestedSuperTypeDependences(class_body -> NestedInterface(j));
+    }
+
+    return;
+}
+
+
+void Semantic::ProcessNestedSuperTypeDependences(AstInterfaceDeclaration *interface_declaration)
+{
+    if (interface_declaration -> semantic_environment)
+    {
+        TypeSymbol *type = interface_declaration -> semantic_environment -> Type();
+        for (int k = 0; k < interface_declaration -> NumExtendsInterfaces(); k++)
+        {
+            TypeSymbol *super_type = FindFirstType(interface_declaration -> ExtendsInterface(k)) -> symbol -> TypeCast();
+            if (super_type)
+                super_type -> subtypes -> AddElement(type -> outermost_type);
+        }
+
+        SetDefaultSuperType(interface_declaration);
+
+        for (int i = 0; i < interface_declaration -> NumNestedClasses(); i++)
+            ProcessNestedSuperTypeDependences(interface_declaration -> NestedClass(i));
+
+        for (int j = 0; j < interface_declaration -> NumNestedInterfaces(); j++)
+            ProcessNestedSuperTypeDependences(interface_declaration -> NestedInterface(j));
+    }
+
+    return;
+}
+
+
+void Semantic::ProcessSuperTypeDependences()
 {
     //
     // Process outer type of superclasses and interfaces and make sure that compilation unit
@@ -698,6 +730,13 @@ void Semantic::ProcessSuperTypes()
                     }
 
                     SetDefaultSuperType(class_declaration);
+
+                    AstClassBody *class_body = class_declaration -> class_body;
+                    for (int l = 0; l < class_body -> NumNestedClasses(); l++)
+                        ProcessNestedSuperTypeDependences(class_body -> NestedClass(l));
+
+                    for (int j = 0; j < class_body -> NumNestedInterfaces(); j++)
+                        ProcessNestedSuperTypeDependences(class_body -> NestedInterface(j));
                 }
                 break;
             }
@@ -715,6 +754,12 @@ void Semantic::ProcessSuperTypes()
                     }
 
                     SetDefaultSuperType(interface_declaration);
+
+                    for (int l = 0; l < interface_declaration -> NumNestedClasses(); l++)
+                        ProcessNestedSuperTypeDependences(interface_declaration -> NestedClass(l));
+
+                    for (int j = 0; j < interface_declaration -> NumNestedInterfaces(); j++)
+                        ProcessNestedSuperTypeDependences(interface_declaration -> NestedInterface(j));
                 }
                 break;
             }
@@ -789,21 +834,6 @@ void Semantic::SetDefaultSuperType(AstClassDeclaration *class_declaration)
         if (type -> Identity() != control.object_name_symbol ||
             type -> ContainingPackage() != control.system_package || type -> IsNested())
             type -> super = control.Object();
-    }
-
-    AstClassBody *class_body = class_declaration -> class_body;
-    for (int i = 0; i < class_body -> NumNestedClasses(); i++)
-    {
-        AstClassDeclaration *inner_class_declaration = class_body -> NestedClass(i);
-        if (inner_class_declaration -> semantic_environment)
-            SetDefaultSuperType(inner_class_declaration);
-    }
-
-    for (int j = 0; j < class_body -> NumNestedInterfaces(); j++)
-    {
-        AstInterfaceDeclaration *inner_interface_declaration = class_body -> NestedInterface(j);
-        if (inner_interface_declaration -> semantic_environment)
-            SetDefaultSuperType(inner_interface_declaration);
     }
 
     return;
@@ -1173,23 +1203,32 @@ void Semantic::ProcessSuperTypesOfInnerType(TypeSymbol *type, Tuple<TypeSymbol *
 
 void Semantic::ProcessTypeHeaders(AstClassDeclaration *class_declaration)
 {
-    //
-    // We need to create a phony environment for an outermost type, 
-    // in order to properly lookup its super type and super interfaces.
-    // We cannot use the environment of this_type as this would cause us
-    // to first look for the super type inside this_type.
-    //
-    assert(state_stack.Size() == 0);
+    TypeSymbol *this_type = class_declaration -> semantic_environment -> Type();
 
-    SemanticEnvironment environment((Semantic *) this, control.no_type);
-    state_stack.Push(&environment);
+    assert(state_stack.Size() == 0 || this_type -> owner -> MethodCast()); // Not a nested type or a immediately local type. 
 
     ProcessTypeHeader(class_declaration);
+    ProcessNestedTypeHeaders(this_type, class_declaration -> class_body);
+    ProcessSuperTypesOfOuterType(this_type);
 
-    state_stack.Pop();
+    //
+    // Note that no environment is set before we invoke ProcessTypeHeader to process the
+    // super types of this_type. As a result, the dependence map is not updated with tha
+    // information. We do so here.
+    //
+    if (this_type -> super)
+    {
+        AddDependence(this_type,
+                      this_type -> super,
+                      (class_declaration -> super_opt ? class_declaration -> super_opt -> LeftToken()
+                                                      : class_declaration -> identifier_token));
+    }
 
-    ProcessNestedTypeHeaders(class_declaration -> semantic_environment -> Type(), class_declaration -> class_body);
-    ProcessSuperTypesOfOuterType(class_declaration -> semantic_environment -> Type());
+    for (int i = 0; i < class_declaration -> NumInterfaces(); i++)
+    {
+        if (class_declaration -> Interface(i) -> symbol)
+            AddDependence(this_type, class_declaration -> Interface(i) -> Type(), class_declaration -> Interface(i) -> LeftToken());
+    }
 
     return;
 }
@@ -1197,23 +1236,26 @@ void Semantic::ProcessTypeHeaders(AstClassDeclaration *class_declaration)
 
 void Semantic::ProcessTypeHeaders(AstInterfaceDeclaration *interface_declaration)
 {
-    //
-    // We need to create a phony environment for an outermost type, 
-    // in order to properly lookup its super type and super interfaces.
-    // We cannot use the environment of this_type as this would cause us
-    // to first look for the super type inside this_type.
-    //
-    assert(state_stack.Size() == 0);
+    TypeSymbol *this_type = interface_declaration -> semantic_environment -> Type();
 
-    SemanticEnvironment environment((Semantic *) this, control.no_type);
-    state_stack.Push(&environment);
+    assert(state_stack.Size() == 0); // Not a nested type
 
     ProcessTypeHeader(interface_declaration);
-
-    state_stack.Pop();
-
     ProcessNestedTypeHeaders(interface_declaration);
     ProcessSuperTypesOfOuterType(interface_declaration -> semantic_environment -> Type());
+
+    //
+    // Note that no environment is set before we invoke ProcessTypeHeader to process the
+    // super types of this_type. As a result, the dependence map is not updated with tha
+    // information. We do so here.
+    //
+    for (int i = 0; i < interface_declaration -> NumExtendsInterfaces(); i++)
+    {
+        if (interface_declaration -> ExtendsInterface(i) -> symbol)
+            AddDependence(this_type,
+                          interface_declaration -> ExtendsInterface(i) -> Type(),
+                          interface_declaration -> ExtendsInterface(i) -> LeftToken());
+    }
 
     return;
 }
@@ -1328,7 +1370,7 @@ TypeSymbol *Semantic::FindTypeInLayer(Ast *name, SymbolSet &inner_types)
             type = package -> FindTypeSymbol(name_symbol);
             if (! type)
             {
-                FileSymbol *file_symbol = Control::GetFile(package, name_symbol, control.option.depend);
+                FileSymbol *file_symbol = Control::GetFile(control, package, name_symbol);
                 if (file_symbol)
                     type = ReadType(file_symbol, package, name_symbol, field_access -> identifier_token);
             }
@@ -1757,8 +1799,11 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment, LexStream::
                 TypeSymbol *containing_type = method -> containing_type;
                 if (containing_type != this_type)
                 {
+                    if (! method -> IsTyped())
+                        method -> ProcessMethodSignature((Semantic *) this, identifier_token);
+
                     //
-                    // If the method is contained in an abstract method read from a class file,
+                    // If the method is contained in an abstract type read from a class file,
                     // then it is possible that the abstract method is just out-of-date and needs
                     // to be recompiled.
                     //
@@ -1768,7 +1813,7 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment, LexStream::
                                         : SemanticError::NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD,
                                    identifier_token,
                                    identifier_token,
-                                   method -> Header((Semantic *) this, identifier_token),
+                                   method -> Header(),
                                    containing_type -> ContainingPackage() -> PackageName(),
                                    containing_type -> ExternalName(),
                                    this_type -> ContainingPackage() -> PackageName(),
@@ -1796,6 +1841,9 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment, LexStream::
                 {
                     TypeSymbol *containing_type = method -> containing_type;
 
+                    if (! method -> IsTyped())
+                        method -> ProcessMethodSignature((Semantic *) this, identifier_token);
+
                     //
                     // If the method is contained in an abstract type read from a class file,
                     // then it is possible that the abstract method is just out-of-date and needs
@@ -1804,7 +1852,7 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment, LexStream::
                     ReportSemError(SemanticError::NON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD,
                                    identifier_token,
                                    identifier_token,
-                                   method -> Header((Semantic *) this, identifier_token),
+                                   method -> Header(),
                                    containing_type -> ContainingPackage() -> PackageName(),
                                    containing_type -> ExternalName(),
                                    this_type -> ContainingPackage() -> PackageName(),
@@ -1848,6 +1896,12 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment, LexStream::
                 {
                     if (method -> ACC_STATIC())
                     {
+                        if (! method -> IsTyped())
+                            method -> ProcessMethodSignature((Semantic *) this, identifier_token);
+
+                        if (! method_shadow -> Conflict(0) -> IsTyped())
+                            method_shadow -> Conflict(0) -> ProcessMethodSignature((Semantic *) this, identifier_token);
+
                         ReportSemError(SemanticError::STATIC_OVERRIDE_ABSTRACT_EXTERNALLY,
                                        class_declaration -> identifier_token,
                                        (class_declaration -> NumInterfaces() > 0
@@ -1855,10 +1909,10 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment, LexStream::
                                              : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
                                                                                : class_declaration -> identifier_token)),
                                        lex_stream -> NameString(class_declaration -> identifier_token),
-                                       method -> Header((Semantic *) this, identifier_token),
+                                       method -> Header(),
                                        method -> containing_type -> ContainingPackage() -> PackageName(),
                                        method -> containing_type -> ExternalName(),
-                                       method_shadow -> Conflict(0) -> Header((Semantic *) this, identifier_token),
+                                       method_shadow -> Conflict(0) -> Header(),
                                        method_shadow -> Conflict(0) -> containing_type -> ContainingPackage() -> PackageName(),
                                        method_shadow -> Conflict(0) -> containing_type -> ExternalName());
                     }
@@ -1936,13 +1990,11 @@ void Semantic::CompleteSymbolTable(AstInterfaceDeclaration *interface_declaratio
             {
                 if (method_shadow -> method_symbol -> Type() != method_shadow -> Conflict(k) -> Type())
                 {
-                    LexStream::TokenIndex token_location = method_declaration -> method_declarator -> identifier_token;
-
                     ReportSemError(SemanticError::MISMATCHED_INHERITED_METHOD,
                                    method_declaration -> method_declarator -> LeftToken(),
                                    method_declaration -> method_declarator -> RightToken(),
-                                   method_shadow -> method_symbol -> Header((Semantic *) this, token_location),
-                                   method_shadow -> Conflict(k) -> Header((Semantic *) this, token_location),
+                                   method_shadow -> method_symbol -> Header(),
+                                   method_shadow -> Conflict(k) -> Header(),
                                    method_shadow -> Conflict(k) -> containing_type -> ContainingPackage() -> PackageName(),
                                    method_shadow -> Conflict(k) -> containing_type -> ExternalName());
                 }
@@ -2290,7 +2342,7 @@ Symbol *Semantic::ProcessImportQualifiedName(AstExpression *name)
             type = package -> FindTypeSymbol(name_symbol);
             if (! type)
             {
-                FileSymbol *file_symbol = Control::GetFile(package, name_symbol, control.option.depend);
+                FileSymbol *file_symbol = Control::GetFile(control, package, name_symbol);
                 if (file_symbol)
                     type = ReadType(file_symbol, package, name_symbol, field_access -> identifier_token);
             }
@@ -2386,7 +2438,7 @@ Symbol *Semantic::ProcessPackageOrType(AstExpression *name)
             type = package -> FindTypeSymbol(name_symbol);
             if (! type)
             {
-                FileSymbol *file_symbol = Control::GetFile(package, name_symbol, control.option.depend);
+                FileSymbol *file_symbol = Control::GetFile(control, package, name_symbol);
                 if (file_symbol)
                     type = ReadType(file_symbol, package, name_symbol, field_access -> identifier_token);
             }
@@ -2500,7 +2552,7 @@ AstExpression *Semantic::FindFirstType(Ast *name)
             }
             else
             {
-                FileSymbol *file_symbol = Control::GetFile(package, name_symbol, control.option.depend);
+                FileSymbol *file_symbol = Control::GetFile(control, package, name_symbol);
                 if (file_symbol)
                     field_access -> symbol = ReadType(file_symbol, package, name_symbol, field_access -> identifier_token);
                 else
@@ -2543,7 +2595,7 @@ TypeSymbol *Semantic::FindSimpleNameType(PackageSymbol *package, LexStream::Toke
         // Check whether or not the type was declared in another compilation unit
         // in the main package.
         //
-        FileSymbol *file_symbol = Control::GetFile(package, name_symbol, control.option.depend);
+        FileSymbol *file_symbol = Control::GetFile(control, package, name_symbol);
         if (file_symbol)
             type = ReadType(file_symbol, package, name_symbol, identifier_token);
     }
@@ -2999,8 +3051,12 @@ void Semantic::CheckInheritedMethodThrows(AstMethodDeclaration *method_declarati
 
         if (CheckedException(exception))
         {
+            if (! method -> IsTyped())
+                method -> ProcessMethodSignature((Semantic *) this, name -> RightToken());
+            method -> ProcessMethodThrows((Semantic *) this, name -> RightToken());
+
             int k;
-            for (k = method -> NumThrows((Semantic *) this, name -> RightToken()) - 1; k >= 0; k--)
+            for (k = method -> NumThrows() - 1; k >= 0; k--)
             {
                 if (exception -> IsSubclass(method -> Throws(k)))
                     break;
@@ -3012,7 +3068,7 @@ void Semantic::CheckInheritedMethodThrows(AstMethodDeclaration *method_declarati
                                name -> LeftToken(),
                                name -> RightToken(),
                                exception -> Name(),
-                               method -> Header((Semantic *) this, name -> RightToken()),
+                               method -> Header(),
                                method -> containing_type -> ContainingPackage() -> PackageName(),
                                method -> containing_type -> ExternalName());
             }
@@ -3030,19 +3086,21 @@ void Semantic::CheckMethodOverride(AstMethodDeclaration *method_declaration, Met
     LexStream::TokenIndex token_location = method_declaration -> method_declarator -> identifier_token;
 
     if (hidden_method -> Type() != method -> Type())
+    {
         ReportSemError(SemanticError::MISMATCHED_INHERITED_METHOD,
                        method_declarator -> LeftToken(),
                        method_declarator -> RightToken(),
-                       method -> Header((Semantic *) this, token_location),
-                       hidden_method -> Header((Semantic *) this, token_location),
+                       method -> Header(),
+                       hidden_method -> Header(),
                        hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
                        hidden_method -> containing_type -> ExternalName());
+    }
     if (hidden_method -> IsFinal() || hidden_method -> ACC_PRIVATE()) // Merged because same kind of message. See error.cpp
         ReportSemError(hidden_method -> IsFinal() ? SemanticError::FINAL_METHOD_OVERRIDE : SemanticError::PRIVATE_METHOD_OVERRIDE,
                        method_declarator -> LeftToken(),
                        method_declarator -> RightToken(),
-                       method -> Header((Semantic *) this, token_location),
-                       hidden_method -> Header((Semantic *) this, token_location),
+                       method -> Header(),
+                       hidden_method -> Header(),
                        hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
                        hidden_method -> containing_type -> ExternalName());
 
@@ -3052,15 +3110,15 @@ void Semantic::CheckMethodOverride(AstMethodDeclaration *method_declaration, Met
              ReportSemError(SemanticError::INSTANCE_METHOD_OVERRIDE,
                             method_declarator -> LeftToken(),
                             method_declarator -> RightToken(),
-                            method -> Header((Semantic *) this, token_location),
-                            hidden_method -> Header((Semantic *) this, token_location),
+                            method -> Header(),
+                            hidden_method -> Header(),
                             hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
                             hidden_method -> containing_type -> ExternalName());
         else ReportSemError(SemanticError::CLASS_METHOD_OVERRIDE,
                             method_declarator -> LeftToken(),
                             method_declarator -> RightToken(),
-                            method -> Header((Semantic *) this, token_location),
-                            hidden_method -> Header((Semantic *) this, token_location),
+                            method -> Header(),
+                            hidden_method -> Header(),
                             hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
                             hidden_method -> containing_type -> ExternalName());
     }
@@ -3071,9 +3129,9 @@ void Semantic::CheckMethodOverride(AstMethodDeclaration *method_declaration, Met
             ReportSemError(SemanticError::BAD_ACCESS_METHOD_OVERRIDE,
                            method_declarator -> LeftToken(),
                            method_declarator -> RightToken(),
-                           method -> Header((Semantic *) this, token_location),
+                           method -> Header(),
                            (method -> ACC_PRIVATE() ? StringConstant::US_private : (method -> ACC_PROTECTED() ? StringConstant::US_protected : StringConstant::US_default)),
-                           hidden_method -> Header((Semantic *) this, token_location),
+                           hidden_method -> Header(),
                            StringConstant::US_public,
                            hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
                            hidden_method -> containing_type -> ExternalName());
@@ -3084,9 +3142,9 @@ void Semantic::CheckMethodOverride(AstMethodDeclaration *method_declaration, Met
              ReportSemError(SemanticError::BAD_ACCESS_METHOD_OVERRIDE,
                             method_declarator -> LeftToken(),
                             method_declarator -> RightToken(),
-                            method -> Header((Semantic *) this, token_location),
+                            method -> Header(),
                             StringConstant::US_default,
-                            hidden_method -> Header((Semantic *) this, token_location),
+                            hidden_method -> Header(),
                             StringConstant::US_protected,
                             hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
                             hidden_method -> containing_type -> ExternalName());
@@ -3096,9 +3154,9 @@ void Semantic::CheckMethodOverride(AstMethodDeclaration *method_declaration, Met
          ReportSemError(SemanticError::BAD_ACCESS_METHOD_OVERRIDE,
                         method_declarator -> LeftToken(),
                         method_declarator -> RightToken(),
-                        method -> Header((Semantic *) this, token_location),
+                        method -> Header(),
                         StringConstant::US_private,
-                        hidden_method -> Header((Semantic *) this, token_location),
+                        hidden_method -> Header(),
                         StringConstant::US_default,
                         hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
                         hidden_method -> containing_type -> ExternalName());
@@ -3112,14 +3170,17 @@ void Semantic::CheckMethodOverride(AstMethodDeclaration *method_declaration, Met
 
 void Semantic::CheckInheritedMethodThrows(AstClassDeclaration *class_declaration, MethodSymbol *method, MethodSymbol *hidden_method)
 {
-    for (int i = method -> NumThrows((Semantic *) this, class_declaration -> identifier_token) - 1; i >= 0; i--)
+    method -> ProcessMethodThrows((Semantic *) this, class_declaration -> identifier_token);
+    hidden_method -> ProcessMethodThrows((Semantic *) this, class_declaration -> identifier_token);
+
+    for (int i = method -> NumThrows() - 1; i >= 0; i--)
     {
         TypeSymbol *exception = method -> Throws(i);
 
         if (CheckedException(exception))
         {
             int k;
-            for (k = hidden_method -> NumThrows((Semantic *) this, class_declaration -> identifier_token) - 1; k >= 0; k--)
+            for (k = hidden_method -> NumThrows() - 1; k >= 0; k--)
             {
                 if (exception -> IsSubclass(hidden_method -> Throws(k)))
                     break;
@@ -3127,6 +3188,12 @@ void Semantic::CheckInheritedMethodThrows(AstClassDeclaration *class_declaration
 
             if (k < 0)
             {
+                if (! method -> IsTyped())
+                    method -> ProcessMethodSignature((Semantic *) this, class_declaration -> identifier_token);
+
+                if (! hidden_method -> IsTyped())
+                    hidden_method -> ProcessMethodSignature((Semantic *) this, class_declaration -> identifier_token);
+
                 ReportSemError(SemanticError::MISMATCHED_OVERRIDDEN_EXCEPTION_EXTERNALLY,
                                class_declaration -> identifier_token,
                                (class_declaration -> NumInterfaces() > 0
@@ -3135,10 +3202,10 @@ void Semantic::CheckInheritedMethodThrows(AstClassDeclaration *class_declaration
                                                                        : class_declaration -> identifier_token)),
                                lex_stream -> NameString(class_declaration -> identifier_token),
                                exception -> Name(),
-                               method -> Header((Semantic *) this, class_declaration -> identifier_token),
+                               method -> Header(),
                                hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
                                hidden_method -> containing_type -> ExternalName(),
-                               hidden_method -> Header((Semantic *) this, class_declaration -> identifier_token),
+                               hidden_method -> Header(),
                                method -> containing_type -> ContainingPackage() -> PackageName(),
                                method -> containing_type -> ExternalName());
             }
@@ -3159,10 +3226,10 @@ void Semantic::CheckMethodOverride(AstClassDeclaration *class_declaration, Metho
                                            : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
                                                                              : class_declaration -> identifier_token)),
                        lex_stream -> NameString(class_declaration -> identifier_token),
-                       method -> Header((Semantic *) this, class_declaration -> identifier_token),
+                       method -> Header(),
                        method -> containing_type -> ContainingPackage() -> PackageName(),
                        method -> containing_type -> ExternalName(),
-                       hidden_method -> Header((Semantic *) this, class_declaration -> identifier_token),
+                       hidden_method -> Header(),
                        hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
                        hidden_method -> containing_type -> ExternalName());
     if (hidden_method -> IsFinal() || hidden_method -> ACC_PRIVATE()) // Merged because same kind of message. See error.cpp
@@ -3174,10 +3241,10 @@ void Semantic::CheckMethodOverride(AstClassDeclaration *class_declaration, Metho
                                            : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
                                                                              : class_declaration -> identifier_token)),
                        lex_stream -> NameString(class_declaration -> identifier_token),
-                       method -> Header((Semantic *) this, class_declaration -> identifier_token),
+                       method -> Header(),
                        method -> containing_type -> ContainingPackage() -> PackageName(),
                        method -> containing_type -> ExternalName(),
-                       hidden_method -> Header((Semantic *) this, class_declaration -> identifier_token),
+                       hidden_method -> Header(),
                        hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
                        hidden_method -> containing_type -> ExternalName());
 
@@ -3191,10 +3258,10 @@ void Semantic::CheckMethodOverride(AstClassDeclaration *class_declaration, Metho
                                                 : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
                                                                                   : class_declaration -> identifier_token)),
                             lex_stream -> NameString(class_declaration -> identifier_token),
-                            method -> Header((Semantic *) this, class_declaration -> identifier_token),
+                            method -> Header(),
                             method -> containing_type -> ContainingPackage() -> PackageName(),
                             method -> containing_type -> ExternalName(),
-                            hidden_method -> Header((Semantic *) this, class_declaration -> identifier_token),
+                            hidden_method -> Header(),
                             hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
                             hidden_method -> containing_type -> ExternalName());
         else ReportSemError(SemanticError::CLASS_METHOD_OVERRIDE_EXTERNALLY,
@@ -3204,10 +3271,10 @@ void Semantic::CheckMethodOverride(AstClassDeclaration *class_declaration, Metho
                                                 : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
                                                                                   : class_declaration -> identifier_token)),
                             lex_stream -> NameString(class_declaration -> identifier_token),
-                            method -> Header((Semantic *) this, class_declaration -> identifier_token),
+                            method -> Header(),
                             method -> containing_type -> ContainingPackage() -> PackageName(),
                             method -> containing_type -> ExternalName(),
-                            hidden_method -> Header((Semantic *) this, class_declaration -> identifier_token),
+                            hidden_method -> Header(),
                             hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
                             hidden_method -> containing_type -> ExternalName());
     }
@@ -3222,13 +3289,13 @@ void Semantic::CheckMethodOverride(AstClassDeclaration *class_declaration, Metho
                                                : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
                                                                                  : class_declaration -> identifier_token)),
                            lex_stream -> NameString(class_declaration -> identifier_token),
-                           method -> Header((Semantic *) this, class_declaration -> identifier_token),
+                           method -> Header(),
                            (method -> ACC_PRIVATE() ? StringConstant::US_private
                                                     : (method -> ACC_PROTECTED() ? StringConstant::US_protected
                                                                                  : StringConstant::US_default)),
                            method -> containing_type -> ContainingPackage() -> PackageName(),
                            method -> containing_type -> ExternalName(),
-                           hidden_method -> Header((Semantic *) this, class_declaration -> identifier_token),
+                           hidden_method -> Header(),
                            StringConstant::US_public,
                            hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
                            hidden_method -> containing_type -> ExternalName());
@@ -3243,11 +3310,11 @@ void Semantic::CheckMethodOverride(AstClassDeclaration *class_declaration, Metho
                                                 : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
                                                                                   : class_declaration -> identifier_token)),
                             lex_stream -> NameString(class_declaration -> identifier_token),
-                            method -> Header((Semantic *) this, class_declaration -> identifier_token),
+                            method -> Header(),
                             StringConstant::US_default,
                             method -> containing_type -> ContainingPackage() -> PackageName(),
                             method -> containing_type -> ExternalName(),
-                            hidden_method -> Header((Semantic *) this, class_declaration -> identifier_token),
+                            hidden_method -> Header(),
                             StringConstant::US_protected,
                             hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
                             hidden_method -> containing_type -> ExternalName());
@@ -3261,11 +3328,11 @@ void Semantic::CheckMethodOverride(AstClassDeclaration *class_declaration, Metho
                                             : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
                                                                               : class_declaration -> identifier_token)),
                         lex_stream -> NameString(class_declaration -> identifier_token),
-                        method -> Header((Semantic *) this, class_declaration -> identifier_token),
+                        method -> Header(),
                         StringConstant::US_private,
                         method -> containing_type -> ContainingPackage() -> PackageName(),
                         method -> containing_type -> ExternalName(),
-                        hidden_method -> Header((Semantic *) this, class_declaration -> identifier_token),
+                        hidden_method -> Header(),
                         StringConstant::US_default,
                         hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
                         hidden_method -> containing_type -> ExternalName());
@@ -3455,10 +3522,13 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type, TypeSymbol *super_type
                         }
                     }
 
+                    if (! method -> IsTyped())
+                        method -> ProcessMethodSignature((Semantic *) this, tok);
+
                     ReportSemError(SemanticError::DEFAULT_METHOD_NOT_OVERRIDDEN,
                                    left_tok,
                                    right_tok,
-                                   method -> Header((Semantic *) this, tok),
+                                   method -> Header(),
                                    base_type -> ContainingPackage() -> PackageName(),
                                    base_type -> ExternalName(),
                                    super_type -> ContainingPackage() -> PackageName(),
@@ -3832,7 +3902,7 @@ TypeSymbol *Semantic::ImportType(LexStream::TokenIndex identifier_token, NameSym
 
         if (import_package)
         {
-            FileSymbol *symbol = Control::GetFile(import_package, name_symbol, control.option.depend);
+            FileSymbol *symbol = Control::GetFile(control, import_package, name_symbol);
             if (symbol)
             {
                 if (! package)
@@ -4042,7 +4112,7 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
         {
             NameSymbol *name_symbol = lex_stream -> NameSymbol(identifier_token);
             PackageSymbol *package = (compilation_unit -> package_declaration_opt ? this_package : control.unnamed_package);
-            FileSymbol *file_symbol = Control::GetFile(package, name_symbol, control.option.depend);
+            FileSymbol *file_symbol = Control::GetFile(control, package, name_symbol);
 
             //
             // If there is no file associated with the name of the type then the type does
@@ -4104,7 +4174,7 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
             type = package -> FindTypeSymbol(name_symbol);
             if (! type)
             {
-                FileSymbol *file_symbol = Control::GetFile(package, name_symbol, control.option.depend);
+                FileSymbol *file_symbol = Control::GetFile(control, package, name_symbol);
                 type = ReadType(file_symbol, package, name_symbol, identifier_token);
             }
             else
@@ -4117,9 +4187,12 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
     }
 
     //
-    // Establish a dependence from base_type to a type that it "must find".
+    // Establish a dependence from the base_type to a type that it "must find".
+    // Note that the only time an environment is not available is when were are
+    // processing the type header of an outermost type.
     //
-    AddDependence(ThisType(), type, identifier_token);
+    if (state_stack.Size() > 0)
+        AddDependence(ThisType(), type, identifier_token);
 
     return type;
 }
@@ -4158,6 +4231,7 @@ void Semantic::ProcessInterface(TypeSymbol *base_type, AstExpression *name)
             }
         }
 
+        name -> symbol = interf; // save type  name in ast.
         base_type -> AddInterface(interf);
     }
 
@@ -4383,8 +4457,9 @@ void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
                     AstVariableDeclarator *vd = field_decl -> VariableDeclarator(m);
                     VariableSymbol *variable_symbol = vd -> symbol;
 
-                    needs_init_method = (vd -> variable_initializer_opt &&
-                                         (! (variable_symbol -> ACC_FINAL() && variable_symbol -> initial_value)));
+                    needs_init_method = variable_symbol &&
+                                        vd -> variable_initializer_opt &&
+                                        (! (variable_symbol -> ACC_FINAL() && variable_symbol -> initial_value));
                 }
 
                 if (needs_init_method)

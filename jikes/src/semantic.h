@@ -505,7 +505,9 @@ public:
     void CheckPackage();
     void ProcessTypeNames();
     void ProcessImports();
-    void ProcessSuperTypes();
+    void ProcessNestedSuperTypeDependences(AstClassDeclaration *);
+    void ProcessNestedSuperTypeDependences(AstInterfaceDeclaration *);
+    void ProcessSuperTypeDependences();
 
     LiteralValue *ComputeFinalValue(AstVariableDeclarator *);
 
@@ -779,18 +781,18 @@ private:
     //
     PackageSymbol  *this_package;
 
-    TypeSymbol *ThisType()                          { return state_stack.Top() -> Type(); }
-    MethodSymbol *&ThisMethod()                     { return state_stack.Top() -> this_method; }
-    VariableSymbol *&ThisVariable()                 { return state_stack.Top() -> this_variable; }
-    Ast *&ExplicitConstructorInvocation()           { return state_stack.Top() -> explicit_constructor_invocation; }
-    SymbolTableStack &LocalSymbolTable()            { return state_stack.Top() -> symbol_table; }
-    ExceptionTableStack &TryExceptionTableStack()   { return state_stack.Top() -> try_exception_table_stack; }
-    StatementStack &TryStatementStack()             { return state_stack.Top() -> try_statement_stack; }
-    StatementStack &BreakableStatementStack()       { return state_stack.Top() -> breakable_statement_stack; }
-    StatementStack &ContinuableStatementStack()     { return state_stack.Top() -> continuable_statement_stack; }
-    BlockStack &LocalBlockStack()                   { return state_stack.Top() -> block_stack; }
-    SemanticEnvironment *GetEnvironment(Ast *ast)   { return state_stack.Top() -> GetEnvironment(ast); }
-    bool StaticRegion()                             { return state_stack.Top() -> StaticRegion(); }
+    TypeSymbol *ThisType()                        { assert(state_stack.Size()); return state_stack.Top() -> Type(); }
+    MethodSymbol *&ThisMethod()                   { assert(state_stack.Size()); return state_stack.Top() -> this_method; }
+    VariableSymbol *&ThisVariable()               { assert(state_stack.Size()); return state_stack.Top() -> this_variable; }
+    Ast *&ExplicitConstructorInvocation()         { assert(state_stack.Size()); return state_stack.Top() -> explicit_constructor_invocation; }
+    SymbolTableStack &LocalSymbolTable()          { assert(state_stack.Size()); return state_stack.Top() -> symbol_table; }
+    ExceptionTableStack &TryExceptionTableStack() { assert(state_stack.Size()); return state_stack.Top() -> try_exception_table_stack; }
+    StatementStack &TryStatementStack()           { assert(state_stack.Size()); return state_stack.Top() -> try_statement_stack; }
+    StatementStack &BreakableStatementStack()     { assert(state_stack.Size()); return state_stack.Top() -> breakable_statement_stack; }
+    StatementStack &ContinuableStatementStack()   { assert(state_stack.Size()); return state_stack.Top() -> continuable_statement_stack; }
+    BlockStack &LocalBlockStack()                 { assert(state_stack.Size()); return state_stack.Top() -> block_stack; }
+    SemanticEnvironment *GetEnvironment(Ast *ast) { assert(state_stack.Size()); return state_stack.Top() -> GetEnvironment(ast); }
+    bool StaticRegion()                           { assert(state_stack.Size()); return state_stack.Top() -> StaticRegion(); }
 
     SemanticEnvironmentStack state_stack;
 
@@ -948,6 +950,7 @@ private:
     bool MoreSpecific(MethodSymbol *, MethodSymbol *);
     bool MoreSpecific(MethodSymbol *, Tuple<MethodSymbol *> &);
     bool NoMethodMoreSpecific(Tuple<MethodSymbol *> &, MethodSymbol *);
+    bool IsMethodAccessible(AstFieldAccess *, TypeSymbol *, MethodSymbol *);
     void SearchForMethodInEnvironment(Tuple<MethodSymbol *> &, SemanticEnvironment *&, SemanticEnvironment *, AstMethodInvocation *);
     MethodSymbol *FindMisspelledMethodName(TypeSymbol *, AstMethodInvocation *, NameSymbol *);
     MethodSymbol *FindMethodInEnvironment(SemanticEnvironment *&, SemanticEnvironment *, AstMethodInvocation *);
@@ -967,7 +970,7 @@ private:
     void TypeAccessCheck(Ast *, TypeSymbol *);
     void TypeNestAccessCheck(AstExpression *);
     void ConstructorAccessCheck(AstClassInstanceCreationExpression *, MethodSymbol *);
-    void MemberAccessCheck(AstFieldAccess *, TypeSymbol *, TypeSymbol *, Symbol *);
+    void MemberAccessCheck(AstFieldAccess *, TypeSymbol *, Symbol *);
     void SimpleNameAccessCheck(AstSimpleName *, TypeSymbol *, Symbol *);
 
     void (Semantic::*ProcessPreUnaryExpr[AstPreUnaryExpression::_num_kinds])(AstPreUnaryExpression *);
@@ -999,7 +1002,7 @@ private:
     void ProcessMOD(AstBinaryExpression *);
     void ProcessINSTANCEOF(AstBinaryExpression *);
 
-    MethodSymbol *FindMethodMember(TypeSymbol *, AstMethodInvocation *);
+    MethodSymbol *FindMethodMember(TypeSymbol *, TypeSymbol *, AstMethodInvocation *);
     void ProcessMethodName(AstMethodInvocation *);
     void (Semantic::*ProcessExprOrStmt[Ast::_num_kinds])(Ast *);
     inline void ProcessStatement(AstStatement *stmt)
@@ -1044,8 +1047,9 @@ private:
     void ProcessClassDeclaration(Ast *);
     void GenerateLocalConstructor(MethodSymbol *);
 
+    void CheckSimpleName(AstSimpleName *, SemanticEnvironment *where_found);
     void ProcessSimpleName(Ast *);
-    void FindVariableMember(TypeSymbol *, AstFieldAccess *);
+    void FindVariableMember(TypeSymbol *, TypeSymbol *, AstFieldAccess *);
     void ProcessAmbiguousName(Ast *);
     void ProcessFieldAccess(Ast *);
     void ProcessIntegerLiteral(Ast *);

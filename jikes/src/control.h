@@ -36,17 +36,18 @@ public:
                   *unnamed_package;
     int dot_classpath_index;
     Tuple<PathSymbol *> classpath;
-    Tuple<DirectorySymbol *> root_directories;
     Tuple<wchar_t *> bad_zip_filenames,
                      bad_input_filenames,
                      unreadable_input_filenames;
+
+    DirectorySymbol *default_directory;
                      
     Semantic *system_semantic;
     Tuple<Semantic *> semantic;
     Tuple<TypeSymbol *> needs_body_work,
                         type_trash_bin;
 
-    SymbolMap unnamed_package_types;
+    NameSymbolMap unnamed_package_types;
 
     SymbolSet input_java_file_set,
               input_class_file_set,
@@ -292,7 +293,7 @@ public:
     //
     static DirectorySymbol *GetOutputDirectory(FileSymbol *);
     static FileSymbol *GetJavaFile(PackageSymbol *, NameSymbol *);
-    static FileSymbol *GetFile(PackageSymbol *, NameSymbol *, bool depend);
+    static FileSymbol *GetFile(Control &, PackageSymbol *, NameSymbol *);
 
     PackageSymbol *FindOrInsertPackage(LexStream *, AstExpression *);
     void ProcessPackageDeclaration(FileSymbol *, AstPackageDeclaration *);

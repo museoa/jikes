@@ -98,6 +98,8 @@ ZipFile::ZipFile(FileSymbol *file_symbol) : buffer(NULL)
 {
     Zip *zip = file_symbol -> Zipfile();
 
+    assert(zip -> IsValid());
+
 #ifdef UNIX_FILE_SYSTEM
     zipfile = zip -> zipfile;
     int rc = fseek(zipfile, file_symbol -> offset, SEEK_SET);
@@ -225,7 +227,7 @@ inline NameSymbol *Zip::ProcessFilename(char *name, int name_length)
 }
 
 
-inline void Zip::ProcessDirectoryEntry(DirectorySymbol *directory_symbol)
+inline void Zip::ProcessDirectoryEntry()
 {
     Skip(8); // u2 version_made_by           = GetU2();
              // u2 version_needed_to_extract = GetU2();
@@ -256,6 +258,7 @@ inline void Zip::ProcessDirectoryEntry(DirectorySymbol *directory_symbol)
     // a package, we need to recognize each name as a subpackage. E.g., when processing
     // "java.lang", we need to recognize "java" as a package before looking for "lang"...
     //
+    DirectorySymbol *directory_symbol = root_directory; // start at the "." directory.
     if (name[file_name_length - 1] == U_SLASH)
         ProcessSubdirectoryEntries(directory_symbol, name, file_name_length - 1);  // -1 to remove last '/'
     else
@@ -313,8 +316,8 @@ inline void Zip::ProcessDirectoryEntry(DirectorySymbol *directory_symbol)
 
 
 Zip::Zip(Control &control_, char *zipfile_name) : control(control_),
-                                                  zipbuffer(NULL),
-                                                  magic(0)
+                                                  magic(0),
+                                                  zipbuffer(NULL)
 {
 #ifdef UNIX_FILE_SYSTEM
     zipfile = ::SystemFopen(zipfile_name, "rb");
@@ -344,6 +347,8 @@ Zip::Zip(Control &control_, char *zipfile_name) : control(control_),
     }
 #endif
 
+    ReadDirectory();
+
     return;
 }
 
@@ -366,10 +371,19 @@ Zip::~Zip()
         CloseHandle(zipfile);
     }
 #endif
+
+    delete root_directory;
 }
 
-void Zip::ReadDirectory(DirectorySymbol *directory_symbol)
+
+//
+// Upon successful termination of this function, IsValid() should yield true.
+// I.e., we should be able to assert that (magic == 0x06054b50)
+//
+void Zip::ReadDirectory()
 {
+    root_directory = new DirectorySymbol(control.dot_name_symbol, NULL);
+
     if (IsValid())
     {
         Skip(8); // u2 number_of_this_disk              = GetU2();
@@ -391,11 +405,10 @@ void Zip::ReadDirectory(DirectorySymbol *directory_symbol)
         buffer_ptr -= (central_directory_size + 16);
 #endif
         for (magic = GetU4(); magic == 0x02014b50; magic = GetU4())
-             ProcessDirectoryEntry(directory_symbol);
-
-        assert(IsValid()); // magic == 0x06054b50
+             ProcessDirectoryEntry();
     }
 
     return;
 }
+
 

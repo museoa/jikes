@@ -1444,9 +1444,7 @@ void Semantic::ProcessClassDeclaration(Ast *stmt)
 
     CheckClassMembers(inner_type, class_body);
 
-    ProcessTypeHeader(class_declaration);
-    ProcessNestedTypeHeaders(inner_type, class_declaration -> class_body);
-    ProcessSuperTypesOfOuterType(inner_type);
+    ProcessTypeHeaders(class_declaration);
 
     ProcessMembers(class_declaration -> semantic_environment, class_body);
     CompleteSymbolTable(class_declaration -> semantic_environment, class_declaration -> identifier_token, class_body);
@@ -1663,7 +1661,7 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
             {
                 if (this_type -> outermost_type == super_type -> outermost_type)
                 {
-                     constructor = TypeSymbol::GetReadAccessMethod(constructor);
+                     constructor = super_type -> GetReadAccessMethod(constructor);
 
                      //
                      // Add extra argument for read access constructor;
@@ -1707,7 +1705,11 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
                     super_call -> Argument(i) = ConvertToType(expr, constructor -> FormalParameter(i) -> Type());
             }
 
-            for (int k = constructor -> NumThrows((Semantic *) this, super_call -> super_token) - 1; k >= 0; k--)
+            //
+            // Make sure that the throws signature of the constructor is processed.
+            //
+            constructor -> ProcessMethodThrows((Semantic *) this, super_call -> super_token);
+            for (int k = constructor -> NumThrows() - 1; k >= 0; k--)
             {
                 TypeSymbol *exception = constructor -> Throws(k);
                 if (! CatchableException(exception))

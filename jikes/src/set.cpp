@@ -213,3 +213,89 @@ void SymbolSet::RemoveElement(Symbol *element)
     return;
 }
 
+
+int SymbolMap::primes[] = {DEFAULT_HASH_SIZE, 101, 401, MAX_HASH_SIZE};
+
+void SymbolMap::Rehash()
+{
+    hash_size = primes[++prime_index];
+
+    delete [] base;
+    base = (Element **) memset(new Element *[hash_size], 0, hash_size * sizeof(Element *));
+
+    for (int i = 0; i < symbol_pool.Length(); i++)
+    {
+        Element *element = symbol_pool[i];
+        int k = element -> domain_element -> Identity() -> index % hash_size;
+        element -> next = base[k];
+        base[k] = element;
+    }
+
+    return;
+}
+
+
+void SymbolMap::Map(Symbol *symbol, Symbol *image)
+{
+    assert(symbol);
+
+    Element *element;
+    int k = symbol -> Identity() -> index % hash_size;
+    for (element = base[k]; element; element = element -> next)
+    {
+        if (element -> domain_element == symbol)
+            break;
+    }
+
+    //
+    // If this is a new element, add it to the map.
+    //
+    if (! element)
+    {
+        element = new Element();
+        element -> domain_element = symbol;
+        element -> next = base[k];
+        base[k] = element;
+
+        //
+        // If the number of unique elements in the map exceeds 2 times
+        // the size of the base, and we have not yet reached the maximum
+        // allowable size for a base, reallocate a larger base and rehash
+         // the elements.
+        //
+        if ((hash_size < MAX_HASH_SIZE) && (symbol_pool.Length() > (hash_size << 1)))
+            Rehash();
+    }
+    else
+    {
+        cout << "WARNING: This should not have happened !!!";
+    }
+
+    element -> image = image;
+
+    return;
+}
+
+
+SymbolMap::SymbolMap(int hash_size_)
+{
+    hash_size = (hash_size_ <= 0 ? 1 : hash_size_);
+
+    prime_index = -1;
+    do
+    {
+        if (hash_size < primes[prime_index + 1])
+            break;
+        prime_index++;
+    } while (primes[prime_index] < MAX_HASH_SIZE);
+
+    base = (Element **) memset(new Element *[hash_size], 0, hash_size * sizeof(Element *));
+}
+
+
+SymbolMap::~SymbolMap()
+{
+    for (int i = 0; i < symbol_pool.Length(); i++)
+        delete symbol_pool[i];
+    return;
+}

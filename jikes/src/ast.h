@@ -320,6 +320,7 @@ public:
     // Given an Ast tree, check whether or not it is a Name - simple or qualified.
     //
     bool IsName();
+    bool IsSuperExpression();
     bool IsLeftHandSide();
     bool IsGenerated();
 
@@ -632,7 +633,7 @@ public:
                                   : (symbol -> Kind() == Symbol::VARIABLE
                                              ? ((VariableSymbol *) symbol) -> Type()
                                              : (symbol -> Kind() == Symbol::METHOD
-                                                        ? ((MethodSymbol *) symbol) -> Type((Semantic *) NULL)
+                                                        ? ((MethodSymbol *) symbol) -> Type()
                                                         : NULL)))
                        : NULL);
     }
@@ -3828,6 +3829,15 @@ inline bool Ast::IsName()
     return (name -> SimpleNameCast() != NULL);
 }
 
+
+//
+// Do we have a simple 'super' expression or a field of the form XXX.super
+//
+inline bool Ast::IsSuperExpression()
+{
+    return (this -> SuperExpressionCast() || (this -> FieldAccessCast() && this -> FieldAccessCast() -> IsSuperAccess()));
+
+}
 
 //
 // Given an Ast tree, check whether or not it is a Name - simple or qualified.

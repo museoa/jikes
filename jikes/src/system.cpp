@@ -178,10 +178,9 @@ void Control::ProcessPath()
     // Allocate a "." path whose associated directory is the "." directory.
     // Identify the "." path as the owner of the "." directory.
     //
-    DirectorySymbol *dot_directory = new DirectorySymbol(dot_name_symbol, NULL);
-    classpath.Next() = classpath_table.InsertPathSymbol(dot_path_name_symbol, dot_directory);
-    dot_directory -> ResetDirectory(); // Note that main_root_directory is reset after it has been assigned an owner above
-    root_directories.Next() = dot_directory;
+    default_directory = new DirectorySymbol(dot_name_symbol, NULL);
+    classpath.Next() = classpath_table.InsertPathSymbol(dot_path_name_symbol, default_directory);
+    default_directory -> ResetDirectory(); // Note that main_root_directory is reset after it has been assigned the owner above.
 
     //
     //
@@ -270,8 +269,7 @@ void Control::ProcessPath()
                 //
                 // If a directory is specified more than once, ignore the duplicates.
                 //
-                PathSymbol *path_symbol = classpath_table.FindPathSymbol(name_symbol);
-                if (path_symbol)
+                if (classpath_table.FindPathSymbol(name_symbol))
                 {
                     if (name_symbol == dot_name_symbol)
                     {
@@ -284,49 +282,35 @@ void Control::ProcessPath()
                 }
 
                 //
-                // Check whether or not the path points to a system directory or a zip file
+                // Check whether or not the path points to a system directory. If not, assume it's a zip file
                 //
-                Zip *zipinfo = (::SystemIsDirectory(head) ? (Zip *) NULL : new Zip(*this, head));
-
-                //
-                // If we have an invalid zip file issue an error and continue...
-                //
-                DirectorySymbol *dot_directory;
-                if (zipinfo)
+                if (::SystemIsDirectory(head))
                 {
-                     if (! zipinfo -> IsValid())
-                     {
-                         wchar_t *name = new wchar_t[input_name_length + 1];
-                         for (int i = 0; i < input_name_length; i++)
-                             name[i] = input_name[i];
-                         name[input_name_length] = U_NULL;
-                         bad_zip_filenames.Next() = name;
-   
-                         delete zipinfo;
-                         continue;
-                     }
-
-                     dot_directory = new DirectorySymbol(dot_name_symbol, NULL);
-                     root_directories.Next() = dot_directory;
+                    DirectorySymbol *dot_directory = ProcessSubdirectories(input_name, input_name_length);
+                    unnamed_package -> directory.Next() = dot_directory;
+                    classpath.Next() = classpath_table.InsertPathSymbol(name_symbol, dot_directory);
                 }
-                else dot_directory = ProcessSubdirectories(input_name, input_name_length);
-
-                //
-                // Create the new path symbol and update the class path with it.
-                //
-                path_symbol = classpath_table.InsertPathSymbol(name_symbol, dot_directory);
-                classpath.Next() = path_symbol;
-
-                //
-                // If the path symbol is associated with a zip file, read the zip directory.
-                //
-                if (zipinfo)
+                else
                 {
+                    Zip *zipinfo = new Zip(*this, head);
+                    if (! zipinfo -> IsValid()) // If the zipfile is all screwed up, give up here !!!
+                    {
+                        wchar_t *name = new wchar_t[input_name_length + 1];
+                        for (int i = 0; i < input_name_length; i++)
+                            name[i] = input_name[i];
+                        name[input_name_length] = U_NULL;
+                        bad_zip_filenames.Next() = name;
+                    }
+
+                    unnamed_package -> directory.Next() = zipinfo -> RootDirectory();
+
+                    //
+                    // Create the new path symbol and update the class path with it.
+                    //
+                    PathSymbol *path_symbol = classpath_table.InsertPathSymbol(name_symbol, zipinfo -> RootDirectory());
                     path_symbol -> zipfile = zipinfo;
-                    zipinfo -> ReadDirectory(dot_directory);
+                    classpath.Next() = path_symbol;
                 }
-
-                unnamed_package -> directory.Next() = dot_directory;
             }
         }
 
@@ -492,7 +476,7 @@ FileSymbol *Control::GetJavaFile(PackageSymbol *package, NameSymbol *name_symbol
 }
 
 
-FileSymbol *Control::GetFile(PackageSymbol *package, NameSymbol *name_symbol, bool depend)
+FileSymbol *Control::GetFile(Control &control, PackageSymbol *package, NameSymbol *name_symbol)
 {
     FileSymbol *file_symbol = NULL;
 
@@ -521,9 +505,9 @@ FileSymbol *Control::GetFile(PackageSymbol *package, NameSymbol *name_symbol, bo
         if (! path_symbol -> IsZip())
         {
             DirectoryEntry *java_entry = directory_symbol -> FindEntry(java_name, java_length),
-                           *class_entry = (((! depend) || (java_entry == NULL))
-                                                        ? directory_symbol -> FindEntry(class_name, class_length)
-                                                        : (DirectoryEntry *) NULL);
+                           *class_entry = (((! control.option.depend) || (java_entry == NULL))
+                                                                       ? directory_symbol -> FindEntry(class_name, class_length)
+                                                                       : (DirectoryEntry *) NULL);
 
             if (java_entry || class_entry)
             {
@@ -561,7 +545,8 @@ TypeSymbol *Control::GetType(PackageSymbol *package, wchar_t *name)
 
     if (! type)
     {
-        FileSymbol *file_symbol = GetFile(package, name_symbol, option.depend);
+        Control &control = *this;
+        FileSymbol *file_symbol = GetFile(control, package, name_symbol);
         type = system_semantic -> ReadType(file_symbol, package, name_symbol, 0);
     }
     else if (type -> SourcePending())

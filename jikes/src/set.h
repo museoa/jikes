@@ -298,10 +298,10 @@ protected:
 //
 // Single-value Mapping from a name_symbol into a symbol with that name.
 //
-class SymbolMap : public SymbolSet
+class NameSymbolMap : public SymbolSet
 {
 public:
-    SymbolMap(int hash_size_ = DEFAULT_HASH_SIZE) : SymbolSet(hash_size_)
+    NameSymbolMap(int hash_size_ = DEFAULT_HASH_SIZE) : SymbolSet(hash_size_)
     {}
 
     //
@@ -344,6 +344,65 @@ public:
 
         return;
     }
+};
+
+
+//
+// Single-value Mapping from an arbitrary symbol into another arbitrary symbol.
+//
+class SymbolMap
+{
+public:
+    enum
+    {
+        DEFAULT_HASH_SIZE = 13,
+        MAX_HASH_SIZE = 1021
+    };
+
+    SymbolMap(int hash_size_ = DEFAULT_HASH_SIZE);
+    ~SymbolMap();
+
+    //
+    // Has symbol been mapped to an image, yet? If so, return the image.
+    //
+    inline Symbol *Image(Symbol *symbol)
+    {
+        assert(symbol);
+
+        int k = symbol -> Identity() -> index % hash_size;
+        for (Element *element = base[k]; element; element = element -> next)
+        {
+            if (element -> domain_element == symbol)
+                return element -> image;
+        }
+
+        return NULL;
+    }
+
+    //
+    // Map or remap symbol to a given image.
+    //
+    void Map(Symbol *, Symbol *);
+
+private:
+
+    class Element
+    {
+    public:
+        Element *next;
+        Symbol  *domain_element,
+                *image;
+    };
+
+    Tuple<Element *> symbol_pool;
+
+    Element **base;
+    int hash_size;
+
+    static int primes[];
+    int prime_index;
+
+    void Rehash();
 };
 
 

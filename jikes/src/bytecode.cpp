@@ -1214,10 +1214,7 @@ void ByteCode::EmitStatementExpression(AstExpression *expression)
         case Ast::CALL:
              {
                  AstMethodInvocation *method_call = (AstMethodInvocation *) expression;
-                 method_call = (method_call -> resolution_opt
-                                             ? method_call -> resolution_opt -> MethodInvocationCast()
-                                             : method_call);
-                 (void) EmitMethodInvocation(method_call);
+                 EmitMethodInvocation(method_call);
                  if (method_call -> Type() != this_control.void_type)
                      PutOp(this_control.IsDoubleWordType(method_call -> Type()) ? OP_POP2 : OP_POP); // discard value
             }
@@ -2194,9 +2191,6 @@ int ByteCode::EmitExpression(AstExpression *expression)
         case Ast::CALL:
              {
                  AstMethodInvocation *method_call = expression -> MethodInvocationCast();
-                 method_call = (method_call -> resolution_opt
-                                             ? method_call -> resolution_opt -> MethodInvocationCast()
-                                             : method_call);
                  EmitMethodInvocation(method_call);
                  return GetTypeWords(method_call -> Type());
              }
@@ -3309,13 +3303,20 @@ void ByteCode::EmitCloneArray(AstMethodInvocation *expression)
 }
 
 
-void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression) 
+void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
 {
-    MethodSymbol *msym = (MethodSymbol *) expression -> symbol;
+    //
+    // If the method call was resolved into a call to another method, use the resolution expression.
+    //
+    AstMethodInvocation *method_call = (expression -> resolution_opt
+                                                    ? expression -> resolution_opt -> MethodInvocationCast()
+                                                    : expression);
+
+    MethodSymbol *msym = (MethodSymbol *) method_call -> symbol;
 
     if (msym -> ExternalIdentity() == this_control.clone_name_symbol && msym -> containing_type -> IsArray())
     {
-        EmitCloneArray(expression);
+        EmitCloneArray(method_call);
         return;
     }
 
@@ -3323,9 +3324,9 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
 
     if (msym -> ACC_STATIC())
     {
-        if (expression -> method -> FieldAccessCast())
+        if (method_call -> method -> FieldAccessCast())
         {
-            AstFieldAccess *field = expression -> method -> FieldAccessCast();
+            AstFieldAccess *field = method_call -> method -> FieldAccessCast();
             if (field -> base -> MethodInvocationCast())
             {
                 EmitMethodInvocation(field -> base -> MethodInvocationCast());
@@ -3335,7 +3336,7 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
     }
     else
     {
-        AstFieldAccess *field = expression -> method -> FieldAccessCast();
+        AstFieldAccess *field = method_call -> method -> FieldAccessCast();
         if (field)
         {
             AstFieldAccess *sub_field_access = field -> base -> FieldAccessCast();
@@ -3345,9 +3346,9 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
                  EmitMethodInvocation(field -> base -> MethodInvocationCast());
             else EmitExpression(field -> base);
         }
-        else if (expression -> method -> SimpleNameCast())
+        else if (method_call -> method -> SimpleNameCast())
         {
-            AstSimpleName *simple_name = expression -> method -> SimpleNameCast();
+            AstSimpleName *simple_name = method_call -> method -> SimpleNameCast();
             if (simple_name -> resolution_opt) // use resolution if available
                 EmitExpression(simple_name -> resolution_opt);
             else // must be field of current object, so load this
@@ -3357,8 +3358,8 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
     }
 
     int stack_words = 0; // words on stack needed for arguments
-    for (int i = 0; i < expression -> NumArguments(); i++)
-        stack_words += EmitExpression((AstExpression *) expression -> Argument(i));
+    for (int i = 0; i < method_call -> NumArguments(); i++)
+        stack_words += EmitExpression((AstExpression *) method_call -> Argument(i));
 
     PutOp(msym -> ACC_STATIC()
                 ? OP_INVOKESTATIC 

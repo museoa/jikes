@@ -318,6 +318,8 @@ MethodSymbol *Semantic::FindConstructor(TypeSymbol *containing_type, Ast *ast,
 
     delete [] argument;
 
+    constructor_set[0] -> ProcessMethodThrows((Semantic *) this, right_tok);
+
     return constructor_set[0];
 }
 
@@ -378,7 +380,7 @@ MethodSymbol *Semantic::FindMisspelledMethodName(TypeSymbol *type, AstMethodInvo
             int i;
             for (i = 0; i < method_call -> NumArguments(); i++)
             {
-                AstExpression *expr =  method_call -> Argument(i);
+                AstExpression *expr = method_call -> Argument(i);
                 if (! CanMethodInvocationConvert(method -> FormalParameter(i) -> Type(), expr -> Type()))
                     break;
             }
@@ -409,6 +411,24 @@ MethodSymbol *Semantic::FindMisspelledMethodName(TypeSymbol *type, AstMethodInvo
                                      ? misspelled_method
                                      : (MethodSymbol *) NULL);
 }
+
+
+//
+// This method is a mirror image of MemberAccessCheck.
+//
+bool Semantic::IsMethodAccessible(AstFieldAccess *field_access, TypeSymbol *base_type, MethodSymbol *method_symbol)
+{
+    TypeSymbol *this_type = ThisType(),
+               *containing_type = method_symbol -> containing_type;
+
+    return (this_type -> outermost_type == containing_type -> outermost_type) ||
+            method_symbol -> ACC_PUBLIC() ||
+            ((! method_symbol -> ACC_PRIVATE()) && containing_type -> ContainingPackage() == this_package) ||
+            (method_symbol -> ACC_PROTECTED() && (field_access -> base -> IsSuperExpression() ||
+                                                  (this_type -> HasProtectedAccessTo(containing_type) && 
+                                                   (base_type -> IsSubclass(this_type) || base_type -> IsOwner(this_type)))));
+}
+
 
 //
 // Search the type in question for a method. Note that name_symbol is an optional argument.
@@ -451,12 +471,13 @@ MethodSymbol *Semantic::FindMethodInType(TypeSymbol *type, AstMethodInvocation *
             if (! method -> IsTyped())
                 method -> ProcessMethodSignature((Semantic *) this, field_access -> identifier_token);
 
-            if (method_call -> NumArguments() == method -> NumFormalParameters())
+            if (method_call -> NumArguments() == method -> NumFormalParameters() &&
+                IsMethodAccessible(field_access, type_symbol, method))
             {
                 int i;
                 for (i = 0; i < method_call -> NumArguments(); i++)
                 {
-                    AstExpression *expr =  method_call -> Argument(i);
+                    AstExpression *expr = method_call -> Argument(i);
                     if (! CanMethodInvocationConvert(method -> FormalParameter(i) -> Type(), expr -> Type()))
                         break;
                 }
@@ -504,7 +525,10 @@ See comment above...
             TypeSymbol *super_type;
             MethodShadowSymbol *method_shadow;
 
-            for (super_type = type -> super; super_type; super_type = super_type -> super)
+            //
+            // Check whether or not the method we are looking fr is not an inaccessible private method.
+            //
+            for (super_type = type; super_type; super_type = super_type -> super)
             {
                 for (method_shadow = super_type -> expanded_method_table -> FindMethodShadowSymbol(name_symbol);
                      method_shadow; method_shadow = method_shadow -> next_method)
@@ -518,7 +542,7 @@ See comment above...
                         int i;
                         for (i = 0; i < method_call -> NumArguments(); i++)
                         {
-                            AstExpression *expr =  method_call -> Argument(i);
+                            AstExpression *expr = method_call -> Argument(i);
                             if (! CanMethodInvocationConvert(method -> FormalParameter(i) -> Type(), expr -> Type()))
                                 break;
                         }
@@ -538,11 +562,11 @@ See comment above...
                                                : SemanticError::METHOD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE),
                                method_call -> LeftToken(),
                                method_call -> RightToken(),
-                               name_symbol -> Name(),
+                               method_shadow -> method_symbol -> Header(),
                                super_type -> ContainingPackage() -> PackageName(),
                                super_type -> ExternalName(),
-                               type -> ContainingPackage() -> PackageName(),
-                               type -> ExternalName());
+                               ThisType() -> ContainingPackage() -> PackageName(),
+                               ThisType() -> ExternalName());
             }
             else
             {
@@ -651,7 +675,7 @@ void Semantic::SearchForMethodInEnvironment(Tuple<MethodSymbol *> &methods_found
                     int i;
                     for (i = 0; i < method_call -> NumArguments(); i++)
                     {
-                        AstExpression *expr =  method_call -> Argument(i);
+                        AstExpression *expr = method_call -> Argument(i);
                         if (! CanMethodInvocationConvert(method -> FormalParameter(i) -> Type(), expr -> Type()))
                             break;
                     }
@@ -1238,7 +1262,7 @@ VariableSymbol *Semantic::FindInstance(TypeSymbol *base_type, TypeSymbol *enviro
         rhs -> method                  = method_name;
         rhs -> left_parenthesis_token  = loc;
         rhs -> right_parenthesis_token = loc;
-        rhs -> symbol                  = TypeSymbol::GetReadAccessMethod(variable_symbol);
+        rhs -> symbol                  = type -> GetReadAccessMethod(variable_symbol);
         rhs -> AddArgument(parm); // TODO: WARNING: sharing of Ast subtree !!!
 
 
@@ -1252,10 +1276,10 @@ VariableSymbol *Semantic::FindInstance(TypeSymbol *base_type, TypeSymbol *enviro
         assign -> expression     = rhs;
         assign -> symbol         = lhs -> Type();
 
-        AstExpressionStatement *stmt = compilation_unit -> ast_pool -> GenExpressionStatement();
-        stmt -> expression          = assign;
-        stmt -> semicolon_token_opt = loc;
-        stmt -> is_reachable = true;
+        AstExpressionStatement *stmt  = compilation_unit -> ast_pool -> GenExpressionStatement();
+        stmt -> expression            = assign;
+        stmt -> semicolon_token_opt   = loc;
+        stmt -> is_reachable          = true;
         stmt -> can_complete_normally = true;
 
         this_block -> AddStatement(stmt);
@@ -1314,6 +1338,9 @@ AstExpression *Semantic::CreateAccessToType(Ast *source, TypeSymbol *environment
         resolution = compilation_unit -> ast_pool -> GenSimpleName(tok);
         resolution -> symbol = variable;
 
+        //
+        // TODO: Document this !!!
+        //
         if (ExplicitConstructorInvocation() -> SuperCallCast())
         {
             TypeSymbol *containing_type = this_type -> ContainingType();
@@ -1331,7 +1358,10 @@ AstExpression *Semantic::CreateAccessToType(Ast *source, TypeSymbol *environment
                 method_call -> method                  = method_name;
                 method_call -> left_parenthesis_token  = tok;
                 method_call -> right_parenthesis_token = tok;
-                method_call -> symbol                  = TypeSymbol::GetReadAccessMethod(variable);
+
+                assert(containing_type == variable -> owner -> TypeCast());
+
+                method_call -> symbol                  = containing_type -> GetReadAccessMethod(variable);
                 method_call -> AddArgument(resolution);
 
                 resolution = method_call;
@@ -1376,19 +1406,19 @@ void Semantic::CreateAccessToScopedVariable(AstSimpleName *simple_name, TypeSymb
         //
         // SimpleNameAccessCheck(simple_name, variable_symbol -> owner -> TypeCast(), variable_symbol);
         //
-        if (variable_symbol -> ACC_PRIVATE())
+        if (variable_symbol -> ACC_PRIVATE() || variable_symbol -> ACC_PROTECTED())
         {
-            AstFieldAccess *method_name = compilation_unit -> ast_pool -> GenFieldAccess();
-            method_name -> base = access_expression;
-            method_name -> dot_token = simple_name -> identifier_token;
+            AstFieldAccess *method_name     = compilation_unit -> ast_pool -> GenFieldAccess();
+            method_name -> base             = access_expression;
+            method_name -> dot_token        = simple_name -> identifier_token;
             method_name -> identifier_token = simple_name -> identifier_token;
-            method_name -> symbol = variable_symbol;
+            method_name -> symbol           = variable_symbol;
 
             AstMethodInvocation *method_call       = compilation_unit -> ast_pool -> GenMethodInvocation();
             method_call -> method                  = method_name;
             method_call -> left_parenthesis_token  = simple_name -> identifier_token;
             method_call -> right_parenthesis_token = simple_name -> identifier_token;
-            method_call -> symbol                  = TypeSymbol::GetReadAccessMethod(variable_symbol);
+            method_call -> symbol                  = environment_type -> GetReadAccessMethod(variable_symbol);
 
             if (! variable_symbol -> ACC_STATIC())
                 method_call -> AddArgument(access_expression); // TODO: WARNING: sharing of Ast subtree !!!
@@ -1397,11 +1427,11 @@ void Semantic::CreateAccessToScopedVariable(AstSimpleName *simple_name, TypeSymb
         }
         else
         {
-            AstFieldAccess *field_access = compilation_unit -> ast_pool -> GenFieldAccess();
-            field_access -> base = access_expression;
-            field_access -> dot_token = simple_name -> identifier_token;
+            AstFieldAccess *field_access     = compilation_unit -> ast_pool -> GenFieldAccess();
+            field_access -> base             = access_expression;
+            field_access -> dot_token        = simple_name -> identifier_token;
             field_access -> identifier_token = simple_name -> identifier_token;
-            field_access -> symbol = variable_symbol;
+            field_access -> symbol           = variable_symbol;
 
             simple_name -> resolution_opt = field_access;
         }
@@ -1436,10 +1466,10 @@ void Semantic::CreateAccessToScopedMethod(AstMethodInvocation *method_call, Type
         // SimpleNameAccessCheck(simple_name, method -> containing_type, method);
         //
         simple_name -> resolution_opt = access_expression;
-        if (method -> ACC_PRIVATE())
+        if (method -> ACC_PRIVATE() || method -> ACC_PROTECTED())
         {
             if (method -> ACC_STATIC())
-                method_call -> symbol = TypeSymbol::GetReadAccessMethod(method);
+                method_call -> symbol = environment_type -> GetReadAccessMethod(method);
             else
             {
                 AstMethodInvocation *old_method_call = method_call;
@@ -1451,13 +1481,69 @@ void Semantic::CreateAccessToScopedMethod(AstMethodInvocation *method_call, Type
                 method_call -> method                  = old_method_call -> method;
                 method_call -> left_parenthesis_token  = old_method_call -> left_parenthesis_token;
                 method_call -> right_parenthesis_token = old_method_call -> right_parenthesis_token;
-                method_call -> symbol                  = TypeSymbol::GetReadAccessMethod(method);
+                method_call -> symbol                  = environment_type -> GetReadAccessMethod(method);
                 method_call -> AddArgument(access_expression);
                 for (int i = 0; i < old_method_call -> NumArguments(); i++)
                     method_call -> AddArgument(old_method_call -> Argument(i));
 
                 old_method_call -> symbol = method;
                 old_method_call -> resolution_opt = method_call;
+            }
+        }
+    }
+
+    return;
+}
+
+
+void Semantic::CheckSimpleName(AstSimpleName *simple_name, SemanticEnvironment *where_found)
+{
+    VariableSymbol *variable_symbol = simple_name -> symbol -> VariableCast();
+
+    assert(variable_symbol);
+
+    if (StaticRegion())
+    {
+        if (! (variable_symbol -> IsLocal() || variable_symbol -> ACC_STATIC()))
+        {
+            ReportSemError(SemanticError::NAME_NOT_CLASS_VARIABLE,
+                           simple_name -> identifier_token,
+                           simple_name -> identifier_token,
+                           lex_stream -> NameString(simple_name -> identifier_token));
+        }
+        else if (! variable_symbol -> IsDeclarationComplete())
+        {
+            ReportSemError(SemanticError::NAME_NOT_YET_AVAILABLE,
+                           simple_name -> identifier_token,
+                           simple_name -> identifier_token,
+                           lex_stream -> NameString(simple_name -> identifier_token));
+        }
+    }
+    else if (! variable_symbol -> ACC_STATIC()) // an instance variable?
+    {
+        TypeSymbol *containing_type = variable_symbol -> owner -> TypeCast(); // an instance field member ?
+
+        if (containing_type) // variable must be a field
+        {
+            if (containing_type == ThisType() && (! variable_symbol -> IsDeclarationComplete())) // forward reference?
+            {
+                ReportSemError(SemanticError::NAME_NOT_YET_AVAILABLE,
+                               simple_name -> identifier_token,
+                               simple_name -> identifier_token,
+                               lex_stream -> NameString(simple_name -> identifier_token));
+            }
+            else if (ExplicitConstructorInvocation() && where_found == state_stack.Top())
+            {
+                //
+                // If the variable in question is an instance variable that is
+                // declared in this_type (this_type is definitely a class) or
+                // one of its super classes, then we have an error:
+                //
+                ReportSemError(SemanticError::INSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
+                               simple_name -> identifier_token,
+                               simple_name -> identifier_token,
+                               lex_stream -> NameString(simple_name -> identifier_token),
+                               containing_type -> Name());
             }
         }
     }
@@ -1477,6 +1563,9 @@ void Semantic::ProcessSimpleName(Ast *expr)
     {
         simple_name -> symbol = variable_symbol;
 
+        //
+        // Make sure that variable has been fully prepared
+        //
         if (! variable_symbol -> IsTyped())
             variable_symbol -> ProcessVariableSignature((Semantic *) this, simple_name -> identifier_token);
 
@@ -1506,6 +1595,8 @@ void Semantic::ProcessSimpleName(Ast *expr)
             }
         }
 
+        CheckSimpleName(simple_name, where_found);
+
         //
         // If the variable belongs to an outer type, add the proper
         // pointer dereferences (and method access in the case of a
@@ -1513,58 +1604,6 @@ void Semantic::ProcessSimpleName(Ast *expr)
         //
         if (where_found != state_stack.Top())
             CreateAccessToScopedVariable(simple_name, where_found -> Type());
-
-        // 
-        // CreateAccessToScopedVariable did not detect an error?
-        // 
-        if (simple_name -> symbol != control.no_type)
-        {
-            if (StaticRegion())
-            {
-                if (! (variable_symbol -> IsLocal() || variable_symbol -> ACC_STATIC()))
-                {
-                    ReportSemError(SemanticError::NAME_NOT_CLASS_VARIABLE,
-                                   simple_name -> identifier_token,
-                                   simple_name -> identifier_token,
-                                   lex_stream -> NameString(simple_name -> identifier_token));
-                }
-                else if (! variable_symbol -> IsDeclarationComplete())
-                {
-                    ReportSemError(SemanticError::NAME_NOT_YET_AVAILABLE,
-                                   simple_name -> identifier_token,
-                                   simple_name -> identifier_token,
-                                   lex_stream -> NameString(simple_name -> identifier_token));
-                }
-            }
-            else if (! variable_symbol -> ACC_STATIC()) // an instance variable?
-            {
-                TypeSymbol *containing_type = variable_symbol -> owner -> TypeCast(); // an instance field member ?
-
-                if (containing_type)
-                {
-                    if (containing_type == this_type && (! variable_symbol -> IsDeclarationComplete()))
-                    {
-                        ReportSemError(SemanticError::NAME_NOT_YET_AVAILABLE,
-                                       simple_name -> identifier_token,
-                                       simple_name -> identifier_token,
-                                       lex_stream -> NameString(simple_name -> identifier_token));
-                    }
-                    else if (ExplicitConstructorInvocation() && where_found == state_stack.Top())
-                    {
-                        //
-                        // If the variable in question is an instance variable that is
-                        // declared in this_type (this_type is definitely a class) or
-                        // one of its super classes, then we have an error:
-                        //
-                        ReportSemError(SemanticError::INSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
-                                       simple_name -> identifier_token,
-                                       simple_name -> identifier_token,
-                                       lex_stream -> NameString(simple_name -> identifier_token),
-                                       containing_type -> Name());
-                    }
-                }
-            }
-        }
     }
     else
     {
@@ -1583,7 +1622,13 @@ void Semantic::ProcessSimpleName(Ast *expr)
             method = method_shadow -> method_symbol;
             TypeSymbol *containing_type = method -> containing_type;
 
-            if (method -> NumFormalParameters((Semantic *) this, simple_name -> identifier_token) == 0)
+            //
+            // Make sure that method has been fully prepared
+            //
+            if (! method -> IsTyped())
+                method -> ProcessMethodSignature((Semantic *) this, simple_name -> identifier_token);
+
+            if (method -> NumFormalParameters() == 0)
                 break;
         }
                                                    
@@ -1743,7 +1788,7 @@ void Semantic::ConstructorAccessCheck(AstClassInstanceCreationExpression *class_
 }
 
 
-void Semantic::MemberAccessCheck(AstFieldAccess *field_access, TypeSymbol *base_type, TypeSymbol *containing_type, Symbol *symbol)
+void Semantic::MemberAccessCheck(AstFieldAccess *field_access, TypeSymbol *base_type, Symbol *symbol)
 {
     TypeSymbol *this_type = ThisType();
 
@@ -1753,6 +1798,9 @@ void Semantic::MemberAccessCheck(AstFieldAccess *field_access, TypeSymbol *base_
     assert(variable_symbol || method_symbol);
 
     AccessFlags *flags = (variable_symbol ? (AccessFlags *) variable_symbol : (AccessFlags *) method_symbol);
+    TypeSymbol *containing_type = (variable_symbol ? variable_symbol -> owner -> TypeCast() : method_symbol -> containing_type);
+
+    assert(containing_type);
 
     AstExpression *base = field_access -> base;
     if (! (containing_type -> ACC_PUBLIC() || base_type -> ContainingPackage() == containing_type -> ContainingPackage()))
@@ -1780,7 +1828,7 @@ void Semantic::MemberAccessCheck(AstFieldAccess *field_access, TypeSymbol *base_
             //       
             // if (! (containing_type -> ContainingPackage() == this_package || this_type -> IsSubclass(containing_type)))
             //
-            if (! (base -> SuperExpressionCast() ||
+            if (! (base -> IsSuperExpression() ||
                    containing_type -> ContainingPackage() == this_package ||
                    (this_type -> HasProtectedAccessTo(containing_type) && 
                     (base_type -> IsSubclass(this_type) || base_type -> IsOwner(this_type)))))
@@ -1861,11 +1909,13 @@ void Semantic::SimpleNameAccessCheck(AstSimpleName *simple_name, TypeSymbol *con
         }
     }
 
+
+
     return;
 }
 
 
-void Semantic::FindVariableMember(TypeSymbol *type, AstFieldAccess *field_access)
+void Semantic::FindVariableMember(TypeSymbol *type, TypeSymbol *environment_type, AstFieldAccess *field_access)
 {
     TypeSymbol *this_type = ThisType();
 
@@ -1906,6 +1956,9 @@ void Semantic::FindVariableMember(TypeSymbol *type, AstFieldAccess *field_access
         VariableSymbol *variable_symbol = FindVariableInType(type, field_access);
         if (variable_symbol)
         {
+            if (! variable_symbol -> IsTyped())
+                variable_symbol -> ProcessVariableSignature((Semantic *) this, field_access -> identifier_token);
+
             //
             // If a variable is FINAL and initialized with a constant expression,
             // we substitute the expression here. JLS section 15.27, pp 381-382.
@@ -1950,8 +2003,12 @@ void Semantic::FindVariableMember(TypeSymbol *type, AstFieldAccess *field_access
             }
 
             TypeSymbol *containing_type = (TypeSymbol *) variable_symbol -> owner;
-            if (variable_symbol -> ACC_PRIVATE() && // access to an private variable in an enclosing type ?
-                this_type != containing_type && this_type -> outermost_type == containing_type -> outermost_type)
+            //
+            // Access to an private or protected variable in an enclosing type ?
+            //
+            if (this_type -> outermost_type == environment_type -> outermost_type &&
+                ((variable_symbol -> ACC_PRIVATE() && this_type != containing_type) ||
+                 (variable_symbol -> ACC_PROTECTED() && (! this_type -> IsSubclass(containing_type)))))
             {
                 if (field_access -> IsConstant())
                     field_access -> symbol = variable_symbol;
@@ -1967,7 +2024,7 @@ void Semantic::FindVariableMember(TypeSymbol *type, AstFieldAccess *field_access
                     p -> method                  = method_name;
                     p -> left_parenthesis_token  = field_access -> identifier_token;
                     p -> right_parenthesis_token = field_access -> identifier_token;
-                    p -> symbol                  = TypeSymbol::GetReadAccessMethod(variable_symbol);
+                    p -> symbol                  = environment_type -> GetReadAccessMethod(variable_symbol);
 
                     if (! variable_symbol -> ACC_STATIC())
                         p -> AddArgument(field_access -> base);
@@ -1979,7 +2036,7 @@ void Semantic::FindVariableMember(TypeSymbol *type, AstFieldAccess *field_access
             else
             {
                 field_access -> symbol = variable_symbol;
-                MemberAccessCheck(field_access, type, containing_type, variable_symbol);
+                MemberAccessCheck(field_access, type, variable_symbol);
             }
         }
         else
@@ -2028,12 +2085,17 @@ void Semantic::ProcessAmbiguousName(Ast *name)
         VariableSymbol *variable_symbol = FindVariableInEnvironment(where_found, state_stack.Top(), simple_name -> identifier_token);
         if (variable_symbol)
         {
+            if (! variable_symbol -> IsTyped())
+                variable_symbol -> ProcessVariableSignature((Semantic *) this, simple_name -> identifier_token);
+
             //
             // A variable_symbol that is FINAL may have an initial value.
             // If variable_symbol is not final then its initial value is NULL.
             //
             simple_name -> value = variable_symbol -> initial_value;
             simple_name -> symbol = variable_symbol;
+
+            CheckSimpleName(simple_name, where_found);
 
             //
             // If the variable belongs to an outer type, add the proper
@@ -2042,44 +2104,7 @@ void Semantic::ProcessAmbiguousName(Ast *name)
             //
             if (where_found != state_stack.Top())
                 CreateAccessToScopedVariable(simple_name, where_found -> Type());
-
-            if (StaticRegion())
-            {
-                if (! (variable_symbol -> IsLocal() || variable_symbol -> ACC_STATIC()))
-                {
-                    ReportSemError(SemanticError::NAME_NOT_CLASS_VARIABLE,
-                                   simple_name -> identifier_token,
-                                   simple_name -> identifier_token,
-                                   lex_stream -> NameString(simple_name -> identifier_token));
-                }
-                else if (! variable_symbol -> IsDeclarationComplete())
-                {
-                    ReportSemError(SemanticError::NAME_NOT_YET_AVAILABLE,
-                                   simple_name -> identifier_token,
-                                   simple_name -> identifier_token,
-                                   lex_stream -> NameString(simple_name -> identifier_token));
-                }
-            }
-
-            if (ExplicitConstructorInvocation() && (! variable_symbol -> ACC_STATIC()))
-            {
-                //
-                // If the variable in question is an instance variable
-                // that is declared in this_type (this_type is definitely
-                // a class) or one of its super classes, then we have an error -> 
-                //
-                TypeSymbol *type = variable_symbol -> owner -> TypeCast();
-                if (type)
-                {
-                    ReportSemError(SemanticError::INSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
-                                   simple_name -> identifier_token,
-                                   simple_name -> identifier_token,
-                                   lex_stream -> NameString(simple_name -> identifier_token),
-                                   type -> Name());
-                }
-            }
         }
-
         //
         // ...Otherwise, if a type of that name is declared in the compilation unit (7.3) containing
         // the Identifier, either by a single-type-import declaration (7.5.1) or by a class or interface
@@ -2226,13 +2251,13 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                     else
                     {
                         AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(field_access -> identifier_token);
-                        simple_name -> symbol = outermost_type;
+                        simple_name -> symbol      = outermost_type;
 
-                        AstFieldAccess *method_access = compilation_unit -> ast_pool -> GenFieldAccess();
-                        method_access -> base = simple_name;
-                        method_access -> dot_token = field_access -> identifier_token;
+                        AstFieldAccess *method_access     = compilation_unit -> ast_pool -> GenFieldAccess();
+                        method_access -> base             = simple_name;
+                        method_access -> dot_token        = field_access -> identifier_token;
                         method_access -> identifier_token = field_access -> identifier_token;
-                        method_access -> symbol = variable_symbol; // the variable in question
+                        method_access -> symbol           = variable_symbol; // the variable in question
 
                         //
                         // Recall that the variable is static...
@@ -2243,10 +2268,10 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                         method_call -> method                  = method_access;
                         method_call -> left_parenthesis_token  = field_access -> identifier_token;
                         method_call -> right_parenthesis_token = field_access -> identifier_token;
-                        method_call -> symbol                  = TypeSymbol::GetWriteAccessMethod(variable_symbol);
+                        method_call -> symbol                  = outermost_type -> GetWriteAccessMethod(variable_symbol);
 
                         field_access -> resolution_opt = method_call;
-                        field_access -> symbol = TypeSymbol::GetReadAccessMethod(variable_symbol);
+                        field_access -> symbol = outermost_type -> GetReadAccessMethod(variable_symbol);
                     }
                 }
             }
@@ -2357,7 +2382,7 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                 }
                 else
                 {
-                    FileSymbol *file_symbol = Control::GetFile(package, name_symbol, control.option.depend);
+                    FileSymbol *file_symbol = Control::GetFile(control, package, name_symbol);
                     if (file_symbol)
                     {
                         type = ReadType(file_symbol, package, name_symbol, field_access -> identifier_token);
@@ -2395,7 +2420,7 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                 else
                 {
                     type = sub_field_access -> Type() -> super;
-                    FindVariableMember(type, field_access);
+                    FindVariableMember(type, sub_field_access -> Type(), field_access);
                 }
             }
             //
@@ -2432,6 +2457,9 @@ void Semantic::ProcessAmbiguousName(Ast *name)
 
                     if (variable_symbol)
                     {
+                        if (! variable_symbol -> IsTyped())
+                            variable_symbol -> ProcessVariableSignature((Semantic *) this, field_access -> identifier_token);
+
                         if (base -> IsName()) // a type name (as opposed to an expression) ? 
                         {
                             if (variable_symbol -> ACC_STATIC())
@@ -2485,18 +2513,22 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                         }
 
                         TypeSymbol *containing_type = (TypeSymbol *) variable_symbol -> owner;
-                        if (variable_symbol -> ACC_PRIVATE() &&
-                            this_type != containing_type && this_type -> outermost_type == containing_type -> outermost_type)
+                        //
+                        // Access to a private or protected variable in an enclosing type ?
+                        //
+                        if (this_type -> outermost_type == type -> outermost_type &&
+                            ((variable_symbol -> ACC_PRIVATE() && this_type != containing_type) ||
+                             (variable_symbol -> ACC_PROTECTED() && (! this_type -> IsSubclass(containing_type)))))
                         {
                             if (field_access -> IsConstant())
                                 field_access -> symbol = variable_symbol;
                             else
                             {
-                                AstFieldAccess *method_name = compilation_unit -> ast_pool -> GenFieldAccess();
-                                method_name -> base = field_access -> base;  // TODO: WARNING: sharing of Ast subtree !!!
-                                method_name -> dot_token = field_access -> identifier_token;
+                                AstFieldAccess *method_name     = compilation_unit -> ast_pool -> GenFieldAccess();
+                                method_name -> base             = field_access -> base;  // TODO: WARNING: sharing of Ast subtree !!!
+                                method_name -> dot_token        = field_access -> identifier_token;
                                 method_name -> identifier_token = field_access -> identifier_token;
-                                method_name -> symbol = variable_symbol; // the variable in question
+                                method_name -> symbol           = variable_symbol; // the variable in question
 
                                 //
                                 // variable_symbol is static.
@@ -2505,7 +2537,7 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                                 p -> method                  = method_name;
                                 p -> left_parenthesis_token  = field_access -> identifier_token;
                                 p -> right_parenthesis_token = field_access -> identifier_token;
-                                p -> symbol                  = TypeSymbol::GetReadAccessMethod(variable_symbol);
+                                p -> symbol                  = type -> GetReadAccessMethod(variable_symbol);
 
                                 if (! variable_symbol -> ACC_STATIC())
                                     p -> AddArgument(field_access -> base); // TODO: WARNING: sharing of Ast subtree !!!
@@ -2517,7 +2549,7 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                         else
                         {
                             field_access -> symbol = variable_symbol;
-                            MemberAccessCheck(field_access, type, containing_type, variable_symbol);
+                            MemberAccessCheck(field_access, type, variable_symbol);
                         }
                     }
                     else 
@@ -2538,16 +2570,25 @@ void Semantic::ProcessAmbiguousName(Ast *name)
             }
             //
             // ...If the name to the left of the '.' is reclassified as an ExpressionName, then this
-            // AmbiguousName is reclassified as an ExpressionName
+            // AmbiguousName is reclassified as an instance member field reference. Note that we have two subcases to
+            // consider: the case where the subexpression to the left is resolved to a variable and
+            // the case where the subexpression is resolved to a method call.
             //
-            else if (type = (TypeSymbol *)
-                            (symbol -> VariableCast()
-                                     ? symbol -> VariableCast() -> Type((Semantic *) this, field_access -> dot_token)
-                                     : (symbol -> MethodCast()
-                                                ? symbol -> MethodCast() -> Type((Semantic *) this, field_access -> dot_token)
-                                                : NULL)))
+            else if (symbol -> VariableCast())
             {
-                FindVariableMember(type, field_access);
+                assert(symbol -> VariableCast() -> IsTyped());
+
+                type = symbol -> VariableCast() -> Type();
+
+                FindVariableMember(type, type, field_access);
+            }
+            else if (symbol -> MethodCast())
+            {
+                assert(symbol -> MethodCast() -> IsTyped());
+
+                type = symbol -> MethodCast() -> Type();
+
+                FindVariableMember(type, type, field_access);
             }
             else // illegal Name !!!
             {
@@ -2808,7 +2849,7 @@ void Semantic::ProcessArrayAccess(Ast *expr)
 }
 
 
-MethodSymbol *Semantic::FindMethodMember(TypeSymbol *type, AstMethodInvocation *method_call)
+MethodSymbol *Semantic::FindMethodMember(TypeSymbol *type, TypeSymbol *environment_type, AstMethodInvocation *method_call)
 {
     MethodSymbol *method = NULL;
     AstFieldAccess *field_access = method_call -> method -> FieldAccessCast();
@@ -2842,11 +2883,18 @@ MethodSymbol *Semantic::FindMethodMember(TypeSymbol *type, AstMethodInvocation *
 
         if (method)
         {
-            if (method -> ACC_PRIVATE() && this_type != method -> containing_type
-                                        && this_type -> outermost_type == method -> containing_type -> outermost_type)
+            if (! method -> IsTyped())
+                method -> ProcessMethodSignature((Semantic *) this, field_access -> identifier_token);
+
+            //
+            // Access to an private or protected method in an enclosing type ?
+            //
+            if (this_type -> outermost_type == environment_type -> outermost_type &&
+                ((method -> ACC_PRIVATE() && this_type != method -> containing_type) ||
+                 (method -> ACC_PROTECTED() && (! this_type -> IsSubclass(method -> containing_type)))))
             {
                 if (method -> ACC_STATIC())
-                    method_call -> symbol = TypeSymbol::GetReadAccessMethod(method);
+                    method_call -> symbol = environment_type -> GetReadAccessMethod(method);
                 else
                 {
                     AstMethodInvocation *old_method_call = method_call;
@@ -2858,7 +2906,7 @@ MethodSymbol *Semantic::FindMethodMember(TypeSymbol *type, AstMethodInvocation *
                     method_call -> method                  = old_method_call -> method;
                     method_call -> left_parenthesis_token  = old_method_call -> left_parenthesis_token;
                     method_call -> right_parenthesis_token = old_method_call -> right_parenthesis_token;
-                    method_call -> symbol = TypeSymbol::GetReadAccessMethod(method);
+                    method_call -> symbol                  = environment_type -> GetReadAccessMethod(method);
                     method_call -> AddArgument(field_access -> base);
                     for (int i = 0; i < old_method_call -> NumArguments(); i++)
                         method_call -> AddArgument(old_method_call -> Argument(i));
@@ -2870,7 +2918,7 @@ MethodSymbol *Semantic::FindMethodMember(TypeSymbol *type, AstMethodInvocation *
             else
             {
                 method_call -> symbol = method;
-                MemberAccessCheck(field_access, type, method -> containing_type, method);
+                MemberAccessCheck(field_access, type, method);
             }
         }
         else method_call -> symbol = control.no_type;
@@ -2910,6 +2958,9 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
             method_call -> symbol = control.no_type;
         else
         {
+            if (! method -> IsTyped())
+                method -> ProcessMethodSignature((Semantic *) this, simple_name -> identifier_token);
+
             if (! method -> ACC_STATIC())
             {
                 //
@@ -2994,7 +3045,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
             }
             else
             {
-                MethodSymbol *method = FindMethodMember(sub_field_access -> Type() -> super, method_call);
+                MethodSymbol *method = FindMethodMember(sub_field_access -> Type() -> super, sub_field_access -> Type(), method_call);
 
                 //
                 // TODO: This test was added in order to pass the test in section 8.4.3.1, page 159.
@@ -3040,6 +3091,9 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
 
                 if (method)
                 {
+                    if (! method -> IsTyped())
+                        method -> ProcessMethodSignature((Semantic *) this, base -> LeftToken());
+
                     if (base -> IsName() && (! method -> ACC_STATIC()))
                     {
                         ReportSemError(SemanticError::METHOD_NOT_CLASS_METHOD,
@@ -3052,17 +3106,21 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                     //       All I can find in the spec is that one example. Nowhere else could I find a
                     //       more formal statement.
                     //
-                    else if (base -> SuperExpressionCast() && method -> ACC_ABSTRACT())
+                    else if (base -> IsSuperExpression() && method -> ACC_ABSTRACT())
                         ReportSemError(SemanticError::ABSTRACT_METHOD_INVOCATION,
                                        field_access -> LeftToken(),
                                        field_access -> identifier_token,
                                        lex_stream -> NameString(field_access -> identifier_token));
 
-                    if (method -> ACC_PRIVATE() && this_type != method -> containing_type
-                                                && this_type -> outermost_type == method -> containing_type -> outermost_type)
+                    //
+                    // Access to an private or protected method in an enclosing type ?
+                    //
+                    if (this_type -> outermost_type == type -> outermost_type &&
+                        ((method -> ACC_PRIVATE() && this_type != method -> containing_type) ||
+                         (method -> ACC_PROTECTED() && (! this_type -> IsSubclass(method -> containing_type)))))
                     {
                         if (method -> ACC_STATIC())
-                            method_call -> symbol = TypeSymbol::GetReadAccessMethod(method);
+                            method_call -> symbol = type -> GetReadAccessMethod(method);
                         else
                         {
                             AstMethodInvocation *old_method_call = method_call;
@@ -3074,7 +3132,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                             method_call -> method                  = old_method_call -> method;
                             method_call -> left_parenthesis_token  = old_method_call -> left_parenthesis_token;
                             method_call -> right_parenthesis_token = old_method_call -> right_parenthesis_token;
-                            method_call -> symbol = TypeSymbol::GetReadAccessMethod(method);
+                            method_call -> symbol                  = type -> GetReadAccessMethod(method);
                             method_call -> AddArgument(field_access -> base);
                             for (int i = 0; i < old_method_call -> NumArguments(); i++)
                                 method_call -> AddArgument(old_method_call -> Argument(i));
@@ -3086,28 +3144,40 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                     else
                     {
                         method_call -> symbol = method;
-                        MemberAccessCheck(field_access, type, method -> containing_type, method);
+                        MemberAccessCheck(field_access, type, method);
                     }
                 }
                 else method_call -> symbol = control.no_type;
             }
         }
-        else if (type = (TypeSymbol *)
-                        (symbol -> VariableCast()
-                                 ? symbol -> VariableCast() -> Type((Semantic *) this, field_access -> dot_token)
-                                 : (symbol -> MethodCast()
-                                            ? symbol -> MethodCast() -> Type((Semantic *) this, field_access -> dot_token)
-                                            : NULL)))
+        //
+        // ...If the name to the left of the '.' is reclassified as an ExpressionName, then this
+        // method call is reclassified as an instance member method call. Note that we have two subcases to
+        // consider: the case where the subexpression to the left is resolved to a variable and
+        // the case where the subexpression is resolved to a method call.
+        //
+        else if (symbol -> VariableCast())
         {
-            (void) FindMethodMember(type, method_call);
+            assert(symbol -> VariableCast() -> IsTyped());
+
+            type = symbol -> VariableCast() -> Type();
+
+            (void) FindMethodMember(type, type, method_call);
+        }
+        else if (symbol -> MethodCast())
+        {
+            assert(symbol -> MethodCast() -> IsTyped());
+
+            type = symbol -> MethodCast() -> Type();
+
+            (void) FindMethodMember(type, type, method_call);
         }
         else // illegal Name !!!
         {
             PackageSymbol *package = symbol -> PackageCast();
             NameSymbol *name_symbol = lex_stream -> NameSymbol(field_access -> identifier_token);
 
-            if (package && (package -> FindTypeSymbol(name_symbol) ||
-                            Control::GetFile(package, name_symbol, control.option.depend)))
+            if (package && (package -> FindTypeSymbol(name_symbol) || Control::GetFile(control, package, name_symbol)))
             {
                 ReportSemError(SemanticError::TYPE_NOT_METHOD,
                                field_access -> identifier_token,
@@ -3136,9 +3206,11 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
     {
         MethodSymbol *method = (MethodSymbol *) method_call -> symbol;
 
+        method -> ProcessMethodThrows((Semantic *) this, method_call -> method -> RightToken()); 
+
         if (exception_set)
         {
-            for (int i = method -> NumThrows((Semantic *) this, method_call -> method -> RightToken()) - 1; i >= 0; i--)
+            for (int i = method -> NumThrows() - 1; i >= 0; i--)
                 exception_set -> AddElement(method -> Throws(i));
 // TODO: what to do?
 //            if (! method -> ACC_STATIC())
@@ -3160,7 +3232,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
         //
         if (! (this_type -> Anonymous() && ThisMethod() && ThisMethod() -> Identity() == control.block_init_name_symbol))
         {
-            for (int k = method -> NumThrows((Semantic *) this, method_call -> method -> RightToken()) - 1; k >= 0; k--)
+            for (int k = method -> NumThrows() - 1; k >= 0; k--)
             {
                 TypeSymbol *exception = method -> Throws(k);
                 if (! CatchableException(exception))
@@ -3194,16 +3266,10 @@ void Semantic::ProcessMethodInvocation(Ast *expr)
     }
 
     if (no_bad_argument)
-    {
-        ProcessMethodName(method_call);
-        if (method_call -> symbol != control.no_type)
-        {
-            MethodSymbol *method = (MethodSymbol *) method_call -> symbol;
-            if (! method -> IsTyped())
-                method -> ProcessMethodSignature((Semantic *) this, method_call -> left_parenthesis_token);
-        }
-    }
+         ProcessMethodName(method_call);
     else method_call -> symbol = control.no_type;
+
+    assert(method_call -> symbol == control.no_type || ((MethodSymbol *) method_call -> symbol) -> IsTyped());
 
     return;
 }
@@ -3318,7 +3384,7 @@ void Semantic::UpdateGeneratedLocalConstructor(MethodSymbol *constructor)
     //
     //
     AstConstructorDeclaration *constructor_declaration = (AstConstructorDeclaration *)
-                                                          constructor -> method_or_constructor_declaration;
+                                                         constructor -> method_or_constructor_declaration;
 
     assert(constructor_declaration -> ConstructorDeclarationCast());
 
@@ -3349,15 +3415,15 @@ void Semantic::UpdateGeneratedLocalConstructor(MethodSymbol *constructor)
             rhs -> symbol = symbol;
 
             AstAssignmentExpression *assign = compilation_unit -> ast_pool
-                                                                -> GenAssignmentExpression(AstAssignmentExpression::EQUAL,
-                                                                                            constructor_block -> left_brace_token);
+                                                               -> GenAssignmentExpression(AstAssignmentExpression::EQUAL,
+                                                                                          constructor_block -> left_brace_token);
             assign -> left_hand_side = lhs;
             assign -> expression     = rhs;
             assign -> symbol         = lhs -> Type();
 
             AstExpressionStatement *stmt = compilation_unit -> ast_pool -> GenExpressionStatement();
-            stmt -> expression          = assign;
-            stmt -> semicolon_token_opt = constructor_block -> left_brace_token;
+            stmt -> expression           = assign;
+            stmt -> semicolon_token_opt  = constructor_block -> left_brace_token;
 
             stmt -> is_reachable = true;
             stmt -> can_complete_normally = true;
@@ -3374,7 +3440,7 @@ void Semantic::UpdateGeneratedLocalConstructor(MethodSymbol *constructor)
 
     assert(! constructor -> IsGeneratedLocalConstructor());
 
-    AstMethodInvocation *method_call = compilation_unit -> ast_pool -> GenMethodInvocation();
+    AstMethodInvocation *method_call       = compilation_unit -> ast_pool -> GenMethodInvocation();
     method_call -> method                  = simple_name;
     method_call -> left_parenthesis_token  = constructor_block -> left_brace_token;
     method_call -> right_parenthesis_token = constructor_block -> left_brace_token;
@@ -3400,11 +3466,11 @@ void Semantic::UpdateGeneratedLocalConstructor(MethodSymbol *constructor)
         method_call -> AddArgument(simple_name);
     }
 
-    AstExpressionStatement *stmt = compilation_unit -> ast_pool -> GenExpressionStatement();
-    stmt -> expression          = method_call;
-    stmt -> semicolon_token_opt = constructor_block -> left_brace_token;
+    AstExpressionStatement *stmt  = compilation_unit -> ast_pool -> GenExpressionStatement();
+    stmt -> expression            = method_call;
+    stmt -> semicolon_token_opt   = constructor_block -> left_brace_token;
 
-    stmt -> is_reachable = true;
+    stmt -> is_reachable          = true;
     stmt -> can_complete_normally = true;
 
     constructor_block -> original_constructor_invocation = stmt;
@@ -3525,7 +3591,7 @@ void Semantic::UpdateLocalConstructors(TypeSymbol *inner_type)
                             {
                                 VariableSymbol *local = target_local_type -> ConstructorParameter(j) -> accessed_local;
                                 AstSimpleName *simple_name = compilation_unit -> ast_pool
-                                                                               -> GenSimpleName(class_creation -> new_token);
+                                                                              -> GenSimpleName(class_creation -> new_token);
                                 simple_name -> symbol = local;
                                 if (source_local_type != target_local_type)
                                 {
@@ -3544,7 +3610,7 @@ void Semantic::UpdateLocalConstructors(TypeSymbol *inner_type)
                                 VariableSymbol *local = target_local_type -> ConstructorParameter(j) -> accessed_local;
 
                                 AstSimpleName *simple_name = compilation_unit -> ast_pool
-                                                                               -> GenSimpleName(class_creation -> new_token);
+                                                                              -> GenSimpleName(class_creation -> new_token);
                                 simple_name -> symbol = (env -> symbol_table.FindVariableSymbol(local -> Identity()) == local
                                                               ? local
                                                               : source_local_type -> FindOrInsertLocalShadow(local));
@@ -3640,6 +3706,8 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression *class
         return;
     }
 
+    assert(super_constructor -> IsTyped());
+
     //
     // Make constructor symbol. The associated symbol table will not contain too many elements...
     //
@@ -3656,7 +3724,7 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression *class
     // Report error is super constructor has throws clause, but add the exceptions to the local throws
     // clause to avoid spurious errors later !!!
     //
-    int num_throws = super_constructor -> NumThrows((Semantic *) this, left_loc);
+    int num_throws = super_constructor -> NumThrows();
     if (num_throws > 0)
     {
         for (int i = 0; i < num_throws; i++)
@@ -3700,7 +3768,7 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression *class
     //
     //
     //
-    AstSuperCall *super_call             = compilation_unit -> ast_pool -> GenSuperCall();
+    AstSuperCall *super_call              = compilation_unit -> ast_pool -> GenSuperCall();
     super_call -> base_opt                = class_creation -> base_opt; // save initial base_opt
     super_call -> dot_token_opt           = class_creation -> new_token;
     super_call -> super_token             = class_creation -> new_token;
@@ -3713,42 +3781,62 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression *class
     super_call -> symbol                  = super_constructor;
 
     //
-    // If it is in a static region, the anonymous class does not need a this$0 argument
+    // If we are in a static region, the anonymous constructor does not need a this$0 argument.
+    // Otherwise, a this$0 argument that points to an instance of the immediately enclosing
+    // class is required.
     //
-    class_creation -> base_opt = (anonymous_type -> ACC_STATIC()
-                                           ? (AstExpression *) NULL
-                                           : CreateAccessToType(class_creation, anonymous_type -> ContainingType()));
+    if (anonymous_type -> ACC_STATIC())
+        class_creation -> base_opt = NULL;
+    else
+    {
+        //
+        // Within an explicit constructor invocation, a class that is immediately nested
+        // in the class being created is not accessible.
+        //
+        if (ExplicitConstructorInvocation() && anonymous_type -> ContainingType() == ThisType())
+        {
+            ReportSemError(SemanticError::INNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
+                           class_creation -> LeftToken(),
+                           class_creation -> RightToken(),
+                           anonymous_type -> ContainingPackage() -> PackageName(),
+                           anonymous_type -> ExternalName(),
+                           ThisType() -> ContainingPackage() -> PackageName(),
+                           ThisType() -> ExternalName());
+            class_creation -> base_opt = NULL;
+        }
+        else class_creation -> base_opt = CreateAccessToType(class_creation, anonymous_type -> ContainingType());
+    }
 
     AstClassBody *class_body = class_creation -> class_body_opt;
 
     AstReturnStatement *return_statement = compilation_unit -> ast_pool -> GenReturnStatement();
-    return_statement -> return_token = class_body -> left_brace_token;
-    return_statement -> expression_opt = NULL;
-    return_statement -> semicolon_token = class_body -> left_brace_token;
-    return_statement -> is_reachable = true;
+    return_statement -> return_token     = class_body -> left_brace_token;
+    return_statement -> expression_opt   = NULL;
+    return_statement -> semicolon_token  = class_body -> left_brace_token;
+    return_statement -> is_reachable     = true;
 
-    AstBlock *block = compilation_unit -> ast_pool -> GenBlock();
-    block -> block_symbol = constructor -> block_symbol -> InsertBlockSymbol(1); // this symbol table will be empty
-    block -> AllocateBlockStatements(1); // this block contains one statement
-    block -> left_brace_token  = class_body -> left_brace_token;
-    block -> right_brace_token = class_body -> left_brace_token;
+    AstBlock *block                = compilation_unit -> ast_pool -> GenBlock();
+    block -> block_symbol          = constructor -> block_symbol -> InsertBlockSymbol(1); // this symbol table will be empty
+    block -> left_brace_token      = class_body -> left_brace_token;
+    block -> right_brace_token     = class_body -> left_brace_token;
 
-    block -> is_reachable = true;
+    block -> is_reachable          = true;
     block -> can_complete_normally = false;
+    block -> AllocateBlockStatements(1); // this block contains one statement
     block -> AddStatement(return_statement);
 
-    AstConstructorBlock *constructor_block                  = compilation_unit -> ast_pool -> GenConstructorBlock();
+    AstConstructorBlock *constructor_block                   = compilation_unit -> ast_pool -> GenConstructorBlock();
     constructor_block -> left_brace_token                    = class_body -> left_brace_token;
     constructor_block -> explicit_constructor_invocation_opt = super_call;
     constructor_block -> block                               = block;
     constructor_block -> right_brace_token                   = class_body -> left_brace_token;
 
-    AstMethodDeclarator *method_declarator      = compilation_unit -> ast_pool -> GenMethodDeclarator();
+    AstMethodDeclarator *method_declarator       = compilation_unit -> ast_pool -> GenMethodDeclarator();
     method_declarator -> identifier_token        = left_loc;
     method_declarator -> left_parenthesis_token  = class_creation -> left_parenthesis_token;
     method_declarator -> right_parenthesis_token = right_loc;
 
-    AstConstructorDeclaration *constructor_declaration = compilation_unit -> ast_pool -> GenConstructorDeclaration();
+    AstConstructorDeclaration *constructor_declaration  = compilation_unit -> ast_pool -> GenConstructorDeclaration();
     constructor_declaration -> constructor_declarator   = method_declarator;
     constructor_declaration -> constructor_body         = constructor_block;
 
@@ -4113,9 +4201,9 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
     else
     {
         MethodSymbol *method = FindConstructor((type -> ACC_INTERFACE() ? control.Object() : type),
-                                                class_creation,
-                                                actual_type -> LeftToken(),
-                                                class_creation -> right_parenthesis_token);
+                                               class_creation,
+                                               actual_type -> LeftToken(),
+                                               class_creation -> right_parenthesis_token);
 
         if (! method)
         {
@@ -4124,6 +4212,8 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
         }
         else
         {
+            assert(method -> IsTyped());
+
             if (class_creation -> base_opt &&
                 (class_creation -> base_opt -> symbol != control.no_type) && 
                 (class_creation -> base_opt -> Type() != method -> containing_type -> ContainingType()))
@@ -4170,13 +4260,13 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
 
                 if (exception_set)
                 {
-                    for (int i = method -> NumThrows((Semantic *) this, actual_type -> RightToken()) - 1; i >= 0; i--)
+                    for (int i = method -> NumThrows() - 1; i >= 0; i--)
                         exception_set -> AddElement(method -> Throws(i));
                 }
 
                 if (! (ThisType() -> Anonymous() && ThisMethod() && ThisMethod() -> Identity() == control.block_init_name_symbol))
                 {
-                    for (int k = method -> NumThrows((Semantic *) this, actual_type -> RightToken()) - 1; k >= 0; k--)
+                    for (int k = method -> NumThrows() - 1; k >= 0; k--)
                     {
                         TypeSymbol *exception = method -> Throws(k);
                         if (! CatchableException(exception))
@@ -4194,9 +4284,11 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
 
             class_creation -> symbol = (anonymous_type ? anonymous_type : type);
 
-            if (method -> ACC_PRIVATE() && ThisType() != type && ThisType() -> outermost_type == type -> outermost_type)
+            if (ThisType() -> outermost_type == type -> outermost_type &&
+                ((method -> ACC_PRIVATE() && ThisType() != type) ||
+                 (method -> ACC_PROTECTED() && (! ThisType() -> IsSubclass(type)))))
             {
-                method = TypeSymbol::GetReadAccessMethod(method);
+                method = type -> GetReadAccessMethod(method);
                 class_creation -> class_type -> symbol = method;
 
                 //
@@ -4368,7 +4460,7 @@ void Semantic::ProcessPostUnaryExpression(Ast *expr)
             if (read_method)
             {
                 variable_symbol = (VariableSymbol *) read_method -> accessed_member;
-                postfix_expression -> write_method = TypeSymbol::GetWriteAccessMethod(variable_symbol);
+                postfix_expression -> write_method = read_method -> containing_type -> GetWriteAccessMethod(variable_symbol);
             }
             else variable_symbol = postfix_expression -> expression -> symbol -> VariableCast();
         }
@@ -4561,7 +4653,7 @@ void Semantic::ProcessPLUSPLUSOrMINUSMINUS(AstPreUnaryExpression *expr)
             if (read_method)
             {
                 variable_symbol = (VariableSymbol *) read_method -> accessed_member;
-                expr -> write_method = TypeSymbol::GetWriteAccessMethod(variable_symbol);
+                expr -> write_method = read_method -> containing_type -> GetWriteAccessMethod(variable_symbol);
             }
             else variable_symbol = expr -> expression -> symbol -> VariableCast();
         }
@@ -4851,6 +4943,28 @@ LiteralValue *Semantic::CastPrimitiveValue(TypeSymbol *target_type, AstExpressio
             {
                 IntLiteralValue *literal = (IntLiteralValue *) expr -> value;
                 literal_value = control.Utf8_pool.FindOrInsert(literal -> value);
+            }
+            else if (source_type == control.boolean_type)
+            {
+                IntLiteralValue *literal = (IntLiteralValue *) expr -> value;
+                if (literal -> value == 0)
+                {
+                    output_string[0] = U_f;
+                    output_string[1] = U_a;
+                    output_string[2] = U_l;
+                    output_string[3] = U_s;
+                    output_string[4] = U_e;
+                    len = 5;
+                }
+                else
+                {
+                    output_string[0] = U_t;
+                    output_string[1] = U_r;
+                    output_string[2] = U_u;
+                    output_string[3] = U_e;
+                    len = 4;
+                }
+                literal_value = control.Utf8_pool.FindOrInsert(output_string, len);
             }
             else if (control.IsSimpleIntegerValueType(source_type))
             {
@@ -6463,7 +6577,7 @@ void Semantic::ProcessMOD(AstBinaryExpression *expr)
              {
                  DoubleLiteralValue *left = (DoubleLiteralValue *) expr -> left_expression -> value;
                  DoubleLiteralValue *right = (DoubleLiteralValue *) expr -> right_expression -> value;
-                 IEEEdouble result =  IEEEdouble((u4) 0);
+                 IEEEdouble result = IEEEdouble((u4) 0);
                  IEEEdouble::Fmodulus(left -> value, right -> value, result);
 
                  expr -> value = control.double_pool.FindOrInsert(result);
@@ -6772,7 +6886,7 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
         if (read_method)
         {
             VariableSymbol *symbol = (VariableSymbol *) read_method -> accessed_member;
-            assignment_expression -> write_method = TypeSymbol::GetWriteAccessMethod(symbol);
+            assignment_expression -> write_method = read_method -> containing_type -> GetWriteAccessMethod(symbol);
         }
     }
 

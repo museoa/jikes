@@ -1502,6 +1502,9 @@ void Utf8LiteralTable::CheckStringConstant(AstExpression *expression)
         for (int k = expr -> Length() - 1; k >= 0; k--)
         {
             literal = (Utf8LiteralValue *) (*expr)[k] -> value;
+
+            assert(literal -> value);
+
             memmove(&str[index], literal -> value, literal -> length * sizeof(char));
             index += literal -> length;
         }

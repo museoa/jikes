@@ -20,6 +20,7 @@
 Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
                                                                  option(option_),
                                                                  dot_classpath_index(0),
+                                                                 default_directory(NULL),
                                                                  system_semantic(NULL),
                                                                  semantic(1024),
                                                                  needs_body_work(1024),
@@ -522,8 +523,7 @@ Control::~Control()
     for (int k = 0; k < unreadable_input_filenames.Length(); k++)
         delete [] unreadable_input_filenames[k];
 
-    for (int l = 0; l < root_directories.Length(); l++)
-        delete root_directories[l];
+    delete default_directory;
 
     delete scanner;
     delete parser;

@@ -793,10 +793,10 @@ void SemanticError::PrintEmacsMessage(int k)
     cout << ':' << left_line_no  << ':' << left_column_no 
          << ':' << right_line_no << ':' << right_column_no
          << (warning[error[k].msg_code] == 1
-                    ? ":\n    Warning: "
+                    ? ": Warning: "
                     : (warning[error[k].msg_code] == 2  && (! control.option.zero_defect)
-                              ? ":\n    Caution: "
-                              : ":\n    Error: "));
+                              ? ": Caution: "
+                              : ": Error: "));
     (print_message[error[k].msg_code]) (error[k], lex_stream, control);
     cout << '\n';
 
@@ -2112,7 +2112,7 @@ void SemanticError::PrintMETHOD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE(ErrorInfo &er
         cout << "/";
     }
     Unicode::Cout(err.insert3);
-    cout << "\" has default access. Therefore, it is not accessible in class \"";
+    cout << "\" has protected or default access. Therefore, it is not accessible in class \"";
     if (NotDot(err.insert4))
     {
         Unicode::Cout(err.insert4);
