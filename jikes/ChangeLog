@@ -1,3 +1,8 @@
+2002-05-20  Chris Abbey  <jikes@cabbey.net>
+
+	* src/expr.cpp (ProcessClassInstanceCreationExpression): fix
+	asserts so that they actually assert instead of segv.
+
 2002-05-16  Eric Blake  <ebb9@email.byu.edu>
 
 	* HACKING: Update instructions for patch submission to mention

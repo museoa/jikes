@@ -3642,6 +3642,7 @@ void Semantic::UpdateLocalConstructors(TypeSymbol *inner_type)
                                                               ? local
                                                               : source_local_type -> FindOrInsertLocalShadow(local));
 
+				assert(simple_name -> symbol);
                                 assert(simple_name -> symbol -> VariableCast());
 
                                 class_creation -> AddLocalArgument(simple_name);
@@ -3671,6 +3672,7 @@ void Semantic::UpdateLocalConstructors(TypeSymbol *inner_type)
                             AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(super_call -> super_token);
                             simple_name -> symbol = env -> symbol_table.FindVariableSymbol(local_shadow -> Identity());
 
+			    assert(simple_name -> symbol);
                             assert(simple_name -> symbol -> VariableCast());
 
                             super_call -> AddLocalArgument(simple_name);
@@ -3700,6 +3702,7 @@ void Semantic::UpdateLocalConstructors(TypeSymbol *inner_type)
                             AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(this_call -> this_token);
                             simple_name -> symbol = env -> symbol_table.FindVariableSymbol(local -> Identity());
 
+			    assert(simple_name -> symbol);
                             assert(simple_name -> symbol -> VariableCast());
 
                             this_call -> AddLocalArgument(simple_name);
