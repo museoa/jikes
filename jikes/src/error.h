@@ -198,6 +198,7 @@ public:
         AMBIGUOUS_METHOD_INVOCATION,
         CONSTRUCTOR_NOT_FOUND,
         METHOD_FOUND_FOR_CONSTRUCTOR,
+        CONSTRUCTOR_OVERLOAD_NOT_FOUND,
         ABSTRACT_TYPE_CREATION,
         INVALID_INSTANCEOF_CONVERSION,
         INVALID_CAST_CONVERSION,
@@ -508,6 +509,7 @@ private:
     static wchar_t *PrintAMBIGUOUS_METHOD_INVOCATION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintCONSTRUCTOR_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMETHOD_FOUND_FOR_CONSTRUCTOR(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintCONSTRUCTOR_OVERLOAD_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintABSTRACT_TYPE_CREATION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINVALID_INSTANCEOF_CONVERSION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINVALID_CAST_CONVERSION(ErrorInfo &, LexStream *, Control &);

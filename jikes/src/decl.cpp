@@ -1102,115 +1102,6 @@ TypeSymbol *Semantic::MustFindNestedType(TypeSymbol *type, Ast *name)
 
 
 //
-// The Ast name is a qualified name (simple name or a field access). The
-// function FindTypeInLayer searches for the first subname that is the name of
-// a type contained in the set inner_types. If such a type is found, it is
-// returned. Otherwise, the whole qualified name is resolved to a symbol that
-// is returned.
-//
-TypeSymbol *Semantic::FindTypeInLayer(Ast *name, SymbolSet &inner_types)
-{
-    //
-    // Unwind all the field accesses until we get to a base that is a simple
-    // name
-    //
-    Tuple<AstFieldAccess *> field;
-    for (AstFieldAccess *field_access = name -> FieldAccessCast();
-         field_access;
-         field_access = field_access -> base -> FieldAccessCast())
-    {
-        field.Next() = field_access;
-        name = field_access -> base;
-    }
-
-    //
-    // If the simple_name base is a type that is an element in the inner_types
-    // set return it. Otherwise, assume it is a package name...
-    //
-    AstSimpleName *simple_name = name -> SimpleNameCast();
-
-    assert(simple_name);
-
-    PackageSymbol *package = NULL;
-    TypeSymbol *type = FindType(simple_name -> identifier_token);
-    if (type)
-    {
-        if (inner_types.IsElement(type))
-            return type;
-    }
-    else // If the simple_name is not a type, assume it is a package
-    {
-        NameSymbol *name_symbol =
-            lex_stream -> NameSymbol(simple_name -> identifier_token);
-        package = control.external_table.FindPackageSymbol(name_symbol);
-        if (! package)
-            package = control.external_table.InsertPackageSymbol(name_symbol,
-                                                                 NULL);
-        control.FindPathsToDirectory(package);
-    }
-
-    //
-    // We now go through the field access in order until we either encounter a
-    // type that is an element of inner_types,
-    // in which case, we return the type. Otherwise, we return NULL.
-    //
-    //
-    for (int i = field.Length() - 1; i >= 0; i--)
-    {
-        AstFieldAccess *field_access = field[i];
-
-        if (type) // The base name is a type that is not contained in the inner_types set?
-        {
-            // resolve the next type...
-            type = FindNestedType(type, field_access -> identifier_token);
-            if (! type)
-                break;
-            if (inner_types.IsElement(type))
-                return type;
-        }
-        else
-        {
-            NameSymbol *name_symbol =
-                lex_stream -> NameSymbol(field_access -> identifier_token);
-            type = package -> FindTypeSymbol(name_symbol);
-            if (! type)
-            {
-                FileSymbol *file_symbol =
-                    Control::GetFile(control, package, name_symbol);
-                if (file_symbol)
-                    type = ReadType(file_symbol, package, name_symbol,
-                                    field_access -> identifier_token);
-            }
-            else if (type -> SourcePending())
-                control.ProcessHeaders(type -> file_symbol);
-
-            //
-            //
-            //
-            if (type)
-            {
-                if (inner_types.IsElement(type))
-                    return type;
-            }
-            else // If the field access was not resolved to a type assume it is a package
-            {
-                NameSymbol *name_symbol =
-                    lex_stream -> NameSymbol(field_access -> identifier_token);
-                PackageSymbol *subpackage =
-                    package -> FindPackageSymbol(name_symbol);
-                if (! subpackage)
-                    subpackage = package -> InsertPackageSymbol(name_symbol);
-                control.FindPathsToDirectory(subpackage);
-                package = subpackage;
-            }
-        }
-    }
-
-    return NULL;
-}
-
-
-//
 // Pass 3: Process all method and constructor declarations within the
 // compilation unit so that any field initialization enclosed in the
 // compilation unit can invoke any constructor or method within the unit.
@@ -2174,6 +2065,7 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_d
     // attempt to import types with the same simple name, then a compile-time
     // error occurs, unless the two types are the same type, in which case the
     // duplicate declaration is ignored.
+    // TODO: Give pedantic warnings about duplicate type declarations.
     //
     for (int i = 0; i < single_type_imports.Length(); i++)
     {
@@ -2713,7 +2605,24 @@ void Semantic::CheckMethodOverride(MethodSymbol *method,
     //
     if (hidden_method -> Type() != method -> Type())
     {
-        if (method -> containing_type == base_type)
+        //
+        // We support covariant return types when loading from .class files,
+        // even though this is not strictly legal in JLS2 (according to binary
+        // compatibility, changing the return type need not be supported).
+        // This is done in anticipation of JDK 1.5, when covariance is likely
+        // to be introduced. The resultant effect is that the subclass must
+        // conform to the narrower return type. Note that we currently only
+        // support Object->Object covariance (and not primitive->primitive,
+        // void->primitive, or void->Object). When loading from .java files,
+        // however, we enforce exact return type matching.
+        //
+        if (method -> containing_type -> file_symbol -> IsClass() &&
+            hidden_method -> Type() -> IsSubclass(control.Object()) &&
+            method -> Type() -> IsSubclass(hidden_method -> Type()))
+        {
+            // Silent acceptance. TODO: Should we add a pedantic warning?
+        }
+        else if (method -> containing_type == base_type)
         {
             if (base_type -> ACC_INTERFACE() &&
                 hidden_method -> containing_type == control.Object())
@@ -4109,8 +4018,8 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
             {
                 if (type -> SourcePending())
                     control.ProcessHeaders(type -> file_symbol);
-                TypeAccessCheck(name, type);
             }
+            TypeAccessCheck(name, type);
         }
     }
 

@@ -1,3 +1,17 @@
+2002-09-05  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/semantic.h:
+	* src/decl.cpp (FindTypeInLayer): Delete dead code.
+	(MustFindType): Perform type access check even when loading from
+	CLASSPATH, to fix some jacks results.
+	(CheckMethodOverride):
+	* src/getclass.cpp (ProcessClassFile): Add limited support for
+	covariance in .class files - bug 3088.
+	* src/error.h:
+	* src/error.cpp (CONSTRUCTOR_OVERLOAD_NOT_FOUND): New error.
+	* src/expr.cpp (ReportConstructorNotFound): Improve to report
+	about access and overload problems.
+
 2002-09-03  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/expr.cpp (FindMethodInEnvironment, FindVariableInEnvironment):

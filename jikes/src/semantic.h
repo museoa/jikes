@@ -1022,7 +1022,6 @@ private:
     TypeSymbol *FindTypeInEnvironment(SemanticEnvironment *, NameSymbol *);
     TypeSymbol *FindType(LexStream::TokenIndex);
     TypeSymbol *MustFindType(Ast *);
-    TypeSymbol *FindTypeInLayer(Ast *, SymbolSet &);
     void ProcessInterface(TypeSymbol *, AstExpression *);
 
     // Implemented in decl.cpp - process initializers

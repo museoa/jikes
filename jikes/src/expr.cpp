@@ -351,8 +351,6 @@ void Semantic::ReportMethodNotFound(AstMethodInvocation *method_call,
 
 void Semantic::ReportConstructorNotFound(Ast *ast, TypeSymbol *type)
 {
-    wchar_t *name = type -> Name();
-
     int num_arguments;
     AstExpression **argument;
 
@@ -393,6 +391,77 @@ void Semantic::ReportConstructorNotFound(Ast *ast, TypeSymbol *type)
         right_tok = this_call -> right_parenthesis_token;
     }
 
+    //
+    // Search for an accessible constructor with different arguments. Favor
+    // the earliest ctor found with the smallest difference in parameter count.
+    // Since the JVMS limits methods to 255 parameters, we initialize our
+    // difference detection with 255.
+    //
+    MethodSymbol *best_match = NULL;
+    MethodSymbol *ctor;
+    int difference = 255;
+    for (ctor = type -> FindConstructorSymbol();
+         ctor; ctor = ctor -> next_method)
+    {
+        if (ConstructorAccessCheck(ast, ctor))
+        {
+            int diff =
+                num_arguments - ctor -> NumFormalParameters();
+            if (diff < 0)
+                diff = - diff;
+            if (diff < difference)
+            {
+                best_match = ctor;
+                difference = diff;
+            }
+        }
+    }
+    if (best_match)
+    {
+        ReportSemError(SemanticError::CONSTRUCTOR_OVERLOAD_NOT_FOUND,
+                       ast -> LeftToken(),
+                       ast -> RightToken(),
+                       type -> ContainingPackage() -> PackageName(),
+                       type -> ExternalName(),
+                       best_match -> Header());
+        return;
+    }
+
+    //
+    // Check if the constructor is inaccessible.
+    //
+    for (ctor = type -> FindConstructorSymbol();
+         ctor; ctor = ctor -> next_method)
+    {
+        if (num_arguments == ctor -> NumFormalParameters())
+        {
+            int i;
+            for (i = 0; i < num_arguments; i++)
+            {
+                AstExpression *expr = argument[i];
+                if (! CanMethodInvocationConvert(ctor -> FormalParameter(i) -> Type(),
+                                                 expr -> Type()))
+                {
+                    break;
+                }
+            }
+            if (i == num_arguments) // found a match?
+            {
+                ReportSemError(SemanticError::CONSTRUCTOR_NOT_ACCESSIBLE,
+                               ast -> LeftToken(),
+                               ast -> RightToken(),
+                               ctor -> Header(),
+                               type -> ContainingPackage() -> PackageName(),
+                               type -> ExternalName(),
+                               ctor -> AccessString());
+                return;
+            }
+        }
+    }
+
+    //
+    // Search for an accessible method with the same name as the type.
+    //
     MethodSymbol *method;
     for (method = type -> FindMethodSymbol(type -> Identity());
          method; method = method -> next_method)
@@ -442,7 +511,10 @@ void Semantic::ReportConstructorNotFound(Ast *ast, TypeSymbol *type)
         }
     }
 
-    // TODO: also check for inaccessible constructors
+    //
+    // Give up. We didn't find it.
+    //
+    wchar_t *name = type -> Name();
     int length = wcslen(name);
 
     for (int i = 0; i < num_arguments; i++)
@@ -459,7 +531,7 @@ void Semantic::ReportConstructorNotFound(Ast *ast, TypeSymbol *type)
     wchar_t *s = header;
 
     for (wchar_t *s2 = name; *s2; s2++)
-         *s++ = *s2;
+        *s++ = *s2;
     *s++ = U_LEFT_PARENTHESIS;
     if (num_arguments > 0)
     {

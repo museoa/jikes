@@ -500,6 +500,8 @@ void SemanticError::StaticInitializer()
     print_message[CONSTRUCTOR_NOT_FOUND] = PrintCONSTRUCTOR_NOT_FOUND;
     print_message[METHOD_FOUND_FOR_CONSTRUCTOR] =
         PrintMETHOD_FOUND_FOR_CONSTRUCTOR;
+    print_message[CONSTRUCTOR_OVERLOAD_NOT_FOUND] =
+        PrintCONSTRUCTOR_OVERLOAD_NOT_FOUND;
     print_message[ABSTRACT_TYPE_CREATION] = PrintABSTRACT_TYPE_CREATION;
     print_message[INVALID_INSTANCEOF_CONVERSION] =
         PrintINVALID_INSTANCEOF_CONVERSION;
@@ -2542,6 +2544,22 @@ wchar_t *SemanticError::PrintMETHOD_FOUND_FOR_CONSTRUCTOR(ErrorInfo &err,
 }
 
 
+wchar_t *SemanticError::PrintCONSTRUCTOR_OVERLOAD_NOT_FOUND(ErrorInfo &err,
+                                                            LexStream *lex_stream,
+                                                            Control &control)
+{
+    ErrorString s;
+
+    s << "No applicable overload was found for a constructor of type \"";
+    if (NotDot(err.insert1))
+        s << err.insert1 << "/";
+    s << err.insert2 << "\". Perhaps you wanted the overloaded version \""
+      << err.insert3 << "\" instead?";
+
+    return s.Array();
+}
+
+
 wchar_t *SemanticError::PrintINCOMPATIBLE_TYPE_FOR_INITIALIZATION(ErrorInfo &err,
                                                                   LexStream *lex_stream,
                                                                   Control &control)
@@ -3381,8 +3399,8 @@ wchar_t *SemanticError::PrintTYPE_NOT_ACCESSIBLE(ErrorInfo &err,
     s << "The type \"";
     if (NotDot(err.insert1))
         s << err.insert1 << '/';
-    s << err.insert2 << "\" with " << err.insert3
-      << " access is not accessible here.";
+    s << err.insert2 << "\" has " << err.insert3
+      << " access and is not accessible here.";
 
     return s.Array();
 }
@@ -3397,8 +3415,8 @@ wchar_t *SemanticError::PrintFIELD_NOT_ACCESSIBLE(ErrorInfo &err,
     s << "The field \"" << err.insert1 << "\" in type \"";
     if (NotDot(err.insert2))
         s << err.insert2 << '/';
-    s << err.insert3 << "\" with " << err.insert4
-      << " access is not accessible here.";
+    s << err.insert3 << "\" has " << err.insert4
+      << " access and is not accessible here.";
 
     return s.Array();
 }
@@ -3433,8 +3451,8 @@ wchar_t *SemanticError::PrintMETHOD_NOT_ACCESSIBLE(ErrorInfo &err,
     s << "The method \"" << err.insert1 << "\" in type \"";
     if (NotDot(err.insert2))
         s << err.insert2 << '/';
-    s << err.insert3 << "\" with " << err.insert4
-      << " access is not accessible here.";
+    s << err.insert3 << "\" has " << err.insert4
+      << " access and is not accessible here.";
 
     return s.Array();
 }
@@ -3482,8 +3500,8 @@ wchar_t *SemanticError::PrintCONSTRUCTOR_NOT_ACCESSIBLE(ErrorInfo &err,
     s << "The constructor \"" << err.insert1 << "\" in type \"";
     if (NotDot(err.insert2))
         s << err.insert2 << '/';
-    s << err. insert3 << "\" with " << err.insert4
-      << " access is not accessible here.";
+    s << err. insert3 << "\" has " << err.insert4
+      << " access and is not accessible here.";
 
     return s.Array();
 }
