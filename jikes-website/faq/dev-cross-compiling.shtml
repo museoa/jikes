@@ -38,10 +38,34 @@
       <table border="0" cellspacing="10" cellpadding="0" align="center">
         <tr>
           <td><!-- #BeginEditable "TopicContent" --> 
-            <h1>Cross-compiling Jikes</h1>
-            <p>&nbsp;</p>
-            <p><i>Not written yet.</i></p>
-            <p>&nbsp;</p>
+           <h2>Official Release</h2>
+            <p>The Win32 official release of Jikes is not produced on the Win32 
+              platform. A cross compiler is used to create a jikes.exe executable
+              under Linux. Part of the reason for doing this is to avoid distributing
+              Windows virii. Cross compiling is a tricky subject, so we are not
+              going to try to cover it all here. If you already have a Win32
+              cross compilation environment setup, a Jikes executable can be
+              created using the following commands.</p>
+
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground"> 
+                          <p style="text-indent: 0em"><code>
+                          $ ./configure --host=mingw32 CXXFLAGS=-O3<br>
+                          $ make install-strip
+                          </code></p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
             <!-- #EndEditable --></td>
         </tr>
       </table>

@@ -88,44 +88,34 @@
               problems in the mailing list.</p>
             <p>&nbsp;</p>
             <h2><a name="config-script-args"></a>Configure script arguments</h2>
-            <p>The <code>configure</code> script accepts many arguments, even 
-              if most of the time it's invoked without any. You can have the entire 
-              list by typing:</p>
+            <p>The <code>configure</code> script accepts many possible arguments, most
+              of which you will never use. A complete list of possible argumets will
+              be printed if you pass the --help argument to the configure script.
+              The most frequently used configure options are:</p>
+
             <div style="text-align: center"> 
               <table border="0" cellspacing="0" cellpadding="1" width="400" align="center">
                 <tr> 
-                  <td class="DimmedFrameBorder"> 
+                  <td class="HighlightedFrameBorder"> 
                     <table width="100%" border="0" cellspacing="0" cellpadding="10">
                       <tr> 
-                        <td class="DimmedFrameBackground">./configure --help</td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </div>
-            <p>&nbsp;</p>
-            <p>The most frequently used are:</p>
-            <div style="text-align: center"> 
-              <table border="0" cellspacing="0" cellpadding="1" width="400" align="center">
-                <tr> 
-                  <td class="DimmedFrameBorder"> 
-                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
-                      <tr> 
-                        <td class="DimmedFrameBackground"><code>CXX=</code>[C++ 
-                          compiler]<br>
-                          <code>CXXFLAGS=</code>[C++ compiler flags]<br>
+                        <td class="HighlightedFrameBackground">
+                          <code>--prefix</code>=[install directory]<br>
+                          <code>--enable-debug</code> (enables debug build)<br>
                           <code>--host</code>=[host platform]<br>
+                          <code>CXX=</code>[C++ compiler]<br>
+                          <code>CXXFLAGS=</code>[C++ compiler flags]<br>
                       </tr>
                     </table>
                   </td>
                 </tr>
               </table>
             </div>
+
             <p>&nbsp;</p>
             <h2><a name="build-other-dir"></a>Building in a different directory</h2>
             <p>If you want to have the object files (.o) and jikes executable 
-              created in a separate directory (somewhat more clean to separate 
+              created in a separate directory (cleaner to separate 
               source code and object files; also useful when having more than one 
               build configuration), just go to the wanted directory and invoke 
               the <code>configure</code> script from there. The files will be 
@@ -133,7 +123,7 @@
               that you'll invoke later.</p>
             <p>&nbsp;</p>
             <h2>C++ Namespaces support</h2>
-            <p>Jikes source code is now C++ namespace compliant, which means that 
+            <p>Jikes source code is C++ namespace compliant, which means that 
               compilers which allow namespaces can be used to compile Jikes. This 
               is normally automatically detected by the <code>configure</code> 
               script, but you can force it by specifying the following additional 
@@ -141,10 +131,10 @@
             <div style="text-align: center"> 
               <table border="0" cellspacing="0" cellpadding="1" width="400" align="center">
                 <tr> 
-                  <td class="DimmedFrameBorder"> 
+                  <td class="HighlightedFrameBorder"> 
                     <table width="100%" border="0" cellspacing="0" cellpadding="10">
                       <tr> 
-                        <td class="DimmedFrameBackground"><code>./configure HAVE_NAMESPACES=1</code></td>
+                        <td class="HighlightedFrameBackground"><code>./configure HAVE_NAMESPACES=1</code></td>
                       </tr>
                     </table>
                   </td>
@@ -160,10 +150,10 @@
             <div style="text-align: center"> 
               <table border="0" cellspacing="0" cellpadding="1" width="400" align="center">
                 <tr> 
-                  <td class="DimmedFrameBorder"> 
+                  <td class="HighlightedFrameBorder"> 
                     <table width="100%" border="0" cellspacing="0" cellpadding="10">
                       <tr> 
-                        <td class="DimmedFrameBackground"><code>./configure HAVE_JIKES_NAMESPACE=1</code></td>
+                        <td class="HighlightedFrameBackground"><code>./configure --enable-jikes-namespace</code></td>
                       </tr>
                     </table>
                   </td>
@@ -171,15 +161,16 @@
               </table>
             </div>
             <p>&nbsp;</p>
-            <p><u>Note:</u> <code>HAVE_JIKES_NAMESPACE</code> must not be specified 
+            <p><u>Note:</u> <code>--enable-jikes-namespace</code> must not be specified 
               if your compiler does not support namespaces (or if <code>configure</code> 
               did not detect its supports it and you did not force it as shown 
               above by using <code>HAVE_NAMESPACES</code>), or you'll get nasty 
               compiling errors ;o)</p>
             <p>&nbsp;</p>
             <h2>Building Jikes</h2>
-            <p>Once the <code>Makefile</code> has been created, you can invoke 
-              it:</p>
+            <p>Once the <code>configure</code> script has finished, the jikes executable
+            can be built using the make command. If GNU make is installed as gmake on
+            your system, use it instead of make in the following instructions.</p>
             <div style="text-align: center"> 
               <table border="0" cellspacing="0" cellpadding="1" width="400" align="center">
                 <tr> 
@@ -187,8 +178,8 @@
                     <table width="100%" border="0" cellspacing="0" cellpadding="10">
                       <tr> 
                         <td class="HighlightedFrameBackground"> <code>make</code><br>
-                          <code>jikes</code> is generated in <code>src/</code> 
-                          directory</td>
+                          (jikes executable is generated in <code>src/</code> 
+                          directory)</td>
                       </tr>
                     </table>
                   </td>
@@ -196,28 +187,27 @@
               </table>
             </div>
             <p>&nbsp;</p>
-            <p>The compiler will be invoked on each source file of Jikes, and 
-              then the linker will produce the <code>jikes</code> executable file 
-              in the <code>src/</code> directory. <b>Congratulation, Jikes is 
-              now ready to run!</b></p>
-            <p>The generated <code>Makefile</code> accepts many targets (just 
-              have a look at it, you'll understand), but the most frequently used 
-              is definetly the one used to clean the build directory from any 
-              generated file by invoking:</p>
+
+            <p>The most commonly used make targets are:</p>
+
             <div style="text-align: center"> 
               <table border="0" cellspacing="0" cellpadding="1" width="400" align="center">
                 <tr> 
-                  <td class="DimmedFrameBorder"> 
+                  <td class="HighlightedFrameBorder"> 
                     <table width="100%" border="0" cellspacing="0" cellpadding="10">
                       <tr> 
-                        <td class="DimmedFrameBackground"><code>make clean</code></td>
+                        <td class="HighlightedFrameBackground">
+                          <code>make clean</code> (remove executable and .o files)<br>
+                          <code>make distclean</code> (remove all generated files)<br>
+                          <code>make install</code> (install into --prefix dir)<br>
+                          <code>make install-strip</code> (install without debug symbols)<br>
                       </tr>
                     </table>
                   </td>
                 </tr>
               </table>
             </div>
-            <p>&nbsp;</p>
+
             <!-- #EndEditable --></td>
         </tr>
       </table>
