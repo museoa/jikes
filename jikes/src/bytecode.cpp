@@ -1040,8 +1040,8 @@ bool ByteCode::EmitStatement(AstStatement* statement)
             bool abrupt = false;
             for (unsigned i = 0; i < for_statement -> NumForInitStatements(); i++)
                 EmitStatement(for_statement -> ForInitStatement(i));
-            Label begin_label,
-                  test_label;
+            Label begin_label;
+            Label test_label;
             //
             // The loop test is placed after the body, unless the body
             // always completes abruptly, to save an additional jump.
@@ -1089,8 +1089,11 @@ bool ByteCode::EmitStatement(AstStatement* statement)
             abrupt |= EmitBlockStatement(for_statement -> statement);
             bool empty = (begin_pc == code_attribute -> CodeLength());
             DefineLabel(continue_label);
-            for (unsigned j = 0; j < for_statement -> NumForUpdateStatements(); j++)
+            for (unsigned j = 0;
+                 j < for_statement -> NumForUpdateStatements(); j++)
+            {
                 EmitStatement(for_statement -> ForUpdateStatement(j));
+            }
             DefineLabel(test_label);
             CompleteLabel(test_label);
 
@@ -1104,7 +1107,8 @@ bool ByteCode::EmitStatement(AstStatement* statement)
                 //
                 line_number_table_attribute ->
                     AddLineNumber(code_attribute -> CodeLength(),
-                                  semantic.lex_stream -> Line(end_expr -> LeftToken()));
+                                  semantic.lex_stream -> Line(end_expr ->
+                                                              LeftToken()));
 
                 EmitBranchIfExpression(end_expr, true,
                                        empty ? continue_label : begin_label,
@@ -1116,6 +1120,9 @@ bool ByteCode::EmitStatement(AstStatement* statement)
             CompleteLabel(begin_label);
             return abrupt && ! for_statement -> can_complete_normally;
         }
+    case Ast::FOREACH: // JSR 201
+        EmitForeachStatement((AstForeachStatement*) statement);
+        return false;
     case Ast::BREAK: // JLS 14.13
         {
             unsigned nesting_level =
@@ -1772,6 +1779,7 @@ void ByteCode::EmitTryStatement(AstTryStatement* statement)
             // completions emit a GOTO instead of a JSR.
             //
             if (statement -> finally_clause_opt)
+            {
                 if (! emit_finally_clause)
                     catch_clause -> block -> block_tag = AstBlock::NONE;
                 else if (! statement -> finally_clause_opt -> block ->
@@ -1780,6 +1788,7 @@ void ByteCode::EmitTryStatement(AstTryStatement* statement)
                     catch_clause -> block -> block_tag =
                         AstBlock::ABRUPT_TRY_FINALLY;
                 }
+            }
             abrupt = EmitBlockStatement(catch_clause -> block);
 
             if (control.option.g & JikesOption::VARS)
@@ -1807,7 +1816,7 @@ void ByteCode::EmitTryStatement(AstTryStatement* statement)
         if (emit_finally_clause)
         {
             int variable_index = method_stack -> TopBlock() ->
-                block_symbol -> try_or_synchronized_variable_index;
+                block_symbol -> helper_variable_index;
             u2 finally_start_pc = code_attribute -> CodeLength();
             u2 special_end_pc = finally_start_pc;
 
@@ -1948,7 +1957,7 @@ bool ByteCode::ProcessAbruptExit(unsigned level, u2 width,
             if (block -> block_tag == AstBlock::TRY_CLAUSE_WITH_FINALLY)
             {
                 variable_index = method_stack -> Block(enclosing_level) ->
-                    block_symbol -> try_or_synchronized_variable_index + 2;
+                    block_symbol -> helper_variable_index + 2;
             }
             else if (block -> block_tag == AstBlock::ABRUPT_TRY_FINALLY)
             {
@@ -1995,7 +2004,7 @@ bool ByteCode::ProcessAbruptExit(unsigned level, u2 width,
             // synchronized statement catchall handler.
             //
             int variable_index = method_stack -> Block(enclosing_level) ->
-                block_symbol -> try_or_synchronized_variable_index;
+                block_symbol -> helper_variable_index;
             LoadLocal(variable_index, control.Object());
             PutOp(OP_MONITOREXIT);
             method_stack -> HandlerRangeEnd(enclosing_level).
@@ -2861,8 +2870,8 @@ void ByteCode::EmitBranchIfExpression(AstExpression* p, bool cond, Label& lab,
 //
 bool ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement* statement)
 {
-    int variable_index = method_stack -> TopBlock() -> block_symbol ->
-        try_or_synchronized_variable_index;
+    int variable_index =
+        method_stack -> TopBlock() -> block_symbol -> helper_variable_index;
 
     Label start_label;
     //
@@ -2996,6 +3005,199 @@ void ByteCode::EmitAssertStatement(AstAssertStatement* assertion)
     PutOp(OP_ATHROW);
     DefineLabel(label);
     CompleteLabel(label);
+}
+
+
+void ByteCode::EmitForeachStatement(AstForeachStatement* foreach)
+{
+    int helper_index =
+        method_stack -> TopBlock() -> block_symbol -> helper_variable_index;
+    bool abrupt;
+    EmitExpression(foreach -> expression);
+    Label loop;
+    Label& comp = method_stack -> TopContinueLabel();
+    Label end;
+    TypeSymbol* expr_type = foreach -> expression -> Type();
+    VariableSymbol* var =
+        foreach -> formal_parameter -> formal_declarator -> symbol;
+    TypeSymbol* component_type = var -> Type();
+    if (expr_type -> IsArray())
+    {
+        //
+        // Turn 'l: for(a b : c) d' into
+        // { expr_type #0 = c;
+        //   int #1 = #0.length;
+        //   l: for(int #2 = 0; #2 < #1; #2++) {
+        //     a b = #0[#2];
+        //     d; }}
+        // Or in bytecode:
+        // eval c onto stack
+        // dup
+        // astore helper_index
+        // arraylength
+        // dup
+        // istore helper_index+1
+        // ifeq end
+        // iconst_0
+        // istore helper_index+2
+        // iconst_0
+        // loop:
+        // aload helper_index
+        // swap
+        // xaload (for x = b, s, i, l, c, f, d, a)
+        // assignment-conversion (if necessary)
+        // xstore b (for x = i, l, f, d, a)
+        // eval d (continue to comp, break to end)
+        // comp:
+        // iinc helper_index+2, 1
+        // iload helper_index+1
+        // iload helper_index+2
+        // dup_x1
+        // if_icmpgt loop
+        // pop
+        // end:
+        //
+        TypeSymbol* expr_subtype = expr_type -> ArraySubtype();
+        if (IsNop(foreach -> statement) &&
+            (! component_type -> Primitive() || expr_subtype -> Primitive()))
+        {
+            //
+            // Optimization (arrays only): no need to increment loop counter
+            // if nothing is done in the loop; and we simply check that the
+            // array is non-null from arraylength. But beware of autounboxing,
+            // which can cause NullPointerException.
+            //
+            PutOp(OP_ARRAYLENGTH);
+            PutOp(OP_POP);
+            return;
+        }
+        PutOp(OP_DUP);
+        StoreLocal(helper_index, expr_type);
+        PutOp(OP_ARRAYLENGTH);
+        PutOp(OP_DUP);
+        StoreLocal(helper_index + 1, control.int_type);
+        EmitBranch(OP_IFEQ, end);
+        PutOp(OP_ICONST_0);
+        StoreLocal(helper_index + 2, control.int_type);
+        PutOp(OP_ICONST_0);
+        DefineLabel(loop);
+        LoadLocal(helper_index, expr_type);
+        PutOp(OP_SWAP);
+        LoadArrayElement(expr_type -> ArraySubtype());
+        EmitCast(component_type, expr_type -> ArraySubtype());
+        u2 var_pc = code_attribute -> CodeLength();        
+        StoreLocal(var -> LocalVariableIndex(), component_type);
+        abrupt = EmitStatement(foreach -> statement);
+        if (control.option.g & JikesOption::VARS)
+        {
+            local_variable_table_attribute ->
+                AddLocalVariable(var_pc, code_attribute -> CodeLength(),
+                                 RegisterName(var -> ExternalIdentity()),
+                                 RegisterUtf8(component_type -> signature),
+                                 var -> LocalVariableIndex());
+        }
+        if (! abrupt || foreach -> statement -> can_complete_normally)
+        {
+            DefineLabel(comp);
+            PutOpIINC(helper_index + 2, 1);
+            LoadLocal(helper_index + 1, control.int_type);
+            LoadLocal(helper_index + 2, control.int_type);
+            PutOp(OP_DUP_X1);
+            EmitBranch(OP_IF_ICMPGT, loop);
+            PutOp(OP_POP);
+        }
+    }
+    else
+    {
+        assert(foreach -> expression -> Type() ->
+               IsSubtype(control.Iterable()));
+        //
+        // Turn 'l: for(a b : c) d' into
+        // for(java.util.Iterator #0 = c.iterator(); #0.hasNext();) {
+        //   a b = (a) c.next();
+        //   d; }
+        // Or in bytecode:
+        // eval c onto stack
+        // invokeinterface java.lang.Iterable.iterator()Ljava/util/Iterator;
+        // dup
+        // invokeinterface java.util.Iterator.hasNext()Z
+        // ifeq cleanup
+        // dup
+        // astore helper_index
+        // loop:
+        // invokeinterface java.util.Iterator.next()Ljava/lang/Object;
+        // checkcast a
+        // astore b
+        // eval d (continue to comp, break to end)
+        // comp:
+        // aload helper_index
+        // dup
+        // invokeinterface java.util.Iterator.hasNext()Z
+        // ifne loop
+        // cleanup:
+        // pop
+        // end:
+        //
+        Label cleanup;
+        PutOp(OP_INVOKEINTERFACE);
+        PutU2(RegisterLibraryMethodref(control.Iterable_iteratorMethod()));
+        PutU1(1);
+        PutU1(0);
+        ChangeStack(1);
+        PutOp(OP_DUP);
+        PutOp(OP_INVOKEINTERFACE);
+        u2 hasNext_index =
+            RegisterLibraryMethodref(control.Iterator_hasNextMethod());
+        PutU2(hasNext_index);
+        PutU1(1);
+        PutU1(0);
+        ChangeStack(1);
+        EmitBranch(OP_IFEQ, cleanup);
+        PutOp(OP_DUP);
+        StoreLocal(helper_index, control.Iterator());
+        DefineLabel(loop);
+        PutOp(OP_INVOKEINTERFACE);
+        PutU2(RegisterLibraryMethodref(control.Iterator_nextMethod()));
+        PutU1(1);
+        PutU1(0);
+        ChangeStack(1);
+        if (component_type != control.Object())
+        {
+            PutOp(OP_CHECKCAST);
+            PutU2(RegisterClass(component_type));
+        }
+        u2 var_pc = code_attribute -> CodeLength();        
+        StoreLocal(var -> LocalVariableIndex(), component_type);
+        abrupt = EmitStatement(foreach -> statement);
+        if (control.option.g & JikesOption::VARS)
+        {
+            local_variable_table_attribute ->
+                AddLocalVariable(var_pc, code_attribute -> CodeLength(),
+                                 RegisterName(var -> ExternalIdentity()),
+                                 RegisterUtf8(component_type -> signature),
+                                 var -> LocalVariableIndex());
+        }
+        if (! abrupt || foreach -> statement -> can_complete_normally)
+        {
+            DefineLabel(comp);
+            LoadLocal(helper_index, control.Iterator());
+            PutOp(OP_DUP);
+            PutOp(OP_INVOKEINTERFACE);
+            PutU2(hasNext_index);
+            PutU1(1);
+            PutU1(0);
+            ChangeStack(1);
+            EmitBranch(OP_IFNE, loop);
+        }
+        else ChangeStack(1);
+        DefineLabel(cleanup);
+        CompleteLabel(cleanup);
+        PutOp(OP_POP);
+    }
+    DefineLabel(end);
+    CompleteLabel(loop);
+    CompleteLabel(comp);
+    CompleteLabel(end);
 }
 
 
@@ -5013,6 +5215,7 @@ bool ByteCode::IsNop(AstBlock* block)
     {
         Ast* statement = block -> Statement(i);
         if (statement -> EmptyStatementCast() ||
+            statement -> LocalClassDeclarationStatementCast() ||
             (statement -> BlockCast() && IsNop((AstBlock*) statement)))
             continue;
         if (statement -> kind == Ast::IF)
@@ -6090,7 +6293,7 @@ void ByteCode::CompleteLabel(Label& lab)
 {
     if (lab.uses.Length())
     {
-        assert((lab.defined) && "label used but with no definition");
+        assert(lab.defined && "label used but with no definition");
 
         //
         // Sanity check - when completing method, make sure nothing jumps out

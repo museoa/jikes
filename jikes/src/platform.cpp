@@ -1291,6 +1291,10 @@ const wchar_t StringConstant::US_hashCode[] = {
     U_h, U_a, U_s, U_h, U_C, U_o, U_d, U_e, U_NU}; // L"hashCode"
 const wchar_t StringConstant::US_Integer[] = {
     U_I, U_n, U_t, U_e, U_g, U_e, U_r, U_NU}; // L"Integer"
+const wchar_t StringConstant::US_Iterable[] = {
+    U_I, U_t, U_e, U_r, U_a, U_b, U_l, U_e, U_NU}; // L"Iterable"
+const wchar_t StringConstant::US_iterator[] = {
+    U_i, U_t, U_e, U_r, U_a, U_t, U_o, U_r, U_NU}; // L"iterator"
 const wchar_t StringConstant::US_L[] = {U_L, U_NU}; // L"L"
 const wchar_t StringConstant::US_Long[]  = {
     U_L, U_o, U_n, U_g, U_NU}; // L"Long"
@@ -1320,6 +1324,9 @@ const wchar_t StringConstant::US_String[] = {
 const wchar_t StringConstant::US_StringBuffer[] = {
     U_S, U_t, U_r, U_i, U_n, U_g,
     U_B, U_u, U_f, U_f, U_e, U_r, U_NU}; // L"StringBuffer"
+const wchar_t StringConstant::US_StringBuilder[] = {
+    U_S, U_t, U_r, U_i, U_n, U_g,
+    U_B, U_u, U_i, U_l, U_d, U_e, U_r, U_NU}; // L"StringBuilder"
 const wchar_t StringConstant::US_TYPE[] = {
     U_T, U_Y, U_P, U_E, U_NU}; // L"TYPE"
 const wchar_t StringConstant::US_Throwable[] = {
@@ -1377,6 +1384,12 @@ const wchar_t StringConstant::US_java_SL_io[] = {
     U_j, U_a, U_v, U_a, U_SL, U_i, U_o, U_NU}; // L"java/io"
 const wchar_t StringConstant::US_java_SL_lang[] = {
     U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_NU}; // L"java/lang"
+const wchar_t StringConstant::US_java_SL_lang_SL_annotation[] = {
+    U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_a, U_n, U_n, U_o, U_t, U_a, U_t, U_i, U_o, U_n,
+    U_NU}; // L"java/lang/annotation"
+const wchar_t StringConstant::US_java_SL_util[] = {
+    U_j, U_a, U_v, U_a, U_SL, U_u, U_t, U_i, U_l, U_NU}; // L"java/util"
 const wchar_t StringConstant::US_length[] = {
     U_l, U_e, U_n, U_g, U_t, U_h, U_NU}; // L"length"
 const wchar_t StringConstant::US_this_DOLLAR[] = {
@@ -1651,6 +1664,10 @@ const char StringConstant::U8S_java_SL_lang_SL_StringBuffer[] = {
     U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
     U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_f, U_f, U_e, U_r,
     U_NU}; // "java/lang/StringBuffer"
+const char StringConstant::U8S_java_SL_lang_SL_StringBuilder[] = {
+    U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_i, U_l, U_d, U_e, U_r,
+    U_NU}; // "java/lang/StringBuilder"
 const char StringConstant::U8S_java_SL_lang_SL_Throwable[] = {
     U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
     U_T, U_h, U_r, U_o, U_w, U_a, U_b, U_l, U_e,
@@ -1698,6 +1715,42 @@ const char StringConstant::U8S_LP_Object_RP_StringBuffer[] = {
     U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
     U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_f, U_f, U_e, U_r, U_SC,
     U_NU}; // "(Ljava/lang/Object;)Ljava/lang/StringBuffer;"
+const char StringConstant::U8S_LP_C_RP_StringBuilder[] = {
+    U_LP, U_C, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_i, U_l, U_d, U_e, U_r, U_SC,
+    U_NU}; // "(C)Ljava/lang/StringBuilder;"
+const char StringConstant::U8S_LP_Z_RP_StringBuilder[] = {
+    U_LP, U_Z, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_i, U_l, U_d, U_e, U_r, U_SC,
+    U_NU}; // "(Z)Ljava/lang/StringBuilder;"
+const char StringConstant::U8S_LP_I_RP_StringBuilder[] = {
+    U_LP, U_I, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_i, U_l, U_d, U_e, U_r, U_SC,
+    U_NU}; // "(I)Ljava/lang/StringBuilder;"
+const char StringConstant::U8S_LP_J_RP_StringBuilder[] = {
+    U_LP, U_J, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_i, U_l, U_d, U_e, U_r, U_SC,
+    U_NU}; // "(J)Ljava/lang/StringBuilder;"
+const char StringConstant::U8S_LP_F_RP_StringBuilder[] = {
+    U_LP, U_F, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_i, U_l, U_d, U_e, U_r, U_SC,
+    U_NU}; // "(F)Ljava/lang/StringBuilder;"
+const char StringConstant::U8S_LP_D_RP_StringBuilder[] = {
+    U_LP, U_D, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_i, U_l, U_d, U_e, U_r, U_SC,
+    U_NU}; // "(D)Ljava/lang/StringBuilder;"
+const char StringConstant::U8S_LP_String_RP_StringBuilder[] = {
+    U_LP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_S, U_t, U_r, U_i, U_n, U_g, U_SC, U_RP,
+    U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_i, U_l, U_d, U_e, U_r, U_SC,
+    U_NU}; // "(Ljava/lang/String;)Ljava/lang/StringBuilder;"
+const char StringConstant::U8S_LP_Object_RP_StringBuilder[] = {
+    U_LP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_O, U_b, U_j, U_e, U_c, U_t, U_SC, U_RP,
+    U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_i, U_l, U_d, U_e, U_r, U_SC,
+    U_NU}; // "(Ljava/lang/Object;)Ljava/lang/StringBuilder;"
 
 const char StringConstant::U8S_NaN[] = {U_N, U_a, U_N, U_NU}; // "NaN"
 const char StringConstant::U8S_pos_Infinity[] = {

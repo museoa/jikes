@@ -141,6 +141,13 @@ $MakeMethodDeclarator
 #endif
 ./
 
+$MakeFormalParameter
+/.
+#ifndef HEADERS
+    rule_action[$rule_number] = &Parser::MakeFormalParameter;
+#endif
+./
+
 $MakeConstructorDeclaration
 /.
 #ifndef HEADERS
@@ -187,6 +194,13 @@ $MakeForStatement
 /.
 #ifndef HEADERS
     rule_action[$rule_number] = &Parser::MakeForStatement;
+#endif
+./
+
+$MakeForeachStatement
+/.
+#ifndef HEADERS
+    rule_action[$rule_number] = &Parser::MakeForeachStatement;
 #endif
 ./
 
@@ -592,6 +606,8 @@ void Parser::InitRuleAction()
 #else // HEADERS
     AstType* MakeArrayType(int tokennum);
     AstName* MakeSimpleName(int tokennum);
+    void MakeFormalParameter(AstModifiers* modifiers, AstType* type,
+                             AstVariableDeclaratorId* variable);
     AstArguments* MakeArguments(int tokennum);
     void MakeLocalVariable(AstModifiers* modifiers, AstType* type,
                            AstListNode* variables);
@@ -618,6 +634,7 @@ void Parser::InitRuleAction()
     void MakeMethodDeclaration();
     void MakeMethodHeader();
     void MakeMethodDeclarator();
+    void MakeFormalParameter();
     void MakeConstructorDeclaration();
     void MakeLabeledStatement();
     void MakeExpressionStatement();
@@ -625,6 +642,7 @@ void Parser::InitRuleAction()
     void MakeSwitchLabel();
     void MakeWhileStatement();
     void MakeForStatement();
+    void MakeForeachStatement();
     void MakeAssertStatement();
     void MakeTryStatement();
     void MakeParenthesizedExpression();
@@ -1687,24 +1705,67 @@ FormalParameterList ::= FormalParameterList ',' FormalParameter
 /.$shared_AddList3./
 
 --
--- For nicer error messages, we accept all modifiers, even though only
--- 'final' is valid.
+-- We must match the inline expansion of LocalVariableDeclaration, so there
+-- is no ambiguity in 'for(a' starting 'for(a b:c)' vs. 'for(a b;;)'.
 --
 --FormalParameter ::= finalopt Type VariableDeclaratorId
-FormalParameter ::= Modifiersopt Type VariableDeclaratorId
+FormalParameter ::= PrimitiveType Dimsopt VariableDeclaratorId
+\:$MakeFormalParameter:\
+/.$location
+void Parser::MakeFormalParameter()
+{
+    MakeFormalParameter(NULL, MakeArrayType(1),
+                        DYNAMIC_CAST<AstVariableDeclaratorId*> (Sym(3)));
+}
+
+//
+// Creates a formal parameter declaration and places it in Sym(1).
+//
+void Parser::MakeFormalParameter(AstModifiers* modifiers, AstType* type,
+                                 AstVariableDeclaratorId* variable)
+{
+    AstFormalParameter* p = ast_pool -> NewFormalParameter();
+    p -> modifiers_opt = modifiers;
+    p -> type = type;
+    AstVariableDeclarator* formal_declarator =
+        ast_pool -> NewVariableDeclarator();
+    formal_declarator -> variable_declarator_name = variable;
+    p -> formal_declarator = formal_declarator;
+    Sym(1) = p;
+}
+./
+
+--
+-- The use of Marker allows us to share code.
+--
+--FormalParameter ::= Name VariableDeclaratorId
+FormalParameter ::= Name Marker VariableDeclaratorId
+\:$MakeFormalParameter:\
+/.$shared_function
+//
+// void MakeFormalParameter();
+//./
+
+FormalParameter ::= Name Dims VariableDeclaratorId
+\:$MakeFormalParameter:\
+/.$shared_function
+//
+// void MakeFormalParameter();
+//./
+
+--1.1 feature
+--
+-- For nicer error messages, we accept all modifiers, even though only
+-- 'final' and annotations are valid.
+--
+FormalParameter ::= Modifiers Type VariableDeclaratorId
 \:$action:\
 /.$location
 void Parser::Act$rule_number()
 {
-    AstFormalParameter* p = ast_pool -> NewFormalParameter();
-    p -> modifiers_opt = DYNAMIC_CAST<AstModifiers*> (Sym(1));
-    p -> type = DYNAMIC_CAST<AstType*> (Sym(2));
-    AstVariableDeclarator* formal_declarator =
-        ast_pool -> NewVariableDeclarator();
-    formal_declarator -> variable_declarator_name =
-        DYNAMIC_CAST<AstVariableDeclaratorId*> (Sym(3));
-    p -> formal_declarator = formal_declarator;
-    Sym(1) = p;
+    MakeFormalParameter(DYNAMIC_CAST<AstModifiers*> (Sym(1)),
+                        DYNAMIC_CAST<AstType*> (Sym(2)),
+                        DYNAMIC_CAST<AstVariableDeclaratorId*> (Sym(3)));
 }
 ./
 
@@ -2125,6 +2186,7 @@ void Parser::Act$rule_number()
 
 --
 -- To separate Type vs. Name ambiguities, we have to expand this inline.
+-- Otherwise, we cannot tell whether 'a[' starts 'a[]b;' or 'a[1]++;'.
 --
 --LocalVariableDeclaration ::= Type VariableDeclarators
 LocalVariableDeclaration ::= PrimitiveType Dimsopt VariableDeclarators
@@ -2181,7 +2243,7 @@ LocalVariableDeclaration ::= Name Dims VariableDeclarators
 --1.1 feature
 --
 -- For nicer error messages, we accept all modifiers, even though only
--- 'final' is valid.
+-- 'final' and annotations are valid.
 --
 --LocalVariableDeclaration ::= finalopt Type VariableDeclarators
 LocalVariableDeclaration ::= Modifiers Type VariableDeclarators
@@ -2219,6 +2281,14 @@ Statement ::= ForStatement
 \:$NoAction:\
 /.$shared_NoAction./
 
+--
+-- Enhanced for statements (also known as foreach, but without a new keyword),
+-- were added in JDK 1.5, as part of JSR 201.
+--
+Statement ::= ForeachStatement
+\:$NoAction:\
+/.$shared_NoAction./
+
 StatementNoShortIf ::= StatementWithoutTrailingSubstatement
 \:$NoAction:\
 /.$shared_NoAction./
@@ -2236,6 +2306,14 @@ StatementNoShortIf ::= WhileStatementNoShortIf
 /.$shared_NoAction./
 
 StatementNoShortIf ::= ForStatementNoShortIf
+\:$NoAction:\
+/.$shared_NoAction./
+
+--
+-- Enhanced for statements (also known as foreach, but without a new keyword),
+-- were added in JDK 1.5, as part of JSR 201.
+--
+StatementNoShortIf ::= ForeachStatementNoShortIf
 \:$NoAction:\
 /.$shared_NoAction./
 
@@ -2742,6 +2820,43 @@ StatementExpressionList ::= StatementExpression
 StatementExpressionList ::= StatementExpressionList ',' StatementExpression
 \:$AddList3:\
 /.$shared_AddList3./
+
+ForeachStatement ::= 'for' '(' FormalParameter ':' Expression ')' Statement
+\:$MakeForeachStatement:\
+/.$location
+void Parser::MakeForeachStatement()
+{
+    //
+    // We wrap the loop statement in a block, to make the semantic pass easier.
+    //
+    AstForeachStatement* p = ast_pool -> NewForeachStatement();
+    p -> for_token = Token(1);
+    p -> formal_parameter = DYNAMIC_CAST<AstFormalParameter*> (Sym(3));
+    p -> expression = DYNAMIC_CAST<AstExpression*> (Sym(5));
+    p -> statement = MakeBlock(7);
+
+    //
+    // We also wrap the loop in a block, to make the semantic pass easier. In
+    // particular, this lets us correctly handle
+    // "for(int i:new int[0]);for(int i::new int[0]);".
+    //
+    AstBlock* block = ast_pool -> NewBlock();
+    block -> AllocateStatements(1); // allocate 1 element
+    block -> left_brace_token = Token(1);
+    block -> AddStatement(p);
+    block -> right_brace_token = Sym(7) -> RightToken();
+    block -> no_braces = true;
+    Sym(1) = block;
+}
+./
+
+ForeachStatementNoShortIf ::= 'for' '(' FormalParameter ':' Expression ')'
+                              StatementNoShortIf
+\:$MakeForeachStatement:\
+/.$shared_function
+//
+// void MakeForeachStatement();
+//./
 
 --
 -- Assert statements were added in JDK 1.4, as part of JSR 41.
@@ -4435,6 +4550,7 @@ LabeledStatementNoShortIf ::= 'LabeledStatement'
 IfThenElseStatementNoShortIf ::= 'IfThenElseStatement'
 WhileStatementNoShortIf ::= 'WhileStatement'
 ForStatementNoShortIf ::= 'ForStatement'
+ForeachStatementNoShortIf ::= 'ForeachStatement'
 UnaryExpressionNotPlusMinus ::= 'UnaryExpression'
 
 PostfixExpressionNotName ::= 'PostfixExpression'

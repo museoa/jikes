@@ -29,6 +29,11 @@ class AstPackageDeclaration;
 class AstName;
 class TypeDependenceChecker;
 
+//
+// This class represents the control information common across all compilation
+// units.  It provides a cache for essential classes and objects, as well as
+// the command line options in force.
+//
 class Control : public StringConstant
 {
 public:
@@ -37,8 +42,6 @@ public:
     SymbolTable classpath_table;
     SymbolTable external_table;
 
-    PackageSymbol* system_package;
-    PackageSymbol* unnamed_package;
     unsigned dot_classpath_index;
     Tuple<PathSymbol*> classpath;
     Tuple<wchar_t*> bad_dirnames;
@@ -65,7 +68,7 @@ public:
     Scanner* scanner;
 
     //
-    //
+    // Tables for hashing everything we've seen so far.
     //
     LiteralLookupTable string_table;
     LiteralLookupTable int_table;
@@ -77,7 +80,7 @@ public:
     TypeLookupTable type_table;
 
     //
-    //
+    // This cache of name symbols is initialized in system.cpp.
     //
     NameSymbol* dot_name_symbol;
     NameSymbol* dot_dot_name_symbol;
@@ -102,9 +105,10 @@ public:
     NameSymbol* getClass_name_symbol;
     NameSymbol* getComponentType_name_symbol;
     NameSymbol* initCause_name_symbol;
+    NameSymbol* iterator_name_symbol;
 
     //
-    //
+    // The primitive types.
     //
     TypeSymbol* byte_type;
     TypeSymbol* short_type;
@@ -119,377 +123,178 @@ public:
     TypeSymbol* no_type;
 
     //
-    TypeSymbol* GetType(PackageSymbol*, const wchar_t*);
-
-    inline TypeSymbol* Serializable()
+    // System package accessors.
+    //
+    inline PackageSymbol* AnnotationPackage()
     {
-        if (! Serializable_type)
-        {
-            PackageSymbol* io_package =
-                ProcessPackage(US_java_SL_io);
-            FindPathsToDirectory(io_package);
-            Serializable_type = GetType(io_package, US_Serializable);
-        }
-        return Serializable_type;
+        if (! annotation_package)
+            annotation_package = ProcessPackage(US_java_SL_lang_SL_annotation);
+        return annotation_package;
+    }
+    inline PackageSymbol* IoPackage()
+    {
+        if (! io_package)
+            io_package = ProcessPackage(US_java_SL_io);
+        return io_package;
+    }
+    inline PackageSymbol* LangPackage()
+    {
+        assert(lang_package);
+        return lang_package;
+    }
+    inline PackageSymbol* UtilPackage()
+    {
+        if (! util_package)
+            util_package = ProcessPackage(US_java_SL_util);
+        return util_package;
+    }
+    inline PackageSymbol* UnnamedPackage()
+    {
+        assert(unnamed_package);
+        return unnamed_package;
     }
 
-    inline TypeSymbol* Object()
-    {
-        return Object_type ? Object_type
-            : Object_type = GetType(system_package, US_Object);
+    //
+    // System type and method accessors. Useful boilerplate macros.
+    //
+#define TYPE_ACCESSOR(type, package)                           \
+    inline TypeSymbol* type()                                  \
+    {                                                          \
+        if (! type ## _type)                                   \
+            type ## _type = ProcessSystemType(package, #type); \
+        return type ## _type;                                  \
     }
-
-    MethodSymbol* Object_getClassMethod();
-
-    inline TypeSymbol* Cloneable()
-    {
-        return Cloneable_type ? Cloneable_type
-            : Cloneable_type = GetType(system_package, US_Cloneable);
+#define METHOD_ACCESSOR(method, type, name, signature)                      \
+    inline MethodSymbol* method ## Method()                                 \
+    {                                                                       \
+        if (! method ## _method)                                            \
+            method ## _method = ProcessSystemMethod(type, name, signature); \
+        return method ## _method;                                           \
     }
-
-    inline TypeSymbol* String()
-    {
-        return String_type ? String_type
-            : String_type = GetType(system_package, US_String);
-    }
-
-    inline TypeSymbol* Void()
-    {
-        return Void_type ? Void_type
-            : Void_type = GetType(system_package, US_Void);
-    }
-
-    inline TypeSymbol* Boolean()
-    {
-        return Boolean_type ? Boolean_type
-            : Boolean_type = GetType(system_package, US_Boolean);
-    }
-
-    inline TypeSymbol* Byte()
-    {
-        return Byte_type ? Byte_type
-            : Byte_type = GetType(system_package, US_Byte);
-    }
-
-    inline TypeSymbol* Short()
-    {
-        return Short_type ? Short_type
-            : Short_type = GetType(system_package, US_Short);
-    }
-
-    inline TypeSymbol* Character()
-    {
-        return Character_type ? Character_type
-            : Character_type = GetType(system_package, US_Character);
-    }
-
-    inline TypeSymbol* Integer()
-    {
-        return Integer_type ? Integer_type
-            : Integer_type = GetType(system_package, US_Integer);
-    }
-
-    inline TypeSymbol* Long()
-    {
-        return Long_type ? Long_type
-            : Long_type = GetType(system_package, US_Long);
-    }
-
-    inline TypeSymbol* Float()
-    {
-        return Float_type ? Float_type
-            : Float_type = GetType(system_package, US_Float);
-    }
-
-    inline TypeSymbol* Double()
-    {
-        return Double_type ? Double_type
-            : Double_type = GetType(system_package, US_Double);
-    }
-
-    inline TypeSymbol* Comparable()
-    {
-        return Comparable_type ? Comparable_type
-            : Comparable_type = GetType(system_package, US_Comparable);
-    }
-
-    void InitAssertionErrorInfo();
-    inline TypeSymbol* AssertionError()
-    {
-        if (! AssertionError_type)
-        {
-            AssertionError_type = GetType(system_package, US_AssertionError);
-            InitAssertionErrorInfo();
-        }
-        return AssertionError_type;
-    }
-
-    MethodSymbol* AssertionError_InitMethod()
-    {
-        if (! AssertionError_Init_method)
-            (void) AssertionError();
-        return AssertionError_Init_method;
-    }
-
-    MethodSymbol* AssertionError_InitWithCharMethod()
-    {
-        if (! AssertionError_InitWithChar_method)
-            (void) AssertionError();
-        return AssertionError_InitWithChar_method;
-    }
-
-    MethodSymbol* AssertionError_InitWithBooleanMethod()
-    {
-        if (! AssertionError_InitWithBoolean_method)
-            (void) AssertionError();
-        return AssertionError_InitWithBoolean_method;
-    }
-
-    MethodSymbol* AssertionError_InitWithIntMethod()
-    {
-        if (! AssertionError_InitWithInt_method)
-            (void) AssertionError();
-        return AssertionError_InitWithInt_method;
-    }
-
-    MethodSymbol* AssertionError_InitWithLongMethod()
-    {
-        if (! AssertionError_InitWithLong_method)
-            (void) AssertionError();
-        return AssertionError_InitWithLong_method;
-    }
-
-    MethodSymbol* AssertionError_InitWithFloatMethod()
-    {
-        if (! AssertionError_InitWithFloat_method)
-            (void) AssertionError();
-        return AssertionError_InitWithFloat_method;
-    }
-
-    MethodSymbol* AssertionError_InitWithDoubleMethod()
-    {
-        if (! AssertionError_InitWithDouble_method)
-            (void) AssertionError();
-        return AssertionError_InitWithDouble_method;
-    }
-
-    MethodSymbol* AssertionError_InitWithObjectMethod()
-    {
-        if (! AssertionError_InitWithObject_method)
-            (void) AssertionError();
-        return AssertionError_InitWithObject_method;
-    }
-
-    void InitClassInfo();
-    inline TypeSymbol* Class()
-    {
-        if (! Class_type)
-        {
-            Class_type = GetType(system_package, US_Class);
-            InitClassInfo();
-        }
-        return Class_type;
-    }
-
-    MethodSymbol* Class_forNameMethod()
-    {
-        if (! Class_forName_method)
-            (void) Class();
-        return Class_forName_method;
-    }
-
-    MethodSymbol* Class_getComponentTypeMethod()
-    {
-        if (! Class_getComponentType_method)
-            (void) Class();
-        return Class_getComponentType_method;
-    }
-
-    MethodSymbol* Class_desiredAssertionStatusMethod()
-    {
-        if (! Class_desiredAssertionStatus_method)
-            (void) Class();
-        return Class_desiredAssertionStatus_method;
-    }
-
-
-    void InitThrowableInfo();
-    inline TypeSymbol* Throwable()
-    {
-        if (! Throwable_type)
-        {
-            Throwable_type = GetType(system_package, US_Throwable);
-            InitThrowableInfo();
-        }
-        return Throwable_type;
-    }
-
-    MethodSymbol* Throwable_getMessageMethod()
-    {
-        if (! Throwable_getMessage_method)
-            (void) Throwable();
-        return Throwable_getMessage_method;
-    }
-
-    MethodSymbol* Throwable_initCauseMethod()
-    {
-        if (! Throwable_initCause_method)
-            (void) Throwable();
-        return Throwable_initCause_method;
-    }
-
-    inline TypeSymbol* Exception()
-    {
-        return Exception_type ? Exception_type
-            : Exception_type = GetType(system_package, US_Exception);
-    }
-
-    inline TypeSymbol* RuntimeException()
-    {
-        return RuntimeException_type ? RuntimeException_type
-            : RuntimeException_type = GetType(system_package,
-                                              US_RuntimeException);
-    }
-
-    inline TypeSymbol* ClassNotFoundException()
-    {
-        return ClassNotFoundException_type ? ClassNotFoundException_type
-            : (ClassNotFoundException_type =
-               GetType(system_package, US_ClassNotFoundException));
-    }
-
-    inline TypeSymbol* Error()
-    {
-        return Error_type ? Error_type
-            : Error_type = GetType(system_package, US_Error);
-    }
-
-    void InitNoClassDefFoundErrorInfo();
-    inline TypeSymbol* NoClassDefFoundError()
-    {
-        if (! NoClassDefFoundError_type)
-        {
-            NoClassDefFoundError_type =
-                GetType(system_package, US_NoClassDefFoundError);
-            InitNoClassDefFoundErrorInfo();
-        }
-        return NoClassDefFoundError_type;
-    }
-
-    MethodSymbol* NoClassDefFoundError_InitStringMethod()
-    {
-        if (! NoClassDefFoundError_InitString_method)
-            (void) NoClassDefFoundError();
-        return NoClassDefFoundError_InitString_method;
-    }
-
-    MethodSymbol* NoClassDefFoundError_InitMethod()
-    {
-        if (! NoClassDefFoundError_Init_method)
-            (void) NoClassDefFoundError();
-        return NoClassDefFoundError_Init_method;
-    }
-
-    void InitStringBufferInfo();
-    inline TypeSymbol* StringBuffer()
-    {
-        if (! StringBuffer_type)
-        {
-            StringBuffer_type =
-                GetType(system_package, US_StringBuffer);
-            InitStringBufferInfo();
-        }
-        return StringBuffer_type;
-    }
-
-
-    MethodSymbol* StringBuffer_InitMethod()
-    {
-        if (! StringBuffer_Init_method)
-            (void) StringBuffer();
-        return StringBuffer_Init_method;
-    }
-
-
-    MethodSymbol* StringBuffer_InitWithStringMethod()
-    {
-        if (! StringBuffer_InitWithString_method)
-            (void) StringBuffer();
-        return StringBuffer_InitWithString_method;
-    }
-
-
-    MethodSymbol* StringBuffer_toStringMethod()
-    {
-        if (! StringBuffer_InitWithString_method)
-            (void) StringBuffer();
-        return StringBuffer_toString_method;
-    }
-
-
-    MethodSymbol* StringBuffer_append_charMethod()
-    {
-        if (! StringBuffer_append_char_method)
-            (void) StringBuffer();
-        return StringBuffer_append_char_method;
-    }
-
-
-    MethodSymbol* StringBuffer_append_booleanMethod()
-    {
-        if (! StringBuffer_append_boolean_method)
-            (void) StringBuffer();
-        return StringBuffer_append_boolean_method;
-    }
-
-
-    MethodSymbol* StringBuffer_append_intMethod()
-    {
-        if (! StringBuffer_append_int_method)
-            (void) StringBuffer();
-        return StringBuffer_append_int_method;
-    }
-
-
-    MethodSymbol* StringBuffer_append_longMethod()
-    {
-        if (! StringBuffer_append_long_method)
-            (void) StringBuffer();
-        return StringBuffer_append_long_method;
-    }
-
-
-    MethodSymbol* StringBuffer_append_floatMethod()
-    {
-        if (! StringBuffer_append_float_method)
-            (void) StringBuffer();
-        return StringBuffer_append_float_method;
-    }
-
-
-    MethodSymbol* StringBuffer_append_doubleMethod()
-    {
-        if (! StringBuffer_append_double_method)
-            (void) StringBuffer();
-        return StringBuffer_append_double_method;
-    }
-
-
-    MethodSymbol* StringBuffer_append_stringMethod()
-    {
-        if (! StringBuffer_append_string_method)
-            (void) StringBuffer();
-        return StringBuffer_append_string_method;
-    }
-
-
-    MethodSymbol* StringBuffer_append_objectMethod()
-    {
-        if (! StringBuffer_append_object_method)
-            (void) StringBuffer();
-        return StringBuffer_append_object_method;
-    }
-
+    TYPE_ACCESSOR(Annotation, AnnotationPackage())
+        TYPE_ACCESSOR(AssertionError, lang_package)
+        METHOD_ACCESSOR(AssertionError_Init, AssertionError(),
+                        "<init>", "()V")
+        METHOD_ACCESSOR(AssertionError_InitWithChar, AssertionError(),
+                        "<init>", "(C)V")
+        METHOD_ACCESSOR(AssertionError_InitWithBoolean, AssertionError(),
+                        "<init>", "(Z)V")
+        METHOD_ACCESSOR(AssertionError_InitWithInt, AssertionError(),
+                        "<init>", "(I)V")
+        METHOD_ACCESSOR(AssertionError_InitWithLong, AssertionError(),
+                        "<init>", "(J)V")
+        METHOD_ACCESSOR(AssertionError_InitWithFloat, AssertionError(),
+                        "<init>", "(F)V")
+        METHOD_ACCESSOR(AssertionError_InitWithDouble, AssertionError(),
+                        "<init>", "(D)V")
+        METHOD_ACCESSOR(AssertionError_InitWithObject, AssertionError(),
+                        "<init>", "(Ljava/lang/Object;)V")
+        TYPE_ACCESSOR(Boolean, lang_package)
+        TYPE_ACCESSOR(Byte, lang_package)
+        TYPE_ACCESSOR(Character, lang_package)
+        TYPE_ACCESSOR(Class, lang_package)
+        METHOD_ACCESSOR(Class_forName, Class(),
+                        "forName", "(Ljava/lang/String;)Ljava/lang/Class;")
+        METHOD_ACCESSOR(Class_getComponentType, Class(),
+                        "getComponentType", "()Ljava/lang/Class;")
+        METHOD_ACCESSOR(Class_desiredAssertionStatus, Class(),
+                        "desiredAssertionStatus", "()Z")
+        TYPE_ACCESSOR(ClassNotFoundException, lang_package)
+        TYPE_ACCESSOR(Cloneable, lang_package)
+        TYPE_ACCESSOR(Comparable, lang_package)
+        TYPE_ACCESSOR(Double, lang_package)
+        TYPE_ACCESSOR(Enum, lang_package)
+        METHOD_ACCESSOR(Enum_Init, Enum(),
+                        "<init>", "(Ljava/lang/String;I)V")
+        METHOD_ACCESSOR(Enum_ordinal, Enum(),
+                        "ordinal", "()I")
+        METHOD_ACCESSOR(Enum_valueOf, Enum(), "valueOf",
+                        "(Ljava/lang/Class;Ljava/lang/String;)Ljava/lang/Enum;")
+        TYPE_ACCESSOR(Error, lang_package)
+        TYPE_ACCESSOR(Exception, lang_package)
+        TYPE_ACCESSOR(Float, lang_package)
+        TYPE_ACCESSOR(Integer, lang_package)
+        TYPE_ACCESSOR(Iterable, lang_package)
+        METHOD_ACCESSOR(Iterable_iterator, Iterable(),
+                        "iterator", "()Ljava/util/Iterator;")
+        TYPE_ACCESSOR(Iterator, UtilPackage())
+        METHOD_ACCESSOR(Iterator_hasNext, Iterator(),
+                        "hasNext", "()Z")
+        METHOD_ACCESSOR(Iterator_next, Iterator(),
+                        "next", "()Ljava/lang/Object;")
+        TYPE_ACCESSOR(Long, lang_package)
+        TYPE_ACCESSOR(NoClassDefFoundError, lang_package)
+        METHOD_ACCESSOR(NoClassDefFoundError_Init,
+                        NoClassDefFoundError(),
+                        "<init>", "()V")
+        METHOD_ACCESSOR(NoClassDefFoundError_InitString,
+                        NoClassDefFoundError(),
+                        "<init>", "(Ljava/lang/String;)V")
+        TYPE_ACCESSOR(Object, lang_package)
+        METHOD_ACCESSOR(Object_getClass, Object(),
+                        "getClass", "()Ljava/lang/Class;")
+        TYPE_ACCESSOR(Overrides, lang_package)
+        TYPE_ACCESSOR(Retention, AnnotationPackage())
+        TYPE_ACCESSOR(RuntimeException, lang_package)
+        TYPE_ACCESSOR(Serializable, IoPackage())
+        TYPE_ACCESSOR(Short, lang_package)
+        TYPE_ACCESSOR(String, lang_package)
+        TYPE_ACCESSOR(StringBuffer, lang_package)
+        METHOD_ACCESSOR(StringBuffer_Init, StringBuffer(),
+                        "<init>", "()V")
+        METHOD_ACCESSOR(StringBuffer_InitWithString, StringBuffer(),
+                        "<init>", "(Ljava/lang/String;)V")
+        METHOD_ACCESSOR(StringBuffer_toString, StringBuffer(),
+                        "toString", "()Ljava/lang/String;")
+        METHOD_ACCESSOR(StringBuffer_append_char, StringBuffer(),
+                        "append", "(C)Ljava/lang/StringBuffer;")
+        METHOD_ACCESSOR(StringBuffer_append_boolean, StringBuffer(),
+                        "append", "(Z)Ljava/lang/StringBuffer;")
+        METHOD_ACCESSOR(StringBuffer_append_int, StringBuffer(),
+                        "append", "(I)Ljava/lang/StringBuffer;")
+        METHOD_ACCESSOR(StringBuffer_append_long, StringBuffer(),
+                        "append", "(J)Ljava/lang/StringBuffer;")
+        METHOD_ACCESSOR(StringBuffer_append_float, StringBuffer(),
+                        "append", "(F)Ljava/lang/StringBuffer;")
+        METHOD_ACCESSOR(StringBuffer_append_double, StringBuffer(),
+                        "append", "(D)Ljava/lang/StringBuffer;")
+        METHOD_ACCESSOR(StringBuffer_append_string, StringBuffer(), "append",
+                        "(Ljava/lang/String;)Ljava/lang/StringBuffer;")
+        METHOD_ACCESSOR(StringBuffer_append_object, StringBuffer(), "append",
+                        "(Ljava/lang/Object;)Ljava/lang/StringBuffer;")
+        TYPE_ACCESSOR(StringBuilder, lang_package)
+        METHOD_ACCESSOR(StringBuilder_Init, StringBuilder(),
+                        "<init>", "()V")
+        METHOD_ACCESSOR(StringBuilder_InitWithString, StringBuilder(),
+                        "<init>", "(Ljava/lang/String;)V")
+        METHOD_ACCESSOR(StringBuilder_toString, StringBuilder(),
+                        "toString", "()Ljava/lang/String;")
+        METHOD_ACCESSOR(StringBuilder_append_char, StringBuilder(),
+                        "append", "(C)Ljava/lang/StringBuilder;")
+        METHOD_ACCESSOR(StringBuilder_append_boolean, StringBuilder(),
+                        "append", "(Z)Ljava/lang/StringBuilder;")
+        METHOD_ACCESSOR(StringBuilder_append_int, StringBuilder(),
+                        "append", "(I)Ljava/lang/StringBuilder;")
+        METHOD_ACCESSOR(StringBuilder_append_long, StringBuilder(),
+                        "append", "(J)Ljava/lang/StringBuilder;")
+        METHOD_ACCESSOR(StringBuilder_append_float, StringBuilder(),
+                        "append", "(F)Ljava/lang/StringBuilder;")
+        METHOD_ACCESSOR(StringBuilder_append_double, StringBuilder(),
+                        "append", "(D)Ljava/lang/StringBuilder;")
+        METHOD_ACCESSOR(StringBuilder_append_string, StringBuilder(), "append",
+                        "(Ljava/lang/String;)Ljava/lang/StringBuilder;")
+        METHOD_ACCESSOR(StringBuilder_append_object, StringBuilder(), "append",
+                        "(Ljava/lang/Object;)Ljava/lang/StringBuilder;")
+        TYPE_ACCESSOR(Target, AnnotationPackage())
+        TYPE_ACCESSOR(Throwable, lang_package)
+        METHOD_ACCESSOR(Throwable_getMessage, Throwable(),
+                        "getMessage", "()Ljava/lang/String;")
+        METHOD_ACCESSOR(Throwable_initCause, Throwable(), "initCause",
+                        "(Ljava/lang/Throwable;)Ljava/lang/Throwable;")
+        TYPE_ACCESSOR(Void, lang_package)
+#undef TYPE_ACCESSOR
+#undef METHOD_ACCESSOR
+        
     IntLiteralTable int_pool;
     LongLiteralTable long_pool;
     FloatLiteralTable float_pool;
@@ -642,39 +447,27 @@ public:
     DirectorySymbol* ProcessSubdirectories(wchar_t*, int, bool);
 
 private:
-
     LiteralValue bad_value;
 
-    TypeSymbol* Serializable_type;
-    TypeSymbol* Object_type;
-    TypeSymbol* Cloneable_type;
-    TypeSymbol* String_type;
-    TypeSymbol* Void_type;
-    TypeSymbol* Boolean_type;
-    TypeSymbol* Byte_type;
-    TypeSymbol* Short_type;
-    TypeSymbol* Character_type;
-    TypeSymbol* Integer_type;
-    TypeSymbol* Long_type;
-    TypeSymbol* Float_type;
-    TypeSymbol* Double_type;
-    TypeSymbol* Comparable_type;
+    //
+    // Cache of system packages. lang and unnamed are always valid, because of
+    // ProcessUnnamedPackage and ProcessSystemInformation in system.cpp, the
+    // constructor initializes the rest to NULL in control.cpp; see accessor
+    // methods above for assignment.
+    //
+    PackageSymbol* annotation_package;
+    PackageSymbol* io_package;
+    PackageSymbol* lang_package;
+    PackageSymbol* util_package;
+    PackageSymbol* unnamed_package;
+
+    //
+    // Cache of system types and methods. Constructor initializes these to
+    // NULL in control.cpp; see accessor methods above for assignment. The
+    // types are in java.lang unless commented otherwise.
+    //
+    TypeSymbol* Annotation_type; // java.lang.annotation
     TypeSymbol* AssertionError_type;
-    TypeSymbol* Class_type;
-    TypeSymbol* Throwable_type;
-    TypeSymbol* Exception_type;
-    TypeSymbol* RuntimeException_type;
-    TypeSymbol* ClassNotFoundException_type;
-    TypeSymbol* Error_type;
-    TypeSymbol* NoClassDefFoundError_type;
-    TypeSymbol* StringBuffer_type;
-
-    MethodSymbol* Object_getClass_method;
-
-    MethodSymbol* Class_forName_method;
-    MethodSymbol* Class_getComponentType_method;
-    MethodSymbol* Class_desiredAssertionStatus_method;
-
     MethodSymbol* AssertionError_Init_method;
     MethodSymbol* AssertionError_InitWithChar_method;
     MethodSymbol* AssertionError_InitWithBoolean_method;
@@ -683,13 +476,43 @@ private:
     MethodSymbol* AssertionError_InitWithFloat_method;
     MethodSymbol* AssertionError_InitWithDouble_method;
     MethodSymbol* AssertionError_InitWithObject_method;
-
-    MethodSymbol* Throwable_getMessage_method;
-    MethodSymbol* Throwable_initCause_method;
-
-    MethodSymbol* NoClassDefFoundError_InitString_method;
+    TypeSymbol* Boolean_type;
+    TypeSymbol* Byte_type;
+    TypeSymbol* Character_type;
+    TypeSymbol* Class_type;
+    MethodSymbol* Class_forName_method;
+    MethodSymbol* Class_getComponentType_method;
+    MethodSymbol* Class_desiredAssertionStatus_method;
+    TypeSymbol* ClassNotFoundException_type;
+    TypeSymbol* Cloneable_type;
+    TypeSymbol* Comparable_type;
+    TypeSymbol* Double_type;
+    TypeSymbol* Enum_type;
+    MethodSymbol* Enum_Init_method;
+    MethodSymbol* Enum_ordinal_method;
+    MethodSymbol* Enum_valueOf_method;
+    TypeSymbol* Error_type;
+    TypeSymbol* Exception_type;
+    TypeSymbol* Float_type;
+    TypeSymbol* Integer_type;
+    TypeSymbol* Iterable_type;
+    MethodSymbol* Iterable_iterator_method;
+    TypeSymbol* Iterator_type; // java.util
+    MethodSymbol* Iterator_hasNext_method;
+    MethodSymbol* Iterator_next_method;
+    TypeSymbol* Long_type;
+    TypeSymbol* NoClassDefFoundError_type;
     MethodSymbol* NoClassDefFoundError_Init_method;
-
+    MethodSymbol* NoClassDefFoundError_InitString_method;
+    TypeSymbol* Object_type;
+    MethodSymbol* Object_getClass_method;
+    TypeSymbol* Overrides_type; // spelled Override? JSR 175 not sure...
+    TypeSymbol* Retention_type; // java.lang.annotation
+    TypeSymbol* RuntimeException_type;
+    TypeSymbol* Serializable_type; // java.io
+    TypeSymbol* Short_type;
+    TypeSymbol* String_type;
+    TypeSymbol* StringBuffer_type;
     MethodSymbol* StringBuffer_Init_method;
     MethodSymbol* StringBuffer_InitWithString_method;
     MethodSymbol* StringBuffer_toString_method;
@@ -701,8 +524,26 @@ private:
     MethodSymbol* StringBuffer_append_double_method;
     MethodSymbol* StringBuffer_append_string_method;
     MethodSymbol* StringBuffer_append_object_method;
+    TypeSymbol* StringBuilder_type;
+    MethodSymbol* StringBuilder_Init_method;
+    MethodSymbol* StringBuilder_InitWithString_method;
+    MethodSymbol* StringBuilder_toString_method;
+    MethodSymbol* StringBuilder_append_char_method;
+    MethodSymbol* StringBuilder_append_boolean_method;
+    MethodSymbol* StringBuilder_append_int_method;
+    MethodSymbol* StringBuilder_append_long_method;
+    MethodSymbol* StringBuilder_append_float_method;
+    MethodSymbol* StringBuilder_append_double_method;
+    MethodSymbol* StringBuilder_append_string_method;
+    MethodSymbol* StringBuilder_append_object_method;
+    TypeSymbol* Target_type; // java.lang.annotation
+    TypeSymbol* Throwable_type;
+    MethodSymbol* Throwable_getMessage_method;
+    MethodSymbol* Throwable_initCause_method;
+    TypeSymbol* Void_type;
 
     static int ConvertUnicodeToUtf8(const wchar_t*, char*);
+    NameSymbol* FindOrInsertSystemName(const char* name);
 
     void ProcessGlobals();
     void ProcessUnnamedPackage();
@@ -713,6 +554,8 @@ private:
     void ProcessSourcePath();
     TypeSymbol* GetPrimitiveType(const wchar_t*, const char*);
     void ProcessSystemInformation();
+    TypeSymbol* ProcessSystemType(PackageSymbol*, const char*);
+    MethodSymbol* ProcessSystemMethod(TypeSymbol*, const char*, const char*);
 
     void ProcessFile(FileSymbol*);
     void ProcessMembers();

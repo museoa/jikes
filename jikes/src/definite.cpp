@@ -1091,6 +1091,71 @@ void Semantic::DefiniteForStatement(Ast* stmt)
 }
 
 
+void Semantic::DefiniteForeachStatement(Ast* stmt)
+{
+    AstForeachStatement* for_statement = (AstForeachStatement*) stmt;
+
+    //
+    // Note that in constructing the Ast, the parser encloses each
+    // for-statement in its own block, so that the loop variable defined in
+    // the formal parameter has scope limited to the for loop. Thus, we do
+    // not need to worry about declaring or reclaiming variables in the
+    // for-init section in this method.
+    //
+    // For example, the following sequence of statements is legal:
+    //
+    //     for (int i : new int[0]);
+    //     for (int i : new int[0]);
+    //
+    AstVariableDeclarator* variable_declarator =
+        for_statement -> formal_parameter -> formal_declarator;
+    VariableSymbol* variable_symbol = variable_declarator -> symbol;
+    if (variable_symbol)
+    {
+        int index = variable_symbol -> LocalVariableIndex(this);
+        if (control.option.g & JikesOption::VARS)
+        {
+#ifdef DUMP
+            Coutput << "(3.6) Foreach Variable \"" << variable_symbol -> Name()
+                    << " #" << index << "\" is declared at line "
+                    << lex_stream -> Line(variable_declarator -> LeftToken())
+                    << endl;
+#endif // DUMP
+            DefiniteBlocks() -> TopBlock() ->
+                AddLocallyDefinedVariable(variable_symbol);
+        }
+        DefinitelyAssignedVariables() -> AssignElement(index);
+    }
+
+    DefiniteExpression(for_statement -> expression,
+                       *DefinitelyAssignedVariables());
+    BitSet starting_set(DefinitelyAssignedVariables() -> du_set);
+    DefinitePair before_statement(*DefinitelyAssignedVariables());
+    DefiniteFinalAssignments() -> Push();
+
+    //
+    // We have already given a warning if the statement is unreachable
+    //
+    if (for_statement -> statement -> is_reachable)
+        DefiniteBlock(for_statement -> statement);
+
+    //
+    // Compute the set of variables that are definitely assigned after the
+    // contained statement and after every continue statement that may exit
+    // the body of the for statement.
+    //
+    *DefinitelyAssignedVariables() *= DefiniteBlocks() -> TopContinuePair();
+    DefiniteLoopBody(starting_set);
+
+    //
+    // Compute the set of variables that are DA before every break statement
+    // that may exit the for statement.
+    //
+    *DefinitelyAssignedVariables() =
+        DefiniteBlocks() -> TopBreakPair() * before_statement;        
+}
+
+
 void Semantic::DefiniteDoStatement(Ast* stmt)
 {
     AstDoStatement* do_statement = (AstDoStatement*) stmt;

@@ -1,3 +1,51 @@
+2004-02-23  Eric Blake  <ebb9@byu.net>
+
+	* configure.ac: Fix typo in --enable-source15 test.
+	* configure: Regenerate.
+	* src/config.h.in: Ditto.
+	* src/access.h (Print): Minor improvement.
+	* src/expr.cpp (CastValue): Ditto.
+	* src/parser.h: Ditto.
+
+	* src/control.h (system_package, unnamed_package): Replace with
+	LangPackage() and UnnamedPackage().
+	(TYPE_ACCESSOR, METHOD_ACCESSOR): Utility macros to make adding
+	new system symbols easier.
+	* src/control.cpp: Update accordingly.
+	* src/system.cpp: Ditto.
+	* src/class.cpp: Ditto.
+	* src/decl.cpp: Ditto.
+	* src/depencd.cpp: Ditto.
+	* src/platform.h: Add several new string constants. This file
+	could stand a cleanup after the control refactor.
+	* src/platform.cpp: Update accordingly.
+
+	* NEWS: Document the addition of enhanced for loops.
+	* src/ast.h (AstForeachStatement): New class.
+	* src/ast.cpp: Support it.
+	* src/unparse.cpp: Ditto.
+	* src/semantic.h (ProcessForeachStatement),
+	(DefiniteForeachStatement): New methods.
+	* src/body.cpp (ProcessForeachStatement),
+	(ProcessContinueStatement): Support foreach loops.
+	* src/definite.cpp (DefiniteForeachStatement): Ditto.
+	* src/bytecode.h (EmitForeachStatement): New method.
+	* src/bytecode.cpp: Support foreach loops.
+	* src/error.h (INCOMPATIBLE_TYPE_FOR_FOREACH, TYPE_NOT_ITERABLE),
+	(FOREACH_UNSUPPORTED): New errors.
+	* src/error.cpp: Support foreach loops.
+	* src/symbol.h (helper_variable_index): Rename from
+	try_or_synchronized_variable_index, for use by foreach.
+	* src/symbol.cpp: Support rename.
+	* src/java.g (FormalParameter): Refactor, to allow LALR(1) grammar
+	with the previously refactored LocalVariableDeclaration.
+	(ForeachStatement): Parse new construct.
+	* src/javaact.cpp: Regenerate.
+	* src/javaact.h: Ditto.
+	* src/javadcl.h: Ditto.
+	* src/javadef.h: Ditto.
+	* src/javasym.h: Ditto.
+
 2004-02-22  Elliott Hughes  <enh@acm.org>
 
 	* body.cpp (ProcessLocalVariableDeclarationStatement): Make the
@@ -9,8 +57,9 @@
 	ProcessFormalParameters, because that's invoked before the variable
 	symbols can have an owner -- how else do you check for duplicate
 	signatures? -- but we do need to come back and do it eventually.
-	The problems was noticed with reporting the location of the original
-	occurrence of a local variable, where the location would be given as "".
+	The problems was noticed with reporting the location of the
+	original occurrence of a local variable, where the location would
+	be given as "".
 
 2004-02-17  Eric Blake  <ebb9@byu.net>
 

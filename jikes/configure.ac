@@ -83,11 +83,11 @@ ACX_CHECK_PATHNAME_STYLE_DOS()
 dnl FIXME: This is a quick hack to define UNIX_FILE_SYSTEM
 dnl or WIN32_FILE_SYSTEM, we need to go back and fix this
 dnl to do a feature test in each place this symbol is used
-if test "$acx_cv_pathname_style_dos" = "yes"; then
-  AC_DEFINE(WIN32_FILE_SYSTEM,,[quick hack to use Win32 file system, fixme])
-else
-  AC_DEFINE(UNIX_FILE_SYSTEM,,[quick hack to use UNIX file system, fixme])
-fi
+AS_IF([test "$acx_cv_pathname_style_dos" = yes],
+      [AC_DEFINE([WIN32_FILE_SYSTEM], [],
+                 [quick hack to use Win32 file system, fixme])],
+      [AC_DEFINE([UNIX_FILE_SYSTEM], [],
+                 [quick hack to use UNIX file system, fixme])])
 
 dnl	Don't define classes in a Jikes namespace by default
 dnl	since most compilers do not support C++ namespaces properly.
@@ -352,9 +352,11 @@ AC_ARG_ENABLE([source15],
               [AS_HELP_STRING([--enable-source15],
                               [Enable experimental 1.5 source features])],
               [source15=$enableval], [source15=no])
-AS_IF([test $source15=yes],
+AS_IF([test $source15 = yes],
       [AC_DEFINE([ENABLE_SOURCE_15], [1],
-                 [Define to enable experimental `-source 1.5' features.])])
+       [Define as nonzero to enable experimental `-source 1.5' features.])],
+      [AC_DEFINE([ENABLE_SOURCE_15], [0],
+       [Define as nonzero to enable experimental `-source 1.5' features.])])
 
 # Subst variables into Makefile.in to produce the Makefile
 

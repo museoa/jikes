@@ -20,6 +20,8 @@ void Parser::InitRuleAction()
 #else // HEADERS
     AstType* MakeArrayType(int tokennum);
     AstName* MakeSimpleName(int tokennum);
+    void MakeFormalParameter(AstModifiers* modifiers, AstType* type,
+                             AstVariableDeclaratorId* variable);
     AstArguments* MakeArguments(int tokennum);
     void MakeLocalVariable(AstModifiers* modifiers, AstType* type,
                            AstListNode* variables);
@@ -46,6 +48,7 @@ void Parser::InitRuleAction()
     void MakeMethodDeclaration();
     void MakeMethodHeader();
     void MakeMethodDeclarator();
+    void MakeFormalParameter();
     void MakeConstructorDeclaration();
     void MakeLabeledStatement();
     void MakeExpressionStatement();
@@ -53,6 +56,7 @@ void Parser::InitRuleAction()
     void MakeSwitchLabel();
     void MakeWhileStatement();
     void MakeForStatement();
+    void MakeForeachStatement();
     void MakeAssertStatement();
     void MakeTryStatement();
     void MakeParenthesizedExpression();
@@ -480,19 +484,15 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[88] = &Parser::Act88;
-#else
-    void Act88();
+    rule_action[88] = &Parser::MakeFormalParameter;
 #endif
 
 #ifndef HEADERS
-    rule_action[89] = &Parser::SetSym1ToSym2;
+    rule_action[89] = &Parser::MakeFormalParameter;
 #endif
 
 #ifndef HEADERS
-    rule_action[90] = &Parser::Act90;
-#else
-    void Act90();
+    rule_action[90] = &Parser::MakeFormalParameter;
 #endif
 
 #ifndef HEADERS
@@ -502,11 +502,13 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[92] = &Parser::MakeConstructorDeclaration;
+    rule_action[92] = &Parser::SetSym1ToSym2;
 #endif
 
 #ifndef HEADERS
-    rule_action[93] = &Parser::MakeMethodDeclarator;
+    rule_action[93] = &Parser::Act93;
+#else
+    void Act93();
 #endif
 
 #ifndef HEADERS
@@ -516,17 +518,17 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[95] = &Parser::Act95;
+    rule_action[95] = &Parser::MakeConstructorDeclaration;
+#endif
+
+#ifndef HEADERS
+    rule_action[96] = &Parser::MakeMethodDeclarator;
+#endif
+
+#ifndef HEADERS
+    rule_action[97] = &Parser::Act97;
 #else
-    void Act95();
-#endif
-
-#ifndef HEADERS
-    rule_action[96] = &Parser::MakeQualifiedSuper;
-#endif
-
-#ifndef HEADERS
-    rule_action[97] = &Parser::MakeQualifiedSuper;
+    void Act97();
 #endif
 
 #ifndef HEADERS
@@ -536,11 +538,11 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[99] = &Parser::SetSym1ToSym2;
+    rule_action[99] = &Parser::MakeQualifiedSuper;
 #endif
 
 #ifndef HEADERS
-    rule_action[100] = &Parser::MakeClassBody;
+    rule_action[100] = &Parser::MakeQualifiedSuper;
 #endif
 
 #ifndef HEADERS
@@ -550,31 +552,31 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[102] = &Parser::Act102;
+    rule_action[102] = &Parser::SetSym1ToSym2;
+#endif
+
+#ifndef HEADERS
+    rule_action[103] = &Parser::MakeClassBody;
+#endif
+
+#ifndef HEADERS
+    rule_action[104] = &Parser::Act104;
 #else
-    void Act102();
+    void Act104();
 #endif
 
 #ifndef HEADERS
-    rule_action[103] = &Parser::MakeArrayInitializer;
-#endif
-
-#ifndef HEADERS
-    rule_action[104] = &Parser::MakeArrayInitializer;
-#endif
-
-#ifndef HEADERS
-    rule_action[105] = &Parser::StartList;
-#endif
-
-#ifndef HEADERS
-    rule_action[106] = &Parser::AddList3;
-#endif
-
-#ifndef HEADERS
-    rule_action[107] = &Parser::Act107;
+    rule_action[105] = &Parser::Act105;
 #else
-    void Act107();
+    void Act105();
+#endif
+
+#ifndef HEADERS
+    rule_action[106] = &Parser::MakeArrayInitializer;
+#endif
+
+#ifndef HEADERS
+    rule_action[107] = &Parser::MakeArrayInitializer;
 #endif
 
 #ifndef HEADERS
@@ -582,21 +584,21 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[109] = &Parser::AddList2;
+    rule_action[109] = &Parser::AddList3;
 #endif
 
 #ifndef HEADERS
-    rule_action[110] = &Parser::NoAction;
-#endif
-
-#ifndef HEADERS
-    rule_action[111] = &Parser::NoAction;
-#endif
-
-#ifndef HEADERS
-    rule_action[112] = &Parser::Act112;
+    rule_action[110] = &Parser::Act110;
 #else
-    void Act112();
+    void Act110();
+#endif
+
+#ifndef HEADERS
+    rule_action[111] = &Parser::StartList;
+#endif
+
+#ifndef HEADERS
+    rule_action[112] = &Parser::AddList2;
 #endif
 
 #ifndef HEADERS
@@ -604,39 +606,41 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[114] = &Parser::Act114;
+    rule_action[114] = &Parser::NoAction;
+#endif
+
+#ifndef HEADERS
+    rule_action[115] = &Parser::Act115;
 #else
-    void Act114();
+    void Act115();
 #endif
 
 #ifndef HEADERS
-    rule_action[115] = &Parser::MakeLocalVariable;
+    rule_action[116] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[116] = &Parser::MakeLocalVariable;
-#endif
-
-#ifndef HEADERS
-    rule_action[117] = &Parser::MakeLocalVariable;
-#endif
-
-#ifndef HEADERS
-    rule_action[118] = &Parser::Act118;
+    rule_action[117] = &Parser::Act117;
 #else
-    void Act118();
+    void Act117();
 #endif
 
 #ifndef HEADERS
-    rule_action[119] = &Parser::NoAction;
+    rule_action[118] = &Parser::MakeLocalVariable;
 #endif
 
 #ifndef HEADERS
-    rule_action[120] = &Parser::NoAction;
+    rule_action[119] = &Parser::MakeLocalVariable;
 #endif
 
 #ifndef HEADERS
-    rule_action[121] = &Parser::NoAction;
+    rule_action[120] = &Parser::MakeLocalVariable;
+#endif
+
+#ifndef HEADERS
+    rule_action[121] = &Parser::Act121;
+#else
+    void Act121();
 #endif
 
 #ifndef HEADERS
@@ -720,43 +724,43 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[142] = &Parser::Act142;
+    rule_action[142] = &Parser::NoAction;
+#endif
+
+#ifndef HEADERS
+    rule_action[143] = &Parser::NoAction;
+#endif
+
+#ifndef HEADERS
+    rule_action[144] = &Parser::NoAction;
+#endif
+
+#ifndef HEADERS
+    rule_action[145] = &Parser::NoAction;
+#endif
+
+#ifndef HEADERS
+    rule_action[146] = &Parser::NoAction;
+#endif
+
+#ifndef HEADERS
+    rule_action[147] = &Parser::Act147;
 #else
-    void Act142();
+    void Act147();
 #endif
 
 #ifndef HEADERS
-    rule_action[143] = &Parser::MakeLabeledStatement;
+    rule_action[148] = &Parser::MakeLabeledStatement;
 #endif
 
 #ifndef HEADERS
-    rule_action[144] = &Parser::MakeLabeledStatement;
+    rule_action[149] = &Parser::MakeLabeledStatement;
 #endif
 
 #ifndef HEADERS
-    rule_action[145] = &Parser::Act145;
+    rule_action[150] = &Parser::Act150;
 #else
-    void Act145();
-#endif
-
-#ifndef HEADERS
-    rule_action[146] = &Parser::MakeExpressionStatement;
-#endif
-
-#ifndef HEADERS
-    rule_action[147] = &Parser::MakeExpressionStatement;
-#endif
-
-#ifndef HEADERS
-    rule_action[148] = &Parser::MakeExpressionStatement;
-#endif
-
-#ifndef HEADERS
-    rule_action[149] = &Parser::MakeExpressionStatement;
-#endif
-
-#ifndef HEADERS
-    rule_action[150] = &Parser::MakeExpressionStatement;
+    void Act150();
 #endif
 
 #ifndef HEADERS
@@ -768,41 +772,35 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[153] = &Parser::MakeIfThenElseStatement;
+    rule_action[153] = &Parser::MakeExpressionStatement;
 #endif
 
 #ifndef HEADERS
-    rule_action[154] = &Parser::MakeIfThenElseStatement;
+    rule_action[154] = &Parser::MakeExpressionStatement;
 #endif
 
 #ifndef HEADERS
-    rule_action[155] = &Parser::MakeIfThenElseStatement;
+    rule_action[155] = &Parser::MakeExpressionStatement;
 #endif
 
 #ifndef HEADERS
-    rule_action[156] = &Parser::Act156;
-#else
-    void Act156();
+    rule_action[156] = &Parser::MakeExpressionStatement;
 #endif
 
 #ifndef HEADERS
-    rule_action[157] = &Parser::Act157;
-#else
-    void Act157();
+    rule_action[157] = &Parser::MakeExpressionStatement;
 #endif
 
 #ifndef HEADERS
-    rule_action[158] = &Parser::Act158;
-#else
-    void Act158();
+    rule_action[158] = &Parser::MakeIfThenElseStatement;
 #endif
 
 #ifndef HEADERS
-    rule_action[159] = &Parser::StartList;
+    rule_action[159] = &Parser::MakeIfThenElseStatement;
 #endif
 
 #ifndef HEADERS
-    rule_action[160] = &Parser::AddList2;
+    rule_action[160] = &Parser::MakeIfThenElseStatement;
 #endif
 
 #ifndef HEADERS
@@ -812,115 +810,115 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[162] = &Parser::StartList;
-#endif
-
-#ifndef HEADERS
-    rule_action[163] = &Parser::AddList2;
-#endif
-
-#ifndef HEADERS
-    rule_action[164] = &Parser::MakeSwitchLabel;
-#endif
-
-#ifndef HEADERS
-    rule_action[165] = &Parser::MakeSwitchLabel;
-#endif
-
-#ifndef HEADERS
-    rule_action[166] = &Parser::MakeWhileStatement;
-#endif
-
-#ifndef HEADERS
-    rule_action[167] = &Parser::MakeWhileStatement;
-#endif
-
-#ifndef HEADERS
-    rule_action[168] = &Parser::Act168;
+    rule_action[162] = &Parser::Act162;
 #else
-    void Act168();
+    void Act162();
 #endif
 
 #ifndef HEADERS
-    rule_action[169] = &Parser::MakeForStatement;
-#endif
-
-#ifndef HEADERS
-    rule_action[170] = &Parser::MakeForStatement;
-#endif
-
-#ifndef HEADERS
-    rule_action[171] = &Parser::NoAction;
-#endif
-
-#ifndef HEADERS
-    rule_action[172] = &Parser::StartList;
-#endif
-
-#ifndef HEADERS
-    rule_action[173] = &Parser::NoAction;
-#endif
-
-#ifndef HEADERS
-    rule_action[174] = &Parser::StartList;
-#endif
-
-#ifndef HEADERS
-    rule_action[175] = &Parser::AddList3;
-#endif
-
-#ifndef HEADERS
-    rule_action[176] = &Parser::MakeAssertStatement;
-#endif
-
-#ifndef HEADERS
-    rule_action[177] = &Parser::MakeAssertStatement;
-#endif
-
-#ifndef HEADERS
-    rule_action[178] = &Parser::Act178;
+    rule_action[163] = &Parser::Act163;
 #else
-    void Act178();
+    void Act163();
 #endif
 
 #ifndef HEADERS
-    rule_action[179] = &Parser::Act179;
+    rule_action[164] = &Parser::StartList;
+#endif
+
+#ifndef HEADERS
+    rule_action[165] = &Parser::AddList2;
+#endif
+
+#ifndef HEADERS
+    rule_action[166] = &Parser::Act166;
 #else
-    void Act179();
+    void Act166();
 #endif
 
 #ifndef HEADERS
-    rule_action[180] = &Parser::Act180;
+    rule_action[167] = &Parser::StartList;
+#endif
+
+#ifndef HEADERS
+    rule_action[168] = &Parser::AddList2;
+#endif
+
+#ifndef HEADERS
+    rule_action[169] = &Parser::MakeSwitchLabel;
+#endif
+
+#ifndef HEADERS
+    rule_action[170] = &Parser::MakeSwitchLabel;
+#endif
+
+#ifndef HEADERS
+    rule_action[171] = &Parser::MakeWhileStatement;
+#endif
+
+#ifndef HEADERS
+    rule_action[172] = &Parser::MakeWhileStatement;
+#endif
+
+#ifndef HEADERS
+    rule_action[173] = &Parser::Act173;
 #else
-    void Act180();
+    void Act173();
 #endif
 
 #ifndef HEADERS
-    rule_action[181] = &Parser::Act181;
+    rule_action[174] = &Parser::MakeForStatement;
+#endif
+
+#ifndef HEADERS
+    rule_action[175] = &Parser::MakeForStatement;
+#endif
+
+#ifndef HEADERS
+    rule_action[176] = &Parser::NoAction;
+#endif
+
+#ifndef HEADERS
+    rule_action[177] = &Parser::StartList;
+#endif
+
+#ifndef HEADERS
+    rule_action[178] = &Parser::NoAction;
+#endif
+
+#ifndef HEADERS
+    rule_action[179] = &Parser::StartList;
+#endif
+
+#ifndef HEADERS
+    rule_action[180] = &Parser::AddList3;
+#endif
+
+#ifndef HEADERS
+    rule_action[181] = &Parser::MakeForeachStatement;
+#endif
+
+#ifndef HEADERS
+    rule_action[182] = &Parser::MakeForeachStatement;
+#endif
+
+#ifndef HEADERS
+    rule_action[183] = &Parser::MakeAssertStatement;
+#endif
+
+#ifndef HEADERS
+    rule_action[184] = &Parser::MakeAssertStatement;
+#endif
+
+#ifndef HEADERS
+    rule_action[185] = &Parser::Act185;
 #else
-    void Act181();
+    void Act185();
 #endif
 
 #ifndef HEADERS
-    rule_action[182] = &Parser::Act182;
+    rule_action[186] = &Parser::Act186;
 #else
-    void Act182();
-#endif
-
-#ifndef HEADERS
-    rule_action[183] = &Parser::MakeTryStatement;
-#endif
-
-#ifndef HEADERS
-    rule_action[184] = &Parser::MakeTryStatement;
-#endif
-
-#ifndef HEADERS
-    rule_action[185] = &Parser::StartList;
-#endif
-
-#ifndef HEADERS
-    rule_action[186] = &Parser::AddList2;
+    void Act186();
 #endif
 
 #ifndef HEADERS
@@ -936,33 +934,37 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[189] = &Parser::NoAction;
-#endif
-
-#ifndef HEADERS
-    rule_action[190] = &Parser::NoAction;
-#endif
-
-#ifndef HEADERS
-    rule_action[191] = &Parser::NoAction;
-#endif
-
-#ifndef HEADERS
-    rule_action[192] = &Parser::NoAction;
-#endif
-
-#ifndef HEADERS
-    rule_action[193] = &Parser::Act193;
+    rule_action[189] = &Parser::Act189;
 #else
-    void Act193();
+    void Act189();
 #endif
 
 #ifndef HEADERS
-    rule_action[194] = &Parser::MakeParenthesizedExpression;
+    rule_action[190] = &Parser::MakeTryStatement;
 #endif
 
 #ifndef HEADERS
-    rule_action[195] = &Parser::MakeParenthesizedExpression;
+    rule_action[191] = &Parser::MakeTryStatement;
+#endif
+
+#ifndef HEADERS
+    rule_action[192] = &Parser::StartList;
+#endif
+
+#ifndef HEADERS
+    rule_action[193] = &Parser::AddList2;
+#endif
+
+#ifndef HEADERS
+    rule_action[194] = &Parser::Act194;
+#else
+    void Act194();
+#endif
+
+#ifndef HEADERS
+    rule_action[195] = &Parser::Act195;
+#else
+    void Act195();
 #endif
 
 #ifndef HEADERS
@@ -974,29 +976,25 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[198] = &Parser::Act198;
+    rule_action[198] = &Parser::NoAction;
+#endif
+
+#ifndef HEADERS
+    rule_action[199] = &Parser::NoAction;
+#endif
+
+#ifndef HEADERS
+    rule_action[200] = &Parser::Act200;
 #else
-    void Act198();
+    void Act200();
 #endif
 
 #ifndef HEADERS
-    rule_action[199] = &Parser::MakeClassLiteral;
+    rule_action[201] = &Parser::MakeParenthesizedExpression;
 #endif
 
 #ifndef HEADERS
-    rule_action[200] = &Parser::MakeClassLiteral;
-#endif
-
-#ifndef HEADERS
-    rule_action[201] = &Parser::Act201;
-#else
-    void Act201();
-#endif
-
-#ifndef HEADERS
-    rule_action[202] = &Parser::Act202;
-#else
-    void Act202();
+    rule_action[202] = &Parser::MakeParenthesizedExpression;
 #endif
 
 #ifndef HEADERS
@@ -1014,27 +1012,31 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[206] = &Parser::MakeQualifiedNew;
+    rule_action[206] = &Parser::MakeClassLiteral;
 #endif
 
 #ifndef HEADERS
-    rule_action[207] = &Parser::MakeQualifiedNew;
+    rule_action[207] = &Parser::MakeClassLiteral;
 #endif
 
 #ifndef HEADERS
-    rule_action[208] = &Parser::StartList;
+    rule_action[208] = &Parser::Act208;
+#else
+    void Act208();
 #endif
 
 #ifndef HEADERS
-    rule_action[209] = &Parser::AddList3;
+    rule_action[209] = &Parser::Act209;
+#else
+    void Act209();
 #endif
 
 #ifndef HEADERS
-    rule_action[210] = &Parser::MakeArrayCreationUninitialized;
+    rule_action[210] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[211] = &Parser::MakeArrayCreationUninitialized;
+    rule_action[211] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
@@ -1044,47 +1046,41 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[213] = &Parser::StartList;
+    rule_action[213] = &Parser::MakeQualifiedNew;
 #endif
 
 #ifndef HEADERS
-    rule_action[214] = &Parser::AddList2;
+    rule_action[214] = &Parser::MakeQualifiedNew;
 #endif
 
 #ifndef HEADERS
-    rule_action[215] = &Parser::Act215;
+    rule_action[215] = &Parser::StartList;
+#endif
+
+#ifndef HEADERS
+    rule_action[216] = &Parser::AddList3;
+#endif
+
+#ifndef HEADERS
+    rule_action[217] = &Parser::MakeArrayCreationUninitialized;
+#endif
+
+#ifndef HEADERS
+    rule_action[218] = &Parser::MakeArrayCreationUninitialized;
+#endif
+
+#ifndef HEADERS
+    rule_action[219] = &Parser::Act219;
 #else
-    void Act215();
+    void Act219();
 #endif
 
 #ifndef HEADERS
-    rule_action[216] = &Parser::Act216;
-#else
-    void Act216();
+    rule_action[220] = &Parser::StartList;
 #endif
 
 #ifndef HEADERS
-    rule_action[217] = &Parser::Act217;
-#else
-    void Act217();
-#endif
-
-#ifndef HEADERS
-    rule_action[218] = &Parser::MakeFieldAccess;
-#endif
-
-#ifndef HEADERS
-    rule_action[219] = &Parser::MakeSuperFieldAccess;
-#endif
-
-#ifndef HEADERS
-    rule_action[220] = &Parser::MakeQualifiedSuperFieldAccess;
-#endif
-
-#ifndef HEADERS
-    rule_action[221] = &Parser::Act221;
-#else
-    void Act221();
+    rule_action[221] = &Parser::AddList2;
 #endif
 
 #ifndef HEADERS
@@ -1106,55 +1102,59 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[225] = &Parser::MakeArrayAccess;
+    rule_action[225] = &Parser::MakeFieldAccess;
 #endif
 
 #ifndef HEADERS
-    rule_action[226] = &Parser::MakeArrayAccess;
+    rule_action[226] = &Parser::MakeSuperFieldAccess;
 #endif
 
 #ifndef HEADERS
-    rule_action[227] = &Parser::MakeArrayAccess;
+    rule_action[227] = &Parser::MakeQualifiedSuperFieldAccess;
 #endif
 
 #ifndef HEADERS
-    rule_action[228] = &Parser::NoAction;
-#endif
-
-#ifndef HEADERS
-    rule_action[229] = &Parser::NoAction;
-#endif
-
-#ifndef HEADERS
-    rule_action[230] = &Parser::NoAction;
-#endif
-
-#ifndef HEADERS
-    rule_action[231] = &Parser::NoAction;
-#endif
-
-#ifndef HEADERS
-    rule_action[232] = &Parser::NoAction;
-#endif
-
-#ifndef HEADERS
-    rule_action[233] = &Parser::NoAction;
-#endif
-
-#ifndef HEADERS
-    rule_action[234] = &Parser::NoAction;
-#endif
-
-#ifndef HEADERS
-    rule_action[235] = &Parser::Act235;
+    rule_action[228] = &Parser::Act228;
 #else
-    void Act235();
+    void Act228();
 #endif
 
 #ifndef HEADERS
-    rule_action[236] = &Parser::Act236;
+    rule_action[229] = &Parser::Act229;
 #else
-    void Act236();
+    void Act229();
+#endif
+
+#ifndef HEADERS
+    rule_action[230] = &Parser::Act230;
+#else
+    void Act230();
+#endif
+
+#ifndef HEADERS
+    rule_action[231] = &Parser::Act231;
+#else
+    void Act231();
+#endif
+
+#ifndef HEADERS
+    rule_action[232] = &Parser::MakeArrayAccess;
+#endif
+
+#ifndef HEADERS
+    rule_action[233] = &Parser::MakeArrayAccess;
+#endif
+
+#ifndef HEADERS
+    rule_action[234] = &Parser::MakeArrayAccess;
+#endif
+
+#ifndef HEADERS
+    rule_action[235] = &Parser::NoAction;
+#endif
+
+#ifndef HEADERS
+    rule_action[236] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
@@ -1166,11 +1166,11 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[239] = &Parser::MakePreUnaryExpression;
+    rule_action[239] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[240] = &Parser::MakePreUnaryExpression;
+    rule_action[240] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
@@ -1178,23 +1178,27 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[242] = &Parser::NoAction;
+    rule_action[242] = &Parser::Act242;
+#else
+    void Act242();
 #endif
 
 #ifndef HEADERS
-    rule_action[243] = &Parser::NoAction;
+    rule_action[243] = &Parser::Act243;
+#else
+    void Act243();
 #endif
 
 #ifndef HEADERS
-    rule_action[244] = &Parser::MakePreUnaryExpression;
+    rule_action[244] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[245] = &Parser::MakePreUnaryExpression;
+    rule_action[245] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[246] = &Parser::NoAction;
+    rule_action[246] = &Parser::MakePreUnaryExpression;
 #endif
 
 #ifndef HEADERS
@@ -1202,7 +1206,7 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[248] = &Parser::MakePreUnaryExpression;
+    rule_action[248] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
@@ -1210,7 +1214,7 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[250] = &Parser::MakePreUnaryExpression;
+    rule_action[250] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
@@ -1218,7 +1222,7 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[252] = &Parser::NoAction;
+    rule_action[252] = &Parser::MakePreUnaryExpression;
 #endif
 
 #ifndef HEADERS
@@ -1238,15 +1242,15 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[257] = &Parser::MakeCastExpression;
+    rule_action[257] = &Parser::MakePreUnaryExpression;
 #endif
 
 #ifndef HEADERS
-    rule_action[258] = &Parser::MakeCastExpression;
+    rule_action[258] = &Parser::MakePreUnaryExpression;
 #endif
 
 #ifndef HEADERS
-    rule_action[259] = &Parser::MakeCastExpression;
+    rule_action[259] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
@@ -1254,31 +1258,31 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[261] = &Parser::MakeBinaryExpression;
+    rule_action[261] = &Parser::MakePreUnaryExpression;
 #endif
 
 #ifndef HEADERS
-    rule_action[262] = &Parser::MakeBinaryExpression;
+    rule_action[262] = &Parser::MakePreUnaryExpression;
 #endif
 
 #ifndef HEADERS
-    rule_action[263] = &Parser::MakeBinaryExpression;
+    rule_action[263] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[264] = &Parser::NoAction;
+    rule_action[264] = &Parser::MakeCastExpression;
 #endif
 
 #ifndef HEADERS
-    rule_action[265] = &Parser::MakeBinaryExpression;
+    rule_action[265] = &Parser::MakeCastExpression;
 #endif
 
 #ifndef HEADERS
-    rule_action[266] = &Parser::MakeBinaryExpression;
+    rule_action[266] = &Parser::MakeCastExpression;
 #endif
 
 #ifndef HEADERS
-    rule_action[267] = &Parser::MakeBinaryExpression;
+    rule_action[267] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
@@ -1306,7 +1310,7 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[274] = &Parser::NoAction;
+    rule_action[274] = &Parser::MakeBinaryExpression;
 #endif
 
 #ifndef HEADERS
@@ -1322,11 +1326,11 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[278] = &Parser::MakeBinaryExpression;
+    rule_action[278] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[279] = &Parser::NoAction;
+    rule_action[279] = &Parser::MakeBinaryExpression;
 #endif
 
 #ifndef HEADERS
@@ -1334,7 +1338,7 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[281] = &Parser::MakeBinaryExpression;
+    rule_action[281] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
@@ -1342,7 +1346,7 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[283] = &Parser::NoAction;
+    rule_action[283] = &Parser::MakeBinaryExpression;
 #endif
 
 #ifndef HEADERS
@@ -1354,7 +1358,7 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[286] = &Parser::MakeBinaryExpression;
+    rule_action[286] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
@@ -1390,15 +1394,15 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[295] = &Parser::MakeInstanceofExpression;
+    rule_action[295] = &Parser::MakeBinaryExpression;
 #endif
 
 #ifndef HEADERS
-    rule_action[296] = &Parser::NoAction;
+    rule_action[296] = &Parser::MakeBinaryExpression;
 #endif
 
 #ifndef HEADERS
-    rule_action[297] = &Parser::MakeBinaryExpression;
+    rule_action[297] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
@@ -1418,11 +1422,11 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[302] = &Parser::MakeBinaryExpression;
+    rule_action[302] = &Parser::MakeInstanceofExpression;
 #endif
 
 #ifndef HEADERS
-    rule_action[303] = &Parser::MakeBinaryExpression;
+    rule_action[303] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
@@ -1430,15 +1434,15 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[305] = &Parser::MakeInstanceofExpression;
+    rule_action[305] = &Parser::MakeBinaryExpression;
 #endif
 
 #ifndef HEADERS
-    rule_action[306] = &Parser::MakeInstanceofExpression;
+    rule_action[306] = &Parser::MakeBinaryExpression;
 #endif
 
 #ifndef HEADERS
-    rule_action[307] = &Parser::NoAction;
+    rule_action[307] = &Parser::MakeBinaryExpression;
 #endif
 
 #ifndef HEADERS
@@ -1450,7 +1454,7 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[310] = &Parser::NoAction;
+    rule_action[310] = &Parser::MakeBinaryExpression;
 #endif
 
 #ifndef HEADERS
@@ -1458,19 +1462,19 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[312] = &Parser::MakeBinaryExpression;
+    rule_action[312] = &Parser::MakeInstanceofExpression;
 #endif
 
 #ifndef HEADERS
-    rule_action[313] = &Parser::MakeBinaryExpression;
+    rule_action[313] = &Parser::MakeInstanceofExpression;
 #endif
 
 #ifndef HEADERS
-    rule_action[314] = &Parser::MakeBinaryExpression;
+    rule_action[314] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[315] = &Parser::NoAction;
+    rule_action[315] = &Parser::MakeBinaryExpression;
 #endif
 
 #ifndef HEADERS
@@ -1490,7 +1494,7 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[320] = &Parser::NoAction;
+    rule_action[320] = &Parser::MakeBinaryExpression;
 #endif
 
 #ifndef HEADERS
@@ -1506,11 +1510,11 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[324] = &Parser::MakeBinaryExpression;
+    rule_action[324] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[325] = &Parser::NoAction;
+    rule_action[325] = &Parser::MakeBinaryExpression;
 #endif
 
 #ifndef HEADERS
@@ -1526,11 +1530,11 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[329] = &Parser::MakeBinaryExpression;
+    rule_action[329] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[330] = &Parser::NoAction;
+    rule_action[330] = &Parser::MakeBinaryExpression;
 #endif
 
 #ifndef HEADERS
@@ -1546,11 +1550,11 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[334] = &Parser::MakeBinaryExpression;
+    rule_action[334] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[335] = &Parser::NoAction;
+    rule_action[335] = &Parser::MakeBinaryExpression;
 #endif
 
 #ifndef HEADERS
@@ -1566,15 +1570,15 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[339] = &Parser::MakeBinaryExpression;
+    rule_action[339] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[340] = &Parser::NoAction;
+    rule_action[340] = &Parser::MakeBinaryExpression;
 #endif
 
 #ifndef HEADERS
-    rule_action[341] = &Parser::MakeConditionalExpression;
+    rule_action[341] = &Parser::MakeBinaryExpression;
 #endif
 
 #ifndef HEADERS
@@ -1582,19 +1586,19 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[343] = &Parser::MakeConditionalExpression;
+    rule_action[343] = &Parser::MakeBinaryExpression;
 #endif
 
 #ifndef HEADERS
-    rule_action[344] = &Parser::MakeConditionalExpression;
+    rule_action[344] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[345] = &Parser::NoAction;
+    rule_action[345] = &Parser::MakeBinaryExpression;
 #endif
 
 #ifndef HEADERS
-    rule_action[346] = &Parser::NoAction;
+    rule_action[346] = &Parser::MakeBinaryExpression;
 #endif
 
 #ifndef HEADERS
@@ -1602,21 +1606,19 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[348] = &Parser::NoAction;
+    rule_action[348] = &Parser::MakeConditionalExpression;
 #endif
 
 #ifndef HEADERS
-    rule_action[349] = &Parser::Act349;
-#else
-    void Act349();
+    rule_action[349] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[350] = &Parser::NoAction;
+    rule_action[350] = &Parser::MakeConditionalExpression;
 #endif
 
 #ifndef HEADERS
-    rule_action[351] = &Parser::NoAction;
+    rule_action[351] = &Parser::MakeConditionalExpression;
 #endif
 
 #ifndef HEADERS
@@ -1636,7 +1638,9 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[356] = &Parser::NoAction;
+    rule_action[356] = &Parser::Act356;
+#else
+    void Act356();
 #endif
 
 #ifndef HEADERS
@@ -1684,7 +1688,7 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[368] = &Parser::NullAction;
+    rule_action[368] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
@@ -1692,7 +1696,7 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[370] = &Parser::NullAction;
+    rule_action[370] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
@@ -1700,7 +1704,7 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[372] = &Parser::NullAction;
+    rule_action[372] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
@@ -1708,155 +1712,183 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[374] = &Parser::NullAction;
+    rule_action[374] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[375] = &Parser::NoAction;
+    rule_action[375] = &Parser::NullAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[376] = &Parser::NullAction;
+    rule_action[376] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[377] = &Parser::NoAction;
+    rule_action[377] = &Parser::NullAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[378] = &Parser::NullAction;
+    rule_action[378] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[379] = &Parser::NoAction;
+    rule_action[379] = &Parser::NullAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[380] = &Parser::NullAction;
+    rule_action[380] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[381] = &Parser::NoAction;
+    rule_action[381] = &Parser::NullAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[382] = &Parser::NullAction;
+    rule_action[382] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[383] = &Parser::NoAction;
+    rule_action[383] = &Parser::NullAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[384] = &Parser::NullAction;
+    rule_action[384] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[385] = &Parser::NoAction;
+    rule_action[385] = &Parser::NullAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[386] = &Parser::NullAction;
+    rule_action[386] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[387] = &Parser::NoAction;
+    rule_action[387] = &Parser::NullAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[388] = &Parser::NullAction;
+    rule_action[388] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[389] = &Parser::NoAction;
+    rule_action[389] = &Parser::NullAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[390] = &Parser::NullAction;
+    rule_action[390] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[391] = &Parser::NoAction;
+    rule_action[391] = &Parser::NullAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[392] = &Parser::NullAction;
+    rule_action[392] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[393] = &Parser::NoAction;
+    rule_action[393] = &Parser::NullAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[394] = &Parser::NullAction;
+    rule_action[394] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[395] = &Parser::NoAction;
+    rule_action[395] = &Parser::NullAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[396] = &Parser::NullAction;
+    rule_action[396] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[397] = &Parser::NoAction;
+    rule_action[397] = &Parser::NullAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[398] = &Parser::NullAction;
+    rule_action[398] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[399] = &Parser::NoAction;
+    rule_action[399] = &Parser::NullAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[400] = &Parser::NullAction;
+    rule_action[400] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[401] = &Parser::NoAction;
+    rule_action[401] = &Parser::NullAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[402] = &Parser::NullAction;
+    rule_action[402] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[403] = &Parser::NoAction;
+    rule_action[403] = &Parser::NullAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[404] = &Parser::NullAction;
+    rule_action[404] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[405] = &Parser::NoAction;
+    rule_action[405] = &Parser::NullAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[406] = &Parser::NullAction;
+    rule_action[406] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[407] = &Parser::NoAction;
+    rule_action[407] = &Parser::NullAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[408] = &Parser::Act408;
+    rule_action[408] = &Parser::NoAction;
+#endif
+
+#ifndef HEADERS
+    rule_action[409] = &Parser::NullAction;
+#endif
+
+#ifndef HEADERS
+    rule_action[410] = &Parser::NoAction;
+#endif
+
+#ifndef HEADERS
+    rule_action[411] = &Parser::NullAction;
+#endif
+
+#ifndef HEADERS
+    rule_action[412] = &Parser::NoAction;
+#endif
+
+#ifndef HEADERS
+    rule_action[413] = &Parser::NullAction;
+#endif
+
+#ifndef HEADERS
+    rule_action[414] = &Parser::NoAction;
+#endif
+
+#ifndef HEADERS
+    rule_action[415] = &Parser::Act415;
 #else
-    void Act408();
+    void Act415();
 #endif
 
 #ifndef HEADERS
-    rule_action[409] = &Parser::Act409;
+    rule_action[416] = &Parser::Act416;
 #else
-    void Act409();
+    void Act416();
 #endif
 
 #ifndef HEADERS
-    rule_action[410] = &Parser::NullAction;
+    rule_action[417] = &Parser::NullAction;
 #endif
 
 #ifndef HEADERS

@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -730,6 +730,17 @@ Ast* AstForStatement::Clone(StoragePool* ast_pool)
     return clone;
 }
 
+Ast* AstForeachStatement::Clone(StoragePool* ast_pool)
+{
+    AstForeachStatement* clone = ast_pool -> GenForeachStatement();
+    clone -> for_token = for_token;
+    clone -> formal_parameter =
+        (AstFormalParameter*) formal_parameter -> Clone(ast_pool);
+    clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
+    clone -> statement = (AstBlock*) statement -> Clone(ast_pool);
+    return clone;
+}
+
 Ast* AstBreakStatement::Clone(StoragePool* ast_pool)
 {
     AstBreakStatement* clone = ast_pool -> GenBreakStatement();
@@ -1075,8 +1086,8 @@ void AstBlock::Print(LexStream& lex_stream)
     if (block_symbol)
         Coutput << ", max_variable_index "
                 << block_symbol -> max_variable_index
-                << ", try_or_synchronized_variable_index "
-                << block_symbol -> try_or_synchronized_variable_index;
+                << ", helper_variable_index "
+                << block_symbol -> helper_variable_index;
     else Coutput << ", BLOCK_SYMBOL NOT SET";
     Coutput << ')';
 
@@ -1557,6 +1568,17 @@ void AstForStatement::Print(LexStream& lex_stream)
         end_expression_opt -> Print(lex_stream);
     for (i = 0; i < NumForUpdateStatements(); i++)
         ForUpdateStatement(i) -> Print(lex_stream);
+    statement -> Print(lex_stream);
+}
+
+void AstForeachStatement::Print(LexStream& lex_stream)
+{
+    Coutput << '#' << id << " (ForeachStatement):  ("
+            << lex_stream.NameString(for_token) << "( #"
+            << formal_parameter -> id << ": #" << expression -> id
+            << ") #" << statement -> id << endl;
+    formal_parameter -> Print(lex_stream);
+    expression -> Print(lex_stream);
     statement -> Print(lex_stream);
 }
 

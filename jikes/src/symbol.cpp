@@ -697,7 +697,7 @@ MethodSymbol::~MethodSymbol()
 
 BlockSymbol::BlockSymbol(unsigned hash_size)
     : max_variable_index(-1),
-      try_or_synchronized_variable_index(-1),
+      helper_variable_index(-1),
       table(hash_size > 0 ? new SymbolTable(hash_size) : (SymbolTable*) NULL)
 {
     Symbol::_kind = BLOCK;

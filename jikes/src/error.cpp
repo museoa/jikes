@@ -1578,6 +1578,9 @@ void SemanticError::InitializeMessages()
         "In the conditional, the type of the true sub-expression, "
         "\"%T1\", is not compatible with the type of the false "
         "sub-expression, \"%T3\".";
+    messages[INCOMPATIBLE_TYPE_FOR_FOREACH] =
+        "The component type of the expression, \"%T1\", is not compatible "
+        "with the index parameter type, \"%T3\".";
     messages[VOID_ARRAY] = "Arrays of type \"void\" are not legal.";
     messages[DUPLICATE_THROWS_CLAUSE_CLASS] =
         "The duplicate listing of type \"%T1\" in the throws "
@@ -1602,6 +1605,9 @@ void SemanticError::InitializeMessages()
         "The type of this expression, \"%T1\", is not an array type.";
     messages[TYPE_NOT_REFERENCE] =
         "The type of this expression, \"%1\", is not a reference type.";
+    messages[TYPE_NOT_ITERABLE] =
+        "The type of this expression, \"%1\", is not an array type nor an "
+        "instance of \"java.lang.Iterable\".";
     messages[TYPE_IS_VOID] =
         "An expression of type \"void\" is not valid in this context where "
         "a value is expected.";
@@ -1672,6 +1678,9 @@ void SemanticError::InitializeMessages()
     messages[HEX_FLOATING_POINT_UNSUPPORTED] =
         "Hexadecimal floating point values are only supported for `-source "
         "1.5' or greater.";
+    messages[FOREACH_UNSUPPORTED] =
+        "Enhanced for loops (also known as foreach loops) are only supported "
+        "for `-source 1.5' or greater.";
     messages[RETURN_STATEMENT_IN_INITIALIZER] =
         "A return statement may not appear in an initializer block.";
     messages[ABRUPT_INITIALIZER] =

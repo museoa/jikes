@@ -583,6 +583,8 @@ public:
         US_Float[],  // L"Float"
         US_hashCode[], // L"hashCode"
         US_Integer[], // L"Integer"
+        US_Iterable[], // L"Iterable"
+        US_iterator[], // L"iterator"
         US_L[], // L"L"
         US_Long[], // L"Long"
         US_NoClassDefFoundError[], // L"NoClassDefFoundError"
@@ -595,6 +597,7 @@ public:
         US_Short[], // L"Short"
         US_String[], // L"String"
         US_StringBuffer[], // L"StringBuffer"
+        US_StringBuilder[], // L"StringBuilder"
         US_TYPE[], // L"TYPE"
         US_Throwable[], // L"Throwable"
         US_Void[], // L"Void"
@@ -628,6 +631,8 @@ public:
         US_initCause[], // L"initCause"
         US_java_SL_io[], // L"java/io"
         US_java_SL_lang[], // L"java/lang"
+        US_java_SL_lang_SL_annotation[], // L"java/lang/annotation"
+        US_java_SL_util[], // L"java/util"
         US_length[], // L"length"
         US_this_DOLLAR[], // L"this$"
         US_this0[], // L"this$0"
@@ -767,6 +772,7 @@ public:
         // "java/lang/NoClassDefFoundError"
         U8S_java_SL_lang_SL_NoClassDefFoundError[],
         U8S_java_SL_lang_SL_StringBuffer[], // "java/lang/StringBuffer"
+        U8S_java_SL_lang_SL_StringBuilder[], // "java/lang/StringBuilder"
         U8S_java_SL_lang_SL_Throwable[], // "java/lang/Throwable"
         U8S_false[], // "false"
         U8S_null[], // "null"
@@ -783,7 +789,17 @@ public:
         // "(Ljava/lang/String;)Ljava/lang/StringBuffer;"
         U8S_LP_String_RP_StringBuffer[],
         // "(Ljava/lang/Object;)Ljava/lang/StringBuffer;"
-        U8S_LP_Object_RP_StringBuffer[];
+        U8S_LP_Object_RP_StringBuffer[],
+        U8S_LP_C_RP_StringBuilder[], // "(C)Ljava/lang/StringBuilder;"
+        U8S_LP_Z_RP_StringBuilder[], // "(Z)Ljava/lang/StringBuilder;"
+        U8S_LP_I_RP_StringBuilder[], // "(I)Ljava/lang/StringBuilder;"
+        U8S_LP_J_RP_StringBuilder[], // "(J)Ljava/lang/StringBuilder;"
+        U8S_LP_F_RP_StringBuilder[], // "(F)Ljava/lang/StringBuilder;"
+        U8S_LP_D_RP_StringBuilder[], // "(D)Ljava/lang/StringBuilder;"
+        // "(Ljava/lang/String;)Ljava/lang/StringBuilder;"
+        U8S_LP_String_RP_StringBuilder[],
+        // "(Ljava/lang/Object;)Ljava/lang/StringBuilder;"
+        U8S_LP_Object_RP_StringBuilder[];
 
     static const char U8S_NaN[], // "NaN"
         U8S_pos_Infinity[], // "Infinity"

@@ -1562,7 +1562,8 @@ class BlockSymbol : public Symbol
 {
 public:
     int max_variable_index;
-    int try_or_synchronized_variable_index;
+    // try, synchronized, and foreach need synthetic helper variables
+    int helper_variable_index;
 
     BlockSymbol(unsigned hash_size);
     virtual ~BlockSymbol();

@@ -20,79 +20,110 @@ namespace Jikes { // Open namespace Jikes block
 #endif
 
 Control::Control(char** arguments, Option& option_)
-    : return_code(0),
-      option(option_),
-      dot_classpath_index(0),
-      system_table(NULL),
-      system_semantic(NULL),
-      semantic(1024),
-      needs_body_work(1024),
-      type_trash_bin(1024),
-      input_java_file_set(1021),
-      input_class_file_set(1021),
-      expired_file_set(),
-      recompilation_file_set(1021),
-      int_pool(&bad_value),
-      long_pool(&bad_value),
-      float_pool(&bad_value),
-      double_pool(&bad_value),
-      Utf8_pool(&bad_value),
+    : return_code(0)
+    , option(option_)
+    , dot_classpath_index(0)
+    , system_table(NULL)
+    , system_semantic(NULL)
+    , semantic(1024)
+    , needs_body_work(1024)
+    , type_trash_bin(1024)
+    , input_java_file_set(1021)
+    , input_class_file_set(1021)
+    , expired_file_set()
+    , recompilation_file_set(1021)
+    , int_pool(&bad_value)
+    , long_pool(&bad_value)
+    , float_pool(&bad_value)
+    , double_pool(&bad_value)
+    , Utf8_pool(&bad_value)
 #ifdef JIKES_DEBUG
-      input_files_processed(0),
-      class_files_read(0),
-      class_files_written(0),
-      line_count(0),
+    , input_files_processed(0)
+    , class_files_read(0)
+    , class_files_written(0)
+    , line_count(0)
 #endif
-      Serializable_type(NULL),
-      Object_type(NULL),
-      Cloneable_type(NULL),
-      String_type(NULL),
-      Void_type(NULL),
-      Boolean_type(NULL),
-      Byte_type(NULL),
-      Short_type(NULL),
-      Character_type(NULL),
-      Integer_type(NULL),
-      Long_type(NULL),
-      Float_type(NULL),
-      Double_type(NULL),
-      Comparable_type(NULL),
-      AssertionError_type(NULL),
-      Class_type(NULL),
-      Throwable_type(NULL),
-      Exception_type(NULL),
-      RuntimeException_type(NULL),
-      ClassNotFoundException_type(NULL),
-      Error_type(NULL),
-      NoClassDefFoundError_type(NULL),
-      StringBuffer_type(NULL),
-      Object_getClass_method(NULL),
-      Class_forName_method(NULL),
-      Class_getComponentType_method(NULL),
-      Class_desiredAssertionStatus_method(NULL),
-      AssertionError_Init_method(NULL),
-      AssertionError_InitWithChar_method(NULL),
-      AssertionError_InitWithBoolean_method(NULL),
-      AssertionError_InitWithInt_method(NULL),
-      AssertionError_InitWithLong_method(NULL),
-      AssertionError_InitWithFloat_method(NULL),
-      AssertionError_InitWithDouble_method(NULL),
-      AssertionError_InitWithObject_method(NULL),
-      Throwable_getMessage_method(NULL),
-      Throwable_initCause_method(NULL),
-      NoClassDefFoundError_InitString_method(NULL),
-      NoClassDefFoundError_Init_method(NULL),
-      StringBuffer_Init_method(NULL),
-      StringBuffer_InitWithString_method(NULL),
-      StringBuffer_toString_method(NULL),
-      StringBuffer_append_char_method(NULL),
-      StringBuffer_append_boolean_method(NULL),
-      StringBuffer_append_int_method(NULL),
-      StringBuffer_append_long_method(NULL),
-      StringBuffer_append_float_method(NULL),
-      StringBuffer_append_double_method(NULL),
-      StringBuffer_append_string_method(NULL),
-      StringBuffer_append_object_method(NULL)
+    // Package cache.  unnamed and lang are initialized in constructor body.
+    , annotation_package(NULL)
+    , io_package(NULL)
+    , util_package(NULL)
+    // Type and method cache. These variables are assigned in control.h
+    // accessors, but must be NULL at startup.
+    , Annotation_type(NULL)
+    , AssertionError_type(NULL)
+    , AssertionError_Init_method(NULL)
+    , AssertionError_InitWithChar_method(NULL)
+    , AssertionError_InitWithBoolean_method(NULL)
+    , AssertionError_InitWithInt_method(NULL)
+    , AssertionError_InitWithLong_method(NULL)
+    , AssertionError_InitWithFloat_method(NULL)
+    , AssertionError_InitWithDouble_method(NULL)
+    , AssertionError_InitWithObject_method(NULL)
+    , Boolean_type(NULL)
+    , Byte_type(NULL)
+    , Character_type(NULL)
+    , Class_type(NULL)
+    , Class_forName_method(NULL)
+    , Class_getComponentType_method(NULL)
+    , Class_desiredAssertionStatus_method(NULL)
+    , ClassNotFoundException_type(NULL)
+    , Cloneable_type(NULL)
+    , Comparable_type(NULL)
+    , Double_type(NULL)
+    , Enum_type(NULL)
+    , Enum_Init_method(NULL)
+    , Enum_ordinal_method(NULL)
+    , Enum_valueOf_method(NULL)
+    , Error_type(NULL)
+    , Exception_type(NULL)
+    , Float_type(NULL)
+    , Integer_type(NULL)
+    , Iterable_type(NULL)
+    , Iterable_iterator_method(NULL)
+    , Iterator_type(NULL)
+    , Iterator_hasNext_method(NULL)
+    , Iterator_next_method(NULL)
+    , Long_type(NULL)
+    , NoClassDefFoundError_type(NULL)
+    , NoClassDefFoundError_Init_method(NULL)
+    , NoClassDefFoundError_InitString_method(NULL)
+    , Object_type(NULL)
+    , Object_getClass_method(NULL)
+    , Overrides_type(NULL)
+    , Retention_type(NULL)
+    , RuntimeException_type(NULL)
+    , Serializable_type(NULL)
+    , Short_type(NULL)
+    , String_type(NULL)
+    , StringBuffer_type(NULL)
+    , StringBuffer_Init_method(NULL)
+    , StringBuffer_InitWithString_method(NULL)
+    , StringBuffer_toString_method(NULL)
+    , StringBuffer_append_char_method(NULL)
+    , StringBuffer_append_boolean_method(NULL)
+    , StringBuffer_append_int_method(NULL)
+    , StringBuffer_append_long_method(NULL)
+    , StringBuffer_append_float_method(NULL)
+    , StringBuffer_append_double_method(NULL)
+    , StringBuffer_append_string_method(NULL)
+    , StringBuffer_append_object_method(NULL)
+    , StringBuilder_type(NULL)
+    , StringBuilder_Init_method(NULL)
+    , StringBuilder_InitWithString_method(NULL)
+    , StringBuilder_toString_method(NULL)
+    , StringBuilder_append_char_method(NULL)
+    , StringBuilder_append_boolean_method(NULL)
+    , StringBuilder_append_int_method(NULL)
+    , StringBuilder_append_long_method(NULL)
+    , StringBuilder_append_float_method(NULL)
+    , StringBuilder_append_double_method(NULL)
+    , StringBuilder_append_string_method(NULL)
+    , StringBuilder_append_object_method(NULL)
+    , Target_type(NULL)
+    , Throwable_type(NULL)
+    , Throwable_getMessage_method(NULL)
+    , Throwable_initCause_method(NULL)
+    , Void_type(NULL)
 {
     ProcessGlobals();
     ProcessUnnamedPackage();
@@ -192,7 +223,7 @@ Control::Control(char** arguments, Option& option_)
     //
     // Require the existence of java.lang.
     //
-    if (system_package -> directory.Length() == 0)
+    if (lang_package -> directory.Length() == 0)
     {
         system_semantic -> ReportSemError(SemanticError::PACKAGE_NOT_FOUND,
                                           LexStream::BadToken(),
@@ -1438,46 +1469,6 @@ void Control::CleanUp(FileSymbol* file_symbol)
 
         file_symbol -> CleanUp();
     }
-}
-
-MethodSymbol* Control::Object_getClassMethod()
-{
-    //
-    // This requires lazy initialization for the case when the user is
-    // compiling java.lang.Object. We don't access the getClass method
-    // until bytecode emission, after the .java file has been processed.
-    //
-    if (! Object_getClass_method)
-    {
-        TypeSymbol* Object_type = Object();
-        if (! Object_type -> Bad())
-        {
-            //
-            // Search for relevant getClass method
-            //
-            for (MethodSymbol* method =
-                     Object_type -> FindMethodSymbol(getClass_name_symbol);
-                 method; method = method -> next_method)
-            {
-                if (strcmp(method -> SignatureString(),
-                           StringConstant::U8S_LP_RP_Class) == 0)
-                {
-                    Object_getClass_method = method;
-                    break;
-                }
-            }
-
-            if (! Object_getClass_method)
-            {
-                system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
-                                                  LexStream::BadToken(),
-                                                  Object_type -> ContainingPackageName(),
-                                                  Object_type -> ExternalName());
-                Object_type -> MarkBad();
-            }
-        }
-    }
-    return Object_getClass_method;
 }
 
 

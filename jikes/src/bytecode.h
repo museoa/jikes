@@ -921,6 +921,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void CloseSwitchLocalVariables(AstBlock*, u2 op_start);
     void EmitTryStatement(AstTryStatement*);
     void EmitAssertStatement(AstAssertStatement*);
+    void EmitForeachStatement(AstForeachStatement*);
     void EmitBranchIfExpression(AstExpression*, bool, Label&,
                                 AstStatement* = NULL);
     void EmitBranch(Opcode, Label&, AstStatement* = NULL);

@@ -66,7 +66,7 @@ inline void Semantic::CheckPackage()
 //
 void Semantic::ProcessTypeNames()
 {
-    import_on_demand_packages.Next() = control.system_package;
+    import_on_demand_packages.Next() = control.LangPackage();
     compilation_unit = source_file_symbol -> compilation_unit;
 
     //
@@ -152,7 +152,8 @@ void Semantic::ProcessTypeNames()
                 }
                 else
                 {
-                    if (type -> ContainingPackage() == control.unnamed_package)
+                    if (type -> ContainingPackage() ==
+                        control.UnnamedPackage())
                     {
                         TypeSymbol* old_type = (TypeSymbol*) control.
                             unnamed_package_types.Image(name_symbol);
@@ -219,7 +220,7 @@ void Semantic::ProcessTypeNames()
                 //
                 if ((this_package -> directory[i] ->
                      FindDirectorySymbol(name_symbol)) &&
-                    this_package != control.unnamed_package)
+                    this_package != control.UnnamedPackage())
                 {
                     char* file_name = type -> file_symbol -> FileName();
                     int length = type -> file_symbol -> FileNameLength();
@@ -515,7 +516,7 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration* declaration)
     // Special case java.lang.Object, the only class with no supertype.
     //
     if (type -> Identity() == control.object_name_symbol &&
-        this_package == control.system_package && ! type -> IsNested())
+        this_package == control.LangPackage() && ! type -> IsNested())
     {
         if (declaration -> super_opt || declaration -> NumInterfaces())
         {
@@ -1613,7 +1614,7 @@ void Semantic::ProcessImportQualifiedName(AstName* name)
         // import statement. Class names in import statements must be the
         // canonical version.
         //
-        TypeSymbol* type = FindSimpleNameType(control.unnamed_package,
+        TypeSymbol* type = FindSimpleNameType(control.UnnamedPackage(),
                                               name -> identifier_token);
 
         //
@@ -1890,7 +1891,7 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration* import_d
         AstName* name = import_declaration -> name;
         package = name -> base_opt
             ? name -> base_opt -> symbol -> PackageCast()
-            : control.unnamed_package;
+            : control.UnnamedPackage();
 
         //
         // It's ok to import a type that is being compiled...

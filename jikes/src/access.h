@@ -187,7 +187,7 @@ public:
 
     void Print(AccessMetatype metatype) const
     {
-        Coutput << "access_flags:";
+        Coutput << "access_flags: 0x" << IntToString(access_flags, 4).String();
         if (ACC_PUBLIC())
             Coutput << " public";
         if (ACC_PRIVATE())
@@ -198,7 +198,7 @@ public:
             Coutput << " static";
         if (ACC_FINAL())
             Coutput << " final";
-        // The next four bits are shared; the metatype determines the meaning.
+        // The next bits are shared; the metatype determines the meaning.
         if (ACC_SYNCHRONIZED())
             Coutput << (metatype == ACCESS_TYPE ? " super" : " synchronized");
         if (ACC_VOLATILE())

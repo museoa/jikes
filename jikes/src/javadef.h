@@ -21,26 +21,26 @@ enum {
       MIN_DISTANCE      = 3,
       MAX_NAME_LENGTH   = 38,
       MAX_TERM_LENGTH   = 38,
-      NUM_STATES        = 457,
+      NUM_STATES        = 479,
 
       NT_OFFSET         = 111,
       BUFF_UBOUND       = 30,
       BUFF_SIZE         = 31,
       STACK_UBOUND      = 127,
       STACK_SIZE        = 128,
-      SCOPE_UBOUND      = 56,
-      SCOPE_SIZE        = 57,
-      LA_STATE_OFFSET   = 5691,
+      SCOPE_UBOUND      = 58,
+      SCOPE_SIZE        = 59,
+      LA_STATE_OFFSET   = 6086,
       MAX_LA            = 1,
-      NUM_RULES         = 410,
+      NUM_RULES         = 417,
       NUM_TERMINALS     = 111,
-      NUM_NON_TERMINALS = 169,
-      NUM_SYMBOLS       = 280,
-      START_STATE       = 706,
+      NUM_NON_TERMINALS = 171,
+      NUM_SYMBOLS       = 282,
+      START_STATE       = 598,
       EOFT_SYMBOL       = 94,
       EOLT_SYMBOL       = 94,
-      ACCEPT_ACTION     = 5690,
-      ERROR_ACTION      = 5691
+      ACCEPT_ACTION     = 6085,
+      ERROR_ACTION      = 6086
      };
 
 

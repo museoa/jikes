@@ -1,18 +1,39 @@
 *** Jikes 1.19a is a CVS version.
 
 The `-target 1.5' option produces class files compatible with Sun's
-JDK 1.5 virtual machine (the biggest change is class literals take
-much less space).  Also, the EnclosingMethod attribute is now used to
-improve reflection.  Fixed bug where compiling with classfiles
-produced by JDK 1.5 caused an assertion error when read by jikes.
+JDK 1.5 virtual machine (the biggest changes are that class literals
+take much less space, and String concatenation is more efficient).
+Also, the EnclosingMethod attribute is now used to improve reflection.
+Fixed bug where compiling with classfiles produced by JDK 1.5 caused
+an assertion error when read by jikes.
+
+The set of legal characters in identifiers has grown according to
+Unicode 4.0.  Now surrogate character pairs are parsed correctly,
+according to the improvements in the JDK 1.5 java.lang.Character, so
+that something like \ud801\udc00 is now an identifier.
 
 Some beta support for JDK 1.5 features is being added.  To try it out,
 you must build jikes yourself, and use the --enable-source15 configure
 option.  Once compiled, the following items are supported by using the
 `-source 1.5' command line argument (but possibly with bugs):
 - Hexadecimal floating point literals, documented in
-java.lang.Float.valueOf(String) and similar to the C99 language
-(0x1.8p+0d is the same as 1.5d).
+java.lang.Float.valueOf(String) and similar to the C99 language.  For
+example, 0x1.8p+0d is now the same as 1.5d.
+- The enhanced loop of JSR 201 is (mostly) supported.  The only
+non-specified behavior is a compiler hack to allow using a non-Object
+variable when looping over an iterator, since generic iterators are
+not yet supported.  For example, this code:
+  for (int i : new int[] {1});
+  for (Object o : Collections.singleton(""));
+is short for:
+  int[] ia = new int[] {1};
+  for (int i1 = 0; i1 < ia.length; i1++) {
+    int i = ia[i1];
+  }
+  for (Iterator it = Collections.singleton("").iterator();
+       i.hasNext(); ) {
+    Object o = i.next();
+  }
 
 *** Jikes 1.19 was released 1 February 2004.
 

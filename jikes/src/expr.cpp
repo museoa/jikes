@@ -5022,7 +5022,8 @@ LiteralValue* Semantic::CastValue(const TypeSymbol* target_type,
             LongLiteralValue* literal =
                 DYNAMIC_CAST<LongLiteralValue*> (expr -> value);
             literal_value =
-                control.int_pool.FindOrInsert((int) (i1) (literal -> value).LowWord()); //FIXME: shouldn't this say i4 instead of int?
+                control.int_pool.FindOrInsert((i4) (i1)
+                                              (literal -> value).LowWord());
         }
         else
         {

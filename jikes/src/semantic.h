@@ -541,6 +541,7 @@ public:
         ProcessExprOrStmt[Ast::WHILE] = &Semantic::ProcessWhileStatement;
         ProcessExprOrStmt[Ast::DO] = &Semantic::ProcessDoStatement;
         ProcessExprOrStmt[Ast::FOR] = &Semantic::ProcessForStatement;
+        ProcessExprOrStmt[Ast::FOREACH] = &Semantic::ProcessForeachStatement;
         ProcessExprOrStmt[Ast::BREAK] = &Semantic::ProcessBreakStatement;
         ProcessExprOrStmt[Ast::CONTINUE] = &Semantic::ProcessContinueStatement;
         ProcessExprOrStmt[Ast::RETURN] = &Semantic::ProcessReturnStatement;
@@ -575,6 +576,7 @@ public:
         DefiniteStmt[Ast::WHILE] = &Semantic::DefiniteWhileStatement;
         DefiniteStmt[Ast::DO] = &Semantic::DefiniteDoStatement;
         DefiniteStmt[Ast::FOR] = &Semantic::DefiniteForStatement;
+        DefiniteStmt[Ast::FOREACH] = &Semantic::DefiniteForeachStatement;
         DefiniteStmt[Ast::BREAK] = &Semantic::DefiniteBreakStatement;
         DefiniteStmt[Ast::CONTINUE] = &Semantic::DefiniteContinueStatement;
         DefiniteStmt[Ast::RETURN] = &Semantic::DefiniteReturnStatement;
@@ -1034,6 +1036,7 @@ private:
     void DefiniteIfStatement(Ast*);
     void DefiniteWhileStatement(Ast*);
     void DefiniteForStatement(Ast*);
+    void DefiniteForeachStatement(Ast*);
     void DefiniteSwitchStatement(Ast*);
     void DefiniteDoStatement(Ast*);
     void DefiniteBreakStatement(Ast*);
@@ -1233,6 +1236,7 @@ private:
     void ProcessLocalVariableDeclarationStatement(Ast*);
     void ProcessBlock(Ast*);
     void ProcessForStatement(Ast*);
+    void ProcessForeachStatement(Ast*);
     void ProcessSwitchStatement(Ast*);
     void ProcessThrowStatement(Ast*);
     void ProcessTryStatement(Ast*);

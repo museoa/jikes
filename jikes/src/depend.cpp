@@ -514,8 +514,8 @@ void Semantic::AddDependence(TypeSymbol* base_type, TypeSymbol* parent_type,
     // imports, it is impossible to reference a class in the unnamed
     // package from a package.
     //
-    assert(parent_type -> ContainingPackage() != control.unnamed_package ||
-           base_type -> ContainingPackage() == control.unnamed_package);
+    assert(parent_type -> ContainingPackage() != control.UnnamedPackage() ||
+           base_type -> ContainingPackage() == control.UnnamedPackage());
 }
 
 void Semantic::AddStringConversionDependence(TypeSymbol* type)

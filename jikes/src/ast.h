@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002, 2003 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -212,6 +211,7 @@ class AstSwitchStatement;
 class AstWhileStatement;
 class AstDoStatement;
 class AstForStatement;
+class AstForeachStatement;
 class AstBreakStatement;
 class AstContinueStatement;
 class AstReturnStatement;
@@ -319,6 +319,7 @@ public:
         WHILE,
         DO,
         FOR,
+        FOREACH,
         BREAK,
         CONTINUE,
         RETURN,
@@ -512,6 +513,7 @@ public:
     inline AstWhileStatement* WhileStatementCast();
     inline AstDoStatement* DoStatementCast();
     inline AstForStatement* ForStatementCast();
+    inline AstForeachStatement* ForeachStatementCast();
     inline AstBreakStatement* BreakStatementCast();
     inline AstContinueStatement* ContinueStatementCast();
     inline AstReturnStatement* ReturnStatementCast();
@@ -2392,24 +2394,6 @@ public:
 
 
 //
-// Statement --> IfStatement
-//             | WhileStatement
-//             | ForStatement
-//             | Block
-//             | EmptyStatement
-//             | ExpressionStatement
-//             | SwitchStatement
-//             | DoStatement
-//             | BreakStatement
-//             | ContinueStatement
-//             | ReturnStatement
-//             | SynchronizedStatement
-//             | ThrowStatement
-//             | TryStatement
-//
-// Label --> identifier_token
-//
-// IfStatement --> <IF, if_token, Expression, Statement, Statement_opt>
 // The parser always makes blocks for the enclosed statements, so we denote
 // that here (even though any statement is legal).
 //
@@ -2815,6 +2799,49 @@ public:
     }
     inline void AllocateForUpdateStatements(unsigned estimate = 1);
     inline void AddForUpdateStatement(AstExpressionStatement*);
+
+#ifdef JIKES_DEBUG
+    virtual void Print(LexStream&);
+    virtual void Unparse(Ostream&, LexStream*);
+#endif
+
+    virtual Ast* Clone(StoragePool*);
+
+    virtual LexStream::TokenIndex LeftToken()
+    {
+        return for_token;
+    }
+    virtual LexStream::TokenIndex RightToken()
+    {
+        return statement -> RightToken();
+    }
+};
+
+
+//
+// ForeachStatement is added in JDK 1.5 by JSR 201.  It has the syntax
+// "for (FormalParameter : expression) statement", where expression must
+// be an array type or an instance of java.lang.Iterable. The parser already
+// wrapped the statement in a block.
+//
+class AstForeachStatement : public AstStatement
+{
+public:
+    LexStream::TokenIndex for_token;
+    AstFormalParameter* formal_parameter;
+    AstExpression* expression;
+    AstBlock* statement;
+
+    AstForeachStatement()
+        : expression(NULL)
+    {
+        kind = FOREACH;
+        class_tag = STATEMENT;
+        generated = false;
+        is_reachable = false;
+        can_complete_normally = false;
+    }
+    ~AstForeachStatement() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -4849,6 +4876,11 @@ public:
         return new (Alloc(sizeof(AstForStatement))) AstForStatement(this);
     }
 
+    inline AstForeachStatement* NewForeachStatement()
+    {
+        return new (Alloc(sizeof(AstForeachStatement))) AstForeachStatement();
+    }
+
     inline AstBreakStatement* NewBreakStatement()
     {
         return new (Alloc(sizeof(AstBreakStatement))) AstBreakStatement();
@@ -5323,6 +5355,13 @@ public:
     inline AstForStatement* GenForStatement()
     {
         AstForStatement* p = NewForStatement();
+        p -> generated = true;
+        return p;
+    }
+
+    inline AstForeachStatement* GenForeachStatement()
+    {
+        AstForeachStatement* p = NewForeachStatement();
         p -> generated = true;
         return p;
     }
@@ -5868,6 +5907,11 @@ inline AstDoStatement* Ast::DoStatementCast()
 inline AstForStatement* Ast::ForStatementCast()
 {
     return DYNAMIC_CAST<AstForStatement*> (kind == FOR ? this : NULL);
+}
+
+inline AstForeachStatement* Ast::ForeachStatementCast()
+{
+    return DYNAMIC_CAST<AstForeachStatement*> (kind == FOREACH ? this : NULL);
 }
 
 inline AstBreakStatement* Ast::BreakStatementCast()

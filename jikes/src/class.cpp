@@ -1552,7 +1552,7 @@ TypeSymbol* Semantic::ReadTypeFromSignature(TypeSymbol* base_type,
             }
             delete [] package_name;
         }
-        else package = control.unnamed_package;
+        else package = control.UnnamedPackage();
 
         //
         // Process type
@@ -1742,7 +1742,7 @@ void Semantic::ProcessClassFile(TypeSymbol* type, const char* buffer,
     // check that types are not duplicated between directories.
     //
     if (! type -> IsNested() &&
-        type -> ContainingPackage() == control.unnamed_package)
+        type -> ContainingPackage() == control.UnnamedPackage())
     {
         TypeSymbol* old_type = (TypeSymbol*)
             control.unnamed_package_types.Image(type -> Identity());

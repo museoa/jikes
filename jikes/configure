@@ -2686,7 +2686,7 @@ _ACEOF
 fi
 
 
-if test "$acx_cv_pathname_style_dos" = "yes"; then
+if test "$acx_cv_pathname_style_dos" = yes; then
 
 cat >>confdefs.h <<\_ACEOF
 #define WIN32_FILE_SYSTEM
@@ -2699,6 +2699,7 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 fi
+
 
 
 # Check whether --enable-jikes-namespace or --disable-jikes-namespace was given.
@@ -22368,10 +22369,16 @@ if test "${enable_source15+set}" = set; then
 else
   source15=no
 fi;
-if test $source15=yes; then
+if test $source15 = yes; then
 
 cat >>confdefs.h <<\_ACEOF
 #define ENABLE_SOURCE_15 1
+_ACEOF
+
+else
+
+cat >>confdefs.h <<\_ACEOF
+#define ENABLE_SOURCE_15 0
 _ACEOF
 
 fi

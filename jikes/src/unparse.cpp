@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1999, 2000, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1999, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -617,6 +616,20 @@ void AstForStatement::Unparse(Ostream& os, LexStream* lex_stream)
     statement -> Unparse(os, lex_stream);
     if (debug_unparse)
         os << "/*:AstForStatement#" << id << "*/";
+}
+
+void AstForeachStatement::Unparse(Ostream& os, LexStream* lex_stream)
+{
+    if (debug_unparse)
+        os << "/*AstForeachStatement:#" << id << "*/";
+    os << lex_stream -> NameString(for_token) << " (";
+    formal_parameter -> Unparse(os, lex_stream);
+    os << " : ";
+    expression -> Unparse(os, lex_stream);
+    os << ')' << endl;
+    statement -> Unparse(os, lex_stream);
+    if (debug_unparse)
+        os << "/*:AstForeachStatement#" << id << "*/";
 }
 
 void AstBreakStatement::Unparse(Ostream& os, LexStream* lex_stream)
