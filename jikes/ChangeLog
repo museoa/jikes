@@ -1,3 +1,10 @@
+2002-06-19  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/control.cpp (ProcessHeaders):
+	* src/decl.cpp (ProcessSuperTypeDependences, SetDefaultSuperType),
+	(ProcessTypeHeader, CompleteSymbolTable): Fix core dump of Jacks
+	test 8.1.4-object-1.
+
 2002-06-18  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.cpp (CompileConstructor),

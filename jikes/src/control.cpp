@@ -1137,6 +1137,8 @@ void Control::ProcessFile(FileSymbol *file_symbol)
 
 void Control::ProcessHeaders(FileSymbol *file_symbol)
 {
+    if (file_symbol -> semantic)
+        return;
     input_java_file_set.AddElement(file_symbol);
 
     bool initial_invocation = (semantic.Length() == 0);

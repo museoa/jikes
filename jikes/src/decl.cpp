@@ -681,6 +681,25 @@ void Semantic::ProcessImports()
 void Semantic::ProcessSuperTypeDependences(AstClassDeclaration *class_declaration)
 {
     TypeSymbol *type = class_declaration -> semantic_environment -> Type();
+
+    //
+    // Special case java.lang.Object, the only type without a supertype.
+    //
+    if (type -> Identity() == control.object_name_symbol &&
+	type -> ContainingPackage() == control.system_package &&
+	! type -> IsNested())
+    {
+	if (class_declaration -> super_opt ||
+	    class_declaration -> NumInterfaces() > 0)
+	{
+	    ReportSemError(SemanticError::OBJECT_WITH_SUPER_TYPE,
+			   class_declaration -> LeftToken(),
+			   class_declaration -> class_body -> left_brace_token - 1);
+	    type -> MarkBad();
+	}
+	return;
+    }
+
     if (class_declaration -> super_opt)
     {
         TypeSymbol *super_type = FindFirstType(class_declaration -> super_opt) -> symbol -> TypeCast();
@@ -738,12 +757,8 @@ void Semantic::SetDefaultSuperType(AstClassDeclaration *class_declaration)
     // If a type has no super type, set it up properly in case
     // it is expanded prematurely by one of its dependents.
     //
-    if (! class_declaration -> super_opt && class_declaration -> NumInterfaces() == 0)
-    {
-        if (type -> Identity() != control.object_name_symbol ||
-            type -> ContainingPackage() != control.system_package || type -> IsNested())
-            type -> super = control.Object();
-    }
+    if (! class_declaration -> super_opt)
+        type -> super = control.Object();
 }
 
 
@@ -756,20 +771,6 @@ void Semantic::SetDefaultSuperType(AstInterfaceDeclaration *interface_declaratio
     // expanded prematurely by one of its dependents.
     //
     type -> super = control.Object();
-
-    for (int i = 0; i < interface_declaration -> NumNestedClasses(); i++)
-    {
-        AstClassDeclaration *inner_class_declaration = interface_declaration -> NestedClass(i);
-        if (inner_class_declaration -> semantic_environment)
-            SetDefaultSuperType(inner_class_declaration);
-    }
-
-    for (int j = 0; j < interface_declaration -> NumNestedInterfaces(); j++)
-    {
-        AstInterfaceDeclaration *inner_interface_declaration = interface_declaration -> NestedInterface(j);
-        if (inner_interface_declaration -> semantic_environment)
-            SetDefaultSuperType(inner_interface_declaration);
-    }
 }
 
 
@@ -782,6 +783,8 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration *class_declaration)
     TypeSymbol *this_type = class_declaration -> semantic_environment -> Type();
 
     assert(! this_type -> HeaderProcessed() || this_type -> Bad());
+    if (this_type -> Bad())
+        return;
 
     //
     // If the class does not have a super type then ...
@@ -812,14 +815,6 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration *class_declaration)
                            class_declaration -> super_opt -> RightToken(),
                            this_type -> ContainingPackage() -> PackageName(),
                            this_type -> ExternalName());
-        }
-        else if (this_type -> Identity() == control.object_name_symbol &&
-                 this_package == control.system_package && (! this_type -> IsNested()))
-        {
-             ReportSemError(SemanticError::OBJECT_WITH_SUPER_TYPE,
-                            class_declaration -> super_opt -> LeftToken(),
-                            class_declaration -> super_opt -> RightToken());
-             this_type -> super = NULL;
         }
         else if (this_type -> super -> ACC_INTERFACE())
         {
@@ -1703,7 +1698,7 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment,
         //
         PackageSymbol *package = this_type -> ContainingPackage();
         for (TypeSymbol *super_type = this_type -> super;
-             super_type -> ACC_ABSTRACT();
+             super_type && super_type -> ACC_ABSTRACT();
              super_type = super_type -> super)
         {
             if (super_type -> ContainingPackage() == package)
