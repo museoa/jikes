@@ -1669,29 +1669,14 @@ void Semantic::ProcessClassDeclaration(Ast* stmt)
 }
 
 
-void Semantic::ProcessThisCall(AstThisCall *this_call)
+void Semantic::ProcessThisCall(AstThisCall* this_call)
 {
-    TypeSymbol *this_type = ThisType();
+    TypeSymbol* this_type = ThisType();
 
     // Signal that we are about to process an explicit constructor invocation.
     ExplicitConstructorInvocation() = this_call;
 
-    bool bad_argument = false;
-    unsigned i;
-
-    for (i = 0; i < this_call -> NumArguments(); i++)
-    {
-        AstExpression *expr = this_call -> Argument(i);
-        ProcessExpressionOrStringConstant(expr);
-        if (expr -> symbol == control.no_type)
-            bad_argument = true;
-        else if (expr -> Type() == control.void_type)
-        {
-            bad_argument = true;
-            ReportSemError(SemanticError::TYPE_IS_VOID, expr,
-                           expr -> Type() -> Name());
-        }
-    }
+    bool bad_argument = ProcessArguments(this_call -> arguments);
     if (! bad_argument)
     {
         MethodSymbol *constructor = FindConstructor(this_type, this_call,
@@ -1700,20 +1685,8 @@ void Semantic::ProcessThisCall(AstThisCall *this_call)
         if (constructor)
         {
             this_call -> symbol = constructor;
-
-            for (i = 0; i < this_call -> NumArguments(); i++)
-            {
-                AstExpression *expr = this_call -> Argument(i);
-                if (expr -> Type() !=
-                    constructor -> FormalParameter(i) -> Type())
-                {
-                    this_call -> Argument(i) =
-                        ConvertToType(expr,
-                                      constructor -> FormalParameter(i) -> Type());
-                }
-            }
-
-            for (i = 0; i < constructor -> NumThrows(); i++)
+            MethodInvocationConversion(this_call -> arguments, constructor);
+            for (unsigned i = 0; i < constructor -> NumThrows(); i++)
             {
                 TypeSymbol *exception = constructor -> Throws(i);
                 if (UncaughtException(exception))
@@ -1739,9 +1712,9 @@ void Semantic::ProcessThisCall(AstThisCall *this_call)
 }
 
 
-void Semantic::ProcessSuperCall(AstSuperCall *super_call)
+void Semantic::ProcessSuperCall(AstSuperCall* super_call)
 {
-    TypeSymbol *this_type = ThisType();
+    TypeSymbol* this_type = ThisType();
     if (super_call -> symbol)
     {
         assert(this_type -> Anonymous());
@@ -1751,7 +1724,7 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
     // Signal that we are about to process an explicit constructor invocation.
     ExplicitConstructorInvocation() = super_call;
 
-    TypeSymbol *super_type = this_type -> super;
+    TypeSymbol* super_type = this_type -> super;
     if (! super_type)
     {
         assert(this_type == control.Object());
@@ -1764,10 +1737,10 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
     {
         ProcessExpression(super_call -> base_opt);
 
-        TypeSymbol *expr_type = super_call -> base_opt -> Type();
+        TypeSymbol* expr_type = super_call -> base_opt -> Type();
         if (expr_type != control.no_type)
         {
-            TypeSymbol *containing_type = super_type -> EnclosingType();
+            TypeSymbol* containing_type = super_type -> EnclosingType();
             if (expr_type -> Primitive() || expr_type == control.null_type)
             {
                 ReportSemError(SemanticError::TYPE_NOT_REFERENCE,
@@ -1813,23 +1786,8 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
                 CreateAccessToType(super_call, super_type -> EnclosingType());
     }
 
-    bool bad_argument = false;
-    unsigned i;
-    for (i = 0; i < super_call -> NumArguments(); i++)
-    {
-        AstExpression *expr = super_call -> Argument(i);
-        ProcessExpressionOrStringConstant(expr);
-        if (expr -> symbol == control.no_type)
-            bad_argument = true;
-        else if (expr -> Type() == control.void_type)
-        {
-            bad_argument = true;
-            ReportSemError(SemanticError::TYPE_IS_VOID, expr,
-                           expr -> Type() -> Name());
-        }
-    }
-
-    MethodSymbol *constructor = NULL;
+    MethodSymbol* constructor = NULL;
+    bool bad_argument = ProcessArguments(super_call -> arguments);
     if (! bad_argument)
     {
         constructor = FindConstructor(super_type, super_call,
@@ -1846,7 +1804,7 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
             // to the constructor invocation.
             //
             constructor = super_type -> GetReadAccessConstructor(constructor);
-            super_call -> AddNullArgument();
+            super_call -> arguments -> AddNullArgument();
         }
 
         super_call -> symbol = constructor;
@@ -1859,21 +1817,13 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
                 ConvertToType(super_call -> base_opt,
                               super_type -> EnclosingType());
         }
-
-        for (i = 0; i < super_call -> NumArguments(); i++)
-        {
-            AstExpression *expr = super_call -> Argument(i);
-            TypeSymbol *ctor_param_type =
-                constructor -> FormalParameter(i) -> Type();
-            if (expr -> Type() != ctor_param_type)
-                super_call -> Argument(i) =
-                    ConvertToType(expr, ctor_param_type);
-        }
+        MethodInvocationConversion(super_call -> arguments, constructor);
 
         //
         // Make sure that the throws signature of the constructor is
         // processed.
         //
+        unsigned i;
         for (i = 0; i < constructor -> NumThrows(); i++)
         {
             TypeSymbol *exception = constructor -> Throws(i);
@@ -1896,7 +1846,7 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
             unsigned param_count = super_type -> NumConstructorParameters();
             if (super_type -> LocalClassProcessingCompleted() && param_count)
             {
-                super_call -> AllocateLocalArguments(param_count);
+                super_call -> arguments -> AllocateLocalArguments(param_count);
                 for (i = 0; i < param_count; i++)
                 {
                     //
@@ -1912,7 +1862,7 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
                     TypeSymbol* owner = accessor -> ContainingType();
                     if (owner != this_type)
                         CreateAccessToScopedVariable(simple_name, owner);
-                    super_call -> AddLocalArgument(simple_name);
+                    super_call -> arguments -> AddLocalArgument(simple_name);
                 }
             }
             else
@@ -1922,7 +1872,8 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
                 // later, since not all shadows may be known yet. See
                 // ProcessClassDeclaration.
                 //
-                super_type -> AddLocalConstructorCallEnvironment(GetEnvironment(super_call));
+                super_type -> AddLocalConstructorCallEnvironment
+                    (GetEnvironment(super_call -> arguments));
             }
         }
     }
@@ -2030,36 +1981,33 @@ void Semantic::ProcessMethodBody(AstMethodDeclaration* method_declaration)
         delete throws_list;
     }
 
-    if (method_declaration -> method_body -> MethodBodyCast())
+    if (method_declaration -> method_body_opt)
     {
-        AstMethodBody *block_body =
-            (AstMethodBody *) method_declaration -> method_body;
-
-        if (block_body -> explicit_constructor_opt)
+        AstMethodBody* method_body = method_declaration -> method_body_opt;
+        if (method_body -> explicit_constructor_opt)
             ReportSemError(SemanticError::MISPLACED_EXPLICIT_CONSTRUCTOR,
-                           block_body -> explicit_constructor_opt);
+                           method_body -> explicit_constructor_opt);
+        method_body -> block_symbol = this_method -> block_symbol;
+        method_body -> nesting_level = LocalBlockStack().Size();
+        LocalBlockStack().Push(method_body);
 
-        block_body -> block_symbol = this_method -> block_symbol;
-        block_body -> nesting_level = LocalBlockStack().Size();
-        LocalBlockStack().Push(block_body);
-
-        ProcessBlockStatements(block_body);
+        ProcessBlockStatements(method_body);
 
         LocalBlockStack().Pop();
 
-        if (block_body -> can_complete_normally)
+        if (method_body -> can_complete_normally)
         {
             if (this_method -> Type() == control.void_type)
             {
-                AstReturnStatement *return_statement =
+                AstReturnStatement* return_statement =
                     compilation_unit -> ast_pool -> GenReturnStatement();
                 return_statement -> return_token =
-                    block_body -> right_brace_token;
+                    method_body -> right_brace_token;
                 return_statement -> semicolon_token =
-                    block_body -> right_brace_token;
+                    method_body -> right_brace_token;
                 return_statement -> is_reachable = true;
-                block_body -> can_complete_normally = false;
-                block_body -> AddStatement(return_statement);
+                method_body -> can_complete_normally = false;
+                method_body -> AddStatement(return_statement);
             }
             else
             {
@@ -2128,8 +2076,8 @@ void Semantic::ProcessConstructorBody(AstConstructorDeclaration* constructor_dec
         LexStream::TokenIndex loc = constructor_block -> LeftToken();
         super_call = compilation_unit -> ast_pool -> GenSuperCall();
         super_call -> super_token = loc;
-        super_call -> left_parenthesis_token = loc;
-        super_call -> right_parenthesis_token = loc;
+        super_call -> arguments =
+            compilation_unit -> ast_pool -> GenArguments(loc, loc);
         super_call -> semicolon_token = loc;
 
         constructor_block -> explicit_constructor_opt = super_call;

@@ -79,13 +79,6 @@ $MakeArrayType
 #endif
 ./
 
-$MakeModifier
-/.
-#ifndef HEADERS
-    rule_action[$rule_number] = &Parser::MakeModifier;
-#endif
-./
-
 $MakeClassBody
 /.
 #ifndef HEADERS
@@ -586,7 +579,8 @@ void Parser::InitRuleAction()
 #else // HEADERS
     AstType* MakeArrayType(int tokennum);
     AstSimpleName* MakeSimpleName(int tokennum);
-    void MakeLocalVariable(AstListNode* modifiers, AstType* type,
+    AstArguments* MakeArguments(int tokennum);
+    void MakeLocalVariable(AstModifiers* modifiers, AstType* type,
                            AstListNode* variables);
     AstStatement* MakeSwitchBlockStatement(AstListNode* labels,
                                            AstListNode* statements = NULL);
@@ -601,7 +595,6 @@ void Parser::InitRuleAction()
     void AddList2();
     void AddList3();
     void MakeArrayType();
-    void MakeModifier();
     void MakeClassBody();
     void MakeQualifiedSuper();
     void MakeArrayInitializer();
@@ -932,22 +925,12 @@ void Parser::MakeArrayType() { Sym(1) = MakeArrayType(1); }
 //
 AstType* Parser::MakeArrayType(int tokennum)
 {
-    AstType* t = Sym(tokennum) -> IsName()
+    AstType* p = Sym(tokennum) -> IsName()
         ? ast_pool -> NewTypeName(DYNAMIC_CAST<AstExpression*> (Sym(tokennum)))
         : DYNAMIC_CAST<AstType*> (Sym(tokennum));
-    if (! Sym(tokennum + 1))
-        return t;
-    AstArrayType* p = ast_pool -> NewArrayType(t);
-    AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(tokennum + 1));
-    p -> AllocateBrackets(tail -> index + 1);
-    AstListNode* root = tail;
-    do
-    {
-        root = root -> next;
-        p -> AddBrackets(DYNAMIC_CAST<AstBrackets*> (root -> element));
-    } while (root != tail);
-    FreeCircularList(tail);
-    return p;
+    return ! Sym(tokennum + 1) ? p
+        : ast_pool -> NewArrayType(p, (DYNAMIC_CAST<AstBrackets*>
+                                       (Sym(tokennum + 1))));
 }
 ./
 
@@ -1171,94 +1154,72 @@ void Parser::Act$rule_number()
 --ConstantModifiers ::= Modifiers
 --AbstractMethodModifiers ::= Modifiers
 Modifiers ::= Modifier
-\:$StartList:\
-/.$shared_StartList./
-
-Modifiers ::= Modifiers Modifier
-\:$AddList2:\
-/.$shared_AddList2./
-
-Modifier ::= 'public'
-\:$MakeModifier:\
-/.$location
-void Parser::MakeModifier()
-{
-    Sym(1) = ast_pool -> NewModifier(Token(1));
-}
-./
-
-Modifier ::= 'protected'
-\:$MakeModifier:\
-/.$shared_function
-//
-// void MakeModifier()
-//./
-
-Modifier ::= 'private'
-\:$MakeModifier:\
-/.$shared_function
-//
-// void MakeModifier()
-//./
-
-Modifier ::= 'static'
 \:$action:\
 /.$location
 void Parser::Act$rule_number()
 {
-    MakeModifier();
-    Sym(1) -> class_tag = Ast::STATIC;
+    AstModifiers* p = ast_pool -> NewModifier(Token(1));
+    if (lex_stream -> Kind(Token(1)) == TK_static)
+        p -> static_token_opt = Token(1);
+    Sym(1) = p;
 }
 ./
 
+Modifiers ::= Modifiers Modifier
+\:$action:\
+/.$location
+void Parser::Act$rule_number()
+{
+    AstModifiers* p = DYNAMIC_CAST<AstModifiers*> (Sym(1));
+    p -> right_modifier_token = Token(2);
+    if (! p -> static_token_opt && lex_stream -> Kind(Token(2)) == TK_static)
+        p -> static_token_opt = Token(1);
+}
+./
+
+Modifier ::= 'public'
+\:$NoAction:\
+/.$shared_NoAction./
+
+Modifier ::= 'protected'
+\:$NoAction:\
+/.$shared_NoAction./
+
+Modifier ::= 'private'
+\:$NoAction:\
+/.$shared_NoAction./
+
+Modifier ::= 'static'
+\:$NoAction:\
+/.$shared_NoAction./
+
 Modifier ::= 'abstract'
-\:$MakeModifier:\
-/.$shared_function
-//
-// void MakeModifier()
-//./
+\:$NoAction:\
+/.$shared_NoAction./
 
 Modifier ::= 'final'
-\:$MakeModifier:\
-/.$shared_function
-//
-// void MakeModifier()
-//./
+\:$NoAction:\
+/.$shared_NoAction./
 
 Modifier ::= 'native'
-\:$MakeModifier:\
-/.$shared_function
-//
-// void MakeModifier()
-//./
+\:$NoAction:\
+/.$shared_NoAction./
 
 Modifier ::= 'strictfp'
-\:$MakeModifier:\
-/.$shared_function
-//
-// void MakeModifier()
-//./
+\:$NoAction:\
+/.$shared_NoAction./
 
 Modifier ::= 'synchronized'
-\:$MakeModifier:\
-/.$shared_function
-//
-// void MakeModifier()
-//./
+\:$NoAction:\
+/.$shared_NoAction./
 
 Modifier ::= 'transient'
-\:$MakeModifier:\
-/.$shared_function
-//
-// void MakeModifier()
-//./
+\:$NoAction:\
+/.$shared_NoAction./
 
 Modifier ::= 'volatile'
-\:$MakeModifier:\
-/.$shared_function
-//
-// void MakeModifier()
-//./
+\:$NoAction:\
+/.$shared_NoAction./
 
 --18.8 Productions from 8: Class Declarations
 --18.8.1 Productions from 8.1: Class Declarations
@@ -1275,18 +1236,7 @@ ClassDeclaration ::= Modifiersopt 'class' 'Identifier' Marker Superopt
 void Parser::Act$rule_number()
 {
     AstClassDeclaration* p = ast_pool -> NewClassDeclaration();
-    if (Sym(1))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
-        p -> AllocateModifiers(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+    p -> modifiers_opt = DYNAMIC_CAST<AstModifiers*> (Sym(1));
     p -> class_token = Token(2);
     p -> super_opt = DYNAMIC_CAST<AstTypeName*> (Sym(5));
     if (Sym(6))
@@ -1375,19 +1325,14 @@ void Parser::MakeClassBody()
             p -> AddClassBodyDeclaration(declaration);
             AstFieldDeclaration* field_declaration =
                 declaration -> FieldDeclarationCast();
-            AstInitializerDeclaration* initializer_declaration =
+            AstInitializerDeclaration* initializer =
                 declaration -> InitializerDeclarationCast();
             if (field_declaration)
             {
-                for (unsigned i = 0;
-                     i < field_declaration -> NumModifiers(); i++)
+                if (field_declaration -> modifiers_opt &&
+                    field_declaration -> modifiers_opt -> static_token_opt)
                 {
-                    if (field_declaration -> Modifier(i) -> class_tag ==
-                        Ast::STATIC)
-                    {
-                        field_declaration -> MarkStatic();
-                        break;
-                    }
+                    field_declaration -> MarkStatic();
                 }
                 //
                 // Interface fields were already marked static.
@@ -1400,20 +1345,14 @@ void Parser::MakeClassBody()
                 num_methods++;
             else if (declaration -> ConstructorDeclarationCast())
                 num_constructors++;
-            else if (initializer_declaration)
+            else if (initializer)
             {
-                for (unsigned i = 0;
-                     i < initializer_declaration -> NumModifiers(); i++)
+                if (initializer -> modifiers_opt &&
+                    initializer -> modifiers_opt -> static_token_opt)
                 {
-                    if (initializer_declaration -> Modifier(i) -> class_tag ==
-                        Ast::STATIC)
-                    {
-                        initializer_declaration -> MarkStatic();
-                        break;
-                    }
-                }
-                if (initializer_declaration -> StaticInitializerCast())
+                    initializer -> MarkStatic();
                     num_static_initializers++;
+                }
                 else num_instance_initializers++;
             }
             else if (declaration -> ClassDeclarationCast())
@@ -1546,25 +1485,14 @@ MemberDeclaration ::= TypeDeclaration
 --
 -- The use of Marker allows us to share code.
 --
---FieldDeclaration ::= Modifiersopt Type VariableDeclarators ';'
+--FieldDeclaration ::= FieldModifiersopt Type VariableDeclarators ';'
 FieldDeclaration ::= Modifiersopt Marker Type VariableDeclarators ';'
 \:$action:\
 /.$location
 void Parser::Act$rule_number()
 {
     AstFieldDeclaration* p = ast_pool -> NewFieldDeclaration();
-    if (Sym(1))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
-        p -> AllocateModifiers(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+    p -> modifiers_opt = DYNAMIC_CAST<AstModifiers*> (Sym(1));
     p -> type = DYNAMIC_CAST<AstType*> (Sym(3));
     AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(4));
     p -> AllocateVariableDeclarators(tail -> index + 1);
@@ -1621,18 +1549,7 @@ void Parser::Act$rule_number()
 {
     AstVariableDeclaratorId* p = ast_pool -> NewVariableDeclaratorId();
     p -> identifier_token = Token(1);
-    if (Sym(2))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(2));
-        p -> AllocateBrackets(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddBrackets(DYNAMIC_CAST<AstBrackets*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+    p -> brackets_opt = DYNAMIC_CAST<AstBrackets*> (Sym(2));
     Sym(1) = p;
 }
 ./
@@ -1662,12 +1579,15 @@ MethodDeclaration ::= MethodHeader MethodHeaderMarker MethodBody
 /.$location
 void Parser::MakeMethodDeclaration()
 {
-    DYNAMIC_CAST<AstMethodDeclaration*> (Sym(1)) -> method_body =
-        DYNAMIC_CAST<AstStatement*> (Sym(3));
+    DYNAMIC_CAST<AstMethodDeclaration*> (Sym(1)) -> method_body_opt =
+        DYNAMIC_CAST<AstMethodBody*> (Sym(3));
 }
 ./
 
-MethodDeclaration ::= MethodHeader MethodHeaderMarker EmptyStatement
+--
+-- The use of Marker allows us to share code.
+--
+MethodDeclaration ::= MethodHeader MethodHeaderMarker Marker ';'
 \:$MakeMethodDeclaration:\
 /.$shared_function
 //
@@ -1677,25 +1597,14 @@ MethodDeclaration ::= MethodHeader MethodHeaderMarker EmptyStatement
 --
 -- The use of Marker allows us to share code.
 --
---MethodHeader ::= Modifiersopt Type MethodDeclarator Throwsopt
+--MethodHeader ::= MethodModifiersopt Type MethodDeclarator Throwsopt
 MethodHeader ::= Modifiersopt Marker Type MethodDeclarator Throwsopt
 \:$MakeMethodHeader:\
 /.$location
 void Parser::MakeMethodHeader()
 {
     AstMethodDeclaration* p = ast_pool -> NewMethodDeclaration();
-    if (Sym(1))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
-        p -> AllocateModifiers(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+    p -> modifiers_opt = DYNAMIC_CAST<AstModifiers*> (Sym(1));
     p -> type = DYNAMIC_CAST<AstType*> (Sym(3));
     p -> method_declarator = DYNAMIC_CAST<AstMethodDeclarator*> (Sym(4));
     if (Sym(5))
@@ -1717,7 +1626,7 @@ void Parser::MakeMethodHeader()
 --
 -- The use of Marker allows us to share code.
 --
---MethodHeader ::= Modifiersopt 'void' MethodDeclarator Throwsopt
+--MethodHeader ::= MethodModifiersopt 'void' MethodDeclarator Throwsopt
 MethodHeader ::= Modifiersopt Marker 'void' MethodDeclarator Throwsopt
 \:$action:\
 /.$location
@@ -1750,18 +1659,7 @@ void Parser::MakeMethodDeclarator()
         FreeCircularList(tail);
     }
     p -> right_parenthesis_token = Token(4);
-    if (Sym(5))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(5));
-        p -> AllocateBrackets(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddBrackets(DYNAMIC_CAST<AstBrackets*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+    p -> brackets_opt = DYNAMIC_CAST<AstBrackets*> (Sym(5));
     Sym(1) = p;
 }
 ./
@@ -1785,25 +1683,12 @@ FormalParameter ::= Modifiersopt Type VariableDeclaratorId
 void Parser::Act$rule_number()
 {
     AstFormalParameter* p = ast_pool -> NewFormalParameter();
-    if (Sym(1))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
-        p -> AllocateModifiers(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+    p -> modifiers_opt = DYNAMIC_CAST<AstModifiers*> (Sym(1));
     p -> type = DYNAMIC_CAST<AstType*> (Sym(2));
-
     AstVariableDeclarator* formal_declarator =
         ast_pool -> NewVariableDeclarator();
     formal_declarator -> variable_declarator_name =
         DYNAMIC_CAST<AstVariableDeclaratorId*> (Sym(3));
-
     p -> formal_declarator = formal_declarator;
     Sym(1) = p;
 }
@@ -1878,18 +1763,7 @@ InitializerDeclaration ::= Modifiersopt Marker MethodHeaderMarker MethodBody
 void Parser::Act$rule_number()
 {
     AstInitializerDeclaration* p = ast_pool -> NewInitializerDeclaration();
-    if (Sym(1))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
-        p -> AllocateModifiers(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+    p -> modifiers_opt = DYNAMIC_CAST<AstModifiers*> (Sym(1));
     p -> block = DYNAMIC_CAST<AstMethodBody*> (Sym(4));
     Sym(1) = p;
 }
@@ -1901,8 +1775,8 @@ void Parser::Act$rule_number()
 -- MethodHeaderMarker allows us to do 2-pass parsing, and MethodBody was
 -- rewritten to handle constructor bodies. See comments above.
 --
---ConstructorDeclaration ::= Modifiersopt ConstructorDeclarator Throwsopt
---                           ConstructorBody
+--ConstructorDeclaration ::= ConstructorModifiersopt ConstructorDeclarator
+--                           Throwsopt ConstructorBody
 ConstructorDeclaration ::= Modifiersopt Marker ConstructorDeclarator
                            Throwsopt MethodHeaderMarker MethodBody
 \:$MakeConstructorDeclaration:\
@@ -1910,18 +1784,7 @@ ConstructorDeclaration ::= Modifiersopt Marker ConstructorDeclarator
 void Parser::MakeConstructorDeclaration()
 {
     AstConstructorDeclaration* p = ast_pool -> NewConstructorDeclaration();
-    if (Sym(1))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
-        p -> AllocateModifiers(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+    p -> modifiers_opt = DYNAMIC_CAST<AstModifiers*> (Sym(1));
     p -> constructor_declarator = DYNAMIC_CAST<AstMethodDeclarator*> (Sym(3));
     if (Sym(4))
     {
@@ -1969,10 +1832,17 @@ void Parser::Act$rule_number()
 {
     AstThisCall* p = ast_pool -> NewThisCall();
     p -> this_token = Token(1);
-    p -> left_parenthesis_token = Token(2);
-    if (Sym(3))
+    p -> arguments = MakeArguments(2);
+    p -> semicolon_token = Token(5);
+    Sym(1) = p;
+}
+
+AstArguments* Parser::MakeArguments(int tokennum)
+{
+    AstArguments* p = ast_pool -> NewArguments(tokennum, tokennum + 2);
+    if (Sym(tokennum + 1))
     {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(3));
+        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(tokennum + 1));
         p -> AllocateArguments(tail -> index + 1);
         AstListNode* root = tail;
         do
@@ -1982,9 +1852,7 @@ void Parser::Act$rule_number()
         } while (root != tail);
         FreeCircularList(tail);
     }
-    p -> right_parenthesis_token = Token(4);
-    p -> semicolon_token = Token(5);
-    Sym(1) = p;
+    return p;
 }
 ./
 
@@ -1995,20 +1863,7 @@ void Parser::Act$rule_number()
 {
     AstSuperCall* p = ast_pool -> NewSuperCall();
     p -> super_token = Token(1);
-    p -> left_parenthesis_token = Token(2);
-    if (Sym(3))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(3));
-        p -> AllocateArguments(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddArgument(DYNAMIC_CAST<AstExpression*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
-    p -> right_parenthesis_token = Token(4);
+    p -> arguments = MakeArguments(2);
     p -> semicolon_token = Token(5);
     Sym(1) = p;
 }
@@ -2024,20 +1879,7 @@ void Parser::MakeQualifiedSuper()
     AstSuperCall* p = ast_pool -> NewSuperCall();
     p -> base_opt = DYNAMIC_CAST<AstExpression*> (Sym(1));
     p -> super_token = Token(3);
-    p -> left_parenthesis_token = Token(4);
-    if (Sym(5))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(5));
-        p -> AllocateArguments(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddArgument(DYNAMIC_CAST<AstExpression*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
-    p -> right_parenthesis_token = Token(6);
+    p -> arguments = MakeArguments(4);
     p -> semicolon_token = Token(7);
     Sym(1) = p;
 }
@@ -2056,7 +1898,7 @@ ExplicitConstructorInvocation ::= Name '.' 'super' '(' ArgumentListopt ')' ';'
 --
 -- The use of Marker is in anticipation of implementing generics.
 --
---InterfaceDeclaration ::= Modifiersopt 'interface' 'Identifier'
+--InterfaceDeclaration ::= InterfaceModifiersopt 'interface' 'Identifier'
 --                         ExtendsInterfacesopt InterfaceBody
 InterfaceDeclaration ::= Modifiersopt 'interface' 'Identifier' Marker
                          ExtendsInterfacesopt InterfaceBody
@@ -2065,18 +1907,7 @@ InterfaceDeclaration ::= Modifiersopt 'interface' 'Identifier' Marker
 void Parser::Act$rule_number()
 {
     AstInterfaceDeclaration* p = ast_pool -> NewInterfaceDeclaration();
-    if (Sym(1))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
-        p -> AllocateModifiers(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+    p -> modifiers_opt = DYNAMIC_CAST<AstModifiers*> (Sym(1));
     p -> interface_token = Token(2);
     if (Sym(5))
     {
@@ -2293,23 +2124,12 @@ void Parser::MakeLocalVariable()
 //
 // Creates a local variable declaration and places it in Sym(1).
 //
-void Parser::MakeLocalVariable(AstListNode* modifiers, AstType* type,
+void Parser::MakeLocalVariable(AstModifiers* modifiers, AstType* type,
                                AstListNode* variables)
 {
     AstLocalVariableDeclarationStatement* p =
         ast_pool -> NewLocalVariableDeclarationStatement();
-    if (modifiers)
-    {
-        AstListNode* tail = modifiers;
-        p -> AllocateModifiers(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+    p -> modifiers_opt = modifiers;
     p -> type = type;
     AstListNode* tail = variables;
     p -> AllocateVariableDeclarators(tail -> index + 1);
@@ -2354,7 +2174,7 @@ LocalVariableDeclaration ::= Modifiers Type VariableDeclarators
 /.$location
 void Parser::Act$rule_number()
 {
-    MakeLocalVariable(DYNAMIC_CAST<AstListNode*> (Sym(1)),
+    MakeLocalVariable(DYNAMIC_CAST<AstModifiers*> (Sym(1)),
                       DYNAMIC_CAST<AstType*> (Sym(2)),
                       DYNAMIC_CAST<AstListNode*> (Sym(3)));
 }
@@ -3223,20 +3043,7 @@ void Parser::Act$rule_number()
         ast_pool -> NewClassInstanceCreationExpression();
     p -> new_token = Token(1);
     p -> class_type = DYNAMIC_CAST<AstTypeName*> (Sym(2));
-    p -> left_parenthesis_token = Token(3);
-    if (Sym(4))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(4));
-        p -> AllocateArguments(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddArgument(DYNAMIC_CAST<AstExpression*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
-    p -> right_parenthesis_token = Token(5);
+    p -> arguments = MakeArguments(3);
     p -> class_body_opt = DYNAMIC_CAST<AstClassBody*> (Sym(6));
     if (p -> class_body_opt)
         p -> class_body_opt -> identifier_token =
@@ -3263,20 +3070,7 @@ void Parser::MakeQualifiedNew()
     p -> base_opt = DYNAMIC_CAST<AstExpression*> (Sym(1));
     p -> new_token = Token(3);
     p -> class_type = ast_pool -> NewTypeName(MakeSimpleName(4));
-    p -> left_parenthesis_token = Token(6);
-    if (Sym(7))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(7));
-        p -> AllocateArguments(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddArgument(DYNAMIC_CAST<AstExpression*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
-    p -> right_parenthesis_token = Token(8);
+    p -> arguments = MakeArguments(6);
     p -> class_body_opt = DYNAMIC_CAST<AstClassBody*> (Sym(9));
     if (p -> class_body_opt)
         p -> class_body_opt -> identifier_token = Token(4);
@@ -3330,18 +3124,7 @@ void Parser::MakeArrayCreationUninitialized()
         p -> AddDimExpr(DYNAMIC_CAST<AstDimExpr*> (root -> element));
     } while (root != tail);
     FreeCircularList(tail);
-    if (Sym(4))
-    {
-        tail = DYNAMIC_CAST<AstListNode*> (Sym(4));
-        p -> AllocateBrackets(tail -> index + 1);
-        root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddBrackets(DYNAMIC_CAST<AstBrackets*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+    p -> brackets_opt = DYNAMIC_CAST<AstBrackets*> (Sym(4));
     Sym(1) = p;
 }
 ./
@@ -3397,7 +3180,6 @@ Dims ::= '[' ']'
 void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool -> NewBrackets(Token(1), Token(2));
-    StartList();
 }
 ./
 
@@ -3406,8 +3188,9 @@ Dims ::= Dims '[' ']'
 /.$location
 void Parser::Act$rule_number()
 {
-    Sym(2) = ast_pool -> NewBrackets(Token(2), Token(3));
-    AddList2();
+    AstBrackets* p = DYNAMIC_CAST<AstBrackets*> (Sym(1));
+    p -> right_bracket_token = Token(2);
+    p -> dims++;
 }
 ./
 
@@ -3465,20 +3248,7 @@ void Parser::MakeMethodInvocation(int tokennum)
 {
     AstMethodInvocation* p = ast_pool -> NewMethodInvocation();
     p -> method = DYNAMIC_CAST<AstExpression*> (Sym(1));
-    p -> left_parenthesis_token = Token(tokennum);
-    if (Sym(tokennum + 1))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(tokennum + 1));
-        p -> AllocateArguments(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddArgument(DYNAMIC_CAST<AstExpression*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
-    p -> right_parenthesis_token = Token(tokennum + 2);
+    p -> arguments = MakeArguments(tokennum);
     Sym(1) = p;
 }
 ./

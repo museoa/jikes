@@ -19,7 +19,7 @@ namespace Jikes { // Open namespace Jikes block
 
 
 //
-// Processs a modifier, possibly modifying the AccessFlags object it modifies.
+// Process modifiers, returning the AccessFlags they represent.
 //
 // Diagnostics are emitted in the following cases:
 // . Invalid modifiers based on context.
@@ -30,100 +30,106 @@ namespace Jikes { // Open namespace Jikes block
 // . Explicit specification of implicit modifier (controlled by
 //   +Predundant-modifiers).
 //
-void Semantic::ProcessAccessFlag(AccessFlags& access_flags,
-                                 LexStream::TokenIndex token_index,
-                                 const wchar_t* declaration_kind_name,
-                                 u2 valid_flags, u2 implicit_flags)
+AccessFlags Semantic::ProcessModifiers(AstModifiers* modifiers,
+                                       const wchar_t* declaration_kind_name,
+                                       u2 valid_flags, u2 implicit_flags)
 {
-    u2 flag;
-    switch (lex_stream -> Kind(token_index))
+    if (! modifiers)
+        return AccessFlags(implicit_flags);
+    AccessFlags access_flags;
+    for (LexStream::TokenIndex index = modifiers -> left_modifier_token;
+         index <= modifiers -> right_modifier_token; index++)
     {
-    case TK_abstract: flag = AccessFlags::ACCESS_ABSTRACT; break;
-    case TK_final: flag = AccessFlags::ACCESS_FINAL; break;
-    case TK_native: flag = AccessFlags::ACCESS_NATIVE; break;
-    case TK_public: flag = AccessFlags::ACCESS_PUBLIC; break;
-    case TK_protected: flag = AccessFlags::ACCESS_PROTECTED; break;
-    case TK_private: flag = AccessFlags::ACCESS_PRIVATE; break;
-    case TK_static: flag = AccessFlags::ACCESS_STATIC; break;
-    case TK_strictfp: flag = AccessFlags::ACCESS_STRICTFP; break;
-    case TK_synchronized: flag = AccessFlags::ACCESS_SYNCHRONIZED; break;
-    case TK_transient: flag = AccessFlags::ACCESS_TRANSIENT; break;
-    case TK_volatile: flag = AccessFlags::ACCESS_VOLATILE; break;
-    default:
-        assert(false && "token was not modifier");
-    }
-    if ((flag & valid_flags) == 0)
-    {
-        ReportSemError(SemanticError::INVALID_MODIFIER, token_index,
-                       lex_stream -> NameString(token_index),
-                       declaration_kind_name);
-    }
-    else if ((flag & AccessFlags::ACCESS_ACCESS) &&
-             (access_flags.Flags() & AccessFlags::ACCESS_ACCESS))
-    {
-        ReportSemError(SemanticError::DUPLICATE_ACCESS_MODIFIER, token_index);
-    }
-    else if (access_flags.IsSet(flag))
-    {
-        ReportSemError(SemanticError::DUPLICATE_MODIFIER, token_index,
-                       lex_stream -> NameString(token_index));
-    }
-    else
-    {
-        // We have a valid flag if it is alone.
-        if ((flag & implicit_flags) != 0)
+        u2 flag;
+        switch (lex_stream -> Kind(index))
         {
-            ReportSemError(SemanticError::REDUNDANT_MODIFIER, token_index,
-                           lex_stream -> NameString(token_index),
+        case TK_abstract: flag = AccessFlags::ACCESS_ABSTRACT; break;
+        case TK_final: flag = AccessFlags::ACCESS_FINAL; break;
+        case TK_native: flag = AccessFlags::ACCESS_NATIVE; break;
+        case TK_public: flag = AccessFlags::ACCESS_PUBLIC; break;
+        case TK_protected: flag = AccessFlags::ACCESS_PROTECTED; break;
+        case TK_private: flag = AccessFlags::ACCESS_PRIVATE; break;
+        case TK_static: flag = AccessFlags::ACCESS_STATIC; break;
+        case TK_strictfp: flag = AccessFlags::ACCESS_STRICTFP; break;
+        case TK_synchronized: flag = AccessFlags::ACCESS_SYNCHRONIZED; break;
+        case TK_transient: flag = AccessFlags::ACCESS_TRANSIENT; break;
+        case TK_volatile: flag = AccessFlags::ACCESS_VOLATILE; break;
+        default:
+            assert(false && "token was not modifier");
+        }
+        if ((flag & valid_flags) == 0)
+        {
+            ReportSemError(SemanticError::INVALID_MODIFIER, index,
+                           lex_stream -> NameString(index),
                            declaration_kind_name);
         }
-        if (! access_flags.RecommendedOrder(flag))
+        else if ((flag & AccessFlags::ACCESS_ACCESS) &&
+                 (access_flags.Flags() & AccessFlags::ACCESS_ACCESS))
         {
-            ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
-                           token_index,
-                           lex_stream -> NameString(token_index));
+            ReportSemError(SemanticError::DUPLICATE_ACCESS_MODIFIER, index);
         }
-        access_flags.SetFlags(flag);
-        if (access_flags.ACC_FINAL())
+        else if (access_flags.IsSet(flag))
         {
-            if (access_flags.ACC_VOLATILE())
+            ReportSemError(SemanticError::DUPLICATE_MODIFIER, index,
+                       lex_stream -> NameString(index));
+        }
+        else
+        {
+            // We have a valid flag if it is alone.
+            if ((flag & implicit_flags) != 0)
             {
-                // We know it's a field because of volatile.
-                ReportSemError(SemanticError::VOLATILE_FINAL_FIELD,
-                               token_index,
-                               lex_stream -> NameString(token_index));
+                ReportSemError(SemanticError::REDUNDANT_MODIFIER, index,
+                               lex_stream -> NameString(index),
+                               declaration_kind_name);
+            }
+            if (! access_flags.RecommendedOrder(flag))
+            {
+                ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
+                               index, lex_stream -> NameString(index));
+            }
+            access_flags.SetFlags(flag);
+            if (access_flags.ACC_FINAL())
+            {
+                if (access_flags.ACC_VOLATILE())
+                {
+                    // We know it's a field because of volatile.
+                    ReportSemError(SemanticError::VOLATILE_FINAL_FIELD,
+                                   index, lex_stream -> NameString(index));
+                    access_flags.ResetFlags(flag);
+                }
+                else if (access_flags.ACC_ABSTRACT())
+                {
+                    ReportSemError(SemanticError::FINAL_ABSTRACT_ENTITY,
+                                   index, declaration_kind_name);
+                    access_flags.ResetFlags(flag);
+                }
+            }
+            else if (access_flags.ACC_ABSTRACT() &&
+                     (valid_flags & AccessFlags::ACCESS_NATIVE))
+            {
+                //
+                // Classes can be private static abstract strictfp, but methods
+                // cannot. Hence, we checked that we are dealing with a method
+                // by looking for NATIVE in the legal flags.
+                //
+                if (access_flags.ACC_SYNCHRONIZED() ||
+                    access_flags.ACC_NATIVE() || access_flags.ACC_PRIVATE() ||
+                    access_flags.ACC_STATIC() || access_flags.ACC_STRICTFP())
+                {
+                    ReportSemError(SemanticError::BAD_ABSTRACT_METHOD_MODIFIER,
+                                   index);
+                    access_flags.ResetFlags(flag);
+                }
+            }
+            else if (access_flags.ACC_STRICTFP() && access_flags.ACC_NATIVE())
+            {
+                ReportSemError(SemanticError::STRICTFP_NATIVE_METHOD, index);
                 access_flags.ResetFlags(flag);
             }
-            else if (access_flags.ACC_ABSTRACT())
-            {
-                ReportSemError(SemanticError::FINAL_ABSTRACT_ENTITY,
-                               token_index, declaration_kind_name);
-                access_flags.ResetFlags(flag);
-            }
-        }
-        else if (access_flags.ACC_ABSTRACT() &&
-                 (valid_flags & AccessFlags::ACCESS_NATIVE))
-        {
-            //
-            // Classes can be private static abstract strictfp, but methods
-            // cannot. Hence, we checked that we are dealing with a method by
-            // looking for NATIVE in the legal flags.
-            //
-            if (access_flags.ACC_SYNCHRONIZED() || access_flags.ACC_NATIVE() ||
-                access_flags.ACC_PRIVATE() || access_flags.ACC_STATIC() ||
-                access_flags.ACC_STRICTFP())
-            {
-                ReportSemError(SemanticError::BAD_ABSTRACT_METHOD_MODIFIER,
-                               token_index);
-                access_flags.ResetFlags(flag);
-            }
-        }
-        else if (access_flags.ACC_STRICTFP() && access_flags.ACC_NATIVE())
-        {
-            ReportSemError(SemanticError::STRICTFP_NATIVE_METHOD, token_index);
-            access_flags.ResetFlags(flag);
         }
     }
+    access_flags.SetFlags(implicit_flags);
+    return access_flags;
 }
 
 //
@@ -131,40 +137,25 @@ void Semantic::ProcessAccessFlag(AccessFlags& access_flags,
 //
 AccessFlags Semantic::ProcessTopLevelTypeModifiers(AstDeclaredType* declaration)
 {
-    AccessFlags access_flags;
     AstClassDeclaration* class_declaration =
         declaration -> ClassDeclarationCast();
     if (class_declaration)
-    {
-        const u2 valid_flags = AccessFlags::ACCESS_ABSTRACT |
-            AccessFlags::ACCESS_FINAL | AccessFlags::ACCESS_PUBLIC |
-            AccessFlags::ACCESS_STRICTFP;
-        for (unsigned i = 0; i < class_declaration -> NumModifiers(); i++)
-        {
-            AstModifier* modifier = class_declaration -> Modifier(i);
-            ProcessAccessFlag(access_flags, modifier -> modifier_token,
-                              L"a top-level class", valid_flags);
-        }
-    }
-    else
-    {
-        AstInterfaceDeclaration* interface_declaration =
-            declaration -> InterfaceDeclarationCast();
-        assert(interface_declaration);
-        const u2 valid_flags = AccessFlags::ACCESS_ABSTRACT |
-            AccessFlags::ACCESS_PUBLIC | AccessFlags::ACCESS_STRICTFP;
-        const u2 implicit_flags = AccessFlags::ACCESS_INTERFACE |
-            AccessFlags::ACCESS_ABSTRACT;
-        for (unsigned i = 0; i < interface_declaration -> NumModifiers(); i++)
-        {
-            AstModifier* modifier = interface_declaration -> Modifier(i);
-            ProcessAccessFlag(access_flags, modifier -> modifier_token,
-                              L"a top-level interface", valid_flags,
-                              implicit_flags);
-        }
-        access_flags.SetFlags(implicit_flags);
-    }
-    return access_flags;
+        return ProcessModifiers(class_declaration -> modifiers_opt,
+                                L"a top-level class",
+                                (AccessFlags::ACCESS_ABSTRACT |
+                                 AccessFlags::ACCESS_FINAL |
+                                 AccessFlags::ACCESS_PUBLIC |
+                                 AccessFlags::ACCESS_STRICTFP));
+    AstInterfaceDeclaration* interface_declaration =
+        declaration -> InterfaceDeclarationCast();
+    assert(interface_declaration);
+    return ProcessModifiers(interface_declaration -> modifiers_opt,
+                            L"a top-level interface",
+                            (AccessFlags::ACCESS_ABSTRACT |
+                             AccessFlags::ACCESS_PUBLIC |
+                             AccessFlags::ACCESS_STRICTFP),
+                            (AccessFlags::ACCESS_INTERFACE |
+                             AccessFlags::ACCESS_ABSTRACT));
 }
 
 
@@ -173,16 +164,11 @@ AccessFlags Semantic::ProcessTopLevelTypeModifiers(AstDeclaredType* declaration)
 //
 AccessFlags Semantic::ProcessLocalClassModifiers(AstClassDeclaration* class_declaration)
 {
-    AccessFlags access_flags;
-    const u2 valid_flags = AccessFlags::ACCESS_ABSTRACT |
-        AccessFlags::ACCESS_FINAL | AccessFlags::ACCESS_STRICTFP;
-    for (unsigned i = 0; i < class_declaration -> NumModifiers(); i++)
-    {
-        AstModifier* modifier = class_declaration -> Modifier(i);
-        ProcessAccessFlag(access_flags, modifier -> modifier_token,
-                          L"a local inner class", valid_flags);
-    }
-    return access_flags;
+    return ProcessModifiers(class_declaration -> modifiers_opt,
+                            L"a local inner class",
+                            (AccessFlags::ACCESS_ABSTRACT |
+                             AccessFlags::ACCESS_FINAL |
+                             AccessFlags::ACCESS_STRICTFP));
 }
 
 
@@ -192,9 +178,9 @@ AccessFlags Semantic::ProcessLocalClassModifiers(AstClassDeclaration* class_decl
 AccessFlags Semantic::ProcessNestedTypeModifiers(TypeSymbol* containing_type,
                                                  AstDeclaredType* declaration)
 {
-    AccessFlags access_flags;
     u2 valid_flags;
     u2 implicit_flags = 0;
+    const wchar_t* context;
     AstClassDeclaration* class_declaration =
         declaration -> ClassDeclarationCast();
     if (class_declaration)
@@ -213,12 +199,7 @@ AccessFlags Semantic::ProcessNestedTypeModifiers(TypeSymbol* containing_type,
                 AccessFlags::ACCESS_FINAL | AccessFlags::ACCESS_ACCESS |
                 AccessFlags::ACCESS_STATIC | AccessFlags::ACCESS_STRICTFP;
         }
-        for (unsigned i = 0; i < class_declaration -> NumModifiers(); i++)
-        {
-            AstModifier* modifier = class_declaration -> Modifier(i);
-            ProcessAccessFlag(access_flags, modifier -> modifier_token,
-                              L"a member class", valid_flags, implicit_flags);
-        }
+        context = L"a member class";
     }
     else
     {
@@ -242,16 +223,10 @@ AccessFlags Semantic::ProcessNestedTypeModifiers(TypeSymbol* containing_type,
             implicit_flags = AccessFlags::ACCESS_INTERFACE |
                 AccessFlags::ACCESS_ABSTRACT | AccessFlags::ACCESS_STATIC;
         }
-        for (unsigned i = 0; i < interface_declaration -> NumModifiers(); i++)
-        {
-            AstModifier* modifier = interface_declaration -> Modifier(i);
-            ProcessAccessFlag(access_flags, modifier -> modifier_token,
-                              L"a member interface", valid_flags,
-                              implicit_flags);
-        }
+        context = L"a member interface";
     }
-    access_flags.SetFlags(implicit_flags);
-    return access_flags;
+    return ProcessModifiers(declaration -> modifiers_opt, context,
+                            valid_flags, implicit_flags);
 }
 
 
@@ -260,17 +235,13 @@ AccessFlags Semantic::ProcessNestedTypeModifiers(TypeSymbol* containing_type,
 //
 AccessFlags Semantic::ProcessFieldModifiers(AstFieldDeclaration* field_declaration)
 {
-    AccessFlags access_flags;
-    const u2 valid_flags = AccessFlags::ACCESS_ACCESS |
-        AccessFlags::ACCESS_STATIC | AccessFlags::ACCESS_FINAL |
-        AccessFlags::ACCESS_TRANSIENT | AccessFlags::ACCESS_VOLATILE;
-    for (unsigned i = 0; i < field_declaration -> NumModifiers(); i++)
-    {
-        AstModifier* modifier = field_declaration -> Modifier(i);
-        ProcessAccessFlag(access_flags, modifier -> modifier_token,
-                          L"a class's member field", valid_flags);
-    }
-    return access_flags;
+    return ProcessModifiers(field_declaration -> modifiers_opt,
+                            L"a class's member field",
+                            (AccessFlags::ACCESS_ACCESS |
+                             AccessFlags::ACCESS_STATIC |
+                             AccessFlags::ACCESS_FINAL |
+                             AccessFlags::ACCESS_TRANSIENT |
+                             AccessFlags::ACCESS_VOLATILE));
 }
 
 
@@ -281,14 +252,8 @@ AccessFlags Semantic::ProcessFieldModifiers(AstFieldDeclaration* field_declarati
 //
 AccessFlags Semantic::ProcessLocalModifiers(AstLocalVariableDeclarationStatement* local_declaration)
 {
-    AccessFlags access_flags;
-    for (unsigned i = 0; i < local_declaration -> NumModifiers(); i++)
-    {
-        AstModifier* modifier = local_declaration -> Modifier(i);
-        ProcessAccessFlag(access_flags, modifier -> modifier_token,
-                          L"a local variable", AccessFlags::ACCESS_FINAL);
-    }
-    return access_flags;
+    return ProcessModifiers(local_declaration -> modifiers_opt,
+                            L"a local variable", AccessFlags::ACCESS_FINAL);
 }
 
 
@@ -299,14 +264,8 @@ AccessFlags Semantic::ProcessLocalModifiers(AstLocalVariableDeclarationStatement
 //
 AccessFlags Semantic::ProcessFormalModifiers(AstFormalParameter* parameter_declaration)
 {
-    AccessFlags access_flags;
-    for (unsigned i = 0; i < parameter_declaration -> NumModifiers(); i++)
-    {
-        AstModifier* modifier = parameter_declaration -> Modifier(i);
-        ProcessAccessFlag(access_flags, modifier -> modifier_token,
-                          L"a formal parameter", AccessFlags::ACCESS_FINAL);
-    }
-    return access_flags;
+    return ProcessModifiers(parameter_declaration -> modifiers_opt,
+                            L"a formal parameter", AccessFlags::ACCESS_FINAL);
 }
 
 
@@ -315,18 +274,15 @@ AccessFlags Semantic::ProcessFormalModifiers(AstFormalParameter* parameter_decla
 //
 AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration* method_declaration)
 {
-    AccessFlags access_flags;
-    const u2 valid_flags = AccessFlags::ACCESS_ACCESS |
-        AccessFlags::ACCESS_STATIC | AccessFlags::ACCESS_STRICTFP |
-        AccessFlags::ACCESS_ABSTRACT | AccessFlags::ACCESS_FINAL |
-        AccessFlags::ACCESS_NATIVE | AccessFlags::ACCESS_SYNCHRONIZED;
-    for (unsigned i = 0; i < method_declaration -> NumModifiers(); i++)
-    {
-        AstModifier* modifier = method_declaration -> Modifier(i);
-        ProcessAccessFlag(access_flags, modifier -> modifier_token,
-                          L"a class's member method", valid_flags);
-    }
-    return access_flags;
+    return ProcessModifiers(method_declaration -> modifiers_opt,
+                            L"a class's member method",
+                            (AccessFlags::ACCESS_ACCESS |
+                             AccessFlags::ACCESS_STATIC |
+                             AccessFlags::ACCESS_STRICTFP |
+                             AccessFlags::ACCESS_ABSTRACT |
+                             AccessFlags::ACCESS_FINAL |
+                             AccessFlags::ACCESS_NATIVE |
+                             AccessFlags::ACCESS_SYNCHRONIZED));
 }
 
 
@@ -335,18 +291,12 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration* method_declar
 //
 AccessFlags Semantic::ProcessInterfaceMethodModifiers(AstMethodDeclaration* method_declaration)
 {
-    AccessFlags access_flags;
-    const u2 valid_flags = AccessFlags::ACCESS_PUBLIC |
-        AccessFlags::ACCESS_ABSTRACT;
-    for (unsigned i = 0; i < method_declaration -> NumModifiers(); i++)
-    {
-        AstModifier* modifier = method_declaration -> Modifier(i);
-        ProcessAccessFlag(access_flags, modifier -> modifier_token,
-                          L"an interface's member method", valid_flags,
-                          valid_flags);
-    }
-    access_flags.SetFlags(valid_flags);
-    return access_flags;
+    return ProcessModifiers(method_declaration -> modifiers_opt,
+                            L"an interface's member method",
+                            (AccessFlags::ACCESS_PUBLIC |
+                             AccessFlags::ACCESS_ABSTRACT),
+                            (AccessFlags::ACCESS_PUBLIC |
+                             AccessFlags::ACCESS_ABSTRACT));
 }
 
 
@@ -355,14 +305,8 @@ AccessFlags Semantic::ProcessInterfaceMethodModifiers(AstMethodDeclaration* meth
 //
 AccessFlags Semantic::ProcessConstructorModifiers(AstConstructorDeclaration* constructor_declaration)
 {
-    AccessFlags access_flags;
-    for (unsigned i = 0; i < constructor_declaration -> NumModifiers(); i++)
-    {
-        AstModifier* modifier = constructor_declaration -> Modifier(i);
-        ProcessAccessFlag(access_flags, modifier -> modifier_token,
-                          L"a constructor", AccessFlags::ACCESS_ACCESS);
-    }
-    return access_flags;
+    return ProcessModifiers(constructor_declaration -> modifiers_opt,
+                            L"a constructor", AccessFlags::ACCESS_ACCESS);
 }
 
 
@@ -371,18 +315,14 @@ AccessFlags Semantic::ProcessConstructorModifiers(AstConstructorDeclaration* con
 //
 AccessFlags Semantic::ProcessInterfaceFieldModifiers(AstFieldDeclaration* field_declaration)
 {
-    AccessFlags access_flags;
-    const u2 valid_flags = AccessFlags::ACCESS_PUBLIC |
-        AccessFlags::ACCESS_STATIC | AccessFlags::ACCESS_FINAL;
-    for (unsigned i = 0; i < field_declaration -> NumModifiers(); i++)
-    {
-        AstModifier* modifier = field_declaration -> Modifier(i);
-        ProcessAccessFlag(access_flags, modifier -> modifier_token,
-                          L"an interface's member field", valid_flags,
-                          valid_flags);
-    }
-    access_flags.SetFlags(valid_flags);
-    return access_flags;
+    return ProcessModifiers(field_declaration -> modifiers_opt,
+                            L"an interface's member field",
+                            (AccessFlags::ACCESS_PUBLIC |
+                             AccessFlags::ACCESS_STATIC |
+                             AccessFlags::ACCESS_FINAL),
+                            (AccessFlags::ACCESS_PUBLIC |
+                             AccessFlags::ACCESS_STATIC |
+                             AccessFlags::ACCESS_FINAL));
 }
 
 //
@@ -390,14 +330,9 @@ AccessFlags Semantic::ProcessInterfaceFieldModifiers(AstFieldDeclaration* field_
 //
 AccessFlags Semantic::ProcessInitializerModifiers(AstInitializerDeclaration* initializer)
 {
-    AccessFlags access_flags;
-    for (unsigned i = 0; i < initializer -> NumModifiers(); i++)
-    {
-        AstModifier* modifier = initializer -> Modifier(i);
-        ProcessAccessFlag(access_flags, modifier -> modifier_token,
-                          L"an initializer block", AccessFlags::ACCESS_STATIC);
-    }
-    return access_flags;
+    return ProcessModifiers(initializer -> modifiers_opt,
+                            L"an initializer block",
+                            AccessFlags::ACCESS_STATIC);
 }
 
 #ifdef HAVE_JIKES_NAMESPACE

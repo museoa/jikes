@@ -277,22 +277,14 @@ bool Parser::Body(AstClassBody* class_body)
     {
         AstMethodDeclaration *method_decl = class_body -> Method(i);
 
-        if (method_decl -> method_symbol)
+        if (method_decl -> method_symbol && method_decl -> method_body_opt)
         {
-            AstMethodBody* block =
-                method_decl -> method_body -> MethodBodyCast();
-
-            if (block)
-            {
-                // Last token in the body.
-                end_token = block -> right_brace_token;
-                AstMethodBody* new_block =
-                    ParseSegment(block -> left_brace_token);
-
-                if (! new_block) // a bad block ?
-                    errors_detected = true;
-                else method_decl -> method_body = new_block;
-            }
+            AstMethodBody* block = method_decl -> method_body_opt;
+            end_token = block -> right_brace_token;
+            AstMethodBody* new_block = ParseSegment(block -> left_brace_token);
+            if (! new_block) // a bad block ?
+                errors_detected = true;
+            else method_decl -> method_body_opt = new_block;
         }
     }
 

@@ -189,8 +189,8 @@ void Semantic::ReportMethodNotFound(AstMethodInvocation *method_call,
         if (MemberAccessCheck(field_access, type, method) ||
             method_shadow -> NumConflicts() > 0)
         {
-            int diff =
-                method_call -> NumArguments() - method -> NumFormalParameters();
+            int diff = method_call -> arguments -> NumArguments() -
+                method -> NumFormalParameters();
             if (diff < 0)
                 diff = - diff;
             if (diff < difference)
@@ -217,7 +217,7 @@ void Semantic::ReportMethodNotFound(AstMethodInvocation *method_call,
     //
     // For a no-arg method, search for an accessible field of the same name.
     //
-    if (method_call -> NumArguments() == 0)
+    if (method_call -> arguments -> NumArguments() == 0)
     {
         VariableShadowSymbol *variable_shadow = type ->
             expanded_field_table -> FindVariableShadowSymbol(name_symbol);
@@ -256,20 +256,20 @@ void Semantic::ReportMethodNotFound(AstMethodInvocation *method_call,
                 method -> ProcessMethodSignature(this, field_access ->
                                                  identifier_token);
 
-            if (method_call -> NumArguments() ==
+            if (method_call -> arguments -> NumArguments() ==
                 method -> NumFormalParameters())
             {
                 unsigned i;
-                for (i = 0; i < method_call -> NumArguments(); i++)
+                for (i = 0; i < method_call -> arguments -> NumArguments(); i++)
                 {
-                    AstExpression *expr = method_call -> Argument(i);
+                    AstExpression *expr = method_call -> arguments -> Argument(i);
                     if (! CanMethodInvocationConvert(method -> FormalParameter(i) -> Type(),
                                                      expr -> Type()))
                     {
                         break;
                     }
                 }
-                if (i == method_call -> NumArguments()) // found a match?
+                if (i == method_call -> arguments -> NumArguments())
                 {
                     //
                     // JLS 9.2: Interfaces do not have protected members,
@@ -352,45 +352,31 @@ void Semantic::ReportMethodNotFound(AstMethodInvocation *method_call,
 
 void Semantic::ReportConstructorNotFound(Ast* ast, TypeSymbol* type)
 {
-    unsigned num_arguments;
-    AstExpression** argument;
-
     AstClassInstanceCreationExpression* class_creation =
         ast -> ClassInstanceCreationExpressionCast();
     AstSuperCall* super_call = ast -> SuperCallCast();
+    AstArguments* args;
     LexStream::TokenIndex left_tok;
-    LexStream::TokenIndex right_tok;
 
     if (class_creation)
     {
-        num_arguments = class_creation -> NumArguments();
-        argument = new AstExpression*[num_arguments + 1];
-        for (unsigned i = 0; i < num_arguments; i++)
-            argument[i] = class_creation -> Argument(i);
+        args = class_creation -> arguments;
         left_tok = class_creation -> new_token;
-        right_tok = class_creation -> right_parenthesis_token;
     }
     else if (super_call)
     {
-        num_arguments = super_call -> NumArguments();
-        argument = new AstExpression*[num_arguments + 1];
-        for (unsigned i = 0; i < num_arguments; i++)
-            argument[i] = super_call -> Argument(i);
+        args = super_call -> arguments;
         left_tok = super_call -> super_token;
-        right_tok = super_call -> right_parenthesis_token;
     }
     else
     {
         AstThisCall *this_call = ast -> ThisCallCast();
         assert(this_call);
-
-        num_arguments = this_call -> NumArguments();
-        argument = new AstExpression*[num_arguments + 1];
-        for (unsigned i = 0; i < num_arguments; i++)
-            argument[i] = this_call -> Argument(i);
+        args = this_call -> arguments;
         left_tok = this_call -> this_token;
-        right_tok = this_call -> right_parenthesis_token;
     }
+    unsigned num_arguments = args -> NumArguments();
+    LexStream::TokenIndex right_tok = args -> right_parenthesis_token;
 
     //
     // Search for an accessible constructor with different arguments. Favor
@@ -398,16 +384,15 @@ void Semantic::ReportConstructorNotFound(Ast* ast, TypeSymbol* type)
     // Since the JVMS limits methods to 255 parameters, we initialize our
     // difference detection with 255.
     //
-    MethodSymbol *best_match = NULL;
-    MethodSymbol *ctor;
+    MethodSymbol* best_match = NULL;
+    MethodSymbol* ctor;
     int difference = 255;
     for (ctor = type -> FindConstructorSymbol();
          ctor; ctor = ctor -> next_method)
     {
         if (ConstructorAccessCheck(ast, ctor))
         {
-            int diff =
-                num_arguments - ctor -> NumFormalParameters();
+            int diff = num_arguments - ctor -> NumFormalParameters();
             if (diff < 0)
                 diff = - diff;
             if (diff < difference)
@@ -419,11 +404,8 @@ void Semantic::ReportConstructorNotFound(Ast* ast, TypeSymbol* type)
     }
     if (best_match)
     {
-        ReportSemError(SemanticError::CONSTRUCTOR_OVERLOAD_NOT_FOUND,
-                       ast -> LeftToken(),
-                       ast -> RightToken(),
-                       type -> ContainingPackageName(),
-                       type -> ExternalName(),
+        ReportSemError(SemanticError::CONSTRUCTOR_OVERLOAD_NOT_FOUND, ast,
+                       type -> ContainingPackageName(), type -> ExternalName(),
                        best_match -> Header());
         return;
     }
@@ -439,7 +421,7 @@ void Semantic::ReportConstructorNotFound(Ast* ast, TypeSymbol* type)
             unsigned i;
             for (i = 0; i < num_arguments; i++)
             {
-                AstExpression *expr = argument[i];
+                AstExpression* expr = args -> Argument(i);
                 if (! CanMethodInvocationConvert(ctor -> FormalParameter(i) -> Type(),
                                                  expr -> Type()))
                 {
@@ -448,13 +430,10 @@ void Semantic::ReportConstructorNotFound(Ast* ast, TypeSymbol* type)
             }
             if (i == num_arguments) // found a match?
             {
-                ReportSemError(SemanticError::CONSTRUCTOR_NOT_ACCESSIBLE,
-                               ast -> LeftToken(),
-                               ast -> RightToken(),
+                ReportSemError(SemanticError::CONSTRUCTOR_NOT_ACCESSIBLE, ast,
                                ctor -> Header(),
                                type -> ContainingPackageName(),
-                               type -> ExternalName(),
-                               ctor -> AccessString());
+                               type -> ExternalName(), ctor -> AccessString());
                 return;
             }
         }
@@ -476,7 +455,7 @@ void Semantic::ReportConstructorNotFound(Ast* ast, TypeSymbol* type)
             for (i = 0; i < num_arguments; i++)
             {
                 if (! CanMethodInvocationConvert(method -> FormalParameter(i) -> Type(),
-                                                 argument[i] -> Type()))
+                                                 args -> Argument(i) -> Type()))
                 {
                     break;
                 }
@@ -520,7 +499,7 @@ void Semantic::ReportConstructorNotFound(Ast* ast, TypeSymbol* type)
 
     for (unsigned i = 0; i < num_arguments; i++)
     {
-        TypeSymbol* arg_type = argument[i] -> Type();
+        TypeSymbol* arg_type = args -> Argument(i) -> Type();
         // '/' after package_name ',' and ' ' to separate this formal
         // parameter from the next one
         length += arg_type -> ContainingPackage() -> PackageNameLength() +
@@ -538,7 +517,7 @@ void Semantic::ReportConstructorNotFound(Ast* ast, TypeSymbol* type)
     {
         for (unsigned i = 0; i < num_arguments; i++)
         {
-            TypeSymbol *arg_type = argument[i] -> Type();
+            TypeSymbol* arg_type = args -> Argument(i) -> Type();
 
             PackageSymbol *package = arg_type -> ContainingPackage();
             wchar_t *package_name = package -> PackageName();
@@ -571,7 +550,6 @@ void Semantic::ReportConstructorNotFound(Ast* ast, TypeSymbol* type)
                    header);
 
     delete [] header;
-    delete [] argument;
 }
 
 
@@ -592,8 +570,7 @@ MethodSymbol* Semantic::FindConstructor(TypeSymbol* containing_type, Ast* ast,
             constructor_symbol;
     }
 
-    unsigned num_arguments;
-    AstExpression** argument;
+    AstArguments* args;
     Tuple<MethodSymbol*> constructor_set(2); // Stores constructor overloads.
 
     AstClassInstanceCreationExpression* class_creation =
@@ -601,34 +578,20 @@ MethodSymbol* Semantic::FindConstructor(TypeSymbol* containing_type, Ast* ast,
     AstSuperCall* super_call = ast -> SuperCallCast();
 
     if (class_creation)
-    {
-        num_arguments = class_creation -> NumArguments();
-        argument = new AstExpression*[num_arguments + 1];
-        for (unsigned i = 0; i < num_arguments; i++)
-            argument[i] = class_creation -> Argument(i);
-    }
+        args = class_creation -> arguments;
     else if (super_call)
-    {
-        num_arguments = super_call -> NumArguments();
-        argument = new AstExpression*[num_arguments + 1];
-        for (unsigned i = 0; i < num_arguments; i++)
-            argument[i] = super_call -> Argument(i);
-    }
+        args = super_call -> arguments;
     else
     {
-        AstThisCall *this_call = ast -> ThisCallCast();
-
+        AstThisCall* this_call = ast -> ThisCallCast();
         assert(this_call);
-
-        num_arguments = this_call -> NumArguments();
-        argument = new AstExpression*[num_arguments + 1];
-        for (unsigned i = 0; i < num_arguments; i++)
-            argument[i] = this_call -> Argument(i);
+        args = this_call -> arguments;
     }
 
+    unsigned num_arguments = args -> NumArguments();
     assert(containing_type -> ConstructorMembersProcessed());
 
-    for (MethodSymbol *ctor = containing_type -> FindConstructorSymbol();
+    for (MethodSymbol* ctor = containing_type -> FindConstructorSymbol();
          ctor; ctor = ctor -> next_method)
     {
         if (! ctor -> IsTyped())
@@ -641,7 +604,7 @@ MethodSymbol* Semantic::FindConstructor(TypeSymbol* containing_type, Ast* ast,
             for (i = 0; i < num_arguments; i++)
             {
                 if (! CanMethodInvocationConvert(ctor -> FormalParameter(i) -> Type(),
-                                                 argument[i] -> Type()))
+                                                 args -> Argument(i) -> Type()))
                 {
                     break;
                 }
@@ -663,9 +626,7 @@ MethodSymbol* Semantic::FindConstructor(TypeSymbol* containing_type, Ast* ast,
     {
         if (! containing_type -> Bad() || NumErrors() == 0)
             ReportConstructorNotFound(ast, containing_type);
-
-        delete [] argument;
-        return (MethodSymbol *) NULL;
+        return NULL;
     }
     if (constructor_set.Length() > 1)
     {
@@ -676,8 +637,6 @@ MethodSymbol* Semantic::FindConstructor(TypeSymbol* containing_type, Ast* ast,
                        constructor_set[0] -> Header(),
                        constructor_set[1] -> Header());
     }
-
-    delete [] argument;
 
     MethodSymbol *constructor_symbol = constructor_set[0];
 
@@ -772,19 +731,20 @@ MethodSymbol *Semantic::FindMisspelledMethodName(TypeSymbol *type,
         if (! method -> IsTyped())
             method -> ProcessMethodSignature(this, identifier_token);
 
-        if (method_call -> NumArguments() == method -> NumFormalParameters())
+        if (method_call -> arguments -> NumArguments() ==
+            method -> NumFormalParameters())
         {
             unsigned i;
-            for (i = 0; i < method_call -> NumArguments(); i++)
+            for (i = 0; i < method_call -> arguments -> NumArguments(); i++)
             {
-                AstExpression *expr = method_call -> Argument(i);
+                AstExpression* expr = method_call -> arguments -> Argument(i);
                 if (! CanMethodInvocationConvert(method -> FormalParameter(i) -> Type(),
                                                  expr -> Type()))
                 {
                     break;
                 }
             }
-            if (i == method_call -> NumArguments())
+            if (i == method_call -> arguments -> NumArguments())
             {
                 int new_index = Spell::Index(name_symbol -> Name(),
                                              method -> Name());
@@ -797,8 +757,8 @@ MethodSymbol *Semantic::FindMisspelledMethodName(TypeSymbol *type,
         }
     }
 
-    int length = name_symbol -> NameLength(),
-         num_args = method_call -> NumArguments();
+    int length = name_symbol -> NameLength();
+    int num_args = method_call -> arguments -> NumArguments();
 
     //
     // If we have a name of length 2, accept >= 30% probality if the function
@@ -854,21 +814,22 @@ MethodShadowSymbol *Semantic::FindMethodInType(TypeSymbol *type,
         // abstract methods inherited from interfaces; and we can skip the
         // member access check because we can always invoke the public version.
         //
-        if (method_call -> NumArguments() == method -> NumFormalParameters() &&
+        if ((method_call -> arguments -> NumArguments() ==
+             method -> NumFormalParameters()) &&
             (MemberAccessCheck(field_access, type, method) ||
              method_shadow -> NumConflicts() > 0))
         {
             unsigned i;
-            for (i = 0; i < method_call -> NumArguments(); i++)
+            for (i = 0; i < method_call -> arguments -> NumArguments(); i++)
             {
-                AstExpression *expr = method_call -> Argument(i);
+                AstExpression *expr = method_call -> arguments -> Argument(i);
                 if (! CanMethodInvocationConvert(method -> FormalParameter(i) -> Type(),
                                                  expr -> Type()))
                 {
                     break;
                 }
             }
-            if (i == method_call -> NumArguments())
+            if (i == method_call -> arguments -> NumArguments())
             {
                 if (MoreSpecific(method, method_set))
                 {
@@ -975,20 +936,20 @@ void Semantic::FindMethodInEnvironment(Tuple<MethodShadowSymbol *> &methods_foun
                 // Since type -> IsOwner(this_type()), i.e., type encloses
                 // this_type(), method is accessible, even if it is private.
                 //
-                if (method_call -> NumArguments() ==
+                if (method_call -> arguments -> NumArguments() ==
                     method -> NumFormalParameters())
                 {
                     unsigned i;
-                    for (i = 0; i < method_call -> NumArguments(); i++)
+                    for (i = 0; i < method_call -> arguments -> NumArguments(); i++)
                     {
-                        AstExpression *expr = method_call -> Argument(i);
+                        AstExpression *expr = method_call -> arguments -> Argument(i);
                         if (! CanMethodInvocationConvert(method -> FormalParameter(i) -> Type(),
                                                          expr -> Type()))
                         {
                             break;
                         }
                     }
-                    if (i == method_call -> NumArguments())
+                    if (i == method_call -> arguments -> NumArguments())
                     {
                         if (MoreSpecific(method, methods_found))
                         {
@@ -1170,21 +1131,21 @@ MethodShadowSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&wher
                         if (! method -> IsTyped())
                             method -> ProcessMethodSignature(this, simple_name -> identifier_token);
 
-                        if (method_call -> NumArguments() ==
+                        if (method_call -> arguments -> NumArguments() ==
                             method -> NumFormalParameters())
                         {
                             unsigned i;
-                            for (i = 0; i < method_call -> NumArguments(); i++)
+                            for (i = 0; i < method_call -> arguments -> NumArguments(); i++)
                             {
                                 AstExpression *expr =
-                                    method_call -> Argument(i);
+                                    method_call -> arguments -> Argument(i);
                                 if (! CanMethodInvocationConvert(method -> FormalParameter(i) -> Type(),
                                                                  expr -> Type()))
                                 {
                                     break;
                                 }
                             }
-                            if (i == method_call -> NumArguments())
+                            if (i == method_call -> arguments -> NumArguments())
                                 // found a match ?
                                 break;
                         }
@@ -1925,29 +1886,29 @@ void Semantic::CreateAccessToScopedVariable(AstSimpleName *simple_name,
                    (variable -> ACC_PROTECTED() &&
                     environment_type -> IsSubclass(containing_type)));
 
-            AstFieldAccess *method_name =
+            LexStream::TokenIndex loc = simple_name -> identifier_token;
+            AstFieldAccess* method_name =
                 compilation_unit -> ast_pool -> GenFieldAccess();
             method_name -> base = access_expression;
-            method_name -> identifier_token = simple_name -> identifier_token;
+            method_name -> identifier_token = loc;
             method_name -> symbol = variable;
 
-            AstMethodInvocation *accessor =
-                compilation_unit -> ast_pool -> GenMethodInvocation();
-            accessor -> method = method_name;
-            accessor -> left_parenthesis_token =
-                simple_name -> identifier_token;
-            accessor -> right_parenthesis_token =
-                simple_name -> identifier_token;
-            // The default base type of the accessor method is appropriate.
-            accessor -> symbol =
-                environment_type -> GetReadAccessMethod(variable);
-
+            AstArguments* args =
+                compilation_unit -> ast_pool -> GenArguments(loc, loc);
             if (! variable -> ACC_STATIC())
             {
                 // TODO: WARNING: sharing of Ast subtree !!!
-                accessor -> AllocateArguments(1);
-                accessor -> AddArgument(access_expression);
+                args -> AllocateArguments(1);
+                args -> AddArgument(access_expression);
             }
+
+            AstMethodInvocation* accessor =
+                compilation_unit -> ast_pool -> GenMethodInvocation();
+            accessor -> method = method_name;
+            accessor -> arguments = args;
+            // The default base type of the accessor method is appropriate.
+            accessor -> symbol =
+                environment_type -> GetReadAccessMethod(variable);
 
             simple_name -> resolution_opt = accessor;
         }
@@ -1998,27 +1959,27 @@ void Semantic::CreateAccessToScopedMethod(AstMethodInvocation *method_call,
                    (method -> ACC_PROTECTED() &&
                     environment_type -> IsSubclass(containing_type)));
 
-            AstMethodInvocation *accessor =
+            AstArguments* args = compilation_unit -> ast_pool ->
+                GenArguments(method_call -> arguments -> left_parenthesis_token,
+                             method_call -> arguments -> right_parenthesis_token);
+            unsigned num_args = method_call -> arguments -> NumArguments();
+            if (! method -> ACC_STATIC())
+            {
+                args -> AllocateArguments(num_args + 1);
+                args -> AddArgument(access_expression);
+            }
+            else args -> AllocateArguments(num_args);
+            for (unsigned i = 0; i < num_args; i++)
+                args -> AddArgument(method_call -> arguments -> Argument(i));
+
+            AstMethodInvocation* accessor =
                 compilation_unit -> ast_pool -> GenMethodInvocation();
             accessor -> method =
                 method_call -> method; // TODO: WARNING: sharing of subtrees...
-            accessor -> left_parenthesis_token =
-                method_call -> left_parenthesis_token;
-            accessor -> right_parenthesis_token =
-                method_call -> right_parenthesis_token;
+            accessor -> arguments = args;
             accessor -> symbol =
                 // default base type is appropriate
                 environment_type -> GetReadAccessMethod(method);
-
-            if (! method -> ACC_STATIC())
-            {
-                accessor -> AllocateArguments(method_call -> NumArguments() +
-                                              1);
-                accessor -> AddArgument(access_expression);
-            }
-            else accessor -> AllocateArguments(method_call -> NumArguments());
-            for (unsigned i = 0; i < method_call -> NumArguments(); i++)
-                accessor -> AddArgument(method_call -> Argument(i));
 
             method_call -> symbol = method;
             method_call -> resolution_opt = accessor;
@@ -2434,6 +2395,8 @@ void Semantic::FindVariableMember(TypeSymbol* type,
                                environment_type != this_type);
                     }
 
+                    LexStream::TokenIndex loc =
+                        field_access -> identifier_token;
                     AstFieldAccess *method_name =
                         compilation_unit -> ast_pool -> GenFieldAccess();
                     // TODO: WARNING: sharing of Ast subtree !!!
@@ -2442,22 +2405,21 @@ void Semantic::FindVariableMember(TypeSymbol* type,
                         field_access -> identifier_token;
                     method_name -> symbol = variable;
 
+                    AstArguments* args =
+                        compilation_unit -> ast_pool -> GenArguments(loc, loc);
+                    if (! variable -> ACC_STATIC())
+                    {
+                        args -> AllocateArguments(1);
+                        args -> AddArgument(field_access -> base);
+                    }
+
                     AstMethodInvocation *accessor =
                         compilation_unit -> ast_pool -> GenMethodInvocation();
                     accessor -> method = method_name;
-                    accessor -> left_parenthesis_token =
-                        field_access -> identifier_token;
-                    accessor -> right_parenthesis_token =
-                        field_access -> identifier_token;
+                    accessor -> arguments = args;
                     accessor -> symbol = environment_type ->
                         GetReadAccessMethod(variable,
                                             field_access -> base -> Type());
-
-                    if (! variable -> ACC_STATIC())
-                    {
-                        accessor -> AllocateArguments(1);
-                        accessor -> AddArgument(field_access -> base);
-                    }
 
                     field_access -> resolution_opt = accessor;
                     field_access -> symbol = accessor -> symbol;
@@ -3016,16 +2978,7 @@ MethodShadowSymbol* Semantic::FindMethodMember(TypeSymbol* type,
             //
             // Apply method invocation conversion to the parameters
             //
-            assert(method_call -> NumArguments() ==
-                   method -> NumFormalParameters());
-
-            for (unsigned i = 0; i < method_call -> NumArguments(); i++)
-            {
-                AstExpression *expr = method_call -> Argument(i);
-                method_call -> Argument(i) =
-                    ConvertToType(expr,
-                                  method -> FormalParameter(i) -> Type());
-            }
+            MethodInvocationConversion(method_call -> arguments, method);
 
             //
             // Access to a private or protected variable in or via an enclosing
@@ -3071,27 +3024,26 @@ MethodShadowSymbol* Semantic::FindMethodMember(TypeSymbol* type,
                            environment_type != this_type);
                 }
 
-                AstMethodInvocation *accessor =
+                AstArguments* args = compilation_unit -> ast_pool ->
+                    GenArguments(method_call -> arguments -> left_parenthesis_token,
+                                 method_call -> arguments -> right_parenthesis_token);
+                unsigned num_args = method_call -> arguments -> NumArguments();
+                if (! method -> ACC_STATIC())
+                {
+                    args -> AllocateArguments(num_args + 1);
+                    args -> AddArgument(field_access -> base);
+                }
+                else args -> AllocateArguments(num_args);
+                for (unsigned i = 0; i < num_args; i++)
+                    args -> AddArgument(method_call -> arguments -> Argument(i));
+
+                AstMethodInvocation* accessor =
                     compilation_unit -> ast_pool -> GenMethodInvocation();
                 // TODO: WARNING: sharing of subtrees...
                 accessor -> method = method_call -> method;
-                accessor -> left_parenthesis_token =
-                    method_call -> left_parenthesis_token;
-                accessor -> right_parenthesis_token =
-                    method_call -> right_parenthesis_token;
+                accessor -> arguments = args;
                 accessor -> symbol = environment_type ->
                     GetReadAccessMethod(method, field_access -> base -> Type());
-
-                if (! method -> ACC_STATIC())
-                {
-                    accessor ->
-                        AllocateArguments(method_call -> NumArguments() + 1);
-                    accessor -> AddArgument(field_access -> base);
-                }
-                else accessor -> AllocateArguments(method_call ->
-                                                   NumArguments());
-                for (unsigned i = 0; i < method_call -> NumArguments(); i++)
-                    accessor -> AddArgument(method_call -> Argument(i));
 
                 method_call -> symbol = method;
                 method_call -> resolution_opt = accessor;
@@ -3146,9 +3098,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                         // accessible.
                         //
                         ReportSemError(SemanticError::INSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR,
-                                       method_call -> LeftToken(),
-                                       method_call -> RightToken(),
-                                       method -> Header(),
+                                       method_call, method -> Header(),
                                        method -> containing_type -> Name());
                         method_call -> symbol = control.no_type;
                         method_shadow = NULL;
@@ -3157,8 +3107,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                 else if (StaticRegion())
                 {
                     ReportSemError(SemanticError::METHOD_NOT_CLASS_METHOD,
-                                   simple_name -> identifier_token,
-                                   method_call -> right_parenthesis_token,
+                                   method_call,
                                    lex_stream -> NameString(simple_name -> identifier_token));
                     method_call -> symbol = control.no_type;
                     method_shadow = NULL;
@@ -3168,16 +3117,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
             //
             // Apply method invocation conversion to the parameters
             //
-            assert(method_call -> NumArguments() == method -> NumFormalParameters());
-
-            for (unsigned i = 0; i < method_call -> NumArguments(); i++)
-            {
-                AstExpression *expr = method_call -> Argument(i);
-                method_call -> Argument(i) =
-                    ConvertToType(expr,
-                                  method -> FormalParameter(i) -> Type());
-            }
-
+            MethodInvocationConversion(method_call -> arguments, method);
             method_call -> symbol = method;
 
             //
@@ -3339,33 +3279,40 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
 }
 
 
-void Semantic::ProcessMethodInvocation(Ast *expr)
+//
+// Processes the argument list, returning true if the list contains an
+// invalid expression.
+//
+bool Semantic::ProcessArguments(AstArguments* args)
 {
-    AstMethodInvocation *method_call = (AstMethodInvocation *) expr;
-
     bool bad_argument = false;
-
-    for (unsigned i = 0; i < method_call -> NumArguments(); i++)
+    for (unsigned i = 0; i < args -> NumArguments(); i++)
     {
-        AstExpression *expr = method_call -> Argument(i);
+        AstExpression* expr = args -> Argument(i);
         ProcessExpressionOrStringConstant(expr);
         if (expr -> symbol == control.no_type)
             bad_argument = true;
         else if (expr -> Type() == control.void_type)
         {
-            bad_argument = true;
-            ReportSemError(SemanticError::TYPE_IS_VOID,
-                           expr -> LeftToken(),
-                           expr -> RightToken(),
+            ReportSemError(SemanticError::TYPE_IS_VOID, expr,
                            expr -> Type() -> Name());
+            bad_argument = true;
         }
     }
+    return bad_argument;
+}
 
+
+void Semantic::ProcessMethodInvocation(Ast* expr)
+{
+    AstMethodInvocation* method_call = (AstMethodInvocation*) expr;
+
+    bool bad_argument = ProcessArguments(method_call -> arguments);
     if (bad_argument)
         method_call -> symbol = control.no_type;
     else ProcessMethodName(method_call);
     assert(method_call -> symbol == control.no_type ||
-           ((MethodSymbol *) method_call -> symbol) -> IsTyped());
+           ((MethodSymbol*) method_call -> symbol) -> IsTyped());
 }
 
 
@@ -3677,7 +3624,7 @@ void Semantic::UpdateLocalConstructors(TypeSymbol* inner_type)
     // parameters.
     //
     inner_type -> MarkLocalClassProcessingCompleted();
-    int param_count = inner_type -> NumConstructorParameters();
+    unsigned param_count = inner_type -> NumConstructorParameters();
     if (param_count)
     {
         for (MethodSymbol* ctor = inner_type -> FindConstructorSymbol();
@@ -3705,57 +3652,26 @@ void Semantic::UpdateLocalConstructors(TypeSymbol* inner_type)
         SemanticEnvironment* env =
             inner_type -> LocalConstructorCallEnvironment(i);
         state_stack.Push(env);
-        Ast* call = env -> ast_construct;
+        AstArguments* args = env -> args;
 
-        AstClassInstanceCreationExpression* class_creation =
-            call -> ClassInstanceCreationExpressionCast();
-        AstSuperCall* super_call = call -> SuperCallCast();
-
-        if (class_creation)
+        args -> AllocateLocalArguments(param_count);
+        for (unsigned k = 0; k < param_count; k++)
         {
-            if (class_creation -> symbol != control.no_type && param_count)
-            {
-                class_creation -> AllocateLocalArguments(param_count);
-                for (int k = 0; k < param_count; k++)
-                {
-                    AstSimpleName* simple_name = compilation_unit ->
-                        ast_pool -> GenSimpleName(class_creation -> new_token);
-                    VariableSymbol* accessor =
-                        FindLocalVariable(inner_type -> ConstructorParameter(k),
-                                          ThisType());
-                    simple_name -> symbol = accessor;
-                    TypeSymbol* owner = accessor -> ContainingType();
-                    if (owner != ThisType())
-                        CreateAccessToScopedVariable(simple_name, owner);
-                    class_creation -> AddLocalArgument(simple_name);
-                }
-            }
+            AstSimpleName* simple_name = compilation_unit ->
+                ast_pool -> GenSimpleName(args -> right_parenthesis_token);
+            VariableSymbol* accessor =
+                FindLocalVariable(inner_type -> ConstructorParameter(k),
+                                  ThisType());
+            simple_name -> symbol = accessor;
+            TypeSymbol* owner = accessor -> ContainingType();
+            if (owner != ThisType())
+                CreateAccessToScopedVariable(simple_name, owner);
+            args -> AddLocalArgument(simple_name);
         }
-        else
+        if (ThisType() -> Anonymous() &&
+            ! ThisType() -> LocalClassProcessingCompleted())
         {
-            assert(super_call);
-            if (super_call -> symbol && param_count)
-            {
-                super_call -> AllocateLocalArguments(param_count);
-                for (int k = 0; k < param_count; k++)
-                {
-                    AstSimpleName* simple_name = compilation_unit ->
-                        ast_pool -> GenSimpleName(super_call -> super_token);
-                    VariableSymbol* accessor =
-                        FindLocalVariable(inner_type -> ConstructorParameter(k),
-                                          ThisType());
-                    simple_name -> symbol = accessor;
-                    TypeSymbol* owner = accessor -> ContainingType();
-                    if (owner != ThisType())
-                        CreateAccessToScopedVariable(simple_name, owner);
-                    super_call -> AddLocalArgument(simple_name);
-                }
-            }
-            if (ThisType() -> Anonymous() &&
-                ! ThisType() -> LocalClassProcessingCompleted())
-            {
-                UpdateLocalConstructors(ThisType());
-            }
+            UpdateLocalConstructors(ThisType());
         }
         state_stack.Pop();
     }
@@ -3773,7 +3689,7 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression* class
     LexStream::TokenIndex left_loc =
         class_creation -> class_type -> LeftToken();
     LexStream::TokenIndex right_loc =
-        class_creation -> right_parenthesis_token;
+        class_creation -> arguments -> right_parenthesis_token;
 
     state_stack.Push(anonymous_type -> semantic_environment);
     TypeSymbol* super_type = anonymous_type -> super;
@@ -3791,15 +3707,16 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression* class
     //
     // Make replacement class instance creation expression.
     //
+    AstArguments* resolution_args = compilation_unit -> ast_pool ->
+        GenArguments(class_creation -> arguments -> left_parenthesis_token,
+                     right_loc);
+
     AstClassInstanceCreationExpression* resolution =
         compilation_unit -> ast_pool -> GenClassInstanceCreationExpression();
     resolution -> new_token = class_creation -> new_token;
     // TODO: WARNING: sharing of subtrees...
     resolution -> class_type = class_creation -> class_type;
-    resolution -> left_parenthesis_token =
-        class_creation -> left_parenthesis_token;
-    resolution -> right_parenthesis_token =
-        class_creation -> right_parenthesis_token;
+    resolution -> arguments = resolution_args;
     resolution -> symbol = anonymous_type;
     class_creation -> resolution_opt = resolution;
 
@@ -3851,22 +3768,23 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression* class
     // Create an explicit call to the superconstructor, passing any necessary
     // shadow variables or enclosing instances.
     //
+    AstArguments* super_args = compilation_unit -> ast_pool ->
+        GenArguments(class_creation -> arguments -> left_parenthesis_token,
+                     right_loc);
+
     AstSuperCall* super_call = compilation_unit -> ast_pool -> GenSuperCall();
     if (super_constructor -> ACC_PRIVATE())
     {
         super_constructor =
             super_type -> GetReadAccessConstructor(super_constructor);
-        super_call -> AddNullArgument();
+        super_args -> AddNullArgument();
     }
 
     // Use initial base_opt.
     super_call -> base_opt = class_creation -> base_opt;
     super_call -> super_token = class_creation -> new_token;
-    super_call -> left_parenthesis_token =
-        class_creation -> left_parenthesis_token;
-    super_call -> right_parenthesis_token =
-        class_creation -> right_parenthesis_token;
-    super_call -> semicolon_token = class_creation -> right_parenthesis_token;
+    super_call -> arguments = super_args;
+    super_call -> semicolon_token = right_loc;
     super_call -> symbol = super_constructor;
 
     AstClassBody* class_body = class_creation -> class_body_opt;
@@ -3888,7 +3806,7 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression* class
         compilation_unit -> ast_pool -> GenMethodDeclarator();
     method_declarator -> identifier_token = left_loc;
     method_declarator -> left_parenthesis_token =
-        class_creation -> left_parenthesis_token;
+        class_creation -> arguments -> left_parenthesis_token;
     method_declarator -> right_parenthesis_token = right_loc;
 
     AstConstructorDeclaration* constructor_declaration  =
@@ -3904,6 +3822,7 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression* class
     //
     // Update the enclosing instance of the supertype.
     //
+    unsigned num_args = class_creation -> arguments -> NumArguments();
     if (class_creation -> base_opt)
     {
         VariableSymbol* super_this0_variable =
@@ -3915,8 +3834,8 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression* class
                                                       max_variable_index++);
         super_this0_variable -> MarkComplete();
 
-        resolution -> AllocateArguments(class_creation -> NumArguments() + 1);
-        resolution -> AddArgument(class_creation -> base_opt);
+        resolution_args -> AllocateArguments(num_args + 1);
+        resolution_args -> AddArgument(class_creation -> base_opt);
         constructor -> AddFormalParameter(super_this0_variable);
 
         AstSimpleName* simple_name = compilation_unit -> ast_pool ->
@@ -3924,8 +3843,8 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression* class
         simple_name -> symbol = super_this0_variable;
         super_call -> base_opt = simple_name;
     }
-    else resolution -> AllocateArguments(class_creation -> NumArguments());
-    super_call -> AllocateArguments(super_constructor ->
+    else resolution_args -> AllocateArguments(num_args);
+    super_args -> AllocateArguments(super_constructor ->
                                     NumFormalParameters());
 
     //
@@ -3943,12 +3862,12 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression* class
         if (control.IsDoubleWordType(symbol -> Type()))
             block_symbol -> max_variable_index++;
 
-        resolution -> AddArgument(class_creation -> Argument(j));
+        resolution_args -> AddArgument(class_creation -> arguments -> Argument(j));
         constructor -> AddFormalParameter(symbol);
         AstSimpleName* simple_name = compilation_unit -> ast_pool ->
             GenSimpleName(class_creation -> new_token);
         simple_name -> symbol = symbol;
-        super_call -> AddArgument(simple_name);
+        super_args -> AddArgument(simple_name);
     }
 
     //
@@ -3959,7 +3878,7 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression* class
         int param_count = super_type -> NumConstructorParameters();
         if (super_type -> LocalClassProcessingCompleted() && param_count)
         {
-            super_call -> AllocateLocalArguments(param_count);
+            super_args -> AllocateLocalArguments(param_count);
             for (int k = 0; k < param_count; k++)
             {
                 //
@@ -3975,7 +3894,7 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression* class
                 TypeSymbol* owner = accessor -> ContainingType();
                 if (owner != anonymous_type)
                     CreateAccessToScopedVariable(simple_name, owner);
-                super_call -> AddLocalArgument(simple_name);
+                super_args -> AddLocalArgument(simple_name);
             }
         }
         else
@@ -3985,7 +3904,8 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression* class
             // later, since not all shadows may be known yet. See
             // ProcessClassDeclaration.
             //
-            super_type -> AddLocalConstructorCallEnvironment(GetEnvironment(super_call));
+            super_type -> AddLocalConstructorCallEnvironment
+                (GetEnvironment(super_call -> arguments));
         }
     }
     //
@@ -4214,19 +4134,7 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast* expr)
     //
     // Check the arguments to the constructor.
     //
-    for (i = 0; i < class_creation -> NumArguments(); i++)
-    {
-        AstExpression* expr = class_creation -> Argument(i);
-        ProcessExpressionOrStringConstant(expr);
-        if (expr -> symbol == control.no_type)
-            type = control.no_type;
-        else if (expr -> Type() == control.void_type)
-        {
-            type = control.no_type;
-            ReportSemError(SemanticError::TYPE_IS_VOID, expr,
-                           expr -> Type() -> Name());
-        }
-    }
+    ProcessArguments(class_creation -> arguments);
 
     //
     // Create the anonymous class now, if needed; then check that the type
@@ -4258,7 +4166,7 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast* expr)
 
     MethodSymbol* ctor =
         FindConstructor(type, class_creation, actual_type -> LeftToken(),
-                        class_creation -> right_parenthesis_token);
+                        class_creation -> arguments -> right_parenthesis_token);
     //
     // Convert the arguments to the correct types.
     //
@@ -4275,13 +4183,7 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast* expr)
                 ConvertToType(class_creation -> base_opt,
                               ctor -> containing_type -> EnclosingType());
         }
-
-        for (i = 0; i < class_creation -> NumArguments(); i++)
-        {
-            AstExpression* expr = class_creation -> Argument(i);
-            class_creation -> Argument(i) =
-                ConvertToType(expr, ctor -> FormalParameter(i) -> Type());
-        }
+        MethodInvocationConversion(class_creation -> arguments, ctor);
 
         //
         // Process the throws clause.
@@ -4311,7 +4213,7 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast* expr)
             assert(ThisType() -> outermost_type == type -> outermost_type);
             ctor = type -> GetReadAccessConstructor(ctor);
             class_creation -> symbol = ctor;
-            class_creation -> AddNullArgument();
+            class_creation -> arguments -> AddNullArgument();
         }
     }
     else
@@ -4336,7 +4238,7 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast* expr)
         if (type -> LocalClassProcessingCompleted())
         {
             unsigned param_count = type -> NumConstructorParameters();
-            class_creation -> AllocateLocalArguments(param_count);
+            class_creation -> arguments -> AllocateLocalArguments(param_count);
             for (i = 0; i < param_count; i++)
             {
                 //
@@ -4354,7 +4256,7 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast* expr)
                 TypeSymbol* owner = accessor -> ContainingType();
                 if (owner != ThisType())
                     CreateAccessToScopedVariable(simple_name, owner);
-                class_creation -> AddLocalArgument(simple_name);
+                class_creation -> arguments -> AddLocalArgument(simple_name);
             }
         }
         else
@@ -4365,7 +4267,7 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast* expr)
             // in body.cpp.
             //
             type -> AddLocalConstructorCallEnvironment
-                (GetEnvironment(class_creation));
+                (GetEnvironment(class_creation -> arguments));
         }
     }
 }
@@ -5393,6 +5295,22 @@ TypeSymbol *Semantic::BinaryNumericPromotion(AstExpression *&left_expr,
     left_expr = ConvertToType(left_expr, control.int_type);
     right_expr = ConvertToType(right_expr, control.int_type);
     return control.int_type;
+}
+
+
+void Semantic::MethodInvocationConversion(AstArguments* args,
+                                          MethodSymbol* method)
+{
+    assert(args -> NumArguments() == method -> NumFormalParameters());
+    for (unsigned i = 0; i < args -> NumArguments(); i++)
+    {
+        AstExpression* expr = args -> Argument(i);
+        if (expr -> Type() != method -> FormalParameter(i) -> Type())
+        {
+            args -> Argument(i) =
+                ConvertToType(expr, method -> FormalParameter(i) -> Type());
+        }
+    }    
 }
 
 

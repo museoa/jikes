@@ -449,7 +449,8 @@ void TypeSymbol::SetSignature(Control& control)
         }
         wcscat(type_signature, type_name);
         // +1 to skip the initial L'L'
-        fully_qualified_name = control.ConvertUnicodeToUtf8(type_signature + 1);
+        fully_qualified_name =
+            control.ConvertUnicodeToUtf8(type_signature + 1);
 
         wcscat(type_signature, StringConstant::US_SC);
         signature = control.ConvertUnicodeToUtf8(type_signature);
@@ -756,14 +757,14 @@ void DirectorySymbol::SetDirectoryName()
         if (strcmp(path_symbol -> Utf8Name(), StringConstant::U8S_DO) == 0)
         {
             directory_name_length = Utf8NameLength();
-            directory_name = new char[directory_name_length + 1]; // +1 for '\0'
+            directory_name = new char[directory_name_length + 1]; // +1: '\0'
 
             strcpy(directory_name, Utf8Name());
         }
         else
         {
             directory_name_length = path_symbol -> Utf8NameLength();
-            directory_name = new char[directory_name_length + 1]; // +1 for '\0'
+            directory_name = new char[directory_name_length + 1]; // +1: '\0'
 
             strcpy(directory_name, path_symbol -> Utf8Name());
         }
@@ -777,7 +778,7 @@ void DirectorySymbol::SetDirectoryName()
         {
             // An absolute file name, or is the owner "." ?
             directory_name_length = Utf8NameLength();
-            directory_name = new char[directory_name_length + 1]; // +1 for '\0'
+            directory_name = new char[directory_name_length + 1]; // +1: '\0'
             strcpy(directory_name, Utf8Name());
         }
         else
@@ -785,9 +786,9 @@ void DirectorySymbol::SetDirectoryName()
             int owner_length = owner_directory -> DirectoryNameLength();
             char *owner_name = owner_directory -> DirectoryName();
             directory_name_length = owner_length + Utf8NameLength() +
-                (owner_name[owner_length - 1] != U_SLASH ? 1 : 0); // +1 for '/'
+                (owner_name[owner_length - 1] != U_SLASH ? 1 : 0); // +1: '/'
 
-            directory_name = new char[directory_name_length + 1]; // +1 for '\0'
+            directory_name = new char[directory_name_length + 1]; // +1: '\0'
 
             strcpy(directory_name, owner_directory -> DirectoryName());
             if (owner_name[owner_length - 1] != U_SLASH)
@@ -948,9 +949,9 @@ void FileSymbol::SetFileName()
     bool dot_directory = (strcmp(directory_name, StringConstant::U8S_DO) == 0);
     file_name_length = (dot_directory ? 0 : directory_name_length) +
         Utf8NameLength() +
-        (path_symbol -> IsZip() // For zip files, we need "()"; for regular directory, we need 1 '/'
-         ? 2 : (dot_directory ||
-                directory_name[directory_name_length - 1] == U_SLASH ? 0 : 1)) +
+        (path_symbol -> IsZip() ? 2 // For zip files, we need "()";
+         : (dot_directory || // for regular directory, we need 1 '/'
+            directory_name[directory_name_length - 1] == U_SLASH ? 0 : 1)) +
         (kind == JAVA ? java_suffix_length : class_suffix_length);
 
     file_name = new char[file_name_length + 1]; // +1 for '\0'
@@ -1010,9 +1011,9 @@ void FileSymbol::SetFileNameLiteral(Control *control)
 
         int file_name_start = i + 1,
             file_name_length = FileNameLength() - file_name_start;
-        file_name_literal = control -> Utf8_pool.FindOrInsert((file_name +
-                                                               file_name_start),
-                                                              file_name_length);
+        file_name_literal =
+            control -> Utf8_pool.FindOrInsert(file_name + file_name_start,
+                                              file_name_length);
     }
 }
 
@@ -1065,7 +1066,8 @@ void TypeSymbol::SetClassName()
         }
         n++;
 
-        length = n + ExternalUtf8NameLength() + FileSymbol::class_suffix_length;
+        length =
+            n + ExternalUtf8NameLength() + FileSymbol::class_suffix_length;
         class_name = new char[length + 1]; // +1 for '\0'
         strncpy(class_name, file_name, n);
         class_name[n] = U_NULL;
@@ -1083,9 +1085,9 @@ void TypeSymbol::ProcessNestedTypeSignatures(Semantic *sem,
 {
     for (unsigned i = 0; i < NumNestedTypeSignatures(); i++)
     {
-        NameSymbol *name_symbol =
-            sem -> control.ConvertUtf8ToUnicode(NestedTypeSignature(i),
-                                                strlen(NestedTypeSignature(i)));
+        NameSymbol* name_symbol = sem ->
+            control.ConvertUtf8ToUnicode(NestedTypeSignature(i),
+                                         strlen(NestedTypeSignature(i)));
         delete [] NestedTypeSignature(i);
         sem -> ProcessNestedType(this, name_symbol, tok);
     }
@@ -1095,7 +1097,8 @@ void TypeSymbol::ProcessNestedTypeSignatures(Semantic *sem,
 }
 
 
-void MethodSymbol::ProcessMethodThrows(Semantic *sem, LexStream::TokenIndex tok)
+void MethodSymbol::ProcessMethodThrows(Semantic* sem,
+                                       LexStream::TokenIndex tok)
 {
     if (throws_signatures)
     {
@@ -1322,8 +1325,9 @@ void MethodSymbol::CleanUp()
     //
     for (unsigned k = 0; k < NumFormalParameters(); k++)
     {
-        VariableSymbol *formal_parameter = (*formal_parameters)[k],
-                       *symbol = block -> InsertVariableSymbol(formal_parameter -> Identity());
+        VariableSymbol* formal_parameter = (*formal_parameters)[k];
+        VariableSymbol* symbol =
+            block -> InsertVariableSymbol(formal_parameter -> Identity());
         symbol -> SetType(formal_parameter -> Type());
         symbol -> MarkComplete();
         (*formal_parameters)[k] = symbol;
@@ -1972,13 +1976,14 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
         field_access -> base = base;
         field_access -> identifier_token = loc;
 
+        AstArguments* args = ast_pool -> GenArguments(loc, loc);
+        args -> AllocateArguments(parameter_count);
+
         AstMethodInvocation *method_invocation =
             ast_pool -> GenMethodInvocation();
         method_invocation -> method = field_access;
-        method_invocation -> left_parenthesis_token = loc;
-        method_invocation -> right_parenthesis_token = loc;
+        method_invocation -> arguments = args;
         method_invocation -> symbol = member;
-        method_invocation -> AllocateArguments(parameter_count);
 
         AstMethodDeclarator *method_declarator =
             ast_pool -> GenMethodDeclarator();
@@ -2016,7 +2021,8 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
             parm -> MarkSynthetic();
             parm -> SetType(member -> FormalParameter(i) -> Type());
             parm -> SetOwner(read_method);
-            parm -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+            parm -> SetLocalVariableIndex(block_symbol ->
+                                          max_variable_index++);
             parm -> MarkComplete();
             if (control.IsDoubleWordType(parm -> Type()))
                 block_symbol -> max_variable_index++;
@@ -2024,17 +2030,17 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
 
             AstSimpleName *simple_name = ast_pool -> GenSimpleName(loc);
             simple_name -> symbol = parm;
-
-            method_invocation -> AddArgument(simple_name);
+            args -> AddArgument(simple_name);
         }
         read_method -> SetSignature(control);
 
-        AstReturnStatement *return_statement = ast_pool -> GenReturnStatement();
+        AstReturnStatement* return_statement =
+            ast_pool -> GenReturnStatement();
         return_statement -> return_token = loc;
         return_statement -> semicolon_token = loc;
         return_statement -> is_reachable = true;
 
-        AstBlock *block = ast_pool -> GenBlock();
+        AstMethodBody* block = ast_pool -> GenMethodBody();
         block -> left_brace_token = loc;
         block -> right_brace_token = loc;
         // the symbol table associated with this block will contain no element
@@ -2065,7 +2071,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
             ast_pool -> GenMethodDeclaration();
         method_declaration -> method_symbol = read_method;
         method_declaration -> method_declarator = method_declarator;
-        method_declaration -> method_body = block;
+        method_declaration -> method_body_opt = block;
 
         read_method -> declaration = method_declaration;
         read_method -> accessed_member = member;
@@ -2177,7 +2183,7 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *ctor)
         read_method -> SetExternalIdentity(ctor -> Identity());
 
         Ast *declaration = ctor -> declaration;
-        AstMethodDeclarator *declarator =
+        AstMethodDeclarator* declarator =
             ((AstConstructorDeclaration*) declaration) -> constructor_declarator;
         assert(declarator);
         LexStream::TokenIndex loc = declarator -> identifier_token;
@@ -2190,13 +2196,14 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *ctor)
         method_declarator -> right_parenthesis_token =
             declarator -> RightToken();
 
+        AstArguments* args = ast_pool -> GenArguments(loc, loc);
+        args -> AllocateArguments(ctor -> NumFormalParameters());
+
         AstThisCall *this_call = ast_pool -> GenThisCall();
         this_call -> this_token = loc;
-        this_call -> left_parenthesis_token = loc;
-        this_call -> right_parenthesis_token = loc;
+        this_call -> arguments = args;
         this_call -> semicolon_token = loc;
         this_call -> symbol = ctor;
-        this_call -> AllocateArguments(ctor -> NumFormalParameters());
 
         VariableSymbol *this0_variable = NULL;
         if (EnclosingType())
@@ -2223,7 +2230,8 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *ctor)
             parm -> MarkSynthetic();
             parm -> SetType(ctor -> FormalParameter(i) -> Type());
             parm -> SetOwner(read_method);
-            parm -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+            parm -> SetLocalVariableIndex(block_symbol ->
+                                          max_variable_index++);
             parm -> MarkComplete();
             if (control.IsDoubleWordType(parm -> Type()))
                 block_symbol -> max_variable_index++;
@@ -2235,7 +2243,7 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *ctor)
             AstSimpleName *simple_name = ast_pool ->
                 GenSimpleName(variable_declarator_name -> identifier_token);
             simple_name -> symbol = parm;
-            this_call -> AddArgument(simple_name);
+            args -> AddArgument(simple_name);
         }
 
         //
@@ -2405,13 +2413,14 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member,
         // A read access method has no throws clause !
         read_method -> SetSignature(control);
 
-        AstReturnStatement *return_statement = ast_pool -> GenReturnStatement();
+        AstReturnStatement* return_statement =
+            ast_pool -> GenReturnStatement();
         return_statement -> return_token = loc;
         return_statement -> expression_opt = field_access;
         return_statement -> semicolon_token = loc;
         return_statement -> is_reachable = true;
 
-        AstBlock *block = ast_pool -> GenBlock();
+        AstMethodBody* block = ast_pool -> GenMethodBody();
         block -> left_brace_token = loc;
         block -> right_brace_token = loc;
         // the symbol table associated with this block will contain no element
@@ -2425,7 +2434,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member,
             ast_pool -> GenMethodDeclaration();
         method_declaration -> method_symbol = read_method;
         method_declaration -> method_declarator = method_declarator;
-        method_declaration -> method_body = block;
+        method_declaration -> method_body_opt = block;
 
         read_method -> declaration = method_declaration;
         read_method -> accessed_member = member;
@@ -2577,8 +2586,9 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member,
         AstSimpleName *simple_name = ast_pool -> GenSimpleName(loc);
         simple_name -> symbol = symbol;
 
-        AstAssignmentExpression *assignment_expression = ast_pool ->
-            GenAssignmentExpression(AstAssignmentExpression::SIMPLE_EQUAL, loc);
+        AstAssignmentExpression* assignment_expression = ast_pool ->
+            GenAssignmentExpression(AstAssignmentExpression::SIMPLE_EQUAL,
+                                    loc);
         assignment_expression -> left_hand_side = left_hand_side;
         assignment_expression -> expression = simple_name;
 
@@ -2589,12 +2599,13 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member,
         expression_statement -> is_reachable = true;
         expression_statement -> can_complete_normally = true;
 
-        AstReturnStatement *return_statement = ast_pool -> GenReturnStatement();
+        AstReturnStatement* return_statement =
+            ast_pool -> GenReturnStatement();
         return_statement -> return_token = loc;
         return_statement -> semicolon_token = loc;
         return_statement -> is_reachable = true;
 
-        AstBlock *block = ast_pool -> GenBlock();
+        AstMethodBody* block = ast_pool -> GenMethodBody();
         block -> left_brace_token = loc;
         block -> right_brace_token = loc;
         // the symbol table associated with this block will contain no element
@@ -2609,7 +2620,7 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member,
             ast_pool -> GenMethodDeclaration();
         method_declaration -> method_symbol = write_method;
         method_declaration -> method_declarator = method_declarator;
-        method_declaration -> method_body = block;
+        method_declaration -> method_body_opt = block;
 
         write_method -> declaration = method_declaration;
         write_method -> accessed_member = member;
@@ -2623,22 +2634,19 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member,
 }
 
 
-MethodSymbol *TypeSymbol::GetWriteAccessFromReadAccess(MethodSymbol *read_method)
+MethodSymbol* TypeSymbol::GetWriteAccessFromReadAccess(MethodSymbol* read_method)
 {
     assert(read_method && read_method -> IsSynthetic() &&
            read_method -> containing_type == this);
-    VariableSymbol *variable =
-        (VariableSymbol*) read_method -> accessed_member;
-    assert(variable);
-
-    AstMethodDeclaration *method_declaration =
-        (AstMethodDeclaration*) read_method -> declaration;
-    AstBlock *block = (AstBlock*) method_declaration -> method_body;
-    AstReturnStatement *return_statement =
-        (AstReturnStatement*) block -> Statement(0);
-    AstFieldAccess *field_access =
-        (AstFieldAccess*) return_statement -> expression_opt;
-
+    VariableSymbol* variable =
+        DYNAMIC_CAST<VariableSymbol*> (read_method -> accessed_member);
+    AstMethodDeclaration* method_declaration =
+        DYNAMIC_CAST<AstMethodDeclaration*> (read_method -> declaration);
+    AstMethodBody* block = method_declaration -> method_body_opt;
+    AstReturnStatement* return_statement =
+        DYNAMIC_CAST<AstReturnStatement*> (block -> Statement(0));
+    AstFieldAccess* field_access =
+        DYNAMIC_CAST<AstFieldAccess*> (return_statement -> expression_opt);
     return GetWriteAccessMethod(variable, field_access -> base -> Type());
 }
 
@@ -2672,8 +2680,7 @@ TypeSymbol *TypeSymbol::GetPlaceholderType()
             ast_pool -> GenClassInstanceCreationExpression();
         class_creation -> new_token = loc;
         class_creation -> class_type = ast_pool -> GenTypeName(ast_type);
-        class_creation -> left_parenthesis_token = loc;
-        class_creation -> right_parenthesis_token = loc;
+        class_creation -> arguments = ast_pool -> GenArguments(loc, loc);
         class_creation -> class_body_opt = class_body;
 
         sem -> GetAnonymousType(class_creation, control.Object());

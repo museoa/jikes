@@ -22,7 +22,7 @@ enum {
       MIN_DISTANCE      = 3,
       MAX_NAME_LENGTH   = 38,
       MAX_TERM_LENGTH   = 38,
-      NUM_STATES        = 356,
+      NUM_STATES        = 357,
 
       NT_OFFSET         = 108,
       BUFF_UBOUND       = 30,

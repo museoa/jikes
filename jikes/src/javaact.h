@@ -21,7 +21,8 @@ void Parser::InitRuleAction()
 #else // HEADERS
     AstType* MakeArrayType(int tokennum);
     AstSimpleName* MakeSimpleName(int tokennum);
-    void MakeLocalVariable(AstListNode* modifiers, AstType* type,
+    AstArguments* MakeArguments(int tokennum);
+    void MakeLocalVariable(AstModifiers* modifiers, AstType* type,
                            AstListNode* variables);
     AstStatement* MakeSwitchBlockStatement(AstListNode* labels,
                                            AstListNode* statements = NULL);
@@ -36,7 +37,6 @@ void Parser::InitRuleAction()
     void AddList2();
     void AddList3();
     void MakeArrayType();
-    void MakeModifier();
     void MakeClassBody();
     void MakeQualifiedSuper();
     void MakeArrayInitializer();
@@ -297,57 +297,59 @@ void Parser::InitRuleAction()
 #endif
 
 #ifndef HEADERS
-    rule_action[46] = &Parser::StartList;
-#endif
-
-#ifndef HEADERS
-    rule_action[47] = &Parser::AddList2;
-#endif
-
-#ifndef HEADERS
-    rule_action[48] = &Parser::MakeModifier;
-#endif
-
-#ifndef HEADERS
-    rule_action[49] = &Parser::MakeModifier;
-#endif
-
-#ifndef HEADERS
-    rule_action[50] = &Parser::MakeModifier;
-#endif
-
-#ifndef HEADERS
-    rule_action[51] = &Parser::Act51;
+    rule_action[46] = &Parser::Act46;
 #else
-    void Act51();
+    void Act46();
 #endif
 
 #ifndef HEADERS
-    rule_action[52] = &Parser::MakeModifier;
+    rule_action[47] = &Parser::Act47;
+#else
+    void Act47();
 #endif
 
 #ifndef HEADERS
-    rule_action[53] = &Parser::MakeModifier;
+    rule_action[48] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[54] = &Parser::MakeModifier;
+    rule_action[49] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[55] = &Parser::MakeModifier;
+    rule_action[50] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[56] = &Parser::MakeModifier;
+    rule_action[51] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[57] = &Parser::MakeModifier;
+    rule_action[52] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS
-    rule_action[58] = &Parser::MakeModifier;
+    rule_action[53] = &Parser::NoAction;
+#endif
+
+#ifndef HEADERS
+    rule_action[54] = &Parser::NoAction;
+#endif
+
+#ifndef HEADERS
+    rule_action[55] = &Parser::NoAction;
+#endif
+
+#ifndef HEADERS
+    rule_action[56] = &Parser::NoAction;
+#endif
+
+#ifndef HEADERS
+    rule_action[57] = &Parser::NoAction;
+#endif
+
+#ifndef HEADERS
+    rule_action[58] = &Parser::NoAction;
 #endif
 
 #ifndef HEADERS

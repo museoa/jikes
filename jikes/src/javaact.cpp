@@ -1,4 +1,4 @@
-#line 639 "java.g"
+#line 632 "java.g"
 // $Id$
 // DO NOT MODIFY THIS FILE - it is generated using jikespg on java.g.
 //
@@ -39,7 +39,7 @@ void Parser::BadAction() { assert(false); }
 //
 // Rule 1:  Goal ::= CompilationUnit
 //
-#line 683 "java.g"
+#line 676 "java.g"
 //
 // Given a rule of the form A ::= x1 x2 ... xn        n >= 1
 // Do nothing - Whatever Ast was produced for x1 is inherited by A.
@@ -56,7 +56,7 @@ void Parser::NoAction() {}
 //
 // Rule 2:  Goal ::= BodyMarker MethodBody
 //
-#line 701 "java.g"
+#line 694 "java.g"
 //
 // Given a rule of the form A ::= x1 x2, inherit the result from x2.
 //
@@ -65,7 +65,7 @@ void Parser::SetSym1ToSym2() { Sym(1) = Sym(2); }
 //
 // Rule 3:  Literal ::= IntegerLiteral
 //
-#line 713 "java.g"
+#line 706 "java.g"
 void Parser::Act3()
 {
     Sym(1) = ast_pool -> NewIntegerLiteral(Token(1));
@@ -74,7 +74,7 @@ void Parser::Act3()
 //
 // Rule 4:  Literal ::= LongLiteral
 //
-#line 722 "java.g"
+#line 715 "java.g"
 void Parser::Act4()
 {
     Sym(1) = ast_pool -> NewLongLiteral(Token(1));
@@ -83,7 +83,7 @@ void Parser::Act4()
 //
 // Rule 5:  Literal ::= FloatLiteral
 //
-#line 731 "java.g"
+#line 724 "java.g"
 void Parser::Act5()
 {
     Sym(1) = ast_pool -> NewFloatLiteral(Token(1));
@@ -92,7 +92,7 @@ void Parser::Act5()
 //
 // Rule 6:  Literal ::= DoubleLiteral
 //
-#line 740 "java.g"
+#line 733 "java.g"
 void Parser::Act6()
 {
     Sym(1) = ast_pool -> NewDoubleLiteral(Token(1));
@@ -107,7 +107,7 @@ void Parser::Act6()
 //
 // Rule 8:  Literal ::= CharacterLiteral
 //
-#line 753 "java.g"
+#line 746 "java.g"
 void Parser::Act8()
 {
     Sym(1) = ast_pool -> NewCharacterLiteral(Token(1));
@@ -116,7 +116,7 @@ void Parser::Act8()
 //
 // Rule 9:  Literal ::= StringLiteral
 //
-#line 762 "java.g"
+#line 755 "java.g"
 void Parser::Act9()
 {
     Sym(1) = ast_pool -> NewStringLiteral(Token(1));
@@ -125,7 +125,7 @@ void Parser::Act9()
 //
 // Rule 10:  Literal ::= null
 //
-#line 771 "java.g"
+#line 764 "java.g"
 void Parser::Act10()
 {
     Sym(1) = ast_pool -> NewNullLiteral(Token(1));
@@ -134,7 +134,7 @@ void Parser::Act10()
 //
 // Rule 11:  BooleanLiteral ::= true
 //
-#line 780 "java.g"
+#line 773 "java.g"
 void Parser::Act11()
 {
     Sym(1) = ast_pool -> NewTrueLiteral(Token(1));
@@ -143,7 +143,7 @@ void Parser::Act11()
 //
 // Rule 12:  BooleanLiteral ::= false
 //
-#line 789 "java.g"
+#line 782 "java.g"
 void Parser::Act12()
 {
     Sym(1) = ast_pool -> NewFalseLiteral(Token(1));
@@ -170,7 +170,7 @@ void Parser::Act12()
 //
 // Rule 16:  PrimitiveType ::= boolean
 //
-#line 812 "java.g"
+#line 805 "java.g"
 void Parser::Act16()
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::BOOLEAN, Token(1));
@@ -191,7 +191,7 @@ void Parser::Act16()
 //
 // Rule 19:  IntegralType ::= byte
 //
-#line 829 "java.g"
+#line 822 "java.g"
 void Parser::Act19()
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::BYTE, Token(1));
@@ -200,7 +200,7 @@ void Parser::Act19()
 //
 // Rule 20:  IntegralType ::= short
 //
-#line 838 "java.g"
+#line 831 "java.g"
 void Parser::Act20()
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::SHORT, Token(1));
@@ -209,7 +209,7 @@ void Parser::Act20()
 //
 // Rule 21:  IntegralType ::= int
 //
-#line 847 "java.g"
+#line 840 "java.g"
 void Parser::Act21()
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::INT, Token(1));
@@ -218,7 +218,7 @@ void Parser::Act21()
 //
 // Rule 22:  IntegralType ::= long
 //
-#line 856 "java.g"
+#line 849 "java.g"
 void Parser::Act22()
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::LONG, Token(1));
@@ -227,7 +227,7 @@ void Parser::Act22()
 //
 // Rule 23:  IntegralType ::= char
 //
-#line 865 "java.g"
+#line 858 "java.g"
 void Parser::Act23()
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::CHAR, Token(1));
@@ -236,7 +236,7 @@ void Parser::Act23()
 //
 // Rule 24:  FloatingPointType ::= float
 //
-#line 874 "java.g"
+#line 867 "java.g"
 void Parser::Act24()
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::FLOAT, Token(1));
@@ -245,7 +245,7 @@ void Parser::Act24()
 //
 // Rule 25:  FloatingPointType ::= double
 //
-#line 883 "java.g"
+#line 876 "java.g"
 void Parser::Act25()
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::DOUBLE, Token(1));
@@ -266,7 +266,7 @@ void Parser::Act25()
 //
 // Rule 28:  ClassOrInterfaceType ::= Name
 //
-#line 907 "java.g"
+#line 900 "java.g"
 void Parser::Act28()
 {
     Sym(1) = ast_pool -> NewTypeName(DYNAMIC_CAST<AstExpression*> (Sym(1)));
@@ -275,7 +275,7 @@ void Parser::Act28()
 //
 // Rule 29:  ArrayType ::= PrimitiveType Dims
 //
-#line 927 "java.g"
+#line 920 "java.g"
 void Parser::MakeArrayType() { Sym(1) = MakeArrayType(1); }
 
 //
@@ -284,22 +284,12 @@ void Parser::MakeArrayType() { Sym(1) = MakeArrayType(1); }
 //
 AstType* Parser::MakeArrayType(int tokennum)
 {
-    AstType* t = Sym(tokennum) -> IsName()
+    AstType* p = Sym(tokennum) -> IsName()
         ? ast_pool -> NewTypeName(DYNAMIC_CAST<AstExpression*> (Sym(tokennum)))
         : DYNAMIC_CAST<AstType*> (Sym(tokennum));
-    if (! Sym(tokennum + 1))
-        return t;
-    AstArrayType* p = ast_pool -> NewArrayType(t);
-    AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(tokennum + 1));
-    p -> AllocateBrackets(tail -> index + 1);
-    AstListNode* root = tail;
-    do
-    {
-        root = root -> next;
-        p -> AddBrackets(DYNAMIC_CAST<AstBrackets*> (root -> element));
-    } while (root != tail);
-    FreeCircularList(tail);
-    return p;
+    return ! Sym(tokennum + 1) ? p
+        : ast_pool -> NewArrayType(p, (DYNAMIC_CAST<AstBrackets*>
+                                       (Sym(tokennum + 1))));
 }
 
 //
@@ -311,7 +301,7 @@ AstType* Parser::MakeArrayType(int tokennum)
 //
 // Rule 31:  Name ::= Identifier
 //
-#line 972 "java.g"
+#line 955 "java.g"
 void Parser::Act31() { MakeSimpleName(1); }
 
 //
@@ -333,7 +323,7 @@ AstSimpleName* Parser::MakeSimpleName(int tokennum)
 //
 // Rule 33:  CompilationUnit ::= PackageDeclarationopt ImportDeclarationsopt TypeDeclarationsopt
 //
-#line 998 "java.g"
+#line 981 "java.g"
 void Parser::Act33()
 {
     AstCompilationUnit* p = ast_pool -> NewCompilationUnit();
@@ -371,7 +361,7 @@ void Parser::Act33()
 //
 // Rule 34:  ImportDeclarations ::= ImportDeclaration
 //
-#line 1036 "java.g"
+#line 1019 "java.g"
 //
 // This starts a list containing a single element.
 // Note that the list is circular so as to preserve the order of the elements.
@@ -388,7 +378,7 @@ void Parser::StartList()
 //
 // Rule 35:  ImportDeclarations ::= ImportDeclarations ImportDeclaration
 //
-#line 1053 "java.g"
+#line 1036 "java.g"
 //
 // This adds token 2 to an existing list.
 // Note that the list is circular so as to preserve the order of the elements.
@@ -434,7 +424,7 @@ void Parser::AddList3()
 //
 // Rule 38:  PackageDeclaration ::= package Name PackageHeaderMarker SEMICOLON
 //
-#line 1095 "java.g"
+#line 1078 "java.g"
 void Parser::Act38()
 {
     AstPackageDeclaration* p = ast_pool -> NewPackageDeclaration();
@@ -459,7 +449,7 @@ void Parser::Act38()
 //
 // Rule 41:  SingleTypeImportDeclaration ::= import Name SEMICOLON
 //
-#line 1120 "java.g"
+#line 1103 "java.g"
 void Parser::Act41()
 {
     AstImportDeclaration* p = ast_pool -> NewImportDeclaration();
@@ -472,7 +462,7 @@ void Parser::Act41()
 //
 // Rule 42:  TypeImportOnDemandDeclaration ::= import Name DOT MULTIPLY SEMICOLON
 //
-#line 1133 "java.g"
+#line 1116 "java.g"
 void Parser::Act42()
 {
     AstImportDeclaration* p = ast_pool -> NewImportDeclaration();
@@ -498,7 +488,7 @@ void Parser::Act42()
 //
 // Rule 45:  TypeDeclaration ::= SEMICOLON
 //
-#line 1155 "java.g"
+#line 1138 "java.g"
 void Parser::Act45()
 {
     Sym(1) = ast_pool -> NewEmptyDeclaration(Token(1));
@@ -507,107 +497,101 @@ void Parser::Act45()
 //
 // Rule 46:  Modifiers ::= Modifier
 //
-// void StartList();
-//
+#line 1159 "java.g"
+void Parser::Act46()
+{
+    AstModifiers* p = ast_pool -> NewModifier(Token(1));
+    if (lex_stream -> Kind(Token(1)) == TK_static)
+        p -> static_token_opt = Token(1);
+    Sym(1) = p;
+}
 
 //
 // Rule 47:  Modifiers ::= Modifiers Modifier
 //
-// void AddList2();
-//
+#line 1171 "java.g"
+void Parser::Act47()
+{
+    AstModifiers* p = DYNAMIC_CAST<AstModifiers*> (Sym(1));
+    p -> right_modifier_token = Token(2);
+    if (! p -> static_token_opt && lex_stream -> Kind(Token(2)) == TK_static)
+        p -> static_token_opt = Token(1);
+}
 
 //
 // Rule 48:  Modifier ::= public
 //
-#line 1184 "java.g"
-void Parser::MakeModifier()
-{
-    Sym(1) = ast_pool -> NewModifier(Token(1));
-}
+// void NoAction();
+//
 
 //
 // Rule 49:  Modifier ::= protected
 //
-// void MakeModifier()
+// void NoAction();
 //
 
 //
 // Rule 50:  Modifier ::= private
 //
-// void MakeModifier()
+// void NoAction();
 //
 
 //
 // Rule 51:  Modifier ::= static
 //
-#line 1207 "java.g"
-void Parser::Act51()
-{
-    MakeModifier();
-    Sym(1) -> class_tag = Ast::STATIC;
-}
+// void NoAction();
+//
 
 //
 // Rule 52:  Modifier ::= abstract
 //
-// void MakeModifier()
+// void NoAction();
 //
 
 //
 // Rule 53:  Modifier ::= final
 //
-// void MakeModifier()
+// void NoAction();
 //
 
 //
 // Rule 54:  Modifier ::= native
 //
-// void MakeModifier()
+// void NoAction();
 //
 
 //
 // Rule 55:  Modifier ::= strictfp
 //
-// void MakeModifier()
+// void NoAction();
 //
 
 //
 // Rule 56:  Modifier ::= synchronized
 //
-// void MakeModifier()
+// void NoAction();
 //
 
 //
 // Rule 57:  Modifier ::= transient
 //
-// void MakeModifier()
+// void NoAction();
 //
 
 //
 // Rule 58:  Modifier ::= volatile
 //
-// void MakeModifier()
+// void NoAction();
 //
 
 //
 // Rule 59:  ClassDeclaration ::= Modifiersopt class Identifier Marker Superopt Interfacesopt ClassBody
 //
-#line 1275 "java.g"
+#line 1236 "java.g"
 void Parser::Act59()
 {
     AstClassDeclaration* p = ast_pool -> NewClassDeclaration();
-    if (Sym(1))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
-        p -> AllocateModifiers(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+    p -> modifiers_opt = DYNAMIC_CAST<AstModifiers*> (Sym(1));
     p -> class_token = Token(2);
     p -> super_opt = DYNAMIC_CAST<AstTypeName*> (Sym(5));
     if (Sym(6))
@@ -655,7 +639,7 @@ void Parser::Act59()
 //
 // Rule 64:  ClassBody ::= LBRACE ClassBodyDeclarationsopt RBRACE
 //
-#line 1348 "java.g"
+#line 1298 "java.g"
 void Parser::MakeClassBody()
 {
     AstClassBody* p = ast_pool -> NewClassBody();
@@ -686,19 +670,14 @@ void Parser::MakeClassBody()
             p -> AddClassBodyDeclaration(declaration);
             AstFieldDeclaration* field_declaration =
                 declaration -> FieldDeclarationCast();
-            AstInitializerDeclaration* initializer_declaration =
+            AstInitializerDeclaration* initializer =
                 declaration -> InitializerDeclarationCast();
             if (field_declaration)
             {
-                for (unsigned i = 0;
-                     i < field_declaration -> NumModifiers(); i++)
+                if (field_declaration -> modifiers_opt &&
+                    field_declaration -> modifiers_opt -> static_token_opt)
                 {
-                    if (field_declaration -> Modifier(i) -> class_tag ==
-                        Ast::STATIC)
-                    {
-                        field_declaration -> MarkStatic();
-                        break;
-                    }
+                    field_declaration -> MarkStatic();
                 }
                 //
                 // Interface fields were already marked static.
@@ -711,20 +690,14 @@ void Parser::MakeClassBody()
                 num_methods++;
             else if (declaration -> ConstructorDeclarationCast())
                 num_constructors++;
-            else if (initializer_declaration)
+            else if (initializer)
             {
-                for (unsigned i = 0;
-                     i < initializer_declaration -> NumModifiers(); i++)
+                if (initializer -> modifiers_opt &&
+                    initializer -> modifiers_opt -> static_token_opt)
                 {
-                    if (initializer_declaration -> Modifier(i) -> class_tag ==
-                        Ast::STATIC)
-                    {
-                        initializer_declaration -> MarkStatic();
-                        break;
-                    }
-                }
-                if (initializer_declaration -> StaticInitializerCast())
+                    initializer -> MarkStatic();
                     num_static_initializers++;
+                }
                 else num_instance_initializers++;
             }
             else if (declaration -> ClassDeclarationCast())
@@ -848,22 +821,11 @@ void Parser::MakeClassBody()
 //
 // Rule 73:  FieldDeclaration ::= Modifiersopt Marker Type VariableDeclarators SEMICOLON
 //
-#line 1553 "java.g"
+#line 1492 "java.g"
 void Parser::Act73()
 {
     AstFieldDeclaration* p = ast_pool -> NewFieldDeclaration();
-    if (Sym(1))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
-        p -> AllocateModifiers(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+    p -> modifiers_opt = DYNAMIC_CAST<AstModifiers*> (Sym(1));
     p -> type = DYNAMIC_CAST<AstType*> (Sym(3));
     AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(4));
     p -> AllocateVariableDeclarators(tail -> index + 1);
@@ -894,7 +856,7 @@ void Parser::Act73()
 //
 // Rule 76:  VariableDeclarator ::= VariableDeclaratorId
 //
-#line 1595 "java.g"
+#line 1523 "java.g"
 void Parser::Act76()
 {
     AstVariableDeclarator* p = ast_pool -> NewVariableDeclarator();
@@ -906,7 +868,7 @@ void Parser::Act76()
 //
 // Rule 77:  VariableDeclarator ::= VariableDeclaratorId EQUAL VariableInitializer
 //
-#line 1607 "java.g"
+#line 1535 "java.g"
 void Parser::Act77()
 {
     AstVariableDeclarator* p = ast_pool -> NewVariableDeclarator();
@@ -919,23 +881,12 @@ void Parser::Act77()
 //
 // Rule 78:  VariableDeclaratorId ::= Identifier Dimsopt
 //
-#line 1620 "java.g"
+#line 1548 "java.g"
 void Parser::Act78()
 {
     AstVariableDeclaratorId* p = ast_pool -> NewVariableDeclaratorId();
     p -> identifier_token = Token(1);
-    if (Sym(2))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(2));
-        p -> AllocateBrackets(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddBrackets(DYNAMIC_CAST<AstBrackets*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+    p -> brackets_opt = DYNAMIC_CAST<AstBrackets*> (Sym(2));
     Sym(1) = p;
 }
 
@@ -954,15 +905,15 @@ void Parser::Act78()
 //
 // Rule 81:  MethodDeclaration ::= MethodHeader MethodHeaderMarker MethodBody
 //
-#line 1663 "java.g"
+#line 1580 "java.g"
 void Parser::MakeMethodDeclaration()
 {
-    DYNAMIC_CAST<AstMethodDeclaration*> (Sym(1)) -> method_body =
-        DYNAMIC_CAST<AstStatement*> (Sym(3));
+    DYNAMIC_CAST<AstMethodDeclaration*> (Sym(1)) -> method_body_opt =
+        DYNAMIC_CAST<AstMethodBody*> (Sym(3));
 }
 
 //
-// Rule 82:  MethodDeclaration ::= MethodHeader MethodHeaderMarker EmptyStatement
+// Rule 82:  MethodDeclaration ::= MethodHeader MethodHeaderMarker Marker SEMICOLON
 //
 // void MakeMethodDeclaration();
 //
@@ -970,22 +921,11 @@ void Parser::MakeMethodDeclaration()
 //
 // Rule 83:  MethodHeader ::= Modifiersopt Marker Type MethodDeclarator Throwsopt
 //
-#line 1684 "java.g"
+#line 1604 "java.g"
 void Parser::MakeMethodHeader()
 {
     AstMethodDeclaration* p = ast_pool -> NewMethodDeclaration();
-    if (Sym(1))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
-        p -> AllocateModifiers(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+    p -> modifiers_opt = DYNAMIC_CAST<AstModifiers*> (Sym(1));
     p -> type = DYNAMIC_CAST<AstType*> (Sym(3));
     p -> method_declarator = DYNAMIC_CAST<AstMethodDeclarator*> (Sym(4));
     if (Sym(5))
@@ -1006,7 +946,7 @@ void Parser::MakeMethodHeader()
 //
 // Rule 84:  MethodHeader ::= Modifiersopt Marker void MethodDeclarator Throwsopt
 //
-#line 1724 "java.g"
+#line 1633 "java.g"
 void Parser::Act84()
 {
     Sym(3) = ast_pool -> NewPrimitiveType(Ast::VOID_TYPE, Token(3));
@@ -1016,7 +956,7 @@ void Parser::Act84()
 //
 // Rule 85:  MethodDeclarator ::= Identifier LPAREN FormalParameterListopt RPAREN Dimsopt
 //
-#line 1734 "java.g"
+#line 1643 "java.g"
 void Parser::MakeMethodDeclarator()
 {
     AstMethodDeclarator* p = ast_pool -> NewMethodDeclarator();
@@ -1036,18 +976,7 @@ void Parser::MakeMethodDeclarator()
         FreeCircularList(tail);
     }
     p -> right_parenthesis_token = Token(4);
-    if (Sym(5))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(5));
-        p -> AllocateBrackets(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddBrackets(DYNAMIC_CAST<AstBrackets*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+    p -> brackets_opt = DYNAMIC_CAST<AstBrackets*> (Sym(5));
     Sym(1) = p;
 }
 
@@ -1066,29 +995,16 @@ void Parser::MakeMethodDeclarator()
 //
 // Rule 88:  FormalParameter ::= Modifiersopt Type VariableDeclaratorId
 //
-#line 1785 "java.g"
+#line 1683 "java.g"
 void Parser::Act88()
 {
     AstFormalParameter* p = ast_pool -> NewFormalParameter();
-    if (Sym(1))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
-        p -> AllocateModifiers(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+    p -> modifiers_opt = DYNAMIC_CAST<AstModifiers*> (Sym(1));
     p -> type = DYNAMIC_CAST<AstType*> (Sym(2));
-
     AstVariableDeclarator* formal_declarator =
         ast_pool -> NewVariableDeclarator();
     formal_declarator -> variable_declarator_name =
         DYNAMIC_CAST<AstVariableDeclaratorId*> (Sym(3));
-
     p -> formal_declarator = formal_declarator;
     Sym(1) = p;
 }
@@ -1102,7 +1018,7 @@ void Parser::Act88()
 //
 // Rule 90:  MethodBody ::= LBRACE BlockStatementsopt RBRACE
 //
-#line 1832 "java.g"
+#line 1717 "java.g"
 void Parser::Act90()
 {
     AstMethodBody* p = ast_pool -> NewMethodBody();
@@ -1134,22 +1050,11 @@ void Parser::Act90()
 //
 // Rule 91:  InitializerDeclaration ::= Modifiersopt Marker MethodHeaderMarker MethodBody
 //
-#line 1878 "java.g"
+#line 1763 "java.g"
 void Parser::Act91()
 {
     AstInitializerDeclaration* p = ast_pool -> NewInitializerDeclaration();
-    if (Sym(1))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
-        p -> AllocateModifiers(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+    p -> modifiers_opt = DYNAMIC_CAST<AstModifiers*> (Sym(1));
     p -> block = DYNAMIC_CAST<AstMethodBody*> (Sym(4));
     Sym(1) = p;
 }
@@ -1157,22 +1062,11 @@ void Parser::Act91()
 //
 // Rule 92:  ConstructorDeclaration ::= Modifiersopt Marker ConstructorDeclarator Throwsopt MethodHeaderMarker MethodBody
 //
-#line 1910 "java.g"
+#line 1784 "java.g"
 void Parser::MakeConstructorDeclaration()
 {
     AstConstructorDeclaration* p = ast_pool -> NewConstructorDeclaration();
-    if (Sym(1))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
-        p -> AllocateModifiers(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+    p -> modifiers_opt = DYNAMIC_CAST<AstModifiers*> (Sym(1));
     p -> constructor_declarator = DYNAMIC_CAST<AstMethodDeclarator*> (Sym(3));
     if (Sym(4))
     {
@@ -1200,15 +1094,22 @@ void Parser::MakeConstructorDeclaration()
 //
 // Rule 94:  ExplicitConstructorInvocation ::= this LPAREN ArgumentListopt RPAREN SEMICOLON
 //
-#line 1968 "java.g"
+#line 1831 "java.g"
 void Parser::Act94()
 {
     AstThisCall* p = ast_pool -> NewThisCall();
     p -> this_token = Token(1);
-    p -> left_parenthesis_token = Token(2);
-    if (Sym(3))
+    p -> arguments = MakeArguments(2);
+    p -> semicolon_token = Token(5);
+    Sym(1) = p;
+}
+
+AstArguments* Parser::MakeArguments(int tokennum)
+{
+    AstArguments* p = ast_pool -> NewArguments(tokennum, tokennum + 2);
+    if (Sym(tokennum + 1))
     {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(3));
+        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(tokennum + 1));
         p -> AllocateArguments(tail -> index + 1);
         AstListNode* root = tail;
         do
@@ -1218,33 +1119,18 @@ void Parser::Act94()
         } while (root != tail);
         FreeCircularList(tail);
     }
-    p -> right_parenthesis_token = Token(4);
-    p -> semicolon_token = Token(5);
-    Sym(1) = p;
+    return p;
 }
 
 //
 // Rule 95:  ExplicitConstructorInvocation ::= super LPAREN ArgumentListopt RPAREN SEMICOLON
 //
-#line 1994 "java.g"
+#line 1862 "java.g"
 void Parser::Act95()
 {
     AstSuperCall* p = ast_pool -> NewSuperCall();
     p -> super_token = Token(1);
-    p -> left_parenthesis_token = Token(2);
-    if (Sym(3))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(3));
-        p -> AllocateArguments(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddArgument(DYNAMIC_CAST<AstExpression*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
-    p -> right_parenthesis_token = Token(4);
+    p -> arguments = MakeArguments(2);
     p -> semicolon_token = Token(5);
     Sym(1) = p;
 }
@@ -1252,26 +1138,13 @@ void Parser::Act95()
 //
 // Rule 96:  ExplicitConstructorInvocation ::= Primary DOT super LPAREN ArgumentListopt RPAREN SEMICOLON
 //
-#line 2022 "java.g"
+#line 1877 "java.g"
 void Parser::MakeQualifiedSuper()
 {
     AstSuperCall* p = ast_pool -> NewSuperCall();
     p -> base_opt = DYNAMIC_CAST<AstExpression*> (Sym(1));
     p -> super_token = Token(3);
-    p -> left_parenthesis_token = Token(4);
-    if (Sym(5))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(5));
-        p -> AllocateArguments(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddArgument(DYNAMIC_CAST<AstExpression*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
-    p -> right_parenthesis_token = Token(6);
+    p -> arguments = MakeArguments(4);
     p -> semicolon_token = Token(7);
     Sym(1) = p;
 }
@@ -1285,22 +1158,11 @@ void Parser::MakeQualifiedSuper()
 //
 // Rule 98:  InterfaceDeclaration ::= Modifiersopt interface Identifier Marker ExtendsInterfacesopt InterfaceBody
 //
-#line 2065 "java.g"
+#line 1907 "java.g"
 void Parser::Act98()
 {
     AstInterfaceDeclaration* p = ast_pool -> NewInterfaceDeclaration();
-    if (Sym(1))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
-        p -> AllocateModifiers(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+    p -> modifiers_opt = DYNAMIC_CAST<AstModifiers*> (Sym(1));
     p -> interface_token = Token(2);
     if (Sym(5))
     {
@@ -1335,7 +1197,7 @@ void Parser::Act98()
 //
 // Rule 101:  InterfaceMemberDeclarations ::= MemberDeclaration
 //
-#line 2127 "java.g"
+#line 1958 "java.g"
 void Parser::Act101()
 {
     AstFieldDeclaration* field = Sym(1) -> FieldDeclarationCast();
@@ -1347,7 +1209,7 @@ void Parser::Act101()
 //
 // Rule 102:  InterfaceMemberDeclarations ::= InterfaceMemberDeclarations MemberDeclaration
 //
-#line 2142 "java.g"
+#line 1973 "java.g"
 void Parser::Act102()
 {
     AstFieldDeclaration* field = Sym(2) -> FieldDeclarationCast();
@@ -1359,7 +1221,7 @@ void Parser::Act102()
 //
 // Rule 103:  ArrayInitializer ::= LBRACE Marker ,opt RBRACE
 //
-#line 2171 "java.g"
+#line 2002 "java.g"
 void Parser::MakeArrayInitializer()
 {
     AstArrayInitializer* p = ast_pool -> NewArrayInitializer();
@@ -1401,7 +1263,7 @@ void Parser::MakeArrayInitializer()
 //
 // Rule 107:  Block ::= LBRACE BlockStatementsopt RBRACE
 //
-#line 2212 "java.g"
+#line 2043 "java.g"
 void Parser::Act107()
 {
     AstBlock* p = ast_pool -> NewBlock();
@@ -1449,7 +1311,7 @@ void Parser::Act107()
 //
 // Rule 112:  BlockStatement ::= ClassDeclaration
 //
-#line 2253 "java.g"
+#line 2084 "java.g"
 void Parser::Act112()
 {
     Sym(1) = ast_pool ->
@@ -1466,7 +1328,7 @@ void Parser::Act112()
 //
 // Rule 114:  LocalVariableDeclarationStatement ::= LocalVariableDeclaration SEMICOLON
 //
-#line 2273 "java.g"
+#line 2104 "java.g"
 void Parser::Act114()
 {
     DYNAMIC_CAST<AstLocalVariableDeclarationStatement*> (Sym(1)) ->
@@ -1476,7 +1338,7 @@ void Parser::Act114()
 //
 // Rule 115:  LocalVariableDeclaration ::= PrimitiveType Dimsopt VariableDeclarators
 //
-#line 2287 "java.g"
+#line 2118 "java.g"
 void Parser::MakeLocalVariable()
 {
     MakeLocalVariable(NULL, MakeArrayType(1),
@@ -1486,23 +1348,12 @@ void Parser::MakeLocalVariable()
 //
 // Creates a local variable declaration and places it in Sym(1).
 //
-void Parser::MakeLocalVariable(AstListNode* modifiers, AstType* type,
+void Parser::MakeLocalVariable(AstModifiers* modifiers, AstType* type,
                                AstListNode* variables)
 {
     AstLocalVariableDeclarationStatement* p =
         ast_pool -> NewLocalVariableDeclarationStatement();
-    if (modifiers)
-    {
-        AstListNode* tail = modifiers;
-        p -> AllocateModifiers(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddModifier(DYNAMIC_CAST<AstModifier*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+    p -> modifiers_opt = modifiers;
     p -> type = type;
     AstListNode* tail = variables;
     p -> AllocateVariableDeclarators(tail -> index + 1);
@@ -1532,10 +1383,10 @@ void Parser::MakeLocalVariable(AstListNode* modifiers, AstType* type,
 //
 // Rule 118:  LocalVariableDeclaration ::= Modifiers Type VariableDeclarators
 //
-#line 2355 "java.g"
+#line 2175 "java.g"
 void Parser::Act118()
 {
-    MakeLocalVariable(DYNAMIC_CAST<AstListNode*> (Sym(1)),
+    MakeLocalVariable(DYNAMIC_CAST<AstModifiers*> (Sym(1)),
                       DYNAMIC_CAST<AstType*> (Sym(2)),
                       DYNAMIC_CAST<AstListNode*> (Sym(3)));
 }
@@ -1681,7 +1532,7 @@ void Parser::Act118()
 //
 // Rule 142:  EmptyStatement ::= SEMICOLON
 //
-#line 2458 "java.g"
+#line 2278 "java.g"
 void Parser::Act142()
 {
     Sym(1) = ast_pool -> NewEmptyStatement(Token(1));
@@ -1690,7 +1541,7 @@ void Parser::Act142()
 //
 // Rule 143:  LabeledStatement ::= Identifier COLON Statement
 //
-#line 2467 "java.g"
+#line 2287 "java.g"
 void Parser::MakeLabeledStatement()
 {
     AstBlock* p = Sym(3) -> BlockCast();
@@ -1723,7 +1574,7 @@ void Parser::MakeLabeledStatement()
 //
 // Rule 145:  ExpressionStatement ::= StatementExpression SEMICOLON
 //
-#line 2501 "java.g"
+#line 2321 "java.g"
 void Parser::Act145()
 {
     DYNAMIC_CAST<AstExpressionStatement*> (Sym(1)) -> semicolon_token_opt = Token(2);
@@ -1732,7 +1583,7 @@ void Parser::Act145()
 //
 // Rule 146:  StatementExpression ::= Assignment
 //
-#line 2510 "java.g"
+#line 2330 "java.g"
 void Parser::MakeExpressionStatement()
 {
     AstExpressionStatement* p = ast_pool -> NewExpressionStatement();
@@ -1779,7 +1630,7 @@ void Parser::MakeExpressionStatement()
 //
 // Rule 153:  IfThenStatement ::= if LPAREN Expression RPAREN Statement Marker Marker
 //
-#line 2567 "java.g"
+#line 2387 "java.g"
 void Parser::MakeIfThenElseStatement()
 {
     //
@@ -1833,7 +1684,7 @@ void Parser::MakeIfThenElseStatement()
 //
 // Rule 156:  SwitchStatement ::= switch LPAREN Expression RPAREN SwitchBlock
 //
-#line 2625 "java.g"
+#line 2445 "java.g"
 void Parser::Act156()
 {
     AstSwitchStatement* p = DYNAMIC_CAST<AstSwitchStatement*> (Sym(5));
@@ -1845,7 +1696,7 @@ void Parser::Act156()
 //
 // Rule 157:  SwitchBlock ::= LBRACE SwitchBlockStatements SwitchLabelsopt RBRACE
 //
-#line 2643 "java.g"
+#line 2463 "java.g"
 void Parser::Act157()
 {
     AstSwitchStatement* p = ast_pool -> NewSwitchStatement();
@@ -1872,7 +1723,7 @@ void Parser::Act157()
 //
 // Rule 158:  SwitchBlock ::= LBRACE SwitchLabelsopt RBRACE
 //
-#line 2670 "java.g"
+#line 2490 "java.g"
 void Parser::Act158()
 {
     AstSwitchStatement* p = ast_pool -> NewSwitchStatement();
@@ -1905,7 +1756,7 @@ void Parser::Act158()
 //
 // Rule 161:  SwitchBlockStatement ::= SwitchLabels BlockStatements
 //
-#line 2699 "java.g"
+#line 2519 "java.g"
 void Parser::Act161()
 {
     Sym(1) = MakeSwitchBlockStatement(DYNAMIC_CAST<AstListNode*> (Sym(1)),
@@ -1964,7 +1815,7 @@ AstStatement* Parser::MakeSwitchBlockStatement(AstListNode* labels,
 //
 // Rule 164:  SwitchLabel ::= case Expression COLON
 //
-#line 2758 "java.g"
+#line 2578 "java.g"
 void Parser::MakeSwitchLabel()
 {
     AstSwitchLabel* p = ast_pool -> NewSwitchLabel();
@@ -1983,7 +1834,7 @@ void Parser::MakeSwitchLabel()
 //
 // Rule 166:  WhileStatement ::= while LPAREN Expression RPAREN Statement
 //
-#line 2782 "java.g"
+#line 2602 "java.g"
 void Parser::MakeWhileStatement()
 {
     AstWhileStatement* p = ast_pool -> NewWhileStatement();
@@ -2011,7 +1862,7 @@ void Parser::MakeWhileStatement()
 //
 // Rule 168:  DoStatement ::= do Statement while LPAREN Expression RPAREN SEMICOLON
 //
-#line 2811 "java.g"
+#line 2631 "java.g"
 void Parser::Act168()
 {
     AstDoStatement* p = ast_pool -> NewDoStatement();
@@ -2035,7 +1886,7 @@ void Parser::Act168()
 //
 // Rule 169:  ForStatement ::= for LPAREN ForInitopt SEMICOLON Expressionopt SEMICOLON ForUpdateopt RPAREN Statement
 //
-#line 2836 "java.g"
+#line 2656 "java.g"
 void Parser::MakeForStatement()
 {
     AstForStatement* p = ast_pool -> NewForStatement();
@@ -2121,7 +1972,7 @@ void Parser::MakeForStatement()
 //
 // Rule 176:  AssertStatement ::= assert Expression Marker Marker SEMICOLON
 //
-#line 2918 "java.g"
+#line 2738 "java.g"
 void Parser::MakeAssertStatement()
 {
     AstAssertStatement* p = ast_pool -> NewAssertStatement();
@@ -2141,7 +1992,7 @@ void Parser::MakeAssertStatement()
 //
 // Rule 178:  BreakStatement ::= break Identifieropt SEMICOLON
 //
-#line 2939 "java.g"
+#line 2759 "java.g"
 void Parser::Act178()
 {
     AstBreakStatement* p = ast_pool -> NewBreakStatement();
@@ -2154,7 +2005,7 @@ void Parser::Act178()
 //
 // Rule 179:  ContinueStatement ::= continue Identifieropt SEMICOLON
 //
-#line 2952 "java.g"
+#line 2772 "java.g"
 void Parser::Act179()
 {
     AstContinueStatement* p = ast_pool -> NewContinueStatement();
@@ -2167,7 +2018,7 @@ void Parser::Act179()
 //
 // Rule 180:  ReturnStatement ::= return Expressionopt SEMICOLON
 //
-#line 2965 "java.g"
+#line 2785 "java.g"
 void Parser::Act180()
 {
     AstReturnStatement* p = ast_pool -> NewReturnStatement();
@@ -2180,7 +2031,7 @@ void Parser::Act180()
 //
 // Rule 181:  ThrowStatement ::= throw Expression SEMICOLON
 //
-#line 2978 "java.g"
+#line 2798 "java.g"
 void Parser::Act181()
 {
     AstThrowStatement* p = ast_pool -> NewThrowStatement();
@@ -2193,7 +2044,7 @@ void Parser::Act181()
 //
 // Rule 182:  SynchronizedStatement ::= synchronized LPAREN Expression RPAREN Block
 //
-#line 2991 "java.g"
+#line 2811 "java.g"
 void Parser::Act182()
 {
     AstSynchronizedStatement* p = ast_pool -> NewSynchronizedStatement();
@@ -2208,7 +2059,7 @@ void Parser::Act182()
 //
 // Rule 183:  TryStatement ::= try Block Catches Marker
 //
-#line 3010 "java.g"
+#line 2830 "java.g"
 void Parser::MakeTryStatement()
 {
     AstTryStatement* p = ast_pool -> NewTryStatement();
@@ -2259,7 +2110,7 @@ void Parser::MakeTryStatement()
 //
 // Rule 187:  CatchClause ::= catch LPAREN FormalParameter RPAREN Block
 //
-#line 3058 "java.g"
+#line 2878 "java.g"
 void Parser::Act187()
 {
     AstCatchClause* p = ast_pool -> NewCatchClause();
@@ -2273,7 +2124,7 @@ void Parser::Act187()
 //
 // Rule 188:  Finally ::= finally Block
 //
-#line 3072 "java.g"
+#line 2892 "java.g"
 void Parser::Act188()
 {
     AstFinallyClause* p = ast_pool -> NewFinallyClause();
@@ -2311,7 +2162,7 @@ void Parser::Act188()
 //
 // Rule 193:  PrimaryNoNewArray ::= this
 //
-#line 3111 "java.g"
+#line 2931 "java.g"
 void Parser::Act193()
 {
     Sym(1) = ast_pool -> NewThisExpression(Token(1));
@@ -2320,7 +2171,7 @@ void Parser::Act193()
 //
 // Rule 194:  PrimaryNoNewArray ::= LPAREN Expression RPAREN
 //
-#line 3120 "java.g"
+#line 2940 "java.g"
 void Parser::MakeParenthesizedExpression()
 {
     AstParenthesizedExpression* p = ast_pool -> NewParenthesizedExpression();
@@ -2345,7 +2196,7 @@ void Parser::MakeParenthesizedExpression()
 //
 // Rule 197:  PrimaryNoNewArray ::= Name DOT this
 //
-#line 3145 "java.g"
+#line 2965 "java.g"
 void Parser::Act197()
 {
     AstThisExpression* p = ast_pool -> NewThisExpression(Token(3));
@@ -2356,7 +2207,7 @@ void Parser::Act197()
 //
 // Rule 198:  PrimaryNoNewArray ::= PrimitiveType Dimsopt DOT class
 //
-#line 3160 "java.g"
+#line 2980 "java.g"
 void Parser::MakeClassLiteral()
 {
     AstClassLiteral* p = ast_pool -> NewClassLiteral(Token(4));
@@ -2373,7 +2224,7 @@ void Parser::MakeClassLiteral()
 //
 // Rule 200:  PrimaryNoNewArray ::= Name DOT Marker class
 //
-#line 3181 "java.g"
+#line 3001 "java.g"
 void Parser::Act200()
 {
     Sym(2) = NULL;
@@ -2383,7 +2234,7 @@ void Parser::Act200()
 //
 // Rule 201:  PrimaryNoNewArray ::= void DOT Marker class
 //
-#line 3195 "java.g"
+#line 3015 "java.g"
 void Parser::Act201()
 {
     Sym(1) = ast_pool -> NewPrimitiveType(Ast::VOID_TYPE, Token(1));
@@ -2406,27 +2257,14 @@ void Parser::Act201()
 //
 // Rule 204:  ClassInstanceCreationExpression ::= new ClassOrInterfaceType LPAREN ArgumentListopt RPAREN ClassBodyopt
 //
-#line 3220 "java.g"
+#line 3040 "java.g"
 void Parser::Act204()
 {
     AstClassInstanceCreationExpression* p =
         ast_pool -> NewClassInstanceCreationExpression();
     p -> new_token = Token(1);
     p -> class_type = DYNAMIC_CAST<AstTypeName*> (Sym(2));
-    p -> left_parenthesis_token = Token(3);
-    if (Sym(4))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(4));
-        p -> AllocateArguments(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddArgument(DYNAMIC_CAST<AstExpression*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
-    p -> right_parenthesis_token = Token(5);
+    p -> arguments = MakeArguments(3);
     p -> class_body_opt = DYNAMIC_CAST<AstClassBody*> (Sym(6));
     if (p -> class_body_opt)
         p -> class_body_opt -> identifier_token =
@@ -2437,7 +2275,7 @@ void Parser::Act204()
 //
 // Rule 205:  ClassInstanceCreationExpression ::= Primary DOT new Identifier Marker LPAREN ArgumentListopt RPAREN...
 //
-#line 3259 "java.g"
+#line 3066 "java.g"
 void Parser::MakeQualifiedNew()
 {
     AstClassInstanceCreationExpression* p =
@@ -2445,20 +2283,7 @@ void Parser::MakeQualifiedNew()
     p -> base_opt = DYNAMIC_CAST<AstExpression*> (Sym(1));
     p -> new_token = Token(3);
     p -> class_type = ast_pool -> NewTypeName(MakeSimpleName(4));
-    p -> left_parenthesis_token = Token(6);
-    if (Sym(7))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(7));
-        p -> AllocateArguments(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddArgument(DYNAMIC_CAST<AstExpression*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
-    p -> right_parenthesis_token = Token(8);
+    p -> arguments = MakeArguments(6);
     p -> class_body_opt = DYNAMIC_CAST<AstClassBody*> (Sym(9));
     if (p -> class_body_opt)
         p -> class_body_opt -> identifier_token = Token(4);
@@ -2486,7 +2311,7 @@ void Parser::MakeQualifiedNew()
 //
 // Rule 209:  ArrayCreationUninitialized ::= new PrimitiveType DimExprs Dimsopt
 //
-#line 3319 "java.g"
+#line 3113 "java.g"
 void Parser::MakeArrayCreationUninitialized()
 {
     AstArrayCreationExpression* p = ast_pool -> NewArrayCreationExpression();
@@ -2501,18 +2326,7 @@ void Parser::MakeArrayCreationUninitialized()
         p -> AddDimExpr(DYNAMIC_CAST<AstDimExpr*> (root -> element));
     } while (root != tail);
     FreeCircularList(tail);
-    if (Sym(4))
-    {
-        tail = DYNAMIC_CAST<AstListNode*> (Sym(4));
-        p -> AllocateBrackets(tail -> index + 1);
-        root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddBrackets(DYNAMIC_CAST<AstBrackets*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+    p -> brackets_opt = DYNAMIC_CAST<AstBrackets*> (Sym(4));
     Sym(1) = p;
 }
 
@@ -2525,7 +2339,7 @@ void Parser::MakeArrayCreationUninitialized()
 //
 // Rule 211:  ArrayCreationInitialized ::= new ArrayType ArrayInitializer
 //
-#line 3363 "java.g"
+#line 3146 "java.g"
 void Parser::Act211()
 {
     AstArrayCreationExpression* p = ast_pool -> NewArrayCreationExpression();
@@ -2550,7 +2364,7 @@ void Parser::Act211()
 //
 // Rule 214:  DimExpr ::= LBRACKET Expression RBRACKET
 //
-#line 3384 "java.g"
+#line 3167 "java.g"
 void Parser::Act214()
 {
     AstDimExpr* p = ast_pool -> NewDimExpr();
@@ -2563,27 +2377,27 @@ void Parser::Act214()
 //
 // Rule 215:  Dims ::= LBRACKET RBRACKET
 //
-#line 3397 "java.g"
+#line 3180 "java.g"
 void Parser::Act215()
 {
     Sym(1) = ast_pool -> NewBrackets(Token(1), Token(2));
-    StartList();
 }
 
 //
 // Rule 216:  Dims ::= Dims LBRACKET RBRACKET
 //
-#line 3407 "java.g"
+#line 3189 "java.g"
 void Parser::Act216()
 {
-    Sym(2) = ast_pool -> NewBrackets(Token(2), Token(3));
-    AddList2();
+    AstBrackets* p = DYNAMIC_CAST<AstBrackets*> (Sym(1));
+    p -> right_bracket_token = Token(2);
+    p -> dims++;
 }
 
 //
 // Rule 217:  FieldAccess ::= Primary DOT Identifier
 //
-#line 3417 "java.g"
+#line 3200 "java.g"
 void Parser::MakeFieldAccess()
 {
     AstFieldAccess* p = ast_pool -> NewFieldAccess();
@@ -2595,7 +2409,7 @@ void Parser::MakeFieldAccess()
 //
 // Rule 218:  FieldAccess ::= super DOT Identifier
 //
-#line 3429 "java.g"
+#line 3212 "java.g"
 void Parser::MakeSuperFieldAccess()
 {
     Sym(1) = ast_pool -> NewSuperExpression(Token(1));
@@ -2605,7 +2419,7 @@ void Parser::MakeSuperFieldAccess()
 //
 // Rule 219:  FieldAccess ::= Name DOT super DOT Identifier
 //
-#line 3444 "java.g"
+#line 3227 "java.g"
 void Parser::MakeQualifiedSuperFieldAccess()
 {
     AstSuperExpression* q = ast_pool -> NewSuperExpression(Token(3));
@@ -2619,7 +2433,7 @@ void Parser::MakeQualifiedSuperFieldAccess()
 //
 // Rule 220:  MethodInvocation ::= Name LPAREN ArgumentListopt RPAREN
 //
-#line 3458 "java.g"
+#line 3241 "java.g"
 void Parser::Act220() { MakeMethodInvocation(2); }
 
 //
@@ -2630,27 +2444,14 @@ void Parser::MakeMethodInvocation(int tokennum)
 {
     AstMethodInvocation* p = ast_pool -> NewMethodInvocation();
     p -> method = DYNAMIC_CAST<AstExpression*> (Sym(1));
-    p -> left_parenthesis_token = Token(tokennum);
-    if (Sym(tokennum + 1))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(tokennum + 1));
-        p -> AllocateArguments(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddArgument(DYNAMIC_CAST<AstExpression*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
-    p -> right_parenthesis_token = Token(tokennum + 2);
+    p -> arguments = MakeArguments(tokennum);
     Sym(1) = p;
 }
 
 //
 // Rule 221:  MethodInvocation ::= Primary DOT Identifier LPAREN ArgumentListopt RPAREN
 //
-#line 3489 "java.g"
+#line 3259 "java.g"
 void Parser::Act221()
 {
     MakeFieldAccess();
@@ -2660,7 +2461,7 @@ void Parser::Act221()
 //
 // Rule 222:  MethodInvocation ::= super DOT Identifier LPAREN ArgumentListopt RPAREN
 //
-#line 3499 "java.g"
+#line 3269 "java.g"
 void Parser::Act222()
 {
     MakeSuperFieldAccess();
@@ -2670,7 +2471,7 @@ void Parser::Act222()
 //
 // Rule 223:  MethodInvocation ::= Name DOT super DOT Identifier LPAREN ArgumentListopt RPAREN
 //
-#line 3515 "java.g"
+#line 3285 "java.g"
 void Parser::Act223()
 {
     MakeQualifiedSuperFieldAccess();
@@ -2680,7 +2481,7 @@ void Parser::Act223()
 //
 // Rule 224:  ArrayAccess ::= Name LBRACKET Expression RBRACKET
 //
-#line 3525 "java.g"
+#line 3295 "java.g"
 void Parser::MakeArrayAccess()
 {
     AstArrayAccess* p = ast_pool -> NewArrayAccess();
@@ -2730,7 +2531,7 @@ void Parser::MakeArrayAccess()
 //
 // Rule 231:  PostIncrementExpression ::= PostfixExpression PLUS_PLUS
 //
-#line 3573 "java.g"
+#line 3343 "java.g"
 void Parser::Act231()
 {
     AstPostUnaryExpression* p =
@@ -2743,7 +2544,7 @@ void Parser::Act231()
 //
 // Rule 232:  PostDecrementExpression ::= PostfixExpression MINUS_MINUS
 //
-#line 3586 "java.g"
+#line 3356 "java.g"
 void Parser::Act232()
 {
     AstPostUnaryExpression* p =
@@ -2768,7 +2569,7 @@ void Parser::Act232()
 //
 // Rule 235:  UnaryExpression ::= PLUS UnaryExpression
 //
-#line 3607 "java.g"
+#line 3377 "java.g"
 void Parser::MakePreUnaryExpression()
 {
     AstPreUnaryExpression::PreUnaryExpressionTag tag;
@@ -2839,7 +2640,7 @@ void Parser::MakePreUnaryExpression()
 //
 // Rule 244:  CastExpression ::= LPAREN PrimitiveType Dimsopt RPAREN UnaryExpression
 //
-#line 3662 "java.g"
+#line 3432 "java.g"
 void Parser::MakeCastExpression() { MakeCastExpression(MakeArrayType(2), 4); }
 
 //
@@ -2859,7 +2660,7 @@ void Parser::MakeCastExpression(AstType* type, int tokennum)
 //
 // Rule 245:  CastExpression ::= LPAREN Expression RPAREN UnaryExpressionNotPlusMinus
 //
-#line 3682 "java.g"
+#line 3452 "java.g"
 void Parser::Act245()
 {
     //
@@ -2890,7 +2691,7 @@ void Parser::Act245()
 //
 // Rule 248:  MultiplicativeExpression ::= MultiplicativeExpression MULTIPLY UnaryExpression
 //
-#line 3712 "java.g"
+#line 3482 "java.g"
 //
 // This creates a binary expression of the named type.
 //
@@ -3015,7 +2816,7 @@ void Parser::MakeBinaryExpression()
 //
 // Rule 263:  RelationalExpression ::= RelationalExpression instanceof ReferenceType
 //
-#line 3809 "java.g"
+#line 3579 "java.g"
 void Parser::MakeInstanceofExpression()
 {
     AstInstanceofExpression* p = ast_pool -> NewInstanceofExpression();
@@ -3112,7 +2913,7 @@ void Parser::MakeInstanceofExpression()
 //
 // Rule 278:  ConditionalExpression ::= ConditionalOrExpression QUESTION Expression COLON ConditionalExpression
 //
-#line 3881 "java.g"
+#line 3651 "java.g"
 void Parser::MakeConditionalExpression()
 {
     AstConditionalExpression* p = ast_pool -> NewConditionalExpression();
@@ -3139,7 +2940,7 @@ void Parser::MakeConditionalExpression()
 //
 // Rule 281:  Assignment ::= PostfixExpression AssignmentOperator AssignmentExpression
 //
-#line 3911 "java.g"
+#line 3681 "java.g"
 void Parser::Act281()
 {
     AstAssignmentExpression::AssignmentExpressionTag tag;
@@ -3274,7 +3075,7 @@ void Parser::Act281()
 //
 // Rule 299:  PackageDeclarationopt ::=
 //
-#line 4031 "java.g"
+#line 3801 "java.g"
 //
 // Given a rule of the form A ::= x1 x2 ... xn
 //
@@ -3519,7 +3320,7 @@ void Parser::NullAction() { Sym(1) = NULL; }
 //
 // Rule 339:  PackageHeaderMarker ::=
 //
-#line 4198 "java.g"
+#line 3968 "java.g"
 //
 // When this function is invoked, if the "parse_package_header_only" flag
 // is turned on, we skip to the end-of-file token.
@@ -3535,7 +3336,7 @@ void Parser::Act339()
 //
 // Rule 340:  MethodHeaderMarker ::=
 //
-#line 4214 "java.g"
+#line 3984 "java.g"
 //
 // When this function is invoked, if the "parse_header_only" flag
 // is turned on, the body of the method being parsed is skipped.

@@ -1792,21 +1792,11 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration* field_declaration)
             must_be_constant = true;
         else
         {
-            AstModifier* modifier = NULL;
-            for (unsigned i = 0;
-                 i < field_declaration -> NumModifiers(); i++)
-            {
-                if (field_declaration -> Modifier(i) -> class_tag ==
-                    Ast::STATIC)
-                {
-                    modifier = field_declaration -> Modifier(i);
-                    break;
-                }
-            }
-            assert(modifier);
-
+            assert(field_declaration -> modifiers_opt &&
+                   field_declaration -> modifiers_opt -> static_token_opt);
             ReportSemError(SemanticError::STATIC_FIELD_IN_INNER_CLASS_NOT_FINAL,
-                           modifier, this_type -> Name(),
+                           field_declaration -> modifiers_opt -> static_token_opt,
+                           this_type -> Name(),
                            this_type -> FileLoc());
         }
     }
@@ -2058,8 +2048,8 @@ void Semantic::AddDefaultConstructor(TypeSymbol* type)
         {
             super_call = compilation_unit -> ast_pool -> GenSuperCall();
             super_call -> super_token = left_loc;
-            super_call -> left_parenthesis_token = left_loc;
-            super_call -> right_parenthesis_token = right_loc;
+            super_call -> arguments = compilation_unit -> ast_pool ->
+                GenArguments(left_loc, right_loc);
             super_call -> semicolon_token = right_loc;
         }
 
@@ -2962,19 +2952,10 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration* method_declaration
     //
     if (access_flags.ACC_STATIC() && this_type -> IsInner())
     {
-        AstModifier* modifier = NULL;
-        for (unsigned i = 0; i < method_declaration -> NumModifiers(); i++)
-        {
-            if (method_declaration -> Modifier(i) -> class_tag == Ast::STATIC)
-            {
-                modifier = method_declaration -> Modifier(i);
-                break;
-            }
-        }
-        assert(modifier);
-
+        assert(method_declaration -> modifiers_opt &&
+               method_declaration -> modifiers_opt -> static_token_opt);
         ReportSemError(SemanticError::STATIC_METHOD_IN_INNER_CLASS,
-                       modifier,
+                       method_declaration -> modifiers_opt -> static_token_opt,
                        lex_stream -> NameString(method_declaration -> method_declarator -> identifier_token),
                        this_type -> Name(),
                        this_type -> FileLoc());
@@ -3539,7 +3520,7 @@ void Semantic::InitializeVariable(AstFieldDeclaration* field_declaration,
     ThisMethod() = NULL;
     AstMethodDeclaration* declaration =
         (AstMethodDeclaration*) init_method -> declaration;
-    AstBlock* init_block = (AstBlock*) declaration -> method_body;
+    assert(declaration -> method_body_opt);
 
     for (unsigned i = 0;
          i < field_declaration -> NumVariableDeclarators(); i++)
@@ -3563,7 +3544,8 @@ void Semantic::InitializeVariable(AstFieldDeclaration* field_declaration,
                     if (! variable -> ACC_STATIC() ||
                         ! variable -> initial_value)
                     {
-                        init_block -> AddStatement(variable_declarator);
+                        declaration -> method_body_opt ->
+                            AddStatement(variable_declarator);
                     }
                 }
                 else if (variable -> ACC_FINAL())
@@ -3592,11 +3574,8 @@ inline void Semantic::ProcessInitializer(AstInitializerDeclaration* initializer,
     ThisMethod() = init_method;
     AstMethodDeclaration* declaration =
         (AstMethodDeclaration*) init_method -> declaration;
-    AstBlock* init_block = (AstBlock*) declaration -> method_body;
 
-    assert(initializer && initializer -> block && init_block);
-
-    LocalBlockStack().Push(init_block);
+    LocalBlockStack().Push(declaration -> method_body_opt);
     LocalSymbolTable().Push(init_method -> block_symbol -> Table());
 
     //
@@ -3616,11 +3595,11 @@ inline void Semantic::ProcessInitializer(AstInitializerDeclaration* initializer,
     ProcessBlock(initializer -> block);
     DefiniteBlockInitializer(initializer -> block, LocalBlockStack().max_size);
 
-    init_block -> AddStatement(initializer -> block);
+    declaration -> method_body_opt -> AddStatement(initializer -> block);
 
     //
     // If the initializer has a higher max_variable_index than the overall
-    // block, update max_variable_index in the init_block, accordingly.
+    // block, update max_variable_index in the method_body, accordingly.
     //
     if (init_method -> block_symbol -> max_variable_index <
         LocalBlockStack().TopMaxEnclosedVariableIndex())
@@ -3676,7 +3655,7 @@ MethodSymbol* Semantic::GetStaticInitializerMethod(int estimate)
         this_type -> InsertMethodSymbol(control.clinit_name_symbol);
     declaration -> type = return_type;
     declaration -> method_symbol = init_method;
-    declaration -> method_body = block;
+    declaration -> method_body_opt = block;
 
     // The method symbol.
     init_method -> SetType(control.void_type);
@@ -3831,7 +3810,7 @@ void Semantic::ProcessInstanceInitializers(AstClassBody* class_body)
         this_type -> InsertMethodSymbol(control.block_init_name_symbol);
     declaration -> type = return_type;
     declaration -> method_symbol = init_method;
-    declaration -> method_body = block;
+    declaration -> method_body_opt = block;
 
     // The method symbol.
     init_method -> SetType(control.void_type);

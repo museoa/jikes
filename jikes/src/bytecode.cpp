@@ -120,9 +120,8 @@ void ByteCode::GenerateCode()
         {
             int method_index = methods.NextIndex(); // index for method
             BeginMethod(method_index, method -> method_symbol);
-            AstBlock* method_block = method -> method_body -> BlockCast();
-            if (method_block) // not an abstract method ?
-                EmitBlockStatement(method_block);
+            if (method -> method_body_opt) // not an abstract method ?
+                EmitBlockStatement(method -> method_body_opt);
             EndMethod(method_index, method -> method_symbol);
         }
     }
@@ -138,7 +137,7 @@ void ByteCode::GenerateCode()
             MethodDeclarationCast();
         assert(method);
         BeginMethod(method_index, method_sym);
-        EmitBlockStatement((AstBlock*) method -> method_body);
+        EmitBlockStatement(method -> method_body_opt);
         EndMethod(method_index, method_sym);
     }
     MethodSymbol* class_literal_sym = unit_type -> ClassLiteralMethod();
@@ -158,7 +157,7 @@ void ByteCode::GenerateCode()
     {
         AstMethodDeclaration* declaration = (AstMethodDeclaration*)
             unit_type -> instance_initializer_method -> declaration;
-        AstBlock* init_block = (AstBlock*) declaration -> method_body;
+        AstBlock* init_block = declaration -> method_body_opt;
         if (! IsNop(init_block))
         {
             int method_index = methods.NextIndex(); // index for method
@@ -200,7 +199,7 @@ void ByteCode::GenerateCode()
     {
         AstMethodDeclaration* declaration = (AstMethodDeclaration*)
             unit_type -> static_initializer_method -> declaration;
-        AstBlock* init_block = (AstBlock*) declaration -> method_body;
+        AstBlock* init_block = declaration -> method_body_opt;
         if (assert_variable || ! IsNop(init_block))
         {
             int method_index = methods.NextIndex(); // index for method
@@ -4578,13 +4577,14 @@ int ByteCode::EmitInstanceCreationExpression(AstClassInstanceCreationExpression*
     if (type -> Anonymous() && type -> super -> EnclosingInstance())
     {
         stack_words++;
-        EmitCheckForNull(expression -> Argument(i++));
+        EmitCheckForNull(expression -> arguments -> Argument(i++));
     }
-    for ( ; i < expression -> NumArguments(); i++)
-        stack_words += EmitExpression(expression -> Argument(i));
-    for (i = 0; i < expression -> NumLocalArguments(); i++)
-        stack_words += EmitExpression(expression -> LocalArgument(i));
-    if (expression -> NeedsExtraNullArgument())
+    for ( ; i < expression -> arguments -> NumArguments(); i++)
+        stack_words += EmitExpression(expression -> arguments -> Argument(i));
+    for (i = 0; i < expression -> arguments -> NumLocalArguments(); i++)
+        stack_words +=
+            EmitExpression(expression -> arguments -> LocalArgument(i));
+    if (expression -> arguments -> NeedsExtraNullArgument())
     {
         PutOp(OP_ACONST_NULL);
         stack_words++;
@@ -4834,8 +4834,8 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation* expression)
     }
 
     int stack_words = 0; // words on stack needed for arguments
-    for (unsigned i = 0; i < method_call -> NumArguments(); i++)
-        stack_words += EmitExpression(method_call -> Argument(i));
+    for (unsigned i = 0; i < method_call -> arguments -> NumArguments(); i++)
+        stack_words += EmitExpression(method_call -> arguments -> Argument(i));
 
     TypeSymbol* type = MethodTypeResolution(method_call -> method, msym);
     PutOp(msym -> ACC_STATIC() ? OP_INVOKESTATIC
@@ -5571,8 +5571,8 @@ void ByteCode::EmitThisInvocation(AstThisCall* this_call)
     int stack_words = 0; // words on stack needed for arguments
     if (unit_type -> EnclosingType())
         LoadLocal(++stack_words, unit_type -> EnclosingType());
-    for (unsigned k = 0; k < this_call -> NumArguments(); k++)
-        stack_words += EmitExpression(this_call -> Argument(k));
+    for (unsigned k = 0; k < this_call -> arguments -> NumArguments(); k++)
+        stack_words += EmitExpression(this_call -> arguments -> Argument(k));
 
     //
     // Now do a transfer of the shadow variables. We do not need to worry
@@ -5610,6 +5610,7 @@ void ByteCode::EmitSuperInvocation(AstSuperCall* super_call)
     //
     PutOp(OP_ALOAD_0); // load 'this'
     int stack_words = 0; // words on stack needed for arguments
+    unsigned i;
     if (super_call -> base_opt)
     {
         stack_words++;
@@ -5623,14 +5624,15 @@ void ByteCode::EmitSuperInvocation(AstSuperCall* super_call)
         }
         else EmitCheckForNull(super_call -> base_opt);
     }
-    for (unsigned k = 0; k < super_call -> NumArguments(); k++)
-        stack_words += EmitExpression(super_call -> Argument(k));
-    for (unsigned i = 0; i < super_call -> NumLocalArguments(); i++)
-        stack_words += EmitExpression(super_call -> LocalArgument(i));
-    if (super_call -> NeedsExtraNullArgument())
+    for (i = 0; i < super_call -> arguments -> NumArguments(); i++)
+        stack_words += EmitExpression(super_call -> arguments -> Argument(i));
+    for (i = 0; i < super_call -> arguments -> NumLocalArguments(); i++)
+        stack_words +=
+            EmitExpression(super_call -> arguments -> LocalArgument(i));
+    if (super_call -> arguments -> NeedsExtraNullArgument())
     {
         PutOp(OP_ACONST_NULL);
-        stack_words += 1;
+        stack_words++;
     }
 
     PutOp(OP_INVOKESPECIAL);
@@ -6206,9 +6208,9 @@ void ByteCode::ResolveAccess(AstExpression* p)
         resolve_expression -> MethodInvocationCast();
 
     // a read method has exactly one argument: the object in question.
-    assert(read_method && read_method -> NumArguments() == 1);
+    assert(read_method && read_method -> arguments -> NumArguments() == 1);
 
-    int stack_words = EmitExpression(read_method -> Argument(0));
+    int stack_words = EmitExpression(read_method -> arguments -> Argument(0));
     PutOp(OP_DUP);
     PutOp(OP_INVOKESTATIC);
     CompleteCall(read_method -> symbol -> MethodCast(), stack_words);

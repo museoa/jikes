@@ -154,15 +154,9 @@ DefiniteAssignmentSet* Semantic::DefiniteMethodInvocation(AstExpression* express
                                                           DefinitePair& def_pair)
 {
     AstMethodInvocation* method_call = (AstMethodInvocation*) expression;
-
     DefiniteExpression(method_call -> method, def_pair);
-
-    for (unsigned i = 0; i < method_call -> NumArguments(); i++)
-    {
-        AstExpression* expr = method_call -> Argument(i);
-        DefiniteExpression(expr, def_pair);
-    }
-
+    for (unsigned i = 0; i < method_call -> arguments -> NumArguments(); i++)
+        DefiniteExpression(method_call -> arguments -> Argument(i), def_pair);
     return NULL;
 }
 
@@ -177,16 +171,12 @@ DefiniteAssignmentSet* Semantic::DefiniteClassInstanceCreationExpression(AstExpr
         class_creation = class_creation -> resolution_opt;
     if (class_creation -> base_opt)
         DefiniteExpression(class_creation -> base_opt, def_pair);
-    for (i = 0; i < class_creation -> NumArguments(); i++)
-    {
-        AstExpression* expr = class_creation -> Argument(i);
-        DefiniteExpression(expr, def_pair);
-    }
-    for (i = 0; i < class_creation -> NumLocalArguments(); i++)
-    {
-        AstExpression* expr = class_creation -> LocalArgument(i);
-        DefiniteExpression(expr, def_pair);
-    }
+    for (i = 0; i < class_creation -> arguments -> NumArguments(); i++)
+        DefiniteExpression(class_creation -> arguments -> Argument(i),
+                           def_pair);
+    for (i = 0; i < class_creation -> arguments -> NumLocalArguments(); i++)
+        DefiniteExpression(class_creation -> arguments -> LocalArgument(i),
+                           def_pair);
     return NULL;
 }
 
@@ -1418,8 +1408,8 @@ void Semantic::DefiniteAssertStatement(Ast* stmt)
 //
 void Semantic::DefiniteThisCall(AstThisCall* this_call)
 {
-    for (unsigned i = 0; i < this_call -> NumArguments(); i++)
-        DefiniteExpression(this_call -> Argument(i),
+    for (unsigned i = 0; i < this_call -> arguments -> NumArguments(); i++)
+        DefiniteExpression(this_call -> arguments -> Argument(i),
                            *DefinitelyAssignedVariables());
 }
 
@@ -1432,8 +1422,8 @@ void Semantic::DefiniteSuperCall(AstSuperCall* super_call)
     if (super_call -> base_opt)
         DefiniteExpression(super_call -> base_opt,
                            *DefinitelyAssignedVariables());
-    for (unsigned i = 0; i < super_call -> NumArguments(); i++)
-        DefiniteExpression(super_call -> Argument(i),
+    for (unsigned i = 0; i < super_call -> arguments -> NumArguments(); i++)
+        DefiniteExpression(super_call -> arguments -> Argument(i),
                            *DefinitelyAssignedVariables());
 }
 
@@ -1442,7 +1432,8 @@ void Semantic::DefiniteMethodBody(AstMethodDeclaration* method_declaration)
 {
     unsigned i;
     assert(FinalFields());
-    if (method_declaration -> method_body -> EmptyStatementCast())
+    AstBlock* block_body = method_declaration -> method_body_opt;
+    if (! block_body);
         return;
 
 #ifdef DUMP
@@ -1452,8 +1443,6 @@ void Semantic::DefiniteMethodBody(AstMethodDeclaration* method_declaration)
                 << ThisType() -> ContainingPackageName()
                 << "/" << ThisType() -> ExternalName() << endl;
 #endif // DUMP
-    AstBlock* block_body = (AstBlock*) method_declaration -> method_body;
-
     int size = block_body -> block_symbol -> max_variable_index +
         FinalFields() -> Length();
     Universe() -> Resize(size, BitSet::UNIVERSE);

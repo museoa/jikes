@@ -1,3 +1,25 @@
+2002-12-06  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/ast.h (AstBrackets, AstModifiers, AstArguments): Consolidate
+	common code into fewer locations.
+	* src/ast.cpp:
+	* src/body.cpp:
+	* src/bytecode.cpp:
+	* src/decl.cpp:
+	* src/definite.cpp:
+	* src/expr.cpp:
+	* src/java.g:
+	* src/modifier.cpp:
+	* src/parser.cpp:
+	* src/parser.h:
+	* src/semantic.h:
+	* src/symbol.cpp:
+	* src/unparse.cpp: Use modifications to Ast tree.
+	* src/javaact.cpp:
+	* src/javaact.h:
+	* src/javadcl.h:
+	* src/javadef.h: Regenerate.
+
 2002-12-06  Elliott Hughes <enh@acm.org>
 
 	* src/stream.cpp (ReadInput, RereadInput): 

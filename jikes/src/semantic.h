@@ -309,7 +309,9 @@ public:
     MethodSymbol* this_method;
     VariableSymbol* this_variable;
     AstStatement* explicit_constructor;
-    Ast* ast_construct;
+
+    // The arguments that need updating if local shadow variables are found.
+    AstArguments* args;
 
     // Stacks used within the current method.
     SymbolTableStack symbol_table;
@@ -340,7 +342,7 @@ public:
           this_method(NULL),
           this_variable(NULL),
           explicit_constructor(NULL),
-          ast_construct(NULL),
+          args(NULL),
           definitely_assigned_variables(NULL),
           universe(NULL),
           blank_finals(NULL),
@@ -365,13 +367,13 @@ public:
     // that are necessary for looking up local variables in the immediate
     // environment.
     //
-    SemanticEnvironment* GetEnvironment(Ast* ast)
+    SemanticEnvironment* GetEnvironment(AstArguments* args)
     {
         SemanticEnvironment* clone = new SemanticEnvironment(sem, type);
         clone -> this_method = this_method;
         clone -> this_variable = this_variable;
         clone -> explicit_constructor = explicit_constructor;
-        clone -> ast_construct = ast;
+        clone -> args = args;
         for (int i = 0; i < symbol_table.Size(); i++)
             clone -> symbol_table.Push(symbol_table[i]);
         clone -> next = next;
@@ -906,7 +908,7 @@ private:
     {
         return state_stack.Top() -> block_stack;
     }
-    SemanticEnvironment* GetEnvironment(Ast* ast)
+    SemanticEnvironment* GetEnvironment(AstArguments* ast)
     {
         return state_stack.Top() -> GetEnvironment(ast);
     }
@@ -970,8 +972,7 @@ private:
     void ProcessSingleTypeImportDeclaration(AstImportDeclaration*);
 
     // Implemented in modifier.cpp - process declaration modifiers
-    void ProcessAccessFlag(AccessFlags&, LexStream::TokenIndex,
-                           const wchar_t*, u2 valid, u2 implicit = 0);
+    AccessFlags ProcessModifiers(AstModifiers*, const wchar_t*, u2, u2 = 0);
     AccessFlags ProcessTopLevelTypeModifiers(AstDeclaredType*);
     AccessFlags ProcessNestedTypeModifiers(TypeSymbol*, AstDeclaredType*);
     AccessFlags ProcessLocalClassModifiers(AstClassDeclaration*);
@@ -1020,6 +1021,7 @@ private:
     void BinaryNumericPromotion(AstBinaryExpression*);
     void BinaryNumericPromotion(AstConditionalExpression*);
     TypeSymbol* BinaryNumericPromotion(AstExpression*&, AstExpression*&);
+    void MethodInvocationConversion(AstArguments*, MethodSymbol*);
 
     // Implemented in definite.cpp - definite (un)assignment analysis
     void (Semantic::*DefiniteStmt[Ast::_num_expr_or_stmt_kinds])(Ast*);
@@ -1281,6 +1283,7 @@ private:
     void ProcessStringLiteral(Ast*);
     void ProcessCharacterLiteral(Ast*);
     void ProcessArrayAccess(Ast*);
+    bool ProcessArguments(AstArguments*);
     void ProcessMethodInvocation(Ast*);
     void ProcessNullLiteral(Ast*);
     void ProcessClassLiteral(Ast*);
