@@ -3849,7 +3849,8 @@ int ByteCode::EmitFieldAccess(AstFieldAccess *expression, bool need_value)
         // If the access is qualified by an arbitrary base
         // expression, evaluate it for side effects.
         //
-        EmitExpression(base, false);
+        if (! expression -> IsClassAccess())
+            EmitExpression(base, false);
         if (need_value)
         {
             PutOp(OP_GETSTATIC);
