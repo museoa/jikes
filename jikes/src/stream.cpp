@@ -876,8 +876,10 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                     }
 #else
 #   ifdef HAVE_ICONV_H
-                    unsigned char chd[2];
-                    unsigned char *chp  = chd;
+                    u1 chd[2], uni_high, uni_low;
+                    u1 *chp  = chd;
+                    // Point to 2 bytes with 16 bit type
+                    wchar_t* wchp = (wchar_t *) chp;
                     size_t   chl  = 2;
                     size_t   srcl = 1;
                     size_t n = iconv(control.option.converter,
@@ -891,13 +893,11 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                         perror("");
                         break;
                     }
-                    
-#        ifdef WORDS_BIGENDIAN
-                    ch=chd[0] + chd[1]*256;
-#        else
-                    ch=chd[1] + chd[0]*256;
-#        endif
 
+                    // Operate on chd buffer in endian independent fashion
+                    uni_high = (u1) (*wchp);
+                    uni_low = (u1) ((*wchp) >> 8);
+                    ch = uni_low + (uni_high * 256);
 #   endif
 #endif
                     if(before==source_ptr)

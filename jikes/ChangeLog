@@ -1,5 +1,21 @@
 2000-05-03  Mo DeJong  <mdejong@cygnus.com>
 
+	* src/double.cpp:
+	* src/double.h:
+	* src/long.cpp:
+	* src/long.h: Fixed endian dependence
+	when HAVE_UNSIGNED_LONG_LONG is defined.
+	If not defined, we still used the old
+	way which depends on WORDS_BIGENDIAN.
+	This patch is not optimal, you are
+	invited to suggest better ways to
+	deal with 64 bit datatypes.
+	* src/stream.cpp: Fixed endian dependence.
+	This patch is not optimal, you are invited to
+	examine the code and suggest a better approach.
+
+2000-05-03  Mo DeJong  <mdejong@cygnus.com>
+
 	* src/ast.h:
 	* src/symbol.h: Use "friend class Foo"
 	instead of "friend Foo" in class declarations
