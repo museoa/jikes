@@ -282,11 +282,16 @@ assert(locations);
 
 void LexStream::ReadInput()
 {
+#ifdef ERNST
     if (file_symbol -> buffer)
     {
+
         ProcessInput(file_symbol -> buffer, strlen(file_symbol -> buffer));
     }
     else if (file_symbol -> IsZip())
+#else
+    if (file_symbol -> IsZip())
+#endif
     {
         ZipFile *zipfile = new ZipFile(file_symbol);
 
@@ -351,11 +356,13 @@ void LexStream::RereadInput()
 {
     if (input_buffer) // if input already available, do nothing
         ;
+#ifdef ERNST
     else if (file_symbol -> buffer)
     {
       fprintf(stderr, "chaos: Don\'t know how to RereadInput a buffer\n");
       assert(false);
     }
+#endif
     else if (file_symbol -> IsZip())
     {
         ZipFile *zipfile = new ZipFile(file_symbol);

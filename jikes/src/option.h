@@ -149,6 +149,7 @@ public:
          full_check,
          unzip,
          dump_errors,
+	 ascii,
          errors,
          comments,
          pedantic;
