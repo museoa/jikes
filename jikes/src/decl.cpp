@@ -2094,8 +2094,11 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration* field_declaration)
         }
         else
         {
-            WarnOfAccessibleFieldWithName(SemanticError::HIDDEN_FIELD,
-                                          name, name_symbol);
+            if (name_symbol != control.serialVersionUID_name_symbol)
+            {
+                WarnOfAccessibleFieldWithName(SemanticError::HIDDEN_FIELD,
+                                              name, name_symbol);
+            }
 
             VariableSymbol* variable =
                 this_type -> InsertVariableSymbol(name_symbol);
