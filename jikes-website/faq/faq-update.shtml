@@ -23,15 +23,15 @@
         'text-align: center' doesn't work). Gecko is used by Mozilla and Netscape 6.
         This workaround can be found multiple times in this file.
       -->
-      <table border="0" cellspacing="0" cellpadding="10" align="center">
+      <!--table border="0" cellspacing="0" cellpadding="10" align="center">
         <tr>
-          <td>
+          <td -->
         <!-- START INCLUDE NAVBAR.SHTML -->
-        <!--#include file="navbar.html" -->
+        <!--include file="navbar.html" -->
         <!-- END INCLUDE NAVBAR.SHTML -->
-          </td>
+          <!--/td>
         </tr>
-      </table>
+      </table -->
     </td>
     <td class="TopicContent">
       <p>&nbsp;</p>

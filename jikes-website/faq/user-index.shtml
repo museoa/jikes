@@ -22,7 +22,7 @@
         <td class="NavBar" width="6">&nbsp;</td><!-- padding -->
         <td class="NavBar"> 
         <!-- START INCLUDE NAVBAR.SHTML -->
-        <!--#include file="navbar.html" -->
+        <!--#include file="user-navbar.html" -->
         <!-- END INCLUDE NAVBAR.SHTML -->
 	</td>
         <td class="NavBar" width="6">&nbsp;</td><!-- padding -->
