@@ -1,5 +1,11 @@
 2002-11-27  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/ast.h:
+	* src/ast.cpp (Clone): Remove covariance, for the sake of our
+	friends at Microsoft who don't believe in standards.
+
+2002-11-27  Eric Blake  <ebb9@email.byu.edu>
+
 	* doc/jikes.1 (+a): New option to omit asserts.
 	(-target, -source):
 	* src/jikes.cpp: Improve documentation to match new behavior.

@@ -46,21 +46,21 @@ void VariableSymbolArray::AllocateMoreSpace()
     if (k == base_size)
     {
         int old_base_size = base_size;
-        T **old_base = base;
+        T** old_base = base;
 
         base_size += base_increment;
 
         assert(base_size <= pool -> Blksize()); // There must be enough room to allocate base
 
-        base = (T **) pool -> Alloc(sizeof(T *) * base_size);
+        base = (T**) pool -> Alloc(sizeof(T*) * base_size);
 
         if (old_base != NULL)
         {
-            memmove(base, old_base, old_base_size * sizeof(T *));
+            memmove(base, old_base, old_base_size * sizeof(T*));
 // STG:
 //                delete [] old_base;
         }
-        memset(&base[old_base_size], 0, (base_size - old_base_size) * sizeof(T *));
+        memset(&base[old_base_size], 0, (base_size - old_base_size) * sizeof(T*));
     }
 
     //
@@ -71,7 +71,7 @@ void VariableSymbolArray::AllocateMoreSpace()
     //
     assert(Blksize() <= pool -> Blksize()); // There must be enough room to allocate block
 
-    base[k] = (T *) pool -> Alloc(sizeof(T) * Blksize());
+    base[k] = (T*) pool -> Alloc(sizeof(T) * Blksize());
     base[k] -= size;
 
     //
@@ -81,7 +81,7 @@ void VariableSymbolArray::AllocateMoreSpace()
 }
 
 
-VariableSymbolArray::VariableSymbolArray(StoragePool *pool_, unsigned estimate = 0) : pool(pool_)
+VariableSymbolArray::VariableSymbolArray(StoragePool* pool_, unsigned estimate = 0) : pool(pool_)
 {
     assert(pool -> Blksize() >= 256); // There must be enough space in the storage pool to move !!!
 
@@ -132,7 +132,7 @@ void AstSwitchStatement::SortCases()
 
     CaseElement pivot, temp;
 
-    AstArray<CaseElement *> &map = *cases;
+    AstArray<CaseElement*> &map = *cases;
 
     top = 0;
     lostack[top] = 1;
@@ -214,24 +214,24 @@ TypeSymbol* AstExpression::Type()
 {
     return (TypeSymbol*)
         (symbol ? (symbol -> Kind() == Symbol::TYPE
-                   ? (TypeSymbol *) symbol
+                   ? (TypeSymbol*) symbol
                    : (symbol -> Kind() == Symbol::VARIABLE
-                      ? ((VariableSymbol *) symbol) -> Type()
+                      ? ((VariableSymbol*) symbol) -> Type()
                       : (symbol -> Kind() == Symbol::METHOD
-                         ? ((MethodSymbol *) symbol) -> Type()
+                         ? ((MethodSymbol*) symbol) -> Type()
                          : NULL)))
          : NULL);
 }
 
 
-AstBlock* AstBlock::Clone(StoragePool* ast_pool)
+Ast* AstBlock::Clone(StoragePool* ast_pool)
 {
-    AstBlock *clone = ast_pool -> GenBlock();
+    AstBlock* clone = ast_pool -> GenBlock();
     CloneInto(clone, ast_pool);
     return clone;
 }
 
-void AstBlock::CloneInto(AstBlock *clone, StoragePool *ast_pool)
+void AstBlock::CloneInto(AstBlock* clone, StoragePool* ast_pool)
 {
     clone -> label_opt = label_opt;
     clone -> nesting_level = nesting_level;
@@ -241,94 +241,94 @@ void AstBlock::CloneInto(AstBlock *clone, StoragePool *ast_pool)
     else
     {
         for (int j = 0; j < NumStatements(); j++)
-            clone -> AddStatement((AstStatement *) Statement(j) -> Clone(ast_pool));
+            clone -> AddStatement((AstStatement*) Statement(j) -> Clone(ast_pool));
     }
     clone -> right_brace_token = right_brace_token;
     clone -> no_braces = no_braces;
 }
 
-Ast *AstPrimitiveType::Clone(StoragePool *ast_pool)
+Ast* AstPrimitiveType::Clone(StoragePool* ast_pool)
 {
-    AstPrimitiveType *clone = ast_pool -> GenPrimitiveType(kind, primitive_kind_token);
+    AstPrimitiveType* clone = ast_pool -> GenPrimitiveType(kind, primitive_kind_token);
 
     return clone;
 }
 
-Ast *AstArrayType::Clone(StoragePool *ast_pool)
+Ast* AstArrayType::Clone(StoragePool* ast_pool)
 {
-    AstArrayType *clone = ast_pool -> GenArrayType();
+    AstArrayType* clone = ast_pool -> GenArrayType();
 
     clone -> type = type -> Clone(ast_pool);
     clone -> AllocateBrackets(NumBrackets());
     for (int i = 0; i < NumBrackets(); i++)
-        clone -> AddBrackets((AstBrackets *) Brackets(i) -> Clone(ast_pool));
+        clone -> AddBrackets((AstBrackets*) Brackets(i) -> Clone(ast_pool));
 
     return clone;
 }
 
-AstSimpleName* AstSimpleName::Clone(StoragePool* ast_pool)
+Ast* AstSimpleName::Clone(StoragePool* ast_pool)
 {
-    AstSimpleName *clone = ast_pool -> GenSimpleName(identifier_token);
-    clone -> resolution_opt = (AstExpression *) (resolution_opt ? resolution_opt -> Clone(ast_pool) : NULL);
+    AstSimpleName* clone = ast_pool -> GenSimpleName(identifier_token);
+    clone -> resolution_opt = (AstExpression*) (resolution_opt ? resolution_opt -> Clone(ast_pool) : NULL);
 
     return clone;
 }
 
-Ast *AstPackageDeclaration::Clone(StoragePool *ast_pool)
+Ast* AstPackageDeclaration::Clone(StoragePool* ast_pool)
 {
-    AstPackageDeclaration *clone = ast_pool -> GenPackageDeclaration();
+    AstPackageDeclaration* clone = ast_pool -> GenPackageDeclaration();
 
     clone -> package_token = package_token;
-    clone -> name = (AstExpression *) name -> Clone(ast_pool);
+    clone -> name = (AstExpression*) name -> Clone(ast_pool);
     clone -> semicolon_token = semicolon_token;
 
     return clone;
 }
 
-Ast *AstImportDeclaration::Clone(StoragePool *ast_pool)
+Ast* AstImportDeclaration::Clone(StoragePool* ast_pool)
 {
-    AstImportDeclaration *clone = ast_pool -> GenImportDeclaration();
+    AstImportDeclaration* clone = ast_pool -> GenImportDeclaration();
 
     clone -> import_token = import_token;
-    clone -> name = (AstExpression *) name -> Clone(ast_pool);
+    clone -> name = (AstExpression*) name -> Clone(ast_pool);
     clone -> star_token_opt = star_token_opt;
     clone -> semicolon_token = semicolon_token;
 
     return clone;
 }
 
-Ast *AstCompilationUnit::Clone(StoragePool *ast_pool)
+Ast* AstCompilationUnit::Clone(StoragePool* ast_pool)
 {
-    AstCompilationUnit *clone = ast_pool -> GenCompilationUnit();
+    AstCompilationUnit* clone = ast_pool -> GenCompilationUnit();
 
-    clone -> package_declaration_opt = (AstPackageDeclaration *)
+    clone -> package_declaration_opt = (AstPackageDeclaration*)
                                        (package_declaration_opt
                                               ? package_declaration_opt -> Clone(ast_pool) : NULL);
     for (int i = 0; i < NumImportDeclarations(); i++)
-        clone -> AddImportDeclaration((AstImportDeclaration *) ImportDeclaration(i) -> Clone(ast_pool));
+        clone -> AddImportDeclaration((AstImportDeclaration*) ImportDeclaration(i) -> Clone(ast_pool));
     for (int k = 0; k < NumTypeDeclarations(); k++)
         clone -> AddTypeDeclaration(TypeDeclaration(k) -> Clone(ast_pool));
 
     return clone;
 }
 
-Ast *AstModifier::Clone(StoragePool *ast_pool)
+Ast* AstModifier::Clone(StoragePool* ast_pool)
 {
-    AstModifier *clone = ast_pool -> GenModifier(kind, modifier_kind_token);
+    AstModifier* clone = ast_pool -> GenModifier(kind, modifier_kind_token);
 
     return clone;
 }
 
-Ast *AstEmptyDeclaration::Clone(StoragePool *ast_pool)
+Ast* AstEmptyDeclaration::Clone(StoragePool* ast_pool)
 {
-    AstEmptyDeclaration *clone = ast_pool -> GenEmptyDeclaration(semicolon_token);
+    AstEmptyDeclaration* clone = ast_pool -> GenEmptyDeclaration(semicolon_token);
 
     return clone;
 }
 
-Ast *AstClassBody::Clone(StoragePool *ast_pool)
+Ast* AstClassBody::Clone(StoragePool* ast_pool)
 {
-    AstClassBody *clone = ast_pool -> GenClassBody();
+    AstClassBody* clone = ast_pool -> GenClassBody();
 
     clone -> left_brace_token = left_brace_token;
     for (int i = 0; i < NumClassBodyDeclarations(); i++)
@@ -338,25 +338,25 @@ Ast *AstClassBody::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-AstStatement* AstClassDeclaration::Clone(StoragePool* ast_pool)
+Ast* AstClassDeclaration::Clone(StoragePool* ast_pool)
 {
-    AstClassDeclaration *clone = ast_pool -> GenClassDeclaration();
+    AstClassDeclaration* clone = ast_pool -> GenClassDeclaration();
 
     for (int i = 0; i < NumClassModifiers(); i++)
-        clone -> AddClassModifier((AstModifier *) ClassModifier(i) -> Clone(ast_pool));
+        clone -> AddClassModifier((AstModifier*) ClassModifier(i) -> Clone(ast_pool));
     clone -> class_token = class_token;
     clone -> identifier_token = identifier_token;
-    clone -> super_opt = (Ast *) (super_opt ? super_opt -> Clone(ast_pool) : NULL);
+    clone -> super_opt = (Ast*) (super_opt ? super_opt -> Clone(ast_pool) : NULL);
     for (int k = 0; k < NumInterfaces(); k++)
-        clone -> AddInterface((AstExpression *) Interface(k) -> Clone(ast_pool));
-    clone -> class_body = (AstClassBody *) class_body -> Clone(ast_pool);
+        clone -> AddInterface((AstExpression*) Interface(k) -> Clone(ast_pool));
+    clone -> class_body = (AstClassBody*) class_body -> Clone(ast_pool);
 
     return clone;
 }
 
-Ast *AstArrayInitializer::Clone(StoragePool *ast_pool)
+Ast* AstArrayInitializer::Clone(StoragePool* ast_pool)
 {
-    AstArrayInitializer *clone = ast_pool -> GenArrayInitializer();
+    AstArrayInitializer* clone = ast_pool -> GenArrayInitializer();
 
     clone -> left_brace_token = left_brace_token;
     for (int k = 0; k < NumVariableInitializers(); k++)
@@ -366,211 +366,211 @@ Ast *AstArrayInitializer::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstBrackets::Clone(StoragePool *ast_pool)
+Ast* AstBrackets::Clone(StoragePool* ast_pool)
 {
-    AstBrackets *clone = ast_pool -> GenBrackets(left_bracket_token, right_bracket_token);
+    AstBrackets* clone = ast_pool -> GenBrackets(left_bracket_token, right_bracket_token);
 
     return clone;
 }
 
-Ast *AstVariableDeclaratorId::Clone(StoragePool *ast_pool)
+Ast* AstVariableDeclaratorId::Clone(StoragePool* ast_pool)
 {
-    AstVariableDeclaratorId *clone = ast_pool -> GenVariableDeclaratorId();
+    AstVariableDeclaratorId* clone = ast_pool -> GenVariableDeclaratorId();
 
     clone -> identifier_token = identifier_token;
     clone -> AllocateBrackets(NumBrackets());
     for (int i = 0; i < NumBrackets(); i++)
-        clone -> AddBrackets((AstBrackets *) Brackets(i) -> Clone(ast_pool));
+        clone -> AddBrackets((AstBrackets*) Brackets(i) -> Clone(ast_pool));
 
     return clone;
 }
 
-AstVariableDeclarator* AstVariableDeclarator::Clone(StoragePool* ast_pool)
+Ast* AstVariableDeclarator::Clone(StoragePool* ast_pool)
 {
-    AstVariableDeclarator *clone = ast_pool -> GenVariableDeclarator();
+    AstVariableDeclarator* clone = ast_pool -> GenVariableDeclarator();
 
-    clone -> variable_declarator_name = (AstVariableDeclaratorId *) variable_declarator_name -> Clone(ast_pool);
-    clone -> variable_initializer_opt = (Ast *) (variable_initializer_opt
+    clone -> variable_declarator_name = (AstVariableDeclaratorId*) variable_declarator_name -> Clone(ast_pool);
+    clone -> variable_initializer_opt = (Ast*) (variable_initializer_opt
                                                        ? variable_initializer_opt -> Clone(ast_pool)
                                                        : NULL);
 
     return clone;
 }
 
-Ast *AstFieldDeclaration::Clone(StoragePool *ast_pool)
+Ast* AstFieldDeclaration::Clone(StoragePool* ast_pool)
 {
-    AstFieldDeclaration *clone = ast_pool -> GenFieldDeclaration();
+    AstFieldDeclaration* clone = ast_pool -> GenFieldDeclaration();
 
     for (int i = 0; i < NumVariableModifiers(); i++)
-        clone -> AddVariableModifier((AstModifier *) VariableModifier(i) -> Clone(ast_pool));
+        clone -> AddVariableModifier((AstModifier*) VariableModifier(i) -> Clone(ast_pool));
     clone -> type = type -> Clone(ast_pool);
     for (int k = 0; k < NumVariableDeclarators(); k++)
-        clone -> AddVariableDeclarator((AstVariableDeclarator *) VariableDeclarator(k) -> Clone(ast_pool));
+        clone -> AddVariableDeclarator((AstVariableDeclarator*) VariableDeclarator(k) -> Clone(ast_pool));
     clone -> semicolon_token = semicolon_token;
 
     return clone;
 }
 
-Ast *AstFormalParameter::Clone(StoragePool *ast_pool)
+Ast* AstFormalParameter::Clone(StoragePool* ast_pool)
 {
-    AstFormalParameter *clone = ast_pool -> GenFormalParameter();
+    AstFormalParameter* clone = ast_pool -> GenFormalParameter();
 
     if (NumParameterModifiers() == 0)
         clone -> parameter_modifiers = NULL;
     else
     {
         for (int i = 0; i < NumParameterModifiers(); i++)
-            clone -> AddParameterModifier((AstModifier *) ParameterModifier(i) -> Clone(ast_pool));
+            clone -> AddParameterModifier((AstModifier*) ParameterModifier(i) -> Clone(ast_pool));
     }
     clone -> type = type -> Clone(ast_pool);
-    clone -> formal_declarator = (AstVariableDeclarator *) formal_declarator -> Clone(ast_pool);
+    clone -> formal_declarator = (AstVariableDeclarator*) formal_declarator -> Clone(ast_pool);
 
     return clone;
 }
 
-Ast *AstMethodDeclarator::Clone(StoragePool *ast_pool)
+Ast* AstMethodDeclarator::Clone(StoragePool* ast_pool)
 {
-    AstMethodDeclarator *clone = ast_pool -> GenMethodDeclarator();
+    AstMethodDeclarator* clone = ast_pool -> GenMethodDeclarator();
 
     clone -> identifier_token = identifier_token;
     clone -> left_parenthesis_token = left_parenthesis_token;
     clone -> AllocateFormalParameters(NumFormalParameters());
     for (int i = 0; i < NumFormalParameters(); i++)
-        clone -> AddFormalParameter((AstFormalParameter *) FormalParameter(i) -> Clone(ast_pool));
+        clone -> AddFormalParameter((AstFormalParameter*) FormalParameter(i) -> Clone(ast_pool));
     clone -> right_parenthesis_token = right_parenthesis_token;
     clone -> AllocateBrackets(NumBrackets());
     for (int k = 0; k < NumBrackets(); k++)
-        clone -> AddBrackets((AstBrackets *) Brackets(k) -> Clone(ast_pool));
+        clone -> AddBrackets((AstBrackets*) Brackets(k) -> Clone(ast_pool));
 
     return clone;
 }
 
-Ast *AstMethodDeclaration::Clone(StoragePool *ast_pool)
+Ast* AstMethodDeclaration::Clone(StoragePool* ast_pool)
 {
-    AstMethodDeclaration *clone = ast_pool -> GenMethodDeclaration();
+    AstMethodDeclaration* clone = ast_pool -> GenMethodDeclaration();
 
     for (int i = 0; i < NumMethodModifiers(); i++)
-        clone -> AddMethodModifier((AstModifier *) MethodModifier(i) -> Clone(ast_pool));
+        clone -> AddMethodModifier((AstModifier*) MethodModifier(i) -> Clone(ast_pool));
     clone -> type = type -> Clone(ast_pool);
-    clone -> method_declarator = (AstMethodDeclarator *) method_declarator -> Clone(ast_pool);
+    clone -> method_declarator = (AstMethodDeclarator*) method_declarator -> Clone(ast_pool);
     for (int k = 0; k < NumThrows(); k++)
-        clone -> AddThrow((AstExpression *) Throw(k) -> Clone(ast_pool));
-    clone -> method_body = (AstStatement *) method_body -> Clone(ast_pool);
+        clone -> AddThrow((AstExpression*) Throw(k) -> Clone(ast_pool));
+    clone -> method_body = (AstStatement*) method_body -> Clone(ast_pool);
 
     return clone;
 }
 
-Ast *AstStaticInitializer::Clone(StoragePool *ast_pool)
+Ast* AstStaticInitializer::Clone(StoragePool* ast_pool)
 {
-    AstStaticInitializer *clone = ast_pool -> GenStaticInitializer();
+    AstStaticInitializer* clone = ast_pool -> GenStaticInitializer();
 
     clone -> static_token = static_token;
-    clone -> block = (AstMethodBody *) block -> Clone(ast_pool);
+    clone -> block = (AstMethodBody*) block -> Clone(ast_pool);
 
     return clone;
 }
 
-AstThisCall* AstThisCall::Clone(StoragePool* ast_pool)
+Ast* AstThisCall::Clone(StoragePool* ast_pool)
 {
-    AstThisCall *clone = ast_pool -> GenThisCall();
+    AstThisCall* clone = ast_pool -> GenThisCall();
 
     clone -> this_token = this_token;
     clone -> left_parenthesis_token = left_parenthesis_token;
     clone -> AllocateArguments(NumArguments());
     for (int i = 0; i < NumArguments(); i++)
-        clone -> AddArgument((AstExpression *) Argument(i) -> Clone(ast_pool));
+        clone -> AddArgument((AstExpression*) Argument(i) -> Clone(ast_pool));
     clone -> right_parenthesis_token = right_parenthesis_token;
     clone -> semicolon_token = semicolon_token;
 
     return clone;
 }
 
-AstSuperCall* AstSuperCall::Clone(StoragePool* ast_pool)
+Ast* AstSuperCall::Clone(StoragePool* ast_pool)
 {
-    AstSuperCall *clone = ast_pool -> GenSuperCall();
+    AstSuperCall* clone = ast_pool -> GenSuperCall();
 
-    clone -> base_opt = (AstExpression *) (base_opt ? base_opt -> Clone(ast_pool) : NULL);
+    clone -> base_opt = (AstExpression*) (base_opt ? base_opt -> Clone(ast_pool) : NULL);
     clone -> dot_token_opt = dot_token_opt;
     clone -> super_token = super_token;
     clone -> left_parenthesis_token = left_parenthesis_token;
     clone -> AllocateArguments(NumArguments());
     for (int i = 0; i < NumArguments(); i++)
-        clone -> AddArgument((AstExpression *) Argument(i) -> Clone(ast_pool));
+        clone -> AddArgument((AstExpression*) Argument(i) -> Clone(ast_pool));
     clone -> right_parenthesis_token = right_parenthesis_token;
     clone -> semicolon_token = semicolon_token;
     clone -> AllocateLocalArguments(NumLocalArguments());
     for (int k = 0; k < NumLocalArguments(); k++)
-        clone -> AddLocalArgument((AstExpression *) LocalArgument(k) -> Clone(ast_pool));
+        clone -> AddLocalArgument((AstExpression*) LocalArgument(k) -> Clone(ast_pool));
 
     return clone;
 }
 
-AstMethodBody* AstMethodBody::Clone(StoragePool* ast_pool)
+Ast* AstMethodBody::Clone(StoragePool* ast_pool)
 {
-    AstMethodBody *clone = ast_pool -> GenMethodBody();
+    AstMethodBody* clone = ast_pool -> GenMethodBody();
     CloneInto(clone, ast_pool);
 
-    clone -> explicit_constructor_opt = (AstStatement *)
+    clone -> explicit_constructor_opt = (AstStatement*)
         (explicit_constructor_opt ? explicit_constructor_opt -> Clone(ast_pool)
          : NULL);
 
     return clone;
 }
 
-Ast *AstConstructorDeclaration::Clone(StoragePool *ast_pool)
+Ast* AstConstructorDeclaration::Clone(StoragePool* ast_pool)
 {
-    AstConstructorDeclaration *clone = ast_pool -> GenConstructorDeclaration();
+    AstConstructorDeclaration* clone = ast_pool -> GenConstructorDeclaration();
 
     for (int i = 0; i < NumConstructorModifiers(); i++)
-        clone -> AddConstructorModifier((AstModifier *) ConstructorModifier(i) -> Clone(ast_pool));
-    clone -> constructor_declarator = (AstMethodDeclarator *) constructor_declarator -> Clone(ast_pool);
+        clone -> AddConstructorModifier((AstModifier*) ConstructorModifier(i) -> Clone(ast_pool));
+    clone -> constructor_declarator = (AstMethodDeclarator*) constructor_declarator -> Clone(ast_pool);
     for (int k = 0; k < NumThrows(); k++)
-        clone -> AddThrow((AstExpression *) Throw(k) -> Clone(ast_pool));
-    clone -> constructor_body = (AstMethodBody *) constructor_body -> Clone(ast_pool);
+        clone -> AddThrow((AstExpression*) Throw(k) -> Clone(ast_pool));
+    clone -> constructor_body = (AstMethodBody*) constructor_body -> Clone(ast_pool);
 
     return clone;
 }
 
-Ast *AstInterfaceDeclaration::Clone(StoragePool *ast_pool)
+Ast* AstInterfaceDeclaration::Clone(StoragePool* ast_pool)
 {
-    AstInterfaceDeclaration *clone = ast_pool -> GenInterfaceDeclaration();
+    AstInterfaceDeclaration* clone = ast_pool -> GenInterfaceDeclaration();
 
     for (int i = 0; i < NumInterfaceModifiers(); i++)
-        clone -> AddInterfaceModifier((AstModifier *) InterfaceModifier(i) -> Clone(ast_pool));
+        clone -> AddInterfaceModifier((AstModifier*) InterfaceModifier(i) -> Clone(ast_pool));
     clone -> interface_token = interface_token;
     clone -> identifier_token = identifier_token;
     for (int k = 0; k < NumExtendsInterfaces(); k++)
-        clone -> AddExtendsInterface((AstExpression *) ExtendsInterface(k) -> Clone(ast_pool));
+        clone -> AddExtendsInterface((AstExpression*) ExtendsInterface(k) -> Clone(ast_pool));
     clone -> left_brace_token = left_brace_token;
     for (int l = 0; l < NumExtendsInterfaces(); l++)
-        clone -> AddInterfaceMemberDeclaration((AstExpression *) InterfaceMemberDeclaration(l) -> Clone(ast_pool));
+        clone -> AddInterfaceMemberDeclaration((AstExpression*) InterfaceMemberDeclaration(l) -> Clone(ast_pool));
     clone -> right_brace_token = right_brace_token;
 
     return clone;
 }
 
-AstLocalVariableDeclarationStatement* AstLocalVariableDeclarationStatement::Clone(StoragePool* ast_pool)
+Ast* AstLocalVariableDeclarationStatement::Clone(StoragePool* ast_pool)
 {
-    AstLocalVariableDeclarationStatement *clone = ast_pool -> GenLocalVariableDeclarationStatement();
+    AstLocalVariableDeclarationStatement* clone = ast_pool -> GenLocalVariableDeclarationStatement();
 
     for (int i = 0; i < NumLocalModifiers(); i++)
-        clone -> AddLocalModifier((AstModifier *) LocalModifier(i) -> Clone(ast_pool));
+        clone -> AddLocalModifier((AstModifier*) LocalModifier(i) -> Clone(ast_pool));
     clone -> type = type -> Clone(ast_pool);
     for (int k = 0; k < NumVariableDeclarators(); k++)
-        clone -> AddVariableDeclarator((AstVariableDeclarator *) VariableDeclarator(k) -> Clone(ast_pool));
+        clone -> AddVariableDeclarator((AstVariableDeclarator*) VariableDeclarator(k) -> Clone(ast_pool));
     clone -> semicolon_token_opt = semicolon_token_opt;
 
     return clone;
 }
 
-AstIfStatement* AstIfStatement::Clone(StoragePool* ast_pool)
+Ast* AstIfStatement::Clone(StoragePool* ast_pool)
 {
-    AstIfStatement *clone = ast_pool -> GenIfStatement();
+    AstIfStatement* clone = ast_pool -> GenIfStatement();
 
     clone -> if_token = if_token;
-    clone -> expression = (AstExpression *) expression -> Clone(ast_pool);
-    clone -> true_statement = (AstStatement *) true_statement -> Clone(ast_pool);
-    clone -> false_statement_opt = (AstStatement *)
+    clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
+    clone -> true_statement = (AstStatement*) true_statement -> Clone(ast_pool);
+    clone -> false_statement_opt = (AstStatement*)
                                    (false_statement_opt
                                           ? false_statement_opt -> Clone(ast_pool)
                                           : NULL);
@@ -578,50 +578,52 @@ AstIfStatement* AstIfStatement::Clone(StoragePool* ast_pool)
     return clone;
 }
 
-AstEmptyStatement* AstEmptyStatement::Clone(StoragePool* ast_pool)
+Ast* AstEmptyStatement::Clone(StoragePool* ast_pool)
 {
-    AstEmptyStatement *clone = ast_pool -> GenEmptyStatement(semicolon_token);
+    AstEmptyStatement* clone = ast_pool -> GenEmptyStatement(semicolon_token);
 
     return clone;
 }
 
-AstExpressionStatement* AstExpressionStatement::Clone(StoragePool* ast_pool)
+Ast* AstExpressionStatement::Clone(StoragePool* ast_pool)
 {
-    AstExpressionStatement *clone = ast_pool -> GenExpressionStatement();
+    AstExpressionStatement* clone = ast_pool -> GenExpressionStatement();
 
-    clone -> expression = (AstExpression *) expression -> Clone(ast_pool);
+    clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
     clone -> semicolon_token_opt = semicolon_token_opt;
 
     return clone;
 }
 
-AstSwitchLabel* AstSwitchLabel::Clone(StoragePool* ast_pool)
+Ast* AstSwitchLabel::Clone(StoragePool* ast_pool)
 {
     AstSwitchLabel* clone = ast_pool ->
-        GenSwitchLabel(expression_opt ? expression_opt -> Clone(ast_pool)
-                       : (AstExpression*) NULL);
+        GenSwitchLabel(expression_opt
+                       ? (AstExpression*) expression_opt -> Clone(ast_pool)
+                       : NULL);
     clone -> case_token = case_token;
     clone -> colon_token = colon_token;
     clone -> map_index = map_index;
     return clone;
 }
 
-AstSwitchBlockStatement* AstSwitchBlockStatement::Clone(StoragePool* ast_pool)
+Ast* AstSwitchBlockStatement::Clone(StoragePool* ast_pool)
 {
     AstSwitchBlockStatement* clone = ast_pool -> GenSwitchBlockStatement();
     CloneInto(clone, ast_pool);
     clone -> AllocateSwitchLabels(NumSwitchLabels());
     for (int i = 0; i < NumSwitchLabels(); i++)
-        clone -> AddSwitchLabel(SwitchLabel(i) -> Clone(ast_pool));
+        clone -> AddSwitchLabel((AstSwitchLabel*) SwitchLabel(i) ->
+                                Clone(ast_pool));
     return clone;
 }
 
-AstSwitchStatement* AstSwitchStatement::Clone(StoragePool* ast_pool)
+Ast* AstSwitchStatement::Clone(StoragePool* ast_pool)
 {
     AstSwitchStatement* clone = ast_pool -> GenSwitchStatement();
     clone -> switch_token = switch_token;
-    clone -> expression = expression -> Clone(ast_pool);
-    clone -> switch_block = switch_block -> Clone(ast_pool);
+    clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
+    clone -> switch_block = (AstBlock*) switch_block -> Clone(ast_pool);
     clone -> AllocateCases(NumCases());
     if (DefaultCase())
     {
@@ -637,51 +639,51 @@ AstSwitchStatement* AstSwitchStatement::Clone(StoragePool* ast_pool)
     return clone;
 }
 
-AstWhileStatement* AstWhileStatement::Clone(StoragePool* ast_pool)
+Ast* AstWhileStatement::Clone(StoragePool* ast_pool)
 {
-    AstWhileStatement *clone = ast_pool -> GenWhileStatement();
+    AstWhileStatement* clone = ast_pool -> GenWhileStatement();
 
     clone -> while_token = while_token;
-    clone -> expression = (AstExpression *) expression -> Clone(ast_pool);
-    clone -> statement = (AstStatement *) statement -> Clone(ast_pool);
+    clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
+    clone -> statement = (AstStatement*) statement -> Clone(ast_pool);
 
     return clone;
 }
 
-AstDoStatement* AstDoStatement::Clone(StoragePool* ast_pool)
+Ast* AstDoStatement::Clone(StoragePool* ast_pool)
 {
-    AstDoStatement *clone = ast_pool -> GenDoStatement();
+    AstDoStatement* clone = ast_pool -> GenDoStatement();
 
     clone -> do_token = do_token;
-    clone -> statement = (AstStatement *) statement -> Clone(ast_pool);
+    clone -> statement = (AstStatement*) statement -> Clone(ast_pool);
     clone -> while_token = while_token;
-    clone -> expression = (AstExpression *) expression -> Clone(ast_pool);
+    clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
     clone -> semicolon_token = semicolon_token;
 
     return clone;
 }
 
-AstForStatement* AstForStatement::Clone(StoragePool* ast_pool)
+Ast* AstForStatement::Clone(StoragePool* ast_pool)
 {
-    AstForStatement *clone = ast_pool -> GenForStatement();
+    AstForStatement* clone = ast_pool -> GenForStatement();
 
     clone -> for_token = for_token;
     for (int i = 0; i < NumForInitStatements(); i++)
-        clone -> AddForInitStatement((AstStatement *) ForInitStatement(i) -> Clone(ast_pool));
-    clone -> end_expression_opt = (AstExpression *)
+        clone -> AddForInitStatement((AstStatement*) ForInitStatement(i) -> Clone(ast_pool));
+    clone -> end_expression_opt = (AstExpression*)
                                   (end_expression_opt
                                          ? end_expression_opt -> Clone(ast_pool)
                                          : NULL);
     for (int k = 0; k < NumForUpdateStatements(); k++)
-        clone -> AddForUpdateStatement((AstExpressionStatement *) ForUpdateStatement(k) -> Clone(ast_pool));
-    clone -> statement = (AstStatement *) statement -> Clone(ast_pool);
+        clone -> AddForUpdateStatement((AstExpressionStatement*) ForUpdateStatement(k) -> Clone(ast_pool));
+    clone -> statement = (AstStatement*) statement -> Clone(ast_pool);
 
     return clone;
 }
 
-AstBreakStatement* AstBreakStatement::Clone(StoragePool* ast_pool)
+Ast* AstBreakStatement::Clone(StoragePool* ast_pool)
 {
-    AstBreakStatement *clone = ast_pool -> GenBreakStatement();
+    AstBreakStatement* clone = ast_pool -> GenBreakStatement();
 
     clone -> break_token = break_token;
     clone -> identifier_token_opt = identifier_token_opt;
@@ -691,9 +693,9 @@ AstBreakStatement* AstBreakStatement::Clone(StoragePool* ast_pool)
     return clone;
 }
 
-AstContinueStatement* AstContinueStatement::Clone(StoragePool* ast_pool)
+Ast* AstContinueStatement::Clone(StoragePool* ast_pool)
 {
-    AstContinueStatement *clone = ast_pool -> GenContinueStatement();
+    AstContinueStatement* clone = ast_pool -> GenContinueStatement();
 
     clone -> continue_token = continue_token;
     clone -> identifier_token_opt = identifier_token_opt;
@@ -703,83 +705,83 @@ AstContinueStatement* AstContinueStatement::Clone(StoragePool* ast_pool)
     return clone;
 }
 
-AstReturnStatement* AstReturnStatement::Clone(StoragePool* ast_pool)
+Ast* AstReturnStatement::Clone(StoragePool* ast_pool)
 {
-    AstReturnStatement *clone = ast_pool -> GenReturnStatement();
+    AstReturnStatement* clone = ast_pool -> GenReturnStatement();
 
     clone -> return_token = return_token;
-    clone -> expression_opt = (AstExpression *) (expression_opt ? expression_opt -> Clone(ast_pool) : NULL);
+    clone -> expression_opt = (AstExpression*) (expression_opt ? expression_opt -> Clone(ast_pool) : NULL);
     clone -> semicolon_token = semicolon_token;
 
     return clone;
 }
 
-AstThrowStatement* AstThrowStatement::Clone(StoragePool* ast_pool)
+Ast* AstThrowStatement::Clone(StoragePool* ast_pool)
 {
-    AstThrowStatement *clone = ast_pool -> GenThrowStatement();
+    AstThrowStatement* clone = ast_pool -> GenThrowStatement();
 
     clone -> throw_token = throw_token;
-    clone -> expression = (AstExpression *) expression -> Clone(ast_pool);
+    clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
     clone -> semicolon_token = semicolon_token;
 
     return clone;
 }
 
-AstSynchronizedStatement* AstSynchronizedStatement::Clone(StoragePool* ast_pool)
+Ast* AstSynchronizedStatement::Clone(StoragePool* ast_pool)
 {
-    AstSynchronizedStatement *clone = ast_pool -> GenSynchronizedStatement();
+    AstSynchronizedStatement* clone = ast_pool -> GenSynchronizedStatement();
 
     clone -> synchronized_token = synchronized_token;
-    clone -> expression = (AstExpression *) expression -> Clone(ast_pool);
-    clone -> block = (AstBlock *) block -> Clone(ast_pool);
+    clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
+    clone -> block = (AstBlock*) block -> Clone(ast_pool);
 
     return clone;
 }
 
-AstAssertStatement* AstAssertStatement::Clone(StoragePool* ast_pool)
+Ast* AstAssertStatement::Clone(StoragePool* ast_pool)
 {
-    AstAssertStatement *clone = ast_pool -> GenAssertStatement();
+    AstAssertStatement* clone = ast_pool -> GenAssertStatement();
 
     clone -> assert_token = assert_token;
-    clone -> condition = (AstExpression *) condition -> Clone(ast_pool);
+    clone -> condition = (AstExpression*) condition -> Clone(ast_pool);
     clone -> message_opt = (message_opt
-                            ? (AstExpression *) message_opt -> Clone(ast_pool)
-                            : (AstExpression *) NULL);
+                            ? (AstExpression*) message_opt -> Clone(ast_pool)
+                            : (AstExpression*) NULL);
     clone -> semicolon_token = semicolon_token;
 
     return clone;
 }
 
-Ast *AstCatchClause::Clone(StoragePool *ast_pool)
+Ast* AstCatchClause::Clone(StoragePool* ast_pool)
 {
-    AstCatchClause *clone = ast_pool -> GenCatchClause();
+    AstCatchClause* clone = ast_pool -> GenCatchClause();
 
     clone -> catch_token = catch_token;
-    clone -> formal_parameter = (AstFormalParameter *) formal_parameter -> Clone(ast_pool);
-    clone -> block = (AstBlock *) block -> Clone(ast_pool);
+    clone -> formal_parameter = (AstFormalParameter*) formal_parameter -> Clone(ast_pool);
+    clone -> block = (AstBlock*) block -> Clone(ast_pool);
 
     return clone;
 }
 
-Ast *AstFinallyClause::Clone(StoragePool *ast_pool)
+Ast* AstFinallyClause::Clone(StoragePool* ast_pool)
 {
-    AstFinallyClause *clone = ast_pool -> GenFinallyClause();
+    AstFinallyClause* clone = ast_pool -> GenFinallyClause();
 
     clone -> finally_token = finally_token;
-    clone -> block = (AstBlock *) block -> Clone(ast_pool);
+    clone -> block = (AstBlock*) block -> Clone(ast_pool);
 
     return clone;
 }
 
-AstTryStatement* AstTryStatement::Clone(StoragePool* ast_pool)
+Ast* AstTryStatement::Clone(StoragePool* ast_pool)
 {
-    AstTryStatement *clone = ast_pool -> GenTryStatement();
+    AstTryStatement* clone = ast_pool -> GenTryStatement();
 
     clone -> try_token = try_token;
-    clone -> block = (AstBlock *) block -> Clone(ast_pool);
+    clone -> block = (AstBlock*) block -> Clone(ast_pool);
     for (int k = 0; k < NumCatchClauses(); k++)
-        clone -> AddCatchClause((AstCatchClause *) CatchClause(k) -> Clone(ast_pool));
-    clone -> finally_clause_opt = (AstFinallyClause *)
+        clone -> AddCatchClause((AstCatchClause*) CatchClause(k) -> Clone(ast_pool));
+    clone -> finally_clause_opt = (AstFinallyClause*)
                                   (finally_clause_opt
                                          ? finally_clause_opt -> Clone(ast_pool)
                                          : NULL);
@@ -787,255 +789,255 @@ AstTryStatement* AstTryStatement::Clone(StoragePool* ast_pool)
     return clone;
 }
 
-AstIntegerLiteral* AstIntegerLiteral::Clone(StoragePool* ast_pool)
+Ast* AstIntegerLiteral::Clone(StoragePool* ast_pool)
 {
-    AstIntegerLiteral *clone = ast_pool -> GenIntegerLiteral(integer_literal_token);
+    AstIntegerLiteral* clone = ast_pool -> GenIntegerLiteral(integer_literal_token);
 
     return clone;
 }
 
-AstLongLiteral* AstLongLiteral::Clone(StoragePool* ast_pool)
+Ast* AstLongLiteral::Clone(StoragePool* ast_pool)
 {
-    AstLongLiteral *clone = ast_pool -> GenLongLiteral(long_literal_token);
+    AstLongLiteral* clone = ast_pool -> GenLongLiteral(long_literal_token);
 
     return clone;
 }
 
-AstFloatLiteral* AstFloatLiteral::Clone(StoragePool* ast_pool)
+Ast* AstFloatLiteral::Clone(StoragePool* ast_pool)
 {
-    AstFloatLiteral *clone = ast_pool -> GenFloatLiteral(float_literal_token);
+    AstFloatLiteral* clone = ast_pool -> GenFloatLiteral(float_literal_token);
 
     return clone;
 }
 
-AstDoubleLiteral* AstDoubleLiteral::Clone(StoragePool* ast_pool)
+Ast* AstDoubleLiteral::Clone(StoragePool* ast_pool)
 {
-    AstDoubleLiteral *clone = ast_pool -> GenDoubleLiteral(double_literal_token);
+    AstDoubleLiteral* clone = ast_pool -> GenDoubleLiteral(double_literal_token);
 
     return clone;
 }
 
-AstTrueLiteral* AstTrueLiteral::Clone(StoragePool* ast_pool)
+Ast* AstTrueLiteral::Clone(StoragePool* ast_pool)
 {
-    AstTrueLiteral *clone = ast_pool -> GenTrueLiteral(true_literal_token);
+    AstTrueLiteral* clone = ast_pool -> GenTrueLiteral(true_literal_token);
 
     return clone;
 }
 
-AstFalseLiteral* AstFalseLiteral::Clone(StoragePool* ast_pool)
+Ast* AstFalseLiteral::Clone(StoragePool* ast_pool)
 {
-    AstFalseLiteral *clone = ast_pool -> GenFalseLiteral(false_literal_token);
+    AstFalseLiteral* clone = ast_pool -> GenFalseLiteral(false_literal_token);
 
     return clone;
 }
 
-AstStringLiteral* AstStringLiteral::Clone(StoragePool* ast_pool)
+Ast* AstStringLiteral::Clone(StoragePool* ast_pool)
 {
-    AstStringLiteral *clone = ast_pool -> GenStringLiteral(string_literal_token);
+    AstStringLiteral* clone = ast_pool -> GenStringLiteral(string_literal_token);
 
     return clone;
 }
 
-AstCharacterLiteral* AstCharacterLiteral::Clone(StoragePool* ast_pool)
+Ast* AstCharacterLiteral::Clone(StoragePool* ast_pool)
 {
-    AstCharacterLiteral *clone = ast_pool -> GenCharacterLiteral(character_literal_token);
+    AstCharacterLiteral* clone = ast_pool -> GenCharacterLiteral(character_literal_token);
 
     return clone;
 }
 
-AstNullLiteral* AstNullLiteral::Clone(StoragePool* ast_pool)
+Ast* AstNullLiteral::Clone(StoragePool* ast_pool)
 {
-    AstNullLiteral *clone = ast_pool -> GenNullLiteral(null_token);
+    AstNullLiteral* clone = ast_pool -> GenNullLiteral(null_token);
 
     return clone;
 }
 
-AstThisExpression* AstThisExpression::Clone(StoragePool* ast_pool)
+Ast* AstThisExpression::Clone(StoragePool* ast_pool)
 {
-    AstThisExpression *clone = ast_pool -> GenThisExpression(this_token);
+    AstThisExpression* clone = ast_pool -> GenThisExpression(this_token);
 
     return clone;
 }
 
-AstSuperExpression* AstSuperExpression::Clone(StoragePool* ast_pool)
+Ast* AstSuperExpression::Clone(StoragePool* ast_pool)
 {
-    AstSuperExpression *clone = ast_pool -> GenSuperExpression(super_token);
+    AstSuperExpression* clone = ast_pool -> GenSuperExpression(super_token);
 
     return clone;
 }
 
-AstParenthesizedExpression* AstParenthesizedExpression::Clone(StoragePool* ast_pool)
+Ast* AstParenthesizedExpression::Clone(StoragePool* ast_pool)
 {
-    AstParenthesizedExpression *clone = ast_pool -> GenParenthesizedExpression();
+    AstParenthesizedExpression* clone = ast_pool -> GenParenthesizedExpression();
 
     clone -> left_parenthesis_token = left_parenthesis_token;
-    clone -> expression = (AstExpression *) expression -> Clone(ast_pool);
+    clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
     clone -> right_parenthesis_token = right_parenthesis_token;
 
     return clone;
 }
 
-AstTypeExpression* AstTypeExpression::Clone(StoragePool* ast_pool)
+Ast* AstTypeExpression::Clone(StoragePool* ast_pool)
 {
-    AstTypeExpression *clone = ast_pool -> GenTypeExpression(type -> Clone(ast_pool));
+    AstTypeExpression* clone = ast_pool -> GenTypeExpression(type -> Clone(ast_pool));
 
     return clone;
 }
 
-AstClassInstanceCreationExpression* AstClassInstanceCreationExpression::Clone(StoragePool* ast_pool)
+Ast* AstClassInstanceCreationExpression::Clone(StoragePool* ast_pool)
 {
-    AstClassInstanceCreationExpression *clone = ast_pool -> GenClassInstanceCreationExpression();
+    AstClassInstanceCreationExpression* clone = ast_pool -> GenClassInstanceCreationExpression();
 
-    clone -> base_opt = (AstExpression *) (base_opt ? base_opt -> Clone(ast_pool) : NULL);
+    clone -> base_opt = (AstExpression*) (base_opt ? base_opt -> Clone(ast_pool) : NULL);
     clone -> dot_token_opt = dot_token_opt;
     clone -> new_token = new_token;
-    clone -> class_type = (AstTypeExpression *) class_type -> Clone(ast_pool);
+    clone -> class_type = (AstTypeExpression*) class_type -> Clone(ast_pool);
     clone -> left_parenthesis_token = left_parenthesis_token;
     clone -> AllocateArguments(NumArguments());
     for (int i = 0; i < NumArguments(); i++)
-        clone -> AddArgument((AstExpression *) Argument(i) -> Clone(ast_pool));
+        clone -> AddArgument((AstExpression*) Argument(i) -> Clone(ast_pool));
     clone -> right_parenthesis_token = right_parenthesis_token;
-    clone -> class_body_opt = (AstClassBody *) (class_body_opt ? class_body_opt -> Clone(ast_pool) : NULL);
+    clone -> class_body_opt = (AstClassBody*) (class_body_opt ? class_body_opt -> Clone(ast_pool) : NULL);
     clone -> AllocateLocalArguments(NumLocalArguments());
     for (int k = 0; k < NumLocalArguments(); k++)
-        clone -> AddLocalArgument((AstExpression *) LocalArgument(k) -> Clone(ast_pool));
+        clone -> AddLocalArgument((AstExpression*) LocalArgument(k) -> Clone(ast_pool));
 
     return clone;
 }
 
-Ast *AstDimExpr::Clone(StoragePool *ast_pool)
+Ast* AstDimExpr::Clone(StoragePool* ast_pool)
 {
-    AstDimExpr *clone = ast_pool -> GenDimExpr();
+    AstDimExpr* clone = ast_pool -> GenDimExpr();
 
     clone -> left_bracket_token = left_bracket_token;
-    clone -> expression = (AstExpression *) expression -> Clone(ast_pool);
+    clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
     clone -> right_bracket_token = right_bracket_token;
 
     return clone;
 }
 
-AstArrayCreationExpression* AstArrayCreationExpression::Clone(StoragePool* ast_pool)
+Ast* AstArrayCreationExpression::Clone(StoragePool* ast_pool)
 {
-    AstArrayCreationExpression *clone = ast_pool -> GenArrayCreationExpression();
+    AstArrayCreationExpression* clone = ast_pool -> GenArrayCreationExpression();
 
     clone -> new_token = new_token;
     clone -> array_type = array_type -> Clone(ast_pool);
     clone -> AllocateDimExprs(NumDimExprs());
     for (int i = 0; i < NumDimExprs(); i++)
-        clone -> AddDimExpr((AstDimExpr *) DimExpr(i) -> Clone(ast_pool));
+        clone -> AddDimExpr((AstDimExpr*) DimExpr(i) -> Clone(ast_pool));
     clone -> AllocateBrackets(NumBrackets());
     for (int k = 0; k < NumBrackets(); k++)
-        clone -> AddBrackets((AstBrackets *) Brackets(k) -> Clone(ast_pool));
-    clone -> array_initializer_opt = (AstArrayInitializer *)
+        clone -> AddBrackets((AstBrackets*) Brackets(k) -> Clone(ast_pool));
+    clone -> array_initializer_opt = (AstArrayInitializer*)
                                      (array_initializer_opt ? array_initializer_opt -> Clone(ast_pool) : NULL);
 
     return clone;
 }
 
-AstFieldAccess* AstFieldAccess::Clone(StoragePool* ast_pool)
+Ast* AstFieldAccess::Clone(StoragePool* ast_pool)
 {
-    AstFieldAccess *clone = ast_pool -> GenFieldAccess(field_access_tag);
+    AstFieldAccess* clone = ast_pool -> GenFieldAccess(field_access_tag);
 
-    clone -> base = (AstExpression *) base -> Clone(ast_pool);
+    clone -> base = (AstExpression*) base -> Clone(ast_pool);
     clone -> dot_token = dot_token;
     clone -> identifier_token = identifier_token;
-    clone -> resolution_opt = (AstExpression *) (resolution_opt ? resolution_opt -> Clone(ast_pool) : NULL);
+    clone -> resolution_opt = (AstExpression*) (resolution_opt ? resolution_opt -> Clone(ast_pool) : NULL);
 
     return clone;
 }
 
-AstMethodInvocation* AstMethodInvocation::Clone(StoragePool* ast_pool)
+Ast* AstMethodInvocation::Clone(StoragePool* ast_pool)
 {
-    AstMethodInvocation *clone = ast_pool -> GenMethodInvocation();
+    AstMethodInvocation* clone = ast_pool -> GenMethodInvocation();
 
-    clone -> method = (AstExpression *) method -> Clone(ast_pool);
+    clone -> method = (AstExpression*) method -> Clone(ast_pool);
     clone -> left_parenthesis_token = left_parenthesis_token;
     clone -> AllocateArguments(NumArguments());
     for (int i = 0; i < NumArguments(); i++)
-        clone -> AddArgument((AstExpression *) Argument(i) -> Clone(ast_pool));
+        clone -> AddArgument((AstExpression*) Argument(i) -> Clone(ast_pool));
     clone -> right_parenthesis_token = right_parenthesis_token;
-    clone -> resolution_opt = (AstExpression *) (resolution_opt ? resolution_opt -> Clone(ast_pool) : NULL);
+    clone -> resolution_opt = (AstExpression*) (resolution_opt ? resolution_opt -> Clone(ast_pool) : NULL);
 
     return clone;
 }
 
-AstArrayAccess* AstArrayAccess::Clone(StoragePool* ast_pool)
+Ast* AstArrayAccess::Clone(StoragePool* ast_pool)
 {
-    AstArrayAccess *clone = ast_pool -> GenArrayAccess();
+    AstArrayAccess* clone = ast_pool -> GenArrayAccess();
 
-    clone -> base = (AstExpression *) base -> Clone(ast_pool);
+    clone -> base = (AstExpression*) base -> Clone(ast_pool);
     clone -> left_bracket_token = left_bracket_token;
-    clone -> expression = (AstExpression *) expression -> Clone(ast_pool);
+    clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
     clone -> right_bracket_token = right_bracket_token;
 
     return clone;
 }
 
-AstPostUnaryExpression* AstPostUnaryExpression::Clone(StoragePool* ast_pool)
+Ast* AstPostUnaryExpression::Clone(StoragePool* ast_pool)
 {
-    AstPostUnaryExpression *clone = ast_pool -> GenPostUnaryExpression(post_unary_tag);
+    AstPostUnaryExpression* clone = ast_pool -> GenPostUnaryExpression(post_unary_tag);
 
-    clone -> expression = (AstExpression *) expression -> Clone(ast_pool);
+    clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
     clone -> post_operator_token = post_operator_token;
 
     return clone;
 }
 
-AstPreUnaryExpression* AstPreUnaryExpression::Clone(StoragePool* ast_pool)
+Ast* AstPreUnaryExpression::Clone(StoragePool* ast_pool)
 {
-    AstPreUnaryExpression *clone = ast_pool -> GenPreUnaryExpression(pre_unary_tag);
+    AstPreUnaryExpression* clone = ast_pool -> GenPreUnaryExpression(pre_unary_tag);
 
     clone -> pre_operator_token = pre_operator_token;
-    clone -> expression = (AstExpression *) expression -> Clone(ast_pool);
+    clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
 
     return clone;
 }
 
-AstCastExpression* AstCastExpression::Clone(StoragePool* ast_pool)
+Ast* AstCastExpression::Clone(StoragePool* ast_pool)
 {
-    AstCastExpression *clone = ast_pool -> GenCastExpression();
+    AstCastExpression* clone = ast_pool -> GenCastExpression();
 
     clone -> left_parenthesis_token_opt = left_parenthesis_token_opt;
-    clone -> type_opt = (Ast *) (type_opt ? type_opt -> Clone(ast_pool) : NULL);
+    clone -> type_opt = (Ast*) (type_opt ? type_opt -> Clone(ast_pool) : NULL);
     clone -> AllocateBrackets(NumBrackets());
     for (int i = 0; i < NumBrackets(); i++)
-        clone -> AddBrackets((AstBrackets *) Brackets(i) -> Clone(ast_pool));
+        clone -> AddBrackets((AstBrackets*) Brackets(i) -> Clone(ast_pool));
     clone -> right_parenthesis_token_opt = right_parenthesis_token_opt;
-    clone -> expression = (AstExpression *) expression -> Clone(ast_pool);
+    clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
 
     return clone;
 }
 
-AstBinaryExpression* AstBinaryExpression::Clone(StoragePool* ast_pool)
+Ast* AstBinaryExpression::Clone(StoragePool* ast_pool)
 {
-    AstBinaryExpression *clone = ast_pool -> GenBinaryExpression(binary_tag);
+    AstBinaryExpression* clone = ast_pool -> GenBinaryExpression(binary_tag);
 
-    clone -> left_expression = (AstExpression *) left_expression -> Clone(ast_pool);
+    clone -> left_expression = (AstExpression*) left_expression -> Clone(ast_pool);
     clone -> binary_operator_token = binary_operator_token;
-    clone -> right_expression = (AstExpression *) right_expression -> Clone(ast_pool);
+    clone -> right_expression = (AstExpression*) right_expression -> Clone(ast_pool);
 
     return clone;
 }
 
-AstConditionalExpression* AstConditionalExpression::Clone(StoragePool* ast_pool)
+Ast* AstConditionalExpression::Clone(StoragePool* ast_pool)
 {
-    AstConditionalExpression *clone = ast_pool -> GenConditionalExpression();
+    AstConditionalExpression* clone = ast_pool -> GenConditionalExpression();
 
-    clone -> test_expression = (AstExpression *) test_expression -> Clone(ast_pool);
+    clone -> test_expression = (AstExpression*) test_expression -> Clone(ast_pool);
     clone -> question_token = question_token;
-    clone -> true_expression = (AstExpression *) true_expression -> Clone(ast_pool);
+    clone -> true_expression = (AstExpression*) true_expression -> Clone(ast_pool);
     clone -> colon_token = colon_token;
-    clone -> false_expression = (AstExpression *) false_expression -> Clone(ast_pool);
+    clone -> false_expression = (AstExpression*) false_expression -> Clone(ast_pool);
 
     return clone;
 }
 
-AstAssignmentExpression* AstAssignmentExpression::Clone(StoragePool* ast_pool)
+Ast* AstAssignmentExpression::Clone(StoragePool* ast_pool)
 {
-    AstAssignmentExpression *clone = ast_pool -> GenAssignmentExpression(assignment_tag, assignment_operator_token);
+    AstAssignmentExpression* clone = ast_pool -> GenAssignmentExpression(assignment_tag, assignment_operator_token);
 
-    clone -> left_hand_side = (AstExpression *) left_hand_side -> Clone(ast_pool);
-    clone -> expression = (AstExpression *) expression -> Clone(ast_pool);
+    clone -> left_hand_side = (AstExpression*) left_hand_side -> Clone(ast_pool);
+    clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
 
     return clone;
 }
