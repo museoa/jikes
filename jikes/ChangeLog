@@ -1,5 +1,11 @@
 2001-11-02  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/expr.cpp (TypeAccessCheck):
+	* src/symbol.cpp (HasProtectedAccessTo): Update to be in line with
+	JLS 6.6.1 for array types, bug 675 - patch 222.
+
+2001-11-02  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/expr.cpp (ConstructorAccessCheck): Fix access check for
 	anonymous classes which call a default constructor in another
 	package, bug 193 - patch 221.

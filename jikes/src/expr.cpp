@@ -1778,20 +1778,21 @@ void Semantic::TypeAccessCheck(Ast *ast, TypeSymbol *type)
 {
     //
     // Unless we are processing the body of a type do not do type checking.
-    // (This method may be invoked, for example, when FindFirstType invokes ProcessPackageOrType)
+    // (This method may be invoked, for example, when FindFirstType invokes
+    // ProcessPackageOrType)
     //
     if (state_stack.Size() > 0)
     {
         TypeSymbol *this_type = ThisType();
 
         //
-        // Type checking is necessary only for two types that are not enclosed within
-        // the same outermost type. Note that if we are trying to access an inner type
-        // T1.T2...Tn from this type, TypeAccessCheck is expected to be invoked first
-        // for T1, then T1.T2, ... and finally for T1.T2...Tn, in turn. When invoked
-        // for T1.T2, for example, this function only checks whether or not T1.T2
-        // is accessible from "this" type. It does not recheck whether or not T1 is
-        // accessible.
+        // Type checking is necessary only for two types that are not enclosed
+        // within the same outermost type. Note that if we are trying to access
+        // an inner type T1.T2...Tn from this type, TypeAccessCheck is expected
+        // to be invoked first for T1, then T1.T2, ... and finally for
+        // T1.T2...Tn, in turn. When invoked for T1.T2, for example, this
+        // function only checks whether or not T1.T2 is accessible from "this"
+        // type. It does not recheck whether or not T1 is accessible.
         //
         if (this_type -> outermost_type != type -> outermost_type)
         {
@@ -1799,16 +1800,17 @@ void Semantic::TypeAccessCheck(Ast *ast, TypeSymbol *type)
                  ReportTypeInaccessible(ast, type);
             else if (type -> ACC_PROTECTED())
             {
-                //
-                // TODO: we have filed a query to Sun regarding which test is required here!
-                //
-                // if (! (type -> ContainingPackage() == this_package || this_type -> IsSubclass(type)))
-                //
-                if (! (type -> ContainingPackage() == this_package || this_type -> HasProtectedAccessTo(type)))
+                if (type -> ContainingPackage() != this_package &&
+                    ! this_type -> HasProtectedAccessTo(type))
+                {
                     ReportTypeInaccessible(ast, type);
+                }
             }
-            else if (! (type -> ACC_PUBLIC() || type -> ContainingPackage() == this_package))
+            else if (! type -> ACC_PUBLIC() &&
+                     type -> ContainingPackage() != this_package)
+            {
                  ReportTypeInaccessible(ast, type);
+            }
         }
     }
 
@@ -1851,25 +1853,25 @@ void Semantic::ConstructorAccessCheck(AstClassInstanceCreationExpression *class_
                            containing_type -> ExternalName());
         }
         else if (constructor -> ACC_PROTECTED() &&
-		 containing_type -> ContainingPackage() != this_package)
-	{
-	    if (! class_creation -> symbol -> TypeCast() -> Anonymous())
-	        ReportSemError(SemanticError::PROTECTED_CONSTRUCTOR_NOT_ACCESSIBLE,
-			       class_creation -> class_type -> LeftToken(),
-			       class_creation -> right_parenthesis_token,
-			       constructor -> Header(),
-			       containing_type -> ContainingPackage() -> PackageName(),
-			       containing_type -> ExternalName());
-	}
-	else if (! constructor -> ACC_PUBLIC() &&
-		 containing_type -> ContainingPackage() != this_package)
-	{
-	    ReportSemError(SemanticError::DEFAULT_CONSTRUCTOR_NOT_ACCESSIBLE,
-			   class_creation -> class_type -> LeftToken(),
-			   class_creation -> right_parenthesis_token,
-			   constructor -> Header(),
-			   containing_type -> ContainingPackage() -> PackageName(),
-			   containing_type -> ExternalName());
+                 containing_type -> ContainingPackage() != this_package)
+        {
+            if (! class_creation -> symbol -> TypeCast() -> Anonymous())
+                ReportSemError(SemanticError::PROTECTED_CONSTRUCTOR_NOT_ACCESSIBLE,
+                               class_creation -> class_type -> LeftToken(),
+                               class_creation -> right_parenthesis_token,
+                               constructor -> Header(),
+                               containing_type -> ContainingPackage() -> PackageName(),
+                               containing_type -> ExternalName());
+        }
+        else if (! constructor -> ACC_PUBLIC() &&
+                 containing_type -> ContainingPackage() != this_package)
+        {
+            ReportSemError(SemanticError::DEFAULT_CONSTRUCTOR_NOT_ACCESSIBLE,
+                           class_creation -> class_type -> LeftToken(),
+                           class_creation -> right_parenthesis_token,
+                           constructor -> Header(),
+                           containing_type -> ContainingPackage() -> PackageName(),
+                           containing_type -> ExternalName());
         }
     }
 }

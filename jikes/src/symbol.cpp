@@ -259,7 +259,15 @@ TypeSymbol *TypeSymbol::GetArrayType(Semantic *sem, int num_dimensions_)
         type -> MarkSourceNoLongerPending();
         type -> outermost_type = type;
 
-        type -> SetACC_PUBLIC();
+        //
+        // An array type has the same accessibility as its component.
+        //
+        if (ACC_PUBLIC())
+          type -> SetACC_PUBLIC();
+        else if (ACC_PROTECTED())
+          type -> SetACC_PROTECTED();
+        else if (ACC_PRIVATE())
+          type -> SetACC_PRIVATE();
         type -> SetACC_FINAL();
 
         type -> super = sem -> control.Object();
@@ -1230,18 +1238,24 @@ bool TypeSymbol::CanAccess(TypeSymbol *type)
 
 //
 // Given two types T and T2 in different packages, the type T has protected
-// access to T2 iff T or any class in which T is lexically enclosed is a subclass
-// of T2 or of some other type T3 that lexically encloses T2.
+// access to T2 iff T or any class in which T is lexically enclosed is a
+// subclass of T2 or of some other type T3 that lexically encloses T2.
 //
 // Of course, T2 and all its enclosing classes, if any, must have been declared
-// either public or protected, otherwise they could not be eligible as a superclass
-// candidate. We do not (and need not) check for that condition here.
+// either public or protected, otherwise they could not be eligible as a
+// superclass candidate. We do not need to check for that condition here.
+//
+// According to JLS 6.6.1, a type T[] is accessible if T is accessible.
 //
 bool TypeSymbol::HasProtectedAccessTo(TypeSymbol *target_type)
 {
     assert(semantic_environment);
+    if (target_type -> IsArray())
+        target_type = target_type -> base_type;
 
-    for (SemanticEnvironment *env = this -> semantic_environment; env != NULL; env = env -> previous)
+    for (SemanticEnvironment *env = this -> semantic_environment;
+         env != NULL;
+         env = env -> previous)
     {
         TypeSymbol *main_type = env -> Type();
         for (TypeSymbol *type = target_type; type; type = type -> owner -> TypeCast())
