@@ -8,17 +8,12 @@ two criteria must be met:
 2. The person's username must be added to the control file in
    the repository's CVSROOT directory.
 
-Adding an account is no big deal, except that it requires superuser
-access on the repository machine:
-
- # useradd -c "<person's real name>" -G users,httpjikes,ftpjikes,cvsjikes \
- > -m -s /bin/bash <person's username>
- # passwd <person's username>
-
-Once the account is set up, the person should be advised of its
-password and log on immediately to change it.  It should also
-run 'ssh-keygen' on both its home system and the repository system
-in order to create SSH keys for secure communication.
+update from cabbey on 27 April 2001 - the part about adding an
+account is no longer correct... it needs to be done through the
+dw/oss website. Jikesadmin should go to the Users section and
+choose "add user", follow the directions. The new user will be
+sent an email to confirm their address and establish their initial
+password.
 
 In order to grant commit access to the repository, someone who
 has commit access to the CVSROOT module must edit the 'avail'
@@ -45,4 +40,4 @@ avail|coar,shields,jikesadmin,lord,ernst,mdejong|jikes,jikestst,site
 (The line has been edited to fit on the screen. :-)
 
 And that's it.  Send questions to <Ken.Coar@Golux.Com>.
-test
+
