@@ -20,68 +20,68 @@ namespace Jikes { // Open namespace Jikes block
 #endif
 
 Control::Control(char **arguments, Option &option_) : return_code(0),
-                                                                 option(option_),
-                                                                 dot_classpath_index(0),
-                                                                 system_table(NULL),
-                                                                 system_semantic(NULL),
-                                                                 semantic(1024),
-                                                                 needs_body_work(1024),
-                                                                 type_trash_bin(1024),
-                                                                 input_java_file_set(1021),
-                                                                 input_class_file_set(1021),
-                                                                 expired_file_set(),
-                                                                 recompilation_file_set(1021),
-                                                                 int_pool(&bad_value),
-                                                                 long_pool(&bad_value),
-                                                                 float_pool(&bad_value),
-                                                                 double_pool(&bad_value),
-                                                                 Utf8_pool(&bad_value),
+                                                      option(option_),
+                                                      dot_classpath_index(0),
+                                                      system_table(NULL),
+                                                      system_semantic(NULL),
+                                                      semantic(1024),
+                                                      needs_body_work(1024),
+                                                      type_trash_bin(1024),
+                                                      input_java_file_set(1021),
+                                                      input_class_file_set(1021),
+                                                      expired_file_set(),
+                                                      recompilation_file_set(1021),
+                                                      int_pool(&bad_value),
+                                                      long_pool(&bad_value),
+                                                      float_pool(&bad_value),
+                                                      double_pool(&bad_value),
+                                                      Utf8_pool(&bad_value),
 #ifdef JIKES_DEBUG
-                                                                 input_files_processed(0),
-                                                                 class_files_read(0),
-                                                                 class_files_written(0),
-                                                                 line_count(0),
+                                                      input_files_processed(0),
+                                                      class_files_read(0),
+                                                      class_files_written(0),
+                                                      line_count(0),
 #endif
-                                                                 Serializable_type(NULL),
-                                                                 Object_type(NULL),
-                                                                 Cloneable_type(NULL),
-                                                                 String_type(NULL),
-                                                                 Void_type(NULL),
-                                                                 Boolean_type(NULL),
-                                                                 Byte_type(NULL),
-                                                                 Short_type(NULL),
-                                                                 Character_type(NULL),
-                                                                 Integer_type(NULL),
-                                                                 Long_type(NULL),
-                                                                 Float_type(NULL),
-                                                                 Double_type(NULL),
-                                                                 Class_type(NULL),
-                                                                 Throwable_type(NULL),
-                                                                 Exception_type(NULL),
-                                                                 RuntimeException_type(NULL),
-                                                                 ClassNotFoundException_type(NULL),
-                                                                 Error_type(NULL),
-                                                                 NoClassDefFoundError_type(NULL),
-                                                                 StringBuffer_type(NULL),
+                                                      Serializable_type(NULL),
+                                                      Object_type(NULL),
+                                                      Cloneable_type(NULL),
+                                                      String_type(NULL),
+                                                      Void_type(NULL),
+                                                      Boolean_type(NULL),
+                                                      Byte_type(NULL),
+                                                      Short_type(NULL),
+                                                      Character_type(NULL),
+                                                      Integer_type(NULL),
+                                                      Long_type(NULL),
+                                                      Float_type(NULL),
+                                                      Double_type(NULL),
+                                                      Class_type(NULL),
+                                                      Throwable_type(NULL),
+                                                      Exception_type(NULL),
+                                                      RuntimeException_type(NULL),
+                                                      ClassNotFoundException_type(NULL),
+                                                      Error_type(NULL),
+                                                      NoClassDefFoundError_type(NULL),
+                                                      StringBuffer_type(NULL),
 
-                                                                 Class_forName_method(NULL),
+                                                      Class_forName_method(NULL),
 
-                                                                 Throwable_getMessage_method(NULL),
+                                                      Throwable_getMessage_method(NULL),
 
-                                                                 NoClassDefFoundError_InitWithString_method(NULL),
+                                                      NoClassDefFoundError_InitWithString_method(NULL),
 
-                                                                 StringBuffer_Init_method(NULL),
-                                                                 StringBuffer_InitWithString_method(NULL),
-                                                                 StringBuffer_toString_method(NULL),
-                                                                 StringBuffer_append_char_array_method(NULL),
-                                                                 StringBuffer_append_char_method(NULL),
-                                                                 StringBuffer_append_boolean_method(NULL),
-                                                                 StringBuffer_append_int_method(NULL),
-                                                                 StringBuffer_append_long_method(NULL),
-                                                                 StringBuffer_append_float_method(NULL),
-                                                                 StringBuffer_append_double_method(NULL),
-                                                                 StringBuffer_append_string_method(NULL),
-                                                                 StringBuffer_append_object_method(NULL)
+                                                      StringBuffer_Init_method(NULL),
+                                                      StringBuffer_InitWithString_method(NULL),
+                                                      StringBuffer_toString_method(NULL),
+                                                      StringBuffer_append_char_array_method(NULL),
+                                                      StringBuffer_append_char_method(NULL),
+                                                      StringBuffer_append_boolean_method(NULL),
+                                                      StringBuffer_append_int_method(NULL),
+                                                      StringBuffer_append_long_method(NULL),
+                                                      StringBuffer_append_float_method(NULL),
+                                                      StringBuffer_append_double_method(NULL),
+                                                      StringBuffer_append_string_method(NULL),
+                                                      StringBuffer_append_object_method(NULL)
 {
     ProcessGlobals();
 
@@ -92,7 +92,8 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
     ProcessSystemInformation();
 
     //
-    // Instantiate a scanner and a parser and initialize the static members for the semantic processors.
+    // Instantiate a scanner and a parser and initialize the static members
+    // for the semantic processors.
     //
     scanner = new Scanner(*this);
     parser = new Parser();
@@ -104,7 +105,8 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
     ProcessNewInputFiles(input_java_file_set, arguments, option.first_file_index);
 
     //
-    // For each input file, copy it into the input_files array and process its package declaration.
+    // For each input file, copy it into the input_files array and process
+    // its package declaration.
     //
     StoragePool *ast_pool = new StoragePool(64); // how much space do we need? estimate 64 tokens.
     FileSymbol **input_files = new FileSymbol*[input_java_file_set.Size() + 1];
@@ -114,6 +116,9 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
                      file_symbol = (FileSymbol *) input_java_file_set.NextElement())
     {
         input_files[num_files++] = file_symbol;
+#ifdef JIKES_DEBUG
+        input_files_processed++;
+#endif
         scanner -> Scan(file_symbol);
         if (file_symbol -> lex_stream) // did we have a successful scan!
         {
@@ -132,8 +137,8 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
     else
     {
         //
-        // Some name, any name !!! We use dot_name_symbol as a bad file name because
-        // no file can be named ".".
+        // Some name, any name !!! We use dot_name_symbol as a bad file name
+        // because no file can be named ".".
         //
         FileSymbol *file_symbol = classpath[dot_classpath_index] -> RootDirectory() -> InsertFileSymbol(dot_name_symbol);
         file_symbol -> directory_symbol = classpath[dot_classpath_index] -> RootDirectory();
@@ -283,7 +288,8 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
         }
 
         //
-        // Clean up all the files that have just been compiled in this new batch.
+        // Clean up all the files that have just been compiled in this new
+        // batch.
         //
         for (FileSymbol *file_symbol = (FileSymbol *) input_java_file_set.FirstElement();
                          file_symbol;
@@ -300,7 +306,8 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
             return_code = 1;
 
         //
-        // If the incremental flag is on, check to see if the user wants us to recompile.
+        // If the incremental flag is on, check to see if the user wants us
+        // to recompile.
         //
         if (option.incremental)
         {
@@ -355,7 +362,7 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
                 }
 
                 //
-                // If a file has been erased, remove it from the input file set.
+                // If a file was erased, remove it from the input file set.
                 //
                 for (file_symbol = (FileSymbol *) expired_file_set.FirstElement();
                      file_symbol;
@@ -372,8 +379,8 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
                 type_trash_bin.Reset();
 
                 //
-                // For each file that should be recompiled, process it if it has not
-                // already been dragged in by dependence.
+                // For each file that should be recompiled, process it if it
+                // has not already been dragged in by dependence.
                 //
                 for (int k = 0; k < num_files; k++)
                 {
@@ -383,7 +390,8 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
                 }
 
                 //
-                // Clean up all the files that have just been compiled in this new batch.
+                // Clean up all the files that have just been compiled in
+                // this new batch.
                 //
                 for (file_symbol = (FileSymbol *) input_java_file_set.FirstElement();
                     // delete file_symbol
@@ -441,7 +449,8 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
                                     fprintf(outfile, "   !%s\n", static_parent -> SignatureString());
 
                                     //
-                                    // If the type is contained in a type that is not one of the input files, save it
+                                    // If the type is contained in a type that
+                                    // is not one of the input files, save it
                                     //
                                     if (static_parent -> file_symbol -> IsClass())
                                         types_in_new_files.AddElement(static_parent);
@@ -458,7 +467,8 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
                                 fprintf(outfile, "    %s\n", parent -> SignatureString());
 
                                 //
-                                // If the type is contained in a type that is not one of the input files, save it
+                                // If the type is contained in a type that is
+                                // not one of the input files, save it
                                 //
                                 if (parent -> file_symbol -> IsClass())
                                     types_in_new_files.AddElement(parent);
@@ -528,7 +538,7 @@ Control::~Control()
 #ifdef JIKES_DEBUG
     if (option.debug_dump_lex || option.debug_dump_ast || option.debug_unparse_ast)
     {
-        Coutput << line_count << " source lines read" << endl << endl
+        Coutput << line_count << " source lines read" << endl
                 << class_files_read << " \".class\" files read" << endl
                 << class_files_written << " \".class\" files written" << endl
                 << input_files_processed << " \".java\" files processed"
@@ -576,8 +586,8 @@ PackageSymbol *Control::ProcessPackage(wchar_t *name)
 
 
 //
-// When searching for a subdirectory in a zipped file, it must already be present in the
-// hierarchy.
+// When searching for a subdirectory in a zipped file, it must already be
+// present in the hierarchy.
 //
 DirectorySymbol *Control::FindSubdirectory(PathSymbol *path_symbol, wchar_t *name, int name_length)
 {
@@ -600,8 +610,8 @@ DirectorySymbol *Control::FindSubdirectory(PathSymbol *path_symbol, wchar_t *nam
 
 
 //
-// When searching for a directory in the system, if it is not already present in the hierarchy
-// insert it and attempt to read it from the system...
+// When searching for a directory in the system, if it is not already present
+// in the hierarchy insert it and attempt to read it from the system...
 //
 #ifdef UNIX_FILE_SYSTEM
     DirectorySymbol *Control::ProcessSubdirectories(wchar_t *source_name, int source_name_length, bool source_dir)
@@ -675,8 +685,9 @@ DirectorySymbol *Control::FindSubdirectory(PathSymbol *path_symbol, wchar_t *nam
                 }
 
                 //
-                // Insert the new directory into the system table to avoid duplicates, in case
-                // the same directory is specified with a different name.
+                // Insert the new directory into the system table to avoid
+                // duplicates, in case the same directory is specified with
+                // a different name.
                 //
                 if (directory_symbol != classpath[dot_classpath_index] -> RootDirectory()) // Not the dot directory.
                 {
@@ -821,7 +832,8 @@ DirectorySymbol *Control::FindSubdirectory(PathSymbol *path_symbol, wchar_t *nam
 #endif
 
 
-void Control::ProcessNewInputFiles(SymbolSet &file_set, char **arguments, int first_index)
+void Control::ProcessNewInputFiles(SymbolSet &file_set, char **arguments,
+                                   int first_index)
 {
     for (int i = 0; i < bad_input_filenames.Length(); i++)
         delete [] bad_input_filenames[i];
@@ -953,8 +965,8 @@ FileSymbol *Control::FindOrInsertJavaInputFile(wchar_t *name, int name_length)
     }
 
     //
-    // If the file was found, return it; otherwise, in case the (.) directory was not specified in the
-    // classpath, search for the file in it...
+    // If the file was found, return it; otherwise, in case the (.) directory
+    // was not specified in the classpath, search for the file in it...
     //
     return (file_symbol ? file_symbol : FindOrInsertJavaInputFile(directory_symbol, file_name_symbol));
 }
@@ -1070,9 +1082,9 @@ void Control::ProcessMembers()
         do
         {
             //
-            // Check whether or not there are cycles in this new batch of types.
-            // Create a partial order of the types (cycles are ordered arbitrarily)
-            // and place the result in partially_ordered_types.
+            // Check whether or not there are cycles in this new batch of
+            // types. Create a partial order of the types (cycles are ordered
+            // arbitrarily) and place the result in partially_ordered_types.
             //
             cycle_checker.PartialOrder(semantic, start);
             start = semantic.Length(); // next starting point
@@ -1305,8 +1317,9 @@ void Control::ProcessPackageDeclaration(FileSymbol *file_symbol, AstPackageDecla
                 type -> MarkSourcePending();
 
                 //
-                // If this type is contained in the unnamed package add it to the set
-                // unnamed_package_types if a type of similar name was not already there.
+                // If this type is contained in the unnamed package add it to
+                // the set unnamed_package_types if a type of similar name was
+                // not already there.
                 //
                 if ((! package_declaration) && (unnamed_package_types.Image(type -> Identity()) == NULL))
                     unnamed_package_types.AddElement(type);

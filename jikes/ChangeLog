@@ -1,5 +1,11 @@
 2001-10-31  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/jikesapi.cpp: Fix up formatting.
+	* src/control.cpp: Fix up formatting. Fix report of # of .java
+	files processed, bug 1818.
+
+2001-10-31  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/option.h (OptionError):
 	* src/platform.cpp (U8S_help_header): Fix compile issues with
 	HP-UX aCC.

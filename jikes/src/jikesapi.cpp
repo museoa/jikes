@@ -31,53 +31,55 @@ namespace Jikes {
  */ 
 class DefaultFileReader: public JikesAPI::FileReader
 {
-    public:
+public:
     
     DefaultFileReader(const char *fileName);
     virtual  ~DefaultFileReader();
     
-    virtual const char     *getBuffer()      { return buffer;}
-    virtual       size_t    getBufferSize()  { return size;}
-    
-    private:
-    
-    const char     *buffer;
-    size_t    size;
+    virtual const char* getBuffer() { return buffer; }
+    virtual size_t getBufferSize() { return size; }
+
+private:
+
+    const char* buffer;
+    size_t size;
+
 // FIXME : need to move into platform.h
 #ifdef   WIN32_FILE_SYSTEM
-    HANDLE    srcfile;
-    HANDLE    mapfile;
+    HANDLE srcfile;
+    HANDLE mapfile;
 #endif 
 };
 
 /**
- * A default implementaion of WriteObject that writes to the file system.
+ * A default implementation of WriteObject that writes to the file system.
  */
 class DefaultFileWriter: public JikesAPI::FileWriter
 {
-    public:
-    DefaultFileWriter(const char *fileName,size_t maxSize);
-    virtual  ~DefaultFileWriter();
+public:
+    DefaultFileWriter(const char *fileName, size_t maxSize);
+    virtual ~DefaultFileWriter();
     
-    virtual  int      isValid();
-    
-    private:
-    
-    virtual  size_t    doWrite(const unsigned char *data,size_t size);
+    virtual int isValid();
+
+private:
+
+    virtual size_t doWrite(const unsigned char *data, size_t size);
 
     // Note that we don't use the bool type anywhere in jikesapi.h
-    // since it is not supported by some compilers and we can't
+    // since it is not supported by some compilers. We can't
     // depend on the typedef in platform.h because jikesapi.h
-    // would never include build time files
-    int      valid;
+    // should never include build time files.
+    int valid;
+
 // FIXME: need to clean this up, why is this not wrapped in a platform.h function?
 #ifdef UNIX_FILE_SYSTEM
-    FILE     *file;
+    FILE *file;
 #elif defined(WIN32_FILE_SYSTEM)
-    HANDLE    file;
-    HANDLE    mapfile;
-    u1       *string_buffer;
-    size_t    dataWritten;
+    HANDLE file;
+    HANDLE mapfile;
+    u1 *string_buffer;
+    size_t dataWritten;
 #endif
 };
 
@@ -95,41 +97,39 @@ JikesOption::~JikesOption()
     delete [] sourcepath;
 }
 
-JikesOption::JikesOption() :
-    bootclasspath(NULL),
-    extdirs(NULL),
-    classpath(NULL),
-    sourcepath(NULL),
-    directory(NULL),
-    encoding(NULL),
-    nowrite(false),
-    deprecation(false),
-    optimize(false),
-    verbose(false),
-    depend(false),
-    nowarn(false),
-    old_classpath_search_order(false),
-    zero_defect(false),
-    help(false),
-    version(false),
-    g(SOURCE | LINES),
-    source(UNKNOWN),
-    target(UNKNOWN)
+JikesOption::JikesOption() : bootclasspath(NULL),
+                             extdirs(NULL),
+                             classpath(NULL),
+                             sourcepath(NULL),
+                             directory(NULL),
+                             encoding(NULL),
+                             nowrite(false),
+                             deprecation(false),
+                             optimize(false),
+                             verbose(false),
+                             depend(false),
+                             nowarn(false),
+                             old_classpath_search_order(false),
+                             zero_defect(false),
+                             help(false),
+                             version(false),
+                             g(SOURCE | LINES),
+                             source(UNKNOWN),
+                             target(UNKNOWN)
 {
 }
 
-JikesAPI * JikesAPI::instance = NULL;
+JikesAPI* JikesAPI::instance = NULL;
 
-JikesAPI::JikesAPI()
-:option(NULL),
-parsedOptions(NULL)
+JikesAPI::JikesAPI() : option(NULL),
+                       parsedOptions(NULL)
 {
     SetNewHandler();
     FloatingPointCheck();
     instance = this;
 }
 
-JikesAPI * JikesAPI::getInstance()
+JikesAPI* JikesAPI::getInstance()
 {
     return instance;
 }
@@ -146,7 +146,7 @@ void JikesAPI::cleanupOptions()
 
     if (parsedOptions)
     {
-        for (char ** parsed = parsedOptions; *parsed != NULL ; parsed++)
+        for (char** parsed = parsedOptions; *parsed != NULL; parsed++)
         {
             delete [] *parsed;
         }
@@ -155,7 +155,7 @@ void JikesAPI::cleanupOptions()
     }
 }
 
-char ** JikesAPI::parseOptions(int argc, char **argv)
+char** JikesAPI::parseOptions(int argc, char **argv)
 {
     cleanupOptions();
 
@@ -211,7 +211,7 @@ int JikesAPI::compile(char **filenames)
     // is so that the jikespai.h header does not
     // need to include option.h.
 
-    Control *control = new Control(filenames , *((Option*)option));
+    Control *control = new Control(filenames, *((Option *) option));
     int return_code = control -> return_code;
     delete control;
     return return_code;
@@ -249,7 +249,7 @@ const char *JikesError::getSeverityString()
  */
 int JikesAPI::stat(const char *fileName, struct ::stat *status)
 {
-    return SystemStat(fileName,status);
+    return SystemStat(fileName, status);
 }
 
 /**
@@ -277,7 +277,7 @@ JikesAPI::FileWriter *JikesAPI::write(const char *fileName, size_t bytes)
 {
     FileWriter *result  = new DefaultFileWriter(fileName, bytes);
     
-    if (result && (!result->isValid()))
+    if (result && (! result -> isValid()))
     {
         delete result;
         result = NULL;
@@ -286,7 +286,7 @@ JikesAPI::FileWriter *JikesAPI::write(const char *fileName, size_t bytes)
 }
 
 /**
- * The Write() mewthod on all WriteObject(s) makes sure that we do not
+ * The Write() method on all WriteObject(s) makes sure that we do not
  * send too much data to the virtual function.
  */
 size_t JikesAPI::FileWriter::write(const unsigned char *data, size_t size)
@@ -295,7 +295,7 @@ size_t JikesAPI::FileWriter::write(const unsigned char *data, size_t size)
 
     if (size <= maxSize)
     {
-        result = doWrite(data,size);
+        result = doWrite(data, size);
         maxSize -= size;
     }
    
@@ -320,12 +320,12 @@ namespace Jikes {
  */ 
 DefaultFileReader::DefaultFileReader(const char *fileName)
 {
-    size   = 0;
+    size = 0;
     buffer = NULL;
 
     struct stat status;
-    JikesAPI::getInstance()->stat(fileName, &status);
-    size   = status.st_size;
+    JikesAPI::getInstance() -> stat(fileName, &status);
+    size = status.st_size;
 
     FILE *srcfile = SystemFopen(fileName, "rb");
     if (srcfile != NULL)
@@ -356,14 +356,14 @@ DefaultFileReader::~DefaultFileReader()
 /**
  * Open a standard FILE pointer and get ready to write.
  */
-DefaultFileWriter::DefaultFileWriter(const char *fileName,size_t maxSize):
-    JikesAPI::FileWriter(maxSize)
+DefaultFileWriter::DefaultFileWriter(const char *fileName, size_t maxSize)
+  : JikesAPI::FileWriter(maxSize)
 {
-    valid  = false;
+    valid = false;
     file = SystemFopen(fileName, "wb");
-    if (file  ==  (FILE *) NULL)
+    if (file == (FILE *) NULL)
         return;
-    valid  = true;
+    valid = true;
 }
 
 /**
@@ -375,14 +375,14 @@ DefaultFileWriter::~DefaultFileWriter()
         fclose(file);
 }
 
-int DefaultFileWriter::isValid()  { return valid;}
+int DefaultFileWriter::isValid() { return valid; }
 
 /**
  * Copy the data buffer to the file.
  */
-size_t DefaultFileWriter::doWrite(const unsigned char *data,size_t size)
+size_t DefaultFileWriter::doWrite(const unsigned char *data, size_t size)
 {
-    return fwrite(data, sizeof(u1),size, file);
+    return fwrite(data, sizeof(u1), size, file);
 }
 
 #elif defined(WIN32_FILE_SYSTEM) // ! UNIX_FILE_SYSTEM
@@ -391,17 +391,18 @@ size_t DefaultFileWriter::doWrite(const unsigned char *data,size_t size)
 // Open a windows file and map the file onto processor memory.
 DefaultFileReader::DefaultFileReader(const char *fileName)
 {
-    size   = 0;
+    size = 0;
     buffer = NULL;
 
-    srcfile = CreateFile(fileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
+    srcfile = CreateFile(fileName, GENERIC_READ, FILE_SHARE_READ, NULL,
+                         OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
     if (srcfile != INVALID_HANDLE_VALUE)
     {
         mapfile = CreateFileMapping(srcfile, NULL, PAGE_READONLY, 0, 0, NULL);
         if (mapfile != INVALID_HANDLE_VALUE)
         {
             buffer = (char *) MapViewOfFile(mapfile, FILE_MAP_READ, 0, 0, 0);
-            size = (size_t)GetFileSize(srcfile, NULL);
+            size = (size_t) GetFileSize(srcfile, NULL);
         }
     }
 }
@@ -430,19 +431,20 @@ DefaultFileReader::~DefaultFileReader()
 DefaultFileWriter::DefaultFileWriter(const char *fileName,size_t maxSize):
     FileWriter(maxSize)
 {
-    valid  = false;
-    dataWritten    = 0;
-    file           = CreateFile(fileName, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    valid = false;
+    dataWritten = 0;
+    file = CreateFile(fileName, GENERIC_READ | GENERIC_WRITE, 0, NULL,
+                      CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (file == INVALID_HANDLE_VALUE)
         return;
 
-    mapfile        = CreateFileMapping(file, NULL, PAGE_READWRITE, 0, maxSize, NULL);
+    mapfile = CreateFileMapping(file, NULL, PAGE_READWRITE, 0, maxSize, NULL);
     if (mapfile == INVALID_HANDLE_VALUE)
         return;
 
-    string_buffer  = (u1 *) MapViewOfFile(mapfile, FILE_MAP_WRITE, 0, 0, maxSize);
+    string_buffer = (u1 *) MapViewOfFile(mapfile, FILE_MAP_WRITE, 0, 0, maxSize);
     assert(string_buffer);
-    valid  = true;
+    valid = true;
 }
 
 // When the WriteObject is destroyed close all the associated files,
@@ -466,7 +468,7 @@ int DefaultFileWriter::isValid()
 }
 
 // Copy the input data to the mapped memory.
-size_t DefaultFileWriter::doWrite(const unsigned char *data,size_t size)
+size_t DefaultFileWriter::doWrite(const unsigned char *data, size_t size)
 {
     memmove(&string_buffer[dataWritten], data, size * sizeof(u1));
     dataWritten += size;
