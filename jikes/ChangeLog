@@ -1,3 +1,7 @@
+2001-05-13  Chris Abbey  <cabbey@bresnanlink.net>
+
+	Released Jikes 1.14, Happy Mother's Day.
+
 2001-05-11  Chris Abbey  <cabbey@bresnanlink.net>
 
 	* src/stream.cpp (Stream::DecodeNextCharacter): fixed
