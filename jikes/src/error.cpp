@@ -245,6 +245,8 @@ void SemanticError::StaticInitializer()
 
     warning[INVALID_OPTION] = 1;
     warning[DISABLED_OPTION] = 1;
+    warning[UNSUPPORTED_ENCODING] = 1;
+
     warning[CANNOT_OPEN_ZIP_FILE] = 1;
     warning[CANNOT_OPEN_PATH_DIRECTORY] = 1;
 
@@ -1053,6 +1055,15 @@ void SemanticError::PrintUNSUPPORTED_OPTION(ErrorInfo &err, LexStream *lex_strea
     return;
 }
 
+
+void SemanticError::PrintUNSUPPORTED_ENCODING(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    Coutput << "Unsupported encoding: \""
+            << err.insert1
+            << "\".";
+    
+    return;
+}              
 
 void SemanticError::PrintDISABLED_OPTION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
