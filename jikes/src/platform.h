@@ -722,6 +722,7 @@ public:
                 U8S_Code[], // "Code"
                 U8S_ConstantValue[], // "ConstantValue"
                 U8S_D[], // "D"
+                U8S_Deprecated[], // "Deprecated"
                 U8S_Exceptions[], // "Exceptions"
                 U8S_F[], // "F"
                 U8S_I[], // "I"
@@ -746,7 +747,6 @@ public:
                 U8S_S[], // "S"
                 U8S_SourceFile[], // "SourceFile"
                 U8S_Synthetic[], // "Synthetic"
-                U8S_Deprecated[], // "Deprecated"
                 U8S_V[], // "V"
                 U8S_Z[], // "Z"
 

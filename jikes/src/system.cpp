@@ -111,7 +111,7 @@ void Control::FindPathsToDirectory(PackageSymbol* package)
         PackageSymbol* owner_package = package -> owner;
         if (owner_package) // package is a subpackage?
         {
-            for (int i = 0; i < owner_package -> directory.Length(); i++)
+            for (unsigned i = 0; i < owner_package -> directory.Length(); i++)
             {
                 DirectorySymbol* owner_directory_symbol =
                     owner_package -> directory[i];
@@ -154,7 +154,7 @@ void Control::FindPathsToDirectory(PackageSymbol* package)
             // Recall that since classpath[0] contains the default directory,
             // we always start searching at location 1.
             //
-            for (int k = 1; k < classpath.Length(); k++)
+            for (unsigned k = 1; k < classpath.Length(); k++)
             {
                 PathSymbol* path_symbol = classpath[k];
                 DirectorySymbol* directory_symbol =
@@ -258,7 +258,7 @@ void Control::InitClassInfo()
              method;
              method = method -> next_method)
         {
-            char* signature = method -> SignatureString();
+            const char* signature = method -> SignatureString();
 
             if (strcmp(signature, StringConstant::U8S_LP_String_RP_Class) == 0)
             {
@@ -284,7 +284,7 @@ void Control::InitClassInfo()
              method;
              method = method -> next_method)
         {
-            char* signature = method -> SignatureString();
+            const char* signature = method -> SignatureString();
 
             if (strcmp(signature, StringConstant::U8S_LP_RP_Class) == 0)
             {
@@ -312,7 +312,7 @@ void Control::InitClassInfo()
                  method;
                  method = method -> next_method)
             {
-                char* signature = method -> SignatureString();
+                const char* signature = method -> SignatureString();
 
                 if (strcmp(signature, StringConstant::U8S_LP_RP_Z) == 0)
                 {
@@ -345,7 +345,7 @@ void Control::InitAssertionErrorInfo()
              constructor;
              constructor = constructor -> next_method)
         {
-            char* signature = constructor -> SignatureString();
+            const char* signature = constructor -> SignatureString();
 
             if (strcmp(signature, StringConstant::U8S_LP_RP_V) == 0)
                 AssertionError_Init_method = constructor;
@@ -396,7 +396,7 @@ void Control::InitThrowableInfo()
              method;
              method = method -> next_method)
         {
-            char* signature = method -> SignatureString();
+            const char* signature = method -> SignatureString();
 
             if (strcmp(signature, StringConstant::U8S_LP_RP_String) == 0)
             {
@@ -415,7 +415,7 @@ void Control::InitThrowableInfo()
                  method;
                  method = method -> next_method)
             {
-                char* signature = method -> SignatureString();
+                const char* signature = method -> SignatureString();
 
                 if (strcmp(signature,
                            StringConstant::U8S_LP_Throwable_RP_Throwable) == 0)
@@ -451,7 +451,7 @@ void Control::InitNoClassDefFoundErrorInfo()
              constructor;
              constructor = constructor -> next_method)
         {
-            char* signature = constructor -> SignatureString();
+            const char* signature = constructor -> SignatureString();
 
             if (strcmp(signature, StringConstant::U8S_LP_String_RP_V) == 0)
                 NoClassDefFoundError_InitString_method = constructor;
@@ -483,7 +483,7 @@ void Control::InitStringBufferInfo()
              constructor;
              constructor = constructor -> next_method)
         {
-            char* signature = constructor -> SignatureString();
+            const char* signature = constructor -> SignatureString();
 
             if (strcmp(signature, StringConstant::U8S_LP_RP_V) == 0)
                  StringBuffer_Init_method = constructor;
@@ -516,7 +516,7 @@ void Control::InitStringBufferInfo()
              append_method;
              append_method = append_method -> next_method)
         {
-            char* signature = append_method -> SignatureString();
+            const char* signature = append_method -> SignatureString();
 
             if (strcmp(signature,
                        StringConstant::U8S_LP_C_RP_StringBuffer) == 0)
@@ -1564,7 +1564,7 @@ DirectorySymbol* Control::GetOutputDirectory(FileSymbol* file_symbol)
 
 
 FileSymbol* Control::GetJavaFile(PackageSymbol* package,
-                                 NameSymbol* name_symbol)
+                                 const NameSymbol* name_symbol)
 {
     FileSymbol* file_symbol = NULL;
 
@@ -1579,7 +1579,7 @@ FileSymbol* Control::GetJavaFile(PackageSymbol* package,
 
     DirectoryEntry* entry = NULL;
     DirectorySymbol* directory_symbol = NULL;
-    for (int k = 0; k < package -> directory.Length(); k++)
+    for (unsigned k = 0; k < package -> directory.Length(); k++)
     {
         directory_symbol = package -> directory[k];
         if ((entry = directory_symbol -> FindEntry(full_filename, length)))
@@ -1608,7 +1608,7 @@ FileSymbol* Control::GetJavaFile(PackageSymbol* package,
 
 
 FileSymbol* Control::GetFile(Control& control, PackageSymbol* package,
-                             NameSymbol* name_symbol)
+                             const NameSymbol* name_symbol)
 {
     return control.option.old_classpath_search_order
         ? GetFileFirst(control, package, name_symbol)
@@ -1616,7 +1616,7 @@ FileSymbol* Control::GetFile(Control& control, PackageSymbol* package,
 }
 
 FileSymbol* Control::GetFileBoth(Control& control, PackageSymbol* package,
-                                 NameSymbol* name_symbol)
+                                 const NameSymbol* name_symbol)
 {
     FileSymbol* java_file_symbol = NULL;
     FileSymbol* class_file_symbol = NULL;
@@ -1637,7 +1637,7 @@ FileSymbol* Control::GetFileBoth(Control& control, PackageSymbol* package,
     strcpy(java_name, name_symbol -> Utf8Name());
     strcat(java_name, FileSymbol::java_suffix);
 
-    for (int k = 0; k < package -> directory.Length(); k++)
+    for (unsigned k = 0; k < package -> directory.Length(); k++)
     {
         DirectorySymbol* directory_symbol = package -> directory[k];
         bool foundBothEntries = false;
@@ -1722,7 +1722,7 @@ FileSymbol* Control::GetFileBoth(Control& control, PackageSymbol* package,
 }
 
 FileSymbol* Control::GetFileFirst(Control& control, PackageSymbol* package,
-                                  NameSymbol* name_symbol)
+                                  const NameSymbol* name_symbol)
 {
     FileSymbol* file_symbol = NULL;
 
@@ -1742,7 +1742,7 @@ FileSymbol* Control::GetFileFirst(Control& control, PackageSymbol* package,
     strcpy(java_name, name_symbol -> Utf8Name());
     strcat(java_name, FileSymbol::java_suffix);
 
-    for (int k = 0; k < package -> directory.Length(); k++)
+    for (unsigned k = 0; k < package -> directory.Length(); k++)
     {
         DirectorySymbol* directory_symbol = package -> directory[k];
         file_symbol = directory_symbol -> FindFileSymbol(name_symbol);

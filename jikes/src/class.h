@@ -79,8 +79,8 @@ public:
 
     virtual void Put(OutputBuffer &output_buffer)
     {
-        output_buffer.PutB1(tag);
-        output_buffer.PutB2(name_index);
+        output_buffer.PutU1(tag);
+        output_buffer.PutU2(name_index);
     }
 
 #ifdef JIKES_DEBUG
@@ -121,9 +121,9 @@ public:
 
     virtual void Put(OutputBuffer &output_buffer)
     {
-        output_buffer.PutB1(tag);
-        output_buffer.PutB4(high_bytes);
-        output_buffer.PutB4(low_bytes);
+        output_buffer.PutU1(tag);
+        output_buffer.PutU4(high_bytes);
+        output_buffer.PutU4(low_bytes);
     }
 
 #ifdef JIKES_DEBUG
@@ -163,9 +163,9 @@ public:
 
     virtual void Put(OutputBuffer &output_buffer)
     {
-         output_buffer.PutB1(tag);
-         output_buffer.PutB2(class_index);
-         output_buffer.PutB2(name_and_type_index);
+         output_buffer.PutU1(tag);
+         output_buffer.PutU2(class_index);
+         output_buffer.PutU2(name_and_type_index);
     }
 
 #ifdef JIKES_DEBUG
@@ -206,8 +206,8 @@ public:
 
     virtual void Put(OutputBuffer &output_buffer)
     {
-        output_buffer.PutB1(tag);
-        output_buffer.PutB4(bytes);
+        output_buffer.PutU1(tag);
+        output_buffer.PutU4(bytes);
     }
 
 #ifdef JIKES_DEBUG
@@ -242,8 +242,8 @@ public:
 
     virtual void Put(OutputBuffer &output_buffer)
     {
-        output_buffer.PutB1(tag);
-        output_buffer.PutB4(bytes);
+        output_buffer.PutU1(tag);
+        output_buffer.PutU4(bytes);
     }
 
 #ifdef JIKES_DEBUG
@@ -288,9 +288,9 @@ public:
 
     virtual void Put(OutputBuffer &output_buffer)
     {
-        output_buffer.PutB1(tag);
-        output_buffer.PutB2(class_index);
-        output_buffer.PutB2(name_and_type_index);
+        output_buffer.PutU1(tag);
+        output_buffer.PutU2(class_index);
+        output_buffer.PutU2(name_and_type_index);
     }
 
 #ifdef JIKES_DEBUG
@@ -335,9 +335,9 @@ public:
 
     virtual void Put(OutputBuffer &output_buffer)
     {
-        output_buffer.PutB1(tag);
-        output_buffer.PutB4(high_bytes);
-        output_buffer.PutB4(low_bytes);
+        output_buffer.PutU1(tag);
+        output_buffer.PutU4(high_bytes);
+        output_buffer.PutU4(low_bytes);
     }
 
 #ifdef JIKES_DEBUG
@@ -376,9 +376,9 @@ public:
 
     virtual void Put(OutputBuffer &output_buffer)
     {
-        output_buffer.PutB1(tag);
-        output_buffer.PutB2(class_index);
-        output_buffer.PutB2(name_and_type_index);
+        output_buffer.PutU1(tag);
+        output_buffer.PutU2(class_index);
+        output_buffer.PutU2(name_and_type_index);
     }
 
 #ifdef JIKES_DEBUG
@@ -423,9 +423,9 @@ public:
 
     virtual void Put(OutputBuffer &output_buffer)
     {
-        output_buffer.PutB1(tag);
-        output_buffer.PutB2(name_index);
-        output_buffer.PutB2(descriptor_index);
+        output_buffer.PutU1(tag);
+        output_buffer.PutU2(name_index);
+        output_buffer.PutU2(descriptor_index);
     }
 
 #ifdef JIKES_DEBUG
@@ -466,8 +466,8 @@ public:
 
     virtual void Put(OutputBuffer &output_buffer)
     {
-        output_buffer.PutB1(tag);
-        output_buffer.PutB2(string_index);
+        output_buffer.PutU1(tag);
+        output_buffer.PutU2(string_index);
     }
 
 #ifdef JIKES_DEBUG
@@ -498,11 +498,12 @@ class CONSTANT_Utf8_info : public cp_info
 
 public:
 
-    CONSTANT_Utf8_info(u1 _tag, char *_bytes, int _length) : cp_info(_tag),
-                                                             length_(_length)
+    CONSTANT_Utf8_info(u1 _tag, char *_bytes, unsigned _length)
+        : cp_info(_tag),
+          length_(_length)
     {
         bytes = new char[_length];
-        for (int i = 0; i < _length; i++)
+        for (unsigned i = 0; i < _length; i++)
             bytes[i] = _bytes[i];
     }
     virtual ~CONSTANT_Utf8_info()
@@ -514,10 +515,10 @@ public:
 
     virtual void Put(OutputBuffer &output_buffer)
     {
-        output_buffer.PutB1(tag);
-        output_buffer.PutB2(length());
+        output_buffer.PutU1(tag);
+        output_buffer.PutU2(length());
         for (int i = 0; i < length(); i++)
-            output_buffer.PutB1(bytes[i]);
+            output_buffer.PutU1(bytes[i]);
     }
 
 #ifdef JIKES_DEBUG
@@ -657,7 +658,7 @@ public:
     {}
     virtual ~Code_attribute()
     {
-        for (int i = 0; i < attributes.Length(); i++)
+        for (unsigned i = 0; i < attributes.Length(); i++)
             delete attributes[i];
     }
 
@@ -675,7 +676,7 @@ public:
             //
             // std. fields of attribute_info
             //
-            for (int i = 0; i < attributes.Length(); i++)
+            for (unsigned i = 0; i < attributes.Length(); i++)
             {
                 if (attributes[i] -> AttributeLength() > 0)
                     attribute_length += (attributes[i] -> AttributeLength() + 6);
@@ -749,26 +750,26 @@ public:
     {
         assert(attribute_name_index != 0);
 
-        output_buffer.PutB2(attribute_name_index);
-        output_buffer.PutB4(AttributeLength());
-        output_buffer.PutB2(max_stack);
-        output_buffer.PutB2(max_locals);
-        output_buffer.PutB4(code.Length());
+        output_buffer.PutU2(attribute_name_index);
+        output_buffer.PutU4(AttributeLength());
+        output_buffer.PutU2(max_stack);
+        output_buffer.PutU2(max_locals);
+        output_buffer.PutU4(code.Length());
 
-        for (int i = 0; i < code.Length(); i++)
-            output_buffer.PutB1(code[i]);
-        output_buffer.PutB2(exception_table.Length());
+        for (unsigned i = 0; i < code.Length(); i++)
+            output_buffer.PutU1(code[i]);
+        output_buffer.PutU2(exception_table.Length());
 
-        for (int j = 0; j < exception_table.Length(); j++)
+        for (unsigned j = 0; j < exception_table.Length(); j++)
         {
-            output_buffer.PutB2(exception_table[j].start_pc);
-            output_buffer.PutB2(exception_table[j].end_pc);
-            output_buffer.PutB2(exception_table[j].handler_pc);
-            output_buffer.PutB2(exception_table[j].catch_type);
+            output_buffer.PutU2(exception_table[j].start_pc);
+            output_buffer.PutU2(exception_table[j].end_pc);
+            output_buffer.PutU2(exception_table[j].handler_pc);
+            output_buffer.PutU2(exception_table[j].catch_type);
         }
 
-        output_buffer.PutB2(attributes.Length());
-        for (int k = 0; k < attributes.Length(); k++)
+        output_buffer.PutU2(attributes.Length());
+        for (unsigned k = 0; k < attributes.Length(); k++)
             attributes[k] -> Put(output_buffer);
     }
 
@@ -792,7 +793,7 @@ public:
         {
             Coutput << " exception_table: " << exception_table.Length()
                     << " entries" << endl;
-            for (int i  = 0; i < exception_table.Length(); i++)
+            for (unsigned i  = 0; i < exception_table.Length(); i++)
             {
                 Coutput << "  start_pc "
                         << (unsigned) exception_table[i].start_pc
@@ -810,7 +811,7 @@ public:
 
         Coutput << "  " << endl;
 
-        for (int i = 0; i < attributes.Length(); i++)
+        for (unsigned i = 0; i < attributes.Length(); i++)
             attributes[i] -> Print(constant_pool);
     }
 #endif
@@ -844,9 +845,9 @@ public:
     {
         assert(attribute_name_index != 0);
 
-        output_buffer.PutB2(attribute_name_index);
-        output_buffer.PutB4(AttributeLength());
-        output_buffer.PutB2(constantvalue_index);
+        output_buffer.PutU2(attribute_name_index);
+        output_buffer.PutU4(AttributeLength());
+        output_buffer.PutU2(constantvalue_index);
     }
 
 #ifdef JIKES_DEBUG
@@ -906,11 +907,11 @@ public:
     {
         assert(attribute_name_index != 0);
 
-        output_buffer.PutB2(attribute_name_index);
-        output_buffer.PutB4(AttributeLength());
-        output_buffer.PutB2(exception_index_table.Length());
-        for (int i = 0; i < exception_index_table.Length(); i++)
-            output_buffer.PutB2(exception_index_table[i]);
+        output_buffer.PutU2(attribute_name_index);
+        output_buffer.PutU4(AttributeLength());
+        output_buffer.PutU2(exception_index_table.Length());
+        for (unsigned i = 0; i < exception_index_table.Length(); i++)
+            output_buffer.PutU2(exception_index_table[i]);
     }
 
 #ifdef JIKES_DEBUG
@@ -922,7 +923,7 @@ public:
                 << AttributeLength()
                 << endl;
 
-        for (int i = 0; i < exception_index_table.Length(); i++)
+        for (unsigned i = 0; i < exception_index_table.Length(); i++)
             Coutput << "    "
                     << (unsigned) exception_index_table[i];
         Coutput << endl;
@@ -972,7 +973,7 @@ public:
 
     void AddInnerClass(u2 inner_class_info_index, u2 outer_class_info_index, u2 inner_name_index, u2 inner_class_access_flags)
     {
-        int index = inner_classes.NextIndex();
+        unsigned index = inner_classes.NextIndex();
 
         inner_classes[index].inner_class_info_index = inner_class_info_index;
         inner_classes[index].outer_class_info_index = outer_class_info_index;
@@ -984,15 +985,15 @@ public:
     {
         assert(attribute_name_index != 0);
 
-        output_buffer.PutB2(attribute_name_index);
-        output_buffer.PutB4(AttributeLength());
-        output_buffer.PutB2(inner_classes.Length());
-        for (int i = 0; i < inner_classes.Length(); i++)
+        output_buffer.PutU2(attribute_name_index);
+        output_buffer.PutU4(AttributeLength());
+        output_buffer.PutU2(inner_classes.Length());
+        for (unsigned i = 0; i < inner_classes.Length(); i++)
         {
-            output_buffer.PutB2(inner_classes[i].inner_class_info_index);
-            output_buffer.PutB2(inner_classes[i].outer_class_info_index);
-            output_buffer.PutB2(inner_classes[i].inner_name_index);
-            output_buffer.PutB2(inner_classes[i].inner_class_access_flags);
+            output_buffer.PutU2(inner_classes[i].inner_class_info_index);
+            output_buffer.PutU2(inner_classes[i].outer_class_info_index);
+            output_buffer.PutU2(inner_classes[i].inner_name_index);
+            output_buffer.PutU2(inner_classes[i].inner_class_access_flags);
         }
     }
 
@@ -1008,7 +1009,7 @@ public:
                 << inner_classes.Length()
                 << endl;
 
-        for (int i = 0; i < inner_classes.Length(); i++)
+        for (unsigned i = 0; i < inner_classes.Length(); i++)
         {
             Coutput << "     "
                     << i
@@ -1071,7 +1072,7 @@ public:
 
     void AddLineNumber(u2 start_pc, u2 line_number)
     {
-        int line_number_index = line_number_table.NextIndex();
+        unsigned line_number_index = line_number_table.NextIndex();
 
         line_number_table[line_number_index].start_pc = start_pc;
         line_number_table[line_number_index].line_number = line_number;
@@ -1079,7 +1080,7 @@ public:
 
     void SetMax(u2 max_pc)
     {
-        int i = line_number_table.Length();
+        unsigned i = line_number_table.Length();
         while(--i > 0 && line_number_table[i].start_pc > max_pc)
             line_number_table[i].start_pc = max_pc;
     }
@@ -1088,13 +1089,13 @@ public:
     {
         assert(attribute_name_index != 0);
 
-        output_buffer.PutB2(attribute_name_index);
-        output_buffer.PutB4(AttributeLength());
-        output_buffer.PutB2(line_number_table.Length());
-        for (int i = 0; i < line_number_table.Length(); i++)
+        output_buffer.PutU2(attribute_name_index);
+        output_buffer.PutU4(AttributeLength());
+        output_buffer.PutU2(line_number_table.Length());
+        for (unsigned i = 0; i < line_number_table.Length(); i++)
         {
-            output_buffer.PutB2(line_number_table[i].start_pc);
-            output_buffer.PutB2(line_number_table[i].line_number);
+            output_buffer.PutU2(line_number_table[i].start_pc);
+            output_buffer.PutU2(line_number_table[i].line_number);
         }
     }
 
@@ -1110,7 +1111,7 @@ public:
                 << line_number_table.Length()
                 << endl;
 
-        for (int i = 0; i < line_number_table.Length(); i++)
+        for (unsigned i = 0; i < line_number_table.Length(); i++)
         {
             Coutput << "     "
                     << i
@@ -1175,7 +1176,7 @@ public:
 
         if (end > start)
         {
-            int local_index = local_variable_table.NextIndex();
+            unsigned local_index = local_variable_table.NextIndex();
 
             local_variable_table[local_index].start_pc = start;
             local_variable_table[local_index].length = end - start;
@@ -1189,16 +1190,16 @@ public:
     {
         assert(attribute_name_index != 0);
 
-        output_buffer.PutB2(attribute_name_index);
-        output_buffer.PutB4(AttributeLength());
-        output_buffer.PutB2(local_variable_table.Length());
-        for (int i = 0; i < local_variable_table.Length(); i++)
+        output_buffer.PutU2(attribute_name_index);
+        output_buffer.PutU4(AttributeLength());
+        output_buffer.PutU2(local_variable_table.Length());
+        for (unsigned i = 0; i < local_variable_table.Length(); i++)
         {
-            output_buffer.PutB2(local_variable_table[i].start_pc);
-            output_buffer.PutB2(local_variable_table[i].length);
-            output_buffer.PutB2(local_variable_table[i].name_index);
-            output_buffer.PutB2(local_variable_table[i].descriptor_index);
-            output_buffer.PutB2(local_variable_table[i].index);
+            output_buffer.PutU2(local_variable_table[i].start_pc);
+            output_buffer.PutU2(local_variable_table[i].length);
+            output_buffer.PutU2(local_variable_table[i].name_index);
+            output_buffer.PutU2(local_variable_table[i].descriptor_index);
+            output_buffer.PutU2(local_variable_table[i].index);
         }
     }
 
@@ -1214,7 +1215,7 @@ public:
                 << local_variable_table.Length()
                 << endl;
 
-        for (int i = 0; i < local_variable_table.Length(); i++)
+        for (unsigned i = 0; i < local_variable_table.Length(); i++)
         {
             Coutput << "     "
                     << i
@@ -1259,9 +1260,9 @@ public:
     {
         assert(attribute_name_index != 0);
 
-        output_buffer.PutB2(attribute_name_index);
-        output_buffer.PutB4(AttributeLength());
-        output_buffer.PutB2(sourcefile_index);
+        output_buffer.PutU2(attribute_name_index);
+        output_buffer.PutU4(AttributeLength());
+        output_buffer.PutU2(sourcefile_index);
     }
 
 #ifdef JIKES_DEBUG
@@ -1302,8 +1303,8 @@ public:
     {
         assert(attribute_name_index != 0);
 
-        output_buffer.PutB2(attribute_name_index);
-        output_buffer.PutB4(AttributeLength());
+        output_buffer.PutU2(attribute_name_index);
+        output_buffer.PutU4(AttributeLength());
     }
 
 #ifdef JIKES_DEBUG
@@ -1342,8 +1343,8 @@ public:
     {
         assert(attribute_name_index != 0);
 
-        output_buffer.PutB2(attribute_name_index);
-        output_buffer.PutB4(AttributeLength());
+        output_buffer.PutU2(attribute_name_index);
+        output_buffer.PutU4(AttributeLength());
     }
 
 #ifdef JIKES_DEBUG
@@ -1378,7 +1379,7 @@ public:
 
      ~field_info()
      {
-         for (int i = 0; i < attributes.Length(); i++)
+         for (unsigned i = 0; i < attributes.Length(); i++)
              delete attributes[i];
      }
 
@@ -1390,12 +1391,12 @@ public:
 
     inline void Put(OutputBuffer &output_buffer)
     {
-        output_buffer.PutB2(access_flags);
-        output_buffer.PutB2(name_index);
-        output_buffer.PutB2(descriptor_index);
-        output_buffer.PutB2(attributes.Length());
+        output_buffer.PutU2(access_flags);
+        output_buffer.PutU2(name_index);
+        output_buffer.PutU2(descriptor_index);
+        output_buffer.PutU2(attributes.Length());
 
-        for (int ai = 0; ai < attributes.Length(); ai++)
+        for (unsigned ai = 0; ai < attributes.Length(); ai++)
             attributes[ai] -> Put(output_buffer);
     }
 
@@ -1410,7 +1411,7 @@ public:
 
         AccessFlags::Print();
 
-        for (int i = 0; i < attributes.Length(); i++)
+        for (unsigned i = 0; i < attributes.Length(); i++)
             attributes[i] -> Print(constant_pool);
         Coutput << endl;
     }
@@ -1437,7 +1438,7 @@ public:
 
     ~method_info()
     {
-        for (int i = 0; i < attributes.Length(); i++)
+        for (unsigned i = 0; i < attributes.Length(); i++)
             delete attributes[i];
     }
 
@@ -1449,12 +1450,12 @@ public:
 
     inline void Put(OutputBuffer &output_buffer)
     {
-        output_buffer.PutB2(access_flags);
-        output_buffer.PutB2(name_index);
-        output_buffer.PutB2(descriptor_index);
-        output_buffer.PutB2(attributes.Length());
+        output_buffer.PutU2(access_flags);
+        output_buffer.PutU2(name_index);
+        output_buffer.PutU2(descriptor_index);
+        output_buffer.PutU2(attributes.Length());
 
-        for (int i = 0; i < attributes.Length(); i++)
+        for (unsigned i = 0; i < attributes.Length(); i++)
             attributes[i] -> Put(output_buffer);
     }
 
@@ -1469,7 +1470,7 @@ public:
 
         AccessFlags::Print();
 
-        for (int i = 0; i < attributes.Length(); i++)
+        for (unsigned i = 0; i < attributes.Length(); i++)
             attributes[i] -> Print(constant_pool);
         Coutput << endl;
     }
@@ -1524,10 +1525,10 @@ public:
 
     ~ClassFile()
     {
-        for (int i = 1; i < constant_pool.Length(); i++)
+        for (unsigned i = 1; i < constant_pool.Length(); i++)
             delete constant_pool[i];
 
-        for (int j = 0; j < attributes.Length(); j++)
+        for (unsigned j = 0; j < attributes.Length(); j++)
             delete attributes[j];
     }
 
@@ -1537,7 +1538,7 @@ public:
         Control &control = sem -> control;
         OutputBuffer output_buffer;
 
-        char *class_file_name = unit_type -> ClassName();
+        const char* class_file_name = unit_type -> ClassName();
         if (control.option.verbose)
         {
             Coutput << "[write "
@@ -1547,15 +1548,15 @@ public:
 
         if (! control.option.nowrite)
         {
-            output_buffer.PutB4(magic);
-            output_buffer.PutB2(minor_version);
-            output_buffer.PutB2(major_version);
+            output_buffer.PutU4(magic);
+            output_buffer.PutU2(minor_version);
+            output_buffer.PutU2(major_version);
 
             //
             // write constant pool
             //
-            output_buffer.PutB2(constant_pool.Length());
-            for (int i = 1; i < constant_pool.Length(); i++)
+            output_buffer.PutU2(constant_pool.Length());
+            for (unsigned i = 1; i < constant_pool.Length(); i++)
             {
                 assert(constant_pool[i]);
 
@@ -1565,43 +1566,43 @@ public:
                     i++; // skip the next entry for eight-byte constants
             }
 
-            output_buffer.PutB2(access_flags);
-            output_buffer.PutB2(this_class);
-            output_buffer.PutB2(super_class);
+            output_buffer.PutU2(access_flags);
+            output_buffer.PutU2(this_class);
+            output_buffer.PutU2(super_class);
 
             //
             // write interfaces
             //
-            output_buffer.PutB2(interfaces.Length());
-            for (int j = 0; j < interfaces.Length(); j++)
-                output_buffer.PutB2(interfaces[j]);
+            output_buffer.PutU2(interfaces.Length());
+            for (unsigned j = 0; j < interfaces.Length(); j++)
+                output_buffer.PutU2(interfaces[j]);
 
             //
             // write field members
             //
-            output_buffer.PutB2(fields.Length());
-            for (int k = 0; k < fields.Length(); k++)
+            output_buffer.PutU2(fields.Length());
+            for (unsigned k = 0; k < fields.Length(); k++)
                 fields[k].Put(output_buffer);
 
             //
             // write method members
             //
-            output_buffer.PutB2(methods.Length());
-            for (int l = 0; l < methods.Length(); l++)
+            output_buffer.PutU2(methods.Length());
+            for (unsigned l = 0; l < methods.Length(); l++)
                 methods[l].Put(output_buffer);
 
             //
             // write attributes
             //
-            output_buffer.PutB2(attributes.Length());
-            for (int m = 0; m < attributes.Length(); m++)
+            output_buffer.PutU2(attributes.Length());
+            for (unsigned m = 0; m < attributes.Length(); m++)
                 attributes[m] -> Put(output_buffer);
 
             if (! output_buffer.WriteToFile(class_file_name))
             {
-                int length = strlen(class_file_name);
+                unsigned length = strlen(class_file_name);
                 wchar_t *name = new wchar_t[length + 1];
-                for (int i = 0; i < length; i++)
+                for (unsigned i = 0; i < length; i++)
                     name[i] = class_file_name[i];
                 name[length] = U_NULL;
 

@@ -152,14 +152,14 @@ void Control::RereadDirectory(DirectorySymbol* directory_symbol)
 {
     directory_symbol -> ResetDirectory();
 
-    for (int i = 0; i < directory_symbol -> subdirectories.Length(); i++)
+    for (unsigned i = 0; i < directory_symbol -> subdirectories.Length(); i++)
         RereadDirectory(directory_symbol -> subdirectories[i]);
 }
 
 
 void Control::RereadDirectories()
 {
-    for (int i = (dot_classpath_index == 0 ? 0 : 1);
+    for (unsigned i = (dot_classpath_index == 0 ? 0 : 1);
          i < classpath.Length(); i++)
     {
         PathSymbol* path_symbol = classpath[i];
@@ -193,7 +193,7 @@ void Control::ComputeRecompilationSet(TypeDependenceChecker& dependence_checker)
          file_symbol;
          file_symbol = (FileSymbol*) input_java_file_set.NextElement())
     {
-        for (int i = 0; i < file_symbol -> types.Length(); i++)
+        for (unsigned i = 0; i < file_symbol -> types.Length(); i++)
             input_types.Next() = file_symbol -> types[i];
     }
 
@@ -204,7 +204,7 @@ void Control::ComputeRecompilationSet(TypeDependenceChecker& dependence_checker)
     // bad types.
     //
     SymbolSet dependents_closure(length_estimate);
-    for (int i = 0; i < type_trash_bin.Length(); i++)
+    for (unsigned i = 0; i < type_trash_bin.Length(); i++)
     {
         TypeSymbol* type = type_trash_bin[i];
         if (! dependents_closure.IsElement(type))
@@ -245,7 +245,7 @@ void Control::ComputeRecompilationSet(TypeDependenceChecker& dependence_checker)
              file_symbol;
              file_symbol = (FileSymbol*) new_set.NextElement())
         {
-            for (int i = 0; i < file_symbol -> types.Length(); i++)
+            for (unsigned i = 0; i < file_symbol -> types.Length(); i++)
             {
                 TypeSymbol* type = file_symbol -> types[i];
                 if (! dependents_closure.IsElement(type))
@@ -348,7 +348,7 @@ void Control::ComputeRecompilationSet(TypeDependenceChecker& dependence_checker)
     //
     // Clean up the types that were compiled in the previous compilation pass.
     //
-    for (int j = 0; j < input_types.Length(); j++)
+    for (unsigned j = 0; j < input_types.Length(); j++)
         input_types[j] -> RemoveCompilationReferences();
 
     //
@@ -356,7 +356,7 @@ void Control::ComputeRecompilationSet(TypeDependenceChecker& dependence_checker)
     // dependence checker.
     //
     Tuple<TypeSymbol*>& type_list = dependence_checker.TypeList();
-    for (int k = 0; k < type_list.Length(); k++)
+    for (unsigned k = 0; k < type_list.Length(); k++)
     {
         TypeSymbol* type = type_list[k];
 

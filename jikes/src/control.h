@@ -576,42 +576,44 @@ public:
     //
     //
     static DirectorySymbol* GetOutputDirectory(FileSymbol*);
-    static FileSymbol* GetJavaFile(PackageSymbol*, NameSymbol*);
-    static FileSymbol* GetFile(Control&, PackageSymbol*, NameSymbol*);
-    static FileSymbol* GetFileFirst(Control&, PackageSymbol*, NameSymbol*);
-    static FileSymbol* GetFileBoth(Control&, PackageSymbol*, NameSymbol*);
+    static FileSymbol* GetJavaFile(PackageSymbol*, const NameSymbol*);
+    static FileSymbol* GetFile(Control&, PackageSymbol*, const NameSymbol*);
+    static FileSymbol* GetFileFirst(Control&, PackageSymbol*,
+                                    const NameSymbol*);
+    static FileSymbol* GetFileBoth(Control&, PackageSymbol*,
+                                   const NameSymbol*);
 
     PackageSymbol* FindOrInsertPackage(LexStream*, AstName*);
     void ProcessPackageDeclaration(FileSymbol*, AstPackageDeclaration*);
     void CleanUp(FileSymbol*);
 
-    inline bool IsSimpleIntegerValueType(TypeSymbol* type)
+    inline bool IsSimpleIntegerValueType(const TypeSymbol* type)
     {
         return type == byte_type || type == short_type ||
             type == int_type || type == char_type;
     }
 
-    inline bool IsIntegral(TypeSymbol* type)
+    inline bool IsIntegral(const TypeSymbol* type)
     {
         return IsSimpleIntegerValueType(type) || type == long_type;
     }
 
-    inline bool IsFloatingPoint(TypeSymbol* type)
+    inline bool IsFloatingPoint(const TypeSymbol* type)
     {
         return type == float_type || type == double_type;
     }
 
-    inline bool IsNumeric(TypeSymbol* type)
+    inline bool IsNumeric(const TypeSymbol* type)
     {
         return IsIntegral(type) || IsFloatingPoint(type);
     }
 
-    inline bool IsDoubleWordType(TypeSymbol* type)
+    inline bool IsDoubleWordType(const TypeSymbol* type)
     {
         return type == long_type || type == double_type;
     }
 
-    inline bool IsPrimitive(TypeSymbol* type)
+    inline bool IsPrimitive(const TypeSymbol* type)
     {
         return IsNumeric(type) || type == boolean_type;
     }

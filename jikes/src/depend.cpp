@@ -43,7 +43,7 @@ void TypeCycleChecker::PartialOrder(Tuple<Semantic*>& semantic, int start)
     // assert that the "index" of all types that should be checked is initially
     // set to OMEGA
     //
-    for (int i = start; i < semantic.Length(); i++)
+    for (unsigned i = start; i < semantic.Length(); i++)
     {
         Semantic* sem = semantic[i];
         for (unsigned k = 0;
@@ -221,7 +221,7 @@ void TypeDependenceChecker::PartialOrder()
                      file_symbol;
                      file_symbol = (FileSymbol *) file_set.NextElement())
     {
-        for (int j = 0; j < file_symbol -> types.Length(); j++)
+        for (unsigned j = 0; j < file_symbol -> types.Length(); j++)
         {
             TypeSymbol *type = file_symbol -> types[j];
             if (type -> incremental_index == OMEGA)
@@ -229,7 +229,7 @@ void TypeDependenceChecker::PartialOrder()
         }
     }
 
-    for (int k = 0; k < type_trash_bin.Length(); k++)
+    for (unsigned k = 0; k < type_trash_bin.Length(); k++)
     {
         TypeSymbol *type = type_trash_bin[k];
         if (type -> incremental_index == OMEGA)
@@ -282,7 +282,7 @@ void TypeDependenceChecker::OutputMake(FILE *outfile, char *output_name,
 {
     assert(outfile);
 
-    for (int i = 0; i < file_list.Length(); i++)
+    for (unsigned i = 0; i < file_list.Length(); i++)
     {
         FileSymbol *file_symbol = file_list[i];
         char *name = file_symbol -> FileName();
@@ -317,8 +317,8 @@ void TypeDependenceChecker::OutputMake(FileSymbol *file_symbol)
     //
     //
     //
-    char *name;
-    char *buf = NULL;
+    const char* name;
+    char* buf = NULL;
     int length;
 
     if (control -> option.directory == NULL)
@@ -366,7 +366,7 @@ void TypeDependenceChecker::OutputMake(FileSymbol *file_symbol)
     //
     //
     SymbolSet file_set;
-    for (int i = 0; i < file_symbol -> types.Length(); i++)
+    for (unsigned i = 0; i < file_symbol -> types.Length(); i++)
     {
         TypeSymbol *type = file_symbol -> types[i];
         TypeSymbol *parent;
@@ -409,8 +409,8 @@ void TypeDependenceChecker::OutputMake(FileSymbol *file_symbol)
 void TypeDependenceChecker::OutputDependences()
 {
     SymbolSet new_file_set;
-
-    for (int i = 0; i < type_list.Length(); i++)
+    unsigned i;
+    for (i = 0; i < type_list.Length(); i++)
     {
         TypeSymbol *type = type_list[i];
         type -> parents_closure = new SymbolSet;
@@ -420,9 +420,9 @@ void TypeDependenceChecker::OutputDependences()
             new_file_set.AddElement(file_symbol);
     }
 
-    for (int l = 0; l < type_list.Length(); l++)
+    for (i = 0; i < type_list.Length(); i++)
     {
-        TypeSymbol *parent = type_list[l];
+        TypeSymbol *parent = type_list[i];
         TypeSymbol *dependent;
         for (dependent = (TypeSymbol *) parent -> dependents_closure -> FirstElement();
              dependent;
@@ -438,9 +438,9 @@ void TypeDependenceChecker::OutputDependences()
         OutputMake(symbol);
     }
 
-    for (int n = 0; n < type_list.Length(); n++)
+    for (i = 0; i < type_list.Length(); i++)
     {
-        TypeSymbol *type = type_list[n];
+        TypeSymbol *type = type_list[i];
         delete type -> parents_closure;
         type -> parents_closure = NULL;
     }

@@ -24,9 +24,19 @@ PackageSymbol* Symbol::PackageCast()
     return DYNAMIC_CAST<PackageSymbol*> (_kind == PACKAGE ? this : NULL);
 }
 
+const PackageSymbol* Symbol::PackageCast() const
+{
+    return DYNAMIC_CAST<const PackageSymbol*> (_kind == PACKAGE ? this : NULL);
+}
+
 TypeSymbol* Symbol::TypeCast()
 {
     return DYNAMIC_CAST<TypeSymbol*> (_kind == TYPE ? this : NULL);
+}
+
+const TypeSymbol* Symbol::TypeCast() const
+{
+    return DYNAMIC_CAST<const TypeSymbol*> (_kind == TYPE ? this : NULL);
 }
 
 MethodSymbol* Symbol::MethodCast()
@@ -34,9 +44,19 @@ MethodSymbol* Symbol::MethodCast()
     return DYNAMIC_CAST<MethodSymbol*> (_kind == METHOD ? this : NULL);
 }
 
+const MethodSymbol* Symbol::MethodCast() const
+{
+    return DYNAMIC_CAST<const MethodSymbol*> (_kind == METHOD ? this : NULL);
+}
+
 BlockSymbol* Symbol::BlockCast()
 {
     return DYNAMIC_CAST<BlockSymbol*> (_kind == BLOCK ? this : NULL);
+}
+
+const BlockSymbol* Symbol::BlockCast() const
+{
+    return DYNAMIC_CAST<const BlockSymbol*> (_kind == BLOCK ? this : NULL);
 }
 
 VariableSymbol* Symbol::VariableCast()
@@ -44,9 +64,20 @@ VariableSymbol* Symbol::VariableCast()
     return DYNAMIC_CAST<VariableSymbol*> (_kind == VARIABLE ? this : NULL);
 }
 
+const VariableSymbol* Symbol::VariableCast() const
+{
+    return DYNAMIC_CAST<const VariableSymbol*>
+        (_kind == VARIABLE ? this : NULL);
+}
+
 LabelSymbol* Symbol::LabelCast()
 {
     return DYNAMIC_CAST<LabelSymbol*> (_kind == LABEL ? this : NULL);
+}
+
+const LabelSymbol* Symbol::LabelCast() const
+{
+    return DYNAMIC_CAST<const LabelSymbol*> (_kind == LABEL ? this : NULL);
 }
 
 LiteralSymbol* Symbol::LiteralCast()
@@ -54,9 +85,19 @@ LiteralSymbol* Symbol::LiteralCast()
     return DYNAMIC_CAST<LiteralSymbol*> (_kind == LITERAL ? this : NULL);
 }
 
+const LiteralSymbol* Symbol::LiteralCast() const
+{
+    return DYNAMIC_CAST<const LiteralSymbol*> (_kind == LITERAL ? this : NULL);
+}
+
 NameSymbol* Symbol::NameCast()
 {
     return DYNAMIC_CAST<NameSymbol*> (_kind == NAME ? this : NULL);
+}
+
+const NameSymbol* Symbol::NameCast() const
+{
+    return DYNAMIC_CAST<const NameSymbol*> (_kind == NAME ? this : NULL);
 }
 
 PathSymbol* Symbol::PathCast()
@@ -64,14 +105,30 @@ PathSymbol* Symbol::PathCast()
     return DYNAMIC_CAST<PathSymbol*> (_kind == PATH ? this : NULL);
 }
 
+const PathSymbol* Symbol::PathCast() const
+{
+    return DYNAMIC_CAST<const PathSymbol*> (_kind == PATH ? this : NULL);
+}
+
 DirectorySymbol* Symbol::DirectoryCast()
 {
     return DYNAMIC_CAST<DirectorySymbol*> (_kind == _DIRECTORY ? this : NULL);
 }
 
+const DirectorySymbol* Symbol::DirectoryCast() const
+{
+    return DYNAMIC_CAST<const DirectorySymbol*>
+        (_kind == _DIRECTORY ? this : NULL);
+}
+
 FileSymbol* Symbol::FileCast()
 {
     return DYNAMIC_CAST<FileSymbol*> (_kind == _FILE ? this : NULL);
+}
+
+const FileSymbol* Symbol::FileCast() const
+{
+    return DYNAMIC_CAST<const FileSymbol*> (_kind == _FILE ? this : NULL);
 }
 
 unsigned SystemTable::primes[] = {DEFAULT_HASH_SIZE, 101, 401, MAX_HASH_SIZE};
@@ -95,7 +152,7 @@ SystemTable::SystemTable(unsigned hash_size_)
 
 SystemTable::~SystemTable()
 {
-    for (int i = 0; i < directories.Length(); i++)
+    for (unsigned i = 0; i < directories.Length(); i++)
         delete directories[i];
 
     delete [] base;
@@ -109,7 +166,7 @@ void SystemTable::Rehash()
     base = (Element**) memset(new Element*[hash_size], 0,
                               hash_size * sizeof(Element*));
 
-    for (int k = 0; k < directories.Length(); k++)
+    for (unsigned k = 0; k < directories.Length(); k++)
     {
         Element* element = directories[k];
 
@@ -128,7 +185,6 @@ DirectorySymbol* SystemTable::FindDirectorySymbol(dev_t device, ino_t inode)
         if (element -> device == device && element -> inode == inode)
             return element -> directory_symbol;
     }
-
     return NULL;
 }
 
@@ -149,7 +205,7 @@ void SystemTable::InsertDirectorySymbol(dev_t device, ino_t inode,
     // maximum allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if (directories.Length() > (int) (hash_size << 1) &&
+    if (directories.Length() > (hash_size << 1) &&
         hash_size < MAX_HASH_SIZE)
     {
         Rehash();
@@ -171,7 +227,7 @@ DirectoryTable::DirectoryTable(int estimate)
 
 DirectoryTable::~DirectoryTable()
 {
-    for (int i = 0; i < entry_pool.Length(); i++)
+    for (unsigned i = 0; i < entry_pool.Length(); i++)
         delete entry_pool[i];
     delete [] base;
 }
@@ -189,7 +245,6 @@ DirectoryEntry* DirectoryTable::FindEntry(char* str, int len)
             return entry -> IsDummy() ? (DirectoryEntry*) NULL : entry;
         }
     }
-
     return NULL;
 }
 
@@ -202,7 +257,7 @@ void DirectoryTable::Rehash()
     base = (DirectoryEntry**) memset(new DirectoryEntry*[hash_size], 0,
                                      hash_size * sizeof(DirectoryEntry*));
 
-    for (int i = 0; i < entry_pool.Length(); i++)
+    for (unsigned i = 0; i < entry_pool.Length(); i++)
     {
         DirectoryEntry* e = entry_pool[i];
         int k = Hash(e -> name, e -> length) % hash_size;
@@ -239,9 +294,8 @@ DirectoryEntry* DirectoryTable::InsertEntry(DirectorySymbol* directory_symbol,
     // allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if (entry_pool.Length() > (int) (hash_size << 1) && hash_size < MAX_HASH_SIZE)
+    if (entry_pool.Length() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
         Rehash();
-
     return entry;
 }
 
@@ -257,7 +311,6 @@ DirectoryEntry* DirectoryTable::FindCaseInsensitiveEntry(char* name,
 
     DirectoryEntry* entry = FindEntry(lower_name, length);
     delete [] lower_name;
-
     return entry ? entry -> Image() : entry;
 }
 
@@ -295,7 +348,7 @@ void DirectoryTable::InsertCaseInsensitiveEntry(DirectoryEntry* image)
         // allowable size for a base, reallocate a larger base and rehash
         // the elements.
         //
-        if (entry_pool.Length() > (int) (hash_size << 1) &&
+        if (entry_pool.Length() > (hash_size << 1) &&
             hash_size < MAX_HASH_SIZE)
         {
             Rehash();
@@ -327,7 +380,6 @@ time_t DirectoryEntry::Mtime()
 
         delete [] file_name;
     }
-
     return mtime_;
 }
 
@@ -347,7 +399,7 @@ NameLookupTable::NameLookupTable(int estimate)
 
 NameLookupTable::~NameLookupTable()
 {
-    for (int i = 0; i < symbol_pool.Length(); i++)
+    for (unsigned i = 0; i < symbol_pool.Length(); i++)
         delete symbol_pool[i];
     delete [] base;
 }
@@ -361,7 +413,7 @@ void NameLookupTable::Rehash()
     base = (NameSymbol**) memset(new NameSymbol*[hash_size], 0,
                                  hash_size * sizeof(NameSymbol*));
 
-    for (int i = 0; i < symbol_pool.Length(); i++)
+    for (unsigned i = 0; i < symbol_pool.Length(); i++)
     {
         NameSymbol* ns = symbol_pool[i];
         int k = ns -> hash_address % hash_size;
@@ -400,9 +452,8 @@ NameSymbol* NameLookupTable::FindOrInsertName(const wchar_t* str, unsigned len)
     // allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if (symbol_pool.Length() > (int) (hash_size << 1) && hash_size < MAX_HASH_SIZE)
+    if (symbol_pool.Length() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
         Rehash();
-
     return symbol;
 }
 
@@ -435,7 +486,7 @@ void TypeLookupTable::Rehash()
     base = (TypeSymbol**) memset(new TypeSymbol*[hash_size], 0,
                                  hash_size * sizeof(TypeSymbol*));
 
-    for (int i = 0; i < symbol_pool.Length(); i++)
+    for (unsigned i = 0; i < symbol_pool.Length(); i++)
     {
         TypeSymbol* type = symbol_pool[i];
         int k = type -> hash_address % hash_size;
@@ -462,7 +513,6 @@ TypeSymbol* TypeLookupTable::FindType(const char* str, int len)
             return type;
         }
     }
-
     return NULL;
 }
 
@@ -492,7 +542,7 @@ void TypeLookupTable::InsertType(TypeSymbol* type)
     // allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if (symbol_pool.Length() > (int) (hash_size << 1) && hash_size < MAX_HASH_SIZE)
+    if (symbol_pool.Length() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
         Rehash();
 }
 
@@ -525,7 +575,7 @@ IntLiteralTable::IntLiteralTable(LiteralValue* bad_value_)
 
 IntLiteralTable::~IntLiteralTable()
 {
-    for (int i = 0; i < symbol_pool.Length(); i++)
+    for (unsigned i = 0; i < symbol_pool.Length(); i++)
         delete symbol_pool[i];
     delete [] base;
 }
@@ -581,7 +631,6 @@ LiteralValue* IntLiteralTable::FindOrInsertChar(LiteralSymbol* literal)
                     value = value * 8 + name[i] - U_0;
             }
         }
-
     return literal -> value = (value < 0 || value > 65535 ? bad_value
                                : FindOrInsert(value));
 }
@@ -604,7 +653,6 @@ LiteralValue* IntLiteralTable::FindOrInsertHexInt(LiteralSymbol* literal)
                         : ((Code::IsLower(*tail) ? U_a : U_A) - 10));
         uvalue |= (d << i);
     }
-
     return tail > head ? bad_value : FindOrInsert((i4) uvalue);
 }
 
@@ -635,7 +683,6 @@ LiteralValue* IntLiteralTable::FindOrInsertOctalInt(LiteralSymbol* literal)
             uvalue |= (d << 30);
         }
     }
-
     return tail > head ? bad_value : FindOrInsert((i4) uvalue);
 }
 
@@ -663,7 +710,6 @@ LiteralValue* IntLiteralTable::FindOrInsertInt(LiteralSymbol* literal)
 
         literal -> value = (*p ? bad_value : FindOrInsert(value));
     }
-
     return literal -> value;
 }
 
@@ -702,7 +748,6 @@ LiteralValue* IntLiteralTable::FindOrInsertNegativeInt(LiteralSymbol* literal)
             break;
         value = value * 10 + digit;
     }
-
     return *p ? bad_value : FindOrInsert(- value);
 }
 
@@ -718,7 +763,7 @@ void IntLiteralTable::Rehash()
     //
     // Recall that the 0th element is unused.
     //
-    for (int i = 1; i < symbol_pool.Length(); i++)
+    for (unsigned i = 1; i < symbol_pool.Length(); i++)
     {
         IntLiteralValue* ilv = symbol_pool[i];
         // The unsigned casting turns the negative values into positive values.
@@ -740,7 +785,6 @@ IntLiteralValue* IntLiteralTable::Find(int value)
         if (lit -> value == value)
             break;
     }
-
     return lit;
 }
 
@@ -770,9 +814,8 @@ IntLiteralValue* IntLiteralTable::FindOrInsert(int value)
     // allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if (symbol_pool.Length() > (int) (hash_size << 1) && hash_size < MAX_HASH_SIZE)
+    if (symbol_pool.Length() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
         Rehash();
-
     return lit;
 }
 
@@ -795,7 +838,7 @@ LongLiteralTable::LongLiteralTable(LiteralValue* bad_value_)
 
 LongLiteralTable::~LongLiteralTable()
 {
-    for (int i = 0; i < symbol_pool.Length(); i++)
+    for (unsigned i = 0; i < symbol_pool.Length(); i++)
         delete symbol_pool[i];
     delete [] base;
 }
@@ -827,7 +870,6 @@ LiteralValue* LongLiteralTable::FindOrInsertHexLong(LiteralSymbol* literal)
                                                       ? U_a : U_A) - 10);
         high |= (d << j);
     }
-
     return tail > head ? bad_value : FindOrInsert(LongInt(high, low));
 }
 
@@ -859,7 +901,6 @@ LiteralValue* LongLiteralTable::FindOrInsertOctalLong(LiteralSymbol* literal)
             uvalue |= ULongInt((d << 31), 0);
         }
     }
-
     return tail > head ? bad_value : FindOrInsert((LongInt) uvalue);
 }
 
@@ -892,7 +933,6 @@ LiteralValue* LongLiteralTable::FindOrInsertLong(LiteralSymbol* literal)
         literal -> value = (*p != U_L && *p != U_l ? bad_value
                             : FindOrInsert(value));
     }
-
     return literal -> value;
 }
 
@@ -930,7 +970,6 @@ LiteralValue* LongLiteralTable::FindOrInsertNegativeLong(LiteralSymbol* literal)
             break;
         value = value * 10 + digit;
     }
-
     return *p != U_L && *p != U_l ? bad_value : FindOrInsert(- value);
 }
 
@@ -946,7 +985,7 @@ void LongLiteralTable::Rehash()
     //
     // Recall that the 0th element is unused.
     //
-    for (int i = 1; i < symbol_pool.Length(); i++)
+    for (unsigned i = 1; i < symbol_pool.Length(); i++)
     {
         LongLiteralValue* llv = symbol_pool[i];
         // The hash function for LongInt values is cheap so we don't need to
@@ -982,9 +1021,8 @@ LongLiteralValue* LongLiteralTable::FindOrInsert(LongInt value)
     // allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if (symbol_pool.Length() > (int) (hash_size << 1) && hash_size < MAX_HASH_SIZE)
+    if (symbol_pool.Length() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
         Rehash();
-
     return lit;
 }
 
@@ -1006,7 +1044,7 @@ FloatLiteralTable::FloatLiteralTable(LiteralValue* bad_value_)
 
 FloatLiteralTable::~FloatLiteralTable()
 {
-    for (int i = 0; i < symbol_pool.Length(); i++)
+    for (unsigned i = 0; i < symbol_pool.Length(); i++)
         delete symbol_pool[i];
     delete [] base;
 }
@@ -1029,7 +1067,6 @@ LiteralValue* FloatLiteralTable::FindOrInsertFloat(LiteralSymbol* literal)
     literal -> value = (value.IsNaN() ? bad_value : FindOrInsert(value));
 
     delete [] name;
-
     return literal -> value;
 }
 
@@ -1045,7 +1082,7 @@ void FloatLiteralTable::Rehash()
     //
     // Recall that the 0th element is unused.
     //
-    for (int i = 1; i < symbol_pool.Length(); i++)
+    for (unsigned i = 1; i < symbol_pool.Length(); i++)
     {
         FloatLiteralValue* flv = symbol_pool[i];
         // The hash function for float values is cheap so we don't need to
@@ -1081,9 +1118,8 @@ FloatLiteralValue* FloatLiteralTable::FindOrInsert(IEEEfloat value)
     // allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if (symbol_pool.Length() > (int) (hash_size << 1) && hash_size < MAX_HASH_SIZE)
+    if (symbol_pool.Length() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
         Rehash();
-
     return lit;
 }
 
@@ -1105,7 +1141,7 @@ DoubleLiteralTable::DoubleLiteralTable(LiteralValue* bad_value_)
 
 DoubleLiteralTable::~DoubleLiteralTable()
 {
-    for (int i = 0; i < symbol_pool.Length(); i++)
+    for (unsigned i = 0; i < symbol_pool.Length(); i++)
         delete symbol_pool[i];
     delete [] base;
 }
@@ -1128,7 +1164,6 @@ LiteralValue* DoubleLiteralTable::FindOrInsertDouble(LiteralSymbol* literal)
     literal -> value = (value.IsNaN() ? bad_value : FindOrInsert(value));
 
     delete [] name;
-
     return literal -> value;
 }
 
@@ -1144,7 +1179,7 @@ void DoubleLiteralTable::Rehash()
     //
     // Recall that the 0th element is unused.
     //
-    for (int i = 1; i < symbol_pool.Length(); i++)
+    for (unsigned i = 1; i < symbol_pool.Length(); i++)
     {
         DoubleLiteralValue* dlv = symbol_pool[i];
         // The hash function for double values is cheap so we don't need to
@@ -1180,9 +1215,8 @@ DoubleLiteralValue* DoubleLiteralTable::FindOrInsert(IEEEdouble value)
     // allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if (symbol_pool.Length() > (int) (hash_size << 1) && hash_size < MAX_HASH_SIZE)
+    if (symbol_pool.Length() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
         Rehash();
-
     return lit;
 }
 
@@ -1306,7 +1340,6 @@ Utf8LiteralValue* Utf8LiteralTable::FindOrInsert(wchar_t ch)
     }
 
     str[len] = U_NULL;
-
     return FindOrInsert(str, len);
 }
 
@@ -1322,7 +1355,7 @@ void Utf8LiteralTable::Rehash()
     //
     // Recall that the 0th element is unused.
     //
-    for (int i = 1; i < symbol_pool.Length(); i++)
+    for (unsigned i = 1; i < symbol_pool.Length(); i++)
     {
         Utf8LiteralValue* ulv = symbol_pool[i];
         int k = ulv -> hash_address % hash_size;
@@ -1350,7 +1383,7 @@ Utf8LiteralTable::Utf8LiteralTable(LiteralValue* bad_value_)
 
 Utf8LiteralTable::~Utf8LiteralTable()
 {
-    for (int i = 0; i < symbol_pool.Length(); i++)
+    for (unsigned i = 0; i < symbol_pool.Length(); i++)
         delete symbol_pool[i];
     delete [] base;
 }
@@ -1385,9 +1418,8 @@ Utf8LiteralValue* Utf8LiteralTable::FindOrInsert(const char* str, int len)
     // allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if (symbol_pool.Length() > (int) (hash_size << 1) && hash_size < MAX_HASH_SIZE)
+    if (symbol_pool.Length() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
         Rehash();
-
     return lit;
 }
 
@@ -1399,7 +1431,7 @@ Utf8LiteralValue* Utf8LiteralTable::FindOrInsert(const char* str, int len)
 //
 void Utf8LiteralTable::CollectStrings()
 {
-    int count = utf8_literals -> Length();
+    unsigned count = utf8_literals -> Length();
     assert(count && leftmost_constant_expr);
     if (count == 1)
     {
@@ -1409,12 +1441,12 @@ void Utf8LiteralTable::CollectStrings()
     else
     {
         int length = 0;
-        for (int i = 0; i < count; i++)
+        for (unsigned i = 0; i < count; i++)
             length += (*utf8_literals)[i] -> length;
         char* str = new char[length + 1]; // +1 for '\0'
 
         int index = 0;
-        for (int k = 0; k < count; k++)
+        for (unsigned k = 0; k < count; k++)
         {
             Utf8LiteralValue* literal = (*utf8_literals)[k];
             assert(literal -> value);
@@ -1580,7 +1612,7 @@ LiteralLookupTable::LiteralLookupTable()
 
 LiteralLookupTable::~LiteralLookupTable()
 {
-    for (int i = 0; i < symbol_pool.Length(); i++)
+    for (unsigned i = 0; i < symbol_pool.Length(); i++)
         delete symbol_pool[i];
     delete [] base;
 }
@@ -1594,7 +1626,7 @@ void LiteralLookupTable::Rehash()
     base = (LiteralSymbol**) memset(new LiteralSymbol*[hash_size], 0,
                                     hash_size * sizeof(LiteralSymbol*));
 
-    for (int i = 0; i < symbol_pool.Length(); i++)
+    for (unsigned i = 0; i < symbol_pool.Length(); i++)
     {
         LiteralSymbol* ls = symbol_pool[i];
         int k = ls -> hash_address % hash_size;
@@ -1633,9 +1665,8 @@ LiteralSymbol* LiteralLookupTable::FindOrInsertLiteral(const wchar_t* str,
     // allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if (symbol_pool.Length() > (int) (hash_size << 1) && hash_size < MAX_HASH_SIZE)
+    if (symbol_pool.Length() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
         Rehash();
-
     return symbol;
 }
 

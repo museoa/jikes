@@ -1336,13 +1336,13 @@ void LexStream::PrintMessages()
             }
             else
             {
-                for (int i = 0; i < bad_tokens.Length(); i++)
+                for (unsigned i = 0; i < bad_tokens.Length(); i++)
                     JikesAPI::getInstance() -> reportError(&bad_tokens[i]);
             }
         }
         else
         {
-            for (int i = 0; i < bad_tokens.Length(); i++)
+            for (unsigned i = 0; i < bad_tokens.Length(); i++)
                 JikesAPI::getInstance() -> reportError(&bad_tokens[i]);
         }
 

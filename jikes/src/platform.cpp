@@ -1534,6 +1534,8 @@ char StringConstant::U8S_ConstantValue[] = {
     U_C, U_o, U_n, U_s, U_t, U_a, U_n, U_t,
     U_V, U_a, U_l, U_u, U_e, U_NU}; // "ConstantValue"
 char StringConstant::U8S_D[] = {U_D, U_NU}; // "D"
+char StringConstant::U8S_Deprecated[] = {
+    U_D, U_e, U_p, U_r, U_e, U_c, U_a, U_t, U_e, U_d, U_NU}; // "Deprecated"
 char StringConstant::U8S_Exceptions[] = {
     U_E, U_x, U_c, U_e, U_p, U_t, U_i, U_o, U_n, U_s, U_NU}; // "Exceptions"
 char StringConstant::U8S_F[] = {U_F, U_NU}; // "F"
@@ -1587,8 +1589,6 @@ char StringConstant::U8S_SourceFile[] = {
     U_S, U_o, U_u, U_r, U_c, U_e, U_F, U_i, U_l, U_e, U_NU}; // "SourceFile"
 char StringConstant::U8S_Synthetic[] = {
     U_S, U_y, U_n, U_t, U_h, U_e, U_t, U_i, U_c, U_NU}; // "Synthetic"
-char StringConstant::U8S_Deprecated[] = {
-    U_D, U_e, U_p, U_r, U_e, U_c, U_a, U_t, U_e, U_d, U_NU}; // "Deprecated"
 char StringConstant::U8S_V[] = {U_V, U_NU}; // "V"
 char StringConstant::U8S_Z[] = {U_Z, U_NU}; // "Z"
 

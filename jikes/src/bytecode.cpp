@@ -681,7 +681,7 @@ void ByteCode::InitializeVariable(AstVariableDeclarator* vd)
 }
 
 
-void ByteCode::InitializeArray(TypeSymbol* type,
+void ByteCode::InitializeArray(const TypeSymbol* type,
                                AstArrayInitializer* array_initializer,
                                bool need_value)
 {
@@ -1796,7 +1796,7 @@ void ByteCode::EmitTryStatement(AstTryStatement* statement)
                 PutOp(OP_POP);
             }
             method_stack -> TopHandlerRangeEnd().Push(special_end_pc);
-            int count = method_stack -> TopHandlerRangeStart().Length();
+            unsigned count = method_stack -> TopHandlerRangeStart().Length();
             assert(count == method_stack -> TopHandlerRangeEnd().Length());
             while (count--)
             {
@@ -2871,7 +2871,7 @@ bool ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement* statement)
     }
     u2 end_pc = code_attribute -> CodeLength();
     method_stack -> TopHandlerRangeEnd().Push(end_pc);
-    int count = method_stack -> TopHandlerRangeStart().Length();
+    unsigned count = method_stack -> TopHandlerRangeStart().Length();
     assert(count == method_stack -> TopHandlerRangeEnd().Length());
     while (count--)
     {
@@ -4927,7 +4927,7 @@ bool ByteCode::IsNop(AstBlock* block)
 }
 
 
-void ByteCode::EmitNewArray(unsigned num_dims, TypeSymbol* type)
+void ByteCode::EmitNewArray(unsigned num_dims, const TypeSymbol* type)
 {
     assert(num_dims);
     if (num_dims == 1)
@@ -5968,7 +5968,7 @@ void ByteCode::CompleteLabel(Label& lab)
         // patch byte code reference to label to reflect its definition
         // as 16-bit signed offset.
         //
-        for (int i = 0; i < lab.uses.Length(); i++)
+        for (unsigned i = 0; i < lab.uses.Length(); i++)
         {
             unsigned int luse = lab.uses[i].use_offset;
             int start = luse - lab.uses[i].op_offset,
@@ -6014,7 +6014,7 @@ void ByteCode::UseLabel(Label& lab, int _length, int _op_offset)
 }
 
 
-void ByteCode::LoadLocal(int varno, TypeSymbol* type)
+void ByteCode::LoadLocal(int varno, const TypeSymbol* type)
 {
     if (control.IsSimpleIntegerValueType(type) || type == control.boolean_type)
     {
@@ -6053,7 +6053,7 @@ void ByteCode::LoadLocal(int varno, TypeSymbol* type)
 // See if we can load without using LDC; otherwise generate constant pool
 // entry if one has not yet been generated.
 //
-void ByteCode::LoadLiteral(LiteralValue* litp, TypeSymbol* type)
+void ByteCode::LoadLiteral(LiteralValue* litp, const TypeSymbol* type)
 {
     if (control.IsSimpleIntegerValueType(type) || type == control.boolean_type)
     {
@@ -6338,7 +6338,7 @@ int ByteCode::LoadVariable(VariableCategory kind, AstExpression* expr,
 }
 
 
-int ByteCode::LoadArrayElement(TypeSymbol* type)
+int ByteCode::LoadArrayElement(const TypeSymbol* type)
 {
     PutOp((type == control.byte_type ||
            type == control.boolean_type) ? OP_BALOAD
@@ -6354,7 +6354,7 @@ int ByteCode::LoadArrayElement(TypeSymbol* type)
 }
 
 
-void ByteCode::StoreArrayElement(TypeSymbol* type)
+void ByteCode::StoreArrayElement(const TypeSymbol* type)
 {
     PutOp((type == control.byte_type ||
            type == control.boolean_type) ? OP_BASTORE
@@ -6390,7 +6390,7 @@ void ByteCode::StoreField(AstExpression* expression)
 }
 
 
-void ByteCode::StoreLocal(int varno, TypeSymbol* type)
+void ByteCode::StoreLocal(int varno, const TypeSymbol* type)
 {
     if (control.IsSimpleIntegerValueType(type) || type == control.boolean_type)
     {
@@ -6604,6 +6604,7 @@ void ByteCode::ChangeStack(int i)
 #ifdef JIKES_DEBUG
 void ByteCode::PrintCode()
 {
+    unsigned i;
     // This explicit casting works around a bug in g++ 3.1 library.
     Coutput << "magic " << (ios&(*)(ios&)) hex << magic << (ios&(*)(ios&)) dec
             << " major_version " << (unsigned) major_version
@@ -6613,52 +6614,41 @@ void ByteCode::PrintCode()
             << " this_class " << (unsigned) this_class << "  super_class "
             << (unsigned) super_class << endl
             << " constant_pool: " << constant_pool.Length() << endl;
-
+    for (i = 1; i < constant_pool.Length(); i++)
     {
-        for (int i = 1; i < constant_pool.Length(); i++)
+        Coutput << "  " << i << "  ";
+        constant_pool[i] -> Print(constant_pool);
+        if (constant_pool[i] -> Tag() == CONSTANT_Long ||
+            constant_pool[i] -> Tag() == CONSTANT_Double)
         {
-            Coutput << "  " << i << "  ";
-            constant_pool[i] -> Print(constant_pool);
-            if (constant_pool[i] -> Tag() == CONSTANT_Long ||
-                constant_pool[i] -> Tag() == CONSTANT_Double)
-            {
-                i++; // skip the next entry for eight-byte constants
-            }
+            i++; // skip the next entry for eight-byte constants
         }
     }
 
     Coutput << "  interfaces " << interfaces.Length() <<": ";
-    {
-        for (int i = 0; i < interfaces.Length(); i++)
-             Coutput << "  " << (int) interfaces[i];
-        Coutput << endl;
-    }
+    for (i = 0; i < interfaces.Length(); i++)
+        Coutput << "  " << (int) interfaces[i];
+    Coutput << endl;
 
     Coutput << "  fields " << fields.Length() << ": ";
+    for (i = 0; i < fields.Length(); i++)
     {
-        for (int i = 0; i < fields.Length(); i++)
-        {
-            Coutput << "field " << i << endl;
-            fields[i].Print(constant_pool);
-        }
+        Coutput << "field " << i << endl;
+        fields[i].Print(constant_pool);
     }
 
     Coutput << " methods length " << methods.Length() << endl;
+    for (i = 0; i < methods.Length(); i++)
     {
-        for (int i = 0; i < methods.Length(); i++)
-        {
-            Coutput << "method " << i << endl;
-            methods[i].Print(constant_pool);
-        }
+        Coutput << "method " << i << endl;
+        methods[i].Print(constant_pool);
     }
 
     Coutput << " attributes length " << attributes.Length() << endl;
+    for (i = 0; i < attributes.Length(); i++)
     {
-        for (int i = 0; i < attributes.Length(); i++)
-        {
-            Coutput << "attribute " << i << endl;
-            attributes[i] -> Print(constant_pool);
-        }
+        Coutput << "attribute " << i << endl;
+        attributes[i] -> Print(constant_pool);
     }
     Coutput << endl;
 }

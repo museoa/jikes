@@ -202,7 +202,7 @@ void Semantic::ProcessTypeNames()
         {
             NameSymbol* name_symbol =
                 lex_stream -> NameSymbol(identifier_token);
-            for (int i = 0; i < this_package -> directory.Length(); i++)
+            for (unsigned i = 0; i < this_package -> directory.Length(); i++)
             {
                 //
                 // The unnamed package cannot contain subpackages, as
@@ -254,7 +254,7 @@ void Semantic::ProcessTypeNames()
     // that it matches the file name.
     //
     TypeSymbol* public_type = NULL;
-    for (int i = 0; i < type_list.Length(); i++)
+    for (unsigned i = 0; i < type_list.Length(); i++)
     {
         TypeSymbol* type = type_list[i];
         if (type && type -> ACC_PUBLIC())
@@ -328,7 +328,7 @@ inline TypeSymbol* Semantic::FindTypeInShadow(TypeShadowSymbol* type_shadow_symb
         }
         else type = NULL;
     }
-    for ( ; (int) i < type_shadow_symbol -> NumConflicts(); i++)
+    for ( ; i < type_shadow_symbol -> NumConflicts(); i++)
     {
         ReportSemError(SemanticError::AMBIGUOUS_TYPE,
                        identifier_token, type -> Name(),
@@ -983,7 +983,7 @@ void Semantic::CompleteSymbolTable(AstClassBody* class_body)
             //
             ExpandedMethodTable* expanded_table =
                 this_type -> expanded_method_table;
-            for (int i = 0;
+            for (unsigned i = 0;
                  i < expanded_table -> symbol_pool.Length(); i++)
             {
                 MethodSymbol* method =
@@ -1031,7 +1031,7 @@ void Semantic::CompleteSymbolTable(AstClassBody* class_body)
             package = super_type -> ContainingPackage();
             ExpandedMethodTable* super_expanded_table =
                 super_type -> expanded_method_table;
-            for (int i = 0;
+            for (unsigned i = 0;
                  i < super_expanded_table -> symbol_pool.Length(); i++)
             {
                 MethodSymbol* method =
@@ -1591,7 +1591,7 @@ void Semantic::ProcessTypeImportOnDemandDeclaration(AstImportDeclaration* import
     //
     if (symbol == this_package)
         return;
-    for (int i = 0; i < import_on_demand_packages.Length(); i++)
+    for (unsigned i = 0; i < import_on_demand_packages.Length(); i++)
     {
         if (symbol == import_on_demand_packages[i])
             return;
@@ -1671,7 +1671,7 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration* import_d
     // duplicate declaration is ignored.
     // TODO: Give pedantic warnings about duplicate type declarations.
     //
-    for (int i = 0; i < single_type_imports.Length(); i++)
+    for (unsigned i = 0; i < single_type_imports.Length(); i++)
     {
         if (type == single_type_imports[i])
             return;
@@ -2401,7 +2401,7 @@ void Semantic::AddInheritedTypes(TypeSymbol* base_type, TypeSymbol* super_type)
     ExpandedTypeTable& super_expanded_table =
         *(super_type -> expanded_type_table);
 
-    for (int i = 0; i < super_expanded_table.symbol_pool.Length(); i++)
+    for (unsigned i = 0; i < super_expanded_table.symbol_pool.Length(); i++)
     {
         TypeShadowSymbol* type_shadow_symbol =
             super_expanded_table.symbol_pool[i];
@@ -2428,8 +2428,11 @@ void Semantic::AddInheritedTypes(TypeSymbol* base_type, TypeSymbol* super_type)
 
                 assert(type -> owner != super_type ||
                        type_shadow_symbol -> NumConflicts() == 0);
-                for (int j = 0; j < type_shadow_symbol -> NumConflicts(); j++)
+                for (unsigned j = 0;
+                     j < type_shadow_symbol -> NumConflicts(); j++)
+                {
                     shadow -> AddConflict(type_shadow_symbol -> Conflict(j));
+                }
             }
         }
         //
@@ -2451,9 +2454,11 @@ void Semantic::AddInheritedTypes(TypeSymbol* base_type, TypeSymbol* super_type)
             {
                 shadow = base_expanded_table.
                     InsertTypeShadowSymbol(type_shadow_symbol -> Conflict(0));
-
-                for (int k = 1; k < type_shadow_symbol -> NumConflicts(); k++)
+                for (unsigned k = 1;
+                     k < type_shadow_symbol -> NumConflicts(); k++)
+                {
                     shadow -> AddConflict(type_shadow_symbol -> Conflict(k));
+                }
             }
         }
     }
@@ -2474,7 +2479,7 @@ void Semantic::AddInheritedFields(TypeSymbol* base_type,
     ExpandedFieldTable& super_expanded_table =
         *(super_type -> expanded_field_table);
 
-    for (int i = 0; i < super_expanded_table.symbol_pool.Length(); i++)
+    for (unsigned i = 0; i < super_expanded_table.symbol_pool.Length(); i++)
     {
         VariableShadowSymbol* variable_shadow_symbol =
             super_expanded_table.symbol_pool[i];
@@ -2501,7 +2506,7 @@ void Semantic::AddInheritedFields(TypeSymbol* base_type,
 
                 assert(variable -> owner != super_type ||
                        variable_shadow_symbol -> NumConflicts() == 0);
-                for (int j = 0;
+                for (unsigned j = 0;
                      j < variable_shadow_symbol -> NumConflicts(); j++)
                 {
                     shadow -> AddConflict(variable_shadow_symbol ->
@@ -2531,7 +2536,7 @@ void Semantic::AddInheritedFields(TypeSymbol* base_type,
                     InsertVariableShadowSymbol(variable_shadow_symbol ->
                                                Conflict(0));
 
-                for (int k = 1;
+                for (unsigned k = 1;
                      k < variable_shadow_symbol -> NumConflicts(); k++)
                 {
                     shadow -> AddConflict(variable_shadow_symbol ->
@@ -2558,7 +2563,7 @@ void Semantic::AddInheritedMethods(TypeSymbol* base_type,
     ExpandedMethodTable* super_expanded_table =
         super_type -> expanded_method_table;
     PackageSymbol* base_package = base_type -> ContainingPackage();
-    int i;
+    unsigned i;
 
     for (i = 0; i < super_expanded_table -> symbol_pool.Length(); i++)
     {
@@ -2600,10 +2605,13 @@ void Semantic::AddInheritedMethods(TypeSymbol* base_type,
             {
                 CheckMethodOverride(shadow -> method_symbol, method,
                                     base_type);
-                for (int m = 0; m < method_shadow_symbol -> NumConflicts(); m++)
+                for (unsigned m = 0;
+                     m < method_shadow_symbol -> NumConflicts(); m++)
+                {
                     CheckMethodOverride(shadow -> method_symbol,
                                         method_shadow_symbol -> Conflict(m),
                                         base_type);
+                }
             }
 
             if (! shadow ||
@@ -2615,8 +2623,11 @@ void Semantic::AddInheritedMethods(TypeSymbol* base_type,
 
                 assert(method -> containing_type != super_type ||
                        method_shadow_symbol -> NumConflicts() == 0);
-                for (int j = 0; j < method_shadow_symbol -> NumConflicts(); j++)
+                for (unsigned j = 0;
+                     j < method_shadow_symbol -> NumConflicts(); j++)
+                {
                     shadow -> AddConflict(method_shadow_symbol -> Conflict(j));
+                }
             }
         }
         //
@@ -2636,7 +2647,7 @@ void Semantic::AddInheritedMethods(TypeSymbol* base_type,
                 if (shadow)
                 {
                     assert(shadow -> method_symbol -> containing_type == base_type);
-                    for (int k = 0;
+                    for (unsigned k = 0;
                          k < method_shadow_symbol -> NumConflicts(); k++)
                     {
                         CheckMethodOverride(shadow -> method_symbol,
@@ -2649,7 +2660,7 @@ void Semantic::AddInheritedMethods(TypeSymbol* base_type,
                     shadow = base_expanded_table ->
                         Overload(method_shadow_symbol -> Conflict(0));
 
-                    for (int l = 1;
+                    for (unsigned l = 1;
                          l < method_shadow_symbol -> NumConflicts(); l++)
                     {
                         shadow -> AddConflict(method_shadow_symbol ->
@@ -3119,7 +3130,7 @@ TypeSymbol* Semantic::ImportType(LexStream::TokenIndex identifier_token,
     TypeSymbol* type = NULL;
     PackageSymbol* location = NULL;
 
-    for (int i = 0; i < import_on_demand_packages.Length(); i++)
+    for (unsigned i = 0; i < import_on_demand_packages.Length(); i++)
     {
         PackageSymbol* import_package =
             import_on_demand_packages[i] -> PackageCast();
@@ -3308,7 +3319,7 @@ TypeSymbol* Semantic::FindType(LexStream::TokenIndex identifier_token)
     // Search for the type in the current compilation unit if it was declared
     // as a class or interface or imported by a single-type-import declaration.
     //
-    for (int i = 0; i < single_type_imports.Length(); i++)
+    for (unsigned i = 0; i < single_type_imports.Length(); i++)
     {
         type = single_type_imports[i];
         if (name_symbol == type -> Identity())
@@ -3718,7 +3729,7 @@ void Semantic::ProcessStaticInitializers(AstClassBody* class_body)
     // field is illegal, so we only need an error here for top-level
     // and static classes.
     //
-    for (int l = 0; l < FinalFields() -> Length(); l++)
+    for (unsigned l = 0; l < FinalFields() -> Length(); l++)
     {
         VariableSymbol* final_var = (*FinalFields())[l];
         if (final_var -> ACC_STATIC() &&
@@ -3812,7 +3823,7 @@ void Semantic::ProcessInstanceInitializers(AstClassBody* class_body)
     // Make sure the instance final fields are properly set.
     //
     assert(FinalFields());
-    for (int i = 0; i < FinalFields() -> Length(); i++)
+    for (unsigned i = 0; i < FinalFields() -> Length(); i++)
     {
         VariableSymbol* variable_symbol = (*FinalFields())[i];
         if (variable_symbol -> ACC_STATIC())

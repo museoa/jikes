@@ -1201,11 +1201,6 @@ public:
     inline void AllocateImportDeclarations(unsigned estimate = 1);
     inline void AddImportDeclaration(AstImportDeclaration*);
 
-    inline void ResetTypeDeclarations(unsigned n)
-    {
-        if (type_declarations)
-            type_declarations -> Reset(n);
-    }
     inline AstDeclaredType*& TypeDeclaration(unsigned i)
     {
         return (*type_declarations)[i];

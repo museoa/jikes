@@ -950,7 +950,7 @@ void Semantic::DefiniteLoopBody(BitSet& starting_set)
     //
     starting_set -= DefinitelyAssignedVariables() -> du_set;
 
-    for (int i = 0; i < DefiniteFinalAssignments() -> Top().Length(); i++)
+    for (unsigned i = 0; i < DefiniteFinalAssignments() -> Top().Length(); i++)
     {
         AstExpression* name = DefiniteFinalAssignments() -> Top()[i];
         VariableSymbol* variable = (VariableSymbol*) name -> symbol;

@@ -135,7 +135,7 @@ public:
     {
         block.Next() = block_;
         index.Next() = 0;
-        if (block.Length() > (int) max_size)
+        if (block.Length() > max_size)
             max_size = block.Length();
     }
 
@@ -948,7 +948,7 @@ private:
     SemanticEnvironmentStack state_stack;
 
     // Implemented in expr.cpp - semantic checks of expressions
-    bool IsIntValueRepresentableInType(AstExpression*, TypeSymbol*);
+    bool IsIntValueRepresentableInType(AstExpression*, const TypeSymbol*);
 
     // Implemented in decl.cpp - nested class processing
     void CheckNestedMembers(TypeSymbol*, AstClassBody*);
@@ -1007,14 +1007,14 @@ private:
     MethodSymbol* GetStaticInitializerMethod(int estimate = 0);
 
     // Implemented in expr.cpp - expression processing
-    bool CanWideningPrimitiveConvert(TypeSymbol*, TypeSymbol*);
-    bool CanNarrowingPrimitiveConvert(TypeSymbol*, TypeSymbol*);
+    bool CanWideningPrimitiveConvert(const TypeSymbol*, const TypeSymbol*);
+    bool CanNarrowingPrimitiveConvert(const TypeSymbol*, const TypeSymbol*);
     bool CanCastConvert(TypeSymbol*, TypeSymbol*,
                         LexStream::TokenIndex = LexStream::BadToken());
-    bool CanMethodInvocationConvert(TypeSymbol*, TypeSymbol*);
-    bool CanAssignmentConvert(TypeSymbol*, AstExpression*);
-    bool CanAssignmentConvertReference(TypeSymbol*, TypeSymbol*);
-    LiteralValue* CastValue(TypeSymbol*, AstExpression*);
+    bool CanMethodInvocationConvert(const TypeSymbol*, const TypeSymbol*);
+    bool CanAssignmentConvert(const TypeSymbol*, AstExpression*);
+    bool CanAssignmentConvertReference(const TypeSymbol*, const TypeSymbol*);
+    LiteralValue* CastValue(const TypeSymbol*, AstExpression*);
     AstExpression* ConvertToType(AstExpression*, TypeSymbol*);
     AstExpression* PromoteUnaryNumericExpression(AstExpression*);
     void BinaryNumericPromotion(AstAssignmentExpression*);

@@ -801,7 +801,7 @@ int SemanticError::PrintMessages()
         lex_stream -> InputBuffer())
     {
         SortMessages();
-        for (int k = 0; k < error.Length(); k++)
+        for (unsigned k = 0; k < error.Length(); k++)
         {
             if (warning[error[k].msg_code] != 1 || ! control.option.nowarn)
                 reportError(k);
@@ -830,7 +830,7 @@ const wchar_t* ErrorInfo::getInsert(unsigned index)
 static void FormatClasspath(ErrorString& s, Control& control)
 {
     s << endl;
-    for (int i = 1; i < control.classpath.Length(); i++)
+    for (unsigned i = 1; i < control.classpath.Length(); i++)
     {
         PathSymbol* path_symbol = control.classpath[i];
         s << "                " << path_symbol -> Name() << endl;
@@ -1434,8 +1434,6 @@ void SemanticError::InitializeMessages()
         "The blank final field \"%1\" must be initialized in this and "
         "every constructor which does not call a form of this(); or else "
         "once in an instance initializer block or instance field initializer.";
-    messages[UNINITIALIZED_FINAL_VARIABLE_IN_INTERFACE] =
-        "The interface field \"%1\" must have an initializer.";
     messages[INIT_SCALAR_WITH_ARRAY] =
         "An array initializer cannot be used to initialize a variable of "
         "type \"%1\".";

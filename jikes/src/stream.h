@@ -201,7 +201,7 @@ public:
 
     inline TokenIndex Next(TokenIndex i)
     {
-        return ++i < (unsigned) token_stream.Length() ? i : token_stream.Length() - 1;
+        return ++i < token_stream.Length() ? i : token_stream.Length() - 1;
     }
     inline TokenIndex Previous(TokenIndex i) { return i <= 0 ? 0 : i - 1; }
     inline TokenIndex Peek() { return Next(index); }
@@ -338,7 +338,7 @@ public:
     inline unsigned NumBadTokens()
     {
         unsigned count = 0;
-        for (int i = 0; i < bad_tokens.Length(); i++)
+        for (unsigned i = 0; i < bad_tokens.Length(); i++)
             if (bad_tokens[i].getSeverity() == JikesError::JIKES_ERROR)
                 count++;
         return count;
@@ -384,7 +384,7 @@ public:
         // their respective "string" pointer.
         //
         unsigned length = 0;
-        int i;
+        unsigned i;
 
         for (i = 1; i < comment_stream.Length(); i++)
             length += (comments[i].length + 1);

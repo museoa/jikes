@@ -169,7 +169,7 @@ char** JikesAPI::parseOptions(int argc, char** argv)
 
     if (bad_options.Length() > 0)
     {
-        for (int i = 0; i < bad_options.Length(); i++)
+        for (unsigned i = 0; i < bad_options.Length(); i++)
             Coutput << bad_options[i] -> GetErrorMessage() << endl;
         parsedOptions = NULL;
     }
@@ -187,7 +187,7 @@ char** JikesAPI::parseOptions(int argc, char** argv)
         parsedOptions[n] = NULL;
     }
 
-    for (int i = 0; i < bad_options.Length(); i++)
+    for (unsigned i = 0; i < bad_options.Length(); i++)
         delete bad_options[i];
 
     delete args;

@@ -583,7 +583,7 @@ void PackageSymbol::SetPackageName()
 }
 
 
-TypeSymbol::TypeSymbol(NameSymbol* name_symbol_)
+TypeSymbol::TypeSymbol(const NameSymbol* name_symbol_)
   : semantic_environment(NULL),
     declaration(NULL),
     file_symbol(NULL),
@@ -713,7 +713,7 @@ BlockSymbol::~BlockSymbol()
     delete table;
 }
 
-PathSymbol::PathSymbol(NameSymbol* name_symbol_)
+PathSymbol::PathSymbol(const NameSymbol* name_symbol_)
     : name_symbol(name_symbol_),
       zipfile(NULL)
 {
@@ -726,7 +726,8 @@ PathSymbol::~PathSymbol()
         delete zipfile;
 }
 
-DirectorySymbol::DirectorySymbol(NameSymbol* name_symbol_, Symbol* owner_,
+DirectorySymbol::DirectorySymbol(const NameSymbol* name_symbol_,
+                                 Symbol* owner_,
                                  bool source_dir_only_)
     : owner(owner_),
       name_symbol(name_symbol_),
@@ -1171,14 +1172,20 @@ void MethodSymbol::SetSignature(Control& control, TypeSymbol* placeholder)
     int s = 1;
     if (is_constructor && this0_type)
     {
-        for (char* str = this0_type -> SignatureString(); *str; str++, s++)
+        for (const char* str = this0_type -> SignatureString();
+             *str; str++, s++)
+        {
             method_signature[s] = *str;
+        }
     }
     for (i = 0; i < NumFormalParameters(); i++)
     {
         TypeSymbol* formal_type = FormalParameter(i) -> Type();
-        for (char* str = formal_type -> SignatureString(); *str; str++, s++)
+        for (const char* str = formal_type -> SignatureString();
+             *str; str++, s++)
+        {
             method_signature[s] = *str;
+        }
     }
     if (is_constructor)
     {
@@ -1186,14 +1193,14 @@ void MethodSymbol::SetSignature(Control& control, TypeSymbol* placeholder)
         {
             TypeSymbol* shadow_type =
                 containing_type -> ConstructorParameter(i) -> Type();
-            for (char* str = shadow_type -> SignatureString();
+            for (const char* str = shadow_type -> SignatureString();
                  *str; str++, s++)
             {
                 method_signature[s] = *str;
             }
         }
         if (placeholder)
-            for (char* str = placeholder -> SignatureString();
+            for (const char* str = placeholder -> SignatureString();
                  *str; str++, s++)
             {
                 method_signature[s] = *str;
@@ -1207,7 +1214,7 @@ void MethodSymbol::SetSignature(Control& control, TypeSymbol* placeholder)
     }
     else
     {
-        for (char* str = Type() -> SignatureString(); *str; str++, s++)
+        for (const char* str = Type() -> SignatureString(); *str; str++, s++)
             method_signature[s] = *str;
     }
     method_signature[s] = U_NULL;
@@ -1592,7 +1599,7 @@ VariableSymbol* TypeSymbol::FindOrInsertClassLiteral(TypeSymbol* type)
     owner -> FindOrInsertClassLiteralMethod(control);
 
     NameSymbol* name_symbol = NULL;
-    char* signature = type -> SignatureString();
+    const char* signature = type -> SignatureString();
     if (signature[0] == U_LEFT_BRACKET) // an array?
     {
         int array_length = wcslen(StringConstant::US_array),

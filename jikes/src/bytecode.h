@@ -39,9 +39,7 @@ public:
 
         LabelUse() : use_length(0), op_offset(0), use_offset(0) {}
 
-        LabelUse(int _length,
-                 int _op_offset,
-                 int _use)
+        LabelUse(int _length, int _op_offset, int _use)
             : use_length(_length),
               op_offset(_op_offset),
               use_offset(_use)
@@ -438,7 +436,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     }
 
 
-    int GetTypeWords(TypeSymbol* type)
+    int GetTypeWords(const TypeSymbol* type)
     {
         return control.IsDoubleWordType(type) ? 2 : 1;
     }
@@ -447,13 +445,13 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     // methods to load and store values
     //
-    void LoadLocal(int varno, TypeSymbol*);
-    void StoreLocal(int varno, TypeSymbol*);
-    void LoadLiteral(LiteralValue*, TypeSymbol*);
+    void LoadLocal(int varno, const TypeSymbol*);
+    void StoreLocal(int varno, const TypeSymbol*);
+    void LoadLiteral(LiteralValue*, const TypeSymbol*);
     void LoadImmediateInteger(int);
     int LoadVariable(VariableCategory, AstExpression*, bool = true);
-    int LoadArrayElement(TypeSymbol*);
-    void StoreArrayElement(TypeSymbol*);
+    int LoadArrayElement(const TypeSymbol*);
+    void StoreArrayElement(const TypeSymbol*);
     void StoreField(AstExpression*);
     void StoreVariable(VariableCategory, AstExpression*);
 
@@ -503,17 +501,19 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
             Image(name -> index, type_name -> index);
         if (index == 0)
         {
-            // We cannot use the variable "index" here as it might be truncated
-            int i = constant_pool.NextIndex();
-            index = i;
+            //
+            // Either the triplet is not in the constant pool, or the constant
+            // pool overflowed.
+            //
+            u2 name_index = RegisterUtf8(name);
+            u2 type_index = RegisterUtf8(type_name);
+            index = (u2) constant_pool.NextIndex();
             name_and_type_constant_pool_index ->
                 Image(name -> index, type_name -> index) = index;
-            constant_pool[i] =
+            constant_pool[index] =
                 new CONSTANT_NameAndType_info(CONSTANT_NameAndType,
-                                              RegisterUtf8(name),
-                                              RegisterUtf8(type_name));
+                                              name_index, type_index);
         }
-
         return index;
     }
 
@@ -535,35 +535,34 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
             Image(class_name -> index, name_type_index);
         if (index == 0)
         {
-            // We cannot use the variable "index" here as it might be truncated
-            int i = constant_pool.NextIndex();
-            index = i;
+            //
+            // Either the triplet is not in the constant pool, or the constant
+            // pool overflowed.
+            //
+            u2 class_index = RegisterClass(class_name);
+            index = (u2) constant_pool.NextIndex();
             fieldref_constant_pool_index ->
                 Image(class_name -> index, name_type_index) = index;
-            constant_pool[i] =
+            constant_pool[index] =
                 new CONSTANT_Fieldref_info(CONSTANT_Fieldref,
-                                           RegisterClass(class_name),
-                                           name_type_index);
+                                           class_index, name_type_index);
         }
-
         return index;
     }
 
 
-    u2 RegisterFieldref(TypeSymbol* type, VariableSymbol* variable)
+    u2 RegisterFieldref(const TypeSymbol* type, const VariableSymbol* variable)
     {
         assert(variable -> owner -> TypeCast());
-
         return RegisterFieldref(type -> fully_qualified_name,
                                 variable -> ExternalIdentity() -> Utf8_literal,
                                 variable -> Type() -> signature);
     }
 
 
-    u2 RegisterFieldref(VariableSymbol* variable)
+    u2 RegisterFieldref(const VariableSymbol* variable)
     {
         assert(variable -> owner -> TypeCast());
-
         return RegisterFieldref(variable -> ContainingType() -> fully_qualified_name,
                                 variable -> ExternalIdentity() -> Utf8_literal,
                                 variable -> Type() -> signature);
@@ -588,14 +587,15 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
             Image(class_name -> index, name_type_index);
         if (index == 0)
         {
-            // We cannot use the variable "index" here as it might be truncated
-            int i = constant_pool.NextIndex();
-            index = i;
+            //
+            // Either the triplet is not in the constant pool, or the constant
+            // pool overflowed.
+            //
+            u2 class_name_index = RegisterClass(class_name);
+            index = (u2) constant_pool.NextIndex();
             methodref_constant_pool_index -> Image(class_name -> index,
                                                    name_type_index) = index;
-
-            u2 class_name_index = RegisterClass(class_name);
-            constant_pool[i] = kind == CONSTANT_Methodref
+            constant_pool[index] = kind == CONSTANT_Methodref
                 ? (cp_info*) new CONSTANT_Methodref_info(CONSTANT_Methodref,
                                                           class_name_index,
                                                           name_type_index)
@@ -603,14 +603,13 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
                                                                    class_name_index,
                                                                    name_type_index);
         }
-
         return index;
     }
 
 
-    u2 RegisterMethodref(TypeSymbol* class_type,
-                         NameSymbol* method_name,
-                         MethodSymbol* method_type)
+    u2 RegisterMethodref(const TypeSymbol* class_type,
+                         const NameSymbol* method_name,
+                         const MethodSymbol* method_type)
     {
         return RegisterMethodref(CONSTANT_Methodref,
                                  class_type -> fully_qualified_name,
@@ -618,9 +617,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
                                  method_type -> signature);
     }
 
-    u2 RegisterInterfaceMethodref(TypeSymbol* interface_name,
-                                  NameSymbol* method_name,
-                                  MethodSymbol* method_type_name)
+    u2 RegisterInterfaceMethodref(const TypeSymbol* interface_name,
+                                  const NameSymbol* method_name,
+                                  const MethodSymbol* method_type_name)
     {
         return RegisterMethodref(CONSTANT_InterfaceMethodref,
                                  interface_name -> fully_qualified_name,
@@ -629,7 +628,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     }
 
 
-    u2 RegisterLibraryMethodref(MethodSymbol* method)
+    u2 RegisterLibraryMethodref(const MethodSymbol* method)
     {
         // The library method must exist. If it does not, flag an error.
         if (method)
@@ -638,7 +637,6 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
                                      method -> ExternalIdentity()-> Utf8_literal,
                                      method -> signature);
         library_method_not_found = true;
-
         return 0;
     }
 
@@ -654,16 +652,18 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         u2 index = (*double_constant_pool_index)[lit -> index];
         if (index == 0)
         {
-            // We cannot use the variable "index" here as it might be truncated
-            int i = constant_pool.NextIndex();
+            //
+            // Either the pair is not in the constant pool, or the constant
+            // pool overflowed.
+            //
+            index = (u2) constant_pool.NextIndex();
             constant_pool.Next() = NULL; // extra slop for double-word entry
-            index = i;
             (*double_constant_pool_index)[lit -> index] = index;
-            constant_pool[i] = new CONSTANT_Double_info(CONSTANT_Double,
-                                                        lit -> value.HighWord(),
-                                                        lit -> value.LowWord());
+            constant_pool[index] =
+                new CONSTANT_Double_info(CONSTANT_Double,
+                                         lit -> value.HighWord(),
+                                         lit -> value.LowWord());
         }
-
         return index;
     }
 
@@ -679,18 +679,16 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         u2 index = (*integer_constant_pool_index)[lit -> index];
         if (index == 0)
         {
-            // We cannot use the variable "index" here as it might be truncated
-            int i = constant_pool.NextIndex();
-            index = i;
+            //
+            // Either the pair is not in the constant pool, or the constant
+            // pool overflowed.
+            //
+            index = (u2) constant_pool.NextIndex();
             (*integer_constant_pool_index)[lit -> index] = index;
-            int val = lit -> value;
-            u4 bytes = (((unsigned) (val >> 24)) << 24) |
-                ((val >> 16 & 0xff) << 16) |
-                ((val >> 8 & 0xff) ) << 8 | (val & 0xff);
-            constant_pool[i] = new CONSTANT_Integer_info(CONSTANT_Integer,
-                                                         bytes);
+            constant_pool[index] =
+                new CONSTANT_Integer_info(CONSTANT_Integer,
+                                          (u4) lit -> value);
         }
-
         return index;
     }
 
@@ -713,17 +711,18 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         u2 index = (*long_constant_pool_index)[lit -> index];
         if (index == 0)
         {
-            // We cannot use the variable "index" here as it might be truncated
-            int i = constant_pool.NextIndex();
+            //
+            // Either the pair is not in the constant pool, or the constant
+            // pool overflowed.
+            //
+            index = (u2) constant_pool.NextIndex();
             constant_pool.Next() = NULL; // extra slop for double-word entry
-            index = i;
             (*long_constant_pool_index)[lit -> index] = index;
-            constant_pool[i] =
+            constant_pool[index] =
                 new CONSTANT_Long_info(CONSTANT_Long,
                                        lit -> value.HighWord(),
                                        lit -> value.LowWord());
         }
-
         return index;
     }
 
@@ -739,14 +738,16 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         u2 index = (*float_constant_pool_index)[lit -> index];
         if (index == 0)
         {
-            // We cannot use the variable "index" here as it might be truncated
-            int i = constant_pool.NextIndex();
-            index = i;
+            //
+            // Either the pair is not in the constant pool, or the constant
+            // pool overflowed.
+            //
+            index = (u2) constant_pool.NextIndex();
             (*float_constant_pool_index)[lit -> index] = index;
-            constant_pool[i] = new CONSTANT_Float_info(CONSTANT_Float,
-                                                       lit -> value.Word());
+            constant_pool[index] =
+                new CONSTANT_Float_info(CONSTANT_Float,
+                                        lit -> value.Word());
         }
-
         return index;
     }
 
@@ -758,21 +759,22 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         u2 index = utf8_constant_pool_index[lit -> index];
         if (index == 0)
         {
-            // We cannot use the variable "index" here as it might be truncated
-            int i = constant_pool.NextIndex();
-            index = i;
+            //
+            // Either the pair is not in the constant pool, or the constant
+            // pool overflowed.
+            //
+            index = (u2) constant_pool.NextIndex();
             utf8_constant_pool_index[lit -> index] = index;
-            constant_pool[i] = new CONSTANT_Utf8_info(CONSTANT_Utf8,
-                                                      lit -> value,
-                                                      lit -> length);
+            constant_pool[index] = new CONSTANT_Utf8_info(CONSTANT_Utf8,
+                                                          lit -> value,
+                                                          lit -> length);
             if (lit -> length > 0xffff)
                 string_overflow = true;
         }
-
         return index;
     }
 
-    u2 RegisterName(NameSymbol* sym)
+    u2 RegisterName(const NameSymbol* sym)
     {
         return RegisterUtf8(sym -> Utf8_literal);
     }
@@ -780,12 +782,6 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     u2 RegisterString(Utf8LiteralValue* lit)
     {
         assert(lit && "null argument to RegisterString");
-
-        //
-        // The domain of these maps is an index in the constant_pool.
-        // For a valid program, the size of the constant pool is limited
-        // to 65k elements.
-        //
         if (! string_constant_pool_index)
             string_constant_pool_index =
                 new Pair(segment_pool, control.Utf8_pool.symbol_pool.Length());
@@ -793,14 +789,16 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         u2 index = (*string_constant_pool_index)[lit -> index];
         if (index == 0)
         {
-            // We cannot use the variable "index" here as it might be truncated
-            int i = constant_pool.NextIndex();
-            index = i;
+            //
+            // Either the pair is not in the constant pool, or the constant
+            // pool overflowed.
+            //
+            u2 utf_index = RegisterUtf8(lit);
+            index = (u2) constant_pool.NextIndex();
             (*string_constant_pool_index)[lit -> index] = index;
-            constant_pool[i] = new CONSTANT_String_info(CONSTANT_String,
-                                                        RegisterUtf8(lit));
+            constant_pool[index] = new CONSTANT_String_info(CONSTANT_String,
+                                                            utf_index);
         }
-
         return index;
     }
 
@@ -812,18 +810,20 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         u2 index = class_constant_pool_index[lit -> index];
         if (index == 0)
         {
-            // We cannot use the variable "index" here as it might be truncated
-            int i = constant_pool.NextIndex();
-            index = i;
+            //
+            // Either the pair is not in the constant pool, or the constant
+            // pool overflowed.
+            //
+            u2 utf_index = RegisterUtf8(lit);
+            index = (u2) constant_pool.NextIndex();
             class_constant_pool_index[lit -> index] = index;
-            constant_pool[i] = new CONSTANT_Class_info(CONSTANT_Class,
-                                                       RegisterUtf8(lit));
+            constant_pool[index] = new CONSTANT_Class_info(CONSTANT_Class,
+                                                           utf_index);
         }
-
         return index;
     }
 
-    u2 RegisterClass(TypeSymbol* sym)
+    u2 RegisterClass(const TypeSymbol* sym)
     {
         return RegisterClass(sym -> fully_qualified_name);
     }
@@ -865,7 +865,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void EmitFieldAccessLhsBase(AstExpression*);
     void EmitFieldAccessLhs(AstExpression*);
     void EmitMethodInvocation(AstMethodInvocation*);
-    void EmitNewArray(unsigned, TypeSymbol*);
+    void EmitNewArray(unsigned, const TypeSymbol*);
     int EmitPostUnaryExpression(AstPostUnaryExpression*, bool);
     void EmitPostUnaryExpressionArray(AstPostUnaryExpression*, bool);
     void EmitPostUnaryExpressionField(VariableCategory,
@@ -900,7 +900,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void EndMethod(int, MethodSymbol*);
     void DeclareField(VariableSymbol*);
     void InitializeVariable(AstVariableDeclarator*);
-    void InitializeArray(TypeSymbol*, AstArrayInitializer*, bool = true);
+    void InitializeArray(const TypeSymbol*, AstArrayInitializer*, bool = true);
     void DeclareLocalVariable(AstVariableDeclarator*);
     bool EmitStatement(AstStatement*);
     void EmitReturnStatement(AstReturnStatement*);

@@ -105,11 +105,12 @@ public:
     char* name;
     int length;
 
-    DirectoryEntry() : next(NULL),
-                       name(NULL),
-                       length(0),
-                       directory(NULL),
-                       mtime_(0)
+    DirectoryEntry()
+        : next(NULL),
+          name(NULL),
+          length(0),
+          directory(NULL),
+          mtime_(0)
     {
         image = this;
     }
@@ -167,7 +168,7 @@ public:
 
     virtual DirectoryEntry* Image() { return image; }
 };
-#endif
+#endif // WIN32_FILE_SYSTEM
 
 
 class SystemTable
@@ -285,28 +286,39 @@ public:
          _num_kinds
     };
 
-    SymbolKind Kind() { return _kind; }
-    virtual const wchar_t* Name() { return NULL; }
-    virtual unsigned NameLength() { return 0; }
-    virtual NameSymbol* Identity() { return NULL; }
-    inline unsigned HashCode();
+    SymbolKind Kind() const { return _kind; }
+    virtual const wchar_t* Name() const { return NULL; }
+    virtual unsigned NameLength() const { return 0; }
+    virtual const NameSymbol* Identity() const { return NULL; }
+    inline unsigned HashCode() const;
 
     //
     // These cannot be inline without including symbol.h, because they
     // would cast to incomplete types.
     //
     PackageSymbol* PackageCast();
+    const PackageSymbol* PackageCast() const;
     TypeSymbol* TypeCast();
+    const TypeSymbol* TypeCast() const;
     MethodSymbol* MethodCast();
+    const MethodSymbol* MethodCast() const;
     BlockSymbol* BlockCast();
+    const BlockSymbol* BlockCast() const;
     VariableSymbol* VariableCast();
+    const VariableSymbol* VariableCast() const;
     LabelSymbol* LabelCast();
+    const LabelSymbol* LabelCast() const;
     LiteralSymbol* LiteralCast();
+    const LiteralSymbol* LiteralCast() const;
     NameSymbol* NameCast();
+    const NameSymbol* NameCast() const;
 
     PathSymbol* PathCast();
+    const PathSymbol* PathCast() const;
     DirectorySymbol* DirectoryCast();
+    const DirectorySymbol* DirectoryCast() const;
     FileSymbol* FileCast();
+    const FileSymbol* FileCast() const;
 
     virtual ~Symbol() {}
 
@@ -425,27 +437,22 @@ public:
     int index;
     Utf8LiteralValue* Utf8_literal;
 
-    virtual const wchar_t* Name()   { return name_; }
-    virtual unsigned NameLength() { return length; }
-    virtual NameSymbol* Identity() { return this; }
-    char* Utf8Name()
+    virtual const wchar_t* Name() const { return name_; }
+    virtual unsigned NameLength() const { return length; }
+    virtual const NameSymbol* Identity() const { return this; }
+    const char* Utf8Name() const
     {
         return Utf8_literal ? Utf8_literal -> value : (char*) NULL;
     }
-    int Utf8NameLength()
+    unsigned Utf8NameLength() const
     {
         return Utf8_literal ? Utf8_literal -> length : 0;
     }
 
-    NameSymbol() : name_(NULL)
-    {}
+    NameSymbol() : name_(NULL) {}
+    virtual ~NameSymbol() { delete [] name_; }
 
-    virtual ~NameSymbol()
-    {
-        delete [] name_;
-    }
-
-    inline void Initialize(const wchar_t* str, int length_,
+    inline void Initialize(const wchar_t* str, unsigned length_,
                            unsigned hash_address_, int index_)
     {
         Symbol::_kind = NAME;
@@ -466,7 +473,7 @@ private:
     friend class NameLookupTable;
 
     wchar_t* name_;
-    int length;
+    unsigned length;
     unsigned hash_address;
 };
 
@@ -542,17 +549,12 @@ class LiteralSymbol : public Symbol
 public:
     LiteralValue* value;
 
-    virtual const wchar_t* Name()   { return name_; }
-    virtual unsigned NameLength() { return length; }
-    virtual NameSymbol* Identity() { return NULL; }
+    virtual const wchar_t* Name() const { return name_; }
+    virtual unsigned NameLength() const { return length; }
+    virtual const NameSymbol* Identity() const { return NULL; }
 
-    LiteralSymbol() : name_(NULL)
-    {}
-
-    virtual ~LiteralSymbol()
-    {
-        delete [] name_;
-    }
+    LiteralSymbol() : name_(NULL) {}
+    virtual ~LiteralSymbol() { delete [] name_; }
 
     void Initialize(const wchar_t* str, unsigned hash_address_, int length_)
     {
@@ -851,7 +853,7 @@ private:
 };
 
 
-inline unsigned Symbol::HashCode()
+inline unsigned Symbol::HashCode() const
 {
     return (unsigned) Identity() -> index;
 }

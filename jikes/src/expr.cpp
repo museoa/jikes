@@ -23,7 +23,7 @@ namespace Jikes { // Open namespace Jikes block
 #endif
 
 bool Semantic::IsIntValueRepresentableInType(AstExpression* expr,
-                                             TypeSymbol* type)
+                                             const TypeSymbol* type)
 {
     if (! expr -> IsConstant() ||
         ! control.IsSimpleIntegerValueType(expr -> Type()))
@@ -77,7 +77,7 @@ inline bool Semantic::MoreSpecific(MethodSymbol* source_method,
 inline bool Semantic::MoreSpecific(MethodSymbol* method,
                                    Tuple<MethodSymbol*>& maximally_specific_method)
 {
-    for (int i = 0; i < maximally_specific_method.Length(); i++)
+    for (unsigned i = 0; i < maximally_specific_method.Length(); i++)
     {
         if (! MoreSpecific(method, maximally_specific_method[i]))
             return false;
@@ -94,7 +94,7 @@ inline bool Semantic::MoreSpecific(MethodSymbol* method,
 inline bool Semantic::NoMethodMoreSpecific(Tuple<MethodSymbol*>& maximally_specific_method,
                                            MethodSymbol* method)
 {
-    for (int i = 0; i < maximally_specific_method.Length(); i++)
+    for (unsigned i = 0; i < maximally_specific_method.Length(); i++)
     {
         if (MoreSpecific(maximally_specific_method[i], method))
             return false;
@@ -110,7 +110,7 @@ inline bool Semantic::NoMethodMoreSpecific(Tuple<MethodSymbol*>& maximally_speci
 inline bool Semantic::MoreSpecific(MethodSymbol* method,
                                    Tuple<MethodShadowSymbol*>& maximally_specific_method)
 {
-    for (int i = 0; i < maximally_specific_method.Length(); i++)
+    for (unsigned i = 0; i < maximally_specific_method.Length(); i++)
     {
         if (! MoreSpecific(method,
                            maximally_specific_method[i] -> method_symbol))
@@ -128,7 +128,7 @@ inline bool Semantic::MoreSpecific(MethodSymbol* method,
 inline bool Semantic::NoMethodMoreSpecific(Tuple<MethodShadowSymbol*>& maximally_specific_method,
                                            MethodSymbol* method)
 {
-    for (int i = 0; i < maximally_specific_method.Length(); i++)
+    for (unsigned i = 0; i < maximally_specific_method.Length(); i++)
     {
         if (MoreSpecific(maximally_specific_method[i] -> method_symbol, method))
             return false;
@@ -644,7 +644,7 @@ VariableSymbol* Semantic::FindMisspelledVariableName(TypeSymbol* type,
     int index = 0;
     const wchar_t* name = lex_stream -> NameString(identifier_token);
 
-    for (int k = 0;
+    for (unsigned k = 0;
          k < type -> expanded_field_table -> symbol_pool.Length(); k++)
     {
         VariableShadowSymbol* variable_shadow =
@@ -680,7 +680,7 @@ MethodSymbol* Semantic::FindMisspelledMethodName(TypeSymbol* type,
     LexStream::TokenIndex identifier_token =
         method_call -> arguments -> left_parenthesis_token - 1;
 
-    for (int k = 0;
+    for (unsigned k = 0;
          k < type -> expanded_method_table -> symbol_pool.Length(); k++)
     {
         MethodShadowSymbol* method_shadow =
@@ -941,7 +941,7 @@ MethodShadowSymbol* Semantic::FindMethodInEnvironment(SemanticEnvironment*& wher
                                    : (MethodSymbol*) NULL);
     if (method_symbol)
     {
-        for (int i = 1; i < methods_found.Length(); i++)
+        for (unsigned i = 1; i < methods_found.Length(); i++)
         {
             ReportSemError(SemanticError::AMBIGUOUS_METHOD_INVOCATION,
                            method_call, method_symbol -> Name(),
@@ -980,7 +980,7 @@ MethodShadowSymbol* Semantic::FindMethodInEnvironment(SemanticEnvironment*& wher
                 if (others.Length() > 0 &&
                     where_found -> Type() != found_other -> Type())
                 {
-                    for (int i = 0; i < others.Length();  i++)
+                    for (unsigned i = 0; i < others.Length();  i++)
                     {
                         if (others[i] -> method_symbol != method_symbol &&
                             (others[i] -> method_symbol -> containing_type ==
@@ -1212,7 +1212,7 @@ VariableSymbol* Semantic::FindVariableInType(TypeSymbol* type,
         if (MemberAccessCheck(type, variable, base))
             variable_set.Next() = variable;
 
-        for (int i = 0; i < variable_shadow -> NumConflicts(); i++)
+        for (unsigned i = 0; i < variable_shadow -> NumConflicts(); i++)
         {
             variable = variable_shadow -> Conflict(i);
             if (! variable -> IsTyped())
@@ -1410,7 +1410,7 @@ void Semantic::FindVariableInEnvironment(Tuple<VariableSymbol*>& variables_found
             // hides all other occurrences of x that may appear in a super
             // class (or super interface) of S (see 8.3).
             //
-            for (int i = 0; i < variable_shadow -> NumConflicts(); i++)
+            for (unsigned i = 0; i < variable_shadow -> NumConflicts(); i++)
                 variables_found.Next() = variable_shadow -> Conflict(i);
             where_found = env;
             break;
@@ -1503,7 +1503,7 @@ VariableSymbol* Semantic::FindVariableInEnvironment(SemanticEnvironment*& where_
                 if (others.Length() > 0 &&
                     where_found -> Type() != found_other -> Type())
                 {
-                    for (int i = 0; i < others.Length(); i++)
+                    for (unsigned i = 0; i < others.Length(); i++)
                     {
                         if (others[i] != variable_symbol)
                         {
@@ -1538,7 +1538,7 @@ VariableSymbol* Semantic::FindVariableInEnvironment(SemanticEnvironment*& where_
         }
     }
 
-    for (int i = 1; i < variables_found.Length(); i++)
+    for (unsigned i = 1; i < variables_found.Length(); i++)
     {
         ReportSemError(SemanticError::AMBIGUOUS_FIELD, identifier_token,
                        variable_symbol -> Name(),
@@ -3715,11 +3715,11 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression* class
     //
     if (super_type -> IsLocal())
     {
-        int param_count = super_type -> NumConstructorParameters();
+        unsigned param_count = super_type -> NumConstructorParameters();
         if (super_type -> LocalClassProcessingCompleted() && param_count)
         {
             super_args -> AllocateLocalArguments(param_count);
-            for (int k = 0; k < param_count; k++)
+            for (unsigned k = 0; k < param_count; k++)
             {
                 //
                 // We may need to create a shadow in the outermost
@@ -4444,8 +4444,8 @@ void Semantic::ProcessPreUnaryExpression(Ast* expr)
 // Returns true if both types are primitive, and the source type can be
 // widened into the target type.
 //
-inline bool Semantic::CanWideningPrimitiveConvert(TypeSymbol* target_type,
-                                                  TypeSymbol* source_type)
+inline bool Semantic::CanWideningPrimitiveConvert(const TypeSymbol* target_type,
+                                                  const TypeSymbol* source_type)
 {
     if (target_type == control.double_type)
         return source_type == control.float_type ||
@@ -4479,8 +4479,8 @@ inline bool Semantic::CanWideningPrimitiveConvert(TypeSymbol* target_type,
 // Returns true if both types are primitive, and the source type can be
 // narrowed to the target type.
 //
-inline bool Semantic::CanNarrowingPrimitiveConvert(TypeSymbol* target_type,
-                                                   TypeSymbol* source_type)
+inline bool Semantic::CanNarrowingPrimitiveConvert(const TypeSymbol* target_type,
+                                                   const TypeSymbol* source_type)
 {
     if (target_type == control.byte_type)
         return source_type == control.double_type ||
@@ -4519,8 +4519,8 @@ inline bool Semantic::CanNarrowingPrimitiveConvert(TypeSymbol* target_type,
 // Returns true if the source type can be converted to the target type in a
 // method invocation - this includes identity and widening conversions.
 //
-bool Semantic::CanMethodInvocationConvert(TypeSymbol* target_type,
-                                          TypeSymbol* source_type)
+bool Semantic::CanMethodInvocationConvert(const TypeSymbol* target_type,
+                                          const TypeSymbol* source_type)
 {
     if (target_type == control.no_type) // Don't convert any class to bad type.
         return false;
@@ -4546,8 +4546,8 @@ bool Semantic::CanMethodInvocationConvert(TypeSymbol* target_type,
 // the target type in assignments. This works only for references (including
 // null), but allows a bad target type while method invocation does not.
 //
-bool Semantic::CanAssignmentConvertReference(TypeSymbol* target_type,
-                                             TypeSymbol* source_type)
+bool Semantic::CanAssignmentConvertReference(const TypeSymbol* target_type,
+                                             const TypeSymbol* source_type)
 {
     return target_type == control.no_type ||
         CanMethodInvocationConvert(target_type, source_type);
@@ -4559,7 +4559,7 @@ bool Semantic::CanAssignmentConvertReference(TypeSymbol* target_type,
 // target type. This includes all method invocation conversions, and
 // additionally allows narrowing conversions of primitive constants.
 //
-bool Semantic::CanAssignmentConvert(TypeSymbol* target_type,
+bool Semantic::CanAssignmentConvert(const TypeSymbol* target_type,
                                     AstExpression* expr)
 {
     return target_type == control.no_type ||
@@ -4634,7 +4634,7 @@ bool Semantic::CanCastConvert(TypeSymbol* target_type,
         ComputeMethodsClosure(target_type, tok);
     ExpandedMethodTable* source_method_table =
         source_type -> expanded_method_table;
-    int i;
+    unsigned i;
     for (i = 0; i < source_method_table -> symbol_pool.Length(); i++)
     {
         MethodSymbol* method1 =
@@ -4662,7 +4662,7 @@ bool Semantic::CanCastConvert(TypeSymbol* target_type,
 // Transfer a constant value across a primitive or String cast statement,
 // whether explicit or generated.
 //
-LiteralValue* Semantic::CastValue(TypeSymbol* target_type,
+LiteralValue* Semantic::CastValue(const TypeSymbol* target_type,
                                   AstExpression* expr)
 {
     TypeSymbol* source_type = expr -> Type();
@@ -6844,8 +6844,8 @@ void Semantic::ProcessAssignmentExpression(Ast* expr)
         if (name)
         {
             if (name -> resolution_opt)
-               read_method =
-                   name -> resolution_opt -> symbol -> MethodCast();
+                read_method =
+                    name -> resolution_opt -> symbol -> MethodCast();
         }
         else if (field_access)
         {

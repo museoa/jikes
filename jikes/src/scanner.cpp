@@ -193,7 +193,7 @@ void Scanner::Scan(FileSymbol* file_symbol)
         if (control.option.dump_errors)
         {
             lex -> SortMessages();
-            for (int i = 0; i < lex -> bad_tokens.Length(); i++)
+            for (unsigned i = 0; i < lex -> bad_tokens.Length(); i++)
                 JikesAPI::getInstance() ->
                     reportError(&(lex -> bad_tokens[i]));
         }
@@ -985,7 +985,7 @@ void Scanner::ClassifyIdOrKeyword()
     if (current_token -> Kind() == TK_Identifier)
     {
         current_token -> SetSymbol(control.FindOrInsertName(cursor, len));
-        for (int i = 0; i < control.option.keyword_map.Length(); i++)
+        for (unsigned i = 0; i < control.option.keyword_map.Length(); i++)
         {
             if (control.option.keyword_map[i].length == len &&
                 wcsncmp(cursor, control.option.keyword_map[i].name, len) == 0)
@@ -1037,7 +1037,7 @@ void Scanner::ClassifyId()
     current_token -> SetKind(TK_Identifier);
     current_token -> SetSymbol(control.FindOrInsertName(cursor, len));
 
-    for (int i = 0; i < control.option.keyword_map.Length(); i++)
+    for (unsigned i = 0; i < control.option.keyword_map.Length(); i++)
     {
         if (control.option.keyword_map[i].length == len &&
             wcsncmp(cursor, control.option.keyword_map[i].name, len) == 0)

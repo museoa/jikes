@@ -1,5 +1,46 @@
 2002-12-10  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/tuple.h: Backport and improve generics-branch handling of
+	tuples; length is now unsigned instead of int.
+	* src/access.h:
+	* src/ast.h:
+	* src/body.cpp:
+	* src/bytecode.cpp:
+	* src/bytecode.h:
+	* src/class.h:
+	* src/control.cpp:
+	* src/control.h:
+	* src/decl.cpp:
+	* src/definite.cpp:
+	* src/depend.cpp:
+	* src/diagnose.cpp:
+	* src/double.h:
+	* src/error.cpp:
+	* src/error.h:
+	* src/expr.cpp:
+	* src/getclass.cpp:
+	* src/incrmnt.cpp:
+	* src/jikesapi.cpp:
+	* src/long.h:
+	* src/lookup.cpp:
+	* src/lookup.h:
+	* src/platform.cpp:
+	* src/platform.h:
+	* src/scanner.cpp:
+	* src/segment.cpp:
+	* src/segment.h:
+	* src/semantic.h:
+	* src/set.cpp:
+	* src/set.h:
+	* src/stream.cpp:
+	* src/stream.h:
+	* src/symbol.cpp:
+	* src/symbol.h:
+	* src/system.cpp:
+	* src/table.h: Changes associated with tuples; more const-safety.
+
+2002-12-10  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/ast.cpp:
 	* src/ast.h:
 	* src/control.h:

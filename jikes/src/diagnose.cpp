@@ -2242,9 +2242,9 @@ void ParseError::PrintMessages()
     SortMessages();
 
     int stack_top = -1;
-    int *error_stack = new int[errors.Length()];
+    int* error_stack = new int[errors.Length()];
 
-    for (int k = 0; k < errors.Length(); k++)
+    for (unsigned k = 0; k < errors.Length(); k++)
     {
         for ( ; stack_top >= 0 &&
                   (errors[error_stack[stack_top]].right_token <=

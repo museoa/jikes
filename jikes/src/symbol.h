@@ -47,21 +47,21 @@ class PackageSymbol;
 class PathSymbol : public Symbol
 {
 public:
-    NameSymbol* name_symbol;
+    const NameSymbol* name_symbol;
     Zip* zipfile;
 
-    PathSymbol(NameSymbol*);
+    PathSymbol(const NameSymbol*);
     virtual ~PathSymbol();
 
-    virtual const wchar_t* Name() { return name_symbol -> Name(); }
-    virtual unsigned NameLength() { return name_symbol -> NameLength(); }
-    virtual NameSymbol* Identity() { return name_symbol; }
-    char* Utf8Name()
+    virtual const wchar_t* Name() const { return name_symbol -> Name(); }
+    virtual unsigned NameLength() const { return name_symbol -> NameLength(); }
+    virtual const NameSymbol* Identity() const { return name_symbol; }
+    const char* Utf8Name() const
     {
         return name_symbol -> Utf8_literal
             ? name_symbol -> Utf8_literal -> value : (char*) NULL;
     }
-    unsigned Utf8NameLength()
+    unsigned Utf8NameLength() const
     {
         return name_symbol -> Utf8_literal
             ? name_symbol -> Utf8_literal -> length : 0;
@@ -81,22 +81,22 @@ class DirectorySymbol : public Symbol
 {
 public:
     Symbol* owner;
-    NameSymbol* name_symbol;
+    const NameSymbol* name_symbol;
 
     Tuple<DirectorySymbol*> subdirectories;
 
-    DirectorySymbol(NameSymbol*, Symbol*, bool source_dir_only);
+    DirectorySymbol(const NameSymbol*, Symbol*, bool source_dir_only);
     virtual ~DirectorySymbol();
 
-    virtual const wchar_t* Name() { return name_symbol -> Name(); }
-    virtual unsigned NameLength() { return name_symbol -> NameLength(); }
-    virtual NameSymbol* Identity() { return name_symbol; }
-    char* Utf8Name()
+    virtual const wchar_t* Name() const { return name_symbol -> Name(); }
+    virtual unsigned NameLength() const { return name_symbol -> NameLength(); }
+    virtual const NameSymbol* Identity() const { return name_symbol; }
+    const char* Utf8Name() const
     {
         return name_symbol -> Utf8_literal
             ? name_symbol -> Utf8_literal -> value : (char*) NULL;
     }
-    unsigned Utf8NameLength()
+    unsigned Utf8NameLength() const
     {
         return name_symbol -> Utf8_literal
             ? name_symbol -> Utf8_literal -> length : 0;
@@ -147,11 +147,11 @@ public:
         return directory_name_length;
     }
 
-    inline DirectorySymbol* InsertDirectorySymbol(NameSymbol*, bool);
-    inline DirectorySymbol* FindDirectorySymbol(NameSymbol*);
+    inline DirectorySymbol* InsertDirectorySymbol(const NameSymbol*, bool);
+    inline DirectorySymbol* FindDirectorySymbol(const NameSymbol*);
 
-    inline FileSymbol* InsertFileSymbol(NameSymbol*);
-    inline FileSymbol* FindFileSymbol(NameSymbol*);
+    inline FileSymbol* InsertFileSymbol(const NameSymbol*);
+    inline FileSymbol* FindFileSymbol(const NameSymbol*);
 
     void ResetDirectory();
 
@@ -188,7 +188,7 @@ private:
     Utf8LiteralValue* file_name_literal;
 
 public:
-    NameSymbol* name_symbol;
+    const NameSymbol* name_symbol;
     DirectorySymbol* directory_symbol;
     PackageSymbol* package;
     FileKind kind;
@@ -211,7 +211,7 @@ public:
 
     Tuple<TypeSymbol*> types;
 
-    FileSymbol(NameSymbol* name_symbol_)
+    FileSymbol(const NameSymbol* name_symbol_)
         : output_directory(NULL),
           file_name(NULL),
           file_name_literal(NULL),
@@ -243,15 +243,15 @@ public:
         return clone;
     }
 
-    virtual const wchar_t* Name() { return name_symbol -> Name(); }
-    virtual unsigned NameLength() { return name_symbol -> NameLength(); }
-    virtual NameSymbol* Identity() { return name_symbol; }
-    char* Utf8Name()
+    virtual const wchar_t* Name() const { return name_symbol -> Name(); }
+    virtual unsigned NameLength() const { return name_symbol -> NameLength(); }
+    virtual const NameSymbol* Identity() const { return name_symbol; }
+    const char* Utf8Name() const
     {
         return name_symbol -> Utf8_literal
             ? name_symbol -> Utf8_literal -> value : (char*) NULL;
     }
-    unsigned Utf8NameLength()
+    unsigned Utf8NameLength() const
     {
         return name_symbol -> Utf8_literal
             ? name_symbol -> Utf8_literal -> length : 0;
@@ -363,7 +363,7 @@ public:
     Tuple<DirectorySymbol*> directory;
     PackageSymbol* owner;
 
-    PackageSymbol(NameSymbol* name_symbol_, PackageSymbol* owner_)
+    PackageSymbol(const NameSymbol* name_symbol_, PackageSymbol* owner_)
         : directory(4),
           owner(owner_),
           name_symbol(name_symbol_),
@@ -375,15 +375,15 @@ public:
 
     virtual ~PackageSymbol();
 
-    virtual const wchar_t* Name() { return name_symbol -> Name(); }
-    virtual unsigned NameLength() { return name_symbol -> NameLength(); }
-    virtual NameSymbol* Identity() { return name_symbol; }
-    char* Utf8Name()
+    virtual const wchar_t* Name() const { return name_symbol -> Name(); }
+    virtual unsigned NameLength() const { return name_symbol -> NameLength(); }
+    virtual const NameSymbol* Identity() const { return name_symbol; }
+    const char* Utf8Name() const
     {
         return name_symbol -> Utf8_literal
             ? name_symbol -> Utf8_literal -> value : (char*) NULL;
     }
-    unsigned Utf8NameLength()
+    unsigned Utf8NameLength() const
     {
         return name_symbol -> Utf8_literal
             ? name_symbol -> Utf8_literal -> length : 0;
@@ -405,17 +405,16 @@ public:
         return package_name_length;
     }
 
-    inline PackageSymbol* FindPackageSymbol(NameSymbol*);
+    inline PackageSymbol* FindPackageSymbol(const NameSymbol*);
     inline PackageSymbol* InsertPackageSymbol(NameSymbol*);
 
-    inline TypeSymbol* FindTypeSymbol(NameSymbol*);
+    inline TypeSymbol* FindTypeSymbol(const NameSymbol*);
     inline TypeSymbol* InsertSystemTypeSymbol(NameSymbol*);
     inline TypeSymbol* InsertOuterTypeSymbol(NameSymbol*);
     inline void DeleteTypeSymbol(TypeSymbol*);
 
 private:
-
-    NameSymbol* name_symbol;
+    const NameSymbol* name_symbol;
     SymbolTable* table;
     inline SymbolTable* Table();
 
@@ -428,7 +427,7 @@ class MethodSymbol : public Symbol, public AccessFlags
 {
 public:
     Ast* declaration; // AstMethodDeclaration or AstConstructorDeclaration
-    NameSymbol* name_symbol;
+    const NameSymbol* name_symbol;
     TypeSymbol* containing_type;
     BlockSymbol* block_symbol;
     MethodSymbol* next_method;
@@ -443,21 +442,21 @@ public:
     Symbol* accessed_member;
     inline bool AccessesStaticMember();
 
-    virtual const wchar_t* Name() { return name_symbol -> Name(); }
-    virtual unsigned NameLength() { return name_symbol -> NameLength(); }
-    virtual NameSymbol* Identity() { return name_symbol; }
-    char* Utf8Name()
+    virtual const wchar_t* Name() const { return name_symbol -> Name(); }
+    virtual unsigned NameLength() const { return name_symbol -> NameLength(); }
+    virtual const NameSymbol* Identity() const { return name_symbol; }
+    const char* Utf8Name() const
     {
         return name_symbol -> Utf8_literal
             ? name_symbol -> Utf8_literal -> value : (char*) NULL;
     }
-    unsigned Utf8NameLength()
+    unsigned Utf8NameLength() const
     {
         return name_symbol -> Utf8_literal
             ? name_symbol -> Utf8_literal -> length : 0;
     }
 
-    MethodSymbol(NameSymbol* name_symbol_)
+    MethodSymbol(const NameSymbol* name_symbol_)
         : declaration(NULL),
           name_symbol(name_symbol_),
           containing_type(NULL),
@@ -481,10 +480,7 @@ public:
 
     virtual ~MethodSymbol();
 
-    bool IsTyped()
-    {
-        return type_ != NULL;
-    }
+    bool IsTyped() const { return type_ != NULL; }
 
     void SetType(TypeSymbol* _type)
     {
@@ -502,13 +498,18 @@ public:
         assert(type_);
         return type_;
     }
+    const TypeSymbol* Type() const
+    {
+        assert(type_);
+        return type_;
+    }
 
-    unsigned NumFormalParameters()
+    unsigned NumFormalParameters() const
     {
         assert(type_);
         return formal_parameters ? formal_parameters -> Length() : 0;
     }
-    VariableSymbol* FormalParameter(unsigned i)
+    VariableSymbol* FormalParameter(unsigned i) const
     {
         return (*formal_parameters)[i];
     }
@@ -554,32 +555,32 @@ public:
         throws_signatures -> Next() = signature;
     }
 
-    void SetExternalIdentity(NameSymbol* external_name_symbol_)
+    void SetExternalIdentity(const NameSymbol* external_name_symbol_)
     {
         external_name_symbol = external_name_symbol_;
     }
-    NameSymbol* ExternalIdentity()
+    const NameSymbol* ExternalIdentity() const
     {
         return external_name_symbol ? external_name_symbol : name_symbol;
     }
-    const wchar_t* ExternalName()
+    const wchar_t* ExternalName() const
     {
         return external_name_symbol ? external_name_symbol -> Name()
             : name_symbol -> Name();
     }
-    unsigned ExternalNameLength()
+    unsigned ExternalNameLength() const
     {
         return external_name_symbol ? external_name_symbol -> NameLength()
             : name_symbol -> NameLength();
     }
-    char* ExternalUtf8Name()
+    const char* ExternalUtf8Name() const
     {
         return external_name_symbol
             ? external_name_symbol -> Utf8_literal -> value
             : name_symbol -> Utf8_literal
             ? name_symbol -> Utf8_literal -> value : (char*) NULL;
     }
-    unsigned ExternalUtf8NameLength()
+    unsigned ExternalUtf8NameLength() const
     {
         return external_name_symbol && external_name_symbol -> Utf8_literal
             ? external_name_symbol -> Utf8_literal -> length
@@ -597,7 +598,7 @@ public:
     }
     void SetSignature(Control&, TypeSymbol* = NULL);
     void SetSignature(Utf8LiteralValue* signature_) { signature = signature_; }
-    char* SignatureString() { return signature -> value; }
+    const char* SignatureString() const { return signature -> value; }
     wchar_t* Header();
 
     void CleanUp();
@@ -609,7 +610,7 @@ public:
     bool IsDeprecated() { return (status & (unsigned char) 0x10) != 0; }
 
 private:
-    NameSymbol* external_name_symbol;
+    const NameSymbol* external_name_symbol;
 
     unsigned char status;
     wchar_t* header;
@@ -654,7 +655,7 @@ public:
 
     FileSymbol* file_symbol;
     FileLocation* file_location;
-    NameSymbol* name_symbol;
+    const NameSymbol* name_symbol;
     Symbol* owner;
 
     // A nested class identifies the outer most type that contains it. If a
@@ -776,7 +777,7 @@ public:
         nested_types -> Next() = type_symbol;
     }
 
-    unsigned NumInterfaces()
+    unsigned NumInterfaces() const
     {
         return interfaces ? interfaces -> Length() : 0;
     }
@@ -785,7 +786,7 @@ public:
         delete interfaces;
         interfaces = NULL;
     }
-    TypeSymbol* Interface(unsigned i) { return (*interfaces)[i]; }
+    TypeSymbol* Interface(unsigned i) const { return (*interfaces)[i]; }
     void AddInterface(TypeSymbol* type_symbol)
     {
         if (! interfaces)
@@ -848,47 +849,47 @@ public:
     MethodSymbol* instance_initializer_method;
     MethodSymbol* static_initializer_method;
 
-    virtual const wchar_t* Name() { return name_symbol -> Name(); }
-    virtual unsigned NameLength() { return name_symbol -> NameLength(); }
-    virtual NameSymbol* Identity() { return name_symbol; }
-    char* Utf8Name()
+    virtual const wchar_t* Name() const { return name_symbol -> Name(); }
+    virtual unsigned NameLength() const { return name_symbol -> NameLength(); }
+    virtual const NameSymbol* Identity() const { return name_symbol; }
+    const char* Utf8Name() const
     {
         return name_symbol -> Utf8_literal
             ? name_symbol -> Utf8_literal -> value : (char*) NULL;
     }
-    unsigned Utf8NameLength()
+    unsigned Utf8NameLength() const
     {
         return name_symbol -> Utf8_literal
             ? name_symbol -> Utf8_literal -> length : 0;
     }
 
 
-    void SetExternalIdentity(NameSymbol* external_name_symbol_)
+    void SetExternalIdentity(const NameSymbol* external_name_symbol_)
     {
         external_name_symbol = external_name_symbol_;
     }
-    NameSymbol* ExternalIdentity()
+    const NameSymbol* ExternalIdentity() const
     {
         return external_name_symbol ? external_name_symbol : name_symbol;
     }
-    const wchar_t* ExternalName()
+    const wchar_t* ExternalName() const
     {
         return external_name_symbol ? external_name_symbol -> Name()
             : name_symbol -> Name();
     }
-    unsigned ExternalNameLength()
+    unsigned ExternalNameLength() const
     {
         return external_name_symbol ? external_name_symbol -> NameLength()
             : name_symbol -> NameLength();
     }
-    char* ExternalUtf8Name()
+    const char* ExternalUtf8Name() const
     {
         return external_name_symbol
             ? external_name_symbol -> Utf8_literal -> value
             : name_symbol -> Utf8_literal
             ? name_symbol -> Utf8_literal -> value : (char*) NULL;
     }
-    unsigned ExternalUtf8NameLength()
+    unsigned ExternalUtf8NameLength() const
     {
         return external_name_symbol && external_name_symbol -> Utf8_literal
             ? external_name_symbol -> Utf8_literal -> length
@@ -896,7 +897,7 @@ public:
             ? name_symbol -> Utf8_literal -> length : 0;
     }
 
-    TypeSymbol(NameSymbol*);
+    TypeSymbol(const NameSymbol*);
     virtual ~TypeSymbol();
 
     void ProcessTypeHeaders();
@@ -929,7 +930,7 @@ public:
     MethodSymbol* GetWriteAccessFromReadAccess(MethodSymbol*);
     TypeSymbol* GetPlaceholderType();
 
-    bool IsArray() { return num_dimensions > 0; }
+    bool IsArray() const { return num_dimensions > 0; }
 
     void SetOwner(Symbol* owner_) { owner = owner_; }
 
@@ -961,6 +962,19 @@ public:
         }
         return NULL;
     }
+    const TypeSymbol* ContainingType() const
+    {
+        if (owner)
+        {
+            TypeSymbol* type = owner -> TypeCast();
+            if (type)
+                return type;
+            MethodSymbol* method = owner -> MethodCast();
+            if (method)
+                return method -> containing_type;
+        }
+        return NULL;
+    }
 
     TypeSymbol* EnclosingType();
     bool HasEnclosingInstance(TypeSymbol*, bool = false);
@@ -970,9 +984,9 @@ public:
     // Note that this test considers a class a subclass of itself, and also
     // interfaces are a subclass of Object. See also IsSubtype.
     //
-    bool IsSubclass(TypeSymbol* super_class)
+    bool IsSubclass(const TypeSymbol* super_class) const
     {
-        for (TypeSymbol* type = this; type; type = type -> super)
+        for (const TypeSymbol* type = this; type; type = type -> super)
             if (type == super_class)
                 return true;
         return false;
@@ -982,7 +996,7 @@ public:
     // Note that this test considers an interface a subtype of itself, but
     // does not work for classes. See also IsSubtype.
     //
-    bool IsSubinterface(TypeSymbol* super_interface)
+    bool IsSubinterface(const TypeSymbol* super_interface) const
     {
         if (this == super_interface)
             return true;
@@ -997,7 +1011,7 @@ public:
     //
     // This test works for classes, but not for interfaces. See also IsSubtype.
     //
-    bool Implements(TypeSymbol* inter)
+    bool Implements(const TypeSymbol* inter) const
     {
         for (unsigned i = 0; i < NumInterfaces(); i++)
         {
@@ -1014,14 +1028,15 @@ public:
     // Cloneable, Serializable, and all equal dimension arrays where the
     // element type is a subtype). For simplicity, a type subtypes itself.
     //
-    bool IsSubtype(TypeSymbol* type)
+    bool IsSubtype(const TypeSymbol* type) const
     {
         if (ACC_INTERFACE())
             return (type -> ACC_INTERFACE() && IsSubinterface(type)) ||
                 super == type;
         if (num_dimensions)
         {
-            TypeSymbol* base = type -> base_type ? type -> base_type : type;
+            const TypeSymbol* base =
+                type -> base_type ? type -> base_type : type;
             return (num_dimensions > type -> num_dimensions &&
                     ((base -> ACC_INTERFACE() && Implements(base)) ||
                      super == base)) ||
@@ -1044,7 +1059,7 @@ public:
     //
     TypeSymbol* GetArrayType(Semantic*, unsigned);
 
-    TypeSymbol* ArraySubtype()
+    TypeSymbol* ArraySubtype() const
     {
         assert(num_dimensions);
         return base_type -> Array(num_dimensions - 1);
@@ -1052,19 +1067,19 @@ public:
 
     void SetSignature(Control&);
     void SetSignature(Utf8LiteralValue* signature_) { signature = signature_; }
-    char* SignatureString() { return signature -> value; }
+    const char* SignatureString() const { return signature -> value; }
 
     void SetClassLiteralName(Utf8LiteralValue* class_literal_name_)
     {
         class_literal_name = class_literal_name_;
     }
 
-    PackageSymbol* ContainingPackage()
+    PackageSymbol* ContainingPackage() const
     {
         return outermost_type -> owner -> PackageCast();
     }
     // Returns the fully-qualified '/' separated package name.
-    const wchar_t* ContainingPackageName()
+    const wchar_t* ContainingPackageName() const
     {
         return outermost_type -> owner -> PackageCast() -> PackageName();
     }
@@ -1099,7 +1114,7 @@ public:
         return false;
     }
 
-    inline char* ClassName()
+    inline const char* ClassName()
     {
         if (! class_name)
             SetClassName();
@@ -1110,7 +1125,7 @@ public:
     {
         status |= CONSTRUCTOR_MEMBERS_PROCESSED;
     }
-    bool ConstructorMembersProcessed()
+    bool ConstructorMembersProcessed() const
     {
         return (status & CONSTRUCTOR_MEMBERS_PROCESSED) != 0;
     }
@@ -1119,7 +1134,7 @@ public:
     {
         status |= METHOD_MEMBERS_PROCESSED;
     }
-    bool MethodMembersProcessed()
+    bool MethodMembersProcessed() const
     {
         return (status & METHOD_MEMBERS_PROCESSED) != 0;
     }
@@ -1128,7 +1143,7 @@ public:
     {
         status |= FIELD_MEMBERS_PROCESSED;
     }
-    bool FieldMembersProcessed()
+    bool FieldMembersProcessed() const
     {
         return (status & FIELD_MEMBERS_PROCESSED) != 0;
     }
@@ -1137,30 +1152,30 @@ public:
     {
         status |= LOCAL_CLASS_PROCESSING_COMPLETED;
     }
-    bool LocalClassProcessingCompleted()
+    bool LocalClassProcessingCompleted() const
     {
         return (status & LOCAL_CLASS_PROCESSING_COMPLETED) != 0;
     }
 
     void MarkSourcePending() { status |= SOURCE_PENDING; }
     void MarkSourceNoLongerPending() { status &= ~ SOURCE_PENDING; }
-    bool SourcePending() { return (status & SOURCE_PENDING) != 0; }
+    bool SourcePending() const { return (status & SOURCE_PENDING) != 0; }
 
     void MarkAnonymous() { status |= ANONYMOUS; }
-    bool Anonymous() { return (status & ANONYMOUS) != 0; }
+    bool Anonymous() const { return (status & ANONYMOUS) != 0; }
 
     void MarkHeaderProcessed() { status |= HEADER_PROCESSED; }
-    bool HeaderProcessed() { return (status & HEADER_PROCESSED) != 0; }
+    bool HeaderProcessed() const { return (status & HEADER_PROCESSED) != 0; }
 
     void MarkPrimitive() { status |= PRIMITIVE; }
-    bool Primitive() { return (status & PRIMITIVE) != 0; }
+    bool Primitive() const { return (status & PRIMITIVE) != 0; }
 
     void MarkDeprecated() { status |= DEPRECATED; }
     void ResetDeprecated() { status &= ~DEPRECATED; }
-    bool IsDeprecated() { return (status & DEPRECATED) != 0; }
+    bool IsDeprecated() const { return (status & DEPRECATED) != 0; }
 
     void MarkSynthetic() { status |= SYNTHETIC; }
-    bool IsSynthetic() { return (status & SYNTHETIC) != 0; }
+    bool IsSynthetic() const { return (status & SYNTHETIC) != 0; }
 
     void MarkBad()
     {
@@ -1170,7 +1185,7 @@ public:
                    LOCAL_CLASS_PROCESSING_COMPLETED);
         MarkSourceNoLongerPending();
     }
-    bool Bad() { return (status & BAD) != 0; }
+    bool Bad() const { return (status & BAD) != 0; }
 
     void MarkCircular()
     {
@@ -1178,7 +1193,7 @@ public:
         MarkBad();
     }
     void MarkNonCircular() { status &= ~ CIRCULAR; }
-    bool Circular() { return (status & CIRCULAR) != 0; }
+    bool Circular() const { return (status & CIRCULAR) != 0; }
 
     void ProcessNestedTypeSignatures(Semantic*, LexStream::TokenIndex);
 
@@ -1217,17 +1232,17 @@ public:
     TypeSymbol* TypeSym(unsigned);
 
     inline TypeSymbol* InsertAnonymousTypeSymbol(NameSymbol*);
-    inline TypeSymbol* FindTypeSymbol(NameSymbol*);
+    inline TypeSymbol* FindTypeSymbol(const NameSymbol*);
     inline TypeSymbol* InsertNestedTypeSymbol(NameSymbol*);
     inline MethodSymbol* FindConstructorSymbol();
-    inline MethodSymbol* InsertConstructorSymbol(NameSymbol*);
+    inline MethodSymbol* InsertConstructorSymbol(const NameSymbol*);
     inline void InsertConstructorSymbol(MethodSymbol*);
-    inline MethodSymbol* FindMethodSymbol(NameSymbol*);
-    inline VariableSymbol* FindVariableSymbol(NameSymbol*);
-    inline VariableSymbol* InsertVariableSymbol(NameSymbol*);
+    inline MethodSymbol* FindMethodSymbol(const NameSymbol*);
+    inline VariableSymbol* FindVariableSymbol(const NameSymbol*);
+    inline VariableSymbol* InsertVariableSymbol(const NameSymbol*);
     inline void InsertVariableSymbol(VariableSymbol*);
 
-    inline MethodSymbol* InsertMethodSymbol(NameSymbol*);
+    inline MethodSymbol* InsertMethodSymbol(const NameSymbol*);
     inline void InsertMethodSymbol(MethodSymbol*);
     inline MethodSymbol* Overload(MethodSymbol*);
     inline void Overload(MethodSymbol*, MethodSymbol*);
@@ -1246,7 +1261,7 @@ private:
     unsigned hash_address;
     TypeSymbol* next_type;
 
-    NameSymbol* external_name_symbol;
+    const NameSymbol* external_name_symbol;
 
     SymbolTable* table;
     SymbolMap* local_shadow_map;
@@ -1352,52 +1367,52 @@ class VariableSymbol : public Symbol, public AccessFlags
 public:
     AstVariableDeclarator* declarator;
 
-    NameSymbol* name_symbol;
+    const NameSymbol* name_symbol;
     Symbol* owner;
     LiteralValue* initial_value;
 
     VariableSymbol* accessed_local;
 
-    virtual const wchar_t* Name() { return name_symbol -> Name(); }
-    virtual unsigned NameLength() { return name_symbol -> NameLength(); }
-    virtual NameSymbol* Identity() { return name_symbol; }
-    char* Utf8Name()
+    virtual const wchar_t* Name() const { return name_symbol -> Name(); }
+    virtual unsigned NameLength() const { return name_symbol -> NameLength(); }
+    virtual const NameSymbol* Identity() const { return name_symbol; }
+    const char* Utf8Name() const
     {
         return name_symbol -> Utf8_literal
             ? name_symbol -> Utf8_literal -> value : (char*) NULL;
     }
-    unsigned Utf8NameLength()
+    unsigned Utf8NameLength() const
     {
         return name_symbol -> Utf8_literal
             ? name_symbol -> Utf8_literal -> length : 0;
     }
 
-    void SetExternalIdentity(NameSymbol* external_name_symbol_)
+    void SetExternalIdentity(const NameSymbol* external_name_symbol_)
     {
         external_name_symbol = external_name_symbol_;
     }
-    NameSymbol* ExternalIdentity()
+    const NameSymbol* ExternalIdentity() const
     {
         return external_name_symbol ? external_name_symbol : name_symbol;
     }
-    const wchar_t* ExternalName()
+    const wchar_t* ExternalName() const
     {
         return external_name_symbol ? external_name_symbol -> Name()
             : name_symbol -> Name();
     }
-    unsigned ExternalNameLength()
+    unsigned ExternalNameLength() const
     {
         return external_name_symbol ? external_name_symbol -> NameLength()
             : name_symbol -> NameLength();
     }
-    char* ExternalUtf8Name()
+    const char* ExternalUtf8Name() const
     {
         return external_name_symbol
             ? external_name_symbol -> Utf8_literal -> value
             : name_symbol -> Utf8_literal
             ? name_symbol -> Utf8_literal -> value : (char*) NULL;
     }
-    unsigned ExternalUtf8NameLength()
+    unsigned ExternalUtf8NameLength() const
     {
         return external_name_symbol && external_name_symbol -> Utf8_literal
             ? external_name_symbol -> Utf8_literal -> length
@@ -1405,7 +1420,7 @@ public:
             ? name_symbol -> Utf8_literal -> length : 0;
     }
 
-    VariableSymbol(NameSymbol* name_symbol_)
+    VariableSymbol(const NameSymbol* name_symbol_)
         : declarator(NULL),
           name_symbol(name_symbol_),
           owner(NULL),
@@ -1434,6 +1449,12 @@ public:
         return method_owner ? method_owner -> containing_type
             : owner -> TypeCast();
     }
+    const TypeSymbol* ContainingType() const
+    {
+        MethodSymbol* method_owner = owner -> MethodCast();
+        return method_owner ? method_owner -> containing_type
+            : owner -> TypeCast();
+    }
 
     void SetLocalVariableIndex(int index) { local_variable_index = index; }
     //
@@ -1447,7 +1468,7 @@ public:
     //
     int LocalVariableIndex(Semantic*);
 
-    bool IsTyped() { return type_ != NULL; }
+    bool IsTyped() const { return type_ != NULL; }
 
     void SetType(TypeSymbol* _type) { type_ = _type; }
 
@@ -1458,6 +1479,11 @@ public:
         // Make sure that the method signature associated with this method is
         // processed prior to invoking this function.
         // ( "this -> ProcessVariableSignature(sem, tok);" )
+        assert(type_);
+        return type_;
+    }
+    const TypeSymbol* Type() const
+    {
         assert(type_);
         return type_;
     }
@@ -1499,7 +1525,7 @@ private:
         DEPRECATED = 0x04, // Used to mark deprecated fields
         INITIALIZED = 0x08 // Used when initial value of final field is known
     };
-    NameSymbol* external_name_symbol;
+    const NameSymbol* external_name_symbol;
 
     unsigned char status;
     int local_variable_index;
@@ -1520,8 +1546,8 @@ public:
     unsigned NumVariableSymbols();
     VariableSymbol* VariableSym(unsigned);
 
-    inline VariableSymbol* FindVariableSymbol(NameSymbol*);
-    inline VariableSymbol* InsertVariableSymbol(NameSymbol*);
+    inline VariableSymbol* FindVariableSymbol(const NameSymbol*);
+    inline VariableSymbol* InsertVariableSymbol(const NameSymbol*);
     inline void InsertVariableSymbol(VariableSymbol*);
     inline BlockSymbol* InsertBlockSymbol(unsigned);
 
@@ -1538,25 +1564,25 @@ class LabelSymbol : public Symbol
 {
 public:
     AstBlock* block; // the block that is labeled by this symbol
-    NameSymbol* name_symbol;
+    const NameSymbol* name_symbol;
 
     unsigned nesting_level;
 
-    virtual const wchar_t* Name() { return name_symbol -> Name(); }
-    virtual unsigned NameLength() { return name_symbol -> NameLength(); }
-    virtual NameSymbol* Identity() { return name_symbol; }
-    char* Utf8Name()
+    virtual const wchar_t* Name() const { return name_symbol -> Name(); }
+    virtual unsigned NameLength() const { return name_symbol -> NameLength(); }
+    virtual const NameSymbol* Identity() const { return name_symbol; }
+    const char* Utf8Name() const
     {
         return name_symbol -> Utf8_literal
             ? name_symbol -> Utf8_literal -> value : (char*) NULL;
     }
-    unsigned Utf8NameLength()
+    unsigned Utf8NameLength() const
     {
         return name_symbol -> Utf8_literal
             ? name_symbol -> Utf8_literal -> length : 0;
     }
 
-    LabelSymbol(NameSymbol* name_symbol_)
+    LabelSymbol(const NameSymbol* name_symbol_)
         : block(NULL),
           name_symbol(name_symbol_),
           nesting_level(0)
@@ -1603,7 +1629,7 @@ public:
     void AddTypeSymbol(TypeSymbol* symbol)
     {
         if (! type_symbol_pool)
-            type_symbol_pool = new ConvertibleArray<TypeSymbol*>(256);
+            type_symbol_pool = new Tuple<TypeSymbol*>(256);
         type_symbol_pool -> Next() = symbol;
     }
 
@@ -1698,32 +1724,32 @@ private:
 public:
 
     inline PathSymbol* InsertPathSymbol(NameSymbol*, DirectorySymbol*);
-    inline PathSymbol* FindPathSymbol(NameSymbol*);
-    inline DirectorySymbol* InsertDirectorySymbol(NameSymbol*, Symbol*,
+    inline PathSymbol* FindPathSymbol(const NameSymbol*);
+    inline DirectorySymbol* InsertDirectorySymbol(const NameSymbol*, Symbol*,
                                                   bool source_path);
-    inline DirectorySymbol* FindDirectorySymbol(NameSymbol*);
-    inline FileSymbol* InsertFileSymbol(NameSymbol*);
-    inline FileSymbol* FindFileSymbol(NameSymbol*);
+    inline DirectorySymbol* FindDirectorySymbol(const NameSymbol*);
+    inline FileSymbol* InsertFileSymbol(const NameSymbol*);
+    inline FileSymbol* FindFileSymbol(const NameSymbol*);
     inline PackageSymbol* InsertPackageSymbol(NameSymbol*, PackageSymbol*);
-    inline PackageSymbol* FindPackageSymbol(NameSymbol*);
+    inline PackageSymbol* FindPackageSymbol(const NameSymbol*);
     inline TypeSymbol* InsertAnonymousTypeSymbol(NameSymbol*);
     inline TypeSymbol* InsertSystemTypeSymbol(NameSymbol*);
     inline TypeSymbol* InsertOuterTypeSymbol(NameSymbol*);
     inline TypeSymbol* InsertNestedTypeSymbol(NameSymbol*);
     inline void DeleteTypeSymbol(TypeSymbol*);
     inline void DeleteAnonymousTypes();
-    inline TypeSymbol* FindTypeSymbol(NameSymbol*);
-    inline MethodSymbol* InsertMethodSymbol(NameSymbol*);
-    inline MethodSymbol* InsertConstructorSymbol(NameSymbol*);
+    inline TypeSymbol* FindTypeSymbol(const NameSymbol*);
+    inline MethodSymbol* InsertMethodSymbol(const NameSymbol*);
+    inline MethodSymbol* InsertConstructorSymbol(const NameSymbol*);
     inline void InsertMethodSymbol(MethodSymbol*);
     inline void InsertConstructorSymbol(MethodSymbol*);
-    inline MethodSymbol* FindMethodSymbol(NameSymbol*);
+    inline MethodSymbol* FindMethodSymbol(const NameSymbol*);
     inline MethodSymbol* FindConstructorSymbol();
-    inline VariableSymbol* InsertVariableSymbol(NameSymbol*);
+    inline VariableSymbol* InsertVariableSymbol(const NameSymbol*);
     inline void InsertVariableSymbol(VariableSymbol*);
-    inline VariableSymbol* FindVariableSymbol(NameSymbol*);
+    inline VariableSymbol* FindVariableSymbol(const NameSymbol*);
     inline LabelSymbol* InsertLabelSymbol(NameSymbol*);
-    inline LabelSymbol* FindLabelSymbol(NameSymbol*);
+    inline LabelSymbol* FindLabelSymbol(const NameSymbol*);
     inline BlockSymbol* InsertBlockSymbol(unsigned);
 
     inline MethodSymbol* Overload(MethodSymbol*);
@@ -1811,7 +1837,7 @@ inline PathSymbol* SymbolTable::InsertPathSymbol(NameSymbol* name_symbol,
 }
 
 
-inline PathSymbol* SymbolTable::FindPathSymbol(NameSymbol* name_symbol)
+inline PathSymbol* SymbolTable::FindPathSymbol(const NameSymbol* name_symbol)
 {
     assert(base);
 
@@ -1825,7 +1851,7 @@ inline PathSymbol* SymbolTable::FindPathSymbol(NameSymbol* name_symbol)
 }
 
 
-inline DirectorySymbol* SymbolTable::InsertDirectorySymbol(NameSymbol* name_symbol,
+inline DirectorySymbol* SymbolTable::InsertDirectorySymbol(const NameSymbol* name_symbol,
                                                            Symbol* owner,
                                                            bool source_path)
 {
@@ -1851,7 +1877,7 @@ inline DirectorySymbol* SymbolTable::InsertDirectorySymbol(NameSymbol* name_symb
 }
 
 
-inline DirectorySymbol* DirectorySymbol::InsertDirectorySymbol(NameSymbol* name_symbol,
+inline DirectorySymbol* DirectorySymbol::InsertDirectorySymbol(const NameSymbol* name_symbol,
                                                                bool source_dir)
 {
     DirectorySymbol* subdirectory_symbol =
@@ -1861,7 +1887,7 @@ inline DirectorySymbol* DirectorySymbol::InsertDirectorySymbol(NameSymbol* name_
 }
 
 
-inline DirectorySymbol* SymbolTable::FindDirectorySymbol(NameSymbol* name_symbol)
+inline DirectorySymbol* SymbolTable::FindDirectorySymbol(const NameSymbol* name_symbol)
 {
     assert(base);
 
@@ -1879,14 +1905,14 @@ inline DirectorySymbol* SymbolTable::FindDirectorySymbol(NameSymbol* name_symbol
 }
 
 
-inline DirectorySymbol* DirectorySymbol::FindDirectorySymbol(NameSymbol* name_symbol)
+inline DirectorySymbol* DirectorySymbol::FindDirectorySymbol(const NameSymbol* name_symbol)
 {
     return table ? table -> FindDirectorySymbol(name_symbol)
         : (DirectorySymbol*) NULL;
 }
 
 
-inline FileSymbol* SymbolTable::InsertFileSymbol(NameSymbol* name_symbol)
+inline FileSymbol* SymbolTable::InsertFileSymbol(const NameSymbol* name_symbol)
 {
     assert(base);
 
@@ -1909,13 +1935,13 @@ inline FileSymbol* SymbolTable::InsertFileSymbol(NameSymbol* name_symbol)
 }
 
 
-inline FileSymbol* DirectorySymbol::InsertFileSymbol(NameSymbol* name_symbol)
+inline FileSymbol* DirectorySymbol::InsertFileSymbol(const NameSymbol* name_symbol)
 {
     return Table() -> InsertFileSymbol(name_symbol);
 }
 
 
-inline FileSymbol* SymbolTable::FindFileSymbol(NameSymbol* name_symbol)
+inline FileSymbol* SymbolTable::FindFileSymbol(const NameSymbol* name_symbol)
 {
     assert(base);
 
@@ -1933,7 +1959,7 @@ inline FileSymbol* SymbolTable::FindFileSymbol(NameSymbol* name_symbol)
 }
 
 
-inline FileSymbol* DirectorySymbol::FindFileSymbol(NameSymbol* name_symbol)
+inline FileSymbol* DirectorySymbol::FindFileSymbol(const NameSymbol* name_symbol)
 {
     return table ? table -> FindFileSymbol(name_symbol)
         : (FileSymbol*) NULL;
@@ -1970,7 +1996,7 @@ inline PackageSymbol* PackageSymbol::InsertPackageSymbol(NameSymbol* name_symbol
 }
 
 
-inline PackageSymbol* SymbolTable::FindPackageSymbol(NameSymbol* name_symbol)
+inline PackageSymbol* SymbolTable::FindPackageSymbol(const NameSymbol* name_symbol)
 {
     assert(base);
 
@@ -1988,7 +2014,7 @@ inline PackageSymbol* SymbolTable::FindPackageSymbol(NameSymbol* name_symbol)
 }
 
 
-inline PackageSymbol* PackageSymbol::FindPackageSymbol(NameSymbol* name_symbol)
+inline PackageSymbol* PackageSymbol::FindPackageSymbol(const NameSymbol* name_symbol)
 {
   return table ? table -> FindPackageSymbol(name_symbol)
       : (PackageSymbol*) NULL;
@@ -2153,7 +2179,7 @@ inline void TypeSymbol::DeleteAnonymousTypes()
         table -> DeleteAnonymousTypes();
 }
 
-inline TypeSymbol* SymbolTable::FindTypeSymbol(NameSymbol* name_symbol)
+inline TypeSymbol* SymbolTable::FindTypeSymbol(const NameSymbol* name_symbol)
 {
     assert(base);
 
@@ -2171,21 +2197,21 @@ inline TypeSymbol* SymbolTable::FindTypeSymbol(NameSymbol* name_symbol)
 }
 
 
-inline TypeSymbol* PackageSymbol::FindTypeSymbol(NameSymbol* name_symbol)
+inline TypeSymbol* PackageSymbol::FindTypeSymbol(const NameSymbol* name_symbol)
 {
     return table ? table -> FindTypeSymbol(name_symbol)
         : (TypeSymbol*) NULL;
 }
 
 
-inline TypeSymbol* TypeSymbol::FindTypeSymbol(NameSymbol* name_symbol)
+inline TypeSymbol* TypeSymbol::FindTypeSymbol(const NameSymbol* name_symbol)
 {
     return table ? table -> FindTypeSymbol(name_symbol)
         : (TypeSymbol*) NULL;
 }
 
 
-inline MethodSymbol* SymbolTable::InsertMethodSymbol(NameSymbol* name_symbol)
+inline MethodSymbol* SymbolTable::InsertMethodSymbol(const NameSymbol* name_symbol)
 {
     assert(base);
 
@@ -2208,13 +2234,13 @@ inline MethodSymbol* SymbolTable::InsertMethodSymbol(NameSymbol* name_symbol)
 }
 
 
-inline MethodSymbol* TypeSymbol::InsertMethodSymbol(NameSymbol* name_symbol)
+inline MethodSymbol* TypeSymbol::InsertMethodSymbol(const NameSymbol* name_symbol)
 {
     return Table() -> InsertMethodSymbol(name_symbol);
 }
 
 
-inline MethodSymbol* SymbolTable::InsertConstructorSymbol(NameSymbol* name_symbol)
+inline MethodSymbol* SymbolTable::InsertConstructorSymbol(const NameSymbol* name_symbol)
 {
     assert(! constructor);
 
@@ -2223,7 +2249,7 @@ inline MethodSymbol* SymbolTable::InsertConstructorSymbol(NameSymbol* name_symbo
 }
 
 
-inline MethodSymbol* TypeSymbol::InsertConstructorSymbol(NameSymbol* name_symbol)
+inline MethodSymbol* TypeSymbol::InsertConstructorSymbol(const NameSymbol* name_symbol)
 {
     return Table() -> InsertConstructorSymbol(name_symbol);
 }
@@ -2271,7 +2297,7 @@ inline void TypeSymbol::InsertConstructorSymbol(MethodSymbol* method_symbol)
 }
 
 
-inline MethodSymbol* SymbolTable::FindMethodSymbol(NameSymbol* name_symbol)
+inline MethodSymbol* SymbolTable::FindMethodSymbol(const NameSymbol* name_symbol)
 {
     assert(base);
 
@@ -2289,7 +2315,7 @@ inline MethodSymbol* SymbolTable::FindMethodSymbol(NameSymbol* name_symbol)
 }
 
 
-inline MethodSymbol* TypeSymbol::FindMethodSymbol(NameSymbol* name_symbol)
+inline MethodSymbol* TypeSymbol::FindMethodSymbol(const NameSymbol* name_symbol)
 {
     return table ? table -> FindMethodSymbol(name_symbol)
         : (MethodSymbol*) NULL;
@@ -2307,7 +2333,7 @@ inline MethodSymbol* TypeSymbol::FindConstructorSymbol()
         : (MethodSymbol*) NULL;
 }
 
-inline VariableSymbol* SymbolTable::InsertVariableSymbol(NameSymbol* name_symbol)
+inline VariableSymbol* SymbolTable::InsertVariableSymbol(const NameSymbol* name_symbol)
 {
     assert(base);
 
@@ -2330,13 +2356,13 @@ inline VariableSymbol* SymbolTable::InsertVariableSymbol(NameSymbol* name_symbol
 }
 
 
-inline VariableSymbol* TypeSymbol::InsertVariableSymbol(NameSymbol* name_symbol)
+inline VariableSymbol* TypeSymbol::InsertVariableSymbol(const NameSymbol* name_symbol)
 {
     return Table() -> InsertVariableSymbol(name_symbol);
 }
 
 
-inline VariableSymbol* BlockSymbol::InsertVariableSymbol(NameSymbol* name_symbol)
+inline VariableSymbol* BlockSymbol::InsertVariableSymbol(const NameSymbol* name_symbol)
 {
     return Table() -> InsertVariableSymbol(name_symbol);
 }
@@ -2375,7 +2401,7 @@ inline void BlockSymbol::InsertVariableSymbol(VariableSymbol* variable_symbol)
 }
 
 
-inline VariableSymbol* SymbolTable::FindVariableSymbol(NameSymbol* name_symbol)
+inline VariableSymbol* SymbolTable::FindVariableSymbol(const NameSymbol* name_symbol)
 {
     assert(base);
 
@@ -2393,14 +2419,14 @@ inline VariableSymbol* SymbolTable::FindVariableSymbol(NameSymbol* name_symbol)
 }
 
 
-inline VariableSymbol* TypeSymbol::FindVariableSymbol(NameSymbol* name_symbol)
+inline VariableSymbol* TypeSymbol::FindVariableSymbol(const NameSymbol* name_symbol)
 {
     return table ? table -> FindVariableSymbol(name_symbol)
         : (VariableSymbol*) NULL;
 }
 
 
-inline VariableSymbol* BlockSymbol::FindVariableSymbol(NameSymbol* name_symbol)
+inline VariableSymbol* BlockSymbol::FindVariableSymbol(const NameSymbol* name_symbol)
 {
     return table ? table -> FindVariableSymbol(name_symbol)
         : (VariableSymbol*) NULL;
@@ -2426,7 +2452,7 @@ inline LabelSymbol* SymbolTable::InsertLabelSymbol(NameSymbol* name_symbol)
 }
 
 
-inline LabelSymbol* SymbolTable::FindLabelSymbol(NameSymbol* name_symbol)
+inline LabelSymbol* SymbolTable::FindLabelSymbol(const NameSymbol* name_symbol)
 {
     assert(base);
 

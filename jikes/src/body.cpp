@@ -1439,7 +1439,7 @@ void Semantic::ProcessTryStatement(Ast* stmt)
         TypeSymbol* type = clause -> parameter_symbol -> Type();
         if (type == control.no_type)
             continue;
-        int initial_length = catchable_exceptions.Length() +
+        unsigned initial_length = catchable_exceptions.Length() +
             convertible_exceptions.Length();
 
         for (TypeSymbol* exception = (TypeSymbol*) exception_set -> FirstElement();
@@ -1506,7 +1506,7 @@ void Semantic::ProcessTryStatement(Ast* stmt)
         // by the enclosing try statement. Then, add the remaining ones to the
         // set that must be caught by the immediately enclosing try statement.
         //
-        for (int i = 0; i < catchable_exceptions.Length(); i++)
+        for (unsigned i = 0; i < catchable_exceptions.Length(); i++)
             exception_set -> RemoveElement(catchable_exceptions[i]);
         TryExceptionTableStack().Top() -> Union(*exception_set);
     }
@@ -1920,7 +1920,7 @@ void Semantic::CheckThrow(AstTypeName* throw_expression,
         else
         {
             bool add = true;
-            for (int i = 0; i < throws_list -> Length(); i++)
+            for (unsigned i = 0; i < throws_list -> Length(); i++)
             {
                 AstTypeName* other_expr = (*throws_list)[i];
                 TypeSymbol* other_type = other_expr -> symbol;
@@ -2155,7 +2155,7 @@ void Semantic::ProcessExecutableBodies(AstClassBody* class_body)
         // in every constructor.
         //
         Tuple<VariableSymbol*> unassigned(FinalFields() -> Length());
-        for (i = 0; (int) i < FinalFields() -> Length(); i++)
+        for (i = 0; i < FinalFields() -> Length(); i++)
         {
             VariableSymbol* variable_symbol = (*FinalFields())[i];
             if (! DefinitelyAssignedVariables() -> da_set[i])
@@ -2169,7 +2169,7 @@ void Semantic::ProcessExecutableBodies(AstClassBody* class_body)
             //
             // Issue an error for each unassigned final.
             //
-            for (i = 0; (int) i < unassigned.Length(); i++)
+            for (i = 0; i < unassigned.Length(); i++)
             {
                 ReportSemError(SemanticError::UNINITIALIZED_FINAL_VARIABLE,
                                unassigned[i] -> declarator,
@@ -2227,7 +2227,7 @@ void Semantic::ProcessExecutableBodies(AstClassBody* class_body)
                 {
                     *DefinitelyAssignedVariables() = initial_state;
                     DefiniteConstructorBody(constructor_decl);
-                    for (int k = 0; k < unassigned.Length(); k++)
+                    for (unsigned k = 0; k < unassigned.Length(); k++)
                     {
                         VariableSymbol* variable_symbol = unassigned[k];
                         if (! DefinitelyAssignedVariables() ->

@@ -274,7 +274,6 @@ public:
         UNINITIALIZED_FINAL_VARIABLE,
         UNINITIALIZED_STATIC_FINAL_VARIABLE,
         UNINITIALIZED_FINAL_VARIABLE_IN_CONSTRUCTOR,
-        UNINITIALIZED_FINAL_VARIABLE_IN_INTERFACE,
         INIT_SCALAR_WITH_ARRAY,
         INIT_ARRAY_WITH_SCALAR,
         INVALID_BYTE_VALUE,
@@ -411,7 +410,7 @@ public:
     SemanticError(Control&, FileSymbol*);
     ~SemanticError()
     {
-        for (int i = 0; i < buffer.Length(); i++)
+        for (unsigned i = 0; i < buffer.Length(); i++)
             delete [] buffer[i];
     }
 

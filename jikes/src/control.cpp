@@ -176,23 +176,18 @@ Control::Control(char** arguments, Option& option_)
     }
 #endif // WIN32_FILE_SYSTEM
 
-    //
-    //
-    //
-    int l;
-    for (l = 0; l < bad_dirnames.Length(); ++l)
+    unsigned i;
+    for (i = 0; i < bad_dirnames.Length(); i++)
     {
-        system_semantic -> ReportSemError(SemanticError::CANNOT_OPEN_PATH_DIRECTORY,
-                                          LexStream::BadToken(),
-                                          bad_dirnames[l]);
+        system_semantic ->
+            ReportSemError(SemanticError::CANNOT_OPEN_PATH_DIRECTORY,
+                           LexStream::BadToken(), bad_dirnames[i]);
     }
-
-    for (l = 0; l < bad_zip_filenames.Length(); l++)
+    for (i = 0; i < bad_zip_filenames.Length(); i++)
     {
         system_semantic -> ReportSemError(SemanticError::CANNOT_OPEN_ZIP_FILE,
                                           LexStream::BadToken(),
-                                          bad_zip_filenames[l]);
-
+                                          bad_zip_filenames[i]);
     }
 
     //
@@ -233,8 +228,8 @@ Control::Control(char** arguments, Option& option_)
             {
                 int length = strlen(option.directory);
                 wchar_t* name = new wchar_t[length + 1];
-                for (int i = 0; i < length; i++)
-                    name[i] = option.directory[i];
+                for (int j = 0; j < length; j++)
+                    name[j] = option.directory[j];
                 name[length] = U_NULL;
                 system_semantic -> ReportSemError(SemanticError::CANNOT_OPEN_DIRECTORY,
                                                   LexStream::BadToken(), name);
@@ -246,21 +241,21 @@ Control::Control(char** arguments, Option& option_)
     //
     //
     //
-    for (int m = 0; m < bad_input_filenames.Length(); m++)
+    for (i = 0; i < bad_input_filenames.Length(); i++)
     {
         system_semantic -> ReportSemError(SemanticError::BAD_INPUT_FILE,
                                           LexStream::BadToken(),
-                                          bad_input_filenames[m]);
+                                          bad_input_filenames[i]);
     }
 
     //
     //
     //
-    for (int n = 0; n < unreadable_input_filenames.Length(); n++)
+    for (i = 0; i < unreadable_input_filenames.Length(); i++)
     {
         system_semantic -> ReportSemError(SemanticError::UNREADABLE_INPUT_FILE,
                                           LexStream::BadToken(),
-                                          unreadable_input_filenames[n]);
+                                          unreadable_input_filenames[i]);
     }
 
     //
@@ -278,9 +273,9 @@ Control::Control(char** arguments, Option& option_)
         //
         system_semantic -> PrintMessages();
         input_java_file_set.SetEmpty();
-        for (int i = 0; i < num_files; i++)
+        for (int j = 0; j < num_files; j++)
         {
-            FileSymbol* file_symbol = input_files[i];
+            FileSymbol* file_symbol = input_files[j];
             if (! input_java_file_set.IsElement(file_symbol))
                 ProcessFile(file_symbol);
         }
@@ -327,21 +322,23 @@ Control::Control(char** arguments, Option& option_)
                 //
                 //
                 //
-                for (int m = 0; m < bad_input_filenames.Length(); m++)
+                for (i = 0; i < bad_input_filenames.Length(); i++)
                 {
-                    system_semantic -> ReportSemError(SemanticError::BAD_INPUT_FILE,
-                                                      LexStream::BadToken(),
-                                                      bad_input_filenames[m]);
+                    system_semantic ->
+                        ReportSemError(SemanticError::BAD_INPUT_FILE,
+                                       LexStream::BadToken(),
+                                       bad_input_filenames[i]);
                 }
 
                 //
                 //
                 //
-                for (int n = 0; n < unreadable_input_filenames.Length(); n++)
+                for (i = 0; i < unreadable_input_filenames.Length(); i++)
                 {
-                    system_semantic -> ReportSemError(SemanticError::UNREADABLE_INPUT_FILE,
-                                                      LexStream::BadToken(),
-                                                      unreadable_input_filenames[n]);
+                    system_semantic ->
+                        ReportSemError(SemanticError::UNREADABLE_INPUT_FILE,
+                                       LexStream::BadToken(),
+                                       unreadable_input_filenames[i]);
                 }
 
                 FileSymbol* file_symbol;
@@ -388,9 +385,9 @@ Control::Control(char** arguments, Option& option_)
                 // For each file that should be recompiled, process it if it
                 // has not already been dragged in by dependence.
                 //
-                for (int k = 0; k < num_files; k++)
+                for (int j = 0; j < num_files; j++)
                 {
-                    FileSymbol* file_symbol = input_files[k];
+                    FileSymbol* file_symbol = input_files[j];
                     if (! input_java_file_set.IsElement(file_symbol))
                         ProcessFile(file_symbol);
                 }
@@ -443,9 +440,9 @@ Control::Control(char** arguments, Option& option_)
                     {
                         char* java_name = file_symbol -> FileName();
 
-                        for (int j = 0; j < file_symbol -> types.Length(); j++)
+                        for (i = 0; i < file_symbol -> types.Length(); i++)
                         {
-                            TypeSymbol* type = file_symbol -> types[j];
+                            TypeSymbol* type = file_symbol -> types[i];
                             fprintf(outfile, "%s : %s\n", java_name,
                                     type -> SignatureString());
 
@@ -538,7 +535,7 @@ Control::Control(char** arguments, Option& option_)
 
 Control::~Control()
 {
-    int i;
+    unsigned i;
     for (i = 0; i < bad_zip_filenames.Length(); i++)
         delete [] bad_zip_filenames[i];
     for (i = 0; i < bad_input_filenames.Length(); i++)
@@ -917,12 +914,12 @@ DirectorySymbol* Control::ProcessSubdirectories(wchar_t* source_name,
 
 void Control::ProcessNewInputFiles(SymbolSet& file_set, char** arguments)
 {
-    for (int i = 0; i < bad_input_filenames.Length(); i++)
+    unsigned i;
+    for (i = 0; i < bad_input_filenames.Length(); i++)
         delete [] bad_input_filenames[i];
     bad_input_filenames.Reset();
-
-    for (int k = 0; k < unreadable_input_filenames.Length(); k++)
-        delete [] unreadable_input_filenames[k];
+    for (i = 0; i < unreadable_input_filenames.Length(); i++)
+        delete [] unreadable_input_filenames[i];
     unreadable_input_filenames.Reset();
 
     //
@@ -1037,9 +1034,9 @@ FileSymbol* Control::FindOrInsertJavaInputFile(wchar_t* name, int name_length)
                                         name_length - (len + 1));
 #endif // WIN32_FILE_SYSTEM
 
-    for (int i = 1; i < classpath.Length(); i++)
+    for (unsigned i = 1; i < classpath.Length(); i++)
     {
-        if (i == (int) dot_classpath_index) // the current directory (.).
+        if (i == dot_classpath_index) // the current directory (.).
         {
             file_symbol = FindOrInsertJavaInputFile(directory_symbol,
                                                     file_name_symbol);
@@ -1106,7 +1103,7 @@ void Control::ProcessFile(FileSymbol* file_symbol)
     //
     // As long as there are new bodies, ...
     //
-    for (int i = 0; i < needs_body_work.Length(); i++)
+    for (unsigned i = 0; i < needs_body_work.Length(); i++)
     {
         assert(semantic.Length() == 0);
 
@@ -1173,7 +1170,7 @@ void Control::ProcessMembers()
     TopologicalSort topological_sorter(needs_member_work,
                                        partially_ordered_types);
 
-    int start = 0;
+    unsigned start = 0;
     while (start < semantic.Length())
     {
         needs_member_work.SetEmpty();
@@ -1191,7 +1188,7 @@ void Control::ProcessMembers()
             //
             // Process the extends and implements clauses.
             //
-            for (int j = 0; j < partially_ordered_types.Length(); j++)
+            for (unsigned j = 0; j < partially_ordered_types.Length(); j++)
             {
                 TypeSymbol* type = partially_ordered_types[j];
                 needs_member_work.AddElement(type);
@@ -1208,7 +1205,7 @@ void Control::ProcessMembers()
         // ProcessTypeHeaders.
         //
         topological_sorter.Sort();
-        for (int i = 0; i < partially_ordered_types.Length(); i++)
+        for (unsigned i = 0; i < partially_ordered_types.Length(); i++)
         {
             TypeSymbol* type = partially_ordered_types[i];
             needs_body_work.Next() = type;
@@ -1320,7 +1317,7 @@ void Control::ProcessBodies(TypeSymbol* type)
             //
             if (option.bytecode)
             {
-                for (int k = 0; k < types -> Length(); k++)
+                for (unsigned k = 0; k < types -> Length(); k++)
                 {
                     TypeSymbol* type = (*types)[k];
                     // Make sure the literal is available for bytecode.
@@ -1339,7 +1336,7 @@ void Control::ProcessBodies(TypeSymbol* type)
             {
                 if (sem -> NumErrors() == 0)
                 {
-                    for (int k = 0; k < types -> Length(); k++)
+                    for (unsigned k = 0; k < types -> Length(); k++)
                     {
                         TypeSymbol* type = (*types)[k];
                         delete type -> semantic_environment;
