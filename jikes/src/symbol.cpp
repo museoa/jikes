@@ -739,8 +739,9 @@ void DirectorySymbol::SetDirectoryName()
 void DirectorySymbol::ResetDirectory()
 {
     //
-    // TODO: the stat function does not work for directories in that the "modified" time stamp associated
-    // with a directory is not updated when a file contained in the directory is changed.
+    // TODO: the stat function does not work for directories in that the
+    // "modified" time stamp associated with a directory is not updated when
+    // a file contained in the directory is changed.
     // For now, we always reread the directory.
     //
     //    struct stat status;
@@ -782,9 +783,10 @@ void DirectorySymbol::ReadDirectory()
                 int length = strlen(entry -> d_name);
 
                 //
-                // Check if the file is a java source, a java class file or a subdirectory.
-                // Since packages cannot start with '.', we skip all files that start with
-                // a dot. That includes this directory "." and its parent ".."
+                // Check if the file is a java source, a java class file or a
+                // subdirectory. Since packages cannot start with '.', we skip
+                // all files that start with a dot. That includes this
+                // directory "." and its parent ".."
                 //
                 // Don't add the class file if the source_dir_only flag is set.
                 if ((length > FileSymbol::java_suffix_length &&
@@ -814,9 +816,10 @@ void DirectorySymbol::ReadDirectory()
                 int length = strlen(entry.cFileName);
 
                 //
-                // Check if the file is a java source, a java class file or a subdirectory.
-                // Since packages cannot start with '.', we skip all files that start with
-                // a dot. That includes this directory "." and its parent ".."
+                // Check if the file is a java source, a java class file or a
+                // subdirectory. Since packages cannot start with '.', we skip
+                // all files that start with a dot. That includes this
+                // directory "." and its parent ".."
                 //
                 bool is_java  = (length > FileSymbol::java_suffix_length &&
                                  FileSymbol::IsJavaSuffix(&entry.cFileName[length - FileSymbol::java_suffix_length])),
@@ -1094,7 +1097,8 @@ void MethodSymbol::ProcessMethodSignature(Semantic *sem, LexStream::TokenIndex t
         while (*signature != U_RIGHT_PARENTHESIS)
         {
             //
-            // Make up a name for each parameter... Recall that for an inner class we need to skip the this$0 parameter
+            // Make up a name for each parameter... Recall that for an inner
+            // class we need to skip the this$0 parameter
             //
             NameSymbol *name_symbol = sem -> control.MakeParameter(++num_parameters);
             VariableSymbol *symbol = new VariableSymbol(name_symbol);
@@ -1125,8 +1129,8 @@ void MethodSymbol::ProcessMethodSignature(Semantic *sem, LexStream::TokenIndex t
         this -> SetType(sem -> ProcessSignature(this -> containing_type, signature, token_location));
 
         //
-        // Create a symbol table for this method for consistency... and in order
-        // to release the space used by the variable paramaters later.
+        // Create a symbol table for this method for consistency... and in
+        // order to release the space used by the variable paramaters later.
         //
         BlockSymbol *block_symbol = new BlockSymbol(num_parameters);
         for (int k = 0; k < num_parameters; k++)
@@ -1200,17 +1204,20 @@ bool TypeSymbol::CanAccess(TypeSymbol *type)
 
     SemanticEnvironment *env = this -> semantic_environment;
     //
-    // Note that this case is only possible in the current environment (i.e., it is not recursively applicable)
-    // as it is not possible to declare an inner class (even an anonymous one) within an explicit
-    // constructor invocation. This is the case precisely because of the unavailability of the "this"
-    // which one would need to pass to the inner class in question. See comment below...
+    // Note that this case is only possible in the current environment (i.e.,
+    // it is not recursively applicable) as it is not possible to declare an
+    // inner class (even an anonymous one) within an explicit constructor
+    // invocation. This is the case precisely because of the unavailability
+    // of the "this" which one would need to pass to the inner class in
+    // question. See comment below...
     //
     if (env -> explicit_constructor_invocation && env -> explicit_constructor_invocation -> SuperCallCast())
     {
         //
-        // If we are processing a super call statement in the constructor of an inner class then
-        // we have access to the this$0 (passed to the constructor of the inner class as parameter) but
-        // not to the "this" of the inner class in question, unless it is static.
+        // If we are processing a super call statement in the constructor of
+        // an inner class then we have access to the this$0 (passed to the
+        // constructor of the inner class as parameter) but not to the "this"
+        // of the inner class in question, unless it is static.
         //
         if (this -> IsSubclass(type))
             return this -> ACC_STATIC(); // "this" class is accessible only if it is static.
@@ -1245,13 +1252,9 @@ bool TypeSymbol::CanAccess(TypeSymbol *type)
 // either public or protected, otherwise they could not be eligible as a
 // superclass candidate. We do not need to check for that condition here.
 //
-// According to JLS 6.6.1, a type T[] is accessible if T is accessible.
-//
 bool TypeSymbol::HasProtectedAccessTo(TypeSymbol *target_type)
 {
-    assert(semantic_environment);
-    if (target_type -> IsArray())
-        target_type = target_type -> base_type;
+    assert(semantic_environment && ! target_type -> IsArray());
 
     for (SemanticEnvironment *env = this -> semantic_environment;
          env != NULL;
@@ -1658,8 +1661,9 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
         else
         {
             //
-            // A constructor in a local class already has a "LocalConstructor()" associated
-            // with it that can be used as a read access method.
+            // A constructor in a local class already has a
+            // "LocalConstructor()" associated with it that can be used as a
+            // read access method.
             //
             assert(! this_type -> IsLocal());
 
@@ -1677,7 +1681,8 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
             LexStream::TokenIndex loc = declarator -> identifier_token;
 
             //
-            // Create a new anonymous type in order to create a unique substitute constructor.
+            // Create a new anonymous type in order to create a unique
+            // substitute constructor.
             //
             AstClassInstanceCreationExpression *class_creation = ast_pool -> GenClassInstanceCreationExpression();
             class_creation -> base_opt      = NULL;
@@ -1734,8 +1739,9 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
             read_method -> AddFormalParameter(parm);
 
             //
-            // Since private_access_constructors will be compiled (see body.cpp), we must create
-            // valid ast_simple_names for its parameters.
+            // Since private_access_constructors will be compiled (see
+            // body.cpp), we must create valid ast_simple_names for its
+            // parameters.
             //
             for (int i = 0; i < member -> NumFormalParameters(); i++)
             {
@@ -1749,8 +1755,9 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
                 read_method -> AddFormalParameter(parm);
 
                 //
-                // Since private_access_constructors will be compiled (see body.cpp), we must create
-                // valid ast_simple_names for its parameters.
+                // Since private_access_constructors will be compiled (see
+                // body.cpp), we must create valid ast_simple_names for its
+                // parameters.
                 //
                 AstVariableDeclaratorId *variable_declarator_name = declarator -> FormalParameter(i)
                                                                                -> formal_declarator -> variable_declarator_name;
@@ -1835,7 +1842,8 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member)
         read_method -> SetContainingType(this_type);
 
         //
-        // A read access method for a field has 1 formal parameter if the member in question is not static
+        // A read access method for a field has 1 formal parameter if the
+        // member in question is not static
         //
         BlockSymbol *block_symbol = new BlockSymbol(3);
         block_symbol -> max_variable_index = 0;
@@ -1900,10 +1908,11 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member)
         write_method -> SetBlockSymbol(block_symbol);
 
         //
-        // A write access method takes one or two arguments. The first is the instance, $1,
-        // of the object in which to do the writing if the member in question is not static.
-        // The second is a parameter of the same type as the member. For a member named "m",
-        // the body of the write access method will consist of the single statement:
+        // A write access method takes one or two arguments. The first is the
+        // instance, $1, of the object in which to do the writing if the
+        // member in question is not static. The second is a parameter of the
+        // same type as the member. For a member named "m", the body of the
+        // write access method will consist of the single statement:
         //
         //    $1.m = m;
         //

@@ -5,7 +5,7 @@ jikes \- java source to bytecode compiler
 jikes [\fI\-options\fP] [\fI\+options\fP] [\fI\@files\fP]
       \fIfile.java\fP\&.\|.\|.
 
-Options and @files may be intermixed.
+Options, @files, and filenames may be intermixed.
 
 .SH DESCRIPTION
 \fBJikes\fP translates Java(TM) source files to bytecode. Features
@@ -14,8 +14,9 @@ makefile generation and incremental compilation. It is maintained
 by the Jikes Project.
 
 At this time, jikes only recognizes the full name of options; you
-cannot abbreviate or group them. Unlike javac, jikes expects options
-before file arguments.
+cannot abbreviate or group them. You can give different argument types
+in any order. Options are global, so they affect compilation of files
+listed earlier on the command line.
 
 .SH OPTIONS
 \fBJikes\fP may be invoked with the following command-line options:
@@ -237,9 +238,11 @@ Treat cautions as errors. Unfortunately, at the moment, this will not
 promote warnings, just cautions.
 
 .PP
-An argument may have the form \fI@file\fP; each line of \fIfile\fP is
-then interpreted as an argument, except that lines beginning with
-\fI@\fP are not expanded recursively.
+An argument may have the form \fI@file\fP, which names a \fIfile\fP
+holding additional command-line arguments.  Each token in that file
+separated by whitespace, or single or double quotes, is treated as an
+argument, except that lines beginning with \fI@\fP are not expanded
+recursively.
 
 .SH FILES
 \fBJikes\fP has several options related to classpath searching.
@@ -265,7 +268,7 @@ for news of recent developments, to download new versions, to report
 bugs, or to learn how to participate in the development process.
 
 .SH COPYRIGHT
-Copyright \(co 1996, 1997, 1998, 1999, 2000, 2001,
+Copyright \(co 1996, 1997, 1998, 1999, 2000, 2001
 International Business Machines Corporation and others. All Rights Reserved.
 
 .PP

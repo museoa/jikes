@@ -1,5 +1,12 @@
 2001-11-02  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/symbol.cpp: Reformat comments to 80 columns.
+	* src/expr.cpp: Reformat comments to 80 columns. Fix one last
+	corner case in TypeAccessCheck.
+	* doc/jikes.1: Fix some wording to match @file behavior.
+
+2001-11-02  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/decl.cpp: Reformat comments to 80 columns.
 
 2001-11-02  Eric Blake  <ebb9@email.byu.edu>
