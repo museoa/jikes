@@ -731,7 +731,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     AstExpression *UnParenthesize(AstExpression *expr)
     {
-        while(expr -> ParenthesizedExpressionCast())
+        while(! (expr -> IsConstant()) && expr -> ParenthesizedExpressionCast())
             expr = expr -> ParenthesizedExpressionCast() -> expression;
 
         return expr;
