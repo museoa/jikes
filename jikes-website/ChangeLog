@@ -2,6 +2,25 @@
 
 	* todo.shtml: updates relative to what has happened recently.
 
+2001-03-19  Mo DeJong  <mdejong@redhat.com>
+
+	* faq/dev-win32.shtml:
+	Overhaul the Installing Mingw and
+	Building Jikes with Mingw sections.
+	Fixed some silly spelling mistakes
+	in the Cygwin section. Use $ prompt
+	in bash examples, remove the explicit
+	Output: before program output. Only
+	describe the build process where
+	the mingw g++ is put ahead of the
+	Cygwin g++ to simplify things.
+	Use an example dir /usr/local/mingw
+	instead of [mingw dir] since that
+	is likely to confuse people. Add
+	link to WinZip in case Windows
+	users do not have it installed
+	already.
+
 2001-03-03  Mo DeJong  <mdejong@redhat.com>
 
 	* faq/dev-win32.shtml:
