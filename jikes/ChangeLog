@@ -1,3 +1,10 @@
+2001-09-20  Mo DeJong  <supermo@bayarea.net>
+
+	* configure.in: Change --enable-debug option so that CXXFLAGS is
+	automatically set to -g when the CXXFLAGS variable was not set by
+	the user - patch 192.
+	* configure: Regen.
+
 2001-09-20  Chris Abbey  <jikes@cabbey.net> 
 
 	* src/double.h (BigInt): Fixed friend class issues, to correct
