@@ -1683,9 +1683,11 @@ void Utf8LiteralTable::EvaluateConstant(AstExpression *expression, int start, in
 
 
 bool Utf8LiteralTable::IsConstant(AstExpression *expression,
-    Symbol *string_symbol)
+                                  TypeSymbol *string_type)
 {
-    if (expression -> symbol == string_symbol && expression -> IsConstant())
+    if (expression -> Type() != string_type)
+        return false;
+    if (expression -> IsConstant())
     {
         // The EvaluateConstant method only works with
         // Utf8LiteralValue* types.
@@ -1712,11 +1714,11 @@ bool Utf8LiteralTable::IsConstant(AstExpression *expression,
         AstExpression *left  = binary_expression -> left_expression,
                       *right = binary_expression -> right_expression;
 
-        bool left_is_constant = IsConstant(left, string_symbol);
+        bool left_is_constant = IsConstant(left, string_type);
 
         int left_end_marker = utf8_literals -> Length();
 
-        bool right_is_constant = IsConstant(right, string_symbol);
+        bool right_is_constant = IsConstant(right, string_type);
         if (left_is_constant && right_is_constant)
              return true;
 
@@ -1729,10 +1731,10 @@ bool Utf8LiteralTable::IsConstant(AstExpression *expression,
         utf8_literals -> Reset(left_start_marker);
     }
     else if ((cast_expression = expression -> CastExpressionCast()))
-         return IsConstant(cast_expression -> expression, string_symbol);
+         return IsConstant(cast_expression -> expression, string_type);
     else if ((parenthesized_expression = expression -> ParenthesizedExpressionCast()))
          return IsConstant(parenthesized_expression -> expression,
-             string_symbol);
+                           string_type);
 
     return false; // Not a constant String expression
 }
@@ -1745,11 +1747,11 @@ void Utf8LiteralTable::CheckStringConstant(AstExpression *expression)
     // it flattens the expresion tree into a set of utf8 literals.
     utf8_literals = new Tuple<Utf8LiteralValue *>(256);
 
-    // CheckStringConstant must be called with an expression
-    // argument that has the symbol for the String type.
-    Symbol *string_symbol = expression -> symbol;
-
-    if (IsConstant(expression, string_symbol))
+    //
+    // Pass the type of this expression, which is known to be String, for
+    // use in IsConstant() to avoid casting problems.
+    //
+    if (IsConstant(expression, expression -> Type()))
         EvaluateConstant(expression, 0, utf8_literals -> Length());
 
     delete utf8_literals;

@@ -809,7 +809,7 @@ private:
 
     Tuple<Utf8LiteralValue *> *utf8_literals;
     void EvaluateConstant(AstExpression *, int, int);
-    bool IsConstant(AstExpression *, Symbol *);
+    bool IsConstant(AstExpression *, TypeSymbol *);
 
     enum
     {
