@@ -1,3 +1,15 @@
+2001-11-25  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/bytecode.h:
+	* src/bytecode.cpp: Reformat to fit more in 80 columns.
+	(semantic, control): Rename from this_semantic and this_control.
+	(StripNops): Rename from UnParenthesize, and include check for
+	widening casts.
+	(EmitCast): Update to treat (short)byte as a nop.
+	(LoadReference): Remove, as it was duplicating EmitExpression.
+	(EmitNewArray): Update to use ANEWARRAY instead of MULTIANEWARRAY
+	when only one dimension provided - patch 231.
+
 2001-11-13  Brian Sullivan  <bsulliv@legacyj.com>
 
 	* src/platform.cpp (class StringConstant): Code reformating to

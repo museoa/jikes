@@ -34,16 +34,19 @@ public:
     class LabelUse
     {
     public:
-        int use_length, // length of use (2 or 4 bytes)
-            op_offset,  // length of use from opcode starting instruction
-            use_offset; // offset in code stream of use
+        int use_length; // length of use (2 or 4 bytes)
+        int op_offset; // length of use from opcode starting instruction
+        int use_offset; // offset in code stream of use
 
         LabelUse() : use_length(0), op_offset(0), use_offset(0) {}
 
-        LabelUse(int _length, int _op_offset, int _use) : use_length(_length), op_offset(_op_offset), use_offset(_use) {}
+        LabelUse(int _length, int _op_offset, int _use) : use_length(_length),
+                                                          op_offset(_op_offset),
+                                                          use_offset(_use)
+        {}
     };
 
-    bool defined;   // boolean, set when value is known
+    bool defined; // boolean, set when value is known
     int definition; // offset of definition point of label
     Tuple<LabelUse> uses;
 
@@ -78,7 +81,8 @@ public:
         blocks[block -> nesting_level] = block;
 
 #ifdef JIKES_DEBUG
-        (void) memset(local_variables_start_pc[block -> nesting_level], 0xFF, size * sizeof(u2));
+        memset(local_variables_start_pc[block -> nesting_level],
+               0xFF, size * sizeof(u2));
 #endif
         top_index++;
     }
@@ -97,7 +101,7 @@ public:
             finally_labels[level].Reset();
             monitor_labels[level].Reset();
             blocks[level] = NULL;
-            (void) memset(local_variables_start_pc[level], 0xFF, size * sizeof(u2));
+            memset(local_variables_start_pc[level], 0xFF, size * sizeof(u2));
 #endif
         }
         else assert(false);
@@ -114,10 +118,10 @@ public:
         assert(0);
     }
 #else
-#define AssertIndex(x)
+#define AssertIndex(x) /* nop */
 #endif
 
-    int TopNestingLevel()   { assert(top_index > 0); return nesting_level[top_index - 1]; }
+    int TopNestingLevel() { assert(top_index > 0); return nesting_level[top_index - 1]; }
     int NestingLevel(int i) { AssertIndex(i); return nesting_level[i]; }
 
     Label &TopBreakLabel()    { return break_labels[TopNestingLevel()]; }
@@ -195,14 +199,16 @@ private:
 
 class ByteCode : public ClassFile, public StringConstant, public Operators
 {
+    //
     // A heuristic level for generating code to handle conditional branches
     // crossing more than 32767 bytes of code. In one test case, 54616 was
     // required to generate that much code, so 10000 seems like a conservative
     // value.
+    //
     enum { TOKEN_WIDTH_REQUIRING_GOTOW = 10000 };
 
-    Control& this_control;
-    Semantic& this_semantic;
+    Control& control;
+    Semantic& semantic;
 
     void CompileClass();
     void CompileInterface();
@@ -234,14 +240,12 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         stack_depth = 0;
 
         max_stack = 0;
-
-        return;
     }
 
-    void    ProcessAbruptExit(int, TypeSymbol * = NULL);
-    void    CompleteLabel(Label &lab);
-    void    DefineLabel(Label &lab);
-    void    UseLabel(Label &lab, int length, int op_offset);
+    void ProcessAbruptExit(int, TypeSymbol * = NULL);
+    void CompleteLabel(Label &lab);
+    void DefineLabel(Label &lab);
+    void UseLabel(Label &lab, int length, int op_offset);
 
     bool IsLabelUsed(Label &lab)
     {
@@ -255,7 +259,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     bool IsNull(AstExpression *p)
     {
-        return (p -> CastExpressionCast() ? (p -> CastExpressionCast() -> expression -> Type() == this_control.null_type) : false);
+        return (p -> CastExpressionCast()
+                ? (p -> CastExpressionCast() -> expression -> Type() == control.null_type)
+                : false);
     }
 
 
@@ -264,7 +270,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     bool IsReferenceType(TypeSymbol *p)
     {
-        return (! (p -> Primitive() || p == this_control.null_type));
+        return (! p -> Primitive() && p != control.null_type);
     }
 
 
@@ -273,7 +279,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     bool IsZero(AstExpression *p)
     {
-        if (p -> IsConstant() && (p -> Type() == this_control.int_type || p -> Type() == this_control.boolean_type))
+        if (p -> IsConstant() &&
+            (p -> Type() == control.int_type ||
+             p -> Type() == control.boolean_type))
         {
             IntLiteralValue *vp = (IntLiteralValue *) (p -> value);
             return (vp -> value == 0);
@@ -310,8 +318,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
                                                      : expression;
 
         //
-        // Find symbol that is associated with expression. If the subexpression has
-        // to be referenced via an access method then the symbol is null
+        // Find symbol that is associated with expression. If the
+        // subexpression has to be referenced via an access method then the
+        // symbol is null.
         //
         AstCastExpression *cast = (lhs ? lhs -> CastExpressionCast() : (AstCastExpression *) NULL);
         Symbol *sym = cast ? cast -> expression -> symbol : (lhs ? lhs -> symbol : (Symbol *) NULL);
@@ -325,17 +334,17 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         // In the case of an array access, it is resolved into a type.
         //
         VariableSymbol *var = (sym ? sym -> VariableCast() : (VariableSymbol *) NULL);
-        return ((! lhs) ? LHS_METHOD
-                        : (! var) ? LHS_ARRAY
-                                  : var -> owner -> MethodCast() ? LHS_LOCAL
-                                                                 : var -> ACC_STATIC() ? LHS_STATIC
-                                                                                       : LHS_FIELD);
+        return (! lhs ? LHS_METHOD
+                : ! var ? LHS_ARRAY
+                : var -> owner -> MethodCast() ? LHS_LOCAL
+                : var -> ACC_STATIC() ? LHS_STATIC
+                : LHS_FIELD);
     }
 
 
     int GetTypeWords(TypeSymbol *type)
     {
-        return this_control.IsDoubleWordType(type) ? 2 : 1;
+        return control.IsDoubleWordType(type) ? 2 : 1;
     }
 
 
@@ -344,7 +353,6 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     void LoadLocal(int varno, TypeSymbol *);
     void StoreLocal(int varno, TypeSymbol *);
-    void LoadReference(AstExpression *);
     void LoadLiteral(LiteralValue *, TypeSymbol *);
     void LoadImmediateInteger(int);
     int  LoadVariable(int, AstExpression *);
@@ -365,8 +373,6 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
             PutOp(OP_LDC_W);
             PutU2(index);
         }
-
-        return;
     }
 
     //
@@ -393,7 +399,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         assert((name != NULL && type_name != NULL) && "null argument to RegisterNameAndType");
 
         if (! name_and_type_constant_pool_index)
-            name_and_type_constant_pool_index = new Triplet(segment_pool, this_control.Utf8_pool.symbol_pool.Length());
+            name_and_type_constant_pool_index = new Triplet(segment_pool, control.Utf8_pool.symbol_pool.Length());
 
         u2 index = name_and_type_constant_pool_index -> Image(name -> index, type_name -> index);
         if (index == 0)
@@ -415,7 +421,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         assert((class_name != NULL && field_name != NULL && field_type_name != NULL) && "null argument to RegisterFieldref");
 
         if (! fieldref_constant_pool_index)
-            fieldref_constant_pool_index = new Triplet(segment_pool, this_control.Utf8_pool.symbol_pool.Length());
+            fieldref_constant_pool_index = new Triplet(segment_pool, control.Utf8_pool.symbol_pool.Length());
 
         u2 name_type_index = RegisterNameAndType(field_name, field_type_name),
            index = fieldref_constant_pool_index -> Image(class_name -> index, name_type_index);
@@ -459,7 +465,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         assert((class_name != NULL && method_name != NULL && method_type_name != NULL) && "null argument to RegisterMethodref");
 
         if (! methodref_constant_pool_index)
-            methodref_constant_pool_index = new Triplet(segment_pool, this_control.Utf8_pool.symbol_pool.Length());
+            methodref_constant_pool_index = new Triplet(segment_pool, control.Utf8_pool.symbol_pool.Length());
 
         u2 name_type_index = RegisterNameAndType(method_name, method_type_name),
            index = methodref_constant_pool_index -> Image(class_name -> index, name_type_index);
@@ -483,23 +489,30 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     }
 
 
-    u2 RegisterMethodref(Utf8LiteralValue *class_name, Utf8LiteralValue *method_name, Utf8LiteralValue *method_type_name)
+    u2 RegisterMethodref(Utf8LiteralValue *class_name,
+                         Utf8LiteralValue *method_name,
+                         Utf8LiteralValue *method_type_name)
     {
-        return RegisterMethodref(CONSTANT_Methodref, class_name, method_name, method_type_name);
+        return RegisterMethodref(CONSTANT_Methodref, class_name,
+                                 method_name, method_type_name);
     }
 
-    u2 RegisterInterfaceMethodref(Utf8LiteralValue *class_name, Utf8LiteralValue *method_name, Utf8LiteralValue *method_type_name)
+    u2 RegisterInterfaceMethodref(Utf8LiteralValue *class_name,
+                                  Utf8LiteralValue *method_name,
+                                  Utf8LiteralValue *method_type_name)
     {
-        return RegisterMethodref(CONSTANT_InterfaceMethodref, class_name, method_name, method_type_name);
+        return RegisterMethodref(CONSTANT_InterfaceMethodref, class_name,
+                                 method_name, method_type_name);
     }
 
 
     u2 RegisterLibraryMethodref(MethodSymbol *method)
     {
         if (method) // The library method must exist. If it is not, flag an error.
-            return RegisterMethodref(CONSTANT_Methodref, method -> containing_type -> fully_qualified_name,
-                                                         method -> ExternalIdentity()-> Utf8_literal,
-                                                         method -> signature);
+            return RegisterMethodref(CONSTANT_Methodref,
+                                     method -> containing_type -> fully_qualified_name,
+                                     method -> ExternalIdentity()-> Utf8_literal,
+                                     method -> signature);
         library_method_not_found = true;
 
         return 0;
@@ -510,7 +523,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         assert((lit != NULL) && "null argument to RegisterDouble");
 
         if (! double_constant_pool_index)
-            double_constant_pool_index = new Pair(segment_pool, this_control.double_pool.symbol_pool.Length());
+            double_constant_pool_index = new Pair(segment_pool, control.double_pool.symbol_pool.Length());
 
         u2 index = (*double_constant_pool_index)[lit -> index];
         if (index == 0)
@@ -531,7 +544,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         assert((lit != NULL) && "null argument to RegisterInteger");
 
         if (! integer_constant_pool_index)
-            integer_constant_pool_index = new Pair(segment_pool, this_control.int_pool.symbol_pool.Length());
+            integer_constant_pool_index = new Pair(segment_pool, control.int_pool.symbol_pool.Length());
 
         u2 index = (*integer_constant_pool_index)[lit -> index];
         if (index == 0)
@@ -559,7 +572,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         assert((lit != NULL) && "null argument to RegisterLong");
 
         if (! long_constant_pool_index)
-            long_constant_pool_index = new Pair(segment_pool, this_control.long_pool.symbol_pool.Length());
+            long_constant_pool_index = new Pair(segment_pool, control.long_pool.symbol_pool.Length());
 
         u2 index = (*long_constant_pool_index)[lit -> index];
         if (index == 0)
@@ -580,7 +593,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         assert((lit != NULL) && "null argument to RegisterFloat");
 
         if (! float_constant_pool_index)
-            float_constant_pool_index = new Pair(segment_pool, this_control.float_pool.symbol_pool.Length());
+            float_constant_pool_index = new Pair(segment_pool, control.float_pool.symbol_pool.Length());
 
         u2 index = (*float_constant_pool_index)[lit -> index];
         if (index == 0)
@@ -622,7 +635,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         // to 65k elements.
         //
         if (! string_constant_pool_index)
-            string_constant_pool_index = new Pair(segment_pool, this_control.Utf8_pool.symbol_pool.Length());
+            string_constant_pool_index = new Pair(segment_pool, control.Utf8_pool.symbol_pool.Length());
 
         u2 index = (*string_constant_pool_index)[lit -> index];
         if (index == 0)
@@ -659,13 +672,13 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     Deprecated_attribute *CreateDeprecatedAttribute()
     {
-        return new Deprecated_attribute(RegisterUtf8(this_control.Deprecated_literal));
+        return new Deprecated_attribute(RegisterUtf8(control.Deprecated_literal));
     }
 
 
     Synthetic_attribute *CreateSyntheticAttribute()
     {
-        return new Synthetic_attribute(RegisterUtf8(this_control.Synthetic_literal));
+        return new Synthetic_attribute(RegisterUtf8(control.Synthetic_literal));
     }
 
 
@@ -734,26 +747,12 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void EmitBranch(unsigned int opc, Label& lab, AstStatement *over);
     void CompleteCall(MethodSymbol *, int, TypeSymbol * = NULL);
 
-
-    //
-    // called when expression has been parenthesized to removed
-    // parantheses and expose true structure.
-    //
-    AstExpression *UnParenthesize(AstExpression *expr)
-    {
-        while (! (expr -> IsConstant()) && expr -> ParenthesizedExpressionCast())
-            expr = expr -> ParenthesizedExpressionCast() -> expression;
-
-        return expr;
-    }
-
+    AstExpression *StripNops(AstExpression *expr);
 
     void EmitArrayAccessLhs(AstArrayAccess *expression)
     {
-        LoadReference(expression -> base);
+        EmitExpression(expression -> base);
         EmitExpression(expression -> expression);
-
-        return;
     }
 
 
@@ -783,23 +782,17 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         PutOp(opc);
         UseLabel(lab, 2, 1);
-
-        return;
     }
 
 
     void GenerateReturn(TypeSymbol *type)
     {
-        PutOp(this_control.IsSimpleIntegerValueType(type) || type == this_control.boolean_type
-                  ? OP_IRETURN
-                  : type == this_control.long_type
-                          ? OP_LRETURN
-                          : type == this_control.float_type
-                                  ? OP_FRETURN
-                                  : type == this_control.double_type
-                                          ? OP_DRETURN
-                                          : OP_ARETURN);
-        return;
+        PutOp((control.IsSimpleIntegerValueType(type) ||
+               type == control.boolean_type) ? OP_IRETURN
+              : type == control.long_type ? OP_LRETURN
+              : type == control.float_type ? OP_FRETURN
+              : type == control.double_type ? OP_DRETURN
+              : OP_ARETURN);
     }
 
 
@@ -819,8 +812,6 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void PutI1(i1 i)
     {
         code_attribute -> AddCode(i & 0xff);
-
-        return;
     }
 
 
@@ -828,16 +819,12 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         code_attribute -> AddCode((i >> 8) & 0xff);
         code_attribute -> AddCode(i & 0xff);
-
-        return;
     }
 
 
     void PutU1(u1 u)
     {
         code_attribute -> AddCode(u & 0xff);
-
-        return;
     }
 
 
@@ -845,8 +832,6 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         code_attribute -> AddCode((u >> 8) & 0xff);
         code_attribute -> AddCode(u & 0xff);
-
-        return;
     }
 
 
@@ -856,8 +841,6 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         code_attribute -> AddCode((u >> 16) & 0xff);
         code_attribute -> AddCode((u >>  8) & 0xff);
         code_attribute -> AddCode(u & 0xff);
-
-        return;
     }
 
 
@@ -877,8 +860,6 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         // to generate junk code, disable the "nop" optimization.
         //  if (optional) last_op_nop = 1;
         //
-
-        return;
     }
 
     void FinishCode(TypeSymbol *);
