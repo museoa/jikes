@@ -949,7 +949,7 @@ void SemanticError::PrintINVALID_OPTION(ErrorInfo &err, LexStream *lex_stream, C
 {
     cout << '\"';
     Unicode::Cout(err.insert1);
-    cout << "\" is an invalid option"
+    cout << "\" is an invalid option; "
          << StringConstant::U8S_command_format;
 
     return;

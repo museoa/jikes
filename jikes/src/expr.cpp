@@ -395,7 +395,7 @@ MethodSymbol *Semantic::FindMisspelledMethodName(TypeSymbol *type, AstMethodInvo
     return (index < 3 ? NULL
                       : (length == 2 && (index >= 3 || num_args > 0)) ||
                         (length == 3 && (index >= 5 || num_args > 0)) ||
-                        (length > 3 && index >= 6)
+                        (length  > 3 && (index >= 6 || (index >= 5 && num_args > 0)))
                                      ? misspelled_method
                                      : NULL);
 }
@@ -745,9 +745,9 @@ assert(stack);
         // If a method in an enclosing class was not found. Search for a similar visible field 
         // or a private method with the name.
         //
-        for (env = stack; env && (! symbol_found); env = env -> previous)
+        for (SemanticEnvironment *env2 = stack; env2 && (! symbol_found); env2 = env2 -> previous)
         {
-            TypeSymbol *type = env -> Type();
+            TypeSymbol *type = env2 -> Type();
 
             if (! type -> expanded_field_table)
                 ComputeFieldsClosure(type, simple_name -> identifier_token);

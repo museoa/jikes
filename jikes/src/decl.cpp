@@ -3819,7 +3819,62 @@ TypeSymbol *Semantic::FindType(LexStream::TokenIndex identifier_token)
     }
 
     if (env) // The type was found in some enclosing environment?
+    {
+        //
+        // If the type is an inherited type, make sure that there is not a
+        // type of the same name within an enclosing lexical scope.
+        //
+        if (type -> owner -> TypeCast() && type -> owner != env -> Type())
+        {
+            for (SemanticEnvironment *env2 = env -> previous; env2; env2 = env2 -> previous)
+            {
+                TypeSymbol *outer_type = env2 -> symbol_table.FindTypeSymbol(name_symbol); // check local type
+                if (! outer_type) // if local type not found, check inner type...
+                {
+                    if (! env2 -> Type() -> expanded_type_table)
+                        ComputeTypesClosure(env2 -> Type(), identifier_token);
+                    TypeShadowSymbol *type_shadow_symbol = env2 -> Type() -> expanded_type_table
+                                                                          -> FindTypeShadowSymbol(name_symbol);
+                    if (type_shadow_symbol)
+                        outer_type = FindTypeInShadow(type_shadow_symbol, identifier_token);
+                }
+
+                //
+                // If a different type of the same name was found in an enclosing scope.
+                //
+                if (outer_type && outer_type != type) 
+                {
+                    MethodSymbol *method = outer_type -> owner -> MethodCast();
+
+                    if (method)
+                    {
+                        ReportSemError(SemanticError::INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL,
+                                       identifier_token,
+                                       identifier_token,
+                                       lex_stream -> Name(identifier_token),
+                                       env -> Type() -> ContainingPackage() -> PackageName(),
+                                       env -> Type() -> ExternalName(),
+                                       method -> Name());
+                        break;
+                    }
+                    else
+                    {
+                        ReportSemError(SemanticError::INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER,
+                                       identifier_token,
+                                       identifier_token,
+                                       lex_stream -> Name(identifier_token),
+                                       env -> Type() -> ContainingPackage() -> PackageName(),
+                                       env -> Type() -> ExternalName(),
+                                       env2 -> Type() -> ContainingPackage() -> PackageName(),
+                                       env2 -> Type() -> ExternalName());
+                        break;
+                    }
+                }
+            }
+        }
+
         return type;
+    }
 
     //
     // check whether or not the type is in the current compilation unit
