@@ -1,3 +1,9 @@
+2001-04-05  Chris Abbey  <cabbey@bresnanlink.net>
+
+	* src/bytecode.cpp: removed debugging printfs
+	that idiot Abbey just commited.
+	* ChangeLog: spacing police
+
 2001-04-04  Russ Trotter  <rtrotter@farcast.net>
 
 	* src/bytecode.cpp: Add line number table
@@ -17,7 +23,7 @@
 
 2001-04-04  Eric Blake  <ebb9@email.byu.edu>
 
-        * src/control.h (Control):
+	* src/control.h (Control):
 	Remove NullLiteral(), as it is not needed when
 	null is not compile-time constant.
 	* src/bytecode.cpp (DeclareField, EmitExpression)
@@ -286,7 +292,7 @@
 	assert caused by cast expression that
 	was attempting to cast a primitive
 	type argument in a super invocation
- 	to the synthetic argument type.
+	to the synthetic argument type.
 	Jikes passes a synthetic class
 	type as the first argument to a
 	synthetic constructor. It was
@@ -325,7 +331,7 @@
 	and RTTI are supported, use
 	them to better diagnose invalid
 	input conditions. Modify the
-  	IsConstant method to pass a
+	IsConstant method to pass a
 	pointer to the String type so
 	that the expression type can
 	be checked. This change fixes
@@ -520,7 +526,7 @@
 
 	* src/jikesapi.cpp:
 	* src/platform.h: Move include of
- 	<fstream> or <fstream.h> to platform.h.
+	<fstream> or <fstream.h> to platform.h.
 	* src/unparse.cpp: Comment out headers
 	that are already included in platform.h.
 
@@ -907,14 +913,14 @@
 	the sequence "\n\n".
 
 2000-07-27  Mo DeJong  <mdejong@redhat.com>
- 
+
 	* src/system.cpp (GetOutputDirectory): Check for
 	a NULL semantic member of a FileSymbol when writing
 	dependencies. A .class file can have a NULL
 	semantic member which was causing a core dump.
 
 2000-07-26  C. Brian Jones  <cbj@gnu.org>
- 
+
 	* src/option.cpp (Option): Create a
 	copy of the -classpath string so it
 	can be deleted correctly later.
@@ -1550,11 +1556,11 @@
 	illegal access to protected constructor from other pckage.
 	problem reportred by:  Garrick Olson <garrick_olson@hotmail.com>
 
-2000-03-31  Chris Abbey <cabbey@home.net>      
-	       
-       * configure.in: enable --with-icc=PROG, also prevent gcc-isms in	
-       the tests when using icc/xlC by setting GXX accordingly.
-	     
+2000-03-31  Chris Abbey <cabbey@home.net>
+
+	* configure.in: enable --with-icc=PROG, also prevent gcc-isms in	
+	the tests when using icc/xlC by setting GXX accordingly.
+
 2000-04-03  Vadim Zaliva  <lord@crocodile.org>
 
 	* jikes.html: corrected +DR option description (was confused with +M).
@@ -1651,12 +1657,12 @@
 	since I was working on an NT box.	   
 
 	* jikes.cpp: If no object of type jikesAPI is defined then main
- 	will create an object of JikesAPI and use this as the default.
+	will create an object of JikesAPI and use this as the default.
 
 	* jikesapi.h 
 	* jikesapi.cpp: Made the methods JikesAPI::read() and
- 	JikesAPI::write() non virtual. These methods now do error
- 	checking.
+	JikesAPI::write() non virtual. These methods now do error
+	checking.
 
 	The methods 
 	
@@ -1752,7 +1758,7 @@
 2000-01-18  Vadim Zaliva  <lord@crocodile.org>
 
 	* stream.cpp (ProcessInputUnicode): buffer resize on surrogate
- 	characters use more accurate memory allocation.
+	characters use more accurate memory allocation.
 
 	* configure.in: check for wmemcpy added.
 
@@ -1764,22 +1770,22 @@
 	* symbol.cpp:
 	* symbol.h:
 	* system.cpp: Debugging malloc libraries are marvelous things.
-  	The attached patch fixes five small memory leaks and one instance
- 	of delete given a null pointer (not actually incorrect, but bad
- 	practice and something memory profiling tools complain heartily
- 	about).
+	The attached patch fixes five small memory leaks and one instance
+	of delete given a null pointer (not actually incorrect, but bad
+	practice and something memory profiling tools complain heartily
+	about).
 
 2000-01-18  C. Scott Ananian <cananian@lesser-magoo.lcs.mit.edu>
 
 	* ast.cpp: Printing out ASTs involving for-statements may segfault
- 	do to a swapped loop bound test.  You only see this if you have
- 	more for-initialization expressions than for-update
- 	expressions. Patch fixes this problem.
+	do to a swapped loop bound test.  You only see this if you have
+	more for-initialization expressions than for-update
+	expressions. Patch fixes this problem.
 
 2000-01-18  C. Scott Ananian <cananian@lesser-magoo.lcs.mit.edu>
 
 	* java.g (SwitchBlock): Fixed segfault when compiling certain
- 	switch-statement constructs.
+	switch-statement constructs.
 
 2000-01-13 C. Scott Ananian <cananian@alumni.princeton.edu>
 
@@ -1787,17 +1793,17 @@
 	
 2000-01-14 C. Scott Ananian <cananian@alumni.princeton.edu>
 
-       * option.cpp: Fixed an off-by-one error in a string
-       allocation.  Debugging-malloc libraries are a
-       Good Thing.
+	* option.cpp: Fixed an off-by-one error in a string
+	allocation.  Debugging-malloc libraries are a
+	Good Thing.
 	  
 2000-01-13  Vadim Zaliva  <lord@crocodile.org>
 
 	* jikes.spec: ChangeLog included in RPM package.
 
 	* Big structure reorganisation. Following files are moved to 'doc'
- 	directory: contrib.html jikes.1 jikes.gif jikes.html
- 	license.htm news.html news_v1.html
+	directory: contrib.html jikes.1 jikes.gif jikes.html
+	license.htm news.html news_v1.html
 
 	* src/ChangeLog and ChangeLog merged and result placed in 'doc'
 	as well.
@@ -1825,14 +1831,14 @@
 	(suggested by Martin York <myork@oxmol.co.uk>).
 
 	* depend.h (class CycleChecker): the macro INFINITY is defined in
- 	the standard headers of Standard Libraries used on the MAC. Thus
- 	it causes chaos when it hits the enum INFINITY values used in
- 	Jikes. Jikes macro renamed to CYCLE_INFINITY.
+	the standard headers of Standard Libraries used on the MAC. Thus
+	it causes chaos when it hits the enum INFINITY values used in
+	Jikes. Jikes macro renamed to CYCLE_INFINITY.
 	(suggested by Martin York <myork@oxmol.co.uk>).
 
 	* stream.h (class LexStream): The macro INFINITY is defined in the
- 	standard headers of Standard Libraries used on the MAC. Thus it
- 	causes chaos when it hits the enum INFINITY values used in Jikes.
+	standard headers of Standard Libraries used on the MAC. Thus it
+	causes chaos when it hits the enum INFINITY values used in Jikes.
 	Jikes macro renamed to LEX_INFINITY.
 	(suggested by Martin York <myork@oxmol.co.uk>).
 
@@ -1858,9 +1864,9 @@
 	* configure.in: 
 	* Makefile.in:
 	autoconf modified to use CXX, not CC macro
- 	everywhere. Using standard macros to check headers presence and
- 	endianess. Autoconf detected macros naming convention unified to
- 	be HAVE_something instead of NEED_something. Check for wint_t and
+	everywhere. Using standard macros to check headers presence and
+	endianess. Autoconf detected macros naming convention unified to
+	be HAVE_something instead of NEED_something. Check for wint_t and
 	w* functions now aware of possible absence of wchar.h (for FreeBSD 
 	compatibility).
 	* libc5-fix: removed as obsoleted by last patch from Mo DeJong

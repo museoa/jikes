@@ -982,7 +982,6 @@ void ByteCode::InitializeClassVariable(AstVariableDeclarator *vd)
         // initialized class variables but _no_ static initializer block.  We now add a line number attribute
         // to appease that debugger.
         
-        printf("one\n");
         line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
                                                      this_semantic.lex_stream -> Line(expression -> LeftToken()));
 
@@ -999,7 +998,6 @@ void ByteCode::InitializeClassVariable(AstVariableDeclarator *vd)
         // specific line of code if a class contains initialized class variables but _no_ static initializer block.
         // We now add a line number attribute to appease that debugger.
         
-        printf("two\n");
         line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
                                                      this_semantic.lex_stream -> Line(array_initializer->LeftToken()));
 
