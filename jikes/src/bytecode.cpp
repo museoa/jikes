@@ -1366,7 +1366,17 @@ bool ByteCode::EmitSwitchStatement(AstSwitchStatement* switch_statement)
         switch_statement -> DefaultCase())
     {
         EmitExpression(switch_statement -> expression, false);
-        return EmitBlockStatement(switch_statement -> Block(0));
+        method_stack -> Push(switch_block);
+        abrupt = EmitSwitchBlockStatement(switch_statement -> Block(0), false);
+        CloseSwitchLocalVariables(switch_block, op_start);
+        if (IsLabelUsed(method_stack -> TopBreakLabel()))
+        {
+            abrupt = false;
+            DefineLabel(method_stack -> TopBreakLabel());
+            CompleteLabel(method_stack -> TopBreakLabel());
+        }
+        method_stack -> Pop();
+        return abrupt;
     }
 
     //
@@ -1388,7 +1398,15 @@ bool ByteCode::EmitSwitchStatement(AstSwitchStatement* switch_statement)
                 EmitBranch(OP_IF_ICMPNE, lab, switch_block);
             }
             else EmitBranch(OP_IFNE, lab, switch_block);
-            EmitBlockStatement(switch_statement -> Block(0));
+            method_stack -> Push(switch_block);
+            EmitSwitchBlockStatement(switch_statement -> Block(0), false);
+            CloseSwitchLocalVariables(switch_block, op_start);
+            if (IsLabelUsed(method_stack -> TopBreakLabel()))
+            {
+                DefineLabel(method_stack -> TopBreakLabel());
+                CompleteLabel(method_stack -> TopBreakLabel());
+            }
+            method_stack -> Pop();
             DefineLabel(lab);
             CompleteLabel(lab);
             return false;

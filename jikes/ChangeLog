@@ -1,3 +1,16 @@
+2004-01-24  Eric Blake  <ebb9@byu.net>
+
+	* src/body.cpp (ProcessSwitchStatement): Make sure scope of local
+	classes in switch statment is switch-statement block...
+	(ProcessLocalVariableDeclarationStatement): while keeping local
+	variables at the scope of the entire switch statement.
+	* src/bytecode.h (MethodStack::Push, AssertIndex, NestingLevel):
+	Update assertions to cooperate with switch statement scoping
+	changes.
+	* src/bytecode.cpp (EmitSwitchStatement): Fix regressions caused
+	by over-optimization of switch statements.
+	* NEWS: Document scoping change.
+
 2004-01-23  Eric Blake  <ebb9@byu.net>
 
 	* src/java.g: Add 'enum', '@', and '...' tokens in preparation for

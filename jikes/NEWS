@@ -36,6 +36,28 @@ class C {
   }
 }
 
+The scope of a local class declaration statement in a switch statement
+is corrected to be only the nearest case label (unlike local variable
+declarations which remain in scope for the entire switch
+statement). This has the following effects:
+class D {
+  void m(int i) {
+    switch (i) {
+    case 0:
+      class One {}
+      class Two {}
+      int j;
+      int k;
+      break;
+    case 1:
+      // new One(); // now illegal, declaration no longer in scope
+      class Two {} // now legal, no conflict with prior declaration
+      j = 1; // remains legal as before
+      // int k; // remains illegal as before
+    }
+  }
+}
+
 Constant instance variables are now initialized sooner, so that you
 cannot view their default 0 value even with reflection.
 

@@ -202,8 +202,22 @@ void Semantic::ProcessLocalVariableDeclarationStatement(Ast* stmt)
         }
         else
         {
+            AstBlock* block = LocalBlockStack().TopBlock();
+            SymbolTable* table;
+            if (block -> block_tag == AstBlock::SWITCH)
+            {
+                //
+                // Local variables declared in a switch statement are in scope
+                // for the entire switch, rather than the nearest label (unlike
+                // local classes).  Hence, we have to check if the top block is
+                // a switch statement, and use the next level up if so.
+                //
+                block = LocalBlockStack()[LocalBlockStack().Size() - 2];
+                table = LocalSymbolTable()[LocalSymbolTable().Size() - 2];
+            }
+            else table = LocalSymbolTable().Top();
             VariableSymbol* symbol =
-                LocalSymbolTable().Top() -> InsertVariableSymbol(name_symbol);
+                table -> InsertVariableSymbol(name_symbol);
             variable_declarator -> symbol = symbol;
 
             unsigned dims =
@@ -213,11 +227,11 @@ void Semantic::ProcessLocalVariableDeclarationStatement(Ast* stmt)
             symbol -> SetOwner(ThisMethod());
             symbol -> declarator = variable_declarator;
             symbol -> SetLocation();
-            BlockSymbol* block = LocalBlockStack().TopBlock() -> block_symbol;
 
-            symbol -> SetLocalVariableIndex(block -> max_variable_index++);
+            symbol -> SetLocalVariableIndex(block -> block_symbol ->
+                                            max_variable_index++);
             if (control.IsDoubleWordType(symbol -> Type()))
-                block -> max_variable_index++;
+                block -> block_symbol -> max_variable_index++;
 
             ProcessVariableInitializer(variable_declarator);
         }
@@ -526,15 +540,17 @@ void Semantic::ProcessSwitchStatement(Ast* stmt)
 
     //
     // We estimate a size for the switch symbol table based on the number of
-    // lines in it.
+    // lines in it. In a switch statement, local variable declarations have
+    // scope over the entire main_block, but local classes only have scope in
+    // the current switch block statement.
     //
     AstBlock* block_body = switch_statement -> switch_block;
-    BlockSymbol* block = LocalSymbolTable().Top() -> InsertBlockSymbol();
-    block -> max_variable_index =
+    BlockSymbol* main_block = LocalSymbolTable().Top() -> InsertBlockSymbol();
+    main_block -> max_variable_index =
         enclosing_block -> block_symbol -> max_variable_index;
-    LocalSymbolTable().Push(block -> Table());
+    LocalSymbolTable().Push(main_block -> Table());
 
-    block_body -> block_symbol = block;
+    block_body -> block_symbol = main_block;
     block_body -> nesting_level = LocalBlockStack().Size();
     LocalBlockStack().Push(block_body);
     BreakableStatementStack().Push(block_body);
@@ -552,7 +568,7 @@ void Semantic::ProcessSwitchStatement(Ast* stmt)
     }
 
     //
-    // Count the number case labels in this switch statement.
+    // Count the number of case labels in this switch statement.
     //
     unsigned num_case_labels = 0;
     for (unsigned i = 0; i < block_body -> NumStatements(); i++)
@@ -632,11 +648,20 @@ void Semantic::ProcessSwitchStatement(Ast* stmt)
         // The parser ensures that a switch block statement always has one
         // statement. When a switch block ends with a sequence of switch
         // labels that are not followed by any executable statements, an
-        // artificial "empty" statement is added by the parser.
+        // artificial "empty" statement is added by the parser. Another
+        // BlockSymbol level is used here for the scope of local classes,
+        // but we share the BlockStack level to make break work correctly.
         //
         assert(switch_block_statement -> NumStatements() > 0);
-        switch_block_statement -> block_symbol = block;
-        switch_block_statement -> nesting_level = LocalBlockStack().Size() - 1;
+        BlockSymbol* statement_block =
+            LocalSymbolTable().Top() -> InsertBlockSymbol();
+        statement_block -> max_variable_index =
+            main_block -> max_variable_index;
+        LocalSymbolTable().Push(statement_block -> Table());
+
+        switch_block_statement -> block_symbol = statement_block;
+        switch_block_statement -> nesting_level = LocalBlockStack().Size();
+        LocalBlockStack().Push(block_body);
         switch_block_statement -> is_reachable =
             switch_statement -> is_reachable;
         ProcessBlockStatements(switch_block_statement);
@@ -650,6 +675,22 @@ void Semantic::ProcessSwitchStatement(Ast* stmt)
             ReportSemError(SemanticError::SWITCH_FALLTHROUGH,
                            switch_block_statement);
         }
+
+        if (statement_block -> max_variable_index <
+            LocalBlockStack().TopMaxEnclosedVariableIndex())
+        {
+            statement_block -> max_variable_index =
+                LocalBlockStack().TopMaxEnclosedVariableIndex();
+        }
+        LocalBlockStack().Pop();
+        LocalSymbolTable().Pop();
+        if (LocalBlockStack().TopMaxEnclosedVariableIndex() <
+            statement_block -> max_variable_index)
+        {
+            LocalBlockStack().TopMaxEnclosedVariableIndex() =
+                statement_block -> max_variable_index;
+        }
+        statement_block -> CompressSpace();
     }
 
     //
@@ -717,10 +758,10 @@ void Semantic::ProcessSwitchStatement(Ast* stmt)
     // Also, update the information for the block that immediately encloses
     // the current block.
     //
-    if (block -> max_variable_index <
+    if (main_block -> max_variable_index <
         LocalBlockStack().TopMaxEnclosedVariableIndex())
     {
-        block -> max_variable_index =
+        main_block -> max_variable_index =
             LocalBlockStack().TopMaxEnclosedVariableIndex();
     }
 
@@ -729,13 +770,13 @@ void Semantic::ProcessSwitchStatement(Ast* stmt)
     LocalSymbolTable().Pop();
 
     if (enclosing_block && (LocalBlockStack().TopMaxEnclosedVariableIndex() <
-                            block -> max_variable_index))
+                            main_block -> max_variable_index))
     {
         LocalBlockStack().TopMaxEnclosedVariableIndex() =
-            block -> max_variable_index;
+            main_block -> max_variable_index;
     }
 
-    block -> CompressSpace(); // space optimization
+    main_block -> CompressSpace(); // space optimization
 }
 
 

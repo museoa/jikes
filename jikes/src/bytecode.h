@@ -77,7 +77,7 @@ public:
     {
         assert(block -> nesting_level < stack_size &&
                (top_index == 0 ||
-                (block -> nesting_level - 1 == nesting_level[top_index - 1])));
+                (block -> nesting_level > nesting_level[top_index - 1])));
 
         nesting_level[top_index] = block -> nesting_level;
         break_labels[block -> nesting_level].uses.Reset();
@@ -120,10 +120,10 @@ public:
 #ifdef JIKES_DEBUG
     void AssertIndex(unsigned k)
     {
-        for (unsigned i = 0; i < Size(); i++)
+        for (unsigned i = 0; i < top_index; i++)
             if (nesting_level[i] == k)
                 return;
-        assert(0);
+        assert(false && "missing method stack level");
     }
 #else
 # define AssertIndex(x) /* nop */
@@ -136,7 +136,7 @@ public:
     }
     unsigned NestingLevel(unsigned i)
     {
-        AssertIndex(i);
+        assert(i < top_index);
         return nesting_level[i];
     }
 
