@@ -1,5 +1,12 @@
 2004-03-28  Elliott Hughes  <enh@acm.org>
 
+	* src/init.cpp: Warn about non-static final fields initialized by a
+	constant expression; these can be made static to save space in each
+	instance.
+	* src/error.cpp, src/error.h: The new diagnostic.
+
+2004-03-28  Elliott Hughes  <enh@acm.org>
+
 	* src/decl.cpp: Accept default access for serialVersionUID; it's
 	common existing practice.
 	* src/error.cpp: Put all the serialization-related warnings

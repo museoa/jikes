@@ -518,6 +518,7 @@ void SemanticError::StaticInitializer()
     warning[CLASS_METHOD_INVOKED_VIA_INSTANCE] = WEAK_WARNING;
     warning[CLASS_FIELD_ACCESSED_VIA_INSTANCE] = WEAK_WARNING;
     warning[ASSIGNMENT_USED_AS_TRUTH_VALUE] = WEAK_WARNING;
+    warning[NON_STATIC_FINAL_CONSTANT_FIELD] = WEAK_WARNING;
 
     //
     // Somewhat stronger warnings, but code will be generated anyway.
@@ -1335,7 +1336,9 @@ void SemanticError::InitializeMessages()
         "Field \"%1\" shadows a field of the same name in \"%T2\".";
     messages[ASSIGNMENT_USED_AS_TRUTH_VALUE] =
         "Suggest parentheses around assignment used as truth value.";
-
+    messages[NON_STATIC_FINAL_CONSTANT_FIELD] =
+        "Final field \"%1\" is initialized with a constant expression and "
+        "could be made static to save space.";
 
     // "Effective Java" warnings.
     messages[EJ_AVOID_OVERLOADING_EQUALS] =

@@ -185,6 +185,7 @@ public:
         LOCAL_SHADOWS_FIELD,
         HIDDEN_FIELD,
         ASSIGNMENT_USED_AS_TRUTH_VALUE,
+        NON_STATIC_FINAL_CONSTANT_FIELD,
 
         // "Effective Java" warnings.
         EJ_AVOID_OVERLOADING_EQUALS,
