@@ -18,12 +18,72 @@ likely we will include it; for example, please:
 <ul>
 <li>Patch against current version of source.
 <li>Use same coding conventions: indenting levels, position of braces, ...
-<li>Provide a description of patch in the <code>ChangeLog</code> file style.
+<li>Provide a description of your patch in the standard <code>ChangeLog</code>
+ format. Do not however include it as part of the patch. That is to say, do
+ not patch ChangeLog, simply include the text with the patch. See an example
+ ChangeLog entry below.
 <li>Include your e-mail address in the <code>ChangeLog</code> notice.
 <li>Provide the patch in <code>diff</code> unified output format 
 (<code>-u</code> option of GNU <code>diff</code>).
+<li>Generate your patch from the module name level of the tree. For example, if you
+ need to patch ast.h the patch should be generated from within the jikes directory
+ and reference the file as src/ast.h, rather than in the src directory referencing
+ the file as ast.h. <small>(It is really a minor item, but it helps immensly if we
+ are consistent, and that is the "standard" way of doing it.)</small>
 </ul>
 
+<h1>Sample ChangeLog and Patch</h1>
+<p>This submission from Eric Blake shows the <b>perfect</b> patch
+ submission:
+ <hr>
+<code><pre>
+ChangeLog:
+2001-02-30  Eric Blake  &lt;ebb9@email.byu.edu&gt;
+
+	* src/platform.h (operator&lt;&lt;): Add a cast
+	to work around broken ostream &lt;&lt; const unsigned
+	char * with aCC on HP-UX.
+
+Index: src/platform.h
+===================================================================
+RCS file: /usr/cvs/jikes/jikes/src/platform.h,v
+retrieving revision 1.13
+diff -u -r1.13 platform.h
+--- src/platform.h	2001/02/12 11:09:06	1.13
++++ src/platform.h	2001/03/30 18:15:20
+@@ -941,7 +941,15 @@
+ 
+     Ostream &operator&lt;&lt;(const unsigned char *c)
+     {
++#ifndef HAVE_OSTREAM_CONST_UNSIGNED_CHAR_PTR
++# ifdef HAVE_CONST_CAST
++        *os &lt;&lt; const_cast&lt;unsigned char *&gt; (c);
++# else
++        *os &lt;&lt; (unsigned char *) c;
++# endif
++#else
+         *os &lt;&lt; c;
++#endif
+         return *this;
+     }
+
+end of patch
+</pre></code>
+<hr>    
+
+<p>Some notes on this: The changelog lines are indented with a single
+tab, not with spaces. The "ChanegLog:" header was probably inserted by
+his software, just incase we didn't recognize what the following text
+was, but since he has followed the format this isn't a problem. 
+
+The text "end of patch" has been added AFTER the
+end of the patch because the last line of the patch is empty. That is
+to say there are three lines following the last inserted line (marked
+with a + character) in the patch, but the last of those is empty. By
+adding some piece of text there that doesn't look like the start of a 
+new patch the trailing line will not get lost and the maintainers will
+not have problems patching this into the tree.
+    
     <!--#include file="footer.shtml" -->
   </BODY>
 </HTML>

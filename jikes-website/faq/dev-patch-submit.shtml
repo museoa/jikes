@@ -40,7 +40,7 @@
           <td><!-- #BeginEditable "TopicContent" -->
             <h1>Submitting a patch</h1>
             <p>&nbsp;</p>
-            <p><i>Not written yet.</i></p>
+            <p><i><a href="../patchguide.shtml">see patch submission guide</a></i></p>
             <p>&nbsp;</p>
             <!-- #EndEditable --></td>
         </tr>
