@@ -23,20 +23,28 @@
         <td class=navbar><!-- content, left linkages -->
           <br>
           <p align=center><big>Quick Links</big></p>
+	  <hr>
+          General Interest
+          <ul style="color: purple; margin-left: -1.33em;">
+            <li><a href="/developerworks/mail/?group_id=10">Mailing Lists</a>
+            <li><a href="people.shtml">People</a>
+	    <li><a href="leadership.shtml">Leadership</a>
+          </ul>
           <hr>
           For Users
-          <ul>
-            <li>User's FAQ
+          <ul style="color: purple; margin-left: -1.33em;">
+            <li><a href="faq/user-index.shtml">User's FAQ</a>
             <li><a href="/developerworks/news/index.php?group_id=10">News</a>
             <li><a href="distribs.shtml">Distributions</a>
             <li><a href="/developerworks/project/showfiles.php?group_id=10">Downloads</a>
             <li><a href="/developerworks/bugs/?group_id=10">View open bugs</a>
             <li><a href="/developerworks/bugs/?func=addbug&amp;group_id=10">Report Bugs Here</a>
+            <li><a href="/developerworks/opensource/license10.html">IBM Public License</a>
           </ul>
           <hr>
           For Developers
-          <ul>
-	    <li>Developer's FAQ
+          <ul style="color: purple; margin-left: -1.33em;">
+	    <li><a href="faq/dev-index.shtml">Developer's FAQ</a>
             <li><a href="cvs.shtml">CVS</a>
             <li><a href="/developerworks/patch/?group_id=10">Patch Queue</a>
 	    <ul>
@@ -44,22 +52,15 @@
             </ul>
 	    <li><a href="todo.shtml">Todo list</a>
           </ul>
-	      <hr>
-          General Interest
-          <ul>
-            <li><a href="/developerworks/mail/?group_id=10">Mailing Lists</a>
-            <li><a href="people.shtml">People</a>
-	    <li><a href="leadership.shtml">Leadership</a>
-	    <li><a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf">Old discussion database<br>at IBM Research</a> <small>includes<br>the "Queries to Sun".</small>
-          </ul>
           <hr>
           Related Links
-          <ul>
+          <ul style="color: purple; margin-left: -1.33em;">
 <!-- wait 'till Mo has this ready            <li><a href="/developerworks/projects/jacks/">Jacks Project</a>
 -->            <li><a href="http://www.ergnosis.com/java-spec-report/">Java Spec Report</a>
 	    <li><a href="http://ibm.com/java/jdk/">The Best JVMs on the net</a>
 	    <li><a href="http://www.java.sun.com/docs/books/jls">Language Spec.</a>
 	    <li><a href="http://www.java.sun.com/docs/books/vmspec">Virtual Machine Spec.</a>
+	    <li><a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf">Old Jikes discussion database<br>at IBM Research</a> <small style="color: black">includes<br>the "Queries to Sun".</small>
           </ul>
         </td>
         <TD class=navbar WIDTH=6>&nbsp;</TD><!--padding-->
@@ -132,8 +133,9 @@ Shields of the IBM T. J. Watson Research Center. Since the release of the source
 they have continued to work on the compiler as contributors; however recently have
 officially been moved on to other projects within IBM.
 
-<P>The source code is available under IBM's Public License, which has
-been approved by the <a href="http://www.opensource.org/">OSI</a>
+<P>The source code is available under
+<a href="/developerworks/opensource/license10.html">IBM's Public License</a>,
+which has been approved by the <a href="http://www.opensource.org/">OSI</a>
 (Open Source Initiative) as a fully compliant open source license.
 The project provides access to the complete <A HREF="cvs.shtml">CVS</A>
 development tree, which includes not only Jikes, but also the source for the Jacks

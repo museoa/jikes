@@ -18,7 +18,7 @@
 
     <ul>
       <li>Migrate old jitterbug bugs to new system. (TAG, EricB, CAbbey, more welcome)
-      <li>Update FAQ. (Pascal, Andrew Inggs)
+      <li>Finish the FAQ. (Pascal, Andrew Inggs)
       <li>Finish bringing new web pages online. (CAbbey)
       <li>document the new bug system categories, priorities and groups. (cabbey)
       <li>Bring Jikes up to Java2 classpath handling. (Adam Hawthorne)

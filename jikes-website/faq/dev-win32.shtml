@@ -10,10 +10,10 @@
 </head>
 
 <body>
-<table width="750" border="0" cellspacing="0" cellpadding="0">
+<table border="0" cellspacing="0" cellpadding="0">
   <tr>
-    <td><img src="../images/dev-faq-logo.png" width="150" height="54" alt="Jikes Developer FAQ"></td>
-    <td><img src="../images/jikes.png" width="600" height="54" alt="Jikes"></td>
+    <td style="background-color: #000000"><img src="../images/dev-faq-logo.png" width="150" height="54" alt="Jikes Developer FAQ"></td>
+    <td style="background-color: #000000; text-align: right"><img align="right" src="../images/jikes.png" width="600" height="54" alt="Jikes"></td>
   </tr>
   <tr> 
     <td class="NavBar"> 
@@ -23,37 +23,19 @@
         'text-align: center' doesn't work). Gecko is used by Mozilla and Netscape 6.
         This workaround can be found multiple times in this file.
       -->
-      <table width="130" border="0" cellspacing="0" cellpadding="0" align="center">
+      <table border="0" cellspacing="0" cellpadding="10" align="center">
         <tr>
           <td>
-            <p style="text-indent: 0px"><a href="dev-index.html">Home</a></p>
-            <p style="text-indent: 0px"><a href="../Templates/user-index.html">User FAQ</a></p>
-            <p style="text-indent: 0px">Mailing Lists</p>
-            <p style="text-indent: 0px"><a href="dev-license.html">Licensing</a></p>
-            <p style="text-indent: 0px"><a href="dev-source-control.html">Source 
-              control</a><br>
-              <a href="dev-compiling.html">Compiling</a><br>
-              <a href="dev-cross-compiling.html">Cross-compiling</a><br>
-              <a href="dev-testing.html">Testing</a><br>
-              <a href="dev-patching.html">Patching</a><br>
-              <a href="dev-patch-submit.html">Submitting a patch</a></p>
-            <p style="text-indent: 0px">Platforms<br>
-              &nbsp;&nbsp;<a href="dev-aix.html">AIX</a><br>
-              &nbsp;&nbsp;<a href="dev-hp-ux.html">HP-UX</a><br>
-              &nbsp;&nbsp;<a href="dev-linux.html">Linux</a><br>
-              &nbsp;&nbsp;<a href="dev-mac.html">Mac</a><br>
-              &nbsp;&nbsp;<a href="dev-solaris.html">Solaris</a><br>
-              &nbsp;&nbsp;<a href="dev-win32.html">Win32</a> </p>
-            <p style="text-align: left; text-indent: 0px"><a href="dev-faq-update.html">Something 
-              wrong or missing?</a></p>
-            <p>&nbsp;</p>
+        <!-- START INCLUDE NAVBAR.SHTML -->
+        <!--#include file="navbar.html" -->
+        <!-- END INCLUDE NAVBAR.SHTML -->
           </td>
         </tr>
       </table>
     </td>
     <td class="TopicContent">
       <p>&nbsp;</p>
-      <table width="580" border="0" cellspacing="0" cellpadding="0" align="center">
+      <table border="0" cellspacing="10" cellpadding="0" align="center">
         <tr>
           <td><!-- #BeginEditable "TopicContent" --> 
             <h1>Jikes on Win32 </h1>
@@ -498,10 +480,10 @@
               extra parameters. First, you need to specify that you want to use 
               the mingw <code>g++</code> instead of the Cygwin version by passing 
               a <code>CXX=...</code> argument to <code>configure</code> (see the 
-              general discussion about <a href="dev-compiling.html#config-script-args">configuring 
+              general discussion about <a href="dev-compiling.shtml#config-script-args">configuring 
               the build environment</a>). You will also need to pass the "host 
               system" (the environment the final executable runs in) to the <code>configure</code> 
-              script since this is a actually cross compile (see <a href="dev-cross-compiling.html">cross-compiling 
+              script since this is a actually cross compile (see <a href="dev-cross-compiling.shtml">cross-compiling 
               Jikes</a> for more information).</p>
             <p><u>Important</u>: replace any backslash ('\') by a slash ('/') 
               in the path to the mingw compiler or the Bash shell won't be able 
@@ -607,7 +589,7 @@
             <p>This shows that the executable only depends on dlls that are already 
               installed on a Windows system.</p>
             <p><u>Important note</u>: you can't build in a directory other than 
-              the <code>src</code> directory with mingw, as stated in <a href="dev-compiling.html#build-other-dir">the 
+              the <code>src</code> directory with mingw, as stated in <a href="dev-compiling.shtml#build-other-dir">the 
               general compiling section</a>. This is a known issue with Mingw 
               (probably related to paths in POSIX form). The Mingw author is aware 
               of this problem and it sits now in his personal todo list :o).</p>
@@ -715,7 +697,7 @@
             <p>The Win32 official release of Jikes is not produced on the Win32 
               platform as expected (at least until now). This is done by using 
               a feature of some compilers known as cross-compiling (please refer 
-              to the appropriate section to <a href="dev-cross-compiling.html">learn 
+              to the appropriate section to <a href="dev-cross-compiling.shtml">learn 
               about cross-compiling Jikes</a>). It's actually built on a Unix 
               machine, using the <code>gcc</code> compiler with the <code>mingw</code> 
               backend to produce a Win32 binary.</p>

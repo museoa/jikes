@@ -1,16 +1,100 @@
-body {  font-family: Verdana, Arial, Helvetica, sans-serif; background-color: #FFFFFF; font-size: 10pt}
-table {  font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 10pt}
-code {  font-family: "Courier New", Courier, mono; font-size: 10pt}
-.HighlightedFrameBorder { background-color: #000000; text-align: center}
-.HighlightedFrameBackground { background-color: #CCCCCC; text-align: center}
-.DimmedFrameBorder { background-color: #000000; text-align: center}
-.DimmedFrameBackground { background-color: #FFFFFF; text-align: center}
-h1 {  font-weight: bold; color: #FF0000; text-align: center; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 10pt}
-h2 {  font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 10pt; font-weight: bold; text-align: left}
-p {  text-align: justify; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 10pt; text-indent: 20px}
-td {  font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 10pt}
-.NavBar {  background-color: #CCCCFF; text-align: center; vertical-align: top; margin-right: auto; margin-left: auto}
-ul {  font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 10pt}
-.TopicContent {  text-align: center; vertical-align: top}
-h3 { font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 10pt; text-align: left ; font-style: italic; text-indent: 30px; font-weight: bold}
-pre.example { background: #dddddd; padding: 2pt,4pt; margin-left: 20px; text-align: left; color: #000000}
+body {
+  background-color: #FFFFFF;
+  font-family: "Times New Roman", Times, serif
+}
+
+table {
+  font-family: "Times New Roman", Times, serif
+}
+
+code {
+  font-family: "Courier New", Courier, mono
+}
+
+.HighlightedFrameBorder {
+  background-color: #000000;
+  text-align: center
+}
+
+.HighlightedFrameBackground {
+  background-color: #CCCCCC;
+  text-align: center
+}
+
+.DimmedFrameBorder {
+  background-color: #000000;
+  text-align: center
+}
+
+.DimmedFrameBackground {
+  background-color: #FFFFFF;
+  text-align: center
+}
+
+h1 {
+  font-weight: bold;
+  color: #FF0000;
+  text-align: center;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 1em
+}
+
+h2 {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 1em;
+  font-weight: bold;
+  text-align: left
+}
+
+h3 {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 1em;
+  font-style: italic;
+  font-weight: bold;
+  text-align: left
+}
+
+p {
+  text-align: justify;
+  font-family: "Times New Roman", Times, serif;
+  text-indent: 2em
+}
+
+td {
+  font-family: "Times New Roman", Times, serif
+}
+
+.NavBar {
+  background-color: #CCCCFF;
+  text-align: center;
+  vertical-align: top;
+  margin-right: auto;
+  margin-left: auto
+}
+
+dl {
+  text-align: left;
+}
+
+ul {
+  text-align: left;
+  font-family: "Times New Roman", Times, serif;
+  margin-left: -1.33em;
+}
+
+.TopicContent {
+  text-align: center;
+  vertical-align: top
+}
+
+pre.example {
+  background: #dddddd;
+  padding: 2pt,4pt;
+  margin-left: 2em;
+  text-align: left;
+  color: #000000
+}
+
+.BackToTop {
+  text-indent: 0em
+}
