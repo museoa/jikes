@@ -1,3 +1,9 @@
+2002-02-07  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/bytecode.cpp (ConcatenateString, AppendString): Fix one more
+	case of non-const String + primitive.
+	(LoadImmediateInteger): Optimize case of 0xffff.
+
 2002-02-06  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/scanner.cpp:

@@ -5163,7 +5163,8 @@ void ByteCode::ConcatenateString(AstBinaryExpression *expression)
     //
     AstExpression *left_expr = StripNops(expression -> left_expression);
     if (left_expr -> Type() == control.String() &&
-        left_expr -> BinaryExpressionCast())
+        left_expr -> BinaryExpressionCast() &&
+        ! left_expr -> IsConstant())
     {
         ConcatenateString((AstBinaryExpression *) left_expr);
     }
@@ -5218,7 +5219,31 @@ void ByteCode::AppendString(AstExpression *expression)
         Utf8LiteralValue *value = DYNAMIC_CAST<Utf8LiteralValue *> (expression -> value);
         if (value -> length == 0)
             return;  // Optimization: do nothing when appending "".
-        LoadConstantAtIndex(RegisterString(value));
+        if (value -> length == 1)
+        {
+            // Optimization: append(char) more efficient than append(String)
+            LoadImmediateInteger(value -> value[0]);
+            type = control.char_type;
+        }
+        else if(type == control.char_type)
+        {
+            // Multibyte string in UTF-8, but still single character
+            if (value -> length == 2)
+                LoadImmediateInteger(((value -> value[0] & 0x001F) << 6) |
+                                     (value -> value[1] & 0x003F));
+            else
+            {
+                assert(value -> length == 3);
+                LoadImmediateInteger(((value -> value[0] & 0x000F) << 12) |
+                                     ((value -> value[1] & 0x003F) << 6) |
+                                     (value -> value[2] & 0x003F));
+            }
+        }
+        else
+        {
+            LoadConstantAtIndex(RegisterString(value));
+            type = control.String();
+        }
     }
     else
     {
@@ -5537,6 +5562,11 @@ void ByteCode::LoadImmediateInteger(int val)
             PutU2(val);
         }
         else LoadConstantAtIndex(index);
+    }
+    else if (val == 65535)
+    {
+        PutOp(OP_ICONST_M1);
+        PutOp(OP_I2C);
     }
     // Outside the range of sipush, we must use the constant pool.
     else LoadConstantAtIndex(RegisterInteger(control.int_pool.FindOrInsert(val)));
