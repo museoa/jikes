@@ -380,7 +380,7 @@ bool Control::IncrementalRecompilation()
         u1 buffer[2];
 
         cin.getline(buffer,2);
-	if (buffer[0] == U_q) {
+        if ((buffer[0] == U_q) || (buffer[0] == U_Q)) {
             return false;
         }
 

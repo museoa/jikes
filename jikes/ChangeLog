@@ -1,3 +1,8 @@
+2000-08-23  Andrew G. Tereschenko  <tag@ibis.odessa.ua>
+
+	* src/incrmnt.cpp (IncrementalRecompilation): Both
+	'q' and 'Q' are now acceptable to quit incremental mode.
+
 2000-08-21  Mo DeJong  <mdejong@redhat.com>
 
 	* src/incrmnt.cpp (IncrementalRecompilation): Rewrite
