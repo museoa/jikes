@@ -2,6 +2,12 @@
 
 	Release 1.20.
 
+2004-04-17  Eric Blake  <ebb9@byu.net>
+
+	* src/m4/ac_cxx_exceptions.m4: Delete - this file is no longer
+	needed, because jikes doesn't use exceptions.
+	* src/Makefile.in: Regenerate.
+
 2004-04-16  Chris Abbey  <jikes@cabbey.net>
 
 	* src/Makefile.in: trivial hand patch, looks like  src/m4/
