@@ -1,3 +1,19 @@
+2002-07-07  Chris Abbey  <jikes@cabbey.net>
+
+	* index.shtml: add robocode link, replace (9 month old) second
+	anniversary banner for dw/oss with robocode rumble banner, minor
+	linkage clenaups.
+	cvs-begin.shtml:
+	cvs.shtml:
+	distribs.shtml:
+	downloads.shtml:
+	index.shtml:
+	leadership.shtml:
+	new.index.shtml:
+	patchguide.shtml:
+	people.shtml:
+	todo.shtml: put the missing # into the body tags' bgcolor attribute
+	
 2002-04-30  Preston Pfarner  <preston-jikes@pfarner.org>
 
 	* faq/dev-source-control.shtml: Correct CVSROOT.

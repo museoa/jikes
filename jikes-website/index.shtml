@@ -58,13 +58,14 @@
           <hr>
           Related Links
           <ul>
-            <li><a href="/developerworks/oss/jacks/">Jacks Project</a>
-            <li><a href="http://www.ergnosis.com/java-spec-report/">Java Spec Report</a>
+            <li><a href="/developerworks/oss/jacks/">Jacks Project</a> is our automated regression testing framework
+            <li><a href="http://www.ergnosis.com/java-spec-report/">Java Spec Report</a> publicly debates the finer points of the specifications
 	    <li><a href="http://ibm.com/java/jdk/">The Best JVMs on the net</a>
 	    <li><a href="http://www.java.sun.com/docs/books/jls">Language Spec.</a>
 	    <li><a href="http://www.java.sun.com/docs/books/vmspec">Virtual Machine Spec.</a>
 	    <li><a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf">Old Jikes discussion database<br>at IBM Research</a> <small>includes<br>the "Queries to Sun".</small>
 	    <li><a href="/developerworks/oss/jikesrvm/?origin=jikes">The Jikes Research Virtual Machine project</a> can only be built with Jikes.
+	    <li><a href="http://ibm.com/alphaworks/robocode/?origin=jikes">Robocode</a> is a fun way to learn java programming, and it uses jikes under the covers to reduce the compile delays and keep the student's attention!
           </ul>
         </td>
         <TD class=navbar WIDTH=6>&nbsp;</TD><!--padding-->
@@ -74,13 +75,14 @@
 
 <!-- content, main - still needs cleanup -->
 
- <p><a href="http://www-106.ibm.com/developerworks/aboutdw/letter2.html?origin=jikes"><img src="http://www-106.ibm.com/developerworks/i/ad-dWbday2.gif" border=0 width=150 height=50 align=right alt="[IBM developerWorks celebrates its second anniversary]"></a>
+ <p><a href="http://www-106.ibm.com/developerworks/cgi-bin/click.cgi?url=http://www.ibm.com/alphaworks/rumble&origin=jikes"><img src="http://www-106.ibm.com/developerworks/i/ad-roborumble.jpg" width="150" height="50" alt="Robocode rumble" border="0" align=right hspace=4 vspace=4></a>
     The Jikes Homepage has been reorganized to take advantage of the new support
-    infrastructure offered by IBM's developerWorks Open Source Software zone. These
-    pages will continue to provide user support to the Jikes community; however,
-    development related issues will be moved to the
-    <a href="/developerworks/projects/jikes/">dW/OSS</a> system as much and as soon
-    as possible.</p>
+    infrastructure offered by <a href="http://ibm.com/?origin=jikes">IBM's</a>
+    <a href="http://ibm.com/developerworks/?origin=jikes">developerWorks</a>
+    <a href="http://ibm.com/developerworks/oss/?origin=jikes">Open Source Software zone</a>.
+    These pages will continue to provide user support to the Jikes community; however,
+    development related issues have been moved to the our space in the
+    <a href="/developerworks/projects/jikes/">dW/OSS</a>.</p>
 
 <hr>
 <p>What is Jikes?</p>
@@ -94,7 +96,7 @@ into the bytecoded instruction set and binary format defined in
 <P>
 You may wonder why the world needs another Java compiler, considering that Sun provides
 javac free with its SDK. Jikes has four advantages that make it a valuable contribution to
-the Linux and Java communities:
+the Java community:
     <UL>
         <LI><em>Open source</em>. <STRONG>Jikes is <A HREF="http://www.opensource.org/docs/certification_mark.html">OSI Certified Open Source Software</A>.</strong>
             OSI Certified is a certification mark of the 
@@ -120,7 +122,7 @@ Source Navigator</A> or <A HREF="http://www.ibm.com/software/ad/vajava/">IBM's V
 which provide sophisticated graphical IDEs (Integrated Development Environments).</P>
 
 <p>The Jikes compiler was released in binary form in April 1997 on the IBM 
-<A HREF="http://www.alphaworks.ibm.com/">alphaWorks</A> site.  Jikes for Linux
+<A HREF="http://ibm.com/alphaworks/">alphaWorks</A> site.  Jikes for Linux
 was released on 15 July 1998. The response was overwhelming -- Jikes had more
 downloads in the three months after the announcement than in the fifteen months
 before the announcement.</P>
