@@ -1,4 +1,3 @@
-
 // $Id$
 //
 // This software is subject to the terms of the IBM Jikes Compiler
@@ -104,29 +103,8 @@ public:
                *boolean_type,
                *void_type,
                *null_type,
-               *no_type,
+               *no_type;
 
-               *Serializable_type,
-
-               *Object_type,
-               *Cloneable_type,
-               *String_type,
-               *Void_type,
-               *Boolean_type,
-               *Byte_type,
-               *Short_type,
-               *Character_type,
-               *Integer_type,
-               *Long_type,
-               *Float_type,
-               *Double_type,
-               *Class_type,
-               *Throwable_type,
-               *RuntimeException_type,
-               *ClassNotFoundException_type,
-               *Error_type,
-               *NoClassDefFoundError_type,
-               *StringBuffer_type;
     //
     TypeSymbol *GetType(PackageSymbol *, wchar_t *);
 
@@ -241,6 +219,12 @@ public:
         return Throwable_getMessage_method;
     }
 
+    inline TypeSymbol *Exception()
+    {
+        return (Exception_type
+                       ? Exception_type
+                       : Exception_type = GetType(system_package, StringConstant::US_Exception));
+    }
 
     inline TypeSymbol *RuntimeException()
     {
@@ -540,6 +524,29 @@ public:
 private:
 
     LiteralValue null_value;
+
+    TypeSymbol *Serializable_type,
+
+               *Object_type,
+               *Cloneable_type,
+               *String_type,
+               *Void_type,
+               *Boolean_type,
+               *Byte_type,
+               *Short_type,
+               *Character_type,
+               *Integer_type,
+               *Long_type,
+               *Float_type,
+               *Double_type,
+               *Class_type,
+               *Throwable_type,
+               *Exception_type,
+               *RuntimeException_type,
+               *ClassNotFoundException_type,
+               *Error_type,
+               *NoClassDefFoundError_type,
+               *StringBuffer_type;
 
     MethodSymbol *Class_forName_method,
 

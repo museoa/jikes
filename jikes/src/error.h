@@ -251,6 +251,7 @@ public:
         UNCATCHABLE_METHOD_THROWN_CHECKED_EXCEPTION,
         UNCATCHABLE_CONSTRUCTOR_THROWN_CHECKED_EXCEPTION,
         UNREACHABLE_CATCH_CLAUSE,
+        UNREACHABLE_DEFAULT_CATCH_CLAUSE,
         UNREACHABLE_STATEMENT,
         UNREACHABLE_STATEMENTS,
         UNREACHABLE_CONSTRUCTOR_BODY,
@@ -592,6 +593,7 @@ private:
     static void PrintUNCATCHABLE_METHOD_THROWN_CHECKED_EXCEPTION(ErrorInfo &, LexStream *, Control &);
     static void PrintUNCATCHABLE_CONSTRUCTOR_THROWN_CHECKED_EXCEPTION(ErrorInfo &, LexStream *, Control &);
     static void PrintUNREACHABLE_CATCH_CLAUSE(ErrorInfo &, LexStream *, Control &);
+    static void PrintUNREACHABLE_DEFAULT_CATCH_CLAUSE(ErrorInfo &, LexStream *, Control &);
     static void PrintUNREACHABLE_STATEMENT(ErrorInfo &, LexStream *, Control &);
     static void PrintUNREACHABLE_STATEMENTS(ErrorInfo &, LexStream *, Control &);
     static void PrintUNREACHABLE_CONSTRUCTOR_BODY(ErrorInfo &, LexStream *, Control &);

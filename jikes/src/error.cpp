@@ -289,6 +289,7 @@ void SemanticError::StaticInitializer()
     //
     warning[BAD_INPUT_FILE] = 2;
     warning[UNREADABLE_INPUT_FILE] = 2;
+    warning[UNREACHABLE_DEFAULT_CATCH_CLAUSE] = 2;
 
 //
 // TODO: Let these conditions be flagged as errors now.
@@ -529,6 +530,7 @@ void SemanticError::StaticInitializer()
     print_message[UNCATCHABLE_METHOD_THROWN_CHECKED_EXCEPTION] = PrintUNCATCHABLE_METHOD_THROWN_CHECKED_EXCEPTION;
     print_message[UNCATCHABLE_CONSTRUCTOR_THROWN_CHECKED_EXCEPTION] = PrintUNCATCHABLE_CONSTRUCTOR_THROWN_CHECKED_EXCEPTION;
     print_message[UNREACHABLE_CATCH_CLAUSE] = PrintUNREACHABLE_CATCH_CLAUSE;
+    print_message[UNREACHABLE_DEFAULT_CATCH_CLAUSE] = PrintUNREACHABLE_DEFAULT_CATCH_CLAUSE;
     print_message[UNREACHABLE_STATEMENT] = PrintUNREACHABLE_STATEMENT;
     print_message[UNREACHABLE_STATEMENTS] = PrintUNREACHABLE_STATEMENTS;
     print_message[UNREACHABLE_CONSTRUCTOR_BODY] = PrintUNREACHABLE_CONSTRUCTOR_BODY;
@@ -4071,6 +4073,23 @@ void SemanticError::PrintUNREACHABLE_CATCH_CLAUSE(ErrorInfo &err, LexStream *lex
     }
     Coutput << err.insert2
             << "\" that can be thrown during execution of the body of the try block.";
+
+    return;
+}
+
+
+void SemanticError::PrintUNREACHABLE_DEFAULT_CATCH_CLAUSE(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    Coutput << "This catch block may be unreachable because there is no exception "
+               "whose type is assignable to \"";
+    if (NotDot(err.insert1))
+    {
+        Coutput << err.insert1
+                << "/";
+    }
+    Coutput << err.insert2
+            << "\" that can be thrown during execution of the body of the try block."
+               " However, this being a base exception class, compilation will proceed.";
 
     return;
 }

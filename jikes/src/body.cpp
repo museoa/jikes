@@ -1335,11 +1335,17 @@ void Semantic::ProcessTryStatement(Ast *stmt)
             //
             if ((catchable_exceptions.Length() + convertible_exceptions.Length()) == initial_length)
             {
-                ReportSemError(SemanticError::UNREACHABLE_CATCH_CLAUSE,
-                               clause -> formal_parameter -> LeftToken(),
-                               clause -> formal_parameter -> RightToken(),
-                               symbol -> Type() -> ContainingPackage() -> PackageName(),
-                               symbol -> Type() -> ExternalName());
+                if (symbol -> Type() == control.Throwable() || symbol -> Type() == control.Exception())
+                     ReportSemError(SemanticError::UNREACHABLE_DEFAULT_CATCH_CLAUSE,
+                                    clause -> formal_parameter -> LeftToken(),
+                                    clause -> formal_parameter -> RightToken(),
+                                    symbol -> Type() -> ContainingPackage() -> PackageName(),
+                                    symbol -> Type() -> ExternalName());
+                else ReportSemError(SemanticError::UNREACHABLE_CATCH_CLAUSE,
+                                    clause -> formal_parameter -> LeftToken(),
+                                    clause -> formal_parameter -> RightToken(),
+                                    symbol -> Type() -> ContainingPackage() -> PackageName(),
+                                    symbol -> Type() -> ExternalName());
             }
             else
             {
