@@ -1,5 +1,10 @@
 2000-10-14  Mo DeJong  <mdejong@redhat.com>
 
+	* src/lookup.cpp: Remove #ifdef JIKES_DEBUG
+	blocks from around blocks of code to free memory.
+
+2000-10-14  Mo DeJong  <mdejong@redhat.com>
+
 	* src/jikesapi.cpp (compile): Minor code
 	reformat. Allocate a control instance on
 	the stack instead of the heap.

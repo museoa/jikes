@@ -139,11 +139,9 @@ Coutput << "    slot " << n << " contains " << num << " element(s)\n";
 if (hash_size < total)
     total = total;
 */
-#ifdef JIKES_DEBUG
     for (int i = 0; i < entry_pool.Length(); i++)
         delete entry_pool[i];
     delete [] base;
-#endif
 }
 
 
@@ -333,11 +331,9 @@ Coutput << "    slot " << n << " contains " << num << " element(s)\n";
 if (hash_size < total)
     total = total;
 */
-#ifdef JIKES_DEBUG
     for (int i = 0; i < symbol_pool.Length(); i++)
         delete symbol_pool[i];
     delete [] base;
-#endif
 }
 
 
@@ -437,9 +433,7 @@ if (hash_size < total)
     total = total;
 */
 
-#ifdef JIKES_DEBUG
     delete [] base;
-#endif
 }
 
 
@@ -568,11 +562,9 @@ if (hash_size < total)
     total = total;
 */
 
-#ifdef JIKES_DEBUG
     for (int i = 0; i < symbol_pool.Length(); i++)
         delete symbol_pool[i];
     delete [] base;
-#endif
 }
 
 
@@ -882,11 +874,9 @@ if (hash_size < total)
     total = total;
 */
 
-#ifdef JIKES_DEBUG
     for (int i = 0; i < symbol_pool.Length(); i++)
         delete symbol_pool[i];
     delete [] base;
-#endif
 }
 
 
@@ -1132,11 +1122,9 @@ if (hash_size < total)
     total = total;
 */
 
-#ifdef JIKES_DEBUG
     for (int i = 0; i < symbol_pool.Length(); i++)
         delete symbol_pool[i];
     delete [] base;
-#endif
 }
 
 
@@ -1255,11 +1243,9 @@ Coutput << "    slot " << n << " contains " << num << " element(s)\n";
 if (hash_size < total)
     total = total;
 */
-#ifdef JIKES_DEBUG
     for (int i = 0; i < symbol_pool.Length(); i++)
         delete symbol_pool[i];
     delete [] base;
-#endif
 }
 
 
@@ -1548,11 +1534,9 @@ Coutput << "    slot " << n << " contains " << num << " element(s)\n";
 if (hash_size < total)
     total = total;
 */
-#ifdef JIKES_DEBUG
     for (int i = 0; i < symbol_pool.Length(); i++)
         delete symbol_pool[i];
     delete [] base;
-#endif
 }
 
 
@@ -1722,11 +1706,9 @@ Coutput << "    slot " << n << " contains " << num << " element(s)\n";
 if (hash_size < total)
     total = total;
 */
-#ifdef JIKES_DEBUG
     for (int i = 0; i < symbol_pool.Length(); i++)
         delete symbol_pool[i];
     delete [] base;
-#endif
 }
 
 
