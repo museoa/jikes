@@ -1,3 +1,9 @@
+2003-02-18  Jan Ploski  <jpljpl@gmx.de>
+
+	* src/dump.cpp: Fix segfault with +c +L and files that
+	don't start with a comment. bug #3519 - regresion tested
+	by Max Horn <max@quendi.de>
+
 2002-12-18  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/platform.h (IntToString, LongToString): Backport from

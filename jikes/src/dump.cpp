@@ -154,7 +154,7 @@ void LexStream::Dump()
 
     TokenIndex tok = 0;
     for (CommentIndex com = FirstComment(tok);
-         com < NumComments() && PrecedingToken(com) == tok; com++)
+         com > 0 && com < NumComments() && PrecedingToken(com) == tok; com++)
     {
         fprintf(tokfile, "*%5d ", com);
         fprintf(tokfile, "%s", FileName());
@@ -180,7 +180,7 @@ void LexStream::Dump()
         fprintf(tokfile, "\n");
 
         for (CommentIndex com = FirstComment(tok);
-             com < NumComments() && PrecedingToken(com) == tok; com++)
+             com > 0 && com < NumComments() && PrecedingToken(com) == tok; com++)
         {
             fprintf(tokfile, "*%5d ", com);
             fprintf(tokfile, " %s", FileName());
