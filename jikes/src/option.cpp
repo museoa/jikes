@@ -38,7 +38,10 @@ void ArgumentExpander::ExpandAtFileArgument(Tuple<char *>& arguments,
 
         buffer = new char[status.st_size + 2];
         file_size = SystemFread(buffer, 1, status.st_size, afile);
-        //assert(status.st_size == file_size); // Fails under Cygwin (fopen "b" flag)
+
+        // Fails under Cygwin (fopen "b" flag)
+        //assert(status.st_size == file_size);
+
         buffer[file_size] = U_LINE_FEED;
         buffer[file_size + 1] = U_NULL;
 
@@ -169,14 +172,17 @@ wchar_t* OptionError::GetErrorMessage()
         s << '\"' << name << "\" requires an argument.";
         break;
     case INVALID_SDK_ARGUMENT:
-        s << '\"' << name << "\" only recognizes Java SDK targets of 1.1 through 1.4.";
+        s << '\"' << name
+          << "\" only recognizes Java SDK targets of 1.1 through 1.4.";
         break;
     case INVALID_K_OPTION:
-        s << "No argument specified for +K option. The proper form is \"+Kxxx=xxx\" (with no intervening space).";
+        s << "No argument specified for +K option. The proper form is "
+          << "\"+Kxxx=xxx\" (with no intervening space).";
         break;
     case INVALID_K_TARGET:
         s << '\"' << name
-          << "\" is not a valid target in a +K option. The target must be a numeric type or boolean.";
+          << "\" is not a valid target in a +K option. The target must be a "
+          << "numeric type or boolean.";
         break;
     case INVALID_TAB_VALUE:
         s << '\"' << name
@@ -227,13 +233,17 @@ void Option::SaveCurrentDirectoryOnDisk(char c)
 
         if (SetCurrentDirectory(disk))
         {
-            DWORD directory_length = GetCurrentDirectory(0, tmp);  // first, get the right size
-            disk_directory = new char[directory_length + 1];       // allocate the directory
-            DWORD length = GetCurrentDirectory(directory_length, disk_directory);
+            // first, get the right size
+            DWORD directory_length = GetCurrentDirectory(0, tmp);
+            // allocate the directory
+            disk_directory = new char[directory_length + 1];
+            DWORD length = GetCurrentDirectory(directory_length,
+                                               disk_directory);
             if (length <= directory_length)
             {
                 for (char *ptr = disk_directory; *ptr; ptr++)
-                    *ptr = (*ptr != U_BACKSLASH ? *ptr : (char) U_SLASH); // turn '\' to '/'.
+                    // turn '\' to '/'.
+                    *ptr = (*ptr != U_BACKSLASH ? *ptr : (char) U_SLASH);
             }
         }
 
@@ -278,7 +288,8 @@ static inline char* makeStrippedCopy(char* value)
         //
         if (! cygwin_posix_path_list_p(result))
         {
-            char* temp = new char[cygwin_win32_to_posix_path_list_buf_size(result)];
+            char* temp =
+                new char[cygwin_win32_to_posix_path_list_buf_size(result)];
             cygwin_win32_to_posix_path_list(result, temp);
             delete[] result;
             result = temp;
@@ -319,22 +330,29 @@ Option::Option(ArgumentExpander& arguments,
         current_directory[j] = NULL;
 
     char tmp[1];
-    DWORD directory_length = GetCurrentDirectory(0, tmp); // first, get the right size
-    char *main_current_directory = new char[directory_length + 1];   // allocate the directory
-    DWORD length = GetCurrentDirectory(directory_length, main_current_directory);
+    // first, get the right size
+    DWORD directory_length = GetCurrentDirectory(0, tmp);
+    // allocate the directory
+    char *main_current_directory = new char[directory_length + 1];
+    DWORD length = GetCurrentDirectory(directory_length,
+                                       main_current_directory);
     if (length > directory_length)
     {
-        delete [] main_current_directory; // FIXME: missing a delete of main_current_directory ???
+        // FIXME: missing a delete of main_current_directory ???
+        delete [] main_current_directory;
         main_current_directory = StringConstant::U8S_DO;
         main_disk = 0;
     }
     else
     {
         for (char *ptr = main_current_directory; *ptr; ptr++)
-            *ptr = (*ptr != U_BACKSLASH ? *ptr : (char) U_SLASH); // turn '\' to '/'.
+            // turn '\' to '/'.
+            *ptr = (*ptr != U_BACKSLASH ? *ptr : (char) U_SLASH);
         main_disk = main_current_directory[0]; // the first character
-        current_directory[Case::ToAsciiLower(main_disk)] = main_current_directory;
-        current_directory[Case::ToAsciiUpper(main_disk)] = main_current_directory;
+        current_directory[Case::ToAsciiLower(main_disk)] =
+            main_current_directory;
+        current_directory[Case::ToAsciiUpper(main_disk)] =
+            main_current_directory;
     }
     current_directory[0] = main_current_directory;
 #endif // WIN32_FILE_SYSTEM
@@ -397,18 +415,19 @@ Option::Option(ArgumentExpander& arguments,
                 directory = new char[length + 1];
                 strcpy(directory, arguments.argv[i]);
 #elif defined(WIN32_FILE_SYSTEM)
-                char disk = (strlen(arguments.argv[i]) >= 2 &&
-                             Case::IsAsciiAlpha(arguments.argv[i][0]) &&
-                             arguments.argv[i][1] == (U_COLON
-                                                      ? arguments.argv[i][0]
-                                                      : 0));
+                char disk = (Case::IsAsciiAlpha(arguments.argv[i][0]) &&
+                             arguments.argv[i][1] == U_COLON)
+                    ? arguments.argv[i][0] : 0;
                 SaveCurrentDirectoryOnDisk(disk);
                 if (SetCurrentDirectory(arguments.argv[i]))
                 {
                     char tmp[1];
-                    DWORD directory_length = GetCurrentDirectory(0, tmp); // first, get the right size
-                    directory = new char[directory_length + 1]; // allocate the directory
-                    DWORD length = GetCurrentDirectory(directory_length, directory);
+                    // first, get the right size
+                    DWORD directory_length = GetCurrentDirectory(0, tmp);
+                    // allocate the directory
+                    directory = new char[directory_length + 1];
+                    DWORD length = GetCurrentDirectory(directory_length,
+                                                       directory);
                     if (length > directory_length)
                     {
                         delete [] directory;
@@ -416,16 +435,23 @@ Option::Option(ArgumentExpander& arguments,
                     }
                 }
 
-                ResetCurrentDirectoryOnDisk(disk); // reset the current directory on the disk
-                SetMainCurrentDirectory();       // reset the real current directory...
+                // reset the current directory on the disk
+                ResetCurrentDirectoryOnDisk(disk);
+                // reset the real current directory...
+                SetMainCurrentDirectory();
 
                 if (! directory)
-                    bad_options.Next() = new OptionError(OptionError::INVALID_DIRECTORY, arguments.argv[i]);
+                {
+                    bad_options.Next() =
+                        new OptionError(OptionError::INVALID_DIRECTORY,
+                                        arguments.argv[i]);
+                }
 #endif // WIN32_FILE_SYSTEM
                 if (directory)
                 {
                     for (char *ptr = directory; *ptr; ptr++)
-                        *ptr = (*ptr != U_BACKSLASH ? *ptr : (char) U_SLASH); // turn '\' to '/'.
+                        // turn '\' to '/'.
+                        *ptr = (*ptr != U_BACKSLASH ? *ptr : (char) U_SLASH);
                 }
             }
             else if (strcmp(arguments.argv[i], "-debug") == 0)
@@ -434,7 +460,7 @@ Option::Option(ArgumentExpander& arguments,
                      strcmp(arguments.argv[i], "--depend") == 0 ||
                      strcmp(arguments.argv[i], "-Xdepend") == 0)
             {
-                 depend = true;
+                depend = true;
             }
             else if (strcmp(arguments.argv[i], "-deprecation") == 0 ||
                      strcmp(arguments.argv[i], "--deprecation") == 0)
@@ -515,9 +541,12 @@ Option::Option(ArgumentExpander& arguments,
                          ! strcmp(arguments.argv[i], "-g:vars,source,lines") ||
                          ! strcmp(arguments.argv[i], "-g:vars,lines,source"))
                     g = SOURCE | LINES | VARS;
-                else bad_options.Next() =
-                         new OptionError(OptionError::INVALID_OPTION,
-                                         arguments.argv[i]);
+                else
+                {
+                    bad_options.Next() =
+                        new OptionError(OptionError::INVALID_OPTION,
+                                        arguments.argv[i]);
+                }
             }
             else if (strcmp(arguments.argv[i], "-help") == 0 ||
                      strcmp(arguments.argv[i], "--help") == 0 ||
@@ -564,9 +593,12 @@ Option::Option(ArgumentExpander& arguments,
                     source = SDK1_3;
                 else if (strcmp(arguments.argv[i], "1.4") == 0)
                     source = SDK1_4;
-                else bad_options.Next() =
-                         new OptionError(OptionError::INVALID_SDK_ARGUMENT,
-                                         "-source");
+                else
+                {
+                    bad_options.Next() =
+                        new OptionError(OptionError::INVALID_SDK_ARGUMENT,
+                                        "-source");
+                }
             }
             else if (strcmp(arguments.argv[i], "-sourcepath") == 0 ||
                      strcmp(arguments.argv[i], "--sourcepath") == 0)
@@ -604,9 +636,12 @@ Option::Option(ArgumentExpander& arguments,
                     target = SDK1_3;
                 else if (strcmp(arguments.argv[i], "1.4") == 0)
                     target = SDK1_4;
-                else bad_options.Next() =
-                         new OptionError(OptionError::INVALID_SDK_ARGUMENT,
-                                         "-target");
+                else
+                {
+                    bad_options.Next() =
+                        new OptionError(OptionError::INVALID_SDK_ARGUMENT,
+                                        "-target");
+                }
             }
             else if (strcmp(arguments.argv[i], "-verbose") == 0 ||
                      strcmp(arguments.argv[i], "--verbose") == 0 ||
@@ -714,16 +749,20 @@ Option::Option(ArgumentExpander& arguments,
                         key = TK_float;
                     else if (strcmp(image, "double") == 0)
                         key = TK_double;
-                    else bad_options.Next() =
-                             new OptionError(OptionError::INVALID_K_TARGET,
-                                             image);
+                    else
+                    {
+                        bad_options.Next() =
+                            new OptionError(OptionError::INVALID_K_TARGET,
+                                            image);
+                    }
 
                     if (key != 0)
                     {
                         int i = keyword_map.NextIndex();
                         keyword_map[i].key = key;
                         keyword_map[i].length = image - name - 1;
-                        keyword_map[i].name = new wchar_t[keyword_map[i].length];
+                        keyword_map[i].name =
+                            new wchar_t[keyword_map[i].length];
                         for (int k = 0; k < keyword_map[i].length; k++)
                             keyword_map[i].name[k] = name[k];
                     }
@@ -757,7 +796,9 @@ Option::Option(ArgumentExpander& arguments,
                 if (! strncmp(image, "modifier-order", 14))
                     pedantic_modifier_order = state;
                 // Add detection for future pedantic flags here.
-                else bad_options.Next() = new OptionError(OptionError::INVALID_P_ARGUMENT, image);
+                else
+                    bad_options.Next() =
+                        new OptionError(OptionError::INVALID_P_ARGUMENT, image);
             }
             else if (arguments.argv[i][1] == 'T')
             {
@@ -784,8 +825,10 @@ Option::Option(ArgumentExpander& arguments,
                     tab_size = tab_size * 10 + digit;
                 }
                 if (*p)
-                     bad_options.Next() =
-                         new OptionError(OptionError::INVALID_TAB_VALUE, image);
+                {
+                    bad_options.Next() =
+                        new OptionError(OptionError::INVALID_TAB_VALUE, image);
+                }
                 Tab::SetTabSize(tab_size == 0 ? Tab::DEFAULT_TAB_SIZE
                                 : tab_size);
             }
@@ -820,8 +863,8 @@ Option::Option(ArgumentExpander& arguments,
             else
             {
                 bad_options.Next() =
-                     new OptionError(OptionError::INVALID_OPTION,
-                                     arguments.argv[i]);
+                    new OptionError(OptionError::INVALID_OPTION,
+                                    arguments.argv[i]);
             }
         }
         else filename_index.Next() = i;

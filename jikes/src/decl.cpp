@@ -273,7 +273,7 @@ void Semantic::ProcessTypeNames()
                 break;
             }
             case Ast::EMPTY_DECLARATION:
-                 break;
+                break;
             default:
                 assert(false);
                 break;
@@ -356,8 +356,8 @@ void Semantic::ProcessTypeNames()
             {
                 public_type = type;
 
-                if  (source_file_symbol -> Identity() !=
-                     public_type -> Identity())
+                if (source_file_symbol -> Identity() !=
+                    public_type -> Identity())
                 {
                     if (class_declaration)
                     {
@@ -717,7 +717,7 @@ void Semantic::ProcessImports()
             compilation_unit -> ImportDeclaration(i);
 
         if (import_declaration -> star_token_opt)
-             ProcessTypeImportOnDemandDeclaration(import_declaration);
+            ProcessTypeImportOnDemandDeclaration(import_declaration);
         else ProcessSingleTypeImportDeclaration(import_declaration);
     }
 }
@@ -765,10 +765,11 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration *class_declaration)
                 super_type -> declaration -> ClassDeclarationCast();
             AstInterfaceDeclaration *interface_decl =
                 super_type -> declaration -> InterfaceDeclarationCast();
+            Semantic *sem = super_type -> semantic_environment -> sem;
             if (class_decl)
-                ProcessTypeHeaders(class_decl);
+                sem -> ProcessTypeHeaders(class_decl);
             else if (interface_decl)
-                ProcessTypeHeaders(interface_decl);
+                sem -> ProcessTypeHeaders(interface_decl);
             else assert(false && "supertype not processed");
         }
         if (control.option.deprecation && state_stack.Size() == 0 &&
@@ -790,11 +791,11 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration *class_declaration)
         }
         else if (super_type -> ACC_FINAL())
         {
-             ReportSemError(SemanticError::SUPER_IS_FINAL,
-                            class_declaration -> super_opt -> LeftToken(),
-                            class_declaration -> super_opt -> RightToken(),
-                            super_type -> ContainingPackage() -> PackageName(),
-                            super_type -> ExternalName());
+            ReportSemError(SemanticError::SUPER_IS_FINAL,
+                           class_declaration -> super_opt -> LeftToken(),
+                           class_declaration -> super_opt -> RightToken(),
+                           super_type -> ContainingPackage() -> PackageName(),
+                           super_type -> ExternalName());
         }
         else
         {
@@ -880,10 +881,11 @@ void Semantic::ProcessInterface(TypeSymbol *base_type, AstExpression *name)
             interf -> declaration -> ClassDeclarationCast();
         AstInterfaceDeclaration *interface_decl =
             interf -> declaration -> InterfaceDeclarationCast();
+        Semantic *sem = interf -> semantic_environment -> sem;
         if (class_decl)
-            ProcessTypeHeaders(class_decl);
+            sem -> ProcessTypeHeaders(class_decl);
         else if (interface_decl)
-            ProcessTypeHeaders(interface_decl);
+            sem -> ProcessTypeHeaders(interface_decl);
         else assert(false && "supertype not processed");
     }
 
@@ -1063,7 +1065,7 @@ TypeSymbol *Semantic::MustFindNestedType(TypeSymbol *type, Ast *name)
 
     TypeSymbol *inner_type = FindNestedType(type, identifier_token);
     if (inner_type)
-         TypeAccessCheck(name, inner_type);
+        TypeAccessCheck(name, inner_type);
     else inner_type = GetBadNestedType(type, identifier_token);
 
     return inner_type;
@@ -1251,11 +1253,11 @@ void Semantic::ProcessMembers(SemanticEnvironment *environment,
     {
         for (int i = 0; i < class_body -> NumStaticInitializers(); i++)
         {
-             ReportSemError(SemanticError::STATIC_INITIALIZER_IN_INNER_CLASS,
-                            class_body -> StaticInitializer(i) -> LeftToken(),
-                            class_body -> StaticInitializer(i) -> RightToken(),
-                            this_type -> Name(),
-                            this_type -> FileLoc());
+            ReportSemError(SemanticError::STATIC_INITIALIZER_IN_INNER_CLASS,
+                           class_body -> StaticInitializer(i) -> LeftToken(),
+                           class_body -> StaticInitializer(i) -> RightToken(),
+                           this_type -> Name(),
+                           this_type -> FileLoc());
         }
     }
 
@@ -1601,10 +1603,10 @@ void Semantic::CleanUp()
                 break;
             }
             case Ast::EMPTY_DECLARATION:
-                 break;
+                break;
             default:
-                 assert(false);
-                 break;
+                assert(false);
+                break;
         }
 
         if (type)
@@ -1953,7 +1955,8 @@ void Semantic::ProcessPackageOrType(AstExpression *name)
             // Otherwise, assume it is a package
             //
             if (type)
-                 field_access -> symbol = type; // save the type to which this expression was resolved for later use...
+                // save the resolved type of this expression for later use...
+                field_access -> symbol = type;
             else
             {
                 NameSymbol *name_symbol =
@@ -2298,7 +2301,7 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration *field_declaration)
                 (array_type ? array_type -> NumBrackets() : 0) +
                 name -> NumBrackets();
             if (num_dimensions == 0)
-                 variable -> SetType(field_type);
+                variable -> SetType(field_type);
             else variable -> SetType(field_type ->
                                      GetArrayType(this, num_dimensions));
             variable -> SetFlags(access_flags);
@@ -3423,7 +3426,7 @@ void Semantic::ProcessFormalParameters(BlockSymbol *block,
         int num_dimensions = (array_type ? array_type -> NumBrackets() : 0) +
             name -> NumBrackets();
         if (num_dimensions == 0)
-             symbol -> SetType(parm_type);
+            symbol -> SetType(parm_type);
         else symbol -> SetType(parm_type -> GetArrayType(this, num_dimensions));
         symbol -> SetFlags(access_flags);
         symbol -> MarkComplete();
@@ -3498,9 +3501,9 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
     if (method_declarator -> NumBrackets() > 0)
     {
         if (method_type == control.void_type)
-             ReportSemError(SemanticError::VOID_ARRAY,
-                            method_declaration -> type -> LeftToken(),
-                            method_declarator -> RightToken());
+            ReportSemError(SemanticError::VOID_ARRAY,
+                           method_declaration -> type -> LeftToken(),
+                           method_declarator -> RightToken());
         else ReportSemError(SemanticError::OBSOLESCENT_BRACKETS,
                             method_declarator -> LeftToken(),
                             method_declarator -> RightToken());
@@ -3554,7 +3557,7 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
                           : (array_type ? array_type -> NumBrackets() : 0))
                          + method_declarator -> NumBrackets();
     if (num_dimensions == 0)
-         method -> SetType(method_type);
+        method -> SetType(method_type);
     else method -> SetType(method_type -> GetArrayType(this, num_dimensions));
 
     //
@@ -3612,24 +3615,24 @@ TypeSymbol *Semantic::FindPrimitiveType(AstPrimitiveType *primitive_type)
 {
     switch (primitive_type -> kind)
     {
-        case Ast::INT:
-             return control.int_type;
-        case Ast::DOUBLE:
-             return control.double_type;
-        case Ast::CHAR:
-             return control.char_type;
-        case Ast::LONG:
-             return control.long_type;
-        case Ast::FLOAT:
-             return control.float_type;
-        case Ast::BYTE:
-             return control.byte_type;
-        case Ast::SHORT:
-             return control.short_type;
-        case Ast::BOOLEAN:
-             return control.boolean_type;
-        default:
-             break;
+    case Ast::INT:
+        return control.int_type;
+    case Ast::DOUBLE:
+        return control.double_type;
+    case Ast::CHAR:
+        return control.char_type;
+    case Ast::LONG:
+        return control.long_type;
+    case Ast::FLOAT:
+        return control.float_type;
+    case Ast::BYTE:
+        return control.byte_type;
+    case Ast::SHORT:
+        return control.short_type;
+    case Ast::BOOLEAN:
+        return control.boolean_type;
+    default:
+        break;
     }
 
     return control.void_type;
@@ -3941,14 +3944,14 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
             }
 
             if (type)
-                 ReportTypeInaccessible(name -> LeftToken(),
-                                        name -> RightToken(), type);
+                ReportTypeInaccessible(name -> LeftToken(),
+                                       name -> RightToken(), type);
             else type = ReadType(file_symbol, package, name_symbol,
                                  identifier_token);
         }
         else if (start_num_errors == NumErrors())
         {
-             TypeAccessCheck(name, type);
+            TypeAccessCheck(name, type);
         }
     }
     else

@@ -25,7 +25,7 @@ void Semantic::ProcessBlockStatements(AstBlock *block_body)
     // complete normally.
     //
     if (block_body -> NumStatements() == 0)
-         block_body -> can_complete_normally = block_body -> is_reachable;
+        block_body -> can_complete_normally = block_body -> is_reachable;
     else
     {
         //
@@ -219,7 +219,7 @@ void Semantic::ProcessLocalVariableDeclarationStatement(Ast *stmt)
                                   ? array_type -> NumBrackets() : 0) +
                 name -> NumBrackets();
             if (num_dimensions == 0)
-                 symbol -> SetType(field_type);
+                symbol -> SetType(field_type);
             else symbol -> SetType(field_type -> GetArrayType(this,
                                                               num_dimensions));
             symbol -> SetFlags(access_flags);
@@ -298,7 +298,7 @@ void Semantic::ProcessSynchronizedStatement(Ast *stmt)
     //
     BlockSymbol *enclosing_block_symbol = enclosing_block -> block_symbol;
     // first such statement encountered in enclosing block?
-    if (enclosing_block_symbol -> try_or_synchronized_variable_index == 0)
+    if (enclosing_block_symbol -> try_or_synchronized_variable_index < 0)
     {
         enclosing_block_symbol -> try_or_synchronized_variable_index =
             enclosing_block_symbol -> max_variable_index;
@@ -886,9 +886,10 @@ void Semantic::ProcessBreakStatement(Ast *stmt)
     }
     else
     {
-        AstBlock *block_body = (AstBlock *) (BreakableStatementStack().Size() > 0
-                                             ? BreakableStatementStack().Top()
-                                             : LocalBlockStack().TopBlock());
+        AstBlock *block_body =
+            (AstBlock *) (BreakableStatementStack().Size() > 0
+                          ? BreakableStatementStack().Top()
+                          : LocalBlockStack().TopBlock());
         break_statement -> nesting_level = block_body -> nesting_level;
         if (BreakableStatementStack().Size() > 0)
         {
@@ -1263,7 +1264,7 @@ void Semantic::ProcessTryStatement(Ast *stmt)
     if (try_statement -> finally_clause_opt)
     {
         BlockSymbol *enclosing_block_symbol = enclosing_block -> block_symbol;
-        if (enclosing_block_symbol -> try_or_synchronized_variable_index == 0)
+        if (enclosing_block_symbol -> try_or_synchronized_variable_index < 0)
         {
             // first such statement encountered in enclosing block?
             enclosing_block_symbol -> try_or_synchronized_variable_index =
@@ -1271,9 +1272,9 @@ void Semantic::ProcessTryStatement(Ast *stmt)
             enclosing_block_symbol -> max_variable_index += 2;
             if (ThisMethod() -> Type() != control.void_type)
             {
-                 if (control.IsDoubleWordType(ThisMethod() -> Type()))
-                      enclosing_block_symbol -> max_variable_index += 2;
-                 else enclosing_block_symbol -> max_variable_index += 1;
+                if (control.IsDoubleWordType(ThisMethod() -> Type()))
+                    enclosing_block_symbol -> max_variable_index += 2;
+                else enclosing_block_symbol -> max_variable_index += 1;
             }
         }
 

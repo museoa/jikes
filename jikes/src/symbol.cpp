@@ -265,8 +265,9 @@ void TypeSymbol::ProcessTypeHeaders()
 
     if (class_declaration)
         semantic_environment -> sem -> ProcessTypeHeaders(class_declaration);
-    else semantic_environment -> sem ->
-             ProcessTypeHeaders((AstInterfaceDeclaration *) declaration);
+    else
+        semantic_environment -> sem ->
+            ProcessTypeHeaders((AstInterfaceDeclaration *) declaration);
 }
 
 void TypeSymbol::ProcessMembers()
@@ -275,11 +276,12 @@ void TypeSymbol::ProcessMembers()
         declaration -> ClassDeclarationCast();
 
     if (class_declaration)
-         semantic_environment -> sem ->
-             ProcessMembers(class_declaration -> semantic_environment,
-                            class_declaration -> class_body);
-    else semantic_environment -> sem ->
-             ProcessMembers((AstInterfaceDeclaration *) declaration);
+        semantic_environment -> sem ->
+            ProcessMembers(class_declaration -> semantic_environment,
+                           class_declaration -> class_body);
+    else
+        semantic_environment -> sem ->
+            ProcessMembers((AstInterfaceDeclaration *) declaration);
 }
 
 void TypeSymbol::CompleteSymbolTable()
@@ -288,12 +290,13 @@ void TypeSymbol::CompleteSymbolTable()
         declaration -> ClassDeclarationCast();
 
     if (class_declaration)
-         semantic_environment -> sem ->
-             CompleteSymbolTable(class_declaration -> semantic_environment,
-                                 class_declaration -> identifier_token,
-                                 class_declaration -> class_body);
-    else semantic_environment -> sem ->
-             CompleteSymbolTable((AstInterfaceDeclaration *) declaration);
+        semantic_environment -> sem ->
+            CompleteSymbolTable(class_declaration -> semantic_environment,
+                                class_declaration -> identifier_token,
+                                class_declaration -> class_body);
+    else
+        semantic_environment -> sem ->
+            CompleteSymbolTable((AstInterfaceDeclaration *) declaration);
 }
 
 
@@ -303,11 +306,12 @@ void TypeSymbol::ProcessExecutableBodies()
         declaration -> ClassDeclarationCast();
 
     if (class_declaration)
-         semantic_environment -> sem ->
-             ProcessExecutableBodies(class_declaration -> semantic_environment,
-                                     class_declaration -> class_body);
-    else semantic_environment -> sem ->
-             ProcessExecutableBodies((AstInterfaceDeclaration *) declaration);
+        semantic_environment -> sem ->
+            ProcessExecutableBodies(class_declaration -> semantic_environment,
+                                    class_declaration -> class_body);
+    else
+        semantic_environment -> sem ->
+            ProcessExecutableBodies((AstInterfaceDeclaration *) declaration);
 }
 
 
@@ -588,38 +592,6 @@ SymbolTable::SymbolTable(int hash_size_) : type_symbol_pool(NULL),
 
 SymbolTable::~SymbolTable()
 {
-/*
-int n;
-int num_slots = 0;
-int total = 0;
-for (n = 0; n < hash_size; n++)
-{
-int num = 0;
-for (Symbol *s = base[n]; s; s = s -> next)
-    num++;
-if (num > 0)
-{
-num_slots++;
-total += num;
-}
-}
-
-if (num_slots > 0)
-{
-cout << "\nDestroying a symbol table with base size " << hash_size
-     << " containing " << num_slots << " non-empty slots\n";
-for (n = 0; n < hash_size; n++)
-{
-int num = 0;
-for (Symbol *s = base[n]; s; s = s -> next)
-    num++;
-if (num > 0)
-cout << "    slot " << n << " contains " << num << " element(s)\n";
-}
-}
-if (hash_size < total)
-    total = total;
-*/
     for (int i = 0; i < NumAnonymousSymbols(); i++)
         delete AnonymousSym(i);
     delete anonymous_symbol_pool;
@@ -783,7 +755,7 @@ MethodSymbol::~MethodSymbol()
 
 BlockSymbol::BlockSymbol(int hash_size)
     : max_variable_index(-1),
-      try_or_synchronized_variable_index(0),
+      try_or_synchronized_variable_index(-1),
       table(hash_size > 0 ? new SymbolTable(hash_size) : (SymbolTable *) NULL)
 {
     Symbol::_kind = BLOCK;
@@ -986,11 +958,11 @@ void DirectorySymbol::ReadDirectory()
                         clean_name[i] = (entry.cFileName[i] == U_BACKSLASH
                                          ? U_SLASH : entry.cFileName[i]);
                     if (is_java)
-                         strcpy(&clean_name[length - FileSymbol::java_suffix_length],
-                                FileSymbol::java_suffix);
+                        strcpy(&clean_name[length - FileSymbol::java_suffix_length],
+                               FileSymbol::java_suffix);
                     else if (is_class)
-                         strcpy(&clean_name[length - FileSymbol::class_suffix_length],
-                                FileSymbol::class_suffix);
+                        strcpy(&clean_name[length - FileSymbol::class_suffix_length],
+                               FileSymbol::class_suffix);
                     DirectoryEntry *entry =
                         entries -> InsertEntry(this, clean_name, length);
                     if (! is_java)
@@ -1029,14 +1001,14 @@ void FileSymbol::SetFileName()
 
     file_name = new char[file_name_length + 1]; // +1 for '\0'
     if (dot_directory)
-         file_name[0] = U_NULL;
+        file_name[0] = U_NULL;
     else
     {
         strcpy(file_name, directory_symbol -> DirectoryName());
         if (path_symbol -> IsZip())
-             strcat(file_name, StringConstant::U8S_LP);
+            strcat(file_name, StringConstant::U8S_LP);
         else if (directory_name[directory_name_length - 1] != U_SLASH)
-             strcat(file_name, StringConstant::U8S_SL);
+            strcat(file_name, StringConstant::U8S_SL);
     }
     strcat(file_name, Utf8Name());
     strcat(file_name, kind == JAVA ? FileSymbol::java_suffix
@@ -1251,7 +1223,7 @@ void MethodSymbol::SetSignature(Control &control, TypeSymbol *placeholder)
     }
     method_signature[s++] = U_RIGHT_PARENTHESIS;
     for (char *str = Type() -> SignatureString(); *str; str++, s++)
-         method_signature[s] = *str;
+        method_signature[s] = *str;
     method_signature[s] = U_NULL;
 
     signature = control.Utf8_pool.FindOrInsert(method_signature, len);

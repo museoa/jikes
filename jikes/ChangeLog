@@ -1,4 +1,17 @@
-2002-08-26  Eric B Blake  <eblake@ee.byu.edu>
+2002-08-26  ??  <nobody@ibm.com>
+
+	* src/option.cpp (Option): Fix bad logic with drive letters in -d
+	for Windows - bug 3238.
+
+2002-08-26  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/symbol.cpp (BlockSymbol):
+	* src/body.cpp (ProcessTryStatement),
+	(ProcessSynchronizedStatement): Fix bug when multiple synchronized
+	statements appear in static method with no params - bug 3205.
+	* src/decl.cpp: Fix typo in last commit.
+
+2002-08-26  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/decl.cpp (ProcessTypeHeader, ProcessInterface),
 	(ProcessTypeHeaders): Fix inner classes subclassing something in
