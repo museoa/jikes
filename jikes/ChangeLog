@@ -1,3 +1,33 @@
+2000-05-23  Mo DeJong  <mdejong@cygnus.com>
+
+	* Makefile.in:
+	* src/Makefile.in: Removed to make way for
+	new automake based build system.
+
+	* AUTHORS:
+	* COPYING:
+	* INSTALL:
+	* Makefile.am:
+	* Makefile.in:
+	* NEWS:
+	* acinclude.m4:
+	* aclocal.m4:
+	* autogen.sh:
+	* configure.in:
+	* doc/Makefile.am:
+	* doc/Makefile.in:
+	* src/Makefile.am:
+	* src/Makefile.in:
+	* src/stamp-h.in: Added or updated files to support
+	automake version of the build system.
+
+2000-05-22  Mo DeJong  <mdejong@cygnus.com>
+
+	* src/error.cpp (PrintTYPED_METHOD_WITH_NO_RETURN):
+	Fixed typo in error message.
+	* src/zip.cpp (Zip): Removed extra semicolon.
+	* src/m4/acx_check_pathname_style.m4: Removed comment.
+
 2000-05-13  Mo DeJong  <mdejong@cygnus.com>
 
 	* configure.in: Fixed up mkdir test so

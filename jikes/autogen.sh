@@ -1,11 +1,14 @@
 #!/bin/sh
 
-# Run this program like so ./autogen.sh after making changes
-# to the configure.in script or the aclocal.m4 file or any
-# of the macros mentioned in the aclocal.m4 file. It will
-# generate a new ./configure script and a new src/config.h.in
+# Run this program (./autogen.sh) after changing any of
+# the files that are used to automatically generate
+# other files. This includes:
+# Makefile.am
+# acinclude.m4
+# configure.in
+# any of the files in src/m4
 
-#aclocal
+aclocal
 autoheader
 autoconf
-#automake
+automake
