@@ -329,7 +329,7 @@ Zip::Zip(Control &control_, char *zipfile_name) : control(control_),
         {
             zipbuffer = new char[22];
             buffer_ptr = zipbuffer;
-            fread(buffer_ptr, sizeof(char), 22, zipfile);
+            SystemFread(buffer_ptr, sizeof(char), 22, zipfile);
 
             magic = GetU4();
         }
@@ -402,7 +402,7 @@ void Zip::ReadDirectory()
         delete [] zipbuffer;
         zipbuffer = new char[central_directory_size + 22];
         buffer_ptr = zipbuffer;
-        fread(buffer_ptr, sizeof(char), central_directory_size + 22, zipfile);
+        SystemFread(buffer_ptr, sizeof(char), central_directory_size + 22, zipfile);
 #elif defined(WIN32_FILE_SYSTEM)
         buffer_ptr -= (central_directory_size + 16);
 #endif

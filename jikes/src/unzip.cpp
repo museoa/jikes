@@ -797,7 +797,7 @@ int Unzip::inflate_free()
 #ifdef UNIX_FILE_SYSTEM
     int Unzip::UncompressFile0(FILE *zipfile, char *buffer, long buffer_length)
     {
-        fread(buffer, sizeof(char), buffer_length, zipfile);
+        SystemFread(buffer, sizeof(char), buffer_length, zipfile);
         return 1;
     }
 

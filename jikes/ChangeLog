@@ -1,3 +1,8 @@
+2001-06-02  Mo DeJong  <mdejong@redhat.com>
+
+	* src/unzip.cpp (UncompressFile0):
+	* src/zip.cpp (Zip): Use SystemFread() instead of fread().
+
 2001-06-01  Mo DeJong  <mdejong@redhat.com>
 
 	* config.guess:
