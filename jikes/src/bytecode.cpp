@@ -1165,6 +1165,13 @@ void ByteCode::EmitStatement(AstStatement *statement)
                  EmitStatement(wp -> statement);
                  DefineLabel(continue_labels[while_depth]);
                  stack_depth = 0;
+
+                 //
+                 // Reset the line number before evaluating the expression
+                 //
+                 line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
+                                                              this_semantic.lex_stream -> Line(wp -> expression -> LeftToken()));
+
                  EmitBranchIfExpression(wp -> expression, true, begin_labels[while_depth]);
                  CompleteLabel(begin_labels[while_depth]);
                  CompleteLabel(continue_labels[while_depth]);
@@ -1178,6 +1185,13 @@ void ByteCode::EmitStatement(AstStatement *statement)
                  EmitStatement(sp -> statement);
                  DefineLabel(continue_labels[do_depth]);
                  stack_depth = 0;
+
+                 //
+                 // Reset the line number before evaluating the expression
+                 //
+                 line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
+                                                              this_semantic.lex_stream -> Line(sp -> expression -> LeftToken()));
+
                  EmitBranchIfExpression(sp -> expression, true, begin_labels[do_depth]);
                  CompleteLabel(begin_labels[do_depth]);
                  CompleteLabel(continue_labels[do_depth]);
@@ -1196,10 +1210,19 @@ void ByteCode::EmitStatement(AstStatement *statement)
                  for (int j = 0; j < for_statement -> NumForUpdateStatements(); j++)
                      EmitStatement(for_statement -> ForUpdateStatement(j));
                  DefineLabel(test_labels[for_depth]);
-                 if (for_statement -> end_expression_opt)
+
+                 AstExpression *end_expr = for_statement -> end_expression_opt;
+                 if (end_expr)
                  {
                      stack_depth = 0;
-                     EmitBranchIfExpression(for_statement -> end_expression_opt, true, begin_labels[for_depth]);
+
+                     //
+                     // Reset the line number before evaluating the expression
+                     //
+                     line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
+                                                                  this_semantic.lex_stream -> Line(end_expr -> LeftToken()));
+
+                     EmitBranchIfExpression(end_expr, true, begin_labels[for_depth]);
                  }
                  else EmitBranch(OP_GOTO, begin_labels[for_depth]);
 
@@ -1471,6 +1494,11 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *sws)
         }
     }
 
+    //
+    // Reset the line number before evaluating the expression
+    //
+    line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
+                                                 this_semantic.lex_stream -> Line(sws -> expression -> LeftToken()));
     EmitExpression(sws -> expression);
 
     stack_depth = 0;
