@@ -29,7 +29,7 @@ public:
         LIST_LIMIT = 5,
         LOG_BLKSIZE = 8,
         BLKSIZE = 1 << LOG_BLKSIZE,
-        MASK = 0xFFFFFFFF << LOG_BLKSIZE
+        MASK = ~ (BLKSIZE - 1)
     };
 
 private:
@@ -104,7 +104,7 @@ public:
         LIST_LIMIT = 5,
         LOG_BLKSIZE = 8,
         BLKSIZE = 1 << LOG_BLKSIZE,
-        MASK = 0xFFFFFFFF << LOG_BLKSIZE
+        MASK = ~ (BLKSIZE - 1)
     };
 
 private:

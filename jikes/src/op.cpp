@@ -251,9 +251,9 @@ void Operators::opdesc(int opc, const char **name, const char **desc)
      return;
 }
 
-void Operators::opline(Tuple<cp_info *> &constant_pool, char *hdr, int pc, int opc,
-                       const char *name, char *args, const char *desc, int info_kind,
-                       int info_index)
+void Operators::opline(Tuple<cp_info *> &constant_pool, const char *hdr,
+		       int pc, int opc, const char *name, char *args,
+		       const char *desc, int info_kind, int info_index)
 {
     // generate line of opcode dump, info is extra info
 

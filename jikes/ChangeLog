@@ -1,3 +1,12 @@
+2001-09-05  Eric B Blake  <eblake@ee.byu.edu>
+
+	* src/segment.h (PairSegment, TripletSegment):
+	* src/op.h (Operators):
+	* src/op.cpp (opline):
+	* src/platform.h (Ostream):
+	* src/body.cpp (ProcessLocalVariableDeclarationStatement): Fix
+	compiler warnings on HP-UX 11.00 aCC.
+
 2001-09-05  Ian P. Cardenas  <ian.cardenas@emagine-solutions.com>
 
 	* src/semantic.h (AddDependence): changed pedantic error reporting

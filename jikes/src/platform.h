@@ -1062,15 +1062,15 @@ public:
         return os -> width(w);
     }
 
-    Ostream &operator<<(ios &(&f)(ios&))
+    Ostream &operator<<(ios &(*f)(ios&))
     {
-        f(*os);
+        (*f)(*os);
         return *this;
     }
 
-    Ostream &operator<<(ostream &(&f)(ostream&))
+    Ostream &operator<<(ostream &(*f)(ostream&))
     {
-        f(*os);
+        (*f)(*os);
         return *this;
     }
 };

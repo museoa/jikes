@@ -176,7 +176,7 @@ void Semantic::ProcessLocalVariableDeclarationStatement(Ast *stmt)
     AccessFlags access_flags = ProcessLocalModifiers(local_decl);
 
     AstPrimitiveType *primitive_type = actual_type -> PrimitiveTypeCast();
-    TypeSymbol *field_type = (primitive_type ? field_type = FindPrimitiveType(primitive_type) : MustFindType(actual_type));
+    TypeSymbol *field_type = (primitive_type ? FindPrimitiveType(primitive_type) : MustFindType(actual_type));
 
     for (int i = 0; i < local_decl -> NumVariableDeclarators(); i++)
     {

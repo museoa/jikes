@@ -279,7 +279,8 @@ private:
         return (unsigned) (code[pc] << 24 | code[pc + 1] << 16 | code[pc + 2] << 8 | code[pc + 3]);
     }
 
-    static void opline(Tuple<cp_info *> &, char *, int, int, const char *, char *, const char *, int, int);
+    static void opline(Tuple<cp_info *> &, const char *, int, int,
+		       const char *, char *, const char *, int, int);
 };
 
 #ifdef	HAVE_JIKES_NAMESPACE
