@@ -266,6 +266,7 @@ class SemanticError
         PROTECTED_INSTANCE_FIELD_NOT_ACCESSIBLE,
         METHOD_NOT_ACCESSIBLE,
         PROTECTED_INSTANCE_METHOD_NOT_ACCESSIBLE,
+        PROTECTED_INTERFACE_METHOD_NOT_ACCESSIBLE,
         CONSTRUCTOR_NOT_ACCESSIBLE,
         CONSTRUCTOR_DOES_NOT_THROW_THIS_EXCEPTION,
         CONSTRUCTOR_DOES_NOT_THROW_SUPER_EXCEPTION,
@@ -572,6 +573,7 @@ private:
     static wchar_t *PrintPROTECTED_INSTANCE_FIELD_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMETHOD_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintPROTECTED_INSTANCE_METHOD_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintPROTECTED_INTERFACE_METHOD_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintCONSTRUCTOR_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintCONSTRUCTOR_DOES_NOT_THROW_THIS_EXCEPTION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintCONSTRUCTOR_DOES_NOT_THROW_SUPER_EXCEPTION(ErrorInfo &, LexStream *, Control &);

@@ -667,6 +667,7 @@ void SemanticError::StaticInitializer()
     print_message[PROTECTED_INSTANCE_FIELD_NOT_ACCESSIBLE] = PrintPROTECTED_INSTANCE_FIELD_NOT_ACCESSIBLE;
     print_message[METHOD_NOT_ACCESSIBLE] = PrintMETHOD_NOT_ACCESSIBLE;
     print_message[PROTECTED_INSTANCE_METHOD_NOT_ACCESSIBLE] = PrintPROTECTED_INSTANCE_METHOD_NOT_ACCESSIBLE;
+    print_message[PROTECTED_INTERFACE_METHOD_NOT_ACCESSIBLE] = PrintPROTECTED_INTERFACE_METHOD_NOT_ACCESSIBLE;
     print_message[CONSTRUCTOR_NOT_ACCESSIBLE] = PrintCONSTRUCTOR_NOT_ACCESSIBLE;
     print_message[CONSTRUCTOR_DOES_NOT_THROW_THIS_EXCEPTION] = PrintCONSTRUCTOR_DOES_NOT_THROW_THIS_EXCEPTION;
     print_message[CONSTRUCTOR_DOES_NOT_THROW_SUPER_EXCEPTION] = PrintCONSTRUCTOR_DOES_NOT_THROW_SUPER_EXCEPTION;
@@ -3440,7 +3441,7 @@ wchar_t *SemanticError::PrintPROTECTED_INSTANCE_FIELD_NOT_ACCESSIBLE(ErrorInfo &
 {
     ErrorString s;
 
-    s << "The instance field \"" << err.insert1 << "\" in type \"";
+    s << "The instance field \"" << err.insert1 << "\" in class \"";
     if (NotDot(err.insert2))
         s << err.insert2 << '/';
     s << err.insert3
@@ -3476,7 +3477,7 @@ wchar_t *SemanticError::PrintPROTECTED_INSTANCE_METHOD_NOT_ACCESSIBLE(ErrorInfo 
 {
     ErrorString s;
 
-    s << "The instance method \"" << err.insert1 << "\" in type \"";
+    s << "The instance method \"" << err.insert1 << "\" in class \"";
     if (NotDot(err.insert2))
         s << err.insert2 << '/';
     s << err.insert3
@@ -3485,6 +3486,19 @@ wchar_t *SemanticError::PrintPROTECTED_INSTANCE_METHOD_NOT_ACCESSIBLE(ErrorInfo 
     if (NotDot(err.insert4))
         s << err.insert4 << '/';
     s << err.insert5 << "\" or any of its enclosing types.";
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintPROTECTED_INTERFACE_METHOD_NOT_ACCESSIBLE(ErrorInfo &err,
+                                                                       LexStream *lex_stream,
+                                                                       Control &control)
+{
+    ErrorString s;
+
+    s << "The method \"" << err.insert1 << "\" only has protected access in "
+      << "\"java.lang.Object\", so it is not accessible from an interface.";
 
     return s.Array();
 }

@@ -1,3 +1,12 @@
+2001-11-13  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/error.cpp:
+	* src/error.h (PROTECTED_INTERFACE_METHOD_NOT_ACCESSIBLE): Add new
+	error.
+	* src/expr.cpp (MemberAccessCheck, ReportMethodNotFound): Update
+	to account for the fact that interfaces do not inherit protected
+	methods from Object, bug 1787, patch 229 update.
+
 2001-11-12  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/double.cpp (IntValue, LongValue): Fix a bug in

@@ -194,12 +194,26 @@ void Semantic::ReportMethodNotFound(AstMethodInvocation *method_call,
                 if (i == method_call -> NumArguments()) // found a match?
                 {
                     //
+                    // JLS 9.2: Interfaces do not have protected members,
+                    // even though jikes treats interfaces as subtypes of
+                    // Object.
+                    //
+                    if (field_access && method -> ACC_PROTECTED() &&
+                        field_access -> base -> Type() -> ACC_INTERFACE())
+                    {
+                        assert(method -> containing_type == control.Object());
+                        ReportSemError(SemanticError::PROTECTED_INTERFACE_METHOD_NOT_ACCESSIBLE,
+                                       method_call -> LeftToken(),
+                                       method_call -> RightToken(),
+                                       method -> Header());
+                    }
+                    //
                     // A protected instance method in the superclass is
                     // inaccessible if the base expression is the wrong type.
                     //
-                    if (method -> ACC_PROTECTED() &&
-                        ! method -> ACC_STATIC() &&
-                        ThisType() -> HasProtectedAccessTo(method -> containing_type))
+                    else if (method -> ACC_PROTECTED() &&
+                             ! method -> ACC_STATIC() &&
+                             ThisType() -> HasProtectedAccessTo(method -> containing_type))
                     {
                         ReportSemError(SemanticError::PROTECTED_INSTANCE_METHOD_NOT_ACCESSIBLE,
                                        method_call -> LeftToken(),
@@ -2042,7 +2056,14 @@ bool Semantic::MemberAccessCheck(AstFieldAccess *field_access,
             // differ, subclasses may access protected static members without
             // further restrictions, but accessing instance members requires
             // that the qualifier be the subclass or lower.
+            // JLS 9.2: Interfaces have no protected members.
             //
+            if (field_access &&
+                field_access -> base -> Type() -> ACC_INTERFACE())
+            {
+                assert(method_symbol); // Object has no fields.
+                return false;
+            }
             if (containing_type -> ContainingPackage() == this_package ||
                 (field_access && field_access -> base -> IsSuperExpression()))
             {
