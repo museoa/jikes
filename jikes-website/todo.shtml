@@ -15,6 +15,7 @@
       <li>Migrate old jitterbug bugs to new system. (TAG, EricB, CAbbey, more welcome)
       <li>Update FAQ. (Pascal, Andrew Inggs)
       <li>Finish bringing new web pages online. (CAbbey)
+      <li>document the new bug system categories, priorites and groups. (cabbey)
       <li>Bring Jikes up to Java2 classpath handling. (Adam Hawthorne)
       <li>Convert the old Jikestst tests into Jacks tests.
       <li>Write a class introspector in TCL for use in Jacks testcases. (earmarked for cabbey)
