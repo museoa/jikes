@@ -1511,7 +1511,7 @@ Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
         for (int i = 0; i < this -> NumForInitStatements(); i++)
             Coutput << " #" << this -> ForInitStatement(i) -> id;
         Coutput << "; #" << (end_expression_opt ? end_expression_opt -> id : 0) << ";";
-        for (int k = 0; k < this -> NumForInitStatements(); k++)
+        for (int k = 0; k < this -> NumForUpdateStatements(); k++)
             Coutput << " #" << this -> ForUpdateStatement(k) -> id;
         Coutput << ") #" << statement -> id << "\n";
 

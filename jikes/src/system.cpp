@@ -717,6 +717,7 @@ DirectorySymbol *Control::GetOutputDirectory(FileSymbol *file_symbol)
 
         directory_symbol = control.ProcessSubdirectories(name, length);
 
+        delete [] name;
         delete [] directory_name;
     }
 

@@ -581,6 +581,8 @@ TypeSymbol::TypeSymbol(NameSymbol *name_symbol_) : semantic_environment(NULL),
 
 TypeSymbol::~TypeSymbol()
 {
+    if (read_method) delete read_method;
+    if (write_method) delete write_method;
     delete semantic_environment;
     delete local;
     delete non_local;

@@ -213,7 +213,7 @@ public:
     virtual ~FileSymbol()
     {
         delete [] file_name;
-        delete buffer;
+        if (buffer) delete buffer;
         delete lex_stream;
     }
 

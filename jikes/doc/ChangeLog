@@ -1,5 +1,25 @@
 2000-01-18  C. Scott Ananian <cananian@lesser-magoo.lcs.mit.edu>
 
+	* bytecode.cpp:
+	* control.cpp:
+	* lookup.cpp:
+	* symbol.cpp:
+	* symbol.h:
+	* system.cpp: Debugging malloc libraries are marvelous things.
+  	The attached patch fixes five small memory leaks and one instance
+ 	of delete given a null pointer (not actually incorrect, but bad
+ 	practice and something memory profiling tools complain heartily
+ 	about).
+
+2000-01-18  C. Scott Ananian <cananian@lesser-magoo.lcs.mit.edu>
+
+	* ast.cpp: Printing out ASTs involving for-statements may segfault
+ 	do to a swapped loop bound test.  You only see this if you have
+ 	more for-initialization expressions than for-update
+ 	expressions. Patch fixes this problem.
+
+2000-01-18  C. Scott Ananian <cananian@lesser-magoo.lcs.mit.edu>
+
 	* java.g (SwitchBlock): Fixed segfault when compiling certain
  	switch-statement constructs.
 

@@ -563,6 +563,7 @@ Control::~Control()
     delete scanner;
     delete parser;
     delete system_semantic;
+    delete system_table;
 #endif
 
 #ifdef TEST

@@ -37,6 +37,8 @@ SystemTable::~SystemTable()
 {
     for (int i = 0; i < directories.Length(); i++)
         delete directories[i];
+
+    delete [] base;
 }
 
 void SystemTable::Rehash()

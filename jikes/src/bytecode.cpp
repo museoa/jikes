@@ -935,7 +935,8 @@ void ByteCode::EndMethod(int method_index, MethodSymbol *msym)
             if (local_variable_table_attribute -> LocalVariableTableLength() > 0)
                  code_attribute -> AddAttribute(local_variable_table_attribute);
             else delete local_variable_table_attribute; // local_variable_table_attribute not needed, so delete it now
-        }
+        } else if (local_variable_table_attribute)// delete if we're dealing w/
+	  delete local_variable_table_attribute;  // a generated access method.
 
         methods[method_index].AddAttribute(code_attribute);
 
