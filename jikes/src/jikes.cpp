@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
                 "+Z                 treat cautions as errors\n"
                 "\nVersion 1.05 (15 Sep 99)"
                 " by Philippe Charles and David Shields, IBM Research.\n"
-                "Please report problems to http://ibm.com/developerworks/opensource/jikes.\n");
+                "Please report problems to Jikes Project at http://ibm.com/developerworks/opensource.\n");
 
         return_code = 1;
     }

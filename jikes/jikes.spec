@@ -1,15 +1,15 @@
 Summary: java source to bytecode compiler
 %define version 1.05
 Buildroot: /var/tmp/jikes-%{version}-root
-Copyright: IBM Public License Version 1.0 - Jikes Compiler, http://ibm.com/developerworks/opensource/jikes
+Copyright: IBM Public License Version 1.0 - Jikes Compiler, http://ibm.com/developerworks/opensource
 Group: Development/Languages
 Name: jikes
 Packager: David Shields (shields@watson.ibm.com)
 Prefix: /usr
 Provides: jikes
 Release: 1
-Source: http://ibm.com/developerworks/opensource/jikes/jikes-%{version}_tar.gz 
-URL: http://ibm.com/developerworks/opensource/jikes 
+Source: http://ibm.com/developerworks/opensource/jikes-%{version}_tar.gz 
+URL: http://ibm.com/developerworks/opensource
 Version: %{version}
 
 
@@ -17,7 +17,7 @@ Version: %{version}
 The IBM Jikes compiler translates Java source files to bytecode. It
 also supports incremental compilation and automatic makefile generation,
 and is maintained by the Jikes Project:
-  http://ibm.com/developerworks/opensource/jikes
+  http://ibm.com/developerworks/opensource
 %prep
 %setup -q -n jikes
 cd src
