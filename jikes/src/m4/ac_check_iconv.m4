@@ -9,6 +9,11 @@ AC_DEFUN(AC_CHECK_ICONV,
 dnl	Check for the iconv header file
 AC_CHECK_HEADERS(iconv.h)
 
+dnl No point going on if iconv.h isn't present.
+dnl In this case, we just assume iconv can not be used by the application
+
+if test "$ac_cv_header_iconv_h" = "yes" ; then
+
 dnl	Check if iconv library is present
 AC_CHECK_LIB(iconv, iconv)
 
@@ -43,11 +48,6 @@ AC_TRY_COMPILE($iconv_includes, [iconv(0, NULL, NULL, NULL, NULL)],
   ac_cv_call_iconv=no)
 ])
 
-dnl No additional testing is possible if regular call does not work.
-dnl In this case, we just assume iconv can not be used by the application
-
-if test "$ac_cv_call_iconv" = "yes" ; then
-
 dnl	Check for declaration of iconv without const qualifier in 2nd argument
 AC_CACHE_CHECK(for error calling iconv with const 2nd argument,
   ac_cv_error_call_iconv_const,
@@ -61,10 +61,10 @@ iconv(0, s, NULL, NULL, NULL);
 if test "$ac_cv_error_call_iconv_const" = "yes"; then
 
   dnl define symbol so we know when to cast the argument to iconv
-  dnl from const char ** to char *
+  dnl from const char ** to char **
 
   AC_DEFINE(HAVE_ERROR_CALL_ICONV_CONST, ,
-    [Defined when the compiler would generate an error on a call to iconv with a non const 2nd argument. This is a known problem on IRIX systems.])
+    [Defined when the compiler would generate an error on a call to iconv with a non const 2nd argument. This is a known problem on IRIX systems, as well as newer GNU LIBCs.])
 
   dnl Double check that our suggested fix works.
 
@@ -83,6 +83,15 @@ if test "$ac_cv_error_call_iconv_const" = "yes"; then
   )])
 
 fi
+
+dnl make sure wchar is wide enough
+AC_CHECK_SIZEOF(wchar_t)
+if test $ac_cv_sizeof_wchar_t -lt 2 ; then
+  AC_MSG_ERROR([wchar_t must be at least two bytes wide])
+fi
+
+dnl now we go looking for an encoding that meets our needs
+AC_FIND_ENCODING()
 
 fi
 

@@ -56,6 +56,15 @@
 /* Define if you have the <iconv.h> header file. */
 #undef HAVE_ICONV_H
 
+/* Define this to the name of the unicode encoding that is the same
+   size as your wchar_t. See also the following entry for byte swapping.
+   This define needs to include wrappering double quotes. */
+#undef JIKES_ICONV_ENCODING
+
+/* Define this if the encoding specified above does not match your
+   platform's native endianness. */
+#undef JIKES_ICONV_NEEDS_BYTE_SWAP
+
 /* Defined when Jikes is built with native floating support */
 #undef HAVE_IEEE754
 
@@ -184,6 +193,9 @@
 
 /* used to seperate elements on the PATH */
 #undef PATH_SEPARATOR
+
+/* The size of a `wchar_t', as computed by sizeof. */
+#undef SIZEOF_WCHAR_T
 
 /* Define if you have the ANSI C header files. */
 #undef STDC_HEADERS

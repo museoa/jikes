@@ -317,7 +317,7 @@ bool Stream::SetEncoding(char* encoding)
     UErrorCode err = U_ZERO_ERROR;
     _decoder = ucnv_open(encoding, &err);
 #elif defined(HAVE_ICONV_H)
-    _decoder = iconv_open("utf-16", encoding);
+    _decoder = iconv_open(JIKES_ICONV_ENCODING, encoding);
 #endif
 
     return HaveDecoder();
@@ -339,6 +339,8 @@ void Stream::DestroyEncoding()
 
 
 // FIXME: We may want to inline this next method
+
+// nah... I wanna get rid of this method instead.
 
 wchar_t
 Stream::DecodeNextCharacter() {
@@ -375,10 +377,12 @@ Stream::DecodeNextCharacter() {
         return (wchar_t) *source_ptr++;
     }
 
-    u1 chd[2], uni_high, uni_low;
-    u1 *chp  = chd;
-    size_t   chl  = 2;
+    wchar_t * chp = &next;
+    size_t chl = sizeof(wchar_t);
     size_t   srcl = 1;
+
+ try_it_again:
+
     size_t n = iconv(_decoder,
 # ifdef HAVE_ERROR_CALL_ICONV_CONST
                     (char **)
@@ -388,23 +392,40 @@ Stream::DecodeNextCharacter() {
 
     if(n == (size_t) -1)
     {
+	if (errno == EINVAL && before + srcl + 1 <= source_tail) {
+	  srcl++; //we're on a multibyte input and it didn't fit in srcl
+	  goto try_it_again; //so we increase the window if there is space
+	  // and try again. This is the ultimate hack. I hate it.
+	} else {
         fprintf(stderr,"Charset conversion error at offset %d: ",
             int(before - data_buffer));
         perror("");
         error_decode_next_character = true;
         return 0;
     }
+    }
 
-    // FIXME: This seems like a hack, someone should reread the docs
-    // and clean this nasty code up -> http://www.netppl.fi/~pp/glibc21/libc_6.html#SEC91
+# if JIKES_ICONV_NEEDS_BYTE_SWAP
+    char tmp;
+    char *targ = (char *)chp;
+#  if SIZEOF_WCHAR_T == 2
+    tmp = targ[0];
+    targ[0]=targ[1];
+    targ[1]=tmp;
+#  elif SIZEOF_WCHAR_T == 4
+    tmp = targ[0];
+    targ[0]=targ[3];
+    targ[3]=tmp;
+    tmp=targ[1];
+    targ[1]=targ[2];
+    targ[2]=tmp;
+#  else
+    assert(0 && "sizeof(wchar_t) is not one I can cope with, this should never have got past configure!!");
+#  endif //sizeof(wchar_t)
 
-    // Operate on chd buffer in endian independent fashion
-    u2 *p16 = (u2 *) chd;
-    uni_high = (u1) (*p16);
-    uni_low = (u1) ((*p16) >> 8);
-    next = (uni_low + (uni_high * 256));
+# endif //byteswap
 
-#endif
+#endif //iconv
 
     if(before == source_ptr)
     {

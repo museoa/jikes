@@ -1,3 +1,19 @@
+2001-05-09  Chris Abbey  <cabbey@bresnanlink.net>
+
+	* acinclude.m4:
+	* src/config.h.in:
+	* src/m4/ac_check_iconv.m4:
+	* src/m4/ac_find_encodign.m4:
+	* src/m4/ac_try_encoding.m4: add support to probe for
+	the correct combo of target encoding and byteswapping
+	for iconv on this platform.
+	* src/stream.cpp: make use of probed values instead
+	of hardcoded. Correct byteswapping to handle all four
+	bytes when sizeof(wchar_t) is 4, bypass swapping if
+	possible.
+	* aclocal.m4:
+	* configure: regenerated
+
 2001-05-07  Pascal Davoust  <davoustp@yahoo.com>
 
 	* long.cpp (LongInt::ConstantCleanup):
@@ -1812,7 +1828,7 @@
 
 2000-03-31  Chris Abbey <cabbey@home.net>
 
-	* configure.in: enable --with-icc=PROG, also prevent gcc-isms in	
+	* configure.in: enable --with-icc=PROG, also prevent gcc-isms in
 	the tests when using icc/xlC by setting GXX accordingly.
 
 2000-04-03  Vadim Zaliva  <lord@crocodile.org>
@@ -2705,7 +2721,6 @@ that
 	* Makefile.in (LIBS): added LIBS variable to link with extra libraries (detected by autoconf).
 	* configure.in (LDFLAGS): Added checks for "IBM Classes for Unicode" library.
 
-=======
 1990-10-09  Dave Shields  <shields@watson.ibm.com>
 	* Makefile.in:
 	* code.cpp 
@@ -3678,4 +3693,3 @@ dejong@cs.umn.edu
 1999-01-13    <shields@jikes.watson.ibm.com>
 
 	* Add Id keyword at start of source files
-
