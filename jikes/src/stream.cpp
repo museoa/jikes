@@ -438,8 +438,13 @@ void LexStream::ProcessInput(char *buffer, long filesize)
     file_read++;
 #endif
 
+#ifdef HAVE_LIB_ICU_UC
+    input_buffer       = new wchar_t[filesize + 4 + 2];
+    wchar_t *input_tail = input_buffer + filesize;
+#else
     input_buffer = new wchar_t[filesize + 4];
-
+#endif
+    
     wchar_t *input_ptr = input_buffer;
     *input_ptr = U_LINE_FEED; // add an initial '\n';
     
@@ -454,14 +459,41 @@ void LexStream::ProcessInput(char *buffer, long filesize)
         UnicodeLexerState state=RAW;
         bool oncemore=false;
 
+#ifdef HAVE_LIB_ICU_UC
+        UErrorCode err = ZERO_ERROR;
+#endif
+
         while((source_ptr <= source_tail) || oncemore)
         {
+#ifdef HAVE_LIB_ICU_UC
+            // On each iteration we advance input_ptr maximun 2 postions.
+            // Here we check if we are close to the end of input_buffer
+            if(input_ptr>=input_tail)
+            {
+                // If this happen, reallocate it with some more space.
+                // This is very rare case, which could happen if
+                // one code page character is represened by several 
+                // unicode characters. One of exaples of such
+                // situation is unicode "surrogates".
+                //
+                // If such reallocation will be required, it will indeed
+                // slow down compilation a bit.
+                size_t cursize = input_ptr-input_buffer;
+                size_t newsize = cursize+cursize/10; // add 10%
+                wchar_t *tmp   = new wchar_t[newsize]; 
+                memcpy(tmp, input_buffer, newsize*sizeof(wchar_t));
+                delete input_buffer;
+                input_buffer = tmp;
+                input_tail = input_buffer + newsize;
+                input_ptr  = input_buffer+cursize;
+            }
+#endif
+            
             wchar_t ch;
             
             if(!oncemore)
             {
 #ifdef HAVE_LIB_ICU_UC
-                UErrorCode err=ZERO_ERROR;
                 if(control.option.converter)
                     ch=ucnv_getNextUChar (control.option.converter,
                                           &source_ptr,
