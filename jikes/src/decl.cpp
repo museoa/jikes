@@ -1911,20 +1911,12 @@ assert(this_type -> FieldMembersProcessed());
 
     //
     // Compute the set of final variables (all fields in an interface are final) in this type.
-    // Also, mark all variables properly declared in this interface pending
-    // prior to invoking InitializeVariable to initialize each of them in turn.
-    // The "pending" flag is reset in InitializeVariable after a variable has been processed.
     //
     Tuple<VariableSymbol *> finals(this_type -> NumVariableSymbols());
     for (int j = 0; j < this_type -> NumVariableSymbols(); j++)
     {
         VariableSymbol *variable_symbol = this_type -> VariableSym(j);
         finals.Next() = variable_symbol;
-        if (variable_symbol -> declarator)
-        {
-            AstVariableDeclarator *variable_declarator = variable_symbol -> declarator -> VariableDeclaratorCast();
-            variable_declarator -> pending = true;
-        }
     }
 
     //
@@ -2630,7 +2622,7 @@ assert(modifier);
             variable -> SetOwner(this_type);
             variable -> declarator = variable_declarator;
             variable -> MarkIncomplete(); // the declaration of a field is not complete until its initializer
-                                                  // (if any) has been processed.
+                                          // (if any) has been processed.
             variable_declarator -> symbol = variable;
         }
     }
@@ -4015,15 +4007,17 @@ void Semantic::InitializeVariable(AstFieldDeclaration *field_declaration, Tuple<
         {
             if (variable_declarator -> variable_initializer_opt)
             {
+                variable_declarator -> pending = true;
+
                 int start_num_errors = NumErrors();
 
                 ProcessVariableInitializer(variable_declarator);
-
                 if (NumErrors() == start_num_errors)
                      DefiniteVariableInitializer(variable_declarator, finals);
                 else variable_declarator -> symbol -> MarkDefinitelyAssigned(); // assume variable is assigned
+
+                variable_declarator -> pending = false;
             }
-            variable_declarator -> pending = false;
             ThisVariable() -> MarkComplete();
         }
     }
@@ -4099,9 +4093,6 @@ void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
 
         //
         // Compute the set of final variables declared by the user in this type.
-        // Also, mark each properly declared static variable pending, so that its initialization
-        // is not prematurely computed in case it is final. After the variable has been
-        // processed this flag is reset. See ProcessInitializer...
         //
         Tuple<VariableSymbol *> finals(this_type -> NumVariableSymbols());
         for (int l = 0; l < this_type -> NumVariableSymbols(); l++)
@@ -4109,11 +4100,6 @@ void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
             VariableSymbol *variable_symbol = this_type -> VariableSym(l);
             if (variable_symbol -> ACC_FINAL())
                 finals.Next() = variable_symbol;
-            if (variable_symbol -> ACC_STATIC() && variable_symbol -> declarator)
-            {
-                AstVariableDeclarator *variable_declarator = variable_symbol -> declarator -> VariableDeclaratorCast();
-                variable_declarator -> pending = true;
-            }
         }
 
         //
@@ -4205,9 +4191,6 @@ void Semantic::ProcessBlockInitializers(AstClassBody *class_body)
 
     //
     // Compute the set of final variables declared by the user in this type.
-    // Also, mark each properly declared instance variable pending, so that its initialization
-    // is not prematurely computed in case it is final. After the variable has been
-    // processed this flag is reset. See ProcessInitializer...
     //
     Tuple<VariableSymbol *> finals(this_type -> NumVariableSymbols());
     for (int i = 0; i < this_type -> NumVariableSymbols(); i++)
@@ -4215,11 +4198,6 @@ void Semantic::ProcessBlockInitializers(AstClassBody *class_body)
         VariableSymbol *variable_symbol = this_type -> VariableSym(i);
         if (variable_symbol -> ACC_FINAL())
             finals.Next() = variable_symbol;
-        if ((! variable_symbol -> ACC_STATIC()) && variable_symbol -> declarator)
-        {
-            AstVariableDeclarator *variable_declarator = variable_symbol -> declarator -> VariableDeclaratorCast();
-            variable_declarator -> pending = true;
-        }
     }
 
     //
