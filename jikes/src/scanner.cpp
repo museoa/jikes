@@ -408,6 +408,10 @@ void Scanner::ScanStarComment()
 // the comment and return the location of the character immediately
 // following it. CURSOR is advanced accordingly.
 //
+// Even if the grammar rule in JLS2 3.7 is changed to omit the LineTerminator
+// at the end of the comment, it is harmless to consume it here, since it
+// ends up ignored whether as a comment or as whitespace.
+//
 void Scanner::ScanSlashComment()
 {
     //
@@ -428,12 +432,17 @@ void Scanner::ScanSlashComment()
     }
 #endif // JIKES_DEBUG
     while (! Code::IsNewline(*++cursor));  // Skip all until \n or EOF
-    if (*cursor == U_CARRIAGE_RETURN)
-    {
-        lex -> ReportMessage(StreamError::UNTERMINATED_COMMENT,
-                             location,
-                             (unsigned) (cursor - lex -> InputBuffer()) - 1);
-    }
+    //
+    // TODO: Verify that JLS3 allows this check to be skipped. While JLS2 3.7
+    // strictly requires that all // comments end in \n, Sun bug 4386773 claims
+    // that no compiler ever enforced it, so the grammar should be changed.
+    //
+    // if (*cursor == U_CARRIAGE_RETURN)
+    // {
+    //     lex -> ReportMessage(StreamError::UNTERMINATED_COMMENT,
+    //                          location,
+    //                          (unsigned) (cursor - lex -> InputBuffer()) - 1);
+    // }
 #ifdef JIKES_DEBUG
     if (control.option.debug_comments)
     {
