@@ -282,7 +282,7 @@ void Semantic::ProcessTypeNames()
         //
         // If we successfully processed this type, check that
         //     . its name does not conflict with a subpackage
-        //     . if it is contained in a file with a diffent name
+        //     . if it is contained in a file with a different name
         //       than its own name that there does not also exist a
         //       (java or class) file with its name.
         //
@@ -292,8 +292,14 @@ void Semantic::ProcessTypeNames()
                 lex_stream -> NameSymbol(identifier_token);
             for (int i = 0; i < this_package -> directory.Length(); i++)
             {
-                if (this_package -> directory[i] ->
-                    FindDirectorySymbol(name_symbol))
+                //
+                // The unnamed package cannot contain subpackages, as
+                // subpackages require a named top-level package. In other
+                // words, java.lang is not a subpackage of the unnamed one.
+                //
+                if ((this_package -> directory[i] ->
+                     FindDirectorySymbol(name_symbol)) &&
+                    this_package != control.unnamed_package)
                 {
                     char *file_name = type -> file_symbol -> FileName();
                     int length = type -> file_symbol -> FileNameLength();
@@ -427,30 +433,41 @@ void Semantic::CheckClassMembers(TypeSymbol *containing_type,
 }
 
 
+//
+// Given a type shadow symbol, returns the first accessible type, and reports
+// an error for any other accessible types.
+//
 inline TypeSymbol *Semantic::FindTypeInShadow(TypeShadowSymbol *type_shadow_symbol,
                                               LexStream::TokenIndex identifier_token)
 {
-    //
-    // Recall that even an inaccessible member x of a super class (or
-    // interface) S, in addition to not been inherited by a subclass, hides
-    // all other occurrences of x that may appear in a super class (or super
-    // interface) of S (see 8.3).
-    //
-    TypeSymbol *type_symbol = type_shadow_symbol -> type_symbol;
-
-    for (int i = 0; i < type_shadow_symbol -> NumConflicts(); i++)
+    TypeSymbol *type = type_shadow_symbol -> type_symbol;
+    int i = 0;
+    if (! TypeAccessCheck(type))
+    {
+        if (type_shadow_symbol -> NumConflicts())
+        {
+            //
+            // The conflicts are necessarily accessible, because they are
+            // public types inherited from interfaces.
+            //
+            type = type_shadow_symbol -> Conflict(0);
+            i = 1;
+        }
+        else type = NULL;
+    }
+    for ( ; i < type_shadow_symbol -> NumConflicts(); i++)
     {
         ReportSemError(SemanticError::AMBIGUOUS_TYPE,
                        identifier_token,
                        identifier_token,
-                       type_symbol -> Name(),
-                       type_symbol -> owner -> TypeCast() -> ContainingPackage() -> PackageName(),
-                       type_symbol -> owner -> TypeCast() -> ExternalName(),
+                       type -> Name(),
+                       type -> owner -> TypeCast() -> ContainingPackage() -> PackageName(),
+                       type -> owner -> TypeCast() -> ExternalName(),
                        type_shadow_symbol -> Conflict(i) -> owner -> TypeCast() -> ContainingPackage() -> PackageName(),
                        type_shadow_symbol -> Conflict(i) -> owner -> TypeCast() -> ExternalName());
     }
 
-    return type_symbol;
+    return type;
 }
 
 
@@ -1037,6 +1054,11 @@ void Semantic::ReportTypeInaccessible(LexStream::TokenIndex left_tok,
 }
 
 
+//
+// Finds an accessible member type named identifier_token within type, or
+// returns NULL. Issues an error if there are multiple ambiguous types. The
+// caller is responsible for searching for inaccessible member types.
+//
 TypeSymbol *Semantic::FindNestedType(TypeSymbol *type,
                                      LexStream::TokenIndex identifier_token)
 {
@@ -1054,21 +1076,21 @@ TypeSymbol *Semantic::FindNestedType(TypeSymbol *type,
 
     return (type_shadow_symbol
             ? FindTypeInShadow(type_shadow_symbol, identifier_token)
-            : type -> FindTypeSymbol(name_symbol));
+            : (TypeSymbol *) NULL);
 }
 
 
+//
+// Finds a nested type named name within the enclosing type, and establishes
+// a dependence relation. This also searches for inaccessible types, and
+// reports an error before returning the inaccessible type. For any other error,
+// the return is control.no_type.
+//
 TypeSymbol *Semantic::MustFindNestedType(TypeSymbol *type, Ast *name)
 {
-    AstSimpleName *simple_name = name -> SimpleNameCast();
-    LexStream::TokenIndex identifier_token =
-        (simple_name ? simple_name -> identifier_token
-         : ((AstFieldAccess *) name) -> identifier_token);
-
+    LexStream::TokenIndex identifier_token = name -> RightToken();
     TypeSymbol *inner_type = FindNestedType(type, identifier_token);
-    if (inner_type)
-        TypeAccessCheck(name, inner_type);
-    else
+    if (! inner_type)
     {
         //
         // Before failing completely, check whether or not the user is trying
@@ -1644,59 +1666,59 @@ TypeSymbol *Semantic::ReadType(FileSymbol *file_symbol,
                            type -> ExternalName());
         }
     }
-    else // Read class file.
+    else if (file_symbol)
     {
+        // Read class file.
         type = package -> InsertOuterTypeSymbol(name_symbol);
         type -> outermost_type = type;
         type -> supertypes_closure = new SymbolSet;
         type -> subtypes = new SymbolSet;
         type -> SetOwner(package);
         type -> SetSignature(control);
+        type -> file_symbol = file_symbol;
+        type -> SetLocation();
 
-        if (file_symbol)
+        file_symbol -> package = package;
+        file_symbol -> types.Next() = type;
+
+        ReadClassFile(type, tok);
+        assert (! type -> IsNested());
+        control.input_class_file_set.AddElement(file_symbol);
+    }
+    else
+    {
+        //
+        // No file found. See if a package by the same name exists, otherwise
+        // create a placeholder type to avoid errors when the type name is
+        // subsequently used.
+        //
+        PackageSymbol *subpackage = package -> FindPackageSymbol(name_symbol);
+        if (! subpackage)
+            subpackage = package -> InsertPackageSymbol(name_symbol);
+        control.FindPathsToDirectory(subpackage);
+        if (subpackage -> directory.Length())
         {
-            type -> file_symbol = file_symbol;
-            type -> SetLocation();
-
-            file_symbol -> package = package;
-            file_symbol -> types.Next() = type;
-
-            ReadClassFile(type, tok);
-
-            assert (! type -> IsNested());
-
-            control.input_class_file_set.AddElement(file_symbol);
+            if (package -> directory.Length())
+                ReportSemError(SemanticError::PACKAGE_NOT_TYPE,
+                               tok,
+                               tok,
+                               subpackage -> PackageName());
+            type = control.no_type;
         }
         else
         {
+            type = package -> InsertOuterTypeSymbol(name_symbol);
+            type -> outermost_type = type;
+            type -> SetOwner(package);
+            type -> SetSignature(control);
             control.ProcessBadType(type);
             type -> MarkBad();
-            if (type != control.Object())
-                type -> super = (type == control.Throwable()
-                                 ? control.Object() : control.Throwable());
-            AddDefaultConstructor(type);
-
-            ReportSemError(SemanticError::TYPE_NOT_FOUND,
-                           tok,
-                           tok,
-                           type -> ContainingPackage() -> PackageName(),
-                           type -> ExternalName());
-
-            if (package == control.unnamed_package)
-            {
-                TypeSymbol *old_type = (TypeSymbol *) control.
-                    unnamed_package_types.Image(type -> Identity());
-                if (! old_type)
-                    control.unnamed_package_types.AddElement(type);
-                else
-                {
-                    ReportSemError(SemanticError::DUPLICATE_TYPE_DECLARATION,
-                                   tok,
-                                   tok,
-                                   type -> Name(),
-                                   old_type -> FileLoc());
-                }
-            }
+            if (package -> directory.Length())
+                ReportSemError(SemanticError::TYPE_NOT_FOUND,
+                               tok,
+                               tok,
+                               type -> ContainingPackage() -> PackageName(),
+                               type -> ExternalName());
         }
     }
 
@@ -1757,26 +1779,24 @@ void Semantic::ProcessImportQualifiedName(AstExpression *name)
             lex_stream -> NameSymbol(field_access -> identifier_token);
         if (type) // The base name is a type
         {
-            TypeSymbol *inner_type = NULL;
-            if (type == control.no_type) // Avoid chain-reaction errors.
+            if (type -> Bad()) // Avoid chain-reaction errors.
             {
                 field_access -> symbol = control.no_type;
                 return;
             }
             if (! type -> expanded_type_table)
                 ComputeTypesClosure(type, field_access -> identifier_token);
+            TypeSymbol *inner_type = NULL;
             TypeShadowSymbol *type_shadow_symbol = type ->
                 expanded_type_table -> FindTypeShadowSymbol(name_symbol);
+            //
+            // Only canonical names may be used in import statements, so we
+            // don't worry about ambiguous names (which are necessarily
+            // inherited and hence non-canonical). But we do need an extra
+            // filter on the containing type being correct.
+            //
             if (type_shadow_symbol)
-            {
-                //
-                // Only canonical names may be used in import statements, hence
-                // the extra filter on the containing type being correct.
-                //
-                inner_type = FindTypeInShadow(type_shadow_symbol,
-                                              field_access -> identifier_token);
-            }
-
+                inner_type = type_shadow_symbol -> type_symbol;
             if (! inner_type)
                 inner_type = control.no_type;
             else if (type != inner_type -> owner)
@@ -1794,8 +1814,7 @@ void Semantic::ProcessImportQualifiedName(AstExpression *name)
             {
                 ReportTypeInaccessible(field_access, inner_type);
             }
-            type = inner_type;
-            field_access -> symbol = type; // save the type to which this expression was resolved for later use...
+            field_access -> symbol = inner_type;
         }
         else
         {
@@ -1880,6 +1899,12 @@ void Semantic::ProcessImportQualifiedName(AstExpression *name)
 }
 
 
+//
+// Processes a package-or-type name. If an accessible type exists, it is chosen.
+// Next, if a package exists, it is chosen. Then, an error is issued, but a
+// check for an inaccessible type is made before inventing a package. The result
+// is stored in name->symbol.
+//
 void Semantic::ProcessPackageOrType(AstExpression *name)
 {
     AstFieldAccess *field_access = name -> FieldAccessCast();
@@ -1891,11 +1916,11 @@ void Semantic::ProcessPackageOrType(AstExpression *name)
         TypeSymbol *type = symbol -> TypeCast();
         if (type) // The base name is a type
         {
-            type = MustFindNestedType(type, field_access);
-            field_access -> symbol = type; // save the type to which this expression was resolved for later use...
+            field_access -> symbol = MustFindNestedType(type, field_access);
         }
         else
         {
+            // Base name is package. Search for type, then subpackage.
             PackageSymbol *package = symbol -> PackageCast();
             NameSymbol *name_symbol =
                 lex_stream -> NameSymbol(field_access -> identifier_token);
@@ -1928,19 +1953,24 @@ void Semantic::ProcessPackageOrType(AstExpression *name)
                     subpackage = package -> InsertPackageSymbol(name_symbol);
                 control.FindPathsToDirectory(subpackage);
                 field_access -> symbol = subpackage;
+                if (subpackage -> directory.Length() == 0)
+                {
+                    ReportSemError(SemanticError::PACKAGE_NOT_FOUND,
+                                   field_access -> identifier_token,
+                                   field_access -> identifier_token,
+                                   subpackage -> PackageName());
+                }
             }
         }
     }
     else
     {
         AstSimpleName *simple_name = name -> SimpleNameCast();
-
         assert(simple_name);
 
         TypeSymbol *type = FindType(simple_name -> identifier_token);
         if (type)
         {
-            TypeAccessCheck(simple_name, type);
             simple_name -> symbol = type;
         }
         else
@@ -1953,7 +1983,48 @@ void Semantic::ProcessPackageOrType(AstExpression *name)
                 package = control.external_table.
                     InsertPackageSymbol(name_symbol, NULL);
             control.FindPathsToDirectory(package);
-            simple_name -> symbol = package;
+            if (package -> directory.Length() == 0)
+            {
+                //
+                // If there is no package, see if the user is trying to access
+                // an inaccessible nested type before giving up.
+                //
+                if (state_stack.Size() > 0)
+                {
+                    NameSymbol *name_symbol = lex_stream ->
+                        NameSymbol(simple_name -> identifier_token);
+                    for (TypeSymbol *super_type = ThisType() -> super;
+                         super_type; super_type = super_type -> super)
+                    {
+                        assert(super_type -> expanded_type_table);
+
+                        TypeShadowSymbol *type_shadow_symbol =
+                            super_type -> expanded_type_table ->
+                            FindTypeShadowSymbol(name_symbol);
+                        if (type_shadow_symbol)
+                        {
+                            type = type_shadow_symbol -> type_symbol;
+                            break;
+                        }
+                    }
+                }
+                if (type)
+                {
+                    ReportTypeInaccessible(simple_name -> identifier_token,
+                                           simple_name -> identifier_token,
+                                           type);
+                    simple_name -> symbol = type;
+                }
+                else
+                {
+                    ReportSemError(SemanticError::PACKAGE_NOT_FOUND,
+                                   simple_name -> identifier_token,
+                                   simple_name -> identifier_token,
+                                   package -> PackageName());
+                    simple_name -> symbol = package;
+                }
+            }
+            else simple_name -> symbol = package;
         }
     }
 }
@@ -3627,8 +3698,7 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
 
 
 //
-// Search for simple identifier which is supposed to be a type.
-// If it is not found, issue an error message.
+// Return the type corresponding to a primitive type keyword.
 //
 TypeSymbol *Semantic::FindPrimitiveType(AstPrimitiveType *primitive_type)
 {
@@ -3658,14 +3728,20 @@ TypeSymbol *Semantic::FindPrimitiveType(AstPrimitiveType *primitive_type)
 }
 
 
+//
+// Search the import-on-demand locations for a type with the given name. This
+// returns inaccessible types if found, with no error message, but favors
+// accessible ones. It will issue an error if the only way an accessible type
+// was found is non-canonical. If no type is found, NULL is returned.
+//
 TypeSymbol *Semantic::ImportType(LexStream::TokenIndex identifier_token,
                                  NameSymbol *name_symbol)
 {
     //
-    // Inaccessible types are ignored. However, for a nicer error message, we
-    // keep track of the first inaccessible type found, while leaving location
-    // as NULL, in case we don't find an accessible type. Once location is set,
-    // we are guaranteed an accessible type, and start looking for duplicates.
+    // To keep track of inaccessible types, we note the first one we find,
+    // while leaving the location as NULL. Once we find an accessible type, we
+    // set location, so that we know that future types are duplicates. We
+    // pre-filtered duplicate import-on-demands, as well as adding java.lang.*.
     //
     TypeSymbol *type = NULL;
     PackageSymbol *location = NULL;
@@ -3702,11 +3778,14 @@ TypeSymbol *Semantic::ImportType(LexStream::TokenIndex identifier_token,
             {
                 //
                 // Only canonical names may be used in import statements, hence
-                // the extra filter on the containing type being correct.
+                // the extra filter on the containing type being correct. If
+                // we encounter conflicts, they are necessarily accessible
+                // inherited types from interfaces (and hence non-canonical).
                 //
-                possible_type = FindTypeInShadow(type_shadow_symbol,
-                                                 identifier_token);
-                if (possible_type && ! possible_type -> ACC_PRIVATE() &&
+                possible_type = (type_shadow_symbol -> NumConflicts()
+                                 ? type_shadow_symbol -> Conflict(0)
+                                 : type_shadow_symbol -> type_symbol);
+                if (! possible_type -> ACC_PRIVATE() &&
                     import_type == possible_type -> owner)
                 {
                     import_package = import_type -> ContainingPackage();
@@ -3730,33 +3809,33 @@ TypeSymbol *Semantic::ImportType(LexStream::TokenIndex identifier_token,
             {
                 type = possible_type;
                 if (type -> ACC_PUBLIC() || import_package == this_package)
-                    location = import_package;
+                    location = import_package; // may be NULL
             }
         }
     }
 
-    if (type && ! location)
+    if (type && ! location && ! type -> ACC_PRIVATE() &&
+        (type -> ACC_PUBLIC() || type -> ContainingPackage() == this_package))
     {
-        if (! type -> ACC_PRIVATE() &&
-            (type -> ACC_PUBLIC() ||
-             type -> ContainingPackage() == this_package))
-        {
-            ReportSemError(SemanticError::IMPORT_NOT_CANONICAL,
-                           identifier_token, identifier_token,
-                           type -> Name(),
-                           type -> ContainingPackage() -> PackageName(),
-                           type -> ExternalName());
-        }
-        else ReportTypeInaccessible(identifier_token, identifier_token, type);
+        ReportSemError(SemanticError::IMPORT_NOT_CANONICAL,
+                       identifier_token, identifier_token,
+                       type -> Name(),
+                       type -> ContainingPackage() -> PackageName(),
+                       type -> ExternalName());
     }
     return type;
 }
 
 
+//
+// Finds an accessible type by the name located at identifier_token, or returns
+// NULL. If there are ambiguous accessible types, this issues an error in the
+// process. Note that inaccessible types are skipped - if the caller wishes
+// to use an inaccessible type, they must search for it.
+//
 TypeSymbol *Semantic::FindType(LexStream::TokenIndex identifier_token)
 {
     TypeSymbol *type;
-
     NameSymbol *name_symbol = lex_stream -> NameSymbol(identifier_token);
 
     SemanticEnvironment *env = NULL;
@@ -3764,10 +3843,11 @@ TypeSymbol *Semantic::FindType(LexStream::TokenIndex identifier_token)
         env = state_stack.Top();
     for ( ; env; env = env -> previous)
     {
+        // Search for local types, which are always accessible.
         type = env -> symbol_table.FindTypeSymbol(name_symbol);
         if (type)
             break;
-
+        // Search for declared or inherited member types.
         type = env -> Type();
         if (! type -> expanded_type_table)
             ComputeTypesClosure(type, identifier_token);
@@ -3776,7 +3856,8 @@ TypeSymbol *Semantic::FindType(LexStream::TokenIndex identifier_token)
         if (type_shadow_symbol)
         {
             type = FindTypeInShadow(type_shadow_symbol, identifier_token);
-            break;
+            if (type)
+                break;
         }
     }
 
@@ -3791,7 +3872,11 @@ TypeSymbol *Semantic::FindType(LexStream::TokenIndex identifier_token)
             TypeSymbol *supertype = (TypeSymbol *) type -> owner;
             for ( ; env; env = env -> previous)
             {
-                // First, check the enclosing type name
+                //
+                // First, check the enclosing type name - this is a caution,
+                // because this behavior is opposite C++ when a type inherits
+                // a membertype with the same name.
+                //
                 if (name_symbol == env -> Type() -> Identity() &&
                     env -> Type() != type)
                 {
@@ -3823,13 +3908,13 @@ TypeSymbol *Semantic::FindType(LexStream::TokenIndex identifier_token)
                                        ((MethodSymbol *) outer_type -> owner) -> Name());
                         break;
                     }
-                    // if local type not found, check inner type
+                    // If local type not found, check inner type.
                     if (! env2 -> Type() -> expanded_type_table)
                         ComputeTypesClosure(env2 -> Type(), identifier_token);
                     TypeShadowSymbol *type_shadow_symbol =
                         env2 -> Type() -> expanded_type_table ->
                         FindTypeShadowSymbol(name_symbol);
-                    if (! type_shadow_symbol)
+                    if (type_shadow_symbol)
                         outer_type = FindTypeInShadow(type_shadow_symbol,
                                                       identifier_token);
                     if (outer_type && outer_type != type &&
@@ -3853,7 +3938,7 @@ TypeSymbol *Semantic::FindType(LexStream::TokenIndex identifier_token)
     }
 
     //
-    // Search for the type in the current compilation unit it was declared as
+    // Search for the type in the current compilation unit if it was declared as
     // a class or interface or imported by a single-type-import declaration.
     //
     for (int i = 0; i < single_type_imports.Length(); i++)
@@ -3864,29 +3949,23 @@ TypeSymbol *Semantic::FindType(LexStream::TokenIndex identifier_token)
     }
 
     //
-    // If a package was specified in this file (the one we are compiling),
-    // we look for the type requested inside the package in question.
-    // Otherwise, we look for the type requested in the unnamed package.
-    // If we don't find the type or we find a bad type we check to see
-    // if the type can be imported.
+    // Search for another file in the current package, and if that fails, check
+    // for an accessible import-on-demand.
     //
-    PackageSymbol *package = (compilation_unit -> package_declaration_opt
-                              ? this_package : control.unnamed_package);
-    type = FindSimpleNameType(package, identifier_token);
+    type = FindSimpleNameType(this_package, identifier_token);
     TypeSymbol *imported_type = (! type || type -> Bad()
                                  ? ImportType(identifier_token, name_symbol)
                                  : (TypeSymbol *) NULL);
 
     //
-    // If a valid type can be imported on demand, chose that type.
+    // If a valid type can be imported on demand, choose that type.
     // Otherwise, if a type was found at all, do some final checks on it.
     //
     // Note that a type T contained in a package P is always accessible to all
     // other types contained in P. I.e., we do not need to perform access check
     // for type...
     //
-    //
-    if (imported_type)
+    if (imported_type && TypeAccessCheck(imported_type))
         type = imported_type;
     else if (type)
     {
@@ -3914,75 +3993,65 @@ TypeSymbol *Semantic::FindType(LexStream::TokenIndex identifier_token)
 
 
 //
-//
+// Finds a type by the given name, and add the dependence information. If one
+// exists, but is not accessible, it is returned after an error. After other
+// errors, control.no_type is returned.
 //
 TypeSymbol *Semantic::MustFindType(Ast *name)
 {
     TypeSymbol *type;
-    LexStream::TokenIndex identifier_token;
+    LexStream::TokenIndex identifier_token = name -> RightToken();
+    NameSymbol *name_symbol = lex_stream -> NameSymbol(identifier_token);
 
     AstSimpleName *simple_name = name -> SimpleNameCast();
     if (simple_name)
     {
-        identifier_token = simple_name -> identifier_token;
-        int start_num_errors = NumErrors();
         type = FindType(identifier_token);
 
         //
-        // If the type was not found, try to read it again to generate an
-        // appropriate error message.
+        // If the type was not found, generate an appropriate error message.
         //
         if (! type)
         {
-            NameSymbol *name_symbol =
-                lex_stream -> NameSymbol(identifier_token);
-            PackageSymbol *package =
-                (compilation_unit -> package_declaration_opt ? this_package
-                 : control.unnamed_package);
-            FileSymbol *file_symbol =
-                Control::GetFile(control, package, name_symbol);
-
-            //
-            // If there is no file associated with the name of the type then
-            // the type does not exist. Before invoking ReadType to issue a
-            // "type not found" error message, check whether the user is
-            // trying to access an inaccessible nested type.
-            //
-            if (! file_symbol && state_stack.Size() > 0)
+            // Check for inaccessible member type.
+            if (state_stack.Size() > 0)
             {
                 for (TypeSymbol *super_type = ThisType() -> super;
                      super_type; super_type = super_type -> super)
                 {
                     assert(super_type -> expanded_type_table);
-
-                    TypeShadowSymbol *type_shadow_symbol =
-                        super_type -> expanded_type_table -> FindTypeShadowSymbol(name_symbol);
+                    TypeShadowSymbol *type_shadow_symbol = super_type ->
+                        expanded_type_table -> FindTypeShadowSymbol(name_symbol);
                     if (type_shadow_symbol)
                     {
-                        type = FindTypeInShadow(type_shadow_symbol,
-                                                identifier_token);
+                        type = type_shadow_symbol -> type_symbol;
                         break;
                     }
                 }
             }
-
+            // Check for an inaccessible import.
+            if (! type)
+                type = ImportType(identifier_token, name_symbol);
+            // Report the error.
             if (type)
                 ReportTypeInaccessible(name -> LeftToken(),
                                        name -> RightToken(), type);
-            else type = ReadType(file_symbol, package, name_symbol,
-                                 identifier_token);
-        }
-        else if (start_num_errors == NumErrors())
-        {
-            TypeAccessCheck(name, type);
+            else
+            {
+                // Try reading the file again, to force an error.
+                NameSymbol *name_symbol =
+                    lex_stream -> NameSymbol(identifier_token);
+                FileSymbol *file_symbol =
+                    Control::GetFile(control, this_package, name_symbol);
+                type = ReadType(file_symbol, this_package, name_symbol,
+                                identifier_token);
+            }
         }
     }
     else
     {
         AstFieldAccess *field_access = name -> FieldAccessCast();
-
         assert(field_access);
-
         identifier_token = field_access -> identifier_token;
 
         ProcessPackageOrType(field_access -> base);
@@ -3991,21 +4060,11 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
         type = symbol -> TypeCast();
         if (type)
         {
-            TypeNestAccessCheck(field_access -> base);
             type = MustFindNestedType(type, field_access);
         }
         else
         {
             PackageSymbol *package = symbol -> PackageCast();
-            if (package -> directory.Length() == 0)
-            {
-                ReportSemError(SemanticError::PACKAGE_NOT_FOUND,
-                               field_access -> base -> LeftToken(),
-                               field_access -> base -> RightToken(),
-                               package -> PackageName());
-            }
-            NameSymbol *name_symbol =
-                lex_stream -> NameSymbol(identifier_token);
             type = package -> FindTypeSymbol(name_symbol);
             if (! type)
             {
@@ -4014,12 +4073,11 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
                 type = ReadType(file_symbol, package, name_symbol,
                                 identifier_token);
             }
-            else
-            {
-                if (type -> SourcePending())
-                    control.ProcessHeaders(type -> file_symbol);
-            }
-            TypeAccessCheck(name, type);
+            else if (type -> SourcePending())
+                control.ProcessHeaders(type -> file_symbol);
+            if (! TypeAccessCheck(type))
+                ReportTypeInaccessible(name -> LeftToken(), identifier_token,
+                                       type);
         }
     }
 

@@ -436,6 +436,7 @@ void SemanticError::StaticInitializer()
     print_message[INVALID_CONSTANT_MODIFIER] = PrintINVALID_CONSTANT_MODIFIER;
     print_message[UNINITIALIZED_FIELD] = PrintUNINITIALIZED_FIELD;
     print_message[RECOMPILATION] = PrintRECOMPILATION;
+    print_message[PACKAGE_NOT_TYPE] = PrintPACKAGE_NOT_TYPE;
     print_message[TYPE_NOT_FOUND] = PrintTYPE_NOT_FOUND;
     print_message[IMPORT_FROM_UNNAMED_PACKAGE] =
         PrintIMPORT_FROM_UNNAMED_PACKAGE;
@@ -1749,6 +1750,19 @@ wchar_t *SemanticError::PrintRECOMPILATION(ErrorInfo &err,
     if (NotDot(err.insert1))
         s << err.insert1 << "/";
     s << err.insert2 << ".java should be recompiled.";
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintPACKAGE_NOT_TYPE(ErrorInfo &err,
+                                              LexStream *lex_stream,
+                                              Control &control)
+{
+    ErrorString s;
+
+    s << "Package \"" << err.insert1
+      << "\" was found when a type was expected.";
 
     return s.Array();
 }

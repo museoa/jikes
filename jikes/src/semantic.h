@@ -1184,11 +1184,9 @@ private:
     void CreateAccessToScopedVariable(AstSimpleName *, TypeSymbol *);
     void CreateAccessToScopedMethod(AstMethodInvocation *, TypeSymbol *);
 
-    bool TypeAccessCheck(Ast *, TypeSymbol *);
-    void TypeNestAccessCheck(AstExpression *);
+    bool TypeAccessCheck(TypeSymbol *);
     bool ConstructorAccessCheck(Ast *, MethodSymbol *);
     bool MemberAccessCheck(AstFieldAccess *, TypeSymbol *, Symbol *);
-    void SimpleNameAccessCheck(AstSimpleName *, TypeSymbol *, Symbol *);
     bool ProtectedAccessCheck(TypeSymbol *);
 
     void (Semantic::*ProcessPreUnaryExpr[AstPreUnaryExpression::_num_kinds])(AstPreUnaryExpression *);

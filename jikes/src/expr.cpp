@@ -1964,11 +1964,10 @@ void Semantic::CreateAccessToScopedMethod(AstMethodInvocation *method_call,
                                           TypeSymbol *environment_type)
 {
     assert(environment_type -> IsOwner(ThisType()));
+    assert(method_call -> method -> SimpleNameCast());
 
     MethodSymbol *method = (MethodSymbol *) method_call -> symbol;
     AstSimpleName *simple_name = (AstSimpleName *) method_call -> method;
-
-    assert(simple_name -> SimpleNameCast());
 
     AstExpression *access_expression;
     if (method -> ACC_STATIC())
@@ -1981,13 +1980,6 @@ void Semantic::CreateAccessToScopedMethod(AstMethodInvocation *method_call,
 
     if (access_expression -> symbol != control.no_type)
     {
-        //
-        // TODO: we have filed a query to Sun regarding the necessity of this
-        // check!
-        //
-        // SimpleNameAccessCheck(simple_name, method -> containing_type,
-        //                       method);
-        //
         simple_name -> resolution_opt = access_expression;
 
         TypeSymbol *containing_type = method -> containing_type;
@@ -2131,7 +2123,10 @@ void Semantic::ProcessSimpleName(Ast *expr)
 }
 
 
-bool Semantic::TypeAccessCheck(Ast *ast, TypeSymbol *type)
+//
+// Returns true if the type is accessible from the current semantic location.
+//
+bool Semantic::TypeAccessCheck(TypeSymbol *type)
 {
     // According to JLS 6.6.1, a type T[] is accessible if T is accessible.
     if (type -> IsArray())
@@ -2153,8 +2148,8 @@ bool Semantic::TypeAccessCheck(Ast *ast, TypeSymbol *type)
     if (state_stack.Size() > 0)
     {
         //
-        // Inside a class body, all types listed above are accessible, and
-        // additionally declared or inherited member types are accessible
+        // Inside a class body, all types listed above are accessible.
+        // Additionally, declared or inherited member types are accessible.
         //
         TypeSymbol *this_type = ThisType();
         assert(this_type -> ContainingPackage() == this_package);
@@ -2165,30 +2160,14 @@ bool Semantic::TypeAccessCheck(Ast *ast, TypeSymbol *type)
             return true;
         }
     }
-    ReportTypeInaccessible(ast, type);
     return false;
 }
 
 
-void Semantic::TypeNestAccessCheck(AstExpression *name)
-{
-    AstSimpleName *simple_name = name -> SimpleNameCast();
-    AstFieldAccess *field_access = name -> FieldAccessCast();
-
-    assert(simple_name || field_access);
-
-    if (field_access)
-        TypeNestAccessCheck(field_access -> base);
-
-    TypeSymbol *type = (simple_name ? simple_name -> Type()
-                        : field_access -> Type());
-    if (type)
-        TypeAccessCheck(name, type);
-}
-
-
 //
-// Returns whether or not the constructor is accessible.
+// Returns true if the constructor is accessible. The invocation is used to
+// distinguish between different rules for class instance creation and explicit
+// constructor invocation.
 //
 bool Semantic::ConstructorAccessCheck(Ast *invocation,
                                       MethodSymbol *constructor)
@@ -2223,9 +2202,10 @@ bool Semantic::ConstructorAccessCheck(Ast *invocation,
 
 
 //
-// Returns whether or not the symbol is accessible from within the innermost
-// enclosing class base_type. field_access is the qualifying expression for
-// the access, and is NULL in the case of a SimpleName access.
+// Returns true if the field or method member symbol can be accessed from this
+// semantic point, when the qualifier of the access is base_type. field_access
+// is the qualifying expression for the access, and is NULL in the case of a
+// SimpleName access.
 //
 bool Semantic::MemberAccessCheck(AstFieldAccess *field_access,
                                  TypeSymbol *base_type, Symbol *symbol)
@@ -2247,14 +2227,9 @@ bool Semantic::MemberAccessCheck(AstFieldAccess *field_access,
 
     //
     // When this function, MemberAccessCheck is invoked, it is assumed that
-    // the function TypeAccessCheck has already been invoked as follows:
+    // the base type has been checked as follows:
     //
-    //    TypeAccessCheck(base, base_type);
-    //
-    // and that the check below has already been performed.
-    //
-    //    if (! (base_type -> ACC_PUBLIC() ||
-    //           base_type -> ContainingPackage() == this_package))
+    //    if (! TypeAccessCheck(base_type))
     //        ReportTypeInaccessible(base, base_type);
     //
 
@@ -2276,7 +2251,9 @@ bool Semantic::MemberAccessCheck(AstFieldAccess *field_access,
             if (field_access &&
                 field_access -> base -> Type() -> ACC_INTERFACE())
             {
-                assert(method_symbol); // Object has no fields.
+                // Object has no fields, so this would be the protected
+                // methods "inherited" into an interface from Object.
+                assert(method_symbol);
                 return false;
             }
             if (containing_type -> ContainingPackage() == this_package ||
@@ -2306,70 +2283,6 @@ bool Semantic::MemberAccessCheck(AstFieldAccess *field_access,
     }
 
     return true;
-}
-
-
-void Semantic::SimpleNameAccessCheck(AstSimpleName *simple_name,
-                                     TypeSymbol *containing_type,
-                                     Symbol *symbol)
-{
-    TypeSymbol *this_type = ThisType();
-
-    VariableSymbol *variable_symbol = symbol -> VariableCast();
-    MethodSymbol *method_symbol = symbol -> MethodCast();
-
-    assert(variable_symbol || method_symbol);
-
-    AccessFlags *flags = (variable_symbol ? (AccessFlags *) variable_symbol
-                          : (AccessFlags *) method_symbol);
-
-    if (! (containing_type -> ACC_PUBLIC() ||
-           this_package == containing_type -> ContainingPackage()))
-        ReportTypeInaccessible(simple_name, containing_type);
-
-    if (this_type -> outermost_type != containing_type -> outermost_type)
-    {
-        if (flags -> ACC_PRIVATE())
-        {
-            ReportSemError((variable_symbol ? SemanticError::FIELD_NOT_ACCESSIBLE
-                                            : SemanticError::METHOD_NOT_ACCESSIBLE),
-                           simple_name -> identifier_token,
-                           simple_name -> identifier_token,
-                           lex_stream -> NameString(simple_name -> identifier_token),
-                           containing_type -> ContainingPackage() -> PackageName(),
-                           containing_type -> ExternalName(),
-                           StringConstant::US_private);
-        }
-        else if (flags -> ACC_PROTECTED())
-        {
-            if (! (containing_type -> ContainingPackage() == this_package ||
-                   this_type -> IsSubclass(containing_type)))
-            {
-                ReportSemError((variable_symbol
-                                ? SemanticError::FIELD_NOT_ACCESSIBLE
-                                : SemanticError::METHOD_NOT_ACCESSIBLE),
-                               simple_name -> identifier_token,
-                               simple_name -> identifier_token,
-                               lex_stream -> NameString(simple_name -> identifier_token),
-                               containing_type -> ContainingPackage() -> PackageName(),
-                               containing_type -> ExternalName(),
-                               StringConstant::US_protected);
-            }
-        }
-        else if (! (flags -> ACC_PUBLIC() ||
-                    containing_type -> ContainingPackage() == this_package))
-        {
-            ReportSemError((variable_symbol
-                            ? SemanticError::FIELD_NOT_ACCESSIBLE
-                            : SemanticError::METHOD_NOT_ACCESSIBLE),
-                           simple_name -> identifier_token,
-                           simple_name -> identifier_token,
-                           lex_stream -> NameString(simple_name -> identifier_token),
-                           containing_type -> ContainingPackage() -> PackageName(),
-                           containing_type -> ExternalName(),
-                           StringConstant::US_default);
-        }
-    }
 }
 
 
@@ -2425,8 +2338,9 @@ void Semantic::FindVariableMember(TypeSymbol *type,
     else
     {
         TypeSymbol *this_type = ThisType();
-        if (! TypeAccessCheck(field_access -> base, type))
+        if (! TypeAccessCheck(type))
         {
+            ReportTypeInaccessible(field_access -> base, type);
             field_access -> symbol = control.no_type;
             return;
         }
@@ -2553,7 +2467,8 @@ void Semantic::FindVariableMember(TypeSymbol *type,
                 if (base_is_type)
                 {
                     field_access -> symbol = inner_type;
-                    TypeAccessCheck(field_access, inner_type);
+                    if (! TypeAccessCheck(inner_type))
+                        ReportTypeInaccessible(field_access, inner_type);
                 }
                 else
                 {
@@ -3203,8 +3118,9 @@ MethodShadowSymbol *Semantic::FindMethodMember(TypeSymbol *type,
     else
     {
         TypeSymbol *this_type = ThisType();
-        if (! TypeAccessCheck(field_access -> base, type))
+        if (! TypeAccessCheck(type))
         {
+            ReportTypeInaccessible(field_access -> base, type);
             method_call -> symbol = control.no_type;
             return shadow;
         }

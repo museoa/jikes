@@ -1,3 +1,25 @@
+2002-09-09  Eric Blake  <ebb9@email.byu.edu>
+
+	General type-handling improvements, including bug 413, 426:
+	* src/decl.cpp (ProcessTypeNames): Allow java.java in the unnamed
+	package, which does not have subpackages.
+	(FindTypeInShadow): Find only accessible types.
+	(FindNestedType): Return only accessible types, without error if
+	none exists.
+	(ReadType): Look for clash with package on failure.
+	(ProcessImportQualifiedName): Improve type searching.
+	(ProcessPackageOrType): Improve searching, along with error
+	messages when not found.
+	(ImportType): Return any imported type, accessible or not.
+	(FindType): Find only accessible types.
+	(MustFindType): Improve error messages when types are not found.
+	* src/error.h:
+	* src/error.cpp (PACKAGE_NOT_TYPE): New error.
+	* src/semantic.h:
+	* src/expr.cpp (SimpleNameAccessCheck, TypeNestAccessCheck):
+	Delete dead code.
+	(TypeAccessCheck): Change to a silent check.
+
 2002-09-05  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/semantic.h:
