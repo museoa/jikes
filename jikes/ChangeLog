@@ -1,5 +1,12 @@
 2004-06-02  Elliott Hughes  <enh@acm.org>
 
+	* src/double.cpp, src/double.h: it's impossible to implement
+	"T& operatorO(const T&)" correctly where O isn't an assignment
+	operator. (In our case, we were leaking memory.)
+	Implement "T operator(const T&)" instead.
+
+2004-06-02  Elliott Hughes  <enh@acm.org>
+
 	* src/definite.cpp: remove redundant test from
 	DefinitePair::operator=(const DefiniteAssignmentSet&).
 	* src/double.cpp: fix leak in BigInt::operator=(const BigInt&).

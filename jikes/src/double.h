@@ -652,15 +652,15 @@ public:
     inline void IsNegative(bool value) { neg = value; }
 
     // operators
-    BigInt& operator+(const unsigned op) const;
+    BigInt operator+(const unsigned op) const;
     inline BigInt& operator+=(const unsigned op) { return *this = *this + op; }
     inline BigInt& operator++() { return *this += 1; } // pre-increment
-    BigInt& operator-(const BigInt& op) const;
-    BigInt& operator*(const BigInt& op) const;
-    BigInt& operator*(unsigned op) const;
+    BigInt operator-(const BigInt& op) const;
+    BigInt operator*(const BigInt& op) const;
+    BigInt operator*(unsigned op) const;
     inline BigInt& operator*=(const BigInt& op) { return *this = *this * op; }
     inline BigInt& operator*=(unsigned op) { return *this = *this * op; }
-    BigInt& operator<<(unsigned op) const;
+    BigInt operator<<(unsigned op) const;
     inline BigInt& operator<<=(unsigned op) { return *this = *this << op; }
 
     // equivalent to *this = *this * m + a, with less work
