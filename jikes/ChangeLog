@@ -1,5 +1,10 @@
 2000-05-03  Mo DeJong  <mdejong@cygnus.com>
 
+	* src/stream.cpp: Use memcpy instead of
+	wmemcpy which is not supported on all systems.
+
+2000-05-03  Mo DeJong  <mdejong@cygnus.com>
+
 	* src/bytecode.cpp: Commented out else
 	block that was added as part of the
 	fix for bug #198 because it was core dumping.
