@@ -1,4 +1,6 @@
 1999-09-17    <shields@jikes.watson.ibm.com>
+	
+	-- Release 1.06 --
 
 	* jikes.1: 
 	Add 'BUGS' section for 1.06 since '++' disabled.
@@ -10,6 +12,7 @@
 	New Project URL (www10...)
 
 	* jikes.1: document -Xdepend (synomym for -depend)
+	Revise 'Source:' clause to use new project home 'pub' directory.
 
 	* contrib.htm: 
 	Add Ken Coar to Core Team, revise format to
