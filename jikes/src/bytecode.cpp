@@ -5950,10 +5950,6 @@ ByteCode::ByteCode(TypeSymbol* type)
 #ifdef JIKES_DEBUG
     if (! control.option.nowrite)
         control.class_files_written++;
-
-    if (control.option.verbose)
-        Coutput << "[generating code for class "
-                << unit_type -> fully_qualified_name -> value << "]" << endl;
 #endif // JIKES_DEBUG
 
     //
@@ -5991,10 +5987,18 @@ ByteCode::ByteCode(TypeSymbol* type)
         major_version = 47;
         minor_version = 0;
         break;
+    case JikesOption::SDK1_4_2:
     case JikesOption::SDK1_4:
         major_version = 48;
         minor_version = 0;
     }
+
+#ifdef JIKES_DEBUG
+    if (control.option.verbose)
+	Coutput << "[generating code for class "
+		<< unit_type -> fully_qualified_name -> value << " as version "
+		<< major_version << "." <<minor_version << " ]" << endl;
+#endif
 
     this_class = RegisterClass(unit_type);
     super_class = (unit_type -> super ? RegisterClass(unit_type -> super) : 0);

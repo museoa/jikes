@@ -1,3 +1,8 @@
+2004-01-26  Chris Abbey	 <jikes@cabbey.net>
+
+	* src/bytecode.cpp (ctor): use same class file versions for 1.4.2
+	as for 1.4, add output file version to debug verbose output.
+	
 2004-01-25  Chris Abbey  <jikes@cabbey.net>
 
 	* src/error.cpp (PrintNamedWarnings): indicate default states with +P
