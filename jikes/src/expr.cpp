@@ -2049,15 +2049,20 @@ void Semantic::FindVariableMember(TypeSymbol *type, TypeSymbol *environment_type
     TypeSymbol *this_type = ThisType();
 
     //
+    // TypeCast() returns true for super, this, and instance creation as
+    // well as true type names, hence the extra check
+    //
+    bool base_is_type = field_access -> base -> symbol -> TypeCast() != NULL &&
+                        field_access -> base -> IsName();
+
+    //
     // TODO: Is this needed ?
     //
     // This operation may throw NullPointerException
     //
     SymbolSet *exception_set = TryExceptionTableStack().Top();
-    if (exception_set)
-    {
+    if (exception_set && ! field_access -> base -> symbol -> TypeCast())
         exception_set -> AddElement(control.RuntimeException());
-    }
 
     if (type -> Bad())
     {
@@ -2088,47 +2093,59 @@ void Semantic::FindVariableMember(TypeSymbol *type, TypeSymbol *environment_type
         {
             assert(variable_symbol -> IsTyped());
 
-            //
-            // If a variable is FINAL, initialized with a constant expression,
-            // and of the form TypeName.Identifier, we substitute the
-            // expression here. - JLS 15.28
-            //
-            if (variable_symbol -> ACC_FINAL() && field_access -> base -> TypeExpressionCast())
+            if (base_is_type)
             {
-                //
-                // If the field declaration of the type has been completely processed,
-                // simply retrieve the value. Otherwise, compute the value of the
-                // initialization expression in question on the fly if the variable
-                // in question is not in the same type. Recall that static variables
-                // must be processed in the textual order in which they appear in the
-                // body of a type. Therefore, if the static initialization of a field
-                // refers to another variable in the same type it must have appeared
-                // before the current field declaration otherwise we will emit an error
-                // message later...
-                //
-                if (variable_symbol -> IsDeclarationComplete())
-                    field_access -> value = variable_symbol -> initial_value;
-                else if (variable_symbol -> declarator)
+                if (! variable_symbol -> ACC_STATIC())
                 {
-                    AstVariableDeclarator *declarator = variable_symbol -> declarator -> VariableDeclaratorCast();
+                    ReportSemError(SemanticError::NAME_NOT_CLASS_VARIABLE,
+                                   field_access -> identifier_token,
+                                   field_access -> identifier_token,
+                                   lex_stream -> NameString(field_access -> identifier_token));
+                    field_access -> symbol = control.no_type;
+                    return;
+                }
+                //
+                // If a variable is FINAL, initialized with a constant
+                // expression, and of the form TypeName.Identifier, we
+                // substitute the expression here. - JLS 15.28
+                //
+                if (variable_symbol -> ACC_FINAL())
+                {
                     //
-                    // If the variable declarator in question exists and its computation is not
-                    // pending (to avoid looping) and it has a simple expression initializer.
+                    // If the field declaration of the type has been completely processed,
+                    // simply retrieve the value. Otherwise, compute the value of the
+                    // initialization expression in question on the fly if the variable
+                    // in question is not in the same type. Recall that static variables
+                    // must be processed in the textual order in which they appear in the
+                    // body of a type. Therefore, if the static initialization of a field
+                    // refers to another variable in the same type it must have appeared
+                    // before the current field declaration otherwise we will emit an error
+                    // message later...
                     //
-                    if (declarator && (! declarator -> pending) &&
-                        declarator -> variable_initializer_opt &&
-                        (! declarator -> variable_initializer_opt -> ArrayInitializerCast()))
+                    if (variable_symbol -> IsDeclarationComplete())
+                        field_access -> value = variable_symbol -> initial_value;
+                    else if (variable_symbol -> declarator)
                     {
-                        TypeSymbol *variable_type = (TypeSymbol *) variable_symbol -> owner;
-                        Semantic *sem = variable_type -> semantic_environment -> sem;
-                        field_access -> value = sem -> ComputeFinalValue(declarator);
+                        AstVariableDeclarator *declarator = variable_symbol -> declarator -> VariableDeclaratorCast();
+                        //
+                        // If the variable declarator in question exists and its computation is not
+                        // pending (to avoid looping) and it has a simple expression initializer.
+                        //
+                        if (declarator && (! declarator -> pending) &&
+                            declarator -> variable_initializer_opt &&
+                            (! declarator -> variable_initializer_opt -> ArrayInitializerCast()))
+                        {
+                            TypeSymbol *variable_type = (TypeSymbol *) variable_symbol -> owner;
+                            Semantic *sem = variable_type -> semantic_environment -> sem;
+                            field_access -> value = sem -> ComputeFinalValue(declarator);
+                        }
                     }
                 }
             }
 
             TypeSymbol *containing_type = (TypeSymbol *) variable_symbol -> owner;
             //
-            // Access to an private or protected variable in an enclosing type ?
+            // Access to a private or protected variable in an enclosing type ?
             //
             if (this_type != containing_type &&
                 this_type -> outermost_type == environment_type -> outermost_type &&
@@ -2171,13 +2188,26 @@ void Semantic::FindVariableMember(TypeSymbol *type, TypeSymbol *environment_type
         {
             TypeSymbol *inner_type = FindNestedType(type, field_access -> identifier_token);
             if (inner_type)
-                 ReportSemError(SemanticError::FIELD_IS_TYPE,
-                                field_access -> identifier_token,
-                                field_access -> identifier_token,
-                                lex_stream -> NameString(field_access -> identifier_token));
-            else ReportAccessedFieldNotFound(field_access, type);
-
-            field_access -> symbol = control.no_type;
+            {
+                if (base_is_type)
+                {
+                    field_access -> symbol = inner_type;
+                    TypeAccessCheck(field_access, inner_type);
+                }
+                else
+                {
+                    ReportSemError(SemanticError::TYPE_NOT_FIELD,
+                                   field_access -> identifier_token,
+                                   field_access -> identifier_token,
+                                   lex_stream -> NameString(field_access -> identifier_token));
+                    field_access -> symbol = control.no_type;
+                }
+            }
+            else
+            {
+                ReportAccessedFieldNotFound(field_access, type);
+                field_access -> symbol = control.no_type;
+            }
         }
     }
 
@@ -2436,9 +2466,7 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                 return;
             }
 
-            wchar_t *identifier_name = lex_stream -> NameString(field_access -> identifier_token);
             PackageSymbol *package;
-
             Symbol *symbol = base -> symbol;
 
             if (field_access -> IsThisAccess() || field_access -> IsSuperAccess())
@@ -2451,15 +2479,15 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                     if (! enclosing_type)
                     {
                         ReportSemError(SemanticError::NOT_A_TYPE,
-                                       field_access -> base -> LeftToken(),
-                                       field_access -> base -> RightToken());
+                                       base -> LeftToken(),
+                                       base -> RightToken());
                         field_access -> symbol = control.no_type;
                     }
                     else if (enclosing_type -> ACC_INTERFACE())
                     {
                         ReportSemError(SemanticError::NOT_A_CLASS,
-                                       field_access -> base -> LeftToken(),
-                                       field_access -> base -> RightToken(),
+                                       base -> LeftToken(),
+                                       base -> RightToken(),
                                        enclosing_type -> ContainingPackage() -> PackageName(),
                                        enclosing_type -> ExternalName());
                         field_access -> symbol = control.no_type;
@@ -2563,147 +2591,7 @@ void Semantic::ProcessAmbiguousName(Ast *name)
             //
             else if ((type = symbol -> TypeCast()))
             {
-                if (type -> Bad())
-                {
-                    //
-                    // If no error has been detected so far, report this as an error so that
-                    // we don't try to generate code later. On the other hand, if an error
-                    // had been detected prior to this, don't flood the user with spurious
-                    // messages.
-                    //
-                    if (NumErrors() == 0)
-                        ReportAccessedFieldNotFound(field_access, type);
-                    field_access -> symbol = control.no_type;
-                }
-                else if (type == control.null_type || type -> Primitive())
-                {
-                    ReportSemError(SemanticError::TYPE_NOT_REFERENCE,
-                                   base -> LeftToken(),
-                                   base -> RightToken(),
-                                   type -> Name());
-                    field_access -> symbol = control.no_type;
-                }
-                else
-                {
-                    TypeAccessCheck(base, type);
-
-                    VariableSymbol *variable_symbol = FindVariableInType(type, field_access);
-
-                    if (variable_symbol)
-                    {
-                        assert(variable_symbol -> IsTyped());
-
-                        if (base -> IsName()) // a type name (as opposed to an expression) ?
-                        {
-                            if (variable_symbol -> ACC_STATIC())
-                            {
-                                //
-                                // A variable_symbol that is STATIC and FINAL must have an initial value.
-                                // If it is dereferenced by a type name, then associate the value with the
-                                // subexpression to identify it as a constant subexpression.
-                                //
-                                if (variable_symbol -> ACC_FINAL())
-                                {
-                                    //
-                                    // If the field declaration of the type has been completely processed,
-                                    // simply retrieve the value. Otherwise, compute the value of the
-                                    // initialization expression in question on the fly if the variable
-                                    // in question is not in the same type. Recall that static variables
-                                    // must be processed in the textual order in which they appear in the
-                                    // body of a type. Therefore, if the static initialization of a field
-                                    // refers to another variable in the same type it must have appeared
-                                    // before the current field declaration otherwise we will emit an error
-                                    // message later...
-                                    //
-                                    if (variable_symbol -> IsDeclarationComplete())
-                                        field_access -> value = variable_symbol -> initial_value;
-                                    else if (variable_symbol -> declarator)
-                                    {
-                                        AstVariableDeclarator *declarator = variable_symbol -> declarator -> VariableDeclaratorCast();
-                                        //
-                                        // If the variable declarator in question exists and its computation is not
-                                        // pending (to avoid looping) and it has a simple expression initializer.
-                                        //
-                                        if (declarator &&
-                                            (! declarator -> pending) &&
-                                            declarator -> variable_initializer_opt &&
-                                            (! declarator -> variable_initializer_opt -> ArrayInitializerCast()))
-                                        {
-                                            TypeSymbol *type = (TypeSymbol *) variable_symbol -> owner;
-                                            Semantic *sem = type -> semantic_environment -> sem;
-                                            field_access -> value = sem -> ComputeFinalValue(declarator);
-                                        }
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                ReportSemError(SemanticError::NAME_NOT_CLASS_VARIABLE,
-                                               field_access -> identifier_token,
-                                               field_access -> identifier_token,
-                                               identifier_name);
-                            }
-                        }
-
-                        TypeSymbol *containing_type = (TypeSymbol *) variable_symbol -> owner;
-                        //
-                        // Access to a private or protected variable in an enclosing type ?
-                        //
-                        if (this_type != containing_type &&
-                            this_type -> outermost_type == type -> outermost_type &&
-                            (variable_symbol -> ACC_PRIVATE() ||
-                             (variable_symbol -> ACC_PROTECTED() &&
-                              containing_type -> ContainingPackage() != type -> ContainingPackage())))
-                        {
-                            assert((! variable_symbol -> ACC_PRIVATE()) || containing_type == type);
- 
-                            if (field_access -> IsConstant())
-                                field_access -> symbol = variable_symbol;
-                            else
-                            {
-                                AstFieldAccess *method_name     = compilation_unit -> ast_pool -> GenFieldAccess();
-                                method_name -> base             = field_access -> base;  // TODO: WARNING: sharing of Ast subtree !!!
-                                method_name -> dot_token        = field_access -> identifier_token;
-                                method_name -> identifier_token = field_access -> identifier_token;
-                                method_name -> symbol           = variable_symbol; // the variable in question
-
-                                //
-                                // variable_symbol is static.
-                                //
-                                AstMethodInvocation *p       = compilation_unit -> ast_pool -> GenMethodInvocation();
-                                p -> method                  = method_name;
-                                p -> left_parenthesis_token  = field_access -> identifier_token;
-                                p -> right_parenthesis_token = field_access -> identifier_token;
-                                p -> symbol                  = type -> GetReadAccessMethod(variable_symbol);
-
-                                if (! variable_symbol -> ACC_STATIC())
-                                    p -> AddArgument(field_access -> base); // TODO: WARNING: sharing of Ast subtree !!!
-
-                                field_access -> resolution_opt = p;
-                                field_access -> symbol = p -> symbol;
-                            }
-                        }
-                        else
-                        {
-                            field_access -> symbol = variable_symbol;
-                            MemberAccessCheck(field_access, type, variable_symbol);
-                        }
-                    }
-                    else
-                    {
-                        TypeSymbol *inner_type = FindNestedType(type, field_access -> identifier_token);
-                        if (inner_type)
-                        {
-                            field_access -> symbol = inner_type;
-                            TypeAccessCheck(field_access, inner_type);
-                        }
-                        else
-                        {
-                            ReportAccessedFieldNotFound(field_access, type);
-                            field_access -> symbol = control.no_type;
-                        }
-                    }
-                }
+                FindVariableMember(type, base -> Type(), field_access);
             }
             //
             // ...If the name to the left of the '.' is reclassified as an ExpressionName, then this
@@ -2755,7 +2643,7 @@ void Semantic::ProcessFieldAccess(Ast *expr)
 
     ProcessAmbiguousName(field_access);
 
-        TypeSymbol *type;
+    TypeSymbol *type;
 
     if (field_access -> symbol != control.no_type)
     {
@@ -3487,7 +3375,7 @@ void Semantic::ProcessSuperExpression(Ast *expr)
     }
     else if (ExplicitConstructorInvocation())
     {
-        ReportSemError(SemanticError::THIS_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
+        ReportSemError(SemanticError::SUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
                        super_expression -> LeftToken(),
                        super_expression -> RightToken(),
                        lex_stream -> NameString(super_expression -> super_token));

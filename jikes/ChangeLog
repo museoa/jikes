@@ -1,5 +1,14 @@
 2001-05-01  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/expr.cpp (FindVariableMember)
+	(ProcessAmbiguousName, ProcessFieldAccess):
+	Fixed and consolidated code which processes
+	qualified field access, to wipe out core
+	dumps mentioned in bug 178.
+	(ProcessSuperExpression): Fixed typo
+
+2001-05-01  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/Makefile.am (jikespg):
 	* src/Makefile.in (jikespg):
 	Use $(JIKESPG) instead of hardcoded jikespg.
