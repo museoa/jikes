@@ -1,3 +1,38 @@
+2002-12-09  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/ast.h (AstName): Another back-port from generics-branch.
+	* src/java.g (*NotName): Backport the grammar changes that allow
+	better parsing of casts, necessary for AstName.
+	* src/ast.cpp:
+	* src/bytecode.cpp:
+	* src/bytecode.h:
+	* src/control.cpp:
+	* src/control.h:
+	* src/decl.cpp:
+	* src/definite.cpp:
+	* src/diagnose.cpp:
+	* src/dump.cpp:
+	* src/error.cpp:
+	* src/error.h:
+	* src/expr.cpp:
+	* src/incrmnt.cpp:
+	* src/lookup.cpp:
+	* src/lookup.h:
+	* src/parser.h:
+	* src/scanner.cpp:
+	* src/scanner.h:
+	* src/stream.cpp:
+	* src/stream.h:
+	* src/symbol.cpp:
+	* src/symbol.h:
+	* src/system.cpp:
+	* src/unparse.cpp: Changes associated with those in the AST.
+	* src/javaact.cpp:
+	* src/javaact.h:
+	* src/javadcl.h:
+	* src/javadef.h:
+	* src/javasym.h: Regenerate.
+
 2002-12-07  Eric Blake  <ebb9@email.byu.edu>
 
 	* configure.in:

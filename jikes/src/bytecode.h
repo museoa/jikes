@@ -41,9 +41,10 @@ public:
 
         LabelUse(int _length,
                  int _op_offset,
-                 int _use) : use_length(_length),
-                             op_offset(_op_offset),
-                             use_offset(_use)
+                 int _use)
+            : use_length(_length),
+              op_offset(_op_offset),
+              use_offset(_use)
         {}
     };
 
@@ -132,7 +133,8 @@ public:
     }
     unsigned NestingLevel(unsigned i)
     {
-        AssertIndex(i); return nesting_level[i];
+        AssertIndex(i);
+        return nesting_level[i];
     }
 
     Label& TopBreakLabel() { return break_labels[TopNestingLevel()]; }
@@ -379,11 +381,11 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     enum VariableCategory
     {
-        LOCAL_VAR =  0, // local variable
-        ARRAY_VAR =  1, // array (of any kind)
-        FIELD_VAR =  2, // instance variable
+        LOCAL_VAR = 0, // local variable
+        ARRAY_VAR = 1, // array (of any kind)
+        FIELD_VAR = 2, // instance variable
         STATIC_VAR = 3, // class variable
-        ACCESSED_VAR = 4 // access to private variable
+        ACCESSED_VAR = 4 // enclosing class field via accessor method
     };
 
     VariableCategory GetVariableKind(AstExpression* expression)
@@ -846,6 +848,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     // Methods to generate expressions.
     //
     int EmitExpression(AstExpression*, bool = true);
+    int EmitName(AstName*, bool);
     int EmitArrayCreationExpression(AstArrayCreationExpression*, bool = true);
     int EmitAssignmentExpression(AstAssignmentExpression*, bool);
     int EmitBinaryExpression(AstBinaryExpression*, bool);

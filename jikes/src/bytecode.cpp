@@ -291,7 +291,7 @@ void ByteCode::CompileConstructor(AstConstructorDeclaration* constructor,
     // so we know where the local variable shadows begin.
     //
     shadow_parameter_offset = unit_type -> EnclosingType() ? 2 : 1;
-    if (unit_type -> NumConstructorParameters() > 0)
+    if (unit_type -> NumConstructorParameters())
     {
         for (unsigned j = 0; j < method_symbol -> NumFormalParameters(); j++)
             shadow_parameter_offset +=
@@ -592,7 +592,7 @@ void ByteCode::EndMethod(int method_index, MethodSymbol* msym)
         // write, and -g:lines is enabled.
         //
         if ((control.option.g & JikesOption::LINES) &&
-            line_number_table_attribute -> LineNumberTableLength() > 0)
+            line_number_table_attribute -> LineNumberTableLength())
         {
              code_attribute -> AddAttribute(line_number_table_attribute);
         }
@@ -631,7 +631,7 @@ void ByteCode::EndMethod(int method_index, MethodSymbol* msym)
                                      parameter -> LocalVariableIndex());
             }
 
-            if (local_variable_table_attribute -> LocalVariableTableLength() > 0)
+            if (local_variable_table_attribute -> LocalVariableTableLength())
                  code_attribute -> AddAttribute(local_variable_table_attribute);
             else
                 // local_variable_table_attribute not needed, so delete it now
@@ -1411,7 +1411,7 @@ bool ByteCode::EmitSwitchStatement(AstSwitchStatement* switch_statement)
     unsigned nlabels = ncases;
     i4 high = 0,
        low = 0;
-    if (ncases > 0)
+    if (ncases)
     {
         low = switch_statement -> Case(0) -> value;
         high = switch_statement -> Case(ncases - 1) -> value;
@@ -2275,7 +2275,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression* p, bool cond, Label& lab,
         {
             EmitExpression(expr);
             PutOp(OP_INSTANCEOF);
-            PutU2(right_type -> num_dimensions > 0
+            PutU2(right_type -> num_dimensions
                   ? RegisterClass(right_type -> signature)
                   : RegisterClass(right_type));
             EmitBranch((cond ? OP_IFNE : OP_IFEQ), lab, over);
@@ -2980,16 +2980,8 @@ int ByteCode::EmitExpression(AstExpression* expression, bool need_value)
 
     switch (expression -> kind)
     {
-    case Ast::IDENTIFIER:
-        {
-            if (expression -> symbol && expression -> symbol -> TypeCast())
-                return 0;
-            AstSimpleName* simple_name = (AstSimpleName*) expression;
-            return (simple_name -> resolution_opt
-                    ? EmitExpression(simple_name -> resolution_opt, need_value)
-                    : LoadVariable(GetVariableKind(expression), expression,
-                                   need_value));
-        }
+    case Ast::NAME:
+        return EmitName((AstName*) expression, need_value);
     case Ast::THIS_EXPRESSION:
         {
             AstThisExpression* this_expr = (AstThisExpression*) expression;
@@ -3100,7 +3092,7 @@ AstExpression* ByteCode::VariableExpressionResolution(AstExpression* expression)
     AstFieldAccess* field = expression -> FieldAccessCast();
     if (field && field -> resolution_opt)
         return field -> resolution_opt;
-    AstSimpleName* name = expression -> SimpleNameCast();
+    AstName* name = expression -> NameCast();
     if (name && name -> resolution_opt)
         return name -> resolution_opt;
     return expression;
@@ -3112,8 +3104,8 @@ TypeSymbol* ByteCode::VariableTypeResolution(AstExpression* expression,
 {
     expression = VariableExpressionResolution(expression);
     AstFieldAccess* field = expression -> FieldAccessCast();
-    AstSimpleName* simple_name = expression -> SimpleNameCast();
-    assert(field || simple_name);
+    AstName* name = expression -> NameCast();
+    assert(field || name);
 
     //
     // JLS2 13.1 Use the type of the base expression for qualified reference
@@ -3125,8 +3117,7 @@ TypeSymbol* ByteCode::VariableTypeResolution(AstExpression* expression,
     // and JLS 13 requires it.
     //
     TypeSymbol* candidate = field ? field -> base -> Type()
-        : simple_name -> resolution_opt
-        ? simple_name -> resolution_opt -> Type() : unit_type;
+        : name -> base_opt ? name -> base_opt -> Type() : unit_type;
     return (sym -> ContainingType() -> ACC_INTERFACE() &&
             control.option.target < JikesOption::SDK1_4)
         ? sym -> ContainingType() : candidate;
@@ -3145,16 +3136,14 @@ TypeSymbol* ByteCode::MethodTypeResolution(AstExpression* method_name,
     // relates to the accessed expression, not the accessor method).
     //
     AstFieldAccess* field = method_name -> FieldAccessCast();
-    AstSimpleName* simple_name = method_name -> SimpleNameCast();
-    assert(field || simple_name);
+    AstName* name = method_name -> NameCast();
+    assert(field || name);
 
-    TypeSymbol* owner_type = msym -> containing_type,
-              * base_type = (msym -> IsSynthetic() ? owner_type
-                             : field ? field -> base -> Type()
-                             : (simple_name -> resolution_opt
-                                ? simple_name -> resolution_opt -> Type()
-                                : unit_type));
-
+    TypeSymbol* owner_type = msym -> containing_type;
+    TypeSymbol* base_type = msym -> IsSynthetic() ? owner_type
+        : field ? field -> base -> Type()
+        : name -> resolution_opt ? name -> resolution_opt -> Type()
+        : name -> base_opt ? name -> base_opt -> Type() : unit_type;
     return owner_type == control.Object() ? owner_type : base_type;
 }
 
@@ -3163,20 +3152,15 @@ void ByteCode::EmitFieldAccessLhsBase(AstExpression* expression)
 {
     expression = VariableExpressionResolution(expression);
     AstFieldAccess* field = expression -> FieldAccessCast();
+    AstName* name = expression -> NameCast();
 
     //
     // We now have the right expression. Check if it's a field. If so, process
     // base Otherwise, it must be a simple name...
     //
-    if (field)
-        EmitExpression(field -> base);
-    else
-    {
-        assert(expression -> SimpleNameCast() &&
-               "unexpected AssignmentExpressionField operand base type");
-
-        PutOp(OP_ALOAD_0); // get address of "this"
-    }
+    if (field || (name && name -> base_opt))
+        EmitExpression(field ? field -> base : name -> base_opt);
+    else PutOp(OP_ALOAD_0); // get address of "this"
 }
 
 
@@ -3427,6 +3411,18 @@ void ByteCode::GenerateAssertVariableInitializer(TypeSymbol* tsym,
 }
 
 
+int ByteCode::EmitName(AstName* expression, bool need_value)
+{
+    if (expression -> symbol -> TypeCast())
+        return 0;
+    VariableSymbol* var = expression -> symbol -> VariableCast();
+    return LoadVariable((expression -> resolution_opt ? ACCESSED_VAR
+                         : var -> owner -> MethodCast() ? LOCAL_VAR
+                         : var -> ACC_STATIC() ? STATIC_VAR : FIELD_VAR),
+                        expression, need_value);
+}
+
+
 //
 // see also OP_MULTIANEWARRAY
 //
@@ -3528,6 +3524,12 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression* assignment_expre
                     ((AstFieldAccess*) left_hand_side) -> base;
                 EmitExpression(base, false);
             }
+            else if (left_hand_side -> NameCast())
+            {
+                AstName* base = ((AstName*) left_hand_side) -> base_opt;
+                if (base)
+                    EmitName(base, false);
+            }
             break;
         case ACCESSED_VAR:
             // need to load address of object, obtained from resolution
@@ -3535,7 +3537,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression* assignment_expre
             {
                 AstExpression* resolve = left_hand_side -> FieldAccessCast()
                     ? left_hand_side -> FieldAccessCast() -> resolution_opt
-                    : left_hand_side -> SimpleNameCast() -> resolution_opt;
+                    : left_hand_side -> NameCast() -> resolution_opt;
 
                 assert(resolve);
 
@@ -4357,7 +4359,7 @@ int ByteCode::EmitInstanceofExpression(AstInstanceofExpression* expr,
         if (need_value)
         {
             PutOp(OP_INSTANCEOF);
-            PutU2(right_type -> num_dimensions > 0
+            PutU2(right_type -> num_dimensions
                   ? RegisterClass(right_type -> signature)
                   : RegisterClass(right_type));
         }
@@ -4484,7 +4486,7 @@ void ByteCode::EmitCast(TypeSymbol* dest_type, TypeSymbol* source_type)
         // Generate check cast instruction.
         //
         PutOp(OP_CHECKCAST);
-        PutU2(dest_type -> num_dimensions > 0
+        PutU2(dest_type -> num_dimensions
               ? RegisterClass(dest_type -> signature)
               : RegisterClass(dest_type));
     }
@@ -4611,6 +4613,7 @@ int ByteCode::EmitConditionalExpression(AstConditionalExpression* expression,
                               need_value);
     if (expression -> Type() == control.null_type)
     {
+        //
         // The null literal has no side effects, but null_expr might.
         // Optimize (cond ? null : null) to (cond, null).
         // Optimize (cond ? null_expr : null) to (cond && null_expr, null).
@@ -4751,29 +4754,10 @@ int ByteCode::EmitConditionalExpression(AstConditionalExpression* expression,
 
 int ByteCode::EmitFieldAccess(AstFieldAccess* expression, bool need_value)
 {
-    assert(! expression -> IsConstant());
-
-    AstExpression* base = expression -> base;
-    VariableSymbol* sym = expression -> symbol -> VariableCast();
-
     if (expression -> resolution_opt)
-    {
-        //
-        // A resolution exists if the field belongs to an enclosing class and
-        // has an accessor method. If the access is qualified by an arbitrary
-        // base expression, evaluate it for side effects. Normally, this will
-        // be done when evaluating the accessor method. However, if this is a
-        // static field, and need_value is false, the access will not have a
-        // side effect, so we can bypass it.
-        //
-        MethodSymbol* method = expression -> symbol -> MethodCast();
-        if (! need_value && method && ! method -> AccessesInstanceMember())
-            return EmitExpression(base, false);
-        return EmitExpression(expression -> resolution_opt, need_value);
-    }
-
-    if (! sym) // not a variable, so it must be a class or package name
-        return 0;
+        return LoadVariable(ACCESSED_VAR, expression, need_value);
+    VariableSymbol* sym = expression -> symbol -> VariableCast();
+    assert(sym);
     return LoadVariable(sym -> ACC_STATIC() ? STATIC_VAR : FIELD_VAR,
                         expression, need_value);
 }
@@ -4790,6 +4774,8 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation* expression)
     assert(method_call);
 
     MethodSymbol* msym = (MethodSymbol*) method_call -> symbol;
+    AstFieldAccess* field = method_call -> method -> FieldAccessCast();
+    AstName* name = method_call -> method -> NameCast();
 
     bool is_super = false; // set if super call
 
@@ -4802,15 +4788,16 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation* expression)
         // access an instance method, in which case the base expression
         // will already be evaluated as the first parameter.
         //
-        AstFieldAccess* field = (msym -> AccessesInstanceMember() ? NULL
-                                 : method_call -> method -> FieldAccessCast());
-        if (field)
+        if (field && (! msym -> accessed_member ||
+                      msym -> AccessesStaticMember()))
+        {
             EmitExpression(field -> base, false);
+        }
+        else if (name && name -> base_opt)
+            EmitName(name -> base_opt, false);
     }
     else
     {
-        AstFieldAccess* field = method_call -> method -> FieldAccessCast();
-        AstSimpleName* simple_name = method_call -> method -> SimpleNameCast();
         if (field)
         {
             //
@@ -4823,11 +4810,13 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation* expression)
             is_super = field -> base -> SuperExpressionCast() != NULL;
             EmitExpression(field -> base);
         }
-        else if (simple_name)
+        else if (name)
         {
-            if (simple_name -> resolution_opt) // use resolution if available
-                EmitExpression(simple_name -> resolution_opt);
-            else // must be field of current object, so load this
+            if (name -> resolution_opt) // use resolution if available
+                EmitExpression(name -> resolution_opt);
+            else if (name -> base_opt)
+                EmitName(name -> base_opt, true);
+            else // must be method of current object, so load this
                 PutOp(OP_ALOAD_0);
         }
         else assert(false && "unexpected argument to field access");
@@ -4940,7 +4929,7 @@ bool ByteCode::IsNop(AstBlock* block)
 
 void ByteCode::EmitNewArray(unsigned num_dims, TypeSymbol* type)
 {
-    assert(num_dims > 0);
+    assert(num_dims);
     if (num_dims == 1)
     {
         TypeSymbol* element_type = type -> ArraySubtype();
@@ -5897,11 +5886,10 @@ ByteCode::ByteCode(TypeSymbol* type)
         major_version = 48;
         minor_version = 0;
     }
+
     constant_pool.Next() = NULL;
     this_class = RegisterClass(unit_type);
-
     super_class = (unit_type -> super ? RegisterClass(unit_type -> super) : 0);
-
     for (unsigned k = 0; k < unit_type -> NumInterfaces(); k++)
         interfaces.Next() = RegisterClass(unit_type -> Interface(k));
 }
@@ -5963,7 +5951,7 @@ void ByteCode::DefineLabel(Label& lab)
 //
 void ByteCode::CompleteLabel(Label& lab)
 {
-    if (lab.uses.Length() > 0)
+    if (lab.uses.Length())
     {
         assert((lab.defined) && "label used but with no definition");
 
@@ -6203,7 +6191,7 @@ void ByteCode::ResolveAccess(AstExpression* p)
 
     AstFieldAccess* field = p -> FieldAccessCast();
     AstExpression* resolve_expression = field ? field -> resolution_opt
-        : p -> SimpleNameCast() -> resolution_opt;
+        : p -> NameCast() -> resolution_opt;
     AstMethodInvocation* read_method =
         resolve_expression -> MethodInvocationCast();
 
@@ -6223,25 +6211,33 @@ int ByteCode::LoadVariable(VariableCategory kind, AstExpression* expr,
     VariableSymbol* sym = (VariableSymbol*) expr -> symbol;
     TypeSymbol* expression_type = expr -> Type();
     AstFieldAccess* field_access = expr -> FieldAccessCast();
+    AstName* name = expr -> NameCast();
+    AstExpression* base = name ? name -> base_opt : field_access -> base;
+    assert(field_access || name);
     switch (kind)
     {
     case LOCAL_VAR:
+        assert(name && ! base);
         if (! need_value)
             return 0;
         LoadLocal(sym -> LocalVariableIndex(), expression_type);
-        break;
+        return GetTypeWords(expression_type);
     case ACCESSED_VAR:
         {
-            AstFieldAccess* field_access = expr -> FieldAccessCast();
-            AstSimpleName* simple_name = expr -> SimpleNameCast();
-            assert(field_access || simple_name);
-            expr = (field_access ? field_access -> resolution_opt
-                    : simple_name -> resolution_opt);
-            assert(expr);
-            return EmitExpression(expr, need_value);
+            //
+            // A resolution is related to either this$0.field or
+            // this$0.access$(). If need_value is false, and the access is
+            // static, field access is smart enough to optimize away, but
+            // method access requires some help.
+            //
+            MethodSymbol* method = expr -> symbol -> MethodCast();
+            if (! need_value && method && method -> AccessesStaticMember())
+                return base ? EmitExpression(base, false) : 0;
+            return EmitExpression((name ? name -> resolution_opt
+                                   : field_access -> resolution_opt),
+                                  need_value);
         }
     case FIELD_VAR:
-    case STATIC_VAR:
         assert(sym -> IsInitialized() || ! sym -> ACC_FINAL());
         if (shadow_parameter_offset && sym -> owner == unit_type &&
             (sym -> accessed_local ||
@@ -6254,11 +6250,12 @@ int ByteCode::LoadVariable(VariableCategory kind, AstExpression* expr,
             //
             if (! sym -> accessed_local)
             {
-                LoadLocal(1, expression_type);
+                PutOp(OP_ALOAD_1);
                 return 1;
             }
             int offset = shadow_parameter_offset;
-            for (unsigned i = 0; i < unit_type -> NumConstructorParameters(); i++)
+            for (unsigned i = 0;
+                 i < unit_type -> NumConstructorParameters(); i++)
             {
                 VariableSymbol* shadow = unit_type -> ConstructorParameter(i);
                 if (sym == shadow)
@@ -6270,84 +6267,74 @@ int ByteCode::LoadVariable(VariableCategory kind, AstExpression* expr,
             }
             assert(false && "local variable shadowing is messed up");
         }
-        if (field_access && field_access -> base -> Type() -> IsArray())
+        if (base && base -> Type() -> IsArray())
         {
             assert(sym -> name_symbol == control.length_name_symbol);
-            if (field_access -> base -> ArrayCreationExpressionCast() &&
-                ! need_value)
+            if (base -> ArrayCreationExpressionCast() && ! need_value)
             {
-                EmitExpression(field_access -> base, false);
+                EmitExpression(base, false);
                 return 0;
             }
-            EmitExpression(field_access -> base);
-            PutOp(OP_ARRAYLENGTH); 
+            EmitExpression(base);
+            PutOp(OP_ARRAYLENGTH);
             if (need_value)
                 return 1;
             PutOp(OP_POP);
             return 0;
         }
-
-        if (sym -> ACC_STATIC())
+        if (sym -> initial_value)
         {
             //
-            // If the access is qualified by an arbitrary base expression,
-            // evaluate it for side effects. Likewise, volatile fields must be
-            // loaded because of the memory barrier side effect.
+            // Inline constants without referring to the field. However, we
+            // must still check for null. 
             //
-            if (field_access)
-                EmitExpression(field_access -> base, false);
-            if (need_value || sym -> ACC_VOLATILE())
+            if (base)
+                EmitCheckForNull(base, false);
+            if (need_value)
             {
-                if (sym -> initial_value)
-                {
-                    //
-                    // Inline any constant. Note that volatile variables can't
-                    // be final, so they are not constant.
-                    //
-                    LoadLiteral(sym -> initial_value, expression_type);
-                    return GetTypeWords(expression_type);
-                }
-                PutOp(OP_GETSTATIC);
+                LoadLiteral(sym -> initial_value, expression_type);
+                return GetTypeWords(expression_type);
             }
-            else return 0;
+            return 0;
         }
-        else
+        if (base)
+            EmitExpression(base);
+        else PutOp(OP_ALOAD_0);
+        PutOp(OP_GETFIELD);
+        break;
+    case STATIC_VAR:
+        //
+        // If the access is qualified by an arbitrary base expression,
+        // evaluate it for side effects. Likewise, volatile fields must be
+        // loaded because of the memory barrier side effect.
+        //
+        if (base)
+            EmitExpression(base, false);
+        if (need_value || sym -> ACC_VOLATILE())
         {
             if (sym -> initial_value)
             {
                 //
-                // Inline constants without referring to the field. However, we
-                // must still check for null.
+                // Inline any constant. Note that volatile variables can't
+                // be final, so they are not constant.
                 //
-                if (field_access)
-                    EmitCheckForNull(field_access -> base, false);
-                if (need_value)
-                {
-                    LoadLiteral(sym -> initial_value, expression_type);
-                    return GetTypeWords(expression_type);
-                }
-                return 0;
+                LoadLiteral(sym -> initial_value, expression_type);
+                return GetTypeWords(expression_type);
             }
-            if (field_access)
-                EmitExpression(field_access -> base);
-            else PutOp(OP_ALOAD_0);
-            PutOp(OP_GETFIELD);
+            PutOp(OP_GETSTATIC);
+            break;
         }
-        if (control.IsDoubleWordType(expression_type))
-            ChangeStack(1);
-        PutU2(RegisterFieldref(VariableTypeResolution(expr, sym), sym));
-
-        if (! need_value)
-        {
-            PutOp(control.IsDoubleWordType(expression_type) ? OP_POP2 : OP_POP);
-            return 0;
-        }
-        break;
+        else return 0;
     default:
         assert(false && "LoadVariable bad kind");
     }
-
-    return GetTypeWords(expression_type);
+    if (control.IsDoubleWordType(expression_type))
+        ChangeStack(1);
+    PutU2(RegisterFieldref(VariableTypeResolution(expr, sym), sym));
+    if (need_value)
+        return GetTypeWords(expression_type);
+    PutOp(control.IsDoubleWordType(expression_type) ? OP_POP2 : OP_POP);
+    return 0;
 }
 
 
@@ -6488,7 +6475,7 @@ void ByteCode::FinishCode()
     // Generate InnerClasses attribute for every CONSTANT_Class_info in the
     // pool that is nested in another type.
     //
-    if (unit_type -> IsNested() || unit_type -> NumNestedTypes() > 0)
+    if (unit_type -> IsNested() || unit_type -> NumNestedTypes())
     {
         inner_classes_attribute =
             new InnerClasses_attribute(RegisterUtf8(control.InnerClasses_literal));
@@ -6536,13 +6523,15 @@ void ByteCode::FinishCode()
 
     if (unit_type -> IsDeprecated())
         attributes.Next() = CreateDeprecatedAttribute();
+    if (unit_type -> IsSynthetic())
+        attributes.Next() = CreateSyntheticAttribute();
 }
 
 
 void ByteCode::PutOp(Opcode opc)
 {
 #ifdef JIKES_DEBUG
-    if (control.option.debug_trap_op > 0 &&
+    if (control.option.debug_trap_op &&
         code_attribute -> CodeLength() == (u2) control.option.debug_trap_op)
     {
         op_trap();

@@ -57,13 +57,18 @@ void AstBlock::Unparse(Ostream& os, LexStream* lex_stream)
         os << "/*:AstBlock#" << id << "*/";
 }
 
-void AstSimpleName::Unparse(Ostream& os, LexStream* lex_stream)
+void AstName::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (debug_unparse)
-        os << "/*AstSimpleName:#" << id << "*/";
+        os << "/*AstName:#" << id << "*/";
+    if (base_opt)
+    {
+        base_opt -> Unparse(os, lex_stream);
+        os << '.';
+    }
     os << lex_stream -> NameString(identifier_token);
     if (debug_unparse)
-        os << "/*:AstSimpleName#" << id << "*/";
+        os << "/*:AstName#" << id << "*/";
 }
 
 void AstPrimitiveType::Unparse(Ostream& os, LexStream* lex_stream)
@@ -181,7 +186,6 @@ void AstClassBody::Unparse(Ostream& os, LexStream* lex_stream)
 
 void AstClassDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
 {
-    unsigned i;
     if (debug_unparse)
         os << "/*AstClassDeclaration:#" << id << "*/";
     if (lex_stream -> IsDeprecated(lex_stream -> Previous(LeftToken())))
@@ -199,10 +203,10 @@ void AstClassDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
     if (NumInterfaces())
     {
         os << "implements ";
-        for (i = 0; i < NumInterfaces(); i++)
+        Interface(0) -> Unparse(os, lex_stream);
+        for (unsigned i = 1; i < NumInterfaces(); i++)
         {
-            if (i > 0)
-                os << ", ";
+            os << ", ";
             Interface(i) -> Unparse(os, lex_stream);
         }
         os << ' ';
@@ -217,10 +221,11 @@ void AstArrayInitializer::Unparse(Ostream& os, LexStream* lex_stream)
     if (debug_unparse)
         os << "/*AstArrayInitializer:#" << id << "*/";
     os << endl << "{ ";
-    for (unsigned i = 0; i < NumVariableInitializers(); i++)
+    if (NumVariableInitializers())
+        VariableInitializer(0) -> Unparse(os, lex_stream);
+    for (unsigned i = 1; i < NumVariableInitializers(); i++)
     {
-        if (i > 0)
-            os << ", ";
+        os << ", ";
         VariableInitializer(i) -> Unparse(os, lex_stream);
     }
     os << " }";
@@ -255,7 +260,6 @@ void AstVariableDeclarator::Unparse(Ostream& os, LexStream* lex_stream)
 
 void AstFieldDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
 {
-    unsigned i;
     if (debug_unparse)
         os << "/*AstFieldDeclaration:#" << id << "*/";
     if (lex_stream -> IsDeprecated(lex_stream -> Previous(LeftToken())))
@@ -264,10 +268,10 @@ void AstFieldDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
         modifiers_opt -> Unparse(os, lex_stream);
     type -> Unparse(os, lex_stream);
     os << ' ';
-    for (i = 0; i < NumVariableDeclarators(); i++)
+    VariableDeclarator(0) -> Unparse(os, lex_stream);
+    for (unsigned i = 1; i < NumVariableDeclarators(); i++)
     {
-        if (i > 0)
-            os << ", ";
+        os << ", ";
         VariableDeclarator(i) -> Unparse(os, lex_stream);
     }
     os << ';' << endl;
@@ -290,14 +294,14 @@ void AstFormalParameter::Unparse(Ostream& os, LexStream* lex_stream)
 
 void AstMethodDeclarator::Unparse(Ostream& os, LexStream* lex_stream)
 {
-    unsigned i;
     if (debug_unparse)
         os << "/*AstMethodDeclarator:#" << id << "*/";
     os << lex_stream -> NameString(identifier_token) << '(';
-    for (i = 0; i < NumFormalParameters(); i++)
+    if (NumFormalParameters())
+        FormalParameter(0) -> Unparse(os, lex_stream);
+    for (unsigned i = 1; i < NumFormalParameters(); i++)
     {
-        if (i > 0)
-            os << ", ";
+        os << ", ";
         FormalParameter(i) -> Unparse(os, lex_stream);
     }
     os << ')';
@@ -323,7 +327,6 @@ void AstMethodBody::Unparse(Ostream& os, LexStream* lex_stream)
 
 void AstMethodDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
 {
-    unsigned i;
     if (debug_unparse)
         os << "/*AstMethodDeclaration:#" << id << "*/";
     if (lex_stream -> IsDeprecated(lex_stream -> Previous(LeftToken())))
@@ -336,13 +339,12 @@ void AstMethodDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
     if (NumThrows())
     {
         os << "throws ";
-        for (i = 0; i < NumThrows(); i++)
+        Throw(0) -> Unparse(os, lex_stream);
+        for (unsigned i = 1; i < NumThrows(); i++)
         {
-            if (i > 0)
-                os << ", ";
+            os << ", ";
             Throw(i) -> Unparse(os, lex_stream);
         }
-        os << ' ';
     }
     if (method_body_opt)
         method_body_opt -> Unparse(os, lex_stream);
@@ -368,13 +370,11 @@ void AstArguments::Unparse(Ostream& os, LexStream* lex_stream)
         os << "/*AstArguments:#" << id << "*/";
     os << lex_stream -> NameString(left_parenthesis_token);
     if (NumArguments())
-    {
         Argument(0) -> Unparse(os, lex_stream);
-        for (unsigned i = 1; i < NumArguments(); i++)
-        {
-            os << ", ";
-            Argument(i) -> Unparse(os, lex_stream);
-        }
+    for (unsigned i = 1; i < NumArguments(); i++)
+    {
+        os << ", ";
+        Argument(i) -> Unparse(os, lex_stream);
     }
     os << lex_stream -> NameString(right_parenthesis_token);
     if (debug_unparse)
@@ -413,7 +413,6 @@ void AstSuperCall::Unparse(Ostream& os, LexStream* lex_stream)
 
 void AstConstructorDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
 {
-    unsigned i;
     if (debug_unparse)
         os << "/*AstConstructorDeclaration:#" << id << "*/";
     if (lex_stream -> IsDeprecated(lex_stream -> Previous(LeftToken())))
@@ -424,10 +423,10 @@ void AstConstructorDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
     if (NumThrows())
     {
         os << " throws ";
-        for (i = 0; i < NumThrows(); i++)
+        Throw(0) -> Unparse(os, lex_stream);
+        for (unsigned i = 1; i < NumThrows(); i++)
         {
-            if (i > 0)
-                os << ", ";
+            os << ", ";
             Throw(i) -> Unparse(os, lex_stream);
         }
     }
@@ -438,7 +437,6 @@ void AstConstructorDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
 
 void AstInterfaceDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
 {
-    unsigned i;
     if (debug_unparse)
         os << "/*AstInterfaceDeclaration:#" << id << "*/";
     if (lex_stream -> IsDeprecated(lex_stream -> Previous(LeftToken())))
@@ -450,10 +448,10 @@ void AstInterfaceDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
     if (NumInterfaces())
     {
         os << "extends ";
-        for (i = 0; i < NumInterfaces(); i++)
+        Interface(0) -> Unparse(os, lex_stream);
+        for (unsigned i = 1; i < NumInterfaces(); i++)
         {
-            if (i > 0)
-                os << ", ";
+            os << ", ";
             Interface(i) -> Unparse(os, lex_stream);
         }
     }
@@ -464,17 +462,16 @@ void AstInterfaceDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
 
 void AstLocalVariableDeclarationStatement::Unparse(Ostream& os, LexStream* lex_stream)
 {
-    unsigned i;
     if (debug_unparse)
         os << "/*AstLocalVariableDeclarationStatement:#" << id << "*/";
     if (modifiers_opt)
         modifiers_opt -> Unparse(os, lex_stream);
     type -> Unparse(os, lex_stream);
     os << ' ';
-    for (i = 0; i < NumVariableDeclarators(); i++)
+    VariableDeclarator(0) -> Unparse(os, lex_stream);
+    for (unsigned i = 1; i < NumVariableDeclarators(); i++)
     {
-        if (i > 0)
-            os << ',';
+        os << ',';
         VariableDeclarator(i) -> Unparse(os, lex_stream);
     }
     if (semicolon_token_opt)
@@ -597,20 +594,23 @@ void AstForStatement::Unparse(Ostream& os, LexStream* lex_stream)
     if (debug_unparse)
         os << "/*AstForStatement:#" << id << "*/";
     os << lex_stream -> NameString(for_token) << " (";
-    for (i = 0; i < NumForInitStatements(); i++)
+    if (NumForInitStatements())
+        ForInitStatement(0) -> Unparse(os, lex_stream);
+    else os << ' ';
+    for (i = 1; i < NumForInitStatements(); i++)
     {
-        if (i > 0)
-            os << ", ";
+        os << ", ";
         ForInitStatement(i) -> Unparse(os, lex_stream);
     }
     os << "; ";
     if (end_expression_opt)
         end_expression_opt -> Unparse(os, lex_stream);
     os << "; ";
-    for (i = 0; i < NumForUpdateStatements(); i++)
+    if (NumForUpdateStatements())
+        ForUpdateStatement(0) -> Unparse(os, lex_stream);
+    for (i = 1; i < NumForUpdateStatements(); i++)
     {
-        if (i > 0)
-            os << ", ";
+        os << ", ";
         ForUpdateStatement(i) -> Unparse(os, lex_stream);
     }
     os << ')' << endl;
@@ -841,6 +841,11 @@ void AstThisExpression::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (debug_unparse)
         os << "/*AstThisExpression:#" << id << "*/";
+    if (base_opt)
+    {
+        base_opt -> Unparse(os, lex_stream);
+        os << '.';
+    }
     os << lex_stream -> NameString(this_token);
     if (debug_unparse)
         os << "/*:AstThisExpression#" << id << "*/";
@@ -850,6 +855,11 @@ void AstSuperExpression::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (debug_unparse)
         os << "/*AstSuperExpression:#" << id << "*/";
+    if (base_opt)
+    {
+        base_opt -> Unparse(os, lex_stream);
+        os << '.';
+    }
     os << lex_stream -> NameString(super_token);
     if (debug_unparse)
         os << "/*:AstSuperExpression#" << id << "*/";

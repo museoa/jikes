@@ -24,11 +24,11 @@ namespace Jikes { // Open namespace Jikes block
 // representation pointed to by target. The char string target is presumed
 // to have been allocated and to be large enough to accomodate the conversion.
 //
-int Control::ConvertUnicodeToUtf8(wchar_t *source, char *target)
+int Control::ConvertUnicodeToUtf8(wchar_t* source, char* target)
 {
     int length = 0;
 
-    for (; *source; source++)
+    for ( ; *source; source++)
     {
         int ch = *source;
 
@@ -53,7 +53,6 @@ int Control::ConvertUnicodeToUtf8(wchar_t *source, char *target)
         }
     }
     target[length] = U_NULL;
-
     return length;
 }
 
@@ -64,9 +63,9 @@ int Control::ConvertUnicodeToUtf8(wchar_t *source, char *target)
 // to have been allocated and to be large enough (at least len + 1) to
 // accomodate the conversion.
 //
-int Control::ConvertUtf8ToUnicode(wchar_t *target, const char *source, int len)
+int Control::ConvertUtf8ToUnicode(wchar_t* target, const char* source, int len)
 {
-    wchar_t *ptr = target;
+    wchar_t* ptr = target;
     for (int i = 0; i < len; i++, ptr++)
     {
         u1 ch = source[i];
@@ -101,23 +100,22 @@ int Control::ConvertUtf8ToUnicode(wchar_t *target, const char *source, int len)
     }
 
     *ptr = U_NULL;
-
     return ptr - target;
 }
 
 
-void Control::FindPathsToDirectory(PackageSymbol *package)
+void Control::FindPathsToDirectory(PackageSymbol* package)
 {
     if (package -> directory.Length() == 0)
     {
-        PackageSymbol *owner_package = package -> owner;
+        PackageSymbol* owner_package = package -> owner;
         if (owner_package) // package is a subpackage?
         {
             for (int i = 0; i < owner_package -> directory.Length(); i++)
             {
-                DirectorySymbol *owner_directory_symbol =
+                DirectorySymbol* owner_directory_symbol =
                     owner_package -> directory[i];
-                DirectorySymbol *subdirectory_symbol =
+                DirectorySymbol* subdirectory_symbol =
                     owner_directory_symbol -> FindDirectorySymbol(package -> Identity());
                 if (! owner_directory_symbol -> IsZip())
                 {
@@ -126,7 +124,7 @@ void Control::FindPathsToDirectory(PackageSymbol *package)
                         int length =
                             owner_directory_symbol -> DirectoryNameLength() +
                             package -> Utf8NameLength() + 1; // +1 for '/'
-                        char *directory_name = new char[length + 1];
+                        char* directory_name = new char[length + 1];
 
                         strcpy(directory_name,
                                owner_directory_symbol -> DirectoryName());
@@ -158,8 +156,8 @@ void Control::FindPathsToDirectory(PackageSymbol *package)
             //
             for (int k = 1; k < classpath.Length(); k++)
             {
-                PathSymbol *path_symbol = classpath[k];
-                DirectorySymbol *directory_symbol =
+                PathSymbol* path_symbol = classpath[k];
+                DirectorySymbol* directory_symbol =
                     path_symbol -> RootDirectory() -> FindDirectorySymbol(package -> Identity());
                 if (! path_symbol -> IsZip())
                 {
@@ -167,7 +165,7 @@ void Control::FindPathsToDirectory(PackageSymbol *package)
                     {
                         int length = path_symbol -> Utf8NameLength() +
                             package -> Utf8NameLength() + 1; // +1 for '/'
-                        char *directory_name = new char[length + 1];
+                        char* directory_name = new char[length + 1];
                         strcpy(directory_name, path_symbol -> Utf8Name());
                         char tail = path_symbol -> Utf8Name()[path_symbol -> Utf8NameLength() - 1];
                         if (tail != U_SLASH && tail != U_BACKSLASH)
@@ -255,12 +253,12 @@ void Control::InitClassInfo()
         //
         // Search for relevant forName method
         //
-        for (MethodSymbol *method =
+        for (MethodSymbol* method =
                  Class_type -> FindMethodSymbol(forName_name_symbol);
              method;
              method = method -> next_method)
         {
-            char *signature = method -> SignatureString();
+            char* signature = method -> SignatureString();
 
             if (strcmp(signature, StringConstant::U8S_LP_String_RP_Class) == 0)
             {
@@ -272,7 +270,7 @@ void Control::InitClassInfo()
         if (! Class_forName_method)
         {
             system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
-                                              0,
+                                              LexStream::BadToken(),
                                               Class_type -> ContainingPackageName(),
                                               Class_type -> ExternalName());
         }
@@ -281,12 +279,12 @@ void Control::InitClassInfo()
         //
         // Search for relevent getComponentType method
         //
-        for (MethodSymbol *method =
+        for (MethodSymbol* method =
                  Class_type -> FindMethodSymbol(getComponentType_name_symbol);
              method;
              method = method -> next_method)
         {
-            char *signature = method -> SignatureString();
+            char* signature = method -> SignatureString();
 
             if (strcmp(signature, StringConstant::U8S_LP_RP_Class) == 0)
             {
@@ -298,7 +296,7 @@ void Control::InitClassInfo()
         if (! Class_getComponentType_method)
         {
             system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
-                                              0,
+                                              LexStream::BadToken(),
                                               Class_type -> ContainingPackageName(),
                                               Class_type -> ExternalName());
         }
@@ -309,12 +307,12 @@ void Control::InitClassInfo()
         //
         if (option.target >= JikesOption::SDK1_4)
         {
-            for (MethodSymbol *method =
+            for (MethodSymbol* method =
                      Class_type -> FindMethodSymbol(desiredAssertionStatus_name_symbol);
                  method;
                  method = method -> next_method)
             {
-                char *signature = method -> SignatureString();
+                char* signature = method -> SignatureString();
 
                 if (strcmp(signature, StringConstant::U8S_LP_RP_Z) == 0)
                 {
@@ -326,7 +324,7 @@ void Control::InitClassInfo()
             if (! Class_desiredAssertionStatus_method)
             {
                 system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
-                                                  0,
+                                                  LexStream::BadToken(),
                                                   Class_type -> ContainingPackageName(),
                                                   Class_type -> ExternalName());
             }
@@ -342,12 +340,12 @@ void Control::InitAssertionErrorInfo()
         //
         // Search for relevant constructors
         //
-        for (MethodSymbol *constructor =
+        for (MethodSymbol* constructor =
                  AssertionError_type -> FindConstructorSymbol();
              constructor;
              constructor = constructor -> next_method)
         {
-            char *signature = constructor -> SignatureString();
+            char* signature = constructor -> SignatureString();
 
             if (strcmp(signature, StringConstant::U8S_LP_RP_V) == 0)
                 AssertionError_Init_method = constructor;
@@ -378,7 +376,7 @@ void Control::InitAssertionErrorInfo()
                AssertionError_InitWithObject_method))
         {
             system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
-                                              0,
+                                              LexStream::BadToken(),
                                               AssertionError_type -> ContainingPackageName(),
                                               AssertionError_type -> ExternalName());
         }
@@ -393,12 +391,12 @@ void Control::InitThrowableInfo()
         //
         // Search for relevant getMessage method
         //
-        for (MethodSymbol *method =
+        for (MethodSymbol* method =
                  Throwable_type -> FindMethodSymbol(getMessage_name_symbol);
              method;
              method = method -> next_method)
         {
-            char *signature = method -> SignatureString();
+            char* signature = method -> SignatureString();
 
             if (strcmp(signature, StringConstant::U8S_LP_RP_String) == 0)
             {
@@ -412,12 +410,12 @@ void Control::InitThrowableInfo()
             //
             // Search for relevant initCause method
             //
-            for (MethodSymbol *method =
+            for (MethodSymbol* method =
                      Throwable_type -> FindMethodSymbol(initCause_name_symbol);
                  method;
                  method = method -> next_method)
             {
-                char *signature = method -> SignatureString();
+                char* signature = method -> SignatureString();
 
                 if (strcmp(signature,
                            StringConstant::U8S_LP_Throwable_RP_Throwable) == 0)
@@ -433,7 +431,7 @@ void Control::InitThrowableInfo()
              ! Throwable_initCause_method))
         {
             system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
-                                              0,
+                                              LexStream::BadToken(),
                                               Throwable_type -> ContainingPackageName(),
                                               Throwable_type -> ExternalName());
         }
@@ -448,12 +446,12 @@ void Control::InitNoClassDefFoundErrorInfo()
         //
         // Search for relevant constructors
         //
-        for (MethodSymbol *constructor =
+        for (MethodSymbol* constructor =
                  NoClassDefFoundError_type -> FindConstructorSymbol();
              constructor;
              constructor = constructor -> next_method)
         {
-            char *signature = constructor -> SignatureString();
+            char* signature = constructor -> SignatureString();
 
             if (strcmp(signature, StringConstant::U8S_LP_String_RP_V) == 0)
                 NoClassDefFoundError_InitString_method = constructor;
@@ -465,7 +463,7 @@ void Control::InitNoClassDefFoundErrorInfo()
             ! NoClassDefFoundError_Init_method)
         {
             system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
-                                              0,
+                                              LexStream::BadToken(),
                                               NoClassDefFoundError_type -> ContainingPackageName(),
                                               NoClassDefFoundError_type -> ExternalName());
         }
@@ -480,12 +478,12 @@ void Control::InitStringBufferInfo()
         //
         // Search for relevant constructors
         //
-        for (MethodSymbol *constructor =
+        for (MethodSymbol* constructor =
                  StringBuffer_type -> FindConstructorSymbol();
              constructor;
              constructor = constructor -> next_method)
         {
-            char *signature = constructor -> SignatureString();
+            char* signature = constructor -> SignatureString();
 
             if (strcmp(signature, StringConstant::U8S_LP_RP_V) == 0)
                  StringBuffer_Init_method = constructor;
@@ -497,7 +495,7 @@ void Control::InitStringBufferInfo()
         //
         // Search for relevant toString method
         //
-        for (MethodSymbol *toString_method =
+        for (MethodSymbol* toString_method =
                  StringBuffer_type -> FindMethodSymbol(toString_name_symbol);
              toString_method;
              toString_method = toString_method -> next_method)
@@ -513,12 +511,12 @@ void Control::InitStringBufferInfo()
         //
         // Search for relevant append method
         //
-        for (MethodSymbol *append_method =
+        for (MethodSymbol* append_method =
                  StringBuffer_type -> FindMethodSymbol(append_name_symbol);
              append_method;
              append_method = append_method -> next_method)
         {
-            char *signature = append_method -> SignatureString();
+            char* signature = append_method -> SignatureString();
 
             if (strcmp(signature,
                        StringConstant::U8S_LP_C_RP_StringBuffer) == 0)
@@ -559,7 +557,7 @@ void Control::InitStringBufferInfo()
                StringBuffer_append_object_method))
         {
             system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
-                                              0,
+                                              LexStream::BadToken(),
                                               StringBuffer_type -> ContainingPackageName(),
                                               StringBuffer_type -> ExternalName());
         }
@@ -605,7 +603,7 @@ void Control::ProcessUnnamedPackage()
 void Control::ProcessPath()
 {
 #ifdef UNIX_FILE_SYSTEM
-    NameSymbol *dot_path_name_symbol = dot_name_symbol;
+    NameSymbol* dot_path_name_symbol = dot_name_symbol;
 
     //
     // We need a place to start. Allocate a "." directory with no owner
@@ -613,7 +611,7 @@ void Control::ProcessPath()
     // associated directory is the "." directory. Identify the "." path as
     // the owner of the "." directory. It's not a sourcepath, so pass false.
     //
-    DirectorySymbol *default_directory = new DirectorySymbol(dot_name_symbol,
+    DirectorySymbol* default_directory = new DirectorySymbol(dot_name_symbol,
                                                              NULL, false);
     // Since the "." directory may not be the first directory, set
     // dot_classpath_index to the first instance in classpath.
@@ -635,13 +633,13 @@ void Control::ProcessPath()
 
 #elif defined(WIN32_FILE_SYSTEM)
 
-    char *main_current_directory = option.GetMainCurrentDirectory();
+    char* main_current_directory = option.GetMainCurrentDirectory();
     int dot_path_name_length = strlen(main_current_directory);
-    wchar_t *dot_path_name = new wchar_t[dot_path_name_length + 1];
+    wchar_t* dot_path_name = new wchar_t[dot_path_name_length + 1];
     for (int i = 0; i < dot_path_name_length; i++)
         dot_path_name[i] = main_current_directory[i];
     dot_path_name[dot_path_name_length] = U_NULL;
-    NameSymbol *dot_path_name_symbol = FindOrInsertName(dot_path_name,
+    NameSymbol* dot_path_name_symbol = FindOrInsertName(dot_path_name,
                                                         dot_path_name_length);
     delete [] dot_path_name;
 
@@ -651,7 +649,7 @@ void Control::ProcessPath()
     // associated directory is the "." directory. Identify the "." path as
     // the owner of the "." directory. It's not a sourcepath, so pass false.
     //
-    DirectorySymbol *default_directory = new DirectorySymbol(dot_name_symbol,
+    DirectorySymbol* default_directory = new DirectorySymbol(dot_name_symbol,
                                                              NULL, false);
     // Since the "." directory may not be the first directory, set
     // dot_classpath_index to the first instance in classpath.
@@ -662,7 +660,7 @@ void Control::ProcessPath()
     // the owner above.
     default_directory -> ReadDirectory();
     system_directories.Next() = default_directory;
-#endif
+#endif // WIN32_FILE_SYSTEM
     //
     //
     //
@@ -679,7 +677,7 @@ void Control::ProcessPath()
     // TODO: If the user did not specify "." in the class path we assume it.
     // javac makes that assumption also. Is that correct?
     //
-    if (dot_classpath_index == -1)
+    if (dot_classpath_index == 0)
         unnamed_package -> directory.Next() = classpath[0] -> RootDirectory();
 }
 
@@ -689,22 +687,22 @@ void Control::ProcessBootClassPath()
     {
         // The longest possible path name we can encounter
         int max_path_name_length = strlen(option.bootclasspath) + 1;
-        wchar_t *path_name = new wchar_t[max_path_name_length + 1];
+        wchar_t* path_name = new wchar_t[max_path_name_length + 1];
 
-        wchar_t *input_name = NULL;
+        wchar_t* input_name = NULL;
 #ifdef WIN32_FILE_SYSTEM
-        char * full_directory_name = NULL;
+        char* full_directory_name = NULL;
 #endif
 
-        for (char *path = option.bootclasspath,
-                  *path_tail = &path[strlen(path)];
+        for (char* path = option.bootclasspath,
+                 * path_tail = &path[strlen(path)];
              path < path_tail; path++)
         {
 #ifdef WIN32_FILE_SYSTEM
             delete [] full_directory_name;
             delete [] input_name;
 #endif
-            char *head;
+            char* head;
             for (head = path; path < path_tail && *path != PathSeparator();
                  path++);
 
@@ -745,7 +743,7 @@ void Control::ProcessBootClassPath()
                                                    full_directory_name);
                 if (length <= directory_length)
                 {
-                    for (char *ptr = full_directory_name; *ptr; ptr++)
+                    for (char* ptr = full_directory_name; *ptr; ptr++)
                     {
                         *ptr = (*ptr != U_BACKSLASH
                                 ? *ptr : (char) U_SLASH); // turn '\' to '/'.
@@ -776,11 +774,11 @@ void Control::ProcessBootClassPath()
             option.ResetCurrentDirectoryOnDisk(disk);
             // Reset the real current directory...
             option.SetMainCurrentDirectory();
-#endif
+#endif // WIN32_FILE_SYSTEM
 
             if (input_name_length > 0)
             {
-                NameSymbol *name_symbol = FindOrInsertName(path_name,
+                NameSymbol* name_symbol = FindOrInsertName(path_name,
                                                            path_name_length);
 
                 //
@@ -810,7 +808,7 @@ void Control::ProcessBootClassPath()
                 {
                     // This is the bootclasspath so it's not sourcepath, pass
                     // false
-                    DirectorySymbol *dot_directory =
+                    DirectorySymbol* dot_directory =
                         ProcessSubdirectories(input_name, input_name_length,
                                               false);
                     unnamed_package -> directory.Next() = dot_directory;
@@ -820,15 +818,15 @@ void Control::ProcessBootClassPath()
                 }
                 else
                 {
-                    Zip *zipinfo = new Zip(*this, head);
+                    Zip* zipinfo = new Zip(*this, head);
                     if (! zipinfo -> IsValid())
                     {
                         // If the zipfile is all screwed up, give up here !!!
-                        wchar_t *name = new wchar_t[input_name_length + 1];
+                        wchar_t* name = new wchar_t[input_name_length + 1];
                         for (int i = 0; i < input_name_length; i++)
                             name[i] = input_name[i];
                         name[input_name_length] = U_NULL;
-                        wchar_t *tail = &name[input_name_length - 3];
+                        wchar_t* tail = &name[input_name_length - 3];
                         if (Case::StringSegmentEqual(tail, US_zip, 3) ||
                             Case::StringSegmentEqual(tail, US_jar, 3))
                         {
@@ -844,7 +842,7 @@ void Control::ProcessBootClassPath()
                     // Create the new path symbol and update the class path
                     // with it.
                     //
-                    PathSymbol *path_symbol =
+                    PathSymbol* path_symbol =
                         classpath_table.InsertPathSymbol(name_symbol,
                                                          zipinfo -> RootDirectory());
                     path_symbol -> zipfile = zipinfo;
@@ -869,21 +867,21 @@ void Control::ProcessExtDirs()
     {
         // The longest possible path name we can encounter
         int max_path_name_length = strlen(option.extdirs) + 1;
-        wchar_t *path_name = new wchar_t[max_path_name_length + 1];
+        wchar_t* path_name = new wchar_t[max_path_name_length + 1];
 
-        wchar_t *input_name = NULL;
+        wchar_t* input_name = NULL;
 #ifdef WIN32_FILE_SYSTEM
-        char * full_directory_name = NULL;
+        char* full_directory_name = NULL;
 #endif
 
-        for (char *path = option.extdirs, *path_tail = &path[strlen(path)];
+        for (char* path = option.extdirs, *path_tail = &path[strlen(path)];
              path < path_tail; path++)
         {
 #ifdef WIN32_FILE_SYSTEM
             delete [] full_directory_name;
             delete [] input_name;
 #endif
-            char *head;
+            char* head;
             for (head = path; path < path_tail && *path != PathSeparator();
                  path++);
 
@@ -925,7 +923,7 @@ void Control::ProcessExtDirs()
                                                    full_directory_name);
                 if (length <= directory_length)
                 {
-                    for (char *ptr = full_directory_name; *ptr; ptr++)
+                    for (char* ptr = full_directory_name; *ptr; ptr++)
                         *ptr = (*ptr != U_BACKSLASH
                                 ? *ptr : (char) U_SLASH); // turn '\' to '/'.
 
@@ -954,11 +952,11 @@ void Control::ProcessExtDirs()
             option.ResetCurrentDirectoryOnDisk(disk);
             // Reset the real current directory...
             option.SetMainCurrentDirectory();
-#endif
+#endif // WIN32_FILE_SYSTEM
 
             if (input_name_length > 0)
             {
-                NameSymbol *name_symbol = FindOrInsertName(path_name,
+                NameSymbol* name_symbol = FindOrInsertName(path_name,
                                                            path_name_length);
 
                 //
@@ -983,7 +981,7 @@ void Control::ProcessExtDirs()
 
                     if (extdir)
                     {
-                        for (dirent *entry = readdir(extdir); entry; entry =
+                        for (dirent* entry = readdir(extdir); entry; entry =
                              readdir(extdir))
                         {
                             int entry_length = strlen(entry -> d_name);
@@ -1010,10 +1008,10 @@ void Control::ProcessExtDirs()
                             for (int i = 0; i < fullpath_length; ++i)
                                 extdir_entry_name[i] = extdir_entry[i];
 
-                            Zip *zipinfo = new Zip(*this, extdir_entry);
+                            Zip* zipinfo = new Zip(*this, extdir_entry);
                             if (! zipinfo -> IsValid())
                             {
-                                wchar_t *name =
+                                wchar_t* name =
                                     new wchar_t[fullpath_length + 1];
                                 for (int i = 0; i < fullpath_length; ++i)
                                     name[i] = extdir_entry_name[i];
@@ -1027,10 +1025,10 @@ void Control::ProcessExtDirs()
                             //
                             // Make a new PathSymbol to add to the classpath.
                             //
-                            NameSymbol *extdir_entry_symbol =
+                            NameSymbol* extdir_entry_symbol =
                                 FindOrInsertName(extdir_entry_name,
                                                  fullpath_length);
-                            PathSymbol *path_symbol =
+                            PathSymbol* path_symbol =
                                 classpath_table.InsertPathSymbol(extdir_entry_symbol,
                                                                  zipinfo -> RootDirectory());
                             path_symbol -> zipfile = zipinfo;
@@ -1041,7 +1039,7 @@ void Control::ProcessExtDirs()
 #elif defined(WIN32_FILE_SYSTEM)
 
                     // +2 for "/*" +1 for '\0'
-                    char *directory_name = new char[input_name_length + 3];
+                    char* directory_name = new char[input_name_length + 3];
                     strcpy(directory_name, head);
                     if (directory_name[input_name_length - 1] != U_SLASH)
                         strcat(directory_name, StringConstant::U8S_SL);
@@ -1062,7 +1060,7 @@ void Control::ProcessExtDirs()
                                  (! strcmp(entry.cFileName, "..")))
                                 continue;
 
-                            char *extdir_entry = new char[fullpath_length + 1];
+                            char* extdir_entry = new char[fullpath_length + 1];
                             wchar_t* extdir_entry_name =
                                 new wchar_t[fullpath_length + 1];
                             // First put path
@@ -1090,10 +1088,10 @@ void Control::ProcessExtDirs()
                             for (int i = 0; i < fullpath_length; ++i)
                                 extdir_entry_name[i] = extdir_entry[i];
 
-                            Zip *zipinfo = new Zip(*this, extdir_entry);
+                            Zip* zipinfo = new Zip(*this, extdir_entry);
                             if (! zipinfo -> IsValid())
                             {
-                                wchar_t *name =
+                                wchar_t* name =
                                     new wchar_t[fullpath_length + 1];
                                 for (int i = 0; i < fullpath_length; ++i)
                                     name[i] = extdir_entry_name[i];
@@ -1104,13 +1102,13 @@ void Control::ProcessExtDirs()
                             unnamed_package->directory.Next() =
                                 zipinfo -> RootDirectory();
 
-                            NameSymbol *extdir_entry_symbol =
+                            NameSymbol* extdir_entry_symbol =
                                 FindOrInsertName(extdir_entry_name,
                                                  fullpath_length);
                             //
                             // Make a new PathSymbol to add to the classpath.
                             //
-                            PathSymbol *path_symbol =
+                            PathSymbol* path_symbol =
                                 classpath_table.InsertPathSymbol(extdir_entry_symbol,
                                                                  zipinfo -> RootDirectory());
                             path_symbol -> zipfile = zipinfo;
@@ -1121,11 +1119,11 @@ void Control::ProcessExtDirs()
                     }
 
                     delete [] directory_name;
-#endif
+#endif // WIN32_FILE_SYSTEM
                 }
                 else
                 {
-                    wchar_t *name = new wchar_t[input_name_length + 1];
+                    wchar_t* name = new wchar_t[input_name_length + 1];
                     for (int i = 0; i < input_name_length; ++i)
                         name[i] = input_name[i];
                     name[input_name_length] = U_NULL;
@@ -1149,21 +1147,21 @@ void Control::ProcessClassPath()
     {
         // The longest possible path name we can encounter.
         int max_path_name_length = strlen(option.classpath) + 1;
-        wchar_t *path_name = new wchar_t[max_path_name_length + 1];
+        wchar_t* path_name = new wchar_t[max_path_name_length + 1];
 
-        wchar_t *input_name = NULL;
+        wchar_t* input_name = NULL;
 #ifdef WIN32_FILE_SYSTEM
-        char * full_directory_name = NULL;
+        char* full_directory_name = NULL;
 #endif
 
-        for (char *path = option.classpath, *path_tail = &path[strlen(path)];
+        for (char* path = option.classpath, *path_tail = &path[strlen(path)];
              path < path_tail; path++)
         {
 #ifdef WIN32_FILE_SYSTEM
             delete [] full_directory_name;
             delete [] input_name;
 #endif
-            char *head;
+            char* head;
             for (head = path; path < path_tail && *path != PathSeparator();
                  path++);
 
@@ -1204,7 +1202,7 @@ void Control::ProcessClassPath()
                                                    full_directory_name);
                 if (length <= directory_length)
                 {
-                    for (char *ptr = full_directory_name; *ptr; ptr++)
+                    for (char* ptr = full_directory_name; *ptr; ptr++)
                         *ptr = (*ptr != U_BACKSLASH
                                 ? *ptr : (char) U_SLASH); // turn '\' to '/'.
 
@@ -1233,11 +1231,11 @@ void Control::ProcessClassPath()
             option.ResetCurrentDirectoryOnDisk(disk);
             // Reset the real current directory...
             option.SetMainCurrentDirectory();
-#endif
+#endif // WIN32_FILE_SYSTEM
 
             if (input_name_length > 0)
             {
-                NameSymbol *name_symbol = FindOrInsertName(path_name,
+                NameSymbol* name_symbol = FindOrInsertName(path_name,
                                                            path_name_length);
 
                 //
@@ -1266,7 +1264,7 @@ void Control::ProcessClassPath()
                 if (SystemIsDirectory(head))
                 {
                     // This is the classpath so it's not sourcepath, pass false
-                    DirectorySymbol *dot_directory =
+                    DirectorySymbol* dot_directory =
                         ProcessSubdirectories(input_name, input_name_length,
                                               false);
                     unnamed_package -> directory.Next() = dot_directory;
@@ -1276,15 +1274,15 @@ void Control::ProcessClassPath()
                 }
                 else
                 {
-                    Zip *zipinfo = new Zip(*this, head);
+                    Zip* zipinfo = new Zip(*this, head);
                     // If the zipfile is all screwed up, give up here !!!
                     if (! zipinfo -> IsValid())
                     {
-                        wchar_t *name = new wchar_t[input_name_length + 1];
+                        wchar_t* name = new wchar_t[input_name_length + 1];
                         for (int i = 0; i < input_name_length; i++)
                             name[i] = input_name[i];
                         name[input_name_length] = U_NULL;
-                        wchar_t *tail = &name[input_name_length - 3];
+                        wchar_t* tail = &name[input_name_length - 3];
                         if (Case::StringSegmentEqual(tail, US_zip, 3) ||
                             Case::StringSegmentEqual(tail, US_jar, 3))
                             bad_zip_filenames.Next() = name;
@@ -1299,7 +1297,7 @@ void Control::ProcessClassPath()
                     // Create the new path symbol and update the class path
                     // with it.
                     //
-                    PathSymbol *path_symbol =
+                    PathSymbol* path_symbol =
                         classpath_table.InsertPathSymbol(name_symbol,
                                                          zipinfo -> RootDirectory());
                     path_symbol -> zipfile = zipinfo;
@@ -1323,21 +1321,21 @@ void Control::ProcessSourcePath()
     {
         // The longest possible path name we can encounter.
         int max_path_name_length = strlen(option.sourcepath) + 1;
-        wchar_t *path_name = new wchar_t[max_path_name_length + 1];
+        wchar_t* path_name = new wchar_t[max_path_name_length + 1];
 
-        wchar_t *input_name = NULL;
+        wchar_t* input_name = NULL;
 #ifdef WIN32_FILE_SYSTEM
-        char * full_directory_name = NULL;
+        char* full_directory_name = NULL;
 #endif
 
-        for (char *path = option.sourcepath, *path_tail = &path[strlen(path)];
+        for (char* path = option.sourcepath, *path_tail = &path[strlen(path)];
              path < path_tail; path++)
         {
 #ifdef WIN32_FILE_SYSTEM
             delete [] full_directory_name;
             delete [] input_name;
 #endif
-            char *head;
+            char* head;
             for (head = path; path < path_tail && *path != PathSeparator(); path++)
                 ;
             *path = U_NULL; // If a separator was encountered, replace it by \0 to terminate the string.
@@ -1370,7 +1368,7 @@ void Control::ProcessSourcePath()
                 DWORD length = GetCurrentDirectory(directory_length, full_directory_name);
                 if (length <= directory_length)
                 {
-                    for (char *ptr = full_directory_name; *ptr; ptr++)
+                    for (char* ptr = full_directory_name; *ptr; ptr++)
                         *ptr = (*ptr != U_BACKSLASH ? *ptr : (char) U_SLASH); // turn '\' to '/'.
 
                     input_name_length = length;
@@ -1393,16 +1391,18 @@ void Control::ProcessSourcePath()
                 input_name[input_name_length] = U_NULL;
             }
 
-            option.ResetCurrentDirectoryOnDisk(disk); // reset the current directory on disk
-            option.SetMainCurrentDirectory();         // reset the real current directory...
-#endif
+            // reset the current directory on disk
+            option.ResetCurrentDirectoryOnDisk(disk);
+            // reset the real current directory...
+            option.SetMainCurrentDirectory();
+#endif // WIN32_FILE_SYSTEM
 
             //
             //
             //
             if (input_name_length > 0)
             {
-                NameSymbol *name_symbol = FindOrInsertName(path_name, path_name_length);
+                NameSymbol* name_symbol = FindOrInsertName(path_name, path_name_length);
 
                 //
                 // If a directory is specified more than once, ignore the duplicates.
@@ -1425,14 +1425,14 @@ void Control::ProcessSourcePath()
                 if (SystemIsDirectory(head))
                 {
                     // This is the sourcepath, so pass true
-                    DirectorySymbol *dot_directory = ProcessSubdirectories(input_name, input_name_length, true);
+                    DirectorySymbol* dot_directory = ProcessSubdirectories(input_name, input_name_length, true);
                     unnamed_package -> directory.Next() = dot_directory;
                     classpath.Next() = classpath_table.InsertPathSymbol(name_symbol, dot_directory);
                 }
                 else
                 {
                     // We don't process zip files as source directories
-                    wchar_t *name = new wchar_t[input_name_length + 1];
+                    wchar_t* name = new wchar_t[input_name_length + 1];
                     for (int i = 0; i < input_name_length; i++)
                         name[i] = input_name[i];
                     name[input_name_length] = U_NULL;
@@ -1450,17 +1450,16 @@ void Control::ProcessSourcePath()
     }
 }
 
-TypeSymbol *Control::GetPrimitiveType(wchar_t *name, char *signature)
+TypeSymbol* Control::GetPrimitiveType(wchar_t* name, char* signature)
 {
-    NameSymbol *name_symbol = FindOrInsertName(name, wcslen(name));
-    TypeSymbol *type = unnamed_package -> InsertSystemTypeSymbol(name_symbol);
+    NameSymbol* name_symbol = FindOrInsertName(name, wcslen(name));
+    TypeSymbol* type = unnamed_package -> InsertSystemTypeSymbol(name_symbol);
 
     type -> SetSignature(Utf8_pool.FindOrInsert(signature, strlen(signature)));
     type -> outermost_type = type;
     type -> SetOwner(unnamed_package);
     type -> SetACC_PUBLIC();
     type -> MarkPrimitive();
-
     return type;
 }
 
@@ -1489,9 +1488,9 @@ void Control::ProcessSystemInformation()
 }
 
 
-DirectorySymbol *Control::GetOutputDirectory(FileSymbol *file_symbol)
+DirectorySymbol* Control::GetOutputDirectory(FileSymbol* file_symbol)
 {
-    DirectorySymbol *directory_symbol;
+    DirectorySymbol* directory_symbol;
 
     // A FileSymbol for a .class file has a NULL semantic.
     if (file_symbol -> semantic == NULL ||
@@ -1500,15 +1499,15 @@ DirectorySymbol *Control::GetOutputDirectory(FileSymbol *file_symbol)
     }
     else
     {
-        Control &control = file_symbol -> semantic -> control;
-        char *directory_prefix = control.option.directory;
+        Control& control = file_symbol -> semantic -> control;
+        char* directory_prefix = control.option.directory;
         int directory_prefix_length = strlen(directory_prefix);
         int utf8_name_length =
             file_symbol -> package -> PackageNameLength() * 3;
         // +1 for slash
         int estimated_length = directory_prefix_length + utf8_name_length + 1;
 
-        char *directory_name = new char[estimated_length + 1];
+        char* directory_name = new char[estimated_length + 1];
 
         strcpy(directory_name, directory_prefix);
 
@@ -1517,7 +1516,7 @@ DirectorySymbol *Control::GetOutputDirectory(FileSymbol *file_symbol)
             // If there was a package declaration, then...
             if (directory_prefix[directory_prefix_length - 1] != U_SLASH)
                 strcat(directory_name, StringConstant::U8S_SL);
-            char *utf8_name = new char[utf8_name_length + 1];
+            char* utf8_name = new char[utf8_name_length + 1];
             ConvertUnicodeToUtf8(file_symbol -> package -> PackageName(),
                                  utf8_name);
             strcat(directory_name, utf8_name);
@@ -1526,7 +1525,7 @@ DirectorySymbol *Control::GetOutputDirectory(FileSymbol *file_symbol)
             if (! SystemIsDirectory(directory_name))
             {
                 // The directory does not yet exist.
-                for (char *ptr = &directory_name[directory_prefix_length + 1];
+                for (char* ptr = &directory_name[directory_prefix_length + 1];
                      *ptr; ptr++)
                 {
                     // all the slashes in a package_name are forward slashes
@@ -1548,7 +1547,7 @@ DirectorySymbol *Control::GetOutputDirectory(FileSymbol *file_symbol)
         // length here.
         //
         int length = strlen(directory_name);
-        wchar_t *name = new wchar_t[length + 1];
+        wchar_t* name = new wchar_t[length + 1];
         for (int i = 0; i < length; i++)
             name[i] = directory_name[i];
         name[length] = U_NULL;
@@ -1560,27 +1559,26 @@ DirectorySymbol *Control::GetOutputDirectory(FileSymbol *file_symbol)
         delete [] name;
         delete [] directory_name;
     }
-
     return directory_symbol;
 }
 
 
-FileSymbol *Control::GetJavaFile(PackageSymbol *package,
-                                 NameSymbol *name_symbol)
+FileSymbol* Control::GetJavaFile(PackageSymbol* package,
+                                 NameSymbol* name_symbol)
 {
-    FileSymbol *file_symbol = NULL;
+    FileSymbol* file_symbol = NULL;
 
     //
     //
     //
     int length = name_symbol -> Utf8NameLength() +
         FileSymbol::java_suffix_length;
-    char *full_filename = new char[length + 1]; // +1 for \0
+    char* full_filename = new char[length + 1]; // +1 for \0
     strcpy(full_filename, name_symbol -> Utf8Name());
     strcat(full_filename, FileSymbol::java_suffix);
 
-    DirectoryEntry *entry = NULL;
-    DirectorySymbol *directory_symbol = NULL;
+    DirectoryEntry* entry = NULL;
+    DirectorySymbol* directory_symbol = NULL;
     for (int k = 0; k < package -> directory.Length(); k++)
     {
         directory_symbol = package -> directory[k];
@@ -1590,7 +1588,7 @@ FileSymbol *Control::GetJavaFile(PackageSymbol *package,
 
     if (entry)
     {
-        PathSymbol *path_symbol = directory_symbol -> PathSym();
+        PathSymbol* path_symbol = directory_symbol -> PathSym();
 
         file_symbol = directory_symbol -> FindFileSymbol(name_symbol);
         if (! ((file_symbol && file_symbol -> IsJava()) ||
@@ -1605,23 +1603,23 @@ FileSymbol *Control::GetJavaFile(PackageSymbol *package,
     }
 
     delete [] full_filename;
-
     return file_symbol;
 }
 
 
-FileSymbol *Control::GetFile(Control &control, PackageSymbol *package,
-                             NameSymbol *name_symbol)
+FileSymbol* Control::GetFile(Control& control, PackageSymbol* package,
+                             NameSymbol* name_symbol)
 {
-    return (control.option.old_classpath_search_order
-            ? GetFileFirst(control, package, name_symbol)
-            : GetFileBoth(control, package, name_symbol));
+    return control.option.old_classpath_search_order
+        ? GetFileFirst(control, package, name_symbol)
+        : GetFileBoth(control, package, name_symbol);
 }
 
-FileSymbol *Control::GetFileBoth(Control &control, PackageSymbol *package,
-                                 NameSymbol *name_symbol)
+FileSymbol* Control::GetFileBoth(Control& control, PackageSymbol* package,
+                                 NameSymbol* name_symbol)
 {
-    FileSymbol *java_file_symbol = NULL, *class_file_symbol = NULL;
+    FileSymbol* java_file_symbol = NULL;
+    FileSymbol* class_file_symbol = NULL;
 
     //
     // calculate a length that is large enough...
@@ -1631,33 +1629,33 @@ FileSymbol *Control::GetFileBoth(Control &control, PackageSymbol *package,
     int java_length = name_symbol -> Utf8NameLength() +
         FileSymbol::java_suffix_length;
 
-    char *class_name = new char[class_length + 1]; // +1 for \0
+    char* class_name = new char[class_length + 1]; // +1 for \0
     strcpy(class_name, name_symbol -> Utf8Name());
     strcat(class_name, FileSymbol::class_suffix);
 
-    char *java_name = new char[java_length + 1]; // +1 for \0
+    char* java_name = new char[java_length + 1]; // +1 for \0
     strcpy(java_name, name_symbol -> Utf8Name());
     strcat(java_name, FileSymbol::java_suffix);
 
     for (int k = 0; k < package -> directory.Length(); k++)
     {
-        DirectorySymbol *directory_symbol = package -> directory[k];
+        DirectorySymbol* directory_symbol = package -> directory[k];
         bool foundBothEntries = false;
-        FileSymbol *file_symbol =
+        FileSymbol* file_symbol =
             directory_symbol -> FindFileSymbol(name_symbol);
         if (! file_symbol)
         {
-            PathSymbol *path_symbol = directory_symbol -> PathSym();
+            PathSymbol* path_symbol = directory_symbol -> PathSym();
             if (! path_symbol -> IsZip())
             {
-                DirectoryEntry *java_entry =
+                DirectoryEntry* java_entry =
                     directory_symbol -> FindEntry(java_name, java_length),
                 *class_entry = (((! control.option.depend ||
                                   java_entry == NULL) &&
                                  (! directory_symbol -> IsSourceDirectory()))
                                 ? directory_symbol -> FindEntry(class_name,
                                                                 class_length)
-                                : (DirectoryEntry *) NULL);
+                                : (DirectoryEntry*) NULL);
 
                 if (java_entry || class_entry)
                 {
@@ -1723,10 +1721,10 @@ FileSymbol *Control::GetFileBoth(Control &control, PackageSymbol *package,
     return class_file_symbol;
 }
 
-FileSymbol *Control::GetFileFirst(Control &control, PackageSymbol *package,
-                                  NameSymbol *name_symbol)
+FileSymbol* Control::GetFileFirst(Control& control, PackageSymbol* package,
+                                  NameSymbol* name_symbol)
 {
-    FileSymbol *file_symbol = NULL;
+    FileSymbol* file_symbol = NULL;
 
     //
     // calculate a length that is large enough...
@@ -1736,31 +1734,31 @@ FileSymbol *Control::GetFileFirst(Control &control, PackageSymbol *package,
     int java_length = name_symbol -> Utf8NameLength() +
         FileSymbol::java_suffix_length;
 
-    char *class_name = new char[class_length + 1]; // +1 for \0
+    char* class_name = new char[class_length + 1]; // +1 for \0
     strcpy(class_name, name_symbol -> Utf8Name());
     strcat(class_name, FileSymbol::class_suffix);
 
-    char *java_name = new char[java_length + 1]; // +1 for \0
+    char* java_name = new char[java_length + 1]; // +1 for \0
     strcpy(java_name, name_symbol -> Utf8Name());
     strcat(java_name, FileSymbol::java_suffix);
 
     for (int k = 0; k < package -> directory.Length(); k++)
     {
-        DirectorySymbol *directory_symbol = package -> directory[k];
+        DirectorySymbol* directory_symbol = package -> directory[k];
         file_symbol = directory_symbol -> FindFileSymbol(name_symbol);
         if (file_symbol)
              break;
 
-        PathSymbol *path_symbol = directory_symbol -> PathSym();
+        PathSymbol* path_symbol = directory_symbol -> PathSym();
         if (! path_symbol -> IsZip())
         {
-            DirectoryEntry *java_entry =
+            DirectoryEntry* java_entry =
                 directory_symbol -> FindEntry(java_name, java_length);
-            DirectoryEntry *class_entry = ((! control.option.depend ||
+            DirectoryEntry* class_entry = ((! control.option.depend ||
                                             (java_entry == NULL))
                                            ? directory_symbol -> FindEntry(class_name,
                                                                            class_length)
-                                           : (DirectoryEntry *) NULL);
+                                           : (DirectoryEntry*) NULL);
 
             if (java_entry || class_entry)
             {
@@ -1789,27 +1787,25 @@ FileSymbol *Control::GetFileFirst(Control &control, PackageSymbol *package,
 
     delete [] java_name;
     delete [] class_name;
-
     return file_symbol;
 }
 
 
 
-TypeSymbol *Control::GetType(PackageSymbol *package, wchar_t *name)
+TypeSymbol* Control::GetType(PackageSymbol* package, wchar_t* name)
 {
-    NameSymbol *name_symbol = FindOrInsertName(name, wcslen(name));
-    TypeSymbol *type = package -> FindTypeSymbol(name_symbol);
+    NameSymbol* name_symbol = FindOrInsertName(name, wcslen(name));
+    TypeSymbol* type = package -> FindTypeSymbol(name_symbol);
 
     if (! type)
     {
-        Control &control = *this;
-        FileSymbol *file_symbol = GetFile(control, package, name_symbol);
+        Control& control = *this;
+        FileSymbol* file_symbol = GetFile(control, package, name_symbol);
         type = system_semantic -> ReadType(file_symbol, package,
                                            name_symbol, 0);
     }
     else if (type -> SourcePending())
          ProcessHeaders(type -> file_symbol);
-
     return type;
 }
 

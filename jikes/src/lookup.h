@@ -62,7 +62,7 @@ public:
     // and its length which it hashes it into a location in the name
     // hash table.
     //
-    inline static unsigned Function(wchar_t *head, int len)
+    inline static unsigned Function(const wchar_t* head, int len)
     {
         unsigned hash_value = 0;
         while (--len >= 0)
@@ -73,7 +73,7 @@ public:
     //
     // Same as above function for a regular "char" string.
     //
-    inline static unsigned Function(const char *head, int len)
+    inline static unsigned Function(const char* head, int len)
     {
         unsigned hash_value = 0;
         while (--len >= 0)
@@ -101,8 +101,8 @@ public:
 class DirectoryEntry
 {
 public:
-    DirectoryEntry *next;
-    char *name;
+    DirectoryEntry* next;
+    char* name;
     int length;
 
     DirectoryEntry() : next(NULL),
@@ -120,17 +120,17 @@ public:
     }
 
 
-    inline void Initialize(DirectorySymbol *directory_, char *name_,
+    inline void Initialize(DirectorySymbol* directory_, char* name_,
                            int length_)
     {
         directory = directory_;
         length = length_;
         name = new char[length + 1];
-        memmove(name, name_, length * sizeof(char));
+        memcpy(name, name_, length * sizeof(char));
         name[length] = U_NULL;
     }
 
-    inline void Initialize(DirectoryEntry *entry, char *name_, int length_)
+    inline void Initialize(DirectoryEntry* entry, char* name_, int length_)
     {
         Initialize(entry -> directory, name_, length_);
     }
@@ -142,11 +142,11 @@ public:
     //
     // See FoldedDirectoryEntry for an explanation of the use of this function
     //
-    virtual DirectoryEntry *Image() { return this; }
+    virtual DirectoryEntry* Image() { return this; }
 
 protected:
-    DirectorySymbol *directory;
-    DirectoryEntry *image;
+    DirectorySymbol* directory;
+    DirectoryEntry* image;
     time_t mtime_;
 };
 
@@ -159,13 +159,13 @@ protected:
 class FoldedDirectoryEntry : public DirectoryEntry
 {
 public:
-    FoldedDirectoryEntry(DirectoryEntry *image_)
+    FoldedDirectoryEntry(DirectoryEntry* image_)
     {
         DirectoryEntry::image = image_;
     }
     virtual ~FoldedDirectoryEntry() {}
 
-    virtual DirectoryEntry *Image() { return image; }
+    virtual DirectoryEntry* Image() { return image; }
 };
 #endif
 
@@ -180,38 +180,41 @@ class SystemTable
 
 public:
 
-    SystemTable(int = DEFAULT_HASH_SIZE);
+    SystemTable(unsigned = DEFAULT_HASH_SIZE);
     virtual ~SystemTable();
 
-    DirectorySymbol *FindDirectorySymbol(dev_t, ino_t);
-    void InsertDirectorySymbol(dev_t, ino_t, DirectorySymbol *);
+    DirectorySymbol* FindDirectorySymbol(dev_t, ino_t);
+    void InsertDirectorySymbol(dev_t, ino_t, DirectorySymbol*);
 
 private:
     class Element
     {
     public:
         Element(dev_t device_, ino_t inode_,
-                DirectorySymbol *directory_symbol_)
+                DirectorySymbol* directory_symbol_)
             : device(device_),
               inode(inode_),
               directory_symbol(directory_symbol_)
         {}
 
-        Element *next;
+        Element* next;
         dev_t device;
         ino_t inode;
-        DirectorySymbol *directory_symbol;
+        DirectorySymbol* directory_symbol;
     };
 
-    Tuple<Element *> directories;
+    Tuple<Element*> directories;
 
-    Element **base;
-    int hash_size;
+    Element** base;
+    unsigned hash_size;
 
-    static int primes[];
+    static unsigned primes[];
     int prime_index;
 
-    int hash(dev_t device, ino_t inode) { return (device + inode) % hash_size; }
+    unsigned hash(dev_t device, ino_t inode)
+    {
+        return (device + inode) % hash_size;
+    }
 
     void Rehash();
 };
@@ -220,20 +223,20 @@ private:
 class DirectoryTable
 {
 public:
-    Tuple<DirectoryEntry *> entry_pool;
+    Tuple<DirectoryEntry*> entry_pool;
 
     DirectoryTable(int estimate = 1024);
     ~DirectoryTable();
 
-    DirectoryEntry *FindEntry(char *, int);
-    DirectoryEntry *InsertEntry(DirectorySymbol *, char *, int);
+    DirectoryEntry* FindEntry(char*, int);
+    DirectoryEntry* InsertEntry(DirectorySymbol*, char*, int);
 
 #ifdef WIN32_FILE_SYSTEM
     //
     // See FoldedDirectoryEntry for an explanation of the use of this function
     //
-    DirectoryEntry *FindCaseInsensitiveEntry(char *, int);
-    void InsertCaseInsensitiveEntry(DirectoryEntry *);
+    DirectoryEntry* FindCaseInsensitiveEntry(char*, int);
+    void InsertCaseInsensitiveEntry(DirectoryEntry*);
 #endif
 
 private:
@@ -243,13 +246,13 @@ private:
         MAX_HASH_SIZE = 8191
     };
 
-    DirectoryEntry **base;
-    int hash_size;
+    DirectoryEntry** base;
+    unsigned hash_size;
 
-    static int primes[];
+    static unsigned primes[];
     int prime_index;
 
-    inline static unsigned Hash(const char *head, int len)
+    inline static unsigned Hash(const char* head, int len)
     {
         return Hash::Function(head, len);
     }
@@ -261,7 +264,7 @@ private:
 class Symbol
 {
 public:
-    Symbol  *next;
+    Symbol* next;
 
     enum SymbolKind
     {
@@ -283,27 +286,27 @@ public:
     };
 
     SymbolKind Kind() { return _kind; }
-    virtual wchar_t *Name()   { return (wchar_t *) NULL; }
-    virtual size_t NameLength() { return 0; }
-    virtual NameSymbol *Identity() { return (NameSymbol *) NULL; }
+    virtual wchar_t* Name()   { return NULL; }
+    virtual unsigned NameLength() { return 0; }
+    virtual NameSymbol* Identity() { return NULL; }
     inline unsigned HashCode();
 
     //
     // These cannot be inline without including symbol.h, because they
     // would cast to incomplete types.
     //
-    PackageSymbol *PackageCast();
-    TypeSymbol *TypeCast();
-    MethodSymbol *MethodCast();
-    BlockSymbol *BlockCast();
-    VariableSymbol *VariableCast();
-    LabelSymbol *LabelCast();
-    LiteralSymbol *LiteralCast();
-    NameSymbol *NameCast();
+    PackageSymbol* PackageCast();
+    TypeSymbol* TypeCast();
+    MethodSymbol* MethodCast();
+    BlockSymbol* BlockCast();
+    VariableSymbol* VariableCast();
+    LabelSymbol* LabelCast();
+    LiteralSymbol* LiteralCast();
+    NameSymbol* NameCast();
 
-    PathSymbol *PathCast();
-    DirectorySymbol *DirectoryCast();
-    FileSymbol *FileCast();
+    PathSymbol* PathCast();
+    DirectorySymbol* DirectoryCast();
+    FileSymbol* FileCast();
 
     virtual ~Symbol() {}
 
@@ -315,7 +318,7 @@ protected:
 class LiteralValue
 {
 public:
-    LiteralValue *next;
+    LiteralValue* next;
     int index;
 
     virtual ~LiteralValue() {}
@@ -325,7 +328,7 @@ public:
 class IntLiteralValue : public LiteralValue
 {
 public:
-    int value;
+    i4 value;
 
     virtual ~IntLiteralValue() {}
 
@@ -385,7 +388,7 @@ public:
 class Utf8LiteralValue : public LiteralValue
 {
 public:
-    char *value;
+    char* value;
     int  length;
 
     Utf8LiteralValue() : value(NULL)
@@ -396,12 +399,12 @@ public:
         delete [] value;
     }
 
-    void Initialize(const char *value_, int length_, unsigned hash_address_,
+    void Initialize(const char* value_, int length_, unsigned hash_address_,
                     int index_)
     {
         length = length_;
         value = new char[length + 1];
-        memmove(value, value_, length * sizeof(char));
+        memcpy(value, value_, length * sizeof(char));
         value[length] = U_NULL;
 
         hash_address = hash_address_;
@@ -420,18 +423,18 @@ class NameSymbol : public Symbol
 {
 public:
     int index;
-    Utf8LiteralValue *Utf8_literal;
+    Utf8LiteralValue* Utf8_literal;
 
-    virtual wchar_t *Name()   { return name_; }
-    virtual size_t NameLength() { return length; }
-    virtual NameSymbol *Identity() { return this; }
-    char *Utf8Name()
+    virtual wchar_t* Name()   { return name_; }
+    virtual unsigned NameLength() { return length; }
+    virtual NameSymbol* Identity() { return this; }
+    char* Utf8Name()
     {
-        return (char *) (Utf8_literal ? Utf8_literal -> value : NULL);
+        return Utf8_literal ? Utf8_literal -> value : (char*) NULL;
     }
     int Utf8NameLength()
     {
-        return (Utf8_literal ? Utf8_literal -> length : 0);
+        return Utf8_literal ? Utf8_literal -> length : 0;
     }
 
     NameSymbol() : name_(NULL)
@@ -442,8 +445,8 @@ public:
         delete [] name_;
     }
 
-    inline void Initialize(wchar_t *str, int length_, unsigned hash_address_,
-                           int index_)
+    inline void Initialize(const wchar_t* str, int length_,
+                           unsigned hash_address_, int index_)
     {
         Symbol::_kind = NAME;
 
@@ -452,7 +455,7 @@ public:
 
         length = length_;
         name_ = new wchar_t[length + 1];
-        memmove(name_, str, length * sizeof(wchar_t));
+        memcpy(name_, str, length * sizeof(wchar_t));
         name_[length] = U_NULL;
 
         Utf8_literal = NULL;
@@ -462,7 +465,7 @@ private:
 
     friend class NameLookupTable;
 
-    wchar_t *name_;
+    wchar_t* name_;
     int length;
     unsigned hash_address;
 };
@@ -471,12 +474,12 @@ private:
 class NameLookupTable
 {
 public:
-    Tuple<NameSymbol *> symbol_pool;
+    Tuple<NameSymbol*> symbol_pool;
 
     NameLookupTable(int estimate = 16384);
     ~NameLookupTable();
 
-    NameSymbol *FindOrInsertName(wchar_t *, size_t);
+    NameSymbol* FindOrInsertName(const wchar_t*, unsigned);
 
 private:
     enum
@@ -485,13 +488,13 @@ private:
         MAX_HASH_SIZE = 32771
     };
 
-    NameSymbol **base;
-    int hash_size;
+    NameSymbol** base;
+    unsigned hash_size;
 
-    static int primes[];
+    static unsigned primes[];
     int prime_index;
 
-    inline static unsigned Hash(wchar_t *head, int len)
+    inline static unsigned Hash(const wchar_t* head, int len)
     {
         return Hash::Function(head, len);
     }
@@ -506,12 +509,12 @@ public:
     TypeLookupTable(int estimate = 16384);
     ~TypeLookupTable();
 
-    TypeSymbol *FindType(const char *, int);
-    void InsertType(TypeSymbol *);
+    TypeSymbol* FindType(const char*, int);
+    void InsertType(TypeSymbol*);
     void SetEmpty();
 
 private:
-    Tuple<TypeSymbol *> symbol_pool;
+    Tuple<TypeSymbol*> symbol_pool;
 
     enum
     {
@@ -519,13 +522,13 @@ private:
         MAX_HASH_SIZE = 32771
     };
 
-    TypeSymbol **base;
-    int hash_size;
+    TypeSymbol** base;
+    unsigned hash_size;
 
-    static int primes[];
+    static unsigned primes[];
     int prime_index;
 
-    inline static unsigned Hash(const char *head, int len)
+    inline static unsigned Hash(const char* head, int len)
     {
         return Hash::Function(head, len);
     }
@@ -537,11 +540,11 @@ private:
 class LiteralSymbol : public Symbol
 {
 public:
-    LiteralValue *value;
+    LiteralValue* value;
 
-    virtual wchar_t *Name()   { return name_; }
-    virtual size_t NameLength() { return length; }
-    virtual NameSymbol *Identity() { return (NameSymbol *) NULL; }
+    virtual wchar_t* Name()   { return name_; }
+    virtual unsigned NameLength() { return length; }
+    virtual NameSymbol* Identity() { return NULL; }
 
     LiteralSymbol() : name_(NULL)
     {}
@@ -551,7 +554,7 @@ public:
         delete [] name_;
     }
 
-    void Initialize(wchar_t *str, unsigned hash_address_, int length_)
+    void Initialize(const wchar_t* str, unsigned hash_address_, int length_)
     {
         Symbol::_kind = LITERAL;
 
@@ -559,7 +562,7 @@ public:
 
         length = length_;
         name_ = new wchar_t[length + 1];
-        memmove(name_, str, length * sizeof(wchar_t));
+        memcpy(name_, str, length * sizeof(wchar_t));
         name_[length] = U_NULL;
 
         value = NULL;
@@ -569,7 +572,7 @@ private:
 
     friend class LiteralLookupTable;
 
-    wchar_t *name_;
+    wchar_t* name_;
     int length;
     unsigned hash_address;
 };
@@ -578,12 +581,12 @@ private:
 class LiteralLookupTable
 {
 public:
-    Tuple<LiteralSymbol *> symbol_pool;
+    Tuple<LiteralSymbol*> symbol_pool;
 
     LiteralLookupTable();
     ~LiteralLookupTable();
 
-    LiteralSymbol *FindOrInsertLiteral(wchar_t *, size_t);
+    LiteralSymbol* FindOrInsertLiteral(const wchar_t*, unsigned);
 
 private:
     enum
@@ -592,13 +595,13 @@ private:
         MAX_HASH_SIZE = 8191
     };
 
-    LiteralSymbol **base;
-    int hash_size;
+    LiteralSymbol** base;
+    unsigned hash_size;
 
-    static int primes[];
+    static unsigned primes[];
     int prime_index;
 
-    inline static unsigned Hash(wchar_t *head, int len)
+    inline static unsigned Hash(const wchar_t* head, int len)
     {
         return Hash::Function(head, len);
     }
@@ -610,24 +613,24 @@ private:
 class IntLiteralTable
 {
 public:
-    Tuple<IntLiteralValue *> symbol_pool;
+    Tuple<IntLiteralValue*> symbol_pool;
 
-    IntLiteralTable(LiteralValue *);
+    IntLiteralTable(LiteralValue*);
     ~IntLiteralTable();
 
-    LiteralValue *FindOrInsertNull()
+    LiteralValue* FindOrInsertNull()
     {
         return FindOrInsert(0);
     }
 
-    LiteralValue *FindOrInsertChar(LiteralSymbol *);
-    LiteralValue *FindOrInsertInt(LiteralSymbol *);
-    LiteralValue *FindOrInsertHexInt(LiteralSymbol *);
-    LiteralValue *FindOrInsertOctalInt(LiteralSymbol *);
-    LiteralValue *FindOrInsertNegativeInt(LiteralSymbol *);
+    LiteralValue* FindOrInsertChar(LiteralSymbol*);
+    LiteralValue* FindOrInsertInt(LiteralSymbol*);
+    LiteralValue* FindOrInsertHexInt(LiteralSymbol*);
+    LiteralValue* FindOrInsertOctalInt(LiteralSymbol*);
+    LiteralValue* FindOrInsertNegativeInt(LiteralSymbol*);
 
-    IntLiteralValue *FindOrInsert(int);
-    IntLiteralValue *Find(int);
+    IntLiteralValue* FindOrInsert(int);
+    IntLiteralValue* Find(int);
 
 #ifdef JIKES_DEBUG
     //
@@ -646,15 +649,15 @@ private:
         MAX_HASH_SIZE = 32771
     };
 
-    IntLiteralValue **base;
-    int hash_size;
+    IntLiteralValue** base;
+    unsigned hash_size;
 
-    static int primes[];
+    static unsigned primes[];
     int prime_index;
 
     static int int32_limit;
 
-    LiteralValue *bad_value;
+    LiteralValue* bad_value;
 
     void Rehash();
 };
@@ -663,17 +666,17 @@ private:
 class LongLiteralTable
 {
 public:
-    Tuple<LongLiteralValue *> symbol_pool;
+    Tuple<LongLiteralValue*> symbol_pool;
 
-    LongLiteralTable(LiteralValue *);
+    LongLiteralTable(LiteralValue*);
     ~LongLiteralTable();
 
-    LiteralValue *FindOrInsertLong(LiteralSymbol *);
-    LiteralValue *FindOrInsertHexLong(LiteralSymbol *);
-    LiteralValue *FindOrInsertOctalLong(LiteralSymbol *);
-    LiteralValue *FindOrInsertNegativeLong(LiteralSymbol *);
+    LiteralValue* FindOrInsertLong(LiteralSymbol*);
+    LiteralValue* FindOrInsertHexLong(LiteralSymbol*);
+    LiteralValue* FindOrInsertOctalLong(LiteralSymbol*);
+    LiteralValue* FindOrInsertNegativeLong(LiteralSymbol*);
 
-    LongLiteralValue *FindOrInsert(LongInt);
+    LongLiteralValue* FindOrInsert(LongInt);
 
 #ifdef JIKES_DEBUG
     //
@@ -692,17 +695,20 @@ private:
         MAX_HASH_SIZE = 8191
     };
 
-    LongLiteralValue **base;
-    int hash_size;
+    LongLiteralValue** base;
+    unsigned hash_size;
 
-    static int primes[];
+    static unsigned primes[];
     int prime_index;
 
     static LongInt int64_limit;
 
-    LiteralValue *bad_value;
+    LiteralValue* bad_value;
 
-    inline static unsigned Hash(LongInt value) { return Hash::Function(value); }
+    inline static unsigned Hash(LongInt value)
+    {
+        return Hash::Function(value);
+    }
 
     void Rehash();
 };
@@ -711,14 +717,14 @@ private:
 class FloatLiteralTable
 {
 public:
-    Tuple<FloatLiteralValue *> symbol_pool;
+    Tuple<FloatLiteralValue*> symbol_pool;
 
-    FloatLiteralTable(LiteralValue *);
+    FloatLiteralTable(LiteralValue*);
     ~FloatLiteralTable();
 
-    LiteralValue *FindOrInsertFloat(LiteralSymbol *);
+    LiteralValue* FindOrInsertFloat(LiteralSymbol*);
 
-    FloatLiteralValue *FindOrInsert(IEEEfloat);
+    FloatLiteralValue* FindOrInsert(IEEEfloat);
 
 #ifdef JIKES_DEBUG
     //
@@ -737,13 +743,13 @@ private:
         MAX_HASH_SIZE = 8191
     };
 
-    FloatLiteralValue **base;
-    int hash_size;
+    FloatLiteralValue** base;
+    unsigned hash_size;
 
-    static int primes[];
+    static unsigned primes[];
     int prime_index;
 
-    LiteralValue *bad_value;
+    LiteralValue* bad_value;
 
     inline static unsigned Hash(IEEEfloat value)
     {
@@ -757,14 +763,14 @@ private:
 class DoubleLiteralTable
 {
 public:
-    Tuple<DoubleLiteralValue *> symbol_pool;
+    Tuple<DoubleLiteralValue*> symbol_pool;
 
-    DoubleLiteralTable(LiteralValue *);
+    DoubleLiteralTable(LiteralValue*);
     ~DoubleLiteralTable();
 
-    LiteralValue *FindOrInsertDouble(LiteralSymbol *);
+    LiteralValue* FindOrInsertDouble(LiteralSymbol*);
 
-    DoubleLiteralValue *FindOrInsert(IEEEdouble);
+    DoubleLiteralValue* FindOrInsert(IEEEdouble);
 
 #ifdef JIKES_DEBUG
     //
@@ -783,13 +789,13 @@ private:
         MAX_HASH_SIZE = 8191
     };
 
-    DoubleLiteralValue **base;
-    int hash_size;
+    DoubleLiteralValue** base;
+    unsigned hash_size;
 
-    static int primes[];
+    static unsigned primes[];
     int prime_index;
 
-    LiteralValue *bad_value;
+    LiteralValue* bad_value;
 
     inline static unsigned Hash(IEEEdouble value)
     {
@@ -803,24 +809,24 @@ private:
 class Utf8LiteralTable
 {
 public:
-    Tuple<Utf8LiteralValue *> symbol_pool;
+    Tuple<Utf8LiteralValue*> symbol_pool;
 
-    Utf8LiteralTable(LiteralValue *);
+    Utf8LiteralTable(LiteralValue*);
     ~Utf8LiteralTable();
 
-    LiteralValue *FindOrInsertString(LiteralSymbol *);
+    LiteralValue* FindOrInsertString(LiteralSymbol*);
 
-    Utf8LiteralValue *FindOrInsert(const char *, int);
-    Utf8LiteralValue *FindOrInsert(wchar_t);
+    Utf8LiteralValue* FindOrInsert(const char*, int);
+    Utf8LiteralValue* FindOrInsert(wchar_t);
 
-    void CheckStringConstant(AstExpression *expr);
+    void CheckStringConstant(AstExpression* expr);
 
 private:
 
-    Tuple<Utf8LiteralValue *> *utf8_literals;
-    AstExpression *leftmost_constant_expr;
+    Tuple<Utf8LiteralValue*>* utf8_literals;
+    AstExpression* leftmost_constant_expr;
     void CollectStrings();
-    bool EndsInKnownString(AstExpression *);
+    bool EndsInKnownString(AstExpression*);
 
     enum
     {
@@ -828,15 +834,15 @@ private:
         MAX_HASH_SIZE = 32771
     };
 
-    Utf8LiteralValue **base;
-    int hash_size;
+    Utf8LiteralValue** base;
+    unsigned hash_size;
 
-    static int primes[];
+    static unsigned primes[];
     int prime_index;
 
-    LiteralValue *bad_value;
+    LiteralValue* bad_value;
 
-    inline static unsigned Hash(const char *head, int len)
+    inline static unsigned Hash(const char* head, int len)
     {
         return Hash::Function(head, len);
     }

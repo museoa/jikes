@@ -95,7 +95,7 @@ void Semantic::ProcessTypeNames()
     //
     if (compilation_unit -> BadCompilationUnitCast())
     {
-        for (int i = 0; i < lex_stream -> NumTypes(); i++)
+        for (unsigned i = 0; i < lex_stream -> NumTypes(); i++)
         {
             LexStream::TokenIndex identifier_token =
                 lex_stream -> Next(lex_stream -> Type(i));
@@ -181,7 +181,7 @@ void Semantic::ProcessTypeNames()
                                            NumClassBodyDeclarations() + 3);
                     type -> SetLocation();
 
-                    if (lex_stream -> IsDeprecated(lex_stream -> Previous(declaration -> LeftToken())))
+                    if (lex_stream -> IsDeprecated(declaration -> LeftToken()))
                         type -> MarkDeprecated();
                     source_file_symbol -> types.Next() = type;
                     declaration -> class_body -> semantic_environment =
@@ -448,7 +448,7 @@ TypeSymbol* Semantic::ProcessNestedTypeName(TypeSymbol* containing_type,
 
     delete [] external_name;
 
-    if (lex_stream -> IsDeprecated(lex_stream -> Previous(declaration -> LeftToken())))
+    if (lex_stream -> IsDeprecated(declaration -> LeftToken()))
         inner_type -> MarkDeprecated();
 
     //
@@ -836,17 +836,19 @@ TypeSymbol* Semantic::FindNestedType(TypeSymbol* type,
 // reports an error before returning the inaccessible type. For any other
 // error, the return is control.no_type.
 //
-TypeSymbol* Semantic::MustFindNestedType(TypeSymbol* type, AstExpression* name)
+TypeSymbol* Semantic::MustFindNestedType(TypeSymbol* type, AstName* name)
 {
-    LexStream::TokenIndex identifier_token = name -> RightToken();
-    TypeSymbol* inner_type = FindNestedType(type, identifier_token);
+    if (name -> base_opt && ! name -> base_opt -> symbol)
+        type = MustFindNestedType(type, name -> base_opt);
+    TypeSymbol* inner_type = FindNestedType(type, name -> identifier_token);
     if (! inner_type)
     {
         //
         // Before failing completely, check whether or not the user is trying
         // to access an inaccessible nested type.
         //
-        NameSymbol* name_symbol = lex_stream -> NameSymbol(identifier_token);
+        NameSymbol* name_symbol =
+            lex_stream -> NameSymbol(name -> identifier_token);
         for (TypeSymbol* super_type = type -> super;
              super_type && ! super_type -> Bad();
              super_type = super_type -> super)
@@ -858,15 +860,14 @@ TypeSymbol* Semantic::MustFindNestedType(TypeSymbol* type, AstExpression* name)
             if (type_shadow_symbol)
             {
                 inner_type = FindTypeInShadow(type_shadow_symbol,
-                                              identifier_token);
+                                              name -> identifier_token);
                 break;
             }
         }
 
         if (inner_type)
-            ReportTypeInaccessible(name -> LeftToken(),
-                                   identifier_token, inner_type);
-        else inner_type = GetBadNestedType(type, identifier_token);
+            ReportTypeInaccessible(name, inner_type);
+        else inner_type = GetBadNestedType(type, name -> identifier_token);
     }
     return inner_type -> Bad() ? control.no_type : inner_type;
 }
@@ -1324,26 +1325,25 @@ TypeSymbol* Semantic::GetBadNestedType(TypeSymbol* type,
 }
 
 
-void Semantic::ProcessImportQualifiedName(AstExpression* name)
+void Semantic::ProcessImportQualifiedName(AstName* name)
 {
-    AstFieldAccess* field_access = name -> FieldAccessCast();
-    if (field_access)
+    if (name -> base_opt)
     {
-        ProcessImportQualifiedName(field_access -> base);
-        Symbol* symbol = field_access -> base -> symbol;
+        ProcessImportQualifiedName(name -> base_opt);
+        Symbol* symbol = name -> base_opt -> symbol;
 
         TypeSymbol* type = symbol -> TypeCast();
         NameSymbol* name_symbol =
-            lex_stream -> NameSymbol(field_access -> identifier_token);
+            lex_stream -> NameSymbol(name -> identifier_token);
         if (type) // The base name is a type
         {
             if (type -> Bad()) // Avoid chain-reaction errors.
             {
-                field_access -> symbol = control.no_type;
+                name -> symbol = control.no_type;
                 return;
             }
             if (! type -> expanded_type_table)
-                ComputeTypesClosure(type, field_access -> identifier_token);
+                ComputeTypesClosure(type, name -> identifier_token);
             TypeSymbol* inner_type = NULL;
             TypeShadowSymbol* type_shadow_symbol = type ->
                 expanded_type_table -> FindTypeShadowSymbol(name_symbol);
@@ -1360,7 +1360,7 @@ void Semantic::ProcessImportQualifiedName(AstExpression* name)
             else if (type != inner_type -> owner)
             {
                 ReportSemError(SemanticError::IMPORT_NOT_CANONICAL,
-                               field_access, name_symbol -> Name(),
+                               name, name_symbol -> Name(),
                                inner_type -> ContainingPackageName(),
                                inner_type -> ExternalName());
             }
@@ -1368,9 +1368,9 @@ void Semantic::ProcessImportQualifiedName(AstExpression* name)
                      (! inner_type -> ACC_PUBLIC() &&
                       inner_type -> ContainingPackage() != this_package))
             {
-                ReportTypeInaccessible(field_access, inner_type);
+                ReportTypeInaccessible(name, inner_type);
             }
-            field_access -> symbol = inner_type;
+            name -> symbol = inner_type;
         }
         else
         {
@@ -1382,7 +1382,7 @@ void Semantic::ProcessImportQualifiedName(AstExpression* name)
                     Control::GetFile(control, package, name_symbol);
                 if (file_symbol)
                     type = ReadType(file_symbol, package, name_symbol,
-                                    field_access -> identifier_token);
+                                    name -> identifier_token);
             }
             else if (type -> SourcePending())
                 control.ProcessHeaders(type -> file_symbol);
@@ -1396,9 +1396,9 @@ void Semantic::ProcessImportQualifiedName(AstExpression* name)
                 if (! type -> ACC_PUBLIC() &&
                     type -> ContainingPackage() != this_package)
                 {
-                    ReportTypeInaccessible(field_access, type);
+                    ReportTypeInaccessible(name, type);
                 }
-                field_access -> symbol = type;
+                name -> symbol = type;
             }
             else
             {
@@ -1407,15 +1407,12 @@ void Semantic::ProcessImportQualifiedName(AstExpression* name)
                 if (! subpackage)
                     subpackage = package -> InsertPackageSymbol(name_symbol);
                 control.FindPathsToDirectory(subpackage);
-                field_access -> symbol = subpackage;
+                name -> symbol = subpackage;
             }
         }
     }
-    else
+    else // unqualified name
     {
-        AstSimpleName* simple_name = name -> SimpleNameCast();
-        assert(simple_name);
-
         //
         // JLS 6.3 The leading simple name of a type import must be a package
         // name, as class names are not in scope. JLS 7.5: Nested classes of
@@ -1424,7 +1421,7 @@ void Semantic::ProcessImportQualifiedName(AstExpression* name)
         // canonical version.
         //
         TypeSymbol* type = FindSimpleNameType(control.unnamed_package,
-                                              simple_name -> identifier_token);
+                                              name -> identifier_token);
 
         //
         // If the name is a type, detect the error. Otherwise, assume
@@ -1433,21 +1430,21 @@ void Semantic::ProcessImportQualifiedName(AstExpression* name)
         if (type)
         {
             ReportSemError(SemanticError::IMPORT_FROM_UNNAMED_PACKAGE,
-                           simple_name -> identifier_token,
-                           lex_stream -> NameString(simple_name -> identifier_token));
-            simple_name -> symbol = control.no_type;
+                           name -> identifier_token,
+                           lex_stream -> NameString(name -> identifier_token));
+            name -> symbol = control.no_type;
         }
         else
         {
             NameSymbol* name_symbol =
-                lex_stream -> NameSymbol(simple_name -> identifier_token);
+                lex_stream -> NameSymbol(name -> identifier_token);
             PackageSymbol* package =
                 control.external_table.FindPackageSymbol(name_symbol);
             if (! package)
                 package = control.external_table.
                     InsertPackageSymbol(name_symbol, NULL);
             control.FindPathsToDirectory(package);
-            simple_name -> symbol = package;
+            name -> symbol = package;
         }
     }
 }
@@ -1459,23 +1456,22 @@ void Semantic::ProcessImportQualifiedName(AstExpression* name)
 // but a check for an inaccessible type is made before inventing a package.
 // The result is stored in name->symbol.
 //
-void Semantic::ProcessPackageOrType(AstExpression* name)
+void Semantic::ProcessPackageOrType(AstName* name)
 {
-    AstFieldAccess* field_access = name -> FieldAccessCast();
-    if (field_access)
+    if (name -> base_opt)
     {
-        ProcessPackageOrType(field_access -> base);
-        Symbol* symbol = field_access -> base -> symbol;
+        ProcessPackageOrType(name -> base_opt);
+        Symbol* symbol = name -> base_opt -> symbol;
 
         TypeSymbol* type = symbol -> TypeCast();
         if (type) // The base name is a type
-            field_access -> symbol = MustFindNestedType(type, field_access);
+            name -> symbol = MustFindNestedType(type, name);
         else
         {
             // Base name is package. Search for type, then subpackage.
             PackageSymbol* package = symbol -> PackageCast();
             NameSymbol* name_symbol =
-                lex_stream -> NameSymbol(field_access -> identifier_token);
+                lex_stream -> NameSymbol(name -> identifier_token);
             type = package -> FindTypeSymbol(name_symbol);
             if (! type)
             {
@@ -1483,7 +1479,7 @@ void Semantic::ProcessPackageOrType(AstExpression* name)
                     Control::GetFile(control, package, name_symbol);
                 if (file_symbol)
                     type = ReadType(file_symbol, package, name_symbol,
-                                    field_access -> identifier_token);
+                                    name -> identifier_token);
             }
             else if (type -> SourcePending())
                 control.ProcessHeaders(type -> file_symbol);
@@ -1494,38 +1490,35 @@ void Semantic::ProcessPackageOrType(AstExpression* name)
             //
             if (type)
                 // save the resolved type of this expression for later use...
-                field_access -> symbol = type;
+                name -> symbol = type;
             else
             {
                 NameSymbol* name_symbol =
-                    lex_stream -> NameSymbol(field_access -> identifier_token);
+                    lex_stream -> NameSymbol(name -> identifier_token);
                 PackageSymbol* subpackage =
                     package -> FindPackageSymbol(name_symbol);
                 if (! subpackage)
                     subpackage = package -> InsertPackageSymbol(name_symbol);
                 control.FindPathsToDirectory(subpackage);
-                field_access -> symbol = subpackage;
+                name -> symbol = subpackage;
                 if (subpackage -> directory.Length() == 0)
                 {
                     ReportSemError(SemanticError::PACKAGE_NOT_FOUND,
-                                   field_access -> identifier_token,
+                                   name -> identifier_token,
                                    subpackage -> PackageName());
                 }
             }
         }
     }
-    else
+    else // unqualified name
     {
-        AstSimpleName* simple_name = name -> SimpleNameCast();
-        assert(simple_name);
-
-        TypeSymbol* type = FindType(simple_name -> identifier_token);
+        TypeSymbol* type = FindType(name -> identifier_token);
         if (type)
-            simple_name -> symbol = type;
+            name -> symbol = type;
         else
         {
             NameSymbol* name_symbol =
-                lex_stream -> NameSymbol(simple_name -> identifier_token);
+                lex_stream -> NameSymbol(name -> identifier_token);
             PackageSymbol* package =
                 control.external_table.FindPackageSymbol(name_symbol);
             if (! package)
@@ -1541,7 +1534,7 @@ void Semantic::ProcessPackageOrType(AstExpression* name)
                 if (state_stack.Size())
                 {
                     NameSymbol* name_symbol = lex_stream ->
-                        NameSymbol(simple_name -> identifier_token);
+                        NameSymbol(name -> identifier_token);
                     for (TypeSymbol* super_type = ThisType() -> super;
                          super_type; super_type = super_type -> super)
                     {
@@ -1559,18 +1552,18 @@ void Semantic::ProcessPackageOrType(AstExpression* name)
                 }
                 if (type)
                 {
-                    ReportTypeInaccessible(simple_name, type);
-                    simple_name -> symbol = type;
+                    ReportTypeInaccessible(name, type);
+                    name -> symbol = type;
                 }
                 else
                 {
                     ReportSemError(SemanticError::PACKAGE_NOT_FOUND,
-                                   simple_name -> identifier_token,
+                                   name -> identifier_token,
                                    package -> PackageName());
-                    simple_name -> symbol = package;
+                    name -> symbol = package;
                 }
             }
-            else simple_name -> symbol = package;
+            else name -> symbol = package;
         }
     }
 }
@@ -1701,27 +1694,24 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration* import_d
 
     if (k < compilation_unit -> NumTypeDeclarations())
     {
-        AstFieldAccess* field_access =
-            import_declaration -> name -> FieldAccessCast();
-        package = (field_access
-                   ? field_access -> base -> symbol -> PackageCast()
-                   : control.unnamed_package);
+        AstName* name = import_declaration -> name;
+        package = name -> base_opt
+            ? name -> base_opt -> symbol -> PackageCast()
+            : control.unnamed_package;
 
         //
         // It's ok to import a type that is being compiled...
         //
         if (type == old_type && package == this_package)
         {
-            ReportSemError(SemanticError::UNNECESSARY_TYPE_IMPORT,
-                           import_declaration -> name,
-                           lex_stream -> NameString(import_declaration -> name -> RightToken()),
+            ReportSemError(SemanticError::UNNECESSARY_TYPE_IMPORT, name,
+                           lex_stream -> NameString(name -> identifier_token),
                            old_type -> FileLoc());
         }
         else
         {
-            ReportSemError(SemanticError::DUPLICATE_IMPORT_NAME,
-                           import_declaration -> name,
-                           lex_stream -> NameString(import_declaration -> name -> RightToken()),
+            ReportSemError(SemanticError::DUPLICATE_IMPORT_NAME, name,
+                           lex_stream -> NameString(name -> identifier_token),
                            old_type -> FileLoc());
         }
     }
@@ -1749,11 +1739,10 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration* import_d
         }
         else
         {
-            FileLocation file_location(lex_stream,
-                                       compilation_unit -> ImportDeclaration(i) -> LeftToken());
-            ReportSemError(SemanticError::DUPLICATE_IMPORT_NAME,
-                           import_declaration -> name -> RightToken(),
-                           lex_stream -> NameString(import_declaration -> name -> RightToken()),
+            AstName* name = compilation_unit -> ImportDeclaration(i) -> name;
+            FileLocation file_location(lex_stream, name -> identifier_token);
+            ReportSemError(SemanticError::DUPLICATE_IMPORT_NAME, name,
+                           lex_stream -> NameString(name -> identifier_token),
                            file_location.location);
         }
     }
@@ -1806,8 +1795,8 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration* field_declaration)
     // declaration, we must temporarily mark this type as deprecated, because
     // the field variable symbol(s) do not yet exist.
     //
-    bool deprecated_declarations = lex_stream ->
-        IsDeprecated(lex_stream -> Previous(field_declaration -> LeftToken()));
+    bool deprecated_declarations =
+        lex_stream -> IsDeprecated(field_declaration -> LeftToken());
     bool deprecated_type = this_type -> IsDeprecated();
     if (deprecated_declarations)
         this_type -> MarkDeprecated();
@@ -1993,7 +1982,7 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration* construc
     // save for processing bodies later.
     constructor_declaration -> constructor_symbol = constructor;
 
-    if (lex_stream -> IsDeprecated(lex_stream -> Previous(constructor_declaration -> LeftToken())))
+    if (lex_stream -> IsDeprecated(constructor_declaration -> LeftToken()))
         constructor -> MarkDeprecated();
 }
 
@@ -2967,9 +2956,8 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration* method_declaration
     // the method symbol does not yet exist. We fix it after formal parameter
     // processing.
     //
-    bool deprecated_method = lex_stream ->
-        IsDeprecated(lex_stream -> Previous(method_declaration ->
-                                            LeftToken()));
+    bool deprecated_method =
+        lex_stream -> IsDeprecated(method_declaration -> LeftToken());
     bool deprecated_type = this_type -> IsDeprecated();
     if (deprecated_method)
         this_type -> MarkDeprecated();
@@ -3374,16 +3362,14 @@ TypeSymbol* Semantic::FindType(LexStream::TokenIndex identifier_token)
 // exists, but is not accessible, it is returned after an error. After other
 // errors, control.no_type is returned.
 //
-TypeSymbol* Semantic::MustFindType(AstExpression* name)
+TypeSymbol* Semantic::MustFindType(AstName* name)
 {
     TypeSymbol* type;
-    LexStream::TokenIndex identifier_token = name -> RightToken();
-    NameSymbol* name_symbol = lex_stream -> NameSymbol(identifier_token);
-
-    AstSimpleName* simple_name = name -> SimpleNameCast();
-    if (simple_name)
+    NameSymbol* name_symbol =
+        lex_stream -> NameSymbol(name -> identifier_token);
+    if (! name -> base_opt)
     {
-        type = FindType(identifier_token);
+        type = FindType(name -> identifier_token);
 
         //
         // If the type was not found, generate an appropriate error message.
@@ -3408,7 +3394,7 @@ TypeSymbol* Semantic::MustFindType(AstExpression* name)
             }
             // Check for an inaccessible import.
             if (! type)
-                type = ImportType(identifier_token, name_symbol);
+                type = ImportType(name -> identifier_token, name_symbol);
             // Report the error.
             if (type)
                 ReportTypeInaccessible(name, type);
@@ -3416,26 +3402,21 @@ TypeSymbol* Semantic::MustFindType(AstExpression* name)
             {
                 // Try reading the file again, to force an error.
                 NameSymbol* name_symbol =
-                    lex_stream -> NameSymbol(identifier_token);
+                    lex_stream -> NameSymbol(name -> identifier_token);
                 FileSymbol* file_symbol =
                     Control::GetFile(control, this_package, name_symbol);
                 type = ReadType(file_symbol, this_package, name_symbol,
-                                identifier_token);
+                                name -> identifier_token);
             }
         }
     }
-    else
+    else // qualified name
     {
-        AstFieldAccess* field_access = name -> FieldAccessCast();
-        assert(field_access);
-        identifier_token = field_access -> identifier_token;
-
-        ProcessPackageOrType(field_access -> base);
-        Symbol* symbol = field_access -> base -> symbol;
-
+        ProcessPackageOrType(name -> base_opt);
+        Symbol* symbol = name -> base_opt -> symbol;
         type = symbol -> TypeCast();
         if (type)
-            type = MustFindNestedType(type, field_access);
+            type = MustFindNestedType(type, name);
         else
         {
             PackageSymbol* package = symbol -> PackageCast();
@@ -3445,7 +3426,7 @@ TypeSymbol* Semantic::MustFindType(AstExpression* name)
                 FileSymbol* file_symbol =
                     Control::GetFile(control, package, name_symbol);
                 type = ReadType(file_symbol, package, name_symbol,
-                                identifier_token);
+                                name -> identifier_token);
             }
             else if (type -> SourcePending())
                 control.ProcessHeaders(type -> file_symbol);

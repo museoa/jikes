@@ -47,94 +47,94 @@ class PackageSymbol;
 class PathSymbol : public Symbol
 {
 public:
-    NameSymbol *name_symbol;
-    Zip *zipfile;
+    NameSymbol* name_symbol;
+    Zip* zipfile;
 
-    PathSymbol(NameSymbol *);
+    PathSymbol(NameSymbol*);
     virtual ~PathSymbol();
 
-    virtual wchar_t *Name() { return name_symbol -> Name(); }
+    virtual wchar_t* Name() { return name_symbol -> Name(); }
     virtual size_t NameLength() { return name_symbol -> NameLength(); }
-    virtual NameSymbol *Identity() { return name_symbol; }
-    char *Utf8Name()
+    virtual NameSymbol* Identity() { return name_symbol; }
+    char* Utf8Name()
     {
-        return (char *) (name_symbol -> Utf8_literal
-                         ? name_symbol -> Utf8_literal -> value : NULL);
+        return name_symbol -> Utf8_literal
+            ? name_symbol -> Utf8_literal -> value : (char*) NULL;
     }
     unsigned Utf8NameLength()
     {
-        return (name_symbol -> Utf8_literal
-                ? name_symbol -> Utf8_literal -> length : 0);
+        return name_symbol -> Utf8_literal
+            ? name_symbol -> Utf8_literal -> length : 0;
     }
 
     inline bool IsZip() { return zipfile != NULL; }
 
-    inline DirectorySymbol *RootDirectory() { return root_directory; }
+    inline DirectorySymbol* RootDirectory() { return root_directory; }
 
 private:
     friend class SymbolTable;
-    DirectorySymbol *root_directory;
+    DirectorySymbol* root_directory;
 };
 
 
 class DirectorySymbol : public Symbol
 {
 public:
-    Symbol *owner;
-    NameSymbol *name_symbol;
+    Symbol* owner;
+    NameSymbol* name_symbol;
 
-    Tuple<DirectorySymbol *> subdirectories;
+    Tuple<DirectorySymbol*> subdirectories;
 
-    DirectorySymbol(NameSymbol *, Symbol *, bool source_dir_only);
+    DirectorySymbol(NameSymbol*, Symbol*, bool source_dir_only);
     virtual ~DirectorySymbol();
 
-    virtual wchar_t *Name() { return name_symbol -> Name(); }
+    virtual wchar_t* Name() { return name_symbol -> Name(); }
     virtual size_t NameLength() { return name_symbol -> NameLength(); }
-    virtual NameSymbol *Identity() { return name_symbol; }
-    char *Utf8Name()
+    virtual NameSymbol* Identity() { return name_symbol; }
+    char* Utf8Name()
     {
-        return (char *) (name_symbol -> Utf8_literal
-                         ? name_symbol -> Utf8_literal -> value : NULL);
+        return name_symbol -> Utf8_literal
+            ? name_symbol -> Utf8_literal -> value : (char*) NULL;
     }
     unsigned Utf8NameLength()
     {
-        return (name_symbol -> Utf8_literal
-                ? name_symbol -> Utf8_literal -> length : 0);
+        return name_symbol -> Utf8_literal
+            ? name_symbol -> Utf8_literal -> length : 0;
     }
     bool IsSourceDirectory() { return source_dir_only; }
 
-    DirectoryEntry *FindEntry(char *name, unsigned len)
+    DirectoryEntry* FindEntry(char* name, unsigned len)
     {
-        return (entries ? entries -> FindEntry(name, len)
-                : (DirectoryEntry *) NULL);
+        return entries ? entries -> FindEntry(name, len)
+            : (DirectoryEntry*) NULL;
     }
 
 #ifdef WIN32_FILE_SYSTEM
-    DirectoryEntry *FindCaseInsensitiveEntry(char *name, unsigned length)
+    DirectoryEntry* FindCaseInsensitiveEntry(char* name, unsigned length)
     {
-        return (entries ? entries -> FindCaseInsensitiveEntry(name, length)
-                : (DirectoryEntry *) NULL);
+        return entries ? entries -> FindCaseInsensitiveEntry(name, length)
+            : (DirectoryEntry*) NULL;
     }
 
-    void InsertEntry(char *name, unsigned length)
+    void InsertEntry(char* name, unsigned length)
     {
         assert(entries);
 
-        DirectoryEntry *entry = entries -> InsertEntry(this, name, length);
+        DirectoryEntry* entry = entries -> InsertEntry(this, name, length);
         entries -> InsertCaseInsensitiveEntry(entry);
     }
 #endif // WIN32_FILE_SYSTEM
 
-    PathSymbol *PathSym()
+    PathSymbol* PathSym()
     {
-        return (owner -> PathCast() ? (PathSymbol *) owner
-                : ((DirectorySymbol *) owner) -> PathSym());
+        return owner -> PathCast() ? (PathSymbol*) owner
+            : ((DirectorySymbol*) owner) -> PathSym();
     }
 
     inline bool IsZip() { return PathSym() -> IsZip(); }
 
     void SetDirectoryName();
-    inline char *DirectoryName()
+    inline char* DirectoryName()
     {
         if (! directory_name)
             SetDirectoryName();
@@ -147,11 +147,11 @@ public:
         return directory_name_length;
     }
 
-    inline DirectorySymbol *InsertDirectorySymbol(NameSymbol *, bool);
-    inline DirectorySymbol *FindDirectorySymbol(NameSymbol *);
+    inline DirectorySymbol* InsertDirectorySymbol(NameSymbol*, bool);
+    inline DirectorySymbol* FindDirectorySymbol(NameSymbol*);
 
-    inline FileSymbol *InsertFileSymbol(NameSymbol *);
-    inline FileSymbol *FindFileSymbol(NameSymbol *);
+    inline FileSymbol* InsertFileSymbol(NameSymbol*);
+    inline FileSymbol* FindFileSymbol(NameSymbol*);
 
     void ResetDirectory();
 
@@ -161,11 +161,11 @@ private:
 
     time_t mtime;
 
-    SymbolTable *table;
-    inline SymbolTable *Table();
+    SymbolTable* table;
+    inline SymbolTable* Table();
 
-    DirectoryTable *entries;
-    char *directory_name;
+    DirectoryTable* entries;
+    char* directory_name;
     size_t directory_name_length;
 
     bool source_dir_only;
@@ -182,15 +182,15 @@ private:
         CLASS_ONLY
     };
 
-    DirectorySymbol *output_directory;
-    char *file_name;
+    DirectorySymbol* output_directory;
+    char* file_name;
     size_t file_name_length;
-    Utf8LiteralValue *file_name_literal;
+    Utf8LiteralValue* file_name_literal;
 
 public:
-    NameSymbol *name_symbol;
-    DirectorySymbol *directory_symbol;
-    PackageSymbol *package;
+    NameSymbol* name_symbol;
+    DirectorySymbol* directory_symbol;
+    PackageSymbol* package;
     FileKind kind;
 
     //
@@ -205,23 +205,24 @@ public:
     //
     time_t mtime;
 
-    LexStream *lex_stream;
-    AstCompilationUnit *compilation_unit;
-    Semantic *semantic;
+    LexStream* lex_stream;
+    AstCompilationUnit* compilation_unit;
+    Semantic* semantic;
 
-    Tuple<TypeSymbol *> types;
+    Tuple<TypeSymbol*> types;
 
-    FileSymbol(NameSymbol *name_symbol_) : output_directory(NULL),
-                                           file_name(NULL),
-                                           file_name_literal(NULL),
-                                           name_symbol(name_symbol_),
-                                           directory_symbol(NULL),
-                                           package(NULL),
-                                           mtime(0),
-                                           lex_stream(NULL),
-                                           compilation_unit(NULL),
-                                           semantic(NULL),
-                                           types(4)
+    FileSymbol(NameSymbol* name_symbol_)
+        : output_directory(NULL),
+          file_name(NULL),
+          file_name_literal(NULL),
+          name_symbol(name_symbol_),
+          directory_symbol(NULL),
+          package(NULL),
+          mtime(0),
+          lex_stream(NULL),
+          compilation_unit(NULL),
+          semantic(NULL),
+          types(4)
     {
          Symbol::_kind = _FILE;
     }
@@ -232,54 +233,53 @@ public:
         delete lex_stream;
     }
 
-    FileSymbol *Clone()
+    FileSymbol* Clone()
     {
-        FileSymbol *clone = new FileSymbol(name_symbol);
+        FileSymbol* clone = new FileSymbol(name_symbol);
 
         clone -> kind = kind;
         clone -> directory_symbol = directory_symbol;
         clone -> mtime = mtime;
-
         return clone;
     }
 
-    virtual wchar_t *Name() { return name_symbol -> Name(); }
+    virtual wchar_t* Name() { return name_symbol -> Name(); }
     virtual size_t NameLength() { return name_symbol -> NameLength(); }
-    virtual NameSymbol *Identity() { return name_symbol; }
-    char *Utf8Name()
+    virtual NameSymbol* Identity() { return name_symbol; }
+    char* Utf8Name()
     {
-        return (char *) (name_symbol -> Utf8_literal
-                         ? name_symbol -> Utf8_literal -> value : NULL);
+        return name_symbol -> Utf8_literal
+            ? name_symbol -> Utf8_literal -> value : (char*) NULL;
     }
     unsigned Utf8NameLength()
     {
-        return (name_symbol -> Utf8_literal
-                ? name_symbol -> Utf8_literal -> length : 0);
+        return name_symbol -> Utf8_literal
+            ? name_symbol -> Utf8_literal -> length : 0;
     }
 
-    inline void SetJava()       { kind = JAVA; }
-    inline void SetClass()      { kind = CLASS; }
-    inline void SetClassOnly()  { kind = CLASS_ONLY; }
+    inline void SetJava() { kind = JAVA; }
+    inline void SetClass() { kind = CLASS; }
+    inline void SetClassOnly() { kind = CLASS_ONLY; }
 
-    inline bool IsJava()       { return kind == JAVA; }
-    inline bool IsClass()      { return kind >= CLASS; }
-    inline bool IsClassOnly()  { return kind == CLASS_ONLY; }
+    inline bool IsJava() { return kind == JAVA; }
+    inline bool IsClass() { return kind >= CLASS; }
+    inline bool IsClassOnly() { return kind == CLASS_ONLY; }
 
-    PathSymbol *PathSym()
+    PathSymbol* PathSym()
     {
         return directory_symbol -> PathSym();
     }
     inline bool IsZip() { return PathSym() -> IsZip(); }
-    inline Zip *Zipfile() { return PathSym() -> zipfile; }
+    inline Zip* Zipfile() { return PathSym() -> zipfile; }
 
-    static char *java_suffix;
+    static char* java_suffix;
     static unsigned java_suffix_length;
-    static char *class_suffix;
+    static char* class_suffix;
     static unsigned class_suffix_length;
-    static bool IsJavaSuffix(char *ptr);
-    static bool IsClassSuffix(char *ptr);
+    static bool IsJavaSuffix(char* ptr);
+    static bool IsClassSuffix(char* ptr);
 
-    inline char *FileName()
+    inline char* FileName()
     {
         if (! file_name)
             SetFileName();
@@ -292,15 +292,15 @@ public:
         return file_name_length;
     }
 
-    inline Utf8LiteralValue *FileNameLiteral()
+    inline Utf8LiteralValue* FileNameLiteral()
     {
         assert(file_name_literal);
         return file_name_literal;
     }
 
-    void SetFileNameLiteral(Control *);
+    void SetFileNameLiteral(Control*);
 
-    DirectorySymbol *OutputDirectory();
+    DirectorySymbol* OutputDirectory();
 
     void SetFileName();
 
@@ -320,11 +320,11 @@ public:
 class FileLocation
 {
 public:
-    wchar_t *location;
+    wchar_t* location;
 
-    FileLocation (LexStream *lex_stream, LexStream::TokenIndex token_index)
+    FileLocation (LexStream* lex_stream, LexStream::TokenIndex token_index)
     {
-        char *file_name = lex_stream -> FileName();
+        char* file_name = lex_stream -> FileName();
         unsigned length = lex_stream -> FileNameLength();
         location = new wchar_t[length + 13];
         for (unsigned i = 0; i < length; i++) {
@@ -339,9 +339,9 @@ public:
         location[length] = U_NULL;
     }
 
-    FileLocation (FileSymbol *file_symbol)
+    FileLocation (FileSymbol* file_symbol)
     {
-        char *file_name = file_symbol -> FileName();
+        char* file_name = file_symbol -> FileName();
         unsigned length = file_symbol -> FileNameLength();
         location = new wchar_t[length + 13];
         for (unsigned i = 0; i < length; i++) {
@@ -360,10 +360,10 @@ public:
 class PackageSymbol : public Symbol
 {
 public:
-    Tuple<DirectorySymbol *> directory;
-    PackageSymbol *owner;
+    Tuple<DirectorySymbol*> directory;
+    PackageSymbol* owner;
 
-    PackageSymbol(NameSymbol *name_symbol_, PackageSymbol *owner_)
+    PackageSymbol(NameSymbol* name_symbol_, PackageSymbol* owner_)
         : directory(4),
           owner(owner_),
           name_symbol(name_symbol_),
@@ -375,24 +375,24 @@ public:
 
     virtual ~PackageSymbol();
 
-    virtual wchar_t *Name() { return name_symbol -> Name(); }
+    virtual wchar_t* Name() { return name_symbol -> Name(); }
     virtual size_t NameLength() { return name_symbol -> NameLength(); }
-    virtual NameSymbol *Identity() { return name_symbol; }
-    char *Utf8Name()
+    virtual NameSymbol* Identity() { return name_symbol; }
+    char* Utf8Name()
     {
-        return (char *) (name_symbol -> Utf8_literal
-                         ? name_symbol -> Utf8_literal -> value : NULL);
+        return name_symbol -> Utf8_literal
+            ? name_symbol -> Utf8_literal -> value : (char*) NULL;
     }
     unsigned Utf8NameLength()
     {
-        return (name_symbol -> Utf8_literal
-                ? name_symbol -> Utf8_literal -> length : 0);
+        return name_symbol -> Utf8_literal
+            ? name_symbol -> Utf8_literal -> length : 0;
     }
     // This name is fully qualified, using slashes.
 
     void SetPackageName();
     // This name is fully qualified, using slashes.
-    wchar_t *PackageName()
+    wchar_t* PackageName()
     {
         if (! package_name)
             SetPackageName();
@@ -405,21 +405,21 @@ public:
         return package_name_length;
     }
 
-    inline PackageSymbol *FindPackageSymbol(NameSymbol *);
-    inline PackageSymbol *InsertPackageSymbol(NameSymbol *);
+    inline PackageSymbol* FindPackageSymbol(NameSymbol*);
+    inline PackageSymbol* InsertPackageSymbol(NameSymbol*);
 
-    inline TypeSymbol *FindTypeSymbol(NameSymbol *);
-    inline TypeSymbol *InsertSystemTypeSymbol(NameSymbol *);
-    inline TypeSymbol *InsertOuterTypeSymbol(NameSymbol *);
-    inline void DeleteTypeSymbol(TypeSymbol *);
+    inline TypeSymbol* FindTypeSymbol(NameSymbol*);
+    inline TypeSymbol* InsertSystemTypeSymbol(NameSymbol*);
+    inline TypeSymbol* InsertOuterTypeSymbol(NameSymbol*);
+    inline void DeleteTypeSymbol(TypeSymbol*);
 
 private:
 
-    NameSymbol *name_symbol;
-    SymbolTable *table;
-    inline SymbolTable *Table();
+    NameSymbol* name_symbol;
+    SymbolTable* table;
+    inline SymbolTable* Table();
 
-    wchar_t *package_name;
+    wchar_t* package_name;
     size_t package_name_length;
 };
 
@@ -427,12 +427,12 @@ private:
 class MethodSymbol : public Symbol, public AccessFlags
 {
 public:
-    Ast *declaration; // AstMethodDeclaration or AstConstructorDeclaration
-    NameSymbol *name_symbol;
-    TypeSymbol *containing_type;
-    BlockSymbol *block_symbol;
-    MethodSymbol *next_method;
-    Utf8LiteralValue *signature;
+    Ast* declaration; // AstMethodDeclaration or AstConstructorDeclaration
+    NameSymbol* name_symbol;
+    TypeSymbol* containing_type;
+    BlockSymbol* block_symbol;
+    MethodSymbol* next_method;
+    Utf8LiteralValue* signature;
 
     unsigned max_block_depth;
 
@@ -440,24 +440,24 @@ public:
     // If this method is a method that permits access to a private member of an
     // enclosing type then accessed_member identifies the member in question.
     //
-    Symbol *accessed_member;
-    inline bool AccessesInstanceMember();
+    Symbol* accessed_member;
+    inline bool AccessesStaticMember();
 
-    virtual wchar_t *Name() { return name_symbol -> Name(); }
+    virtual wchar_t* Name() { return name_symbol -> Name(); }
     virtual size_t NameLength() { return name_symbol -> NameLength(); }
-    virtual NameSymbol *Identity() { return name_symbol; }
-    char *Utf8Name()
+    virtual NameSymbol* Identity() { return name_symbol; }
+    char* Utf8Name()
     {
-        return (char *) (name_symbol -> Utf8_literal
-                         ? name_symbol -> Utf8_literal -> value : NULL);
+        return name_symbol -> Utf8_literal
+            ? name_symbol -> Utf8_literal -> value : (char*) NULL;
     }
     unsigned Utf8NameLength()
     {
-        return (name_symbol -> Utf8_literal
-                ? name_symbol -> Utf8_literal -> length : 0);
+        return name_symbol -> Utf8_literal
+            ? name_symbol -> Utf8_literal -> length : 0;
     }
 
-    MethodSymbol(NameSymbol *name_symbol_)
+    MethodSymbol(NameSymbol* name_symbol_)
         : declaration(NULL),
           name_symbol(name_symbol_),
           containing_type(NULL),
@@ -486,45 +486,43 @@ public:
         return type_ != NULL;
     }
 
-    void SetType(TypeSymbol *_type)
+    void SetType(TypeSymbol* _type)
     {
         type_ = _type;
     }
 
-    void ProcessMethodSignature(Semantic *, LexStream::TokenIndex);
-    void ProcessMethodThrows(Semantic *, LexStream::TokenIndex);
+    void ProcessMethodSignature(Semantic*, LexStream::TokenIndex);
+    void ProcessMethodThrows(Semantic*, LexStream::TokenIndex);
 
-    TypeSymbol *Type()
+    TypeSymbol* Type()
     {
         // Make sure that the method signature associated with this method is
         // processed prior to invoking this function.
         //  ( "this -> ProcessMethodSignature(sem, tok);" )
         assert(type_);
-
         return type_;
     }
 
     unsigned NumFormalParameters()
     {
         assert(type_);
-
-        return (formal_parameters ? formal_parameters -> Length() : 0);
+        return formal_parameters ? formal_parameters -> Length() : 0;
     }
-    VariableSymbol *FormalParameter(unsigned i)
+    VariableSymbol* FormalParameter(unsigned i)
     {
         return (*formal_parameters)[i];
     }
-    void AddFormalParameter(VariableSymbol *variable)
+    void AddFormalParameter(VariableSymbol* variable)
     {
         if (! formal_parameters)
-            formal_parameters = new Tuple<VariableSymbol *>(8);
+            formal_parameters = new Tuple<VariableSymbol*>(8);
         formal_parameters -> Next() = variable;
     }
 
     unsigned NumThrows()
     {
         assert(! throws_signatures);
-        return (throws ? throws -> Length() : 0);
+        return throws ? throws -> Length() : 0;
     }
     TypeSymbol* Throws(unsigned i)
     {
@@ -539,88 +537,95 @@ public:
 
     unsigned NumThrowsSignatures()
     {
-        return (throws_signatures ? throws_signatures -> Length() : 0);
+        return throws_signatures ? throws_signatures -> Length() : 0;
     }
-    char *ThrowsSignature(unsigned i)
+    char* ThrowsSignature(unsigned i)
     {
         return (*throws_signatures)[i];
     }
-    void AddThrowsSignature(const char *signature_, unsigned length)
+    void AddThrowsSignature(const char* signature_, unsigned length)
     {
-        char *signature = new char[length + 1];
+        char* signature = new char[length + 1];
         strncpy(signature, signature_, length);
         signature[length] = U_NULL;
 
         if (! throws_signatures)
-            throws_signatures = new Tuple<char *>(8);
+            throws_signatures = new Tuple<char*>(8);
         throws_signatures -> Next() = signature;
     }
 
-    void SetExternalIdentity(NameSymbol *external_name_symbol_)
+    void SetExternalIdentity(NameSymbol* external_name_symbol_)
     {
         external_name_symbol = external_name_symbol_;
     }
-    NameSymbol *ExternalIdentity()
+    NameSymbol* ExternalIdentity()
     {
-        return (external_name_symbol ? external_name_symbol : name_symbol);
+        return external_name_symbol ? external_name_symbol : name_symbol;
     }
-    wchar_t *ExternalName()
+    wchar_t* ExternalName()
     {
-        return (external_name_symbol ? external_name_symbol -> Name()
-                : name_symbol -> Name());
+        return external_name_symbol ? external_name_symbol -> Name()
+            : name_symbol -> Name();
     }
     unsigned ExternalNameLength()
     {
-        return (external_name_symbol ? external_name_symbol -> NameLength()
-                : name_symbol -> NameLength());
+        return external_name_symbol ? external_name_symbol -> NameLength()
+            : name_symbol -> NameLength();
     }
-    char *ExternalUtf8Name()
+    char* ExternalUtf8Name()
     {
-        return (char *) (external_name_symbol
-                         ? external_name_symbol -> Utf8_literal -> value
-                         : (name_symbol -> Utf8_literal
-                            ? name_symbol -> Utf8_literal -> value : NULL));
+        return external_name_symbol
+            ? external_name_symbol -> Utf8_literal -> value
+            : name_symbol -> Utf8_literal
+            ? name_symbol -> Utf8_literal -> value : (char*) NULL;
     }
     unsigned ExternalUtf8NameLength()
     {
-        return (external_name_symbol
-                ? (external_name_symbol -> Utf8_literal
-                   ? external_name_symbol -> Utf8_literal -> length : 0)
-                : (name_symbol -> Utf8_literal
-                   ? name_symbol -> Utf8_literal -> length : 0));
+        return external_name_symbol && external_name_symbol -> Utf8_literal
+            ? external_name_symbol -> Utf8_literal -> length
+            : name_symbol -> Utf8_literal
+            ? name_symbol -> Utf8_literal -> length : 0;
     }
 
-    void SetContainingType(TypeSymbol *containing_type_) { containing_type = containing_type_; }
-    void SetBlockSymbol(BlockSymbol *block_symbol_) { block_symbol = block_symbol_; }
-    void SetSignature(Control &, TypeSymbol * = NULL);
-    void SetSignature(Utf8LiteralValue *signature_) { signature = signature_; }
-    char *SignatureString() { return signature -> value; }
-    wchar_t *Header();
+    void SetContainingType(TypeSymbol* containing_type_)
+    {
+        containing_type = containing_type_;
+    }
+    void SetBlockSymbol(BlockSymbol* block_symbol_)
+    {
+        block_symbol = block_symbol_;
+    }
+    void SetSignature(Control&, TypeSymbol* = NULL);
+    void SetSignature(Utf8LiteralValue* signature_) { signature = signature_; }
+    char* SignatureString() { return signature -> value; }
+    wchar_t* Header();
 
     void CleanUp();
 
     void MarkSynthetic() { status |= (unsigned char) 0x08; }
-    bool IsSynthetic()   { return (status & (unsigned char) 0x08) != 0; }
+    bool IsSynthetic() { return (status & (unsigned char) 0x08) != 0; }
 
     void MarkDeprecated() { status |= (unsigned char) 0x10; }
-    bool IsDeprecated()   { return (status & (unsigned char) 0x10) != 0; }
+    bool IsDeprecated() { return (status & (unsigned char) 0x10) != 0; }
 
 private:
-    NameSymbol *external_name_symbol;
+    NameSymbol* external_name_symbol;
 
     unsigned char status;
-    wchar_t *header;
+    wchar_t* header;
 
-    TypeSymbol *type_;
-    Tuple<VariableSymbol *> *formal_parameters;
-    Tuple<TypeSymbol *> *throws;
-    Tuple<char *> *throws_signatures;
+    // The return type of methods, and the containing type of constructors.
+    TypeSymbol* type_;
+
+    Tuple<VariableSymbol*>* formal_parameters;
+    Tuple<TypeSymbol*>* throws;
+    Tuple<char*>* throws_signatures;
 
     //
     // If the method in question is a constructor of a local type, we may need
     // to construct another constructor that accepts extra local parameters.
     //
-    MethodSymbol *local_constructor;
+    MethodSymbol* local_constructor;
 };
 
 
@@ -647,21 +652,21 @@ public:
     SemanticEnvironment* semantic_environment;
     AstClassBody* declaration;
 
-    FileSymbol *file_symbol;
-    FileLocation *file_location;
-    NameSymbol *name_symbol;
-    Symbol *owner;
+    FileSymbol* file_symbol;
+    FileLocation* file_location;
+    NameSymbol* name_symbol;
+    Symbol* owner;
 
     // A nested class identifies the outer most type that contains it. If a
     // class is not nested then it identifies itself as its outermost type.
-    TypeSymbol *outermost_type;
+    TypeSymbol* outermost_type;
 
-    TypeSymbol *super;
+    TypeSymbol* super;
 
     // Indicates the base type (type of elements in the last dimension) of an
     // array. For a normal type base_type is NULL. If base_type is a "bad"
     // type it points to itself (this).
-    TypeSymbol *base_type;
+    TypeSymbol* base_type;
 
     // This variable is used in TypeCycleChecker to determine if this type
     // forms an inter-type cycle in its "extends" or "implements" relationship.
@@ -677,113 +682,114 @@ public:
 
     unsigned NumLocalConstructorCallEnvironments()
     {
-        return (local_constructor_call_environments
-                ? local_constructor_call_environments -> Length() : 0);
+        return local_constructor_call_environments
+            ? local_constructor_call_environments -> Length() : 0;
     }
-    SemanticEnvironment *&LocalConstructorCallEnvironment(unsigned i)
+    SemanticEnvironment*& LocalConstructorCallEnvironment(unsigned i)
     {
         return (*local_constructor_call_environments)[i];
     }
-    void AddLocalConstructorCallEnvironment(SemanticEnvironment *environment)
+    void AddLocalConstructorCallEnvironment(SemanticEnvironment* environment)
     {
         if (! local_constructor_call_environments)
-            local_constructor_call_environments = new Tuple<SemanticEnvironment *>(8);
+            local_constructor_call_environments =
+                new Tuple<SemanticEnvironment*>(8);
         local_constructor_call_environments -> Next() = environment;
     }
 
     unsigned NumPrivateAccessMethods()
     {
-        return (private_access_methods
-                ? private_access_methods -> Length() : 0);
+        return private_access_methods
+            ? private_access_methods -> Length() : 0;
     }
-    MethodSymbol *&PrivateAccessMethod(unsigned i)
+    MethodSymbol*& PrivateAccessMethod(unsigned i)
     {
         return (*private_access_methods)[i];
     }
-    void AddPrivateAccessMethod(MethodSymbol *method_symbol)
+    void AddPrivateAccessMethod(MethodSymbol* method_symbol)
     {
         if (! private_access_methods)
-            private_access_methods = new Tuple<MethodSymbol *>(8);
+            private_access_methods = new Tuple<MethodSymbol*>(8);
         private_access_methods -> Next() = method_symbol;
     }
 
     unsigned NumPrivateAccessConstructors()
     {
-        return (private_access_constructors
-                ? private_access_constructors -> Length() : 0);
+        return private_access_constructors
+            ? private_access_constructors -> Length() : 0;
     }
-    MethodSymbol *&PrivateAccessConstructor(unsigned i)
+    MethodSymbol*& PrivateAccessConstructor(unsigned i)
     {
         return (*private_access_constructors)[i];
     }
-    void AddPrivateAccessConstructor(MethodSymbol *constructor_symbol)
+    void AddPrivateAccessConstructor(MethodSymbol* constructor_symbol)
     {
         if (! private_access_constructors)
-            private_access_constructors = new Tuple<MethodSymbol *>(8);
+            private_access_constructors = new Tuple<MethodSymbol*>(8);
         private_access_constructors -> Next() = constructor_symbol;
     }
 
     unsigned NumConstructorParameters()
     {
-        return (constructor_parameters
-                ? constructor_parameters -> Length() : 0);
+        return constructor_parameters
+            ? constructor_parameters -> Length() : 0;
     }
-    VariableSymbol *&ConstructorParameter(unsigned i)
+    VariableSymbol*& ConstructorParameter(unsigned i)
     {
         return (*constructor_parameters)[i];
     }
-    void AddConstructorParameter(VariableSymbol *variable_symbol)
+    void AddConstructorParameter(VariableSymbol* variable_symbol)
     {
         if (! constructor_parameters)
-            constructor_parameters = new Tuple<VariableSymbol *>(8);
+            constructor_parameters = new Tuple<VariableSymbol*>(8);
         constructor_parameters -> Next() = variable_symbol;
     }
 
-    VariableSymbol *&EnclosingInstance()
+    VariableSymbol*& EnclosingInstance()
     {
         return enclosing_instance;
     }
 
     unsigned NumClassLiterals()
     {
-        return (class_literals ? class_literals -> Length() : 0);
+        return class_literals ? class_literals -> Length() : 0;
     }
-    VariableSymbol *&ClassLiteral(unsigned i) { return (*class_literals)[i]; }
-    void AddClassLiteral(VariableSymbol *literal_symbol)
+    VariableSymbol*& ClassLiteral(unsigned i) { return (*class_literals)[i]; }
+    void AddClassLiteral(VariableSymbol* literal_symbol)
     {
         if (! class_literals)
-            class_literals = new Tuple<VariableSymbol *>(8);
+            class_literals = new Tuple<VariableSymbol*>(8);
         class_literals -> Next() = literal_symbol;
     }
 
-    VariableSymbol *AssertVariable() { return assert_variable; }
+    VariableSymbol* AssertVariable() { return assert_variable; }
 
     unsigned NumNestedTypes()
     {
-        return (nested_types ? nested_types -> Length() : 0);
+        return nested_types ? nested_types -> Length() : 0;
     }
-    TypeSymbol *&NestedType(unsigned i) { return (*nested_types)[i]; }
-    void AddNestedType(TypeSymbol *type_symbol)
+    TypeSymbol*& NestedType(unsigned i) { return (*nested_types)[i]; }
+    void AddNestedType(TypeSymbol* type_symbol)
     {
         if (! nested_types)
-            nested_types = new Tuple<TypeSymbol *>(8);
+            nested_types = new Tuple<TypeSymbol*>(8);
         nested_types -> Next() = type_symbol;
     }
 
     unsigned NumInterfaces()
     {
-        return (interfaces ? interfaces -> Length() : 0);
+        return interfaces ? interfaces -> Length() : 0;
     }
     void ResetInterfaces()
     {
         delete interfaces;
         interfaces = NULL;
     }
-    TypeSymbol *Interface(unsigned i) { return (*interfaces)[i]; }
-    void AddInterface(TypeSymbol *type_symbol)
+    TypeSymbol* Interface(unsigned i) { return (*interfaces)[i]; }
+    void AddInterface(TypeSymbol* type_symbol)
     {
         if (! interfaces)
-            interfaces = new Tuple<TypeSymbol *>(8);
+            interfaces = new Tuple<TypeSymbol*>(8);
         interfaces -> Next() = type_symbol;
     }
 
@@ -791,11 +797,11 @@ public:
     {
         return anonymous_types ? anonymous_types -> Length() : 0;
     }
-    TypeSymbol *&AnonymousType(unsigned i) { return (*anonymous_types)[i]; }
-    void AddAnonymousType(TypeSymbol *type_symbol)
+    TypeSymbol*& AnonymousType(unsigned i) { return (*anonymous_types)[i]; }
+    void AddAnonymousType(TypeSymbol* type_symbol)
     {
         if (! anonymous_types)
-            anonymous_types = new Tuple<TypeSymbol *>(8);
+            anonymous_types = new Tuple<TypeSymbol*>(8);
         anonymous_types -> Next() = type_symbol;
         if (! outermost_type -> placeholder_type)
             outermost_type -> placeholder_type = type_symbol;
@@ -803,30 +809,28 @@ public:
     void DeleteAnonymousTypes();
     unsigned NumLocalTypes();
 
-    SymbolSet *local,
-              *non_local;
-
-    SymbolSet *supertypes_closure,
-              *subtypes,
-              *subtypes_closure,
-              *innertypes_closure;
-
-    SymbolSet *dependents,
-              *parents,
-              *static_parents,
-              *dependents_closure,  // processed in cycle.cpp
-              *parents_closure;     // processed in cycle.cpp
+    SymbolSet* local;
+    SymbolSet* non_local;
+    SymbolSet* supertypes_closure;
+    SymbolSet* subtypes;
+    SymbolSet* subtypes_closure;
+    SymbolSet* innertypes_closure;
+    SymbolSet* dependents;
+    SymbolSet* parents;
+    SymbolSet* static_parents;
+    SymbolSet* dependents_closure;  // processed in cycle.cpp
+    SymbolSet* parents_closure;     // processed in cycle.cpp
 
     // Index of element in symbol_pool (in the relevant symbol table) that
     // points to this type.
     int pool_index;
 
-    Utf8LiteralValue *signature;
-    Utf8LiteralValue *fully_qualified_name;
+    Utf8LiteralValue* signature;
+    Utf8LiteralValue* fully_qualified_name;
 
-    ExpandedTypeTable *expanded_type_table;
-    ExpandedFieldTable *expanded_field_table;
-    ExpandedMethodTable *expanded_method_table;
+    ExpandedTypeTable* expanded_type_table;
+    ExpandedFieldTable* expanded_field_table;
+    ExpandedMethodTable* expanded_method_table;
 
     unsigned num_dimensions;
 
@@ -841,59 +845,58 @@ public:
     // relies on VM's allowing the assignment of final instance fields in an
     // instance method instead of a constructor.
     //
-    MethodSymbol *instance_initializer_method;
-    MethodSymbol *static_initializer_method;
+    MethodSymbol* instance_initializer_method;
+    MethodSymbol* static_initializer_method;
 
-    virtual wchar_t *Name() { return name_symbol -> Name(); }
+    virtual wchar_t* Name() { return name_symbol -> Name(); }
     virtual size_t NameLength() { return name_symbol -> NameLength(); }
-    virtual NameSymbol *Identity() { return name_symbol; }
-    char *Utf8Name()
+    virtual NameSymbol* Identity() { return name_symbol; }
+    char* Utf8Name()
     {
-        return (char *) (name_symbol -> Utf8_literal
-                         ? name_symbol -> Utf8_literal -> value : NULL);
+        return name_symbol -> Utf8_literal
+            ? name_symbol -> Utf8_literal -> value : (char*) NULL;
     }
     unsigned Utf8NameLength()
     {
-        return (name_symbol -> Utf8_literal
-                ? name_symbol -> Utf8_literal -> length : 0);
+        return name_symbol -> Utf8_literal
+            ? name_symbol -> Utf8_literal -> length : 0;
     }
 
 
-    void SetExternalIdentity(NameSymbol *external_name_symbol_)
+    void SetExternalIdentity(NameSymbol* external_name_symbol_)
     {
         external_name_symbol = external_name_symbol_;
     }
-    NameSymbol *ExternalIdentity()
+    NameSymbol* ExternalIdentity()
     {
-        return (external_name_symbol ? external_name_symbol : name_symbol);
+        return external_name_symbol ? external_name_symbol : name_symbol;
     }
-    wchar_t *ExternalName()
+    wchar_t* ExternalName()
     {
-        return (external_name_symbol ? external_name_symbol -> Name()
-                : name_symbol -> Name());
+        return external_name_symbol ? external_name_symbol -> Name()
+            : name_symbol -> Name();
     }
     unsigned ExternalNameLength()
     {
-        return (external_name_symbol ? external_name_symbol -> NameLength()
-                : name_symbol -> NameLength());
+        return external_name_symbol ? external_name_symbol -> NameLength()
+            : name_symbol -> NameLength();
     }
-    char *ExternalUtf8Name()
+    char* ExternalUtf8Name()
     {
-        return (char *) (external_name_symbol
-                         ? external_name_symbol -> Utf8_literal -> value
-                         : (name_symbol -> Utf8_literal
-                            ? name_symbol -> Utf8_literal -> value : NULL));
+        return external_name_symbol
+            ? external_name_symbol -> Utf8_literal -> value
+            : name_symbol -> Utf8_literal
+            ? name_symbol -> Utf8_literal -> value : (char*) NULL;
     }
     unsigned ExternalUtf8NameLength()
     {
-        return (external_name_symbol
-                ? (external_name_symbol -> Utf8_literal
-                   ? external_name_symbol -> Utf8_literal -> length : 0)
-                : (name_symbol -> Utf8_literal
-                   ? name_symbol -> Utf8_literal -> length : 0));
+        return external_name_symbol && external_name_symbol -> Utf8_literal
+            ? external_name_symbol -> Utf8_literal -> length
+            : name_symbol -> Utf8_literal
+            ? name_symbol -> Utf8_literal -> length : 0;
     }
 
-    TypeSymbol(NameSymbol *);
+    TypeSymbol(NameSymbol*);
     virtual ~TypeSymbol();
 
     void ProcessTypeHeaders();
@@ -902,76 +905,74 @@ public:
     void ProcessExecutableBodies();
     void RemoveCompilationReferences();
 
-    VariableSymbol *InsertThis0();
+    VariableSymbol* InsertThis0();
 
-    TypeSymbol *FindOrInsertClassLiteralClass();
-    MethodSymbol *FindOrInsertClassLiteralMethod(Control &);
-    MethodSymbol *ClassLiteralMethod()
+    TypeSymbol* FindOrInsertClassLiteralClass();
+    MethodSymbol* FindOrInsertClassLiteralMethod(Control&);
+    MethodSymbol* ClassLiteralMethod()
     {
         return class_literal_method;
     }
-    Utf8LiteralValue *FindOrInsertClassLiteralName(Control &);
-    VariableSymbol *FindOrInsertClassLiteral(TypeSymbol *);
-    VariableSymbol *FindOrInsertLocalShadow(VariableSymbol *);
-    VariableSymbol *FindOrInsertAssertVariable();
+    Utf8LiteralValue* FindOrInsertClassLiteralName(Control&);
+    VariableSymbol* FindOrInsertClassLiteral(TypeSymbol*);
+    VariableSymbol* FindOrInsertLocalShadow(VariableSymbol*);
+    VariableSymbol* FindOrInsertAssertVariable();
 
     //
     // Get an accessor method in this class for the given symbol, with
     // qualifying type defaulting to this type if unspecified
     //
-    MethodSymbol *GetReadAccessMethod(MethodSymbol *, TypeSymbol * = NULL);
-    MethodSymbol *GetReadAccessConstructor(MethodSymbol *);
-    MethodSymbol *GetReadAccessMethod(VariableSymbol *, TypeSymbol * = NULL);
-    MethodSymbol *GetWriteAccessMethod(VariableSymbol *, TypeSymbol * = NULL);
-    MethodSymbol *GetWriteAccessFromReadAccess(MethodSymbol *);
-    TypeSymbol *GetPlaceholderType();
+    MethodSymbol* GetReadAccessMethod(MethodSymbol*, TypeSymbol* = NULL);
+    MethodSymbol* GetReadAccessConstructor(MethodSymbol*);
+    MethodSymbol* GetReadAccessMethod(VariableSymbol*, TypeSymbol* = NULL);
+    MethodSymbol* GetWriteAccessMethod(VariableSymbol*, TypeSymbol* = NULL);
+    MethodSymbol* GetWriteAccessFromReadAccess(MethodSymbol*);
+    TypeSymbol* GetPlaceholderType();
 
-    bool IsArray() { return (num_dimensions > 0); }
+    bool IsArray() { return num_dimensions > 0; }
 
-    void SetOwner(Symbol *owner_) { owner = owner_; }
+    void SetOwner(Symbol* owner_) { owner = owner_; }
 
-    bool IsOwner(TypeSymbol *type)
+    bool IsOwner(TypeSymbol* type)
     {
-        Symbol *sym = type -> owner;
+        Symbol* sym = type -> owner;
         while (! sym -> PackageCast())
         {
             if (sym == this)
                 return true;
 
-            MethodSymbol *method = sym -> MethodCast();
+            MethodSymbol* method = sym -> MethodCast();
             sym = (method ? method -> containing_type
-                   : ((TypeSymbol *) sym) -> owner);
+                   : ((TypeSymbol*) sym) -> owner);
         }
-
         return false;
     }
 
-    TypeSymbol *ContainingType()
+    TypeSymbol* ContainingType()
     {
         if (owner)
         {
-            TypeSymbol *type = owner -> TypeCast();
+            TypeSymbol* type = owner -> TypeCast();
             if (type)
                 return type;
-            MethodSymbol *method = owner -> MethodCast();
+            MethodSymbol* method = owner -> MethodCast();
             if (method)
                 return method -> containing_type;
         }
-
-        return (TypeSymbol *) NULL;
+        return NULL;
     }
 
-    TypeSymbol *EnclosingType();
-    bool HasEnclosingInstance(TypeSymbol *, bool = false);
-    bool HasProtectedAccessTo(TypeSymbol *);
+    TypeSymbol* EnclosingType();
+    bool HasEnclosingInstance(TypeSymbol*, bool = false);
+    bool HasProtectedAccessTo(TypeSymbol*);
 
     //
     // Note that this test considers a class a subclass of itself, and also
     // interfaces are a subclass of Object. See also IsSubtype.
     //
-    bool IsSubclass(TypeSymbol *super_class)
+    bool IsSubclass(TypeSymbol* super_class)
     {
-        for (TypeSymbol *type = this; type; type = type -> super)
+        for (TypeSymbol* type = this; type; type = type -> super)
             if (type == super_class)
                 return true;
         return false;
@@ -981,7 +982,7 @@ public:
     // Note that this test considers an interface a subtype of itself, but
     // does not work for classes. See also IsSubtype.
     //
-    bool IsSubinterface(TypeSymbol *super_interface)
+    bool IsSubinterface(TypeSymbol* super_interface)
     {
         if (this == super_interface)
             return true;
@@ -996,7 +997,7 @@ public:
     //
     // This test works for classes, but not for interfaces. See also IsSubtype.
     //
-    bool Implements(TypeSymbol *inter)
+    bool Implements(TypeSymbol* inter)
     {
         for (unsigned i = 0; i < NumInterfaces(); i++)
         {
@@ -1013,14 +1014,14 @@ public:
     // Cloneable, Serializable, and all equal dimension arrays where the
     // element type is a subtype). For simplicity, a type subtypes itself.
     //
-    bool IsSubtype(TypeSymbol *type)
+    bool IsSubtype(TypeSymbol* type)
     {
         if (ACC_INTERFACE())
             return (type -> ACC_INTERFACE() && IsSubinterface(type)) ||
                 super == type;
         if (num_dimensions)
         {
-            TypeSymbol *base = type -> base_type ? type -> base_type : type;
+            TypeSymbol* base = type -> base_type ? type -> base_type : type;
             return (num_dimensions > type -> num_dimensions &&
                     ((base -> ACC_INTERFACE() && Implements(base)) ||
                      super == base)) ||
@@ -1030,25 +1031,30 @@ public:
         return type -> ACC_INTERFACE() ? Implements(type) : IsSubclass(type);
     }
 
-    wchar_t *FileLoc()
+    wchar_t* FileLoc()
     {
-        return (wchar_t *) (file_location ? file_location -> location : NULL);
+        return file_location ? file_location -> location : (wchar_t*) NULL;
     }
 
     void SetLocation();
 
-    TypeSymbol *GetArrayType(Semantic *, unsigned);
+    //
+    // Returns the array type of the given number of dims with the same base
+    // type as this (ie. Object[] -> GetArrayType(...,2) returns Object[][]).
+    //
+    TypeSymbol* GetArrayType(Semantic*, unsigned);
 
-    TypeSymbol *ArraySubtype()
+    TypeSymbol* ArraySubtype()
     {
+        assert(num_dimensions);
         return base_type -> Array(num_dimensions - 1);
     }
 
-    void SetSignature(Control &);
-    void SetSignature(Utf8LiteralValue *signature_) { signature = signature_; }
-    char *SignatureString() { return signature -> value; }
+    void SetSignature(Control&);
+    void SetSignature(Utf8LiteralValue* signature_) { signature = signature_; }
+    char* SignatureString() { return signature -> value; }
 
-    void SetClassLiteralName(Utf8LiteralValue *class_literal_name_)
+    void SetClassLiteralName(Utf8LiteralValue* class_literal_name_)
     {
         class_literal_name = class_literal_name_;
     }
@@ -1063,7 +1069,7 @@ public:
         return outermost_type -> owner -> PackageCast() -> PackageName();
     }
 
-    bool IsNestedIn(TypeSymbol *);
+    bool IsNestedIn(TypeSymbol*);
 
     bool IsNested() { return outermost_type != this; }
 
@@ -1084,8 +1090,8 @@ public:
 
     bool IsLocal()
     {
-        for (Symbol *sym = owner;
-             ! sym -> PackageCast(); sym = ((TypeSymbol *) sym) -> owner)
+        for (Symbol* sym = owner;
+             ! sym -> PackageCast(); sym = ((TypeSymbol*) sym) -> owner)
         {
             if (sym -> MethodCast())
                 return true;
@@ -1093,7 +1099,7 @@ public:
         return false;
     }
 
-    inline char *ClassName()
+    inline char* ClassName()
     {
         if (! class_name)
             SetClassName();
@@ -1174,59 +1180,59 @@ public:
     void MarkNonCircular() { status &= ~ CIRCULAR; }
     bool Circular() { return (status & CIRCULAR) != 0; }
 
-    void ProcessNestedTypeSignatures(Semantic *, LexStream::TokenIndex);
+    void ProcessNestedTypeSignatures(Semantic*, LexStream::TokenIndex);
 
     bool NestedTypesProcessed() { return nested_type_signatures == NULL; }
 
     unsigned NumNestedTypeSignatures()
     {
-        return (nested_type_signatures
-                ? nested_type_signatures -> Length() : 0);
+        return nested_type_signatures
+            ? nested_type_signatures -> Length() : 0;
     }
-    char *NestedTypeSignature(unsigned i)
+    char* NestedTypeSignature(unsigned i)
     {
         return (*nested_type_signatures)[i];
     }
-    void AddNestedTypeSignature(const char *signature_, unsigned length)
+    void AddNestedTypeSignature(const char* signature_, unsigned length)
     {
-        char *signature = new char[length + 1];
+        char* signature = new char[length + 1];
         strncpy(signature, signature_, length);
         signature[length] = U_NULL;
 
         if (! nested_type_signatures)
-            nested_type_signatures = new Tuple<char *>(8);
+            nested_type_signatures = new Tuple<char*>(8);
         nested_type_signatures -> Next() = signature;
     }
 
     inline void SetSymbolTable(unsigned);
-    inline SymbolTable *Table();
+    inline SymbolTable* Table();
 
     unsigned NumVariableSymbols();
-    VariableSymbol *VariableSym(unsigned);
+    VariableSymbol* VariableSym(unsigned);
 
     unsigned NumMethodSymbols();
-    MethodSymbol *MethodSym(unsigned);
+    MethodSymbol* MethodSym(unsigned);
 
     unsigned NumTypeSymbols();
-    TypeSymbol *TypeSym(unsigned);
+    TypeSymbol* TypeSym(unsigned);
 
-    inline TypeSymbol *InsertAnonymousTypeSymbol(NameSymbol *);
-    inline TypeSymbol *FindTypeSymbol(NameSymbol *);
-    inline TypeSymbol *InsertNestedTypeSymbol(NameSymbol *);
-    inline MethodSymbol *FindConstructorSymbol();
-    inline MethodSymbol *InsertConstructorSymbol(NameSymbol *);
-    inline void InsertConstructorSymbol(MethodSymbol *);
-    inline MethodSymbol *FindMethodSymbol(NameSymbol *);
-    inline VariableSymbol *FindVariableSymbol(NameSymbol *);
-    inline VariableSymbol *InsertVariableSymbol(NameSymbol *);
-    inline void InsertVariableSymbol(VariableSymbol *);
+    inline TypeSymbol* InsertAnonymousTypeSymbol(NameSymbol*);
+    inline TypeSymbol* FindTypeSymbol(NameSymbol*);
+    inline TypeSymbol* InsertNestedTypeSymbol(NameSymbol*);
+    inline MethodSymbol* FindConstructorSymbol();
+    inline MethodSymbol* InsertConstructorSymbol(NameSymbol*);
+    inline void InsertConstructorSymbol(MethodSymbol*);
+    inline MethodSymbol* FindMethodSymbol(NameSymbol*);
+    inline VariableSymbol* FindVariableSymbol(NameSymbol*);
+    inline VariableSymbol* InsertVariableSymbol(NameSymbol*);
+    inline void InsertVariableSymbol(VariableSymbol*);
 
-    inline MethodSymbol *InsertMethodSymbol(NameSymbol *);
-    inline void InsertMethodSymbol(MethodSymbol *);
-    inline MethodSymbol *Overload(MethodSymbol *);
-    inline void Overload(MethodSymbol *, MethodSymbol *);
-    inline MethodSymbol *LocalConstructorOverload(MethodSymbol *);
-    MethodSymbol *FindOverloadMethod(MethodSymbol *, AstMethodDeclarator *);
+    inline MethodSymbol* InsertMethodSymbol(NameSymbol*);
+    inline void InsertMethodSymbol(MethodSymbol*);
+    inline MethodSymbol* Overload(MethodSymbol*);
+    inline void Overload(MethodSymbol*, MethodSymbol*);
+    inline MethodSymbol* LocalConstructorOverload(MethodSymbol*);
+    MethodSymbol* FindOverloadMethod(MethodSymbol*, AstMethodDeclarator*);
 
     inline void CompressSpace();
 
@@ -1238,24 +1244,24 @@ private:
     //
     friend class TypeLookupTable;
     unsigned hash_address;
-    TypeSymbol *next_type;
+    TypeSymbol* next_type;
 
-    NameSymbol *external_name_symbol;
+    NameSymbol* external_name_symbol;
 
-    SymbolTable *table;
-    SymbolMap *local_shadow_map;
+    SymbolTable* table;
+    SymbolMap* local_shadow_map;
 
     unsigned short status;
 
-    PackageSymbol *package;
-    char *class_name;
+    PackageSymbol* package;
+    char* class_name;
 
     void SetClassName();
 
-    MethodSymbol *class_literal_method;
-    Utf8LiteralValue *class_literal_name;
+    MethodSymbol* class_literal_method;
+    Utf8LiteralValue* class_literal_name;
 
-    VariableSymbol *assert_variable;
+    VariableSymbol* assert_variable;
 
     //
     // For a local type, when we first encounter an embedded call to one of
@@ -1264,7 +1270,7 @@ private:
     // it and resolve it after we have computed all necessary information
     // about the type and its inner types.
     //
-    Tuple<SemanticEnvironment *> *local_constructor_call_environments;
+    Tuple<SemanticEnvironment*>* local_constructor_call_environments;
 
     //
     // When an inner class tries to access a private member of one of its
@@ -1274,18 +1280,18 @@ private:
     // The maps read_methods and write_methods are used to keep track of the
     // read and write method to which a member has been mapped.
     //
-    Tuple<MethodSymbol *> *private_access_methods,
-                          *private_access_constructors;
+    Tuple<MethodSymbol*>* private_access_methods;
+    Tuple<MethodSymbol*>* private_access_constructors;
 
-    inline void MapSymbolToReadMethod(Symbol *, TypeSymbol *, MethodSymbol *);
-    inline MethodSymbol *ReadMethod(Symbol *, TypeSymbol *);
-    inline void MapSymbolToWriteMethod(VariableSymbol *, TypeSymbol *,
-                                       MethodSymbol *);
-    inline MethodSymbol *WriteMethod(VariableSymbol *, TypeSymbol *);
+    inline void MapSymbolToReadMethod(Symbol*, TypeSymbol*, MethodSymbol*);
+    inline MethodSymbol* ReadMethod(Symbol*, TypeSymbol*);
+    inline void MapSymbolToWriteMethod(VariableSymbol*, TypeSymbol*,
+                                       MethodSymbol*);
+    inline MethodSymbol* WriteMethod(VariableSymbol*, TypeSymbol*);
 
-    Map<Symbol, Map<TypeSymbol, MethodSymbol> > *read_methods;
-    Map<VariableSymbol, Map<TypeSymbol, MethodSymbol> > *write_methods;
-    TypeSymbol *placeholder_type;
+    Map<Symbol, Map<TypeSymbol, MethodSymbol> >* read_methods;
+    Map<VariableSymbol, Map<TypeSymbol, MethodSymbol> >* write_methods;
+    TypeSymbol* placeholder_type;
 
     //
     // For an accessible inner class the first element in this array
@@ -1304,38 +1310,38 @@ private:
     // The array class_identities is used to store static variables of type
     // Class that contain the proper value for a given type.
     //
-    Tuple<VariableSymbol *> *constructor_parameters;
-    VariableSymbol *enclosing_instance;
-    Tuple<VariableSymbol *> *class_literals;
+    Tuple<VariableSymbol*>* constructor_parameters;
+    VariableSymbol* enclosing_instance;
+    Tuple<VariableSymbol*>* class_literals;
 
-    Tuple<char *> *nested_type_signatures;
+    Tuple<char*>* nested_type_signatures;
 
     //
     // The inner types that appear immediately within this type in the order
     // in which they should be processed (compiled).
     //
-    Tuple<TypeSymbol *> *nested_types;
+    Tuple<TypeSymbol*>* nested_types;
     // The interfaces that were declared in the header of the type.
-    Tuple<TypeSymbol *> *interfaces;
+    Tuple<TypeSymbol*>* interfaces;
     // The anonymous types that were declared in this type.
-    Tuple<TypeSymbol *> *anonymous_types;
+    Tuple<TypeSymbol*>* anonymous_types;
 
     //
     // The arrays of this type that were declared.
     //
-    Tuple<TypeSymbol *> *array;
+    Tuple<TypeSymbol*>* array;
     inline unsigned NumArrays()
     {
-        return (array ? array -> Length() : 0);
+        return array ? array -> Length() : 0;
     }
-    inline TypeSymbol *Array(unsigned i)
+    inline TypeSymbol* Array(unsigned i)
     {
         return (*array)[i];
     }
-    inline void AddArrayType(TypeSymbol *type_symbol)
+    inline void AddArrayType(TypeSymbol* type_symbol)
     {
         if (! array)
-            array = new Tuple<TypeSymbol *>(4);
+            array = new Tuple<TypeSymbol*>(4);
         array -> Next() = type_symbol;
     }
 };
@@ -1344,63 +1350,62 @@ private:
 class VariableSymbol : public Symbol, public AccessFlags
 {
 public:
-    AstVariableDeclarator *declarator;
+    AstVariableDeclarator* declarator;
 
-    NameSymbol *name_symbol;
-    Symbol *owner;
-    LiteralValue *initial_value;
+    NameSymbol* name_symbol;
+    Symbol* owner;
+    LiteralValue* initial_value;
 
-    VariableSymbol *accessed_local;
+    VariableSymbol* accessed_local;
 
-    virtual wchar_t *Name() { return name_symbol -> Name(); }
+    virtual wchar_t* Name() { return name_symbol -> Name(); }
     virtual size_t NameLength() { return name_symbol -> NameLength(); }
-    virtual NameSymbol *Identity() { return name_symbol; }
-    char *Utf8Name()
+    virtual NameSymbol* Identity() { return name_symbol; }
+    char* Utf8Name()
     {
-        return (char *) (name_symbol -> Utf8_literal
-                         ? name_symbol -> Utf8_literal -> value : NULL);
+        return name_symbol -> Utf8_literal
+            ? name_symbol -> Utf8_literal -> value : (char*) NULL;
     }
     unsigned Utf8NameLength()
     {
-        return (name_symbol -> Utf8_literal
-                ? name_symbol -> Utf8_literal -> length : 0);
+        return name_symbol -> Utf8_literal
+            ? name_symbol -> Utf8_literal -> length : 0;
     }
 
-    void SetExternalIdentity(NameSymbol *external_name_symbol_)
+    void SetExternalIdentity(NameSymbol* external_name_symbol_)
     {
         external_name_symbol = external_name_symbol_;
     }
-    NameSymbol *ExternalIdentity()
+    NameSymbol* ExternalIdentity()
     {
-        return (external_name_symbol ? external_name_symbol : name_symbol);
+        return external_name_symbol ? external_name_symbol : name_symbol;
     }
-    wchar_t *ExternalName()
+    wchar_t* ExternalName()
     {
-        return (external_name_symbol ? external_name_symbol -> Name()
-                : name_symbol -> Name());
+        return external_name_symbol ? external_name_symbol -> Name()
+            : name_symbol -> Name();
     }
     unsigned ExternalNameLength()
     {
-        return (external_name_symbol ? external_name_symbol -> NameLength()
-                : name_symbol -> NameLength());
+        return external_name_symbol ? external_name_symbol -> NameLength()
+            : name_symbol -> NameLength();
     }
-    char *ExternalUtf8Name()
+    char* ExternalUtf8Name()
     {
-        return (char *) (external_name_symbol
-                         ? external_name_symbol -> Utf8_literal -> value
-                         : (name_symbol -> Utf8_literal
-                            ? name_symbol -> Utf8_literal -> value : NULL));
+        return external_name_symbol
+            ? external_name_symbol -> Utf8_literal -> value
+            : name_symbol -> Utf8_literal
+            ? name_symbol -> Utf8_literal -> value : (char*) NULL;
     }
     unsigned ExternalUtf8NameLength()
     {
-        return (external_name_symbol
-                ? (external_name_symbol -> Utf8_literal
-                   ? external_name_symbol -> Utf8_literal -> length : 0)
-                : (name_symbol -> Utf8_literal
-                   ? name_symbol -> Utf8_literal -> length : 0));
+        return external_name_symbol && external_name_symbol -> Utf8_literal
+            ? external_name_symbol -> Utf8_literal -> length
+            : name_symbol -> Utf8_literal
+            ? name_symbol -> Utf8_literal -> length : 0;
     }
 
-    VariableSymbol(NameSymbol *name_symbol_)
+    VariableSymbol(NameSymbol* name_symbol_)
         : declarator(NULL),
           name_symbol(name_symbol_),
           owner(NULL),
@@ -1417,15 +1422,15 @@ public:
 
     virtual ~VariableSymbol() { delete [] signature_string; }
 
-    void SetOwner(Symbol *owner_)
+    void SetOwner(Symbol* owner_)
     {
         owner = owner_;
         assert(owner -> TypeCast() || owner -> MethodCast());
     }
 
-    TypeSymbol *ContainingType()
+    TypeSymbol* ContainingType()
     {
-        MethodSymbol *method_owner = owner -> MethodCast();
+        MethodSymbol* method_owner = owner -> MethodCast();
         return method_owner ? method_owner -> containing_type
             : owner -> TypeCast();
     }
@@ -1440,25 +1445,24 @@ public:
     // offset to account for all final fields. This version should only be
     // needed for definite assignment analysis.
     //
-    int LocalVariableIndex(Semantic *);
+    int LocalVariableIndex(Semantic*);
 
     bool IsTyped() { return type_ != NULL; }
 
-    void SetType(TypeSymbol *_type) { type_ = _type; }
+    void SetType(TypeSymbol* _type) { type_ = _type; }
 
-    void ProcessVariableSignature(Semantic *, LexStream::TokenIndex);
+    void ProcessVariableSignature(Semantic*, LexStream::TokenIndex);
 
-    TypeSymbol *Type()
+    TypeSymbol* Type()
     {
         // Make sure that the method signature associated with this method is
         // processed prior to invoking this function.
         // ( "this -> ProcessVariableSignature(sem, tok);" )
         assert(type_);
-
         return type_;
     }
 
-    void SetSignatureString(const char *signature_, unsigned length)
+    void SetSignatureString(const char* signature_, unsigned length)
     {
         signature_string = new char[length + 1];
         strncpy(signature_string, signature_, length);
@@ -1468,9 +1472,9 @@ public:
     // Is variable a local variable?
     bool IsLocal() { return owner -> MethodCast() != NULL; }
     // Is variable local to a particular method ?
-    bool IsLocal(MethodSymbol *method) { return owner == method; }
+    bool IsLocal(MethodSymbol* method) { return owner == method; }
 
-    bool IsFinal(TypeSymbol *type) { return owner == type && ACC_FINAL(); }
+    bool IsFinal(TypeSymbol* type) { return owner == type && ACC_FINAL(); }
 
     //
     // These functions are used to identify when the declaration of a field
@@ -1495,12 +1499,12 @@ private:
         DEPRECATED = 0x04, // Used to mark deprecated fields
         INITIALIZED = 0x08 // Used when initial value of final field is known
     };
-    NameSymbol *external_name_symbol;
+    NameSymbol* external_name_symbol;
 
     unsigned char status;
     int local_variable_index;
-    TypeSymbol *type_;
-    char *signature_string;
+    TypeSymbol* type_;
+    char* signature_string;
 };
 
 
@@ -1533,28 +1537,29 @@ private:
 class LabelSymbol : public Symbol
 {
 public:
-    AstBlock *block; // the block that is labeled by this symbol
-    NameSymbol *name_symbol;
+    AstBlock* block; // the block that is labeled by this symbol
+    NameSymbol* name_symbol;
 
     unsigned nesting_level;
 
-    virtual wchar_t *Name() { return name_symbol -> Name(); }
+    virtual wchar_t* Name() { return name_symbol -> Name(); }
     virtual size_t NameLength() { return name_symbol -> NameLength(); }
-    virtual NameSymbol *Identity() { return name_symbol; }
-    char *Utf8Name()
+    virtual NameSymbol* Identity() { return name_symbol; }
+    char* Utf8Name()
     {
-        return (char *) (name_symbol -> Utf8_literal
-                         ? name_symbol -> Utf8_literal -> value : NULL);
+        return name_symbol -> Utf8_literal
+            ? name_symbol -> Utf8_literal -> value : (char*) NULL;
     }
     unsigned Utf8NameLength()
     {
-        return (name_symbol -> Utf8_literal
-                ? name_symbol -> Utf8_literal -> length : 0);
+        return name_symbol -> Utf8_literal
+            ? name_symbol -> Utf8_literal -> length : 0;
     }
 
-    LabelSymbol(NameSymbol *name_symbol_) : block(NULL),
-                                            name_symbol(name_symbol_),
-                                            nesting_level(0)
+    LabelSymbol(NameSymbol* name_symbol_)
+        : block(NULL),
+          name_symbol(name_symbol_),
+          nesting_level(0)
     {
         Symbol::_kind = LABEL;
     }
@@ -1574,76 +1579,76 @@ public:
 
     unsigned NumAnonymousSymbols()
     {
-        return (anonymous_symbol_pool ? anonymous_symbol_pool -> Length() : 0);
+        return anonymous_symbol_pool ? anonymous_symbol_pool -> Length() : 0;
     }
-    TypeSymbol *AnonymousSym(unsigned i)
+    TypeSymbol* AnonymousSym(unsigned i)
     {
         return (*anonymous_symbol_pool)[i];
     }
-    void AddAnonymousSymbol(TypeSymbol *symbol)
+    void AddAnonymousSymbol(TypeSymbol* symbol)
     {
         if (! anonymous_symbol_pool)
-            anonymous_symbol_pool = new ConvertibleArray<TypeSymbol *>(256);
+            anonymous_symbol_pool = new ConvertibleArray<TypeSymbol*>(256);
         anonymous_symbol_pool -> Next() = symbol;
     }
 
     unsigned NumTypeSymbols()
     {
-        return (type_symbol_pool ? type_symbol_pool -> Length() : 0);
+        return type_symbol_pool ? type_symbol_pool -> Length() : 0;
     }
-    TypeSymbol *&TypeSym(unsigned i)
+    TypeSymbol*& TypeSym(unsigned i)
     {
         return (*type_symbol_pool)[i];
     }
-    void AddTypeSymbol(TypeSymbol *symbol)
+    void AddTypeSymbol(TypeSymbol* symbol)
     {
         if (! type_symbol_pool)
-            type_symbol_pool = new ConvertibleArray<TypeSymbol *>(256);
+            type_symbol_pool = new ConvertibleArray<TypeSymbol*>(256);
         type_symbol_pool -> Next() = symbol;
     }
 
     unsigned NumMethodSymbols()
     {
-        return (method_symbol_pool ? method_symbol_pool -> Length() : 0);
+        return method_symbol_pool ? method_symbol_pool -> Length() : 0;
     }
-    MethodSymbol *MethodSym(unsigned i)
+    MethodSymbol* MethodSym(unsigned i)
     {
         return (*method_symbol_pool)[i];
     }
-    void AddMethodSymbol(MethodSymbol *symbol)
+    void AddMethodSymbol(MethodSymbol* symbol)
     {
         if (! method_symbol_pool)
-            method_symbol_pool = new ConvertibleArray<MethodSymbol *>(256);
+            method_symbol_pool = new ConvertibleArray<MethodSymbol*>(256);
         method_symbol_pool -> Next() = symbol;
     }
 
     unsigned NumVariableSymbols()
     {
-        return (variable_symbol_pool ? variable_symbol_pool -> Length() : 0);
+        return variable_symbol_pool ? variable_symbol_pool -> Length() : 0;
     }
-    VariableSymbol *VariableSym(unsigned i)
+    VariableSymbol* VariableSym(unsigned i)
     {
         return (*variable_symbol_pool)[i];
     }
-    void AddVariableSymbol(VariableSymbol *symbol)
+    void AddVariableSymbol(VariableSymbol* symbol)
     {
         if (! variable_symbol_pool)
-            variable_symbol_pool = new ConvertibleArray<VariableSymbol *>(256);
+            variable_symbol_pool = new ConvertibleArray<VariableSymbol*>(256);
         variable_symbol_pool -> Next() = symbol;
     }
 
     unsigned NumOtherSymbols()
     {
-        return (other_symbol_pool ? other_symbol_pool -> Length() : 0);
+        return other_symbol_pool ? other_symbol_pool -> Length() : 0;
     }
-    Symbol *OtherSym(unsigned i)
+    Symbol* OtherSym(unsigned i)
     {
         return (*other_symbol_pool)[i];
     }
-    void AddOtherSymbol(Symbol *symbol)
+    void AddOtherSymbol(Symbol* symbol)
     {
         if (! other_symbol_pool)
-            other_symbol_pool = new ConvertibleArray<Symbol *>(256);
+            other_symbol_pool = new ConvertibleArray<Symbol*>(256);
         other_symbol_pool -> Next() = symbol;
     }
 
@@ -1688,65 +1693,63 @@ private:
     }
     void Rehash();
 
-    MethodSymbol *constructor;
+    MethodSymbol* constructor;
 
 public:
 
-    inline PathSymbol *InsertPathSymbol(NameSymbol *, DirectorySymbol *);
-    inline PathSymbol *FindPathSymbol(NameSymbol *);
-    inline DirectorySymbol *InsertDirectorySymbol(NameSymbol *, Symbol *,
+    inline PathSymbol* InsertPathSymbol(NameSymbol*, DirectorySymbol*);
+    inline PathSymbol* FindPathSymbol(NameSymbol*);
+    inline DirectorySymbol* InsertDirectorySymbol(NameSymbol*, Symbol*,
                                                   bool source_path);
-    inline DirectorySymbol *FindDirectorySymbol(NameSymbol *);
-    inline FileSymbol *InsertFileSymbol(NameSymbol *);
-    inline FileSymbol *FindFileSymbol(NameSymbol *);
-    inline PackageSymbol *InsertPackageSymbol(NameSymbol *, PackageSymbol *);
-    inline PackageSymbol *FindPackageSymbol(NameSymbol *);
-    inline TypeSymbol *InsertAnonymousTypeSymbol(NameSymbol *);
-    inline TypeSymbol *InsertSystemTypeSymbol(NameSymbol *);
-    inline TypeSymbol *InsertOuterTypeSymbol(NameSymbol *);
-    inline TypeSymbol *InsertNestedTypeSymbol(NameSymbol *);
-    inline void DeleteTypeSymbol(TypeSymbol *);
+    inline DirectorySymbol* FindDirectorySymbol(NameSymbol*);
+    inline FileSymbol* InsertFileSymbol(NameSymbol*);
+    inline FileSymbol* FindFileSymbol(NameSymbol*);
+    inline PackageSymbol* InsertPackageSymbol(NameSymbol*, PackageSymbol*);
+    inline PackageSymbol* FindPackageSymbol(NameSymbol*);
+    inline TypeSymbol* InsertAnonymousTypeSymbol(NameSymbol*);
+    inline TypeSymbol* InsertSystemTypeSymbol(NameSymbol*);
+    inline TypeSymbol* InsertOuterTypeSymbol(NameSymbol*);
+    inline TypeSymbol* InsertNestedTypeSymbol(NameSymbol*);
+    inline void DeleteTypeSymbol(TypeSymbol*);
     inline void DeleteAnonymousTypes();
-    inline TypeSymbol *FindTypeSymbol(NameSymbol *);
-    inline MethodSymbol *InsertMethodSymbol(NameSymbol *);
-    inline MethodSymbol *InsertConstructorSymbol(NameSymbol *);
-    inline void InsertMethodSymbol(MethodSymbol *);
-    inline void InsertConstructorSymbol(MethodSymbol *);
-    inline MethodSymbol *FindMethodSymbol(NameSymbol *);
-    inline MethodSymbol *FindConstructorSymbol();
-    inline VariableSymbol *InsertVariableSymbol(NameSymbol *);
-    inline void InsertVariableSymbol(VariableSymbol *);
-    inline VariableSymbol *FindVariableSymbol(NameSymbol *);
-    inline LabelSymbol *InsertLabelSymbol(NameSymbol *);
-    inline LabelSymbol *FindLabelSymbol(NameSymbol *);
-    inline BlockSymbol *InsertBlockSymbol(unsigned);
+    inline TypeSymbol* FindTypeSymbol(NameSymbol*);
+    inline MethodSymbol* InsertMethodSymbol(NameSymbol*);
+    inline MethodSymbol* InsertConstructorSymbol(NameSymbol*);
+    inline void InsertMethodSymbol(MethodSymbol*);
+    inline void InsertConstructorSymbol(MethodSymbol*);
+    inline MethodSymbol* FindMethodSymbol(NameSymbol*);
+    inline MethodSymbol* FindConstructorSymbol();
+    inline VariableSymbol* InsertVariableSymbol(NameSymbol*);
+    inline void InsertVariableSymbol(VariableSymbol*);
+    inline VariableSymbol* FindVariableSymbol(NameSymbol*);
+    inline LabelSymbol* InsertLabelSymbol(NameSymbol*);
+    inline LabelSymbol* FindLabelSymbol(NameSymbol*);
+    inline BlockSymbol* InsertBlockSymbol(unsigned);
 
-    inline MethodSymbol *Overload(MethodSymbol *);
-    inline void Overload(MethodSymbol *, MethodSymbol *);
-    inline MethodSymbol *LocalConstructorOverload(MethodSymbol *);
-    MethodSymbol *FindOverloadMethod(MethodSymbol *, AstMethodDeclarator *);
+    inline MethodSymbol* Overload(MethodSymbol*);
+    inline void Overload(MethodSymbol*, MethodSymbol*);
+    inline MethodSymbol* LocalConstructorOverload(MethodSymbol*);
+    MethodSymbol* FindOverloadMethod(MethodSymbol*, AstMethodDeclarator*);
 };
 
-inline bool MethodSymbol::AccessesInstanceMember() {
-    return (accessed_member &&
-            ((accessed_member -> MethodCast() &&
-              ! accessed_member -> MethodCast() -> ACC_STATIC()) ||
-             (accessed_member -> VariableCast() &&
-              ! accessed_member -> VariableCast() -> ACC_STATIC())));
+inline bool MethodSymbol::AccessesStaticMember()
+{
+    return accessed_member &&
+        DYNAMIC_CAST<AccessFlags*> (accessed_member) -> ACC_STATIC();
 }
 
 inline unsigned TypeSymbol::NumVariableSymbols()
 {
-    return (table ? table -> NumVariableSymbols() : 0);
+    return table ? table -> NumVariableSymbols() : 0;
 }
-inline VariableSymbol *TypeSymbol::VariableSym(unsigned i)
+inline VariableSymbol* TypeSymbol::VariableSym(unsigned i)
 {
     return table -> VariableSym(i);
 }
 
 inline unsigned BlockSymbol::NumVariableSymbols()
 {
-    return (table ? table -> NumVariableSymbols() : 0);
+    return table ? table -> NumVariableSymbols() : 0;
 }
 inline VariableSymbol* BlockSymbol::VariableSym(unsigned i)
 {
@@ -1755,18 +1758,21 @@ inline VariableSymbol* BlockSymbol::VariableSym(unsigned i)
 
 inline unsigned TypeSymbol::NumMethodSymbols()
 {
-    return (table ? table -> NumMethodSymbols() : 0);
+    return table ? table -> NumMethodSymbols() : 0;
 }
-inline MethodSymbol *TypeSymbol::MethodSym(unsigned i)
+inline MethodSymbol* TypeSymbol::MethodSym(unsigned i)
 {
     return table -> MethodSym(i);
 }
 
 inline unsigned TypeSymbol::NumTypeSymbols()
 {
-    return (table ? table -> NumTypeSymbols() : 0);
+    return table ? table -> NumTypeSymbols() : 0;
 }
-inline TypeSymbol *TypeSymbol::TypeSym(unsigned i) { return table -> TypeSym(i); }
+inline TypeSymbol* TypeSymbol::TypeSym(unsigned i)
+{
+    return table -> TypeSym(i);
+}
 
 inline void TypeSymbol::CompressSpace()
 {
@@ -1779,12 +1785,12 @@ inline void BlockSymbol::CompressSpace()
         table -> CompressSpace();
 }
 
-inline PathSymbol *SymbolTable::InsertPathSymbol(NameSymbol *name_symbol,
-                                                 DirectorySymbol *directory_symbol)
+inline PathSymbol* SymbolTable::InsertPathSymbol(NameSymbol* name_symbol,
+                                                 DirectorySymbol* directory_symbol)
 {
     assert(base);
 
-    PathSymbol *symbol = new PathSymbol(name_symbol);
+    PathSymbol* symbol = new PathSymbol(name_symbol);
     directory_symbol -> owner = symbol;
     symbol -> root_directory = directory_symbol;
     AddOtherSymbol(symbol);
@@ -1799,35 +1805,33 @@ inline PathSymbol *SymbolTable::InsertPathSymbol(NameSymbol *name_symbol,
     // maximum allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
+    if (Size() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
         Rehash();
-
     return symbol;
 }
 
 
-inline PathSymbol *SymbolTable::FindPathSymbol(NameSymbol *name_symbol)
+inline PathSymbol* SymbolTable::FindPathSymbol(NameSymbol* name_symbol)
 {
     assert(base);
 
-    for (Symbol *symbol = base[name_symbol -> index % hash_size];
+    for (Symbol* symbol = base[name_symbol -> index % hash_size];
          symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
-            return (PathSymbol *) symbol;
+            return (PathSymbol*) symbol;
     }
-
-    return (PathSymbol *) NULL;
+    return NULL;
 }
 
 
-inline DirectorySymbol *SymbolTable::InsertDirectorySymbol(NameSymbol *name_symbol,
-                                                           Symbol *owner,
+inline DirectorySymbol* SymbolTable::InsertDirectorySymbol(NameSymbol* name_symbol,
+                                                           Symbol* owner,
                                                            bool source_path)
 {
     assert(base);
 
-    DirectorySymbol *symbol = new DirectorySymbol(name_symbol, owner,
+    DirectorySymbol* symbol = new DirectorySymbol(name_symbol, owner,
                                                   source_path);
     AddOtherSymbol(symbol);
 
@@ -1841,54 +1845,52 @@ inline DirectorySymbol *SymbolTable::InsertDirectorySymbol(NameSymbol *name_symb
     // maximum allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
+    if (Size() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
         Rehash();
-
     return symbol;
 }
 
 
-inline DirectorySymbol *DirectorySymbol::InsertDirectorySymbol(NameSymbol *name_symbol,
+inline DirectorySymbol* DirectorySymbol::InsertDirectorySymbol(NameSymbol* name_symbol,
                                                                bool source_dir)
 {
-    DirectorySymbol *subdirectory_symbol = Table() -> InsertDirectorySymbol(name_symbol, this, source_dir);
+    DirectorySymbol* subdirectory_symbol =
+        Table() -> InsertDirectorySymbol(name_symbol, this, source_dir);
     subdirectories.Next() = subdirectory_symbol;
-
     return subdirectory_symbol;
 }
 
 
-inline DirectorySymbol *SymbolTable::FindDirectorySymbol(NameSymbol *name_symbol)
+inline DirectorySymbol* SymbolTable::FindDirectorySymbol(NameSymbol* name_symbol)
 {
     assert(base);
 
-    for (Symbol *symbol = base[name_symbol -> index % hash_size];
+    for (Symbol* symbol = base[name_symbol -> index % hash_size];
          symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
         {
-            DirectorySymbol *directory_symbol = symbol -> DirectoryCast();
+            DirectorySymbol* directory_symbol = symbol -> DirectoryCast();
             if (directory_symbol)
                 return directory_symbol;
         }
     }
-
-    return (DirectorySymbol *) NULL;
+    return NULL;
 }
 
 
-inline DirectorySymbol *DirectorySymbol::FindDirectorySymbol(NameSymbol *name_symbol)
+inline DirectorySymbol* DirectorySymbol::FindDirectorySymbol(NameSymbol* name_symbol)
 {
-    return (table ? table -> FindDirectorySymbol(name_symbol)
-            : (DirectorySymbol *) NULL);
+    return table ? table -> FindDirectorySymbol(name_symbol)
+        : (DirectorySymbol*) NULL;
 }
 
 
-inline FileSymbol *SymbolTable::InsertFileSymbol(NameSymbol *name_symbol)
+inline FileSymbol* SymbolTable::InsertFileSymbol(NameSymbol* name_symbol)
 {
     assert(base);
 
-    FileSymbol *symbol = new FileSymbol(name_symbol);
+    FileSymbol* symbol = new FileSymbol(name_symbol);
     AddOtherSymbol(symbol);
 
     unsigned k = name_symbol -> index % hash_size;
@@ -1901,51 +1903,49 @@ inline FileSymbol *SymbolTable::InsertFileSymbol(NameSymbol *name_symbol)
     // maximum allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
+    if (Size() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
         Rehash();
-
     return symbol;
 }
 
 
-inline FileSymbol *DirectorySymbol::InsertFileSymbol(NameSymbol *name_symbol)
+inline FileSymbol* DirectorySymbol::InsertFileSymbol(NameSymbol* name_symbol)
 {
     return Table() -> InsertFileSymbol(name_symbol);
 }
 
 
-inline FileSymbol *SymbolTable::FindFileSymbol(NameSymbol *name_symbol)
+inline FileSymbol* SymbolTable::FindFileSymbol(NameSymbol* name_symbol)
 {
     assert(base);
 
-    for (Symbol *symbol = base[name_symbol -> index % hash_size];
+    for (Symbol* symbol = base[name_symbol -> index % hash_size];
          symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
         {
-            FileSymbol *file_symbol = symbol -> FileCast();
+            FileSymbol* file_symbol = symbol -> FileCast();
             if (file_symbol)
                 return file_symbol;
         }
     }
-
-    return (FileSymbol *) NULL;
+    return NULL;
 }
 
 
-inline FileSymbol *DirectorySymbol::FindFileSymbol(NameSymbol *name_symbol)
+inline FileSymbol* DirectorySymbol::FindFileSymbol(NameSymbol* name_symbol)
 {
-    return (table ? table -> FindFileSymbol(name_symbol)
-            : (FileSymbol *) NULL);
+    return table ? table -> FindFileSymbol(name_symbol)
+        : (FileSymbol*) NULL;
 }
 
 
-inline PackageSymbol *SymbolTable::InsertPackageSymbol(NameSymbol *name_symbol,
-                                                       PackageSymbol *owner)
+inline PackageSymbol* SymbolTable::InsertPackageSymbol(NameSymbol* name_symbol,
+                                                       PackageSymbol* owner)
 {
     assert(base);
 
-    PackageSymbol *symbol = new PackageSymbol(name_symbol, owner);
+    PackageSymbol* symbol = new PackageSymbol(name_symbol, owner);
     AddOtherSymbol(symbol);
 
     unsigned k = name_symbol -> index % hash_size;
@@ -1958,64 +1958,61 @@ inline PackageSymbol *SymbolTable::InsertPackageSymbol(NameSymbol *name_symbol,
     // maximum allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
+    if (Size() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
         Rehash();
-
     return symbol;
 }
 
 
-inline PackageSymbol *PackageSymbol::InsertPackageSymbol(NameSymbol *name_symbol)
+inline PackageSymbol* PackageSymbol::InsertPackageSymbol(NameSymbol* name_symbol)
 {
     return Table() -> InsertPackageSymbol(name_symbol, this);
 }
 
 
-inline PackageSymbol *SymbolTable::FindPackageSymbol(NameSymbol *name_symbol)
+inline PackageSymbol* SymbolTable::FindPackageSymbol(NameSymbol* name_symbol)
 {
     assert(base);
 
-    for (Symbol *symbol = base[name_symbol -> index % hash_size];
+    for (Symbol* symbol = base[name_symbol -> index % hash_size];
          symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
         {
-            PackageSymbol *package_symbol = symbol -> PackageCast();
+            PackageSymbol* package_symbol = symbol -> PackageCast();
             if (package_symbol)
                 return package_symbol;
         }
     }
-
-    return (PackageSymbol *) NULL;
+    return NULL;
 }
 
 
-inline PackageSymbol *PackageSymbol::FindPackageSymbol(NameSymbol *name_symbol)
+inline PackageSymbol* PackageSymbol::FindPackageSymbol(NameSymbol* name_symbol)
 {
-  return (table ? table -> FindPackageSymbol(name_symbol)
-          : (PackageSymbol *) NULL);
+  return table ? table -> FindPackageSymbol(name_symbol)
+      : (PackageSymbol*) NULL;
 }
 
-inline TypeSymbol *SymbolTable::InsertAnonymousTypeSymbol(NameSymbol *name_symbol)
+inline TypeSymbol* SymbolTable::InsertAnonymousTypeSymbol(NameSymbol* name_symbol)
 {
-    TypeSymbol *symbol = new TypeSymbol(name_symbol);
+    TypeSymbol* symbol = new TypeSymbol(name_symbol);
     AddAnonymousSymbol(symbol);
-
     return symbol;
 }
 
 
-inline TypeSymbol *TypeSymbol::InsertAnonymousTypeSymbol(NameSymbol *name_symbol)
+inline TypeSymbol* TypeSymbol::InsertAnonymousTypeSymbol(NameSymbol* name_symbol)
 {
     return Table() -> InsertAnonymousTypeSymbol(name_symbol);
 }
 
 
-inline TypeSymbol *SymbolTable::InsertSystemTypeSymbol(NameSymbol *name_symbol)
+inline TypeSymbol* SymbolTable::InsertSystemTypeSymbol(NameSymbol* name_symbol)
 {
     assert(base);
 
-    TypeSymbol *symbol = new TypeSymbol(name_symbol);
+    TypeSymbol* symbol = new TypeSymbol(name_symbol);
     symbol -> pool_index = NumTypeSymbols();
     AddTypeSymbol(symbol);
 
@@ -2029,24 +2026,23 @@ inline TypeSymbol *SymbolTable::InsertSystemTypeSymbol(NameSymbol *name_symbol)
     // maximum allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
+    if (Size() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
         Rehash();
-
     return symbol;
 }
 
 
-inline TypeSymbol *PackageSymbol::InsertSystemTypeSymbol(NameSymbol *name_symbol)
+inline TypeSymbol* PackageSymbol::InsertSystemTypeSymbol(NameSymbol* name_symbol)
 {
     return Table() -> InsertSystemTypeSymbol(name_symbol);
 }
 
 
-inline TypeSymbol *SymbolTable::InsertOuterTypeSymbol(NameSymbol *name_symbol)
+inline TypeSymbol* SymbolTable::InsertOuterTypeSymbol(NameSymbol* name_symbol)
 {
     assert(base);
 
-    TypeSymbol *symbol = new TypeSymbol(name_symbol);
+    TypeSymbol* symbol = new TypeSymbol(name_symbol);
     symbol -> pool_index = NumTypeSymbols();
     AddTypeSymbol(symbol);
 
@@ -2060,24 +2056,23 @@ inline TypeSymbol *SymbolTable::InsertOuterTypeSymbol(NameSymbol *name_symbol)
     // maximum allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
+    if (Size() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
         Rehash();
-
     return symbol;
 }
 
 
-inline TypeSymbol *PackageSymbol::InsertOuterTypeSymbol(NameSymbol *name_symbol)
+inline TypeSymbol* PackageSymbol::InsertOuterTypeSymbol(NameSymbol* name_symbol)
 {
     return Table() -> InsertOuterTypeSymbol(name_symbol);
 }
 
 
-inline TypeSymbol *SymbolTable::InsertNestedTypeSymbol(NameSymbol *name_symbol)
+inline TypeSymbol* SymbolTable::InsertNestedTypeSymbol(NameSymbol* name_symbol)
 {
     assert(base);
 
-    TypeSymbol *symbol = new TypeSymbol(name_symbol);
+    TypeSymbol* symbol = new TypeSymbol(name_symbol);
     symbol -> pool_index = NumTypeSymbols();
     AddTypeSymbol(symbol);
 
@@ -2091,20 +2086,19 @@ inline TypeSymbol *SymbolTable::InsertNestedTypeSymbol(NameSymbol *name_symbol)
     // maximum allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
+    if (Size() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
         Rehash();
-
     return symbol;
 }
 
 
-inline TypeSymbol *TypeSymbol::InsertNestedTypeSymbol(NameSymbol *name_symbol)
+inline TypeSymbol* TypeSymbol::InsertNestedTypeSymbol(NameSymbol* name_symbol)
 {
     return Table() -> InsertNestedTypeSymbol(name_symbol);
 }
 
 
-inline void SymbolTable::DeleteTypeSymbol(TypeSymbol *type)
+inline void SymbolTable::DeleteTypeSymbol(TypeSymbol* type)
 {
     assert(base);
 
@@ -2113,8 +2107,9 @@ inline void SymbolTable::DeleteTypeSymbol(TypeSymbol *type)
         base[k] = type -> next;
     else
     {
-        Symbol *previous = base[k];
-        for (Symbol *symbol = previous -> next; symbol != type; previous = symbol, symbol = symbol -> next)
+        Symbol* previous = base[k];
+        for (Symbol* symbol = previous -> next;
+             symbol != type; previous = symbol, symbol = symbol -> next)
             ;
         previous -> next = type -> next;
     }
@@ -2134,7 +2129,7 @@ inline void SymbolTable::DeleteTypeSymbol(TypeSymbol *type)
 }
 
 
-inline void PackageSymbol::DeleteTypeSymbol(TypeSymbol *type)
+inline void PackageSymbol::DeleteTypeSymbol(TypeSymbol* type)
 {
     if (table)
         table -> DeleteTypeSymbol(type);
@@ -2158,44 +2153,43 @@ inline void TypeSymbol::DeleteAnonymousTypes()
         table -> DeleteAnonymousTypes();
 }
 
-inline TypeSymbol *SymbolTable::FindTypeSymbol(NameSymbol *name_symbol)
+inline TypeSymbol* SymbolTable::FindTypeSymbol(NameSymbol* name_symbol)
 {
     assert(base);
 
-    for (Symbol *symbol = base[name_symbol -> index % hash_size];
+    for (Symbol* symbol = base[name_symbol -> index % hash_size];
          symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
         {
-            TypeSymbol *type = symbol -> TypeCast();
+            TypeSymbol* type = symbol -> TypeCast();
             if (type)
                 return type;
         }
     }
-
-    return (TypeSymbol *) NULL;
+    return NULL;
 }
 
 
-inline TypeSymbol *PackageSymbol::FindTypeSymbol(NameSymbol *name_symbol)
+inline TypeSymbol* PackageSymbol::FindTypeSymbol(NameSymbol* name_symbol)
 {
-    return (table ? table -> FindTypeSymbol(name_symbol)
-            : (TypeSymbol *) NULL);
+    return table ? table -> FindTypeSymbol(name_symbol)
+        : (TypeSymbol*) NULL;
 }
 
 
-inline TypeSymbol *TypeSymbol::FindTypeSymbol(NameSymbol *name_symbol)
+inline TypeSymbol* TypeSymbol::FindTypeSymbol(NameSymbol* name_symbol)
 {
-    return (table ? table -> FindTypeSymbol(name_symbol)
-            : (TypeSymbol *) NULL);
+    return table ? table -> FindTypeSymbol(name_symbol)
+        : (TypeSymbol*) NULL;
 }
 
 
-inline MethodSymbol *SymbolTable::InsertMethodSymbol(NameSymbol *name_symbol)
+inline MethodSymbol* SymbolTable::InsertMethodSymbol(NameSymbol* name_symbol)
 {
     assert(base);
 
-    MethodSymbol *symbol = new MethodSymbol(name_symbol);
+    MethodSymbol* symbol = new MethodSymbol(name_symbol);
     AddMethodSymbol(symbol);
 
     unsigned k = name_symbol -> index % hash_size;
@@ -2208,20 +2202,19 @@ inline MethodSymbol *SymbolTable::InsertMethodSymbol(NameSymbol *name_symbol)
     // maximum allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
+    if (Size() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
         Rehash();
-
     return symbol;
 }
 
 
-inline MethodSymbol *TypeSymbol::InsertMethodSymbol(NameSymbol *name_symbol)
+inline MethodSymbol* TypeSymbol::InsertMethodSymbol(NameSymbol* name_symbol)
 {
     return Table() -> InsertMethodSymbol(name_symbol);
 }
 
 
-inline MethodSymbol *SymbolTable::InsertConstructorSymbol(NameSymbol *name_symbol)
+inline MethodSymbol* SymbolTable::InsertConstructorSymbol(NameSymbol* name_symbol)
 {
     assert(! constructor);
 
@@ -2230,13 +2223,13 @@ inline MethodSymbol *SymbolTable::InsertConstructorSymbol(NameSymbol *name_symbo
 }
 
 
-inline MethodSymbol *TypeSymbol::InsertConstructorSymbol(NameSymbol *name_symbol)
+inline MethodSymbol* TypeSymbol::InsertConstructorSymbol(NameSymbol* name_symbol)
 {
     return Table() -> InsertConstructorSymbol(name_symbol);
 }
 
 
-inline void SymbolTable::InsertMethodSymbol(MethodSymbol *method_symbol)
+inline void SymbolTable::InsertMethodSymbol(MethodSymbol* method_symbol)
 {
     assert(base);
 
@@ -2252,18 +2245,18 @@ inline void SymbolTable::InsertMethodSymbol(MethodSymbol *method_symbol)
     // maximum allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
+    if (Size() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
         Rehash();
 }
 
 
-inline void TypeSymbol::InsertMethodSymbol(MethodSymbol *method_symbol)
+inline void TypeSymbol::InsertMethodSymbol(MethodSymbol* method_symbol)
 {
     Table() -> InsertMethodSymbol(method_symbol);
 }
 
 
-inline void SymbolTable::InsertConstructorSymbol(MethodSymbol *method_symbol)
+inline void SymbolTable::InsertConstructorSymbol(MethodSymbol* method_symbol)
 {
     assert(! constructor);
 
@@ -2272,54 +2265,53 @@ inline void SymbolTable::InsertConstructorSymbol(MethodSymbol *method_symbol)
 }
 
 
-inline void TypeSymbol::InsertConstructorSymbol(MethodSymbol *method_symbol)
+inline void TypeSymbol::InsertConstructorSymbol(MethodSymbol* method_symbol)
 {
     Table() -> InsertConstructorSymbol(method_symbol);
 }
 
 
-inline MethodSymbol *SymbolTable::FindMethodSymbol(NameSymbol *name_symbol)
+inline MethodSymbol* SymbolTable::FindMethodSymbol(NameSymbol* name_symbol)
 {
     assert(base);
 
-    for (Symbol *symbol = base[name_symbol -> index % hash_size];
+    for (Symbol* symbol = base[name_symbol -> index % hash_size];
          symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
         {
-            MethodSymbol *method = symbol -> MethodCast();
+            MethodSymbol* method = symbol -> MethodCast();
             if (method)
                 return method;
         }
     }
-
-    return (MethodSymbol *) NULL;
+    return NULL;
 }
 
 
-inline MethodSymbol *TypeSymbol::FindMethodSymbol(NameSymbol *name_symbol)
+inline MethodSymbol* TypeSymbol::FindMethodSymbol(NameSymbol* name_symbol)
 {
-    return (table ? table -> FindMethodSymbol(name_symbol)
-            : (MethodSymbol *) NULL);
+    return table ? table -> FindMethodSymbol(name_symbol)
+        : (MethodSymbol*) NULL;
 }
 
 
-inline MethodSymbol *SymbolTable::FindConstructorSymbol()
+inline MethodSymbol* SymbolTable::FindConstructorSymbol()
 {
     return constructor;
 }
 
-inline MethodSymbol *TypeSymbol::FindConstructorSymbol()
+inline MethodSymbol* TypeSymbol::FindConstructorSymbol()
 {
-    return (table ? table -> FindConstructorSymbol()
-            : (MethodSymbol *) NULL);
+    return table ? table -> FindConstructorSymbol()
+        : (MethodSymbol*) NULL;
 }
 
-inline VariableSymbol *SymbolTable::InsertVariableSymbol(NameSymbol *name_symbol)
+inline VariableSymbol* SymbolTable::InsertVariableSymbol(NameSymbol* name_symbol)
 {
     assert(base);
 
-    VariableSymbol *symbol = new VariableSymbol(name_symbol);
+    VariableSymbol* symbol = new VariableSymbol(name_symbol);
     AddVariableSymbol(symbol);
 
     unsigned k = name_symbol -> index % hash_size;
@@ -2332,14 +2324,13 @@ inline VariableSymbol *SymbolTable::InsertVariableSymbol(NameSymbol *name_symbol
     // maximum allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
+    if (Size() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
         Rehash();
-
     return symbol;
 }
 
 
-inline VariableSymbol *TypeSymbol::InsertVariableSymbol(NameSymbol *name_symbol)
+inline VariableSymbol* TypeSymbol::InsertVariableSymbol(NameSymbol* name_symbol)
 {
     return Table() -> InsertVariableSymbol(name_symbol);
 }
@@ -2351,7 +2342,7 @@ inline VariableSymbol* BlockSymbol::InsertVariableSymbol(NameSymbol* name_symbol
 }
 
 
-inline void SymbolTable::InsertVariableSymbol(VariableSymbol *variable_symbol)
+inline void SymbolTable::InsertVariableSymbol(VariableSymbol* variable_symbol)
 {
     assert(base);
 
@@ -2367,12 +2358,12 @@ inline void SymbolTable::InsertVariableSymbol(VariableSymbol *variable_symbol)
     // maximum allowable size for a base, reallocate a larger base and rehash
     // the elements.
     //
-    if ((Size() > (hash_size << 1)) && (hash_size < MAX_HASH_SIZE))
+    if (Size() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
         Rehash();
 }
 
 
-inline void TypeSymbol::InsertVariableSymbol(VariableSymbol *variable_symbol)
+inline void TypeSymbol::InsertVariableSymbol(VariableSymbol* variable_symbol)
 {
     Table() -> InsertVariableSymbol(variable_symbol);
 }
@@ -2384,44 +2375,43 @@ inline void BlockSymbol::InsertVariableSymbol(VariableSymbol* variable_symbol)
 }
 
 
-inline VariableSymbol *SymbolTable::FindVariableSymbol(NameSymbol *name_symbol)
+inline VariableSymbol* SymbolTable::FindVariableSymbol(NameSymbol* name_symbol)
 {
     assert(base);
 
-    for (Symbol *symbol = base[name_symbol -> index % hash_size];
+    for (Symbol* symbol = base[name_symbol -> index % hash_size];
          symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
         {
-            VariableSymbol *variable_symbol = symbol -> VariableCast();
+            VariableSymbol* variable_symbol = symbol -> VariableCast();
             if (variable_symbol)
                 return variable_symbol;
         }
     }
-
-    return (VariableSymbol *) NULL;
+    return NULL;
 }
 
 
-inline VariableSymbol *TypeSymbol::FindVariableSymbol(NameSymbol *name_symbol)
+inline VariableSymbol* TypeSymbol::FindVariableSymbol(NameSymbol* name_symbol)
 {
-    return (table ? table -> FindVariableSymbol(name_symbol)
-            : (VariableSymbol *) NULL);
+    return table ? table -> FindVariableSymbol(name_symbol)
+        : (VariableSymbol*) NULL;
 }
 
 
 inline VariableSymbol* BlockSymbol::FindVariableSymbol(NameSymbol* name_symbol)
 {
-    return (table ? table -> FindVariableSymbol(name_symbol)
-            : (VariableSymbol*) NULL);
+    return table ? table -> FindVariableSymbol(name_symbol)
+        : (VariableSymbol*) NULL;
 }
 
 
-inline LabelSymbol *SymbolTable::InsertLabelSymbol(NameSymbol *name_symbol)
+inline LabelSymbol* SymbolTable::InsertLabelSymbol(NameSymbol* name_symbol)
 {
     assert(base);
 
-    LabelSymbol *symbol = new LabelSymbol(name_symbol);
+    LabelSymbol* symbol = new LabelSymbol(name_symbol);
     AddOtherSymbol(symbol);
 
     unsigned k = name_symbol -> index % hash_size;
@@ -2432,34 +2422,31 @@ inline LabelSymbol *SymbolTable::InsertLabelSymbol(NameSymbol *name_symbol)
     // as only one label can be inserted in any given symboltable,
     // we don't need to try to rehash here !
     //
-
     return symbol;
 }
 
 
-inline LabelSymbol *SymbolTable::FindLabelSymbol(NameSymbol *name_symbol)
+inline LabelSymbol* SymbolTable::FindLabelSymbol(NameSymbol* name_symbol)
 {
     assert(base);
 
-    for (Symbol *symbol = base[name_symbol -> index % hash_size];
+    for (Symbol* symbol = base[name_symbol -> index % hash_size];
          symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
         {
-            LabelSymbol *label = symbol -> LabelCast();
+            LabelSymbol* label = symbol -> LabelCast();
             if (label)
                 return label;
         }
     }
-
-    return (LabelSymbol *) NULL;
+    return NULL;
 }
 
-inline BlockSymbol *SymbolTable::InsertBlockSymbol(unsigned hash_size = 0)
+inline BlockSymbol* SymbolTable::InsertBlockSymbol(unsigned hash_size = 0)
 {
-    BlockSymbol *symbol = new BlockSymbol(hash_size);
+    BlockSymbol* symbol = new BlockSymbol(hash_size);
     AddOtherSymbol(symbol);
-
     return symbol;
 }
 
@@ -2470,29 +2457,28 @@ inline BlockSymbol* BlockSymbol::InsertBlockSymbol(unsigned hash_size = 0)
 }
 
 
-inline MethodSymbol *SymbolTable::Overload(MethodSymbol *base_method)
+inline MethodSymbol* SymbolTable::Overload(MethodSymbol* base_method)
 {
-    MethodSymbol *overload_method = new MethodSymbol(base_method -> Identity());
+    MethodSymbol* overload_method =
+        new MethodSymbol(base_method -> Identity());
     AddMethodSymbol(overload_method);
 
     overload_method -> next = overload_method; // mark overloaded method
     overload_method -> next_method = base_method -> next_method;
     base_method -> next_method = overload_method;
-
     return overload_method;
 }
 
 
-inline MethodSymbol *TypeSymbol::Overload(MethodSymbol *base_method)
+inline MethodSymbol* TypeSymbol::Overload(MethodSymbol* base_method)
 {
     assert(table);
-
     return table -> Overload(base_method);
 }
 
 
-inline void SymbolTable::Overload(MethodSymbol *base_method,
-                                  MethodSymbol *overload_method)
+inline void SymbolTable::Overload(MethodSymbol* base_method,
+                                  MethodSymbol* overload_method)
 {
     AddMethodSymbol(overload_method);
 
@@ -2501,8 +2487,8 @@ inline void SymbolTable::Overload(MethodSymbol *base_method,
     base_method -> next_method = overload_method;
 }
 
-inline void TypeSymbol::Overload(MethodSymbol *base_method,
-                                 MethodSymbol *overload_method)
+inline void TypeSymbol::Overload(MethodSymbol* base_method,
+                                 MethodSymbol* overload_method)
 {
     assert(table);
 
@@ -2510,58 +2496,57 @@ inline void TypeSymbol::Overload(MethodSymbol *base_method,
 }
 
 
-inline MethodSymbol *SymbolTable::LocalConstructorOverload(MethodSymbol *base_method)
+inline MethodSymbol* SymbolTable::LocalConstructorOverload(MethodSymbol* base_method)
 {
-    MethodSymbol *overload_method = new MethodSymbol(base_method -> Identity());
+    MethodSymbol* overload_method =
+        new MethodSymbol(base_method -> Identity());
     AddMethodSymbol(overload_method);
 
     overload_method -> next = overload_method; // mark overloaded method
-
     return overload_method;
 }
 
 
-inline MethodSymbol *TypeSymbol::LocalConstructorOverload(MethodSymbol *base_method)
+inline MethodSymbol* TypeSymbol::LocalConstructorOverload(MethodSymbol* base_method)
 {
     assert(table);
-
     return table -> LocalConstructorOverload(base_method);
 }
 
 
-inline MethodSymbol *TypeSymbol::FindOverloadMethod(MethodSymbol *base_method,
-                                                    AstMethodDeclarator *method_declarator)
+inline MethodSymbol* TypeSymbol::FindOverloadMethod(MethodSymbol* base_method,
+                                                    AstMethodDeclarator* method_declarator)
 {
-    return (table ? table -> FindOverloadMethod(base_method,
-                                                method_declarator)
-            : (MethodSymbol *) NULL);
+    return table ? table -> FindOverloadMethod(base_method, method_declarator)
+        : (MethodSymbol*) NULL;
 }
 
 
-inline SymbolTable *DirectorySymbol::Table()
+inline SymbolTable* DirectorySymbol::Table()
 {
-    return (table ? table : table = new SymbolTable(101));
+    return table ? table : table = new SymbolTable(101);
 }
 
-inline SymbolTable *PackageSymbol::Table()
+inline SymbolTable* PackageSymbol::Table()
 {
-    return (table ? table : table = new SymbolTable(101));
+    return table ? table : table = new SymbolTable(101);
 }
 
 inline void TypeSymbol::SetSymbolTable(unsigned estimate)
 {
-    if (! table) // If table was not yet allocated, allocate one based on the estimate
+    // If table was not yet allocated, allocate one based on the estimate
+    if (! table)
         table = new SymbolTable(estimate);
 }
 
-inline SymbolTable *TypeSymbol::Table()
+inline SymbolTable* TypeSymbol::Table()
 {
-    return (table ? table : table = new SymbolTable());
+    return table ? table : table = new SymbolTable();
 }
 
 inline SymbolTable* BlockSymbol::Table()
 {
-    return (table ? table : table = new SymbolTable());
+    return table ? table : table = new SymbolTable();
 }
 
 #ifdef HAVE_JIKES_NAMESPACE

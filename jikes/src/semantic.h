@@ -482,7 +482,7 @@ public:
         }
 #endif // JIKES_DEBUG
         // Semantic processing of expressions.
-        ProcessExprOrStmt[Ast::IDENTIFIER] = &Semantic::ProcessSimpleName;
+        ProcessExprOrStmt[Ast::NAME] = &Semantic::ProcessName;
         ProcessExprOrStmt[Ast::DOT] = &Semantic::ProcessFieldAccess;
         ProcessExprOrStmt[Ast::INTEGER_LITERAL] =
             &Semantic::ProcessIntegerLiteral;
@@ -583,7 +583,7 @@ public:
         DefiniteStmt[Ast::ASSERT] = &Semantic::DefiniteAssertStatement;
         DefiniteStmt[Ast::TRY] = &Semantic::DefiniteTryStatement;
 
-        DefiniteExpr[Ast::IDENTIFIER] = &Semantic::DefiniteSimpleName;
+        DefiniteExpr[Ast::NAME] = &Semantic::DefiniteName;
         DefiniteExpr[Ast::DOT] = &Semantic::DefiniteFieldAccess;
         DefiniteExpr[Ast::ARRAY_ACCESS] = &Semantic::DefiniteArrayAccess;
         DefiniteExpr[Ast::CALL] = &Semantic::DefiniteMethodInvocation;
@@ -964,9 +964,9 @@ private:
     }
     TypeSymbol* GetBadNestedType(TypeSymbol*, LexStream::TokenIndex);
     TypeSymbol* FindNestedType(TypeSymbol*, LexStream::TokenIndex);
-    TypeSymbol* MustFindNestedType(TypeSymbol*, AstExpression*);
-    void ProcessImportQualifiedName(AstExpression*);
-    void ProcessPackageOrType(AstExpression*);
+    TypeSymbol* MustFindNestedType(TypeSymbol*, AstName*);
+    void ProcessImportQualifiedName(AstName*);
+    void ProcessPackageOrType(AstName*);
     void ProcessTypeImportOnDemandDeclaration(AstImportDeclaration*);
     TypeSymbol* FindSimpleNameType(PackageSymbol*, LexStream::TokenIndex);
     void ProcessSingleTypeImportDeclaration(AstImportDeclaration*);
@@ -995,7 +995,7 @@ private:
     TypeSymbol* FindPrimitiveType(AstPrimitiveType*);
     TypeSymbol* FindTypeInEnvironment(SemanticEnvironment*, NameSymbol*);
     TypeSymbol* FindType(LexStream::TokenIndex);
-    TypeSymbol* MustFindType(AstExpression*);
+    TypeSymbol* MustFindType(AstName*);
     void ProcessType(AstType*);
     void ProcessInterface(TypeSymbol*, AstTypeName*);
 
@@ -1059,7 +1059,7 @@ private:
     VariableSymbol* DefiniteFinal(AstFieldAccess*);
 
     DefiniteAssignmentSet* (Semantic::*DefiniteExpr[Ast::_num_expression_kinds])(AstExpression*, DefinitePair&);
-    DefiniteAssignmentSet* DefiniteSimpleName(AstExpression*, DefinitePair&);
+    DefiniteAssignmentSet* DefiniteName(AstExpression*, DefinitePair&);
     DefiniteAssignmentSet* DefiniteArrayAccess(AstExpression*,
                                                DefinitePair&);
     DefiniteAssignmentSet* DefiniteMethodInvocation(AstExpression*,
@@ -1164,17 +1164,17 @@ private:
     VariableSymbol* FindVariableInEnvironment(SemanticEnvironment*&,
                                               SemanticEnvironment*,
                                               LexStream::TokenIndex);
-    VariableSymbol* FindVariableInType(TypeSymbol*, AstFieldAccess*,
+    VariableSymbol* FindVariableInType(TypeSymbol*, AstExpression*,
                                        NameSymbol* = NULL);
     VariableSymbol* FindLocalVariable(VariableSymbol*, TypeSymbol*);
     AstExpression* FindEnclosingInstance(AstExpression*, TypeSymbol*, bool);
     AstExpression* CreateAccessToType(Ast*, TypeSymbol*);
-    void CreateAccessToScopedVariable(AstSimpleName*, TypeSymbol*);
+    void CreateAccessToScopedVariable(AstName*, TypeSymbol*);
     void CreateAccessToScopedMethod(AstMethodInvocation*, TypeSymbol*);
 
     bool TypeAccessCheck(TypeSymbol*);
-    bool ConstructorAccessCheck(Ast*, MethodSymbol*);
-    bool MemberAccessCheck(AstFieldAccess*, TypeSymbol*, Symbol*);
+    bool ConstructorAccessCheck(MethodSymbol*, bool);
+    bool MemberAccessCheck(TypeSymbol*, Symbol*, AstExpression* = NULL);
     bool ProtectedAccessCheck(TypeSymbol*);
 
     void (Semantic::*ProcessPreUnaryExpr[AstPreUnaryExpression::_num_kinds])(AstPreUnaryExpression*);
@@ -1269,10 +1269,10 @@ private:
     void ProcessClassDeclaration(Ast*);
 
     // Implemented in expr.cpp - expression processing
-    void CheckSimpleName(AstSimpleName*, SemanticEnvironment* where_found);
-    void ProcessSimpleName(Ast*);
-    void FindVariableMember(TypeSymbol*, AstFieldAccess*);
-    void ProcessAmbiguousName(Ast*);
+    void CheckSimpleName(AstName*, SemanticEnvironment* where_found);
+    void ProcessName(Ast*);
+    void FindVariableMember(TypeSymbol*, AstExpression*);
+    void ProcessAmbiguousName(AstName*);
     void ProcessFieldAccess(Ast*);
     void ProcessIntegerLiteral(Ast*);
     void ProcessLongLiteral(Ast*);

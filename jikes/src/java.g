@@ -79,6 +79,13 @@ $MakeArrayType
 #endif
 ./
 
+$MakeImportDeclaration
+/.
+#ifndef HEADERS
+    rule_action[$rule_number] = &Parser::MakeImportDeclaration;
+#endif
+./
+
 $MakeClassBody
 /.
 #ifndef HEADERS
@@ -578,7 +585,7 @@ void Parser::InitRuleAction()
     rule_action[0] = &Parser::BadAction;
 #else // HEADERS
     AstType* MakeArrayType(int tokennum);
-    AstSimpleName* MakeSimpleName(int tokennum);
+    AstName* MakeSimpleName(int tokennum);
     AstArguments* MakeArguments(int tokennum);
     void MakeLocalVariable(AstModifiers* modifiers, AstType* type,
                            AstListNode* variables);
@@ -595,6 +602,7 @@ void Parser::InitRuleAction()
     void AddList2();
     void AddList3();
     void MakeArrayType();
+    void MakeImportDeclaration();
     void MakeClassBody();
     void MakeQualifiedSuper();
     void MakeArrayInitializer();
@@ -899,7 +907,7 @@ ClassOrInterfaceType ::= Name
 /.$location
 void Parser::Act$rule_number()
 {
-    Sym(1) = ast_pool -> NewTypeName(DYNAMIC_CAST<AstExpression*> (Sym(1)));
+    Sym(1) = ast_pool -> NewTypeName(DYNAMIC_CAST<AstName*> (Sym(1)));
 }
 ./
 
@@ -925,8 +933,8 @@ void Parser::MakeArrayType() { Sym(1) = MakeArrayType(1); }
 //
 AstType* Parser::MakeArrayType(int tokennum)
 {
-    AstType* p = Sym(tokennum) -> IsName()
-        ? ast_pool -> NewTypeName(DYNAMIC_CAST<AstExpression*> (Sym(tokennum)))
+    AstType* p = Sym(tokennum) -> NameCast()
+        ? ast_pool -> NewTypeName(DYNAMIC_CAST<AstName*> (Sym(tokennum)))
         : DYNAMIC_CAST<AstType*> (Sym(tokennum));
     return ! Sym(tokennum + 1) ? p
         : ast_pool -> NewArrayType(p, (DYNAMIC_CAST<AstBrackets*>
@@ -957,20 +965,24 @@ void Parser::Act$rule_number() { MakeSimpleName(1); }
 //
 // Used on "Identifier", and sets the corresponding symbol to a simple name.
 //
-AstSimpleName* Parser::MakeSimpleName(int tokennum)
+AstName* Parser::MakeSimpleName(int tokennum)
 {
-    AstSimpleName* name = ast_pool -> NewSimpleName(Token(tokennum));
+    AstName* name = ast_pool -> NewName(Token(tokennum));
     Sym(tokennum) = name;
     return name;
 }
 ./
 
 Name ::= Name '.' 'Identifier'
-\:$MakeFieldAccess:\
-/.$shared_function
-//
-// void MakeFieldAccess();
-//./
+\:$action:\
+/.$location
+void Parser::Act$rule_number()
+{
+    AstName* p = ast_pool -> NewName(Token(3));
+    p -> base_opt = DYNAMIC_CAST<AstName*> (Sym(1));
+    Sym(1) = p;
+}
+./
 
 --18.6 Productions from 7: Packages
 
@@ -1079,7 +1091,7 @@ void Parser::Act$rule_number()
 {
     AstPackageDeclaration* p = ast_pool -> NewPackageDeclaration();
     p -> package_token = Token(1);
-    p -> name = DYNAMIC_CAST<AstExpression*> (Sym(2));
+    p -> name = DYNAMIC_CAST<AstName*> (Sym(2));
     p -> semicolon_token = Token(3);
     Sym(1) = p;
 }
@@ -1096,33 +1108,29 @@ ImportDeclaration ::= TypeImportOnDemandDeclaration
 --
 -- Note that semantically, Name must be qualified to be valid (since simple
 -- type names are not in scope). However, the grammar accepts simple names.
+-- The use of Marker allows us to share code.
 --
-SingleTypeImportDeclaration ::= 'import' Name ';'
-\:$action:\
+--SingleTypeImportDeclaration ::= 'import' Name ';'
+SingleTypeImportDeclaration ::= 'import' Name Marker Marker ';'
+\:$MakeImportDeclaration:\
 /.$location
-void Parser::Act$rule_number()
+void Parser::MakeImportDeclaration()
 {
     AstImportDeclaration* p = ast_pool -> NewImportDeclaration();
     p -> import_token = Token(1);
-    p -> name = DYNAMIC_CAST<AstExpression*> (Sym(2));
-    p -> semicolon_token = Token(3);
+    p -> name = DYNAMIC_CAST<AstName*> (Sym(2));
+    p -> star_token_opt = Token(3) == Token(4) ? 0 : Token(4);
+    p -> semicolon_token = Token(5);
     Sym(1) = p;
 }
 ./
 
 TypeImportOnDemandDeclaration ::= 'import' Name '.' '*' ';'
-\:$action:\
-/.$location
-void Parser::Act$rule_number()
-{
-    AstImportDeclaration* p = ast_pool -> NewImportDeclaration();
-    p -> import_token = Token(1);
-    p -> name = DYNAMIC_CAST<AstExpression*> (Sym(2));
-    p -> star_token_opt = Token(4);
-    p -> semicolon_token = Token(5);
-    Sym(1) = p;
-}
-./
+\:$MakeImportDeclaration:\
+/.$shared_function
+//
+// void MakeImportDeclaration();
+//./
 
 TypeDeclaration ::= ClassDeclaration
 \:$NoAction:\
@@ -1839,7 +1847,8 @@ void Parser::Act$rule_number()
 
 AstArguments* Parser::MakeArguments(int tokennum)
 {
-    AstArguments* p = ast_pool -> NewArguments(tokennum, tokennum + 2);
+    AstArguments* p = ast_pool -> NewArguments(Token(tokennum),
+                                               Token(tokennum + 2));
     if (Sym(tokennum + 1))
     {
         AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(tokennum + 1));
@@ -2320,7 +2329,8 @@ ExpressionStatement ::= StatementExpression ';'
 /.$location
 void Parser::Act$rule_number()
 {
-    DYNAMIC_CAST<AstExpressionStatement*> (Sym(1)) -> semicolon_token_opt = Token(2);
+    DYNAMIC_CAST<AstExpressionStatement*> (Sym(1)) -> semicolon_token_opt =
+        Token(2);
 }
 ./
 
@@ -2732,6 +2742,7 @@ StatementExpressionList ::= StatementExpressionList ',' StatementExpression
 -- Assert statements were added in JDK 1.4, as part of JSR 41.
 -- The use of Marker allows us to share code.
 --
+--AssertStatement ::= 'assert' Expression ';'
 AssertStatement ::= 'assert' Expression Marker Marker ';'
 \:$MakeAssertStatement:\
 /.$location
@@ -2934,7 +2945,15 @@ void Parser::Act$rule_number()
 }
 ./
 
-PrimaryNoNewArray ::= '(' Expression ')'
+--
+-- We split this into two rules to allow better parsing of parenthesized
+-- expressions vs. casts.  All expressions have a dual *NotName form, so that
+-- the decision of whether "(name)" starts a cast or is a primary does not
+-- cause parsing ambiguities. The use of Marker allows us to share code.
+-- Also note that splitting this rule aids in parsing generics.
+--
+--PrimaryNoNewArray ::= '(' Expression ')'
+PrimaryNoNewArray ::= '(' Name Marker ')'
 \:$MakeParenthesizedExpression:\
 /.$location
 void Parser::MakeParenthesizedExpression()
@@ -2942,10 +2961,20 @@ void Parser::MakeParenthesizedExpression()
     AstParenthesizedExpression* p = ast_pool -> NewParenthesizedExpression();
     p -> left_parenthesis_token = Token(1);
     p -> expression = DYNAMIC_CAST<AstExpression*> (Sym(2));
-    p -> right_parenthesis_token = Token(3);
+    p -> right_parenthesis_token = Token(4);
     Sym(1) = p;
 }
 ./
+
+--
+-- The use of Marker allows us to share code.
+--
+PrimaryNoNewArray ::= '(' ExpressionNotName Marker ')'
+\:$MakeParenthesizedExpression:\
+/.$shared_function
+//
+// void MakeParenthesizedExpression();
+//./
 
 PrimaryNoNewArray ::= ClassInstanceCreationExpression
 \:$NoAction:\
@@ -2956,6 +2985,7 @@ PrimaryNoNewArray ::= FieldAccess
 /.$shared_NoAction./
 
 --1.1 feature
+--
 -- Note that we had to rework this to avoid ambiguity
 --
 --PrimaryNoNewArray ::= ClassType '.' 'this'
@@ -2965,12 +2995,13 @@ PrimaryNoNewArray ::= Name '.' 'this'
 void Parser::Act$rule_number()
 {
     AstThisExpression* p = ast_pool -> NewThisExpression(Token(3));
-    p -> base_opt = ast_pool -> NewTypeName(DYNAMIC_CAST<AstExpression*> (Sym(1)));
+    p -> base_opt = ast_pool -> NewTypeName(DYNAMIC_CAST<AstName*> (Sym(1)));
     Sym(1) = p;
 }
 ./
 
 --1.1 feature
+--
 -- Note that we had to rework this to avoid ambiguity.
 --
 --PrimaryNoNewArray ::= Type '.' 'class'
@@ -3082,7 +3113,7 @@ void Parser::MakeQualifiedNew()
 --
 -- The use of Marker is in anticipation of implementing generics.
 --
---ClassInstanceCreationExpression ::= Primary '.' 'new' 'Identifier' '('
+--ClassInstanceCreationExpression ::= Name '.' 'new' 'Identifier' '('
 --                                    ArgumentListopt ')' ClassBodyopt
 ClassInstanceCreationExpression ::= Name '.' 'new' 'Identifier'
                                     Marker '(' ArgumentListopt
@@ -3217,6 +3248,7 @@ void Parser::MakeSuperFieldAccess()
 ./
 
 --1.2 feature
+--
 -- Technically, only ClassType is allowed instead of Name, but that would be
 -- ambiguous with qualified names
 --
@@ -3227,7 +3259,7 @@ FieldAccess ::= Name '.' 'super' '.' 'Identifier'
 void Parser::MakeQualifiedSuperFieldAccess()
 {
     AstSuperExpression* q = ast_pool -> NewSuperExpression(Token(3));
-    q -> base_opt = ast_pool -> NewTypeName(DYNAMIC_CAST<AstExpression*> (Sym(1)));
+    q -> base_opt = ast_pool -> NewTypeName(DYNAMIC_CAST<AstName*> (Sym(1)));
     AstFieldAccess* p = ast_pool -> NewFieldAccess();
     p -> base = q;
     p -> identifier_token = Token(5);
@@ -3274,6 +3306,7 @@ void Parser::Act$rule_number()
 ./
 
 --1.2 feature
+--
 -- Technically, only ClassType is allowed instead of Name, but that would be
 -- ambiguous with qualified names
 --
@@ -3310,8 +3343,8 @@ ArrayAccess ::= PrimaryNoNewArray '[' Expression ']'
 // void MakeArrayAccess();
 //./
 
---
 --1.2 feature
+--
 -- Access of an initialized array is legal.  See above.
 --
 ArrayAccess ::= ArrayCreationInitialized '[' Expression ']'
@@ -3334,6 +3367,18 @@ PostfixExpression ::= PostIncrementExpression
 /.$shared_NoAction./
 
 PostfixExpression ::= PostDecrementExpression
+\:$NoAction:\
+/.$shared_NoAction./
+
+PostfixExpressionNotName ::= Primary
+\:$NoAction:\
+/.$shared_NoAction./
+
+PostfixExpressionNotName ::= PostIncrementExpression
+\:$NoAction:\
+/.$shared_NoAction./
+
+PostfixExpressionNotName ::= PostDecrementExpression
 \:$NoAction:\
 /.$shared_NoAction./
 
@@ -3402,6 +3447,26 @@ UnaryExpression ::= UnaryExpressionNotPlusMinus
 \:$NoAction:\
 /.$shared_NoAction./
 
+UnaryExpressionNotName ::= PreIncrementExpression
+\:$NoAction:\
+/.$shared_NoAction./
+
+UnaryExpressionNotName ::= PreDecrementExpression
+\:$NoAction:\
+/.$shared_NoAction./
+
+UnaryExpressionNotName ::= '+' UnaryExpression
+\:$MakePreUnaryExpression:\
+/.$shared_Unary./
+
+UnaryExpressionNotName ::= '-' UnaryExpression
+\:$MakePreUnaryExpression:\
+/.$shared_Unary./
+
+UnaryExpressionNotName ::= UnaryExpressionNotPlusMinusNotName
+\:$NoAction:\
+/.$shared_NoAction./
+
 PreIncrementExpression ::= '++' UnaryExpression
 \:$MakePreUnaryExpression:\
 /.$shared_Unary./
@@ -3426,6 +3491,38 @@ UnaryExpressionNotPlusMinus ::= CastExpression
 \:$NoAction:\
 /.$shared_NoAction./
 
+UnaryExpressionNotPlusMinusNotName ::= PostfixExpressionNotName
+\:$NoAction:\
+/.$shared_NoAction./
+
+UnaryExpressionNotPlusMinusNotName ::= '~' UnaryExpression
+\:$MakePreUnaryExpression:\
+/.$shared_Unary./
+
+UnaryExpressionNotPlusMinusNotName ::= '!' UnaryExpression
+\:$MakePreUnaryExpression:\
+/.$shared_Unary./
+
+UnaryExpressionNotPlusMinusNotName ::= CastExpression
+\:$NoAction:\
+/.$shared_NoAction./
+
+--
+-- The grammar of JLS 15 is ambiguous with "(a" starting a cast or being a
+-- parenthesized expression.  JLS1 proposed one way to rewrite the grammar,
+-- requiring a semantic check that the cast expression really is a type.
+-- However, we settle for a different solution (partly in anticipation of
+-- LALR(1) parsing of generics), made possible by the way we factored
+-- parenthesized expressions in Primary.
+--
+-- JLS 15 lists:
+--CastExpression ::= '(' PrimitiveType ')' UnaryExpression
+--CastExpression ::= '(' ReferenceType ')' UnaryExpressionNotPlusMinus
+-- JLS1 suggests:
+--CastExpression ::= '(' PrimitiveType Dimsopt ')' UnaryExpression
+--CastExpression ::= '(' Expression ')' UnaryExpressionNotPlusMinus
+--CastExpression ::= '(' Name Dims ')' UnaryExpressionNotPlusMinus
+--
 CastExpression ::= '(' PrimitiveType Dimsopt ')' UnaryExpression
 \:$MakeCastExpression:\
 /.$location
@@ -3446,24 +3543,15 @@ void Parser::MakeCastExpression(AstType* type, int tokennum)
 }
 ./
 
-CastExpression ::= '(' Expression ')' UnaryExpressionNotPlusMinus
-\:$action:\
-/.$location
-void Parser::Act$rule_number()
-{
-    //
-    // Note that Expression must be a name - i.e., Sym(2) -> isName() == true
-    // This check is not performed here and should be performed during
-    // semantic processing.
-    //
-    AstCastExpression* p = ast_pool -> NewCastExpression();
-    p -> left_parenthesis_token = Token(1);
-    p -> type = ast_pool -> NewTypeName(DYNAMIC_CAST<AstExpression*> (Sym(2)));
-    p -> right_parenthesis_token = Token(3);
-    p -> expression = DYNAMIC_CAST<AstExpression*> (Sym(4));
-    Sym(1) = p;
-}
-./
+--
+-- The use of Marker allows us to share code.
+--
+CastExpression ::= '(' Name Marker ')' UnaryExpressionNotPlusMinus
+\:$MakeCastExpression:\
+/.$shared_function
+//
+// void MakeCastExpression();
+//./
 
 CastExpression ::= '(' Name Dims ')' UnaryExpressionNotPlusMinus
 \:$MakeCastExpression:\
@@ -3525,6 +3613,38 @@ MultiplicativeExpression ::= MultiplicativeExpression '%' UnaryExpression
 \:$MakeBinaryExpression:\
 /.$shared_Binary./
 
+MultiplicativeExpressionNotName ::= UnaryExpressionNotName
+\:$NoAction:\
+/.$shared_NoAction./
+
+MultiplicativeExpressionNotName ::= MultiplicativeExpressionNotName '*'
+                                    UnaryExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+MultiplicativeExpressionNotName ::= Name '*' UnaryExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+MultiplicativeExpressionNotName ::= MultiplicativeExpressionNotName '/'
+                                    UnaryExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+MultiplicativeExpressionNotName ::= Name '/'
+                                    UnaryExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+MultiplicativeExpressionNotName ::= MultiplicativeExpressionNotName '%'
+                                    UnaryExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+MultiplicativeExpressionNotName ::= Name '%' UnaryExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
 AdditiveExpression ::= MultiplicativeExpression
 \:$NoAction:\
 /.$shared_NoAction./
@@ -3534,6 +3654,28 @@ AdditiveExpression ::= AdditiveExpression '+' MultiplicativeExpression
 /.$shared_Binary./
 
 AdditiveExpression ::= AdditiveExpression '-' MultiplicativeExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+AdditiveExpressionNotName ::= MultiplicativeExpressionNotName
+\:$NoAction:\
+/.$shared_NoAction./
+
+AdditiveExpressionNotName ::= AdditiveExpressionNotName '+'
+                              MultiplicativeExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+AdditiveExpressionNotName ::= Name '+' MultiplicativeExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+AdditiveExpressionNotName ::= AdditiveExpressionNotName '-'
+                              MultiplicativeExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+AdditiveExpressionNotName ::= Name '-' MultiplicativeExpression
 \:$MakeBinaryExpression:\
 /.$shared_Binary./
 
@@ -3550,6 +3692,34 @@ ShiftExpression ::= ShiftExpression '>>' AdditiveExpression
 /.$shared_Binary./
 
 ShiftExpression ::= ShiftExpression '>>>' AdditiveExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+ShiftExpressionNotName ::= AdditiveExpressionNotName
+\:$NoAction:\
+/.$shared_NoAction./
+
+ShiftExpressionNotName ::= ShiftExpressionNotName '<<' AdditiveExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+ShiftExpressionNotName ::= Name '<<' AdditiveExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+ShiftExpressionNotName ::= ShiftExpressionNotName '>>' AdditiveExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+ShiftExpressionNotName ::= Name '>>' AdditiveExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+ShiftExpressionNotName ::= ShiftExpressionNotName '>>>' AdditiveExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+ShiftExpressionNotName ::= Name '>>>' AdditiveExpression
 \:$MakeBinaryExpression:\
 /.$shared_Binary./
 
@@ -3586,6 +3756,59 @@ void Parser::MakeInstanceofExpression()
 }
 ./
 
+RelationalExpressionNotName ::= ShiftExpressionNotName
+\:$NoAction:\
+/.$shared_NoAction./
+
+RelationalExpressionNotName ::= RelationalExpressionNotName '<' ShiftExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+RelationalExpressionNotName ::= Name '<' ShiftExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+RelationalExpressionNotName ::= RelationalExpressionNotName '>' ShiftExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+RelationalExpressionNotName ::= Name '>' ShiftExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+RelationalExpressionNotName ::= RelationalExpressionNotName '<='
+                                ShiftExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+RelationalExpressionNotName ::= Name '<=' ShiftExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+RelationalExpressionNotName ::= RelationalExpressionNotName '>='
+                                ShiftExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+RelationalExpressionNotName ::= Name '>=' ShiftExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+RelationalExpressionNotName ::= RelationalExpressionNotName 'instanceof'
+                                ReferenceType
+\:$MakeInstanceofExpression:\
+/.$shared_function
+//
+// void MakeInstanceofExpression();
+//./
+
+RelationalExpressionNotName ::= Name 'instanceof' ReferenceType
+\:$MakeInstanceofExpression:\
+/.$shared_function
+//
+// void MakeInstanceofExpression();
+//./
+
 EqualityExpression ::= RelationalExpression
 \:$NoAction:\
 /.$shared_NoAction./
@@ -3598,11 +3821,45 @@ EqualityExpression ::= EqualityExpression '!=' RelationalExpression
 \:$MakeBinaryExpression:\
 /.$shared_Binary./
 
+EqualityExpressionNotName ::= RelationalExpressionNotName
+\:$NoAction:\
+/.$shared_NoAction./
+
+EqualityExpressionNotName ::= EqualityExpressionNotName '=='
+                              RelationalExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+EqualityExpressionNotName ::= Name '==' RelationalExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+EqualityExpressionNotName ::= EqualityExpressionNotName '!='
+                              RelationalExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+EqualityExpressionNotName ::= Name '!=' RelationalExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
 AndExpression ::= EqualityExpression
 \:$NoAction:\
 /.$shared_NoAction./
 
 AndExpression ::= AndExpression '&' EqualityExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+AndExpressionNotName ::= EqualityExpressionNotName
+\:$NoAction:\
+/.$shared_NoAction./
+
+AndExpressionNotName ::= AndExpressionNotName '&' EqualityExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+AndExpressionNotName ::= Name '&' EqualityExpression
 \:$MakeBinaryExpression:\
 /.$shared_Binary./
 
@@ -3614,11 +3871,36 @@ ExclusiveOrExpression ::= ExclusiveOrExpression '^' AndExpression
 \:$MakeBinaryExpression:\
 /.$shared_Binary./
 
+ExclusiveOrExpressionNotName ::= AndExpressionNotName
+\:$NoAction:\
+/.$shared_NoAction./
+
+ExclusiveOrExpressionNotName ::= ExclusiveOrExpressionNotName '^' AndExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+ExclusiveOrExpressionNotName ::= Name '^' AndExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
 InclusiveOrExpression ::= ExclusiveOrExpression
 \:$NoAction:\
 /.$shared_NoAction./
 
 InclusiveOrExpression ::= InclusiveOrExpression '|' ExclusiveOrExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+InclusiveOrExpressionNotName ::= ExclusiveOrExpressionNotName
+\:$NoAction:\
+/.$shared_NoAction./
+
+InclusiveOrExpressionNotName ::= InclusiveOrExpressionNotName '|'
+                                 ExclusiveOrExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+InclusiveOrExpressionNotName ::= Name '|' ExclusiveOrExpression
 \:$MakeBinaryExpression:\
 /.$shared_Binary./
 
@@ -3631,12 +3913,38 @@ ConditionalAndExpression ::= ConditionalAndExpression '&&'
 \:$MakeBinaryExpression:\
 /.$shared_Binary./
 
+ConditionalAndExpressionNotName ::= InclusiveOrExpressionNotName
+\:$NoAction:\
+/.$shared_NoAction./
+
+ConditionalAndExpressionNotName ::= ConditionalAndExpressionNotName '&&'
+                                    InclusiveOrExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+ConditionalAndExpressionNotName ::= Name '&&' InclusiveOrExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
 ConditionalOrExpression ::= ConditionalAndExpression
 \:$NoAction:\
 /.$shared_NoAction./
 
 ConditionalOrExpression ::= ConditionalOrExpression '||'
                             ConditionalAndExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+ConditionalOrExpressionNotName ::= ConditionalAndExpressionNotName
+\:$NoAction:\
+/.$shared_NoAction./
+
+ConditionalOrExpressionNotName ::= ConditionalOrExpressionNotName '||'
+                                   ConditionalAndExpression
+\:$MakeBinaryExpression:\
+/.$shared_Binary./
+
+ConditionalOrExpressionNotName ::= Name '||' ConditionalAndExpression
 \:$MakeBinaryExpression:\
 /.$shared_Binary./
 
@@ -3660,11 +3968,38 @@ void Parser::MakeConditionalExpression()
 }
 ./
 
+ConditionalExpressionNotName ::= ConditionalOrExpressionNotName
+\:$NoAction:\
+/.$shared_NoAction./
+
+ConditionalExpressionNotName ::= ConditionalOrExpressionNotName '?' Expression
+                                 ':' ConditionalExpression
+\:$MakeConditionalExpression:\
+/.$shared_function
+//
+// void MakeConditionalExpression();
+//./
+
+ConditionalExpressionNotName ::= Name '?' Expression ':' ConditionalExpression
+\:$MakeConditionalExpression:\
+/.$shared_function
+//
+// void MakeConditionalExpression();
+//./
+
 AssignmentExpression ::= ConditionalExpression
 \:$NoAction:\
 /.$shared_NoAction./
 
 AssignmentExpression ::= Assignment
+\:$NoAction:\
+/.$shared_NoAction./
+
+AssignmentExpressionNotName ::= ConditionalExpressionNotName
+\:$NoAction:\
+/.$shared_NoAction./
+
+AssignmentExpressionNotName ::= Assignment
 \:$NoAction:\
 /.$shared_NoAction./
 
@@ -3764,6 +4099,10 @@ AssignmentOperator ::= '|='
 /.$shared_NoAction./
 
 Expression ::= AssignmentExpression
+\:$NoAction:\
+/.$shared_NoAction./
+
+ExpressionNotName ::= AssignmentExpressionNotName
 \:$NoAction:\
 /.$shared_NoAction./
 
@@ -4091,5 +4430,22 @@ IfThenElseStatementNoShortIf ::= 'IfThenElseStatement'
 WhileStatementNoShortIf ::= 'WhileStatement'
 ForStatementNoShortIf ::= 'ForStatement'
 UnaryExpressionNotPlusMinus ::= 'UnaryExpression'
+
+PostfixExpressionNotName ::= 'PostfixExpression'
+UnaryExpressionNotName ::= 'UnaryExpression'
+UnaryExpressionNotPlusMinusNotName ::= 'UnaryExpression'
+MultiplicativeExpressionNotName ::= 'MultiplicativeExpression'
+AdditiveExpressionNotName ::= 'AdditiveExpression'
+ShiftExpressionNotName ::= 'ShiftExpression'
+RelationalExpressionNotName ::= 'RelationalExpression'
+EqualityExpressionNotName ::= 'EqualityExpression'
+AndExpressionNotName ::= 'AndExpression'
+ExclusiveOrExpressionNotName ::= 'ExclusiveOrExpression'
+InclusiveOrExpressionNotName ::= 'InclusiveOrExpression'
+ConditionalAndExpressionNotName ::= 'ConditionalAndExpression'
+ConditionalOrExpressionNotName ::= 'ConditionalOrExpression'
+ConditionalExpressionNotName ::= 'ConditionalExpression'
+AssignmentExpressionNotName ::= 'AssignmentExpression'
+ExpressionNotName ::= 'Expression'
 
 $end

@@ -791,7 +791,8 @@ int SemanticError::PrintMessages()
                 name[i] = file_name[i];
             name[length] = U_NULL;
             control.system_semantic ->
-                ReportSemError(SemanticError::CANNOT_REOPEN_FILE, 0, 0, name);
+                ReportSemError(SemanticError::CANNOT_REOPEN_FILE,
+                               LexStream::BadToken(), name);
             delete [] name;
         }
     }
@@ -1354,7 +1355,6 @@ void SemanticError::InitializeMessages()
         "be an instance of type \"%T3\".";
     messages[INVALID_CAST_CONVERSION] =
         "An expression of type \"%1\" cannot be cast into type \"%2\".";
-    messages[INVALID_CAST_TYPE] = "Expression found where a type is expected.";
     messages[INCOMPATIBLE_TYPE_FOR_INITIALIZATION] =
         "The type of the initializer, \"%T3\", is not "
         "assignable to the variable, of type \"%T1\".";

@@ -21,16 +21,16 @@ namespace Jikes { // Open namespace Jikes block
 
 class StoragePool;
 class Ast;
-class AstPackageDeclaration;
-class AstCompilationUnit;
+class AstListNode;
+class AstStatement;
+class AstName;
 class AstType;
 class AstTypeName;
-class AstClassBody;
-class AstListNode;
+class AstPackageDeclaration;
+class AstCompilationUnit;
 class AstModifiers;
+class AstClassBody;
 class AstMethodBody;
-class AstSimpleName;
-class AstStatement;
 class AstArguments;
 
 enum ParseErrorCode

@@ -67,7 +67,7 @@ public:
     //
     // Return length of the VariableSymbol array.
     //
-    int Length() { return top; }
+    unsigned Length() { return top; }
 
     //
     // Return a reference to the ith element of the VariableSymbol array.
@@ -175,7 +175,7 @@ class AstExpression;
 class AstType;
 
 class AstBlock;
-class AstSimpleName;
+class AstName;
 class AstPrimitiveType;
 class AstBrackets;
 class AstArrayType;
@@ -278,7 +278,7 @@ public:
     {
         AST, // must be first
         // Expressions
-        IDENTIFIER,
+        NAME,
         DOT,
         INTEGER_LITERAL,
         LONG_LITERAL,
@@ -412,12 +412,8 @@ public:
 #endif
 
     //
-    // Given an Ast tree, check whether or not it is a Name - simple or
-    // qualified.
     // General queries.
     //
-    bool IsName();
-    bool IsSimpleNameOrFieldAccess();
     bool IsLeftHandSide();
     bool IsExplicitConstructorInvocation();
     bool IsGenerated();
@@ -478,7 +474,7 @@ public:
     //
     inline AstListNode* ListNodeCast();
     inline AstBlock* BlockCast();
-    inline AstSimpleName* SimpleNameCast();
+    inline AstName* NameCast();
     inline AstBrackets* BracketsCast();
     inline AstArrayType* ArrayTypeCast();
     inline AstTypeName* TypeNameCast();
@@ -617,7 +613,7 @@ public:
     //
     // Return length of the Ast array.
     //
-    int Length() { return top; }
+    unsigned Length() { return top; }
 
     //
     // Return a reference to the ith element of the Ast array.
@@ -901,14 +897,12 @@ protected:
 
 
 //
-// Name --> SimpleName
-//        | FieldAccess
+// Simple and qualified names.
 //
-// SimpleName --> <IDENTIFIER, identifier_token>
-//
-class AstSimpleName : public AstExpression
+class AstName : public AstExpression
 {
 public:
+    AstName* base_opt;
     LexStream::TokenIndex identifier_token;
 
     //
@@ -917,11 +911,12 @@ public:
     //
     AstExpression* resolution_opt;
 
-    AstSimpleName(LexStream::TokenIndex token)
-        : identifier_token(token),
+    AstName(LexStream::TokenIndex token)
+        : base_opt(NULL),
+          identifier_token(token),
           resolution_opt(NULL)
     {
-        kind = IDENTIFIER;
+        kind = NAME;
         class_tag = EXPRESSION;
         generated = false;
         value = NULL;
@@ -935,7 +930,10 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return identifier_token; }
+    virtual LexStream::TokenIndex LeftToken()
+    {
+        return base_opt ? base_opt -> LeftToken() : identifier_token;
+    }
     virtual LexStream::TokenIndex RightToken() { return identifier_token; }
 };
 
@@ -1073,9 +1071,9 @@ public:
 class AstTypeName : public AstType
 {
 public:
-    AstExpression* name;
+    AstName* name;
 
-    AstTypeName(StoragePool*, AstExpression* n)
+    AstTypeName(StoragePool*, AstName* n)
         : name(n)
     {
         kind = TYPE;
@@ -1097,11 +1095,11 @@ public:
     }
     virtual LexStream::TokenIndex RightToken()
     {
-        return name -> RightToken();
+        return name -> identifier_token;
     }
     virtual LexStream::TokenIndex IdentifierToken()
     {
-        return name -> RightToken();
+        return name -> identifier_token;
     }
 };
 
@@ -1113,7 +1111,7 @@ class AstPackageDeclaration : public Ast
 {
 public:
     LexStream::TokenIndex package_token;
-    AstExpression* name;
+    AstName* name;
     LexStream::TokenIndex semicolon_token;
 
     AstPackageDeclaration()
@@ -1142,7 +1140,7 @@ class AstImportDeclaration : public Ast
 {
 public:
     LexStream::TokenIndex import_token;
-    AstExpression* name;
+    AstName* name;
     LexStream::TokenIndex star_token_opt;
     LexStream::TokenIndex semicolon_token;
 
@@ -1987,7 +1985,7 @@ class AstArguments : public Ast
 {
     StoragePool* pool;
     AstArray<AstExpression*>* arguments;
-    AstArray<AstExpression*>* shadow_arguments;
+    AstArray<AstName*>* shadow_arguments;
     bool null_argument;
 
 public:
@@ -2016,7 +2014,7 @@ public:
     inline void AllocateArguments(unsigned estimate = 1);
     inline void AddArgument(AstExpression*);
 
-    inline AstExpression*& LocalArgument(unsigned i)
+    inline AstName*& LocalArgument(unsigned i)
     {
         return (*shadow_arguments)[i];
     }
@@ -2025,7 +2023,7 @@ public:
         return shadow_arguments ? shadow_arguments -> Length() : 0;
     }
     inline void AllocateLocalArguments(unsigned estimate = 1);
-    inline void AddLocalArgument(AstExpression*);
+    inline void AddLocalArgument(AstName*);
 
     inline void AddNullArgument() { null_argument = true; }
     inline bool NeedsExtraNullArgument() { return null_argument; }
@@ -3760,7 +3758,7 @@ public:
 class AstFieldAccess : public AstExpression
 {
 public:
-    AstExpression* base;
+    AstExpression* base; // Not AstName.
     LexStream::TokenIndex identifier_token;
 
     //
@@ -3802,7 +3800,7 @@ public:
 class AstMethodInvocation : public AstExpression
 {
 public:
-    AstExpression* method; // AstSimpleName or AstFieldAccess
+    AstExpression* method; // AstName, AstFieldAccess
     AstArguments* arguments;
 
     //
@@ -4280,43 +4278,11 @@ public:
 
 
 //
-// Given an Ast tree, check whether or not it is a Name - simple or qualified.
-//
-inline bool Ast::IsName()
-{
-    Ast* name = this;
-    for (AstFieldAccess* field_access = name -> FieldAccessCast();
-         field_access;
-         field_access = name -> FieldAccessCast())
-    {
-        name = field_access -> base;
-    }
-    return name -> kind == IDENTIFIER;
-}
-
-
-//
-// Given an Ast tree, check whether or not it is a simple name or
-// a field access consisting only of simple names or keywords.
-//
-inline bool Ast::IsSimpleNameOrFieldAccess()
-{
-    Ast* name = this;
-    for (AstFieldAccess* field_access = name -> FieldAccessCast();
-         field_access; field_access = name -> FieldAccessCast())
-    {
-        name = field_access -> base;
-    }
-    return name -> kind == IDENTIFIER || name -> kind == TYPE;
-}
-
-
-//
 // Given an Ast tree, check whether it is a variable (not a value).
 //
 inline bool Ast::IsLeftHandSide()
 {
-    return kind == IDENTIFIER || kind == DOT || kind == ARRAY_ACCESS;
+    return kind == NAME || kind == DOT || kind == ARRAY_ACCESS;
 }
 
 
@@ -4595,9 +4561,9 @@ public:
         return new (Alloc(sizeof(AstBlock))) AstBlock(this);
     }
 
-    inline AstSimpleName* NewSimpleName(LexStream::TokenIndex token)
+    inline AstName* NewName(LexStream::TokenIndex token)
     {
-        return new (Alloc(sizeof(AstSimpleName))) AstSimpleName(token);
+        return new (Alloc(sizeof(AstName))) AstName(token);
     }
 
     inline AstPrimitiveType* NewPrimitiveType(Ast::Kind kind,
@@ -4618,7 +4584,7 @@ public:
         return new (Alloc(sizeof(AstArrayType))) AstArrayType(type, brackets);
     }
 
-    inline AstTypeName* NewTypeName(AstExpression* name)
+    inline AstTypeName* NewTypeName(AstName* name)
     {
         return new (Alloc(sizeof(AstTypeName))) AstTypeName(this, name);
     }
@@ -5019,9 +4985,9 @@ public:
         return p;
     }
 
-    inline AstSimpleName* GenSimpleName(LexStream::TokenIndex token)
+    inline AstName* GenName(LexStream::TokenIndex token)
     {
-        AstSimpleName* p = NewSimpleName(token);
+        AstName* p = NewName(token);
         p -> generated = true;
         return p;
     }
@@ -5049,7 +5015,7 @@ public:
         return p;
     }
 
-    inline AstTypeName* GenTypeName(AstExpression* type)
+    inline AstTypeName* GenTypeName(AstName* type)
     {
         AstTypeName* p = NewTypeName(type);
         p -> generated = true;
@@ -5630,9 +5596,9 @@ inline AstBlock* Ast::BlockCast()
          ? this : NULL);
 }
 
-inline AstSimpleName* Ast::SimpleNameCast()
+inline AstName* Ast::NameCast()
 {
-    return DYNAMIC_CAST<AstSimpleName*> (kind == IDENTIFIER ? this : NULL);
+    return DYNAMIC_CAST<AstName*> (kind == NAME ? this : NULL);
 }
 
 inline AstBrackets* Ast::BracketsCast()
@@ -6041,7 +6007,7 @@ inline void AstBlock::AddStatement(AstStatement* statement)
 
 inline void AstBlock::AllocateLocallyDefinedVariables(unsigned estimate)
 {
-    if(! defined_variables)
+    if (! defined_variables)
         defined_variables = pool -> NewVariableSymbolArray(estimate);
 }
 
@@ -6275,10 +6241,10 @@ inline void AstArguments::AddArgument(AstExpression* argument)
 inline void AstArguments::AllocateLocalArguments(unsigned estimate)
 {
     assert(! shadow_arguments);
-    shadow_arguments = NewAstArray<AstExpression*> (pool, estimate);
+    shadow_arguments = NewAstArray<AstName*> (pool, estimate);
 }
 
-inline void AstArguments::AddLocalArgument(AstExpression* argument)
+inline void AstArguments::AddLocalArgument(AstName* argument)
 {
     assert(shadow_arguments);
     shadow_arguments -> Next() = argument;
