@@ -954,11 +954,20 @@ void Semantic::DefiniteForStatement(Ast *stmt)
     // contained statement and after every continue statement that may exit
     // the body of the for statement.
     //
-    *definitely_assigned_variables *=
-        definite_block_stack -> TopContinuePair();
-    for (int j = 0; j < for_statement -> NumForUpdateStatements(); j++)
-        DefiniteExpressionStatement(for_statement -> ForUpdateStatement(j));
-    DefiniteLoopBody(starting_set);
+    if (for_statement -> statement -> can_complete_normally)
+    {
+        *definitely_assigned_variables *=
+            definite_block_stack -> TopContinuePair();
+        for (int j = 0; j < for_statement -> NumForUpdateStatements(); j++)
+            DefiniteExpressionStatement(for_statement -> ForUpdateStatement(j));
+        DefiniteLoopBody(starting_set);
+    }
+    else
+    {
+        *definitely_assigned_variables = *universe;
+        for (int j = 0; j < for_statement -> NumForUpdateStatements(); j++)
+            DefiniteExpressionStatement(for_statement -> ForUpdateStatement(j));
+    }
 
     //
     // Compute the set of variables that belongs to both sets below:

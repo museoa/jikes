@@ -1240,13 +1240,11 @@ bool ByteCode::EmitStatement(AstStatement *statement)
                     line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
                                                                  semantic.lex_stream -> Line(wp -> expression -> LeftToken()));
                     EmitBranchIfExpression(wp -> expression, false,
-                                           method_stack -> TopContinueLabel(),
+                                           method_stack -> TopBreakLabel(),
                                            wp -> statement);
                 }
                 EmitStatement(wp -> statement);
                 assert(stack_depth == 0);
-                DefineLabel(method_stack -> TopContinueLabel());
-                CompleteLabel(method_stack -> TopContinueLabel());
                 return abrupt;
             }
             if (wp -> expression -> IsConstant())
@@ -1329,14 +1327,12 @@ bool ByteCode::EmitStatement(AstStatement *statement)
                         line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
                                                                      semantic.lex_stream -> Line(for_statement -> end_expression_opt -> LeftToken()));
                         EmitBranchIfExpression(for_statement -> end_expression_opt,
-                                               false, method_stack -> TopContinueLabel(),
+                                               false, method_stack -> TopBreakLabel(),
                                                for_statement -> statement);
                     }
                 }
                 EmitStatement(for_statement -> statement);
                 assert(stack_depth == 0);
-                DefineLabel(method_stack -> TopContinueLabel());
-                CompleteLabel(method_stack -> TopContinueLabel());
                 return abrupt;
             }
             if (for_statement -> end_expression_opt &&
