@@ -648,7 +648,7 @@ public:
                                + code.Length()                // for code
                                + 2                            // for exception_table_length
                                + exception_table.Length() * 8 // for exception table
-                               + 2;                            // for attributes_count
+                               + 2;                           // for attributes_count
             //
             // std. fields of attribute_info
             //
@@ -1110,15 +1110,22 @@ public:
     //
     // make entry in local variable table
     //
-    void AddLocalVariable(u2 start, u2 length, u2 name, u2 descriptor, u2 index)
+    void AddLocalVariable(u2 start, u2 end, u2 name, u2 descriptor, u2 index)
     {
-        int local_index = local_variable_table.NextIndex();
+        assert(end >= start);
 
-        local_variable_table[local_index].start_pc = start;
-        local_variable_table[local_index].length = length;
-        local_variable_table[local_index].name_index = name;
-        local_variable_table[local_index].descriptor_index = descriptor;
-        local_variable_table[local_index].index = index;
+        if (end > start)
+        {
+            int local_index = local_variable_table.NextIndex();
+
+            local_variable_table[local_index].start_pc = start;
+            local_variable_table[local_index].length = end - start;
+            local_variable_table[local_index].name_index = name;
+            local_variable_table[local_index].descriptor_index = descriptor;
+            local_variable_table[local_index].index = index;
+        }
+else 
+end = end;
 
         return;
     }
