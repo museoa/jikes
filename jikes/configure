@@ -1624,28 +1624,6 @@ fi
 
 
 
-# Check whether --enable-debug or --disable-debug was given.
-if test "${enable_debug+set}" = set; then
-  enableval="$enable_debug"
-  ok=$enableval
-else
-  ok=no
-fi;
-
-if test "$ok" = "yes"; then
-
-cat >>confdefs.h <<\_ACEOF
-#define JIKES_DEBUG 1
-_ACEOF
-
-
-  # If the user did not set CXXFLAGS, set it to -g now to keep
-  # the AC_PROG_CXX macro from using -g -O2 by default.
-  if test "${CXXFLAGS+set}" != "set" ; then
-    CXXFLAGS="-g"
-  fi
-fi
-
 # Make sure we can run config.sub.
 $ac_config_sub sun4 >/dev/null 2>&1 ||
   { { echo "$as_me:$LINENO: error: cannot run $ac_config_sub" >&5
@@ -1700,6 +1678,42 @@ host_vendor=`echo $ac_cv_host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\2/'`
 host_os=`echo $ac_cv_host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
 
 
+
+case "${host}" in
+    *windows32*)
+        jikes_vcpp=yes
+        ;;
+esac
+
+# Check whether --enable-debug or --disable-debug was given.
+if test "${enable_debug+set}" = set; then
+  enableval="$enable_debug"
+  jikes_debug=$enableval
+else
+  jikes_debug=no
+fi;
+
+if test "$jikes_debug" = "yes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define JIKES_DEBUG 1
+_ACEOF
+
+
+      if test "${CXXFLAGS+set}" != "set" ; then
+    if test "$jikes_vcpp" = "yes" ; then
+      CXXFLAGS="-Zi -MDd -GX -GR"
+    else
+      CXXFLAGS="-g"
+    fi
+  fi
+else
+      if test "${CXXFLAGS+set}" != "set" ; then
+    if test "$jikes_vcpp" = "yes" ; then
+      CXXFLAGS="-MD -GX -GR"
+    fi
+  fi
+fi
 
 ac_ext=cc
 ac_cpp='$CXXCPP $CPPFLAGS'
