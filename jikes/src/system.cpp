@@ -64,7 +64,7 @@ void Control::FindPathsToDirectory(PackageSymbol *package)
 
                     strcpy(directory_name, owner_directory_symbol -> DirectoryName());
                     if (owner_directory_symbol -> DirectoryName()[owner_directory_symbol -> DirectoryNameLength() - 1] != U_SLASH)
-                        strcat(directory_name, StringConstant::U8S__SL_);
+                        strcat(directory_name, StringConstant::U8S__SL);
                     strcat(directory_name, package -> Utf8Name());
 
                     if (::SystemIsDirectory(directory_name))
@@ -92,7 +92,7 @@ void Control::FindPathsToDirectory(PackageSymbol *package)
                     int length = path_symbol -> Utf8NameLength() + package -> Utf8NameLength() + 1; // +1 for '/'
                     char *directory_name = new char[length + 1]; // +1 for '/' +1 for '\0'
                     strcpy(directory_name, path_symbol -> Utf8Name());
-                    strcat(directory_name, StringConstant::U8S__SL_);
+                    strcat(directory_name, StringConstant::U8S__SL);
                     strcat(directory_name, package -> Utf8Name());
 
                     if (::SystemIsDirectory(directory_name))
@@ -112,11 +112,11 @@ void Control::FindPathsToDirectory(PackageSymbol *package)
 
 void Control::ProcessGlobalNameSymbols()
 {
-    this -> dot_name_symbol        = FindOrInsertName(US__DO_, wcslen(US__DO_));
-    this -> dot_dot_name_symbol    = FindOrInsertName(US__DO__DO_, wcslen(US__DO__DO_));
+    this -> dot_name_symbol        = FindOrInsertName(US__DO, wcslen(US__DO));
+    this -> dot_dot_name_symbol    = FindOrInsertName(US__DO__DO, wcslen(US__DO__DO));
     this -> length_name_symbol     = FindOrInsertName(US_length, wcslen(US_length));
-    this -> init_name_symbol       = FindOrInsertName(US__LT_init_GT_, wcslen(US__LT_init_GT_));
-    this -> clinit_name_symbol     = FindOrInsertName(US__LT_clinit_GT_, wcslen(US__LT_clinit_GT_));
+    this -> init_name_symbol       = FindOrInsertName(US__LT_init_GT, wcslen(US__LT_init_GT));
+    this -> clinit_name_symbol     = FindOrInsertName(US__LT_clinit_GT, wcslen(US__LT_clinit_GT));
     this -> block_init_name_symbol = FindOrInsertName(US_block_DOLLAR, wcslen(US_block_DOLLAR));
     this -> this0_name_symbol      = FindOrInsertName(US_this0, wcslen(US_this0));
     this -> clone_name_symbol      = FindOrInsertName(US_clone, wcslen(US_clone));
@@ -138,8 +138,8 @@ void Control::ProcessUnnamedPackage()
     //
     // Create an entry for no_type. no_type is used primarily to signal an error
     //
-    no_type = unnamed_package -> InsertSystemTypeSymbol(FindOrInsertName(US__QU__QU_, wcslen(US__QU__QU_)));
-    no_type -> SetSignature(Utf8_pool.FindOrInsert(U8S__DO_, strlen(U8S__DO_))); // give it some signature...
+    no_type = unnamed_package -> InsertSystemTypeSymbol(FindOrInsertName(US__QU__QU, wcslen(US__QU__QU)));
+    no_type -> SetSignature(Utf8_pool.FindOrInsert(U8S__DO, strlen(U8S__DO))); // give it some signature...
     no_type -> outermost_type = no_type;
     no_type -> SetOwner(unnamed_package);
     no_type -> MarkBad();
@@ -408,7 +408,7 @@ DirectorySymbol *Control::GetOutputDirectory(FileSymbol *file_symbol)
 
         if (file_symbol -> package != control.unnamed_package) // if there was a package declaration, then...
         {
-            strcat(directory_name, StringConstant::U8S__SL_);
+            strcat(directory_name, StringConstant::U8S__SL);
             char *utf8_name = new char[utf8_name_length + 1];
             (void) ConvertUnicodeToUtf8(file_symbol -> package -> PackageName(), utf8_name);
             strcat(directory_name, utf8_name);

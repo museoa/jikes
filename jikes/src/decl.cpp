@@ -44,7 +44,8 @@ inline void Semantic::CheckPackage()
             TypeSymbol *type = name -> symbol -> TypeCast();
             if (type && (! type -> Bad()))
             {
-assert(type -> file_symbol);
+                assert(type -> file_symbol);
+
                 char *file_name = type -> file_symbol -> FileName();
                 int length = type -> file_symbol -> FileNameLength();
                 wchar_t *error_name = new wchar_t[length + 1];
@@ -112,7 +113,9 @@ void Semantic::ProcessTypeNames()
             {
                 NameSymbol *name_symbol = lex_stream -> NameSymbol(identifier_token);
                 TypeSymbol *type = this_package -> FindTypeSymbol(name_symbol);
-assert(type);
+
+                assert(type);
+
                 type -> MarkSourceNoLongerPending();
                 type -> supertypes_closure = new SymbolSet;
                 type -> subtypes = new SymbolSet;
@@ -486,7 +489,7 @@ TypeSymbol *Semantic::ProcessNestedClassName(TypeSymbol *containing_type, AstCla
     int length = containing_type -> ExternalNameLength() + 1 + name_symbol -> NameLength(); // +1 for $,... +1 for $
     wchar_t *external_name = new wchar_t[length + 1]; // +1 for '\0';
     wcscpy(external_name, containing_type -> ExternalName());
-    wcscat(external_name, StringConstant::US__DS_);
+    wcscat(external_name, StringConstant::US__DS);
     wcscat(external_name, name_symbol -> Name());
 
     TypeSymbol *inner_type = containing_type -> InsertNestedTypeSymbol(name_symbol);
@@ -593,7 +596,7 @@ TypeSymbol *Semantic::ProcessNestedInterfaceName(TypeSymbol *containing_type, As
     int length = containing_type -> ExternalNameLength() + 1 + name_symbol -> NameLength(); // +1 for $,... +1 for $
     wchar_t *external_name = new wchar_t[length + 1]; // +1 for '\0';
     wcscpy(external_name, containing_type -> ExternalName());
-    wcscat(external_name, StringConstant::US__DS_);
+    wcscat(external_name, StringConstant::US__DS);
     wcscat(external_name, name_symbol -> Name());
 
     TypeSymbol *inner_type = containing_type -> InsertNestedTypeSymbol(name_symbol);
@@ -687,10 +690,11 @@ void Semantic::ProcessSuperTypes()
                     {
                         TypeSymbol *super_type = FindFirstType(class_declaration -> Interface(k)) -> symbol -> TypeCast();
                         if (super_type)
-{
-assert(super_type -> subtypes);
+                        {
+                            assert(super_type -> subtypes);
+
                             super_type -> subtypes -> AddElement(type);
-}
+                        }
                     }
 
                     ProcessOuterType(class_declaration);
@@ -841,7 +845,8 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration *class_declaration)
 {
     state_stack.Push(class_declaration -> semantic_environment);
     TypeSymbol *this_type = ThisType();
-assert(! this_type -> HeaderProcessed() || this_type -> Bad());
+
+    assert(! this_type -> HeaderProcessed() || this_type -> Bad());
 
     if (! class_declaration -> super_opt)
     {
@@ -853,8 +858,8 @@ assert(! this_type -> HeaderProcessed() || this_type -> Bad());
     {
         TypeSymbol *super_type = MustFindType(class_declaration -> super_opt);
 
-assert(this_type -> subtypes_closure);
-assert(! super_type -> SourcePending());
+        assert(this_type -> subtypes_closure);
+        assert(! super_type -> SourcePending());
 
         this_type -> super = super_type;
 
@@ -913,12 +918,15 @@ void Semantic::ProcessTypeHeader(AstInterfaceDeclaration *interface_declaration)
 {
     state_stack.Push(interface_declaration -> semantic_environment);
     TypeSymbol *this_type = ThisType();
-assert(! this_type -> HeaderProcessed() || this_type -> Bad());
+
+    assert(! this_type -> HeaderProcessed() || this_type -> Bad());
 
     SetObjectSuperType(this_type, interface_declaration -> identifier_token);
     for (int k = 0; k < interface_declaration -> NumExtendsInterfaces(); k++)
         ProcessInterface(interface_declaration -> ExtendsInterface(k));
-assert(this_type -> subtypes_closure);
+
+    assert(this_type -> subtypes_closure);
+
     for (int i = 0; i < this_type -> NumInterfaces(); i++)
     {
         if (this_type -> subtypes_closure -> IsElement(this_type -> Interface(i)))
@@ -988,7 +996,8 @@ void Semantic::MarkCircularNest(TypeSymbol *type)
 //
 void Semantic::ProcessSuperTypesOfOuterType(TypeSymbol *type)
 {
-assert((! type -> IsNested()) || type -> owner -> MethodCast());
+    assert((! type -> IsNested()) || type -> owner -> MethodCast());
+
     if (type -> super)
     {
         type -> supertypes_closure -> AddElement(type -> super -> outermost_type);
@@ -1055,7 +1064,8 @@ assert((! type -> IsNested()) || type -> owner -> MethodCast());
                                type -> ExternalName());
 
                 SetObjectSuperType(type, class_declaration -> identifier_token);
-assert(type -> Identity() != control.object_name_symbol || type -> ContainingPackage() != control.system_package);
+
+                assert(type -> Identity() != control.object_name_symbol || type -> ContainingPackage() != control.system_package);
             }
         }
 
@@ -1142,7 +1152,9 @@ void Semantic::ProcessSuperTypesOfInnerType(TypeSymbol *type, Tuple<TypeSymbol *
     if (partially_ordered_types.Length() > 1) // inner_types set has more than one element?
     {
         SymbolSet &inner_types = *(type -> innertypes_closure);
-assert(partially_ordered_types.Length() == inner_types.Size());
+
+        assert(partially_ordered_types.Length() == inner_types.Size());
+
         TopologicalSort *topological_sorter = new TopologicalSort(inner_types, partially_ordered_types);
         topological_sorter -> Sort();
         delete topological_sorter;
@@ -1249,7 +1261,9 @@ TypeSymbol *Semantic::FindTypeInLayer(Ast *name, SymbolSet &inner_types)
     // return it. Otherwise, assume it is a package name...
     //
     AstSimpleName *simple_name = name -> SimpleNameCast();
-assert(simple_name);
+
+    assert(simple_name);
+
     PackageSymbol *package = NULL;
     TypeSymbol *type = FindType(simple_name -> identifier_token);
     if (type)
@@ -1481,7 +1495,8 @@ void Semantic::ProcessNestedTypeHeaders(AstInterfaceDeclaration *interface_decla
 inline void Semantic::ProcessConstructorMembers(AstClassBody *class_body)
 {
     TypeSymbol *this_type = ThisType();
-assert(this_type -> HeaderProcessed());
+
+    assert(this_type -> HeaderProcessed());
 
     //
     // If the class contains no constructor, ...
@@ -1502,7 +1517,8 @@ assert(this_type -> HeaderProcessed());
 
 inline void Semantic::ProcessMethodMembers(AstClassBody *class_body)
 {
-assert(ThisType() -> HeaderProcessed());
+    assert(ThisType() -> HeaderProcessed());
+
     for (int k = 0; k < class_body -> NumMethods(); k++)
         ProcessMethodDeclaration(class_body -> Method(k));
 
@@ -1514,7 +1530,7 @@ assert(ThisType() -> HeaderProcessed());
 
 inline void Semantic::ProcessFieldMembers(AstClassBody *class_body)
 {
-assert(ThisType() -> HeaderProcessed());
+    assert(ThisType() -> HeaderProcessed());
 
     for (int i = 0; i < class_body -> NumInstanceVariables(); i++)
         ProcessFieldDeclaration(class_body -> InstanceVariable(i));
@@ -1535,9 +1551,10 @@ void Semantic::ProcessMembers(SemanticEnvironment *environment, AstClassBody *cl
     //
     state_stack.Push(environment);
     TypeSymbol *this_type = ThisType();
-assert(! this_type -> ConstructorMembersProcessed() || this_type -> Bad());
-assert(! this_type -> MethodMembersProcessed() || this_type -> Bad());
-assert(! this_type -> FieldMembersProcessed() || this_type -> Bad());
+
+    assert(! this_type -> ConstructorMembersProcessed() || this_type -> Bad());
+    assert(! this_type -> MethodMembersProcessed() || this_type -> Bad());
+    assert(! this_type -> FieldMembersProcessed() || this_type -> Bad());
 
     ProcessConstructorMembers(class_body);
     ProcessMethodMembers(class_body);
@@ -1616,7 +1633,7 @@ assert(! this_type -> FieldMembersProcessed() || this_type -> Bad());
 
 inline void Semantic::ProcessMethodMembers(AstInterfaceDeclaration *interface_declaration)
 {
-assert(ThisType() -> HeaderProcessed());
+    assert(ThisType() -> HeaderProcessed());
 
     for (int k = 0; k < interface_declaration -> NumMethods(); k++)
         ProcessMethodDeclaration(interface_declaration -> Method(k));
@@ -1629,7 +1646,7 @@ assert(ThisType() -> HeaderProcessed());
 
 inline void Semantic::ProcessFieldMembers(AstInterfaceDeclaration *interface_declaration)
 {
-assert(ThisType() -> HeaderProcessed());
+    assert(ThisType() -> HeaderProcessed());
 
     for (int k = 0; k < interface_declaration -> NumClassVariables(); k++)
         ProcessFieldDeclaration(interface_declaration -> ClassVariable(k));
@@ -1648,8 +1665,8 @@ void Semantic::ProcessMembers(AstInterfaceDeclaration *interface_declaration)
     state_stack.Push(interface_declaration -> semantic_environment);
     TypeSymbol *this_type = ThisType();
 
-assert(! this_type -> MethodMembersProcessed() || this_type -> Bad());
-assert(! this_type -> FieldMembersProcessed() || this_type -> Bad());
+    assert(! this_type -> MethodMembersProcessed() || this_type -> Bad());
+    assert(! this_type -> FieldMembersProcessed() || this_type -> Bad());
 
     ProcessMethodMembers(interface_declaration);
     ProcessFieldMembers(interface_declaration);
@@ -1689,9 +1706,10 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment, LexStream::
 
     state_stack.Push(environment);
     TypeSymbol *this_type = ThisType();
-assert(this_type -> ConstructorMembersProcessed());
-assert(this_type -> MethodMembersProcessed());
-assert(this_type -> FieldMembersProcessed());
+
+    assert(this_type -> ConstructorMembersProcessed());
+    assert(this_type -> MethodMembersProcessed());
+    assert(this_type -> FieldMembersProcessed());
 
     //
     //
@@ -1868,8 +1886,9 @@ void Semantic::CompleteSymbolTable(AstInterfaceDeclaration *interface_declaratio
 
     state_stack.Push(interface_declaration -> semantic_environment);
     TypeSymbol *this_type = ThisType();
-assert(this_type -> MethodMembersProcessed());
-assert(this_type -> FieldMembersProcessed());
+
+    assert(this_type -> MethodMembersProcessed());
+    assert(this_type -> FieldMembersProcessed());
 
     //
     //
@@ -1920,10 +1939,41 @@ assert(this_type -> FieldMembersProcessed());
     }
 
     //
-    // Initialize each variable, in turn
+    // Initialize each variable, in turn.
     //
     for (int k = 0; k < interface_declaration -> NumClassVariables(); k++)
         InitializeVariable(interface_declaration -> ClassVariable(k), finals);
+
+    //
+    // We need a static constructor-initializer if we encounter at least one class
+    // variable that is declared with an initialization expression that is not a
+    // constant expression.
+    //
+    for (int n = 0; n < finals.Length(); n++)
+    {
+        if (! finals[n] -> initial_value)
+        {
+            MethodSymbol *init_method = this_type -> InsertMethodSymbol(control.clinit_name_symbol);
+
+            init_method -> SetType(control.void_type);
+            init_method -> SetACC_FINAL();
+            init_method -> SetACC_STATIC();
+            init_method -> SetContainingType(this_type);
+            init_method -> SetBlockSymbol(new BlockSymbol(0)); // the symbol table associated with this block will contain no element
+            init_method -> block_symbol -> max_variable_index = 0;
+            init_method -> SetSignature(control);
+
+            //
+            //
+            //
+            init_method -> max_block_depth = 2; // TODO: Dave why is this the case? We need a legitimate comment here !!!
+            init_method -> block_symbol -> CompressSpace(); // space optimization
+
+            this_type -> static_initializer_method = init_method;
+
+            break;
+        }
+    }
 
     //
     // Recursively process all inner types
@@ -2102,7 +2152,8 @@ TypeSymbol *Semantic::ReadType(FileSymbol *file_symbol, PackageSymbol *package, 
 
             ReadClassFile(type, tok);
 
-assert (! type -> IsNested());
+            assert (! type -> IsNested());
+
             control.input_class_file_set.AddElement(file_symbol);
         }
         else
@@ -2153,7 +2204,7 @@ TypeSymbol *Semantic::GetBadNestedType(TypeSymbol *type, LexStream::TokenIndex i
     int length = type -> ExternalNameLength() + 1 + name_symbol -> NameLength(); // +1 for $,... +1 for $
     wchar_t *external_name = new wchar_t[length + 1]; // +1 for '\0';
     wcscpy(external_name, type -> ExternalName());
-    wcscat(external_name, StringConstant::US__DS_);
+    wcscat(external_name, StringConstant::US__DS);
     wcscat(external_name, name_symbol -> Name());
 
     TypeSymbol *inner_type = type -> InsertNestedTypeSymbol(name_symbol);
@@ -2241,7 +2292,8 @@ Symbol *Semantic::ProcessImportQualifiedName(AstExpression *name)
     else
     {
         AstSimpleName *simple_name = name -> SimpleNameCast();
-assert(simple_name);
+
+        assert(simple_name);
 
         //
         // From the 1.1 document:
@@ -2336,7 +2388,9 @@ Symbol *Semantic::ProcessPackageOrType(AstExpression *name)
     else
     {
         AstSimpleName *simple_name = name -> SimpleNameCast();
-assert(simple_name);
+
+        assert(simple_name);
+
         type = FindType(simple_name -> identifier_token);
         if (type)
         {
@@ -2406,7 +2460,9 @@ AstExpression *Semantic::FindFirstType(Ast *name)
         else
         {
             PackageSymbol *package = expr -> symbol -> PackageCast();
-assert(package);
+
+            assert(package);
+
             name_expression = field_access; // The relevant subexpression might be this field access...
 
             NameSymbol *name_symbol = lex_stream -> NameSymbol(field_access -> identifier_token);
@@ -2436,7 +2492,9 @@ assert(package);
     else
     {
         AstSimpleName *simple_name = name -> SimpleNameCast();
-assert(simple_name);
+
+        assert(simple_name);
+
         simple_name -> symbol = ProcessPackageOrType(simple_name);
         name_expression = simple_name;
     }
@@ -2551,7 +2609,8 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_d
                 break;
         }
 
-assert(i < compilation_unit -> NumImportDeclarations());
+        assert(i < compilation_unit -> NumImportDeclarations());
+
         if (compilation_unit -> ImportDeclaration(i) == import_declaration) // No duplicate found
         {
             import_declaration -> name -> symbol = type;
@@ -2595,7 +2654,8 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration *field_declaration)
                 modifier = field_declaration -> VariableModifier(i);
         }
 
-assert(modifier);
+        assert(modifier);
+
         ReportSemError(SemanticError::STATIC_FIELD_IN_INNER_CLASS,
                        modifier -> modifier_kind_token,
                        modifier -> modifier_kind_token);
@@ -3362,7 +3422,9 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type, TypeSymbol *super_type
                         {
                             AstClassInstanceCreationExpression *class_creation = ThisType() -> declaration
                                                                                             -> ClassInstanceCreationExpressionCast();
-assert(class_creation);
+
+                            assert(class_creation);
+
                             left_tok = class_creation -> class_type -> LeftToken();
                             right_tok = class_creation -> class_type -> RightToken();
                         }
@@ -3438,7 +3500,7 @@ void Semantic::ComputeFieldsClosure(TypeSymbol *type, LexStream::TokenIndex tok)
             ComputeFieldsClosure(interf, tok);
     }
 
-assert(type -> FieldMembersProcessed());
+    assert(type -> FieldMembersProcessed());
 
     for (int i = 0; i < type -> NumVariableSymbols(); i++)
     {
@@ -3480,7 +3542,7 @@ void Semantic::ComputeMethodsClosure(TypeSymbol *type, LexStream::TokenIndex tok
             ComputeMethodsClosure(interf, tok);
     }
 
-assert(type -> MethodMembersProcessed());
+    assert(type -> MethodMembersProcessed());
 
     for (int i = 0; i < type -> NumMethodSymbols(); i++)
     {
@@ -3584,7 +3646,8 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
                 modifier = method_declaration -> MethodModifier(i);
         }
 
-assert(modifier);
+        assert(modifier);
+
         ReportSemError(SemanticError::STATIC_METHOD_IN_INNER_CLASS,
                        modifier -> modifier_kind_token,
                        modifier -> modifier_kind_token);
@@ -3965,7 +4028,9 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
     else
     {
         AstFieldAccess *field_access = name -> FieldAccessCast();
-assert(field_access);
+
+        assert(field_access);
+
         identifier_token = field_access -> identifier_token;
 
         Symbol *symbol = ProcessPackageOrType(field_access -> base);
@@ -4014,7 +4079,8 @@ assert(field_access);
 void Semantic::ProcessInterface(AstExpression *name)
 {
     TypeSymbol *interf = MustFindType(name);
-assert(! interf -> SourcePending());
+
+    assert(! interf -> SourcePending());
 
     if (! interf -> ACC_INTERFACE())
     {
@@ -4098,7 +4164,8 @@ inline void Semantic::ProcessInitializer(AstBlock *initializer_block, AstBlock *
     AstConstructorBlock *constructor_block = block_body -> ConstructorBlockCast();
     if (constructor_block)
     {
-assert(constructor_block -> explicit_constructor_invocation_opt);
+        assert(constructor_block -> explicit_constructor_invocation_opt);
+
         ReportSemError(SemanticError::MISPLACED_EXPLICIT_CONSTRUCTOR_INVOCATION,
                        constructor_block -> explicit_constructor_invocation_opt -> LeftToken(),
                        constructor_block -> explicit_constructor_invocation_opt -> RightToken());
@@ -4129,33 +4196,41 @@ void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
     {
         TypeSymbol *this_type = ThisType();
 
-        MethodSymbol *init_method = this_type -> InsertMethodSymbol(control.clinit_name_symbol);
-
-        init_method -> SetType(control.void_type);
-        init_method -> SetACC_FINAL();
-        init_method -> SetACC_STATIC();
-        init_method -> SetContainingType(this_type);
-        init_method -> SetBlockSymbol(new BlockSymbol(0)); // the symbol table associated with this block will contain no element
-        init_method -> block_symbol -> max_variable_index = 0;
-        init_method -> SetSignature(control);
-
-        this_type -> static_initializer_method = init_method;
+        BlockSymbol *block_symbol = new BlockSymbol(0); // the symbol table associated with this block will contain no element
+        block_symbol -> max_variable_index = 0;         // if we need this, it will be associated with a static function.
 
         AstBlock *initializer_block = compilation_unit -> ast_pool -> GenBlock();
         initializer_block -> left_brace_token  = class_body -> left_brace_token;
         initializer_block -> right_brace_token = class_body -> left_brace_token;
-        initializer_block -> block_symbol = init_method -> block_symbol;
+        initializer_block -> block_symbol = block_symbol;
         initializer_block -> nesting_level = LocalBlockStack().Size();
 
         LocalBlockStack().max_size = 0;
 
         //
+        // If the class being processed contains any static
+        // initializer then, it needs a static initializer function?
+        //
+        MethodSymbol *init_method = NULL;
+        if (class_body -> NumStaticInitializers() > 0)
+        {
+              init_method = this_type -> InsertMethodSymbol(control.clinit_name_symbol);
+
+              init_method -> SetType(control.void_type);
+              init_method -> SetACC_FINAL();
+              init_method -> SetACC_STATIC();
+              init_method -> SetContainingType(this_type);
+              init_method -> SetBlockSymbol(block_symbol);
+              init_method -> SetSignature(control);
+        }
+
+        //
         // Compute the set of final variables declared by the user in this type.
         //
         Tuple<VariableSymbol *> finals(this_type -> NumVariableSymbols());
-        for (int l = 0; l < this_type -> NumVariableSymbols(); l++)
+        for (int i = 0; i < this_type -> NumVariableSymbols(); i++)
         {
-            VariableSymbol *variable_symbol = this_type -> VariableSym(l);
+            VariableSymbol *variable_symbol = this_type -> VariableSym(i);
             if (variable_symbol -> ACC_FINAL())
                 finals.Next() = variable_symbol;
         }
@@ -4217,23 +4292,84 @@ void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
             ProcessInitializer(initializer_block, block_body, init_method, finals);
         }
 
-        init_method -> max_block_depth = LocalBlockStack().max_size;
-        init_method -> block_symbol -> CompressSpace(); // space optimization
-
         //
-        // Check that all static final variables have been initialized by now.
-        // If not, issue an error and assume they are.
+        // Check that each static final variables has been initialized by now.
+        // If not, issue an error and assume it is.
         //
-        for (int i = 0; i < finals.Length(); i++)
+        for (int l = 0; l < finals.Length(); l++)
         {
-            if (finals[i] -> ACC_STATIC() && (! finals[i] -> IsDefinitelyAssigned()))
+            if (finals[l] -> ACC_STATIC() && (! finals[l] -> IsDefinitelyAssigned()))
             {
                 ReportSemError(SemanticError::UNINITIALIZED_STATIC_FINAL_VARIABLE,
-                               finals[i] -> declarator -> LeftToken(),
-                               finals[i] -> declarator -> RightToken());
-                finals[i] -> MarkDefinitelyAssigned();
+                               finals[l] -> declarator -> LeftToken(),
+                               finals[l] -> declarator -> RightToken());
+                finals[l] -> MarkDefinitelyAssigned();
             }
         }
+
+        //
+        // If we had not yet defined a static initializer function and
+        // there exists a non constant final in the class then define one now.
+        //
+        if (! init_method)
+        {
+            //
+            // Check whether or not we need a static initializer method. We need a static
+            // constructor-initializer iff:
+            //
+            //     . we have at least one static initializer (this case is processed above)
+            //     . we have at least one static variable that is initialized but is not 
+            //       a symbolic constant; i.e., a final variable initialized with a
+            //       a constant expression.
+            //
+            for (int i = 0; i < class_body -> NumClassVariables(); i++)
+            {
+                AstFieldDeclaration *field_decl = class_body -> ClassVariable(i);
+
+                //
+                // We need a static constructor-initializer if we encounter at least one class
+                // variable that is declared with an initialization expression that is not a
+                // constant expression.
+                //
+                bool needs_init_method = false;
+                for (int m = 0; m < field_decl -> NumVariableDeclarators() && (! needs_init_method); m++)
+                {
+                    AstVariableDeclarator *vd = field_decl -> VariableDeclarator(m);
+                    VariableSymbol *variable_symbol = vd -> symbol;
+
+                    needs_init_method = (vd -> variable_initializer_opt &&
+                                         (! (variable_symbol -> ACC_FINAL() && variable_symbol -> initial_value)));
+                }
+
+                if (needs_init_method)
+                {
+                    init_method = this_type -> InsertMethodSymbol(control.clinit_name_symbol);
+
+                    init_method -> SetType(control.void_type);
+                    init_method -> SetACC_FINAL();
+                    init_method -> SetACC_STATIC();
+                    init_method -> SetContainingType(this_type);
+                    init_method -> SetBlockSymbol(block_symbol);
+                    init_method -> SetSignature(control);
+
+                    break;
+                }
+            }
+        }
+
+        //
+        // If an initialization method has been defined, update its max_block_depth.
+        // Otherwise, deallocate the block symbol as nobody would be pointing to it
+        // after this point.
+        //
+        if (init_method)
+        {
+             init_method -> max_block_depth = LocalBlockStack().max_size;
+             this_type -> static_initializer_method = init_method;
+
+             block_symbol -> CompressSpace(); // space optimization
+        }
+        else delete block_symbol;
 
 // STG:
 //        delete initializer_block;

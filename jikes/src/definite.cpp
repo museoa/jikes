@@ -227,7 +227,9 @@ DefiniteAssignmentSet *Semantic::DefinitePLUSPLUSOrMINUSMINUS(AstExpression *exp
         else
         {
             AstFieldAccess *field_access = expr -> FieldAccessCast();
-assert(field_access);
+
+            assert(field_access);
+
             if (field_access -> resolution_opt)
                 read_method = field_access -> resolution_opt -> symbol -> MethodCast();
         }
@@ -1471,7 +1473,9 @@ void Semantic::DefiniteReturnStatement(Ast *stmt)
                      definite_block_stack -> Block(k) != definite_try_stack -> Block(i);
                      k--)
                     ;
-assert(k >= 0);
+
+                assert(k >= 0);
+
                 definite_block_stack -> FinalReturnSet(k) += (*possibly_assigned_finals);
                 break;
             }
@@ -1552,7 +1556,9 @@ void Semantic::DefiniteThrowStatement(Ast *stmt)
                 int k;
                 for (k = definite_block_stack -> Size() - 1; definite_block_stack -> Block(k) != try_statement -> block; k--)
                     ;
-assert(k >= 0);
+
+                assert(k >= 0);
+
                 definite_block_stack -> FinalThrowSet(k) += (*possibly_assigned_finals);
                 break;
             }
@@ -1563,7 +1569,9 @@ assert(k >= 0);
                      definite_block_stack -> Block(k) != definite_try_stack -> Block(i);
                      k--)
                     ;
-assert(k >= 0);
+
+                assert(k >= 0);
+
                 definite_block_stack -> FinalThrowSet(k) += (*possibly_assigned_finals);
                 break;
             }

@@ -461,7 +461,7 @@ Goal -> CompilationUnit
 //
 // Do nothing - Whatever Ast was produced for x1 is inherited by A.
 //
-void Parser::BadAction(void) { assert(0); }
+void Parser::BadAction(void) { assert(false); }
 void Parser::NoAction(void) {}
 ./
 

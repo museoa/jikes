@@ -1,10 +1,9 @@
-// $Id$
 #line 427 "java.g"
 //
-// This software is subject to the terms of the IBM Jikes Compiler 
-// License Agreement available at the following URL:
+// This software is subject to the terms of the IBM Jikes Compiler Open
+// Source License Agreement available at the following URL:
 // http://www.ibm.com/research/jikes.
-// Copyright (C) 1996, 1999, International Business Machines Corporation
+// Copyright (C) 1996, 1998, International Business Machines Corporation
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -35,7 +34,7 @@
 //
 // Do nothing - Whatever Ast was produced for x1 is inherited by A.
 //
-void Parser::BadAction(void) { assert(0); }
+void Parser::BadAction(void) { assert(false); }
 void Parser::NoAction(void) {}
  
 // 

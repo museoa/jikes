@@ -25,17 +25,23 @@ bool Semantic::IsIntValueRepresentableInType(AstExpression *expr, TypeSymbol *ty
     IntLiteralValue *literal = (IntLiteralValue *) expr -> value;
 
     return (expr -> IsConstant() && 
-//
-// TODO: this test makes more sense than the one below. However, the JLS
-// specifies the "IsInt" test below?
-//control.IsSimpleIntegerValueType(expr -> type())) &&
-//
-           expr -> Type() == control.int_type) &&
-           (type == control.int_type ||
-            type == control.no_type  ||
-            (type == control.char_type && (literal -> value >= 0)  && (literal -> value <= 65535)) ||
-            (type == control.byte_type && (literal -> value >= -128) && (literal -> value <= 127)) ||
-            (type == control.short_type && (literal -> value >= -32768)  && (literal -> value <= 32767)));
+            //
+            // TODO: the test:
+            //
+            //    control.IsSimpleIntegerValueType(expr -> type())) &&
+            //
+            // makes more sense than the test:
+            //
+            //    expr -> Type() == control.int_type) &&
+            //
+            // below which is specified in the JLS.
+            //
+            expr -> Type() == control.int_type) &&
+            (type == control.int_type ||
+             type == control.no_type  ||
+             (type == control.char_type && (literal -> value >= 0)  && (literal -> value <= 65535)) ||
+             (type == control.byte_type && (literal -> value >= -128) && (literal -> value <= 127)) ||
+             (type == control.short_type && (literal -> value >= -32768)  && (literal -> value <= 32767)));
 }
 
 
@@ -119,7 +125,9 @@ void Semantic::ReportMethodNotFound(Ast *ast, wchar_t *name)
         else
         {
             this_call = ast -> ThisCallCast();
-assert(this_call);
+
+            assert(this_call);
+
             num_arguments = this_call -> NumArguments();
             argument = new AstExpression*[num_arguments + 1];
             for (int i = 0; i < num_arguments; i++)
@@ -151,7 +159,7 @@ assert(this_call);
 
             PackageSymbol *package = arg_type -> ContainingPackage();
             wchar_t *package_name = package -> PackageName();
-            if (package -> PackageNameLength() > 0 && wcscmp(package_name, StringConstant::US__DO_) != 0)
+            if (package -> PackageNameLength() > 0 && wcscmp(package_name, StringConstant::US__DO) != 0)
             {
                 while (*package_name)
                 {
@@ -212,14 +220,16 @@ MethodSymbol *Semantic::FindConstructor(TypeSymbol *containing_type, Ast *ast,
     else
     {
         this_call = ast -> ThisCallCast();
-assert(this_call);
+
+        assert(this_call);
+
         num_arguments = this_call -> NumArguments();
         argument = new AstExpression*[num_arguments + 1];
         for (int i = 0; i < num_arguments; i++)
             argument[i] = this_call -> Argument(i);
     }
 
-assert(containing_type -> ConstructorMembersProcessed());
+    assert(containing_type -> ConstructorMembersProcessed());
 
     for (MethodSymbol *constructor = containing_type -> FindConstructorSymbol();
          constructor; constructor = constructor -> next_method)
@@ -340,7 +350,7 @@ VariableSymbol *Semantic::FindMisspelledVariableName(TypeSymbol *type, LexStream
 
     return ((length == 3 && index >= 5) || (length == 4 && index >= 6) || (length >= 5 && index >= 7)
                           ? misspelled_variable
-                          : NULL);
+                          : (VariableSymbol *) NULL);
 }
 
 //
@@ -392,12 +402,12 @@ MethodSymbol *Semantic::FindMisspelledMethodName(TypeSymbol *type, AstMethodInvo
     // If we have a name of length 3, accept >= 50% probality if the function takes at least one argument
     // Otherwise, if the length of the name is > 3, accept >= 60% probability.
     //
-    return (index < 3 ? NULL
+    return (index < 3 ? (MethodSymbol *) NULL
                       : (length == 2 && (index >= 3 || num_args > 0)) ||
                         (length == 3 && (index >= 5 || num_args > 0)) ||
                         (length  > 3 && (index >= 6 || (index >= 5 && num_args > 0)))
                                      ? misspelled_method
-                                     : NULL);
+                                     : (MethodSymbol *) NULL);
 }
 
 //
@@ -479,7 +489,9 @@ See comment above...
         {
             VariableSymbol *variable_symbol = variable_shadow_symbol -> variable_symbol;
             TypeSymbol *enclosing_type = variable_symbol -> owner -> TypeCast();
-assert(enclosing_type);
+
+            assert(enclosing_type);
+
             ReportSemError(SemanticError::FIELD_NOT_METHOD,
                            method_call -> LeftToken(),
                            method_call -> RightToken(),
@@ -659,7 +671,7 @@ void Semantic::SearchForMethodInEnvironment(Tuple<MethodSymbol *> &methods_found
             //
             // If a match was found, save the environment
             //
-            where_found = (methods_found.Length() > 0 ? env : NULL);
+            where_found = (methods_found.Length() > 0 ? env : (SemanticEnvironment *) NULL);
             break;
         }
     }
@@ -743,7 +755,8 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
         //
         // First, search for a perfect visible method match in an enclosing class.
         //
-assert(stack);
+        assert(stack);
+
         for (SemanticEnvironment *env = stack -> previous; env; env = env -> previous)
         {
             Tuple<MethodSymbol *> others(2);
@@ -780,7 +793,9 @@ assert(stack);
             {
                 VariableSymbol *variable_symbol = variable_shadow_symbol -> variable_symbol;
                 TypeSymbol *enclosing_type = variable_symbol -> owner -> TypeCast();
-assert(enclosing_type);
+
+                assert(enclosing_type);
+
                 ReportSemError(SemanticError::FIELD_NOT_METHOD,
                                method_call -> LeftToken(),
                                method_call -> RightToken(),
@@ -1092,7 +1107,9 @@ VariableSymbol *Semantic::FindVariableInEnvironment(SemanticEnvironment *&where_
                 variable_symbol = stack -> symbol_table.FindVariableSymbol(name_symbol);
                 if (! variable_symbol)
                     variable_symbol = type -> FindVariableSymbol(name_symbol);
-assert(variable_symbol);
+
+                assert(variable_symbol);
+
                 where_found = stack;
             }
         }
@@ -1184,7 +1201,9 @@ VariableSymbol *Semantic::FindInstance(TypeSymbol *base_type, TypeSymbol *enviro
 
     AstClassDeclaration *class_declaration = base_type -> declaration -> ClassDeclarationCast();
     AstClassInstanceCreationExpression *class_creation = base_type -> declaration -> ClassInstanceCreationExpressionCast();
-assert(class_declaration || class_creation);
+
+    assert(class_declaration || class_creation);
+
     AstClassBody *class_body = (class_declaration ? class_declaration -> class_body : class_creation -> class_body_opt);
 
     LexStream::TokenIndex loc = class_body -> left_brace_token;
@@ -1271,7 +1290,7 @@ AstExpression *Semantic::CreateAccessToType(Ast *source, TypeSymbol *environment
          tok = this_call -> this_token;
     else if (field_access)
          tok = field_access -> dot_token;
-    else assert(0);
+    else assert(false);
 
     AstExpression *resolution;
 
@@ -1289,7 +1308,9 @@ AstExpression *Semantic::CreateAccessToType(Ast *source, TypeSymbol *environment
     else if (ExplicitConstructorInvocation())
     {
         VariableSymbol *variable = LocalSymbolTable().FindVariableSymbol(control.this0_name_symbol);
-assert(variable);
+
+        assert(variable);
+
         resolution = compilation_unit -> ast_pool -> GenSimpleName(tok);
         resolution -> symbol = variable;
 
@@ -1336,7 +1357,8 @@ assert(variable);
 
 void Semantic::CreateAccessToScopedVariable(AstSimpleName *simple_name, TypeSymbol *environment_type)
 {
-assert(environment_type -> IsOwner(ThisType()));
+    assert(environment_type -> IsOwner(ThisType()));
+
     VariableSymbol *variable_symbol = (VariableSymbol *) simple_name -> symbol;
 
     AstExpression *access_expression;
@@ -1391,10 +1413,12 @@ assert(environment_type -> IsOwner(ThisType()));
 
 void Semantic::CreateAccessToScopedMethod(AstMethodInvocation *method_call, TypeSymbol *environment_type)
 {
-assert(environment_type -> IsOwner(ThisType()));
+    assert(environment_type -> IsOwner(ThisType()));
+
     MethodSymbol *method = (MethodSymbol *) method_call -> symbol;
     AstSimpleName *simple_name = (AstSimpleName *) method_call -> method;
-assert(simple_name -> SimpleNameCast());
+
+    assert(simple_name -> SimpleNameCast());
 
     AstExpression *access_expression;
     if (method -> ACC_STATIC())
@@ -1648,7 +1672,9 @@ void Semantic::TypeNestAccessCheck(AstExpression *name)
 {
     AstSimpleName *simple_name = name -> SimpleNameCast();
     AstFieldAccess *field_access = name -> FieldAccessCast();
-assert(simple_name || field_access);
+
+    assert(simple_name || field_access);
+
     if (field_access)
         TypeNestAccessCheck(field_access -> base);
 
@@ -1723,7 +1749,9 @@ void Semantic::MemberAccessCheck(AstFieldAccess *field_access, TypeSymbol *base_
 
     VariableSymbol *variable_symbol = symbol -> VariableCast();
     MethodSymbol *method_symbol = symbol -> MethodCast();
-assert(variable_symbol || method_symbol);
+
+    assert(variable_symbol || method_symbol);
+
     AccessFlags *flags = (variable_symbol ? (AccessFlags *) variable_symbol : (AccessFlags *) method_symbol);
 
     AstExpression *base = field_access -> base;
@@ -1788,7 +1816,9 @@ void Semantic::SimpleNameAccessCheck(AstSimpleName *simple_name, TypeSymbol *con
 
     VariableSymbol *variable_symbol = symbol -> VariableCast();
     MethodSymbol *method_symbol = symbol -> MethodCast();
-assert(variable_symbol || method_symbol);
+
+    assert(variable_symbol || method_symbol);
+
     AccessFlags *flags = (variable_symbol ? (AccessFlags *) variable_symbol : (AccessFlags *) method_symbol);
 
     if (! (containing_type -> ACC_PUBLIC() || this_type -> ContainingPackage() == containing_type -> ContainingPackage()))
@@ -2092,7 +2122,9 @@ void Semantic::ProcessAmbiguousName(Ast *name)
     else
     {
         AstFieldAccess *field_access = (AstFieldAccess *) name;
-assert(name -> FieldAccessCast());
+
+        assert(name -> FieldAccessCast());
+
         TypeSymbol *type = NULL;
 
         if (field_access -> IsClassAccess())
@@ -2143,7 +2175,8 @@ assert(name -> FieldAccessCast());
                      type = control.Void();
                 base -> symbol = type;
                 field_access -> symbol = type -> FindVariableSymbol(control.type_name_symbol);
-assert(field_access -> symbol);
+
+                assert(field_access -> symbol);
             }
             else
             {
@@ -2204,7 +2237,8 @@ assert(field_access -> symbol);
                         //
                         // Recall that the variable is static...
                         //
-assert(variable_symbol -> ACC_STATIC());
+                        assert(variable_symbol -> ACC_STATIC());
+
                         AstMethodInvocation *method_call       = compilation_unit -> ast_pool -> GenMethodInvocation();
                         method_call -> method                  = method_access;
                         method_call -> left_parenthesis_token  = field_access -> identifier_token;
@@ -3247,14 +3281,18 @@ void Semantic::UpdateGeneratedLocalConstructor(MethodSymbol *constructor)
 {
     TypeSymbol *local_type = constructor -> containing_type;
     MethodSymbol *local_constructor = constructor -> LocalConstructor();
-assert(local_constructor -> IsGeneratedLocalConstructor());
+
+    assert(local_constructor -> IsGeneratedLocalConstructor());
+
     BlockSymbol *block_symbol = local_constructor -> block_symbol;
 
     for (int i = 0; i < constructor -> NumFormalParameters(); i++)
     {
         VariableSymbol *param = constructor -> FormalParameter(i),
                        *symbol = block_symbol -> FindVariableSymbol(param -> Identity());
-assert(symbol);
+
+        assert(symbol);
+
         symbol -> SetExternalIdentity(param -> ExternalIdentity()); // TODO: do we really need this ?
         symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
         if (symbol -> Type() == control.long_type || symbol -> Type() == control.double_type)
@@ -3281,7 +3319,9 @@ assert(symbol);
     //
     AstConstructorDeclaration *constructor_declaration = (AstConstructorDeclaration *)
                                                           constructor -> method_or_constructor_declaration;
-assert(constructor_declaration -> ConstructorDeclarationCast());
+
+    assert(constructor_declaration -> ConstructorDeclarationCast());
+
     AstConstructorBlock *constructor_block = constructor_declaration -> constructor_body;
 
     if (! (constructor_block -> explicit_constructor_invocation_opt &&
@@ -3299,7 +3339,9 @@ assert(constructor_declaration -> ConstructorDeclarationCast());
         {
             VariableSymbol *param = local_type -> ConstructorParameter(i),
                            *symbol = block_symbol -> FindVariableSymbol(param -> Identity());
-assert(symbol);
+
+            assert(symbol);
+
             AstSimpleName *lhs = compilation_unit -> ast_pool -> GenSimpleName(constructor_block -> left_brace_token);
             lhs -> symbol = param;
 
@@ -3329,7 +3371,8 @@ assert(symbol);
     //
     AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(constructor_block -> left_brace_token);
     simple_name -> symbol = constructor;
-assert(! constructor -> IsGeneratedLocalConstructor());
+
+    assert(! constructor -> IsGeneratedLocalConstructor());
 
     AstMethodInvocation *method_call = compilation_unit -> ast_pool -> GenMethodInvocation();
     method_call -> method                  = simple_name;
@@ -3342,7 +3385,9 @@ assert(! constructor -> IsGeneratedLocalConstructor());
     {
         AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(constructor_block -> left_brace_token);
         simple_name -> symbol = block_symbol -> FindVariableSymbol(control.this0_name_symbol);
-assert(simple_name -> symbol);
+
+        assert(simple_name -> symbol);
+
         method_call -> AddArgument(simple_name);
     }
 
@@ -3431,7 +3476,9 @@ void Semantic::UpdateLocalConstructors(TypeSymbol *inner_type)
 
             AstClassDeclaration *class_declaration = local_type -> declaration -> ClassDeclarationCast();
             AstClassInstanceCreationExpression *class_creation = local_type -> declaration -> ClassInstanceCreationExpressionCast();
-assert(class_declaration || class_creation);
+
+            assert(class_declaration || class_creation);
+
             AstClassBody *class_body = (class_declaration ? class_declaration -> class_body : class_creation -> class_body_opt);
 
             if (class_body -> default_constructor)
@@ -3454,7 +3501,8 @@ assert(class_declaration || class_creation);
         for (int m = 0; m < local_classes.Length(); m++)
         {
             TypeSymbol *target_local_type = local_classes[m];
-assert(target_local_type -> LocalClassProcessingCompleted());
+
+            assert(target_local_type -> LocalClassProcessingCompleted());
 
             for (int i = 0; i < target_local_type -> NumLocalConstructorCallEnvironments(); i++)
             {
@@ -3500,16 +3548,20 @@ assert(target_local_type -> LocalClassProcessingCompleted());
                                 simple_name -> symbol = (env -> symbol_table.FindVariableSymbol(local -> Identity()) == local
                                                               ? local
                                                               : source_local_type -> FindOrInsertLocalShadow(local));
-assert(simple_name -> symbol -> VariableCast());
+
+                                assert(simple_name -> symbol -> VariableCast());
+
                                 class_creation -> AddLocalArgument(simple_name);
                             }
                         }
 
                         MethodSymbol *constructor = (MethodSymbol *) class_creation -> class_type -> symbol;
-assert(constructor);
-assert(constructor -> MethodCast());
-assert(! constructor -> IsGeneratedLocalConstructor());
-assert(constructor -> LocalConstructor());
+
+                        assert(constructor);
+                        assert(constructor -> MethodCast());
+                        assert(! constructor -> IsGeneratedLocalConstructor());
+                        assert(constructor -> LocalConstructor());
+
                         class_creation -> class_type -> symbol = constructor -> LocalConstructor();
                     }
                 }
@@ -3524,20 +3576,25 @@ assert(constructor -> LocalConstructor());
 
                             AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(super_call -> super_token);
                             simple_name -> symbol = env -> symbol_table.FindVariableSymbol(local -> Identity());
-assert(simple_name -> symbol -> VariableCast()); 
+
+                            assert(simple_name -> symbol -> VariableCast());
+
                             super_call -> AddLocalArgument(simple_name);
                         }
 
                         MethodSymbol *constructor = (MethodSymbol *) super_call -> symbol;
-assert(constructor -> MethodCast() && (! constructor -> IsGeneratedLocalConstructor()));
-assert(constructor -> LocalConstructor());
+
+                        assert(constructor -> MethodCast() && (! constructor -> IsGeneratedLocalConstructor()));
+                        assert(constructor -> LocalConstructor());
+
                         super_call -> symbol = constructor -> LocalConstructor();
                     }
                 }
                 else
                 {
                     this_call = (AstThisCall *) call;
-assert(this_call -> ThisCallCast());
+
+                    assert(this_call -> ThisCallCast());
 
                     if (this_call -> symbol -> MethodCast())
                     {
@@ -3548,13 +3605,17 @@ assert(this_call -> ThisCallCast());
 
                             AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(this_call -> this_token);
                             simple_name -> symbol = env -> symbol_table.FindVariableSymbol(local -> Identity());
-assert(simple_name -> symbol -> VariableCast()); 
+
+                            assert(simple_name -> symbol -> VariableCast());
+
                             this_call -> AddLocalArgument(simple_name);
                         }
 
                         MethodSymbol *constructor = (MethodSymbol *) this_call -> symbol;
-assert(constructor -> MethodCast() && (! constructor -> IsGeneratedLocalConstructor()));
-assert(constructor -> LocalConstructor());
+
+                        assert(constructor -> MethodCast() && (! constructor -> IsGeneratedLocalConstructor()));
+                        assert(constructor -> LocalConstructor());
+
                         this_call -> symbol = constructor -> LocalConstructor();
                     }
                 }
@@ -3709,8 +3770,10 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression *class
         GenerateLocalConstructor(constructor);
 
         MethodSymbol *generated_constructor = constructor -> LocalConstructor();
-assert(! constructor -> IsGeneratedLocalConstructor());
-assert(generated_constructor);
+
+        assert(! constructor -> IsGeneratedLocalConstructor());
+        assert(generated_constructor);
+
         block_symbol = generated_constructor -> block_symbol; // use the environment of the generated constructor...
 
         if (super_call -> base_opt)
@@ -3742,10 +3805,14 @@ assert(generated_constructor);
 
                     anonymous_type -> FindOrInsertLocalShadow(local);
                     simple_name -> symbol = block_symbol -> FindVariableSymbol(local -> Identity());
-assert(simple_name -> symbol);
+
+                    assert(simple_name -> symbol);
+
                     super_call -> AddLocalArgument(simple_name);
                 }
-assert(super_constructor -> LocalConstructor() && (! super_constructor -> IsGeneratedLocalConstructor()));
+
+                assert(super_constructor -> LocalConstructor() && (! super_constructor -> IsGeneratedLocalConstructor()));
+
                 super_call -> symbol = super_constructor -> LocalConstructor();
             }
             else // are we currently within the body of the type in question ?
@@ -3789,7 +3856,9 @@ assert(super_constructor -> LocalConstructor() && (! super_constructor -> IsGene
     {
         VariableSymbol *param = super_constructor -> FormalParameter(k),
                        *symbol = block_symbol -> FindVariableSymbol(param -> Identity());
-assert(symbol);
+
+        assert(symbol);
+
         AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(class_creation -> new_token);
         simple_name -> symbol = symbol;
         super_call -> AddArgument(simple_name);
@@ -3825,12 +3894,13 @@ TypeSymbol *Semantic::GetAnonymousType(AstClassInstanceCreationExpression *class
     int length = value.Length() + outermost_type -> NameLength() + 1; // +1 for $
     wchar_t *anonymous_name = new wchar_t[length + 1];
     wcscpy(anonymous_name, outermost_type -> Name());
-    wcscat(anonymous_name, StringConstant::US__DS_);
+    wcscat(anonymous_name, StringConstant::US__DS);
     wcscat(anonymous_name, value.String());
 
     NameSymbol *name_symbol = control.FindOrInsertName(anonymous_name, length);
 
-assert((! ThisMethod()) || LocalSymbolTable().Top());
+    assert((! ThisMethod()) || LocalSymbolTable().Top());
+
     TypeSymbol *inner_type = (ThisMethod() ? LocalSymbolTable().Top() -> InsertAnonymousTypeSymbol(name_symbol)
                                            : this_type -> InsertAnonymousTypeSymbol(name_symbol));
     inner_type -> SetACC_PRIVATE();
@@ -4058,10 +4128,12 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
                 (class_creation -> base_opt -> symbol != control.no_type) && 
                 (class_creation -> base_opt -> Type() != method -> containing_type -> ContainingType()))
             {
-assert(method -> containing_type);
-assert(method -> containing_type -> ContainingType());
-assert(class_creation -> base_opt -> Type());
-assert(CanMethodInvocationConvert(method -> containing_type -> ContainingType(), class_creation -> base_opt -> Type()));
+                assert(method -> containing_type);
+                assert(method -> containing_type -> ContainingType());
+                assert(class_creation -> base_opt -> Type());
+                assert(CanMethodInvocationConvert(method -> containing_type -> ContainingType(),
+                                                  class_creation -> base_opt -> Type()));
+
                 class_creation -> base_opt = ConvertToType(class_creation -> base_opt, method -> containing_type -> ContainingType());
             }
 
@@ -4143,9 +4215,11 @@ assert(CanMethodInvocationConvert(method -> containing_type -> ContainingType(),
             {
                 if (type -> LocalClassProcessingCompleted() && method -> LocalConstructor())
                 {
-assert(! method -> IsGeneratedLocalConstructor());
+                    assert(! method -> IsGeneratedLocalConstructor());
+
                     class_creation -> class_type -> symbol = method -> LocalConstructor();
-assert(method -> LocalConstructor() -> signature);
+
+                    assert(method -> LocalConstructor() -> signature);
 
                     //
                     // Are we currently within the body of the method that contains
@@ -6825,7 +6899,7 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
                  BinaryNumericPromotion(assignment_expression);
              break;
         default:
-            assert(0);
+            assert(false);
             break;
     }
 

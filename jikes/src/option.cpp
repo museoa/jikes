@@ -139,7 +139,7 @@ void Option::SaveCurrentDirectoryOnDisk(char c)
         if (! disk_directory)
         {
             disk_directory = new char[2];
-            strcpy(disk_directory, StringConstant::U8S__DO_);
+            strcpy(disk_directory, StringConstant::U8S__DO);
         }
 
         current_directory[Case::ToAsciiLower(c)] = disk_directory;
@@ -157,7 +157,7 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
                                               debug_dump_lex(false),
                                               debug_dump_ast(false),
                                               debug_dump_class(false),
-                                              debug_trap_op(false),
+                                              debug_trap_op(0),
                                               applet_author(false),
                                               incremental(false),
                                               makefile(false),
@@ -192,7 +192,7 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
     if (length > directory_length)
     {
         delete [] main_current_directory;
-        main_current_directory = StringConstant::U8S__DO_;
+        main_current_directory = StringConstant::U8S__DO;
         main_disk = 0;
     }
     else
@@ -371,7 +371,7 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
             }
             else if (strcmp(arguments.argv[i], "+O") == 0)
             {
-                 debug_trap_op = atoi(arguments.argv[i+1]);
+                 debug_trap_op = atoi(arguments.argv[i + 1]);
                  i++;
             }
             else if (strcmp(arguments.argv[i],"+P") == 0)

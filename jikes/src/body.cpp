@@ -216,7 +216,7 @@ void Semantic::ProcessLocalVariableDeclarationStatement(Ast *stmt)
             symbol -> declarator = variable_declarator;
             BlockSymbol *block = LocalBlockStack().TopBlock() -> block_symbol;
             symbol -> SetLocalVariableIndex(block -> max_variable_index++); // Assigning a local_variable_index to a variable
-                                                                               // also marks it complete as a side-effect.
+                                                                            // also marks it complete as a side-effect.
             if (symbol -> Type() == control.long_type || symbol -> Type() == control.double_type)
                 block -> max_variable_index++;
 
@@ -279,7 +279,7 @@ void Semantic::ProcessSynchronizedStatement(Ast *stmt)
     // additional slot if the value returned is double or long.
     //
     block -> synchronized_variable_index = enclosing_block -> block_symbol -> max_variable_index;
-    block -> max_variable_index =  block -> synchronized_variable_index + 2;
+    block -> max_variable_index = block -> synchronized_variable_index + 2;
     if (ThisMethod() -> Type() == control.double_type || ThisMethod() -> Type() == control.long_type)
          block -> max_variable_index += 2;
     else if (ThisMethod() -> Type() != control.void_type)
@@ -875,7 +875,9 @@ void Semantic::ProcessContinueStatement(Ast *stmt)
         if (label_symbol)
         {
             continue_statement -> nesting_level = label_symbol -> nesting_level;
-assert(label_symbol -> block -> NumStatements() > 0);
+
+            assert(label_symbol -> block -> NumStatements() > 0);
+
             loop_statement = label_symbol -> block -> Statement(0);
         }
         else
@@ -908,12 +910,13 @@ assert(label_symbol -> block -> NumStatements() > 0);
         AstStatement *enclosed_statement = (do_statement ? do_statement -> statement
                                                          : (for_statement ? for_statement -> statement
                                                                           : (while_statement ? while_statement -> statement
-                                                                                             : NULL)));
+                                                                                             : (AstStatement *) NULL)));
         if (enclosed_statement)
             enclosed_statement -> can_complete_normally = true;
         else
         {
-assert(continue_statement -> identifier_token_opt);
+            assert(continue_statement -> identifier_token_opt);
+
             ReportSemError(SemanticError::INVALID_CONTINUE_TARGET,
                            continue_statement -> LeftToken(),
                            continue_statement -> RightToken(),
@@ -949,15 +952,20 @@ void Semantic::ProcessReturnStatement(Ast *stmt)
         }
         else if (return_statement -> expression_opt -> Type() != control.no_type)
         {
-            if (! CanAssignmentConvert(this_method -> Type(), return_statement -> expression_opt))
+            if (this_method -> Type() != return_statement -> expression_opt -> Type())
             {
-                ReportSemError(SemanticError::MISMATCHED_RETURN_AND_METHOD_TYPE,
-                               return_statement -> expression_opt -> LeftToken(),
-                               return_statement -> expression_opt -> RightToken(),
-                               return_statement -> expression_opt -> Type() -> ContainingPackage() -> PackageName(),
-                               return_statement -> expression_opt -> Type() -> ExternalName(),
-                               this_method -> Type() -> ContainingPackage() -> PackageName(),
-                               this_method -> Type() -> ExternalName());
+                if (CanAssignmentConvert(this_method -> Type(), return_statement -> expression_opt))
+                    return_statement -> expression_opt = ConvertToType(return_statement -> expression_opt, this_method -> Type());
+                else
+                {
+                    ReportSemError(SemanticError::MISMATCHED_RETURN_AND_METHOD_TYPE,
+                                   return_statement -> expression_opt -> LeftToken(),
+                                   return_statement -> expression_opt -> RightToken(),
+                                   return_statement -> expression_opt -> Type() -> ContainingPackage() -> PackageName(),
+                                   return_statement -> expression_opt -> Type() -> ExternalName(),
+                                   this_method -> Type() -> ContainingPackage() -> PackageName(),
+                                   this_method -> Type() -> ExternalName());
+                }
             }
         }
     }
@@ -1365,9 +1373,9 @@ TypeSymbol *Semantic::GetLocalType(AstClassDeclaration *class_declaration)
     int length = value.Length() + outermost_type -> NameLength() + 1 + name_symbol -> NameLength() + 1; // +1 for $,... +1 for $
     wchar_t *external_name = new wchar_t[length + 1]; // +1 for '\0';
     wcscpy(external_name, outermost_type -> Name());
-    wcscat(external_name, StringConstant::US__DS_);
+    wcscat(external_name, StringConstant::US__DS);
     wcscat(external_name, value.String());
-    wcscat(external_name, StringConstant::US__DS_);
+    wcscat(external_name, StringConstant::US__DS);
     wcscat(external_name, name_symbol -> Name());
 
     type -> SetACC_PRIVATE();
@@ -1673,7 +1681,8 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
                 (super_call -> base_opt -> Type() != control.no_type) &&
                 (super_call -> base_opt -> Type() != super_type -> ContainingType()))
             {
-assert(CanMethodInvocationConvert(super_type -> ContainingType(), super_call -> base_opt -> Type()));
+                assert(CanMethodInvocationConvert(super_type -> ContainingType(), super_call -> base_opt -> Type()));
+
                 super_call -> base_opt = ConvertToType(super_call -> base_opt, super_type -> ContainingType());
             }
 
@@ -1711,10 +1720,14 @@ assert(CanMethodInvocationConvert(super_type -> ContainingType(), super_call -> 
                         AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(super_call -> super_token);
 
                         this_type -> FindOrInsertLocalShadow(local);
-assert(ThisMethod() -> LocalConstructor() && (! ThisMethod() -> IsGeneratedLocalConstructor()));
+
+                        assert(ThisMethod() -> LocalConstructor() && (! ThisMethod() -> IsGeneratedLocalConstructor()));
+
                         BlockSymbol *block_symbol = ThisMethod() -> LocalConstructor() -> block_symbol;
                         simple_name -> symbol = block_symbol -> FindVariableSymbol(local -> Identity());
-assert(simple_name -> symbol); // for the time being, we will now process sources with the error below...
+
+                        assert(simple_name -> symbol); // for the time being, we will now process sources with the error below...
+
                         //
                         // This is possible if the source contains a method that erroneously calls a super class.
                         //
@@ -1722,7 +1735,9 @@ assert(simple_name -> symbol); // for the time being, we will now process source
                             simple_name -> symbol = control.no_type;
                         super_call -> AddLocalArgument(simple_name);
                     }
-assert(constructor -> LocalConstructor() && (! constructor -> IsGeneratedLocalConstructor()));
+
+                    assert(constructor -> LocalConstructor() && (! constructor -> IsGeneratedLocalConstructor()));
+
                     super_call -> symbol = constructor -> LocalConstructor();
                 }
                 else // are we currently within the body of the type in question ?
@@ -1744,7 +1759,8 @@ assert(constructor -> LocalConstructor() && (! constructor -> IsGeneratedLocalCo
 void Semantic::CheckThrow(AstExpression *throw_expression)
 {
     TypeSymbol *throw_type = throw_expression -> symbol -> TypeCast();
-assert(throw_type);
+
+    assert(throw_type);
 
     if (throw_type -> ACC_INTERFACE())
     {
@@ -1948,7 +1964,9 @@ void Semantic::ProcessConstructorBody(AstConstructorDeclaration *constructor_dec
         if (this_type -> IsLocal())
         {
             LocalSymbolTable().Pop();
-assert(this_method -> LocalConstructor() && (! this_method -> IsGeneratedLocalConstructor()));
+
+            assert(this_method -> LocalConstructor() && (! this_method -> IsGeneratedLocalConstructor()));
+
             LocalSymbolTable().Push(this_method -> LocalConstructor() -> block_symbol -> Table());
         }
 
@@ -1959,7 +1977,8 @@ assert(this_method -> LocalConstructor() && (! this_method -> IsGeneratedLocalCo
             }
             else
             {
-assert(super_call);
+                assert(super_call);
+
                 super_call -> is_reachable = true;
                 ProcessSuperCall(super_call);
             }
@@ -2016,6 +2035,12 @@ assert(super_call);
     LocalBlockStack().Pop();
     LocalSymbolTable().Pop();
 
+    //
+    // Update the local variable info for the main block associated with this constructor.
+    //
+    if (this_method -> block_symbol -> max_variable_index < block -> max_variable_index)
+        this_method -> block_symbol -> max_variable_index = block -> max_variable_index;
+
     block -> CompressSpace(); // space optimization
 
     return;
@@ -2027,10 +2052,10 @@ void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment, AstClas
     state_stack.Push(environment);
     TypeSymbol *this_type = ThisType();
 
-assert(this_type -> HeaderProcessed());
-assert(this_type -> ConstructorMembersProcessed());
-assert(this_type -> MethodMembersProcessed());
-assert(this_type -> FieldMembersProcessed());
+    assert(this_type -> HeaderProcessed());
+    assert(this_type -> ConstructorMembersProcessed());
+    assert(this_type -> MethodMembersProcessed());
+    assert(this_type -> FieldMembersProcessed());
 
     ThisVariable() = NULL; // All variable declarations have already been processed
 
@@ -2254,9 +2279,10 @@ void Semantic::ProcessExecutableBodies(AstInterfaceDeclaration *interface_declar
 {
     state_stack.Push(interface_declaration -> semantic_environment);
     TypeSymbol *this_type = ThisType();
-assert(this_type -> HeaderProcessed());
-assert(this_type -> MethodMembersProcessed());
-assert(this_type -> FieldMembersProcessed());
+
+    assert(this_type -> HeaderProcessed());
+    assert(this_type -> MethodMembersProcessed());
+    assert(this_type -> FieldMembersProcessed());
 
     for (int k = 0; k < this_type -> NumVariableSymbols(); k++)
     {

@@ -22,6 +22,7 @@ void DiagnoseParser::ReallocateStacks()
     int old_stack_length = stack_length;
  
     stack_length += STACK_INCREMENT;
+
     assert(stack_length <= SHRT_MAX);
 
     int *old_stack = stack; 

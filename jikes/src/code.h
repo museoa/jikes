@@ -46,7 +46,6 @@ public:
     }
 
     static inline void CodeCheck(wchar_t c)
-
     {
          assert(c >> LOG_COMPLEMENT_SIZE < BASE_SIZE);
          assert(base[c >> LOG_COMPLEMENT_SIZE] + c >= (&code[0]));

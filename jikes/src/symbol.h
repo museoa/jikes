@@ -473,7 +473,9 @@ public:
     {
         if (! type_)
             ProcessMethodSignature(sem, tok);
-assert(type_);
+
+        assert(type_);
+
         return type_;
     }
 
@@ -481,7 +483,9 @@ assert(type_);
     {
         if (! type_)
             ProcessMethodSignature(sem, tok);
-assert(type_);
+
+        assert(type_);
+
         return (formal_parameters ? formal_parameters -> Length() : 0);
     }
     VariableSymbol *FormalParameter(int i)
@@ -499,7 +503,9 @@ assert(type_);
     {
         if (throws_signatures)
             ProcessMethodThrows(sem, tok);
-assert(! throws_signatures);
+
+        assert(! throws_signatures);
+
         return (throws ? throws -> Length() : 0);
     }
     TypeSymbol *Throws(int i)
@@ -534,9 +540,10 @@ assert(! throws_signatures);
 
     void SetGeneratedLocalConstructor(MethodSymbol *base_method)
     {
-assert(! base_method -> local_constructor);
-       base_method -> local_constructor = this;
-       this -> local_constructor = base_method;
+        assert(! base_method -> local_constructor);
+
+        base_method -> local_constructor = this;
+        this -> local_constructor = base_method;
     }
     bool IsGeneratedLocalConstructor() { return ((local_constructor != NULL) && (this -> external_name_symbol == NULL)); }
     MethodSymbol *LocalConstructor()  { return local_constructor; }
@@ -598,7 +605,8 @@ private:
 
     bool ACC_FINAL()
     {
-assert(! "use the ACC_FINAL() flag on a method symbol. Use the function IsFinal() instead");
+        assert(! "use the ACC_FINAL() flag on a method symbol. Use the function IsFinal() instead");
+
         return false;
     }
 };
@@ -792,8 +800,9 @@ public:
 
     VariableSymbol *FindThis(int k)
     {
-assert(IsInner());
-assert(NumConstructorParameters() > 0);
+        assert(IsInner());
+        assert(NumConstructorParameters() > 0);
+
         return (k == 0 ? ConstructorParameter(0)
                        : (VariableSymbol *) (NumEnclosingInstances() > k ? EnclosingInstance(k) : NULL));
     }
@@ -1227,7 +1236,9 @@ public:
     {
         if (! type_)
             ProcessVariableSignature(sem, tok);
-assert(type_);
+
+        assert(type_);
+
         return type_;
     }
 
@@ -1510,7 +1521,8 @@ inline void BlockSymbol::CompressSpace() { if (table) table -> CompressSpace(); 
 
 inline PathSymbol *SymbolTable::InsertPathSymbol(NameSymbol *name_symbol, DirectorySymbol *directory_symbol)
 {
-assert(base);
+    assert(base);
+
     PathSymbol *symbol = new PathSymbol(name_symbol);
     directory_symbol -> owner = symbol;
     symbol -> root_directory = directory_symbol;
@@ -1534,7 +1546,8 @@ assert(base);
 
 inline PathSymbol *SymbolTable::FindPathSymbol(NameSymbol *name_symbol)
 {
-assert(base);
+    assert(base);
+
     for (Symbol *symbol = base[name_symbol -> index % hash_size]; symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
@@ -1547,7 +1560,8 @@ assert(base);
 
 inline DirectorySymbol *SymbolTable::InsertDirectorySymbol(NameSymbol *name_symbol, Symbol *owner)
 {
-assert(base);
+    assert(base);
+
     DirectorySymbol *symbol = new DirectorySymbol(name_symbol, owner);
     AddOtherSymbol(symbol);
 
@@ -1596,7 +1610,8 @@ inline DirectorySymbol *DirectorySymbol::InsertAndReadDirectorySymbol(NameSymbol
 
 inline DirectorySymbol *SymbolTable::FindDirectorySymbol(NameSymbol *name_symbol)
 {
-assert(base);
+    assert(base);
+
     for (Symbol *symbol = base[name_symbol -> index % hash_size]; symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
@@ -1619,7 +1634,8 @@ inline DirectorySymbol *DirectorySymbol::FindDirectorySymbol(NameSymbol *name_sy
 
 inline FileSymbol *SymbolTable::InsertFileSymbol(NameSymbol *name_symbol)
 {
-assert(base);
+    assert(base);
+
     FileSymbol *symbol = new FileSymbol(name_symbol);
     AddOtherSymbol(symbol);
 
@@ -1647,7 +1663,8 @@ inline FileSymbol *DirectorySymbol::InsertFileSymbol(NameSymbol *name_symbol)
 
 inline FileSymbol *SymbolTable::FindFileSymbol(NameSymbol *name_symbol)
 {
-assert(base);
+    assert(base);
+
     for (Symbol *symbol = base[name_symbol -> index % hash_size]; symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
@@ -1670,7 +1687,8 @@ inline FileSymbol *DirectorySymbol::FindFileSymbol(NameSymbol *name_symbol)
 
 inline PackageSymbol *SymbolTable::InsertPackageSymbol(NameSymbol *name_symbol, PackageSymbol *owner)
 {
-assert(base);
+    assert(base);
+
     PackageSymbol *symbol = new PackageSymbol(name_symbol, owner);
     AddOtherSymbol(symbol);
 
@@ -1698,7 +1716,8 @@ inline PackageSymbol *PackageSymbol::InsertPackageSymbol(NameSymbol *name_symbol
 
 inline PackageSymbol *SymbolTable::FindPackageSymbol(NameSymbol *name_symbol)
 {
-assert(base);
+    assert(base);
+
     for (Symbol *symbol = base[name_symbol -> index % hash_size]; symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
@@ -1735,7 +1754,8 @@ inline TypeSymbol *TypeSymbol::InsertAnonymousTypeSymbol(NameSymbol *name_symbol
 
 inline TypeSymbol *SymbolTable::InsertSystemTypeSymbol(NameSymbol *name_symbol)
 {
-assert(base);
+    assert(base);
+
     TypeSymbol *symbol = new TypeSymbol(name_symbol);
     symbol -> pool_index = NumTypeSymbols();
     AddTypeSymbol(symbol);
@@ -1764,7 +1784,8 @@ inline TypeSymbol *PackageSymbol::InsertSystemTypeSymbol(NameSymbol *name_symbol
 
 inline TypeSymbol *SymbolTable::InsertOuterTypeSymbol(NameSymbol *name_symbol)
 {
-assert(base);
+    assert(base);
+
     TypeSymbol *symbol = new TypeSymbol(name_symbol);
     symbol -> pool_index = NumTypeSymbols();
     AddTypeSymbol(symbol);
@@ -1793,7 +1814,8 @@ inline TypeSymbol *PackageSymbol::InsertOuterTypeSymbol(NameSymbol *name_symbol)
 
 inline TypeSymbol *SymbolTable::InsertNestedTypeSymbol(NameSymbol *name_symbol)
 {
-assert(base);
+    assert(base);
+
     TypeSymbol *symbol = new TypeSymbol(name_symbol);
     symbol -> pool_index = NumTypeSymbols();
     AddTypeSymbol(symbol);
@@ -1822,7 +1844,8 @@ inline TypeSymbol *TypeSymbol::InsertNestedTypeSymbol(NameSymbol *name_symbol)
 
 inline void SymbolTable::DeleteTypeSymbol(TypeSymbol *type)
 {
-assert(base);
+    assert(base);
+
     int k = type -> name_symbol -> index % hash_size;
     if (type == base[k])
         base[k] = type -> next;
@@ -1877,7 +1900,8 @@ inline void TypeSymbol::DeleteAnonymousTypes()
 
 inline TypeSymbol *SymbolTable::FindTypeSymbol(NameSymbol *name_symbol)
 {
-assert(base);
+    assert(base);
+
     for (Symbol *symbol = base[name_symbol -> index % hash_size]; symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
@@ -1906,7 +1930,8 @@ inline TypeSymbol *TypeSymbol::FindTypeSymbol(NameSymbol *name_symbol)
 
 inline MethodSymbol *SymbolTable::InsertMethodSymbol(NameSymbol *name_symbol)
 {
-assert(base);
+    assert(base);
+
     MethodSymbol *symbol = new MethodSymbol(name_symbol);
     AddMethodSymbol(symbol);
 
@@ -1934,7 +1959,8 @@ inline MethodSymbol *TypeSymbol::InsertMethodSymbol(NameSymbol *name_symbol)
 
 inline MethodSymbol *SymbolTable::InsertConstructorSymbol(NameSymbol *name_symbol)
 {
-assert(! constructor);
+    assert(! constructor);
+
     this -> constructor = InsertMethodSymbol(name_symbol);
     return this -> constructor;
 }
@@ -1948,7 +1974,8 @@ inline MethodSymbol *TypeSymbol::InsertConstructorSymbol(NameSymbol *name_symbol
 
 inline void SymbolTable::InsertMethodSymbol(MethodSymbol *method_symbol)
 {
-assert(base);
+    assert(base);
+
     AddMethodSymbol(method_symbol);
 
     int k = method_symbol -> name_symbol -> index % hash_size;
@@ -1975,7 +2002,8 @@ inline void TypeSymbol::InsertMethodSymbol(MethodSymbol *method_symbol)
 
 inline void SymbolTable::InsertConstructorSymbol(MethodSymbol *method_symbol)
 {
-assert(! constructor);
+    assert(! constructor);
+
     this -> constructor = method_symbol;
     InsertMethodSymbol(method_symbol);
 }
@@ -1989,7 +2017,8 @@ inline void TypeSymbol::InsertConstructorSymbol(MethodSymbol *method_symbol)
 
 inline MethodSymbol *SymbolTable::FindMethodSymbol(NameSymbol *name_symbol)
 {
-assert(base);
+    assert(base);
+
     for (Symbol *symbol = base[name_symbol -> index % hash_size]; symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
@@ -2022,7 +2051,8 @@ inline MethodSymbol *TypeSymbol::FindConstructorSymbol()
 
 inline VariableSymbol *SymbolTable::InsertVariableSymbol(NameSymbol *name_symbol)
 {
-assert(base);
+    assert(base);
+
     VariableSymbol *symbol = new VariableSymbol(name_symbol);
     AddVariableSymbol(symbol);
 
@@ -2056,7 +2086,8 @@ inline VariableSymbol *BlockSymbol::InsertVariableSymbol(NameSymbol *name_symbol
 
 inline void SymbolTable::InsertVariableSymbol(VariableSymbol *variable_symbol)
 {
-assert(base);
+    assert(base);
+
     AddVariableSymbol(variable_symbol);
 
     int k = variable_symbol -> name_symbol -> index % hash_size;
@@ -2089,7 +2120,8 @@ inline void BlockSymbol::InsertVariableSymbol(VariableSymbol *variable_symbol)
 
 inline VariableSymbol *SymbolTable::FindVariableSymbol(NameSymbol *name_symbol)
 {
-assert(base);
+    assert(base);
+
     for (Symbol *symbol = base[name_symbol -> index % hash_size]; symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
@@ -2118,7 +2150,8 @@ inline VariableSymbol *BlockSymbol::FindVariableSymbol(NameSymbol *name_symbol)
 
 inline LabelSymbol *SymbolTable::InsertLabelSymbol(NameSymbol *name_symbol)
 {
-assert(base);
+    assert(base);
+
     LabelSymbol *symbol = new LabelSymbol(name_symbol);
     AddOtherSymbol(symbol);
 
@@ -2137,7 +2170,8 @@ assert(base);
 
 inline LabelSymbol *SymbolTable::FindLabelSymbol(NameSymbol *name_symbol)
 {
-assert(base);
+    assert(base);
+
     for (Symbol *symbol = base[name_symbol -> index % hash_size]; symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
@@ -2181,7 +2215,8 @@ inline MethodSymbol *SymbolTable::Overload(MethodSymbol *base_method)
 
 inline MethodSymbol *TypeSymbol::Overload(MethodSymbol *base_method)
 {
-assert(table);
+    assert(table);
+
     return table -> Overload(base_method);
 }
 
@@ -2199,7 +2234,8 @@ inline void SymbolTable::Overload(MethodSymbol *base_method, MethodSymbol *overl
 
 inline void TypeSymbol::Overload(MethodSymbol *base_method, MethodSymbol *overload)
 {
-assert(table);
+    assert(table);
+
     table -> Overload(base_method, overload);
 }
 
@@ -2218,7 +2254,8 @@ inline MethodSymbol *SymbolTable::LocalConstructorOverload(MethodSymbol *base_me
 
 inline MethodSymbol *TypeSymbol::LocalConstructorOverload(MethodSymbol *base_method)
 {
-assert(table);
+    assert(table);
+
     return table -> LocalConstructorOverload(base_method);
 }
 

@@ -982,7 +982,8 @@ void Control::ProcessFile(FileSymbol *file_symbol)
     //
     for (int i = 0; i < needs_body_work.Length(); i++)
     {
-assert(semantic.Length() == 0);
+        assert(semantic.Length() == 0);
+
         ProcessBodies(needs_body_work[i]);
     }
     needs_body_work.Reset();
@@ -1017,7 +1018,8 @@ void Control::ProcessHeaders(FileSymbol *file_symbol)
         //
         if (file_symbol -> compilation_unit)
         {
-assert(! file_symbol -> semantic);
+            assert(! file_symbol -> semantic);
+
             if (! file_symbol -> package)
                 ProcessPackageDeclaration(file_symbol, file_symbol -> compilation_unit -> package_declaration_opt);
             file_symbol -> semantic = new Semantic(*this, file_symbol);
@@ -1200,9 +1202,7 @@ void Control::ProcessBodies(TypeSymbol *type)
                 if (option.bytecode)
                 {
                     ByteCode *code = new ByteCode(type);
-                    if (type -> ACC_INTERFACE())
-                         code -> CompileInterface(type);
-                    else code -> CompileClass(type);
+                    code -> GenerateCode();
 
                     delete code;
                 }

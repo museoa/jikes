@@ -285,7 +285,7 @@ void LexStream::ReadInput()
         if (zipfile -> Buffer() == NULL)
         {
             cerr << "chaos: Don\'t know how to process compressed (\".java\") source in a zip file\n";
-            assert(0);
+            assert(false);
         }
         else if (! file_symbol -> lex_stream) // Once the zip file is loaded, it never changes. So, we only read it the first time
         {
@@ -350,7 +350,7 @@ void LexStream::RereadInput()
         if (zipfile -> Buffer() == NULL)
         {
             cerr << "chaos: Don\'t know how to process compressed (\".java\") source in a zip file\n";
-            assert(0);
+            assert(false);
         }
         else ProcessInput(zipfile -> Buffer(), file_symbol -> uncompressed_size);
         delete zipfile;
@@ -831,7 +831,7 @@ void LexStream::PrintMessage(StreamError::StreamErrorKind kind)
              cout << "Invalid unicode escape character";
              break;
         default:
-             assert(0);
+             assert(false);
     }
 
     cout << '\n';

@@ -166,6 +166,7 @@ public:
     inline void Reset(const int n = 0)
     {
         assert(n >= 0 && n <= size);
+
         top = n;
     }
 
@@ -184,6 +185,7 @@ public:
     inline T& operator[](const int i)
     {
         assert(i >= 0 && i < top);
+
         return base[i >> log_blksize][i];
     }
 
@@ -354,20 +356,22 @@ public:
     inline T& operator[](const int i)
     {
         assert(i >= 0 && i < Tuple<T>::top);
+
         return (array ? array[i] : Tuple<T>::base[i >> Tuple<T>::log_blksize][i]);
     }
 
-    inline void Resize(const int n = 0) { assert(0); }
-    inline void Reset(const int n = 0) { assert(0); }
+    inline void Resize(const int n = 0) { assert(false); }
+    inline void Reset(const int n = 0) { assert(false); }
     inline T& Next()
     {
         assert(! array);
+
         int i = Tuple<T>::NextIndex();
         return Tuple<T>::base[i >> Tuple<T>::log_blksize][i];
     }
     inline Tuple<T>& operator=(const Tuple<T>& rhs)
     {
-        assert(0);
+        assert(false);
         return *this;
     }
 
@@ -435,7 +439,8 @@ public:
         if (mapfile == INVALID_HANDLE_VALUE)
             return false;
         u1 *string_buffer = (u1 *) MapViewOfFile(mapfile, FILE_MAP_WRITE, 0, 0, buffer.top);
-assert(string_buffer);
+
+        assert(string_buffer);
 
         int i = 0,
             size = 0,

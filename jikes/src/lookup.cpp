@@ -78,14 +78,13 @@ time_t DirectoryEntry::Mtime()
         char *file_name = new char[length + 1];
         strcpy(file_name, dirname);
         if (dirname[this -> directory -> DirectoryNameLength() - 1] != U_SLASH)
-            strcat(file_name, StringConstant::U8S__SL_);
+            strcat(file_name, StringConstant::U8S__SL);
         strcat(file_name, this -> name);
 
         struct stat status;
         if (::SystemStat(file_name, &status) == 0)
-            mtime_ = status.st_mtime;
-else
-assert("Cannot compute system time stamp\n");
+             mtime_ = status.st_mtime;
+        else assert(false && "Cannot compute system time stamp\n");
 
         delete [] file_name;
     }

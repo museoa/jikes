@@ -88,7 +88,8 @@ public:
     {
         if (d != 0)
         {
-assert(current_directory[d]);
+            assert(current_directory[d]);
+
             SetCurrentDirectory(current_directory[d]);
         }
     }
@@ -122,10 +123,11 @@ public:
          zero_defect;
     int first_file_index;
 
+    int debug_trap_op;
+
     bool debug_dump_lex,
          debug_dump_ast,
          debug_dump_class,
-         debug_trap_op,
          applet_author,
          incremental,
          makefile,

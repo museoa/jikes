@@ -154,7 +154,7 @@ public:
     int &TopMaxEnclosedVariableIndex()
     {
         if (index.Length() <= 0)
-            assert(0);
+            assert(false);
         return index[index.Length() - 1];
     }
 
@@ -175,7 +175,7 @@ public:
     void Push() { info.Next().Reset(); }
     void Pop()  { if (info.Length() > 0) info.Reset(info.Length() - 1); }
     int Size()  { return info.Length(); }
-    Tuple <AstExpression *> &Top()  { if (info.Length() == 0) assert(0); return info[info.Length() - 1]; }
+    Tuple <AstExpression *> &Top()  { if (info.Length() == 0) assert(false); return info[info.Length() - 1]; }
 
 private:
     Tuple< Tuple<AstExpression *> > info;
@@ -237,7 +237,7 @@ public:
     {
         if (top_index > 0)
              top_index--;
-        else assert(0);
+        else assert(false);
     }
 
     int Size()                 { return top_index; }
@@ -256,7 +256,8 @@ public:
 
     BitSet &TopExitSet(BitSet &start_set)
     {
-assert(top_index > 0);
+        assert(top_index > 0);
+
         exit_set  = start_set;
         exit_set *= TopBreakSet();
         exit_set *= TopContinueSet();
@@ -278,7 +279,8 @@ assert(top_index > 0);
 
     BitSet &TopFinalExitSet(BitSet &start_set)
     {
-assert(top_index > 0);
+        assert(top_index > 0);
+
         exit_set  = start_set;
         exit_set += TopFinalBreakSet();
         exit_set += TopFinalContinueSet();
@@ -346,7 +348,7 @@ public:
     {
         if (top_index > 0)
              top_index--;
-        else assert(0);
+        else assert(false);
     }
 
     int Size()                           { return top_index; }

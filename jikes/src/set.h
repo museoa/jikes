@@ -192,7 +192,8 @@ public:
     //
     inline bool IsElement(Symbol *element)
     {
-assert(element);
+        assert(element);
+
         NameSymbol *name_symbol = element -> Identity();
         for (ShadowSymbol *shadow = base[name_symbol -> index % hash_size]; shadow; shadow = shadow -> next)
         {
@@ -308,7 +309,8 @@ public:
     //
     inline Symbol *Image(NameSymbol *name_symbol)
     {
-assert(name_symbol);
+        assert(name_symbol);
+
         for (ShadowSymbol *shadow = base[name_symbol -> index % hash_size]; shadow; shadow = shadow -> next)
         {
             if (shadow -> Identity() == name_symbol)
@@ -323,7 +325,8 @@ assert(name_symbol);
     //
     inline void AddElement(Symbol *element)
     {
-assert(element);
+        assert(element);
+
         ShadowSymbol *shadow = NULL;
         for (shadow = base[element -> Identity() -> index % hash_size]; shadow; shadow = shadow -> next)
         {
@@ -464,7 +467,8 @@ public:
     //
     int operator[](const int i)
     {
-assert(i >= 0 && i < set_size);
+        assert(i >= 0 && i < set_size);
+
         //
         // Note that no check is made here to ensure that 0 <= i < set_size.
         // Such a check might be useful for debugging and a range exception
@@ -481,7 +485,8 @@ assert(i >= 0 && i < set_size);
     //
     void AddElement(int i)
     {
-assert(i >= 0 && i < set_size);
+        assert(i >= 0 && i < set_size);
+
         s[i / cell_size] |= ((i + cell_size) % cell_size
                                              ? (CELL) 1 << ((i + cell_size) % cell_size)
                                              : (CELL) 1);
@@ -492,7 +497,8 @@ assert(i >= 0 && i < set_size);
     //
     void RemoveElement(int i)
     {
-assert(i >= 0 && i < set_size);
+        assert(i >= 0 && i < set_size);
+
         s[i / cell_size] &= ~((i + cell_size) % cell_size
                                               ? (CELL) 1 << ((i + cell_size) % cell_size)
                                               : (CELL) 1);

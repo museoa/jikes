@@ -101,7 +101,9 @@ ZipFile::ZipFile(FileSymbol *file_symbol) : buffer(NULL)
 #ifdef UNIX_FILE_SYSTEM
     zipfile = zip -> zipfile;
     int rc = fseek(zipfile, file_symbol -> offset, SEEK_SET);
+
     assert(rc == 0);
+
 #elif defined(WIN32_FILE_SYSTEM)
     file_buffer = &zip -> zipbuffer[file_symbol -> offset];
 #endif
@@ -378,6 +380,7 @@ void Zip::ReadDirectory(DirectorySymbol *directory_symbol)
 
 #ifdef UNIX_FILE_SYSTEM
         int rc = fseek(zipfile, -((int) central_directory_size + 22), SEEK_END);
+
         assert(rc == 0);
 
         delete [] zipbuffer;
@@ -389,7 +392,8 @@ void Zip::ReadDirectory(DirectorySymbol *directory_symbol)
 #endif
         for (magic = GetU4(); magic == 0x02014b50; magic = GetU4())
              ProcessDirectoryEntry(directory_symbol);
-assert(IsValid()); // magic == 0x06054b50
+
+        assert(IsValid()); // magic == 0x06054b50
     }
 
     return;

@@ -79,7 +79,7 @@ wchar_t *MethodSymbol::Header(Semantic *sem, LexStream::TokenIndex token_locatio
         {
             PackageSymbol *package = this -> Type() -> ContainingPackage();
             wchar_t *package_name = package -> PackageName();
-            if (package -> PackageNameLength() > 0 && wcscmp(package_name, StringConstant::US__DO_) != 0)
+            if (package -> PackageNameLength() > 0 && wcscmp(package_name, StringConstant::US__DO) != 0)
             {
                 while (*package_name)
                 {
@@ -104,7 +104,7 @@ wchar_t *MethodSymbol::Header(Semantic *sem, LexStream::TokenIndex token_locatio
 
                 PackageSymbol *package = formal -> Type() -> ContainingPackage();
                 wchar_t *package_name = package -> PackageName();
-                if (package -> PackageNameLength() > 0 && wcscmp(package_name, StringConstant::US__DO_) != 0)
+                if (package -> PackageNameLength() > 0 && wcscmp(package_name, StringConstant::US__DO) != 0)
                 {
                     while (*package_name)
                     {
@@ -128,7 +128,8 @@ wchar_t *MethodSymbol::Header(Semantic *sem, LexStream::TokenIndex token_locatio
         *s++ = U_RIGHT_PARENTHESIS;
         *s++ = U_SEMICOLON;
         *s = U_NULL;
-assert((s - header) <= length);
+
+        assert((s - header) <= length);
     }
 
     return header;
@@ -139,7 +140,8 @@ MethodSymbol *SymbolTable::FindOverloadMethod(MethodSymbol *base_method, AstMeth
 {
     for (MethodSymbol *method = base_method; method; method = method -> next_method)
     {
-assert(method -> IsTyped());
+        assert(method -> IsTyped());
+
         if (method -> NumFormalParameters() == method_declarator -> NumFormalParameters())
         {
             int i;
@@ -246,7 +248,7 @@ TypeSymbol *TypeSymbol::GetArrayType(Semantic *sem, int num_dimensions_)
          num <= num_dimensions_;
          num++, len = len + 2)
     {
-        wcscat(name, StringConstant::US__LB__RB_);
+        wcscat(name, StringConstant::US__LB__RB);
         NameSymbol *name_sym = sem -> control.FindOrInsertName(name, len);
 
         AccessFlags acc_flags;
@@ -343,15 +345,15 @@ void TypeSymbol::SetSignature(Control &control)
                   this -> ExternalNameLength() + 4; // +1 for 'L' +1 for '/' +1 for ';' +1 for '\0'
         wchar_t *type_signature = new wchar_t[len];
         wcscpy(type_signature, StringConstant::US_L);
-        if (this -> ContainingPackage() -> PackageNameLength() > 0 && wcscmp(package_name, StringConstant::US__DO_) != 0)
+        if (this -> ContainingPackage() -> PackageNameLength() > 0 && wcscmp(package_name, StringConstant::US__DO) != 0)
         {
             wcscat(type_signature, package_name);
-            wcscat(type_signature, StringConstant::US__SL_);
+            wcscat(type_signature, StringConstant::US__SL);
         }
         wcscat(type_signature, type_name);
         this -> fully_qualified_name = control.ConvertUnicodeToUtf8(type_signature + 1); // +1 to skip the initial L'L'
 
-        wcscat(type_signature, StringConstant::US__SC_); 
+        wcscat(type_signature, StringConstant::US__SC); 
         this -> signature = control.ConvertUnicodeToUtf8(type_signature);
 
         delete [] type_signature;
@@ -503,12 +505,12 @@ void PackageSymbol::SetPackageName()
     if (owner)
     {
         wcscpy(this -> package_name, owner -> PackageName());
-        wcscat(this -> package_name, StringConstant::US__SL_);
+        wcscat(this -> package_name, StringConstant::US__SL);
     }
     else this -> package_name[0] = U_NULL;
     wcscat(this -> package_name, this -> Name());
 
-assert(wcslen(this -> package_name) == this -> package_name_length);
+    assert(wcslen(this -> package_name) == this -> package_name_length);
 
     return;
 }
@@ -668,7 +670,7 @@ void DirectorySymbol::SetDirectoryName()
     PathSymbol *path_symbol = owner -> PathCast();
     if (path_symbol)
     {
-        if (strcmp(path_symbol -> Utf8Name(), StringConstant::U8S__DO_) == 0)
+        if (strcmp(path_symbol -> Utf8Name(), StringConstant::U8S__DO) == 0)
         {
             this -> directory_name_length = this -> Utf8NameLength();
             this -> directory_name = new char[this -> directory_name_length + 1]; // +1 for '\0'
@@ -687,7 +689,7 @@ void DirectorySymbol::SetDirectoryName()
     {
         DirectorySymbol *owner_directory = owner -> DirectoryCast();
         if (this -> Name()[this -> NameLength() - 1] == U_SLASH ||                     // An absolute file name ?
-            strcmp(owner_directory -> DirectoryName(), StringConstant::U8S__DO_) == 0) // or is the owner "." ?
+            strcmp(owner_directory -> DirectoryName(), StringConstant::U8S__DO) == 0) // or is the owner "." ?
         {
             this -> directory_name_length = this -> Utf8NameLength();
             this -> directory_name = new char[this -> directory_name_length + 1];  // +1 for '\0'
@@ -705,12 +707,12 @@ void DirectorySymbol::SetDirectoryName()
 
             strcpy(this -> directory_name, owner_directory -> DirectoryName());
             if (owner_name[owner_length - 1] != U_SLASH)
-                strcat(this -> directory_name, StringConstant::U8S__SL_);
+                strcat(this -> directory_name, StringConstant::U8S__SL);
             strcat(this -> directory_name, this -> Utf8Name());
         }
     }
 
-assert(strlen(this -> directory_name) == this -> directory_name_length);
+    assert(strlen(this -> directory_name) == this -> directory_name_length);
 
     return;
 }
@@ -718,7 +720,7 @@ assert(strlen(this -> directory_name) == this -> directory_name_length);
 
 void DirectorySymbol::ResetDirectory()
 {
-assert(! this -> IsZip());
+    assert(! this -> IsZip());
 
     //
     // TODO: the stat function does not work for directories in that the "modified" time stamp associated
@@ -777,8 +779,8 @@ void DirectorySymbol::ReadDirectory()
     char *directory_name = new char[this -> DirectoryNameLength() + 3]; // +2 for "/*" +1 for '\0'
     strcpy(directory_name, this -> DirectoryName());
     if (directory_name[this -> DirectoryNameLength() - 1] != U_SLASH)
-        strcat(directory_name, StringConstant::U8S__SL_);
-    strcat(directory_name, StringConstant::U8S__ST_);
+        strcat(directory_name, StringConstant::U8S__SL);
+    strcat(directory_name, StringConstant::U8S__ST);
 
     WIN32_FIND_DATA entry;
     HANDLE file_handle = FindFirstFile(directory_name, &entry);
@@ -836,7 +838,7 @@ void FileSymbol::SetFileName()
     PathSymbol *path_symbol = this -> PathSym();
     char *directory_name = directory_symbol -> DirectoryName();
     int directory_name_length = directory_symbol -> DirectoryNameLength();
-    bool dot_directory = (strcmp(directory_name, StringConstant::U8S__DO_) == 0);
+    bool dot_directory = (strcmp(directory_name, StringConstant::U8S__DO) == 0);
     this -> file_name_length = (dot_directory ? 0 : directory_name_length) +
                                this -> Utf8NameLength()   +
                                (path_symbol -> IsZip() // For zip files we need "()" for regular directory, we need 1 '/'
@@ -851,16 +853,16 @@ void FileSymbol::SetFileName()
     {
         strcpy(file_name, directory_symbol -> DirectoryName());
         if (path_symbol -> IsZip())
-             strcat(file_name, StringConstant::U8S__LP_);
+             strcat(file_name, StringConstant::U8S__LP);
         else if (directory_name[directory_name_length - 1] != U_SLASH)
-             strcat(file_name, StringConstant::U8S__SL_);
+             strcat(file_name, StringConstant::U8S__SL);
     }
     strcat(file_name, this -> Utf8Name());
     strcat(file_name, kind == JAVA ? FileSymbol::java_suffix : FileSymbol::class_suffix);
     if (path_symbol -> IsZip())
-        strcat(file_name, StringConstant::U8S__RP_);
+        strcat(file_name, StringConstant::U8S__RP);
 
-assert(strlen(this -> file_name) == this -> file_name_length);
+    assert(strlen(this -> file_name) == this -> file_name_length);
 
     return;
 }
@@ -899,7 +901,7 @@ void TypeSymbol::SetClassName()
         strcpy(class_name, directory_name);
 
         if (directory_name[directory_length - 1] != U_SLASH)
-            strcat(class_name, StringConstant::U8S__SL_);
+            strcat(class_name, StringConstant::U8S__SL);
     }
     else
     {
@@ -921,7 +923,7 @@ void TypeSymbol::SetClassName()
     strcat(class_name, ExternalUtf8Name());
     strcat(class_name, FileSymbol::class_suffix);
 
-assert(strlen(this -> class_name) <= length);
+    assert(strlen(this -> class_name) <= length);
 
     return;
 }
@@ -953,7 +955,8 @@ void MethodSymbol::ProcessMethodThrows(Semantic *sem, LexStream::TokenIndex tok)
 {
     if (throws_signatures)
     {
-assert(sem);
+        assert(sem);
+
         //
         // Process throws clause
         //
@@ -1018,7 +1021,8 @@ void MethodSymbol::ProcessMethodSignature(Semantic *sem, LexStream::TokenIndex t
 {
     if (! this -> type_)
     {
-assert(sem);
+        assert(sem);
+
         int num_parameters = 0;
         char *signature = this -> SignatureString();
         signature++; // +1 to skip initial '('
@@ -1129,7 +1133,8 @@ void VariableSymbol::ProcessVariableSignature(Semantic *sem, LexStream::TokenInd
 {
     if (! this -> type_)
     {
-assert(sem);
+        assert(sem);
+
         this -> SetType(sem -> ProcessSignature((TypeSymbol *) owner, signature_string, token_location));
     }
 
@@ -1151,7 +1156,8 @@ bool TypeSymbol::IsNestedIn(TypeSymbol *type)
 
 bool TypeSymbol::CanAccess(TypeSymbol *type)
 {
-assert(semantic_environment);
+    assert(semantic_environment);
+
     SemanticEnvironment *env = this -> semantic_environment;
     //
     // Note that this case is only possible in the current environment (i.e., it is not recursively applicable)
@@ -1201,7 +1207,7 @@ assert(semantic_environment);
 //
 bool TypeSymbol::HasProtectedAccessTo(TypeSymbol *target_type)
 {
-assert(semantic_environment);
+    assert(semantic_environment);
     
     for (SemanticEnvironment *env = this -> semantic_environment; env != NULL; env = env -> previous)
     {
@@ -1235,14 +1241,16 @@ inline NameSymbol *TypeSymbol::GetThisName(Control &control, int n)
 
 VariableSymbol *TypeSymbol::InsertThis(int n)
 {
-assert(IsInner());
+    assert(IsInner());
+
     Control &control = semantic_environment -> sem -> control;
     VariableSymbol *variable_symbol = NULL;
 
     if (n == 0)
     {
-assert(NumConstructorParameters() == 0); // no local shadows and no this$0 !!!
-assert(NumEnclosingInstances() == 0);
+        assert(NumConstructorParameters() == 0); // no local shadows and no this$0 !!!
+        assert(NumEnclosingInstances() == 0);
+
         //
         // Create a this0 pointer for an inner class.
         //
@@ -1259,7 +1267,8 @@ assert(NumEnclosingInstances() == 0);
     }
     else
     {
-assert(NumEnclosingInstances() == n);
+        assert(NumEnclosingInstances() == n);
+
         //
         // Create a this$n pointer.
         //
@@ -1284,7 +1293,7 @@ TypeSymbol *TypeSymbol::FindOrInsertClassLiteralClass(LexStream::TokenIndex tok)
     AstCompilationUnit *compilation_unit = sem -> compilation_unit;
     Control &control = sem -> control;
 
-assert(this == outermost_type);
+    assert(this == outermost_type);
 
     if (! this -> class_literal_class)
     {
@@ -1321,13 +1330,17 @@ MethodSymbol *TypeSymbol::FindOrInsertClassLiteralMethod(Control &control)
 {
     if (! class_literal_method)
     {
+        //
+        // Note that max_variable_index is initialized to 1 (instead of 0),
+        // even though the class literal method is static. The reason is that
+        // in generating code for this method, a try statement with a catch
+        // will be used. Therefore, an extra "local" slot is required for the
+        // local Exception parameter of the catch clause.
+        //
         BlockSymbol *block_symbol = new BlockSymbol(1); // the associated symbol table will contain 1 element
-        block_symbol -> max_variable_index = 0;
+        block_symbol -> max_variable_index = 1;
 
-        NameSymbol *name_symbol = control.FindOrInsertName(StringConstant::US__class_DOLLAR,
-                                                           wcslen(StringConstant::US__class_DOLLAR));
-
-        class_literal_method = InsertMethodSymbol(name_symbol);
+        class_literal_method = InsertMethodSymbol(control.class_name_symbol);
         class_literal_method -> SetType(control.Class());
         class_literal_method -> SetACC_STATIC();
         class_literal_method -> SetContainingType((TypeSymbol *) this);
@@ -1367,7 +1380,8 @@ Utf8LiteralValue *TypeSymbol::FindOrInsertClassLiteralName(Control &control)
 
 VariableSymbol *TypeSymbol::FindOrInsertClassLiteral(TypeSymbol *type)
 {
-assert(IsTopLevel() && (! type -> Primitive()));
+    assert(IsTopLevel() && (! type -> Primitive()));
+
     Semantic *sem = semantic_environment -> sem;
     Control &control = sem -> control;
  
@@ -1431,7 +1445,8 @@ assert(IsTopLevel() && (! type -> Primitive()));
 
 VariableSymbol *TypeSymbol::FindOrInsertLocalShadow(VariableSymbol *local)
 {
-assert(this -> IsLocal());
+    assert(this -> IsLocal());
+
     Control &control = semantic_environment -> sem -> control;
     VariableSymbol *variable = FindVariableSymbol(local -> Identity());
 
@@ -1798,6 +1813,8 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member)
         symbol -> MarkSynthetic();
         symbol -> SetType(member -> Type());
         symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+        if (member -> Type() == control.long_type || member -> Type() == control.double_type)
+            block_symbol -> max_variable_index++;
         method -> AddFormalParameter(symbol);
 
         method -> SetSignature(control);

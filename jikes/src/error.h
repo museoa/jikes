@@ -344,7 +344,7 @@ private:
     static unsigned char warning[];
     static void (*print_message[_num_kinds])(ErrorInfo &, LexStream *, Control &);
 
-    static bool NotDot(wchar_t *str) { return (! (wcslen(str) == 0 || wcscmp(str, StringConstant::US__DO_) == 0)); }
+    static bool NotDot(wchar_t *str) { return (! (wcslen(str) == 0 || wcscmp(str, StringConstant::US__DO) == 0)); }
 
     static void PrintBAD_ERROR(ErrorInfo &, LexStream *, Control &);
     static void PrintDEFAULT_ERROR(ErrorInfo &, LexStream *, Control &);

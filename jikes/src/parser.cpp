@@ -18,6 +18,7 @@ void Parser::ReallocateStacks()
     int old_stack_length = stack_length;
  
     stack_length += STACK_INCREMENT;
+
     assert(stack_length <= SHRT_MAX);
 
     int *old_stack = stack; 
@@ -219,7 +220,7 @@ Ast *Parser::HeaderParse()
 
 bool Parser::BodyParse(LexStream *lex_stream_, AstClassBody *class_body)
 {
-assert(class_body -> UnparsedClassBodyCast());
+    assert(class_body -> UnparsedClassBodyCast());
 
     lex_stream = lex_stream_;
     ast_pool = class_body -> pool;
@@ -321,7 +322,7 @@ bool Parser::Body(AstClassBody *class_body)
 
 bool Parser::BodyParse(LexStream *lex_stream_, AstInterfaceDeclaration *interface_declaration)
 {
-assert(interface_declaration -> UnparsedInterfaceBodyCast());
+    assert(interface_declaration -> UnparsedInterfaceBodyCast());
 
     lex_stream = lex_stream_;
     ast_pool = interface_declaration -> pool;

@@ -16,26 +16,42 @@
 #include "access.h"
 #include "unicode.h"
 #include "tuple.h"
+#include "op.h"
+
 
 class cp_info
 {
-public:
+protected:
     u1 tag;
 
-    cp_info(u1 _tag) : tag(_tag) {}
+    //
+    //    u1 info[]
+    //
+    // cp_info can be viewed as a generic (abstract, in Java talk) class that must
+    // be "extended" to implement the real constant pool objects. The real objects
+    // contain the info...
+    //
 
+public:
+
+    cp_info(u1 _tag) : tag(_tag) {}
     virtual ~cp_info() {}
 
-    virtual void put(OutputBuffer &output_buffer)
+    u1 Tag() { return tag; }
+
+    virtual void Put(OutputBuffer &output_buffer)
     {
          assert("trying to put unsupported attribute kind" == NULL);
     }
 
 #ifdef TEST
-    virtual void print(Tuple<cp_info *>& constant_pool) {
+    virtual void Print(Tuple<cp_info *>& constant_pool)
+    {
         cout << (int) tag;
     }
-    virtual void describe(Tuple<cp_info *>& constant_pool) {
+
+    virtual void Describe(Tuple<cp_info *>& constant_pool)
+    {
         cout << (int) tag;
     }
 #endif
@@ -44,40 +60,59 @@ public:
 
 class CONSTANT_Class_info : public cp_info
 {
-public:
-    /* u1 tag; */
+    //
+    //    u1 tag;
+    //
+    // The tag is inherited from cp_info
+    //
     u2 name_index;
 
-    CONSTANT_Class_info(u1 _tag) : cp_info(_tag) {}
+public:
+
+    CONSTANT_Class_info(u1 _tag, u2 _name_index) : cp_info(_tag),
+                                                   name_index(_name_index)
+    {}
     virtual ~CONSTANT_Class_info() {}
 
-    virtual void put(OutputBuffer &output_buffer)
+    virtual void Put(OutputBuffer &output_buffer)
     {
         output_buffer.PutB1(tag);
         output_buffer.PutB2(name_index);
     }
 
 #ifdef TEST
-    virtual void print(Tuple<cp_info *>& constant_pool) {
+    virtual void Print(Tuple<cp_info *>& constant_pool)
+    {
         cout << "CONSTANT_Class_info: name_index " << name_index << "\n";
     }
-    virtual void describe(Tuple<cp_info *>& constant_pool) {
-        cout << "Class:";  constant_pool[name_index]->describe(constant_pool);
+
+    virtual void Describe(Tuple<cp_info *> &constant_pool)
+    {
+        cout << "Class:";  constant_pool[name_index] -> Describe(constant_pool);
     }
 #endif    
 };
 
+
 class CONSTANT_Double_info : public cp_info
 {
-public:
-    /* u1 tag; */
+    //
+    //    u1 tag;
+    //
+    // The tag is inherited from cp_info
+    //
     u4 high_bytes;
     u4 low_bytes;
 
-    CONSTANT_Double_info(u1 _tag) : cp_info(_tag) {}
+public:
+
+    CONSTANT_Double_info(u1 _tag, u4 _high_bytes, u4 _low_bytes) : cp_info(_tag),
+                                                                   high_bytes(_high_bytes),
+                                                                   low_bytes(_low_bytes)
+    {}
     virtual ~CONSTANT_Double_info() {}
 
-    virtual void put(OutputBuffer &output_buffer)
+    virtual void Put(OutputBuffer &output_buffer)
     {
         output_buffer.PutB1(tag);
         output_buffer.PutB4(high_bytes);
@@ -85,27 +120,38 @@ public:
     }
 
 #ifdef TEST
-    virtual void print(Tuple<cp_info *>& constant_pool) {
+    virtual void Print(Tuple<cp_info *> &constant_pool)
+    {
         cout << "CONSTANT_Float_info: bytes  \n";
     }
-    virtual void describe(Tuple<cp_info *>& constant_pool) {
+
+    virtual void Describe(Tuple<cp_info *> &constant_pool)
+    {
         cout << "D:";
-//        constant_pool[string_index]->describe(constant_pool);
     }
 #endif    
 };
 
+
 class CONSTANT_Fieldref_info : public cp_info
 {
-public:
-    /* u1 tag; */
+    //
+    //    u1 tag;
+    //
+    // The tag is inherited from cp_info
+    //
     u2 class_index;
     u2 name_and_type_index;
 
-    CONSTANT_Fieldref_info(u1 _tag) : cp_info(_tag) {}
+public:
+
+    CONSTANT_Fieldref_info(u1 _tag, u2 _class_index, u2 _name_and_type_index) : cp_info(_tag),
+                                                                                class_index(_class_index),
+                                                                                name_and_type_index(_name_and_type_index)
+    {}
     virtual ~CONSTANT_Fieldref_info() {}
 
-    virtual void put(OutputBuffer &output_buffer)
+    virtual void Put(OutputBuffer &output_buffer)
     {
          output_buffer.PutB1(tag);
          output_buffer.PutB2(class_index);
@@ -113,39 +159,52 @@ public:
     }
 
 #ifdef TEST
-    virtual void print(Tuple<cp_info *>& constant_pool) {
+    virtual void Print(Tuple<cp_info *> &constant_pool)
+    {
         cout << "CONSTANT_Fieldref_info: class_index: " << class_index
              << ", name_and_type_index: " << name_and_type_index << "\n";
     }
-    virtual void describe(Tuple<cp_info *>& constant_pool) {
-        constant_pool[class_index]->describe(constant_pool); cout << ".";
-        constant_pool[name_and_type_index]->describe(constant_pool);
+
+    virtual void Describe(Tuple<cp_info *> &constant_pool)
+    {
+        constant_pool[class_index] -> Describe(constant_pool); cout << ".";
+        constant_pool[name_and_type_index] -> Describe(constant_pool);
     }
 #endif    
 };
 
+
 class CONSTANT_Float_info : public cp_info
 {
-public:
-    /* u1 tag; */
+    //
+    //    u1 tag;
+    //
+    // The tag is inherited from cp_info
+    //
     u4 bytes;
 
-    CONSTANT_Float_info(u1 _tag) : cp_info(_tag) {}
+public:
+
+    CONSTANT_Float_info(u1 _tag, u4 _bytes) : cp_info(_tag),
+                                              bytes(_bytes)
+    {}
     virtual ~CONSTANT_Float_info() {}
 
-    virtual void put(OutputBuffer &output_buffer)
+    virtual void Put(OutputBuffer &output_buffer)
     {
         output_buffer.PutB1(tag);
         output_buffer.PutB4(bytes);
     }
 
 #ifdef TEST
-    virtual void print(Tuple<cp_info *>& constant_pool) {
+    virtual void Print(Tuple<cp_info *> &constant_pool)
+    {
         cout << "CONSTANT_Float_info: bytes " << (float) bytes << "\n"; //DSDouble
     }
-    virtual void describe(Tuple<cp_info *>& constant_pool) {
+
+    virtual void Describe(Tuple<cp_info *> &constant_pool)
+    {
         cout << "F:";
-//        constant_pool[string_index]->describe(constant_pool);
     }
 #endif    
 };
@@ -153,45 +212,60 @@ public:
 
 class CONSTANT_Integer_info : public cp_info
 {
-public:
-    /* u1 tag; */
+    //
+    //    u1 tag;
+    //
+    // The tag is inherited from cp_info
+    //
     u4 bytes;
 
-    CONSTANT_Integer_info(u1 _tag) : cp_info(_tag) {}
+public:
+
+    CONSTANT_Integer_info(u1 _tag, u4 _bytes) : cp_info(_tag),
+                                                bytes(_bytes)
+    {}
     virtual ~CONSTANT_Integer_info() {}
 
-    virtual void put(OutputBuffer &output_buffer)
+    virtual void Put(OutputBuffer &output_buffer)
     {
         output_buffer.PutB1(tag);
         output_buffer.PutB4(bytes);
     }
 
 #ifdef TEST
-    virtual void print(Tuple<cp_info *>& constant_pool) {
-    int val;
-    val = ((bytes>>24)&0xff)<<24 | ((bytes>>16)&0xff)<<16
-        | ((bytes>>8)&0xff)<<8 | (bytes&0xff);
-//        cout << "CONSTANT_Integer_info: bytes " <<  value << "\n";
+    virtual void Print(Tuple<cp_info *> &constant_pool)
+    {
+        int val = ((bytes >> 24) & 0xff) << 24 | ((bytes >> 16) & 0xff) << 16 | ((bytes >> 8) & 0xff) << 8 | (bytes & 0xff);
         cout << "CONSTANT_Integer_info: bytes " << val << "\n";
     }
-    virtual void describe(Tuple<cp_info *>& constant_pool) {
+
+    virtual void Describe(Tuple<cp_info *> &constant_pool)
+    {
         cout << "I:";
-//        constant_pool[string_index]->describe(constant_pool);
     }
 #endif    
 };
 
+
 class CONSTANT_InterfaceMethodref_info : public cp_info
 {
-public:
-    /* u1 tag; */
+    //
+    //    u1 tag;
+    //
+    // The tag is inherited from cp_info
+    //
     u2 class_index;
     u2 name_and_type_index;
 
-    CONSTANT_InterfaceMethodref_info(u1 _tag) : cp_info(_tag) {}
+public:
+
+    CONSTANT_InterfaceMethodref_info(u1 _tag, u2 _class_index, u2 _name_and_type_index) : cp_info(_tag),
+                                                                                          class_index(_class_index),
+                                                                                          name_and_type_index(_name_and_type_index)
+    {}
     virtual ~CONSTANT_InterfaceMethodref_info() {}
 
-    virtual void put(OutputBuffer &output_buffer)
+    virtual void Put(OutputBuffer &output_buffer)
     {
         output_buffer.PutB1(tag);
         output_buffer.PutB2(class_index);
@@ -199,28 +273,40 @@ public:
     }
 
 #ifdef TEST
-    virtual void print(Tuple<cp_info *>& constant_pool) {
+    virtual void Print(Tuple<cp_info *> &constant_pool)
+    {
         cout << "CONSTANT_InterfaceMethodref_info: class_index: " << class_index
              << ", name_and_type_index: " << name_and_type_index << "\n";
     }
-    virtual void describe(Tuple<cp_info *>& constant_pool) {
-        constant_pool[class_index]->describe(constant_pool); cout << ".";
-        constant_pool[name_and_type_index]->describe(constant_pool);
+
+    virtual void Describe(Tuple<cp_info *> &constant_pool)
+    {
+        constant_pool[class_index] -> Describe(constant_pool); cout << ".";
+        constant_pool[name_and_type_index] -> Describe(constant_pool);
     }
 #endif    
 };
 
+
 class CONSTANT_Long_info : public cp_info
 {
-public:
-    /* u1 tag; */
+    //
+    // u1 tag;
+    //
+    // The tag is inherited from cp_info
+    //
     u4 high_bytes;
     u4 low_bytes;
 
-    CONSTANT_Long_info(u1 _tag) : cp_info(_tag) {}
+public:
+
+    CONSTANT_Long_info(u1 _tag, u4 _high_bytes, u4 _low_bytes) : cp_info(_tag),
+                                                                 high_bytes(_high_bytes),
+                                                                 low_bytes(_low_bytes)
+    {}
     virtual ~CONSTANT_Long_info() {}
 
-    virtual void put(OutputBuffer &output_buffer)
+    virtual void Put(OutputBuffer &output_buffer)
     {
         output_buffer.PutB1(tag);
         output_buffer.PutB4(high_bytes);
@@ -228,28 +314,38 @@ public:
     }
 
 #ifdef TEST
-    virtual void print(Tuple<cp_info *>& constant_pool) {
+    virtual void Print(Tuple<cp_info *> &constant_pool)
+    {
         cout << "CONSTANT_Long_info: bytes \n";
     }
-    virtual void describe(Tuple<cp_info *>& constant_pool) {
+
+    virtual void Describe(Tuple<cp_info *> &constant_pool)
+    {
         cout << "L:";
-//        constant_pool[string_index]->describe(constant_pool);
     }
 #endif    
 };
 
+
 class CONSTANT_Methodref_info : public cp_info
 {
-public:
-    /* u1 tag; */
+    //
+    //    u1 tag;
+    //
+    // The tag is inherited from cp_info
+    //
     u2 class_index;
     u2 name_and_type_index;
 
+public:
 
-    CONSTANT_Methodref_info(u1 _tag) : cp_info(_tag) {}
+    CONSTANT_Methodref_info(u1 _tag, u2 _class_index, u2 _name_and_type_index) : cp_info(_tag),
+                                                                                 class_index(_class_index),
+                                                                                 name_and_type_index(_name_and_type_index)
+    {}
     virtual ~CONSTANT_Methodref_info() {}
 
-    virtual void put(OutputBuffer &output_buffer)
+    virtual void Put(OutputBuffer &output_buffer)
     {
         output_buffer.PutB1(tag);
         output_buffer.PutB2(class_index);
@@ -257,28 +353,40 @@ public:
     }
 
 #ifdef TEST
-    virtual void print(Tuple<cp_info *>& constant_pool) {
+    virtual void Print(Tuple<cp_info *> &constant_pool)
+    {
         cout << "CONSTANT_Methodref_info: class_index: " << class_index
              << ", name_and_type_index: " << name_and_type_index << "\n";
     }
-    virtual void describe(Tuple<cp_info *>& constant_pool) {
-        constant_pool[class_index]->describe(constant_pool); cout << ".";
-        constant_pool[name_and_type_index]->describe(constant_pool);
+
+    virtual void Describe(Tuple<cp_info *> &constant_pool)
+    {
+        constant_pool[class_index] -> Describe(constant_pool); cout << ".";
+        constant_pool[name_and_type_index] -> Describe(constant_pool);
     }
 #endif    
 };
 
+
 class CONSTANT_NameAndType_info : public cp_info
 {
-public:
-    /* u1 tag; */
+    //
+    //    u1 tag;
+    //
+    // The tag is inherited from cp_info
+    //
     u2 name_index;
     u2 descriptor_index;
 
-    CONSTANT_NameAndType_info(u1 _tag) : cp_info(_tag) {}
+public:
+
+    CONSTANT_NameAndType_info(u1 _tag, u2 _name_index, u2 _descriptor_index) : cp_info(_tag),
+                                                                               name_index(_name_index),
+                                                                               descriptor_index(_descriptor_index)
+    {}
     virtual ~CONSTANT_NameAndType_info() {}
 
-    virtual void put(OutputBuffer &output_buffer)
+    virtual void Put(OutputBuffer &output_buffer)
     {
         output_buffer.PutB1(tag);
         output_buffer.PutB2(name_index);
@@ -286,58 +394,86 @@ public:
     }
 
 #ifdef TEST
-    virtual void print(Tuple<cp_info *>& constant_pool) {
+    virtual void Print(Tuple<cp_info *> &constant_pool)
+    {
         cout << "CONSTANT_NameAndType_info: name_index: " << name_index
              << ", descriptor_index: " << descriptor_index << "\n";
     }
-    virtual void describe(Tuple<cp_info *>& constant_pool) {
-        constant_pool[name_index]->describe(constant_pool);
+
+    virtual void Describe(Tuple<cp_info *> &constant_pool)
+    {
+        constant_pool[name_index] -> Describe(constant_pool);
         cout << " ";
-        constant_pool[descriptor_index]->describe(constant_pool);
+        constant_pool[descriptor_index] -> Describe(constant_pool);
     }
 #endif    
 };
 
+
 class CONSTANT_String_info : public cp_info
 {
-public:
-    /* u1 tag; */
+    //
+    //    u1 tag;
+    //
+    // The tag is inherited from cp_info
+    //
     u2 string_index;
 
-    CONSTANT_String_info(u1 _tag) : cp_info(_tag) {}
+public:
+    CONSTANT_String_info(u1 _tag, u2 _string_index) : cp_info(_tag),
+                                                      string_index(_string_index)
+    {}
     virtual ~CONSTANT_String_info() {}
 
-    virtual void put(OutputBuffer &output_buffer)
+    virtual void Put(OutputBuffer &output_buffer)
     {
         output_buffer.PutB1(tag);
         output_buffer.PutB2(string_index);
     }
 
 #ifdef TEST
-    virtual void print(Tuple<cp_info *>& constant_pool) {
+    virtual void Print(Tuple<cp_info *> &constant_pool)
+    {
         cout << "CONSTANT_String_info: string_index: " << string_index << "\n";
     }
-    virtual void describe(Tuple<cp_info *>& constant_pool) {
-        constant_pool[string_index]->describe(constant_pool);
+
+    virtual void Describe(Tuple<cp_info *> &constant_pool)
+    {
+        constant_pool[string_index] -> Describe(constant_pool);
     }
 #endif
 };
 
+
 class CONSTANT_Utf8_info : public cp_info
 {
+    //
+    //    u1 tag;
+    //
+    // The tag is inherited from cp_info
+    //
+    u2 length_;
+    char *bytes; /* bytes[length + 1] ... after input a '\0' will be added. */
+
 public:
-    /* u1 tag; */
-    u2 length() { return length_; }
-    char *bytes; /* bytes[length+1] ... after input a '\0' will be added. */
 
-    CONSTANT_Utf8_info(u1 _tag) : cp_info(_tag) {}
+    CONSTANT_Utf8_info(u1 _tag, char *_bytes, int _length) : cp_info(_tag),
+                                                             length_(_length)
+    {
+        bytes = new char[_length];
+        for (int i = 0; i < _length; i++)
+            bytes[i] = _bytes[i];
 
+        return;
+    }
     virtual ~CONSTANT_Utf8_info()
     {
         delete [] bytes;
     }
 
-    virtual void put(OutputBuffer &output_buffer)
+    u2 length() { return length_; }
+
+    virtual void Put(OutputBuffer &output_buffer)
     {
         output_buffer.PutB1(tag);
         output_buffer.PutB2(length());
@@ -345,32 +481,48 @@ public:
             output_buffer.PutB1(bytes[i]);
     }
 
-public:
-    u2 length_;
 #ifdef TEST
-    virtual void print(Tuple<cp_info *>& constant_pool) {
-        
+    virtual void Print(Tuple<cp_info *> &constant_pool)
+    {
         cout << "CONSTANT_Utf8_info: length: " << length_<< " ";
-        for (int i=0;i<length_;i++) Unicode::Cout(bytes[i]);
+
+        for (int i = 0; i < length_; i++)
+            Unicode::Cout(bytes[i]);
         cout << "\n";
-        // should only do packing when actually write the string out!!
-        // so have same common internal form on input and output.
     }
-    virtual void describe(Tuple<cp_info *>& constant_pool) {
+
+    virtual void Describe(Tuple<cp_info *> &constant_pool)
+    {
         cout << "\"";
-        for (int i=0;i<length_;i++) Unicode::Cout(bytes[i]);
+        for (int i = 0; i < length_; i++)
+            Unicode::Cout(bytes[i]);
         cout << "\"";
-//        Unicode::Cout(bytes);
     }
 #endif    
 };
 
-// field_info and method_infoshould be defined here, but they contain attributes, so it is necessary
-// to define the attributes first.
 
+//
+// field_info and method_info should be defined here, but they contain attributes, so it is necessary
+// to define the attributes first.
+//
 
 class attribute_info
 {
+protected:
+    u1 tag; // this field was added in order to distinguish the attributes...
+
+    u2 attribute_name_index;
+
+    //
+    //    u2 attribute_length;
+    //    u1 info[attribute_length];
+    //
+    // attribute_info can be viewed as a generic (abstract, in Java talk) class that must
+    // be "extended" to implement the real attribute objects. The real objects
+    // contain the info...
+    //
+
 public:
     enum 
     {
@@ -386,255 +538,358 @@ public:
         Synthetic
     };
 
-    u1 tag;
-    u2 attribute_name_index;
-    u4 attribute_length;
-
-    attribute_info(u1 _tag) : tag(_tag) {}
-    attribute_info(u1 _tag, u2 _name_index, u4 _length) :
-            tag(_tag), attribute_name_index(_name_index),
-            attribute_length(_length) {}
-
+    attribute_info(u1 _tag, u2 _name_index) : tag(_tag),
+                                              attribute_name_index(_name_index)
+    {}
     virtual ~attribute_info() {};
 
-    virtual void put(OutputBuffer &output_buffer)
-    {
-        assert(0);
-    }
+    u1 Tag() { return tag; }
+    u2 AttributeNameIndex() { return attribute_name_index; }
+
+    virtual u4 AttributeLength() { assert(false); return 0; } // abstract method: should not be invoked.
+
+    virtual void Put(OutputBuffer &output_buffer) { assert(false); } // abstract method: should not be invoked.
 
 #ifdef TEST
-    virtual void print(Tuple<cp_info *>& constant_pool) {
+    virtual void Print(Tuple<cp_info *> &constant_pool)
+    {
         cout << "print for attribute info tag " << tag << " not defined\n";
+        cout.flush();
+        assert(false); // abstract method: should not be invoked.
     }
 #endif    
 };
 
-class GenericAttribute_info : public attribute_info
-{
-public:
-//    u2 attribute_name_index;
-    u4 attribute_length() { return info.Length(); }
-    Tuple<u1> info; /* info[attribute_length] */
-
-    GenericAttribute_info(u2 &_name_index, u4 &_length) : attribute_info(Generic, _name_index, _length),
-                                                          info(8, 4)
-    {}
-
-    virtual ~GenericAttribute_info() { }
-
-    virtual void put(OutputBuffer &output_error)
-    {
-        assert(0);
-    }
-
-#ifdef TEST
-    virtual void print(Tuple<cp_info *>& constant_pool) {
-        cout << "print for attribute info tag " << tag << " not defined\n";
-    }
-#endif    
-};
 
 class Code_attribute : public attribute_info
 {
-public:
-    Code_attribute() : attribute_info(Code,0,0),
-                       max_stack(0),
-                       max_locals(0),
-                       code(8, 4),
-                       exception_table(6, 16),
-                       attributes(6, 16)
-    {}
-
-    Code_attribute(u2 &_name_index, u4 &_length) : attribute_info(Code,_name_index,_length),
-                                                   code(8, 4),
-                                                   exception_table(6, 16),
-                                                   attributes(6, 16)
-    {}
-
-    virtual ~Code_attribute()
-    {
-        for (int i = 0; i < attributes.Length(); i++)
-            delete attributes[i];
-    }
-
-//    u2 attribute_name_index;
-//    u4 attribute_length;
-    u2 max_stack;
+    //
+    //    u2 attribute_name_index;
+    //
+    // The attribut_name_index is inherited from attribute_info
+    //
+    u4 attribute_length;
+//    u2 max_stack;
     u2 max_locals;
-    /* u4 code_length; */
+
+    //
+    //    u4 code_length;
+    //
+    // code_length can be computed as code.Length();
+    //
     Tuple<u1> code; /* code[code_length] */
 
-    u2 exception_table_length() { return exception_table.Length(); }
-    struct exception_element
+    //
+    //    u2 exception_table_length;
+    //
+    // exception_table_length can be computed as exception_table.Length();
+    //
+    struct ExceptionElement
     {
         u2 start_pc;
         u2 end_pc;
         u2 handler_pc;
         u2 catch_type;
     };
-    Tuple<exception_element> exception_table; /* exceptiontable[exception_table_length] */
+    Tuple<ExceptionElement> exception_table; /* exceptiontable[exception_table_length] */
 
-    u2 attributes_count() { return attributes.Length(); }
+    //
+    //    u2 attribute_count;
+    //
+    // attribute_count can be computed as attributes.Length();
+    //
     Tuple<attribute_info *> attributes; /* attributes[attributes_count] */
 
-    virtual void put(OutputBuffer &output_buffer)
+public:
+
+    Code_attribute(u2 _name_index, u2 _max_locals) : attribute_info(Code, _name_index),
+                                                     code(8, 4),
+                                                     exception_table(6, 16),
+                                                     attributes(6, 16),
+                                                     max_stack(0),
+                                                     max_locals(_max_locals),
+                                                     attribute_length(0)
+    {}
+    virtual ~Code_attribute()
     {
-        int i;
-assert(attribute_name_index != 0);
+        for (int i = 0; i < attributes.Length(); i++)
+            delete attributes[i];
+    }
+
+    virtual u4 AttributeLength()
+    {
+        if (attribute_length == 0) // if not yet computed...
+        {
+            attribute_length = + 2                            // for max_stack
+                               + 2                            // for max_locals
+                               + 4                            // for code_length
+                               + code.Length()                // for code
+                               + 2                            // for exception_table_length
+                               + exception_table.Length() * 8 // for exception table
+                               + 2;                            // for attributes_count
+            //
+            // std. fields of attribute_info
+            //
+            for (int i = 0; i < attributes.Length(); i++)
+            {
+                if (attributes[i] -> AttributeLength() > 0)
+                    attribute_length += (attributes[i] -> AttributeLength() + 6);
+            }
+        }
+
+        return attribute_length;
+    }
+
+    u2 max_stack; // ???
+    u2 MaxStack() { return max_stack; }
+    void ResetMaxStack(u2 val) { max_stack = val; }
+
+    u2 MaxLocals() { return max_locals; }
+    void ResetMaxLocals(u2 val) { max_locals = val; }
+
+    u2 CodeLength() { return code.Length(); }
+
+    void ResetCode(int i, u1 byte)
+    {
+        code[i] = byte;
+    }
+
+    void AddCode(u1 byte)
+    {
+        code.Next() = byte;
+    }
+
+    u2 ExceptionTableLength() { return exception_table.Length(); }
+
+    void AddException(u2 start_pc, u2 end_pc, u2 handler_pc, u2 catch_type)
+    {
+        int exception_index = exception_table.NextIndex();
+
+        exception_table[exception_index].start_pc = start_pc;
+        exception_table[exception_index].end_pc = end_pc;
+        exception_table[exception_index].handler_pc = handler_pc;
+        exception_table[exception_index].catch_type = catch_type;
+    }
+
+    u2 AttributesCount() { return attributes.Length(); }
+
+    void AddAttribute(attribute_info *attribute)
+    {
+        attributes.Next() = attribute;
+    }
+
+    virtual void Put(OutputBuffer &output_buffer)
+    {
+        assert(attribute_name_index != 0);
 
         output_buffer.PutB2(attribute_name_index);
-        output_buffer.PutB4(attribute_length);
+        output_buffer.PutB4(AttributeLength());
         output_buffer.PutB2(max_stack);
         output_buffer.PutB2(max_locals); 
         output_buffer.PutB4(code.Length());
 
-        for (i = 0; i < code.Length(); i++) 
+        for (int i = 0; i < code.Length(); i++) 
             output_buffer.PutB1(code[i]);
         output_buffer.PutB2(exception_table.Length());
 
-        for (i = 0; i < exception_table.Length(); i++)
+        for (int j = 0; j < exception_table.Length(); j++)
         {
-            output_buffer.PutB2(exception_table[i].start_pc);
-            output_buffer.PutB2(exception_table[i].end_pc);
-            output_buffer.PutB2(exception_table[i].handler_pc);
-            output_buffer.PutB2(exception_table[i].catch_type);
+            output_buffer.PutB2(exception_table[j].start_pc);
+            output_buffer.PutB2(exception_table[j].end_pc);
+            output_buffer.PutB2(exception_table[j].handler_pc);
+            output_buffer.PutB2(exception_table[j].catch_type);
         }
 
         output_buffer.PutB2(attributes.Length());
-        for (i = 0; i < attributes.Length(); i++)
-            attributes[i] -> put(output_buffer);
+        for (int k = 0; k < attributes.Length(); k++)
+            attributes[k] -> Put(output_buffer);
 
         return;
     }
                 
 #ifdef TEST
-    virtual void  print(Tuple<cp_info *>& constant_pool)
+    virtual void  Print(Tuple<cp_info *> &constant_pool)
     {
-
-        void  opdmp(Tuple<cp_info *>& constant_pool, Tuple<u1>& code);
-        int i;
         cout << "Code_attribute attribute_name_index " << attribute_name_index
-             << " attribute_length " << attribute_length << "\n";
-        cout << " max_stack " << max_stack <<
-            " max_locals "  << max_locals <<
-            " code_length "  << code.Length() << "\n";
-        if (exception_table.Length()) {
+             << " attribute_length " << attribute_length << "\n"
+             << " max_stack " << max_stack
+             << " max_locals "  << max_locals
+             << " code_length "  << code.Length() << "\n";
+
+        if (exception_table.Length())
+        {
             cout << " exception_table: " << exception_table.Length() << " entries\n";
-            for (i=0; i<exception_table.Length(); i++) {
-                cout <<
-                "  start_pc " << exception_table[i].start_pc <<
-                "  end_pc " << exception_table[i].end_pc <<
-                "  handler_pc " << exception_table[i].handler_pc <<
-                "  catch_type " << exception_table[i].catch_type << "\n";
-//                const_string(cp,exception_table[i].catch_type);
+            for (int i  = 0; i < exception_table.Length(); i++)
+            {
+                cout << "  start_pc " << exception_table[i].start_pc
+                     << "  end_pc " << exception_table[i].end_pc
+                     << "  handler_pc " << exception_table[i].handler_pc
+                     << "  catch_type " << exception_table[i].catch_type << "\n";
             }
         }
-        opdmp(constant_pool,code);
+
+        Operators::opdmp(constant_pool, code);
+
         cout << "  \n";
-        for (i=0;i<attributes.Length();i++) {
-            attributes[i] -> print(constant_pool);
-        }
+
+        for (int i = 0; i < attributes.Length(); i++)
+            attributes[i] -> Print(constant_pool);
     }
 #endif    
-
 };
+
 
 class ConstantValue_attribute : public attribute_info
 {
-public:
-    ConstantValue_attribute(u2 &_name_index, u4 &_length) : attribute_info(ConstantValue,_name_index,_length)
-    {}
-
-//    u2 attribute_name_index;
-//    u4 attribute_length; /* must be 2 */
+    //    
+    //    u2 attribute_name_index;
+    //
+    // The field attribute_name_index is inherited from attribute_info
+    //
+    //    u4 attribute_length;
+    //
+    // The value of attribute_length is always 2
+    //
     u2 constantvalue_index;
 
+public:
+
+    ConstantValue_attribute(u2 _name_index, u2 _constantvalue_index) : attribute_info(ConstantValue, _name_index),
+                                                                       constantvalue_index(_constantvalue_index)
+    {}
     virtual ~ConstantValue_attribute() {}
 
-    virtual void put(OutputBuffer &output_buffer)
+    virtual u4 AttributeLength() { return 2; }
+
+    virtual void Put(OutputBuffer &output_buffer)
     {
-assert(attribute_name_index != 0);
+        assert(attribute_name_index != 0);
 
         output_buffer.PutB2(attribute_name_index);
-        output_buffer.PutB4(attribute_length);
+        output_buffer.PutB4(AttributeLength());
         output_buffer.PutB2(constantvalue_index);
     }
                 
 #ifdef TEST
-    virtual void print(Tuple<cp_info *>& constant_pool) {
+    virtual void Print(Tuple<cp_info *> &constant_pool)
+    {
         cout << "ConstantValue_attribute attribute_name_index " << attribute_name_index
-             << " attribute_length " << attribute_length
+             << " attribute_length " << AttributeLength()
              << " constantvalue_index " << constantvalue_index << "\n";
     }
 #endif    
 };
 
+
 class Deprecated_attribute : public attribute_info
 {
+    //
+    //    u2 attribute_name_index;
+    //
+    // The fields attribute_name_index is inherited from attribute_info
+    //
+    //
+    //    u4 attribute_length;
+    //
+    // The value of attribute_length is always 0
+    //
+
 public:
-//    u2 attribute_name_index;
-//    u4 attribute_length; /* must be 0 */
 
-    Deprecated_attribute(u2 &_name_index, u4 &_length) : attribute_info(Deprecated,_name_index,_length)
+    Deprecated_attribute(u2 _name_index) : attribute_info(Deprecated, _name_index)
     {}
-
     virtual ~Deprecated_attribute() {}
+
+    virtual u4 AttributeLength() { return 0; }
+
 #ifdef TEST
-    virtual void print(Tuple<cp_info *>& constant_pool) {
+    virtual void Print(Tuple<cp_info *> &constant_pool)
+    {
         cout << "Deprecated_attribute attribute_name_index " << attribute_name_index
-             << " length " << attribute_length
+             << " length " << AttributeLength()
              << "\n";
     }
 #endif    
 };
 
+
 class Exceptions_attribute : public attribute_info
 {
-public:
-//    u2 attribute_name_index;
-//    u4 attribute_length; /* must be 2 */
-     u2 number_of_exceptions() { return exception_index_table.Length(); }
+    //
+    //    u2 attribute_name_index;
+    //
+    // The fields attribute_name_index is inherited from attribute_info
+    //
+    //    u4 attribute_length;
+    //
+    // The value of attribute_length is derived from the exception_index_table. See below
+    //
+    //    u2 number_of_exceptions;
+    //
+    // The value of number_of_exceptions is derived from the exception_index_table. See below
+    //
+
     Tuple<u2> exception_index_table; /* exception_index_table[number_of_exceptions] */
 
-    Exceptions_attribute(u2 &_name_index, u4 &_length)
-              : attribute_info(Exceptions,_name_index, _length) {}
-     virtual ~Exceptions_attribute() { }
+public:
 
-    virtual void put(OutputBuffer &output_buffer)
+    Exceptions_attribute(u2 _name_index) : attribute_info(Exceptions, _name_index)
+    {}
+    virtual ~Exceptions_attribute() {}
+
+    virtual u4 AttributeLength()
     {
-assert(attribute_name_index != 0);
+        return exception_index_table.Length() * 2 + 2;
+    }
+
+    u2 NumberOfExceptions() { return exception_index_table.Length(); }
+
+    void AddExceptionIndex(u2 index)
+    {
+        exception_index_table.Next() = index;
+    }
+
+    virtual void Put(OutputBuffer &output_buffer)
+    {
+        assert(attribute_name_index != 0);
 
         output_buffer.PutB2(attribute_name_index);
-        output_buffer.PutB4(attribute_length);
+        output_buffer.PutB4(AttributeLength());
         output_buffer.PutB2(exception_index_table.Length());
-        for (int i = 0; i< exception_index_table.Length(); i++)
+        for (int i = 0; i < exception_index_table.Length(); i++)
             output_buffer.PutB2(exception_index_table[i]);
     }
 
 #ifdef TEST
-    virtual void print(Tuple<cp_info *>& constant_pool) {
+    virtual void Print(Tuple<cp_info *> &constant_pool)
+    {
         cout << "Exceptions_attribute attribute_name_index " << attribute_name_index
-             << " attribute_length " << attribute_length << "\n";
-        for (int i=0; i<exception_index_table.Length(); i++) {
+             << " attribute_length " << AttributeLength() << "\n";
+
+        for (int i = 0; i < exception_index_table.Length(); i++)
             cout << "    " << exception_index_table[i];
-        }
         cout << "\n";
     }
 #endif    
 };
 
+
 class InnerClasses_attribute : public attribute_info
 {
-public:
-    InnerClasses_attribute(u2 &_name_index, u4 &_length) : attribute_info(InnerClasses,_name_index,_length),
-                                                           inner_classes(6, 16)
-    {}
+    //
+    //    u2 attribute_name_index;
+    //
+    // The fields attribute_name_index is inherited from attribute_info
+    //
+    //    u4 attribute_length;
+    //
+    // The value of attribute_length is derived from inner_classes. See below
+    //
+    //    u2 number_of_classes;
+    //
+    // The value of number_of_classes is derived from inner_classes. See below
+    //
 
-    virtual ~InnerClasses_attribute() {}
-
-//    u2 attribute_name_index;
-//    u4 attribute_length;
-     u2 inner_classes_length() { return inner_classes.Length();}
     struct inner_classes_element
     {
         u2 inner_class_info_index;
@@ -644,12 +899,36 @@ public:
     };
     Tuple<inner_classes_element> inner_classes; /* inner_classes_table[inner_classes_table_length] */
 
-    virtual void put(OutputBuffer &output_buffer)
+public:
+
+    InnerClasses_attribute(u2 _name_index) : attribute_info(InnerClasses, _name_index),
+                                             inner_classes(6, 16)
+    {}
+    virtual ~InnerClasses_attribute() {}
+
+    virtual u4 AttributeLength()
     {
-assert(attribute_name_index != 0);
+        return inner_classes.Length() * 8 + 2;
+    }
+
+    u2 InnerClassesLength() { return inner_classes.Length();}
+
+    void AddInnerClass(u2 inner_class_info_index, u2 outer_class_info_index, u2 inner_name_index, u2 inner_class_access_flags)
+    {
+        int index = inner_classes.NextIndex();
+
+        inner_classes[index].inner_class_info_index = inner_class_info_index;
+        inner_classes[index].outer_class_info_index = outer_class_info_index;
+        inner_classes[index].inner_name_index = inner_name_index;
+        inner_classes[index].inner_class_access_flags = inner_class_access_flags;
+    }
+
+    virtual void Put(OutputBuffer &output_buffer)
+    {
+        assert(attribute_name_index != 0);
 
         output_buffer.PutB2(attribute_name_index);
-        output_buffer.PutB4(attribute_length);
+        output_buffer.PutB4(AttributeLength());
         output_buffer.PutB2(inner_classes.Length());
         for (int i = 0; i < inner_classes.Length(); i++)
         {
@@ -661,11 +940,14 @@ assert(attribute_name_index != 0);
     }
 
 #ifdef TEST
-    virtual void print(Tuple<cp_info *>& constant_pool) {
+    virtual void Print(Tuple<cp_info *> &constant_pool)
+    {
         cout << "InnerClasses_attribute attribute_name_index " << attribute_name_index
-             << " attribute_length " << attribute_length << "\n";
-        cout << " inner_classes_length " << inner_classes.Length() <<"\n";
-        for (int i=0; i<inner_classes.Length(); i++) {
+             << " attribute_length " << AttributeLength() << "\n"
+             << " inner_classes_length " << inner_classes.Length() <<"\n";
+
+        for (int i = 0; i < inner_classes.Length(); i++)
+        {
             cout << "     " << i << "  inner_class_info_index " << inner_classes[i].inner_class_info_index
                  << "  outer_class_info_index " << inner_classes[i].outer_class_info_index
                  << "  inner_name_index " << inner_classes[i].inner_name_index
@@ -676,16 +958,23 @@ assert(attribute_name_index != 0);
 #endif    
 };
 
+
 class LineNumberTable_attribute : public attribute_info
 {
-public:
-    LineNumberTable_attribute(u2 &_name_index, u4 &_length) : attribute_info(LineNumberTable,_name_index,_length),
-                                                              line_number_table(6, 16)
-    {}
+    //
+    //    u2 attribute_name_index;
+    //
+    // The fields attribute_name_index is inherited from attribute_info
+    //
+    //    u4 attribute_length;
+    //
+    // The value of attribute_length is derived from line_number_table. See below
+    //
+    //    u2 line_number_table_length;
+    //
+    // The value of line_number_table_length is derived from line_number_table. See below
+    //
 
-//    u2 attribute_name_index;
-//    u4 attribute_length;
-     u2 line_number_table_length() { return line_number_table.Length();}
     struct line_number_element
     {
         u2 start_pc;
@@ -693,14 +982,37 @@ public:
     };
     Tuple<line_number_element> line_number_table; /* line_number_table[line_number_table_length] */
 
+public:
+
+    LineNumberTable_attribute(u2 _name_index) : attribute_info(LineNumberTable, _name_index),
+                                                line_number_table(6, 16)
+    {}
     virtual ~LineNumberTable_attribute() {}
 
-    virtual void put(OutputBuffer &output_buffer)
+    virtual u4 AttributeLength()
     {
-assert(attribute_name_index != 0);
+        return line_number_table.Length() * 4 + 2;
+    }
+
+    u2 LineNumberTableLength()
+    {
+        return line_number_table.Length();
+    }
+
+    void AddLineNumber(u2 start_pc, u2 line_number)
+    {
+        int line_number_index = line_number_table.NextIndex();
+
+        line_number_table[line_number_index].start_pc = start_pc;
+        line_number_table[line_number_index].line_number = line_number;
+    }
+
+    virtual void Put(OutputBuffer &output_buffer)
+    {
+        assert(attribute_name_index != 0);
 
         output_buffer.PutB2(attribute_name_index);
-        output_buffer.PutB4(attribute_length);
+        output_buffer.PutB4(AttributeLength());
         output_buffer.PutB2(line_number_table.Length());
         for (int i = 0; i < line_number_table.Length(); i++)
         {
@@ -710,13 +1022,16 @@ assert(attribute_name_index != 0);
     }
 
 #ifdef TEST
-    virtual void print(Tuple<cp_info *>& constant_pool) {
+    virtual void Print(Tuple<cp_info *> &constant_pool)
+     {
         cout << "LineNumberTable_attribute attribute_name_index " << attribute_name_index
-             << " attribute_length " << attribute_length << "\n";
-        cout << " line_number_table_length " << line_number_table.Length() <<"\n";
-        for (int i=0; i<line_number_table.Length(); i++) {
+             << " attribute_length " << AttributeLength() << "\n"
+             << " line_number_table_length " << line_number_table.Length() <<"\n";
+
+        for (int i = 0; i < line_number_table.Length(); i++)
+        {
             cout << "     " << i << "  start_pc " << line_number_table[i].start_pc
-                    << "  line_number " << line_number_table[i].line_number << "\n";
+                 << "  line_number " << line_number_table[i].line_number << "\n";
         }
     }
 #endif    
@@ -725,13 +1040,20 @@ assert(attribute_name_index != 0);
 
 class LocalVariableTable_attribute : public attribute_info
 {
-public:
-    LocalVariableTable_attribute(u2 &_name_index, u4 &_length) : attribute_info(LocalVariableTable,_name_index,_length)
-    {}
+    //
+    //    u2 attribute_name_index;
+    //
+    // The fields attribute_name_index is inherited from attribute_info
+    //
+    //    u4 attribute_length;
+    //
+    // The value of attribute_length is derived from local_variable_table. See below
+    //
+    //    u2 local_variable_length;
+    //
+    // The value of local_variable_length is derived from local_variable_length. See below
+    //
 
-//    u2 attribute_name_index;
-//    u4 attribute_length;
-     u2 local_variable_table_length() { return local_variable_table.Length();}
     struct local_variable_element
     {
         u2 start_pc;
@@ -742,14 +1064,41 @@ public:
     };
     Tuple<local_variable_element> local_variable_table; /* local_variable_table[local_variable_table_length] */
 
-    virtual ~LocalVariableTable_attribute() { }
+public:
 
-    virtual void put(OutputBuffer &output_buffer)
+    LocalVariableTable_attribute(u2 _name_index) : attribute_info(LocalVariableTable, _name_index)
+    {}
+    virtual ~LocalVariableTable_attribute() {}
+
+    virtual u4 AttributeLength()
     {
-assert(attribute_name_index != 0);
+        return local_variable_table.Length() * 10 + 2;
+    }
+
+    u2 LocalVariableTableLength() { return local_variable_table.Length(); }
+
+    //
+    // make entry in local variable table
+    //
+    void AddLocalVariable(u2 start, u2 length, u2 name, u2 descriptor, u2 index)
+    {
+        int local_index = local_variable_table.NextIndex();
+
+        local_variable_table[local_index].start_pc = start;
+        local_variable_table[local_index].length = length;
+        local_variable_table[local_index].name_index = name;
+        local_variable_table[local_index].descriptor_index = descriptor;
+        local_variable_table[local_index].index = index;
+
+        return;
+    }
+
+    virtual void Put(OutputBuffer &output_buffer)
+    {
+        assert(attribute_name_index != 0);
 
         output_buffer.PutB2(attribute_name_index);
-        output_buffer.PutB4(attribute_length);
+        output_buffer.PutB4(AttributeLength());
         output_buffer.PutB2(local_variable_table.Length());
         for (int i = 0; i < local_variable_table.Length(); i++)
         {
@@ -762,11 +1111,14 @@ assert(attribute_name_index != 0);
     }
                 
 #ifdef TEST
-    virtual void print(Tuple<cp_info *>& constant_pool) {
+    virtual void Print(Tuple<cp_info *> &constant_pool)
+    {
         cout << "LocalVariableTable_attribute attribute_name_index " << attribute_name_index
-             << " attribute_length " << attribute_length << "\n";
-        cout << " local_variable_table_length " << local_variable_table.Length() <<"\n";
-        for (int i=0; i<local_variable_table.Length(); i++) {
+             << " attribute_length " << AttributeLength() << "\n"
+             << " local_variable_table_length " << local_variable_table.Length() <<"\n";
+
+        for (int i = 0; i < local_variable_table.Length(); i++)
+        {
             cout << "     " << i << "  start_pc " << local_variable_table[i].start_pc
                  << "  length " << local_variable_table[i].length
                  << "  name_index " << local_variable_table[i].name_index
@@ -777,59 +1129,78 @@ assert(attribute_name_index != 0);
 #endif    
 };
 
+
 class SourceFile_attribute : public attribute_info
 {
-public:
-//    u2 attribute_name_index;
-//    u4 attribute_length; /* must be 2 */
+    //
+    //    u2 attribute_name_index;
+    //
+    // The fields attribute_name_index is inherited from attribute_info
+    //
+    // The attribute_length is always 2.
+    //
     u2 sourcefile_index;
 
-    SourceFile_attribute(u2 &_name_index, u4 &_length) : attribute_info(SourceFile,_name_index,_length)
-    {}
+public:
 
+    SourceFile_attribute(u2 _name_index, u2 _sourcefile_index) : attribute_info(SourceFile, _name_index),
+                                                                 sourcefile_index(_sourcefile_index)
+    {}
     virtual ~SourceFile_attribute() {}
 
-    virtual void put(OutputBuffer &output_buffer)
+    virtual u4 AttributeLength() { return 2; }
+
+    virtual void Put(OutputBuffer &output_buffer)
     {
-assert(attribute_name_index != 0);
+        assert(attribute_name_index != 0);
 
         output_buffer.PutB2(attribute_name_index);
-        output_buffer.PutB4(attribute_length);
+        output_buffer.PutB4(AttributeLength());
         output_buffer.PutB2(sourcefile_index);
     }
                 
 #ifdef TEST
-    virtual void print(Tuple<cp_info *>& constant_pool) {
+    virtual void Print(Tuple<cp_info *> &constant_pool)
+    {
         cout << "SourceFile_attribute attribute_name_index " << attribute_name_index
-             << " length " << attribute_length
+             << " length " << AttributeLength()
              << " sourcefile_index " << sourcefile_index << "\n";
     }
 #endif    
 };
 
+
 class Synthetic_attribute : public attribute_info
 {
+    //
+    //    u2 attribute_name_index;
+    //
+    // The fields attribute_name_index and attribute_length are inherited from attribute_info
+    //
+    // The attribute_length is always 0.
+    //
+
 public:
-//    u2 attribute_name_index;
-//    u4 attribute_length; /* must be 0 */
 
-    Synthetic_attribute(u2 &_name_index, u4 &_length) : attribute_info(Synthetic,_name_index,_length)
+    Synthetic_attribute(u2 _name_index) : attribute_info(Synthetic, _name_index)
     {}
-
     virtual ~Synthetic_attribute() {}
 
-    virtual void put(OutputBuffer &output_buffer)
+    virtual u4 AttributeLength() { return 0; }
+
+    virtual void Put(OutputBuffer &output_buffer)
     {
-assert(attribute_name_index != 0);
+        assert(attribute_name_index != 0);
 
         output_buffer.PutB2(attribute_name_index);
-        output_buffer.PutB4(attribute_length);
+        output_buffer.PutB4(AttributeLength());
     }
                 
 #ifdef TEST
-    virtual void print(Tuple<cp_info *>& constant_pool) {
+    virtual void Print(Tuple<cp_info *> &constant_pool)
+    {
         cout << "Synthetic_attribute attribute_name_index " << attribute_name_index
-             << " length " << attribute_length
+             << " length " << AttributeLength()
              << "\n";
     }
 #endif    
@@ -838,12 +1209,20 @@ assert(attribute_name_index != 0);
 
 class field_info : public AccessFlags
 {
-public:
-    /* u2 access_flags; */
+    //
+    // u2 access_flags;
+    //
+    // The access_flags is inherited from AccessFlags
+    //
     u2 name_index;
     u2 descriptor_index;
-    u2 attributes_count() { return attributes.Length();}
+
+    //
+    // attributes_count can be computed as attributes.Length();
+    //
     Tuple<attribute_info *> attributes; /* attributes[attributes_count] */
+
+public:
 
      ~field_info()
      {
@@ -851,7 +1230,13 @@ public:
              delete attributes[i];
      }
 
-    inline void put(OutputBuffer &output_buffer)
+    inline void SetNameIndex(u2 _name_index) { name_index = _name_index; }
+    inline void SetDescriptorIndex(u2 _descriptor_index) { descriptor_index = _descriptor_index; }
+
+    inline u2 AttributesCount() { return attributes.Length(); }
+    inline void AddAttribute(attribute_info *attribute) { attributes.Next() = attribute; }
+
+    inline void Put(OutputBuffer &output_buffer)
     {
         output_buffer.PutB2(access_flags);
         output_buffer.PutB2(name_index);
@@ -859,17 +1244,19 @@ public:
         output_buffer.PutB2(attributes.Length());
 
         for (int ai = 0; ai < attributes.Length(); ai++)
-            attributes[ai] -> put(output_buffer);
+            attributes[ai] -> Put(output_buffer);
     }
 
 #ifdef TEST
-    void print(Tuple<cp_info *>& constant_pool) {
+    void Print(Tuple<cp_info *> &constant_pool)
+    {
         cout << "field_info  name_index " << name_index
              << "  descriptor_index " << descriptor_index << "\n";
+
         AccessFlags::Print();
-        for (int i=0; i<attributes.Length(); i++) {
-            attributes[i]->print(constant_pool);
-        }
+
+        for (int i = 0; i < attributes.Length(); i++)
+            attributes[i] -> Print(constant_pool);
         cout << "\n";
     }
 #endif    
@@ -878,12 +1265,20 @@ public:
 
 class method_info : public AccessFlags
 {
-public:
-    /* u2 access_flags; */
+    //
+    // u2 access_flags;
+    //
+    // The access_flags is inherited from AccessFlags
+    //
     u2 name_index;
     u2 descriptor_index;
-    u2 attributes_count() { return attributes.Length(); }
+
+    //
+    // attributes_count can be computed as attributes.Length();
+    //
     Tuple<attribute_info *> attributes; /* attributes[attributes_count] */
+
+public:
 
     ~method_info()
     {
@@ -891,25 +1286,33 @@ public:
             delete attributes[i];
     }
 
-    inline void put(OutputBuffer &output_buffer)
+    inline void SetNameIndex(u2 _name_index) { name_index = _name_index; }
+    inline void SetDescriptorIndex(u2 _descriptor_index) { descriptor_index = _descriptor_index; }
+
+    inline u2 AttributesCount() { return attributes.Length(); }
+    inline void AddAttribute(attribute_info *attribute) { attributes.Next() = attribute; }
+
+    inline void Put(OutputBuffer &output_buffer)
     {
         output_buffer.PutB2(access_flags);
         output_buffer.PutB2(name_index);
         output_buffer.PutB2(descriptor_index);
         output_buffer.PutB2(attributes.Length());
 
-        for (int ai = 0; ai < attributes.Length(); ai++)
-            attributes[ai] -> put(output_buffer);
+        for (int i = 0; i < attributes.Length(); i++)
+            attributes[i] -> Put(output_buffer);
     }
 
 #ifdef TEST
-     void print(Tuple<cp_info *>& constant_pool) {
+     void Print(Tuple<cp_info *> &constant_pool)
+     {
         cout << "method_info  name_index " << name_index
              << "  descriptor_index " << descriptor_index << "\n";
+
         AccessFlags::Print();
-        for (int i=0; i<attributes.Length(); i++) {
-            attributes[i]->print(constant_pool);
-        }
+
+        for (int i = 0; i < attributes.Length(); i++)
+            attributes[i] -> Print(constant_pool);
         cout << "\n";
     }
 #endif    
@@ -937,24 +1340,28 @@ public:
     u4 magic;
     u2 minor_version;
     u2 major_version;
-    u2 constant_pool_count() { return constant_pool.Length(); }
+    u2 ConstantPoolCount() { return constant_pool.Length(); }
     Tuple<cp_info *> constant_pool; /* cp_info[constant_pool_count] */
-/*    u2 access_flags; */
+    //
+    // u2 access_flags;
+    //
+    // The access_flags is inherited from AccessFlags
+    //
     u2 this_class;
     u2 super_class;
-    u2 interfaces_count() { return interfaces.Length(); }
+    u2 InterfacesCount() { return interfaces.Length(); }
     Tuple<u2> interfaces; /* interfaces[interfaces_count] */
-    u2 fields_count() { return fields.Length(); }
+    u2 FieldsCount() { return fields.Length(); }
     Tuple<field_info> fields; /* fields[fields_count] */
-    u2 methods_count() { return methods.Length();}
+    u2 MethodsCount() { return methods.Length();}
     Tuple<method_info> methods; /* methods[methods_count] */
-    u2 attributes_count() { return attributes.Length(); }
+    u2 AttributesCount() { return attributes.Length(); }
     Tuple<attribute_info *> attributes; /* attributes[attributes_count] */
 
-    ClassFile(TypeSymbol *type_) : type(type_),
-                                   constant_pool(8, 4),
-                                   fields(6, 16),
-                                   methods(6, 16)
+    ClassFile(TypeSymbol *unit_type_) : unit_type(unit_type_),
+                                        constant_pool(8, 4),
+                                        fields(6, 16),
+                                        methods(6, 16)
     {}
 
     ~ClassFile()
@@ -970,7 +1377,7 @@ public:
 
     void Write()
     {
-        Control &control = type -> semantic_environment -> sem -> control;
+        Control &control = unit_type -> semantic_environment -> sem -> control;
 
         if (! control.option.nowrite)
         {
@@ -978,11 +1385,14 @@ public:
             output_buffer.PutB2(minor_version);
             output_buffer.PutB2(major_version);
 
+            //
+            // write constant pool
+            //
             output_buffer.PutB2(constant_pool.Length());
             for (int i = 1; i < constant_pool.Length(); i++)
             {
-                constant_pool[i] -> put(output_buffer);
-                if (constant_pool[i] -> tag  ==  CONSTANT_Long || constant_pool[i] -> tag  ==  CONSTANT_Double)
+                constant_pool[i] -> Put(output_buffer);
+                if (constant_pool[i] -> Tag()  ==  CONSTANT_Long || constant_pool[i] -> Tag()  ==  CONSTANT_Double)
                     i++;; // skip the next entry for eight-byte constants
             }
 
@@ -990,24 +1400,37 @@ public:
             output_buffer.PutB2(this_class);
             output_buffer.PutB2(super_class);
 
+            //
+            // write interfaces
+            //
             output_buffer.PutB2(interfaces.Length());
             for (int j = 0; j < interfaces.Length(); j++)
                 output_buffer.PutB2(interfaces[j]);
 
+            //
+            // write field members
+            //
             output_buffer.PutB2(fields.Length());
             for (int k = 0; k < fields.Length(); k++)
-                fields[k].put(output_buffer);
+                fields[k].Put(output_buffer);
 
+            //
+            // write method members
+            //
             output_buffer.PutB2(methods.Length());
             for (int l = 0; l < methods.Length(); l++)
-                methods[l].put(output_buffer);
+                methods[l].Put(output_buffer);
 
+            //
+            // write attributes
+            //
             output_buffer.PutB2(attributes.Length());
             for (int m = 0; m < attributes.Length(); m++)
-                attributes[m] -> put(output_buffer);
+                attributes[m] -> Put(output_buffer);
 
-            char *class_file_name = type -> ClassName();
-            if (control.option.verbose) {
+            char *class_file_name = unit_type -> ClassName();
+            if (control.option.verbose)
+            {
                 cout << "[write ";
                 Unicode::Cout(class_file_name);
                 cout << "]\n";
@@ -1032,7 +1455,7 @@ public:
     }
 
 protected:
-    TypeSymbol *type;
+    TypeSymbol *unit_type;
     OutputBuffer output_buffer;
 };
 #endif

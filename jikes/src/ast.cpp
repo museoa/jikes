@@ -1760,58 +1760,58 @@ Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
 
 Ast::~Ast()
 {
-    assert(0);
+    assert(false);
 }
 
 AstStatement::~AstStatement()
 {
-    assert(0);
+    assert(false);
 }
 
 AstExpression::~AstExpression()
 {
-    assert(0);
+    assert(false);
 }
 
 AstBlock::~AstBlock()
 {
-    assert(0);
+    assert(false);
     //    delete block_statements;
 }
 
 AstPrimitiveType::~AstPrimitiveType()
 {
-    assert(0);
+    assert(false);
 }
 
 AstArrayType::~AstArrayType()
 {
-    assert(0);
+    assert(false);
     //    delete type;
     //    delete brackets;
 }
 
 AstSimpleName::~AstSimpleName()
 {
-    assert(0);
+    assert(false);
     //    delete resolution_opt;
 }
  
 AstPackageDeclaration::~AstPackageDeclaration()
 {
-    assert(0);
+    assert(false);
     //    delete name;
 }
 
 AstImportDeclaration::~AstImportDeclaration()
 {
-    assert(0);
+    assert(false);
     //    delete name;
 }
 
 AstCompilationUnit::~AstCompilationUnit()
 {
-    assert(0);
+    assert(false);
     //    delete package_declaration_opt;
     //    delete import_declarations;
     //    delete type_declarations;
@@ -1819,17 +1819,17 @@ AstCompilationUnit::~AstCompilationUnit()
 
 AstModifier::~AstModifier()
 {
-    assert(0);
+    assert(false);
 }
 
 AstEmptyDeclaration::~AstEmptyDeclaration()
 {
-    assert(0);
+    assert(false);
 }
 
 AstClassBody::~AstClassBody()
 {
-    assert(0);
+    assert(false);
     //    delete default_constructor;
     //    delete instance_variables;
     //    delete class_variables;
@@ -1845,7 +1845,7 @@ AstClassBody::~AstClassBody()
 
 AstClassDeclaration::~AstClassDeclaration()
 {
-    assert(0);
+    assert(false);
     //    delete class_modifiers;
     //    delete super_opt;
     //    delete interfaces;
@@ -1854,31 +1854,31 @@ AstClassDeclaration::~AstClassDeclaration()
 
 AstArrayInitializer::~AstArrayInitializer()
 {
-    assert(0);
+    assert(false);
     //    delete variable_initializers;
 }
 
 AstBrackets::~AstBrackets()
 {
-    assert(0);
+    assert(false);
 }
 
 AstVariableDeclaratorId::~AstVariableDeclaratorId()
 {
-    assert(0);
+    assert(false);
     //    delete brackets;
 }
 
 AstVariableDeclarator::~AstVariableDeclarator()
 {
-    assert(0);
+    assert(false);
     //    delete variable_declarator_name;
     //    delete variable_initializer_opt;
 }
 
 AstFieldDeclaration::~AstFieldDeclaration()
 {
-    assert(0);
+    assert(false);
     //    delete variable_modifiers;
     //    delete type;
     //    delete variable_declarators;
@@ -1886,7 +1886,7 @@ AstFieldDeclaration::~AstFieldDeclaration()
 
 AstFormalParameter::~AstFormalParameter()
 {
-    assert(0);
+    assert(false);
     //    delete parameter_modifiers;
     //    delete type;
     //    delete variable_declarator_name;
@@ -1894,14 +1894,14 @@ AstFormalParameter::~AstFormalParameter()
 
 AstMethodDeclarator::~AstMethodDeclarator()
 {
-    assert(0);
+    assert(false);
     //    delete formal_parameters;
     //    delete brackets;
 }
 
 AstMethodDeclaration::~AstMethodDeclaration()
 {
-    assert(0);
+    assert(false);
     //    delete method_modifiers;
     //    delete type;
     //    delete method_declarator;
@@ -1911,13 +1911,13 @@ AstMethodDeclaration::~AstMethodDeclaration()
 
 AstStaticInitializer::~AstStaticInitializer()
 {
-    assert(0);
+    assert(false);
     //    delete block;
 }
 
 AstThisCall::~AstThisCall()
 {
-    assert(0);
+    assert(false);
     //    delete arguments;
     //    delete base_opt;
     //    delete local_arguments_opt;
@@ -1925,7 +1925,7 @@ AstThisCall::~AstThisCall()
 
 AstSuperCall::~AstSuperCall()
 {
-    assert(0);
+    assert(false);
     //    delete base_opt;
     //    delete arguments;
     //    delete local_arguments_opt;
@@ -1933,7 +1933,7 @@ AstSuperCall::~AstSuperCall()
 
 AstConstructorBlock::~AstConstructorBlock()
 {
-    assert(0);
+    assert(false);
     //    delete explicit_constructor_invocation_opt;
     //    delete block;
     //    delete local_init_block;
@@ -1942,7 +1942,7 @@ AstConstructorBlock::~AstConstructorBlock()
 
 AstConstructorDeclaration::~AstConstructorDeclaration()
 {
-    assert(0);
+    assert(false);
     //    delete constructor_modifiers;
     //    delete constructor_declarator;
     //    delete throws;
@@ -1951,7 +1951,7 @@ AstConstructorDeclaration::~AstConstructorDeclaration()
 
 AstInterfaceDeclaration::~AstInterfaceDeclaration()
 {
-    assert(0);
+    assert(false);
     //    delete class_variables;
     //    delete abstract_methods;
     //    delete inner_classes;
@@ -1963,7 +1963,7 @@ AstInterfaceDeclaration::~AstInterfaceDeclaration()
 
 AstLocalVariableDeclarationStatement::~AstLocalVariableDeclarationStatement()
 {
-    assert(0);
+    assert(false);
     //    delete local_modifiers;
     //    delete type;
     //    delete variable_declarators;
@@ -1971,7 +1971,7 @@ AstLocalVariableDeclarationStatement::~AstLocalVariableDeclarationStatement()
 
 AstIfStatement::~AstIfStatement()
 {
-    assert(0);
+    assert(false);
     //    delete expression;
     //    delete true_statement;
     //    delete false_statement_opt;
@@ -1979,57 +1979,57 @@ AstIfStatement::~AstIfStatement()
 
 AstEmptyStatement::~AstEmptyStatement()
 {
-    assert(0);
+    assert(false);
 }
 
 AstExpressionStatement::~AstExpressionStatement()
 {
-    assert(0);
+    assert(false);
     //    delete expression;
 }
 
 AstCaseLabel::~AstCaseLabel()
 {
-    assert(0);
+    assert(false);
     //    delete expression;
 }
 
 AstDefaultLabel::~AstDefaultLabel()
 {
-    assert(0);
+    assert(false);
 }
 
 AstSwitchBlockStatement::~AstSwitchBlockStatement()
 {
-    assert(0);
+    assert(false);
     //    delete switch_labels;
     //    delete block_statements;
 }
 
 AstSwitchStatement::~AstSwitchStatement()
 {
-    assert(0);
+    assert(false);
     //    delete expression;
     //    delete switch_block;
 }
 
 AstWhileStatement::~AstWhileStatement()
 {
-    assert(0);
+    assert(false);
     //    delete expression;
     //    delete statement;
 }
 
 AstDoStatement::~AstDoStatement()
 {
-    assert(0);
+    assert(false);
     //    delete statement;
     //    delete expression;
 }
 
 AstForStatement::~AstForStatement()
 {
-    assert(0);
+    assert(false);
     //    delete for_init_statements;
     //    delete end_expression_opt;
     //    delete for_update_statements;
@@ -2038,49 +2038,49 @@ AstForStatement::~AstForStatement()
 
 AstBreakStatement::~AstBreakStatement()
 {
-    assert(0);
+    assert(false);
 }
 
 AstContinueStatement::~AstContinueStatement()
 {
-    assert(0);
+    assert(false);
 }
 
 AstReturnStatement::~AstReturnStatement()
 {
-    assert(0);
+    assert(false);
     //    delete expression_opt;
 }
 
 AstThrowStatement::~AstThrowStatement()
 {
-    assert(0);
+    assert(false);
     //    delete expression;
 }
 
 AstSynchronizedStatement::~AstSynchronizedStatement()
 {
-    assert(0);
+    assert(false);
     //    delete expression;
     //    delete block;
 }
 
 AstCatchClause::~AstCatchClause()
 {
-    assert(0);
+    assert(false);
     //    delete formal_parameter;
     //    delete block;
 }
 
 AstFinallyClause::~AstFinallyClause()
 {
-    assert(0);
+    assert(false);
     //    delete block;
 }
 
 AstTryStatement::~AstTryStatement()
 {
-    assert(0);
+    assert(false);
     //    delete block;
     //    delete catch_clauses;
     //    delete finally_clause_opt;
@@ -2088,74 +2088,74 @@ AstTryStatement::~AstTryStatement()
 
 AstIntegerLiteral::~AstIntegerLiteral()
 {
-    assert(0);
+    assert(false);
 }
 
 AstLongLiteral::~AstLongLiteral()
 {
-    assert(0);
+    assert(false);
 }
 
 AstFloatingPointLiteral::~AstFloatingPointLiteral()
 {
-    assert(0);
+    assert(false);
 }
 
 AstDoubleLiteral::~AstDoubleLiteral()
 {
-    assert(0);
+    assert(false);
 }
 
 AstTrueLiteral::~AstTrueLiteral()
 {
-    assert(0);
+    assert(false);
 }
 
 AstFalseLiteral::~AstFalseLiteral()
 {
-    assert(0);
+    assert(false);
 }
 
 AstStringLiteral::~AstStringLiteral()
 {
-    assert(0);
+    assert(false);
 }
 
 AstCharacterLiteral::~AstCharacterLiteral()
 {
-    assert(0);
+    assert(false);
 }
 
 AstNullLiteral::~AstNullLiteral()
 {
-    assert(0);
+    assert(false);
 }
 
 AstThisExpression::~AstThisExpression()
 {
-    assert(0);
+    assert(false);
 }
 
 AstSuperExpression::~AstSuperExpression()
 {
-    assert(0);
+    assert(false);
 }
 
 AstParenthesizedExpression::~AstParenthesizedExpression()
 {
-    assert(0);
+    assert(false);
     //    delete expression;
 }
 
 AstTypeExpression::~AstTypeExpression()
 {
-    assert(0);
+    assert(false);
     //    delete type;
 }
 
 AstClassInstanceCreationExpression::~AstClassInstanceCreationExpression()
 {
-    assert(0);
+    assert(false);
     //    delete base_opt;
     //    delete class_type;
     //    delete arguments;
@@ -2165,13 +2165,13 @@ AstClassInstanceCreationExpression::~AstClassInstanceCreationExpression()
 
 AstDimExpr::~AstDimExpr()
 {
-    assert(0);
+    assert(false);
     //    delete expression;
 }
 
 AstArrayCreationExpression::~AstArrayCreationExpression()
 {
-    assert(0);
+    assert(false);
     //    delete array_type;
     //    delete dim_exprs;
     //    delete brackets;
@@ -2180,14 +2180,14 @@ AstArrayCreationExpression::~AstArrayCreationExpression()
 
 AstFieldAccess::~AstFieldAccess()
 {
-    assert(0);
+    assert(false);
     //    delete base;
     //    delete resolution_opt;
 }
 
 AstMethodInvocation::~AstMethodInvocation()
 {
-    assert(0);
+    assert(false);
     //    delete method;
     //    delete arguments;
     //    delete resolution_opt;
@@ -2195,26 +2195,26 @@ AstMethodInvocation::~AstMethodInvocation()
 
 AstArrayAccess::~AstArrayAccess()
 {
-    assert(0);
+    assert(false);
     //    delete base;
     //    delete expression;
 }
 
 AstPostUnaryExpression::~AstPostUnaryExpression()
 {
-    assert(0);
+    assert(false);
     //    delete expression;
 }
 
 AstPreUnaryExpression::~AstPreUnaryExpression()
 {
-    assert(0);
+    assert(false);
     //    delete expression;
 }
 
 AstCastExpression::~AstCastExpression()
 {
-    assert(0);
+    assert(false);
     //    delete type_opt;
     //    delete brackets;
     //    delete expression;
@@ -2222,14 +2222,14 @@ AstCastExpression::~AstCastExpression()
 
 AstBinaryExpression::~AstBinaryExpression()
 {
-   assert(0);
+   assert(false);
    //    delete left_expression;
    //    delete right_expression;
 }
 
 AstConditionalExpression::~AstConditionalExpression()
 {
-    assert(0);
+    assert(false);
     //    delete test_expression;
     //    delete true_expression;
     //    delete false_expression;
@@ -2237,7 +2237,7 @@ AstConditionalExpression::~AstConditionalExpression()
 
 AstAssignmentExpression::~AstAssignmentExpression()
 {
-    assert(0);
+    assert(false);
     //    delete left_hand_side;
     //    delete expression;
 }

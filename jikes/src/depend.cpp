@@ -262,7 +262,7 @@ void TypeDependenceChecker::ProcessType(TypeSymbol *type)
 
 void TypeDependenceChecker::OutputMake(FILE *outfile, char *output_name, Tuple<FileSymbol *> &file_list)
 {
-assert(outfile);
+    assert(outfile);
 
     for (int i = 0; i < file_list.Length(); i++)
     {

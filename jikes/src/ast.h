@@ -514,7 +514,7 @@ public:
     void Reset(const int n = 0)
     {
         if (n < 0 || n > size)
-            assert(0);
+            assert(false);
         top = n;
     }
 
@@ -587,7 +587,7 @@ public:
     //
     // Destructor of an Ast array.
     //
-    ~AstArray() { assert(0); }
+    ~AstArray() { assert(false); }
 };
 
 
@@ -4039,7 +4039,7 @@ public:
         if (top > size)
         {
             if (n > Blksize()) // we cannot allocate a chunk of storage that is larger than the block !
-                assert(0);
+                assert(false);
             i = size;
             top = size + ((n + sizeof(Cell) - 1) / sizeof(Cell));
             AllocateMoreSpace();
@@ -4061,7 +4061,7 @@ public:
     inline void Reset(const int n = 0)
     {
         if (n < 0 || n > size)
-            assert(0);
+            assert(false);
         top = n;
     }
 

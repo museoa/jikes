@@ -540,6 +540,9 @@ void SemanticError::StaticInitializer()
     print_message[VOID_TO_STRING] = PrintVOID_TO_STRING;
 
 #ifdef TEST
+    //
+    // Make sure that there is a message associated with each code
+    //
     for (int k = 0; k < _num_kinds; k++)
         assert(print_message[k] != NULL);
 #endif
@@ -2147,9 +2150,9 @@ void SemanticError::PrintFIELD_NOT_METHOD(ErrorInfo &err, LexStream *lex_stream,
 
 void SemanticError::PrintTYPE_NOT_METHOD(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The keyword \"new\" is expected before this name as \"";
+    cout << "The keyword \"new\" is expected before this name, \"";
     Unicode::Cout(err.insert1);
-    cout << "\" is not the name of a method but the name of a type.";
+    cout << "\", as it is not the name of a method but the name of a type.";
 
     return;
 }
@@ -4239,7 +4242,7 @@ void SemanticError::PrintENCLOSING_INSTANCE_NOT_ACCESSIBLE(ErrorInfo &err, LexSt
         cout << "/";
     }
     Unicode::Cout(err.insert2);
-    Unicode::Cout(StringConstant::US__DO_);
+    Unicode::Cout(StringConstant::US__DO);
     Unicode::Cout(StringConstant::US_this);
     cout << "\" is not accessible here";
     cout << ". In general, an enclosing instance is accessible only in the body of an instance method, "

@@ -116,9 +116,9 @@ public:
                                                   : wcslen(KeywordName(tokens[i].Kind())));
     }
 
-    ::LiteralSymbol *LiteralSymbol(TokenIndex);
+    class LiteralSymbol *LiteralSymbol(TokenIndex);
 
-    ::NameSymbol *NameSymbol(TokenIndex);
+    class NameSymbol *NameSymbol(TokenIndex);
 
     char *FileName();
     int FileNameLength();
@@ -326,7 +326,8 @@ private:
 
     unsigned FindColumn(unsigned location)
     {
-assert(locations);
+        assert(locations);
+
         return Tab::Wcslen(input_buffer, locations[FindLine(location)], location);
     }
 };
