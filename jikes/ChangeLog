@@ -1,10 +1,15 @@
-2000-11-03  Mo DeJong  <mdejong@redhat.com>
+2000-12-03  Mo DeJong  <mdejong@redhat.com>
+
+	* src/stream.cpp (ProcessInputUnicode): Use
+	correct form of delete for an array variable.
+
+2000-12-03  Mo DeJong  <mdejong@redhat.com>
 
 	* src/jikesapi.cpp (compile): Revert
 	change that allocated a Control object
 	on the stack.
 
-2000-11-03  Mo DeJong  <mdejong@redhat.com>
+2000-12-03  Mo DeJong  <mdejong@redhat.com>
 
 	* src/jikesapi.cpp (parseOptions): Revert
 	the change that allocated an ArgumentExpander

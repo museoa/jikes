@@ -851,7 +851,7 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                 size_t newsize = cursize+cursize/10+4; // add 10%
                 wchar_t *tmp   = new wchar_t[newsize]; 
                 memcpy (tmp, input_buffer, cursize*sizeof(wchar_t));
-                delete input_buffer;
+                delete [] input_buffer;
                 input_buffer = tmp;
                 input_tail = input_buffer + newsize - 1;
                 input_ptr  = input_buffer + cursize;
