@@ -79,7 +79,7 @@
             distributions</a> page for a list of Linux distributions known
             to include Jikes as a standard package.  For other platforms,
             go to the
-            <a href="/developerworks/downloads/?group_id=10&recent_only=1">
+            <a href="/developerworks/downloads/?group_id=10&amp;recent_only=1">
             downloads</a> page and look for an official binary version of
             Jikes.  A Zip file is provided for Windows users, just unzip
             it and place the bin directory on your PATH.

@@ -57,7 +57,7 @@
 <br>
     <P>If you know of an additional distribution we're missing here, please <A HREF="mailto:jikes-dev@www-124.ibm.com">let us know</A>.</P>
 
-    <P>Most will acquire Jikes as an independent package though, like most open source projects, Jikes is <A HREF="/developerworks/downloads/?group_id=10&recent_only=1">available</A> in both source and precompiled binary forms.</p>
+    <P>Most will acquire Jikes as an independent package though, like most open source projects, Jikes is <A HREF="/developerworks/downloads/?group_id=10&amp;recent_only=1">available</A> in both source and precompiled binary forms.</p>
 
     <!--#include file="footer.shtml" -->
   </BODY>
