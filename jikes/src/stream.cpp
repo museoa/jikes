@@ -827,7 +827,7 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
         const char *source_ptr  = buffer;
         const char *source_tail = buffer + filesize - 1; // point to last character read from the file.
 
-        UnicodeLexerState saved_state;
+        UnicodeLexerState saved_state = START;
         UnicodeLexerState state = START;
 #ifdef HAVE_LIB_ICU_UC
         UErrorCode err = U_ZERO_ERROR;
@@ -1021,6 +1021,8 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                     state = RAW;
                     *(++input_ptr)=ch;                    
                 }
+               // clear saved_state == UNICODE_ESCAPE_DIGIT_2 status
+               saved_state = CR;
                 break;
 
             case START:
