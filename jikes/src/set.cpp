@@ -226,6 +226,8 @@ void SymbolMap::Map(Symbol *symbol, Symbol *image)
         element -> next = base[k];
         base[k] = element;
 
+        symbol_pool.Next() = element;
+
         //
         // If the number of unique elements in the map exceeds 2 times
         // the size of the base, and we have not yet reached the maximum
@@ -266,5 +268,8 @@ SymbolMap::~SymbolMap()
 {
     for (int i = 0; i < symbol_pool.Length(); i++)
         delete symbol_pool[i];
+
+    delete [] base;
+
     return;
 }
