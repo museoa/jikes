@@ -39,7 +39,7 @@
             <li><a href="http://sourceforge.net/news/?group_id=128803">News</a>
             <li><a href="distribs.shtml">Distributions</a>
             <li><a href="http://sourceforge.net/project/showfiles.php?group_id=128803">Downloads</a>
-            <li><a href="http://sourceforge.net/tracker/?group_id=128803&amp;atid=712760&amp;status=1">View open bugs</a>
+            <li><a href="http://sourceforge.net/tracker/?group_id=128803&amp;atid=712760">View bugs</a>
             <li><a href="faq/bug-reporting.shtml">Report bugs here</a>
             <li><a href="http://oss.software.ibm.com/developerworks/opensource/license10.html">IBM Public License</a>
           </ul>
