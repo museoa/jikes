@@ -1,3 +1,13 @@
+2004-05-16  Chris Abbey  <jikes@cabbey.net>
+
+	Release 1.21
+
+2004-05-13  Chris Abbey  <jikes@cabbey.net>
+
+	* configure.ac: bump version
+	* configure: regen
+
+	
 2004-05-04  Chris Abbey  <jikes@cabbey.net>
 
 	* src/m4/ac_check_iconv.m4: enable --without-iconv
