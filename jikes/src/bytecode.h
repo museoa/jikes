@@ -834,7 +834,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     int EmitExpression(AstExpression *, bool = true);
     int EmitArrayCreationExpression(AstArrayCreationExpression *, bool = true);
     int EmitAssignmentExpression(AstAssignmentExpression *, bool);
-    int EmitBinaryExpression(AstBinaryExpression *);
+    int EmitBinaryExpression(AstBinaryExpression*, bool);
     int EmitCastExpression(AstCastExpression *, bool);
     void EmitCast(TypeSymbol *, TypeSymbol *);
     int EmitInstanceCreationExpression(AstClassInstanceCreationExpression *,
@@ -863,8 +863,8 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
                                                AstPreUnaryExpression *, bool);
     void EmitThisInvocation(AstThisCall *);
     void EmitSuperInvocation(AstSuperCall *);
-    void ConcatenateString(AstBinaryExpression *);
-    void AppendString(AstExpression *);
+    void ConcatenateString(AstBinaryExpression*, bool);
+    void AppendString(AstExpression*, bool);
     void EmitStringAppendMethod(TypeSymbol *);
     void ChangeStack(int);
     void ResolveAccess(AstExpression *);

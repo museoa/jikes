@@ -3148,27 +3148,22 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
             return 0;
         }
     case Ast::POST_UNARY:
-        return EmitPostUnaryExpression((AstPostUnaryExpression *) expression,
+        return EmitPostUnaryExpression((AstPostUnaryExpression*) expression,
                                        need_value);
     case Ast::PRE_UNARY:
-        return EmitPreUnaryExpression((AstPreUnaryExpression *) expression,
+        return EmitPreUnaryExpression((AstPreUnaryExpression*) expression,
                                       need_value);
     case Ast::CAST:
-        return EmitCastExpression((AstCastExpression *) expression, need_value);
+        return EmitCastExpression((AstCastExpression*) expression, need_value);
     case Ast::BINARY:
-        {
-            // Must evaluate for potential side effects.
-            int words = EmitBinaryExpression((AstBinaryExpression *) expression);
-            if (need_value)
-                return words;
-            PutOp(words == 1 ? OP_POP : OP_POP2);
-            return 0;
-        }
+        return EmitBinaryExpression((AstBinaryExpression*) expression,
+                                    need_value);
     case Ast::CONDITIONAL:
-        return EmitConditionalExpression((AstConditionalExpression *) expression,
+        return EmitConditionalExpression(((AstConditionalExpression*)
+                                          expression),
                                          need_value);
     case Ast::ASSIGNMENT:
-        return EmitAssignmentExpression((AstAssignmentExpression *) expression,
+        return EmitAssignmentExpression((AstAssignmentExpression*) expression,
                                         need_value);
     case Ast::NULL_LITERAL:
         if (need_value)
@@ -3760,7 +3755,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
             PutOp(OP_INVOKESPECIAL);
             PutU2(RegisterLibraryMethodref(control.StringBuffer_InitMethod()));
             EmitStringAppendMethod(control.String());
-            AppendString(assignment_expression -> expression);
+            AppendString(assignment_expression -> expression, true);
             PutOp(OP_INVOKEVIRTUAL);
             PutU2(RegisterLibraryMethodref(control.StringBuffer_toStringMethod()));
             ChangeStack(1); // account for return value
@@ -3977,9 +3972,10 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
 // method relies on the compiler having already inserted numeric promotion
 // casts, so that the type of the left and right expressions match.
 //
-int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
+int ByteCode::EmitBinaryExpression(AstBinaryExpression* expression,
+                                   bool need_value)
 {
-    TypeSymbol *type = expression -> Type();
+    TypeSymbol* type = expression -> Type();
 
     //
     // First, special case instanceof and string concatenation.
@@ -4001,7 +3997,8 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
             // in case of side effects in (expr ? null : null).
             //
             EmitExpression(expression -> left_expression, false);
-            PutOp(OP_ICONST_0);
+            if (need_value)
+                PutOp(OP_ICONST_0);
         }
         else if (expression -> left_expression -> IsConstant() ||
                  expression -> left_expression -> BinaryExpressionCast())
@@ -4012,7 +4009,8 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
             //
             assert(left_type == control.String());
             EmitExpression(expression -> left_expression, false);
-            PutOp(OP_ICONST_1);
+            if (need_value)
+                PutOp(OP_ICONST_1);
         }
         else if ((expression -> left_expression -> IsThisExpression() ||
                   expression -> left_expression -> IsSuperExpression() ||
@@ -4024,27 +4022,89 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
             // We know the result: true, since the expression is non-null.
             //
             EmitExpression(expression -> left_expression, false);
-            PutOp(OP_ICONST_1);
+            if (need_value)
+                PutOp(OP_ICONST_1);
         }
         else
         {
-            EmitExpression(expression -> left_expression);
-            PutOp(OP_INSTANCEOF);
-            PutU2(right_type -> num_dimensions > 0
-                  ? RegisterClass(right_type -> signature)
-                  : RegisterClass(right_type));
+            EmitExpression(expression -> left_expression, need_value);
+            if (need_value)
+            {
+                PutOp(OP_INSTANCEOF);
+                PutU2(right_type -> num_dimensions > 0
+                      ? RegisterClass(right_type -> signature)
+                      : RegisterClass(right_type));
+            }
         }
-        return 1;
+        return need_value ? 1 : 0;
     }
 
     if (type == control.String())
     {
         assert(expression -> binary_tag == AstBinaryExpression::PLUS);
-        ConcatenateString(expression);
+        ConcatenateString(expression, need_value);
+        if (! need_value)
+        {
+            PutOp(OP_POP);
+            return 0;
+        }
         PutOp(OP_INVOKEVIRTUAL);
         PutU2(RegisterLibraryMethodref(control.StringBuffer_toStringMethod()));
         ChangeStack(1); // account for return value
         return 1;
+    }
+
+    //
+    // Next, simplify if no result is needed. The only remaining boolean
+    // operations with side-effects are division and remainder on integral 0.
+    //
+    if (! need_value)
+    {
+        if ((expression -> binary_tag == AstBinaryExpression::SLASH ||
+             expression -> binary_tag == AstBinaryExpression::MOD) &&
+            control.IsIntegral(type) &&
+            (IsZero(expression -> right_expression) ||
+             ! expression -> right_expression -> IsConstant()))
+        {
+            if (IsZero(expression -> right_expression))
+            {
+                //
+                // Undo compiler-inserted numeric promotion.
+                //
+                AstExpression* left_expr = expression -> left_expression;
+                if (left_expr -> CastExpressionCast() &&
+                    left_expr -> generated)
+                {
+                    left_expr = ((AstCastExpression*) left_expr) -> expression;
+                }
+                type = left_expr -> Type();
+                EmitExpression(left_expr);
+                PutOp(type == control.long_type ? OP_LCONST_0 : OP_ICONST_0);
+            }
+            else
+            {
+                EmitExpression(expression -> left_expression);
+                EmitExpression(expression -> right_expression);
+            }
+            if (type == control.long_type)
+            {
+                PutOp(expression -> binary_tag == AstBinaryExpression::SLASH
+                      ? OP_LDIV : OP_LREM);
+                PutOp(OP_POP2);
+            }
+            else
+            {
+                PutOp(expression -> binary_tag == AstBinaryExpression::SLASH
+                      ? OP_IDIV : OP_IREM);
+                PutOp(OP_POP);
+            }
+        }
+        else
+        {
+            EmitExpression(expression -> left_expression, false);
+            EmitExpression(expression -> right_expression, false);
+        }
+        return 0;
     }
 
     //
@@ -4056,10 +4116,10 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
         // Undo compiler-inserted numeric promotion, as well as narrowing from
         // long to int in shifts, to avoid unnecessary type conversions.
         //
-        AstExpression *right_expr = expression -> right_expression;
+        AstExpression* right_expr = expression -> right_expression;
         if (right_expr -> CastExpressionCast() && right_expr -> generated)
-            right_expr = ((AstCastExpression *) right_expr) -> expression;
-        TypeSymbol *right_type = right_expr -> Type();
+            right_expr = ((AstCastExpression*) right_expr) -> expression;
+        TypeSymbol* right_type = right_expr -> Type();
 
         switch (expression -> binary_tag)
         {
@@ -4209,10 +4269,6 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
 
         switch (expression -> binary_tag)
         {
-        case AstBinaryExpression::AND_AND:
-            EmitExpression(left_expr, false);
-            PutOp(OP_ICONST_0);
-            return 1;
         case AstBinaryExpression::EQUAL_EQUAL:
             if (left_type != control.boolean_type)
                 break;
@@ -4263,6 +4319,7 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
             return GetTypeWords(type);
         case AstBinaryExpression::STAR:
         case AstBinaryExpression::AND:
+        case AstBinaryExpression::AND_AND:
             //
             // Floating point multiplication by 0 cannot be simplified, because
             // of NaN, infinity, and -0.0 rules. And in general, division
@@ -4298,9 +4355,8 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
                 EmitExpression(expression -> left_expression);
                 break;
             case AstBinaryExpression::IOR:
-                EmitExpression(expression -> left_expression, false);
-                // Fallthrough
             case AstBinaryExpression::OR_OR:
+                EmitExpression(expression -> left_expression, false);
                 PutOp(OP_ICONST_1);
                 break;
             case AstBinaryExpression::NOT_EQUAL:
@@ -4366,8 +4422,8 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
     EmitExpression(expression -> left_expression);
     EmitExpression(expression -> right_expression);
 
-    bool integer_type = (control.IsSimpleIntegerValueType(type) ||
-                         type == control.boolean_type);
+    assert(type != control.boolean_type);
+    bool integer_type = (control.IsSimpleIntegerValueType(type));
     switch (expression -> binary_tag)
     {
     case AstBinaryExpression::STAR:
@@ -5688,7 +5744,8 @@ void ByteCode::EmitSuperInvocation(AstSuperCall *super_call)
 //
 //  Methods for string concatenation
 //
-void ByteCode::ConcatenateString(AstBinaryExpression *expression)
+void ByteCode::ConcatenateString(AstBinaryExpression* expression,
+                                 bool need_value)
 {
     //
     // Generate code to concatenate strings, by generating a string buffer
@@ -5697,13 +5754,15 @@ void ByteCode::ConcatenateString(AstBinaryExpression *expression)
     // compiles to
     //  new StringBuffer().append(s1).append(s2).toString();
     // Use recursion to share a single buffer where possible.
+    // If concatenated string is not needed, we must still perform string
+    // conversion on all objects, as well as perform side effects of terms.
     //
     AstExpression *left_expr = StripNops(expression -> left_expression);
     if (left_expr -> Type() == control.String() &&
         left_expr -> BinaryExpressionCast() &&
         ! left_expr -> IsConstant())
     {
-        ConcatenateString((AstBinaryExpression *) left_expr);
+        ConcatenateString((AstBinaryExpression*) left_expr, need_value);
     }
     else
     {
@@ -5720,18 +5779,20 @@ void ByteCode::ConcatenateString(AstBinaryExpression *expression)
             // new StringBuffer(null) raising a NullPointerException
             // since string constants are never null.
             //
-            Utf8LiteralValue *value =
-                DYNAMIC_CAST<Utf8LiteralValue *> (left_expr -> value);
-            if (value -> length == 0)
+            Utf8LiteralValue* value =
+                DYNAMIC_CAST<Utf8LiteralValue*> (left_expr -> value);
+            if (value -> length == 0 || ! need_value)
             {
                 PutOp(OP_INVOKESPECIAL);
-                PutU2(RegisterLibraryMethodref(control.StringBuffer_InitMethod()));
+                PutU2(RegisterLibraryMethodref
+                      (control.StringBuffer_InitMethod()));
             }
             else
             {
                 LoadConstantAtIndex(RegisterString(value));
                 PutOp(OP_INVOKESPECIAL);
-                PutU2(RegisterLibraryMethodref(control.StringBuffer_InitWithStringMethod()));
+                PutU2(RegisterLibraryMethodref
+                      (control.StringBuffer_InitWithStringMethod()));
                 ChangeStack(-1); // account for the argument
             }
         }
@@ -5739,15 +5800,15 @@ void ByteCode::ConcatenateString(AstBinaryExpression *expression)
         {
             PutOp(OP_INVOKESPECIAL);
             PutU2(RegisterLibraryMethodref(control.StringBuffer_InitMethod()));
-            AppendString(left_expr);
+            AppendString(left_expr, need_value);
         }
     }
 
-    AppendString(expression -> right_expression);
+    AppendString(expression -> right_expression, need_value);
 }
 
 
-void ByteCode::AppendString(AstExpression *expression)
+void ByteCode::AppendString(AstExpression* expression, bool need_value)
 {
     //
     // Grab the type before reducing no-ops, in the case of ""+(int)char.
@@ -5757,10 +5818,11 @@ void ByteCode::AppendString(AstExpression *expression)
 
     if (expression -> IsConstant())
     {
-        Utf8LiteralValue *value =
-            DYNAMIC_CAST<Utf8LiteralValue *> (expression -> value);
-        if (value -> length == 0)
-            return;  // Optimization: do nothing when appending "".
+        Utf8LiteralValue* value =
+            DYNAMIC_CAST<Utf8LiteralValue*> (expression -> value);
+        // Optimization: do nothing when appending "", or for unused result.
+        if (value -> length == 0 || ! need_value)
+            return;
         assert(type == control.String());
         if (value -> length == 1)
         {
@@ -5790,17 +5852,22 @@ void ByteCode::AppendString(AstExpression *expression)
     }
     else
     {
-        AstBinaryExpression *binary_expression =
+        AstBinaryExpression* binary_expression =
             expression -> BinaryExpressionCast();
         if (binary_expression && type == control.String())
         {
             assert(binary_expression -> binary_tag ==
                    AstBinaryExpression::PLUS);
-            AppendString(binary_expression -> left_expression);
-            AppendString(binary_expression -> right_expression);
+            AppendString(binary_expression -> left_expression, need_value);
+            AppendString(binary_expression -> right_expression, need_value);
             return;
         }
-
+        if (! need_value && control.IsPrimitive(type))
+        {
+            // Optimization: appending non-Object is no-op if result is unused.
+            EmitExpression(expression, false);
+            return;
+        }
         EmitExpression(expression);
     }
 

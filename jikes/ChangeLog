@@ -1,3 +1,10 @@
+2002-12-02  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/bytecode.h (EmitBinaryExpression, ConcatenateString),
+	(AppendString): Add need_value argument to emit less code.
+	* src/bytecode.cpp (EmitBinaryExpression): Fix logic in evaluation
+	of a||true, bug 3398.
+
 2002-11-30  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.cpp (EmitSwitchStatement):
