@@ -9,6 +9,7 @@
 	* src/expr.cpp (CastValue, IsIntValueRepresentableInType): Fix
 	missing cases in previous commit, exposed by Classpath.
 	(ProtectedAccessCheck):
+	* src/symbol.cpp (GetWriteAccessMethod): 
 	* src/semantic.h (ProtectedAccessCheck): Update rules to fix bug
 	exposed by Classpath.
 	* src/decl.cpp (CompleteSymbolTable): Special case

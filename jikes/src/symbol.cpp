@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler Open
 // Source License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -1642,7 +1642,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
 
     assert((member -> ACC_PRIVATE() && this == containing_type) ||
            (member -> ACC_PROTECTED() &&
-            ! semantic_environment -> sem -> ProtectedAccessCheck(base_type, containing_type)) ||
+            ! semantic_environment -> sem -> ProtectedAccessCheck(containing_type)) ||
            containing_type == super);
 
     MethodSymbol *read_method = ReadMethod(member, base_type);
@@ -2091,7 +2091,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member,
 
     assert((member -> ACC_PRIVATE() && this == containing_type) ||
            (member -> ACC_PROTECTED() &&
-            (! semantic_environment -> sem -> ProtectedAccessCheck(base_type, containing_type))));
+            (! semantic_environment -> sem -> ProtectedAccessCheck(containing_type))));
 
     MethodSymbol *read_method = ReadMethod(member, base_type);
 
@@ -2232,7 +2232,7 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member,
 
     assert((member -> ACC_PRIVATE() && this == containing_type) ||
            (member -> ACC_PROTECTED() &&
-            (! semantic_environment -> sem -> ProtectedAccessCheck(base_type, containing_type))));
+            (! semantic_environment -> sem -> ProtectedAccessCheck(containing_type))));
 
     MethodSymbol *write_method = WriteMethod(member, base_type);
 
