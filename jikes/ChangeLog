@@ -1,3 +1,9 @@
+2000-12-26  Mo DeJong  <mdejong@redhat.com>
+
+	* src/incrmnt.cpp (Control::IncrementalRecompilation):
+	Use char instead of u1 as the argument passed to
+	the cin.get() method.
+
 2000-12-20  Mo DeJong  <mdejong@redhat.com>
 
 	* src/m4/ac_cxx_check_set_new_handler.m4:

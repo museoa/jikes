@@ -377,7 +377,7 @@ bool Control::IncrementalRecompilation()
 	out << "\nIncremental: Enter to continue or q + Enter to quit: ";
 	out.flush();
 
-        u1 ch;
+        char ch;
         // See if the user types Q or presses enter/escape or sends an EOF
         while (1) {
             cin.get(ch);
