@@ -7,7 +7,7 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
-// $Id:
+// $Id$
 //
 // Generate code.h and code.cpp to reflect classification of Unicode
 // characters used by a Java Virtual Machine (usually Sun's, so that
