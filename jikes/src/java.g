@@ -6,8 +6,8 @@
 -- This software is subject to the terms of the IBM Jikes Compiler
 -- License Agreement available at the following URL:
 -- http://ibm.com/developerworks/opensource/jikes.
--- Copyright (C) 1996, 1999, 2001 International Business Machines
--- Corporation and others.  All Rights Reserved.
+-- Copyright (C) 1996, 1999, 2000, 2001 International Business
+-- Machines Corporation and others.  All Rights Reserved.
 -- You must accept the terms of that agreement to use this software.
 
 ------------------------------------------------------------------------
@@ -386,14 +386,14 @@ $Start
 $Rules
 
 \:
-// $Id$
+// $Id$ -*- c++ -*-
 // DO NOT MODIFY THIS FILE - it is generated using jikespg on java.g.
 //
 // This software is subject to the terms of the IBM Jikes Compiler Open
 // Source License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 2001 International Business Machines
-// Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 1998, 2001 International Business
+// Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -438,8 +438,8 @@ void Parser::InitRuleAction()
 // This software is subject to the terms of the IBM Jikes Compiler Open
 // Source License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 2001 International Business Machines
-// Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 1998, 2001 International Business
+// Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -4951,7 +4951,7 @@ void Parser::Act$rule_number(void)
 } // Close namespace Jikes block
 #endif
 
-#endif
+#endif // ! HEADERS
 :\
 
 $names

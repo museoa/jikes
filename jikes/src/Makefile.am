@@ -106,7 +106,7 @@ $(PARSER_FILES): java.g $(JIKESPG)
 JAVA = java
 JAVAC = jikes
 code.cpp code.h: gencode.java
-	$(JAVAC) jikes
+	$(JAVAC) $<
 	$(JAVA) gencode
 
 # end special maintainer mode section

@@ -3,8 +3,8 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://www.ibm.com/research/jikes.
-// Copyright (C) 1996, 1998, 2001, International Business Machines Corporation
-// and others.  All Rights Reserved.
+// Copyright (C) 1999, 2000, 2001, International Business
+// Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -46,8 +46,8 @@ class gencode
 
     static public void main(String args[]) throws FileNotFoundException, IOException
     {
-        int num_elements = 65536,
-            num_slots = BASE_SIZE;
+        int num_elements = 65536;
+        int num_slots = BASE_SIZE;
 
         byte base[][] = new byte[BASE_SIZE][SLOT_SIZE];
 
@@ -241,7 +241,7 @@ class gencode
             hfile.println();
             hfile.println("};");
             hfile.println();
-            hfile.println("#endif");
+            hfile.println("#endif // code_INCLUDED");
 
             cfile.println("char Code::code[" +  offset + "] =");
             cfile.println("{");
@@ -383,7 +383,7 @@ class gencode
             hfile.println();
             hfile.println("};");
             hfile.println();
-            hfile.println("#endif");
+            hfile.println("#endif // code_INCLUDED");
 
             cfile.println("char Code::code[65536] =");
             cfile.println("{");
@@ -455,14 +455,14 @@ class gencode
 
     static void printHeader(PrintStream file, String[] includes)
     {
-        file.println("// $Id$");
+        file.println("// $I" + /* CVS hack */ "d$ -*- c++ -*-");
         file.println("// DO NOT MODIFY THIS FILE - it is generated using gencode.java.");
         file.println("//");
         file.println("// This software is subject to the terms of the IBM Jikes Compiler");
         file.println("// License Agreement available at the following URL:");
         file.println("// http://www.ibm.com/research/jikes.");
-        file.println("// Copyright (C) 1996, 1998, 2001, International Business Machines Corporation");
-        file.println("// and others.  All Rights Reserved.");
+        file.println("// Copyright (C) 1999, 2000, 2001, International Business");
+        file.println("// Machines Corporation and others.  All Rights Reserved.");
         file.println("// You must accept the terms of that agreement to use this software.");
         file.println("//");
         file.println();

@@ -1,3 +1,89 @@
+2001-09-13  Eric Blake  <ebb9@email.byu.edu>
+	    Michael Ernst  <mernst@lcs.mit.edu>
+	
+	* src/Makefile.am:
+	* src/Makefile.in: fix typo that broke --enable-maintainer-mode
+	* src/access.h:
+	* src/ast.cpp:
+	* src/ast.h:
+	* src/body.cpp:
+	* src/bytecode.cpp:
+	* src/bytecode.h:
+	* src/case.cpp:
+	* src/case.h:
+	* src/class.h:
+	* src/code.cpp:
+	* src/code.h:
+	* src/control.cpp:
+	* src/control.h:
+	* src/decl.cpp:
+	* src/definite.cpp:
+	* src/depend.cpp:
+	* src/depend.h:
+	* src/diagnose.cpp:
+	* src/diagnose.h:
+	* src/double.cpp:
+	* src/double.h:
+	* src/dump.cpp:
+	* src/error.cpp:
+	* src/error.h:
+	* src/expr.cpp:
+	* src/gencode.java:
+	* src/getclass.cpp:
+	* src/getclass.h:
+	* src/incrmnt.cpp:
+	* src/init.cpp:
+	* src/java.g:
+	* src/javaact.cpp:
+	* src/javaact.h:
+	* src/javadcl.h:
+	* src/javadef.h:
+	* src/javaprs.h:
+	* src/javasym.h:
+	* src/jikes.cpp:
+	* src/jikesapi.cpp:
+	* src/jikesapi.h:
+	* src/long.cpp:
+	* src/long.h:
+	* src/lookup.cpp:
+	* src/lookup.h:
+	* src/lpginput.cpp:
+	* src/lpginput.h:
+	* src/modifier.cpp:
+	* src/op.cpp:
+	* src/op.h:
+	* src/option.cpp:
+	* src/option.h:
+	* src/parser.cpp:
+	* src/parser.h:
+	* src/platform.cpp:
+	* src/platform.h:
+	* src/scanner.cpp:
+	* src/scanner.h:
+	* src/segment.cpp:
+	* src/segment.h:
+	* src/semantic.h:
+	* src/set.cpp:
+	* src/set.h:
+	* src/spell.h:
+	* src/stream.cpp:
+	* src/stream.h:
+	* src/symbol.cpp:
+	* src/symbol.h:
+	* src/system.cpp:
+	* src/tab.cpp:
+	* src/tab.h:
+	* src/table.h:
+	* src/tuple.h:
+	* src/unparse.cpp:
+	* src/unzip.cpp:
+	* src/unzip.h:
+	* src/zip.cpp:
+	* src/zip.h: Patches 135, 136 - Fix whitespace and comment typos
+	for a more consistent style.  Update copyright notice years where
+	necessary.  Also centralize some #includes in platform.h.  Headers
+	now open up in emacs under c++-mode.
+
 2001-09-10  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.cpp (EmitFieldAccess): Fix a regression in class
@@ -3205,7 +3291,7 @@ that
 	* Makefile.in (LIBS): added LIBS variable to link with extra libraries (detected by autoconf).
 	* configure.in (LDFLAGS): Added checks for "IBM Classes for Unicode" library.
 
-1990-10-09  Dave Shields  <shields@watson.ibm.com>
+1999-10-09  Dave Shields  <shields@watson.ibm.com>
 	* Makefile.in:
 	* code.cpp 
 	* code.h
@@ -3521,20 +3607,20 @@ that
 	* configure:
 	Applied patch from Moses DeJong:
 
-Moses DeJong <dejong@cs.umn.edu> on 07/27/99 03:57:26 PM
-To:   jikes-bugs@Watson.IBM.Com
-Subject:  [jikes-bugs] Bug in Jikes configure.in script
-
-It looks like the --with-gas option defined in the configure.in script
-should not be included. It would only work on a MIPS system and there
-is no working gnu assembler on mips right now so there is no reason
-to keep the --with-gas option in the configure.in file. This patch
-removes the unneeded option. The g++ compiler does not even accept
--mgas as a valid option so if someone gave the --with-gas option
-then jikes would not compile (only the gcc compiler accepts it).
-
-Mo DeJong
-dejong@cs.umn.edu
+	Moses DeJong <dejong@cs.umn.edu> on 07/27/99 03:57:26 PM
+	To:   jikes-bugs@Watson.IBM.Com
+	Subject:  [jikes-bugs] Bug in Jikes configure.in script
+	
+	It looks like the --with-gas option defined in the configure.in script
+	should not be included. It would only work on a MIPS system and there
+	is no working gnu assembler on mips right now so there is no reason
+	to keep the --with-gas option in the configure.in file. This patch
+	removes the unneeded option. The g++ compiler does not even accept
+	-mgas as a valid option so if someone gave the --with-gas option
+	then jikes would not compile (only the gcc compiler accepts it).
+	
+	Mo DeJong
+	dejong@cs.umn.edu
 
 
 1999-07-26    <shields@jikes.watson.ibm.com>

@@ -3,15 +3,15 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, International Business Machines Corporation
-// and others.  All Rights Reserved.
+// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
 #include "ast.h"
 
-#ifdef	HAVE_JIKES_NAMESPACE
-namespace Jikes {	// Open namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+namespace Jikes { // Open namespace Jikes block
 #endif
 
 #ifdef JIKES_DEBUG
@@ -138,13 +138,13 @@ void AstSwitchStatement::SortCases()
     lostack[top] = 0;
     histack[top] = map.Length() - 1;
 
-    while(top >= 0)
+    while (top >= 0)
     {
         lower = lostack[top];
         upper = histack[top];
         top--;
 
-        while(upper > lower)
+        while (upper > lower)
         {
             //
             // The array is most-likely almost sorted. Therefore,
@@ -1040,7 +1040,7 @@ Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
                 this -> Statement(k) -> Print(lex_stream);
         }
         else
-	     Coutput << endl;
+            Coutput << endl;
     }
 
     void AstPrimitiveType::Print(LexStream& lex_stream)
@@ -2341,7 +2341,7 @@ AstAssignmentExpression::~AstAssignmentExpression()
     //    delete expression;
 }
 
-#ifdef	HAVE_JIKES_NAMESPACE
-}			// Close namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+} // Close namespace Jikes block
 #endif
 

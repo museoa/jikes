@@ -3,8 +3,8 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, International Business Machines Corporation
-// and others.  All Rights Reserved.
+// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -17,15 +17,8 @@
 #include "tuple.h"
 #include "spell.h"
 
-/*
-//FIXME: need to readdress this include stuff
-#include <assert.h>
-#include <stdio.h>
-#include <math.h>
-*/
-
-#ifdef	HAVE_JIKES_NAMESPACE
-namespace Jikes {	// Open namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+namespace Jikes { // Open namespace Jikes block
 #endif
 
 bool Semantic::IsIntValueRepresentableInType(AstExpression *expr, TypeSymbol *type)
@@ -1858,7 +1851,7 @@ void Semantic::ConstructorAccessCheck(AstClassInstanceCreationExpression *class_
         {
             if (constructor -> ACC_PROTECTED())
             {
-                if(containing_type->ContainingPackage() != this_package)
+                if (containing_type->ContainingPackage() != this_package)
                 {
                     ReportSemError(SemanticError::PROTECTED_CONSTRUCTOR_NOT_ACCESSIBLE,
                                    class_creation -> class_type -> LeftToken(),
@@ -1940,7 +1933,7 @@ void Semantic::MemberAccessCheck(AstFieldAccess *field_access, TypeSymbol *base_
                 // Since "this" is a primary, it can be parenthesized. We remove all such parentheses here.
                 //
                 AstExpression *expr = base;
-                while(expr -> ParenthesizedExpressionCast())
+                while (expr -> ParenthesizedExpressionCast())
                     expr = expr -> ParenthesizedExpressionCast() -> expression;
 
                 if (! (expr -> ThisExpressionCast() || expr -> SuperExpressionCast()))
@@ -2994,7 +2987,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                 // We are in a static region if we are:
                 //     . in the body of a static method
                 //     . in the body of a static initializer
-                //     . precessing an initializer expression for a static variable.
+                //     . processing an initializer expression for a static variable.
                 //
                 // See StaticRegion() Semantic.h for more detail.
                 //
@@ -3796,8 +3789,8 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression *class
     constructor -> SetACC_PUBLIC();
 
     //
-    // Report error is super constructor has throws clause, but add the exceptions to the local throws
-    // clause to avoid spurious errors later !!!
+    // Report error if super constructor has throws clause, but add the
+    // exceptions to the local throws clause to avoid spurious errors later !!!
     //
     int num_throws = super_constructor -> NumThrows();
     if (num_throws > 0)
@@ -4031,7 +4024,10 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression *class
     return;
 }
 
-
+//
+// super_type is the type specified in the anonymous constructor,
+// which is the supertype of the created anonymous type.
+//
 TypeSymbol *Semantic::GetAnonymousType(AstClassInstanceCreationExpression *class_creation, TypeSymbol *super_type)
 {
     TypeSymbol *this_type = ThisType();
@@ -7075,7 +7071,7 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
         return;
     }
 
-    switch(assignment_expression -> assignment_tag)
+    switch (assignment_expression -> assignment_tag)
     {
         case AstAssignmentExpression::PLUS_EQUAL:
         case AstAssignmentExpression::STAR_EQUAL:
@@ -7166,7 +7162,7 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
     return;
 }
 
-#ifdef	HAVE_JIKES_NAMESPACE
-}			// Close namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+} // Close namespace Jikes block
 #endif
 

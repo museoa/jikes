@@ -1,10 +1,10 @@
-// $Id$
+// $Id$ -*- c++ -*-
 //
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, International Business Machines Corporation
-// and others.  All Rights Reserved.
+// Copyright (C) 2000, 2001 International Business
+// Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 //
@@ -76,6 +76,17 @@
 # endif
 #endif
 
+#ifdef HAVE_SYS_CYGWIN_H
+#include <sys/cygwin.h>
+#endif
+
+#if defined(HAVE_LIBICU_UC)
+# include <unicode/ucnv.h>
+#elif defined(HAVE_ICONV_H)
+# include <iconv.h>
+# include <errno.h>
+#endif
+
 /*
 Currently, we do not use this one
 #ifdef HAVE_INTTYPES_H
@@ -138,6 +149,10 @@ Currently, we do not use this one
 
 #ifdef HAVE_LOCALE_H
 # include <locale.h>
+#endif
+
+#ifdef HAVE_TIME_H
+# include <time.h>
 #endif
 
 // C++ standard support
@@ -245,13 +260,13 @@ enum { false = 0, true = 1 };
 
 // tuple.h needs the above typedefs first, but has it's own namespace block...
 // cabbey would also argue that the wsclen and family don't need to be in our
-// namespace, 'cuz if wee need to define them we aren't going to clash. ;)
+// namespace, 'cuz if we need to define them we aren't going to clash. ;)
 #include "tuple.h"
 
 
 
-#ifdef	HAVE_JIKES_NAMESPACE
-namespace Jikes {	// Open namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+namespace Jikes { // Open namespace Jikes block
 #endif
 
 //
@@ -556,8 +571,8 @@ public:
                    US_RuntimeException[], // "RuntimeException"
                    US_Serializable[], // "Serializable"
                    US_Short[], // "Short"
-                   US_StringBuffer[], // "StringBuffer"
                    US_String[], // "String"
+                   US_StringBuffer[], // "StringBuffer"
                    US_TYPE[], // "TYPE"
                    US_Throwable[], // "Throwable"
                    US_Void[], // "Void"
@@ -941,7 +956,7 @@ public:
                 for (int i = 3; i >= 0; i--)
                 {
                     int d = ch % 16;
-                    switch(d)
+                    switch (d)
                     {
                         case 10:
                             str[i] = U_A;
@@ -1121,9 +1136,9 @@ class ErrorString: public ConvertibleArray<wchar_t>
     int  field_width ;
 };
 
-#ifdef	HAVE_JIKES_NAMESPACE
-}			// Close namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+} // Close namespace Jikes block
 #endif
 
-#endif // #ifndef platform_INCLUDED
+#endif // platform_INCLUDED
 

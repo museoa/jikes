@@ -1,12 +1,12 @@
-// $Id$
+// $Id$ -*- c++ -*-
 //
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, International Business Machines Corporation
-// and others.  All Rights Reserved.
+// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
-
 //
+
 #ifndef bytecode_INCLUDED
 #define bytecode_INCLUDED
 
@@ -19,8 +19,8 @@
 #include "op.h"
 #include "segment.h"
 
-#ifdef	HAVE_JIKES_NAMESPACE
-namespace Jikes {	// Open namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+namespace Jikes { // Open namespace Jikes block
 #endif
 
 class TypeSymbol;
@@ -739,7 +739,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     AstExpression *UnParenthesize(AstExpression *expr)
     {
-        while(! (expr -> IsConstant()) && expr -> ParenthesizedExpressionCast())
+        while (! (expr -> IsConstant()) && expr -> ParenthesizedExpressionCast())
             expr = expr -> ParenthesizedExpressionCast() -> expression;
 
         return expr;
@@ -905,9 +905,9 @@ public:
     }
 };
 
-#ifdef	HAVE_JIKES_NAMESPACE
-}			// Close namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+} // Close namespace Jikes block
 #endif
 
-#endif
+#endif // bytecode_INCLUDED
 

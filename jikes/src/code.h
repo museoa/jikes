@@ -1,11 +1,11 @@
-// $Id$
+// $Id$ -*- c++ -*-
 // DO NOT MODIFY THIS FILE - it is generated using gencode.java.
 //
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://www.ibm.com/research/jikes.
-// Copyright (C) 1996, 1998, 2001, International Business Machines Corporation
-// and others.  All Rights Reserved.
+// Copyright (C) 1999, 2000, 2001, International Business
+// Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -110,7 +110,7 @@ public:
 
 };
 
-#endif
+#endif // code_INCLUDED
 
 #ifdef HAVE_JIKES_NAMESPACE
 } // Close namespace Jikes block

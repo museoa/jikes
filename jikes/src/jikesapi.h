@@ -1,6 +1,12 @@
-/*
- * $Id$
- */
+// $Id$ -*- c++ -*-
+//
+// This software is subject to the terms of the IBM Jikes Compiler
+// License Agreement available at the following URL:
+// http://ibm.com/developerworks/opensource/jikes.
+// Copyright (C) 1996, 1999, 2000, 2001 International Business
+// Machines Corporation and others.  All Rights Reserved.
+// You must accept the terms of that agreement to use this software.
+//
 
 #ifndef _JIKES_API_H_FLAG_
 #define _JIKES_API_H_FLAG_
@@ -99,7 +105,7 @@ class JikesAPI
     virtual char** parseOptions(int argc, char **argv) ;
 
     /**
-     * Compile given list ofiles using current compiler options.
+     * Compile given list of files using current compiler options.
      */
     virtual int compile(char ** filenames);
 
@@ -124,8 +130,8 @@ class JikesAPI
     public:
             virtual  ~FileReader()  {}
             
-            virtual const char     *getBuffer()      = 0;	// If the file is unreadable an object should still be created but GetBuffer() should return NULL.
-            virtual       size_t    getBufferSize()  = 0;	// If the file is unreadable GetBufferSize() is undefined.
+            virtual const char     *getBuffer()      = 0; // If the file is unreadable an object should still be created but GetBuffer() should return NULL.
+            virtual       size_t    getBufferSize()  = 0; // If the file is unreadable GetBufferSize() is undefined.
         };
 
     /**
@@ -143,7 +149,7 @@ class JikesAPI
             
     private:
             
-            virtual  size_t    doWrite(const unsigned char *data, size_t size)   = 0;	// Garanteed not to be called with a combined total of more than maxSize bytes during the lifespan of the object.
+            virtual  size_t    doWrite(const unsigned char *data, size_t size)   = 0; // Garanteed not to be called with a combined total of more than maxSize bytes during the lifespan of the object.
             size_t   maxSize;
         };
         

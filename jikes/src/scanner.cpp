@@ -3,16 +3,17 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, International Business Machines Corporation
-// and others.  All Rights Reserved.
+// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
+
 #include "scanner.h"
 #include "control.h"
 #include "error.h"
 
-#ifdef	HAVE_JIKES_NAMESPACE
-namespace Jikes {	// Open namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+namespace Jikes { // Open namespace Jikes block
 #endif
 
 int (*Scanner::scan_keyword[13]) (wchar_t *p1) =
@@ -192,7 +193,7 @@ void Scanner::Scan(FileSymbol *file_symbol)
         if (control.option.dump_errors)
         {
             lex -> SortMessages();
-            for(int i = 0; i < lex -> bad_tokens.Length(); i++)
+            for (int i = 0; i < lex -> bad_tokens.Length(); i++)
                 JikesAPI::getInstance()->reportError(&(lex->bad_tokens[i]));
         }
         lex -> DestroyInput(); // get rid of input buffer
@@ -450,7 +451,7 @@ int Scanner::ScanKeyword2(wchar_t *p1)
 
 int Scanner::ScanKeyword3(wchar_t *p1)
 {
-    switch(*p1)
+    switch (*p1)
     {
         case U_f:
             if (p1[1] == U_o && p1[2] == U_r)
@@ -621,7 +622,7 @@ int Scanner::ScanKeyword6(wchar_t *p1)
 
 int Scanner::ScanKeyword7(wchar_t *p1)
 {
-    switch(*p1)
+    switch (*p1)
     {
         case U_b:
             if (p1[1] == U_o && p1[2] == U_o && p1[3] == U_l &&
@@ -657,7 +658,7 @@ int Scanner::ScanKeyword7(wchar_t *p1)
 
 int Scanner::ScanKeyword8(wchar_t *p1)
 {
-    switch(*p1)
+    switch (*p1)
     {
         case U_a:
             if (p1[1] == U_b && p1[2] == U_s &&
@@ -1580,7 +1581,7 @@ void Scanner::ClassifyNonAsciiUnicode()
     return;
 }
 
-#ifdef	HAVE_JIKES_NAMESPACE
-}			// Close namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+} // Close namespace Jikes block
 #endif
 

@@ -3,8 +3,8 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, International Business Machines Corporation
-// and others.  All Rights Reserved.
+// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -13,17 +13,10 @@
 #include "control.h"
 #include "stream.h"
 
-/*
-//FIXME: need to readdress this include stuff
-#include <iostream.h>
-#include <stdio.h>
-*/
-
-
 #ifdef JIKES_DEBUG
 
-#ifdef	HAVE_JIKES_NAMESPACE
-namespace Jikes {	// Open namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+namespace Jikes { // Open namespace Jikes block
 #endif
 
 static char*
@@ -137,7 +130,7 @@ static char*
 
 static char *token_type(unsigned char kind)
 {
-    switch(kind)
+    switch (kind)
     {
     case TK_Identifier: return TK_Identifier_STRING;
     case TK_abstract: return TK_abstract_STRING;
@@ -245,7 +238,7 @@ static char *token_type(unsigned char kind)
     case TK_ERROR: return TK_ERROR_STRING;
     case TK_EOF: return TK_EOF_STRING;
     case TK_EOL: return TK_EOL_STRING;
-    default:            return TK_notoken_STRING;
+    default: return TK_notoken_STRING;
     }
 }
 
@@ -375,8 +368,8 @@ Dump(wchar_t* wstr) {
     return saved_data;
 }
 
-#ifdef	HAVE_JIKES_NAMESPACE
-}			// Close namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+} // Close namespace Jikes block
 #endif
 
 #endif // JIKES_DEBUG

@@ -3,10 +3,11 @@
 // This software is subject to the terms of the IBM Jikes Compiler Open
 // Source License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, International Business Machines Corporation
-// and others.  All Rights Reserved.
+// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
+
 #include "symbol.h"
 #include "stream.h"
 #include "control.h"
@@ -17,8 +18,8 @@
 #include "set.h"
 #include "case.h"
 
-#ifdef	HAVE_JIKES_NAMESPACE
-namespace Jikes {	// Open namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+namespace Jikes { // Open namespace Jikes block
 #endif
 
 char *FileSymbol::java_suffix = StringConstant::U8S__DO_java;
@@ -153,7 +154,7 @@ MethodSymbol *SymbolTable::FindOverloadMethod(MethodSymbol *base_method, AstMeth
         }
     }
 
-    return(MethodSymbol *)  NULL;
+    return (MethodSymbol *) NULL;
 }
 
 
@@ -762,7 +763,7 @@ void DirectorySymbol::ReadDirectory()
     if (! entries)
     {
         entries = new DirectoryTable();
-	
+
 //FIXME: these need to go into platform.cpp
 #ifdef UNIX_FILE_SYSTEM
         DIR *directory = opendir(this -> DirectoryName());
@@ -1923,7 +1924,7 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member)
     return write_method;
 }
 
-#ifdef	HAVE_JIKES_NAMESPACE
-}			// Close namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+} // Close namespace Jikes block
 #endif
 

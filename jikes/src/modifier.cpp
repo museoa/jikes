@@ -3,16 +3,16 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, International Business Machines Corporation
-// and others.  All Rights Reserved.
+// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
 #include "platform.h"
 #include "semantic.h"
 
-#ifdef	HAVE_JIKES_NAMESPACE
-namespace Jikes {	// Open namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+namespace Jikes { // Open namespace Jikes block
 #endif
 
 AccessFlags Semantic::ProcessClassModifiers(AstClassDeclaration *class_declaration)
@@ -23,7 +23,7 @@ AccessFlags Semantic::ProcessClassModifiers(AstClassDeclaration *class_declarati
     {
         AstModifier *modifier = class_declaration -> ClassModifier(i);
 
-        switch(modifier -> kind)
+        switch (modifier -> kind)
         {
             case Ast::ABSTRACT:
                  if (access_flags.ACC_ABSTRACT())
@@ -100,7 +100,7 @@ AccessFlags Semantic::ProcessLocalClassModifiers(AstClassDeclaration *class_decl
     {
         AstModifier *modifier = class_declaration -> ClassModifier(i);
 
-        switch(modifier -> kind)
+        switch (modifier -> kind)
         {
             case Ast::ABSTRACT:
                  if (access_flags.ACC_ABSTRACT())
@@ -167,7 +167,7 @@ AccessFlags Semantic::ProcessNestedClassModifiers(AstClassDeclaration *class_dec
     {
         AstModifier *modifier = class_declaration -> ClassModifier(i);
 
-        switch(modifier -> kind)
+        switch (modifier -> kind)
         {
             case Ast::ABSTRACT:
                  if (access_flags.ACC_ABSTRACT())
@@ -274,7 +274,7 @@ AccessFlags Semantic::ProcessStaticNestedClassModifiers(AstClassDeclaration *cla
     {
         AstModifier *modifier = class_declaration -> ClassModifier(i);
 
-        switch(modifier -> kind)
+        switch (modifier -> kind)
         {
             case Ast::ABSTRACT:
                  if (access_flags.ACC_ABSTRACT())
@@ -382,7 +382,7 @@ AccessFlags Semantic::ProcessInterfaceModifiers(AstInterfaceDeclaration *interfa
     {
         AstModifier *modifier = interface_declaration -> InterfaceModifier(i);
 
-        switch(modifier -> kind)
+        switch (modifier -> kind)
         {
             case Ast::ABSTRACT:
                  if (access_flags.ACC_ABSTRACT())
@@ -436,7 +436,7 @@ AccessFlags Semantic::ProcessInterfaceModifiers(AstInterfaceDeclaration *interfa
 }
 
 /**
- * Process modifieres for interface contained in another interface.
+ * Process modifiers for interface contained in another interface.
  */
 AccessFlags Semantic::ProcessStaticNestedInterfaceModifiers(AstInterfaceDeclaration *interface_declaration)
 {
@@ -446,7 +446,7 @@ AccessFlags Semantic::ProcessStaticNestedInterfaceModifiers(AstInterfaceDeclarat
     {
         AstModifier *modifier = interface_declaration -> InterfaceModifier(i);
 
-        switch(modifier -> kind)
+        switch (modifier -> kind)
         {
         case Ast::ABSTRACT:
             if (access_flags.ACC_ABSTRACT())
@@ -464,7 +464,7 @@ AccessFlags Semantic::ProcessStaticNestedInterfaceModifiers(AstInterfaceDeclarat
             }
             break;
         case Ast::PUBLIC:
-            if(access_flags.ACC_PUBLIC())
+            if (access_flags.ACC_PUBLIC())
             {
                 ReportSemError(SemanticError::DUPLICATE_ACCESS_MODIFIER,
                                modifier -> modifier_kind_token,
@@ -481,7 +481,7 @@ AccessFlags Semantic::ProcessStaticNestedInterfaceModifiers(AstInterfaceDeclarat
             }
             break;
         case Ast::STATIC:
-            if(access_flags.ACC_STATIC())
+            if (access_flags.ACC_STATIC())
             {
                 ReportSemError(SemanticError::DUPLICATE_MODIFIER,
                                modifier -> modifier_kind_token,
@@ -490,7 +490,7 @@ AccessFlags Semantic::ProcessStaticNestedInterfaceModifiers(AstInterfaceDeclarat
             }
             else 
             {
-                if(control.option.pedantic)
+                if (control.option.pedantic)
                     ReportSemError(SemanticError::REDUNDANT_STATIC,
                                    modifier -> modifier_kind_token,
                                    modifier -> modifier_kind_token);
@@ -532,7 +532,7 @@ AccessFlags Semantic::ProcessNestedInterfaceModifiers(AstInterfaceDeclaration *i
     {
         AstModifier *modifier = interface_declaration -> InterfaceModifier(i);
 
-        switch(modifier -> kind)
+        switch (modifier -> kind)
         {
         case Ast::ABSTRACT:
             if (access_flags.ACC_ABSTRACT())
@@ -631,7 +631,7 @@ AccessFlags Semantic::ProcessFieldModifiers(AstFieldDeclaration *field_declarati
     {
         AstModifier *modifier = field_declaration -> VariableModifier(i);
 
-        switch(modifier -> kind)
+        switch (modifier -> kind)
         {
             case Ast::PUBLIC:
                  if (access_flags.ACC_PUBLIC() || access_flags.ACC_PROTECTED() || access_flags.ACC_PRIVATE())
@@ -802,7 +802,7 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
     {
         AstModifier *modifier = method_declaration -> MethodModifier(i);
 
-        switch(modifier -> kind)
+        switch (modifier -> kind)
         {
             case Ast::PUBLIC:
                  if (access_flags.ACC_PUBLIC() || access_flags.ACC_PROTECTED() || access_flags.ACC_PRIVATE())
@@ -984,7 +984,7 @@ AccessFlags Semantic::ProcessInterfaceMethodModifiers(AstMethodDeclaration *meth
     {
         AstModifier *modifier = method_declaration -> MethodModifier(i);
 
-        switch(modifier -> kind)
+        switch (modifier -> kind)
         {
             case Ast::PUBLIC:
                  if (access_flags.ACC_PUBLIC())
@@ -1047,7 +1047,7 @@ AccessFlags Semantic::ProcessConstructorModifiers(AstConstructorDeclaration *con
     {
         AstModifier *modifier = constructor_declaration -> ConstructorModifier(i);
 
-        switch(modifier -> kind)
+        switch (modifier -> kind)
         {
             case Ast::PUBLIC:
                  if (access_flags.ACC_PUBLIC() || access_flags.ACC_PROTECTED() || access_flags.ACC_PRIVATE())
@@ -1100,7 +1100,7 @@ AccessFlags Semantic::ProcessConstantModifiers(AstFieldDeclaration *field_declar
     {
         AstModifier *modifier = field_declaration -> VariableModifier(i);
 
-        switch(modifier -> kind)
+        switch (modifier -> kind)
         {
             case Ast::PUBLIC:
                  if (access_flags.ACC_PUBLIC())
@@ -1172,7 +1172,7 @@ AccessFlags Semantic::ProcessConstantModifiers(AstFieldDeclaration *field_declar
     return access_flags;
 }
 
-#ifdef	HAVE_JIKES_NAMESPACE
-}			// Close namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+} // Close namespace Jikes block
 #endif
 

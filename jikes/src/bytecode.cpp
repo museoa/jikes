@@ -3,8 +3,8 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, International Business Machines Corporation
-// and others.  All Rights Reserved.
+// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -16,21 +16,6 @@
 #include "stream.h"
 #include "symbol.h"
 #include "table.h"
-
-/*
-//FIXME: need to readdress this include stuff
-#ifdef HAVE_IOSTREAM_H
-#include <iostream.h>
-#endif
-
-#ifdef HAVE_WCHAR_H
-# include <wchar.h>
-#endif
-
-#ifdef WIN32_FILE_SYSTEM
-#include <windows.h>
-#endif
-*/
 
 #ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes { // Open namespace Jikes block
@@ -1554,7 +1539,7 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
     //
     // supply any needed padding
     //
-    while(code_attribute -> CodeLength() % 4 != 0)
+    while (code_attribute -> CodeLength() % 4 != 0)
         PutNop(0);
 
     //
@@ -2238,7 +2223,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
     // integral comparison for which no special casing needed.
     // Begin by dealing with non-comparisons
     //
-    switch(bp -> binary_tag)
+    switch (bp -> binary_tag)
     {
         case AstBinaryExpression::LESS:
         case AstBinaryExpression::LESS_EQUAL:
@@ -2273,7 +2258,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
         if (IsZero(left))
         {
             EmitExpression(right);
-            switch(bp -> binary_tag)
+            switch (bp -> binary_tag)
             {
                 case AstBinaryExpression::LESS: // if (0 < x) same as  if (x > 0)
                      op_true = OP_IFGT;
@@ -2300,7 +2285,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
         {
             EmitExpression(left);
 
-            switch(bp -> binary_tag)
+            switch (bp -> binary_tag)
             {
                 case AstBinaryExpression::LESS:
                      op_true = OP_IFLT;
@@ -2328,7 +2313,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
             EmitExpression(left);
             EmitExpression(right);
 
-            switch(bp -> binary_tag)
+            switch (bp -> binary_tag)
             {
                 case AstBinaryExpression::LESS:
                      op_true = OP_IF_ICMPLT;
@@ -3032,7 +3017,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
 
     if (assignment_expression -> SimpleAssignment())
     {
-        switch(kind)
+        switch (kind)
         {
             case LHS_ARRAY:
                  EmitArrayAccessLhs(left_hand_side -> ArrayAccessCast()); // lhs must be array access
@@ -3084,7 +3069,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
     //
     else
     {
-        switch(kind)
+        switch (kind)
         {
             case LHS_ARRAY:
                  EmitArrayAccessLhs(left_hand_side -> ArrayAccessCast()); // lhs must be array access
@@ -3325,7 +3310,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
     //
     // Update left operand, saving value of right operand if it is needed.
     //
-    switch(kind)
+    switch (kind)
     {
         case LHS_ARRAY:
              if (need_value)
@@ -4026,7 +4011,7 @@ int ByteCode::EmitPostUnaryExpression(AstPostUnaryExpression *expression, bool n
 {
     int kind = GetLhsKind(expression);
 
-    switch(kind)
+    switch (kind)
     {
         case LHS_LOCAL:
         case LHS_STATIC:
@@ -4335,7 +4320,7 @@ void ByteCode::EmitPreUnaryIncrementExpression(AstPreUnaryExpression *expression
 {
     int kind = GetLhsKind(expression);
 
-    switch(kind)
+    switch (kind)
     {
         case LHS_LOCAL:
         case LHS_STATIC:

@@ -3,23 +3,15 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, International Business Machines Corporation
-// and others.  All Rights Reserved.
+// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
 #include "op.h"
 
-/*
-//FIXME: include stuff
-#include <stdio.h>
-#include <stdlib.h>
-#include <iostream.h>
-#include <string.h>
-*/
-
-#ifdef	HAVE_JIKES_NAMESPACE
-namespace Jikes {	// Open namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+namespace Jikes { // Open namespace Jikes block
 #endif
 
 
@@ -252,8 +244,8 @@ void Operators::opdesc(int opc, const char **name, const char **desc)
 }
 
 void Operators::opline(Tuple<cp_info *> &constant_pool, const char *hdr,
-		       int pc, int opc, const char *name, char *args,
-		       const char *desc, int info_kind, int info_index)
+                       int pc, int opc, const char *name, char *args,
+                       const char *desc, int info_kind, int info_index)
 {
     // generate line of opcode dump, info is extra info
 
@@ -538,7 +530,7 @@ void Operators::opdmp(Tuple<cp_info *> &constant_pool, Tuple<u1> &code)
                  break;
             case OP_NEWARRAY:
                  au1 = get_u1(code, pc); pc++;
-                 switch(au1)
+                 switch (au1)
                  {
                      case 4: sprintf(argdesc, "%s", "BOOLEAN");break;
                      case 5: sprintf(argdesc, "%s", "CHAR");break;
@@ -792,7 +784,7 @@ int Operators::stack_effect[] =
     0   // OP_HARDWARE
 };
 
-#ifdef	HAVE_JIKES_NAMESPACE
-}			// Close namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+} // Close namespace Jikes block
 #endif
 

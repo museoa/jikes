@@ -3,8 +3,8 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, International Business Machines Corporation
-// and others.  All Rights Reserved.
+// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -13,8 +13,8 @@
 #include "semantic.h"
 #include "ast.h"
 
-#ifdef	HAVE_JIKES_NAMESPACE
-namespace Jikes {	// Open namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+namespace Jikes { // Open namespace Jikes block
 #endif
 
 unsigned char SemanticError::warning[SemanticError::_num_kinds] = { 0 };
@@ -37,7 +37,7 @@ void ErrorInfo::Initialize(LexStream *l, wchar_t  *m, JikesErrorSeverity s)
      * (lord)
      *
      
-     if(right_column_no != 0) // could not compute a column number
+     if (right_column_no != 0) // could not compute a column number
      right_column_no += (right_string_length - 1); // point to last character in right token
      
     */
@@ -87,7 +87,7 @@ wchar_t *ErrorInfo::regularErrorString()
 {
     ErrorString s;
 
-    if(left_token < right_token)
+    if (left_token < right_token)
         PrintLargeSource(s);
     else 
         PrintSmallSource(s);
@@ -812,13 +812,13 @@ void SemanticError::SortMessages()
      lostack[top] = 0;
      histack[top] = error.Length() - 1;
 
-     while(top >= 0)
+     while (top >= 0)
      {
          lower = lostack[top];
          upper = histack[top];
          top--;
 
-         while(upper > lower)
+         while (upper > lower)
          {
              //
              // The array is most-likely almost sorted. Therefore,
@@ -5409,7 +5409,7 @@ wchar_t *SemanticError::PrintCONSTRUCTOR_FOUND_IN_ANONYMOUS_CLASS(ErrorInfo &err
     return s.Array();
 }
 
-#ifdef	HAVE_JIKES_NAMESPACE
-}			// Close namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+} // Close namespace Jikes block
 #endif
 

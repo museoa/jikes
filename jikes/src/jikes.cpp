@@ -3,21 +3,15 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1999, International Business Machines Corporation
-// and others.  All Rights Reserved.
+// Copyright (C) 1996, 1999, 2000, 2001 International Business
+// Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
-
-/*
-#include <iostream.h>
-#include <assert.h>
-#include <stdio.h>
-*/
 
 #include "platform.h"
 #include "jikesapi.h"
 
-#ifdef	HAVE_JIKES_NAMESPACE
+#ifdef HAVE_JIKES_NAMESPACE
 using namespace Jikes;
 #endif
 
@@ -92,8 +86,8 @@ int main(int argc, char *argv[])
                 "+ud                 unparse AST, with extra debugging information\n"
 #endif
                 "\n"
-		JIKES_VERSION_STRING
-		"\n"
+                JIKES_VERSION_STRING
+                "\n"
                 "Originally written by Philippe Charles and David Shields \n"
                 "of IBM Research, Jikes is now maintained and refined by the\n"
                 "Jikes Project at:\n"

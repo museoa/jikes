@@ -613,7 +613,7 @@ uninstall-am: uninstall-binPROGRAMS uninstall-includeHEADERS \
 @MAINTAINER_MODE_TRUE@	$(JIKESPG) java.g
 @MAINTAINER_MODE_TRUE@	rm -f java.l
 @MAINTAINER_MODE_TRUE@code.cpp code.h: gencode.java
-@MAINTAINER_MODE_TRUE@	$(JAVAC) jikes
+@MAINTAINER_MODE_TRUE@	$(JAVAC) $<
 @MAINTAINER_MODE_TRUE@	$(JAVA) gencode
 
 # end special maintainer mode section

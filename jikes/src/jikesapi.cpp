@@ -1,28 +1,18 @@
-/*
- * $Id$
- */
-
+// $Id$
+//
+// This software is subject to the terms of the IBM Jikes Compiler
+// License Agreement available at the following URL:
+// http://ibm.com/developerworks/opensource/jikes.
+// Copyright (C) 1996, 1999, 2000, 2001 International Business
+// Machines Corporation and others.  All Rights Reserved.
+// You must accept the terms of that agreement to use this software.
+//
 
 #include "platform.h"
 #include "control.h"
 #include "jikesapi.h"
 
-/*
-FIXME: Need to readdress include issue.
-#ifdef HAVE_STDLIB_H
-# include <stdlib.h>
-#endif
-
-#ifdef HAVE_STDIO_H
-# include <stdio.h>
-#endif
-
-#ifdef HAVE_WINDOWS_H
-# include <windows.h>
-#endif
-*/
-
-#ifdef	HAVE_JIKES_NAMESPACE
+#ifdef HAVE_JIKES_NAMESPACE
 using namespace Jikes;
 #endif
 
@@ -32,7 +22,7 @@ using namespace Jikes;
 // include build files like platform.h or config.h. Only
 // the Default* classes in this file can live in the Jikes namespace.
 
-#ifdef	HAVE_JIKES_NAMESPACE
+#ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes {
 #endif
 
@@ -46,8 +36,8 @@ class DefaultFileReader: public JikesAPI::FileReader
     DefaultFileReader(const char *fileName);
     virtual  ~DefaultFileReader();
     
-    virtual const char     *getBuffer()      {return(buffer);}
-    virtual       size_t    getBufferSize()  {return(size);}
+    virtual const char     *getBuffer()      { return buffer;}
+    virtual       size_t    getBufferSize()  { return size;}
     
     private:
     
@@ -91,8 +81,8 @@ class DefaultFileWriter: public JikesAPI::FileWriter
 #endif
 };
 
-#ifdef	HAVE_JIKES_NAMESPACE
-}			// Close namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+} // Close namespace Jikes block
 #endif
 
 JikesOption::~JikesOption()
@@ -151,11 +141,14 @@ JikesAPI::~JikesAPI()
     cleanupOptions();
 }
 
-void JikesAPI::cleanupOptions() {
+void JikesAPI::cleanupOptions()
+{
     delete option;
 
-    if (parsedOptions) {
-        for(char ** parsed = parsedOptions; *parsed != NULL ; parsed++) {
+    if (parsedOptions)
+    {
+        for (char ** parsed = parsedOptions; *parsed != NULL ; parsed++)
+        {
             delete [] *parsed;
         }
         delete [] parsedOptions;
@@ -231,7 +224,7 @@ void JikesAPI::reportError(JikesError *error)
 
 const char *JikesError::getSeverityString() 
 {
-    switch(getSeverity())
+    switch (getSeverity())
     {
     case JIKES_ERROR  : return "Error";
     case JIKES_WARNING: return "Warning";
@@ -266,9 +259,9 @@ JikesAPI::FileReader *JikesAPI::read(const char *fileName)
     // NB even if a file is empty (0 bytes)
     // This will return a pointer to 0 length array
     // and should not be NULL.
-    if(result && (result->getBuffer() == NULL))  
-    {							    
-        delete result;				
+    if (result && (result->getBuffer() == NULL))  
+    {
+        delete result;
         result  = NULL;
     }
     return result;
@@ -281,7 +274,7 @@ JikesAPI::FileWriter *JikesAPI::write(const char *fileName, size_t bytes)
 {
     FileWriter *result  = new DefaultFileWriter(fileName, bytes);
     
-    if(result && (!result->isValid()))
+    if (result && (!result->isValid()))
     {
         delete result;
         result = NULL;
@@ -293,21 +286,21 @@ JikesAPI::FileWriter *JikesAPI::write(const char *fileName, size_t bytes)
  * The Write() mewthod on all WriteObject(s) makes sure that we do not
  * send too much data to the virtual function.
  */
-size_t JikesAPI::FileWriter::write(const unsigned char *data,size_t size)
+size_t JikesAPI::FileWriter::write(const unsigned char *data, size_t size)
 {
     size_t result   = 0;
 
-    if(size <= maxSize)
+    if (size <= maxSize)
     {
-        result   = this->doWrite(data,size);
-        maxSize  -= size;
+        result = doWrite(data,size);
+        maxSize -= size;
     }
    
-    return(result);
+    return result;
 }
 
 
-#ifdef	HAVE_JIKES_NAMESPACE
+#ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes {
 #endif
 
@@ -379,7 +372,7 @@ DefaultFileWriter::~DefaultFileWriter()
         fclose(file);
 }
 
-int DefaultFileWriter::isValid()  {return(valid);}
+int DefaultFileWriter::isValid()  { return valid;}
 
 /**
  * Copy the data buffer to the file.
@@ -389,9 +382,7 @@ size_t DefaultFileWriter::doWrite(const unsigned char *data,size_t size)
     return fwrite(data, sizeof(u1),size, file);
 }
 
-#elif defined(WIN32_FILE_SYSTEM)
-
-
+#elif defined(WIN32_FILE_SYSTEM) // ! UNIX_FILE_SYSTEM
 
 
 // Open a windows file and map the file onto processor memory.
@@ -468,7 +459,7 @@ DefaultFileWriter::~DefaultFileWriter()
 
 int DefaultFileWriter::isValid()  
 {
-    return(valid);
+    return valid;
 }
 
 // Copy the input data to the mapped memory.
@@ -476,13 +467,13 @@ size_t DefaultFileWriter::doWrite(const unsigned char *data,size_t size)
 {
     memmove(&string_buffer[dataWritten], data, size * sizeof(u1));
     dataWritten += size;
-    return(size);
+    return size;
 }
 
-#endif // UNIX_FILE_SYSTEM
+#endif // WIN32_FILE_SYSTEM
 
 
-#ifdef	HAVE_JIKES_NAMESPACE
-}			// Close namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+} // Close namespace Jikes block
 #endif
 

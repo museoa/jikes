@@ -1,12 +1,13 @@
-// $Id$
+// $Id$ -*- c++ -*-
 //
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, International Business Machines Corporation
-// and others.  All Rights Reserved.
+// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
+
 #ifndef symbol_INCLUDED
 #define symbol_INCLUDED
 
@@ -20,8 +21,8 @@
 #include "tuple.h"
 #include "case.h"
 
-#ifdef	HAVE_JIKES_NAMESPACE
-namespace Jikes {	// Open namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+namespace Jikes { // Open namespace Jikes block
 #endif
 
 class Semantic;
@@ -185,9 +186,8 @@ public:
     time_t mtime;
 
     //
-    // These fields are used for buffer "files".
+    // This field is used for buffer "files".
     //
-
     // FIXME: This field does not seem to be set anywhere,
     // but it is read in symbol.cpp and stream.cpp
     char *buffer;
@@ -627,7 +627,7 @@ public:
     FileLocation *file_location;
     NameSymbol *name_symbol;
     Symbol *owner;
-    TypeSymbol *outermost_type; // An nested class identifies the outer most type that contains it.
+    TypeSymbol *outermost_type; // A nested class identifies the outer most type that contains it.
                                 // If a class is not nested then it identifies itself as its outer
                                 // most type.
     TypeSymbol *super,
@@ -2315,11 +2315,11 @@ inline SymbolTable *BlockSymbol::Table()
     {
         return Case::StringSegmentEqual(suffix, java_suffix, java_suffix_length);
     }
+#endif // WIN32_FILE_SYSTEM
+
+#ifdef HAVE_JIKES_NAMESPACE
+} // Close namespace Jikes block
 #endif
 
-#ifdef	HAVE_JIKES_NAMESPACE
-}			// Close namespace Jikes block
-#endif
-
-#endif // ifndef symbol_INCLUDED
+#endif // symbol_INCLUDED
 

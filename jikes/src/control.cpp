@@ -3,8 +3,8 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, International Business Machines Corporation
-// and others.  All Rights Reserved.
+// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 #include "control.h"
@@ -15,8 +15,8 @@
 #include "bytecode.h"
 #include "case.h"
 
-#ifdef	HAVE_JIKES_NAMESPACE
-namespace Jikes {	// Open namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+namespace Jikes { // Open namespace Jikes block
 #endif
 
 Control::Control(char **arguments, Option &option_) : return_code(0),
@@ -559,7 +559,7 @@ PackageSymbol *Control::ProcessPackage(wchar_t *name)
         FindPathsToDirectory(package_symbol);
     }
 
-    while(length < name_length)
+    while (length < name_length)
     {
         int start = ++length;
         for (int i = 0; length < name_length && name[length] != U_SLASH; i++, length++)
@@ -839,16 +839,16 @@ void Control::ProcessNewInputFiles(SymbolSet &file_set, char **arguments, int fi
     //
     // Process all file names specified in command line
     //
-    if(arguments)
+    if (arguments)
     {
         int j=0;
-        while(arguments[j])
+        while (arguments[j])
         {
             char *file_name = arguments[j++];
             int file_name_length = strlen(file_name);
 
             wchar_t *name = new wchar_t[file_name_length + 1];
-            for(int i = 0; i < file_name_length; i++)
+            for (int i = 0; i < file_name_length; i++)
                 name[i] = (file_name[i] != U_BACKSLASH ? file_name[i] : (wchar_t) U_SLASH); // change backslash to forward slash.
             name[file_name_length] = U_NULL;
             
@@ -1005,6 +1005,10 @@ void Control::ProcessFile(FileSymbol *file_symbol)
     {
         assert(semantic.Length() == 0);
 
+        //
+        // These bodies are not necessarily in file_symbol; they
+        // might be in another FileSymbol used by file_symbol.
+        //
         ProcessBodies(needs_body_work[i]);
     }
     needs_body_work.Reset();
@@ -1091,9 +1095,10 @@ void Control::ProcessMembers()
         } while (start < semantic.Length());
 
         //
-        // Patially order the collection of types in needs_member_work and place the result
-        // in partially_ordered_types. This reordering is based on the complete "supertype"
-        // information computed in ProcessTypeHeaders.
+        // Partially order the collection of types in needs_member_work and
+        // place the result in partially_ordered_types. This reordering is
+        // based on the complete "supertype" information computed in
+        // ProcessTypeHeaders.
         //
         topological_sorter.Sort();
         for (int i = 0; i < partially_ordered_types.Length(); i++)
@@ -1354,7 +1359,7 @@ void Control::CleanUp(FileSymbol *file_symbol)
     return;
 }
 
-#ifdef	HAVE_JIKES_NAMESPACE
-}			// Close namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+} // Close namespace Jikes block
 #endif
 

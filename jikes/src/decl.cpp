@@ -3,8 +3,8 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, International Business Machines Corporation
-// and others.  All Rights Reserved.
+// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 #include "platform.h"
@@ -15,8 +15,8 @@
 #include "tuple.h"
 #include "spell.h"
 
-#ifdef	HAVE_JIKES_NAMESPACE
-namespace Jikes {	// Open namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+namespace Jikes { // Open namespace Jikes block
 #endif
 
 //
@@ -140,7 +140,7 @@ void Semantic::ProcessTypeNames()
         TypeSymbol *type = NULL;
 
         Ast *type_declaration = compilation_unit -> TypeDeclaration(k);
-        switch(type_declaration -> kind)
+        switch (type_declaration -> kind)
         {
             case Ast::CLASS:
             {
@@ -1997,7 +1997,7 @@ void Semantic::CleanUp()
     {
         TypeSymbol *type = NULL;
         Ast *type_declaration = compilation_unit -> TypeDeclaration(i);
-        switch(type_declaration -> kind)
+        switch (type_declaration -> kind)
         {
             case Ast::CLASS:
             {
@@ -3853,7 +3853,7 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
 //
 TypeSymbol *Semantic::FindPrimitiveType(AstPrimitiveType *primitive_type)
 {
-    switch(primitive_type -> kind)
+    switch (primitive_type -> kind)
     {
         case Ast::INT:
              return control.int_type;
@@ -4658,7 +4658,7 @@ void Semantic::ProcessBlockInitializers(AstClassBody *class_body)
     return;
 }
 
-#ifdef	HAVE_JIKES_NAMESPACE
-}			// Close namespace Jikes block
+#ifdef HAVE_JIKES_NAMESPACE
+} // Close namespace Jikes block
 #endif
 
