@@ -4823,18 +4823,19 @@ bool Semantic::CanCastConvert(TypeSymbol *target_type,
         target_type = target_type -> base_type;
         if (source_type -> Primitive() || target_type -> Primitive())
             return false;
-        assert(source_type -> ACC_INTERFACE() ||
-               target_type -> ACC_INTERFACE());
     }
 
     //
-    // Here, we are left with a class and an interface, or two interfaces. If
-    // the class is final, it does not implement the interface. Otherwise, a
-    // class is considered ok (even if it has conflicting signatures). With
-    // two interfaces, check for conflicting signatures.
+    // Here, we are left with two reference types. Two classes are not
+    // compatible at this point, and final classes do not inmplement
+    // interfaces. Otherwise, a class can implement an interface (even with
+    // conflicting signatures), but two interfaces must be compatible.
     //
-    if (source_type -> ACC_FINAL() || target_type -> ACC_FINAL())
-        return false;
+    if (source_type -> ACC_FINAL() || target_type -> ACC_FINAL() ||
+        (! source_type -> ACC_INTERFACE() && ! target_type -> ACC_INTERFACE()))
+    {
+         return false;
+    }
     if (! source_type -> ACC_INTERFACE() || ! target_type -> ACC_INTERFACE())
         return true;
     if (! source_type -> expanded_method_table)

@@ -1,3 +1,8 @@
+2002-10-14  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/expr.cpp (CanCastConvert): Fix recognition of incompatible
+	casts between classes - bug 3320.
+
 2002-10-10  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/scanner.cpp (ScanKeyword7): Fix fallthrough that treated
