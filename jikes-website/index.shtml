@@ -154,7 +154,15 @@ which provide sophisticated graphical IDEs (Integrated Development Environments)
 <A HREF="http://ibm.com/alphaworks/">alphaWorks</A> site.  Jikes for Linux
 was released on 15 July 1998. The response was overwhelming -- Jikes had more
 downloads in the three months after the announcement than in the fifteen months
-before the announcement.</P>
+before the announcement. Around the end of March 2002, IBM opened a fledgling
+community hosting location attached to their
+<a href="http://www-136.ibm.com/developerworks/opensource/">developerWorks</a>
+site with Jikes as a founding member. Approximately 3 years later this server
+was decommissioned and the most active projects migrated into SourceForge.net
+hosting options. During those three years Jikes was the #1 most popular
+project every month, often by a large margin. We approached nearly 250,000
+downloads while residing at dw/oss, and had been consistently tallying triple
+digit daily downloads.</P>
 
 <p>Release of Jikes for Linux was soon followed by requests to open up the source. 
 Many notes and comments from users suggested this would be a good idea.  The 
@@ -166,11 +174,12 @@ an open source project.  This marked the start of one of IBM's first efforts in
 the open source arena.</P>
 
 <P>The original alphaWorks version of Jikes was written by Philippe Charles and Dave 
-Shields of the IBM T. J. Watson Research Center. Since the release of the source
-they have continued to work on the compiler as contributors; however recently have
-officially been moved on to other projects within IBM. Today there are no IBMers who
-work on Jikes as part of their job description. Jikes survives today soley based on
-the free time contributions of members of the open source community.
+Shields of the IBM T. J. Watson Research Center. For awhile after the release of the
+source they continued to work on the compiler as contributors; however, shortly after
+the project migrated to developerWorks' Open Source Server they were
+officially moved off onto other projects within IBM. Today there are no IBMers
+who work on Jikes as part of their job description. Jikes survives today soley
+based on the free time contributions of members of the open source community.
 
 <P>The source code is available under
 <a href="http://oss.software.ibm.com/developerworks/opensource/license10.html">IBM's Public License</a>,
