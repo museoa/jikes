@@ -244,7 +244,8 @@ Option::Option(ArgumentExpander &arguments) :
                 if(!converter)
                     bad_options.Next() = new OptionError(SemanticError::UNSUPPORTED_ENCODING, encoding); 
 #else
-// if compiling without ICU support, will only support one encoding (ascii).
+                bad_options.Next() = new OptionError(SemanticError::UNSUPPORTED_OPTION, "-encoding"); 
+                i++;
 #endif
                 continue;
             }
