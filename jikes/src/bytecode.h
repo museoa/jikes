@@ -82,8 +82,8 @@ public:
         finally_labels[block -> nesting_level].uses.Reset();
         blocks[block -> nesting_level] = block;
         if (size)
-          memset(local_variables_start_pc[block -> nesting_level],
-                 0xFF, size * sizeof(u2));
+            memset(local_variables_start_pc[block -> nesting_level],
+                   0xFF, size * sizeof(u2));
         top_index++;
     }
 

@@ -1633,7 +1633,8 @@ AstExpression *Semantic::CreateAccessToType(Ast *source,
                 FindVariableSymbol(control.this0_name_symbol);
             assert(variable);
 
-            resolution = compilation_unit -> ast_pool -> GenSimpleName(left_tok);
+            resolution =
+                compilation_unit -> ast_pool -> GenSimpleName(left_tok);
             resolution -> symbol = variable;
         }
         else

@@ -1,3 +1,12 @@
+2002-06-18  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/bytecode.cpp:
+	* src/bytecode.h:
+	* src/expr.cpp: Formatting.
+	* src/error.cpp (SELF_IN_EXPLICIT_CONSTRUCTOR),
+	(ENCLOSING_INSTANCE_ACCESS_FROM_CONSTRUCTOR_INVOCATION): Improve
+	error wording.
+
 2002-06-17  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/expr.cpp (ConstructorAccessCheck): Allow access of protected
@@ -8,12 +17,12 @@
 	* src/body.cpp (ProcessSuperCall): Remove duplicate error message,
 	final cleanup for bug 386.
 	
-2002-06-17  Eric B Blake  <eblake@ee.byu.edu>
+2002-06-17  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/decl.cpp (AddInheritedMethods): Synthetic methods do not
 	need to be inherited - bug 2924.
 
-2002-06-17  Eric B Blake  <eblake@ee.byu.edu>
+2002-06-17  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.cpp (EmitSwitchStatement, EmitBlockStatement),
 	(DeclareLocalVariable):
@@ -1738,8 +1747,8 @@
 	which is not legal Java - from bug 420.
 	* src/ast.cpp (Print):
 	* src/ast.h (AstThisCall): Remove base_opt and
-        dot_token_opt, as they are not necessary in legal
-        Java - from bug 420.
+	dot_token_opt, as they are not necessary in legal
+	Java - from bug 420.
 	
 2001-09-06  Russ Trotter <russtrotter@yahoo.com>
 

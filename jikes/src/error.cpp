@@ -3820,7 +3820,7 @@ wchar_t *SemanticError::PrintSELF_IN_EXPLICIT_CONSTRUCTOR(ErrorInfo &err,
     ErrorString s;
 
     s << "The expression \"" << err.insert1
-      << "\" may not be used in an explicit constructor invocation.";
+      << "\" is not yet initialized here.";
 
     return s.Array();
 }
@@ -4451,11 +4451,10 @@ wchar_t *SemanticError::PrintENCLOSING_INSTANCE_ACCESS_FROM_CONSTRUCTOR_INVOCATI
 {
     ErrorString s;
 
-    s << "An instance of \"";
+    s << "The innermost enclosing instance of type \"";
     if (NotDot(err.insert1))
         s << err.insert1 << "/";
-    s << err.insert2
-      << ".this\" is not accessible from an explicit constructor invocation.";
+    s << err.insert2 << "\" is \"this\", which is not yet initialized here.";
 
     return s.Array();
 }
