@@ -27,6 +27,39 @@ class SymbolSet;
 class Semantic;
 class SemanticError;
 
+// This is temporary solution.
+// In future basic_ostringstream<wchar_t> will be used.
+// But now it is not supported by libg++.
+// (lord).
+class ErrorString: public ConvertibleArray<wchar_t>
+{
+public:
+    ErrorString();
+
+    ErrorString &operator<<(const wchar_t *s);
+    ErrorString &operator<<(const wchar_t c);
+    ErrorString &operator<<(const char *s);
+    ErrorString &operator<<(const char c);
+    ErrorString &operator<<(int n);
+    ErrorString &operator<<(ostream &(*f)(ostream&))
+    {
+        assert(f == (ostream &(*)(ostream&)) endl);
+        return *this << '\n';
+    }
+
+    void width(int w);
+    void fill(const char c);
+
+    wchar_t *Array();
+
+private:
+
+    void do_fill(int n);
+    char fill_char;
+    int  field_width;
+};
+
+
 class ErrorInfo : public JikesError
 {
     friend class SemanticError;

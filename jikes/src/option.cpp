@@ -12,6 +12,8 @@
 #include "javasym.h"
 #include "error.h"
 #include "case.h"
+#include "tab.h"
+#include "code.h"
 
 #ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes { // Open namespace Jikes block

@@ -12,7 +12,7 @@
 #define set_INCLUDED
 
 #include "platform.h"
-#include "symbol.h"
+#include "lookup.h"
 
 #ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes { // Open namespace Jikes block

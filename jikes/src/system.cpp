@@ -12,6 +12,8 @@
 #include "control.h"
 #include "semantic.h"
 #include "zip.h"
+#include "option.h"
+#include "case.h"
 
 #ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes { // Open namespace Jikes block
@@ -337,6 +339,7 @@ void Control::InitClassInfo()
 
 void Control::InitAssertionErrorInfo()
 {
+    assert(option.source >= JikesOption::SDK1_4);
     if (! AssertionError_type -> Bad())
     {
         //

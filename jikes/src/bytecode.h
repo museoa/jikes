@@ -14,8 +14,6 @@
 #include "tuple.h"
 #include "ast.h"
 #include "class.h"
-#include "option.h"
-#include "long.h"
 #include "op.h"
 #include "segment.h"
 

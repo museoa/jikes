@@ -9,6 +9,7 @@
 //
 
 #include "ast.h"
+#include "symbol.h"
 
 #ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes { // Open namespace Jikes block
@@ -113,8 +114,13 @@ void AstCompilationUnit::FreeAst()
      delete ast_pool;
 }
 
+int CaseElement::Value()
+{
+    return ((IntLiteralValue*) (expression -> value)) -> value;
+}
+
 //
-// This procedure uses a  quick sort algorithm to sort the cases
+// This procedure uses a quick sort algorithm to sort the cases
 // in a switch statement.
 //
 void AstSwitchStatement::SortCases()
@@ -1891,6 +1897,19 @@ Ast::~Ast()
 AstStatement::~AstStatement()
 {
     assert(false);
+}
+
+TypeSymbol* AstExpression::Type()
+{
+    return (TypeSymbol *)
+        (symbol ? (symbol -> Kind() == Symbol::TYPE
+                   ? (TypeSymbol *) symbol
+                   : (symbol -> Kind() == Symbol::VARIABLE
+                      ? ((VariableSymbol *) symbol) -> Type()
+                      : (symbol -> Kind() == Symbol::METHOD
+                         ? ((MethodSymbol *) symbol) -> Type()
+                         : NULL)))
+         : NULL);
 }
 
 AstExpression::~AstExpression()

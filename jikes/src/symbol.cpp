@@ -17,6 +17,7 @@
 #include "zip.h"
 #include "set.h"
 #include "case.h"
+#include "option.h"
 
 #ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes { // Open namespace Jikes block
@@ -1026,6 +1027,27 @@ void FileSymbol::SetFileName()
     assert(strlen(file_name) == file_name_length);
 }
 
+#ifdef UNIX_FILE_SYSTEM
+bool FileSymbol::IsClassSuffix(char *suffix)
+{
+    return (strncmp(suffix, class_suffix, class_suffix_length) == 0);
+}
+
+bool FileSymbol::IsJavaSuffix(char *suffix)
+{
+    return (strncmp(suffix, java_suffix, java_suffix_length) == 0);
+}
+#elif defined(WIN32_FILE_SYSTEM)
+bool FileSymbol::IsClassSuffix(char *suffix)
+{
+    return Case::StringSegmentEqual(suffix, class_suffix, class_suffix_length);
+}
+
+bool FileSymbol::IsJavaSuffix(char *suffix)
+{
+    return Case::StringSegmentEqual(suffix, java_suffix, java_suffix_length);
+}
+#endif // WIN32_FILE_SYSTEM
 
 void FileSymbol::SetFileNameLiteral(Control *control)
 {

@@ -13,7 +13,6 @@
 
 #include "platform.h"
 #include "ast.h"
-#include "diagnose.h"
 #include "error.h"
 #include "symbol.h"
 #include "control.h"
@@ -25,7 +24,6 @@ namespace Jikes { // Open namespace Jikes block
 #endif
 
 
-class cp_info;
 class TypeShadowSymbol;
 
 //
@@ -765,45 +763,9 @@ public:
     //
     // If we had a bad compilation unit, print the parser messages.
     // If semantic errors were detected print them too.
-    // Set the return code.
+    // Set the return code. Implemented in error.cpp.
     //
-    void PrintMessages()
-    {
-        if (this != control.system_semantic)
-        {
-            if (lex_stream -> NumBadTokens() > 0)
-            {
-                lex_stream -> PrintMessages();
-                return_code = 1;
-            }
-            else if (lex_stream -> NumWarnTokens() > 0)
-                lex_stream -> PrintMessages();
-
-            if (! compilation_unit ||
-                compilation_unit -> BadCompilationUnitCast())
-            {
-                DiagnoseParser *diagnose_parser =
-                    new DiagnoseParser(control, lex_stream);
-                return_code = 1;
-                delete diagnose_parser;
-            }
-
-            if (! control.option.nocleanup && compilation_unit)
-                CleanUp();
-        }
-
-        if (error && error -> error.Length() > 0 &&
-            error -> PrintMessages() > return_code)
-        {
-            return_code = 1;
-        }
-
-        //
-        // Once we have processed the errors, reset the error object
-        //
-        delete error;
-        error = NULL;
-    }
+    void PrintMessages();
 
     PackageSymbol *Package() { return this_package; }
 

@@ -12,9 +12,6 @@
 #define scanner_INCLUDED
 
 #include "platform.h"
-#include "code.h"
-#include "javadef.h"
-#include "javasym.h"
 #include "stream.h"
 
 #ifdef HAVE_JIKES_NAMESPACE

@@ -12,7 +12,6 @@
 #define option_INCLUDED
 
 #include "platform.h"
-#include "code.h"
 #include "tuple.h"
 #include "jikesapi.h"
 

@@ -11,6 +11,7 @@
 #include "platform.h"
 #include "control.h"
 #include "jikesapi.h"
+#include "option.h"
 
 #ifdef HAVE_JIKES_NAMESPACE
 using namespace Jikes;

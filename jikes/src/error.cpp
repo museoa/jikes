@@ -12,10 +12,143 @@
 #include "control.h"
 #include "semantic.h"
 #include "ast.h"
+#include "diagnose.h"
+#include "option.h"
 
 #ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes { // Open namespace Jikes block
 #endif
+
+void Semantic::PrintMessages()
+{
+    if (this != control.system_semantic)
+    {
+        if (lex_stream -> NumBadTokens() > 0)
+        {
+            lex_stream -> PrintMessages();
+            return_code = 1;
+        }
+        else if (lex_stream -> NumWarnTokens() > 0)
+            lex_stream -> PrintMessages();
+
+        if (! compilation_unit ||
+            compilation_unit -> BadCompilationUnitCast())
+        {
+            DiagnoseParser *diagnose_parser =
+                new DiagnoseParser(control, lex_stream);
+            return_code = 1;
+            delete diagnose_parser;
+        }
+
+        if (! control.option.nocleanup && compilation_unit)
+            CleanUp();
+    }
+
+    if (error && error -> error.Length() > 0 &&
+        error -> PrintMessages() > return_code)
+    {
+        return_code = 1;
+    }
+
+    //
+    // Once we have processed the errors, reset the error object
+    //
+    delete error;
+    error = NULL;
+}
+
+
+ErrorString::ErrorString() : ConvertibleArray<wchar_t>(1024),
+                             fill_char(' '),
+                             field_width(0)
+{
+}
+
+void ErrorString::do_fill(int n)
+{
+    while (n < field_width)
+    {
+        Next() = (wchar_t) fill_char;
+        n++;
+    }
+    field_width = 0;
+}
+
+ErrorString &ErrorString::operator<<(const wchar_t c)
+{
+    do_fill(1);
+    Next() = c;
+    return *this;
+}
+
+ErrorString &ErrorString::operator<<(const char c)
+{
+    do_fill(1);
+    Next() = (wchar_t) c;
+    return *this;
+}
+
+ErrorString &ErrorString::operator<<(const wchar_t *s)
+{
+    if (s)
+    {
+        do_fill(
+                wcslen(
+#ifdef HAVE_ERROR_CALL_WCSLEN_CONST
+                       (wchar_t *)
+#endif
+                       s)
+                );
+        while (*s)
+            Next() = *(s++);
+    }
+
+    return *this;
+}
+
+ErrorString &ErrorString::operator<<(const char *s)
+{
+    if (s)
+    {
+        do_fill(strlen(s));
+        while (*s)
+            Next() = (wchar_t) *(s++);
+    }
+
+    return *this;
+}
+
+ErrorString &ErrorString::operator<<(int n)
+{
+    char buf[64];
+    sprintf(buf, "%d", n);
+
+    return (*this << buf);
+}
+
+wchar_t *ErrorString::Array()
+{
+    Next() = U_NULL; // zero terminate string
+    wchar_t *s = ConvertibleArray<wchar_t>::Array();
+    if (!s)
+        return NULL;
+
+    //TODO: optimize!
+    wchar_t *res = new wchar_t[top];
+    memcpy(res, s, top * sizeof(wchar_t));
+    return res;
+}
+
+void ErrorString::width(int w)
+{
+    field_width = w;
+}
+
+void ErrorString::fill(const char c)
+{
+    fill_char = c;
+}
+
 
 unsigned char SemanticError::warning[SemanticError::_num_kinds] = { 0 };
 wchar_t * (*SemanticError::print_message[SemanticError::_num_kinds]) (ErrorInfo &, LexStream *, Control &) = { NULL };

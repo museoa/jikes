@@ -9,6 +9,7 @@
 //
 #include "platform.h"
 #include "semantic.h"
+#include "option.h"
 
 #ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes { // Open namespace Jikes block

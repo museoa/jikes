@@ -11,6 +11,10 @@
 #include "scanner.h"
 #include "control.h"
 #include "error.h"
+#include "javadef.h"
+#include "javasym.h"
+#include "option.h"
+#include "code.h"
 
 #ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes { // Open namespace Jikes block
