@@ -19,7 +19,7 @@ static char hostfile[] = __FILE__;
 /*******************************************************************/
 /*******************************************************************/
 const char HEADER_INFO[]  = "IBM Research Jikes Parser Generator";
-const char VERSION[] = "1.1";
+const char VERSION[] = "1.2";
 const char BLANK[]        = " ";
 const long MAX_TABLE_SIZE = MIN((long) USHRT_MAX, INT_MAX) - 1;
 
