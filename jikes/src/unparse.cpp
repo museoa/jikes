@@ -12,9 +12,9 @@
 #include "platform.h"
 #include "ast.h"
 
-//FIXME: need to move to platform.h
-#include <iostream.h>
-#include <fstream.h>
+//FIXME: include stuff
+//#include <iostream.h>
+//#include <fstream.h>
 
 #ifdef	HAVE_JIKES_NAMESPACE
 namespace Jikes {	// Open namespace Jikes block

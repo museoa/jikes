@@ -108,8 +108,10 @@ Currently, we do not use this one
 
 #ifdef HAVE_STD
 # include <iostream>
+# include <fstream>
 #else
 # include <iostream.h>
+# include <fstream.h>
 #endif
 
 // VC++ pretends to support the

@@ -7,6 +7,8 @@
 #include "control.h"
 #include "jikesapi.h"
 
+/*
+FIXME: Need to readdress include issue.
 #ifdef HAVE_STDLIB_H
 # include <stdlib.h>
 #endif
@@ -18,6 +20,7 @@
 #ifdef HAVE_WINDOWS_H
 # include <windows.h>
 #endif
+*/
 
 #ifdef	HAVE_JIKES_NAMESPACE
 using namespace Jikes;

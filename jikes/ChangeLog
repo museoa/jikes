@@ -1,5 +1,13 @@
 2000-01-10  Mo DeJong  <mdejong@redhat.com>
 
+	* src/jikesapi.cpp:
+	* src/platform.h: Move include of
+ 	<fstream> or <fstream.h> to platform.h.
+	* src/unparse.cpp: Comment out headers
+	that are already included in platform.h.
+
+2000-01-10  Mo DeJong  <mdejong@redhat.com>
+
 	* src/stream.cpp (LexStream::LiteralSymbol,
 	LexStream::NameSymbol): Added class qualifier
 	to fix compiler error when LexStream was
