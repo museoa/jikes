@@ -1,3 +1,8 @@
+2001-10-17  Eric B Blake  <ebb9@email.byu.edu>
+
+	* src/long.cpp (operator/, operator%): Suppress a warning in the
+	HP aCC compiler.
+
 2001-10-16  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/op.h:
