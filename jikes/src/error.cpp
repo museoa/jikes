@@ -730,7 +730,6 @@ void SemanticError::StaticInitializer()
     print_message[ENCLOSING_INSTANCE_ACCESS_ACROSS_STATIC_REGION] = PrintENCLOSING_INSTANCE_ACCESS_ACROSS_STATIC_REGION;
     print_message[ENCLOSING_INSTANCE_NOT_ACCESSIBLE] = PrintENCLOSING_INSTANCE_NOT_ACCESSIBLE;
     print_message[INVALID_ENCLOSING_INSTANCE] = PrintINVALID_ENCLOSING_INSTANCE;
-    print_message[ZERO_DIVIDE_ERROR] = PrintZERO_DIVIDE_ERROR;
     print_message[ZERO_DIVIDE_CAUTION] = PrintZERO_DIVIDE_CAUTION;
     print_message[VOID_TO_STRING] = PrintVOID_TO_STRING;
 
@@ -4501,25 +4500,13 @@ wchar_t *SemanticError::PrintENCLOSING_INSTANCE_NOT_ACCESSIBLE(ErrorInfo &err,
 }
 
 
-wchar_t *SemanticError::PrintZERO_DIVIDE_ERROR(ErrorInfo &err,
-                                               LexStream *lex_stream,
-                                               Control &control)
-{
-    ErrorString s;
-
-    s << "Attempt to divide by zero.";
-
-    return s.Array();
-}
-
-
 wchar_t *SemanticError::PrintZERO_DIVIDE_CAUTION(ErrorInfo &err,
                                                  LexStream *lex_stream,
                                                  Control &control)
 {
     ErrorString s;
 
-    s << "Attempt to divide by zero.";
+    s << "Integer division will fail with division by zero.";
 
     return s.Array();
 }

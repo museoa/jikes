@@ -1,5 +1,14 @@
 2002-05-22  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/error.h (ZERO_DIVIDE_ERROR):
+	* src/error.cpp (ZERO_DIVIDE_ERROR):
+	* src/expr.cpp (ProcessSLASH, ProcessMOD),
+	(ProcessAssignmentExpression): Remove ZERO_DIVIDE_ERROR, since
+	http://java.sun.com/docs/books/jls/clarifications-2-2nd-ed.html -
+	the JLS2 clarification page - states division by 0 is legal Java.
+
+2002-05-22  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/ast.h (NewAstArray): Make this a global function, to
 	workaround egcs-1.1.2 bug.
 

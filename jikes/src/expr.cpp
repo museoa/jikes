@@ -6399,13 +6399,13 @@ void Semantic::ProcessSLASH(AstBinaryExpression *expr)
                 (expr -> Type() == control.long_type &&
                  DYNAMIC_CAST<LongLiteralValue *> (right_expression -> value) -> value == 0))
             {
-                ReportSemError((left_expression -> IsConstant()
-                                ? SemanticError::ZERO_DIVIDE_ERROR
-                                : SemanticError::ZERO_DIVIDE_CAUTION),
+                //
+                // This will guarantee a runtime exception, but the
+                // clarifications to JLS2 insist it is legal code.
+                //
+                ReportSemError(SemanticError::ZERO_DIVIDE_CAUTION,
                                expr -> LeftToken(),
                                expr -> RightToken());
-                if (left_expression -> IsConstant())
-                    expr -> symbol = control.no_type;
             }
             else if (left_expression -> IsConstant())
             {
@@ -6497,9 +6497,11 @@ void Semantic::ProcessMOD(AstBinaryExpression *expr)
                 (expr -> Type() == control.long_type &&
                  DYNAMIC_CAST<LongLiteralValue *> (right_expression -> value) -> value == 0))
             {
-                ReportSemError((left_expression -> IsConstant()
-                                ? SemanticError::ZERO_DIVIDE_ERROR
-                                : SemanticError::ZERO_DIVIDE_CAUTION),
+                //
+                // This will guarantee a runtime exception, but the
+                // clarifications to JLS2 insist it is legal code.
+                //
+                ReportSemError(SemanticError::ZERO_DIVIDE_CAUTION,
                                expr -> LeftToken(),
                                expr -> RightToken());
                 if (left_expression -> IsConstant())
@@ -7021,6 +7023,10 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
                          DYNAMIC_CAST<LongLiteralValue *>
                          (right_expression -> value) -> value == 0))
                     {
+                        //
+                        // This will guarantee a runtime exception, but the
+                        // clarifications to JLS2 insist it is legal code.
+                        //
                         ReportSemError(SemanticError::ZERO_DIVIDE_CAUTION,
                                        assignment_expression -> LeftToken(),
                                        assignment_expression -> RightToken());

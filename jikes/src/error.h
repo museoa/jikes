@@ -341,7 +341,6 @@ class SemanticError
         ENCLOSING_INSTANCE_NOT_ACCESSIBLE,
         INVALID_ENCLOSING_INSTANCE,
 
-        ZERO_DIVIDE_ERROR,
         ZERO_DIVIDE_CAUTION,
         VOID_TO_STRING,
 
@@ -641,7 +640,6 @@ private:
     static wchar_t *PrintENCLOSING_INSTANCE_ACCESS_ACROSS_STATIC_REGION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintENCLOSING_INSTANCE_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINVALID_ENCLOSING_INSTANCE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintZERO_DIVIDE_ERROR(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintZERO_DIVIDE_CAUTION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintVOID_TO_STRING(ErrorInfo &, LexStream *, Control &);
 
