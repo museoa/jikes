@@ -34,20 +34,19 @@ public:
             s2[j] = Case::ToAsciiLower(str2[j]);
         s2[len2] = U_NULL;
 
-        if (len1 == 1  &&  len2 == 1)
+        if (len1 == 1 && len2 == 1)
         {
-            /*****************************************************/
-            /*  Singleton mispellings:                           */
-            /*                                                   */
-            /*  ;      <---->     ,                              */
-            /*                                                   */
-            /*  ;      <---->     :                              */
-            /*                                                   */
-            /*  .      <---->     ,                              */
-            /*                                                   */
-            /*  '      <---->     "                              */
-            /*                                                   */
-            /*****************************************************/
+            //
+            //  Singleton mispellings:
+            //
+            //  ;      <---->     ,
+            //
+            //  ;      <---->     :
+            //
+            //  .      <---->     ,
+            //
+            //  '      <---->     "
+            //
             if ((s1[0] == U_SEMICOLON    &&  s2[0] == U_COMMA)  ||
                 (s1[0] == U_COMMA        &&  s2[0] == U_SEMICOLON)  ||
                 (s1[0] == U_SEMICOLON    &&  s2[0] == U_COLON)  ||
@@ -59,62 +58,62 @@ public:
                     return 3;
         }
  
-    /*****************************************************************/
-    /* Scan the two strings. Increment "match" count for each match. */
-    /* When a transposition is encountered, increase "match" count   */
-    /* by two but count it as an error. When a typo is found, skip   */
-    /* it and count it as an error. Otherwise we have a mismatch; if */
-    /* one of the strings is longer, increment its index, otherwise, */
-    /* increment both indices and continue.                          */
-    /*                                                               */
-    /* This algorithm is an adaptation of a boolean misspelling      */
-    /* algorithm proposed by Juergen Uhl.                            */
-    /*****************************************************************/
+        //
+        // Scan the two strings. Increment "match" count for each match.
+        // When a transposition is encountered, increase "match" count
+        // by two but count it as an error. When a typo is found, skip
+        // it and count it as an error. Otherwise we have a mismatch; if
+        // one of the strings is longer, increment its index, otherwise,
+        // increment both indices and continue.
+        //
+        // This algorithm is an adaptation of a boolean misspelling
+        // algorithm proposed by Juergen Uhl.
+        //
         int count = 0,
             prefix_length = 0,
-            num_errors = 0;
+            num_errors = 0,
+            i1 = 0,
+            i2 = 0;
 
-        i = 0;
-        j = 0;
-        while ((i < len1)  &&  (j < len2))
+        while ((i1 < len1)  &&  (i2 < len2))
         {
-            if (s1[i] == s2[j])
+            if (s1[i1] == s2[i2])
             {
                 count++;
-                i++;
-                j++;
+                i1++;
+                i2++;
                 if (num_errors == 0)
                     prefix_length++;
             }
-            else if (s1[i+1] == s2[j]  &&  s1[i] == s2[j+1])
+            else if (s1[i1 + 1] == s2[i2]  &&  s1[i1] == s2[i2 + 1])
             {
                 count += 2;
-                i += 2;
-                j += 2;
+                i1 += 2;
+                i2 += 2;
                 num_errors++;
             }
-            else if (s1[i+1] == s2[j+1])
+            else if (s1[i1 + 1] == s2[i2 + 1])
             {
-                i++;
-                j++;
+                i1++;
+                i2++;
                 num_errors++;
             }
             else
             {
-                if ((len1 - i) > (len2 - j))
-                     i++;
-                else if ((len2 - j) > (len1 - i))
-                     j++;
+                if ((len1 - i1) > (len2 - i2))
+                     i1++;
+                else if ((len2 - i2) > (len1 - i1))
+                     i2++;
                 else
                 {
-                    i++;
-                    j++;
+                    i1++;
+                    i2++;
                 }
                 num_errors++;
             }
         }
 
-        if (i < len1  ||  j < len2)
+        if (i1 < len1  ||  i2 < len2)
             num_errors++;
 
         if (num_errors > (Min(len1, len2) / 6 + 1))
