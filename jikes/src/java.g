@@ -6,8 +6,7 @@
 -- This software is subject to the terms of the IBM Jikes Compiler
 -- License Agreement available at the following URL:
 -- http://ibm.com/developerworks/opensource/jikes.
--- Copyright (C) 1996, 1999, 2000, 2001, 2002 International Business
--- Machines Corporation and others.  All Rights Reserved.
+-- Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
 -- You must accept the terms of that agreement to use this software.
 
 ------------------------------------------------------------------------
@@ -569,8 +568,7 @@ $Rules
 // This software is subject to the terms of the IBM Jikes Compiler Open
 // Source License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -643,8 +641,7 @@ void Parser::InitRuleAction()
 // This software is subject to the terms of the IBM Jikes Compiler Open
 // Source License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -1827,7 +1824,7 @@ ConstructorDeclarator ::= 'Identifier' '(' FormalParameterListopt ')' Marker
 -- For better error reporting, we have coalesced ExplicitConstructorInvocation
 -- into BlockStatement. Therefore, we do not need a rule for ConstructorBody,
 -- since MethodBody does the same amount of work. During semantic analysis,
--- we then calls of an explicit constructor invocation out of context.
+-- we then check calls of an explicit constructor invocation out of context.
 --
 --ConstructorBody ::= '{' ExplicitConstructorInvocationopt
 --                    BlockStatementsopt '}'
@@ -3631,8 +3628,7 @@ MultiplicativeExpressionNotName ::= MultiplicativeExpressionNotName '/'
 \:$MakeBinaryExpression:\
 /.$shared_Binary./
 
-MultiplicativeExpressionNotName ::= Name '/'
-                                    UnaryExpression
+MultiplicativeExpressionNotName ::= Name '/' UnaryExpression
 \:$MakeBinaryExpression:\
 /.$shared_Binary./
 
@@ -4130,7 +4126,7 @@ Identifieropt ::= $empty
 \:$NoAction:\
 /.$shared_NoAction./
 
-Identifieropt -> 'Identifier'
+Identifieropt ::= 'Identifier'
 \:$NoAction:\
 /.$shared_NoAction./
 

@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 2000, 2001, 2003 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -68,7 +67,7 @@ public:
 
     //
     // Find the position of the first occurrence of a character within a
-    // string. If the character is not foud, return -1.
+    // string. If the character is not found, return -1.
     //
     static inline int Index(char *s, wchar_t c)
     {
@@ -126,7 +125,8 @@ public:
         return true;
     }
 
-    static inline bool StringSegmentEqual(wchar_t *s1, const wchar_t *s2, int n)
+    static inline bool StringSegmentEqual(wchar_t *s1, const wchar_t *s2,
+                                          int n)
     {
         for (int i = 0; i < n; i++)
         {
