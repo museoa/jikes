@@ -199,8 +199,7 @@ void Control::ProcessGlobals()
     init_name_symbol = FindOrInsertName(US_LT_init_GT, wcslen(US_LT_init_GT));
     clinit_name_symbol = FindOrInsertName(US_LT_clinit_GT,
                                           wcslen(US_LT_clinit_GT));
-    block_init_name_symbol = FindOrInsertName(US_block_DOLLAR,
-                                              wcslen(US_block_DOLLAR));
+    block_init_name_symbol = FindOrInsertName(US_this, wcslen(US_this));
     this0_name_symbol = FindOrInsertName(US_this0, wcslen(US_this0));
     clone_name_symbol = FindOrInsertName(US_clone, wcslen(US_clone));
     object_name_symbol = FindOrInsertName(US_Object, wcslen(US_Object));

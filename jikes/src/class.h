@@ -1538,11 +1538,30 @@ public:
                 assert(constant_pool[i]);
 
                 constant_pool[i] -> Put(output_buffer);
-                if (constant_pool[i] -> Tag()  ==  CONSTANT_Long || constant_pool[i] -> Tag()  ==  CONSTANT_Double)
-                    i++;; // skip the next entry for eight-byte constants
+                if (constant_pool[i] -> Tag() == CONSTANT_Long ||
+                    constant_pool[i] -> Tag() == CONSTANT_Double)
+                    i++; // skip the next entry for eight-byte constants
             }
 
-            output_buffer.PutB2(access_flags);
+            //
+            // For compatibility reasons, protected classes are marked public,
+            // and private classes are marked default; and no class may be
+            // static or strictfp. These properties are displayed correctly
+            // later on in the InnerClasses attribute.
+            //
+            {
+                AccessFlags compat(access_flags);
+                if (compat.ACC_PROTECTED())
+                {
+                    compat.ResetACC_PROTECTED();
+                    compat.SetACC_PUBLIC();
+                }
+                else if (compat.ACC_PRIVATE())
+                    compat.ResetACC_PRIVATE();
+                compat.ResetACC_STATIC();
+                compat.ResetACC_STRICTFP();
+                output_buffer.PutB2(compat.Flags());
+            }
             output_buffer.PutB2(this_class);
             output_buffer.PutB2(super_class);
 

@@ -398,21 +398,17 @@ void AstSuperCall::Unparse(Ostream& os, LexStream* lex_stream)
          os << "/*:AstSuperCall#" << id << "*/";
 }
 
-void AstConstructorBlock::Unparse(Ostream& os, LexStream* lex_stream)
+void AstMethodBody::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
-        os << "/*AstConstructorBlock:#" << id << "*/";
-    if (explicit_constructor_invocation_opt)
-    {
-        os << "{" << endl;
-        explicit_constructor_invocation_opt -> Unparse(os, lex_stream);
-        // os << ";" << endl;
-    }
-    block -> Unparse(os, lex_stream);
-    if (explicit_constructor_invocation_opt)
-        os << "}" << endl;
+        os << "/*AstMethodBody:#" << id << "*/";
+    os << "{" << endl;
+    if (explicit_constructor_opt)
+        explicit_constructor_opt -> Unparse(os, lex_stream);
+    AstBlock::Unparse(os, lex_stream);
+    os << "}" << endl;
     if (Ast::debug_unparse)
-        os << "/*:AstConstructorBlock#" << id << "*/";
+        os << "/*:AstMethodBody#" << id << "*/";
 }
 
 void AstConstructorDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
@@ -568,8 +564,7 @@ void AstSwitchBlockStatement::Unparse(Ostream& os, LexStream* lex_stream)
         os << "/*AstSwitchBlockStatement:#" << id << "*/";
     for (int j = 0; j < NumSwitchLabels(); j++)
         SwitchLabel(j) -> Unparse(os, lex_stream);
-    for (int l = 0; l < NumStatements(); l++)
-        Statement(l) -> Unparse(os, lex_stream);
+    AstBlock::Unparse(os, lex_stream);
     if (Ast::debug_unparse)
         os << "/*:AstSwitchBlockStatement#" << id << "*/";
 }

@@ -114,7 +114,7 @@ void Semantic::ProcessTypeNames()
                 type -> supertypes_closure = new SymbolSet;
                 type -> subtypes = new SymbolSet;
                 type -> semantic_environment =
-                    new SemanticEnvironment((Semantic *) this, type, NULL);
+                    new SemanticEnvironment(this, type, NULL);
                 if (type != control.Object())
                     type -> super = control.no_type;
                 if (! type -> FindConstructorSymbol())
@@ -178,7 +178,8 @@ void Semantic::ProcessTypeNames()
                         type_list.Next() = type; // Save valid type for later processing. See below
 
                         type -> MarkSourceNoLongerPending();
-                        type -> semantic_environment = new SemanticEnvironment((Semantic *) this, type, NULL);
+                        type -> semantic_environment =
+                            new SemanticEnvironment(this, type, NULL);
                         type -> declaration = class_declaration;
                         type -> SetFlags(ProcessClassModifiers(class_declaration));
                         //
@@ -236,7 +237,8 @@ void Semantic::ProcessTypeNames()
                         type_list.Next() = type; // Save valid type for later processing. See below
 
                         type -> MarkSourceNoLongerPending();
-                        type -> semantic_environment = new SemanticEnvironment((Semantic *) this, type, NULL);
+                        type -> semantic_environment =
+                            new SemanticEnvironment(this, type, NULL);
                         type -> declaration = interface_declaration;
                         type -> file_symbol = source_file_symbol;
                         type -> SetFlags(ProcessInterfaceModifiers(interface_declaration));
@@ -509,9 +511,9 @@ TypeSymbol *Semantic::ProcessNestedClassName(TypeSymbol *containing_type, AstCla
     inner_type -> supertypes_closure = new SymbolSet;
     inner_type -> subtypes = new SymbolSet;
     inner_type -> SetExternalIdentity(control.FindOrInsertName(external_name, length));
-    inner_type -> semantic_environment = new SemanticEnvironment((Semantic *) this,
-                                                                 inner_type,
-                                                                 containing_type -> semantic_environment);
+    inner_type -> semantic_environment =
+        new SemanticEnvironment(this, inner_type,
+                                containing_type -> semantic_environment);
     inner_type -> declaration = class_declaration;
     inner_type -> file_symbol = source_file_symbol;
     inner_type -> SetFlags(containing_type -> ACC_INTERFACE()
@@ -533,7 +535,18 @@ TypeSymbol *Semantic::ProcessNestedClassName(TypeSymbol *containing_type, AstCla
     // If not a top-level type, then add pointer to enclosing type.
     //
     if (! inner_type -> ACC_STATIC())
-        inner_type -> InsertThis(0);
+        inner_type -> InsertThis0();
+    else if (containing_type -> IsInner())
+    {
+        ReportSemError(SemanticError::STATIC_TYPE_IN_INNER_CLASS,
+                       class_declaration -> identifier_token,
+                       class_declaration -> identifier_token,
+                       lex_stream -> NameString(class_declaration -> identifier_token),
+                       containing_type -> Name(),
+                       containing_type -> FileLoc());
+        // Change its status so we can continue compiling...
+        inner_type -> ResetACC_STATIC();
+    }
 
     if (inner_type -> IsLocal())
     {
@@ -604,9 +617,9 @@ TypeSymbol *Semantic::ProcessNestedInterfaceName(TypeSymbol *containing_type, As
     inner_type -> supertypes_closure = new SymbolSet;
     inner_type -> subtypes = new SymbolSet;
     inner_type -> SetExternalIdentity(control.FindOrInsertName(external_name, length));
-    inner_type -> semantic_environment = new SemanticEnvironment((Semantic *) this,
-                                                                 inner_type,
-                                                                 containing_type -> semantic_environment);
+    inner_type -> semantic_environment =
+        new SemanticEnvironment(this, inner_type,
+                                containing_type -> semantic_environment);
     inner_type -> declaration = interface_declaration;
     inner_type -> file_symbol = source_file_symbol;
 
@@ -1537,7 +1550,8 @@ void Semantic::ProcessMembers(SemanticEnvironment *environment,
 
             ProcessMembers(interface_declaration);
 
-            if (this_type -> IsInner() && interface_declaration -> semantic_environment)
+            if (this_type -> IsInner() &&
+                interface_declaration -> semantic_environment)
             {
                 //
                 // Nested interfaces are implicitly static
@@ -1556,17 +1570,6 @@ void Semantic::ProcessMembers(SemanticEnvironment *environment,
 
             ProcessMembers(class_declaration -> semantic_environment,
                            class_declaration -> class_body);
-
-            if (this_type -> IsInner() && class_declaration -> semantic_environment &&
-                class_declaration -> semantic_environment -> Type() -> ACC_STATIC())
-            {
-                ReportSemError(SemanticError::STATIC_TYPE_IN_INNER_CLASS,
-                               class_declaration -> identifier_token,
-                               class_declaration -> identifier_token,
-                               lex_stream -> NameString(class_declaration -> identifier_token),
-                               this_type -> Name(),
-                               this_type -> FileLoc());
-            }
         }
     }
 
@@ -1671,7 +1674,7 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment,
                 if (containing_type != this_type)
                 {
                     if (! method -> IsTyped())
-                        method -> ProcessMethodSignature((Semantic *) this,
+                        method -> ProcessMethodSignature(this,
                                                          identifier_token);
 
                     ReportSemError(SemanticError::NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD,
@@ -1721,7 +1724,7 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment,
                     TypeSymbol *containing_type = method -> containing_type;
 
                     if (! method -> IsTyped())
-                        method -> ProcessMethodSignature((Semantic *) this,
+                        method -> ProcessMethodSignature(this,
                                                          identifier_token);
 
                     //
@@ -1738,8 +1741,7 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment,
                             continue;
                         MethodShadowSymbol *shadow = intermediate ->
                             expanded_method_table ->
-                            FindOverloadMethodShadow(method,
-                                                     (Semantic *) this,
+                            FindOverloadMethodShadow(method, this,
                                                      identifier_token);
                         if (shadow && shadow -> method_symbol -> containing_type == intermediate)
                             break;
@@ -1760,11 +1762,11 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment,
     }
 
     ProcessStaticInitializers(class_body);
-    ProcessBlockInitializers(class_body);
+    ProcessInstanceInitializers(class_body);
 
     //
     // Reset the this_variable and this_method may have been set in
-    // ProcessStaticInitializers and/or ProcessBlockInitializers.
+    // ProcessStaticInitializers and/or ProcessInstanceInitializers.
     // Indicate that there is no method being currently compiled
     // in this environment.
     //
@@ -1803,7 +1805,8 @@ void Semantic::CompleteSymbolTable(AstInterfaceDeclaration *interface_declaratio
     assert(this_type -> FieldMembersProcessed());
 
     if (! this_type -> expanded_method_table)
-        ComputeMethodsClosure(this_type, interface_declaration -> identifier_token);
+        ComputeMethodsClosure(this_type,
+                              interface_declaration -> identifier_token);
 
     //
     // Compute the set of final variables (all fields in an interface are
@@ -1820,22 +1823,10 @@ void Semantic::CompleteSymbolTable(AstInterfaceDeclaration *interface_declaratio
     // Initialize each variable, in turn, and check to see if we need to
     // declare a static initialization method: <clinit>.
     //
-    MethodSymbol *init_method = NULL;
-    for (int k = 0; k < interface_declaration -> NumClassVariables(); k++)
-    {
-        InitializeVariable(interface_declaration -> ClassVariable(k), finals);
-
-        //
-        // We need a static constructor-initializer if we encounter at least
-        // one class variable that is declared with an initialization
-        // expression that is not a constant expression.
-        //
-        if (! init_method &&
-            NeedsInitializationMethod(interface_declaration -> ClassVariable(k)))
-        {
-            init_method = GetStaticInitializerMethod();
-        }
-    }
+    int count = interface_declaration -> NumClassVariables();
+    for (int k = 0; k < count; k++)
+        InitializeVariable(interface_declaration -> ClassVariable(k),
+                           GetStaticInitializerMethod(count - k), finals);
 
     //
     // Recursively process all inner types
@@ -1941,7 +1932,8 @@ TypeSymbol *Semantic::ReadType(FileSymbol *file_symbol, PackageSymbol *package, 
             type -> outermost_type = type;
             type -> supertypes_closure = new SymbolSet;
             type -> subtypes = new SymbolSet;
-            type -> semantic_environment = new SemanticEnvironment((Semantic *) this, type, NULL);
+            type -> semantic_environment =
+                new SemanticEnvironment(this, type, NULL);
             if (type != control.Object())
                 type -> super = (type == control.Throwable() ? control.Object() : control.Throwable());
             type -> SetOwner(package);
@@ -2015,7 +2007,8 @@ TypeSymbol *Semantic::ReadType(FileSymbol *file_symbol, PackageSymbol *package, 
 }
 
 
-TypeSymbol *Semantic::GetBadNestedType(TypeSymbol *type, LexStream::TokenIndex identifier_token)
+TypeSymbol *Semantic::GetBadNestedType(TypeSymbol *type,
+                                       LexStream::TokenIndex identifier_token)
 {
     NameSymbol *name_symbol = lex_stream -> NameSymbol(identifier_token);
 
@@ -2025,7 +2018,8 @@ TypeSymbol *Semantic::GetBadNestedType(TypeSymbol *type, LexStream::TokenIndex i
     if (! outermost_type -> local)
         outermost_type -> local = new SymbolSet;
 
-    int length = type -> ExternalNameLength() + 1 + name_symbol -> NameLength(); // +1 for $,... +1 for $
+    int length = type -> ExternalNameLength() + 1 +
+        name_symbol -> NameLength(); // +1 for $,... +1 for $
     wchar_t *external_name = new wchar_t[length + 1]; // +1 for '\0';
     wcscpy(external_name, type -> ExternalName());
     wcscat(external_name, StringConstant::US_DS);
@@ -2037,13 +2031,13 @@ TypeSymbol *Semantic::GetBadNestedType(TypeSymbol *type, LexStream::TokenIndex i
     inner_type -> supertypes_closure = new SymbolSet;
     inner_type -> subtypes = new SymbolSet;
     inner_type -> SetExternalIdentity(control.FindOrInsertName(external_name, length));
-    inner_type -> semantic_environment = new SemanticEnvironment((Semantic *) this,
-                                                                 inner_type,
-                                                                 type -> semantic_environment);
+    inner_type -> semantic_environment =
+        new SemanticEnvironment(this, inner_type,
+                                type -> semantic_environment);
     inner_type -> super = control.Object();
     inner_type -> SetOwner(type);
     inner_type -> SetSignature(control);
-    inner_type -> InsertThis(0);
+
     AddDefaultConstructor(inner_type);
 
     ReportSemError(SemanticError::TYPE_NOT_FOUND,
@@ -2076,7 +2070,8 @@ void Semantic::ProcessImportQualifiedName(AstExpression *name)
             }
 
             if (! type -> NestedTypesProcessed())
-                type -> ProcessNestedTypeSignatures((Semantic *) this, field_access -> identifier_token);
+                type -> ProcessNestedTypeSignatures(this,
+                                                    field_access -> identifier_token);
             NameSymbol *name_symbol = lex_stream -> NameSymbol(field_access -> identifier_token);
             TypeSymbol *inner_type = type -> FindTypeSymbol(name_symbol);
             if (! inner_type)
@@ -2490,9 +2485,9 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_d
 void Semantic::ProcessFieldDeclaration(AstFieldDeclaration *field_declaration)
 {
     TypeSymbol *this_type = ThisType();
-    AccessFlags access_flags = (this_type -> ACC_INTERFACE()
-                                ? ProcessInterfaceFieldModifiers(field_declaration)
-                                : ProcessFieldModifiers(field_declaration));
+    AccessFlags access_flags = this_type -> ACC_INTERFACE()
+        ? ProcessInterfaceFieldModifiers(field_declaration)
+        : ProcessFieldModifiers(field_declaration);
 
     //
     // JLS2 8.1.2 - Inner classes may not have static fields unless they are
@@ -2507,16 +2502,18 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration *field_declaration)
     if (this_type -> IsInner() && access_flags.ACC_STATIC())
     {
         if (access_flags.ACC_FINAL())
-        {
             must_be_constant = true;
-        }
         else
         {
             AstModifier *modifier = NULL;
-            for (int i = 0; i < field_declaration -> NumVariableModifiers(); i++)
+            for (int i = 0;
+                 i < field_declaration -> NumVariableModifiers(); i++)
             {
-                if (field_declaration -> VariableModifier(i) -> kind == Ast::STATIC)
+                if (field_declaration -> VariableModifier(i) -> kind ==
+                    Ast::STATIC)
+                {
                     modifier = field_declaration -> VariableModifier(i);
+                }
             }
 
             assert(modifier);
@@ -2532,20 +2529,26 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration *field_declaration)
     //
     //
     //
-    bool deprecated_declarations = lex_stream -> IsDeprecated(lex_stream -> Previous(field_declaration -> LeftToken()));
+    bool deprecated_declarations = lex_stream ->
+        IsDeprecated(lex_stream -> Previous(field_declaration -> LeftToken()));
     AstArrayType *array_type = field_declaration -> type -> ArrayTypeCast();
     TypeSymbol *field_type;
     {
-        Ast *actual_type = (array_type ? array_type -> type : field_declaration -> type);
+        Ast *actual_type = (array_type ? array_type -> type
+                            : field_declaration -> type);
         AstPrimitiveType *primitive_type = actual_type -> PrimitiveTypeCast();
-        field_type = (primitive_type ? FindPrimitiveType(primitive_type) : MustFindType(actual_type));
+        field_type = (primitive_type ? FindPrimitiveType(primitive_type)
+                      : MustFindType(actual_type));
     }
 
     for (int i = 0; i < field_declaration -> NumVariableDeclarators(); i++)
     {
-        AstVariableDeclarator *variable_declarator = field_declaration -> VariableDeclarator(i);
-        AstVariableDeclaratorId *name = variable_declarator -> variable_declarator_name;
-        NameSymbol *name_symbol = lex_stream -> NameSymbol(name -> identifier_token);
+        AstVariableDeclarator *variable_declarator =
+            field_declaration -> VariableDeclarator(i);
+        AstVariableDeclaratorId *name =
+            variable_declarator -> variable_declarator_name;
+        NameSymbol *name_symbol =
+            lex_stream -> NameSymbol(name -> identifier_token);
 
         if (this_type -> FindVariableSymbol(name_symbol))
         {
@@ -2557,28 +2560,33 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration *field_declaration)
         }
         else
         {
-            VariableSymbol *variable = this_type -> InsertVariableSymbol(name_symbol);
-            int num_dimensions = (array_type ? array_type -> NumBrackets() : 0) + name -> NumBrackets();
+            VariableSymbol *variable =
+                this_type -> InsertVariableSymbol(name_symbol);
+            int num_dimensions =
+                (array_type ? array_type -> NumBrackets() : 0) +
+                name -> NumBrackets();
             if (num_dimensions == 0)
                  variable -> SetType(field_type);
-            else variable -> SetType(field_type -> GetArrayType((Semantic *) this, num_dimensions));
+            else variable -> SetType(field_type ->
+                                     GetArrayType(this, num_dimensions));
             variable -> SetFlags(access_flags);
             variable -> SetOwner(this_type);
             variable -> declarator = variable_declarator;
-            variable -> MarkIncomplete(); // the declaration of a field is not complete until its initializer
-                                          // (if any) has been processed.
-            if (must_be_constant)
+            // the declaration of a field is not complete until its initializer
+            // (if any) has been processed.
+            variable -> MarkIncomplete();
+            if (must_be_constant &&
+                (num_dimensions != 0 ||
+                 ! variable_declarator -> variable_initializer_opt ||
+                 (! field_type -> Primitive() &&
+                  field_type != control.String())))
             {
-                if (num_dimensions != 0 || (! variable_declarator -> variable_initializer_opt) ||
-                    (! field_type -> Primitive() && field_type != control.String()))
-                {
-                    ReportSemError(SemanticError::STATIC_FIELD_IN_INNER_CLASS_NOT_CONSTANT,
-                                   name -> identifier_token,
-                                   name -> identifier_token,
-                                   name_symbol -> Name(),
-                                   this_type -> Name(),
-                                   this_type -> FileLoc());
-                }
+                ReportSemError(SemanticError::STATIC_FIELD_IN_INNER_CLASS_NOT_CONSTANT,
+                               name -> identifier_token,
+                               name -> identifier_token,
+                               name_symbol -> Name(),
+                               this_type -> Name(),
+                               this_type -> FileLoc());
             }
 
             variable_declarator -> symbol = variable;
@@ -2587,92 +2595,6 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration *field_declaration)
                 variable -> MarkDeprecated();
         }
     }
-}
-
-
-void Semantic::GenerateLocalConstructor(MethodSymbol *constructor)
-{
-    TypeSymbol *local_type = constructor -> containing_type;
-
-    //
-    // Make up external name for constructor as we shall turn it into a regular
-    // method later. Note that the method needs to be PRIVATE and FINAL so that:
-    //
-    //    1. virtual calls are not made to it
-    //
-    //    2. it might be inlined later.
-    //
-    // This resetting destroys the original access flags specified by the user.
-    // We shall say more about this later...
-    //
-    IntToWstring value(local_type -> NumGeneratedConstructors());
-
-    int length = 12 + value.Length(); // +12 for constructor$
-    wchar_t *external_name = new wchar_t[length + 1]; // +1 for '\0';
-    wcscpy(external_name, StringConstant::US_constructor_DOLLAR);
-    wcscat(external_name, value.String());
-    constructor -> SetExternalIdentity(control.FindOrInsertName(external_name, length)); // Turn the constructor into a method
-    constructor -> ResetFlags();
-    constructor -> SetACC_PRIVATE();
-    constructor -> SetACC_FINAL();
-
-    delete [] external_name;
-
-    //
-    // Make generated constructor symbol. The associated symbol table will not
-    // contain too many elements.
-    //
-    BlockSymbol *block_symbol = new BlockSymbol(local_type -> NumConstructorParameters() +
-                                                constructor -> NumFormalParameters() + 3);
-    block_symbol -> max_variable_index = 1; // All types need a spot for "this"
-
-    //
-    // Note that the local constructor does not inherit the access flags of the
-    // specified constructor. This is because it acts more like a read_access
-    // method. The synthetic attribute that is associated with the constructor
-    // allows the compiler to prevent an illegal access from an unauthorized
-    // environment.
-    //
-    MethodSymbol *local_constructor = local_type -> LocalConstructorOverload(constructor);
-    local_constructor -> MarkSynthetic();
-    local_constructor -> method_or_constructor_declaration = constructor -> method_or_constructor_declaration;
-    local_constructor -> SetType(control.void_type);
-    local_constructor -> SetContainingType(local_type);
-    local_constructor -> SetBlockSymbol(block_symbol);
-    for (int i = 0; i < constructor -> NumThrows(); i++)
-        local_constructor -> AddThrows(constructor -> Throws(i));
-
-    for (int j = 0; j < local_type -> NumConstructorParameters(); j++)
-    {
-        VariableSymbol *param = local_type -> ConstructorParameter(j),
-                       *symbol = block_symbol -> InsertVariableSymbol(param -> Identity());
-        symbol -> MarkSynthetic();
-        symbol -> SetType(param -> Type());
-        symbol -> SetOwner(local_constructor);
-        symbol -> SetExternalIdentity(param -> ExternalIdentity());
-        symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
-        if (control.IsDoubleWordType(symbol -> Type()))
-            block_symbol -> max_variable_index++;
-        local_constructor -> AddFormalParameter(symbol);
-    }
-
-    //
-    // Add all the parameters from the original constructor to the symbol
-    // table of the local constructor. However, only mark them complete and
-    // do not yet assign a number to them. This will be done after we know
-    // how many extra "local" variable shadows are needed.
-    //
-    for (int k = 0; k < constructor -> NumFormalParameters(); k++)
-    {
-        VariableSymbol *param = constructor -> FormalParameter(k),
-                       *symbol = block_symbol -> InsertVariableSymbol(param -> Identity());
-        symbol -> MarkSynthetic();
-        symbol -> MarkComplete();
-        symbol -> SetType(param -> Type());
-        symbol -> SetOwner(local_constructor);
-    }
-
-    local_type -> AddGeneratedConstructor(local_constructor);
 }
 
 
@@ -2769,12 +2691,12 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration *construc
     constructor -> SetFlags(access_flags);
     constructor -> SetContainingType(this_type);
     constructor -> SetBlockSymbol(block_symbol);
-    constructor -> method_or_constructor_declaration = constructor_declaration;
+    constructor -> declaration = constructor_declaration;
 
-    VariableSymbol *this0_variable = NULL;
-    if (this_type -> IsInner())
+    if (this_type -> EnclosingType())
     {
-        this0_variable = block_symbol -> InsertVariableSymbol(control.this0_name_symbol);
+        VariableSymbol *this0_variable =
+            block_symbol -> InsertVariableSymbol(control.this0_name_symbol);
         this0_variable -> SetType(this_type -> ContainingType());
         this0_variable -> SetOwner(constructor);
         this0_variable -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
@@ -2793,7 +2715,7 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration *construc
         constructor -> AddFormalParameter(symbol);
     }
 
-    constructor -> SetSignature(control, this0_variable);
+    constructor -> SetSignature(control);
 
     for (int k = 0; k < constructor_declaration -> NumThrows(); k++)
     {
@@ -2804,9 +2726,6 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration *construc
     }
 
     constructor_declaration -> constructor_symbol = constructor; // save for processing bodies later.
-
-    if (this_type -> IsLocal())
-        GenerateLocalConstructor(constructor);
 
     if (lex_stream -> IsDeprecated(lex_stream -> Previous(constructor_declaration -> LeftToken())))
         constructor -> MarkDeprecated();
@@ -2830,16 +2749,16 @@ void Semantic::AddDefaultConstructor(TypeSymbol *type)
     else if (type -> ACC_PRIVATE())
         constructor -> SetACC_PRIVATE();
 
-    VariableSymbol *this0_variable = NULL;
-    if (type -> IsInner())
+    if (type -> EnclosingType())
     {
-        this0_variable = block_symbol -> InsertVariableSymbol(control.this0_name_symbol);
+        VariableSymbol *this0_variable =
+            block_symbol -> InsertVariableSymbol(control.this0_name_symbol);
         this0_variable -> SetType(type -> ContainingType());
         this0_variable -> SetOwner(constructor);
         this0_variable -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
     }
 
-    constructor -> SetSignature(control, this0_variable);
+    constructor -> SetSignature(control);
 
     AstClassDeclaration *class_declaration = (type -> declaration ? type -> declaration -> ClassDeclarationCast()
                                                                   : (AstClassDeclaration *) NULL);
@@ -2850,9 +2769,10 @@ void Semantic::AddDefaultConstructor(TypeSymbol *type)
                               right_loc = (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
                                                                           : class_declaration -> identifier_token);
 
-        AstMethodDeclarator *method_declarator       = compilation_unit -> ast_pool -> GenMethodDeclarator();
-        method_declarator -> identifier_token        = left_loc;
-        method_declarator -> left_parenthesis_token  = left_loc;
+        AstMethodDeclarator *method_declarator =
+            compilation_unit -> ast_pool -> GenMethodDeclarator();
+        method_declarator -> identifier_token = left_loc;
+        method_declarator -> left_parenthesis_token = left_loc;
         method_declarator -> right_parenthesis_token = right_loc;
 
         AstSuperCall *super_call = NULL;
@@ -2873,31 +2793,24 @@ void Semantic::AddDefaultConstructor(TypeSymbol *type)
         return_statement -> semicolon_token = left_loc;
         return_statement -> is_reachable = true;
 
-        AstBlock *block = compilation_unit -> ast_pool -> GenBlock();
-        block -> AllocateBlockStatements(1); // this block contains one statement
-        block -> left_brace_token  = left_loc;
-        block -> right_brace_token = right_loc;
+        AstMethodBody *constructor_block =
+            compilation_unit -> ast_pool -> GenMethodBody();
+        // This symbol table will be empty.
+        constructor_block -> block_symbol = new BlockSymbol(0);
+        constructor_block -> left_brace_token  = left_loc;
+        constructor_block -> right_brace_token = right_loc;
+        constructor_block -> AllocateBlockStatements(1);
+        constructor_block -> AddStatement(return_statement);
+        constructor_block -> explicit_constructor_opt = super_call;
 
-        block -> is_reachable = true;
-        block -> can_complete_normally = false;
-        block -> AddStatement(return_statement);
-
-        AstConstructorBlock *constructor_block                   = compilation_unit -> ast_pool -> GenConstructorBlock();
-        constructor_block -> left_brace_token                    = left_loc;
-        constructor_block -> explicit_constructor_invocation_opt = super_call;
-        constructor_block -> block                               = block;
-        constructor_block -> right_brace_token                   = right_loc;
-
-        AstConstructorDeclaration *constructor_declaration = compilation_unit -> ast_pool -> GenConstructorDeclaration();
-        constructor_declaration -> constructor_declarator   = method_declarator;
-        constructor_declaration -> constructor_body         = constructor_block;
+        AstConstructorDeclaration *constructor_declaration =
+            compilation_unit -> ast_pool -> GenConstructorDeclaration();
+        constructor_declaration -> constructor_declarator = method_declarator;
+        constructor_declaration -> constructor_body = constructor_block;
 
         constructor_declaration -> constructor_symbol = constructor;
-        constructor -> method_or_constructor_declaration = constructor_declaration;
+        constructor -> declaration = constructor_declaration;
         class_body -> default_constructor = constructor_declaration;
-
-        if (type -> IsLocal())
-            GenerateLocalConstructor(constructor);
     }
 }
 
@@ -2942,9 +2855,11 @@ void Semantic::CheckMethodOverride(MethodSymbol *method,
 
     if (method -> containing_type == base_type && ThisType() == base_type)
     {
-        AstMethodDeclaration *method_declaration = ((AstMethodDeclaration *) method -> method_or_constructor_declaration);
+        AstMethodDeclaration *method_declaration =
+            (AstMethodDeclaration *) method -> declaration;
         assert(method_declaration);
-        AstMethodDeclarator *method_declarator = method_declaration -> method_declarator;
+        AstMethodDeclarator *method_declarator =
+            method_declaration -> method_declarator;
 
         left_tok = method_declarator -> LeftToken();
         right_tok = method_declarator -> RightToken();
@@ -3031,7 +2946,10 @@ void Semantic::CheckMethodOverride(MethodSymbol *method,
     // other hand, if a type inherits a final method from a superclass and
     // an abstract method from an interface, it is legal.
     //
-    if (method -> containing_type == base_type && hidden_method -> IsFinal())
+    if (method -> containing_type == base_type &&
+        (hidden_method -> ACC_FINAL() ||
+         hidden_method -> ACC_PRIVATE() ||
+         hidden_method -> containing_type -> ACC_FINAL()))
     {
         if (base_type -> ACC_INTERFACE())
         {
@@ -3165,8 +3083,8 @@ void Semantic::CheckMethodOverride(MethodSymbol *method,
     if (method -> containing_type != base_type && method -> ACC_ABSTRACT())
         return;
 
-    method -> ProcessMethodThrows((Semantic *) this, left_tok);
-    hidden_method -> ProcessMethodThrows((Semantic *) this, left_tok);
+    method -> ProcessMethodThrows(this, left_tok);
+    hidden_method -> ProcessMethodThrows(this, left_tok);
 
     for (int i = method -> NumThrows() - 1; i >= 0; i--)
     {
@@ -3415,8 +3333,7 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type,
              super_type -> ContainingPackage() == base_type -> ContainingPackage()))
         {
             MethodShadowSymbol *shadow =
-                base_expanded_table.FindOverloadMethodShadow(method,
-                                                             (Semantic *) this,
+                base_expanded_table.FindOverloadMethodShadow(method, this,
                                                              tok);
 
             //
@@ -3455,8 +3372,7 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type,
                  ! method -> IsSynthetic())
         {
             MethodShadowSymbol *shadow =
-                base_expanded_table.FindOverloadMethodShadow(method,
-                                                             (Semantic *) this,
+                base_expanded_table.FindOverloadMethodShadow(method, this,
                                                              tok);
             if (method_shadow_symbol -> NumConflicts() > 0)
             {
@@ -3494,7 +3410,8 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type,
 
                 if (ThisType() == base_type)
                 {
-                    AstMethodDeclaration *method_declaration = ((AstMethodDeclaration *) shadow -> method_symbol -> method_or_constructor_declaration);
+                    AstMethodDeclaration *method_declaration =
+                        (AstMethodDeclaration *) shadow -> method_symbol -> declaration;
                     AstMethodDeclarator *method_declarator = method_declaration -> method_declarator;
 
                     left_tok = method_declarator -> LeftToken();
@@ -3524,7 +3441,7 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type,
                 }
 
                 if (! method -> IsTyped())
-                    method -> ProcessMethodSignature((Semantic *) this, tok);
+                    method -> ProcessMethodSignature(this, tok);
 
                 ReportSemError(SemanticError::DEFAULT_METHOD_NOT_OVERRIDDEN,
                                left_tok,
@@ -3559,7 +3476,7 @@ void Semantic::ComputeTypesClosure(TypeSymbol *type, LexStream::TokenIndex tok)
     }
 
     if (! type -> NestedTypesProcessed())
-        type -> ProcessNestedTypeSignatures((Semantic *) this, tok);
+        type -> ProcessNestedTypeSignatures(this, tok);
     for (int i = 0; i < type -> NumTypeSymbols(); i++)
     {
         if (! type -> TypeSym(i) -> Bad())
@@ -3690,7 +3607,7 @@ void Semantic::ProcessFormalParameters(BlockSymbol *block, AstMethodDeclarator *
         int num_dimensions = (array_type ? array_type -> NumBrackets() : 0) + name -> NumBrackets();
         if (num_dimensions == 0)
              symbol -> SetType(parm_type);
-        else symbol -> SetType(parm_type -> GetArrayType((Semantic *) this, num_dimensions));
+        else symbol -> SetType(parm_type -> GetArrayType(this, num_dimensions));
         symbol -> SetFlags(access_flags);
         symbol -> MarkComplete();
 
@@ -3702,16 +3619,19 @@ void Semantic::ProcessFormalParameters(BlockSymbol *block, AstMethodDeclarator *
 void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration)
 {
     TypeSymbol *this_type = ThisType();
-    AccessFlags access_flags = (this_type -> ACC_INTERFACE()
-                                           ? ProcessInterfaceMethodModifiers(method_declaration)
-                                           : ProcessMethodModifiers(method_declaration));
+    AccessFlags access_flags = this_type -> ACC_INTERFACE()
+        ? ProcessInterfaceMethodModifiers(method_declaration)
+        : ProcessMethodModifiers(method_declaration);
 
     //
     // By JLS2 8.4.3.3, a private method and all methods declared in a
-    // final class are implicitly final.
+    // final class are implicitly final. Also, all methods in a strictfp
+    // class are strictfp.
     //
     if (access_flags.ACC_PRIVATE() || this_type -> ACC_FINAL())
         access_flags.SetACC_FINAL();
+    if (this_type -> ACC_STRICTFP())
+        access_flags.SetACC_STRICTFP();
 
     //
     // A method enclosed in an inner type may not be declared static.
@@ -3800,7 +3720,7 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
                          + method_declarator -> NumBrackets();
     if (num_dimensions == 0)
          method -> SetType(method_type);
-    else method -> SetType(method_type -> GetArrayType((Semantic *) this, num_dimensions));
+    else method -> SetType(method_type -> GetArrayType(this, num_dimensions));
 
     //
     // if the method is not static, leave a slot for the "this" pointer.
@@ -3808,7 +3728,7 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
     method -> SetFlags(access_flags);
     method -> SetContainingType(this_type);
     method -> SetBlockSymbol(block_symbol);
-    method -> method_or_constructor_declaration = method_declaration;
+    method -> declaration = method_declaration;
     for (int i = 0; i < method_declarator -> NumFormalParameters(); i++)
     {
         AstVariableDeclarator *formal_declarator = method_declarator -> FormalParameter(i) -> formal_declarator;
@@ -4251,15 +4171,28 @@ void Semantic::ProcessInterface(TypeSymbol *base_type, AstExpression *name)
 }
 
 
-void Semantic::InitializeVariable(AstFieldDeclaration *field_declaration, Tuple<VariableSymbol *> &finals)
+//
+// Initializes a static or instance field. In addition to checking the
+// semantics, the initialization is added as a statement in the init_method,
+// for easy bytecode emission, if it has an initializer and is not a static
+// constant.
+//
+void Semantic::InitializeVariable(AstFieldDeclaration *field_declaration,
+                                  MethodSymbol *init_method,
+                                  Tuple<VariableSymbol *> &finals)
 {
     ThisMethod() = NULL;
+    AstMethodDeclaration *declaration =
+        (AstMethodDeclaration *) init_method -> declaration;
+    AstBlock *init_block = (AstBlock *) declaration -> method_body;
 
     for (int i = 0; i < field_declaration -> NumVariableDeclarators(); i++)
     {
-        AstVariableDeclarator *variable_declarator = field_declaration -> VariableDeclarator(i);
+        AstVariableDeclarator *variable_declarator =
+            field_declaration -> VariableDeclarator(i);
+        ThisVariable() = variable_declarator -> symbol;
 
-        if ((ThisVariable() = variable_declarator -> symbol))
+        if (variable_declarator -> symbol)
         {
             if (variable_declarator -> variable_initializer_opt)
             {
@@ -4269,7 +4202,14 @@ void Semantic::InitializeVariable(AstFieldDeclaration *field_declaration, Tuple<
 
                 ProcessVariableInitializer(variable_declarator);
                 if (NumErrors() == start_num_errors)
+                {
                     DefiniteVariableInitializer(variable_declarator, finals);
+                    if (! variable_declarator -> symbol -> ACC_STATIC() ||
+                        ! variable_declarator -> symbol -> initial_value)
+                    {
+                        init_block -> AddStatement(variable_declarator);
+                    }
+                }
                 else
                     // Suppress further error messages.
                     variable_declarator -> symbol -> MarkDefinitelyAssigned();
@@ -4282,104 +4222,108 @@ void Semantic::InitializeVariable(AstFieldDeclaration *field_declaration, Tuple<
 }
 
 
-inline void Semantic::ProcessInitializer(AstBlock *initializer_block,
-                                         AstBlock *block_body,
+//
+// Adds an initializer block to the init_method, after checking its semantics,
+// for easier bytecode emission.
+//
+inline void Semantic::ProcessInitializer(AstMethodBody *initializer,
                                          MethodSymbol *init_method,
                                          Tuple<VariableSymbol *> &finals)
 {
     ThisVariable() = NULL;
     ThisMethod() = init_method;
+    AstMethodDeclaration *declaration =
+        (AstMethodDeclaration *) init_method -> declaration;
+    AstBlock *init_block = (AstBlock *) declaration -> method_body;
 
-    assert(initializer_block && block_body);
+    assert(initializer && init_block);
 
-    LocalBlockStack().Push(initializer_block);
+    LocalBlockStack().Push(init_block);
     LocalSymbolTable().Push(init_method -> block_symbol -> Table());
-
-    AstConstructorBlock *constructor_block = block_body -> ConstructorBlockCast();
-    if (constructor_block)
-    {
-        assert(constructor_block -> explicit_constructor_invocation_opt);
-
-        ReportSemError(SemanticError::MISPLACED_EXPLICIT_CONSTRUCTOR_INVOCATION,
-                       constructor_block -> explicit_constructor_invocation_opt -> LeftToken(),
-                       constructor_block -> explicit_constructor_invocation_opt -> RightToken());
-    }
 
     //
     // Initializer blocks are always reachable, as prior blocks must be able
     // to complete normally.
     //
-    block_body -> is_reachable = true;
-    
-    ProcessBlock(block_body);
+    initializer -> is_reachable = true;
 
-    DefiniteBlockInitializer(block_body, LocalBlockStack().max_size, finals);
+    if (initializer -> explicit_constructor_opt)
+        ReportSemError(SemanticError::MISPLACED_EXPLICIT_CONSTRUCTOR,
+                       initializer -> explicit_constructor_opt -> LeftToken(),
+                       initializer -> explicit_constructor_opt -> RightToken());
+    ProcessBlock(initializer);
+    DefiniteBlockInitializer(initializer, LocalBlockStack().max_size, finals);
+
+    init_block -> AddStatement(initializer);
 
     //
-    // If an enclosed block has a higher max_variable_index than the current
-    // block, update max_variable_index in the current_block, accordingly.
+    // If the initializer has a higher max_variable_index than the overall
+    // block, update max_variable_index in the init_block, accordingly.
     //
-    if (init_method -> block_symbol -> max_variable_index < LocalBlockStack().TopMaxEnclosedVariableIndex())
-        init_method -> block_symbol -> max_variable_index = LocalBlockStack().TopMaxEnclosedVariableIndex();
+    if (init_method -> block_symbol -> max_variable_index <
+        LocalBlockStack().TopMaxEnclosedVariableIndex())
+    {
+        init_method -> block_symbol -> max_variable_index =
+            LocalBlockStack().TopMaxEnclosedVariableIndex();
+    }
 
-    if (! block_body -> can_complete_normally)
+    if (! initializer -> can_complete_normally)
         ReportSemError(SemanticError::ABRUPT_INITIALIZER,
-                       block_body -> LeftToken(),
-                       block_body -> RightToken());
+                       initializer -> LeftToken(),
+                       initializer -> RightToken());
 
     LocalBlockStack().Pop();
     LocalSymbolTable().Pop();
 }
 
 
-bool Semantic::NeedsInitializationMethod(AstFieldDeclaration *field_declaration)
-{
-    //
-    // We need a static constructor-initializer if we encounter at least one
-    // class variable that is declared with an initializer which is not a
-    // constant expression. Remember that non-final variables are not
-    // constants, so the only variables with an initial value should be final.
-    //
-    for (int i = 0; i < field_declaration -> NumVariableDeclarators(); i++)
-    {
-        AstVariableDeclarator *variable_declarator = field_declaration -> VariableDeclarator(i);
-
-        // happens in bad type on duplicate declaration
-        if (! variable_declarator -> symbol)
-            return true;
-
-        if (variable_declarator -> variable_initializer_opt)
-        {
-            if (! variable_declarator -> symbol -> initial_value)
-                return true;
-            else assert(variable_declarator -> symbol -> ACC_FINAL());
-        }
-    }
-
-    return false;
-}
-
-
 //
-// Lazily create and return the static initializer for this type
+// Lazily create and return the static initializer for this type. The estimate
+// is for the number of initializers that will be grouped into this method.
+// This is called both when processing static initializers, and any time an
+// assert statement is encountered (since assertions require an initialized
+// static variable to operate).
 //
-MethodSymbol *Semantic::GetStaticInitializerMethod()
+MethodSymbol *Semantic::GetStaticInitializerMethod(int estimate)
 {
     TypeSymbol *this_type = ThisType();
     if (this_type -> static_initializer_method)
         return this_type -> static_initializer_method;
 
-    BlockSymbol *block_symbol = new BlockSymbol(0); // the symbol table associated with this block will contain no element
-    block_symbol -> max_variable_index = 0;         // if we need this, it will be associated with a static initializer.
+    StoragePool *ast_pool = compilation_unit -> ast_pool;
+    LexStream::TokenIndex loc = this_type -> GetLocation();
 
-    MethodSymbol *init_method;
-    init_method = this_type -> InsertMethodSymbol(control.clinit_name_symbol);
+    // The symbol table associated with this block has no elements.
+    BlockSymbol *block_symbol = new BlockSymbol(0);
+    block_symbol -> max_variable_index = 0;
+
+    // The body of the static initializer. This will contain each initializer
+    // block in sequence.
+    AstMethodBody *block = ast_pool -> GenMethodBody();
+    block -> left_brace_token = loc;
+    block -> right_brace_token = loc;
+    block -> block_symbol = block_symbol;
+    block -> AllocateBlockStatements(estimate);
+
+    // The method declaration. We leave some fields uninitialized, because
+    // they are not needed in bytecode.cpp.
+    AstMethodDeclaration *declaration = ast_pool -> GenMethodDeclaration();
+    MethodSymbol *init_method =
+        this_type -> InsertMethodSymbol(control.clinit_name_symbol);
+    declaration -> method_symbol = init_method;
+    declaration -> method_body = block;
+
+    // The method symbol.
     init_method -> SetType(control.void_type);
+    init_method -> SetACC_PRIVATE();
     init_method -> SetACC_FINAL();
     init_method -> SetACC_STATIC();
+    if (this_type -> ACC_STRICTFP())
+        init_method -> SetACC_STRICTFP();
     init_method -> SetContainingType(this_type);
     init_method -> SetBlockSymbol(block_symbol);
     init_method -> SetSignature(control);
+    init_method -> declaration = declaration;
 
     this_type -> static_initializer_method = init_method;
     return init_method;
@@ -4397,155 +4341,162 @@ void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
     // is magically implemented by bytecode.cpp, rather than adding all the AST
     // structure to the block of the static initializer.
     //
-    if (class_body -> NumStaticInitializers() > 0 ||
-        class_body -> NumClassVariables() > 0)
+    if (class_body -> NumStaticInitializers() == 0 &&
+        class_body -> NumClassVariables() == 0)
     {
-        TypeSymbol *this_type = ThisType();
+        return;
+    }
 
-        BlockSymbol *block_symbol = NULL;
-        AstBlock *initializer_block = NULL;
+    TypeSymbol *this_type = ThisType();
+    LocalBlockStack().max_size = 1;
 
-        LocalBlockStack().max_size = 0;
+    //
+    // Compute the set of final variables declared by the user in this type.
+    //
+    Tuple<VariableSymbol *> finals(this_type -> NumVariableSymbols());
+    for (int i = 0; i < this_type -> NumVariableSymbols(); i++)
+    {
+        VariableSymbol *variable_symbol = this_type -> VariableSym(i);
+        if (variable_symbol -> ACC_FINAL())
+            finals.Next() = variable_symbol;
+    }
 
+    //
+    // The static initializers and class variable initializers are executed
+    // in textual order, with the exception that assignments may occur before
+    // declaration. See JLS 8.5.
+    //
+    int j = 0,
+        k = 0;
+    int estimate = class_body -> NumClassVariables() +
+        class_body -> NumStaticInitializers();
+    MethodSymbol *init_method = GetStaticInitializerMethod(estimate);
+    while (j < class_body -> NumClassVariables() &&
+           k < class_body -> NumStaticInitializers())
+    {
         //
-        // If the class being processed contains any static initializer, or we
-        // already know we have assert statements, then the class needs a
-        // static initializer function. There is also the case, covered below,
-        // where there are no asserts or static initializer blocks, but where
-        // a static field is initialized with a non-constant value.
+        // Note that since there cannot be any overlap in the declarations,
+        // we can use either location position. The RightToken of the field
+        // declaration is used because it does not have to be computed (it
+        // is the terminating semicolon). Similarly, the LeftToken of the
+        // static initializer is used because it is the initial "static"
+        // keyword that marked the initializer.
         //
-        MethodSymbol *init_method = NULL;
-        if (class_body -> NumStaticInitializers() > 0)
+        if (class_body -> ClassVariable(j) -> semicolon_token <
+            class_body -> StaticInitializer(k) -> static_token)
         {
-            init_method = GetStaticInitializerMethod();
-            block_symbol = init_method -> block_symbol;
-
-            initializer_block = compilation_unit -> ast_pool -> GenBlock();
-            initializer_block -> left_brace_token  = class_body -> left_brace_token;
-            initializer_block -> right_brace_token = class_body -> left_brace_token;
-            initializer_block -> block_symbol = block_symbol;
-            initializer_block -> nesting_level = LocalBlockStack().Size();
-        }
-
-        //
-        // Compute the set of final variables declared by the user in this
-        // type.
-        //
-        Tuple<VariableSymbol *> finals(this_type -> NumVariableSymbols());
-        for (int i = 0; i < this_type -> NumVariableSymbols(); i++)
-        {
-            VariableSymbol *variable_symbol = this_type -> VariableSym(i);
-            if (variable_symbol -> ACC_FINAL())
-                finals.Next() = variable_symbol;
-        }
-
-        //
-        // The static initializers and class variable initializers are executed
-        // in textual order, with one exception... 8.5
-        //
-        int j,
-            k;
-        for (j = 0, k = 0; j < class_body -> NumClassVariables() && k < class_body -> NumStaticInitializers(); )
-        {
-            //
-            // Note that since there cannot be any overlap in the declarations,
-            // we can use either location position. The RightToken of the field
-            // declaration is used because it does not have to be computed (it
-            // is the terminating semicolon). Similarly, the LeftToken of the
-            // static initializer is used because it is the initial "static"
-            // keyword that marked the initializer.
-            //
-            if (class_body -> ClassVariable(j) -> semicolon_token < class_body -> StaticInitializer(k) -> static_token)
-            {
-                InitializeVariable(class_body -> ClassVariable(j), finals);
-                j++;
-            }
-            else
-            {
-                AstBlock *block_body = class_body -> StaticInitializer(k) -> block;
-                ProcessInitializer(initializer_block, block_body,
-                                   init_method, finals);
-                k++;
-            }
-        }
-        for (; j < class_body -> NumClassVariables(); j++)
-            InitializeVariable(class_body -> ClassVariable(j), finals);
-        for (; k < class_body -> NumStaticInitializers(); k++)
-        {
-            AstBlock *block_body = class_body -> StaticInitializer(k) -> block;
-
-            ProcessInitializer(initializer_block, block_body,
+            InitializeVariable(class_body -> ClassVariable(j++),
                                init_method, finals);
         }
-
-        //
-        // Check that each static final variables has been initialized by now.
-        // If not, issue an error and assume it is.  Notice that for inner
-        // classes, we have already reported that a non-constant static
-        // field is illegal, so we only need an error here for top-level
-        // and static classes.
-        //
-        for (int l = 0; l < finals.Length(); l++)
+        else
         {
-            if (! finals[l] -> IsDefinitelyAssigned() &&
-                finals[l] -> ACC_STATIC())
+            ProcessInitializer(class_body -> StaticInitializer(k++) -> block,
+                               init_method, finals);
+        }
+    }
+    while (j < class_body -> NumClassVariables())
+    {
+        InitializeVariable(class_body -> ClassVariable(j++), init_method,
+                           finals);
+    }
+    while (k < class_body -> NumStaticInitializers())
+    {
+        ProcessInitializer(class_body -> StaticInitializer(k++) -> block,
+                           init_method, finals);
+    }
+
+    //
+    // Check that each static final variables has been initialized by now.
+    // If not, issue an error and assume it is.  Notice that for inner
+    // classes, we have already reported that a non-constant static
+    // field is illegal, so we only need an error here for top-level
+    // and static classes.
+    //
+    for (int l = 0; l < finals.Length(); l++)
+    {
+        if (! finals[l] -> IsDefinitelyAssigned() &&
+            finals[l] -> ACC_STATIC())
+        {
+            if (! this_type -> IsInner())
             {
-                if (! this_type -> IsInner())
-                {
-                    ReportSemError(SemanticError::UNINITIALIZED_STATIC_FINAL_VARIABLE,
-                                   finals[l] -> declarator -> LeftToken(),
-                                   finals[l] -> declarator -> RightToken(),
-                                   finals[l] -> Name());
-                }
-                finals[l] -> MarkDefinitelyAssigned();
+                ReportSemError(SemanticError::UNINITIALIZED_STATIC_FINAL_VARIABLE,
+                               finals[l] -> declarator -> LeftToken(),
+                               finals[l] -> declarator -> RightToken(),
+                               finals[l] -> Name());
             }
+            finals[l] -> MarkDefinitelyAssigned();
         }
+    }
 
-        //
-        // If we had not yet defined a static initializer function and
-        // there exists a static variable in the class that is not initialized
-        // with a constant then define one now.
-        //
-        if (! init_method)
-        {
-            //
-            // Check whether or not we need a static initializer method. We
-            // need a static constructor-initializer iff:
-            //
-            //     . we have at least one static initializer (this case is
-            //       processed above)
-            //     . we have at least one static variable that is not
-            //       initialized with a constant expression.
-            //
-            for (int i = 0; i < class_body -> NumClassVariables(); i++)
-            {
-                if (NeedsInitializationMethod(class_body -> ClassVariable(i)))
-                {
-                    init_method = GetStaticInitializerMethod();
-
-                    break;
-                }
-            }
-        }
-
-        //
-        // If an initialization method has been defined, update its
-        // max_block_depth.
-        //
-        if (init_method)
-        {
-             init_method -> max_block_depth = LocalBlockStack().max_size;
-             if (block_symbol)
-                 block_symbol -> CompressSpace(); // space optimization
-        }
-        else delete block_symbol;
+    //
+    // If an initialization method has been defined, update its
+    // max_block_depth.
+    //
+    if (this_type -> static_initializer_method)
+    {
+        MethodSymbol *init_method = this_type -> static_initializer_method;
+        init_method -> max_block_depth = LocalBlockStack().max_size;
+        init_method -> block_symbol -> CompressSpace(); // space optimization
     }
 }
 
 
-void Semantic::ProcessBlockInitializers(AstClassBody *class_body)
+void Semantic::ProcessInstanceInitializers(AstClassBody *class_body)
 {
+    //
+    // For instance initializers, we create a method to do all the
+    // initialization. We name the method 'this', which is legal in VM's
+    // but an illegal user name, to avoid name clashes. Constructors which
+    // do not invoke another constructor via the this() statement will call
+    // the instance initializer method after calling super(). We rely on the
+    // fact that VM's allow assignment of final instance variables in an
+    // instance method, rather than requiring it to be in a constructor.
+    //
+    if (class_body -> NumInstanceInitializers() == 0 &&
+        class_body -> NumInstanceVariables() == 0)
+    {
+        return;
+    }
+
     TypeSymbol *this_type = ThisType();
+    LocalBlockStack().max_size = 1;
+    StoragePool *ast_pool = compilation_unit -> ast_pool;
+    LexStream::TokenIndex loc = this_type -> GetLocation();
+
+    // The symbol table associated with this block has one element, the
+    // current instance 'this'.
+    BlockSymbol *block_symbol = new BlockSymbol(1);
+    block_symbol -> max_variable_index = 1;
+
+    // The combined block of the instance initializations. This will contain
+    // each initializer block in sequence, and be inlined into constructors.
+    AstMethodBody *block = ast_pool -> GenMethodBody();
+    block -> left_brace_token = loc;
+    block -> right_brace_token = loc;
+    block -> block_symbol = block_symbol;
+
+    // The method declaration. We leave some fields uninitialized, because
+    // they are not needed in bytecode.cpp.
+    AstMethodDeclaration *declaration = ast_pool -> GenMethodDeclaration();
+    MethodSymbol *init_method =
+        this_type -> InsertMethodSymbol(control.block_init_name_symbol);
+    declaration -> method_symbol = init_method;
+    declaration -> method_body = block;
+
+    // The method symbol.
+    init_method -> SetType(control.void_type);
+    init_method -> SetACC_PRIVATE();
+    init_method -> SetACC_FINAL();
+    if (this_type -> ACC_STRICTFP())
+        init_method -> SetACC_STRICTFP();
+    init_method -> MarkSynthetic();
+    init_method -> SetContainingType(this_type);
+    init_method -> SetBlockSymbol(block_symbol);
+    init_method -> SetSignature(control);
+    init_method -> declaration = declaration;
+
+    assert(this_type -> instance_initializer_method == NULL);
+    this_type -> instance_initializer_method = init_method;
 
     //
     // Compute the set of final variables declared by the user in this type.
@@ -4567,96 +4518,52 @@ void Semantic::ProcessBlockInitializers(AstClassBody *class_body)
     // superclass constructor is called, in textual order along with any
     // instance variable initializations.
     //
-    if (class_body -> NumBlocks() == 0)
+    int j = 0,
+        k = 0;
+    int estimate = class_body -> NumInstanceVariables() +
+        class_body -> NumInstanceInitializers();
+    block -> AllocateBlockStatements(estimate);
+    while (j < class_body -> NumInstanceVariables() &&
+           k < class_body -> NumInstanceInitializers())
     {
-        for (int j = 0; j < class_body -> NumInstanceVariables(); j++)
-            InitializeVariable(class_body -> InstanceVariable(j), finals);
-    }
-    else
-    {
-        MethodSymbol *init_method = this_type -> InsertMethodSymbol(control.block_init_name_symbol);
-        init_method -> SetType(control.void_type);
-        init_method -> SetACC_FINAL();
-        init_method -> SetACC_PRIVATE();
-        init_method -> SetContainingType(this_type);
-        init_method -> SetBlockSymbol(new BlockSymbol(0));  // the symbol table associated with this block will contain no element
-        init_method -> block_symbol -> max_variable_index = 1;
-        init_method -> SetSignature(control);
-
         //
-        // Compute the set of constructors whose bodies do not start with
-        // an explicit this call.
+        // Note that since there cannot be any overlap in the declarations,
+        // we can use either location position. The RightToken of the field
+        // declaration is used because it does not have to be computed (it
+        // is the terminating semicolon). Similarly, the LeftToken of the
+        // instance initializer is used because it is the initial "{".
         //
-        for (int i = 0; i < class_body -> NumConstructors(); i++)
+        if (class_body -> InstanceVariable(j) -> semicolon_token <
+            class_body -> InstanceInitializer(k) -> left_brace_token)
         {
-            MethodSymbol *method = class_body -> Constructor(i) -> constructor_symbol;
-            if (method)
-            {
-                AstConstructorBlock *constructor_block = class_body -> Constructor(i) -> constructor_body;
-                if (! (constructor_block -> explicit_constructor_invocation_opt &&
-                       constructor_block -> explicit_constructor_invocation_opt -> ThisCallCast()))
-                init_method -> AddInitializerConstructor(method);
-            }
-        }
-
-        this_type -> block_initializer_method = init_method;
-
-        AstBlock *initializer_block = compilation_unit -> ast_pool -> GenBlock();
-        initializer_block -> left_brace_token  = class_body -> left_brace_token;
-        initializer_block -> right_brace_token = class_body -> left_brace_token;
-        initializer_block -> block_symbol = init_method -> block_symbol;
-        initializer_block -> nesting_level = LocalBlockStack().Size();
-
-        LocalBlockStack().max_size = 0;
-
-        int j,
-            k;
-        for (j = 0, k = 0; j < class_body -> NumInstanceVariables() && k < class_body -> NumBlocks(); )
-        {
-            //
-            // Note that since there cannot be any overlap in the
-            // declarations, we can use either location position.
-            // The RightToken of the field declaration is used because it
-            // does not have to be computed (it is the terminating semicolon).
-            // Similarly, the LeftToken of the block initializer is used
-            // because it is the initial "{".
-            //
-            //    if (class_body -> InstanceVariable(j) -> RightToken() < class_body -> Blocks(k) -> LeftToken())
-            //
-            if (class_body -> InstanceVariable(j) -> semicolon_token < class_body -> Block(k) -> left_brace_token)
-            {
-                InitializeVariable(class_body -> InstanceVariable(j), finals);
-                j++;
-            }
-            else
-            {
-                AstBlock *block_body = class_body -> Block(k);
-
-                ProcessInitializer(initializer_block, block_body,
-                                   init_method, finals);
-                k++;
-            }
-        }
-        for (; j < class_body -> NumInstanceVariables(); j++)
-            InitializeVariable(class_body -> InstanceVariable(j), finals);
-        for (; k < class_body -> NumBlocks(); k++)
-        {
-            AstBlock *block_body = class_body -> Block(k);
-
-            ProcessInitializer(initializer_block, block_body,
+            InitializeVariable(class_body -> InstanceVariable(j++),
                                init_method, finals);
         }
-
-        init_method -> max_block_depth = LocalBlockStack().max_size;
-        init_method -> block_symbol -> CompressSpace(); // space optimization
-
-        //
-        // Note that unlike the case of static fields. We do not ensure here
-        // that each final instance variable has been initialized at this
-        // point, because the user may chose instead to initialize such a
-        // final variable in every constructor instead. See body.cpp
-        //
+        else
+        {
+            ProcessInitializer(class_body -> InstanceInitializer(k++),
+                               init_method, finals);
+        }
     }
+    while (j < class_body -> NumInstanceVariables())
+    {
+        InitializeVariable(class_body -> InstanceVariable(j++), init_method,
+                           finals);
+    }
+    while (k < class_body -> NumInstanceInitializers())
+    {
+        ProcessInitializer(class_body -> InstanceInitializer(k++),
+                           init_method, finals);
+    }
+
+    //
+    // Note that unlike the case of static fields. We do not ensure here that
+    // each final instance variable has been initialized at this point,
+    // because the user may chose instead to initialize such a final variable
+    // in every constructor instead. See body.cpp
+    //
+    init_method -> max_block_depth = LocalBlockStack().max_size;
+    init_method -> block_symbol -> CompressSpace(); // space optimization
 }
 
 #ifdef HAVE_JIKES_NAMESPACE

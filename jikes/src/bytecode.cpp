@@ -26,39 +26,38 @@ void ByteCode::CompileClass()
     AstClassDeclaration *class_decl = unit_type -> declaration -> ClassDeclarationCast();
     AstClassBody *class_body = (class_decl ? class_decl -> class_body
                                 : ((AstClassInstanceCreationExpression *) unit_type -> declaration) -> class_body_opt);
+    int i;
 
     //
     // Process static variables.
     //
     Tuple<AstVariableDeclarator *> initialized_static_fields(unit_type -> NumVariableSymbols()); // fields needing code to initialize
+    for (i = 0; i < class_body -> NumClassVariables(); i++)
     {
-        for (int i = 0; i < class_body -> NumClassVariables(); i++)
+        AstFieldDeclaration *field_decl = class_body -> ClassVariable(i);
+        for (int vi = 0; vi < field_decl -> NumVariableDeclarators(); vi++)
         {
-            AstFieldDeclaration *field_decl = class_body -> ClassVariable(i);
-            for (int vi = 0; vi < field_decl -> NumVariableDeclarators(); vi++)
-            {
-                AstVariableDeclarator *variable_declarator = field_decl -> VariableDeclarator(vi);
-                VariableSymbol *vsym = variable_declarator -> symbol;
-                DeclareField(vsym);
+            AstVariableDeclarator *variable_declarator = field_decl -> VariableDeclarator(vi);
+            VariableSymbol *vsym = variable_declarator -> symbol;
+            DeclareField(vsym);
 
-                //
-                // We need a static initializer if we encounter at least one
-                // class variable that is not a constant. Remember, according
-                // to JLS 15.28, a constant is a final field initialized with
-                // a constant expression.
-                //
-                if (variable_declarator -> variable_initializer_opt)
+            //
+            // We need a static initializer if we encounter at least one
+            // class variable that is not a constant. Remember, according
+            // to JLS 15.28, a constant is a final field initialized with
+            // a constant expression.
+            //
+            if (variable_declarator -> variable_initializer_opt)
+            {
+                if (vsym -> initial_value)
                 {
-                    if (vsym -> initial_value)
-                    {
-                        AstExpression *init;
-                        assert(init = variable_declarator -> variable_initializer_opt -> ExpressionCast());
-                        assert(init -> IsConstant() &&
-                               variable_declarator -> symbol -> ACC_FINAL());
-                    }
-                    else
-                        initialized_static_fields.Next() = variable_declarator;
+                    AstExpression *init;
+                    assert(init = variable_declarator -> variable_initializer_opt -> ExpressionCast());
+                    assert(init -> IsConstant() &&
+                           variable_declarator -> symbol -> ACC_FINAL());
                 }
+                else
+                    initialized_static_fields.Next() = variable_declarator;
             }
         }
     }
@@ -67,21 +66,19 @@ void ByteCode::CompileClass()
     // Process instance variables.
     //
     Tuple<AstVariableDeclarator *> initialized_instance_fields(unit_type -> NumVariableSymbols()); // fields needing code to init
+    for (i = 0; i < class_body -> NumInstanceVariables(); i++)
     {
-        for (int i = 0; i < class_body -> NumInstanceVariables(); i++)
+        AstFieldDeclaration *field_decl  = class_body -> InstanceVariable(i);
+        for (int vi = 0; vi < field_decl -> NumVariableDeclarators(); vi++)
         {
-            AstFieldDeclaration *field_decl  = class_body -> InstanceVariable(i);
-            for (int vi = 0; vi < field_decl -> NumVariableDeclarators(); vi++)
-            {
-                AstVariableDeclarator *vd = field_decl -> VariableDeclarator(vi);
-                DeclareField(vd -> symbol);
+            AstVariableDeclarator *vd = field_decl -> VariableDeclarator(vi);
+            DeclareField(vd -> symbol);
 
-                //
-                // We must initialize all instance fields, even the constants.
-                //
-                if (vd -> variable_initializer_opt)
-                    initialized_instance_fields.Next() = vd;
-            }
+            //
+            // We must initialize all instance fields, even the constants.
+            //
+            if (vd -> variable_initializer_opt)
+                initialized_instance_fields.Next() = vd;
         }
     }
 
@@ -89,28 +86,17 @@ void ByteCode::CompileClass()
     // Supply needed field declaration for this$0 and any additional local
     // shadow parameters.
     //
-    {
-        for (int i = 0; i < unit_type -> NumConstructorParameters(); i++)
-            DeclareField(unit_type -> ConstructorParameter(i));
-    }
-
-    //
-    // Supply needed field declaration for enclosing instances (this$n, n > 0)
-    // if present.
-    //
-    {
-        for (int i = 1; i < unit_type -> NumEnclosingInstances(); i++)
-            DeclareField(unit_type -> EnclosingInstance(i));
-    }
+    if (unit_type -> EnclosingType())
+        DeclareField(unit_type -> EnclosingInstance());
+    for (i = 0; i < unit_type -> NumConstructorParameters(); i++)
+        DeclareField(unit_type -> ConstructorParameter(i));
 
     //
     // Supply needed field declarations for "class" identifiers (used for
     // X.class literals) if present.
     //
-    {
-        for (int i = 0; i < unit_type -> NumClassLiterals(); i++)
-            DeclareField(unit_type -> ClassLiteral(i));
-    }
+    for (i = 0; i < unit_type -> NumClassLiterals(); i++)
+        DeclareField(unit_type -> ClassLiteral(i));
 
     //
     // Supply needed field declaration for "$noassert" flag (used in assert
@@ -123,42 +109,38 @@ void ByteCode::CompileClass()
     //
     // compile method bodies
     //
+    for (i = 0; i < class_body -> NumMethods(); i++)
     {
-        for (int i = 0; i < class_body -> NumMethods(); i++)
+        AstMethodDeclaration *method = class_body -> Method(i);
+        if (method -> method_symbol)
         {
-            AstMethodDeclaration *method = class_body -> Method(i);
-            if (method -> method_symbol)
-            {
-                int method_index = methods.NextIndex(); // index for method
+            int method_index = methods.NextIndex(); // index for method
 
-                BeginMethod(method_index, method -> method_symbol);
-                AstBlock *method_block = method -> method_body -> BlockCast();
-                if (method_block) // not an abstract method ?
-                    EmitStatement(method_block);
-                EndMethod(method_index, method -> method_symbol);
-            }
+            BeginMethod(method_index, method -> method_symbol);
+            AstBlock *method_block = method -> method_body -> BlockCast();
+            if (method_block) // not an abstract method ?
+                EmitBlockStatement(method_block);
+            EndMethod(method_index, method -> method_symbol);
         }
     }
 
     //
     // compile any private access methods
     //
+    for (i = 0; i < unit_type -> NumPrivateAccessMethods(); i++)
     {
-        for (int i = 0; i < unit_type -> NumPrivateAccessMethods(); i++)
-        {
-            int method_index = methods.NextIndex(); // index for method
+        int method_index = methods.NextIndex(); // index for method
 
-            MethodSymbol *method_sym = unit_type -> PrivateAccessMethod(i);
-            AstMethodDeclaration *method = (method_sym -> method_or_constructor_declaration
-                                            ? method_sym -> method_or_constructor_declaration -> MethodDeclarationCast()
-                                            : (AstMethodDeclaration *) NULL);
-            BeginMethod(method_index, method_sym);
-            if (method)
-                EmitStatement(method -> method_body);
-            else
-                GenerateAccessMethod(method_sym);
-            EndMethod(method_index, method_sym);
-        }
+        MethodSymbol *method_sym = unit_type -> PrivateAccessMethod(i);
+        AstMethodDeclaration *method = (method_sym -> declaration
+                                        ? method_sym -> declaration -> MethodDeclarationCast()
+                                        : (AstMethodDeclaration *) NULL);
+        BeginMethod(method_index, method_sym);
+        if (method)
+            EmitBlockStatement((AstBlock *) method -> method_body);
+        else
+            GenerateAccessMethod(method_sym);
+        EndMethod(method_index, method_sym);
     }
 
     //
@@ -177,216 +159,71 @@ void ByteCode::CompileClass()
     }
 
     //
+    // Compile the instance initializer.
     //
-    // Compile the instance initializer blocks.
-    //
-    MethodSymbol *block_init_method = unit_type -> block_initializer_method;
-    if (block_init_method)
+    bool has_instance_initializer = false;
+    if (unit_type -> instance_initializer_method)
     {
-        int method_index = methods.NextIndex(); // index for method
-        BeginMethod(method_index, block_init_method);
-
-        int fi = 0,
-            bi = 0;
-        bool abrupt = false;
-        while (fi < initialized_instance_fields.Length() &&
-               bi < class_body -> NumBlocks() && ! abrupt)
+        AstMethodDeclaration *declaration = (AstMethodDeclaration *)
+            unit_type -> instance_initializer_method -> declaration;
+        AstBlock *init_block = (AstBlock *) declaration -> method_body;
+        if (! IsNop(init_block))
         {
-            if (initialized_instance_fields[fi] -> LeftToken() < class_body -> Block(bi) -> left_brace_token)
-                 InitializeInstanceVariable(initialized_instance_fields[fi++]);
-            else abrupt = EmitStatement(class_body -> Block(bi++));
+            int method_index = methods.NextIndex(); // index for method
+            BeginMethod(method_index,
+                        unit_type -> instance_initializer_method);
+            bool abrupt = EmitBlockStatement(init_block);
+            if (! abrupt)
+                PutOp(OP_RETURN);
+            EndMethod(method_index, unit_type -> instance_initializer_method);
+            has_instance_initializer = true;
         }
-
-        while (fi < initialized_instance_fields.Length())
-            InitializeInstanceVariable(initialized_instance_fields[fi++]);
-
-        //
-        // compile any initialization blocks
-        //
-        while (bi < class_body -> NumBlocks() && ! abrupt)
-            abrupt = EmitStatement(class_body -> Block(bi++));
-
-        if (! abrupt)
-            PutOp(OP_RETURN);
-        EndMethod(method_index, block_init_method);
     }
 
     //
     // Compile all constructors.
     //
-    // TODO: The generated dummy class used as an extra parameter in private
-    // constructor accessors is currently not a valid .class file. However,
-    // as it is never loaded by the virtual machine, we can live with an
-    // invalid class for the moment.
-    //
-    if (unit_type -> NumGeneratedConstructors() == 0 ||
-        unit_type -> declaration -> IsGenerated())
-    {
-        if (class_body -> default_constructor)
-            CompileConstructor(class_body -> default_constructor, initialized_instance_fields);
-        else
-        {
-            for (int i = 0; i < class_body -> NumConstructors(); i++)
-            {
-                AstConstructorDeclaration *constructor = class_body -> Constructor(i);
-                CompileConstructor(constructor, initialized_instance_fields);
-            }
-        }
-        for (int k = 0; k < unit_type -> NumPrivateAccessConstructors(); k++)
-        {
-            MethodSymbol *constructor_sym = unit_type -> PrivateAccessConstructor(k);
-            AstConstructorDeclaration *constructor =
-                constructor_sym -> method_or_constructor_declaration -> ConstructorDeclarationCast();
-            CompileConstructor(constructor, initialized_instance_fields);
-        }
-    }
+    if (class_body -> default_constructor)
+        CompileConstructor(class_body -> default_constructor,
+                           initialized_instance_fields,
+                           has_instance_initializer);
     else
+        for (i = 0; i < class_body -> NumConstructors(); i++)
+            CompileConstructor(class_body -> Constructor(i),
+                               initialized_instance_fields,
+                               has_instance_initializer);
+
+    for (i = 0; i < unit_type -> NumPrivateAccessConstructors(); i++)
     {
-        for (int i = 0; i < unit_type -> NumGeneratedConstructors(); i++)
-        {
-            MethodSymbol *this_constructor_symbol = unit_type -> GeneratedConstructor(i);
-            AstConstructorDeclaration *constructor =
-                    this_constructor_symbol -> method_or_constructor_declaration -> ConstructorDeclarationCast();
-            AstConstructorBlock *constructor_block = constructor -> constructor_body -> ConstructorBlockCast();
-
-            //
-            // compile generated constructor
-            //
-            int method_index = methods.NextIndex(); // index for method
-            BeginMethod(method_index, this_constructor_symbol);
-
-            assert(constructor_block -> explicit_constructor_invocation_opt);
-
-            EmitStatement((AstStatement *) constructor_block -> explicit_constructor_invocation_opt);
-
-            for (int si = 0; si < constructor_block -> NumLocalInitStatements(); si++)
-                EmitStatement(constructor_block -> LocalInitStatement(si));
-
-            //
-            // supply needed field initialization unless constructor
-            // starts with explicit 'this' call to another constructor
-            //
-            if (! (constructor_block -> explicit_constructor_invocation_opt &&
-                   constructor_block -> explicit_constructor_invocation_opt -> ThisCallCast()))
-            {
-                if (unit_type -> NumEnclosingInstances())
-                {
-                    VariableSymbol *this0_parameter = unit_type -> EnclosingInstance(0);
-                    PutOp(OP_ALOAD_0); // load address of object on which method is to be invoked
-                    LoadLocal(1, this0_parameter -> Type());
-                    PutOp(OP_PUTFIELD);
-                    PutU2(RegisterFieldref(this0_parameter));
-                }
-
-                if (class_body -> this_block)
-                {
-                    AstBlock *block = class_body -> this_block;
-                    for (int si = 0; si < block -> NumStatements(); si++)
-                        EmitStatement((AstStatement *) block -> Statement(si));
-                }
-
-                if (! unit_type -> block_initializer_method)
-                {
-                    int fi = 0,
-                        bi = 0;
-                    while (fi < initialized_instance_fields.Length() && bi < class_body -> NumBlocks())
-                    {
-                        if (initialized_instance_fields[fi] -> LeftToken() < class_body -> Block(bi) -> left_brace_token)
-                            InitializeInstanceVariable(initialized_instance_fields[fi++]);
-                        else
-                        {
-                            AstBlock *block = class_body -> Block(bi++);
-                            for (int si = 0; si < block -> NumStatements(); si++)
-                                EmitStatement((AstStatement *) block -> Statement(si));
-                        }
-                    }
-
-                    while (fi < initialized_instance_fields.Length())
-                        InitializeInstanceVariable(initialized_instance_fields[fi++]);
-
-                    //
-                    // compile any initialization blocks
-                    //
-                    while (bi < class_body -> NumBlocks())
-                    {
-                        AstBlock *block = class_body -> Block(bi++);
-                        for (int si = 0; si < block -> NumStatements(); si++)
-                            EmitStatement((AstStatement *) block -> Statement(si));
-                    }
-                }
-                else
-                {
-                    //
-                    // generate a call to the parameterless function
-                    // block_initializer_function
-                    //
-                    PutOp(OP_ALOAD_0); // load address of object on which method is to be invoked
-                    PutOp(OP_INVOKESPECIAL);
-                    CompleteCall(unit_type -> block_initializer_method, 0);
-                }
-            }
-
-            EmitStatement(constructor_block -> original_constructor_invocation);
-            PutOp(OP_RETURN);
-            EndMethod(method_index, this_constructor_symbol);
-
-            //
-            // compile method associated with generated constructor
-            //
-            MethodSymbol *local_constructor_symbol = this_constructor_symbol -> LocalConstructor();
-            method_index = methods.NextIndex(); // index for method
-            BeginMethod(method_index, local_constructor_symbol);  // is constructor
-
-            EmitStatement(constructor_block -> block);
-
-            EndMethod(method_index, local_constructor_symbol);
-        }
+        MethodSymbol *constructor_sym =
+            unit_type -> PrivateAccessConstructor(i);
+        AstConstructorDeclaration *constructor =
+            constructor_sym -> declaration -> ConstructorDeclarationCast();
+        CompileConstructor(constructor, initialized_instance_fields,
+                           has_instance_initializer);
     }
 
     //
-    // If we need to generate a static initializer...
+    // Compile the static initializer.
     //
     if (unit_type -> static_initializer_method)
     {
-        assert(class_body -> NumStaticInitializers() > 0 ||
-               initialized_static_fields.Length() > 0 ||
-               assert_variable);
-
-        int method_index = methods.NextIndex(); // index for method
-        BeginMethod(method_index, unit_type -> static_initializer_method);
-
-        if (assert_variable)
-            GenerateAssertVariableInitializer(unit_type -> outermost_type, assert_variable);
-
-        //
-        // revisit members that are part of class initialization
-        //
-        int fi = 0,
-            bi = 0;
-        bool abrupt = false;
-        while (fi < class_body -> NumStaticInitializers() &&
-               bi < initialized_static_fields.Length() && ! abrupt)
+        AstMethodDeclaration *declaration = (AstMethodDeclaration *)
+            unit_type -> static_initializer_method -> declaration;
+        AstBlock *init_block = (AstBlock *) declaration -> method_body;
+        if (assert_variable || ! IsNop(init_block))
         {
-            if (class_body -> StaticInitializer(fi) -> static_token < initialized_static_fields[bi] -> LeftToken())
-                abrupt = EmitStatement(class_body ->
-                                       StaticInitializer(fi++) -> block);
-            else InitializeClassVariable(initialized_static_fields[bi++]);
+            int method_index = methods.NextIndex(); // index for method
+            BeginMethod(method_index, unit_type -> static_initializer_method);
+            if (assert_variable)
+                GenerateAssertVariableInitializer(unit_type -> outermost_type,
+                                                  assert_variable);
+            bool abrupt = EmitBlockStatement(init_block);
+            if (! abrupt)
+                PutOp(OP_RETURN);
+            EndMethod(method_index, unit_type -> static_initializer_method);
         }
-
-        while (fi < class_body -> NumStaticInitializers() && ! abrupt)
-            abrupt = EmitStatement(class_body -> StaticInitializer(fi++) ->
-                                   block);
-
-        while (bi < initialized_static_fields.Length())
-            InitializeClassVariable(initialized_static_fields[bi++]);
-
-        if (! abrupt)
-            PutOp(OP_RETURN);
-        EndMethod(method_index, unit_type -> static_initializer_method);
     }
-    else assert(class_body -> NumStaticInitializers() == 0 &&
-                initialized_static_fields.Length() == 0 &&
-                ! assert_variable);
 
     FinishCode(unit_type);
 
@@ -519,18 +356,17 @@ void ByteCode::CompileInterface()
     //
     if (unit_type -> static_initializer_method)
     {
-        assert(initialized_fields.Length() > 0);
+        AstMethodDeclaration *declaration = (AstMethodDeclaration *)
+            unit_type -> static_initializer_method -> declaration;
+        AstBlock *init_block = (AstBlock *) declaration -> method_body;
 
         int method_index = methods.NextIndex(); // index for method
         BeginMethod(method_index, unit_type -> static_initializer_method);
-
-        for (int i = 0; i < initialized_fields.Length(); i++)
-            InitializeClassVariable(initialized_fields[i]);
-
+        bool abrupt = EmitBlockStatement(init_block);
+        assert(! abrupt);
         PutOp(OP_RETURN);
         EndMethod(method_index, unit_type -> static_initializer_method);
     }
-    else assert(initialized_fields.Length() == 0);
 
     FinishCode(unit_type);
 
@@ -556,98 +392,99 @@ void ByteCode::CompileInterface()
 // initialized_fields is a list of fields needing code to initialize.
 //
 void ByteCode::CompileConstructor(AstConstructorDeclaration *constructor,
-                                  Tuple<AstVariableDeclarator *> &initialized_fields)
+                                  Tuple<AstVariableDeclarator *> &initialized_fields,
+                                  bool has_instance_initializer)
 {
     MethodSymbol *method_symbol = constructor -> constructor_symbol;
-    TypeSymbol *type = method_symbol -> containing_type;
-    AstClassDeclaration *class_decl = type -> declaration -> ClassDeclarationCast();
-    AstClassBody *class_body = (class_decl ? class_decl -> class_body
-                                           : ((AstClassInstanceCreationExpression *) type -> declaration) -> class_body_opt);
+    AstMethodBody *constructor_block = constructor -> constructor_body;
 
     int method_index = methods.NextIndex(); // index for method
     BeginMethod(method_index, method_symbol);
 
-    AstConstructorBlock *constructor_block = constructor -> constructor_body -> ConstructorBlockCast();
-    if (constructor_block -> explicit_constructor_invocation_opt)
-        EmitStatement((AstStatement *) constructor_block -> explicit_constructor_invocation_opt);
-    else
+    if (control.option.source < JikesOption::SDK1_4)
     {
-        assert(unit_type == control.Object() &&
-               "A constructor block without an explicit constructor_invocation");
+        //
+        // Prior to JDK 1.4, VMs incorrectly complained if shadow
+        // initialization happened before the superconstructor, even though
+        // the JVMS permits it.
+        //
+        if (constructor_block -> explicit_constructor_opt)
+            EmitStatement(constructor_block -> explicit_constructor_opt);
+        else
+            assert(unit_type == control.Object() &&
+                   "A constructor without an explicit constructor invocation");
     }
 
-    // supply needed field initialization unless constructor
-    // starts with explicit 'this' call to another constructor
-    bool abrupt = false;
-    if (! (constructor_block -> explicit_constructor_invocation_opt &&
-           constructor_block -> explicit_constructor_invocation_opt -> ThisCallCast()))
+    //
+    // Supply synthetic field initialization unless constructor calls this().
+    //
+    if (constructor_block -> explicit_constructor_opt &&
+        ! constructor_block -> explicit_constructor_opt -> ThisCallCast())
     {
-        if (type -> NumEnclosingInstances())
+        if (unit_type -> EnclosingType())
         {
-            VariableSymbol *this0_parameter = type -> EnclosingInstance(0);
-            PutOp(OP_ALOAD_0); // load address of object on which method is to be invoked
+            //
+            // Initialize this$0
+            //
+            VariableSymbol *this0_parameter = unit_type -> EnclosingInstance();
+            PutOp(OP_ALOAD_0);
             LoadLocal(1, this0_parameter -> Type());
             PutOp(OP_PUTFIELD);
             PutU2(RegisterFieldref(this0_parameter));
         }
 
-        if (class_body -> this_block) // compile explicit 'this' call if present
+        if (unit_type -> NumConstructorParameters() > 0)
         {
-            AstBlock *block = class_body -> this_block;
-            for (int si = 0; si < block -> NumStatements(); si++)
-                EmitStatement((AstStatement *) block -> Statement(si));
-        }
+            //
+            // Set up the index to account for this, this$0, and normal
+            // parameters, then initialize local variable shadows.
+            //
+            int index = unit_type -> EnclosingType() ? 2 : 1;
+            for (int j = 0; j < method_symbol -> NumFormalParameters(); j++)
+                index += GetTypeWords(method_symbol -> FormalParameter(j) ->
+                                      Type());
 
-        if (! type -> block_initializer_method)
-        {
-            int fi = 0,
-                bi = 0;
-
-            while (fi < initialized_fields.Length() &&
-                   bi < class_body -> NumBlocks() && ! abrupt)
+            for (int i = 0; i < unit_type -> NumConstructorParameters(); i++)
             {
-                if (initialized_fields[fi] -> LeftToken() <
-                    class_body -> Block(bi) -> left_brace_token)
-                {
-                    InitializeInstanceVariable(initialized_fields[fi++]);
-                }
-                else
-                {
-                    AstBlock *block = class_body -> Block(bi++);
-                    for (int si = 0;
-                         si < block -> NumStatements() && ! abrupt; si++)
-                    {
-                        abrupt = EmitStatement((AstStatement *) block ->
-                                               Statement(si));
-                    }
-                }
+                VariableSymbol *shadow = unit_type -> ConstructorParameter(i);
+                PutOp(OP_ALOAD_0);
+                LoadLocal(index, shadow -> Type());
+                PutOp(OP_PUTFIELD);
+                if (control.IsDoubleWordType(shadow -> Type()))
+                    ChangeStack(-1);
+                PutU2(RegisterFieldref(shadow));
+                index += GetTypeWords(shadow -> Type());
             }
-
-            while (fi < initialized_fields.Length())
-                InitializeInstanceVariable(initialized_fields[fi++]);
-
-            // compile any initialization blocks
-            while (bi < class_body -> NumBlocks() && ! abrupt)
-            {
-                AstBlock *block = class_body -> Block(bi++);
-                for (int si = 0;
-                     si < block -> NumStatements() && ! abrupt; si++)
-                {
-                    abrupt = EmitStatement((AstStatement *) block ->
-                                           Statement(si));
-                }
-            }
-        }
-        else // generate a call to the parameterless function block_initializer_function
-        {
-            PutOp(OP_ALOAD_0); // load address of object on which method is to be invoked
-            PutOp(OP_INVOKESPECIAL);
-            CompleteCall(type -> block_initializer_method, 0);
         }
     }
 
-    if (! abrupt)
-        EmitStatement(constructor_block -> block);
+    if (control.option.source >= JikesOption::SDK1_4)
+    {
+        //
+        // Since JDK 1.4, VMs correctly allow shadow initialization before
+        // the superconstructor, which is necessary to avoid null pointer
+        // exceptions with polymorphic calls from the superconstructor.
+        //
+        if (constructor_block -> explicit_constructor_opt)
+            EmitStatement(constructor_block -> explicit_constructor_opt);
+        else
+            assert(unit_type == control.Object() &&
+                   "A constructor without an explicit constructor invocation");
+    }
+
+    //
+    // Compile instance initializers unless the constructor calls this().
+    //
+    if (has_instance_initializer &&
+        constructor_block -> explicit_constructor_opt &&
+        ! constructor_block -> explicit_constructor_opt -> ThisCallCast())
+    {
+        PutOp(OP_ALOAD_0);
+        PutOp(OP_INVOKESPECIAL);
+        CompleteCall(unit_type -> instance_initializer_method, 0);
+    }
+
+    EmitBlockStatement(constructor_block);
     EndMethod(method_index, method_symbol);
 }
 
@@ -658,7 +495,8 @@ void ByteCode::DeclareField(VariableSymbol *symbol)
     TypeSymbol *type = symbol -> Type();
 
     fields[field_index].SetFlags(symbol -> Flags());
-    fields[field_index].SetNameIndex(RegisterUtf8(symbol -> ExternalIdentity() -> Utf8_literal));
+    fields[field_index].SetNameIndex(RegisterName(symbol ->
+                                                  ExternalIdentity()));
     fields[field_index].SetDescriptorIndex(RegisterUtf8(type -> signature));
 
     //
@@ -671,14 +509,19 @@ void ByteCode::DeclareField(VariableSymbol *symbol)
         assert(type -> Primitive() || type == control.String());
         u2 index = ((control.IsSimpleIntegerValueType(type) ||
                      type == control.boolean_type)
-                    ? RegisterInteger(DYNAMIC_CAST<IntLiteralValue *> (symbol -> initial_value))
+                    ? RegisterInteger(DYNAMIC_CAST<IntLiteralValue *>
+                                      (symbol -> initial_value))
                     : type == control.String()
-                    ? RegisterString(DYNAMIC_CAST<Utf8LiteralValue *> (symbol -> initial_value))
+                    ? RegisterString(DYNAMIC_CAST<Utf8LiteralValue *>
+                                     (symbol -> initial_value))
                     : type == control.float_type
-                    ? RegisterFloat(DYNAMIC_CAST<FloatLiteralValue *> (symbol -> initial_value))
+                    ? RegisterFloat(DYNAMIC_CAST<FloatLiteralValue *>
+                                    (symbol -> initial_value))
                     : type == control.long_type
-                    ? RegisterLong(DYNAMIC_CAST<LongLiteralValue *> (symbol -> initial_value))
-                    : RegisterDouble(DYNAMIC_CAST<DoubleLiteralValue *> (symbol -> initial_value)));
+                    ? RegisterLong(DYNAMIC_CAST<LongLiteralValue *>
+                                   (symbol -> initial_value))
+                    : RegisterDouble(DYNAMIC_CAST<DoubleLiteralValue *>
+                                     (symbol -> initial_value)));
         u2 attribute_index = RegisterUtf8(control.ConstantValue_literal);
         fields[field_index].AddAttribute(new ConstantValue_attribute(attribute_index, index));
     }
@@ -778,9 +621,17 @@ void ByteCode::BeginMethod(int method_index, MethodSymbol *msym)
                 << unit_type -> ContainingPackage() -> PackageName() << "/"
                 << unit_type -> ExternalName() << endl;
 #endif // DUMP
+#ifdef JIKES_DEBUG
+    if (control.option.debug_trace_stack_change)
+        Coutput << endl << "Generating method "
+                << unit_type -> ContainingPackage() -> PackageName() << '.'
+                << unit_type -> ExternalName() << '.' << msym -> Name()
+                << msym -> signature -> value << endl;
+#endif // JIKES_DEBUG
     MethodInitialization();
 
-    methods[method_index].SetNameIndex(RegisterUtf8(msym -> ExternalIdentity() -> Utf8_literal));
+    methods[method_index].SetNameIndex(RegisterName(msym ->
+                                                    ExternalIdentity()));
     methods[method_index].SetDescriptorIndex(RegisterUtf8(msym -> signature));
     methods[method_index].SetFlags(msym -> Flags());
 
@@ -797,13 +648,14 @@ void ByteCode::BeginMethod(int method_index, MethodSymbol *msym)
     {
         Exceptions_attribute *exceptions_attribute = new Exceptions_attribute(RegisterUtf8(control.Exceptions_literal));
         for (int i = 0; i < msym -> NumThrows(); i++)
-            exceptions_attribute -> AddExceptionIndex(RegisterClass(msym -> Throws(i) -> fully_qualified_name));
+            exceptions_attribute ->
+                AddExceptionIndex(RegisterClass(msym -> Throws(i)));
         methods[method_index].AddAttribute(exceptions_attribute);
     }
 
     //
     // If the method is contained in an interface and it is not a generated
-    // static initializer, no further processing ins needed
+    // static initializer, no further processing is needed
     //
     if (msym -> containing_type -> ACC_INTERFACE() &&
         msym -> Identity() != control.clinit_name_symbol)
@@ -816,16 +668,19 @@ void ByteCode::BeginMethod(int method_index, MethodSymbol *msym)
     //
     if (! (msym -> ACC_ABSTRACT() || msym -> ACC_NATIVE()))
     {
-        method_stack = new MethodStack(msym -> max_block_depth, msym -> block_symbol -> max_variable_index);
+        method_stack = new MethodStack(msym -> max_block_depth,
+                                       msym -> block_symbol -> max_variable_index);
 
-        code_attribute = new Code_attribute(RegisterUtf8(control.Code_literal), msym -> block_symbol -> max_variable_index);
+        code_attribute = new Code_attribute(RegisterUtf8(control.Code_literal),
+                                            msym -> block_symbol -> max_variable_index);
 
         line_number = 0;
         line_number_table_attribute = new LineNumberTable_attribute(RegisterUtf8(control.LineNumberTable_literal));
 
-        local_variable_table_attribute = ((control.option.g & JikesOption::VARS)
-                                          ? new LocalVariableTable_attribute(RegisterUtf8(control.LocalVariableTable_literal))
-                                          : (LocalVariableTable_attribute *) NULL);
+        local_variable_table_attribute =
+            ((control.option.g & JikesOption::VARS)
+             ? new LocalVariableTable_attribute(RegisterUtf8(control.LocalVariableTable_literal))
+             : (LocalVariableTable_attribute *) NULL);
     }
 
     VariableSymbol *last_parameter = (msym -> NumFormalParameters() ? msym -> FormalParameter(msym -> NumFormalParameters() - 1)
@@ -838,10 +693,10 @@ void ByteCode::BeginMethod(int method_index, MethodSymbol *msym)
                                                : last_parameter_index);
     if (num_parameter_slots > 255)
     {
-        assert(msym -> method_or_constructor_declaration);
+        assert(msym -> declaration);
 
-        AstMethodDeclaration *method_declaration = msym -> method_or_constructor_declaration -> MethodDeclarationCast();
-        AstConstructorDeclaration *constructor_declaration = msym -> method_or_constructor_declaration -> ConstructorDeclarationCast();
+        AstMethodDeclaration *method_declaration = msym -> declaration -> MethodDeclarationCast();
+        AstConstructorDeclaration *constructor_declaration = msym -> declaration -> ConstructorDeclarationCast();
         AstMethodDeclarator *declarator = (method_declaration ? method_declaration -> method_declarator
                                                               : constructor_declaration -> constructor_declarator);
 
@@ -868,8 +723,8 @@ void ByteCode::EndMethod(int method_index, MethodSymbol *msym)
         if (msym -> block_symbol -> max_variable_index > 65535)
         {
             semantic.ReportSemError(SemanticError::LOCAL_VARIABLES_OVERFLOW,
-                                    msym -> method_or_constructor_declaration -> LeftToken(),
-                                    msym -> method_or_constructor_declaration -> RightToken(),
+                                    msym -> declaration -> LeftToken(),
+                                    msym -> declaration -> RightToken(),
                                     msym -> Header(),
                                     unit_type -> ContainingPackage() -> PackageName(),
                                     unit_type -> ExternalName());
@@ -878,8 +733,8 @@ void ByteCode::EndMethod(int method_index, MethodSymbol *msym)
         if (max_stack > 65535)
         {
             semantic.ReportSemError(SemanticError::STACK_OVERFLOW,
-                                    msym -> method_or_constructor_declaration -> LeftToken(),
-                                    msym -> method_or_constructor_declaration -> RightToken(),
+                                    msym -> declaration -> LeftToken(),
+                                    msym -> declaration -> RightToken(),
                                     msym -> Header(),
                                     unit_type -> ContainingPackage() -> PackageName(),
                                     unit_type -> ExternalName());
@@ -888,8 +743,8 @@ void ByteCode::EndMethod(int method_index, MethodSymbol *msym)
         if (code_attribute -> CodeLengthExceeded())
         {
             semantic.ReportSemError(SemanticError::CODE_OVERFLOW,
-                                    msym -> method_or_constructor_declaration -> LeftToken(),
-                                    msym -> method_or_constructor_declaration -> RightToken(),
+                                    msym -> declaration -> LeftToken(),
+                                    msym -> declaration -> RightToken(),
                                     msym -> Header(),
                                     unit_type -> ContainingPackage() -> PackageName(),
                                     unit_type -> ExternalName());
@@ -927,11 +782,11 @@ void ByteCode::EndMethod(int method_index, MethodSymbol *msym)
         {
             if (! msym -> ACC_STATIC()) // add 'this' to local variable table
             {
-                local_variable_table_attribute -> AddLocalVariable(0,
-                                                                   code_attribute -> CodeLength(),
-                                                                   RegisterUtf8(control.this_literal),
-                                                                   RegisterUtf8(msym -> containing_type -> signature),
-                                                                   0);
+                local_variable_table_attribute ->
+                    AddLocalVariable(0, code_attribute -> CodeLength(),
+                                     RegisterUtf8(control.this_literal),
+                                     RegisterUtf8(msym -> containing_type -> signature),
+                                     0);
             }
 
             //
@@ -940,11 +795,11 @@ void ByteCode::EndMethod(int method_index, MethodSymbol *msym)
             for (int i = 0; i < msym -> NumFormalParameters(); i++)
             {
                 VariableSymbol *parameter = msym -> FormalParameter(i);
-                local_variable_table_attribute -> AddLocalVariable(0,
-                                                                   code_attribute -> CodeLength(),
-                                                                   RegisterUtf8(parameter -> ExternalIdentity() -> Utf8_literal),
-                                                                   RegisterUtf8(parameter -> Type() -> signature),
-                                                                   parameter -> LocalVariableIndex());
+                local_variable_table_attribute ->
+                    AddLocalVariable(0, code_attribute -> CodeLength(),
+                                     RegisterName(parameter -> ExternalIdentity()),
+                                     RegisterUtf8(parameter -> Type() -> signature),
+                                     parameter -> LocalVariableIndex());
             }
 
             if (local_variable_table_attribute -> LocalVariableTableLength() > 0)
@@ -961,77 +816,34 @@ void ByteCode::EndMethod(int method_index, MethodSymbol *msym)
 
 
 //
-// This should only be called on non-constant static fields.
+// This is called to initialize non-constant static fields, and all instance
+// fields, that were declared with optional initializers.
 //
-void ByteCode::InitializeClassVariable(AstVariableDeclarator *vd)
+void ByteCode::InitializeVariable(AstVariableDeclarator *vd)
 {
-    assert(vd -> variable_initializer_opt);
+    assert(vd -> variable_initializer_opt && vd -> symbol);
 
-    AstExpression *expression = vd -> variable_initializer_opt -> ExpressionCast();
+    AstExpression *expression =
+        vd -> variable_initializer_opt -> ExpressionCast();
     if (expression)
     {
-        assert(vd -> symbol && ! vd -> symbol -> initial_value);
-
-        //
-        // Here, we add a line number attribute for this initializer for this
-        // expression.  It seems that some debuggers (notably Sun's JDB) will
-        // not allow setting breakpoints at a specific line of code if a class
-        // contains initialized class variables but _no_ static initializer
-        // block.  We now add a line number attribute to appease that debugger.
-        //
-        line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
-                                                     semantic.lex_stream -> Line(expression -> LeftToken()));
-
+        if (vd -> symbol -> ACC_STATIC())
+            assert(! vd -> symbol -> initial_value);
+        else
+            PutOp(OP_ALOAD_0); // load 'this' for instance variables
         EmitExpression(expression);
     }
     else
     {
-        AstArrayInitializer *array_initializer = vd -> variable_initializer_opt -> ArrayInitializerCast();
-
+        AstArrayInitializer *array_initializer =
+            vd -> variable_initializer_opt -> ArrayInitializerCast();
         assert(array_initializer);
-
-        //
-        // Like the case above, we add a line number attribute for this
-        // initializer. In this case, the initializer is an array. It seems
-        // that some debuggers (notably Sun's JDB) will not allow setting
-        // breakpoints at a specific line of code if a class contains
-        // initialized class variables but _no_ static initializer block.
-        // We now add a line number attribute to appease that debugger.
-        //
-        line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
-                                                     semantic.lex_stream -> Line(array_initializer->LeftToken()));
-
+        if (! vd -> symbol -> ACC_STATIC())
+            PutOp(OP_ALOAD_0); // load 'this' for instance variables
         InitializeArray(vd -> symbol -> Type(), array_initializer);
     }
 
-    PutOp(OP_PUTSTATIC);
-    if (expression && control.IsDoubleWordType(expression -> Type()))
-        ChangeStack(-1);
-    PutU2(RegisterFieldref(vd -> symbol));
-}
-
-
-void ByteCode::InitializeInstanceVariable(AstVariableDeclarator *vd)
-{
-    assert(vd -> variable_initializer_opt); // field needs initialization
-
-    AstExpression *expression = vd -> variable_initializer_opt -> ExpressionCast();
-    if (expression)
-    {
-        PutOp(OP_ALOAD_0); // load 'this'
-        EmitExpression(expression);
-    }
-    else
-    {
-        AstArrayInitializer *array_initializer = vd -> variable_initializer_opt -> ArrayInitializerCast();
-
-        assert(array_initializer);
-
-        PutOp(OP_ALOAD_0); // load 'this'
-        InitializeArray(vd -> symbol -> Type(), array_initializer);
-    }
-
-    PutOp(OP_PUTFIELD);
+    PutOp(vd -> symbol -> ACC_STATIC() ? OP_PUTSTATIC : OP_PUTFIELD);
     if (expression && control.IsDoubleWordType(expression -> Type()))
         ChangeStack(-1);
     PutU2(RegisterFieldref(vd -> symbol));
@@ -1048,9 +860,15 @@ void ByteCode::InitializeArray(TypeSymbol *type,
     for (int i = 0; i < array_initializer -> NumVariableInitializers(); i++)
     {
         Ast *entry = array_initializer -> VariableInitializer(i);
+        AstExpression *expr = entry -> ExpressionCast();
+        if (expr && (IsZero(expr) || expr -> Type() == control.null_type))
+        {
+            EmitExpression(expr, false);
+            continue;
+        }
+
         PutOp(OP_DUP);
         LoadImmediateInteger(i);
-        AstExpression *expr = entry -> ExpressionCast();
         if (expr)
              EmitExpression(expr);
         else
@@ -1140,6 +958,7 @@ bool ByteCode::EmitStatement(AstStatement *statement)
 
     switch (statement -> kind)
     {
+    case Ast::METHOD_BODY:
     case Ast::BLOCK: // JLS 14.2
         return EmitBlockStatement((AstBlock *) statement);
     case Ast::LOCAL_VARIABLE_DECLARATION: // JLS 14.3
@@ -1247,6 +1066,7 @@ bool ByteCode::EmitStatement(AstStatement *statement)
                 assert(stack_depth == 0);
                 return abrupt;
             }
+            Label &continue_label = method_stack -> TopContinueLabel();
             if (wp -> expression -> IsConstant())
             {
                 // must be true, or internal statement would be
@@ -1255,13 +1075,13 @@ bool ByteCode::EmitStatement(AstStatement *statement)
                 abrupt = true;
             }
             else
-                EmitBranch(OP_GOTO, method_stack -> TopContinueLabel(),
-                           wp -> statement);
+                EmitBranch(OP_GOTO, continue_label, wp -> statement);
             Label begin_label;
             DefineLabel(begin_label);
+            u2 begin_pc = code_attribute -> CodeLength();
             abrupt |= EmitStatement(wp -> statement);
-            DefineLabel(method_stack -> TopContinueLabel());
-            CompleteLabel(method_stack -> TopContinueLabel());
+            bool empty = (begin_pc == code_attribute -> CodeLength());
+            DefineLabel(continue_label);
             assert(stack_depth == 0);
 
             //
@@ -1270,9 +1090,11 @@ bool ByteCode::EmitStatement(AstStatement *statement)
             line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
                                                          semantic.lex_stream -> Line(wp -> expression -> LeftToken()));
 
-            EmitBranchIfExpression(wp -> expression, true, begin_label,
+            EmitBranchIfExpression(wp -> expression, true,
+                                   empty ? continue_label : begin_label,
                                    wp -> statement);
             CompleteLabel(begin_label);
+            CompleteLabel(continue_label);
             return abrupt && ! wp -> can_complete_normally;
         }
     case Ast::DO: // JLS 14.11
@@ -1339,18 +1161,22 @@ bool ByteCode::EmitStatement(AstStatement *statement)
                 assert(stack_depth == 0);
                 return abrupt;
             }
+            Label &continue_label = method_stack -> TopContinueLabel();
             if (for_statement -> end_expression_opt &&
                 ! for_statement -> end_expression_opt -> IsConstant())
             {
-                EmitBranch(OP_GOTO, test_label,
+                EmitBranch(OP_GOTO,
+                           (for_statement -> NumForUpdateStatements()
+                            ? test_label : continue_label),
                            for_statement -> statement);
             }
             else
                 abrupt = true;
             DefineLabel(begin_label);
+            u2 begin_pc = code_attribute -> CodeLength();
             abrupt |= EmitStatement(for_statement -> statement);
-            DefineLabel(method_stack -> TopContinueLabel());
-            CompleteLabel(method_stack -> TopContinueLabel());
+            bool empty = (begin_pc == code_attribute -> CodeLength());
+            DefineLabel(continue_label);
             for (int j = 0; j < for_statement -> NumForUpdateStatements(); j++)
                 EmitStatement(for_statement -> ForUpdateStatement(j));
             DefineLabel(test_label);
@@ -1367,11 +1193,13 @@ bool ByteCode::EmitStatement(AstStatement *statement)
                 line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
                                                              semantic.lex_stream -> Line(end_expr -> LeftToken()));
 
-                EmitBranchIfExpression(end_expr, true, begin_label,
+                EmitBranchIfExpression(end_expr, true,
+                                       empty ? continue_label : begin_label,
                                        for_statement -> statement);
             }
-            else EmitBranch(OP_GOTO, begin_label,
+            else EmitBranch(OP_GOTO, empty ? continue_label : begin_label,
                             for_statement -> statement);
+            CompleteLabel(continue_label);
             CompleteLabel(begin_label);
             return abrupt && ! for_statement -> can_complete_normally;
         }
@@ -1422,19 +1250,27 @@ bool ByteCode::EmitStatement(AstStatement *statement)
     case Ast::TRY: // JLS 14.18
         EmitTryStatement((AstTryStatement *) statement);
         return ! statement -> can_complete_normally;
+    case Ast::CATCH:   // JLS 14.18
+    case Ast::FINALLY: // JLS 14.18
+        // handled by TryStatement
+        assert(false && "should not get here");
+        return false;
     case Ast::ASSERT: // JDK 1.4 (JSR 41)
         EmitAssertStatement((AstAssertStatement *) statement);
         return false;
     case Ast::CLASS: // Class Declaration
-    case Ast::INTERFACE: // InterfaceDeclaration
         //
-        // these are factored out by the front end; and so must be
-        // skipped here
+        // This is factored out by the front end; and so must be
+        // skipped here (remember, interfaces cannot be declared locally).
         //
         return false;
-    case Ast::CATCH:   // JLS 14.18
-    case Ast::FINALLY: // JLS 14.18
-        // handled by TryStatement
+    case Ast::VARIABLE_DECLARATOR:
+        //
+        // This is not really a statement, but we treat it as one to make
+        // initializer blocks easier to intermix with variable declarations.
+        //
+        InitializeVariable((AstVariableDeclarator *) statement);
+        return false;
     default:
         assert(false && "unknown statement kind");
         return false;
@@ -1471,7 +1307,7 @@ bool ByteCode::EmitBlockStatement(AstBlock *block)
     method_stack -> Push(block);
     bool abrupt = false;
     for (int i = 0; i < block -> NumStatements() && ! abrupt; i++)
-        abrupt = EmitStatement((AstStatement *) block -> Statement(i));
+        abrupt = EmitStatement(block -> Statement(i));
 
     //
     // If contained break statements jump out of this block, define the label.
@@ -1496,11 +1332,12 @@ bool ByteCode::EmitBlockStatement(AstBlock *block)
                     << "\" numbered " << variable -> LocalVariableIndex()
                     << " was released" << endl;
 #endif // DUMP
-            local_variable_table_attribute -> AddLocalVariable(method_stack -> StartPc(variable),
-                                                               code_attribute -> CodeLength(),
-                                                               RegisterUtf8(variable -> ExternalIdentity() -> Utf8_literal),
-                                                               RegisterUtf8(variable -> Type() -> signature),
-                                                               variable -> LocalVariableIndex());
+            local_variable_table_attribute ->
+                AddLocalVariable(method_stack -> StartPc(variable),
+                                 code_attribute -> CodeLength(),
+                                 RegisterName(variable -> ExternalIdentity()),
+                                 RegisterUtf8(variable -> Type() -> signature),
+                                 variable -> LocalVariableIndex());
         }
     }
 
@@ -1532,7 +1369,7 @@ void ByteCode::EmitStatementExpression(AstExpression *expression)
         EmitAssignmentExpression((AstAssignmentExpression *) expression, false);
         break;
     case Ast::CLASS_CREATION:
-        EmitClassInstanceCreationExpression((AstClassInstanceCreationExpression *) expression, false);
+        EmitInstanceCreationExpression((AstClassInstanceCreationExpression *) expression, false);
         break;
     default:
         assert(false && "invalid statement expression kind");
@@ -1778,11 +1615,12 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
                         << "\" numbered " << variable -> LocalVariableIndex()
                         << " was released" << endl;
 #endif // DUMP
-                local_variable_table_attribute -> AddLocalVariable(method_stack -> StartPc(variable),
-                                                                   code_attribute -> CodeLength(),
-                                                                   RegisterUtf8(variable -> ExternalIdentity() -> Utf8_literal),
-                                                                   RegisterUtf8(variable -> Type() -> signature),
-                                                                   variable -> LocalVariableIndex());
+                local_variable_table_attribute ->
+                    AddLocalVariable(method_stack -> StartPc(variable),
+                                     code_attribute -> CodeLength(),
+                                     RegisterName(variable -> ExternalIdentity()),
+                                     RegisterUtf8(variable -> Type() -> signature),
+                                     variable -> LocalVariableIndex());
             }
         }
     }
@@ -1920,17 +1758,18 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
 
             if (control.option.g & JikesOption::VARS)
             {
-                local_variable_table_attribute -> AddLocalVariable(handler_pc,
-                                                                   code_attribute -> CodeLength(),
-                                                                   RegisterUtf8(parameter_symbol -> ExternalIdentity() -> Utf8_literal),
-                                                                   RegisterUtf8(parameter_symbol -> Type() -> signature),
-                                                                   parameter_symbol -> LocalVariableIndex());
+                local_variable_table_attribute ->
+                    AddLocalVariable(handler_pc,
+                                     code_attribute -> CodeLength(),
+                                     RegisterName(parameter_symbol -> ExternalIdentity()),
+                                     RegisterUtf8(parameter_symbol -> Type() -> signature),
+                                     parameter_symbol -> LocalVariableIndex());
             }
 
             code_attribute -> AddException(start_try_block_pc,
-                                           end_try_block_pc,
-                                           handler_pc,
-                                           RegisterClass(parameter_symbol -> Type() -> fully_qualified_name));
+                                           end_try_block_pc, handler_pc,
+                                           RegisterClass(parameter_symbol ->
+                                                         Type()));
 
             //
             // If catch block completes normally, skip further catch blocks.
@@ -2344,7 +2183,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
                 PutOp(OP_INSTANCEOF);
                 PutU2(right_type -> num_dimensions > 0
                       ? RegisterClass(right_type -> signature)
-                      : RegisterClass(right_type -> fully_qualified_name));
+                      : RegisterClass(right_type));
 
                 EmitBranch((cond ? OP_IFNE : OP_IFEQ), lab, over);
             }
@@ -2935,7 +2774,7 @@ void ByteCode::EmitAssertStatement(AstAssertStatement *assertion)
         EmitBranchIfExpression(assertion -> condition, true, label);
 
         PutOp(OP_NEW);
-        PutU2(RegisterClass(control.AssertionError() -> fully_qualified_name));
+        PutU2(RegisterClass(control.AssertionError()));
         PutOp(OP_DUP);
 
         MethodSymbol *constructor = NULL;
@@ -2994,6 +2833,8 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
     {
     case Ast::IDENTIFIER:
         {
+            if (expression -> symbol && expression -> symbol -> TypeCast())
+                return 0;
             AstSimpleName *simple_name = expression -> SimpleNameCast();
             return (simple_name -> resolution_opt
                     ? EmitExpression(simple_name -> resolution_opt, need_value)
@@ -3008,10 +2849,8 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
             return 1;
         }
         return 0;
-    case Ast::PARENTHESIZED_EXPRESSION:
-        return EmitExpression(((AstParenthesizedExpression *) expression) -> expression, need_value);
     case Ast::CLASS_CREATION:
-        return EmitClassInstanceCreationExpression((AstClassInstanceCreationExpression *) expression, need_value);
+        return EmitInstanceCreationExpression((AstClassInstanceCreationExpression *) expression, need_value);
     case Ast::ARRAY_CREATION:
         assert(need_value && "array can't qualify static member");
         return EmitArrayCreationExpression((AstArrayCreationExpression *) expression);
@@ -3021,16 +2860,20 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
     case Ast::DOT:
         {
             AstFieldAccess *field_access = (AstFieldAccess *) expression;
-            return ((field_access -> IsClassAccess() &&
-                     field_access -> resolution_opt)
-                    ? (unit_type -> outermost_type -> ACC_INTERFACE()
-                       ? EmitExpression(field_access -> resolution_opt, need_value)
-                       : GenerateClassAccess(field_access, need_value))
-                    : EmitFieldAccess(field_access, need_value));
+            if (field_access -> IsClassAccess() &&
+                field_access -> resolution_opt)
+            {
+                return unit_type -> outermost_type -> ACC_INTERFACE()
+                    ? EmitExpression(field_access -> resolution_opt,
+                                     need_value)
+                    : GenerateClassAccess(field_access, need_value);
+            }
+            return EmitFieldAccess(field_access, need_value);
         }
     case Ast::CALL:
         {
-            AstMethodInvocation *method_call = expression -> MethodInvocationCast();
+            AstMethodInvocation *method_call =
+                expression -> MethodInvocationCast();
             // must evaluate for side effects
             EmitMethodInvocation(method_call);
             if (need_value)
@@ -3055,18 +2898,19 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
                                       need_value);
     case Ast::CAST:
         {
-            AstCastExpression *cast_expression = (AstCastExpression *) expression;
-
+            AstCastExpression *cast_expression =
+                (AstCastExpression *) expression;
             //
-            // only primitive types require casting
+            // Only primitive types require casting; the front end changed
+            // object downcasting to CHECK_AND_CAST.
             //
-            return (cast_expression -> expression -> Type() -> Primitive()
-                    ? EmitCastExpression(cast_expression, need_value)
-                    : EmitExpression(cast_expression -> expression, need_value));
+            return cast_expression -> expression -> Type() -> Primitive()
+                ? EmitCastExpression(cast_expression, need_value)
+                : EmitExpression(cast_expression -> expression, need_value);
         }
     case Ast::CHECK_AND_CAST:
         {
-            // must evaluate, for ClassCastException side effect
+            // Must evaluate, for ClassCastException side effect.
             int words = EmitCastExpression((AstCastExpression *) expression,
                                            true);
             if (need_value)
@@ -3077,7 +2921,7 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
         }        
     case Ast::BINARY:
         {
-            // must evaluate for potential side effects
+            // Must evaluate for potential side effects.
             int words = EmitBinaryExpression((AstBinaryExpression *) expression);
             if (need_value)
                 return words;
@@ -3101,7 +2945,6 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
         assert(false && "unknown expression kind");
         break;
     }
-
     return 0; // even though we will not reach here
 }
 
@@ -3283,10 +3126,8 @@ void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
     PutOp(OP_INVOKESTATIC);
     PutU2(RegisterLibraryMethodref(control.Class_forNameMethod()));
     PutOp(OP_ARETURN);
-    code_attribute -> AddException(0,
-                                   5,
-                                   5,
-                                   RegisterClass(control.ClassNotFoundException() -> fully_qualified_name));
+    code_attribute -> AddException(0, 5, 5,
+                                   RegisterClass(control.ClassNotFoundException()));
 
     ChangeStack(1); // account for the exception on the stack
     if (control.option.source < JikesOption::SDK1_4)
@@ -3295,7 +3136,7 @@ void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
         PutU2(RegisterLibraryMethodref(control.Throwable_getMessageMethod()));
         ChangeStack(1); // account for the returned string
         PutOp(OP_NEW);
-        PutU2(RegisterClass(control.NoClassDefFoundError() -> fully_qualified_name));
+        PutU2(RegisterClass(control.NoClassDefFoundError()));
         PutOp(OP_DUP_X1);
         PutOp(OP_SWAP);
         PutOp(OP_INVOKESPECIAL);
@@ -3305,7 +3146,7 @@ void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
     else
     {
         PutOp(OP_NEW);
-        PutU2(RegisterClass(control.NoClassDefFoundError() -> fully_qualified_name));
+        PutU2(RegisterClass(control.NoClassDefFoundError()));
         PutOp(OP_DUP_X1);
         PutOp(OP_INVOKESPECIAL);
         PutU2(RegisterLibraryMethodref(control.NoClassDefFoundError_InitMethod()));
@@ -3410,7 +3251,7 @@ void ByteCode::GenerateAssertVariableInitializer(TypeSymbol *tsym,
     //
     PutOp(OP_ICONST_0);
     PutOp(OP_ANEWARRAY);
-    PutU2(RegisterClass(tsym -> fully_qualified_name));
+    PutU2(RegisterClass(tsym));
     PutOp(OP_INVOKEVIRTUAL);
     ChangeStack(1); // for returned value
     PutU2(RegisterLibraryMethodref(control.Object_getClassMethod()));
@@ -3498,8 +3339,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
             if (left_hand_side -> FieldAccessCast())
             {
                 AstExpression *base = ((AstFieldAccess *) left_hand_side) -> base;
-                if (! base -> symbol -> TypeCast())
-                    EmitExpression(base, false);
+                EmitExpression(base, false);
             }
             break;
         case LHS_METHOD:
@@ -3598,7 +3438,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
         if (assignment_expression -> assignment_tag == AstAssignmentExpression::PLUS_EQUAL && left_type == control.String())
         {
             PutOp(OP_NEW);
-            PutU2(RegisterClass(control.StringBuffer() -> fully_qualified_name));
+            PutU2(RegisterClass(control.StringBuffer()));
             PutOp(OP_DUP_X1);
             PutOp(OP_INVOKESPECIAL);
             PutU2(RegisterLibraryMethodref(control.StringBuffer_InitMethod()));
@@ -3868,7 +3708,7 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
             PutOp(OP_INSTANCEOF);
             PutU2(right_type -> num_dimensions > 0
                   ? RegisterClass(right_type -> signature)
-                  : RegisterClass(right_type -> fully_qualified_name));
+                  : RegisterClass(right_type));
         }
         return 1;
     }
@@ -4354,7 +4194,7 @@ void ByteCode::EmitCast(TypeSymbol *dest_type, TypeSymbol *source_type)
         PutOp(OP_CHECKCAST);
         PutU2(dest_type -> num_dimensions > 0
               ? RegisterClass(dest_type -> signature)
-              : RegisterClass(dest_type -> fully_qualified_name));
+              : RegisterClass(dest_type));
     }
 }
 
@@ -4400,19 +4240,24 @@ void ByteCode::EmitCheckForNull(AstExpression *expression)
     }
 }
 
-int ByteCode::EmitClassInstanceCreationExpression(AstClassInstanceCreationExpression *expression,
-                                                  bool need_value)
+int ByteCode::EmitInstanceCreationExpression(AstClassInstanceCreationExpression *expression,
+                                             bool need_value)
 {
-    MethodSymbol *constructor = (MethodSymbol *) expression -> class_type -> symbol;
+    if (expression -> resolution_opt)
+        return EmitInstanceCreationExpression(expression -> resolution_opt,
+                                              need_value);
+    MethodSymbol *constructor =
+        (MethodSymbol *) expression -> class_type -> symbol;
 
     PutOp(OP_NEW);
-    PutU2(RegisterClass(expression -> Type() -> fully_qualified_name));
+    PutU2(RegisterClass(expression -> Type()));
     if (need_value) // save address of new object for constructor
         PutOp(OP_DUP);
 
     //
-    // call constructor
-    // pass address of object explicitly passed to new if specified.
+    // Pass enclosing instance along, then real arguments, then shadow
+    // variables. We do not need to worry about an extra null argument, as
+    // there are no accessibility issues when invoking this().
     //
     int stack_words = 0;
     if (expression -> base_opt)
@@ -4420,34 +4265,20 @@ int ByteCode::EmitClassInstanceCreationExpression(AstClassInstanceCreationExpres
         stack_words += EmitExpression(expression -> base_opt);
         EmitCheckForNull(expression -> base_opt);
     }
-
-    //
-    // Pass all local arguments, if any
-    //
+    for (int k = 0; k < expression -> NumArguments(); k++)
+        stack_words += EmitExpression(expression -> Argument(k));
     for (int i = 0; i < expression -> NumLocalArguments(); i++)
-        stack_words += EmitExpression((AstExpression *) expression -> LocalArgument(i));
-
-    //
-    // If we are calling a private constructor, pass the extra null argument
-    // to the access constructor.
-    //
+        stack_words += EmitExpression(expression -> LocalArgument(i));
     if (expression -> NeedsExtraNullArgument())
     {
         PutOp(OP_ACONST_NULL);
         stack_words += 1;
     }
 
-    //
-    // Now, process the real arguments specified in the source.
-    //
-    for (int k = 0; k < expression -> NumArguments(); k++)
-        stack_words += EmitExpression((AstExpression *) expression -> Argument(k));
-
     PutOp(OP_INVOKESPECIAL);
     ChangeStack(-stack_words);
-    PutU2(RegisterMethodref(expression -> Type() -> fully_qualified_name,
-                            control.init_name_symbol -> Utf8_literal,
-                            constructor -> signature));
+    PutU2(RegisterMethodref(expression -> Type(), control.init_name_symbol,
+                            constructor));
 
     return 1;
 }
@@ -4604,21 +4435,23 @@ int ByteCode::EmitFieldAccess(AstFieldAccess *expression, bool need_value)
         MethodSymbol *method = expression -> symbol -> MethodCast();
         if (! need_value && method && ! method -> AccessesInstanceMember())
             return EmitExpression(base, false);
-        else return EmitExpression(expression -> resolution_opt, need_value);
+        return EmitExpression(expression -> resolution_opt, need_value);
     }
 
     if (! sym) // not a variable, so it must be a class or package name
         return 0;
 
-    if (base -> Type() -> IsArray() &&
-        sym -> ExternalIdentity() == control.length_name_symbol)
+    if (base -> Type() -> IsArray())
     {
-        if (! need_value)
-            return 0;
-
+        assert(sym -> name_symbol == control.length_name_symbol);
+        // Possible null pointer exception requires evaluation.
         EmitExpression(base);
         PutOp(OP_ARRAYLENGTH);
-
+        if (! need_value)
+        {
+            PutOp(OP_POP);
+            return 0;
+        }
         return 1;
     }
 
@@ -4626,30 +4459,24 @@ int ByteCode::EmitFieldAccess(AstFieldAccess *expression, bool need_value)
     if (sym -> ACC_STATIC())
     {
         //
-        // If the access is qualified by an arbitrary base
-        // expression, evaluate it for side effects.
+        // If the access is qualified by an arbitrary base expression,
+        // evaluate it for side effects. Likewise, volatile fields must be
+        // loaded because of the memory barrier side effect.
         //
-        if (! expression -> IsClassAccess() &&
-            ! expression -> base -> symbol -> TypeCast())
-        {
+        if (! expression -> IsClassAccess())
             EmitExpression(base, false);
-        }
-        if (need_value)
-        {
+        if (need_value || sym -> ACC_VOLATILE())
             PutOp(OP_GETSTATIC);
-            if (control.IsDoubleWordType(expression_type))
-                ChangeStack(1);
-        }
         else return 0;
     }
     else
     {
         EmitExpression(base); // get base
         PutOp(OP_GETFIELD); // must evaluate, in case of NullPointerException
-        if (control.IsDoubleWordType(expression_type))
-            ChangeStack(1);
     }
 
+    if (control.IsDoubleWordType(expression_type))
+        ChangeStack(1);
     PutU2(RegisterFieldref(VariableTypeResolution(expression, sym), sym));
 
     if (! need_value)
@@ -4688,7 +4515,7 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
         //
         AstFieldAccess *field = (msym -> AccessesInstanceMember() ? NULL
                                  : method_call -> method -> FieldAccessCast());
-        if (field && ! field -> base -> symbol -> TypeCast())
+        if (field)
             EmitExpression(field -> base, false);
     }
     else
@@ -4740,12 +4567,9 @@ void ByteCode::CompleteCall(MethodSymbol *msym,
 
     TypeSymbol *type = (base_type ? base_type : msym -> containing_type);
 
-    PutU2(type -> ACC_INTERFACE() ? RegisterInterfaceMethodref(type -> fully_qualified_name,
-                                                               msym -> ExternalIdentity() -> Utf8_literal,
-                                                               msym -> signature)
-                                  : RegisterMethodref(type -> fully_qualified_name,
-                                                      msym -> ExternalIdentity() -> Utf8_literal,
-                                                      msym -> signature));
+    PutU2(type -> ACC_INTERFACE()
+          ? RegisterInterfaceMethodref(type, msym -> ExternalIdentity(), msym)
+          : RegisterMethodref(type, msym -> ExternalIdentity(), msym));
 
     if (type -> ACC_INTERFACE())
     {
@@ -4843,7 +4667,7 @@ void ByteCode::EmitNewArray(int num_dims, TypeSymbol *type)
         else // must be reference type
         {
             PutOp(OP_ANEWARRAY);
-            PutU2(RegisterClass(element_type -> fully_qualified_name));
+            PutU2(RegisterClass(element_type));
         }
     }
     else
@@ -4949,7 +4773,8 @@ void ByteCode::EmitPostUnaryExpressionField(int kind,
             ChangeStack(-1);
 
         VariableSymbol *sym = (VariableSymbol *) expression -> symbol;
-        PutU2(RegisterFieldref(VariableTypeResolution(expression -> expression, sym), sym));
+        PutU2(RegisterFieldref(VariableTypeResolution(expression ->
+                                                      expression, sym), sym));
     }
 }
 
@@ -5422,7 +5247,8 @@ void ByteCode::EmitPreUnaryIncrementExpressionField(int kind,
             ChangeStack(-1);
 
         VariableSymbol *sym = (VariableSymbol *) expression -> symbol;
-        PutU2(RegisterFieldref(VariableTypeResolution(expression -> expression, sym), sym));
+        PutU2(RegisterFieldref(VariableTypeResolution(expression ->
+                                                      expression, sym), sym));
     }
 }
 
@@ -5430,46 +5256,48 @@ void ByteCode::EmitPreUnaryIncrementExpressionField(int kind,
 void ByteCode::EmitThisInvocation(AstThisCall *this_call)
 {
     //
-    // THIS_CALL
-    //    AstExpression *method;
-    //    AstList *arguments;
-    // A call to another constructor (THIS_CALL) or super constructor
-    // (SUPER_CALL) results in the same sort of generated code, as the
-    // semantic analysis has resolved the proper constructor to be invoked.
+    // Pass enclosing instance along, then real arguments.
     //
     PutOp(OP_ALOAD_0); // load 'this'
-
     int stack_words = 0; // words on stack needed for arguments
-
-    //
-    // If this is an inner class, we must also pass along the enclosing
-    // instance in addition to this.
-    //
-    if (unit_type -> IsInner())
-    {
-        PutOp(OP_ALOAD_1); // load 'this$0'
-        stack_words++;
-    }
-
-    for (int i = 0; i < this_call -> NumLocalArguments(); i++)
-        stack_words += EmitExpression((AstExpression *) this_call -> LocalArgument(i));
-
+    if (unit_type -> EnclosingType())
+        LoadLocal(++stack_words, unit_type -> EnclosingType());
     for (int k = 0; k < this_call -> NumArguments(); k++)
-        stack_words += EmitExpression((AstExpression *) this_call -> Argument(k));
+        stack_words += EmitExpression(this_call -> Argument(k));
+
+    //
+    // Now do a transfer of the shadow variables. We do not need to worry
+    // about an extra null argument, as there are no accessibility issues
+    // when invoking this().
+    //
+    assert(this_call -> shadow_parameter_offset);
+    for (int offset = this_call -> shadow_parameter_offset, i = 0;
+         i < unit_type -> NumConstructorParameters(); i++)
+    {
+        VariableSymbol *shadow = unit_type -> ConstructorParameter(i);
+        LoadLocal(offset, shadow -> Type());
+        int words = GetTypeWords(shadow -> Type());
+        offset += words;
+        stack_words += words;
+    }
 
     PutOp(OP_INVOKESPECIAL);
     ChangeStack(-stack_words);
 
-    PutU2(RegisterMethodref(unit_type -> fully_qualified_name,
-                            this_call -> symbol -> ExternalIdentity() -> Utf8_literal,
-                            this_call -> symbol -> signature));
+    PutU2(RegisterMethodref(unit_type,
+                            this_call -> symbol -> ExternalIdentity(),
+                            this_call -> symbol));
 }
 
 
 void ByteCode::EmitSuperInvocation(AstSuperCall *super_call)
 {
+    //
+    // Pass enclosing instance along, then real arguments, then shadow
+    // variables, and finally any extra null argument for accessibility
+    // issues.
+    //
     PutOp(OP_ALOAD_0); // load 'this'
-
     int stack_words = 0; // words on stack needed for arguments
     if (super_call -> base_opt)
     {
@@ -5481,30 +5309,27 @@ void ByteCode::EmitSuperInvocation(AstSuperCall *super_call)
             // the base of the super call is null only if the original base
             // of the class instance creation expression is.
             //
-            AstClassInstanceCreationExpression *creation = (AstClassInstanceCreationExpression *) unit_type -> declaration;
-            EmitCheckForNull(creation -> Argument(0));
+            AstClassInstanceCreationExpression *creation =
+                (AstClassInstanceCreationExpression *) unit_type -> declaration;
+            EmitCheckForNull(creation -> base_opt);
         }
         else EmitCheckForNull(super_call -> base_opt);
     }
-
+    for (int k = 0; k < super_call -> NumArguments(); k++)
+        stack_words += EmitExpression(super_call -> Argument(k));
     for (int i = 0; i < super_call -> NumLocalArguments(); i++)
-        stack_words += EmitExpression((AstExpression *) super_call -> LocalArgument(i));
-
+        stack_words += EmitExpression(super_call -> LocalArgument(i));
     if (super_call -> NeedsExtraNullArgument())
     {
         PutOp(OP_ACONST_NULL);
         stack_words += 1;
     }
 
-    for (int k = 0; k < super_call -> NumArguments(); k++)
-        stack_words += EmitExpression((AstExpression *) super_call -> Argument(k));
-
     PutOp(OP_INVOKESPECIAL);
     ChangeStack(-stack_words);
-
-    PutU2(RegisterMethodref(unit_type -> super -> fully_qualified_name,
-                            super_call -> symbol -> ExternalIdentity() -> Utf8_literal,
-                            super_call -> symbol -> signature));
+    PutU2(RegisterMethodref(unit_type -> super,
+                            super_call -> symbol -> ExternalIdentity(),
+                            super_call -> symbol));
 }
 
 
@@ -5531,7 +5356,7 @@ void ByteCode::ConcatenateString(AstBinaryExpression *expression)
     else
     {
         PutOp(OP_NEW);
-        PutU2(RegisterClass(control.StringBuffer() -> fully_qualified_name));
+        PutU2(RegisterClass(control.StringBuffer()));
         PutOp(OP_DUP);
         if (left_expr -> IsConstant())
         {
@@ -5665,25 +5490,26 @@ static void op_trap()
 #endif // JIKES_DEBUG
 
 
-ByteCode::ByteCode(TypeSymbol *unit_type) : ClassFile(unit_type),
-                                            control(unit_type -> semantic_environment -> sem -> control),
-                                            semantic(*unit_type -> semantic_environment -> sem),
+ByteCode::ByteCode(TypeSymbol *unit_type)
+    : ClassFile(unit_type),
+      control(unit_type -> semantic_environment -> sem -> control),
+      semantic(*unit_type -> semantic_environment -> sem),
+      string_overflow(false),
+      library_method_not_found(false),
+      double_constant_pool_index(NULL),
+      integer_constant_pool_index(NULL),
+      long_constant_pool_index(NULL),
+      float_constant_pool_index(NULL),
+      string_constant_pool_index(NULL),
 
-                                            string_overflow(false),
-                                            library_method_not_found(false),
+      utf8_constant_pool_index(segment_pool,
+                               control.Utf8_pool.symbol_pool.Length()),
+      class_constant_pool_index(segment_pool,
+                                control.Utf8_pool.symbol_pool.Length()),
 
-                                            double_constant_pool_index(NULL),
-                                            integer_constant_pool_index(NULL),
-                                            long_constant_pool_index(NULL),
-                                            float_constant_pool_index(NULL),
-                                            string_constant_pool_index(NULL),
-
-                                            utf8_constant_pool_index(segment_pool, control.Utf8_pool.symbol_pool.Length()),
-                                            class_constant_pool_index(segment_pool, control.Utf8_pool.symbol_pool.Length()),
-
-                                            name_and_type_constant_pool_index(NULL),
-                                            fieldref_constant_pool_index(NULL),
-                                            methodref_constant_pool_index(NULL)
+      name_and_type_constant_pool_index(NULL),
+      fieldref_constant_pool_index(NULL),
+      methodref_constant_pool_index(NULL)
 {
 #ifdef JIKES_DEBUG
     if (! control.option.nowrite)
@@ -5696,31 +5522,16 @@ ByteCode::ByteCode(TypeSymbol *unit_type) : ClassFile(unit_type),
 
     SetFlags(unit_type -> Flags());
 
-    //
-    // TODO: Are these appropriately taken care of earlier?
-    // The flags for 'static' and 'protected' are set only for the inner
-    // classes attribute, not for the class, as described in page 25
-    // of the inner classes document.
-    //
-    if (unit_type -> ACC_PROTECTED())
-    {
-        this -> ResetACC_PROTECTED();
-        this -> SetACC_PUBLIC();
-    }
-    this -> ResetACC_STATIC();
-    this -> ResetACC_PRIVATE();
-    this -> SetACC_SUPER(); // must always set ACC_SUPER for class (cf page 96 of revised JVM Spec)
-
     magic = 0xcafebabe;
     major_version = 45;             // use Sun JDK 1.0 version numbers
     minor_version = 3;
     constant_pool.Next() = NULL;
-    this_class = RegisterClass(unit_type -> fully_qualified_name);
+    this_class = RegisterClass(unit_type);
 
-    super_class = (unit_type -> super ? RegisterClass(unit_type -> super -> fully_qualified_name) : 0);
+    super_class = (unit_type -> super ? RegisterClass(unit_type -> super) : 0);
 
     for (int k = 0; k < unit_type -> NumInterfaces(); k++)
-        interfaces.Next() = RegisterClass(unit_type -> Interface(k) -> fully_qualified_name);
+        interfaces.Next() = RegisterClass(unit_type -> Interface(k));
 }
 
 
@@ -6036,43 +5847,40 @@ int ByteCode::LoadVariable(int kind, AstExpression *expr, bool need_value)
         }
     case LHS_FIELD:
     case LHS_STATIC:
+        //
+        // If no value is needed, do nothing for non-volatile fields.
+        // But we must access volatile fields because of the memory
+        // barrier side-effect.
+        //
+        if (! need_value && ! sym -> ACC_VOLATILE())
+            return 0;
+        if (sym -> ACC_STATIC())
         {
             //
-            // If no value is needed, do nothing for non-volatile fields.
-            // But we must access volatile fields because of the memory
-            // barrier side-effect.
+            // If the access is qualified by an arbitrary base
+            // expression, evaluate it for side effects.
             //
-            if (! need_value && ! sym -> ACC_VOLATILE())
-                return 0;
-            if (sym -> ACC_STATIC())
+            if (expr -> FieldAccessCast())
             {
-                //
-                // If the access is qualified by an arbitrary base
-                // expression, evaluate it for side effects.
-                //
-                if (expr -> FieldAccessCast())
-                {
-                    AstExpression *base = ((AstFieldAccess *) expr) -> base;
-                    if (! base -> symbol -> TypeCast())
-                        EmitExpression(base, false);
-                }
+                AstExpression *base = ((AstFieldAccess *) expr) -> base;
+                EmitExpression(base, false);
+            }
 
-                PutOp(OP_GETSTATIC);
-                ChangeStack(GetTypeWords(expression_type) - 1);
-            }
-            else
-            {
-                PutOp(OP_ALOAD_0); // get address of "this"
-                PutOp(OP_GETFIELD);
-                ChangeStack(GetTypeWords(expression_type) - 1);
-            }
-            PutU2(RegisterFieldref(VariableTypeResolution(expr, sym), sym));
-            if (! need_value)
-            {
-                PutOp(control.IsDoubleWordType(expression_type)
-                      ? OP_POP2 : OP_POP);
-                return 0;
-            }
+            PutOp(OP_GETSTATIC);
+            ChangeStack(GetTypeWords(expression_type) - 1);
+        }
+        else
+        {
+            PutOp(OP_ALOAD_0); // get address of "this"
+            PutOp(OP_GETFIELD);
+            ChangeStack(GetTypeWords(expression_type) - 1);
+        }
+        PutU2(RegisterFieldref(VariableTypeResolution(expr, sym), sym));
+        if (! need_value)
+        {
+            PutOp(control.IsDoubleWordType(expression_type)
+                  ? OP_POP2 : OP_POP);
+            return 0;
         }
         break;
     default:
@@ -6215,11 +6023,12 @@ void ByteCode::FinishCode(TypeSymbol *type)
         attributes.Next() = new SourceFile_attribute(RegisterUtf8(control.SourceFile_literal),
                                                      RegisterUtf8(type -> file_symbol -> FileNameLiteral()));
 
-    if (type == NULL)
-        return; // return if interface type
-
+    //
+    // Generate InnerClasses attribute for every CONSTANT_Class_info in the
+    // pool that is nested in another type.
+    //
     if (type -> IsLocal() || type -> IsNested() ||
-        type -> NumNestedTypes() > 0) // here to generate InnerClasses attribute
+        type -> NumNestedTypes() > 0)
     {
         inner_classes_attribute = new InnerClasses_attribute(RegisterUtf8(control.InnerClasses_literal));
 
@@ -6240,27 +6049,25 @@ void ByteCode::FinishCode(TypeSymbol *type)
         for (int j = owners.Length() - 1; j >= 0; j--)
         {
             TypeSymbol *outer = owners[j];
-            inner_classes_attribute -> AddInnerClass(RegisterClass(outer -> fully_qualified_name),
-                                                     outer -> IsLocal()
-                                                            ? 0
-                                                            : RegisterClass(outer -> ContainingType() -> fully_qualified_name),
-                                                     outer -> Anonymous()
-                                                            ? 0
-                                                            : RegisterUtf8(outer -> name_symbol -> Utf8_literal),
-                                                     outer -> Flags());
+            inner_classes_attribute ->
+                AddInnerClass(RegisterClass(outer),
+                              (outer -> IsLocal() ? 0
+                               : RegisterClass(outer -> ContainingType())),
+                              (outer -> Anonymous() ? 0
+                               : RegisterName(outer -> name_symbol)),
+                              outer -> Flags());
         }
 
         for (int k = 0; k < type -> NumNestedTypes(); k++)
         {
             TypeSymbol *nested = type -> NestedType(k);
-            inner_classes_attribute -> AddInnerClass(RegisterClass(nested -> fully_qualified_name),
-                                                     nested -> IsLocal()
-                                                             ? 0
-                                                             : RegisterClass(nested -> ContainingType() -> fully_qualified_name),
-                                                     nested -> Anonymous()
-                                                             ? 0
-                                                             : RegisterUtf8(nested -> name_symbol -> Utf8_literal),
-                                                     nested -> Flags());
+            inner_classes_attribute ->
+                AddInnerClass(RegisterClass(nested),
+                              (nested -> IsLocal() ? 0
+                               : RegisterClass(nested -> ContainingType())),
+                              (nested -> Anonymous() ? 0
+                               : RegisterName(nested -> name_symbol)),
+                              nested -> Flags());
         }
 
         attributes.Next() = inner_classes_attribute;

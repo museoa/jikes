@@ -432,8 +432,6 @@ void SemanticError::Report(SemanticErrorKind msg_code,
         // set properly. See print_messages
         error.Reset(1);
     }
-
-    return;
 }
 
 void SemanticError::StaticInitializer()
@@ -641,7 +639,7 @@ void SemanticError::StaticInitializer()
     print_message[EXPRESSION_NOT_THROWABLE] = PrintEXPRESSION_NOT_THROWABLE;
     print_message[MISPLACED_BREAK_STATEMENT] = PrintMISPLACED_BREAK_STATEMENT;
     print_message[MISPLACED_CONTINUE_STATEMENT] = PrintMISPLACED_CONTINUE_STATEMENT;
-    print_message[MISPLACED_EXPLICIT_CONSTRUCTOR_INVOCATION] = PrintMISPLACED_EXPLICIT_CONSTRUCTOR_INVOCATION;
+    print_message[MISPLACED_EXPLICIT_CONSTRUCTOR] = PrintMISPLACED_EXPLICIT_CONSTRUCTOR;
     print_message[INVALID_CONTINUE_TARGET] = PrintINVALID_CONTINUE_TARGET;
     print_message[NON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD] = PrintNON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD;
     print_message[NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD] = PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD;
@@ -675,14 +673,13 @@ void SemanticError::StaticInitializer()
     print_message[BAD_ACCESS_METHOD_OVERRIDE] = PrintBAD_ACCESS_METHOD_OVERRIDE;
     print_message[BAD_ACCESS_METHOD_OVERRIDE_EXTERNALLY] = PrintBAD_ACCESS_METHOD_OVERRIDE_EXTERNALLY;
     print_message[CIRCULAR_THIS_CALL] = PrintCIRCULAR_THIS_CALL;
-    print_message[INSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR_INVOCATION] = PrintINSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR_INVOCATION;
-    print_message[INSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR_INVOCATION] = PrintINSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR_INVOCATION;
+    print_message[INSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR] = PrintINSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR;
+    print_message[INSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR] = PrintINSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR;
     print_message[SYNTHETIC_VARIABLE_ACCESS] = PrintSYNTHETIC_VARIABLE_ACCESS;
     print_message[SYNTHETIC_METHOD_INVOCATION] = PrintSYNTHETIC_METHOD_INVOCATION;
     print_message[SYNTHETIC_CONSTRUCTOR_INVOCATION] = PrintSYNTHETIC_CONSTRUCTOR_INVOCATION;
-    print_message[THIS_IN_EXPLICIT_CONSTRUCTOR_INVOCATION] = PrintTHIS_IN_EXPLICIT_CONSTRUCTOR_INVOCATION;
-    print_message[SUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION] = PrintSUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION;
-    print_message[INNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION] = PrintINNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION;
+    print_message[SELF_IN_EXPLICIT_CONSTRUCTOR] = PrintSELF_IN_EXPLICIT_CONSTRUCTOR;
+    print_message[INNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR] = PrintINNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR;
     print_message[EXPRESSION_NOT_CONSTANT] = PrintEXPRESSION_NOT_CONSTANT;
     print_message[UNCAUGHT_METHOD_EXCEPTION] = PrintUNCAUGHT_METHOD_EXCEPTION;
     print_message[UNCAUGHT_CONSTRUCTOR_EXCEPTION] = PrintUNCAUGHT_CONSTRUCTOR_EXCEPTION;
@@ -842,8 +839,6 @@ void SemanticError::SortMessages()
              }
          }
      }
-
-     return;
 }
 
 
@@ -3189,13 +3184,14 @@ wchar_t *SemanticError::PrintMISPLACED_CONTINUE_STATEMENT(ErrorInfo &err,
 }
 
 
-wchar_t *SemanticError::PrintMISPLACED_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &err,
-                                                                       LexStream *lex_stream,
-                                                                       Control &control)
+wchar_t *SemanticError::PrintMISPLACED_EXPLICIT_CONSTRUCTOR(ErrorInfo &err,
+                                                            LexStream *lex_stream,
+                                                            Control &control)
 {
     ErrorString s;
 
-    s << "Misplaced explicit constructor invocation.";
+    s << "Misplaced explicit constructor invocation. It may only be the "
+      << "first statement in constructors.";
 
     return s.Array();
 }
@@ -3726,9 +3722,9 @@ wchar_t *SemanticError::PrintCIRCULAR_THIS_CALL(ErrorInfo &err,
 }
 
 
-wchar_t *SemanticError::PrintINSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &err,
-                                                                                  LexStream *lex_stream,
-                                                                                  Control &control)
+wchar_t *SemanticError::PrintINSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR(ErrorInfo &err,
+                                                                       LexStream *lex_stream,
+                                                                       Control &control)
 {
     ErrorString s;
 
@@ -3740,16 +3736,15 @@ wchar_t *SemanticError::PrintINSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR_INVOCATIO
 }
 
 
-wchar_t *SemanticError::PrintINSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &err,
-                                                                                LexStream *lex_stream,
-                                                                                Control &control)
+wchar_t *SemanticError::PrintINSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR(ErrorInfo &err,
+                                                                     LexStream *lex_stream,
+                                                                     Control &control)
 {
     ErrorString s;
 
-    s << "The instance method \"" << err.insert1
-      << "\" declared in this class, \"" << err.insert2
-      << "\", or one of its super classes, is not accessible in an explicit "
-      << "constructor invocation.";
+    s << "The instance method \"" << err.insert1 << "\" declared in class \""
+      << err.insert2
+      << "\" is not accessible in an explicit constructor invocation.";
 
     return s.Array();
 }
@@ -3803,9 +3798,9 @@ wchar_t *SemanticError::PrintSYNTHETIC_CONSTRUCTOR_INVOCATION(ErrorInfo &err,
 }
 
 
-wchar_t *SemanticError::PrintTHIS_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &err,
-                                                                     LexStream *lex_stream,
-                                                                     Control &control)
+wchar_t *SemanticError::PrintSELF_IN_EXPLICIT_CONSTRUCTOR(ErrorInfo &err,
+                                                          LexStream *lex_stream,
+                                                          Control &control)
 {
     ErrorString s;
 
@@ -3816,22 +3811,9 @@ wchar_t *SemanticError::PrintTHIS_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &
 }
 
 
-wchar_t *SemanticError::PrintSUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &err,
-                                                                      LexStream *lex_stream,
-                                                                      Control &control)
-{
-    ErrorString s;
-
-    s << "The expression \"" << err.insert1
-      << "\" may not be used in an explicit constructor invocation.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintINNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &err,
-                                                                                  LexStream *lex_stream,
-                                                                                  Control &control)
+wchar_t *SemanticError::PrintINNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR(ErrorInfo &err,
+                                                                       LexStream *lex_stream,
+                                                                       Control &control)
 {
     ErrorString s;
 
@@ -4474,8 +4456,8 @@ wchar_t *SemanticError::PrintENCLOSING_INSTANCE_ACCESS_ACROSS_STATIC_REGION(Erro
     if (NotDot(err.insert1))
         s << err.insert1 << "/";
     s << err.insert2
-      << ".this\" is not accessible here because it would have to cross a "
-      << "static region in the intervening type \"";
+      << ".this\" is not available as an enclosing instance at this location "
+      << "in type \"";
     if (NotDot(err.insert3))
         s << err.insert3 << "/";
     s << err.insert4 << "\".";

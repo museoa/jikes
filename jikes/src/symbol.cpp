@@ -27,11 +27,6 @@ int FileSymbol::java_suffix_length = strlen(java_suffix);
 char *FileSymbol::class_suffix = StringConstant::U8S_DO_class;
 int FileSymbol::class_suffix_length = strlen(class_suffix);
 
-bool MethodSymbol::IsFinal()
-{
-    return ((AccessFlags *) this) -> ACC_FINAL() || ((AccessFlags *) this) -> ACC_PRIVATE() || containing_type -> ACC_FINAL();
-}
-
 wchar_t *MethodSymbol::Header()
 {
     assert(type_);
@@ -215,7 +210,7 @@ void TypeSymbol::RemoveCompilationReferences()
                 table -> VariableSym(i) -> declarator = NULL;
 
             for (int j = 0; j < table -> NumMethodSymbols(); j++)
-                table -> MethodSym(j) -> method_or_constructor_declaration = NULL;
+                table -> MethodSym(j) -> declaration = NULL;
 
             for (int k = 0; k < table -> NumTypeSymbols(); k++)
                 table -> TypeSym(k) -> declaration = NULL;
@@ -325,6 +320,24 @@ void TypeSymbol::SetLocation()
 }
 
 
+LexStream::TokenIndex TypeSymbol::GetLocation()
+{
+    LexStream::TokenIndex loc = LexStream::BadToken();
+    if (declaration -> ClassDeclarationCast())
+        loc = ((AstClassDeclaration *) declaration) -> identifier_token;
+    else if (declaration -> InterfaceDeclarationCast())
+        loc = ((AstInterfaceDeclaration *) declaration) -> identifier_token;
+    else if (declaration -> ClassInstanceCreationExpressionCast())
+    {
+        assert(((AstClassInstanceCreationExpression *) declaration) ->
+               class_body_opt);
+        loc = ((AstClassInstanceCreationExpression *) declaration) ->
+            class_body_opt -> left_brace_token;
+    }
+    assert(loc != LexStream::BadToken());
+    return loc;
+}
+
 void TypeSymbol::SetSignature(Control &control)
 {
     if (num_dimensions > 0)
@@ -363,7 +376,7 @@ void TypeSymbol::SetSignature(Control &control)
         delete [] type_signature;
 
         if (! (Anonymous() || IsLocal()))
-            control.type_table.InsertType((TypeSymbol *) this);
+            control.type_table.InsertType(this);
     }
 }
 
@@ -545,8 +558,8 @@ TypeSymbol::TypeSymbol(NameSymbol *name_symbol_)
     expanded_field_table(NULL),
     expanded_method_table(NULL),
     num_dimensions(0),
+    instance_initializer_method(NULL),
     static_initializer_method(NULL),
-    block_initializer_method(NULL),
     external_name_symbol(NULL),
     table(NULL),
     local_shadow_map(NULL),
@@ -562,9 +575,9 @@ TypeSymbol::TypeSymbol(NameSymbol *name_symbol_)
     private_access_constructors(NULL),
     read_methods(NULL),
     write_methods(NULL),
+    placeholder_type(NULL),
     constructor_parameters(NULL),
-    generated_constructors(NULL),
-    enclosing_instances(NULL),
+    enclosing_instance(NULL),
     class_literals(NULL),
     nested_type_signatures(NULL),
     nested_types(NULL),
@@ -573,6 +586,11 @@ TypeSymbol::TypeSymbol(NameSymbol *name_symbol_)
     array(NULL)
 {
     Symbol::_kind = TYPE;
+}
+
+int TypeSymbol::NumLocalTypes()
+{
+    return local ? local -> Size() : 0;
 }
 
 
@@ -607,8 +625,6 @@ TypeSymbol::~TypeSymbol()
     delete private_access_methods;
     delete private_access_constructors;
     delete constructor_parameters;
-    delete generated_constructors;
-    delete enclosing_instances;
     delete class_literals;
     delete nested_types;
     delete interfaces;
@@ -783,7 +799,7 @@ void DirectorySymbol::ReadDirectory()
                     ((! source_dir_only) && length > FileSymbol::class_suffix_length &&
                      FileSymbol::IsClassSuffix(&entry -> d_name[length - FileSymbol::class_suffix_length])) ||
                     ((Case::Index(entry -> d_name, U_DOT) < 0) && SystemIsDirectory(entry -> d_name)))
-                    entries -> InsertEntry((DirectorySymbol *) this, entry -> d_name, length);
+                    entries -> InsertEntry(this, entry -> d_name, length);
             }
             closedir(directory);
         }
@@ -826,7 +842,7 @@ void DirectorySymbol::ReadDirectory()
                          strcpy(&clean_name[length - FileSymbol::java_suffix_length], FileSymbol::java_suffix);
                     else if (is_class)
                          strcpy(&clean_name[length - FileSymbol::class_suffix_length], FileSymbol::class_suffix);
-                    DirectoryEntry *entry = entries -> InsertEntry((DirectorySymbol *) this, clean_name, length);
+                    DirectoryEntry *entry = entries -> InsertEntry(this, clean_name, length);
                     if (! is_java)
                         entries -> InsertCaseInsensitiveEntry(entry);
                     delete [] clean_name;
@@ -996,36 +1012,81 @@ void MethodSymbol::ProcessMethodThrows(Semantic *sem, LexStream::TokenIndex tok)
 }
 
 
-void MethodSymbol::SetSignature(Control &control, VariableSymbol *this0_variable)
+void MethodSymbol::SetSignature(Control &control, TypeSymbol *placeholder)
 {
+    int i;
     int len = 2 + strlen(Type() -> SignatureString()); // +1 for '(' +1 for ')'
 
-    if (this0_variable)
-        len += strlen(this0_variable -> Type() -> SignatureString());
-    for (int i = 0; i < NumFormalParameters(); i++)
+    bool is_constructor = Identity() == control.init_name_symbol;
+    TypeSymbol *this0_type = containing_type -> EnclosingType();
+    int variable_index = ACC_STATIC() ? 0 : 1;
+
+    if (is_constructor && this0_type)
+    {
+        len += strlen(this0_type -> SignatureString());
+        variable_index++;
+    }
+    for (i = 0; i < NumFormalParameters(); i++)
     {
         TypeSymbol *formal_type = FormalParameter(i) -> Type();
         len += strlen(formal_type -> SignatureString());
+        variable_index += (control.IsDoubleWordType(formal_type) ? 2 : 1);
     }
+    if (is_constructor)
+    {
+        for (i = 0; i < containing_type -> NumConstructorParameters(); i++)
+        {
+            TypeSymbol *shadow_type =
+                containing_type -> ConstructorParameter(i) -> Type();
+            len += strlen(shadow_type -> SignatureString());
+            variable_index += (control.IsDoubleWordType(shadow_type) ? 2 : 1);
+        }
+        if (placeholder)
+        {
+            len += strlen(placeholder -> SignatureString());
+            variable_index++;
+        }
+    }
+    if (block_symbol && variable_index > block_symbol -> max_variable_index)
+        block_symbol -> max_variable_index = variable_index;
 
     char *method_signature = new char[len + 1]; // +1 for '\0'
     method_signature[0] = U_LEFT_PARENTHESIS;
-    int k = 1;
-    if (this0_variable)
+    int s = 1;
+    if (is_constructor && this0_type)
     {
-        for (char *str = this0_variable -> Type() -> SignatureString(); *str; str++, k++)
-            method_signature[k] = *str;
+        for (char *str = this0_type -> SignatureString(); *str; str++, s++)
+            method_signature[s] = *str;
     }
-    for (int j = 0; j < NumFormalParameters(); j++)
+    for (i = 0; i < NumFormalParameters(); i++)
     {
-        TypeSymbol *formal_type = FormalParameter(j) -> Type();
-        for (char *str = formal_type -> SignatureString(); *str; str++, k++)
-            method_signature[k] = *str;
+        TypeSymbol *formal_type = FormalParameter(i) -> Type();
+        for (char *str = formal_type -> SignatureString(); *str; str++, s++)
+            method_signature[s] = *str;
     }
-    method_signature[k++] = U_RIGHT_PARENTHESIS;
-    for (char *str = Type() -> SignatureString(); *str; str++, k++)
-         method_signature[k] = *str;
-    method_signature[k] = U_NULL;
+    if (is_constructor)
+    {
+        for (i = 0; i < containing_type -> NumConstructorParameters(); i++)
+        {
+            TypeSymbol *shadow_type =
+                containing_type -> ConstructorParameter(i) -> Type();
+            for (char *str = shadow_type -> SignatureString();
+                 *str; str++, s++)
+            {
+                method_signature[s] = *str;
+            }
+        }
+        if (placeholder)
+            for (char *str = placeholder -> SignatureString();
+                 *str; str++, s++)
+            {
+                method_signature[s] = *str;
+            }
+    }
+    method_signature[s++] = U_RIGHT_PARENTHESIS;
+    for (char *str = Type() -> SignatureString(); *str; str++, s++)
+         method_signature[s] = *str;
+    method_signature[s] = U_NULL;
 
     signature = control.Utf8_pool.FindOrInsert(method_signature, len);
 
@@ -1033,7 +1094,8 @@ void MethodSymbol::SetSignature(Control &control, VariableSymbol *this0_variable
 }
 
 
-void MethodSymbol::ProcessMethodSignature(Semantic *sem, LexStream::TokenIndex token_location)
+void MethodSymbol::ProcessMethodSignature(Semantic *sem,
+                                          LexStream::TokenIndex token_location)
 {
     if (! type_)
     {
@@ -1046,7 +1108,8 @@ void MethodSymbol::ProcessMethodSignature(Semantic *sem, LexStream::TokenIndex t
         //
         // For the constructor of an inner type, skip the "this$0" argument.
         //
-        if (containing_type -> IsInner() && Identity() == sem -> control.init_name_symbol)
+        if (containing_type -> EnclosingType() &&
+            Identity() == sem -> control.init_name_symbol)
         {
             if (*signature != U_RIGHT_PARENTHESIS)
             {
@@ -1099,7 +1162,8 @@ void MethodSymbol::ProcessMethodSignature(Semantic *sem, LexStream::TokenIndex t
         //
         // Now set the type of the method.
         //
-        SetType(sem -> ProcessSignature(containing_type, signature, token_location));
+        SetType(sem -> ProcessSignature(containing_type, signature,
+                                        token_location));
 
         //
         // Create a symbol table for this method for consistency... and in
@@ -1138,7 +1202,7 @@ void MethodSymbol::CleanUp()
     block -> CompressSpace(); // space optimization
     SetBlockSymbol(block);
 
-    method_or_constructor_declaration = NULL; // remove reference to Ast structure
+    declaration = NULL; // remove reference to Ast structure
 }
 
 
@@ -1155,7 +1219,8 @@ void VariableSymbol::ProcessVariableSignature(Semantic *sem, LexStream::TokenInd
 
 bool TypeSymbol::IsNestedIn(TypeSymbol *type)
 {
-    for (SemanticEnvironment *env = semantic_environment; env != NULL; env = env -> previous)
+    for (SemanticEnvironment *env = semantic_environment;
+         env != NULL; env = env -> previous)
     {
         if (env -> Type() == type)
              return true;
@@ -1165,48 +1230,50 @@ bool TypeSymbol::IsNestedIn(TypeSymbol *type)
 }
 
 
-bool TypeSymbol::CanAccess(TypeSymbol *type)
+//
+// Return the type of an enclosing instance, if this is an inner class
+// which is not in a static context.
+//
+TypeSymbol *TypeSymbol::EnclosingType()
+{
+    if (enclosing_instance)
+    {
+        assert(ContainingType());
+        return ContainingType();
+    }
+    return NULL;
+}
+
+
+//
+// Check if this type has access to an enclosing instance of the named type.
+//
+bool TypeSymbol::HasEnclosingInstance(TypeSymbol *type)
 {
     assert(semantic_environment);
+    if (ACC_STATIC())
+        return false;
 
     SemanticEnvironment *env = semantic_environment;
-    //
-    // Note that this case is only possible in the current environment (i.e.,
-    // it is not recursively applicable) as it is not possible to declare an
-    // inner class (even an anonymous one) within an explicit constructor
-    // invocation. This is the case precisely because of the unavailability
-    // of the "this" which one would need to pass to the inner class in
-    // question. See comment below...
-    //
-    if (env -> explicit_constructor_invocation && env -> explicit_constructor_invocation -> SuperCallCast())
-    {
-        //
-        // If we are processing a super call statement in the constructor of
-        // an inner class then we have access to the this$0 (passed to the
-        // constructor of the inner class as parameter) but not to the "this"
-        // of the inner class in question, unless it is static.
-        //
-        if (IsSubclass(type))
-            return ACC_STATIC(); // "this" class is accessible only if it is static.
-        if (IsInner())
-        {
-            if (ContainingType() -> IsSubclass(type))
-                return true;
-            env = env -> previous; // skip "this" type.
-        }
-    }
 
-    for (; env != NULL; env = env -> previous)
-    {
-        if (env -> StaticRegion()) // are we in a static environment?
-             break;
-        else if (env -> Type() -> IsSubclass(type)) // then, check if we reached the type in question or one of its superclasses;
-             return true;
-        else if (env -> Type() -> ACC_STATIC())     // next, check whether or not the current type is static...
-             break;
-    }
+    //
+    // Note that in an explicit constructor invocation, we have access to
+    // enclosing instances (via constructor parameter this$0), but no access
+    // to "this".
+    //
+    if (env -> explicit_constructor)
+        env = env -> previous; // Skip 'this' type before it is initialized.
 
-    return false;
+    for ( ; env; env = env -> previous)
+    {
+        if (env -> StaticRegion()) // No 'this' in current level.
+            return false;
+        if (env -> Type() -> IsSubclass(type)) // Success!
+            return true;
+        if (env -> Type() -> ACC_STATIC()) // No more enclosing levels exist.
+            return false;
+    }
+    return false; // The requested type does not enclose this type.
 }
 
 
@@ -1229,7 +1296,8 @@ bool TypeSymbol::HasProtectedAccessTo(TypeSymbol *target_type)
     {
         TypeSymbol *main_type = env -> Type();
         // Loop through T2 and enclosing classes.
-        for (TypeSymbol *type = target_type; type; type = type -> owner -> TypeCast())
+        for (TypeSymbol *type = target_type;
+             type; type = type -> owner -> TypeCast())
         {
             if (main_type -> IsSubclass(type))
                 return true;
@@ -1240,65 +1308,29 @@ bool TypeSymbol::HasProtectedAccessTo(TypeSymbol *target_type)
 }
 
 
-inline NameSymbol *TypeSymbol::GetThisName(Control &control, int n)
+VariableSymbol *TypeSymbol::InsertThis0()
 {
-    IntToWstring value(n);
-
-    int length = wcslen(StringConstant::US_this_DOLLAR) + value.Length();
-    wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
-    wcscpy(name, StringConstant::US_this_DOLLAR);
-    wcscat(name, value.String());
-    NameSymbol *name_symbol = control.FindOrInsertName(name, length);
-
-    delete [] name;
-
-    return name_symbol;
-}
-
-
-VariableSymbol *TypeSymbol::InsertThis(int n)
-{
-    assert(IsInner());
+    assert(IsInner() && ContainingType() &&
+           ! semantic_environment -> previous -> StaticRegion());
 
     Control &control = semantic_environment -> sem -> control;
-    VariableSymbol *variable_symbol = NULL;
 
-    if (n == 0)
-    {
-        assert(NumConstructorParameters() == 0); // no local shadows and no this$0 !!!
-        assert(NumEnclosingInstances() == 0);
+    // No local shadows and no this$0 yet.
+    assert(NumConstructorParameters() == 0 && ! enclosing_instance);
 
-        //
-        // Create a this0 pointer for an inner class.
-        //
-        variable_symbol = InsertVariableSymbol(control.this0_name_symbol);
-        variable_symbol -> MarkSynthetic();
-        variable_symbol -> SetType(ContainingType());
-        variable_symbol -> SetACC_PRIVATE();
-//        variable_symbol -> SetACC_FINAL();
-        variable_symbol -> SetOwner((TypeSymbol *) this);
-        variable_symbol -> MarkComplete();
+    //
+    // Create a this0 pointer for an inner class.
+    //
+    VariableSymbol *variable_symbol =
+        InsertVariableSymbol(control.this0_name_symbol);
+    variable_symbol -> SetType(ContainingType());
+    variable_symbol -> SetACC_FINAL();
+    variable_symbol -> SetOwner(this);
+    variable_symbol -> MarkComplete();
+    variable_symbol -> MarkSynthetic();
+    variable_symbol -> MarkDefinitelyAssigned();
 
-        AddConstructorParameter(variable_symbol);
-        AddEnclosingInstance(variable_symbol); // must at least have this$0
-    }
-    else
-    {
-        assert(NumEnclosingInstances() == n);
-
-        //
-        // Create a this$n pointer.
-        //
-        variable_symbol = InsertVariableSymbol(GetThisName(control, n));
-        variable_symbol -> MarkSynthetic();
-        variable_symbol -> SetType(EnclosingInstance(n - 1) -> Type() -> ContainingType());
-        variable_symbol -> SetACC_PRIVATE();
-//        variable_symbol -> SetACC_FINAL();
-        variable_symbol -> SetOwner((TypeSymbol *) this);
-        variable_symbol -> MarkComplete();
-
-        AddEnclosingInstance(variable_symbol);
-    }
+    enclosing_instance = variable_symbol;
 
     return variable_symbol;
 }
@@ -1361,7 +1393,7 @@ MethodSymbol *TypeSymbol::FindOrInsertClassLiteralMethod(Control &control)
         class_literal_method -> MarkSynthetic();
         class_literal_method -> SetType(control.Class());
         class_literal_method -> SetACC_STATIC();
-        class_literal_method -> SetContainingType((TypeSymbol *) this);
+        class_literal_method -> SetContainingType(this);
         class_literal_method -> SetBlockSymbol(block_symbol);
 
             VariableSymbol *variable_symbol = block_symbol -> InsertVariableSymbol(control.MakeParameter(1));
@@ -1398,7 +1430,7 @@ Utf8LiteralValue *TypeSymbol::FindOrInsertClassLiteralName(Control &control)
 
 VariableSymbol *TypeSymbol::FindOrInsertClassLiteral(TypeSymbol *type)
 {
-    assert((! IsInner()) && (! type -> Primitive()));
+    assert(! IsInner() && ! type -> Primitive());
 
     Semantic *sem = semantic_environment -> sem;
     Control &control = sem -> control;
@@ -1458,7 +1490,7 @@ VariableSymbol *TypeSymbol::FindOrInsertClassLiteral(TypeSymbol *type)
         variable_symbol -> MarkSynthetic();
         variable_symbol -> SetType(control.Class());
         variable_symbol -> SetACC_STATIC();
-        variable_symbol -> SetOwner((TypeSymbol *) this);
+        variable_symbol -> SetOwner(this);
         variable_symbol -> MarkComplete();
 
         AddClassLiteral(variable_symbol);
@@ -1490,7 +1522,7 @@ VariableSymbol *TypeSymbol::FindOrInsertAssertVariable()
         assert_variable -> SetACC_PRIVATE();
         assert_variable -> SetACC_STATIC();
         assert_variable -> SetACC_FINAL();
-        assert_variable -> SetOwner((TypeSymbol *) this);
+        assert_variable -> SetOwner(this);
         assert_variable -> MarkComplete();
         assert_variable -> MarkDefinitelyAssigned();
 
@@ -1508,23 +1540,53 @@ VariableSymbol *TypeSymbol::FindOrInsertAssertVariable()
 
 VariableSymbol *TypeSymbol::FindOrInsertLocalShadow(VariableSymbol *local)
 {
-    assert(IsLocal());
+    assert(IsLocal() && local -> IsLocal());
 
     Control &control = semantic_environment -> sem -> control;
-    VariableSymbol *variable = (VariableSymbol *) (local_shadow_map ? local_shadow_map -> Image(local) : NULL);
+    VariableSymbol *variable = NULL;
+    if (local_shadow_map)
+        variable = (VariableSymbol *) local_shadow_map -> Image(local);
 
     //
-    // For a local class, if it does not yet have a shadow for a local variable
-    // that it needs access to, create one.
+    // For a local/anonymous class, if it does not yet have a shadow for a
+    // local variable that it needs access to, create one.
     //
-    // Note that since this function is always invoked after the symbol
-    // table for the type in question has been extended, the local shadow will
-    // not appear in the expanded_field_table. Creating a shadow in the
-    // expanded_field_table as well would cut down on the number of calls to
-    // this function. However, the reason why we don't create such a shadow is
-    // that since the new symbol is assigned a new name on the fly, its
-    // name_symbol will fall outside the range of the expanded field table in
-    // question.
+    // For example:
+    // class Outer {
+    //   static void foo(final int i) {
+    //     class Local {
+    //       Local(int k) { k = i; }
+    //     }
+    //     new Local(1);
+    //   }
+    // }
+    //
+    // expands to:
+    // class Outer {
+    //   static void foo(final int i) {
+    //     new Outer$1&Local(1, i);
+    //   }
+    // }
+    // class Outer$1&Local {
+    //   /*synthetic*/ final int val$i;
+    //   Outer$1&Local(int k, int i) {
+    //     val$i = i;
+    //     super();
+    //     k = val$i;
+    //   }
+    // }
+    //
+    // This method creates Outer$1$Local.val$i in the above example.  Notice
+    // that JVMS 4.9.4 permits initialization of synthetic fields BEFORE the
+    // explicit constructor invocation, even though it would not normally be
+    // valid Java; this is necessary for the case when the superconstructor
+    // calls a polymorphic method which references i.
+    //
+    // Note that we must mangle the shadow with val$, because of this case:
+    // void foo(final int i) {
+    //   class Local { int j = i; }
+    //   new Local() { int i; };
+    // }
     //
     if (! variable)
     {
@@ -1535,38 +1597,40 @@ VariableSymbol *TypeSymbol::FindOrInsertLocalShadow(VariableSymbol *local)
         NameSymbol *name_symbol = control.FindOrInsertName(name, length);
 
         variable = InsertVariableSymbol(name_symbol);
-        variable -> MarkSynthetic();
-        variable -> accessed_local = local;
         variable -> SetType(local -> Type());
-        variable -> SetACC_PRIVATE();
-//        variable -> SetACC_FINAL();
-        variable -> SetOwner((TypeSymbol *) this);
+        variable -> SetACC_FINAL();
+        variable -> SetOwner(this);
         variable -> MarkComplete();
+        variable -> MarkSynthetic();
+        variable -> MarkDefinitelyAssigned();
 
+        if (ContainingType() ==
+            local -> owner -> MethodCast() -> containing_type)
+        {
+            variable -> accessed_local = local;
+        }
+        else
+        {
+            assert(Anonymous() && ! EnclosingType());
+            variable -> accessed_local = semantic_environment -> sem ->
+                FindLocalVariable(local, ContainingType());
+        }
         AddConstructorParameter(variable);
 
         delete [] name;
-
-        for (int i = 0; i < NumGeneratedConstructors(); i++)
-        {
-            MethodSymbol *constructor = GeneratedConstructor(i);
-
-            VariableSymbol *symbol = constructor -> block_symbol -> InsertVariableSymbol(name_symbol);
-            symbol -> MarkSynthetic();
-            symbol -> SetType(variable -> Type());
-            symbol -> SetOwner(constructor);
-            symbol -> SetLocalVariableIndex(constructor -> block_symbol -> max_variable_index++);
-            if (control.IsDoubleWordType(symbol -> Type()))
-                constructor -> block_symbol -> max_variable_index++;
-            constructor -> AddFormalParameter(symbol);
-        }
 
         if (! local_shadow_map)
             local_shadow_map = new SymbolMap();
         local_shadow_map -> Map(local, variable);
     }
 
-assert(variable -> accessed_local == local);
+#ifdef JIKES_DEBUG
+    VariableSymbol *accessed;
+    for (accessed = variable -> accessed_local;
+         accessed && accessed != local;
+         accessed = accessed -> accessed_local);
+    assert(accessed);
+#endif // JIKES_DEBUG
 
     return variable;
 }
@@ -1694,15 +1758,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
         //
         // Use the location of the class name for all elements of this method.
         //
-        LexStream::TokenIndex loc = LexStream::BadToken();
-        if (declaration -> ClassDeclarationCast())
-            loc = ((AstClassDeclaration *) declaration) -> identifier_token;
-        else if (declaration -> ClassInstanceCreationExpressionCast())
-        {
-            assert(((AstClassInstanceCreationExpression *) declaration) -> class_body_opt);
-            loc = ((AstClassInstanceCreationExpression *) declaration) -> class_body_opt -> left_brace_token;
-        }
-        assert(loc != LexStream::BadToken());
+        LexStream::TokenIndex loc = GetLocation();
 
         int parameter_count = member -> NumFormalParameters();
 
@@ -1710,6 +1766,8 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
         read_method -> MarkSynthetic();
         read_method -> SetType(member -> Type());
         read_method -> SetACC_STATIC();
+        if (member -> ACC_STRICTFP())
+            read_method -> SetACC_STRICTFP();
         read_method -> SetContainingType(this);
 
         //
@@ -1833,7 +1891,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
         method_declaration -> method_declarator   = method_declarator;
         method_declaration -> method_body         = block;
 
-        read_method -> method_or_constructor_declaration = method_declaration;
+        read_method -> declaration = method_declaration;
         read_method -> accessed_member = member;
         MapSymbolToReadMethod(member, base_type, read_method);
         AddPrivateAccessMethod(read_method);
@@ -1844,21 +1902,19 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
     return read_method;
 }
 
-MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *member)
+MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *ctor)
 {
-    assert(member -> Identity() == semantic_environment -> sem -> control.init_name_symbol); // accessing a constructor
-    TypeSymbol *containing_type = member -> containing_type;
-    if (! base_type)
-        base_type = this;
-
     //
     // Protected superconstructors are always accessible, and class instance
     // creation expressions can only invoke a protected constructor in the
     // current package, where an accessor is not needed.
     //
-    assert(member -> ACC_PRIVATE() && this == containing_type);
+    assert((ctor -> Identity() ==
+            semantic_environment -> sem -> control.init_name_symbol) &&
+           ctor -> ACC_PRIVATE() && this == ctor -> containing_type &&
+           ! Anonymous());
 
-    MethodSymbol *read_method = ReadMethod(member, base_type);
+    MethodSymbol *read_method = ReadMethod(ctor, this);
 
     if (! read_method)
     {
@@ -1912,171 +1968,124 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *member)
         // }
         // 
         Semantic *sem = semantic_environment -> sem;
-
         assert(sem);
 
         Control &control = sem -> control;
-
         StoragePool *ast_pool = sem -> compilation_unit -> ast_pool;
 
-        IntToWstring value(NumPrivateAccessConstructors());
-        
-        int length = 7 + value.Length(); // +7 for access$
-        wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
-        wcscpy(name, StringConstant::US_access_DOLLAR);
-        wcscat(name, value.String());
+        // +3 to allow for dummy parameter, local variable shadows
+        BlockSymbol *block_symbol =
+            new BlockSymbol(ctor -> NumFormalParameters() + 3);
 
-        BlockSymbol *block_symbol = new BlockSymbol(member -> NumFormalParameters() + 3);
-
-        read_method = InsertMethodSymbol(control.FindOrInsertName(name, length));
+        read_method = InsertMethodSymbol(control.init_name_symbol);
         read_method -> MarkSynthetic();
-        read_method -> SetType(member -> Type());
+        read_method -> SetType(control.void_type);
         read_method -> SetContainingType(this);
         read_method -> SetBlockSymbol(block_symbol);
+        if (ctor -> ACC_STRICTFP())
+            read_method -> SetACC_STRICTFP();
 
-        for (int j = 0; j < member -> NumThrows(); j++)
-            read_method -> AddThrows(member -> Throws(j));
+        for (int j = 0; j < ctor -> NumThrows(); j++)
+            read_method -> AddThrows(ctor -> Throws(j));
 
-        //
-        // A constructor in a local class already has a "LocalConstructor()"
-        // associated with it that can be used as a read access method.
-        //
-        assert(! IsLocal());
-
-        //
-        //
-        //
         block_symbol -> max_variable_index = 1;
-        read_method -> SetExternalIdentity(member -> Identity());
+        read_method -> SetExternalIdentity(ctor -> Identity());
 
-        Ast *declaration = member -> method_or_constructor_declaration;
-        AstMethodDeclaration *method_declaration = declaration -> MethodDeclarationCast();
-        AstMethodDeclarator *declarator = (method_declaration
-                                           ? method_declaration -> method_declarator
-                                           : ((AstConstructorDeclaration *) declaration) -> constructor_declarator);
+        Ast *declaration = ctor -> declaration;
+        AstMethodDeclarator *declarator = ((AstConstructorDeclaration *) declaration) -> constructor_declarator;
+        assert(declarator);
         LexStream::TokenIndex loc = declarator -> identifier_token;
 
-        //
-        // Create a new anonymous type in order to create a unique substitute
-        // constructor.
-        //
-        AstSimpleName *ast_type = ast_pool -> GenSimpleName(loc);
- 
-        AstClassInstanceCreationExpression *class_creation = ast_pool -> GenClassInstanceCreationExpression();
-        class_creation -> base_opt      = NULL;
-        class_creation -> dot_token_opt = 0;
-        class_creation -> new_token = loc;
-        class_creation -> class_type = ast_pool -> GenTypeExpression(ast_type);
-        class_creation -> left_parenthesis_token  = loc;
-        class_creation -> right_parenthesis_token = loc;
+        AstMethodDeclarator *method_declarator =
+            ast_pool -> GenMethodDeclarator();
+        method_declarator -> identifier_token = loc;
+        method_declarator -> left_parenthesis_token =
+            declarator -> LeftToken();
+        method_declarator -> right_parenthesis_token =
+            declarator -> RightToken();
 
-        AstClassBody *class_body = ast_pool -> GenClassBody();
-        class_body -> left_brace_token = loc;
-        class_body -> right_brace_token = loc;
-
-        class_creation -> class_body_opt = class_body;
-
-        TypeSymbol *anonymous_type = sem -> GetAnonymousType(class_creation, control.Object());
-
-        //
-        //
-        //
-        AstMethodDeclarator *method_declarator       = ast_pool -> GenMethodDeclarator();
-        method_declarator -> identifier_token        = loc;
-        method_declarator -> left_parenthesis_token  = declarator -> LeftToken();
-        method_declarator -> right_parenthesis_token = declarator -> RightToken();
-        
         AstThisCall *this_call = ast_pool -> GenThisCall();
-        this_call -> base_opt                = NULL;
-        this_call -> this_token              = loc;
-        this_call -> left_parenthesis_token  = loc;
+        this_call -> this_token = loc;
+        this_call -> left_parenthesis_token = loc;
         this_call -> right_parenthesis_token = loc;
-        this_call -> semicolon_token         = loc;
-        this_call -> symbol = member;
+        this_call -> semicolon_token = loc;
+        this_call -> symbol = ctor;
 
         VariableSymbol *this0_variable = NULL;
-        if (IsInner())
+        if (EnclosingType())
         {
-            this0_variable = block_symbol -> InsertVariableSymbol(control.this0_name_symbol);
+            this0_variable = block_symbol ->
+                InsertVariableSymbol(control.this0_name_symbol);
             this0_variable -> MarkSynthetic();
             this0_variable -> SetType(ContainingType());
             this0_variable -> SetOwner(read_method);
-            this0_variable -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+            this0_variable -> SetLocalVariableIndex(block_symbol ->
+                                                    max_variable_index++);
         }
-
-        //
-        // Add extra parameter with anonymous type...
-        //
-        VariableSymbol *parm = block_symbol -> InsertVariableSymbol(control.MakeParameter(1));
-        parm -> MarkSynthetic();
-        parm -> SetType(anonymous_type);
-        parm -> SetOwner(read_method);
-        parm -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
-        read_method -> AddFormalParameter(parm);
 
         //
         // Since private_access_constructors will be compiled (see
         // body.cpp), we must create valid ast_simple_names for its
         // parameters.
         //
-        for (int i = 0; i < member -> NumFormalParameters(); i++)
+        VariableSymbol *parm;
+        for (int i = 0; i < ctor -> NumFormalParameters(); i++)
         {
-            parm = block_symbol -> InsertVariableSymbol(member -> FormalParameter(i) -> Identity());
+            parm = block_symbol -> InsertVariableSymbol(ctor -> FormalParameter(i) -> Identity());
             parm -> MarkSynthetic();
-            parm -> SetType(member -> FormalParameter(i) -> Type());
+            parm -> SetType(ctor -> FormalParameter(i) -> Type());
             parm -> SetOwner(read_method);
             parm -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
             if (control.IsDoubleWordType(parm -> Type()))
                 block_symbol -> max_variable_index++;
             read_method -> AddFormalParameter(parm);
 
-            //
-            // Since private_access_constructors will be compiled (see
-            // body.cpp), we must create valid ast_simple_names for its
-            // parameters.
-            //
-            AstVariableDeclaratorId *variable_declarator_name = declarator -> FormalParameter(i) -> formal_declarator -> variable_declarator_name;
-            AstSimpleName *simple_name = ast_pool -> GenSimpleName(variable_declarator_name -> identifier_token);
+            AstVariableDeclaratorId *variable_declarator_name =
+                declarator -> FormalParameter(i) -> formal_declarator ->
+                variable_declarator_name;
+            AstSimpleName *simple_name = ast_pool ->
+                GenSimpleName(variable_declarator_name -> identifier_token);
             simple_name -> symbol = parm;
             this_call -> AddArgument(simple_name);
         }
-        read_method -> SetSignature(control, this0_variable);
 
-        AstReturnStatement *return_statement = ast_pool -> GenReturnStatement();
+        //
+        // Any local variable shadow parameters will be taken care of later,
+        // possibly changing this signature.
+        //
+        this_call -> shadow_parameter_offset =
+            block_symbol -> max_variable_index;
+        read_method -> SetSignature(control,
+                                    outermost_type -> GetPlaceholderType());
+
+        AstReturnStatement *return_statement =
+            ast_pool -> GenReturnStatement();
         return_statement -> return_token = loc;
-        return_statement -> expression_opt = NULL;
         return_statement -> semicolon_token = loc;
         return_statement -> is_reachable = true;
 
-        AstBlock *block = ast_pool -> GenBlock();
-        block -> AllocateBlockStatements(1); // this block contains one statement
-        block -> left_brace_token  = loc;
-        block -> right_brace_token = loc;
+        AstMethodBody *constructor_block = ast_pool -> GenMethodBody();
+        // This symbol table will be empty.
+        constructor_block -> block_symbol = new BlockSymbol(0);
+        constructor_block -> block_symbol -> InsertBlockSymbol(1);
+        constructor_block -> left_brace_token = loc;
+        constructor_block -> right_brace_token = loc;
+        constructor_block -> AllocateBlockStatements(1);
+        constructor_block -> AddStatement(return_statement);
+        constructor_block -> explicit_constructor_opt = this_call;
 
-        block -> block_symbol = new BlockSymbol(0); // the symbol table associated with this block will contain no element
-        block -> is_reachable = true;
-        block -> can_complete_normally = false;
-        block -> AddStatement(return_statement);
-
-        AstConstructorBlock *constructor_block                   = ast_pool -> GenConstructorBlock();
-        constructor_block -> left_brace_token                    = loc;
-        constructor_block -> explicit_constructor_invocation_opt = this_call;
-        constructor_block -> block                               = block;
-        constructor_block -> right_brace_token                   = loc;
-
-        AstConstructorDeclaration *constructor_declaration  = ast_pool -> GenConstructorDeclaration();
-        constructor_declaration -> constructor_declarator   = method_declarator;
-        constructor_declaration -> constructor_body         = constructor_block;
+        AstConstructorDeclaration *constructor_declaration =
+            ast_pool -> GenConstructorDeclaration();
+        constructor_declaration -> constructor_declarator = method_declarator;
+        constructor_declaration -> constructor_body = constructor_block;
 
         constructor_declaration -> constructor_symbol = read_method;
-        read_method -> method_or_constructor_declaration = constructor_declaration;
+        read_method -> declaration = constructor_declaration;
 
         AddPrivateAccessConstructor(read_method);
 
-        read_method -> accessed_member = member;
-        MapSymbolToReadMethod(member, base_type, read_method);
-
-        delete [] name;
+        read_method -> accessed_member = ctor;
+        MapSymbolToReadMethod(ctor, this, read_method);
     }
 
     return read_method;
@@ -2134,15 +2143,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member,
         //
         // Use the location of the class name for all elements of this method
         //
-        LexStream::TokenIndex loc = LexStream::BadToken();
-        if (declaration -> ClassDeclarationCast())
-            loc = ((AstClassDeclaration *) declaration) -> identifier_token;
-        else if (declaration -> ClassInstanceCreationExpressionCast())
-        {
-            assert(((AstClassInstanceCreationExpression *) declaration) -> class_body_opt);
-            loc = ((AstClassInstanceCreationExpression *) declaration) -> class_body_opt -> left_brace_token;
-        }
-        assert(loc != LexStream::BadToken());
+        LexStream::TokenIndex loc = GetLocation();
 
         read_method = InsertMethodSymbol(control.FindOrInsertName(name, length));
         read_method -> MarkSynthetic();
@@ -2212,7 +2213,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member,
         method_declaration -> method_declarator  = method_declarator;
         method_declaration -> method_body        = block;
 
-        read_method -> method_or_constructor_declaration = method_declaration;
+        read_method -> declaration = method_declaration;
         read_method -> accessed_member = member;
         MapSymbolToReadMethod(member, base_type, read_method);
         AddPrivateAccessMethod(read_method);
@@ -2277,15 +2278,7 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member,
         //
         // Use the location of the class name for all elements of this method
         //
-        LexStream::TokenIndex loc = LexStream::BadToken();
-        if (declaration -> ClassDeclarationCast())
-            loc = ((AstClassDeclaration *) declaration) -> identifier_token;
-        else if (declaration -> ClassInstanceCreationExpressionCast())
-        {
-            assert(((AstClassInstanceCreationExpression *) declaration) -> class_body_opt);
-            loc = ((AstClassInstanceCreationExpression *) declaration) -> class_body_opt -> left_brace_token;
-        }
-        assert(loc != LexStream::BadToken());
+        LexStream::TokenIndex loc = GetLocation();
 
         write_method = InsertMethodSymbol(control.FindOrInsertName(name, length));
         write_method -> MarkSynthetic();
@@ -2375,7 +2368,7 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member,
         method_declaration -> method_declarator   = method_declarator;
         method_declaration -> method_body         = block;
 
-        write_method -> method_or_constructor_declaration = method_declaration;
+        write_method -> declaration = method_declaration;
         write_method -> accessed_member = member;
         MapSymbolToWriteMethod(member, base_type, write_method);
         AddPrivateAccessMethod(write_method);
@@ -2394,12 +2387,56 @@ MethodSymbol *TypeSymbol::GetWriteAccessFromReadAccess(MethodSymbol *read_method
     VariableSymbol *variable = (VariableSymbol *) read_method -> accessed_member;
     assert(variable);
 
-    AstMethodDeclaration *method_declaration = (AstMethodDeclaration *) read_method -> method_or_constructor_declaration;
+    AstMethodDeclaration *method_declaration =
+        (AstMethodDeclaration *) read_method -> declaration;
     AstBlock *block = (AstBlock *) method_declaration -> method_body;
-    AstReturnStatement *return_statement = (AstReturnStatement *) block -> Statement(0);
-    AstFieldAccess *field_access = (AstFieldAccess *) return_statement -> expression_opt;
+    AstReturnStatement *return_statement =
+        (AstReturnStatement *) block -> Statement(0);
+    AstFieldAccess *field_access =
+        (AstFieldAccess *) return_statement -> expression_opt;
 
     return GetWriteAccessMethod(variable, field_access -> base -> Type());
+}
+
+
+//
+// Create a new placeholder type in order to create a unique parameter in
+// accessor constructors. The first anonymous type created in an outer class
+// can be used as the placeholder.
+//
+TypeSymbol *TypeSymbol::GetPlaceholderType()
+{
+    assert(outermost_type == this);
+    if (! placeholder_type)
+    {
+        //
+        // Use the location of the class name for all elements of the
+        // placeholder.
+        //
+        Semantic *sem = semantic_environment -> sem;
+        sem -> state_stack.Push(semantic_environment);
+        LexStream::TokenIndex loc = GetLocation();
+        Control &control = sem -> control;
+        StoragePool *ast_pool = sem -> compilation_unit -> ast_pool;
+
+        AstClassBody *class_body = ast_pool -> GenClassBody();
+        class_body -> left_brace_token = loc;
+        class_body -> right_brace_token = loc;
+        AstSimpleName *ast_type = ast_pool -> GenSimpleName(loc);
+
+        AstClassInstanceCreationExpression *class_creation =
+            ast_pool -> GenClassInstanceCreationExpression();
+        class_creation -> new_token = loc;
+        class_creation -> class_type = ast_pool -> GenTypeExpression(ast_type);
+        class_creation -> left_parenthesis_token = loc;
+        class_creation -> right_parenthesis_token = loc;
+        class_creation -> class_body_opt = class_body;
+
+        sem -> GetAnonymousType(class_creation, control.Object());
+        sem -> state_stack.Pop();
+        assert(placeholder_type);
+    }
+    return placeholder_type;
 }
 
 #ifdef HAVE_JIKES_NAMESPACE

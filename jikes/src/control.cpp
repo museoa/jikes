@@ -1233,6 +1233,34 @@ void Control::ProcessMembers()
 }
 
 
+void Control::CollectTypes(TypeSymbol *type, Tuple<TypeSymbol *> &types)
+{
+    types.Next() = type;
+
+    for (int j = 0; j < type -> NumAnonymousTypes(); j++)
+        CollectTypes(type -> AnonymousType(j), types);
+
+    if (type -> local)
+    {
+        for (TypeSymbol *local_type = (TypeSymbol *) type -> local -> FirstElement();
+             local_type;
+             local_type = (TypeSymbol *) type -> local -> NextElement())
+        {
+            CollectTypes(local_type, types);
+        }
+    }
+
+    if (type -> non_local)
+    {
+        for (TypeSymbol *non_local_type = (TypeSymbol *) type -> non_local -> FirstElement();
+             non_local_type;
+             non_local_type = (TypeSymbol *) type -> non_local -> NextElement())
+        {
+            CollectTypes(non_local_type, types);
+        }
+    }
+}
+
 
 void Control::ProcessBodies(TypeSymbol *type)
 {
@@ -1328,34 +1356,7 @@ void Control::ProcessBodies(TypeSymbol *type)
             ! sem -> compilation_unit -> BadCompilationUnitCast())
         {
             Tuple<TypeSymbol *> *types = new Tuple<TypeSymbol *>(1024);
-            types -> Next() = type;
-
-            for (int j = 0; j < type -> NumAnonymousTypes(); j++)
-            {
-                types -> Next() = type -> AnonymousType(j);
-            }
-
-            if (type -> local)
-            {
-                TypeSymbol *local_type;
-                for (local_type = (TypeSymbol *) type -> local -> FirstElement();
-                     local_type;
-                     local_type = (TypeSymbol *) type -> local -> NextElement())
-                {
-                    types -> Next() = local_type;
-                }
-            }
-
-            if (type -> non_local)
-            {
-                TypeSymbol *non_local_type;
-                for (non_local_type = (TypeSymbol *) type -> non_local -> FirstElement();
-                     non_local_type;
-                     non_local_type = (TypeSymbol *) type -> non_local -> NextElement())
-                {
-                    types -> Next() = non_local_type;
-                }
-            }
+            CollectTypes(type, *types);
 
             //
             // If we are supposed to generate code, do so now !!!

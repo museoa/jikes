@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -144,21 +144,19 @@ void ConstructorCycleChecker::CheckConstructorCycles(AstConstructorDeclaration *
 
     AstConstructorDeclaration *called_constructor_declaration = NULL;
 
-    AstConstructorBlock *constructor_block =
+    AstMethodBody *constructor_block =
         constructor_declaration -> constructor_body;
-    if (constructor_block -> explicit_constructor_invocation_opt)
+    if (constructor_block -> explicit_constructor_opt)
     {
         AstThisCall *this_call =
-            constructor_block -> explicit_constructor_invocation_opt ->
-            ThisCallCast();
+            constructor_block -> explicit_constructor_opt -> ThisCallCast();
         MethodSymbol *called_constructor =
             (MethodSymbol *) (this_call ? this_call -> symbol : NULL);
 
         if (called_constructor)
         {
             called_constructor_declaration =
-                (AstConstructorDeclaration *) called_constructor ->
-                method_or_constructor_declaration;
+                (AstConstructorDeclaration *) called_constructor -> declaration;
 
             if (called_constructor_declaration -> index == OMEGA)
                 CheckConstructorCycles(called_constructor_declaration);
@@ -195,7 +193,7 @@ void ConstructorCycleChecker::CheckConstructorCycles(AstConstructorDeclaration *
                 called_constructor_declaration -> index = CYCLE_INFINITY;
 
                 constructor_block =
-                    (AstConstructorBlock *) called_constructor_declaration ->
+                    (AstMethodBody *) called_constructor_declaration ->
                     constructor_body;
                 AstMethodDeclarator *constructor_declarator =
                     called_constructor_declaration -> constructor_declarator;
@@ -204,8 +202,8 @@ void ConstructorCycleChecker::CheckConstructorCycles(AstConstructorDeclaration *
                     constructor_symbol -> containing_type ->
                     semantic_environment -> sem;
                 sem -> ReportSemError(SemanticError::CIRCULAR_THIS_CALL,
-                                      constructor_block -> explicit_constructor_invocation_opt -> LeftToken(),
-                                      constructor_block -> explicit_constructor_invocation_opt -> RightToken(),
+                                      constructor_block -> explicit_constructor_opt -> LeftToken(),
+                                      constructor_block -> explicit_constructor_opt -> RightToken(),
                                       sem -> lex_stream -> NameString(constructor_declarator -> identifier_token));
             } while (called_constructor_declaration != constructor_declaration);
         }

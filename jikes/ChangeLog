@@ -1,3 +1,41 @@
+2002-05-22  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/java.g: Change grammar to detect this() and super() anywhere
+	in method - bug 2805.
+	* src/javaact.cpp: Regenerate.
+	* src/javaact.h: Ditto.
+	* src/javadcl.h: Ditto.
+	* src/javadef.h: Ditto.
+	* src/javaprs.h: Ditto.
+	* src/javasym.h: Ditto.
+	* src/ast.cpp: Update handling of AST components to match grammar.
+	* src/ast.h: Ditto.
+	* src/unparse.cpp: Ditto.
+	* src/semantic.h: Improve semantic analysis of constructors,
+	initializer blocks, and nested classes.
+	* src/body.cpp: Ditto.
+	* src/decl.cpp: Ditto.
+	* src/expr.cpp: Ditto.
+	* src/symbol.cpp: Improve handling of nested type representations.
+	* src/symbol.h: Ditto.
+	* src/bytecode.cpp: Improve bytecode emission of constructors, and
+	squash a few latent bugs.
+	* src/bytecode.h: Ditto.
+	* src/error.cpp: Improve errors related to constructors.
+	* src/error.h: Ditto.
+	* src/class.h: Related code touchups, such as formatting or
+	name changes.
+	* src/control.cpp: Ditto.
+	* src/control.h: Ditto.
+	* src/definite.cpp: Ditto.
+	* src/depend.cpp: Ditto.
+	* src/getclass.cpp: Ditto.
+	* src/parser.cpp: Ditto.
+	* src/parser.h: Ditto.
+	* src/platform.cpp: Ditto.
+	* src/platform.h: Ditto.
+	* src/system.cpp: Ditto.
+
 2002-05-20  Chris Abbey  <jikes@cabbey.net>
 
 	* src/expr.cpp (ProcessClassInstanceCreationExpression): fix

@@ -1380,8 +1380,6 @@ wchar_t StringConstant::US_array[] = {
     U_a, U_r, U_r, U_a, U_y, U_NU}; // L"array"
 wchar_t StringConstant::US_access_DOLLAR[] = {
     U_a, U_c, U_c, U_e, U_s, U_s, U_DS, U_NU}; // L"access$"
-wchar_t StringConstant::US_block_DOLLAR[] = {
-    U_b, U_l, U_o, U_c, U_k, U_DS, U_NU}; // L"block$"
 wchar_t StringConstant::US_class_DOLLAR[] = {
     U_c, U_l, U_a, U_s, U_s, U_DS, U_NU}; // L"class$"
 wchar_t StringConstant::US_clone[] = {

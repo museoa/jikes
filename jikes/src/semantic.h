@@ -35,9 +35,13 @@ class SymbolTableStack
 {
 public:
     void Push(SymbolTable *symtab) { table.Next() = symtab; }
-    void Pop()                     { if (table.Length() > 0) table.Reset(table.Length() - 1); }
-    int Size()                     { return table.Length(); }
-    SymbolTable *Top()             { return (SymbolTable *) (table.Length() > 0 ? table[table.Length() - 1] : NULL); }
+    void Pop() { if (table.Length() > 0) table.Reset(table.Length() - 1); }
+    int Size() { return table.Length(); }
+    SymbolTable *Top()
+    {
+        return (SymbolTable *) (table.Length() > 0
+                                ? table[table.Length() - 1] : NULL);
+    }
 
     SymbolTable *operator[](const int i) { return table[i]; } /*  */
 
@@ -50,7 +54,8 @@ public:
     {
         for (int i = table.Length() - 1; i >= 0; i--)
         {
-            VariableSymbol *symbol = table[i] -> FindVariableSymbol(name_symbol);
+            VariableSymbol *symbol =
+                table[i] -> FindVariableSymbol(name_symbol);
             if (symbol)
                 return symbol;
         }
@@ -101,9 +106,13 @@ class ExceptionTableStack
 {
 public:
     void Push(SymbolSet *set) { table.Next() = set; }
-    void       Pop()          { if (table.Length() > 0) table.Reset(table.Length() - 1); }
-    int        Size()         { return table.Length(); }
-    SymbolSet *Top()          { return (SymbolSet *) (table.Length() > 0 ? table[table.Length() - 1] : NULL); }
+    void Pop() { if (table.Length() > 0) table.Reset(table.Length() - 1); }
+    int Size() { return table.Length(); }
+    SymbolSet *Top()
+    {
+        return (SymbolSet *) (table.Length() > 0
+                              ? table[table.Length() - 1] : NULL);
+    }
 
 private:
     Tuple<SymbolSet *> table;
@@ -117,9 +126,12 @@ class StatementStack
 {
 public:
     void Push(Ast *stmt) { info.Next() = stmt; }
-    void Pop()           { if (info.Length() > 0) info.Reset(info.Length() - 1); }
-    int Size()           { return info.Length(); }
-    Ast *Top()           { return (Ast *) (info.Length() > 0 ? info[info.Length() - 1] : NULL); }
+    void Pop() { if (info.Length() > 0) info.Reset(info.Length() - 1); }
+    int Size() { return info.Length(); }
+    Ast *Top()
+    {
+        return (Ast *) (info.Length() > 0 ? info[info.Length() - 1] : NULL);
+    }
 
     Ast *operator[](const int i) { return info[i]; }
 
@@ -135,10 +147,13 @@ class NestingLevelStack
 {
 public:
     void Push(int nesting) { info.Next() = nesting; }
-    void Pop()             { if (info.Length() > 0) info.Reset(info.Length() - 1); }
-    int Size()             { return info.Length(); }
+    void Pop() { if (info.Length() > 0) info.Reset(info.Length() - 1); }
+    int Size() { return info.Length(); }
     // Top returns 0 if the stack is empty, a valid value for no nesting depth
-    int Top()              { return (int) (info.Length() > 0 ? info[info.Length() - 1] : 0); }
+    int Top()
+    {
+        return (int) (info.Length() > 0 ? info[info.Length() - 1] : 0);
+    }
 
     int operator[](const int i) { return info[i]; }
 
@@ -174,7 +189,11 @@ public:
     }
 
     int Size() { return block.Length(); }
-    AstBlock *TopBlock() { return (AstBlock *) (block.Length() > 0 ? block[block.Length() - 1] : NULL); }
+    AstBlock *TopBlock()
+    {
+        return (AstBlock *) (block.Length() > 0
+                             ? block[block.Length() - 1] : NULL);
+    }
 
     AstBlock *operator[](const int i) { return block[i]; }
 
@@ -202,7 +221,10 @@ public:
     void Push() { info.Next().Reset(); }
     void Pop()  { if (info.Length() > 0) info.Reset(info.Length() - 1); }
     int Size()  { return info.Length(); }
-    Tuple <AstExpression *> &Top()  { if (info.Length() == 0) assert(false); return info[info.Length() - 1]; }
+    Tuple <AstExpression *> &Top()
+    {
+        if (info.Length() == 0) assert(false); return info[info.Length() - 1];
+    }
 
 private:
     Tuple< Tuple<AstExpression *> > info;
@@ -259,15 +281,19 @@ public:
         {
             if (top_index == 0)
             {
-                memset(local_variables[top_index], 0, locally_defined_variables[top_index] -> Size() * sizeof(VariableSymbol *));
+                memset(local_variables[top_index], 0,
+                       (locally_defined_variables[top_index] -> Size() *
+                        sizeof(VariableSymbol *)));
                 locally_defined_variables[top_index] -> SetEmpty();
             }
             else
             {
                 memmove(local_variables[top_index],
                         local_variables[top_index - 1],
-                        locally_defined_variables[top_index] -> Size() * sizeof(VariableSymbol *));
-                *locally_defined_variables[top_index] = *locally_defined_variables[top_index - 1];
+                        (locally_defined_variables[top_index] -> Size() *
+                         sizeof(VariableSymbol *)));
+                *locally_defined_variables[top_index] =
+                    *locally_defined_variables[top_index - 1];
             }
         }
 
@@ -282,22 +308,62 @@ public:
         else assert(false);
     }
 
-    int Size()                 { return top_index; }
-    AstBlock *Block(int i)     { return block[i]; }
-    AstBlock *TopBlock()       { assert(top_index > 0); return block[top_index - 1]; }
+    int Size() { return top_index; }
+    AstBlock *Block(int i) { return block[i]; }
+    AstBlock *TopBlock()
+    {
+        assert(top_index > 0);
+        return block[top_index - 1];
+    }
 
-    VariableSymbol **TopLocalVariables() { assert(top_index > 0 && local_variables); return local_variables[top_index - 1]; }
-    BitSet *TopLocallyDefinedVariables() { assert(top_index > 0 && locally_defined_variables); return locally_defined_variables[top_index - 1]; }
+    VariableSymbol **TopLocalVariables()
+    {
+        assert(top_index > 0 && local_variables);
+        return local_variables[top_index - 1];
+    }
+    BitSet *TopLocallyDefinedVariables()
+    {
+        assert(top_index > 0 && locally_defined_variables);
+        return locally_defined_variables[top_index - 1];
+    }
 
-    DefinitePair &BreakPair(int i)    { return definite_pairs[i] -> break_pair; }
-    DefinitePair &ContinuePair(int i) { return definite_pairs[i] -> continue_pair; }
-    DefinitePair &ReturnPair(int i)   { return definite_pairs[i] -> return_pair; }
-    DefinitePair &ThrowPair(int i)    { return definite_pairs[i] -> throw_pair; }
+    DefinitePair &BreakPair(int i)
+    {
+        return definite_pairs[i] -> break_pair;
+    }
+    DefinitePair &ContinuePair(int i)
+    {
+        return definite_pairs[i] -> continue_pair;
+    }
+    DefinitePair &ReturnPair(int i)
+    {
+        return definite_pairs[i] -> return_pair;
+    }
+    DefinitePair &ThrowPair(int i)
+    {
+        return definite_pairs[i] -> throw_pair;
+    }
 
-    DefinitePair &TopBreakPair()      { assert(top_index > 0); return definite_pairs[top_index - 1] -> break_pair; }
-    DefinitePair &TopContinuePair()   { assert(top_index > 0); return definite_pairs[top_index - 1] -> continue_pair; }
-    DefinitePair &TopReturnPair()     { assert(top_index > 0); return definite_pairs[top_index - 1] -> return_pair; }
-    DefinitePair &TopThrowPair()      { assert(top_index > 0); return definite_pairs[top_index - 1] -> throw_pair; }
+    DefinitePair &TopBreakPair()
+    {
+        assert(top_index > 0);
+        return definite_pairs[top_index - 1] -> break_pair;
+    }
+    DefinitePair &TopContinuePair()
+    {
+        assert(top_index > 0);
+        return definite_pairs[top_index - 1] -> continue_pair;
+    }
+    DefinitePair &TopReturnPair()
+    {
+        assert(top_index > 0);
+        return definite_pairs[top_index - 1] -> return_pair;
+    }
+    DefinitePair &TopThrowPair()
+    {
+        assert(top_index > 0);
+        return definite_pairs[top_index - 1] -> throw_pair;
+    }
 
     DefinitePair &TopExitPair(DefinitePair &start_pair)
     {
@@ -312,16 +378,19 @@ public:
         return exit_pair;
     }
 
-    DefiniteBlockStack(Control &control, int stack_size_, int set_size) : stack_size(stack_size_),
-                                                                          top_index(0),
-                                                                          exit_pair(set_size)
+    DefiniteBlockStack(Control &control, int stack_size_, int set_size)
+        : stack_size(stack_size_),
+          top_index(0),
+          exit_pair(set_size)
     {
         block = new AstBlock*[stack_size];
         definite_pairs = new DefinitePairs*[stack_size];
-        local_variables = (VariableSymbol ***) ((control.option.g & JikesOption::VARS)
-                                                ? new VariableSymbol**[stack_size] : NULL);
-        locally_defined_variables = (BitSet **) ((control.option.g & JikesOption::VARS)
-                                                 ? new BitSet*[stack_size] : NULL);
+        local_variables =
+            (VariableSymbol ***) ((control.option.g & JikesOption::VARS)
+                                  ? new VariableSymbol**[stack_size] : NULL);
+        locally_defined_variables =
+            (BitSet **) ((control.option.g & JikesOption::VARS)
+                         ? new BitSet*[stack_size] : NULL);
 
         for (int i = 0; i < stack_size; i++)
         {
@@ -387,11 +456,19 @@ public:
         else assert(false);
     }
 
-    int Size()                           { return top_index; }
+    int Size() { return top_index; }
     AstTryStatement *TryStatement(int i) { return try_statement[i]; }
-    AstBlock *Block(int i)               { return block[i]; }
-    AstBlock *TopBlock()                 { assert(top_index > 0); return block[top_index - 1]; }
-    void SetTopBlock(AstBlock *block_)   { assert(top_index > 0); block[top_index - 1] = block_; }
+    AstBlock *Block(int i) { return block[i]; }
+    AstBlock *TopBlock()
+    {
+        assert(top_index > 0);
+        return block[top_index - 1];
+    }
+    void SetTopBlock(AstBlock *block_)
+    {
+        assert(top_index > 0);
+        block[top_index - 1] = block_;
+    }
 
     DefiniteTryStack(int stack_size_) : stack_size(stack_size_),
                                         top_index(0)
@@ -425,10 +502,10 @@ public:
     Semantic *sem;
     SemanticEnvironment *previous;
 
-    MethodSymbol   *this_method;
+    MethodSymbol *this_method;
     VariableSymbol *this_variable;
-    Ast            *explicit_constructor_invocation;
-    Ast            *ast_construct;
+    AstStatement *explicit_constructor;
+    Ast *ast_construct;
 
     SymbolTableStack symbol_table; // Points to symbol table on top of stack
     ExceptionTableStack try_exception_table_stack;
@@ -438,16 +515,16 @@ public:
     NestingLevelStack abrupt_finally_stack;
     BlockStack block_stack;
 
-    SemanticEnvironment(Semantic *sem_,
-                        TypeSymbol *type_,
-                        SemanticEnvironment *previous_ = NULL) : sem(sem_),
-                                                                 previous(previous_),
-                                                                 this_method(NULL),
-                                                                 this_variable(NULL),
-                                                                 explicit_constructor_invocation(NULL),
-                                                                 ast_construct(NULL),
-                                                                 _type(type_),
-                                                                 next(NULL)
+    SemanticEnvironment(Semantic *sem_, TypeSymbol *type_,
+                        SemanticEnvironment *previous_ = NULL)
+        : sem(sem_),
+          previous(previous_),
+          this_method(NULL),
+          this_variable(NULL),
+          explicit_constructor(NULL),
+          ast_construct(NULL),
+          _type(type_),
+          next(NULL)
     {}
 
 
@@ -464,14 +541,15 @@ public:
     //
     SemanticEnvironment *GetEnvironment(Ast *ast)
     {
-        SemanticEnvironment *clone = new SemanticEnvironment(sem, _type, NULL);
-        clone -> this_method = this -> this_method;
-        clone -> this_variable = this -> this_variable;
+        SemanticEnvironment *clone = new SemanticEnvironment(sem, _type);
+        clone -> this_method = this_method;
+        clone -> this_variable = this_variable;
+        clone -> explicit_constructor = explicit_constructor;
         clone -> ast_construct = ast;
-        for (int i = 0; i < this -> symbol_table.Size(); i++)
-            clone -> symbol_table.Push(this -> symbol_table[i]);
-        clone -> next = this -> next;
-        this -> next = clone;
+        for (int i = 0; i < symbol_table.Size(); i++)
+            clone -> symbol_table.Push(symbol_table[i]);
+        clone -> next = next;
+        next = clone;
 
         return clone;
     }
@@ -479,13 +557,15 @@ public:
     TypeSymbol *Type() { return _type; }
 
     //
-    // Are we in a static area?
+    // Are we in a region with no current instance? This applies to all
+    // static initializers, static methods, and explicit constructor
+    // invocations, including initializers in interfaces.
     //
     inline bool StaticRegion()
     {
-        return (this_variable && this_variable -> ACC_STATIC()) ||
-               (this_method   && this_method -> ACC_STATIC())   ||
-               (_type -> ACC_INTERFACE());
+        return ((this_variable && this_variable -> ACC_STATIC()) ||
+                (this_method && this_method -> ACC_STATIC()) ||
+                explicit_constructor);
     }
 
 private:
@@ -511,7 +591,11 @@ public:
 
     int Size() { return info.Length(); }
 
-    SemanticEnvironment *Top() { return (SemanticEnvironment *) (info.Length() > 0 ? info[info.Length() - 1] : NULL); }
+    SemanticEnvironment *Top()
+    {
+        return (SemanticEnvironment *) (info.Length() > 0
+                                        ? info[info.Length() - 1] : NULL);
+    }
 
     SemanticEnvironment *operator[](const int i) { return info[i]; }
 
@@ -546,45 +630,29 @@ public:
 
     LiteralValue *ComputeFinalValue(AstVariableDeclarator *);
 
-    Semantic(Control &control_,
-             FileSymbol *file_symbol_) : control(control_),
-                                         source_file_symbol(file_symbol_),
-                                         lex_stream(file_symbol_ -> lex_stream),
-                                         compilation_unit(file_symbol_ -> compilation_unit),
-                                         directory_symbol(file_symbol_ -> directory_symbol),
-                                         return_code(0),
-                                         error(NULL),
-                                         this_package(file_symbol_ -> package),
-                                         definitely_assigned_variables(NULL),
-                                         universe(NULL),
-                                         blank_finals(NULL),
-                                         definite_block_stack(NULL),
-                                         definite_try_stack(NULL),
-                                         definite_final_assignment_stack(NULL),
-                                         definite_visible_variables(NULL),
-                                         processing_simple_assignment(false)
+    Semantic(Control &control_, FileSymbol *file_symbol_)
+        : control(control_),
+          source_file_symbol(file_symbol_),
+          lex_stream(file_symbol_ -> lex_stream),
+          compilation_unit(file_symbol_ -> compilation_unit),
+          directory_symbol(file_symbol_ -> directory_symbol),
+          return_code(0),
+          error(NULL),
+          this_package(file_symbol_ -> package),
+          definitely_assigned_variables(NULL),
+          universe(NULL),
+          blank_finals(NULL),
+          definite_block_stack(NULL),
+          definite_try_stack(NULL),
+          definite_final_assignment_stack(NULL),
+          definite_visible_variables(NULL),
+          processing_simple_assignment(false)
     {
-        ProcessExprOrStmt[Ast::LOCAL_VARIABLE_DECLARATION] =
-            &Semantic::ProcessLocalVariableDeclarationStatement;
-        ProcessExprOrStmt[Ast::BLOCK] = &Semantic::ProcessBlock;
-        ProcessExprOrStmt[Ast::EXPRESSION_STATEMENT] =
-            &Semantic::ProcessExpressionStatement;
-        ProcessExprOrStmt[Ast::SYNCHRONIZED_STATEMENT] =
-            &Semantic::ProcessSynchronizedStatement;
-        ProcessExprOrStmt[Ast::IF] = &Semantic::ProcessIfStatement;
-        ProcessExprOrStmt[Ast::WHILE] = &Semantic::ProcessWhileStatement;
-        ProcessExprOrStmt[Ast::FOR] = &Semantic::ProcessForStatement;
-        ProcessExprOrStmt[Ast::SWITCH] = &Semantic::ProcessSwitchStatement;
-        ProcessExprOrStmt[Ast::DO] = &Semantic::ProcessDoStatement;
-        ProcessExprOrStmt[Ast::BREAK] = &Semantic::ProcessBreakStatement;
-        ProcessExprOrStmt[Ast::CONTINUE] = &Semantic::ProcessContinueStatement;
-        ProcessExprOrStmt[Ast::RETURN] = &Semantic::ProcessReturnStatement;
-        ProcessExprOrStmt[Ast::THROW] = &Semantic::ProcessThrowStatement;
-        ProcessExprOrStmt[Ast::TRY] = &Semantic::ProcessTryStatement;
-        ProcessExprOrStmt[Ast::ASSERT] = &Semantic::ProcessAssertStatement;
-        ProcessExprOrStmt[Ast::EMPTY_STATEMENT] =
-            &Semantic::ProcessEmptyStatement;
-        ProcessExprOrStmt[Ast::CLASS] = &Semantic::ProcessClassDeclaration;
+#ifdef JIKES_DEBUG
+        for (int i = 0; i < Ast::_num_kinds; i++)
+            ProcessExprOrStmt[i] = &Semantic::ProcessInvalidKind;
+#endif
+        // Semantic processing of expressions.
         ProcessExprOrStmt[Ast::IDENTIFIER] = &Semantic::ProcessSimpleName;
         ProcessExprOrStmt[Ast::DOT] = &Semantic::ProcessFieldAccess;
         ProcessExprOrStmt[Ast::INTEGER_LITERAL] =
@@ -617,33 +685,62 @@ public:
         ProcessExprOrStmt[Ast::PRE_UNARY] =
             &Semantic::ProcessPreUnaryExpression;
         ProcessExprOrStmt[Ast::CAST] = &Semantic::ProcessCastExpression;
+        ProcessExprOrStmt[Ast::CHECK_AND_CAST] =
+            &Semantic::ProcessCastExpression;
         ProcessExprOrStmt[Ast::BINARY] = &Semantic::ProcessBinaryExpression;
         ProcessExprOrStmt[Ast::TYPE] = &Semantic::ProcessTypeExpression;
         ProcessExprOrStmt[Ast::CONDITIONAL] =
             &Semantic::ProcessConditionalExpression;
         ProcessExprOrStmt[Ast::ASSIGNMENT] =
             &Semantic::ProcessAssignmentExpression;
+        // Semantic processing of statements.
+        ProcessExprOrStmt[Ast::CLASS] = &Semantic::ProcessClassDeclaration;
+        ProcessExprOrStmt[Ast::THIS_CALL] = &Semantic::ProcessInvalidKind;
+        ProcessExprOrStmt[Ast::SUPER_CALL] = &Semantic::ProcessInvalidKind;
+        ProcessExprOrStmt[Ast::BLOCK] = &Semantic::ProcessBlock;
+        ProcessExprOrStmt[Ast::LOCAL_VARIABLE_DECLARATION] =
+            &Semantic::ProcessLocalVariableDeclarationStatement;
+        ProcessExprOrStmt[Ast::IF] = &Semantic::ProcessIfStatement;
+        ProcessExprOrStmt[Ast::EMPTY_STATEMENT] =
+            &Semantic::ProcessEmptyStatement;
+        ProcessExprOrStmt[Ast::EXPRESSION_STATEMENT] =
+            &Semantic::ProcessExpressionStatement;
+        ProcessExprOrStmt[Ast::SWITCH] = &Semantic::ProcessSwitchStatement;
+        ProcessExprOrStmt[Ast::WHILE] = &Semantic::ProcessWhileStatement;
+        ProcessExprOrStmt[Ast::DO] = &Semantic::ProcessDoStatement;
+        ProcessExprOrStmt[Ast::FOR] = &Semantic::ProcessForStatement;
+        ProcessExprOrStmt[Ast::BREAK] = &Semantic::ProcessBreakStatement;
+        ProcessExprOrStmt[Ast::CONTINUE] = &Semantic::ProcessContinueStatement;
+        ProcessExprOrStmt[Ast::RETURN] = &Semantic::ProcessReturnStatement;
+        ProcessExprOrStmt[Ast::THROW] = &Semantic::ProcessThrowStatement;
+        ProcessExprOrStmt[Ast::SYNCHRONIZED_STATEMENT] =
+            &Semantic::ProcessSynchronizedStatement;
+        ProcessExprOrStmt[Ast::ASSERT] = &Semantic::ProcessAssertStatement;
+        ProcessExprOrStmt[Ast::TRY] = &Semantic::ProcessTryStatement;
 
+        // Check statements for definite assignment.
+        DefiniteStmt[Ast::CLASS] = &Semantic::DefiniteEmptyStatement;
+        DefiniteStmt[Ast::THIS_CALL] = &Semantic::DefiniteEmptyStatement;
+        DefiniteStmt[Ast::SUPER_CALL] = &Semantic::DefiniteEmptyStatement;
+        DefiniteStmt[Ast::BLOCK] = &Semantic::DefiniteBlock;
         DefiniteStmt[Ast::LOCAL_VARIABLE_DECLARATION] =
             &Semantic::DefiniteLocalVariableDeclarationStatement;
-        DefiniteStmt[Ast::BLOCK] = &Semantic::DefiniteBlock;
+        DefiniteStmt[Ast::IF] = &Semantic::DefiniteIfStatement;
+        DefiniteStmt[Ast::EMPTY_STATEMENT] = &Semantic::DefiniteEmptyStatement;
         DefiniteStmt[Ast::EXPRESSION_STATEMENT] =
             &Semantic::DefiniteExpressionStatement;
-        DefiniteStmt[Ast::SYNCHRONIZED_STATEMENT] =
-            &Semantic::DefiniteSynchronizedStatement;
-        DefiniteStmt[Ast::IF] = &Semantic::DefiniteIfStatement;
-        DefiniteStmt[Ast::WHILE] = &Semantic::DefiniteWhileStatement;
-        DefiniteStmt[Ast::FOR] = &Semantic::DefiniteForStatement;
         DefiniteStmt[Ast::SWITCH] = &Semantic::DefiniteSwitchStatement;
+        DefiniteStmt[Ast::WHILE] = &Semantic::DefiniteWhileStatement;
         DefiniteStmt[Ast::DO] = &Semantic::DefiniteDoStatement;
+        DefiniteStmt[Ast::FOR] = &Semantic::DefiniteForStatement;
         DefiniteStmt[Ast::BREAK] = &Semantic::DefiniteBreakStatement;
         DefiniteStmt[Ast::CONTINUE] = &Semantic::DefiniteContinueStatement;
         DefiniteStmt[Ast::RETURN] = &Semantic::DefiniteReturnStatement;
         DefiniteStmt[Ast::THROW] = &Semantic::DefiniteThrowStatement;
-        DefiniteStmt[Ast::TRY] = &Semantic::DefiniteTryStatement;
+        DefiniteStmt[Ast::SYNCHRONIZED_STATEMENT] =
+            &Semantic::DefiniteSynchronizedStatement;
         DefiniteStmt[Ast::ASSERT] = &Semantic::DefiniteAssertStatement;
-        DefiniteStmt[Ast::EMPTY_STATEMENT] = &Semantic::DefiniteEmptyStatement;
-        DefiniteStmt[Ast::CLASS] = &Semantic::DefiniteClassDeclaration;
+        DefiniteStmt[Ast::TRY] = &Semantic::DefiniteTryStatement;
 
         DefiniteExpr[Ast::IDENTIFIER] = &Semantic::DefiniteSimpleName;
         DefiniteExpr[Ast::DOT] = &Semantic::DefiniteFieldAccess;
@@ -826,20 +923,24 @@ public:
             else if (lex_stream -> NumWarnTokens() > 0)
                 lex_stream -> PrintMessages();
 
-            if ((! compilation_unit) || compilation_unit -> BadCompilationUnitCast())
+            if (! compilation_unit ||
+                compilation_unit -> BadCompilationUnitCast())
             {
-                DiagnoseParser *diagnose_parser = new DiagnoseParser(control, lex_stream);
+                DiagnoseParser *diagnose_parser =
+                    new DiagnoseParser(control, lex_stream);
                 return_code = 1;
                 delete diagnose_parser;
             }
 
-            if (! control.option.nocleanup)
-            if (compilation_unit)
+            if (! control.option.nocleanup && compilation_unit)
                 CleanUp();
         }
 
-        if (error && error -> error.Length() > 0 && error -> PrintMessages() > return_code)
+        if (error && error -> error.Length() > 0 &&
+            error -> PrintMessages() > return_code)
+        {
             return_code = 1;
+        }
 
         //
         // Once we have processed the errors, reset the error object
@@ -848,19 +949,25 @@ public:
         error = NULL;
     }
 
-    TypeSymbol *ProcessSignature(TypeSymbol *, const char *, LexStream::TokenIndex);
-    TypeSymbol *ReadType(FileSymbol *, PackageSymbol *, NameSymbol *, LexStream::TokenIndex);
-    TypeSymbol *ReadTypeFromSignature(TypeSymbol *, const char *, int, LexStream::TokenIndex);
-    TypeSymbol *ProcessNestedType(TypeSymbol *, NameSymbol *, LexStream::TokenIndex);
+    TypeSymbol *ProcessSignature(TypeSymbol *, const char *,
+                                 LexStream::TokenIndex);
+    TypeSymbol *ReadType(FileSymbol *, PackageSymbol *, NameSymbol *,
+                         LexStream::TokenIndex);
+    TypeSymbol *ReadTypeFromSignature(TypeSymbol *, const char *, int,
+                                      LexStream::TokenIndex);
+    TypeSymbol *ProcessNestedType(TypeSymbol *, NameSymbol *,
+                                  LexStream::TokenIndex);
 
     inline bool IsConstantTrue(AstExpression *expr)
     {
-        return expr -> IsConstant() && (expr -> Type() == control.boolean_type) &&
+        return expr -> IsConstant() &&
+            expr -> Type() == control.boolean_type &&
             DYNAMIC_CAST<IntLiteralValue *> (expr -> value) -> value;
     }
     inline bool IsConstantFalse(AstExpression *expr)
     {
-        return expr -> IsConstant() && (expr -> Type() == control.boolean_type) &&
+        return expr -> IsConstant() &&
+            expr -> Type() == control.boolean_type &&
             ! DYNAMIC_CAST<IntLiteralValue *> (expr -> value) -> value;
     }
 
@@ -893,7 +1000,8 @@ private:
     void ProcessMethodMembers(AstClassBody *);
     void ProcessFieldMembers(AstClassBody *);
     void ProcessMembers(SemanticEnvironment *, AstClassBody *);
-    void CompleteSymbolTable(SemanticEnvironment *, LexStream::TokenIndex, AstClassBody *);
+    void CompleteSymbolTable(SemanticEnvironment *, LexStream::TokenIndex,
+                             AstClassBody *);
     void ProcessExecutableBodies(SemanticEnvironment *, AstClassBody *);
     void ProcessExecutableBodies(AstInterfaceDeclaration *);
 
@@ -927,10 +1035,10 @@ private:
         assert(state_stack.Size());
         return state_stack.Top() -> this_variable;
     }
-    Ast *&ExplicitConstructorInvocation()
+    AstStatement *&ExplicitConstructorInvocation()
     {
         assert(state_stack.Size());
-        return state_stack.Top() -> explicit_constructor_invocation;
+        return state_stack.Top() -> explicit_constructor;
     }
     SymbolTableStack &LocalSymbolTable()
     {
@@ -991,13 +1099,19 @@ private:
     bool IsIntValueRepresentableInType(AstExpression *, TypeSymbol *);
 
     void CheckClassMembers(TypeSymbol *, AstClassBody *);
-    void CheckNestedTypeDuplication(SemanticEnvironment *, LexStream::TokenIndex);
+    void CheckNestedTypeDuplication(SemanticEnvironment *,
+                                    LexStream::TokenIndex);
     TypeSymbol *ProcessNestedClassName(TypeSymbol *, AstClassDeclaration *);
     void CheckInterfaceMembers(TypeSymbol *, AstInterfaceDeclaration *);
-    TypeSymbol *ProcessNestedInterfaceName(TypeSymbol *, AstInterfaceDeclaration *);
+    TypeSymbol *ProcessNestedInterfaceName(TypeSymbol *,
+                                           AstInterfaceDeclaration *);
     TypeSymbol *FindTypeInShadow(TypeShadowSymbol *, LexStream::TokenIndex);
-    void ReportTypeInaccessible(LexStream::TokenIndex, LexStream::TokenIndex, TypeSymbol *);
-    void ReportTypeInaccessible(Ast *ast, TypeSymbol *type) { ReportTypeInaccessible(ast -> LeftToken(), ast -> RightToken(), type); }
+    void ReportTypeInaccessible(LexStream::TokenIndex, LexStream::TokenIndex,
+                                TypeSymbol *);
+    void ReportTypeInaccessible(Ast *ast, TypeSymbol *type)
+    {
+        ReportTypeInaccessible(ast -> LeftToken(), ast -> RightToken(), type);
+    }
     TypeSymbol *GetBadNestedType(TypeSymbol *, LexStream::TokenIndex);
     TypeSymbol *FindNestedType(TypeSymbol *, LexStream::TokenIndex);
     TypeSymbol *MustFindNestedType(TypeSymbol *, Ast *);
@@ -1033,16 +1147,18 @@ private:
     TypeSymbol *MustFindType(Ast *);
     void ProcessInterface(TypeSymbol *, AstExpression *);
 
-    void InitializeVariable(AstFieldDeclaration *, Tuple<VariableSymbol *> &);
-    void ProcessInitializer(AstBlock *, AstBlock *, MethodSymbol *, Tuple<VariableSymbol *> &);
-    bool NeedsInitializationMethod(AstFieldDeclaration *);
+    void InitializeVariable(AstFieldDeclaration *, MethodSymbol *,
+                            Tuple<VariableSymbol *> &);
+    void ProcessInitializer(AstMethodBody *, MethodSymbol *,
+                            Tuple<VariableSymbol *> &);
     void ProcessStaticInitializers(AstClassBody *);
-    void ProcessBlockInitializers(AstClassBody *);
-    MethodSymbol *GetStaticInitializerMethod();
+    void ProcessInstanceInitializers(AstClassBody *);
+    MethodSymbol *GetStaticInitializerMethod(int estimate = 0);
 
     bool CanWideningPrimitiveConvert(TypeSymbol *, TypeSymbol *);
     bool CanNarrowingPrimitiveConvert(TypeSymbol *, TypeSymbol *);
-    bool CanCastConvert(TypeSymbol *, TypeSymbol *, LexStream::TokenIndex = LexStream::BadToken());
+    bool CanCastConvert(TypeSymbol *, TypeSymbol *,
+                        LexStream::TokenIndex = LexStream::BadToken());
     bool CanMethodInvocationConvert(TypeSymbol *, TypeSymbol *);
     bool CanAssignmentConvert(TypeSymbol *, AstExpression *);
     bool CanAssignmentConvertReference(TypeSymbol *, TypeSymbol *);
@@ -1080,40 +1196,61 @@ private:
 
     DefiniteAssignmentSet *(Semantic::*DefiniteExpr[Ast::_num_expression_kinds])(AstExpression *, DefinitePair &);
     DefiniteAssignmentSet *DefiniteSimpleName(AstExpression *, DefinitePair &);
-    DefiniteAssignmentSet *DefiniteArrayAccess(AstExpression *, DefinitePair &);
-    DefiniteAssignmentSet *DefiniteMethodInvocation(AstExpression *, DefinitePair &);
-    DefiniteAssignmentSet *DefiniteClassInstanceCreationExpression(AstExpression *, DefinitePair &);
-    DefiniteAssignmentSet *DefiniteArrayCreationExpression(AstExpression *, DefinitePair &);
-    DefiniteAssignmentSet *DefinitePreUnaryExpression(AstExpression *, DefinitePair &);
-    DefiniteAssignmentSet *DefinitePostUnaryExpression(AstExpression *, DefinitePair &);
-    DefiniteAssignmentSet *DefiniteBinaryExpression(AstExpression *, DefinitePair &);
-    DefiniteAssignmentSet *DefiniteConditionalExpression(AstExpression *, DefinitePair &);
-    DefiniteAssignmentSet *DefiniteAssignmentExpression(AstExpression *, DefinitePair &);
-    DefiniteAssignmentSet *DefiniteDefaultExpression(AstExpression *, DefinitePair &);
-    DefiniteAssignmentSet *DefiniteFieldAccess(AstExpression *, DefinitePair &);
-    DefiniteAssignmentSet *DefiniteParenthesizedExpression(AstExpression *, DefinitePair &);
-    DefiniteAssignmentSet *DefiniteCastExpression(AstExpression *, DefinitePair &);
-    DefiniteAssignmentSet *DefiniteBooleanExpression(AstExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefiniteArrayAccess(AstExpression *,
+                                               DefinitePair &);
+    DefiniteAssignmentSet *DefiniteMethodInvocation(AstExpression *,
+                                                    DefinitePair &);
+    DefiniteAssignmentSet *DefiniteClassInstanceCreationExpression(AstExpression *,
+                                                                   DefinitePair &);
+    DefiniteAssignmentSet *DefiniteArrayCreationExpression(AstExpression *,
+                                                           DefinitePair &);
+    DefiniteAssignmentSet *DefinitePreUnaryExpression(AstExpression *,
+                                                      DefinitePair &);
+    DefiniteAssignmentSet *DefinitePostUnaryExpression(AstExpression *,
+                                                       DefinitePair &);
+    DefiniteAssignmentSet *DefiniteBinaryExpression(AstExpression *,
+                                                    DefinitePair &);
+    DefiniteAssignmentSet *DefiniteConditionalExpression(AstExpression *,
+                                                         DefinitePair &);
+    DefiniteAssignmentSet *DefiniteAssignmentExpression(AstExpression *,
+                                                        DefinitePair &);
+    DefiniteAssignmentSet *DefiniteDefaultExpression(AstExpression *,
+                                                     DefinitePair &);
+    DefiniteAssignmentSet *DefiniteFieldAccess(AstExpression *,
+                                               DefinitePair &);
+    DefiniteAssignmentSet *DefiniteParenthesizedExpression(AstExpression *,
+                                                           DefinitePair &);
+    DefiniteAssignmentSet *DefiniteCastExpression(AstExpression *,
+                                                  DefinitePair &);
+    DefiniteAssignmentSet *DefiniteBooleanExpression(AstExpression *,
+                                                     DefinitePair &);
     void DefiniteExpression(AstExpression *, DefinitePair &);
 
     DefiniteAssignmentSet *(Semantic::*DefinitePreUnaryExpr[AstPreUnaryExpression::_num_kinds])(AstExpression *, DefinitePair &);
-    DefiniteAssignmentSet *DefiniteDefaultPreUnaryExpression(AstExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefiniteDefaultPreUnaryExpression(AstExpression *,
+                                                             DefinitePair &);
     DefiniteAssignmentSet *DefiniteNOT(AstExpression *, DefinitePair &);
-    DefiniteAssignmentSet *DefinitePLUSPLUSOrMINUSMINUS(AstExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefinitePLUSPLUSOrMINUSMINUS(AstExpression *,
+                                                        DefinitePair &);
 
     DefiniteAssignmentSet *(Semantic::*DefiniteBinaryExpr[AstBinaryExpression::_num_kinds])(AstBinaryExpression *, DefinitePair &);
-    DefiniteAssignmentSet *DefiniteDefaultBinaryExpression(AstBinaryExpression *, DefinitePair &);
-    DefiniteAssignmentSet *DefiniteAND_AND(AstBinaryExpression *, DefinitePair &);
-    DefiniteAssignmentSet *DefiniteOR_OR(AstBinaryExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefiniteDefaultBinaryExpression(AstBinaryExpression *,
+                                                           DefinitePair &);
+    DefiniteAssignmentSet *DefiniteAND_AND(AstBinaryExpression *,
+                                           DefinitePair &);
+    DefiniteAssignmentSet *DefiniteOR_OR(AstBinaryExpression *,
+                                         DefinitePair &);
 
     void DefiniteArrayInitializer(AstArrayInitializer *, DefinitePair &);
     void DefiniteArrayInitializer(AstArrayInitializer *);
     void DefiniteVariableInitializer(AstVariableDeclarator *);
     void DefiniteBlockStatements(AstBlock *);
     void DefiniteMethodBody(AstMethodDeclaration *, Tuple<VariableSymbol *> &);
-    void DefiniteConstructorBody(AstConstructorDeclaration *, Tuple<VariableSymbol *> &);
+    void DefiniteConstructorBody(AstConstructorDeclaration *,
+                                 Tuple<VariableSymbol *> &);
     void DefiniteBlockInitializer(AstBlock *, int, Tuple<VariableSymbol *> &);
-    void DefiniteVariableInitializer(AstVariableDeclarator *, Tuple<VariableSymbol *> &);
+    void DefiniteVariableInitializer(AstVariableDeclarator *,
+                                     Tuple<VariableSymbol *> &);
 
     void ProcessBlockStatements(AstBlock *);
     void ProcessThisCall(AstThisCall *);
@@ -1125,29 +1262,45 @@ private:
     wchar_t *UncaughtExceptionContext();
     void ReportConstructorNotFound(Ast *, TypeSymbol *);
     void ReportMethodNotFound(AstMethodInvocation *, TypeSymbol *);
-    MethodSymbol *FindConstructor(TypeSymbol *, Ast *, LexStream::TokenIndex, LexStream::TokenIndex);
+    MethodSymbol *FindConstructor(TypeSymbol *, Ast *,
+                                  LexStream::TokenIndex,
+                                  LexStream::TokenIndex);
     bool MoreSpecific(MethodSymbol *, MethodSymbol *);
     bool MoreSpecific(MethodSymbol *, Tuple<MethodSymbol *> &);
     bool NoMethodMoreSpecific(Tuple<MethodSymbol *> &, MethodSymbol *);
-    void FindMethodInEnvironment(Tuple<MethodSymbol *> &, SemanticEnvironment *&, SemanticEnvironment *, AstMethodInvocation *);
-    MethodSymbol *FindMisspelledMethodName(TypeSymbol *, AstMethodInvocation *, NameSymbol *);
-    MethodSymbol *FindMethodInEnvironment(SemanticEnvironment *&, SemanticEnvironment *, AstMethodInvocation *);
-    MethodSymbol *FindMethodInType(TypeSymbol *, AstMethodInvocation *, NameSymbol * = NULL);
+    void FindMethodInEnvironment(Tuple<MethodSymbol *> &,
+                                 SemanticEnvironment *&,
+                                 SemanticEnvironment *, AstMethodInvocation *);
+    MethodSymbol *FindMisspelledMethodName(TypeSymbol *,
+                                           AstMethodInvocation *,
+                                           NameSymbol *);
+    MethodSymbol *FindMethodInEnvironment(SemanticEnvironment *&,
+                                          SemanticEnvironment *,
+                                          AstMethodInvocation *);
+    MethodSymbol *FindMethodInType(TypeSymbol *, AstMethodInvocation *,
+                                   NameSymbol * = NULL);
 
     void ReportVariableNotFound(AstExpression *, TypeSymbol *);
-    void FindVariableInEnvironment(Tuple<VariableSymbol *> &, SemanticEnvironment *&,
-                                        SemanticEnvironment *, NameSymbol *, LexStream::TokenIndex);
-    VariableSymbol *FindMisspelledVariableName(TypeSymbol *, LexStream::TokenIndex);
-    VariableSymbol *FindVariableInEnvironment(SemanticEnvironment *&, SemanticEnvironment *, LexStream::TokenIndex);
-    VariableSymbol *FindVariableInType(TypeSymbol *, AstFieldAccess *, NameSymbol * = NULL);
-    VariableSymbol *FindInstance(TypeSymbol *, TypeSymbol *, bool);
+    void FindVariableInEnvironment(Tuple<VariableSymbol *> &,
+                                   SemanticEnvironment *&,
+                                   SemanticEnvironment *, NameSymbol *,
+                                   LexStream::TokenIndex);
+    VariableSymbol *FindMisspelledVariableName(TypeSymbol *,
+                                               LexStream::TokenIndex);
+    VariableSymbol *FindVariableInEnvironment(SemanticEnvironment *&,
+                                              SemanticEnvironment *,
+                                              LexStream::TokenIndex);
+    VariableSymbol *FindVariableInType(TypeSymbol *, AstFieldAccess *,
+                                       NameSymbol * = NULL);
+    VariableSymbol *FindLocalVariable(VariableSymbol *, TypeSymbol *);
+    AstExpression *FindEnclosingInstance(AstExpression *, TypeSymbol *, bool);
     AstExpression *CreateAccessToType(Ast *, TypeSymbol *);
     void CreateAccessToScopedVariable(AstSimpleName *, TypeSymbol *);
     void CreateAccessToScopedMethod(AstMethodInvocation *, TypeSymbol *);
 
     bool TypeAccessCheck(Ast *, TypeSymbol *);
     void TypeNestAccessCheck(AstExpression *);
-    void ConstructorAccessCheck(AstClassInstanceCreationExpression *, MethodSymbol *);
+    bool ConstructorAccessCheck(Ast *, MethodSymbol *);
     bool MemberAccessCheck(AstFieldAccess *, TypeSymbol *, Symbol *);
     void SimpleNameAccessCheck(AstSimpleName *, TypeSymbol *, Symbol *);
     bool ProtectedAccessCheck(TypeSymbol *);
@@ -1183,7 +1336,13 @@ private:
 
     void FindMethodMember(TypeSymbol *, AstMethodInvocation *);
     void ProcessMethodName(AstMethodInvocation *);
+
+    //
+    // An array of member methods, to dispatch the various expressions and
+    // statements for processing.
+    //
     void (Semantic::*ProcessExprOrStmt[Ast::_num_kinds])(Ast *);
+
     inline void ProcessStatement(AstStatement *stmt)
     {
         (this ->* ProcessExprOrStmt[stmt -> kind])(stmt);
@@ -1191,12 +1350,15 @@ private:
 
     inline void ProcessExpression(AstExpression *expr)
     {
-        (this ->* ProcessExprOrStmt[expr -> kind])(expr);
+        if (expr -> symbol)
+            // already processed, make sure it was compiler-generated
+            assert(expr -> generated);
+        else (this ->* ProcessExprOrStmt[expr -> kind])(expr);
     }
 
     inline void ProcessExpressionOrStringConstant(AstExpression *expr)
     {
-        (this ->* ProcessExprOrStmt[expr -> kind])(expr);
+        ProcessExpression(expr);
         //
         // If the expression is of type String, check whether or not it is
         // constant, and if so, compute the result.
@@ -1221,9 +1383,18 @@ private:
     void ProcessReturnStatement(Ast *);
     void ProcessAssertStatement(Ast *);
     void ProcessEmptyStatement(Ast *);
+    void ProcessInvalidKind(Ast *ast)
+    {
+        assert(ast -> IsExplicitConstructorInvocation());
+        AstStatement *statement = (AstStatement *) ast;
+        statement -> can_complete_normally = statement -> is_reachable;
+        ReportSemError(SemanticError::MISPLACED_EXPLICIT_CONSTRUCTOR,
+                       statement -> LeftToken(),
+                       statement -> RightToken());
+    }
+
     TypeSymbol *GetLocalType(AstClassDeclaration *);
     void ProcessClassDeclaration(Ast *);
-    void GenerateLocalConstructor(MethodSymbol *);
 
     //
     // CheckSimpleName must behave differently if we are in the middle
@@ -1250,10 +1421,11 @@ private:
     void ProcessThisExpression(Ast *);
     void ProcessSuperExpression(Ast *);
     void ProcessParenthesizedExpression(Ast *);
-    void UpdateGeneratedLocalConstructor(MethodSymbol *);
     void UpdateLocalConstructors(TypeSymbol *);
-    void GetAnonymousConstructor(AstClassInstanceCreationExpression *, TypeSymbol *);
-    TypeSymbol *GetAnonymousType(AstClassInstanceCreationExpression *, TypeSymbol *);
+    void GetAnonymousConstructor(AstClassInstanceCreationExpression *,
+                                 TypeSymbol *);
+    TypeSymbol *GetAnonymousType(AstClassInstanceCreationExpression *,
+                                 TypeSymbol *);
     void ProcessClassInstanceCreationExpression(Ast *);
     void ProcessArrayCreationExpression(Ast *);
     void ProcessPostUnaryExpression(Ast *);
@@ -1270,16 +1442,24 @@ private:
     void CheckMethodOverride(MethodSymbol *, MethodSymbol *, TypeSymbol *);
     void AddInheritedTypes(TypeSymbol *, TypeSymbol *);
     void AddInheritedFields(TypeSymbol *, TypeSymbol *);
-    void AddInheritedMethods(TypeSymbol *, TypeSymbol *, LexStream::TokenIndex);
+    void AddInheritedMethods(TypeSymbol *, TypeSymbol *,
+                             LexStream::TokenIndex);
     void ComputeTypesClosure(TypeSymbol *, LexStream::TokenIndex);
     void ComputeFieldsClosure(TypeSymbol *, LexStream::TokenIndex);
     void ComputeMethodsClosure(TypeSymbol *, LexStream::TokenIndex);
 
-    inline bool InRange(const char *buffer_ptr, const char *buffer_tail, int size) { return ((buffer_ptr + size) <= buffer_tail); }
-    TypeSymbol *RetrieveNestedTypes(TypeSymbol *, wchar_t *, LexStream::TokenIndex);
-    TypeSymbol *GetClassPool(TypeSymbol *, TypeSymbol **, const char **, int, LexStream::TokenIndex);
+    inline bool InRange(const char *buffer_ptr, const char *buffer_tail,
+                        int size)
+    {
+        return ((buffer_ptr + size) <= buffer_tail);
+    }
+    TypeSymbol *RetrieveNestedTypes(TypeSymbol *, wchar_t *,
+                                    LexStream::TokenIndex);
+    TypeSymbol *GetClassPool(TypeSymbol *, TypeSymbol **, const char **, int,
+                             LexStream::TokenIndex);
     void ProcessBadClass(TypeSymbol *, LexStream::TokenIndex);
-    bool ProcessClassFile(TypeSymbol *, const char *, int, LexStream::TokenIndex);
+    bool ProcessClassFile(TypeSymbol *, const char *, int,
+                          LexStream::TokenIndex);
     void ReadClassFile(TypeSymbol *, LexStream::TokenIndex);
 
     //
@@ -1308,7 +1488,8 @@ public:
     inline void AddDependence(TypeSymbol *, TypeSymbol *,
                               LexStream::TokenIndex, bool = false);
     inline void SetObjectSuperType(TypeSymbol *, LexStream::TokenIndex);
-    inline void AddStringConversionDependence(TypeSymbol *, LexStream::TokenIndex);
+    inline void AddStringConversionDependence(TypeSymbol *,
+                                              LexStream::TokenIndex);
 };
 
 

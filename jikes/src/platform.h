@@ -611,7 +611,6 @@ public:
                    US_append[], // L"append"
                    US_array[], // L"array"
                    US_access_DOLLAR[], // L"access$"
-                   US_block_DOLLAR[], // L"block$"
                    US_class_DOLLAR[], // L"class$"
                    US_clone[], // L"clone"
                    US_constructor_DOLLAR[], // L"constructor$"

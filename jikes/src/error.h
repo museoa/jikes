@@ -250,7 +250,7 @@ class SemanticError
         EXPRESSION_NOT_THROWABLE,
         MISPLACED_BREAK_STATEMENT,
         MISPLACED_CONTINUE_STATEMENT,
-        MISPLACED_EXPLICIT_CONSTRUCTOR_INVOCATION,
+        MISPLACED_EXPLICIT_CONSTRUCTOR,
         INVALID_CONTINUE_TARGET,
         NON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD,
         NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD,
@@ -284,14 +284,13 @@ class SemanticError
         BAD_ACCESS_METHOD_OVERRIDE,
         BAD_ACCESS_METHOD_OVERRIDE_EXTERNALLY,
         CIRCULAR_THIS_CALL,
-        INSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
-        INSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
+        INSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR,
+        INSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR,
         SYNTHETIC_VARIABLE_ACCESS,
         SYNTHETIC_METHOD_INVOCATION,
         SYNTHETIC_CONSTRUCTOR_INVOCATION,
-        THIS_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
-        SUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
-        INNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
+        SELF_IN_EXPLICIT_CONSTRUCTOR,
+        INNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR,
         EXPRESSION_NOT_CONSTANT,
         UNCAUGHT_METHOD_EXCEPTION,
         UNCAUGHT_CONSTRUCTOR_EXCEPTION,
@@ -556,7 +555,7 @@ private:
     static wchar_t *PrintEXPRESSION_NOT_THROWABLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISPLACED_BREAK_STATEMENT(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISPLACED_CONTINUE_STATEMENT(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintMISPLACED_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintMISPLACED_EXPLICIT_CONSTRUCTOR(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINVALID_CONTINUE_TARGET(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD(ErrorInfo &, LexStream *, Control &);
@@ -590,14 +589,13 @@ private:
     static wchar_t *PrintBAD_ACCESS_METHOD_OVERRIDE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintBAD_ACCESS_METHOD_OVERRIDE_EXTERNALLY(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintCIRCULAR_THIS_CALL(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintINSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintINSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintINSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintINSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintSYNTHETIC_VARIABLE_ACCESS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintSYNTHETIC_METHOD_INVOCATION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintSYNTHETIC_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintTHIS_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintSUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintINNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintSELF_IN_EXPLICIT_CONSTRUCTOR(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintINNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintEXPRESSION_NOT_CONSTANT(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNCAUGHT_METHOD_EXCEPTION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNCAUGHT_CONSTRUCTOR_EXCEPTION(ErrorInfo &, LexStream *, Control &);

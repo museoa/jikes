@@ -730,6 +730,7 @@ private:
 
     void ProcessFile(FileSymbol *);
     void ProcessMembers();
+    void CollectTypes(TypeSymbol *, Tuple<TypeSymbol *> &);
     void ProcessBodies(TypeSymbol *);
 
     void ProcessNewInputFiles(SymbolSet &, char **);

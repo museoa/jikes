@@ -194,7 +194,12 @@ Ast *Ast::Clone(StoragePool *ast_pool)
 Ast *AstBlock::Clone(StoragePool *ast_pool)
 {
     AstBlock *clone = ast_pool -> GenBlock();
+    CloneInto(clone, ast_pool);
+    return clone;
+}
 
+void AstBlock::CloneInto(AstBlock *clone, StoragePool *ast_pool)
+{
     clone -> label_opt = label_opt;
     clone -> nesting_level = nesting_level;
     clone -> left_brace_token = left_brace_token;
@@ -203,12 +208,10 @@ Ast *AstBlock::Clone(StoragePool *ast_pool)
     else
     {
         for (int j = 0; j < NumStatements(); j++)
-            clone -> AddStatement(Statement(j) -> Clone(ast_pool));
+            clone -> AddStatement((AstStatement *) Statement(j) -> Clone(ast_pool));
     }
     clone -> right_brace_token = right_brace_token;
     clone -> no_braces = no_braces;
-
-    return clone;
 }
 
 Ast *AstPrimitiveType::Clone(StoragePool *ast_pool)
@@ -429,7 +432,7 @@ Ast *AstStaticInitializer::Clone(StoragePool *ast_pool)
     AstStaticInitializer *clone = ast_pool -> GenStaticInitializer();
 
     clone -> static_token = static_token;
-    clone -> block = (AstBlock *) block -> Clone(ast_pool);
+    clone -> block = (AstMethodBody *) block -> Clone(ast_pool);
 
     return clone;
 }
@@ -469,17 +472,14 @@ Ast *AstSuperCall::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-Ast *AstConstructorBlock::Clone(StoragePool *ast_pool)
+Ast *AstMethodBody::Clone(StoragePool *ast_pool)
 {
-    AstConstructorBlock *clone = ast_pool -> GenConstructorBlock();
+    AstMethodBody *clone = ast_pool -> GenMethodBody();
+    CloneInto(clone, ast_pool);
 
-    clone -> left_brace_token = left_brace_token;
-    clone -> explicit_constructor_invocation_opt = (Ast *)
-                                                   (explicit_constructor_invocation_opt
-                                                          ? explicit_constructor_invocation_opt -> Clone(ast_pool)
-                                                          : NULL);
-    clone -> block = (AstBlock *) block -> Clone(ast_pool);
-    clone -> right_brace_token = right_brace_token;
+    clone -> explicit_constructor_opt = (AstStatement *)
+        (explicit_constructor_opt ? explicit_constructor_opt -> Clone(ast_pool)
+         : NULL);
 
     return clone;
 }
@@ -493,7 +493,7 @@ Ast *AstConstructorDeclaration::Clone(StoragePool *ast_pool)
     clone -> constructor_declarator = (AstMethodDeclarator *) constructor_declarator -> Clone(ast_pool);
     for (int k = 0; k < NumThrows(); k++)
         clone -> AddThrow((AstExpression *) Throw(k) -> Clone(ast_pool));
-    clone -> constructor_body = (AstConstructorBlock *) constructor_body -> Clone(ast_pool);
+    clone -> constructor_body = (AstMethodBody *) constructor_body -> Clone(ast_pool);
 
     return clone;
 }
@@ -587,15 +587,10 @@ Ast *AstDefaultLabel::Clone(StoragePool *ast_pool)
 Ast *AstSwitchBlockStatement::Clone(StoragePool *ast_pool)
 {
     AstSwitchBlockStatement *clone = ast_pool -> GenSwitchBlockStatement();
-
+    CloneInto(clone, ast_pool);
     clone -> AllocateSwitchLabels(NumSwitchLabels());
     for (int i = 0; i < NumSwitchLabels(); i++)
         clone -> AddSwitchLabel(SwitchLabel(i) -> Clone(ast_pool));
-
-    clone -> AllocateBlockStatements(NumStatements());
-    for (int k = 0; k < NumStatements(); k++)
-        clone -> AddStatement((AstStatement *) Statement(k) -> Clone(ast_pool));
-
     return clone;
 }
 
@@ -1327,18 +1322,16 @@ void AstSuperCall::Print(LexStream& lex_stream)
         Argument(j) -> Print(lex_stream);
 }
 
-void AstConstructorBlock::Print(LexStream& lex_stream)
+void AstMethodBody::Print(LexStream& lex_stream)
 {
-    Coutput << "#" << id << " (ConstructorBlock):  ";
-    if (explicit_constructor_invocation_opt)
-        Coutput << " #" << explicit_constructor_invocation_opt -> id;
-    else Coutput << " #0";
-    Coutput << " #" << block -> id
-            << endl;
+    Coutput << "#" << id << " (MethodBody):  ";
+    if (explicit_constructor_opt)
+        Coutput << " #" << explicit_constructor_opt -> id << endl;
+    else Coutput << " #0" << endl;
+    AstBlock::Print(lex_stream);
 
-    if (explicit_constructor_invocation_opt)
-        explicit_constructor_invocation_opt -> Print(lex_stream);
-    block -> Print(lex_stream);
+    if (explicit_constructor_opt)
+        explicit_constructor_opt -> Print(lex_stream);
 }
 
 void AstConstructorDeclaration::Print(LexStream& lex_stream)
@@ -1461,18 +1454,10 @@ void AstSwitchBlockStatement::Print(LexStream& lex_stream)
         Coutput << " #" << SwitchLabel(i) -> id << ':';
     }
     Coutput << endl;
-    for (int k = 0; k < NumStatements(); k++)
-    {
-        if (k % 10 == 0)
-            Coutput << endl << "            ";
-        Coutput << " #" << Statement(k) -> id;
-    }
-    Coutput << endl;
+    AstBlock::Print(lex_stream);
 
     for (int j = 0; j < NumSwitchLabels(); j++)
         SwitchLabel(j) -> Print(lex_stream);
-    for (int l = 0; l < NumStatements(); l++)
-        Statement(l) -> Print(lex_stream);
 }
 
 void AstSwitchStatement::Print(LexStream& lex_stream)
@@ -1970,7 +1955,7 @@ AstClassBody::~AstClassBody()
     //    delete static_initializers;
     //    delete inner_classes;
     //    delete inner_interfaces;
-    //    delete blocks;
+    //    delete instance_initializers;
     //    delete class_body_declarations;
     //    delete this_block;
 }
@@ -2051,7 +2036,6 @@ AstThisCall::~AstThisCall()
 {
     assert(false);
     //    delete arguments;
-    //    delete base_opt;
     //    delete local_arguments_opt;
 }
 
@@ -2063,11 +2047,10 @@ AstSuperCall::~AstSuperCall()
     //    delete local_arguments_opt;
 }
 
-AstConstructorBlock::~AstConstructorBlock()
+AstMethodBody::~AstMethodBody()
 {
     assert(false);
-    //    delete explicit_constructor_invocation_opt;
-    //    delete block;
+    //    delete explicit_constructor_opt;
     //    delete local_init_block;
     //    delete original_constructor_invocation;
 }
@@ -2135,7 +2118,6 @@ AstSwitchBlockStatement::~AstSwitchBlockStatement()
 {
     assert(false);
     //    delete switch_labels;
-    //    delete block_statements;
 }
 
 AstSwitchStatement::~AstSwitchStatement()

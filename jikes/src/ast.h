@@ -189,7 +189,7 @@ class AstMethodDeclaration;
 class AstStaticInitializer;
 class AstThisCall;
 class AstSuperCall;
-class AstConstructorBlock;
+class AstMethodBody;
 class AstConstructorDeclaration;
 class AstInterfaceDeclaration;
 class AstBlock;
@@ -346,7 +346,7 @@ public:
         THIS_CALL,
         SUPER_CALL,
         BLOCK,
-        CONSTRUCTOR_BLOCK,
+        METHOD_BODY,
         LOCAL_VARIABLE_DECLARATION,
         IF,
         EMPTY_STATEMENT,
@@ -414,6 +414,7 @@ public:
     bool IsSuperExpression();
     bool IsThisExpression();
     bool IsLeftHandSide();
+    bool IsExplicitConstructorInvocation();
     bool IsGenerated();
 
     //
@@ -493,7 +494,7 @@ public:
     inline AstStaticInitializer *StaticInitializerCast();
     inline AstThisCall *ThisCallCast();
     inline AstSuperCall *SuperCallCast();
-    inline AstConstructorBlock *ConstructorBlockCast();
+    inline AstMethodBody *MethodBodyCast();
     inline AstConstructorDeclaration *ConstructorDeclarationCast();
     inline AstInterfaceDeclaration *InterfaceDeclarationCast();
     inline AstBlock *BlockCast();
@@ -559,7 +560,7 @@ public:
 // may also specify the number of "slots" to add to the base when the
 // current base runs out of space. Each slot points to a block.
 //
-template <class T>
+template <typename T>
 class AstArray
 {
     T **base;
@@ -655,7 +656,7 @@ public:
     {
         Ast::kind = Ast::LIST_NODE;
         Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::generated = false;
 #ifdef JIKES_DEBUG
         --count; // don't count these nodes
 #endif
@@ -748,11 +749,12 @@ public:
 //
 // BlockStatement --> LocalVariableDeclarationStatement
 //                  | Statement
+//                  | ClassDeclaration
 //
 class AstBlock : public AstStatement
 {
 private:
-    AstArray<Ast *> *block_statements;
+    AstArray<AstStatement *> *block_statements;
     VariableSymbolArray *locally_defined_variables;
 
 public:
@@ -786,7 +788,7 @@ public:
     {
         Ast::kind = Ast::BLOCK;
         Ast::class_tag = Ast::STATEMENT;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstStatement::pool = pool_;
         AstStatement::is_reachable = false;
         AstStatement::can_complete_normally = false;
@@ -795,17 +797,15 @@ public:
 
     virtual ~AstBlock();
 
-    inline Ast *&Statement(int i) { return (*block_statements)[i]; }
+    inline AstStatement *&Statement(int i) { return (*block_statements)[i]; }
     inline int NumStatements() { return (block_statements ? block_statements -> Length() : 0); }
     inline void AllocateBlockStatements(int estimate = 0);
-    inline void AddStatement(Ast *);
+    inline void AddStatement(AstStatement *);
 
     inline VariableSymbol *&LocallyDefinedVariable(int i) { return (*locally_defined_variables)[i]; }
     inline int NumLocallyDefinedVariables() { return (locally_defined_variables ? locally_defined_variables -> Length() : 0); }
     inline void AllocateLocallyDefinedVariables(int estimate = 0);
     inline void AddLocallyDefinedVariable(VariableSymbol *);
-
-    inline void TransferLocallyDefinedVariablesTo(AstSwitchBlockStatement *);
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -816,6 +816,9 @@ public:
 
     virtual LexStream::TokenIndex LeftToken()  { return left_brace_token; }
     virtual LexStream::TokenIndex RightToken() { return right_brace_token; }
+
+protected:
+    void CloneInto(AstBlock *, StoragePool *);
 };
 
 //
@@ -840,7 +843,7 @@ public:
     {
         Ast::kind = kind_;
         Ast::class_tag = Ast::PRIMITIVE_TYPE;
-        Ast::generated = 0;
+        Ast::generated = false;
     }
 
     virtual ~AstPrimitiveType();
@@ -871,7 +874,7 @@ public:
     {
         Ast::kind = Ast::BRACKETS;
         Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::generated = false;
     }
 
     virtual ~AstBrackets();
@@ -915,7 +918,7 @@ public:
     {
         Ast::kind = Ast::ARRAY;
         Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::generated = false;
     }
 
     virtual ~AstArrayType();
@@ -960,7 +963,7 @@ public:
     {
         Ast::kind = Ast::IDENTIFIER;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -992,7 +995,7 @@ public:
     {
         Ast::kind = Ast::PACKAGE;
         Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::generated = false;
     }
 
     virtual ~AstPackageDeclaration();
@@ -1023,7 +1026,7 @@ public:
     {
         Ast::kind = Ast::IMPORT;
         Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::generated = false;
     }
 
     virtual ~AstImportDeclaration();
@@ -1064,7 +1067,7 @@ public:
     {
         Ast::kind = Ast::COMPILATION;
         Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::generated = false;
     }
 
     virtual ~AstCompilationUnit();
@@ -1138,7 +1141,7 @@ public:
     {
         Ast::kind = kind_;
         Ast::class_tag = Ast::MODIFIER;
-        Ast::generated = 0;
+        Ast::generated = false;
     }
 
     virtual ~AstModifier();
@@ -1167,7 +1170,7 @@ public:
     {
         Ast::kind = Ast::EMPTY_DECLARATION;
         Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::generated = false;
     }
 
     virtual ~AstEmptyDeclaration();
@@ -1201,7 +1204,7 @@ private:
     AstArray<AstStaticInitializer *> *static_initializers;
     AstArray<AstClassDeclaration *> *inner_classes;
     AstArray<AstInterfaceDeclaration *> *inner_interfaces;
-    AstArray<AstBlock *> *blocks;
+    AstArray<AstMethodBody *> *instance_initializers;
     AstArray<AstEmptyDeclaration *> *empty_declarations;
 
 public:
@@ -1225,14 +1228,14 @@ public:
                                        static_initializers(NULL),
                                        inner_classes(NULL),
                                        inner_interfaces(NULL),
-                                       blocks(NULL),
+                                       instance_initializers(NULL),
                                        empty_declarations(NULL),
                                        default_constructor(NULL),
                                        this_block(NULL)
     {
         Ast::kind = Ast::CLASS_BODY;
         Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::generated = false;
     }
 
     virtual ~AstClassBody();
@@ -1278,10 +1281,10 @@ public:
     inline void AllocateNestedInterfaces(int estimate = 0);
     inline void AddNestedInterface(AstInterfaceDeclaration *);
 
-    inline AstBlock *&Block(int i) { return (*blocks)[i]; }
-    inline int NumBlocks() { return (blocks ? blocks -> Length() : 0); }
-    inline void AllocateBlocks(int estimate = 0);
-    inline void AddBlock(AstBlock *);
+    inline AstMethodBody *&InstanceInitializer(int i) { return (*instance_initializers)[i]; }
+    inline int NumInstanceInitializers() { return (instance_initializers ? instance_initializers -> Length() : 0); }
+    inline void AllocateInstanceInitializers(int estimate = 0);
+    inline void AddInstanceInitializer(AstMethodBody *);
 
     inline AstEmptyDeclaration *&EmptyDeclaration(int i) { return (*empty_declarations)[i]; }
     inline int NumEmptyDeclarations() { return (empty_declarations ? empty_declarations -> Length() : 0); }
@@ -1339,7 +1342,7 @@ public:
     {
         Ast::kind = Ast::CLASS;
         Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstStatement::pool = pool_;
     }
 
@@ -1402,7 +1405,7 @@ public:
     {
         Ast::kind = Ast::ARRAY_INITIALIZER;
         Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::generated = false;
     }
 
     virtual ~AstArrayInitializer();
@@ -1443,7 +1446,7 @@ public:
     {
         Ast::kind = Ast::VARIABLE_DECLARATOR_NAME;
         Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::generated = false;
     }
 
     virtual ~AstVariableDeclaratorId();
@@ -1469,9 +1472,14 @@ public:
 
 
 //
-// VariableDeclarator --> <VARIABLE_DECLARATOR, VariableDeclaratorId, VariableInitializer_opt>
+// VariableDeclarator --> <VARIABLE_DECLARATOR, VariableDeclaratorId,
+//     VariableInitializer_opt>
 //
-class AstVariableDeclarator : public Ast
+// Technically, this is not a statement. But it is similar to local variable
+// declarations, which are, and treating it as a statement makes compiling
+// initializer blocks more uniform.
+//
+class AstVariableDeclarator : public AstStatement
 {
 public:
     VariableSymbol *symbol;
@@ -1485,11 +1493,16 @@ public:
 
     AstVariableDeclarator() : symbol(NULL),
                               pending(false),
+                              variable_declarator_name(NULL),
                               variable_initializer_opt(NULL)
     {
         Ast::kind = Ast::VARIABLE_DECLARATOR;
-        Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::class_tag = Ast::STATEMENT;
+        Ast::generated = false;
+        AstStatement::pool = NULL;
+        AstStatement::defined_variables = NULL;
+        AstStatement:: is_reachable = true;
+        AstStatement:: can_complete_normally = true;
     }
 
     virtual ~AstVariableDeclarator();
@@ -1534,7 +1547,7 @@ public:
     {
         Ast::kind = Ast::FIELD;
         Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::generated = false;
     }
 
     virtual ~AstFieldDeclaration();
@@ -1585,7 +1598,7 @@ public:
     {
         Ast::kind = Ast::PARAMETER;
         Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::generated = false;
     }
 
     virtual ~AstFormalParameter();
@@ -1632,7 +1645,7 @@ public:
     {
         Ast::kind = Ast::METHOD_DECLARATOR;
         Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::generated = false;
     }
 
     virtual ~AstMethodDeclarator();
@@ -1664,9 +1677,11 @@ public:
 
 
 //
-// MethodDeclaration --> <METHOD, MethodModifiers, Type, MethodDeclarator, Throws, MethodBody>
+// MethodDeclaration --> <METHOD, MethodModifiers, Type, MethodDeclarator,
+//    Throws, MethodBody>
 //
-// MethodModifier --> Modifier (PUBLIC, PROTECTED, PRIVATE, STATIC, ABSTRACT, FINAL, NATIVE or SYNCHRONIZED)
+// MethodModifier --> Modifier (PUBLIC, PROTECTED, PRIVATE, STATIC, ABSTRACT,
+//    FINAL, NATIVE or SYNCHRONIZED)
 //
 // Throws --> Names
 //
@@ -1684,7 +1699,7 @@ public:
 
     Ast *type;
     AstMethodDeclarator *method_declarator;
-    AstStatement *method_body;
+    AstStatement *method_body; // AstMethodBody or AstEmptyStatement
 
     AstMethodDeclaration(StoragePool *pool_) : pool(pool_),
                                                method_modifiers(NULL),
@@ -1693,7 +1708,7 @@ public:
     {
         Ast::kind = Ast::METHOD;
         Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::generated = false;
     }
 
     virtual ~AstMethodDeclaration();
@@ -1727,19 +1742,70 @@ public:
 };
 
 //
+// This class represents a method body, for methods and constructors. It is
+// basically a block, with the addition of an explicit constructor invocation
+// (used only in the context of constructors, NULL otherwise).
+//
+class AstMethodBody : public AstBlock
+{
+private:
+    // Generated statements to shadow variables into a local class.
+    AstArray<AstStatement *> *local_init_statements;
+
+public:
+    AstStatement *explicit_constructor_opt;
+
+    AstExpressionStatement *original_constructor_invocation;
+
+    AstMethodBody(StoragePool *pool_)
+        : AstBlock(pool_),
+          local_init_statements(NULL),
+          explicit_constructor_opt(NULL),
+          original_constructor_invocation(NULL)
+    {
+        Ast::kind = Ast::METHOD_BODY;
+        Ast::class_tag = Ast::STATEMENT;
+        AstStatement::is_reachable = true;
+        AstStatement::can_complete_normally = false;
+        AstStatement::defined_variables = NULL;
+    }
+
+    virtual ~AstMethodBody();
+
+    inline AstStatement *&LocalInitStatement(int i)
+    {
+        return (*local_init_statements)[i];
+    }
+    inline int NumLocalInitStatements()
+    {
+        return (local_init_statements ? local_init_statements -> Length() : 0);
+    }
+    inline void AllocateLocalInitStatements(int estimate = 0);
+    inline void AddLocalInitStatement(AstStatement *);
+
+#ifdef JIKES_DEBUG
+    virtual void Print(LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
+#endif
+
+    virtual Ast *Clone(StoragePool *);
+};
+
+
+//
 // StaticInitializer --> <STATIC_INITIALIZER, static_token, Block>
 //
 class AstStaticInitializer : public Ast
 {
 public:
     LexStream::TokenIndex static_token;
-    AstBlock *block;
+    AstMethodBody *block;
 
     AstStaticInitializer()
     {
         Ast::kind = Ast::STATIC_INITIALIZER;
         Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::generated = false;
     }
 
     virtual ~AstStaticInitializer();
@@ -1764,30 +1830,28 @@ public:
 class AstThisCall : public AstStatement
 {
 private:
-
     AstArray<AstExpression *> *arguments;
-    AstArray<AstExpression *> *local_arguments_opt; // used only for local classes that use enclosed local variables
 
 public:
     MethodSymbol *symbol;
 
-    AstExpression *base_opt;
-    LexStream::TokenIndex dot_token_opt;
     LexStream::TokenIndex this_token;
     LexStream::TokenIndex left_parenthesis_token;
     LexStream::TokenIndex right_parenthesis_token;
     LexStream::TokenIndex semicolon_token;
 
+    u2 shadow_parameter_offset;
+
     AstThisCall(StoragePool *pool_) : arguments(NULL),
-                                      local_arguments_opt(NULL),
-                                      symbol(NULL)
+                                      symbol(NULL),
+                                      shadow_parameter_offset(0)
     {
         Ast::kind = Ast::THIS_CALL;
         Ast::class_tag = Ast::STATEMENT;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstStatement::pool = pool_;
-        AstStatement::is_reachable = false;
-        AstStatement::can_complete_normally = false;
+        AstStatement::is_reachable = true;
+        AstStatement::can_complete_normally = true;
         AstStatement::defined_variables = NULL;
     }
 
@@ -1797,11 +1861,6 @@ public:
     inline int NumArguments() { return (arguments ? arguments -> Length() : 0); }
     inline void AllocateArguments(int estimate = 0);
     inline void AddArgument(AstExpression *);
-
-    inline AstExpression *&LocalArgument(int i) { return (*local_arguments_opt)[i]; }
-    inline int NumLocalArguments() { return (local_arguments_opt ? local_arguments_opt -> Length() : 0); }
-    inline void AllocateLocalArguments(int estimate = 0);
-    inline void AddLocalArgument(AstExpression *);
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -1846,10 +1905,10 @@ public:
     {
         Ast::kind = Ast::SUPER_CALL;
         Ast::class_tag = Ast::STATEMENT;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstStatement::pool = pool_;
-        AstStatement::is_reachable = false;
-        AstStatement::can_complete_normally = false;
+        AstStatement::is_reachable = true;
+        AstStatement::can_complete_normally = true;
         AstStatement::defined_variables = NULL;
     }
 
@@ -1881,65 +1940,23 @@ public:
 
 
 //
-// ConstructorDeclaration --> <CONSTRUCTOR, Constructormodifiers, MethodDeclarator, Throws, ConstructorBody>
+// ConstructorDeclaration --> <CONSTRUCTOR, ConstructorModifiers,
+//     MethodDeclarator, Throws, ConstructorBody>
 //
-// ConstructorBody --> <CONSTRUCTOR_BLOCK, {_token, ExplicitConstructorInvocation, BlockStatements, }_token>
-//                   | MethodBody
+// ConstructorBody --> <METHOD_BODY, {_token,
+//     ExplicitConstructorInvocation, BlockStatements, }_token>
 //
 // ConstructorModifier --> Modifier (PUBLIC, PROTECTED or PRIVATE)
 //
 // ExplicitConstructorInvocation --> ThisCall
 //                                 | SuperCall
 //
-class AstConstructorBlock : public AstStatement
-{
-private:
-
-    AstArray<AstStatement *> *local_init_statements;
-
-public:
-    BlockSymbol *block_symbol;
-
-    LexStream::TokenIndex left_brace_token;
-    Ast *explicit_constructor_invocation_opt;
-    AstBlock *block;
-    LexStream::TokenIndex right_brace_token;
-
-    AstExpressionStatement *original_constructor_invocation;
-
-    AstConstructorBlock(StoragePool *pool_) : local_init_statements(NULL),
-                                              block_symbol(NULL),
-                                              explicit_constructor_invocation_opt(NULL),
-                                              original_constructor_invocation(NULL)
-    {
-        Ast::kind = Ast::CONSTRUCTOR_BLOCK;
-        Ast::class_tag = Ast::STATEMENT;
-        Ast::generated = 0;
-        AstStatement::pool = pool_;
-        AstStatement::is_reachable = false;
-        AstStatement::can_complete_normally = false;
-        AstStatement::defined_variables = NULL;
-    }
-
-    virtual ~AstConstructorBlock();
-
-    inline AstStatement *&LocalInitStatement(int i) { return (*local_init_statements)[i]; }
-    inline int NumLocalInitStatements() { return (local_init_statements ? local_init_statements -> Length() : 0); }
-    inline void AllocateLocalInitStatements(int estimate = 0);
-    inline void AddLocalInitStatement(AstStatement *);
-
-#ifdef JIKES_DEBUG
-    virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream *);
-#endif
-
-    virtual Ast *Clone(StoragePool *);
-
-    virtual LexStream::TokenIndex LeftToken()  { return left_brace_token;  }
-    virtual LexStream::TokenIndex RightToken() { return right_brace_token; }
-};
-
-
+// NOTE: We do not actually build ConstructorBodies. Instead, we have
+// overloaded MethodBody to store the necessary information. This is
+// because this() and super() are treated as Statements in the grammar;
+// and in the bytecode, constructors are just methods with a special
+// name.
+//
 class AstConstructorDeclaration : public Ast
 {
     StoragePool *pool;
@@ -1951,17 +1968,18 @@ public:
     int index;
 
     AstMethodDeclarator *constructor_declarator;
-    AstConstructorBlock *constructor_body;
+    AstMethodBody *constructor_body;
 
-    AstConstructorDeclaration(StoragePool *pool_) : pool(pool_),
-                                                    constructor_modifiers(NULL),
-                                                    throws(NULL),
-                                                    constructor_symbol(NULL),
-                                                    index(ConstructorCycleChecker::OMEGA)
+    AstConstructorDeclaration(StoragePool *pool_)
+        : pool(pool_),
+          constructor_modifiers(NULL),
+          throws(NULL),
+          constructor_symbol(NULL),
+          index(ConstructorCycleChecker::OMEGA)
     {
         Ast::kind = Ast::CONSTRUCTOR;
         Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::generated = false;
     }
 
     virtual ~AstConstructorDeclaration();
@@ -2055,7 +2073,7 @@ public:
     {
         Ast::kind = Ast::INTERFACE;
         Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::generated = false;
     }
 
     virtual ~AstInterfaceDeclaration();
@@ -2135,7 +2153,7 @@ public:
     {
         Ast::kind = Ast::LOCAL_VARIABLE_DECLARATION;
         Ast::class_tag = Ast::STATEMENT;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstStatement::pool = pool_;
         AstStatement::is_reachable = false;
         AstStatement::can_complete_normally = false;
@@ -2207,7 +2225,7 @@ public:
     {
         Ast::kind = Ast::IF;
         Ast::class_tag = Ast::STATEMENT;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstStatement::pool = pool_;
         AstStatement::is_reachable = false;
         AstStatement::can_complete_normally = false;
@@ -2247,7 +2265,7 @@ public:
     {
         Ast::kind = Ast::EMPTY_STATEMENT;
         Ast::class_tag = Ast::STATEMENT;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstStatement::pool = pool_;
         AstStatement::is_reachable = false;
         AstStatement::can_complete_normally = false;
@@ -2284,7 +2302,7 @@ public:
     {
         Ast::kind = Ast::EXPRESSION_STATEMENT;
         Ast::class_tag = Ast::STATEMENT;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstStatement::pool = pool_;
         AstStatement::is_reachable = false;
         AstStatement::can_complete_normally = false;
@@ -2329,7 +2347,7 @@ public:
     {
         Ast::kind = Ast::CASE;
         Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::generated = false;
     }
 
     virtual ~AstCaseLabel();
@@ -2359,7 +2377,7 @@ public:
     {
         Ast::kind = Ast::DEFAULT;
         Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::generated = false;
     }
 
     virtual ~AstDefaultLabel();
@@ -2379,42 +2397,25 @@ public:
 //
 // SwitchBlockStatement --> <SWITCH_BLOCK, SwitchLabels, BlockStatements>
 //
-class AstSwitchBlockStatement : public Ast
+class AstSwitchBlockStatement : public AstBlock
 {
 private:
-    StoragePool *pool;
-
-    AstArray<AstStatement *> *block_statements;
     AstArray<Ast *> *switch_labels;
-    VariableSymbolArray *locally_defined_variables;
-
-    friend class AstBlock;
 
 public:
-    AstSwitchBlockStatement(StoragePool *pool_) : pool(pool_),
-                                                  block_statements(NULL),
-                                                  switch_labels(NULL),
-                                                  locally_defined_variables(NULL)
+    AstSwitchBlockStatement(StoragePool *pool_)
+        : AstBlock(pool_),
+          switch_labels(NULL)
     {
         Ast::kind = Ast::SWITCH_BLOCK;
-        Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
     }
 
     virtual ~AstSwitchBlockStatement();
-
-    inline AstStatement *&Statement(int i) { return (*block_statements)[i]; }
-    inline int NumStatements() { return (block_statements ? block_statements -> Length() : 0); }
-    inline void AllocateBlockStatements(int estimate = 0);
-    inline void AddStatement(AstStatement *);
 
     inline Ast *&SwitchLabel(int i) { return (*switch_labels)[i]; }
     inline int NumSwitchLabels() { return (switch_labels ? switch_labels -> Length() : 0); }
     inline void AllocateSwitchLabels(int estimate = 0);
     inline void AddSwitchLabel(Ast *);
-
-    inline VariableSymbol *&LocallyDefinedVariable(int i) { return (*locally_defined_variables)[i]; }
-    inline int NumLocallyDefinedVariables() { return (locally_defined_variables ? locally_defined_variables -> Length() : 0); }
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -2422,15 +2423,6 @@ public:
 #endif
 
     virtual Ast *Clone(StoragePool *);
-
-    virtual LexStream::TokenIndex LeftToken()
-    {
-        return SwitchLabel(0) -> LeftToken();
-    }
-    virtual LexStream::TokenIndex RightToken()
-    {
-        return Statement(NumStatements() - 1) -> RightToken();
-    }
 };
 
 
@@ -2462,7 +2454,7 @@ public:
     {
         Ast::kind = Ast::SWITCH;
         Ast::class_tag = Ast::STATEMENT;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstStatement::pool = pool_;
         AstStatement::is_reachable = false;
         AstStatement::can_complete_normally = false;
@@ -2507,7 +2499,7 @@ public:
     {
         Ast::kind = Ast::WHILE;
         Ast::class_tag = Ast::STATEMENT;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstStatement::pool = pool_;
         AstStatement::is_reachable = false;
         AstStatement::can_complete_normally = false;
@@ -2547,7 +2539,7 @@ public:
     {
         Ast::kind = Ast::DO;
         Ast::class_tag = Ast::STATEMENT;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstStatement::pool = pool_;
         AstStatement::is_reachable = false;
         AstStatement::can_complete_normally = false;
@@ -2597,7 +2589,7 @@ public:
     {
         Ast::kind = Ast::FOR;
         Ast::class_tag = Ast::STATEMENT;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstStatement::pool = pool_;
         AstStatement::is_reachable = false;
         AstStatement::can_complete_normally = false;
@@ -2646,7 +2638,7 @@ public:
     {
         Ast::kind = Ast::BREAK;
         Ast::class_tag = Ast::STATEMENT;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstStatement::pool = pool_;
         AstStatement::is_reachable = false;
         AstStatement::can_complete_normally = false;
@@ -2684,7 +2676,7 @@ public:
     {
         Ast::kind = Ast::CONTINUE;
         Ast::class_tag = Ast::STATEMENT;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstStatement::pool = pool_;
         AstStatement::is_reachable = false;
         AstStatement::can_complete_normally = false;
@@ -2722,7 +2714,7 @@ public:
     {
         Ast::kind = Ast::RETURN;
         Ast::class_tag = Ast::STATEMENT;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstStatement::pool = pool_;
         AstStatement::is_reachable = false;
         AstStatement::can_complete_normally = false;
@@ -2760,7 +2752,7 @@ public:
     {
         Ast::kind = Ast::THROW;
         Ast::class_tag = Ast::STATEMENT;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstStatement::pool = pool_;
         AstStatement::is_reachable = false;
         AstStatement::can_complete_normally = false;
@@ -2798,7 +2790,7 @@ public:
     {
         Ast::kind = Ast::SYNCHRONIZED_STATEMENT;
         Ast::class_tag = Ast::STATEMENT;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstStatement::pool = pool_;
         AstStatement::is_reachable = false;
         AstStatement::can_complete_normally = false;
@@ -2839,7 +2831,7 @@ public:
     {
         Ast::kind = Ast::ASSERT;
         Ast::class_tag = Ast::STATEMENT;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstStatement::pool = pool_;
         AstStatement::is_reachable = false;
         AstStatement::can_complete_normally = false;
@@ -2876,7 +2868,7 @@ public:
     {
         Ast::kind = Ast::CATCH;
         Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::generated = false;
     }
 
     virtual ~AstCatchClause();
@@ -2906,7 +2898,7 @@ public:
     {
         Ast::kind = Ast::FINALLY;
         Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::generated = false;
     }
 
     virtual ~AstFinallyClause();
@@ -2942,7 +2934,7 @@ public:
     {
         Ast::kind = Ast::TRY;
         Ast::class_tag = Ast::STATEMENT;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstStatement::pool = pool_;
         AstStatement::is_reachable = false;
         AstStatement::can_complete_normally = false;
@@ -3019,7 +3011,7 @@ public:
     {
         Ast::kind = Ast::INTEGER_LITERAL;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -3050,7 +3042,7 @@ public:
     {
         Ast::kind = Ast::LONG_LITERAL;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -3081,7 +3073,7 @@ public:
     {
         Ast::kind = Ast::FLOAT_LITERAL;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -3111,7 +3103,7 @@ public:
     {
         Ast::kind = Ast::DOUBLE_LITERAL;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -3141,7 +3133,7 @@ public:
     {
         Ast::kind = Ast::TRUE_LITERAL;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -3171,7 +3163,7 @@ public:
     {
         Ast::kind = Ast::FALSE_LITERAL;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -3201,7 +3193,7 @@ public:
     {
         Ast::kind = Ast::STRING_LITERAL;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -3231,7 +3223,7 @@ public:
     {
         Ast::kind = Ast::CHARACTER_LITERAL;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -3261,7 +3253,7 @@ public:
     {
         Ast::kind = Ast::NULL_LITERAL;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -3291,7 +3283,7 @@ public:
     {
         Ast::kind = Ast::THIS_EXPRESSION;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -3322,7 +3314,7 @@ public:
     {
         Ast::kind = Ast::SUPER_EXPRESSION;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -3355,7 +3347,7 @@ public:
     {
         Ast::kind = Ast::PARENTHESIZED_EXPRESSION;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -3386,7 +3378,7 @@ public:
     {
         Ast::kind = Ast::TYPE;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -3432,18 +3424,26 @@ public:
     AstClassBody *class_body_opt;
 
     AstClassDeclaration *anonymous_declaration;
+    //
+    // For anonymous classes, we resolve the original statement into a new
+    // one that does not have a class_body_opt. This is necessary to get
+    // the parameters called in the correct order.
+    //
+    AstClassInstanceCreationExpression *resolution_opt;
 
-    AstClassInstanceCreationExpression(StoragePool *pool_) : pool(pool_),
-                                                             arguments(NULL),
-                                                             local_arguments_opt(NULL),
-                                                             add_null_argument(false),
-                                                             base_opt(NULL),
-                                                             class_body_opt(NULL),
-                                                             anonymous_declaration(NULL)
+    AstClassInstanceCreationExpression(StoragePool *pool_)
+        : pool(pool_),
+          arguments(NULL),
+          local_arguments_opt(NULL),
+          add_null_argument(false),
+          base_opt(NULL),
+          class_body_opt(NULL),
+          anonymous_declaration(NULL),
+          resolution_opt(NULL)
     {
         Ast::kind = Ast::CLASS_CREATION;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -3492,7 +3492,7 @@ public:
     {
         Ast::kind = Ast::DIM;
         Ast::class_tag = Ast::NO_TAG;
-        Ast::generated = 0;
+        Ast::generated = false;
     }
 
     virtual ~AstDimExpr();
@@ -3532,7 +3532,7 @@ public:
     {
         Ast::kind = Ast::ARRAY_CREATION;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -3614,7 +3614,7 @@ public:
     {
         Ast::kind = Ast::DOT;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -3672,7 +3672,7 @@ public:
     {
         Ast::kind = Ast::CALL;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -3711,7 +3711,7 @@ public:
     {
         Ast::kind = Ast::ARRAY_ACCESS;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -3769,7 +3769,7 @@ public:
     {
         Ast::kind = Ast::POST_UNARY;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -3827,7 +3827,7 @@ public:
     {
         Ast::kind = Ast::PRE_UNARY;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -3874,7 +3874,7 @@ public:
     {
         Ast::kind = Ast::CAST;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -3960,7 +3960,7 @@ public:
     {
         Ast::kind = Ast::BINARY;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -3995,7 +3995,7 @@ public:
     {
         Ast::kind = Ast::CONDITIONAL;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -4076,7 +4076,7 @@ public:
     {
         Ast::kind = Ast::ASSIGNMENT;
         Ast::class_tag = Ast::EXPRESSION;
-        Ast::generated = 0;
+        Ast::generated = false;
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
@@ -4103,10 +4103,13 @@ public:
 inline bool Ast::IsName()
 {
     Ast *name = this;
-    for (AstFieldAccess *field_access = name -> FieldAccessCast(); field_access && field_access -> IsNameAccess();
-                                                                   field_access = name -> FieldAccessCast())
+    for (AstFieldAccess *field_access = name -> FieldAccessCast();
+         field_access && field_access -> IsNameAccess();
+         field_access = name -> FieldAccessCast())
+    {
         name = field_access -> base;
-    return (name -> SimpleNameCast() != NULL);
+    }
+    return name -> kind == IDENTIFIER;
 }
 
 
@@ -4117,9 +4120,12 @@ inline bool Ast::IsName()
 inline bool Ast::IsSimpleNameOrFieldAccess()
 {
     Ast *name = this;
-    for (AstFieldAccess *field_access = name -> FieldAccessCast(); field_access; field_access = name -> FieldAccessCast())
+    for (AstFieldAccess *field_access = name -> FieldAccessCast();
+         field_access; field_access = name -> FieldAccessCast())
+    {
         name = field_access -> base;
-    return (name -> SimpleNameCast() || name -> TypeExpressionCast());
+    }
+    return name -> kind == IDENTIFIER || name -> kind == TYPE;
 }
 
 
@@ -4128,7 +4134,7 @@ inline bool Ast::IsSimpleNameOrFieldAccess()
 //
 inline bool Ast::IsSuperExpression()
 {
-    return (SuperExpressionCast() || (FieldAccessCast() && FieldAccessCast() -> IsSuperAccess()));
+    return kind == SUPER_EXPRESSION || (kind == DOT && FieldAccessCast() -> IsSuperAccess());
 }
 
 //
@@ -4136,7 +4142,7 @@ inline bool Ast::IsSuperExpression()
 //
 inline bool Ast::IsThisExpression()
 {
-    return (ThisExpressionCast() || (FieldAccessCast() && FieldAccessCast() -> IsThisAccess()));
+    return kind == THIS_EXPRESSION || (kind == DOT && FieldAccessCast() -> IsThisAccess());
 }
 
 //
@@ -4144,7 +4150,16 @@ inline bool Ast::IsThisExpression()
 //
 inline bool Ast::IsLeftHandSide()
 {
-    return (SimpleNameCast() || FieldAccessCast() || ArrayAccessCast());
+    return kind == IDENTIFIER || kind == DOT || kind == ARRAY_ACCESS;
+}
+
+
+//
+// Given an Ast tree, check whether it is an explicit constructor invocation.
+//
+inline bool Ast::IsExplicitConstructorInvocation()
+{
+    return kind == THIS_CALL || kind == SUPER_CALL;
 }
 
 
@@ -4153,7 +4168,7 @@ inline bool Ast::IsLeftHandSide()
 //
 inline bool Ast::IsGenerated()
 {
-    return (generated == 1);
+    return generated == 1;
 }
 
 
@@ -4217,7 +4232,8 @@ private:
                 memmove(base, old_base, old_base_size * sizeof(Cell *));
                 delete [] old_base;
             }
-            memset(&base[old_base_size], 0, (base_size - old_base_size) * sizeof(Cell *));
+            memset(&base[old_base_size], 0,
+                   (base_size - old_base_size) * sizeof(Cell *));
         }
 
         //
@@ -4237,8 +4253,6 @@ private:
         // Finally, we update SIZE.
         //
         size += Blksize();
-
-        return;
     }
 
 public:
@@ -4376,25 +4390,19 @@ public:
         base_size = 0;
 
         Reset();
-
-        return;
     }
 
     // ********************************************************************
 
     inline VariableSymbolArray *NewVariableSymbolArray(unsigned size = 0)
     {
-        return new (Alloc(sizeof(VariableSymbolArray))) VariableSymbolArray((StoragePool *) this, size);
+        return new (Alloc(sizeof(VariableSymbolArray))) VariableSymbolArray(this, size);
     }
 
-    inline AstArray<Ast *> *NewAstArray(unsigned size = 0)
+    template <typename T>
+    inline AstArray<T> *NewAstArray(unsigned size = 0)
     {
-        return new (Alloc(sizeof(AstArray<Ast *>))) AstArray<Ast *>((StoragePool *) this, size);
-    }
-
-    inline AstArray<CaseElement *> *NewCaseElementArray(unsigned size = 0)
-    {
-        return new (Alloc(sizeof(AstArray<CaseElement *>))) AstArray<CaseElement *>((StoragePool *) this, size);
+        return new (Alloc(sizeof(AstArray<T>))) AstArray<T>(this, size);
     }
 
     inline AstListNode *NewListNode()
@@ -4404,7 +4412,7 @@ public:
 
     inline AstBlock *NewBlock()
     {
-        return new (Alloc(sizeof(AstBlock))) AstBlock((StoragePool *) this);
+        return new (Alloc(sizeof(AstBlock))) AstBlock(this);
     }
 
     inline AstPrimitiveType *NewPrimitiveType(Ast::Kind kind, LexStream::TokenIndex token)
@@ -4414,7 +4422,7 @@ public:
 
     inline AstArrayType *NewArrayType()
     {
-        return new (Alloc(sizeof(AstArrayType))) AstArrayType((StoragePool *) this);
+        return new (Alloc(sizeof(AstArrayType))) AstArrayType(this);
     }
 
     inline AstSimpleName *NewSimpleName(LexStream::TokenIndex token)
@@ -4434,7 +4442,7 @@ public:
 
     inline AstCompilationUnit *NewCompilationUnit()
     {
-        return new (Alloc(sizeof(AstCompilationUnit))) AstCompilationUnit((StoragePool *) this);
+        return new (Alloc(sizeof(AstCompilationUnit))) AstCompilationUnit(this);
     }
 
     inline AstModifier *NewModifier(Ast::Kind kind, LexStream::TokenIndex token)
@@ -4449,17 +4457,17 @@ public:
 
     inline AstClassBody *NewClassBody()
     {
-        return new (Alloc(sizeof(AstClassBody))) AstClassBody((StoragePool *) this);
+        return new (Alloc(sizeof(AstClassBody))) AstClassBody(this);
     }
 
     inline AstClassDeclaration *NewClassDeclaration()
     {
-        return new (Alloc(sizeof(AstClassDeclaration))) AstClassDeclaration((StoragePool *) this);
+        return new (Alloc(sizeof(AstClassDeclaration))) AstClassDeclaration(this);
     }
 
     inline AstArrayInitializer *NewArrayInitializer()
     {
-        return new (Alloc(sizeof(AstArrayInitializer))) AstArrayInitializer((StoragePool *) this);
+        return new (Alloc(sizeof(AstArrayInitializer))) AstArrayInitializer(this);
     }
 
     inline AstBrackets *NewBrackets(LexStream::TokenIndex left, LexStream::TokenIndex right)
@@ -4469,7 +4477,7 @@ public:
 
     inline AstVariableDeclaratorId *NewVariableDeclaratorId()
     {
-        return new (Alloc(sizeof(AstVariableDeclaratorId))) AstVariableDeclaratorId((StoragePool *) this);
+        return new (Alloc(sizeof(AstVariableDeclaratorId))) AstVariableDeclaratorId(this);
     }
 
     inline AstVariableDeclarator *NewVariableDeclarator()
@@ -4479,22 +4487,22 @@ public:
 
     inline AstFieldDeclaration *NewFieldDeclaration()
     {
-        return new (Alloc(sizeof(AstFieldDeclaration))) AstFieldDeclaration((StoragePool *) this);
+        return new (Alloc(sizeof(AstFieldDeclaration))) AstFieldDeclaration(this);
     }
 
     inline AstFormalParameter *NewFormalParameter()
     {
-        return new (Alloc(sizeof(AstFormalParameter))) AstFormalParameter((StoragePool *) this);
+        return new (Alloc(sizeof(AstFormalParameter))) AstFormalParameter(this);
     }
 
     inline AstMethodDeclarator *NewMethodDeclarator()
     {
-        return new (Alloc(sizeof(AstMethodDeclarator))) AstMethodDeclarator((StoragePool *) this);
+        return new (Alloc(sizeof(AstMethodDeclarator))) AstMethodDeclarator(this);
     }
 
     inline AstMethodDeclaration *NewMethodDeclaration()
     {
-        return new (Alloc(sizeof(AstMethodDeclaration))) AstMethodDeclaration((StoragePool *) this);
+        return new (Alloc(sizeof(AstMethodDeclaration))) AstMethodDeclaration(this);
     }
 
     inline AstStaticInitializer *NewStaticInitializer()
@@ -4504,47 +4512,47 @@ public:
 
     inline AstThisCall *NewThisCall()
     {
-        return new (Alloc(sizeof(AstThisCall))) AstThisCall((StoragePool *) this);
+        return new (Alloc(sizeof(AstThisCall))) AstThisCall(this);
     }
 
     inline AstSuperCall *NewSuperCall()
     {
-        return new (Alloc(sizeof(AstSuperCall))) AstSuperCall((StoragePool *) this);
+        return new (Alloc(sizeof(AstSuperCall))) AstSuperCall(this);
     }
 
-    inline AstConstructorBlock *NewConstructorBlock()
+    inline AstMethodBody *NewMethodBody()
     {
-        return new (Alloc(sizeof(AstConstructorBlock))) AstConstructorBlock((StoragePool *) this);
+        return new (Alloc(sizeof(AstMethodBody))) AstMethodBody(this);
     }
 
     inline AstConstructorDeclaration *NewConstructorDeclaration()
     {
-        return new (Alloc(sizeof(AstConstructorDeclaration))) AstConstructorDeclaration((StoragePool *) this);
+        return new (Alloc(sizeof(AstConstructorDeclaration))) AstConstructorDeclaration(this);
     }
 
     inline AstInterfaceDeclaration *NewInterfaceDeclaration()
     {
-        return new (Alloc(sizeof(AstInterfaceDeclaration))) AstInterfaceDeclaration((StoragePool *) this);
+        return new (Alloc(sizeof(AstInterfaceDeclaration))) AstInterfaceDeclaration(this);
     }
 
     inline AstLocalVariableDeclarationStatement *NewLocalVariableDeclarationStatement()
     {
-        return new (Alloc(sizeof(AstLocalVariableDeclarationStatement))) AstLocalVariableDeclarationStatement((StoragePool *) this);
+        return new (Alloc(sizeof(AstLocalVariableDeclarationStatement))) AstLocalVariableDeclarationStatement(this);
     }
 
     inline AstIfStatement *NewIfStatement()
     {
-        return new (Alloc(sizeof(AstIfStatement))) AstIfStatement((StoragePool *) this);
+        return new (Alloc(sizeof(AstIfStatement))) AstIfStatement(this);
     }
 
     inline AstEmptyStatement *NewEmptyStatement(LexStream::TokenIndex token)
     {
-        return new (Alloc(sizeof(AstEmptyStatement))) AstEmptyStatement((StoragePool *) this, token);
+        return new (Alloc(sizeof(AstEmptyStatement))) AstEmptyStatement(this, token);
     }
 
     inline AstExpressionStatement *NewExpressionStatement()
     {
-        return new (Alloc(sizeof(AstExpressionStatement))) AstExpressionStatement((StoragePool *) this);
+        return new (Alloc(sizeof(AstExpressionStatement))) AstExpressionStatement(this);
     }
 
     inline AstCaseLabel *NewCaseLabel()
@@ -4559,57 +4567,57 @@ public:
 
     inline AstSwitchBlockStatement *NewSwitchBlockStatement()
     {
-        return new (Alloc(sizeof(AstSwitchBlockStatement))) AstSwitchBlockStatement((StoragePool *) this);
+        return new (Alloc(sizeof(AstSwitchBlockStatement))) AstSwitchBlockStatement(this);
     }
 
     inline AstSwitchStatement *NewSwitchStatement()
     {
-        return new (Alloc(sizeof(AstSwitchStatement))) AstSwitchStatement((StoragePool *) this);
+        return new (Alloc(sizeof(AstSwitchStatement))) AstSwitchStatement(this);
     }
 
     inline AstWhileStatement *NewWhileStatement()
     {
-        return new (Alloc(sizeof(AstWhileStatement))) AstWhileStatement((StoragePool *) this);
+        return new (Alloc(sizeof(AstWhileStatement))) AstWhileStatement(this);
     }
 
     inline AstDoStatement *NewDoStatement()
     {
-        return new (Alloc(sizeof(AstDoStatement))) AstDoStatement((StoragePool *) this);
+        return new (Alloc(sizeof(AstDoStatement))) AstDoStatement(this);
     }
 
     inline AstForStatement *NewForStatement()
     {
-        return new (Alloc(sizeof(AstForStatement))) AstForStatement((StoragePool *) this);
+        return new (Alloc(sizeof(AstForStatement))) AstForStatement(this);
     }
 
     inline AstBreakStatement *NewBreakStatement()
     {
-        return new (Alloc(sizeof(AstBreakStatement))) AstBreakStatement((StoragePool *) this);
+        return new (Alloc(sizeof(AstBreakStatement))) AstBreakStatement(this);
     }
 
     inline AstContinueStatement *NewContinueStatement()
     {
-        return new (Alloc(sizeof(AstContinueStatement))) AstContinueStatement((StoragePool *) this);
+        return new (Alloc(sizeof(AstContinueStatement))) AstContinueStatement(this);
     }
 
     inline AstReturnStatement *NewReturnStatement()
     {
-        return new (Alloc(sizeof(AstReturnStatement))) AstReturnStatement((StoragePool *) this);
+        return new (Alloc(sizeof(AstReturnStatement))) AstReturnStatement(this);
     }
 
     inline AstThrowStatement *NewThrowStatement()
     {
-        return new (Alloc(sizeof(AstThrowStatement))) AstThrowStatement((StoragePool *) this);
+        return new (Alloc(sizeof(AstThrowStatement))) AstThrowStatement(this);
     }
 
     inline AstSynchronizedStatement *NewSynchronizedStatement()
     {
-        return new (Alloc(sizeof(AstSynchronizedStatement))) AstSynchronizedStatement((StoragePool *) this);
+        return new (Alloc(sizeof(AstSynchronizedStatement))) AstSynchronizedStatement(this);
     }
 
     inline AstAssertStatement *NewAssertStatement()
     {
-        return new (Alloc(sizeof(AstAssertStatement))) AstAssertStatement((StoragePool *) this);
+        return new (Alloc(sizeof(AstAssertStatement))) AstAssertStatement(this);
     }
 
     inline AstCatchClause *NewCatchClause()
@@ -4624,7 +4632,7 @@ public:
 
     inline AstTryStatement *NewTryStatement()
     {
-        return new (Alloc(sizeof(AstTryStatement))) AstTryStatement((StoragePool *) this);
+        return new (Alloc(sizeof(AstTryStatement))) AstTryStatement(this);
     }
 
     inline AstIntegerLiteral *NewIntegerLiteral(LexStream::TokenIndex token)
@@ -4694,7 +4702,7 @@ public:
 
     inline AstClassInstanceCreationExpression *NewClassInstanceCreationExpression()
     {
-        return new (Alloc(sizeof(AstClassInstanceCreationExpression))) AstClassInstanceCreationExpression((StoragePool *) this);
+        return new (Alloc(sizeof(AstClassInstanceCreationExpression))) AstClassInstanceCreationExpression(this);
     }
 
     inline AstDimExpr *NewDimExpr()
@@ -4704,7 +4712,7 @@ public:
 
     inline AstArrayCreationExpression *NewArrayCreationExpression()
     {
-        return new (Alloc(sizeof(AstArrayCreationExpression))) AstArrayCreationExpression((StoragePool *) this);
+        return new (Alloc(sizeof(AstArrayCreationExpression))) AstArrayCreationExpression(this);
     }
 
     inline AstFieldAccess *NewFieldAccess(AstFieldAccess::FieldAccessTag tag = AstFieldAccess::NONE)
@@ -4714,7 +4722,7 @@ public:
 
     inline AstMethodInvocation *NewMethodInvocation()
     {
-        return new (Alloc(sizeof(AstMethodInvocation))) AstMethodInvocation((StoragePool *) this);
+        return new (Alloc(sizeof(AstMethodInvocation))) AstMethodInvocation(this);
     }
 
     inline AstArrayAccess *NewArrayAccess()
@@ -4734,7 +4742,7 @@ public:
 
     inline AstCastExpression *NewCastExpression()
     {
-        return new (Alloc(sizeof(AstCastExpression))) AstCastExpression((StoragePool *) this);
+        return new (Alloc(sizeof(AstCastExpression))) AstCastExpression(this);
     }
 
     inline AstBinaryExpression *NewBinaryExpression(AstBinaryExpression::BinaryExpressionTag tag)
@@ -4767,490 +4775,490 @@ public:
     inline AstBlock *GenBlock()
     {
         AstBlock *p = NewBlock();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstPrimitiveType *GenPrimitiveType(Ast::Kind kind, LexStream::TokenIndex token)
     {
         AstPrimitiveType *p = NewPrimitiveType(kind, token);
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstArrayType *GenArrayType()
     {
         AstArrayType *p = NewArrayType();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstSimpleName *GenSimpleName(LexStream::TokenIndex token)
     {
         AstSimpleName *p = NewSimpleName(token);
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstPackageDeclaration *GenPackageDeclaration()
     {
         AstPackageDeclaration *p = NewPackageDeclaration();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstImportDeclaration *GenImportDeclaration()
     {
         AstImportDeclaration *p = NewImportDeclaration();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstCompilationUnit *GenCompilationUnit()
     {
         AstCompilationUnit *p = NewCompilationUnit();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstModifier *GenModifier(Ast::Kind kind, LexStream::TokenIndex token)
     {
         AstModifier *p = NewModifier(kind, token);
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstEmptyDeclaration *GenEmptyDeclaration(LexStream::TokenIndex token)
     {
         AstEmptyDeclaration *p = NewEmptyDeclaration(token);
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstClassBody *GenClassBody()
     {
         AstClassBody *p = NewClassBody();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstClassDeclaration *GenClassDeclaration()
     {
         AstClassDeclaration *p = NewClassDeclaration();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstArrayInitializer *GenArrayInitializer()
     {
         AstArrayInitializer *p = NewArrayInitializer();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstBrackets *GenBrackets(LexStream::TokenIndex left, LexStream::TokenIndex right)
     {
         AstBrackets *p = NewBrackets(left, right);
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstVariableDeclaratorId *GenVariableDeclaratorId()
     {
         AstVariableDeclaratorId *p = NewVariableDeclaratorId();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstVariableDeclarator *GenVariableDeclarator()
     {
         AstVariableDeclarator *p = NewVariableDeclarator();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstFieldDeclaration *GenFieldDeclaration()
     {
         AstFieldDeclaration *p = NewFieldDeclaration();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstFormalParameter *GenFormalParameter()
     {
         AstFormalParameter *p = NewFormalParameter();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstMethodDeclarator *GenMethodDeclarator()
     {
         AstMethodDeclarator *p = NewMethodDeclarator();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstMethodDeclaration *GenMethodDeclaration()
     {
         AstMethodDeclaration *p = NewMethodDeclaration();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstStaticInitializer *GenStaticInitializer()
     {
         AstStaticInitializer *p = NewStaticInitializer();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstThisCall *GenThisCall()
     {
         AstThisCall *p = NewThisCall();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstSuperCall *GenSuperCall()
     {
         AstSuperCall *p = NewSuperCall();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
-    inline AstConstructorBlock *GenConstructorBlock()
+    inline AstMethodBody *GenMethodBody()
     {
-        AstConstructorBlock *p = NewConstructorBlock();
-        p -> generated = 1;
+        AstMethodBody *p = NewMethodBody();
+        p -> generated = true;
         return p;
     }
 
     inline AstConstructorDeclaration *GenConstructorDeclaration()
     {
         AstConstructorDeclaration *p = NewConstructorDeclaration();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstInterfaceDeclaration *GenInterfaceDeclaration()
     {
         AstInterfaceDeclaration *p = NewInterfaceDeclaration();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstLocalVariableDeclarationStatement *GenLocalVariableDeclarationStatement()
     {
         AstLocalVariableDeclarationStatement *p = NewLocalVariableDeclarationStatement();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstIfStatement *GenIfStatement()
     {
         AstIfStatement *p = NewIfStatement();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstEmptyStatement *GenEmptyStatement(LexStream::TokenIndex token)
     {
         AstEmptyStatement *p = NewEmptyStatement(token);
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstExpressionStatement *GenExpressionStatement()
     {
         AstExpressionStatement *p = NewExpressionStatement();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstCaseLabel *GenCaseLabel()
     {
         AstCaseLabel *p = NewCaseLabel();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstDefaultLabel *GenDefaultLabel()
     {
         AstDefaultLabel *p = NewDefaultLabel();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstSwitchBlockStatement *GenSwitchBlockStatement()
     {
         AstSwitchBlockStatement *p = NewSwitchBlockStatement();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstSwitchStatement *GenSwitchStatement()
     {
         AstSwitchStatement *p = NewSwitchStatement();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstWhileStatement *GenWhileStatement()
     {
         AstWhileStatement *p = NewWhileStatement();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstDoStatement *GenDoStatement()
     {
         AstDoStatement *p = NewDoStatement();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstForStatement *GenForStatement()
     {
         AstForStatement *p = NewForStatement();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstBreakStatement *GenBreakStatement()
     {
         AstBreakStatement *p = NewBreakStatement();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstContinueStatement *GenContinueStatement()
     {
         AstContinueStatement *p = NewContinueStatement();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstReturnStatement *GenReturnStatement()
     {
         AstReturnStatement *p = NewReturnStatement();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstThrowStatement *GenThrowStatement()
     {
         AstThrowStatement *p = NewThrowStatement();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstSynchronizedStatement *GenSynchronizedStatement()
     {
         AstSynchronizedStatement *p = NewSynchronizedStatement();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstAssertStatement *GenAssertStatement()
     {
         AstAssertStatement *p = NewAssertStatement();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstCatchClause *GenCatchClause()
     {
         AstCatchClause *p = NewCatchClause();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstFinallyClause *GenFinallyClause()
     {
         AstFinallyClause *p = NewFinallyClause();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstTryStatement *GenTryStatement()
     {
         AstTryStatement *p = NewTryStatement();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstIntegerLiteral *GenIntegerLiteral(LexStream::TokenIndex token)
     {
         AstIntegerLiteral *p = NewIntegerLiteral(token);
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstLongLiteral *GenLongLiteral(LexStream::TokenIndex token)
     {
         AstLongLiteral *p = NewLongLiteral(token);
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstFloatLiteral *GenFloatLiteral(LexStream::TokenIndex token)
     {
         AstFloatLiteral *p = NewFloatLiteral(token);
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstDoubleLiteral *GenDoubleLiteral(LexStream::TokenIndex token)
     {
         AstDoubleLiteral *p = NewDoubleLiteral(token);
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstTrueLiteral *GenTrueLiteral(LexStream::TokenIndex token)
     {
         AstTrueLiteral *p = NewTrueLiteral(token);
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstFalseLiteral *GenFalseLiteral(LexStream::TokenIndex token)
     {
         AstFalseLiteral *p = NewFalseLiteral(token);
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstStringLiteral *GenStringLiteral(LexStream::TokenIndex token)
     {
         AstStringLiteral *p = NewStringLiteral(token);
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstCharacterLiteral *GenCharacterLiteral(LexStream::TokenIndex token)
     {
         AstCharacterLiteral *p = NewCharacterLiteral(token);
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstNullLiteral *GenNullLiteral(LexStream::TokenIndex token)
     {
         AstNullLiteral *p = NewNullLiteral(token);
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstThisExpression *GenThisExpression(LexStream::TokenIndex token)
     {
         AstThisExpression *p = NewThisExpression(token);
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstSuperExpression *GenSuperExpression(LexStream::TokenIndex token)
     {
         AstSuperExpression *p = NewSuperExpression(token);
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstParenthesizedExpression *GenParenthesizedExpression()
     {
         AstParenthesizedExpression *p = NewParenthesizedExpression();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstTypeExpression *GenTypeExpression(Ast *type)
     {
         AstTypeExpression *p = NewTypeExpression(type);
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstClassInstanceCreationExpression *GenClassInstanceCreationExpression()
     {
         AstClassInstanceCreationExpression *p = NewClassInstanceCreationExpression();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstDimExpr *GenDimExpr()
     {
         AstDimExpr *p = NewDimExpr();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstArrayCreationExpression *GenArrayCreationExpression()
     {
         AstArrayCreationExpression *p = NewArrayCreationExpression();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstFieldAccess *GenFieldAccess(AstFieldAccess::FieldAccessTag tag = AstFieldAccess::NONE)
     {
         AstFieldAccess *p = NewFieldAccess(tag);
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstMethodInvocation *GenMethodInvocation()
     {
         AstMethodInvocation *p = NewMethodInvocation();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstArrayAccess *GenArrayAccess()
     {
         AstArrayAccess *p = NewArrayAccess();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstPostUnaryExpression *GenPostUnaryExpression(AstPostUnaryExpression::PostUnaryExpressionTag tag)
     {
         AstPostUnaryExpression *p = NewPostUnaryExpression(tag);
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstPreUnaryExpression *GenPreUnaryExpression(AstPreUnaryExpression::PreUnaryExpressionTag tag)
     {
         AstPreUnaryExpression *p = NewPreUnaryExpression(tag);
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstCastExpression *GenCastExpression()
     {
         AstCastExpression *p = NewCastExpression();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstBinaryExpression *GenBinaryExpression(AstBinaryExpression::BinaryExpressionTag tag)
     {
         AstBinaryExpression *p = NewBinaryExpression(tag);
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstConditionalExpression *GenConditionalExpression()
     {
         AstConditionalExpression *p = NewConditionalExpression();
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
     inline AstAssignmentExpression *GenAssignmentExpression(AstAssignmentExpression::AssignmentExpressionTag tag, LexStream::TokenIndex token)
     {
         AstAssignmentExpression *p = NewAssignmentExpression(tag, token);
-        p -> generated = 1;
+        p -> generated = true;
         return p;
     }
 
@@ -5275,7 +5283,7 @@ public:
 
 
 //
-// Define a templatized function for the dynamic_cast<> operator.
+// Define a templatized function for dynamic_cast<> operator.
 // This is slightly scary, but we need to do it so that we
 // can continue to support older compilers that don't implement
 // the dynamic_cast<> operator. We also do extra checking
@@ -5289,16 +5297,19 @@ public:
 #include <typeinfo>
 #endif
 
-template <class TO, class FROM>
-TO DYNAMIC_CAST(FROM f) {
+template <typename TO, typename FROM>
+TO DYNAMIC_CAST(FROM f)
+{
 #ifndef HAVE_DYNAMIC_CAST
     return (TO) f;
 #else
     // If NULL, return NULL to support dynamic_cast semantics
-    if (!f) return (TO) NULL;
+    if (!f)
+        return (TO) NULL;
     TO ptr = dynamic_cast<TO> (f);
 
-    if (! ptr) {
+    if (! ptr)
+    {
 #ifdef HAVE_RTTI
         const type_info& t = typeid(f);
         const char *name = t.name();
@@ -5310,50 +5321,49 @@ TO DYNAMIC_CAST(FROM f) {
 #endif
 }
 
-
 //
 // Cast conversions for Ast
 //
 
 inline AstStatement *Ast::StatementCast()
 {
-    return DYNAMIC_CAST<AstStatement *, Ast *>
+    return DYNAMIC_CAST<AstStatement *>
         (class_tag == STATEMENT ? this : NULL);
 }
 
 inline AstExpression *Ast::ExpressionCast()
 {
-    return DYNAMIC_CAST<AstExpression *, Ast *>
+    return DYNAMIC_CAST<AstExpression *>
         (class_tag == EXPRESSION ? this : NULL);
 }
 
 inline AstPrimitiveType *Ast::PrimitiveTypeCast()
 {
-    return DYNAMIC_CAST<AstPrimitiveType *, Ast *>
+    return DYNAMIC_CAST<AstPrimitiveType *>
         (class_tag == PRIMITIVE_TYPE ? this : NULL);
 }
 
 inline AstModifier *Ast::ModifierCast()
 {
-    return DYNAMIC_CAST<AstModifier *, Ast *>
+    return DYNAMIC_CAST<AstModifier *>
         (class_tag == MODIFIER ? this : NULL);
 }
 
 inline AstFieldDeclaration *Ast::StaticFieldCast()
 {
-    return DYNAMIC_CAST<AstFieldDeclaration *, Ast *>
+    return DYNAMIC_CAST<AstFieldDeclaration *>
         (class_tag == STATIC_FIELD ? this : NULL);
 }
 
 inline AstClassBody *Ast::UnparsedClassBodyCast()
 {
-    return DYNAMIC_CAST<AstClassBody *, Ast *>
+    return DYNAMIC_CAST<AstClassBody *>
         (class_tag == UNPARSED ? this : NULL);
 }
 
 inline AstInterfaceDeclaration *Ast::UnparsedInterfaceBodyCast()
 {
-    return DYNAMIC_CAST<AstInterfaceDeclaration *, Ast *>
+    return DYNAMIC_CAST<AstInterfaceDeclaration *>
         (class_tag == UNPARSED ? this : NULL);
 }
 
@@ -5365,785 +5375,627 @@ inline AstInterfaceDeclaration *Ast::UnparsedInterfaceBodyCast()
 
 inline AstListNode *Ast::ListNodeCast()
 {
-    return DYNAMIC_CAST<AstListNode *, Ast *>
+    return DYNAMIC_CAST<AstListNode *>
         (kind == LIST_NODE ? this : NULL);
 }
 
 inline AstArrayType *Ast::ArrayTypeCast()
 {
-    return DYNAMIC_CAST<AstArrayType *, Ast *>
+    return DYNAMIC_CAST<AstArrayType *>
         (kind == ARRAY ? this : NULL);
 }
 
 inline AstSimpleName *Ast::SimpleNameCast()
 {
-    return DYNAMIC_CAST<AstSimpleName *, Ast *>
+    return DYNAMIC_CAST<AstSimpleName *>
         (kind == IDENTIFIER ? this : NULL);
 }
 
 inline AstPackageDeclaration *Ast::PackageDeclarationCast()
 {
-    return DYNAMIC_CAST<AstPackageDeclaration *, Ast *>
+    return DYNAMIC_CAST<AstPackageDeclaration *>
         (kind == PACKAGE ? this : NULL);
 }
 
 inline AstImportDeclaration *Ast::ImportDeclarationCast()
 {
-    return DYNAMIC_CAST<AstImportDeclaration *, Ast *>
+    return DYNAMIC_CAST<AstImportDeclaration *>
         (kind == IMPORT ? this : NULL);
 }
 
 inline AstCompilationUnit *Ast::CompilationUnitCast()
 {
-    return DYNAMIC_CAST<AstCompilationUnit *, Ast *>
+    return DYNAMIC_CAST<AstCompilationUnit *>
         (kind == COMPILATION || kind == BAD_COMPILATION
             || kind == EMPTY_COMPILATION ? this : NULL);
 }
 
 inline AstCompilationUnit *Ast::BadCompilationUnitCast()
 {
-    return DYNAMIC_CAST<AstCompilationUnit *, Ast *>
+    return DYNAMIC_CAST<AstCompilationUnit *>
         (kind == BAD_COMPILATION ? this : NULL);
 }
 
 inline AstCompilationUnit *Ast::EmptyCompilationUnitCast()
 {
-    return DYNAMIC_CAST<AstCompilationUnit *, Ast *>
+    return DYNAMIC_CAST<AstCompilationUnit *>
         (kind == EMPTY_COMPILATION ? this : NULL);
 }
 
 inline AstEmptyDeclaration *Ast::EmptyDeclarationCast()
 {
-    return DYNAMIC_CAST<AstEmptyDeclaration *, Ast *>
+    return DYNAMIC_CAST<AstEmptyDeclaration *>
         (kind == EMPTY_DECLARATION ? this : NULL);
 }
 
 inline AstClassDeclaration *Ast::ClassDeclarationCast()
 {
-    return DYNAMIC_CAST<AstClassDeclaration *, Ast *>
+    return DYNAMIC_CAST<AstClassDeclaration *>
         (kind == CLASS ? this : NULL);
 }
 
 inline AstArrayInitializer *Ast::ArrayInitializerCast()
 {
-    return DYNAMIC_CAST<AstArrayInitializer *, Ast *>
+    return DYNAMIC_CAST<AstArrayInitializer *>
         (kind == ARRAY_INITIALIZER ? this : NULL);
 }
 
 inline AstBrackets *Ast::BracketsCast()
 {
-    return DYNAMIC_CAST<AstBrackets *, Ast *>
+    return DYNAMIC_CAST<AstBrackets *>
         (kind == BRACKETS ? this : NULL);
 }
 
 inline AstVariableDeclaratorId *Ast::VariableDeclaratorIdCast()
 {
-    return DYNAMIC_CAST<AstVariableDeclaratorId *, Ast *>
+    return DYNAMIC_CAST<AstVariableDeclaratorId *>
         (kind == VARIABLE_DECLARATOR_NAME ? this : NULL);
 }
 
 inline AstVariableDeclarator *Ast::VariableDeclaratorCast()
 {
-    return DYNAMIC_CAST<AstVariableDeclarator *, Ast *>
+    return DYNAMIC_CAST<AstVariableDeclarator *>
         (kind == VARIABLE_DECLARATOR ? this : NULL);
 }
 
 inline AstFieldDeclaration *Ast::FieldDeclarationCast()
 {
-    return DYNAMIC_CAST<AstFieldDeclaration *, Ast *>
+    return DYNAMIC_CAST<AstFieldDeclaration *>
         (kind == FIELD ? this : NULL);
 }
 
 inline AstFormalParameter *Ast::FormalParameterCast()
 {
-    return DYNAMIC_CAST<AstFormalParameter *, Ast *>
+    return DYNAMIC_CAST<AstFormalParameter *>
         (kind == PARAMETER ? this : NULL);
 }
 
 inline AstMethodDeclarator *Ast::MethodDeclaratorCast()
 {
-    return DYNAMIC_CAST<AstMethodDeclarator *, Ast *>
+    return DYNAMIC_CAST<AstMethodDeclarator *>
         (kind == METHOD_DECLARATOR ? this : NULL);
 }
 
 inline AstMethodDeclaration *Ast::MethodDeclarationCast()
 {
-    return DYNAMIC_CAST<AstMethodDeclaration *, Ast *>
+    return DYNAMIC_CAST<AstMethodDeclaration *>
         (kind == METHOD ? this : NULL);
 }
 
 inline AstStaticInitializer *Ast::StaticInitializerCast()
 {
-    return DYNAMIC_CAST<AstStaticInitializer *, Ast *>
+    return DYNAMIC_CAST<AstStaticInitializer *>
         (kind == STATIC_INITIALIZER ? this : NULL);
 }
 
 inline AstThisCall *Ast::ThisCallCast()
 {
-    return DYNAMIC_CAST<AstThisCall *, Ast *>
+    return DYNAMIC_CAST<AstThisCall *>
         (kind == THIS_CALL ? this : NULL);
 }
 
 inline AstSuperCall *Ast::SuperCallCast()
 {
-    return DYNAMIC_CAST<AstSuperCall *, Ast *>
+    return DYNAMIC_CAST<AstSuperCall *>
         (kind == SUPER_CALL ? this : NULL);
 }
 
-inline AstConstructorBlock *Ast::ConstructorBlockCast()
+inline AstMethodBody *Ast::MethodBodyCast()
 {
-    return DYNAMIC_CAST<AstConstructorBlock *, Ast *>
-        (kind == CONSTRUCTOR_BLOCK ? this : NULL);
+    return DYNAMIC_CAST<AstMethodBody *>
+        (kind == METHOD_BODY ? this : NULL);
 }
 
 inline AstConstructorDeclaration *Ast::ConstructorDeclarationCast()
 {
-    return DYNAMIC_CAST<AstConstructorDeclaration *, Ast *>
+    return DYNAMIC_CAST<AstConstructorDeclaration *>
         (kind == CONSTRUCTOR ? this : NULL);
 }
 
 inline AstInterfaceDeclaration *Ast::InterfaceDeclarationCast()
 {
-    return DYNAMIC_CAST<AstInterfaceDeclaration *, Ast *>
+    return DYNAMIC_CAST<AstInterfaceDeclaration *>
         (kind == INTERFACE ? this : NULL);
 }
 
 inline AstBlock *Ast::BlockCast()
 {
-    return DYNAMIC_CAST<AstBlock *, Ast *>
-        (kind == BLOCK ? this : NULL);
+    return DYNAMIC_CAST<AstBlock *>
+        (kind == BLOCK || kind == METHOD_BODY || kind == SWITCH_BLOCK
+         ? this : NULL);
 }
 
 inline AstLocalVariableDeclarationStatement *Ast::LocalVariableDeclarationStatementCast()
 {
-    return DYNAMIC_CAST<AstLocalVariableDeclarationStatement *, Ast *>
+    return DYNAMIC_CAST<AstLocalVariableDeclarationStatement *>
         (kind == LOCAL_VARIABLE_DECLARATION ? this : NULL);
 }
 
 inline AstIfStatement *Ast::IfStatementCast()
 {
-    return DYNAMIC_CAST<AstIfStatement *, Ast *>
+    return DYNAMIC_CAST<AstIfStatement *>
         (kind == IF ? this : NULL);
 }
 
 inline AstEmptyStatement *Ast::EmptyStatementCast()
 {
-    return DYNAMIC_CAST<AstEmptyStatement *, Ast *>
+    return DYNAMIC_CAST<AstEmptyStatement *>
         (kind == EMPTY_STATEMENT ? this : NULL);
 }
 
 inline AstExpressionStatement *Ast::ExpressionStatementCast()
 {
-    return DYNAMIC_CAST<AstExpressionStatement *, Ast *>
+    return DYNAMIC_CAST<AstExpressionStatement *>
         (kind == EXPRESSION_STATEMENT ? this : NULL);
 }
 
 inline AstCaseLabel *Ast::CaseLabelCast()
 {
-    return DYNAMIC_CAST<AstCaseLabel *, Ast *>
+    return DYNAMIC_CAST<AstCaseLabel *>
         (kind == CASE ? this : NULL);
 }
 
 inline AstDefaultLabel *Ast::DefaultLabelCast()
 {
-    return DYNAMIC_CAST<AstDefaultLabel *, Ast *>
+    return DYNAMIC_CAST<AstDefaultLabel *>
         (kind == DEFAULT ? this : NULL);
 }
 
 inline AstSwitchBlockStatement *Ast::SwitchBlockStatementCast()
 {
-    return DYNAMIC_CAST<AstSwitchBlockStatement *, Ast *>
+    return DYNAMIC_CAST<AstSwitchBlockStatement *>
         (kind == SWITCH_BLOCK ? this : NULL);
 }
 
 inline AstSwitchStatement *Ast::SwitchStatementCast()
 {
-    return DYNAMIC_CAST<AstSwitchStatement *, Ast *>
+    return DYNAMIC_CAST<AstSwitchStatement *>
         (kind == SWITCH ? this : NULL);
 }
 
 inline AstWhileStatement *Ast::WhileStatementCast()
 {
-    return DYNAMIC_CAST<AstWhileStatement *, Ast *>
+    return DYNAMIC_CAST<AstWhileStatement *>
         (kind == WHILE ? this : NULL);
 }
 
 inline AstDoStatement *Ast::DoStatementCast()
 {
-    return DYNAMIC_CAST<AstDoStatement *, Ast *>
+    return DYNAMIC_CAST<AstDoStatement *>
         (kind == DO ? this : NULL);
 }
 
 inline AstForStatement *Ast::ForStatementCast()
 {
-    return DYNAMIC_CAST<AstForStatement *, Ast *>
+    return DYNAMIC_CAST<AstForStatement *>
         (kind == FOR ? this : NULL);
 }
 
 inline AstBreakStatement *Ast::BreakStatementCast()
 {
-    return DYNAMIC_CAST<AstBreakStatement *, Ast *>
+    return DYNAMIC_CAST<AstBreakStatement *>
         (kind == BREAK ? this : NULL);
 }
 
 inline AstContinueStatement *Ast::ContinueStatementCast()
 {
-    return DYNAMIC_CAST<AstContinueStatement *, Ast *>
+    return DYNAMIC_CAST<AstContinueStatement *>
         (kind == CONTINUE ? this : NULL);
 }
 
 inline AstReturnStatement *Ast::ReturnStatementCast()
 {
-    return DYNAMIC_CAST<AstReturnStatement *, Ast *>
+    return DYNAMIC_CAST<AstReturnStatement *>
         (kind == RETURN ? this : NULL);
 }
 
 inline AstThrowStatement *Ast::ThrowStatementCast()
 {
-    return DYNAMIC_CAST<AstThrowStatement *, Ast *>
+    return DYNAMIC_CAST<AstThrowStatement *>
         (kind == THROW ? this : NULL);
 }
 
 inline AstSynchronizedStatement *Ast::SynchronizedStatementCast()
 {
-    return DYNAMIC_CAST<AstSynchronizedStatement *, Ast *>
+    return DYNAMIC_CAST<AstSynchronizedStatement *>
         (kind == SYNCHRONIZED_STATEMENT ? this : NULL);
 }
 
 inline AstAssertStatement *Ast::AssertStatementCast()
 {
-    return DYNAMIC_CAST<AstAssertStatement *, Ast *>
+    return DYNAMIC_CAST<AstAssertStatement *>
         (kind == ASSERT ? this : NULL);
 }
 
 inline AstCatchClause *Ast::CatchClauseCast()
 {
-    return DYNAMIC_CAST<AstCatchClause *, Ast *>
+    return DYNAMIC_CAST<AstCatchClause *>
         (kind == CATCH ? this : NULL);
 }
 
 inline AstFinallyClause *Ast::FinallyClauseCast()
 {
-    return DYNAMIC_CAST<AstFinallyClause *, Ast *>
+    return DYNAMIC_CAST<AstFinallyClause *>
         (kind == FINALLY ? this : NULL);
 }
 
 inline AstTryStatement *Ast::TryStatementCast()
 {
-    return DYNAMIC_CAST<AstTryStatement *, Ast *>
+    return DYNAMIC_CAST<AstTryStatement *>
         (kind == TRY ? this : NULL);
 }
 
 inline AstIntegerLiteral *Ast::IntegerLiteralCast()
 {
-    return DYNAMIC_CAST<AstIntegerLiteral *, Ast *>
+    return DYNAMIC_CAST<AstIntegerLiteral *>
         (kind == INTEGER_LITERAL ? this : NULL);
 }
 
 inline AstLongLiteral *Ast::LongLiteralCast()
 {
-    return DYNAMIC_CAST<AstLongLiteral *, Ast *>
+    return DYNAMIC_CAST<AstLongLiteral *>
         (kind == LONG_LITERAL ? this : NULL);
 }
 
 inline AstFloatLiteral *Ast::FloatLiteralCast()
 {
-    return DYNAMIC_CAST<AstFloatLiteral *, Ast *>
+    return DYNAMIC_CAST<AstFloatLiteral *>
         (kind == FLOAT_LITERAL ? this : NULL);
 }
 
 inline AstDoubleLiteral *Ast::DoubleLiteralCast()
 {
-    return DYNAMIC_CAST<AstDoubleLiteral *, Ast *>
+    return DYNAMIC_CAST<AstDoubleLiteral *>
         (kind == DOUBLE_LITERAL ? this : NULL);
 }
 
 inline AstTrueLiteral *Ast::TrueLiteralCast()
 {
-    return DYNAMIC_CAST<AstTrueLiteral *, Ast *>
+    return DYNAMIC_CAST<AstTrueLiteral *>
         (kind == TRUE_LITERAL ? this : NULL);
 }
 
 inline AstFalseLiteral *Ast::FalseLiteralCast()
 {
-    return DYNAMIC_CAST<AstFalseLiteral *, Ast *>
+    return DYNAMIC_CAST<AstFalseLiteral *>
         (kind == FALSE_LITERAL ? this : NULL);
 }
 
 inline AstStringLiteral *Ast::StringLiteralCast()
 {
-    return DYNAMIC_CAST<AstStringLiteral *, Ast *>
+    return DYNAMIC_CAST<AstStringLiteral *>
         (kind == STRING_LITERAL ? this : NULL);
 }
 
 inline AstCharacterLiteral *Ast::CharacterLiteralCast()
 {
-    return DYNAMIC_CAST<AstCharacterLiteral *, Ast *>
+    return DYNAMIC_CAST<AstCharacterLiteral *>
         (kind == CHARACTER_LITERAL ? this : NULL);
 }
 
 inline AstNullLiteral *Ast::NullLiteralCast()
 {
-    return DYNAMIC_CAST<AstNullLiteral *, Ast *>
+    return DYNAMIC_CAST<AstNullLiteral *>
         (kind == NULL_LITERAL ? this : NULL);
 }
 
 inline AstThisExpression *Ast::ThisExpressionCast()
 {
-    return DYNAMIC_CAST<AstThisExpression *, Ast *>
+    return DYNAMIC_CAST<AstThisExpression *>
         (kind == THIS_EXPRESSION ? this : NULL);
 }
 
 inline AstSuperExpression *Ast::SuperExpressionCast()
 {
-    return DYNAMIC_CAST<AstSuperExpression *, Ast *>
+    return DYNAMIC_CAST<AstSuperExpression *>
         (kind == SUPER_EXPRESSION ? this : NULL);
 }
 
 inline AstParenthesizedExpression *Ast::ParenthesizedExpressionCast()
 {
-    return DYNAMIC_CAST<AstParenthesizedExpression *, Ast *>
+    return DYNAMIC_CAST<AstParenthesizedExpression *>
         (kind == PARENTHESIZED_EXPRESSION ? this : NULL);
 }
 
 inline AstClassInstanceCreationExpression *Ast::ClassInstanceCreationExpressionCast()
 {
-    return DYNAMIC_CAST<AstClassInstanceCreationExpression *, Ast *>
+    return DYNAMIC_CAST<AstClassInstanceCreationExpression *>
         (kind == CLASS_CREATION ? this : NULL);
 }
 
 inline AstDimExpr *Ast::DimExprCast()
 {
-    return DYNAMIC_CAST<AstDimExpr *, Ast *>
+    return DYNAMIC_CAST<AstDimExpr *>
         (kind == DIM ? this : NULL);
 }
 
 inline AstArrayCreationExpression *Ast::ArrayCreationExpressionCast()
 {
-    return DYNAMIC_CAST<AstArrayCreationExpression *, Ast *>
+    return DYNAMIC_CAST<AstArrayCreationExpression *>
         (kind == ARRAY_CREATION ? this : NULL);
 }
 
 inline AstFieldAccess *Ast::FieldAccessCast()
 {
-    return DYNAMIC_CAST<AstFieldAccess *, Ast *>
+    return DYNAMIC_CAST<AstFieldAccess *>
         (kind == DOT ? this : NULL);
 }
 
 inline AstMethodInvocation *Ast::MethodInvocationCast()
 {
-    return DYNAMIC_CAST<AstMethodInvocation *, Ast *>
+    return DYNAMIC_CAST<AstMethodInvocation *>
         (kind == CALL ? this : NULL);
 }
 
 inline AstArrayAccess *Ast::ArrayAccessCast()
 {
-    return DYNAMIC_CAST<AstArrayAccess *, Ast *>
+    return DYNAMIC_CAST<AstArrayAccess *>
         (kind == ARRAY_ACCESS ? this : NULL);
 }
 
 inline AstPostUnaryExpression *Ast::PostUnaryExpressionCast()
 {
-    return DYNAMIC_CAST<AstPostUnaryExpression *, Ast *>
+    return DYNAMIC_CAST<AstPostUnaryExpression *>
         (kind == POST_UNARY ? this : NULL);
 }
 
 inline AstPreUnaryExpression *Ast::PreUnaryExpressionCast()
 {
-    return DYNAMIC_CAST<AstPreUnaryExpression *, Ast *>
+    return DYNAMIC_CAST<AstPreUnaryExpression *>
         (kind == PRE_UNARY ? this : NULL);
 }
 
 inline AstCastExpression *Ast::CastExpressionCast()
 {
-    return DYNAMIC_CAST<AstCastExpression *, Ast *>
+    return DYNAMIC_CAST<AstCastExpression *>
         (kind == CAST || kind == CHECK_AND_CAST ? this : NULL);
 }
 
 inline AstBinaryExpression *Ast::BinaryExpressionCast()
 {
-    return DYNAMIC_CAST<AstBinaryExpression *, Ast *>
+    return DYNAMIC_CAST<AstBinaryExpression *>
         (kind == BINARY ? this : NULL);
 }
 
 inline AstTypeExpression *Ast::TypeExpressionCast()
 {
-    return DYNAMIC_CAST<AstTypeExpression *, Ast *>
+    return DYNAMIC_CAST<AstTypeExpression *>
         (kind == TYPE ? this : NULL);
 }
 
 inline AstConditionalExpression *Ast::ConditionalExpressionCast()
 {
-    return DYNAMIC_CAST<AstConditionalExpression *, Ast *>
+    return DYNAMIC_CAST<AstConditionalExpression *>
         (kind == CONDITIONAL ? this : NULL);
 }
 
 inline AstAssignmentExpression *Ast::AssignmentExpressionCast()
 {
-    return DYNAMIC_CAST<AstAssignmentExpression *, Ast *>
+    return DYNAMIC_CAST<AstAssignmentExpression *>
         (kind == ASSIGNMENT ? this : NULL);
 }
 
 inline void AstClassBody::AllocateInstanceVariables(int estimate)
 {
     if (! instance_variables)
-        instance_variables = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstFieldDeclaration *> *>
-#else
-            (AstArray<AstFieldDeclaration *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        instance_variables =
+            pool -> NewAstArray<AstFieldDeclaration *> (estimate);
 }
 
 inline void AstClassBody::AddInstanceVariable(AstFieldDeclaration *field_declaration)
 {
     if (! instance_variables)
-        instance_variables = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstFieldDeclaration *> *>
-#else
-            (AstArray<AstFieldDeclaration *> *)
-#endif
-            (pool -> NewAstArray());
+        AllocateInstanceVariables(1);
     instance_variables -> Next() = field_declaration;
 }
 
 inline void AstClassBody::AllocateClassVariables(int estimate)
 {
     if (! class_variables)
-        class_variables = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstFieldDeclaration *> *>
-#else
-            (AstArray<AstFieldDeclaration *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        class_variables =
+            pool -> NewAstArray<AstFieldDeclaration *> (estimate);
 }
 
 inline void AstClassBody::AddClassVariable(AstFieldDeclaration *field_declaration)
 {
     if (! class_variables)
-        class_variables = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstFieldDeclaration *> *>
-#else
-            (AstArray<AstFieldDeclaration *> *)
-#endif
-            (pool -> NewAstArray());
+        AllocateClassVariables(1);
     class_variables -> Next() = field_declaration;
 }
 
 inline void AstClassBody::AllocateMethods(int estimate)
 {
     if (! methods)
-        methods = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstMethodDeclaration *> *>
-#else
-            (AstArray<AstMethodDeclaration *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        methods =
+            pool -> NewAstArray<AstMethodDeclaration *> (estimate);
 }
 
 inline void AstClassBody::AddMethod(AstMethodDeclaration *method_declaration)
 {
     if (! methods)
-        methods = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstMethodDeclaration *> *>
-#else
-            (AstArray<AstMethodDeclaration *> *)
-#endif
-            (pool -> NewAstArray());
+        AllocateMethods(1);
     methods -> Next() = method_declaration;
 }
 
-inline void AstClassBody::AllocateBlocks(int estimate)
+inline void AstClassBody::AllocateInstanceInitializers(int estimate)
 {
-    if (! blocks)
-        blocks = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstBlock *> *>
-#else
-            (AstArray<AstBlock *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+    if (! instance_initializers)
+        instance_initializers =
+            pool -> NewAstArray<AstMethodBody *> (estimate);
 }
 
-inline void AstClassBody::AddBlock(AstBlock *block)
+inline void AstClassBody::AddInstanceInitializer(AstMethodBody *block)
 {
-    if (! blocks)
-        blocks = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstBlock *> *>
-#else
-            (AstArray<AstBlock *> *)
-#endif
-            (pool -> NewAstArray());
-    blocks -> Next() = block;
+    if (! instance_initializers)
+        AllocateInstanceInitializers(1);
+    instance_initializers -> Next() = block;
 }
 
 inline void AstClassBody::AllocateNestedInterfaces(int estimate)
 {
     if (! inner_interfaces)
-        inner_interfaces = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstInterfaceDeclaration *> *>
-#else
-            (AstArray<AstInterfaceDeclaration *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        inner_interfaces =
+            pool -> NewAstArray<AstInterfaceDeclaration *> (estimate);
 }
 
 inline void AstClassBody::AddNestedInterface(AstInterfaceDeclaration *interface_declaration)
 {
     if (! inner_interfaces)
-        inner_interfaces = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstInterfaceDeclaration *> *>
-#else
-            (AstArray<AstInterfaceDeclaration *> *)
-#endif
-            (pool -> NewAstArray());
+        AllocateNestedInterfaces(1);
     inner_interfaces -> Next() = interface_declaration;
 }
 
 inline void AstClassBody::AllocateNestedClasses(int estimate)
 {
     if (! inner_classes)
-        inner_classes = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstClassDeclaration *> *>
-#else
-            (AstArray<AstClassDeclaration *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        inner_classes =
+            pool -> NewAstArray<AstClassDeclaration *> (estimate);
 }
 
 inline void AstClassBody::AddNestedClass(AstClassDeclaration *class_declaration)
 {
     if (! inner_classes)
-        inner_classes = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstClassDeclaration *> *>
-#else
-            (AstArray<AstClassDeclaration *> *)
-#endif
-            (pool -> NewAstArray());
+        AllocateNestedClasses(1);
     inner_classes -> Next() = class_declaration;
 }
 
 inline void AstClassBody::AllocateStaticInitializers(int estimate)
 {
     if (! static_initializers)
-        static_initializers = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstStaticInitializer *> *>
-#else
-            (AstArray<AstStaticInitializer *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        static_initializers =
+            pool -> NewAstArray<AstStaticInitializer *> (estimate);
 }
 
 inline void AstClassBody::AddStaticInitializer(AstStaticInitializer *static_initializer)
 {
     if (! static_initializers)
-        static_initializers = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstStaticInitializer *> *>
-#else
-            (AstArray<AstStaticInitializer *> *)
-#endif
-            (pool -> NewAstArray());
+        AllocateStaticInitializers(1);
     static_initializers -> Next() = static_initializer;
 }
 
 inline void AstClassBody::AllocateConstructors(int estimate)
 {
     if (! constructors)
-        constructors = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstConstructorDeclaration *> *>
-#else
-            (AstArray<AstConstructorDeclaration *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        constructors =
+            pool -> NewAstArray<AstConstructorDeclaration *> (estimate);
 }
 
 inline void AstClassBody::AddConstructor(AstConstructorDeclaration *constructor_declaration)
 {
     if (! constructors)
-        constructors = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstConstructorDeclaration *> *>
-#else
-            (AstArray<AstConstructorDeclaration *> *)
-#endif
-            (pool -> NewAstArray());
+        AllocateConstructors(1);
     constructors -> Next() = constructor_declaration;
 }
 
 inline void AstClassBody::AllocateEmptyDeclarations(int estimate)
 {
     if (! empty_declarations)
-        empty_declarations = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstEmptyDeclaration *> *>
-#else
-            (AstArray<AstEmptyDeclaration *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        empty_declarations =
+            pool -> NewAstArray<AstEmptyDeclaration *> (estimate);
 }
 
 inline void AstClassBody::AddEmptyDeclaration(AstEmptyDeclaration *empty_declaration)
 {
     if (! empty_declarations)
-        empty_declarations = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstEmptyDeclaration *> *>
-#else
-            (AstArray<AstEmptyDeclaration *> *)
-#endif
-            (pool -> NewAstArray());
+        AllocateEmptyDeclarations(1);
     empty_declarations -> Next() = empty_declaration;
 }
 
 inline void AstInterfaceDeclaration::AllocateNestedInterfaces(int estimate)
 {
     if (! inner_interfaces)
-        inner_interfaces = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstInterfaceDeclaration *> *>
-#else
-            (AstArray<AstInterfaceDeclaration *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        inner_interfaces =
+            pool -> NewAstArray<AstInterfaceDeclaration *> (estimate);
 }
 
 inline void AstInterfaceDeclaration::AddNestedInterface(AstInterfaceDeclaration *interface_declaration)
 {
     if (! inner_interfaces)
-        inner_interfaces = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstInterfaceDeclaration *> *>
-#else
-            (AstArray<AstInterfaceDeclaration *> *)
-#endif
-            (pool -> NewAstArray());
+        AllocateNestedInterfaces(1);
     inner_interfaces -> Next() = interface_declaration;
 }
 
 inline void AstInterfaceDeclaration::AllocateNestedClasses(int estimate)
 {
     if (! inner_classes)
-        inner_classes = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstClassDeclaration *> *>
-#else
-            (AstArray<AstClassDeclaration *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        inner_classes =
+            pool -> NewAstArray<AstClassDeclaration *> (estimate);
 }
 
 inline void AstInterfaceDeclaration::AddNestedClass(AstClassDeclaration *class_declaration)
 {
     if (! inner_classes)
-        inner_classes = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstClassDeclaration *> *>
-#else
-            (AstArray<AstClassDeclaration *> *)
-#endif
-            (pool -> NewAstArray());
+        AllocateNestedClasses(1);
     inner_classes -> Next() = class_declaration;
 }
 
 inline void AstInterfaceDeclaration::AllocateMethods(int estimate)
 {
     if (! methods)
-        methods = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstMethodDeclaration *> *>
-#else
-            (AstArray<AstMethodDeclaration *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        methods =
+            pool -> NewAstArray<AstMethodDeclaration *> (estimate);
 }
 
 inline void AstInterfaceDeclaration::AddMethod(AstMethodDeclaration *method_declaration)
 {
     if (! methods)
-        methods = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstMethodDeclaration *> *>
-#else
-            (AstArray<AstMethodDeclaration *> *)
-#endif
-            (pool -> NewAstArray());
+        AllocateMethods(1);
     methods -> Next() = method_declaration;
 }
 
 inline void AstInterfaceDeclaration::AllocateClassVariables(int estimate)
 {
     if (! class_variables)
-        class_variables = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstFieldDeclaration *> *>
-#else
-            (AstArray<AstFieldDeclaration *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        class_variables =
+            pool -> NewAstArray<AstFieldDeclaration *> (estimate);
 }
 
 inline void AstInterfaceDeclaration::AddClassVariable(AstFieldDeclaration *field_declaration)
 {
     if (! class_variables)
-        class_variables = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstFieldDeclaration *> *>
-#else
-            (AstArray<AstFieldDeclaration *> *)
-#endif
-            (pool -> NewAstArray());
+        AllocateClassVariables(1);
     class_variables -> Next() = field_declaration;
 }
 
 inline void AstInterfaceDeclaration::AllocateEmptyDeclarations(int estimate)
 {
     if (! empty_declarations)
-        empty_declarations = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstEmptyDeclaration *> *>
-#else
-            (AstArray<AstEmptyDeclaration *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        empty_declarations =
+            pool -> NewAstArray<AstEmptyDeclaration *> (estimate);
 }
 
 inline void AstInterfaceDeclaration::AddEmptyDeclaration(AstEmptyDeclaration *empty_declaration)
 {
     if (! empty_declarations)
-        empty_declarations = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstEmptyDeclaration *> *>
-#else
-            (AstArray<AstEmptyDeclaration *> *)
-#endif
-            (pool -> NewAstArray());
+        AllocateEmptyDeclarations(1);
     empty_declarations -> Next() = empty_declaration;
 }
 
 inline void AstClassDeclaration::AllocateClassModifiers(int estimate)
 {
     if (! class_modifiers)
-        class_modifiers = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstModifier *> *>
-#else
-            (AstArray<AstModifier *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        class_modifiers =
+            pool -> NewAstArray<AstModifier *> (estimate);
 }
 
 inline void AstClassDeclaration::AddClassModifier(AstModifier *class_modifier)
@@ -6156,13 +6008,8 @@ inline void AstClassDeclaration::AddClassModifier(AstModifier *class_modifier)
 inline void AstFieldDeclaration::AllocateVariableModifiers(int estimate)
 {
     if (! variable_modifiers)
-        variable_modifiers = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstModifier *> *>
-#else
-            (AstArray<AstModifier *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        variable_modifiers =
+            pool -> NewAstArray<AstModifier *> (estimate);
 }
 
 inline void AstFieldDeclaration::AddVariableModifier(AstModifier *variable_modifier)
@@ -6175,13 +6022,8 @@ inline void AstFieldDeclaration::AddVariableModifier(AstModifier *variable_modif
 inline void AstFormalParameter::AllocateParameterModifiers(int estimate)
 {
     if (! parameter_modifiers)
-        parameter_modifiers = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstModifier *> *>
-#else
-            (AstArray<AstModifier *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        parameter_modifiers =
+            pool -> NewAstArray<AstModifier *> (estimate);
 }
 
 inline void AstFormalParameter::AddParameterModifier(AstModifier *parameter_modifier)
@@ -6194,13 +6036,8 @@ inline void AstFormalParameter::AddParameterModifier(AstModifier *parameter_modi
 inline void AstMethodDeclaration::AllocateMethodModifiers(int estimate)
 {
     if (! method_modifiers)
-        method_modifiers = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstModifier *> *>
-#else
-            (AstArray<AstModifier *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        method_modifiers =
+            pool -> NewAstArray<AstModifier *> (estimate);
 }
 
 inline void AstMethodDeclaration::AddMethodModifier(AstModifier *method_modifier)
@@ -6213,13 +6050,8 @@ inline void AstMethodDeclaration::AddMethodModifier(AstModifier *method_modifier
 inline void AstConstructorDeclaration::AllocateConstructorModifiers(int estimate)
 {
     if (! constructor_modifiers)
-        constructor_modifiers = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstModifier *> *>
-#else
-            (AstArray<AstModifier *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        constructor_modifiers =
+            pool -> NewAstArray<AstModifier *> (estimate);
 }
 
 inline void AstConstructorDeclaration::AddConstructorModifier(AstModifier *constructor_modifier)
@@ -6232,13 +6064,8 @@ inline void AstConstructorDeclaration::AddConstructorModifier(AstModifier *const
 inline void AstInterfaceDeclaration::AllocateInterfaceModifiers(int estimate)
 {
     if (! interface_modifiers)
-        interface_modifiers = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstModifier *> *>
-#else
-            (AstArray<AstModifier *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        interface_modifiers =
+            pool -> NewAstArray<AstModifier *> (estimate);
 }
 
 inline void AstInterfaceDeclaration::AddInterfaceModifier(AstModifier *interface_modifier)
@@ -6251,13 +6078,8 @@ inline void AstInterfaceDeclaration::AddInterfaceModifier(AstModifier *interface
 inline void AstLocalVariableDeclarationStatement::AllocateLocalModifiers(int estimate)
 {
     if (! local_modifiers)
-        local_modifiers = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstModifier *> *>
-#else
-            (AstArray<AstModifier *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        local_modifiers =
+            pool -> NewAstArray<AstModifier *> (estimate);
 }
 
 inline void AstLocalVariableDeclarationStatement::AddLocalModifier(AstModifier *local_modifier)
@@ -6270,10 +6092,11 @@ inline void AstLocalVariableDeclarationStatement::AddLocalModifier(AstModifier *
 inline void AstBlock::AllocateBlockStatements(int estimate)
 {
     if (! block_statements)
-        block_statements = pool -> NewAstArray(estimate);
+        block_statements =
+            pool -> NewAstArray<AstStatement *> (estimate);
 }
 
-inline void AstBlock::AddStatement(Ast *statement)
+inline void AstBlock::AddStatement(AstStatement *statement)
 {
     if (! block_statements)
         AllocateBlockStatements();
@@ -6293,12 +6116,6 @@ inline void AstBlock::AddLocallyDefinedVariable(VariableSymbol *variable_symbol)
     locally_defined_variables -> Next() = variable_symbol;
 }
 
-inline void AstBlock::TransferLocallyDefinedVariablesTo(AstSwitchBlockStatement *switch_block_statement)
-{
-    switch_block_statement -> locally_defined_variables = locally_defined_variables;
-    locally_defined_variables = NULL;
-}
-
 inline void AstStatement::AllocateDefinedVariables(int estimate)
 {
     if (! defined_variables)
@@ -6312,33 +6129,16 @@ inline void AstStatement::AddDefinedVariable(VariableSymbol *variable_symbol)
     defined_variables -> Next() = variable_symbol;
 }
 
-inline void AstSwitchBlockStatement::AllocateBlockStatements(int estimate)
-{
-    if (! block_statements)
-        block_statements = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstStatement *> *>
-#else
-            (AstArray<AstStatement *> *)
-#endif
-            (pool -> NewAstArray(estimate));
-}
-
-inline void AstSwitchBlockStatement::AddStatement(AstStatement *statement)
-{
-    if (! block_statements)
-        AllocateBlockStatements();
-    block_statements -> Next() = statement;
-}
-
 inline void AstSwitchBlockStatement::AllocateSwitchLabels(int estimate)
 {
     if (! switch_labels)
-        switch_labels = pool -> NewAstArray(estimate);
+        switch_labels = pool -> NewAstArray<Ast *> (estimate);
 }
 
 inline void AstSwitchBlockStatement::AddSwitchLabel(Ast *case_or_default_label)
 {
+    assert(case_or_default_label -> kind == CASE ||
+           case_or_default_label -> kind == DEFAULT);
     if (! switch_labels)
         AllocateSwitchLabels();
     switch_labels -> Next() = case_or_default_label;
@@ -6347,7 +6147,7 @@ inline void AstSwitchBlockStatement::AddSwitchLabel(Ast *case_or_default_label)
 inline void AstSwitchStatement::AllocateCases(int estimate)
 {
     if (! cases)
-        cases = pool -> NewCaseElementArray(estimate);
+        cases = pool -> NewAstArray<CaseElement *> (estimate);
 }
 
 inline void AstSwitchStatement::AddCase(CaseElement *case_element)
@@ -6357,19 +6157,14 @@ inline void AstSwitchStatement::AddCase(CaseElement *case_element)
     cases -> Next() = case_element;
 }
 
-inline void AstConstructorBlock::AllocateLocalInitStatements(int estimate)
+inline void AstMethodBody::AllocateLocalInitStatements(int estimate)
 {
     if (! local_init_statements)
-        local_init_statements = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstStatement *> *>
-#else
-            (AstArray<AstStatement *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        local_init_statements =
+            pool -> NewAstArray<AstStatement *> (estimate);
 }
 
-inline void AstConstructorBlock::AddLocalInitStatement(AstStatement *statement)
+inline void AstMethodBody::AddLocalInitStatement(AstStatement *statement)
 {
     if (! local_init_statements)
         AllocateLocalInitStatements();
@@ -6379,13 +6174,8 @@ inline void AstConstructorBlock::AddLocalInitStatement(AstStatement *statement)
 inline void AstVariableDeclaratorId::AllocateBrackets(int estimate)
 {
     if (! brackets)
-        brackets = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstBrackets *> *>
-#else
-            (AstArray<AstBrackets *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        brackets =
+            pool -> NewAstArray<AstBrackets *> (estimate);
 }
 
 inline void AstVariableDeclaratorId::AddBrackets(AstBrackets *bracket)
@@ -6398,13 +6188,8 @@ inline void AstVariableDeclaratorId::AddBrackets(AstBrackets *bracket)
 inline void AstArrayType::AllocateBrackets(int estimate)
 {
     if (! brackets)
-        brackets = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstBrackets *> *>
-#else
-            (AstArray<AstBrackets *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        brackets =
+            pool -> NewAstArray<AstBrackets *> (estimate);
 }
 
 inline void AstArrayType::AddBrackets(AstBrackets *bracket)
@@ -6417,13 +6202,8 @@ inline void AstArrayType::AddBrackets(AstBrackets *bracket)
 inline void AstMethodDeclarator::AllocateBrackets(int estimate)
 {
     if (! brackets)
-        brackets = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstBrackets *> *>
-#else
-            (AstArray<AstBrackets *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        brackets =
+            pool -> NewAstArray<AstBrackets *> (estimate);
 }
 
 inline void AstMethodDeclarator::AddBrackets(AstBrackets *bracket)
@@ -6436,13 +6216,8 @@ inline void AstMethodDeclarator::AddBrackets(AstBrackets *bracket)
 inline void AstArrayCreationExpression::AllocateBrackets(int estimate)
 {
     if (! brackets)
-        brackets = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstBrackets *> *>
-#else
-            (AstArray<AstBrackets *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        brackets =
+            pool -> NewAstArray<AstBrackets *> (estimate);
 }
 
 inline void AstArrayCreationExpression::AddBrackets(AstBrackets *bracket)
@@ -6455,13 +6230,8 @@ inline void AstArrayCreationExpression::AddBrackets(AstBrackets *bracket)
 inline void AstCastExpression::AllocateBrackets(int estimate)
 {
     if (! brackets)
-        brackets = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstBrackets *> *>
-#else
-            (AstArray<AstBrackets *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        brackets =
+            pool -> NewAstArray<AstBrackets *> (estimate);
 }
 
 inline void AstCastExpression::AddBrackets(AstBrackets *bracket)
@@ -6474,13 +6244,8 @@ inline void AstCastExpression::AddBrackets(AstBrackets *bracket)
 inline void AstArrayCreationExpression::AllocateDimExprs(int estimate)
 {
     if (! dim_exprs)
-        dim_exprs = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstDimExpr *> *>
-#else
-            (AstArray<AstDimExpr *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        dim_exprs =
+            pool -> NewAstArray<AstDimExpr *> (estimate);
 }
 
 inline void AstArrayCreationExpression::AddDimExpr(AstDimExpr *dim_expr)
@@ -6493,13 +6258,8 @@ inline void AstArrayCreationExpression::AddDimExpr(AstDimExpr *dim_expr)
 inline void AstThisCall::AllocateArguments(int estimate)
 {
     if (! arguments)
-        arguments = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstExpression *> *>
-#else
-            (AstArray<AstExpression *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        arguments =
+            pool -> NewAstArray<AstExpression *> (estimate);
 }
 
 inline void AstThisCall::AddArgument(AstExpression *argument)
@@ -6512,13 +6272,8 @@ inline void AstThisCall::AddArgument(AstExpression *argument)
 inline void AstSuperCall::AllocateArguments(int estimate)
 {
     if (! arguments)
-        arguments = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstExpression *> *>
-#else
-            (AstArray<AstExpression *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        arguments =
+            pool -> NewAstArray<AstExpression *> (estimate);
 }
 
 inline void AstSuperCall::AddArgument(AstExpression *argument)
@@ -6531,13 +6286,8 @@ inline void AstSuperCall::AddArgument(AstExpression *argument)
 inline void AstClassInstanceCreationExpression::AllocateArguments(int estimate)
 {
     if (! arguments)
-        arguments = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstExpression *> *>
-#else
-            (AstArray<AstExpression *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        arguments =
+            pool -> NewAstArray<AstExpression *> (estimate);
 }
 
 inline void AstClassInstanceCreationExpression::AddArgument(AstExpression *argument)
@@ -6550,13 +6300,8 @@ inline void AstClassInstanceCreationExpression::AddArgument(AstExpression *argum
 inline void AstMethodInvocation::AllocateArguments(int estimate)
 {
     if (! arguments)
-        arguments = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstExpression *> *>
-#else
-            (AstArray<AstExpression *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        arguments =
+            pool -> NewAstArray<AstExpression *> (estimate);
 }
 
 inline void AstMethodInvocation::AddArgument(AstExpression *argument)
@@ -6566,35 +6311,11 @@ inline void AstMethodInvocation::AddArgument(AstExpression *argument)
     arguments -> Next() = argument;
 }
 
-inline void AstThisCall::AllocateLocalArguments(int estimate)
-{
-    if (! local_arguments_opt)
-        local_arguments_opt = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstExpression *> *>
-#else
-            (AstArray<AstExpression *> *)
-#endif
-            (pool -> NewAstArray(estimate));
-}
-
-inline void AstThisCall::AddLocalArgument(AstExpression *argument)
-{
-    if (! local_arguments_opt)
-        AllocateLocalArguments();
-    local_arguments_opt -> Next() = argument;
-}
-
 inline void AstSuperCall::AllocateLocalArguments(int estimate)
 {
     if (! local_arguments_opt)
-        local_arguments_opt = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstExpression *> *>
-#else
-            (AstArray<AstExpression *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        local_arguments_opt =
+            pool -> NewAstArray<AstExpression *> (estimate);
 }
 
 inline void AstSuperCall::AddLocalArgument(AstExpression *argument)
@@ -6607,13 +6328,8 @@ inline void AstSuperCall::AddLocalArgument(AstExpression *argument)
 inline void AstClassInstanceCreationExpression::AllocateLocalArguments(int estimate)
 {
     if (! local_arguments_opt)
-        local_arguments_opt = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstExpression *> *>
-#else
-            (AstArray<AstExpression *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        local_arguments_opt =
+            pool -> NewAstArray<AstExpression *> (estimate);
 }
 
 inline void AstClassInstanceCreationExpression::AddLocalArgument(AstExpression *argument)
@@ -6626,13 +6342,8 @@ inline void AstClassInstanceCreationExpression::AddLocalArgument(AstExpression *
 inline void AstMethodDeclaration::AllocateThrows(int estimate)
 {
     if (! throws)
-        throws = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstExpression *> *>
-#else
-            (AstArray<AstExpression *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        throws =
+            pool -> NewAstArray<AstExpression *> (estimate);
 }
 
 inline void AstMethodDeclaration::AddThrow(AstExpression *exception)
@@ -6645,13 +6356,8 @@ inline void AstMethodDeclaration::AddThrow(AstExpression *exception)
 inline void AstConstructorDeclaration::AllocateThrows(int estimate)
 {
     if (! throws)
-        throws = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstExpression *> *>
-#else
-            (AstArray<AstExpression *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        throws =
+            pool -> NewAstArray<AstExpression *> (estimate);
 }
 
 inline void AstConstructorDeclaration::AddThrow(AstExpression *exception)
@@ -6664,13 +6370,8 @@ inline void AstConstructorDeclaration::AddThrow(AstExpression *exception)
 inline void AstMethodDeclarator::AllocateFormalParameters(int estimate)
 {
     if (! formal_parameters)
-        formal_parameters = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstFormalParameter *> *>
-#else
-            (AstArray<AstFormalParameter *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        formal_parameters =
+            pool -> NewAstArray<AstFormalParameter *> (estimate);
 }
 
 inline void AstMethodDeclarator::AddFormalParameter(AstFormalParameter *formal_parameter)
@@ -6683,13 +6384,8 @@ inline void AstMethodDeclarator::AddFormalParameter(AstFormalParameter *formal_p
 inline void AstLocalVariableDeclarationStatement::AllocateVariableDeclarators(int estimate)
 {
     if (! variable_declarators)
-        variable_declarators = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstVariableDeclarator *> *>
-#else
-            (AstArray<AstVariableDeclarator *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        variable_declarators =
+            pool -> NewAstArray<AstVariableDeclarator *> (estimate);
 }
 
 inline void AstLocalVariableDeclarationStatement::AddVariableDeclarator(AstVariableDeclarator *variable_declarator)
@@ -6702,13 +6398,8 @@ inline void AstLocalVariableDeclarationStatement::AddVariableDeclarator(AstVaria
 inline void AstFieldDeclaration::AllocateVariableDeclarators(int estimate)
 {
     if (! variable_declarators)
-        variable_declarators = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstVariableDeclarator *> *>
-#else
-            (AstArray<AstVariableDeclarator *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        variable_declarators =
+            pool -> NewAstArray<AstVariableDeclarator *> (estimate);
 }
 
 inline void AstFieldDeclaration::AddVariableDeclarator(AstVariableDeclarator *variable_declarator)
@@ -6721,13 +6412,8 @@ inline void AstFieldDeclaration::AddVariableDeclarator(AstVariableDeclarator *va
 inline void AstClassDeclaration::AllocateInterfaces(int estimate)
 {
     if (! interfaces)
-        interfaces = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstExpression *> *>
-#else
-            (AstArray<AstExpression *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        interfaces =
+            pool -> NewAstArray<AstExpression *> (estimate);
 }
 
 inline void AstClassDeclaration::AddInterface(AstExpression *interf)
@@ -6740,13 +6426,8 @@ inline void AstClassDeclaration::AddInterface(AstExpression *interf)
 inline void AstInterfaceDeclaration::AllocateExtendsInterfaces(int estimate)
 {
     if (! extends_interfaces)
-        extends_interfaces = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstExpression *> *>
-#else
-            (AstArray<AstExpression *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        extends_interfaces =
+            pool -> NewAstArray<AstExpression *> (estimate);
 }
 
 inline void AstInterfaceDeclaration::AddExtendsInterface(AstExpression *interf)
@@ -6759,7 +6440,7 @@ inline void AstInterfaceDeclaration::AddExtendsInterface(AstExpression *interf)
 inline void AstInterfaceDeclaration::AllocateInterfaceMemberDeclarations(int estimate)
 {
     if (! interface_member_declarations)
-        interface_member_declarations = pool -> NewAstArray(estimate);
+        interface_member_declarations = pool -> NewAstArray<Ast *> (estimate);
 }
 
 inline void AstInterfaceDeclaration::AddInterfaceMemberDeclaration(Ast *member)
@@ -6772,7 +6453,7 @@ inline void AstInterfaceDeclaration::AddInterfaceMemberDeclaration(Ast *member)
 inline void AstClassBody::AllocateClassBodyDeclarations(int estimate)
 {
     if (! class_body_declarations)
-        class_body_declarations = pool -> NewAstArray(estimate);
+        class_body_declarations = pool -> NewAstArray<Ast *> (estimate);
 }
 
 inline void AstClassBody::AddClassBodyDeclaration(Ast *member)
@@ -6791,7 +6472,7 @@ void AstClassBody::AddClassBodyDeclarationNicely(Ast *member)
     AstStaticInitializer *static_initializer = member -> StaticInitializerCast();
     AstClassDeclaration *class_declaration = member -> ClassDeclarationCast();
     AstInterfaceDeclaration *interface_declaration = member -> InterfaceDeclarationCast();
-    AstBlock *block = member -> BlockCast();
+    AstMethodBody *block = member -> MethodBodyCast();
 
     AddClassBodyDeclaration(member);
 
@@ -6826,7 +6507,7 @@ void AstClassBody::AddClassBodyDeclarationNicely(Ast *member)
     }
     else if (block)
     {
-        AddBlock(block);
+        AddInstanceInitializer(block);
     }
     else // assert(block = member -> EmptyDeclarationCast())
     {
@@ -6837,13 +6518,8 @@ void AstClassBody::AddClassBodyDeclarationNicely(Ast *member)
 inline void AstForStatement::AllocateForInitStatements(int estimate)
 {
     if (! for_init_statements)
-        for_init_statements = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstStatement *> *>
-#else
-            (AstArray<AstStatement *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        for_init_statements =
+            pool -> NewAstArray<AstStatement *> (estimate);
 }
 
 inline void AstForStatement::AddForInitStatement(AstStatement *statement)
@@ -6856,13 +6532,8 @@ inline void AstForStatement::AddForInitStatement(AstStatement *statement)
 inline void AstForStatement::AllocateForUpdateStatements(int estimate)
 {
     if (! for_update_statements)
-        for_update_statements = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstExpressionStatement *> *>
-#else
-            (AstArray<AstExpressionStatement *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        for_update_statements =
+            pool -> NewAstArray<AstExpressionStatement *> (estimate);
 }
 
 inline void AstForStatement::AddForUpdateStatement(AstExpressionStatement *statement)
@@ -6875,7 +6546,7 @@ inline void AstForStatement::AddForUpdateStatement(AstExpressionStatement *state
 inline void AstArrayInitializer::AllocateVariableInitializers(int estimate)
 {
     if (! variable_initializers)
-        variable_initializers = pool -> NewAstArray(estimate);
+        variable_initializers = pool -> NewAstArray<Ast *> (estimate);
 }
 
 inline void AstArrayInitializer::AddVariableInitializer(Ast *initializer)
@@ -6888,13 +6559,8 @@ inline void AstArrayInitializer::AddVariableInitializer(Ast *initializer)
 inline void AstTryStatement::AllocateCatchClauses(int estimate)
 {
     if (! catch_clauses)
-        catch_clauses = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstCatchClause *> *>
-#else
-            (AstArray<AstCatchClause *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        catch_clauses =
+            pool -> NewAstArray<AstCatchClause *> (estimate);
 }
 
 inline void AstTryStatement::AddCatchClause(AstCatchClause *catch_clause)
@@ -6907,13 +6573,8 @@ inline void AstTryStatement::AddCatchClause(AstCatchClause *catch_clause)
 inline void AstCompilationUnit::AllocateImportDeclarations(int estimate)
 {
     if (! import_declarations)
-        import_declarations = 
-#ifdef HAVE_REINTERPRET_CAST
-            reinterpret_cast<AstArray<AstImportDeclaration *> *>
-#else
-            (AstArray<AstImportDeclaration *> *)
-#endif
-            (pool -> NewAstArray(estimate));
+        import_declarations =
+            pool -> NewAstArray<AstImportDeclaration *> (estimate);
 }
 
 inline void AstCompilationUnit::AddImportDeclaration(AstImportDeclaration *import_declaration)
@@ -6926,7 +6587,7 @@ inline void AstCompilationUnit::AddImportDeclaration(AstImportDeclaration *impor
 inline void AstCompilationUnit::AllocateTypeDeclarations(int estimate)
 {
     if (! type_declarations)
-        type_declarations = pool -> NewAstArray(estimate);
+        type_declarations = pool -> NewAstArray<Ast *> (estimate);
 }
 
 inline void AstCompilationUnit::AddTypeDeclaration(Ast *type_declaration)
@@ -6940,7 +6601,7 @@ inline void AstCompilationUnit::AddTypeDeclaration(Ast *type_declaration)
 //
 // Allocate another block of storage for the ast array.
 //
-template <class T>
+template <typename T>
     void AstArray<T>::AllocateMoreSpace()
     {
         //
@@ -6998,12 +6659,10 @@ template <class T>
         // Finally, we update size.
         //
         size += Blksize();
-
-        return;
     }
 
 
-template <class T>
+template <typename T>
     //
     // Constructor of a ast array.
     //

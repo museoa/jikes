@@ -536,20 +536,24 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     }
 
 
-    u2 RegisterMethodref(Utf8LiteralValue *class_name,
-                         Utf8LiteralValue *method_name,
-                         Utf8LiteralValue *method_type_name)
+    u2 RegisterMethodref(TypeSymbol *class_type,
+                         NameSymbol *method_name,
+                         MethodSymbol *method_type)
     {
-        return RegisterMethodref(CONSTANT_Methodref, class_name,
-                                 method_name, method_type_name);
+        return RegisterMethodref(CONSTANT_Methodref,
+                                 class_type -> fully_qualified_name,
+                                 method_name -> Utf8_literal,
+                                 method_type -> signature);
     }
 
-    u2 RegisterInterfaceMethodref(Utf8LiteralValue *class_name,
-                                  Utf8LiteralValue *method_name,
-                                  Utf8LiteralValue *method_type_name)
+    u2 RegisterInterfaceMethodref(TypeSymbol *interface_name,
+                                  NameSymbol *method_name,
+                                  MethodSymbol *method_type_name)
     {
-        return RegisterMethodref(CONSTANT_InterfaceMethodref, class_name,
-                                 method_name, method_type_name);
+        return RegisterMethodref(CONSTANT_InterfaceMethodref,
+                                 interface_name -> fully_qualified_name,
+                                 method_name -> Utf8_literal,
+                                 method_type_name -> signature);
     }
 
 
@@ -658,20 +662,27 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
 
     u2 RegisterUtf8(Utf8LiteralValue *lit)
     {
-        assert((lit != NULL) && "null argument to RegisterUtf8");
+        assert(lit != NULL && "null argument to RegisterUtf8");
 
         u2 index = utf8_constant_pool_index[lit -> index];
         if (index == 0)
         {
-            int i = constant_pool.NextIndex(); // We cannot use the variable "index" here as it might be truncated
+            // We cannot use the variable "index" here as it might be truncated
+            int i = constant_pool.NextIndex();
             index = i;
             utf8_constant_pool_index[lit -> index] = index;
-            constant_pool[i] = new CONSTANT_Utf8_info(CONSTANT_Utf8, lit -> value, lit -> length);
+            constant_pool[i] = new CONSTANT_Utf8_info(CONSTANT_Utf8,
+                                                      lit -> value,
+                                                      lit -> length);
         }
 
         return index;
     }
 
+    u2 RegisterName(NameSymbol *sym)
+    {
+        return RegisterUtf8(sym -> Utf8_literal);
+    }
 
     u2 RegisterString(Utf8LiteralValue *lit)
     {
@@ -714,6 +725,11 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         return index;
     }
 
+    u2 RegisterClass(TypeSymbol *sym)
+    {
+        return RegisterClass(sym -> fully_qualified_name);
+    }
+
 
     //
     //  Methods to write out the byte code
@@ -739,7 +755,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     int  EmitBinaryExpression(AstBinaryExpression *);
     int  EmitCastExpression(AstCastExpression *, bool);
     void EmitCast(TypeSymbol *, TypeSymbol *);
-    int  EmitClassInstanceCreationExpression(AstClassInstanceCreationExpression *, bool);
+    int  EmitInstanceCreationExpression(AstClassInstanceCreationExpression *, bool);
     int  EmitConditionalExpression(AstConditionalExpression *, bool);
     int  EmitFieldAccess(AstFieldAccess *, bool = true);
     AstExpression *VariableExpressionResolution(AstExpression *);
@@ -774,13 +790,13 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     // Methods to process statements
     //
-    void CompileConstructor(AstConstructorDeclaration *, Tuple<AstVariableDeclarator *> &);
+    void CompileConstructor(AstConstructorDeclaration *,
+                            Tuple<AstVariableDeclarator *> &, bool);
 
     void BeginMethod(int, MethodSymbol *);
     void EndMethod(int, MethodSymbol *);
     void DeclareField(VariableSymbol *);
-    void InitializeClassVariable(AstVariableDeclarator *);
-    void InitializeInstanceVariable(AstVariableDeclarator *);
+    void InitializeVariable(AstVariableDeclarator *);
     void InitializeArray(TypeSymbol *, AstArrayInitializer *);
     void DeclareLocalVariable(AstVariableDeclarator *);
     bool EmitStatement(AstStatement *);

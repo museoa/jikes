@@ -125,7 +125,7 @@ void Semantic::ReportMethodNotFound(AstMethodInvocation *method_call,
         MethodSymbol *method = method_shadow -> method_symbol;
 
         if (! method -> IsTyped())
-            method -> ProcessMethodSignature((Semantic *) this, id_token);
+            method -> ProcessMethodSignature(this, id_token);
 
         if (MemberAccessCheck(field_access, type, method))
         {
@@ -188,7 +188,7 @@ void Semantic::ReportMethodNotFound(AstMethodInvocation *method_call,
         {
             MethodSymbol *method = method_shadow -> method_symbol;
             if (! method -> IsTyped())
-                method -> ProcessMethodSignature((Semantic *) this, field_access -> identifier_token);
+                method -> ProcessMethodSignature(this, field_access -> identifier_token);
 
             if (method_call -> NumArguments() == method -> NumFormalParameters())
             {
@@ -287,8 +287,11 @@ void Semantic::ReportConstructorNotFound(Ast *ast, TypeSymbol *type)
     int num_arguments;
     AstExpression **argument;
 
-    AstClassInstanceCreationExpression *class_creation = ast -> ClassInstanceCreationExpressionCast();
+    AstClassInstanceCreationExpression *class_creation =
+        ast -> ClassInstanceCreationExpressionCast();
     AstSuperCall *super_call = ast -> SuperCallCast();
+    LexStream::TokenIndex left_tok;
+    LexStream::TokenIndex right_tok;
 
     if (class_creation)
     {
@@ -296,6 +299,8 @@ void Semantic::ReportConstructorNotFound(Ast *ast, TypeSymbol *type)
         argument = new AstExpression*[num_arguments + 1];
         for (int i = 0; i < num_arguments; i++)
             argument[i] = class_creation -> Argument(i);
+        left_tok = class_creation -> new_token;
+        right_tok = class_creation -> right_parenthesis_token;
     }
     else if (super_call)
     {
@@ -303,6 +308,8 @@ void Semantic::ReportConstructorNotFound(Ast *ast, TypeSymbol *type)
         argument = new AstExpression*[num_arguments + 1];
         for (int i = 0; i < num_arguments; i++)
             argument[i] = super_call -> Argument(i);
+        left_tok = super_call -> super_token;
+        right_tok = super_call -> right_parenthesis_token;
     }
     else
     {
@@ -313,8 +320,57 @@ void Semantic::ReportConstructorNotFound(Ast *ast, TypeSymbol *type)
         argument = new AstExpression*[num_arguments + 1];
         for (int i = 0; i < num_arguments; i++)
             argument[i] = this_call -> Argument(i);
+        left_tok = this_call -> this_token;
+        right_tok = this_call -> right_parenthesis_token;
     }
 
+    MethodSymbol *method;
+    for (method = type -> FindMethodSymbol(type -> Identity());
+         method; method = method -> next_method)
+    {
+        if (! method -> IsTyped())
+            method -> ProcessMethodSignature((Semantic *) this, right_tok);
+
+        if (num_arguments == method -> NumFormalParameters())
+        {
+            int i;
+            for (i = 0; i < num_arguments; i++)
+            {
+                if (! CanMethodInvocationConvert(method -> FormalParameter(i) -> Type(), argument[i] -> Type()))
+                    break;
+            }
+            if (i == num_arguments)
+                break;
+        }
+    }
+    if (method)
+    {
+        if (method -> declaration)
+        {
+            AstMethodDeclaration *method_declaration =
+                (AstMethodDeclaration *) method -> declaration;
+            FileLocation loc((method -> containing_type ->
+                              semantic_environment -> sem -> lex_stream),
+                             (method_declaration -> method_declarator ->
+                              identifier_token));
+
+            ReportSemError(SemanticError::METHOD_FOUND_FOR_CONSTRUCTOR,
+                           left_tok,
+                           right_tok,
+                           type -> Name(),
+                           loc.location);
+        }
+        else
+        {
+            ReportSemError(SemanticError::METHOD_FOUND_FOR_CONSTRUCTOR,
+                           left_tok,
+                           right_tok,
+                           type -> Name(),
+                           method -> containing_type -> file_location -> location);
+        }
+    }
+
+    // TODO: also check for inaccessible constructors
     int length = wcslen(name);
 
     for (int i = 0; i < num_arguments; i++)
@@ -375,16 +431,32 @@ MethodSymbol *Semantic::FindConstructor(TypeSymbol *containing_type, Ast *ast,
                                         LexStream::TokenIndex left_tok,
                                         LexStream::TokenIndex right_tok)
 {
+    if (containing_type == control.no_type)
+        return NULL;
+
     Tuple<MethodSymbol *> constructor_set(2); // Stores constructor overloads.
 
     int num_arguments;
     AstExpression **argument;
 
-    AstClassInstanceCreationExpression *class_creation = ast -> ClassInstanceCreationExpressionCast();
+    AstClassInstanceCreationExpression *class_creation =
+        ast -> ClassInstanceCreationExpressionCast();
     AstSuperCall *super_call = ast -> SuperCallCast();
 
     if (class_creation)
     {
+        //
+        // If this type is anonymous, we have just generated the constructor,
+        // so we know it is the right one.
+        //
+        if (containing_type -> Anonymous())
+        {
+            if (class_creation -> class_type -> symbol == control.no_type)
+                return NULL;
+            assert(class_creation -> class_type -> symbol -> MethodCast());
+            return (MethodSymbol *) class_creation -> class_type -> symbol;
+        }
+
         num_arguments = class_creation -> NumArguments();
         argument = new AstExpression*[num_arguments + 1];
         for (int i = 0; i < num_arguments; i++)
@@ -411,85 +483,46 @@ MethodSymbol *Semantic::FindConstructor(TypeSymbol *containing_type, Ast *ast,
 
     assert(containing_type -> ConstructorMembersProcessed());
 
-    for (MethodSymbol *constructor = containing_type -> FindConstructorSymbol();
-         constructor; constructor = constructor -> next_method)
+    for (MethodSymbol *ctor = containing_type -> FindConstructorSymbol();
+         ctor; ctor = ctor -> next_method)
     {
-        if (! constructor -> IsTyped())
-            constructor -> ProcessMethodSignature((Semantic *) this, right_tok);
+        if (! ctor -> IsTyped())
+            ctor -> ProcessMethodSignature(this, right_tok);
 
-        if (num_arguments == constructor -> NumFormalParameters())
+        if (num_arguments == ctor -> NumFormalParameters() &&
+            ConstructorAccessCheck(ast, ctor))
         {
             int i;
             for (i = 0; i < num_arguments; i++)
             {
-                if (! CanMethodInvocationConvert(constructor -> FormalParameter(i) -> Type(), argument[i] -> Type()))
+                if (! CanMethodInvocationConvert(ctor -> FormalParameter(i) -> Type(),
+                                                 argument[i] -> Type()))
+                {
                     break;
+                }
             }
             if (i == num_arguments)
             {
-                if (MoreSpecific(constructor, constructor_set))
+                if (MoreSpecific(ctor, constructor_set))
                 {
                     constructor_set.Reset();
-                    constructor_set.Next() = constructor;
+                    constructor_set.Next() = ctor;
                 }
-                else if (NoMethodMoreSpecific(constructor_set, constructor))
-                    constructor_set.Next() = constructor;
+                else if (NoMethodMoreSpecific(constructor_set, ctor))
+                    constructor_set.Next() = ctor;
             }
         }
     }
 
     if (constructor_set.Length() == 0)
     {
-        MethodSymbol *method;
-        for (method = containing_type -> FindMethodSymbol(containing_type -> Identity()); method; method = method -> next_method)
-        {
-            if (! method -> IsTyped())
-                method -> ProcessMethodSignature((Semantic *) this, right_tok);
-
-            if (num_arguments == method -> NumFormalParameters())
-            {
-                int i;
-                for (i = 0; i < num_arguments; i++)
-                {
-                    if (! CanMethodInvocationConvert(method -> FormalParameter(i) -> Type(), argument[i] -> Type()))
-                        break;
-                }
-                if (i == num_arguments)
-                    break;
-            }
-        }
-
-        if (method)
-        {
-            if (method -> method_or_constructor_declaration)
-            {
-                AstMethodDeclaration *method_declaration = (AstMethodDeclaration *) method -> method_or_constructor_declaration;
-                FileLocation loc(method -> containing_type -> semantic_environment -> sem -> lex_stream,
-                                 method_declaration -> method_declarator -> identifier_token);
-
-                ReportSemError(SemanticError::METHOD_FOUND_FOR_CONSTRUCTOR,
-                               left_tok,
-                               right_tok,
-                               containing_type -> Name(),
-                               loc.location);
-            }
-            else
-            {
-                ReportSemError(SemanticError::METHOD_FOUND_FOR_CONSTRUCTOR,
-                               left_tok,
-                               right_tok,
-                               containing_type -> Name(),
-                               method -> containing_type -> file_location -> location);
-            }
-        }
-        else if ((! containing_type -> Bad()) || NumErrors() == 0)
+        if (! containing_type -> Bad() || NumErrors() == 0)
             ReportConstructorNotFound(ast, containing_type);
 
         delete [] argument;
-
         return (MethodSymbol *) NULL;
     }
-    else if (constructor_set.Length() > 1)
+    if (constructor_set.Length() > 1)
     {
         ReportSemError(SemanticError::AMBIGUOUS_CONSTRUCTOR_INVOCATION,
                        left_tok,
@@ -550,7 +583,7 @@ VariableSymbol *Semantic::FindMisspelledVariableName(TypeSymbol *type,
         VariableShadowSymbol *variable_shadow = type -> expanded_field_table -> symbol_pool[k];
         VariableSymbol *variable = variable_shadow -> variable_symbol;
         if (! variable -> IsTyped())
-            variable -> ProcessVariableSignature((Semantic *) this, identifier_token);
+            variable -> ProcessVariableSignature(this, identifier_token);
 
         int new_index = Spell::Index(name, variable -> Name());
         if (new_index > index)
@@ -587,7 +620,7 @@ MethodSymbol *Semantic::FindMisspelledMethodName(TypeSymbol *type,
         MethodSymbol *method = method_shadow -> method_symbol;
 
         if (! method -> IsTyped())
-            method -> ProcessMethodSignature((Semantic *) this, identifier_token);
+            method -> ProcessMethodSignature(this, identifier_token);
 
         if (method_call -> NumArguments() == method -> NumFormalParameters())
         {
@@ -657,7 +690,7 @@ MethodSymbol *Semantic::FindMethodInType(TypeSymbol *type,
         MethodSymbol *method = method_shadow -> method_symbol;
 
         if (! method -> IsTyped())
-            method -> ProcessMethodSignature((Semantic *) this,
+            method -> ProcessMethodSignature(this,
                                              field_access -> identifier_token);
 
         if (method_call -> NumArguments() == method -> NumFormalParameters() &&
@@ -717,7 +750,7 @@ MethodSymbol *Semantic::FindMethodInType(TypeSymbol *type,
     // If this method came from a class file, make sure that its throws clause
     // has been processed.
     //
-    method -> ProcessMethodThrows((Semantic *) this, field_access -> identifier_token);
+    method -> ProcessMethodThrows(this, field_access -> identifier_token);
 
     if (control.option.deprecation &&
         method -> IsDeprecated() && method -> containing_type -> outermost_type != ThisType() -> outermost_type)
@@ -768,7 +801,8 @@ void Semantic::FindMethodInEnvironment(Tuple<MethodSymbol *> &methods_found,
                 MethodSymbol *method = method_shadow -> method_symbol;
 
                 if (! method -> IsTyped())
-                    method -> ProcessMethodSignature((Semantic *) this, simple_name -> identifier_token);
+                    method -> ProcessMethodSignature(this,
+                                                     simple_name -> identifier_token);
 
                 //
                 // Since type -> IsOwner(this_type()), i.e., type encloses
@@ -846,9 +880,11 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
                 Tuple<MethodSymbol *> others(2);
                 SemanticEnvironment *found_other,
                                     *previous_env = where_found -> previous;
-                FindMethodInEnvironment(others, found_other, previous_env, method_call);
+                FindMethodInEnvironment(others, found_other, previous_env,
+                                        method_call);
 
-                if (others.Length() > 0 && where_found -> Type() -> CanAccess(found_other -> Type()))
+                if (others.Length() > 0 &&
+                    where_found -> Type() -> HasEnclosingInstance(found_other -> Type()))
                 {
                     for (int i = 0; i < others.Length();  i++)
                     {
@@ -940,7 +976,7 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
                     {
                         MethodSymbol *method = method_shadow -> method_symbol;
                         if (! method -> IsTyped())
-                            method -> ProcessMethodSignature((Semantic *) this, simple_name -> identifier_token);
+                            method -> ProcessMethodSignature(this, simple_name -> identifier_token);
 
                         if (method_call -> NumArguments() == method -> NumFormalParameters())
                         {
@@ -1020,7 +1056,7 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
     //
     if (method_symbol)
     {
-        method_symbol -> ProcessMethodThrows((Semantic *) this, method_call -> method -> RightToken());
+        method_symbol -> ProcessMethodThrows(this, method_call -> method -> RightToken());
 
         if (control.option.deprecation &&
             method_symbol -> IsDeprecated() && method_symbol -> containing_type -> outermost_type != ThisType() -> outermost_type)
@@ -1069,7 +1105,7 @@ VariableSymbol *Semantic::FindVariableInType(TypeSymbol *type,
         variable = variable_shadow -> variable_symbol;
 
         if (! variable -> IsTyped())
-            variable -> ProcessVariableSignature((Semantic *) this, field_access -> identifier_token);
+            variable -> ProcessVariableSignature(this, field_access -> identifier_token);
 
         if (MemberAccessCheck(field_access, type, variable))
             variable_set.Next() = variable;
@@ -1079,7 +1115,7 @@ VariableSymbol *Semantic::FindVariableInType(TypeSymbol *type,
             VariableSymbol *variable = variable_shadow -> Conflict(i);
 
             if (! variable -> IsTyped())
-                variable -> ProcessVariableSignature((Semantic *) this, field_access -> identifier_token);
+                variable -> ProcessVariableSignature(this, field_access -> identifier_token);
 
             if (MemberAccessCheck(field_access, type, variable))
                 variable_set.Next() = variable;
@@ -1164,7 +1200,7 @@ void Semantic::ReportVariableNotFound(AstExpression *access, TypeSymbol *type)
         // Make sure that method has been fully prepared.
         //
         if (! method -> IsTyped())
-            method -> ProcessMethodSignature((Semantic *) this, id_token);
+            method -> ProcessMethodSignature(this, id_token);
 
         if (method -> NumFormalParameters() == 0 &&
             MemberAccessCheck((AstFieldAccess *) NULL, type, method))
@@ -1302,13 +1338,17 @@ void Semantic::FindVariableInEnvironment(Tuple<VariableSymbol *> &variables_foun
 
 
 VariableSymbol *Semantic::FindVariableInEnvironment(SemanticEnvironment *&where_found,
-                                                    SemanticEnvironment *stack, LexStream::TokenIndex identifier_token)
+                                                    SemanticEnvironment *stack,
+                                                    LexStream::TokenIndex identifier_token)
 {
     Tuple<VariableSymbol *> variables_found(2);
     NameSymbol *name_symbol = lex_stream -> NameSymbol(identifier_token);
-    FindVariableInEnvironment(variables_found, where_found, stack, name_symbol, identifier_token);
+    FindVariableInEnvironment(variables_found, where_found, stack,
+                              name_symbol, identifier_token);
 
-    VariableSymbol *variable_symbol = (VariableSymbol *) (variables_found.Length() > 0 ? variables_found[0] : NULL);
+    VariableSymbol *variable_symbol =
+        (VariableSymbol *) (variables_found.Length() > 0
+                            ? variables_found[0] : NULL);
 
     if (variable_symbol)
     {
@@ -1320,41 +1360,42 @@ VariableSymbol *Semantic::FindVariableInEnvironment(SemanticEnvironment *&where_
 
                 if (! variable_symbol -> ACC_FINAL())
                 {
-                    MethodSymbol *method = variable_symbol -> owner -> MethodCast();
+                    MethodSymbol *method =
+                        variable_symbol -> owner -> MethodCast();
 
+                    //
+                    // TODO: What if the method is a constructor ?
+                    // if (method -> Identity() != control.init_symbol &&
+                    //     method -> Identity() != control.block_init_symbol &&
+                    //     method -> Identity() != control.clinit_symbol)
+                    //
+                    //
                     ReportSemError(SemanticError::INNER_CLASS_REFERENCE_TO_NON_FINAL_LOCAL_VARIABLE,
                                    identifier_token,
                                    identifier_token,
                                    type -> ContainingPackage() -> PackageName(),
                                    type -> ExternalName(),
                                    lex_stream -> NameString(identifier_token),
-                                   //
-                                   // TODO: What if the method is a constructor ?
-                                   //        if (method -> Identity() != control.init_symbol &&
-                                   //            method -> Identity() != control.block_init_symbol &&
-                                   //            method -> Identity() != control.clinit_symbol)
-                                   //
-                                   //
-                                   method -> Name());
+                                   method -> ExternalName());
                 }
-
-                //
-                // Insert a local shadow in the type. If we are currently
-                // processing a constructor, the local shadow would have been
-                // passed to it as an argument. If so, use the local argument;
-                // otherwise, use the local shadow.
-                //
-                VariableSymbol *local_shadow = type -> FindOrInsertLocalShadow(variable_symbol),
-                               *local_symbol = stack -> symbol_table.FindVariableSymbol(local_shadow -> Identity());
-                variable_symbol = (local_symbol ? local_symbol : local_shadow);
-
-                assert(variable_symbol);
-
-                where_found = stack;
+                else if (! variable_symbol -> initial_value)
+                {
+                    //
+                    // The variable is not constant, so we need to insert a
+                    // variable shadow in the outermost local class within the
+                    // scope of the variable, and use that shadow instead.
+                    //
+                    variable_symbol = FindLocalVariable(variable_symbol,
+                                                        stack -> Type());
+                    TypeSymbol *shadow_owner = variable_symbol -> owner -> TypeCast();
+                    assert(shadow_owner);
+                    where_found = shadow_owner -> semantic_environment;
+                }
             }
         }
-        else if (variable_symbol -> owner != where_found -> Type())  // is symbol an inherited field?
+        else if (variable_symbol -> owner != where_found -> Type())
         {
+            // is symbol an inherited field?
             TypeSymbol *type = (TypeSymbol *) variable_symbol -> owner;
 
             if (variable_symbol -> IsSynthetic())
@@ -1371,15 +1412,19 @@ VariableSymbol *Semantic::FindVariableInEnvironment(SemanticEnvironment *&where_
                 Tuple<VariableSymbol *> others(2);
                 SemanticEnvironment *found_other,
                                     *previous_env = where_found -> previous;
-                FindVariableInEnvironment(others, found_other, previous_env, name_symbol, identifier_token);
+                FindVariableInEnvironment(others, found_other, previous_env,
+                                          name_symbol, identifier_token);
 
-                if (others.Length() > 0 && where_found -> Type() -> CanAccess(found_other -> Type()))
+                if (others.Length() > 0 &&
+                    where_found -> Type() -> HasEnclosingInstance(found_other -> Type()))
                 {
-                    for (int i = 0; i < others.Length();  i++)
+                    for (int i = 0; i < others.Length(); i++)
                     {
-                        if (! (others[i] == variable_symbol && variable_symbol -> ACC_STATIC()))
+                        if (others[i] != variable_symbol ||
+                            ! variable_symbol -> ACC_STATIC())
                         {
-                            MethodSymbol *method = others[i] -> owner -> MethodCast();
+                            MethodSymbol *method =
+                                others[i] -> owner -> MethodCast();
 
                             if (method)
                             {
@@ -1438,119 +1483,96 @@ VariableSymbol *Semantic::FindVariableInEnvironment(SemanticEnvironment *&where_
         }
 
         if (! variable_symbol -> IsTyped())
-            variable_symbol -> ProcessVariableSignature((Semantic *) this, identifier_token);
+            variable_symbol -> ProcessVariableSignature(this, identifier_token);
     }
 
     return variable_symbol;
 }
 
 
-VariableSymbol *Semantic::FindInstance(TypeSymbol *base_type,
-                                       TypeSymbol *environment_type,
-                                       bool innermost)
+//
+// Find a variable shadow in the outermost local class within the scope of
+// the variable, and return a local variable shadow to it instead.
+//
+VariableSymbol *Semantic::FindLocalVariable(VariableSymbol *local,
+                                            TypeSymbol *type)
 {
-    assert(base_type != environment_type);
+    assert(local -> IsLocal());
 
-    for (int i = 0; i < base_type -> NumEnclosingInstances(); i++)
+    TypeSymbol *containing_type =
+        local -> owner -> MethodCast() -> containing_type;
+    if (type == containing_type)
+        return local;
+
+    while (type && type -> ContainingType() != containing_type)
     {
-        VariableSymbol *variable = base_type -> EnclosingInstance(i);
-        TypeSymbol *type = variable -> Type();
-        if (environment_type == type ||
-            (innermost && variable -> Type() -> IsSubclass(environment_type)))
+        if (! type -> EnclosingType())
         {
-            return variable;
-        }
-    }
-
-    AstClassDeclaration *class_declaration = base_type -> declaration -> ClassDeclarationCast();
-    AstClassInstanceCreationExpression *class_creation = base_type -> declaration -> ClassInstanceCreationExpressionCast();
-
-    assert(class_declaration || class_creation);
-
-    AstClassBody *class_body = (class_declaration ? class_declaration -> class_body : class_creation -> class_body_opt);
-
-    LexStream::TokenIndex loc = class_body -> left_brace_token;
-    AstBlock *this_block = class_body -> this_block;
-    if (! this_block)
-    {
-        this_block = compilation_unit -> ast_pool -> GenBlock();
-        this_block -> left_brace_token  = loc;
-        this_block -> right_brace_token = loc;
-
-        this_block -> is_reachable = true;
-        this_block -> can_complete_normally = true;
-
-        class_body -> this_block = this_block;
-    }
-
-    int k = base_type -> NumEnclosingInstances();
-    for (TypeSymbol *type = base_type -> EnclosingInstance(k - 1) -> Type(); type; type = type -> ContainingType(), k++)
-    {
-        AstSimpleName *parm = compilation_unit -> ast_pool -> GenSimpleName(loc);
-        parm -> symbol = base_type -> EnclosingInstance(k - 1);
-
-        VariableSymbol *variable_symbol = (VariableSymbol *) type -> FindThis(0);
-
-        AstFieldAccess *method_name = compilation_unit -> ast_pool -> GenFieldAccess();
-        method_name -> base = parm;
-        method_name -> dot_token = loc;
-        method_name -> identifier_token = loc;
-        method_name -> symbol = variable_symbol; // the variable in question
-
-        AstMethodInvocation *rhs       = compilation_unit -> ast_pool -> GenMethodInvocation();
-        rhs -> method                  = method_name;
-        rhs -> left_parenthesis_token  = loc;
-        rhs -> right_parenthesis_token = loc;
-        rhs -> symbol                  = type -> GetReadAccessMethod(variable_symbol);
-        rhs -> AddArgument(parm); // TODO: WARNING: sharing of Ast subtree !!!
-
-
-        AstSimpleName *lhs = compilation_unit -> ast_pool -> GenSimpleName(loc);
-        VariableSymbol *variable = base_type -> FindThis(k);
-        lhs -> symbol = (variable ? variable : base_type -> InsertThis(k));
-
-        AstAssignmentExpression *assign = compilation_unit -> ast_pool
-                                                           -> GenAssignmentExpression(AstAssignmentExpression::SIMPLE_EQUAL, loc);
-        assign -> left_hand_side = lhs;
-        assign -> expression     = rhs;
-        assign -> symbol         = lhs -> Type();
-
-        AstExpressionStatement *stmt  = compilation_unit -> ast_pool -> GenExpressionStatement();
-        stmt -> expression            = assign;
-        stmt -> semicolon_token_opt   = loc;
-        stmt -> is_reachable          = true;
-        stmt -> can_complete_normally = true;
-
-        this_block -> AddStatement(stmt);
-
-        if (lhs -> Type() -> IsSubclass(environment_type))
+            assert(type -> Anonymous());
             break;
+        }
+        type = type -> ContainingType();
     }
+    assert(type && type -> IsLocal());
 
-    return base_type -> EnclosingInstance(k);
+    return type -> FindOrInsertLocalShadow(local);
 }
 
 
+//
+// Using the this$0 variable, locate the appropriate enclosing instance.
+//
+AstExpression *Semantic::FindEnclosingInstance(AstExpression *base,
+                                               TypeSymbol *environment_type,
+                                               bool innermost)
+{
+    TypeSymbol *base_type = base -> Type();
+    VariableSymbol *this0 = base_type -> EnclosingInstance();
+    assert(base_type != environment_type && this0);
+
+    LexStream::TokenIndex tok = base -> RightToken();
+
+    AstFieldAccess *field_access = compilation_unit -> ast_pool ->
+        GenFieldAccess(AstFieldAccess::THIS_TAG);
+    field_access -> base = base;
+    field_access -> dot_token = tok;
+    field_access -> identifier_token = tok;
+    field_access -> symbol = this0;
+
+    if (this0 -> Type() == environment_type ||
+        (innermost && this0 -> Type() -> IsSubclass(environment_type)))
+    {
+        return field_access;
+    }
+    return FindEnclosingInstance(field_access, environment_type, innermost);
+}
+
+
+//
+// Generate access to the correct enclosing instance.
+//
 AstExpression *Semantic::CreateAccessToType(Ast *source,
                                             TypeSymbol *environment_type)
 {
     TypeSymbol *this_type = ThisType();
 
-    LexStream::TokenIndex tok;
+    LexStream::TokenIndex left_tok;
+    LexStream::TokenIndex right_tok;
 
     AstSimpleName *simple_name = source -> SimpleNameCast();
     AstFieldAccess *field_access = source -> FieldAccessCast();
     AstSuperCall *super_call = source -> SuperCallCast();
-    AstClassInstanceCreationExpression *class_creation = source -> ClassInstanceCreationExpressionCast();
+    AstClassInstanceCreationExpression *class_creation =
+        source -> ClassInstanceCreationExpressionCast();
     bool is_super = false;
     bool is_this = false;
 
     if (simple_name)
-         tok = simple_name -> identifier_token;
+        left_tok = right_tok = simple_name -> identifier_token;
     else if (class_creation)
-         tok = class_creation -> new_token;
+        left_tok = right_tok = class_creation -> new_token;
     else if (super_call)
-         tok = super_call -> super_token;
+        left_tok = right_tok = super_call -> super_token;
     else if (field_access)
     {
         if (field_access -> IsSuperAccess())
@@ -1558,126 +1580,98 @@ AstExpression *Semantic::CreateAccessToType(Ast *source,
         else if (field_access -> IsThisAccess())
             is_this = true;
         assert(is_super || is_this);
-        tok = field_access -> dot_token;
+        left_tok = field_access -> base -> LeftToken();
+        right_tok = field_access -> base -> RightToken();
     }
     else assert(false);
 
     AstExpression *resolution;
 
-    if (! this_type -> CanAccess(environment_type))
+    if (! this_type -> HasEnclosingInstance(environment_type))
     {
         if (ExplicitConstructorInvocation())
             ReportSemError(SemanticError::ENCLOSING_INSTANCE_ACCESS_FROM_CONSTRUCTOR_INVOCATION,
-                           (field_access ? field_access -> base -> LeftToken() : tok),
-                           (field_access ? field_access -> base -> RightToken() : tok),
+                           left_tok, right_tok,
                            environment_type -> ContainingPackage() -> PackageName(),
                            environment_type -> ExternalName());
         else
         {
             SemanticEnvironment *env = state_stack.Top();
-            for (; env; env = env -> previous) // check whether or not there is an intervening static type...
+            // check whether or not there is an intervening static type...
+            for (; env; env = env -> previous)
             {
-                if (env -> StaticRegion() || env -> Type() -> ACC_STATIC())
+                if (env -> StaticRegion())
                     break;
             }
 
             if (env)
                  ReportSemError(SemanticError::ENCLOSING_INSTANCE_ACCESS_ACROSS_STATIC_REGION,
-                                (field_access ? field_access -> base -> LeftToken() : tok),
-                                (field_access ? field_access -> base -> RightToken() : tok),
+                                left_tok, right_tok,
                                 environment_type -> ContainingPackage() -> PackageName(),
                                 environment_type -> ExternalName(),
                                 env -> Type() -> ContainingPackage() -> PackageName(),
                                 env -> Type() -> ExternalName());
             else ReportSemError(SemanticError::ENCLOSING_INSTANCE_NOT_ACCESSIBLE,
-                                (field_access ? field_access -> base -> LeftToken() : tok),
-                                (field_access ? field_access -> base -> RightToken() : tok),
+                                left_tok, right_tok,
                                 environment_type -> ContainingPackage() -> PackageName(),
                                 environment_type -> ExternalName());
         }
 
-        resolution = compilation_unit -> ast_pool -> GenSimpleName(tok);
+        resolution = compilation_unit -> ast_pool -> GenSimpleName(left_tok);
         resolution -> symbol = control.no_type;
-    }
-    else if (ExplicitConstructorInvocation())
-    {
-        VariableSymbol *variable = LocalSymbolTable().FindVariableSymbol(control.this0_name_symbol);
-
-        assert(variable);
-
-        resolution = compilation_unit -> ast_pool -> GenSimpleName(tok);
-        resolution -> symbol = variable;
-
-        //
-        // TODO: Document this !!!
-        //
-        if (ExplicitConstructorInvocation() -> SuperCallCast())
-        {
-            TypeSymbol *containing_type = this_type -> ContainingType();
-            if (! containing_type -> IsSubclass(environment_type))
-            {
-                variable = FindInstance(containing_type, environment_type,
-                                        true);
-
-                AstFieldAccess *method_name = compilation_unit -> ast_pool -> GenFieldAccess();
-                method_name -> base = resolution; // TODO: WARNING: sharing of Ast subtree !!!
-                method_name -> dot_token = tok;
-                method_name -> identifier_token = tok;
-                method_name -> symbol = variable;
-
-                AstMethodInvocation *method_call       = compilation_unit -> ast_pool -> GenMethodInvocation();
-                method_call -> method                  = method_name;
-                method_call -> left_parenthesis_token  = tok;
-                method_call -> right_parenthesis_token = tok;
-
-                assert(containing_type == variable -> owner -> TypeCast());
-
-                method_call -> symbol = containing_type -> GetReadAccessMethod(variable);
-                method_call -> AddArgument(resolution);
-
-                resolution = method_call;
-            }
-        }
-    }
-    //
-    // Collapse everything except qualified this or super to the innermost
-    // class.
-    //
-    else if (this_type == environment_type ||
-             (this_type -> IsSubclass(environment_type) && (! is_super) &&
-              (! is_this)))
-    {
-        resolution = compilation_unit -> ast_pool -> GenThisExpression(tok);
-        resolution -> symbol = this_type;
     }
     else
     {
-        resolution = compilation_unit -> ast_pool -> GenSimpleName(tok);
-        resolution -> symbol = FindInstance(this_type, environment_type,
-                                            (! is_super) && (! is_this));
+        //
+        // Collapse everything except qualified this or super to the innermost
+        // class. Start from the parameter this$0 in an explicit constructor
+        // invocation, else start from this.
+        //
+        if (ExplicitConstructorInvocation())
+        {
+            VariableSymbol *variable = LocalSymbolTable().
+                FindVariableSymbol(control.this0_name_symbol);
+            assert(variable);
+
+            resolution = compilation_unit -> ast_pool -> GenSimpleName(left_tok);
+            resolution -> symbol = variable;
+        }
+        else
+        {
+            resolution =
+                compilation_unit -> ast_pool -> GenThisExpression(left_tok);
+            resolution -> symbol = this_type;
+        }
+        TypeSymbol *resolved_type = resolution -> Type();
+        if (resolved_type != environment_type &&
+            (! resolved_type -> IsSubclass(environment_type) ||
+             is_super || is_this))
+        {
+            resolution = FindEnclosingInstance(resolution,
+                                               environment_type,
+                                               (! is_super && ! is_this));
+        }
     }
 
     if (is_super)
         environment_type = environment_type -> super;
 
-    return ((resolution -> symbol == control.no_type) ||
-            (resolution -> Type() == environment_type)
-            ? resolution : ConvertToType(resolution, environment_type));
+    return ConvertToType(resolution, environment_type);
 }
 
 
 void Semantic::CreateAccessToScopedVariable(AstSimpleName *simple_name,
                                             TypeSymbol *environment_type)
 {
-    assert(environment_type -> IsOwner(ThisType()) &&
-           (! simple_name -> IsConstant()));
+    assert(! simple_name -> IsConstant());
 
     VariableSymbol *variable = (VariableSymbol *) simple_name -> symbol;
 
     AstExpression *access_expression;
     if (variable -> ACC_STATIC())
     {
-        access_expression = compilation_unit -> ast_pool -> GenSimpleName(simple_name -> identifier_token);
+        access_expression = compilation_unit -> ast_pool ->
+            GenSimpleName(simple_name -> identifier_token);
         access_expression -> symbol = environment_type;
     }
     else access_expression = CreateAccessToType(simple_name, environment_type);
@@ -1697,30 +1691,38 @@ void Semantic::CreateAccessToScopedVariable(AstSimpleName *simple_name,
                    (variable -> ACC_PROTECTED() &&
                     environment_type -> IsSubclass(containing_type)));
 
-            AstFieldAccess *method_name     = compilation_unit -> ast_pool -> GenFieldAccess();
-            method_name -> base             = access_expression;
-            method_name -> dot_token        = simple_name -> identifier_token;
+            AstFieldAccess *method_name =
+                compilation_unit -> ast_pool -> GenFieldAccess();
+            method_name -> base = access_expression;
+            method_name -> dot_token = simple_name -> identifier_token;
             method_name -> identifier_token = simple_name -> identifier_token;
-            method_name -> symbol           = variable;
+            method_name -> symbol = variable;
 
-            AstMethodInvocation *accessor       = compilation_unit -> ast_pool -> GenMethodInvocation();
-            accessor -> method                  = method_name;
-            accessor -> left_parenthesis_token  = simple_name -> identifier_token;
-            accessor -> right_parenthesis_token = simple_name -> identifier_token;
-            accessor -> symbol                  = environment_type -> GetReadAccessMethod(variable); // default base type is appropriate
+            AstMethodInvocation *accessor =
+                compilation_unit -> ast_pool -> GenMethodInvocation();
+            accessor -> method = method_name;
+            accessor -> left_parenthesis_token =
+                simple_name -> identifier_token;
+            accessor -> right_parenthesis_token =
+                simple_name -> identifier_token;
+            // The default base type of the accessor method is appropriate.
+            accessor -> symbol =
+                environment_type -> GetReadAccessMethod(variable);
 
             if (! variable -> ACC_STATIC())
-                accessor -> AddArgument(access_expression); // TODO: WARNING: sharing of Ast subtree !!!
+                // TODO: WARNING: sharing of Ast subtree !!!
+                accessor -> AddArgument(access_expression);
 
             simple_name -> resolution_opt = accessor;
         }
         else
         {
-            AstFieldAccess *field_access     = compilation_unit -> ast_pool -> GenFieldAccess();
-            field_access -> base             = access_expression;
-            field_access -> dot_token        = simple_name -> identifier_token;
+            AstFieldAccess *field_access =
+                compilation_unit -> ast_pool -> GenFieldAccess();
+            field_access -> base = access_expression;
+            field_access -> dot_token = simple_name -> identifier_token;
             field_access -> identifier_token = simple_name -> identifier_token;
-            field_access -> symbol           = variable;
+            field_access -> symbol = variable;
 
             simple_name -> resolution_opt = field_access;
         }
@@ -1832,7 +1834,7 @@ void Semantic::CheckSimpleName(AstSimpleName *simple_name,
                 // declared in this_type (this_type is definitely a class) or
                 // one of its super classes, then we have an error:
                 //
-                ReportSemError(SemanticError::INSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
+                ReportSemError(SemanticError::INSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR,
                                simple_name -> identifier_token,
                                simple_name -> identifier_token,
                                lex_stream -> NameString(simple_name -> identifier_token),
@@ -1973,48 +1975,37 @@ void Semantic::TypeNestAccessCheck(AstExpression *name)
 }
 
 
-void Semantic::ConstructorAccessCheck(AstClassInstanceCreationExpression *class_creation,
+bool Semantic::ConstructorAccessCheck(Ast *invocation,
                                       MethodSymbol *constructor)
 {
     TypeSymbol *this_type = ThisType();
     TypeSymbol *containing_type = constructor -> containing_type;
+    AstClassInstanceCreationExpression *class_creation =
+        invocation -> ClassInstanceCreationExpressionCast();
+    AstSuperCall *super_call = invocation -> SuperCallCast();
+    AstThisCall *this_call = invocation -> ThisCallCast();
+    assert(class_creation || super_call || this_call);
 
-    if (this_type -> outermost_type != containing_type -> outermost_type)
+    if (this_type -> outermost_type != containing_type -> outermost_type &&
+        constructor -> ACC_PRIVATE())
     {
-        if (constructor -> ACC_PRIVATE())
-        {
-            ReportSemError(SemanticError::CONSTRUCTOR_NOT_ACCESSIBLE,
-                           class_creation -> class_type -> LeftToken(),
-                           class_creation -> right_parenthesis_token,
-                           constructor -> Header(),
-                           containing_type -> ContainingPackage() -> PackageName(),
-                           containing_type -> ExternalName(),
-                           StringConstant::US_private);
-        }
-        else if (constructor -> ACC_PROTECTED() &&
-                 containing_type -> ContainingPackage() != this_package)
-        {
-            if (! class_creation -> symbol -> TypeCast() -> Anonymous())
-                ReportSemError(SemanticError::CONSTRUCTOR_NOT_ACCESSIBLE,
-                               class_creation -> class_type -> LeftToken(),
-                               class_creation -> right_parenthesis_token,
-                               constructor -> Header(),
-                               containing_type -> ContainingPackage() -> PackageName(),
-                               containing_type -> ExternalName(),
-                               StringConstant::US_protected);
-        }
-        else if (! constructor -> ACC_PUBLIC() &&
-                 containing_type -> ContainingPackage() != this_package)
-        {
-            ReportSemError(SemanticError::CONSTRUCTOR_NOT_ACCESSIBLE,
-                           class_creation -> class_type -> LeftToken(),
-                           class_creation -> right_parenthesis_token,
-                           constructor -> Header(),
-                           containing_type -> ContainingPackage() -> PackageName(),
-                           containing_type -> ExternalName(),
-                           StringConstant::US_default);
-        }
+        return false;
     }
+
+    //
+    // An anonymous class can access protected constructors. But it is the
+    // anonymous class doing the access; the class instance creation is
+    // accessing the accessible generated constructor in the anonymous class,
+    // so we just use the normal rule that class instance creation cannot
+    // access protected constructors outside the package.
+    //
+    if (containing_type -> ContainingPackage() != this_package &&
+        ((constructor -> ACC_PROTECTED() && class_creation) ||
+         ! constructor -> ACC_PUBLIC()))
+    {
+        return false;
+    }
+    return true;
 }
 
 
@@ -2531,7 +2522,7 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                 if (variable_symbol)
                 {
                     if (! variable_symbol -> IsTyped())
-                        variable_symbol -> ProcessVariableSignature((Semantic *) this,
+                        variable_symbol -> ProcessVariableSignature(this,
                                                                     field_access -> identifier_token);
                     field_access -> symbol = variable_symbol;
                 }
@@ -2624,13 +2615,14 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                                field_access -> RightToken());
                 field_access -> symbol = control.no_type;
             }
-            else if (! (this_type -> IsNestedIn(enclosing_type) &&
-                        this_type -> CanAccess(enclosing_type)))
+            else if (! this_type -> IsNestedIn(enclosing_type) ||
+                     ! this_type -> HasEnclosingInstance(enclosing_type))
             {
                 if (this_type == enclosing_type)
                 {
-                    ReportSemError((field_access -> IsThisAccess() ? SemanticError::MISPLACED_THIS_EXPRESSION
-                                                                   : SemanticError::MISPLACED_SUPER_EXPRESSION),
+                    ReportSemError((field_access -> IsThisAccess()
+                                    ? SemanticError::MISPLACED_THIS_EXPRESSION
+                                    : SemanticError::MISPLACED_SUPER_EXPRESSION),
                                    field_access -> LeftToken(),
                                    field_access -> RightToken());
                 }
@@ -3088,23 +3080,30 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
 
             if (! method -> ACC_STATIC())
             {
-                //
-                // We are in a static region if we are:
-                //     . in the body of a static method
-                //     . in the body of a static initializer
-                //     . processing an initializer expression for a static
-                //       variable.
-                //
-                // See StaticRegion() Semantic.h for more detail.
-                //
-                // Note that a constructor is never static.
-                //
                 if (StaticRegion())
                 {
-                    ReportSemError(SemanticError::METHOD_NOT_CLASS_METHOD,
-                                   simple_name -> identifier_token,
-                                   method_call -> right_parenthesis_token,
-                                   lex_stream -> NameString(simple_name -> identifier_token));
+                    if (ExplicitConstructorInvocation() &&
+                        this_type -> IsSubclass(method -> containing_type))
+                    {
+                        //
+                        // If the method in question is an instance method
+                        // that is declared in this_type (this_type is
+                        // definitely a class) or one of its super classes,
+                        // then we have an error.
+                        //
+                        ReportSemError(SemanticError::INSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR,
+                                       method_call -> LeftToken(),
+                                       method_call -> RightToken(),
+                                       method -> Header(),
+                                       method -> containing_type -> Name());
+                    }
+                    else
+                    {
+                        ReportSemError(SemanticError::METHOD_NOT_CLASS_METHOD,
+                                       simple_name -> identifier_token,
+                                       method_call -> right_parenthesis_token,
+                                       lex_stream -> NameString(simple_name -> identifier_token));
+                    }
                     method_call -> symbol = control.no_type;
                     return;
                 }
@@ -3118,7 +3117,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                         // definitely a class) or one of its super classes,
                         // then we have an error ->
                         //
-                        ReportSemError(SemanticError::INSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
+                        ReportSemError(SemanticError::INSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR,
                                        method_call -> LeftToken(),
                                        method_call -> RightToken(),
                                        method -> Header(),
@@ -3289,7 +3288,7 @@ void Semantic::ProcessThisExpression(Ast *expr)
     }
     else if (ExplicitConstructorInvocation())
     {
-        ReportSemError(SemanticError::THIS_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
+        ReportSemError(SemanticError::SELF_IN_EXPLICIT_CONSTRUCTOR,
                        this_expression -> LeftToken(),
                        this_expression -> RightToken(),
                        lex_stream -> NameString(this_expression -> this_token));
@@ -3319,7 +3318,7 @@ void Semantic::ProcessSuperExpression(Ast *expr)
     }
     else if (ExplicitConstructorInvocation())
     {
-        ReportSemError(SemanticError::SUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
+        ReportSemError(SemanticError::SELF_IN_EXPLICIT_CONSTRUCTOR,
                        super_expression -> LeftToken(),
                        super_expression -> RightToken(),
                        lex_stream -> NameString(super_expression -> super_token));
@@ -3343,638 +3342,280 @@ void Semantic::ProcessParenthesizedExpression(Ast *expr)
 }
 
 
-void Semantic::UpdateGeneratedLocalConstructor(MethodSymbol *constructor)
-{
-    if (! constructor) // because of an earlier error
-        return;
-
-    TypeSymbol *local_type = constructor -> containing_type;
-    MethodSymbol *local_constructor = constructor -> LocalConstructor();
-
-    assert(local_constructor -> IsGeneratedLocalConstructor());
-
-    BlockSymbol *block_symbol = local_constructor -> block_symbol;
-
-    for (int i = 0; i < constructor -> NumFormalParameters(); i++)
-    {
-        VariableSymbol *param = constructor -> FormalParameter(i),
-                       *symbol = block_symbol -> FindVariableSymbol(param -> Identity());
-
-        assert(symbol);
-
-        symbol -> SetExternalIdentity(param -> ExternalIdentity()); // TODO: do we really need this ?
-        symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
-        if (control.IsDoubleWordType(symbol -> Type()))
-            block_symbol -> max_variable_index++;
-        local_constructor -> AddFormalParameter(symbol);
-    }
-
-    //
-    // If we are dealing with a constructor generated for an anonymous type and
-    // the super type of the anonymous type is an inner type then the generated
-    // constructor accepts an additional formal parameter which is the
-    // containing type of the super type, and the name of the parameter is #0.
-    //
-    VariableSymbol *super_this0_variable = block_symbol -> FindVariableSymbol(control.MakeParameter(0));
-    if (super_this0_variable)
-    {
-        super_this0_variable -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
-        local_constructor -> AddFormalParameter(super_this0_variable);
-    }
-    local_constructor -> SetSignature(control);
-
-    //
-    //
-    //
-    AstConstructorDeclaration *constructor_declaration = (AstConstructorDeclaration *)
-                                                         constructor -> method_or_constructor_declaration;
-
-    assert(constructor_declaration -> ConstructorDeclarationCast());
-
-    AstConstructorBlock *constructor_block = constructor_declaration -> constructor_body;
-
-    if (! (constructor_block -> explicit_constructor_invocation_opt &&
-           constructor_block -> explicit_constructor_invocation_opt -> ThisCallCast()))
-    {
-        constructor_block -> AllocateLocalInitStatements(local_type -> NumConstructorParameters());
-
-        //
-        // Generate an assignment statement for each local variable parameter.
-        // Note that we do not initialize the this$0 here as the real
-        // constructor will do that. If the local_type is static, its
-        // constructor_parameters list does not start with this$0.
-        //
-        for (int i = (local_type -> ACC_STATIC() ? 0 : 1); i < local_type -> NumConstructorParameters(); i++)
-        {
-            VariableSymbol *param = local_type -> ConstructorParameter(i),
-                           *symbol = block_symbol -> FindVariableSymbol(param -> Identity());
-
-            assert(symbol);
-
-            AstSimpleName *lhs = compilation_unit -> ast_pool -> GenSimpleName(constructor_block -> left_brace_token);
-            lhs -> symbol = param;
-
-            AstSimpleName *rhs = compilation_unit -> ast_pool -> GenSimpleName(constructor_block -> left_brace_token);
-            rhs -> symbol = symbol;
-
-            AstAssignmentExpression *assign = compilation_unit -> ast_pool
-                                                               -> GenAssignmentExpression(AstAssignmentExpression::SIMPLE_EQUAL,
-                                                                                          constructor_block -> left_brace_token);
-            assign -> left_hand_side = lhs;
-            assign -> expression     = rhs;
-            assign -> symbol         = lhs -> Type();
-
-            AstExpressionStatement *stmt = compilation_unit -> ast_pool -> GenExpressionStatement();
-            stmt -> expression           = assign;
-            stmt -> semicolon_token_opt  = constructor_block -> left_brace_token;
-
-            stmt -> is_reachable = true;
-            stmt -> can_complete_normally = true;
-
-            constructor_block -> AddLocalInitStatement(stmt);
-        }
-    }
-
-    //
-    //
-    //
-    AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(constructor_block -> left_brace_token);
-    simple_name -> symbol = constructor;
-
-    assert(! constructor -> IsGeneratedLocalConstructor());
-
-    AstMethodInvocation *method_call       = compilation_unit -> ast_pool -> GenMethodInvocation();
-    method_call -> method                  = simple_name;
-    method_call -> left_parenthesis_token  = constructor_block -> left_brace_token;
-    method_call -> right_parenthesis_token = constructor_block -> left_brace_token;
-    method_call -> symbol                  = simple_name -> symbol;
-
-    method_call -> AllocateArguments(constructor -> NumFormalParameters() + 1);
-    if (! local_type -> ACC_STATIC())
-    {
-        AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(constructor_block -> left_brace_token);
-        simple_name -> symbol = block_symbol -> FindVariableSymbol(control.this0_name_symbol);
-
-        assert(simple_name -> symbol);
-
-        method_call -> AddArgument(simple_name);
-    }
-
-    for (int k = 0; k < constructor -> NumFormalParameters(); k++)
-    {
-        VariableSymbol *param = constructor -> FormalParameter(k),
-                       *symbol = block_symbol -> FindVariableSymbol(param -> Identity());
-        AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(constructor_block -> left_brace_token);
-        simple_name -> symbol = symbol;
-        method_call -> AddArgument(simple_name);
-    }
-
-    AstExpressionStatement *stmt  = compilation_unit -> ast_pool -> GenExpressionStatement();
-    stmt -> expression            = method_call;
-    stmt -> semicolon_token_opt   = constructor_block -> left_brace_token;
-
-    stmt -> is_reachable          = true;
-    stmt -> can_complete_normally = true;
-
-    constructor_block -> original_constructor_invocation = stmt;
-}
-
-
 void Semantic::UpdateLocalConstructors(TypeSymbol *inner_type)
 {
-    if (! ThisType() -> IsLocal()) // the method containing inner_type is not itself embedded in another method
+    assert(inner_type -> IsLocal() && ! inner_type -> Anonymous());
+
+    //
+    // Update the constructor signatures to account for local shadow
+    // parameters.
+    //
+    inner_type -> MarkLocalClassProcessingCompleted();
+    int param_count = inner_type -> NumConstructorParameters();
+    if (param_count == 0)
+        return; // nothing to do
+
+    for (MethodSymbol *ctor = inner_type -> FindConstructorSymbol();
+         ctor; ctor = ctor -> next_method)
     {
-        //
-        // Compute the set of local_classes we need to process here - they are
-        // the inner_type itself and all the classes that are embedded in its
-        // body.
-        //
-        Tuple<TypeSymbol *> local_classes(8);
+        ctor -> SetSignature(control);
+    }
+    for (int j = 0; j < inner_type -> NumPrivateAccessConstructors(); j++)
+        inner_type -> PrivateAccessConstructor(j) ->
+            SetSignature(control, (inner_type -> outermost_type ->
+                                   GetPlaceholderType()));
 
-        TypeSymbol *outermost_type = inner_type -> outermost_type;
-        if (outermost_type -> local) // The set of local types in the outermost type is not empty?
+    //
+    // Update all constructor call contexts that were pending on this class.
+    // These calls are necessarily located within the body of inner_type, and
+    // are calling a constructor in inner_type.
+    // TODO: Figure out how to update accessor constructors.
+    //
+    for (int i = 0;
+         i < inner_type -> NumLocalConstructorCallEnvironments(); i++)
+    {
+        SemanticEnvironment *env =
+            inner_type -> LocalConstructorCallEnvironment(i);
+        state_stack.Push(env);
+        Ast *call = env -> ast_construct;
+
+        AstClassInstanceCreationExpression *class_creation =
+            call -> ClassInstanceCreationExpressionCast();
+        AstSuperCall *super_call = call -> SuperCallCast();
+
+        if (class_creation)
         {
-            for (TypeSymbol *local_type = (TypeSymbol *) outermost_type -> local -> FirstElement();
-                             local_type;
-                             local_type = (TypeSymbol *) outermost_type -> local -> NextElement())
+            if (class_creation -> symbol != control.no_type)
             {
-                if (local_type -> CanAccess(inner_type))
-                    local_classes.Next() = local_type;
-            }
-        }
-
-        for (int j = 0; j < outermost_type -> NumAnonymousTypes(); j++)
-        {
-            TypeSymbol *anon_type = outermost_type -> AnonymousType(j);
-            //
-            // Skip anonymous classes created as an extra parameter for
-            // private constructor accessors, and add all others to the list.
-            //
-            if (! anon_type -> declaration -> IsGenerated() &&
-                anon_type -> CanAccess(inner_type))
-            {
-                local_classes.Next() = anon_type;
-            }
-        }
-
-        //
-        // We now update each type T2 containing a call to a constructor of
-        // T1 to make sure that T2 has a copy of or access to all the local
-        // variables required by T1.
-        //
-        for (int k = 0; k < local_classes.Length(); k++)
-        {
-            TypeSymbol *target_local_type = local_classes[k];
-
-            for (int i = 0; i < target_local_type -> NumLocalConstructorCallEnvironments(); i++)
-            {
-                SemanticEnvironment *env = target_local_type -> LocalConstructorCallEnvironment(i);
-                TypeSymbol *source_local_type = env -> Type();
-                if (! source_local_type -> CanAccess(target_local_type))
+                //
+                // Normally, we can safely use the val$name variable in
+                // inner_class.  However, in the case of an anonymous subclass
+                // of inner_class located in an explicit constructor call,
+                // TODO: think this through a bit more...
+                //
+                class_creation -> AllocateLocalArguments(param_count);
+                for (int k = 0; k < param_count; k++)
                 {
-                    for (int j = (target_local_type -> ACC_STATIC() ? 0 : 1);
-                         j < target_local_type -> NumConstructorParameters(); j++)
-                    {
-                        VariableSymbol *local = target_local_type -> ConstructorParameter(j) -> accessed_local;
-
-                        //
-                        // If there does not exist a variable with the same
-                        // identity as the local or there exists such a
-                        // variable but it is not the local then make a copy of
-                        // the local in the source type.
-                        //
-                        if (env -> symbol_table.FindVariableSymbol(local -> Identity()) != local)
-                            (void) source_local_type -> FindOrInsertLocalShadow(local);
-                    }
+                    AstSimpleName *simple_name = compilation_unit ->
+                        ast_pool -> GenSimpleName(class_creation -> new_token);
+                    simple_name -> symbol =
+                        inner_type -> ConstructorParameter(k);
+                    CreateAccessToScopedVariable(simple_name, inner_type);
+                    class_creation -> AddLocalArgument(simple_name);
                 }
             }
         }
-
-        //
-        // Now update the constructor bodies to reflect the new local variable
-        // counts and mark the local_type completed.
-        //
-        for (int l = 0; l < local_classes.Length(); l++)
+        else
         {
-            TypeSymbol *local_type = local_classes[l];
-
-            AstClassDeclaration *class_declaration = local_type -> declaration -> ClassDeclarationCast();
-            AstClassInstanceCreationExpression *class_creation = local_type -> declaration -> ClassInstanceCreationExpressionCast();
-
-            assert(class_declaration || class_creation);
-
-            AstClassBody *class_body = (class_declaration ? class_declaration -> class_body : class_creation -> class_body_opt);
-
-            if (class_body -> default_constructor)
-                 UpdateGeneratedLocalConstructor(class_body -> default_constructor -> constructor_symbol);
-            else
+            assert(super_call);
+            if (super_call -> symbol -> MethodCast())
             {
-                for (int i = 0; i < class_body -> NumConstructors(); i++)
-                    UpdateGeneratedLocalConstructor(class_body -> Constructor(i) -> constructor_symbol);
-
-                for (int k = 0; k < local_type -> NumPrivateAccessConstructors(); k++)
-                    UpdateGeneratedLocalConstructor(local_type -> PrivateAccessConstructor(k));
-            }
-
-            local_type -> MarkLocalClassProcessingCompleted();
-        }
-
-        //
-        // Now update the constructor calls
-        //
-        for (int m = 0; m < local_classes.Length(); m++)
-        {
-            TypeSymbol *target_local_type = local_classes[m];
-
-            assert(target_local_type -> LocalClassProcessingCompleted());
-
-            for (int i = 0; i < target_local_type -> NumLocalConstructorCallEnvironments(); i++)
-            {
-                Ast *call = target_local_type -> LocalConstructorCallEnvironment(i) -> ast_construct;
-                SemanticEnvironment *env = target_local_type -> LocalConstructorCallEnvironment(i);
-                TypeSymbol *source_local_type = env -> Type();
-
-                AstClassInstanceCreationExpression *class_creation;
-                AstSuperCall *super_call;
-                AstThisCall *this_call;
-
-                if ((class_creation = call -> ClassInstanceCreationExpressionCast()))
+                super_call -> AllocateLocalArguments(param_count);
+                for (int k = 0; k < param_count; k++)
                 {
-                    if (class_creation -> symbol != control.no_type)
-                    {
-                        if (source_local_type -> CanAccess(target_local_type))
-                        {
-                            for (int j = (target_local_type -> ACC_STATIC() ? 0 : 1);
-                                 j < target_local_type -> NumConstructorParameters(); j++)
-                            {
-                                AstSimpleName *simple_name = compilation_unit -> ast_pool
-                                                                              -> GenSimpleName(class_creation -> new_token);
-                                VariableSymbol *variable_symbol = target_local_type -> ConstructorParameter(j);
-                                simple_name -> symbol = variable_symbol;
-                                if (source_local_type != target_local_type)
-                                {
-                                    simple_name -> symbol = variable_symbol -> accessed_local;
-
-                                    state_stack.Push(source_local_type -> semantic_environment);
-                                    CreateAccessToScopedVariable(simple_name, target_local_type);
-                                    state_stack.Pop();
-                                }
-                                class_creation -> AddLocalArgument(simple_name);
-                            }
-                        }
-                        else
-                        {
-                            for (int j = (target_local_type -> ACC_STATIC() ? 0 : 1);
-                                 j < target_local_type -> NumConstructorParameters(); j++)
-                            {
-                                VariableSymbol *local = target_local_type -> ConstructorParameter(j) -> accessed_local;
-
-                                AstSimpleName *simple_name = compilation_unit -> ast_pool
-                                                                              -> GenSimpleName(class_creation -> new_token);
-                                //
-                                // If there does not exist a variable with the
-                                // same identity as the local or there exists
-                                // such a variable but it is not the local
-                                // then make a copy of the local in the source
-                                // type.
-                                //
-                                simple_name -> symbol = (env -> symbol_table.FindVariableSymbol(local -> Identity()) == local
-                                                              ? local
-                                                              : source_local_type -> FindOrInsertLocalShadow(local));
-
-				assert(simple_name -> symbol);
-                                assert(simple_name -> symbol -> VariableCast());
-
-                                class_creation -> AddLocalArgument(simple_name);
-                            }
-                        }
-
-                        MethodSymbol *constructor = (MethodSymbol *) class_creation -> class_type -> symbol;
-
-                        assert(constructor);
-                        assert(constructor -> MethodCast());
-                        assert(! constructor -> IsGeneratedLocalConstructor());
-                        assert(constructor -> LocalConstructor());
-
-                        class_creation -> class_type -> symbol = constructor -> LocalConstructor();
-                    }
-                }
-                else if ((super_call = call -> SuperCallCast()))
-                {
-                    if (super_call -> symbol -> MethodCast())
-                    {
-                        for (int j = (target_local_type -> ACC_STATIC() ? 0 : 1);
-                             j < target_local_type -> NumConstructorParameters(); j++)
-                        {
-                            VariableSymbol *local = target_local_type -> ConstructorParameter(j) -> accessed_local,
-                                           *local_shadow = source_local_type -> FindOrInsertLocalShadow(local);
-
-                            AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(super_call -> super_token);
-                            simple_name -> symbol = env -> symbol_table.FindVariableSymbol(local_shadow -> Identity());
-
-			    assert(simple_name -> symbol);
-                            assert(simple_name -> symbol -> VariableCast());
-
-                            super_call -> AddLocalArgument(simple_name);
-                        }
-
-                        MethodSymbol *constructor = (MethodSymbol *) super_call -> symbol;
-
-                        assert(constructor -> MethodCast() && (! constructor -> IsGeneratedLocalConstructor()));
-                        assert(constructor -> LocalConstructor());
-
-                        super_call -> symbol = constructor -> LocalConstructor();
-                    }
-                }
-                else
-                {
-                    this_call = (AstThisCall *) call;
-
-                    assert(this_call -> ThisCallCast());
-
-                    if (this_call -> symbol -> MethodCast())
-                    {
-                        for (int j = (target_local_type -> ACC_STATIC() ? 0 : 1);
-                             j < target_local_type -> NumConstructorParameters(); j++)
-                        {
-                            VariableSymbol *local = target_local_type -> ConstructorParameter(j);
-
-                            AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(this_call -> this_token);
-                            simple_name -> symbol = env -> symbol_table.FindVariableSymbol(local -> Identity());
-
-			    assert(simple_name -> symbol);
-                            assert(simple_name -> symbol -> VariableCast());
-
-                            this_call -> AddLocalArgument(simple_name);
-                        }
-
-                        MethodSymbol *constructor = (MethodSymbol *) this_call -> symbol;
-
-                        assert(constructor -> MethodCast() && (! constructor -> IsGeneratedLocalConstructor()));
-                        assert(constructor -> LocalConstructor());
-
-                        this_call -> symbol = constructor -> LocalConstructor();
-                    }
+                    AstSimpleName *simple_name = compilation_unit ->
+                        ast_pool -> GenSimpleName(super_call -> super_token);
+                    simple_name -> symbol =
+                        inner_type -> ConstructorParameter(k);
+                    CreateAccessToScopedVariable(simple_name, inner_type);
+                    super_call -> AddLocalArgument(simple_name);
                 }
             }
         }
+        state_stack.Pop();
     }
 }
 
 
+//
+// This creates the default constructor for an anonymous class, and sets
+// the resolution_opt field of the original to a generated instance creation
+// expression that has been adjusted for compilation purposes.
+//
 void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression *class_creation,
                                        TypeSymbol *anonymous_type)
 {
     LexStream::TokenIndex left_loc  = class_creation -> class_type -> LeftToken(),
                           right_loc = class_creation -> right_parenthesis_token;
 
+    state_stack.Push(anonymous_type -> semantic_environment);
     TypeSymbol *super_type = anonymous_type -> super;
-    MethodSymbol *super_constructor = FindConstructor(super_type, class_creation, left_loc, right_loc);
+    MethodSymbol *super_constructor = FindConstructor(super_type,
+                                                      class_creation,
+                                                      left_loc, right_loc);
     if (! super_constructor)
     {
         class_creation -> class_type -> symbol = control.no_type;
+        state_stack.Pop();
         return;
     }
-
     assert(super_constructor -> IsTyped());
+
+    //
+    // Make replacement class instance creation expression.
+    //
+    AstClassInstanceCreationExpression *resolution =
+        compilation_unit -> ast_pool -> GenClassInstanceCreationExpression();
+    resolution -> new_token = class_creation -> new_token;
+    // TODO: WARNING: sharing of subtrees...
+    resolution -> class_type = class_creation -> class_type;
+    resolution -> left_parenthesis_token =
+        class_creation -> left_parenthesis_token;
+    resolution -> right_parenthesis_token =
+        class_creation -> right_parenthesis_token;
+    resolution -> symbol = anonymous_type;
+    class_creation -> resolution_opt = resolution;
 
     //
     // Make constructor symbol. The associated symbol table will not contain
     // too many elements...
     //
-    BlockSymbol *block_symbol = new BlockSymbol(super_constructor -> NumFormalParameters() + 3);
-    block_symbol -> max_variable_index = 1; // All types need a spot for "this".
+    BlockSymbol *block_symbol =
+        new BlockSymbol(super_constructor -> NumFormalParameters() + 3);
+    block_symbol -> max_variable_index = 1; // A spot for "this".
 
-    MethodSymbol *constructor = anonymous_type -> InsertConstructorSymbol(control.init_name_symbol);
+    MethodSymbol *constructor =
+        anonymous_type -> InsertConstructorSymbol(control.init_name_symbol);
     constructor -> SetType(control.void_type);
     constructor -> SetContainingType(anonymous_type);
     constructor -> SetBlockSymbol(block_symbol);
 
     //
     // Anonymous class constructors may throw any exception listed in the
-    // superclass.
+    // superclass; but this list may be expanded later since the anonymous
+    // constructor also throws anything possible in instance initializers.
     //
-    int num_throws = super_constructor -> NumThrows();
-    for (int i = 0; i < num_throws; i++)
-    {
-        TypeSymbol *exception = super_constructor -> Throws(i);
-        constructor -> AddThrows(exception);
-    }
-
-    VariableSymbol *this0_variable = NULL;
-    if (anonymous_type -> IsInner())
-    {
-        this0_variable = block_symbol -> InsertVariableSymbol(control.this0_name_symbol);
-        this0_variable -> MarkSynthetic();
-        this0_variable -> SetType(anonymous_type -> ContainingType());
-        this0_variable -> SetOwner(constructor);
-        this0_variable -> SetACC_FINAL();
-        this0_variable -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
-    }
-
-    for (int j = 0; j < super_constructor -> NumFormalParameters(); j++)
-    {
-        VariableSymbol *param = super_constructor -> FormalParameter(j),
-                       *symbol = block_symbol -> InsertVariableSymbol(param -> Identity());
-        symbol -> SetType(param -> Type());
-        symbol -> SetOwner(constructor);
-        symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
-        if (control.IsDoubleWordType(symbol -> Type()))
-            block_symbol -> max_variable_index++;
-        constructor -> AddFormalParameter(symbol);
-    }
-
-    //
-    //
-    //
-    AstSuperCall *super_call              = compilation_unit -> ast_pool -> GenSuperCall();
-    super_call -> base_opt                = class_creation -> base_opt; // save initial base_opt
-    super_call -> dot_token_opt           = class_creation -> new_token;
-    super_call -> super_token             = class_creation -> new_token;
-    super_call -> left_parenthesis_token  = class_creation -> new_token;
-    super_call -> right_parenthesis_token = class_creation -> new_token;
-    super_call -> semicolon_token         = class_creation -> new_token;
-
-    super_call -> is_reachable            = true;
-    super_call -> can_complete_normally   = true;
-    super_call -> symbol                  = super_constructor;
+    for (int i = 0; i < super_constructor -> NumThrows(); i++)
+        constructor -> AddThrows(super_constructor -> Throws(i));
 
     //
     // If we are in a static region, the anonymous constructor does not need
     // a this$0 argument. Otherwise, a this$0 argument that points to an
     // instance of the immediately enclosing class is required.
     //
-    if (anonymous_type -> ACC_STATIC())
-        class_creation -> base_opt = NULL;
-    else
+    if (anonymous_type -> EnclosingType())
     {
-        //
-        // Within an explicit constructor invocation, a class that is
-        // immediately nested in the class being created is not accessible.
-        //
-        if (ExplicitConstructorInvocation() && anonymous_type -> ContainingType() == ThisType())
-        {
-            ReportSemError(SemanticError::INNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
-                           class_creation -> LeftToken(),
-                           class_creation -> RightToken(),
-                           anonymous_type -> ContainingPackage() -> PackageName(),
-                           anonymous_type -> ExternalName(),
-                           ThisType() -> ContainingPackage() -> PackageName(),
-                           ThisType() -> ExternalName());
-            class_creation -> base_opt = NULL;
-        }
-        else class_creation -> base_opt = CreateAccessToType(class_creation, anonymous_type -> ContainingType());
+        VariableSymbol *this0_variable =
+            block_symbol -> InsertVariableSymbol(control.this0_name_symbol);
+        this0_variable -> MarkSynthetic();
+        this0_variable -> SetType(anonymous_type -> EnclosingType());
+        this0_variable -> SetOwner(constructor);
+        this0_variable -> SetACC_FINAL();
+        this0_variable -> SetLocalVariableIndex(block_symbol ->
+                                                max_variable_index++);
+        AstThisExpression *this0_expression =
+            compilation_unit -> ast_pool -> GenThisExpression(left_loc);
+        this0_expression -> symbol = anonymous_type -> EnclosingType();
+        resolution -> base_opt = this0_expression;
     }
+
+    //
+    // Create an explicit call to the superconstructor, passing any necessary
+    // shadow variables or enclosing instances.
+    //
+    AstSuperCall *super_call = compilation_unit -> ast_pool -> GenSuperCall();
+    if (super_constructor -> ACC_PRIVATE())
+    {
+        super_constructor =
+            super_type -> GetReadAccessConstructor(super_constructor);
+        super_call -> AddNullArgument();
+    }
+
+    // Use initial base_opt.
+    super_call -> base_opt = class_creation -> base_opt;
+    super_call -> dot_token_opt = class_creation -> new_token;
+    super_call -> super_token = class_creation -> new_token;
+    super_call -> left_parenthesis_token =
+        class_creation -> left_parenthesis_token;
+    super_call -> right_parenthesis_token =
+        class_creation -> right_parenthesis_token;
+    super_call -> semicolon_token = class_creation -> right_parenthesis_token;
+    super_call -> symbol = super_constructor;
 
     AstClassBody *class_body = class_creation -> class_body_opt;
 
-    AstReturnStatement *return_statement = compilation_unit -> ast_pool -> GenReturnStatement();
-    return_statement -> return_token     = class_body -> left_brace_token;
-    return_statement -> expression_opt   = NULL;
-    return_statement -> semicolon_token  = class_body -> left_brace_token;
-    return_statement -> is_reachable     = true;
+    //
+    // Construct the default constructor of the anonymous type.
+    //
+    AstMethodBody *constructor_block =
+        compilation_unit -> ast_pool -> GenMethodBody();
+    // This symbol table will be empty.
+    constructor_block -> block_symbol =
+        constructor -> block_symbol -> InsertBlockSymbol(0);
+    constructor_block -> left_brace_token = class_body -> left_brace_token;
+    constructor_block -> right_brace_token = class_body -> left_brace_token;
+    constructor_block -> explicit_constructor_opt = super_call;
 
-    AstBlock *block                = compilation_unit -> ast_pool -> GenBlock();
-    block -> block_symbol          = constructor -> block_symbol -> InsertBlockSymbol(1); // this symbol table will be empty
-    block -> left_brace_token      = class_body -> left_brace_token;
-    block -> right_brace_token     = class_body -> left_brace_token;
-
-    block -> is_reachable          = true;
-    block -> can_complete_normally = false;
-    block -> AllocateBlockStatements(1); // this block contains one statement
-    block -> AddStatement(return_statement);
-
-    AstConstructorBlock *constructor_block                   = compilation_unit -> ast_pool -> GenConstructorBlock();
-    constructor_block -> left_brace_token                    = class_body -> left_brace_token;
-    constructor_block -> explicit_constructor_invocation_opt = super_call;
-    constructor_block -> block                               = block;
-    constructor_block -> right_brace_token                   = class_body -> left_brace_token;
-
-    AstMethodDeclarator *method_declarator       = compilation_unit -> ast_pool -> GenMethodDeclarator();
-    method_declarator -> identifier_token        = left_loc;
-    method_declarator -> left_parenthesis_token  = class_creation -> left_parenthesis_token;
+    AstMethodDeclarator *method_declarator =
+        compilation_unit -> ast_pool -> GenMethodDeclarator();
+    method_declarator -> identifier_token = left_loc;
+    method_declarator -> left_parenthesis_token =
+        class_creation -> left_parenthesis_token;
     method_declarator -> right_parenthesis_token = right_loc;
 
-    AstConstructorDeclaration *constructor_declaration  = compilation_unit -> ast_pool -> GenConstructorDeclaration();
-    constructor_declaration -> constructor_declarator   = method_declarator;
-    constructor_declaration -> constructor_body         = constructor_block;
-
+    AstConstructorDeclaration *constructor_declaration  =
+        compilation_unit -> ast_pool -> GenConstructorDeclaration();
+    constructor_declaration -> constructor_declarator = method_declarator;
+    constructor_declaration -> constructor_body = constructor_block;
     constructor_declaration -> constructor_symbol = constructor;
-    constructor -> method_or_constructor_declaration = constructor_declaration;
+
+    constructor -> declaration = constructor_declaration;
+    class_body -> default_constructor = constructor_declaration;
+
 
     //
-    // Note that the constructor for the anonymous type is not added to the
-    // class body here beacause we've already completely compiled it and the
-    // arguments to its super call do not contain "valid" SimpleName Ast
-    // expressions. It is added to the constructor body later in
-    // get_anonymous_type...
+    // Update the enclosing instance of the supertype.
     //
-    // class_body -> default_constructor = constructor_declaration;
-    //
-    VariableSymbol *super_this0_variable = NULL;
-
-    if (anonymous_type -> IsLocal())
+    if (class_creation -> base_opt)
     {
-        GenerateLocalConstructor(constructor);
-
-        MethodSymbol *generated_constructor = constructor -> LocalConstructor();
-
-        assert(! constructor -> IsGeneratedLocalConstructor());
-        assert(generated_constructor);
-
-        block_symbol = generated_constructor -> block_symbol; // use the environment of the generated constructor...
-
-        if (super_call -> base_opt)
-        {
-            //
-            // Add the this$0 parameter for the super type. However, only
-            // mark it complete and do not yet assign a number to it. This
-            // will be done after we know how many extra "local" variable
-            // shadows are needed. See UpdateGeneratedLocalConstructor
-            //
-            super_this0_variable = block_symbol -> InsertVariableSymbol(control.MakeParameter(0));
-            super_this0_variable -> MarkSynthetic();
-            super_this0_variable -> SetType(super_call -> base_opt -> Type());
-            super_this0_variable -> SetOwner(generated_constructor);
-            super_this0_variable -> MarkComplete();
-        }
-
-        if (super_type -> IsLocal()) // a local type may use enclosed local variables?
-        {
-            if (super_type -> LocalClassProcessingCompleted())
-            {
-                assert(super_constructor -> LocalConstructor() && (! super_constructor -> IsGeneratedLocalConstructor()));
-
-                super_call -> symbol = super_constructor -> LocalConstructor();
-
-                //
-                // TODO: Should we set the size for the super_call arguments here ???
-                //
-                for (int i = (super_type -> ACC_STATIC() ? 0 : 1); i < super_type -> NumConstructorParameters(); i++)
-                {
-                    VariableSymbol *local = super_type -> ConstructorParameter(i) -> accessed_local,
-                                   *local_shadow = anonymous_type -> FindOrInsertLocalShadow(local);
-
-                    AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(super_call -> super_token);
-                    simple_name -> symbol = block_symbol -> FindVariableSymbol(local_shadow -> Identity());
-
-                    assert(simple_name -> symbol);
-
-                    super_call -> AddLocalArgument(simple_name);
-                }
-            }
-            else // are we currently within the body of the type in question ?
-                super_type -> AddLocalConstructorCallEnvironment(GetEnvironment(super_call));
-        }
-    }
-    else if (super_call -> base_opt)
-    {
-        super_this0_variable = block_symbol -> InsertVariableSymbol(control.MakeParameter(0));
+        VariableSymbol *super_this0_variable =
+            block_symbol -> InsertVariableSymbol(control.MakeParameter(0));
         super_this0_variable -> MarkSynthetic();
         super_this0_variable -> SetType(super_call -> base_opt -> Type());
         super_this0_variable -> SetOwner(constructor);
-        super_this0_variable -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+        super_this0_variable -> SetLocalVariableIndex(block_symbol ->
+                                                      max_variable_index++);
 
+        resolution -> AllocateArguments(class_creation -> NumArguments() + 1);
+        resolution -> AddArgument(class_creation -> base_opt);
         constructor -> AddFormalParameter(super_this0_variable);
-    }
 
-    //
-    // Complete the definition of the constructor and update the super call
-    // accordingly.
-    //
-    if (super_this0_variable)
-    {
-        class_creation -> AddArgument(super_call -> base_opt); // pass the original base expression as argument to anonymous class.
-
-        AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(class_creation -> new_token);
+        AstSimpleName *simple_name = compilation_unit -> ast_pool ->
+            GenSimpleName(class_creation -> new_token);
         simple_name -> symbol = super_this0_variable;
-        super_call -> base_opt = simple_name; // pass the base expression argument to the super class
+        super_call -> base_opt = simple_name;
     }
-
-    constructor -> SetSignature(control, this0_variable); // we now have all the information to set the signature of the constructor.
+    else resolution -> AllocateArguments(class_creation -> NumArguments());
 
     //
-    // Are we guaranteed to have all the info available here? Yes, because if
-    // the anonymous type is not local to a method, then its super type
-    // cannot be local to a method. Therefore, no extra argument (other than
-    // the proper this$0 specified in the base) is needed. If on the other
-    // hand the anonymous type is local and its supertype is also local, it
-    // must have appeared before the anonymous type and therefore its
-    // information has already been computed.
+    // Next, simply pass all parameters through to the superclass.
     //
-    for (int k = 0; k < super_constructor -> NumFormalParameters(); k++)
+    for (int j = 0; j < super_constructor -> NumFormalParameters(); j++)
     {
-        VariableSymbol *param = super_constructor -> FormalParameter(k),
-                       *symbol = block_symbol -> FindVariableSymbol(param -> Identity());
+        VariableSymbol *param = super_constructor -> FormalParameter(j);
+        VariableSymbol *symbol =
+            block_symbol -> InsertVariableSymbol(param -> Identity());
+        symbol -> SetType(param -> Type());
+        symbol -> SetOwner(constructor);
+        symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+        if (control.IsDoubleWordType(symbol -> Type()))
+            block_symbol -> max_variable_index++;
 
-        assert(symbol);
-
-        AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(class_creation -> new_token);
+        resolution -> AddArgument(class_creation -> Argument(j));
+        constructor -> AddFormalParameter(symbol);
+        AstSimpleName *simple_name = compilation_unit -> ast_pool ->
+            GenSimpleName(class_creation -> new_token);
         simple_name -> symbol = symbol;
         super_call -> AddArgument(simple_name);
     }
 
+    //
+    // We set the signature of the constructor now, although it may be modified
+    // later if this is in a local constructor call environment.
+    //
+    constructor -> SetSignature(control);
     class_creation -> class_type -> symbol = constructor;
+    state_stack.Pop();
 }
 
 //
@@ -3993,6 +3634,7 @@ TypeSymbol *Semantic::GetAnonymousType(AstClassInstanceCreationExpression *class
                         class_creation -> class_type -> RightToken(),
                         super_type -> ContainingPackage() -> PackageName(),
                         super_type -> ExternalName());
+         return control.no_type;
     }
 
     AstClassBody *class_body = class_creation -> class_body_opt;
@@ -4000,79 +3642,85 @@ TypeSymbol *Semantic::GetAnonymousType(AstClassInstanceCreationExpression *class
     TypeSymbol *outermost_type = this_type -> outermost_type;
 
     //
-    // Make up a proper name for the anonymous type
+    // Anonymous and local classes can clash if we don't use both when
+    // determining the id number of this class.
     //
-    IntToWstring value(outermost_type -> NumAnonymousTypes() + 1);
+    IntToWstring value(this_type -> NumLocalTypes() +
+                       this_type -> NumAnonymousTypes() + 1);
 
-    int length = value.Length() + outermost_type -> NameLength() + 1; // +1 for $
-    wchar_t *anonymous_name = new wchar_t[length + 1];
-    wcscpy(anonymous_name, outermost_type -> Name());
+    int length = this_type -> ExternalNameLength() + 1 +
+        value.Length(); // +1 for $
+    wchar_t *anonymous_name = new wchar_t[length + 1]; // +1 for '\0'
+    wcscpy(anonymous_name, this_type -> ExternalName());
     wcscat(anonymous_name, StringConstant::US_DS);
     wcscat(anonymous_name, value.String());
 
     NameSymbol *name_symbol = control.FindOrInsertName(anonymous_name, length);
+    delete [] anonymous_name;
 
-    assert((! ThisMethod()) || LocalSymbolTable().Top());
+    assert(! ThisMethod() || LocalSymbolTable().Top());
 
-    TypeSymbol *inner_type = (ThisMethod() ? LocalSymbolTable().Top() -> InsertAnonymousTypeSymbol(name_symbol)
-                                           : this_type -> InsertAnonymousTypeSymbol(name_symbol));
-    inner_type -> SetACC_PRIVATE();
-    inner_type -> MarkAnonymous();
-    inner_type -> outermost_type = outermost_type;
-    inner_type -> supertypes_closure = new SymbolSet;
-    inner_type -> subtypes_closure = new SymbolSet;
-    inner_type -> semantic_environment = new SemanticEnvironment((Semantic *) this, inner_type, state_stack.Top());
-    inner_type -> declaration = class_creation;
-    inner_type -> file_symbol = source_file_symbol;
-    inner_type -> SetOwner(ThisMethod() ? (Symbol *) ThisMethod() : (Symbol *) this_type);
+    TypeSymbol *anon_type =
+        this_type -> InsertAnonymousTypeSymbol(name_symbol);
+    anon_type -> MarkAnonymous();
+    anon_type -> outermost_type = outermost_type;
+    anon_type -> supertypes_closure = new SymbolSet;
+    anon_type -> subtypes_closure = new SymbolSet;
+    anon_type -> semantic_environment = new SemanticEnvironment(this, anon_type, state_stack.Top());
+    anon_type -> declaration = class_creation;
+    anon_type -> file_symbol = source_file_symbol;
+    anon_type -> SetOwner(ThisMethod() ? (Symbol *) ThisMethod() : (Symbol *) this_type);
     //
     // Add 3 extra elements for padding. Need a default constructor and
     // other support elements.
     //
-    inner_type -> SetSymbolTable(class_body -> NumClassBodyDeclarations() + 3);
-    inner_type -> SetLocation();
-    inner_type -> SetSignature(control);
+    anon_type -> SetSymbolTable(class_body -> NumClassBodyDeclarations() + 3);
+    anon_type -> SetLocation();
+    anon_type -> SetSignature(control);
 
     //
     // By JLS2 15.9.5, an anonymous class is implicitly final, but never
-    // static.  However, in a static context, error checking is much
-    // easier if the STATIC flag is temporarily set; we turn it off below.
+    // static. However, the anonymous class only needs access to its enclosing
+    // instance if it is not in a static context.
     //
-    inner_type -> SetACC_FINAL();
-    if (StaticRegion() || (ExplicitConstructorInvocation() && inner_type -> ContainingType() == ThisType()))
-         inner_type -> SetACC_STATIC();
-    else inner_type -> InsertThis(0);
+    anon_type -> SetACC_FINAL();
+    if (! StaticRegion())
+        anon_type -> InsertThis0();
 
     if (super_type -> ACC_INTERFACE())
     {
-         inner_type -> AddInterface(super_type);
-         inner_type -> super = control.Object();
+        anon_type -> AddInterface(super_type);
+        anon_type -> super = control.Object();
     }
-    else inner_type -> super = super_type;
+    else anon_type -> super = super_type;
 
-    outermost_type -> AddAnonymousType(inner_type);
-    delete [] anonymous_name;
+    this_type -> AddAnonymousType(anon_type);
 
-    AstClassDeclaration *class_declaration = compilation_unit -> ast_pool -> GenClassDeclaration();
+    AstClassDeclaration *class_declaration =
+        compilation_unit -> ast_pool -> GenClassDeclaration();
     class_declaration -> class_token = class_body -> left_brace_token;
     class_declaration -> identifier_token = class_body -> left_brace_token;
     class_declaration -> class_body = class_body;
-
     class_creation -> anonymous_declaration = class_declaration;
 
     //
+    // Provide the default constructor. For now, we don't worry about accessors
+    // to final local variables; those are inserted later when completing
+    // the class instance creation processing. Also, the throws clause may
+    // expand after processing instance initializer blocks. We keep on
+    // processing, even if the constructor failed, to detect other semantic
+    // errors in the anonymous class body.
     //
-    //
-    GetAnonymousConstructor(class_creation, inner_type);
+    GetAnonymousConstructor(class_creation, anon_type);
 
     //
     // Now process the body of the anonymous class !!!
     //
-    CheckClassMembers(inner_type, class_body);
-    ProcessNestedTypeHeaders(inner_type, class_body);
-    if (inner_type -> owner -> MethodCast())
-         ProcessSuperTypesOfOuterType(inner_type);
-    else ProcessNestedSuperTypes(inner_type);
+    CheckClassMembers(anon_type, class_body);
+    ProcessNestedTypeHeaders(anon_type, class_body);
+    if (anon_type -> owner -> MethodCast())
+         ProcessSuperTypesOfOuterType(anon_type);
+    else ProcessNestedSuperTypes(anon_type);
 
     //
     // If the class body has not yet been parsed, do so now.
@@ -4080,55 +3728,55 @@ TypeSymbol *Semantic::GetAnonymousType(AstClassInstanceCreationExpression *class
     if (class_body -> UnparsedClassBodyCast())
     {
         if (! control.parser -> InitializerParse(lex_stream, class_body))
-             compilation_unit -> kind = Ast::BAD_COMPILATION; // mark the fact that syntax errors were detected
+             compilation_unit -> kind = Ast::BAD_COMPILATION;
         else
         {
-            inner_type -> MarkHeaderProcessed();
-            ProcessMembers(inner_type -> semantic_environment, class_body);
-            CompleteSymbolTable(inner_type -> semantic_environment, class_body -> left_brace_token, class_body);
+            anon_type -> MarkHeaderProcessed();
+            ProcessMembers(anon_type -> semantic_environment, class_body);
+            CompleteSymbolTable(anon_type -> semantic_environment,
+                                class_body -> left_brace_token, class_body);
         }
 
         if (! control.parser -> BodyParse(lex_stream, class_body))
-             compilation_unit -> kind = Ast::BAD_COMPILATION; // mark the fact that syntax errors were detected
-        else ProcessExecutableBodies(inner_type -> semantic_environment, class_body);
+             compilation_unit -> kind = Ast::BAD_COMPILATION;
+        else ProcessExecutableBodies(anon_type -> semantic_environment,
+                                     class_body);
     }
     else // The relevant bodies have already been parsed
     {
-        inner_type -> MarkHeaderProcessed();
-        ProcessMembers(inner_type -> semantic_environment, class_body);
-        CompleteSymbolTable(inner_type -> semantic_environment, class_body -> left_brace_token, class_body);
-        ProcessExecutableBodies(inner_type -> semantic_environment, class_body);
+        anon_type -> MarkHeaderProcessed();
+        ProcessMembers(anon_type -> semantic_environment, class_body);
+        CompleteSymbolTable(anon_type -> semantic_environment,
+                            class_body -> left_brace_token, class_body);
+        ProcessExecutableBodies(anon_type -> semantic_environment,
+                                class_body);
     }
 
     //
-    // Add the default constructor to the body of the anonymous type.
-    // If the symbol was resolved to "no_type" then constructor will be NULL
+    // Finally, mark the class complete, in order to add any shadow variable
+    //parameters to the constructor.
     //
-    MethodSymbol *constructor = class_creation -> class_type -> symbol -> MethodCast();
-    if (constructor)
+    if (anon_type -> NumConstructorParameters())
     {
-        class_body -> default_constructor = (AstConstructorDeclaration *) constructor -> method_or_constructor_declaration;
-
-        if (inner_type -> IsLocal())
-        {
-            inner_type -> AddLocalConstructorCallEnvironment(GetEnvironment(class_creation));
-            UpdateLocalConstructors(inner_type);
-        }
+        class_body -> default_constructor -> constructor_symbol ->
+            SetSignature(control);
     }
-
-    //
-    // See above - anonymous classes are never static.
-    //
-    inner_type -> ResetACC_STATIC();
-
-    return inner_type;
+    anon_type -> MarkLocalClassProcessingCompleted();
+    return (class_creation -> class_type -> symbol == control.no_type
+            ? control.no_type : anon_type);
 }
 
 
 void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
 {
-    AstClassInstanceCreationExpression *class_creation = (AstClassInstanceCreationExpression *) expr;
+    AstClassInstanceCreationExpression *class_creation =
+        (AstClassInstanceCreationExpression *) expr;
 
+    //
+    // For an anonymous type, the qualifier determines the enclosing instance
+    // of the supertype; as the enclosing instance of the anonymous class (if
+    // present) is the current class. We update actual_type after this.
+    //
     Ast *actual_type = class_creation -> class_type -> type;
     TypeSymbol *type;
     if (class_creation -> base_opt)
@@ -4141,7 +3789,8 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
             class_creation -> symbol = control.no_type;
             return;
         }
-        else if (enclosing_type == control.null_type || enclosing_type -> Primitive())
+        if (enclosing_type == control.null_type ||
+            enclosing_type -> Primitive())
         {
             ReportSemError(SemanticError::TYPE_NOT_REFERENCE,
                            class_creation -> base_opt -> LeftToken(),
@@ -4179,186 +3828,163 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
     else
     {
         type = MustFindType(actual_type);
-        if (type -> IsInner())
-        {
-            //
-            // Within an explicit constructor invocation, a class that is
-            // immediately nested in the class being created is not accessible.
-            //
-            if (ExplicitConstructorInvocation() && type -> ContainingType() == ThisType())
-            {
-                ReportSemError(SemanticError::INNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
-                               class_creation -> LeftToken(),
-                               class_creation -> RightToken(),
-                               type -> ContainingPackage() -> PackageName(),
-                               type -> ExternalName(),
-                               ThisType() -> ContainingPackage() -> PackageName(),
-                               ThisType() -> ExternalName());
-                class_creation -> symbol = control.no_type;
-                return;
-            }
-
-            class_creation -> base_opt = CreateAccessToType(class_creation, type -> ContainingType());
-        }
+        if (type -> EnclosingType())
+            class_creation -> base_opt =
+                CreateAccessToType(class_creation, type -> EnclosingType());
     }
 
-    bool no_bad_argument = true;
+    //
+    // Check the arguments to the constructor.
+    //
+    bool bad_argument = false;
     for (int i = 0; i < class_creation -> NumArguments(); i++)
     {
         AstExpression *expr = class_creation -> Argument(i);
         ProcessExpressionOrStringConstant(expr);
-        no_bad_argument = no_bad_argument && (expr -> symbol != control.no_type);
+        bad_argument = bad_argument || expr -> symbol == control.no_type;
     }
-
-    TypeSymbol *anonymous_type = NULL;
-
-    if (! no_bad_argument)
+    if (bad_argument)
     {
         class_creation -> class_type -> symbol = control.no_type;
-        class_creation -> symbol = type;
+        class_creation -> symbol = control.no_type;
+        return;
     }
-    else
-    {
-        MethodSymbol *method = FindConstructor((type -> ACC_INTERFACE() ? control.Object() : type),
-                                               class_creation,
-                                               actual_type -> LeftToken(),
-                                               class_creation -> right_parenthesis_token);
 
-        if (! method)
+    //
+    // Create the anonymous class now, if needed; then check that the type
+    // can be constructed. A side effect of creating the anonymous class is
+    // building a resolution constructor invocation that does not have a body;
+    // this new constructor is necessary to call parameters in the correct
+    // order, when the superclass of the anonymous class has an enclosing
+    // instance.
+    //
+    if (class_creation -> class_body_opt)
+    {
+        type = GetAnonymousType(class_creation, type);
+        class_creation -> symbol = type;
+        if (type == control.no_type)
+            return;
+        class_creation = class_creation -> resolution_opt;
+    }
+    else class_creation -> symbol = type;
+
+    if (type -> ACC_INTERFACE())
+    {
+        ReportSemError(SemanticError::NOT_A_CLASS,
+                       actual_type -> LeftToken(),
+                       actual_type -> RightToken(),
+                       type -> ContainingPackage() -> PackageName(),
+                       type -> ExternalName());
+        class_creation -> symbol = control.no_type;
+        return;
+    }
+    else if (type -> ACC_ABSTRACT())
+    {
+        ReportSemError(SemanticError::ABSTRACT_TYPE_CREATION,
+                       actual_type -> LeftToken(),
+                       actual_type -> RightToken(),
+                       type -> ExternalName());
+    }
+
+    MethodSymbol *ctor =
+        FindConstructor(type, class_creation, actual_type -> LeftToken(),
+                        class_creation -> right_parenthesis_token);
+    if (! ctor)
+    {
+        class_creation -> class_type -> symbol = control.no_type;
+        return;
+    }
+
+    //
+    // Convert the arguments to the correct types.
+    //
+    assert(ctor -> IsTyped());
+    class_creation -> class_type -> symbol = ctor;
+
+    if (class_creation -> base_opt && ! ctor -> containing_type -> Bad())
+    {
+        assert(CanAssignmentConvertReference(ctor -> containing_type -> EnclosingType(),
+                                             class_creation -> base_opt -> Type()));
+        class_creation -> base_opt =
+            ConvertToType(class_creation -> base_opt,
+                          ctor -> containing_type -> EnclosingType());
+    }
+
+    for (int i = 0; i < class_creation -> NumArguments(); i++)
+    {
+        AstExpression *expr = class_creation -> Argument(i);
+        class_creation -> Argument(i) =
+            ConvertToType(expr, ctor -> FormalParameter(i) -> Type());
+    }
+
+    //
+    // Process the throws clause.
+    //
+    SymbolSet *exception_set = TryExceptionTableStack().Top();
+    for (int j = ctor -> NumThrows() - 1; j >= 0; j--)
+    {
+        TypeSymbol *exception = ctor -> Throws(j);
+        if (exception_set)
+            exception_set -> AddElement(exception);
+
+        if (UncaughtException(exception))
+            ReportSemError((class_creation -> class_body_opt
+                            ? SemanticError::UNCAUGHT_CONSTRUCTOR_EXCEPTION
+                            : SemanticError::UNCAUGHT_ANONYMOUS_CONSTRUCTOR_EXCEPTION),
+                           actual_type -> LeftToken(),
+                           actual_type -> RightToken(),
+                           type -> ExternalName(),
+                           exception -> ContainingPackage() -> PackageName(),
+                           exception -> ExternalName(),
+                           UncaughtExceptionContext());
+    }
+
+    if (ctor -> ACC_PRIVATE() && ThisType() != type)
+    {
+        //
+        // Add extra argument for read access constructor.
+        //
+        assert(ThisType() -> outermost_type == type -> outermost_type);
+        ctor = type -> GetReadAccessConstructor(ctor);
+        class_creation -> class_type -> symbol = ctor;
+        class_creation -> AddNullArgument();
+    }
+
+    //
+    // A local type may use enclosed local variables. If so, we must add
+    // the parameters which allow the local type to initialize its shadows.
+    //
+    if (type -> IsLocal())
+    {
+        if (type -> LocalClassProcessingCompleted())
         {
-            class_creation -> class_type -> symbol = control.no_type;
-            class_creation -> symbol = type;
+            int param_count = type -> NumConstructorParameters();
+            if (param_count > 0)
+                class_creation -> AllocateLocalArguments(param_count);
+            for (int i = 0; i < param_count; i++)
+            {
+                VariableSymbol *local = type -> ConstructorParameter(i) -> accessed_local;
+                AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(class_creation -> new_token);
+                //
+                // Are we currently within the body of the method that
+                // contains the local variable in question? If not, we may need
+                // to create a shadow in the outermost local class enclosing
+                // the variable.
+                //
+                simple_name -> symbol = (type -> owner == ThisMethod()) ? local
+                    : FindLocalVariable(local, ThisType());
+                class_creation -> AddLocalArgument(simple_name);
+            }
         }
         else
         {
-            assert(method -> IsTyped());
-
-            if (class_creation -> base_opt &&
-                (class_creation -> base_opt -> symbol != control.no_type) &&
-                (class_creation -> base_opt -> Type() != method -> containing_type -> ContainingType()))
-            {
-                assert(method -> containing_type);
-                assert(method -> containing_type -> ContainingType());
-                assert(class_creation -> base_opt -> Type());
-                assert(CanMethodInvocationConvert(method -> containing_type -> ContainingType(),
-                                                  class_creation -> base_opt -> Type()));
-
-                class_creation -> base_opt = ConvertToType(class_creation -> base_opt, method -> containing_type -> ContainingType());
-            }
-
-            for (int i = 0; i < class_creation -> NumArguments(); i++)
-            {
-                AstExpression *expr = class_creation -> Argument(i);
-                if (expr -> Type() != method -> FormalParameter(i) -> Type())
-                    class_creation -> Argument(i) = ConvertToType(expr, method -> FormalParameter(i) -> Type());
-            }
-
-            if (class_creation -> class_body_opt)
-            {
-                anonymous_type = GetAnonymousType(class_creation, type);
-                method = anonymous_type -> FindConstructorSymbol();
-                if (method -> LocalConstructor())
-                    method = method -> LocalConstructor();
-            }
-            else
-            {
-                if (type -> ACC_INTERFACE())
-                {
-                    ReportSemError(SemanticError::NOT_A_CLASS,
-                                   actual_type -> LeftToken(),
-                                   actual_type -> RightToken(),
-                                   type -> ContainingPackage() -> PackageName(),
-                                   type -> ExternalName());
-                    class_creation -> symbol = control.no_type;
-                    return;
-                }
-                else if (type -> ACC_ABSTRACT())
-                {
-                    ReportSemError(SemanticError::ABSTRACT_TYPE_CREATION,
-                                   actual_type -> LeftToken(),
-                                   actual_type -> RightToken(),
-                                   type -> ExternalName());
-                }
-
-                class_creation -> class_type -> symbol = method;
-            }
-
-            SymbolSet *exception_set = TryExceptionTableStack().Top();
-            for (int j = method -> NumThrows() - 1; j >= 0; j--)
-            {
-                TypeSymbol *exception = method -> Throws(j);
-                if (exception_set)
-                    exception_set -> AddElement(exception);
-
-                if (UncaughtException(exception))
-                    ReportSemError((class_creation -> class_body_opt
-                                    ? SemanticError::UNCAUGHT_CONSTRUCTOR_EXCEPTION
-                                    : SemanticError::UNCAUGHT_ANONYMOUS_CONSTRUCTOR_EXCEPTION),
-                                   actual_type -> LeftToken(),
-                                   actual_type -> RightToken(),
-                                   type -> ExternalName(),
-                                   exception -> ContainingPackage() -> PackageName(),
-                                   exception -> ExternalName(),
-                                   UncaughtExceptionContext());
-            }
-
-            class_creation -> symbol = (anonymous_type ? anonymous_type : type);
 
             //
-            // Note that since constructors are not inherited, we do not need
-            // to worry about the protected case here.
+            // We are within body of type; save processing for later, since
+            // not all shadows may be known yet. See ProcessClassDeclaration
+            // in body.cpp.
             //
-            if (ThisType() != type &&
-                ThisType() -> outermost_type == type -> outermost_type &&
-                method -> ACC_PRIVATE())
-            {
-                if (! method -> LocalConstructor())
-                {
-                    method = type -> GetReadAccessConstructor(method);
-                    class_creation -> class_type -> symbol = method;
-
-                    //
-                    // Add extra argument for read access constructor;
-                    //
-                    class_creation -> AddNullArgument();
-                }
-            }
-            else ConstructorAccessCheck(class_creation, method);
-
-            //
-            // A local type may use enclosed local variables. So, we at least
-            // allocate the space for adding these extra arguments. If the
-            // type being created has already been fully processed, add the
-            // extra arguments here.
-            //
-            if ((! anonymous_type) && type -> IsLocal())
-            {
-                if (type -> LocalClassProcessingCompleted() && method -> LocalConstructor())
-                {
-                    assert(! method -> IsGeneratedLocalConstructor());
-
-                    class_creation -> class_type -> symbol = method -> LocalConstructor();
-
-                    assert(method -> LocalConstructor() -> signature);
-
-                    for (int i = (type -> ACC_STATIC() ? 0 : 1); i < type -> NumConstructorParameters(); i++)
-                    {
-                        VariableSymbol *local = type -> ConstructorParameter(i) -> accessed_local;
-
-                        AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(class_creation -> new_token);
-                        //
-                        // Are we currently within the body of the method
-                        // that contains the local type in question?
-                        //
-                        simple_name -> symbol = (type -> owner == ThisMethod()
-                                                                ? local
-                                                                : ThisType() -> FindOrInsertLocalShadow(local));
-                        class_creation -> AddLocalArgument(simple_name);
-                    }
-                }
-                else // are we within body of type in question? Save processing for later. See ProcessClassDeclaration in body.cpp
-                    type -> AddLocalConstructorCallEnvironment(GetEnvironment(class_creation));
-            }
+            type -> AddLocalConstructorCallEnvironment(GetEnvironment(class_creation));
         }
     }
 }
@@ -4387,7 +4013,7 @@ void Semantic::ProcessArrayCreationExpression(Ast *expr)
                                      : array_creation -> NumDimExprs() + array_creation -> NumBrackets());
 
     if (num_dimensions > 0)
-        type = type -> GetArrayType((Semantic *) this, num_dimensions);
+        type = type -> GetArrayType(this, num_dimensions);
     array_creation -> symbol = type;
 
     for (int i = 0; i < array_creation -> NumDimExprs(); i++)
@@ -4761,49 +4387,45 @@ bool Semantic::CanMethodInvocationConvert(TypeSymbol *target_type,
 
     if (source_type -> Primitive())
     {
-        if (! target_type -> Primitive())
-            return false;
-
-        return (target_type == source_type ||
-                CanWideningPrimitiveConvert(target_type, source_type));
+        return (target_type -> Primitive() &&
+                (target_type == source_type ||
+                 CanWideningPrimitiveConvert(target_type, source_type)));
     }
-    else
-    {
-        if (target_type -> Primitive())
-            return false;
 
-        if (source_type -> IsArray())
+    if (target_type -> Primitive())
+        return false;
+
+    if (source_type -> IsArray())
+    {
+        if (target_type -> IsArray())
         {
-            if (target_type -> IsArray())
-            {
-                TypeSymbol *source_subtype = source_type -> ArraySubtype();
-                TypeSymbol *target_subtype = target_type -> ArraySubtype();
-                return (source_subtype -> Primitive() &&
-                        target_subtype -> Primitive()
-                        ? (source_subtype == target_subtype)
-                        : CanMethodInvocationConvert(target_subtype,
-                                                     source_subtype));
-            }
-            return (target_type == control.Object() ||
-                    target_type == control.Cloneable() ||
-                    target_type == control.Serializable());
+            TypeSymbol *source_subtype = source_type -> ArraySubtype();
+            TypeSymbol *target_subtype = target_type -> ArraySubtype();
+            return ((source_subtype -> Primitive() &&
+                     target_subtype -> Primitive())
+                    ? (source_subtype == target_subtype)
+                    : CanMethodInvocationConvert(target_subtype,
+                                                 source_subtype));
         }
-        else if (source_type -> ACC_INTERFACE())
-        {
-            if (target_type -> ACC_INTERFACE())
-                 return source_type -> IsSubinterface(target_type);
-            else if (target_type != control.Object()) // target is a class type
-                 return false;
-        }
-        else if (source_type != control.null_type) // source_type is a class
-        {
-            if (target_type -> IsArray())
-                 return false;
-            else if (target_type -> ACC_INTERFACE())
-                 return source_type -> Implements(target_type);
-            else if (! source_type -> IsSubclass(target_type))
-                 return false;
-        }
+        return (target_type == control.Object() ||
+                target_type == control.Cloneable() ||
+                target_type == control.Serializable());
+    }
+
+    if (source_type -> ACC_INTERFACE())
+    {
+        if (target_type -> ACC_INTERFACE())
+            return source_type -> IsSubinterface(target_type);
+        return target_type == control.Object();
+    }
+
+    if (source_type != control.null_type) // source_type is a class
+    {
+        if (target_type -> IsArray())
+            return false;
+        if (target_type -> ACC_INTERFACE())
+            return source_type -> Implements(target_type);
+        return source_type -> IsSubclass(target_type);
     }
 
     return true;
@@ -4833,91 +4455,100 @@ bool Semantic::CanCastConvert(TypeSymbol *target_type,
                               TypeSymbol *source_type,
                               LexStream::TokenIndex tok)
 {
-    if (source_type == target_type || source_type == control.no_type || target_type == control.no_type)
+    if (source_type == target_type || source_type == control.no_type ||
+        target_type == control.no_type)
+    {
         return true;
+    }
 
     if (source_type -> Primitive())
     {
-        if (! target_type -> Primitive())
-            return false;
-
-        return (CanWideningPrimitiveConvert(target_type, source_type) ||
-                CanNarrowingPrimitiveConvert(target_type, source_type));
+        return (target_type -> Primitive() &&
+                (CanWideningPrimitiveConvert(target_type, source_type) ||
+                 CanNarrowingPrimitiveConvert(target_type, source_type)));
     }
-    else
+
+    if (target_type -> Primitive())
+        return false;
+
+    if (source_type -> IsArray())
     {
-        if (target_type -> Primitive())
-            return false;
-
-        if (source_type -> IsArray())
+        if (target_type -> IsArray())
         {
-            if (target_type -> IsArray())
-            {
-                TypeSymbol *source_subtype = source_type -> ArraySubtype();
-                TypeSymbol *target_subtype = target_type -> ArraySubtype();
-                return (source_subtype -> Primitive() &&
-                        target_subtype -> Primitive()
-                        ? (source_subtype == target_subtype)
-                        : CanCastConvert(target_subtype, source_subtype, tok));
-            }
-            return (target_type == control.Object() ||
-                    target_type == control.Cloneable() ||
-                    target_type == control.Serializable());
+            TypeSymbol *source_subtype = source_type -> ArraySubtype();
+            TypeSymbol *target_subtype = target_type -> ArraySubtype();
+            return ((source_subtype -> Primitive() &&
+                     target_subtype -> Primitive())
+                    ? (source_subtype == target_subtype)
+                    : CanCastConvert(target_subtype, source_subtype, tok));
         }
-        else if (source_type -> ACC_INTERFACE())
+        return (target_type == control.Object() ||
+                target_type == control.Cloneable() ||
+                target_type == control.Serializable());
+    }
+
+    if (source_type -> ACC_INTERFACE())
+    {
+        if (target_type -> ACC_INTERFACE())
         {
-            if (target_type -> ACC_INTERFACE())
+            if (! source_type -> expanded_method_table)
+                ComputeMethodsClosure(source_type, tok);
+            if (! target_type -> expanded_method_table)
+                ComputeMethodsClosure(target_type, tok);
+
+            //
+            // Iterate over all methods in the source symbol table of the
+            // source_type interface; For each such method, if the
+            // target_type contains a method with the same signature, then
+            // make sure that the two methods have the same return type.
+            //
+            ExpandedMethodTable *source_method_table = source_type -> expanded_method_table;
+            int i;
+            for (i = 0; i < source_method_table -> symbol_pool.Length(); i++)
             {
-                if (! source_type -> expanded_method_table)
-                    ComputeMethodsClosure(source_type, tok);
-                if (! target_type -> expanded_method_table)
-                    ComputeMethodsClosure(target_type, tok);
-
-                //
-                // Iterate over all methods in the source symbol table of the
-                // source_type interface; For each such method, if the
-                // target_type contains a method with the same signature, then
-                // make sure that the two methods have the same return type.
-                //
-                ExpandedMethodTable *source_method_table = source_type -> expanded_method_table;
-                int i;
-                for (i = 0; i < source_method_table -> symbol_pool.Length(); i++)
+                MethodSymbol *method1 = source_method_table -> symbol_pool[i] -> method_symbol;
+                MethodShadowSymbol *method_shadow2 = target_type -> expanded_method_table
+                    -> FindOverloadMethodShadow(method1, this, tok);
+                if (method_shadow2)
                 {
-                    MethodSymbol *method1 = source_method_table -> symbol_pool[i] -> method_symbol;
-                    MethodShadowSymbol *method_shadow2 = target_type -> expanded_method_table
-                                                                     -> FindOverloadMethodShadow(method1, (Semantic *) this, tok);
-                    if (method_shadow2)
-                    {
-                        if (! method1 -> IsTyped())
-                            method1 -> ProcessMethodSignature((Semantic *) this, tok);
+                    if (! method1 -> IsTyped())
+                        method1 -> ProcessMethodSignature(this, tok);
 
-                        MethodSymbol *method2 = method_shadow2 -> method_symbol;
-                        if (! method2 -> IsTyped())
-                            method2 -> ProcessMethodSignature((Semantic *) this, tok);
-                        if (method1 -> Type() != method2 -> Type())
-                            break;
-                    }
+                    MethodSymbol *method2 = method_shadow2 -> method_symbol;
+                    if (! method2 -> IsTyped())
+                        method2 -> ProcessMethodSignature(this, tok);
+                    if (method1 -> Type() != method2 -> Type())
+                        break;
                 }
-
-                // all the methods passed the test
-                return (i == source_method_table -> symbol_pool.Length());
             }
-            else if (target_type -> ACC_FINAL() && (! target_type -> Implements(source_type)))
+
+            // All the methods passed the test.
+            return (i == source_method_table -> symbol_pool.Length());
+        }
+        else if (target_type -> ACC_FINAL() &&
+                 ! target_type -> Implements(source_type))
+        {
                  return false;
         }
-        else if (source_type != control.null_type) // source_type is a class
+    }
+    else if (source_type != control.null_type) // source_type is a class
+    {
+        if (target_type -> IsArray())
         {
-            if (target_type -> IsArray())
+            if (source_type != control.Object())
+                return false;
+        }
+        else if (target_type -> ACC_INTERFACE())
+        {
+            if (source_type -> ACC_FINAL() &&
+                ! source_type -> Implements(target_type))
             {
-                if (source_type != control.Object())
-                    return false;
+                return false;
             }
-            else if (target_type -> ACC_INTERFACE())
-            {
-                if (source_type -> ACC_FINAL() && (! source_type -> Implements(target_type)))
-                    return false;
-            }
-            else if ((! source_type -> IsSubclass(target_type)) && (! target_type -> IsSubclass(source_type)))
+        }
+        else if (! source_type -> IsSubclass(target_type) &&
+                 ! target_type -> IsSubclass(source_type))
+        {
                  return false;
         }
     }
@@ -4927,7 +4558,8 @@ bool Semantic::CanCastConvert(TypeSymbol *target_type,
 
 
 //
-// We only need to cast the value of constant primitive expressions.
+// Transfer a constant value across a primitive or String cast statement,
+// whether explicit or generated.
 //
 LiteralValue *Semantic::CastValue(TypeSymbol *target_type,
                                   AstExpression *expr)
@@ -4948,60 +4580,81 @@ LiteralValue *Semantic::CastValue(TypeSymbol *target_type,
     {
         if (source_type == control.double_type)
         {
-            DoubleLiteralValue *literal = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> value);
+            DoubleLiteralValue *literal =
+                DYNAMIC_CAST<DoubleLiteralValue *> (expr -> value);
             DoubleToString ieee_double(literal -> value);
-            literal_value = control.Utf8_pool.FindOrInsert(ieee_double.String(), ieee_double.Length());
+            literal_value =
+                control.Utf8_pool.FindOrInsert(ieee_double.String(),
+                                               ieee_double.Length());
         }
         else if (source_type == control.float_type)
         {
-            FloatLiteralValue *literal = DYNAMIC_CAST<FloatLiteralValue *> (expr -> value);
+            FloatLiteralValue *literal =
+                DYNAMIC_CAST<FloatLiteralValue *> (expr -> value);
             FloatToString ieee_float(literal -> value);
-            literal_value = control.Utf8_pool.FindOrInsert(ieee_float.String(), ieee_float.Length());
+            literal_value =
+                control.Utf8_pool.FindOrInsert(ieee_float.String(),
+                                               ieee_float.Length());
         }
         else if (source_type == control.long_type)
         {
-            LongLiteralValue *literal = DYNAMIC_CAST<LongLiteralValue *> (expr -> value);
+            LongLiteralValue *literal =
+                DYNAMIC_CAST<LongLiteralValue *> (expr -> value);
             LongToDecString long_integer(literal -> value);
-            literal_value = control.Utf8_pool.FindOrInsert(long_integer.String(), long_integer.Length());
+            literal_value =
+                control.Utf8_pool.FindOrInsert(long_integer.String(),
+                                               long_integer.Length());
         }
         else if (source_type == control.char_type)
         {
-            IntLiteralValue *literal = DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
+            IntLiteralValue *literal =
+                DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
             literal_value = control.Utf8_pool.FindOrInsert(literal -> value);
         }
         else if (source_type == control.boolean_type)
         {
             if (IsConstantFalse(expr))
-                literal_value = control.Utf8_pool.FindOrInsert(StringConstant::U8S_false, 5);
+                literal_value =
+                    control.Utf8_pool.FindOrInsert(StringConstant::U8S_false,
+                                                   5);
             else
             {
                 assert(IsConstantTrue(expr));
-                literal_value = control.Utf8_pool.FindOrInsert(StringConstant::U8S_true, 4);
+                literal_value =
+                    control.Utf8_pool.FindOrInsert(StringConstant::U8S_true,
+                                                   4);
             }
         }
         else if (control.IsSimpleIntegerValueType(source_type))
         {
-            IntLiteralValue *literal = DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
+            IntLiteralValue *literal =
+                DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
             IntToString integer(literal -> value);
-            literal_value = control.Utf8_pool.FindOrInsert(integer.String(), integer.Length());
+            literal_value =
+                control.Utf8_pool.FindOrInsert(integer.String(),
+                                               integer.Length());
         }
     }
     else if (target_type == control.double_type)
     {
         if (source_type == control.float_type)
         {
-            FloatLiteralValue *literal = DYNAMIC_CAST<FloatLiteralValue *> (expr -> value);
-            literal_value = control.double_pool.FindOrInsert(literal -> value.DoubleValue());
+            FloatLiteralValue *literal =
+                DYNAMIC_CAST<FloatLiteralValue *> (expr -> value);
+            literal_value =
+                control.double_pool.FindOrInsert(literal -> value.DoubleValue());
         }
         else if (source_type == control.long_type)
         {
-            LongLiteralValue *literal = DYNAMIC_CAST<LongLiteralValue *> (expr -> value);
+            LongLiteralValue *literal =
+                DYNAMIC_CAST<LongLiteralValue *> (expr -> value);
             IEEEdouble value(literal -> value);
             literal_value = control.double_pool.FindOrInsert(value);
         }
         else
         {
-            IntLiteralValue *literal = DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
+            IntLiteralValue *literal =
+                DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
             IEEEdouble value(literal -> value);
             literal_value = control.double_pool.FindOrInsert(value);
         }
@@ -5010,18 +4663,22 @@ LiteralValue *Semantic::CastValue(TypeSymbol *target_type,
     {
         if (source_type == control.double_type)
         {
-            DoubleLiteralValue *literal = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> value);
-            literal_value = control.float_pool.FindOrInsert(literal -> value.FloatValue());
+            DoubleLiteralValue *literal =
+                DYNAMIC_CAST<DoubleLiteralValue *> (expr -> value);
+            literal_value =
+                control.float_pool.FindOrInsert(literal -> value.FloatValue());
         }
         else if (source_type == control.long_type)
         {
-            LongLiteralValue *literal = DYNAMIC_CAST<LongLiteralValue *> (expr -> value);
+            LongLiteralValue *literal =
+                DYNAMIC_CAST<LongLiteralValue *> (expr -> value);
             IEEEfloat value(literal -> value);
             literal_value = control.float_pool.FindOrInsert(value);
         }
         else
         {
-            IntLiteralValue *literal = DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
+            IntLiteralValue *literal =
+                DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
             IEEEfloat value(literal -> value);
             literal_value = control.float_pool.FindOrInsert(value);
         }
@@ -5030,36 +4687,48 @@ LiteralValue *Semantic::CastValue(TypeSymbol *target_type,
     {
         if (source_type == control.double_type)
         {
-            DoubleLiteralValue *literal = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> value);
-            literal_value = control.long_pool.FindOrInsert(literal -> value.LongValue());
+            DoubleLiteralValue *literal =
+                DYNAMIC_CAST<DoubleLiteralValue *> (expr -> value);
+            literal_value =
+                control.long_pool.FindOrInsert(literal -> value.LongValue());
         }
         else if (source_type == control.float_type)
         {
-            FloatLiteralValue *literal = DYNAMIC_CAST<FloatLiteralValue *> (expr -> value);
-            literal_value = control.long_pool.FindOrInsert(literal -> value.LongValue());
+            FloatLiteralValue *literal =
+                DYNAMIC_CAST<FloatLiteralValue *> (expr -> value);
+            literal_value =
+                control.long_pool.FindOrInsert(literal -> value.LongValue());
         }
         else
         {
-            IntLiteralValue *literal = DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
-            literal_value = control.long_pool.FindOrInsert((LongInt) literal -> value);
+            IntLiteralValue *literal =
+                DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
+            literal_value =
+                control.long_pool.FindOrInsert((LongInt) literal -> value);
         }
     }
     else if (target_type == control.int_type)
     {
         if (source_type == control.double_type)
         {
-            DoubleLiteralValue *literal = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> value);
-            literal_value = control.int_pool.FindOrInsert((literal -> value).IntValue());
+            DoubleLiteralValue *literal =
+                DYNAMIC_CAST<DoubleLiteralValue *> (expr -> value);
+            literal_value =
+                control.int_pool.FindOrInsert((literal -> value).IntValue());
         }
         else if (source_type == control.float_type)
         {
-            FloatLiteralValue *literal = DYNAMIC_CAST<FloatLiteralValue *> (expr -> value);
-            literal_value = control.int_pool.FindOrInsert(literal -> value.IntValue());
+            FloatLiteralValue *literal =
+                DYNAMIC_CAST<FloatLiteralValue *> (expr -> value);
+            literal_value =
+                control.int_pool.FindOrInsert(literal -> value.IntValue());
         }
         else if (source_type == control.long_type)
         {
-            LongLiteralValue *literal = DYNAMIC_CAST<LongLiteralValue *> (expr -> value);
-            literal_value = control.int_pool.FindOrInsert((i4) (literal -> value).LowWord());
+            LongLiteralValue *literal =
+                DYNAMIC_CAST<LongLiteralValue *> (expr -> value);
+            literal_value =
+                control.int_pool.FindOrInsert((i4) (literal -> value).LowWord());
         }
         else literal_value = expr -> value;
     }
@@ -5067,69 +4736,93 @@ LiteralValue *Semantic::CastValue(TypeSymbol *target_type,
     {
         if (source_type == control.double_type)
         {
-            DoubleLiteralValue *literal = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> value);
-            literal_value = control.int_pool.FindOrInsert((i4) (u2) (literal -> value.IntValue()));
+            DoubleLiteralValue *literal =
+                DYNAMIC_CAST<DoubleLiteralValue *> (expr -> value);
+            literal_value =
+                control.int_pool.FindOrInsert((i4) (u2) (literal -> value.IntValue()));
         }
         else if (source_type == control.float_type)
         {
-            FloatLiteralValue *literal = DYNAMIC_CAST<FloatLiteralValue *> (expr -> value);
-            literal_value = control.int_pool.FindOrInsert((i4) (u2) (literal -> value.IntValue()));
+            FloatLiteralValue *literal =
+                DYNAMIC_CAST<FloatLiteralValue *> (expr -> value);
+            literal_value =
+                control.int_pool.FindOrInsert((i4) (u2) (literal -> value.IntValue()));
         }
         else if (source_type == control.long_type)
         {
-            LongLiteralValue *literal = DYNAMIC_CAST<LongLiteralValue *> (expr -> value);
-            literal_value = control.int_pool.FindOrInsert((i4) (u2) (literal -> value).LowWord());
+            LongLiteralValue *literal =
+                DYNAMIC_CAST<LongLiteralValue *> (expr -> value);
+            literal_value =
+                control.int_pool.FindOrInsert((i4) (u2) (literal -> value).LowWord());
         }
         else
         {
-            IntLiteralValue *literal = DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
-            literal_value = control.int_pool.FindOrInsert((i4) (u2) literal -> value);
+            IntLiteralValue *literal =
+                DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
+            literal_value =
+                control.int_pool.FindOrInsert((i4) (u2) literal -> value);
         }
     }
     else if (target_type == control.short_type)
     {
         if (source_type == control.double_type)
         {
-            DoubleLiteralValue *literal = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> value);
-            literal_value = control.int_pool.FindOrInsert((i4) (i2) (literal -> value.IntValue()));
+            DoubleLiteralValue *literal =
+                DYNAMIC_CAST<DoubleLiteralValue *> (expr -> value);
+            literal_value =
+                control.int_pool.FindOrInsert((i4) (i2) (literal -> value.IntValue()));
         }
         else if (source_type == control.float_type)
         {
-            FloatLiteralValue *literal = DYNAMIC_CAST<FloatLiteralValue *> (expr -> value);
-            literal_value = control.int_pool.FindOrInsert((i4) (i2) (literal -> value.IntValue()));
+            FloatLiteralValue *literal =
+                DYNAMIC_CAST<FloatLiteralValue *> (expr -> value);
+            literal_value =
+                control.int_pool.FindOrInsert((i4) (i2) (literal -> value.IntValue()));
         }
         else if (source_type == control.long_type)
         {
-            LongLiteralValue *literal = DYNAMIC_CAST<LongLiteralValue *> (expr -> value);
-            literal_value = control.int_pool.FindOrInsert((i4) (i2) (literal -> value).LowWord());
+            LongLiteralValue *literal =
+                DYNAMIC_CAST<LongLiteralValue *> (expr -> value);
+            literal_value =
+                control.int_pool.FindOrInsert((i4) (i2) (literal -> value).LowWord());
         }
         else
         {
-            IntLiteralValue *literal = DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
-            literal_value = control.int_pool.FindOrInsert((i4) (i2) literal -> value);
+            IntLiteralValue *literal =
+                DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
+            literal_value =
+                control.int_pool.FindOrInsert((i4) (i2) literal -> value);
         }
     }
     else if (target_type == control.byte_type)
     {
         if (source_type == control.double_type)
         {
-            DoubleLiteralValue *literal = DYNAMIC_CAST<DoubleLiteralValue *> (expr -> value);
-            literal_value = control.int_pool.FindOrInsert((i4) (i1) (literal -> value.IntValue()));
+            DoubleLiteralValue *literal =
+                DYNAMIC_CAST<DoubleLiteralValue *> (expr -> value);
+            literal_value =
+                control.int_pool.FindOrInsert((i4) (i1) (literal -> value.IntValue()));
         }
         else if (source_type == control.float_type)
         {
-            FloatLiteralValue *literal = DYNAMIC_CAST<FloatLiteralValue *> (expr -> value);
-            literal_value = control.int_pool.FindOrInsert((i4) (i1) (literal -> value.IntValue()));
+            FloatLiteralValue *literal =
+                DYNAMIC_CAST<FloatLiteralValue *> (expr -> value);
+            literal_value =
+                control.int_pool.FindOrInsert((i4) (i1) (literal -> value.IntValue()));
         }
         else if (source_type == control.long_type)
         {
-            LongLiteralValue *literal = DYNAMIC_CAST<LongLiteralValue *> (expr -> value);
-            literal_value = control.int_pool.FindOrInsert((int) (i1) (literal -> value).LowWord());
+            LongLiteralValue *literal =
+                DYNAMIC_CAST<LongLiteralValue *> (expr -> value);
+            literal_value =
+                control.int_pool.FindOrInsert((int) (i1) (literal -> value).LowWord());
         }
         else
         {
-            IntLiteralValue *literal = DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
-            literal_value = control.int_pool.FindOrInsert((i4) (i1) literal -> value);
+            IntLiteralValue *literal =
+                DYNAMIC_CAST<IntLiteralValue *> (expr -> value);
+            literal_value =
+                control.int_pool.FindOrInsert((i4) (i1) literal -> value);
         }
     }
 
@@ -5172,8 +4865,7 @@ void Semantic::ProcessCastExpression(Ast *expr)
 
     int num_dimensions = cast_expression -> NumBrackets();
     target_type = (num_dimensions == 0 ? target_type
-                   : target_type -> GetArrayType((Semantic *) this,
-                                                 num_dimensions));
+                   : target_type -> GetArrayType(this, num_dimensions));
 
     if (CanAssignmentConvert(target_type, cast_expression -> expression))
     {
@@ -5203,13 +4895,22 @@ void Semantic::ProcessCastExpression(Ast *expr)
 
 AstExpression *Semantic::ConvertToType(AstExpression *expr, TypeSymbol *type)
 {
-    if (expr -> Type() == control.null_type || type -> Bad())
+    TypeSymbol *target_type = expr -> Type();
+    if (target_type == control.null_type || target_type == type ||
+        target_type == control.no_type || type -> Bad())
+    {
         return expr;
+    }
 
     LexStream::TokenIndex loc = expr -> LeftToken();
 
-    AstCastExpression *result = compilation_unit -> ast_pool -> GenCastExpression();
+    AstCastExpression *result =
+        compilation_unit -> ast_pool -> GenCastExpression();
     result -> left_parenthesis_token_opt = loc;
+    //
+    // Rather than generate an AstTypeExpression, we leave this NULL and rely
+    // on the resolved symbol for the type.
+    //
     result -> type_opt = NULL;
     result -> right_parenthesis_token_opt = loc;
     result -> expression = expr;
@@ -6721,7 +6422,7 @@ void Semantic::ProcessTypeExpression(Ast *expr)
     TypeSymbol *type = (primitive_type ? FindPrimitiveType(primitive_type) : MustFindType(actual_type));
 
     if (array_type)
-        type = type -> GetArrayType((Semantic *) this, array_type -> NumBrackets());
+        type = type -> GetArrayType(this, array_type -> NumBrackets());
 
     type_expression -> symbol = type;
 }

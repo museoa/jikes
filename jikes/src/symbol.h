@@ -102,7 +102,7 @@ public:
     {
         assert(entries);
 
-        DirectoryEntry *entry = entries -> InsertEntry((DirectorySymbol *) this, name, length);
+        DirectoryEntry *entry = entries -> InsertEntry(this, name, length);
         entries -> InsertCaseInsensitiveEntry(entry);
     }
 #endif
@@ -396,7 +396,7 @@ private:
 class MethodSymbol : public Symbol, public AccessFlags
 {
 public:
-    Ast *method_or_constructor_declaration; // AstMethodDeclaration or AstConstructorDeclaration
+    Ast *declaration; // AstMethodDeclaration or AstConstructorDeclaration
     NameSymbol *name_symbol;
     TypeSymbol *containing_type;
     BlockSymbol *block_symbol;
@@ -439,31 +439,30 @@ public:
     char *Utf8Name() { return (char *) (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> value : NULL); }
     int Utf8NameLength() { return (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0); }
 
-    MethodSymbol(NameSymbol *name_symbol_) : method_or_constructor_declaration(NULL),
-                                             name_symbol(name_symbol_),
-                                             containing_type(NULL),
-                                             block_symbol(NULL),
-                                             next_method(NULL),
-                                             signature(NULL),
-                                             max_block_depth(1), // there must be at least one block in a method
-                                                                 // this default is useful for default constructors.
-                                             accessed_member(NULL),
-                                             external_name_symbol(NULL),
-                                             status(0),
-                                             header(NULL),
-                                             type_(NULL),
-                                             formal_parameters(NULL),
-                                             throws(NULL),
-                                             throws_signatures(NULL),
-                                             initializer_constructors(NULL),
-                                             local_constructor(NULL)
+    MethodSymbol(NameSymbol *name_symbol_)
+        : declaration(NULL),
+          name_symbol(name_symbol_),
+          containing_type(NULL),
+          block_symbol(NULL),
+          next_method(NULL),
+          signature(NULL),
+          max_block_depth(1), // there must be at least one block in a method
+          // this default is useful for default constructors.
+          accessed_member(NULL),
+          external_name_symbol(NULL),
+          status(0),
+          header(NULL),
+          type_(NULL),
+          formal_parameters(NULL),
+          throws(NULL),
+          throws_signatures(NULL),
+          initializer_constructors(NULL),
+          local_constructor(NULL)
     {
         Symbol::_kind = METHOD;
     }
 
     virtual ~MethodSymbol();
-
-    bool IsFinal();
 
     bool IsTyped()
     {
@@ -541,43 +540,43 @@ public:
         throws_signatures -> Next() = signature;
     }
 
-    void SetGeneratedLocalConstructor(MethodSymbol *base_method)
+    void SetExternalIdentity(NameSymbol *external_name_symbol_)
     {
-        assert(! base_method -> local_constructor);
-
-        base_method -> local_constructor = this;
-        this -> local_constructor = base_method;
+        external_name_symbol = external_name_symbol_;
     }
-    bool IsGeneratedLocalConstructor() { return ((local_constructor != NULL) && (this -> external_name_symbol == NULL)); }
-    MethodSymbol *LocalConstructor()  { return local_constructor; }
-
-    void SetExternalIdentity(NameSymbol *external_name_symbol_) { external_name_symbol = external_name_symbol_; }
     NameSymbol *ExternalIdentity()
     {
         return (external_name_symbol ? external_name_symbol : name_symbol);
     }
     wchar_t *ExternalName()
     {
-        return (external_name_symbol ? external_name_symbol -> Name() : name_symbol -> Name());
+        return (external_name_symbol ? external_name_symbol -> Name()
+                : name_symbol -> Name());
     }
     int ExternalNameLength()
     {
-        return (external_name_symbol ? external_name_symbol -> NameLength() : name_symbol -> NameLength());
+        return (external_name_symbol ? external_name_symbol -> NameLength()
+                : name_symbol -> NameLength());
     }
     char *ExternalUtf8Name()
     {
-        return (char *) (external_name_symbol ? external_name_symbol -> Utf8_literal -> value
-                                              : (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> value : NULL));
+        return (char *) (external_name_symbol
+                         ? external_name_symbol -> Utf8_literal -> value
+                         : (name_symbol -> Utf8_literal
+                            ? name_symbol -> Utf8_literal -> value : NULL));
     }
     int ExternalUtf8NameLength()
     {
-        return (external_name_symbol ? (external_name_symbol -> Utf8_literal ? external_name_symbol -> Utf8_literal -> length : 0)
-                                     : (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0));
+        return (external_name_symbol
+                ? (external_name_symbol -> Utf8_literal
+                   ? external_name_symbol -> Utf8_literal -> length : 0)
+                : (name_symbol -> Utf8_literal
+                   ? name_symbol -> Utf8_literal -> length : 0));
     }
 
     void SetContainingType(TypeSymbol *containing_type_) { containing_type = containing_type_; }
     void SetBlockSymbol(BlockSymbol *block_symbol_) { block_symbol = block_symbol_; }
-    void SetSignature(Control &, VariableSymbol * = NULL);
+    void SetSignature(Control &, TypeSymbol * = NULL);
     void SetSignature(Utf8LiteralValue *signature_) { signature = signature_; }
     char *SignatureString() { return signature -> value; }
     wchar_t *Header();
@@ -607,13 +606,6 @@ private:
     // to construct another constructor that accepts extra local parameters.
     //
     MethodSymbol *local_constructor;
-
-    bool ACC_FINAL()
-    {
-        assert(! "use the ACC_FINAL() flag on a method symbol. Use the function IsFinal() instead");
-
-        return false;
-    }
 };
 
 
@@ -692,22 +684,9 @@ public:
         constructor_parameters -> Next() = variable_symbol;
     }
 
-    int NumGeneratedConstructors() { return (generated_constructors ? generated_constructors -> Length() : 0); }
-    MethodSymbol *&GeneratedConstructor(int i) { return (*generated_constructors)[i]; }
-    void AddGeneratedConstructor(MethodSymbol *constructor_symbol)
+    VariableSymbol *&EnclosingInstance()
     {
-        if (! generated_constructors)
-            generated_constructors = new Tuple<MethodSymbol *>(8);
-        generated_constructors -> Next() = constructor_symbol;
-    }
-
-    int NumEnclosingInstances() { return (enclosing_instances ? enclosing_instances -> Length() : 0); }
-    VariableSymbol *&EnclosingInstance(int i) { return (*enclosing_instances)[i]; }
-    void AddEnclosingInstance(VariableSymbol *instance_symbol)
-    {
-        if (! enclosing_instances)
-            enclosing_instances = new Tuple<VariableSymbol *>(8);
-        enclosing_instances -> Next() = instance_symbol;
+        return enclosing_instance;
     }
 
     int NumClassLiterals() { return (class_literals ? class_literals -> Length() : 0); }
@@ -751,8 +730,11 @@ public:
         if (! anonymous_types)
             anonymous_types = new Tuple<TypeSymbol *>(8);
         anonymous_types -> Next() = type_symbol;
+        if (! outermost_type -> placeholder_type)
+            outermost_type -> placeholder_type = type_symbol;
     }
     void DeleteAnonymousTypes();
+    int NumLocalTypes();
 
     SymbolSet *local,
               *non_local;
@@ -781,8 +763,19 @@ public:
 
     int num_dimensions;
 
+    //
+    // Initializer blocks and variable declarations which require
+    // initialization are coalesced into these two methods. Notice that
+    // bytecode.cpp emits an actual method named '<clinit>' for the static
+    // case, and one named 'this' for the instance case (yes, that is a legal
+    // VM name, but an illegal Java source code name). Constructors that do
+    // not invoke another constructor via the this() statement will defer
+    // variable initialization to a generated call to the method 'this'. This
+    // relies on VM's allowing the assignment of final instance fields in an
+    // instance method instead of a constructor.
+    //
+    MethodSymbol *instance_initializer_method;
     MethodSymbol *static_initializer_method;
-    MethodSymbol *block_initializer_method;
 
     virtual wchar_t *Name() { return name_symbol -> Name(); }
     virtual size_t NameLength() { return name_symbol -> NameLength(); }
@@ -791,28 +784,38 @@ public:
     int Utf8NameLength() { return (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0); }
 
 
-    void SetExternalIdentity(NameSymbol *external_name_symbol_) { external_name_symbol = external_name_symbol_; }
+    void SetExternalIdentity(NameSymbol *external_name_symbol_)
+    {
+        external_name_symbol = external_name_symbol_;
+    }
     NameSymbol *ExternalIdentity()
     {
         return (external_name_symbol ? external_name_symbol : name_symbol);
     }
     wchar_t *ExternalName()
     {
-        return (external_name_symbol ? external_name_symbol -> Name() : name_symbol -> Name());
+        return (external_name_symbol ? external_name_symbol -> Name()
+                : name_symbol -> Name());
     }
     int ExternalNameLength()
     {
-        return (external_name_symbol ? external_name_symbol -> NameLength() : name_symbol -> NameLength());
+        return (external_name_symbol ? external_name_symbol -> NameLength()
+                : name_symbol -> NameLength());
     }
     char *ExternalUtf8Name()
     {
-        return (char *) (external_name_symbol ? external_name_symbol -> Utf8_literal -> value
-                                              : (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> value : NULL));
+        return (char *) (external_name_symbol
+                         ? external_name_symbol -> Utf8_literal -> value
+                         : (name_symbol -> Utf8_literal
+                            ? name_symbol -> Utf8_literal -> value : NULL));
     }
     int ExternalUtf8NameLength()
     {
-        return (external_name_symbol ? (external_name_symbol -> Utf8_literal ? external_name_symbol -> Utf8_literal -> length : 0)
-                                     : (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0));
+        return (external_name_symbol
+                ? (external_name_symbol -> Utf8_literal
+                   ? external_name_symbol -> Utf8_literal -> length : 0)
+                : (name_symbol -> Utf8_literal
+                   ? name_symbol -> Utf8_literal -> length : 0));
     }
 
     TypeSymbol(NameSymbol *);
@@ -824,17 +827,7 @@ public:
     void ProcessExecutableBodies();
     void RemoveCompilationReferences();
 
-    NameSymbol *GetThisName(Control &, int);
-
-    VariableSymbol *FindThis(int k)
-    {
-        assert(IsInner());
-        assert(NumConstructorParameters() > 0);
-
-        return (k == 0 ? ConstructorParameter(0)
-                       : (VariableSymbol *) (NumEnclosingInstances() > k ? EnclosingInstance(k) : NULL));
-    }
-    VariableSymbol *InsertThis(int k);
+    VariableSymbol *InsertThis0();
 
     TypeSymbol *FindOrInsertClassLiteralClass(LexStream::TokenIndex);
     TypeSymbol *ClassLiteralClass()
@@ -853,7 +846,6 @@ public:
     }
     VariableSymbol *FindOrInsertClassLiteral(TypeSymbol *);
     VariableSymbol *FindOrInsertLocalShadow(VariableSymbol *);
-
     VariableSymbol *FindOrInsertAssertVariable();
 
     //
@@ -865,6 +857,7 @@ public:
     MethodSymbol *GetReadAccessMethod(VariableSymbol *, TypeSymbol * = NULL);
     MethodSymbol *GetWriteAccessMethod(VariableSymbol *, TypeSymbol * = NULL);
     MethodSymbol *GetWriteAccessFromReadAccess(MethodSymbol *);
+    TypeSymbol *GetPlaceholderType();
 
     bool IsArray() { return (num_dimensions > 0); }
 
@@ -899,8 +892,8 @@ public:
         return (TypeSymbol *) NULL;
     }
 
-    bool CanAccess(TypeSymbol *);
-
+    TypeSymbol *EnclosingType();
+    bool HasEnclosingInstance(TypeSymbol *);
     bool HasProtectedAccessTo(TypeSymbol *);
 
     //
@@ -908,7 +901,10 @@ public:
     //
     bool IsSubclass(TypeSymbol *super_class)
     {
-        return (this == super_class ? true : (super == NULL ? false : super -> IsSubclass(super_class)));
+        for (TypeSymbol *type = this; type; type = type -> super)
+            if (type == super_class)
+                return true;
+        return false;
     }
 
     bool IsSubinterface(TypeSymbol *super_interface)
@@ -930,7 +926,7 @@ public:
             if (Interface(i) -> IsSubinterface(inter))
                 return true;
         }
-        return (this -> super ? this -> super -> Implements(inter) : false);
+        return super && super -> Implements(inter);
     }
 
     wchar_t *FileLoc()
@@ -939,6 +935,8 @@ public:
     }
 
     void SetLocation();
+
+    LexStream::TokenIndex GetLocation();
 
     TypeSymbol *GetArrayType(Semantic *, int);
 
@@ -960,26 +958,28 @@ public:
     bool IsNested() { return outermost_type != this; }
 
     //
-    // FIXME: Technically, JLS2 8.1.2 states that ALL local and anonymous
-    // classes are inner classes, even when they occur in a static context.
-    // However, other locations in jikes currently rely on the current broken
-    // behavior of IsInner returning false if the class is in a static
-    // context; this should be fixed after jikes 1.15.
+    // JLS2 8.1.2 states that ALL local and anonymous classes are inner
+    // classes, even when they occur in a static context.  Even in the static
+    // context, such classes are not implicitly static, they simply lack an
+    // enclosing instance.  In other words, the JLS definition of inner class
+    // is lame. If everything works correctly, these classes will correctly
+    // be marked nested, yet never static.
     //
     bool IsInner()
     {
-        return IsNested() &&
-            (! ACC_STATIC() || IsLocal());
+        assert((! IsLocal() && ! Anonymous()) ||
+               (IsNested() && ! ACC_STATIC()));
+        return IsNested() && ! ACC_STATIC();
     }
 
     bool IsLocal()
     {
-        for (Symbol *sym = owner; ! sym -> PackageCast(); sym = ((TypeSymbol *) sym) -> owner)
+        for (Symbol *sym = owner;
+             ! sym -> PackageCast(); sym = ((TypeSymbol *) sym) -> owner)
         {
             if (sym -> MethodCast())
                 return true;
         }
-
         return false;
     }
 
@@ -1151,6 +1151,7 @@ private:
 
     Map<Symbol, Map<TypeSymbol, MethodSymbol> > *read_methods;
     Map<VariableSymbol, Map<TypeSymbol, MethodSymbol> > *write_methods;
+    TypeSymbol *placeholder_type;
 
     //
     // For an accessible inner class the first element in this array
@@ -1170,8 +1171,7 @@ private:
     // Class that contain the proper value for a given type.
     //
     Tuple<VariableSymbol *> *constructor_parameters;
-    Tuple<MethodSymbol *> *generated_constructors;
-    Tuple<VariableSymbol *> *enclosing_instances;
+    VariableSymbol *enclosing_instance;
     Tuple<VariableSymbol *> *class_literals;
 
     Tuple<char *> *nested_type_signatures;
@@ -1179,16 +1179,11 @@ private:
     //
     // The inner types that appear immediately within this type in the order
     // in which they should be processed (compiled).
+    //
     Tuple<TypeSymbol *> *nested_types;
-
-    //
     // The interfaces that were declared in the header of the type.
-    //
     Tuple<TypeSymbol *> *interfaces;
-
-    //
     // The anonymous types that were declared in this type.
-    //
     Tuple<TypeSymbol *> *anonymous_types;
 
     //
@@ -1229,40 +1224,51 @@ public:
     char *Utf8Name() { return (char *) (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> value : NULL); }
     int Utf8NameLength() { return (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0); }
 
-    void SetExternalIdentity(NameSymbol *external_name_symbol_) { external_name_symbol = external_name_symbol_; }
+    void SetExternalIdentity(NameSymbol *external_name_symbol_)
+    {
+        external_name_symbol = external_name_symbol_;
+    }
     NameSymbol *ExternalIdentity()
     {
         return (external_name_symbol ? external_name_symbol : name_symbol);
     }
     wchar_t *ExternalName()
     {
-        return (external_name_symbol ? external_name_symbol -> Name() : name_symbol -> Name());
+        return (external_name_symbol ? external_name_symbol -> Name()
+                : name_symbol -> Name());
     }
     int ExternalNameLength()
     {
-        return (external_name_symbol ? external_name_symbol -> NameLength() : name_symbol -> NameLength());
+        return (external_name_symbol ? external_name_symbol -> NameLength()
+                : name_symbol -> NameLength());
     }
     char *ExternalUtf8Name()
     {
-        return (char *) (external_name_symbol ? external_name_symbol -> Utf8_literal -> value
-                                              : (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> value : NULL));
+        return (char *) (external_name_symbol
+                         ? external_name_symbol -> Utf8_literal -> value
+                         : (name_symbol -> Utf8_literal
+                            ? name_symbol -> Utf8_literal -> value : NULL));
     }
     int ExternalUtf8NameLength()
     {
-        return (external_name_symbol ? (external_name_symbol -> Utf8_literal ? external_name_symbol -> Utf8_literal -> length : 0)
-                                     : (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0));
+        return (external_name_symbol
+                ? (external_name_symbol -> Utf8_literal
+                   ? external_name_symbol -> Utf8_literal -> length : 0)
+                : (name_symbol -> Utf8_literal
+                   ? name_symbol -> Utf8_literal -> length : 0));
     }
 
-    VariableSymbol(NameSymbol *name_symbol_) : declarator(NULL),
-                                               name_symbol(name_symbol_),
-                                               owner(NULL),
-                                               initial_value(NULL),
-                                               accessed_local(NULL),
-                                               external_name_symbol(NULL),
-                                               status(0),
-                                               local_variable_index_(-1),
-                                               type_(NULL),
-                                               signature_string(NULL)
+    VariableSymbol(NameSymbol *name_symbol_)
+        : declarator(NULL),
+          name_symbol(name_symbol_),
+          owner(NULL),
+          initial_value(NULL),
+          accessed_local(NULL),
+          external_name_symbol(NULL),
+          status(0),
+          local_variable_index_(-1),
+          type_(NULL),
+          signature_string(NULL)
     {
         Symbol::_kind = VARIABLE;
     }
@@ -1307,9 +1313,12 @@ public:
         signature_string[length] = U_NULL;
     }
 
-    bool IsLocal()                     { return owner -> MethodCast() != NULL; }           // is variable a local variable?
-    bool IsLocal(MethodSymbol *method) { return owner == method; } // is variable local to a particular method ?
-    bool IsFinal(TypeSymbol *type)     { return (owner == type && ACC_FINAL()); }
+    // Is variable a local variable?
+    bool IsLocal() { return owner -> MethodCast() != NULL; }
+    // Is variable local to a particular method ?
+    bool IsLocal(MethodSymbol *method) { return owner == method; }
+
+    bool IsFinal(TypeSymbol *type) { return owner == type && ACC_FINAL(); }
 
     //
     // These functions are used to identify when the declaration of a field
@@ -2291,7 +2300,6 @@ inline MethodSymbol *SymbolTable::LocalConstructorOverload(MethodSymbol *base_me
     AddMethodSymbol(overload_method);
 
     overload_method -> next = overload_method; // mark overloaded method
-    overload_method -> SetGeneratedLocalConstructor(base_method);
 
     return overload_method;
 }
@@ -2305,9 +2313,12 @@ inline MethodSymbol *TypeSymbol::LocalConstructorOverload(MethodSymbol *base_met
 }
 
 
-inline MethodSymbol *TypeSymbol::FindOverloadMethod(MethodSymbol *base_method, AstMethodDeclarator *method_declarator)
+inline MethodSymbol *TypeSymbol::FindOverloadMethod(MethodSymbol *base_method,
+                                                    AstMethodDeclarator *method_declarator)
 {
-    return (table ? table -> FindOverloadMethod(base_method, method_declarator) : (MethodSymbol *) NULL);
+    return (table ? table -> FindOverloadMethod(base_method,
+                                                method_declarator)
+            : (MethodSymbol *) NULL);
 }
 
 
