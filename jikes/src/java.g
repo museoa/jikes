@@ -1165,9 +1165,11 @@ void Parser::MakeImportDeclaration()
 {
     AstImportDeclaration* p = ast_pool -> NewImportDeclaration();
     p -> import_token = Token(1);
-    p -> static_token_opt = Token(2) == Token(3) ? 0 : Token(2);
+    if (Token(3) > Token(2))
+        p -> static_token_opt = Token(2);
     p -> name = DYNAMIC_CAST<AstName*> (Sym(3));
-    p -> star_token_opt = Token(4) == Token(5) ? 0 : Token(5);
+    if (Token(6) > Token(5))
+        p -> star_token_opt = Token(5);
     p -> semicolon_token = Token(6);
     Sym(1) = p;
 }
@@ -2707,7 +2709,7 @@ void Parser::Act$rule_number()
         block -> AddStatement
             (MakeSwitchBlockStatement(DYNAMIC_CAST<AstListNode*> (Sym(3))));
     block -> right_brace_token = Token(4);
-    block -> block_tag = AstBlock::SWITCH;
+    block -> SetTag(AstBlock::SWITCH);
     p -> switch_block = block;
     Sym(1) = p;
 }
@@ -2726,7 +2728,7 @@ void Parser::Act$rule_number()
         block -> AddStatement
             (MakeSwitchBlockStatement(DYNAMIC_CAST<AstListNode*> (Sym(2))));
     block -> right_brace_token = Token(3);
-    block -> block_tag = AstBlock::SWITCH;
+    block -> SetTag(AstBlock::SWITCH);
 
     p -> switch_block = block;
 
@@ -3036,7 +3038,8 @@ void Parser::Act$rule_number()
 {
     AstBreakStatement* p = ast_pool -> NewBreakStatement();
     p -> break_token = Token(1);
-    p -> identifier_token_opt = Token(2) == Token(3) ? 0 : Token(2);
+    if (Token(3) > Token(2))
+        p -> identifier_token_opt = Token(2);
     p -> semicolon_token = Token(3);
     Sym(1) = p;
 }
@@ -3049,7 +3052,8 @@ void Parser::Act$rule_number()
 {
     AstContinueStatement* p = ast_pool -> NewContinueStatement();
     p -> continue_token = Token(1);
-    p -> identifier_token_opt = Token(2) == Token(3) ? 0 : Token(2);
+    if (Token(3) > Token(2))
+        p -> identifier_token_opt = Token(2);
     p -> semicolon_token = Token(3);
     Sym(1) = p;
 }
@@ -3090,7 +3094,7 @@ void Parser::Act$rule_number()
     p -> synchronized_token = Token(1);
     p -> expression = DYNAMIC_CAST<AstExpression*> (Sym(3));
     p -> block = DYNAMIC_CAST<AstBlock*> (Sym(5));
-    p -> block -> block_tag = AstBlock::SYNCHRONIZED;
+    p -> block -> SetTag(AstBlock::SYNCHRONIZED);
 
     Sym(1) = p;
 }
@@ -3123,10 +3127,10 @@ void Parser::MakeTryStatement()
     }
     if (Sym(4))
     {
-        p -> block -> block_tag = AstBlock::TRY_CLAUSE_WITH_FINALLY;
+        p -> block -> SetTag(AstBlock::TRY_CLAUSE_WITH_FINALLY);
         for (unsigned i = 0; i < p -> NumCatchClauses(); i++)
-            p -> CatchClause(i) -> block -> block_tag =
-                AstBlock::TRY_CLAUSE_WITH_FINALLY;
+            p -> CatchClause(i) -> block ->
+                SetTag(AstBlock::TRY_CLAUSE_WITH_FINALLY);
         p -> finally_clause_opt = DYNAMIC_CAST<AstFinallyClause*> (Sym(4));
     }
     Sym(1) = p;
@@ -3170,7 +3174,7 @@ void Parser::Act$rule_number()
     AstFinallyClause* p = ast_pool -> NewFinallyClause();
     p -> finally_token = Token(1);
     p -> block = DYNAMIC_CAST<AstBlock*> (Sym(2));
-    p -> block -> block_tag = AstBlock::FINALLY;
+    p -> block -> SetTag(AstBlock::FINALLY);
 
     Sym(1) = p;
 }

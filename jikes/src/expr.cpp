@@ -3977,7 +3977,7 @@ TypeSymbol* Semantic::GetAnonymousType(AstClassInstanceCreationExpression* class
     if (class_body -> UnparsedClassBodyCast())
     {
         if (! control.parser -> InitializerParse(lex_stream, class_body))
-             compilation_unit -> kind = Ast::BAD_COMPILATION;
+             compilation_unit -> MarkBad();
         else
         {
             ProcessMembers(class_body);
@@ -3985,7 +3985,7 @@ TypeSymbol* Semantic::GetAnonymousType(AstClassInstanceCreationExpression* class
         }
 
         if (! control.parser -> BodyParse(lex_stream, class_body))
-            compilation_unit -> kind = Ast::BAD_COMPILATION;
+            compilation_unit -> MarkBad();
         else ProcessExecutableBodies(class_body);
     }
     else // The relevant bodies have already been parsed
@@ -4542,7 +4542,7 @@ void Semantic::ProcessPLUSPLUSOrMINUSMINUS(AstPreUnaryExpression* prefix_express
 void Semantic::ProcessPreUnaryExpression(Ast* expr)
 {
     AstPreUnaryExpression* prefix_expression = (AstPreUnaryExpression*) expr;
-    (this ->* ProcessPreUnaryExpr[prefix_expression -> pre_unary_tag])
+    (this ->* ProcessPreUnaryExpr[prefix_expression -> Tag()])
         (prefix_expression);
 }
 
@@ -6630,7 +6630,7 @@ void Semantic::ProcessMOD(AstBinaryExpression* expr)
 void Semantic::ProcessBinaryExpression(Ast* expr)
 {
     AstBinaryExpression* binary_expression = (AstBinaryExpression*) expr;
-    (this ->* ProcessBinaryExpr[binary_expression -> binary_tag])
+    (this ->* ProcessBinaryExpr[binary_expression -> Tag()])
         (binary_expression);
 }
 
@@ -6875,7 +6875,7 @@ void Semantic::ProcessAssignmentExpression(Ast* expr)
     // variable, we use ProcessingSimpleAssignment() to inform
     // CheckSimpleName() to treat it specially.
     //
-    if ((assignment_expression -> assignment_tag ==
+    if ((assignment_expression -> Tag() ==
          AstAssignmentExpression::SIMPLE_EQUAL) &&
         left_hand_side -> NameCast() &&
         ! left_hand_side -> NameCast() -> base_opt)
@@ -6931,7 +6931,7 @@ void Semantic::ProcessAssignmentExpression(Ast* expr)
                 containing_type -> GetWriteAccessFromReadAccess(read_method);
     }
 
-    if (assignment_expression -> assignment_tag ==
+    if (assignment_expression -> Tag() ==
         AstAssignmentExpression::SIMPLE_EQUAL)
     {
         if (left_type != right_type)
@@ -6985,7 +6985,7 @@ void Semantic::ProcessAssignmentExpression(Ast* expr)
     // TODO: Get the definative answer from Sun which behavior is correct
     //
     if (left_type == control.String() &&
-        (assignment_expression -> assignment_tag ==
+        (assignment_expression -> Tag() ==
          AstAssignmentExpression::PLUS_EQUAL))
     {
         if (right_type != control.String())
@@ -7011,7 +7011,7 @@ void Semantic::ProcessAssignmentExpression(Ast* expr)
         return;
     }
 
-    switch (assignment_expression -> assignment_tag)
+    switch (assignment_expression -> Tag())
     {
         case AstAssignmentExpression::PLUS_EQUAL:
         case AstAssignmentExpression::STAR_EQUAL:

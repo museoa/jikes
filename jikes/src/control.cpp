@@ -1322,7 +1322,7 @@ void Control::ProcessBodies(TypeSymbol* type)
                                          type -> declaration))
         {
             // Mark that syntax errors were detected.
-            sem -> compilation_unit -> kind = Ast::BAD_COMPILATION;
+            sem -> compilation_unit -> MarkBad();
         }
         else
         {
@@ -1330,7 +1330,7 @@ void Control::ProcessBodies(TypeSymbol* type)
             if (! parser -> BodyParse(sem -> lex_stream, type -> declaration))
             {
                 // Mark that syntax errors were detected.
-                sem -> compilation_unit -> kind = Ast::BAD_COMPILATION;
+                sem -> compilation_unit -> MarkBad();
             }
             else type -> ProcessExecutableBodies();
         }

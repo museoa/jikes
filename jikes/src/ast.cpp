@@ -55,7 +55,7 @@ void VariableSymbolArray::AllocateMoreSpace()
 
         base = (T**) pool -> Alloc(sizeof(T*) * base_size);
 
-        if (old_base != NULL)
+        if (old_base)
         {
             memcpy(base, old_base, old_base_size * sizeof(T*));
         }
@@ -127,22 +127,18 @@ void AstCompilationUnit::FreeAst()
 //
 void AstSwitchStatement::SortCases()
 {
-    int lower,
-        upper,
-        lostack[32],
-        histack[32];
+    int lower;
+    int upper;
+    int lostack[32];
+    int histack[32];
+    int top = 0;
+    int i;
+    int j;
+    CaseElement pivot;
+    CaseElement temp;
 
-    int top,
-        i,
-        j;
-
-    CaseElement pivot, temp;
-
-    AstArray<CaseElement*>& map = *cases;
-
-    top = 0;
     lostack[top] = 1;
-    histack[top] = map.Length() - 1;
+    histack[top] = num_cases;
 
     while (top >= 0)
     {
@@ -157,8 +153,8 @@ void AstSwitchStatement::SortCases()
             // we use the middle element as the pivot element.
             //
             i = (lower + upper) >> 1;
-            pivot = *map[i];
-            *map[i] = *map[lower];
+            pivot = *cases[i];
+            *cases[i] = *cases[lower];
 
             //
             // Split the array section indicated by LOWER and UPPER
@@ -166,14 +162,14 @@ void AstSwitchStatement::SortCases()
             //
             i = lower;
             for (j = lower + 1; j <= upper; j++)
-                if (*map[j] < pivot)
+                if (*cases[j] < pivot)
                 {
-                    temp = *map[++i];
-                    *map[i] = *map[j];
-                    *map[j] = temp;
+                    temp = *cases[++i];
+                    *cases[i] = *cases[j];
+                    *cases[j] = temp;
                 }
-            *map[lower] = *map[i];
-            *map[i] = pivot;
+            *cases[lower] = *cases[i];
+            *cases[i] = pivot;
 
             top++;
             if ((i - lower) < (upper - i))
@@ -200,11 +196,11 @@ void AstSwitchStatement::SortCases()
 CaseElement* AstSwitchStatement::CaseForValue(i4 value)
 {
     unsigned lower = 1;
-    unsigned upper = cases -> Length() - 1;
+    unsigned upper = num_cases;
     while (lower <= upper)
     {
         unsigned mid = (lower + upper) >> 1;
-        CaseElement* elt = (*cases)[mid];
+        CaseElement* elt = cases[mid];
         if (elt -> value == value)
             return elt;
         if (elt -> value > value)
@@ -212,7 +208,7 @@ CaseElement* AstSwitchStatement::CaseForValue(i4 value)
         else
             lower = mid + 1;
     }
-    return (*cases)[0];
+    return cases[0];
 }
 
 
@@ -239,6 +235,7 @@ Ast* AstBlock::Clone(StoragePool* ast_pool)
 
 void AstBlock::CloneBlock(StoragePool* ast_pool, AstBlock* orig)
 {
+    other_tag = orig -> other_tag;
     label_opt = orig -> label_opt;
     nesting_level = orig -> nesting_level;
     left_brace_token = orig -> left_brace_token;
@@ -312,6 +309,7 @@ Ast* AstCompilationUnit::Clone(StoragePool* ast_pool)
 {
     unsigned i;
     AstCompilationUnit* clone = ast_pool -> GenCompilationUnit();
+    clone -> other_tag = other_tag;
     if (package_declaration_opt)
         clone -> package_declaration_opt = (AstPackageDeclaration*)
             package_declaration_opt -> Clone(ast_pool);
@@ -452,6 +450,7 @@ Ast* AstVariableDeclarator::Clone(StoragePool* ast_pool)
 Ast* AstFieldDeclaration::Clone(StoragePool* ast_pool)
 {
     AstFieldDeclaration* clone = ast_pool -> GenFieldDeclaration();
+    clone -> other_tag = other_tag;
     if (modifiers_opt)
         clone -> modifiers_opt =
             (AstModifiers*) modifiers_opt -> Clone(ast_pool);
@@ -524,6 +523,7 @@ Ast* AstMethodDeclaration::Clone(StoragePool* ast_pool)
 Ast* AstInitializerDeclaration::Clone(StoragePool* ast_pool)
 {
     AstInitializerDeclaration* clone = ast_pool -> GenInitializerDeclaration();
+    clone -> other_tag = other_tag;
     if (modifiers_opt)
         clone -> modifiers_opt =
             (AstModifiers*) modifiers_opt -> Clone(ast_pool);
@@ -543,7 +543,7 @@ Ast* AstArguments::Clone(StoragePool* ast_pool)
     for (i = 0; i < NumLocalArguments(); i++)
         clone -> AddLocalArgument((AstName*) LocalArgument(i) ->
                                   Clone(ast_pool));
-    clone -> null_argument = null_argument;
+    clone -> other_tag = other_tag;
     return clone;
 }
 
@@ -1002,7 +1002,7 @@ Ast* AstArrayAccess::Clone(StoragePool* ast_pool)
 Ast* AstPostUnaryExpression::Clone(StoragePool* ast_pool)
 {
     AstPostUnaryExpression* clone =
-        ast_pool -> GenPostUnaryExpression(post_unary_tag);
+        ast_pool -> GenPostUnaryExpression((PostUnaryExpressionTag) other_tag);
     clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
     clone -> post_operator_token = post_operator_token;
     return clone;
@@ -1011,7 +1011,7 @@ Ast* AstPostUnaryExpression::Clone(StoragePool* ast_pool)
 Ast* AstPreUnaryExpression::Clone(StoragePool* ast_pool)
 {
     AstPreUnaryExpression* clone =
-        ast_pool -> GenPreUnaryExpression(pre_unary_tag);
+        ast_pool -> GenPreUnaryExpression((PreUnaryExpressionTag) other_tag);
     clone -> pre_operator_token = pre_operator_token;
     clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
     return clone;
@@ -1030,7 +1030,8 @@ Ast* AstCastExpression::Clone(StoragePool* ast_pool)
 
 Ast* AstBinaryExpression::Clone(StoragePool* ast_pool)
 {
-    AstBinaryExpression* clone = ast_pool -> GenBinaryExpression(binary_tag);
+    AstBinaryExpression* clone =
+        ast_pool -> GenBinaryExpression((BinaryExpressionTag) other_tag);
     clone -> left_expression =
         (AstExpression*) left_expression -> Clone(ast_pool);
     clone -> binary_operator_token = binary_operator_token;
@@ -1064,9 +1065,9 @@ Ast* AstConditionalExpression::Clone(StoragePool* ast_pool)
 
 Ast* AstAssignmentExpression::Clone(StoragePool* ast_pool)
 {
-    AstAssignmentExpression* clone =
-        ast_pool -> GenAssignmentExpression(assignment_tag,
-                                            assignment_operator_token);
+    AstAssignmentExpression* clone = ast_pool ->
+        GenAssignmentExpression((AssignmentExpressionTag) other_tag,
+                                assignment_operator_token);
     clone -> left_hand_side =
         (AstExpression*) left_hand_side -> Clone(ast_pool);
     clone -> expression = (AstExpression*) expression -> Clone(ast_pool);
@@ -1521,13 +1522,13 @@ void AstSwitchStatement::Print(LexStream& lex_stream)
             << lex_stream.NameString(switch_token)
             << " ( #" << expression -> id << " ) #" << switch_block -> id
             << endl;
-    for (unsigned i = 0; i < cases -> Length(); i++)
+    for (unsigned i = 0; i <= num_cases; i++)
     {
         Coutput << " case index: " << i;
-        if ((*cases)[i])
-            Coutput << "  block: " << (*cases)[i] -> block_index
-                    << "  label: " << (*cases)[i] -> case_index
-                    << "  value: " << (*cases)[i] -> value << endl;
+        if (cases[i])
+            Coutput << "  block: " << cases[i] -> block_index
+                    << "  label: " << cases[i] -> case_index
+                    << "  value: " << cases[i] -> value << endl;
         else Coutput << "(none)" << endl;
     }
     expression -> Print(lex_stream);
@@ -1592,8 +1593,8 @@ void AstBreakStatement::Print(LexStream& lex_stream)
 {
     Coutput << '#' << id << " (BreakStatement):  "
             << lex_stream.NameString(break_token) << ' '
-            << (identifier_token_opt ?
-                lex_stream.NameString(identifier_token_opt) : L"")
+            << (identifier_token_opt
+                ? lex_stream.NameString(identifier_token_opt) : L"")
             << " at nesting_level " << nesting_level << endl;
 }
 
@@ -1601,8 +1602,8 @@ void AstContinueStatement::Print(LexStream& lex_stream)
 {
     Coutput << '#' << id << " (ContinueStatement):  "
             << lex_stream.NameString(continue_token) << ' '
-            << (identifier_token_opt ?
-                lex_stream.NameString(identifier_token_opt) : L"")
+            << (identifier_token_opt
+                ? lex_stream.NameString(identifier_token_opt) : L"")
             << " at nesting_level " << nesting_level << endl;
 }
 

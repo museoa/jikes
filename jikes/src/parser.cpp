@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -137,7 +136,7 @@ AstCompilationUnit* Parser::HeaderParse(LexStream* lex_stream_,
             ! compilation_unit -> BadCompilationUnitCast())
         {
             if (compilation_unit -> NumTypeDeclarations() == 0)
-                compilation_unit -> kind = Ast::EMPTY_COMPILATION;
+                compilation_unit -> MarkEmpty();
         }
     }
 
@@ -219,7 +218,7 @@ Ast* Parser::HeaderParse()
             RepairParse(curtok);
 
         if (parse_stack[0] && parse_stack[0] -> CompilationUnitCast())
-            parse_stack[0] -> kind = Ast::BAD_COMPILATION;
+            ((AstCompilationUnit*) parse_stack[0]) -> MarkBad();
         else
         {
             parse_stack[0] = NULL;

@@ -241,7 +241,7 @@ void Semantic::ProcessLocalVariableDeclarationStatement(Ast* stmt)
                                           name, name_symbol);
             AstBlock* block = LocalBlockStack().TopBlock();
             SymbolTable* table;
-            if (block -> block_tag == AstBlock::SWITCH)
+            if (block -> Tag() == AstBlock::SWITCH)
             {
                 //
                 // Local variables declared in a switch statement are in scope
@@ -2454,7 +2454,7 @@ void Semantic::ProcessConstructorBody(AstConstructorDeclaration* constructor_dec
 
 void Semantic::ProcessExecutableBodies(AstClassBody* class_body)
 {
-    if (compilation_unit -> kind == Ast::BAD_COMPILATION)
+    if (compilation_unit -> BadCompilationUnitCast())
         return; // errors were detected, exit now
 
     state_stack.Push(class_body -> semantic_environment);

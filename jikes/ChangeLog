@@ -1,3 +1,18 @@
+2004-03-01  Eric Blake  <ebb9@byu.net>
+
+	* src/ast.h (Ast, StoragePool): Backport improved type-safety,
+	reduced object size, and placement operator new from
+	generics-branch.  Affects all Ast classes.
+	* src/ast.cpp: Ditto.
+	* src/body.cpp: Ditto.
+	* src/bytecode.cpp: Ditto.
+	* src/control.cpp: Ditto.
+	* src/definite.cpp: Ditto.
+	* src/expr.cpp: Ditto.
+	* src/java.g: Ditto.
+	* src/parser.cpp: Ditto.
+	* src/javaact.cpp: Regenerate.
+
 2004-02-29  Elliott Hughes  <enh@acm.org>
 
 	* src/error.cpp: Also allow +Pno-all to turn off all named groups. This

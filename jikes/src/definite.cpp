@@ -334,7 +334,7 @@ DefiniteAssignmentSet* Semantic::DefinitePreUnaryExpression(AstExpression* expre
 {
     AstPreUnaryExpression* prefix_expression =
         (AstPreUnaryExpression*) expression;
-    return (this ->* DefinitePreUnaryExpr[prefix_expression -> pre_unary_tag])
+    return (this ->* DefinitePreUnaryExpr[prefix_expression -> Tag()])
         (prefix_expression -> expression, def_pair);
 }
 
@@ -437,7 +437,7 @@ DefiniteAssignmentSet* Semantic::DefiniteBinaryExpression(AstExpression* express
 {
     AstBinaryExpression* binary_expression =
         (AstBinaryExpression*) expression;
-    return (this ->* DefiniteBinaryExpr[binary_expression -> binary_tag])
+    return (this ->* DefiniteBinaryExpr[binary_expression -> Tag()])
         (binary_expression, def_pair);
 }
 
@@ -757,7 +757,7 @@ inline void Semantic::DefiniteVariableInitializer(AstVariableDeclarator* variabl
     // TODO: Sun has never given any nice official word on this.
     //
     if (DefiniteBlocks() &&
-        DefiniteBlocks() -> TopBlock() -> block_tag == AstBlock::SWITCH &&
+        DefiniteBlocks() -> TopBlock() -> Tag() == AstBlock::SWITCH &&
         (! init || ! init -> IsConstant()))
     {
         BlankFinals() -> AddElement(variable_declarator -> symbol ->
