@@ -3142,13 +3142,13 @@ void Parser::Act215(void)
 //
 
 //
-// Rule 218:  PrimaryNoNewArray ::= Name DOT this
+// Rule 218:  PrimaryNoNewArray ::= ClassType DOT this
 //
 #line 3608 "java.g"
 void Parser::Act218(void)
 {
     AstFieldAccess *p = ast_pool -> NewFieldAccess(AstFieldAccess::THIS_TAG);
-    p -> base = (AstExpression *) Sym(1);
+    p -> base = ast_pool -> NewTypeExpression(Sym(1));
     p -> dot_token = Token(2);
     p -> identifier_token = Token(3);
     Sym(1) = p;
@@ -3460,7 +3460,7 @@ void Parser::MakeSuperFieldAccess(void)
 }
 
 //
-// Rule 238:  FieldAccess ::= Name DOT super DOT Identifier
+// Rule 238:  FieldAccess ::= ClassType DOT super DOT Identifier
 //
 #line 3950 "java.g"
 void Parser::MakeSuperDoubleFieldAccess(void)
@@ -3468,7 +3468,7 @@ void Parser::MakeSuperDoubleFieldAccess(void)
     AstFieldAccess *p = ast_pool -> NewFieldAccess();
 
          AstFieldAccess *q = ast_pool -> NewFieldAccess(AstFieldAccess::SUPER_TAG);
-         q -> base = (AstExpression *) Sym(1);
+         q -> base = ast_pool -> NewTypeExpression(Sym(1));
          q -> dot_token = Token(2);
          q -> identifier_token = Token(3);
 
@@ -3559,7 +3559,7 @@ void Parser::Act241(void)
 }
 
 //
-// Rule 242:  MethodInvocation ::= Name DOT super DOT Identifier LPAREN ArgumentListopt RPAREN
+// Rule 242:  MethodInvocation ::= ClassType DOT super DOT Identifier LPAREN ArgumentListopt RPAREN
 //
 #line 4050 "java.g"
 void Parser::Act242(void)

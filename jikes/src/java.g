@@ -3602,13 +3602,13 @@ PrimaryNoNewArray -> FieldAccess
 /.$shared_NoAction./
 
 --1.1 feature
-PrimaryNoNewArray ::= Name '.' 'this'
+PrimaryNoNewArray ::= ClassType '.' 'this'
 \:$action:\
 /.$location
 void Parser::Act$rule_number(void)
 {
     AstFieldAccess *p = ast_pool -> NewFieldAccess(AstFieldAccess::THIS_TAG);
-    p -> base = (AstExpression *) Sym(1);
+    p -> base = ast_pool -> NewTypeExpression(Sym(1));
     p -> dot_token = Token(2);
     p -> identifier_token = Token(3);
     Sym(1) = p;
@@ -3944,7 +3944,7 @@ void Parser::MakeSuperFieldAccess(void)
 ./
 
 --1.2 feature
-FieldAccess ::= Name '.' 'super' '.' 'Identifier'
+FieldAccess ::= ClassType '.' 'super' '.' 'Identifier'
 \:$MakeSuperDoubleFieldAccess:\
 /.$location
 void Parser::MakeSuperDoubleFieldAccess(void)
@@ -3952,7 +3952,7 @@ void Parser::MakeSuperDoubleFieldAccess(void)
     AstFieldAccess *p = ast_pool -> NewFieldAccess();
 
          AstFieldAccess *q = ast_pool -> NewFieldAccess(AstFieldAccess::SUPER_TAG);
-         q -> base = (AstExpression *) Sym(1);
+         q -> base = ast_pool -> NewTypeExpression(Sym(1));
          q -> dot_token = Token(2);
          q -> identifier_token = Token(3);
 
@@ -4044,7 +4044,7 @@ void Parser::Act$rule_number(void)
 ./
 
 --1.2 feature
-MethodInvocation ::= Name '.' 'super' '.' 'Identifier' '(' ArgumentListopt ')'
+MethodInvocation ::= ClassType '.' 'super' '.' 'Identifier' '(' ArgumentListopt ')'
 \:$action:\
 /.$location
 void Parser::Act$rule_number(void)

@@ -1,5 +1,18 @@
 2001-12-08  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/java.g: Update parser rules for qualified this and super to
+	favor types over variables.
+	* src/javaact.cpp:
+	* src/javaact.h:
+	* src/javadcl.h:
+	* src/javadef.h:
+	* src/javaprs.h:
+	* src/javasym.h: Regenerate.
+	* src/expr.cpp (ProcessAmbiguousName): Redo patch 235 from
+	previous attempt, which was causing core dumps - bug 2465.
+
+2001-12-08  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/error.h:
 	* src/error.cpp (NO_ABSTRACT_METHOD_IMPLEMENTATION),
 	(NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD_FROM_ABSTRACT_CLASS):

@@ -2481,14 +2481,8 @@ void Semantic::ProcessAmbiguousName(Ast *name)
         AstExpression *base = field_access -> base;
         if (base -> FieldAccessCast() || base -> SimpleNameCast())
         {
-            //
-            // Remember that Foo.this, Foo.super, and Foo.class treat Foo
-            // as a type name, while Foo.fieldname treats Foo as an ambiguous
-            // name (which favors an obsuring variable over a type name).
-            //
-            if (field_access -> IsNameAccess())
-                ProcessAmbiguousName(base);
-            else ProcessTypeExpression(base);
+            assert(field_access -> IsNameAccess());
+            ProcessAmbiguousName(base);
         }
         else ProcessExpression(base);
 
