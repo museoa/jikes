@@ -452,7 +452,7 @@ void LexStream::ProcessInput(char *buffer, long filesize)
         
         UnicodeLexerState saved_state;
         UnicodeLexerState state=RAW;
-        bool oncemore=FALSE;
+        bool oncemore=false;
 
         while((source_ptr <= source_tail) || oncemore)
         {
@@ -474,7 +474,7 @@ void LexStream::ProcessInput(char *buffer, long filesize)
 #else
                 ch=*source_ptr++;
 #endif
-            } else oncemore=FALSE;
+            } else oncemore = false;
       
             switch(state)
             {
@@ -492,7 +492,7 @@ void LexStream::ProcessInput(char *buffer, long filesize)
                 {
                     *(++input_ptr )= U_BACKSLASH;
                     state          = RAW;
-                    oncemore       = TRUE;
+                    oncemore       = true;
                 }
                 break;
             case UNICODE_ESCAPE:
@@ -540,7 +540,7 @@ void LexStream::ProcessInput(char *buffer, long filesize)
                     ch       = escape_value+hexvalue(ch);
                     state    = saved_state;
                     saved_state = UNICODE_ESCAPE_DIGIT_2;
-                    oncemore = TRUE;
+                    oncemore = true;
                 } else  
                 {
                     if(initial_reading_of_input)
