@@ -1,3 +1,8 @@
+2004-04-11  Eric Blake  <ebb9@byu.net>
+
+	* src/symbol.cpp (UnlinkFromParents): Fix compile-time error with
+	poor choice of identifier.
+
 2004-04-11  Elliott Hughes  <enh@acm.org>
 
 	* AUTHORS: credit where credit's due.

@@ -694,9 +694,9 @@ void TypeSymbol::UnlinkFromParents()
     {
         for (unsigned i = 0; i < NumInterfaces(); ++i)
         {
-            TypeSymbol* interface = Interface(i);
-            interface -> subtypes -> RemoveElement(this);
-            interface -> dependents -> RemoveElement(this);
+            TypeSymbol* interf = Interface(i);
+            interf -> subtypes -> RemoveElement(this);
+            interf -> dependents -> RemoveElement(this);
         }
     }
 }
