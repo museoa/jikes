@@ -6,6 +6,7 @@
       IBM - developerWorks - Open Source Software - Jikes - User FAQ
     </title>
     <link rel="stylesheet" href="../styles/jikes-faq.css">
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
   </head>
   <body>
     <table border="0" cellspacing="0" cellpadding="0">
@@ -958,7 +959,7 @@ class Test {
           <pre class="example">
 class X extends Y.Z {}
 class Y extends X.Z {}</pre>
-</pre>
+
           <p>
             because Jikes checks for cycles by grouping types as follows:
           </p>

@@ -63,7 +63,7 @@
 	    <li><a href="http://ibm.com/java/jdk/">The Best JVMs on the net</a>
 	    <li><a href="http://www.java.sun.com/docs/books/jls">Language Spec.</a>
 	    <li><a href="http://www.java.sun.com/docs/books/vmspec">Virtual Machine Spec.</a>
-	    <li><a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf">Old Jikes discussion database<br>at IBM Research</a> <small style="color: black">includes<br>the "Queries to Sun".</small>
+	    <li><a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf">Old Jikes discussion database<br>at IBM Research</a> <small>includes<br>the "Queries to Sun".</small>
 	    <li><a href="/developerworks/oss/jikesrvm/?origin=jikes">The Jikes Research Virtual Machine project</a> can only be built with Jikes.
           </ul>
         </td>

@@ -1,5 +1,6 @@
 body {
   background-color: #FFFFFF;
+  color: #000000;
   font-family: "Times New Roman", Times, serif
 }
 
@@ -8,32 +9,37 @@ table {
 }
 
 code {
-  font-family: "Courier New", Courier, mono
+  font-family: "Courier New", Courier, monospace
 }
 
 .HighlightedFrameBorder {
   background-color: #000000;
+  color: #000000;
   text-align: center
 }
 
 .HighlightedFrameBackground {
   background-color: #CCCCCC;
+  color: #000000;
   text-align: center
 }
 
 .DimmedFrameBorder {
   background-color: #000000;
+  color: #000000;
   text-align: center
 }
 
 .DimmedFrameBackground {
   background-color: #FFFFFF;
+  color: #FFFFFF;
   text-align: center
 }
 
 h1 {
   font-weight: bold;
   color: #FF0000;
+  background-color: #FFffFF;
   text-align: center;
   font-family: "Times New Roman", Times, serif;
   font-size: 1em
@@ -66,6 +72,7 @@ td {
 
 .NavBar {
   background-color: #CCCCFF;
+  color: #000000;
   text-align: center;
   vertical-align: top;
   margin-right: auto;
@@ -88,7 +95,7 @@ ul {
 
 pre.example {
   background: #dddddd;
-  padding: 2pt,4pt;
+  padding: 0.3em;
   margin-left: 2em;
   text-align: left;
   color: #000000
