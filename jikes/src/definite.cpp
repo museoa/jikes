@@ -55,12 +55,12 @@ inline DefinitePair& DefinitePair::operator=(const DefiniteAssignmentSet& rhs)
 // If the expression can be (or always is) boolean, and the when true and
 // when false cases matter, call DefiniteBooleanExpression.
 //
-void Semantic::DefiniteExpression(AstExpression *expr, DefinitePair &pair)
+void Semantic::DefiniteExpression(AstExpression *expr, DefinitePair &def_pair)
 {
-    DefiniteAssignmentSet *definite = DefiniteBooleanExpression(expr, pair);
+    DefiniteAssignmentSet *definite = DefiniteBooleanExpression(expr, def_pair);
     if (definite)
     {
-        pair = *definite;
+        def_pair = *definite;
         delete definite;
     }
 }
@@ -70,7 +70,7 @@ void Semantic::DefiniteExpression(AstExpression *expr, DefinitePair &pair)
 // false status differ after this expression, the calling function MUST delete
 // the returned object to avoid a memory leak.
 //
-DefiniteAssignmentSet *Semantic::DefiniteBooleanExpression(AstExpression *expr, DefinitePair &pair)
+DefiniteAssignmentSet *Semantic::DefiniteBooleanExpression(AstExpression *expr, DefinitePair &def_pair)
 {
     DefiniteAssignmentSet *definite = NULL;
 
@@ -80,23 +80,23 @@ DefiniteAssignmentSet *Semantic::DefiniteBooleanExpression(AstExpression *expr, 
     // assignment statement.
     //
     if (IsConstantTrue(expr))
-        return new DefiniteAssignmentSet(pair, *universe);
+        return new DefiniteAssignmentSet(def_pair, *universe);
     else if (IsConstantFalse(expr))
-        return new DefiniteAssignmentSet(*universe, pair);
+        return new DefiniteAssignmentSet(*universe, def_pair);
     else if (expr -> symbol != control.no_type)
-        definite = (this ->* DefiniteExpr[expr -> kind])(expr, pair);
+        definite = (this ->* DefiniteExpr[expr -> kind])(expr, def_pair);
 
     assert(! definite || expr -> Type() == control.boolean_type);
     return definite;
 }
 
 
-DefiniteAssignmentSet *Semantic::DefiniteSimpleName(AstExpression *expression, DefinitePair &pair)
+DefiniteAssignmentSet *Semantic::DefiniteSimpleName(AstExpression *expression, DefinitePair &def_pair)
 {
     AstSimpleName *simple_name = (AstSimpleName *) expression;
 
     if (simple_name -> resolution_opt)
-        return DefiniteBooleanExpression(simple_name -> resolution_opt, pair);
+        return DefiniteBooleanExpression(simple_name -> resolution_opt, def_pair);
 
     //
     // Some simple names are undefined. e.g., the simple name in a method call.
@@ -109,7 +109,7 @@ DefiniteAssignmentSet *Semantic::DefiniteSimpleName(AstExpression *expression, D
         // Compile time constants are always da; this matters in switch
         // blocks, where we might have bypassed the initializer.
         //
-        if (! pair.da_set[index] && ! simple_name -> IsConstant())
+        if (! def_pair.da_set[index] && ! simple_name -> IsConstant())
         {
             ReportSemError(SemanticError::VARIABLE_NOT_DEFINITELY_ASSIGNED,
                            simple_name -> identifier_token,
@@ -117,7 +117,7 @@ DefiniteAssignmentSet *Semantic::DefiniteSimpleName(AstExpression *expression, D
                            variable -> Name());
 
             if (variable -> IsLocal(ThisMethod())) // to avoid cascading errors!
-                pair.da_set.AddElement(index);
+                def_pair.da_set.AddElement(index);
         }
     }
 
@@ -125,68 +125,68 @@ DefiniteAssignmentSet *Semantic::DefiniteSimpleName(AstExpression *expression, D
 }
 
 
-DefiniteAssignmentSet *Semantic::DefiniteArrayAccess(AstExpression *expression, DefinitePair &pair)
+DefiniteAssignmentSet *Semantic::DefiniteArrayAccess(AstExpression *expression, DefinitePair &def_pair)
 {
     AstArrayAccess *array_access = (AstArrayAccess *) expression;
 
-    DefiniteExpression(array_access -> base, pair);
-    DefiniteExpression(array_access -> expression, pair);
+    DefiniteExpression(array_access -> base, def_pair);
+    DefiniteExpression(array_access -> expression, def_pair);
 
     return (DefiniteAssignmentSet *) NULL;
 }
 
 
-DefiniteAssignmentSet *Semantic::DefiniteMethodInvocation(AstExpression *expression, DefinitePair &pair)
+DefiniteAssignmentSet *Semantic::DefiniteMethodInvocation(AstExpression *expression, DefinitePair &def_pair)
 {
     AstMethodInvocation *method_call = (AstMethodInvocation *) expression;
 
-    DefiniteExpression(method_call -> method, pair);
+    DefiniteExpression(method_call -> method, def_pair);
 
     for (int i = 0; i < method_call -> NumArguments(); i++)
     {
         AstExpression *expr = method_call -> Argument(i);
-        DefiniteExpression(expr, pair);
+        DefiniteExpression(expr, def_pair);
     }
 
     return (DefiniteAssignmentSet *) NULL;
 }
 
 
-DefiniteAssignmentSet *Semantic::DefiniteClassInstanceCreationExpression(AstExpression *expression, DefinitePair &pair)
+DefiniteAssignmentSet *Semantic::DefiniteClassInstanceCreationExpression(AstExpression *expression, DefinitePair &def_pair)
 {
     AstClassInstanceCreationExpression *class_creation = (AstClassInstanceCreationExpression *) expression;
 
     if (class_creation -> base_opt)
-        DefiniteExpression(class_creation -> base_opt, pair);
+        DefiniteExpression(class_creation -> base_opt, def_pair);
 
     for (int i = 0; i < class_creation -> NumLocalArguments(); i++)
     {
         AstExpression *expr = class_creation -> LocalArgument(i);
-        DefiniteExpression(expr, pair);
+        DefiniteExpression(expr, def_pair);
     }
 
     for (int k = 0; k < class_creation -> NumArguments(); k++)
     {
         AstExpression *expr = class_creation -> Argument(k);
-        DefiniteExpression(expr, pair);
+        DefiniteExpression(expr, def_pair);
     }
 
     return (DefiniteAssignmentSet *) NULL;
 }
 
 
-DefiniteAssignmentSet *Semantic::DefiniteArrayCreationExpression(AstExpression *expression, DefinitePair &pair)
+DefiniteAssignmentSet *Semantic::DefiniteArrayCreationExpression(AstExpression *expression, DefinitePair &def_pair)
 {
     AstArrayCreationExpression *array_creation = (AstArrayCreationExpression *) expression;
 
     for (int i = 0; i < array_creation -> NumDimExprs(); i++)
     {
         AstDimExpr *dim_expr = array_creation -> DimExpr(i);
-        DefiniteExpression(dim_expr -> expression, pair);
+        DefiniteExpression(dim_expr -> expression, def_pair);
     }
 
     if (array_creation -> array_initializer_opt)
-        DefiniteArrayInitializer(array_creation -> array_initializer_opt, pair);
+        DefiniteArrayInitializer(array_creation -> array_initializer_opt, def_pair);
 
     return (DefiniteAssignmentSet *) NULL;
 }
@@ -215,9 +215,9 @@ inline VariableSymbol *Semantic::DefiniteFinal(AstFieldAccess *field_access)
 }
 
 
-DefiniteAssignmentSet *Semantic::DefinitePLUSPLUSOrMINUSMINUS(AstExpression *expr, DefinitePair &pair)
+DefiniteAssignmentSet *Semantic::DefinitePLUSPLUSOrMINUSMINUS(AstExpression *expr, DefinitePair &def_pair)
 {
-    DefiniteExpression(expr, pair);
+    DefiniteExpression(expr, def_pair);
 
     VariableSymbol *variable = NULL;
     if (! expr -> ArrayAccessCast()) // some kind of name
@@ -253,23 +253,23 @@ DefiniteAssignmentSet *Semantic::DefinitePLUSPLUSOrMINUSMINUS(AstExpression *exp
                        variable -> Name());
 
         if (variable -> IsFinal(ThisType())) // mark it assigned, to catch further errors
-            pair.du_set.RemoveElement(variable -> LocalVariableIndex());
+            def_pair.du_set.RemoveElement(variable -> LocalVariableIndex());
     }
 
     return (DefiniteAssignmentSet *) NULL;
 }
 
 
-DefiniteAssignmentSet *Semantic::DefinitePostUnaryExpression(AstExpression *expression, DefinitePair &pair)
+DefiniteAssignmentSet *Semantic::DefinitePostUnaryExpression(AstExpression *expression, DefinitePair &def_pair)
 {
     AstPostUnaryExpression *postfix_expression = (AstPostUnaryExpression *) expression;
-    return DefinitePLUSPLUSOrMINUSMINUS(postfix_expression -> expression, pair);
+    return DefinitePLUSPLUSOrMINUSMINUS(postfix_expression -> expression, def_pair);
 }
 
 
-DefiniteAssignmentSet *Semantic::DefiniteNOT(AstExpression *expr, DefinitePair &pair)
+DefiniteAssignmentSet *Semantic::DefiniteNOT(AstExpression *expr, DefinitePair &def_pair)
 {
-    DefiniteAssignmentSet *after_expr = DefiniteBooleanExpression(expr, pair);
+    DefiniteAssignmentSet *after_expr = DefiniteBooleanExpression(expr, def_pair);
     if (after_expr) // is the expression is a complex boolean expression?
     {
         DefinitePair temp(after_expr -> true_pair);
@@ -286,29 +286,29 @@ DefiniteAssignmentSet *Semantic::DefiniteNOT(AstExpression *expr, DefinitePair &
 // As these operators are not applicable to boolean expressions,
 // we do not need to invoke DefiniteExpression to process them.
 //
-DefiniteAssignmentSet *Semantic::DefiniteDefaultPreUnaryExpression(AstExpression *expr, DefinitePair &pair)
+DefiniteAssignmentSet *Semantic::DefiniteDefaultPreUnaryExpression(AstExpression *expr, DefinitePair &def_pair)
 {
-    return (this ->* DefiniteExpr[expr -> kind])(expr, pair);
+    return (this ->* DefiniteExpr[expr -> kind])(expr, def_pair);
 }
 
 
-DefiniteAssignmentSet *Semantic::DefinitePreUnaryExpression(AstExpression *expression, DefinitePair &pair)
+DefiniteAssignmentSet *Semantic::DefinitePreUnaryExpression(AstExpression *expression, DefinitePair &def_pair)
 {
     AstPreUnaryExpression *prefix_expression = (AstPreUnaryExpression *) expression;
-    return (this ->* DefinitePreUnaryExpr[prefix_expression -> pre_unary_tag])(prefix_expression -> expression, pair);
+    return (this ->* DefinitePreUnaryExpr[prefix_expression -> pre_unary_tag])(prefix_expression -> expression, def_pair);
 }
 
 
-DefiniteAssignmentSet *Semantic::DefiniteAND_AND(AstBinaryExpression *expr, DefinitePair &pair)
+DefiniteAssignmentSet *Semantic::DefiniteAND_AND(AstBinaryExpression *expr, DefinitePair &def_pair)
 {
-    DefiniteAssignmentSet *after_left = DefiniteBooleanExpression(expr -> left_expression, pair);
+    DefiniteAssignmentSet *after_left = DefiniteBooleanExpression(expr -> left_expression, def_pair);
     DefinitePair *before_right = NULL;
     if (after_left)
-        pair = after_left -> true_pair;
+        def_pair = after_left -> true_pair;
     else
-        before_right = new DefinitePair(pair);
+        before_right = new DefinitePair(def_pair);
 
-    DefiniteAssignmentSet *after_right = DefiniteBooleanExpression(expr -> right_expression, pair);
+    DefiniteAssignmentSet *after_right = DefiniteBooleanExpression(expr -> right_expression, def_pair);
 
     if (after_left)
     {
@@ -320,14 +320,14 @@ DefiniteAssignmentSet *Semantic::DefiniteAND_AND(AstBinaryExpression *expr, Defi
         else
         {
             after_right = after_left;
-            after_right -> true_pair = pair;
-            after_right -> false_pair *= pair;
+            after_right -> true_pair = def_pair;
+            after_right -> false_pair *= def_pair;
         }
     }
     else
     {
         if (! after_right)
-            after_right = new DefiniteAssignmentSet(pair);
+            after_right = new DefiniteAssignmentSet(def_pair);
 
         after_right -> false_pair *= *before_right;
     }
@@ -339,16 +339,16 @@ DefiniteAssignmentSet *Semantic::DefiniteAND_AND(AstBinaryExpression *expr, Defi
 }
 
 
-DefiniteAssignmentSet *Semantic::DefiniteOR_OR(AstBinaryExpression *expr, DefinitePair &pair)
+DefiniteAssignmentSet *Semantic::DefiniteOR_OR(AstBinaryExpression *expr, DefinitePair &def_pair)
 {
-    DefiniteAssignmentSet *after_left = DefiniteBooleanExpression(expr -> left_expression, pair);
+    DefiniteAssignmentSet *after_left = DefiniteBooleanExpression(expr -> left_expression, def_pair);
     DefinitePair *before_right = NULL;
     if (after_left)
-        pair = after_left -> false_pair;
+        def_pair = after_left -> false_pair;
     else
-        before_right = new DefinitePair(pair);
+        before_right = new DefinitePair(def_pair);
 
-    DefiniteAssignmentSet *after_right = DefiniteBooleanExpression(expr -> right_expression, pair);
+    DefiniteAssignmentSet *after_right = DefiniteBooleanExpression(expr -> right_expression, def_pair);
 
     if (after_left)
     {
@@ -360,14 +360,14 @@ DefiniteAssignmentSet *Semantic::DefiniteOR_OR(AstBinaryExpression *expr, Defini
         else
         {
             after_right = after_left;
-            after_right -> true_pair *= pair;
-            after_right -> false_pair = pair;
+            after_right -> true_pair *= def_pair;
+            after_right -> false_pair = def_pair;
         }
     }
     else
     {
         if (! after_right)
-            after_right = new DefiniteAssignmentSet(pair);
+            after_right = new DefiniteAssignmentSet(def_pair);
 
         after_right -> true_pair *= *before_right;
     }
@@ -379,39 +379,39 @@ DefiniteAssignmentSet *Semantic::DefiniteOR_OR(AstBinaryExpression *expr, Defini
 }
 
 
-DefiniteAssignmentSet *Semantic::DefiniteDefaultBinaryExpression(AstBinaryExpression *expr, DefinitePair &pair)
+DefiniteAssignmentSet *Semantic::DefiniteDefaultBinaryExpression(AstBinaryExpression *expr, DefinitePair &def_pair)
 {
-    DefiniteExpression(expr -> left_expression, pair);
-    DefiniteExpression(expr -> right_expression, pair);
+    DefiniteExpression(expr -> left_expression, def_pair);
+    DefiniteExpression(expr -> right_expression, def_pair);
 
     return (DefiniteAssignmentSet *) NULL;
 }
 
 
-DefiniteAssignmentSet *Semantic::DefiniteBinaryExpression(AstExpression *expression, DefinitePair &pair)
+DefiniteAssignmentSet *Semantic::DefiniteBinaryExpression(AstExpression *expression, DefinitePair &def_pair)
 {
     AstBinaryExpression *binary_expression = (AstBinaryExpression *) expression;
-    return (this ->* DefiniteBinaryExpr[binary_expression -> binary_tag])(binary_expression, pair);
+    return (this ->* DefiniteBinaryExpr[binary_expression -> binary_tag])(binary_expression, def_pair);
 }
 
 
-DefiniteAssignmentSet *Semantic::DefiniteConditionalExpression(AstExpression *expression, DefinitePair &pair)
+DefiniteAssignmentSet *Semantic::DefiniteConditionalExpression(AstExpression *expression, DefinitePair &def_pair)
 {
     AstConditionalExpression *conditional_expression = (AstConditionalExpression *) expression;
 
-    DefiniteAssignmentSet *after_condition = DefiniteBooleanExpression(conditional_expression -> test_expression, pair);
+    DefiniteAssignmentSet *after_condition = DefiniteBooleanExpression(conditional_expression -> test_expression, def_pair);
     DefinitePair *before_expressions = NULL;
 
     if (after_condition)
-        pair = after_condition -> true_pair;
-    else before_expressions = new DefinitePair(pair);
-    DefiniteAssignmentSet *after_true = DefiniteBooleanExpression(conditional_expression -> true_expression, pair);
-    DefinitePair *after_true_pair = (after_true ? (DefinitePair *) NULL : new DefinitePair(pair));
+        def_pair = after_condition -> true_pair;
+    else before_expressions = new DefinitePair(def_pair);
+    DefiniteAssignmentSet *after_true = DefiniteBooleanExpression(conditional_expression -> true_expression, def_pair);
+    DefinitePair *after_true_pair = (after_true ? (DefinitePair *) NULL : new DefinitePair(def_pair));
 
     if (after_condition)
-         pair = after_condition -> false_pair;
-    else pair = *before_expressions;
-    DefiniteAssignmentSet *after_false = DefiniteBooleanExpression(conditional_expression -> false_expression, pair);
+         def_pair = after_condition -> false_pair;
+    else def_pair = *before_expressions;
+    DefiniteAssignmentSet *after_false = DefiniteBooleanExpression(conditional_expression -> false_expression, def_pair);
 
     if (conditional_expression -> Type() == control.boolean_type)
     {
@@ -425,14 +425,14 @@ DefiniteAssignmentSet *Semantic::DefiniteConditionalExpression(AstExpression *ex
         }
         else
         {
-            after_true -> true_pair *= pair;
-            after_true -> false_pair *= pair;
+            after_true -> true_pair *= def_pair;
+            after_true -> false_pair *= def_pair;
         }
     }
     else
     {
         assert(! after_true && ! after_false);
-        pair *= *after_true_pair;
+        def_pair *= *after_true_pair;
     }
 
     // harmless if NULL
@@ -444,7 +444,7 @@ DefiniteAssignmentSet *Semantic::DefiniteConditionalExpression(AstExpression *ex
 }
 
 
-DefiniteAssignmentSet *Semantic::DefiniteAssignmentExpression(AstExpression *expression, DefinitePair &pair)
+DefiniteAssignmentSet *Semantic::DefiniteAssignmentExpression(AstExpression *expression, DefinitePair &def_pair)
 {
     AstAssignmentExpression *assignment_expression = (AstAssignmentExpression *) expression;
 
@@ -495,9 +495,10 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentExpression(AstExpression *exp
                 AstBlock *block = definite_block_stack -> TopBlock();
                 block -> AddLocallyDefinedVariable(variable);
 #ifdef DUMP
-Coutput << "(1) Variable \"" << variable -> Name() << " #" << index
-        << "\" is defined at line " << lex_stream -> Line(assignment_expression -> LeftToken())
-        << endl;
+                Coutput << "(1) Variable \"" << variable -> Name() << " #"
+                        << index << "\" is defined at line "
+                        << lex_stream -> Line(assignment_expression -> LeftToken())
+                        << endl;
 #endif
             }
 
@@ -506,7 +507,7 @@ Coutput << "(1) Variable \"" << variable -> Name() << " #" << index
             // been set prior to such an assignment. otherwise, an error
             // occurs.
             //
-            if (! (assignment_expression -> SimpleAssignment() || pair.da_set[index]))
+            if (! (assignment_expression -> SimpleAssignment() || def_pair.da_set[index]))
             {
                 ReportSemError(SemanticError::VARIABLE_NOT_DEFINITELY_ASSIGNED,
                                assignment_expression -> left_hand_side -> LeftToken(),
@@ -532,7 +533,7 @@ Coutput << "(1) Variable \"" << variable -> Name() << " #" << index
     if (! simple_name)
     {
         AstFieldAccess *field_access = left_hand_side -> FieldAccessCast();
-        DefiniteExpression((field_access ? field_access -> base : left_hand_side), pair);
+        DefiniteExpression((field_access ? field_access -> base : left_hand_side), def_pair);
     }
 
     //
@@ -540,7 +541,7 @@ Coutput << "(1) Variable \"" << variable -> Name() << " #" << index
     // assignments are stricter than they were in JLS1; hence we no longer
     // consider the when true and when false values separately.
     //
-    DefiniteExpression(assignment_expression -> expression, pair);
+    DefiniteExpression(assignment_expression -> expression, def_pair);
 
     //
     // Finally, we mark the variable as assigned.
@@ -553,7 +554,7 @@ Coutput << "(1) Variable \"" << variable -> Name() << " #" << index
             // It is an error to assign any final except a DU blank final
             //
             if (! ((*blank_finals)[variable -> LocalVariableIndex()] &&
-                   pair.du_set[variable -> LocalVariableIndex()]))
+                   def_pair.du_set[variable -> LocalVariableIndex()]))
             {
                 ReportSemError(SemanticError::TARGET_VARIABLE_IS_FINAL,
                                assignment_expression -> left_hand_side -> LeftToken(),
@@ -564,25 +565,25 @@ Coutput << "(1) Variable \"" << variable -> Name() << " #" << index
                 definite_final_assignment_stack -> Top().Next() = left_hand_side;
         }
 
-        pair.AssignElement(variable -> LocalVariableIndex());
+        def_pair.AssignElement(variable -> LocalVariableIndex());
     }
 
     return (DefiniteAssignmentSet *) NULL;
 }
 
-DefiniteAssignmentSet *Semantic::DefiniteDefaultExpression(AstExpression *expr, DefinitePair &pair)
+DefiniteAssignmentSet *Semantic::DefiniteDefaultExpression(AstExpression *expr, DefinitePair &def_pair)
 {
     return (DefiniteAssignmentSet *) NULL;
 }
 
-DefiniteAssignmentSet *Semantic::DefiniteParenthesizedExpression(AstExpression *expression, DefinitePair &pair)
+DefiniteAssignmentSet *Semantic::DefiniteParenthesizedExpression(AstExpression *expression, DefinitePair &def_pair)
 {
     AstParenthesizedExpression *expr = (AstParenthesizedExpression *) expression;
 
-    return DefiniteBooleanExpression(expr -> expression, pair);
+    return DefiniteBooleanExpression(expr -> expression, def_pair);
 }
 
-DefiniteAssignmentSet *Semantic::DefiniteFieldAccess(AstExpression *expression, DefinitePair &pair)
+DefiniteAssignmentSet *Semantic::DefiniteFieldAccess(AstExpression *expression, DefinitePair &def_pair)
 {
     AstFieldAccess *expr = (AstFieldAccess *) expression;
 
@@ -596,25 +597,25 @@ DefiniteAssignmentSet *Semantic::DefiniteFieldAccess(AstExpression *expression, 
     //      VariableSymbol *variable = DefiniteFinal(expr);
     //      if (variable)
     //      {
-    //          if (! pair.da_set[variable -> LocalVariableIndex()])
+    //          if (! def_pair.da_set[variable -> LocalVariableIndex()])
     //          {
     //              ReportSemError(SemanticError::VARIABLE_NOT_DEFINITELY_ASSIGNED,
     //                             expr -> LeftToken(),
     //                             expr -> RightToken(),
     //                             variable -> Name());
     //              // supress further warnings
-    //              pair.da_set.AddElement(variable -> LocalVariableIndex());
+    //              def_pair.da_set.AddElement(variable -> LocalVariableIndex());
     //          }
     //      }
 
-    return DefiniteBooleanExpression((expr -> resolution_opt ? expr -> resolution_opt : expr -> base), pair);
+    return DefiniteBooleanExpression((expr -> resolution_opt ? expr -> resolution_opt : expr -> base), def_pair);
 }
 
-DefiniteAssignmentSet *Semantic::DefiniteCastExpression(AstExpression *expression, DefinitePair &pair)
+DefiniteAssignmentSet *Semantic::DefiniteCastExpression(AstExpression *expression, DefinitePair &def_pair)
 {
     AstCastExpression *expr = (AstCastExpression *) expression;
 
-    return DefiniteBooleanExpression(expr -> expression, pair);
+    return DefiniteBooleanExpression(expr -> expression, def_pair);
 }
 
 
@@ -622,18 +623,18 @@ DefiniteAssignmentSet *Semantic::DefiniteCastExpression(AstExpression *expressio
 // Must have two versions, since this can be called in both expression and
 // statement context.
 //
-void Semantic::DefiniteArrayInitializer(AstArrayInitializer *array_initializer, DefinitePair &pair)
+void Semantic::DefiniteArrayInitializer(AstArrayInitializer *array_initializer, DefinitePair &def_pair)
 {
     for (int i = 0; i < array_initializer -> NumVariableInitializers(); i++)
     {
         AstArrayInitializer *sub_array_initializer = array_initializer -> VariableInitializer(i) -> ArrayInitializerCast();
 
         if (sub_array_initializer)
-            DefiniteArrayInitializer(sub_array_initializer, pair);
+            DefiniteArrayInitializer(sub_array_initializer, def_pair);
         else
         {
             AstExpression *init = (AstExpression *) array_initializer -> VariableInitializer(i);
-            DefiniteExpression(init, pair);
+            DefiniteExpression(init, def_pair);
         }
     }
 
@@ -703,9 +704,11 @@ inline void Semantic::DefiniteBlockStatements(AstBlock *block_body)
                         if ((*definitely_assigned_variables).da_set[k] && (! locally_defined_variables[k]))
                         {
 #ifdef DUMP
-Coutput << "(2) Variable \"" << variable -> Name() << " #" << variable -> LocalVariableIndex()
-        << "\" is defined at line " << lex_stream -> Line(statement -> LeftToken())
-        << endl;
+                            Coutput << "(2) Variable \"" << variable -> Name()
+                                    << " #" << variable -> LocalVariableIndex()
+                                    << "\" is defined at line "
+                                    << lex_stream -> Line(statement -> LeftToken())
+                                    << endl;
 #endif
                             statement -> AddDefinedVariable(variable);
                             locally_defined_variables.AddElement(k);
@@ -750,14 +753,17 @@ void Semantic::DefiniteBlock(Ast *stmt)
     DefiniteBlockStatements(block_body);
 
 #ifdef DUMP
-if (control.option.g && block_body -> NumLocallyDefinedVariables() > 0)
-{
-Coutput << "(3) At Line " << lex_stream -> Line(block_body -> RightToken())
-        << " the range for the following variables end:" << endl << endl;
-for (int j = 0; j < block_body -> NumLocallyDefinedVariables(); j++)
-Coutput << "    \"" << block_body -> LocallyDefinedVariable(j) -> Name()
-        << "\"" << endl;
-}
+    if (control.option.g && block_body -> NumLocallyDefinedVariables() > 0)
+    {
+        Coutput << "(3) At Line "
+                << lex_stream -> Line(block_body -> RightToken())
+                << " the range for the following variables end:" << endl
+                << endl;
+        for (int j = 0; j < block_body -> NumLocallyDefinedVariables(); j++)
+            Coutput << "    \""
+                    << block_body -> LocallyDefinedVariable(j) -> Name()
+                    << "\"" << endl;
+    }
 #endif
     //
     // Remove all variables that just went out of scope
@@ -800,9 +806,12 @@ void Semantic::DefiniteLocalVariableDeclarationStatement(Ast *stmt)
             {
                 assert(definite_block_stack -> TopLocalVariables()[variable_symbol -> LocalVariableIndex()] == NULL);
 #ifdef DUMP
-Coutput << "(3.5) Local Variable \"" << variable_symbol -> Name() << " #" << variable_symbol -> LocalVariableIndex()
-        << "\" is declared at line " << lex_stream -> Line(variable_declarator -> LeftToken())
-        << endl;
+                Coutput << "(3.5) Local Variable \""
+                        << variable_symbol -> Name() << " #"
+                        << variable_symbol -> LocalVariableIndex()
+                        << "\" is declared at line "
+                        << lex_stream -> Line(variable_declarator -> LeftToken())
+                        << endl;
 #endif
                 definite_block_stack -> TopLocalVariables()[variable_symbol -> LocalVariableIndex()] = variable_symbol;
             }
@@ -818,9 +827,11 @@ Coutput << "(3.5) Local Variable \"" << variable_symbol -> Name() << " #" << var
                     AstBlock *block = definite_block_stack -> TopBlock();
                     block -> AddLocallyDefinedVariable(variable_symbol);
 #ifdef DUMP
-Coutput << "(4) Variable \"" << variable_symbol -> Name() << " #" << variable_symbol -> LocalVariableIndex()
-        << "\" is defined at line " << lex_stream -> Line(variable_declarator -> LeftToken())
-        << endl;
+                    Coutput << "(4) Variable \"" << variable_symbol -> Name()
+                            << " #" << variable_symbol -> LocalVariableIndex()
+                            << "\" is defined at line "
+                            << lex_stream -> Line(variable_declarator -> LeftToken())
+                            << endl;
 #endif
                 }
             }
@@ -1010,9 +1021,11 @@ void Semantic::DefiniteForStatement(Ast *stmt)
                     if ((definitely_assigned_variables -> da_set)[k] && (! locally_defined_variables[k]))
                     {
 #ifdef DUMP
-Coutput << "(5) Variable \"" << variable -> Name() << " #" << variable -> LocalVariableIndex()
-        << "\" is defined at line " << lex_stream -> Line(statement -> LeftToken())
-        << endl;
+                        Coutput << "(5) Variable \"" << variable -> Name()
+                                << " #" << variable -> LocalVariableIndex()
+                                << "\" is defined at line "
+                                << lex_stream -> Line(statement -> LeftToken())
+                                << endl;
 #endif
                         statement -> AddDefinedVariable(variable);
                         locally_defined_variables.AddElement(k);
@@ -1166,9 +1179,12 @@ void Semantic::DefiniteSwitchStatement(Ast *stmt)
                             if (definitely_assigned_variables -> da_set[k] && (! locally_defined_variables[k]))
                             {
 #ifdef DUMP
-Coutput << "Variable \"" << variable -> Name() << " #" << variable -> LocalVariableIndex()
-        << "\" is defined at line " << lex_stream -> Line(statement -> LeftToken())
-        << endl;
+                                Coutput << "Variable \"" << variable -> Name()
+                                        << " #"
+                                        << variable -> LocalVariableIndex()
+                                        << "\" is defined at line "
+                                        << lex_stream -> Line(statement -> LeftToken())
+                                        << endl;
 #endif
                                 statement -> AddDefinedVariable(variable);
                                 locally_defined_variables.AddElement(k);
@@ -1183,14 +1199,20 @@ Coutput << "Variable \"" << variable -> Name() << " #" << variable -> LocalVaria
             }
 
 #ifdef DUMP
-if (control.option.g && block_body -> NumLocallyDefinedVariables() > 0)
-{
-Coutput << "(5.5) At Line " << lex_stream -> Line(statement -> RightToken())
-        << " the range for the following variables end:" << endl << endl;
-for (int j = 0; j < block_body -> NumLocallyDefinedVariables(); j++)
-Coutput << "    \"" << block_body -> LocallyDefinedVariable(j) -> Name()
-        << "\"" << endl;
-}
+            if (control.option.g && block_body -> NumLocallyDefinedVariables() > 0)
+            {
+                Coutput << "(5.5) At Line "
+                        << lex_stream -> Line(statement -> RightToken())
+                        << " the range for the following variables end:"
+                        << endl << endl;
+                for (int j = 0;
+                     j < block_body -> NumLocallyDefinedVariables(); j++)
+                {
+                    Coutput << "    \""
+                            << block_body -> LocallyDefinedVariable(j) -> Name()
+                            << "\"" << endl;
+                }
+            }
 #endif
             //
             // At the end of a switch block statement, we always close the
@@ -1576,14 +1598,17 @@ void Semantic::DefiniteTryStatement(Ast *stmt)
     DefiniteBlockStatements(try_block_body);
 
 #ifdef DUMP
-if (control.option.g && try_block_body -> NumLocallyDefinedVariables() > 0)
-{
-Coutput << "(6) At Line " << lex_stream -> Line(try_block_body -> RightToken())
-        << " the range for the following variables end:" << endl << endl;
-for (int k = 0; k < try_block_body -> NumLocallyDefinedVariables(); k++)
-Coutput << "    \"" << try_block_body -> LocallyDefinedVariable(k) -> Name()
-        << "\"" << endl;
-}
+    if (control.option.g && try_block_body -> NumLocallyDefinedVariables() > 0)
+    {
+        Coutput << "(6) At Line "
+                << lex_stream -> Line(try_block_body -> RightToken())
+                << " the range for the following variables end:" << endl
+                << endl;
+        for (int k = 0; k < try_block_body -> NumLocallyDefinedVariables(); k++)
+            Coutput << "    \""
+                    << try_block_body -> LocallyDefinedVariable(k) -> Name()
+                    << "\"" << endl;
+    }
 #endif
     DefinitePair &exit_pair = definite_block_stack -> TopExitPair(*definitely_assigned_variables);
     BitSet before_catch_finals(exit_pair.du_set),
@@ -1648,9 +1673,11 @@ Coutput << "    \"" << try_block_body -> LocallyDefinedVariable(k) -> Name()
             VariableSymbol *variable = clause -> parameter_symbol;
             definite_block_stack -> TopLocallyDefinedVariables() -> AddElement(variable -> LocalVariableIndex());
 #ifdef DUMP
-Coutput << "(7) Variable \"" << variable -> Name() << " #" << variable -> LocalVariableIndex()
-        << "\" is defined at line " << lex_stream -> Line(clause -> formal_parameter -> LeftToken())
-        << endl;
+            Coutput << "(7) Variable \"" << variable -> Name() << " #"
+                    << variable -> LocalVariableIndex()
+                    << "\" is defined at line "
+                    << lex_stream -> Line(clause -> formal_parameter -> LeftToken())
+                    << endl;
 #endif
         }
         definitely_assigned_variables -> du_set = before_catch_finals;
@@ -1658,14 +1685,17 @@ Coutput << "(7) Variable \"" << variable -> Name() << " #" << variable -> LocalV
         DefiniteBlockStatements(clause_block_body);
 
 #ifdef DUMP
-if (control.option.g && clause_block_body -> NumLocallyDefinedVariables() > 0)
-{
-Coutput << "(8) At Line " << lex_stream -> Line(clause_block_body -> RightToken())
-        << " the range for the following variables end:" << endl << endl;
-for (int l = 0; l < clause_block_body -> NumLocallyDefinedVariables(); l++)
-Coutput << "    \"" << clause_block_body -> LocallyDefinedVariable(l) -> Name()
-        << "\"" << endl;
-}
+        if (control.option.g && clause_block_body -> NumLocallyDefinedVariables() > 0)
+        {
+            Coutput << "(8) At Line "
+                    << lex_stream -> Line(clause_block_body -> RightToken())
+                    << " the range for the following variables end:" << endl
+                    << endl;
+            for (int l = 0; l < clause_block_body -> NumLocallyDefinedVariables(); l++)
+                Coutput << "    \""
+                        << clause_block_body -> LocallyDefinedVariable(l) -> Name()
+                        << "\"" << endl;
+        }
 #endif
         //
         // Once we are done with a block, its enclosed local variables are no
@@ -1741,10 +1771,12 @@ void Semantic::DefiniteMethodBody(AstMethodDeclaration *method_declaration, Tupl
     if (! method_declaration -> method_body -> EmptyStatementCast())
     {
 #ifdef DUMP
-if (control.option.g)
-Coutput << "(9) Processing method \"" << method_declaration -> method_symbol -> Name()
-        << "\" in " << ThisType() -> ContainingPackage() -> PackageName() << "/"
-        << ThisType() -> ExternalName() << endl;
+        if (control.option.g)
+            Coutput << "(9) Processing method \""
+                    << method_declaration -> method_symbol -> Name()
+                    << "\" in "
+                    << ThisType() -> ContainingPackage() -> PackageName() << "/"
+                    << ThisType() -> ExternalName() << endl;
 #endif
         AstConstructorBlock *constructor_block = method_declaration -> method_body -> ConstructorBlockCast();
         AstBlock *block_body = (constructor_block ? constructor_block -> block : (AstBlock *) method_declaration -> method_body);
@@ -1778,9 +1810,11 @@ Coutput << "(9) Processing method \"" << method_declaration -> method_symbol -> 
                 VariableSymbol *variable = formal_declarator -> symbol;
                 definite_block_stack -> TopLocallyDefinedVariables() -> AddElement(variable -> LocalVariableIndex());
 #ifdef DUMP
-Coutput << "(10) Variable \"" << variable -> Name() << " #" << variable -> LocalVariableIndex()
-        << "\" is defined at line " << lex_stream -> Line(formal_declarator -> LeftToken())
-        << endl;
+                Coutput << "(10) Variable \"" << variable -> Name() << " #"
+                        << variable -> LocalVariableIndex()
+                        << "\" is defined at line "
+                        << lex_stream -> Line(formal_declarator -> LeftToken())
+                        << endl;
 #endif
             }
 
@@ -1796,14 +1830,17 @@ Coutput << "(10) Variable \"" << variable -> Name() << " #" << variable -> Local
         DefiniteBlockStatements(block_body);
 
 #ifdef DUMP
-if (control.option.g && block_body -> NumLocallyDefinedVariables() > 0)
-{
-Coutput << "(11) At Line " << lex_stream -> Line(block_body -> RightToken())
-        << " the range for the following variables end:" << endl << endl;
-for (int j = 0; j < block_body -> NumLocallyDefinedVariables(); j++)
-Coutput << "    \"" << block_body -> LocallyDefinedVariable(j) -> Name()
-        << "\"" << endl;
-}
+        if (control.option.g && block_body -> NumLocallyDefinedVariables() > 0)
+        {
+            Coutput << "(11) At Line "
+                    << lex_stream -> Line(block_body -> RightToken())
+                    << " the range for the following variables end:" << endl
+                    << endl;
+            for (int j = 0; j < block_body -> NumLocallyDefinedVariables(); j++)
+                Coutput << "    \""
+                        << block_body -> LocallyDefinedVariable(j) -> Name()
+                        << "\"" << endl;
+        }
 #endif
         definite_block_stack -> Pop();
 
@@ -1823,10 +1860,12 @@ Coutput << "    \"" << block_body -> LocallyDefinedVariable(j) -> Name()
 void Semantic::DefiniteConstructorBody(AstConstructorDeclaration *constructor_declaration, Tuple<VariableSymbol *> &finals)
 {
 #ifdef DUMP
-if (control.option.g)
-Coutput << "(12) Processing constructor \"" << constructor_declaration -> constructor_symbol -> Name()
-        << "\" in " << ThisType() -> ContainingPackage() -> PackageName() << "/"
-        << ThisType() -> ExternalName() << endl;
+    if (control.option.g)
+        Coutput << "(12) Processing constructor \""
+                << constructor_declaration -> constructor_symbol -> Name()
+                << "\" in "
+                << ThisType() -> ContainingPackage() -> PackageName() << "/"
+                << ThisType() -> ExternalName() << endl;
 #endif
     AstConstructorBlock *constructor_block = constructor_declaration -> constructor_body;
     AstBlock *block_body = constructor_block -> block;
@@ -1901,9 +1940,11 @@ Coutput << "(12) Processing constructor \"" << constructor_declaration -> constr
             VariableSymbol *variable = formal_declarator -> symbol;
             definite_block_stack -> TopLocallyDefinedVariables() -> AddElement(variable -> LocalVariableIndex());
 #ifdef DUMP
-Coutput << "(13) Variable \"" << variable -> Name() << " #" << variable -> LocalVariableIndex()
-        << "\" is defined at line " << lex_stream -> Line(formal_declarator -> LeftToken())
-        << endl;
+            Coutput << "(13) Variable \"" << variable -> Name() << " #"
+                    << variable -> LocalVariableIndex()
+                    << "\" is defined at line "
+                    << lex_stream -> Line(formal_declarator -> LeftToken())
+                    << endl;
 #endif
         }
 
@@ -1919,14 +1960,17 @@ Coutput << "(13) Variable \"" << variable -> Name() << " #" << variable -> Local
     DefiniteBlockStatements(block_body);
 
 #ifdef DUMP
-if (control.option.g && block_body -> NumLocallyDefinedVariables() > 0)
-{
-Coutput << "(14) At Line " << lex_stream -> Line(block_body -> RightToken())
-        << " the range for the following variables end:" << endl << endl;
-for (int j = 0; j < block_body -> NumLocallyDefinedVariables(); j++)
-Coutput << "    \"" << block_body -> LocallyDefinedVariable(j) -> Name()
-        << "\"" << endl;
-}
+    if (control.option.g && block_body -> NumLocallyDefinedVariables() > 0)
+    {
+        Coutput << "(14) At Line "
+                << lex_stream -> Line(block_body -> RightToken())
+                << " the range for the following variables end:" << endl
+                << endl;
+        for (int j = 0; j < block_body -> NumLocallyDefinedVariables(); j++)
+            Coutput << "    \""
+                    << block_body -> LocallyDefinedVariable(j) -> Name()
+                    << "\"" << endl;
+    }
 #endif
     //
     // Compute the set of finals that has definitely been assigned in this
@@ -1957,10 +2001,10 @@ Coutput << "    \"" << block_body -> LocallyDefinedVariable(j) -> Name()
 void Semantic::DefiniteBlockInitializer(AstBlock *block_body, int stack_size, Tuple<VariableSymbol *> &finals)
 {
 #ifdef DUMP
-if (control.option.g)
-Coutput << "(15) Processing Initializer block "
-        << " in " << ThisType() -> ContainingPackage() -> PackageName() << "/"
-        << ThisType() -> ExternalName() << endl;
+    if (control.option.g)
+        Coutput << "(15) Processing Initializer block " << " in "
+                << ThisType() -> ContainingPackage() -> PackageName() << "/"
+                << ThisType() -> ExternalName() << endl;
 #endif
     universe = new DefinitePair(block_body -> block_symbol -> max_variable_index + finals.Length(), BitSet::UNIVERSE);
     definite_block_stack = new DefiniteBlockStack(control, stack_size + 1, universe -> Size()); // +1 for absent method block
@@ -2017,14 +2061,17 @@ Coutput << "(15) Processing Initializer block "
     DefiniteBlockStatements(block_body);
 
 #ifdef DUMP
-if (control.option.g && block_body -> NumLocallyDefinedVariables() > 0)
-{
-Coutput << "(16) At Line " << lex_stream -> Line(block_body -> RightToken())
-        << " the range for the following variables end:" << endl << endl;
-for (int j = 0; j < block_body -> NumLocallyDefinedVariables(); j++)
-Coutput << "    \"" << block_body -> LocallyDefinedVariable(j) -> Name()
-        << "\"" << endl;
-}
+    if (control.option.g && block_body -> NumLocallyDefinedVariables() > 0)
+    {
+        Coutput << "(16) At Line "
+                << lex_stream -> Line(block_body -> RightToken())
+                << " the range for the following variables end:" << endl
+                << endl;
+        for (int j = 0; j < block_body -> NumLocallyDefinedVariables(); j++)
+            Coutput << "    \""
+                    << block_body -> LocallyDefinedVariable(j) -> Name()
+                    << "\"" << endl;
+    }
 #endif
     //
     // For each final that has definitely or possibly been assigned a value
