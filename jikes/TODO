@@ -6,13 +6,15 @@ Fix build under IRIX, it failed in
 
 Include java.g file in tar ball.
 This was omitted in the 1.12 release.
+(FIXED)
 
 Add RPM spec file to the tar ball.
 This was omitted in the 1.12 release.
+(FIXED)
 
-Add a configure check to make folks do
-not attempt to build under Cygwin with
-the -mno-cygwin flag.
+Add a configure check to make sure
+folks do not attempt to build under
+Cygwin with the -mno-cygwin flag.
 
 Add the src/m4 subdir contents to
 the .tar file.

@@ -164,6 +164,10 @@ tuple.h \
 unzip.h \
 zip.h
 
+
+# Include the java.g file in the .tar ball
+
+EXTRA_DIST = java.g
 subdir = src
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = config.h
@@ -438,7 +442,7 @@ jikespg:
 
 efence:
 	@rm -f jikes$(EXEEXT)
-	$(CXXLINK) -o jikes $(jikes_OBJECTS) -lstdc++ -lefence
+	$(CXXLINK) -o jikes$(EXEEXT) $(jikes_OBJECTS) -lstdc++ -lefence
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -80,6 +80,10 @@ install_sh = @install_sh@
 
 
 SUBDIRS = doc src
+
+# Include the RPM spec file in the .tar ball
+
+EXTRA_DIST = jikes.spec
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs

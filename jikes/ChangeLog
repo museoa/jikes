@@ -1,5 +1,14 @@
 2000-12-20  Mo DeJong  <mdejong@redhat.com>
 
+	* Makefile.am: Add RPM spec file to
+	`make dist` target.
+	* TODO: Mark TODO items fixed.
+	* src/Makefile.am: Add java.g
+	file to `make dist` target. Fix
+	up efence target.
+
+2000-12-20  Mo DeJong  <mdejong@redhat.com>
+
 	* HACKING: Add new file that gives
 	users a bit more hacking info.
 	* INSTALL: Fix problems with CXXFLAGS
