@@ -1462,7 +1462,7 @@ void Control::CheckForUnusedImports(Semantic* sem)
                 ! sem -> referenced_package_imports.IsElement(package))
             {
                 sem -> ReportSemError(SemanticError::UNUSED_PACKAGE_IMPORT,
-                                      import_declaration -> name,
+                                      import_declaration,
                                       package -> PackageName());
             }
         }
@@ -1473,7 +1473,7 @@ void Control::CheckForUnusedImports(Semantic* sem)
                 ! sem -> referenced_type_imports.IsElement(import_type))
             {
                 sem -> ReportSemError(SemanticError::UNUSED_TYPE_IMPORT,
-                                      import_declaration -> name,
+                                      import_declaration,
                                       import_type -> ContainingPackage() -> PackageName(),
                                       import_type -> ExternalName());
             }

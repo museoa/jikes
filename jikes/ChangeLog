@@ -1,3 +1,9 @@
+2004-05-01  Elliott Hughes  <enh@acm.org>
+
+	* src/control.cpp: it's the import that's unused, not the name.
+	Let the user's editor highlight the whole import declaration,
+	not just the name.
+
 2004-04-18  Chris Abbey  <jikes@cabbey.net>
 
 	Release 1.20.
