@@ -1,5 +1,7 @@
 1999-09-17    <shields@jikes.watson.ibm.com>
 
+	* jikes.1: document -Xdepend (synomym for -depend)
+
 	* contrib.htm: 
 	Add Ken Coar to Core Team, revise format to
 	reflect new project organization.
