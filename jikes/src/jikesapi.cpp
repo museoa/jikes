@@ -100,7 +100,8 @@ JikesOption::JikesOption():
 JikesAPI * JikesAPI::instance = NULL;
 
 JikesAPI::JikesAPI()
-:option(NULL)
+:option(NULL),
+parsedOptions(NULL)
 {
     SetNewHandler();
     FloatingPointCheck();
@@ -126,6 +127,7 @@ void JikesAPI::cleanupOptions() {
             delete [] *parsed;
         }
         delete [] parsedOptions;
+        parsedOptions = NULL;
     }
 }
 
@@ -138,28 +140,28 @@ char ** JikesAPI::parseOptions(int argc, char **argv)
     option = opt;
     int n = args.argc - opt->first_file_index;
 
-    if(n <= 0)
+    if (n <= 0)
     {
         return NULL;
     }
     else
     {
-        char **res = new char*[n+1];
-        for(int i=0; i<n; i++)
+        parsedOptions = new char*[n+1];
+        for (int i=0; i<n; i++)
         {
             const char *o = args.argv[opt->first_file_index+i];
-            if(o)
+            if (o)
             {
-                res[i] = new char[strlen(o)+1];
-                strcpy(res[i],o);
+                parsedOptions[i] = new char[strlen(o)+1];
+                strcpy(parsedOptions[i],o);
             } else
             {
-                res[i] = NULL;
+                parsedOptions[i] = NULL;
                 break;
             }
         }
-        res[n] = NULL;
-        return res;
+        parsedOptions[n] = NULL;
+        return parsedOptions;
     }
 }
 

@@ -1,3 +1,13 @@
+2000-11-29  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/jikesapi.cpp (JikesAPI, parseOptions,
+	cleanupOptions):  Initialize the parsedOptions
+	member to avoid deleting uninitialized memory.
+	Set the parsedOptions member to NULL in
+	cleanupOptions to avoid a double delete of memory.
+	Set the parsedOptions member inside parseOptions()
+	so that it can be deleted later.
+
 2000-11-27  Mo DeJong  <mdejong@redhat.com>
 
 	* src/jikes.cpp (main): Don't attempt to
