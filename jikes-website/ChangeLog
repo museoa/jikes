@@ -1,3 +1,9 @@
+2002-09-07  Elliott Hughes  <enh@acm.org>
+
+	* faq/dev-mac.shtml: simplify instructions for Mac OS X; it's
+	basically Yet Another Unix as far as building Jikes goes.
+
+
 2002-08-22  Andrew M. Inggs  <aminggs@yahoo.co.uk>
 
 	* faq/bug-reporting.shtml: Rewrote first point in process
