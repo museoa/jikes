@@ -55,7 +55,7 @@
 	variables that went out of scope, fixing bug
 	253 and related.
 
-2001-05-06  ??  <kumaran@alumni.stanford.org>
+2001-05-06  Kumaran Santhanam  <kumaran@alumni.stanford.org>
 
 	* src/control.cpp (ProcessBodies): fix
 	timestamp assert failure on Windows builds
