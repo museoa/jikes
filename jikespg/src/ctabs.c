@@ -1213,7 +1213,7 @@ static void print_error_maps(void)
                    ("\n    public final static char symbol_index[] = {0,\n",
                     1, num_symbols, 10, temp);
                 mystrcpy("    public final static char terminal_index[] = "
-                         "symbol_index[0];\n");
+                         "symbol_index;\n");
                 mystrcpy("    public final static char non_terminal_index[] = "
                          "symbol_index;\n");
             }

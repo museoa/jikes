@@ -1,3 +1,8 @@
+2002-05-09  Matthew L Daniel  <mdaniel@scdi.com>
+
+	* src/ctabs.c (print_error_maps): Fix bug for Java output.
+	* jikespg.spec: New file for rpm generation.
+
 2002-03-05  Eric Blake  <ebb9@email.byu.edu>
 
 	* Makefile: Add.
