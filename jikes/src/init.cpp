@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -53,6 +53,7 @@ void Semantic::ProcessVariableInitializer(AstVariableDeclarator *variable_declar
                 else ReportSemError(SemanticError::INVALID_SHORT_VALUE,
                                     init -> LeftToken(),
                                     init -> RightToken());
+                init -> value = NULL;
             }
             else
             {
@@ -63,6 +64,7 @@ void Semantic::ProcessVariableInitializer(AstVariableDeclarator *variable_declar
                                field_type -> ExternalName(),
                                init -> Type() -> ContainingPackage() -> PackageName(),
                                init -> Type() -> ExternalName());
+                init -> value = NULL;
             }
         }
     
