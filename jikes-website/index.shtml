@@ -17,19 +17,22 @@
           <hr>
           For Users
           <ul>
-            <li>FAQ
+            <li>User's FAQ
             <li><a href="/developerworks/news/index.php?group_id=10">News</a>
             <li><a href="distribs.shtml">Distributions</a>
             <li><a href="/developerworks/project/showfiles.php?group_id=10">Downloads</a>
 <!--            <li><a href="/developerworks/mail/?group_id=10">Mailing Lists</a>
--->            <li><a href="/developerworks/bugs/?group_id=10">Report Bugs</a>
+-->
+            <li><a href="/developerworks/bugs/?group_id=10&set=custom&_assigned_to=0&_status=1&_category=100&_bug_group=100&SUBMIT=Browse">View open bugs</a><!-- this is a hack to work around the next/prev 50 bug -->
+            <li><a href="/developerworks/bugs/?func=addbug&group_id=10">Report Bugs Here</a>
             <li>...
           </ul>
           <hr>
           For Developers
           <ul>
+	    <li>Developer's FAQ
             <li><a href="cvs.shtml">CVS</a>
-            <li><a href="/developerworks/patch/?group_id=10">Patches</a>
+            <li><a href="/developerworks/patch/?group_id=10">Patche Queue</a>
 	    <ul>
 	      <li><a href="patchguide.shtml"><small>Patch Guidelines</small></a>
             </ul>

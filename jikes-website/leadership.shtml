@@ -68,7 +68,7 @@ a few months.
 All further contributions must be made under the same terms. All contributions must contain the following
 copyright notice:
 <P><code><BLOCKQUOTE>Copyright &copy; <FONT COLOR="GREEN">{date} {name of contributor}</FONT> and others. All rights reserved.<BR CLEAR="LEFT">
-This program and the accompanying materials are made available under the terms of the IBM Public License, as found in the file IPL.html that is included in this distribution.
+This program and the accompanying materials are made available under the terms of the IBM Public License, as found in the file license.htm that is included in this distribution.
 </BLOCKQUOTE></code></p>
 
     <!--#include file="footer.shtml" -->
