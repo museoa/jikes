@@ -1,5 +1,18 @@
 2001-11-02  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/ast.h: Reformat comments to 80 columns. Remove unused
+	AstAssignmentExpression::DEFINITE_EQUAL.
+	* src/bytecode.cpp: Reformat comments to 80 columns. Update when
+	local variable table data is generated, to start when a varible is
+	declared (rather than first assigned), bug 422; this also solves
+	the core dump of bug 2353. Optimize boolean conditional
+	expressions when one term is constant, bug 65.
+	* src/definite.cpp: Remove dead code for tracking when a variable
+	is first assigned, since the local variable table now only cares
+	when it is declared. Patch 223.
+
+2001-11-02  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/symbol.cpp: Reformat comments to 80 columns.
 	* src/expr.cpp: Reformat comments to 80 columns. Fix one last
 	corner case in TypeAccessCheck.

@@ -47,10 +47,10 @@ class VariableSymbolArray
 public:
 
     //
-    // This function is used to reset the size of a VariableSymbol array without
-    // allocating or deallocting space. It may be invoked with an integer
-    // argument n which indicates the new size or with no argument which
-    // indicates that the size should be reset to 0.
+    // This function is used to reset the size of a VariableSymbol array
+    // without allocating or deallocting space. It may be invoked with an
+    // integer argument n which indicates the new size or with no argument
+    // which indicates that the size should be reset to 0.
     //
     void Reset(const int n = 0)
     {
@@ -110,30 +110,32 @@ public:
 // inline static void *operator new(size_t, void *p) { return p; }
 //
 
-//**********************************************************************************
+//***************************************************************************
 //
 // This file contains the definitions of the classes used to construct the
 // AST representation of a Java program.
 //
-// The node Ast is a base class of all other classes. (The name of the other classes
-// start with the prefix "Ast".) The nodes associated with executable statements
-// (e.g., AstIfStatement) are subclasses of AstStatement and nodes associated with
-// expressions (e.g., AstBinaryExpression) are subclasses of AstExpression.
+// The node Ast is a base class of all other classes. (The name of the other
+// classes start with the prefix "Ast".) The nodes associated with executable
+// statements (e.g., AstIfStatement) are subclasses of AstStatement and nodes
+// associated with expressions (e.g., AstBinaryExpression) are subclasses of
+// AstExpression.
 //
 // The information contained in the AST nodes is described by a grammar where
-// each rule consists of a left-hand side nonterminal followed by "-->" followed
-// by a right-hand side symbol or a sequence enclosed in the pair of symbols
-// "<" and ">". In defining the symbols, the following notation is used:
+// each rule consists of a left-hand side nonterminal followed by "-->"
+// followed by a right-hand side symbol or a sequence enclosed in the pair of
+// symbols "<" and ">". In defining the symbols, the following notation is
+// used:
 //
 // Symbols that are capitalized (e.g., Type) are nonterminals. Symbols that are
 // in all upper case (e.g., PACKAGE) represent node kinds. Symbols that contain
-// the substring "_token" represents tokens in the source file. The suffix "_opt"
-// indicates that a symbol is optional. For example, if Super_opt appears in a
-// rule, it indicates that either Super or null can be expected. When a symbol
-// is plural (e.g., Modifiers), it indicates zero or more instances of such a
-// symbol (a list to be precise) can be expected. Thus, when "Modifiers" is
-// specified in the right-hand side of a rule either no Modifier or a sequence
-// of them may appear.
+// the substring "_token" represents tokens in the source file. The suffix
+// "_opt" indicates that a symbol is optional. For example, if Super_opt
+// appears in a rule, it indicates that either Super or null can be expected.
+// When a symbol is plural (e.g., Modifiers), it indicates zero or more
+// instances of such a symbol (a list to be precise) can be expected. Thus,
+// when "Modifiers" is specified in the right-hand side of a rule either no
+// Modifier or a sequence of them may appear.
 //
 // Implementation Notes:
 //
@@ -147,17 +149,17 @@ public:
 //    destructor that can delete its subtrees. Therefore, a user can dispose of
 //    a whole ast tree (or subtree) by simply deleting the root node.
 //
-//    When the preprocessor variable JIKES_DEBUG is defined the user may print out
-//    an AST tree to standard output by calling the virtual function "Print"
-//    for the root node of the tree.
+//    When the preprocessor variable JIKES_DEBUG is defined the user may print
+//    out an AST tree to standard output by calling the virtual function
+//    "Print" for the root node of the tree.
 //
 //    DynamicArrays are used to implement lists. This representation has the
-//    advantage of being very flexible and easy to use. However, it may be slightly
-//    less time-efficient than a straightforward linked list. My guess is no more
-//    than 10% which justifies this use, but that should be checked at some point...
+//    advantage of being very flexible and easy to use. However, it may be
+//    slightly less time-efficient than a straightforward linked list. My
+//    guess is no more than 10% which justifies this use, but that should be
+//    checked at some point...
 //
-//**********************************************************************************
-
+//***************************************************************************
 //
 // This is a complete list of all Ast nodes declared here to allow
 // forward references.
@@ -369,17 +371,21 @@ public:
 
 #ifdef JIKES_DEBUG
     typedef AstKind Kind;
-    typedef AstTag  Tag;
+    typedef AstTag Tag;
 #else
     typedef unsigned short Kind;
-    typedef unsigned char  Tag;
+    typedef unsigned char Tag;
 #endif
 
-    Kind  kind;      // every node has a unique kind...
-    Tag   class_tag; // Some subsets of nodes are grouped together to form a class of nodes.
-    bool  generated; // "generated" is a boolean value that indicates whether or not a node
-                     // is associated with a construct in a source file or that is was generated
-                     // by the compiler. See functions "gen_ ..." and "new_ ..." below.
+    Kind kind; // every node has a unique kind...
+    Tag class_tag; // Some subsets of nodes are grouped together to form a class of nodes.
+
+    //
+    // "generated" is a boolean value that indicates whether or not a node
+    // is associated with a construct in a source file or that is was generated
+    // by the compiler. See functions "gen_ ..." and "new_ ..." below.
+    //
+    bool generated;
 
 #ifdef JIKES_DEBUG
     unsigned id;
@@ -398,7 +404,8 @@ public:
 #endif
 
     //
-    // Given an Ast tree, check whether or not it is a Name - simple or qualified.
+    // Given an Ast tree, check whether or not it is a Name - simple or
+    // qualified.
     //
     bool IsName();
     bool IsSimpleNameOrFieldAccess();
@@ -670,9 +677,10 @@ public:
          can_complete_normally;
 
     //
-    // Note that for efficiency reasons AstStatement does not have a constructor.
-    // Therefore, subclasses that are derived from AstStatement are expected to
-    // initialize the fields is_reachable and can_complete_normally appropriately.
+    // Note that for efficiency reasons AstStatement does not have a
+    // constructor. Therefore, subclasses that are derived from AstStatement
+    // are expected to initialize the fields is_reachable and
+    // can_complete_normally appropriately.
     //
     // Note also that an AstStatement is never constructed directly!
     //
@@ -697,9 +705,10 @@ public:
     Symbol *symbol;
 
     //
-    // Note that for efficiency reasons AstExpression does not have a constructor.
-    // However, subclasses that are derived from AstExpression are expected to
-    // initialize the fields value and symbol to NULL as indicated below:
+    // Note that for efficiency reasons AstExpression does not have a
+    // constructor. However, subclasses that are derived from AstExpression
+    // are expected to initialize the fields value and symbol to NULL as
+    // indicated below:
     //
     // AstExpression() : value(NULL),
     //                   symbol(NULL)
@@ -769,7 +778,7 @@ public:
                                    block_tag(NONE),
                                    block_symbol(NULL),
                                    nesting_level(0),
-                   no_braces(false)
+                                   no_braces(false)
     {
         Ast::kind = Ast::BLOCK;
         Ast::class_tag = Ast::STATEMENT;
@@ -816,10 +825,12 @@ public:
 //
 // PrimitiveType --> <PrimitiveKind, PrimitiveName>
 //
-// PrimitiveKind --> BYTE | SHORT | INT | LONG | CHAR | FLOAT | DOUBLE | BOOLEAN | VOID
+// PrimitiveKind --> BYTE | SHORT | INT | LONG | CHAR | FLOAT | DOUBLE |
+//                   BOOLEAN | VOID
 //
 // PrimitiveName --> byte_token | short_token | int_token | long_token |
-//                   char_token | float_token | double_token | boolean_token | void_token
+//                   char_token | float_token | double_token | boolean_token |
+//                   void_token
 //
 class AstPrimitiveType : public Ast
 {
@@ -1030,7 +1041,7 @@ public:
 };
 
 //
-// CompilationUnit --> <COMPILATION,     PackageDeclaration_opt, ImportDeclarations, TypeDeclarations>
+// CompilationUnit --> <COMPILATION, PackageDeclaration_opt, ImportDeclarations, TypeDeclarations>
 //                   | <BAD_COMPILATION, PackageDeclaration_opt, ImportDeclarations, TypeDeclarations>
 //                   | <EMPTY_COMPILATION, PackageDeclaration_opt, ImportDeclarations, TypeDeclarations>
 //
@@ -1110,11 +1121,13 @@ public:
 //
 // Modifier --> <ModifierKind, ModifierName>
 //
-// ModifierKind --> PUBLIC | PROTECTED | PRIVATE | STATIC | ABSTRACT | FINAL | NATIVE
-//                  SYNCHRONIZED | TRANSIENT | VOLATILE
+// ModifierKind --> PUBLIC | PROTECTED | PRIVATE | STATIC | ABSTRACT | FINAL |
+//                  NATIVE | SYNCHRONIZED | TRANSIENT | VOLATILE | STRICTFP
 //
-// ModifierName --> public_token | protected_token | private_token | static_token | abstract_token |
-//                  final_token | native_token | synchronized_token | transient_token | volatile_token
+// ModifierName --> public_token | protected_token | private_token |
+//                  static_token | abstract_token | final_token |
+//                  native_token | synchronized_token | transient_token |
+//                  volatile_token | strictfp_token
 //
 class AstModifier : public Ast
 {
@@ -1461,7 +1474,10 @@ class AstVariableDeclarator : public Ast
 {
 public:
     VariableSymbol *symbol;
-    bool pending; // when true, this variable signals that the variable_initializer_opt for this variable is currently being evaluated
+
+    // when true, this variable signals that the variable_initializer_opt
+    // for this variable is currently being evaluated
+    bool pending;
 
     AstVariableDeclaratorId *variable_declarator_name;
     Ast *variable_initializer_opt;
@@ -1984,12 +2000,13 @@ public:
 // InterfaceMemberDeclaration --> ConstantDeclaration
 //                              | AbstractMethodDeclaration
 //
-// ConstantDeclaration --> FieldDeclaration (where the FieldModifierList is a Constantmodifiers)
+// ConstantDeclaration --> FieldDeclaration (where the FieldModifierList is a
+//         Constantmodifiers)
 //
 // ConstantModifier --> Modifier (PUBLIC, STATIC or FINAL)
 //
-// AbstractMethodDeclaration --> MethodDeclaration (where MethodModifierList is a SignatureModifierList and the
-//                                                  MethodBody is an EmptyStatement)
+// AbstractMethodDeclaration --> MethodDeclaration (where MethodModifierList
+//         is a SignatureModifierList and the MethodBody is an EmptyStatement)
 //
 // SignatureModifier --> Modifier (PUBLIC or ABSTRACT)
 //
@@ -2909,7 +2926,8 @@ public:
     virtual LexStream::TokenIndex RightToken()
     {
         //
-        // when the Finally clause is null, there must be one or more catch clauses
+        // when the Finally clause is null, there must be one or more catch
+        // clauses
         //
         return (finally_clause_opt ? finally_clause_opt -> RightToken() : CatchClause(NumCatchClauses() - 1) -> RightToken());
     }
@@ -3346,9 +3364,9 @@ public:
 //
 // ClassInstanceCreationExpression --> <CLASS_CREATION, new_token, TypeExpression, (_token, Arguments, )_token>
 //
-// Sometimes, during semantic analysis an artificial base_opt expression is constructed.
-// In such a case, the user can determine this condition by testing whether or not
-// dot_token_opt is 0;
+// Sometimes, during semantic analysis an artificial base_opt expression is
+// constructed. In such a case, the user can determine this condition by
+// testing whether or not dot_token_opt is 0;
 //
 class AstClassInstanceCreationExpression : public AstExpression
 {
@@ -3784,8 +3802,8 @@ public:
 // cAstkind --> CAST
 //             | CHECK_AND_CAST
 //
-// NOTE that the optional symbols above are absent only when the compiler inserts
-// a CAST conversion node into the program.
+// NOTE that the optional symbols above are absent only when the compiler
+// inserts a CAST conversion node into the program.
 //
 class AstCastExpression : public AstExpression
 {
@@ -3840,13 +3858,16 @@ public:
 // RightExpression --> Expression
 //                   | type
 //
-// BinaryTag --> STAR | SLASH | MOD | PLUS | MINUS | LEFT_SHIFT | RIGHT_SHIFT | UNSIGNED_RIGHT_SHIFT |
-//               INSTANCEOF | LESS | GREATER | LESS_EQUAL | GREATER_EQUAL | EQUAL_EQUAL | NOT_EQUAL |
+// BinaryTag --> STAR | SLASH | MOD | PLUS | MINUS | LEFT_SHIFT | RIGHT_SHIFT |
+//               UNSIGNED_RIGHT_SHIFT | INSTANCEOF | LESS | GREATER |
+//               LESS_EQUAL | GREATER_EQUAL | EQUAL_EQUAL | NOT_EQUAL |
 //               AND | XOR | IOR | AND_AND | OR_OR
 //
-// BinaryOperator --> *_token | /_token | %_token | +_token | -_token | <<_token | >>_token | >>>_token |
-//                    instanceof_token | <_token | >_token | <=_token | >=_token | ==_token | !=_token |
-//                    &_token | ^_token | |_token | &&_token | ||_token
+// BinaryOperator --> *_token | /_token | %_token | +_token | -_token |
+//                    <<_token | >>_token | >>>_token | instanceof_token |
+//                    <_token | >_token | <=_token | >=_token | ==_token |
+//                    !=_token | &_token | ^_token | |_token | &&_token |
+//                    ||_token
 //
 class AstBinaryExpression : public AstExpression
 {
@@ -3945,8 +3966,9 @@ public:
 //
 // Assignment --> <ASSIGNMENT, AssignmentTag, LeftHandSide, AssignmentOperator, Expression>
 //
-// AssignmentTag --> EQUAL | STAR_EQUAL | SLASH_EQUAL | MOD_EQUAL | PLUS_EQUAL | MINUS_EQUAL |
-//                   LEFT_SHIFT_EQUAL | RIGHT_SHIFT_EQUAL | UNSIGNED_RIGHT_SHIFT_EQUAL |
+// AssignmentTag --> EQUAL | STAR_EQUAL | SLASH_EQUAL | MOD_EQUAL |
+//                   PLUS_EQUAL | MINUS_EQUAL | LEFT_SHIFT_EQUAL |
+//                   RIGHT_SHIFT_EQUAL | UNSIGNED_RIGHT_SHIFT_EQUAL |
 //                   AND_EQUAL | XOR_EQUAL | IOR_EQUAL
 //
 // LeftHandSide --> Name | FieldAccess | ArrayAccess
@@ -3954,12 +3976,13 @@ public:
 //                | <cAstkind, (_token_opt, Type_opt, Brackets )_token_opt, FieldAccess>
 //                | <cAstkind, (_token_opt, Type_opt, Brackets )_token_opt, ArrayAccess>
 //
-// NOTE: that a LeftHandSide appears as a cast node only when the assignment_operator in question
-// is of the form "op=" and the application of the operator requires a casting of the value of the
-// left-hand side.
+// NOTE: that a LeftHandSide appears as a cast node only when the
+// assignment_operator in question is of the form "op=" and the application
+// of the operator requires a casting of the value of the left-hand side.
 //
-// AssignmentOperator --> =_token | *=_token | /=_token | %=_token | +=_token | -=_token |
-//                        <<=_token | >>=_token | >>>=_token | &=_token | ^=_token | |=_token
+// AssignmentOperator --> =_token | *=_token | /=_token | %=_token | +=_token |
+//                        -=_token | <<=_token | >>=_token | >>>=_token |
+//                        &=_token | ^=_token | |=_token
 //
 class AstAssignmentExpression : public AstExpression
 {
@@ -3968,7 +3991,6 @@ public:
     {
         NONE,
         SIMPLE_EQUAL,
-        DEFINITE_EQUAL,
         STAR_EQUAL,
         SLASH_EQUAL,
         MOD_EQUAL,
@@ -3977,7 +3999,6 @@ public:
         LEFT_SHIFT_EQUAL,
         RIGHT_SHIFT_EQUAL,
         UNSIGNED_RIGHT_SHIFT_EQUAL,
-
 
         AND_EQUAL,
         XOR_EQUAL,
@@ -4011,7 +4032,7 @@ public:
 
     virtual ~AstAssignmentExpression();
 
-    inline bool SimpleAssignment() { return (assignment_tag == SIMPLE_EQUAL || assignment_tag == DEFINITE_EQUAL); }
+    inline bool SimpleAssignment() { return assignment_tag == SIMPLE_EQUAL; }
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -4079,9 +4100,9 @@ inline bool Ast::IsGenerated()
 
 
 //
-// This Storage pool is modeled after the Dynamic arrays. The difference is that
-// instead of a Next() function we have an alloc(size_t) function. The value
-// of the size_t argument represents the size of the object to allocate.
+// This Storage pool is modeled after the Dynamic arrays. The difference is
+// that instead of a Next() function we have an alloc(size_t) function. The
+// value of the size_t argument represents the size of the object to allocate.
 //
 class StoragePool
 {
@@ -4122,7 +4143,8 @@ private:
         size_t k = size >> log_blksize; /* which segment? */
 
         //
-        // If the base is overflowed, reallocate it and initialize the new elements to NULL.
+        // If the base is overflowed, reallocate it and initialize the new
+        // elements to NULL.
         //
         if (k == base_size)
         {
@@ -4212,9 +4234,9 @@ public:
         }
 
         //
-        // Double the size of the base in order to allocate extra space for the headers
-        // and add a little margin for stuff like extra Cast node and computation of
-        // static expressions that require cloning.
+        // Double the size of the base in order to allocate extra space for
+        // the headers and add a little margin for stuff like extra Cast node
+        // and computation of static expressions that require cloning.
         //
         base_increment = (base_increment << 1) + 3;
 
@@ -4266,9 +4288,9 @@ public:
     inline size_t Length() { return top; }
 
     //
-    // This function is used to reset the Storage pool. This action automatically
-    // invalidates all objects that had been allocated in the pool. At least,
-    // YOU should assume it does!!!
+    // This function is used to reset the Storage pool. This action
+    // automatically invalidates all objects that had been allocated in the
+    // pool. At least, YOU should assume it does!!!
     //
     inline void Reset(const int n = 0)
     {
@@ -4300,7 +4322,7 @@ public:
         return;
     }
 
-    // ********************************************************************************************** //
+    // ********************************************************************
 
     inline VariableSymbolArray *NewVariableSymbolArray(unsigned size = 0)
     {
@@ -4672,7 +4694,7 @@ public:
         return new (Alloc(sizeof(AstAssignmentExpression))) AstAssignmentExpression(tag, token);
     }
 
-    // ********************************************************************************************** //
+    // *********************************************************************
 
     //
     // Note that CaseElement nodes are always generated.
@@ -5167,7 +5189,7 @@ public:
         return p;
     }
 
-    // ********************************************************************************************** //
+    // *********************************************************************
 
     //
     // Return the total size of temporary space allocated.
@@ -6880,7 +6902,8 @@ template <class T>
         size_t k = size >> log_blksize; /* which segment? */
 
         //
-        // If the base is overflowed, reallocate it and initialize the new elements to NULL.
+        // If the base is overflowed, reallocate it and initialize the new
+        // elements to NULL.
         //
         if (k == base_size)
         {

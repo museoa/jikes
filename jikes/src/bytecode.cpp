@@ -752,14 +752,6 @@ void ByteCode::GenerateAccessMethod(MethodSymbol *method_symbol)
     if (method_symbol -> Type() == this_control.void_type)
          PutOp(OP_RETURN);
     else GenerateReturn(method_symbol -> Type());
-
-    //
-    // here to emit noop if would otherwise EmitBranch past end
-    //
-    if (last_label_pc >= code_attribute -> CodeLength())
-        PutNop(0);
-
-    return;
 }
 
 
@@ -768,13 +760,11 @@ void ByteCode::BeginMethod(int method_index, MethodSymbol *msym)
     assert(msym);
 
 #ifdef DUMP
-if (this_control.option.g)
-{
-Coutput << "(51) Generating code for method \"" << msym -> Name()
-        << "\" in " << unit_type -> ContainingPackage() -> PackageName() << "/"
-        << unit_type -> ExternalName() << endl;
-Coutput.flush();
-}
+    if (this_control.option.g)
+        Coutput << "(51) Generating code for method \"" << msym -> Name()
+                << "\" in "
+                << unit_type -> ContainingPackage() -> PackageName() << "/"
+                << unit_type -> ExternalName() << endl << flush;
 #endif
     MethodInitialization();
 
@@ -896,8 +886,10 @@ void ByteCode::EndMethod(int method_index, MethodSymbol *msym)
         //
         code_attribute -> SetMaxStack(max_stack);
 
-        if (last_label_pc >= code_attribute -> CodeLength()) // here to emit noop if would otherwise branch past end
-            PutNop(0);
+        //
+        // Sanity check - make sure nothing jumped past here
+        //
+        assert(last_label_pc < code_attribute -> CodeLength());
 
         //
         // attribute length:
@@ -944,8 +936,8 @@ void ByteCode::EndMethod(int method_index, MethodSymbol *msym)
             if (local_variable_table_attribute -> LocalVariableTableLength() > 0)
                  code_attribute -> AddAttribute(local_variable_table_attribute);
             else delete local_variable_table_attribute; // local_variable_table_attribute not needed, so delete it now
-        } else if (local_variable_table_attribute) // delete when dealing with
-            delete local_variable_table_attribute;  // a generated access method.
+        }
+        else delete local_variable_table_attribute;
 
         methods[method_index].AddAttribute(code_attribute);
 
@@ -1074,6 +1066,20 @@ void ByteCode::InitializeArray(TypeSymbol *type, AstArrayInitializer *array_init
 //
 void ByteCode::DeclareLocalVariable(AstVariableDeclarator *declarator)
 {
+    if (this_control.option.g & JikesOption::VARS)
+    {
+#ifdef JIKES_DEBUG
+        assert(method_stack -> StartPc(declarator -> symbol) == 0xFFFF); // must be uninitialized
+#endif
+#ifdef DUMP
+        Coutput << "(53) Variable \"" << declarator -> symbol -> Name()
+                << "\" numbered "
+                << declarator -> symbol -> LocalVariableIndex()
+                << " was processed" << endl << flush;
+#endif
+        method_stack -> StartPc(declarator -> symbol) = code_attribute -> CodeLength();
+    }
+
     if (declarator -> symbol -> initial_value)
         LoadLiteral(declarator -> symbol -> initial_value, declarator -> symbol -> Type());
     else if (declarator -> variable_initializer_opt)
@@ -1089,22 +1095,6 @@ void ByteCode::DeclareLocalVariable(AstVariableDeclarator *declarator)
     else return; // if nothing to initialize
 
     StoreLocal(declarator -> symbol -> LocalVariableIndex(), declarator -> symbol -> Type());
-
-    if (this_control.option.g & JikesOption::VARS)
-    {
-#ifdef JIKES_DEBUG
-        assert(method_stack -> StartPc(declarator -> symbol) == 0xFFFF); // must be uninitialized
-#endif
-#ifdef DUMP
-Coutput << "(53) Variable \"" << declarator -> symbol -> Name()
-        << "\" numbered " << declarator -> symbol -> LocalVariableIndex()
-        << " was processed" << endl;
-Coutput.flush();
-#endif
-        method_stack -> StartPc(declarator -> symbol) = code_attribute -> CodeLength();
-    }
-
-    return;
 }
 
 
@@ -1128,24 +1118,6 @@ void ByteCode::EmitStatement(AstStatement *statement)
     {
         line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
                                                      this_semantic.lex_stream -> Line(statement -> LeftToken()));
-    }
-
-    if (this_control.option.g & JikesOption::VARS)
-    {
-        for (int i = 0; i < statement -> NumDefinedVariables(); i++)
-        {
-            VariableSymbol *variable = statement -> DefinedVariable(i);
-#ifdef JIKES_DEBUG
-            assert(method_stack -> StartPc(variable) == 0xFFFF); // must be uninitialized
-#endif
-#ifdef DUMP
-Coutput << "(55) Variable \"" << variable -> Name()
-        << "\" numbered " << variable -> LocalVariableIndex()
-        << " was processed" << endl;
-Coutput.flush();
-#endif
-            method_stack -> StartPc(variable) = code_attribute -> CodeLength();
-        }
     }
 
     stack_depth = 0; // stack empty at start of statement
@@ -1172,24 +1144,24 @@ Coutput.flush();
                  AstIfStatement *if_statement = (AstIfStatement *) statement;
                  if (if_statement -> expression -> IsConstant())
                  {
-                     IntLiteralValue *if_constant_expr = (IntLiteralValue *) if_statement -> expression -> value;
-
-                     if (if_constant_expr -> value)
-                          EmitStatement(if_statement -> true_statement);
+                     if (! IsZero(if_statement -> expression))
+                         EmitStatement(if_statement -> true_statement);
                      else if (if_statement -> false_statement_opt) // if there is false part
-                          EmitStatement(if_statement -> false_statement_opt);
+                         EmitStatement(if_statement -> false_statement_opt);
                  }
                  else if (if_statement -> false_statement_opt) // if true and false parts
                  {
                      Label label1,
                            label2;
                      AstStatement *true_statement = if_statement -> true_statement;
-                     EmitBranchIfExpression(if_statement -> expression, false, label1, true_statement);
+                     EmitBranchIfExpression(if_statement -> expression,
+                                            false, label1, true_statement);
                      stack_depth = 0;
 
                      EmitStatement(true_statement);
                      if (true_statement -> can_complete_normally)
-                         EmitBranch(OP_GOTO, label2, if_statement -> false_statement_opt);
+                         EmitBranch(OP_GOTO, label2,
+                                    if_statement -> false_statement_opt);
 
                      DefineLabel(label1);
                      EmitStatement(if_statement -> false_statement_opt);
@@ -1203,7 +1175,9 @@ Coutput.flush();
                  else // if no false part
                  {
                      Label label1;
-                     EmitBranchIfExpression(if_statement -> expression, false, label1, if_statement -> true_statement);
+                     EmitBranchIfExpression(if_statement -> expression,
+                                            false, label1,
+                                            if_statement -> true_statement);
                      stack_depth = 0;
                      EmitStatement(if_statement -> true_statement);
                      DefineLabel(label1);
@@ -1221,6 +1195,7 @@ Coutput.flush();
             // These nodes are handled by SwitchStatement and
             // are not directly visited
             //
+            assert(false && "faulty logic encountered");
             break;
         case Ast::WHILE: // JLS 14.10
              {
@@ -1228,10 +1203,37 @@ Coutput.flush();
                  //
                  // Branch to continuation test. This test is placed after the
                  // body of the loop we can fall through into it after each
-                 // loop iteration without the need for an additional branch.
+                 // loop iteration without the need for an additional branch,
+                 // unless the loop body always completes abruptly.
                  //
-                 EmitBranch(OP_GOTO, method_stack -> TopContinueLabel(),
-                            wp -> statement);
+                 if (! wp -> statement -> can_complete_normally)
+                 {
+                     if (wp -> expression -> IsConstant())
+                     {
+                         // must be true, or internal statement would be
+                         // unreachable
+                         assert(this_semantic.IsConstantTrue(wp -> expression));
+                     }
+                     else
+                     {
+                         line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
+                                                                      this_semantic.lex_stream -> Line(wp -> expression -> LeftToken()));
+                         EmitExpression(wp -> expression); // for side effects only
+                         PutOp(OP_POP);
+                     }
+                     EmitStatement(wp -> statement);
+                     DefineLabel(method_stack -> TopContinueLabel());
+                     stack_depth = 0;
+                     CompleteLabel(method_stack -> TopContinueLabel());
+                     break;
+                 }
+                 if (wp -> expression -> IsConstant())
+                     // must be true, or internal statement would be
+                     // unreachable
+                     assert(this_semantic.IsConstantTrue(wp -> expression));
+                 else
+                     EmitBranch(OP_GOTO, method_stack -> TopContinueLabel(),
+                                wp -> statement);
                  Label begin_label;
                  DefineLabel(begin_label);
                  EmitStatement(wp -> statement);
@@ -1259,14 +1261,16 @@ Coutput.flush();
                  DefineLabel(method_stack -> TopContinueLabel());
                  stack_depth = 0;
 
-                 //
-                 // Reset the line number before evaluating the expression
-                 //
-                 line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
-                                                              this_semantic.lex_stream -> Line(sp -> expression -> LeftToken()));
-
-                 EmitBranchIfExpression(sp -> expression, true, begin_label,
-                                        sp -> statement);
+                 if (sp -> statement -> can_complete_normally)
+                 {
+                     //
+                     // Reset the line number before evaluating the expression
+                     //
+                     line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
+                                                                  this_semantic.lex_stream -> Line(sp -> expression -> LeftToken()));
+                     EmitBranchIfExpression(sp -> expression, true,
+                                            begin_label, sp -> statement);
+                 }
                  CompleteLabel(begin_label);
                  CompleteLabel(method_stack -> TopContinueLabel());
              }
@@ -1278,7 +1282,40 @@ Coutput.flush();
                      EmitStatement(for_statement -> ForInitStatement(i));
                  Label begin_label,
                        test_label;
-                 EmitBranch(OP_GOTO, test_label, for_statement -> statement);
+                 //
+                 // The loop test is placed after the body, unless the body
+                 // always completes abruptly, to save an additional jump.
+                 //
+                 if (! for_statement -> statement -> can_complete_normally)
+                 {
+                     if (for_statement -> end_expression_opt)
+                     {
+                         if (for_statement -> end_expression_opt -> IsConstant())
+                         {
+                             // must be true, or internal statement would be
+                             // unreachable
+                             assert(this_semantic.IsConstantTrue(for_statement -> end_expression_opt));
+                         }
+                         else
+                         {
+                             line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
+                                                                          this_semantic.lex_stream -> Line(for_statement -> end_expression_opt -> LeftToken()));
+                             EmitExpression(for_statement -> end_expression_opt); // for side effects only
+                             PutOp(OP_POP);
+                         }
+                     }
+                     EmitStatement(for_statement -> statement);
+                     DefineLabel(method_stack -> TopContinueLabel());
+                     stack_depth = 0;
+                     CompleteLabel(method_stack -> TopContinueLabel());
+                     break;
+                 }
+                 if (for_statement -> end_expression_opt &&
+                     ! for_statement -> end_expression_opt -> IsConstant())
+                 {
+                     EmitBranch(OP_GOTO, test_label,
+                                for_statement -> statement);
+                 }
                  DefineLabel(begin_label);
                  EmitStatement(for_statement -> statement);
                  DefineLabel(method_stack -> TopContinueLabel());
@@ -1300,7 +1337,8 @@ Coutput.flush();
                      EmitBranchIfExpression(end_expr, true, begin_label,
                                             for_statement -> statement);
                  }
-                 else EmitBranch(OP_GOTO, begin_label, for_statement -> statement);
+                 else EmitBranch(OP_GOTO, begin_label,
+                                 for_statement -> statement);
 
                  CompleteLabel(begin_label);
                  CompleteLabel(test_label);
@@ -1329,10 +1367,10 @@ Coutput.flush();
              PutOp(OP_ATHROW);
              break;
         case Ast::SYNCHRONIZED_STATEMENT: // JLS 14.17
-             EmitSynchronizedStatement(statement -> SynchronizedStatementCast());
+             EmitSynchronizedStatement((AstSynchronizedStatement *) statement);
              break;
         case Ast::TRY: // JLS 14.18
-             EmitTryStatement(statement -> TryStatementCast());
+             EmitTryStatement((AstTryStatement *) statement);
              break;
         case Ast::CLASS: // Class Declaration
         case Ast::INTERFACE: // InterfaceDeclaration
@@ -1398,15 +1436,13 @@ void ByteCode::EmitBlockStatement(AstBlock *block)
         for (int i = 0; i < block -> NumLocallyDefinedVariables(); i++)
         {
             VariableSymbol *variable = block -> LocallyDefinedVariable(i);
-
 #ifdef JIKES_DEBUG
             assert(method_stack -> StartPc(variable) != 0xFFFF);
 #endif
 #ifdef DUMP
-Coutput << "(56) The symbol \"" << variable -> Name()
-        << "\" numbered " << variable -> LocalVariableIndex()
-        << " was released" << endl;
-Coutput.flush();
+            Coutput << "(56) The symbol \"" << variable -> Name()
+                    << "\" numbered " << variable -> LocalVariableIndex()
+                    << " was released" << endl << flush;
 #endif
             local_variable_table_attribute -> AddLocalVariable(method_stack -> StartPc(variable),
                                                                code_attribute -> CodeLength(),
@@ -1670,46 +1706,10 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
         //
         for (int si = 0; si < switch_block_statement -> NumStatements(); si++)
             EmitStatement(switch_block_statement -> Statement(si) -> StatementCast());
-
-        //
-        // If this switch block statement does not terminate normally,
-        // close the range of the locally defined variables here and
-        // reset their StartPc
-        //
-        if (this_control.option.g & JikesOption::VARS)
-        {
-            for (int i = 0; i < switch_block_statement -> NumLocallyDefinedVariables(); i++)
-            {
-                VariableSymbol *variable = switch_block_statement -> LocallyDefinedVariable(i);
-                if (method_stack -> StartPc(variable) > op_start)
-                {
-
-#ifdef JIKES_DEBUG
-                    assert(method_stack -> StartPc(variable) != 0xFFFF);
-#endif
-#ifdef DUMP
-Coutput << "(57) The symbol \"" << variable -> Name()
-        << "\" numbered " << variable -> LocalVariableIndex()
-        << " was released" << endl;
-Coutput.flush();
-#endif
-                    local_variable_table_attribute -> AddLocalVariable(method_stack -> StartPc(variable),
-                                                                       code_attribute -> CodeLength(),
-                                                                       RegisterUtf8(variable -> ExternalIdentity() -> Utf8_literal),
-                                                                       RegisterUtf8(variable -> Type() -> signature),
-                                                                       variable -> LocalVariableIndex());
-#ifdef JIKES_DEBUG
-                    method_stack -> StartPc(variable) = 0xFFFF;
-#endif
-                }
-            }
-        }
     }
 
     //
-    // If the last statement in the switch block terminates normally,
-    // close the range of the locally defined variables that have
-    // been defined but not yet processsed.
+    // Close the range of the locally defined variables.
     //
     if (this_control.option.g & JikesOption::VARS)
     {
@@ -1718,15 +1718,13 @@ Coutput.flush();
             VariableSymbol *variable = switch_block -> LocallyDefinedVariable(i);
             if (method_stack -> StartPc(variable) > op_start)
             {
-
 #ifdef JIKES_DEBUG
                 assert(method_stack -> StartPc(variable) != 0xFFFF);
 #endif
 #ifdef DUMP
-Coutput << "(58) The symbol \"" << variable -> Name()
-        << "\" numbered " << variable -> LocalVariableIndex()
-        << " was released" << endl;
-Coutput.flush();
+                Coutput << "(58) The symbol \"" << variable -> Name()
+                        << "\" numbered " << variable -> LocalVariableIndex()
+                        << " was released" << endl << flush;
 #endif
                 local_variable_table_attribute -> AddLocalVariable(method_stack -> StartPc(variable),
                                                                    code_attribute -> CodeLength(),
@@ -2018,10 +2016,14 @@ void ByteCode::EmitBranch(unsigned int opc, Label& lab, AstStatement *over)
 //      constant operand
 //      negation (we eliminate it)
 //      equality
-//      && and || (partial evaluation)
+//      ?: && and || (partial evaluation)
 //      comparisons
 // Other expressions are just evaluated and the appropriate
 // branch emitted.
+//
+// TODO: return a bool that is true if the statement being branched over is
+// even needed (if statements and other places might have a constant false
+// expression, allowing the next block of code to be skipped entirely).
 //
 void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
                                       AstStatement *over)
@@ -2048,6 +2050,28 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
         EmitBranchIfExpression(pre -> expression, (! cond), lab, over);
         return;
     }
+
+    AstConditionalExpression *conditional = p -> ConditionalExpressionCast();
+    if (conditional)
+    {
+        //
+        // branch_if(true?a:b, cond, lab) =>
+        // branch_if(a, cond, lab);
+        // branch_if(false?a:b, cond, lab) =>
+        // branch_if(b, cond, lab);
+        //
+        if (conditional -> test_expression -> IsConstant())
+        {
+            if (IsZero(conditional -> test_expression))
+                EmitBranchIfExpression(conditional -> false_expression,
+                                       cond, lab, over);
+            else
+                EmitBranchIfExpression(conditional -> true_expression,
+                                       cond, lab, over);
+            return;
+        }
+    }
+
 
     //
     // dispose of non-binary expression case by just evaluating
@@ -2089,6 +2113,37 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
              return;
         case AstBinaryExpression::AND_AND:
              //
+             // branch_if(true&&b, cond, lab) =>
+             // branch_if(b, cond, lab);
+             // branch_if(false&&b, cond, lab) =>
+             // branch_if(false, cond, lab);
+             //
+             if (left -> IsConstant())
+             {
+                 if (! IsZero(left))
+                     EmitBranchIfExpression(right, cond, lab, over);
+                 else if (! cond)
+                     EmitBranch(OP_GOTO, lab, over);
+             }
+             //
+             // branch_if(a&&true, cond, lab) =>
+             // branch_if(a, cond, lab);
+             // branch_if(a&&false, cond, lab) =>
+             // emit(a), pop; for side effects
+             //
+             else if (right -> IsConstant())
+             {
+                 if (! IsZero(right))
+                     EmitBranchIfExpression(left, cond, lab, over);
+                 else
+                 {
+                     EmitExpression(left);
+                     PutOp(OP_POP);
+                     if (! cond)
+                         EmitBranch(OP_GOTO, lab, over);
+                 }
+             }
+             //
              // branch_if(a&&b, true, lab) =>
              // branch_if(a,false,skip);
              // branch_if(b,true,lab);
@@ -2097,7 +2152,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
              // branch_if(a,false,lab);
              // branch_if(b,false,lab);
              //
-             if (cond)
+             else if (cond)
              {
                  Label skip;
                  EmitBranchIfExpression(left, false, skip, over);
@@ -2113,16 +2168,46 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
              return;
         case AstBinaryExpression::OR_OR:
              //
+             // branch_if(false||b, cond, lab) =>
+             // branch_if(b, cond, lab);
+             // branch_if(true||b, cond, lab) =>
+             // branch_if(true, cond, lab);
+             //
+             if (left -> IsConstant())
+             {
+                 if (IsZero(left))
+                     EmitBranchIfExpression(right, cond, lab, over);
+                 else if (cond)
+                     EmitBranch(OP_GOTO, lab, over);
+             }
+             //
+             // branch_if(a||false, cond, lab) =>
+             // branch_if(a, cond, lab);
+             // branch_if(a||true, cond, lab) =>
+             // emit(a), pop; for side effects
+             //
+             else if (right -> IsConstant())
+             {
+                 if (IsZero(right))
+                     EmitBranchIfExpression(left, cond, lab, over);
+                 else
+                 {
+                     EmitExpression(left);
+                     PutOp(OP_POP);
+                     if (cond)
+                         EmitBranch(OP_GOTO, lab, over);
+                 }
+             }
+             //
              // branch_if(a||b,true,lab) =>
              // branch_if(a,true,lab);
              // branch_if(b,true,lab);
              // branch_if(a||b,false,lab) =>
              // branch_if(a,true,skip);
              // branch_if(b,false,lab);
-             // There is additional possibility of one of the operands being
-             // constant that should be dealt with at some point.
+             // skip:
              //
-             if (cond)
+             else if (cond)
              {
                  EmitBranchIfExpression(left, true, lab, over);
                  EmitBranchIfExpression(right, true, lab, over);
@@ -3353,23 +3438,6 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
             assert(false && "bad kind in EmitAssignmentExpression");
     }
 
-    if ((this_control.option.g & JikesOption::VARS) &&
-        assignment_expression -> assignment_tag == AstAssignmentExpression::DEFINITE_EQUAL)
-    {
-        VariableSymbol *variable = assignment_expression -> left_hand_side -> symbol -> VariableCast();
-        assert(variable);
-#ifdef JIKES_DEBUG
-        assert(method_stack -> StartPc(variable) == 0xFFFF); // must be uninitialized
-#endif
-#ifdef DUMP
-Coutput << "(59) Variable \"" << variable -> Name()
-        << "\" numbered " << variable -> LocalVariableIndex()
-        << " was processed" << endl;
-Coutput.flush();
-#endif
-        method_stack -> StartPc(variable) = code_attribute -> CodeLength();
-    }
-
     return GetTypeWords(assignment_expression -> Type());
 }
 
@@ -3784,17 +3852,26 @@ int ByteCode::EmitClassInstanceCreationExpression(AstClassInstanceCreationExpres
 int ByteCode::EmitConditionalExpression(AstConditionalExpression *expression,
                                         bool need_value)
 {
-    Label lab1,
-          lab2;
-    EmitBranchIfExpression(expression -> test_expression, false, lab1, 0);
-    EmitExpression(expression -> true_expression, need_value);
-    EmitBranch(OP_GOTO, lab2);
-    DefineLabel(lab1);
-    EmitExpression(expression -> false_expression, need_value);
-    DefineLabel(lab2);
-    CompleteLabel(lab1);
-    CompleteLabel(lab2);
-
+    if (expression -> test_expression -> IsConstant())
+    {
+        if (IsZero(expression -> test_expression))
+            EmitExpression(expression -> false_expression);
+        else
+            EmitExpression(expression -> true_expression);
+    }
+    else
+    {
+        Label lab1,
+              lab2;
+        EmitBranchIfExpression(expression -> test_expression, false, lab1, 0);
+        EmitExpression(expression -> true_expression, need_value);
+        EmitBranch(OP_GOTO, lab2);
+        DefineLabel(lab1);
+        EmitExpression(expression -> false_expression, need_value);
+        DefineLabel(lab2);
+        CompleteLabel(lab1);
+        CompleteLabel(lab2);
+    }
     return GetTypeWords(expression -> true_expression -> Type());
 }
 
@@ -4050,8 +4127,8 @@ int ByteCode::EmitPostUnaryExpression(AstPostUnaryExpression *expression, bool n
 //
 // AstExpression *expression;
 // POST_UNARY on instance variable
-// load value of field, duplicate, do increment or decrement, then store back, leaving original value
-// on top of stack.
+// load value of field, duplicate, do increment or decrement, then store
+// back, leaving original value on top of stack.
 //
 void ByteCode::EmitPostUnaryExpressionField(int kind, AstPostUnaryExpression *expression, bool need_value)
 {
@@ -4107,8 +4184,8 @@ void ByteCode::EmitPostUnaryExpressionField(int kind, AstPostUnaryExpression *ex
 //
 // AstExpression *expression;
 // POST_UNARY on local variable
-// load value of variable, duplicate, do increment or decrement, then store back, leaving original value
-// on top of stack.
+// load value of variable, duplicate, do increment or decrement, then store
+// back, leaving original value on top of stack.
 //
 void ByteCode::EmitPostUnaryExpressionSimple(int kind, AstPostUnaryExpression *expression, bool need_value)
 {
@@ -4298,19 +4375,9 @@ int ByteCode::EmitPreUnaryExpression(AstPreUnaryExpression *expression, bool nee
             case AstPreUnaryExpression::NOT:
                 assert(type == this_control.boolean_type);
 
-                {
-                    Label lab1,
-                          lab2;
-                    EmitExpression(expression -> expression);
-                    EmitBranch(OP_IFEQ, lab1);
-                    PutOp(OP_ICONST_0);       // turn true into false
-                    EmitBranch(OP_GOTO, lab2);
-                    DefineLabel(lab1);
-                    PutOp(OP_ICONST_1);       // here to turn false into true
-                    DefineLabel(lab2);
-                    CompleteLabel(lab1);
-                    CompleteLabel(lab2);
-                }
+                EmitExpression(expression -> expression);
+                PutOp(OP_ICONST_1);
+                PutOp(OP_IXOR); // !(e) <=> (e)^true
                 break;
             default:
                 assert(false && "unknown preunary tag");
@@ -4841,10 +4908,6 @@ void ByteCode::DefineLabel(Label& lab)
 
     lab.defined = true;
     lab.definition = code_attribute -> CodeLength();
-    if (lab.definition > last_label_pc)
-        last_label_pc = lab.definition;
-
-    return;
 }
 
 
@@ -4854,9 +4917,20 @@ void ByteCode::DefineLabel(Label& lab)
 //
 void ByteCode::CompleteLabel(Label& lab)
 {
+    //
+    // TODO: when the offset is to the next instruction, the goto is useless
+    // and can be optimized away (but what if it is at the end of a method...?)
+    //
     if (lab.uses.Length() > 0)
     {
         assert((lab.defined) && "label used but with no definition");
+
+        //
+        // Sanity check - when completing method, make sure nothing jumps out
+        // of the method
+        //
+        if (lab.definition > last_label_pc)
+            last_label_pc = lab.definition;
 
         //
         // patch byte code reference to label to reflect its definition
@@ -5373,7 +5447,8 @@ void ByteCode::FinishCode(TypeSymbol *type)
 void ByteCode::PutOp(unsigned char opc)
 {
 #ifdef JIKES_DEBUG
-    if (this_control.option.debug_trap_op > 0 && code_attribute -> CodeLength() == this_control.option.debug_trap_op)
+    if (this_control.option.debug_trap_op > 0 &&
+        code_attribute -> CodeLength() == this_control.option.debug_trap_op)
         op_trap();
 
     //

@@ -467,6 +467,7 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentExpression(AstExpression *exp
     }
 
     VariableSymbol *variable = (left_hand_side -> symbol ? left_hand_side -> symbol -> VariableCast() : (VariableSymbol *) NULL);
+    int index;
 
     //
     // An array access is never considered to be final. Since no variable
@@ -477,30 +478,7 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentExpression(AstExpression *exp
     {
         if (variable -> IsLocal(ThisMethod()) || variable -> IsFinal(ThisType()))
         {
-            int index = variable -> LocalVariableIndex();
-
-            //
-            // If the debug level is set as -g:vars and we have a simple
-            // assignment statement whose left-hand side is a local variable
-            // that has not yet been defined, mark this assignment as a
-            // definition assignment.
-            //
-            if ((control.option.g & JikesOption::VARS) &&
-                assignment_expression -> assignment_tag == AstAssignmentExpression::SIMPLE_EQUAL &&
-                variable -> IsLocal(ThisMethod()) &&
-                ! (*definite_block_stack -> TopLocallyDefinedVariables())[index])
-            {
-                assignment_expression -> assignment_tag = AstAssignmentExpression::DEFINITE_EQUAL;
-                definite_block_stack -> TopLocallyDefinedVariables() -> AddElement(index);
-                AstBlock *block = definite_block_stack -> TopBlock();
-                block -> AddLocallyDefinedVariable(variable);
-#ifdef DUMP
-                Coutput << "(1) Variable \"" << variable -> Name() << " #"
-                        << index << "\" is defined at line "
-                        << lex_stream -> Line(assignment_expression -> LeftToken())
-                        << endl;
-#endif
-            }
+            index = variable -> LocalVariableIndex();
 
             //
             // If we have a compound assignment then the variable must have
@@ -553,8 +531,8 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentExpression(AstExpression *exp
             //
             // It is an error to assign any final except a DU blank final
             //
-            if (! ((*blank_finals)[variable -> LocalVariableIndex()] &&
-                   def_pair.du_set[variable -> LocalVariableIndex()]))
+            if (! ((*blank_finals)[index] &&
+                   def_pair.du_set[index]))
             {
                 ReportSemError(SemanticError::TARGET_VARIABLE_IS_FINAL,
                                assignment_expression -> left_hand_side -> LeftToken(),
@@ -565,7 +543,7 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentExpression(AstExpression *exp
                 definite_final_assignment_stack -> Top().Next() = left_hand_side;
         }
 
-        def_pair.AssignElement(variable -> LocalVariableIndex());
+        def_pair.AssignElement(index);
     }
 
     return (DefiniteAssignmentSet *) NULL;
@@ -679,66 +657,17 @@ inline void Semantic::DefiniteStatement(Ast *ast)
 
 inline void Semantic::DefiniteBlockStatements(AstBlock *block_body)
 {
-    if ((control.option.g & JikesOption::VARS) &&
-        block_body -> NumStatements() > 0)
+    for (int i = 0; i < block_body -> NumStatements(); i++)
     {
-        AstStatement *statement = (AstStatement *) block_body -> Statement(0);
-        DefiniteStatement(statement);
-        for (int i = 1; i < block_body -> NumStatements(); i++)
-        {
-            statement = (AstStatement *) block_body -> Statement(i);
-            //
-            // As unreachable statements already cause an error, we avoid
-            // them here
-            //
-            if (statement -> is_reachable)
-            {
-                //
-                // All variables that were assigned a value in the previous
-                // statement must be defined
-                BitSet &locally_defined_variables = *definite_block_stack -> TopLocallyDefinedVariables();
-                for (int k = 0; k < definitely_assigned_variables -> Size(); k++)
-                {
-                    VariableSymbol *variable = definite_block_stack -> TopLocalVariables()[k];
-                    if (variable) // a variable that is visible in this block? (i.e. not one declare in a non-enclosing block)
-                    {
-                        if ((*definitely_assigned_variables).da_set[k] && (! locally_defined_variables[k]))
-                        {
-#ifdef DUMP
-                            Coutput << "(2) Variable \"" << variable -> Name()
-                                    << " #" << variable -> LocalVariableIndex()
-                                    << "\" is defined at line "
-                                    << lex_stream -> Line(statement -> LeftToken())
-                                    << endl;
-#endif
-                            statement -> AddDefinedVariable(variable);
-                            locally_defined_variables.AddElement(k);
-                            block_body -> AddLocallyDefinedVariable(variable);
-                        }
-                    }
-                }
-
-                DefiniteStatement(statement);
-            }
-            else break;
-        }
+        AstStatement *statement = (AstStatement *) block_body -> Statement(i);
+        //
+        // As unreachable statements already cause an error, we avoid
+        // them here
+        //
+        if (statement -> is_reachable)
+            DefiniteStatement(statement);
+        else break;
     }
-    else
-    {
-        for (int i = 0; i < block_body -> NumStatements(); i++)
-        {
-            AstStatement *statement = (AstStatement *) block_body -> Statement(i);
-            //
-            // As unreachable statements already cause an error, we avoid
-            // them here
-            //
-            if (statement -> is_reachable)
-                 DefiniteStatement(statement);
-            else break;
-        }
-    }
-
-    return;
 }
 
 
@@ -816,26 +745,17 @@ void Semantic::DefiniteLocalVariableDeclarationStatement(Ast *stmt)
                         << endl;
 #endif
                 definite_block_stack -> TopLocalVariables()[variable_symbol -> LocalVariableIndex()] = variable_symbol;
+                definite_block_stack -> TopLocallyDefinedVariables() -> AddElement(variable_symbol -> LocalVariableIndex());
+                AstBlock *block = definite_block_stack -> TopBlock();
+                block -> AddLocallyDefinedVariable(variable_symbol);
             }
 
             if (variable_declarator -> variable_initializer_opt)
             {
+                int index = variable_symbol -> LocalVariableIndex();
                 DefiniteVariableInitializer(variable_declarator);
-                definitely_assigned_variables -> AssignElement(variable_symbol -> LocalVariableIndex());
+                definitely_assigned_variables -> AssignElement(index);
 
-                if (control.option.g & JikesOption::VARS)
-                {
-                    definite_block_stack -> TopLocallyDefinedVariables() -> AddElement(variable_symbol -> LocalVariableIndex());
-                    AstBlock *block = definite_block_stack -> TopBlock();
-                    block -> AddLocallyDefinedVariable(variable_symbol);
-#ifdef DUMP
-                    Coutput << "(4) Variable \"" << variable_symbol -> Name()
-                            << " #" << variable_symbol -> LocalVariableIndex()
-                            << "\" is defined at line "
-                            << lex_stream -> Line(variable_declarator -> LeftToken())
-                            << endl;
-#endif
-                }
             }
             else
             {
@@ -845,8 +765,6 @@ void Semantic::DefiniteLocalVariableDeclarationStatement(Ast *stmt)
             }
         }
     }
-
-    return;
 }
 
 
@@ -855,8 +773,6 @@ void Semantic::DefiniteExpressionStatement(Ast *stmt)
     AstExpressionStatement *expression_statement = (AstExpressionStatement *) stmt;
 
     DefiniteExpression(expression_statement -> expression, *definitely_assigned_variables);
-
-   return;
 }
 
 
@@ -1002,51 +918,9 @@ void Semantic::DefiniteForStatement(Ast *stmt)
     //     for (int i = 0; i < 10; i++);
     //     for (int i = 10; i < 20; i++);
     //
-    if ((control.option.g & JikesOption::VARS) &&
-        for_statement -> NumForInitStatements() > 0)
+    for (int i = 0; i < for_statement -> NumForInitStatements(); i++)
     {
-        AstStatement *statement = (AstStatement *) for_statement -> ForInitStatement(0);
-        DefiniteStatement(statement);
-        for (int i = 1; i < for_statement -> NumForInitStatements(); i++)
-        {
-            statement = (AstStatement *) for_statement -> ForInitStatement(i);
-
-            //
-            // All variables that were assigned a value in the previous
-            // statement must be defined
-            //
-            BitSet &locally_defined_variables = *definite_block_stack -> TopLocallyDefinedVariables();
-            for (int k = 0; k < definitely_assigned_variables -> Size(); k++)
-            {
-                VariableSymbol *variable = definite_block_stack -> TopLocalVariables()[k];
-                if (variable) // a variable that is visible in this block? (i.e. not one declare in a non-enclosing block)
-                {
-                    if ((definitely_assigned_variables -> da_set)[k] && (! locally_defined_variables[k]))
-                    {
-#ifdef DUMP
-                        Coutput << "(5) Variable \"" << variable -> Name()
-                                << " #" << variable -> LocalVariableIndex()
-                                << "\" is defined at line "
-                                << lex_stream -> Line(statement -> LeftToken())
-                                << endl;
-#endif
-                        statement -> AddDefinedVariable(variable);
-                        locally_defined_variables.AddElement(k);
-                        AstBlock *block = definite_block_stack -> TopBlock();
-                        block -> AddLocallyDefinedVariable(variable);
-                    }
-                }
-            }
-
-            DefiniteStatement(statement);
-        }
-    }
-    else
-    {
-        for (int i = 0; i < for_statement -> NumForInitStatements(); i++)
-        {
-            DefiniteStatement(for_statement -> ForInitStatement(i));
-        }
+        DefiniteStatement(for_statement -> ForInitStatement(i));
     }
 
     BreakableStatementStack().Push(definite_block_stack -> TopBlock());
@@ -1156,98 +1030,16 @@ void Semantic::DefiniteSwitchStatement(Ast *stmt)
 
         *definitely_assigned_variables *= starting_pair;
 
-        if ((control.option.g & JikesOption::VARS) &&
-            switch_block_statement -> NumStatements() > 0)
+        for (int j = 0; j < switch_block_statement -> NumStatements(); j++)
         {
-            BitSet &locally_defined_variables = *definite_block_stack -> TopLocallyDefinedVariables();
-            AstStatement *statement = (AstStatement *) switch_block_statement -> Statement(0);
-            DefiniteStatement(statement);
-            for (int j = 1; j < switch_block_statement -> NumStatements(); j++)
-            {
-                statement = (AstStatement *) switch_block_statement -> Statement(j);
-                //
-                // As unreachable statements already cause an error, we avoid
-                // them here
-                //
-                if (statement -> is_reachable)
-                {
-                    //
-                    // All variables that were assigned a value in the previous
-                    // statement must be defined
-                    //
-                    for (int k = 0; k < definitely_assigned_variables -> Size(); k++)
-                    {
-                        VariableSymbol *variable = definite_block_stack -> TopLocalVariables()[k];
-                        if (variable) // a variable that is visible in this block? (i.e. not one declare in a non-enclosing block)
-                        {
-                            if (definitely_assigned_variables -> da_set[k] && (! locally_defined_variables[k]))
-                            {
-#ifdef DUMP
-                                Coutput << "Variable \"" << variable -> Name()
-                                        << " #"
-                                        << variable -> LocalVariableIndex()
-                                        << "\" is defined at line "
-                                        << lex_stream -> Line(statement -> LeftToken())
-                                        << endl;
-#endif
-                                statement -> AddDefinedVariable(variable);
-                                locally_defined_variables.AddElement(k);
-                                block_body -> AddLocallyDefinedVariable(variable);
-                            }
-                        }
-                    }
-
-                    DefiniteStatement(statement);
-                }
-                else break;
-            }
-
-#ifdef DUMP
-            if ((control.option.g & JikesOption::VARS) &&
-                block_body -> NumLocallyDefinedVariables() > 0)
-            {
-                Coutput << "(5.5) At Line "
-                        << lex_stream -> Line(statement -> RightToken())
-                        << " the range for the following variables end:"
-                        << endl << endl;
-                for (int j = 0;
-                     j < block_body -> NumLocallyDefinedVariables(); j++)
-                {
-                    Coutput << "    \""
-                            << block_body -> LocallyDefinedVariable(j) -> Name()
-                            << "\"" << endl;
-                }
-            }
-#endif
+            AstStatement *statement = (AstStatement *) switch_block_statement -> Statement(j);
             //
-            // At the end of a switch block statement, we always close the
-            // range of all local variables that have been defined. That's
-            // because even if this switch block statement extends into the
-            // next block, it is not the only entry point into that block.
-            // Therefore, in order for a variable to be definitely defined at
-            // the starting point of a switch block statement, it must have
-            // been defined prior to the switch statement.
-            // Notice that this clears out compile-time constants as well,
-            // which are always DA, so we have a special case in
-            // DefiniteSimpleName to get around that.
+            // As unreachable statements already cause an error, we avoid
+            // them here
             //
-            for (int k = 0; k < block_body -> NumLocallyDefinedVariables(); k++)
-                locally_defined_variables.RemoveElement(block_body -> LocallyDefinedVariable(k) -> LocalVariableIndex());
-            block_body -> TransferLocallyDefinedVariablesTo(switch_block_statement);
-        }
-        else
-        {
-            for (int j = 0; j < switch_block_statement -> NumStatements(); j++)
-            {
-                AstStatement *statement = (AstStatement *) switch_block_statement -> Statement(j);
-                //
-                // As unreachable statements already cause an error, we avoid
-                // them here
-                //
-                if (statement -> is_reachable)
-                     DefiniteStatement(statement);
-                else break;
-            }
+            if (statement -> is_reachable)
+                DefiniteStatement(statement);
+            else break;
         }
     }
 
@@ -1923,20 +1715,6 @@ void Semantic::DefiniteConstructorBody(AstConstructorDeclaration *constructor_de
     //
 
     definite_block_stack -> Push(block_body);
-    if (control.option.g & JikesOption::VARS)
-    {
-        //
-        // We need this initialization to prevent debug info from being
-        // generated for final fields (since they are not truly local
-        // variables).
-        //
-        BitSet &locally_defined_variables = *definite_block_stack -> TopLocallyDefinedVariables();
-        for (int i = 0; i < finals.Length(); i++) // Assume that all final instance variables have been assigned a value.
-        {
-            int index = block_body -> block_symbol -> max_variable_index + i;
-            locally_defined_variables.AddElement(index);
-        }
-    }
 
     AstMethodDeclarator *constructor_declarator = constructor_declaration -> constructor_declarator;
     for (int j = 0; j < constructor_declarator -> NumFormalParameters(); j++)
@@ -2046,20 +1824,6 @@ void Semantic::DefiniteBlockInitializer(AstBlock *block_body, int stack_size, Tu
 
     definite_block_stack -> Push(NULL); // No method available
     definite_block_stack -> Push(block_body);
-    if (control.option.g & JikesOption::VARS)
-    {
-        //
-        // We need this initialization to prevent debug info from being
-        // generated for final fields (since they are not truly local
-        // variables).
-        //
-        BitSet &locally_defined_variables = *definite_block_stack -> TopLocallyDefinedVariables();
-        for (int i = 0; i < finals.Length(); i++) // Assume that all final instance variables have been assigned a value.
-        {
-            int index = block_body -> block_symbol -> max_variable_index + i;
-            locally_defined_variables.AddElement(index);
-        }
-    }
 
     for (int j = 0; j < block_body -> block_symbol -> NumVariableSymbols(); j++)
     {
