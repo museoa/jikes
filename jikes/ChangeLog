@@ -1,3 +1,23 @@
+2001-04-19  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/double.cpp (IEEEfloat, Adjust):
+	* src/double.h (IEEEfloat, Adjust):
+	Add IEEEfloat::Adjust(), which simply segregates
+	a portion of IEEEfloat(char *) from being inline,
+	where it caused an ICE in mingw 2.95.2 (bug 433).
+	(IEEEfloat, IEEEdouble):
+	Fix friend declarations to include the keyword
+	class, to support the HP-UX aCC compiler. Fix
+	enums, along with...
+	* src/semantic.h (Semantic):
+	Fixed enum to not end in trailing comma (it's
+	valid in C99, but not C++98); not all compilers
+        support this extension to the language yet.
+	* src/platform.cpp (Format):
+	Move declaration of int i out of for loop inside
+	switch statement, since some compilers (aCC, VC++)
+        are broken and don't do scoping correctly.
+
 2001-04-16  Eric Blake  <ebb9@email.byu.edu>
 
 	* doc/jikes.1: Include mention of other

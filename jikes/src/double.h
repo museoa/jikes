@@ -81,7 +81,7 @@ class IEEEfloat
     // using only integer arithmetic.
     //
 private:
-    friend FloatToString;
+    friend class FloatToString;
 
     union
     {
@@ -98,7 +98,7 @@ private:
         FRACT_SIZE = 23,         // number of bits in mantissa
         BIAS       = 127,        // exponent bias
         MAX_DEC_EXP = 38,        // maximum decimal exponent
-        MAX_DIGITS = BIAS + FRACT_SIZE + 1 - MAX_DEC_EXP, // maximum digits in precise decimal
+        MAX_DIGITS = BIAS + FRACT_SIZE + 1 - MAX_DEC_EXP // maximum digits in precise decimal
     };
     enum
     {
@@ -117,7 +117,7 @@ private:
         MAX_INT    = 0x7FFFFFFF, // maximum integer
         MIN_INT    = 0x80000000, // minimum integer
         MIN_LONG_F = 0xDF000000, // bit pattern of (float)MIN_LONG
-        MIN_INT_F  = 0xCF000000, // bit pattern of (float)MIN_INT
+        MIN_INT_F  = 0xCF000000 // bit pattern of (float)MIN_INT
     };
 
     inline u4 SignBit(void) const   { return value.word & SIGN_BIT; }
@@ -134,8 +134,10 @@ private:
     // returns the value of 1 ulp (unit in last place) for this float
     IEEEfloat Ulp(void) const;
     // returns the ratio between two floats represented in BigInts
-    static IEEEfloat Ratio(const BigInt &a, const BigInt &b);
-
+    static IEEEfloat Ratio(const BigInt &, const BigInt &);
+    // adjusts the value of this based on the ratio of the BigInts, and
+    // in direction determined by the boolean
+    bool Adjust(const BigInt &, const BigInt &, const bool);
 
 #ifndef HAVE_MEMBER_CONSTANTS
     // VC++ can't cope with constant class members
@@ -294,7 +296,7 @@ class IEEEdouble : public BaseLong
     //
 {
 private:
-    friend DoubleToString;
+    friend class DoubleToString;
 
     //
     // two enums, so that first is signed, and second may be unsigned
@@ -305,7 +307,7 @@ private:
         FRACT_SIZE_HI = FRACT_SIZE - 32, // mantissa bits in high word
         BIAS          = 1023,       // exponent bias
         MAX_DEC_EXP   = 308,        // maximum decimal exponent
-        MAX_DIGITS    = BIAS + FRACT_SIZE + 1 - MAX_DEC_EXP, // maximum digits in precise decimal
+        MAX_DIGITS    = BIAS + FRACT_SIZE + 1 - MAX_DEC_EXP // maximum digits in precise decimal
     };
     enum
     {
@@ -319,7 +321,7 @@ private:
         NEG_INF_HI    = 0xFFF00000, // -Inf
         POS_INF_HI    = 0x7FF00000, // +Inf
         NAN_HI        = 0x7FF80000, // canonical NaN
-        ZERO_LO       = 0x00000000, // low half of special values above
+        ZERO_LO       = 0x00000000 // low half of special values above
     };
 
     inline u4 SignBit(void) const   { return HighWord() & SIGN_BIT; }

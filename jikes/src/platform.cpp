@@ -714,6 +714,7 @@ void FloatToString::Format(char *s, int exp, bool neg)
     //
     length = s - str + 1; // strlen(str) + '.'
     bool eneg;
+    int i;
     switch (exp)
     {
     case -3: case -2: case -1:
@@ -729,7 +730,7 @@ void FloatToString::Format(char *s, int exp, bool neg)
         do
             *(s + (neg ? 2 : 1) - exp) = *s;
         while (s-- != str);
-        for (int i = (neg ? 1 : 0); i < (neg ? 2 : 1) - exp; i++)
+        for (i = (neg ? 1 : 0); i < (neg ? 2 : 1) - exp; i++)
             str[i] = U_0;
         if (neg)
             str[0] = U_MINUS;
@@ -1079,6 +1080,7 @@ void DoubleToString::Format(char *s, int exp, bool neg)
     //
     length = s - str + 1; // strlen(str) + '.'
     bool eneg;
+    int i;
     switch (exp)
     {
     case -3: case -2: case -1:
@@ -1094,7 +1096,7 @@ void DoubleToString::Format(char *s, int exp, bool neg)
         do
             *(s + (neg ? 2 : 1) - exp) = *s;
         while (s-- != str);
-        for (int i = (neg ? 1 : 0); i < (neg ? 2 : 1) - exp; i++)
+        for (i = (neg ? 1 : 0); i < (neg ? 2 : 1) - exp; i++)
             str[i] = U_0;
         if (neg)
             str[0] = U_MINUS;

@@ -879,7 +879,7 @@ private:
     enum
     {
         INT_SHIFT_MASK = 0x1f,
-        LONG_SHIFT_MASK = 0x3f,
+        LONG_SHIFT_MASK = 0x3f
     };
 
     SemanticError *error;

@@ -199,6 +199,101 @@ IEEEfloat::IEEEfloat(const IEEEdouble &d)
 #endif // HAVE_IEEE754
 }
 
+bool IEEEfloat::Adjust(const BigInt &delta, const BigInt &bs, const bool dsign)
+{
+    IEEEfloat aadj, aadj1;
+    i4 y;
+
+    aadj = Ratio(delta, bs);
+    if (aadj <= 2)
+    {
+        if (dsign)
+            aadj = aadj1 = 1;
+        else if (FractBits())
+        {
+            if (value.word == 1)
+            {
+                // underflow
+                *this = POSITIVE_ZERO();
+                return true;
+            }
+            aadj = 1;
+            aadj1 = -1;
+        }
+        else
+        {
+            //
+            // special case - mantissa is power of 2
+            //				 
+            if (aadj < 1.0f)
+                aadj = 0.5f;
+            else
+                aadj *= 0.5f;
+            aadj1 = -aadj;
+        }
+    }
+    else
+    {
+        aadj *= 0.5f;
+        aadj1 = dsign ? aadj : -aadj;
+    }
+    y = Exponent();
+    //
+    // Check for overflow
+    //
+    if (y == BIAS)
+    {
+        IEEEfloat tmp(*this);
+        value.word -= (FRACT_SIZE + 1) * MIN_FRACT;
+        *this += aadj1 * Ulp();
+        if (Exponent() >= BIAS - FRACT_SIZE)
+        {
+            if (tmp.value.word == POS_INF - 1)
+            {
+                // overflow
+                *this = POSITIVE_INFINITY();
+                return true;
+            }
+            value.word = POS_INF - 1;
+            return false;
+        }
+        else
+            value.word += (FRACT_SIZE + 1) * MIN_FRACT;
+    }
+    else
+    {
+        //
+        // Compute adj so that the IEEE rounding rules will
+        // correctly round *this + adj in some half-way cases.
+        // If *this * Ulp() is denormalized, we must adjust aadj
+        // to avoid trouble from bits lost to denormalization.
+        //
+        if (y <= FRACT_SIZE - BIAS || aadj > 1)
+        {
+            aadj1 = IEEEfloat((aadj + 0.5f).IntValue());
+            if (! dsign)
+                aadj1 = -aadj1;
+        }
+        *this += aadj1 * Ulp();
+    }
+    if (y == Exponent())
+    {
+        //
+        // Can we stop now?
+        // The tolerances below are conservative.
+        //
+        aadj -= aadj.IntValue();
+        if (dsign || FractBits())
+        {
+            if (aadj < .4999999f || aadj > .5000001f)
+                return true;
+        }
+        else if (aadj < .4999999f / 2)
+            return true;
+    }
+    return false;
+}
+
 IEEEfloat::IEEEfloat(const char *str, bool check_invalid)
 {
     int bb2, bb5, bbe, bd2, bd5, bbbits, bs2,
@@ -214,7 +309,6 @@ IEEEfloat::IEEEfloat(const char *str, bool check_invalid)
          esign; // the sign of the exponent
     char c;
     const char *s, *s0, *s1;
-    IEEEfloat aadj, aadj1;
     i4 L;
     i4 y, z;
 
@@ -600,93 +694,11 @@ IEEEfloat::IEEEfloat(const char *str, bool check_invalid)
         //
         // more than 1/2 ulp off - try again
         //
-        aadj = Ratio(delta, bs);
-        if (aadj <= 2)
-        {
-            if (dsign)
-                aadj = aadj1 = 1;
-            else if (FractBits())
-            {
-                if (value.word == 1)
-                {
-                    // underflow
-                    *this = POSITIVE_ZERO();
-                    break;
-                }
-                aadj = 1;
-                aadj1 = -1;
-            }
-            else
-            {
-                //
-                // special case - mantissa is power of 2
-                //				 
-                if (aadj < 1.0f)
-                    aadj = 0.5f;
-                else
-                    aadj *= 0.5f;
-                aadj1 = -aadj;
-            }
-        }
-        else
-        {
-            aadj *= 0.5f;
-            aadj1 = dsign ? aadj : -aadj;
-        }
-        y = Exponent();
+        // This is broken into a separate method because mingw gcc 2.95.2
+        // has an ICE caused by register over-allocation if it is inline.
         //
-        // Check for overflow
-        //
-        if (y == BIAS)
-        {
-            IEEEfloat tmp(*this);
-            value.word -= (FRACT_SIZE + 1) * MIN_FRACT;
-            *this += aadj1 * Ulp();
-            if (Exponent() >= BIAS - FRACT_SIZE)
-            {
-                if (tmp.value.word == POS_INF - 1)
-                {
-                    // overflow
-                    *this = POSITIVE_INFINITY();
-                    break;
-                }
-                value.word = POS_INF - 1;
-                continue;
-            }
-            else
-                value.word += (FRACT_SIZE + 1) * MIN_FRACT;
-        }
-        else
-        {
-            //
-            // Compute adj so that the IEEE rounding rules will
-            // correctly round *this + adj in some half-way cases.
-            // If *this * Ulp() is denormalized, we must adjust aadj
-            // to avoid trouble from bits lost to denormalization.
-            //
-            if (y <= FRACT_SIZE - BIAS || aadj > 1)
-            {
-                aadj1 = IEEEfloat((aadj + 0.5f).IntValue());
-                if (! dsign)
-                    aadj1 = -aadj1;
-            }
-            *this += aadj1 * Ulp();
-        }
-        if (y == Exponent())
-        {
-            //
-            // Can we stop now?
-            // The tolerances below are conservative.
-            //
-            aadj -= aadj.IntValue();
-            if (dsign || FractBits())
-            {
-                if (aadj < .4999999f || aadj > .5000001f)
-                    break;
-            }
-            else if (aadj < .4999999f / 2)
-                break;
-        }
+        if (Adjust(delta, bs, dsign))
+            break;
     }
     if (check_invalid && (IsZero() || IsInfinite()))
         *this = NaN();
