@@ -497,7 +497,7 @@ inline void Scanner::SkipSpaces()
 // scan_keyword(i):
 // Scan an identifier of length I and determine if it is a keyword.
 //
-int Scanner::ScanKeyword0(wchar_t *p1)
+int Scanner::ScanKeyword0(wchar_t*)
 {
     return TK_Identifier;
 }

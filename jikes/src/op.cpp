@@ -260,7 +260,7 @@ void Operators::OpDesc(Opcode opc, const char **name, const char **desc)
 }
 
 void Operators::OpLine(Tuple<cp_info *> &constant_pool, const char *hdr,
-                       int pc, Opcode opc, const char *name, char *args,
+                       int pc, const char *name, char *args,
                        const char *desc, int info_kind, int info_index)
 {
     // generate line of opcode dump, info is extra info
@@ -295,11 +295,12 @@ void Operators::OpLine(Tuple<cp_info *> &constant_pool, const char *hdr,
             Coutput << " local#" << info_index;
             break;
     }
-//
-// DS (17 jun) - skip desc for now: it's too long and should only
-// be written at user request.
-//  Coutput << " " << desc;
-//
+    //
+    // Skip desc for now: it's too long and should only
+    // be written at user request.
+    //  Coutput << ' ' << desc;
+    //
+    assert(desc);
     Coutput << endl;
 }
 
@@ -466,7 +467,7 @@ void Operators::OpDmp(Tuple<cp_info *> &constant_pool, Tuple<u1> &code)
                      high = GetI4(code, pc); pc += 4;
                      sprintf(argdesc, "default:%d low:%d high:%d",
                              def + pc_start, low, high);
-                     OpLine(constant_pool, " ", pc_start, opc, name,
+                     OpLine(constant_pool, " ", pc_start, name,
                             argdesc, desc, info_kind, info_index);
                      len =  high - low + 1;
                      while (len)
@@ -475,7 +476,7 @@ void Operators::OpDmp(Tuple<cp_info *> &constant_pool, Tuple<u1> &code)
                          val = GetI4(code, pc);
                          sprintf(argdesc, "match:%d offset:%d",
                                  low++, val + pc_start);
-                         OpLine(constant_pool, "*", pc_this, op_this, name,
+                         OpLine(constant_pool, "*", pc_this, name,
                                 argdesc, desc, INFO_NONE, 0);
                          pc += 4;
                          len--;
@@ -504,7 +505,7 @@ void Operators::OpDmp(Tuple<cp_info *> &constant_pool, Tuple<u1> &code)
                      npairs = GetI4(code, pc); pc +=4;
                      sprintf(argdesc, "default:%d npairs:%d",
                              def + pc_start, npairs);
-                     OpLine(constant_pool, " ", pc_start, op_this, name,
+                     OpLine(constant_pool, " ", pc_start, name,
                             argdesc, desc, info_kind, info_index);
                      len = npairs;
                      while (npairs)
@@ -514,7 +515,7 @@ void Operators::OpDmp(Tuple<cp_info *> &constant_pool, Tuple<u1> &code)
                          offset = GetI4(code, pc); pc +=4;
                          sprintf(argdesc, "match:%d offset:%d ",
                                  match, offset + pc_start);
-                         OpLine(constant_pool, "*", pcb, op_this, name,
+                         OpLine(constant_pool, "*", pcb, name,
                                 argdesc, desc, INFO_NONE, 0);
                          npairs--;
                      }
@@ -588,7 +589,7 @@ void Operators::OpDmp(Tuple<cp_info *> &constant_pool, Tuple<u1> &code)
 
         // output first part of description
         if (info_kind != INFO_DONE)
-            OpLine(constant_pool, " ", pc_start, opc, name,
+            OpLine(constant_pool, " ", pc_start, name,
                    argdesc, desc, info_kind, info_index);
     }
 }

@@ -36,19 +36,7 @@ void AstCompilationUnit::Unparse(LexStream* lex_stream, const char* const direct
     }
     Ostream os(&os_base);
     Unparse(os, lex_stream);
-    delete[] out_file_name;
-}
-
-void Ast::Unparse(Ostream& os, LexStream* lex_stream)
-{
-    if (debug_unparse)
-        os << "/*Ast:#" << id << "*/";
-    os << "***** TO DO *****";
-    os << "#" << id << " (Ast):  "
-       << "Node kind " << (int) kind << " does not contain an unparse routine"
-       << endl;
-    if (debug_unparse)
-        os << "/*:Ast#" << id << "*/";
+    delete [] out_file_name;
 }
 
 void AstBlock::Unparse(Ostream& os, LexStream* lex_stream)
@@ -218,7 +206,7 @@ void AstArrayInitializer::Unparse(Ostream& os, LexStream* lex_stream)
         os << "/*:AstArrayInitializer#" << id << "*/";
 }
 
-void AstBrackets::Unparse(Ostream& os, LexStream* lex_stream)
+void AstBrackets::Unparse(Ostream& os, LexStream*)
 {
     if (Ast::debug_unparse)
         os << "/*AstBrackets:#" << id << "*/";

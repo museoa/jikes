@@ -869,15 +869,14 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void ChangeStack(int);
     void ResolveAccess(AstExpression *);
     int GenerateClassAccess(AstFieldAccess *, bool);
-    void GenerateClassAccessMethod(MethodSymbol *);
+    void GenerateClassAccessMethod();
     void GenerateAssertVariableInitializer(TypeSymbol *, VariableSymbol *);
     void EmitCheckForNull(AstExpression *expr, bool = true);
 
     //
     // Methods to process statements
     //
-    void CompileConstructor(AstConstructorDeclaration *,
-                            Tuple<AstVariableDeclarator *> &, bool);
+    void CompileConstructor(AstConstructorDeclaration*, bool);
 
     void BeginMethod(int, MethodSymbol *);
     void EndMethod(int, MethodSymbol *);

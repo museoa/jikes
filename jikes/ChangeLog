@@ -1,7 +1,29 @@
 2002-11-26  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/ast.h (Ast): Remove unnecessary destructors (Ast nodes are
+	allocated from a storage pool; hence reclaiming the pool reclaims
+	all the nodes at once rather than using destructors).
+	* src/ast.cpp:
+	* src/unparse.cpp: Remove pure virtual method implementations.
+	* src/bytecode.h (CompileConstructor, GenerateClassAccessMethod):
+	Remove dead parameters.
+	* src/bytecode.cpp (EmitSwitchStatement): Remove dead comment.
+	* src/double.h (operator++, operator--):
+	* src/long.cpp (operator++, operator--):
+	* src/scanner.cpp (ScanKeyword0):
+	* src/unzip.cpp (UncompressFile*):
+	* src/op.h (OpLine):
+	* src/op.cpp:
+	* src/class.h (Print, Describe): Remove dead parameters.
+	* src/definite.cpp (DefiniteDefault*): Move to...
+	* src/semantic: Here.
+	(DefiniteDefaultStatement): Rename from DefiniteEmptyStatement.
+	(DefiniteBlockStack): Remove dead parameter.
+
+2002-11-26  Eric Blake  <ebb9@email.byu.edu>
+
 	* doc/jikes.1 (-Xswitchcheck): Document new option added for javac
-	compatibility - patch 374..
+	compatibility - patch 374.
 	* src/ast.h (AstSwitchLabel): Consolidate AstCaseLabel and
 	AstDefaultLabel into one class.
 	(CaseElement, AstSwitchStatement): Rework the sorting and storage

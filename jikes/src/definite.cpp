@@ -686,12 +686,6 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentExpression(AstExpression *exp
     return (DefiniteAssignmentSet *) NULL;
 }
 
-DefiniteAssignmentSet *Semantic::DefiniteDefaultExpression(AstExpression *expr,
-                                                           DefinitePair &def_pair)
-{
-    return (DefiniteAssignmentSet *) NULL;
-}
-
 DefiniteAssignmentSet *Semantic::DefiniteParenthesizedExpression(AstExpression *expression,
                                                                  DefinitePair &def_pair)
 {
@@ -1417,16 +1411,6 @@ void Semantic::DefiniteAssertStatement(Ast *stmt)
 
 
 //
-// Called for empty statements, class declarations, and misplaced explicit
-// constructors.
-//
-void Semantic::DefiniteEmptyStatement(Ast *stmt)
-{
-    return;
-}
-
-
-//
 // Called only from DefiniteConstructorBody, for this() calls.
 //
 void Semantic::DefiniteThisCall(AstThisCall *this_call)
@@ -1471,7 +1455,7 @@ void Semantic::DefiniteMethodBody(AstMethodDeclaration *method_declaration)
         FinalFields() -> Length();
     Universe() -> Resize(size, BitSet::UNIVERSE);
     int stack_size = method_declaration -> method_symbol -> max_block_depth;
-    DefiniteBlocks() = new DefiniteBlockStack(control, stack_size, size);
+    DefiniteBlocks() = new DefiniteBlockStack(stack_size, size);
     DefinitelyAssignedVariables() -> Resize(size);
     BlankFinals() -> Resize(size, BitSet::EMPTY);
     ReachableAssignments() -> Resize(size, BitSet::EMPTY);
@@ -1547,7 +1531,7 @@ void Semantic::DefiniteConstructorBody(AstConstructorDeclaration *constructor_de
     Universe() -> Resize(size, BitSet::UNIVERSE);
     int stack_size =
         constructor_declaration -> constructor_symbol -> max_block_depth;
-    DefiniteBlocks() = new DefiniteBlockStack(control, stack_size, size);
+    DefiniteBlocks() = new DefiniteBlockStack(stack_size, size);
     DefinitelyAssignedVariables() -> Resize(size);
     BlankFinals() -> Resize(size, BitSet::EMPTY);
     ReachableAssignments() -> Resize(size, BitSet::EMPTY);
@@ -1628,7 +1612,7 @@ void Semantic::DefiniteBlockInitializer(AstBlock *block_body, int stack_size)
     int size = block_body -> block_symbol -> max_variable_index +
         FinalFields() -> Length();
     Universe() -> Resize(size, BitSet::UNIVERSE);
-    DefiniteBlocks() = new DefiniteBlockStack(control, stack_size, size);
+    DefiniteBlocks() = new DefiniteBlockStack(stack_size, size);
     DefinitelyAssignedVariables() -> Resize(size);
     BlankFinals() -> Resize(size, BitSet::EMPTY);
     ReachableAssignments() -> Resize(size, BitSet::EMPTY);

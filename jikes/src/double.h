@@ -235,7 +235,7 @@ public:
     inline IEEEfloat  operator+  (void)         { return *this; } // unary plus
     inline IEEEfloat &operator+= (const IEEEfloat op) { return *this = *this + op; } // add and assign
     inline IEEEfloat  operator++ (void)         { return *this += 1; } // pre-increment
-    inline IEEEfloat  operator++ (int dummy)
+    inline IEEEfloat  operator++ (int)
     {
         IEEEfloat result = *this;
         *this += 1;
@@ -246,7 +246,7 @@ public:
     inline IEEEfloat  operator-  (const IEEEfloat op) const { return *this + (-op); } // binary subtraction
     inline IEEEfloat &operator-= (const IEEEfloat op) { return *this = *this - op; } // subtract and assign
     inline IEEEfloat  operator-- (void)         { return *this -= 1; } // pre-decrement
-    inline IEEEfloat  operator-- (int dummy)
+    inline IEEEfloat  operator-- (int)
     {
         IEEEfloat result = *this;
         *this -= 1;
@@ -457,7 +457,7 @@ public:
     inline IEEEdouble  operator+  (void) const          { return *this; } // unary plus
     inline IEEEdouble &operator+= (const IEEEdouble op) { return *this = *this + op; } // add and assign
     inline IEEEdouble  operator++ (void)          { return *this += 1; } // pre-increment
-    inline IEEEdouble  operator++ (int dummy)
+    inline IEEEdouble  operator++ (int)
     {
         IEEEdouble result = *this;
         *this += 1;
@@ -468,7 +468,7 @@ public:
     inline IEEEdouble  operator-  (const IEEEdouble op) const { return *this + (-op); } // binary subtraction
     inline IEEEdouble &operator-= (const IEEEdouble op) { return *this = *this - op; } // subtract and assign
     inline IEEEdouble  operator-- (void)          { return *this -= 1; } // pre-decrement
-    inline IEEEdouble  operator-- (int dummy)
+    inline IEEEdouble  operator-- (int)
     {
         IEEEdouble result = *this;
         *this -= 1;

@@ -42,18 +42,18 @@ public:
 
     u1 Tag() { return tag; }
 
-    virtual void Put(OutputBuffer &output_buffer)
+    virtual void Put(OutputBuffer&)
     {
          assert("trying to put unsupported attribute kind" == NULL);
     }
 
 #ifdef JIKES_DEBUG
-    virtual void Print(Tuple<cp_info *>& constant_pool)
+    virtual void Print(Tuple<cp_info*>&)
     {
         Coutput << (int) tag;
     }
 
-    virtual void Describe(Tuple<cp_info *>& constant_pool)
+    virtual void Describe(Tuple<cp_info*>&)
     {
         Coutput << (int) tag;
     }
@@ -84,7 +84,7 @@ public:
     }
 
 #ifdef JIKES_DEBUG
-    virtual void Print(Tuple<cp_info *>& constant_pool)
+    virtual void Print(Tuple<cp_info*>&)
     {
         Coutput << "CONSTANT_Class_info: name_index "
                 << (unsigned) name_index << endl;
@@ -127,13 +127,13 @@ public:
     }
 
 #ifdef JIKES_DEBUG
-    virtual void Print(Tuple<cp_info *> &constant_pool)
+    virtual void Print(Tuple<cp_info*>&)
     {
         Coutput << "CONSTANT_Double_info: bytes "
                 << BaseLong(high_bytes, low_bytes).DoubleView() << endl;
     }
 
-    virtual void Describe(Tuple<cp_info *> &constant_pool)
+    virtual void Describe(Tuple<cp_info*>&)
     {
         Coutput << "D:";
     }
@@ -169,7 +169,7 @@ public:
     }
 
 #ifdef JIKES_DEBUG
-    virtual void Print(Tuple<cp_info *> &constant_pool)
+    virtual void Print(Tuple<cp_info*>&)
     {
         Coutput << "CONSTANT_Fieldref_info: class_index: "
                 << (unsigned) class_index
@@ -211,12 +211,12 @@ public:
     }
 
 #ifdef JIKES_DEBUG
-    virtual void Print(Tuple<cp_info *> &constant_pool)
+    virtual void Print(Tuple<cp_info*>&)
     {
         Coutput << "CONSTANT_Float_info: bytes " << (float) bytes << endl;
     }
 
-    virtual void Describe(Tuple<cp_info *> &constant_pool)
+    virtual void Describe(Tuple<cp_info*>&)
     {
         Coutput << "F:";
     }
@@ -247,7 +247,7 @@ public:
     }
 
 #ifdef JIKES_DEBUG
-    virtual void Print(Tuple<cp_info *> &constant_pool)
+    virtual void Print(Tuple<cp_info*>&)
     {
         int val = ((bytes >> 24) & 0xff) << 24 |
             ((bytes >> 16) & 0xff) << 16 |
@@ -258,7 +258,7 @@ public:
                 << endl;
     }
 
-    virtual void Describe(Tuple<cp_info *> &constant_pool)
+    virtual void Describe(Tuple<cp_info*>&)
     {
         Coutput << "I:";
     }
@@ -294,7 +294,7 @@ public:
     }
 
 #ifdef JIKES_DEBUG
-    virtual void Print(Tuple<cp_info *> &constant_pool)
+    virtual void Print(Tuple<cp_info*>&)
     {
         Coutput << "CONSTANT_InterfaceMethodref_info: class_index: "
                 << (unsigned) class_index
@@ -341,12 +341,12 @@ public:
     }
 
 #ifdef JIKES_DEBUG
-    virtual void Print(Tuple<cp_info *> &constant_pool)
+    virtual void Print(Tuple<cp_info*>&)
     {
         Coutput << "CONSTANT_Long_info: bytes" << endl;
     }
 
-    virtual void Describe(Tuple<cp_info *> &constant_pool)
+    virtual void Describe(Tuple<cp_info*>&)
     {
         Coutput << "L:";
     }
@@ -382,7 +382,7 @@ public:
     }
 
 #ifdef JIKES_DEBUG
-    virtual void Print(Tuple<cp_info *> &constant_pool)
+    virtual void Print(Tuple<cp_info*>&)
     {
         Coutput << "CONSTANT_Methodref_info: class_index: "
                 << (unsigned) class_index
@@ -429,7 +429,7 @@ public:
     }
 
 #ifdef JIKES_DEBUG
-    virtual void Print(Tuple<cp_info *> &constant_pool)
+    virtual void Print(Tuple<cp_info*>&)
     {
         Coutput << "CONSTANT_NameAndType_info: name_index: "
                 << (unsigned) name_index
@@ -471,7 +471,7 @@ public:
     }
 
 #ifdef JIKES_DEBUG
-    virtual void Print(Tuple<cp_info *> &constant_pool)
+    virtual void Print(Tuple<cp_info*>&)
     {
         Coutput << "CONSTANT_String_info: string_index: "
                 << (unsigned) string_index
@@ -521,7 +521,7 @@ public:
     }
 
 #ifdef JIKES_DEBUG
-    virtual void Print(Tuple<cp_info *> &constant_pool)
+    virtual void Print(Tuple<cp_info*>&)
     {
         Coutput << "CONSTANT_Utf8_info: length: "
                 << (unsigned) length_
@@ -532,7 +532,7 @@ public:
         Coutput << endl;
     }
 
-    virtual void Describe(Tuple<cp_info *> &constant_pool)
+    virtual void Describe(Tuple<cp_info*>&)
     {
         Coutput << "\"";
         for (int i = 0; i < length_; i++)
@@ -587,12 +587,12 @@ public:
     u1 Tag() { return tag; }
     u2 AttributeNameIndex() { return attribute_name_index; }
 
-    virtual u4 AttributeLength() { assert(false); return 0; } // abstract method: should not be invoked.
-
-    virtual void Put(OutputBuffer &output_buffer) { assert(false); } // abstract method: should not be invoked.
+    // abstract methods: should not be invoked.
+    virtual u4 AttributeLength() { assert(false); return 0; }
+    virtual void Put(OutputBuffer&) { assert(false); }
 
 #ifdef JIKES_DEBUG
-    virtual void Print(Tuple<cp_info *> &constant_pool)
+    virtual void Print(Tuple<cp_info*>&)
     {
         Coutput << "print for attribute info tag "
                 << (unsigned) tag
@@ -850,7 +850,7 @@ public:
     }
 
 #ifdef JIKES_DEBUG
-    virtual void Print(Tuple<cp_info *> &constant_pool)
+    virtual void Print(Tuple<cp_info*>&)
     {
         Coutput << "ConstantValue_attribute attribute_name_index "
                 << (unsigned) attribute_name_index
@@ -914,7 +914,7 @@ public:
     }
 
 #ifdef JIKES_DEBUG
-    virtual void Print(Tuple<cp_info *> &constant_pool)
+    virtual void Print(Tuple<cp_info*>&)
     {
         Coutput << "Exceptions_attribute attribute_name_index "
                 << (unsigned) attribute_name_index
@@ -997,7 +997,7 @@ public:
     }
 
 #ifdef JIKES_DEBUG
-    virtual void Print(Tuple<cp_info *> &constant_pool)
+    virtual void Print(Tuple<cp_info*>&)
     {
         Coutput << "InnerClasses_attribute attribute_name_index "
                 << (unsigned) attribute_name_index
@@ -1099,7 +1099,7 @@ public:
     }
 
 #ifdef JIKES_DEBUG
-    virtual void Print(Tuple<cp_info *> &constant_pool)
+    virtual void Print(Tuple<cp_info*>&)
      {
         Coutput << "LineNumberTable_attribute attribute_name_index "
                 << (unsigned) attribute_name_index
@@ -1203,7 +1203,7 @@ public:
     }
 
 #ifdef JIKES_DEBUG
-    virtual void Print(Tuple<cp_info *> &constant_pool)
+    virtual void Print(Tuple<cp_info*>&)
     {
         Coutput << "LocalVariableTable_attribute attribute_name_index "
                 << (unsigned) attribute_name_index
@@ -1265,7 +1265,7 @@ public:
     }
 
 #ifdef JIKES_DEBUG
-    virtual void Print(Tuple<cp_info *> &constant_pool)
+    virtual void Print(Tuple<cp_info*>&)
     {
         Coutput << "SourceFile_attribute attribute_name_index "
                 << (unsigned) attribute_name_index
@@ -1307,7 +1307,7 @@ public:
     }
 
 #ifdef JIKES_DEBUG
-    virtual void Print(Tuple<cp_info *> &constant_pool)
+    virtual void Print(Tuple<cp_info*>&)
     {
         Coutput << "Synthetic_attribute attribute_name_index "
                 << (unsigned) attribute_name_index
@@ -1347,7 +1347,7 @@ public:
     }
 
 #ifdef JIKES_DEBUG
-    virtual void Print(Tuple<cp_info *> &constant_pool)
+    virtual void Print(Tuple<cp_info*>&)
     {
         Coutput << "Deprecated_attribute attribute_name_index "
                 << (unsigned) attribute_name_index

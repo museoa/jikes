@@ -167,7 +167,7 @@ BaseLong &BaseLong::operator+= (const BaseLong op)
     return *this = *this + op;
 }
 
-BaseLong BaseLong::operator++ (int dummy)
+BaseLong BaseLong::operator++ (int)
 {
     BaseLong temp = *this;
     *this += 1;
@@ -199,7 +199,7 @@ BaseLong &BaseLong::operator-= (const BaseLong op)
     return *this = *this - op;
 }
 
-BaseLong BaseLong::operator-- (int dummy)
+BaseLong BaseLong::operator-- (int)
 {
     BaseLong temp = *this;
     *this -= 1;

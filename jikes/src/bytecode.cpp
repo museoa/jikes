@@ -155,7 +155,7 @@ void ByteCode::CompileClass()
         //
         int method_index = methods.NextIndex(); // index for method
         BeginMethod(method_index, class_literal_sym);
-        GenerateClassAccessMethod(class_literal_sym);
+        GenerateClassAccessMethod();
         EndMethod(method_index, class_literal_sym);
     }
 
@@ -186,12 +186,10 @@ void ByteCode::CompileClass()
     //
     if (class_body -> default_constructor)
         CompileConstructor(class_body -> default_constructor,
-                           initialized_instance_fields,
                            has_instance_initializer);
     else
         for (i = 0; i < class_body -> NumConstructors(); i++)
             CompileConstructor(class_body -> Constructor(i),
-                               initialized_instance_fields,
                                has_instance_initializer);
 
     for (i = 0; i < unit_type -> NumPrivateAccessConstructors(); i++)
@@ -200,8 +198,7 @@ void ByteCode::CompileClass()
             unit_type -> PrivateAccessConstructor(i);
         AstConstructorDeclaration *constructor =
             constructor_sym -> declaration -> ConstructorDeclarationCast();
-        CompileConstructor(constructor, initialized_instance_fields,
-                           has_instance_initializer);
+        CompileConstructor(constructor, has_instance_initializer);
     }
 
     //
@@ -396,7 +393,6 @@ void ByteCode::CompileInterface()
 // initialized_fields is a list of fields needing code to initialize.
 //
 void ByteCode::CompileConstructor(AstConstructorDeclaration *constructor,
-                                  Tuple<AstVariableDeclarator *> &initialized_fields,
                                   bool has_instance_initializer)
 {
     MethodSymbol *method_symbol = constructor -> constructor_symbol;
@@ -1474,17 +1470,7 @@ bool ByteCode::EmitSwitchStatement(AstSwitchStatement* switch_statement)
         switch_statement -> DefaultCase())
     {
         EmitExpression(switch_statement -> expression, false);
-        return EmitBlockStatement(switch_statement -> Block(0)); //ebb
-//          method_stack -> Push(switch_block);
-//          abrupt = EmitBlockStatement(switch_statement -> Block(0));
-//          if (IsLabelUsed(method_stack -> TopBreakLabel()))
-//          {
-//              abrupt = false;
-//              DefineLabel(method_stack -> TopBreakLabel());
-//              CompleteLabel(method_stack -> TopBreakLabel());
-//          }
-//          method_stack -> Pop();
-//          return abrupt;
+        return EmitBlockStatement(switch_statement -> Block(0));
     }
 
     //
@@ -1500,21 +1486,13 @@ bool ByteCode::EmitSwitchStatement(AstSwitchStatement* switch_statement)
         {
             EmitExpression(switch_statement -> expression);
             Label lab;
-//              method_stack -> Push(switch_block);
             if (switch_statement -> Case(0) -> value)
             {
                 LoadImmediateInteger(switch_statement -> Case(0) -> value);
-//                  EmitBranch(OP_IF_ICMPNE, method_stack -> TopBreakLabel(),
-//                             switch_block);
                 EmitBranch(OP_IF_ICMPNE, lab, switch_block);
             }
             else EmitBranch(OP_IFNE, lab, switch_block);
-//              else EmitBranch(OP_IFNE, method_stack -> TopBreakLabel(),
-//                              switch_block);
             EmitBlockStatement(switch_statement -> Block(0));
-//              DefineLabel(method_stack -> TopBreakLabel());
-//              CompleteLabel(method_stack -> TopBreakLabel());
-//              method_stack -> Pop();
             DefineLabel(lab);
             CompleteLabel(lab);
             return false;
@@ -3315,7 +3293,7 @@ void ByteCode::EmitFieldAccessLhs(AstExpression *expression)
 //
 // Generate code for access method used to set class literal fields
 //
-void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
+void ByteCode::GenerateClassAccessMethod()
 {
     //
     // Here, we add a line-number attribute entry for this method.

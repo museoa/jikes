@@ -394,7 +394,11 @@ public:
     {}
 #endif
 
-    virtual ~Ast();
+    //
+    // ASTs should not be destructed. Instead, delete the containing
+    // StoragePool.
+    //
+    virtual ~Ast() { assert(false); }
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&) = 0;
@@ -713,9 +717,6 @@ public:
     // are expected to initialize the fields is_reachable and
     // can_complete_normally appropriately.
     //
-    // Note also that an AstStatement is never constructed directly!
-    //
-    virtual ~AstStatement();
 
     virtual AstStatement* Clone(StoragePool*) = 0;
 
@@ -748,8 +749,6 @@ public:
     //                   symbol(NULL)
     // {}
     //
-
-    virtual ~AstExpression();
 
     bool IsConstant() { return (value != NULL); }
 
@@ -811,8 +810,6 @@ public:
         AstStatement::defined_variables = NULL;
     }
 
-    virtual ~AstBlock();
-
     inline AstStatement *&Statement(int i) { return (*block_statements)[i]; }
     inline int NumStatements()
     {
@@ -873,8 +870,6 @@ public:
         Ast::generated = false;
     }
 
-    virtual ~AstPrimitiveType();
-
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
     virtual void Unparse(Ostream &, LexStream *);
@@ -904,8 +899,6 @@ public:
         Ast::class_tag = Ast::NO_TAG;
         Ast::generated = false;
     }
-
-    virtual ~AstBrackets();
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -948,8 +941,6 @@ public:
         Ast::class_tag = Ast::NO_TAG;
         Ast::generated = false;
     }
-
-    virtual ~AstArrayType();
 
     inline AstBrackets *&Brackets(int i) { return (*brackets)[i]; }
     inline int NumBrackets() { return (brackets ? brackets -> Length() : 0); }
@@ -1002,8 +993,6 @@ public:
         AstExpression::symbol = NULL;
     }
 
-    virtual ~AstSimpleName();
-
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
     virtual void Unparse(Ostream &, LexStream *);
@@ -1031,8 +1020,6 @@ public:
         Ast::class_tag = Ast::NO_TAG;
         Ast::generated = false;
     }
-
-    virtual ~AstPackageDeclaration();
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -1062,8 +1049,6 @@ public:
         Ast::class_tag = Ast::NO_TAG;
         Ast::generated = false;
     }
-
-    virtual ~AstImportDeclaration();
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -1103,8 +1088,6 @@ public:
         Ast::class_tag = Ast::NO_TAG;
         Ast::generated = false;
     }
-
-    virtual ~AstCompilationUnit();
 
     void FreeAst();
 
@@ -1192,8 +1175,6 @@ public:
         Ast::generated = false;
     }
 
-    virtual ~AstModifier();
-
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
     virtual void Unparse(Ostream &, LexStream *);
@@ -1220,8 +1201,6 @@ public:
         Ast::class_tag = Ast::NO_TAG;
         Ast::generated = false;
     }
-
-    virtual ~AstEmptyDeclaration();
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -1282,8 +1261,6 @@ public:
         Ast::class_tag = Ast::NO_TAG;
         Ast::generated = false;
     }
-
-    virtual ~AstClassBody();
 
     inline Ast *&ClassBodyDeclaration(int i)
     {
@@ -1447,8 +1424,6 @@ public:
         AstStatement::pool = pool_;
     }
 
-    virtual ~AstClassDeclaration();
-
     bool IsValid() { return semantic_environment != NULL; }
 
     inline void MarkLocal()
@@ -1520,8 +1495,6 @@ public:
         Ast::generated = false;
     }
 
-    virtual ~AstArrayInitializer();
-
     inline Ast *&VariableInitializer(int i)
     {
         return (*variable_initializers)[i];
@@ -1567,8 +1540,6 @@ public:
         Ast::class_tag = Ast::NO_TAG;
         Ast::generated = false;
     }
-
-    virtual ~AstVariableDeclaratorId();
 
     inline AstBrackets *&Brackets(int i) { return (*brackets)[i]; }
     inline int NumBrackets() { return (brackets ? brackets -> Length() : 0); }
@@ -1626,8 +1597,6 @@ public:
         AstStatement:: can_complete_normally = true;
     }
 
-    virtual ~AstVariableDeclarator();
-
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
     virtual void Unparse(Ostream &, LexStream *);
@@ -1674,8 +1643,6 @@ public:
         Ast::class_tag = Ast::NO_TAG;
         Ast::generated = false;
     }
-
-    virtual ~AstFieldDeclaration();
 
     inline void MarkStatic() { Ast::class_tag = Ast::STATIC_FIELD; }
 
@@ -1739,8 +1706,6 @@ public:
         Ast::generated = false;
     }
 
-    virtual ~AstFormalParameter();
-
     inline AstModifier *&ParameterModifier(int i)
     {
         return (*parameter_modifiers)[i];
@@ -1796,8 +1761,6 @@ public:
         Ast::class_tag = Ast::NO_TAG;
         Ast::generated = false;
     }
-
-    virtual ~AstMethodDeclarator();
 
     inline AstBrackets *&Brackets(int i) { return (*brackets)[i]; }
     inline int NumBrackets() { return (brackets ? brackets -> Length() : 0); }
@@ -1868,8 +1831,6 @@ public:
         Ast::generated = false;
     }
 
-    virtual ~AstMethodDeclaration();
-
     bool IsValid() { return method_symbol != NULL; }
 
     bool IsSignature() { return method_body -> EmptyStatementCast() != NULL; }
@@ -1930,8 +1891,6 @@ public:
         no_braces = true;
     }
 
-    virtual ~AstMethodBody();
-
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
     virtual void Unparse(Ostream &, LexStream *);
@@ -1957,8 +1916,6 @@ public:
         Ast::class_tag = Ast::NO_TAG;
         Ast::generated = false;
     }
-
-    virtual ~AstStaticInitializer();
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -2001,8 +1958,6 @@ public:
         AstStatement::can_complete_normally = true;
         AstStatement::defined_variables = NULL;
     }
-
-    virtual ~AstThisCall();
 
     inline AstExpression *&Argument(int i) { return (*arguments)[i]; }
     inline int NumArguments()
@@ -2063,8 +2018,6 @@ public:
         AstStatement::can_complete_normally = true;
         AstStatement::defined_variables = NULL;
     }
-
-    virtual ~AstSuperCall();
 
     inline AstExpression *&Argument(int i) { return (*arguments)[i]; }
     inline int NumArguments()
@@ -2145,8 +2098,6 @@ public:
         Ast::class_tag = Ast::NO_TAG;
         Ast::generated = false;
     }
-
-    virtual ~AstConstructorDeclaration();
 
     bool IsValid() { return constructor_symbol != NULL; }
 
@@ -2253,8 +2204,6 @@ public:
         Ast::class_tag = Ast::NO_TAG;
         Ast::generated = false;
     }
-
-    virtual ~AstInterfaceDeclaration();
 
     bool IsValid() { return semantic_environment != NULL; }
 
@@ -2382,8 +2331,6 @@ public:
         AstStatement::defined_variables = NULL;
     }
 
-    virtual ~AstLocalVariableDeclarationStatement();
-
     inline AstModifier *&LocalModifier(int i) { return (*local_modifiers)[i]; }
     inline int NumLocalModifiers()
     {
@@ -2466,8 +2413,6 @@ public:
         AstStatement::defined_variables = NULL;
     }
 
-    virtual ~AstIfStatement();
-
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
     virtual void Unparse(Ostream &, LexStream *);
@@ -2507,8 +2452,6 @@ public:
         AstStatement::defined_variables = NULL;
     }
 
-    virtual ~AstEmptyStatement();
-
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
     virtual void Unparse(Ostream &, LexStream *);
@@ -2544,8 +2487,6 @@ public:
         AstStatement::can_complete_normally = false;
         AstStatement::defined_variables = NULL;
     }
-
-    virtual ~AstExpressionStatement();
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -2749,8 +2690,6 @@ public:
         AstStatement::defined_variables = NULL;
     }
 
-    virtual ~AstWhileStatement();
-
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
     virtual void Unparse(Ostream &, LexStream *);
@@ -2791,8 +2730,6 @@ public:
         AstStatement::can_complete_normally = false;
         AstStatement::defined_variables = NULL;
     }
-
-    virtual ~AstDoStatement();
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -2842,8 +2779,6 @@ public:
         AstStatement::can_complete_normally = false;
         AstStatement::defined_variables = NULL;
     }
-
-    virtual ~AstForStatement();
 
     inline AstStatement *&ForInitStatement(int i)
     {
@@ -2909,8 +2844,6 @@ public:
         AstStatement::defined_variables = NULL;
     }
 
-    virtual ~AstBreakStatement();
-
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
     virtual void Unparse(Ostream &, LexStream *);
@@ -2949,8 +2882,6 @@ public:
         AstStatement::defined_variables = NULL;
     }
 
-    virtual ~AstContinueStatement();
-
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
     virtual void Unparse(Ostream &, LexStream *);
@@ -2988,8 +2919,6 @@ public:
         AstStatement::defined_variables = NULL;
     }
 
-    virtual ~AstReturnStatement();
-
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
     virtual void Unparse(Ostream &, LexStream *);
@@ -3025,8 +2954,6 @@ public:
         AstStatement::can_complete_normally = false;
         AstStatement::defined_variables = NULL;
     }
-
-    virtual ~AstThrowStatement();
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -3064,8 +2991,6 @@ public:
         AstStatement::can_complete_normally = false;
         AstStatement::defined_variables = NULL;
     }
-
-    virtual ~AstSynchronizedStatement();
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -3110,8 +3035,6 @@ public:
         AstStatement::defined_variables = NULL;
     }
 
-    virtual ~AstAssertStatement();
-
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
     virtual void Unparse(Ostream &, LexStream *);
@@ -3143,8 +3066,6 @@ public:
         Ast::generated = false;
     }
 
-    virtual ~AstCatchClause();
-
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
     virtual void Unparse(Ostream &, LexStream *);
@@ -3175,8 +3096,6 @@ public:
         Ast::class_tag = Ast::NO_TAG;
         Ast::generated = false;
     }
-
-    virtual ~AstFinallyClause();
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -3221,8 +3140,6 @@ public:
         AstStatement::can_complete_normally = false;
         AstStatement::defined_variables = NULL;
     }
-
-    virtual ~AstTryStatement();
 
     inline AstCatchClause *&CatchClause(int i) { return (*catch_clauses)[i]; }
     inline int NumCatchClauses()
@@ -3302,8 +3219,6 @@ public:
         AstExpression::symbol = NULL;
     }
 
-    virtual ~AstIntegerLiteral();
-
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
     virtual void Unparse(Ostream &, LexStream *);
@@ -3332,8 +3247,6 @@ public:
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
-
-    virtual ~AstLongLiteral();
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -3364,8 +3277,6 @@ public:
         AstExpression::symbol = NULL;
     }
 
-    virtual ~AstFloatLiteral();
-
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
     virtual void Unparse(Ostream &, LexStream *);
@@ -3395,8 +3306,6 @@ public:
         AstExpression::symbol = NULL;
     }
 
-    virtual ~AstDoubleLiteral();
-
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
     virtual void Unparse(Ostream &, LexStream *);
@@ -3425,8 +3334,6 @@ public:
         AstExpression::symbol = NULL;
     }
 
-    virtual ~AstTrueLiteral();
-
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
     virtual void Unparse(Ostream &, LexStream *);
@@ -3454,8 +3361,6 @@ public:
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
-
-    virtual ~AstFalseLiteral();
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -3486,8 +3391,6 @@ public:
         AstExpression::symbol = NULL;
     }
 
-    virtual ~AstStringLiteral();
-
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
     virtual void Unparse(Ostream &, LexStream *);
@@ -3516,8 +3419,6 @@ public:
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
-
-    virtual ~AstCharacterLiteral();
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -3553,8 +3454,6 @@ public:
         AstExpression::symbol = NULL;
     }
 
-    virtual ~AstNullLiteral();
-
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
     virtual void Unparse(Ostream &, LexStream *);
@@ -3582,8 +3481,6 @@ public:
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
-
-    virtual ~AstThisExpression();
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -3613,8 +3510,6 @@ public:
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
-
-    virtual ~AstSuperExpression();
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -3647,8 +3542,6 @@ public:
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
-
-    virtual ~AstParenthesizedExpression();
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -3684,8 +3577,6 @@ public:
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
-
-    virtual ~AstTypeExpression();
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -3751,8 +3642,6 @@ public:
         AstExpression::symbol = NULL;
     }
 
-    virtual ~AstClassInstanceCreationExpression();
-
     inline AstExpression *&Argument(int i) { return (*arguments)[i]; }
     inline int NumArguments()
     {
@@ -3811,8 +3700,6 @@ public:
         Ast::generated = false;
     }
 
-    virtual ~AstDimExpr();
-
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
     virtual void Unparse(Ostream &, LexStream *);
@@ -3853,8 +3740,6 @@ public:
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
-
-    virtual ~AstArrayCreationExpression();
 
     inline AstBrackets *&Brackets(int i) { return (*brackets)[i]; }
     inline int NumBrackets() { return (brackets ? brackets -> Length() : 0); }
@@ -3932,8 +3817,6 @@ public:
         AstExpression::symbol = NULL;
     }
 
-    virtual ~AstFieldAccess();
-
     bool IsNameAccess()  { return field_access_tag == NONE; }
     bool IsThisAccess()  { return field_access_tag == THIS_TAG; }
     bool IsSuperAccess() { return field_access_tag == SUPER_TAG; }
@@ -3990,8 +3873,6 @@ public:
         AstExpression::symbol = NULL;
     }
 
-    virtual ~AstMethodInvocation();
-
     inline AstExpression *&Argument(int i) { return (*arguments)[i]; }
     inline int NumArguments()
     {
@@ -4034,8 +3915,6 @@ public:
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
-
-    virtual ~AstArrayAccess();
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -4092,8 +3971,6 @@ public:
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
-
-    virtual ~AstPostUnaryExpression();
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -4157,8 +4034,6 @@ public:
         AstExpression::symbol = NULL;
     }
 
-    virtual ~AstPreUnaryExpression();
-
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
     virtual void Unparse(Ostream &, LexStream *);
@@ -4209,8 +4084,6 @@ public:
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
-
-    virtual ~AstCastExpression();
 
     inline AstBrackets *&Brackets(int i) { return (*brackets)[i]; }
     inline int NumBrackets() { return (brackets ? brackets -> Length() : 0); }
@@ -4300,8 +4173,6 @@ public:
         AstExpression::symbol = NULL;
     }
 
-    virtual ~AstBinaryExpression();
-
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
     virtual void Unparse(Ostream &, LexStream *);
@@ -4340,8 +4211,6 @@ public:
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
-
-    virtual ~AstConditionalExpression();
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -4433,8 +4302,6 @@ public:
         AstExpression::value = NULL;
         AstExpression::symbol = NULL;
     }
-
-    virtual ~AstAssignmentExpression();
 
     inline bool SimpleAssignment() { return assignment_tag == SIMPLE_EQUAL; }
 

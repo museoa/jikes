@@ -252,7 +252,7 @@ public:
         return return_pair;
     }
 
-    DefiniteBlockStack(Control &control, int stack_size_, int set_size)
+    DefiniteBlockStack(int stack_size_, int set_size)
         : stack_size(stack_size_),
           top_index(0),
           return_pair(set_size, BitSet::UNIVERSE)
@@ -536,16 +536,17 @@ public:
         // DefiniteThisCall and DefiniteSuperCall should be invoked manually
         // from DefiniteConstructorBody rather than automatically by
         // DefiniteStatement. Therefore, all three of these categories are
-        // diverted to the no-op DefiniteEmptyStatement.
+        // diverted to the no-op DefiniteDefaultStatement.
         //
-        DefiniteStmt[Ast::CLASS] = &Semantic::DefiniteEmptyStatement;
-        DefiniteStmt[Ast::THIS_CALL] = &Semantic::DefiniteEmptyStatement;
-        DefiniteStmt[Ast::SUPER_CALL] = &Semantic::DefiniteEmptyStatement;
+        DefiniteStmt[Ast::CLASS] = &Semantic::DefiniteDefaultStatement;
+        DefiniteStmt[Ast::THIS_CALL] = &Semantic::DefiniteDefaultStatement;
+        DefiniteStmt[Ast::SUPER_CALL] = &Semantic::DefiniteDefaultStatement;
         DefiniteStmt[Ast::BLOCK] = &Semantic::DefiniteBlock;
         DefiniteStmt[Ast::LOCAL_VARIABLE_DECLARATION] =
             &Semantic::DefiniteLocalVariableDeclarationStatement;
         DefiniteStmt[Ast::IF] = &Semantic::DefiniteIfStatement;
-        DefiniteStmt[Ast::EMPTY_STATEMENT] = &Semantic::DefiniteEmptyStatement;
+        DefiniteStmt[Ast::EMPTY_STATEMENT] =
+            &Semantic::DefiniteDefaultStatement;
         DefiniteStmt[Ast::EXPRESSION_STATEMENT] =
             &Semantic::DefiniteExpressionStatement;
         DefiniteStmt[Ast::SWITCH] = &Semantic::DefiniteSwitchStatement;
@@ -1020,7 +1021,7 @@ private:
     void DefiniteThrowStatement(Ast *);
     void DefiniteTryStatement(Ast *);
     void DefiniteAssertStatement(Ast *);
-    void DefiniteEmptyStatement(Ast *);
+    void DefiniteDefaultStatement(Ast*) {}
     void DefiniteThisCall(AstThisCall *);
     void DefiniteSuperCall(AstSuperCall *);
 
@@ -1047,8 +1048,11 @@ private:
                                                          DefinitePair &);
     DefiniteAssignmentSet *DefiniteAssignmentExpression(AstExpression *,
                                                         DefinitePair &);
-    DefiniteAssignmentSet *DefiniteDefaultExpression(AstExpression *,
-                                                     DefinitePair &);
+    DefiniteAssignmentSet* DefiniteDefaultExpression(AstExpression*,
+                                                     DefinitePair&)
+    {
+        return NULL;
+    }
     DefiniteAssignmentSet *DefiniteFieldAccess(AstExpression *,
                                                DefinitePair &);
     DefiniteAssignmentSet *DefiniteParenthesizedExpression(AstExpression *,
