@@ -38,7 +38,7 @@
 -- Therefore, though the user is encouraged to read javaact.h, no
 -- change should ever be made to that file. Instead, changes should
 -- always be made in this file and javaact.h should be regenerated
--- using JIKESPG. 
+-- using JIKESPG.
 --
 ------------------------------------------------------------------------
 
@@ -50,12 +50,12 @@ $Define
 --
 $location
 /.
- 
-// 
+
+//
 // Rule $rule_number:  $rule_text
 //
 #line $next_line "$input_file"./
- 
+
 --
 -- This macro is used to initialize the rule_action array
 -- to an unnamed function. A name is generated using the
@@ -69,7 +69,7 @@ $action
     void Act$rule_number(void);
 #endif
 ./
- 
+
 --
 -- These macros are used to initialize the rule_action array
 -- to a specific named function.
@@ -193,7 +193,7 @@ $MakeCastExpression
 #endif
 ./
 
--- 
+--
 -- This macro is used to initialize the rule_action array
 -- to the NullAction function.
 --
@@ -203,8 +203,8 @@ $NullAction
     rule_action[$rule_number] = &Parser::NullAction;
 #endif
 ./
- 
--- 
+
+--
 -- This macro is used to initialize the rule_action array
 -- to the NoAction function.
 --
@@ -214,8 +214,8 @@ $NoAction
     rule_action[$rule_number] = &Parser::NoAction;
 #endif
 ./
- 
--- 
+
+--
 -- This macro generates a header for a named action function that is
 -- already defined and will be shared.
 --
@@ -225,7 +225,7 @@ $shared_function
 //
 // Rule $rule_number:  $rule_text./
 
--- 
+--
 -- This macro generates a header for a rule that invokes the
 -- no_function routine.
 --
@@ -238,7 +238,7 @@ $shared_NoAction
 // void NoAction(void);
 //./
 
--- 
+--
 -- This macro generates a header for a rule that invokes the
 -- null_function routine.
 --
@@ -699,7 +699,7 @@ void Parser::MakeArrayType(void)
     //
     // The list of modifiers is guaranteed not empty
     //
-    {   
+    {
         AstListNode *tail = (AstListNode *) Sym(2);
         p -> AllocateBrackets(tail -> index + 1);
         AstListNode *root = tail;
@@ -716,7 +716,7 @@ void Parser::MakeArrayType(void)
 
 ArrayType ::= Name Dims
 \:$MakeArrayType:\
-/.$shared_function 
+/.$shared_function
 //
 // void MakeArrayType(void);
 //./
@@ -752,7 +752,7 @@ QualifiedName ::= Name '.' 'Identifier'
 \:$MakeFieldAccess:\
 /.$location
 void Parser::MakeFieldAccess(void)
-{ 
+{
     AstFieldAccess *p = ast_pool -> NewFieldAccess();
     p -> base = (AstExpression *) Sym(1);
     p -> dot_token = Token(2);
@@ -1393,7 +1393,7 @@ ClassMemberDeclaration -> InterfaceDeclaration
 
 --
 -- Empty declarations are not valid Java ClassMemberDeclarations.
--- However, since the current (2/14/97) Java compiler accepts them 
+-- However, since the current (2/14/97) Java compiler accepts them
 -- (in fact, some of the official tests contain this erroneous
 -- syntax), we decided to accept them as valid syntax and flag them
 -- as a warning during semantic processing.
@@ -1424,7 +1424,7 @@ void Parser::Act$rule_number(void)
 {
     AstFieldDeclaration *p = ast_pool -> NewFieldDeclaration();
     if (Sym(1) != NULL)
-    {   
+    {
         AstListNode *tail = (AstListNode *) Sym(1);
         p -> AllocateVariableModifiers(tail -> index + 1);
         AstListNode *root = tail;
@@ -1439,7 +1439,7 @@ void Parser::Act$rule_number(void)
     //
     // The list of declarators is guaranteed not empty
     //
-    {   
+    {
         AstListNode *tail = (AstListNode *) Sym(3);
         p -> AllocateVariableDeclarators(tail -> index + 1);
         AstListNode *root = tail;
@@ -1581,7 +1581,7 @@ void Parser::Act$rule_number(void)
 {
     AstMethodDeclaration *p = ast_pool -> NewMethodDeclaration();
     if (Sym(1) != NULL)
-    {   
+    {
         AstListNode *tail = (AstListNode *) Sym(1);
         p -> AllocateMethodModifiers(tail -> index + 1);
         AstListNode *root = tail;
@@ -1595,7 +1595,7 @@ void Parser::Act$rule_number(void)
     p -> type              = Sym(2);
     p -> method_declarator = (AstMethodDeclarator *) Sym(3);
     if (Sym(4) != NULL)
-    {   
+    {
         AstListNode *tail = (AstListNode *) Sym(4);
         p -> AllocateThrows(tail -> index + 1);
         AstListNode *root = tail;
@@ -1617,7 +1617,7 @@ void Parser::Act$rule_number(void)
 {
     AstMethodDeclaration *p = ast_pool -> NewMethodDeclaration();
     if (Sym(1) != NULL)
-    {   
+    {
         AstListNode *tail = (AstListNode *) Sym(1);
         p -> AllocateMethodModifiers(tail -> index + 1);
         AstListNode *root = tail;
@@ -1631,7 +1631,7 @@ void Parser::Act$rule_number(void)
     p -> type              = ast_pool -> NewPrimitiveType(Ast::VOID_TYPE, Token(2));
     p -> method_declarator = (AstMethodDeclarator *) Sym(3);
     if (Sym(4) != NULL)
-    {   
+    {
         AstListNode *tail = (AstListNode *) Sym(4);
         p -> AllocateThrows(tail -> index + 1);
         AstListNode *root = tail;
@@ -1655,7 +1655,7 @@ void Parser::Act$rule_number(void)
     p -> identifier_token        = Token(1);
     p -> left_parenthesis_token  = Token(2);
     if (Sym(3) != NULL)
-    {   
+    {
         AstListNode *tail = (AstListNode *) Sym(3);
         p -> AllocateFormalParameters(tail -> index + 1);
         AstListNode *root = tail;
@@ -1749,7 +1749,7 @@ void Parser::Act$rule_number(void)
     //
     // The list of modifiers is guaranteed not empty
     //
-    {   
+    {
         AstListNode *tail = (AstListNode *) Sym(1);
         p -> AllocateParameterModifiers(tail -> index + 1);
         AstListNode *root = tail;
@@ -1876,7 +1876,7 @@ void Parser::Act$rule_number(void)
     AstConstructorDeclaration *p = ast_pool -> NewConstructorDeclaration();
 
     if (Sym(1) != NULL)
-    {   
+    {
         AstListNode *tail = (AstListNode *) Sym(1);
         p -> AllocateConstructorModifiers(tail -> index + 1);
         AstListNode *root = tail;
@@ -1889,7 +1889,7 @@ void Parser::Act$rule_number(void)
     }
     p -> constructor_declarator = (AstMethodDeclarator *) Sym(2);
     if (Sym(3) != NULL)
-    {   
+    {
         AstListNode *tail = (AstListNode *) Sym(3);
         p -> AllocateThrows(tail -> index + 1);
         AstListNode *root = tail;
@@ -1923,7 +1923,7 @@ void Parser::Act$rule_number(void)
     p -> identifier_token        = Token(1);
     p -> left_parenthesis_token  = Token(2);
     if (Sym(3) != NULL)
-    {   
+    {
         AstListNode *tail = (AstListNode *) Sym(3);
         p -> AllocateFormalParameters(tail -> index + 1);
         AstListNode *root = tail;
@@ -1944,7 +1944,7 @@ void Parser::Act$rule_number(void)
 -- in the rule below in order to make the grammar lalr(1).
 --
 -- ConstructorBody ::= '{' ExplicitConstructorInvocationopt BlockStatementsopt '}'
--- 
+--
 ConstructorBody -> Block
 \:$NoAction:\
 /.$shared_NoAction./
@@ -2120,7 +2120,7 @@ void Parser::Act$rule_number(void)
 {
     AstInterfaceDeclaration *p = (AstInterfaceDeclaration *) Sym(5);
     if (Sym(1) != NULL)
-    {   
+    {
         AstListNode *tail = (AstListNode *) Sym(1);
         p -> AllocateInterfaceModifiers(tail -> index + 1);
         AstListNode *root = tail;
@@ -2167,7 +2167,7 @@ void Parser::Act$rule_number(void)
 
     p -> left_brace_token = Token(1);
     if (Sym(2) != NULL)
-    {   
+    {
         int num_class_variables = 0,
             num_methods = 0,
             num_inner_classes = 0,
@@ -2306,7 +2306,7 @@ InterfaceMemberDeclaration -> InterfaceDeclaration
 
 --
 -- Empty declarations are not valid Java InterfaceMemberDeclarations.
--- However, since the current (2/14/97) Java compiler accepts them 
+-- However, since the current (2/14/97) Java compiler accepts them
 -- (in fact, some of the official tests contain this erroneous
 -- syntax), we decided to accept them as valid syntax and flag them
 -- as a warning during semantic processing.
@@ -2535,7 +2535,7 @@ void Parser::Act$rule_number(void)
     //
     // The list of declarators is guaranteed not empty
     //
-    {   
+    {
         AstListNode *tail = (AstListNode *) Sym(2);
         p -> AllocateVariableDeclarators(tail -> index + 1);
         AstListNode *root = tail;
@@ -2561,7 +2561,7 @@ void Parser::Act$rule_number(void)
     //
     // The list of modifiers is guaranteed not empty
     //
-    {   
+    {
         AstListNode *tail = (AstListNode *) Sym(1);
         p -> AllocateLocalModifiers(tail -> index + 1);
         AstListNode *root = tail;
@@ -2576,7 +2576,7 @@ void Parser::Act$rule_number(void)
     //
     // The list of declarators is guaranteed not empty
     //
-    {   
+    {
         AstListNode *tail = (AstListNode *) Sym(3);
         p -> AllocateVariableDeclarators(tail -> index + 1);
         AstListNode *root = tail;
@@ -4196,7 +4196,7 @@ CastExpression ::= '(' Expression ')' UnaryExpressionNotPlusMinus
 \:$action:\
 /.$location
 void Parser::Act$rule_number(void)
-{ 
+{
     //
     // Note that Expression must be a name - i.e., Sym(2) -> isName() == true
     // This check is not performed here and should be performed during
@@ -4738,7 +4738,7 @@ ClassBodyopt -> ClassBody
 -- The rules below are for optional terminal symbols.  An optional comma,
 -- is only used in the context of an array initializer - It is a
 -- "syntactic sugar" that otherwise serves no other purpose. By contrast,
--- an optional identifier is used in the definition of a break and 
+-- an optional identifier is used in the definition of a break and
 -- continue statement. When the identifier does not appear, a NULL
 -- is produced. When the identifier is present, the user should use the
 -- corresponding Token(i) method. See break statement as an example.
@@ -4929,52 +4929,52 @@ BodyMarker ::= '"class Identifier { ... MethodHeader "'
 
 void ::= ResultType
 
-PLUS_PLUS ::=    '++'   
-MINUS_MINUS ::=    '--'   
-EQUAL_EQUAL ::=    '=='   
-LESS_EQUAL ::=    '<='   
-GREATER_EQUAL ::=    '>='   
-NOT_EQUAL ::=    '!='   
-LEFT_SHIFT ::=    '<<'   
-RIGHT_SHIFT ::=    '>>'   
-UNSIGNED_RIGHT_SHIFT ::=    '>>>'  
-PLUS_EQUAL ::=    '+='   
-MINUS_EQUAL ::=    '-='   
-MULTIPLY_EQUAL ::=    '*='   
-DIVIDE_EQUAL ::=    '/='   
-AND_EQUAL ::=    '&='   
-OR_EQUAL ::=    '|='   
-XOR_EQUAL ::=    '^='   
-REMAINDER_EQUAL ::=    '%='   
-LEFT_SHIFT_EQUAL ::=    '<<='  
-RIGHT_SHIFT_EQUAL ::=    '>>='  
-UNSIGNED_RIGHT_SHIFT_EQUAL ::=    '>>>=' 
-OR_OR ::=    '||'   
-AND_AND ::=    '&&'   
+PLUS_PLUS ::=    '++'
+MINUS_MINUS ::=    '--'
+EQUAL_EQUAL ::=    '=='
+LESS_EQUAL ::=    '<='
+GREATER_EQUAL ::=    '>='
+NOT_EQUAL ::=    '!='
+LEFT_SHIFT ::=    '<<'
+RIGHT_SHIFT ::=    '>>'
+UNSIGNED_RIGHT_SHIFT ::=    '>>>'
+PLUS_EQUAL ::=    '+='
+MINUS_EQUAL ::=    '-='
+MULTIPLY_EQUAL ::=    '*='
+DIVIDE_EQUAL ::=    '/='
+AND_EQUAL ::=    '&='
+OR_EQUAL ::=    '|='
+XOR_EQUAL ::=    '^='
+REMAINDER_EQUAL ::=    '%='
+LEFT_SHIFT_EQUAL ::=    '<<='
+RIGHT_SHIFT_EQUAL ::=    '>>='
+UNSIGNED_RIGHT_SHIFT_EQUAL ::=    '>>>='
+OR_OR ::=    '||'
+AND_AND ::=    '&&'
 
-PLUS ::=    '+'    
-MINUS ::=    '-'    
-NOT ::=    '!'    
-REMAINDER ::=    '%'    
-XOR ::=    '^'    
-AND ::=    '&'    
-MULTIPLY ::=    '*'    
-OR ::=    '|'    
-TWIDDLE ::=    '~'    
-DIVIDE ::=    '/'    
-GREATER ::=    '>'    
-LESS ::=    '<'    
-LPAREN ::=    '('    
-RPAREN ::=    ')'    
-LBRACE ::=    '{'    
-RBRACE ::=    '}'    
-LBRACKET ::=    '['    
-RBRACKET ::=    ']'    
-SEMICOLON ::=    ';'    
-QUESTION ::=    '?'    
-COLON ::=    ':'    
-COMMA ::=    ','    
-DOT ::=    '.'    
-EQUAL ::=    '='    
+PLUS ::=    '+'
+MINUS ::=    '-'
+NOT ::=    '!'
+REMAINDER ::=    '%'
+XOR ::=    '^'
+AND ::=    '&'
+MULTIPLY ::=    '*'
+OR ::=    '|'
+TWIDDLE ::=    '~'
+DIVIDE ::=    '/'
+GREATER ::=    '>'
+LESS ::=    '<'
+LPAREN ::=    '('
+RPAREN ::=    ')'
+LBRACE ::=    '{'
+RBRACE ::=    '}'
+LBRACKET ::=    '['
+RBRACKET ::=    ']'
+SEMICOLON ::=    ';'
+QUESTION ::=    '?'
+COLON ::=    ':'
+COMMA ::=    ','
+DOT ::=    '.'
+EQUAL ::=    '='
 
 $end

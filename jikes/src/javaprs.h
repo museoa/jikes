@@ -75,7 +75,7 @@ public:
                act = term_action[term_check[i] == sym ? i : act];
                if (act <= LA_STATE_OFFSET)
                    break;
-            } 
+            }
         }
 
         return act;
