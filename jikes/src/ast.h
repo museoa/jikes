@@ -727,13 +727,13 @@ public:
     {
         return (TypeSymbol *)
                (symbol ? (symbol -> Kind() == Symbol::TYPE
-                                  ? (TypeSymbol *) symbol
-                                  : (symbol -> Kind() == Symbol::VARIABLE
-                                             ? ((VariableSymbol *) symbol) -> Type()
-                                             : (symbol -> Kind() == Symbol::METHOD
-                                                        ? ((MethodSymbol *) symbol) -> Type()
-                                                        : NULL)))
-                       : NULL);
+                          ? (TypeSymbol *) symbol
+                          : (symbol -> Kind() == Symbol::VARIABLE
+                             ? ((VariableSymbol *) symbol) -> Type()
+                             : (symbol -> Kind() == Symbol::METHOD
+                                ? ((MethodSymbol *) symbol) -> Type()
+                                : NULL)))
+                : NULL);
     }
 
     virtual Ast *Clone(StoragePool *) { return (Ast *) NULL; }
@@ -760,6 +760,7 @@ public:
     {
         NONE,
         TRY_CLAUSE_WITH_FINALLY,
+        ABRUPT_TRY_FINALLY,
         FINALLY,
         SYNCHRONIZED,
         SWITCH

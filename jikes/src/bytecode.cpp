@@ -543,7 +543,8 @@ void ByteCode::CompileInterface()
 //
 // initialized_fields is a list of fields needing code to initialize.
 //
-void ByteCode::CompileConstructor(AstConstructorDeclaration *constructor, Tuple<AstVariableDeclarator *> &initialized_fields)
+void ByteCode::CompileConstructor(AstConstructorDeclaration *constructor,
+                                  Tuple<AstVariableDeclarator *> &initialized_fields)
 {
     MethodSymbol *method_symbol = constructor -> constructor_symbol;
     TypeSymbol *type = method_symbol -> containing_type;
@@ -1011,7 +1012,8 @@ void ByteCode::InitializeInstanceVariable(AstVariableDeclarator *vd)
 }
 
 
-void ByteCode::InitializeArray(TypeSymbol *type, AstArrayInitializer *array_initializer)
+void ByteCode::InitializeArray(TypeSymbol *type,
+                               AstArrayInitializer *array_initializer)
 {
     TypeSymbol *subtype = type -> ArraySubtype();
 
@@ -1334,18 +1336,31 @@ void ByteCode::EmitStatement(AstStatement *statement)
         break;
     case Ast::BREAK: // JLS 14.13
         {
-            int nesting_level = statement -> BreakStatementCast() -> nesting_level;
-            ProcessAbruptExit(nesting_level);
-            EmitBranch(OP_GOTO, method_stack -> BreakLabel(nesting_level),
-                       method_stack -> Block(nesting_level));
+            int nesting_level = statement -> BreakStatementCast() ->
+                nesting_level;
+            AstBlock *over = method_stack -> Block(nesting_level);
+            u2 jump_size = (over -> RightToken() - over -> LeftToken() <
+                            TOKEN_WIDTH_REQUIRING_GOTOW) ? 3 : 5;
+            if (ProcessAbruptExit(nesting_level, jump_size))
+            {
+                EmitBranch(OP_GOTO, method_stack -> BreakLabel(nesting_level),
+                           over);
+            }
         }
         break;
     case Ast::CONTINUE: // JLS 14.14
         {
-            int nesting_level = statement -> ContinueStatementCast() -> nesting_level;
-            ProcessAbruptExit(nesting_level);
-            EmitBranch(OP_GOTO, method_stack -> ContinueLabel(nesting_level),
-                       method_stack -> Block(nesting_level));
+            int nesting_level = statement -> ContinueStatementCast() ->
+                nesting_level;
+            AstBlock *over = method_stack -> Block(nesting_level);
+            u2 jump_size = (over -> RightToken() - over -> LeftToken() <
+                            TOKEN_WIDTH_REQUIRING_GOTOW) ? 3 : 5;
+            if (ProcessAbruptExit(nesting_level, jump_size))
+            {
+                EmitBranch(OP_GOTO,
+                           method_stack -> ContinueLabel(nesting_level),
+                           over);
+            }
         }
         break;
     case Ast::RETURN: // JLS 14.15
@@ -1393,8 +1408,8 @@ void ByteCode::EmitReturnStatement(AstReturnStatement *statement)
 
     if (! expression)
     {
-        ProcessAbruptExit(method_stack -> NestingLevel(0));
-        PutOp(OP_RETURN);
+        if (ProcessAbruptExit(method_stack -> NestingLevel(0), 1))
+            PutOp(OP_RETURN);
     }
     else
     {
@@ -1403,9 +1418,8 @@ void ByteCode::EmitReturnStatement(AstReturnStatement *statement)
 
         EmitExpression(expression);
 
-        ProcessAbruptExit(method_stack -> NestingLevel(0), type);
-
-        GenerateReturn(type);
+        if (ProcessAbruptExit(method_stack -> NestingLevel(0), 1, type))
+            GenerateReturn(type);
     }
 }
 
@@ -1568,7 +1582,7 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
     EmitExpression(switch_statement -> expression);
 
     PutOp(use_lookup ? OP_LOOKUPSWITCH : OP_TABLESWITCH);
-    int op_start = last_op_pc; // pc at start of instruction
+    u2 op_start = last_op_pc; // pc at start of instruction
 
     //
     // supply any needed padding
@@ -1782,16 +1796,25 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
     assert(method_stack -> TopFinallyLabel().defined == false);
     assert(method_stack -> TopFinallyLabel().definition == 0);
 
-    int start_try_block_pc = code_attribute -> CodeLength(); // start pc
+    u2 start_try_block_pc = code_attribute -> CodeLength(); // start pc
     bool emit_finally_clause = (statement -> finally_clause_opt &&
                                 ! IsNop(statement -> finally_clause_opt -> block));
 
     //
     // If we determined the finally clause is a nop, remove the tag
     // TRY_CLAUSE_WITH_FINALLY so that abrupt completions do not emit JSR.
+    // On the other hand, if the finally clause cannot complete normally,
+    // change the tag to ABRUPT_TRY_FINALLY so that abrupt completions emit
+    // a GOTO instead of a JSR.
     //
-    if (statement -> finally_clause_opt && ! emit_finally_clause)
-        statement -> block -> block_tag = AstBlock::NONE;
+    if (statement -> finally_clause_opt)
+        if (! emit_finally_clause)
+            statement -> block -> block_tag = AstBlock::NONE;
+        else if (! statement -> finally_clause_opt -> block ->
+                 can_complete_normally)
+        {
+            statement -> block -> block_tag = AstBlock::ABRUPT_TRY_FINALLY;
+        }
     EmitBlockStatement(statement -> block);
 
     //
@@ -1800,8 +1823,8 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
     // any, needed to call a finally block or skip to the end of the try
     // statement.
     //
-    int end_try_block_pc = code_attribute -> CodeLength(),
-        special_end_pc = end_try_block_pc; // end_pc for "special" handler
+    u2 end_try_block_pc = code_attribute -> CodeLength(),
+       special_end_pc = end_try_block_pc; // end_pc for "special" handler
 
     //
     // If try block is not empty, process catch clauses, including "special"
@@ -1824,7 +1847,7 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
 
         for (int i = 0; i < statement -> NumCatchClauses(); i++)
         {
-            int handler_pc = code_attribute -> CodeLength();
+            u2 handler_pc = code_attribute -> CodeLength();
 
             AstCatchClause *catch_clause = statement -> CatchClause(i);
             VariableSymbol *parameter_symbol = catch_clause -> parameter_symbol;
@@ -1837,10 +1860,19 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
             //
             // If we determined the finally clause is a nop, remove the tag
             // TRY_CLAUSE_WITH_FINALLY so that abrupt completions do not emit
-            // JSR.
+            // JSR. On the other hand, if the finally clause cannot complete
+            // normally, change the tag to ABRUPT_TRY_FINALLY so that abrupt
+            // completions emit a GOTO instead of a JSR.
             //
-            if (statement -> finally_clause_opt && ! emit_finally_clause)
-                catch_clause -> block -> block_tag = AstBlock::NONE;
+            if (statement -> finally_clause_opt)
+                if (! emit_finally_clause)
+                    catch_clause -> block -> block_tag = AstBlock::NONE;
+                else if (! statement -> finally_clause_opt -> block ->
+                         can_complete_normally)
+                {
+                    catch_clause -> block -> block_tag =
+                        AstBlock::ABRUPT_TRY_FINALLY;
+                }
             EmitBlockStatement(catch_clause -> block);
 
             if (control.option.g & JikesOption::VARS)
@@ -1875,7 +1907,8 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
         //
         if (emit_finally_clause)
         {
-            int variable_index = method_stack -> TopBlock() -> block_symbol -> try_or_synchronized_variable_index;
+            int variable_index = method_stack -> TopBlock() ->
+                block_symbol -> try_or_synchronized_variable_index;
 
             //
             // Emit code for "special" handler to make sure finally clause is
@@ -1888,28 +1921,37 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
                                            0);
             assert(stack_depth == 0);
             stack_depth = 1; // account for the exception already on stack
-            StoreLocal(variable_index, control.Object()); // Save exception
-            EmitBranch(OP_JSR, finally_label, statement);
-            LoadLocal(variable_index, control.Object()); // Reload exception,
-            PutOp(OP_ATHROW); // and rethrow it.
+            if (statement -> finally_clause_opt -> block ->
+                can_complete_normally)
+            {
+                StoreLocal(variable_index, control.Object()); // Save exception
+                EmitBranch(OP_JSR, finally_label, statement);
+                LoadLocal(variable_index, control.Object()); // Reload and
+                PutOp(OP_ATHROW); // rethrow exception.
+            }
+            else
+            {
+                //
+                // Ignore the exception already on the stack, since we know
+                // the finally clause overrides it.
+                //
+                PutOp(OP_POP);
+            }
 
             //
             // Generate code for finally clause. If the finally block can
-            // complete normally, save the return address. Otherwise, we pop
-            // the return address from the stack, and try and catch blocks
-            // which complete normally just jump here.
+            // complete normally, this is reached from a JSR, so save the
+            // return address. Otherwise, this is reached from a GOTO.
             //
             DefineLabel(finally_label);
             assert(stack_depth == 0);
-            stack_depth = 1; // account for the return location already on stack
             if (statement -> finally_clause_opt -> block -> can_complete_normally)
-                StoreLocal(variable_index + 1, control.Object());
-            else
             {
-                PutOp(OP_POP);
-                if (IsLabelUsed(end_label))
-                    DefineLabel(end_label);
+                stack_depth = 1; // account for the return location on stack
+                StoreLocal(variable_index + 1, control.Object());
             }
+            else if (IsLabelUsed(end_label))
+                DefineLabel(end_label);
             EmitBlockStatement(statement -> finally_clause_opt -> block);
 
             //
@@ -1956,54 +1998,103 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
 
 
 //
-// Exit to block at level lev, freeing monitor locks and invoking finally
-// clauses as appropriate
+// Exit to block at level, freeing monitor locks and invoking finally
+// clauses as appropriate. The width is 1 for return, 3 for normal a normal
+// GOTO (from a break or continue), or 5 for a GOTO_W. The return is true
+// unless some intervening finally block cannot complete normally.
 //
-void ByteCode::ProcessAbruptExit(int to_lev, TypeSymbol *return_type)
+bool ByteCode::ProcessAbruptExit(int level, u2 width, TypeSymbol *return_type)
 {
+    int variable_index = -1;
+    //
+    // We must store the return value in a variable, rather than on the
+    // stack, in case a finally block contains an embedded try-catch which
+    // wipes out the stack.
+    //
+    if (return_type)
+    {
+        for (int i = method_stack -> Size() - 1;
+             i > 0 && method_stack -> NestingLevel(i) != level; i--)
+        {
+            int nesting_level = method_stack -> NestingLevel(i),
+                enclosing_level = method_stack -> NestingLevel(i - 1);
+            AstBlock *block = method_stack -> Block(nesting_level);
+            if (block -> block_tag == AstBlock::TRY_CLAUSE_WITH_FINALLY)
+            {
+                variable_index = method_stack -> Block(enclosing_level) ->
+                    block_symbol -> try_or_synchronized_variable_index + 2;
+            }
+            else if (block -> block_tag == AstBlock::ABRUPT_TRY_FINALLY)
+            {
+                variable_index = -1;
+                break;
+            }
+        }
+    }
+    if (variable_index >= 0)
+        StoreLocal(variable_index, return_type);
+
     for (int i = method_stack -> Size() - 1;
-         i > 0 && method_stack -> NestingLevel(i) != to_lev; i--)
+         i > 0 && method_stack -> NestingLevel(i) != level; i--)
     {
         int nesting_level = method_stack -> NestingLevel(i),
             enclosing_level = method_stack -> NestingLevel(i - 1);
         AstBlock *block = method_stack -> Block(nesting_level);
         if (block -> block_tag == AstBlock::TRY_CLAUSE_WITH_FINALLY)
         {
+            EmitBranch(OP_JSR, method_stack -> FinallyLabel(enclosing_level),
+                       method_stack -> Block(enclosing_level));
+        }
+        else if (block -> block_tag == AstBlock::ABRUPT_TRY_FINALLY)
+        {
+            //
+            // Pop any return value, and ignore the width of the abrupt
+            // instruction, because the abrupt finally preempts it.
+            //
             if (return_type)
             {
-                //
-                // Note: If the finally block cannot complete normally,
-                // this leaves some dead code after the jsr. But it is not
-                // a common situation. If the finally block can complete
-                // normally, save the return value, call the jsr, then
-                // restore return value.
-                //
-                int variable_index = method_stack -> Block(enclosing_level) -> block_symbol -> try_or_synchronized_variable_index + 2;
-
-                StoreLocal(variable_index, return_type);
-
-                EmitBranch(OP_JSR, 
-                           method_stack -> FinallyLabel(enclosing_level),
-                           method_stack -> Block(enclosing_level));
-
-                LoadLocal(variable_index, return_type);
+                PutOp(control.IsDoubleWordType(return_type)
+                      ? OP_POP2 : OP_POP);
             }
-            else
-            {
-                EmitBranch(OP_JSR, 
-                           method_stack -> FinallyLabel(enclosing_level),
-                           method_stack -> Block(enclosing_level));
-            }
+            width = 0;
+            EmitBranch(OP_GOTO, method_stack -> FinallyLabel(enclosing_level),
+                       method_stack -> Block(enclosing_level));
+            break;            
         }
         else if (block -> block_tag == AstBlock::SYNCHRONIZED)
         {
+            //
+            // This code must be safe for asynchronous exceptions.  Note that
+            // we are splitting the range of instructions covered by the
+            // synchronized statement catchall handler.
+            //
             int variable_index = method_stack -> Block(enclosing_level) ->
                 block_symbol -> try_or_synchronized_variable_index;
+            u2 start_pc = method_stack -> MonitorStartPc(enclosing_level);
+            u2 handler_pc = method_stack -> MonitorHandlerPc(enclosing_level);
             
             LoadLocal(variable_index, control.Object());
             PutOp(OP_MONITOREXIT);
+            u2 end_pc = code_attribute -> CodeLength();
+            code_attribute -> AddException(start_pc, end_pc, handler_pc, 0);
         }
     }
+
+    if (variable_index >= 0)
+        LoadLocal(variable_index, return_type);
+    for (int i = method_stack -> Size() - 1;
+         i > 0 && method_stack -> NestingLevel(i) != level; i--)
+    {
+        int nesting_level = method_stack -> NestingLevel(i),
+            enclosing_level = method_stack -> NestingLevel(i - 1);
+        AstBlock *block = method_stack -> Block(nesting_level);
+        if (block -> block_tag == AstBlock::SYNCHRONIZED)
+            method_stack -> MonitorStartPc(enclosing_level) =
+                code_attribute -> CodeLength() + width;
+        else if (block -> block_tag == AstBlock::ABRUPT_TRY_FINALLY)
+            return false;
+    }
+    return true;
 }
 
 void ByteCode::EmitBranch(Opcode opc, Label& lab, AstStatement *over)
@@ -2687,48 +2778,59 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
 
 void ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
 {
+    int variable_index = method_stack -> TopBlock() -> block_symbol ->
+        try_or_synchronized_variable_index;
+
+    Label start_label;
+    //
+    // This code must be careful of asynchronous exceptions. Even if the
+    // synchronized block is empty, user code can use Thread.stop(Throwable),
+    // so we must ensure the monitor exits. We make sure that all instructions
+    // after the monitorenter are covered.  By sticking the catchall code
+    // before the synchronized block, we can even make abrupt exits inside the
+    // statement be asynch-exception safe.  Note that the user can cause
+    // deadlock (ie. an infinite loop), by releasing the monitor (via JNI or
+    // some other means) in the block statement, so that the monitorexit fails
+    // synchronously with an IllegalMonitorStateException and tries again; but
+    // JLS 17.13 states that the compiler need not worry about such user
+    // stupidity.
+    //
+    EmitBranch(OP_GOTO, start_label, NULL);
+    u2 handler_pc = code_attribute -> CodeLength();
+    method_stack -> TopMonitorHandlerPc() = handler_pc;
+    assert(stack_depth == 0);
+    stack_depth = 1; // account for the exception already on the stack
+    LoadLocal(variable_index, control.Object()); // reload monitor
+    PutOp(OP_MONITOREXIT);
+    u2 throw_pc = code_attribute -> CodeLength();
+    PutOp(OP_ATHROW);
+    code_attribute -> AddException(handler_pc, throw_pc, handler_pc, 0);
+
+    //
+    // Even if enclosed statement is a nop, we must enter the monitor, because
+    // of memory flushing side effects of synchronization.
+    //
+    DefineLabel(start_label);
+    CompleteLabel(start_label);
     EmitExpression(statement -> expression);
-
-    int variable_index = method_stack -> TopBlock() -> block_symbol -> try_or_synchronized_variable_index;
-
     PutOp(OP_DUP); // duplicate for saving, entering monitor
     StoreLocal(variable_index, control.Object()); // save address of object
     PutOp(OP_MONITORENTER); // enter monitor associated with object
 
-    int start_synchronized_pc = code_attribute -> CodeLength(); // start pc
-
+    //
+    // TopMonitorStartPc() will be modified if there are any abrupt exits
+    // within the block statement.
+    //
+    method_stack -> TopMonitorStartPc() = code_attribute -> CodeLength();
     EmitBlockStatement(statement -> block);
-
-    int end_synchronized_pc = code_attribute -> CodeLength(); // end pc
 
     if (statement -> block -> can_complete_normally)
     {
-        LoadLocal(variable_index, control.Object()); // load address of object onto stack
+        LoadLocal(variable_index, control.Object()); // reload monitor
         PutOp(OP_MONITOREXIT);
-    }
-
-    if (start_synchronized_pc != end_synchronized_pc) // if the synchronized block is not empty.
-    {
-        // branch around exception handler
-        Label end_label;
-        if (statement -> block -> can_complete_normally)
-            EmitBranch(OP_GOTO, end_label, NULL);
-
-        //
-        // Reach here if any exception thrown.
-        //
-        int handler_pc = code_attribute -> CodeLength();
-        assert(stack_depth == 0);
-        stack_depth = 1; // account for the exception already on the stack
-        LoadLocal(variable_index, control.Object()); // load address of object onto stack
-        PutOp(OP_MONITOREXIT);
-        PutOp(OP_ATHROW);
-
-        code_attribute -> AddException(start_synchronized_pc, handler_pc, handler_pc, 0);
-
-        if (IsLabelUsed(end_label))
-            DefineLabel(end_label);
-        CompleteLabel(end_label);
+        u2 end_pc = code_attribute -> CodeLength();
+        code_attribute -> AddException(method_stack -> TopMonitorStartPc(),
+                                       end_pc, handler_pc, 0);
     }
 }
 
@@ -2809,14 +2911,13 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
     switch (expression -> kind)
     {
     case Ast::IDENTIFIER:
-        if (need_value)
         {
             AstSimpleName *simple_name = expression -> SimpleNameCast();
             return (simple_name -> resolution_opt
-                    ? EmitExpression(simple_name -> resolution_opt)
-                    : LoadVariable(GetLhsKind(expression), expression));
+                    ? EmitExpression(simple_name -> resolution_opt, need_value)
+                    : LoadVariable(GetLhsKind(expression), expression,
+                                   need_value));
         }
-        return 0;
     case Ast::THIS_EXPRESSION:
     case Ast::SUPER_EXPRESSION:
         if (need_value)
@@ -2946,7 +3047,8 @@ AstExpression *ByteCode::VariableExpressionResolution(AstExpression *expression)
 }
 
 
-TypeSymbol *ByteCode::VariableTypeResolution(AstExpression *expression, VariableSymbol *sym)
+TypeSymbol *ByteCode::VariableTypeResolution(AstExpression *expression,
+                                             VariableSymbol *sym)
 {
     expression = VariableExpressionResolution(expression);
     AstFieldAccess *field = expression -> FieldAccessCast();
@@ -3110,10 +3212,9 @@ void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
 // here to generate code to dymanically initialize the field for a class
 // literal and then return its value
 //
-int ByteCode::GenerateClassAccess(AstFieldAccess *field_access, bool need_value)
+int ByteCode::GenerateClassAccess(AstFieldAccess *field_access,
+                                  bool need_value)
 {
-    if (! need_value)
-        return 0;
     //
     // Evaluate X.class literal. If X is a primitive type, this is a
     // predefined field; otherwise, we must create a new synthetic field to
@@ -3158,6 +3259,11 @@ int ByteCode::GenerateClassAccess(AstFieldAccess *field_access, bool need_value)
     DefineLabel(label);
     CompleteLabel(label);
 
+    if (! need_value)
+    {
+        PutOp(OP_POP);
+        return 0;
+    }
     return 1; // return one-word (reference) result
 }
 
@@ -3247,7 +3353,8 @@ int ByteCode::EmitArrayCreationExpression(AstArrayCreationExpression *expression
 //
 // ASSIGNMENT
 //
-int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expression, bool need_value)
+int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expression,
+                                       bool need_value)
 {
     AstCastExpression *casted_left_hand_side = assignment_expression -> left_hand_side -> CastExpressionCast();
     AstExpression *left_hand_side = (casted_left_hand_side ? casted_left_hand_side -> expression : assignment_expression -> left_hand_side);
@@ -3275,7 +3382,11 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
             // expression, evaluate it for side effects.
             //
             if (left_hand_side -> FieldAccessCast())
-                EmitExpression(((AstFieldAccess *) left_hand_side) -> base, false);
+            {
+                AstExpression *base = ((AstFieldAccess *) left_hand_side) -> base;
+                if (! base -> symbol -> TypeCast())
+                    EmitExpression(base, false);
+            }
             break;
         case LHS_METHOD:
             if (! accessed_member -> ACC_STATIC()) // need to load address of object, obtained from resolution
@@ -3342,8 +3453,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
                 {
                     VariableSymbol *sym = (VariableSymbol *) left_hand_side -> symbol;
                     PutOpIINC(sym -> LocalVariableIndex(), val);
-                    if (need_value)
-                        LoadVariable(LHS_LOCAL, left_hand_side);
+                    LoadVariable(LHS_LOCAL, left_hand_side, need_value);
                     return GetTypeWords(assignment_expression -> Type());
                 }
             }
@@ -4025,7 +4135,8 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
 }
 
 
-int ByteCode::EmitCastExpression(AstCastExpression *expression, bool need_value)
+int ByteCode::EmitCastExpression(AstCastExpression *expression,
+                                 bool need_value)
 {
     //
     // Convert from src type to destination type.
@@ -4175,7 +4286,8 @@ void ByteCode::EmitCheckForNull(AstExpression *expression)
     }
 }
 
-int ByteCode::EmitClassInstanceCreationExpression(AstClassInstanceCreationExpression *expression, bool need_value)
+int ByteCode::EmitClassInstanceCreationExpression(AstClassInstanceCreationExpression *expression,
+                                                  bool need_value)
 {
     MethodSymbol *constructor = (MethodSymbol *) expression -> class_type -> symbol;
 
@@ -4290,7 +4402,8 @@ int ByteCode::EmitFieldAccess(AstFieldAccess *expression, bool need_value)
     if (! sym) // not a variable, so it must be a class or package name
         return 0;
 
-    if (base -> Type() -> IsArray() && sym -> ExternalIdentity() == control.length_name_symbol)
+    if (base -> Type() -> IsArray() &&
+        sym -> ExternalIdentity() == control.length_name_symbol)
     {
         if (! need_value)
             return 0;
@@ -4308,8 +4421,11 @@ int ByteCode::EmitFieldAccess(AstFieldAccess *expression, bool need_value)
         // If the access is qualified by an arbitrary base
         // expression, evaluate it for side effects.
         //
-        if (! expression -> IsClassAccess())
+        if (! expression -> IsClassAccess() &&
+            ! expression -> base -> symbol -> TypeCast())
+        {
             EmitExpression(base, false);
+        }
         if (need_value)
         {
             PutOp(OP_GETSTATIC);
@@ -4364,7 +4480,7 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
         //
         AstFieldAccess *field = (msym -> AccessesInstanceMember() ? NULL
                                  : method_call -> method -> FieldAccessCast());
-        if (field)
+        if (field && ! field -> base -> symbol -> TypeCast())
             EmitExpression(field -> base, false);
     }
     else
@@ -4521,7 +4637,8 @@ void ByteCode::EmitNewArray(int num_dims, TypeSymbol *type)
 //
 // POST_UNARY
 //
-int ByteCode::EmitPostUnaryExpression(AstPostUnaryExpression *expression, bool need_value)
+int ByteCode::EmitPostUnaryExpression(AstPostUnaryExpression *expression,
+                                      bool need_value)
 {
     int kind = GetLhsKind(expression);
 
@@ -4559,7 +4676,9 @@ int ByteCode::EmitPostUnaryExpression(AstPostUnaryExpression *expression, bool n
 // load value of field, duplicate, do increment or decrement, then store
 // back, leaving original value on top of stack.
 //
-void ByteCode::EmitPostUnaryExpressionField(int kind, AstPostUnaryExpression *expression, bool need_value)
+void ByteCode::EmitPostUnaryExpressionField(int kind,
+                                            AstPostUnaryExpression *expression,
+                                            bool need_value)
 {
     if (kind == LHS_METHOD)
          ResolveAccess(expression -> expression); // get address and value
@@ -4619,13 +4738,14 @@ void ByteCode::EmitPostUnaryExpressionField(int kind, AstPostUnaryExpression *ex
 // load value of variable, duplicate, do increment or decrement, then store
 // back, leaving original value on top of stack.
 //
-void ByteCode::EmitPostUnaryExpressionSimple(int kind, AstPostUnaryExpression *expression, bool need_value)
+void ByteCode::EmitPostUnaryExpressionSimple(int kind,
+                                             AstPostUnaryExpression *expression,
+                                             bool need_value)
 {
     TypeSymbol *expression_type = expression -> Type();
     if (kind == LHS_LOCAL && expression_type == control.int_type) // can we use IINC ??
     {
-        if (need_value)
-            LoadVariable(kind, expression);
+        LoadVariable(kind, expression, need_value);
         PutOpIINC(expression -> symbol -> VariableCast() -> LocalVariableIndex(),
                   expression -> post_unary_tag == AstPostUnaryExpression::PLUSPLUS ? 1 : -1);
         return;
@@ -4677,7 +4797,8 @@ void ByteCode::EmitPostUnaryExpressionSimple(int kind, AstPostUnaryExpression *e
 // assignment for which lhs is array element
 //    AstExpression *expression;
 //
-void ByteCode::EmitPostUnaryExpressionArray(AstPostUnaryExpression *expression, bool need_value)
+void ByteCode::EmitPostUnaryExpressionArray(AstPostUnaryExpression *expression,
+                                            bool need_value)
 {
     EmitArrayAccessLhs((AstArrayAccess *) expression -> expression); // lhs must be array access
     PutOp(OP_DUP2); // save array base and index for later store
@@ -4763,7 +4884,8 @@ void ByteCode::EmitPostUnaryExpressionArray(AstPostUnaryExpression *expression, 
 //
 // PRE_UNARY
 //
-int ByteCode::EmitPreUnaryExpression(AstPreUnaryExpression *expression, bool need_value)
+int ByteCode::EmitPreUnaryExpression(AstPreUnaryExpression *expression,
+                                     bool need_value)
 {
     TypeSymbol *type = expression -> Type();
     if (expression -> pre_unary_tag == AstPreUnaryExpression::PLUSPLUS ||
@@ -4824,7 +4946,8 @@ int ByteCode::EmitPreUnaryExpression(AstPreUnaryExpression *expression, bool nee
 //
 // PRE_UNARY with side effects (++X or --X)
 //
-void ByteCode::EmitPreUnaryIncrementExpression(AstPreUnaryExpression *expression, bool need_value)
+void ByteCode::EmitPreUnaryIncrementExpression(AstPreUnaryExpression *expression,
+                                               bool need_value)
 {
     int kind = GetLhsKind(expression);
 
@@ -4860,15 +4983,16 @@ void ByteCode::EmitPreUnaryIncrementExpression(AstPreUnaryExpression *expression
 // load value of variable, do increment or decrement, duplicate, then store
 // back, leaving new value on top of stack.
 //
-void ByteCode::EmitPreUnaryIncrementExpressionSimple(int kind, AstPreUnaryExpression *expression, bool need_value)
+void ByteCode::EmitPreUnaryIncrementExpressionSimple(int kind,
+                                                     AstPreUnaryExpression *expression,
+                                                     bool need_value)
 {
     TypeSymbol *type = expression -> Type();
     if (kind == LHS_LOCAL && type == control.int_type)
     {
         PutOpIINC(expression -> symbol -> VariableCast() -> LocalVariableIndex(),
                   expression -> pre_unary_tag == AstPreUnaryExpression::PLUSPLUS ? 1 : -1);
-        if (need_value)
-            LoadVariable(kind, expression);
+        LoadVariable(kind, expression, need_value);
         return;
     }
 
@@ -4923,7 +5047,8 @@ void ByteCode::EmitPreUnaryIncrementExpressionSimple(int kind, AstPreUnaryExpres
 // assignment for which lhs is array element
 //    AstExpression *expression;
 //
-void ByteCode::EmitPreUnaryIncrementExpressionArray(AstPreUnaryExpression *expression, bool need_value)
+void ByteCode::EmitPreUnaryIncrementExpressionArray(AstPreUnaryExpression *expression,
+                                                    bool need_value)
 {
     EmitArrayAccessLhs((AstArrayAccess *) expression -> expression); // lhs must be array access
 
@@ -5011,7 +5136,9 @@ void ByteCode::EmitPreUnaryIncrementExpressionArray(AstPreUnaryExpression *expre
 // Pre Unary for which operand is field (instance variable)
 // AstExpression *expression;
 //
-void ByteCode::EmitPreUnaryIncrementExpressionField(int kind, AstPreUnaryExpression *expression, bool need_value)
+void ByteCode::EmitPreUnaryIncrementExpressionField(int kind,
+                                                    AstPreUnaryExpression *expression,
+                                                    bool need_value)
 {
     if (kind == LHS_METHOD)
         ResolveAccess(expression -> expression); // get address and value
@@ -5626,21 +5753,33 @@ void ByteCode::ResolveAccess(AstExpression *p)
 }
 
 
-int ByteCode::LoadVariable(int kind, AstExpression *expr)
+int ByteCode::LoadVariable(int kind, AstExpression *expr, bool need_value)
 {
     VariableSymbol *sym = (VariableSymbol *) expr -> symbol;
     TypeSymbol *expression_type = expr -> Type();
     switch (kind)
     {
     case LHS_LOCAL:
+        if (! need_value)
+            return 0;
         LoadLocal(sym -> LocalVariableIndex(), expression_type);
         break;
     case LHS_METHOD:
-        EmitExpression(expr); // will do resolution
-        break;
+        {
+            AstFieldAccess *field_access = expr -> FieldAccessCast();
+            assert(field_access && field_access -> resolution_opt);
+            return EmitExpression(field_access -> resolution_opt, need_value);
+        }
     case LHS_FIELD:
     case LHS_STATIC:
         {
+            //
+            // If no value is needed, do nothing for non-volatile fields.
+            // But we must access volatile fields because of the memory
+            // barrier side-effect.
+            //
+            if (! need_value && ! sym -> ACC_VOLATILE())
+                return 0;
             if (sym -> ACC_STATIC())
             {
                 //
@@ -5659,8 +5798,13 @@ int ByteCode::LoadVariable(int kind, AstExpression *expr)
                 PutOp(OP_GETFIELD);
                 ChangeStack(GetTypeWords(expression_type) - 1);
             }
-
             PutU2(RegisterFieldref(VariableTypeResolution(expr, sym), sym));
+            if (! need_value)
+            {
+                PutOp(control.IsDoubleWordType(expression_type)
+                      ? OP_POP2 : OP_POP);
+                return 0;
+            }
         }
         break;
     default:

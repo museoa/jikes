@@ -1,3 +1,16 @@
+2002-02-20  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/ast.h (AstBlock): Add ABRUPT_TRY_FINALLY, to correctly emit
+	synchronized blocks in try-finally.
+	* src/bytecode.cpp (EmitSynchronizedStatement),
+	(ProcessAbruptExit, EmitTryFinally): Correct synchronized
+	statement to be safe with asynchronous exceptions, bug 2647.
+	(EmitExpression, LoadVariable): Don't optimize away class literal
+	or volatile variable qualifying a static reference, because of
+	their potential side effects.
+	* src/bytecode.h (class MethodStack): Improve, to work with
+	synchronized statement fixes - patch 263.
+
 2002-02-18  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/ast.h (NewTokenIndexArray): Remove dead code, which was

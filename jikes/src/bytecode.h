@@ -40,14 +40,16 @@ public:
 
         LabelUse() : use_length(0), op_offset(0), use_offset(0) {}
 
-        LabelUse(int _length, int _op_offset, int _use) : use_length(_length),
-                                                          op_offset(_op_offset),
-                                                          use_offset(_use)
+        LabelUse(int _length,
+                 int _op_offset,
+                 int _use) : use_length(_length),
+                             op_offset(_op_offset),
+                             use_offset(_use)
         {}
     };
 
     bool defined; // boolean, set when value is known
-    int definition; // offset of definition point of label
+    u2 definition; // offset of definition point of label
     Tuple<LabelUse> uses;
 
     Label() : defined(false), definition(0) {}
@@ -71,13 +73,13 @@ public:
     void Push(AstBlock *block)
     {
         assert(block -> nesting_level < stack_size &&
-              (top_index == 0 || ((block -> nesting_level - 1) == nesting_level[top_index - 1])));
+               (top_index == 0 ||
+                (block -> nesting_level - 1 == nesting_level[top_index - 1])));
 
         nesting_level[top_index] = block -> nesting_level;
         break_labels[block -> nesting_level].uses.Reset();
         continue_labels[block -> nesting_level].uses.Reset();
         finally_labels[block -> nesting_level].uses.Reset();
-        monitor_labels[block -> nesting_level].uses.Reset();
         blocks[block -> nesting_level] = block;
 
 #ifdef JIKES_DEBUG
@@ -99,7 +101,6 @@ public:
             break_labels[level].Reset();
             continue_labels[level].Reset();
             finally_labels[level].Reset();
-            monitor_labels[level].Reset();
             blocks[level] = NULL;
             memset(local_variables_start_pc[level], 0xFF, size * sizeof(u2));
 #endif
@@ -121,31 +122,43 @@ public:
 #define AssertIndex(x) /* nop */
 #endif
 
-    int TopNestingLevel() { assert(top_index > 0); return nesting_level[top_index - 1]; }
+    int TopNestingLevel()
+    {
+        assert(top_index > 0);
+        return nesting_level[top_index - 1];
+    }
     int NestingLevel(int i) { AssertIndex(i); return nesting_level[i]; }
 
-    Label &TopBreakLabel()    { return break_labels[TopNestingLevel()]; }
-    Label &BreakLabel(int i)  { AssertIndex(i); return break_labels[i]; }
+    Label &TopBreakLabel() { return break_labels[TopNestingLevel()]; }
+    Label &BreakLabel(int i) { AssertIndex(i); return break_labels[i]; }
 
-    Label &TopContinueLabel()   { return continue_labels[TopNestingLevel()]; }
+    Label &TopContinueLabel() { return continue_labels[TopNestingLevel()]; }
     Label &ContinueLabel(int i) { AssertIndex(i); return continue_labels[i]; }
 
-    Label &TopFinallyLabel()    { return finally_labels[TopNestingLevel()]; }
-    Label &FinallyLabel(int i)  { AssertIndex(i); return finally_labels[i]; }
+    Label &TopFinallyLabel() { return finally_labels[TopNestingLevel()]; }
+    Label &FinallyLabel(int i) { AssertIndex(i); return finally_labels[i]; }
 
-    Label &TopMonitorLabel()   { return monitor_labels[TopNestingLevel()]; }
-    Label &MonitorLabel(int i) { AssertIndex(i); return monitor_labels[i]; }
+    u2 &TopMonitorHandlerPc() { return monitor_handler_pc[TopNestingLevel()]; }
+    u2 &MonitorHandlerPc(int i)
+    {
+        AssertIndex(i);
+        return monitor_handler_pc[i];
+    }
 
-    AstBlock *TopBlock()   { return blocks[TopNestingLevel()]; }
+    u2 &TopMonitorStartPc() { return monitor_start_pc[TopNestingLevel()]; }
+    u2 &MonitorStartPc(int i) { AssertIndex(i); return monitor_start_pc[i]; }
+
+    AstBlock *TopBlock() { return blocks[TopNestingLevel()]; }
     AstBlock *Block(int i) { AssertIndex(i); return blocks[i]; }
 
-    //
-    //
-    //
-    u2 *TopLocalVariablesStartPc() { return (u2 *) local_variables_start_pc[TopNestingLevel()]; }
+    u2 *TopLocalVariablesStartPc()
+    {
+        return (u2 *) local_variables_start_pc[TopNestingLevel()];
+    }
     u2 &StartPc(VariableSymbol *variable)
     {
-        assert(variable -> LocalVariableIndex() >= 0 && variable -> LocalVariableIndex() < size);
+        assert(variable -> LocalVariableIndex() >= 0 &&
+               variable -> LocalVariableIndex() < size);
         return TopLocalVariablesStartPc()[variable -> LocalVariableIndex()];
     }
 
@@ -157,22 +170,22 @@ public:
         break_labels = new Label[stack_size];
         continue_labels = new Label[stack_size];
         finally_labels = new Label[stack_size];
-        monitor_labels = new Label[stack_size];
+        monitor_handler_pc = new u2[stack_size];
+        monitor_start_pc = new u2[stack_size];
         blocks = new AstBlock *[stack_size];
 
-        local_variables_start_pc = new u2*[stack_size];
+        local_variables_start_pc = new u2 *[stack_size];
         for (int i = 0; i < stack_size; i++)
             local_variables_start_pc[i] = new u2[size];
     }
     ~MethodStack()
     {
         delete [] nesting_level;
-
         delete [] break_labels;
         delete [] continue_labels;
         delete [] finally_labels;
-        delete [] monitor_labels;
-
+        delete [] monitor_handler_pc;
+        delete [] monitor_start_pc;
         delete [] blocks;
 
         for (int i = 0; i < stack_size; i++)
@@ -183,10 +196,11 @@ public:
 private:
     int *nesting_level;
 
-    Label *break_labels,
-          *continue_labels,
-          *finally_labels,
-          *monitor_labels;
+    Label *break_labels;
+    Label *continue_labels;
+    Label *finally_labels;
+    u2 *monitor_handler_pc;
+    u2 *monitor_start_pc;
 
     AstBlock **blocks; // block symbols for current block
 
@@ -242,14 +256,14 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         max_stack = 0;
     }
 
-    void ProcessAbruptExit(int, TypeSymbol * = NULL);
+    bool ProcessAbruptExit(int, u2, TypeSymbol * = NULL);
     void CompleteLabel(Label &lab);
     void DefineLabel(Label &lab);
     void UseLabel(Label &lab, int length, int op_offset);
 
     bool IsLabelUsed(Label &lab)
     {
-        return (lab.uses.Length() > 0);
+        return lab.uses.Length() > 0;
     }
 
 
@@ -258,7 +272,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     bool IsReferenceType(TypeSymbol *p)
     {
-        return (! p -> Primitive() && p != control.null_type);
+        return ! p -> Primitive() && p != control.null_type;
     }
 
 
@@ -337,28 +351,37 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         AstPreUnaryExpression *pre = expression -> PreUnaryExpressionCast();
         AstPostUnaryExpression *post = expression -> PostUnaryExpressionCast();
 
-        AstExpression *lhs = assignment ? (assignment -> write_method ? (AstExpression *) NULL : assignment -> left_hand_side)
-                                        : pre ? (pre -> write_method ? (AstExpression *) NULL : pre -> expression)
-                                              : post ? (post -> write_method ? (AstExpression *) NULL : post -> expression)
-                                                     : expression;
+        AstExpression *lhs = (assignment
+                              ? (assignment -> write_method
+                                 ? (AstExpression *) NULL
+                                 : assignment -> left_hand_side)
+                              : pre
+                              ? (pre -> write_method
+                                 ? (AstExpression *) NULL : pre -> expression)
+                              : post
+                              ? (post -> write_method
+                                 ? (AstExpression *) NULL : post -> expression)
+                              : expression);
 
         //
         // Find symbol that is associated with expression. If the
         // subexpression has to be referenced via an access method then the
         // symbol is null.
         //
-        AstCastExpression *cast = (lhs ? lhs -> CastExpressionCast() : (AstCastExpression *) NULL);
-        Symbol *sym = cast ? cast -> expression -> symbol : (lhs ? lhs -> symbol : (Symbol *) NULL);
+        AstCastExpression *cast = (lhs ? lhs -> CastExpressionCast()
+                                   : (AstCastExpression *) NULL);
+        Symbol *sym = (cast ? cast -> expression -> symbol
+                       : (lhs ? lhs -> symbol : (Symbol *) NULL));
 
         //
         // If the expression associated with the left-hand side is null,
-        // then we have an access method.
-        // Otherwise, a left-hand side is either an array access,
-        // a field access or a name. In the case of a FieldAccess
-        // or name, the left-hand side is resolved into a variable.
-        // In the case of an array access, it is resolved into a type.
+        // then we have an access method. Otherwise, a left-hand side is
+        // either an array access, a field access or a name. In the case of
+        // a FieldAccess or name, the left-hand side is resolved into a
+        // variable. For an array access, it is resolved into a type.
         //
-        VariableSymbol *var = (sym ? sym -> VariableCast() : (VariableSymbol *) NULL);
+        VariableSymbol *var = (sym ? sym -> VariableCast()
+                               : (VariableSymbol *) NULL);
         return (! lhs ? LHS_METHOD
                 : ! var ? LHS_ARRAY
                 : var -> owner -> MethodCast() ? LHS_LOCAL
@@ -380,8 +403,8 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void StoreLocal(int varno, TypeSymbol *);
     void LoadLiteral(LiteralValue *, TypeSymbol *);
     void LoadImmediateInteger(int);
-    int  LoadVariable(int, AstExpression *);
-    int  LoadArrayElement(TypeSymbol *);
+    int LoadVariable(int, AstExpression *, bool = true);
+    int LoadArrayElement(TypeSymbol *);
     void StoreArrayElement(TypeSymbol *);
     void StoreField(AstExpression *);
     void StoreVariable(int, AstExpression *);
@@ -588,7 +611,8 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
 
     u2 FindInteger(IntLiteralValue *lit)
     {
-        return (lit && integer_constant_pool_index ? (*integer_constant_pool_index)[lit -> index] : 0);
+        return lit && (integer_constant_pool_index
+                       ? (*integer_constant_pool_index)[lit -> index] : 0);
     }
 
 
@@ -741,7 +765,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void AppendString(AstExpression *);
     void EmitStringAppendMethod(TypeSymbol *);
     void GenerateAccessMethod(MethodSymbol *);
-    void ChangeStack (int);
+    void ChangeStack(int);
     void ResolveAccess(AstExpression *);
     int  GenerateClassAccess(AstFieldAccess *, bool);
     void GenerateClassAccessMethod(MethodSymbol *);
