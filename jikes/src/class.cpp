@@ -146,12 +146,15 @@ void CPUtf8Info::Init(u2 size)
         case 0xf6: case 0xf7: case 0xf8: case 0xf9: case 0xfa: case 0xfb:
         case 0xfc: case 0xfd: case 0xfe: case 0xff: // invalid
             valid = false;
+#ifdef JIKES_DEBUG
             contents.Next() = '\\';
             contents.Next() = 'x';
             tmp = IntToString(bytes[i], 2).String();
             contents.Next() = tmp[0];
             contents.Next() = tmp[1];
+#endif // JIKES_DEBUG
             break;
+#ifdef JIKES_DEBUG
         case 0x09:
             contents.Next() = '\\';
             contents.Next() = 't';
@@ -186,57 +189,73 @@ void CPUtf8Info::Init(u2 size)
             contents.Next() = tmp[2];
             contents.Next() = tmp[3];
             break;
+#endif // JIKES_DEBUG
         default:
             if (bytes[i] < 0x7f) // printing ASCII
+            {
+#ifdef JIKES_DEBUG
                 contents.Next() = bytes[i];
+#endif // JIKES_DEBUG
+            }
             else if (bytes[i] <= 0xdf) // 2-byte source
             {
-                contents.Next() = '\\';
                 if (i + 1 == size || (bytes[i + 1] & 0xc0) != 0x80)
                 {
                     valid = false;
+#ifdef JIKES_DEBUG
+                    contents.Next() = '\\';
                     contents.Next() = 'x';
                     tmp = IntToString(bytes[i], 2).String();
                     contents.Next() = tmp[0];
                     contents.Next() = tmp[1];
+#endif // JIKES_DEBUG
                     break;
                 }
+#ifdef JIKES_DEBUG
                 u2 value = (bytes[i] & 0x1f) << 6;
                 value |= bytes[++i] & 0x3f;
+                contents.Next() = '\\';
                 contents.Next() = 'u';
                 tmp = IntToString(value, 4).String();
                 contents.Next() = tmp[0];
                 contents.Next() = tmp[1];
                 contents.Next() = tmp[2];
                 contents.Next() = tmp[3];
+#endif // JIKES_DEBUG
             }
             else // 3-byte source
             {
                 assert((bytes[i] & 0xf0) == 0xe0);
-                contents.Next() = '\\';
                 if (i + 2 >= size ||
                     (bytes[i + 1] & 0xc0) != 0x80 ||
                     (bytes[i + 2] & 0xc0) != 0x80)
                 {
                     valid = false;
+#ifdef JIKES_DEBUG
+                    contents.Next() = '\\';
                     contents.Next() = 'x';
                     tmp = IntToString(bytes[i], 2).String();
                     contents.Next() = tmp[0];
                     contents.Next() = tmp[1];
+#endif // JIKES_DEBUG
                     break;
                 }
+#ifdef JIKES_DEBUG
                 u2 value = (bytes[i] & 0x0f) << 12;
                 value |= (bytes[++i] & 0x3f) << 6;
                 value |= bytes[++i] & 0x3f;
+                contents.Next() = '\\';
                 contents.Next() = 'u';
                 tmp = IntToString(value, 4).String();
                 contents.Next() = tmp[0];
                 contents.Next() = tmp[1];
                 contents.Next() = tmp[2];
                 contents.Next() = tmp[3];
+#endif // JIKES_DEBUG
             }
         }
     }
+#ifdef JIKES_DEBUG
     if (! valid)
     {
         contents.Next() = '\\';
@@ -250,6 +269,7 @@ void CPUtf8Info::Init(u2 size)
         contents.Next() = '\\';
     }
     contents.Next() = 0;
+#endif // JIKES_DEBUG
 }
 
 
@@ -498,8 +518,7 @@ AttributeInfo::AttributeInfoTag AttributeInfo::Tag(const CPUtf8Info* name)
             return ATTRIBUTE_EnclosingMethod;
         break;
     case 17:
-        if (! strcmp(name -> Bytes(),
-                     StringConstant::U8S_AnnotationDefault))
+        if (! strcmp(name -> Bytes(), StringConstant::U8S_AnnotationDefault))
             return ATTRIBUTE_AnnotationDefault;
         break;
     case 18:

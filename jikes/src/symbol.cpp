@@ -1504,6 +1504,8 @@ TypeSymbol* TypeSymbol::UnboxedType(Control& control)
         return control.int_type;
     if (this == control.Boolean())
         return control.boolean_type;
+    if (this == control.Byte())
+        return control.byte_type;
     if (this == control.Short())
         return control.short_type;
     if (this == control.Character())

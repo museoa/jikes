@@ -190,23 +190,18 @@ class CPUtf8Info : public CPInfo
     const u2 len;
     u1* bytes; // bytes[length]
 
-    //
-    // Flattened to null-terminated char sequence, for debug output. Also
-    // used by attribute decoding, since all recognized attributes are ASCII.
-    //
-    ConvertibleArray<char> contents;
     bool valid;
 
 public:
     CPUtf8Info(const char* _bytes, unsigned length)
         : CPInfo(CONSTANT_Utf8)
         , len(length)
-        , contents(length)
         , valid(true)
     {
-        bytes = (len > 0) ? new u1[len] : 0;
+        bytes = new u1[len + 1];
         for (unsigned i = 0; i < len; i++)
             bytes[i] = (u1) _bytes[i];
+        bytes[len] = U_NULL;
         Init(len);
         assert(valid && length <= 0xffff);
     }
@@ -217,14 +212,12 @@ public:
     }
 
     //
-    // We guarantee that Bytes() is null-terminated and does not contain
-    // intermediate null characters. Furthermore, if the constant pool entry
-    // contains only printing ASCII (\u0020 through \u007f), with the
-    // exception of '"' or '\\', then strlen(Bytes()) == Length(). Otherwise,
-    // Bytes() is a stylized representation of the entry, which parses by
-    // the same rules as a Java String literal using escape characters.
+    // If this UTF8 was valid, then Bytes returns a NULL-terminated string
+    // that can be passed to strcmp() and friends, since Java's modified UTF8
+    // encoding ensures there are no embedded \0. However, since we already
+    // know Length(), calling strlen() on the result is inefficient.
     //
-    const char* Bytes() const { return contents.Array(); }
+    const char* Bytes() const { return (const char*) bytes; }
     u2 Length() const { return len; }
 
     virtual void Put(OutputBuffer& out) const
@@ -240,6 +233,15 @@ private:
     void Init(u2);
 
 #ifdef JIKES_DEBUG
+    //
+    // When debugging, contents represents the String literal (less the
+    // enclosing "") made of printing ASCII characters that will regenerate
+    // the same sequence of bytes, provided the UTF8 was valid.  Otherwise it
+    // contains some hints as to where the UTF8 went wrong. It is a
+    // NULL-terminated sequence, with no embedded NULLs.
+    //
+    ConvertibleArray<char> contents;
+
 public:
     virtual void Print(const ConstantPool&) const
     {
@@ -1033,10 +1035,10 @@ public:
         assert(! classes[i].inner_name_index ||
                (constant_pool[classes[i].inner_name_index] -> Tag() ==
                 CPInfo::CONSTANT_Utf8));
-        return classes[i].inner_name_index
-            ? ((const CPUtf8Info*)
-               constant_pool[classes[i].inner_name_index]) -> Bytes()
-            : (const char*) NULL;
+        if (! classes[i].inner_name_index)
+            return NULL;
+        return ((const CPUtf8Info*)
+                constant_pool[classes[i].inner_name_index]) -> Bytes();
     }
     u2 NameLength(u2 i, const ConstantPool& constant_pool) const
     {
@@ -3104,8 +3106,10 @@ public:
         return i;
     }
     //
-    // Gets max(len, rest of buffer) bytes, and stores it in a new u1[] in
-    // the previously uninitialized bytes.  Returns the size of bytes.  Caller
+    // Gets max(len, rest of buffer) bytes, and stores it in a new u1[len + 1]
+    // in the previously uninitialized bytes.  The extra byte is set to U_NULL,
+    // so if bytes had no embedded NULLs, it can be cast to (const char*) and
+    // used in methods like strlen(). Returns the size of bytes, and caller
     // is responsible for calling delete[] on bytes.
     //
     inline u4 GetN(u1*& bytes, u4 len)
@@ -3115,13 +3119,10 @@ public:
             valid = false;
             len = buffer_tail - buffer;
         }
-        if (! len)
-        {
-            bytes = NULL;
-            return 0;
-        }
-        bytes = new u1[len];
-        memcpy(bytes, buffer, len);
+        bytes = new u1[len + 1];
+        if (len)
+            memcpy(bytes, buffer, len);
+        bytes[len] = U_NULL;
         buffer += len;
         return len;
     }

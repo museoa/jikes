@@ -1,3 +1,14 @@
+2004-04-04  Eric Blake  <ebb9@byu.net>
+
+	* src/class.h (GetN): Return NULL-terminated byte arrays. 
+	(CPUtf8Info::Bytes): Change to reflect the actual contents of the
+	bytes array rather than debugging view - fixes bug 3913.
+	(CPUtf8Info::contents, Init): Use contents only when debugging.
+	* src/class.cpp: Update all callers.
+	* src/symbol.cpp (UnboxedType): Adds missing Byte.
+	* src/error.cpp: Fix some typos.
+	(PrintFile): Be forgiving of NULL filename.
+
 2004-04-04  Elliott Hughes  <enh@acm.org>
 
 	* src/symbol.cpp (BoxedType): Adds the missing primitive type 'byte'.
@@ -9,14 +20,15 @@
 
 2004-04-03  Elliott Hughes  <enh@acm.org>
 
-	* src/error.cpp: Correctly fix the text of *all* package-related errors.
+	* src/error.cpp: Correctly fix the text of *all* package-related
+	errors.
 
 2004-04-03  Elliott Hughes  <enh@acm.org>
 
-	* src/diagnose.cpp, src/error.cpp: Fix +D so that it outputs the correct
-	column numbers, instead of always reporting column 0 because we hadn't
-	re-read the input to be able to translate token indexes into column
-	numbers.
+	* src/diagnose.cpp, src/error.cpp: Fix +D so that it outputs the
+	correct column numbers, instead of always reporting column 0
+	because we hadn't re-read the input to be able to translate token
+	indexes into column numbers.
 
 2004-04-02  Elliott Hughes  <enh@acm.org>
 

@@ -994,10 +994,13 @@ static void FormatClasspath(ErrorString& s, Control& control)
 static void PrintFile(ErrorString& s, const wchar_t* filename,
                       const wchar_t slash_char)
 {
-    while (*filename)
+    if (filename)
     {
-        wchar_t ch = *filename++;
-        s << (ch != U_SLASH ? ch : slash_char);
+        while (*filename)
+        {
+            wchar_t ch = *filename++;
+            s << (ch != U_SLASH ? ch : slash_char);
+        }
     }
 }
 
@@ -2001,8 +2004,8 @@ void SemanticError::InitializeMessages()
 
     // Package related errors.
     messages[WRONG_TYPE_IN_CLASSFILE] =
-        "The file \"%1.class\" was found in directory \"%F2\" specified in the"
-        "CLASSPATH. However, that class file specifies the type \"%4\".";
+        "The file \"%1.class\" was found in directory \"%F2\" specified in "
+        "the CLASSPATH. However, that class file specifies the type \"%4\".";
     messages[TYPE_NAME_MISMATCH] =
         "The name of the type specified, \"%T1\", does not match "
         "the name found in the class file: \"%3\".";
@@ -2067,9 +2070,9 @@ void SemanticError::InitializeMessages()
         "The innermost enclosing instance of type \"%T1\" "
         "is \"this\", which is not yet initialized here.";
     messages[ENCLOSING_INSTANCE_ACCESS_ACROSS_STATIC_REGION] =
-        "An instance of \"%T1"
-        ".this\" exists, but is not accessible at this location because an "
-        "intermediate anonymous type occurs in an explicit constructor call.";
+        "An instance of \"%T1.this\" exists, but is not accessible at this "
+        "location because an intermediate anonymous type occurs in an "
+        "explicit constructor call.";
     messages[ENCLOSING_INSTANCE_NOT_ACCESSIBLE] =
         "An instance of \"%T1.this\" is not accessible here. In general, an "
         "enclosing instance is accessible only in the body of an instance "
