@@ -1,5 +1,12 @@
 2001-05-06  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/bytecode.cpp (EmitPostUnaryExpressionField)
+	(EmitPreUnaryIncrementExpressionArray):
+	Fix bad bytecodes when performing increment
+	operators on sub-integers (bugs 127, 223).
+
+2001-05-06  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/definite.cpp (DefiniteBlock)
 	(DefiniteSwitchStatement, DefiniteTryStatement):
 	Changed the definite algorithm to quit checking

@@ -3887,6 +3887,7 @@ void ByteCode::EmitPostUnaryExpressionField(int kind, AstPostUnaryExpression *ex
     {
         PutOp(OP_ICONST_1);
         PutOp(expression -> post_unary_tag == AstPostUnaryExpression::PLUSPLUS ? OP_IADD : OP_ISUB);
+        EmitCast(expression_type, this_control.int_type);
     }
     else if (expression_type == this_control.long_type)
     {
@@ -4176,10 +4177,10 @@ void ByteCode::EmitPreUnaryIncrementExpression(AstPreUnaryExpression *expression
 
 
 //
-//    AstExpression *expression;
-// POST_UNARY on name
-// load value of variable, do increment or decrement, duplicate, then store back, leaving original value
-// on top of stack.
+// AstExpression *expression;
+// PRE_UNARY on name
+// load value of variable, do increment or decrement, duplicate, then store
+// back, leaving new value on top of stack.
 //
 void ByteCode::EmitPreUnaryIncrementExpressionSimple(int kind, AstPreUnaryExpression *expression, bool need_value)
 {
@@ -4263,9 +4264,9 @@ void ByteCode::EmitPreUnaryIncrementExpressionArray(AstPreUnaryExpression *expre
          PutOp(OP_BALOAD);
          PutOp(OP_ICONST_1);
          PutOp(expression -> pre_unary_tag == AstPreUnaryExpression::PLUSPLUS ? OP_IADD : OP_ISUB);
+         PutOp(OP_I2B);
          if (need_value)
              PutOp(OP_DUP_X2);
-         PutOp(OP_I2B);
          PutOp(OP_BASTORE);
     }
     else if (type == this_control.char_type)
@@ -4273,9 +4274,9 @@ void ByteCode::EmitPreUnaryIncrementExpressionArray(AstPreUnaryExpression *expre
          PutOp(OP_CALOAD);
          PutOp(OP_ICONST_1);
          PutOp(expression -> pre_unary_tag == AstPreUnaryExpression::PLUSPLUS ? OP_IADD : OP_ISUB);
+         PutOp(OP_I2C);
          if (need_value)
              PutOp(OP_DUP_X2);
-         PutOp(OP_I2C);
          PutOp(OP_CASTORE);
     }
     else if (type == this_control.short_type)
@@ -4283,9 +4284,9 @@ void ByteCode::EmitPreUnaryIncrementExpressionArray(AstPreUnaryExpression *expre
          PutOp(OP_SALOAD);
          PutOp(OP_ICONST_1);
          PutOp(expression -> pre_unary_tag == AstPreUnaryExpression::PLUSPLUS ? OP_IADD : OP_ISUB);
+         PutOp(OP_I2S);
          if (need_value)
              PutOp(OP_DUP_X2);
-         PutOp(OP_I2S);
          PutOp(OP_SASTORE);
     }
     else if (type == this_control.long_type)
