@@ -278,6 +278,8 @@ DefiniteAssignmentSet *Semantic::DefinitePLUSPLUSOrMINUSMINUS(AstExpression *exp
         variable = (read_method
                     ? (VariableSymbol *) read_method -> accessed_member
                     : expr -> symbol -> VariableCast());
+        while (variable && variable -> accessed_local)
+            variable = variable -> accessed_local;
     }
 
     //
@@ -571,6 +573,8 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentExpression(AstExpression *exp
     VariableSymbol *variable = (left_hand_side -> symbol
                                 ? left_hand_side -> symbol -> VariableCast()
                                 : (VariableSymbol *) NULL);
+    while (variable && variable -> accessed_local)
+        variable = variable -> accessed_local;
     int index = 0;
 
     //

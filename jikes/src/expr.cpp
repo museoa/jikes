@@ -1684,6 +1684,15 @@ void Semantic::CreateAccessToScopedVariable(AstSimpleName *simple_name,
 
     VariableSymbol *variable = (VariableSymbol *) simple_name -> symbol;
 
+    if (variable -> owner -> MethodCast() && ! variable -> ACC_FINAL())
+    {
+        //
+        // We've already reported the error, in FindVariableInEnvironment.
+        //
+        simple_name -> symbol = control.no_type;
+        return;
+    }
+
     AstExpression *access_expression;
     if (variable -> ACC_STATIC())
     {
@@ -1871,7 +1880,9 @@ void Semantic::ProcessSimpleName(Ast *expr)
 
     AstSimpleName *simple_name = (AstSimpleName *) expr;
     SemanticEnvironment *where_found;
-    VariableSymbol *variable_symbol = FindVariableInEnvironment(where_found, state_stack.Top(), simple_name -> identifier_token);
+    VariableSymbol *variable_symbol =
+        FindVariableInEnvironment(where_found, state_stack.Top(),
+                                  simple_name -> identifier_token);
     if (variable_symbol)
     {
         assert(variable_symbol -> IsTyped());
