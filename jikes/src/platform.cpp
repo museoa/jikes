@@ -213,7 +213,7 @@ void FloatingPointCheck()
 
 int SystemStat(const char *name, struct stat *stat_struct)
 {
-  return stat(name, stat_struct);
+  return ::stat(name, stat_struct);
 }
 FILE *SystemFopen(const char *name, const char *mode)
 {
@@ -262,10 +262,10 @@ int SystemMkdirhierForFile(char *filename)
         {
             int result = 0;
             filename[i] = U_NULL;
-            if (! ::SystemIsDirectory(filename))
+            if (! SystemIsDirectory(filename))
             {
                 Ostream() << "making directory " << filename << "\n";
-                result = ::SystemMkdirhier(filename);
+                result = SystemMkdirhier(filename);
             }
             filename[i] = U_SLASH;
             return result;

@@ -1,3 +1,9 @@
+2001-10-26  Chris Dennis  <Chris.Dennis@invidi.com>
+
+	* src/platform.cpp (SystemFopen, SystemMkdirhierForFile):
+	* src/jikesapi.cpp (JikesAPI::stat): Fix namespace issues
+	mentioned in bug 2250 - patch 210.
+
 2001-10-25  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/ast.h:

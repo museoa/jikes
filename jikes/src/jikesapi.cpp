@@ -239,7 +239,7 @@ const char *JikesError::getSeverityString()
 /**
  *  By default just ask the system for stat information.
  */
-int JikesAPI::stat(const char *fileName,struct stat *status)
+int JikesAPI::stat(const char *fileName, struct ::stat *status)
 {
     return SystemStat(fileName,status);
 }
