@@ -125,7 +125,7 @@ static char*
       TK_DOT_STRING[] = "TK_DOT",
       TK_EQUAL_STRING[] = "TK_EQUAL",
       TK_ERROR_STRING[] = "TK_ERROR",
-      TK_EOF_STRING[] = "TK_EOF"
+      TK_EOF_STRING[] = "TK_EOF";
 
 static char *token_type(unsigned char kind)
 {
