@@ -100,8 +100,6 @@ void Semantic::ProcessVariableInitializer(AstVariableDeclarator *variable_declar
             }
         }
     }
-
-    return;
 }
 
 
@@ -167,8 +165,6 @@ void Semantic::ProcessArrayInitializer(AstArrayInitializer *array_initializer, T
             }
         }
     }
-
-    return;
 }
 
 

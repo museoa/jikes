@@ -135,7 +135,7 @@ void Semantic::ProcessTypeNames()
     //
     for (int k = 0; k < compilation_unit -> NumTypeDeclarations(); k++)
     {
-        LexStream::TokenIndex identifier_token;
+        LexStream::TokenIndex identifier_token = LexStream::Badtoken();
         TypeSymbol *type = NULL;
 
         Ast *type_declaration = compilation_unit -> TypeDeclaration(k);
@@ -1161,14 +1161,17 @@ void Semantic::ReportTypeInaccessible(LexStream::TokenIndex left_tok, LexStream:
                    right_tok,
                    type -> ContainingPackage() -> PackageName(),
                    type -> ExternalName(),
-                   (type -> ACC_PRIVATE() ? StringConstant::US_private : (type -> ACC_PROTECTED() ? StringConstant::US_protected : StringConstant::US_default)));
+                   type -> AccessString());
 }
 
 
 TypeSymbol *Semantic::FindNestedType(TypeSymbol *type, LexStream::TokenIndex identifier_token)
 {
-    if (type == control.null_type || type == control.no_type || type -> Primitive())
+    if (type == control.null_type || type == control.no_type ||
+        type -> Primitive())
+    {
         return NULL;
+    }
 
     NameSymbol *name_symbol = lex_stream -> NameSymbol(identifier_token);
 
@@ -1176,8 +1179,9 @@ TypeSymbol *Semantic::FindNestedType(TypeSymbol *type, LexStream::TokenIndex ide
         ComputeTypesClosure(type, identifier_token);
     TypeShadowSymbol *type_shadow_symbol = type -> expanded_type_table -> FindTypeShadowSymbol(name_symbol);
 
-    return (type_shadow_symbol ? FindTypeInShadow(type_shadow_symbol, identifier_token)
-                               : type -> FindTypeSymbol(name_symbol));
+    return (type_shadow_symbol
+            ? FindTypeInShadow(type_shadow_symbol, identifier_token)
+            : type -> FindTypeSymbol(name_symbol));
 }
 
 
@@ -1832,8 +1836,11 @@ void Semantic::CompleteSymbolTable(AstInterfaceDeclaration *interface_declaratio
         // one class variable that is declared with an initialization
         // expression that is not a constant expression.
         //
-        if ((! init_method) && NeedsInitializationMethod(interface_declaration -> ClassVariable(k)))
+        if (! init_method &&
+            NeedsInitializationMethod(interface_declaration -> ClassVariable(k)))
+        {
             init_method = GetStaticInitializerMethod();
+        }
     }
 
     //
@@ -2387,7 +2394,7 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_d
             return;
     }
 
-    TypeSymbol *old_type;
+    TypeSymbol *old_type = NULL;
     int k;
     for (k = 0; k < compilation_unit -> NumTypeDeclarations(); k++)
     {
@@ -4292,8 +4299,6 @@ inline void Semantic::ProcessInitializer(AstBlock *initializer_block,
 
     LocalBlockStack().Push(initializer_block);
     LocalSymbolTable().Push(init_method -> block_symbol -> Table());
-
-    int start_num_errors = NumErrors();
 
     AstConstructorBlock *constructor_block = block_body -> ConstructorBlockCast();
     if (constructor_block)

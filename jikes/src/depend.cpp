@@ -300,7 +300,7 @@ void TypeDependenceChecker::OutputMake(FileSymbol *file_symbol)
     //
     //
     char *name;
-    char *buf;
+    char *buf = NULL;
     int length;
 
     if (control -> option.directory == NULL)

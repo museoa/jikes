@@ -1053,7 +1053,15 @@ void ByteCode::DeclareLocalVariable(AstVariableDeclarator *declarator)
     }
 
     if (declarator -> symbol -> initial_value)
+    {
+        //
+        // Optimization: If we are not tracking local variable names, we do
+        // not need to waste space on a constant as it is always inlined.
+        //
+        if (! (control.option.g & JikesOption::VARS))
+            return;
         LoadLiteral(declarator -> symbol -> initial_value, declarator -> symbol -> Type());
+    }
     else if (declarator -> variable_initializer_opt)
     {
         AstArrayCreationExpression *ace = declarator -> variable_initializer_opt -> ArrayCreationExpressionCast();
@@ -2942,10 +2950,10 @@ void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
     // exception handler if forName fails (optimization: the
     // ClassNotFoundException will already be on the stack):
     //
+    //  invokevirtual  java/lang/Throwable.getMessage()Ljava/lang/String;
     //  new            java/lang/NoClassDefFoundError
     //  dup_x1         save copy to throw, but below string arg to constructor
-    //  swap           arrange the stack correctly
-    //  invokevirtual  java/lang/Throwable.getMessage()Ljava/lang/String;
+    //  swap           swap string and new object to correct order
     //  invokespecial  java/lang/NoClassDefFoundError.<init>(Ljava/lang/String;)V
     //  athrow         throw the correct exception
     PutOp(OP_ALOAD_0);
@@ -2954,13 +2962,13 @@ void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
     PutOp(OP_ARETURN);
 
     ChangeStack(1); // account for the exception on the stack
+    PutOp(OP_INVOKEVIRTUAL);
+    PutU2(RegisterLibraryMethodref(control.Throwable_getMessageMethod()));
+    ChangeStack(1); // account for the returned string
     PutOp(OP_NEW);
     PutU2(RegisterClass(control.NoClassDefFoundError() -> fully_qualified_name));
     PutOp(OP_DUP_X1);
     PutOp(OP_SWAP);
-    PutOp(OP_INVOKEVIRTUAL);
-    PutU2(RegisterLibraryMethodref(control.Throwable_getMessageMethod()));
-    ChangeStack(1); // account for the returned string
     PutOp(OP_INVOKESPECIAL);
     PutU2(RegisterLibraryMethodref(control.NoClassDefFoundError_InitMethod()));
     ChangeStack(-1); // account for the argument to the constructor
@@ -3014,7 +3022,8 @@ int ByteCode::GenerateClassAccess(AstFieldAccess *field_access, bool need_value)
     EmitBranch(OP_IFNONNULL, label);
 
     PutOp(OP_POP);
-    LoadLiteral(field_access -> base -> Type() -> ClassLiteralName(), control.String());
+    LoadLiteral(field_access -> base -> Type() -> ClassLiteralName(),
+                control.String());
     PutOp(OP_INVOKESTATIC);
     CompleteCall(unit_type -> outermost_type -> ClassLiteralMethod(), 1);
     PutOp(OP_DUP);
@@ -3241,16 +3250,11 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
         {
             PutOp(OP_NEW);
             PutU2(RegisterClass(control.StringBuffer() -> fully_qualified_name));
-            PutOp(OP_DUP);
+            PutOp(OP_DUP_X1);
             PutOp(OP_INVOKESPECIAL);
             PutU2(RegisterLibraryMethodref(control.StringBuffer_InitMethod()));
-            PutOp(OP_SWAP); // swap address if buffer and string to update.
             EmitStringAppendMethod(control.String());
             AppendString(assignment_expression -> expression);
-
-            //
-            // convert string buffer to string
-            //
             PutOp(OP_INVOKEVIRTUAL);
             PutU2(RegisterLibraryMethodref(control.StringBuffer_toStringMethod()));
             ChangeStack(1); // account for return value
@@ -3503,10 +3507,13 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
     //
     // special case string concatenation
     //
-    if (expression -> binary_tag == AstBinaryExpression::PLUS &&
-        (IsReferenceType(expression -> left_expression -> Type()) || IsReferenceType(expression -> right_expression -> Type())))
+    if (expression -> Type() == control.String())
     {
+        assert(expression -> binary_tag == AstBinaryExpression::PLUS);
         ConcatenateString(expression);
+        PutOp(OP_INVOKEVIRTUAL);
+        PutU2(RegisterLibraryMethodref(control.StringBuffer_toStringMethod()));
+        ChangeStack(1); // account for return value
         return 1;
     }
 
@@ -4725,84 +4732,82 @@ void ByteCode::EmitSuperInvocation(AstSuperCall *super_call)
 void ByteCode::ConcatenateString(AstBinaryExpression *expression)
 {
     //
-    // generate code to concatenate strings, by generating a string buffer
+    // Generate code to concatenate strings, by generating a string buffer
     // and appending the arguments before calling toString, i.e.,
-    //  s1+s2 compiles to
+    //  s1+s2
+    // compiles to
     //  new StringBuffer().append(s1).append(s2).toString();
-    // Look for sequences of concatenation to use a single buffer where
-    // possible. Call appropriate constructor depending on whether or not
-    // first operand is a string.
+    // Use recursion to share a single buffer where possible.
     //
-    PutOp(OP_NEW);
-    PutU2(RegisterClass(control.StringBuffer() -> fully_qualified_name));
-    PutOp(OP_DUP);
-    if (expression -> left_expression -> IsConstant())
+    AstExpression *left_expr = StripNops(expression -> left_expression);
+    if (left_expr -> Type() == control.String() &&
+	left_expr -> BinaryExpressionCast())
     {
-        assert(expression -> left_expression -> Type() == control.String());
-
-        EmitExpression(expression -> left_expression);
-        PutOp(OP_INVOKESPECIAL);
-        PutU2(RegisterLibraryMethodref(control.StringBuffer_InitWithStringMethod()));
-        ChangeStack(-1); // account for the argument
+        ConcatenateString((AstBinaryExpression *) left_expr);
     }
     else
     {
-        PutOp(OP_INVOKESPECIAL);
-        PutU2(RegisterLibraryMethodref(control.StringBuffer_InitMethod()));
-
-        AppendString(expression -> left_expression);
+        PutOp(OP_NEW);
+        PutU2(RegisterClass(control.StringBuffer() -> fully_qualified_name));
+        PutOp(OP_DUP);
+        if (left_expr -> IsConstant())
+        {
+            //
+            // Optimizations: if the left term is "", just append the right
+            // term. Otherwise, use new StringBuffer(String) on the left term.
+            // This is not normally safe, as new StringBuffer(null) throws
+            // a NullPointerException, but constants are non-null!
+            //
+            assert(left_expr -> Type() == control.String() &&
+                   ! expression -> right_expression -> IsConstant());
+            if (((Utf8LiteralValue *) left_expr -> value) -> length == 0)
+            {
+                PutOp(OP_INVOKESPECIAL);
+                PutU2(RegisterLibraryMethodref(control.StringBuffer_InitMethod()));
+            }
+            else
+            {
+                EmitExpression(left_expr);
+                PutOp(OP_INVOKESPECIAL);
+                PutU2(RegisterLibraryMethodref(control.StringBuffer_InitWithStringMethod()));
+                ChangeStack(-1); // account for the argument
+            }
+        }
+        else
+        {
+            PutOp(OP_INVOKESPECIAL);
+            PutU2(RegisterLibraryMethodref(control.StringBuffer_InitMethod()));
+            AppendString(left_expr);
+        }
     }
 
     AppendString(expression -> right_expression);
-
-    //
-    // convert string buffer to string
-    //
-    PutOp(OP_INVOKEVIRTUAL);
-    PutU2(RegisterLibraryMethodref(control.StringBuffer_toStringMethod()));
-    ChangeStack(1); // account for return value
 }
 
 
 void ByteCode::AppendString(AstExpression *expression)
 {
+    expression = StripNops(expression);
     TypeSymbol *type = expression -> Type();
 
     if (expression -> IsConstant())
     {
         assert(type == control.String());
-        LoadConstantAtIndex(RegisterString((Utf8LiteralValue *) expression -> value));
+        Utf8LiteralValue *value = (Utf8LiteralValue *) expression -> value;
+
+        if (value -> length == 0)
+            return;  // Optimization: do nothing when appending "".
+        LoadConstantAtIndex(RegisterString(value));
     }
     else
     {
         AstBinaryExpression *binary_expression = expression -> BinaryExpressionCast();
-        if (binary_expression)
+        if (binary_expression && type == control.String())
         {
-            if (binary_expression -> binary_tag == AstBinaryExpression::PLUS &&
-                (IsReferenceType(binary_expression -> left_expression -> Type()) ||
-                 IsReferenceType(binary_expression -> right_expression -> Type())))
-            {
-                AppendString(binary_expression -> left_expression);
-                AppendString(binary_expression -> right_expression);
-
-                return;
-            }
-        }
-
-        if (expression -> ParenthesizedExpressionCast())
-        {
-            AppendString(expression -> ParenthesizedExpressionCast() -> expression);
+            assert(binary_expression -> binary_tag == AstBinaryExpression::PLUS);
+            AppendString(binary_expression -> left_expression);
+            AppendString(binary_expression -> right_expression);
             return;
-        }
-
-        AstCastExpression *cast = expression -> CastExpressionCast();
-        if (cast) // here if cast expression, verify that converting to string
-        {
-            if (cast -> kind == Ast::CAST && cast -> Type() == control.String())
-            {
-                AppendString(cast -> expression);
-                return;
-            }
         }
 
         EmitExpression(expression);
@@ -4815,10 +4820,10 @@ void ByteCode::AppendString(AstExpression *expression)
 void ByteCode::EmitStringAppendMethod(TypeSymbol *type)
 {
     //
-    // Find appropriate append routine to add to string buffer
-    // Do not use append(char[]), because that inserts the contents instead
-    // of the correct char[].toString()
-    // Treating null as a String is slightly more efficient than as an Object
+    // Find appropriate append routine to add to string buffer. Do not use
+    // append(char[]), because that inserts the contents instead of the
+    // correct char[].toString(). Treating null as a String is slightly more
+    // efficient than as an Object.
     //
     MethodSymbol *append_method =
         (type == control.char_type ? control.StringBuffer_append_charMethod()

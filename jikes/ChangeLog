@@ -1,5 +1,22 @@
 2001-12-07  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/access.h:
+	* src/body.cpp:
+	* src/decl.cpp:
+	* src/definite.cpp:
+	* src/depend.cpp:
+	* src/diagnose.cpp:
+	* src/getclass.cpp:
+	* src/init.cpp: Code cleanup, in part from -Wall compilation.
+	* src/bytecode.cpp (DeclareLocalVariable): Avoid assigning unused
+	constants when not compiling with -g - bug 2482.
+	(EmitAssignmentExpression, EmitBinaryExpression),
+	(ConcatenateString, AppendString): Improve String concatenation,
+	to optimize longer concats starting with a constant, and to avoid
+	concatenating "" - bug 1788, patch 237.
+
+2001-12-07  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/bytecode.cpp (CompileClass): Remove the emission of Miranda
 	methods (generated place-holder abstract methods in abstract
 	classes which inherit but don't declare the method) - bug 2356,

@@ -483,7 +483,7 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentExpression(AstExpression *exp
     VariableSymbol *variable = (left_hand_side -> symbol
                                 ? left_hand_side -> symbol -> VariableCast()
                                 : (VariableSymbol *) NULL);
-    int index;
+    int index = 0;
 
     //
     // An array access is never considered to be final. Since no variable
@@ -748,35 +748,33 @@ void Semantic::DefiniteLocalVariableDeclarationStatement(Ast *stmt)
         VariableSymbol *variable_symbol = variable_declarator -> symbol;
         if (variable_symbol)
         {
+            int index = variable_symbol -> LocalVariableIndex();
             if (control.option.g & JikesOption::VARS)
             {
-                assert(definite_block_stack -> TopLocalVariables()[variable_symbol -> LocalVariableIndex()] == NULL);
+                assert(definite_block_stack -> TopLocalVariables()[index] == NULL);
 #ifdef DUMP
                 Coutput << "(3.5) Local Variable \""
-                        << variable_symbol -> Name() << " #"
-                        << variable_symbol -> LocalVariableIndex()
+                        << variable_symbol -> Name() << " #" << index
                         << "\" is declared at line "
                         << lex_stream -> Line(variable_declarator -> LeftToken())
                         << endl;
 #endif
-                definite_block_stack -> TopLocalVariables()[variable_symbol -> LocalVariableIndex()] = variable_symbol;
-                definite_block_stack -> TopLocallyDefinedVariables() -> AddElement(variable_symbol -> LocalVariableIndex());
+                definite_block_stack -> TopLocalVariables()[index] = variable_symbol;
+                definite_block_stack -> TopLocallyDefinedVariables() -> AddElement(index);
                 AstBlock *block = definite_block_stack -> TopBlock();
                 block -> AddLocallyDefinedVariable(variable_symbol);
             }
 
             if (variable_declarator -> variable_initializer_opt)
             {
-                int index = variable_symbol -> LocalVariableIndex();
                 DefiniteVariableInitializer(variable_declarator);
                 definitely_assigned_variables -> AssignElement(index);
-
             }
             else
             {
-                definitely_assigned_variables -> ReclaimElement(variable_symbol -> LocalVariableIndex());
+                definitely_assigned_variables -> ReclaimElement(index);
                 if (variable_symbol -> ACC_FINAL())
-                    blank_finals -> AddElement(variable_symbol -> LocalVariableIndex());
+                    blank_finals -> AddElement(index);
             }
         }
     }

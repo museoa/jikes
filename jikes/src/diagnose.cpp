@@ -1464,7 +1464,7 @@ RepairCandidate DiagnoseParser::SecondaryPhase(TokenObject error_token)
         j,
         k,
         top,
-        next_last_index,
+        next_last_index = 0,
         last_index;
 
     candidate.symbol = 0;

@@ -178,7 +178,9 @@ void Semantic::ProcessLocalVariableDeclarationStatement(Ast *stmt)
     AccessFlags access_flags = ProcessLocalModifiers(local_decl);
 
     AstPrimitiveType *primitive_type = actual_type -> PrimitiveTypeCast();
-    TypeSymbol *field_type = (primitive_type ? FindPrimitiveType(primitive_type) : MustFindType(actual_type));
+    TypeSymbol *field_type = (primitive_type
+                              ? FindPrimitiveType(primitive_type)
+                              : MustFindType(actual_type));
 
     for (int i = 0; i < local_decl -> NumVariableDeclarators(); i++)
     {
@@ -210,13 +212,16 @@ void Semantic::ProcessLocalVariableDeclarationStatement(Ast *stmt)
             symbol -> SetOwner(ThisMethod());
             symbol -> declarator = variable_declarator;
             BlockSymbol *block = LocalBlockStack().TopBlock() -> block_symbol;
-            symbol -> SetLocalVariableIndex(block -> max_variable_index++); // Assigning a local_variable_index to a variable
-                                                                            // also marks it complete as a side-effect.
+
+            //
+            // Assigning a local_variable_index to a variable also marks it
+            // complete as a side-effect.
+            //
+            symbol -> SetLocalVariableIndex(block -> max_variable_index++);
             if (control.IsDoubleWordType(symbol -> Type()))
                 block -> max_variable_index++;
 
-            if (variable_declarator -> variable_initializer_opt)
-                 ProcessVariableInitializer(variable_declarator);
+            ProcessVariableInitializer(variable_declarator);
         }
     }
 
@@ -2131,8 +2136,6 @@ void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment, AstClas
         }
     }
 
-    AstBlock *last_block_body = (class_body -> NumBlocks() > 0 ? class_body -> Block(class_body -> NumBlocks() - 1)
-                                                               : (AstBlock *) NULL);
     if (class_body -> NumConstructors() == 0)
     {
         //
