@@ -1,4 +1,4 @@
-*** Jikes 1.20 was released ???
+*** Jikes 1.20 was released 18 April 2004
 
 Many new diagnostics have been added. These include detection of
 overflow in integer constant expressions, serialization-related

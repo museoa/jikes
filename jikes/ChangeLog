@@ -1,3 +1,7 @@
+2004-04-18  Chris Abbey  <jikes@cabbey.net>
+
+	Release 1.20.
+
 2004-04-14  Chris Abbey	 <jikes@cabbey.net>
 
 	* src/error.cpp (SemanticError::InitializeMessageGroups): turn
