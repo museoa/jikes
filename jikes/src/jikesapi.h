@@ -9,7 +9,10 @@ class JikesOption
 {    
  public:
     
+    char *bootclasspath;
+    char *extdirs;
     char *classpath;
+    char *sourcepath;
     char *directory;
     char *encoding;
 

@@ -46,7 +46,8 @@ public:
                   *unnamed_package;
     int dot_classpath_index;
     Tuple<PathSymbol *> classpath;
-    Tuple<wchar_t *> bad_zip_filenames,
+    Tuple<wchar_t *> bad_dirnames,
+                     bad_zip_filenames,
                      bad_input_filenames,
                      unreadable_input_filenames;
 
@@ -535,7 +536,7 @@ public:
     PackageSymbol *ProcessPackage(wchar_t *);
 
     DirectorySymbol *FindSubdirectory(PathSymbol *, wchar_t *, int);
-    DirectorySymbol *ProcessSubdirectories(wchar_t *, int);
+    DirectorySymbol *ProcessSubdirectories(wchar_t *, int, bool);
 
 private:
 
@@ -589,6 +590,10 @@ private:
     void ProcessGlobals();
     void ProcessUnnamedPackage();
     void ProcessPath();
+    void ProcessBootClassPath();
+    void ProcessExtDirs();
+    void ProcessClassPath();
+    void ProcessSourcePath();
     TypeSymbol *GetPrimitiveType(wchar_t *, char *);
     void ProcessSystemInformation();
 

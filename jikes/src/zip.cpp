@@ -205,7 +205,7 @@ inline DirectorySymbol *Zip::ProcessSubdirectoryEntries(DirectorySymbol *directo
         NameSymbol *name_symbol = control.FindOrInsertName(directory_name, end - start);
         DirectorySymbol *subdirectory_symbol = directory_symbol -> FindDirectorySymbol(name_symbol);
         if (! subdirectory_symbol)
-            subdirectory_symbol = directory_symbol -> InsertDirectorySymbol(name_symbol);
+            subdirectory_symbol = directory_symbol -> InsertDirectorySymbol(name_symbol, false);
         directory_symbol = subdirectory_symbol;
     }
 
@@ -383,7 +383,8 @@ Zip::~Zip()
 //
 void Zip::ReadDirectory()
 {
-    root_directory = new DirectorySymbol(control.dot_name_symbol, NULL);
+    // Not a sourcepath (since we don't read java files from zip files)
+    root_directory = new DirectorySymbol(control.dot_name_symbol, NULL, false);
 
     if (IsValid())
     {

@@ -4,6 +4,50 @@
 	u2 type instead of wchar_t type to address
 	a 16 bit value from a char*.
 
+2001-04-23  Adam Hawthorne  <adamh@basis.com>
+
+	* doc/jikes.1: Added options and changed text
+	at the bottom to reflect those options.
+	* src/control.cpp (Control):
+	* src/control.h (Control):
+	Add support for distinguishing
+	directories specified with -sourcepath option.
+	Add bad_dirnames for better error reporting
+	because of the way the new options work. Add
+	new methods ProcessBootClassPath(),
+	ProcessExtDirs(), ProcessClassPath(), and
+	ProcessSourcePath().
+	* src/jikes.cpp (main): Added new options
+	to usage message.
+	* src/jikesapi.cpp (JikesOption):
+	* src/jikesapi.h (JikesOption):
+	Add new member variables bootclasspath,
+	extdirs, and sourcepath.
+	* src/option.cpp (Option): Add parsing of
+	new options
+	* src/symbol.cpp (DirectorySymbol, SymbolTable):
+	* src/symbol.h (DirectorySymbol):
+	Add source_dir_only flag in DirectorySymbol.
+	Add new source_dir_only_ parameter to
+	DirectorySymbol constructor, and check it
+	in ReadDirectory(). Change
+	SymbolTable::InsertDirectorySymbol() and
+	DirectorySymbol::InsertDirectorySymbol() to
+	require the flag.
+	* src/system.cpp (Control):
+	Change calls DirectorySymbol constructor,
+	DirectorySymbol::InsertDirectorySymbol()
+	and SymbolTable::InsertDirectorySymbol()
+	to include source_dir argument.  Change
+	ProcessPath to delegate path processing
+	to ProcessBootClassPath(), ProcessExtDirs(),
+	ProcessClassPath(), and ProcessSourcePath().
+	Change ProcessSubdirectories() calls to
+	include source_dir argument.
+	* src/zip.cpp (Zip):
+	Change calls to InsertDirectorySymbol to
+	include source_dir flag.
+
 2001-04-20  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/long.h: fix another HP-UX aCC enum

@@ -1376,11 +1376,11 @@ wchar_t StringConstant::US_AND[]                        = {U_AM, U_NU}, // "&"
 wchar_t StringConstant::US_smallest_int[] = {U_MINUS, U_2, U_1, U_4, U_7, U_4, U_8, U_3, U_6, U_4, U_8, U_NU}; // "-2147483648"
 
 
-char StringConstant::U8S_command_format[] = "use: jikes [-classpath path][-d dir][-debug][-depend|-Xdepend][-deprecation]"
+char StringConstant::U8S_command_format[] = "use: jikes [-bootclasspath path][-classpath path][-d dir][-debug][-depend|-Xdepend][-deprecation]"
 #if defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
                                             "[-encoding encoding]"
 #endif
-					    "[-g][-nowarn][-nowrite][-O][-verbose][-Xstdout]"
+					    "[-extdirs path][-g][-nowarn][-nowrite][-O][-sourcepath path][-verbose][-Xstdout]"
                                             "[++][+B][+c][+OLDCSO][+D][+DR=filename][+E][+F][+Kname=TypeKeyWord][+M][+P][+Td...d][+U][+Z]"
                                             " file.java...";
 

@@ -76,7 +76,7 @@ public:
 
     Tuple<DirectorySymbol *> subdirectories;
 
-    DirectorySymbol(NameSymbol *, Symbol *);
+    DirectorySymbol(NameSymbol *, Symbol *, bool source_dir_only);
     virtual ~DirectorySymbol();
 
     virtual wchar_t *Name() { return name_symbol -> Name(); }
@@ -84,6 +84,7 @@ public:
     virtual NameSymbol *Identity() { return name_symbol; }
     char *Utf8Name() { return (char *) (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> value : NULL); }
     int Utf8NameLength() { return (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0); }
+    bool IsSourceDirectory() { return source_dir_only; }
 
     DirectoryEntry *FindEntry(char *name, int len) { return (entries ? entries -> FindEntry(name, len) : (DirectoryEntry *) NULL); }
 
@@ -125,7 +126,7 @@ public:
         return directory_name_length;
     }
 
-    inline DirectorySymbol *InsertDirectorySymbol(NameSymbol *);
+    inline DirectorySymbol *InsertDirectorySymbol(NameSymbol *, bool);
     inline DirectorySymbol *FindDirectorySymbol(NameSymbol *);
 
     inline FileSymbol *InsertFileSymbol(NameSymbol *);
@@ -145,6 +146,8 @@ private:
     DirectoryTable *entries;
     char *directory_name;
     size_t directory_name_length;
+
+    bool source_dir_only;
 };
 
 
@@ -1485,7 +1488,7 @@ public:
 
     inline PathSymbol *InsertPathSymbol(NameSymbol *, DirectorySymbol *);
     inline PathSymbol *FindPathSymbol(NameSymbol *);
-    inline DirectorySymbol *InsertDirectorySymbol(NameSymbol *, Symbol *);
+    inline DirectorySymbol *InsertDirectorySymbol(NameSymbol *, Symbol *, bool source_path);
     inline DirectorySymbol *FindDirectorySymbol(NameSymbol *);
     inline FileSymbol *InsertFileSymbol(NameSymbol *);
     inline FileSymbol *FindFileSymbol(NameSymbol *);
@@ -1572,11 +1575,11 @@ inline PathSymbol *SymbolTable::FindPathSymbol(NameSymbol *name_symbol)
 }
 
 
-inline DirectorySymbol *SymbolTable::InsertDirectorySymbol(NameSymbol *name_symbol, Symbol *owner)
+inline DirectorySymbol *SymbolTable::InsertDirectorySymbol(NameSymbol *name_symbol, Symbol *owner, bool source_path)
 {
     assert(base);
 
-    DirectorySymbol *symbol = new DirectorySymbol(name_symbol, owner);
+    DirectorySymbol *symbol = new DirectorySymbol(name_symbol, owner, source_path);
     AddOtherSymbol(symbol);
 
     int k = name_symbol -> index % hash_size;
@@ -1595,9 +1598,9 @@ inline DirectorySymbol *SymbolTable::InsertDirectorySymbol(NameSymbol *name_symb
 }
 
 
-inline DirectorySymbol *DirectorySymbol::InsertDirectorySymbol(NameSymbol *name_symbol)
+inline DirectorySymbol *DirectorySymbol::InsertDirectorySymbol(NameSymbol *name_symbol, bool source_dir)
 {
-    DirectorySymbol *subdirectory_symbol = Table() -> InsertDirectorySymbol(name_symbol, this);
+    DirectorySymbol *subdirectory_symbol = Table() -> InsertDirectorySymbol(name_symbol, this, source_dir);
     this -> subdirectories.Next() = subdirectory_symbol;
 
     return subdirectory_symbol;
