@@ -126,7 +126,6 @@ static char*
       TK_EQUAL_STRING[] = "TK_EQUAL",
       TK_ERROR_STRING[] = "TK_ERROR",
       TK_EOF_STRING[] = "TK_EOF",
-      TK_EOL_STRING[] = "TK_EOL";
 
 static char *token_type(unsigned char kind)
 {
@@ -237,7 +236,6 @@ static char *token_type(unsigned char kind)
     case TK_EQUAL: return TK_EQUAL_STRING;
     case TK_ERROR: return TK_ERROR_STRING;
     case TK_EOF: return TK_EOF_STRING;
-    case TK_EOL: return TK_EOL_STRING;
     default: return TK_notoken_STRING;
     }
 }

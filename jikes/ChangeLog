@@ -1,5 +1,9 @@
 2002-05-15  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/dump.cpp (token_type): Missed a case in previous commit.
+
+2002-05-15  Eric Blake  <ebb9@email.byu.edu>
+
 	Updated version of patch 40.
 	* src/bytecode.cpp:
 	* src/bytecode.h:
