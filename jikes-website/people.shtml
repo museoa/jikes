@@ -1,9 +1,10 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>
   <head>
     <TITLE>IBM - developerWorks - Open Source Software - Jikes - People</TITLE>
   </head>
   <BODY bgcolor="ffffff">
-    <p align="center"><img src="images/jikes.png" width=600 height=54 border=0 align=center alt="Jikes<sup><small>TM</small></sup>"><BR>&nbsp;</p>
+    <p align="center"><img src="images/jikes.png" width=600 height=54 border=0 alt="Jikes"><BR>&nbsp;</p>
     
     <p align="center"><small><font color="red">The E-mail addresses on this and other pages of the Jikes website are not to be used for unsolicited mass mailing ("spam") of any kind, commercial or otherwise. Violators who are caught will be lart'd.</font></small></p>
     
@@ -102,7 +103,7 @@
 
     <h1>In the here and now</h1>
       
-      <a name="admin"><h2>Project Administration</h2></a>
+      <h2><a name="admin">Project Administration</a></h2>
 
         <P><b>Name:</b> Mo DeJong<BR>
            <b>Organization:</b> Red Hat Inc<BR>
@@ -124,7 +125,7 @@
 	   Note that I defer all code related matter to Mo, so if he rejects a patch, don't appeal to me...
 	   instead you should take a reasoned argument to jikes-dev.</p>
         
-      <a name="contrib"><h2>Project Contributors</h2></a>
+      <h2><a name="contrib">Project Contributors</a></h2>
         <p>Folks who have through their repeated contributions to and outstanding participation
         in the project have gained the notice of the project administration. (in some semblance of chronology)
         

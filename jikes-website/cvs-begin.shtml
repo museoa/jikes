@@ -1,9 +1,10 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>
   <head>
     <TITLE>IBM - developerWorks - Open Source Software - Jikes - Concurrent Versions System Beginners' Introduction</TITLE>
   </head>
   <BODY bgcolor="ffffff">
-    <p align="center"><img src="images/jikes.png" width=600 height=54 border=0 align=center alt="Jikes<sup><small>TM</small></sup>"><BR>&nbsp;</p>
+    <p align="center"><img src="images/jikes.png" width=600 height=54 border=0 alt="Jikes"><BR>&nbsp;</p>
 
 
 <h1>CVS: Concurrent Versions System</h1>
@@ -38,7 +39,7 @@ set homedrive=c:
 set homepath=\cvs
 </code>
 </pre>
-</p>
+
 
 <p>Now that the environment is correctly configured, you'll need to log into the cvs server, both the userid and server name are stored in the CVSROOT variable, and are "anoncvs" and "oss.software.ibm.com" respectively. Most all command line cvs programs will accept the following command:
 
@@ -48,7 +49,7 @@ cvs login
 </code>
 </pre>
 
-The password is "anoncvs" (without the quotes), just like the userid.</p>
+The password is "anoncvs" (without the quotes), just like the userid.
 
 <p>The next step is to extract a copy of the modules you are interested in, again this is common to all command line oriented cvs programs. The following will extract the sources and build environment for the Jikes Project:
 
@@ -74,7 +75,7 @@ cvs update
 </code>
 </pre>
 
-You will not need to re-establish the CVSROOT, as it will be stored in the data that is extracted; similarly you should not need to re-login either; however, your cvs client may not maintain the login status.</p>
+You will not need to re-establish the CVSROOT, as it will be stored in the data that is extracted; similarly you should not need to re-login either; however, your cvs client may not maintain the login status.
 
 <h1>Additional CVS Resources:</h1>
 <ul>

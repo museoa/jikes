@@ -1,9 +1,10 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>
   <head>
     <TITLE>IBM - developerWorks - Open Source Software - Jikes - Leadership</TITLE>
   </head>
   <BODY bgcolor="ffffff">
-    <p align="center"><img src="images/jikes.png" width=600 height=54 border=0 align=center alt="Jikes<sup><small>TM</small></sup>"><BR>&nbsp;</p>
+    <p align="center"><img src="images/jikes.png" width=600 height=54 border=0 alt="Jikes"><BR>&nbsp;</p>
 
 <h1>Jikes Steering Committee</h1>
 
@@ -67,9 +68,9 @@ a few months.
 <p>Jikes is covered by the <A HREF="/developerworks/opensource/license10.html">IBM Public License</A>.
 All further contributions must be made under the same terms. All contributions must contain the following
 copyright notice:
-<P><code><BLOCKQUOTE>Copyright &copy; <FONT COLOR="GREEN">{date} {name of contributor}</FONT> and others. All rights reserved.<BR CLEAR="LEFT">
+<BLOCKQUOTE><code>Copyright &copy; <FONT COLOR="GREEN">{date} {name of contributor}</FONT> and others. All rights reserved.<BR CLEAR="LEFT">
 This program and the accompanying materials are made available under the terms of the IBM Public License, as found in the file license.htm that is included in this distribution.
-</BLOCKQUOTE></code></p>
+</code></BLOCKQUOTE>
 
     <!--#include file="footer.shtml" -->
   </BODY>

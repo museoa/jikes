@@ -1,17 +1,26 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>
   <head>
     <TITLE>IBM - developerWorks - Open Source Software - Jikes' Home</TITLE>
-  </HEAD>
+    <style type="text/css">
+      .navbar {
+        background-color: #CCCCFF;
+	vertical-align: top;
+	margin-right: auto;
+	margin-left: auto;
+      }
+    </style>
+  </head>
   <BODY bgcolor="ffffff">
     <table border=0 cellspacing=0 cellpadding=0>
       <tr>
-        <td colspan=5 align=center >
-          <img src="images/jikes.png" width=600 height=54 border=0 align=center alt="Welcome to Jikes<sup><small>TM</small></sup>"><BR>&nbsp;
+        <td colspan=5 align=center>
+          <img src="images/jikes.png" width=600 height=54 border=0 alt="Welcome to Jikes"><BR>&nbsp;
         </td>
       </tr>
       <tr valign=top>
-        <TD BGCOLOR="ccCCff" WIDTH=6>&nbsp;</TD><!--padding-->
-        <td bgcolor="ccCCff"><!-- content, left linkages -->
+        <TD class=navbar WIDTH=6>&nbsp;</TD><!--padding-->
+        <td class=navbar><!-- content, left linkages -->
           <br>
           <p align=center><big>Quick Links</big></p>
           <hr>
@@ -53,7 +62,7 @@
 	    <li><a href="http://www.java.sun.com/docs/books/vmspec">Virtual Machine Spec.</a>
           </ul>
         </td>
-        <TD BGCOLOR="ccCCff" WIDTH=6>&nbsp;</TD><!--padding-->
+        <TD class=navbar WIDTH=6>&nbsp;</TD><!--padding-->
         <TD WIDTH=12>&nbsp;</TD><!--gutter-->
         <TD>
 
@@ -93,7 +102,7 @@ the Linux and Java communities:
         <LI><em>Dependency analysis</em>. Jikes performs a dependency analysis on
             your code that provides two very useful features: Incremental builds
             and makefile generation.</LI>
-    </UL></p>
+    </UL>
 <p>Abridged from <!--a href="faq.shtml"-->a FAQ entry<!--/A--> which was adapted from
 some material by Lou Grinzo for an article he wrote, the link I have for which is no longer valid.</p>
 

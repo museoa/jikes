@@ -1,9 +1,10 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>
   <head>
     <TITLE>IBM - developerWorks - Open Source Software - Jikes - Todo</TITLE>
   </head>
   <BODY bgcolor="ffffff">
-    <p align="center"><img src="images/jikes.png" width=600 height=54 border=0 align=center alt="Jikes<sup><small>TM</small></sup>"><BR>&nbsp;</p>
+    <p align="center"><img src="images/jikes.png" width=600 height=54 border=0 alt="Jikes"><BR>&nbsp;</p>
 
     <h1>Jikes' Project ToDo List</h1>
     <p>The items herein are work that needs to be done from an overall project management standpoint, see also the

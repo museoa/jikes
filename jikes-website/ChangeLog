@@ -1,3 +1,8 @@
+2001-02-11  Chris Abbey  <cabbey@bresnanlink.net>
+
+	* *.shtml: made 4.01 transitional valid (except index, still
+	 a weird validation error on it...) added check logo to footer
+	
 2001-02-07  Chris Abbey  <cabbey@bresnanlink.net>
 
 	* todo.shtml
