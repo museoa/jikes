@@ -1,3 +1,17 @@
+2000-05-08  Mo DeJong  <mdejong@cygnus.com>
+
+	* src/jikesapi.cpp(~DefaultFileReader): Added
+	(void *) cast to fix strict const error raised
+	by g++. Also fixed an old constructor call in
+	DefaultFileWriter().
+	* src/option.cpp(Option): Moved Cygwin path
+	conversion so that it also works on a
+	-classpath passed in on the command line.
+	* src/option.h(Option): Added declaration for
+	SaveCurrentDirectoryOnDisk() method.
+	* src/m4/acx_check_pathname_style.m4: Fixed
+	detection of mingw32 compiler toolchain.
+
 2000-05-05  Mo DeJong  <mdejong@cygnus.com>
 
 	* src/Makefile.in:
