@@ -3846,6 +3846,7 @@ void Semantic::ProcessFormalParameters(BlockSymbol *block,
         else symbol -> SetType(parm_type -> GetArrayType(this, num_dimensions));
         symbol -> SetFlags(access_flags);
         symbol -> MarkComplete();
+        symbol -> MarkInitialized();
 
         parameter -> formal_declarator -> symbol = symbol;
     }
@@ -4466,36 +4467,36 @@ void Semantic::InitializeVariable(AstFieldDeclaration *field_declaration,
     {
         AstVariableDeclarator *variable_declarator =
             field_declaration -> VariableDeclarator(i);
-        ThisVariable() = variable_declarator -> symbol;
+        VariableSymbol *variable = variable_declarator -> symbol;
 
-        if (variable_declarator -> symbol)
+        if (variable)
         {
+            ThisVariable() = variable;
             if (variable_declarator -> variable_initializer_opt)
             {
                 variable_declarator -> pending = true;
 
                 int start_num_errors = NumErrors();
-                if (! variable_declarator -> symbol -> IsDeclarationComplete())
-                    ProcessVariableInitializer(variable_declarator);
+                ProcessVariableInitializer(variable_declarator);
                 if (NumErrors() == start_num_errors)
                 {
                     DefiniteFieldInitializer(variable_declarator);
-                    if (! variable_declarator -> symbol -> ACC_STATIC() ||
-                        ! variable_declarator -> symbol -> initial_value)
+                    if (! variable -> ACC_STATIC() ||
+                        ! variable -> initial_value)
                     {
                         init_block -> AddStatement(variable_declarator);
                     }
                 }
-                else if (variable_declarator -> symbol -> ACC_FINAL())
+                else if (variable -> ACC_FINAL())
                 {
                     // Suppress further error messages.
                     DefinitelyAssignedVariables() ->
-                        AssignElement(variable_declarator ->  symbol -> LocalVariableIndex());
+                        AssignElement(variable -> LocalVariableIndex());
                 }
 
                 variable_declarator -> pending = false;
             }
-            ThisVariable() -> MarkComplete();
+            variable -> MarkComplete();
         }
     }
 }

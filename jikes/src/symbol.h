@@ -1534,11 +1534,15 @@ public:
     void MarkDeprecated() { status |= DEPRECATED; }
     bool IsDeprecated() { return (status & DEPRECATED) != 0; }
 
+    void MarkInitialized() { status |= INITIALIZED; }
+    bool IsInitialized() { return (status & INITIALIZED) != 0; }
+
 private:
     enum {
-        COMPLETE = 0x01,
-        SYNTHETIC = 0x02,
-        DEPRECATED = 0x04
+        COMPLETE = 0x01, // Used to prevent use of field before declaration
+        SYNTHETIC = 0x02, // Used to mark compiler-created variables
+        DEPRECATED = 0x04, // Used to mark deprecated fields
+        INITIALIZED = 0x08, // Used when initial value of final field is known
     };
     NameSymbol *external_name_symbol;
 

@@ -664,7 +664,7 @@ public:
     void ProcessSuperTypeDependences(AstClassDeclaration *);
     void ProcessSuperTypeDependences(AstInterfaceDeclaration *);
 
-    LiteralValue *ComputeFinalValue(AstVariableDeclarator *);
+    void ComputeFinalValue(VariableSymbol *);
 
     Semantic(Control &control_, FileSymbol *file_symbol_)
         : control(control_),

@@ -5806,7 +5806,7 @@ int ByteCode::LoadVariable(VariableCategory kind, AstExpression *expr,
         }
     case LHS_FIELD:
     case LHS_STATIC:
-        assert(sym -> IsDeclarationComplete() || ! sym -> ACC_FINAL());
+        assert(sym -> IsInitialized() || ! sym -> ACC_FINAL());
         if (shadow_parameter_offset && sym -> owner == unit_type &&
             (sym -> accessed_local ||
              sym -> Identity() == control.this0_name_symbol))

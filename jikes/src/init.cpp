@@ -22,7 +22,7 @@ void Semantic::ProcessVariableInitializer(AstVariableDeclarator *variable_declar
 
     if (! variable_declarator -> variable_initializer_opt)
     {
-        symbol -> MarkComplete();
+        symbol -> MarkInitialized();
         return;
     }
 
@@ -92,7 +92,7 @@ void Semantic::ProcessVariableInitializer(AstVariableDeclarator *variable_declar
             }
         }
     }
-    symbol -> MarkComplete();
+    symbol -> MarkInitialized();
 }
 
 
@@ -167,22 +167,49 @@ void Semantic::ProcessArrayInitializer(AstArrayInitializer *array_initializer,
 }
 
 
-LiteralValue *Semantic::ComputeFinalValue(AstVariableDeclarator *variable_declarator)
+void Semantic::ComputeFinalValue(VariableSymbol *variable)
 {
-    VariableSymbol *variable = variable_declarator -> symbol;
-    TypeSymbol *type = (TypeSymbol *) variable -> owner;
-    assert(variable -> ACC_FINAL() && ! variable -> IsDeclarationComplete() &&
-           variable_declarator -> variable_initializer_opt -> ExpressionCast());
+    AstVariableDeclarator *variable_declarator = variable -> declarator;
+    assert(variable_declarator && variable -> ACC_FINAL());
+    if (! variable -> IsInitialized())
+    {
+        if (variable_declarator -> pending ||
+            ! variable_declarator -> variable_initializer_opt)
+        {
+            //
+            // Break loops, and ignore non-initialized fields.
+            //
+            variable -> MarkInitialized();
+            return;
+        }
 
-    state_stack.Push(type -> semantic_environment);
-    variable_declarator -> pending = true;
+        //
+        // Create a clone and process that, to avoid triggering errors now.
+        // Process the initializer in the 
+        // Later, we will issue the errors for real when processing the field
+        // initializer when we get to its source file.
+        //
+        assert(variable -> owner -> TypeCast());
+        TypeSymbol *type = (TypeSymbol *) variable -> owner;
+        Semantic *sem = type -> semantic_environment -> sem;
 
-    ProcessVariableInitializer(variable_declarator);
+        if (! sem -> error)
+            sem -> error =
+                new SemanticError(control, sem -> source_file_symbol);
+        sem -> error -> EnteringClone();
+        sem -> state_stack.Push(type -> semantic_environment);
+        variable_declarator -> pending = true;
 
-    variable_declarator -> pending = false;
-    state_stack.Pop();
+        AstVariableDeclarator *clone = (AstVariableDeclarator *)
+            variable_declarator -> Clone(sem -> compilation_unit -> ast_pool);
+        clone -> symbol = variable;
+        sem -> ProcessVariableInitializer(clone);
+        assert(variable -> IsInitialized());
 
-    return variable -> initial_value;
+        variable_declarator -> pending = false;
+        sem -> state_stack.Pop();
+        sem -> error -> ExitingClone();
+    }
 }
 
 #ifdef HAVE_JIKES_NAMESPACE

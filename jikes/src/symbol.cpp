@@ -414,6 +414,7 @@ TypeSymbol *TypeSymbol::GetArrayType(Semantic *sem, int num_dimensions_)
         symbol -> SetOwner(type);
         symbol -> SetType(sem -> control.int_type);
         symbol -> MarkComplete();
+        symbol -> MarkInitialized();
 
         type -> CompressSpace(); // space optimization
 
@@ -1507,6 +1508,7 @@ VariableSymbol *TypeSymbol::InsertThis0()
     variable_symbol -> SetACC_FINAL();
     variable_symbol -> SetOwner(this);
     variable_symbol -> MarkComplete();
+    variable_symbol -> MarkInitialized();
     variable_symbol -> MarkSynthetic();
 
     enclosing_instance = variable_symbol;
@@ -1718,6 +1720,7 @@ VariableSymbol *TypeSymbol::FindOrInsertAssertVariable()
         assert_variable -> SetACC_FINAL();
         assert_variable -> SetOwner(this);
         assert_variable -> MarkComplete();
+        assert_variable -> MarkInitialized();
         assert_variable -> MarkSynthetic();
 
         //
@@ -1795,6 +1798,7 @@ VariableSymbol *TypeSymbol::FindOrInsertLocalShadow(VariableSymbol *local)
         variable -> SetACC_FINAL();
         variable -> SetOwner(this);
         variable -> MarkComplete();
+        variable -> MarkInitialized();
         variable -> MarkSynthetic();
 
         if (ContainingType() == local -> ContainingType())

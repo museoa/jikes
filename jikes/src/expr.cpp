@@ -1879,31 +1879,13 @@ void Semantic::ProcessSimpleName(Ast *expr)
         CheckSimpleName(simple_name, where_found);
 
         //
-        // A variable_symbol FINAL must have an initial value.
+        // A FINAL field may have an initial value.
         //
         if (variable_symbol -> ACC_FINAL())
         {
-            if (variable_symbol -> IsDeclarationComplete())
-                simple_name -> value = variable_symbol -> initial_value;
-            else if (variable_symbol -> declarator)
-            {
-                AstVariableDeclarator *declarator =
-                    variable_symbol -> declarator -> VariableDeclaratorCast();
-                //
-                // If the variable declarator in question exists and its
-                // computation is not pending (to avoid looping) and it has a
-                // simple expression initializer.
-                //
-                if (declarator && ! declarator -> pending &&
-                    declarator -> variable_initializer_opt &&
-                    (! declarator -> variable_initializer_opt ->
-                     ArrayInitializerCast()))
-                {
-                    TypeSymbol *type = (TypeSymbol *) variable_symbol -> owner;
-                    Semantic *sem = type -> semantic_environment -> sem;
-                    simple_name -> value = sem -> ComputeFinalValue(declarator);
-                }
-            }
+            if (! variable_symbol -> IsInitialized())
+                ComputeFinalValue(variable_symbol);
+            simple_name -> value = variable_symbol -> initial_value;
         }
 
         //
@@ -2253,39 +2235,13 @@ void Semantic::FindVariableMember(TypeSymbol *type,
             //
             if (variable -> ACC_FINAL())
             {
-                //
-                // If the field declaration of the type has been completely
-                // processed, simply retrieve the value. Otherwise, compute
-                // the value of the initialization expression in question on
-                // the fly if the variable in question is not in the same type.
-                // Recall that static variables must be processed in the
-                // textual order in which they appear in the body of a type.
-                // Therefore, if the static initialization of a field refers
-                // to another variable in the same type it must have appeared
-                // before the current field declaration otherwise we will emit
-                // an error message later...
-                //
-                if (variable -> declarator &&
-                    ! variable -> IsDeclarationComplete())
+                if (! variable -> IsInitialized())
+                    ComputeFinalValue(variable);
+                if (base_is_type)
                 {
-                    AstVariableDeclarator *declarator = variable -> declarator;
-                    //
-                    // If the variable declarator in question exists and
-                    // its computation is not pending (to avoid looping)
-                    // and it has a simple expression initializer.
-                    //
-                    if (! declarator -> pending &&
-                        declarator -> variable_initializer_opt &&
-                        ! declarator -> variable_initializer_opt -> ArrayInitializerCast())
-                    {
-                        TypeSymbol *variable_type =
-                            (TypeSymbol *) variable -> owner;
-                        variable_type -> semantic_environment -> sem ->
-                            ComputeFinalValue(declarator);
-                    }
-                }
-                if (base_is_type && variable -> IsDeclarationComplete())
+                    assert(variable -> IsInitialized());
                     field_access -> value = variable -> initial_value;
+                }
             }
 
             //

@@ -2,6 +2,22 @@
 
         * 1.16 release.
 
+2002-07-08  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/bytecode.cpp (LoadVariable): Fix assertion in bug 3044.
+	* src/decl.cpp (InitializeVariable): Improve variable
+	initialization procedure.
+	* src/expr.cpp (ProcessSimpleName, FindVariableMember): Improve
+	final variable inlining.
+	* src/getclass.cpp: Ditto.
+	* src/symbol.cpp: Ditto.
+	* src/init.cpp (ComputeFinalValue): Fix regression mentioned in
+	bug 3044, introduced by patch 310.
+	* src/semantic.h (ComputeFinalValue): Change method signature.
+	* src/symbol.h (MarkInitialized, IsInitialized): Add flag for
+	initialization value computed, to be orthogonal from declaration
+	complete.
+
 2002-07-07  Bu FeiMing  <mybird@online.sh.cn>
 
 	* src/stream.cpp (getErrorMessage): duplication of "to make
