@@ -56,15 +56,15 @@
     <blockquote>The "core team" has evolved into a very low-overhead administrative structure,
     whose principal function is to approve the nomination of new project leaders.</blockquote>
     <p>This is not to say that they contributions made by this team are irrelevant, quite the
-    contrary in fact, they are crucial. The "core team" has now been renamed the <strong>Steering
-    Committee</strong>, so without further ado, the members of the committee in addition to Dave,
-    Philippe, and Vadim are:
+    contrary in fact, they are crucial. The "core team" has now been renamed the
+    <a href="steering.shtml"><strong>Steering Committee</strong></a>, so without further ado,
+    the members of the committee in addition to Dave, Philippe, and Vadim are:
     
     <P><b>Name:</b> Ken Coar<BR>
        <b>Email:</b> <a href="mailto:Ken.Coar@Golux.Com">Ken.Coar@Golux.Com</a><BR>
-       <b>URL:</b> <a href="http://Golux.Com/~coar/">http://Golux.Com/~coar/</a><BR>
+       <b>URL:</b> <a href="http://Golux.Com/coar/">http://Golux.Com/coar/</a><BR>
        <b>Organization:</b> Apache Software Foundation and IBM Corporation<BR>
-       <b>Occupation:</b> Web development<BR>
+       <b>Occupation:</b> Free source and Web server development<BR>
        <b>Location:</b> Research Triangle Park, North Carolina, USA<BR>
        <b>Contributions:</b> Open-source project support, CVS mirrors, mailing lists. Token lab rat.</p>
 
