@@ -351,7 +351,7 @@ DefaultFileReader::~DefaultFileReader()
  * Open a standard FILE pointer and get ready to write.
  */
 DefaultFileWriter::DefaultFileWriter(const char *fileName,size_t maxSize):
-    FileWriter(maxSize)
+    JikesAPI::FileWriter(maxSize)
 {
     valid  = false;
     file = SystemFopen(fileName, "wb");

@@ -1,3 +1,14 @@
+2001-03-30  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/jikesapi.cpp (DefaultFileWriter):
+	Fixed the call to the superconstructor to
+	work with g++ 2.7 (bug 390).
+	* src/expr.cpp (CastPrimitiveValue):
+	Improved the casting calls, in particular
+	repairing one detected as an ambiguity in
+	g++ 2.7 (bug 390).
+
+	
 2001-03-30  Chris Abbey  <cabbey@bresnanlink.net>
 
 	* src/jikes.cpp:

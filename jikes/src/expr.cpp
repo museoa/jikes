@@ -5150,8 +5150,7 @@ LiteralValue *Semantic::CastPrimitiveValue(TypeSymbol *target_type, AstExpressio
             if (source_type == control.float_type)
             {
                 FloatLiteralValue *literal = (FloatLiteralValue *) expr -> value;
-                IEEEdouble value(literal -> value);
-                literal_value = control.double_pool.FindOrInsert(value);
+                literal_value = control.double_pool.FindOrInsert(literal -> value.DoubleValue());
             }
             else if (source_type == control.long_type)
             {
@@ -5171,8 +5170,7 @@ LiteralValue *Semantic::CastPrimitiveValue(TypeSymbol *target_type, AstExpressio
             if (source_type == control.double_type)
             {
                 DoubleLiteralValue *literal = (DoubleLiteralValue *) expr -> value;
-                IEEEfloat value(literal -> value);
-                literal_value = control.float_pool.FindOrInsert(value);
+                literal_value = control.float_pool.FindOrInsert(literal -> value.FloatValue());
             }
             else if (source_type == control.long_type)
             {
@@ -5192,14 +5190,12 @@ LiteralValue *Semantic::CastPrimitiveValue(TypeSymbol *target_type, AstExpressio
             if (source_type == control.double_type)
             {
                 DoubleLiteralValue *literal = (DoubleLiteralValue *) expr -> value;
-                LongInt value(literal -> value);
-                literal_value = control.long_pool.FindOrInsert(value);
+                literal_value = control.long_pool.FindOrInsert(literal -> value.LongValue());
             }
             else if (source_type == control.float_type)
             {
                 FloatLiteralValue *literal = (FloatLiteralValue *) expr -> value;
-                LongInt value(literal -> value);
-                literal_value = control.long_pool.FindOrInsert(value);
+                literal_value = control.long_pool.FindOrInsert(literal -> value.LongValue());
             }
             else
             {
@@ -5222,7 +5218,7 @@ LiteralValue *Semantic::CastPrimitiveValue(TypeSymbol *target_type, AstExpressio
             else if (source_type == control.long_type)
             {
                 LongLiteralValue *literal = (LongLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((int) (literal -> value).LowWord());
+                literal_value = control.int_pool.FindOrInsert((i4) (literal -> value).LowWord());
             }
             else literal_value = expr -> value;
         }
@@ -5231,22 +5227,22 @@ LiteralValue *Semantic::CastPrimitiveValue(TypeSymbol *target_type, AstExpressio
             if (source_type == control.double_type)
             {
                 DoubleLiteralValue *literal = (DoubleLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((int) (u2) (literal -> value.IntValue()));
+                literal_value = control.int_pool.FindOrInsert((i4) (u2) (literal -> value.IntValue()));
             }
             else if (source_type == control.float_type)
             {
                 FloatLiteralValue *literal = (FloatLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((int) (u2) (literal -> value.IntValue()));
+                literal_value = control.int_pool.FindOrInsert((i4) (u2) (literal -> value.IntValue()));
             }
             else if (source_type == control.long_type)
             {
                 LongLiteralValue *literal = (LongLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((int) (u2) (literal -> value).LowWord());
+                literal_value = control.int_pool.FindOrInsert((i4) (u2) (literal -> value).LowWord());
             }
             else
             {
                 IntLiteralValue *literal = (IntLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((int) (u2) literal -> value);
+                literal_value = control.int_pool.FindOrInsert((i4) (u2) literal -> value);
             }
         }
         else if (target_type == control.short_type)
@@ -5254,22 +5250,22 @@ LiteralValue *Semantic::CastPrimitiveValue(TypeSymbol *target_type, AstExpressio
             if (source_type == control.double_type)
             {
                 DoubleLiteralValue *literal = (DoubleLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((int) (i2) (literal -> value.IntValue()));
+                literal_value = control.int_pool.FindOrInsert((i4) (i2) (literal -> value.IntValue()));
             }
             else if (source_type == control.float_type)
             {
                 FloatLiteralValue *literal = (FloatLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((int) (i2) (literal -> value.IntValue()));
+                literal_value = control.int_pool.FindOrInsert((i4) (i2) (literal -> value.IntValue()));
             }
             else if (source_type == control.long_type)
             {
                 LongLiteralValue *literal = (LongLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((int) (i2) (literal -> value).LowWord());
+                literal_value = control.int_pool.FindOrInsert((i4) (i2) (literal -> value).LowWord());
             }
             else
             {
                 IntLiteralValue *literal = (IntLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((int) (i2) literal -> value);
+                literal_value = control.int_pool.FindOrInsert((i4) (i2) literal -> value);
             }
         }
         else if (target_type == control.byte_type)
@@ -5277,12 +5273,12 @@ LiteralValue *Semantic::CastPrimitiveValue(TypeSymbol *target_type, AstExpressio
             if (source_type == control.double_type)
             {
                 DoubleLiteralValue *literal = (DoubleLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((int) (i1) (literal -> value.IntValue()));
+                literal_value = control.int_pool.FindOrInsert((i4) (i1) (literal -> value.IntValue()));
             }
             else if (source_type == control.float_type)
             {
                 FloatLiteralValue *literal = (FloatLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((int) (i1) (literal -> value.IntValue()));
+                literal_value = control.int_pool.FindOrInsert((i4) (i1) (literal -> value.IntValue()));
             }
             else if (source_type == control.long_type)
             {
@@ -5292,7 +5288,7 @@ LiteralValue *Semantic::CastPrimitiveValue(TypeSymbol *target_type, AstExpressio
             else
             {
                 IntLiteralValue *literal = (IntLiteralValue *) expr -> value;
-                literal_value = control.int_pool.FindOrInsert((int) (i1) literal -> value);
+                literal_value = control.int_pool.FindOrInsert((i4) (i1) literal -> value);
             }
         }
     }
