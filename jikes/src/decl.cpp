@@ -3743,9 +3743,10 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
         method = this_type -> Overload(method);
     }
 
-    int num_dimensions = (method_type == control.void_type
-                                       ? 0
-                                       : (array_type ? array_type -> NumBrackets() : 0) + method_declarator -> NumBrackets());
+    int num_dimensions = ((method_type == control.void_type)
+                          ? 0
+                          : (array_type ? array_type -> NumBrackets() : 0))
+                         + method_declarator -> NumBrackets();
     if (num_dimensions == 0)
          method -> SetType(method_type);
     else method -> SetType(method_type -> GetArrayType((Semantic *) this, num_dimensions));

@@ -1,5 +1,12 @@
 2001-09-06  Michael Ernst  <mernst@lcs.mit.edu>
 
+	* src/bytecode.cpp (EmitAssignmentExpression):
+	* src/getclass.cpp (ProcessSignature):
+	* src/decl.cpp (ProcessMethodDeclaration): Fix some warnings
+	triggered by some versions of gcc -Wall - patch 137.
+
+2001-09-06  Michael Ernst  <mernst@lcs.mit.edu>
+
 	* src/stream.h (SetUpComments): Prevent duplicate work, by
 	checking if comment_buffer already exists - patch 133.
 

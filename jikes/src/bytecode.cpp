@@ -3173,6 +3173,10 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
                          assert(false && "bad op_type in EmitAssignmentExpression");
                 }
             }
+            else
+            {
+                assert(false && "bad op_type in EmitAssignmentExpression");
+            }
 
             //
             // convert value to desired type if necessary
