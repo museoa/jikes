@@ -1,5 +1,10 @@
 2001-11-12  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/bytecode.cpp (GenerateAssertVariableInitializer),
+	(EmitAssertStatement): Fix regressions caused by patch 225.
+
+2001-11-12  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/system.cpp (InitObjectInfo): Delete.
 	* src/control.h (Object):
 	* src/control.cpp (Object_getClassMethod): Rearrange evaluation

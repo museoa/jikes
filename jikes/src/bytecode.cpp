@@ -2648,19 +2648,15 @@ void ByteCode::EmitAssertStatement(AstAssertStatement *assertion)
     {
         PutOp(OP_GETSTATIC);
         PutU2(RegisterFieldref(assertion -> assert_variable));
-        ChangeStack(1);
         Label label;
         EmitBranch(OP_IFNE, label);
         EmitBranchIfExpression(assertion -> condition, true, label, NULL);
 
         PutOp(OP_NEW);
         PutU2(RegisterClass(this_control.AssertionError() -> fully_qualified_name));
-        ChangeStack(1);
         PutOp(OP_DUP);
-        ChangeStack(1);
 
         MethodSymbol *constructor = NULL;
-        int stack_change = -1;
         if (assertion -> message_opt)
         {
             EmitExpression(assertion -> message_opt);
@@ -2686,15 +2682,13 @@ void ByteCode::EmitAssertStatement(AstAssertStatement *assertion)
 
             assert(constructor != this_control.AssertionError_InitMethod() &&
                    "unable to find right constructor for assertion error");
-            stack_change -= (this_control.IsDoubleWordType(type) ? 2 : 1);
+            ChangeStack(- GetTypeWords(type));
         }
         else constructor = this_control.AssertionError_InitMethod();
     
         PutOp(OP_INVOKESPECIAL);
         PutU2(RegisterLibraryMethodref(constructor));
-        ChangeStack(stack_change);
         PutOp(OP_ATHROW);
-        ChangeStack(-1);
 
         DefineLabel(label);
         CompleteLabel(label);
@@ -3151,22 +3145,21 @@ void ByteCode::GenerateAssertVariableInitializer(TypeSymbol *tsym,
     //  putstatic        <thisClass>.$noassert
     //
     PutOp(OP_ICONST_0);
-    ChangeStack(1);
     PutOp(OP_ANEWARRAY);
     PutU2(RegisterClass(tsym -> fully_qualified_name));
     PutOp(OP_INVOKEVIRTUAL);
+    ChangeStack(1); // for returned value
     PutU2(RegisterLibraryMethodref(this_control.Object_getClassMethod()));
     PutOp(OP_INVOKEVIRTUAL);
+    ChangeStack(1); // for returned value
     PutU2(RegisterLibraryMethodref(this_control.Class_getComponentTypeMethod()));
     PutOp(OP_INVOKEVIRTUAL);
+    ChangeStack(1); // for returned value
     PutU2(RegisterLibraryMethodref(this_control.Class_desiredAssertionStatusMethod()));
     PutOp(OP_ICONST_1);
-    ChangeStack(1);
     PutOp(OP_IXOR);
-    ChangeStack(-1);
     PutOp(OP_PUTSTATIC);
     PutU2(RegisterFieldref(vsym));
-    ChangeStack(-1);
 }
 
 
