@@ -46,12 +46,19 @@ distclean: clean
 	$(ERASE) Makefile TAGS
 	$(ERASE) *~
 
-install: all
-	mkdir -p $(prefix)/bin
-	strip $(EXECUTABLE)
-	cp $(EXECUTABLE) $(prefix)/bin
+install: all install-unstripped install-docs
+
+install-unstripped: all
+	mkdir -p $(exec_prefix)/bin
+	cp $(EXECUTABLE) $(exec_prefix)/bin
+
+install-stripped: all
+	mkdir -p $(exec_prefix)/bin
+	strip -o $(exec_prefix)/bin/$(EXECUTABLE) $(EXECUTABLE)
+
+install-docs: all
 	mkdir -p $(prefix)/man/man1
-	cp ../doc/jikes.1 $(prefix)/man/man1
+	cp $(srcdir)/../doc/jikes.1 $(prefix)/man/man1
 
 Makefile: $(srcdir)/Makefile.in
 	./config.status

@@ -1,3 +1,10 @@
+2000-04-09  Mo DeJong  <mdejong@cygnus.com>
+
+	* src/Makefile.in: Added install-unstripped, install-stripped,
+	and install-docs rules. Made install-unstripped the default.
+	Fixed the install rules to use exec_prefix instead of the prefix.
+	Fixed problem installing the docs when build dir != src dir.
+
 2000-04-09  Vadim Zaliva  <lord@crocodile.org>
 
 	* ChangeLog moved from doc/ to project root per
