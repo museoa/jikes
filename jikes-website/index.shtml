@@ -75,7 +75,8 @@
 
 <!-- content, main - still needs cleanup -->
 
- <p><a href="http://www-106.ibm.com/developerworks/cgi-bin/click.cgi?url=http://www.ibm.com/alphaworks/rumble&origin=jikes"><img src="http://www-106.ibm.com/developerworks/i/ad-roborumble.jpg" width="150" height="50" alt="Robocode rumble" border="0" align=right hspace=4 vspace=4></a>
+ <p>
+<img src="images/4thbd.png" width="244" height="200" alt="[Happy 4th Birthday to Jikes]" border="0" align=left hspace=4 vspace=4></a>
     The Jikes Homepage has been reorganized to take advantage of the new support
     infrastructure offered by <a href="http://ibm.com/?origin=jikes">IBM's</a>
     <a href="http://ibm.com/developerworks/?origin=jikes">developerWorks</a>
@@ -83,7 +84,8 @@
     These pages will continue to provide user support to the Jikes community; however,
     development related issues have been moved to the our space in the
     <a href="/developerworks/projects/jikes/">dW/OSS</a>.</p>
-
+    <p><big>Happy 4th Birthday to Jikes!</big></p>
+<br clear=all>
 <hr>
 <p>What is Jikes?</p>
 <P>Jikes<small><sup>TM</sup></small> is a compiler that translates Java<small><sup>TM</sup></small> source files as defined in
