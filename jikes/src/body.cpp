@@ -991,6 +991,21 @@ void Semantic::ProcessReturnStatement(Ast* stmt)
 }
 
 
+//
+// Any exception that is neither RuntimeException or one of its subclasses
+// nor Error or one of its subclasses is a checked exception. This also
+// ignores invalid types. Additionally, 'throw null' results in a
+// NullPointerException, so it is unchecked.
+//
+bool Semantic::CheckedException(TypeSymbol* exception)
+{
+    return (exception != control.null_type &&
+            exception != control.no_type &&
+            ! exception -> IsSubclass(control.RuntimeException()) &&
+            ! exception -> IsSubclass(control.Error()));
+}
+
+
 bool Semantic::UncaughtException(TypeSymbol* exception)
 {
     //

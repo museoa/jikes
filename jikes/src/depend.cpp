@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -495,6 +494,48 @@ TopologicalSort::~TopologicalSort()
 {
     delete pending;
 }
+
+
+void Semantic::AddDependence(TypeSymbol* base_type, TypeSymbol* parent_type,
+                             bool static_access)
+{
+    if (base_type -> Bad() || parent_type -> Bad())
+        return;
+    base_type = base_type -> outermost_type;
+    parent_type = parent_type -> outermost_type;
+
+    parent_type -> dependents -> AddElement(base_type);
+    if (static_access)
+        base_type -> static_parents -> AddElement(parent_type);
+    else base_type -> parents -> AddElement(parent_type);
+
+    //
+    // It is not possible to import from the unnamed package, and without
+    // imports, it is impossible to reference a class in the unnamed
+    // package from a package.
+    //
+    assert(parent_type -> ContainingPackage() != control.unnamed_package ||
+           base_type -> ContainingPackage() == control.unnamed_package);
+}
+
+void Semantic::AddStringConversionDependence(TypeSymbol* type)
+{
+    if (type == control.null_type)
+        ; // no dependence
+    else if (type == control.boolean_type)
+        AddDependence(ThisType(), control.Boolean());
+    else if (type == control.char_type)
+        AddDependence(ThisType(), control.Character());
+    else if (type == control.int_type)
+        AddDependence(ThisType(), control.Integer());
+    else if (type == control.long_type)
+        AddDependence(ThisType(), control.Long());
+    else if (type == control.float_type)
+        AddDependence(ThisType(), control.Float());
+    else // (type == control.double_type)
+        AddDependence(ThisType(), control.Double());
+}
+
 
 #ifdef HAVE_JIKES_NAMESPACE
 } // Close namespace Jikes block

@@ -41,6 +41,20 @@ bool Semantic::IsIntValueRepresentableInType(AstExpression* expr,
 }
 
 
+bool Semantic::IsConstantTrue(AstExpression* expr)
+{
+    return expr -> IsConstant() && expr -> Type() == control.boolean_type &&
+        DYNAMIC_CAST<IntLiteralValue*> (expr -> value) -> value;
+}
+
+
+bool Semantic::IsConstantFalse(AstExpression* expr)
+{
+    return expr -> IsConstant() && expr -> Type() == control.boolean_type &&
+        ! DYNAMIC_CAST<IntLiteralValue*> (expr -> value) -> value;
+}
+
+
 //
 // Returns true if source_method is more specific than target_method, which
 // is defined as the type that declared the method, as well as all method
@@ -1959,6 +1973,18 @@ void Semantic::CheckSimpleName(AstName* name, SemanticEnvironment* where_found)
             }
         }
     }
+}
+
+
+void Semantic::ProcessExpressionOrStringConstant(AstExpression* expr)
+{
+    ProcessExpression(expr);
+    //
+    // If the expression is of type String, check whether or not it is
+    // constant, and if so, compute the result.
+    //
+    if (expr -> symbol == control.String() && ! expr -> IsConstant())
+        control.Utf8_pool.CheckStringConstant(expr);
 }
 
 

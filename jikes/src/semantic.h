@@ -14,7 +14,6 @@
 #include "ast.h"
 #include "error.h"
 #include "symbol.h"
-#include "control.h"
 #include "tuple.h"
 #include "set.h"
 
@@ -23,6 +22,7 @@ namespace Jikes { // Open namespace Jikes block
 #endif
 
 
+class Control;
 class TypeShadowSymbol;
 
 //
@@ -808,19 +808,9 @@ public:
     TypeSymbol* ProcessNestedType(TypeSymbol*, NameSymbol*,
                                   LexStream::TokenIndex);
 
-    // Evaluate constant expressions
-    inline bool IsConstantTrue(AstExpression* expr)
-    {
-        return expr -> IsConstant() &&
-            expr -> Type() == control.boolean_type &&
-            DYNAMIC_CAST<IntLiteralValue*> (expr -> value) -> value;
-    }
-    inline bool IsConstantFalse(AstExpression* expr)
-    {
-        return expr -> IsConstant() &&
-            expr -> Type() == control.boolean_type &&
-            ! DYNAMIC_CAST<IntLiteralValue*> (expr -> value) -> value;
-    }
+    // Implemented in expr.cpp - semantic checks of expressions
+    bool IsConstantTrue(AstExpression* expr);
+    bool IsConstantFalse(AstExpression* expr);
 
 private:
     enum
@@ -1006,8 +996,10 @@ private:
     MethodSymbol* GetStaticInitializerMethod(int estimate = 0);
 
     // Implemented in expr.cpp - expression processing
-    bool CanWideningPrimitiveConvert(const TypeSymbol*, const TypeSymbol*);
-    bool CanNarrowingPrimitiveConvert(const TypeSymbol*, const TypeSymbol*);
+    inline bool CanWideningPrimitiveConvert(const TypeSymbol*,
+                                            const TypeSymbol*);
+    inline bool CanNarrowingPrimitiveConvert(const TypeSymbol*,
+                                             const TypeSymbol*);
     bool CanCastConvert(TypeSymbol*, TypeSymbol*,
                         LexStream::TokenIndex = LexStream::BadToken());
     bool CanMethodInvocationConvert(const TypeSymbol*, const TypeSymbol*);
@@ -1127,6 +1119,7 @@ private:
     void CheckThrow(AstTypeName*, Tuple<AstTypeName*>*);
     void ProcessMethodBody(AstMethodDeclaration*);
     void ProcessConstructorBody(AstConstructorDeclaration*);
+    bool CheckedException(TypeSymbol*);
     bool UncaughtException(TypeSymbol*);
     const wchar_t* UncaughtExceptionContext();
 
@@ -1136,11 +1129,12 @@ private:
     MethodSymbol* FindConstructor(TypeSymbol*, Ast*,
                                   LexStream::TokenIndex,
                                   LexStream::TokenIndex);
-    bool MoreSpecific(MethodSymbol*, MethodSymbol*);
-    bool MoreSpecific(MethodSymbol*, Tuple<MethodSymbol*>&);
-    bool NoMethodMoreSpecific(Tuple<MethodSymbol*>&, MethodSymbol*);
-    bool MoreSpecific(MethodSymbol*, Tuple<MethodShadowSymbol*>&);
-    bool NoMethodMoreSpecific(Tuple<MethodShadowSymbol*>&, MethodSymbol*);
+    inline bool MoreSpecific(MethodSymbol*, MethodSymbol*);
+    inline bool MoreSpecific(MethodSymbol*, Tuple<MethodSymbol*>&);
+    inline bool NoMethodMoreSpecific(Tuple<MethodSymbol*>&, MethodSymbol*);
+    inline bool MoreSpecific(MethodSymbol*, Tuple<MethodShadowSymbol*>&);
+    inline bool NoMethodMoreSpecific(Tuple<MethodShadowSymbol*>&,
+                                     MethodSymbol*);
     void FindMethodInEnvironment(Tuple<MethodShadowSymbol*>&,
                                  SemanticEnvironment*&,
                                  SemanticEnvironment*, AstMethodInvocation*);
@@ -1225,17 +1219,7 @@ private:
             assert(expr -> generated);
         else (this ->* ProcessExprOrStmt[expr -> kind])(expr);
     }
-
-    inline void ProcessExpressionOrStringConstant(AstExpression* expr)
-    {
-        ProcessExpression(expr);
-        //
-        // If the expression is of type String, check whether or not it is
-        // constant, and if so, compute the result.
-        //
-        if (expr -> symbol == control.String() && ! expr -> IsConstant())
-            control.Utf8_pool.CheckStringConstant(expr);
-    }
+    void ProcessExpressionOrStringConstant(AstExpression* expr);
 
     // Implemented in body.cpp - statement processing
     void ProcessLocalVariableDeclarationStatement(Ast*);
@@ -1331,20 +1315,6 @@ private:
                           LexStream::TokenIndex);
     void ReadClassFile(TypeSymbol*, LexStream::TokenIndex);
 
-    //
-    // Any exception that is neither RuntimeException or one of its subclasses
-    // nor Error or one of its subclasses is a checked exception. This also
-    // ignores invalid types. Additionally, 'throw null' results in a
-    // NullPointerException, so it is unchecked.
-    //
-    inline bool CheckedException(TypeSymbol* exception)
-    {
-        return (! exception -> IsSubclass(control.RuntimeException()) &&
-                ! exception -> IsSubclass(control.Error()) &&
-                exception != control.null_type &&
-                exception != control.no_type);
-    }
-
 public:
 
     // Implemented in getclass.cpp - class processing from .class files
@@ -1357,51 +1327,11 @@ public:
     static inline u4 GetAndSkipU4(const char*&);
     static inline void Skip(const char*&, int);
 
-    inline void AddDependence(TypeSymbol*, TypeSymbol*, bool = false);
-    inline void AddStringConversionDependence(TypeSymbol*);
+    // Implemented in depend.cpp - class dependence tracking
+    void AddDependence(TypeSymbol*, TypeSymbol*, bool = false);
+    void AddStringConversionDependence(TypeSymbol*);
 };
 
-
-inline void Semantic::AddDependence(TypeSymbol* base_type,
-                                    TypeSymbol* parent_type,
-                                    bool static_access)
-{
-    if (base_type -> Bad() || parent_type -> Bad())
-        return;
-    base_type = base_type -> outermost_type;
-    parent_type = parent_type -> outermost_type;
-
-    parent_type -> dependents -> AddElement(base_type);
-    if (static_access)
-        base_type -> static_parents -> AddElement(parent_type);
-    else base_type -> parents -> AddElement(parent_type);
-
-    //
-    // It is not possible to import from the unnamed package, and without
-    // imports, it is impossible to reference a class in the unnamed
-    // package from a package.
-    //
-    assert(parent_type -> ContainingPackage() != control.unnamed_package ||
-           base_type -> ContainingPackage() == control.unnamed_package);
-}
-
-inline void Semantic::AddStringConversionDependence(TypeSymbol* type)
-{
-    if (type == control.null_type)
-         ;
-    else if (type == control.boolean_type)
-         AddDependence(ThisType(), control.Boolean());
-    else if (type == control.char_type)
-         AddDependence(ThisType(), control.Character());
-    else if (type == control.int_type)
-         AddDependence(ThisType(), control.Integer());
-    else if (type == control.long_type)
-         AddDependence(ThisType(), control.Long());
-    else if (type == control.float_type)
-         AddDependence(ThisType(), control.Float());
-    else // (type == control.double_type)
-         AddDependence(ThisType(), control.Double());
-}
 
 #ifdef HAVE_JIKES_NAMESPACE
 } // Close namespace Jikes block

@@ -1,5 +1,17 @@
 2004-01-17  Eric Blake  <ebb9@byu.net>
 
+	* src/semantic.h: Drop dependence on control.h (slight compilation
+	speed improvement).
+	* src/body.cpp (CheckedException): Move here from semantic.h.
+	* src/depend.cpp (AddDependence, AddStringConversionDependence):
+	Ditto.
+	* src/expr.cpp (IsConstantTrue, IsConstantFalse),
+	(ProcessExpressionOrStringConstant): Ditto.
+	* src/definite.cpp: Dependency on control.h now explicit.
+	* src/class.h: Ditto.
+
+2004-01-17  Eric Blake  <ebb9@byu.net>
+
 	* src/op.h: Backport improvements from generics-branch. Better
 	opcode dumping, and only compiled when needed. 
 	* src/op.cpp: Ditto.
