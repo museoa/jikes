@@ -1,3 +1,20 @@
+2005-02-24  Chris Abbey  <jikes@cabbey.net>
+
+	* faq/bug-reporting.shtml: finally got the urls right to link into
+	the bug tracker catagories.
+	
+	* faq/user-navbar.html: s/JIkes/Jikes/
+
+	* index.shtml:
+	historical accuracy... man that text was old... 'recently' indeed.
+
+	* footer.shtml: heh, regexp got caried away on me
+
+	* documents/index.shtml, faq/dev-navbar.html, faq/user-navbar.html, footer.shtml, queries/index.shtml:
+	fix some more stuff, incl css-checker links
+
+	* faq/user-index.shtml: fix html error
+
 2005-02-23  Chris Abbey  <jikes@cabbey.net>
 
 	* patchguide.shtml:

@@ -84,30 +84,30 @@
       in (maybe two, but probably not three or more). Once you've decided then take the link with each and skim the
       list of bugs returned, you may need to read the details of a bug before determining if it is yours or not.</p>
      <dl>
-      <dt><a href="/developerworks/bugs/index.php?group_id=10&amp;set=custom&amp;_status=1&amp;_category=105">Parser</a></dt>
+      <dt><a href="http://sourceforge.net/tracker/index.php?group_id=128803&amp;atid=712760&amp;set=custom&amp;_status=1&amp;order=priority&amp;sort=ASC&amp;submit=Browse&amp;_category=714908">Parser</a></dt>
        <dd>The parser is responsible for converting your source code into the Abstract Symbol Tree that the 
         compiler uses internally to produce classes. Errors such as not recognizing a method name, or not
         seeing that a block could throw a certain type of exception would belong to the parser.</dd>
-      <dt><a href="/developerworks/bugs/index.php?group_id=10&amp;set=custom&amp;_status=1&amp;_category=106">Emitter</a></dt>
+      <dt><a href="http://sourceforge.net/tracker/index.php?group_id=128803&amp;atid=712760&amp;set=custom&amp;_status=1&amp;order=priority&amp;sort=ASC&amp;submit=Browse&amp;_category=714909">Emitter</a></dt>
        <dd>The emitter is responsible for turning the AST produced by the parser into bytecode in class files.
         Errors such as not emitting a branch argument that would lead outside the method, or any other bytecode
         that would cause a class file to fail verification would belong to the emitter.</dd>
-      <dt><a href="/developerworks/bugs/index.php?group_id=10&amp;set=custom&amp;_status=1&amp;_category=107">Dependencies</a></dt>
+      <dt><a href="http://sourceforge.net/tracker/index.php?group_id=128803&amp;atid=712760&amp;set=custom&amp;_status=1&amp;order=priority&amp;sort=ASC&amp;submit=Browse&amp;_category=714910">Dependencies</a></dt>
        <dd>The dependency subsystem is responsible for tracking what classes make use of what other classes. A bug against
         the dependency tracker might be if a class should have been recompiled because other classes changed, but it wasn't.</dd>
-      <dt><a href="/developerworks/bugs/index.php?group_id=10&amp;set=custom&amp;_status=1&amp;_category=108">User Interface</a></dt>
+      <dt><a href="http://sourceforge.net/tracker/index.php?group_id=128803&amp;atid=712760&amp;set=custom&amp;_status=1&amp;order=priority&amp;sort=ASC&amp;submit=Browse&amp;_category=714911">User Interface</a></dt>
        <dd>The user interface is responsible for dealing with command line options, and reading user environment variables,
         an example bug against the UI is that the usage test ignores the -Xstdout argument and prints to stderr.</dd>
-      <dt><a href="/developerworks/bugs/index.php?group_id=10&amp;set=custom&amp;_status=1&amp;_category=109">Build</a></dt>
+      <dt><a href="http://sourceforge.net/tracker/index.php?group_id=128803&amp;atid=712760&amp;set=custom&amp;_status=1&amp;order=priority&amp;sort=ASC&amp;submit=Browse&amp;_category=714912">Build</a></dt>
        <dd>Use the build component if the Jikes source code fails to compile on your platform, examples include faulty
         logic in ./configure tests.</dd>
-      <dt><a href="/developerworks/bugs/index.php?group_id=10&amp;set=custom&amp;_status=1&amp;_category=110">Specifications</a></dt>
+      <dt><a href="http://sourceforge.net/tracker/index.php?group_id=128803&amp;atid=712760&amp;set=custom&amp;_status=1&amp;order=priority&amp;sort=ASC&amp;submit=Browse&amp;_category=714913">Specifications</a></dt>
        <dd>This component is used to track Jikes' compliance with specification issues, and more often to track when clarification
         is needed from Sun.</dd>
-      <dt><a href="/developerworks/bugs/index.php?group_id=10&amp;set=custom&amp;_status=1&amp;_category=111">Documentation / Web</a></dt>
+      <dt><a href="http://sourceforge.net/tracker/index.php?group_id=128803&amp;atid=712760&amp;set=custom&amp;_status=1&amp;order=priority&amp;sort=ASC&amp;submit=Browse&amp;_category=714914">Documentation / Web</a></dt>
        <dd>This component is used report problems either in the website, or the shipped documentation. For example, if a link goes
         404.</dd>
-      <dt><a href="/developerworks/bugs/index.php?group_id=10&amp;set=custom&amp;_status=1&amp;_category=120">Suggestion or Feature Request</a></dt>
+      <dt><a href="http://sourceforge.net/tracker/index.php?group_id=128803&amp;atid=712760&amp;set=custom&amp;_status=1&amp;order=priority&amp;sort=ASC&amp;submit=Browse&amp;_category=714915">Suggestion or Feature Request</a></dt>
        <dd>This one should be self-explanatory, RFEs go here.</dd>
      </dl>
      <p>If you do find your bug in one of the above categories already then you should evaluate if you have any additional information
@@ -185,7 +185,7 @@
      places).</p>
      
      <h1>Report the bug</h1>
-     <p>This is the <strong>easy</strong> part. Just go to the <a href="/developerworks/bugs/?func=addbug&amp;group_id=10">submission page</a>
+     <p>This is the <strong>easy</strong> part. Just go to the <a href="http://sourceforge.net/tracker/?func=add&amp;group_id=128803&amp;atid=712760">submission page</a>
       and put all the information above into the form in some nice coherent fashion. The first thing you'll need to supply is your email
       address, be sure to put a VALID address, you'll also need to decide if you want this address to be publicly visible on this bug.
       Reference the IBM Privacy Guidelines at the bottom of that page for details, but the general gist of this switch is that the dW staff,
