@@ -45,3 +45,4 @@ avail|coar,shields,jikesadmin,lord,ernst,mdejong|jikes,jikestst,site
 (The line has been edited to fit on the screen. :-)
 
 And that's it.  Send questions to <Ken.Coar@Golux.Com>.
+test
