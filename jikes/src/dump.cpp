@@ -248,7 +248,7 @@ void LexStream::Dump()
 
     if ((tokfile = ::SystemFopen(tokfile_name, "w")) == NULL)
     {
-        cout << "*** Cannot open file " << tokfile_name << "\n";
+        Coutput << "*** Cannot open file " << tokfile_name << "\n";
         return;
     }
 
@@ -259,7 +259,6 @@ void LexStream::Dump()
     LexStream::TokenIndex tok = 0;
     for (LexStream::CommentIndex com = FirstComment(tok); com < NumComments() && PrecedingToken(com) == tok; com++)
     {
-        
         fprintf(tokfile, "*%5d ", com);
         // print file name
 #ifdef EBCDIC

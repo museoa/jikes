@@ -9,7 +9,6 @@
 //
 #include "config.h"
 #include <sys/stat.h>
-#include "unicode.h"
 #include "error.h"
 #include "control.h"
 #include "semantic.h"
@@ -229,7 +228,7 @@ void SemanticError::Report(SemanticErrorKind msg_code,
             buffer.Reset();
         }
         error.Reset(1); // we need at least 1 error in order for the return code to be set properly. See print_messages
-        cout.flush();
+        Coutput.flush();
     }
  
     return;
@@ -503,6 +502,7 @@ void SemanticError::StaticInitializer()
     print_message[INSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR_INVOCATION] = PrintINSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR_INVOCATION;
     print_message[SYNTHETIC_VARIABLE_ACCESS] = PrintSYNTHETIC_VARIABLE_ACCESS;
     print_message[SYNTHETIC_METHOD_INVOCATION] = PrintSYNTHETIC_METHOD_INVOCATION;
+    print_message[SYNTHETIC_CONSTRUCTOR_INVOCATION] = PrintSYNTHETIC_CONSTRUCTOR_INVOCATION;
     print_message[THIS_IN_EXPLICIT_CONSTRUCTOR_INVOCATION] = PrintTHIS_IN_EXPLICIT_CONSTRUCTOR_INVOCATION;
     print_message[SUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION] = PrintSUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION;
     print_message[INNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION] = PrintINNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION;
@@ -682,31 +682,31 @@ int SemanticError::PrintMessages()
                 if (control.option.nowarn) // we only had warnings and they should not be reported
                     return return_code;
 
-                cout << "\nIssued "
-                     << num_warnings 
-                     << (lex_stream -> file_symbol -> semantic == control.system_semantic ? " system" : " semantic")
-                     << " warning" << (num_warnings <= 1 ? "" : "s");
+                Coutput << "\nIssued "
+                        << num_warnings 
+                        << (lex_stream -> file_symbol -> semantic == control.system_semantic ? " system" : " semantic")
+                        << " warning" << (num_warnings <= 1 ? "" : "s");
             }
             else // we had some errors, and possibly warnings as well
             {
-                cout << "\nFound "
-                     << num_errors
-                     << (lex_stream -> file_symbol -> semantic == control.system_semantic ? " system" : " semantic")
-                     << " error" << (num_errors <= 1 ? "" : "s");
+                Coutput << "\nFound "
+                        << num_errors
+                        << (lex_stream -> file_symbol -> semantic == control.system_semantic ? " system" : " semantic")
+                        << " error" << (num_errors <= 1 ? "" : "s");
                 if (num_warnings > 0 && !control.option.nowarn) 
                 {
-                     cout << " and issued "
-                          << num_warnings << " warning" << (num_warnings <= 1 ? "" : "s");
+                     Coutput << " and issued "
+                             << num_warnings << " warning" << (num_warnings <= 1 ? "" : "s");
                 }
             }
 
             if (lex_stream -> file_symbol -> semantic != control.system_semantic)
             {
-                cout << " compiling \"";
-                Unicode::Cout(lex_stream -> FileName());
-                cout << '\"';
+                Coutput << " compiling \""
+                        << lex_stream -> FileName()
+                        << '\"';
             }
-            cout << ':';
+            Coutput << ':';
 
             //
             //
@@ -741,13 +741,13 @@ int SemanticError::PrintMessages()
                         if (error[k].left_token < error[k].right_token)
                              PrintLargeSource(k);
                         else PrintSmallSource(k);
-                        cout << "\n*** " << (warning[error[k].msg_code] == 1
+                        Coutput << "\n*** " << (warning[error[k].msg_code] == 1
                                                     ? "Warning: "
                                                     : (warning[error[k].msg_code] == 2 && (! control.option.zero_defect)
                                                               ? "Caution: "
                                                               : "Error: "));
                         (print_message[error[k].msg_code]) (error[k], lex_stream, control);
-                        cout << '\n';
+                        Coutput << '\n';
                     }
                 }
                 lex_stream -> DestroyInput();
@@ -782,8 +782,7 @@ int SemanticError::PrintMessages()
         }
     }
 
-    cout.flush();
-    cerr.flush();
+    Coutput.flush();
 
     return return_code;
 }
@@ -799,16 +798,16 @@ void SemanticError::PrintEmacsMessage(int k)
     if (right_column_no != 0) // could not compute a column number
         right_column_no += (error[k].right_string_length - 1); // point to last character in right token
 
-    Unicode::Cout(lex_stream -> FileName());
-    cout << ':' << left_line_no  << ':' << left_column_no 
-         << ':' << right_line_no << ':' << right_column_no
-         << (warning[error[k].msg_code] == 1
-                    ? ": Warning: "
-                    : (warning[error[k].msg_code] == 2  && (! control.option.zero_defect)
-                              ? ": Caution: "
-                              : ": Error: "));
+    Coutput << lex_stream -> FileName()
+            << ':' << left_line_no  << ':' << left_column_no 
+            << ':' << right_line_no << ':' << right_column_no
+            << (warning[error[k].msg_code] == 1
+                       ? ": Warning: "
+                       : (warning[error[k].msg_code] == 2  && (! control.option.zero_defect)
+                                 ? ": Caution: "
+                                 : ": Error: "));
     (print_message[error[k].msg_code]) (error[k], lex_stream, control);
-    cout << '\n';
+    Coutput << '\n';
 
     return;
 }
@@ -830,57 +829,59 @@ void SemanticError::PrintLargeSource(int k)
     if (left_line_no == right_line_no)
     {
         if (left_line_no == 0)
-            cout << "\n";
+            Coutput << "\n";
         else
         {
-            cout << "\n\n";
-            cout.width(6);
-            cout << left_line_no << ". ";
+            Coutput << "\n\n";
+            Coutput.width(6);
+            Coutput << left_line_no << ". ";
             for (int i = lex_stream -> LineStart(left_line_no); i <= lex_stream -> LineEnd(left_line_no); i++)
-                Unicode::Cout(lex_stream -> InputBuffer()[i]);
+                Coutput << lex_stream -> InputBuffer()[i];
 
-            cout.width(left_column_no + 8);
-            cout << "<";
-            cout.width(right_column_no + error[k].right_string_length - left_column_no - 1);
-            cout.fill('-');
-            cout << ">";
-            cout.fill(' ');
+            int offset = lex_stream -> WcharOffset(error[k].left_token, error[k].right_token);
+            Coutput.width(left_column_no + 8);
+            Coutput << "<";
+            Coutput.width(right_column_no + error[k].right_string_length - left_column_no - 1 + offset);
+            Coutput.fill('-');
+            Coutput << ">";
+            Coutput.fill(' ');
         }
     }
     else
     {
-        cout << "\n\n";
-        cout.width(left_column_no + 8);
-        cout << "<";
+        Coutput << "\n\n";
+        Coutput.width(left_column_no + 8);
+        Coutput << "<";
 
-        cout.width(lex_stream -> LineSegmentLength(error[k].left_token));
-        cout.fill('-');
-        cout << "\n";
-        cout.fill(' ');
+        Coutput.width(lex_stream -> LineSegmentLength(error[k].left_token));
+        Coutput.fill('-');
+        Coutput << "\n";
+        Coutput.fill(' ');
 
-        cout.width(6);
-        cout << left_line_no << ". ";
+        Coutput.width(6);
+        Coutput << left_line_no << ". ";
         for (int i = lex_stream -> LineStart(left_line_no); i <= lex_stream -> LineEnd(left_line_no); i++)
-            Unicode::Cout(lex_stream -> InputBuffer()[i]);
+            Coutput << lex_stream -> InputBuffer()[i];
 
         if (right_line_no > left_line_no + 1)
         {
-            cout.width(left_column_no + 7);
-            cout << " ";
-            cout << ". . .\n";
+            Coutput.width(left_column_no + 7);
+            Coutput << " ";
+            Coutput << ". . .\n";
         }
 
-        cout.width(6);
-        cout << right_line_no << ". ";
+        Coutput.width(6);
+        Coutput << right_line_no << ". ";
         for (int j = lex_stream -> LineStart(right_line_no); j <= lex_stream -> LineEnd(right_line_no); j++)
-            Unicode::Cout(lex_stream -> InputBuffer()[j]);
+            Coutput << lex_stream -> InputBuffer()[j];
 
-        cout.width(8);
-        cout << "";
-        cout.width(right_column_no + error[k].right_string_length - 1);
-        cout.fill('-');
-        cout << ">";
-        cout.fill(' ');
+        int offset = lex_stream -> WcharOffset(error[k].right_token);
+        Coutput.width(8);
+        Coutput << "";
+        Coutput.width(right_column_no + error[k].right_string_length - 1 + offset);
+        Coutput.fill('-');
+        Coutput << ">";
+        Coutput.fill(' ');
     }
  
     return;
@@ -896,31 +897,31 @@ void SemanticError::PrintSmallSource(int k)
     int left_line_no = lex_stream -> Line(error[k].left_token);
 
     if (left_line_no == 0)
-        cout << "\n";
+        Coutput << "\n";
     else
     {
-        cout << "\n\n";
-        cout.width(6);
-        cout << left_line_no;
-        cout << ". ";
-
+        Coutput << "\n\n";
+        Coutput.width(6);
+        Coutput << left_line_no;
+        Coutput << ". ";
         for (int i = lex_stream -> LineStart(left_line_no); i <= lex_stream -> LineEnd(left_line_no); i++)
-            Unicode::Cout(lex_stream -> InputBuffer()[i]);
+            Coutput << lex_stream -> InputBuffer()[i];
 
         int left_column_no = lex_stream -> Column(error[k].left_token),
             right_column_no = lex_stream -> Column(error[k].right_token);
 
-        cout.width(left_column_no + 7);
-        cout << "";
+        Coutput.width(left_column_no + 7);
+        Coutput << "";
         if (left_column_no == right_column_no && error[k].right_string_length == 1)
-            cout << '^';
+            Coutput << '^';
         else
         {
-            cout << '<';
-            cout.width(right_column_no + error[k].right_string_length - left_column_no - 1);
-            cout.fill('-');
-            cout << ">";
-            cout.fill(' ');
+            int offset = lex_stream -> WcharOffset(error[k].left_token, error[k].right_token);
+            Coutput << '<';
+            Coutput.width(right_column_no + error[k].right_string_length - left_column_no - 1 + offset);
+            Coutput.fill('-');
+            Coutput << ">";
+            Coutput.fill(' ');
         }
     }
  
@@ -935,7 +936,7 @@ void SemanticError::PrintSmallSource(int k)
 //
 void SemanticError::PrintBAD_ERROR(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cerr << "chaos: Error code " << err.msg_code << " is not a valid error message code.\n";
+    fprintf(stderr, "chaos: Error code %i is not a valid error message code.\n", err.msg_code);
 
     return;
 }
@@ -944,23 +945,23 @@ void SemanticError::PrintBAD_ERROR(ErrorInfo &err, LexStream *lex_stream, Contro
 void SemanticError::PrintDEFAULT_ERROR(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
     if (err.insert1)
-        Unicode::Cout(err.insert1);
+        Coutput << err.insert1;
     if (err.insert2)
-        Unicode::Cout(err.insert2);
+        Coutput << err.insert2;
     if (err.insert3)
-        Unicode::Cout(err.insert3);
+        Coutput << err.insert3;
     if (err.insert4)
-        Unicode::Cout(err.insert4);
+        Coutput << err.insert4;
     if (err.insert5)
-        Unicode::Cout(err.insert5);
+        Coutput << err.insert5;
     if (err.insert6)
-        Unicode::Cout(err.insert6);
+        Coutput << err.insert6;
     if (err.insert7)
-        Unicode::Cout(err.insert7);
+        Coutput << err.insert7;
     if (err.insert8)
-        Unicode::Cout(err.insert8);
+        Coutput << err.insert8;
     if (err.insert9)
-        Unicode::Cout(err.insert9);
+        Coutput << err.insert9;
 
     return;
 }
@@ -968,11 +969,11 @@ void SemanticError::PrintDEFAULT_ERROR(ErrorInfo &err, LexStream *lex_stream, Co
 
 void SemanticError::PrintINVALID_OPTION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << '\"';
-    Unicode::Cout(err.insert1);
-    cout << "\" is an invalid option; "
-         << StringConstant::U8S_command_format;
-    cout << '.';
+    Coutput << '\"'
+            << err.insert1
+            << "\" is an invalid option; "
+            << StringConstant::U8S_command_format
+            << '.';
 
     return;
 }
@@ -980,7 +981,7 @@ void SemanticError::PrintINVALID_OPTION(ErrorInfo &err, LexStream *lex_stream, C
 
 void SemanticError::PrintINVALID_K_OPTION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "No argument specified for +K option. The proper form is \"+Kxxx=xxx\" (with no intervening space).";
+    Coutput << "No argument specified for +K option. The proper form is \"+Kxxx=xxx\" (with no intervening space).";
 
     return;
 }
@@ -988,9 +989,9 @@ void SemanticError::PrintINVALID_K_OPTION(ErrorInfo &err, LexStream *lex_stream,
 
 void SemanticError::PrintINVALID_K_TARGET(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << '\"';
-    Unicode::Cout(err.insert1);
-    cout << "\" is not a valid target in a +K option. The target must be a numeric type or boolean.";
+    Coutput << '\"'
+            << err.insert1
+            << "\" is not a valid target in a +K option. The target must be a numeric type or boolean.";
 
     return;
 }
@@ -998,9 +999,9 @@ void SemanticError::PrintINVALID_K_TARGET(ErrorInfo &err, LexStream *lex_stream,
 
 void SemanticError::PrintINVALID_TAB_VALUE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << '\"';
-    Unicode::Cout(err.insert1);
-    cout << "\" is not a valid tab size. An integer value is expected.";
+    Coutput << '\"'
+            << err.insert1
+            << "\" is not a valid tab size. An integer value is expected.";
 
     return;
 }
@@ -1008,9 +1009,9 @@ void SemanticError::PrintINVALID_TAB_VALUE(ErrorInfo &err, LexStream *lex_stream
 
 void SemanticError::PrintINVALID_DIRECTORY(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The directory specified in the \"-d\" option, \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", is either invalid or it could not be expanded.";
+    Coutput << "The directory specified in the \"-d\" option, \""
+            << err.insert1
+            << "\", is either invalid or it could not be expanded.";
 
     return;
 }
@@ -1018,9 +1019,9 @@ void SemanticError::PrintINVALID_DIRECTORY(ErrorInfo &err, LexStream *lex_stream
 
 void SemanticError::PrintUNSUPPORTED_OPTION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "This option \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" is currently unsupported.";
+    Coutput << "This option \""
+            << err.insert1
+            << "\" is currently unsupported.";
 
     return;
 }
@@ -1028,7 +1029,7 @@ void SemanticError::PrintUNSUPPORTED_OPTION(ErrorInfo &err, LexStream *lex_strea
 
 void SemanticError::PrintNO_CURRENT_DIRECTORY(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Could not open current directory.";
+    Coutput << "Could not open current directory.";
 
     return;
 }
@@ -1036,9 +1037,9 @@ void SemanticError::PrintNO_CURRENT_DIRECTORY(ErrorInfo &err, LexStream *lex_str
 
 void SemanticError::PrintCANNOT_OPEN_ZIP_FILE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The file \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" is not a valid zip file.";
+    Coutput << "The file \""
+            << err.insert1
+            << "\" is not a valid zip file.";
 
     return;
 }
@@ -1046,9 +1047,9 @@ void SemanticError::PrintCANNOT_OPEN_ZIP_FILE(ErrorInfo &err, LexStream *lex_str
 
 void SemanticError::PrintCANNOT_OPEN_PATH_DIRECTORY(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The file \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" is not a valid directory.";
+    Coutput << "The file \""
+            << err.insert1
+            << "\" is not a valid directory.";
 
     return;
 }
@@ -1056,30 +1057,30 @@ void SemanticError::PrintCANNOT_OPEN_PATH_DIRECTORY(ErrorInfo &err, LexStream *l
 
 void SemanticError::PrintPACKAGE_NOT_FOUND(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Could not find package named: \n";
+    Coutput << "Could not find package named: \n";
     for (int i = 1; i < control.classpath.Length(); i++)
     {
         PathSymbol *path_symbol = control.classpath[i];
         wchar_t *path = path_symbol -> Name();
 
-        cout << "                ";
-        Unicode::Cout(path);
+        Coutput << "                "
+                << path;
         if (path_symbol -> IsZip())
         {
-            cout << "(";
-            Unicode::Cout(err.insert1);
-            cout << ")";
+            Coutput << "("
+                    << err.insert1
+                    << ")";
         }
         else
         {
-            cout << "/";
-            Unicode::Cout(err.insert1);
+            Coutput << "/"
+                    << err.insert1;
         }
 
         if (i + 2 < control.classpath.Length())
-             cout << ", \n";
+             Coutput << ", \n";
         else if (i + 2 == control.classpath.Length())
-             cout << " or \n";
+             Coutput << " or \n";
     }
 
     return;
@@ -1088,9 +1089,9 @@ void SemanticError::PrintPACKAGE_NOT_FOUND(ErrorInfo &err, LexStream *lex_stream
 
 void SemanticError::PrintCANNOT_OPEN_DIRECTORY(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Unable to open directory \"";
-    Unicode::Cout(err.insert1);
-    cout << "\".";
+    Coutput << "Unable to open directory \""
+            << err.insert1
+            << "\".";
 
     return;
 }
@@ -1098,9 +1099,9 @@ void SemanticError::PrintCANNOT_OPEN_DIRECTORY(ErrorInfo &err, LexStream *lex_st
 
 void SemanticError::PrintBAD_INPUT_FILE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The input file \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" does not have the \".java\" extension.";
+    Coutput << "The input file \""
+            << err.insert1
+            << "\" does not have the \".java\" extension.";
 
     return;
 }
@@ -1108,9 +1109,9 @@ void SemanticError::PrintBAD_INPUT_FILE(ErrorInfo &err, LexStream *lex_stream, C
 
 void SemanticError::PrintUNREADABLE_INPUT_FILE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The input file \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" was not found.";
+    Coutput << "The input file \""
+            << err.insert1
+            << "\" was not found.";
 
     return;
 }
@@ -1118,9 +1119,9 @@ void SemanticError::PrintUNREADABLE_INPUT_FILE(ErrorInfo &err, LexStream *lex_st
 
 void SemanticError::PrintCANNOT_REOPEN_FILE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Unable to reopen file \"";
-    Unicode::Cout(err.insert1);
-    cout << "\".";
+    Coutput << "Unable to reopen file \""
+            << err.insert1
+            << "\".";
 
     return;
 }
@@ -1128,9 +1129,9 @@ void SemanticError::PrintCANNOT_REOPEN_FILE(ErrorInfo &err, LexStream *lex_strea
 
 void SemanticError::PrintCANNOT_WRITE_FILE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Unable to write file \"";
-    Unicode::Cout(err.insert1);
-    cout << "\".";
+    Coutput << "Unable to write file \""
+            << err.insert1
+            << "\".";
 
     return;
 }
@@ -1138,9 +1139,9 @@ void SemanticError::PrintCANNOT_WRITE_FILE(ErrorInfo &err, LexStream *lex_stream
 
 void SemanticError::PrintCANNOT_COMPUTE_COLUMNS(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Unable to reopen file \"";
-    Unicode::Cout(err.insert1);
-    cout << "\". Therefore, column positions may be incorrect.";
+    Coutput << "Unable to reopen file \""
+            << err.insert1
+            << "\". Therefore, column positions may be incorrect.";
 
     return;
 }
@@ -1148,7 +1149,7 @@ void SemanticError::PrintCANNOT_COMPUTE_COLUMNS(ErrorInfo &err, LexStream *lex_s
 
 void SemanticError::PrintREDUNDANT_ABSTRACT(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The use of the \"abstract\" modifier in this context is redundant and strongly discouraged as a matter of style.";
+    Coutput << "The use of the \"abstract\" modifier in this context is redundant and strongly discouraged as a matter of style.";
 
     return;
 }
@@ -1156,7 +1157,7 @@ void SemanticError::PrintREDUNDANT_ABSTRACT(ErrorInfo &err, LexStream *lex_strea
 
 void SemanticError::PrintREDUNDANT_FINAL(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The use of the \"final\" modifier in this context is redundant and strongly discouraged as a matter of style.";
+    Coutput << "The use of the \"final\" modifier in this context is redundant and strongly discouraged as a matter of style.";
 
     return;
 }
@@ -1164,7 +1165,7 @@ void SemanticError::PrintREDUNDANT_FINAL(ErrorInfo &err, LexStream *lex_stream, 
 
 void SemanticError::PrintREDUNDANT_PUBLIC(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The use of the \"public\" modifier in this context is redundant and strongly discouraged as a matter of style.";
+    Coutput << "The use of the \"public\" modifier in this context is redundant and strongly discouraged as a matter of style.";
 
     return;
 }
@@ -1172,7 +1173,7 @@ void SemanticError::PrintREDUNDANT_PUBLIC(ErrorInfo &err, LexStream *lex_stream,
 
 void SemanticError::PrintREDUNDANT_STATIC(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The use of the \"static\" modifier in this context is redundant and strongly discouraged as a matter of style.";
+    Coutput << "The use of the \"static\" modifier in this context is redundant and strongly discouraged as a matter of style.";
 
     return;
 }
@@ -1180,7 +1181,7 @@ void SemanticError::PrintREDUNDANT_STATIC(ErrorInfo &err, LexStream *lex_stream,
 
 void SemanticError::PrintEMPTY_DECLARATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "An EmptyDeclaration is a deprecated feature that should not be used - \";\" ignored.";
+    Coutput << "An EmptyDeclaration is a deprecated feature that should not be used - \";\" ignored.";
 
     return;
 }
@@ -1188,7 +1189,7 @@ void SemanticError::PrintEMPTY_DECLARATION(ErrorInfo &err, LexStream *lex_stream
 
 void SemanticError::PrintOBSOLESCENT_ABSTRACT(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Every interface in implicitly abstract. This modifier is obsolete and should not be used in new Java programs.";
+    Coutput << "Every interface in implicitly abstract. This modifier is obsolete and should not be used in new Java programs.";
 
     return;
 }
@@ -1196,7 +1197,7 @@ void SemanticError::PrintOBSOLESCENT_ABSTRACT(ErrorInfo &err, LexStream *lex_str
 
 void SemanticError::PrintOBSOLESCENT_BRACKETS(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The use of empty bracket pairs following a MethodDeclarator should not be used in new Java programs.";
+    Coutput << "The use of empty bracket pairs following a MethodDeclarator should not be used in new Java programs.";
 
     return;
 }
@@ -1204,7 +1205,7 @@ void SemanticError::PrintOBSOLESCENT_BRACKETS(ErrorInfo &err, LexStream *lex_str
 
 void SemanticError::PrintNO_TYPES(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "This compilation unit contains no type declaration.";
+    Coutput << "This compilation unit contains no type declaration.";
 
     return;
 }
@@ -1212,23 +1213,23 @@ void SemanticError::PrintNO_TYPES(ErrorInfo &err, LexStream *lex_stream, Control
 
 void SemanticError::PrintTYPE_IN_MULTIPLE_FILES(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The file \"";
+    Coutput << "The file \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << ".java\" contains type \"";
-    Unicode::Cout(err.insert4);
-    cout << "\" which conflicts with file \"";
+    Coutput << err.insert2
+            << ".java\" contains type \""
+            << err.insert4
+            << "\" which conflicts with file \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << "/";
+        Coutput << err.insert3
+                << "/";
     }
-    Unicode::Cout(err.insert4);
-    cout << ".java\".";
+    Coutput << err.insert4
+            << ".java\".";
 
     return;
 }
@@ -1236,23 +1237,23 @@ void SemanticError::PrintTYPE_IN_MULTIPLE_FILES(ErrorInfo &err, LexStream *lex_s
 
 void SemanticError::PrintPACKAGE_TYPE_CONFLICT(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type \"";
+    Coutput << "The type \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << "\" contained in file \"";
-    Unicode::Cout(err.insert3);
-    cout << "\" conflicts with the package \"";
+    Coutput << err.insert2
+            << "\" contained in file \""
+            << err.insert3
+            << "\" conflicts with the package \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << "\".";
+    Coutput << err.insert2
+            << "\".";
 
     return;
 }
@@ -1260,18 +1261,18 @@ void SemanticError::PrintPACKAGE_TYPE_CONFLICT(ErrorInfo &err, LexStream *lex_st
 
 void SemanticError::PrintDIRECTORY_FILE_CONFLICT(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" contained in file \"";
+    Coutput << "The type \""
+            << err.insert1
+            << "\" contained in file \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << ".java\" conflicts with the directory \"";
-    Unicode::Cout(err.insert4);
-    cout << "\".";
+    Coutput << err.insert3
+            << ".java\" conflicts with the directory \""
+            << err.insert4
+            << "\".";
 
     return;
 }
@@ -1279,13 +1280,13 @@ void SemanticError::PrintDIRECTORY_FILE_CONFLICT(ErrorInfo &err, LexStream *lex_
 
 void SemanticError::PrintFILE_FILE_CONFLICT(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Cannot write class file \"";
-    Unicode::Cout(err.insert1);
-    cout << ".class\" because that name conflicts with the name of the class file \"";
-    Unicode::Cout(err.insert2);
-    cout << "\" in directory \"";
-    Unicode::Cout(err.insert3);
-    cout << "\". This is illegal because file names are case-insensitive in this system.";
+    Coutput << "Cannot write class file \""
+            << err.insert1
+            << ".class\" because that name conflicts with the name of the class file \""
+            << err.insert2
+            << "\" in directory \""
+            << err.insert3
+            << "\". This is illegal because file names are case-insensitive in this system.";
 
     return;
 }
@@ -1293,13 +1294,13 @@ void SemanticError::PrintFILE_FILE_CONFLICT(ErrorInfo &err, LexStream *lex_strea
 
 void SemanticError::PrintMULTIPLE_PUBLIC_TYPES(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" is declared public in compilation unit \"";
-    Unicode::Cout(lex_stream -> FileName());
-    cout<< "\" which also contains the public type, \"";
-    Unicode::Cout(err.insert2);
-    cout << "\".";
+    Coutput << "The type \""
+            << err.insert1
+            << "\" is declared public in compilation unit \""
+            << lex_stream -> FileName()
+            << "\" which also contains the public type, \""
+            << err.insert2
+            << "\".";
 
     return;
 }
@@ -1307,11 +1308,11 @@ void SemanticError::PrintMULTIPLE_PUBLIC_TYPES(ErrorInfo &err, LexStream *lex_st
 
 void SemanticError::PrintMISMATCHED_TYPE_AND_FILE_NAMES(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The public type \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" does not match the name of its containing file \"";
-    Unicode::Cout(lex_stream -> FileName());
-    cout << "\".";
+    Coutput << "The public type \""
+            << err.insert1
+            << "\" does not match the name of its containing file \""
+            << lex_stream -> FileName()
+            << "\".";
 
     return;
 }
@@ -1319,15 +1320,15 @@ void SemanticError::PrintMISMATCHED_TYPE_AND_FILE_NAMES(ErrorInfo &err, LexStrea
 
 void SemanticError::PrintREFERENCE_TO_TYPE_IN_MISMATCHED_FILE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" is defined in the file \"";
-    Unicode::Cout(err.insert2);
-    cout << ".java\" but referenced in the file \"";
-    Unicode::Cout(lex_stream -> FileName());
-    cout << "\". It is recommended that it be redefined in \"";
-    Unicode::Cout(err.insert1);
-    cout << ".java\".";
+    Coutput << "The type \""
+            << err.insert1
+            << "\" is defined in the file \""
+            << err.insert2
+            << ".java\" but referenced in the file \""
+            << lex_stream -> FileName()
+            << "\". It is recommended that it be redefined in \""
+            << err.insert1
+            << ".java\".";
 
     return;
 }
@@ -1335,11 +1336,11 @@ void SemanticError::PrintREFERENCE_TO_TYPE_IN_MISMATCHED_FILE(ErrorInfo &err, Le
 
 void SemanticError::PrintDUPLICATE_INNER_TYPE_NAME(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The inner type named \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" is nested in an outer class of the same name at location ";
-    Unicode::Cout(err.insert2);
-    cout << '.';
+    Coutput << "The inner type named \""
+            << err.insert1
+            << "\" is nested in an outer class of the same name at location "
+            << err.insert2
+            << '.';
 
     return;
 }
@@ -1347,11 +1348,11 @@ void SemanticError::PrintDUPLICATE_INNER_TYPE_NAME(ErrorInfo &err, LexStream *le
 
 void SemanticError::PrintDUPLICATE_TYPE_DECLARATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Duplicate declaration of type \"";
-    Unicode::Cout(err.insert1);
-    cout << "\". The other occurrence is at location ";
-    Unicode::Cout(err.insert2);
-    cout << '.';
+    Coutput << "Duplicate declaration of type \""
+            << err.insert1
+            << "\". The other occurrence is at location "
+            << err.insert2
+            << '.';
 
     return;
 }
@@ -1359,11 +1360,11 @@ void SemanticError::PrintDUPLICATE_TYPE_DECLARATION(ErrorInfo &err, LexStream *l
 
 void SemanticError::PrintUNNECESSARY_TYPE_IMPORT(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Unnecessary import of type \"";
-    Unicode::Cout(err.insert1);
-    cout << "\". The type is declared at location ";
-    Unicode::Cout(err.insert2);
-    cout << '.';
+    Coutput << "Unnecessary import of type \""
+            << err.insert1
+            << "\". The type is declared at location "
+            << err.insert2
+            << '.';
 
     return;
 }
@@ -1371,9 +1372,9 @@ void SemanticError::PrintUNNECESSARY_TYPE_IMPORT(ErrorInfo &err, LexStream *lex_
 
 void SemanticError::PrintUNINITIALIZED_FIELD(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The field \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" is not initialized.";
+    Coutput << "The field \""
+            << err.insert1
+            << "\" is not initialized.";
 
     return;
 }
@@ -1381,7 +1382,7 @@ void SemanticError::PrintUNINITIALIZED_FIELD(ErrorInfo &err, LexStream *lex_stre
 
 void SemanticError::PrintDUPLICATE_MODIFIER(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Duplicate specification of this modifier.";
+    Coutput << "Duplicate specification of this modifier.";
 
     return;
 }
@@ -1389,7 +1390,7 @@ void SemanticError::PrintDUPLICATE_MODIFIER(ErrorInfo &err, LexStream *lex_strea
 
 void SemanticError::PrintDUPLICATE_ACCESS_MODIFIER(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Duplicate specification of an access modifier. "
+    Coutput << "Duplicate specification of an access modifier. "
             "Only one instance of \"public\", \"private\", or \"protected\" may appear in a declaration.";
 
     return;
@@ -1398,8 +1399,8 @@ void SemanticError::PrintDUPLICATE_ACCESS_MODIFIER(ErrorInfo &err, LexStream *le
 
 void SemanticError::PrintINVALID_TOP_LEVEL_CLASS_MODIFIER(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    Unicode::Cout(err.insert1);
-    cout << " is not a valid modifier for a top-level class.";
+    Coutput << err.insert1
+            << " is not a valid modifier for a top-level class.";
 
     return;
 }
@@ -1407,8 +1408,8 @@ void SemanticError::PrintINVALID_TOP_LEVEL_CLASS_MODIFIER(ErrorInfo &err, LexStr
 
 void SemanticError::PrintINVALID_INNER_CLASS_MODIFIER(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    Unicode::Cout(err.insert1);
-    cout << " is not a valid modifier for an inner class.";
+    Coutput << err.insert1
+            << " is not a valid modifier for an inner class.";
 
     return;
 }
@@ -1416,8 +1417,8 @@ void SemanticError::PrintINVALID_INNER_CLASS_MODIFIER(ErrorInfo &err, LexStream 
 
 void SemanticError::PrintINVALID_STATIC_INNER_CLASS_MODIFIER(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    Unicode::Cout(err.insert1);
-    cout << " is not a valid modifier for an inner class that is enclosed in an interface.";
+    Coutput << err.insert1
+            << " is not a valid modifier for an inner class that is enclosed in an interface.";
 
     return;
 }
@@ -1425,8 +1426,8 @@ void SemanticError::PrintINVALID_STATIC_INNER_CLASS_MODIFIER(ErrorInfo &err, Lex
 
 void SemanticError::PrintINVALID_LOCAL_CLASS_MODIFIER(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    Unicode::Cout(err.insert1);
-    cout << " is not a valid modifier for a local inner class.";
+    Coutput << err.insert1
+            << " is not a valid modifier for a local inner class.";
 
     return;
 }
@@ -1434,7 +1435,7 @@ void SemanticError::PrintINVALID_LOCAL_CLASS_MODIFIER(ErrorInfo &err, LexStream 
 
 void SemanticError::PrintFINAL_ABSTRACT_CLASS(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "A class may not be declared both \"final\" and \"abstract\".";
+    Coutput << "A class may not be declared both \"final\" and \"abstract\".";
 
     return;
 }
@@ -1442,8 +1443,8 @@ void SemanticError::PrintFINAL_ABSTRACT_CLASS(ErrorInfo &err, LexStream *lex_str
 
 void SemanticError::PrintINVALID_INTERFACE_MODIFIER(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    Unicode::Cout(err.insert1);
-    cout << " is not a valid interface modifier.";
+    Coutput << err.insert1
+            << " is not a valid interface modifier.";
 
     return;
 }
@@ -1451,7 +1452,7 @@ void SemanticError::PrintINVALID_INTERFACE_MODIFIER(ErrorInfo &err, LexStream *l
 
 void SemanticError::PrintVOLATILE_FINAL(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "A \"volatile\" field may not be declared \"final\".";
+    Coutput << "A \"volatile\" field may not be declared \"final\".";
 
     return;
 }
@@ -1459,7 +1460,7 @@ void SemanticError::PrintVOLATILE_FINAL(ErrorInfo &err, LexStream *lex_stream, C
 
 void SemanticError::PrintFINAL_VOLATILE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "A \"final\" field may not be declared \"volatile\".";
+    Coutput << "A \"final\" field may not be declared \"volatile\".";
 
     return;
 }
@@ -1467,8 +1468,8 @@ void SemanticError::PrintFINAL_VOLATILE(ErrorInfo &err, LexStream *lex_stream, C
 
 void SemanticError::PrintINVALID_FIELD_MODIFIER(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    Unicode::Cout(err.insert1);
-    cout << " is not a valid field modifier.";
+    Coutput << err.insert1
+            << " is not a valid field modifier.";
 
     return;
 }
@@ -1476,8 +1477,8 @@ void SemanticError::PrintINVALID_FIELD_MODIFIER(ErrorInfo &err, LexStream *lex_s
 
 void SemanticError::PrintINVALID_LOCAL_MODIFIER(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    Unicode::Cout(err.insert1);
-    cout << " is not a valid local variable or parameter modifier.";
+    Coutput << err.insert1
+            << " is not a valid local variable or parameter modifier.";
 
     return;
 }
@@ -1485,8 +1486,8 @@ void SemanticError::PrintINVALID_LOCAL_MODIFIER(ErrorInfo &err, LexStream *lex_s
 
 void SemanticError::PrintINVALID_METHOD_MODIFIER(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    Unicode::Cout(err.insert1);
-    cout << " is not a valid method modifier.";
+    Coutput << err.insert1
+            << " is not a valid method modifier.";
 
     return;
 }
@@ -1494,8 +1495,8 @@ void SemanticError::PrintINVALID_METHOD_MODIFIER(ErrorInfo &err, LexStream *lex_
 
 void SemanticError::PrintINVALID_SIGNATURE_MODIFIER(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    Unicode::Cout(err.insert1);
-    cout << " is not a valid signature modifier.";
+    Coutput << err.insert1
+            << " is not a valid signature modifier.";
 
     return;
 }
@@ -1503,8 +1504,8 @@ void SemanticError::PrintINVALID_SIGNATURE_MODIFIER(ErrorInfo &err, LexStream *l
 
 void SemanticError::PrintINVALID_CONSTRUCTOR_MODIFIER(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    Unicode::Cout(err.insert1);
-    cout << " is not a valid constructor modifier.";
+    Coutput << err.insert1
+            << " is not a valid constructor modifier.";
 
     return;
 }
@@ -1512,8 +1513,8 @@ void SemanticError::PrintINVALID_CONSTRUCTOR_MODIFIER(ErrorInfo &err, LexStream 
 
 void SemanticError::PrintINVALID_CONSTANT_MODIFIER(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    Unicode::Cout(err.insert1);
-    cout << " is not a valid constant modifier.";
+    Coutput << err.insert1
+            << " is not a valid constant modifier.";
 
     return;
 }
@@ -1521,14 +1522,14 @@ void SemanticError::PrintINVALID_CONSTANT_MODIFIER(ErrorInfo &err, LexStream *le
 
 void SemanticError::PrintPARENT_TYPE_IN_UNNAMED_PACKAGE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type associated with this construct is (or depends on) the type ";
+    Coutput << "The type associated with this construct is (or depends on) the type ";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << " which is contained in an unnamed package.";
+    Coutput << err.insert2
+            << " which is contained in an unnamed package.";
 
     return;
 }
@@ -1536,28 +1537,28 @@ void SemanticError::PrintPARENT_TYPE_IN_UNNAMED_PACKAGE(ErrorInfo &err, LexStrea
 
 void SemanticError::PrintRECOMPILATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type associated with this construct depends on file ";
+    Coutput << "The type associated with this construct depends on file ";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << ".class which, in turn, depends on file ";
+    Coutput << err.insert2
+            << ".class which, in turn, depends on file ";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << "/";
+        Coutput << err.insert3
+                << "/";
     }
-    Unicode::Cout(err.insert4);
-    cout << ".java. All files that depend on this source file, in particular, ";
+    Coutput << err.insert4
+            << ".java. All files that depend on this source file, in particular, ";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << ".java should be recompiled.";
+    Coutput << err.insert2
+            << ".java should be recompiled.";
 
     return;
 }
@@ -1565,14 +1566,14 @@ void SemanticError::PrintRECOMPILATION(ErrorInfo &err, LexStream *lex_stream, Co
 
 void SemanticError::PrintTYPE_NOT_FOUND(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Type ";
+    Coutput << "Type ";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << " was not found.";
+    Coutput << err.insert2
+            << " was not found.";
 
     return;
 }
@@ -1580,13 +1581,13 @@ void SemanticError::PrintTYPE_NOT_FOUND(ErrorInfo &err, LexStream *lex_stream, C
 
 void SemanticError::PrintDUPLICATE_ON_DEMAND_IMPORT(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Type ";
-    Unicode::Cout(err.insert1);
-    cout << " is imported on demand from package ";
-    Unicode::Cout(err.insert2);
-    cout << " and package ";
-    Unicode::Cout(err.insert3);
-    cout << '.';
+    Coutput << "Type "
+            << err.insert1
+            << " is imported on demand from package "
+            << err.insert2
+            << " and package "
+            << err.insert3
+            << '.';
 
     return;
 }
@@ -1594,7 +1595,7 @@ void SemanticError::PrintDUPLICATE_ON_DEMAND_IMPORT(ErrorInfo &err, LexStream *l
 
 void SemanticError::PrintNOT_A_TYPE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "A type is expected here.";
+    Coutput << "A type is expected here.";
 
     return;
 }
@@ -1602,14 +1603,14 @@ void SemanticError::PrintNOT_A_TYPE(ErrorInfo &err, LexStream *lex_stream, Contr
 
 void SemanticError::PrintNOT_A_CLASS(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Interface \"";
+    Coutput << "Interface \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << '/';
+        Coutput << err.insert1
+                << '/';
     }
-    Unicode::Cout(err.insert2);
-    cout << "\" cannot be used where a class is expected.";
+    Coutput << err.insert2
+            << "\" cannot be used where a class is expected.";
 
     return;
 }
@@ -1617,14 +1618,14 @@ void SemanticError::PrintNOT_A_CLASS(ErrorInfo &err, LexStream *lex_stream, Cont
 
 void SemanticError::PrintNOT_AN_INTERFACE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Class ";
+    Coutput << "Class ";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << '/';
+        Coutput << err.insert1
+                << '/';
     }
-    Unicode::Cout(err.insert2);
-    cout << " cannot be used where an interface is expected.";
+    Coutput << err.insert2
+            << " cannot be used where an interface is expected.";
 
     return;
 }
@@ -1632,14 +1633,14 @@ void SemanticError::PrintNOT_AN_INTERFACE(ErrorInfo &err, LexStream *lex_stream,
 
 void SemanticError::PrintSUPER_IS_FINAL(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The super class \"";
+    Coutput << "The super class \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << '/';
+        Coutput << err.insert1
+                << '/';
     }
-    Unicode::Cout(err.insert2);
-    cout << "\" is final. A final class must not have subclasses.";
+    Coutput << err.insert2
+            << "\" is final. A final class must not have subclasses.";
 
     return;
 }
@@ -1647,11 +1648,11 @@ void SemanticError::PrintSUPER_IS_FINAL(ErrorInfo &err, LexStream *lex_stream, C
 
 void SemanticError::PrintOBJECT_WITH_SUPER_TYPE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type ";
-    Unicode::Cout(err.insert1);
-    cout << '/';
-    Unicode::Cout(err.insert2);
-    cout << " must not have a super type.";
+    Coutput << "The type "
+            << err.insert1
+            << '/'
+            << err.insert2
+            << " must not have a super type.";
 
     return;
 }
@@ -1659,11 +1660,11 @@ void SemanticError::PrintOBJECT_WITH_SUPER_TYPE(ErrorInfo &err, LexStream *lex_s
 
 void SemanticError::PrintOBJECT_HAS_NO_SUPER_TYPE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type ";
-    Unicode::Cout(err.insert1);
-    cout << '/';
-    Unicode::Cout(err.insert2);
-    cout << " does not have a super type.";
+    Coutput << "The type "
+            << err.insert1
+            << '/'
+            << err.insert2
+            << " does not have a super type.";
 
     return;
 }
@@ -1671,11 +1672,11 @@ void SemanticError::PrintOBJECT_HAS_NO_SUPER_TYPE(ErrorInfo &err, LexStream *lex
 
 void SemanticError::PrintDUPLICATE_FIELD(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Duplicate declaration of field \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" in type \"";
-    Unicode::Cout(err.insert2);
-    cout << "\".";
+    Coutput << "Duplicate declaration of field \""
+            << err.insert1
+            << "\" in type \""
+            << err.insert2
+            << "\".";
 
     return;
 }
@@ -1683,11 +1684,11 @@ void SemanticError::PrintDUPLICATE_FIELD(ErrorInfo &err, LexStream *lex_stream, 
 
 void SemanticError::PrintDUPLICATE_METHOD(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Duplicate declaration of method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" in type \"";
-    Unicode::Cout(err.insert2);
-    cout << "\".";
+    Coutput << "Duplicate declaration of method \""
+            << err.insert1
+            << "\" in type \""
+            << err.insert2
+            << "\".";
 
     return;
 }
@@ -1695,18 +1696,18 @@ void SemanticError::PrintDUPLICATE_METHOD(ErrorInfo &err, LexStream *lex_stream,
 
 void SemanticError::PrintMISMATCHED_INHERITED_METHOD(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The return type of method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" does not match the return type of method \"";
-    Unicode::Cout(err.insert2);
-    cout << "\" inherited from type \"";
+    Coutput << "The return type of method \""
+            << err.insert1
+            << "\" does not match the return type of method \""
+            << err.insert2
+            << "\" inherited from type \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << "/";
+        Coutput << err.insert3
+                << "/";
     }
-    Unicode::Cout(err.insert4);
-    cout << "\".";
+    Coutput << err.insert4
+            << "\".";
 
     return;
 }
@@ -1714,27 +1715,27 @@ void SemanticError::PrintMISMATCHED_INHERITED_METHOD(ErrorInfo &err, LexStream *
 
 void SemanticError::PrintMISMATCHED_INHERITED_METHOD_EXTERNALLY(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "In class \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", the method \"";
-    Unicode::Cout(err.insert2);
-    cout << "\", inherited from type \"";
+    Coutput << "In class \""
+            << err.insert1
+            << "\", the method \""
+            << err.insert2
+            << "\", inherited from type \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << "/";
+        Coutput << err.insert3
+                << "/";
     }
-    Unicode::Cout(err.insert4);
-    cout << "\", does not have the same return type as the overridden method \"";
-    Unicode::Cout(err.insert5);
-    cout << "\", inherited from type \"";
+    Coutput << err.insert4
+            << "\", does not have the same return type as the overridden method \""
+            << err.insert5
+            << "\", inherited from type \"";
     if (NotDot(err.insert6))
     {
-        Unicode::Cout(err.insert6);
-        cout << "/";
+        Coutput << err.insert6
+                << "/";
     }
-    Unicode::Cout(err.insert7);
-    cout << "\".";
+    Coutput << err.insert7
+            << "\".";
 
     return;
 }
@@ -1742,9 +1743,9 @@ void SemanticError::PrintMISMATCHED_INHERITED_METHOD_EXTERNALLY(ErrorInfo &err, 
 
 void SemanticError::PrintDUPLICATE_CONSTRUCTOR(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Duplicate declaration of this constructor in type \"";
-    Unicode::Cout(err.insert1);
-    cout << "\".";
+    Coutput << "Duplicate declaration of this constructor in type \""
+            << err.insert1
+            << "\".";
 
     return;
 }
@@ -1752,11 +1753,11 @@ void SemanticError::PrintDUPLICATE_CONSTRUCTOR(ErrorInfo &err, LexStream *lex_st
 
 void SemanticError::PrintMISMATCHED_CONSTRUCTOR_NAME(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The name of the constructor \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" does not match the name of the class \"";
-    Unicode::Cout(err.insert2);
-    cout << "\".";
+    Coutput << "The name of the constructor \""
+            << err.insert1
+            << "\" does not match the name of the class \""
+            << err.insert2
+            << "\".";
 
     return;
 }
@@ -1764,10 +1765,10 @@ void SemanticError::PrintMISMATCHED_CONSTRUCTOR_NAME(ErrorInfo &err, LexStream *
 
 void SemanticError::PrintMETHOD_WITH_CONSTRUCTOR_NAME(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The name of this method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" matches the name of the containing class. "
-            "However, the method is not a constructor since its declarator is qualified with a type.";
+    Coutput << "The name of this method \""
+            << err.insert1
+            << "\" matches the name of the containing class. "
+               "However, the method is not a constructor since its declarator is qualified with a type.";
 
     return;
 }
@@ -1775,9 +1776,9 @@ void SemanticError::PrintMETHOD_WITH_CONSTRUCTOR_NAME(ErrorInfo &err, LexStream 
 
 void SemanticError::PrintDUPLICATE_FORMAL_PARAMETER(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Duplicate declaration of formal parameter ";
-    Unicode::Cout(err.insert1);
-    cout << '.';
+    Coutput << "Duplicate declaration of formal parameter "
+            << err.insert1
+            << '.';
 
     return;
 }
@@ -1785,9 +1786,9 @@ void SemanticError::PrintDUPLICATE_FORMAL_PARAMETER(ErrorInfo &err, LexStream *l
 
 void SemanticError::PrintDUPLICATE_LOCAL_VARIABLE_DECLARATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Duplicate declaration of local variable \"";
-    Unicode::Cout(err.insert1);
-    cout << "\".";
+    Coutput << "Duplicate declaration of local variable \""
+            << err.insert1
+            << "\".";
 
     return;
 }
@@ -1795,11 +1796,11 @@ void SemanticError::PrintDUPLICATE_LOCAL_VARIABLE_DECLARATION(ErrorInfo &err, Le
 
 void SemanticError::PrintDUPLICATE_LOCAL_TYPE_DECLARATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Duplicate declaration of local class \"";
-    Unicode::Cout(err.insert1);
-    cout << "\". The other occurrence is at location ";
-    Unicode::Cout(err.insert2);
-    cout << '.';
+    Coutput << "Duplicate declaration of local class \""
+            << err.insert1
+            << "\". The other occurrence is at location "
+            << err.insert2
+            << '.';
 
     return;
 }
@@ -1807,7 +1808,7 @@ void SemanticError::PrintDUPLICATE_LOCAL_TYPE_DECLARATION(ErrorInfo &err, LexStr
 
 void SemanticError::PrintMULTIPLE_DEFAULT_LABEL(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Multiple specification of default label in switch statement.";
+    Coutput << "Multiple specification of default label in switch statement.";
 
     return;
 }
@@ -1815,8 +1816,8 @@ void SemanticError::PrintMULTIPLE_DEFAULT_LABEL(ErrorInfo &err, LexStream *lex_s
 
 void SemanticError::PrintUNDECLARED_LABEL(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    Unicode::Cout(err.insert1);
-    cout << " is an undeclared label.";
+    Coutput << err.insert1
+            << " is an undeclared label.";
 
     return;
 }
@@ -1824,9 +1825,9 @@ void SemanticError::PrintUNDECLARED_LABEL(ErrorInfo &err, LexStream *lex_stream,
 
 void SemanticError::PrintDUPLICATE_LABEL(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Duplicate declaration of label \"";
-    Unicode::Cout(err.insert1);
-    cout << "\".";
+    Coutput << "Duplicate declaration of label \""
+            << err.insert1
+            << "\".";
 
     return;
 }
@@ -1834,14 +1835,14 @@ void SemanticError::PrintDUPLICATE_LABEL(ErrorInfo &err, LexStream *lex_stream, 
 
 void SemanticError::PrintTYPE_NOT_THROWABLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type \"";
+    Coutput << "The type \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << "\" is not a subclass of \"Throwable\".";
+    Coutput << err.insert2
+            << "\" is not a subclass of \"Throwable\".";
 
     return;
 }
@@ -1849,7 +1850,7 @@ void SemanticError::PrintTYPE_NOT_THROWABLE(ErrorInfo &err, LexStream *lex_strea
 
 void SemanticError::PrintCATCH_PRIMITIVE_TYPE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "A primitive type cannot be used to declare a catch clause parameter - the type Error is assumed.";
+    Coutput << "A primitive type cannot be used to declare a catch clause parameter - the type Error is assumed.";
 
     return;
 }
@@ -1857,7 +1858,7 @@ void SemanticError::PrintCATCH_PRIMITIVE_TYPE(ErrorInfo &err, LexStream *lex_str
 
 void SemanticError::PrintCATCH_ARRAY_TYPE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "A array type cannot be used to declare a catch clause parameter - the type Error is assumed.";
+    Coutput << "A array type cannot be used to declare a catch clause parameter - the type Error is assumed.";
 
     return;
 }
@@ -1865,23 +1866,23 @@ void SemanticError::PrintCATCH_ARRAY_TYPE(ErrorInfo &err, LexStream *lex_stream,
 
 void SemanticError::PrintAMBIGUOUS_FIELD(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The field name \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" is an ambiguous name found in the types \"";
+    Coutput << "The field name \""
+            << err.insert1
+            << "\" is an ambiguous name found in the types \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" and \"";
+    Coutput << err.insert3
+            << "\" and \"";
     if (NotDot(err.insert4))
     {
-        Unicode::Cout(err.insert4);
-        cout << "/";
+        Coutput << err.insert4
+                << "/";
     }
-    Unicode::Cout(err.insert5);
-    cout << "\".";
+    Coutput << err.insert5
+            << "\".";
 
     return;
 }
@@ -1889,23 +1890,23 @@ void SemanticError::PrintAMBIGUOUS_FIELD(ErrorInfo &err, LexStream *lex_stream, 
 
 void SemanticError::PrintAMBIGUOUS_TYPE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The the nested type name \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" is an ambiguous name found in the types \"";
+    Coutput << "The the nested type name \""
+            << err.insert1
+            << "\" is an ambiguous name found in the types \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" and \"";
+    Coutput << err.insert3
+            << "\" and \"";
     if (NotDot(err.insert4))
     {
-        Unicode::Cout(err.insert4);
-        cout << "/";
+        Coutput << err.insert4
+                << "/";
     }
-    Unicode::Cout(err.insert5);
-    cout << "\".";
+    Coutput << err.insert5
+            << "\".";
 
     return;
 }
@@ -1913,9 +1914,9 @@ void SemanticError::PrintAMBIGUOUS_TYPE(ErrorInfo &err, LexStream *lex_stream, C
 
 void SemanticError::PrintFIELD_IS_TYPE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The name \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" cannot be dereferenced as it represents a type.";
+    Coutput << "The name \""
+            << err.insert1
+            << "\" cannot be dereferenced as it represents a type.";
 
     return;
 }
@@ -1923,16 +1924,16 @@ void SemanticError::PrintFIELD_IS_TYPE(ErrorInfo &err, LexStream *lex_stream, Co
 
 void SemanticError::PrintFIELD_NOT_FOUND(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "No field named \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" was found in type \"";
+    Coutput << "No field named \""
+            << err.insert1
+            << "\" was found in type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\".";
+    Coutput << err.insert3
+            << "\".";
 
     return;
 }
@@ -1940,20 +1941,20 @@ void SemanticError::PrintFIELD_NOT_FOUND(ErrorInfo &err, LexStream *lex_stream, 
 
 void SemanticError::PrintFIELD_NAME_MISSPELLED(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "No field named \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" was found in type \"";
+    Coutput << "No field named \""
+            << err.insert1
+            << "\" was found in type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\". However, there is an accessible field \"";
-    Unicode::Cout(err.insert4);
-    cout << "\" whose name closely matches the name \"";
-    Unicode::Cout(err.insert1);
-    cout << "\".";
+    Coutput << err.insert3
+            << "\". However, there is an accessible field \""
+            << err.insert4
+            << "\" whose name closely matches the name \""
+            << err.insert1
+            << "\".";
 
     return;
 }
@@ -1961,23 +1962,23 @@ void SemanticError::PrintFIELD_NAME_MISSPELLED(ErrorInfo &err, LexStream *lex_st
 
 void SemanticError::PrintFIELD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The field \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" contained in class \"";
+    Coutput << "The field \""
+            << err.insert1
+            << "\" contained in class \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" has private access. Therefore, it is not accessible in class \"";
+    Coutput << err.insert3
+            << "\" has private access. Therefore, it is not accessible in class \"";
     if (NotDot(err.insert4))
     {
-        Unicode::Cout(err.insert4);
-        cout << "/";
+        Coutput << err.insert4
+                << "/";
     }
-    Unicode::Cout(err.insert5);
-    cout << "\".";
+    Coutput << err.insert5
+            << "\".";
 
     return;
 }
@@ -1985,23 +1986,23 @@ void SemanticError::PrintFIELD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE(ErrorInfo &err
 
 void SemanticError::PrintFIELD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The field \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" contained in class \"";
+    Coutput << "The field \""
+            << err.insert1
+            << "\" contained in class \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" has default access. Therefore, it is not accessible in class \"";
+    Coutput << err.insert3
+            << "\" has default access. Therefore, it is not accessible in class \"";
     if (NotDot(err.insert4))
     {
-        Unicode::Cout(err.insert4);
-        cout << "/";
+        Coutput << err.insert4
+                << "/";
     }
-    Unicode::Cout(err.insert5);
-    cout << "\" which is in a different package.";
+    Coutput << err.insert5
+            << "\" which is in a different package.";
 
     return;
 }
@@ -2009,9 +2010,9 @@ void SemanticError::PrintFIELD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE(ErrorInfo &err
 
 void SemanticError::PrintNAME_NOT_FOUND(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "No entity named \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" was found in this environment.";
+    Coutput << "No entity named \""
+            << err.insert1
+            << "\" was found in this environment.";
 
     return;
 }
@@ -2019,9 +2020,9 @@ void SemanticError::PrintNAME_NOT_FOUND(ErrorInfo &err, LexStream *lex_stream, C
 
 void SemanticError::PrintNAME_NOT_YET_AVAILABLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Illegal use of name \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" which has not yet been fully declared at this point.";
+    Coutput << "Illegal use of name \""
+            << err.insert1
+            << "\" which has not yet been fully declared at this point.";
 
     return;
 }
@@ -2029,11 +2030,11 @@ void SemanticError::PrintNAME_NOT_YET_AVAILABLE(ErrorInfo &err, LexStream *lex_s
 
 void SemanticError::PrintNAME_NOT_VARIABLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The name \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" does not denote a valid variable. If \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" is a method that takes no argument, it must be followed by \"()\".";
+    Coutput << "The name \""
+            << err.insert1
+            << "\" does not denote a valid variable. If \""
+            << err.insert1
+            << "\" is a method that takes no argument, it must be followed by \"()\".";
 
     return;
 }
@@ -2041,9 +2042,9 @@ void SemanticError::PrintNAME_NOT_VARIABLE(ErrorInfo &err, LexStream *lex_stream
 
 void SemanticError::PrintMETHOD_NOT_FOUND(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "No match was found for method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\".";
+    Coutput << "No match was found for method \""
+            << err.insert1
+            << "\".";
 
     return;
 }
@@ -2051,16 +2052,16 @@ void SemanticError::PrintMETHOD_NOT_FOUND(ErrorInfo &err, LexStream *lex_stream,
 
 void SemanticError::PrintMETHOD_NAME_NOT_FOUND_IN_TYPE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "No method named \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" was found in type \"";
+    Coutput << "No method named \""
+            << err.insert1
+            << "\" was found in type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\".";
+    Coutput << err.insert3
+            << "\".";
 
     return;
 }
@@ -2068,20 +2069,20 @@ void SemanticError::PrintMETHOD_NAME_NOT_FOUND_IN_TYPE(ErrorInfo &err, LexStream
 
 void SemanticError::PrintMETHOD_NAME_MISSPELLED(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "No method named \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" was found in type \"";
+    Coutput << "No method named \""
+            << err.insert1
+            << "\" was found in type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\". However, there is an accessible method \"";
-    Unicode::Cout(err.insert4);
-    cout << "\" whose name closely matches the name \"";
-    Unicode::Cout(err.insert1);
-    cout << "\".";
+    Coutput << err.insert3
+            << "\". However, there is an accessible method \""
+            << err.insert4
+            << "\" whose name closely matches the name \""
+            << err.insert1
+            << "\".";
 
     return;
 }
@@ -2089,23 +2090,23 @@ void SemanticError::PrintMETHOD_NAME_MISSPELLED(ErrorInfo &err, LexStream *lex_s
 
 void SemanticError::PrintMETHOD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" in class \"";
+    Coutput << "Method \""
+            << err.insert1
+            << "\" in class \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" has private access. Therefore, it is not accessible in class \"";
+    Coutput << err.insert3
+            << "\" has private access. Therefore, it is not accessible in class \"";
     if (NotDot(err.insert4))
     {
-        Unicode::Cout(err.insert4);
-        cout << "/";
+        Coutput << err.insert4
+                << "/";
     }
-    Unicode::Cout(err.insert5);
-    cout << "\".";
+    Coutput << err.insert5
+            << "\".";
 
     return;
 }
@@ -2113,23 +2114,23 @@ void SemanticError::PrintMETHOD_WITH_PRIVATE_ACCESS_NOT_ACCESSIBLE(ErrorInfo &er
 
 void SemanticError::PrintMETHOD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" in class \"";
+    Coutput << "Method \""
+            << err.insert1
+            << "\" in class \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" has protected or default access. Therefore, it is not accessible in class \"";
+    Coutput << err.insert3
+            << "\" has protected or default access. Therefore, it is not accessible in class \"";
     if (NotDot(err.insert4))
     {
-        Unicode::Cout(err.insert4);
-        cout << "/";
+        Coutput << err.insert4
+                << "/";
     }
-    Unicode::Cout(err.insert5);
-    cout << "\" which is in a different package.";
+    Coutput << err.insert5
+            << "\" which is in a different package.";
 
     return;
 }
@@ -2137,17 +2138,17 @@ void SemanticError::PrintMETHOD_WITH_DEFAULT_ACCESS_NOT_ACCESSIBLE(ErrorInfo &er
 
 void SemanticError::PrintHIDDEN_METHOD_IN_ENCLOSING_CLASS(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" contained in the enclosing type \"";
+    Coutput << "The method \""
+            << err.insert1
+            << "\" contained in the enclosing type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" is a perfect match for this method call."
-            " However, it is not visible in this nested class because a method with the same name is hiding it.";
+    Coutput << err.insert3
+            << "\" is a perfect match for this method call."
+               " However, it is not visible in this nested class because a method with the same name is hiding it.";
 
     return;
 }
@@ -2155,16 +2156,16 @@ void SemanticError::PrintHIDDEN_METHOD_IN_ENCLOSING_CLASS(ErrorInfo &err, LexStr
 
 void SemanticError::PrintFIELD_NOT_METHOD(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The name \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" is not a method name but the name of a field member of the type \"";
+    Coutput << "The name \""
+            << err.insert1
+            << "\" is not a method name but the name of a field member of the type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\".";
+    Coutput << err.insert3
+            << "\".";
 
     return;
 }
@@ -2172,9 +2173,9 @@ void SemanticError::PrintFIELD_NOT_METHOD(ErrorInfo &err, LexStream *lex_stream,
 
 void SemanticError::PrintTYPE_NOT_METHOD(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The keyword \"new\" is expected before this name, \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", as it is not the name of a method but the name of a type.";
+    Coutput << "The keyword \"new\" is expected before this name, \""
+            << err.insert1
+            << "\", as it is not the name of a method but the name of a type.";
 
     return;
 }
@@ -2182,13 +2183,13 @@ void SemanticError::PrintTYPE_NOT_METHOD(ErrorInfo &err, LexStream *lex_stream, 
 
 void SemanticError::PrintTYPE_NOT_FIELD(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "A type \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" was found where a field name or method call was expected. Did you mean to write \"";
-    Unicode::Cout(err.insert1);
-    cout << ".xxx\", or \"new ";
-    Unicode::Cout(err.insert1);
-    cout << "()\", or ... ?";
+    Coutput << "A type \""
+            << err.insert1
+            << "\" was found where a field name or method call was expected. Did you mean to write \""
+            << err.insert1
+            << ".xxx\", or \"new "
+            << err.insert1
+            << "()\", or ... ?";
 
     return;
 }
@@ -2196,16 +2197,16 @@ void SemanticError::PrintTYPE_NOT_FIELD(ErrorInfo &err, LexStream *lex_stream, C
 
 void SemanticError::PrintMETHOD_NOT_FIELD(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The name \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" is not a field name but the name of a method declared in the type \"";
+    Coutput << "The name \""
+            << err.insert1
+            << "\" is not a field name but the name of a method declared in the type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\".";
+    Coutput << err.insert3
+            << "\".";
 
     return;
 }
@@ -2213,9 +2214,9 @@ void SemanticError::PrintMETHOD_NOT_FIELD(ErrorInfo &err, LexStream *lex_stream,
 
 void SemanticError::PrintAMBIGUOUS_CONSTRUCTOR_INVOCATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Ambiguous invocation of constructor \"";
-    Unicode::Cout(err.insert1);
-    cout << "\".";
+    Coutput << "Ambiguous invocation of constructor \""
+            << err.insert1
+            << "\".";
 
     return;
 }
@@ -2223,27 +2224,27 @@ void SemanticError::PrintAMBIGUOUS_CONSTRUCTOR_INVOCATION(ErrorInfo &err, LexStr
 
 void SemanticError::PrintAMBIGUOUS_METHOD_INVOCATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Ambiguous invocation of method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\". At least two methods are accessible from here: Method \"";
-    Unicode::Cout(err.insert2);
-    cout << "\" declared in type \"";
+    Coutput << "Ambiguous invocation of method \""
+            << err.insert1
+            << "\". At least two methods are accessible from here: Method \""
+            << err.insert2
+            << "\" declared in type \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << '/';
+        Coutput << err.insert3
+                << '/';
     }
-    Unicode::Cout(err.insert4);
-    cout << "\" and method \"";
-    Unicode::Cout(err.insert5);
-    cout << "\" declared in type \"";
+    Coutput << err.insert4
+            << "\" and method \""
+            << err.insert5
+            << "\" declared in type \"";
     if (NotDot(err.insert6))
     {
-        Unicode::Cout(err.insert6);
-        cout << '/';
+        Coutput << err.insert6
+                << '/';
     }
-    Unicode::Cout(err.insert7);
-    cout << "\".";
+    Coutput << err.insert7
+            << "\".";
 
     return;
 }
@@ -2251,9 +2252,9 @@ void SemanticError::PrintAMBIGUOUS_METHOD_INVOCATION(ErrorInfo &err, LexStream *
 
 void SemanticError::PrintNAME_NOT_CLASS_VARIABLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The name \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" does not denote a class (static) variable.";
+    Coutput << "The name \""
+            << err.insert1
+            << "\" does not denote a class (static) variable.";
 
     return;
 }
@@ -2261,7 +2262,7 @@ void SemanticError::PrintNAME_NOT_CLASS_VARIABLE(ErrorInfo &err, LexStream *lex_
 
 void SemanticError::PrintNOT_A_NUMERIC_VARIABLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Only a variable of numeric type can appear in this context.";
+    Coutput << "Only a variable of numeric type can appear in this context.";
 
     return;
 }
@@ -2269,9 +2270,9 @@ void SemanticError::PrintNOT_A_NUMERIC_VARIABLE(ErrorInfo &err, LexStream *lex_s
 
 void SemanticError::PrintMETHOD_NOT_CLASS_METHOD(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" does not denote a class method.";
+    Coutput << "The method \""
+            << err.insert1
+            << "\" does not denote a class method.";
 
     return;
 }
@@ -2279,9 +2280,9 @@ void SemanticError::PrintMETHOD_NOT_CLASS_METHOD(ErrorInfo &err, LexStream *lex_
 
 void SemanticError::PrintABSTRACT_TYPE_CREATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Attempt to instantiate an abstract class \"";
-    Unicode::Cout(err.insert1);
-    cout << "\".";
+    Coutput << "Attempt to instantiate an abstract class \""
+            << err.insert1
+            << "\".";
 
     return;
 }
@@ -2289,9 +2290,9 @@ void SemanticError::PrintABSTRACT_TYPE_CREATION(ErrorInfo &err, LexStream *lex_s
 
 void SemanticError::PrintCONSTRUCTOR_NOT_FOUND(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "No match was found for constructor \"";
-    Unicode::Cout(err.insert1);
-    cout << "\".";
+    Coutput << "No match was found for constructor \""
+            << err.insert1
+            << "\".";
 
     return;
 } 
@@ -2299,11 +2300,11 @@ void SemanticError::PrintCONSTRUCTOR_NOT_FOUND(ErrorInfo &err, LexStream *lex_st
 
 void SemanticError::PrintMETHOD_FOUND_FOR_CONSTRUCTOR(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "No match was found for constructor \"";
-    Unicode::Cout(err.insert1);
-    cout << "\". However, a method with the same name was found at location ";
-    Unicode::Cout(err.insert2);
-    cout << '.';
+    Coutput << "No match was found for constructor \""
+            << err.insert1
+            << "\". However, a method with the same name was found at location "
+            << err.insert2
+            << '.';
 
     return;
 } 
@@ -2311,21 +2312,21 @@ void SemanticError::PrintMETHOD_FOUND_FOR_CONSTRUCTOR(ErrorInfo &err, LexStream 
 
 void SemanticError::PrintINCOMPATIBLE_TYPE_FOR_INITIALIZATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type of the left-hand side (or array type) in this initialization (or array creation expression), \"";
+    Coutput << "The type of the left-hand side (or array type) in this initialization (or array creation expression), \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << '/';
+        Coutput << err.insert1
+                << '/';
     }
-    Unicode::Cout(err.insert2);
-    cout << "\", is not compatible with the type of the right-hand side expression, \"";
+    Coutput << err.insert2
+            << "\", is not compatible with the type of the right-hand side expression, \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << '/';
+        Coutput << err.insert3
+                << '/';
     }
-    Unicode::Cout(err.insert4);
-    cout << "\".";
+    Coutput << err.insert4
+            << "\".";
 
     return;
 }
@@ -2333,21 +2334,21 @@ void SemanticError::PrintINCOMPATIBLE_TYPE_FOR_INITIALIZATION(ErrorInfo &err, Le
 
 void SemanticError::PrintINCOMPATIBLE_TYPE_FOR_ASSIGNMENT(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type of the left-hand side in this assignment, \"";
+    Coutput << "The type of the left-hand side in this assignment, \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << '/';
+        Coutput << err.insert1
+                << '/';
     }
-    Unicode::Cout(err.insert2);
-    cout << "\", is not compatible with the type of the right-hand side expression, \"";
+    Coutput << err.insert2
+            << "\", is not compatible with the type of the right-hand side expression, \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << '/';
+        Coutput << err.insert3
+                << '/';
     }
-    Unicode::Cout(err.insert4);
-    cout << "\".";
+    Coutput << err.insert4
+            << "\".";
 
     return;
 }
@@ -2355,21 +2356,21 @@ void SemanticError::PrintINCOMPATIBLE_TYPE_FOR_ASSIGNMENT(ErrorInfo &err, LexStr
 
 void SemanticError::PrintINCOMPATIBLE_TYPE_FOR_CONDITIONAL_EXPRESSION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "In this conditional expression, the type of the false subexpression, \"";
+    Coutput << "In this conditional expression, the type of the false subexpression, \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << '/';
+        Coutput << err.insert1
+                << '/';
     }
-    Unicode::Cout(err.insert2);
-    cout << "\", is not compatible with the type of the true subexpression, \"";
+    Coutput << err.insert2
+            << "\", is not compatible with the type of the true subexpression, \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << '/';
+        Coutput << err.insert3
+                << '/';
     }
-    Unicode::Cout(err.insert4);
-    cout << "\".";
+    Coutput << err.insert4
+            << "\".";
 
     return;
 }
@@ -2377,7 +2378,7 @@ void SemanticError::PrintINCOMPATIBLE_TYPE_FOR_CONDITIONAL_EXPRESSION(ErrorInfo 
 
 void SemanticError::PrintVOID_ARRAY(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Arrays of type \"void\" are not legal.";
+    Coutput << "Arrays of type \"void\" are not legal.";
 
     return;
 }
@@ -2385,7 +2386,7 @@ void SemanticError::PrintVOID_ARRAY(ErrorInfo &err, LexStream *lex_stream, Contr
 
 void SemanticError::PrintVOID_TYPE_IN_EQUALITY_EXPRESSION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Subexpressions of type \"void\" may not appear in an EqualityExpression.";
+    Coutput << "Subexpressions of type \"void\" may not appear in an EqualityExpression.";
 
     return;
 }
@@ -2393,21 +2394,21 @@ void SemanticError::PrintVOID_TYPE_IN_EQUALITY_EXPRESSION(ErrorInfo &err, LexStr
 
 void SemanticError::PrintINCOMPATIBLE_TYPE_FOR_BINARY_EXPRESSION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type of the left-hand side expression, \"";
+    Coutput << "The type of the left-hand side expression, \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << '/';
+        Coutput << err.insert1
+                << '/';
     }
-    Unicode::Cout(err.insert2);
-    cout << "\", is not compatible with the type of the right-hand side expression, \"";
+    Coutput << err.insert2
+            << "\", is not compatible with the type of the right-hand side expression, \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << '/';
+        Coutput << err.insert3
+                << '/';
     }
-    Unicode::Cout(err.insert4);
-    cout << "\" (and vice-versa).";
+    Coutput << err.insert4
+            << "\" (and vice-versa).";
 
     return;
 }
@@ -2415,21 +2416,21 @@ void SemanticError::PrintINCOMPATIBLE_TYPE_FOR_BINARY_EXPRESSION(ErrorInfo &err,
 
 void SemanticError::PrintINVALID_INSTANCEOF_CONVERSION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type of the left-side expression, \"";
+    Coutput << "The type of the left-side expression, \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << '/';
+        Coutput << err.insert1
+                << '/';
     }
-    Unicode::Cout(err.insert2);
-    cout << "\", cannot possibly be an instance of type \"";
+    Coutput << err.insert2
+            << "\", cannot possibly be an instance of type \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << '/';
+        Coutput << err.insert3
+                << '/';
     }
-    Unicode::Cout(err.insert4);
-    cout << "\".";
+    Coutput << err.insert4
+            << "\".";
 
     return;
 }
@@ -2437,11 +2438,11 @@ void SemanticError::PrintINVALID_INSTANCEOF_CONVERSION(ErrorInfo &err, LexStream
 
 void SemanticError::PrintINVALID_CAST_CONVERSION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "An expression of type \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" cannot be cast into type \"";
-    Unicode::Cout(err.insert2);
-    cout << "\".";
+    Coutput << "An expression of type \""
+            << err.insert1
+            << "\" cannot be cast into type \""
+            << err.insert2
+            << "\".";
 
     return;
 }
@@ -2449,7 +2450,7 @@ void SemanticError::PrintINVALID_CAST_CONVERSION(ErrorInfo &err, LexStream *lex_
 
 void SemanticError::PrintINVALID_CAST_TYPE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Expression found where a type is expected.";
+    Coutput << "Expression found where a type is expected.";
 
     return;
 }
@@ -2457,9 +2458,9 @@ void SemanticError::PrintINVALID_CAST_TYPE(ErrorInfo &err, LexStream *lex_stream
 
 void SemanticError::PrintTYPE_NOT_PRIMITIVE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type of this expression, \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", is not a primitive type.";
+    Coutput << "The type of this expression, \""
+            << err.insert1
+            << "\", is not a primitive type.";
 
     return;
 }
@@ -2467,9 +2468,9 @@ void SemanticError::PrintTYPE_NOT_PRIMITIVE(ErrorInfo &err, LexStream *lex_strea
 
 void SemanticError::PrintTYPE_NOT_INTEGRAL(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type of this expression, \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", is not an integral type.";
+    Coutput << "The type of this expression, \""
+            << err.insert1
+            << "\", is not an integral type.";
 
     return;
 }
@@ -2477,9 +2478,9 @@ void SemanticError::PrintTYPE_NOT_INTEGRAL(ErrorInfo &err, LexStream *lex_stream
 
 void SemanticError::PrintTYPE_NOT_NUMERIC(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type of this expression, \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", is not numeric.";
+    Coutput << "The type of this expression, \""
+            << err.insert1
+            << "\", is not numeric.";
 
     return;
 }
@@ -2487,9 +2488,9 @@ void SemanticError::PrintTYPE_NOT_NUMERIC(ErrorInfo &err, LexStream *lex_stream,
 
 void SemanticError::PrintTYPE_NOT_INTEGER(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type of this expression, \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", cannot be promoted to \"int\" by widening conversion.";
+    Coutput << "The type of this expression, \""
+            << err.insert1
+            << "\", cannot be promoted to \"int\" by widening conversion.";
 
     return;
 }
@@ -2497,9 +2498,9 @@ void SemanticError::PrintTYPE_NOT_INTEGER(ErrorInfo &err, LexStream *lex_stream,
 
 void SemanticError::PrintTYPE_NOT_BOOLEAN(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type of this expression, \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", is not boolean.";
+    Coutput << "The type of this expression, \""
+            << err.insert1
+            << "\", is not boolean.";
 
     return;
 }
@@ -2507,9 +2508,9 @@ void SemanticError::PrintTYPE_NOT_BOOLEAN(ErrorInfo &err, LexStream *lex_stream,
 
 void SemanticError::PrintTYPE_NOT_ARRAY(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type of this expression, \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", is not an array type.";
+    Coutput << "The type of this expression, \""
+            << err.insert1
+            << "\", is not an array type.";
 
     return;
 }
@@ -2517,9 +2518,9 @@ void SemanticError::PrintTYPE_NOT_ARRAY(ErrorInfo &err, LexStream *lex_stream, C
 
 void SemanticError::PrintTYPE_NOT_REFERENCE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type of this expression, \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", is not a valid reference type in this context.";
+    Coutput << "The type of this expression, \""
+            << err.insert1
+            << "\", is not a valid reference type in this context.";
 
     return;
 }
@@ -2527,15 +2528,15 @@ void SemanticError::PrintTYPE_NOT_REFERENCE(ErrorInfo &err, LexStream *lex_strea
 
 void SemanticError::PrintTYPE_NOT_VALID_FOR_SWITCH(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type of a switch statement expression must be either \"int\", \"short\", \"char\" or \"byte\".";
-    cout << " The type of this expression is \"";
+    Coutput << "The type of a switch statement expression must be either \"int\", \"short\", \"char\" or \"byte\"."
+            << " The type of this expression is \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << '/';
+        Coutput << err.insert1
+                << '/';
     }
-    Unicode::Cout(err.insert2);
-    cout << "\".";
+    Coutput << err.insert2
+            << "\".";
 
     return;
 }
@@ -2543,9 +2544,9 @@ void SemanticError::PrintTYPE_NOT_VALID_FOR_SWITCH(ErrorInfo &err, LexStream *le
 
 void SemanticError::PrintTYPE_IS_VOID(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "An expression of type \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" is not valid in this context.";
+    Coutput << "An expression of type \""
+            << err.insert1
+            << "\" is not valid in this context.";
 
     return;
 }
@@ -2553,11 +2554,11 @@ void SemanticError::PrintTYPE_IS_VOID(ErrorInfo &err, LexStream *lex_stream, Con
 
 void SemanticError::PrintVALUE_NOT_REPRESENTABLE_IN_SWITCH_TYPE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The value of this expression, ";
-    Unicode::Cout(err.insert1);
-    cout << ", cannot be represented in the type of the switch statement expression, \"";
-    Unicode::Cout(err.insert2);
-    cout << "\".";
+    Coutput << "The value of this expression, "
+            << err.insert1
+            << ", cannot be represented in the type of the switch statement expression, \""
+            << err.insert2
+            << "\".";
 
     return;
 }
@@ -2565,11 +2566,11 @@ void SemanticError::PrintVALUE_NOT_REPRESENTABLE_IN_SWITCH_TYPE(ErrorInfo &err, 
 
 void SemanticError::PrintTYPE_NOT_CONVERTIBLE_TO_SWITCH_TYPE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type of this expression, \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", is not assignment-convertible to the type of the switch statement expression, \"";
-    Unicode::Cout(err.insert2);
-    cout << "\".";
+    Coutput << "The type of this expression, \""
+            << err.insert1
+            << "\", is not assignment-convertible to the type of the switch statement expression, \""
+            << err.insert2
+            << "\".";
 
     return;
 }
@@ -2577,9 +2578,9 @@ void SemanticError::PrintTYPE_NOT_CONVERTIBLE_TO_SWITCH_TYPE(ErrorInfo &err, Lex
 
 void SemanticError::PrintDUPLICATE_CASE_VALUE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The value of this expression, ";
-    Unicode::Cout(err.insert1);
-    cout << ", has already been used in this switch statement.";
+    Coutput << "The value of this expression, "
+            << err.insert1
+            << ", has already been used in this switch statement.";
 
     return;
 }
@@ -2587,9 +2588,9 @@ void SemanticError::PrintDUPLICATE_CASE_VALUE(ErrorInfo &err, LexStream *lex_str
 
 void SemanticError::PrintMISPLACED_THIS_EXPRESSION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "A \"this\" expression may only be used in the body of an instance method, "
-            "constructor (after the explicit constructor invocation, if any), "
-            "initializer block, or in the initializer expression of an instance variable.";
+    Coutput << "A \"this\" expression may only be used in the body of an instance method, "
+               "constructor (after the explicit constructor invocation, if any), "
+               "initializer block, or in the initializer expression of an instance variable.";
 
     return;
 }
@@ -2597,9 +2598,9 @@ void SemanticError::PrintMISPLACED_THIS_EXPRESSION(ErrorInfo &err, LexStream *le
 
 void SemanticError::PrintMISPLACED_SUPER_EXPRESSION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "A \"super\" expression may only appear in the body of a class that has a super class and"
-            " it must be enclosed in the body of an instance method or constructor or in the initializer"
-            " of an instance variable.";
+    Coutput << "A \"super\" expression may only appear in the body of a class that has a super class and"
+               " it must be enclosed in the body of an instance method or constructor or in the initializer"
+               " of an instance variable.";
 
     return;
 }
@@ -2607,10 +2608,10 @@ void SemanticError::PrintMISPLACED_SUPER_EXPRESSION(ErrorInfo &err, LexStream *l
 
 void SemanticError::PrintFINAL_VARIABLE_TARGET_IN_LOOP(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Possible attempt to assign a value to a final variable \"";
-    Unicode::Cout(err.insert1);
-    cout << "\"";
-    cout << ", within the body of a loop that may execute more than once.";
+    Coutput << "Possible attempt to assign a value to a final variable \""
+            << err.insert1
+            << "\""
+            << ", within the body of a loop that may execute more than once.";
 
     return;
 }
@@ -2618,15 +2619,15 @@ void SemanticError::PrintFINAL_VARIABLE_TARGET_IN_LOOP(ErrorInfo &err, LexStream
 
 void SemanticError::PrintTARGET_VARIABLE_IS_FINAL(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Possible attempt to reassign a value to the final variable \"";
-    Unicode::Cout(err.insert1);
-    cout << "\"";
+    Coutput << "Possible attempt to reassign a value to the final variable \""
+            << err.insert1
+            << "\"";
     if (err.insert2)
     {
-        cout << ". The other assignement was at location ";
-        Unicode::Cout(err.insert2);
+        Coutput << ". The other assignement was at location "
+                << err.insert2;
     }
-    cout << '.';
+    Coutput << '.';
 
     return;
 }
@@ -2634,7 +2635,7 @@ void SemanticError::PrintTARGET_VARIABLE_IS_FINAL(ErrorInfo &err, LexStream *lex
 
 void SemanticError::PrintUNINITIALIZED_FINAL_VARIABLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "A final variable must be initialized.";
+    Coutput << "A final variable must be initialized.";
 
     return;
 }
@@ -2642,8 +2643,8 @@ void SemanticError::PrintUNINITIALIZED_FINAL_VARIABLE(ErrorInfo &err, LexStream 
 
 void SemanticError::PrintUNINITIALIZED_STATIC_FINAL_VARIABLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "A blank class final variable must be initialized in a static initializer block. "
-            "We will assume that it has been initialized to avoid emitting spurious messages.";
+    Coutput << "A blank class final variable must be initialized in a static initializer block. "
+               "We will assume that it has been initialized to avoid emitting spurious messages.";
 
     return;
 }
@@ -2651,9 +2652,9 @@ void SemanticError::PrintUNINITIALIZED_STATIC_FINAL_VARIABLE(ErrorInfo &err, Lex
 
 void SemanticError::PrintUNINITIALIZED_FINAL_VARIABLE_IN_CONSTRUCTOR(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The blank final field \"this.";
-    cout << err.insert1;
-    cout << "\" is not definitely assigned a value in this constructor.";
+    Coutput << "The blank final field \"this."
+            << err.insert1
+            << "\" is not definitely assigned a value in this constructor.";
 
     return;
 }
@@ -2661,9 +2662,9 @@ void SemanticError::PrintUNINITIALIZED_FINAL_VARIABLE_IN_CONSTRUCTOR(ErrorInfo &
 
 void SemanticError::PrintINIT_SCALAR_WITH_ARRAY(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "An array initializer cannot be used to initialize a variable of type \"";
-    Unicode::Cout(err.insert1);
-    cout << "\".";
+    Coutput << "An array initializer cannot be used to initialize a variable of type \""
+            << err.insert1
+            << "\".";
 
     return;
 }
@@ -2671,9 +2672,9 @@ void SemanticError::PrintINIT_SCALAR_WITH_ARRAY(ErrorInfo &err, LexStream *lex_s
 
 void SemanticError::PrintINIT_ARRAY_WITH_SCALAR(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "A single expression cannot be used to initialize an array variable of type \"";
-    Unicode::Cout(err.insert1);
-    cout << "\".";
+    Coutput << "A single expression cannot be used to initialize an array variable of type \""
+            << err.insert1
+            << "\".";
 
     return;
 }
@@ -2681,7 +2682,7 @@ void SemanticError::PrintINIT_ARRAY_WITH_SCALAR(ErrorInfo &err, LexStream *lex_s
 
 void SemanticError::PrintINVALID_BYTE_VALUE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "A byte value must be an integer value (note that a character literal is not an integer value) in the range -128..127.";
+    Coutput << "A byte value must be an integer value (note that a character literal is not an integer value) in the range -128..127.";
 
     return;
 }
@@ -2689,8 +2690,8 @@ void SemanticError::PrintINVALID_BYTE_VALUE(ErrorInfo &err, LexStream *lex_strea
 
 void SemanticError::PrintINVALID_SHORT_VALUE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "A short value must be an integer value (note that a character literal is not an integer value) "
-            "in the range -32768..32767.";
+    Coutput << "A short value must be an integer value (note that a character literal is not an integer value) "
+               "in the range -32768..32767.";
 
     return;
 }
@@ -2698,8 +2699,8 @@ void SemanticError::PrintINVALID_SHORT_VALUE(ErrorInfo &err, LexStream *lex_stre
 
 void SemanticError::PrintINVALID_CHARACTER_VALUE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "A character literal must be a valid unicode value - i.e., a character literal enclosed in single quotes or "
-            "an integer value in the range 0..65535 or an escaped 3-digit octal value in the range \\000..\\377.";
+    Coutput << "A character literal must be a valid unicode value - i.e., a character literal enclosed in single quotes or "
+               "an integer value in the range 0..65535 or an escaped 3-digit octal value in the range \\000..\\377.";
 
     return;
 }
@@ -2707,8 +2708,8 @@ void SemanticError::PrintINVALID_CHARACTER_VALUE(ErrorInfo &err, LexStream *lex_
 
 void SemanticError::PrintINVALID_INT_VALUE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The value of an \"int\" literal must be a decimal value in the range -2147483648..2147483647"
-            " or a hexadecimal or octal literal that fits in 32 bits.";
+    Coutput << "The value of an \"int\" literal must be a decimal value in the range -2147483648..2147483647"
+               " or a hexadecimal or octal literal that fits in 32 bits.";
 
     return;
 }
@@ -2716,8 +2717,8 @@ void SemanticError::PrintINVALID_INT_VALUE(ErrorInfo &err, LexStream *lex_stream
 
 void SemanticError::PrintINVALID_LONG_VALUE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The value of a long literal must be a decimal value in the range "
-            "-9223372036854775808..9223372036854775807 or a hexadecimal or octal literal that fits in 64 bits.";
+    Coutput << "The value of a long literal must be a decimal value in the range "
+               "-9223372036854775808..9223372036854775807 or a hexadecimal or octal literal that fits in 64 bits.";
 
     return;
 }
@@ -2725,7 +2726,7 @@ void SemanticError::PrintINVALID_LONG_VALUE(ErrorInfo &err, LexStream *lex_strea
 
 void SemanticError::PrintINVALID_FLOAT_VALUE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Invalid floating-point constant.";
+    Coutput << "Invalid floating-point constant.";
 
     return;
 }
@@ -2733,7 +2734,7 @@ void SemanticError::PrintINVALID_FLOAT_VALUE(ErrorInfo &err, LexStream *lex_stre
 
 void SemanticError::PrintINVALID_DOUBLE_VALUE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Invalid double constant.";
+    Coutput << "Invalid double constant.";
 
     return;
 }
@@ -2741,7 +2742,7 @@ void SemanticError::PrintINVALID_DOUBLE_VALUE(ErrorInfo &err, LexStream *lex_str
 
 void SemanticError::PrintINVALID_STRING_VALUE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The value of this \"String\" literal is invalid. Perhaps it contains a bad escape sequence?";
+    Coutput << "The value of this \"String\" literal is invalid. Perhaps it contains a bad escape sequence?";
 
     return;
 }
@@ -2749,7 +2750,7 @@ void SemanticError::PrintINVALID_STRING_VALUE(ErrorInfo &err, LexStream *lex_str
 
 void SemanticError::PrintRETURN_STATEMENT_IN_INITIALIZER(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "A return statement may not appear in an initializer block.";
+    Coutput << "A return statement may not appear in an initializer block.";
 
     return;
 }
@@ -2757,8 +2758,8 @@ void SemanticError::PrintRETURN_STATEMENT_IN_INITIALIZER(ErrorInfo &err, LexStre
 
 void SemanticError::PrintMISPLACED_RETURN_WITH_EXPRESSION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "A return statement with expression must be contained in a method declaration that is "
-            "declared to return a value.";
+    Coutput << "A return statement with expression must be contained in a method declaration that is "
+               "declared to return a value.";
 
     return;
 }
@@ -2766,7 +2767,7 @@ void SemanticError::PrintMISPLACED_RETURN_WITH_EXPRESSION(ErrorInfo &err, LexStr
 
 void SemanticError::PrintMISPLACED_RETURN_WITH_NO_EXPRESSION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "A return statement with no expression may only appear in void method or a constructor.";
+    Coutput << "A return statement with no expression may only appear in void method or a constructor.";
 
     return;
 }
@@ -2774,21 +2775,21 @@ void SemanticError::PrintMISPLACED_RETURN_WITH_NO_EXPRESSION(ErrorInfo &err, Lex
 
 void SemanticError::PrintMISMATCHED_RETURN_AND_METHOD_TYPE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type of this return expression, \"";
+    Coutput << "The type of this return expression, \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << '/';
+        Coutput << err.insert1
+                << '/';
     }
-    Unicode::Cout(err.insert2);
-    cout << "\", does not match the return type of the method, \"";
+    Coutput << err.insert2
+            << "\", does not match the return type of the method, \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << '/';
+        Coutput << err.insert3
+                << '/';
     }
-    Unicode::Cout(err.insert4);
-    cout << "\".";
+    Coutput << err.insert4
+            << "\".";
 
     return;
 }
@@ -2796,8 +2797,8 @@ void SemanticError::PrintMISMATCHED_RETURN_AND_METHOD_TYPE(ErrorInfo &err, LexSt
 
 void SemanticError::PrintEXPRESSION_NOT_THROWABLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The expression in a throw statement must denote a variable or value of a reference type "
-            "which is assignable to the type Throwable.";
+    Coutput << "The expression in a throw statement must denote a variable or value of a reference type "
+               "which is assignable to the type Throwable.";
 
     return;
 }
@@ -2805,21 +2806,21 @@ void SemanticError::PrintEXPRESSION_NOT_THROWABLE(ErrorInfo &err, LexStream *lex
 
 void SemanticError::PrintBAD_THROWABLE_EXPRESSION_IN_TRY(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type of the expression in this throw statement, \"";
+    Coutput << "The type of the expression in this throw statement, \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << '/';
+        Coutput << err.insert1
+                << '/';
     }
-    Unicode::Cout(err.insert2);
-    cout << "\", is not catchable by the enclosing try statement;";
+    Coutput << err.insert2
+            << "\", is not catchable by the enclosing try statement;";
     if (wcslen(err.insert3) > 0)
     {
-        cout << " nor is it assignable to an exception in the throws clause of the enclosing method or constructor \"";
-        Unicode::Cout(err.insert3);
-        cout << "\";";
+        Coutput << " nor is it assignable to an exception in the throws clause of the enclosing method or constructor \""
+                << err.insert3
+                << "\";";
     }
-    cout << " nor is it a subclass of RuntimeException or Error.";
+    Coutput << " nor is it a subclass of RuntimeException or Error.";
 
     return;
 }
@@ -2827,16 +2828,16 @@ void SemanticError::PrintBAD_THROWABLE_EXPRESSION_IN_TRY(ErrorInfo &err, LexStre
 
 void SemanticError::PrintBAD_THROWABLE_EXPRESSION_IN_METHOD(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type of the expression in this throw statement, \"";
+    Coutput << "The type of the expression in this throw statement, \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << '/';
+        Coutput << err.insert1
+                << '/';
     }
-    Unicode::Cout(err.insert2);
-    cout << "\", is not assignable to an exception in the throws clause of the enclosing method or constructor \"";
-    Unicode::Cout(err.insert3);
-    cout << "\"; nor is it a subclass of RuntimeException or Error.";
+    Coutput << err.insert2
+            << "\", is not assignable to an exception in the throws clause of the enclosing method or constructor \""
+            << err.insert3
+            << "\"; nor is it a subclass of RuntimeException or Error.";
 
     return;
 }
@@ -2844,14 +2845,14 @@ void SemanticError::PrintBAD_THROWABLE_EXPRESSION_IN_METHOD(ErrorInfo &err, LexS
 
 void SemanticError::PrintBAD_THROWABLE_EXPRESSION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type of the expression in this throw statement, \"";
+    Coutput << "The type of the expression in this throw statement, \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << '/';
+        Coutput << err.insert1
+                << '/';
     }
-    Unicode::Cout(err.insert2);
-    cout << "\", is not a subclass of RuntimeException or Error.";
+    Coutput << err.insert2
+            << "\", is not a subclass of RuntimeException or Error.";
 
     return;
 }
@@ -2859,7 +2860,7 @@ void SemanticError::PrintBAD_THROWABLE_EXPRESSION(ErrorInfo &err, LexStream *lex
 
 void SemanticError::PrintMISPLACED_BREAK_STATEMENT(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "A \"break\" statement must be enclosed in a \"switch\", \"while\", \"do\" or \"for\" statement.";
+    Coutput << "A \"break\" statement must be enclosed in a \"switch\", \"while\", \"do\" or \"for\" statement.";
 
     return;
 }
@@ -2867,7 +2868,7 @@ void SemanticError::PrintMISPLACED_BREAK_STATEMENT(ErrorInfo &err, LexStream *le
 
 void SemanticError::PrintMISPLACED_CONTINUE_STATEMENT(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "A \"continue\" statement must be enclosed in a \"while\", \"do\" or \"for\" statement.";
+    Coutput << "A \"continue\" statement must be enclosed in a \"while\", \"do\" or \"for\" statement.";
 
     return;
 }
@@ -2875,7 +2876,7 @@ void SemanticError::PrintMISPLACED_CONTINUE_STATEMENT(ErrorInfo &err, LexStream 
 
 void SemanticError::PrintMISPLACED_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Misplaced explicit constructor invocation.";
+    Coutput << "Misplaced explicit constructor invocation.";
 
     return;
 }
@@ -2883,9 +2884,9 @@ void SemanticError::PrintMISPLACED_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &er
 
 void SemanticError::PrintINVALID_CONTINUE_TARGET(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The statement labeled \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" cannot be continued since it is not a \"while\", \"do\" or \"for\" statement.";
+    Coutput << "The statement labeled \""
+            << err.insert1
+            << "\" cannot be continued since it is not a \"while\", \"do\" or \"for\" statement.";
 
     return;
 }
@@ -2893,11 +2894,11 @@ void SemanticError::PrintINVALID_CONTINUE_TARGET(ErrorInfo &err, LexStream *lex_
 
 void SemanticError::PrintNON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The abstract method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" is enclosed in a type, \"";
-    Unicode::Cout(err.insert2);
-    cout << "\", that is not abstract.";
+    Coutput << "The abstract method \""
+            << err.insert1
+            << "\" is enclosed in a type, \""
+            << err.insert2
+            << "\", that is not abstract.";
 
     return;
 }
@@ -2905,23 +2906,23 @@ void SemanticError::PrintNON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD(ErrorInfo &e
 
 void SemanticError::PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The abstract method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", inherited from type \"";
+    Coutput << "The abstract method \""
+            << err.insert1
+            << "\", inherited from type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << '/';
+        Coutput << err.insert2
+                << '/';
     }
-    Unicode::Cout(err.insert3);
-    cout << "\", is not implemented in the non-abstract class \"";
+    Coutput << err.insert3
+            << "\", is not implemented in the non-abstract class \"";
     if (NotDot(err.insert4))
     {
-        Unicode::Cout(err.insert4);
-        cout << '/';
+        Coutput << err.insert4
+                << '/';
     }
-    Unicode::Cout(err.insert5);
-    cout << "\".";
+    Coutput << err.insert5
+            << "\".";
 
     return;
 }
@@ -2929,33 +2930,33 @@ void SemanticError::PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD(ErrorInfo &e
 
 void SemanticError::PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD_FROM_ABSTRACT_CLASS(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The abstract method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", inherited from type \"";
+    Coutput << "The abstract method \""
+            << err.insert1
+            << "\", inherited from type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << '/';
+        Coutput << err.insert2
+                << '/';
     }
-    Unicode::Cout(err.insert3);
-    cout << "\", is not implemented in the non-abstract class \"";
+    Coutput << err.insert3
+            << "\", is not implemented in the non-abstract class \"";
     if (NotDot(err.insert4))
     {
-        Unicode::Cout(err.insert4);
-        cout << '/';
+        Coutput << err.insert4
+                << '/';
     }
-    Unicode::Cout(err.insert5);
-    cout << "\". Since the type \"";
+    Coutput << err.insert5
+            << "\". Since the type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << '/';
+        Coutput << err.insert2
+                << '/';
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" was read from a class file, it is possible that it just needs to be recompiled "
-            "because after having inherited method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" from an interface, the method was subsequently removed from that interface.";
+    Coutput << err.insert3
+            << "\" was read from a class file, it is possible that it just needs to be recompiled "
+               "because after having inherited method \""
+            << err.insert1
+            << "\" from an interface, the method was subsequently removed from that interface.";
 
     return;
 }
@@ -2963,24 +2964,24 @@ void SemanticError::PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD_FROM_ABSTRAC
 
 void SemanticError::PrintNON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The abstract method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", belonging to the class \"";
+    Coutput << "The abstract method \""
+            << err.insert1
+            << "\", belonging to the class \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << '/';
+        Coutput << err.insert2
+                << '/';
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" has default access."
-            " Therefore, it is not inherited and hence, it cannot be implemented in the non-abstract class \"";
+    Coutput << err.insert3
+            << "\" has default access."
+               " Therefore, it is not inherited and hence, it cannot be implemented in the non-abstract class \"";
     if (NotDot(err.insert4))
     {
-        Unicode::Cout(err.insert4);
-        cout << '/';
+        Coutput << err.insert4
+                << '/';
     }
-    Unicode::Cout(err.insert5);
-    cout << "\".";
+    Coutput << err.insert5
+            << "\".";
 
     return;
 }
@@ -2988,18 +2989,18 @@ void SemanticError::PrintNON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METH
 
 void SemanticError::PrintNO_ABSTRACT_METHOD_IMPLEMENTATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "No implementation of the abstract method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" declared in type \"";
+    Coutput << "No implementation of the abstract method \""
+            << err.insert1
+            << "\" declared in type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << '/';
+        Coutput << err.insert2
+                << '/';
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" was found in class \"";
-    Unicode::Cout(err.insert4);
-    cout << "\".";
+    Coutput << err.insert3
+            << "\" was found in class \""
+            << err.insert4
+            << "\".";
 
     return;
 }
@@ -3007,16 +3008,16 @@ void SemanticError::PrintNO_ABSTRACT_METHOD_IMPLEMENTATION(ErrorInfo &err, LexSt
 
 void SemanticError::PrintDUPLICATE_INTERFACE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Duplicate specification of interface \"";
+    Coutput << "Duplicate specification of interface \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << '/';
+        Coutput << err.insert1
+                << '/';
     }
-    Unicode::Cout(err.insert2);
-    cout << "\" in definition of type \"";
-    Unicode::Cout(err.insert3);
-    cout << "\".";
+    Coutput << err.insert2
+            << "\" in definition of type \""
+            << err.insert3
+            << "\".";
 
     return;
 }
@@ -3024,9 +3025,9 @@ void SemanticError::PrintDUPLICATE_INTERFACE(ErrorInfo &err, LexStream *lex_stre
 
 void SemanticError::PrintUNKNOWN_QUALIFIED_NAME_BASE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "\"";
-    Unicode::Cout(err.insert1);
-    cout << "\" is either a misplaced package name or a non-existent entity.";
+    Coutput << "\""
+            << err.insert1
+            << "\" is either a misplaced package name or a non-existent entity.";
 
     return;
 }
@@ -3034,9 +3035,9 @@ void SemanticError::PrintUNKNOWN_QUALIFIED_NAME_BASE(ErrorInfo &err, LexStream *
 
 void SemanticError::PrintUNKNOWN_AMBIGUOUS_NAME(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "\"";
-    Unicode::Cout(err.insert1);
-    cout << "\" is either a misplaced package name or a non-existent entity. An expression name is expected in this context.";
+    Coutput << "\""
+            << err.insert1
+            << "\" is either a misplaced package name or a non-existent entity. An expression name is expected in this context.";
 
     return;
 }
@@ -3044,14 +3045,14 @@ void SemanticError::PrintUNKNOWN_AMBIGUOUS_NAME(ErrorInfo &err, LexStream *lex_s
 
 void SemanticError::PrintCIRCULAR_CLASS(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The class \"";
+    Coutput << "The class \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << "\" is circularly defined with its super type(s).";
+    Coutput << err.insert2
+            << "\" is circularly defined with its super type(s).";
 
     return;
 }
@@ -3059,14 +3060,14 @@ void SemanticError::PrintCIRCULAR_CLASS(ErrorInfo &err, LexStream *lex_stream, C
 
 void SemanticError::PrintCIRCULAR_INTERFACE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The interface \"";
+    Coutput << "The interface \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << "\" is circularly defined with its super type(s).";
+    Coutput << err.insert2
+            << "\" is circularly defined with its super type(s).";
 
     return;
 }
@@ -3074,16 +3075,16 @@ void SemanticError::PrintCIRCULAR_INTERFACE(ErrorInfo &err, LexStream *lex_strea
 
 void SemanticError::PrintTYPE_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type \"";
+    Coutput << "The type \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << '/';
+        Coutput << err.insert1
+                << '/';
     }
-    Unicode::Cout(err.insert2);
-    cout << "\" with ";
-    Unicode::Cout(err.insert3);
-    cout << " access is not visible here.";
+    Coutput << err.insert2
+            << "\" with "
+            << err.insert3
+            << " access is not visible here.";
 
     return;
 }
@@ -3091,16 +3092,16 @@ void SemanticError::PrintTYPE_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stre
 
 void SemanticError::PrintPRIVATE_FIELD_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The field \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" in type \"";
+    Coutput << "The field \""
+            << err.insert1
+            << "\" in type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << '/';
+        Coutput << err.insert2
+                << '/';
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" is private and not accessible here.";
+    Coutput << err.insert3
+            << "\" is private and not accessible here.";
 
     return;
 }
@@ -3108,16 +3109,16 @@ void SemanticError::PrintPRIVATE_FIELD_NOT_ACCESSIBLE(ErrorInfo &err, LexStream 
 
 void SemanticError::PrintPROTECTED_FIELD_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The field \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" in type \"";
+    Coutput << "The field \""
+            << err.insert1
+            << "\" in type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << '/';
+        Coutput << err.insert2
+                << '/';
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" is protected and not accessible here.";
+    Coutput << err.insert3
+            << "\" is protected and not accessible here.";
 
     return;
 }
@@ -3125,16 +3126,16 @@ void SemanticError::PrintPROTECTED_FIELD_NOT_ACCESSIBLE(ErrorInfo &err, LexStrea
 
 void SemanticError::PrintDEFAULT_FIELD_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The field \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" in type \"";
+    Coutput << "The field \""
+            << err.insert1
+            << "\" in type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << '/';
+        Coutput << err.insert2
+                << '/';
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" has default access and is not accessible here.";
+    Coutput << err.insert3
+            << "\" has default access and is not accessible here.";
 
     return;
 }
@@ -3142,16 +3143,16 @@ void SemanticError::PrintDEFAULT_FIELD_NOT_ACCESSIBLE(ErrorInfo &err, LexStream 
 
 void SemanticError::PrintPRIVATE_METHOD_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" in type \"";
+    Coutput << "Method \""
+            << err.insert1
+            << "\" in type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << '/';
+        Coutput << err.insert2
+                << '/';
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" is private and not accessible here.";
+    Coutput << err.insert3
+            << "\" is private and not accessible here.";
 
     return;
 }
@@ -3159,16 +3160,16 @@ void SemanticError::PrintPRIVATE_METHOD_NOT_ACCESSIBLE(ErrorInfo &err, LexStream
 
 void SemanticError::PrintPROTECTED_METHOD_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" in type \"";
+    Coutput << "Method \""
+            << err.insert1
+            << "\" in type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << '/';
+        Coutput << err.insert2
+                << '/';
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" is protected and not accessible here.";
+    Coutput << err.insert3
+            << "\" is protected and not accessible here.";
 
     return;
 }
@@ -3176,16 +3177,16 @@ void SemanticError::PrintPROTECTED_METHOD_NOT_ACCESSIBLE(ErrorInfo &err, LexStre
 
 void SemanticError::PrintDEFAULT_METHOD_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" in type \"";
+    Coutput << "Method \""
+            << err.insert1
+            << "\" in type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << '/';
+        Coutput << err.insert2
+                << '/';
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" has default access and is not accessible here.";
+    Coutput << err.insert3
+            << "\" has default access and is not accessible here.";
 
     return;
 }
@@ -3193,16 +3194,16 @@ void SemanticError::PrintDEFAULT_METHOD_NOT_ACCESSIBLE(ErrorInfo &err, LexStream
 
 void SemanticError::PrintPRIVATE_CONSTRUCTOR_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The constructor \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" in type \"";
+    Coutput << "The constructor \""
+            << err.insert1
+            << "\" in type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << '/';
+        Coutput << err.insert2
+                << '/';
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" is private. Therefore, it is not accessible here.";
+    Coutput << err.insert3
+            << "\" is private. Therefore, it is not accessible here.";
 
     return;
 }
@@ -3210,16 +3211,16 @@ void SemanticError::PrintPRIVATE_CONSTRUCTOR_NOT_ACCESSIBLE(ErrorInfo &err, LexS
 
 void SemanticError::PrintPROTECTED_CONSTRUCTOR_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The constructor \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" in type \"";
+    Coutput << "The constructor \""
+            << err.insert1
+            << "\" in type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << '/';
+        Coutput << err.insert2
+                << '/';
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" is protected. Therefore, it is not accessible here.";
+    Coutput << err.insert3
+            << "\" is protected. Therefore, it is not accessible here.";
 
     return;
 }
@@ -3227,16 +3228,16 @@ void SemanticError::PrintPROTECTED_CONSTRUCTOR_NOT_ACCESSIBLE(ErrorInfo &err, Le
 
 void SemanticError::PrintDEFAULT_CONSTRUCTOR_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The constructor \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" in type \"";
+    Coutput << "The constructor \""
+            << err.insert1
+            << "\" in type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << '/';
+        Coutput << err.insert2
+                << '/';
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" has default access. Therefore, it is not accessible here.";
+    Coutput << err.insert3
+            << "\" has default access. Therefore, it is not accessible here.";
 
     return;
 }
@@ -3244,14 +3245,14 @@ void SemanticError::PrintDEFAULT_CONSTRUCTOR_NOT_ACCESSIBLE(ErrorInfo &err, LexS
 
 void SemanticError::PrintCONSTRUCTOR_DOES_NOT_THROW_THIS_EXCEPTION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The constructor invoked here can throw the exception \"";
+    Coutput << "The constructor invoked here can throw the exception \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << "\" which is not thrown by the constructor containing this call.";
+    Coutput << err.insert2
+            << "\" which is not thrown by the constructor containing this call.";
 
     return;
 }
@@ -3259,32 +3260,32 @@ void SemanticError::PrintCONSTRUCTOR_DOES_NOT_THROW_THIS_EXCEPTION(ErrorInfo &er
 
 void SemanticError::PrintCONSTRUCTOR_DOES_NOT_THROW_SUPER_EXCEPTION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "A constructor associated with this ";
+    Coutput << "A constructor associated with this ";
 
     if (wcslen(err.insert1) == 0)
-        cout << "anonymous type";
+        Coutput << "anonymous type";
     else
     {
-        cout << "type, \"";
-        Unicode::Cout(err.insert1);
-        cout << "\",";
+        Coutput << "type, \""
+                << err.insert1
+                << "\",";
     }
 
-    cout << " does not throw the exception \"";
+    Coutput << " does not throw the exception \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" thrown by its super type, \"";
+    Coutput << err.insert3
+            << "\" thrown by its super type, \"";
     if (NotDot(err.insert4))
     {
-        Unicode::Cout(err.insert4);
-        cout << "/";
+        Coutput << err.insert4
+                << "/";
     }
-    Unicode::Cout(err.insert5);
-    cout << "\".";
+    Coutput << err.insert5
+            << "\".";
 
     return;
 }
@@ -3292,9 +3293,9 @@ void SemanticError::PrintCONSTRUCTOR_DOES_NOT_THROW_SUPER_EXCEPTION(ErrorInfo &e
 
 void SemanticError::PrintPARAMETER_REDECLARED(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The name of a formal parameter, \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", may not be used to declare a local variable or an exception parameter.";
+    Coutput << "The name of a formal parameter, \""
+            << err.insert1
+            << "\", may not be used to declare a local variable or an exception parameter.";
 
     return;
 }
@@ -3302,8 +3303,8 @@ void SemanticError::PrintPARAMETER_REDECLARED(ErrorInfo &err, LexStream *lex_str
 
 void SemanticError::PrintBAD_ABSTRACT_METHOD_MODIFIER(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "A method declaration that contains the keyword \"abstract\" may not also contain one of the keywords: "
-            "\"private\", \"static\", \"final\", \"native\" or \"synchronized\".";
+    Coutput << "A method declaration that contains the keyword \"abstract\" may not also contain one of the keywords: "
+               "\"private\", \"static\", \"final\", \"native\" or \"synchronized\".";
 
     return;
 }
@@ -3311,9 +3312,9 @@ void SemanticError::PrintBAD_ABSTRACT_METHOD_MODIFIER(ErrorInfo &err, LexStream 
 
 void SemanticError::PrintABSTRACT_METHOD_MODIFIER_CONFLICT(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "An abstract method may not also contain the keyword \"";
-    Unicode::Cout(err.insert1);
-    cout << "\".";
+    Coutput << "An abstract method may not also contain the keyword \""
+            << err.insert1
+            << "\".";
 
     return;
 }
@@ -3321,9 +3322,9 @@ void SemanticError::PrintABSTRACT_METHOD_MODIFIER_CONFLICT(ErrorInfo &err, LexSt
 
 void SemanticError::PrintABSTRACT_METHOD_INVOCATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "An abstract method, \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", cannot be invoked.";
+    Coutput << "An abstract method, \""
+            << err.insert1
+            << "\", cannot be invoked.";
 
     return;
 }
@@ -3331,18 +3332,18 @@ void SemanticError::PrintABSTRACT_METHOD_INVOCATION(ErrorInfo &err, LexStream *l
 
 void SemanticError::PrintFINAL_METHOD_OVERRIDE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" cannot override the final (or private) method \"";
-    Unicode::Cout(err.insert2);
-    cout << "\" declared in type \"";
+    Coutput << "The method \""
+            << err.insert1
+            << "\" cannot override the final (or private) method \""
+            << err.insert2
+            << "\" declared in type \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << "/";
+        Coutput << err.insert3
+                << "/";
     }
-    Unicode::Cout(err.insert4);
-    cout << "\".";
+    Coutput << err.insert4
+            << "\".";
 
     return;
 }
@@ -3350,27 +3351,27 @@ void SemanticError::PrintFINAL_METHOD_OVERRIDE(ErrorInfo &err, LexStream *lex_st
 
 void SemanticError::PrintFINAL_METHOD_OVERRIDE_EXTERNALLY(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "In class \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", the method \"";
-    Unicode::Cout(err.insert2);
-    cout << "\", inherited from type \"";
+    Coutput << "In class \""
+            << err.insert1
+            << "\", the method \""
+            << err.insert2
+            << "\", inherited from type \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << "/";
+        Coutput << err.insert3
+                << "/";
     }
-    Unicode::Cout(err.insert4);
-    cout << "\", overrides the final (or private) method \"";
-    Unicode::Cout(err.insert5);
-    cout << "\", inherited from type \"";
+    Coutput << err.insert4
+            << "\", overrides the final (or private) method \""
+            << err.insert5
+            << "\", inherited from type \"";
     if (NotDot(err.insert6))
     {
-        Unicode::Cout(err.insert6);
-        cout << "/";
+        Coutput << err.insert6
+                << "/";
     }
-    Unicode::Cout(err.insert7);
-    cout << "\".";
+    Coutput << err.insert7
+            << "\".";
 
     return;
 }
@@ -3378,18 +3379,18 @@ void SemanticError::PrintFINAL_METHOD_OVERRIDE_EXTERNALLY(ErrorInfo &err, LexStr
 
 void SemanticError::PrintPRIVATE_METHOD_OVERRIDE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" is overriding the private (should be treated as final) method \"";
-    Unicode::Cout(err.insert2);
-    cout << "\" declared in type \"";
+    Coutput << "The method \""
+            << err.insert1
+            << "\" is overriding the private (should be treated as final) method \""
+            << err.insert2
+            << "\" declared in type \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << "/";
+        Coutput << err.insert3
+                << "/";
     }
-    Unicode::Cout(err.insert4);
-    cout << "\".";
+    Coutput << err.insert4
+            << "\".";
 
     return;
 }
@@ -3397,27 +3398,27 @@ void SemanticError::PrintPRIVATE_METHOD_OVERRIDE(ErrorInfo &err, LexStream *lex_
 
 void SemanticError::PrintPRIVATE_METHOD_OVERRIDE_EXTERNALLY(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "In class \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", the method \"";
-    Unicode::Cout(err.insert2);
-    cout << "\", inherited from type \"";
+    Coutput << "In class \""
+            << err.insert1
+            << "\", the method \""
+            << err.insert2
+            << "\", inherited from type \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << "/";
+        Coutput << err.insert3
+                << "/";
     }
-    Unicode::Cout(err.insert4);
-    cout << "\", overrides the private (should be treated as final) method \"";
-    Unicode::Cout(err.insert5);
-    cout << "\", inherited from type \"";
+    Coutput << err.insert4
+            << "\", overrides the private (should be treated as final) method \""
+            << err.insert5
+            << "\", inherited from type \"";
     if (NotDot(err.insert6))
     {
-        Unicode::Cout(err.insert6);
-        cout << "/";
+        Coutput << err.insert6
+                << "/";
     }
-    Unicode::Cout(err.insert7);
-    cout << "\".";
+    Coutput << err.insert7
+            << "\".";
 
     return;
 }
@@ -3425,18 +3426,18 @@ void SemanticError::PrintPRIVATE_METHOD_OVERRIDE_EXTERNALLY(ErrorInfo &err, LexS
 
 void SemanticError::PrintCLASS_METHOD_OVERRIDE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The instance method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" cannot override the static method \"";
-    Unicode::Cout(err.insert2);
-    cout << "\" declared in type \"";
+    Coutput << "The instance method \""
+            << err.insert1
+            << "\" cannot override the static method \""
+            << err.insert2
+            << "\" declared in type \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << "/";
+        Coutput << err.insert3
+                << "/";
     }
-    Unicode::Cout(err.insert4);
-    cout << "\".";
+    Coutput << err.insert4
+            << "\".";
 
     return;
 }
@@ -3444,27 +3445,27 @@ void SemanticError::PrintCLASS_METHOD_OVERRIDE(ErrorInfo &err, LexStream *lex_st
 
 void SemanticError::PrintCLASS_METHOD_OVERRIDE_EXTERNALLY(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "In class \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", the instance method \"";
-    Unicode::Cout(err.insert2);
-    cout << "\", inherited from type \"";
+    Coutput << "In class \""
+            << err.insert1
+            << "\", the instance method \""
+            << err.insert2
+            << "\", inherited from type \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << "/";
+        Coutput << err.insert3
+                << "/";
     }
-    Unicode::Cout(err.insert4);
-    cout << "\", cannot override the static method \"";
-    Unicode::Cout(err.insert5);
-    cout << "\", declared in type \"";
+    Coutput << err.insert4
+            << "\", cannot override the static method \""
+            << err.insert5
+            << "\", declared in type \"";
     if (NotDot(err.insert6))
     {
-        Unicode::Cout(err.insert6);
-        cout << "/";
+        Coutput << err.insert6
+                << "/";
     }
-    Unicode::Cout(err.insert7);
-    cout << "\".";
+    Coutput << err.insert7
+            << "\".";
 
     return;
 }
@@ -3472,18 +3473,18 @@ void SemanticError::PrintCLASS_METHOD_OVERRIDE_EXTERNALLY(ErrorInfo &err, LexStr
 
 void SemanticError::PrintINSTANCE_METHOD_OVERRIDE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The static method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" cannot hide the instance method \"";
-    Unicode::Cout(err.insert2);
-    cout << "\" declared in \"";
+    Coutput << "The static method \""
+            << err.insert1
+            << "\" cannot hide the instance method \""
+            << err.insert2
+            << "\" declared in \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << "/";
+        Coutput << err.insert3
+                << "/";
     }
-    Unicode::Cout(err.insert4);
-    cout << "\".";
+    Coutput << err.insert4
+            << "\".";
 
     return;
 }
@@ -3491,27 +3492,27 @@ void SemanticError::PrintINSTANCE_METHOD_OVERRIDE(ErrorInfo &err, LexStream *lex
 
 void SemanticError::PrintINSTANCE_METHOD_OVERRIDE_EXTERNALLY(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "In class \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", the static method \"";
-    Unicode::Cout(err.insert2);
-    cout << "\", inherited from type \"";
+    Coutput << "In class \""
+            << err.insert1
+            << "\", the static method \""
+            << err.insert2
+            << "\", inherited from type \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << "/";
+        Coutput << err.insert3
+                << "/";
     }
-    Unicode::Cout(err.insert4);
-    cout << "\", hides the instance method \"";
-    Unicode::Cout(err.insert5);
-    cout << "\", declared in type \"";
+    Coutput << err.insert4
+            << "\", hides the instance method \""
+            << err.insert5
+            << "\", declared in type \"";
     if (NotDot(err.insert6))
     {
-        Unicode::Cout(err.insert6);
-        cout << "/";
+        Coutput << err.insert6
+                << "/";
     }
-    Unicode::Cout(err.insert7);
-    cout << "\".";
+    Coutput << err.insert7
+            << "\".";
 
     return;
 }
@@ -3519,22 +3520,22 @@ void SemanticError::PrintINSTANCE_METHOD_OVERRIDE_EXTERNALLY(ErrorInfo &err, Lex
 
 void SemanticError::PrintBAD_ACCESS_METHOD_OVERRIDE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" with ";
-    Unicode::Cout(err.insert2);
-    cout << " access cannot override the method \"";
-    Unicode::Cout(err.insert3);
-    cout << "\" with ";
-    Unicode::Cout(err.insert4);
-    cout << " access declared in type \"";
+    Coutput << "The method \""
+            << err.insert1
+            << "\" with "
+            << err.insert2
+            << " access cannot override the method \""
+            << err.insert3
+            << "\" with "
+            << err.insert4
+            << " access declared in type \"";
     if (NotDot(err.insert5))
     {
-        Unicode::Cout(err.insert5);
-        cout << "/";
+        Coutput << err.insert5
+                << "/";
     }
-    Unicode::Cout(err.insert6);
-    cout << "\".";
+    Coutput << err.insert6
+            << "\".";
 
     return;
 }
@@ -3542,31 +3543,31 @@ void SemanticError::PrintBAD_ACCESS_METHOD_OVERRIDE(ErrorInfo &err, LexStream *l
 
 void SemanticError::PrintBAD_ACCESS_METHOD_OVERRIDE_EXTERNALLY(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "In class \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", the method \"";
-    Unicode::Cout(err.insert2);
-    cout << "\" with ";
-    Unicode::Cout(err.insert3);
-    cout << " access inherited from type \"";
+    Coutput << "In class \""
+            << err.insert1
+            << "\", the method \""
+            << err.insert2
+            << "\" with "
+            << err.insert3
+            << " access inherited from type \"";
     if (NotDot(err.insert4))
     {
-        Unicode::Cout(err.insert4);
-        cout << "/";
+        Coutput << err.insert4
+                << "/";
     }
-    Unicode::Cout(err.insert5);
-    cout << "\", cannot override the method \"";
-    Unicode::Cout(err.insert6);
-    cout << "\" with ";
-    Unicode::Cout(err.insert7);
-    cout << " access inherited from type \"";
+    Coutput << err.insert5
+            << "\", cannot override the method \""
+            << err.insert6
+            << "\" with "
+            << err.insert7
+            << " access inherited from type \"";
     if (NotDot(err.insert8))
     {
-        Unicode::Cout(err.insert8);
-        cout << "/";
+        Coutput << err.insert8
+                << "/";
     }
-    Unicode::Cout(err.insert9);
-    cout << "\".";
+    Coutput << err.insert9
+            << "\".";
 
     return;
 }
@@ -3574,18 +3575,18 @@ void SemanticError::PrintBAD_ACCESS_METHOD_OVERRIDE_EXTERNALLY(ErrorInfo &err, L
 
 void SemanticError::PrintMISMATCHED_OVERRIDDEN_EXCEPTION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The exception \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" is not the same as or a subclass of any exception in the throws clause of the overridden method \"";
-    Unicode::Cout(err.insert2);
-    cout << "\" declared in type \"";
+    Coutput << "The exception \""
+            << err.insert1
+            << "\" is not the same as or a subclass of any exception in the throws clause of the overridden method \""
+            << err.insert2
+            << "\" declared in type \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << "/";
+        Coutput << err.insert3
+                << "/";
     }
-    Unicode::Cout(err.insert4);
-    cout << "\".";
+    Coutput << err.insert4
+            << "\".";
 
     return;
 }
@@ -3593,29 +3594,29 @@ void SemanticError::PrintMISMATCHED_OVERRIDDEN_EXCEPTION(ErrorInfo &err, LexStre
 
 void SemanticError::PrintMISMATCHED_OVERRIDDEN_EXCEPTION_EXTERNALLY(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "In class \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", the exception \"";
-    Unicode::Cout(err.insert2);
-    cout << "\" specified in method \"";
-    Unicode::Cout(err.insert3);
-    cout << "\" inherited from type \"";
+    Coutput << "In class \""
+            << err.insert1
+            << "\", the exception \""
+            << err.insert2
+            << "\" specified in method \""
+            << err.insert3
+            << "\" inherited from type \"";
     if (NotDot(err.insert4))
     {
-        Unicode::Cout(err.insert4);
-        cout << "/";
+        Coutput << err.insert4
+                << "/";
     }
-    Unicode::Cout(err.insert5);
-    cout << "\", is not the same as or a subclass of any exception in the throws clause of the overridden method \"";
-    Unicode::Cout(err.insert6);
-    cout << "\" declared in type \"";
+    Coutput << err.insert5
+            << "\", is not the same as or a subclass of any exception in the throws clause of the overridden method \""
+            << err.insert6
+            << "\" declared in type \"";
     if (NotDot(err.insert7))
     {
-        Unicode::Cout(err.insert7);
-        cout << "/";
+        Coutput << err.insert7
+                << "/";
     }
-    Unicode::Cout(err.insert8);
-    cout << "\".";
+    Coutput << err.insert8
+            << "\".";
 
     return;
 }
@@ -3623,9 +3624,9 @@ void SemanticError::PrintMISMATCHED_OVERRIDDEN_EXCEPTION_EXTERNALLY(ErrorInfo &e
 
 void SemanticError::PrintABSTRACT_METHOD_WITH_BODY(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The declaration of the abstract or native method, \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", must not contain a method body.";
+    Coutput << "The declaration of the abstract or native method, \""
+            << err.insert1
+            << "\", must not contain a method body.";
 
     return;
 }
@@ -3633,9 +3634,9 @@ void SemanticError::PrintABSTRACT_METHOD_WITH_BODY(ErrorInfo &err, LexStream *le
 
 void SemanticError::PrintNON_ABSTRACT_METHOD_WITHOUT_BODY(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The declaration of the non-abstract and non-native method, \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", must contain a method body.";
+    Coutput << "The declaration of the non-abstract and non-native method, \""
+            << err.insert1
+            << "\", must contain a method body.";
 
     return;
 }
@@ -3643,16 +3644,16 @@ void SemanticError::PrintNON_ABSTRACT_METHOD_WITHOUT_BODY(ErrorInfo &err, LexStr
 
 void SemanticError::PrintSTATIC_OVERRIDE_ABSTRACT(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The static method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" cannot hide an abstract method of the same name declared in type \"";
+    Coutput << "The static method \""
+            << err.insert1
+            << "\" cannot hide an abstract method of the same name declared in type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\".";
+    Coutput << err.insert3
+            << "\".";
 
     return;
 }
@@ -3660,27 +3661,27 @@ void SemanticError::PrintSTATIC_OVERRIDE_ABSTRACT(ErrorInfo &err, LexStream *lex
 
 void SemanticError::PrintSTATIC_OVERRIDE_ABSTRACT_EXTERNALLY(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "In class \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", the static method \"";
-    Unicode::Cout(err.insert2);
-    cout << "\", inherited from type \"";
+    Coutput << "In class \""
+            << err.insert1
+            << "\", the static method \""
+            << err.insert2
+            << "\", inherited from type \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << "/";
+        Coutput << err.insert3
+                << "/";
     }
-    Unicode::Cout(err.insert4);
-    cout << "\", cannot hide the abstract method \"";
-    Unicode::Cout(err.insert5);
-    cout << "\", inherited from type \"";
+    Coutput << err.insert4
+            << "\", cannot hide the abstract method \""
+            << err.insert5
+            << "\", inherited from type \"";
     if (NotDot(err.insert6))
     {
-        Unicode::Cout(err.insert6);
-        cout << "/";
+        Coutput << err.insert6
+                << "/";
     }
-    Unicode::Cout(err.insert7);
-    cout << "\".";
+    Coutput << err.insert7
+            << "\".";
 
     return;
 }
@@ -3688,9 +3689,9 @@ void SemanticError::PrintSTATIC_OVERRIDE_ABSTRACT_EXTERNALLY(ErrorInfo &err, Lex
 
 void SemanticError::PrintCIRCULAR_THIS_CALL(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The constructor \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" may not directly or indirectly invoke itself.";
+    Coutput << "The constructor \""
+            << err.insert1
+            << "\" may not directly or indirectly invoke itself.";
 
     return;
 }
@@ -3698,11 +3699,11 @@ void SemanticError::PrintCIRCULAR_THIS_CALL(ErrorInfo &err, LexStream *lex_strea
 
 void SemanticError::PrintINSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The instance variable \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" declared in class \"";
-    Unicode::Cout(err.insert2);
-    cout << "\" is not accessible in an explicit constructor invocation.";
+    Coutput << "The instance variable \""
+            << err.insert1
+            << "\" declared in class \""
+            << err.insert2
+            << "\" is not accessible in an explicit constructor invocation.";
 
     return;
 }
@@ -3710,11 +3711,11 @@ void SemanticError::PrintINSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(Er
 
 void SemanticError::PrintINSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The instance method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" declared in this class, \"";
-    Unicode::Cout(err.insert2);
-    cout << "\", or one of its super classes, is not accessible in an explicit constructor invocation.";
+    Coutput << "The instance method \""
+            << err.insert1
+            << "\" declared in this class, \""
+            << err.insert2
+            << "\", or one of its super classes, is not accessible in an explicit constructor invocation.";
 
     return;
 }
@@ -3722,16 +3723,16 @@ void SemanticError::PrintINSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(Erro
 
 void SemanticError::PrintSYNTHETIC_VARIABLE_ACCESS(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Illegal attempt to access the synthetic field \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" contained in class \"";
+    Coutput << "Illegal attempt to access the synthetic field \""
+            << err.insert1
+            << "\" contained in class \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\".";
+    Coutput << err.insert3
+            << "\".";
 
     return;
 }
@@ -3739,16 +3740,33 @@ void SemanticError::PrintSYNTHETIC_VARIABLE_ACCESS(ErrorInfo &err, LexStream *le
 
 void SemanticError::PrintSYNTHETIC_METHOD_INVOCATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Illegal attempt to invoke the synthetic method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" contained in class \"";
+    Coutput << "Illegal attempt to invoke the synthetic method \""
+            << err.insert1
+            << "\" contained in class \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\".";
+    Coutput << err.insert3
+            << "\".";
+
+    return;
+}
+
+
+void SemanticError::PrintSYNTHETIC_CONSTRUCTOR_INVOCATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    Coutput << "Illegal attempt to invoke the synthetic constructor \""
+            << err.insert1
+            << "\" from class \"";
+    if (NotDot(err.insert2))
+    {
+        Coutput << err.insert2
+                << "/";
+    }
+    Coutput << err.insert3
+            << "\".";
 
     return;
 }
@@ -3756,9 +3774,9 @@ void SemanticError::PrintSYNTHETIC_METHOD_INVOCATION(ErrorInfo &err, LexStream *
 
 void SemanticError::PrintTHIS_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The expression \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" may not be used in an explicit constructor invocation.";
+    Coutput << "The expression \""
+            << err.insert1
+            << "\" may not be used in an explicit constructor invocation.";
 
     return;
 }
@@ -3766,9 +3784,9 @@ void SemanticError::PrintTHIS_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &err,
 
 void SemanticError::PrintSUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The expression \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" may not be used in an explicit constructor invocation.";
+    Coutput << "The expression \""
+            << err.insert1
+            << "\" may not be used in an explicit constructor invocation.";
 
     return;
 }
@@ -3776,21 +3794,21 @@ void SemanticError::PrintSUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &err
 
 void SemanticError::PrintINNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The constructor for class \"";
+    Coutput << "The constructor for class \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << "\" is not accessible from an explicit constructor invocation in the immediately enclosing class \"";
+    Coutput << err.insert2
+            << "\" is not accessible from an explicit constructor invocation in the immediately enclosing class \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << "/";
+        Coutput << err.insert3
+                << "/";
     }
-    Unicode::Cout(err.insert4);
-    cout << "\"."; 
+    Coutput << err.insert4
+            << "\"."; 
 
     return;
 }
@@ -3798,7 +3816,7 @@ void SemanticError::PrintINNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(Er
 
 void SemanticError::PrintEXPRESSION_NOT_CONSTANT(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "A constant expression is expected in this context.";
+    Coutput << "A constant expression is expected in this context.";
 
     return;
 }
@@ -3806,17 +3824,17 @@ void SemanticError::PrintEXPRESSION_NOT_CONSTANT(ErrorInfo &err, LexStream *lex_
 
 void SemanticError::PrintUNCATCHABLE_METHOD_THROWN_CHECKED_EXCEPTION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" can throw the checked exception \"";
+    Coutput << "The method \""
+            << err.insert1
+            << "\" can throw the checked exception \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\", but its invocation is neither enclosed in a try statement that can catch "
-            "that exception nor in the body of a method or constructor that \"throws\" that exception.";
+    Coutput << err.insert3
+            << "\", but its invocation is neither enclosed in a try statement that can catch "
+               "that exception nor in the body of a method or constructor that \"throws\" that exception.";
 
     return;
 }
@@ -3824,17 +3842,17 @@ void SemanticError::PrintUNCATCHABLE_METHOD_THROWN_CHECKED_EXCEPTION(ErrorInfo &
 
 void SemanticError::PrintUNCATCHABLE_CONSTRUCTOR_THROWN_CHECKED_EXCEPTION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The constructor \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" can throw the checked exception \"";
+    Coutput << "The constructor \""
+            << err.insert1
+            << "\" can throw the checked exception \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\", but its invocation is neither enclosed in a try statement that can catch "
-            "that exception nor in the body of a method or constructor that \"throws\" that exception.";
+    Coutput << err.insert3
+            << "\", but its invocation is neither enclosed in a try statement that can catch "
+               "that exception nor in the body of a method or constructor that \"throws\" that exception.";
 
     return;
 }
@@ -3842,15 +3860,15 @@ void SemanticError::PrintUNCATCHABLE_CONSTRUCTOR_THROWN_CHECKED_EXCEPTION(ErrorI
 
 void SemanticError::PrintUNREACHABLE_CATCH_CLAUSE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "This catch block may be unreachable because there is no exception "
-            "whose type is assignable to \"";
+    Coutput << "This catch block may be unreachable because there is no exception "
+               "whose type is assignable to \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << "\" that can be thrown during execution of the body of the try block.";
+    Coutput << err.insert2
+            << "\" that can be thrown during execution of the body of the try block.";
 
     return;
 }
@@ -3858,7 +3876,7 @@ void SemanticError::PrintUNREACHABLE_CATCH_CLAUSE(ErrorInfo &err, LexStream *lex
 
 void SemanticError::PrintUNREACHABLE_STATEMENT(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "This statement is unreachable.";
+    Coutput << "This statement is unreachable.";
 
     return;
 }
@@ -3866,7 +3884,7 @@ void SemanticError::PrintUNREACHABLE_STATEMENT(ErrorInfo &err, LexStream *lex_st
 
 void SemanticError::PrintUNREACHABLE_STATEMENTS(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "These statements are unreachable.";
+    Coutput << "These statements are unreachable.";
 
     return;
 }
@@ -3874,8 +3892,8 @@ void SemanticError::PrintUNREACHABLE_STATEMENTS(ErrorInfo &err, LexStream *lex_s
 
 void SemanticError::PrintUNREACHABLE_CONSTRUCTOR_BODY(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The body of this constructor is unreachable because the last initializer block "
-            "in this class does not complete normally.";
+    Coutput << "The body of this constructor is unreachable because the last initializer block "
+               "in this class does not complete normally.";
 
     return;
 }
@@ -3883,16 +3901,16 @@ void SemanticError::PrintUNREACHABLE_CONSTRUCTOR_BODY(ErrorInfo &err, LexStream 
 
 void SemanticError::PrintBLOCKED_CATCH_CLAUSE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "This catch block is unreachable: the exception \"";
+    Coutput << "This catch block is unreachable: the exception \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << "\" was used in a previous catch clause in this try statement at location ";
-    Unicode::Cout(err.insert3);
-    cout << '.';
+    Coutput << err.insert2
+            << "\" was used in a previous catch clause in this try statement at location "
+            << err.insert3
+            << '.';
 
     return;
 }
@@ -3900,9 +3918,9 @@ void SemanticError::PrintBLOCKED_CATCH_CLAUSE(ErrorInfo &err, LexStream *lex_str
 
 void SemanticError::PrintVARIABLE_NOT_DEFINITELY_ASSIGNED(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The variable \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" may be accessed here before having been definitely assigned a value.";
+    Coutput << "The variable \""
+            << err.insert1
+            << "\" may be accessed here before having been definitely assigned a value.";
 
     return;
 }
@@ -3910,11 +3928,11 @@ void SemanticError::PrintVARIABLE_NOT_DEFINITELY_ASSIGNED(ErrorInfo &err, LexStr
 
 void SemanticError::PrintTYPED_METHOD_WITH_NO_RETURN(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" must contain a return statement with an expression compatible with type \"";
-    Unicode::Cout(err.insert2);
-    cout << "\".";
+    Coutput << "The method \""
+            << err.insert1
+            << "\" must contain a return statement with an expression compatible with type \""
+            << err.insert2
+            << "\".";
 
     return;
 }
@@ -3922,23 +3940,23 @@ void SemanticError::PrintTYPED_METHOD_WITH_NO_RETURN(ErrorInfo &err, LexStream *
 
 void SemanticError::PrintDEFAULT_METHOD_NOT_OVERRIDDEN(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" in class \"";
+    Coutput << "Method \""
+            << err.insert1
+            << "\" in class \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" does not override the corresponding method with default access in class \"";
+    Coutput << err.insert3
+            << "\" does not override the corresponding method with default access in class \"";
     if (NotDot(err.insert4))
     {
-        Unicode::Cout(err.insert4);
-        cout << "/";
+        Coutput << err.insert4
+                << "/";
     }
-    Unicode::Cout(err.insert5);
-    cout << "\".";
+    Coutput << err.insert5
+            << "\".";
 
     return;
 }
@@ -3946,32 +3964,32 @@ void SemanticError::PrintDEFAULT_METHOD_NOT_OVERRIDDEN(ErrorInfo &err, LexStream
 
 void SemanticError::PrintTYPE_NOT_IN_UNNAMED_PACKAGE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The file \"";
-    Unicode::Cout(err.insert1);
-    cout << ".class\" was found in directory \"";
-    Unicode::Cout(err.insert2);
-    cout << "\" specified in the CLASSPATH. However, that class file specifies a type associated with the named package \"";
-    Unicode::Cout(err.insert3);
-    cout << "\" instead of the unnamed package.";
+    Coutput << "The file \""
+            << err.insert1
+            << ".class\" was found in directory \""
+            << err.insert2
+            << "\" specified in the CLASSPATH. However, that class file specifies a type associated with the named package \""
+            << err.insert3
+            << "\" instead of the unnamed package.";
 }
 
 
 void SemanticError::PrintTYPE_IN_WRONG_PACKAGE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" was found in package \"";
-    Unicode::Cout(err.insert2);
-    cout << "\". However, that type is associated with ";
+    Coutput << "The type \""
+            << err.insert1
+            << "\" was found in package \""
+            << err.insert2
+            << "\". However, that type is associated with ";
     if (wcslen(err.insert3) == 0)
-        cout << "the unnamed package";
+        Coutput << "the unnamed package";
     else
     {
-        cout << "another named package, \"";
-        Unicode::Cout(err.insert3);
-        cout << "\"";
+        Coutput << "another named package, \""
+                << err.insert3
+                << "\"";
     }
-    cout << '.';
+    Coutput << '.';
 
     return;
 }
@@ -3979,16 +3997,16 @@ void SemanticError::PrintTYPE_IN_WRONG_PACKAGE(ErrorInfo &err, LexStream *lex_st
 
 void SemanticError::PrintTYPE_NAME_MISMATCH(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The name of the type specified, \"";
+    Coutput << "The name of the type specified, \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << "\", does not match the name found in the class file: \"";
-    Unicode::Cout(err.insert3);
-    cout << "\".";
+    Coutput << err.insert2
+            << "\", does not match the name found in the class file: \""
+            << err.insert3
+            << "\".";
 
     return;
 }
@@ -3996,14 +4014,14 @@ void SemanticError::PrintTYPE_NAME_MISMATCH(ErrorInfo &err, LexStream *lex_strea
 
 void SemanticError::PrintDEPRECATED_TYPE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type \"";
+    Coutput << "The type \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << "\" has been deprecated.";
+    Coutput << err.insert2
+            << "\" has been deprecated.";
 
     return;
 }
@@ -4011,16 +4029,16 @@ void SemanticError::PrintDEPRECATED_TYPE(ErrorInfo &err, LexStream *lex_stream, 
 
 void SemanticError::PrintDEPRECATED_FIELD(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The variable \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" declared in type \"";
+    Coutput << "The variable \""
+            << err.insert1
+            << "\" declared in type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" has been deprecated.";
+    Coutput << err.insert3
+            << "\" has been deprecated.";
 
     return;
 }
@@ -4028,16 +4046,16 @@ void SemanticError::PrintDEPRECATED_FIELD(ErrorInfo &err, LexStream *lex_stream,
 
 void SemanticError::PrintDEPRECATED_METHOD(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The method \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" declared in type \"";
+    Coutput << "The method \""
+            << err.insert1
+            << "\" declared in type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" has been deprecated.";
+    Coutput << err.insert3
+            << "\" has been deprecated.";
 
     return;
 }
@@ -4045,16 +4063,16 @@ void SemanticError::PrintDEPRECATED_METHOD(ErrorInfo &err, LexStream *lex_stream
 
 void SemanticError::PrintDEPRECATED_CONSTRUCTOR(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The constructor \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" declared in type \"";
+    Coutput << "The constructor \""
+            << err.insert1
+            << "\" declared in type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" has been deprecated.";
+    Coutput << err.insert3
+            << "\" has been deprecated.";
 
     return;
 }
@@ -4062,13 +4080,13 @@ void SemanticError::PrintDEPRECATED_CONSTRUCTOR(ErrorInfo &err, LexStream *lex_s
 
 void SemanticError::PrintONE_UNNAMED_PACKAGE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" was found in directory \"";
-    Unicode::Cout(err.insert2);
-    cout << "\" specified in the CLASSPATH. It is accessible here only because, by default, this compiler uses "
-            "one unnamed package. In a compiler that associates an unnamed package with each directory "
-            "(as this compiler does with the +P option) this access would be illegal.";
+    Coutput << "The type \""
+            << err.insert1
+            << "\" was found in directory \""
+            << err.insert2
+            << "\" specified in the CLASSPATH. It is accessible here only because, by default, this compiler uses "
+               "one unnamed package. In a compiler that associates an unnamed package with each directory "
+               "(as this compiler does with the +P option) this access would be illegal.";
 
     return;
 }
@@ -4077,15 +4095,15 @@ void SemanticError::PrintONE_UNNAMED_PACKAGE(ErrorInfo &err, LexStream *lex_stre
 
 void SemanticError::PrintCOMPRESSED_ZIP_FILE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The file ";
-    Unicode::Cout(err.insert1);
-    cout << "(";
-    Unicode::Cout(err.insert2);
-    cout << "/";
-    Unicode::Cout(err.insert3);
-    cout << ") is in an unsupported compressed format. (Unzip and) Rezip \"";
-    Unicode::Cout(err.insert1);
-    cout << "\".";
+    Coutput << "The file "
+            << err.insert1
+            << "("
+            << err.insert2
+            << "/"
+            << err.insert3
+            << ") is in an unsupported compressed format. (Unzip and) Rezip \""
+            << err.insert1
+            << "\".";
 
     return;
 }
@@ -4093,14 +4111,14 @@ void SemanticError::PrintCOMPRESSED_ZIP_FILE(ErrorInfo &err, LexStream *lex_stre
 
 void SemanticError::PrintINVALID_CLASS_FILE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The class file \"";
+    Coutput << "The class file \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << ".class\" has an invalid format.";
+    Coutput << err.insert2
+            << ".class\" has an invalid format.";
 
     return;
 }
@@ -4108,14 +4126,14 @@ void SemanticError::PrintINVALID_CLASS_FILE(ErrorInfo &err, LexStream *lex_strea
 
 void SemanticError::PrintCANNOT_OPEN_CLASS_FILE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Unable to open file associated with type \"";
+    Coutput << "Unable to open file associated with type \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << "\".";
+    Coutput << err.insert2
+            << "\".";
 
     return;
 }
@@ -4123,7 +4141,7 @@ void SemanticError::PrintCANNOT_OPEN_CLASS_FILE(ErrorInfo &err, LexStream *lex_s
 
 void SemanticError::PrintONE_ONE_FEATURE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "This is a 1.1 feature.";
+    Coutput << "This is a 1.1 feature.";
 
     return;
 }
@@ -4131,14 +4149,14 @@ void SemanticError::PrintONE_ONE_FEATURE(ErrorInfo &err, LexStream *lex_stream, 
 
 void SemanticError::PrintSTATIC_NOT_INNER_CLASS(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The static class \"";
+    Coutput << "The static class \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << "\" is not an inner class.";
+    Coutput << err.insert2
+            << "\" is not an inner class.";
 
     return;
 }
@@ -4146,21 +4164,21 @@ void SemanticError::PrintSTATIC_NOT_INNER_CLASS(ErrorInfo &err, LexStream *lex_s
 
 void SemanticError::PrintTYPE_NOT_INNER_CLASS(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type \"";
+    Coutput << "The type \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << "\", is not an inner class that is immediately enclosed in type \"";
+    Coutput << err.insert2
+            << "\", is not an inner class that is immediately enclosed in type \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << "/";
+        Coutput << err.insert3
+                << "/";
     }
-    Unicode::Cout(err.insert4);
-    cout << "\".";
+    Coutput << err.insert4
+            << "\".";
 
     return;
 }
@@ -4168,28 +4186,28 @@ void SemanticError::PrintTYPE_NOT_INNER_CLASS(ErrorInfo &err, LexStream *lex_str
 
 void SemanticError::PrintSUPER_TYPE_NOT_INNER_CLASS(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The super type \"";
+    Coutput << "The super type \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << "\" of this type, \"";
+    Coutput << err.insert2
+            << "\" of this type, \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << "/";
+        Coutput << err.insert3
+                << "/";
     }
-    Unicode::Cout(err.insert4);
-    cout << "\", is not an inner class that is immediately enclosed in type \"";
+    Coutput << err.insert4
+            << "\", is not an inner class that is immediately enclosed in type \"";
     if (NotDot(err.insert5))
     {
-        Unicode::Cout(err.insert5);
-        cout << "/";
+        Coutput << err.insert5
+                << "/";
     }
-    Unicode::Cout(err.insert6);
-    cout << "\".";
+    Coutput << err.insert6
+            << "\".";
 
     return;
 }
@@ -4197,7 +4215,7 @@ void SemanticError::PrintSUPER_TYPE_NOT_INNER_CLASS(ErrorInfo &err, LexStream *l
 
 void SemanticError::PrintSTATIC_FIELD_IN_INNER_CLASS(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "An inner class may not contain a static field that is not final.";
+    Coutput << "An inner class may not contain a static field that is not final.";
 
     return;
 }
@@ -4205,7 +4223,7 @@ void SemanticError::PrintSTATIC_FIELD_IN_INNER_CLASS(ErrorInfo &err, LexStream *
 
 void SemanticError::PrintSTATIC_METHOD_IN_INNER_CLASS(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Inner class may not contain static method.";
+    Coutput << "Inner class may not contain static method.";
 
     return;
 }
@@ -4213,13 +4231,13 @@ void SemanticError::PrintSTATIC_METHOD_IN_INNER_CLASS(ErrorInfo &err, LexStream 
 
 void SemanticError::PrintSTATIC_TYPE_IN_INNER_CLASS(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The static type \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" is enclosed in an inner class, \"";
-    Unicode::Cout(err.insert2);
-    cout << "\", located at ";
-    Unicode::Cout(err.insert3);
-    cout << '.';
+    Coutput << "The static type \""
+            << err.insert1
+            << "\" is enclosed in an inner class, \""
+            << err.insert2
+            << "\", located at "
+            << err.insert3
+            << '.';
 
     return;
 }
@@ -4227,11 +4245,11 @@ void SemanticError::PrintSTATIC_TYPE_IN_INNER_CLASS(ErrorInfo &err, LexStream *l
 
 void SemanticError::PrintSTATIC_INITIALIZER_IN_INNER_CLASS(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "This static initializer is enclosed in an inner class, \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", located at ";
-    Unicode::Cout(err.insert2);
-    cout << '.';
+    Coutput << "This static initializer is enclosed in an inner class, \""
+            << err.insert1
+            << "\", located at "
+            << err.insert2
+            << '.';
 
     return;
 }
@@ -4240,18 +4258,18 @@ void SemanticError::PrintSTATIC_INITIALIZER_IN_INNER_CLASS(ErrorInfo &err, LexSt
 
 void SemanticError::PrintINNER_CLASS_REFERENCE_TO_NON_FINAL_LOCAL_VARIABLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Invalid reference in inner class \"";
+    Coutput << "Invalid reference in inner class \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << "\" to a non-final local variable, \"";
-    Unicode::Cout(err.insert3);
-    cout << "\", declared in method \"";
-    Unicode::Cout(err.insert4);
-    cout << "\".";
+    Coutput << err.insert2
+            << "\" to a non-final local variable, \""
+            << err.insert3
+            << "\", declared in method \""
+            << err.insert4
+            << "\".";
 
     return;
 }
@@ -4259,41 +4277,41 @@ void SemanticError::PrintINNER_CLASS_REFERENCE_TO_NON_FINAL_LOCAL_VARIABLE(Error
 
 void SemanticError::PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Ambiguous reference to field \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" declared in (or inherited from) type \"";
+    Coutput << "Ambiguous reference to field \""
+            << err.insert1
+            << "\" declared in (or inherited from) type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" but also declared in the enclosing method \"";
-    Unicode::Cout(err.insert4);
-    cout << "\". Explicit qualification is required.";
+    Coutput << err.insert3
+            << "\" but also declared in the enclosing method \""
+            << err.insert4
+            << "\". Explicit qualification is required.";
 
     return;
 }
 
 void SemanticError::PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Ambiguous reference to member named \"";
-    Unicode::Cout(err.insert1);
-    cout << "\" inherited from type \"";
+    Coutput << "Ambiguous reference to member named \""
+            << err.insert1
+            << "\" inherited from type \"";
     if (NotDot(err.insert2))
     {
-        Unicode::Cout(err.insert2);
-        cout << "/";
+        Coutput << err.insert2
+                << "/";
     }
-    Unicode::Cout(err.insert3);
-    cout << "\" but also declared or inherited in the enclosing type \"";
+    Coutput << err.insert3
+            << "\" but also declared or inherited in the enclosing type \"";
     if (NotDot(err.insert4))
     {
-        Unicode::Cout(err.insert4);
-        cout << "/";
+        Coutput << err.insert4
+                << "/";
     }
-    Unicode::Cout(err.insert5);
-    cout << "\". Explicit qualification is required.";
+    Coutput << err.insert5
+            << "\". Explicit qualification is required.";
 
     return;
 }
@@ -4301,21 +4319,21 @@ void SemanticError::PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER(Er
 
 void SemanticError::PrintILLEGAL_THIS_FIELD_ACCESS(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The type \"";
+    Coutput << "The type \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << "\" is either not an outer type of type \"";
+    Coutput << err.insert2
+            << "\" is either not an outer type of type \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << "/";
+        Coutput << err.insert3
+                << "/";
     }
-    Unicode::Cout(err.insert4);
-    cout << "\" or it is not accessible because this expression appears in a static region.";
+    Coutput << err.insert4
+            << "\" or it is not accessible because this expression appears in a static region.";
 
     return;
 }
@@ -4323,19 +4341,19 @@ void SemanticError::PrintILLEGAL_THIS_FIELD_ACCESS(ErrorInfo &err, LexStream *le
 
 void SemanticError::PrintENCLOSING_INSTANCE_NOT_ACCESSIBLE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "An instance of \"";
+    Coutput << "An instance of \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    Unicode::Cout(StringConstant::US__DO);
-    Unicode::Cout(StringConstant::US_this);
-    cout << "\" is not accessible here";
-    cout << ". In general, an enclosing instance is accessible only in the body of an instance method, "
-            "constructor (after the explicit constructor invocation, if any), "
-            "initializer block, or in the initializer expression of an instance variable.";
+    Coutput << err.insert2
+            << StringConstant::US__DO
+            << StringConstant::US_this
+            << "\" is not accessible here"
+            << ". In general, an enclosing instance is accessible only in the body of an instance method, "
+               "constructor (after the explicit constructor invocation, if any), "
+               "initializer block, or in the initializer expression of an instance variable.";
 
     return;
 }
@@ -4343,7 +4361,7 @@ void SemanticError::PrintENCLOSING_INSTANCE_NOT_ACCESSIBLE(ErrorInfo &err, LexSt
 
 void SemanticError::PrintZERO_DIVIDE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Attempt to divide by zero.";
+    Coutput << "Attempt to divide by zero.";
 
     return;
 }
@@ -4351,7 +4369,7 @@ void SemanticError::PrintZERO_DIVIDE(ErrorInfo &err, LexStream *lex_stream, Cont
 
 void SemanticError::PrintVOID_TO_STRING(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Attempt to convert an expression of type void into a String.";
+    Coutput << "Attempt to convert an expression of type void into a String.";
 
     return;
 }
@@ -4359,28 +4377,28 @@ void SemanticError::PrintVOID_TO_STRING(ErrorInfo &err, LexStream *lex_stream, C
 
 void SemanticError::PrintINVALID_ENCLOSING_INSTANCE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "The super type of this type, \"";
+    Coutput << "The super type of this type, \"";
     if (NotDot(err.insert1))
     {
-        Unicode::Cout(err.insert1);
-        cout << "/";
+        Coutput << err.insert1
+                << "/";
     }
-    Unicode::Cout(err.insert2);
-    cout << "\", is immediately enclosed in type \"";
+    Coutput << err.insert2
+            << "\", is immediately enclosed in type \"";
     if (NotDot(err.insert3))
     {
-        Unicode::Cout(err.insert3);
-        cout << "/";
+        Coutput << err.insert3
+                << "/";
     }
-    Unicode::Cout(err.insert4);
-    cout << "\" which does not match the type of this primary expression, \"";
+    Coutput << err.insert4
+            << "\" which does not match the type of this primary expression, \"";
     if (NotDot(err.insert5))
     {
-        Unicode::Cout(err.insert5);
-        cout << "/";
+        Coutput << err.insert5
+                << "/";
     }
-    Unicode::Cout(err.insert6);
-    cout << "\".";
+    Coutput << err.insert6
+            << "\".";
 
     return;
 }
@@ -4388,7 +4406,7 @@ void SemanticError::PrintINVALID_ENCLOSING_INSTANCE(ErrorInfo &err, LexStream *l
 
 void SemanticError::PrintCONSTRUCTOR_FOUND_IN_ANONYMOUS_CLASS(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "An anonymous class cannot have a constructor.";
+    Coutput << "An anonymous class cannot have a constructor.";
 
     return;
 }

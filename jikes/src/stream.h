@@ -19,10 +19,8 @@
 #include "javadef.h"
 #include "javasym.h"
 #include "tuple.h"
-#include "bool.h"
 #include "tab.h"
 #include "lookup.h"
-#include "unicode.h"
 
 class Control;
 class Input_info;
@@ -131,6 +129,39 @@ public:
 
     inline int LineSegmentLength(TokenIndex i)
         { return Tab::Wcslen(input_buffer, tokens[i].Location(), LineEnd(Line(i))); }
+
+    //
+    // For a sequence of tokens in a given range find out how many large
+    // characters they contain and compute the appropriate offset.
+    //
+    inline int WcharOffset(TokenIndex start, TokenIndex end)
+    {
+        int offset = 0;
+        for (TokenIndex i = start; i <= end; i++)
+        {
+            for (wchar_t *str = NameString(i); *str; str++)
+            {
+                 if (*str > 0xff)
+                    offset += 5;
+            }
+        }
+
+        return offset;
+    }
+
+    //
+    // When only an end token is supplied, the start token is assume to be the first one on the same line.
+    //
+    inline int WcharOffset(TokenIndex end)
+    {
+        TokenIndex start;
+        unsigned the_line = Line(end);
+        for (start = end; Line(start) == the_line; start--)
+            ;
+        start++;
+
+        return WcharOffset(start, end);
+    }
 
     wchar_t *InputBuffer() { return input_buffer; }
     size_t InputBufferLength() { return input_buffer_length; }

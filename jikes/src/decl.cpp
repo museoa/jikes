@@ -124,7 +124,8 @@ void Semantic::ProcessTypeNames()
                 if (type != control.Object())
                     type -> super = (type == control.Throwable() ? control.Object() : control.Throwable());
                 type -> MarkBad();
-                AddDefaultConstructor(type);
+                if (! type -> FindConstructorSymbol())
+                    AddDefaultConstructor(type);
                 source_file_symbol -> types.Next() = type;
             }
         }
@@ -1967,19 +1968,19 @@ void Semantic::CompleteSymbolTable(AstInterfaceDeclaration *interface_declaratio
     }
 
     //
-    // Initialize each variable, in turn.
+    // Initialize each variable, in turn, and check to see if we need to declare a static initialization method: <clinit>.
     //
+    MethodSymbol *init_method = NULL;
     for (int k = 0; k < interface_declaration -> NumClassVariables(); k++)
+    {
         InitializeVariable(interface_declaration -> ClassVariable(k), finals);
 
-    //
-    // We need a static constructor-initializer if we encounter at least one class
-    // variable that is declared with an initialization expression that is not a
-    // constant expression.
-    //
-    for (int n = 0; n < finals.Length(); n++)
-    {
-        if (! finals[n] -> initial_value)
+        //
+        // We need a static constructor-initializer if we encounter at least one class
+        // variable that is declared with an initialization expression that is not a
+        // constant expression.
+        //
+        if ((! init_method) && NeedsInitializationMethod(interface_declaration -> ClassVariable(k)))
         {
             MethodSymbol *init_method = this_type -> InsertMethodSymbol(control.clinit_name_symbol);
 
@@ -1998,8 +1999,6 @@ void Semantic::CompleteSymbolTable(AstInterfaceDeclaration *interface_declaratio
             init_method -> block_symbol -> CompressSpace(); // space optimization
 
             this_type -> static_initializer_method = init_method;
-
-            break;
         }
     }
 
@@ -2120,7 +2119,7 @@ void Semantic::ConvertUtf8ToUnicode(wchar_t *target, char *source, int len)
         }
         else
         {
-cerr << "chaos: Damn, Caramba, Zut !!!\n";
+fprintf(stderr, "chaos: Damn, Caramba, Zut !!!\n");
         }
     }
 
@@ -2468,7 +2467,7 @@ void Semantic::ProcessTypeImportOnDemandDeclaration(AstImportDeclaration *import
     //
     //
     TypeSymbol *type = symbol -> TypeCast();
-    if (type && type -> IsDeprecated() && type -> file_symbol != source_file_symbol)
+    if (control.option.deprecation && type && type -> IsDeprecated() && type -> file_symbol != source_file_symbol)
     {
         ReportSemError(SemanticError::DEPRECATED_TYPE,
                        import_declaration -> name -> LeftToken(),
@@ -2674,7 +2673,7 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_d
     //
     //
     //
-    if (type -> IsDeprecated() && type -> file_symbol != source_file_symbol)
+    if (control.option.deprecation && type -> IsDeprecated() && type -> file_symbol != source_file_symbol)
     {
         ReportSemError(SemanticError::DEPRECATED_TYPE,
                        import_declaration -> name -> LeftToken(),
@@ -2764,7 +2763,15 @@ void Semantic::GenerateLocalConstructor(MethodSymbol *constructor)
     TypeSymbol *local_type = constructor -> containing_type;
 
     //
-    // Make up external name for constructor
+    // Make up external name for constructor as we shall turn it into a regular method later.
+    // Note that the method needs to be PRIVATE and FINAL so that:
+    // 
+    //    1. virtual calls are not made to it
+    // 
+    //    2. it might be inlined later.
+    //
+    // This resetting destroys the original access flags specified by the user. We shall
+    // say more about this later...
     //
     IntToWstring value(local_type -> NumGeneratedConstructors());
 
@@ -2773,6 +2780,9 @@ void Semantic::GenerateLocalConstructor(MethodSymbol *constructor)
     wcscpy(external_name, StringConstant::US__constructor_DOLLAR);
     wcscat(external_name, value.String());
     constructor -> SetExternalIdentity(control.FindOrInsertName(external_name, length)); // Turn the constructor into a method
+    constructor -> ResetFlags();
+    constructor -> SetACC_PRIVATE();
+    constructor -> SetACC_FINAL();
 
     delete [] external_name;
 
@@ -2783,12 +2793,17 @@ void Semantic::GenerateLocalConstructor(MethodSymbol *constructor)
                                                 constructor -> NumFormalParameters() + 3);
     block_symbol -> max_variable_index = 1; // All types need a spot for "this"
 
+    //
+    // Note that the local constructor does not inherit the access flags of the specified constructor.
+    // This is because it acts more like a read_access method. The synthetic attribute that is associated
+    // with the constructor allows the compiler to prevent an illegal access from an unauthorized environment.
+    //
     MethodSymbol *local_constructor = local_type -> LocalConstructorOverload(constructor);
+    local_constructor -> MarkSynthetic();
     local_constructor -> method_or_constructor_declaration = constructor -> method_or_constructor_declaration;
     local_constructor -> SetType(control.void_type);
     local_constructor -> SetContainingType(local_type);
     local_constructor -> SetBlockSymbol(block_symbol);
-    ((AccessFlags *) local_constructor) -> access_flags = ((AccessFlags *) constructor) -> access_flags;
     for (int i = 0; i < constructor -> NumThrows(); i++)
         local_constructor -> AddThrows(constructor -> Throws(i));
 
@@ -2796,6 +2811,7 @@ void Semantic::GenerateLocalConstructor(MethodSymbol *constructor)
     {
         VariableSymbol *param = local_type -> ConstructorParameter(j),
                        *symbol = block_symbol -> InsertVariableSymbol(param -> Identity());
+        symbol -> MarkSynthetic();
         symbol -> SetType(param -> Type());
         symbol -> SetOwner(local_constructor);
         symbol -> SetExternalIdentity(param -> ExternalIdentity());
@@ -2815,9 +2831,10 @@ void Semantic::GenerateLocalConstructor(MethodSymbol *constructor)
     {
         VariableSymbol *param = constructor -> FormalParameter(k),
                        *symbol = block_symbol -> InsertVariableSymbol(param -> Identity());
+        symbol -> MarkSynthetic();
+        symbol -> MarkComplete();
         symbol -> SetType(param -> Type());
         symbol -> SetOwner(local_constructor);
-        symbol -> MarkComplete();
     }
 
     local_type -> AddGeneratedConstructor(local_constructor);
@@ -2905,14 +2922,14 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration *construc
 
     for (int i = 0; i < constructor_declarator -> NumFormalParameters(); i++)
     {
-        AstFormalParameter *parameter = constructor_declarator -> FormalParameter(i);
-        VariableSymbol *symbol = parameter -> parameter_symbol;
+        AstVariableDeclarator *formal_declarator = constructor_declarator -> FormalParameter(i) -> formal_declarator;
+        VariableSymbol *symbol = formal_declarator -> symbol;
 
         symbol -> SetOwner(constructor);
         symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
         if (symbol -> Type() == control.long_type || symbol -> Type() == control.double_type)
             block_symbol -> max_variable_index++;
-        symbol -> declarator = parameter -> variable_declarator_name;
+        symbol -> declarator = formal_declarator;
         constructor -> AddFormalParameter(symbol);
     }
 
@@ -3671,7 +3688,7 @@ void Semantic::ProcessFormalParameters(BlockSymbol *block, AstMethodDeclarator *
         AstPrimitiveType *primitive_type = actual_type -> PrimitiveTypeCast();
         TypeSymbol *parm_type = (primitive_type ? FindPrimitiveType(primitive_type) : MustFindType(actual_type));
 
-        AstVariableDeclaratorId *name = parameter -> variable_declarator_name;
+        AstVariableDeclaratorId *name = parameter -> formal_declarator -> variable_declarator_name;
         NameSymbol *name_symbol = lex_stream -> NameSymbol(name -> identifier_token);
         VariableSymbol *symbol = block -> FindVariableSymbol(name_symbol);
         if (symbol)
@@ -3690,7 +3707,7 @@ void Semantic::ProcessFormalParameters(BlockSymbol *block, AstMethodDeclarator *
         symbol -> SetFlags(access_flags);
         symbol -> MarkComplete();
 
-        parameter -> parameter_symbol = symbol;
+        parameter -> formal_declarator -> symbol = symbol;
     }
 
     return;
@@ -3809,14 +3826,14 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
     method -> method_or_constructor_declaration = method_declaration;
     for (int i = 0; i < method_declarator -> NumFormalParameters(); i++)
     {
-        AstFormalParameter *parameter = method_declarator -> FormalParameter(i);
-        VariableSymbol *symbol = parameter -> parameter_symbol;
+        AstVariableDeclarator *formal_declarator = method_declarator -> FormalParameter(i) -> formal_declarator;
+        VariableSymbol *symbol = formal_declarator -> symbol;
 
         symbol -> SetOwner(method);
         symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
         if (symbol -> Type() == control.long_type || symbol -> Type() == control.double_type)
             block_symbol -> max_variable_index++;
-        symbol -> declarator = parameter -> variable_declarator_name;
+        symbol -> declarator = formal_declarator;
         method -> AddFormalParameter(symbol);
     }
     method -> SetSignature(control);
@@ -4186,7 +4203,7 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
     //
     //
     //
-    if (type -> IsDeprecated() && type -> file_symbol != source_file_symbol)
+    if (control.option.deprecation && type -> IsDeprecated() && type -> file_symbol != source_file_symbol)
     {
         ReportSemError(SemanticError::DEPRECATED_TYPE,
                        name -> LeftToken(),
@@ -4316,6 +4333,27 @@ inline void Semantic::ProcessInitializer(AstBlock *initializer_block, AstBlock *
 }
 
 
+bool Semantic::NeedsInitializationMethod(AstFieldDeclaration *field_declaration)
+{
+    //
+    // We need a static constructor-initializer if we encounter at least one class
+    // variable that is declared with an initializer is not a constant expression.
+    //
+    for (int i = 0; i < field_declaration -> NumVariableDeclarators(); i++)
+    {
+        AstVariableDeclarator *variable_declarator = field_declaration -> VariableDeclarator(i);
+        if (variable_declarator -> variable_initializer_opt)
+        {
+            AstExpression *init = variable_declarator -> variable_initializer_opt -> ExpressionCast();
+            if (! (init && init -> IsConstant()))
+                return true;
+        }
+    }
+
+    return false;
+}
+
+
 void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
 {
     if (class_body -> NumStaticInitializers() > 0 || class_body -> NumClassVariables() > 0)
@@ -4435,7 +4473,8 @@ void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
 
         //
         // If we had not yet defined a static initializer function and
-        // there exists a non constant final in the class then define one now.
+        // there exists a static variable in the class that is not initialized
+        // with a constant then define one now.
         //
         if (! init_method)
         {
@@ -4444,31 +4483,12 @@ void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
             // constructor-initializer iff:
             //
             //     . we have at least one static initializer (this case is processed above)
-            //     . we have at least one static variable that is initialized but is not 
-            //       a symbolic constant; i.e., a final variable initialized with a
-            //       a constant expression.
+            //     . we have at least one static variable that is not initialized with a
+            //       constant expression.
             //
             for (int i = 0; i < class_body -> NumClassVariables(); i++)
             {
-                AstFieldDeclaration *field_decl = class_body -> ClassVariable(i);
-
-                //
-                // We need a static constructor-initializer if we encounter at least one class
-                // variable that is declared with an initialization expression that is not a
-                // constant expression.
-                //
-                bool needs_init_method = false;
-                for (int m = 0; m < field_decl -> NumVariableDeclarators() && (! needs_init_method); m++)
-                {
-                    AstVariableDeclarator *vd = field_decl -> VariableDeclarator(m);
-                    VariableSymbol *variable_symbol = vd -> symbol;
-
-                    needs_init_method = variable_symbol &&
-                                        vd -> variable_initializer_opt &&
-                                        (! (variable_symbol -> ACC_FINAL() && variable_symbol -> initial_value));
-                }
-
-                if (needs_init_method)
+                if (NeedsInitializationMethod(class_body -> ClassVariable(i)))
                 {
                     init_method = this_type -> InsertMethodSymbol(control.clinit_name_symbol);
 

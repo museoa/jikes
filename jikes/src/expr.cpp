@@ -318,23 +318,36 @@ MethodSymbol *Semantic::FindConstructor(TypeSymbol *containing_type, Ast *ast,
 
     delete [] argument;
 
+    MethodSymbol *constructor_symbol = constructor_set[0];
+
+    if (constructor_symbol -> IsSynthetic())
+    {
+        ReportSemError(SemanticError::SYNTHETIC_CONSTRUCTOR_INVOCATION,
+                       left_tok,
+                       right_tok,
+                       constructor_symbol -> Header(),
+                       containing_type -> ContainingPackage() -> PackageName(),
+                       containing_type -> ExternalName());
+    }
+
     //
     // If this constructor came from a class file, make sure that its throws clause has been processed.
     //
-    constructor_set[0] -> ProcessMethodThrows((Semantic *) this, right_tok);
+    constructor_symbol -> ProcessMethodThrows((Semantic *) this, right_tok);
 
-    if (constructor_set[0] -> IsDeprecated() &&
-        constructor_set[0] -> containing_type -> outermost_type != ThisType() -> outermost_type)
+    if (control.option.deprecation &&
+        constructor_symbol -> IsDeprecated() &&
+        constructor_symbol -> containing_type -> outermost_type != ThisType() -> outermost_type)
     {
         ReportSemError(SemanticError::DEPRECATED_METHOD,
                        left_tok,
                        right_tok,
-                       constructor_set[0] -> Header(),
-                       constructor_set[0] -> containing_type -> ContainingPackage() -> PackageName(),
-                       constructor_set[0] -> containing_type -> ExternalName());
+                       constructor_symbol -> Header(),
+                       constructor_symbol -> containing_type -> ContainingPackage() -> PackageName(),
+                       constructor_symbol -> containing_type -> ExternalName());
     }
 
-    return constructor_set[0];
+    return constructor_symbol;
 }
 
 
@@ -646,7 +659,8 @@ See comment above...
     //
     method -> ProcessMethodThrows((Semantic *) this, field_access -> identifier_token);
 
-    if (method -> IsDeprecated() && method -> containing_type -> outermost_type != ThisType() -> outermost_type)
+    if (control.option.deprecation &&
+        method -> IsDeprecated() && method -> containing_type -> outermost_type != ThisType() -> outermost_type)
     {
         ReportSemError(SemanticError::DEPRECATED_METHOD,
                        method_call -> LeftToken(),
@@ -953,7 +967,8 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
     {
         method_symbol -> ProcessMethodThrows((Semantic *) this, method_call -> method -> RightToken());
 
-        if (method_symbol -> IsDeprecated() && method_symbol -> containing_type -> outermost_type != ThisType() -> outermost_type)
+        if (control.option.deprecation &&
+            method_symbol -> IsDeprecated() && method_symbol -> containing_type -> outermost_type != ThisType() -> outermost_type)
         {
             ReportSemError(SemanticError::DEPRECATED_METHOD,
                            method_call -> LeftToken(),
@@ -1031,7 +1046,8 @@ inline VariableSymbol *Semantic::FindVariableInType(TypeSymbol *type, AstFieldAc
                            variable_symbol -> owner -> TypeCast() -> ExternalName());
         }
 
-        if (variable_symbol -> IsDeprecated() &&
+        if (control.option.deprecation &&
+            variable_symbol -> IsDeprecated() &&
             variable_symbol -> owner -> TypeCast() -> outermost_type != ThisType() -> outermost_type)
         {
             ReportSemError(SemanticError::DEPRECATED_FIELD,
@@ -1188,11 +1204,14 @@ VariableSymbol *Semantic::FindVariableInEnvironment(SemanticEnvironment *&where_
                                    method -> Name());
                 }
 
-                type -> FindOrInsertLocalShadow(variable_symbol);
-
-                variable_symbol = stack -> symbol_table.FindVariableSymbol(name_symbol);
-                if (! variable_symbol)
-                    variable_symbol = type -> FindVariableSymbol(name_symbol);
+                //
+                // Insert a local shadow in the type. If we are currently processing a
+                // constructor, the local shadow would have been passed to it as an argument.
+                // If so, use the local argument; otherwise, use the local shadow.
+                //
+                VariableSymbol *local_shadow = type -> FindOrInsertLocalShadow(variable_symbol),
+                               *local_symbol = stack -> symbol_table.FindVariableSymbol(local_shadow -> Identity());
+                variable_symbol = (local_symbol ? local_symbol : local_shadow);
 
                 assert(variable_symbol);
 
@@ -1274,7 +1293,8 @@ VariableSymbol *Semantic::FindVariableInEnvironment(SemanticEnvironment *&where_
 
     if (variable_symbol)
     {
-        if (variable_symbol -> IsDeprecated() &&
+        if (control.option.deprecation &&
+            variable_symbol -> IsDeprecated() &&
             variable_symbol -> owner -> TypeCast() -> outermost_type != ThisType() -> outermost_type)
         {
             ReportSemError(SemanticError::DEPRECATED_FIELD,
@@ -2277,7 +2297,8 @@ void Semantic::ProcessAmbiguousName(Ast *name)
 
                 assert(variable_symbol);
 
-                if (variable_symbol -> IsDeprecated() &&
+                if (control.option.deprecation &&
+                    variable_symbol -> IsDeprecated() &&
                     variable_symbol -> owner -> TypeCast() -> outermost_type != ThisType() -> outermost_type)
                 {
                     ReportSemError(SemanticError::DEPRECATED_FIELD,
@@ -3608,8 +3629,14 @@ void Semantic::UpdateLocalConstructors(TypeSymbol *inner_type)
                          j < target_local_type -> NumConstructorParameters(); j++)
                     {
                         VariableSymbol *local = target_local_type -> ConstructorParameter(j) -> accessed_local;
+
+                        //
+                        // If there does not exist a variable with the same identity as the local or
+                        // there exists such a variable but it is not the local then make a copy of
+                        // the local in the source type.
+                        //
                         if (env -> symbol_table.FindVariableSymbol(local -> Identity()) != local)
-                            source_local_type -> FindOrInsertLocalShadow(local);
+                            (void) source_local_type -> FindOrInsertLocalShadow(local);
                     }
                 }
             }
@@ -3693,6 +3720,11 @@ void Semantic::UpdateLocalConstructors(TypeSymbol *inner_type)
 
                                 AstSimpleName *simple_name = compilation_unit -> ast_pool
                                                                               -> GenSimpleName(class_creation -> new_token);
+                                //
+                                // If there does not exist a variable with the same identity as the local or
+                                // there exists such a variable but it is not the local then make a copy of
+                                // the local in the source type.
+                                //
                                 simple_name -> symbol = (env -> symbol_table.FindVariableSymbol(local -> Identity()) == local
                                                               ? local
                                                               : source_local_type -> FindOrInsertLocalShadow(local));
@@ -3720,10 +3752,11 @@ void Semantic::UpdateLocalConstructors(TypeSymbol *inner_type)
                         for (int j = (target_local_type -> ACC_STATIC() ? 0 : 1);
                              j < target_local_type -> NumConstructorParameters(); j++)
                         {
-                            VariableSymbol *local = target_local_type -> ConstructorParameter(j) -> accessed_local;
+                            VariableSymbol *local = target_local_type -> ConstructorParameter(j) -> accessed_local,
+                                           *local_shadow = source_local_type -> FindOrInsertLocalShadow(local);
 
                             AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(super_call -> super_token);
-                            simple_name -> symbol = env -> symbol_table.FindVariableSymbol(local -> Identity());
+                            simple_name -> symbol = env -> symbol_table.FindVariableSymbol(local_shadow -> Identity());
 
                             assert(simple_name -> symbol -> VariableCast());
 
@@ -3749,7 +3782,7 @@ void Semantic::UpdateLocalConstructors(TypeSymbol *inner_type)
                         for (int j = (target_local_type -> ACC_STATIC() ? 0 : 1);
                              j < target_local_type -> NumConstructorParameters(); j++)
                         {
-                            VariableSymbol *local = target_local_type -> ConstructorParameter(j) -> accessed_local;
+                            VariableSymbol *local = target_local_type -> ConstructorParameter(j);
 
                             AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(this_call -> this_token);
                             simple_name -> symbol = env -> symbol_table.FindVariableSymbol(local -> Identity());
@@ -3964,26 +3997,25 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression *class
         {
             if (super_type -> LocalClassProcessingCompleted())
             {
+                assert(super_constructor -> LocalConstructor() && (! super_constructor -> IsGeneratedLocalConstructor()));
+
+                super_call -> symbol = super_constructor -> LocalConstructor();
+
                 //
                 // TODO: Should we set the size for the super_call arguments here ???
                 //
-                for (int i = 1; i < super_type -> NumConstructorParameters(); i++)
+                for (int i = (super_type -> ACC_STATIC() ? 0 : 1); i < super_type -> NumConstructorParameters(); i++)
                 {
-                    VariableSymbol *local = super_type -> ConstructorParameter(i) -> accessed_local;
+                    VariableSymbol *local = super_type -> ConstructorParameter(i) -> accessed_local,
+                                   *local_shadow = anonymous_type -> FindOrInsertLocalShadow(local);
 
                     AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(super_call -> super_token);
-
-                    anonymous_type -> FindOrInsertLocalShadow(local);
-                    simple_name -> symbol = block_symbol -> FindVariableSymbol(local -> Identity());
+                    simple_name -> symbol = block_symbol -> FindVariableSymbol(local_shadow -> Identity());
 
                     assert(simple_name -> symbol);
 
                     super_call -> AddLocalArgument(simple_name);
                 }
-
-                assert(super_constructor -> LocalConstructor() && (! super_constructor -> IsGeneratedLocalConstructor()));
-
-                super_call -> symbol = super_constructor -> LocalConstructor();
             }
             else // are we currently within the body of the type in question ?
                 super_type -> AddLocalConstructorCallEnvironment(GetEnvironment(super_call));
@@ -4370,13 +4402,16 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
                 ((method -> ACC_PRIVATE() && ThisType() != type) ||
                  (method -> ACC_PROTECTED() && (! ThisType() -> IsSubclass(type)))))
             {
-                method = type -> GetReadAccessMethod(method);
-                class_creation -> class_type -> symbol = method;
+                if (! method -> LocalConstructor())
+                {
+                    method = type -> GetReadAccessMethod(method);
+                    class_creation -> class_type -> symbol = method;
 
-                //
-                // Add extra argument for read access constructor;
-                //
-                class_creation -> AddNullArgument();
+                    //
+                    // Add extra argument for read access constructor;
+                    //
+                    class_creation -> AddNullArgument();
+                }
             }
             else ConstructorAccessCheck(class_creation, method);
 
@@ -4395,31 +4430,19 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
 
                     assert(method -> LocalConstructor() -> signature);
 
-                    //
-                    // Are we currently within the body of the method that contains
-                    // the local type in question?
-                    //
-                    if (type -> owner == ThisMethod())
+                    for (int i = (type -> ACC_STATIC() ? 0 : 1); i < type -> NumConstructorParameters(); i++)
                     {
-                        for (int i = (type -> ACC_STATIC() ? 0 : 1); i < type -> NumConstructorParameters(); i++)
-                        {
-                            VariableSymbol *local = type -> ConstructorParameter(i) -> accessed_local;
+                        VariableSymbol *local = type -> ConstructorParameter(i) -> accessed_local;
 
-                            AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(class_creation -> new_token);
-                            simple_name -> symbol = local;
-                            class_creation -> AddLocalArgument(simple_name);
-                        }
-                    }
-                    else
-                    {
-                        for (int i = (type -> ACC_STATIC() ? 0 : 1); i < type -> NumConstructorParameters(); i++)
-                        {
-                            VariableSymbol *local = type -> ConstructorParameter(i) -> accessed_local;
-
-                            AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(class_creation -> new_token);
-                            simple_name -> symbol = ThisType() -> FindOrInsertLocalShadow(local);
-                            class_creation -> AddLocalArgument(simple_name);
-                        }
+                        AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(class_creation -> new_token);
+                        //
+                        // Are we currently within the body of the method that contains
+                        // the local type in question?
+                        //
+                        simple_name -> symbol = (type -> owner == ThisMethod()
+                                                                ? local
+                                                                : ThisType() -> FindOrInsertLocalShadow(local));
+                        class_creation -> AddLocalArgument(simple_name);
                     }
                 }
                 else // are we within body of type in question? Save processing for later. See ProcessClassDeclaration in body.cpp

@@ -12,7 +12,6 @@
 #define case_INCLUDED
 
 #include "config.h"
-#include "bool.h"
 #include <wchar.h>
 
 //

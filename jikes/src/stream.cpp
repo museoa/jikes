@@ -285,7 +285,7 @@ void LexStream::ReadInput()
 
         if (zipfile -> Buffer() == NULL)
         {
-            cerr << "chaos: Don\'t know how to process compressed (\".java\") source in a zip file\n";
+            fprintf(stderr, "chaos: Don\'t know how to process compressed (\".java\") source in a zip file\n");
             assert(false);
         }
         else if (! file_symbol -> lex_stream) // Once the zip file is loaded, it never changes. So, we only read it the first time
@@ -350,7 +350,7 @@ void LexStream::RereadInput()
 
         if (zipfile -> Buffer() == NULL)
         {
-            cerr << "chaos: Don\'t know how to process compressed (\".java\") source in a zip file\n";
+            fprintf(stderr, "chaos: Don\'t know how to process compressed (\".java\") source in a zip file\n");
             assert(false);
         }
         else ProcessInput(zipfile -> Buffer(), file_symbol -> uncompressed_size);
@@ -404,7 +404,7 @@ void LexStream::RereadInput()
 
 
 //
-// Read file_size Ascii characters from srcfile, convert them to unicode
+// Read file_size Ascii characters from srcfile, convert them to unicode and
 // store them in input_buffer.
 //
 void LexStream::ProcessInput(char *buffer, long filesize)
@@ -620,10 +620,10 @@ void LexStream::PrintMessages()
         {
             char *file_name = FileName();
 
-            cout << "\nFound " << NumBadTokens() << " lexical error" << (NumBadTokens() == 1 ? "" : "s")
-                 << " in \"";
-            Unicode::Cout(file_name);
-            cout << "\":";
+            Coutput << "\nFound " << NumBadTokens() << " lexical error" << (NumBadTokens() == 1 ? "" : "s")
+                    << " in \""
+                    << file_name
+                    << "\":";
 
             if (! input_buffer)
             {
@@ -646,7 +646,7 @@ void LexStream::PrintMessages()
                          PrintSmallSource(i);
                     else PrintLargeSource(i);
 
-                    cout << "\n*** Lexical Error: ";
+                    Coutput << "\n*** Lexical Error: ";
 
                     PrintMessage(bad_tokens[i].kind);
                 }
@@ -660,7 +660,7 @@ void LexStream::PrintMessages()
 
         DestroyInput();
 
-        cout.flush();
+        Coutput.flush();
     }
 
     return;
@@ -677,10 +677,10 @@ void LexStream::PrintEmacsMessage(int k)
         right_line_no   = FindLine(bad_tokens[k].end_location),
         right_column_no = FindColumn(bad_tokens[k].end_location);
 
-    Unicode::Cout(FileName());
-    cout << ':' << left_line_no  << ':' << left_column_no
-         << ':' << right_line_no << ':' << right_column_no
-         << ":\n    Lexical: ";
+    Coutput << FileName()
+            << ':' << left_line_no  << ':' << left_column_no
+            << ':' << right_line_no << ':' << right_column_no
+            << ":\n    Lexical: ";
 
     PrintMessage(bad_tokens[k].kind);
 
@@ -697,28 +697,34 @@ void LexStream::PrintSmallSource(int k)
 {
     int left_line_no = FindLine(bad_tokens[k].start_location);
 
-    cout << "\n\n";
-    cout.width(6);
-    cout << left_line_no;
-    cout << ". ";
-
+    Coutput << "\n\n";
+    Coutput.width(6);
+    Coutput << left_line_no;
+    Coutput << ". ";
     for (int i = this -> LineStart(left_line_no); i <= this -> LineEnd(left_line_no); i++)
-        Unicode::Cout(this -> InputBuffer()[i]);
+        Coutput << this -> InputBuffer()[i];
 
     int left_column_no = FindColumn(bad_tokens[k].start_location),
         right_column_no = FindColumn(bad_tokens[k].end_location);
 
-    cout.width(left_column_no + 7);
-    cout << "";
+    Coutput.width(left_column_no + 7);
+    Coutput << "";
     if (left_column_no == right_column_no)
-        cout << '^';
+        Coutput << '^';
     else
     {
-        cout << '<';
-        cout.width(right_column_no - left_column_no);
-        cout.fill('-');
-        cout << ">";
-        cout.fill(' ');
+        int offset = 0;
+        for (int i = bad_tokens[k].start_location; i <= bad_tokens[k].end_location; i++)
+        {
+            if (this -> InputBuffer()[i] > 0xff)
+                offset += 5;
+        }
+
+        Coutput << '<';
+        Coutput.width(right_column_no - left_column_no + offset);
+        Coutput.fill('-');
+        Coutput << ">";
+        Coutput.fill(' ');
     }
  
     return;
@@ -741,59 +747,73 @@ void LexStream::PrintLargeSource(int k)
     if (left_line_no == right_line_no)
     {
         if (left_line_no == 0)
-            cout << "\n";
+            Coutput << "\n";
         else
         {
-            cout << "\n\n";
-            cout.width(6);
-            cout << left_line_no << ". ";
+            Coutput << "\n\n";
+            Coutput.width(6);
+            Coutput << left_line_no << ". ";
             for (int i = this -> LineStart(left_line_no); i <= this -> LineEnd(left_line_no); i++)
-                Unicode::Cout(this -> InputBuffer()[i]);
+                Coutput << this -> InputBuffer()[i];
 
-            cout.width(left_column_no + 8);
-            cout << "<";
-            cout.width(right_column_no - left_column_no);
-            cout.fill('-');
-            cout << ">";
-            cout.fill(' ');
+            int offset = 0;
+            for (int j = bad_tokens[k].start_location; j <= bad_tokens[k].end_location; j++)
+            {
+                if (this -> InputBuffer()[j] > 0xff)
+                    offset += 5;
+            }
+
+            Coutput.width(left_column_no + 8);
+            Coutput << "<";
+            Coutput.width(right_column_no - left_column_no + offset);
+            Coutput.fill('-');
+            Coutput << ">";
+            Coutput.fill(' ');
         }
     }
     else
     {
-        cout << "\n\n";
-        cout.width(left_column_no + 8);
-        cout << "<";
+        Coutput << "\n\n";
+        Coutput.width(left_column_no + 8);
+        Coutput << "<";
 
-       int segment_size = Tab::Wcslen(input_buffer, bad_tokens[k].start_location,
-                                                    LineEnd(FindLine(bad_tokens[k].start_location)));
-        cout.width(segment_size);
-        cout.fill('-');
-        cout << "\n";
-        cout.fill(' ');
+        int segment_size = Tab::Wcslen(input_buffer, bad_tokens[k].start_location,
+                                                     LineEnd(FindLine(bad_tokens[k].start_location)));
+        Coutput.width(segment_size - 1);
+        Coutput.fill('-');
+        Coutput << "\n";
+        Coutput.fill(' ');
 
-        cout.width(6);
-        cout << left_line_no << ". ";
+        Coutput.width(6);
+        Coutput << left_line_no << ". ";
         for (int i = this -> LineStart(left_line_no); i <= this -> LineEnd(left_line_no); i++)
-            Unicode::Cout(this -> InputBuffer()[i]);
+            Coutput << this -> InputBuffer()[i];
 
         if (right_line_no > left_line_no + 1)
         {
-            cout.width(left_column_no + 7);
-            cout << " ";
-            cout << ". . .\n";
+            Coutput.width(left_column_no + 7);
+            Coutput << " ";
+            Coutput << ". . .\n";
         }
 
-        cout.width(6);
-        cout << right_line_no << ". ";
-        for (int j = this -> LineStart(right_line_no); j <= this -> LineEnd(right_line_no); j++)
-            Unicode::Cout(this -> InputBuffer()[j]);
+        Coutput.width(6);
+        Coutput << right_line_no << ". ";
 
-        cout.width(8);
-        cout << "";
-        cout.width(right_column_no);
-        cout.fill('-');
-        cout << ">";
-        cout.fill(' ');
+        int offset = 0;
+        for (int j = this -> LineStart(right_line_no); j <= this -> LineEnd(right_line_no); j++)
+        {
+            wchar_t c = this -> InputBuffer()[j];
+            if (c > 0xff)
+                offset += 5;
+            Coutput << c;
+        }
+
+        Coutput.width(8);
+        Coutput << "";
+        Coutput.width(right_column_no - 1 + offset);
+        Coutput.fill('-');
+        Coutput << ">";
+        Coutput.fill(' ');
     }
  
     return;
@@ -805,37 +825,37 @@ void LexStream::PrintMessage(StreamError::StreamErrorKind kind)
     switch(kind)
     {
         case StreamError::BAD_TOKEN:
-             cout << "Illegal token";
+             Coutput << "Illegal token";
              break;
         case StreamError::BAD_OCTAL_CONSTANT:
-             cout << "Octal constant contains invalid digit";
+             Coutput << "Octal constant contains invalid digit";
              break;
         case StreamError::EMPTY_CHARACTER_CONSTANT:
-             cout << "Empty character constant";
+             Coutput << "Empty character constant";
              break;
         case StreamError::UNTERMINATED_CHARACTER_CONSTANT:
-             cout << "Character constant not properly terminated";
+             Coutput << "Character constant not properly terminated";
              break;
         case StreamError::UNTERMINATED_COMMENT:
-             cout << "Comment not properly terminated";
+             Coutput << "Comment not properly terminated";
              break;
         case StreamError::UNTERMINATED_STRING_CONSTANT:
-             cout << "String constant not properly terminated";
+             Coutput << "String constant not properly terminated";
              break;
         case StreamError::INVALID_HEX_CONSTANT:
-             cout << "The prefix 0x must be followed by at least one hex digit";
+             Coutput << "The prefix 0x must be followed by at least one hex digit";
              break;
         case StreamError::INVALID_FLOATING_CONSTANT_EXPONENT:
-             cout << "floating-constant exponent has no digit";
+             Coutput << "floating-constant exponent has no digit";
              break;
         case StreamError::INVALID_UNICODE_ESCAPE:
-             cout << "Invalid unicode escape character";
+             Coutput << "Invalid unicode escape character";
              break;
         default:
              assert(false);
     }
 
-    cout << '\n';
+    Coutput << '\n';
 
     return;
 }

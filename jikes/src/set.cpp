@@ -33,37 +33,6 @@ void SymbolSet::Rehash()
 
 SymbolSet::~SymbolSet()
 {
-/*
-int n;
-int num_slots = 0;
-int total = 0;
-for (n = 0; n < hash_size; n++)
-{
-int num = 0;
-for (ShadowSymbol *s = base[n]; s; s = s -> next)
-    num++;
-if (num > 0)
-{
-num_slots++;
-total += num;
-}
-}
-
-if (num_slots > 0)
-{
-cout << "\nDestroying a set with base size " << hash_size << " containing " << num_slots << " non-empty slots\n";
-for (n = 0; n < hash_size; n++)
-{
-int num = 0;
-for (ShadowSymbol *s = base[n]; s; s = s -> next)
-    num++;
-if (num > 0)
-cout << "    slot " << n << " contains " << num << " element(s)\n";
-}
-}
-if (hash_size < total)
-    total = total;
-*/
     SetEmpty();
     delete [] base;
 }
@@ -268,7 +237,7 @@ void SymbolMap::Map(Symbol *symbol, Symbol *image)
     }
     else
     {
-        cout << "WARNING: This should not have happened !!!";
+        fprintf(stderr, "WARNING: This should not have happened !!!");
     }
 
     element -> image = image;

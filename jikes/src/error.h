@@ -231,6 +231,7 @@ public:
         INSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
         SYNTHETIC_VARIABLE_ACCESS,
         SYNTHETIC_METHOD_INVOCATION,
+        SYNTHETIC_CONSTRUCTOR_INVOCATION,
         THIS_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
         SUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
         INNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
@@ -557,6 +558,7 @@ private:
     static void PrintINSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
     static void PrintSYNTHETIC_VARIABLE_ACCESS(ErrorInfo &, LexStream *, Control &);
     static void PrintSYNTHETIC_METHOD_INVOCATION(ErrorInfo &, LexStream *, Control &);
+    static void PrintSYNTHETIC_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
     static void PrintTHIS_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
     static void PrintSUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
     static void PrintINNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);

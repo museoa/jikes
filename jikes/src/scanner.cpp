@@ -186,7 +186,7 @@ void Scanner::Scan(FileSymbol *file_symbol)
             lex -> SortMessages();
             for (int i = 0; i < lex -> bad_tokens.Length(); i++) 
                 lex -> PrintEmacsMessage(i);
-            cout.flush();
+            Coutput.flush();
         }
         lex -> DestroyInput(); // get rid of input buffer
     }

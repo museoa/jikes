@@ -12,11 +12,14 @@
 #define access_INCLUDED
 
 #include "config.h"
-#include "bool.h"
 
 class AccessFlags
 {
+protected:
+    u2 access_flags;
+
 public:
+
     bool ACC_PUBLIC()       { return (access_flags & 0x0001) != 0; }
     bool ACC_PRIVATE()      { return (access_flags & 0x0002) != 0; }
     bool ACC_PROTECTED()    { return (access_flags & 0x0004) != 0; }
@@ -59,7 +62,10 @@ public:
     void ResetACC_ABSTRACT()     { access_flags &= (~ 0x0400); }
     void ResetACC_STRICTFP()     { access_flags &= (~ 0x0800); }
 
-    u2 access_flags;
+    void ResetFlags() { access_flags = 0; }
+    void SetFlags(u2 access_flags_) { access_flags = access_flags_; }
+    void SetFlags(AccessFlags af)  { this -> access_flags = af.access_flags; }
+    u2 Flags() { return access_flags; }
 
     AccessFlags() : access_flags(0) {}
     AccessFlags(u2& _access_flags) : access_flags(_access_flags) {}
@@ -67,21 +73,21 @@ public:
 #ifdef TEST
     void Print()
     {
-        cout << " access_flags: ";
-        if (ACC_PUBLIC())       cout << " public";
-        if (ACC_PRIVATE())      cout << " private";
-        if (ACC_PROTECTED())    cout << " protected";
-        if (ACC_STATIC())       cout << " static";
-        if (ACC_FINAL())        cout << " final";
+        Coutput << " access_flags: ";
+        if (ACC_PUBLIC())       Coutput << " public";
+        if (ACC_PRIVATE())      Coutput << " private";
+        if (ACC_PROTECTED())    Coutput << " protected";
+        if (ACC_STATIC())       Coutput << " static";
+        if (ACC_FINAL())        Coutput << " final";
         // super and synchronized use the same bit!
-        if (ACC_SYNCHRONIZED()) cout << " super_or_synchronized";
-        if (ACC_VOLATILE())     cout << " volatile";
-        if (ACC_TRANSIENT())    cout << " transient";
-        if (ACC_NATIVE())       cout << " native";
-        if (ACC_INTERFACE())    cout << " interface";
-        if (ACC_ABSTRACT())     cout << " abstract";
-        if (ACC_STRICTFP())     cout << " strictfp";
-        cout << "\n";
+        if (ACC_SYNCHRONIZED()) Coutput << " super_or_synchronized";
+        if (ACC_VOLATILE())     Coutput << " volatile";
+        if (ACC_TRANSIENT())    Coutput << " transient";
+        if (ACC_NATIVE())       Coutput << " native";
+        if (ACC_INTERFACE())    Coutput << " interface";
+        if (ACC_ABSTRACT())     Coutput << " abstract";
+        if (ACC_STRICTFP())     Coutput << " strictfp";
+        Coutput << "\n";
     }
 #endif
 };

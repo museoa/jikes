@@ -15,7 +15,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "bool.h"
 #include "code.h"
 #include "tuple.h"
 
@@ -70,6 +69,8 @@ public:
     ~OptionError() { delete [] name; }
 };
 
+
+class Ostream;
 
 class Option
 {

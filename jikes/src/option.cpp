@@ -13,6 +13,7 @@
 #include "option.h"
 #include "javasym.h"
 #include "error.h"
+#include "case.h"
 
 //
 //
@@ -235,6 +236,8 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
                  nowrite = true;
             else if (strcmp(arguments.argv[i],"-nowarn") == 0)
                  nowarn = true;
+            else if (strcmp(arguments.argv[i],"-Xstdout") == 0)
+                 Coutput.StandardOutput();
             else if (strcmp(arguments.argv[i], "-d") == 0 && ((i + 1) < arguments.argc))
             {
                 ++i;
@@ -287,7 +290,7 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
         {
             if (strcmp(arguments.argv[i], "+AA") == 0)
                  applet_author = true;
-            if (strcmp(arguments.argv[i], "+A") == 0)
+            else if (strcmp(arguments.argv[i], "+A") == 0)
                  debug_dump_ast = true;
 #ifdef EBCDIC
             else if (strcmp(arguments.argv[i], "+ASCII") == 0)
@@ -450,6 +453,13 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
         arguments.argv[i] = arguments.argv[first_file_index];
         arguments.argv[first_file_index] = temp;
     }
+
+    //
+    // If the traditional batch output form for reporting errors is requested,
+    // then wide character expansion is turned on.
+    //
+    if (errors && (! dump_errors))
+        Coutput.SetExpandWchar();
 
     return;
 }

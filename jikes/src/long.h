@@ -12,7 +12,6 @@
 
 #include "config.h"
 #include <math.h>
-#include "bool.h"
 
 class IEEEdouble;
 class IEEEfloat;

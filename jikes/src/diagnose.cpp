@@ -13,7 +13,6 @@
 #include "diagnose.h"
 #include "control.h"
 #include "semantic.h"
-#include "unicode.h"
 #include "case.h"
 #include "spell.h"
  
@@ -2022,7 +2021,7 @@ void ParseError::Report(int msg_level,
              PrintSecondaryMessage(i);
         else PrintPrimaryMessage(i);
         errors.Reset(1); // we only need to indicate that at least one error was detected... See print_messages
-        cout.flush();
+        Coutput.flush();
     }
 
     return;
@@ -2037,16 +2036,16 @@ void ParseError::PrintMessages()
 {
     if (control.option.dump_errors || errors.Length() == 0)
     {
-        cout.flush();
+        Coutput.flush();
         return;
     }
 
     if (control.option.errors)
     {
-        cout << "\nFound " << errors.Length() << " syntax error" << (errors.Length() == 1 ? "" : "s")
-             << " in \"";
-        Unicode::Cout(lex_stream -> FileName());
-        cout << "\":";
+        Coutput << "\nFound " << errors.Length() << " syntax error" << (errors.Length() == 1 ? "" : "s")
+                << " in \""
+                << lex_stream -> FileName()
+                << "\":";
 
         lex_stream -> RereadInput();
 
@@ -2135,11 +2134,11 @@ void ParseError::PrintMessages()
                 int m = left_column_no,
                     n = right_column_no + errors[k].right_string_length - 1;
 
-                cout << "\n\n";
-                cout.width(6);
-                cout << left_line_no << ". ";
+                Coutput << "\n\n";
+                Coutput.width(6);
+                Coutput << left_line_no << ". ";
                 for (int i = lex_stream -> LineStart(left_line_no); i <= lex_stream -> LineEnd(left_line_no); i++)
-                    Unicode::Cout(lex_stream -> InputBuffer()[i]);
+                    Coutput << lex_stream -> InputBuffer()[i];
 
                 if ((msg_code == SUBSTITUTION_CODE) ||
                     (n == m) ||
@@ -2148,23 +2147,24 @@ void ParseError::PrintMessages()
                     (msg_code == DELETION_CODE &&
                      left_column_no == right_column_no))
                 {
-                    cout.width(left_column_no + 9);
-                    cout << "^\n";
+                    Coutput.width(left_column_no + 9);
+                    Coutput << "^\n";
                 }
                 else if (msg_code == INSERTION_CODE ||
                          msg_code == EOF_CODE)
                 {
-                    cout.width(n + 9);
-                    cout << "^\n";
+                    Coutput.width(n + 9);
+                    Coutput << "^\n";
                 }
                 else
                 {
-                    cout.width(left_column_no + 8);
-                    cout << "<";
-                    cout.width(right_column_no + errors[k].right_string_length - left_column_no);
-                    cout.fill('-');
-                    cout << (msg_code == SCOPE_CODE || msg_code == MANUAL_CODE ? "^\n" : ">\n");
-                    cout.fill(' ');
+                    int offset = lex_stream -> WcharOffset(errors[k].left_token, errors[k].right_token);
+                    Coutput.width(left_column_no + 8);
+                    Coutput << "<";
+                    Coutput.width(right_column_no + errors[k].right_string_length - left_column_no + offset);
+                    Coutput.fill('-');
+                    Coutput << (msg_code == SCOPE_CODE || msg_code == MANUAL_CODE ? "^\n" : ">\n");
+                    Coutput.fill(' ');
                 }
             }
  
@@ -2186,7 +2186,7 @@ void ParseError::PrintMessages()
     if (stack_top == 0)
         PrintLargeMessage(error_stack[stack_top]);
 
-    cout.flush();
+    Coutput.flush();
  
     delete [] error_stack;
 
@@ -2214,55 +2214,55 @@ void ParseError::PrintLargeMessage(int k)
  
         if (left_line_no == right_line_no)
         {
-            cout << "\n\n";
-            cout.width(6);
-            cout << left_line_no << ". ";
+            Coutput << "\n\n";
+            Coutput.width(6);
+            Coutput << left_line_no << ". ";
             for (int i = lex_stream -> LineStart(left_line_no); i <= lex_stream -> LineEnd(left_line_no); i++)
-                Unicode::Cout(lex_stream -> InputBuffer()[i]);
+                Coutput << lex_stream -> InputBuffer()[i];
 
-            cout.width(left_column_no + 8);
-            cout << (errors[k].msg_code == SCOPE_CODE || errors[k].msg_code == MANUAL_CODE ? "^" : "<");
-
-            cout.width(right_column_no + errors[k].right_string_length - left_column_no);
-            cout.fill('-');
-            cout << (errors[k].msg_code == SCOPE_CODE || errors[k].msg_code == MANUAL_CODE ? "^\n" : ">\n");
-            cout.fill(' ');
+            int offset = lex_stream -> WcharOffset(errors[k].left_token, errors[k].right_token);
+            Coutput.width(left_column_no + 8);
+            Coutput << (errors[k].msg_code == SCOPE_CODE || errors[k].msg_code == MANUAL_CODE ? "^" : "<");
+            Coutput.width(right_column_no + errors[k].right_string_length - left_column_no + offset);
+            Coutput.fill('-');
+            Coutput << (errors[k].msg_code == SCOPE_CODE || errors[k].msg_code == MANUAL_CODE ? "^\n" : ">\n");
+            Coutput.fill(' ');
         }
         else
         {
-            cout << "\n\n";
-            cout.width(left_column_no + 8);
-            cout << "<";
+            Coutput << "\n\n";
+            Coutput.width(left_column_no + 8);
+            Coutput << "<";
 
-            cout.width(lex_stream -> LineSegmentLength(errors[k].left_token));
-            cout.fill('-');
-            cout << "\n";
-            cout.fill(' ');
+            Coutput.width(lex_stream -> LineSegmentLength(errors[k].left_token));
+            Coutput.fill('-');
+            Coutput << "\n";
+            Coutput.fill(' ');
 
-            cout.width(6);
-            cout << left_line_no << ". ";
-            int i;
-            for (i = lex_stream -> LineStart(left_line_no); i <= lex_stream -> LineEnd(left_line_no); i++)
-                Unicode::Cout(lex_stream -> InputBuffer()[i]);
+            Coutput.width(6);
+            Coutput << left_line_no << ". ";
+            for (int i = lex_stream -> LineStart(left_line_no); i <= lex_stream -> LineEnd(left_line_no); i++)
+                Coutput << lex_stream -> InputBuffer()[i];
 
             if (right_line_no > left_line_no + 1)
             {
-                cout.width(left_column_no + 7);
-                cout << " ";
-                cout << ". . .\n";
+                Coutput.width(left_column_no + 7);
+                Coutput << " ";
+                Coutput << ". . .\n";
             }
 
-            cout.width(6);
-            cout << right_line_no << ". ";
-            for (i = lex_stream -> LineStart(right_line_no); i <= lex_stream -> LineEnd(right_line_no); i++)
-                Unicode::Cout(lex_stream -> InputBuffer()[i]);
+            Coutput.width(6);
+            Coutput << right_line_no << ". ";
+            for (int j = lex_stream -> LineStart(right_line_no); j <= lex_stream -> LineEnd(right_line_no); j++)
+                Coutput << lex_stream -> InputBuffer()[j];
 
-            cout.width(8);
-            cout << "";
-            cout.width(right_column_no + errors[k].right_string_length);
-            cout.fill('-');
-            cout << (errors[k].msg_code == SCOPE_CODE || errors[k].msg_code == MANUAL_CODE ? "^\n" : ">\n");
-            cout.fill(' ');
+            int offset = lex_stream -> WcharOffset(errors[k].right_token);
+            Coutput.width(8);
+            Coutput << "";
+            Coutput.width(right_column_no + errors[k].right_string_length + offset);
+            Coutput.fill('-');
+            Coutput << (errors[k].msg_code == SCOPE_CODE || errors[k].msg_code == MANUAL_CODE ? "^\n" : ">\n");
+            Coutput.fill(' ');
         }
     }
 
@@ -2300,63 +2300,63 @@ void ParseError::PrintPrimaryMessage(int k)
         if (right_column_no != 0) // could not compute a column number
             right_column_no += (errors[k].right_string_length - 1); // point to last character in right token
 
-        Unicode::Cout(lex_stream -> FileName());
-        cout   << ':' << left_line_no  << ':' << left_column_no 
-             << ':' << right_line_no << ':' << right_column_no
-             << ":\n    Syntax: ";
+        Coutput << lex_stream -> FileName()
+                << ':' << left_line_no  << ':' << left_column_no 
+                << ':' << right_line_no << ':' << right_column_no
+                << ":\n    Syntax: ";
     }
-    else cout << "*** Syntax Error: ";
+    else Coutput << "*** Syntax Error: ";
  
     switch(errors[k].msg_code)
     {
         case ERROR_CODE:
-             cout << "Parsing terminated at this token";
+             Coutput << "Parsing terminated at this token";
              break;
         case BEFORE_CODE:
              for (i = 0; i < len; i++)
-                 cout << name[i];
-             cout << " inserted before this token";
+                 Coutput << name[i];
+             Coutput << " inserted before this token";
              break;
         case INSERTION_CODE:
              for (i = 0; i < len; i++)
-                 cout << name[i];
-             cout << " expected after this token";
+                 Coutput << name[i];
+             Coutput << " expected after this token";
              break;
         case DELETION_CODE:
              if (errors[k].left_token == errors[k].right_token)
-                  cout << "Unexpected symbol ignored";
-             else cout << "Unexpected symbols ignored";
+                  Coutput << "Unexpected symbol ignored";
+             else Coutput << "Unexpected symbols ignored";
              break;
         case INVALID_CODE:
              if (len == 0)
-                 cout << "Unexpected input discarded";
+                 Coutput << "Unexpected input discarded";
              else
              {
-                 cout << "Invalid ";
+                 Coutput << "Invalid ";
                  for (i = 0; i < len; i++)
-                     cout << name[i];
+                     Coutput << name[i];
              }
              break;
         case SUBSTITUTION_CODE:
              for (i = 0; i < len; i++)
-                 cout << name[i];
-             cout << " expected instead of this token";
+                 Coutput << name[i];
+             Coutput << " expected instead of this token";
              break;
 #if defined(SCOPE_REPAIR)
         case SCOPE_CODE:
-             cout << '\"';
+             Coutput << '\"';
              for (i = scope_suffix[- (int) errors[k].name_index];
                   scope_rhs[i] != 0; i++)
              {
                  len  = name_length[scope_rhs[i]];
                  name = &string_buffer[name_start[scope_rhs[i]]];
                  for (int j = 0; j < len; j++)
-                     cout << name[j];
+                     Coutput << name[j];
                  if (scope_rhs[i+1]) // any more symbols to print?
-                     cout << ' ';
+                     Coutput << ' ';
              }
-             cout << '\"';
-             cout << " inserted to complete ";
+             Coutput << '\"';
+             Coutput << " inserted to complete ";
              //
              // TODO: This should not be an option
              //
@@ -2365,42 +2365,42 @@ void ParseError::PrintPrimaryMessage(int k)
                  len  = name_length[errors[k].scope_name_index];
                  name = &string_buffer[name_start[errors[k].scope_name_index]];
                  for (int j = 0; j < len; j++) // any more symbols to print?
-                      cout << name[j];
+                      Coutput << name[j];
              }
-             else cout << "scope";
+             else Coutput << "scope";
              break;
 #endif
         case MANUAL_CODE:
-             cout << '\"';
+             Coutput << '\"';
              for (i = 0; i < len; i++)
-                 cout << name[i];
-             cout << "\" inserted to complete structure";
+                 Coutput << name[i];
+             Coutput << "\" inserted to complete structure";
              break;
         case MERGE_CODE:
-             cout << "symbols merged to form ";
+             Coutput << "symbols merged to form ";
              for (i = 0; i < len; i++)
-                 cout << name[i];
+                 Coutput << name[i];
              break;
         case EOF_CODE:
              for (i = 0; i < len; i++)
-                 cout << name[i];
-             cout << " reached after this token";
+                 Coutput << name[i];
+             Coutput << " reached after this token";
              break;
         default:
              if (errors[k].msg_code == MISPLACED_CODE)
-                  cout << "misplaced construct(s)";
+                  Coutput << "misplaced construct(s)";
              else if (len == 0)
-                  cout << "unexpected input discarded";
+                  Coutput << "unexpected input discarded";
              else
              {
                  for (i = 0; i < len; i++)
-                     cout << name[i];
-                 cout << " expected instead";
+                     Coutput << name[i];
+                 Coutput << " expected instead";
              }
              break;
     }
  
-    cout << '\n';
+    Coutput << '\n';
 
     return;
 }
@@ -2434,31 +2434,31 @@ void ParseError::PrintSecondaryMessage(int k)
         if (right_column_no != 0) // could not compute a column number
             right_column_no += (errors[k].right_string_length - 1); // point to last character in right token
 
-        Unicode::Cout(lex_stream -> FileName());
-        cout << ':' << left_line_no  << ':' << left_column_no 
-             << ':' << right_line_no << ':' << right_column_no
-             << ":\n    Syntax: ";
+        Coutput << lex_stream -> FileName()
+                << ':' << left_line_no  << ':' << left_column_no 
+                << ':' << right_line_no << ':' << right_column_no
+                << ":\n    Syntax: ";
     }
-    else cout << "*** Syntax Error: ";
+    else Coutput << "*** Syntax Error: ";
  
     switch(errors[k].msg_code)
     {
         case MISPLACED_CODE:
-            cout << "Misplaced construct(s)";
+            Coutput << "Misplaced construct(s)";
             break;
 #if defined(SCOPE_REPAIR)
         case SCOPE_CODE:
-            cout << '\"';
+            Coutput << '\"';
             for (i = scope_suffix[- (int) errors[k].name_index]; scope_rhs[i] != 0; i++)
             {
                 len  = name_length[scope_rhs[i]];
                 name = &string_buffer[name_start[scope_rhs[i]]];
                 for (int j = 0; j < len; j++) // any more symbols to print?
-                     cout << name[j];
+                     Coutput << name[j];
                 if (scope_rhs[i+1])
-                    cout << ' ';
+                    Coutput << ' ';
             }
-            cout << "\" inserted to complete ";
+            Coutput << "\" inserted to complete ";
             //
             // TODO: This should not be an option
             //
@@ -2467,34 +2467,34 @@ void ParseError::PrintSecondaryMessage(int k)
                 len  = name_length[errors[k].scope_name_index];
                 name = &string_buffer[name_start[errors[k].scope_name_index]];
                 for (int j = 0; j < len; j++) // any more symbols to print?
-                     cout << name[j];
+                     Coutput << name[j];
             }
-            else cout << "phrase";
+            else Coutput << "phrase";
             break;
 #endif
         case  MANUAL_CODE:
-            cout << '\"';
+            Coutput << '\"';
             for (i = 0; i < len; i++)
-                cout << name[i];
-            cout << "\" inserted to complete structure";
+                Coutput << name[i];
+            Coutput << "\" inserted to complete structure";
             break;
         case MERGE_CODE:
-            cout << "Symbols merged to form ";
+            Coutput << "Symbols merged to form ";
             for (i = 0; i < len; i++)
-                cout << name[i];
+                Coutput << name[i];
             break;
         default:
             if (errors[k].msg_code == DELETION_CODE || len == 0)
-                cout << "Unexpected input discarded";
+                Coutput << "Unexpected input discarded";
             else
             {
                 for (i = 0; i < len; i++)
-                    cout << name[i];
-                cout << " expected instead";
+                    Coutput << name[i];
+                Coutput << " expected instead";
             }
     }
  
-    cout << '\n';
+    Coutput << '\n';
 
     return;
 }

@@ -849,6 +849,7 @@ private:
 
     void InitializeVariable(AstFieldDeclaration *, Tuple<VariableSymbol *> &);
     void ProcessInitializer(AstBlock *, AstBlock *, MethodSymbol *, Tuple<VariableSymbol *> &);
+    bool NeedsInitializationMethod(AstFieldDeclaration *);
     void ProcessStaticInitializers(AstClassBody *);
     void ProcessBlockInitializers(AstClassBody *);
 

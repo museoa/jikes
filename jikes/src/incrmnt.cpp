@@ -10,12 +10,11 @@
 #include "config.h"
 #include <sys/stat.h>
 #include <iostream.h>
-#include "bool.h"
 #include "control.h"
 #include "scanner.h"
 #include "parser.h"
 #include "semantic.h"
-#include "unicode.h"
+#include "case.h"
 #include "set.h"
 
 void Control::RemoveTrashedTypes(SymbolSet &type_trash_set)
@@ -363,8 +362,8 @@ bool Control::IncrementalRecompilation()
         candidates = recompilation_file_set;
     else
     {
-        cerr << "\nIncremental Jikes: Press Enter to continue or [Q]uit + Enter to exit: ";
-        cerr.flush();
+        fprintf(stderr, "\nIncremental Jikes: Press Enter to continue or [Q]uit + Enter to exit: ");
+        fflush(stderr);
 
         Tuple<char> line;
         char ch;
@@ -412,8 +411,8 @@ bool Control::IncrementalRecompilation()
     // Also, complete the computation of type_trash_set, the set of files that should be
     // removed from the database as they will be recompiled.
     //
-    cerr << (recompilation_file_set.IsEmpty() && expired_file_set.IsEmpty() ? "\nnothing changed...\n" : "\nok...\n");
-    cerr.flush();
+    fprintf(stderr, "%s", (recompilation_file_set.IsEmpty() && expired_file_set.IsEmpty() ? "\nnothing changed...\n" : "\nok...\n"));
+    fflush(stderr);
 
     delete new_arguments;
 

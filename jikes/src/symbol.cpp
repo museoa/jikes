@@ -17,6 +17,7 @@
 #include "table.h"
 #include "zip.h"
 #include "set.h"
+#include "case.h"
 
 #ifdef UNIX_FILE_SYSTEM
 #include <dirent.h>
@@ -148,7 +149,7 @@ MethodSymbol *SymbolTable::FindOverloadMethod(MethodSymbol *base_method, AstMeth
             for (i = method -> NumFormalParameters() - 1; i >= 0; i--)
             {
                 AstFormalParameter *parameter = method_declarator -> FormalParameter(i);
-                if (method -> FormalParameter(i) -> Type() != parameter -> parameter_symbol -> Type())
+                if (method -> FormalParameter(i) -> Type() != parameter -> formal_declarator -> symbol -> Type())
                     break;
             }
             if (i < 0)
@@ -251,10 +252,6 @@ TypeSymbol *TypeSymbol::GetArrayType(Semantic *sem, int num_dimensions_)
         wcscat(name, StringConstant::US__LB__RB);
         NameSymbol *name_sym = sem -> control.FindOrInsertName(name, len);
 
-        AccessFlags acc_flags;
-        acc_flags.SetACC_PUBLIC();
-        acc_flags.SetACC_FINAL();
-
         TypeSymbol *type = new TypeSymbol(name_sym);
 
         type -> MarkHeaderProcessed();
@@ -265,7 +262,9 @@ TypeSymbol *TypeSymbol::GetArrayType(Semantic *sem, int num_dimensions_)
         type -> MarkSourceNoLongerPending();
         type -> outermost_type = type;
 
-        type -> SetFlags(acc_flags);
+        type -> SetACC_PUBLIC();
+        type -> SetACC_FINAL();
+
         type -> super = sem -> control.Object();
         //
         // All arrays implement the interfaces java.io.Serializable and
@@ -283,11 +282,13 @@ TypeSymbol *TypeSymbol::GetArrayType(Semantic *sem, int num_dimensions_)
         MethodSymbol *method = type -> InsertMethodSymbol(sem -> control.clone_name_symbol);
         method -> SetType(sem -> control.Object());
         method -> SetContainingType(type);
-        method -> SetFlags(acc_flags);
+        method -> SetACC_PUBLIC();
+        method -> SetACC_FINAL();
         method -> SetBlockSymbol(new BlockSymbol(1)); // the associated symbol table will remain empty
 
         VariableSymbol *symbol = type -> InsertVariableSymbol(sem -> control.length_name_symbol);
-        symbol -> SetFlags(acc_flags);
+        symbol -> SetACC_PUBLIC();
+        symbol -> SetACC_FINAL();
         symbol -> SetOwner(type);
         symbol -> SetType(sem -> control.int_type);
 
@@ -550,6 +551,7 @@ TypeSymbol::TypeSymbol(NameSymbol *name_symbol_) : semantic_environment(NULL),
                                                    fully_qualified_name(NULL),
                                                    class_literal_name(NULL),
                                                    table(NULL),
+                                                   local_shadow_map(NULL),
                                                    expanded_type_table(NULL),
                                                    expanded_field_table(NULL),
                                                    expanded_method_table(NULL),
@@ -587,6 +589,7 @@ TypeSymbol::~TypeSymbol()
     delete parents;
     delete static_parents;
     delete table;
+    delete local_shadow_map;
     delete expanded_type_table;
     delete expanded_field_table;
     delete expanded_method_table;
@@ -1452,7 +1455,7 @@ VariableSymbol *TypeSymbol::FindOrInsertLocalShadow(VariableSymbol *local)
     assert(this -> IsLocal());
 
     Control &control = semantic_environment -> sem -> control;
-    VariableSymbol *variable = FindVariableSymbol(local -> Identity());
+    VariableSymbol *variable = (VariableSymbol *) (local_shadow_map ? local_shadow_map -> Image(local) : NULL);
 
     //
     // For a local class, if it does not yet have a shadow for a local variable
@@ -1469,7 +1472,13 @@ VariableSymbol *TypeSymbol::FindOrInsertLocalShadow(VariableSymbol *local)
     //
     if (! variable)
     {
-        variable = InsertVariableSymbol(local -> Identity());
+        int length = 4 + local -> NameLength(); // +4 for val$
+        wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
+        wcscpy(name, StringConstant::US__val_DOLLAR);
+        wcscat(name, local -> Name());
+        NameSymbol *name_symbol = control.FindOrInsertName(name, length);
+
+        variable = InsertVariableSymbol(name_symbol);
         variable -> MarkSynthetic();
         variable -> accessed_local = local;
         variable -> SetType(local -> Type());
@@ -1478,34 +1487,30 @@ VariableSymbol *TypeSymbol::FindOrInsertLocalShadow(VariableSymbol *local)
         variable -> SetOwner((TypeSymbol *) this);
         variable -> MarkComplete();
 
-        int length = 4 + local -> NameLength(); // +4 for val$
-        wchar_t *external_name = new wchar_t[length + 1]; // +1 for '\0';
-        wcscpy(external_name, StringConstant::US__val_DOLLAR);
-        wcscat(external_name, local -> Name());
-
-        variable -> SetExternalIdentity(control.FindOrInsertName(external_name, length));
         AddConstructorParameter(variable);
 
-        delete [] external_name;
+        delete [] name;
 
         for (int i = 0; i < NumGeneratedConstructors(); i++)
         {
             MethodSymbol *constructor = GeneratedConstructor(i);
-            VariableSymbol *symbol = constructor -> block_symbol -> FindVariableSymbol(local -> Identity());
-            if (! symbol)
-            {
-                symbol = constructor -> block_symbol -> InsertVariableSymbol(local -> Identity());
-                symbol -> MarkSynthetic();
-                symbol -> SetType(variable -> Type());
-                symbol -> SetOwner(constructor);
-                symbol -> SetExternalIdentity(external_name_symbol);
-                symbol -> SetLocalVariableIndex(constructor -> block_symbol -> max_variable_index++);
-                if (symbol -> Type() == control.long_type || symbol -> Type() == control.double_type)
-                    constructor -> block_symbol -> max_variable_index++;
-                constructor -> AddFormalParameter(symbol);
-            }
+
+            VariableSymbol *symbol = constructor -> block_symbol -> InsertVariableSymbol(name_symbol);
+            symbol -> MarkSynthetic();
+            symbol -> SetType(variable -> Type());
+            symbol -> SetOwner(constructor);
+            symbol -> SetLocalVariableIndex(constructor -> block_symbol -> max_variable_index++);
+            if (symbol -> Type() == control.long_type || symbol -> Type() == control.double_type)
+                constructor -> block_symbol -> max_variable_index++;
+            constructor -> AddFormalParameter(symbol);
         }
+
+        if (! local_shadow_map)
+            local_shadow_map = new SymbolMap();
+        local_shadow_map -> Map(local, variable);
     }
+
+assert(variable -> accessed_local == local);
 
     return variable;
 }
@@ -1611,6 +1616,12 @@ assert(this -> IsSubclass(member -> containing_type));
         else
         {
             //
+            // A constructor in a local class already has a "LocalConstructor()" associated
+            // with it that can be used as a read access method.
+            //
+            assert(! this -> IsLocal());
+
+            //
             //
             //
             block_symbol -> max_variable_index = 1;
@@ -1700,7 +1711,8 @@ assert(this -> IsSubclass(member -> containing_type));
                 // Since private_access_constructors will be compiled (see body.cpp), we must create
                 // valid ast_simple_names for its parameters.
                 //
-                AstVariableDeclaratorId *variable_declarator_name = declarator -> FormalParameter(i) -> variable_declarator_name;
+                AstVariableDeclaratorId *variable_declarator_name = declarator -> FormalParameter(i)
+                                                                               -> formal_declarator -> variable_declarator_name;
                 AstSimpleName *simple_name = ast_pool -> GenSimpleName(variable_declarator_name -> identifier_token);
                 simple_name -> symbol = parm;
                 this_call -> AddArgument(simple_name);
@@ -1736,9 +1748,6 @@ assert(this -> IsSubclass(member -> containing_type));
 
             constructor_declaration -> constructor_symbol = read_method;
             read_method -> method_or_constructor_declaration = constructor_declaration;
-
-            if (this -> IsLocal())
-                sem -> GenerateLocalConstructor(read_method);
 
             this -> AddPrivateAccessConstructor(read_method);
         }

@@ -1340,25 +1340,22 @@ void Semantic::DefiniteSwitchStatement(Ast *stmt)
     {
         AstSwitchBlockStatement *switch_block_statement = (AstSwitchBlockStatement *) block_body -> Statement(i);
 
-        if (switch_block_statement -> NumStatements() > 0)
+        *definitely_assigned_variables = starting_set;
+        *possibly_assigned_finals = after_expr_finals;
+
+        for (int k = 0; k < switch_block_statement -> NumStatements(); k++)
         {
-            *definitely_assigned_variables = starting_set;
-            *possibly_assigned_finals = after_expr_finals;
-
-            for (int k = 0; k < switch_block_statement -> NumStatements(); k++)
-            {
-                AstStatement *statement = (AstStatement *) switch_block_statement -> Statement(k);
-                if (statement -> is_reachable)
-                     DefiniteStatement(statement);
-                else break;
-            }
-
-            //
-            // Update possibly_assigned_finals here. If a continue, break (of an enclosing statement), return or throw
-            // statement was encountered...
-            //
-            switch_finals_union += definite_block_stack -> TopFinalExitSet(*possibly_assigned_finals);
+            AstStatement *statement = (AstStatement *) switch_block_statement -> Statement(k);
+            if (statement -> is_reachable)
+                 DefiniteStatement(statement);
+            else break;
         }
+
+        //
+        // Update possibly_assigned_finals here. If a continue, break (of an enclosing statement), return or throw
+        // statement was encountered...
+        //
+        switch_finals_union += definite_block_stack -> TopFinalExitSet(*possibly_assigned_finals);
     }
 
     if (switch_statement -> default_case.switch_block_statement) // Is there a default case?
@@ -1757,11 +1754,11 @@ void Semantic::DefiniteMethodBody(AstMethodDeclaration *method_declaration, Tupl
         AstMethodDeclarator *method_declarator = method_declaration -> method_declarator;
         for (int k = 0; k < method_declarator -> NumFormalParameters(); k++)
         {
-            AstFormalParameter *parameter = method_declarator -> FormalParameter(k);
-            definitely_assigned_variables -> AddElement(parameter -> parameter_symbol -> LocalVariableIndex());
-            if (parameter -> parameter_symbol -> ACC_FINAL())
-                possibly_assigned_finals -> AddElement(parameter -> parameter_symbol -> LocalVariableIndex());
-            definite_visible_variables -> AddElement(parameter -> parameter_symbol);
+            AstVariableDeclarator *formal_declarator = method_declarator -> FormalParameter(k) -> formal_declarator;
+            definitely_assigned_variables -> AddElement(formal_declarator -> symbol -> LocalVariableIndex());
+            if (formal_declarator -> symbol -> ACC_FINAL())
+                possibly_assigned_finals -> AddElement(formal_declarator -> symbol -> LocalVariableIndex());
+            definite_visible_variables -> AddElement(formal_declarator -> symbol);
         }
 
         for (int l = 0; l < block_body -> block_symbol -> NumVariableSymbols(); l++)
@@ -1829,11 +1826,11 @@ void Semantic::DefiniteConstructorBody(AstConstructorDeclaration *constructor_de
     AstMethodDeclarator *constructor_declarator = constructor_declaration -> constructor_declarator;
     for (int j = 0; j < constructor_declarator -> NumFormalParameters(); j++)
     {
-        AstFormalParameter *parameter = constructor_declarator -> FormalParameter(j);
-        definitely_assigned_variables -> AddElement(parameter -> parameter_symbol -> LocalVariableIndex());
-        if (parameter -> parameter_symbol -> ACC_FINAL())
-            possibly_assigned_finals -> AddElement(parameter -> parameter_symbol -> LocalVariableIndex());
-        definite_visible_variables -> AddElement(parameter -> parameter_symbol);
+        AstVariableDeclarator *formal_declarator = constructor_declarator -> FormalParameter(j) -> formal_declarator;
+        definitely_assigned_variables -> AddElement(formal_declarator -> symbol -> LocalVariableIndex());
+        if (formal_declarator -> symbol -> ACC_FINAL())
+            possibly_assigned_finals -> AddElement(formal_declarator -> symbol -> LocalVariableIndex());
+        definite_visible_variables -> AddElement(formal_declarator -> symbol);
     }
 
     for (int l = 0; l < block_body -> block_symbol -> NumVariableSymbols(); l++)

@@ -624,49 +624,53 @@ void Semantic::ProcessSwitchStatement(Ast *stmt)
             }
         }
 
-        if (switch_block_statement -> NumStatements() > 0)
-        {
-            //
-            // A statement in a switch block is reachable iff its
-            // switch statement is reachable and at least one of the
-            // following is true:
-            //
-            // . it bears a case or default label
-            // . there is a statement preceeding it in the switch block and that
-            // preceeding  statement can compile normally.
-            //
-            AstStatement *statement = (AstStatement *) switch_block_statement -> Statement(0);
-            statement -> is_reachable = switch_statement -> is_reachable;
-            AstStatement *first_unreachable_statement = (AstStatement *) (statement -> is_reachable ? NULL : statement);
-            ProcessStatement(statement);
-            for (int j = 1; j < switch_block_statement -> NumStatements(); j++)
-            {
-                AstStatement *previous_statement = statement;
-                statement = (AstStatement *) switch_block_statement -> Statement(j);
-                if (switch_statement -> is_reachable)
-                {
-                    statement -> is_reachable = previous_statement -> can_complete_normally;
-                    if ((! statement -> is_reachable) && (first_unreachable_statement == NULL))
-                        first_unreachable_statement = statement;
-                }
+        //
+        // The parser ensures that a switch block statement always has one statement.
+        // When a switch block ends with a sequence of switch labels that are not followed
+        // by any executable statements, an artificial "empty" statement is added by the parser.
+        //
+        assert(switch_block_statement -> NumStatements() > 0);
 
-                ProcessStatement(statement);
+        //
+        // A statement in a switch block is reachable iff its
+        // switch statement is reachable and at least one of the
+        // following is true:
+        //
+        // . it bears a case or default label
+        // . there is a statement preceeding it in the switch block and that
+        // preceeding  statement can compile normally.
+        //
+        AstStatement *statement = (AstStatement *) switch_block_statement -> Statement(0);
+        statement -> is_reachable = switch_statement -> is_reachable;
+        AstStatement *first_unreachable_statement = (AstStatement *) (statement -> is_reachable ? NULL : statement);
+        ProcessStatement(statement);
+        for (int j = 1; j < switch_block_statement -> NumStatements(); j++)
+        {
+            AstStatement *previous_statement = statement;
+            statement = (AstStatement *) switch_block_statement -> Statement(j);
+            if (switch_statement -> is_reachable)
+            {
+                statement -> is_reachable = previous_statement -> can_complete_normally;
+                if ((! statement -> is_reachable) && (first_unreachable_statement == NULL))
+                    first_unreachable_statement = statement;
             }
 
-            if (first_unreachable_statement)
+            ProcessStatement(statement);
+        }
+
+        if (first_unreachable_statement)
+        {
+            if (first_unreachable_statement == statement)
             {
-                if (first_unreachable_statement == statement)
-                {
-                    ReportSemError(SemanticError::UNREACHABLE_STATEMENT,
-                                   statement -> LeftToken(),
-                                   statement -> RightToken());
-                }
-                else
-                {
-                    ReportSemError(SemanticError::UNREACHABLE_STATEMENTS,
-                                   first_unreachable_statement -> LeftToken(),
-                                   statement -> RightToken());
-                }
+                ReportSemError(SemanticError::UNREACHABLE_STATEMENT,
+                               statement -> LeftToken(),
+                               statement -> RightToken());
+            }
+            else
+            {
+                ReportSemError(SemanticError::UNREACHABLE_STATEMENTS,
+                               first_unreachable_statement -> LeftToken(),
+                               statement -> RightToken());
             }
         }
     }
@@ -694,24 +698,15 @@ void Semantic::ProcessSwitchStatement(Ast *stmt)
         switch_statement -> can_complete_normally = true;
     else
     {
-        int last_index = block_body -> NumStatements() - 1;
-        AstSwitchBlockStatement *last_switch_block_statement =
-                                 (AstSwitchBlockStatement *) block_body -> Statement(last_index);
-        //
-        // Last switch block statement contains only switch labels.
-        //
-        if (last_switch_block_statement -> NumStatements() == 0)
+        AstSwitchBlockStatement *last_switch_block_statement = (AstSwitchBlockStatement *)
+                                                               block_body -> Statement(block_body -> NumStatements() - 1);
+
+        assert(last_switch_block_statement -> NumStatements() > 0);
+
+        AstStatement *last_statement = (AstStatement *)
+                                       last_switch_block_statement -> Statement(last_switch_block_statement -> NumStatements() - 1);
+        if (last_statement -> can_complete_normally)
             switch_statement -> can_complete_normally = true;
-        else 
-        {
-            //
-            // Last switch block statement contains only switch statements
-            //
-            AstStatement *last_statement =
-                  (AstStatement *) last_switch_block_statement -> Statement(last_switch_block_statement -> NumStatements() - 1);
-            if (last_statement -> can_complete_normally)
-                switch_statement -> can_complete_normally = true;
-        }
     }
 
     switch_statement -> SortCases();
@@ -1193,7 +1188,7 @@ void Semantic::ProcessTryStatement(Ast *stmt)
                            parm_type -> ExternalName());
         }
 
-        AstVariableDeclaratorId *name = parameter -> variable_declarator_name;
+        AstVariableDeclaratorId *name = parameter -> formal_declarator -> variable_declarator_name;
         NameSymbol *name_symbol = lex_stream -> NameSymbol(name -> identifier_token);
         if (LocalSymbolTable().FindVariableSymbol(name_symbol))
         {
@@ -1224,7 +1219,7 @@ void Semantic::ProcessTryStatement(Ast *stmt)
         symbol -> SetType(parm_type);
         symbol -> SetOwner(ThisMethod());
         symbol -> SetLocalVariableIndex(block -> max_variable_index++);
-        symbol -> declarator = parameter -> variable_declarator_name;
+        symbol -> declarator = parameter -> formal_declarator;
 
         clause -> parameter_symbol = symbol;
 
@@ -1320,7 +1315,7 @@ void Semantic::ProcessTryStatement(Ast *stmt)
             }
             else if (k < l)
             {
-                 FileLocation loc(lex_stream, previous_clause -> formal_parameter -> variable_declarator_name -> identifier_token);
+                 FileLocation loc(lex_stream, previous_clause -> formal_parameter -> RightToken());
                  ReportSemError(SemanticError::BLOCKED_CATCH_CLAUSE,
                                 clause -> formal_parameter -> LeftToken(),
                                 clause -> formal_parameter -> RightToken(),
@@ -1653,12 +1648,15 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
             {
                 if (this_type -> outermost_type == super_type -> outermost_type)
                 {
-                     constructor = super_type -> GetReadAccessMethod(constructor);
+                     if (! constructor -> LocalConstructor())
+                     {
+                         constructor = super_type -> GetReadAccessMethod(constructor);
 
-                     //
-                     // Add extra argument for read access constructor;
-                     //
-                     super_call -> AddNullArgument();
+                         //
+                         // Add extra argument for read access constructor;
+                         //
+                         super_call -> AddNullArgument();
+                     }
                 }
                 else ReportSemError(SemanticError::PRIVATE_CONSTRUCTOR_NOT_ACCESSIBLE,
                                     super_call -> LeftToken(),
@@ -1720,32 +1718,31 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
             {
                 if (super_type -> LocalClassProcessingCompleted())
                 {
-                    for (int i = 1; i < super_type -> NumConstructorParameters(); i++)
-                    {
-                        VariableSymbol *local = super_type -> ConstructorParameter(i) -> accessed_local;
-
-                        AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(super_call -> super_token);
-
-                        this_type -> FindOrInsertLocalShadow(local);
-
-                        assert(ThisMethod() -> LocalConstructor() && (! ThisMethod() -> IsGeneratedLocalConstructor()));
-
-                        BlockSymbol *block_symbol = ThisMethod() -> LocalConstructor() -> block_symbol;
-                        simple_name -> symbol = block_symbol -> FindVariableSymbol(local -> Identity());
-
-                        assert(simple_name -> symbol); // for the time being, we will now process sources with the error below...
-
-                        //
-                        // This is possible if the source contains a method that erroneously calls a super class.
-                        //
-                        if (! simple_name -> symbol)
-                            simple_name -> symbol = control.no_type;
-                        super_call -> AddLocalArgument(simple_name);
-                    }
+                    assert(ThisMethod() -> LocalConstructor() && (! ThisMethod() -> IsGeneratedLocalConstructor()));
 
                     assert(constructor -> LocalConstructor() && (! constructor -> IsGeneratedLocalConstructor()));
 
                     super_call -> symbol = constructor -> LocalConstructor();
+
+                    //
+                    // Recall that as a side-effect, when a local shadow is created in a type
+                    // an argument that will be used to initialize the local shadow that has 
+                    // the same identity must be passed to every constructor in the type. Since
+                    // we are currently processing a constructor, such an argument must be available.
+                    //
+                    BlockSymbol *block_symbol = ThisMethod() -> LocalConstructor() -> block_symbol;
+                    for (int i = (super_type -> ACC_STATIC() ? 0 : 1); i < super_type -> NumConstructorParameters(); i++)
+                    {
+                        VariableSymbol *local = super_type -> ConstructorParameter(i) -> accessed_local,
+                                       *local_shadow = this_type -> FindOrInsertLocalShadow(local);
+
+                        AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(super_call -> super_token);
+                        simple_name -> symbol = block_symbol -> FindVariableSymbol(local_shadow -> Identity());
+
+                        assert(simple_name -> symbol);
+
+                        super_call -> AddLocalArgument(simple_name);
+                    }
                 }
                 else // are we currently within the body of the type in question ?
                 {
@@ -2127,7 +2124,7 @@ void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment, AstClas
                 for (int l = 0; l < this_method -> NumFormalParameters(); l++)
                 {
                     VariableSymbol *parm = this_method -> FormalParameter(l);
-                    AstVariableDeclaratorId *name = (AstVariableDeclaratorId *) parm -> declarator;
+                    AstVariableDeclaratorId *name = parm -> declarator -> variable_declarator_name;
 
                     SemanticEnvironment *where_found;
                     Tuple<VariableSymbol *> variables_found(2);
@@ -2214,7 +2211,7 @@ void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment, AstClas
             for (int i = 0; i < this_method -> NumFormalParameters(); i++)
             {
                 VariableSymbol *parm = this_method -> FormalParameter(i);
-                AstVariableDeclaratorId *name = (AstVariableDeclaratorId *) parm -> declarator;
+                AstVariableDeclaratorId *name = parm -> declarator -> variable_declarator_name;
 
                 SemanticEnvironment *where_found;
                 Tuple<VariableSymbol *> variables_found(2);

@@ -43,17 +43,20 @@ void ByteCode::CompileClass()
             AstFieldDeclaration *field_decl = class_body -> ClassVariable(i);
             for (int vi = 0; vi < field_decl -> NumVariableDeclarators(); vi++)
             {
-                AstVariableDeclarator *vd = field_decl -> VariableDeclarator(vi);
-                VariableSymbol *vsym = vd -> symbol;
+                AstVariableDeclarator *variable_declarator = field_decl -> VariableDeclarator(vi);
+                VariableSymbol *vsym = variable_declarator -> symbol;
                 DeclareField(vsym);
 
                 //
                 // We need a static constructor-initializer if we encounter at least one class
-                // variable that is declared with an initialization expression that is not a
-                // constant expression.
+                // variable that is declared with an initializer that is not a constant expression.
                 //
-                if (vd -> variable_initializer_opt && (! (vsym -> ACC_FINAL() && vsym -> initial_value)))
-                    initialized_static_fields.Next() = vd;
+                if (variable_declarator -> variable_initializer_opt)
+                {
+                    AstExpression *init = variable_declarator -> variable_initializer_opt -> ExpressionCast();
+                    if (! (init && init -> IsConstant()))
+                        initialized_static_fields.Next() = variable_declarator;
+                }
             }
         }
     }
@@ -402,15 +405,21 @@ void ByteCode::CompileInterface()
 
             for (int vi = 0; vi < field_decl -> NumVariableDeclarators(); vi++)
             {
-                AstVariableDeclarator *vd = field_decl -> VariableDeclarator(vi);
-                VariableSymbol *vsym = vd -> symbol;
+                AstVariableDeclarator *variable_declarator = field_decl -> VariableDeclarator(vi);
+                VariableSymbol *vsym = variable_declarator -> symbol;
+
                 //
-                // We need a static constructor-initializer if we encounter at least one class
-                // variable that is declared with an initialization expression that is not a
+                // We need a static constructor-initializer if we encounter at least one
+                // variable (all variable declared in an interface are implicitly static)
+                // that is declared with an initialization expression that is not a
                 // constant expression.
                 //
-                if (! vsym -> initial_value)
-                    initialized_fields.Next() = vd;
+                if (variable_declarator -> variable_initializer_opt)
+                {
+                    AstExpression *init = variable_declarator -> variable_initializer_opt -> ExpressionCast();
+                    if (! (init && init -> IsConstant()))
+                        initialized_fields.Next() = variable_declarator;
+                }
 
                 DeclareField(vsym);
             }
@@ -438,7 +447,6 @@ void ByteCode::CompileInterface()
 
         int method_index = methods.NextIndex(); // index for method
         BeginMethod(method_index, unit_type -> static_initializer_method);
-        methods[method_index].SetACC_FINAL();
 
         for (int i = 0; i < initialized_fields.Length(); i++)
             InitializeClassVariable(initialized_fields[i]);
@@ -561,17 +569,24 @@ void ByteCode::DeclareField(VariableSymbol *symbol)
 {
     int field_index = fields.NextIndex(); // index for field
 
-    fields[field_index].access_flags = symbol -> access_flags;
+    fields[field_index].SetFlags(symbol -> Flags());
     fields[field_index].SetNameIndex(RegisterUtf8(symbol -> ExternalIdentity() -> Utf8_literal));
     fields[field_index].SetDescriptorIndex(RegisterUtf8(symbol -> Type() -> signature));
 
-    TypeSymbol *type = symbol -> Type();
-    if (symbol -> ACC_FINAL() &&
-        symbol -> initial_value &&
-        (type -> Primitive() || (type == this_control.String() && symbol -> initial_value != this_control.NullValue())))
+    AstVariableDeclarator *variable_declarator = symbol -> declarator;
+    if (variable_declarator && symbol -> ACC_STATIC()) // a declared static variable (not a generated one!)
     {
-        fields[field_index].AddAttribute(new ConstantValue_attribute(RegisterUtf8(U8S_ConstantValue, U8S_ConstantValue_length),
-                                                                     GetConstant(symbol -> initial_value, symbol -> Type())));
+        AstExpression *init = (variable_declarator -> variable_initializer_opt
+                                                    ? variable_declarator -> variable_initializer_opt -> ExpressionCast()
+                                                    : (AstExpression *) NULL);
+        LiteralValue *initial_value = (init ? init -> value : (LiteralValue *) NULL);
+
+        TypeSymbol *type = symbol -> Type();
+        if (initial_value && (type -> Primitive() || (type == this_control.String() && initial_value != this_control.NullValue())))
+        {
+            fields[field_index].AddAttribute(new ConstantValue_attribute(RegisterUtf8(U8S_ConstantValue, U8S_ConstantValue_length),
+                                                                         GetConstant(initial_value, type)));
+        }
     }
 
     if (symbol -> IsSynthetic())
@@ -671,7 +686,7 @@ void ByteCode::BeginMethod(int method_index, MethodSymbol *msym)
     //
     //
     //
-    methods[method_index].access_flags = msym -> access_flags;
+    methods[method_index].SetFlags(msym -> Flags());
 
     if (msym -> IsSynthetic())
         methods[method_index].AddAttribute(CreateSyntheticAttribute());
@@ -789,10 +804,7 @@ void ByteCode::InitializeClassVariable(AstVariableDeclarator *vd)
     AstExpression *expression = vd -> variable_initializer_opt -> ExpressionCast();
     if (expression)
     {
-        //
-        // if already initialized
-        //
-        if (expression -> IsConstant() && vd -> symbol -> ACC_FINAL())
+        if (expression -> IsConstant())  // if already initialized
             return;
         EmitExpression(expression);
     }
@@ -1177,7 +1189,11 @@ void ByteCode::EmitBlockStatement(AstBlock *block, bool synchronized)
 
     if (nesting_level > max_block_depth)
     {
-        cout << "nesting_level " << nesting_level << "max " << max_block_depth << "\n";
+        Coutput << "nesting_level "
+                << nesting_level
+                << "max "
+                << max_block_depth
+                << "\n";
         assert(false && "loops too deeply nested");
     }
 
@@ -3330,13 +3346,17 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
 
     if (msym -> ACC_STATIC())
     {
-        if (method_call -> method -> FieldAccessCast())
+        AstFieldAccess *field = method_call -> method -> FieldAccessCast();
+        if (field)
         {
-            AstFieldAccess *field = method_call -> method -> FieldAccessCast();
             if (field -> base -> MethodInvocationCast())
             {
                 EmitMethodInvocation(field -> base -> MethodInvocationCast());
                 PutOp(OP_POP); // discard value (only evaluating for side effect)
+            }
+            else if (field -> base -> ClassInstanceCreationExpressionCast())
+            {
+                (void) EmitClassInstanceCreationExpression(field -> base -> ClassInstanceCreationExpressionCast(), false);
             }
         }
     }
@@ -4293,7 +4313,7 @@ ByteCode::ByteCode(TypeSymbol *unit_type) : ClassFile(unit_type),
     synchronized_blocks = 0;
     finally_blocks = 0;
     
-    access_flags = unit_type -> access_flags;
+    SetFlags(unit_type -> Flags());
 
     //
     // The flags for 'static' and 'protected' are set only for the inner
@@ -4301,11 +4321,13 @@ ByteCode::ByteCode(TypeSymbol *unit_type) : ClassFile(unit_type),
     // of the inner classes document.
     //
     if (unit_type -> ACC_PROTECTED())
-        access_flags |= 0x0001; // set PUBLIC if PROTECTED
-    access_flags &= (~ 0x0008); // ResetACC_STATIC
-    access_flags &= (~ 0x0004); // ResetACC_PROTECTED
-    access_flags &= (~ 0x0002); // ResetACC_PRIVATE
-    access_flags |= 0x0020; // must be set always set ACC_SUPER for class (cf page 86 of JVM Spec)
+    {
+        this -> ResetACC_PROTECTED();
+        this -> SetACC_PUBLIC();
+    }
+    this -> ResetACC_STATIC();
+    this -> ResetACC_PRIVATE();
+    this -> SetACC_SUPER(); // must be set always set ACC_SUPER for class (cf page 86 of JVM Spec)
     
     magic = 0xcafebabe;
     major_version = 45;             // use Sun JDK 1.0 version numbers
@@ -5131,7 +5153,7 @@ void ByteCode::FinishCode(TypeSymbol *type)
                                                      outer -> Anonymous()
                                                             ? 0
                                                             : RegisterUtf8(outer -> name_symbol -> Utf8_literal),
-                                                     outer -> access_flags);
+                                                     outer -> Flags());
         }
           
         for (int k = 0; k < type -> NumNestedTypes(); k++)
@@ -5144,7 +5166,7 @@ void ByteCode::FinishCode(TypeSymbol *type)
                                                      nested -> Anonymous()
                                                              ? 0
                                                              : RegisterUtf8(nested -> name_symbol -> Utf8_literal),
-                                                     nested -> access_flags);
+                                                     nested -> Flags());
         }
 
         attributes.Next() = inner_classes_attribute;
@@ -5394,8 +5416,15 @@ void ByteCode::ChangeStack(int i)
         code_attribute -> max_stack = stack_depth;
 
 #ifdef TRACE_STACK_CHANGE
-    cout << "stack change: pc " << last_op_pc << " change " << i <<
-            "  stack_depth " << stack_depth << "  max_stack: "<< code_attribute -> max_stack << "\n";
+    Coutput << "stack change: pc "
+            << last_op_pc
+            << " change "
+            << i
+            << "  stack_depth "
+            << stack_depth
+            << "  max_stack: "
+            << code_attribute -> max_stack
+            << "\n";
 #endif
 
     return;
@@ -5405,58 +5434,58 @@ void ByteCode::ChangeStack(int i)
 #ifdef TEST
 void ByteCode::PrintCode()
 {
-    cout << "magic " << hex << magic << dec
-         << " major_version " << major_version
-         << " minor_version " << minor_version << "\n";
+    Coutput << "magic " << hex << magic << dec
+            << " major_version " << (unsigned) major_version
+            << " minor_version " << (unsigned) minor_version << "\n";
     AccessFlags::Print();
-    cout << "\n";
-    cout << " this_class " << this_class << "  super_class " << super_class <<"\n";
-    cout << " constant_pool: " << constant_pool.Length() << "\n";
+    Coutput << "\n"
+            << " this_class " << (unsigned) this_class << "  super_class " << (unsigned) super_class <<"\n"
+            << " constant_pool: " << constant_pool.Length() << "\n";
     
     {
         for (int i = 1; i < constant_pool.Length(); i++)
         {
-            cout << "  " << i << "  ";
+            Coutput << "  " << i << "  ";
             constant_pool[i] -> Print(constant_pool);
             if (constant_pool[i] -> Tag() == CONSTANT_Long || constant_pool[i] -> Tag() == CONSTANT_Double)
                 i++; // skip the next entry for eight-byte constants
         }
     }
 
-    cout << "  interfaces " << interfaces.Length() <<": ";
+    Coutput << "  interfaces " << interfaces.Length() <<": ";
     {
         for (int i = 0; i < interfaces.Length(); i++)
-             cout << "  " << (int) interfaces[i];
-        cout <<"\n";
+             Coutput << "  " << (int) interfaces[i];
+        Coutput <<"\n";
     }
 
-    cout << "  fields " << fields.Length() <<": ";
+    Coutput << "  fields " << fields.Length() <<": ";
     {
         for (int i = 0; i < fields.Length(); i++)
         {
-            cout << "field " << i << "\n";
+            Coutput << "field " << i << "\n";
             fields[i].Print(constant_pool);
         }
     }
 
-    cout << " methods length " << methods.Length() << "\n";
+    Coutput << " methods length " << methods.Length() << "\n";
     {
         for (int i = 0; i < methods.Length(); i++)
         {
-            cout << "method " << i << "\n";
+            Coutput << "method " << i << "\n";
             methods[i].Print(constant_pool);
         }
     }
 
-    cout << " attributes length " << attributes.Length() << "\n";
+    Coutput << " attributes length " << attributes.Length() << "\n";
     {
         for (int i = 0; i < attributes.Length(); i++)
         {
-            cout << "attribute " << i << "\n";
+            Coutput << "attribute " << i << "\n";
             attributes[i] -> Print(constant_pool);
         }
     }
-    cout << "\n";
+    Coutput << "\n";
 
     return;
 } 

@@ -4,7 +4,7 @@
 %options nogoto-default
 %options single-productions
 %options la=2,names=max
-
+-- $Id$
 -- This software is subject to the terms of the IBM Jikes Compiler
 -- License Agreement available at the following URL:
 -- http://www.ibm.com/research/jikes.
@@ -1727,8 +1727,14 @@ FormalParameter ::= Type VariableDeclaratorId
 void Parser::Act$rule_number(void)
 {
     AstFormalParameter *p = ast_pool -> NewFormalParameter();
-    p -> type                     = Sym(1);
-    p -> variable_declarator_name = (AstVariableDeclaratorId *) Sym(2);
+    p -> type = Sym(1);
+
+    AstVariableDeclarator *formal_declarator = ast_pool -> NewVariableDeclarator();
+    formal_declarator -> variable_declarator_name = (AstVariableDeclaratorId *) Sym(2);
+    formal_declarator -> variable_initializer_opt = NULL;
+
+    p -> formal_declarator = formal_declarator;
+
     Sym(1) = p;
 }
 ./
@@ -1754,8 +1760,15 @@ void Parser::Act$rule_number(void)
         } while(root != tail);
         FreeCircularList(tail);
     }
-    p -> type                     = Sym(2);
-    p -> variable_declarator_name = (AstVariableDeclaratorId *) Sym(3);
+
+    p -> type = Sym(2);
+
+    AstVariableDeclarator *formal_declarator = ast_pool -> NewVariableDeclarator();
+    formal_declarator -> variable_declarator_name = (AstVariableDeclaratorId *) Sym(3);
+    formal_declarator -> variable_initializer_opt = NULL;
+
+    p -> formal_declarator = formal_declarator;
+
     Sym(1) = p;
 }
 ./
@@ -2905,6 +2918,8 @@ void Parser::Act$rule_number(void)
     AstSwitchStatement *p = ast_pool -> NewSwitchStatement();
 
     AstSwitchBlockStatement *q = ast_pool -> NewSwitchBlockStatement();
+    q -> AddStatement(ast_pool -> NewEmptyStatement(Token(Sym(2) -> RightToken())));
+
     //
     // The list of SwitchBlockStatements is never null
     //
@@ -2957,6 +2972,8 @@ void Parser::Act$rule_number(void)
     }
 
     AstSwitchBlockStatement *q = ast_pool -> NewSwitchBlockStatement();
+    q -> AddStatement(ast_pool -> NewEmptyStatement(Token(Sym(3) -> RightToken())));
+
     //
     // The list of SwitchLabels is never null
     //

@@ -247,42 +247,42 @@ void Operators::opline(Tuple<cp_info *> &constant_pool, char *hdr, int pc, int o
 {
     // generate line of opcode dump, info is extra info
 
-    cout << *hdr;
-    cout.width(4);
-    cout << pc;
-    cout << "\t" << name;
+    Coutput << *hdr;
+    Coutput.width(4);
+    Coutput << pc;
+    Coutput << "\t" << name;
     int len = strlen(name);
     if (strlen(args))
     {
-        cout << " " << args;
+        Coutput << " " << args;
         len += (strlen(args) + 1);
     }
     if (len < 8)
-         cout << "\t\t\t";
+         Coutput << "\t\t\t";
     else if (len < 16)
-         cout << "\t\t";
-    else cout << "\t";
+         Coutput << "\t\t";
+    else Coutput << "\t";
 
     switch (info_kind)
     {
         case INFO_CONST:
-             cout << " ";
+             Coutput << " ";
              if (info_index <= 0 || info_index > constant_pool.Length())
-                cout << "OUT-OF_BOUNDS CONSTANT_POOL-INDEX " << info_index;
+                Coutput << "OUT-OF_BOUNDS CONSTANT_POOL-INDEX " << info_index;
             else {
 //              constant_pool[info_index] -> describe(constant_pool);
             }
             break;
         case INFO_LOCAL:
-            cout << " local#" << info_index;
+            Coutput << " local#" << info_index;
             break;
     }
 //
 // DS (17 jun) - skip desc for now: it's too long and shoud only
 // be written at user request.
-//  cout << " " << desc;
+//  Coutput << " " << desc;
 //
-    cout << "\n";
+    Coutput << "\n";
 
     return;
 }

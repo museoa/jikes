@@ -50,7 +50,7 @@ class SemanticEnvironment;
 // indicates that a symbol is optional. For example, if Super_opt appears in a
 // rule, it indicates that either Super or null can be expected. When a symbol
 // is plural (e.g., Modifiers), it indicates zero or more instances of such a 
-// symbol (a list to be precised) can be expected. Thus, when "Modifiers" is
+// symbol (a list to be precise) can be expected. Thus, when "Modifiers" is
 // specified in the right-hand side of a rule either no Modifier or a sequence
 // of them may appear.
 //
@@ -67,7 +67,7 @@ class SemanticEnvironment;
 //    a whole ast tree (or subtree) by simply deleting the root node.
 //
 //    When the preprocessor variable TEST is defined the user may print out
-//    an AST tree to standard output by calling the virtual function "print"
+//    an AST tree to standard output by calling the virtual function "Print"
 //    for the root node of the tree.
 //
 //    DynamicArrays are used to implement lists. This representation has the
@@ -298,7 +298,7 @@ public:
 
     Kind  kind;      // every node has a unique kind...
     Tag   class_tag; // Some subsets of nodes are grouped together to form a class of nodes.
-    bool  generated; // "generated" is a boolean value that indicates whether ot not a node
+    bool  generated; // "generated" is a boolean value that indicates whether or not a node
                      // is associated with a construct in a source file or that is was generated
                      // by the compiler. See functions "gen_ ..." and "new_ ..." below.
 
@@ -335,7 +335,7 @@ public:
     //       AstFieldDeclaration *fp = (FieldDeclaration *) p;
     //
     // However, if p points to a ClassBodyDeclaration which may be
-    // either a FieldDeclaration, MethodDeclaration, ConstructorDeclaration
+    // either a FieldDeclaration, MethodDeclaration, ConstructorDeclaration,
     // StaticInitializer, ClassDeclaration, InterfaceDeclaration or a block
     // then the following sequence of code may be used:
     //
@@ -1428,10 +1428,8 @@ class AstFormalParameter : public Ast
 
 public:
 
-    VariableSymbol *parameter_symbol;
-
     Ast *type;
-    AstVariableDeclaratorId *variable_declarator_name;
+    AstVariableDeclarator *formal_declarator;
 
     AstFormalParameter(StoragePool *pool_) : pool(pool_),
                                              parameter_modifiers(NULL)
@@ -1458,7 +1456,7 @@ public:
     {
        return (NumParameterModifiers() > 0 ? (*parameter_modifiers)[0] -> LeftToken() : type -> LeftToken());
     }
-    virtual LexStream::TokenIndex RightToken() { return variable_declarator_name -> RightToken(); }
+    virtual LexStream::TokenIndex RightToken() { return formal_declarator -> RightToken(); }
 };
 
  

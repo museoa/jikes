@@ -13,9 +13,9 @@
 #include "scanner.h"
 #include "parser.h"
 #include "semantic.h"
-#include "unicode.h"
 #include "error.h"
 #include "bytecode.h"
+#include "case.h"
 
 Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
                                                                  option(option_),
@@ -257,7 +257,7 @@ Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
         }
 
         //
-        // Clean up all the file that have just been compiled i this new batch.
+        // Clean up all the files that have just been compiled in this new batch.
         //
         for (FileSymbol *file_symbol = (FileSymbol *) input_java_file_set.FirstElement();
                          file_symbol;
@@ -384,7 +384,7 @@ Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
             {
                 FILE *outfile = ::SystemFopen(option.makefile_name, "w");
                 if (outfile == NULL)
-                    cout << "*** Cannot open file " << option.makefile_name << "\n";
+                    Coutput << "*** Cannot open file " << option.makefile_name << "\n";
                 else
                 {
                     SymbolSet types_in_new_files;
@@ -533,10 +533,10 @@ Control::~Control()
 #ifdef TEST
     if (option.debug_dump_lex || option.debug_dump_ast)
     {
-        cout << line_count << " source lines read\n\n"
-             << class_files_read << " \".class\" files read\n"
-             << class_files_written << " \".class\" files written\n" 
-             << input_files_processed << " \".java\" files processed\n";
+        Coutput << line_count << " source lines read\n\n"
+                << class_files_read << " \".class\" files read\n"
+                << class_files_written << " \".class\" files written\n" 
+                << input_files_processed << " \".java\" files processed\n";
     }
 #endif
 }
@@ -1005,9 +1005,9 @@ void Control::ProcessHeaders(FileSymbol *file_symbol)
 
     if (option.verbose)
     {
-        cout << "[read ";
-        Unicode::Cout(file_symbol -> FileName());
-        cout << "]\n";
+        Coutput << "[read "
+                << file_symbol -> FileName()
+                << "]\n";
     }
 
     if (! file_symbol -> lex_stream)

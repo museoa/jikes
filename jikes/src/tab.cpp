@@ -24,6 +24,8 @@ int Tab::Wcslen(wchar_t *line, int start, int end)
             int offset = (i - start) - 1;
             start -= ((tab_size - 1) - offset % tab_size);
         }
+        else if (Coutput.ExpandWchar() && line[i] > 0xFF)
+             start -= 5;
     }
 
     return (end - start);

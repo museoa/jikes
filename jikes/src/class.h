@@ -14,7 +14,6 @@
 #include <stdio.h>
 #include "semantic.h"
 #include "access.h"
-#include "unicode.h"
 #include "tuple.h"
 #include "op.h"
 
@@ -47,12 +46,12 @@ public:
 #ifdef TEST
     virtual void Print(Tuple<cp_info *>& constant_pool)
     {
-        cout << (int) tag;
+        Coutput << (int) tag;
     }
 
     virtual void Describe(Tuple<cp_info *>& constant_pool)
     {
-        cout << (int) tag;
+        Coutput << (int) tag;
     }
 #endif
 };
@@ -83,12 +82,12 @@ public:
 #ifdef TEST
     virtual void Print(Tuple<cp_info *>& constant_pool)
     {
-        cout << "CONSTANT_Class_info: name_index " << name_index << "\n";
+        Coutput << "CONSTANT_Class_info: name_index " << (unsigned) name_index << "\n";
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
     {
-        cout << "Class:";  constant_pool[name_index] -> Describe(constant_pool);
+        Coutput << "Class:";  constant_pool[name_index] -> Describe(constant_pool);
     }
 #endif    
 };
@@ -122,12 +121,12 @@ public:
 #ifdef TEST
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
-        cout << "CONSTANT_Float_info: bytes  \n";
+        Coutput << "CONSTANT_Double_info: bytes " << BaseLong(high_bytes, low_bytes).DoubleView() << "\n";
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
     {
-        cout << "D:";
+        Coutput << "D:";
     }
 #endif    
 };
@@ -161,13 +160,17 @@ public:
 #ifdef TEST
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
-        cout << "CONSTANT_Fieldref_info: class_index: " << class_index
-             << ", name_and_type_index: " << name_and_type_index << "\n";
+        Coutput << "CONSTANT_Fieldref_info: class_index: "
+                << (unsigned) class_index
+                << ", name_and_type_index: "
+                << (unsigned) name_and_type_index
+                << "\n";
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
     {
-        constant_pool[class_index] -> Describe(constant_pool); cout << ".";
+        constant_pool[class_index] -> Describe(constant_pool);
+        Coutput << ".";
         constant_pool[name_and_type_index] -> Describe(constant_pool);
     }
 #endif    
@@ -199,12 +202,12 @@ public:
 #ifdef TEST
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
-        cout << "CONSTANT_Float_info: bytes " << (float) bytes << "\n"; //DSDouble
+        Coutput << "CONSTANT_Float_info: bytes " << (float) bytes << "\n";
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
     {
-        cout << "F:";
+        Coutput << "F:";
     }
 #endif    
 };
@@ -236,12 +239,14 @@ public:
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
         int val = ((bytes >> 24) & 0xff) << 24 | ((bytes >> 16) & 0xff) << 16 | ((bytes >> 8) & 0xff) << 8 | (bytes & 0xff);
-        cout << "CONSTANT_Integer_info: bytes " << val << "\n";
+        Coutput << "CONSTANT_Integer_info: bytes "
+                << val
+                << "\n";
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
     {
-        cout << "I:";
+        Coutput << "I:";
     }
 #endif    
 };
@@ -275,13 +280,17 @@ public:
 #ifdef TEST
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
-        cout << "CONSTANT_InterfaceMethodref_info: class_index: " << class_index
-             << ", name_and_type_index: " << name_and_type_index << "\n";
+        Coutput << "CONSTANT_InterfaceMethodref_info: class_index: "
+                << (unsigned) class_index
+                << ", name_and_type_index: "
+                << (unsigned) name_and_type_index
+                << "\n";
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
     {
-        constant_pool[class_index] -> Describe(constant_pool); cout << ".";
+        constant_pool[class_index] -> Describe(constant_pool);
+        Coutput << ".";
         constant_pool[name_and_type_index] -> Describe(constant_pool);
     }
 #endif    
@@ -316,12 +325,12 @@ public:
 #ifdef TEST
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
-        cout << "CONSTANT_Long_info: bytes \n";
+        Coutput << "CONSTANT_Long_info: bytes \n";
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
     {
-        cout << "L:";
+        Coutput << "L:";
     }
 #endif    
 };
@@ -355,13 +364,17 @@ public:
 #ifdef TEST
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
-        cout << "CONSTANT_Methodref_info: class_index: " << class_index
-             << ", name_and_type_index: " << name_and_type_index << "\n";
+        Coutput << "CONSTANT_Methodref_info: class_index: "
+                << (unsigned) class_index
+                << ", name_and_type_index: "
+                << (unsigned) name_and_type_index
+                << "\n";
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
     {
-        constant_pool[class_index] -> Describe(constant_pool); cout << ".";
+        constant_pool[class_index] -> Describe(constant_pool);
+        Coutput << ".";
         constant_pool[name_and_type_index] -> Describe(constant_pool);
     }
 #endif    
@@ -396,14 +409,17 @@ public:
 #ifdef TEST
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
-        cout << "CONSTANT_NameAndType_info: name_index: " << name_index
-             << ", descriptor_index: " << descriptor_index << "\n";
+        Coutput << "CONSTANT_NameAndType_info: name_index: "
+                << (unsigned) name_index
+                << ", descriptor_index: "
+                << (unsigned) descriptor_index
+                << "\n";
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
     {
         constant_pool[name_index] -> Describe(constant_pool);
-        cout << " ";
+        Coutput << " ";
         constant_pool[descriptor_index] -> Describe(constant_pool);
     }
 #endif    
@@ -434,7 +450,9 @@ public:
 #ifdef TEST
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
-        cout << "CONSTANT_String_info: string_index: " << string_index << "\n";
+        Coutput << "CONSTANT_String_info: string_index: "
+                << (unsigned) string_index
+                << "\n";
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
@@ -484,19 +502,21 @@ public:
 #ifdef TEST
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
-        cout << "CONSTANT_Utf8_info: length: " << length_<< " ";
+        Coutput << "CONSTANT_Utf8_info: length: "
+                << (unsigned) length_
+                << " ";
 
         for (int i = 0; i < length_; i++)
-            Unicode::Cout(bytes[i]);
-        cout << "\n";
+            Coutput << (char) bytes[i];
+        Coutput << "\n";
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
     {
-        cout << "\"";
+        Coutput << "\"";
         for (int i = 0; i < length_; i++)
-            Unicode::Cout(bytes[i]);
-        cout << "\"";
+            Coutput << (char) bytes[i];
+        Coutput << "\"";
     }
 #endif    
 };
@@ -553,8 +573,10 @@ public:
 #ifdef TEST
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
-        cout << "print for attribute info tag " << tag << " not defined\n";
-        cout.flush();
+        Coutput << "print for attribute info tag "
+                << (unsigned) tag
+                << " not defined\n";
+        Coutput.flush();
         assert(false); // abstract method: should not be invoked.
     }
 #endif    
@@ -710,27 +732,39 @@ public:
 #ifdef TEST
     virtual void  Print(Tuple<cp_info *> &constant_pool)
     {
-        cout << "Code_attribute attribute_name_index " << attribute_name_index
-             << " attribute_length " << attribute_length << "\n"
-             << " max_stack " << max_stack
-             << " max_locals "  << max_locals
-             << " code_length "  << code.Length() << "\n";
+        Coutput << "Code_attribute attribute_name_index "
+                << (unsigned) attribute_name_index
+                << " attribute_length "
+                << (unsigned) attribute_length
+                << "\n"
+                << " max_stack "
+                << (unsigned) max_stack
+                << " max_locals "
+                << (unsigned) max_locals
+                << " code_length "
+                << code.Length()
+                << "\n";
 
         if (exception_table.Length())
         {
-            cout << " exception_table: " << exception_table.Length() << " entries\n";
+            Coutput << " exception_table: " << exception_table.Length() << " entries\n";
             for (int i  = 0; i < exception_table.Length(); i++)
             {
-                cout << "  start_pc " << exception_table[i].start_pc
-                     << "  end_pc " << exception_table[i].end_pc
-                     << "  handler_pc " << exception_table[i].handler_pc
-                     << "  catch_type " << exception_table[i].catch_type << "\n";
+                Coutput << "  start_pc "
+                        << (unsigned) exception_table[i].start_pc
+                        << "  end_pc "
+                        << (unsigned) exception_table[i].end_pc
+                        << "  handler_pc "
+                        << (unsigned) exception_table[i].handler_pc
+                        << "  catch_type "
+                        << (unsigned) exception_table[i].catch_type
+                        << "\n";
             }
         }
 
         Operators::opdmp(constant_pool, code);
 
-        cout << "  \n";
+        Coutput << "  \n";
 
         for (int i = 0; i < attributes.Length(); i++)
             attributes[i] -> Print(constant_pool);
@@ -773,9 +807,13 @@ public:
 #ifdef TEST
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
-        cout << "ConstantValue_attribute attribute_name_index " << attribute_name_index
-             << " attribute_length " << AttributeLength()
-             << " constantvalue_index " << constantvalue_index << "\n";
+        Coutput << "ConstantValue_attribute attribute_name_index "
+                << (unsigned) attribute_name_index
+                << " attribute_length "
+                << AttributeLength()
+                << " constantvalue_index "
+                << (unsigned) constantvalue_index
+                << "\n";
     }
 #endif    
 };
@@ -831,12 +869,16 @@ public:
 #ifdef TEST
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
-        cout << "Exceptions_attribute attribute_name_index " << attribute_name_index
-             << " attribute_length " << AttributeLength() << "\n";
+        Coutput << "Exceptions_attribute attribute_name_index "
+                << (unsigned) attribute_name_index
+                << " attribute_length "
+                << AttributeLength()
+                << "\n";
 
         for (int i = 0; i < exception_index_table.Length(); i++)
-            cout << "    " << exception_index_table[i];
-        cout << "\n";
+            Coutput << "    "
+                    << (unsigned) exception_index_table[i];
+        Coutput << "\n";
     }
 #endif    
 };
@@ -910,17 +952,28 @@ public:
 #ifdef TEST
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
-        cout << "InnerClasses_attribute attribute_name_index " << attribute_name_index
-             << " attribute_length " << AttributeLength() << "\n"
-             << " inner_classes_length " << inner_classes.Length() <<"\n";
+        Coutput << "InnerClasses_attribute attribute_name_index "
+                << (unsigned) attribute_name_index
+                << " attribute_length "
+                << AttributeLength()
+                << "\n"
+                << " inner_classes_length "
+                << inner_classes.Length()
+                << "\n";
 
         for (int i = 0; i < inner_classes.Length(); i++)
         {
-            cout << "     " << i << "  inner_class_info_index " << inner_classes[i].inner_class_info_index
-                 << "  outer_class_info_index " << inner_classes[i].outer_class_info_index
-                 << "  inner_name_index " << inner_classes[i].inner_name_index
-                 << "  inner_class_access_flags " << inner_classes[i].inner_class_access_flags
-                 << "\n";
+            Coutput << "     "
+                    << i
+                    << "  inner_class_info_index "
+                    << (unsigned) inner_classes[i].inner_class_info_index
+                    << "  outer_class_info_index "
+                    << (unsigned) inner_classes[i].outer_class_info_index
+                    << "  inner_name_index "
+                    << (unsigned) inner_classes[i].inner_name_index
+                    << "  inner_class_access_flags "
+                    << (unsigned) inner_classes[i].inner_class_access_flags
+                    << "\n";
         }
     }
 #endif    
@@ -992,14 +1045,24 @@ public:
 #ifdef TEST
     virtual void Print(Tuple<cp_info *> &constant_pool)
      {
-        cout << "LineNumberTable_attribute attribute_name_index " << attribute_name_index
-             << " attribute_length " << AttributeLength() << "\n"
-             << " line_number_table_length " << line_number_table.Length() <<"\n";
+        Coutput << "LineNumberTable_attribute attribute_name_index "
+                << (unsigned) attribute_name_index
+                << " attribute_length "
+                << AttributeLength()
+                << "\n"
+                << " line_number_table_length "
+                << line_number_table.Length()
+                << "\n";
 
         for (int i = 0; i < line_number_table.Length(); i++)
         {
-            cout << "     " << i << "  start_pc " << line_number_table[i].start_pc
-                 << "  line_number " << line_number_table[i].line_number << "\n";
+            Coutput << "     "
+                    << i
+                    << "  start_pc "
+                    << (unsigned) line_number_table[i].start_pc
+                    << "  line_number "
+                    << (unsigned) line_number_table[i].line_number
+                    << "\n";
         }
     }
 #endif    
@@ -1081,17 +1144,30 @@ public:
 #ifdef TEST
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
-        cout << "LocalVariableTable_attribute attribute_name_index " << attribute_name_index
-             << " attribute_length " << AttributeLength() << "\n"
-             << " local_variable_table_length " << local_variable_table.Length() <<"\n";
+        Coutput << "LocalVariableTable_attribute attribute_name_index "
+                << (unsigned) attribute_name_index
+                << " attribute_length "
+                << AttributeLength()
+                << "\n"
+                << " local_variable_table_length "
+                << local_variable_table.Length()
+                << "\n";
 
         for (int i = 0; i < local_variable_table.Length(); i++)
         {
-            cout << "     " << i << "  start_pc " << local_variable_table[i].start_pc
-                 << "  length " << local_variable_table[i].length
-                 << "  name_index " << local_variable_table[i].name_index
-                 << "  descriptor_index " << local_variable_table[i].descriptor_index
-                 << "  index " << local_variable_table[i].index << "\n";
+            Coutput << "     "
+                    << i
+                    << "  start_pc "
+                    << (unsigned) local_variable_table[i].start_pc
+                    << "  length "
+                    << (unsigned) local_variable_table[i].length
+                    << "  name_index "
+                    << (unsigned) local_variable_table[i].name_index
+                    << "  descriptor_index "
+                    << (unsigned) local_variable_table[i].descriptor_index
+                    << "  index "
+                    << (unsigned) local_variable_table[i].index
+                    << "\n";
         }
     }
 #endif    
@@ -1130,9 +1206,13 @@ public:
 #ifdef TEST
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
-        cout << "SourceFile_attribute attribute_name_index " << attribute_name_index
-             << " length " << AttributeLength()
-             << " sourcefile_index " << sourcefile_index << "\n";
+        Coutput << "SourceFile_attribute attribute_name_index "
+                << (unsigned) attribute_name_index
+                << " length "
+                << AttributeLength()
+                << " sourcefile_index "
+                << (unsigned) sourcefile_index
+                << "\n";
     }
 #endif    
 };
@@ -1167,9 +1247,11 @@ public:
 #ifdef TEST
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
-        cout << "Synthetic_attribute attribute_name_index " << attribute_name_index
-             << " length " << AttributeLength()
-             << "\n";
+        Coutput << "Synthetic_attribute attribute_name_index "
+                << (unsigned) attribute_name_index
+                << " length "
+                << AttributeLength()
+                << "\n";
     }
 #endif    
 };
@@ -1204,9 +1286,11 @@ public:
 #ifdef TEST
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
-        cout << "Deprecated_attribute attribute_name_index " << attribute_name_index
-             << " length " << AttributeLength()
-             << "\n";
+        Coutput << "Deprecated_attribute attribute_name_index "
+                << (unsigned) attribute_name_index
+                << " length "
+                << AttributeLength()
+                << "\n";
     }
 #endif    
 };
@@ -1255,14 +1339,17 @@ public:
 #ifdef TEST
     void Print(Tuple<cp_info *> &constant_pool)
     {
-        cout << "field_info  name_index " << name_index
-             << "  descriptor_index " << descriptor_index << "\n";
+        Coutput << "field_info  name_index "
+                << (unsigned) name_index
+                << "  descriptor_index "
+                << (unsigned) descriptor_index
+                << "\n";
 
         AccessFlags::Print();
 
         for (int i = 0; i < attributes.Length(); i++)
             attributes[i] -> Print(constant_pool);
-        cout << "\n";
+        Coutput << "\n";
     }
 #endif    
 };
@@ -1311,14 +1398,17 @@ public:
 #ifdef TEST
      void Print(Tuple<cp_info *> &constant_pool)
      {
-        cout << "method_info  name_index " << name_index
-             << "  descriptor_index " << descriptor_index << "\n";
+        Coutput << "method_info  name_index "
+                << (unsigned) name_index
+                << "  descriptor_index "
+                << (unsigned) descriptor_index
+                << "\n";
 
         AccessFlags::Print();
 
         for (int i = 0; i < attributes.Length(); i++)
             attributes[i] -> Print(constant_pool);
-        cout << "\n";
+        Coutput << "\n";
     }
 #endif    
 };
@@ -1436,9 +1526,9 @@ public:
             char *class_file_name = unit_type -> ClassName();
             if (control.option.verbose)
             {
-                cout << "[write ";
-                Unicode::Cout(class_file_name);
-                cout << "]\n";
+                Coutput << "[write "
+                        << class_file_name
+                        << "]\n";
             }
 
             if (! output_buffer.WriteToFile(class_file_name))

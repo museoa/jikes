@@ -4,7 +4,6 @@
 #include "config.h"
 #include <ctype.h>
 #include <assert.h>
-#include "bool.h"
 
 class Code
 {
