@@ -2211,8 +2211,7 @@ void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment, AstClas
                 LocalSymbolTable().Pop();
                 this_method -> max_block_depth = LocalBlockStack().max_size;
 
-                if (NumErrors() == start_num_errors)
-                    DefiniteConstructorBody(constructor_decl, finals);
+                DefiniteConstructorBody(constructor_decl, finals);
 
                 for (int k = 0; k < unassigned_finals.Length(); k++)
                 {

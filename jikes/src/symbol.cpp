@@ -760,8 +760,6 @@ void DirectorySymbol::ResetDirectory()
     entries = NULL;
 
     ReadDirectory();
-
-    return;
 }
 
 
@@ -1145,7 +1143,7 @@ void MethodSymbol::ProcessMethodSignature(Semantic *sem, LexStream::TokenIndex t
 
 void MethodSymbol::CleanUp()
 {
-    BlockSymbol *block_symbol = new BlockSymbol(NumFormalParameters());
+    BlockSymbol *block = new BlockSymbol(NumFormalParameters());
 
     //
     // Make a copy of each parameter into the new pared-down symbol table and
@@ -1154,7 +1152,7 @@ void MethodSymbol::CleanUp()
     for (int k = 0; k < NumFormalParameters(); k++)
     {
         VariableSymbol *formal_parameter = (*formal_parameters)[k],
-                       *symbol = block_symbol -> InsertVariableSymbol(formal_parameter -> Identity());
+                       *symbol = block -> InsertVariableSymbol(formal_parameter -> Identity());
         symbol -> SetType(formal_parameter -> Type());
         symbol -> MarkComplete();
         (*formal_parameters)[k] = symbol;
@@ -1164,12 +1162,10 @@ void MethodSymbol::CleanUp()
     // Destroy the old symbol and replace it by the new one.
     //
     delete block_symbol;
-    block_symbol -> CompressSpace(); // space optimization
-    SetBlockSymbol(block_symbol);
+    block -> CompressSpace(); // space optimization
+    SetBlockSymbol(block);
 
     method_or_constructor_declaration = NULL; // remove reference to Ast structure
-
-    return;
 }
 
 

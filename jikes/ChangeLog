@@ -1,3 +1,10 @@
+2001-11-06  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/body.cpp (ProcessExecutableBodies): Supress spurious warning
+	messages about finals not assigned in a constructor which contains
+	semantic errors, bug 669.
+	* src/symbol.cpp (CleanUp): Fix core dump from patch 225.
+
 2001-11-05  Eric Blake  <ebb9@email.byu.edu>
 
 	Patch 139.
