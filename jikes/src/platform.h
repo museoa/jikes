@@ -183,6 +183,22 @@ typedef signed char i1;
 #endif
 
 
+//
+// Some compilers do not correctly predefine the primitive type "bool"
+// and its possible values: "false" and "true"
+//
+#ifndef HAVE_BOOL
+//======================================================================
+// We define the type "bool" and the constants "false" and "true".
+// The type bool as well as the constants false and true are expected
+// to become standard C++. When that happens, these declarations should
+// be removed.
+//======================================================================
+typedef unsigned char bool;
+enum { false = 0, true = 1 };
+#endif
+
+
 // tuple.h needs the above typedefs first, but has it's own namespace block...
 // cabbey would also argue that the wsclen and family don't need to be in our
 // namespace, 'cuz if wee need to define them we aren't going to clash. ;)
@@ -262,24 +278,6 @@ extern int SystemMkdirhier(char *);
 
 extern char * strcat3(const char *, const char *, const char *);
 extern char * wstring2string(wchar_t * in);
-
-
-
-//
-// Some compilers do not correctly predefine the primitive type "bool"
-// and its possible values: "false" and "true"
-//
-#ifndef HAVE_BOOL
-//======================================================================
-// We define the type "bool" and the constants "false" and "true".
-// The type bool as well as the constants false and true are expected
-// to become standard C++. When that happens, these declarations should
-// be removed.
-//======================================================================
-typedef unsigned char bool;
-enum { false = 0, true = 1 };
-#endif
-
 
 
 

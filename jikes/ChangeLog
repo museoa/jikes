@@ -1,3 +1,21 @@
+2000-01-16  Mo DeJong  <mdejong@redhat.com>
+
+	* src/bytecode.cpp: Add additional
+	cast so that both branches of the ?:
+	operator have the same result type.
+	The AT&T compiler generated an error
+	for this case.
+	* src/jikesapi.cpp:
+	* src/jikesapi.h: Use int instead of
+	the bool type in jikesapi.h because
+	bool is not supported by all compilers.
+	* src/platform.h: Move the bool compat
+	typedef before the include of tuple.h
+	because tuple.h uses the bool type.
+	* src/m4/ac_check_wcs_funcs.m4: Check
+	for the wint_t type using out own
+	#include files.
+
 2000-01-14  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* src/dump.cpp:

@@ -12,16 +12,18 @@ class JikesOption
     char *classpath;
     char *directory;
     char *encoding;
-    
-    bool nowrite;
-    bool deprecation;
-    bool O;
-    bool g;
-    bool verbose;
-    bool depend;
-    bool nowarn;
-    bool old_classpath_search_order;
-    bool zero_defect;
+
+    // Each of these fields is a boolean value
+    // 0 if false, non-zero if true
+    int nowrite;
+    int deprecation;
+    int O;
+    int g;
+    int verbose;
+    int depend;
+    int nowarn;
+    int old_classpath_search_order;
+    int zero_defect;
 
     virtual ~JikesOption();
 
@@ -134,7 +136,7 @@ class JikesAPI
             virtual  ~FileWriter() {}
             
             size_t    write(const unsigned char *data, size_t size);
-            virtual  bool      isValid()                         = 0;
+            virtual  int      isValid()                         = 0;
             
     private:
             

@@ -17,13 +17,6 @@ AC_CHECK_HEADERS(wchar.h string.h strings.h memory.h)
 dnl	Check for wcs functions in wchar.h or string.h
 AC_CHECK_FUNCS(wcslen wcscpy wcsncpy wcscat wcscmp wcsncmp)
 
-dnl	See if wint_t is defined in stddef.h
-AC_CHECK_TYPE(wint_t)
-if test "$ac_cv_type_wint_t" = "yes" ; then
-  AC_DEFINE(HAVE_WINT_T, ,
-    [Defined when the wint_t type is supported])
-fi
-
 dnl	Check to see if we get a compiler error when discarding a const qualifier
 AC_REQUIRE([AC_CHECK_ERROR_DISCARD_CONST])
 
@@ -42,6 +35,23 @@ wcs_funcs_includes="
 # include <wchar.h>
 #endif
 "
+
+dnl	See if wint_t is defined in stddef.h or wchar.h
+
+dnl	FIXME: We can't use AC_CHECK_TYPE since it does not consider includes
+dnl AC_CHECK_TYPE(wint_t)
+
+AC_CACHE_CHECK(for wchar_t type,
+  ac_cv_type_wint_t,
+[
+AC_TRY_COMPILE($wcs_funcs_includes, [wint_t s = sizeof (wint_t *);],
+  ac_cv_type_wint_t=yes,
+  ac_cv_type_wint_t=no)
+])
+if test "$ac_cv_type_wint_t" = "yes" ; then
+  AC_DEFINE(HAVE_WINT_T, ,
+    [Defined when the wint_t type is supported])
+fi
 
 dnl	Make sure we can compile a simple call to wcslen
 AC_CACHE_CHECK(call wcslen,

@@ -69,13 +69,17 @@ class DefaultFileWriter: public JikesAPI::FileWriter
     DefaultFileWriter(const char *fileName,size_t maxSize);
     virtual  ~DefaultFileWriter();
     
-    virtual  bool      isValid();
+    virtual  int      isValid();
     
     private:
     
     virtual  size_t    doWrite(const unsigned char *data,size_t size);
-    
-    bool      valid;
+
+    // Note that we don't use the bool type anywhere in jikesapi.h
+    // since it is not supported by some compilers and we can't
+    // depend on the typedef in platform.h because jikesapi.h
+    // would never include build time files
+    int      valid;
 // FIXME: need to clean this up, why is this not wrapped in a platform.h function?
 #ifdef UNIX_FILE_SYSTEM
     FILE     *file;
@@ -358,7 +362,7 @@ DefaultFileWriter::~DefaultFileWriter()
     fclose(file);
 }
 
-bool DefaultFileWriter::isValid()  {return(valid);}
+int DefaultFileWriter::isValid()  {return(valid);}
 
 /**
  * Copy the data buffer to the file.
@@ -445,7 +449,7 @@ DefaultFileWriter::~DefaultFileWriter()
     }
 }
 
-bool DefaultFileWriter::isValid()  
+int DefaultFileWriter::isValid()  
 {
     return(valid);
 }

@@ -415,9 +415,9 @@ void ByteCode::CompileClass()
          AstInterfaceDeclaration *interface_declaration = unit_type -> declaration -> InterfaceDeclarationCast();
          int n = (class_declaration ? class_declaration -> NumInterfaces()
                                     : interface_declaration -> NumInterfaceMemberDeclarations());
-         Ast *left = (class_declaration ? class_declaration -> Interface(0)
+         Ast *left = (class_declaration ? (Ast *) class_declaration -> Interface(0)
                                         : interface_declaration -> InterfaceMemberDeclaration(0)),
-             *right = (class_declaration ? class_declaration -> Interface(n - 1)
+             *right = (class_declaration ? (Ast *) class_declaration -> Interface(n - 1)
                                          : interface_declaration -> InterfaceMemberDeclaration(n - 1));
 
          this_semantic.ReportSemError(SemanticError::INTERFACES_OVERFLOW,
