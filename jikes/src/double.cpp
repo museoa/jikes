@@ -125,12 +125,12 @@ IEEEfloat::IEEEfloat(i4 a)
 IEEEfloat::IEEEfloat(const LongInt &a)
 {
 #ifdef HAVE_IEEE754
-# ifdef HAVE_UNSIGNED_LONG_LONG
+# ifdef HAVE_64BIT_TYPES
     value.float_value = (float)(i8) a.Words();
 # else
     value.float_value = ((float)(i4) a.HighWord() * (float) 0x40000000 * 4.0f)
         + (float) a.LowWord();
-# endif // HAVE_UNSIGNED_LONG_LONG
+# endif // HAVE_64BIT_TYPES
 #else
     //
     // Unfortunately, we cannot recycle the LongInt.DoubleValue() method, since
@@ -1311,12 +1311,12 @@ IEEEdouble::IEEEdouble(i4 a)
 IEEEdouble::IEEEdouble(const LongInt &a)
 {
 #ifdef HAVE_IEEE754
-# ifdef HAVE_UNSIGNED_LONG_LONG
+# ifdef HAVE_64BIT_TYPES
     value.double_value = (double)(i8) a.Words();
 # else
     value.double_value = ((double)(i4) a.HighWord() * (double) 0x40000000 * 4.0) +
         (double) a.LowWord();
-# endif // HAVE_UNSIGNED_LONG_LONG
+# endif // HAVE_64BIT_TYPES
 #else
     int sign = 0;
     LongInt l = a;

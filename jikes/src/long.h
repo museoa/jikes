@@ -37,16 +37,16 @@ protected:
     union
     {
         double double_value;
-#ifndef HAVE_UNSIGNED_LONG_LONG
+#ifndef HAVE_64BIT_TYPES
         u4 word[2];
 #else
         u8 words;
-#endif // HAVE_UNSIGNED_LONG_LONG
+#endif // HAVE_64BIT_TYPES
     } value;
 
     // Set the high word only. Does not modify the low word!
     inline void setHighWord(u4 high) {
-#ifndef HAVE_UNSIGNED_LONG_LONG
+#ifndef HAVE_64BIT_TYPES
 # ifndef WORDS_BIGENDIAN
         value.word[1] = high;
 # else
@@ -54,12 +54,12 @@ protected:
 # endif
 #else
         setHighAndLowWords(high, LowWord());
-#endif // HAVE_UNSIGNED_LONG_LONG
+#endif // HAVE_64BIT_TYPES
     }
 
     // Set the low word only. Does not modify the high word!
     inline void setLowWord(u4 low) {
-#ifndef HAVE_UNSIGNED_LONG_LONG
+#ifndef HAVE_64BIT_TYPES
 # ifndef WORDS_BIGENDIAN
         value.word[0] = low;
 # else
@@ -67,12 +67,12 @@ protected:
 # endif
 #else
         setHighAndLowWords(HighWord(), low);
-#endif // HAVE_UNSIGNED_LONG_LONG
+#endif // HAVE_64BIT_TYPES
     }
     
     // Set the value for both words.
     inline void setHighAndLowWords(u4 high, u4 low) {
-#ifndef HAVE_UNSIGNED_LONG_LONG
+#ifndef HAVE_64BIT_TYPES
 # ifndef WORDS_BIGENDIAN
         value.word[1] = high;
         value.word[0] = low;
@@ -82,23 +82,23 @@ protected:
 # endif
 #else
         value.words = (((u8) high) << 32) | low;
-#endif // HAVE_UNSIGNED_LONG_LONG
+#endif // HAVE_64BIT_TYPES
     }
 
     // Set the value for both words.
     inline void setHighAndLowWords(const BaseLong &op)
     {
-#ifndef HAVE_UNSIGNED_LONG_LONG
+#ifndef HAVE_64BIT_TYPES
         value.word[0] = op.value.word[0];
         value.word[1] = op.value.word[1];
 #else
         value.words = op.value.words;
-#endif // HAVE_UNSIGNED_LONG_LONG
+#endif // HAVE_64BIT_TYPES
     }
 
 public:
 
-#ifndef HAVE_UNSIGNED_LONG_LONG
+#ifndef HAVE_64BIT_TYPES
 # ifndef WORDS_BIGENDIAN
     inline u4 HighWord(void) const { return value.word[1]; }
     inline u4 LowWord(void) const  { return value.word[0]; }
@@ -110,7 +110,7 @@ public:
     inline u4 HighWord(void) const { return ((u4) (value.words >> 32)); }
     inline u4 LowWord(void) const  { return ((u4) value.words); }
     inline u8 Words(void) const    { return value.words; }
-#endif // HAVE_UNSIGNED_LONG_LONG
+#endif // HAVE_64BIT_TYPES
 
     double DoubleView(void) const { return value.double_value; }
 
@@ -118,9 +118,9 @@ public:
     BaseLong(u4 a); // no sign extension
     BaseLong(i4 a); // sign extends
     inline BaseLong (void) {} // construct without initializing
-#ifdef HAVE_UNSIGNED_LONG_LONG
+#ifdef HAVE_64BIT_TYPES
     inline BaseLong(u8 a) { value.words = a; } // construct in one step
-#endif // HAVE_UNSIGNED_LONG_LONG
+#endif // HAVE_64BIT_TYPES
 
     BaseLong  operator+  (const BaseLong) const; // binary addition
     BaseLong  operator+  (void) const;     // unary plus
@@ -186,9 +186,9 @@ public:
     explicit 
 #endif
            LongInt (const IEEEfloat &); // narrowing conversion of float to long
-#ifdef HAVE_UNSIGNED_LONG_LONG
+#ifdef HAVE_64BIT_TYPES
     inline LongInt(u8 a) : BaseLong (a) {} // construct in one step
-#endif // HAVE_UNSIGNED_LONG_LONG
+#endif // HAVE_64BIT_TYPES
 
     //
     // These constants are generated when first used.  The memory they
@@ -248,9 +248,9 @@ public:
     inline ULongInt (u4 a) : BaseLong (a) {} // no sign extension
     inline ULongInt (i4 a) : BaseLong (a) {} // sign extended
     inline ULongInt (void) : BaseLong () {} // uninitialized
-#ifdef HAVE_UNSIGNED_LONG_LONG
+#ifdef HAVE_64BIT_TYPES
     inline ULongInt(u8 a) : BaseLong (a) {} // construct in one step
-#endif // HAVE_UNSIGNED_LONG_LONG
+#endif // HAVE_64BIT_TYPES
 
     ULongInt  operator/  (const ULongInt) const; // divide
     ULongInt &operator/= (const ULongInt); // divide and assign

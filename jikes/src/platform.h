@@ -200,25 +200,22 @@ typedef unsigned int wint_t;
 
 #ifdef HAVE_32BIT_TYPES
 
-// MS VC++ supports long long, but by a different name...
-# ifdef _WINDOWS_
-#  define HAVE_UNSIGNED_LONG_LONG 1
-# endif
-
+// MS VC++ defines __int64
+# ifdef HAVE_UNSIGNED_INT64
 // Range 0..18446744073709551615
-# ifdef HAVE_UNSIGNED_LONG_LONG
-#  ifndef _WINDOWS
-typedef unsigned long long u8;
-#  else
 typedef unsigned __int64 u8;
-#  endif
 
 // Range -9223372036854775808..9223372036854775807
-#  ifndef _WINDOWS_
-typedef signed long long i8;
-#  else
 typedef signed __int64 i8;
-#  endif
+# endif // HAVE_UNSIGNED_INT64
+
+// gcc defines long long
+# ifdef HAVE_UNSIGNED_LONG_LONG
+// Range 0..18446744073709551615
+typedef unsigned long long u8;
+
+// Range -9223372036854775808..9223372036854775807
+typedef signed long long i8;
 # endif // HAVE_UNSIGNED_LONG_LONG
 
 // Range 0..4294967295

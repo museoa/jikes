@@ -1,3 +1,16 @@
+2001-09-20  Mo DeJong  <supermo@bayarea.net> 
+
+	* configure.in: Add check for __int64 type which is supported by
+	VC++ under Windows - patch 191.
+	* configure: Regen.
+	* src/config.h.in: Regen.
+	* src/platform.h: Revert incorrect #ifdef checks added by patch
+	190. These checks need to be done in the configure.in file so
+	config.h gets the right #ifdefs.
+	* src/double.cpp:
+	* src/long.cpp:
+	* src/long.h: Use HAVE_64BIT_TYPES instead of HAVE_UNSIGNED_LONG_LONG.
+
 2001-09-20  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.cpp (EmitFieldAccess): Fix another reported
