@@ -20,7 +20,7 @@ AC_CACHE_VAL(acx_cv_pathname_style_dos,
 
 acx_cv_pathname_style_dos="no"
 case ${host_os} in
-  *djgpp | *mingw32* | *emx*) acx_cv_pathname_style_dos="yes" ;;
+  *djgpp | *mingw32* | *windows32* | *emx*) acx_cv_pathname_style_dos="yes" ;;
 esac
 ])
 AC_MSG_RESULT($acx_cv_pathname_style_dos)

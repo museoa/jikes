@@ -1,5 +1,14 @@
 2001-06-01  Mo DeJong  <mdejong@redhat.com>
 
+	* config.guess:
+	* config.sub: Update from net versions to add
+	the new windows32 host option.
+	* src/m4/acx_check_pathname_style.m4 (ACX_CHECK_PATHNAME_STYLE_DOS):
+	Add *windows32* to the set of targets that support
+	DOS style pathnames.
+
+2001-06-01  Mo DeJong  <mdejong@redhat.com>
+
 	* src/option.cpp (ArgumentExpanded, ArgumentExpander): Rename
 	ArgumentExpanded to ExpandAtFileArgument. Change parsing so
 	@files are treated as one filename per line instead of
