@@ -7,7 +7,7 @@
 # You must accept the terms of that agreement to use this software.
 #
 #
-a -encoding euc_jp
+a -encoding euc-jp
 e euc_jp euc_jp
 a -encoding gb2312
 e gb2312 gb2312
