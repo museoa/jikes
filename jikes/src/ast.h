@@ -4392,11 +4392,15 @@ public:
         return new (Alloc(sizeof(VariableSymbolArray))) VariableSymbolArray(this, size);
     }
 
-    template <typename T>
-    inline AstArray<T> *NewAstArray(unsigned size = 0)
-    {
-        return new (Alloc(sizeof(AstArray<T>))) AstArray<T>(this, size);
-    }
+    //
+    // Older compilers do not support templatized member methods, hence we
+    // have moved this to be a global method (yuck).
+    //
+    // template <typename T>
+    // inline AstArray<T> *NewAstArray(unsigned size = 0)
+    // {
+    //     return new (Alloc(sizeof(AstArray<T>))) AstArray<T>(this, size);
+    // }
 
     inline AstListNode *NewListNode()
     {
@@ -5276,6 +5280,16 @@ public:
 
 
 //
+// Older compilers do not support templatized member methods. If it were not
+// for that fact, this method should be a member of StoragePool.
+//
+template <typename T>
+inline AstArray<T> *NewAstArray(StoragePool *pool, unsigned size = 0)
+{
+    return new (pool -> Alloc(sizeof(AstArray<T>))) AstArray<T>(pool, size);
+}
+
+//
 // Define a templatized function for dynamic_cast<> operator.
 // This is slightly scary, but we need to do it so that we
 // can continue to support older compilers that don't implement
@@ -5291,7 +5305,7 @@ public:
 #endif
 
 template <typename TO, typename FROM>
-TO DYNAMIC_CAST(FROM f)
+inline TO DYNAMIC_CAST(FROM f)
 {
 #ifndef HAVE_DYNAMIC_CAST
     return (TO) f;
@@ -5792,7 +5806,7 @@ inline void AstClassBody::AllocateInstanceVariables(int estimate)
 {
     if (! instance_variables)
         instance_variables =
-            pool -> NewAstArray<AstFieldDeclaration *> (estimate);
+            NewAstArray<AstFieldDeclaration *> (pool, estimate);
 }
 
 inline void AstClassBody::AddInstanceVariable(AstFieldDeclaration *field_declaration)
@@ -5806,7 +5820,7 @@ inline void AstClassBody::AllocateClassVariables(int estimate)
 {
     if (! class_variables)
         class_variables =
-            pool -> NewAstArray<AstFieldDeclaration *> (estimate);
+            NewAstArray<AstFieldDeclaration *> (pool, estimate);
 }
 
 inline void AstClassBody::AddClassVariable(AstFieldDeclaration *field_declaration)
@@ -5820,7 +5834,7 @@ inline void AstClassBody::AllocateMethods(int estimate)
 {
     if (! methods)
         methods =
-            pool -> NewAstArray<AstMethodDeclaration *> (estimate);
+            NewAstArray<AstMethodDeclaration *> (pool, estimate);
 }
 
 inline void AstClassBody::AddMethod(AstMethodDeclaration *method_declaration)
@@ -5834,7 +5848,7 @@ inline void AstClassBody::AllocateInstanceInitializers(int estimate)
 {
     if (! instance_initializers)
         instance_initializers =
-            pool -> NewAstArray<AstMethodBody *> (estimate);
+            NewAstArray<AstMethodBody *> (pool, estimate);
 }
 
 inline void AstClassBody::AddInstanceInitializer(AstMethodBody *block)
@@ -5848,7 +5862,7 @@ inline void AstClassBody::AllocateNestedInterfaces(int estimate)
 {
     if (! inner_interfaces)
         inner_interfaces =
-            pool -> NewAstArray<AstInterfaceDeclaration *> (estimate);
+            NewAstArray<AstInterfaceDeclaration *> (pool, estimate);
 }
 
 inline void AstClassBody::AddNestedInterface(AstInterfaceDeclaration *interface_declaration)
@@ -5862,7 +5876,7 @@ inline void AstClassBody::AllocateNestedClasses(int estimate)
 {
     if (! inner_classes)
         inner_classes =
-            pool -> NewAstArray<AstClassDeclaration *> (estimate);
+            NewAstArray<AstClassDeclaration *> (pool, estimate);
 }
 
 inline void AstClassBody::AddNestedClass(AstClassDeclaration *class_declaration)
@@ -5876,7 +5890,7 @@ inline void AstClassBody::AllocateStaticInitializers(int estimate)
 {
     if (! static_initializers)
         static_initializers =
-            pool -> NewAstArray<AstStaticInitializer *> (estimate);
+            NewAstArray<AstStaticInitializer *> (pool, estimate);
 }
 
 inline void AstClassBody::AddStaticInitializer(AstStaticInitializer *static_initializer)
@@ -5890,7 +5904,7 @@ inline void AstClassBody::AllocateConstructors(int estimate)
 {
     if (! constructors)
         constructors =
-            pool -> NewAstArray<AstConstructorDeclaration *> (estimate);
+            NewAstArray<AstConstructorDeclaration *> (pool, estimate);
 }
 
 inline void AstClassBody::AddConstructor(AstConstructorDeclaration *constructor_declaration)
@@ -5904,7 +5918,7 @@ inline void AstClassBody::AllocateEmptyDeclarations(int estimate)
 {
     if (! empty_declarations)
         empty_declarations =
-            pool -> NewAstArray<AstEmptyDeclaration *> (estimate);
+            NewAstArray<AstEmptyDeclaration *> (pool, estimate);
 }
 
 inline void AstClassBody::AddEmptyDeclaration(AstEmptyDeclaration *empty_declaration)
@@ -5918,7 +5932,7 @@ inline void AstInterfaceDeclaration::AllocateNestedInterfaces(int estimate)
 {
     if (! inner_interfaces)
         inner_interfaces =
-            pool -> NewAstArray<AstInterfaceDeclaration *> (estimate);
+            NewAstArray<AstInterfaceDeclaration *> (pool, estimate);
 }
 
 inline void AstInterfaceDeclaration::AddNestedInterface(AstInterfaceDeclaration *interface_declaration)
@@ -5932,7 +5946,7 @@ inline void AstInterfaceDeclaration::AllocateNestedClasses(int estimate)
 {
     if (! inner_classes)
         inner_classes =
-            pool -> NewAstArray<AstClassDeclaration *> (estimate);
+            NewAstArray<AstClassDeclaration *> (pool, estimate);
 }
 
 inline void AstInterfaceDeclaration::AddNestedClass(AstClassDeclaration *class_declaration)
@@ -5946,7 +5960,7 @@ inline void AstInterfaceDeclaration::AllocateMethods(int estimate)
 {
     if (! methods)
         methods =
-            pool -> NewAstArray<AstMethodDeclaration *> (estimate);
+            NewAstArray<AstMethodDeclaration *> (pool, estimate);
 }
 
 inline void AstInterfaceDeclaration::AddMethod(AstMethodDeclaration *method_declaration)
@@ -5960,7 +5974,7 @@ inline void AstInterfaceDeclaration::AllocateClassVariables(int estimate)
 {
     if (! class_variables)
         class_variables =
-            pool -> NewAstArray<AstFieldDeclaration *> (estimate);
+            NewAstArray<AstFieldDeclaration *> (pool, estimate);
 }
 
 inline void AstInterfaceDeclaration::AddClassVariable(AstFieldDeclaration *field_declaration)
@@ -5974,7 +5988,7 @@ inline void AstInterfaceDeclaration::AllocateEmptyDeclarations(int estimate)
 {
     if (! empty_declarations)
         empty_declarations =
-            pool -> NewAstArray<AstEmptyDeclaration *> (estimate);
+            NewAstArray<AstEmptyDeclaration *> (pool, estimate);
 }
 
 inline void AstInterfaceDeclaration::AddEmptyDeclaration(AstEmptyDeclaration *empty_declaration)
@@ -5988,7 +6002,7 @@ inline void AstClassDeclaration::AllocateClassModifiers(int estimate)
 {
     if (! class_modifiers)
         class_modifiers =
-            pool -> NewAstArray<AstModifier *> (estimate);
+            NewAstArray<AstModifier *> (pool, estimate);
 }
 
 inline void AstClassDeclaration::AddClassModifier(AstModifier *class_modifier)
@@ -6002,7 +6016,7 @@ inline void AstFieldDeclaration::AllocateVariableModifiers(int estimate)
 {
     if (! variable_modifiers)
         variable_modifiers =
-            pool -> NewAstArray<AstModifier *> (estimate);
+            NewAstArray<AstModifier *> (pool, estimate);
 }
 
 inline void AstFieldDeclaration::AddVariableModifier(AstModifier *variable_modifier)
@@ -6016,7 +6030,7 @@ inline void AstFormalParameter::AllocateParameterModifiers(int estimate)
 {
     if (! parameter_modifiers)
         parameter_modifiers =
-            pool -> NewAstArray<AstModifier *> (estimate);
+            NewAstArray<AstModifier *> (pool, estimate);
 }
 
 inline void AstFormalParameter::AddParameterModifier(AstModifier *parameter_modifier)
@@ -6030,7 +6044,7 @@ inline void AstMethodDeclaration::AllocateMethodModifiers(int estimate)
 {
     if (! method_modifiers)
         method_modifiers =
-            pool -> NewAstArray<AstModifier *> (estimate);
+            NewAstArray<AstModifier *> (pool, estimate);
 }
 
 inline void AstMethodDeclaration::AddMethodModifier(AstModifier *method_modifier)
@@ -6044,7 +6058,7 @@ inline void AstConstructorDeclaration::AllocateConstructorModifiers(int estimate
 {
     if (! constructor_modifiers)
         constructor_modifiers =
-            pool -> NewAstArray<AstModifier *> (estimate);
+            NewAstArray<AstModifier *> (pool, estimate);
 }
 
 inline void AstConstructorDeclaration::AddConstructorModifier(AstModifier *constructor_modifier)
@@ -6058,7 +6072,7 @@ inline void AstInterfaceDeclaration::AllocateInterfaceModifiers(int estimate)
 {
     if (! interface_modifiers)
         interface_modifiers =
-            pool -> NewAstArray<AstModifier *> (estimate);
+            NewAstArray<AstModifier *> (pool, estimate);
 }
 
 inline void AstInterfaceDeclaration::AddInterfaceModifier(AstModifier *interface_modifier)
@@ -6072,7 +6086,7 @@ inline void AstLocalVariableDeclarationStatement::AllocateLocalModifiers(int est
 {
     if (! local_modifiers)
         local_modifiers =
-            pool -> NewAstArray<AstModifier *> (estimate);
+            NewAstArray<AstModifier *> (pool, estimate);
 }
 
 inline void AstLocalVariableDeclarationStatement::AddLocalModifier(AstModifier *local_modifier)
@@ -6086,7 +6100,7 @@ inline void AstBlock::AllocateBlockStatements(int estimate)
 {
     if (! block_statements)
         block_statements =
-            pool -> NewAstArray<AstStatement *> (estimate);
+            NewAstArray<AstStatement *> (pool, estimate);
 }
 
 inline void AstBlock::AddStatement(AstStatement *statement)
@@ -6125,7 +6139,7 @@ inline void AstStatement::AddDefinedVariable(VariableSymbol *variable_symbol)
 inline void AstSwitchBlockStatement::AllocateSwitchLabels(int estimate)
 {
     if (! switch_labels)
-        switch_labels = pool -> NewAstArray<Ast *> (estimate);
+        switch_labels = NewAstArray<Ast *> (pool, estimate);
 }
 
 inline void AstSwitchBlockStatement::AddSwitchLabel(Ast *case_or_default_label)
@@ -6140,7 +6154,7 @@ inline void AstSwitchBlockStatement::AddSwitchLabel(Ast *case_or_default_label)
 inline void AstSwitchStatement::AllocateCases(int estimate)
 {
     if (! cases)
-        cases = pool -> NewAstArray<CaseElement *> (estimate);
+        cases = NewAstArray<CaseElement *> (pool, estimate);
 }
 
 inline void AstSwitchStatement::AddCase(CaseElement *case_element)
@@ -6154,7 +6168,7 @@ inline void AstMethodBody::AllocateLocalInitStatements(int estimate)
 {
     if (! local_init_statements)
         local_init_statements =
-            pool -> NewAstArray<AstStatement *> (estimate);
+            NewAstArray<AstStatement *> (pool, estimate);
 }
 
 inline void AstMethodBody::AddLocalInitStatement(AstStatement *statement)
@@ -6168,7 +6182,7 @@ inline void AstVariableDeclaratorId::AllocateBrackets(int estimate)
 {
     if (! brackets)
         brackets =
-            pool -> NewAstArray<AstBrackets *> (estimate);
+            NewAstArray<AstBrackets *> (pool, estimate);
 }
 
 inline void AstVariableDeclaratorId::AddBrackets(AstBrackets *bracket)
@@ -6182,7 +6196,7 @@ inline void AstArrayType::AllocateBrackets(int estimate)
 {
     if (! brackets)
         brackets =
-            pool -> NewAstArray<AstBrackets *> (estimate);
+            NewAstArray<AstBrackets *> (pool, estimate);
 }
 
 inline void AstArrayType::AddBrackets(AstBrackets *bracket)
@@ -6196,7 +6210,7 @@ inline void AstMethodDeclarator::AllocateBrackets(int estimate)
 {
     if (! brackets)
         brackets =
-            pool -> NewAstArray<AstBrackets *> (estimate);
+            NewAstArray<AstBrackets *> (pool, estimate);
 }
 
 inline void AstMethodDeclarator::AddBrackets(AstBrackets *bracket)
@@ -6210,7 +6224,7 @@ inline void AstArrayCreationExpression::AllocateBrackets(int estimate)
 {
     if (! brackets)
         brackets =
-            pool -> NewAstArray<AstBrackets *> (estimate);
+            NewAstArray<AstBrackets *> (pool, estimate);
 }
 
 inline void AstArrayCreationExpression::AddBrackets(AstBrackets *bracket)
@@ -6224,7 +6238,7 @@ inline void AstCastExpression::AllocateBrackets(int estimate)
 {
     if (! brackets)
         brackets =
-            pool -> NewAstArray<AstBrackets *> (estimate);
+            NewAstArray<AstBrackets *> (pool, estimate);
 }
 
 inline void AstCastExpression::AddBrackets(AstBrackets *bracket)
@@ -6238,7 +6252,7 @@ inline void AstArrayCreationExpression::AllocateDimExprs(int estimate)
 {
     if (! dim_exprs)
         dim_exprs =
-            pool -> NewAstArray<AstDimExpr *> (estimate);
+            NewAstArray<AstDimExpr *> (pool, estimate);
 }
 
 inline void AstArrayCreationExpression::AddDimExpr(AstDimExpr *dim_expr)
@@ -6252,7 +6266,7 @@ inline void AstThisCall::AllocateArguments(int estimate)
 {
     if (! arguments)
         arguments =
-            pool -> NewAstArray<AstExpression *> (estimate);
+            NewAstArray<AstExpression *> (pool, estimate);
 }
 
 inline void AstThisCall::AddArgument(AstExpression *argument)
@@ -6266,7 +6280,7 @@ inline void AstSuperCall::AllocateArguments(int estimate)
 {
     if (! arguments)
         arguments =
-            pool -> NewAstArray<AstExpression *> (estimate);
+            NewAstArray<AstExpression *> (pool, estimate);
 }
 
 inline void AstSuperCall::AddArgument(AstExpression *argument)
@@ -6280,7 +6294,7 @@ inline void AstClassInstanceCreationExpression::AllocateArguments(int estimate)
 {
     if (! arguments)
         arguments =
-            pool -> NewAstArray<AstExpression *> (estimate);
+            NewAstArray<AstExpression *> (pool, estimate);
 }
 
 inline void AstClassInstanceCreationExpression::AddArgument(AstExpression *argument)
@@ -6294,7 +6308,7 @@ inline void AstMethodInvocation::AllocateArguments(int estimate)
 {
     if (! arguments)
         arguments =
-            pool -> NewAstArray<AstExpression *> (estimate);
+            NewAstArray<AstExpression *> (pool, estimate);
 }
 
 inline void AstMethodInvocation::AddArgument(AstExpression *argument)
@@ -6308,7 +6322,7 @@ inline void AstSuperCall::AllocateLocalArguments(int estimate)
 {
     if (! local_arguments_opt)
         local_arguments_opt =
-            pool -> NewAstArray<AstExpression *> (estimate);
+            NewAstArray<AstExpression *> (pool, estimate);
 }
 
 inline void AstSuperCall::AddLocalArgument(AstExpression *argument)
@@ -6322,7 +6336,7 @@ inline void AstClassInstanceCreationExpression::AllocateLocalArguments(int estim
 {
     if (! local_arguments_opt)
         local_arguments_opt =
-            pool -> NewAstArray<AstExpression *> (estimate);
+            NewAstArray<AstExpression *> (pool, estimate);
 }
 
 inline void AstClassInstanceCreationExpression::AddLocalArgument(AstExpression *argument)
@@ -6336,7 +6350,7 @@ inline void AstMethodDeclaration::AllocateThrows(int estimate)
 {
     if (! throws)
         throws =
-            pool -> NewAstArray<AstExpression *> (estimate);
+            NewAstArray<AstExpression *> (pool, estimate);
 }
 
 inline void AstMethodDeclaration::AddThrow(AstExpression *exception)
@@ -6350,7 +6364,7 @@ inline void AstConstructorDeclaration::AllocateThrows(int estimate)
 {
     if (! throws)
         throws =
-            pool -> NewAstArray<AstExpression *> (estimate);
+            NewAstArray<AstExpression *> (pool, estimate);
 }
 
 inline void AstConstructorDeclaration::AddThrow(AstExpression *exception)
@@ -6364,7 +6378,7 @@ inline void AstMethodDeclarator::AllocateFormalParameters(int estimate)
 {
     if (! formal_parameters)
         formal_parameters =
-            pool -> NewAstArray<AstFormalParameter *> (estimate);
+            NewAstArray<AstFormalParameter *> (pool, estimate);
 }
 
 inline void AstMethodDeclarator::AddFormalParameter(AstFormalParameter *formal_parameter)
@@ -6378,7 +6392,7 @@ inline void AstLocalVariableDeclarationStatement::AllocateVariableDeclarators(in
 {
     if (! variable_declarators)
         variable_declarators =
-            pool -> NewAstArray<AstVariableDeclarator *> (estimate);
+            NewAstArray<AstVariableDeclarator *> (pool, estimate);
 }
 
 inline void AstLocalVariableDeclarationStatement::AddVariableDeclarator(AstVariableDeclarator *variable_declarator)
@@ -6392,7 +6406,7 @@ inline void AstFieldDeclaration::AllocateVariableDeclarators(int estimate)
 {
     if (! variable_declarators)
         variable_declarators =
-            pool -> NewAstArray<AstVariableDeclarator *> (estimate);
+            NewAstArray<AstVariableDeclarator *> (pool, estimate);
 }
 
 inline void AstFieldDeclaration::AddVariableDeclarator(AstVariableDeclarator *variable_declarator)
@@ -6406,7 +6420,7 @@ inline void AstClassDeclaration::AllocateInterfaces(int estimate)
 {
     if (! interfaces)
         interfaces =
-            pool -> NewAstArray<AstExpression *> (estimate);
+            NewAstArray<AstExpression *> (pool, estimate);
 }
 
 inline void AstClassDeclaration::AddInterface(AstExpression *interf)
@@ -6420,7 +6434,7 @@ inline void AstInterfaceDeclaration::AllocateExtendsInterfaces(int estimate)
 {
     if (! extends_interfaces)
         extends_interfaces =
-            pool -> NewAstArray<AstExpression *> (estimate);
+            NewAstArray<AstExpression *> (pool, estimate);
 }
 
 inline void AstInterfaceDeclaration::AddExtendsInterface(AstExpression *interf)
@@ -6433,7 +6447,7 @@ inline void AstInterfaceDeclaration::AddExtendsInterface(AstExpression *interf)
 inline void AstInterfaceDeclaration::AllocateInterfaceMemberDeclarations(int estimate)
 {
     if (! interface_member_declarations)
-        interface_member_declarations = pool -> NewAstArray<Ast *> (estimate);
+        interface_member_declarations = NewAstArray<Ast *> (pool, estimate);
 }
 
 inline void AstInterfaceDeclaration::AddInterfaceMemberDeclaration(Ast *member)
@@ -6446,7 +6460,7 @@ inline void AstInterfaceDeclaration::AddInterfaceMemberDeclaration(Ast *member)
 inline void AstClassBody::AllocateClassBodyDeclarations(int estimate)
 {
     if (! class_body_declarations)
-        class_body_declarations = pool -> NewAstArray<Ast *> (estimate);
+        class_body_declarations = NewAstArray<Ast *> (pool, estimate);
 }
 
 inline void AstClassBody::AddClassBodyDeclaration(Ast *member)
@@ -6512,7 +6526,7 @@ inline void AstForStatement::AllocateForInitStatements(int estimate)
 {
     if (! for_init_statements)
         for_init_statements =
-            pool -> NewAstArray<AstStatement *> (estimate);
+            NewAstArray<AstStatement *> (pool, estimate);
 }
 
 inline void AstForStatement::AddForInitStatement(AstStatement *statement)
@@ -6526,7 +6540,7 @@ inline void AstForStatement::AllocateForUpdateStatements(int estimate)
 {
     if (! for_update_statements)
         for_update_statements =
-            pool -> NewAstArray<AstExpressionStatement *> (estimate);
+            NewAstArray<AstExpressionStatement *> (pool, estimate);
 }
 
 inline void AstForStatement::AddForUpdateStatement(AstExpressionStatement *statement)
@@ -6539,7 +6553,7 @@ inline void AstForStatement::AddForUpdateStatement(AstExpressionStatement *state
 inline void AstArrayInitializer::AllocateVariableInitializers(int estimate)
 {
     if (! variable_initializers)
-        variable_initializers = pool -> NewAstArray<Ast *> (estimate);
+        variable_initializers = NewAstArray<Ast *> (pool, estimate);
 }
 
 inline void AstArrayInitializer::AddVariableInitializer(Ast *initializer)
@@ -6553,7 +6567,7 @@ inline void AstTryStatement::AllocateCatchClauses(int estimate)
 {
     if (! catch_clauses)
         catch_clauses =
-            pool -> NewAstArray<AstCatchClause *> (estimate);
+            NewAstArray<AstCatchClause *> (pool, estimate);
 }
 
 inline void AstTryStatement::AddCatchClause(AstCatchClause *catch_clause)
@@ -6567,7 +6581,7 @@ inline void AstCompilationUnit::AllocateImportDeclarations(int estimate)
 {
     if (! import_declarations)
         import_declarations =
-            pool -> NewAstArray<AstImportDeclaration *> (estimate);
+            NewAstArray<AstImportDeclaration *> (pool, estimate);
 }
 
 inline void AstCompilationUnit::AddImportDeclaration(AstImportDeclaration *import_declaration)
@@ -6580,7 +6594,7 @@ inline void AstCompilationUnit::AddImportDeclaration(AstImportDeclaration *impor
 inline void AstCompilationUnit::AllocateTypeDeclarations(int estimate)
 {
     if (! type_declarations)
-        type_declarations = pool -> NewAstArray<Ast *> (estimate);
+        type_declarations = NewAstArray<Ast *> (pool, estimate);
 }
 
 inline void AstCompilationUnit::AddTypeDeclaration(Ast *type_declaration)
