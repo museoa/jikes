@@ -3202,6 +3202,7 @@ else
 extern "C" void exit (int);
 #endif
 
+#include <sys/stat.h>
 #include <stat.mac.h>
 
 int
@@ -3213,7 +3214,7 @@ mkdir("foo.dir", 0);
   return 0;
 }
 EOF
-if { (eval echo configure:2847: \"$ac_link\") >&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2848: \"$ac_link\") >&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   jikes_cv_mac_mkdir=yes
 else
   echo "configure: failed program was:" >&5
@@ -3223,16 +3224,16 @@ fi
 rm -f conftest*
 
 fi
-echo "configure:2856: result: $jikes_cv_mac_mkdir" >&5
+echo "configure:2857: result: $jikes_cv_mac_mkdir" >&5
 echo "$ECHO_T""$jikes_cv_mac_mkdir" >&6
 
-echo "configure:2858: checking for glibc style mkdir" >&5
+echo "configure:2859: checking for glibc style mkdir" >&5
 echo $ECHO_N "checking for glibc style mkdir... $ECHO_C" >&6
 if test "${jikes_cv_glibc_mkdir+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   cat >conftest.$ac_ext <<EOF
-#line 2864 "configure"
+#line 2865 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit (int);
@@ -3250,7 +3251,7 @@ mkdir("foo.dir", S_IRWXU | S_IRWXG | S_IRWXO);
   return 0;
 }
 EOF
-if { (eval echo configure:2879: \"$ac_link\") >&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2880: \"$ac_link\") >&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   jikes_cv_glibc_mkdir=yes
 else
   echo "configure: failed program was:" >&5
@@ -3260,16 +3261,16 @@ fi
 rm -f conftest*
 
 fi
-echo "configure:2888: result: $jikes_cv_glibc_mkdir" >&5
+echo "configure:2889: result: $jikes_cv_glibc_mkdir" >&5
 echo "$ECHO_T""$jikes_cv_glibc_mkdir" >&6
 
-echo "configure:2890: checking for libc5 style mkdir" >&5
+echo "configure:2891: checking for libc5 style mkdir" >&5
 echo $ECHO_N "checking for libc5 style mkdir... $ECHO_C" >&6
 if test "${jikes_cv_libc5_mkdir+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   cat >conftest.$ac_ext <<EOF
-#line 2896 "configure"
+#line 2897 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit (int);
@@ -3287,7 +3288,7 @@ mkdir("foo.dir", S_IRWXU);
   return 0;
 }
 EOF
-if { (eval echo configure:2911: \"$ac_link\") >&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2912: \"$ac_link\") >&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   jikes_cv_libc5_mkdir=yes
 else
   echo "configure: failed program was:" >&5
@@ -3297,16 +3298,16 @@ fi
 rm -f conftest*
 
 fi
-echo "configure:2920: result: $jikes_cv_libc5_mkdir" >&5
+echo "configure:2921: result: $jikes_cv_libc5_mkdir" >&5
 echo "$ECHO_T""$jikes_cv_libc5_mkdir" >&6
 
-echo "configure:2922: checking for win32 style mkdir" >&5
+echo "configure:2923: checking for win32 style mkdir" >&5
 echo $ECHO_N "checking for win32 style mkdir... $ECHO_C" >&6
 if test "${jikes_cv_win32_mkdir+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   cat >conftest.$ac_ext <<EOF
-#line 2928 "configure"
+#line 2929 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit (int);
@@ -3323,7 +3324,7 @@ mkdir("foo.dir");
   return 0;
 }
 EOF
-if { (eval echo configure:2942: \"$ac_link\") >&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:2943: \"$ac_link\") >&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   jikes_cv_win32_mkdir=yes
 else
   echo "configure: failed program was:" >&5
@@ -3333,7 +3334,7 @@ fi
 rm -f conftest*
 
 fi
-echo "configure:2951: result: $jikes_cv_win32_mkdir" >&5
+echo "configure:2952: result: $jikes_cv_win32_mkdir" >&5
 echo "$ECHO_T""$jikes_cv_win32_mkdir" >&6
 
 if test "$jikes_cv_glibc_mkdir" = "yes" ; then
@@ -3368,13 +3369,13 @@ else
     { echo "configure: error: Could not locate a working mkdir() implementation" >&2; exit 1; }
 fi
 
-echo "configure:2976: checking floating point bug workaround for ICC compiler" >&5
+echo "configure:2977: checking floating point bug workaround for ICC compiler" >&5
 echo $ECHO_N "checking floating point bug workaround for ICC compiler... $ECHO_C" >&6
 if test "${jikes_cv_icc_fp_bugs+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   cat >conftest.$ac_ext <<EOF
-#line 2982 "configure"
+#line 2983 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit (int);
@@ -3388,7 +3389,7 @@ main ()
   return 0;
 }
 EOF
-if { (eval echo configure:2996: \"$ac_compile\") >&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:2997: \"$ac_compile\") >&5; (eval $ac_compile) 2>&5; }; then
     if "$CXX" = "ICC" || test "$CXX" = "vacpp" ; then
        jikes_cv_icc_fp_bugs=yes
    else
@@ -3403,7 +3404,7 @@ fi
 rm -f conftest*
 
 fi
-echo "configure:3009: result: $jikes_cv_icc_fp_bugs" >&5
+echo "configure:3010: result: $jikes_cv_icc_fp_bugs" >&5
 echo "$ECHO_T""$jikes_cv_icc_fp_bugs" >&6
 if test "$jikes_cv_icc_fp_bugs" = "yes" ; then
     #

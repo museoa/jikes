@@ -45,6 +45,10 @@ return
  mkdir(dirname);
 #endif
 
+#ifdef HAVE_MAC_MKDIR
+ mkdir(dirname,0);
+#endif
+
 }
 
 //
