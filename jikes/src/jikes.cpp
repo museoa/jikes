@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
                 "++                 compile in incremental mode\n"
                 "+B                 do not invoke bytecode generator\n"
                 "+c                 do not discard comments from lexer output\n"
-                "+CSO               search for both java and classfile in classpath\n"
+                "+OLDCSO            perform original Jikes classpath order for compatibility\n"
                 "+D                 report errors immediately in emacs-form without buffering\n"
                 "+DR=filename       generate dependence report in filename\n"
                 "+E                 list errors in emacs-form\n"

@@ -769,9 +769,9 @@ FileSymbol *Control::GetJavaFile(PackageSymbol *package, NameSymbol *name_symbol
 
 FileSymbol *Control::GetFile(Control &control, PackageSymbol *package, NameSymbol *name_symbol)
 {
-    return control.option.classpath_search_order
-            ?    GetFileBoth(control, package, name_symbol)
-            :    GetFileFirst(control, package, name_symbol);
+    return control.option.old_classpath_search_order                           
+            ?    GetFileFirst(control, package, name_symbol)                   
+            :    GetFileBoth(control, package, name_symbol);     
 }
 
 FileSymbol *Control::GetFileBoth(Control &control, PackageSymbol *package, NameSymbol *name_symbol)

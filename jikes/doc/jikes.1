@@ -17,7 +17,7 @@ jikes \- java source to bytecode compiler
 [\fB\-Xstdout\fP]
 [\fB\+\+\fP]
 [\fB\+B\fP]
-[\fB\+CSO\fP]
+[\fB\+OLDCSO\fP]
 [\fB\+D\fP]
 [\fB\+DR=\fP filename]
 [\fB\+E\fP]
@@ -81,8 +81,8 @@ compile in incremental mode
 \fB\+B
 do not invoke bytecode generator
 .TP
-\fB\+CSO
-Select to use same classpath search order as javac. 
+\fB\+OLDCSO
+Select to use same classpath search order as in older versions of Jikes (for compatibility). 
 .TP
 \fB\+D
 report errors immediately in emacs-form without buffering

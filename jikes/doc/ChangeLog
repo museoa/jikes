@@ -1,3 +1,11 @@
+2000-03-09 Joe Berkovitz <joeb@atg.com>                                        
+       * option.h                                                              
+       * option.cpp                                                            
+       * jikes.cpp                                                             
+       * system.cpp: rename +CSO option and classpath_search_order             
+       variable to +OLDCSO and old_classpath_search_order, and invert          
+       sense of option correspondingly.                                        
+                         
 2000-02-29  Vadim Zaliva  <lord@crocodile.org>
 
 	* Switched to ICU-1.4.0

@@ -329,8 +329,8 @@ Option::Option(ArgumentExpander &arguments) :
                  comments = true;
             else if (strcmp(arguments.argv[i], "+C") == 0)
                  debug_dump_class = true;
-            else if (strcmp(arguments.argv[i], "+CSO") == 0)
-                 classpath_search_order = true;
+            else if (strcmp(arguments.argv[i], "+OLDCSO") == 0)
+                 old_classpath_search_order = true;
             else if (strcmp(arguments.argv[i],"+D") == 0)
             {
                  dump_errors = true;

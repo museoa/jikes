@@ -27,7 +27,7 @@ JikesOption::JikesOption():
     verbose(false),
     depend(false),
     nowarn(false),
-    classpath_search_order(false),
+    old_classpath_search_order(false),
     zero_defect(false)
 {
 }

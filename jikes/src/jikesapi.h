@@ -29,7 +29,7 @@ class JikesOption
     bool verbose;
     bool depend;
     bool nowarn;
-    bool classpath_search_order;
+    bool old_classpath_search_order;
     bool zero_defect;
 
     virtual ~JikesOption();
