@@ -6,7 +6,7 @@
   <BODY bgcolor="ffffff">
     <p align="center"><img src="images/jikes.png" width=600 height=54 border=0 alt="Jikes"><BR>&nbsp;</p>
 
-    <p>Increasingly, one of the easiest ways to get Jikes is with your operating system itself -- Jikes is included in the following distributions:</P>
+    <p>Increasingly, one of the easiest ways to get Jikes is with your operating system itself -- Jikes is included in the following distributions (listed in no particular order):</P>
 
     <TABLE BORDER=0 ALIGN="CENTER">
       <TR VALIGN="MIDDLE">
@@ -27,6 +27,11 @@
       </TR><TR VALIGN="MIDDLE">
         <TD ALIGN="RIGHT"><a href="http://www.linux-mandrake.com"><IMG SRC="images/mandrake.png" alt="" BORDER=0 HEIGHT=50 WIDTH=60></A></TD>
         <TD ALIGN="LEFT" ><a href="http://www.linux-mandrake.com">Mandrake-Linux</a></TD>
+      </TR><TR>
+        <TD COLSPAN=2><HR></TD>
+      </TR><TR VALIGN="MIDDLE">
+        <TD ALIGN="RIGHT"><a href="http://www.yellowdoglinux.com"><IMG SRC="images/ydl.png" alt="" BORDER=0 HEIGHT=111 WIDTH=103></A></TD>
+        <TD ALIGN="LEFT" ><a href="http://www.yellowdoglinux.com">Yellow Dog Linux</a></TD>
       </TR><TR>
         <TD COLSPAN=2><HR></TD>
       </TR><TR VALIGN="MIDDLE">
