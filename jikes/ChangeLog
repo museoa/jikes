@@ -1,3 +1,10 @@
+2000-09-04  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/body.cpp (ProcessLocalVariableDeclarationStatement)
+	(ProcessExecutableBodies): Reduce check for local variable/formal
+	parameter duplication to occur only in innermost enclosing
+	class, per JLS 14.4.2 - patch 62, from bug 197.
+
 2001-09-04  Eric Blake  <ebb9@email.byu.edu>
 	
 	* src/body.cpp (ProcessSynchronizedStatement)

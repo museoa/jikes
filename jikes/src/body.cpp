@@ -184,22 +184,11 @@ void Semantic::ProcessLocalVariableDeclarationStatement(Ast *stmt)
         AstVariableDeclaratorId *name = variable_declarator -> variable_declarator_name;
         NameSymbol *name_symbol = lex_stream -> NameSymbol(name -> identifier_token);
 
-//
-// TODO: Confirm that this new test is indeed the case. In 1.0, only the more restricted test below was necessary.
-//
-//        if (LocalSymbolTable().FindVariableSymbol(name_symbol))
-//        {
-//            ReportSemError(SemanticError::DUPLICATE_LOCAL_VARIABLE_DECLARATION,
-//                           name -> identifier_token,
-//                           name -> identifier_token,
-//                           name_symbol -> Name());
-//        }
-//
-        SemanticEnvironment *where_found;
-        Tuple<VariableSymbol *> variables_found(2);
-        SearchForVariableInEnvironment(variables_found, where_found, state_stack.Top(), name_symbol, name -> identifier_token);
-        VariableSymbol *symbol = (variables_found.Length() > 0 ? variables_found[0] : (VariableSymbol *) NULL);
-        if (symbol && symbol -> IsLocal())
+        //
+        // According to JLS2 14.4.2, only check for a duplicate in
+        // the local class scope; don't worry about enclosing classes
+        //
+        if (LocalSymbolTable().FindVariableSymbol(name_symbol))
         {
             ReportSemError(SemanticError::DUPLICATE_LOCAL_VARIABLE_DECLARATION,
                            name -> identifier_token,
@@ -208,7 +197,7 @@ void Semantic::ProcessLocalVariableDeclarationStatement(Ast *stmt)
         }
         else
         {
-            symbol = LocalSymbolTable().Top() -> InsertVariableSymbol(name_symbol);
+            VariableSymbol *symbol = LocalSymbolTable().Top() -> InsertVariableSymbol(name_symbol);
             variable_declarator -> symbol = symbol;
 
             int num_dimensions = (array_type ? array_type -> NumBrackets() : 0) + name -> NumBrackets();
@@ -2197,26 +2186,6 @@ void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment, AstClas
             MethodSymbol *this_method = ThisMethod();
             if (this_method)
             {
-                for (int l = 0; l < this_method -> NumFormalParameters(); l++)
-                {
-                    VariableSymbol *parm = this_method -> FormalParameter(l);
-                    AstVariableDeclaratorId *name = parm -> declarator -> variable_declarator_name;
-
-                    SemanticEnvironment *where_found;
-                    Tuple<VariableSymbol *> variables_found(2);
-                    SearchForVariableInEnvironment(variables_found, where_found, state_stack.Top(),
-                                                   parm -> Identity(),
-                                                   name -> identifier_token);
-                    VariableSymbol *symbol = (variables_found.Length() > 0 ? variables_found[0] : (VariableSymbol *) NULL);
-                    if (symbol && symbol -> IsLocal())
-                    {
-                        ReportSemError(SemanticError::DUPLICATE_LOCAL_VARIABLE_DECLARATION,
-                                       name -> identifier_token,
-                                       name -> identifier_token,
-                                       parm -> Name());
-                    }
-                }
-
                 AstConstructorBlock *constructor_block = constructor_decl -> constructor_body;
                 if (constructor_block -> explicit_constructor_invocation_opt &&
                     constructor_block -> explicit_constructor_invocation_opt -> ThisCallCast())
@@ -2281,29 +2250,6 @@ void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment, AstClas
         MethodSymbol *this_method = ThisMethod();
         if (this_method)
         {
-            //
-            // TODO: Confirm that this new test is indeed necessary. In 1.0, a more restricted test was used...
-            //
-            for (int i = 0; i < this_method -> NumFormalParameters(); i++)
-            {
-                VariableSymbol *parm = this_method -> FormalParameter(i);
-                AstVariableDeclaratorId *name = parm -> declarator -> variable_declarator_name;
-
-                SemanticEnvironment *where_found;
-                Tuple<VariableSymbol *> variables_found(2);
-                SearchForVariableInEnvironment(variables_found, where_found, state_stack.Top(),
-                                               parm -> Identity(),
-                                               name -> identifier_token);
-                VariableSymbol *symbol = (variables_found.Length() > 0 ? variables_found[0] : (VariableSymbol *) NULL);
-                if (symbol && symbol -> IsLocal())
-                {
-                    ReportSemError(SemanticError::DUPLICATE_LOCAL_VARIABLE_DECLARATION,
-                                   name -> identifier_token,
-                                   name -> identifier_token,
-                                   parm -> Name());
-                }
-            }
-
             LocalSymbolTable().Push(this_method -> block_symbol -> Table());
             LocalBlockStack().max_size = 0;
 
