@@ -1,5 +1,12 @@
 2004-03-28  Elliott Hughes  <enh@acm.org>
 
+	* src/expr.cpp: Fix another assertion compiling Sun's
+	JDK 1.4.1 source; don't ask FindInaccessibleType to try with an
+	AstName whose base_opt is non-null, because it doesn't handle
+	that case. We can now compile the JDK as well as javac again.
+
+2004-03-28  Elliott Hughes  <enh@acm.org>
+
 	* src/expr.cpp: Fix an assertion compiling Sun's
 	JDK 1.4.1 source; it looks like the call to AddDependence in
 	ProcessClassLiteral was lifted too high, and the dependence should

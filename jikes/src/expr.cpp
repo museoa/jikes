@@ -1383,7 +1383,9 @@ void Semantic::ReportVariableNotFound(AstExpression* access, TypeSymbol* type)
     //
     // Try various possibilities of what the user might have meant.
     //
-    TypeSymbol* inaccessible_type = FindInaccessibleType(access -> NameCast());
+    AstName* ast_name = access -> NameCast();
+    TypeSymbol* inaccessible_type = ast_name -> base_opt
+        ? 0 : FindInaccessibleType(ast_name);
     VariableSymbol* variable = FindMisspelledVariableName(type, access);
     if (variable)
     {
@@ -1409,7 +1411,7 @@ void Semantic::ReportVariableNotFound(AstExpression* access, TypeSymbol* type)
         //
         // There is an inaccessible type of the same name.
         //
-        ReportTypeInaccessible(access -> NameCast(), inaccessible_type);
+        ReportTypeInaccessible(ast_name, inaccessible_type);
     }
     else if (access -> symbol && access -> symbol -> PackageCast())
     {
