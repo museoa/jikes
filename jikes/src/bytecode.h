@@ -807,7 +807,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     int  GenerateClassAccess(AstFieldAccess *, bool);
     void GenerateClassAccessMethod(MethodSymbol *);
     void GenerateAssertVariableInitializer(TypeSymbol *, VariableSymbol *);
-    void EmitCheckForNull(AstExpression *);
+    void EmitCheckForNull(AstExpression *expr, bool = true);
 
     //
     // Methods to process statements

@@ -1,5 +1,12 @@
 2002-08-02  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/bytecode.h (EmitCheckForNull):
+	* src/bytecode.cpp (EmitCheckForNull, EmitSuperInvocation),
+	(LoadVariable, EmitInstanceCreationExpression): Fix two corner
+	cases of null checks - bugs 2991, 3170.
+
+2002-08-02  Eric Blake  <ebb9@email.byu.edu>
+
 	Overhaul line ending and error message output. Solves bug 2879,
 	and makes errors more unified in appearance.
 	* src/gencode.java (IsNewline): Redefine.

@@ -4267,22 +4267,30 @@ void ByteCode::EmitCast(TypeSymbol *dest_type, TypeSymbol *source_type)
 }
 
 //
-// Emits the required check for null in a qualified instance creation or
-// super constructor call if the base expression can possibly be null.
+// Emits the required check for null in a qualified instance creation,
+// super constructor call, or constant instance variable reference, if the
+// base expression can possibly be null. It also emits the base expression.
+// In the case of anonymous classes, we emit an alternate expression (the
+// constructor parameter), after performing the null check on the qualifier
+// of the anonymous class instance creation expression.
 //
-void ByteCode::EmitCheckForNull(AstExpression *expression)
+void ByteCode::EmitCheckForNull(AstExpression *expression, bool need_value)
 {
     expression = StripNops(expression);
 
     if (expression -> Type() == control.null_type)
     {
         //
-        // It's already null, so throw it now. Adjust the stack, since the
-        // calling context does not realize that this will always complete
-        // abruptly, and expects the stack to be unchanged.
+        // It's guaranteed to be null, so cause any side effects, then throw
+        // the null already on the stack (which will make the VM correctly
+        // create and throw a NullPointerException). Adjust the stack if
+        // necessary, since the calling context does not realize that this
+        // will always complete abruptly.
         //
+        EmitExpression(expression, true);
         PutOp(OP_ATHROW);
-        ChangeStack(1);
+        if (need_value)
+            ChangeStack(1);
         return;
     }
     VariableSymbol *variable = expression -> symbol -> VariableCast();
@@ -4292,13 +4300,15 @@ void ByteCode::EmitCheckForNull(AstExpression *expression)
         (variable && variable -> IsSynthetic() &&
          variable -> Identity() == control.this0_name_symbol))
     {
+        EmitExpression(expression, need_value);
         return;
     }
     //
     // We did not bother checking for other guaranteed non-null conditions:
     // IsConstant(), string concats, and ArrayCreationExpressionCast(), since
-    // none of these can qualify a constructor invocation. If we get here, it
-    // is uncertain whether the expression can be null, so check, using:
+    // none of these can qualify a constructor invocation or a constant
+    // instance field reference. If we get here, it is uncertain whether the
+    // expression can be null, so check, using:
     //
     // ((Object) ref).getClass();
     //
@@ -4306,7 +4316,9 @@ void ByteCode::EmitCheckForNull(AstExpression *expression)
     // NullPointerException if invoked on null; and since it is final in
     // Object, we can be certain it has no side-effects.
     //
-    PutOp(OP_DUP);
+    EmitExpression(expression, true);
+    if (need_value)
+        PutOp(OP_DUP);
     PutOp(OP_INVOKEVIRTUAL);
     ChangeStack(1); // for returned value
     PutU2(RegisterLibraryMethodref(control.Object_getClassMethod()));
@@ -4331,14 +4343,21 @@ int ByteCode::EmitInstanceCreationExpression(AstClassInstanceCreationExpression 
     // variables, and finally an extra null argument, as needed.
     //
     int stack_words = 0;
+    int i = 0;
     if (expression -> base_opt)
     {
-        stack_words += EmitExpression(expression -> base_opt);
+        stack_words++;
         EmitCheckForNull(expression -> base_opt);
     }
-    for (int k = 0; k < expression -> NumArguments(); k++)
-        stack_words += EmitExpression(expression -> Argument(k));
-    for (int i = 0; i < expression -> NumLocalArguments(); i++)
+    if (expression -> Type() -> Anonymous() &&
+        expression -> Type() -> super -> EnclosingInstance())
+    {
+        stack_words++;
+        EmitCheckForNull(expression -> Argument(i++));
+    }
+    for ( ; i < expression -> NumArguments(); i++)
+        stack_words += EmitExpression(expression -> Argument(i));
+    for (i = 0; i < expression -> NumLocalArguments(); i++)
         stack_words += EmitExpression(expression -> LocalArgument(i));
     if (expression -> NeedsExtraNullArgument())
     {
@@ -5335,17 +5354,14 @@ void ByteCode::EmitSuperInvocation(AstSuperCall *super_call)
     int stack_words = 0; // words on stack needed for arguments
     if (super_call -> base_opt)
     {
-        stack_words += EmitExpression(super_call -> base_opt);
+        stack_words++;
         if (unit_type -> Anonymous())
         {
             //
-            // Special case - in the generated anonymous class constructor,
-            // the base of the super call is null only if the original base
-            // of the class instance creation expression is.
+            // Special case - the null check was done during the class instance
+            // creation, so we skip it here.
             //
-            AstClassInstanceCreationExpression *creation =
-                (AstClassInstanceCreationExpression *) unit_type -> declaration;
-            EmitCheckForNull(creation -> base_opt);
+            EmitExpression(super_call -> base_opt);
         }
         else EmitCheckForNull(super_call -> base_opt);
     }
@@ -5873,6 +5889,7 @@ int ByteCode::LoadVariable(VariableCategory kind, AstExpression *expr,
     expr = StripNops(expr);
     VariableSymbol *sym = (VariableSymbol *) expr -> symbol;
     TypeSymbol *expression_type = expr -> Type();
+    AstFieldAccess *field_access = expr -> FieldAccessCast();
     switch (kind)
     {
     case LHS_LOCAL:
@@ -5920,12 +5937,11 @@ int ByteCode::LoadVariable(VariableCategory kind, AstExpression *expr,
             }
             assert(false && "local variable shadowing is messed up");
         }
-        if (expr -> FieldAccessCast() &&
-            ((AstFieldAccess *) expr) -> base -> Type() -> IsArray())
+        if (field_access && field_access -> base -> Type() -> IsArray())
         {
             assert(sym -> name_symbol == control.length_name_symbol &&
                    need_value);
-            EmitExpression(((AstFieldAccess *) expr) -> base);
+            EmitExpression(field_access -> base);
             PutOp(OP_ARRAYLENGTH);
             return 1;
         }
@@ -5937,12 +5953,8 @@ int ByteCode::LoadVariable(VariableCategory kind, AstExpression *expr,
             // evaluate it for side effects. Likewise, volatile fields must be
             // loaded because of the memory barrier side effect.
             //
-            if (expr -> FieldAccessCast())
-            {
-                AstFieldAccess *field_access = (AstFieldAccess *) expr;
-                if (! field_access -> IsClassAccess())
-                    EmitExpression(field_access -> base, false);
-            }
+            if (field_access && ! field_access -> IsClassAccess())
+                EmitExpression(field_access -> base, false);
             if (need_value || sym -> ACC_VOLATILE())
             {
                 if (sym -> initial_value)
@@ -5960,26 +5972,34 @@ int ByteCode::LoadVariable(VariableCategory kind, AstExpression *expr,
         }
         else
         {
-            if (expr -> FieldAccessCast())
-                EmitExpression(((AstFieldAccess *) expr) -> base);
-            else PutOp(OP_ALOAD_0); // get address of "this"
+            if (sym -> initial_value)
+            {
+                //
+                // Inline constants without referring to the field. However, we
+                // must still check for null.
+                //
+                if (field_access)
+                    EmitCheckForNull(field_access -> base, false);
+                if (need_value)
+                {
+                    LoadLiteral(sym -> initial_value, expression_type);
+                    return GetTypeWords(expression_type);
+                }
+                return 0;
+            }
+            if (field_access)
+                EmitExpression(field_access -> base);
+            else PutOp(OP_ALOAD_0);
             PutOp(OP_GETFIELD);
         }
         if (control.IsDoubleWordType(expression_type))
             ChangeStack(1);
         PutU2(RegisterFieldref(VariableTypeResolution(expr, sym), sym));
 
-        if (! need_value || sym -> initial_value)
+        if (! need_value)
         {
             PutOp(control.IsDoubleWordType(expression_type) ? OP_POP2 : OP_POP);
-            if (! need_value)
-                return 0;
-            //
-            // Now that we have checked for null, discard the dynamic result and
-            // replace it with the inlined constant.
-            //
-            assert(! sym -> ACC_STATIC());
-            LoadLiteral(sym -> initial_value, expression_type);
+            return 0;
         }
         break;
     default:
