@@ -47,9 +47,7 @@
         <TD COLSPAN=2><HR></TD>
       </TR><TR VALIGN="MIDDLE">
         <TD ALIGN="RIGHT"><a href="http://fedora.redhat.com/"><IMG SRC="images/fedora.png" alt="" BORDER=0 HEIGHT=40 WIDTH=110></A></TD>
-        <TD ALIGN="LEFT" ><a href="http://fedora.redhat.com/">Fedora</a> - (<small>in <a href="http://download.fedora.redhat.com/pub/fedora/linux/extras/">extras</a></small)</TD>
-
-http://fedora.redhat.com/images/header-fedora_logo.png
+        <TD ALIGN="LEFT" ><a href="http://fedora.redhat.com/">Fedora</a> - (<small>in <a href="http://download.fedora.redhat.com/pub/fedora/linux/extras/">extras</a></small>)</TD>
       <!-- RH has removed jikes; ergo, jikes will remove RH... seems fair /TR><TR>
         <TD COLSPAN=2><HR></TD>
       </TR><TR VALIGN="MIDDLE">
