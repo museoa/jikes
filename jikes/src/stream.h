@@ -62,6 +62,7 @@ public:
         INVALID_HEX_CONSTANT,
         INVALID_UNICODE_ESCAPE,
         INVALID_ESCAPE_SEQUENCE,
+        LAST_CHARACTER_NOT_NEWLINE, // pedantic only
         DEPRECATED_IDENTIFIER_ASSERT, // from here, these are warnings only
         DOLLAR_IN_IDENTIFIER
     };

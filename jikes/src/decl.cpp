@@ -732,6 +732,7 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration *class_declaration)
     TypeSymbol *type = class_declaration -> semantic_environment -> Type();
 
     assert(! type -> HeaderProcessed() || type -> Bad());
+    type -> MarkHeaderProcessed();
     if (type -> Bad())
         return;
 
@@ -758,6 +759,18 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration *class_declaration)
     {
         TypeSymbol *super_type = MustFindType(class_declaration -> super_opt);
         assert(! super_type -> SourcePending());
+        if (! super_type -> HeaderProcessed())
+        {
+            AstClassDeclaration *class_decl =
+                super_type -> declaration -> ClassDeclarationCast();
+            AstInterfaceDeclaration *interface_decl =
+                super_type -> declaration -> InterfaceDeclarationCast();
+            if (class_decl)
+                ProcessTypeHeaders(class_decl);
+            else if (interface_decl)
+                ProcessTypeHeaders(interface_decl);
+            else assert(false && "supertype not processed");
+        }
         if (control.option.deprecation && state_stack.Size() == 0 &&
             super_type -> IsDeprecated() && ! type -> IsDeprecated())
         {
@@ -821,7 +834,6 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration *class_declaration)
                        type -> ContainingPackage() -> PackageName(),
                        type -> ExternalName());
     }
-    type -> MarkHeaderProcessed();
 }
 
 
@@ -830,6 +842,7 @@ void Semantic::ProcessTypeHeader(AstInterfaceDeclaration *interface_declaration)
     TypeSymbol *type = interface_declaration -> semantic_environment -> Type();
 
     assert(! type -> HeaderProcessed() || type -> Bad());
+    type -> MarkHeaderProcessed();
 
     //
     // Although interfaces do not have a superclass in source code, in
@@ -853,7 +866,6 @@ void Semantic::ProcessTypeHeader(AstInterfaceDeclaration *interface_declaration)
                        type -> ContainingPackage() -> PackageName(),
                        type -> ExternalName());
     }
-    type -> MarkHeaderProcessed();
 }
 
 
@@ -862,6 +874,18 @@ void Semantic::ProcessInterface(TypeSymbol *base_type, AstExpression *name)
     TypeSymbol *interf = MustFindType(name);
 
     assert(! interf -> SourcePending());
+    if (! interf -> HeaderProcessed())
+    {
+        AstClassDeclaration *class_decl =
+            interf -> declaration -> ClassDeclarationCast();
+        AstInterfaceDeclaration *interface_decl =
+            interf -> declaration -> InterfaceDeclarationCast();
+        if (class_decl)
+            ProcessTypeHeaders(class_decl);
+        else if (interface_decl)
+            ProcessTypeHeaders(interface_decl);
+        else assert(false && "supertype not processed");
+    }
 
     if (control.option.deprecation && state_stack.Size() == 0 &&
         interf -> IsDeprecated() && ! base_type -> IsDeprecated())
@@ -924,6 +948,8 @@ void Semantic::ProcessTypeHeaders(AstClassDeclaration *class_declaration)
 {
     TypeSymbol *type = class_declaration -> semantic_environment -> Type();
 
+    if (type -> HeaderProcessed())
+        return; // Possible if a subclass was declared in the same file.
     ProcessTypeHeader(class_declaration);
     state_stack.Push(class_declaration -> semantic_environment);
     AstClassBody *class_body = class_declaration -> class_body;
@@ -949,6 +975,8 @@ void Semantic::ProcessTypeHeaders(AstInterfaceDeclaration *interface_declaration
 {
     TypeSymbol *type = interface_declaration -> semantic_environment -> Type();
 
+    if (type -> HeaderProcessed())
+        return; // Possible if a subclass was declared in the same file.
     ProcessTypeHeader(interface_declaration);
     state_stack.Push(interface_declaration -> semantic_environment);
     for (int i = 0; i < interface_declaration -> NumNestedClasses(); i++)
@@ -1123,7 +1151,7 @@ TypeSymbol *Semantic::FindTypeInLayer(Ast *name, SymbolSet &inner_types)
                                     field_access -> identifier_token);
             }
             else if (type -> SourcePending())
-                 control.ProcessHeaders(type -> file_symbol);
+                control.ProcessHeaders(type -> file_symbol);
 
             //
             //
@@ -1918,7 +1946,7 @@ void Semantic::ProcessPackageOrType(AstExpression *name)
                                     field_access -> identifier_token);
             }
             else if (type -> SourcePending())
-                 control.ProcessHeaders(type -> file_symbol);
+                control.ProcessHeaders(type -> file_symbol);
 
             //
             // If the field access was resolved into a type, then save it.
@@ -2022,7 +2050,7 @@ TypeSymbol *Semantic::FindSimpleNameType(PackageSymbol *package,
     if (type)
     {
         if (type -> SourcePending())
-             control.ProcessHeaders(type -> file_symbol);
+            control.ProcessHeaders(type -> file_symbol);
     }
     else
     {

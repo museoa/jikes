@@ -419,7 +419,7 @@ void Scanner::ScanSlashComment()
     // end in U_CARRIAGE_RETURN, U_NULL; and that we changed all CR to LF
     // within the file.
     //
-    unsigned location = cursor - lex -> InputBuffer();
+    // unsigned location = cursor - lex -> InputBuffer();
 #ifdef JIKES_DEBUG
     LexStream::Comment *current_comment = NULL;
     if (control.option.debug_comments)

@@ -24,9 +24,8 @@ namespace Jikes { // Open namespace Jikes block
 JikesError::JikesErrorSeverity StreamError::getSeverity()
 {
     // Most Lexical errors are ERRORs.
-    return kind >= StreamError::DEPRECATED_IDENTIFIER_ASSERT
-        ? JikesError::JIKES_WARNING
-        : JikesError::JIKES_ERROR;
+    return kind >= StreamError::LAST_CHARACTER_NOT_NEWLINE
+        ? JikesError::JIKES_WARNING : JikesError::JIKES_ERROR;
 }
 
 const char *StreamError::getFileName()
@@ -59,6 +58,9 @@ const wchar_t *StreamError::getErrorMessage()
         return L"Invalid unicode escape character.";
     case INVALID_ESCAPE_SEQUENCE:
         return L"Invalid escape sequence.";
+    case LAST_CHARACTER_NOT_NEWLINE:
+        return L"While not necessary, it is a good idea to end a file with a "
+            L"line terminator.";
     case DEPRECATED_IDENTIFIER_ASSERT:
         return L"The use of \"assert\" as an identifier is deprecated,"
             L" as it is now a keyword. Use -source 1.4 if you intended "
@@ -908,6 +910,13 @@ void LexStream::ProcessInputAscii(const char *buffer, long filesize)
     //
     if (*input_ptr == U_CTL_Z)
         input_ptr--;
+    if (initial_reading_of_input && control.option.pedantic &&
+        *input_ptr != U_LINE_FEED)
+    {
+        ReportMessage(StreamError::LAST_CHARACTER_NOT_NEWLINE,
+                      (unsigned) (input_ptr - input_buffer),
+                      (unsigned) (input_ptr - input_buffer));
+    }
     *(++input_ptr) = U_CARRIAGE_RETURN;
     *(++input_ptr) = U_NULL;
     input_buffer_length = input_ptr - input_buffer;
@@ -1153,6 +1162,13 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
     //
     if (*input_ptr == U_CTL_Z)
         input_ptr--;
+    if (initial_reading_of_input && control.option.pedantic &&
+        *input_ptr != U_LINE_FEED)
+    {
+        ReportMessage(StreamError::LAST_CHARACTER_NOT_NEWLINE,
+                      (unsigned) (input_ptr - input_buffer),
+                      (unsigned) (input_ptr - input_buffer));
+    }
     *(++input_ptr) = U_CARRIAGE_RETURN;
     *(++input_ptr) = U_NULL;
     input_buffer_length = input_ptr - input_buffer;

@@ -1,3 +1,13 @@
+2002-08-26  Eric B Blake  <eblake@ee.byu.edu>
+
+	* src/decl.cpp (ProcessTypeHeader, ProcessInterface),
+	(ProcessTypeHeaders): Fix inner classes subclassing something in
+	the same .java file - bug 3202.
+	* src/scanner.cpp (ScanSlashComment): Comment dead code.
+	* src/stream.h (LAST_CHARACTER_NOT_NEWLINE): New warning.
+	* src/stream.cpp (ProcessInputAscii, ProcessInputUnicode): Give
+	pedantic warning if file doesn't end in \n (or its variants).
+
 2002-08-22  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/scanner.cpp (ScanSlashComment): Revert change that gave
