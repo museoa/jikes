@@ -432,6 +432,10 @@ Coutput << "    slot " << n << " contains " << num << " element(s)\n";
 if (hash_size < total)
     total = total;
 */
+
+#ifdef TEST
+    delete [] base;
+#endif
 }
 
 
