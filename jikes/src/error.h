@@ -150,7 +150,6 @@ class SemanticError
         INVALID_CONSTRUCTOR_MODIFIER,
         INVALID_CONSTANT_MODIFIER,
         UNINITIALIZED_FIELD,
-        PARENT_TYPE_IN_UNNAMED_PACKAGE,
         RECOMPILATION,
         TYPE_NOT_FOUND,
         IMPORT_FROM_UNNAMED_PACKAGE,
@@ -225,11 +224,13 @@ class SemanticError
         DUPLICATE_CASE_VALUE,
         MISPLACED_THIS_EXPRESSION,
         MISPLACED_SUPER_EXPRESSION,
-        TARGET_VARIABLE_IS_FINAL,
-        FINAL_VARIABLE_TARGET_IN_LOOP,
+        VARIABLE_NOT_DEFINITELY_UNASSIGNED,
+        VARIABLE_NOT_DEFINITELY_UNASSIGNED_IN_LOOP,
+        FINAL_VARIABLE_NOT_BLANK,
         UNINITIALIZED_FINAL_VARIABLE,
         UNINITIALIZED_STATIC_FINAL_VARIABLE,
         UNINITIALIZED_FINAL_VARIABLE_IN_CONSTRUCTOR,
+        UNINITIALIZED_FINAL_VARIABLE_IN_INTERFACE,
         INIT_SCALAR_WITH_ARRAY,
         INIT_ARRAY_WITH_SCALAR,
         INVALID_BYTE_VALUE,
@@ -241,6 +242,7 @@ class SemanticError
         INVALID_DOUBLE_VALUE,
         INVALID_STRING_VALUE,
         RETURN_STATEMENT_IN_INITIALIZER,
+        ABRUPT_INITIALIZER,
         MISPLACED_RETURN_WITH_EXPRESSION,
         MISPLACED_RETURN_WITH_NO_EXPRESSION,
         MISMATCHED_RETURN_AND_METHOD_TYPE,
@@ -457,7 +459,6 @@ private:
     static wchar_t *PrintINVALID_CONSTRUCTOR_MODIFIER(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINVALID_CONSTANT_MODIFIER(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNINITIALIZED_FIELD(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintPARENT_TYPE_IN_UNNAMED_PACKAGE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintRECOMPILATION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintTYPE_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintIMPORT_FROM_UNNAMED_PACKAGE(ErrorInfo &, LexStream *, Control &);
@@ -532,11 +533,13 @@ private:
     static wchar_t *PrintDUPLICATE_CASE_VALUE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISPLACED_THIS_EXPRESSION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISPLACED_SUPER_EXPRESSION(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintTARGET_VARIABLE_IS_FINAL(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintFINAL_VARIABLE_TARGET_IN_LOOP(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintVARIABLE_NOT_DEFINITELY_UNASSIGNED(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintVARIABLE_NOT_DEFINITELY_UNASSIGNED_IN_LOOP(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintFINAL_VARIABLE_NOT_BLANK(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNINITIALIZED_FINAL_VARIABLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNINITIALIZED_STATIC_FINAL_VARIABLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNINITIALIZED_FINAL_VARIABLE_IN_CONSTRUCTOR(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintUNINITIALIZED_FINAL_VARIABLE_IN_INTERFACE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINIT_SCALAR_WITH_ARRAY(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINIT_ARRAY_WITH_SCALAR(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINVALID_BYTE_VALUE(ErrorInfo &, LexStream *, Control &);
@@ -548,6 +551,7 @@ private:
     static wchar_t *PrintINVALID_DOUBLE_VALUE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINVALID_STRING_VALUE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintRETURN_STATEMENT_IN_INITIALIZER(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintABRUPT_INITIALIZER(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISPLACED_RETURN_WITH_EXPRESSION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISPLACED_RETURN_WITH_NO_EXPRESSION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISMATCHED_RETURN_AND_METHOD_TYPE(ErrorInfo &, LexStream *, Control &);

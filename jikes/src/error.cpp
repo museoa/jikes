@@ -448,7 +448,6 @@ void SemanticError::StaticInitializer()
     warning[RECOMMENDED_MODIFIER_ORDER] = 1;
     warning[OBSOLESCENT_BRACKETS] = 1;
     warning[NO_TYPES] = 1;
-    warning[PARENT_TYPE_IN_UNNAMED_PACKAGE] = 1;
 
     warning[DEPRECATED_TYPE] = 1;
     warning[DEPRECATED_FIELD] = 1;
@@ -482,13 +481,9 @@ void SemanticError::StaticInitializer()
     warning[ZERO_DIVIDE_CAUTION] = 2;
 
 //
-// TODO: Let these conditions be flagged as errors now.
+// TODO: Let this condition be flagged as errors now.
 //
 //    warning[UNREACHABLE_CATCH_CLAUSE] = 2;
-//    warning[VARIABLE_NOT_DEFINITELY_ASSIGNED] = 2;
-//    warning[TARGET_VARIABLE_IS_FINAL] = 2;
-//    warning[FINAL_VARIABLE_TARGET_IN_LOOP] = 2;
-//    warning[VOID_TO_STRING] = 2;
 //
 
 #ifdef JIKES_DEBUG
@@ -551,7 +546,6 @@ void SemanticError::StaticInitializer()
     print_message[INVALID_CONSTRUCTOR_MODIFIER] = PrintINVALID_CONSTRUCTOR_MODIFIER;
     print_message[INVALID_CONSTANT_MODIFIER] = PrintINVALID_CONSTANT_MODIFIER;
     print_message[UNINITIALIZED_FIELD] = PrintUNINITIALIZED_FIELD;
-    print_message[PARENT_TYPE_IN_UNNAMED_PACKAGE] = PrintPARENT_TYPE_IN_UNNAMED_PACKAGE;
     print_message[RECOMPILATION] = PrintRECOMPILATION;
     print_message[TYPE_NOT_FOUND] = PrintTYPE_NOT_FOUND;
     print_message[IMPORT_FROM_UNNAMED_PACKAGE] = PrintIMPORT_FROM_UNNAMED_PACKAGE;
@@ -626,11 +620,13 @@ void SemanticError::StaticInitializer()
     print_message[DUPLICATE_CASE_VALUE] = PrintDUPLICATE_CASE_VALUE;
     print_message[MISPLACED_THIS_EXPRESSION] = PrintMISPLACED_THIS_EXPRESSION;
     print_message[MISPLACED_SUPER_EXPRESSION] = PrintMISPLACED_SUPER_EXPRESSION;
-    print_message[TARGET_VARIABLE_IS_FINAL] = PrintTARGET_VARIABLE_IS_FINAL;
-    print_message[FINAL_VARIABLE_TARGET_IN_LOOP] = PrintFINAL_VARIABLE_TARGET_IN_LOOP;
+    print_message[VARIABLE_NOT_DEFINITELY_UNASSIGNED] = PrintVARIABLE_NOT_DEFINITELY_UNASSIGNED;
+    print_message[VARIABLE_NOT_DEFINITELY_UNASSIGNED_IN_LOOP] = PrintVARIABLE_NOT_DEFINITELY_UNASSIGNED_IN_LOOP;
+    print_message[FINAL_VARIABLE_NOT_BLANK] = PrintFINAL_VARIABLE_NOT_BLANK;
     print_message[UNINITIALIZED_FINAL_VARIABLE] = PrintUNINITIALIZED_FINAL_VARIABLE;
     print_message[UNINITIALIZED_STATIC_FINAL_VARIABLE] = PrintUNINITIALIZED_STATIC_FINAL_VARIABLE;
     print_message[UNINITIALIZED_FINAL_VARIABLE_IN_CONSTRUCTOR] = PrintUNINITIALIZED_FINAL_VARIABLE_IN_CONSTRUCTOR;
+    print_message[UNINITIALIZED_FINAL_VARIABLE_IN_INTERFACE] = PrintUNINITIALIZED_FINAL_VARIABLE_IN_INTERFACE;
     print_message[INIT_SCALAR_WITH_ARRAY] = PrintINIT_SCALAR_WITH_ARRAY;
     print_message[INIT_ARRAY_WITH_SCALAR] = PrintINIT_ARRAY_WITH_SCALAR;
     print_message[INVALID_BYTE_VALUE] = PrintINVALID_BYTE_VALUE;
@@ -642,6 +638,7 @@ void SemanticError::StaticInitializer()
     print_message[INVALID_DOUBLE_VALUE] = PrintINVALID_DOUBLE_VALUE;
     print_message[INVALID_STRING_VALUE] = PrintINVALID_STRING_VALUE;
     print_message[RETURN_STATEMENT_IN_INITIALIZER] = PrintRETURN_STATEMENT_IN_INITIALIZER;
+    print_message[ABRUPT_INITIALIZER] = PrintABRUPT_INITIALIZER;
     print_message[MISPLACED_RETURN_WITH_EXPRESSION] = PrintMISPLACED_RETURN_WITH_EXPRESSION;
     print_message[MISPLACED_RETURN_WITH_NO_EXPRESSION] = PrintMISPLACED_RETURN_WITH_NO_EXPRESSION;
     print_message[MISMATCHED_RETURN_AND_METHOD_TYPE] = PrintMISMATCHED_RETURN_AND_METHOD_TYPE;
@@ -1778,22 +1775,6 @@ wchar_t *SemanticError::PrintINVALID_CONSTANT_MODIFIER(ErrorInfo &err,
 }
 
 
-wchar_t *SemanticError::PrintPARENT_TYPE_IN_UNNAMED_PACKAGE(ErrorInfo &err,
-                                                            LexStream *lex_stream,
-                                                            Control &control)
-{
-    ErrorString s;
-
-    s << "The type associated with this construct is (or depends on) the "
-      << "type ";
-    if (NotDot(err.insert1))
-        s << err.insert1 << "/";
-    s << err.insert2 << " which is contained in an unnamed package.";
-
-    return s.Array();
-}
-
-
 wchar_t *SemanticError::PrintRECOMPILATION(ErrorInfo &err,
                                            LexStream *lex_stream,
                                            Control &control)
@@ -2166,7 +2147,7 @@ wchar_t *SemanticError::PrintTYPE_NOT_THROWABLE(ErrorInfo &err,
     s << "The type \"";
     if (NotDot(err.insert1))
         s << err.insert1 << "/";
-    s << err.insert2 << "\" is not a subclass of \"Throwable\".";
+    s << err.insert2 << "\" is not a subclass of \"java.lang.Throwable\".";
 
     return s.Array();
 }
@@ -2179,7 +2160,7 @@ wchar_t *SemanticError::PrintCATCH_PRIMITIVE_TYPE(ErrorInfo &err,
     ErrorString s;
 
     s << "A primitive type cannot be used to declare a catch clause "
-      << "parameter - the type Error is assumed.";
+      << "parameter.";
 
     return s.Array();
 }
@@ -2192,7 +2173,7 @@ wchar_t *SemanticError::PrintCATCH_ARRAY_TYPE(ErrorInfo &err,
     ErrorString s;
 
     s << "A array type cannot be used to declare a catch clause "
-      << "parameter - the type Error is assumed.";
+      << "parameter.";
 
     return s.Array();
 }
@@ -2466,8 +2447,8 @@ wchar_t *SemanticError::PrintNAME_NOT_CLASS_VARIABLE(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "The name \"" << err.insert1
-      << "\" does not denote a class (static) variable.";
+    s << "The field \"" << err.insert1
+      << "\" is not static, and cannot be accessed in this static context.";
 
     return s.Array();
 }
@@ -2492,7 +2473,7 @@ wchar_t *SemanticError::PrintMETHOD_NOT_CLASS_METHOD(ErrorInfo &err,
     ErrorString s;
 
     s << "The method \"" << err.insert1
-      << "\" does not denote a class method.";
+      << "\" is not static, and cannot be accessed in this static context.";
 
     return s.Array();
 }
@@ -2872,31 +2853,41 @@ wchar_t *SemanticError::PrintMISPLACED_SUPER_EXPRESSION(ErrorInfo &err,
 }
 
 
-wchar_t *SemanticError::PrintFINAL_VARIABLE_TARGET_IN_LOOP(ErrorInfo &err,
-                                                           LexStream *lex_stream,
-                                                           Control &control)
+wchar_t *SemanticError::PrintVARIABLE_NOT_DEFINITELY_UNASSIGNED_IN_LOOP(ErrorInfo &err,
+                                                                        LexStream *lex_stream,
+                                                                        Control &control)
 {
     ErrorString s;
 
-    s << "Possible attempt to assign a value to a final variable \""
-      << err.insert1
-      << "\", within the body of a loop that may execute more than once.";
+    s << "The blank final variable \"" << err.insert1
+      << "\" cannot be assigned within the body of a loop that may execute "
+      << "more than once.";
 
     return s.Array();
 }
 
 
-wchar_t *SemanticError::PrintTARGET_VARIABLE_IS_FINAL(ErrorInfo &err,
+wchar_t *SemanticError::PrintVARIABLE_NOT_DEFINITELY_UNASSIGNED(ErrorInfo &err,
+                                                                LexStream *lex_stream,
+                                                                Control &control)
+{
+    ErrorString s;
+
+    s << "Possible attempt to reassign a value to the blank final variable \""
+      << err.insert1 << "\".";
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintFINAL_VARIABLE_NOT_BLANK(ErrorInfo &err,
                                                       LexStream *lex_stream,
                                                       Control &control)
 {
     ErrorString s;
 
-    s << "Possible attempt to reassign a value to the final variable \""
-      << err.insert1 << "\"";
-    if (err.insert2)
-        s << ". The other assignement was at location " << err.insert2;
-    s << '.';
+    s << "The final variable \"" << err.insert1
+      << "\" is not a blank final in this context, so it may not be assigned.";
 
     return s.Array();
 }
@@ -2908,7 +2899,9 @@ wchar_t *SemanticError::PrintUNINITIALIZED_FINAL_VARIABLE(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "A final variable must be initialized.";
+    s << "The blank final field \"" << err.insert1
+      << "\" must be initialized in an instance initializer block or instance "
+      << "field initializer, since this class has no explicit constructor.";
 
     return s.Array();
 }
@@ -2920,9 +2913,9 @@ wchar_t *SemanticError::PrintUNINITIALIZED_STATIC_FINAL_VARIABLE(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "A blank class final variable must be initialized in a static "
-      << "initializer block. Assuming that it has been initialized to avoid "
-      << "further messages.";
+    s << "The blank static final field \"" << err.insert1
+      << "\" must be initialized in a static initializer block or static "
+      << "field initializer.";
 
     return s.Array();
 }
@@ -2934,8 +2927,23 @@ wchar_t *SemanticError::PrintUNINITIALIZED_FINAL_VARIABLE_IN_CONSTRUCTOR(ErrorIn
 {
     ErrorString s;
 
-    s << "The blank final field \"this." << err.insert1
-      << "\" is not definitely assigned a value in this constructor.";
+    s << "The blank final field \"" << err.insert1
+      << "\" must be initialized in this and every constructor which does not "
+      << "call a form of this(); or else once in an instance initializer "
+      << "block or instance field initializer.";
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintUNINITIALIZED_FINAL_VARIABLE_IN_INTERFACE(ErrorInfo &err,
+                                                                       LexStream *lex_stream,
+                                                                       Control &control)
+{
+    ErrorString s;
+
+    s << "The interface field \"" << err.insert1
+      << "\" must have an initializer.";
 
     return s.Array();
 }
@@ -3085,6 +3093,18 @@ wchar_t *SemanticError::PrintRETURN_STATEMENT_IN_INITIALIZER(ErrorInfo &err,
 }
 
 
+wchar_t *SemanticError::PrintABRUPT_INITIALIZER(ErrorInfo &err,
+                                                LexStream *lex_stream,
+                                                Control &control)
+{
+    ErrorString s;
+
+    s << "An initializer block must be able to complete normally.";
+
+    return s.Array();
+}
+
+
 wchar_t *SemanticError::PrintMISPLACED_RETURN_WITH_EXPRESSION(ErrorInfo &err,
                                                               LexStream *lex_stream,
                                                               Control &control)
@@ -3135,8 +3155,8 @@ wchar_t *SemanticError::PrintEXPRESSION_NOT_THROWABLE(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "The expression in a throw statement must denote a variable or "
-      << "value which is assignable to the type Throwable.";
+    s << "The expression in a throw statement must be assignable to the "
+      << "type \"java.lang.Throwable.\"";
 
     return s.Array();
 }
@@ -3157,7 +3177,8 @@ wchar_t *SemanticError::PrintBAD_THROWABLE_EXPRESSION_IN_TRY(ErrorInfo &err,
         s << " nor is it assignable to an exception in the throws clause of "
           << "the enclosing method or constructor \"" << err.insert3 << "\";";
     }
-    s << " nor is it a subclass of RuntimeException or Error.";
+    s << " nor is it a subclass of java.lang.RuntimeException or "
+      << "java.lang.Error.";
 
     return s.Array();
 }
@@ -3175,7 +3196,8 @@ wchar_t *SemanticError::PrintBAD_THROWABLE_EXPRESSION_IN_METHOD(ErrorInfo &err,
     s << err.insert2 << "\", is not assignable to an exception in the "
       << "throws clause of the enclosing method or constructor \""
       << err.insert3
-      << "\"; nor is it a subclass of RuntimeException or Error.";
+      << "\"; nor is it a subclass of java.lang.RuntimeException or "
+      << "java.lang.Error.";
 
     return s.Array();
 }
@@ -3190,7 +3212,8 @@ wchar_t *SemanticError::PrintBAD_THROWABLE_EXPRESSION(ErrorInfo &err,
     s << "The type of the expression in this throw statement, \"";
     if (NotDot(err.insert1))
         s << err.insert1 << '/';
-    s << err.insert2 << "\", is not a subclass of RuntimeException or Error.";
+    s << err.insert2 << "\", is not a subclass of java.lang.RuntimeException "
+      << "or java.lang.Error.";
 
     return s.Array();
 }
@@ -4035,7 +4058,7 @@ wchar_t *SemanticError::PrintUNREACHABLE_DEFAULT_CATCH_CLAUSE(ErrorInfo &err,
 
     s << "This try block cannot throw a \"checked exception\" (JLS section "
       << "14.7) that can be caught here. You may have intended to catch a "
-      << "RuntimeException instead of an Exception.";
+      << "java.lang.RuntimeException instead of a java.lang.Exception.";
 
     return s.Array();
 }
@@ -4600,7 +4623,7 @@ wchar_t *SemanticError::PrintVOID_TO_STRING(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "Attempt to convert an expression of type void into a String.";
+    s << "Attempt to convert a void expression into java.lang.String.";
 
     return s.Array();
 }

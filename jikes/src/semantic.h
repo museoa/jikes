@@ -483,8 +483,6 @@ public:
     {
         if (info.Length() > 0)
             info.Reset(info.Length() - 1);
-
-        return;
     }
 
     int Size() { return info.Length(); }
@@ -750,8 +748,6 @@ public:
         //
         delete error;
         error = NULL;
-
-        return;
     }
 
     TypeSymbol *ProcessSignature(TypeSymbol *, const char *, LexStream::TokenIndex);
@@ -1056,8 +1052,6 @@ private:
         //
         if (expr -> symbol == control.String() && (! expr -> IsConstant()))
             control.Utf8_pool.CheckStringConstant(expr);
-
-        return;
     }
 
     void ProcessLocalVariableDeclarationStatement(Ast *);
@@ -1157,39 +1151,36 @@ public:
     static inline u4 GetAndSkipU4(const char *&);
     static inline void Skip(const char *&, int);
 
-    inline void AddDependence(TypeSymbol *, TypeSymbol *, LexStream::TokenIndex, bool = false);
+    inline void AddDependence(TypeSymbol *, TypeSymbol *,
+                              LexStream::TokenIndex, bool = false);
     inline void SetObjectSuperType(TypeSymbol *, LexStream::TokenIndex);
     inline void AddStringConversionDependence(TypeSymbol *, LexStream::TokenIndex);
 };
 
 
-inline void Semantic::AddDependence(TypeSymbol *base_type_, TypeSymbol *parent_type_, LexStream::TokenIndex tok, bool static_access)
+inline void Semantic::AddDependence(TypeSymbol *base_type,
+                                    TypeSymbol *parent_type,
+                                    LexStream::TokenIndex tok,
+                                    bool static_access)
 {
-    if (base_type_ != control.no_type)
+    if (base_type != control.no_type)
     {
-        TypeSymbol *base_type = base_type_ -> outermost_type,
-                   *parent_type = parent_type_ -> outermost_type;
+        base_type = base_type -> outermost_type;
+        parent_type = parent_type -> outermost_type;
 
         parent_type -> dependents -> AddElement(base_type);
         if (static_access)
              base_type -> static_parents -> AddElement(parent_type);
         else base_type -> parents -> AddElement(parent_type);
 
-        if (control.option.pedantic)
-        {
-            if (parent_type -> ContainingPackage() == control.unnamed_package &&
-                base_type -> ContainingPackage() != control.unnamed_package)
-            {
-                ReportSemError(SemanticError::PARENT_TYPE_IN_UNNAMED_PACKAGE,
-                               tok,
-                               tok,
-                               parent_type_ -> ContainingPackage() -> PackageName(),
-                               parent_type_ -> ExternalName());
-            }
-        }
+        //
+        // It is not possible to import from the unnamed package, and without
+        // imports, it is impossible to reference a class in the unnamed
+        // package from a package.
+        //
+        assert(parent_type -> ContainingPackage() != control.unnamed_package ||
+               base_type -> ContainingPackage() == control.unnamed_package);
     }
-
-    return;
 }
 
 inline void Semantic::SetObjectSuperType(TypeSymbol *type, LexStream::TokenIndex tok)

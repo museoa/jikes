@@ -54,11 +54,13 @@ void Semantic::ProcessBlockStatements(AstBlock *block_body)
             block_body -> can_complete_normally = true;
 
         //
-        // If we have one or more unreachable statements that are contained in a
-        // reachable block then issue message. (If the enclosing block is not reachable
-        // the message will be issued later for the enclosing block.)
+        // If we have one or more unreachable statements that are contained in
+        // a reachable block then issue message. (If the enclosing block is
+        // not reachable the message will be issued later for the enclosing
+        // block.)
         //
-        if (first_unreachable_statement && LocalBlockStack().TopBlock() -> is_reachable)
+        if (first_unreachable_statement &&
+            LocalBlockStack().TopBlock() -> is_reachable)
         {
             if (first_unreachable_statement == statement)
             {
@@ -75,15 +77,14 @@ void Semantic::ProcessBlockStatements(AstBlock *block_body)
         }
 
         //
-        // If an enclosed block has a higher max_variable_index than the current block,
-        // update max_variable_index in the current_block, accordingly.
+        // If an enclosed block has a higher max_variable_index than the
+        // current block, update max_variable_index in the current_block,
+        // accordingly.
         //
         BlockSymbol *block = block_body -> block_symbol;
         if (block -> max_variable_index < LocalBlockStack().TopMaxEnclosedVariableIndex())
             block -> max_variable_index = LocalBlockStack().TopMaxEnclosedVariableIndex();
     }
-
-    return;
 }
 
 
@@ -94,13 +95,15 @@ void Semantic::ProcessBlock(Ast *stmt)
     AstBlock *enclosing_block = LocalBlockStack().TopBlock();
 
     //
-    // Guess that the number of elements will not exceed the number of statements + 3. The +3 takes into account
-    // one label + one ForInit declaration and one extra something else.
+    // Guess that the number of elements will not exceed the number of
+    // statements + 3. The +3 takes into account one label + one ForInit
+    // declaration and one extra something else.
     //
     int table_size = block_body -> NumStatements() + 3;
     BlockSymbol *block = LocalSymbolTable().Top() -> InsertBlockSymbol(table_size);
     //
-    // enclosing_block is not present only when we are processing the block of a static initializer
+    // enclosing_block is not present only when we are processing the block
+    // of a static initializer
     //
     block -> max_variable_index = (enclosing_block ? enclosing_block -> block_symbol -> max_variable_index : 1);
     LocalSymbolTable().Push(block -> Table());
@@ -152,7 +155,8 @@ void Semantic::ProcessBlock(Ast *stmt)
     LocalSymbolTable().Pop();
 
     //
-    // Update the information for the block that immediately encloses the current block.
+    // Update the information for the block that immediately encloses the
+    // current block.
     //
     if (enclosing_block)
     {
@@ -161,8 +165,6 @@ void Semantic::ProcessBlock(Ast *stmt)
     }
 
     block -> CompressSpace(); // space optimization
-
-    return;
 }
 
 
@@ -223,8 +225,6 @@ void Semantic::ProcessLocalVariableDeclarationStatement(Ast *stmt)
     // iff it is reachable.
     //
     local_decl -> can_complete_normally = local_decl -> is_reachable;
-
-    return;
 }
 
 
@@ -238,8 +238,6 @@ void Semantic::ProcessExpressionStatement(Ast *stmt)
     // An expression statement can complete normally iff it is reachable.
     //
     expression_statement -> can_complete_normally = expression_statement -> is_reachable;
-
-    return;
 }
 
 
@@ -269,13 +267,15 @@ void Semantic::ProcessSynchronizedStatement(Ast *stmt)
              *block_body = synchronized_statement -> block;
 
     //
-    // Synchronized blocks require one special local variable slot for the monitor.
-    // However, since a try-finally may require up to four slots, we reserve them
-    // all at this time.  Otherwise, the sequence {synchronized; variable declaration;
-    // try-finally} within the same enclosing block will cause a VerifyError.
-    // The VM should not care if some of these special slots are unused.
+    // Synchronized blocks require one special local variable slot for the
+    // monitor. However, since a try-finally may require up to four slots, we
+    // reserve them all at this time.  Otherwise, the sequence {synchronized;
+    // variable declaration; try-finally} within the same enclosing block will
+    // cause a VerifyError. The VM should not care if some of these special
+    // slots are unused.
     //
-    // TODO: Is it worth optimizing this and try-finally to avoid wasting variable slots?
+    // TODO: Is it worth optimizing this and try-finally to avoid wasting
+    // variable slots?
     //
     BlockSymbol *enclosing_block_symbol = enclosing_block -> block_symbol;
     if (enclosing_block_symbol -> try_or_synchronized_variable_index == 0) // first such statement encountered in enclosing block?
@@ -291,7 +291,8 @@ void Semantic::ProcessSynchronizedStatement(Ast *stmt)
     }
 
     //
-    // Guess that the number of elements will not exceed the number of statements + 3.
+    // Guess that the number of elements will not exceed the number of
+    // statements + 3.
     //
     BlockSymbol *block = LocalSymbolTable().Top() -> InsertBlockSymbol(block_body -> NumStatements() + 3);
     block -> max_variable_index = enclosing_block_symbol -> max_variable_index;
@@ -312,8 +313,6 @@ void Semantic::ProcessSynchronizedStatement(Ast *stmt)
     synchronized_statement -> can_complete_normally = synchronized_statement -> block -> can_complete_normally;
 
     block -> CompressSpace(); // space optimization
-
-    return;
 }
 
 
@@ -333,8 +332,9 @@ void Semantic::ProcessIfStatement(Ast *stmt)
     }
 
     //
-    // Recall that the parser ensures that the statements that appear in an if-statement
-    // (both the true and false statement) are enclosed in a block.
+    // Recall that the parser ensures that the statements that appear in an
+    // if-statement (both the true and false statement) are enclosed in a
+    // block.
     //
     if_statement -> true_statement -> is_reachable = if_statement -> is_reachable;
     ProcessBlock(if_statement -> true_statement);
@@ -348,8 +348,6 @@ void Semantic::ProcessIfStatement(Ast *stmt)
                                                 if_statement -> false_statement_opt -> can_complete_normally;
     }
     else if_statement -> can_complete_normally = if_statement -> is_reachable;
-
-    return;
 }
 
 
@@ -358,7 +356,8 @@ void Semantic::ProcessWhileStatement(Ast *stmt)
     AstWhileStatement *while_statement = (AstWhileStatement *) stmt;
 
     //
-    // Recall that each while statement is enclosed in a unique block by the parser
+    // Recall that each while statement is enclosed in a unique block by the
+    // parser
     //
     BreakableStatementStack().Push(LocalBlockStack().TopBlock());
     ContinuableStatementStack().Push(LocalBlockStack().TopBlock());
@@ -411,8 +410,6 @@ void Semantic::ProcessWhileStatement(Ast *stmt)
 
     BreakableStatementStack().Pop();
     ContinuableStatementStack().Pop();
-
-    return;
 }
 
 
@@ -436,7 +433,8 @@ void Semantic::ProcessForStatement(Ast *stmt)
         ProcessStatement(for_statement -> ForInitStatement(i));
 
     //
-    // Recall that each for statement is enclosed in a unique block by the parser
+    // Recall that each for statement is enclosed in a unique block by the
+    // parser
     //
     BreakableStatementStack().Push(LocalBlockStack().TopBlock());
     ContinuableStatementStack().Push(LocalBlockStack().TopBlock());
@@ -501,8 +499,6 @@ void Semantic::ProcessForStatement(Ast *stmt)
 
     BreakableStatementStack().Pop();
     ContinuableStatementStack().Pop();
-
-    return;
 }
 
 
@@ -513,7 +509,8 @@ void Semantic::ProcessSwitchStatement(Ast *stmt)
     AstBlock *enclosing_block = LocalBlockStack().TopBlock();
 
     //
-    // We estimate a size for the switch symbol table based on the number of lines in it.
+    // We estimate a size for the switch symbol table based on the number of
+    // lines in it.
     //
     AstBlock *block_body = switch_statement -> switch_block;
     BlockSymbol *block = LocalSymbolTable().Top() -> InsertBlockSymbol();
@@ -625,9 +622,10 @@ void Semantic::ProcessSwitchStatement(Ast *stmt)
         }
 
         //
-        // The parser ensures that a switch block statement always has one statement.
-        // When a switch block ends with a sequence of switch labels that are not followed
-        // by any executable statements, an artificial "empty" statement is added by the parser.
+        // The parser ensures that a switch block statement always has one
+        // statement. When a switch block ends with a sequence of switch
+        // labels that are not followed by any executable statements, an
+        // artificial "empty" statement is added by the parser.
         //
         assert(switch_block_statement -> NumStatements() > 0);
 
@@ -724,9 +722,10 @@ void Semantic::ProcessSwitchStatement(Ast *stmt)
     }
 
     //
-    // If an enclosed block has a higher max_variable_index than the current block,
-    // update max_variable_index in the current_block, accordingly.
-    // Also, update the information for the block that immediately encloses the current block.
+    // If an enclosed block has a higher max_variable_index than the current
+    // block, update max_variable_index in the current_block, accordingly.
+    // Also, update the information for the block that immediately encloses
+    // the current block.
     //
     if (block -> max_variable_index < LocalBlockStack().TopMaxEnclosedVariableIndex())
         block -> max_variable_index = LocalBlockStack().TopMaxEnclosedVariableIndex();
@@ -742,8 +741,6 @@ void Semantic::ProcessSwitchStatement(Ast *stmt)
     }
 
     block -> CompressSpace(); // space optimization
-
-    return;
 }
 
 
@@ -752,7 +749,8 @@ void Semantic::ProcessDoStatement(Ast *stmt)
     AstDoStatement *do_statement = (AstDoStatement *) stmt;
 
     //
-    // Recall that each Do statement is enclosed in a unique block by the parser
+    // Recall that each Do statement is enclosed in a unique block by the
+    // parser
     //
     BreakableStatementStack().Push(LocalBlockStack().TopBlock());
     ContinuableStatementStack().Push(LocalBlockStack().TopBlock());
@@ -779,12 +777,14 @@ void Semantic::ProcessDoStatement(Ast *stmt)
     }
 
     //
-    // A do statement can complete normally, iff at least one of the following is true:
-    //     1. The contained statement can complete normally and the condition expression
-    //        is not a constant expression with the value true
+    // A do statement can complete normally, iff at least one of the following
+    // is true:
+    //     1. The contained statement can complete normally and the condition
+    //        expression is not a constant expression with the value true
     //     2. There is a reachable break statement that exits the do statement
-    //        (This condition is true is the block that immediately encloses this do statement
-    //         can complete normally. See ProcessBreakStatement)
+    //        (This condition is true is the block that immediately encloses
+    //        this do statement can complete normally. See
+    //        ProcessBreakStatement)
     //
     AstBlock *block_body = (AstBlock *) BreakableStatementStack().Top();
     do_statement -> can_complete_normally = (enclosed_statement -> can_complete_normally && ((! literal) || literal -> value == 0)) ||
@@ -792,8 +792,6 @@ void Semantic::ProcessDoStatement(Ast *stmt)
 
     BreakableStatementStack().Pop();
     ContinuableStatementStack().Pop();
-
-    return;
 }
 
 
@@ -802,8 +800,8 @@ void Semantic::ProcessBreakStatement(Ast *stmt)
     AstBreakStatement *break_statement = (AstBreakStatement *) stmt;
 
     //
-    // Recall that it is possible to break out of any labeled statement even if it is not a
-    // do, for, while or switch statement.
+    // Recall that it is possible to break out of any labeled statement even
+    // if it is not a do, for, while or switch statement.
     //
     if (break_statement -> identifier_token_opt)
     {
@@ -845,8 +843,6 @@ void Semantic::ProcessBreakStatement(Ast *stmt)
                             break_statement -> LeftToken(),
                             break_statement -> RightToken());
     }
-
-    return;
 }
 
 
@@ -896,8 +892,9 @@ void Semantic::ProcessContinueStatement(Ast *stmt)
     }
 
     //
-    // If this is a valid continue statement, it is associated with a loop statement.
-    // Since the loop can be continued, its enclosed statement "can complete normally".
+    // If this is a valid continue statement, it is associated with a loop
+    // statement. Since the loop can be continued, its enclosed statement
+    // "can complete normally".
     //
     if (loop_statement)
     {
@@ -921,8 +918,6 @@ void Semantic::ProcessContinueStatement(Ast *stmt)
                            lex_stream -> NameString(continue_statement -> identifier_token_opt));
         }
     }
-
-    return;
 }
 
 
@@ -973,8 +968,6 @@ void Semantic::ProcessReturnStatement(Ast *stmt)
                        return_statement -> LeftToken(),
                        return_statement -> RightToken());
     }
-
-    return;
 }
 
 
@@ -987,16 +980,17 @@ bool Semantic::CatchableException(TypeSymbol *exception)
         return true;
 
     //
-    // Firstly, check the stack of try statements to see if the exception in question is catchable.
+    // Firstly, check the stack of try statements to see if the exception in
+    // question is catchable.
     //
     for (int i = TryStatementStack().Size() - 1; i >= 0; i--)
     {
         AstTryStatement *try_statement = (AstTryStatement *) TryStatementStack()[i];
 
         //
-        // If a try statement contains a finally clause that can complete abruptly
-        // then any exception that can reach it is assumed to be catchable.
-        // See Spec 11.3.
+        // If a try statement contains a finally clause that can complete
+        // abruptly then any exception that can reach it is assumed to be
+        // catchable. See Spec 11.3.
         //
         if (try_statement -> finally_clause_opt && (! try_statement -> finally_clause_opt -> block -> can_complete_normally))
             return true;
@@ -1096,8 +1090,6 @@ void Semantic::ProcessThrowStatement(Ast *stmt)
                             type -> ContainingPackage() -> PackageName(),
                             type -> ExternalName());
     }
-
-    return;
 }
 
 
@@ -1309,9 +1301,9 @@ void Semantic::ProcessTryStatement(Ast *stmt)
     //       and can throw an exception that is assignable to the parameter
     //       of the catch clause C.
     //
-    //     . There is no earlier catch block A in the try statement such that the
-    //       type of C's parameter is the same as or a subclass of the type of A's
-    //       parameter.
+    //     . There is no earlier catch block A in the try statement such that
+    //       the type of C's parameter is the same as or a subclass of the
+    //       type of A's parameter.
     //
     // Note that the use of the word assignable here is slightly misleading.
     // It does not mean assignable in the strict sense defined in section 5.2.
@@ -1328,8 +1320,9 @@ void Semantic::ProcessTryStatement(Ast *stmt)
     //
     //    . Convertible Exception:
     //      the type T of the parameter of the catch clause C is assignable to
-    //      the type S (T is a subclass of S) of an exception that can be thrown by
-    //      some expression or throw statement in the try block that is reachable.
+    //      the type S (T is a subclass of S) of an exception that can be
+    //      thrown by some expression or throw statement in the try block that
+    //      is reachable.
     //      
     //      This rule captures the idea that at run time an object declared to
     //      be of type S can actually be an instance of an object of type T in
@@ -1357,7 +1350,8 @@ void Semantic::ProcessTryStatement(Ast *stmt)
             }
 
             //
-            // No clause was found whose parameter can possibly accept this exception.
+            // No clause was found whose parameter can possibly accept this
+            // exception.
             //
             if ((catchable_exceptions.Length() + convertible_exceptions.Length()) == initial_length)
             {
@@ -1407,9 +1401,9 @@ void Semantic::ProcessTryStatement(Ast *stmt)
     if (TryExceptionTableStack().Top())
     {
         //
-        // First, remove all the thrown exceptions that are definitely caught by the
-        // enclosing try statement. Then, add the remaining ones to the set that must
-        // be caught by the immediately enclosing try statement.
+        // First, remove all the thrown exceptions that are definitely caught
+        // by the enclosing try statement. Then, add the remaining ones to the
+        // set that must be caught by the immediately enclosing try statement.
         //
         for (int i = 0; i < catchable_exceptions.Length(); i++)
             exception_set -> RemoveElement(catchable_exceptions[i]);
@@ -1423,8 +1417,6 @@ void Semantic::ProcessTryStatement(Ast *stmt)
     //
     if (try_statement -> finally_clause_opt && (! try_statement -> finally_clause_opt -> block -> can_complete_normally))
         try_statement -> can_complete_normally = false;
-
-    return;
 }
 
 
@@ -1474,8 +1466,6 @@ void Semantic::ProcessEmptyStatement(Ast *stmt)
     // An empty statement can complete normally iff it is reachable.
     //
     empty_statement -> can_complete_normally = empty_statement -> is_reachable;
-
-    return;
 }
 
 
@@ -1530,7 +1520,8 @@ void Semantic::ProcessClassDeclaration(Ast *stmt)
     inner_type -> SetFlags(ProcessLocalClassModifiers(class_declaration));
     inner_type -> SetOwner(ThisMethod());
     //
-    // Add 3 extra elements for padding. May need a default constructor and other support elements.
+    // Add 3 extra elements for padding. May need a default constructor and
+    // other support elements.
     //
     inner_type -> SetSymbolTable(class_body -> NumClassBodyDeclarations() + 3);
     inner_type -> SetLocation();
@@ -1563,8 +1554,6 @@ void Semantic::ProcessClassDeclaration(Ast *stmt)
     // static, but which at least compile.
     //
     //    inner_type -> ResetACC_STATIC();
-
-    return;
 }
 
 
@@ -1613,9 +1602,9 @@ void Semantic::ProcessThisCall(AstThisCall *this_call)
                 this_type -> AddLocalConstructorCallEnvironment(GetEnvironment(this_call));
 
             //
-            // Note that there is no need to do access-checking as we are allowed,
-            // within the body of a class, to invoke any other constructor or member
-            // (private or otherwise) in that class.
+            // Note that there is no need to do access-checking as we are
+            // allowed, within the body of a class, to invoke any other
+            // constructor or member (private or otherwise) in that class.
             //
         }
     }
@@ -1623,8 +1612,6 @@ void Semantic::ProcessThisCall(AstThisCall *this_call)
     ExplicitConstructorInvocation() = NULL; // signal that we are no longer processing an explicit constructor invocation
 
     this_call -> can_complete_normally = this_call -> is_reachable;
-
-    return;
 }
 
 
@@ -1769,7 +1756,8 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
             }
 
             //
-            // Make sure that the throws signature of the constructor is processed.
+            // Make sure that the throws signature of the constructor is
+            // processed.
             //
             for (int k = constructor -> NumThrows() - 1; k >= 0; k--)
             {
@@ -1798,10 +1786,12 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
                     super_call -> symbol = constructor -> LocalConstructor();
 
                     //
-                    // Recall that as a side-effect, when a local shadow is created in a type
-                    // an argument that will be used to initialize the local shadow that has
-                    // the same identity must be passed to every constructor in the type. Since
-                    // we are currently processing a constructor, such an argument must be available.
+                    // Recall that as a side-effect, when a local shadow is
+                    // created in a type an argument that will be used to
+                    // initialize the local shadow that has the same identity
+                    // must be passed to every constructor in the type. Since
+                    // we are currently processing a constructor, such an
+                    // argument must be available.
                     //
                     BlockSymbol *block_symbol = ThisMethod() -> LocalConstructor() -> block_symbol;
                     for (int i = (super_type -> ACC_STATIC() ? 0 : 1); i < super_type -> NumConstructorParameters(); i++)
@@ -1828,8 +1818,6 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
     ExplicitConstructorInvocation() = NULL; // signal that we are no longer processing an explicit constructor invocation
 
     super_call -> can_complete_normally = super_call -> is_reachable;
-
-    return;
 }
 
 
@@ -1855,8 +1843,6 @@ void Semantic::CheckThrow(AstExpression *throw_expression)
                        throw_type -> ContainingPackage() -> PackageName(),
                        throw_type -> ExternalName());
     }
-
-    return;
 }
 
 
@@ -1890,17 +1876,18 @@ void Semantic::ProcessMethodBody(AstMethodDeclaration *method_declaration)
             block_body = constructor_block -> block;
 
             //
-            // If the parser recognizes the body of a method as a ConstructorBlock
-            // then it must have an explicit_constructor_invocation.
+            // If the parser recognizes the body of a method as a
+            // ConstructorBlock then it must have an
+            // explicit_constructor_invocation.
             //
             AstThisCall *this_call = constructor_block -> explicit_constructor_invocation_opt -> ThisCallCast();
             if (this_call)
             {
                 this_call -> is_reachable = true;
                 //
-                // Do not process the explicit constructor invocation as this could
-                // cause problems with assertions (e.g. for inner classes) that will
-                // turn out not to be true.
+                // Do not process the explicit constructor invocation as this
+                // could cause problems with assertions (e.g. for inner
+                // classes) that will turn out not to be true.
                 //
                 // ProcessThisCall(this_call);
                 //
@@ -1911,9 +1898,9 @@ void Semantic::ProcessMethodBody(AstMethodDeclaration *method_declaration)
                 AstSuperCall *super_call = (AstSuperCall *) constructor_block -> explicit_constructor_invocation_opt;
                 super_call -> is_reachable = true;
                 //
-                // Do not process the explicit constructor invocation as this could
-                // cause problems with assertions (e.g. for inner classes) that will
-                // turn out not to be true.
+                // Do not process the explicit constructor invocation as this
+                // could cause problems with assertions (e.g. for inner
+                // classes) that will turn out not to be true.
                 //
                 // ProcessSuperCall(super_call);
                 //
@@ -1973,8 +1960,6 @@ void Semantic::ProcessMethodBody(AstMethodDeclaration *method_declaration)
     }
 
     this_method -> block_symbol -> CompressSpace(); // space optimization
-
-    return;
 }
 
 
@@ -2026,14 +2011,15 @@ void Semantic::ProcessConstructorBody(AstConstructorDeclaration *constructor_dec
     }
 
     //
-    // If the constructor starts with an explicit_constructor_invocation, either
-    // one specified by the user or generated, we process it and set up the proper
-    // local environment, if appropriate...
+    // If the constructor starts with an explicit_constructor_invocation,
+    // either one specified by the user or generated, we process it and set
+    // up the proper local environment, if appropriate...
     //
     if (constructor_block -> explicit_constructor_invocation_opt)
     {
         //
-        // If we are processing a local constructor, set up the generated environment...
+        // If we are processing a local constructor, set up the generated
+        // environment...
         //
         if (this_type -> IsLocal())
         {
@@ -2044,21 +2030,22 @@ void Semantic::ProcessConstructorBody(AstConstructorDeclaration *constructor_dec
             LocalSymbolTable().Push(this_method -> LocalConstructor() -> block_symbol -> Table());
         }
 
-            if (this_call)
-            {
-                this_call -> is_reachable = true;
-                ProcessThisCall(this_call);
-            }
-            else
-            {
-                assert(super_call);
+        if (this_call)
+        {
+            this_call -> is_reachable = true;
+            ProcessThisCall(this_call);
+        }
+        else
+        {
+            assert(super_call);
 
-                super_call -> is_reachable = true;
-                ProcessSuperCall(super_call);
-            }
+            super_call -> is_reachable = true;
+            ProcessSuperCall(super_call);
+        }
 
         //
-        // If we are processing a local constructor, restore its original environment...
+        // If we are processing a local constructor, restore its original
+        // environment...
         //
         if (this_type -> IsLocal())
         {
@@ -2068,7 +2055,8 @@ void Semantic::ProcessConstructorBody(AstConstructorDeclaration *constructor_dec
     }
 
     //
-    // Guess that the number of elements will not exceed the number of statements.
+    // Guess that the number of elements will not exceed the number of
+    // statements.
     //
     int table_size = block_body -> NumStatements();
     BlockSymbol *block = LocalSymbolTable().Top() -> InsertBlockSymbol(table_size);
@@ -2099,14 +2087,13 @@ void Semantic::ProcessConstructorBody(AstConstructorDeclaration *constructor_dec
     LocalSymbolTable().Pop();
 
     //
-    // Update the local variable info for the main block associated with this constructor.
+    // Update the local variable info for the main block associated with this
+    // constructor.
     //
     if (this_method -> block_symbol -> max_variable_index < block -> max_variable_index)
         this_method -> block_symbol -> max_variable_index = block -> max_variable_index;
 
     block -> CompressSpace(); // space optimization
-
-    return;
 }
 
 
@@ -2126,8 +2113,9 @@ void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment, AstClas
     ThisVariable() = NULL; // All variable declarations have already been processed
 
     //
-    // Compute the set of instance final variables declared by the user in this type
-    // as well as the set of instance final variables that have not yet been initialized.
+    // Compute the set of instance final variables declared by the user in
+    // this type as well as the set of instance final variables that have not
+    // yet been initialized.
     //
     Tuple<VariableSymbol *> finals(this_type -> NumVariableSymbols()),
                             unassigned_finals(this_type -> NumVariableSymbols());
@@ -2154,12 +2142,14 @@ void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment, AstClas
         {
             ReportSemError(SemanticError::UNINITIALIZED_FINAL_VARIABLE,
                            unassigned_finals[k] -> declarator -> LeftToken(),
-                           unassigned_finals[k] -> declarator -> RightToken());
+                           unassigned_finals[k] -> declarator -> RightToken(),
+                           unassigned_finals[k] -> Name());
         }
 
         //
         // Process the body of the default constructor, if there is one.
-        // (An anonymous class does not yet have a default constructor at this point.)
+        // (An anonymous class does not yet have a default constructor at this
+        // point.)
         //
         AstConstructorDeclaration *constructor_decl = class_body -> default_constructor;
         if (constructor_decl)
@@ -2291,8 +2281,6 @@ void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment, AstClas
     }
 
     state_stack.Pop();
-
-    return;
 }
 
 
@@ -2310,9 +2298,10 @@ void Semantic::ProcessExecutableBodies(AstInterfaceDeclaration *interface_declar
         VariableSymbol *variable_symbol = this_type -> VariableSym(k);
         if (! variable_symbol -> IsDefinitelyAssigned())
         {
-            ReportSemError(SemanticError::UNINITIALIZED_FINAL_VARIABLE,
+            ReportSemError(SemanticError::UNINITIALIZED_FINAL_VARIABLE_IN_INTERFACE,
                            variable_symbol -> declarator -> LeftToken(),
-                           variable_symbol -> declarator -> RightToken());
+                           variable_symbol -> declarator -> RightToken(),
+                           variable_symbol -> Name());
         }
     }
 
@@ -2333,8 +2322,6 @@ void Semantic::ProcessExecutableBodies(AstInterfaceDeclaration *interface_declar
     }
 
     state_stack.Pop();
-
-    return;
 }
 
 #ifdef HAVE_JIKES_NAMESPACE

@@ -1,3 +1,24 @@
+2001-12-05  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/body.cpp: Reformat comments to 80 columns. Improve error
+	messages for uninitialized finals.
+	* src/definite.cpp: Improve error messages for assignment to blank
+	vs. regular final variables.
+	* src/error.cpp:
+	* src/error.h (PARENT_TYPE_IN_UNNAMED_PACKAGE): Delete as unused.
+	(TARGET_VARIABLE_IS_FINAL, FINAL_VARIABLE_TARGET_IN_LOOP): Rename
+	to VARIABLE_NOT_DEFINITELY_UNASSIGNED,
+	VARIABLE_NOT_DEFINITELY_UNASSIGNED_IN_LOOP.
+	(FINAL_VARIABLE_NOT_BLANK, ABRUPT_INITIALIZER),
+	(UNINITIALIZED_FINAL_VARIABLE_IN_INTERFACE): New errors.
+	(METHOD_NOT_CLASS_METHOD, NAME_NOT_CLASS_VARIABLE): Improve
+	wording, to make it clear that member exists - bug 2452.
+	* src/semantic.h (AddDependence): Update to account that imports
+	from unnamed package are no longer legal.
+	* src/decl.cpp (ProcessInitializer): Update to account for fact
+	that initializers are always reachable, and must complete normally
+	- bug 2454, patch 234.
+
 2001-11-30  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/definite.cpp (DefiniteAssertStatement): Fix a bug in assert

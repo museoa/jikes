@@ -1761,8 +1761,8 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment,
         }
     }
 
-    ProcessBlockInitializers(class_body);
     ProcessStaticInitializers(class_body);
+    ProcessBlockInitializers(class_body);
 
     //
     // Reset the this_variable and this_method may have been set in
@@ -4280,8 +4280,10 @@ void Semantic::InitializeVariable(AstFieldDeclaration *field_declaration, Tuple<
 }
 
 
-inline void Semantic::ProcessInitializer(AstBlock *initializer_block, AstBlock *block_body,
-                                         MethodSymbol *init_method, Tuple<VariableSymbol *> &finals)
+inline void Semantic::ProcessInitializer(AstBlock *initializer_block,
+                                         AstBlock *block_body,
+                                         MethodSymbol *init_method,
+                                         Tuple<VariableSymbol *> &finals)
 {
     ThisVariable() = NULL;
     ThisMethod() = init_method;
@@ -4303,10 +4305,15 @@ inline void Semantic::ProcessInitializer(AstBlock *initializer_block, AstBlock *
                        constructor_block -> explicit_constructor_invocation_opt -> RightToken());
     }
 
+    //
+    // Initializer blocks are always reachable, as prior blocks must be able
+    // to complete normally.
+    //
+    block_body -> is_reachable = true;
+    
     ProcessBlock(block_body);
 
-    if (NumErrors() == start_num_errors)
-        DefiniteBlockInitializer(block_body, LocalBlockStack().max_size, finals);
+    DefiniteBlockInitializer(block_body, LocalBlockStack().max_size, finals);
 
     //
     // If an enclosed block has a higher max_variable_index than the current
@@ -4314,6 +4321,11 @@ inline void Semantic::ProcessInitializer(AstBlock *initializer_block, AstBlock *
     //
     if (init_method -> block_symbol -> max_variable_index < LocalBlockStack().TopMaxEnclosedVariableIndex())
         init_method -> block_symbol -> max_variable_index = LocalBlockStack().TopMaxEnclosedVariableIndex();
+
+    if (! block_body -> can_complete_normally)
+        ReportSemError(SemanticError::ABRUPT_INITIALIZER,
+                       block_body -> LeftToken(),
+                       block_body -> RightToken());
 
     LocalBlockStack().Pop();
     LocalSymbolTable().Pop();
@@ -4451,17 +4463,8 @@ void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
             else
             {
                 AstBlock *block_body = class_body -> StaticInitializer(k) -> block;
-
-                //
-                // The first block that is the body of an initializer is
-                // reachable. A subsequent block is reachable iff its
-                // predecessor can complete normally
-                //
-                block_body -> is_reachable = (k == 0
-                                                 ? true
-                                                 : class_body -> StaticInitializer(k - 1) -> block -> can_complete_normally);
-
-                ProcessInitializer(initializer_block, block_body, init_method, finals);
+                ProcessInitializer(initializer_block, block_body,
+                                   init_method, finals);
                 k++;
             }
         }
@@ -4471,16 +4474,8 @@ void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
         {
             AstBlock *block_body = class_body -> StaticInitializer(k) -> block;
 
-            //
-            // The first block that is the body of an initializer is reachable
-            // A subsequent block is reachable iff its predecessor can complete
-            // normally
-            //
-            block_body -> is_reachable = (k == 0
-                                             ? true
-                                             : class_body -> StaticInitializer(k - 1) -> block -> can_complete_normally);
-
-            ProcessInitializer(initializer_block, block_body, init_method, finals);
+            ProcessInitializer(initializer_block, block_body,
+                               init_method, finals);
         }
 
         //
@@ -4492,13 +4487,15 @@ void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
         //
         for (int l = 0; l < finals.Length(); l++)
         {
-            if (finals[l] -> ACC_STATIC() && (! finals[l] -> IsDefinitelyAssigned()))
+            if (! finals[l] -> IsDefinitelyAssigned() &&
+                finals[l] -> ACC_STATIC())
             {
                 if (! this_type -> IsInner())
                 {
                     ReportSemError(SemanticError::UNINITIALIZED_STATIC_FINAL_VARIABLE,
                                    finals[l] -> declarator -> LeftToken(),
-                                   finals[l] -> declarator -> RightToken());
+                                   finals[l] -> declarator -> RightToken(),
+                                   finals[l] -> Name());
                 }
                 finals[l] -> MarkDefinitelyAssigned();
             }
@@ -4558,7 +4555,11 @@ void Semantic::ProcessBlockInitializers(AstClassBody *class_body)
     {
         VariableSymbol *variable_symbol = this_type -> VariableSym(i);
         if (variable_symbol -> ACC_FINAL())
+        {
             finals.Next() = variable_symbol;
+            if (! variable_symbol -> ACC_STATIC())
+                variable_symbol -> MarkNotDefinitelyAssigned();
+        }
     }
 
     //
@@ -4631,14 +4632,8 @@ void Semantic::ProcessBlockInitializers(AstClassBody *class_body)
             {
                 AstBlock *block_body = class_body -> Block(k);
 
-                //
-                // The first block that is the body of an initializer is
-                // reachable. A subsequent block is reachable iff its
-                // predecessor can complete normally
-                //
-                block_body -> is_reachable = (k == 0 ? true : class_body -> Block(k - 1) -> can_complete_normally);
-
-                ProcessInitializer(initializer_block, block_body, init_method, finals);
+                ProcessInitializer(initializer_block, block_body,
+                                   init_method, finals);
                 k++;
             }
         }
@@ -4648,14 +4643,8 @@ void Semantic::ProcessBlockInitializers(AstClassBody *class_body)
         {
             AstBlock *block_body = class_body -> Block(k);
 
-            //
-            // The first block that is the body of an initializer is reachable
-            // A subsequent block is reachable iff its predecessor can complete
-            // normally
-            //
-            block_body -> is_reachable = (k == 0 ? true : class_body -> Block(k - 1) -> can_complete_normally);
-
-            ProcessInitializer(initializer_block, block_body, init_method, finals);
+            ProcessInitializer(initializer_block, block_body,
+                               init_method, finals);
         }
 
         init_method -> max_block_depth = LocalBlockStack().max_size;

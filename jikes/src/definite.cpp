@@ -239,7 +239,9 @@ DefiniteAssignmentSet *Semantic::DefinitePLUSPLUSOrMINUSMINUS(AstExpression *exp
                 read_method = field_access -> resolution_opt -> symbol -> MethodCast();
         }
 
-        variable = (read_method ? (VariableSymbol *) read_method -> accessed_member : expr -> symbol -> VariableCast());
+        variable = (read_method
+                    ? (VariableSymbol *) read_method -> accessed_member
+                    : expr -> symbol -> VariableCast());
     }
 
     //
@@ -247,10 +249,22 @@ DefiniteAssignmentSet *Semantic::DefinitePLUSPLUSOrMINUSMINUS(AstExpression *exp
     //
     if (variable && variable -> ACC_FINAL())
     {
-        ReportSemError(SemanticError::TARGET_VARIABLE_IS_FINAL,
-                       expr -> LeftToken(),
-                       expr -> RightToken(),
-                       variable -> Name());
+        if ((variable -> IsLocal(ThisMethod()) ||
+             variable -> IsFinal(ThisType())) &&
+            (*blank_finals)[variable -> LocalVariableIndex()])
+        {
+            ReportSemError(SemanticError::VARIABLE_NOT_DEFINITELY_UNASSIGNED,
+                           expr -> LeftToken(),
+                           expr -> RightToken(),
+                           variable -> Name());
+        }
+        else
+        {
+            ReportSemError(SemanticError::FINAL_VARIABLE_NOT_BLANK,
+                           expr -> LeftToken(),
+                           expr -> RightToken(),
+                           variable -> Name());
+        }
 
         if (variable -> IsFinal(ThisType())) // mark it assigned, to catch further errors
             def_pair.du_set.RemoveElement(variable -> LocalVariableIndex());
@@ -466,7 +480,9 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentExpression(AstExpression *exp
             left_hand_side = field_access -> resolution_opt;
     }
 
-    VariableSymbol *variable = (left_hand_side -> symbol ? left_hand_side -> symbol -> VariableCast() : (VariableSymbol *) NULL);
+    VariableSymbol *variable = (left_hand_side -> symbol
+                                ? left_hand_side -> symbol -> VariableCast()
+                                : (VariableSymbol *) NULL);
     int index;
 
     //
@@ -476,7 +492,8 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentExpression(AstExpression *exp
     //
     if (variable)
     {
-        if (variable -> IsLocal(ThisMethod()) || variable -> IsFinal(ThisType()))
+        if (variable -> IsLocal(ThisMethod()) ||
+            variable -> IsFinal(ThisType()))
         {
             index = variable -> LocalVariableIndex();
 
@@ -485,7 +502,8 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentExpression(AstExpression *exp
             // been set prior to such an assignment. otherwise, an error
             // occurs.
             //
-            if (! (assignment_expression -> SimpleAssignment() || def_pair.da_set[index]))
+            if (! (assignment_expression -> SimpleAssignment() ||
+                   def_pair.da_set[index]))
             {
                 ReportSemError(SemanticError::VARIABLE_NOT_DEFINITELY_ASSIGNED,
                                assignment_expression -> left_hand_side -> LeftToken(),
@@ -495,7 +513,7 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentExpression(AstExpression *exp
         }
         else if (variable -> ACC_FINAL()) // attempt to assign a value to a final field member!
         {
-            ReportSemError(SemanticError::TARGET_VARIABLE_IS_FINAL,
+            ReportSemError(SemanticError::FINAL_VARIABLE_NOT_BLANK,
                            assignment_expression -> left_hand_side -> LeftToken(),
                            assignment_expression -> left_hand_side -> RightToken(),
                            variable -> Name());
@@ -511,7 +529,9 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentExpression(AstExpression *exp
     if (! simple_name)
     {
         AstFieldAccess *field_access = left_hand_side -> FieldAccessCast();
-        DefiniteExpression((field_access ? field_access -> base : left_hand_side), def_pair);
+        DefiniteExpression((field_access ? field_access -> base
+                            : left_hand_side),
+                           def_pair);
     }
 
     //
@@ -524,7 +544,8 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentExpression(AstExpression *exp
     //
     // Finally, we mark the variable as assigned.
     //
-    if (variable && (variable -> IsLocal(ThisMethod()) || variable -> IsFinal(ThisType())))
+    if (variable &&
+        (variable -> IsLocal(ThisMethod()) || variable -> IsFinal(ThisType())))
     {
         if (variable -> ACC_FINAL())
         {
@@ -534,7 +555,9 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentExpression(AstExpression *exp
             if (! ((*blank_finals)[index] &&
                    def_pair.du_set[index]))
             {
-                ReportSemError(SemanticError::TARGET_VARIABLE_IS_FINAL,
+                ReportSemError(((*blank_finals)[index]
+                                ? SemanticError::VARIABLE_NOT_DEFINITELY_UNASSIGNED
+                                : SemanticError::FINAL_VARIABLE_NOT_BLANK),
                                assignment_expression -> left_hand_side -> LeftToken(),
                                assignment_expression -> left_hand_side -> RightToken(),
                                variable -> Name());
@@ -836,9 +859,12 @@ void Semantic::DefiniteLoopBody(AstStatement *statement)
         AstExpression *name = definite_final_assignment_stack -> Top()[k];
         VariableSymbol *variable = (VariableSymbol *) name -> symbol;
 
-        if (definite_visible_variables -> IsElement(variable) && new_set[variable -> LocalVariableIndex()])
+        if (definite_visible_variables -> IsElement(variable) &&
+            new_set[variable -> LocalVariableIndex()])
         {
-            ReportSemError(SemanticError::FINAL_VARIABLE_TARGET_IN_LOOP,
+            ReportSemError(((*blank_finals)[variable -> LocalVariableIndex()]
+                            ? SemanticError::VARIABLE_NOT_DEFINITELY_UNASSIGNED_IN_LOOP
+                            : SemanticError::FINAL_VARIABLE_NOT_BLANK),
                            name -> LeftToken(),
                            name -> RightToken(),
                            variable -> Name());
@@ -1737,19 +1763,11 @@ void Semantic::DefiniteConstructorBody(AstConstructorDeclaration *constructor_de
 
         finals[i] -> SetLocalVariableIndex(index);
         if (finals[i] -> IsDefinitelyAssigned())
-        {
             definitely_assigned_variables -> AssignElement(index);
-        }
-        else
-        {
-            //
-            // only blank finals can be possibly assigned without being
-            // definitely assigned
-            //
-            if (finals[i] -> IsPossiblyAssigned())
-                definitely_assigned_variables -> AddElement(index);
+        else if (finals[i] -> IsPossiblyAssigned())
+            definitely_assigned_variables -> AddElement(index);
+        if (! finals[i] -> declarator -> variable_initializer_opt)
             blank_finals -> AddElement(index);
-        }
         definite_visible_variables -> AddElement(finals[i]);
     }
 
@@ -1856,19 +1874,11 @@ void Semantic::DefiniteBlockInitializer(AstBlock *block_body, int stack_size, Tu
 
         finals[i] -> SetLocalVariableIndex(index);
         if (finals[i] -> IsDefinitelyAssigned())
-        {
             definitely_assigned_variables -> AssignElement(index);
-        }
-        else
-        {
-            //
-            // only blank finals can be possibly assigned without being
-            // definitely assigned
-            //
-            if (finals[i] -> IsPossiblyAssigned())
-                definitely_assigned_variables -> AddElement(index);
+        else if (finals[i] -> IsPossiblyAssigned())
+            definitely_assigned_variables -> AddElement(index);
+        if (! finals[i] -> declarator -> variable_initializer_opt)
             blank_finals -> AddElement(index);
-        }
         definite_visible_variables -> AddElement(finals[i]);
     }
 
@@ -1937,19 +1947,11 @@ void Semantic::DefiniteVariableInitializer(AstVariableDeclarator *variable_decla
     {
         finals[i] -> SetLocalVariableIndex(i);
         if (finals[i] -> IsDefinitelyAssigned())
-        {
             definitely_assigned_variables -> AssignElement(i);
-        }
-        else
-        {
-            //
-            // only blank finals can be possibly assigned without being
-            // definitely assigned
-            //
-            if (finals[i] -> IsPossiblyAssigned())
-                definitely_assigned_variables -> AddElement(i);
+        else if (finals[i] -> IsPossiblyAssigned())
+            definitely_assigned_variables -> AddElement(i);
+        if (! finals[i] -> declarator -> variable_initializer_opt)
             blank_finals -> AddElement(i);
-        }
         definite_visible_variables -> AddElement(finals[i]);
     }
 
