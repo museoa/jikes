@@ -24,9 +24,90 @@ namespace Jikes { // Open namespace Jikes block
 // out valid classfiles.
 //
 class ClassFile;
-class CPInfo;
-class CPUtf8Info;
+class ConstantPool;
+class Control;
 class TypeSymbol;
+
+
+//
+// The prefix CP stands for Constant Pool. This is the base class of all
+// constant pool information; subclasses give more detail. JVMS 4.4.
+//
+class CPInfo
+{
+public:
+    enum ConstantPoolTag
+    {
+        CONSTANT_Class = 7,
+        CONSTANT_Fieldref = 9,
+        CONSTANT_Methodref = 10,
+        CONSTANT_InterfaceMethodref = 11,
+        CONSTANT_String = 8,
+        CONSTANT_Integer = 3,
+        CONSTANT_Float = 4,
+        CONSTANT_Long = 5,
+        CONSTANT_Double = 6,
+        CONSTANT_NameAndType = 12,
+        CONSTANT_Utf8 = 1
+    };
+
+protected:
+    const ConstantPoolTag tag;
+
+public:
+    CPInfo(ConstantPoolTag _tag) : tag(_tag) {}
+    virtual ~CPInfo() {}
+
+    ConstantPoolTag Tag() const { return tag; }
+    bool Large() const
+    {
+        return tag == CONSTANT_Long || tag == CONSTANT_Double;
+    }
+    bool Constant() const
+    {
+        return ((tag >= CPInfo::CONSTANT_Integer &&
+                 tag <= CPInfo::CONSTANT_Double) ||
+                tag == CPInfo::CONSTANT_String);
+    }
+
+    //
+    // This reads the next constant pool entry from buffer, advancing it to
+    // the end of the entry. The user is responsible for deleting the result.
+    //
+    static CPInfo* AllocateCPInfo(ClassFile&);
+
+    //
+    // Subclasses should override, to write an entry to a .class file.
+    //
+    virtual void Put(OutputBuffer& out) const
+    {
+        out.PutU1((u1) tag);
+    }
+
+    //
+    // Allows subclasses to perform data validation, once the entire constant
+    // pool has been read. Return false on failure.
+    //
+    virtual bool Check(const ConstantPool&) const { return true; }
+
+#ifdef JIKES_DEBUG
+    //
+    // Prints all information about the constant value, ending the line.
+    //
+    virtual void Print(const ConstantPool&) const
+    {
+        Coutput << "unknown tag: " << (unsigned) tag << endl;
+    }
+
+    //
+    // Prints shortened information, no newline.
+    //
+    virtual void Describe(const ConstantPool&) const
+    {
+        Coutput << "unknown tag: " << (unsigned) tag;
+    }
+#endif // JIKES_DEBUG
+};
 
 
 //
@@ -35,8 +116,28 @@ class TypeSymbol;
 //
 class ConstantPool : private Tuple<CPInfo*>
 {
-    static CPInfo* invalid;
-    class CPInvalid;
+    class CPInvalid : public CPInfo
+    {
+    public:
+        CPInvalid() : CPInfo((ConstantPoolTag) 0) {}
+        ~CPInvalid() {}
+        virtual void Put(OutputBuffer&) const
+        {
+            assert(false && "trying to put invalid ConstantPool entry");
+        }
+        virtual bool Check(const ConstantPool&) const { return false; }
+
+#ifdef JIKES_DEBUG
+        virtual void Print(const ConstantPool&) const
+        {
+            Coutput << "invalid index" << endl;
+        }
+        virtual void Describe(const ConstantPool&) const
+        {
+            Coutput << "(invalid)";
+        }
+#endif // JIKES_DEBUG
+    } invalid;
 
 public:
     ConstantPool(unsigned estimate = 0)
@@ -63,9 +164,9 @@ public:
     inline const CPInfo* operator[](const unsigned i) const
     {
         if (i >= top)
-            return invalid;
+            return &invalid;
         const CPInfo* result = Tuple<CPInfo*>::operator[](i);
-        return result ? result : invalid;
+        return result ? result : &invalid;
     }
 
     inline void Reset() { Tuple<CPInfo*>::Reset(); }
@@ -77,83 +178,6 @@ public:
         return i < top && Tuple<CPInfo*>::operator[](i);
     }
     bool Check() const;
-};
-
-
-//
-// The prefix CP stands for Constant Pool. This is the base class of all
-// constant pool information; subclasses give more detail. JVMS 4.4.
-//
-class CPInfo
-{
-protected:
-    const u1 tag;
-
-public:
-    enum ConstantPoolTag
-    {
-        CONSTANT_Class = 7,
-        CONSTANT_Fieldref = 9,
-        CONSTANT_Methodref = 10,
-        CONSTANT_InterfaceMethodref = 11,
-        CONSTANT_String = 8,
-        CONSTANT_Integer = 3,
-        CONSTANT_Float = 4,
-        CONSTANT_Long = 5,
-        CONSTANT_Double = 6,
-        CONSTANT_NameAndType = 12,
-        CONSTANT_Utf8 = 1
-    };
-
-    CPInfo(u1 _tag) : tag(_tag) {}
-    virtual ~CPInfo() {}
-
-    u1 Tag() const { return tag; }
-    bool Large() const
-    {
-        return tag == CONSTANT_Long || tag == CONSTANT_Double;
-    }
-    bool Constant() const
-    {
-        return ((tag >= CPInfo::CONSTANT_Integer &&
-                 tag <= CPInfo::CONSTANT_Double) ||
-                tag == CPInfo::CONSTANT_String);
-    }
-
-    //
-    // This reads the next constant pool entry from buffer, advancing it to
-    // the end of the entry. The user is responsible for deleting the result.
-    //
-    static CPInfo* AllocateCPInfo(ClassFile&);
-
-    virtual void Put(OutputBuffer&) const
-    {
-        assert(false && "trying to put unsupported attribute kind");
-    }
-
-    //
-    // Allows subclasses to perform data validation, once the entire constant
-    // pool has been read. Return false on failure.
-    //
-    virtual bool Check(const ConstantPool&) const { return true; }
-
-#ifdef JIKES_DEBUG
-    //
-    // Prints all information about the constant value, ending the line.
-    //
-    virtual void Print(const ConstantPool&) const
-    {
-        Coutput << "unknown tag: " << (unsigned) tag << endl;
-    }
-
-    //
-    // Prints shortened information, no newline.
-    //
-    virtual void Describe(const ConstantPool&) const
-    {
-        Coutput << "unknown tag: " << (unsigned) tag;
-    }
-#endif // JIKES_DEBUG
 };
 
 
@@ -202,11 +226,11 @@ public:
     const char* Bytes() const { return contents.Array(); }
     u2 Length() const { return len; }
 
-    virtual void Put(OutputBuffer& output_buffer) const
+    virtual void Put(OutputBuffer& out) const
     {
-        output_buffer.PutU1(tag);
-        output_buffer.PutU2(len);
-        output_buffer.PutN(bytes, len);
+        CPInfo::Put(out);
+        out.PutU2(len);
+        out.PutN(bytes, len);
     }
 
     virtual bool Check(const ConstantPool&) const { return valid; }
@@ -249,10 +273,10 @@ public:
     CPClassInfo(ClassFile&);
     virtual ~CPClassInfo() {}
 
-    virtual void Put(OutputBuffer& output_buffer) const
+    virtual void Put(OutputBuffer& out) const
     {
-        output_buffer.PutU1(tag);
-        output_buffer.PutU2(name_index);
+        CPInfo::Put(out);
+        out.PutU2(name_index);
     }
 
     virtual bool Check(const ConstantPool& constant_pool) const
@@ -312,19 +336,20 @@ class CPMemberInfo : public CPInfo
     const u2 name_and_type_index;
 
 public:
-    CPMemberInfo(u1 _tag, u2 _class_index, u2 _name_and_type_index)
+    CPMemberInfo(ConstantPoolTag _tag, u2 _class_index,
+                 u2 _name_and_type_index)
         : CPInfo(_tag)
         , class_index(_class_index)
         , name_and_type_index(_name_and_type_index)
     {}
-    CPMemberInfo(u1, ClassFile&);
+    CPMemberInfo(ConstantPoolTag, ClassFile&);
     virtual ~CPMemberInfo() {}
 
-    virtual void Put(OutputBuffer& output_buffer) const
+    virtual void Put(OutputBuffer& out) const
     {
-        output_buffer.PutU1(tag);
-        output_buffer.PutU2(class_index);
-        output_buffer.PutU2(name_and_type_index);
+        CPInfo::Put(out);
+        out.PutU2(class_index);
+        out.PutU2(name_and_type_index);
     }
 
     virtual bool Check(const ConstantPool& constant_pool) const
@@ -404,10 +429,10 @@ public:
     CPStringInfo(ClassFile&);
     virtual ~CPStringInfo() {}
 
-    virtual void Put(OutputBuffer& output_buffer) const
+    virtual void Put(OutputBuffer& out) const
     {
-        output_buffer.PutU1(tag);
-        output_buffer.PutU2(string_index);
+        CPInfo::Put(out);
+        out.PutU2(string_index);
     }
 
     virtual bool Check(const ConstantPool& constant_pool) const
@@ -470,10 +495,10 @@ public:
     CPIntegerInfo(ClassFile&);
     virtual ~CPIntegerInfo() {}
 
-    virtual void Put(OutputBuffer& output_buffer) const
+    virtual void Put(OutputBuffer& out) const
     {
-        output_buffer.PutU1(tag);
-        output_buffer.PutU4(bytes);
+        CPInfo::Put(out);
+        out.PutU4(bytes);
     }
 
     i4 Value() const { return (i4) bytes; }
@@ -510,10 +535,10 @@ public:
     CPFloatInfo(ClassFile&);
     virtual ~CPFloatInfo() {}
 
-    virtual void Put(OutputBuffer& output_buffer) const
+    virtual void Put(OutputBuffer& out) const
     {
-        output_buffer.PutU1(tag);
-        output_buffer.PutU4(value.Word());
+        CPInfo::Put(out);
+        out.PutU4(value.Word());
     }
 
     const IEEEfloat& Value() const { return value; }
@@ -550,11 +575,11 @@ public:
     CPLongInfo(ClassFile&);
     virtual ~CPLongInfo() {}
 
-    virtual void Put(OutputBuffer& output_buffer) const
+    virtual void Put(OutputBuffer& out) const
     {
-        output_buffer.PutU1(tag);
-        output_buffer.PutU4(value.HighWord());
-        output_buffer.PutU4(value.LowWord());
+        CPInfo::Put(out);
+        out.PutU4(value.HighWord());
+        out.PutU4(value.LowWord());
     }
 
     const LongInt& Value() const { return value; }
@@ -592,11 +617,11 @@ public:
     CPDoubleInfo(ClassFile&);
     virtual ~CPDoubleInfo() {}
 
-    virtual void Put(OutputBuffer& output_buffer) const
+    virtual void Put(OutputBuffer& out) const
     {
-        output_buffer.PutU1(tag);
-        output_buffer.PutU4(value.HighWord());
-        output_buffer.PutU4(value.LowWord());
+        CPInfo::Put(out);
+        out.PutU4(value.HighWord());
+        out.PutU4(value.LowWord());
     }
 
     const IEEEdouble& Value() const { return value; }
@@ -651,11 +676,11 @@ public:
             Length();
     }
 
-    virtual void Put(OutputBuffer& output_buffer) const
+    virtual void Put(OutputBuffer& out) const
     {
-        output_buffer.PutU1(tag);
-        output_buffer.PutU2(name_index);
-        output_buffer.PutU2(descriptor_index);
+        CPInfo::Put(out);
+        out.PutU2(name_index);
+        out.PutU2(descriptor_index);
     }
 
     virtual bool Check(const ConstantPool& constant_pool) const
@@ -727,17 +752,17 @@ public:
         ATTRIBUTE_Deprecated,
         ATTRIBUTE_Signature, // defined in JSR 14
         ATTRIBUTE_Bridge, // defined in JSR 14?
+        ATTRIBUTE_EnclosingMethod, // defined in JSR 14
+        ATTRIBUTE_LocalVariableTypeTable, // defined in JSR 14
         ATTRIBUTE_StackMap, // defined in JSR 139
         ATTRIBUTE_RuntimeVisibleAnnotations, // defined in JSR 175
         ATTRIBUTE_RuntimeInvisibleAnnotations, // defined in JSR 175
         ATTRIBUTE_RuntimeVisibleParameterAnnotations, // defined in JSR 175
         ATTRIBUTE_RuntimeInvisibleParameterAnnotations, // defined in JSR 175
         ATTRIBUTE_AnnotationDefault, // defined in JSR 175
-        ATTRIBUTE_EnclosingMethod, // defined in JSR 202?
         // all others are currently unknown to jikes
-        ATTRIBUTE_Generic,
-        // defined in JSR 14?, not yet implemented
-        ATTRIBUTE_LocalVariableTypeTable = ATTRIBUTE_Generic
+        ATTRIBUTE_Generic
+
     };
 protected:
     const AttributeInfoTag tag;
@@ -772,15 +797,15 @@ public:
     static AttributeInfo* AllocateAttributeInfo(ClassFile&);
 
     // Subclasses must override if attribute_length != 0.
-    virtual void Put(OutputBuffer& output_buffer) const
+    virtual void Put(OutputBuffer& out) const
     {
         assert(tag == ATTRIBUTE_Generic
                ? (! attribute_length || info) : ! info);
         assert(attribute_name_index);
-        output_buffer.PutU2(attribute_name_index);
-        output_buffer.PutU4(attribute_length);
+        out.PutU2(attribute_name_index);
+        out.PutU4(attribute_length);
         if (info)
-            output_buffer.PutN(info, attribute_length);
+            out.PutN(info, attribute_length);
     }
 
 #ifdef JIKES_DEBUG
@@ -838,10 +863,10 @@ public:
     ConstantValueAttribute(ClassFile&);
     virtual ~ConstantValueAttribute() {}
 
-    virtual void Put(OutputBuffer& output_buffer) const
+    virtual void Put(OutputBuffer& out) const
     {
-        AttributeInfo::Put(output_buffer);
-        output_buffer.PutU2(constantvalue_index);
+        AttributeInfo::Put(out);
+        out.PutU2(constantvalue_index);
     }
 
     const CPInfo* Value(const ConstantPool& constant_pool) const
@@ -901,12 +926,12 @@ public:
         exception_index_table.Next() = index;
     }
 
-    virtual void Put(OutputBuffer& output_buffer) const
+    virtual void Put(OutputBuffer& out) const
     {
-        AttributeInfo::Put(output_buffer);
-        output_buffer.PutU2(exception_index_table.Length());
+        AttributeInfo::Put(out);
+        out.PutU2(exception_index_table.Length());
         for (unsigned i = 0; i < exception_index_table.Length(); i++)
-            output_buffer.PutU2(exception_index_table[i]);
+            out.PutU2(exception_index_table[i]);
     }
 
 #ifdef JIKES_DEBUG
@@ -964,14 +989,14 @@ public:
     u2 InnerClassesLength() const { return classes.Length();}
 
     void AddInnerClass(u2 inner_class_info_index, u2 outer_class_info_index,
-                       u2 inner_name_index, u2 inner_class_access_flags)
+                       u2 inner_name_index, AccessFlags inner_class_flags)
     {
         attribute_length += 8;
         InnerClassesElement& entry = classes.Next();
         entry.inner_class_info_index = inner_class_info_index;
         entry.outer_class_info_index = outer_class_info_index;
         entry.inner_name_index = inner_name_index;
-        entry.inner_class_access_flags.SetFlags(inner_class_access_flags);
+        entry.inner_class_access_flags.SetFlags(inner_class_flags);
     }
 
     const CPClassInfo* Inner(u2 i, const ConstantPool& constant_pool) const
@@ -1015,16 +1040,16 @@ public:
         return classes[i].inner_class_access_flags;
     }
 
-    virtual void Put(OutputBuffer& output_buffer) const
+    virtual void Put(OutputBuffer& out) const
     {
-        AttributeInfo::Put(output_buffer);
-        output_buffer.PutU2(classes.Length());
+        AttributeInfo::Put(out);
+        out.PutU2(classes.Length());
         for (unsigned i = 0; i < classes.Length(); i++)
         {
-            output_buffer.PutU2(classes[i].inner_class_info_index);
-            output_buffer.PutU2(classes[i].outer_class_info_index);
-            output_buffer.PutU2(classes[i].inner_name_index);
-            output_buffer.PutU2(classes[i].inner_class_access_flags.Flags());
+            out.PutU2(classes[i].inner_class_info_index);
+            out.PutU2(classes[i].outer_class_info_index);
+            out.PutU2(classes[i].inner_name_index);
+            out.PutU2(classes[i].inner_class_access_flags.Flags());
         }
     }
 
@@ -1136,10 +1161,10 @@ public:
         return ((CPUtf8Info*) constant_pool[sourcefile_index]) -> Length();
     }
 
-    virtual void Put(OutputBuffer& output_buffer) const
+    virtual void Put(OutputBuffer& out) const
     {
-        AttributeInfo::Put(output_buffer);
-        output_buffer.PutU2(sourcefile_index);
+        AttributeInfo::Put(out);
+        out.PutU2(sourcefile_index);
     }
 
 #ifdef JIKES_DEBUG
@@ -1216,14 +1241,14 @@ public:
             line_number_table[i].start_pc = max_pc;
     }
 
-    virtual void Put(OutputBuffer& output_buffer) const
+    virtual void Put(OutputBuffer& out) const
     {
-        AttributeInfo::Put(output_buffer);
-        output_buffer.PutU2(line_number_table.Length());
+        AttributeInfo::Put(out);
+        out.PutU2(line_number_table.Length());
         for (unsigned i = 0; i < line_number_table.Length(); i++)
         {
-            output_buffer.PutU2(line_number_table[i].start_pc);
-            output_buffer.PutU2(line_number_table[i].line_number);
+            out.PutU2(line_number_table[i].start_pc);
+            out.PutU2(line_number_table[i].line_number);
         }
     }
 
@@ -1247,8 +1272,9 @@ public:
 
 
 //
-// Valid only for code, this gives local variable name, scope, and type
-// information relative to bytecode offsets. JVMS 4.7.10.
+// Valid only for code, LocalVariableTable gives local variable name, scope,
+// and type information relative to bytecode offsets. JVMS 4.7.10.
+// Also, the LocalVariableTypeTable gives generic type information.
 //
 class LocalVariableTableAttribute : public AttributeInfo
 {
@@ -1267,12 +1293,13 @@ class LocalVariableTableAttribute : public AttributeInfo
     Tuple<LocalVariableElement> local_variable_table;
 
 public:
-    LocalVariableTableAttribute(u2 _name_index)
-        : AttributeInfo(ATTRIBUTE_LocalVariableTable, _name_index, 2)
+    LocalVariableTableAttribute(u2 _name_index, bool generic = false)
+        : AttributeInfo(generic ? ATTRIBUTE_LocalVariableTypeTable
+                        : ATTRIBUTE_LocalVariableTable, _name_index, 2)
         // +2 for local_variable_table_length
         , local_variable_table(6, 16)
     {}
-    LocalVariableTableAttribute(ClassFile&);
+    LocalVariableTableAttribute(ClassFile&, bool generic);
     virtual ~LocalVariableTableAttribute() {}
 
     u2 LocalVariableTableLength() const
@@ -1299,17 +1326,17 @@ public:
         }
     }
 
-    virtual void Put(OutputBuffer& output_buffer) const
+    virtual void Put(OutputBuffer& out) const
     {
-        AttributeInfo::Put(output_buffer);
-        output_buffer.PutU2(local_variable_table.Length());
+        AttributeInfo::Put(out);
+        out.PutU2(local_variable_table.Length());
         for (unsigned i = 0; i < local_variable_table.Length(); i++)
         {
-            output_buffer.PutU2(local_variable_table[i].start_pc);
-            output_buffer.PutU2(local_variable_table[i].length);
-            output_buffer.PutU2(local_variable_table[i].name_index);
-            output_buffer.PutU2(local_variable_table[i].descriptor_index);
-            output_buffer.PutU2(local_variable_table[i].index);
+            out.PutU2(local_variable_table[i].start_pc);
+            out.PutU2(local_variable_table[i].length);
+            out.PutU2(local_variable_table[i].name_index);
+            out.PutU2(local_variable_table[i].descriptor_index);
+            out.PutU2(local_variable_table[i].index);
         }
     }
 
@@ -1317,7 +1344,8 @@ public:
     virtual void Print(const ConstantPool& constant_pool, int fill = 2) const
     {
         assert(fill == 2);
-        PrintPrefix("LocalVariableTable", constant_pool, 2);
+        PrintPrefix(tag == ATTRIBUTE_LocalVariableTable ? "LocalVariableTable"
+                    : "LocalVariableTypeTable", constant_pool, 2);
         Coutput << ", count: " << (unsigned) local_variable_table.Length()
                 << endl;
         for (unsigned i = 0; i < local_variable_table.Length(); i++)
@@ -1397,10 +1425,10 @@ public:
     SignatureAttribute(ClassFile&);
     virtual ~SignatureAttribute() {}
 
-    virtual void Put(OutputBuffer& output_buffer) const
+    virtual void Put(OutputBuffer& out) const
     {
-        AttributeInfo::Put(output_buffer);
-        output_buffer.PutU2(signature_index);
+        AttributeInfo::Put(out);
+        out.PutU2(signature_index);
     }
 
     const CPUtf8Info* Signature(const ConstantPool& constant_pool) const
@@ -1496,11 +1524,11 @@ public:
 
             u2 Size() const { return tag >= TYPE_Object ? 3 : 1; }
 
-            void Put(OutputBuffer& output_buffer) const
+            void Put(OutputBuffer& out) const
             {
-                output_buffer.PutU1(tag);
+                out.PutU1((u1) tag);
                 if (tag >= TYPE_Object)
-                    output_buffer.PutU2(info);
+                    out.PutU2(info);
             }
 
 #ifdef JIKES_DEBUG
@@ -1587,15 +1615,15 @@ public:
             stack.Next() = entry;
         }
 
-        void Put(OutputBuffer& output_buffer) const
+        void Put(OutputBuffer& out) const
         {
-            output_buffer.PutU2(offset);
-            output_buffer.PutU2(locals.Length());
+            out.PutU2(offset);
+            out.PutU2(locals.Length());
             for (unsigned i = 0; i < locals.Length(); i++)
-                locals[i].Put(output_buffer);
-            output_buffer.PutU2(stack.Length());
+                locals[i].Put(out);
+            out.PutU2(stack.Length());
             for (unsigned j = 0; j < stack.Length(); j++)
-                stack[j].Put(output_buffer);
+                stack[j].Put(out);
         }
 
 #ifdef JIKES_DEBUG
@@ -1659,12 +1687,12 @@ public:
         attribute_length += frame -> FrameSize();
     }
 
-    virtual void Put(OutputBuffer& output_buffer) const
+    virtual void Put(OutputBuffer& out) const
     {
-        AttributeInfo::Put(output_buffer);
-        output_buffer.PutU2(frames.Length());
+        AttributeInfo::Put(out);
+        out.PutU2(frames.Length());
         for (unsigned i = 0; i < frames.Length(); i++)
-            frames[i] -> Put(output_buffer);
+            frames[i] -> Put(out);
     }
 
 #ifdef JIKES_DEBUG
@@ -1709,6 +1737,7 @@ class CodeAttribute : public AttributeInfo
     // Remember location of known attributes.
     LineNumberTableAttribute* attr_linenumbers;
     LocalVariableTableAttribute* attr_locals;
+    LocalVariableTableAttribute* attr_local_types;
     StackMapAttribute* attr_stackmap;
 
 public:
@@ -1800,6 +1829,10 @@ public:
             assert(! attr_locals);
             attr_locals = (LocalVariableTableAttribute*) attribute;
             break;
+        case AttributeInfo::ATTRIBUTE_LocalVariableTypeTable:
+            assert(! attr_local_types);
+            attr_local_types = (LocalVariableTableAttribute*) attribute;
+            break;
         case AttributeInfo::ATTRIBUTE_StackMap:
             assert(! attr_stackmap);
             attr_stackmap = (StackMapAttribute*) attribute;
@@ -1809,26 +1842,26 @@ public:
         }
     }
 
-    virtual void Put(OutputBuffer& output_buffer) const
+    virtual void Put(OutputBuffer& out) const
     {
         unsigned i;
-        AttributeInfo::Put(output_buffer);
-        output_buffer.PutU2(max_stack);
-        output_buffer.PutU2(max_locals);
-        output_buffer.PutU4(code.Length());
+        AttributeInfo::Put(out);
+        out.PutU2(max_stack);
+        out.PutU2(max_locals);
+        out.PutU4(code.Length());
         for (i = 0; i < code.Length(); i++)
-            output_buffer.PutU1(code[i]);
-        output_buffer.PutU2(exception_table.Length());
+            out.PutU1(code[i]);
+        out.PutU2(exception_table.Length());
         for (i = 0; i < exception_table.Length(); i++)
         {
-            output_buffer.PutU2(exception_table[i].start_pc);
-            output_buffer.PutU2(exception_table[i].end_pc);
-            output_buffer.PutU2(exception_table[i].handler_pc);
-            output_buffer.PutU2(exception_table[i].catch_type);
+            out.PutU2(exception_table[i].start_pc);
+            out.PutU2(exception_table[i].end_pc);
+            out.PutU2(exception_table[i].handler_pc);
+            out.PutU2(exception_table[i].catch_type);
         }
-        output_buffer.PutU2(attributes.Length());
+        out.PutU2(attributes.Length());
         for (i = 0; i < attributes.Length(); i++)
-            attributes[i] -> Put(output_buffer);
+            attributes[i] -> Put(out);
     }
 
 #ifdef JIKES_DEBUG
@@ -1838,114 +1871,382 @@ public:
 
 
 //
-// Forward declaration, since AnnotationMemberValue and AnnotationValue are
+// Forward declaration, since AnnotationComponentValue and Annotation are
 // mutually referential.
 //
-class AnnotationValue;
+class Annotation;
 
 //
 // Describes an annotation value, as used inside AnnotationsAttribute,
 // ParameterAnnotationsAttribute, and AnnotationDefaultAttribute. JSR 175
 // section IX.
 //
-class AnnotationMemberValue
+class AnnotationComponentValue
 {
 public:
-    enum AnnotationMemberValueTag
+    enum AnnotationComponentValueTag
     {
-        MEMBER_byte = U_B,
-        MEMBER_char = U_C,
-        MEMBER_double = U_D,
-        MEMBER_float = U_F,
-        MEMBER_int = U_I,
-        MEMBER_long = U_J,
-        MEMBER_short = U_S,
-        MEMBER_boolean = U_Z,
-        MEMBER_string = U_s,
-        MEMBER_enum = U_e,
-        MEMBER_class = U_c,
-        MEMBER_annotation = U_AT,
-        MEMBER_array = U_LB
+        COMPONENT_byte = U_B,
+        COMPONENT_char = U_C,
+        COMPONENT_double = U_D,
+        COMPONENT_float = U_F,
+        COMPONENT_int = U_I,
+        COMPONENT_long = U_J,
+        COMPONENT_short = U_S,
+        COMPONENT_boolean = U_Z,
+        COMPONENT_string = U_s,
+        COMPONENT_enum = U_e,
+        COMPONENT_class = U_c,
+        COMPONENT_annotation = U_AT,
+        COMPONENT_array = U_LB
     };
-
-private:
-    AnnotationMemberValueTag tag;
-    // u2 const_value_index for boolean, byte, short, char, int, long,
-    //  float, double, String
-    // u2 type_name_index for enum constant
-    // u2 class_info_index for Class
-    // u2 num_values for array
-    // unused for annotation
-    u2 info;
-    // const_name_index for enum constant
-    // unused for all else
-    u2 const_name_index;
-    // annotation_value for annotation
-    // unused for all else
-    AnnotationValue* annotation_value;
-    // values[num_values] for array
-    // unused for all else
-    AnnotationMemberValue** values;
+protected:
+    const AnnotationComponentValueTag tag;
 
 public:
-    AnnotationMemberValue(ClassFile&);
-    ~AnnotationMemberValue();
+    AnnotationComponentValue(AnnotationComponentValueTag _tag)
+        : tag(_tag)
+    {}
+    virtual ~AnnotationComponentValue() {}
 
-    u2 Size() const;
+    //
+    // This reads the next component from the buffer, advancing it to the
+    // end of the component. The user is responsible for deleting the result.
+    //
+    static AnnotationComponentValue* AllocateAnnotationComponentValue(ClassFile&);
 
-    void Put(OutputBuffer&) const;
+    AnnotationComponentValueTag Tag() const { return tag; }
+
+    // Subclasses must override.
+    virtual u2 Length() const { return 1; } // +1 tag
+
+    // Subclasses must override.
+    virtual void Put(OutputBuffer& out) const
+    {
+        out.PutU1((u1) tag);
+    }
 
 #ifdef JIKES_DEBUG
-    void Print(const ConstantPool&) const;
+    // Subclasses must override.
+    virtual void Print(const ConstantPool&) const
+    {
+        Coutput << "<invalid tag:" << (unsigned) tag << '>';
+    }
 #endif // JIKES_DEBUG
 };
 
 
 //
-// Describes an annotation, as used inside AnnotationMemberValue,
+// Represents boolean, byte, short, char, int, long, float, double, String,
+// and Class annotation values.
+//
+class AnnotationComponentConstant : public AnnotationComponentValue
+{
+    // u1 tag; // inherited from AnnotationComponentValue
+    // u2 const_value_index for boolean, byte, short, char, int, long, float,
+    //    double, String,
+    // u2 class_info_index for Class
+    const u2 index;
+
+public:
+    AnnotationComponentConstant(AnnotationComponentValueTag _tag, u2 _index)
+        : AnnotationComponentValue(_tag)
+        , index(_index)
+    {
+        assert(tag != COMPONENT_annotation && tag != COMPONENT_array &&
+               tag != COMPONENT_enum);
+    }
+    AnnotationComponentConstant(ClassFile&, AnnotationComponentValueTag);
+    virtual ~AnnotationComponentConstant() {}
+
+    virtual u2 Length() const { return 3; } // +1 tag, +2 index
+
+    virtual void Put(OutputBuffer& out) const
+    {
+        AnnotationComponentValue::Put(out);
+        out.PutU2(index);
+    }
+
+#ifdef JIKES_DEBUG
+    virtual void Print(const ConstantPool& pool) const
+    {
+        Coutput << (unsigned) index << '=';
+        pool[index] -> Describe(pool);
+        switch (tag)
+        {
+        case COMPONENT_boolean:
+            if (pool[index] -> Tag() == CPInfo::CONSTANT_Integer)
+            {
+                i4 value = ((CPIntegerInfo*) pool[index]) -> Value();
+                if (value == 0)
+                    Coutput << "(false)";
+                else if (value == 0)
+                    Coutput << "(true)";
+                else Coutput << "(invalid)";
+            }
+            else Coutput << "(invalid)";
+            break;
+        case COMPONENT_char:
+            if (pool[index] -> Tag() == CPInfo::CONSTANT_Integer)
+            {
+                i4 value = ((CPIntegerInfo*) pool[index]) -> Value();
+                if (value == '\n')
+                    Coutput << "('\\n')";
+                else if (value == '\r')
+                    Coutput << "('\\r')";
+                else if (value == '\'')
+                    Coutput << "('\\'')";
+                else if (value == '\\')
+                    Coutput << "('\\\\')";
+                else if (value > 0x1f && value < 0x7f)
+                    Coutput << "('" << (char) value << "')";
+                else if (value >= 0 && value <= 0xffff)
+                {
+                    Coutput << "('\\u" << IntToString(value, 4).String()
+                            << "')";
+                }
+                else Coutput << "(invalid)";
+            }
+            else Coutput << "(invalid)";
+            break;
+        case COMPONENT_byte:
+            if (pool[index] -> Tag() == CPInfo::CONSTANT_Integer)
+            {
+                i4 value = ((CPIntegerInfo*) pool[index]) -> Value();
+                if (value < -128 || value > 127)
+                    Coutput << "(invalid)";
+            }
+            else Coutput << "(invalid)";
+            break;
+        case COMPONENT_short:
+            if (pool[index] -> Tag() == CPInfo::CONSTANT_Integer)
+            {
+                i4 value = ((CPIntegerInfo*) pool[index]) -> Value();
+                if (value < -32768 || value > 32767)
+                    Coutput << "(invalid)";
+            }
+            else Coutput << "(invalid)";
+            break;
+        case COMPONENT_int:
+            if (pool[index] -> Tag() != CPInfo::CONSTANT_Integer)
+                Coutput << "(invalid)";
+            break;
+        case COMPONENT_long:
+            if (pool[index] -> Tag() != CPInfo::CONSTANT_Long)
+                Coutput << "(invalid)";
+            break;
+        case COMPONENT_float:
+            if (pool[index] -> Tag() != CPInfo::CONSTANT_Float)
+                Coutput << "(invalid)";
+            break;
+        case COMPONENT_double:
+            if (pool[index] -> Tag() != CPInfo::CONSTANT_Double)
+                Coutput << "(invalid)";
+            break;
+        case COMPONENT_string:
+            if (pool[index] -> Tag() != CPInfo::CONSTANT_String)
+                Coutput << "(invalid)";
+            break;
+        case COMPONENT_class:
+            if (pool[index] -> Tag() != CPInfo::CONSTANT_Class)
+                Coutput << "(invalid)";
+            break;
+        default:
+            assert(false && "invalid constant-valued attribute");
+        }
+    }
+#endif // JIKES_DEBUG
+};
+
+
+//
+// Represents enum constant annotation values.
+//
+class AnnotationComponentEnum : public AnnotationComponentValue
+{
+    // u1 tag; // inherited from AnnotationComponentValue
+    const u2 type_name_index;
+    const u2 const_name_index;
+
+public:
+    AnnotationComponentEnum(u2 type, u2 name)
+        : AnnotationComponentValue(COMPONENT_enum)
+        , type_name_index(type)
+        , const_name_index(name)
+    {}
+    AnnotationComponentEnum(ClassFile&);
+    virtual ~AnnotationComponentEnum() {}
+
+    virtual u2 Length() const { return 5; } // +1 tag, +2 type, +2 name
+
+    virtual void Put(OutputBuffer& out) const
+    {
+        AnnotationComponentValue::Put(out);
+        out.PutU2(type_name_index);
+        out.PutU2(const_name_index);
+    }
+
+#ifdef JIKES_DEBUG
+    virtual void Print(const ConstantPool& pool) const
+    {
+        Coutput << (unsigned) type_name_index << '.'
+                << (unsigned) const_name_index << '=';
+        pool[type_name_index] -> Describe(pool);
+        if (pool[type_name_index] -> Tag() != CPInfo::CONSTANT_Class)
+            Coutput << "(invalid)";
+        Coutput << '.';
+        pool[const_name_index] -> Describe(pool);
+        if (pool[type_name_index] -> Tag() != CPInfo::CONSTANT_Utf8)
+            Coutput << "(invalid)";
+    }
+#endif // JIKES_DEBUG
+};
+
+
+//
+// Represents nested annotation values.
+//
+class AnnotationComponentAnnotation : public AnnotationComponentValue
+{
+    // u1 tag; // inherited from AnnotationComponentValue
+    Annotation* attr_value;
+
+public:
+    AnnotationComponentAnnotation(Annotation* nested)
+        : AnnotationComponentValue(COMPONENT_annotation)
+        , attr_value(nested)
+    {}
+    AnnotationComponentAnnotation(ClassFile&);
+    virtual ~AnnotationComponentAnnotation();
+
+    virtual u2 Length() const;
+
+    virtual void Put(OutputBuffer&) const;
+
+#ifdef JIKES_DEBUG
+    virtual void Print(const ConstantPool&) const;
+#endif // JIKES_DEBUG
+};
+
+
+//
+// Represents array annotation values.
+//
+class AnnotationComponentArray : public AnnotationComponentValue
+{
+    // u1 tag; // inherited from AnnotationComponentValue
+    // u2 num_values; // computed as values.Length()
+    Tuple<AnnotationComponentValue*> values; // values[num_values]
+
+    u2 len; // cache the length
+
+public:
+    AnnotationComponentArray()
+        : AnnotationComponentValue(COMPONENT_array)
+        , values(6, 16)
+        , len(3) // +1 tag, +2 num_values
+    {}
+    AnnotationComponentArray(ClassFile&);
+    virtual ~AnnotationComponentArray()
+    {
+        unsigned i = values.Length();
+        while (i--)
+            delete values[i];
+    }
+
+    u2 NumValues() const { return values.Length(); }
+
+    void AddValue(AnnotationComponentValue* value)
+    {
+        values.Next() = value;
+        len += value -> Length();
+    }
+
+    virtual u2 Length() const { return len; }
+
+    virtual void Put(OutputBuffer& out) const
+    {
+        AnnotationComponentValue::Put(out);
+        out.PutU2(values.Length());
+        for (unsigned i = 0; i < values.Length(); i++)
+            values[i] -> Put(out);
+    }
+
+#ifdef JIKES_DEBUG
+    virtual void Print(const ConstantPool& pool) const
+    {
+        Coutput << '{';
+        unsigned count = values.Length();
+        if (count)
+            values[0] -> Print(pool);
+        for (unsigned i = 1; i < count; i++)
+        {
+            Coutput << ", ";
+            values[i] -> Print(pool);
+        }
+        Coutput << '}';
+    }
+#endif // JIKES_DEBUG
+};
+
+
+//
+// Describes an annotation, as used inside AnnotationComponentValue,
 // ParameterAnnotationsAttribute, and AnnotationDefaultAttribute. JSR 175
 // section IX.
 //
-class AnnotationValue
+class Annotation
 {
     u2 type_index;
-    u2 num_member_value_pairs;
-    struct MemberValuePair
+    // u2 num_components; // computed as components.Length()
+    struct Component
     {
-        u2 member_name_index;
-        AnnotationMemberValue* value;
+        u2 component_name_index;
+        AnnotationComponentValue* component_value;
     };
-    // member_value_pairs[num_member_value_pairs]
-    MemberValuePair* member_value_pairs;
+    Tuple<Component> components; // components[num_components]
 
 public:
-    AnnotationValue(ClassFile&);
-    ~AnnotationValue()
+    Annotation(u2 index)
+        : type_index(index)
+        , components(6, 16)
+    {}
+    Annotation(ClassFile&);
+    ~Annotation()
     {
-        while (num_member_value_pairs--)
-            delete member_value_pairs[num_member_value_pairs].value;
-        delete [] member_value_pairs;
+        unsigned i = components.Length();
+        while (i--)
+            delete components[i].component_value;
     }
 
-    u2 Size() const
+    u2 Length() const
     {
-        u2 size = 4; // +2 type_index, +2 num_member_value_pairs
-        for (unsigned i = 0; i < num_member_value_pairs; i++)
-        {
+        u2 size = 4; // +2 type_index, +2 num_components
+        unsigned i = components.Length();
+        while (i--)
             // +2 member_name_index
-            size += 2 + member_value_pairs[i].value -> Size();
-        }
+            size += 2 + components[i].component_value -> Length();
         return size;
+    }
+
+    u1 NumComponents() const { return components.Length(); }
+
+    void AddComponent(u2 name_index, AnnotationComponentValue* value)
+    {
+        Component& component = components.Next();
+        component.component_name_index = name_index;
+        component.component_value = value;
     }
 
     void Put(OutputBuffer& out) const
     {
         out.PutU2(type_index);
-        out.PutU2(num_member_value_pairs);
-        for (unsigned i = 0; i < num_member_value_pairs; i++)
+        unsigned i = components.Length();
+        out.PutU1(i);
+        while (i--)
         {
-            out.PutU2(member_value_pairs[i].member_name_index);
-            member_value_pairs[i].value -> Put(out);
+            out.PutU2(components[i].component_name_index);
+            components[i].component_value -> Put(out);
         }
     }
 
@@ -1954,23 +2255,22 @@ public:
     {
         Coutput << (unsigned) type_index << "=@";
         pool[type_index] -> Describe(pool);
-        Coutput << ", length:" << (unsigned) num_member_value_pairs << '(';
-        if (num_member_value_pairs)
+        unsigned num_components = components.Length();
+        Coutput << ", length:" << num_components << '(';
+        if (num_components)
         {
-            Coutput << (unsigned) member_value_pairs[0].member_name_index
-                    << ':';
-            pool[member_value_pairs[0].member_name_index] -> Describe(pool);
+            Coutput << (unsigned) components[0].component_name_index << ':';
+            pool[components[0].component_name_index] -> Describe(pool);
             Coutput << '=';
-            member_value_pairs[0].value -> Print(pool);
+            components[0].component_value -> Print(pool);
         }
-        for (unsigned i = 1; i < num_member_value_pairs; i++)
+        for (unsigned i = 1; i < num_components; i++)
         {
-            Coutput << ", "
-                    << (unsigned) member_value_pairs[i].member_name_index
+            Coutput << ", " << (unsigned) components[i].component_name_index
                     << ':';
-            pool[member_value_pairs[i].member_name_index] -> Describe(pool);
+            pool[components[i].component_name_index] -> Describe(pool);
             Coutput << '=';
-            member_value_pairs[i].value -> Print(pool);
+            components[i].component_value -> Print(pool);
         }
         Coutput << ')';
     }
@@ -1987,7 +2287,7 @@ class AnnotationsAttribute : public AttributeInfo
     // u2 attribute_name_index; // inherited from AttributeInfo
     // u4 attribute_length; // inherited from AttributeInfo
     // u2 num_annotations; // computed as annotations.Length()
-    Tuple<AnnotationValue*> annotations; // annotations[num_annotations]
+    Tuple<Annotation*> annotations; // annotations[num_annotations]
 
 public:
     AnnotationsAttribute(u2 _name_index, bool visible)
@@ -2007,18 +2307,18 @@ public:
 
     u2 NumAnnotations() const { return annotations.Length(); }
 
-    void AddAnnotation(AnnotationValue* annotation)
+    void AddAnnotation(Annotation* annotation)
     {
         annotations.Next() = annotation;
-        attribute_length += annotation -> Size();
+        attribute_length += annotation -> Length();
     }
 
-    virtual void Put(OutputBuffer& output_buffer) const
+    virtual void Put(OutputBuffer& out) const
     {
-        AttributeInfo::Put(output_buffer);
-        output_buffer.PutU2(annotations.Length());
+        AttributeInfo::Put(out);
+        out.PutU2(annotations.Length());
         for (unsigned i = 0; i < annotations.Length(); i++)
-            annotations[i] -> Put(output_buffer);
+            annotations[i] -> Put(out);
     }
 
 #ifdef JIKES_DEBUG
@@ -2053,7 +2353,7 @@ class ParameterAnnotationsAttribute : public AttributeInfo
     // u2 num_annotations; // computed as parameters[i].Length()
     // annotation annotations[num_annotations]; // computed as parameters[i]
     // parameter_annotations[num_parameters]
-    Tuple<AnnotationValue*>* parameters;
+    Tuple<Annotation*>* parameters;
 
 public:
     ParameterAnnotationsAttribute(u2 _name_index, bool visible, u1 params)
@@ -2065,7 +2365,7 @@ public:
         , parameters(NULL)
     {
         if (params)
-            parameters = new Tuple<AnnotationValue*>[params];
+            parameters = new Tuple<Annotation*>[params];
     }
     ParameterAnnotationsAttribute(ClassFile&, bool visible);
     virtual ~ParameterAnnotationsAttribute()
@@ -2083,22 +2383,22 @@ public:
         return parameters[param].Length();
     }
 
-    void AddAnnotation(AnnotationValue* annotation, u1 param)
+    void AddAnnotation(Annotation* annotation, u1 param)
     {
         assert(param < num_parameters);
         parameters[param].Next() = annotation;
-        attribute_length += annotation -> Size();
+        attribute_length += annotation -> Length();
     }
 
-    virtual void Put(OutputBuffer& output_buffer) const
+    virtual void Put(OutputBuffer& out) const
     {
-        AttributeInfo::Put(output_buffer);
-        output_buffer.PutU1(num_parameters);
+        AttributeInfo::Put(out);
+        out.PutU1(num_parameters);
         for (unsigned i = 0; i < num_parameters; i++)
         {
-            output_buffer.PutU2(parameters[i].Length());
+            out.PutU2(parameters[i].Length());
             for (unsigned j = 0; j < parameters[i].Length(); j++)
-                parameters[i][j] -> Put(output_buffer);
+                parameters[i][j] -> Put(out);
         }
     }
 
@@ -2113,12 +2413,11 @@ public:
         Coutput << ", num_parameters: " << (unsigned) num_parameters << endl;
         for (unsigned i = 0; i < num_parameters; i++)
         {
-            Coutput.width(5);
-            Coutput << i << ": num_annotations: "
+            Coutput << " param " << i << ": num_annotations: "
                     << (unsigned) parameters[i].Length() << endl;
             for (unsigned j = 0; j < parameters[i].Length(); j++)
             {
-                Coutput << "    ";
+                Coutput << "  ";
                 parameters[i][j] -> Print(constant_pool);
                 Coutput << endl;
             }
@@ -2136,23 +2435,26 @@ class AnnotationDefaultAttribute : public AttributeInfo
 {
     // u2 attribute_name_index; // inherited from AttributeInfo
     // u4 attribute_length; // inherited from AttributeInfo
-    AnnotationMemberValue* default_value;
+    AnnotationComponentValue* default_value;
 
 public:
-    AnnotationDefaultAttribute(u2 _name_index, AnnotationMemberValue* value)
+    AnnotationDefaultAttribute(u2 _name_index, AnnotationComponentValue* value)
         : AttributeInfo(ATTRIBUTE_AnnotationDefault, _name_index,
-                        value -> Size())
+                        value -> Length())
         , default_value(value)
     {}
     AnnotationDefaultAttribute(ClassFile&);
     virtual ~AnnotationDefaultAttribute() { delete default_value; }
 
-    const AnnotationMemberValue* DefaultValue() const { return default_value; }
-
-    virtual void Put(OutputBuffer& output_buffer) const
+    const AnnotationComponentValue* DefaultValue() const
     {
-        AttributeInfo::Put(output_buffer);
-        default_value -> Put(output_buffer);
+        return default_value;
+    }
+
+    virtual void Put(OutputBuffer& out) const
+    {
+        AttributeInfo::Put(out);
+        default_value -> Put(out);
     }
 
 #ifdef JIKES_DEBUG
@@ -2194,11 +2496,11 @@ public:
     EnclosingMethodAttribute(ClassFile&);
     virtual ~EnclosingMethodAttribute() {}
 
-    virtual void Put(OutputBuffer& output_buffer) const
+    virtual void Put(OutputBuffer& out) const
     {
-        AttributeInfo::Put(output_buffer);
-        output_buffer.PutU2(class_index);
-        output_buffer.PutU2(name_and_type_index);
+        AttributeInfo::Put(out);
+        out.PutU2(class_index);
+        out.PutU2(name_and_type_index);
     }
 
 #ifdef JIKES_DEBUG
@@ -2277,24 +2579,8 @@ public:
     }
 
     inline void SetDescriptorIndex(u2 index) { descriptor_index = index; }
-    const char* Signature(const ConstantPool& constant_pool) const
-    {
-        assert(constant_pool[descriptor_index] -> Tag() ==
-               CPInfo::CONSTANT_Utf8);
-        const CPUtf8Info* sig = attr_signature
-            ? attr_signature -> Signature(constant_pool)
-            : (const CPUtf8Info*) constant_pool[descriptor_index];
-        return sig -> Bytes();
-    }
-    u2 SignatureLength(const ConstantPool& constant_pool) const
-    {
-        assert(constant_pool[descriptor_index] -> Tag() ==
-               CPInfo::CONSTANT_Utf8);
-        const CPUtf8Info* sig = attr_signature
-            ? attr_signature -> Signature(constant_pool)
-            : (const CPUtf8Info*) constant_pool[descriptor_index];
-        return sig -> Length();
-    }
+    const char* Signature(const ConstantPool&, const Control&) const;
+    u2 SignatureLength(const ConstantPool&, const Control&) const;
 
     inline u2 AttributesCount() const { return attributes.Length(); }
     inline void AddAttribute(AttributeInfo* attribute)
@@ -2344,14 +2630,14 @@ public:
     }
     
 
-    inline void Put(OutputBuffer& output_buffer) const
+    inline void Put(OutputBuffer& out) const
     {
-        output_buffer.PutU2(access_flags);
-        output_buffer.PutU2(name_index);
-        output_buffer.PutU2(descriptor_index);
-        output_buffer.PutU2(attributes.Length());
+        out.PutU2(access_flags);
+        out.PutU2(name_index);
+        out.PutU2(descriptor_index);
+        out.PutU2(attributes.Length());
         for (unsigned i = 0; i < attributes.Length(); i++)
-            attributes[i] -> Put(output_buffer);
+            attributes[i] -> Put(out);
     }
 
 #ifdef JIKES_DEBUG
@@ -2443,24 +2729,8 @@ public:
     }
 
     inline void SetDescriptorIndex(u2 index) { descriptor_index = index; }
-    const char* Signature(const ConstantPool& constant_pool) const
-    {
-        assert(constant_pool[descriptor_index] -> Tag() ==
-               CPInfo::CONSTANT_Utf8);
-        const CPUtf8Info* sig = attr_signature
-            ? attr_signature -> Signature(constant_pool)
-            : (const CPUtf8Info*) constant_pool[descriptor_index];
-        return sig -> Bytes();
-    }
-    u2 SignatureLength(const ConstantPool& constant_pool) const
-    {
-        assert(constant_pool[descriptor_index] -> Tag() ==
-               CPInfo::CONSTANT_Utf8);
-        const CPUtf8Info* sig = attr_signature
-            ? attr_signature -> Signature(constant_pool)
-            : (const CPUtf8Info*) constant_pool[descriptor_index];
-        return sig -> Length();
-    }
+    const char* Signature(const ConstantPool&, const Control&) const;
+    u2 SignatureLength(const ConstantPool&, const Control&) const;
 
     inline u2 AttributesCount() const { return attributes.Length(); }
     inline void AddAttribute(AttributeInfo* attribute)
@@ -2529,14 +2799,14 @@ public:
     const CodeAttribute* Code() const { return attr_code; }
     const ExceptionsAttribute* Exceptions() const { return attr_exceptions; }
 
-    inline void Put(OutputBuffer& output_buffer) const
+    inline void Put(OutputBuffer& out) const
     {
-        output_buffer.PutU2(access_flags);
-        output_buffer.PutU2(name_index);
-        output_buffer.PutU2(descriptor_index);
-        output_buffer.PutU2(attributes.Length());
+        out.PutU2(access_flags);
+        out.PutU2(name_index);
+        out.PutU2(descriptor_index);
+        out.PutU2(attributes.Length());
         for (unsigned i = 0; i < attributes.Length(); i++)
-            attributes[i] -> Put(output_buffer);
+            attributes[i] -> Put(out);
     }
 
 #ifdef JIKES_DEBUG
@@ -2750,6 +3020,7 @@ public:
     {
         return attr_innerclasses;
     }
+    const SignatureAttribute* Signature() const { return attr_signature; }
 
     void Write(TypeSymbol* unit_type) const;
 

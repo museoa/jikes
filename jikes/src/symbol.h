@@ -1104,7 +1104,7 @@ public:
 
     bool IsNestedIn(TypeSymbol*);
 
-    bool IsNested() { return outermost_type != this; }
+    bool IsNested() const { return outermost_type != this; }
 
     //
     // JLS2 8.1.2 states that ALL local and anonymous classes are inner
@@ -1114,14 +1114,14 @@ public:
     // is lame. If everything works correctly, these classes will correctly
     // be marked nested, yet never static.
     //
-    bool IsInner()
+    bool IsInner() const
     {
         assert((! IsLocal() && ! Anonymous()) ||
                (IsNested() && ! ACC_STATIC()));
         return IsNested() && ! ACC_STATIC();
     }
 
-    bool IsLocal()
+    bool IsLocal() const
     {
         for (Symbol* sym = owner;
              ! sym -> PackageCast(); sym = ((TypeSymbol*) sym) -> owner)

@@ -30,7 +30,7 @@ public:
         ACCESS_SYNCHRONIZED = 0x0020,
         ACCESS_SUPER = 0x0020,
         ACCESS_VOLATILE = 0x0040,
-        ACCESS_BRIDGE = 0x0040, // JSR 202
+        ACCESS_BRIDGE = 0x0040, // JSR 14
         ACCESS_TRANSIENT = 0x0080,
         ACCESS_VARARGS = 0x0080, // JSR 201
         ACCESS_NATIVE = 0x0100,
@@ -38,6 +38,7 @@ public:
         ACCESS_INTERFACE = 0x0200,
         ACCESS_ABSTRACT = 0x0400,
         ACCESS_STRICTFP = 0x0800,
+        ACCESS_ANNOTATION = 0x0800, // JSR 175? described in JSR 14
         ACCESS_SYNTHETIC = 0x1000, // JSR 201
         ACCESS_ACCESS = ACCESS_PUBLIC | ACCESS_PROTECTED | ACCESS_PRIVATE
     };
@@ -65,6 +66,7 @@ public:
     bool ACC_INTERFACE() const { return IsSet(ACCESS_INTERFACE); }
     bool ACC_ABSTRACT() const { return IsSet(ACCESS_ABSTRACT); }
     bool ACC_STRICTFP() const { return IsSet(ACCESS_STRICTFP); }
+    bool ACC_ANNOTATION() const { return IsSet(ACCESS_ANNOTATION); }
     bool ACC_SYNTHETIC() const { return IsSet(ACCESS_SYNTHETIC); }
 
     void SetFlags(u2 flag) { access_flags |= flag; }
@@ -85,6 +87,7 @@ public:
     void SetACC_INTERFACE() { SetFlags(ACCESS_INTERFACE); }
     void SetACC_ABSTRACT() { SetFlags(ACCESS_ABSTRACT); }
     void SetACC_STRICTFP() { SetFlags(ACCESS_STRICTFP); }
+    void SetACC_ANNOTATION() { SetFlags(ACCESS_ANNOTATION); }
     void SetACC_SYNTHETIC() { SetFlags(ACCESS_SYNTHETIC); }
 
     void ResetFlags(u2 flag = 0xffff) { access_flags &= ~ flag; }
@@ -104,6 +107,7 @@ public:
     void ResetACC_INTERFACE() { ResetFlags(ACCESS_INTERFACE); }
     void ResetACC_ABSTRACT() { ResetFlags(ACCESS_ABSTRACT); }
     void ResetACC_STRICTFP() { ResetFlags(ACCESS_STRICTFP); }
+    void ResetACC_ANNOTATION() { ResetFlags(ACCESS_ANNOTATION); }
     void ResetACC_SYNTHETIC() { ResetFlags(ACCESS_SYNTHETIC); }
 
     u2 Flags() const { return access_flags; }
@@ -202,13 +206,13 @@ public:
         if (ACC_TRANSIENT())
             Coutput << (metatype == ACCESS_METHOD ? " varags" : " transient");
         if (ACC_NATIVE())
-            Coutput << (metatype == ACCESS_TYPE ? " enum" : " native");
+            Coutput << (metatype == ACCESS_VARIABLE ? " enum" : " native");
         if (ACC_INTERFACE())
             Coutput << " interface";
         if (ACC_ABSTRACT())
             Coutput << " abstract";
         if (ACC_STRICTFP())
-            Coutput << " strictfp";
+            Coutput << (metatype == ACCESS_TYPE ? " annotation" : " strictfp");
         if (ACC_SYNTHETIC())
             Coutput << " synthetic";
         Coutput << endl;

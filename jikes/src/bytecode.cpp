@@ -802,7 +802,7 @@ void ByteCode::DeclareLocalVariable(AstVariableDeclarator* declarator)
                 (StripNops(expr) -> Type() == control.null_type))
             {
                 PutOp(OP_CHECKCAST);
-                PutU2(RegisterClass(type -> signature));
+                PutU2(RegisterClass(type));
             }
         }
     }
@@ -2317,9 +2317,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression* p, bool cond, Label& lab,
         {
             EmitExpression(expr);
             PutOp(OP_INSTANCEOF);
-            PutU2(right_type -> num_dimensions
-                  ? RegisterClass(right_type -> signature)
-                  : RegisterClass(right_type));
+            PutU2(RegisterClass(right_type));
             EmitBranch((cond ? OP_IFNE : OP_IFEQ), lab, over);
         }
         return;
@@ -3061,7 +3059,7 @@ int ByteCode::EmitExpression(AstExpression* expression, bool need_value)
             {
                 VariableSymbol* sym = (VariableSymbol*) expression -> symbol;
                 PutOp(OP_GETSTATIC);
-                PutU2(RegisterFieldref(sym -> owner -> TypeCast(), sym));
+                PutU2(RegisterFieldref(sym));
                 return 1;
             }
             return 0;
@@ -3891,7 +3889,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression* assignment_expre
         {
             assert(assignment_expression -> SimpleAssignment());
             PutOp(OP_CHECKCAST);
-            PutU2(RegisterClass(left_type -> signature));
+            PutU2(RegisterClass(left_type));
         }
         // fallthrough
     case STATIC_VAR:
@@ -4459,9 +4457,7 @@ int ByteCode::EmitInstanceofExpression(AstInstanceofExpression* expr,
         if (need_value)
         {
             PutOp(OP_INSTANCEOF);
-            PutU2(right_type -> num_dimensions
-                  ? RegisterClass(right_type -> signature)
-                  : RegisterClass(right_type));
+            PutU2(RegisterClass(right_type));
         }
     }
     return need_value ? 1 : 0;
@@ -4583,9 +4579,7 @@ void ByteCode::EmitCast(TypeSymbol* dest_type, TypeSymbol* source_type)
     else
     {
         PutOp(OP_CHECKCAST);
-        PutU2(dest_type -> num_dimensions
-              ? RegisterClass(dest_type -> signature)
-              : RegisterClass(dest_type));
+        PutU2(RegisterClass(dest_type));
     }
 }
 
@@ -4691,7 +4685,7 @@ int ByteCode::EmitInstanceCreationExpression(AstClassInstanceCreationExpression*
 
     PutOp(OP_INVOKESPECIAL);
     ChangeStack(-stack_words);
-    PutU2(RegisterMethodref(type, control.init_name_symbol, constructor));
+    PutU2(RegisterMethodref(type, constructor));
     return 1;
 }
 
@@ -4936,14 +4930,9 @@ int ByteCode::EmitMethodInvocation(AstMethodInvocation* expression,
 int ByteCode::CompleteCall(MethodSymbol* msym, int stack_words,
                            bool need_value, TypeSymbol* base_type)
 {
-    ChangeStack(-stack_words);
-
+    ChangeStack(- stack_words);
     TypeSymbol* type = (base_type ? base_type : msym -> containing_type);
-
-    PutU2(type -> ACC_INTERFACE()
-          ? RegisterInterfaceMethodref(type, msym -> ExternalIdentity(), msym)
-          : RegisterMethodref(type, msym -> ExternalIdentity(), msym));
-
+    PutU2(RegisterMethodref(type, msym));
     if (type -> ACC_INTERFACE())
     {
         PutU1(stack_words + 1);
@@ -5060,7 +5049,7 @@ void ByteCode::EmitNewArray(unsigned num_dims, const TypeSymbol* type)
     else
     {
         PutOp(OP_MULTIANEWARRAY);
-        PutU2(RegisterClass(type -> signature));
+        PutU2(RegisterClass(type));
         PutU1(num_dims); // load dims count
         ChangeStack(1 - num_dims);
     }
@@ -5088,7 +5077,7 @@ void ByteCode::EmitArrayAccessLhs(AstArrayAccess* expression)
         // or directly used as an array access base.
         //
         PutOp(OP_CHECKCAST);
-        PutU2(RegisterClass(base_type -> signature));
+        PutU2(RegisterClass(base_type));
     }
     EmitExpression(expression -> expression);
 }
@@ -5705,9 +5694,7 @@ void ByteCode::EmitThisInvocation(AstThisCall* this_call)
     PutOp(OP_INVOKESPECIAL);
     ChangeStack(-stack_words);
 
-    PutU2(RegisterMethodref(unit_type,
-                            this_call -> symbol -> ExternalIdentity(),
-                            this_call -> symbol));
+    PutU2(RegisterMethodref(unit_type, this_call -> symbol));
 }
 
 
@@ -5747,9 +5734,7 @@ void ByteCode::EmitSuperInvocation(AstSuperCall* super_call)
 
     PutOp(OP_INVOKESPECIAL);
     ChangeStack(-stack_words);
-    PutU2(RegisterMethodref(unit_type -> super,
-                            super_call -> symbol -> ExternalIdentity(),
-                            super_call -> symbol));
+    PutU2(RegisterMethodref(unit_type -> super, super_call -> symbol));
 }
 
 
@@ -5939,28 +5924,30 @@ static void op_trap()
 
 
 ByteCode::ByteCode(TypeSymbol* type)
-    : ClassFile(),
-      control(type -> semantic_environment -> sem -> control),
-      semantic(*type -> semantic_environment -> sem),
-      unit_type(type),
-      string_overflow(false),
-      library_method_not_found(false),
-      last_op_goto(false),
-      shadow_parameter_offset(0),
-      double_constant_pool_index(NULL),
-      integer_constant_pool_index(NULL),
-      long_constant_pool_index(NULL),
-      float_constant_pool_index(NULL),
-      string_constant_pool_index(NULL),
-
-      utf8_constant_pool_index(segment_pool,
-                               control.Utf8_pool.symbol_pool.Length()),
-      class_constant_pool_index(segment_pool,
-                                control.Utf8_pool.symbol_pool.Length()),
-
-      name_and_type_constant_pool_index(NULL),
-      fieldref_constant_pool_index(NULL),
-      methodref_constant_pool_index(NULL)
+    : ClassFile()
+    , control(type -> semantic_environment -> sem -> control)
+    , semantic(*type -> semantic_environment -> sem)
+    , unit_type(type)
+    , string_overflow(false)
+    , library_method_not_found(false)
+    , last_op_goto(false)
+    , shadow_parameter_offset(0)
+    , code_attribute(NULL)
+    , line_number_table_attribute(NULL)
+    , local_variable_table_attribute(NULL)
+    , inner_classes_attribute(NULL)
+    , double_constant_pool_index(NULL)
+    , integer_constant_pool_index(NULL)
+    , long_constant_pool_index(NULL)
+    , float_constant_pool_index(NULL)
+    , string_constant_pool_index(NULL)
+    , utf8_constant_pool_index(segment_pool,
+                               control.Utf8_pool.symbol_pool.Length())
+    , class_constant_pool_index(segment_pool,
+                                control.Utf8_pool.symbol_pool.Length())
+    , name_and_type_constant_pool_index(NULL)
+    , fieldref_constant_pool_index(NULL)
+    , methodref_constant_pool_index(NULL)
 {
 #ifdef JIKES_DEBUG
     if (! control.option.nowrite)
@@ -5973,7 +5960,8 @@ ByteCode::ByteCode(TypeSymbol* type)
     // strictfp. Also, a non-access flag, the super bit, must be set for
     // classes but not interfaces. For top-level types, this changes nothing
     // except adding the super bit. For nested types, the correct access bits
-    // are emitted later as part of the InnerClasses attribute.
+    // are emitted later as part of the InnerClasses attribute. Also, no class
+    // is marked strictfp.
     //
     SetFlags(unit_type -> Flags());
     if (ACC_PROTECTED())
@@ -6354,7 +6342,9 @@ int ByteCode::LoadVariable(VariableCategory kind, AstExpression* expr,
         assert(name && ! base);
         if (! need_value)
             return 0;
-        LoadLocal(sym -> LocalVariableIndex(), expression_type);
+        if (expr -> IsConstant())
+            LoadLiteral(expr -> value, expression_type);
+        else LoadLocal(sym -> LocalVariableIndex(), expression_type);
         return GetTypeWords(expression_type);
     case ACCESSED_VAR:
         {
@@ -6592,8 +6582,7 @@ void ByteCode::StoreVariable(VariableCategory kind, AstExpression* expr)
 
 
 //
-// finish off code by writing SourceFile attribute
-// and InnerClasses attribute (if appropriate)
+// Finish off code by writing remaining type-level attributes.
 //
 void ByteCode::FinishCode()
 {
@@ -6605,58 +6594,6 @@ void ByteCode::FinishCode()
                      (RegisterUtf8(control.SourceFile_literal),
                       RegisterUtf8(unit_type -> file_symbol ->
                                    FileNameLiteral())));
-
-    //
-    // Generate InnerClasses attribute for every CONSTANT_Class_info in the
-    // pool that is nested in another type.
-    //
-    if (unit_type -> IsNested() || unit_type -> NumNestedTypes())
-    {
-        inner_classes_attribute =
-            new InnerClassesAttribute(RegisterUtf8
-                                      (control.InnerClasses_literal));
-
-        //
-        // need to build chain from this type to its owner all the way to the
-        // containing type and then write that out in reverse order (so
-        // containing type comes first), and then write out an entry for each
-        // immediately contained type
-        //
-        Tuple<TypeSymbol*> owners;
-        for (TypeSymbol* t = unit_type;
-             t && t != unit_type -> outermost_type;
-             t = t -> ContainingType())
-        {
-            owners.Next() = t;
-        }
-
-        for (int j = owners.Length() - 1; j >= 0; j--)
-        {
-            TypeSymbol* outer = owners[j];
-            inner_classes_attribute ->
-                AddInnerClass(RegisterClass(outer),
-                              (outer -> IsLocal() ? 0
-                               : RegisterClass(outer -> ContainingType())),
-                              (outer -> Anonymous() ? 0
-                               : RegisterName(outer -> name_symbol)),
-                              outer -> Flags());
-        }
-
-        for (unsigned k = 0; k < unit_type -> NumNestedTypes(); k++)
-        {
-            TypeSymbol* nested = unit_type -> NestedType(k);
-            inner_classes_attribute ->
-                AddInnerClass(RegisterClass(nested),
-                              (nested -> IsLocal() ? 0
-                               : RegisterClass(nested -> ContainingType())),
-                              (nested -> Anonymous() ? 0
-                               : RegisterName(nested -> name_symbol)),
-                              nested -> Flags());
-        }
-
-        attributes.Next() = inner_classes_attribute;
-    }
-
     if (unit_type -> IsDeprecated())
         AddAttribute(CreateDeprecatedAttribute());
     if (unit_type -> ACC_SYNTHETIC() &&
@@ -6669,6 +6606,14 @@ void ByteCode::FinishCode()
         MethodSymbol* enclosing = (MethodSymbol*) unit_type -> owner;
         AddAttribute(CreateEnclosingMethodAttribute(enclosing));
     }
+    //
+    // In case they weren't referenced elsewhere, make sure all nested types
+    // of this class are listed in the constant pool.  A side effect of
+    // registering the class is updating the InnerClasses attribute.
+    //
+    unsigned i = unit_type -> NumNestedTypes();
+    while (i--)
+        RegisterClass(unit_type -> NestedType(i));
 }
 
 

@@ -1,3 +1,29 @@
+2004-02-12  Eric Blake  <ebb9@byu.net>
+
+	* src/access.h (ACCESS_ANNOTATION): Add, from JSR 175? According
+	to Sun, the value of this flag may still change before 1.5 is
+	final.
+	* src/bytecode.h (RegisterFieldRef, RegisterMethodref),
+	(RegisterClass): Decrease number of overloads, in order to better
+	track inner classes. Don't emit the currently forbidden
+	ACC_STRICTFP for inner classes.
+	* src/bytecode.cpp: Change all callers of updated Register*.
+	(LoadVariable): Don't load String constants, fixes bug 3850.
+	* src/class.h (CPInfo::tag): Change type to ConstantPoolTag.
+	(ConstantPool::invalid): Move inline.
+	(ATTRIBUTE_LocalVariableTypeTable): Implement, shares code with
+	LocalVariableTable.
+	(AnnotationComponentValue): Rename from AnnotationMemberValue.
+	(AnnotationComponentConstant, AnnotationComponentEnum),
+	(AnnotationComponentAnnotation, AnnotationComponentArray): Break
+	into subclasses for better implementation.
+	(Annotation): Rename from AnnotationValue, and make easier to
+	dynamically grow.
+	(Signature, SignatureLength): Update method signatures to allow
+	checking -source 1.5; fixes bug 3853.
+	* src/class.cpp: Implement.
+	* src/symbol.h (IsNested, IsInner, IsLocal): Const-ify.
+
 2004-02-06  Elliott Hughes  <enh@acm.org>
 
 	* src/bytecode.cpp (EmitPreUnaryExpression): Fix bad assertion -
