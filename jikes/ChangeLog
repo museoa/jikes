@@ -1,3 +1,10 @@
+2002-05-06  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/depend.h:
+	* src/depend.cpp:
+	* src/incrmnt.cpp:
+	* src/symbol.cpp (TypeSymbol): Templatize cycle checking.
+
 2002-05-01  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/expr.cpp (ConvertToType): Don't cast to missing return type

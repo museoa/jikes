@@ -12,8 +12,7 @@
 #define depend_INCLUDED
 
 #include "platform.h"
-// Also included in platform.h but that might change
-//#include "tuple.h"
+#include "tuple.h"
 
 #ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes { // Open namespace Jikes block
@@ -27,15 +26,31 @@ class AstConstructorDeclaration;
 class SymbolSet;
 class Control;
 
+template <typename T>
 class CycleChecker
 {
 public:
     enum { OMEGA = -1, CYCLE_INFINITY = INT_MAX };
 
     inline int Min(int x, int y) { return (x < y ? x : y); }
+
+protected:
+    class Stack
+    {
+    public:
+        void Push(T *t) { info.Next() = t; }
+        void Pop() { if (info.Length() > 0) info.Reset(info.Length() - 1); }
+        int Size() { return info.Length(); }
+        T *Top()
+        {
+            return (T *) (info.Length() > 0 ? info[info.Length() - 1] : NULL);
+        }
+    private:
+        Tuple<T *> info;
+    } stack;
 };
 
-class TypeCycleChecker : public CycleChecker
+class TypeCycleChecker : public CycleChecker<TypeSymbol>
 {
 public:
 
@@ -45,17 +60,6 @@ public:
     void PartialOrder(SymbolSet &);
 
 private:
-    class Stack
-    {
-    public:
-        void Push(TypeSymbol *type) { info.Next() = type; }
-        void Pop()                  { if (info.Length() > 0) info.Reset(info.Length() - 1); }
-        int Size()                  { return info.Length(); }
-        TypeSymbol *Top()           { return (TypeSymbol *) (info.Length() > 0 ? info[info.Length() - 1] : NULL); }
-    private:
-        Tuple<TypeSymbol *> info;
-    } stack;
-
     Tuple<TypeSymbol *> &type_list;
 
     void ProcessSubtypes(TypeSymbol *);
@@ -63,36 +67,24 @@ private:
 };
 
 
-class ConstructorCycleChecker : public CycleChecker
+class ConstructorCycleChecker : public CycleChecker<AstConstructorDeclaration>
 {
 public:
-
     ConstructorCycleChecker(AstClassBody *);
 
 private:
-    class Stack
-    {
-    public:
-        void Push(AstConstructorDeclaration *constructor) { info.Next() = constructor; }
-        void Pop()                                        { if (info.Length() > 0) info.Reset(info.Length() - 1); }
-        int Size()                                        { return info.Length(); }
-        AstConstructorDeclaration *Top()
-           { return (AstConstructorDeclaration *) (info.Length() > 0 ? info[info.Length() - 1] : NULL);}
-    private:
-        Tuple<AstConstructorDeclaration *> info;
-    } stack;
-
     void CheckConstructorCycles(AstConstructorDeclaration *);
 };
 
 
-class TypeDependenceChecker : public CycleChecker
+class TypeDependenceChecker : public CycleChecker<TypeSymbol>
 {
 public:
-    TypeDependenceChecker(Control *control_, SymbolSet &file_set_, Tuple<TypeSymbol *> &type_trash_bin_)
-        : file_set(file_set_),
-          control(control_),
-          type_trash_bin(type_trash_bin_)
+    TypeDependenceChecker(Control *control_,
+			  SymbolSet &file_set_,
+			  Tuple<TypeSymbol *> &type_trash_bin_) : file_set(file_set_),
+								  control(control_),
+								  type_trash_bin(type_trash_bin_)
     {}
 
     ~TypeDependenceChecker() {}
@@ -107,17 +99,6 @@ public:
 private:
     Control *control;
     Tuple<TypeSymbol *> &type_trash_bin;
-
-    class Stack
-    {
-    public:
-        void Push(TypeSymbol *type) { info.Next() = type; }
-        void Pop()                  { if (info.Length() > 0) info.Reset(info.Length() - 1); }
-        int Size()                  { return info.Length(); }
-        TypeSymbol *Top()           { return (TypeSymbol *) (info.Length() > 0 ? info[info.Length() - 1] : NULL); }
-    private:
-        Tuple<TypeSymbol *> info;
-    } stack;
 
     void OutputMake(FILE *, char *, Tuple<FileSymbol *> &);
     void OutputMake(FileSymbol *);
