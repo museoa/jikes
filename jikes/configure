@@ -3541,9 +3541,9 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 #line $LINENO "configure"
 #include "confdefs.h"
 
-int f(int  x){return 1;}
-int f(char x){return 1;}
-int f(bool x){return 1;}
+int f(int  x){return x;}
+int f(char x){return x;}
+int f(bool x){return x;}
 
 int
 main ()
@@ -5025,7 +5025,7 @@ else
     # include <iconv.h>
     #endif
 
-int main (int argc, char** argv) {
+int main (int, char**) {
   const char * src = "abc\0";
   size_t dstspace = 4*sizeof(wchar_t);
   size_t srcspace = strlen(src);
@@ -5147,7 +5147,7 @@ else
     # include <iconv.h>
     #endif
 
-int main (int argc, char** argv) {
+int main (int, char**) {
   const char * src = "abc\0";
   size_t dstspace = 4*sizeof(wchar_t);
   size_t srcspace = strlen(src);
@@ -17876,7 +17876,7 @@ else
 int
 main ()
 {
-int i = __S_IFDIR;
+int i = __S_IFDIR; i++;
   ;
   return 0;
 }
@@ -17918,7 +17918,7 @@ else
 int
 main ()
 {
-int i = _S_IFDIR;
+int i = _S_IFDIR; i++;
   ;
   return 0;
 }
@@ -17960,7 +17960,7 @@ else
 int
 main ()
 {
-int i = S_IFDIR;
+int i = S_IFDIR; i++;
   ;
   return 0;
 }

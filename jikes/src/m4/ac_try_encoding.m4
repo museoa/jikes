@@ -35,7 +35,7 @@ AC_DEFUN(AC_TRY_AN_ENCODING, [
     # include <iconv.h>
     #endif
 
-int main (int argc, char** argv) {
+int main (int, char**) {
   const char * src = "abc\0";
   size_t dstspace = 4*sizeof(wchar_t);
   size_t srcspace = strlen(src);

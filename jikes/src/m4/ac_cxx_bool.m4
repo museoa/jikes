@@ -13,9 +13,9 @@ AC_DEFUN(AC_CXX_BOOL,
 ac_cv_cxx_bool,
 [AC_LANG_PUSH([C++])
  AC_TRY_COMPILE([
-int f(int  x){return 1;}
-int f(char x){return 1;}
-int f(bool x){return 1;}
+int f(int  x){return x;}
+int f(char x){return x;}
+int f(bool x){return x;}
 ],[bool b = true; return f(b);],
  ac_cv_cxx_bool=yes, ac_cv_cxx_bool=no)
  AC_LANG_POP([C++])
