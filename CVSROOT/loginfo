@@ -27,5 +27,4 @@
 ALL		$CVSROOT/CVSROOT/log_accum.pl %s
 
 # this must be ONE line... ugly, but functional
-jikes-website ((sleep 2 && cd /www/software10/html/jikes && cvs update -P > /tmp/jikes.last.www.commit 2>&1) &)
-
+jikes-website ((sleep 2 && cd /www/software10/html/jikes && cvs update -Pd > /tmp/jikes.last.www.commit 2>&1) &)
