@@ -524,19 +524,14 @@ public:
     // Return a boolean value indicating whether or not the element i
     // is in the bitset in question.
     //
-    int operator[](const int i)
+    bool operator[](const int i)
     {
         assert(i >= 0 && i < set_size);
 
-        //
-        // Note that no check is made here to ensure that 0 <= i < set_size.
-        // Such a check might be useful for debugging and a range exception
-        // should be thrown if it yields TRUE.
-        //
-        return s[i / cell_size] &
-               ((i + cell_size) % cell_size
-                         ? (CELL) 1 << ((i + cell_size) % cell_size)
-                         : (CELL) 1);
+        return (s[i / cell_size] &
+                ((i + cell_size) % cell_size
+                          ? (CELL) 1 << ((i + cell_size) % cell_size)
+                          : (CELL) 1)) != 0;
     }
 
     //

@@ -1371,7 +1371,7 @@ VariableSymbol *Semantic::FindInstance(TypeSymbol *base_type, TypeSymbol *enviro
         lhs -> symbol = (variable ? variable : base_type -> InsertThis(k));
 
         AstAssignmentExpression *assign = compilation_unit -> ast_pool
-                                                           -> GenAssignmentExpression(AstAssignmentExpression::EQUAL, loc);
+                                                           -> GenAssignmentExpression(AstAssignmentExpression::SIMPLE_EQUAL, loc);
         assign -> left_hand_side = lhs;
         assign -> expression     = rhs;
         assign -> symbol         = lhs -> Type();
@@ -3577,7 +3577,7 @@ void Semantic::UpdateGeneratedLocalConstructor(MethodSymbol *constructor)
             rhs -> symbol = symbol;
 
             AstAssignmentExpression *assign = compilation_unit -> ast_pool
-                                                               -> GenAssignmentExpression(AstAssignmentExpression::EQUAL,
+                                                               -> GenAssignmentExpression(AstAssignmentExpression::SIMPLE_EQUAL,
                                                                                           constructor_block -> left_brace_token);
             assign -> left_hand_side = lhs;
             assign -> expression     = rhs;
@@ -7086,7 +7086,7 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
         }
     }
 
-    if (assignment_expression -> assignment_tag == AstAssignmentExpression::EQUAL)
+    if (assignment_expression -> assignment_tag == AstAssignmentExpression::SIMPLE_EQUAL)
     {
         if (left_type != right_type)
         {
