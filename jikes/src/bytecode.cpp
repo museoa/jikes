@@ -4452,8 +4452,6 @@ void ByteCode::EmitThisInvocation(AstThisCall *this_call)
     PutOp(OP_ALOAD_0); // load 'this'
 
     int stack_words = 0; // words on stack needed for arguments
-    if (this_call -> base_opt)
-        stack_words += EmitExpression(this_call -> base_opt);
 
     for (int i = 0; i < this_call -> NumLocalArguments(); i++)
         stack_words += EmitExpression((AstExpression *) this_call -> LocalArgument(i));

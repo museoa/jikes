@@ -1750,8 +1750,6 @@ private:
 public:
     MethodSymbol *symbol;
 
-    AstExpression *base_opt;
-    LexStream::TokenIndex dot_token_opt;
     LexStream::TokenIndex this_token;
     LexStream::TokenIndex left_parenthesis_token;
     LexStream::TokenIndex right_parenthesis_token;

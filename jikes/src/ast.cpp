@@ -1283,20 +1283,12 @@ Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
 
     void AstThisCall::Print(LexStream& lex_stream)
     {
-        Coutput << "#" << this -> id << " (ThisCall):  ";
-        if (base_opt)
-        {
-            Coutput << "#" << base_opt -> id
-                    << lex_stream.NameString(dot_token_opt);
-        }
-        Coutput << lex_stream.NameString(this_token)
+        Coutput << "#" << this -> id << " (ThisCall):  "
+                << lex_stream.NameString(this_token)
                 << " (";
         for (int i = 0; i < this -> NumArguments(); i++)
             Coutput << " #" << this -> Argument(i) -> id;
         Coutput << " )" << endl;
-
-        if (base_opt)
-            base_opt -> Print(lex_stream);
 
         for (int j = 0; j < NumArguments(); j++)
             this -> Argument(j) -> Print(lex_stream);

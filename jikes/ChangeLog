@@ -1,3 +1,35 @@
+2001-09-06  Eric Blake  <ebb9@email.byu.edu>
+
+	Patch 85:
+	* src/java.g: Fixed some copyright and namespace
+	code transferred to generated files.
+	Fixed up some comments (in particular, where JLS2
+	clarifies questions posed by JLS1), typos, and
+	whitespace consistency problems.
+	(ExplicitConstructorInvocation): Removed this
+	illegal production - from bug 420.
+	(Primary, ArrayCreationExpression, ArrayAccess)
+	(ArrayCreationInitialized, ArrayCreationUninitialized):
+	Split ArrayCreationExpression into two parts, to
+	allow legal array access of initialized array,
+	added in JLS2 - from bug 123.
+	* src/javaact.cpp: 
+	* src/javaact.h:
+	* src/javadcl.h:
+	* src/javadef.h:
+	* src/javaprs.h:
+	* src/javasym.h: Regenerate with CVS version of jikespg - from bug
+	516.
+	* src/bytecode.cpp (EmitThisInvocation): 
+	* src/body.cpp (ProcessThisCall):
+	* src/symbol.cpp (GetReadAccessMethod):
+	Remove code for qualified explicit this constructor,
+	which is not legal Java - from bug 420.
+	* src/ast.cpp (Print):
+	* src/ast.h (AstThisCall): Remove base_opt and
+        dot_token_opt, as they are not necessary in legal
+        Java - from bug 420.
+	
 2001-09-06  Russ Trotter <russtrotter@yahoo.com>
 
 	* src/bytecode.cpp (GenerateAccessMethod)

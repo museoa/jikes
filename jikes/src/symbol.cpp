@@ -1692,7 +1692,6 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
             method_declarator -> right_parenthesis_token = declarator -> RightToken();
 
             AstThisCall *this_call = ast_pool -> GenThisCall();
-            this_call -> base_opt                = NULL;
             this_call -> this_token              = loc;
             this_call -> left_parenthesis_token  = loc;
             this_call -> right_parenthesis_token = loc;

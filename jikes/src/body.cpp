@@ -1529,55 +1529,9 @@ void Semantic::ProcessClassDeclaration(Ast *stmt)
 
 void Semantic::ProcessThisCall(AstThisCall *this_call)
 {
-    TypeSymbol *this_type = ThisType(),
-               *containing_type = this_type -> ContainingType();
+    TypeSymbol *this_type = ThisType();
 
     ExplicitConstructorInvocation() = this_call; // signal that we are about to process an explicit constructor invocation
-
-    if (this_call -> base_opt)
-    {
-        ProcessExpression(this_call -> base_opt);
-
-        TypeSymbol *expr_type = this_call -> base_opt -> Type();
-        if (expr_type != control.no_type)
-        {
-            if (! containing_type)
-            {
-                ReportSemError(SemanticError::TYPE_NOT_INNER_CLASS,
-                               this_call -> base_opt -> LeftToken(),
-                               this_call -> base_opt -> RightToken(),
-                               this_type -> ContainingPackage() -> PackageName(),
-                               this_type -> ExternalName(),
-                               expr_type -> ContainingPackage() -> PackageName(),
-                               expr_type -> ExternalName());
-                this_call -> base_opt -> symbol = control.no_type;
-            }
-            //
-            // 1.2 change. In 1.1, we used to allow access to any subclass of type. Now, there must
-            // be a perfect match.
-            //
-            // else if (! expr_type -> IsSubclass(containing_type))
-            //
-            else if (expr_type != containing_type)
-            {
-                ReportSemError(SemanticError::INVALID_ENCLOSING_INSTANCE,
-                               this_call -> base_opt -> LeftToken(),
-                               this_call -> base_opt -> RightToken(),
-                               this_type -> ContainingPackage() -> PackageName(),
-                               this_type -> ExternalName(),
-                               containing_type -> ContainingPackage() -> PackageName(),
-                               containing_type -> ExternalName(),
-                               expr_type -> ContainingPackage() -> PackageName(),
-                               expr_type -> ExternalName());
-                this_call -> base_opt -> symbol = control.no_type;
-            }
-        }
-    }
-    else // (! this_call -> base_opt)
-    {
-        if (this_type -> IsInner())
-            this_call -> base_opt = CreateAccessToType(this_call, containing_type);
-    }
 
     bool no_bad_argument = true;
 
