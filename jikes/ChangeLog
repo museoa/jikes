@@ -1,3 +1,8 @@
+2000-01-10  Christopher Abbey  <cabbey@bresnanlink.net>
+
+	* src/jikesapi.cpp: Move DefaultFileReader and
+	DefaultFileWriter classes into the Jikes namespace.
+
 2000-01-10  Mo DeJong  <mdejong@redhat.com>
 
 	* src/ast.cpp:

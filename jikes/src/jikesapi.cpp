@@ -23,10 +23,15 @@
 using namespace Jikes;
 #endif
 
-// Note: JikesAPI classes only use the Jikes namespace above, they
+// Note: JikesAPI classes only use the Jikes namespace, they
 // are never defined in the Jikes namespace. The use of the Jikes
 // namespace is a compile time option and jikesapi.h can not
-// include build files like platform.h or config.h
+// include build files like platform.h or config.h. Only
+// the Default* classes in this file can live in the Jikes namespace.
+
+#ifdef	HAVE_JIKES_NAMESPACE
+namespace Jikes {
+#endif
 
 /**
  * A default implementation of ReadObject that read from the file sysytem.
@@ -78,6 +83,10 @@ class DefaultFileWriter: public JikesAPI::FileWriter
     size_t    dataWritten;
 #endif
 };
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
+#endif
 
 JikesOption::~JikesOption()
 {
@@ -281,6 +290,11 @@ size_t JikesAPI::FileWriter::write(const unsigned char *data,size_t size)
 }
 
 
+#ifdef	HAVE_JIKES_NAMESPACE
+namespace Jikes {
+#endif
+
+
 #ifdef UNIX_FILE_SYSTEM
 // The following methods define UNIX specific methods for
 // reading files from the file system. WINDOWS method follow in
@@ -441,7 +455,10 @@ size_t DefaultFileWriter::doWrite(const unsigned char *data,size_t size)
     return(size);
 }
 
+#endif // UNIX_FILE_SYSTEM
+
+
+#ifdef	HAVE_JIKES_NAMESPACE
+}			// Close namespace Jikes block
 #endif
-
-
 
