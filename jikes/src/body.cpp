@@ -274,9 +274,13 @@ void Semantic::ProcessSynchronizedStatement(Ast *stmt)
              *block_body = synchronized_statement -> block;
 
     //
-    // "synchronized" blocks require two more local variable slots for synchronization,
-    // plus one extra variable slot if the containing method returns a value, plus an
-    // additional slot if the value returned is double or long.
+    // Synchronized blocks require one special local variable slot for the monitor.
+    // However, since a try-finally may require up to four slots, we reserve them
+    // all at this time.  Otherwise, the sequence {synchronized; variable declaration;
+    // try-finally} within the same enclosing block will cause a VerifyError.
+    // The VM should not care if some of these special slots are unused.
+    //
+    // TODO: Is it worth optimizing this and try-finally to avoid wasting variable slots?
     //
     BlockSymbol *enclosing_block_symbol = enclosing_block -> block_symbol;
     if (enclosing_block_symbol -> try_or_synchronized_variable_index == 0) // first such statement encountered in enclosing block?
@@ -285,9 +289,9 @@ void Semantic::ProcessSynchronizedStatement(Ast *stmt)
         enclosing_block_symbol -> max_variable_index += 2;
         if (ThisMethod() -> Type() != control.void_type)
         {
-             if (control.IsDoubleWordType(ThisMethod() -> Type()))
-                  enclosing_block_symbol -> max_variable_index += 2;
-             else enclosing_block_symbol -> max_variable_index += 1;
+            if (control.IsDoubleWordType(ThisMethod() -> Type()))
+                enclosing_block_symbol -> max_variable_index += 2;
+            else enclosing_block_symbol -> max_variable_index += 1;
         }
     }
 
@@ -1118,20 +1122,26 @@ void Semantic::ProcessTryStatement(Ast *stmt)
 
     //
     // A try_statement containing a finally clause requires some extra local
-    // variables in its immediately enclosing block. If it is enclosed in a method
-    // that returns void then 2 extra elements are needed. If the method
-    // returns a long or a double value, two additional elements are needed.
-    // Otherwise, one additional element is needed.
-    // If this try_statement is the first try_statement with a finally clause
-    // that was encountered in the immediately enclosing block, we allocate
-    // two extra slots for the special local variables.
+    // variables in its immediately enclosing block. The first holds an
+    // uncaught exception from the try or catch block.  The second holds the
+    // return address of the jsr.  And if the method has a return type, 1-2
+    // more slots are needed to hold the return value in the case of an
+    // abrupt exit from a try or catch block.
+    //
+    // Meanwhile, statements within try or catch blocks cannot share local
+    // variables with the finally block, because of a potential VerifyError if
+    // the finally overwrites a register holding a monitor of an enclosed
+    // synchronized statement during an abrupt exit.
     //
     AstBlock *enclosing_block = LocalBlockStack().TopBlock();
+    int max_variable_index = enclosing_block -> block_symbol -> max_variable_index;
+
     if (try_statement -> finally_clause_opt)
     {
         BlockSymbol *enclosing_block_symbol = enclosing_block -> block_symbol;
-        if (enclosing_block_symbol -> try_or_synchronized_variable_index == 0) // first such statement encountered in enclosing block?
+        if (enclosing_block_symbol -> try_or_synchronized_variable_index == 0)
         {
+            // first such statement encountered in enclosing block?
             enclosing_block_symbol -> try_or_synchronized_variable_index = enclosing_block_symbol -> max_variable_index;
             enclosing_block_symbol -> max_variable_index += 2;
             if (ThisMethod() -> Type() != control.void_type)
@@ -1143,17 +1153,21 @@ void Semantic::ProcessTryStatement(Ast *stmt)
         }
 
         //
-        // A finally block is processed in the environment of its immediate enclosing block.
-        // (as opposed to the environment of its associated try block).
+        // A finally block is processed in the environment of its immediate
+        // enclosing block (as opposed to the environment of its associated
+        // try block).
         //
         // Note that the finally block must be processed prior to the other
-        // blocks in the try statement, because the computation of whether or not
-        // an exception is catchable in a try statement depends on the termination
-        // status of the associated finally block. See CatchableException function.
+        // blocks in the try statement, because the computation of whether or
+        // not an exception is catchable in a try statement depends on the
+        // termination status of the associated finally block. See
+        // CatchableException function. In addition, any variables used in
+        // the finally block cannot be safely used in the other blocks.
         //
         AstBlock *block_body = try_statement -> finally_clause_opt -> block;
         block_body -> is_reachable = try_statement -> is_reachable;
         ProcessBlock(block_body);
+        max_variable_index = block_body -> block_symbol -> max_variable_index;
     }
 
     //
@@ -1211,10 +1225,11 @@ void Semantic::ProcessTryStatement(Ast *stmt)
 
         AstBlock *block_body = clause -> block;
         //
-        // Guess that the number of elements in the table will not exceed the number of statements + the clause parameter.
+        // Guess that the number of elements in the table will not exceed the
+        // number of statements + the clause parameter.
         //
         BlockSymbol *block = LocalSymbolTable().Top() -> InsertBlockSymbol(block_body -> NumStatements() + 1);
-        block -> max_variable_index = enclosing_block -> block_symbol -> max_variable_index;
+        block -> max_variable_index = max_variable_index;
         LocalSymbolTable().Push(block -> Table());
 
         AccessFlags access_flags = ProcessFormalModifiers(parameter);
@@ -1245,7 +1260,8 @@ void Semantic::ProcessTryStatement(Ast *stmt)
         LocalSymbolTable().Pop();
 
         //
-        // Update the information for the block that immediately encloses the current block.
+        // Update the information for the block that immediately encloses
+        // the current block.
         //
         if (LocalBlockStack().TopMaxEnclosedVariableIndex() < block -> max_variable_index)
             LocalBlockStack().TopMaxEnclosedVariableIndex() = block -> max_variable_index;
@@ -1270,7 +1286,34 @@ void Semantic::ProcessTryStatement(Ast *stmt)
     TryExceptionTableStack().Push(exception_set);
 
     try_statement -> block -> is_reachable = try_statement -> is_reachable;
-    ProcessBlock(try_statement -> block);
+    AstBlock *block_body = try_statement -> block;
+    //
+    // Guess that the number of elements in the table will not exceed the
+    // number of statements + 3. This padding allows extra variable
+    // declarations in things like for-init, without expensive reallocation.
+    //
+    BlockSymbol *block = LocalSymbolTable().Top() -> InsertBlockSymbol(block_body -> NumStatements() + 3);
+    block -> max_variable_index = max_variable_index;
+    LocalSymbolTable().Push(block -> Table());
+
+    block_body -> block_symbol = block;
+    block_body -> nesting_level = LocalBlockStack().Size();
+    LocalBlockStack().Push(block_body);
+
+    ProcessBlockStatements(block_body);
+    
+    LocalBlockStack().Pop();
+    LocalSymbolTable().Pop();
+
+    //
+    // Update the information for the block that immediately encloses the
+    // current block.
+    //
+    if (LocalBlockStack().TopMaxEnclosedVariableIndex() < block -> max_variable_index)
+        LocalBlockStack().TopMaxEnclosedVariableIndex() = block -> max_variable_index;
+
+    block -> CompressSpace(); // space optimization
+
     if (try_statement -> block -> can_complete_normally)
         try_statement -> can_complete_normally = true;
 

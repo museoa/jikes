@@ -1,4 +1,14 @@
-2001-09-02  Eric Blake  <ebb9@email.byu.edu>
+2001-09-04  Eric Blake  <ebb9@email.byu.edu>
+	
+	* src/body.cpp (ProcessSynchronizedStatement)
+	(ProcessTryStatement): Fix VerifyErrors caused
+	by reusing local variables between try and
+	finally blocks - patch 50, from bug 204.
+	* src/bytecode.cpp (ProcessAbruptExit)
+	(EmitSynchronizedStatement): Likewise.  Also
+	optimized the emitted bytecode for synchronized.	
+
+2001-09-03  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/expr.cpp (ProcessAssignmentExpression): Fix the regression
 	caused by the patch committed 2001-05-06 - patch 118, from bug 493.

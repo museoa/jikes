@@ -1958,23 +1958,11 @@ void ByteCode::ProcessAbruptExit(int to_lev, TypeSymbol *return_type)
         }
         else if (block -> block_tag == AstBlock::SYNCHRONIZED)
         {
-            if (return_type)
-            {
-                Label &monitor_label = method_stack -> MonitorLabel(enclosing_level);
-                int variable_index = method_stack -> Block(enclosing_level) -> block_symbol -> try_or_synchronized_variable_index + 2;
-
-                StoreLocal(variable_index, return_type);
-
-                PutOp(OP_JSR);
-                UseLabel(monitor_label, 2, 1);
-
-                LoadLocal(variable_index, return_type);
-            }
-            else
-            {
-                PutOp(OP_JSR);
-                UseLabel(method_stack -> MonitorLabel(enclosing_level), 2, 1);
-            }
+            int variable_index = method_stack -> Block(enclosing_level) ->
+                block_symbol -> try_or_synchronized_variable_index;
+            
+            LoadLocal(variable_index, this_control.Object());
+            PutOp(OP_MONITOREXIT);
         }
     }
 
@@ -2452,9 +2440,8 @@ void ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
 
     int variable_index = method_stack -> TopBlock() -> block_symbol -> try_or_synchronized_variable_index;
 
+    PutOp(OP_DUP); // duplicate for saving, entering monitor
     StoreLocal(variable_index, this_control.Object()); // save address of object
-    LoadLocal(variable_index, this_control.Object()); // load address of object onto stack
-
     PutOp(OP_MONITORENTER); // enter monitor associated with object
 
     int start_synchronized_pc = code_attribute -> CodeLength(); // start pc
@@ -2463,16 +2450,21 @@ void ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
 
     int end_synchronized_pc = code_attribute -> CodeLength(); // end pc
 
-    LoadLocal(variable_index, this_control.Object()); // load address of object onto stack
-    PutOp(OP_MONITOREXIT);
+    if (statement -> block -> can_complete_normally)
+    {
+        LoadLocal(variable_index, this_control.Object()); // load address of object onto stack
+        PutOp(OP_MONITOREXIT);
+    }
 
     if (start_synchronized_pc != end_synchronized_pc) // if the synchronized block is not empty.
     {
         Label end_label;
-        EmitBranch(OP_GOTO, end_label); // branch around exception handler
+        if (statement -> block -> can_complete_normally)
+            EmitBranch(OP_GOTO, end_label); // branch around exception handler
 
         //
-        // Reach here if any increment. max_stack in case exception thrown while stack at greatest depth
+        // Reach here if any exception thrown. Increment max_stack in case
+        // exception thrown while stack at greatest depth
         //
         max_stack++;
         int handler_pc = code_attribute -> CodeLength();
@@ -2482,16 +2474,8 @@ void ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
 
         code_attribute -> AddException(start_synchronized_pc, handler_pc, handler_pc, 0);
 
-        DefineLabel(method_stack -> TopMonitorLabel());
-        CompleteLabel(method_stack -> TopMonitorLabel());
-
-        int loc_index = variable_index + 1; // local variable index to save return  address
-        StoreLocal(loc_index, this_control.Object()); // save return address
-        LoadLocal(variable_index, this_control.Object()); // load address of object onto stack
-        PutOp(OP_MONITOREXIT);
-        PutOpWide(OP_RET, loc_index);  // return using saved address
-
-        DefineLabel(end_label);
+        if (IsLabelUsed(end_label))
+            DefineLabel(end_label);
         CompleteLabel(end_label);
     }
 
