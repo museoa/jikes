@@ -33,12 +33,12 @@
       </TR><TR VALIGN="MIDDLE">
         <TD ALIGN="RIGHT"><a href="http://www.yellowdoglinux.com"><IMG SRC="images/ydl.png" alt="" BORDER=0 HEIGHT=111 WIDTH=103></A></TD>
         <TD ALIGN="LEFT" ><a href="http://www.yellowdoglinux.com">Yellow Dog Linux</a></TD>
-      </TR><TR>
+      <!-- RH has removed jikes; ergo, jikes will remove RH... seems fair /TR><TR>
         <TD COLSPAN=2><HR></TD>
       </TR><TR VALIGN="MIDDLE">
         <TD ALIGN="RIGHT"><a href="http://redhat.com"><IMG SRC="images/redhat.gif" alt="" BORDER=0 HEIGHT=56 WIDTH=70></A></TD>
         <TD ALIGN="LEFT" ><a href="http://redhat.com">Red Hat</a></TD>
-      </TR>
+      </TR-->
     </TABLE>
 <br>
     <p>Jikes is also available in the following developer's Tool Kits:</p>
