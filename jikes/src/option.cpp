@@ -310,9 +310,7 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
         }
         else if (arguments.argv[i][0] == '+')
         {
-            if (strcmp(arguments.argv[i], "+AA") == 0)
-                 applet_author = true;
-            else if (strcmp(arguments.argv[i], "+A") == 0)
+            if (strcmp(arguments.argv[i], "+A") == 0)
                  debug_dump_ast = true;
             else if (strcmp(arguments.argv[i], "+u") == 0)
                  debug_unparse_ast = true;

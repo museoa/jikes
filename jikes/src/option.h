@@ -142,7 +142,6 @@ public:
          debug_unparse_ast_debug,
          debug_dump_class,
          nocleanup,
-         applet_author,
          incremental,
          makefile,
 	 dependence_report,
