@@ -287,7 +287,7 @@ class LexStream
     }
 
 #ifdef JIKES_DEBUG
-void LexStream::Dump(); // temporary function used to dump token stream.
+void Dump(); // temporary function used to dump token stream.
 #endif
 
     //
