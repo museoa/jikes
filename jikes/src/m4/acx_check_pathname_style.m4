@@ -19,7 +19,6 @@ AC_CACHE_VAL(acx_cv_pathname_style_dos,
 [AC_REQUIRE([AC_CANONICAL_HOST])
 
 acx_cv_pathname_style_dos="no"
-#echo "host_os is \"${host_os}\""
 case ${host_os} in
   *djgpp | *mingw32* | *emx*) acx_cv_pathname_style_dos="yes" ;;
 esac

@@ -4730,7 +4730,7 @@ wchar_t *SemanticError::PrintTYPED_METHOD_WITH_NO_RETURN(ErrorInfo &err, LexStre
     
     s << "The method \""
             << err.insert1
-            << "\" must contain a return s.Array()tatement with an expression compatible with type \""
+            << "\" must contain a return statement with an expression compatible with type \""
             << err.insert2
             << "\".";
 

@@ -325,7 +325,7 @@ Zip::Zip(Control &control_, char *zipfile_name) : control(control_),
     if (zipfile)
     {
         int rc = fseek(zipfile, -22, SEEK_END);
-        if (rc == 0);
+        if (rc == 0)
         {
             zipbuffer = new char[22];
             buffer_ptr = zipbuffer;
