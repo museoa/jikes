@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -4384,11 +4384,6 @@ public:
     inline VariableSymbolArray *NewVariableSymbolArray(unsigned size = 0)
     {
         return new (Alloc(sizeof(VariableSymbolArray))) VariableSymbolArray((StoragePool *) this, size);
-    }
-
-    inline AstArray<LexStream::TokenIndex> *NewTokenIndexArray(unsigned size = 0)
-    {
-        return new (Alloc(sizeof(AstArray<LexStream::TokenIndex>))) AstArray<LexStream::TokenIndex>((StoragePool *) this, size);
     }
 
     inline AstArray<Ast *> *NewAstArray(unsigned size = 0)

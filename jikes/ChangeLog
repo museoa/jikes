@@ -1,5 +1,10 @@
 2002-02-18  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/ast.h (NewTokenIndexArray): Remove dead code, which was
+	responsible for bug 2652 before I reworked labeled statements.
+
+2002-02-18  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/gencode.java: Add more optimizations, to reduce the size of
 	the Unicode lookup table.
 	* src/code.h:
