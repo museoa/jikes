@@ -22,120 +22,126 @@
 namespace Jikes {	// Open namespace Jikes block
 #endif
 
+PackageSymbol *Symbol::PackageCast()
+{
+    return
 #ifdef HAVE_DYNAMIC_CAST
-PackageSymbol *Symbol::PackageCast()
-{
-    return dynamic_cast<PackageSymbol *> (_kind == PACKAGE ? this : NULL);
+        dynamic_cast<PackageSymbol *>
+#else
+        (PackageSymbol *)
+#endif
+            (_kind == PACKAGE ? this : NULL);
 }
 
 TypeSymbol *Symbol::TypeCast()
 {
-    return dynamic_cast<TypeSymbol *> (_kind == TYPE ? this : NULL);
+    return
+#ifdef HAVE_DYNAMIC_CAST
+        dynamic_cast<TypeSymbol *>
+#else
+        (TypeSymbol *)
+#endif
+            (_kind == TYPE ? this : NULL);
 }
 
 MethodSymbol *Symbol::MethodCast()
 {
-    return dynamic_cast<MethodSymbol *> (_kind == METHOD ? this : NULL);
+    return
+#ifdef HAVE_DYNAMIC_CAST
+        dynamic_cast<MethodSymbol *>
+#else
+        (MethodSymbol *)
+#endif
+            (_kind == METHOD ? this : NULL);
 }
 
 BlockSymbol *Symbol::BlockCast()
 {
-    return dynamic_cast<BlockSymbol *> (_kind == BLOCK ? this : NULL);
+    return
+#ifdef HAVE_DYNAMIC_CAST
+        dynamic_cast<BlockSymbol *>
+#else
+        (BlockSymbol *)
+#endif
+            (_kind == BLOCK ? this : NULL);
 }
 
 VariableSymbol *Symbol::VariableCast()
 {
-    return dynamic_cast<VariableSymbol *> (_kind == VARIABLE ? this : NULL);
+    return
+#ifdef HAVE_DYNAMIC_CAST
+        dynamic_cast<VariableSymbol *>
+#else
+        (VariableSymbol *)
+#endif
+           (_kind == VARIABLE ? this : NULL); 
 }
 
 LabelSymbol *Symbol::LabelCast()
 {
-    return dynamic_cast<LabelSymbol *> (_kind == LABEL ? this : NULL);
+    return
+#ifdef HAVE_DYNAMIC_CAST
+        dynamic_cast<LabelSymbol *>
+#else
+        (LabelSymbol *)
+#endif
+            (_kind == LABEL ? this : NULL);
 }
 
 LiteralSymbol *Symbol::LiteralCast()
 {
-    return dynamic_cast<LiteralSymbol *> (_kind == LITERAL ? this : NULL);
+    return
+#ifdef HAVE_DYNAMIC_CAST
+        dynamic_cast<LiteralSymbol *>
+#else
+        (LiteralSymbol *)
+#endif
+            (_kind == LITERAL ? this : NULL);
 }
 
 NameSymbol *Symbol::NameCast()
 {
-    return dynamic_cast<NameSymbol *> (_kind == NAME ? this : NULL);
+    return
+#ifdef HAVE_DYNAMIC_CAST
+        dynamic_cast<NameSymbol *>
+#else
+        (NameSymbol *)
+#endif
+            (_kind == NAME ? this : NULL);
 }
-
 
 PathSymbol *Symbol::PathCast()
 {
-    return dynamic_cast<PathSymbol *> (_kind == PATH ? this : NULL);
+    return
+#ifdef HAVE_DYNAMIC_CAST
+        dynamic_cast<PathSymbol *>
+#else
+        (PathSymbol *)
+#endif
+            (_kind == PATH ? this : NULL);
 }
 
 DirectorySymbol *Symbol::DirectoryCast()
 {
-    return dynamic_cast<DirectorySymbol *> (_kind == _DIRECTORY ? this : NULL);
+    return
+#ifdef HAVE_DYNAMIC_CAST
+        dynamic_cast<DirectorySymbol *>
+#else
+        (DirectorySymbol *)
+#endif
+            (_kind == _DIRECTORY ? this : NULL);
 }
 
 FileSymbol *Symbol::FileCast()
 {
-    return dynamic_cast<FileSymbol *> (_kind == _FILE ? this : NULL);
+    return
+#ifdef HAVE_DYNAMIC_CAST
+        dynamic_cast<FileSymbol *>
+#else
+        (FileSymbol *)
+#endif
+            (_kind == _FILE ? this : NULL);
 }
-
-#else // ! HAVE_DYNAMIC_CAST
-PackageSymbol *Symbol::PackageCast()
-{
-    return (PackageSymbol *) (_kind == PACKAGE ? this : NULL);
-}
-
-TypeSymbol *Symbol::TypeCast()
-{
-    return (TypeSymbol *) (_kind == TYPE ? this : NULL);
-}
-
-MethodSymbol *Symbol::MethodCast()
-{
-    return (MethodSymbol *) (_kind == METHOD ? this : NULL);
-}
-
-BlockSymbol *Symbol::BlockCast()
-{
-    return (BlockSymbol *) (_kind == BLOCK ? this : NULL);
-}
-
-VariableSymbol *Symbol::VariableCast()
-{
-    return (VariableSymbol *) (_kind == VARIABLE ? this : NULL);
-}
-
-LabelSymbol *Symbol::LabelCast()
-{
-    return (LabelSymbol *) (_kind == LABEL ? this : NULL);
-}
-
-LiteralSymbol *Symbol::LiteralCast()
-{
-    return (LiteralSymbol *) (_kind == LITERAL ? this : NULL);
-}
-
-NameSymbol *Symbol::NameCast()
-{
-    return (NameSymbol *) (_kind == NAME ? this : NULL);
-}
-
-
-PathSymbol *Symbol::PathCast()
-{
-    return (PathSymbol *) (_kind == PATH ? this : NULL);
-}
-
-DirectorySymbol *Symbol::DirectoryCast()
-{
-    return (DirectorySymbol *) (_kind == _DIRECTORY ? this : NULL);
-}
-
-FileSymbol *Symbol::FileCast()
-{
-    return (FileSymbol *) (_kind == _FILE ? this : NULL);
-}
-#endif // ! HAVE_DYNAMIC_CAST
 
 int SystemTable::primes[] = {DEFAULT_HASH_SIZE, 101, 401, MAX_HASH_SIZE};
 

@@ -1,3 +1,10 @@
+2001-04-13  Mo DeJong  <mdejong@redhat.com>
+
+	* src/ast.h:
+	* src/lookup.cpp: Don't place a large #ifdef HAVE_DYNAMIC_CAST
+	around a whole set of cast definitions. Instead, we conditionally
+	compile only the cast itself.
+
 2001-04-05  Chris Abbey  <cabbey@bresnanlink.net>
 
 	* configure.in: set release date for 1.14 in stone.
