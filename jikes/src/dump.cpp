@@ -20,7 +20,7 @@ namespace Jikes { // Open namespace Jikes block
 #endif
 
 static char*
-      TK_notoken_STRING      = "TK_notoken",
+      TK_notoken_STRING = "TK_notoken",
       TK_Identifier_STRING[] = "TK_Identifier",
       TK_abstract_STRING[] = "TK_abstract",
       TK_boolean_STRING[] = "TK_boolean",
@@ -125,7 +125,7 @@ static char*
       TK_DOT_STRING[] = "TK_DOT",
       TK_EQUAL_STRING[] = "TK_EQUAL",
       TK_ERROR_STRING[] = "TK_ERROR",
-      TK_EOF_STRING[] = "TK_EOF",
+      TK_EOF_STRING[] = "TK_EOF"
 
 static char *token_type(unsigned char kind)
 {
