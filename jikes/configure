@@ -2030,7 +2030,7 @@ else
   ok=no
 fi;
 
-if test "$ok"= "yes"; then
+if test "$ok" = "yes"; then
 
 cat >>confdefs.h <<\EOF
 #define HAVE_JIKES_NAMESPACE 1
