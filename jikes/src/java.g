@@ -2918,7 +2918,7 @@ void Parser::Act$rule_number(void)
     AstSwitchStatement *p = ast_pool -> NewSwitchStatement();
 
     AstSwitchBlockStatement *q = ast_pool -> NewSwitchBlockStatement();
-    q -> AddStatement(ast_pool -> NewEmptyStatement(Token(Sym(2) -> RightToken())));
+    q -> AddStatement(ast_pool -> NewEmptyStatement(Sym(2) -> RightToken()));
 
     //
     // The list of SwitchBlockStatements is never null

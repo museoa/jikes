@@ -1,3 +1,9 @@
+2000-02-01  C. Scott Ananian <cananian@lesser-magoo.lcs.mit.edu>
+
+	* java.g:  corrected "converting to Token" twice problem.
+	which was causing crash compiling empty case statement with 
+	empty default clause.
+
 2000-01-18  Vadim Zaliva  <lord@crocodile.org>
 
 	* stream.cpp (ProcessInputUnicode): buffer resize on surrogate
