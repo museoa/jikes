@@ -80,7 +80,7 @@
 
 <hr>
 <p>What is Jikes?</p>
-<P>Jikes<sup>TM</sup> is a compiler that translates Java source files as defined in
+<P>Jikes<small><sup>TM</sup></small> is a compiler that translates Java source files as defined in
 <a href="http://www.java.sun.com/docs/books/jls">The Java Language Specification</a>
 into the bytecoded instruction set and binary format defined in
 <a href="http://www.java.sun.com/docs/books/vmspec">The Java Virtual Machine Specification</a>.</P>
@@ -92,8 +92,9 @@ You may wonder why the world needs another Java compiler, considering that Sun p
 javac free with its SDK. Jikes has four advantages that make it a valuable contribution to
 the Linux and Java communities:
     <UL>
-        <LI><em>Open source</em>. <STRONG>Jikes is <A HREF="http://www.opensource.org/certification-mark.html">Certified Open Source Software</A>
-            by the <A HREF="http://www.opensource.org/">Open Source Initiative</a>.</STRONG></LI>
+        <LI><em>Open source</em>. <STRONG>Jikes is <A HREF="http://www.opensource.org/docs/certification_mark.html">OSI Certified Open Source Software</A>.</strong>
+            OSI Certified is a certification mark of the 
+	    <A HREF="http://www.opensource.org/">Open Source Initiative</a>.</LI>
         <LI><em>Strictly Java compatible</em>. Jikes strives to adhere to both The Java
             Language Specification and The Java Virtual Machine Specification as
             tightly as possible, and does not support subsets, supersets, or
