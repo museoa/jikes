@@ -1228,7 +1228,7 @@ void LexStream::ReportMessage(StreamError::StreamErrorKind kind,
                               unsigned start_location,
                               unsigned end_location)
 {
-    if (! control.option.nowarn ||
+    if (control.option.tolerance != JikesOption::NO_WARNINGS ||
         kind < StreamError::DEPRECATED_IDENTIFIER_ASSERT)
     {
         bad_tokens.Next().Initialize(kind, start_location, end_location, this);

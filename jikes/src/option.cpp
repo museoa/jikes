@@ -574,7 +574,7 @@ Option::Option(ArgumentExpander& arguments,
                      strcmp(arguments.argv[i], "--nowarn") == 0 ||
                      strcmp(arguments.argv[i], "-q") == 0)
             {
-                nowarn = true;
+                tolerance = NO_WARNINGS;
             }
             else if (strcmp(arguments.argv[i], "-nowrite") == 0 ||
                      strcmp(arguments.argv[i], "--nowrite") == 0)
@@ -879,10 +879,38 @@ Option::Option(ArgumentExpander& arguments,
                 unzip = true;
                 full_check = true;
             }
-            else if (strcmp(arguments.argv[i], "+Z") == 0 ||
-                     strcmp(arguments.argv[i], "--zero-cautions") == 0)
+            else if (strcmp(arguments.argv[i], "--zero-cautions") == 0)
             {
-                zero_defect = true;
+                tolerance = CAUTIONS_ARE_ERRORS;
+            }
+            else if (strncmp(arguments.argv[i], "+Z", 2) == 0)
+            {
+                // We accept +Z, +Z0, +Z1, and +Z2, where +Z means +Z1.
+                char* start = arguments.argv[i] + 2;
+                char* end = 0;
+                int level = (*start == '\0') ? 1 : strtoul(start, &end, 10);
+                if (end && *end != 0) level = 666;
+
+                // Translate the numeric level into a ToleranceLevel.
+                if (level == 0)
+                {
+                    tolerance = NO_WARNINGS;
+                }
+                else if (level == 1)
+                {
+                    tolerance = CAUTIONS_ARE_ERRORS;
+                }
+                else if (level == 2)
+                {
+                    tolerance = ToleranceLevel(WARNINGS_ARE_ERRORS |
+                                               CAUTIONS_ARE_ERRORS);
+                }
+                else
+                {
+                    bad_options.Next() =
+                        new OptionError(OptionError::INVALID_OPTION,
+                                        arguments.argv[i]);
+                }
             }
 #ifdef JIKES_DEBUG
             else if (strcmp(arguments.argv[i], "+A") == 0)

@@ -111,14 +111,13 @@ JikesOption::JikesOption()
       optimize(false),
       verbose(false),
       depend(false),
-      nowarn(false),
       old_classpath_search_order(false),
-      zero_defect(false),
       help(false),
       version(false),
       g(SOURCE | LINES),
       source(UNKNOWN),
-      target(UNKNOWN)
+      target(UNKNOWN),
+      tolerance(DEFAULT)
 {
 }
 

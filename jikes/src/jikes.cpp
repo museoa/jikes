@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
                "                      control level of debug information in class files\n"
                "                      [default lines,source]\n"
                "-J...               no effect (ignored for compatibility)\n"
-               "-nowarn             do not issue warning messages\n"
+               "-nowarn             javac-compatible equivalent of +Z0\n"
                "-nowrite            do not write any class files, useful with -verbose\n"
                "-O                  optimize bytecode (presently does nothing)\n"
                "-source release     interpret source by Java SDK release rules\n"
@@ -79,7 +79,10 @@ int main(int argc, char *argv[])
 
         printf("+T=n                set value of tab to n spaces, defaults to 8\n"
                "+U                  do full dependence check including Zip and Jar files\n"
-               "+Z                  treat cautions as errors\n"
+               "+Z0                 do not issue warning messages\n"
+               "+Z1                 treat cautions as errors\n"
+               "+Z2                 treat both warnings and cautions as errors\n"
+               "+Z                  equivalent to +Z1\n"
 #ifdef JIKES_DEBUG
                "\tDebugging options:\n"
                "+A                  dump AST to standard output\n"

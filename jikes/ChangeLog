@@ -1,3 +1,17 @@
+2004-02-28  Elliott Hughes  <enh@acm.org>
+
+	* src/error.cpp: Implement upgrading of warnings to errors, as well
+	as the old optional upgrading of cautions. Fixes bug 665.
+	* src/jikesapi.cpp, jikesapi.h: Replace the nowarn and zero_defect
+	boolean fields with a new field that represents the level of tolerance
+	we show towards warnings and cautions.
+	* src/option.cpp: Parse +Z0, +Z1 and +Z2, and re-implement -nowarn, +Z
+	and --zero-cautions in terms of the new tolerance level.
+	variable; or hiding of fields when declaring a field.
+	* src/stream.cpp: Tracks the API change for testing whether warnings
+	should be generated.
+	* src/jikes.cpp, doc/jikes.1: Document new +Z sub-options.
+
 2004-02-27  Elliott Hughes  <enh@acm.org>
 
 	* src/body.cpp, src/semantic.h: Add a method to check for an

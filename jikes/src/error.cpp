@@ -13,6 +13,7 @@
 #include "ast.h"
 #include "diagnose.h"
 #include "option.h"
+#include "jikesapi.h"
 
 #ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes { // Open namespace Jikes block
@@ -258,8 +259,6 @@ void SemanticError::Report(SemanticErrorKind msg_code,
 {
     //
     // Do not report errors detected while processing a clone !!!
-    // If we have a warning and the nowarn option is set, ignore it.
-    // Don't report warnings that have been turned off on the command-line.
     //
     assert(msg_code < _num_kinds);
     if (clone_count)
@@ -278,12 +277,15 @@ void SemanticError::Report(SemanticErrorKind msg_code,
         return;
     case NAMED_WEAK_ON:
     case WEAK_WARNING:
-        warning[msg_code] = WEAK_WARNING;
+        warning[msg_code] =
+            control.option.tolerance & JikesOption::WARNINGS_ARE_ERRORS
+                ? MANDATORY_ERROR : WEAK_WARNING;
         break;
     case NAMED_STRONG_ON:
     case STRONG_WARNING:
-        warning[msg_code] = control.option.zero_defect ? MANDATORY_ERROR
-                                                       : STRONG_WARNING;
+        warning[msg_code] =
+            control.option.tolerance & JikesOption::CAUTIONS_ARE_ERRORS
+                ? MANDATORY_ERROR : STRONG_WARNING;
         break;
     case MANDATORY_ERROR:
         break;
@@ -292,7 +294,8 @@ void SemanticError::Report(SemanticErrorKind msg_code,
     //
     // Don't report non-mandatory errors if we're in -nowarn mode.
     //
-    if (control.option.nowarn && warning[msg_code] != MANDATORY_ERROR)
+    if (control.option.tolerance == JikesOption::NO_WARNINGS &&
+        warning[msg_code] != MANDATORY_ERROR)
     {
         return;
     }
@@ -878,7 +881,7 @@ int SemanticError::PrintMessages()
     {
         if (num_errors == 0)
         {
-            if (control.option.nowarn)
+            if (control.option.tolerance == JikesOption::NO_WARNINGS)
                 // we only had warnings and they should not be reported
                 return return_code;
 
@@ -893,7 +896,8 @@ int SemanticError::PrintMessages()
                     << (lex_stream -> file_symbol -> semantic ==
                         control.system_semantic ? " system" : " semantic")
                     << " error" << (num_errors <= 1 ? "" : "s");
-            if (num_warnings > 0 && !control.option.nowarn)
+            if (num_warnings > 0 &&
+                control.option.tolerance != JikesOption::NO_WARNINGS)
             {
                 Coutput << " and issued " << num_warnings
                         << " warning" << (num_warnings <= 1 ? "" : "s");
@@ -937,8 +941,11 @@ int SemanticError::PrintMessages()
         SortMessages();
         for (unsigned k = 0; k < error.Length(); k++)
         {
-            if (warning[error[k].msg_code] != 1 || ! control.option.nowarn)
+            if (warning[error[k].msg_code] != 1 ||
+                control.option.tolerance != JikesOption::NO_WARNINGS)
+            {
                 reportError(k);
+            }
         }
         lex_stream -> DestroyInput();
     }
