@@ -1107,6 +1107,10 @@ void SemanticError::InitializeMessages()
     messages[PACKAGE_TYPE_CONFLICT] =
         "The type \"%T1\" contained in file \"%3\" conflicts with the "
         "package \"%T1\".";
+    messages[FILE_FILE_CONFLICT] =
+        "Cannot write class file \"%1.class\" because that name conflicts "
+        "with the class file \"%2\" in directory \"%F3\". This is illegal "
+        "because file names are case-insensitive in this system.";
     messages[MISMATCHED_TYPE_AND_FILE_NAMES] =
         "The public type \"%1\" does not match the name of its containing "
         "file \"%L\".";
