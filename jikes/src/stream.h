@@ -224,7 +224,7 @@ class LexStream
 
     inline int NumBadTokens() { return bad_tokens.Length(); }
 
-#ifdef TEST
+#ifdef JIKES_DEBUG
     int file_read;
 #endif
 
@@ -286,7 +286,7 @@ class LexStream
         return;
     }
 
-#ifdef TEST
+#ifdef JIKES_DEBUG
 void LexStream::Dump(); // temporary function used to dump token stream.
 #endif
 

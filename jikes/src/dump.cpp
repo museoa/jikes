@@ -7,7 +7,7 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
-#ifdef TEST
+#ifdef JIKES_DEBUG
 
 #include "platform.h"
 #include "javasym.h"

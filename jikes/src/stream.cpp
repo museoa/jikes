@@ -266,7 +266,7 @@ StreamError::StreamError():initialized(false)
 
 
 LexStream::LexStream(Control &control_, FileSymbol *file_symbol_) : file_symbol(file_symbol_),
-#ifdef TEST
+#ifdef JIKES_DEBUG
     file_read(0),
 #endif
     tokens(NULL),
@@ -398,7 +398,7 @@ wchar_t *LexStream::KeywordName(int kind)
 
 LexStream::~LexStream()
 {
-#ifdef TEST
+#ifdef JIKES_DEBUG
     control.line_count += (file_read * (line_location.Length() - 3));
 #endif
 
@@ -594,7 +594,7 @@ void LexStream::RereadInput()
 {
     if (input_buffer) // if input already available, do nothing
         ;
-#ifdef TEST
+#ifdef JIKES_DEBUG
     else if (file_symbol -> buffer)
     {
       fprintf(stderr, "chaos: Don\'t know how to RereadInput a buffer\n");
@@ -677,7 +677,7 @@ void LexStream::ProcessInput(const char *buffer, long filesize)
 //
 void LexStream::ProcessInputAscii(const char *buffer, long filesize)
 {
-#ifdef TEST
+#ifdef JIKES_DEBUG
     file_read++;
 #endif
 
@@ -805,7 +805,7 @@ void LexStream::ProcessInputAscii(const char *buffer, long filesize)
 void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
 {
     //fprintf(stderr,"LexStream::ProcessInputUnicode called.\n");
-#ifdef TEST
+#ifdef JIKES_DEBUG
     file_read++;
 #endif
 

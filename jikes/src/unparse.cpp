@@ -12,12 +12,12 @@
 //FIXME: need to move to platform.h
 //#include <iostream.h>
 //#include <fstream.h>
-#ifdef TEST
+#ifdef JIKES_DEBUG
     bool Ast::debug_unparse = false;
 #endif
 
 
-#ifdef TEST
+#ifdef JIKES_DEBUG
 // Special top-level form
 void AstCompilationUnit::Unparse(LexStream& lex_stream, char *directory)
 {

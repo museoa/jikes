@@ -25,6 +25,8 @@ LIBS=@LIBS@
 # Sun CC : -fast : -ansi, -xs to debug with shared libst
 # gcc : -O6 -funroll-loops -fomit-frame-pointer
 
+# Add -DJIKES_DEBUG to get extra debug features!
+
 
 SYSOBJECTS=@SYSOBJECTS@
 EXECUTABLE=jikes@EXEEXT@

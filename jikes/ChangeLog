@@ -1,5 +1,27 @@
 2000-05-05  Mo DeJong  <mdejong@cygnus.com>
 
+	* src/Makefile.in:
+	* src/access.h:
+	* src/ast.cpp:
+	* src/ast.h:
+	* src/bytecode.cpp:
+	* src/bytecode.h:
+	* src/class.h:
+	* src/control.cpp:
+	* src/control.h:
+	* src/dump.cpp:
+	* src/error.cpp:
+	* src/getclass.cpp:
+	* src/jikes.cpp:
+	* src/lookup.cpp:
+	* src/lookup.h:
+	* src/stream.cpp:
+	* src/stream.h:
+	* src/unparse.cpp: Changed all uses of #ifdef TEST
+	to #ifdef JIKES_DEBUG.
+
+2000-05-05  Mo DeJong  <mdejong@cygnus.com>
+
 	* README: Merged in contents from src/README.
 	* src/README: Removed.
 

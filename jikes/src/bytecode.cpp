@@ -462,7 +462,7 @@ void ByteCode::CompileClass()
 
     if (this_semantic.NumErrors() == 0)
          Write();
-#ifdef TEST
+#ifdef JIKES_DEBUG
     else if (this_control.option.debug_dump_class)
          PrintCode();
 #endif
@@ -550,7 +550,7 @@ void ByteCode::CompileInterface()
 
     if (this_semantic.NumErrors() == 0)
          Write();
-#ifdef TEST
+#ifdef JIKES_DEBUG
     else if (this_control.option.debug_dump_class)
          PrintCode();
 #endif
@@ -1069,7 +1069,7 @@ void ByteCode::DeclareLocalVariable(AstVariableDeclarator *declarator)
 
     if (this_control.option.g)
     {
-#ifdef TEST
+#ifdef JIKES_DEBUG
         assert(method_stack -> StartPc(declarator -> symbol) == 0xFFFF); // must be uninitialized
 #endif
 #ifdef DUMP
@@ -1112,7 +1112,7 @@ void ByteCode::EmitStatement(AstStatement *statement)
         for (int i = 0; i < statement -> NumDefinedVariables(); i++)
         {
             VariableSymbol *variable = statement -> DefinedVariable(i);
-#ifdef TEST
+#ifdef JIKES_DEBUG
             assert(method_stack -> StartPc(variable) == 0xFFFF); // must be uninitialized
 #endif
 #ifdef DUMP
@@ -1372,7 +1372,7 @@ void ByteCode::EmitBlockStatement(AstBlock *block)
         {
             VariableSymbol *variable = block -> LocallyDefinedVariable(i);
 
-#ifdef TEST
+#ifdef JIKES_DEBUG
             assert(method_stack -> StartPc(variable) != 0xFFFF);
 #endif
 #ifdef DUMP
@@ -1649,7 +1649,7 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
             {
                 VariableSymbol *variable = switch_block_statement -> LocallyDefinedVariable(i);
 
-#ifdef TEST
+#ifdef JIKES_DEBUG
                 assert(method_stack -> StartPc(variable) != 0xFFFF);
 #endif
 #ifdef DUMP
@@ -1663,7 +1663,7 @@ Coutput.flush();
                                                                    RegisterUtf8(variable -> ExternalIdentity() -> Utf8_literal),
                                                                    RegisterUtf8(variable -> Type() -> signature),
                                                                    variable -> LocalVariableIndex());
-#ifdef TEST
+#ifdef JIKES_DEBUG
                 method_stack -> StartPc(variable) = 0xFFFF;
 #endif
             }
@@ -1681,7 +1681,7 @@ Coutput.flush();
         {
             VariableSymbol *variable = switch_block -> LocallyDefinedVariable(i);
 
-#ifdef TEST
+#ifdef JIKES_DEBUG
             assert(method_stack -> StartPc(variable) != 0xFFFF);
 #endif
 #ifdef DUMP
@@ -3179,7 +3179,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
     {
         VariableSymbol *variable = assignment_expression -> left_hand_side -> symbol -> VariableCast();
         assert(variable);
-#ifdef TEST
+#ifdef JIKES_DEBUG
         assert(method_stack -> StartPc(variable) == 0xFFFF); // must be uninitialized
 #endif
 #ifdef DUMP
@@ -4547,7 +4547,7 @@ void ByteCode::EmitStringAppendMethod(TypeSymbol *type)
 }
 
 
-#ifdef TEST
+#ifdef JIKES_DEBUG
 static void op_trap()
 {
     int i = 0; // used for debugger trap
@@ -4576,7 +4576,7 @@ ByteCode::ByteCode(TypeSymbol *unit_type) : ClassFile(unit_type),
                                             fieldref_constant_pool_index(NULL),
                                             methodref_constant_pool_index(NULL)
 {
-#ifdef TEST
+#ifdef JIKES_DEBUG
     if (! this_control.option.nowrite)
         this_control.class_files_written++;
 #endif
@@ -5138,7 +5138,7 @@ void ByteCode::FinishCode(TypeSymbol *type)
 
 void ByteCode::PutOp(unsigned char opc)
 {
-#ifdef TEST
+#ifdef JIKES_DEBUG
     if (this_control.option.debug_trap_op > 0 && code_attribute -> CodeLength() == this_control.option.debug_trap_op)
         op_trap();
 
@@ -5420,7 +5420,7 @@ void ByteCode::ChangeStack(int i)
 }
 
 
-#ifdef TEST
+#ifdef JIKES_DEBUG
 void ByteCode::PrintCode()
 {
     Coutput << "magic " << hex << magic << dec

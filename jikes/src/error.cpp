@@ -494,7 +494,7 @@ void SemanticError::StaticInitializer()
 //    warning[VOID_TO_STRING] = 2;
 //
 
-#ifdef TEST
+#ifdef JIKES_DEBUG
     for (int i = 0; i < _num_kinds; i++)
         print_message[i] = NULL;
 #endif
@@ -772,7 +772,7 @@ void SemanticError::StaticInitializer()
     print_message[ZERO_DIVIDE_CAUTION] = PrintZERO_DIVIDE_CAUTION;
     print_message[VOID_TO_STRING] = PrintVOID_TO_STRING;
 
-#ifdef TEST
+#ifdef JIKES_DEBUG
     //
     // Make sure that there is a message associated with each code
     //

@@ -70,7 +70,7 @@ public:
     AccessFlags() : access_flags(0) {}
     AccessFlags(u2& _access_flags) : access_flags(_access_flags) {}
 
-#ifdef TEST
+#ifdef JIKES_DEBUG
     void Print()
     {
         Coutput << " access_flags: ";

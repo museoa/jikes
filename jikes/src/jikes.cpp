@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
                 "+Td...d            set value of tab d...d spaces; each d is a decimal digit\n"
                 "+U                 do full dependence check including Zip and Jar files\n"
                 "+Z                 treat cautions as errors\n"
-#ifdef TEST
+#ifdef JIKES_DEBUG
                 "Debugging options:\n"
                 "+A                 dump AST to standard output\n"
                 "+C                 dump bytecodes to standard output\n"

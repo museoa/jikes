@@ -33,7 +33,7 @@ Control::Control(char **arguments, Option &option_) : return_code(0),
                                                                  float_pool(&bad_value),
                                                                  double_pool(&bad_value),
                                                                  Utf8_pool(&bad_value),
-#ifdef TEST
+#ifdef JIKES_DEBUG
                                                                  input_files_processed(0),
                                                                  class_files_read(0),
                                                                  class_files_written(0),
@@ -560,7 +560,7 @@ Control::~Control()
     delete system_semantic;
     delete system_table;
 
-#ifdef TEST
+#ifdef JIKES_DEBUG
     if (option.debug_dump_lex || option.debug_dump_ast || option.debug_unparse_ast)
     {
         Coutput << line_count << " source lines read\n\n"
@@ -1355,7 +1355,7 @@ void Control::CleanUp(FileSymbol *file_symbol)
 
     if (sem)
     {
-#ifdef TEST
+#ifdef JIKES_DEBUG
         if (option.debug_dump_lex)
         {
             sem -> lex_stream -> Reset(); // rewind input and ...

@@ -9,7 +9,7 @@
 //
 
 #include "ast.h"
-#ifdef TEST
+#ifdef JIKES_DEBUG
     unsigned Ast::count = 0;
 #endif
 
@@ -999,7 +999,7 @@ Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
     return clone;
 }
 
-#ifdef TEST
+#ifdef JIKES_DEBUG
     void Ast::Print(LexStream& lex_stream)
     {
         Coutput << "#" << this -> id << " (Ast):  "

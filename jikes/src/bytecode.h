@@ -73,7 +73,7 @@ public:
         monitor_labels[block -> nesting_level].uses.Reset();
         blocks[block -> nesting_level] = block;
 
-#ifdef TEST
+#ifdef JIKES_DEBUG
         (void) memset(local_variables_start_pc[block -> nesting_level], 0xFF, size * sizeof(u2));
 #endif
         top_index++;
@@ -84,7 +84,7 @@ public:
         if (top_index > 0)
         {
             top_index--;
-#ifdef TEST
+#ifdef JIKES_DEBUG
             int level = nesting_level[top_index];
 
             nesting_level[top_index] = 0;
@@ -101,7 +101,7 @@ public:
 
     int Size() { return top_index; }
 
-#ifdef TEST
+#ifdef JIKES_DEBUG
     void AssertIndex(int k)
     {
         for (int i = 0; i < Size(); i++)
@@ -774,7 +774,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     }
 
 
-#ifdef TEST
+#ifdef JIKES_DEBUG
     void PrintCode();
 #endif
 

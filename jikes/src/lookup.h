@@ -613,7 +613,7 @@ public:
     IntLiteralValue *FindOrInsert(int);
     IntLiteralValue *Find(int);
 
-#ifdef TEST
+#ifdef JIKES_DEBUG
     //
     // To prevent arithmentic conversion to allow illegal calls inadvertently.
     // Since the return type is wrong, compilation will fail !
@@ -659,7 +659,7 @@ public:
 
     LongLiteralValue *FindOrInsert(LongInt);
 
-#ifdef TEST
+#ifdef JIKES_DEBUG
     //
     // To prevent arithmentic conversion to allow illegal calls inadvertently.
     //
@@ -702,7 +702,7 @@ public:
 
     FloatLiteralValue *FindOrInsert(IEEEfloat);
 
-#ifdef TEST
+#ifdef JIKES_DEBUG
     //
     // To prevent arithmentic conversion to allow illegal calls inadvertently.
     //
@@ -745,7 +745,7 @@ public:
 
     DoubleLiteralValue *FindOrInsert(IEEEdouble);
 
-#ifdef TEST
+#ifdef JIKES_DEBUG
     //
     // To prevent arithmentic conversion to allow illegal calls inadvertently.
     //

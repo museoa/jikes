@@ -527,7 +527,7 @@ public:
 
     void ProcessHeaders(FileSymbol *);
 
-#ifdef TEST
+#ifdef JIKES_DEBUG
     int input_files_processed,
         class_files_read,
         class_files_written,
