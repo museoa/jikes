@@ -1702,6 +1702,9 @@ assert(this_type -> FieldMembersProcessed());
     ExpandedMethodTable &expanded_table = *(this_type -> expanded_method_table);
     if (! this_type -> ACC_ABSTRACT())
     {
+        //
+        // Check that every abstract method that is inherited is overridden.
+        //
         for (int i = 0; i < expanded_table.symbol_pool.Length(); i++)
         {
             MethodSymbol *method = expanded_table.symbol_pool[i] -> method_symbol;
@@ -1720,6 +1723,42 @@ assert(this_type -> FieldMembersProcessed());
                                    (containing_type -> file_symbol && containing_type -> file_symbol -> IsClass())
                                         ? SemanticError::NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD_FROM_ABSTRACT_CLASS
                                         : SemanticError::NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD,
+                                   identifier_token,
+                                   identifier_token,
+                                   method -> Header((Semantic *) this, identifier_token),
+                                   containing_type -> ContainingPackage() -> PackageName(),
+                                   containing_type -> ExternalName(),
+                                   this_type -> ContainingPackage() -> PackageName(),
+                                   this_type -> ExternalName());
+                }
+            }
+        }
+
+        //
+        // If the super class of this_type is abstract and it is contained in a
+        // different package, check to see if its members include abstract methods
+        // with default access. If so, we must issue error messages for them also
+        // as they cannot be overridden.
+        //
+        if (this_type != control.Object() && this_type -> super -> ACC_ABSTRACT() &&
+            (this_type -> ContainingPackage() != this_type -> super -> ContainingPackage()))
+        {
+            ExpandedMethodTable &super_expanded_table = *(this_type -> super -> expanded_method_table);
+            for (int i = 0; i < super_expanded_table.symbol_pool.Length(); i++)
+            {
+                MethodSymbol *method = super_expanded_table.symbol_pool[i] -> method_symbol;
+
+                if (method -> ACC_ABSTRACT() &&
+                    (! (method -> ACC_PUBLIC() || method -> ACC_PROTECTED() || method -> ACC_PRIVATE())))
+                {
+                    TypeSymbol *containing_type = method -> containing_type;
+
+                    //
+                    // If the method is contained in an abstract method read from a class file,
+                    // then it is possible that the abstract method is just out-of-date and needs
+                    // to be recompiled.
+                    //
+                    ReportSemError(SemanticError::NON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD,
                                    identifier_token,
                                    identifier_token,
                                    method -> Header((Semantic *) this, identifier_token),

@@ -183,6 +183,7 @@ public:
         NON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD,
         NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD,
         NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD_FROM_ABSTRACT_CLASS,
+        NON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD,
         NO_ABSTRACT_METHOD_IMPLEMENTATION,
         DUPLICATE_INTERFACE,
         UNKNOWN_QUALIFIED_NAME_BASE,
@@ -497,6 +498,7 @@ private:
     static void PrintNON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD(ErrorInfo &, LexStream *, Control &);
     static void PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD(ErrorInfo &, LexStream *, Control &);
     static void PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD_FROM_ABSTRACT_CLASS(ErrorInfo &, LexStream *, Control &);
+    static void PrintNON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD(ErrorInfo &, LexStream *, Control &);
     static void PrintNO_ABSTRACT_METHOD_IMPLEMENTATION(ErrorInfo &, LexStream *, Control &);
     static void PrintDUPLICATE_INTERFACE(ErrorInfo &, LexStream *, Control &);
     static void PrintUNKNOWN_QUALIFIED_NAME_BASE(ErrorInfo &, LexStream *, Control &);

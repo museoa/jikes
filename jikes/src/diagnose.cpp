@@ -15,7 +15,7 @@
 #include "semantic.h"
 #include "unicode.h"
 #include "case.h"
-#include "misspell.h"
+#include "spell.h"
  
 void DiagnoseParser::ReallocateStacks()
 {
@@ -1178,7 +1178,7 @@ int DiagnoseParser::Misspell(int sym, TokenObject tok)
     }
     keyword[len] = U_NULL;
 
-    int index = Misspell::Index(lex_stream -> Name(tok), keyword);
+    int index = Spell::Index(lex_stream -> Name(tok), keyword);
 
     delete [] keyword;
 

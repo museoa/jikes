@@ -266,8 +266,8 @@ void SemanticError::StaticInitializer()
     // TODO: Review the cases below. They should be flagged as errors.
     //       However, since javac does not flag them at all, we only issue
     //       a warning.
-    warning[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL] = 1;
-    warning[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER] = 1;
+    warning[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL] = 2;
+    warning[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER] = 2;
     warning[PRIVATE_METHOD_OVERRIDE] = 1;
     warning[PRIVATE_METHOD_OVERRIDE_EXTERNALLY] = 1;
 
@@ -448,6 +448,7 @@ void SemanticError::StaticInitializer()
     print_message[NON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD] = PrintNON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD;
     print_message[NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD] = PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD;
     print_message[NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD_FROM_ABSTRACT_CLASS] = PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD_FROM_ABSTRACT_CLASS;
+    print_message[NON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD] = PrintNON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD;
     print_message[NO_ABSTRACT_METHOD_IMPLEMENTATION] = PrintNO_ABSTRACT_METHOD_IMPLEMENTATION;
     print_message[DUPLICATE_INTERFACE] = PrintDUPLICATE_INTERFACE;
     print_message[UNKNOWN_QUALIFIED_NAME_BASE] = PrintUNKNOWN_QUALIFIED_NAME_BASE;
@@ -2869,6 +2870,31 @@ void SemanticError::PrintNON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD_FROM_ABSTRAC
 }
 
 
+void SemanticError::PrintNON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "The abstract method \"";
+    Unicode::Cout(err.insert1);
+    cout << "\", belonging to the class \"";
+    if (NotDot(err.insert2))
+    {
+        Unicode::Cout(err.insert2);
+        cout << '/';
+    }
+    Unicode::Cout(err.insert3);
+    cout << "\" has default access."
+            " Therefore, it is not inherited and, hence, cannot be implemented in the non-abstract class \"";
+    if (NotDot(err.insert4))
+    {
+        Unicode::Cout(err.insert4);
+        cout << '/';
+    }
+    Unicode::Cout(err.insert5);
+    cout << "\"";
+
+    return;
+}
+
+
 void SemanticError::PrintNO_ABSTRACT_METHOD_IMPLEMENTATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
     cout << "No implementation of the abstract method \"";
@@ -4029,7 +4055,7 @@ void SemanticError::PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL(Err
 
 void SemanticError::PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
-    cout << "Ambiguous reference to field \"";
+    cout << "Ambiguous reference to member named \"";
     Unicode::Cout(err.insert1);
     cout << "\" inherited from type \"";
     if (NotDot(err.insert2))
