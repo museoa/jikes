@@ -37,10 +37,10 @@
 	invokespecial bytecode can only occur in subclasses - bug 2430,
 	patch 233.
 
-2001-11-26  ??  <H.Zeller@acm.org>
+2001-11-26  Henner Zeller  <H.Zeller@acm.org>
 
 	* jikes.spec: Mandrake compresses man-pages with bzip, not gzip -
-	patch 232.
+	bug 335, patch 232.
 
 2001-11-25  Eric Blake  <ebb9@email.byu.edu>
 
