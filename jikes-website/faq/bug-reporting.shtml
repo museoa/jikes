@@ -52,11 +52,20 @@
        status is indicated thusly.</span></p>
      <dl>
       <dt>Floating point issues</dt>
-       <dd><a href="/developerworks/bugs/?func=detailbug&amp;bug_id=116&amp;group_id=10">116</a> and others.
+       <dd><a href="/developerworks/bugs/?func=detailbug&amp;bug_id=138&amp;group_id=10">138</a> and others.
         <span style="background-color:#ffcccc;">Eric is beating the fp code into submission one patch at a time.</span></dd>
       <dt>JPDA issues</dt>
        <dd><a href="/developerworks/bugs/?func=detailbug&amp;bug_id=210&amp;group_id=10">210</a>
-       <span style="background-color:#ffcccc;">Lots of bitching, but no one stepping up to fix it.</span></dd>
+       <span style="background-color:#ffcccc;">Patch
+       <a href="/developerworks/bugs/?func=detailpatch&patch_id=56&group_id=10">56</a>
+        has been proposed, but not verified.  Your feedback is
+       needed!</span></dd>
+      <dt>Variable shadowing</dt>
+       <dd><a href="http://oss.software.ibm.com/developerworks/bugs/?func=detailbug&bug_id=197&group_id=10">197</a>
+       Jikes does not allow legal variable shadowing in inner classes.
+       <span style="background-color:#ffcccc;">Patch
+       <a href="http://oss.software.ibm.com/developerworks/patch/?func=detailpatch&patch_id=62&group_id=10">62</a>
+       has been proposed.</span></dd>
       <dt>-encoding issues</dt>
        <dd><a href="/developerworks/bugs/?func=detailbug&amp;bug_id=113&amp;group_id=10">113</a> and others
        not in the new bug system. <span style="background-color:#ffcccc;">These issues do not appear to be resolved in 1.13, but are
@@ -71,11 +80,6 @@
        it was too long, as that it was "oddly mod 2" long), this also varied based on the platform and how its compiler laid out
        memory -- an excellent example of what happens when you trample on someone else's memory in C++ ;). <span style="background-color:#ffcccc;">
        FIXED in 1.12 (partially) and 1.13 (completely?)</span>.</dd>
-      <dt>HP/UX</dt>
-       <dd><a href="/developerworks/bugs/?func=detailbug&amp;bug_id=110&amp;group_id=10">110</a> and
-        <a href="/developerworks/bugs/?func=detailbug&amp;bug_id=240&amp;group_id=10">240</a>. We currently cannot
-        build Jikes on HP/UX. <span style="background-color:#ffcccc;">We need an HP/UX compiler expert to help figure
-        out what's wrong and fix it.</span></dd>
      </dl>
      <p>If your bug wasn't listed above, move on to the next check.</p>
      <h1>Verify that this is in fact a Jikes bug</h1>

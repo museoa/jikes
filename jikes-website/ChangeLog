@@ -1,3 +1,9 @@
+2001-03-27  Eric Blake  <ebb9@email.byu.edu>
+
+	* faq/bug-reporting.shtml: Updated the WKB section to list
+	bug 197 (shadowing of variables), tweaked some URLs, and
+	removed the bug	on compiling to HP-UX (since I've done it).
+
 2001-03-28  Pascal Davoust  <davoustp@yahoo.com>
 	
 	* footer.shtml: Changed the mail link
