@@ -1,3 +1,9 @@
+2004-03-02  Elliott Hughes  <enh@acm.org>
+
+	* src/option.cpp: Implement -Werror as a javac-compatible synonym
+	for +Z2.
+	* src/jikes.cpp, doc/jikes.1: Document new -Werror option.
+
 2004-03-01  Eric Blake  <ebb9@byu.net>
 
 	* src/ast.h (Ast, StoragePool): Backport improved type-safety,

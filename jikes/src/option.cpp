@@ -576,6 +576,11 @@ Option::Option(ArgumentExpander& arguments,
             {
                 tolerance = NO_WARNINGS;
             }
+            else if (strcmp(arguments.argv[i], "-Werror") == 0)
+            {
+                tolerance = ToleranceLevel(WARNINGS_ARE_ERRORS |
+                                           CAUTIONS_ARE_ERRORS);
+            }
             else if (strcmp(arguments.argv[i], "-nowrite") == 0 ||
                      strcmp(arguments.argv[i], "--nowrite") == 0)
             {

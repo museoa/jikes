@@ -59,6 +59,7 @@ int main(int argc, char *argv[])
                "-target release     output bytecode for Java SDK release rules\n"
                "                      [default to source if specified, else 1.4.2]\n"
                "-verbose            list files read and written\n"
+               "-Werror             javac-compatible equivalent of +Z2\n"
                "-Xstdout            redirect output listings to stdout\n"
                "-Xswitchcheck       warn about fallthrough between switch statement cases\n"
                "\tEnhanced options:\n"
