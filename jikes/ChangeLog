@@ -1,3 +1,8 @@
+2001-11-03  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/option.h (INVALID_SDK_ARGUMENT): Add error message.
+	* src/option.cpp: Use error message, and fix stupid typo.
+
 2001-11-02  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/ast.h: Reformat comments to 80 columns. Remove unused

@@ -203,6 +203,9 @@ wchar_t* OptionError::GetErrorMessage()
     case MISSING_OPTION_ARGUMENT:
         s << '\"' << name << "\" requires an argument.";
         break;
+    case INVALID_SDK_ARGUMENT:
+        s << '\"' << name << "\" only recognizes Java SDK targets of 1.1 through 1.4.";
+        break;
     case INVALID_K_OPTION:
         s << "No argument specified for +K option. The proper form is \"+Kxxx=xxx\" (with no intervening space).";
         break;
@@ -548,15 +551,15 @@ Option::Option(ArgumentExpander& arguments,
                 }
                 // For now, this defaults to SDK1_3 if not specified.
                 i++;
-                if (strcmp(arguments.argv[i], "1.1"))
+                if (strcmp(arguments.argv[i], "1.1") == 0)
                     source = SDK1_1;
-                else if (strcmp(arguments.argv[i], "1.2"))
+                else if (strcmp(arguments.argv[i], "1.2") == 0)
                     source = SDK1_2;
-                else if (strcmp(arguments.argv[i], "1.3"))
+                else if (strcmp(arguments.argv[i], "1.3") == 0)
                     source = SDK1_3;
-                else if (strcmp(arguments.argv[i], "1.4"))
+                else if (strcmp(arguments.argv[i], "1.4") == 0)
                     source = SDK1_4;
-                else bad_options.Next() = new OptionError(OptionError::INVALID_OPTION, "-source");
+                else bad_options.Next() = new OptionError(OptionError::INVALID_SDK_ARGUMENT, "-source");
             }
             else if (strcmp(arguments.argv[i], "-sourcepath") == 0 ||
                      strcmp(arguments.argv[i], "--sourcepath") == 0)
@@ -581,15 +584,15 @@ Option::Option(ArgumentExpander& arguments,
                 // This defaults to the value of source if not specified, or
                 // specified to a value less than source.
                 i++;
-                if (strcmp(arguments.argv[i], "1.1"))
+                if (strcmp(arguments.argv[i], "1.1") == 0)
                     target = SDK1_1;
-                else if (strcmp(arguments.argv[i], "1.2"))
+                else if (strcmp(arguments.argv[i], "1.2") == 0)
                     target = SDK1_2;
-                else if (strcmp(arguments.argv[i], "1.3"))
+                else if (strcmp(arguments.argv[i], "1.3") == 0)
                     target = SDK1_3;
-                else if (strcmp(arguments.argv[i], "1.4"))
+                else if (strcmp(arguments.argv[i], "1.4") == 0)
                     target = SDK1_4;
-                else bad_options.Next() = new OptionError(OptionError::INVALID_OPTION, "-target");
+                else bad_options.Next() = new OptionError(OptionError::INVALID_SDK_ARGUMENT, "-target");
             }
             else if (strcmp(arguments.argv[i], "-verbose") == 0 ||
                      strcmp(arguments.argv[i], "--verbose") == 0 ||

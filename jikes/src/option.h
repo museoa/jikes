@@ -60,6 +60,7 @@ public:
     {
         INVALID_OPTION,
         MISSING_OPTION_ARGUMENT,
+        INVALID_SDK_ARGUMENT,
         INVALID_K_OPTION,
         INVALID_K_TARGET,
         INVALID_TAB_VALUE,
