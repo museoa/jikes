@@ -1,0 +1,20 @@
+<HTML>
+  <head>
+    <TITLE>IBM - developerWorks - Open Source Software - Jikes - Concurrent Versioning System</TITLE>
+  </head>
+  <BODY bgcolor="ffffff">
+    <p align="center"><img src="images/jikes.png" width=600 height=54 border=0 align=center alt="Jikes<sup><small>TM</small></sup>"><BR>&nbsp;</p>
+
+    <p>The Jikes Project keeps all our source files, build environment, documentation, and web pages in CVS. The information below should be
+       sufficient to get those familiar with CVS up and running, additional information about CVS can be obtained <a href="cvs-begin.shtml">here</a>. 
+
+    <dl>
+      <dt>CVSROOT</dt><dd><code>:pserver:anoncvs@oss.software.ibm.com:/usr/cvs/jikes</code></dd>
+      <dt>password</dt><dd>anoncvs</dd>
+      <dt>modules</dt><dd>jikes, jacks</dd>
+      <dt>CVSWeb</dt><dd><a href="http://oss.software.ibm.com/developerworks/opensource/cvs/jikes/">Browsable here</a></dd>
+    </dl>
+
+    <!--#include file="footer.shtml" -->
+  </BODY>
+</HTML>
