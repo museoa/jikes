@@ -1,4 +1,4 @@
-// $Id$
+// $Id
 //
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
@@ -226,16 +226,6 @@ assert(containing_type -> ConstructorMembersProcessed());
         if (! constructor -> IsTyped())
             constructor -> ProcessMethodSignature((Semantic *) this, right_tok);
 
-        //
-        // Note that access checking is performed by the function access_check
-        // which must be invoked on the constructor returned by this function.
-        //
-        //   (constructor -> ACC_PUBLIC() ||
-        //    containing_type == this_type() ||
-        //    (! constructor -> ACC_PRIVATE() &&
-        //     (containing_type -> ContainingPackage() == this_package ||
-        //      (constructor -> ACC_PROTECTED() && this_type() -> IsSubclass(containing_type)))))
-        //
         if (num_arguments == constructor -> NumFormalParameters())
         {
             int i;
@@ -337,6 +327,10 @@ MethodSymbol *Semantic::FindMethodInType(TypeSymbol *type, AstMethodInvocation *
     if (! type -> expanded_method_table)
         ComputeMethodsClosure(type, field_access -> identifier_token);
 
+//
+// TODO: Confirm that this is no longer the case as of javac 1.2
+//
+/*
     //
     // First look for the method in the "type". If it is not found, look for
     // it in the superclasses in the proper order. It is possible that the
@@ -346,6 +340,9 @@ MethodSymbol *Semantic::FindMethodInType(TypeSymbol *type, AstMethodInvocation *
     //
     for (TypeSymbol *type_symbol = type; type_symbol && method_set.Length() == 0; type_symbol = type_symbol -> super)
     {
+*/
+        TypeSymbol *type_symbol = type;
+
         for (MethodShadowSymbol *method_shadow = type_symbol -> expanded_method_table -> FindMethodShadowSymbol(name_symbol);
              method_shadow; method_shadow = method_shadow -> next_method)
         {
@@ -355,16 +352,6 @@ MethodSymbol *Semantic::FindMethodInType(TypeSymbol *type, AstMethodInvocation *
             if (! method -> IsTyped())
                 method -> ProcessMethodSignature((Semantic *) this, field_access -> identifier_token);
 
-            //
-            // Note that access checking is performed by the function access_check which must be
-            // invoked on the method returned by this function.
-            //
-            //   (method -> ACC_PUBLIC() ||
-            //    containing_type == this_type() ||
-            //    (! method -> ACC_PRIVATE() &&
-            //     (containing_type -> ContainingPackage() == this_package ||
-            //      (method -> ACC_PROTECTED() && this_type() -> IsSubclass(containing_type)))))
-            //
             if (method_call -> NumArguments() == method -> NumFormalParameters())
             {
                 int i;
@@ -386,7 +373,11 @@ MethodSymbol *Semantic::FindMethodInType(TypeSymbol *type, AstMethodInvocation *
                 }
             }
         }
+
+/*
+See comment above...
     }
+*/
 
     if (method_set.Length() == 0)
     {
@@ -598,6 +589,7 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
     {
         AstSimpleName *simple_name = method_call -> method -> SimpleNameCast();
         NameSymbol *name_symbol = (NameSymbol *) lex_stream -> NameSymbol(simple_name -> identifier_token);
+        bool symbol_found = false;
 
         for (SemanticEnvironment *env = stack; env; env = env -> previous)
         {
@@ -618,6 +610,7 @@ assert(enclosing_type);
                                variable_symbol -> Name(),
                                enclosing_type -> ContainingPackage() -> PackageName(),
                                enclosing_type -> ExternalName());
+                symbol_found = true;
                 break;
             }
             else
@@ -664,19 +657,23 @@ assert(enclosing_type);
                                    super_type -> ExternalName(),
                                    type -> ContainingPackage() -> PackageName(),
                                    type -> ExternalName());
+                    symbol_found = true;
                     break;
                 }    
             }
         }
 
-        if (FindType(simple_name -> identifier_token))
+        if (! symbol_found)
         {
-            ReportSemError(SemanticError::TYPE_NOT_METHOD,
-                           method_call -> LeftToken(),
-                           method_call -> RightToken(),
-                           name_symbol -> Name());
+            if (FindType(simple_name -> identifier_token))
+            {
+                ReportSemError(SemanticError::TYPE_NOT_METHOD,
+                               method_call -> LeftToken(),
+                               method_call -> RightToken(),
+                               name_symbol -> Name());
+            }
+            else ReportMethodNotFound(method_call, name_symbol -> Name());
         }
-        else ReportMethodNotFound(method_call, name_symbol -> Name());
     }
 
 
@@ -698,6 +695,10 @@ inline VariableSymbol *Semantic::FindVariableInType(TypeSymbol *type, AstFieldAc
     if (! type -> expanded_field_table)
         ComputeFieldsClosure(type, field_access -> identifier_token);
 
+//
+// TODO: Confirm that this is no longer the case as of javac 1.2
+//
+/*
     //
     // First look for the variable in the "type". If it is not found, look for
     // it in the superclasses in the proper order. It is possible that the
@@ -708,6 +709,9 @@ inline VariableSymbol *Semantic::FindVariableInType(TypeSymbol *type, AstFieldAc
     VariableShadowSymbol *variable_shadow_symbol;
     for (variable_shadow_symbol = NULL; (! variable_shadow_symbol) && type; type = type -> super)
         variable_shadow_symbol = type -> expanded_field_table -> FindVariableShadowSymbol(name_symbol);
+*/
+
+    VariableShadowSymbol *variable_shadow_symbol = type -> expanded_field_table -> FindVariableShadowSymbol(name_symbol);
 
     //
     // Recall that even an inaccessible member x of a super class (or interface) S,
@@ -718,28 +722,16 @@ inline VariableSymbol *Semantic::FindVariableInType(TypeSymbol *type, AstFieldAc
     {
         VariableSymbol *variable_symbol = variable_shadow_symbol -> variable_symbol;
 
-        //
-        // Note that access checking is performed by the function access_check which must be
-        // invoked on the variable returned by this function.
-        //
-        // if (variable_symbol -> ACC_PUBLIC() ||
-        //     type == this_type() ||
-        //     (!variable_symbol -> ACC_PRIVATE() &&
-        //      (type -> ContainingPackage() == this_package ||
-        //       (variable_symbol -> ACC_PROTECTED() && this_type() -> IsSubclass(type)))))
-        //
+        for (int i = 0; i < variable_shadow_symbol -> NumConflicts(); i++)
         {
-            for (int i = 0; i < variable_shadow_symbol -> NumConflicts(); i++)
-            {
-                ReportSemError(SemanticError::AMBIGUOUS_NAME,
-                               field_access -> LeftToken(),
-                               field_access -> RightToken(),
-                               name_symbol -> Name(),
-                               variable_symbol -> owner -> TypeCast() -> ContainingPackage() -> PackageName(),
-                               variable_symbol -> owner -> TypeCast() -> ExternalName(),
-                               variable_shadow_symbol -> Conflict(i) -> owner -> TypeCast() -> ContainingPackage() -> PackageName(),
-                               variable_shadow_symbol -> Conflict(i) -> owner -> TypeCast() -> ExternalName());
-            }
+            ReportSemError(SemanticError::AMBIGUOUS_NAME,
+                           field_access -> LeftToken(),
+                           field_access -> RightToken(),
+                           name_symbol -> Name(),
+                           variable_symbol -> owner -> TypeCast() -> ContainingPackage() -> PackageName(),
+                           variable_symbol -> owner -> TypeCast() -> ExternalName(),
+                           variable_shadow_symbol -> Conflict(i) -> owner -> TypeCast() -> ContainingPackage() -> PackageName(),
+                           variable_shadow_symbol -> Conflict(i) -> owner -> TypeCast() -> ExternalName());
         }
 
         return variable_symbol;
@@ -1046,28 +1038,36 @@ AstExpression *Semantic::CreateAccessToType(Ast *source, TypeSymbol *environment
     }
     else if (ExplicitConstructorInvocation() && ExplicitConstructorInvocation() -> SuperCallCast())
     {
-        resolution = compilation_unit -> ast_pool -> GenSimpleName(tok);
         VariableSymbol *variable = LocalSymbolTable().FindVariableSymbol(control.this0_name_symbol);
-        resolution -> symbol = variable;
-assert(variable);
-        TypeSymbol *containing_type = this_type -> ContainingType();
-        if (! containing_type -> IsSubclass(environment_type))
+        if (variable)
         {
-            variable = FindInstance(containing_type, environment_type);
+            resolution = compilation_unit -> ast_pool -> GenSimpleName(tok);
+            resolution -> symbol = variable;
+            TypeSymbol *containing_type = this_type -> ContainingType();
+            if (! containing_type -> IsSubclass(environment_type))
+            {
+                variable = FindInstance(containing_type, environment_type);
 
-            AstFieldAccess *field_access = compilation_unit -> ast_pool -> GenFieldAccess();
-            field_access -> base = resolution;
-            field_access -> dot_token = field_access -> dot_token;
-            field_access -> identifier_token = field_access -> dot_token;
-            field_access -> symbol = variable;
+                AstFieldAccess *field_access = compilation_unit -> ast_pool -> GenFieldAccess();
+                field_access -> base = resolution;
+                field_access -> dot_token = field_access -> dot_token;
+                field_access -> identifier_token = field_access -> dot_token;
+                field_access -> symbol = variable;
 
-            AstMethodInvocation *method_call      = compilation_unit -> ast_pool -> GenMethodInvocation();
-            method_call -> method                  = field_access;
-            method_call -> left_parenthesis_token  = field_access -> dot_token;
-            method_call -> right_parenthesis_token = field_access -> dot_token;
-            method_call -> symbol                  = TypeSymbol::GetReadAccessMethod(variable);
+                AstMethodInvocation *method_call      = compilation_unit -> ast_pool -> GenMethodInvocation();
+                method_call -> method                  = field_access;
+                method_call -> left_parenthesis_token  = field_access -> dot_token;
+                method_call -> right_parenthesis_token = field_access -> dot_token;
+                method_call -> symbol                  = TypeSymbol::GetReadAccessMethod(variable);
 
-            resolution = method_call;
+                resolution = method_call;
+            }
+        }
+        else
+        {
+assert(this_type -> ACC_STATIC());
+            resolution = compilation_unit -> ast_pool -> GenThisExpression(tok);
+            resolution -> symbol = this_type;
         }
     }
     else if (this_type -> IsSubclass(environment_type))
@@ -1336,13 +1336,13 @@ void Semantic::TypeAccessCheck(Ast *ast, TypeSymbol *type)
                  ReportTypeInaccessible(ast, type);
             else if (type -> ACC_PROTECTED())
             {
-                 //
-                 // TODO: we have filed a query to Sun regarding which test is required here!
-                 //
-                 // if (! (type -> ContainingPackage() == this_package || this_type -> IsSubclass(type)))
-                 //
-                 if (! (type -> ContainingPackage() == this_package || this_type -> HasProtectedAccessTo(type)))
-                     ReportTypeInaccessible(ast, type);
+                //
+                // TODO: we have filed a query to Sun regarding which test is required here!
+                //
+                // if (! (type -> ContainingPackage() == this_package || this_type -> IsSubclass(type)))
+                //
+                if (! (type -> ContainingPackage() == this_package || this_type -> HasProtectedAccessTo(type)))
+                    ReportTypeInaccessible(ast, type);
             }
             else if (! (type -> ACC_PUBLIC() || type -> ContainingPackage() == this_package))
                  ReportTypeInaccessible(ast, type);
@@ -1389,6 +1389,12 @@ void Semantic::ConstructorAccessCheck(AstClassInstanceCreationExpression *class_
         {
             if (constructor -> ACC_PROTECTED())
             {
+                //
+                // TODO: we need to file a query to Sun regarding which test is required here!
+                // According to the rules 6.6.2 in the JLS, access to a protected constructor
+                // that is not contained in the same package is only valid through a "super(...)" call.
+                // However, javac seems to have relaxed this restriction to allow subclass access...
+                //
                 //
                 // TODO: we have filed a query to Sun regarding which test is required here!
                 //
@@ -1452,7 +1458,9 @@ assert(variable_symbol || method_symbol);
             //
             // if (! (containing_type -> ContainingPackage() == this_package || this_type -> IsSubclass(containing_type)))
             //
-            if (! (containing_type -> ContainingPackage() == this_package || this_type -> HasProtectedAccessTo(containing_type)))
+            if (! (containing_type -> ContainingPackage() == this_package ||
+                   (this_type -> HasProtectedAccessTo(containing_type) && 
+                    (base_type -> IsSubclass(this_type) || base_type -> IsOwner(this_type)))))
             {
                 ReportSemError((variable_symbol ? SemanticError::PROTECTED_FIELD_NOT_ACCESSIBLE
                                                 : SemanticError::PROTECTED_METHOD_NOT_ACCESSIBLE),
@@ -1682,6 +1690,8 @@ assert(name -> FieldAccessCast());
                 type = (primitive_type ? FindPrimitiveType(primitive_type) : MustFindType(base -> type));
             }
 
+            TypeSymbol *outermost_type = this_type -> outermost_type;
+
             if (type -> Primitive())
             {
                 if (type == control.int_type)
@@ -1709,36 +1719,67 @@ assert(field_access -> symbol);
             else
             {
                 base -> symbol = type;
-                TypeSymbol *outermost_type = this_type -> outermost_type;
 
-                VariableSymbol *variable_symbol = outermost_type -> FindOrInsertClassLiteral(type);
-                if (this_type == outermost_type)
+                if (outermost_type -> ACC_INTERFACE())
                 {
-                    AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(field_access -> identifier_token);
-                    simple_name -> symbol = variable_symbol;
+                    TypeSymbol *class_literal_type = GetClassLiteralClass(field_access -> identifier_token);
+                    AddDependence(this_type, class_literal_type, field_access -> identifier_token);
 
-                    field_access -> symbol = variable_symbol;
-                    field_access -> resolution_opt = simple_name;
-                }
-                else
-                {
                     AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(field_access -> identifier_token);
-                    simple_name -> symbol = outermost_type;
+                    simple_name -> symbol = class_literal_type;
 
                     AstFieldAccess *method_access = compilation_unit -> ast_pool -> GenFieldAccess();
                     method_access -> base = simple_name;
                     method_access -> dot_token = field_access -> identifier_token;
                     method_access -> identifier_token = field_access -> identifier_token;
-                    method_access -> symbol = variable_symbol; // the variable in question
 
-                    AstMethodInvocation *p      = compilation_unit -> ast_pool -> GenMethodInvocation();
-                    p -> method                  = method_access;
-                    p -> left_parenthesis_token  = field_access -> identifier_token;
-                    p -> right_parenthesis_token = field_access -> identifier_token;
-                    p -> symbol                  = TypeSymbol::GetWriteAccessMethod(variable_symbol);
+                    AstStringLiteral *string_literal = compilation_unit -> ast_pool -> GenStringLiteral(field_access -> identifier_token);
+                    string_literal -> value = type -> signature;
+                    string_literal -> symbol = control.String();
 
-                    field_access -> resolution_opt = p;
-                    field_access -> symbol = TypeSymbol::GetReadAccessMethod(variable_symbol);
+                    AstMethodInvocation *method_call       = compilation_unit -> ast_pool -> GenMethodInvocation();
+                    method_call -> method                  = method_access;
+                    method_call -> left_parenthesis_token  = field_access -> identifier_token;
+                    method_call -> AddArgument(string_literal);
+                    method_call -> right_parenthesis_token = field_access -> identifier_token;
+                    method_call -> symbol                  = class_literal_type -> class_literal_method;
+
+                    field_access -> resolution_opt = method_call;
+                    field_access -> symbol = (method_call -> symbol ? method_call -> symbol : control.no_type);
+                }
+                else
+                {
+                    AddDependence(this_type, control.Class(), field_access -> identifier_token);
+
+                    VariableSymbol *variable_symbol = outermost_type -> FindOrInsertClassLiteral(type);
+                    if (this_type == outermost_type)
+                    {
+                        AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(field_access -> identifier_token);
+                        simple_name -> symbol = variable_symbol;
+
+                        field_access -> symbol = variable_symbol;
+                        field_access -> resolution_opt = simple_name;
+                    }
+                    else
+                    {
+                        AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(field_access -> identifier_token);
+                        simple_name -> symbol = outermost_type;
+
+                        AstFieldAccess *method_access = compilation_unit -> ast_pool -> GenFieldAccess();
+                        method_access -> base = simple_name;
+                        method_access -> dot_token = field_access -> identifier_token;
+                        method_access -> identifier_token = field_access -> identifier_token;
+                        method_access -> symbol = variable_symbol; // the variable in question
+
+                        AstMethodInvocation *method_call       = compilation_unit -> ast_pool -> GenMethodInvocation();
+                        method_call -> method                  = method_access;
+                        method_call -> left_parenthesis_token  = field_access -> identifier_token;
+                        method_call -> right_parenthesis_token = field_access -> identifier_token;
+                        method_call -> symbol                  = TypeSymbol::GetWriteAccessMethod(variable_symbol);
+
+                        field_access -> resolution_opt = method_call;
+                        field_access -> symbol = TypeSymbol::GetReadAccessMethod(variable_symbol);
+                    }
                 }
             }
         }
@@ -3459,6 +3500,41 @@ assert((! ThisMethod()) || LocalSymbolTable().Top());
     inner_type -> ResetACC_FINAL();
 
     return inner_type;
+}
+
+
+TypeSymbol *Semantic::GetClassLiteralClass(LexStream::TokenIndex tok)
+{
+    TypeSymbol *outermost_type = ThisType() -> outermost_type;
+
+    if (! outermost_type -> class_literal_class)
+    {
+        AstClassInstanceCreationExpression *class_creation = compilation_unit -> ast_pool -> GenClassInstanceCreationExpression();
+        class_creation -> base_opt      = NULL;
+        class_creation -> dot_token_opt = 0;
+        class_creation -> new_token = tok;
+
+             AstSimpleName *ast_type= compilation_unit -> ast_pool -> GenSimpleName(tok);
+
+        class_creation -> class_type = compilation_unit -> ast_pool -> GenTypeExpression(ast_type);
+        class_creation -> left_parenthesis_token  = tok;
+        class_creation -> right_parenthesis_token = tok;
+
+            AstClassBody *class_body = compilation_unit -> ast_pool -> GenClassBody();
+            class_body -> left_brace_token = tok;
+            class_body -> right_brace_token = tok;
+
+        class_creation -> class_body_opt = class_body;
+
+        TypeSymbol *class_literal_type = GetAnonymousType(class_creation, control.Object());
+        class_literal_type -> InsertClassLiteralMethod(control);
+
+        AddDependence(class_literal_type, control.Class(), tok);
+
+        outermost_type -> class_literal_class = class_literal_type;
+    }
+
+    return outermost_type -> class_literal_class;
 }
 
 
@@ -5544,8 +5620,10 @@ void Semantic::ProcessEQUAL_EQUAL(AstBinaryExpression *expr)
                 ReportSemError(SemanticError::INCOMPATIBLE_TYPE_FOR_BINARY_EXPRESSION,
                                expr -> LeftToken(),
                                expr -> RightToken(),
-                               expr -> left_expression -> Type() -> Name(),
-                               expr -> right_expression -> Type() -> Name());
+                               expr -> left_expression -> Type() -> ContainingPackage() -> PackageName(),
+                               expr -> left_expression -> Type() -> ExternalName(),
+                               expr -> right_expression -> Type() -> ContainingPackage() -> PackageName(),
+                               expr -> right_expression -> Type() -> ExternalName());
             }
         }
         else 
@@ -5611,8 +5689,10 @@ void Semantic::ProcessNOT_EQUAL(AstBinaryExpression *expr)
                 ReportSemError(SemanticError::INCOMPATIBLE_TYPE_FOR_BINARY_EXPRESSION,
                                expr -> LeftToken(),
                                expr -> RightToken(),
-                               expr -> left_expression -> Type() -> Name(),
-                               expr -> right_expression -> Type() -> Name());
+                               expr -> left_expression -> Type() -> ContainingPackage() -> PackageName(),
+                               expr -> left_expression -> Type() -> ExternalName(),
+                               expr -> right_expression -> Type() -> ContainingPackage() -> PackageName(),
+                               expr -> right_expression -> Type() -> ExternalName());
             }
         }
         else 
@@ -5620,9 +5700,7 @@ void Semantic::ProcessNOT_EQUAL(AstBinaryExpression *expr)
             if (left_type == control.void_type)
                 ReportSemError(SemanticError::VOID_TYPE_IN_EQUALITY_EXPRESSION,
                                expr -> LeftToken(),
-                               expr -> RightToken(),
-                               expr -> left_expression -> Type() -> Name(),
-                               expr -> right_expression -> Type() -> Name());
+                               expr -> RightToken());
             expr -> symbol = left_type;
         }
 
@@ -5943,8 +6021,10 @@ void Semantic::ProcessINSTANCEOF(AstBinaryExpression *expr)
         ReportSemError(SemanticError::INVALID_INSTANCEOF_CONVERSION,
                        expr -> LeftToken(),
                        expr -> RightToken(),
-                       left_type -> Name(),
-                       right_type -> Name());
+                       left_type -> ContainingPackage() -> PackageName(),
+                       left_type -> ExternalName(),
+                       right_type -> ContainingPackage() -> PackageName(),
+                       right_type -> ExternalName());
     }
 
     expr -> symbol = control.boolean_type;
@@ -6027,8 +6107,10 @@ void Semantic::ProcessConditionalExpression(Ast *expr)
             ReportSemError(SemanticError::INCOMPATIBLE_TYPE_FOR_CONDITIONAL_EXPRESSION,
                            conditional_expression -> false_expression -> LeftToken(),
                            conditional_expression -> false_expression -> RightToken(),
-                           conditional_expression -> false_expression -> Type() -> Name(),
-                           conditional_expression -> true_expression -> Type() -> Name());
+                           conditional_expression -> false_expression -> Type() -> ContainingPackage() -> PackageName(),
+                           conditional_expression -> false_expression -> Type() -> ExternalName(),
+                           conditional_expression -> true_expression -> Type() -> ContainingPackage() -> PackageName(),
+                           conditional_expression -> true_expression -> Type() -> ExternalName());
             conditional_expression -> symbol = control.no_type;
         }
         else // must be a numeric type
@@ -6088,8 +6170,10 @@ void Semantic::ProcessConditionalExpression(Ast *expr)
             ReportSemError(SemanticError::INCOMPATIBLE_TYPE_FOR_CONDITIONAL_EXPRESSION,
                            conditional_expression -> false_expression -> LeftToken(),
                            conditional_expression -> false_expression -> RightToken(),
-                           conditional_expression -> false_expression -> Type() -> Name(),
-                           conditional_expression -> true_expression -> Type() -> Name());
+                           conditional_expression -> false_expression -> Type() -> ContainingPackage() -> PackageName(),
+                           conditional_expression -> false_expression -> Type() -> ExternalName(),
+                           conditional_expression -> true_expression -> Type() -> ContainingPackage() -> PackageName(),
+                           conditional_expression -> true_expression -> Type() -> ExternalName());
             conditional_expression -> symbol = control.no_type;
         }
         else if (true_type == control.null_type)
@@ -6111,8 +6195,10 @@ void Semantic::ProcessConditionalExpression(Ast *expr)
             ReportSemError(SemanticError::INCOMPATIBLE_TYPE_FOR_CONDITIONAL_EXPRESSION,
                            conditional_expression -> false_expression -> LeftToken(),
                            conditional_expression -> false_expression -> RightToken(),
-                           conditional_expression -> false_expression -> Type() -> Name(),
-                           conditional_expression -> true_expression -> Type() -> Name());
+                           conditional_expression -> false_expression -> Type() -> ContainingPackage() -> PackageName(),
+                           conditional_expression -> false_expression -> Type() -> ExternalName(),
+                           conditional_expression -> true_expression -> Type() -> ContainingPackage() -> PackageName(),
+                           conditional_expression -> true_expression -> Type() -> ExternalName());
             conditional_expression -> symbol = control.no_type;
         }
     }
@@ -6198,8 +6284,10 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
                 ReportSemError(SemanticError::INCOMPATIBLE_TYPE_FOR_ASSIGNMENT,
                                assignment_expression -> LeftToken(),
                                assignment_expression -> RightToken(),
-                               left_type -> Name(),
-                               right_type -> Name());
+                               left_type -> ContainingPackage() -> PackageName(),
+                               left_type -> ExternalName(),
+                               right_type -> ContainingPackage() -> PackageName(),
+                               right_type -> ExternalName());
             }
         }
 

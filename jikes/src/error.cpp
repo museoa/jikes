@@ -1,4 +1,4 @@
-// $Id$
+// $Id
 //
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
@@ -257,18 +257,6 @@ void SemanticError::StaticInitializer()
     warning[METHOD_WITH_CONSTRUCTOR_NAME] = 1;
 
     //
-    // Something stronger than a warning, but code will be generated anyway
-    //
-    warning[BAD_INPUT_FILE] = 2;
-    warning[UNREADABLE_INPUT_FILE] = 2;
-
-    warning[UNREACHABLE_CATCH_CLAUSE] = 2;
-    warning[VARIABLE_NOT_DEFINITELY_ASSIGNED] = 2;
-    warning[TARGET_VARIABLE_IS_FINAL] = 2;
-    warning[FINAL_VARIABLE_TARGET_IN_LOOP] = 2;
-    warning[VOID_TO_STRING] = 2;
-
-    //
     // TODO: Review the cases below. They should be flagged as errors.
     //       However, since javac does not flag them at all, we only issue
     //       a warning.
@@ -276,6 +264,22 @@ void SemanticError::StaticInitializer()
     warning[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER] = 1;
     warning[PRIVATE_METHOD_OVERRIDE] = 1;
     warning[PRIVATE_METHOD_OVERRIDE_EXTERNALLY] = 1;
+
+    //
+    // Something stronger than a warning, but code will be generated anyway
+    //
+    warning[BAD_INPUT_FILE] = 2;
+    warning[UNREADABLE_INPUT_FILE] = 2;
+
+//
+// TODO: Let these conditions be flagged as errors now.
+//
+//    warning[UNREACHABLE_CATCH_CLAUSE] = 2;
+//    warning[VARIABLE_NOT_DEFINITELY_ASSIGNED] = 2;
+//    warning[TARGET_VARIABLE_IS_FINAL] = 2;
+//    warning[FINAL_VARIABLE_TARGET_IN_LOOP] = 2;
+//    warning[VOID_TO_STRING] = 2;
+//
 
 #ifdef TEST
     for (int i = 0; i < _num_kinds; i++)
@@ -2058,9 +2062,19 @@ void SemanticError::PrintMETHOD_FOUND_FOR_CONSTRUCTOR(ErrorInfo &err, LexStream 
 void SemanticError::PrintINCOMPATIBLE_TYPE_FOR_INITIALIZATION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
     cout << "The type of the left-hand side (or array type) in this initialization (or array creation expression), \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", is not compatible with the type of the right-hand side expression, \"";
+    if (wcslen(err.insert1) > 0 && wcscmp(err.insert1, StringConstant::US__DO_) != 0)
+    {
+        Unicode::Cout(err.insert1);
+        cout << '/';
+    }
     Unicode::Cout(err.insert2);
+    cout << "\", is not compatible with the type of the right-hand side expression, \"";
+    if (wcslen(err.insert3) > 0 && wcscmp(err.insert3, StringConstant::US__DO_) != 0)
+    {
+        Unicode::Cout(err.insert3);
+        cout << '/';
+    }
+    Unicode::Cout(err.insert4);
     cout << "\"";
 
     return;
@@ -2070,9 +2084,19 @@ void SemanticError::PrintINCOMPATIBLE_TYPE_FOR_INITIALIZATION(ErrorInfo &err, Le
 void SemanticError::PrintINCOMPATIBLE_TYPE_FOR_ASSIGNMENT(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
     cout << "The type of the left-hand side in this assignment, \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", is not compatible with the type of the right-hand side expression, \"";
+    if (wcslen(err.insert1) > 0 && wcscmp(err.insert1, StringConstant::US__DO_) != 0)
+    {
+        Unicode::Cout(err.insert1);
+        cout << '/';
+    }
     Unicode::Cout(err.insert2);
+    cout << "\", is not compatible with the type of the right-hand side expression, \"";
+    if (wcslen(err.insert3) > 0 && wcscmp(err.insert3, StringConstant::US__DO_) != 0)
+    {
+        Unicode::Cout(err.insert3);
+        cout << '/';
+    }
+    Unicode::Cout(err.insert4);
     cout << "\"";
 
     return;
@@ -2082,9 +2106,19 @@ void SemanticError::PrintINCOMPATIBLE_TYPE_FOR_ASSIGNMENT(ErrorInfo &err, LexStr
 void SemanticError::PrintINCOMPATIBLE_TYPE_FOR_CONDITIONAL_EXPRESSION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
     cout << "In this conditional expression, the type of the false subexpression, \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", is not compatible with the type of the true subexpression, \"";
+    if (wcslen(err.insert1) > 0 && wcscmp(err.insert1, StringConstant::US__DO_) != 0)
+    {
+        Unicode::Cout(err.insert1);
+        cout << '/';
+    }
     Unicode::Cout(err.insert2);
+    cout << "\", is not compatible with the type of the true subexpression, \"";
+    if (wcslen(err.insert3) > 0 && wcscmp(err.insert3, StringConstant::US__DO_) != 0)
+    {
+        Unicode::Cout(err.insert3);
+        cout << '/';
+    }
+    Unicode::Cout(err.insert4);
     cout << "\"";
 
     return;
@@ -2102,9 +2136,19 @@ void SemanticError::PrintVOID_TYPE_IN_EQUALITY_EXPRESSION(ErrorInfo &err, LexStr
 void SemanticError::PrintINCOMPATIBLE_TYPE_FOR_BINARY_EXPRESSION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
     cout << "The type of the left-hand side expression, \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", is not compatible with the type of the right-hand side expression, \"";
+    if (wcslen(err.insert1) > 0 && wcscmp(err.insert1, StringConstant::US__DO_) != 0)
+    {
+        Unicode::Cout(err.insert1);
+        cout << '/';
+    }
     Unicode::Cout(err.insert2);
+    cout << "\", is not compatible with the type of the right-hand side expression, \"";
+    if (wcslen(err.insert3) > 0 && wcscmp(err.insert3, StringConstant::US__DO_) != 0)
+    {
+        Unicode::Cout(err.insert3);
+        cout << '/';
+    }
+    Unicode::Cout(err.insert4);
     cout << "\" (and vice-versa)";
 
     return;
@@ -2114,9 +2158,19 @@ void SemanticError::PrintINCOMPATIBLE_TYPE_FOR_BINARY_EXPRESSION(ErrorInfo &err,
 void SemanticError::PrintINVALID_INSTANCEOF_CONVERSION(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
     cout << "The type of the left-side expression, \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", cannot possibly be an instance of type \"";
+    if (wcslen(err.insert1) > 0 && wcscmp(err.insert1, StringConstant::US__DO_) != 0)
+    {
+        Unicode::Cout(err.insert1);
+        cout << '/';
+    }
     Unicode::Cout(err.insert2);
+    cout << "\", cannot possibly be an instance of type \"";
+    if (wcslen(err.insert3) > 0 && wcscmp(err.insert3, StringConstant::US__DO_) != 0)
+    {
+        Unicode::Cout(err.insert3);
+        cout << '/';
+    }
+    Unicode::Cout(err.insert4);
     cout << "\"";
 
     return;
@@ -2217,7 +2271,12 @@ void SemanticError::PrintTYPE_NOT_VALID_FOR_SWITCH(ErrorInfo &err, LexStream *le
 {
     cout << "The type of a switch statement expression must be either \"int\", \"short\", \"char\" or \"byte\".";
     cout << " The type of this expression is \"";
-    Unicode::Cout(err.insert1);
+    if (wcslen(err.insert1) > 0 && wcscmp(err.insert1, StringConstant::US__DO_) != 0)
+    {
+        Unicode::Cout(err.insert1);
+        cout << '/';
+    }
+    Unicode::Cout(err.insert2);
     cout << "\"";
 
     return;
@@ -2441,9 +2500,19 @@ void SemanticError::PrintMISPLACED_RETURN_WITH_NO_EXPRESSION(ErrorInfo &err, Lex
 void SemanticError::PrintMISMATCHED_RETURN_AND_METHOD_TYPE(ErrorInfo &err, LexStream *lex_stream, Control &control)
 {
     cout << "The type of this return expression, \"";
-    Unicode::Cout(err.insert1);
-    cout << "\", does not match the return type of the method, \"";
+    if (wcslen(err.insert1) > 0 && wcscmp(err.insert1, StringConstant::US__DO_) != 0)
+    {
+        Unicode::Cout(err.insert1);
+        cout << '/';
+    }
     Unicode::Cout(err.insert2);
+    cout << "\", does not match the return type of the method, \"";
+    if (wcslen(err.insert3) > 0 && wcscmp(err.insert3, StringConstant::US__DO_) != 0)
+    {
+        Unicode::Cout(err.insert3);
+        cout << '/';
+    }
+    Unicode::Cout(err.insert4);
     cout << "\"";
 
     return;

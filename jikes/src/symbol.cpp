@@ -1,4 +1,4 @@
-// $Id$
+// $Id
 //
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
@@ -537,6 +537,7 @@ TypeSymbol::TypeSymbol(NameSymbol *name_symbol_) : semantic_environment(NULL),
                                                    dependents_closure(NULL),
                                                    parents_closure(NULL),
                                                    num_dimensions(0),
+                                                   class_literal_class(NULL),
                                                    class_literal_method(NULL),
                                                    static_initializer_method(NULL),
                                                    block_initializer_method(NULL),
@@ -1148,13 +1149,13 @@ assert(semantic_environment);
         //
         // If we are processing a super call statement in the constructor of an inner class then
         // we have access to the this$0 (passed to the constructor of the inner class as parameter) but
-        // not to the "this" of the inner class in question.
+        // not to the "this" of the inner class in question, unless it is static.
         //
-        if (env -> Type() -> IsSubclass(type))
-            return false;
-        if (env -> Type() -> IsInner())
+        if (this -> IsSubclass(type))
+            return this -> ACC_STATIC(); // "this" class is accessible only if it is static.
+        if (this -> IsInner())
         {
-            if (env -> Type() -> ContainingType() -> IsSubclass(type))
+            if (this -> ContainingType() -> IsSubclass(type))
                 return true;
             env = env -> previous; // skip "this" type.
         }
@@ -1268,36 +1269,42 @@ assert(NumEnclosingInstances() == n);
 }
 
 
-VariableSymbol *TypeSymbol::FindOrInsertClassLiteral(TypeSymbol *type)
+void TypeSymbol::InsertClassLiteralMethod(Control &control)
 {
-assert(IsTopLevel() && (! type -> Primitive()));
-    Semantic *sem = semantic_environment -> sem;
-    Control &control = sem -> control;
-    TypeSymbol *Class = sem -> control.Class();
-
-    NameSymbol *name_symbol = NULL;
-    VariableSymbol *variable_symbol;
-
     if (! class_literal_method)
     {
         BlockSymbol *block_symbol = new BlockSymbol(1); // the associated symbol table will contain 1 element
         block_symbol -> max_variable_index = 0;
 
-        name_symbol = control.FindOrInsertName(StringConstant::US__class_DOLLAR, wcslen(StringConstant::US__class_DOLLAR));
+        NameSymbol *name_symbol = control.FindOrInsertName(StringConstant::US__class_DOLLAR,
+                                                           wcslen(StringConstant::US__class_DOLLAR));
+
         class_literal_method = InsertMethodSymbol(name_symbol);
-        class_literal_method -> SetType(Class);
+        class_literal_method -> SetType(control.Class());
         class_literal_method -> SetACC_STATIC();
         class_literal_method -> SetContainingType((TypeSymbol *) this);
         class_literal_method -> SetBlockSymbol(block_symbol);
 
-            variable_symbol = block_symbol -> InsertVariableSymbol(control.MakeParameter(1));
-            variable_symbol -> SetType(sem -> control.String());
+            VariableSymbol *variable_symbol = block_symbol -> InsertVariableSymbol(control.MakeParameter(1));
+            variable_symbol -> SetType(control.String());
             variable_symbol -> SetOwner(class_literal_method);
             variable_symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
 
         class_literal_method -> AddFormalParameter(variable_symbol);
         class_literal_method -> SetSignature(control);
     }
+
+    return;
+}
+
+
+VariableSymbol *TypeSymbol::FindOrInsertClassLiteral(TypeSymbol *type)
+{
+assert(IsTopLevel() && (! type -> Primitive()));
+    Semantic *sem = semantic_environment -> sem;
+    Control &control = sem -> control;
+ 
+    this -> InsertClassLiteralMethod(control);
 
     if (! type -> class_literal_name)
     {
@@ -1311,6 +1318,7 @@ assert(IsTopLevel() && (! type -> Primitive()));
         delete [] name;
     }
 
+    NameSymbol *name_symbol = NULL;
     char *signature = type -> SignatureString();
     if (signature[0] == U_LEFT_BRACKET) // an array?
     {
@@ -1346,11 +1354,11 @@ assert(IsTopLevel() && (! type -> Primitive()));
         delete [] name;
     }
 
-    variable_symbol = FindVariableSymbol(name_symbol);
+    VariableSymbol *variable_symbol = FindVariableSymbol(name_symbol);
     if (! variable_symbol)
     {
         variable_symbol = InsertVariableSymbol(name_symbol);
-        variable_symbol -> SetType(Class);
+        variable_symbol -> SetType(control.Class());
         variable_symbol -> SetACC_PRIVATE();
         variable_symbol -> SetACC_STATIC();
         variable_symbol -> SetOwner((TypeSymbol *) this);

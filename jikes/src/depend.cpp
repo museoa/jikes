@@ -1,4 +1,4 @@
-// $Id$
+// $Id
 //
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
@@ -262,7 +262,6 @@ void TypeDependenceChecker::ProcessType(TypeSymbol *type)
 void TypeDependenceChecker::OutputMake(char *file_name, char *output_name, Tuple<FileSymbol *> &file_list)
 {
     FILE *outfile = ::SystemFopen(file_name, "w");
-    FileSymbol *file_symbol = file_list[0];
 
     if (outfile == NULL)
         cout << "*** Cannot open file " << file_name << "\n";
@@ -270,17 +269,18 @@ void TypeDependenceChecker::OutputMake(char *file_name, char *output_name, Tuple
     {
         for (int i = 0; i < file_list.Length(); i++)
         {
-            char *name = file_list[i] -> FileName();
-            int length = file_list[i] -> FileNameLength() + 1; // ".class" has one more character than ".java"
+            FileSymbol *file_symbol = file_list[i];
+            char *name = file_symbol -> FileName();
+            int length = file_symbol -> FileNameLength() - (file_symbol -> IsJava() ? FileSymbol::java_suffix_length
+                                                                                    : FileSymbol::class_suffix_length);
 
-            char *class_name = new char[length + 1], // +1 for '\0'
-                 *java_name = new char[length];
+            char *class_name = new char[length + FileSymbol::class_suffix_length + 1],
+                 *java_name = new char[length + FileSymbol::java_suffix_length + 1];
 
-            strcpy(class_name, name);
-            strcpy(java_name, name);
-            if (file_symbol -> IsJava())
-                 strcpy(&class_name[length - FileSymbol::java_suffix_length], FileSymbol::class_suffix);
-            else strcpy(&java_name[length - FileSymbol::class_suffix_length], FileSymbol::java_suffix);
+            strncpy(class_name, name, length);
+            strcpy(&class_name[length], FileSymbol::class_suffix);
+            strncpy(java_name, name, length);
+            strcpy(&java_name[length], FileSymbol::java_suffix);
 
             struct stat status;
 
@@ -297,8 +297,7 @@ void TypeDependenceChecker::OutputMake(char *file_name, char *output_name, Tuple
                 
             }
             
-
-            if (i > 0) // file_list[i] != file_symbol
+            if (i > 0) // Not the first file in the list
             {
                 if ((::SystemStat(class_name, &status) == 0) && (status.st_mode & STAT_S_IFREG)) {
                 fprintf(outfile, "%s: ", output_name);
@@ -330,17 +329,16 @@ void TypeDependenceChecker::OutputMake(FileSymbol *file_symbol)
     //
     //
     char *name = file_symbol -> FileName();
-    int length = file_symbol -> FileNameLength() + 1; // ".class" has one more character than ".java"
-    char *output_name = new char[length + 1], // +1 for '\0'
-         *u_name = new char[length];
-    strcpy(output_name, name);
-    strcpy(u_name, name);
-    if (file_symbol -> IsJava())
-    {
-        strcpy(&output_name[length - FileSymbol::java_suffix_length], FileSymbol::class_suffix);
-        strcpy(&u_name[length - FileSymbol::java_suffix_length], StringConstant::U8S_u);
-    }
-    else strcpy(&u_name[length - FileSymbol::class_suffix_length], StringConstant::U8S_u);
+    int length = file_symbol -> FileNameLength() - (file_symbol -> IsJava() ? FileSymbol::java_suffix_length
+                                                                            : FileSymbol::class_suffix_length);
+
+    char *output_name = new char[length + FileSymbol::class_suffix_length + 1],
+         *u_name = new char[length + strlen(StringConstant::U8S__DO_u) + 1];
+
+    strncpy(output_name, name, length);
+    strncpy(u_name, name, length);
+    strcpy(&output_name[length], FileSymbol::class_suffix);
+    strcpy(&u_name[length], StringConstant::U8S__DO_u);
 
     //
     //

@@ -1,4 +1,4 @@
-// $Id$
+// $Id
 //
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
@@ -40,8 +40,8 @@ public:
     static const unsigned short name_start[];
     static const unsigned char  name_length[];
     static const          char  string_buffer[];
-    static const unsigned char  terminal_index[];
-    static const unsigned char  non_terminal_index[];
+    static const unsigned short terminal_index[];
+    static const unsigned short non_terminal_index[];
     static const unsigned short scope_prefix[];
     static const unsigned short scope_suffix[];
     static const unsigned short scope_lhs[];
@@ -52,9 +52,11 @@ public:
     static const unsigned short in_symb[];
 
     static int nt_action(int state, int sym)
-        { return base_action[state + sym]; }
+    {
+        return base_action[state + sym];
+    }
 
-    static int t_action(int act, int sym, LexStream* stream)
+    static int t_action(int act, int sym, LexStream *stream)
     {
         act = base_action[act];
         int i = act + sym;

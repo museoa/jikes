@@ -1,4 +1,4 @@
-// $Id$
+// $Id
 //
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
@@ -65,8 +65,10 @@ void Semantic::ProcessVariableInitializer(AstVariableDeclarator *variable_declar
                 ReportSemError(SemanticError::INCOMPATIBLE_TYPE_FOR_ASSIGNMENT,
                                variable_declarator -> LeftToken(),
                                init -> RightToken(),
-                               symbol -> Type() -> Name(),
-                               init -> Type() -> Name());
+                               symbol -> Type() -> ContainingPackage() -> PackageName(),
+                               symbol -> Type() -> ExternalName(),
+                               init -> Type() -> ContainingPackage() -> PackageName(),
+                               init -> Type() -> ExternalName());
             }
         }
 
@@ -131,8 +133,10 @@ void Semantic::ProcessArrayInitializer(AstArrayInitializer *array_initializer, T
                         ReportSemError(SemanticError::INCOMPATIBLE_TYPE_FOR_INITIALIZATION,
                                        init -> LeftToken(),
                                        init -> RightToken(),
-                                       array_subtype -> Name(),
-                                       init -> Type() -> Name());
+                                       array_subtype -> ContainingPackage() -> PackageName(),
+                                       array_subtype -> ExternalName(),
+                                       init -> Type() -> ContainingPackage() -> PackageName(),
+                                       init -> Type() -> ExternalName());
                     }
                 }
             }

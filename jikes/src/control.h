@@ -1,4 +1,4 @@
-// $Id$
+// $Id
 //
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
@@ -79,7 +79,8 @@ public:
                *this0_name_symbol,
                *clone_name_symbol,
                *object_name_symbol,
-               *type_name_symbol;
+               *type_name_symbol,
+               *class_name_symbol;
 
     //
     //
@@ -285,7 +286,7 @@ public:
         } while (num > 0);
 
         p--;
-        *p = U_POUND; // '#'
+        *p = U_DOLLAR; // '$'
 
         return FindOrInsertName(p, wcslen(p));
     }

@@ -1,4 +1,4 @@
-// $Id$
+// $Id
 //
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
@@ -368,16 +368,6 @@ inline TypeSymbol *Semantic::FindTypeInShadow(TypeShadowSymbol *type_shadow_symb
     //
     TypeSymbol *type_symbol = type_shadow_symbol -> type_symbol;
 
-    //
-    // TODO: Rewrite this comment !!!   Note that access checking is performed by the function access_check
-    // which must be invoked on the constructor returned by this function.
-    //
-    // if (type_symbol -> ACC_PUBLIC() ||
-    //     type_symbol -> owner == this_type() ||
-    //     (!type_symbol -> ACC_PRIVATE() &&
-    //      (type_symbol -> ContainingPackage() == this_package ||
-    //       (type_symbol -> ACC_PROTECTED() && this_type() -> is_Subclass(type_symbol))))
-    //
     for (int i = 0; i < type_shadow_symbol -> NumConflicts(); i++)
     {
         ReportSemError(SemanticError::AMBIGUOUS_NAME,
@@ -3173,7 +3163,6 @@ void Semantic::AddInheritedTypes(TypeSymbol *base_type, TypeSymbol *super_type)
         //
         if (type_symbol -> ACC_PUBLIC() ||
             type_symbol -> ACC_PROTECTED() ||
-            super_type -> outermost_type == base_type -> outermost_type ||
             ((! type_symbol -> ACC_PRIVATE()) &&
              (super_type -> ContainingPackage() == base_type -> ContainingPackage())))
         {
@@ -3193,7 +3182,7 @@ void Semantic::AddInheritedTypes(TypeSymbol *base_type, TypeSymbol *super_type)
                 }
             }
             //
-            // TODO: if base_type is a nested type check if a type with the same
+            // TODO: maybe? if base_type is a nested type check if a type with the same
             //       name appears in one of the enclosed lexical scopes. If so, add 
             //       it to the shadow!
             //
@@ -3219,7 +3208,6 @@ void Semantic::AddInheritedFields(TypeSymbol *base_type, TypeSymbol *super_type)
         //
         if (variable_symbol -> ACC_PUBLIC() ||
             variable_symbol -> ACC_PROTECTED() ||
-            super_type -> outermost_type == base_type -> outermost_type ||
             ((! variable_symbol -> ACC_PRIVATE()) &&
              (super_type -> ContainingPackage() == base_type -> ContainingPackage())))
         {
@@ -3262,7 +3250,6 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type, TypeSymbol *super_type
         //
         if (method -> ACC_PUBLIC() ||
             method -> ACC_PROTECTED() ||
-            super_type -> outermost_type == base_type -> outermost_type ||
             ((! method -> ACC_PRIVATE()) && 
              (super_type -> ContainingPackage() == base_type -> ContainingPackage())))
         {
@@ -3958,7 +3945,8 @@ void Semantic::InitializeVariable(AstFieldDeclaration *field_declaration, Tuple<
                 ProcessVariableInitializer(variable_declarator);
 
                 if (NumErrors() == start_num_errors)
-                    DefiniteVariableInitializer(variable_declarator, finals);
+                     DefiniteVariableInitializer(variable_declarator, finals);
+                else variable_declarator -> symbol -> MarkDefinitelyAssigned(); // assume variable is assigned
             }
             variable_declarator -> pending = false;
             ThisVariable() -> MarkComplete();

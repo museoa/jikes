@@ -1,4 +1,4 @@
-// $Id$
+// $Id
 //
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
@@ -542,7 +542,8 @@ void Semantic::ProcessSwitchStatement(Ast *stmt)
         ReportSemError(SemanticError::TYPE_NOT_VALID_FOR_SWITCH,
                        switch_statement -> expression -> LeftToken(),
                        switch_statement -> expression -> RightToken(),
-                       type -> Name());
+                       type -> ContainingPackage() -> PackageName(),
+                       type -> ExternalName());
     }
 
     switch_statement -> default_case.switch_block_statement = NULL;
@@ -951,8 +952,10 @@ void Semantic::ProcessReturnStatement(Ast *stmt)
                 ReportSemError(SemanticError::MISMATCHED_RETURN_AND_METHOD_TYPE,
                                return_statement -> expression_opt -> LeftToken(),
                                return_statement -> expression_opt -> RightToken(),
-                               return_statement -> expression_opt -> Type() -> Name(),
-                               this_method -> Type() -> Name());
+                               return_statement -> expression_opt -> Type() -> ContainingPackage() -> PackageName(),
+                               return_statement -> expression_opt -> Type() -> ExternalName(),
+                               this_method -> Type() -> ContainingPackage() -> PackageName(),
+                               this_method -> Type() -> ExternalName());
             }
         }
     }

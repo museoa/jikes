@@ -1,4 +1,4 @@
-// $Id$
+// $Id
 //
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
@@ -2128,9 +2128,12 @@ int ByteCode::EmitExpression(AstExpression *expression)
             return EmitExpression(expression -> DimExprCast() -> expression);
         case Ast::DOT:
         {
-                AstFieldAccess * field_access =(AstFieldAccess *)expression;
-                 return ((field_access -> IsClassAccess()) && (field_access -> resolution_opt)) ? GenerateClassAccess(field_access)
-                         : EmitFieldAccess(field_access);
+            AstFieldAccess * field_access =(AstFieldAccess *)expression;
+            return ((field_access -> IsClassAccess()) && (field_access -> resolution_opt))
+                                                       ? (ClassFile::type -> outermost_type -> ACC_INTERFACE()
+                                                                    ? EmitExpression(field_access -> resolution_opt)
+                                                                    : GenerateClassAccess(field_access))
+                                                       : EmitFieldAccess(field_access);
         }
         case Ast::CALL:
             return EmitMethodInvocation((AstMethodInvocation *)expression, 0);

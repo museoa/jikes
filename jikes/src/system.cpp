@@ -1,4 +1,4 @@
-// $Id$
+// $Id
 //
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
@@ -122,6 +122,7 @@ void Control::ProcessGlobalNameSymbols()
     this -> clone_name_symbol      = FindOrInsertName(US_clone, wcslen(US_clone));
     this -> object_name_symbol     = FindOrInsertName(US_Object, wcslen(US_Object));
     this -> type_name_symbol       = FindOrInsertName(US_TYPE, wcslen(US_TYPE));
+    this -> class_name_symbol      = FindOrInsertName(US__class_DOLLAR, wcslen(US__class_DOLLAR));
 
     return;
 }

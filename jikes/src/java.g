@@ -3,7 +3,7 @@
 %options hblockb=\:,hblocke=:\
 %options nogoto-default
 %options single-productions
-%options la=2
+%options la=2,names=max
 
 -- This software is subject to the terms of the IBM Jikes Compiler
 -- License Agreement available at the following URL:

@@ -1,4 +1,4 @@
-// $Id$
+// $Id
 //
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
@@ -728,7 +728,6 @@ public:
         return;
     }
 
-    NameSymbol *MakeParameter(int);
     TypeSymbol *ProcessSignature(TypeSymbol *, char *, LexStream::TokenIndex);
     void ConvertUtf8ToUnicode(wchar_t *, char *, int);
     TypeSymbol *ReadType(FileSymbol *, PackageSymbol *, NameSymbol *, LexStream::TokenIndex);
@@ -1060,6 +1059,7 @@ private:
     void UpdateGeneratedLocalConstructor(MethodSymbol *);
     void UpdateLocalConstructors(TypeSymbol *);
     void GetAnonymousConstructor(AstClassInstanceCreationExpression *, TypeSymbol *);
+    TypeSymbol *GetClassLiteralClass(LexStream::TokenIndex);
     TypeSymbol *GetAnonymousType(AstClassInstanceCreationExpression *, TypeSymbol *);
     void ProcessClassInstanceCreationExpression(Ast *);
     void ProcessArrayCreationExpression(Ast *);

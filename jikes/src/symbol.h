@@ -1,4 +1,4 @@
-// $Id$
+// $Id
 //
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
@@ -733,6 +733,8 @@ public:
 
     int num_dimensions;
 
+    TypeSymbol *class_literal_class;
+
     MethodSymbol *class_literal_method;
     MethodSymbol *static_initializer_method;
     MethodSymbol *block_initializer_method;
@@ -787,6 +789,7 @@ assert(NumConstructorParameters() > 0);
     }
     VariableSymbol *InsertThis(int k);
 
+    void InsertClassLiteralMethod(Control &);
     VariableSymbol *FindOrInsertClassLiteral(TypeSymbol *);
     VariableSymbol *FindOrInsertLocalShadow(VariableSymbol *);
 
