@@ -12,7 +12,8 @@
       <li>Migrate old jitterbug bugs to new system. (TAG, EricB, CAbbey, more welcome)
       <li>Update FAQ. (Pascal, Andrew Inggs)
       <li>Finish bringing new web pages online. (CAbbey)
-      <li>Convert the old Jikestst tests into Jacks tests, particularly:
+      <li>Convert the old Jikestst tests into Jacks tests.
+      <li>Write a class introspector in TCL for use in Jacks testcases. (earmarked for cabbey)
       <li>Move the old Sun Queries from the research database to a web page.
       <li>Fix the bugs that are known, triage the ones that are brand new.
     </ul>
