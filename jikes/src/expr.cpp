@@ -6173,10 +6173,10 @@ void Semantic::ProcessAND_AND(AstBinaryExpression *expr)
             // Even when evaluating false && x, x must be constant for && to
             // be constant
             //
-            expr -> value =
-                control.int_pool.FindOrInsert((IsConstantTrue(expr -> left_expression) &&
-                                               IsConstantTrue(expr -> left_expression))
-                                              ? 1 : 0);
+            expr -> value = control.int_pool.
+                FindOrInsert((IsConstantTrue(expr -> left_expression) &&
+                              IsConstantTrue(expr -> right_expression))
+                             ? 1 : 0);
         }
     }
 
@@ -6215,10 +6215,10 @@ void Semantic::ProcessOR_OR(AstBinaryExpression *expr)
             // Even when evaluating true || x, x must be constant for && to
             // be constant
             //
-            expr -> value =
-                control.int_pool.FindOrInsert((IsConstantTrue(expr -> left_expression) ||
-                                               IsConstantTrue(expr -> right_expression))
-                                              ? 1 : 0);
+            expr -> value = control.int_pool.
+                FindOrInsert((IsConstantTrue(expr -> left_expression) ||
+                              IsConstantTrue(expr -> right_expression))
+                             ? 1 : 0);
         }
     }
 

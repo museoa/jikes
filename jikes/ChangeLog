@@ -1,3 +1,7 @@
+2002-03-12  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/expr.cpp (ProcessAND_AND): Fix bug 2750.
+
 2002-03-08  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/option.cpp (makeStrippedCopy): Let -bootclasspath ''
