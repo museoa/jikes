@@ -190,34 +190,34 @@ private:
 //
 //
 //
-class DefiniteSets
+class DefinitePairs
 {
 public:
-    DefiniteSets(int set_size) : break_set(set_size),
-                                 continue_set(set_size),
-                                 return_set(set_size),
-                                 throw_set(set_size)
+    DefinitePairs(int set_size) : break_pair(set_size),
+                                  continue_pair(set_size),
+                                  return_pair(set_size),
+                                  throw_pair(set_size)
     {}
 
-    BitSet break_set,
-           continue_set,
-           return_set,
-           throw_set;
+    DefinitePair break_pair,
+                 continue_pair,
+                 return_pair,
+                 throw_pair;
 
     void UniverseInit()
     {
-        break_set.SetUniverse();
-        continue_set.SetUniverse();
-        return_set.SetUniverse();
-        throw_set.SetUniverse();
+        break_pair.SetUniverse();
+        continue_pair.SetUniverse();
+        return_pair.SetUniverse();
+        throw_pair.SetUniverse();
     }
 
     void EmptyInit()
     {
-        break_set.SetEmpty();
-        continue_set.SetEmpty();
-        return_set.SetEmpty();
-        throw_set.SetEmpty();
+        break_pair.SetEmpty();
+        continue_pair.SetEmpty();
+        return_pair.SetEmpty();
+        throw_pair.SetEmpty();
     }
 };
 
@@ -231,8 +231,7 @@ public:
 
     void Push(AstBlock *block_)
     {
-        definite_sets[top_index] -> UniverseInit();
-        final_sets[top_index] -> EmptyInit();
+        definite_pairs[top_index] -> UniverseInit();
 
         if (locally_defined_variables)
         {
@@ -268,66 +267,41 @@ public:
     VariableSymbol **TopLocalVariables() { assert(top_index > 0 && local_variables); return local_variables[top_index - 1]; }
     BitSet *TopLocallyDefinedVariables() { assert(top_index > 0 && locally_defined_variables); return locally_defined_variables[top_index - 1]; }
 
-    BitSet &BreakSet(int i)    { return definite_sets[i] -> break_set; }
-    BitSet &ContinueSet(int i) { return definite_sets[i] -> continue_set; }
-    BitSet &ReturnSet(int i)   { return definite_sets[i] -> return_set; }
-    BitSet &ThrowSet(int i)    { return definite_sets[i] -> throw_set; }
+    DefinitePair &BreakPair(int i)    { return definite_pairs[i] -> break_pair; }
+    DefinitePair &ContinuePair(int i) { return definite_pairs[i] -> continue_pair; }
+    DefinitePair &ReturnPair(int i)   { return definite_pairs[i] -> return_pair; }
+    DefinitePair &ThrowPair(int i)    { return definite_pairs[i] -> throw_pair; }
 
-    BitSet &TopBreakSet()      { assert(top_index > 0); return definite_sets[top_index - 1] -> break_set; }
-    BitSet &TopContinueSet()   { assert(top_index > 0); return definite_sets[top_index - 1] -> continue_set; }
-    BitSet &TopReturnSet()     { assert(top_index > 0); return definite_sets[top_index - 1] -> return_set; }
-    BitSet &TopThrowSet()      { assert(top_index > 0); return definite_sets[top_index - 1] -> throw_set; }
+    DefinitePair &TopBreakPair()      { assert(top_index > 0); return definite_pairs[top_index - 1] -> break_pair; }
+    DefinitePair &TopContinuePair()   { assert(top_index > 0); return definite_pairs[top_index - 1] -> continue_pair; }
+    DefinitePair &TopReturnPair()     { assert(top_index > 0); return definite_pairs[top_index - 1] -> return_pair; }
+    DefinitePair &TopThrowPair()      { assert(top_index > 0); return definite_pairs[top_index - 1] -> throw_pair; }
 
-    BitSet &TopExitSet(BitSet &start_set)
+    DefinitePair &TopExitPair(DefinitePair &start_pair)
     {
         assert(top_index > 0);
 
-        exit_set  = start_set;
-        exit_set *= TopBreakSet();
-        exit_set *= TopContinueSet();
-        exit_set *= TopReturnSet();
-        exit_set *= TopThrowSet();
+        exit_pair  = start_pair;
+        exit_pair *= TopBreakPair();
+        exit_pair *= TopContinuePair();
+        exit_pair *= TopReturnPair();
+        exit_pair *= TopThrowPair();
 
-        return exit_set;
-    }
-
-    BitSet &FinalBreakSet(int i)    { return final_sets[i] -> break_set; }
-    BitSet &FinalContinueSet(int i) { return final_sets[i] -> continue_set; }
-    BitSet &FinalReturnSet(int i)   { return final_sets[i] -> return_set; }
-    BitSet &FinalThrowSet(int i)    { return final_sets[i] -> throw_set; }
-
-    BitSet &TopFinalBreakSet()      { assert(top_index > 0); return final_sets[top_index - 1] -> break_set; }
-    BitSet &TopFinalContinueSet()   { assert(top_index > 0); return final_sets[top_index - 1] -> continue_set; }
-    BitSet &TopFinalReturnSet()     { assert(top_index > 0); return final_sets[top_index - 1] -> return_set; }
-    BitSet &TopFinalThrowSet()      { assert(top_index > 0); return final_sets[top_index - 1] -> throw_set; }
-
-    BitSet &TopFinalExitSet(BitSet &start_set)
-    {
-        assert(top_index > 0);
-
-        exit_set  = start_set;
-        exit_set += TopFinalBreakSet();
-        exit_set += TopFinalContinueSet();
-        exit_set += TopFinalReturnSet();
-        exit_set += TopFinalThrowSet();
-
-        return exit_set;
+        return exit_pair;
     }
 
     DefiniteBlockStack(Control &control, int stack_size_, int set_size) : stack_size(stack_size_),
                                                                           top_index(0),
-                                                                          exit_set(set_size)
+                                                                          exit_pair(set_size)
     {
         block = new AstBlock*[stack_size];
-        definite_sets = new DefiniteSets*[stack_size];
-        final_sets = new DefiniteSets*[stack_size];
+        definite_pairs = new DefinitePairs*[stack_size];
         local_variables = (VariableSymbol ***) (control.option.g ? new VariableSymbol**[stack_size] : NULL);
         locally_defined_variables = (BitSet **) (control.option.g ? new BitSet*[stack_size] : NULL);
 
         for (int i = 0; i < stack_size; i++)
         {
-            definite_sets[i] = new DefiniteSets(set_size);
-            final_sets[i] = new DefiniteSets(set_size);
+            definite_pairs[i] = new DefinitePairs(set_size);
             if (local_variables)
             {
                 local_variables[i] = new VariableSymbol*[set_size];
@@ -340,8 +314,7 @@ public:
     {
         for (int i = 0; i < stack_size; i++)
         {
-            delete definite_sets[i];
-            delete final_sets[i];
+            delete definite_pairs[i];
             if (local_variables)
             {
                 delete [] local_variables[i];
@@ -350,8 +323,7 @@ public:
         }
 
         delete [] block;
-        delete [] definite_sets;
-        delete [] final_sets;
+        delete [] definite_pairs;
         delete [] local_variables;
         delete [] locally_defined_variables;
     }
@@ -362,13 +334,12 @@ private:
         top_index;
     AstBlock **block;
 
-    DefiniteSets **definite_sets,
-                 **final_sets;
+    DefinitePairs **definite_pairs;
 
     BitSet **locally_defined_variables;
     VariableSymbol ***local_variables;
 
-    BitSet exit_set;
+    DefinitePair exit_pair;
 };
 
 
@@ -560,12 +531,13 @@ public:
                                                             error(NULL),
                                                             this_package(file_symbol_ -> package),
                                                             definitely_assigned_variables(NULL),
-                                                            possibly_assigned_finals(NULL),
                                                             universe(NULL),
+                                                            blank_finals(NULL),
                                                             definite_block_stack(NULL),
                                                             definite_try_stack(NULL),
                                                             definite_final_assignment_stack(NULL),
-                                                            definite_visible_variables(NULL)
+                                                            definite_visible_variables(NULL),
+                                                            processing_simple_assignment(false)
     {
         ProcessExprOrStmt[Ast::LOCAL_VARIABLE_DECLARATION] = &Semantic::ProcessLocalVariableDeclarationStatement;
         ProcessExprOrStmt[Ast::BLOCK]                      = &Semantic::ProcessBlock;
@@ -664,100 +636,12 @@ public:
         DefiniteBinaryExpr[AstBinaryExpression::LESS_EQUAL]           = &Semantic::DefiniteDefaultBinaryExpression;
         DefiniteBinaryExpr[AstBinaryExpression::GREATER_EQUAL]        = &Semantic::DefiniteDefaultBinaryExpression;
 
-        //
-        // TODO: Remove this comment as well as the functions:
-        //
-        //     DefiniteAND
-        //     DefiniteXOR
-        //     DefiniteIOR
-        //
-        //     DefiniteEQUAL
-        //     DefiniteNOT_EQUAL
-        //
-        // when revised spec is released !!!
-        //
-        //****************************************************************************************
-        //
-        // To: Martin Odersky <Martin.Odersky@epfl.ch>
-        // cc: David Shields/Watson/IBM@IBMUS, compiler@eng.sun.com,
-        // gilad.bracha@eng.sun.com, jrose@eng.sun.com,
-        // innerclass-comments@lukasiewicz.eng.sun.com, guy.steele@east.sun.com,
-        // peter.kessler@eng.sun.com
-        // Subject: Re: Query #32 to Sun: Verification problem
-        //
-        //
-        //
-        //
-        // On Thu, 29 Jul 1999, Martin Odersky wrote:
-        //
-        // > It seems a very undesirable state of affairs if the Java spec for |,
-        // > &, ^ and the JVM spec for iand, ior, ixor differ in their definite
-        // > assignment properties. Assuming that it's unreasonable to make the
-        // > verifier implement the current JLS spec one-to-one, would it be
-        // > possible to tighten the JLS so that definite assignment for |, & ,^ is
-        // > done in the way the verifier does it? I doubt that such a tightening
-        // > would invalidate any real Java programs.
-        //
-        // Gilad and I decided today that ammending the JLS was the best course of
-        // action, and then discovered that Guy had already done so in our working
-        // draft of the revised specification.  We anticipate that when a draft is
-        // made
-        // available for public review, it will drop sections 16.1.6, 16.1.7, and
-        // 16.1.8, which specify special-case rules for the &, |, and ^ operators.
-        // They will be covered instead by the general case for expressions with
-        // subexpressions, which reads as follows in the current working draft:
-        //
-        //  If the expression has subexpressions, V is [un]assigned
-        //  after the expression iff V is [un]assigned after its rightmost
-        //  immediate subexpression.
-        //
-        // Note that the when-true and when-false cases, currently distinguished
-        // for these operators, are now coalesced, as in the general case.
-        //
-        // Pending an official change to the specification, we recommend that
-        // compiler implementors follow the proposed ammendments.
-        //
-        // Due to the fact that 'javac' has never been in compliance with the
-        // current JLS on this issue, nor will much (all?) code that
-        // relies on the difference actually verify and execute, compatibility
-        // implications should be minimal.
-        //
-        // --Bill
-        //
-        //------------------------------------------------------------------------------------------------
-        //
-        // To: David Shields/Watson/IBM@IBMUS
-        // cc: Martin Odersky <Martin.Odersky@epfl.ch>, compiler@eng.sun.com, gilad.bracha@eng.sun.com,
-        // jrose@eng.sun.com, innerclass-comments@lukasiewicz.eng.sun.com, guy.steele@east.sun.com,
-        // peter.kessler@eng.sun.com
-        // Subject: Re: Query #32 to Sun: Verification problem
-        //
-        // On Mon, 2 Aug 1999 shieldsd@us.ibm.com wrote:
-        //
-        // > Do you still plan to retain 16.1.3, 16.1.4 and 16.1.11? Since we follow them as
-        // > currently written, we accept some of the positive 1.2 JCK tests that javac
-        // > currently rejects, but the resulting class files fail verification. Examples
-        // > include dasg02901, dasg03001, dasg03301, dasg03303, dasg03401, dasg03501,
-        // > dasg04501, dasg04601, dasg04701 and dasg05001).
-        // >
-        // > dave and philippe
-        //
-        // We plan to keep these.  However, the special rules for '==' (16.1.9) and
-        // '!=' (16.1.10) have also been dropped, again because the bytecodes for these
-        // operators create materialized boolean values on the stack at runtime.
-        //
-        // Guy and Gilad:  In my copy of the draft, the second-to-last sentence on
-        // page p.395 claims otherwise, but sections 16.1.9 and 16.1.10 have in fact
-        // been deleted.
-        //
-        // --Bill
-        //
-        DefiniteBinaryExpr[AstBinaryExpression::AND]                  = &Semantic::DefiniteDefaultBinaryExpression;// &Semantic::DefiniteAND;
-        DefiniteBinaryExpr[AstBinaryExpression::XOR]                  = &Semantic::DefiniteDefaultBinaryExpression;// &Semantic::DefiniteXOR;
-        DefiniteBinaryExpr[AstBinaryExpression::IOR]                  = &Semantic::DefiniteDefaultBinaryExpression;// &Semantic::DefiniteIOR;
+        DefiniteBinaryExpr[AstBinaryExpression::AND]                  = &Semantic::DefiniteDefaultBinaryExpression;
+        DefiniteBinaryExpr[AstBinaryExpression::XOR]                  = &Semantic::DefiniteDefaultBinaryExpression;
+        DefiniteBinaryExpr[AstBinaryExpression::IOR]                  = &Semantic::DefiniteDefaultBinaryExpression;
 
-        DefiniteBinaryExpr[AstBinaryExpression::EQUAL_EQUAL]          = &Semantic::DefiniteDefaultBinaryExpression; // &Semantic::DefiniteEQUAL_EQUAL;
-        DefiniteBinaryExpr[AstBinaryExpression::NOT_EQUAL]            = &Semantic::DefiniteDefaultBinaryExpression; // &Semantic::DefiniteNOT_EQUAL;
+        DefiniteBinaryExpr[AstBinaryExpression::EQUAL_EQUAL]          = &Semantic::DefiniteDefaultBinaryExpression;
+        DefiniteBinaryExpr[AstBinaryExpression::NOT_EQUAL]            = &Semantic::DefiniteDefaultBinaryExpression;
 
         DefiniteBinaryExpr[AstBinaryExpression::AND_AND]              = &Semantic::DefiniteAND_AND;
         DefiniteBinaryExpr[AstBinaryExpression::OR_OR]                = &Semantic::DefiniteOR_OR;
@@ -869,6 +753,17 @@ public:
     TypeSymbol *ReadTypeFromSignature(TypeSymbol *, const char *, int, LexStream::TokenIndex);
     TypeSymbol *ProcessNestedType(TypeSymbol *, NameSymbol *, LexStream::TokenIndex);
 
+    inline bool IsConstantTrue(AstExpression *expr)
+    {
+        return expr -> IsConstant() && (expr -> Type() == control.boolean_type) &&
+            (((IntLiteralValue *) expr -> value) -> value);
+    }
+    inline bool IsConstantFalse(AstExpression *expr)
+    {
+        return expr -> IsConstant() && (expr -> Type() == control.boolean_type) &&
+            (! ((IntLiteralValue *) expr -> value) -> value);
+    }
+
 private:
     enum
     {
@@ -932,9 +827,9 @@ private:
 
     SemanticEnvironmentStack state_stack;
 
-    BitSet *definitely_assigned_variables,
-           *possibly_assigned_finals,
-           *universe;
+    DefinitePair *definitely_assigned_variables,
+                 *universe;
+    BitSet *blank_finals;
     DefiniteBlockStack *definite_block_stack;
     DefiniteTryStack *definite_try_stack;
     DefiniteFinalAssignmentStack *definite_final_assignment_stack;
@@ -1029,42 +924,35 @@ private:
 
     VariableSymbol *DefiniteFinal(AstFieldAccess *);
 
-    DefiniteAssignmentSet *(Semantic::*DefiniteExpr[Ast::_num_expression_kinds])(AstExpression *, BitSet &);
-    DefiniteAssignmentSet *DefiniteSimpleName(AstExpression *, BitSet &);
-    DefiniteAssignmentSet *DefiniteArrayAccess(AstExpression *, BitSet &);
-    DefiniteAssignmentSet *DefiniteMethodInvocation(AstExpression *, BitSet &);
-    DefiniteAssignmentSet *DefiniteClassInstanceCreationExpression(AstExpression *, BitSet &);
-    DefiniteAssignmentSet *DefiniteArrayCreationExpression(AstExpression *, BitSet &);
-    DefiniteAssignmentSet *DefinitePreUnaryExpression(AstExpression *, BitSet &);
-    DefiniteAssignmentSet *DefinitePostUnaryExpression(AstExpression *, BitSet &);
-    DefiniteAssignmentSet *DefiniteBinaryExpression(AstExpression *, BitSet &);
-    DefiniteAssignmentSet *DefiniteConditionalExpression(AstExpression *, BitSet &);
-    DefiniteAssignmentSet *DefiniteAssignmentExpression(AstExpression *, BitSet &);
-    DefiniteAssignmentSet *DefiniteDefaultExpression(AstExpression *, BitSet &);
-    DefiniteAssignmentSet *DefiniteFieldAccess(AstExpression *, BitSet &);
-    DefiniteAssignmentSet *DefiniteParenthesizedExpression(AstExpression *, BitSet &);
-    DefiniteAssignmentSet *DefiniteCastExpression(AstExpression *, BitSet &);
-    DefiniteAssignmentSet *DefiniteExpression(AstExpression *, BitSet &);
+    DefiniteAssignmentSet *(Semantic::*DefiniteExpr[Ast::_num_expression_kinds])(AstExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefiniteSimpleName(AstExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefiniteArrayAccess(AstExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefiniteMethodInvocation(AstExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefiniteClassInstanceCreationExpression(AstExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefiniteArrayCreationExpression(AstExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefinitePreUnaryExpression(AstExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefinitePostUnaryExpression(AstExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefiniteBinaryExpression(AstExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefiniteConditionalExpression(AstExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefiniteAssignmentExpression(AstExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefiniteDefaultExpression(AstExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefiniteFieldAccess(AstExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefiniteParenthesizedExpression(AstExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefiniteCastExpression(AstExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefiniteBooleanExpression(AstExpression *, DefinitePair &);
+    void DefiniteExpression(AstExpression *, DefinitePair &);
 
-    DefiniteAssignmentSet *(Semantic::*DefinitePreUnaryExpr[AstPreUnaryExpression::_num_kinds])(AstExpression *, BitSet &);
-    DefiniteAssignmentSet *DefiniteDefaultPreUnaryExpression(AstExpression *, BitSet &);
-    DefiniteAssignmentSet *DefiniteNOT(AstExpression *, BitSet &);
-    DefiniteAssignmentSet *DefinitePLUSPLUSOrMINUSMINUS(AstExpression *, BitSet &);
+    DefiniteAssignmentSet *(Semantic::*DefinitePreUnaryExpr[AstPreUnaryExpression::_num_kinds])(AstExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefiniteDefaultPreUnaryExpression(AstExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefiniteNOT(AstExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefinitePLUSPLUSOrMINUSMINUS(AstExpression *, DefinitePair &);
 
-    DefiniteAssignmentSet *(Semantic::*DefiniteBinaryExpr[AstBinaryExpression::_num_kinds])(AstBinaryExpression *, BitSet &);
-    DefiniteAssignmentSet *DefiniteDefaultBinaryExpression(AstBinaryExpression *, BitSet &);
-    DefiniteAssignmentSet *DefiniteAND(AstBinaryExpression *, BitSet &);
-    DefiniteAssignmentSet *DefiniteIOR(AstBinaryExpression *, BitSet &);
-    DefiniteAssignmentSet *DefiniteXOR(AstBinaryExpression *, BitSet &);
-    DefiniteAssignmentSet *DefiniteAND_AND(AstBinaryExpression *, BitSet &);
-    DefiniteAssignmentSet *DefiniteOR_OR(AstBinaryExpression *, BitSet &);
-    DefiniteAssignmentSet *DefiniteEQUAL_EQUAL(AstBinaryExpression *, BitSet &);
-    DefiniteAssignmentSet *DefiniteNOT_EQUAL(AstBinaryExpression *, BitSet &);
+    DefiniteAssignmentSet *(Semantic::*DefiniteBinaryExpr[AstBinaryExpression::_num_kinds])(AstBinaryExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefiniteDefaultBinaryExpression(AstBinaryExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefiniteAND_AND(AstBinaryExpression *, DefinitePair &);
+    DefiniteAssignmentSet *DefiniteOR_OR(AstBinaryExpression *, DefinitePair &);
 
-    DefiniteAssignmentSet *DefiniteAssignmentAND(TypeSymbol *, BitSet *, BitSet &, DefiniteAssignmentSet *, DefiniteAssignmentSet *);
-    DefiniteAssignmentSet *DefiniteAssignmentIOR(TypeSymbol *, BitSet *, BitSet &, DefiniteAssignmentSet *, DefiniteAssignmentSet *);
-    DefiniteAssignmentSet *DefiniteAssignmentXOR(TypeSymbol *, BitSet *, BitSet &, DefiniteAssignmentSet *, DefiniteAssignmentSet *);
-
+    void DefiniteArrayInitializer(AstArrayInitializer *, DefinitePair &);
     void DefiniteArrayInitializer(AstArrayInitializer *);
     void DefiniteVariableInitializer(AstVariableDeclarator *);
     void DefiniteBlockStatements(AstBlock *);
@@ -1181,6 +1069,12 @@ private:
     TypeSymbol *GetLocalType(AstClassDeclaration *);
     void ProcessClassDeclaration(Ast *);
     void GenerateLocalConstructor(MethodSymbol *);
+
+    //
+    // CheckSimpleName must behave differently if we are in the middle
+    // of a simple assignment. See expr.cpp.
+    //
+    bool processing_simple_assignment;
 
     void CheckSimpleName(AstSimpleName *, SemanticEnvironment *where_found);
     void ProcessSimpleName(Ast *);

@@ -1,3 +1,16 @@
+2001-10-25  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/ast.h:
+	* src/java.g (SwitchBlock): Mark blocks inside a switch statement
+	with AstBlock::SWITCH, for use in definite assignment analysis.
+	* src/javaact.cpp: Regenerate.
+	* src/definite.cpp:
+	* src/semantic.h:
+	* src/expr.cpp:
+	* src/set.h: Overhaul definite assignment analysis, to bring it
+	line with 2nd edition JLS. In the process, fixed bugs: 192, 603,
+	606, 610, 623 - patch 209.
+	
 2001-10-17  Eric B Blake  <ebb9@email.byu.edu>
 
 	* src/long.cpp (operator/, operator%): Suppress a warning in the

@@ -1616,7 +1616,8 @@ void Semantic::CheckSimpleName(AstSimpleName *simple_name, SemanticEnvironment *
                            simple_name -> identifier_token,
                            lex_stream -> NameString(simple_name -> identifier_token));
         }
-        else if (! variable_symbol -> IsDeclarationComplete())
+        else if (! variable_symbol -> IsDeclarationComplete() &&
+                 ! processing_simple_assignment)
         {
             ReportSemError(SemanticError::NAME_NOT_YET_AVAILABLE,
                            simple_name -> identifier_token,
@@ -1630,7 +1631,9 @@ void Semantic::CheckSimpleName(AstSimpleName *simple_name, SemanticEnvironment *
 
         if (containing_type) // variable must be a field
         {
-            if (containing_type == ThisType() && (! variable_symbol -> IsDeclarationComplete())) // forward reference?
+            if (containing_type == ThisType() &&
+                ! variable_symbol -> IsDeclarationComplete() &&
+                ! processing_simple_assignment) // forward reference?
             {
                 ReportSemError(SemanticError::NAME_NOT_YET_AVAILABLE,
                                simple_name -> identifier_token,
@@ -6942,7 +6945,25 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
 
     AstExpression *left_hand_side = assignment_expression -> left_hand_side;
 
-    ProcessExpression(left_hand_side);
+    //
+    // JLS2 8.3.2.3 permits simple assignment to a variable that has not
+    // yet been declared in an initializer.  If the left_hand_side is a
+    // variable, we use processing_simple_assignment to inform
+    // CheckSimpleName() to treat it specially.
+    //EBB
+    {
+        if (assignment_expression -> assignment_tag == AstAssignmentExpression::SIMPLE_EQUAL)
+        {
+            AstSimpleName *simple_name = left_hand_side -> SimpleNameCast();
+            if (simple_name)
+                processing_simple_assignment = true;
+        }
+
+        ProcessExpression(left_hand_side);
+
+        processing_simple_assignment = false;
+    }
+
     ProcessExpressionOrStringConstant(assignment_expression -> expression);
     TypeSymbol *left_type = left_hand_side -> Type(),
                *right_type = assignment_expression -> expression -> Type();

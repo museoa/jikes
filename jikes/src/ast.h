@@ -750,7 +750,8 @@ public:
         NONE,
         TRY_CLAUSE_WITH_FINALLY,
         FINALLY,
-        SYNCHRONIZED
+        SYNCHRONIZED,
+        SWITCH
     };
     BlockTag block_tag;
 

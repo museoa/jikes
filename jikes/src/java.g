@@ -2843,6 +2843,7 @@ void Parser::Act$rule_number(void)
     AstBlock *block = ast_pool -> NewBlock();
     block -> left_brace_token  = Token(1);
     block -> right_brace_token = Token(2);
+    block -> block_tag = AstBlock::SWITCH;
 
     p -> switch_block = block;
 
@@ -2872,6 +2873,7 @@ void Parser::Act$rule_number(void)
         FreeCircularList(tail);
     }
     block -> right_brace_token = Token(3);
+    block -> block_tag = AstBlock::SWITCH;
 
     p -> switch_block  = block;
 
@@ -2909,6 +2911,7 @@ void Parser::Act$rule_number(void)
     block -> left_brace_token  = Token(1);
     block -> AddStatement(q);
     block -> right_brace_token = Token(3);
+    block -> block_tag = AstBlock::SWITCH;
 
     p -> switch_block  = block;
 
@@ -2960,6 +2963,7 @@ void Parser::Act$rule_number(void)
 
     block -> AddStatement(q);
     block -> right_brace_token = Token(4);
+    block -> block_tag = AstBlock::SWITCH;
 
     p -> switch_block  = block;
 

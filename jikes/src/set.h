@@ -410,6 +410,9 @@ private:
 };
 
 
+class DefinitePair;
+class DefiniteAssignmentSet;
+
 //
 // This Bitset template class can be used to construct sets of
 // integers. The template takes as argument the address of an integer
@@ -464,6 +467,7 @@ public:
     //
     BitSet& operator=(const BitSet& rhs)
     {
+        assert(set_size == rhs.set_size);
         for (int i = (set_size - 1) / cell_size; i >= 0; i--)
             s[i] = rhs.s[i];
 
@@ -473,7 +477,10 @@ public:
     //
     // Constructor of an uninitialized bitset.
     //
-    BitSet(int set_size_) : set_size(set_size_)
+#ifdef HAVE_EXPLICIT
+    explicit
+#endif
+             BitSet(int set_size_) : set_size(set_size_)
     {
         //
         // Note that we comment out the -1 because some C++ compilers
@@ -522,7 +529,7 @@ public:
     //
     // Return size of a bit set.
     //
-    int Size() { return set_size; }
+    int Size() const { return set_size; }
 
     //
     // Return a boolean value indicating whether or not the element i
@@ -566,22 +573,25 @@ public:
     // Yield a boolean result indicating whether or not two sets are
     // identical.
     //
-    int operator==(const BitSet& rhs)
+    bool operator==(const BitSet& rhs) const
     {
+        if (set_size != rhs.set_size)
+            return false;
+
         for (int i = (set_size - 1) / cell_size; i >= 0; i--)
         {
             if (s[i] != rhs.s[i])
-                return 0;
+                return false;
         }
 
-        return 1;
+        return true;
     }
 
     //
     // Yield a boolean result indicating whether or not two sets are
     // identical.
     //
-    int operator!=(const BitSet& rhs)
+    bool operator!=(const BitSet& rhs) const
     {
         return ! (*this == rhs);
     }
@@ -589,7 +599,7 @@ public:
     //
     // Union of two bitsets.
     //
-    BitSet operator+(const BitSet& rhs)
+    BitSet operator+(const BitSet& rhs) const
     {
         BitSet result(set_size);
 
@@ -613,7 +623,7 @@ public:
     //
     // Intersection of two bitsets.
     //
-    BitSet operator*(const BitSet& rhs)
+    BitSet operator*(const BitSet& rhs) const
     {
         BitSet result(set_size);
 
@@ -637,7 +647,7 @@ public:
     //
     // Difference of two bitsets.
     //
-    BitSet operator-(const BitSet& rhs)
+    BitSet operator-(const BitSet& rhs) const
     {
         BitSet result(set_size);
 
@@ -659,18 +669,162 @@ public:
     }
 };
 
+
+//
+// The DefinitePair class holds two Bitsets, one for definite assignment,
+// and one for definite unassignment.
+//
+class DefinitePair
+{
+public:
+    BitSet da_set,
+           du_set;
+
+    //
+    // Constructor to clone a definite pair.
+    //
+    inline DefinitePair(const DefinitePair& rhs) : da_set(rhs.da_set),
+                                                   du_set(rhs.du_set)
+    {}
+
+    //
+    // Other useful constructors.
+    //
+    inline DefinitePair(int size) : da_set(size, BitSet::EMPTY),
+                                    du_set(size, BitSet::UNIVERSE)
+    {}
+
+    inline DefinitePair(int size, int init) : da_set(size, init),
+                                              du_set(size, init)
+    {}
+
+    inline DefinitePair(const BitSet da, const BitSet du) : da_set(da),
+                                                            du_set(du)
+    {
+        assert(da.Size() == du.Size());
+    }
+
+    //
+    // Set to the results when true * results when false
+    //
+    inline DefinitePair(const DefiniteAssignmentSet &set);
+
+    //
+    // Set both bitsets.
+    //
+    inline void SetEmpty()    { da_set.SetEmpty();    du_set.SetEmpty(); }
+    inline void SetUniverse() { da_set.SetUniverse(); du_set.SetUniverse(); }
+
+    inline DefinitePair& operator=(const DefinitePair& rhs)
+    {
+        this -> da_set = rhs.da_set;
+        this -> du_set = rhs.du_set;
+        return *this;
+    }
+
+    inline DefinitePair& operator=(const DefiniteAssignmentSet& rhs);
+
+    inline int Size() const { return da_set.Size(); }
+
+    //
+    // Modify element i in both bitsets.
+    //
+    inline void AddElement(int i)    { da_set.AddElement(i);    du_set.AddElement(i); }
+    inline void RemoveElement(int i) { da_set.RemoveElement(i); du_set.RemoveElement(i); }
+
+    //
+    // An assignment statement adds to da, but removes from du; reclaim it when
+    // the variable leaves scope.
+    //
+    inline void AssignElement(int i) { da_set.AddElement(i); du_set.RemoveElement(i); }
+    inline void ReclaimElement(int i) { da_set.RemoveElement(i); du_set.AddElement(i); }
+
+    //
+    // da == da && du == du
+    //
+    inline bool operator==(const DefinitePair& rhs) const
+    {
+        return da_set == rhs.da_set && du_set == rhs.du_set;
+    }
+    inline bool operator!=(const DefinitePair& rhs) const { return ! (*this == rhs); }
+
+    //
+    // Union
+    //
+    inline DefinitePair operator+(const DefinitePair& rhs) const
+    {
+        DefinitePair result(da_set + rhs.da_set, du_set + rhs.du_set);
+        return result;
+    }
+    inline DefinitePair& operator+=(const DefinitePair& rhs)
+    {
+        da_set += rhs.da_set;
+        du_set += rhs.du_set;
+        return *this;
+    }
+
+    //
+    // Intersection
+    //
+    inline DefinitePair operator*(const DefinitePair& rhs) const
+    {
+        DefinitePair result(da_set * rhs.da_set, du_set * rhs.du_set);
+        return result;
+    }
+    inline DefinitePair& operator*=(const DefinitePair& rhs)
+    {
+        da_set *= rhs.da_set;
+        du_set *= rhs.du_set;
+        return *this;
+    }
+
+    //
+    // Difference
+    //
+    inline DefinitePair operator-(const DefinitePair& rhs) const
+    {
+        DefinitePair result(da_set - rhs.da_set, du_set - rhs.du_set);
+        return result;
+    }
+    inline DefinitePair& operator-=(const DefinitePair& rhs)
+    {
+        da_set -= rhs.da_set;
+        du_set -= rhs.du_set;
+        return *this;
+    }
+};
+
+
 class DefiniteAssignmentSet
 {
 public:
-    int set_size;
+    DefinitePair true_pair,
+                 false_pair;
 
-    BitSet true_set,
-           false_set;
-
-    DefiniteAssignmentSet(int set_size_) : set_size(set_size_),
-                                           true_set(set_size),
-                                           false_set(set_size)
+    inline DefiniteAssignmentSet(int set_size) : true_pair(set_size),
+                                                 false_pair(set_size)
     {}
+
+    inline DefiniteAssignmentSet(DefinitePair &true_pair_,
+                                 DefinitePair &false_pair_) : true_pair(true_pair_),
+                                                              false_pair(false_pair_)
+    {}
+
+    inline DefiniteAssignmentSet(DefinitePair &pair) : true_pair(pair),
+                                                       false_pair(pair)
+    {}
+
+    inline BitSet DASet() const { return true_pair.da_set * false_pair.da_set; }
+    inline BitSet DUSet() const { return true_pair.du_set * false_pair.du_set; }
+    inline DefinitePair Merge() const { return DefinitePair(DASet(), DUSet()); }
+    inline void AddElement(int i) { true_pair.AddElement(i); false_pair.AddElement(i); }
+
+    //
+    // An assignment statement adds to da, but removes from du; reclaim it when
+    // the variable leaves scope.
+    //
+    inline void AssignElement(int i) { true_pair.AssignElement(i); false_pair.AssignElement(i); }
+
 };
 
 #ifdef HAVE_JIKES_NAMESPACE
