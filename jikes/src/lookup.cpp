@@ -94,8 +94,8 @@ void SystemTable::InsertDirectorySymbol(dev_t device, ino_t inode, DirectorySymb
 int DirectoryTable::primes[] = {DEFAULT_HASH_SIZE, 2039, 4093, MAX_HASH_SIZE};
 
 DirectoryTable::DirectoryTable(int estimate) : entry_pool(estimate),
-                                               prime_index(0),
-                                               hash_size(primes[0])
+                                               hash_size(primes[0]),
+                                               prime_index(0)
 {
     base = (DirectoryEntry **) memset(new DirectoryEntry *[hash_size], 0, hash_size * sizeof(DirectoryEntry *));
 }
@@ -288,8 +288,8 @@ time_t DirectoryEntry::Mtime()
 int NameLookupTable::primes[] = {DEFAULT_HASH_SIZE, 8191, 16411, MAX_HASH_SIZE};
 
 NameLookupTable::NameLookupTable(int estimate) : symbol_pool(estimate),
-                                                 prime_index(0),
-                                                 hash_size(primes[0])
+                                                 hash_size(primes[0]),
+                                                 prime_index(0)
 {
     base = (NameSymbol **) memset(new NameSymbol *[hash_size], 0, hash_size * sizeof(NameSymbol *));
 }
@@ -355,7 +355,7 @@ void NameLookupTable::Rehash()
 }
 
 
-NameSymbol *NameLookupTable::FindOrInsertName(wchar_t *str, int len)
+NameSymbol *NameLookupTable::FindOrInsertName(wchar_t *str, size_t len)
 {
     unsigned hash_address = Hash(str, len);
     int k = hash_address % hash_size;
@@ -390,8 +390,8 @@ NameSymbol *NameLookupTable::FindOrInsertName(wchar_t *str, int len)
 int TypeLookupTable::primes[] = {DEFAULT_HASH_SIZE, 8191, 16411, MAX_HASH_SIZE};
 
 TypeLookupTable::TypeLookupTable(int estimate) : symbol_pool(estimate),
-                                                 prime_index(0),
-                                                 hash_size(primes[0])
+                                                 hash_size(primes[0]),
+                                                 prime_index(0)
 {
     base = (TypeSymbol **) memset(new TypeSymbol *[hash_size], 0, hash_size * sizeof(TypeSymbol *));
 }
@@ -516,9 +516,9 @@ int IntLiteralTable::int32_limit = 0x7FFFFFFF / 10;
 int IntLiteralTable::primes[] = {DEFAULT_HASH_SIZE, 8191, 16411, MAX_HASH_SIZE};
 
 IntLiteralTable::IntLiteralTable(LiteralValue *bad_value_) : symbol_pool(16384),
-                                                             bad_value(bad_value_),
+                                                             hash_size(primes[0]),
                                                              prime_index(0),
-                                                             hash_size(primes[0])
+                                                             bad_value(bad_value_)
 {
     base = (IntLiteralValue **) memset(new IntLiteralValue *[hash_size], 0, hash_size * sizeof(IntLiteralValue *));
     symbol_pool.Next() = NULL; // do not use the 0th element
@@ -830,9 +830,9 @@ LongInt LongLiteralTable::int64_limit = LongInt(0x7FFFFFFF, 0xFFFFFFFF) / 10;
 int LongLiteralTable::primes[] = {DEFAULT_HASH_SIZE, 2039, 4093, MAX_HASH_SIZE};
 
 LongLiteralTable::LongLiteralTable(LiteralValue *bad_value_) : symbol_pool(16384),
-                                                               bad_value(bad_value_),
+                                                               hash_size(primes[0]),
                                                                prime_index(0),
-                                                               hash_size(primes[0])
+                                                               bad_value(bad_value_)
 {
     base = (LongLiteralValue **) memset(new LongLiteralValue *[hash_size], 0, hash_size * sizeof(LongLiteralValue *));
     symbol_pool.Next() = NULL; // do not use the 0th element
@@ -1080,9 +1080,9 @@ LongLiteralValue *LongLiteralTable::FindOrInsert(LongInt value)
 int FloatLiteralTable::primes[] = {DEFAULT_HASH_SIZE, 2039, 4093, MAX_HASH_SIZE};
 
 FloatLiteralTable::FloatLiteralTable(LiteralValue *bad_value_) : symbol_pool(16384),
-                                                                 bad_value(bad_value_),
+                                                                 hash_size(primes[0]),
                                                                  prime_index(0),
-                                                                 hash_size(primes[0])
+                                                                 bad_value(bad_value_)
 {
     base = (FloatLiteralValue **) memset(new FloatLiteralValue *[hash_size], 0, hash_size * sizeof(FloatLiteralValue *));
     symbol_pool.Next() = NULL; // do not use the 0th element
@@ -1134,7 +1134,7 @@ if (hash_size < total)
 LiteralValue *FloatLiteralTable::FindOrInsertFloat(LiteralSymbol *literal)
 {
     char *name = new char[literal -> NameLength() + 1];
-    for (int i = 0; i < literal -> NameLength(); i++)
+    for (size_t i = 0; i < literal -> NameLength(); i++)
         name[i] = (char) literal -> Name()[i];
     name[literal -> NameLength()] = U_NULL;
 
@@ -1204,9 +1204,9 @@ FloatLiteralValue *FloatLiteralTable::FindOrInsert(IEEEfloat value)
 int DoubleLiteralTable::primes[] = {DEFAULT_HASH_SIZE, 2039, 4093, MAX_HASH_SIZE};
 
 DoubleLiteralTable::DoubleLiteralTable(LiteralValue *bad_value_) : symbol_pool(16384),
-                                                                   bad_value(bad_value_),
+                                                                   hash_size(primes[0]),
                                                                    prime_index(0),
-                                                                   hash_size(primes[0])
+                                                                   bad_value(bad_value_)
 {
     base = (DoubleLiteralValue **) memset(new DoubleLiteralValue *[hash_size], 0, hash_size * sizeof(DoubleLiteralValue *));
     symbol_pool.Next() = NULL; // do not use the 0th element
@@ -1257,7 +1257,7 @@ if (hash_size < total)
 LiteralValue *DoubleLiteralTable::FindOrInsertDouble(LiteralSymbol *literal)
 {
     char *name = new char[literal -> NameLength() + 1];
-    for (int i = 0; i < literal -> NameLength(); i++)
+    for (size_t i = 0; i < literal -> NameLength(); i++)
         name[i] = (char) literal -> Name()[i];
     name[literal -> NameLength()] = U_NULL;
 
@@ -1496,9 +1496,9 @@ void Utf8LiteralTable::Rehash()
 int Utf8LiteralTable::primes[] = {DEFAULT_HASH_SIZE, 8191, 16411, MAX_HASH_SIZE};
 
 Utf8LiteralTable::Utf8LiteralTable(LiteralValue *bad_value_) : symbol_pool(16384),
-                                                               bad_value(bad_value_),
+                                                               hash_size(primes[0]),
                                                                prime_index(0),
-                                                               hash_size(primes[0])
+                                                               bad_value(bad_value_)
 {
     base = (Utf8LiteralValue **) memset(new Utf8LiteralValue *[hash_size], 0, hash_size * sizeof(Utf8LiteralValue *));
     symbol_pool.Next() = NULL; // do not use the 0th element
@@ -1589,20 +1589,16 @@ bool Utf8LiteralTable::IsConstant(AstExpression *expression)
     //
     while (! expression -> IsConstant())
     {
-        AstBinaryExpression *binary_expression;
-        AstCastExpression *cast_expression;
-        AstParenthesizedExpression *parenthesized_expression;
-
-        if (binary_expression = expression -> BinaryExpressionCast())
+        if (AstBinaryExpression *binary_expression = expression -> BinaryExpressionCast())
         {
              AstExpression *right = binary_expression -> right_expression;
              if (! IsConstant(right))
                  return false;
              expression = binary_expression -> left_expression;
         }
-        else if (cast_expression = expression -> CastExpressionCast())
+        else if (AstCastExpression *cast_expression = expression -> CastExpressionCast())
              expression = cast_expression -> expression;
-        else if (parenthesized_expression = expression -> ParenthesizedExpressionCast())
+        else if (AstParenthesizedExpression *parenthesized_expression = expression -> ParenthesizedExpressionCast())
              expression = parenthesized_expression -> expression;
         else return false; // Not a constant String expression
     }
@@ -1658,8 +1654,8 @@ void Utf8LiteralTable::CheckStringConstant(AstExpression *expression)
 int LiteralLookupTable::primes[] = {DEFAULT_HASH_SIZE, 2039, 4093, MAX_HASH_SIZE};
 
 LiteralLookupTable::LiteralLookupTable() : symbol_pool(16384),
-                                           prime_index(0),
-                                           hash_size(primes[0])
+                                           hash_size(primes[0]),
+                                           prime_index(0)
 {
     base = (LiteralSymbol **) memset(new LiteralSymbol *[hash_size], 0, hash_size * sizeof(LiteralSymbol *));
 }
@@ -1725,7 +1721,7 @@ void LiteralLookupTable::Rehash()
 }
 
 
-LiteralSymbol *LiteralLookupTable::FindOrInsertLiteral(wchar_t *str, int len)
+LiteralSymbol *LiteralLookupTable::FindOrInsertLiteral(wchar_t *str, size_t len)
 {
     unsigned hash_address = Hash(str, len);
     int k = hash_address % hash_size;

@@ -43,13 +43,13 @@ class Parser : public javaprs_table
 public:
 
     Parser() : ast_pool(NULL),
-               parse_package_header_only(false),
                parse_header_only(false),
-               stack(NULL),
+               parse_package_header_only(false),
                location_stack(NULL),
                parse_stack(NULL),
-               temp_stack(NULL),
-               stack_length(0)
+               stack_length(0),
+               stack(NULL),
+               temp_stack(NULL)
     {
         InitRuleAction();
         return;

@@ -72,8 +72,7 @@ void DiagnoseParser::DiagnoseParse()
         i,
         tok,
         lhs_symbol,
-        act = START_STATE,
-        current_kind = lex_stream -> Kind(curtok);
+        act = START_STATE;
 
     ReallocateStacks();
 

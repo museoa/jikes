@@ -261,6 +261,9 @@ void Semantic::ProcessTypeNames()
                 }
                 break;
             }
+	    default:
+		assert(false);
+		break;
         }
 
         //
@@ -2025,6 +2028,9 @@ void Semantic::CompleteSymbolTable(AstInterfaceDeclaration *interface_declaratio
 //
 void Semantic::CleanUp()
 {
+    if (control.option.nocleanup)
+	return;
+
     for (int i = 0; i < compilation_unit -> NumTypeDeclarations(); i++)
     {
         TypeSymbol *type = NULL;
@@ -2045,6 +2051,9 @@ void Semantic::CleanUp()
                     type = interface_declaration -> semantic_environment -> Type();
                 break;
             }
+	    default:
+		assert(false);
+		break;
         }
 
         if (type)
@@ -2550,10 +2559,7 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_d
     int k;
     for (k = 0; k < compilation_unit -> NumTypeDeclarations(); k++)
     {
-        AstClassDeclaration *class_declaration;
-        AstInterfaceDeclaration *interface_declaration;
-
-        if (class_declaration = compilation_unit -> TypeDeclaration(k) -> ClassDeclarationCast())
+        if (AstClassDeclaration *class_declaration = compilation_unit -> TypeDeclaration(k) -> ClassDeclarationCast())
         {
             if (class_declaration -> semantic_environment)
             {
@@ -2562,7 +2568,7 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_d
                     break;
             }
         }
-        else if (interface_declaration = compilation_unit -> TypeDeclaration(k) -> InterfaceDeclarationCast())
+        else if (AstInterfaceDeclaration *interface_declaration = compilation_unit -> TypeDeclaration(k) -> InterfaceDeclarationCast())
         {
             if (interface_declaration -> semantic_environment)
             {
@@ -2817,7 +2823,6 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration *construc
     AccessFlags access_flags = ProcessConstructorModifiers(constructor_declaration);
 
     AstMethodDeclarator *constructor_declarator = constructor_declaration -> constructor_declarator;
-    NameSymbol *name_symbol = lex_stream -> NameSymbol(constructor_declarator -> identifier_token);
     wchar_t *constructor_name = lex_stream -> NameString(constructor_declarator -> identifier_token);
 
     if (lex_stream -> NameSymbol(constructor_declarator -> identifier_token) != this_type -> Identity())
@@ -2834,7 +2839,6 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration *construc
     // As the body of the constructor may not have been parsed yet, we estimate a size
     // for its symbol table based on the number of lines in the body + a margin for one-liners.
     //
-    AstConstructorBlock *block = constructor_declaration -> constructor_body -> ConstructorBlockCast();
     BlockSymbol *block_symbol = new BlockSymbol(constructor_declarator -> NumFormalParameters() + 3);
     block_symbol -> max_variable_index = 1; // All types need a spot for "this".
 
@@ -3046,7 +3050,6 @@ void Semantic::CheckMethodOverride(AstMethodDeclaration *method_declaration, Met
 {
     AstMethodDeclarator *method_declarator = method_declaration -> method_declarator;
     MethodSymbol *method = method_declaration -> method_symbol;
-    LexStream::TokenIndex token_location = method_declaration -> method_declarator -> identifier_token;
 
     if (hidden_method -> Type() != method -> Type())
     {
@@ -3745,7 +3748,6 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
     // As the body of the method may not have been parsed yet, we estimate a size
     // for its symbol table based on the number of lines in the body + a margin for one-liners.
     //
-    AstBlock *block = method_declaration -> method_body -> BlockCast();
     BlockSymbol *block_symbol = new BlockSymbol(method_declarator -> NumFormalParameters());
     block_symbol -> max_variable_index = (access_flags.ACC_STATIC() ? 0 : 1);
     ProcessFormalParameters(block_symbol, method_declarator);
@@ -4234,7 +4236,7 @@ void Semantic::InitializeVariable(AstFieldDeclaration *field_declaration, Tuple<
     {
         AstVariableDeclarator *variable_declarator = field_declaration -> VariableDeclarator(i);
 
-        if (ThisVariable() = variable_declarator -> symbol)
+        if ((ThisVariable() = variable_declarator -> symbol))
         {
             if (variable_declarator -> variable_initializer_opt)
             {

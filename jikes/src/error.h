@@ -35,7 +35,6 @@ public:
         INVALID_DIRECTORY,
         UNSUPPORTED_OPTION,
         DISABLED_OPTION,
-        UNSUPPORTED_ENCODING,
 
         NO_CURRENT_DIRECTORY,
         CANNOT_OPEN_ZIP_FILE,
@@ -381,7 +380,6 @@ private:
     static void PrintINVALID_DIRECTORY(ErrorInfo &, LexStream *, Control &);
     static void PrintUNSUPPORTED_OPTION(ErrorInfo &, LexStream *, Control &);
     static void PrintDISABLED_OPTION(ErrorInfo &, LexStream *, Control &);
-    static void PrintUNSUPPORTED_ENCODING(ErrorInfo &, LexStream *, Control &);
     static void PrintNO_CURRENT_DIRECTORY(ErrorInfo &, LexStream *, Control &);
     static void PrintCANNOT_OPEN_ZIP_FILE(ErrorInfo &, LexStream *, Control &);
     static void PrintCANNOT_OPEN_PATH_DIRECTORY(ErrorInfo &, LexStream *, Control &);

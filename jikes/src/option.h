@@ -138,7 +138,10 @@ public:
 
     bool debug_dump_lex,
          debug_dump_ast,
+         debug_unparse_ast,
+         debug_unparse_ast_debug,
          debug_dump_class,
+	 nocleanup,
          applet_author,
          incremental,
          makefile,

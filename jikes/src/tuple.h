@@ -199,6 +199,12 @@ public:
         return i;
     }
 
+    inline void Push(T elt) { this -> Next() = elt; }
+    // Not "return (*this)[--top]" because that may violate an invariant
+    // in operator[].
+    inline T Pop() { assert(top!=0); top--; return base[top >> log_blksize][top]; }
+    inline T Top() { assert(top!=0); return (*this)[top-1]; }
+
     //
     // Add an element to the dynamic array and return a reference to
     // that new element.

@@ -20,7 +20,7 @@ u2 &PairSegment::Image(u2 target)
                 return list[i].value;
         }
 
-        if (top < LIST_LIMIT)
+        if (top < (int)LIST_LIMIT)
         {
             int j = top++;
             list[j].target = target;
@@ -82,7 +82,7 @@ Pair &TripletSegment::Image(u2 target)
                 return *list[i].value;
         }
 
-        if (top < LIST_LIMIT)
+        if (top < (int)LIST_LIMIT)
         {
             int j = top++;
             list[j].target = target;

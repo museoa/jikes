@@ -80,12 +80,12 @@ class DiagnoseParser : public Parser
 {
 public:
 
-    DiagnoseParser(Control &control_, LexStream *lex_stream_) : error(control_, lex_stream_),
-                                                                next_stack(NULL),
+    DiagnoseParser(Control &control_, LexStream *lex_stream_) : next_stack(NULL),
                                                                 prev_stack(NULL),
                                                                 scope_index(NULL),
                                                                 scope_position(NULL),
-                                                                state_pool(256)
+                                                                state_pool(256),
+								error(control_, lex_stream_)
     {
         lex_stream = lex_stream_;
         memset(list, 0, NUM_SYMBOLS * sizeof(int));

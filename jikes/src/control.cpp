@@ -30,9 +30,20 @@ Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
                                                                  input_class_file_set(1021),
                                                                  expired_file_set(),
                                                                  recompilation_file_set(1021),
+                                                                 int_pool(&bad_value),
+                                                                 long_pool(&bad_value),
+                                                                 float_pool(&bad_value),
+                                                                 double_pool(&bad_value),
+                                                                 Utf8_pool(&bad_value),
+#ifdef TEST
+							         input_files_processed(0),
+                                                                 class_files_read(0),
+								 class_files_written(0),
+                                                                 line_count(0),
+#endif
+                                                                 Serializable_type(NULL),
                                                                  Object_type(NULL),
                                                                  Cloneable_type(NULL),
-                                                                 Serializable_type(NULL),
                                                                  String_type(NULL),
                                                                  Void_type(NULL),
                                                                  Boolean_type(NULL),
@@ -69,20 +80,7 @@ Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
                                                                  StringBuffer_append_float_method(NULL),
                                                                  StringBuffer_append_double_method(NULL),
                                                                  StringBuffer_append_string_method(NULL),
-                                                                 StringBuffer_append_object_method(NULL),
-
-                                                                 int_pool(&bad_value),
-                                                                 long_pool(&bad_value),
-                                                                 float_pool(&bad_value),
-                                                                 double_pool(&bad_value),
-                                                                 Utf8_pool(&bad_value)
-
-#ifdef TEST
-                                                               , line_count(0),
-                                                                 class_files_read(0),
-                                                                 class_files_written(0),
-                                                                 input_files_processed(0)
-#endif
+                                                                 StringBuffer_append_object_method(NULL)
 {
     ProcessGlobals();
 
@@ -168,6 +166,14 @@ Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
                                           0,
                                           0,
                                           option.bad_options[o] -> name);
+    }
+
+    if (java_util_package -> directory.Length() == 0)
+    {
+        system_semantic -> ReportSemError(SemanticError::PACKAGE_NOT_FOUND,
+                                          0,
+                                          0,
+                                          StringConstant::US_java_SL_util);
     }
 
     //
@@ -386,6 +392,7 @@ Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
                      file_symbol;
                      file_symbol = (FileSymbol *) input_java_file_set.NextElement())
                 {
+		    // delete file_symbol
                     CleanUp(file_symbol);
                 }
 
@@ -522,7 +529,7 @@ Control::~Control()
 #endif
 
 #ifdef TEST
-    if (option.debug_dump_lex || option.debug_dump_ast)
+    if (option.debug_dump_lex || option.debug_dump_ast || option.debug_unparse_ast)
     {
         Coutput << line_count << " source lines read\n\n"
                 << class_files_read << " \".class\" files read\n"
@@ -1222,6 +1229,8 @@ void Control::ProcessBodies(TypeSymbol *type)
             // If no error was detected while generating code, then
             // start cleaning up.
             //
+	    if (! option.nocleanup)
+	    {
             if (sem -> NumErrors() == 0)
             {
                 for (int k = 0; k < types -> Length(); k++)
@@ -1249,8 +1258,10 @@ void Control::ProcessBodies(TypeSymbol *type)
             delete types;
         }
     }
+    }
 
     sem -> types_to_be_processed.RemoveElement(type);
+    if (! option.nocleanup)
     if (sem -> types_to_be_processed.Size() == 0) // all types belonging to this compilation unit have been processed.
         CleanUp(sem -> source_file_symbol);
 
@@ -1314,6 +1325,17 @@ void Control::CleanUp(FileSymbol *file_symbol)
         }
         if (option.debug_dump_ast)
             sem -> compilation_unit -> Print(*sem -> lex_stream);
+        if (option.debug_unparse_ast)
+	{
+	    if (option.debug_unparse_ast_debug)
+	      {
+		// which of these is correct?
+	        sem -> compilation_unit -> debug_unparse = true;
+		Ast::debug_unparse = true;
+	      }
+	    sem -> compilation_unit -> Unparse(*sem -> lex_stream,
+					       "unparsed/");
+	}
 #endif
         sem -> PrintMessages();
         if (sem -> return_code > 0)
