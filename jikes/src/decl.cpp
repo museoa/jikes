@@ -899,15 +899,6 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration *class_declaration)
                             super_type -> ContainingPackage() -> PackageName(),
                             super_type -> ExternalName());
         }
-        if ((! super_type -> ACC_PUBLIC() &&
-             super_type -> ContainingPackage() != this_package) ||
-            (super_type -> ACC_PRIVATE() &&
-             super_type -> outermost_type != this_type -> outermost_type))
-        {
-            ReportTypeInaccessible(class_declaration -> super_opt -> LeftToken(),
-                                   class_declaration -> super_opt -> RightToken(),
-                                   super_type);
-        }
     }
 
     for (int i = 0; i < class_declaration -> NumInterfaces(); i++)
@@ -4497,15 +4488,6 @@ void Semantic::ProcessInterface(TypeSymbol *base_type, AstExpression *name)
                 return;
             }
         }
-        if ((! interf -> ACC_PUBLIC() &&
-             interf -> ContainingPackage() != this_package) ||
-            (interf -> ACC_PRIVATE() &&
-             interf -> outermost_type != base_type -> outermost_type))
-        {
-            ReportTypeInaccessible(name -> LeftToken(), name -> RightToken(),
-                                   interf);
-        }
-
         name -> symbol = interf; // save type name in ast.
         base_type -> AddInterface(interf);
     }

@@ -4,6 +4,13 @@
 
 2002-07-09  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/expr.cpp (TypeAccessCheck): Perform type checks in all
+	cases, including supertypes - bug 3054.
+	* src/decl.cpp (ProcessTypeHeader, ProcessInterface): Remove
+	duplicate error report.
+
+2002-07-09  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/expr.cpp (ProcessAmbiguousName): Fix handling of byte.class
 	and friends, bug 3053.
 

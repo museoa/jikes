@@ -1909,54 +1909,40 @@ void Semantic::ProcessSimpleName(Ast *expr)
 
 bool Semantic::TypeAccessCheck(Ast *ast, TypeSymbol *type)
 {
+    // According to JLS 6.6.1, a type T[] is accessible if T is accessible.
+    if (type -> IsArray())
+        type = type -> base_type;
+
     //
-    // Unless we are processing the body of a type do not do type checking.
-    // (This method may be invoked, for example, when FindFirstType invokes
-    // ProcessPackageOrType)
+    // Outside a class body, only public types from other packages, or
+    // non-private types in the current package, are accessible. For a member
+    // type, as in T1.T2, this does not check that T1 is also accessible; that
+    // requires additional checks by the caller.
     //
+    assert(this_package);
+    if (type -> ACC_PUBLIC() ||
+        (type -> ContainingPackage() == this_package &&
+         ! type -> ACC_PRIVATE()))
+    {
+        return true;
+    }
     if (state_stack.Size() > 0)
     {
+        //
+        // Inside a class body, all types listed above are accessible, and
+        // additionally declared or inherited member types are accessible
+        //
         TypeSymbol *this_type = ThisType();
-
-        // According to JLS 6.6.1, a type T[] is accessible if T is accessible.
-        if (type -> IsArray())
-            type = type -> base_type;
-
-        //
-        // Type checking is necessary only for two types that are not enclosed
-        // within the same outermost type. Note that if we are trying to access
-        // an inner type T1.T2...Tn from this type, TypeAccessCheck is expected
-        // to be invoked first for T1, then T1.T2, ... and finally for
-        // T1.T2...Tn, in turn. When invoked for T1.T2, for example, this
-        // function only checks whether or not T1.T2 is accessible from "this"
-        // type. It does not recheck whether or not T1 is accessible.
-        //
-        if (this_type -> outermost_type != type -> outermost_type)
+        assert(this_type -> ContainingPackage() == this_package);
+        if (this_type -> outermost_type == type -> outermost_type ||
+            (type -> ACC_PROTECTED() &&
+             this_type -> HasProtectedAccessTo(type)))
         {
-            if (type -> ACC_PRIVATE())
-            {
-                 ReportTypeInaccessible(ast, type);
-                 return false;
-            }
-            else if (type -> ACC_PROTECTED())
-            {
-                if (type -> ContainingPackage() != this_package &&
-                    ! this_type -> HasProtectedAccessTo(type))
-                {
-                    ReportTypeInaccessible(ast, type);
-                    return false;
-                }
-            }
-            else if (! type -> ACC_PUBLIC() &&
-                     type -> ContainingPackage() != this_package)
-            {
-                 ReportTypeInaccessible(ast, type);
-                 return false;
-            }
+            return true;
         }
     }
-
-    return true;
+    ReportTypeInaccessible(ast, type);
+    return false;
 }
 
 
@@ -2407,7 +2393,7 @@ void Semantic::ProcessAmbiguousName(Ast *name)
              simple_name -> symbol = type;
         //
         // ...Otherwise, the Ambiguous name is reclassified as a PackageName.
-        // While the JLS claims a later step determines whether or not 
+        // While the JLS claims a later step determines whether or not
         // a package of that name actually exists, it is pointless to defer
         // the error that long, as a package cannot qualify a method or field
         // access, and a subpackage requires the base package to exist.
@@ -4941,7 +4927,7 @@ void Semantic::ProcessCastExpression(Ast *expr)
 
 
 //
-// Inserts a widening conversion, if necessary. 
+// Inserts a widening conversion, if necessary.
 //
 AstExpression *Semantic::ConvertToType(AstExpression *expr,
                                        TypeSymbol *target_type)
@@ -6547,7 +6533,7 @@ void Semantic::ProcessMOD(AstBinaryExpression *expr)
                         (left_expression -> value);
                     DoubleLiteralValue *right = DYNAMIC_CAST<DoubleLiteralValue *>
                         (right_expression -> value);
-                    
+
                     expr -> value =
                         control.double_pool.FindOrInsert(left -> value %
                                                          right -> value);
@@ -6843,7 +6829,7 @@ void Semantic::ProcessConditionalExpression(Ast *expr)
         {
             assert(conditional_expression -> symbol == control.String());
             //  || conditional_expression -> symbol == control.null_type);
-            
+
             if (IsConstantTrue(conditional_expression -> test_expression))
                 conditional_expression -> value =
                     conditional_expression -> true_expression -> value;
