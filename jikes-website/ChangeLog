@@ -1,3 +1,9 @@
+2001-03-30  Chris Abbey  <cabbey@bresnanlink.net>
+
+	* patchguide.shtml: added directions about howto
+	properly include changelog entires, and an example
+	perfect patch.
+
 2001-03-27  Eric Blake  <ebb9@email.byu.edu>
 
 	* faq/bug-reporting.shtml: Updated the WKB section to list
