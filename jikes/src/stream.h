@@ -306,7 +306,7 @@ class LexStream : public Stream
     inline int NumBadTokens() { return bad_tokens.Length(); }
 
 #ifdef JIKES_DEBUG
-    int file_read;
+    bool file_read;
 #endif
 
     //*

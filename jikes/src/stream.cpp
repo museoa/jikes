@@ -439,7 +439,7 @@ Stream::DecodeNextCharacter() {
 
 LexStream::LexStream(Control &control_, FileSymbol *file_symbol_) : file_symbol(file_symbol_),
 #ifdef JIKES_DEBUG
-    file_read(0),
+    file_read(false),
 #endif
     tokens(NULL),
     columns(NULL),
@@ -569,7 +569,8 @@ wchar_t *LexStream::KeywordName(int kind)
 LexStream::~LexStream()
 {
 #ifdef JIKES_DEBUG
-    control.line_count += (file_read * (line_location.Length() - 3));
+    if (file_read)
+        control.line_count += (line_location.Length() - 3);
 #endif
 
     DestroyInput();
@@ -852,7 +853,7 @@ void LexStream::ProcessInput(const char *buffer, long filesize)
 void LexStream::ProcessInputAscii(const char *buffer, long filesize)
 {
 #ifdef JIKES_DEBUG
-    file_read++;
+    file_read = true;
 #endif
 
     wchar_t *input_ptr = AllocateInputBuffer( filesize );
@@ -979,7 +980,7 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
 {
     //fprintf(stderr,"LexStream::ProcessInputUnicode called.\n");
 #ifdef JIKES_DEBUG
-    file_read++;
+    file_read = true;
 #endif
 
     wchar_t *input_ptr = AllocateInputBuffer( filesize );

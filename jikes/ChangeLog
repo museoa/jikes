@@ -1,3 +1,9 @@
+2001-10-15  Michael Ernst  <mernst@alum.mit.edu>
+
+	* src/stream.cpp:
+	* src/stream.h (class LexStream): Change file_read to bool, to
+	match its use - patch 201.
+
 2001-10-14  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.h (InvertIfOpCode): Fix regression caused by patch
