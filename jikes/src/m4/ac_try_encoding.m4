@@ -42,8 +42,12 @@ int main (int argc, char** argv) {
   char * dst = new char[dstspace];
   char * dst_ptr = dst;
   iconv_t d = iconv_open( "$1" , "ISO-8859-1");
-  if (d == (iconv_t) -1)
-    return -1;
+  if (d == (iconv_t) -1) {
+    d = iconv_open( "$1" , "ISO8859-1");
+    if (d == (iconv_t) -1) {
+      return -1;
+    }
+  }
   size_t r = iconv( d,
 #ifdef HAVE_ERROR_CALL_ICONV_CONST
 	 (char **)
