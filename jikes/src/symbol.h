@@ -55,7 +55,7 @@ public:
     virtual ~PathSymbol();
 
     virtual wchar_t *Name() { return name_symbol -> Name(); }
-    virtual size_t NameLength() { return name_symbol -> NameLength(); }
+    virtual int NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol *Identity() { return name_symbol; }
     char *Utf8Name() { return (char *) (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> value : NULL); }
     int Utf8NameLength() { return (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0); }
@@ -82,7 +82,7 @@ public:
     virtual ~DirectorySymbol();
 
     virtual wchar_t *Name() { return name_symbol -> Name(); }
-    virtual size_t NameLength() { return name_symbol -> NameLength(); }
+    virtual int NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol *Identity() { return name_symbol; }
     char *Utf8Name() { return (char *) (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> value : NULL); }
     int Utf8NameLength() { return (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0); }
@@ -120,7 +120,7 @@ public:
             SetDirectoryName();
         return directory_name;
     }
-    inline size_t DirectoryNameLength()
+    inline int DirectoryNameLength()
     {
         if (! directory_name)
             SetDirectoryName();
@@ -146,7 +146,7 @@ private:
 
     DirectoryTable *entries;
     char *directory_name;
-    size_t directory_name_length;
+    int directory_name_length;
 };
 
 
@@ -162,7 +162,7 @@ private:
 
     DirectorySymbol *output_directory;
     char *file_name;
-    size_t file_name_length;
+    int file_name_length;
     Utf8LiteralValue *file_name_literal;
 
 public:
@@ -183,25 +183,19 @@ public:
     //
     time_t mtime;
 
-    //
-    // These fields are used for buffer "files".
-    //
-    char *buffer;
-
     LexStream *lex_stream;
     AstCompilationUnit *compilation_unit;
     Semantic *semantic;
 
     Tuple<TypeSymbol *> types;
 
-    FileSymbol(NameSymbol *name_symbol_) : output_directory(NULL),
-                                           file_name(NULL),
-                                           file_name_literal(NULL),
-					   name_symbol(name_symbol_),
+    FileSymbol(NameSymbol *name_symbol_) : name_symbol(name_symbol_),
+                                           output_directory(NULL),
                                            directory_symbol(NULL),
                                            package(NULL),
+                                           file_name(NULL),
+                                           file_name_literal(NULL),
                                            mtime(0),
-                                           buffer(NULL),
                                            lex_stream(NULL),
                                            compilation_unit(NULL),
                                            semantic(NULL),
@@ -214,7 +208,6 @@ public:
     {
         delete [] file_name;
         delete lex_stream;
-	delete buffer;
     }
 
     FileSymbol *Clone()
@@ -229,7 +222,7 @@ public:
     }
 
     virtual wchar_t *Name() { return name_symbol -> Name(); }
-    virtual size_t NameLength() { return name_symbol -> NameLength(); }
+    virtual int NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol *Identity() { return name_symbol; }
     char *Utf8Name() { return (char *) (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> value : NULL); }
     int Utf8NameLength() { return (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0); }
@@ -340,11 +333,11 @@ public:
     Tuple<DirectorySymbol *> directory;
     PackageSymbol *owner;
 
-    PackageSymbol(NameSymbol *name_symbol_, PackageSymbol *owner_) : directory(4),
+    PackageSymbol(NameSymbol *name_symbol_, PackageSymbol *owner_) : name_symbol(name_symbol_),
+                                                                     directory(4),
                                                                      owner(owner_),
-								     name_symbol(name_symbol_),
-                                                                     table(NULL),
-                                                                     package_name(NULL)
+                                                                     package_name(NULL),
+                                                                     table(NULL)
     {
         Symbol::_kind = PACKAGE;
     }
@@ -352,13 +345,12 @@ public:
     virtual ~PackageSymbol();
 
     virtual wchar_t *Name() { return name_symbol -> Name(); }
-    virtual size_t NameLength() { return name_symbol -> NameLength(); }
+    virtual int NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol *Identity() { return name_symbol; }
     char *Utf8Name() { return (char *) (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> value : NULL); }
     int Utf8NameLength() { return (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0); }
 
     void SetPackageName();
-    // This name is fully qualified, using slashes.
     wchar_t *PackageName()
     {
         if (! package_name)
@@ -387,7 +379,7 @@ private:
     inline SymbolTable *Table();
 
     wchar_t *package_name;
-    size_t package_name_length;
+    int package_name_length;
 };
 
 
@@ -431,32 +423,29 @@ public:
     Symbol *accessed_member;
 
     virtual wchar_t *Name() { return name_symbol -> Name(); }
-    virtual size_t NameLength() { return name_symbol -> NameLength(); }
+    virtual int NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol *Identity() { return name_symbol; }
     char *Utf8Name() { return (char *) (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> value : NULL); }
     int Utf8NameLength() { return (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0); }
 
-
-
-
     MethodSymbol(NameSymbol *name_symbol_) : method_or_constructor_declaration(NULL),
                                              name_symbol(name_symbol_),
+                                             external_name_symbol(NULL),
                                              containing_type(NULL),
                                              block_symbol(NULL),
                                              next_method(NULL),
                                              signature(NULL),
-                                             max_block_depth(1), // there must be at least one block in a method
-                                                                 // this default is useful for default constructors.
-                                             accessed_member(NULL),
-                                             external_name_symbol(NULL),
+                                             type_(NULL),
                                              status(0),
                                              header(NULL),
-                                             type_(NULL),
+                                             max_block_depth(1), // there must be at least one block in a method
+                                                                 // this default is useful for default constructors.
+                                             local_constructor(NULL),
+                                             accessed_member(NULL),
                                              formal_parameters(NULL),
                                              throws(NULL),
                                              throws_signatures(NULL),
-                                             initializer_constructors(NULL),
-                                             local_constructor(NULL)
+                                             initializer_constructors(NULL)
     {
         Symbol::_kind = METHOD;
     }
@@ -765,12 +754,10 @@ public:
     MethodSymbol *block_initializer_method;
 
     virtual wchar_t *Name() { return name_symbol -> Name(); }
-    virtual size_t NameLength() { return name_symbol -> NameLength(); }
+    virtual int NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol *Identity() { return name_symbol; }
     char *Utf8Name() { return (char *) (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> value : NULL); }
     int Utf8NameLength() { return (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0); }
-
-    char *FullyQualifiedName();
 
     void SetExternalIdentity(NameSymbol *external_name_symbol_) { external_name_symbol = external_name_symbol_; }
     NameSymbol *ExternalIdentity()
@@ -1185,7 +1172,7 @@ public:
     VariableSymbol *accessed_local;
 
     virtual wchar_t *Name() { return name_symbol -> Name(); }
-    virtual size_t NameLength() { return name_symbol -> NameLength(); }
+    virtual int NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol *Identity() { return name_symbol; }
     char *Utf8Name() { return (char *) (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> value : NULL); }
     int Utf8NameLength() { return (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0); }
@@ -1216,14 +1203,14 @@ public:
 
     VariableSymbol(NameSymbol *name_symbol_) : declarator(NULL),
                                                name_symbol(name_symbol_),
-                                               owner(NULL),
-                                               initial_value(NULL),
-                                               accessed_local(NULL),
                                                external_name_symbol(NULL),
-                                               status(0),
-                                               local_variable_index_(-1),
+                                               owner(NULL),
                                                type_(NULL),
-                                               signature_string(NULL)
+                                               signature_string(NULL),
+                                               initial_value(NULL),
+                                               local_variable_index_(-1),
+                                               accessed_local(NULL),
+                                               status(0)
     {
         Symbol::_kind = VARIABLE;
     }
@@ -1337,14 +1324,14 @@ public:
     int nesting_level;
 
     virtual wchar_t *Name() { return name_symbol -> Name(); }
-    virtual size_t NameLength() { return name_symbol -> NameLength(); }
+    virtual int NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol *Identity() { return name_symbol; }
     char *Utf8Name() { return (char *) (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> value : NULL); }
     int Utf8NameLength() { return (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0); }
 
     LabelSymbol(NameSymbol *name_symbol_) : block(NULL),
-                                            name_symbol(name_symbol_),
-                                            nesting_level(0)
+                                            nesting_level(0),
+                                            name_symbol(name_symbol_)
     {
         Symbol::_kind = LABEL;
     }

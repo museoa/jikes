@@ -19,6 +19,7 @@
 #include "long.h"
 #include "double.h"
 
+class Control;
 class Symbol;
 class PackageSymbol;
 class TypeSymbol;
@@ -108,13 +109,13 @@ class DirectoryEntry
 {
 public:
     DirectoryEntry *next;
-    char *name;
     int length;
+    char *name;
 
-    DirectoryEntry() : next(NULL),
-                       name(NULL),
-                       length(0),
+    DirectoryEntry() : name(NULL),
                        directory(NULL),
+                       next(NULL),
+                       length(0),
                        mtime_(0)
     {
         image = this;
@@ -283,7 +284,7 @@ public:
 
     SymbolKind Kind() { return _kind; }
     virtual wchar_t *Name()   { return (wchar_t *) NULL; }
-    virtual size_t NameLength() { return 0; }
+    virtual int NameLength() { return 0; }
     virtual NameSymbol *Identity() { return (NameSymbol *) NULL; }
 
     PackageSymbol        *PackageCast()        { return (PackageSymbol *) (_kind == PACKAGE ? this : NULL); }
@@ -416,7 +417,7 @@ public:
     Utf8LiteralValue *Utf8_literal;
 
     virtual wchar_t *Name()   { return name_; }
-    virtual size_t NameLength() { return length; }
+    virtual int NameLength() { return length; }
     virtual NameSymbol *Identity() { return this; }
     char *Utf8Name() { return (char *) (Utf8_literal ? Utf8_literal -> value : NULL); }
     int Utf8NameLength() { return (Utf8_literal ? Utf8_literal -> length : 0); }
@@ -464,7 +465,7 @@ public:
     NameLookupTable(int estimate = 16384);
     ~NameLookupTable();
 
-    NameSymbol *FindOrInsertName(wchar_t *, size_t);
+    NameSymbol *FindOrInsertName(wchar_t *, int);
 
 private:
     enum
@@ -522,7 +523,7 @@ public:
     LiteralValue *value;
 
     virtual wchar_t *Name()   { return name_; }
-    virtual size_t NameLength() { return length; }
+    virtual int NameLength() { return length; }
     virtual NameSymbol *Identity() { return (NameSymbol *) NULL; }
 
     LiteralSymbol() : name_(NULL)
@@ -565,7 +566,7 @@ public:
     LiteralLookupTable();
     ~LiteralLookupTable();
 
-    LiteralSymbol *FindOrInsertLiteral(wchar_t *, size_t);
+    LiteralSymbol *FindOrInsertLiteral(wchar_t *, int);
 
 private:
     enum
@@ -789,6 +790,7 @@ public:
 private:
 
     Tuple<AstExpression *> *expr;
+    void EvaluateConstant(AstExpression *, int, int);
     bool IsConstant(AstExpression *);
 
     enum

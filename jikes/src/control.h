@@ -34,7 +34,6 @@ public:
                 external_table;
 
     PackageSymbol *system_package,
-	          *java_util_package,
                   *unnamed_package;
     int dot_classpath_index;
     Tuple<PathSymbol *> classpath;
@@ -246,11 +245,6 @@ public:
         return (Error_type ? Error_type : Error_type = GetType(system_package, StringConstant::US_Error));
     }
 
-    inline TypeSymbol *Vector()
-    {
-        return (Vector_type ? Vector_type : Vector_type = GetType(java_util_package, StringConstant::US_Vector));
-    }
-
     void InitNoClassDefFoundErrorInfo();
     inline TypeSymbol *NoClassDefFoundError()
     {
@@ -379,11 +373,6 @@ public:
         return StringBuffer_append_object_method;
     }
 
-    //
-    //
-    //
-    LiteralValue bad_value;
-
     IntLiteralTable    int_pool;
     LongLiteralTable   long_pool;
     FloatLiteralTable  float_pool;
@@ -444,6 +433,11 @@ public:
     LiteralValue *NullValue() { return &null_value; }
 
     //
+    // The one and only bad value constant.
+    //
+    LiteralValue *BadValue() { return &bad_value; }
+
+    //
     // Note that only names are converted here and not literals, since
     // no error can occur in a name.
     // A literal is converted during the semantic pass so that an
@@ -478,8 +472,6 @@ public:
     static DirectorySymbol *GetOutputDirectory(FileSymbol *);
     static FileSymbol *GetJavaFile(PackageSymbol *, NameSymbol *);
     static FileSymbol *GetFile(Control &, PackageSymbol *, NameSymbol *);
-    static FileSymbol *GetFileBoth(Control &, PackageSymbol *, NameSymbol *);
-    static FileSymbol *GetFileFirst(Control &, PackageSymbol *, NameSymbol *);
 
     PackageSymbol *FindOrInsertPackage(LexStream *, AstExpression *);
     void ProcessPackageDeclaration(FileSymbol *, AstPackageDeclaration *);
@@ -510,11 +502,6 @@ public:
         return (type == long_type || type == double_type);
     }
 
-    inline bool IsPrimitive(TypeSymbol *type)
-    {
-	return (IsNumeric(type) || type == boolean_type);
-    }
-
     inline void ProcessBadType(TypeSymbol *type_symbol)
     {
         type_trash_bin.Next() = type_symbol;
@@ -536,7 +523,8 @@ public:
 
 private:
 
-    LiteralValue null_value;
+    LiteralValue null_value,
+                 bad_value;
 
     TypeSymbol *Serializable_type,
 
@@ -558,7 +546,6 @@ private:
                *RuntimeException_type,
                *ClassNotFoundException_type,
                *Error_type,
-               *Vector_type,
                *NoClassDefFoundError_type,
                *StringBuffer_type;
 

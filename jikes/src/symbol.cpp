@@ -17,7 +17,6 @@
 #include "table.h"
 #include "zip.h"
 #include "set.h"
-//#include <strstream.h> TODO - ERNST
 #include "case.h"
 
 #ifdef UNIX_FILE_SYSTEM
@@ -422,8 +421,8 @@ void SymbolTable::Rehash()
 }
 
 
-SymbolTable::SymbolTable(int hash_size_) : type_symbol_pool(NULL),
-                                           anonymous_symbol_pool(NULL),
+SymbolTable::SymbolTable(int hash_size_) : anonymous_symbol_pool(NULL),
+                                           type_symbol_pool(NULL),
                                            method_symbol_pool(NULL),
                                            variable_symbol_pool(NULL),
                                            other_symbol_pool(NULL),
@@ -527,6 +526,7 @@ TypeSymbol::TypeSymbol(NameSymbol *name_symbol_) : semantic_environment(NULL),
                                                    file_symbol(NULL),
                                                    file_location(NULL),
                                                    name_symbol(name_symbol_),
+                                                   external_name_symbol(NULL),
                                                    owner(NULL),
                                                    outermost_type(NULL),
                                                    super(NULL),
@@ -534,6 +534,7 @@ TypeSymbol::TypeSymbol(NameSymbol *name_symbol_) : semantic_environment(NULL),
                                                    index(CycleChecker::OMEGA),
                                                    unit_index(CycleChecker::OMEGA),
                                                    incremental_index(CycleChecker::OMEGA),
+                                                   status(0),
                                                    local(NULL),
                                                    non_local(NULL),
                                                    supertypes_closure(NULL),
@@ -545,23 +546,21 @@ TypeSymbol::TypeSymbol(NameSymbol *name_symbol_) : semantic_environment(NULL),
                                                    static_parents(new SymbolSet()),
                                                    dependents_closure(NULL),
                                                    parents_closure(NULL),
+                                                   num_dimensions(0),
+                                                   class_literal_class(NULL),
+                                                   class_literal_method(NULL),
+                                                   static_initializer_method(NULL),
+                                                   block_initializer_method(NULL),
                                                    signature(NULL),
                                                    fully_qualified_name(NULL),
+                                                   class_literal_name(NULL),
+                                                   table(NULL),
+                                                   local_shadow_map(NULL),
                                                    expanded_type_table(NULL),
                                                    expanded_field_table(NULL),
                                                    expanded_method_table(NULL),
-                                                   num_dimensions(0),
-                                                   static_initializer_method(NULL),
-                                                   block_initializer_method(NULL),
-                                                   external_name_symbol(NULL),
-                                                   table(NULL),
-                                                   local_shadow_map(NULL),
-                                                   status(0),
                                                    package(NULL),
                                                    class_name(NULL),
-                                                   class_literal_class(NULL),
-                                                   class_literal_method(NULL),
-                                                   class_literal_name(NULL),
                                                    local_constructor_call_environments(NULL),
                                                    private_access_methods(NULL),
                                                    private_access_constructors(NULL),
@@ -571,11 +570,11 @@ TypeSymbol::TypeSymbol(NameSymbol *name_symbol_) : semantic_environment(NULL),
                                                    generated_constructors(NULL),
                                                    enclosing_instances(NULL),
                                                    class_literals(NULL),
-                                                   nested_type_signatures(NULL),
                                                    nested_types(NULL),
                                                    interfaces(NULL),
                                                    anonymous_types(NULL),
-                                                   array(NULL)
+                                                   array(NULL),
+                                                   nested_type_signatures(NULL)
 {
     Symbol::_kind = TYPE;
 }
@@ -633,9 +632,9 @@ MethodSymbol::~MethodSymbol()
 }
 
 
-BlockSymbol::BlockSymbol(int hash_size) : max_variable_index(-1),
-                                          try_or_synchronized_variable_index(0),
-                      table(hash_size > 0 ? new SymbolTable(hash_size) : (SymbolTable *) NULL)
+BlockSymbol::BlockSymbol(int hash_size) : table(hash_size > 0 ? new SymbolTable(hash_size) : (SymbolTable *) NULL),
+                                          max_variable_index(-1),
+                                          try_or_synchronized_variable_index(0)
 {
     Symbol::_kind = BLOCK;
 }
@@ -658,12 +657,12 @@ PathSymbol::~PathSymbol()
 }
 
 
-DirectorySymbol::DirectorySymbol(NameSymbol *name_symbol_, Symbol *owner_) : owner(owner_),
-                                                                             name_symbol(name_symbol_),
+DirectorySymbol::DirectorySymbol(NameSymbol *name_symbol_, Symbol *owner_) : name_symbol(name_symbol_),
+                                                                             owner(owner_),
                                                                              mtime(0),
                                                                              table(NULL),
-                                                                             entries(NULL),
-                                                                             directory_name(NULL)
+                                                                             directory_name(NULL),
+                                                                             entries(NULL)
 {
     Symbol::_kind = _DIRECTORY;
 }
@@ -852,7 +851,7 @@ void FileSymbol::SetFileName()
 {
     PathSymbol *path_symbol = this -> PathSym();
     char *directory_name = directory_symbol -> DirectoryName();
-    size_t directory_name_length = directory_symbol -> DirectoryNameLength();
+    int directory_name_length = directory_symbol -> DirectoryNameLength();
     bool dot_directory = (strcmp(directory_name, StringConstant::U8S__DO) == 0);
     this -> file_name_length = (dot_directory ? 0 : directory_name_length) +
                                this -> Utf8NameLength()   +
@@ -925,7 +924,7 @@ void FileSymbol::CleanUp()
 
 void TypeSymbol::SetClassName()
 {
-    size_t length;
+    int length;
 
     if (semantic_environment -> sem -> control.option.directory)
     {
@@ -1585,6 +1584,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
         assert(sem);
 
         Control &control = sem -> control;
+        LexStream *lex_stream = sem -> lex_stream;
         StoragePool *ast_pool = sem -> compilation_unit -> ast_pool;
 
         IntToWstring value(member -> Identity() == control.init_name_symbol ? this_type -> NumPrivateAccessConstructors()
@@ -1922,34 +1922,4 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member)
     }
 
     return write_method;
-}
-
-
-// Problem:  there's no way to know whether the value can be safely deleted.
-// I could fix this by:
-//  * storing it to fully_qualified_name; then caller never deletes the result
-//  * always allocating a new copy; then caller always deletes the result
-char *TypeSymbol::FullyQualifiedName() {
-#ifdef TODO_ERNST
-    if (fully_qualified_name)
-    return fully_qualified_name -> value;
-    if (!owner)
-    return Utf8Name();
-//    ostrstream result_os_base; TODO-ERNST
-//    Ostream result_os(&result_os_base); TODO-ERNST
-    Symbol *o = owner;
-    if (o -> PackageCast()) {
-    result_os << o -> PackageCast() -> PackageName();
-    } else if (o -> TypeCast()) {
-    result_os << o -> TypeCast() -> FullyQualifiedName();
-    } else {
-    Ostream() << "Huh?  Parent of type.";
-    }
-    result_os << "." << Utf8Name();
-    // I'm having trouble with "result_os << ends;", so cheat.
-    result_os_base << ends;
-    return result_os_base.str();
-#else
-    return NULL;
-#endif
 }

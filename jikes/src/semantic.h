@@ -439,13 +439,14 @@ public:
 
     SemanticEnvironment(Semantic *sem_, TypeSymbol *type_, SemanticEnvironment *previous_ = NULL)
             : sem(sem_),
+              _type(type_),
               previous(previous_),
+              next(NULL),
+
               this_method(NULL),
               this_variable(NULL),
               explicit_constructor_invocation(NULL),
-              ast_construct(NULL),
-              _type(type_),
-              next(NULL)
+              ast_construct(NULL)
     {}
 
 
@@ -548,19 +549,19 @@ public:
 
     Semantic(Control &control_, FileSymbol *file_symbol_) : control(control_),
                                                             source_file_symbol(file_symbol_),
-                                                            lex_stream(file_symbol_ -> lex_stream),
                                                             compilation_unit(file_symbol_ -> compilation_unit),
+                                                            lex_stream(file_symbol_ -> lex_stream),
                                                             directory_symbol(file_symbol_ -> directory_symbol),
+                                                            this_package(file_symbol_ -> package),
                                                             return_code(0),
                                                             error(NULL),
-                                                            this_package(file_symbol_ -> package),
                                                             definitely_assigned_variables(NULL),
-                                                            possibly_assigned_finals(NULL),
                                                             universe(NULL),
                                                             definite_block_stack(NULL),
                                                             definite_try_stack(NULL),
                                                             definite_final_assignment_stack(NULL),
-                                                            definite_visible_variables(NULL)
+                                                            definite_visible_variables(NULL),
+                                                            possibly_assigned_finals(NULL)
     {
         ProcessExprOrStmt[Ast::LOCAL_VARIABLE_DECLARATION] = &Semantic::ProcessLocalVariableDeclarationStatement;
         ProcessExprOrStmt[Ast::BLOCK]                      = &Semantic::ProcessBlock;
@@ -842,7 +843,6 @@ public:
                 delete diagnose_parser;
             }
 
-	    if (! control.option.nocleanup)
             if (compilation_unit)
                 CleanUp();
         }
@@ -1288,7 +1288,9 @@ inline void Semantic::SetObjectSuperType(TypeSymbol *type, LexStream::TokenIndex
 
 inline void Semantic::AddStringConversionDependence(TypeSymbol *type, LexStream::TokenIndex tok)
 {
-    if (type == control.boolean_type)
+    if (type == control.null_type)
+         ;
+    else if (type == control.boolean_type)
          AddDependence(ThisType(), control.Boolean(), tok);
     else if (type == control.char_type)
          AddDependence(ThisType(), control.Character(), tok);

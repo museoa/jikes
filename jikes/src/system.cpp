@@ -474,15 +474,15 @@ void Control::ProcessPath()
     if (option.classpath)
     {
         int max_path_name_length = strlen(option.classpath) + 1; // The longest possible path name we can encounter
-        char * full_directory_name = NULL;
         wchar_t *path_name = new wchar_t[max_path_name_length + 1]; // +1 for '\0'
 
         wchar_t *input_name = NULL;
+        char *full_directory_name = NULL;
 
         for (char *path = option.classpath, *path_tail = &path[strlen(path)]; path < path_tail; path++)
         {
 #ifdef WIN32_FILE_SYSTEM
-            delete [] full_directory_name; 
+            delete [] full_directory_name;
             delete [] input_name;
 #endif
             char *head;
@@ -640,7 +640,6 @@ void Control::ProcessSystemInformation()
     // Add entry for system package
     //
     system_package = ProcessPackage(StringConstant::US_java_SL_lang);
-    java_util_package = ProcessPackage(StringConstant::US_java_SL_util);
 
     //
     // Create an entry for each primitive type. Note that the type void is treated as a primitive.
@@ -739,7 +738,7 @@ FileSymbol *Control::GetJavaFile(PackageSymbol *package, NameSymbol *name_symbol
     for (int k = 0; k < package -> directory.Length(); k++)
     {
         directory_symbol = package -> directory[k];
-        if ((entry = directory_symbol -> FindEntry(full_filename, length)))
+        if (entry = directory_symbol -> FindEntry(full_filename, length))
             break;
     }
 
@@ -763,97 +762,8 @@ FileSymbol *Control::GetJavaFile(PackageSymbol *package, NameSymbol *name_symbol
     return file_symbol;
 }
 
+
 FileSymbol *Control::GetFile(Control &control, PackageSymbol *package, NameSymbol *name_symbol)
-{
-    return control.option.classpath_search_order
-            ?    GetFileBoth(control, package, name_symbol)
-            :    GetFileFirst(control, package, name_symbol);
-}
-
-FileSymbol *Control::GetFileBoth(Control &control, PackageSymbol *package, NameSymbol *name_symbol)
-{
-    FileSymbol *java_file_symbol = NULL, *class_file_symbol = NULL;
-
-    //
-    // calculate a length that is large enough...
-    //
-    int class_length = name_symbol -> Utf8NameLength() + FileSymbol::class_suffix_length,
-    java_length = name_symbol -> Utf8NameLength() + FileSymbol::java_suffix_length;
-
-    char *class_name = new char[class_length + 1]; // +1 for \0
-    strcpy(class_name, name_symbol -> Utf8Name());
-    strcat(class_name, FileSymbol::class_suffix);
-
-    char *java_name = new char[java_length + 1]; // +1 for \0
-    strcpy(java_name, name_symbol -> Utf8Name());
-    strcat(java_name, FileSymbol::java_suffix);
-
-    for (int k = 0; k < package -> directory.Length(); k++)
-    {
-        DirectorySymbol *directory_symbol = package -> directory[k];
-        bool foundBothEntries = false;
-        FileSymbol *file_symbol = directory_symbol -> FindFileSymbol(name_symbol);
-        if (! file_symbol)
-        {
-            PathSymbol *path_symbol = directory_symbol -> PathSym();
-            if (! path_symbol -> IsZip())
-            {
-                DirectoryEntry *java_entry = directory_symbol -> FindEntry(java_name, java_length),
-                *class_entry = (((! control.option.depend) || (java_entry == NULL))
-                                ? directory_symbol -> FindEntry(class_name, class_length)
-                                : (DirectoryEntry *) NULL);
-
-                if (java_entry || class_entry)
-                {
-                    file_symbol = directory_symbol -> InsertFileSymbol(name_symbol);
-                    file_symbol -> directory_symbol = directory_symbol;
-
-                    if (java_entry && ((! class_entry) || class_entry -> Mtime() < java_entry -> Mtime()))
-                    {
-                        file_symbol -> SetJava();
-                        file_symbol -> mtime = java_entry -> Mtime();
-                    }
-                    else
-                    {
-                        if (java_entry)
-                            file_symbol -> SetClass();
-                        else file_symbol -> SetClassOnly();
-                        file_symbol -> mtime = class_entry -> Mtime();
-                    }
-                }
-
-                if (java_entry && class_entry)
-                    foundBothEntries = true; // flag case where both .java and class found in same path
-            }
-        }
-
-        if (file_symbol)
-        {
-            if (file_symbol -> IsJava() && ! java_file_symbol)
-                java_file_symbol = file_symbol; // if no .java file seen yet, note this one
-            else if (! class_file_symbol)
-                class_file_symbol = file_symbol; // if no .class file seen yet, note this one
-
-
-            if (foundBothEntries == true || (java_file_symbol && class_file_symbol))
-                break;      // both .java and .class seen, so no point in continuing the search
-        }
-    }
-
-    delete [] java_name;
-    delete [] class_name;
-
-    //
-    // If both .java and .class seen, do a mod time check to decide which one to deliver.
-    // Otherwise just return whichever kind we found, or NULL.
-    //
-    if (java_file_symbol && ((! class_file_symbol) || class_file_symbol -> mtime < java_file_symbol -> mtime))
-        return java_file_symbol;
-    else
-        return class_file_symbol;
-}
-
-FileSymbol *Control::GetFileFirst(Control &control, PackageSymbol *package, NameSymbol *name_symbol)
 {
     FileSymbol *file_symbol = NULL;
 

@@ -1,4 +1,3 @@
-// $Id$
 //
 // This software is subject to the terms of the IBM Jikes Compiler Open
 // Source License Agreement available at the following URL:

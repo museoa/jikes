@@ -1602,7 +1602,7 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
                 else
                 {
                     //
-                    // TODO: Do this more efficiently ??? !!!
+                    // TODO: Do this more efficiently ???!!!
                     //
                     for (int di = 0; di < switch_statement -> NumCases(); di++)
                     {
@@ -2212,9 +2212,6 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
                      op_true = OP_IFLE;
                      op_false = OP_IFGT;
                      break;
-	        default:
-		    assert(false);
-		    break;
             }
         }
         else if (IsZero(right))
@@ -2239,9 +2236,6 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
                      op_true = OP_IFGE;
                      op_false = OP_IFLT;
                      break;
-	        default:
-		    assert(false);
-		    break;
             }
         }
         else
@@ -2267,9 +2261,6 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
                      op_true = OP_IF_ICMPGE;
                      op_false = OP_IF_ICMPLT;
                      break;
-	        default:
-		    assert(false);
-		    break;
             }
         }
     }
@@ -2309,9 +2300,6 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
                  op_true = OP_IFGE;
                  op_false = OP_IFLT;
                  break;
-	        default:
-		    assert(false);
-		    break;
         }
     }
     else if (left_type == this_control.float_type)
@@ -2351,9 +2339,6 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
                  op_true = OP_IFGE;
                  op_false = OP_IFLT;
                  break;
-	    default:
-		assert(false);
-		break;
         }
     }
     else if (left_type == this_control.double_type)
@@ -2392,9 +2377,6 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
                  op_true = OP_IFGE;
                  op_false = OP_IFLT;
                  break;
-	    default:
-		assert(false);
-		break;
         }
     }
     else assert(false && "comparison of unsupported type");
@@ -2430,6 +2412,8 @@ void ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
 
     if (start_synchronized_pc != end_synchronized_pc) // if the synchronized block is not empty.
     {
+        int end_pc = last_op_pc;
+
         Label end_label;
         EmitBranch(OP_GOTO, end_label); // branch around exception handler
 
@@ -2614,11 +2598,13 @@ void ByteCode::EmitFieldAccessLhsBase(AstExpression *expression)
 {
     expression = VariableExpressionResolution(expression);
     AstFieldAccess *field = expression -> FieldAccessCast();
+    AstSimpleName *simple_name = expression -> SimpleNameCast();
 
     //
     // We now have the right expression. Check if it's a field. If so, process base
     // Otherwise, it must be a simple name...
     //
+    VariableSymbol *sym = (VariableSymbol *) expression -> symbol;
     field = expression -> FieldAccessCast();
     if (field)
         EmitExpression(field -> base);
@@ -2756,8 +2742,10 @@ int ByteCode::GenerateClassAccess(AstFieldAccess *field_access)
     }
     else // here in nested case, where must invoke access methods for the field
     {
+        VariableSymbol *sym = field_access -> symbol -> VariableCast();
         MethodSymbol *read_symbol = field_access -> symbol -> MethodCast(),
                      *write_symbol = field_access -> resolution_opt -> symbol -> MethodCast();
+        AstMethodInvocation *resolve = field_access -> resolution_opt -> MethodInvocationCast();
 
         //
         // need load this for class with method
@@ -4433,60 +4421,49 @@ void ByteCode::ConcatenateString(AstBinaryExpression *expression)
 }
 
 
-void ByteCode::AppendString(AstExpression *p)
+void ByteCode::AppendString(AstExpression *expression)
 {
-    AstBinaryExpression *binexpr;
-    if (p -> BinaryExpressionCast())
-    {
-        binexpr = p -> BinaryExpressionCast();
-        if (binexpr -> binary_tag == AstBinaryExpression::PLUS &&
-            (IsReferenceType(binexpr -> left_expression -> Type()) || IsReferenceType(binexpr -> right_expression -> Type())))
-        {
-            AppendString(binexpr -> left_expression);
-            AppendString(binexpr -> right_expression);
+    TypeSymbol *type = expression -> Type();
 
+    if (expression -> IsConstant())
+    {
+        assert(type == this_control.String());
+        LoadConstantAtIndex(RegisterString((Utf8LiteralValue *) expression -> value));
+    }
+    else
+    {
+        AstBinaryExpression *binary_expression = expression -> BinaryExpressionCast();
+        if (binary_expression)
+        {
+            if (binary_expression -> binary_tag == AstBinaryExpression::PLUS &&
+                (IsReferenceType(binary_expression -> left_expression -> Type()) ||
+                 IsReferenceType(binary_expression -> right_expression -> Type())))
+            {
+                AppendString(binary_expression -> left_expression);
+                AppendString(binary_expression -> right_expression);
+
+                return;
+            }
+        }
+
+        if (expression -> ParenthesizedExpressionCast())
+        {
+            AppendString(expression -> ParenthesizedExpressionCast() -> expression);
             return;
         }
-    }
 
-    if (p -> ParenthesizedExpressionCast())
-    {
-        AppendString(p -> ParenthesizedExpressionCast() -> expression);
-        return;
-    }
-
-    AstCastExpression *cast = p -> CastExpressionCast();
-    if (cast) // here if cast expression, verify that converting to string
-    {
-        if (cast -> kind == Ast::CAST && cast -> Type() == this_control.String())
+        AstCastExpression *cast = expression -> CastExpressionCast();
+        if (cast) // here if cast expression, verify that converting to string
         {
-            AppendString(cast -> expression);
-            return;
+            if (cast -> kind == Ast::CAST && cast -> Type() == this_control.String())
+            {
+                AppendString(cast -> expression);
+                return;
+            }
         }
-    }
 
-    //
-    // replace explicit reference to "null" by
-    // corresponding string.
-    //
-    TypeSymbol *type = p -> Type();
-    if (type == this_control.null_type)
-    {
-        u2 null_string_index = RegisterString(this_control.null_literal);
-
-        if (null_string_index <= 255)
-        {
-            PutOp(OP_LDC);
-            PutU1((u1) null_string_index);
-        }
-        else
-        {
-            PutOp(OP_LDC_W);
-            PutU2(null_string_index);
-        }
-        type = this_control.String();
+        EmitExpression(expression);
     }
-    else EmitExpression(p);
 
     EmitStringAppendMethod(type);
 
@@ -4537,17 +4514,13 @@ void ByteCode::EmitStringAppendMethod(TypeSymbol *type)
 static void op_trap()
 {
     int i = 0; // used for debugger trap
-    i++;       // avoid compiler warnings about unused variable
 }
 #endif
 
 
 ByteCode::ByteCode(TypeSymbol *unit_type) : ClassFile(unit_type),
-                                            this_control(unit_type -> semantic_environment -> sem -> control),
                                             this_semantic(*unit_type -> semantic_environment -> sem),
-
-                                            string_overflow(false),
-                                            library_method_not_found(false),
+                                            this_control(unit_type -> semantic_environment -> sem -> control),
 
                                             double_constant_pool_index(NULL),
                                             integer_constant_pool_index(NULL),
@@ -4560,7 +4533,10 @@ ByteCode::ByteCode(TypeSymbol *unit_type) : ClassFile(unit_type),
 
                                             name_and_type_constant_pool_index(NULL),
                                             fieldref_constant_pool_index(NULL),
-                                            methodref_constant_pool_index(NULL)
+                                            methodref_constant_pool_index(NULL),
+
+                                            string_overflow(false),
+                                            library_method_not_found(false)
 {
 #ifdef TEST
     if (! this_control.option.nowrite)
@@ -5125,6 +5101,7 @@ void ByteCode::FinishCode(TypeSymbol *type)
 void ByteCode::PutOp(unsigned char opc)
 {
 #ifdef TEST
+    int len = code_attribute -> CodeLength(); // show current position
     if (this_control.option.debug_trap_op > 0 && code_attribute -> CodeLength() == this_control.option.debug_trap_op)
         op_trap();
 

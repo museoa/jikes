@@ -34,7 +34,7 @@ void VariableSymbolArray::AllocateMoreSpace()
     // reallocated.
     //
     //
-    size_t k = size >> log_blksize; /* which segment? */
+    int k = size >> log_blksize; /* which segment? */
 
     //
     // If the base is overflowed, reallocate it and initialize the new elements to NULL.
@@ -1035,8 +1035,7 @@ Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
             for (int k = 0; k < this -> NumStatements(); k++)
                 this -> Statement(k) -> Print(lex_stream);
         }
-        else
-	     Coutput <<"\n";
+        else Coutput <<"\n";
     }
 
     void AstPrimitiveType::Print(LexStream& lex_stream)
@@ -1708,7 +1707,6 @@ Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
             Coutput << "#" << base_opt -> id
                     << lex_stream.NameString(dot_token_opt) << " ";
         }
-        Coutput << " ";
         Coutput << lex_stream.NameString(new_token)
                 << " #" << class_type -> id
                 << " (";
