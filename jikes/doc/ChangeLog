@@ -1,3 +1,16 @@
+2000-02-21  Vadim Zaliva  <lord@crocodile.org>
+
+	* jikesapi.h (class JikesAPI): reader and writer factories removed - they are 
+	duplicating read/write methods functionality. read/write made virtual.
+
+	* jikesapi.cpp:
+	* jikesapi.h: method of readers and writers renamed to follow
+	project naming conventions.
+
+	* jikes.cpp (main): removed conditional creation of JikesAPI.
+	* jikesapi.cpp: indentation, comsetics.
+	* jikesapi.h: indentation, comsetics.
+
 2000-02-21  Martin York <myork202@mail.mwfree.net>
 
 	Some Vadim remarks taken in account:

@@ -431,10 +431,10 @@ public:
 
         for (int i=0; i < n; i++)
         {
-            file->Write(buffer.base[i] + size, buffer.Blksize());
+            file->write(buffer.base[i] + size, buffer.Blksize());
             size += buffer.Blksize();
         }
-        file->Write(buffer.base[n] + size, (buffer.top - size));
+        file->write(buffer.base[n] + size, (buffer.top - size));
 
         delete file;
        

@@ -577,7 +577,7 @@ void LexStream::ReadInput()
         JikesAPI::FileReader  *file = JikesAPI::getInstance()->read(FileName());
         if (file)
         {
-            ProcessInput(file->GetBuffer(),file->GetBufferSize());
+            ProcessInput(file->getBuffer(),file->getBufferSize());
             delete file;
         }
     }
@@ -620,7 +620,7 @@ void LexStream::RereadInput()
            JikesAPI::FileReader  *file = JikesAPI::getInstance()->read(FileName());
            if (file)
            {
-               ProcessInput(file->GetBuffer(),file->GetBufferSize());
+               ProcessInput(file->getBuffer(),file->getBufferSize());
                delete file;
            }
         }

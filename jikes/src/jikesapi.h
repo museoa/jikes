@@ -5,20 +5,18 @@
 #ifndef _JIKES_API_H_FLAG_
 #define _JIKES_API_H_FLAG_
 
-
 #include "stdlib.h"
 
-#ifdef UNIX_FILE_SYSTEM
-#include <stdio.h>
-#elif defined( WIN32_FILE_SYSTEM )
-#include <windows.h>
+#if defined(UNIX_FILE_SYSTEM)
+# include <stdio.h>
+#elif defined(WIN32_FILE_SYSTEM)
+# include <windows.h>
 #endif
-
 
 class JikesOption
 {
     
-public:
+ public:
     
     char *classpath    ;
     char *directory    ;
@@ -43,7 +41,6 @@ public:
 
 class JikesError
 {
-
  public:
 
     enum JikesErrorSeverity
@@ -107,7 +104,7 @@ class JikesAPI
      */
     virtual int compile(char ** filenames);
 
-    /*
+    /**
      * Jikes API implements singelton pattern.
      * This is a way to get instance of it.
      */
@@ -119,91 +116,97 @@ class JikesAPI
     virtual void reportError(JikesError *error);
     
  protected:
-
-	  /*
-	   * Define the virtual abse class for all ReadObjects.
-	   * A pointer to an object of this type is returned by JikesAPI::read()
-	   */
-      class FileReader
-      {
-         public:
+    
+    /**
+     * Define the virtual base class for all Readers.
+     * A pointer to an object of this type is returned by JikesAPI::read()
+     */
+    class FileReader
+        {
+    public:
             virtual  ~FileReader()  {}
+            
+            virtual const char     *getBuffer()      = 0;	// If the file is unreadable an object should still be created but GetBuffer() should return NULL.
+            virtual       size_t    getBufferSize()  = 0;	// If the file is unreadable GetBufferSize() is undefined.
+        };
 
-            virtual const char     *GetBuffer()      = 0;	// If the file is unreadable an object should still be created but GetBuffer() should return NULL.
-            virtual       size_t    GetBufferSize()  = 0;	// If the file is unreadable GetBufferSize() is undefined.
-      };
+    /**
+     * A default implamentation of ReadObject that read from the file sysytem.
+     */ 
+    class DefaultFileReader: public FileReader
+        {
+    public:
 
-	  /*
-	   * A default implamentation of ReadObject that read from the file sysytem.
-	   */ 
-      class DefaultFileReader: public FileReader
-      {
-         public:      DefaultFileReader(const char *fileName);
+            DefaultFileReader(const char *fileName);
             virtual  ~DefaultFileReader();
-
-            virtual const char     *GetBuffer()      {return(buffer);}
-            virtual       size_t    GetBufferSize()  {return(size);}
-         private:
+            
+            virtual const char     *getBuffer()      {return(buffer);}
+            virtual       size_t    getBufferSize()  {return(size);}
+            
+    private:
+            
             const char     *buffer;
-                  size_t    size;
+            size_t    size;
 #ifdef   WIN32_FILE_SYSTEM
-                  HANDLE    srcfile;
-                  HANDLE    mapfile;
+            HANDLE    srcfile;
+            HANDLE    mapfile;
 #endif 
-      };
+        };
 
-      /*
-       * Define the virtual base class for all WriteObjects.
-       * A pointer to an object of this type is returned by JikesAPI::write()
-       */
-      class FileWriter
-      {
-         public:      FileWriter(size_t mS):   maxSize(mS) {} 
+    /**
+     * Define the virtual base class for all WriteObjects.
+     * A pointer to an object of this type is returned by JikesAPI::write()
+     */
+    class FileWriter
+        {
+    public:
+            FileWriter(size_t mS):   maxSize(mS) {} 
             virtual  ~FileWriter() {}
-
-            size_t    Write(const unsigned char *data,size_t size);
-            virtual  bool      Valid()                                 = 0;
-         private:
-            virtual  size_t    DoWrite(const unsigned char *data,size_t size)   = 0;	// Garanteed not to be called with a combined total of more than maxSize bytes during the lifespan of the object.
+            
+            size_t    write(const unsigned char *data, size_t size);
+            virtual  bool      isValid()                         = 0;
+            
+    private:
+            
+            virtual  size_t    doWrite(const unsigned char *data, size_t size)   = 0;	// Garanteed not to be called with a combined total of more than maxSize bytes during the lifespan of the object.
             size_t   maxSize;
-      };
-
-	  /*
-	   * A default implamentaion of WriteObject that writes to the file system.
-	   */
-      class DefaultFileWriter: public FileWriter
-      {
-         public:      DefaultFileWriter(const char *fileName,size_t maxSize);
+        };
+    
+    /**
+     * A default implamentaion of WriteObject that writes to the file system.
+     */
+    class DefaultFileWriter: public FileWriter
+        {
+    public:
+            DefaultFileWriter(const char *fileName,size_t maxSize);
             virtual  ~DefaultFileWriter();
-
-            virtual  bool      Valid();
-         private:
-            virtual  size_t    DoWrite(const unsigned char *data,size_t size);
-
-                     bool      valid;
+            
+            virtual  bool      isValid();
+            
+    private:
+            
+            virtual  size_t    doWrite(const unsigned char *data,size_t size);
+            
+            bool      valid;
 #ifdef UNIX_FILE_SYSTEM
-                     FILE     *file;
+            FILE     *file;
 #elif defined(WIN32_FILE_SYSTEM)
-                     HANDLE    file;
-                     HANDLE    mapfile;
-                     u1       *string_buffer;
-                     size_t    dataWritten;
+            HANDLE    file;
+            HANDLE    mapfile;
+            u1       *string_buffer;
+            size_t    dataWritten;
 #endif
-      };
+        };
 
-	  // These functions are used internally by Jikes to retrieve file information
-	  // from the JikesAPI.
-
-      virtual	FileReader * readerFactory(const char *fileName);
-      virtual	FileWriter * writterFactory(const char *fileName, size_t bytes);
-
-  public:
-      virtual	  int stat(const char *filename,struct stat *status);
-      
-      FileReader  * read  (const char *filename              );
-      FileWriter  * write (const char *filename, size_t bytes);
-      
+ public:
+    
+    virtual int stat(const char *filename, struct stat *status);
+    
+    virtual FileReader  *read  (const char *filename              );
+    virtual FileWriter  *write (const char *filename, size_t bytes);
+    
  private:
+
     JikesOption *option;
     static JikesAPI *instance;
 };
