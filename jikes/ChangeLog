@@ -227,11 +227,10 @@
 2001-04-19  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/double.cpp (IEEEfloat, Adjust):
-	* src/double.h (IEEEfloat, Adjust):
+	* src/double.h (IEEEfloat, Adjust, IEEEfloat, IEEEdouble):
 	Add IEEEfloat::Adjust(), which simply segregates
 	a portion of IEEEfloat(char *) from being inline,
 	where it caused an ICE in mingw 2.95.2 (bug 433).
-	(IEEEfloat, IEEEdouble):
 	Fix friend declarations to include the keyword
 	class, to support the HP-UX aCC compiler. Fix
 	enums, along with...
@@ -254,10 +253,9 @@
 	* src/Makefile.in: Add dependency of
 	double.h on long.h.
 	* src/double.h:
-	* src/double.cpp:
+	* src/double.cpp (IEEEfloat, IEEEdouble, BigInt):
 	Add better const support to existing
 	methods.
-	(IEEEfloat, IEEEdouble):
 	Change IEEEfloat(char *) and
 	IEEEdouble(char *) to be 100% accurate.
 	Fix a bug in conversion from negative
@@ -265,14 +263,13 @@
 	Clean up magic numbers, and got enum
 	constants working cleanly.
 	Add methods Bias() and FractSize().
-	(BigInt): Add the BigInt class for use
+	Add the BigInt class for use
 	in string/floating-point conversions.
 	* src/expr.cpp (CastPrimitiveValue):
 	Clean up the casts to work with more
 	compilers.
 	* src/semantic.h:
-	* src/expr.cpp:
-	(Process*_SHIFT):
+	* src/expr.cpp (Process*_SHIFT):
 	Get rid of magic numbers with shifts.
 	* src/long.h:
 	* src/long.cpp:
@@ -280,9 +277,8 @@
 	methods.
 	Remove some magic numbers.
 	* src/platform.h:
-	* src/platform.cpp (FloatToString)
-	(DoubleToString): Rewrite the conversions
-	from floating point to strings to be
+	* src/platform.cpp (FloatToString, DoubleToString)
+	Rewrite the conversions from floating point to strings to be
 	100% accurate.
 	Replace use of raw literals for "NaN"
 	and others with constants in StringConstant,
