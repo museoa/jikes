@@ -1,3 +1,7 @@
+2002-07-10  Chris Abbey	 <jikes@cabbey.net>
+
+        * 1.16 release.
+	
 2002-07-05  Chris Abbey  <jikes@cabbey.net>
 
 	* doc/jikes.1: explain that windows doesn't have -encoding
