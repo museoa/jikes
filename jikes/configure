@@ -2126,7 +2126,7 @@ echo "${ECHO_T}$ac_cv_cxx_namespaces" >&6
 if test "$ac_cv_cxx_namespaces" = yes; then
 
 cat >>confdefs.h <<\EOF
-#define HAVE_NAMESPACES
+#define HAVE_NAMESPACES 1
 EOF
 
 fi
@@ -2650,8 +2650,8 @@ extern "C" void exit (int);
 
 #ifdef HAVE_NEW
 # include <new>
-# ifdef HAVE_NAMESPACE
-#  using namespace std;
+# ifdef HAVE_NAMESPACES
+    using namespace std;
 # endif
 #else
 # ifdef HAVE_NEW_H
@@ -2713,8 +2713,8 @@ extern "C" void exit (int);
 
 #ifdef HAVE_NEW
 # include <new>
-# ifdef HAVE_NAMESPACE
-#  using namespace std;
+# ifdef HAVE_NAMESPACES
+    using namespace std;
 # endif
 #else
 # ifdef HAVE_NEW_H

@@ -1,5 +1,11 @@
 2000-12-20  Mo DeJong  <mdejong@redhat.com>
 
+	* src/m4/ac_cxx_check_set_new_handler.m4:
+	* src/m4/ac_cxx_namespaces.m4: Use
+	HAVE_NAMESPACES not HAVE_NAMESPACE.
+
+2000-12-20  Mo DeJong  <mdejong@redhat.com>
+
 	* Makefile.am: Add RPM spec file to
 	`make dist` target.
 	* TODO: Mark TODO items fixed.
