@@ -157,7 +157,9 @@ class SemanticError
         PARENT_TYPE_IN_UNNAMED_PACKAGE,
         RECOMPILATION,
         TYPE_NOT_FOUND,
+        IMPORT_FROM_UNNAMED_PACKAGE,
         DUPLICATE_ON_DEMAND_IMPORT,
+        UNKNOWN_ON_DEMAND_IMPORT,
         NOT_A_TYPE,
         NOT_A_CLASS,
         NOT_AN_INTERFACE,
@@ -260,7 +262,6 @@ class SemanticError
         NON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD,
         NO_ABSTRACT_METHOD_IMPLEMENTATION,
         DUPLICATE_INTERFACE,
-        UNKNOWN_QUALIFIED_NAME_BASE,
         UNKNOWN_AMBIGUOUS_NAME,
         CIRCULAR_INTERFACE,
         CIRCULAR_CLASS,
@@ -470,7 +471,9 @@ private:
     static wchar_t *PrintPARENT_TYPE_IN_UNNAMED_PACKAGE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintRECOMPILATION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintTYPE_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintIMPORT_FROM_UNNAMED_PACKAGE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintDUPLICATE_ON_DEMAND_IMPORT(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintUNKNOWN_ON_DEMAND_IMPORT(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNOT_A_TYPE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNOT_A_CLASS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNOT_AN_INTERFACE(ErrorInfo &, LexStream *, Control &);
@@ -573,7 +576,6 @@ private:
     static wchar_t *PrintNON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNO_ABSTRACT_METHOD_IMPLEMENTATION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintDUPLICATE_INTERFACE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintUNKNOWN_QUALIFIED_NAME_BASE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNKNOWN_AMBIGUOUS_NAME(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintCIRCULAR_INTERFACE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintCIRCULAR_CLASS(ErrorInfo &, LexStream *, Control &);

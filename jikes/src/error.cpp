@@ -563,6 +563,7 @@ void SemanticError::StaticInitializer()
     print_message[PARENT_TYPE_IN_UNNAMED_PACKAGE] = PrintPARENT_TYPE_IN_UNNAMED_PACKAGE;
     print_message[RECOMPILATION] = PrintRECOMPILATION;
     print_message[TYPE_NOT_FOUND] = PrintTYPE_NOT_FOUND;
+    print_message[IMPORT_FROM_UNNAMED_PACKAGE] = PrintIMPORT_FROM_UNNAMED_PACKAGE;
     print_message[DUPLICATE_ON_DEMAND_IMPORT] = PrintDUPLICATE_ON_DEMAND_IMPORT;
     print_message[NOT_A_TYPE] = PrintNOT_A_TYPE;
     print_message[NOT_A_CLASS] = PrintNOT_A_CLASS;
@@ -1892,6 +1893,19 @@ wchar_t *SemanticError::PrintTYPE_NOT_FOUND(ErrorInfo &err,
 }
 
 
+wchar_t *SemanticError::PrintIMPORT_FROM_UNNAMED_PACKAGE(ErrorInfo &err,
+                                                         LexStream *lex_stream,
+                                                         Control &control)
+{
+    ErrorString s;
+
+    s << "Type \"" << err.insert1 << "\" exists in the unnamed package, and "
+      << "cannot be imported. Consider putting it into a named package.";
+
+    return s.Array();
+}
+
+
 wchar_t *SemanticError::PrintDUPLICATE_ON_DEMAND_IMPORT(ErrorInfo &err,
                                                         LexStream *lex_stream,
                                                         Control &control)
@@ -1900,6 +1914,19 @@ wchar_t *SemanticError::PrintDUPLICATE_ON_DEMAND_IMPORT(ErrorInfo &err,
 
     s << "Type " << err.insert1 << " is imported on demand from package "
       << err.insert2 << " and package " << err.insert3 << '.';
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintUNKNOWN_ON_DEMAND_IMPORT(ErrorInfo &err,
+                                                      LexStream *lex_stream,
+                                                      Control &control)
+{
+    ErrorString s;
+
+    s << "The import \"" << err.insert1
+      << "\" is not valid, since it does not name a type in a package.";
 
     return s.Array();
 }
@@ -3393,19 +3420,6 @@ wchar_t *SemanticError::PrintDUPLICATE_INTERFACE(ErrorInfo &err,
     if (NotDot(err.insert1))
         s << err.insert1 << '/';
     s << err.insert2 << "\" in definition of type \"" << err.insert3 << "\".";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintUNKNOWN_QUALIFIED_NAME_BASE(ErrorInfo &err,
-                                                         LexStream *lex_stream,
-                                                         Control &control)
-{
-    ErrorString s;
-
-    s << "\"" << err.insert1
-      << "\" is either a misplaced package name or a non-existent entity.";
 
     return s.Array();
 }

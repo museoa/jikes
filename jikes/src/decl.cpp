@@ -58,8 +58,6 @@ inline void Semantic::CheckPackage()
             }
          }
     }
-
-    return;
 }
 
 
@@ -123,8 +121,6 @@ void Semantic::ProcessTypeNames()
                 source_file_symbol -> types.Next() = type;
             }
         }
-
-        return;
     }
 
     //
@@ -377,8 +373,6 @@ void Semantic::ProcessTypeNames()
             }
         }
     }
-
-    return;
 }
 
 
@@ -407,8 +401,6 @@ void Semantic::CheckClassMembers(TypeSymbol *containing_type, AstClassBody *clas
                            class_body -> EmptyDeclaration(l) -> RightToken());
         }
     }
-
-    return;
 }
 
 
@@ -2248,6 +2240,12 @@ void Semantic::ProcessImportQualifiedName(AstExpression *name)
         TypeSymbol *type = symbol -> TypeCast();
         if (type) // The base name is a type
         {
+            if (type == control.no_type) // Avoid chain-reaction errors.
+            {
+                field_access -> symbol = control.no_type;
+                return;
+            }
+
             if (! type -> NestedTypesProcessed())
                 type -> ProcessNestedTypeSignatures((Semantic *) this, field_access -> identifier_token);
             NameSymbol *name_symbol = lex_stream -> NameSymbol(field_access -> identifier_token);
@@ -2297,36 +2295,25 @@ void Semantic::ProcessImportQualifiedName(AstExpression *name)
         assert(simple_name);
 
         //
-        // From the 1.1 document:
+        // JLS 6.3 The leading simple name of a type import must be a package
+        // name, as class names are not in scope. JLS 7.5: Nested classes of
+        // all sorts (top-level or inner) can be imported by either kind of
+        // import statement. Class names in import statements must be the
+        // canonical version.
         //
-        //    Nested classes of all sorts (top-level or inner) can be imported
-        //    by either kind of import statement. Class names in import
-        //    statements must be fully package qualified, and be resolvable
-        //    without reference to inheritance relations...
-        //
-        TypeSymbol *type;
-        if (compilation_unit -> package_declaration_opt)
-        {
-            type = FindSimpleNameType(this_package, simple_name -> identifier_token);
-            //
-            // If the type was not found, look for it in the unnamed package.
-            // The relevant passages that justify this lookup are:
-            // 6.5.4.11, 6.7, 7.4.2, 7.5.1
-            //
-            if (! type)
-                type = FindSimpleNameType(control.unnamed_package, simple_name -> identifier_token);
-        }
-        else type = FindSimpleNameType(control.unnamed_package, simple_name -> identifier_token);
+        TypeSymbol *type = FindSimpleNameType(control.unnamed_package, simple_name -> identifier_token);
 
         //
-        // If the simple_name is a type, save it. Otherwise, assume it is a
-        // package
+        // If the simple_name is a type, detect the error. Otherwise, assume
+        // it is a package, and legal.
         //
         if (type)
         {
-            if (! (type -> ACC_PUBLIC() || type -> ContainingPackage() == this_package))
-                ReportTypeInaccessible(name, type);
-            simple_name -> symbol = type;
+            ReportSemError(SemanticError::IMPORT_FROM_UNNAMED_PACKAGE,
+                           simple_name -> identifier_token,
+                           simple_name -> identifier_token,
+                           lex_stream -> NameString(simple_name -> identifier_token));
+            simple_name -> symbol = control.no_type;
         }
         else
         {
@@ -2338,8 +2325,6 @@ void Semantic::ProcessImportQualifiedName(AstExpression *name)
             simple_name -> symbol = package;
         }
     }
-
-    return;
 }
 
 
@@ -2445,7 +2430,8 @@ void Semantic::ProcessTypeImportOnDemandDeclaration(AstImportDeclaration *import
     //
     //
     TypeSymbol *type = symbol -> TypeCast();
-    if (control.option.deprecation && type && type -> IsDeprecated() && type -> file_symbol != source_file_symbol)
+    if (control.option.deprecation && type &&
+        type -> IsDeprecated() && type -> file_symbol != source_file_symbol)
     {
         ReportSemError(SemanticError::DEPRECATED_TYPE,
                        import_declaration -> name -> LeftToken(),
@@ -2453,8 +2439,6 @@ void Semantic::ProcessTypeImportOnDemandDeclaration(AstImportDeclaration *import
                        type -> ContainingPackage() -> PackageName(),
                        type -> ExternalName());
     }
-
-    return;
 }
 
 
@@ -2549,9 +2533,14 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_d
     ProcessImportQualifiedName(import_declaration -> name);
     Symbol *symbol = import_declaration -> name -> symbol;
     PackageSymbol *package = symbol -> PackageCast();
+    //
+    // Technically, the JLS grammar forbids "import foo;". However, our
+    // grammar parses it, and will either find or create the package foo, so
+    // we can give a better message than "expected '.'".
+    //
     if (package)
     {
-        ReportSemError(SemanticError::UNKNOWN_QUALIFIED_NAME_BASE,
+        ReportSemError(SemanticError::UNKNOWN_ON_DEMAND_IMPORT,
                        import_declaration -> name -> LeftToken(),
                        import_declaration -> name -> RightToken(),
                        package -> PackageName());
@@ -2659,7 +2648,8 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_d
     //
     //
     //
-    if (control.option.deprecation && type -> IsDeprecated() && type -> file_symbol != source_file_symbol)
+    if (control.option.deprecation && type -> IsDeprecated() &&
+        type -> file_symbol != source_file_symbol)
     {
         ReportSemError(SemanticError::DEPRECATED_TYPE,
                        import_declaration -> name -> LeftToken(),
@@ -2667,8 +2657,6 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_d
                        type -> ContainingPackage() -> PackageName(),
                        type -> ExternalName());
     }
-
-    return;
 }
 
 
