@@ -1,0 +1,4 @@
+2000-01-15  Mo DeJong  <mdejong@redhat.com>
+
+	* ChangeLog: Initialize new jikes-website
+	module.
