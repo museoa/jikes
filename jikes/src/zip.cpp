@@ -16,11 +16,11 @@
 namespace Jikes { // Open namespace Jikes block
 #endif
 
-//************************************************************************************************
+//************************************************************
 //
 // The ZipFile methods follow
 //
-//************************************************************************************************
+//************************************************************
 #ifdef UNIX_FILE_SYSTEM
     int (*ZipFile::uncompress_file[10]) (FILE *, char *, long) =
     {
@@ -156,11 +156,11 @@ ZipFile::~ZipFile()
 }
 
 
-//************************************************************************************************
+//********************************************************************
 //
 // The Zip methods follow:
 //
-//************************************************************************************************
+//********************************************************************
 inline u1 Zip::GetU1()
 {
     return *buffer_ptr++;
@@ -253,15 +253,22 @@ inline void Zip::ProcessDirectoryEntry()
     Skip(file_name_length + extra_field_length + file_comment_length);
 
     //
-    // Note that we need to process all subdirectory entries that appear in the zip file, and not
-    // just the ones that contain java and class files. Recall that in java the dot notation is
-    // used in specifying a package. Therefore, in processing a qualified-name that represents
-    // a package, we need to recognize each name as a subpackage. E.g., when processing
-    // "java.lang", we need to recognize "java" as a package before looking for "lang"...
-    //
-    DirectorySymbol *directory_symbol = root_directory; // start at the "." directory.
+    // Note that we need to process all subdirectory entries
+    // that appear in the zip file, and not just the ones that
+    // contain java and class files. Recall that in java the
+    // dot notation is used in specifying a package. Therefore,
+    // in processing a qualified-name that represents a package,
+    // we need to recognize each name as a subpackage. E.g.,
+    // when processing "java.lang", we need to recognize "java"
+    // as a package before looking for "lang"...
+
+    // start at the "." directory.
+    DirectorySymbol *directory_symbol = root_directory;
+    // -1 to remove last '/'
     if (name[file_name_length - 1] == U_SLASH)
-        ProcessSubdirectoryEntries(directory_symbol, name, file_name_length - 1);  // -1 to remove last '/'
+        ProcessSubdirectoryEntries(directory_symbol,
+				   name,
+				   file_name_length - 1);
     else
     {
         bool java_file = (file_name_length >= FileSymbol::java_suffix_length &&
@@ -276,16 +283,22 @@ inline void Zip::ProcessDirectoryEntry()
             for (i = name_length - 1; i >= 0 && name[i] != U_SLASH; i--)
                 ;
             if (i > 0) // directory specified?
-                directory_symbol = ProcessSubdirectoryEntries(directory_symbol, name, i);
-            NameSymbol *name_symbol = ProcessFilename(&name[i + 1], name_length - (i + 1));
+                directory_symbol = ProcessSubdirectoryEntries(directory_symbol,
+							      name, i);
+            NameSymbol *name_symbol = ProcessFilename(&name[i + 1],
+						      name_length - (i + 1));
 
             //
-            // Search for a file of that name in the directory. If one is not found, then insert ...
-            // Otherwise, either a class file of that name was previously processed and now we found
-            // a java file with the same name or vice-versa... In that case keep (or replace with ) the
-            // the file with the most recent date stamp.
+            // Search for a file of that name in the directory.
+	    // If one is not found, then insert ... Otherwise,
+	    // either a class file of that name was previously
+	    // processed and now we found a java file with the
+	    // same name or vice-versa... In that case keep
+	    // (or replace with) the file with the most recent
+	    // date stamp.
             //
-            FileSymbol *file_symbol = directory_symbol -> FindFileSymbol(name_symbol);
+            FileSymbol *file_symbol = directory_symbol ->
+	      FindFileSymbol(name_symbol);
             if (! file_symbol)
             {
                 file_symbol = directory_symbol -> InsertFileSymbol(name_symbol);
@@ -335,11 +348,22 @@ Zip::Zip(Control &control_, char *zipfile_name) : control(control_),
         }
     }
 #elif defined(WIN32_FILE_SYSTEM)
-    zipfile = CreateFile(zipfile_name, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
+    zipfile = CreateFile(zipfile_name,
+			 GENERIC_READ,
+			 FILE_SHARE_READ,
+			 NULL,
+			 OPEN_EXISTING,
+			 FILE_ATTRIBUTE_READONLY,
+			 NULL);
     if (zipfile != INVALID_HANDLE_VALUE)
     {
         mapfile = CreateFileMapping(zipfile, NULL, PAGE_READONLY, 0, 0, NULL);
-        zipbuffer = (mapfile == INVALID_HANDLE_VALUE ? NULL : (char *) MapViewOfFile(mapfile, FILE_MAP_READ, 0, 0, 0));
+        zipbuffer = (mapfile == INVALID_HANDLE_VALUE ?
+		     NULL :
+		     (char *) MapViewOfFile(mapfile,
+					    FILE_MAP_READ,
+					    0, 0, 0)
+		     );
         if (zipbuffer)
         {
             buffer_ptr = &zipbuffer[GetFileSize(zipfile, NULL) - END_SIZE];
@@ -347,6 +371,24 @@ Zip::Zip(Control &control_, char *zipfile_name) : control(control_),
         }
     }
 #endif
+
+    // The following was posted to the dev list, but was just
+    // too good to not put in here, the next person to have to
+    // deal with this crap will appreciate it. -=Chris
+    //
+    // From: Mo DeJong <supermo@bayarea.net>
+    //
+    //   Ode to a zip file:
+    //
+    //   I can't read it forwards
+    //   I can't read it backwards
+    //   I must know where to being
+    //   so I need to look in the middle
+    //   to find the middle, I must know the end
+    //   but I don't know where that is, so I guess
+    //
+    // -------------------------------------------------
+
 
     // This may or may not be a valid zip file. The zip file might have
     // a file comment so we can't be sure where the END header is located.
@@ -526,7 +568,9 @@ void Zip::ReadDirectory()
         delete [] zipbuffer;
         zipbuffer = new char[central_directory_size + END_SIZE];
         buffer_ptr = zipbuffer;
-        SystemFread(buffer_ptr, sizeof(char), central_directory_size + END_SIZE, zipfile);
+        SystemFread(buffer_ptr, sizeof(char),
+		    central_directory_size + END_SIZE,
+		    zipfile);
 #elif defined(WIN32_FILE_SYSTEM)
         Skip(6); // u4 central_directory_offset         = GetU4();
                  // u2 comment_length                   = GetU2();
