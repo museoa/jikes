@@ -1017,7 +1017,9 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
 // Search the type in question for a variable. Note that name_symbol is an
 // optional argument. If it was not passed to this function then its default
 // value is NULL (see semantic.h) and we assume that the name to search for
-// is the last identifier specified in the field_access.
+// is the last identifier specified in the field_access. Error reporting if
+// the field is not found is up to the callee, since for qualified names,
+// the name may successfully resolve to a nested type.
 //
 VariableSymbol *Semantic::FindVariableInType(TypeSymbol *type,
                                              AstFieldAccess *field_access,
@@ -1060,7 +1062,6 @@ VariableSymbol *Semantic::FindVariableInType(TypeSymbol *type,
 
     if (variable_set.Length() == 0)
     {
-        ReportVariableNotFound(field_access, type);
         return (VariableSymbol *) NULL;
     }
     else if (variable_set.Length() > 1)
@@ -2348,12 +2349,11 @@ void Semantic::FindVariableMember(TypeSymbol *type,
             }
             else
             {
+                ReportVariableNotFound(field_access, type);
                 field_access -> symbol = control.no_type;
             }
         }
     }
-
-    return;
 }
 
 //

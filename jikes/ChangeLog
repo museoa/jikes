@@ -1,3 +1,7 @@
+2001-11-12  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/expr.cpp (FindVariable*): Another regression in 229.
+
 2001-11-11  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/decl.cpp:
