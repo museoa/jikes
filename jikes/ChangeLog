@@ -1,3 +1,9 @@
+2001-11-02  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/expr.cpp (ConstructorAccessCheck): Fix access check for
+	anonymous classes which call a default constructor in another
+	package, bug 193 - patch 221.
+
 2001-11-02  Mo DeJong  <supermo@bayarea.net>
 
 	* configure.in: Add --enable-jikes-namespace flag. Jikes classes

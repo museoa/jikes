@@ -1850,33 +1850,28 @@ void Semantic::ConstructorAccessCheck(AstClassInstanceCreationExpression *class_
                            containing_type -> ContainingPackage() -> PackageName(),
                            containing_type -> ExternalName());
         }
-        else if (! class_creation -> symbol -> TypeCast() -> Anonymous())
-        {
-            if (constructor -> ACC_PROTECTED())
-            {
-                if (containing_type->ContainingPackage() != this_package)
-                {
-                    ReportSemError(SemanticError::PROTECTED_CONSTRUCTOR_NOT_ACCESSIBLE,
-                                   class_creation -> class_type -> LeftToken(),
-                                   class_creation -> right_parenthesis_token,
-                                   constructor -> Header(),
-                                   containing_type -> ContainingPackage() -> PackageName(),
-                                   containing_type -> ExternalName());
-                }
-            }
-            else if (! (constructor -> ACC_PUBLIC() || containing_type -> ContainingPackage() == this_package))
-            {
-                ReportSemError(SemanticError::DEFAULT_CONSTRUCTOR_NOT_ACCESSIBLE,
-                               class_creation -> class_type -> LeftToken(),
-                               class_creation -> right_parenthesis_token,
-                               constructor -> Header(),
-                               containing_type -> ContainingPackage() -> PackageName(),
-                               containing_type -> ExternalName());
-            }
+        else if (constructor -> ACC_PROTECTED() &&
+		 containing_type -> ContainingPackage() != this_package)
+	{
+	    if (! class_creation -> symbol -> TypeCast() -> Anonymous())
+	        ReportSemError(SemanticError::PROTECTED_CONSTRUCTOR_NOT_ACCESSIBLE,
+			       class_creation -> class_type -> LeftToken(),
+			       class_creation -> right_parenthesis_token,
+			       constructor -> Header(),
+			       containing_type -> ContainingPackage() -> PackageName(),
+			       containing_type -> ExternalName());
+	}
+	else if (! constructor -> ACC_PUBLIC() &&
+		 containing_type -> ContainingPackage() != this_package)
+	{
+	    ReportSemError(SemanticError::DEFAULT_CONSTRUCTOR_NOT_ACCESSIBLE,
+			   class_creation -> class_type -> LeftToken(),
+			   class_creation -> right_parenthesis_token,
+			   constructor -> Header(),
+			   containing_type -> ContainingPackage() -> PackageName(),
+			   containing_type -> ExternalName());
         }
     }
-
-    return;
 }
 
 
