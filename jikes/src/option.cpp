@@ -184,7 +184,6 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
                                               full_check(false),
                                               unzip(false),
                                               dump_errors(false),
-                                              ascii(false),
                                               errors(true),
                                               comments(false),
                                               pedantic(false)
