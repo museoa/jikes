@@ -1,4 +1,8 @@
 2000-02-03  Vadim Zaliva  <lord@crocodile.org>
 
+	* exec.d: Add everal test files contributed by:
+	1. Benjamin Chelf <chelf@codesourcery.com>
+	2. Pedro Dantas <p.dantas@intershop.de>
+
 	* new Unicode test suite created.
 

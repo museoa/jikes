@@ -12,12 +12,15 @@ exec:
 	mkdir this.exec
 	../../bin/jt exec
 	mv *.e this.exec
-chk:
+chk:	
+	rm -f exec.dif
 	diff ../ok/exec this.exec >exec.dif
 clean:
 	rm -fr this.exec
-	rm -fr *.java
-	rm -fr *.class
-	rm -fr *.[cer]
-	rm -fr *.dif
+	rm -f *.java
+	rm -f *.class
+	rm -f *.[cer]
+	rm -f *.dif
+	rm -f *.html
+	rm -f core
 
