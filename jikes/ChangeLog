@@ -1,3 +1,9 @@
+2004-03-13  Elliott Hughes  <enh@acm.org>
+
+	* src/control.cpp: only check for unused imports if compilation
+	is successful. Seemingly unused imports may well be used by code
+	we couldn't compile, so we can't be sure they're unused.
+
 2004-03-12  Eric Blake  <ebb9@byu.net>
 
 	* src/ast.h (AstMethodInvocation): Split method into base_opt and

@@ -1382,16 +1382,32 @@ void Control::ProcessBodies(TypeSymbol* type)
     sem -> types_to_be_processed.RemoveElement(type);
 
     if (sem -> types_to_be_processed.Size() == 0)
-        CheckForUnusedImports(sem);
-    if (! option.nocleanup && sem -> types_to_be_processed.Size() == 0)
     {
         // All types belonging to this compilation unit have been processed.
-        CleanUp(sem -> source_file_symbol);
+        CheckForUnusedImports(sem);
+        if (! option.nocleanup)
+        {
+            CleanUp(sem -> source_file_symbol);
+        }
     }
 }
 
 void Control::CheckForUnusedImports(Semantic* sem)
 {
+    if (sem -> NumErrors() != 0 ||
+        sem -> lex_stream -> NumBadTokens() != 0 ||
+        sem -> compilation_unit -> BadCompilationUnitCast())
+    {
+        //
+        // It's not worth checking for unused imports if compilation
+        // wasn't successful; we may well have just not got round to
+        // compiling the relevant code, and if there were errors, the
+        // user has more important things to worry about than unused
+        // imports!
+        //
+        return;
+    }
+
     for (unsigned i = 0;
          i < sem -> compilation_unit -> NumImportDeclarations(); ++i)
     {
