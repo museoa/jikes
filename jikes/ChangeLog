@@ -1,3 +1,12 @@
+2002-08-06  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/ast.h:
+	* src/bytecode.cpp: Formatting.
+	(EndMethod): Fix assertion with oversize method body.
+	* src/decl.cpp (GetStaticInitializerMethod),
+	(ProcessInstanceInitializers): Assign return type to generated
+	methods to avoid coredump with oversize initializer body.
+
 2002-08-05  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/ast.cpp (AstClassBody::Clone): Correctly clone.

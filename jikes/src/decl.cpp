@@ -4126,11 +4126,16 @@ MethodSymbol *Semantic::GetStaticInitializerMethod(int estimate)
     block -> block_symbol = block_symbol;
     block -> AllocateBlockStatements(estimate);
 
+    // The return type (void).
+    AstSimpleName *return_type = ast_pool -> GenSimpleName(loc);
+    return_type -> symbol = control.void_type;
+
     // The method declaration. We leave some fields uninitialized, because
     // they are not needed in bytecode.cpp.
     AstMethodDeclaration *declaration = ast_pool -> GenMethodDeclaration();
     MethodSymbol *init_method =
         this_type -> InsertMethodSymbol(control.clinit_name_symbol);
+    declaration -> type = return_type;
     declaration -> method_symbol = init_method;
     declaration -> method_body = block;
 
@@ -4286,11 +4291,16 @@ void Semantic::ProcessInstanceInitializers(AstClassBody *class_body)
     block -> right_brace_token = loc;
     block -> block_symbol = block_symbol;
 
+    // The return type (void).
+    AstSimpleName *return_type = ast_pool -> GenSimpleName(loc);
+    return_type -> symbol = control.void_type;
+
     // The method declaration. We leave some fields uninitialized, because
     // they are not needed in bytecode.cpp.
     AstMethodDeclaration *declaration = ast_pool -> GenMethodDeclaration();
     MethodSymbol *init_method =
         this_type -> InsertMethodSymbol(control.block_init_name_symbol);
+    declaration -> type = return_type;
     declaration -> method_symbol = init_method;
     declaration -> method_body = block;
 
