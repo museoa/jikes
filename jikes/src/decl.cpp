@@ -2097,7 +2097,7 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration* field_declaration)
             if (name_symbol != control.serialVersionUID_name_symbol)
             {
                 WarnOfAccessibleFieldWithName(SemanticError::HIDDEN_FIELD,
-                                              name, name_symbol);
+                                              name, name_symbol, access_flags.ACC_STATIC());
             }
 
             VariableSymbol* variable =

@@ -1,3 +1,9 @@
+2004-08-18  Elliott Hughes  <enh@acm.org>
+
+	* src/body.cpp, src/decl.cpp, src/semantic.h: bug #3947; ignore
+	static variables if we're looking for shadows of a non-static
+	variable, and vice versa.
+
 2004-06-25  Elliott Hughes  <enh@acm.org>
 
 	* src/decl.cpp: a fix to my fix for bug #3986; still regresses 
