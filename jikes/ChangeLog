@@ -1,3 +1,9 @@
+2001-04-26  Mo DeJong  <mdejong@redhat.com>
+
+	* src/stream.cpp (DecodeNextCharacter): Use
+	u2 type instead of wchar_t type to address
+	a 16 bit value from a char*.
+
 2001-04-20  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/long.h: fix another HP-UX aCC enum

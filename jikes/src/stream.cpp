@@ -377,8 +377,6 @@ Stream::DecodeNextCharacter() {
 
     u1 chd[2], uni_high, uni_low;
     u1 *chp  = chd;
-    // Point to 2 bytes with 16 bit type
-    wchar_t* wchp = (wchar_t *) chp;
     size_t   chl  = 2;
     size_t   srcl = 1;
     size_t n = iconv(_decoder,
@@ -401,8 +399,9 @@ Stream::DecodeNextCharacter() {
     // and clean this nasty code up -> http://www.netppl.fi/~pp/glibc21/libc_6.html#SEC91
 
     // Operate on chd buffer in endian independent fashion
-    uni_high = (u1) (*wchp);
-    uni_low = (u1) ((*wchp) >> 8);
+    u2 *p16 = (u2 *) chd;
+    uni_high = (u1) (*p16);
+    uni_low = (u1) ((*p16) >> 8);
     next = (uni_low + (uni_high * 256));
 
 #endif
