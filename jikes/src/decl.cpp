@@ -1147,10 +1147,14 @@ void Semantic::CheckForSerializationMistakes(AstClassBody* class_body)
 
     if (this_type -> IsInner())
     {
-        // FIXME: If the class implements the readObject and writeObject
-        // methods, it should be okay. But would anyone really do that?
-        ReportSemError(SemanticError::EJ_SERIALIZABLE_INNER_CLASS,
-                       class_body -> identifier_token);
+        // Was it actually this class' fault, or was the situation unavoidable?
+        if (! this_type -> super -> Implements(control.Serializable()))
+        {
+            // FIXME: If the class implements the readObject and writeObject
+            // methods, it should be okay. But would anyone really do that?
+            ReportSemError(SemanticError::EJ_SERIALIZABLE_INNER_CLASS,
+                           class_body -> identifier_token);
+        }
     }
 
     //

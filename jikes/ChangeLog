@@ -1,5 +1,10 @@
 2004-12-11  Elliott Hughes  <enh@acm.org>
 
+	* src/decl.cpp: bug #4073; don't warn about inner classes that
+	implement Serializable if they're forced to by a superclass.
+
+2004-12-11  Elliott Hughes  <enh@acm.org>
+
 	* src/symbol.cpp: bug #4090; always allocate a SymbolSet for
 	a type's subtypes.
 	* src/body.cpp, src/class.cpp, src/control.cpp, src/decl.cpp,
