@@ -39,7 +39,7 @@
             <li><a href="http://sourceforge.net/news/?group_id=128803">News</a>
             <li><a href="distribs.shtml">Distributions</a>
             <li><a href="http://sourceforge.net/project/showfiles.php?group_id=128803">Downloads</a>
-            <li><a href="/developerworks/bugs/?group_id=10">View open bugs</a>
+            <li><a href="http://sourceforge.net/tracker/?group_id=128803&amp;atid=712760&amp;status=1">View open bugs</a>
             <li><a href="faq/bug-reporting.shtml">Report bugs here</a>
             <li><a href="http://oss.software.ibm.com/developerworks/opensource/license10.html">IBM Public License</a>
           </ul>
@@ -48,7 +48,7 @@
           <ul>
 	    <li><a href="faq/dev-index.shtml">Developer's FAQ</a>
             <li><a href="cvs.shtml">CVS</a>
-            <li><a href="http://sourceforge.net/tracker/?group_id=128803&atid=712762">Patch Queue</a>
+            <li><a href="http://sourceforge.net/tracker/?group_id=128803&amp;atid=712762">Patch Queue</a>
 	    <ul>
 	      <li><a href="patchguide.shtml"><small>Patch Guidelines</small></a>
 	      <li><small><a href="http://sources.redhat.com/cgi-bin/cvsweb.cgi/~checkout~/jacks/jacks.html?cvsroot=mauve">Regression Testing Framework</a> (now in <a href="http://sources.redhat.com/mauve/">Mauve</a>)</small>
