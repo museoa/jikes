@@ -385,7 +385,8 @@ LongToDecString::LongToDecString(LongInt &num)
         str = &info[TAIL_INDEX];
         *str = U_NULL;
 
-        ULongInt n = (num.HighWord() == 0x80000000 ? (LongInt) (-num) : num); // compute the absolute value
+        // compute absolute value
+        ULongInt n = (num.HighWord() & 0x80000000 ? -num : num);
 
         do
         {
@@ -462,7 +463,7 @@ FloatToString::FloatToString(IEEEfloat &num)
             //
             decimal_exponent = (int) ceil(num.Exponent() * log10(2.0));
             f *= pow(10.0, -decimal_exponent); // shift f until it has precisely one decimal digit before the dot
-            if (floor(f) == 0.0)
+            while (floor(f) == 0.0)
             {
                 decimal_exponent--;
                 f *= 10.0;
@@ -625,7 +626,7 @@ DoubleToString::DoubleToString(IEEEdouble &num)
             //
             decimal_exponent = (int) ceil(num.Exponent() * log10(2.0));
             d *= pow(10.0, -decimal_exponent); // shift f until it has precisely one decimal digit before the dot
-            if (floor(d) == 0.0)
+            while (floor(d) == 0.0)
             {
                 decimal_exponent--;
                 d *= 10.0;

@@ -1,3 +1,11 @@
+2001-02-16  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/platform.cpp (LongToDecString,
+	FloatToString, DoubleToString):
+	Fix typo in abs calculation.
+	Avoid core dump during float
+	and double conversion.
+
 2001-02-15  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/expr.cpp (ProcessPLUS): Prevent
