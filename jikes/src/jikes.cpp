@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
                 "-debug             no effect (recognized for compatibility)\n"
                 "-depend | -Xdepend recompile all used classes\n"
                 "-deprecation       report uses of deprecated features\n"
+                "-encoding encoding use specified encoding to read source files\n"
                 "-g                 debug (generate LocalVariableTable)\n"
                 "-nowarn            do not issue warning messages\n"
                 "-nowrite           do not write any class files\n"
@@ -71,7 +72,7 @@ int main(int argc, char *argv[])
                 "+Td...d            set value of tab d...d spaces; each d is a decimal digit\n"
                 "+U                 do full dependence check including Zip and Jar files\n"
                 "+Z                 treat cautions as errors\n"
-                "\nVersion 1.07pa (9 Oct 99)"
+                "\nVersion 1.07-vz1010a (10 Oct 99)"
                 " by Philippe Charles and David Shields, IBM Research.\n"
                 "Please report problems to shields@watson.ibm.com.\n"
                 "or via browser at http://www.ibm.com/research/jikes\n");
