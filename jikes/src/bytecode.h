@@ -764,6 +764,15 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     // Return the OP_IF... bytecode that has the opposite meaning 
     unsigned int InvertIfOpCode(unsigned int opc) 
     {
+        //
+        // Unfortunately, the JVMS does not nicely specify symmetric opcodes;
+        // we must treat even-odd and odd-even pairs differently.
+        //
+        if (opc >= OP_IFNULL)
+        {
+            assert(opc <= OP_IFNONNULL);
+            return opc ^ 1;
+        }
         assert(OP_IFEQ <= opc && opc <= OP_IF_ACMPNE);
         return ((opc + 1) ^ 1) - 1;
     }

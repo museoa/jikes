@@ -1,5 +1,10 @@
 2001-10-14  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/bytecode.h (InvertIfOpCode): Fix regression caused by patch
+	167, as reported in bug 1982 - patch 205.
+
+2001-10-14  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/bytecode.h:
 	* src/bytecode.cpp (GenerateClassAccess): Fix a regression
 	reported in bug 2016 with class literal - patch 206.
