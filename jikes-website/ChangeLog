@@ -1,3 +1,12 @@
+2001-10-13  Chris Abbey  <jikes@cabbey.net>
+
+	* index.shtml: softened a bit of wording to appease the
+	IBM-Sun relationship handlers who were affraid someone
+	from Sun might be offended if they clicked through from a
+	new project that is being announced monday. Also took the
+	opportunity to add some verbage to make it clear how much
+	support IBM still gives Jikes. *cough*very*little*cough*
+
 2001-05-07  Mo DeJong  <mdejong@redhat.com>
 
 	* faq/dev-win32.shtml:

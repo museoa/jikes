@@ -79,7 +79,7 @@
     as possible.
 
 <hr>
-<p>What is Jikes<sup>TM</sup>?</p>
+<p>What is Jikes?</p>
 <P>Jikes<sup>TM</sup> is a compiler that translates Java source files as defined in
 <a href="http://www.java.sun.com/docs/books/jls">The Java Language Specification</a>
 into the bytecoded instruction set and binary format defined in
@@ -94,7 +94,7 @@ the Linux and Java communities:
     <UL>
         <LI><em>Open source</em>. <STRONG>Jikes is <A HREF="http://www.opensource.org/certification-mark.html">Certified Open Source Software</A>
             by the <A HREF="http://www.opensource.org/">Open Source Initiative</a>.</STRONG></LI>
-        <LI><em>Strictly Java compatible</em>. Jikes adheres to both The Java
+        <LI><em>Strictly Java compatible</em>. Jikes strives to adhere to both The Java
             Language Specification and The Java Virtual Machine Specification as
             tightly as possible, and does not support subsets, supersets, or
             other variations of the language. The <!--A HREF="faq.shtml"-->FAQ<!--/A--> describes
@@ -132,12 +132,14 @@ the open source arena.</P>
 <P>The original alphaWorks version of Jikes was written by Philippe Charles and Dave 
 Shields of the IBM T. J. Watson Research Center. Since the release of the source
 they have continued to work on the compiler as contributors; however recently have
-officially been moved on to other projects within IBM.
+officially been moved on to other projects within IBM. Today there are no IBMers who
+work on Jikes as part of their job description. Jikes survives today soley based on
+the free time contributions of members of the open sourse community.
 
 <P>The source code is available under
 <a href="/developerworks/opensource/license10.html">IBM's Public License</a>,
 which has been approved by the <a href="http://www.opensource.org/">OSI</a>
-(Open Source Initiative) as a fully compliant open source license.
+(Open Source Initiative) as a fully certified open source license.
 The project provides access to the complete <A HREF="cvs.shtml">CVS</A>
 development tree, which includes not only Jikes, but also the source for the Jacks
 Test Suite and the Jikes Parser Generator used to build Jikes. Members of the community
