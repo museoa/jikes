@@ -1,3 +1,9 @@
+2004-01-14  Eric Blake  <ebb9@byu.net>
+
+	* src/expr.cpp (ReportMethodNotFound): Improve error message when
+	accessing interface.clone(); it regressed from 1.18.
+	* src/config.h.in: Regenerate (missed checking this in yesterday).
+
 2004-01-13  Eric Blake  <ebb9@byu.net>
 
 	* src/m4/ac_check_error_discard_const.m4: Further autoconf fixes;
