@@ -1,3 +1,9 @@
+2000-06-26  C. Scott Ananian <cananian@lesser-magoo.lcs.mit.edu>
+
+	* src/code.h: Fix comment.
+	* src/gencode.java: Fix comment.
+	* src/stream.cpp: Fix for jitter bug number 253.
+
 2000-06-22  Andrew G. Tereschenko  <tag@ibis.odessa.ua>
 
 	* src/platform.h: Avoid using #if ! to avoid

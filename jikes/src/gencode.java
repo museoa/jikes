@@ -139,7 +139,7 @@ class gencode
             hfile.println("         assert(base[c >> LOG_COMPLEMENT_SIZE] + c < (&code[" + num_slots * SLOT_SIZE + "]));");
             hfile.println("    }");
             hfile.println();
-            hfile.println("    static inline bool IsNewline(wchar_t c) // \\r characters are replaced by \\x0a in read_input.");
+            hfile.println("    static inline bool IsNewline(wchar_t c) // \\r characters are replaced by \\x0a in Stream::ProcessInput().");
             hfile.println("    {");
             hfile.println("        return c == '\\x0a';");
             hfile.println("    }");

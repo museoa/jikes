@@ -1002,10 +1002,17 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                 break;
 
             case CR:
-                if(ch==U_LINE_FEED)
+                if (ch == U_LINE_FEED)
                 {
+                    // skip line feed if it comes right after a CR.
                     state = RAW;
-                } else if(ch==U_BACKSLASH && saved_state != UNICODE_ESCAPE_DIGIT_2)
+                } else if (ch == U_CARRIAGE_RETURN)
+                {
+                    // but if CR follows CR then the second CR is a
+                    // line feed too (and note that state=CR still, afterwards,
+                    // so that CR-CR-LF will be handled correctly). [CSA]
+                    *(++input_ptr) = U_LINE_FEED;
+                } else if (ch == U_BACKSLASH && saved_state != UNICODE_ESCAPE_DIGIT_2)
                 {
                     saved_state = CR;
                     state       = QUOTE;

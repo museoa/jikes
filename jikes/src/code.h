@@ -55,7 +55,7 @@ public:
          assert(base[c >> LOG_COMPLEMENT_SIZE] + c < (&code[39424]));
     }
 
-    static inline bool IsNewline(wchar_t c) // \r characters are replaced by \x0a in read_input.
+    static inline bool IsNewline(wchar_t c) // \r characters are replaced by \x0a in Stream::ProcessInput().
     {
         return c == '\x0a';
     }
