@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -89,10 +89,9 @@ private:
 };
 
 class Option: public JikesOption
- {
+{
 
 #ifdef WIN32_FILE_SYSTEM
-
     char main_disk, *current_directory[128];
 
 public:
@@ -111,7 +110,7 @@ public:
     {
         SetCurrentDirectory(current_directory[main_disk]);
     }
-    
+
     char *GetMainCurrentDirectory()
     {
         return current_directory[main_disk];
@@ -119,22 +118,27 @@ public:
 
     void SaveCurrentDirectoryOnDisk(char c);
 
-#endif
+#endif // WIN32_FILE_SYSTEM
 
 public:
-         
+
     Tuple<KeywordMap> keyword_map;
 
     int first_file_index;
 
+#ifdef JIKES_DEBUG
     int debug_trap_op;
 
     bool debug_dump_lex,
          debug_dump_ast,
          debug_unparse_ast,
          debug_unparse_ast_debug,
+         debug_comments,
          debug_dump_class,
-         nocleanup,
+         debug_trace_stack_change;
+#endif // JIKES_DEBUG
+
+    bool nocleanup,
          incremental,
          makefile,
          dependence_report,
@@ -143,7 +147,6 @@ public:
          unzip,
          dump_errors,
          errors,
-         comments,
          pedantic;
 
     char *dependence_report_name;

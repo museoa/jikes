@@ -1,5 +1,22 @@
 2002-01-06  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/op.h (class Operators):
+	* src/op.cpp (opdesc): Make protected, and allow null arguments.
+	* src/bytecode.h (PutNop): Delete dead code.
+	* src/bytecode.cpp (EmitAssignmentExpression): Fix bad bytecode,
+	caused by typo in patch 231 - bug 2541.
+	(PutOp): Improve debugging code. Delete giant
+	switch statement since it was duplicating op.cpp.
+	(ChangeStack):
+	* src/jikes.cpp:
+	* src/scanner.cpp:
+	* src/option.cpp (Option):
+	* src/option.h: Replace static #ifdef TRACE_STACK_CHANGE with new
+	dynamic +S option and debug_trace_stack_change, to allow easier
+	debugging of bug 2541 - patch 254.
+
+2002-01-06  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/bytecode.cpp (EmitBranchIfExpression, EmitBinaryExpression):
 	More optimizations of boolean result operations.
 	(EmitCheckForNull, EmitSuperInvocation): Remove redundant check

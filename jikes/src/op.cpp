@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -19,11 +19,11 @@ void Operators::opdesc(int opc, const char **name, const char **desc)
 {
     struct op_entry
     {
-        const char *op_name,
-                   *op_desc;
+        const char *op_name;
+        const char *op_desc;
     };
 
-    struct op_entry table[] =
+    static struct op_entry table[] =
     {
         {"nop",  "do nothing"},
         {"aconst_null",  "push null"},
@@ -229,18 +229,34 @@ void Operators::opdesc(int opc, const char **name, const char **desc)
         {"jsr_w",  "jump subroutine (wide index)"}
     };
 
-    if (opc == OP_SOFTWARE)                 // software
-         *name = *desc = "software";
-    else if (opc == OP_HARDWARE)           // hardware
-         *name = *desc = "hardware";
+    if (opc == OP_SOFTWARE)
+    {
+        if (name)
+            *name = "software";
+        if (desc)
+            *desc = "software";
+    }
+    else if (opc == OP_HARDWARE)
+    {
+        if (name)
+            *name = "hardware";
+        if (desc)
+            *desc = "hardware";
+    }
     else if (opc >=0 && opc <= 0xc9)
     {
-         *name = table[opc].op_name;
-         *desc = table[opc].op_desc;
+        if (name)
+            *name = table[opc].op_name;
+        if (desc)
+            *desc = table[opc].op_desc;
     }
-    else *name = *desc = "illegal";
-
-     return;
+    else
+    {
+        if (name)
+            *name = "illegal";
+        if (desc)
+            *desc = "illegal";
+    }
 }
 
 void Operators::opline(Tuple<cp_info *> &constant_pool, const char *hdr,

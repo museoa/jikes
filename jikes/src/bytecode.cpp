@@ -446,7 +446,7 @@ void ByteCode::CompileClass()
 #ifdef JIKES_DEBUG
     if (control.option.debug_dump_class)
         PrintCode();
-#endif
+#endif // JIKES_DEBUG
 }
 
 
@@ -536,7 +536,7 @@ void ByteCode::CompileInterface()
 #ifdef JIKES_DEBUG
     if (control.option.debug_dump_class)
         PrintCode();
-#endif
+#endif // JIKES_DEBUG
 }
 
 
@@ -746,7 +746,7 @@ void ByteCode::BeginMethod(int method_index, MethodSymbol *msym)
                 << "\" in "
                 << unit_type -> ContainingPackage() -> PackageName() << "/"
                 << unit_type -> ExternalName() << endl;
-#endif
+#endif // DUMP
     MethodInitialization();
 
     methods[method_index].SetNameIndex(RegisterUtf8(msym -> ExternalIdentity() -> Utf8_literal));
@@ -1042,13 +1042,13 @@ void ByteCode::DeclareLocalVariable(AstVariableDeclarator *declarator)
     {
 #ifdef JIKES_DEBUG
         assert(method_stack -> StartPc(declarator -> symbol) == 0xFFFF); // must be uninitialized
-#endif
+#endif // JIKES_DEBUG
 #ifdef DUMP
         Coutput << "(53) Variable \"" << declarator -> symbol -> Name()
                 << "\" numbered "
                 << declarator -> symbol -> LocalVariableIndex()
                 << " was processed" << endl;
-#endif
+#endif // DUMP
         method_stack -> StartPc(declarator -> symbol) = code_attribute -> CodeLength();
     }
 
@@ -1421,12 +1421,12 @@ void ByteCode::EmitBlockStatement(AstBlock *block)
             VariableSymbol *variable = block -> LocallyDefinedVariable(i);
 #ifdef JIKES_DEBUG
             assert(method_stack -> StartPc(variable) != 0xFFFF);
-#endif
+#endif // JIKES_DEBUG
 #ifdef DUMP
             Coutput << "(56) The symbol \"" << variable -> Name()
                     << "\" numbered " << variable -> LocalVariableIndex()
                     << " was released" << endl;
-#endif
+#endif // DUMP
             local_variable_table_attribute -> AddLocalVariable(method_stack -> StartPc(variable),
                                                                code_attribute -> CodeLength(),
                                                                RegisterUtf8(variable -> ExternalIdentity() -> Utf8_literal),
@@ -1562,7 +1562,7 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
     // supply any needed padding
     //
     while (code_attribute -> CodeLength() % 4 != 0)
-        PutNop(0);
+        PutU1(0);
 
     //
     // Note that if no default clause in switch statement, must allocate
@@ -1702,12 +1702,12 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
             {
 #ifdef JIKES_DEBUG
                 assert(method_stack -> StartPc(variable) != 0xFFFF);
-#endif
+#endif // JIKES_DEBUG
 #ifdef DUMP
                 Coutput << "(58) The symbol \"" << variable -> Name()
                         << "\" numbered " << variable -> LocalVariableIndex()
                         << " was released" << endl;
-#endif
+#endif // DUMP
                 local_variable_table_attribute -> AddLocalVariable(method_stack -> StartPc(variable),
                                                                    code_attribute -> CodeLength(),
                                                                    RegisterUtf8(variable -> ExternalIdentity() -> Utf8_literal),
@@ -3533,7 +3533,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
             }
 
             int stack_words = (GetTypeWords(left_type) +
-                               accessed_member -> ACC_STATIC() ? 0 : 1);
+                               (accessed_member -> ACC_STATIC() ? 0 : 1));
             PutOp(OP_INVOKESTATIC);
             CompleteCall(assignment_expression -> write_method, stack_words);
         }
@@ -4372,7 +4372,9 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
 }
 
 
-void ByteCode::CompleteCall(MethodSymbol *msym, int stack_words, TypeSymbol *base_type)
+void ByteCode::CompleteCall(MethodSymbol *msym,
+                            int stack_words,
+                            TypeSymbol *base_type)
 {
     ChangeStack(-stack_words);
 
@@ -5241,7 +5243,7 @@ static void op_trap()
     int i = 0; // used for debugger trap
     i++;       // avoid compiler warnings about unused variable
 }
-#endif
+#endif // JIKES_DEBUG
 
 
 ByteCode::ByteCode(TypeSymbol *unit_type) : ClassFile(unit_type),
@@ -5267,7 +5269,7 @@ ByteCode::ByteCode(TypeSymbol *unit_type) : ClassFile(unit_type),
 #ifdef JIKES_DEBUG
     if (! control.option.nowrite)
         control.class_files_written++;
-#endif
+#endif // JIKES_DEBUG
 
     SetFlags(unit_type -> Flags());
 
@@ -5762,221 +5764,20 @@ void ByteCode::PutOp(unsigned char opc)
 #ifdef JIKES_DEBUG
     if (control.option.debug_trap_op > 0 &&
         code_attribute -> CodeLength() == control.option.debug_trap_op)
-        op_trap();
-
-    //
-    // debug trick - force branch on opcode to see what opcode we are compiling
-    //
-    switch (opc)
     {
-    case OP_NOP: break;
-    case OP_ACONST_NULL: break;
-    case OP_ICONST_M1: break;
-    case OP_ICONST_0: break;
-    case OP_ICONST_1: break;
-    case OP_ICONST_2: break;
-    case OP_ICONST_3: break;
-    case OP_ICONST_4: break;
-    case OP_ICONST_5: break;
-    case OP_LCONST_0: break;
-    case OP_LCONST_1: break;
-    case OP_FCONST_0: break;
-    case OP_FCONST_1: break;
-    case OP_FCONST_2: break;
-    case OP_DCONST_0: break;
-    case OP_DCONST_1: break;
-    case OP_BIPUSH: break;
-    case OP_SIPUSH: break;
-    case OP_LDC: break;
-    case OP_LDC_W: break;
-    case OP_LDC2_W: break;
-    case OP_ILOAD: break;
-    case OP_LLOAD: break;
-    case OP_FLOAD: break;
-    case OP_DLOAD: break;
-    case OP_ALOAD: break;
-    case OP_ILOAD_0: break;
-    case OP_ILOAD_1: break;
-    case OP_ILOAD_2: break;
-    case OP_ILOAD_3: break;
-    case OP_LLOAD_0: break;
-    case OP_LLOAD_1: break;
-    case OP_LLOAD_2: break;
-    case OP_LLOAD_3: break;
-    case OP_FLOAD_0: break;
-    case OP_FLOAD_1: break;
-    case OP_FLOAD_2: break;
-    case OP_FLOAD_3: break;
-    case OP_DLOAD_0: break;
-    case OP_DLOAD_1: break;
-    case OP_DLOAD_2: break;
-    case OP_DLOAD_3: break;
-    case OP_ALOAD_0: break;
-    case OP_ALOAD_1: break;
-    case OP_ALOAD_2: break;
-    case OP_ALOAD_3: break;
-    case OP_IALOAD: break;
-    case OP_LALOAD: break;
-    case OP_FALOAD: break;
-    case OP_DALOAD: break;
-    case OP_AALOAD: break;
-    case OP_BALOAD: break;
-    case OP_CALOAD: break;
-    case OP_SALOAD: break;
-    case OP_ISTORE: break;
-    case OP_LSTORE: break;
-    case OP_FSTORE: break;
-    case OP_DSTORE: break;
-    case OP_ASTORE: break;
-    case OP_ISTORE_0: break;
-    case OP_ISTORE_1: break;
-    case OP_ISTORE_2: break;
-    case OP_ISTORE_3: break;
-    case OP_LSTORE_0: break;
-    case OP_LSTORE_1: break;
-    case OP_LSTORE_2: break;
-    case OP_LSTORE_3: break;
-    case OP_FSTORE_0: break;
-    case OP_FSTORE_1: break;
-    case OP_FSTORE_2: break;
-    case OP_FSTORE_3: break;
-    case OP_DSTORE_0: break;
-    case OP_DSTORE_1: break;
-    case OP_DSTORE_2: break;
-    case OP_DSTORE_3: break;
-    case OP_ASTORE_0: break;
-    case OP_ASTORE_1: break;
-    case OP_ASTORE_2: break;
-    case OP_ASTORE_3: break;
-    case OP_IASTORE: break;
-    case OP_LASTORE: break;
-    case OP_FASTORE: break;
-    case OP_DASTORE: break;
-    case OP_AASTORE: break;
-    case OP_BASTORE: break;
-    case OP_CASTORE: break;
-    case OP_SASTORE: break;
-    case OP_POP: break;
-    case OP_POP2: break;
-    case OP_DUP: break;
-    case OP_DUP_X1: break;
-    case OP_DUP_X2: break;
-    case OP_DUP2: break;
-    case OP_DUP2_X1: break;
-    case OP_DUP2_X2: break;
-    case OP_SWAP: break;
-    case OP_IADD: break;
-    case OP_LADD: break;
-    case OP_FADD: break;
-    case OP_DADD: break;
-    case OP_ISUB: break;
-    case OP_LSUB: break;
-    case OP_FSUB: break;
-    case OP_DSUB: break;
-    case OP_IMUL: break;
-    case OP_LMUL: break;
-    case OP_FMUL: break;
-    case OP_DMUL: break;
-    case OP_IDIV: break;
-    case OP_LDIV: break;
-    case OP_FDIV: break;
-    case OP_DDIV: break;
-    case OP_IREM: break;
-    case OP_LREM: break;
-    case OP_FREM: break;
-    case OP_DREM: break;
-    case OP_INEG: break;
-    case OP_LNEG: break;
-    case OP_FNEG: break;
-    case OP_DNEG: break;
-    case OP_ISHL: break;
-    case OP_LSHL: break;
-    case OP_ISHR: break;
-    case OP_LSHR: break;
-    case OP_IUSHR: break;
-    case OP_LUSHR: break;
-    case OP_IAND: break;
-    case OP_LAND: break;
-    case OP_IOR: break;
-    case OP_LOR: break;
-    case OP_IXOR: break;
-    case OP_LXOR: break;
-    case OP_IINC: break;
-    case OP_I2L: break;
-    case OP_I2F: break;
-    case OP_I2D: break;
-    case OP_L2I: break;
-    case OP_L2F: break;
-    case OP_L2D: break;
-    case OP_F2I: break;
-    case OP_F2L: break;
-    case OP_F2D: break;
-    case OP_D2I: break;
-    case OP_D2L: break;
-    case OP_D2F: break;
-    case OP_I2B: break;
-    case OP_I2C: break;
-    case OP_I2S: break;
-    case OP_LCMP: break;
-    case OP_FCMPL: break;
-    case OP_FCMPG: break;
-    case OP_DCMPL: break;
-    case OP_DCMPG: break;
-    case OP_IFEQ: break;
-    case OP_IFNE: break;
-    case OP_IFLT: break;
-    case OP_IFGE: break;
-    case OP_IFGT: break;
-    case OP_IFLE: break;
-    case OP_IF_ICMPEQ: break;
-    case OP_IF_ICMPNE: break;
-    case OP_IF_ICMPLT: break;
-    case OP_IF_ICMPGE: break;
-    case OP_IF_ICMPGT: break;
-    case OP_IF_ICMPLE: break;
-    case OP_IF_ACMPEQ: break;
-    case OP_IF_ACMPNE: break;
-    case OP_GOTO: break;
-    case OP_JSR: break;
-    case OP_RET: break;
-    case OP_TABLESWITCH: break;
-    case OP_LOOKUPSWITCH: break;
-    case OP_IRETURN: break;
-    case OP_LRETURN: break;
-    case OP_FRETURN: break;
-    case OP_DRETURN: break;
-    case OP_ARETURN: break;
-    case OP_RETURN: break;
-    case OP_GETSTATIC: break;
-    case OP_PUTSTATIC: break;
-    case OP_GETFIELD: break;
-    case OP_PUTFIELD: break;
-    case OP_INVOKEVIRTUAL: break;
-    case OP_INVOKESPECIAL: break;
-    case OP_INVOKESTATIC: break;
-    case OP_INVOKEINTERFACE: break;
-    case OP_XXXUNUSEDXXX: break;
-    case OP_NEW: break;
-    case OP_NEWARRAY: break;
-    case OP_ANEWARRAY: break;
-    case OP_ARRAYLENGTH: break;
-    case OP_ATHROW: break;
-    case OP_CHECKCAST: break;
-    case OP_INSTANCEOF: break;
-    case OP_MONITORENTER: break;
-    case OP_MONITOREXIT: break;
-    case OP_WIDE: break;
-    case OP_MULTIANEWARRAY: break;
-    case OP_IFNULL: break;
-    case OP_IFNONNULL: break;
-    case OP_GOTO_W: break;
-    case OP_JSR_W: break;
-    case OP_SOFTWARE: break;
-    case OP_HARDWARE: break;
+        op_trap();
     }
-#endif
 
-    last_op_pc = code_attribute -> CodeLength(); // save pc at start of operation
+    if (control.option.debug_trace_stack_change)
+    {
+        const char *opname;
+        opdesc(opc, &opname, NULL);
+        Coutput << "opcode: " << opname << endl;
+    }
+#endif // JIKES_DEBUG
+
+    // save pc at start of operation
+    last_op_pc = code_attribute -> CodeLength();
     code_attribute -> AddCode(opc);
     ChangeStack(stack_effect[opc]);
 }
@@ -6021,11 +5822,12 @@ void ByteCode::ChangeStack(int i)
     if (i > 0 && stack_depth > max_stack)
         max_stack = stack_depth;
 
-#ifdef TRACE_STACK_CHANGE
-    Coutput << "stack change: pc " << last_op_pc << " change " << i
-            << "  stack_depth " << stack_depth << "  max_stack: " << max_stack
-            << endl;
-#endif
+#ifdef JIKES_DEBUG
+    if (control.option.debug_trace_stack_change)
+        Coutput << "stack change: pc " << last_op_pc << " change " << i
+                << "  stack_depth " << stack_depth << "  max_stack: "
+                << max_stack << endl;
+#endif // JIKES_DEBUG
 }
 
 

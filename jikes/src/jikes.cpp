@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -76,6 +76,7 @@ int main(int argc, char *argv[])
                "+C                  dump bytecodes to standard output\n"
                "+L                  dump lexer output (stream of tokens) to file.java.tok\n"
                "+O numbytes         call no-op op_trap() for bytecodes of the given length\n"
+               "+S                  trace method stack depth to standard output\n"
                "+u                  unparse AST; produces Java code for the AST\n"
                "+ud                 unparse AST, with extra debugging information\n"
 #endif

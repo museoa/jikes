@@ -2,7 +2,7 @@
 //
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -840,19 +840,16 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         code_attribute -> AddCode(i & 0xff);
     }
 
-
     void PutI2(i2 i)
     {
         code_attribute -> AddCode((i >> 8) & 0xff);
         code_attribute -> AddCode(i & 0xff);
     }
 
-
     void PutU1(u1 u)
     {
         code_attribute -> AddCode(u & 0xff);
     }
-
 
     void PutU2(u2 u)
     {
@@ -860,32 +857,12 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         code_attribute -> AddCode(u & 0xff);
     }
 
-
     void PutU4(u4 u)
     {
         code_attribute -> AddCode((u >> 24));
         code_attribute -> AddCode((u >> 16) & 0xff);
         code_attribute -> AddCode((u >>  8) & 0xff);
         code_attribute -> AddCode(u & 0xff);
-    }
-
-
-    //
-    // emit NOP. The NOP can be replaced by the next instruction if
-    // optional is set; otherwise it must be kept.
-    //
-    void PutNop(int optional)
-    {
-        PutOp(OP_NOP);
-
-        //
-        // this optimization is causing more trouble than it's worth.
-        // latest problem (27 jan 97) was reported by Derek, in that
-        // nop just before label definition, resulted in operation generated
-        // after label def. being moved before the def! Since it's such a sin
-        // to generate junk code, disable the "nop" optimization.
-        //  if (optional) last_op_nop = 1;
-        //
     }
 
     void FinishCode(TypeSymbol *);

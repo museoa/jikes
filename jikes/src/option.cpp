@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -290,12 +290,16 @@ static inline char* makeStrippedCopy(char* value)
 
 Option::Option(ArgumentExpander& arguments,
                Tuple<OptionError *>& bad_options) : first_file_index(arguments.argc),
+#ifdef JIKES_DEBUG
                                                     debug_trap_op(0),
                                                     debug_dump_lex(false),
                                                     debug_dump_ast(false),
                                                     debug_unparse_ast(false),
                                                     debug_unparse_ast_debug(false),
+                                                    debug_comments(false),
                                                     debug_dump_class(false),
+                                                    debug_trace_stack_change(false),
+#endif // JIKES_DEBUG
                                                     nocleanup(false),
                                                     incremental(false),
                                                     makefile(false),
@@ -305,13 +309,12 @@ Option::Option(ArgumentExpander& arguments,
                                                     unzip(false),
                                                     dump_errors(false),
                                                     errors(true),
-                                                    comments(false),
                                                     pedantic(false),
                                                     dependence_report_name(NULL)
 {
 #ifdef WIN32_FILE_SYSTEM
     for (int j = 0; j < 128; j++)
-         current_directory[j] = NULL;
+        current_directory[j] = NULL;
 
     char tmp[1];
     DWORD directory_length = GetCurrentDirectory(0, tmp); // first, get the right size
@@ -418,7 +421,7 @@ Option::Option(ArgumentExpander& arguments,
                  depend = true;
             else if (strcmp(arguments.argv[i], "-deprecation") == 0 ||
                      strcmp(arguments.argv[i], "--deprecation") == 0)
-                 deprecation = true;
+                deprecation = true;
             else if (strcmp(arguments.argv[i], "-encoding") == 0 ||
                      strcmp(arguments.argv[i], "--encoding") == 0)
             {
@@ -490,19 +493,19 @@ Option::Option(ArgumentExpander& arguments,
                      strcmp(arguments.argv[i], "--help") == 0 ||
                      strcmp(arguments.argv[i], "-h") == 0 ||
                      strcmp(arguments.argv[i], "-?") == 0)
-                 help = true;
+                help = true;
             else if (arguments.argv[i][1] == 'J')
-                 ; // Ignore for compatibility.
+                ; // Ignore for compatibility.
             else if (strcmp(arguments.argv[i], "-nowarn") == 0 ||
                      strcmp(arguments.argv[i], "--nowarn") == 0 ||
                      strcmp(arguments.argv[i], "-q") == 0)
-                 nowarn = true;
+                nowarn = true;
             else if (strcmp(arguments.argv[i], "-nowrite") == 0 ||
                      strcmp(arguments.argv[i], "--nowrite") == 0)
-                 nowrite = true;
+                nowrite = true;
             else if (strcmp(arguments.argv[i], "-O") == 0 ||
                      strcmp(arguments.argv[i], "--optimize") == 0)
-                 optimize = true;
+                optimize = true;
             else if (strcmp(arguments.argv[i], "-source") == 0 ||
                      strcmp(arguments.argv[i], "--source") == 0)
             {
@@ -580,39 +583,29 @@ Option::Option(ArgumentExpander& arguments,
         {
             if (strcmp(arguments.argv[i], "++") == 0)
             {
-                 incremental = true;
-                 full_check = true;
+                incremental = true;
+                full_check = true;
             }
-#ifdef JIKES_DEBUG
-            else if (strcmp(arguments.argv[i], "+A") == 0)
-                 debug_dump_ast = true;
-            else if (strcmp(arguments.argv[i], "+u") == 0)
-                 debug_unparse_ast = true;
-            else if (strcmp(arguments.argv[i], "+ud") == 0)
-            {
-                debug_unparse_ast = true;
-                debug_unparse_ast_debug = true;
-            }
-#endif // JIKES_DEBUG
             else if (strcmp(arguments.argv[i], "+B") == 0)
-                 bytecode = false;
-#ifdef JIKES_DEBUG
-            else if (strcmp(arguments.argv[i], "+c") == 0)
-                 comments = true;
-            else if (strcmp(arguments.argv[i], "+C") == 0)
-                 debug_dump_class = true;
-#endif // JIKES_DEBUG
-            else if (strcmp(arguments.argv[i], "+OLDCSO") == 0)
-                 old_classpath_search_order = true;
+                bytecode = false;
             else if (strcmp(arguments.argv[i], "+D") == 0)
             {
-                 dump_errors = true;
-                 errors = false;
-            }
-            else if (strcmp(arguments.argv[i], "+E") == 0)
-            {
+                dump_errors = true;
                 errors = false;
             }
+            else if (strncmp(arguments.argv[i], "+DR=", 4) == 0)
+            {
+                makefile = true;
+                dependence_report=true;
+                full_check = true;
+                dependence_report_name =
+                    new char[strlen(&arguments.argv[i][4]) + 1];
+                strcpy(dependence_report_name, &arguments.argv[i][4]);
+            }
+            else if (strcmp(arguments.argv[i], "+E") == 0)
+                errors = false;
+            else if (strcmp(arguments.argv[i], "+F") == 0)
+                full_check = true;
             else if (arguments.argv[i][1] == 'K')
             {
                 char *name = arguments.argv[i] + 2,
@@ -628,21 +621,21 @@ Option::Option(ArgumentExpander& arguments,
                     image++;
 
                     if (strcmp(image, "boolean") == 0)
-                         key = TK_boolean;
+                        key = TK_boolean;
                     else if (strcmp(image, "byte") == 0)
-                         key = TK_byte;
+                        key = TK_byte;
                     else if (strcmp(image, "char") == 0)
-                         key = TK_char;
+                        key = TK_char;
                     else if (strcmp(image, "short") == 0)
-                         key = TK_short;
+                        key = TK_short;
                     else if (strcmp(image, "int") == 0)
-                         key = TK_int;
+                        key = TK_int;
                     else if (strcmp(image, "long") == 0)
-                         key = TK_long;
+                        key = TK_long;
                     else if (strcmp(image, "float") == 0)
-                         key = TK_float;
+                        key = TK_float;
                     else if (strcmp(image, "double") == 0)
-                         key = TK_double;
+                        key = TK_double;
                     else bad_options.Next() = new OptionError(OptionError::INVALID_K_TARGET, image);
 
                     if (key != 0)
@@ -656,31 +649,15 @@ Option::Option(ArgumentExpander& arguments,
                     }
                 }
             }
-            else if (strcmp(arguments.argv[i], "+F") == 0)
-                 full_check = true;
             else if (strcmp(arguments.argv[i], "+M") == 0)
             {
-                 makefile = true;
-                 full_check = true;
+                makefile = true;
+                full_check = true;
             }
-            else if (strncmp(arguments.argv[i], "+DR=", 4) == 0)
-            {
-                 makefile = true;
-                 dependence_report=true;
-                 full_check = true;
-                 dependence_report_name =
-                     new char[strlen(&arguments.argv[i][4]) + 1];
-                 strcpy(dependence_report_name, &arguments.argv[i][4]);
-            }
-#ifdef JIKES_DEBUG
-            else if (strcmp(arguments.argv[i], "+O") == 0)
-            {
-                 debug_trap_op = atoi(arguments.argv[i + 1]);
-                 i++;
-            }
-#endif // JIKES_DEBUG
+            else if (strcmp(arguments.argv[i], "+OLDCSO") == 0)
+                old_classpath_search_order = true;
             else if (strcmp(arguments.argv[i], "+P") == 0)
-                 pedantic = true;
+                pedantic = true;
             else if (arguments.argv[i][1] == 'T')
             {
                 int tab_size = 0;
@@ -696,17 +673,34 @@ Option::Option(ArgumentExpander& arguments,
                      bad_options.Next() = new OptionError(OptionError::INVALID_TAB_VALUE, image);
                 Tab::SetTabSize(tab_size == 0 ? Tab::DEFAULT_TAB_SIZE : tab_size);
             }
-#ifdef JIKES_DEBUG
-            else if (strcmp(arguments.argv[i], "+L") == 0)
-                 debug_dump_lex = true;
-#endif // JIKES_DEBUG
             else if (strcmp(arguments.argv[i], "+U") == 0)
             {
-                 unzip = true;
-                 full_check = true;
+                unzip = true;
+                full_check = true;
             }
             else if (strcmp(arguments.argv[i], "+Z") == 0)
-                 zero_defect = true;
+                zero_defect = true;
+#ifdef JIKES_DEBUG
+            else if (strcmp(arguments.argv[i], "+A") == 0)
+                debug_dump_ast = true;
+            else if (strcmp(arguments.argv[i], "+c") == 0)
+                debug_comments = true;
+            else if (strcmp(arguments.argv[i], "+C") == 0)
+                debug_dump_class = true;
+            else if (strcmp(arguments.argv[i], "+L") == 0)
+                debug_dump_lex = true;
+            else if (strcmp(arguments.argv[i], "+O") == 0)
+                debug_trap_op = atoi(arguments.argv[++i]);
+            else if (strcmp(arguments.argv[i], "+S") == 0)
+                debug_trace_stack_change = true;
+            else if (strcmp(arguments.argv[i], "+u") == 0)
+                debug_unparse_ast = true;
+            else if (strcmp(arguments.argv[i], "+ud") == 0)
+            {
+                debug_unparse_ast = true;
+                debug_unparse_ast_debug = true;
+            }
+#endif // JIKES_DEBUG
             else bad_options.Next() = new OptionError(OptionError::INVALID_OPTION, arguments.argv[i]);
         }
         else filename_index.Next() = i;
@@ -784,7 +778,7 @@ Option::~Option()
 #ifdef WIN32_FILE_SYSTEM
     for (char c = 'a'; c <= 'z'; c++)
         delete [] current_directory[c];
-#endif
+#endif // WIN32_FILE_SYSTEM
 
     return;
 }

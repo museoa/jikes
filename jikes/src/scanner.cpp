@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -124,8 +124,6 @@ Scanner::Scanner(Control &control_) : control(control_)
     classify_token[U_COMMA]              = &Scanner::ClassifyComma;
     classify_token[U_DOT]                = &Scanner::ClassifyPeriod;
     classify_token[U_EQUAL]              = &Scanner::ClassifyEqual;
-
-    return;
 }
 
 
@@ -141,7 +139,8 @@ void Scanner::Initialize(FileSymbol *file_symbol)
     current_token = &(lex -> token_stream[current_token_index]);
     current_token -> SetKind(0);
 
-    if (control.option.comments)
+#ifdef JIKES_DEBUG
+    if (control.option.debug_comments)
     {
         LexStream::Comment *current_comment = &(lex -> comment_stream.Next()); // add 0th comment !
         current_comment -> string = NULL;
@@ -149,10 +148,9 @@ void Scanner::Initialize(FileSymbol *file_symbol)
         current_comment -> previous_token = -1; // No token precedes this comment
         current_comment -> location = 0;
     }
+#endif // JIKES_DEBUG
 
     lex -> line_location.Next() = 0; // mark starting location of line # 0
-
-    return;
 }
 
 
@@ -166,8 +164,6 @@ void Scanner::SetUp(FileSymbol *file_symbol)
     Initialize(file_symbol);
     lex -> CompressSpace();
     file_symbol -> lex_stream = lex;
-
-    return;
 }
 
 
@@ -207,8 +203,6 @@ void Scanner::Scan(FileSymbol *file_symbol)
     }
 
     file_symbol -> lex_stream = lex;
-
-    return;
 }
 
 
@@ -255,8 +249,6 @@ void Scanner::Scan()
         lex -> token_stream[left_brace].SetRightBrace(current_token_index);
         brace_stack.Pop();
     }
-
-    return;
 }
 
 
@@ -267,10 +259,15 @@ void Scanner::Scan()
 //
 void Scanner::ScanStarComment()
 {
-    LexStream::Comment *current_comment = (control.option.comments ? &(lex -> comment_stream.Next()) : new LexStream::Comment());
+    unsigned location = cursor - lex -> InputBuffer();
+#ifdef JIKES_DEBUG
+    LexStream::Comment *current_comment = (control.option.debug_comments
+                                           ? &(lex -> comment_stream.Next())
+                                           : new LexStream::Comment());
     current_comment -> string = NULL;
     current_comment -> previous_token = current_token_index; // the token that precedes this comment
-    current_comment -> location = cursor - lex -> InputBuffer();
+    current_comment -> location = location;
+#endif // JIKES_DEBUG
 
     cursor += 2;
 
@@ -320,10 +317,12 @@ void Scanner::ScanStarComment()
             case U_SLASH:
                 if (state == STAR)
                 {
+#ifdef JIKES_DEBUG
                     current_comment -> length = ((cursor - lex -> InputBuffer()) -
                                                  current_comment -> location);
-                    if (! control.option.comments)
+                    if (! control.option.debug_comments)
                         delete current_comment;
+#endif // JIKES_DEBUG
                     return;
                 }
                 // fallthrough
@@ -361,9 +360,11 @@ void Scanner::ScanStarComment()
                 if (*cursor == U_SLASH)
                 {
                     cursor++;
+#ifdef JIKES_DEBUG
                     current_comment -> length = (cursor - lex -> InputBuffer()) - current_comment -> location;
-                    if (! control.option.comments)
+                    if (! control.option.debug_comments)
                         delete current_comment;
+#endif // JIKES_DEBUG
                     return;
                 }
             }
@@ -381,17 +382,16 @@ void Scanner::ScanStarComment()
     //
     cursor -= 2;
     lex -> bad_tokens.Next().Initialize(StreamError::UNTERMINATED_COMMENT,
-                                        current_comment -> location,
+                                        location,
                                         (unsigned) (cursor - lex -> InputBuffer()) - 1,
                                         lex);
 
+#ifdef JIKES_DEBUG
     current_comment -> length = ((cursor - lex -> InputBuffer()) -
                                  current_comment -> location);
-
-    if (! control.option.comments)
+    if (! control.option.debug_comments)
         delete current_comment;
-
-    return;
+#endif // JIKES_DEBUG
 }
 
 
@@ -400,7 +400,8 @@ void Scanner::ScanStarComment()
 //
 void Scanner::ScanSlashComment()
 {
-    if (control.option.comments)
+#ifdef JIKES_DEBUG
+    if (control.option.debug_comments)
     {
         LexStream::Comment *current_comment = &(lex -> comment_stream.Next());
         current_comment -> string = NULL;
@@ -409,14 +410,11 @@ void Scanner::ScanSlashComment()
         for (cursor += 2; ! Code::IsNewline(*cursor); cursor++)  // skip all until \n
             ;
         current_comment -> length = (cursor - lex -> InputBuffer()) - current_comment -> location;
+        return;
     }
-    else
-    {
-        for (cursor += 2; ! Code::IsNewline(*cursor); cursor++)  // skip all until \n
-            ;
-    }
-
-    return;
+#endif // JIKES_DEBUG
+    for (cursor += 2; ! Code::IsNewline(*cursor); cursor++)  // skip all until \n
+        ;
 }
 
 
@@ -449,8 +447,6 @@ inline void Scanner::SkipSpaces()
             else break;
         }
     } while (Code::IsSpace(*cursor));
-
-    return;
 }
 
 
@@ -790,8 +786,6 @@ inline void Scanner::CheckOctalLiteral(wchar_t *cursor, wchar_t *tail)
                                                 (unsigned) (cursor - lex -> InputBuffer()),
                                                 (unsigned) (tail - lex -> InputBuffer()) - 1, lex);
     }
-
-    return;
 }
 
 
@@ -841,7 +835,6 @@ void Scanner::ClassifyCharLiteral()
     current_token -> SetSymbol(control.char_table.FindOrInsertLiteral(cursor, ptr - cursor));
 
     cursor = ptr;
-    return;
 }
 
 
@@ -884,7 +877,6 @@ void Scanner::ClassifyStringLiteral()
     current_token -> SetSymbol(control.string_table.FindOrInsertLiteral(cursor, ptr - cursor));
 
     cursor = ptr;
-    return;
 }
 
 
@@ -967,8 +959,6 @@ void Scanner::ClassifyIdOrKeyword()
     }
 
     cursor = ptr;
-
-    return;
 }
 
 /**********************************************************************/
@@ -1007,7 +997,6 @@ void Scanner::ClassifyId()
     }
 
     cursor = ptr;
-    return;
 }
 
 
@@ -1159,7 +1148,6 @@ void Scanner::ClassifyNumericLiteral()
     /******************************************************************/
 
     cursor = ptr;
-    return;
 }
 
 
@@ -1171,8 +1159,6 @@ void Scanner::ClassifyColon()
     current_token -> SetKind(TK_COLON);
 
     cursor++;
-
-    return;
 }
 
 
@@ -1194,8 +1180,6 @@ void Scanner::ClassifyPlus()
         current_token -> SetKind(TK_PLUS_EQUAL);
     }
     else current_token -> SetKind(TK_PLUS);
-
-    return;
 }
 
 
@@ -1217,8 +1201,6 @@ void Scanner::ClassifyMinus()
         current_token -> SetKind(TK_MINUS_EQUAL);
     }
     else current_token -> SetKind(TK_MINUS);
-
-    return;
 }
 
 
@@ -1235,8 +1217,6 @@ void Scanner::ClassifyStar()
         current_token -> SetKind(TK_MULTIPLY_EQUAL);
     }
     else current_token -> SetKind(TK_MULTIPLY);
-
-    return;
 }
 
 
@@ -1253,8 +1233,6 @@ void Scanner::ClassifySlash()
         current_token -> SetKind(TK_DIVIDE_EQUAL);
     }
     else current_token -> SetKind(TK_DIVIDE);
-
-    return;
 }
 
 
@@ -1282,8 +1260,6 @@ void Scanner::ClassifyLess()
         else current_token -> SetKind(TK_LEFT_SHIFT);
     }
     else current_token -> SetKind(TK_LESS);
-
-    return;
 }
 
 
@@ -1322,8 +1298,6 @@ void Scanner::ClassifyGreater()
         else current_token -> SetKind(TK_RIGHT_SHIFT);
     }
     else current_token -> SetKind(TK_GREATER);
-
-    return;
 }
 
 
@@ -1345,8 +1319,6 @@ void Scanner::ClassifyAnd()
         current_token -> SetKind(TK_AND_EQUAL);
     }
     else current_token -> SetKind(TK_AND);
-
-    return;
 }
 
 
@@ -1368,8 +1340,6 @@ void Scanner::ClassifyOr()
         current_token -> SetKind(TK_OR_EQUAL);
     }
     else current_token -> SetKind(TK_OR);
-
-    return;
 }
 
 
@@ -1386,8 +1356,6 @@ void Scanner::ClassifyXor()
         current_token -> SetKind(TK_XOR_EQUAL);
     }
     else current_token -> SetKind(TK_XOR);
-
-    return;
 }
 
 
@@ -1404,8 +1372,6 @@ void Scanner::ClassifyNot()
         current_token -> SetKind(TK_NOT_EQUAL);
     }
     else current_token -> SetKind(TK_NOT);
-
-    return;
 }
 
 
@@ -1422,8 +1388,6 @@ void Scanner::ClassifyEqual()
         current_token -> SetKind(TK_EQUAL_EQUAL);
     }
     else current_token -> SetKind(TK_EQUAL);
-
-    return;
 }
 
 
@@ -1440,8 +1404,6 @@ void Scanner::ClassifyMod()
         current_token -> SetKind(TK_REMAINDER_EQUAL);
     }
     else current_token -> SetKind(TK_REMAINDER);
-
-    return;
 }
 
 
@@ -1458,8 +1420,6 @@ void Scanner::ClassifyPeriod()
 
         cursor++;
     }
-
-    return;
 }
 
 
@@ -1471,8 +1431,6 @@ void Scanner::ClassifySemicolon()
     current_token -> SetKind(TK_SEMICOLON);
 
     cursor++;
-
-    return;
 }
 
 
@@ -1484,8 +1442,6 @@ void Scanner::ClassifyComma()
     current_token -> SetKind(TK_COMMA);
 
     cursor++;
-
-    return;
 }
 
 
@@ -1504,8 +1460,6 @@ void Scanner::ClassifyLbrace()
     current_token -> SetKind(TK_LBRACE);
 
     cursor++;
-
-    return;
 }
 
 
@@ -1529,8 +1483,6 @@ void Scanner::ClassifyRbrace()
     current_token -> SetKind(TK_RBRACE);
 
     cursor++;
-
-    return;
 }
 
 
@@ -1542,8 +1494,6 @@ void Scanner::ClassifyLparen()
     current_token -> SetKind(TK_LPAREN);
 
     cursor++;
-
-    return;
 }
 
 
@@ -1555,8 +1505,6 @@ void Scanner::ClassifyRparen()
     current_token -> SetKind(TK_RPAREN);
 
     cursor++;
-
-    return;
 }
 
 
@@ -1568,8 +1516,6 @@ void Scanner::ClassifyLbracket()
     current_token -> SetKind(TK_LBRACKET);
 
     cursor++;
-
-    return;
 }
 
 
@@ -1581,8 +1527,6 @@ void Scanner::ClassifyRbracket()
     current_token -> SetKind(TK_RBRACKET);
 
     cursor++;
-
-    return;
 }
 
 
@@ -1594,8 +1538,6 @@ void Scanner::ClassifyComplement()
     current_token -> SetKind(TK_TWIDDLE);
 
     cursor++;
-
-    return;
 }
 
 
@@ -1617,8 +1559,6 @@ void Scanner::ClassifyBadToken()
     {
         current_token -> SetKind(TK_EOF);
     }
-
-    return;
 }
 
 
@@ -1631,8 +1571,6 @@ void Scanner::ClassifyQuestion()
     current_token -> SetKind(TK_QUESTION);
 
     cursor++;
-
-    return;
 }
 
 
@@ -1645,7 +1583,6 @@ void Scanner::ClassifyNonAsciiUnicode()
         ClassifyId();
     else 
         ClassifyBadToken();
-    return;
 }
 
 #ifdef HAVE_JIKES_NAMESPACE
