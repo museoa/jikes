@@ -407,6 +407,6 @@ zip.@O@:  $(srcdir)/zip.cpp $(srcdir)/config.h $(srcdir)/control.h \
           $(srcdir)/zip.h $(srcdir)/unzip.h 
 	$(CC) $(CCFLAGS) $(srcdir)/zip.cpp 
 
-segment.@O@:  $SRCdir/segment.cpp$(srcdir)/segment.h $(srcdir)/tuple.h $(srcdir)/config.h 
+segment.@O@:  $(srcdir)/segment.cpp $(srcdir)/segment.h $(srcdir)/tuple.h $(srcdir)/config.h 
 	$(CC) $(CCFLAGS) $(srcdir)/segment.cpp
 

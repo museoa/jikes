@@ -825,9 +825,9 @@ public:
     VariableSymbol *FindOrInsertClassLiteral(TypeSymbol *);
     VariableSymbol *FindOrInsertLocalShadow(VariableSymbol *);
 
-    MethodSymbol *GetReadAccessMethod(MethodSymbol *);
-    MethodSymbol *GetReadAccessMethod(VariableSymbol *);
-    MethodSymbol *GetWriteAccessMethod(VariableSymbol *);
+    static MethodSymbol *GetReadAccessMethod(MethodSymbol *);
+    static MethodSymbol *GetReadAccessMethod(VariableSymbol *);
+    static MethodSymbol *GetWriteAccessMethod(VariableSymbol *);
 
     bool IsArray() { return (num_dimensions > 0); }
 

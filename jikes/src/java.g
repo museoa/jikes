@@ -2712,7 +2712,7 @@ void Parser::MakeLabeledStatement(void)
         p -> right_brace_token = Sym(3) -> RightToken();
     }
 
-    p -> label_token_opt = Token(1); // add label to statement
+    p -> AddLabel(Token(1)); // add label to statement
     Sym(1) = p; // The final result is a block containing the labeled-statement
 }
 ./

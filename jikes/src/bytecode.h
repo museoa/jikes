@@ -65,7 +65,8 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         max_block_depth,
         last_parameter_index; // set to local variable index of last parameter
 
-    bool string_overflow;
+    bool string_overflow,
+         library_method_not_found;
 
     Code_attribute *code_attribute; // code for current method ?
     LineNumberTable_attribute *line_number_table_attribute;
@@ -152,22 +153,6 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     bool IsLabelUsed(Label &lab)
     {
         return (lab.uses.Length() > 0);
-    }
-
-
-    //
-    // methods to determine type
-    //
-    bool IsDefaultValue(AstExpression *);
-
-    //
-    //  Methods to query attributes
-    // return true if p refers to local variable, false otherwise
-    //
-    bool IsLocal(AstExpression *p)
-    {
-        VariableSymbol *sym = p -> symbol -> VariableCast();
-        return (sym && sym -> owner -> MethodCast());
     }
 
 
@@ -267,27 +252,35 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void LoadLocal(int varno, TypeSymbol *);
     void StoreLocalVariable(VariableSymbol *);
     void StoreLocal(int varno, TypeSymbol *);
-    int  GetConstant(LiteralValue *, TypeSymbol *);
-    int  LoadLiteral(LiteralValue *, TypeSymbol *);
     void LoadReference(AstExpression *);
-    void LoadShort(int val);
-    void LoadInteger(int val);
+    void LoadLiteral(LiteralValue *, TypeSymbol *);
+    void LoadImmediateInteger(int);
     int  LoadVariable(int, AstExpression *);
     int  LoadArrayElement(TypeSymbol *);
     void StoreArrayElement(TypeSymbol *);
     void StoreField(AstExpression *);
     void StoreVariable(int, AstExpression *);
 
-    //
-    // here to load a constant when the LiteralValue is set.
-    //
-    int LoadConstant(AstExpression *p)
+    void LoadConstantAtIndex(u2 index)
     {
-        assert (p -> IsConstant());
+        if (index <= 255)
+        {
+            PutOp(OP_LDC);
+            PutU1((u1) index);
+        }
+        else
+        {
+            PutOp(OP_LDC_W);
+            PutU2(index);
+        }
 
-        return LoadLiteral(p -> value, p -> Type());
+        return;
     }
 
+    //
+    // These pools are sets that keep track of elements that have
+    // already been inserted in the constant pool.
+    //
     SegmentPool segment_pool;
 
     Pair *double_constant_pool_index,
@@ -302,226 +295,6 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     Triplet *name_and_type_constant_pool_index,
             *fieldref_constant_pool_index,
             *methodref_constant_pool_index;
-
-    //
-    // unlike most methods, which always build a new entry, the
-    // 'register' methods only build a new entry for a literal if one has net
-    // yet been built.
-    //
-    int method_clone_index,
-        method_clone_getmessage_index,
-        method_clone_init_index,
-        method_stringbuffer_tostring_index,
-        method_stringbuffer_init_index,
-        method_stringbuffer_string_init_index,
-        method_stringbuffer_appendchararray_index,
-        method_stringbuffer_appendchar_index,
-        method_stringbuffer_appendboolean_index,
-        method_stringbuffer_appendint_index,
-        method_stringbuffer_appendlong_index,
-        method_stringbuffer_appendfloat_index,
-        method_stringbuffer_appenddouble_index,
-        method_stringbuffer_appendstring_index,
-        method_stringbuffer_appendobject_index;
-
-    u2 RegisterMethodClone()
-    {
-        if (method_clone_index == 0)
-        {
-            method_clone_index = RegisterMethodref(this_control.java_SL_lang_SL_Object_literal,
-                                                   this_control.clone_literal,
-                                                   this_control.LP_RP_Ljava_SL_lang_SL_Object_SC_literal);
-        }
-
-        return method_clone_index;
-    }
-
-
-    u2 RegisterMethodCloneGetmessage()
-    {
-        if (method_clone_getmessage_index == 0)
-        {
-            method_clone_getmessage_index = RegisterMethodref(this_control.java_SL_lang_SL_Throwable_literal,
-                                                              this_control.getMessage_literal,
-                                                              this_control.LP_RP_Ljava_SL_lang_SL_String_SC_literal);
-        }
-
-        return method_clone_getmessage_index;
-    }
-
-
-    u2 RegisterMethodCloneInit()
-    {
-        if (method_clone_init_index == 0)
-        {
-            method_clone_init_index = RegisterMethodref(this_control.java_SL_lang_SL_InternalError_literal,
-                                                        this_control.LT_init_GT_literal,
-                                                        this_control.LP_Ljava_SL_lang_SL_String_SC_RP_V_literal);
-        }
-
-        return method_clone_init_index;
-    }
-
-
-    u2 RegisterMethodStringbufferTostring()
-    {
-        if (method_stringbuffer_tostring_index == 0)
-        {
-            method_stringbuffer_tostring_index = RegisterMethodref(this_control.java_SL_lang_SL_StringBuffer_literal,
-                                                                   this_control.toString_literal,
-                                                                   this_control.LP_RP_Ljava_SL_lang_SL_String_SC_literal);
-        }
-
-        return method_stringbuffer_tostring_index;
-    }
-
-
-    u2 RegisterMethodStringbufferInit()
-    {
-        if (method_stringbuffer_init_index == 0)
-        {
-            method_stringbuffer_init_index = RegisterMethodref(this_control.java_SL_lang_SL_StringBuffer_literal,
-                                                               this_control.LT_init_GT_literal,
-                                                               this_control.LP_RP_V_literal);
-        }
-
-        return method_stringbuffer_init_index;
-    }
-
-
-    u2 RegisterMethodStringbufferStringInit()
-    {
-        if (method_stringbuffer_string_init_index == 0)
-        {
-            method_stringbuffer_string_init_index = RegisterMethodref(this_control.java_SL_lang_SL_StringBuffer_literal,
-                                                                      this_control.LT_init_GT_literal,
-                                                                      this_control.LP_Ljava_SL_lang_SL_String_SC_RP_V_literal);
-        }
-
-        return method_stringbuffer_string_init_index;
-    }
-
-
-    u2 RegisterMethodStringbufferAppendchararray()
-    {
-        if (method_stringbuffer_appendchararray_index == 0)
-        {
-            method_stringbuffer_appendchararray_index =
-                   RegisterMethodref(this_control.java_SL_lang_SL_StringBuffer_literal,
-                                     this_control.append_literal,
-                                     this_control.LP_LB_C_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal);
-        }
-
-        return method_stringbuffer_appendchararray_index;
-    }
-
-
-    u2 RegisterMethodStringbufferAppendchar()
-    {
-        if (method_stringbuffer_appendchar_index == 0)
-        {
-            method_stringbuffer_appendchar_index = RegisterMethodref(this_control.java_SL_lang_SL_StringBuffer_literal,
-                                                                     this_control.append_literal,
-                                                                     this_control.LP_C_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal);
-        }
-
-        return method_stringbuffer_appendchar_index;
-    }
-
-
-    u2 RegisterMethodStringbufferAppendboolean()
-    {
-        if (method_stringbuffer_appendboolean_index == 0)
-        {
-            method_stringbuffer_appendboolean_index =
-                   RegisterMethodref(this_control.java_SL_lang_SL_StringBuffer_literal,
-                                     this_control.append_literal,
-                                     this_control.LP_Z_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal);
-        }
-
-        return method_stringbuffer_appendboolean_index;
-    }
-
-
-    u2 RegisterMethodStringbufferAppendint()
-    {
-        if (method_stringbuffer_appendint_index == 0)
-        {
-            method_stringbuffer_appendint_index = RegisterMethodref(this_control.java_SL_lang_SL_StringBuffer_literal,
-                                                                    this_control.append_literal,
-                                                                    this_control.LP_I_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal);
-        }
-
-        return method_stringbuffer_appendint_index;
-    }
-
-
-    u2 RegisterMethodStringbufferAppendlong()
-    {
-        if (method_stringbuffer_appendlong_index == 0)
-        {
-            method_stringbuffer_appendlong_index = RegisterMethodref(this_control.java_SL_lang_SL_StringBuffer_literal,
-                                                                     this_control.append_literal,
-                                                                     this_control.LP_J_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal);
-        }
-
-        return method_stringbuffer_appendlong_index;
-    }
-
-
-    u2 RegisterMethodStringbufferAppendfloat()
-    {
-        if (method_stringbuffer_appendfloat_index == 0)
-        {
-            method_stringbuffer_appendfloat_index = RegisterMethodref(this_control.java_SL_lang_SL_StringBuffer_literal,
-                                                                      this_control.append_literal,
-                                                                      this_control.LP_F_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal);
-        }
-
-        return method_stringbuffer_appendfloat_index;
-    }
-
-
-    u2 RegisterMethodStringbufferAppenddouble()
-    {
-        if (method_stringbuffer_appenddouble_index == 0)
-        {
-            method_stringbuffer_appenddouble_index = RegisterMethodref(this_control.java_SL_lang_SL_StringBuffer_literal,
-                                                                       this_control.append_literal,
-                                                                       this_control.LP_D_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal);
-        }
-
-        return method_stringbuffer_appenddouble_index;
-    }
-
-
-    u2 RegisterMethodStringbufferAppendstring()
-    {
-        if (method_stringbuffer_appendstring_index == 0)
-        {
-            method_stringbuffer_appendstring_index =
-                   RegisterMethodref(this_control.java_SL_lang_SL_StringBuffer_literal,
-                                     this_control.append_literal,
-                                     this_control.LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal);
-        }
-
-        return method_stringbuffer_appendstring_index;
-    }
-
-
-    u2 RegisterMethodStringbufferAppendobject()
-    {
-        if (method_stringbuffer_appendobject_index == 0)
-        {
-            method_stringbuffer_appendobject_index =
-                   RegisterMethodref(this_control.java_SL_lang_SL_StringBuffer_literal,
-                                     this_control.append_literal,
-                                     this_control.LP_Ljava_SL_lang_SL_Object_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal);
-        }
-
-        return method_stringbuffer_appendobject_index;
-    }
-
 
     u2 RegisterNameAndType(Utf8LiteralValue *name, Utf8LiteralValue *type_name)
     {
@@ -629,6 +402,17 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     }
 
 
+    u2 RegisterLibraryMethodref(MethodSymbol *method)
+    {
+        if (method) // The library method must exist. If it is not, flag an error.
+            return RegisterMethodref(CONSTANT_Methodref, method -> containing_type -> fully_qualified_name,
+                                                         method -> ExternalIdentity()-> Utf8_literal,
+                                                         method -> signature);
+        library_method_not_found = true;
+
+        return 0;
+    }
+
     u2 RegisterDouble(DoubleLiteralValue *lit)
     {
         assert((lit != NULL) && "null argument to RegisterDouble");
@@ -669,6 +453,12 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         }
 
         return index;
+    }
+
+
+    u2 FindInteger(IntLiteralValue *lit)
+    {
+        return (lit && integer_constant_pool_index ? (*integer_constant_pool_index)[lit -> index] : 0);
     }
 
 
@@ -806,7 +596,6 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void EmitFieldAccessLhs(AstExpression *);
     void EmitMethodInvocation(AstMethodInvocation *);
     void EmitNewArray(int, TypeSymbol *);
-    void EmitCloneArray(AstMethodInvocation *);
     int  EmitPostUnaryExpression(AstPostUnaryExpression *, bool);
     void EmitPostUnaryExpressionArray(AstPostUnaryExpression *, bool);
     void EmitPostUnaryExpressionField(int, AstPostUnaryExpression *, bool);
@@ -909,6 +698,10 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
 #endif
 
     void PutOp(unsigned char opc);
+
+    void PutOpWide(unsigned char opc, u2 var);
+
+    void PutOpIINC(u2 var, int val);
 
     //
     //  Methods to insert values into byte code

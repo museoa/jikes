@@ -123,124 +123,209 @@ void Control::ProcessGlobals()
     object_name_symbol     = FindOrInsertName(US_Object, wcslen(US_Object));
     type_name_symbol       = FindOrInsertName(US_TYPE, wcslen(US_TYPE));
     class_name_symbol      = FindOrInsertName(US__class_DOLLAR, wcslen(US__class_DOLLAR));
-
-    LP_C_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal =
-        Utf8_pool.FindOrInsert(U8S_LP_C_RP_Ljava_SL_lang_SL_StringBuffer_SC,
-                               U8S_LP_C_RP_Ljava_SL_lang_SL_StringBuffer_SC_length);
-
-    LP_D_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal =
-        Utf8_pool.FindOrInsert(U8S_LP_D_RP_Ljava_SL_lang_SL_StringBuffer_SC,
-                               U8S_LP_D_RP_Ljava_SL_lang_SL_StringBuffer_SC_length);
-
-    LP_F_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal =
-        Utf8_pool.FindOrInsert(U8S_LP_F_RP_Ljava_SL_lang_SL_StringBuffer_SC,
-                               U8S_LP_F_RP_Ljava_SL_lang_SL_StringBuffer_SC_length);
-
-    LP_I_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal =
-        Utf8_pool.FindOrInsert(U8S_LP_I_RP_Ljava_SL_lang_SL_StringBuffer_SC,
-                               U8S_LP_I_RP_Ljava_SL_lang_SL_StringBuffer_SC_length);
-
-    LP_J_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal =
-        Utf8_pool.FindOrInsert(U8S_LP_J_RP_Ljava_SL_lang_SL_StringBuffer_SC,
-                               U8S_LP_J_RP_Ljava_SL_lang_SL_StringBuffer_SC_length);
-
-    LP_LB_C_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal =
-        Utf8_pool.FindOrInsert(U8S_LP_LB_C_RP_Ljava_SL_lang_SL_StringBuffer_SC,
-                               U8S_LP_LB_C_RP_Ljava_SL_lang_SL_StringBuffer_SC_length);
-
-    LP_Ljava_SL_lang_SL_Object_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal =
-        Utf8_pool.FindOrInsert(U8S_LP_Ljava_SL_lang_SL_Object_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC,
-                               U8S_LP_Ljava_SL_lang_SL_Object_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC_length);
-
-    LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal =
-        Utf8_pool.FindOrInsert(U8S_LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC,
-                               U8S_LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC_length);
-
-    LP_Ljava_SL_lang_SL_String_SC_RP_V_literal =
-        Utf8_pool.FindOrInsert(U8S_LP_Ljava_SL_lang_SL_String_SC_RP_V,
-                               U8S_LP_Ljava_SL_lang_SL_String_SC_RP_V_length);
-
-    LP_RP_Ljava_SL_lang_SL_Object_SC_literal =
-        Utf8_pool.FindOrInsert(U8S_LP_RP_Ljava_SL_lang_SL_Object_SC,
-                               U8S_LP_RP_Ljava_SL_lang_SL_Object_SC_length);
-
-    LP_RP_Ljava_SL_lang_SL_String_SC_literal =
-        Utf8_pool.FindOrInsert(U8S_LP_RP_Ljava_SL_lang_SL_String_SC,
-                               U8S_LP_RP_Ljava_SL_lang_SL_String_SC_length);
-
-    LP_RP_V_literal = Utf8_pool.FindOrInsert(U8S_LP_RP_V, U8S_LP_RP_V_length);
-
-    LP_Z_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal =
-        Utf8_pool.FindOrInsert(U8S_LP_Z_RP_Ljava_SL_lang_SL_StringBuffer_SC,
-                               U8S_LP_Z_RP_Ljava_SL_lang_SL_StringBuffer_SC_length);
-
-    LT_init_GT_literal = Utf8_pool.FindOrInsert(U8S_LT_init_GT, U8S_LT_init_GT_length);
-
-    append_literal = Utf8_pool.FindOrInsert(U8S_append, U8S_append_length);
-
-    clone_literal = Utf8_pool.FindOrInsert(U8S_clone, U8S_clone_length);
-
-    getMessage_literal = Utf8_pool.FindOrInsert(U8S_getMessage, U8S_getMessage_length);
-
-    java_SL_lang_SL_InternalError_literal =
-        Utf8_pool.FindOrInsert(U8S_java_SL_lang_SL_InternalError,
-                               U8S_java_SL_lang_SL_InternalError_length);
-
-    java_SL_lang_SL_Object_literal = Utf8_pool.FindOrInsert(U8S_java_SL_lang_SL_Object, U8S_java_SL_lang_SL_Object_length);
-
-    java_SL_lang_SL_StringBuffer_literal =
-        Utf8_pool.FindOrInsert(U8S_java_SL_lang_SL_StringBuffer,
-                               U8S_java_SL_lang_SL_StringBuffer_length);
-
-    java_SL_lang_SL_Throwable_literal = Utf8_pool.FindOrInsert(U8S_java_SL_lang_SL_Throwable, U8S_java_SL_lang_SL_Throwable_length);
-
-    toString_literal = Utf8_pool.FindOrInsert(U8S_toString, U8S_toString_length);
-
-    java_SL_lang_SL_ClassNotFoundException_literal =
-         Utf8_pool.FindOrInsert(U8S_java_SL_lang_SL_ClassNotFoundException,
-                                U8S_java_SL_lang_SL_ClassNotFoundException_length);
-
-    java_SL_lang_SL_Class_literal =
-         Utf8_pool.FindOrInsert(U8S_java_SL_lang_SL_Class,
-                                U8S_java_SL_lang_SL_Class_length);
-
-    java_SL_lang_SL_CloneNotSupportedException_literal =
-         Utf8_pool.FindOrInsert(U8S_java_SL_lang_SL_CloneNotSupportedException,
-                                U8S_java_SL_lang_SL_CloneNotSupportedException_length);
-
-    java_SL_lang_SL_NoClassDefFoundError_literal =
-         Utf8_pool.FindOrInsert(U8S_java_SL_lang_SL_NoClassDefFoundError,
-                                U8S_java_SL_lang_SL_NoClassDefFoundError_length);
+    toString_name_symbol   = FindOrInsertName(US_toString, wcslen(US_toString));
+    append_name_symbol     = FindOrInsertName(US_append, wcslen(US_append));
+    forName_name_symbol    = FindOrInsertName(US_forName, wcslen(US_forName));
+    getMessage_name_symbol = FindOrInsertName(US_getMessage, wcslen(US_getMessage));
 
     ConstantValue_literal = Utf8_pool.FindOrInsert(U8S_ConstantValue, U8S_ConstantValue_length);
-
     Exceptions_literal = Utf8_pool.FindOrInsert(U8S_Exceptions, U8S_Exceptions_length);
-
     InnerClasses_literal = Utf8_pool.FindOrInsert(U8S_InnerClasses, U8S_InnerClasses_length);
-
     Synthetic_literal = Utf8_pool.FindOrInsert(U8S_Synthetic, U8S_Synthetic_length);
-
     Deprecated_literal = Utf8_pool.FindOrInsert(U8S_Deprecated, U8S_Deprecated_length);
-
     LineNumberTable_literal = Utf8_pool.FindOrInsert(U8S_LineNumberTable, U8S_LineNumberTable_length);
-
     LocalVariableTable_literal = Utf8_pool.FindOrInsert(U8S_LocalVariableTable, U8S_LocalVariableTable_length);
-
     Code_literal = Utf8_pool.FindOrInsert(U8S_Code, U8S_Code_length);
-
     Sourcefile_literal = Utf8_pool.FindOrInsert(U8S_Sourcefile, U8S_Sourcefile_length);
 
-    LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_Class_SC_literal =
-         Utf8_pool.FindOrInsert(U8S_LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_Class_SC,
-                                U8S_LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_Class_SC_length);
-
-    LT_clinit_GT_literal = Utf8_pool.FindOrInsert(U8S_LT_clinit_GT, U8S_LT_clinit_GT_length);
-
-    forName_literal = Utf8_pool.FindOrInsert(U8S_forName, U8S_forName_length);
-
     null_literal = Utf8_pool.FindOrInsert(U8S_null, U8S_null_length);
-
     this_literal = Utf8_pool.FindOrInsert(U8S_this, U8S_this_length);
+
+    return;
+}
+
+
+void Control::InitClassInfo()
+{
+    if (! Class_type -> Bad())
+    {
+        //
+        // Search for relevant forName method
+        //
+        for (MethodSymbol *method = Class_type -> FindMethodSymbol(forName_name_symbol);
+             method;
+             method = method -> next_method)
+        {
+            char *signature = method -> SignatureString();
+
+            if (strcmp(signature, StringConstant::U8S_LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_Class_SC) == 0)
+            {
+                Class_forName_method = method;
+                break;
+            }
+        }
+
+        if (! Class_forName_method)
+        {
+            system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
+                                              0,
+                                              0,
+                                              Class_type -> ContainingPackage() -> PackageName(),
+                                              Class_type -> ExternalName());
+        }
+    }
+
+    return;
+}
+
+
+void Control::InitThrowableInfo()
+{
+    if (! Throwable_type -> Bad())
+    {
+        //
+        // Search for relevant getMessage method
+        //
+        for (MethodSymbol *method = Throwable_type -> FindMethodSymbol(getMessage_name_symbol);
+             method;
+             method = method -> next_method)
+        {
+            char *signature = method -> SignatureString();
+
+            if (strcmp(signature, StringConstant::U8S_LP_RP_Ljava_SL_lang_SL_String_SC) == 0)
+            {
+                Throwable_getMessage_method = method;
+                break;
+            }
+        }
+
+        if (! Throwable_getMessage_method)
+        {
+            system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
+                                              0,
+                                              0,
+                                              Throwable_type -> ContainingPackage() -> PackageName(),
+                                              Throwable_type -> ExternalName());
+        }
+    }
+
+    return;
+}
+
+
+void Control::InitNoClassDefFoundErrorInfo()
+{
+    if (! NoClassDefFoundError_type -> Bad())
+    {
+        //
+        // Search for relevant constructors
+        //
+        for (MethodSymbol *constructor = NoClassDefFoundError_type -> FindConstructorSymbol();
+             constructor;
+             constructor = constructor -> next_method)
+        {
+            char *signature = constructor -> SignatureString();
+
+            if (strcmp(signature, StringConstant::U8S_LP_Ljava_SL_lang_SL_String_SC_RP_V) == 0)
+                NoClassDefFoundError_InitWithString_method = constructor;
+        }
+
+        if (! NoClassDefFoundError_InitWithString_method)
+        {
+            system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
+                                              0,
+                                              0,
+                                              NoClassDefFoundError_type -> ContainingPackage() -> PackageName(),
+                                              NoClassDefFoundError_type -> ExternalName());
+        }
+    }
+
+    return;
+}
+
+
+void Control::InitStringBufferInfo()
+{
+    if (! StringBuffer_type -> Bad())
+    {
+        //
+        // Search for relevant constructors
+        //
+        for (MethodSymbol *constructor = StringBuffer_type -> FindConstructorSymbol();
+             constructor;
+             constructor = constructor -> next_method)
+        {
+            char *signature = constructor -> SignatureString();
+
+            if (strcmp(signature, StringConstant::U8S_LP_RP_V) == 0)
+                 StringBuffer_Init_method = constructor;
+            else if (strcmp(signature, StringConstant::U8S_LP_Ljava_SL_lang_SL_String_SC_RP_V) == 0)
+                 StringBuffer_InitWithString_method = constructor;
+        }
+
+        //
+        // Search for relevant toString method
+        //
+        for (MethodSymbol *toString_method = StringBuffer_type -> FindMethodSymbol(toString_name_symbol);
+             toString_method;
+             toString_method = toString_method -> next_method)
+        {
+            if (strcmp(toString_method -> SignatureString(), StringConstant::U8S_LP_RP_Ljava_SL_lang_SL_String_SC) == 0)
+            {
+                StringBuffer_toString_method = toString_method;
+                break;
+            }
+        }
+
+        //
+        // Search for relevant append method
+        //
+        for (MethodSymbol *append_method = StringBuffer_type -> FindMethodSymbol(append_name_symbol);
+             append_method;
+             append_method = append_method -> next_method)
+        {
+            char *signature = append_method -> SignatureString();
+
+            if (strcmp(signature, StringConstant::U8S_LP_LB_C_RP_Ljava_SL_lang_SL_StringBuffer_SC) == 0)
+                 StringBuffer_append_char_array_method = append_method;
+            else if (strcmp(signature, StringConstant::U8S_LP_C_RP_Ljava_SL_lang_SL_StringBuffer_SC) == 0)
+                 StringBuffer_append_char_method = append_method;
+            else if (strcmp(signature, StringConstant::U8S_LP_Z_RP_Ljava_SL_lang_SL_StringBuffer_SC) == 0)
+                 StringBuffer_append_boolean_method = append_method;
+            else if (strcmp(signature, StringConstant::U8S_LP_I_RP_Ljava_SL_lang_SL_StringBuffer_SC) == 0)
+                 StringBuffer_append_int_method = append_method;
+            else if (strcmp(signature, StringConstant::U8S_LP_J_RP_Ljava_SL_lang_SL_StringBuffer_SC) == 0)
+                 StringBuffer_append_long_method = append_method;
+            else if (strcmp(signature, StringConstant::U8S_LP_F_RP_Ljava_SL_lang_SL_StringBuffer_SC) == 0)
+                 StringBuffer_append_float_method = append_method;
+            else if (strcmp(signature, StringConstant::U8S_LP_D_RP_Ljava_SL_lang_SL_StringBuffer_SC) == 0)
+                 StringBuffer_append_double_method = append_method;
+            else if (strcmp(signature, StringConstant::U8S_LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC) == 0)
+                 StringBuffer_append_string_method = append_method;
+            else if (strcmp(signature, StringConstant::U8S_LP_Ljava_SL_lang_SL_Object_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC) == 0)
+                 StringBuffer_append_object_method = append_method;
+        }
+
+        if (! (StringBuffer_Init_method &&
+               StringBuffer_InitWithString_method &&
+               StringBuffer_toString_method &&
+               StringBuffer_append_char_array_method &&
+               StringBuffer_append_char_method &&
+               StringBuffer_append_boolean_method &&
+               StringBuffer_append_int_method &&
+               StringBuffer_append_long_method &&
+               StringBuffer_append_float_method &&
+               StringBuffer_append_double_method &&
+               StringBuffer_append_string_method &&
+               StringBuffer_append_object_method))
+        {
+            system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
+                                              0,
+                                              0,
+                                              StringBuffer_type -> ContainingPackage() -> PackageName(),
+                                              StringBuffer_type -> ExternalName());
+        }
+    }
 
     return;
 }

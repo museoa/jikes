@@ -529,10 +529,12 @@ public:
     LiteralValue *FindOrInsertNegativeInt(LiteralSymbol *);
 
     IntLiteralValue *FindOrInsert(int);
+    IntLiteralValue *Find(int);
 
 #ifdef TEST
     //
     // To prevent arithmentic conversion to allow illegal calls inadvertently.
+    // Since the return type is wrong, compilation will fail !
     //
     void FindOrInsert(LongInt) {}
     void FindOrInsert(float)   {}

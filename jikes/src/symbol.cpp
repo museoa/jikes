@@ -285,6 +285,7 @@ TypeSymbol *TypeSymbol::GetArrayType(Semantic *sem, int num_dimensions_)
         method -> SetACC_PUBLIC();
         method -> SetACC_FINAL();
         method -> SetBlockSymbol(new BlockSymbol(1)); // the associated symbol table will remain empty
+        method -> SetSignature(sem -> control);
 
         VariableSymbol *symbol = type -> InsertVariableSymbol(sem -> control.length_name_symbol);
         symbol -> SetACC_PUBLIC();
@@ -1522,7 +1523,7 @@ VariableSymbol *TypeSymbol::FindOrInsertLocalShadow(VariableSymbol *local)
             symbol -> SetType(variable -> Type());
             symbol -> SetOwner(constructor);
             symbol -> SetLocalVariableIndex(constructor -> block_symbol -> max_variable_index++);
-            if (symbol -> Type() == control.long_type || symbol -> Type() == control.double_type)
+            if (control.IsDoubleWordType(symbol -> Type()))
                 constructor -> block_symbol -> max_variable_index++;
             constructor -> AddFormalParameter(symbol);
         }
@@ -1568,13 +1569,15 @@ inline MethodSymbol *TypeSymbol::WriteMethod(VariableSymbol *symbol)
 
 MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
 {
-assert(this -> IsSubclass(member -> containing_type));
+    assert(member -> ACC_PRIVATE());
 
-    MethodSymbol *read_method = this -> ReadMethod(member);
+    TypeSymbol *type = member -> containing_type;
+
+    MethodSymbol *read_method = type -> ReadMethod(member);
 
     if (! read_method)
     {
-        Semantic *sem = this -> semantic_environment -> sem;
+        Semantic *sem = type -> semantic_environment -> sem;
 
         assert(sem);
 
@@ -1582,8 +1585,8 @@ assert(this -> IsSubclass(member -> containing_type));
         LexStream *lex_stream = sem -> lex_stream;
         StoragePool *ast_pool = sem -> compilation_unit -> ast_pool;
 
-        IntToWstring value(member -> Identity() == control.init_name_symbol ? this -> NumPrivateAccessConstructors()
-                                                                            : this -> NumPrivateAccessMethods());
+        IntToWstring value(member -> Identity() == control.init_name_symbol ? type -> NumPrivateAccessConstructors()
+                                                                            : type -> NumPrivateAccessMethods());
 
         int length = 7 + value.Length(); // +7 for access$
         wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
@@ -1592,10 +1595,10 @@ assert(this -> IsSubclass(member -> containing_type));
 
         BlockSymbol *block_symbol = new BlockSymbol(member -> NumFormalParameters() + 3);
 
-        read_method = this -> InsertMethodSymbol(control.FindOrInsertName(name, length));
+        read_method = type -> InsertMethodSymbol(control.FindOrInsertName(name, length));
         read_method -> MarkSynthetic();
         read_method -> SetType(member -> Type());
-        read_method -> SetContainingType(this);
+        read_method -> SetContainingType(type);
         read_method -> SetBlockSymbol(block_symbol);
 
         for (int i = 0; i < member -> NumThrows(); i++)
@@ -1613,7 +1616,7 @@ assert(this -> IsSubclass(member -> containing_type));
             {
                 VariableSymbol *instance = block_symbol -> InsertVariableSymbol(control.MakeParameter(1));
                 instance -> MarkSynthetic();
-                instance -> SetType(this);
+                instance -> SetType(type);
                 instance -> SetOwner(read_method);
                 instance -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
                 read_method -> AddFormalParameter(instance);
@@ -1626,14 +1629,14 @@ assert(this -> IsSubclass(member -> containing_type));
                 parm -> SetType(member -> FormalParameter(i) -> Type());
                 parm -> SetOwner(read_method);
                 parm -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
-                if (parm -> Type() == control.long_type || parm -> Type() == control.double_type)
+                if (control.IsDoubleWordType(parm -> Type()))
                     block_symbol -> max_variable_index++;
                 read_method -> AddFormalParameter(parm);
             }
             read_method -> SetSignature(control);
             // A read access method has no throws clause !
 
-            this -> AddPrivateAccessMethod(read_method);
+            type -> AddPrivateAccessMethod(read_method);
         }
         else
         {
@@ -1641,7 +1644,7 @@ assert(this -> IsSubclass(member -> containing_type));
             // A constructor in a local class already has a "LocalConstructor()" associated
             // with it that can be used as a read access method.
             //
-            assert(! this -> IsLocal());
+            assert(! type -> IsLocal());
 
             //
             //
@@ -1695,11 +1698,11 @@ assert(this -> IsSubclass(member -> containing_type));
             this_call -> symbol = member;
 
             VariableSymbol *this0_variable = NULL;
-            if (this -> IsInner())
+            if (type -> IsInner())
             {
                 this0_variable = block_symbol -> InsertVariableSymbol(control.this0_name_symbol);
                 this0_variable -> MarkSynthetic();
-                this0_variable -> SetType(this -> ContainingType());
+                this0_variable -> SetType(type -> ContainingType());
                 this0_variable -> SetOwner(read_method);
                 this0_variable -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
             }
@@ -1725,7 +1728,7 @@ assert(this -> IsSubclass(member -> containing_type));
                 parm -> SetType(member -> FormalParameter(i) -> Type());
                 parm -> SetOwner(read_method);
                 parm -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
-                if (parm -> Type() == control.long_type || parm -> Type() == control.double_type)
+                if (control.IsDoubleWordType(parm -> Type()))
                     block_symbol -> max_variable_index++;
                 read_method -> AddFormalParameter(parm);
 
@@ -1771,11 +1774,11 @@ assert(this -> IsSubclass(member -> containing_type));
             constructor_declaration -> constructor_symbol = read_method;
             read_method -> method_or_constructor_declaration = constructor_declaration;
 
-            this -> AddPrivateAccessConstructor(read_method);
+            type -> AddPrivateAccessConstructor(read_method);
         }
 
         read_method -> accessed_member = member;
-        this -> MapSymbolToReadMethod(member, read_method);
+        type -> MapSymbolToReadMethod(member, read_method);
 
         delete [] name;
     }
@@ -1786,30 +1789,31 @@ assert(this -> IsSubclass(member -> containing_type));
 
 MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member)
 {
-assert(this -> IsSubclass(member -> owner -> TypeCast()));
+    TypeSymbol *type = member -> owner -> TypeCast();
+    assert(member -> ACC_PRIVATE() && type);
 
-    MethodSymbol *read_method = this -> ReadMethod(member);
+    MethodSymbol *read_method = type -> ReadMethod(member);
 
     if (! read_method)
     {
-        Semantic *sem = this -> semantic_environment -> sem;
+        Semantic *sem = type -> semantic_environment -> sem;
 
         assert(sem);
 
         Control &control = sem -> control;
 
-        IntToWstring value(this -> NumPrivateAccessMethods());
+        IntToWstring value(type -> NumPrivateAccessMethods());
 
         int length = 7 + value.Length(); // +7 for access$
         wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
         wcscpy(name, StringConstant::US__access_DOLLAR);
         wcscat(name, value.String());
 
-        read_method = this -> InsertMethodSymbol(control.FindOrInsertName(name, length));
+        read_method = type -> InsertMethodSymbol(control.FindOrInsertName(name, length));
         read_method -> MarkSynthetic();
         read_method -> SetType(member -> Type());
         read_method -> SetACC_STATIC();
-        read_method -> SetContainingType(this);
+        read_method -> SetContainingType(type);
 
         //
         // A read access method for a field has 1 formal parameter if the member in question is not static
@@ -1822,7 +1826,7 @@ assert(this -> IsSubclass(member -> owner -> TypeCast()));
         {
             VariableSymbol *instance = block_symbol -> InsertVariableSymbol(control.MakeParameter(1));
             instance -> MarkSynthetic();
-            instance -> SetType(this);
+            instance -> SetType(type);
             instance -> SetOwner(read_method);
             instance -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
             read_method -> AddFormalParameter(instance);
@@ -1832,8 +1836,8 @@ assert(this -> IsSubclass(member -> owner -> TypeCast()));
         // A read access method has no throws clause !
 
         read_method -> accessed_member = member;
-        this -> MapSymbolToReadMethod(member, read_method);
-        this -> AddPrivateAccessMethod(read_method);
+        type -> MapSymbolToReadMethod(member, read_method);
+        type -> AddPrivateAccessMethod(read_method);
 
         delete [] name;
     }
@@ -1844,30 +1848,31 @@ assert(this -> IsSubclass(member -> owner -> TypeCast()));
 
 MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member)
 {
-assert(this -> IsSubclass(member -> owner -> TypeCast()));
+    TypeSymbol *type = member -> owner -> TypeCast();
+    assert(member -> ACC_PRIVATE() && type);
 
-    MethodSymbol *write_method = this -> WriteMethod(member);
+    MethodSymbol *write_method = type -> WriteMethod(member);
 
     if (! write_method)
     {
-        Semantic *sem = this -> semantic_environment -> sem;
+        Semantic *sem = type -> semantic_environment -> sem;
 
         assert(sem);
 
         Control &control = sem -> control;
 
-        IntToWstring value(this -> NumPrivateAccessMethods());
+        IntToWstring value(type -> NumPrivateAccessMethods());
 
         int length = 7 + value.Length(); // +7 for access$
         wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
         wcscpy(name, StringConstant::US__access_DOLLAR);
         wcscat(name, value.String());
 
-        write_method = this -> InsertMethodSymbol(control.FindOrInsertName(name, length));
+        write_method = type -> InsertMethodSymbol(control.FindOrInsertName(name, length));
         write_method -> MarkSynthetic();
         write_method -> SetType(sem -> control.void_type);
         write_method -> SetACC_STATIC();
-        write_method -> SetContainingType(this);
+        write_method -> SetContainingType(type);
 
         BlockSymbol *block_symbol = new BlockSymbol(3);
         block_symbol -> max_variable_index = 0;
@@ -1885,7 +1890,7 @@ assert(this -> IsSubclass(member -> owner -> TypeCast()));
         {
             VariableSymbol *instance = block_symbol -> InsertVariableSymbol(control.MakeParameter(1));
             instance -> MarkSynthetic();
-            instance -> SetType(this);
+            instance -> SetType(type);
             instance -> SetOwner(write_method);
             instance -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
             write_method -> AddFormalParameter(instance);
@@ -1895,7 +1900,7 @@ assert(this -> IsSubclass(member -> owner -> TypeCast()));
         symbol -> MarkSynthetic();
         symbol -> SetType(member -> Type());
         symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
-        if (member -> Type() == control.long_type || member -> Type() == control.double_type)
+        if (control.IsDoubleWordType(member -> Type()))
             block_symbol -> max_variable_index++;
         write_method -> AddFormalParameter(symbol);
 
@@ -1903,8 +1908,8 @@ assert(this -> IsSubclass(member -> owner -> TypeCast()));
         // A write access method has no throws clause !
 
         write_method -> accessed_member = member;
-        this -> MapSymbolToWriteMethod(member, write_method);
-        this -> AddPrivateAccessMethod(write_method);
+        type -> MapSymbolToWriteMethod(member, write_method);
+        type -> AddPrivateAccessMethod(write_method);
 
         delete [] name;
     }

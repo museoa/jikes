@@ -996,7 +996,7 @@ void Semantic::DefiniteBlock(Ast *stmt)
     // labeled statement in its own block... Therefore, only blocks
     // are labeled.
     //
-    if (block_body -> label_token_opt)
+    if (block_body -> NumLabels() > 0)
         *definitely_assigned_variables *= definite_block_stack -> TopBreakSet();
 
     definite_block_stack -> Pop();

@@ -264,19 +264,12 @@ void ByteCode::CompileClass()
             //
             int method_index = methods.NextIndex(); // index for method
             BeginMethod(method_index, this_constructor_symbol);
-            methods[method_index].SetNameIndex(RegisterUtf8(this_control.LT_init_GT_literal));
 
             UpdateBlockInfo(this_constructor_symbol -> block_symbol);
                 
-            if (! constructor_block -> explicit_constructor_invocation_opt)
-            {
-                PutOp(OP_ALOAD_0);
-                PutOp(OP_INVOKENONVIRTUAL);   // no args, hence no need to call ChangeStack()
-                PutU2(RegisterMethodref(unit_type -> super -> fully_qualified_name,
-                                        this_control.LT_init_GT_literal,
-                                        this_control.LP_RP_V_literal));
-            }
-            else EmitStatement((AstStatement *) constructor_block -> explicit_constructor_invocation_opt);
+            assert(constructor_block -> explicit_constructor_invocation_opt);
+
+            EmitStatement((AstStatement *) constructor_block -> explicit_constructor_invocation_opt);
 
             for (int si = 0; si < constructor_block -> NumLocalInitStatements(); si++)
                 EmitStatement(constructor_block -> LocalInitStatement(si));
@@ -354,7 +347,6 @@ void ByteCode::CompileClass()
             MethodSymbol *local_constructor_symbol = this_constructor_symbol -> LocalConstructor();
             method_index = methods.NextIndex(); // index for method
             BeginMethod(method_index, local_constructor_symbol);  // is constructor
-            methods[method_index].SetNameIndex(RegisterUtf8(local_constructor_symbol -> ExternalIdentity() -> Utf8_literal));
 
             for (int k = 0; k < constructor_block -> block -> NumStatements(); k++)
                 EmitStatement((AstStatement *) constructor_block -> block -> Statement(k));
@@ -446,6 +438,15 @@ void ByteCode::CompileClass()
     if (string_overflow)
     {
          this_semantic.ReportSemError(SemanticError::STRING_OVERFLOW,
+                                      unit_type -> declaration -> LeftToken(),
+                                      unit_type -> declaration -> RightToken(),
+                                      unit_type -> ContainingPackage() -> PackageName(),
+                                      unit_type -> ExternalName());
+    }
+
+    if (library_method_not_found)
+    {
+         this_semantic.ReportSemError(SemanticError::LIBRARY_METHOD_NOT_FOUND,
                                       unit_type -> declaration -> LeftToken(),
                                       unit_type -> declaration -> RightToken(),
                                       unit_type -> ContainingPackage() -> PackageName(),
@@ -559,23 +560,13 @@ void ByteCode::CompileConstructor(AstConstructorDeclaration *constructor, Tuple<
 
     int method_index = methods.NextIndex(); // index for method
     BeginMethod(method_index, method_symbol);
-    methods[method_index].SetNameIndex(RegisterUtf8(this_control.LT_init_GT_literal));
 
     UpdateBlockInfo(method_symbol -> block_symbol);
 
     AstConstructorBlock *constructor_block = constructor -> constructor_body -> ConstructorBlockCast();
-    if (! constructor_block -> explicit_constructor_invocation_opt)
-    {
-        if (super_class)
-        {
-            PutOp(OP_ALOAD_0);
-            PutOp(OP_INVOKENONVIRTUAL);   // no args, hence no need to call ChangeStack()
-            PutU2(RegisterMethodref(unit_type -> super -> fully_qualified_name,
-                                    this_control.LT_init_GT_literal,
-                                    this_control.LP_RP_V_literal));
-        }
-    }
-    else EmitStatement((AstStatement *) constructor_block -> explicit_constructor_invocation_opt);
+    assert(constructor_block -> explicit_constructor_invocation_opt);
+
+    EmitStatement((AstStatement *) constructor_block -> explicit_constructor_invocation_opt);
 
     // supply needed field initialization unless constructor
     // starts with explicit 'this' call to another constructor
@@ -669,8 +660,19 @@ void ByteCode::DeclareField(VariableSymbol *symbol)
             // As of now, we are following the language spec - ergo, this extra test.
             //
             if (symbol -> ACC_FINAL())
-                fields[field_index].AddAttribute(new ConstantValue_attribute(RegisterUtf8(this_control.ConstantValue_literal),
-                                                                             GetConstant(initial_value, type)));
+            {
+                u2 index = (this_control.IsSimpleIntegerValueType(type) || type == this_control.boolean_type
+                                ? RegisterInteger((IntLiteralValue *) initial_value)
+                                : type == this_control.String()
+                                        ? RegisterString((Utf8LiteralValue *) initial_value)
+                                        : type == this_control.float_type
+                                                ? RegisterFloat((FloatLiteralValue *) initial_value)
+                                                : type == this_control.long_type
+                                                        ? RegisterLong((LongLiteralValue *) initial_value)
+                                                        : RegisterDouble((DoubleLiteralValue *) initial_value));
+                u2 attribute_index = RegisterUtf8(this_control.ConstantValue_literal);
+                fields[field_index].AddAttribute(new ConstantValue_attribute(attribute_index, index));
+            }
         }
     }
 
@@ -755,22 +757,8 @@ void ByteCode::BeginMethod(int method_index, MethodSymbol *msym)
     MethodInitialization();
     method_type = msym -> Type(); // save the type of the method being compiled
 
-    if (msym -> Identity() == this_control.clinit_name_symbol) // Generated constructor for static init.
-    {
-         methods[method_index].SetNameIndex(RegisterUtf8(this_control.LT_clinit_GT_literal));
-         methods[method_index].SetDescriptorIndex(RegisterUtf8(this_control.LP_RP_V_literal));
-    }
-    else if (msym -> Identity() == this_control.init_name_symbol) // a constructor, caller sets name
-         methods[method_index].SetDescriptorIndex(RegisterUtf8(msym -> signature));
-    else
-    {
-         methods[method_index].SetNameIndex(RegisterUtf8(msym -> ExternalIdentity() -> Utf8_literal));
-         methods[method_index].SetDescriptorIndex(RegisterUtf8(msym -> signature));
-    }
-
-    //
-    //
-    //
+    methods[method_index].SetNameIndex(RegisterUtf8(msym -> ExternalIdentity() -> Utf8_literal));
+    methods[method_index].SetDescriptorIndex(RegisterUtf8(msym -> signature));
     methods[method_index].SetFlags(msym -> Flags());
 
     if (msym -> IsSynthetic())
@@ -818,8 +806,7 @@ void ByteCode::BeginMethod(int method_index, MethodSymbol *msym)
 
     last_parameter_index = (last_parameter ? last_parameter -> LocalVariableIndex() : -1);
 
-    int num_parameter_slots = (last_parameter && (last_parameter -> Type() == this_control.long_type || 
-                                                  last_parameter -> Type() == this_control.double_type)
+    int num_parameter_slots = (last_parameter && this_control.IsDoubleWordType(last_parameter -> Type())
                                                ? last_parameter_index + 1
                                                : last_parameter_index);
     if (num_parameter_slots > 255)
@@ -1012,13 +999,13 @@ void ByteCode::InitializeArray(TypeSymbol *type, AstArrayInitializer *array_init
 {
     TypeSymbol *subtype = type -> ArraySubtype();
 
-    LoadInteger(array_initializer -> NumVariableInitializers());
+    LoadImmediateInteger(array_initializer -> NumVariableInitializers());
     EmitNewArray(1, type); // make the array
     for (int i = 0; i < array_initializer -> NumVariableInitializers(); i++)
     {
         Ast *entry = array_initializer -> VariableInitializer(i);
         PutOp(OP_DUP);
-        LoadInteger(i);
+        LoadImmediateInteger(i);
         AstExpression *expr = entry -> ExpressionCast();
         if (expr)
              EmitExpression(expr);
@@ -1045,7 +1032,7 @@ void ByteCode::DeclareLocalVariable(AstVariableDeclarator *declarator)
         declarator -> symbol -> local_program_counter = code_attribute -> CodeLength();
 
     if (declarator -> symbol -> initial_value)
-        (void) LoadLiteral(declarator -> symbol -> initial_value, declarator -> symbol -> Type());
+        LoadLiteral(declarator -> symbol -> initial_value, declarator -> symbol -> Type());
     else if (declarator -> variable_initializer_opt)
     {
         AstArrayCreationExpression *ace = declarator -> variable_initializer_opt -> ArrayCreationExpressionCast();
@@ -1703,9 +1690,9 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
     }
 
     //
-    // process catch clauses
+    // process catch clauses, but only if try block is not empty
     //
-    for (int i = 0; i < statement -> NumCatchClauses(); i++)
+    for (int i = 0; start_pc != end_pc && i < statement -> NumCatchClauses(); i++)
     {
         int handler_pc = code_attribute -> CodeLength();
 
@@ -1714,7 +1701,6 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
         StoreLocalVariable(parameter_symbol);
         EmitStatement(catch_clause -> block);
 
-        
         code_attribute -> AddException(start_pc,
                                        end_pc,
                                        handler_pc,
@@ -1730,12 +1716,16 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
                 UseLabel(final_labels[final_depth], 2, 1);
             }
         }
-        
+
         if (catch_clause -> block -> can_complete_normally)
-        // If there are more catch clauses, or a finally clause, then emit branch to
-        // skip over their code and on to the next statement.
+        {
+            //        
+            // If there are more catch clauses, or a finally clause, then emit branch to
+            // skip over their code and on to the next statement.
+            //        
             if (statement -> finally_clause_opt || i < (statement -> NumCatchClauses() - 1))
                 EmitBranch(OP_GOTO, end_label);
+        }
     }
 
     if (statement -> finally_clause_opt)
@@ -1749,18 +1739,23 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
         // invoked in case an otherwise uncaught exception is thrown in the
         // try block, or an exception is thrown from within a catch block.
 
-        code_attribute -> AddException(start_pc,
-                                       special_end_pc,
-                                       code_attribute -> CodeLength(),
-                                       0);
-        StoreLocal(block_symbol -> try_variable_index, this_control.Object()); // Save exception
-        PutOp(OP_JSR); // Jump to finally block.
-        UseLabel(final_labels[final_depth], 2, 1);
-        LoadLocal(block_symbol -> try_variable_index, this_control.Object()); // Reload exception,
-        PutOp(OP_ATHROW); // and rethrow it.
+        // No special handler is needed if the try block is empty.
+        if (start_pc != end_pc) // If try-block not empty
+        {
+            code_attribute -> AddException(start_pc,
+                                           special_end_pc,
+                                           code_attribute -> CodeLength(),
+                                           0);
+            StoreLocal(block_symbol -> try_variable_index, this_control.Object()); // Save exception
+            PutOp(OP_JSR); // Jump to finally block.
+            UseLabel(final_labels[final_depth], 2, 1);
+            LoadLocal(block_symbol -> try_variable_index, this_control.Object()); // Reload exception,
+            PutOp(OP_ATHROW); // and rethrow it.
+        }
 
+        //
         // Generate code for finally clause.
-        
+        //
         DefineLabel(final_labels[final_depth]);
         CompleteLabel(final_labels[final_depth]);
         if (statement -> finally_clause_opt -> block -> can_complete_normally)
@@ -1779,8 +1774,7 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
         {
             // Finally can complete normally, so return to caller using the
             // saved return address.
-            PutOp(OP_RET);
-            PutU1(block_symbol -> try_variable_index + 1);
+            PutOpWide(OP_RET, block_symbol -> try_variable_index + 1);
         }
     }
 
@@ -2328,8 +2322,7 @@ void ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
         StoreLocal(loc_index, this_control.Object()); // save return address
         LoadLocal(var_index, this_control.Object()); // load address of object onto stack
         PutOp(OP_MONITOREXIT); 
-        PutOp(OP_RET);
-        PutU1(loc_index);  // return using saved address
+        PutOpWide(OP_RET, loc_index);  // return using saved address
 
         DefineLabel(end_label);
         CompleteLabel(end_label);
@@ -2348,7 +2341,10 @@ void ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
 int ByteCode::EmitExpression(AstExpression *expression) 
 {
     if (expression -> IsConstant())
-        return LoadConstant(expression);
+    {
+        LoadLiteral(expression -> value, expression -> Type());
+        return (this_control.IsDoubleWordType(expression -> Type()) ? 2 : 1);
+    }
 
     switch (expression -> kind)
     {
@@ -2358,15 +2354,6 @@ int ByteCode::EmitExpression(AstExpression *expression)
                  return (simple_name -> resolution_opt ? EmitExpression(simple_name -> resolution_opt)
                                                        : LoadVariable(GetLhsKind(expression), expression));
              }
-        case Ast::INTEGER_LITERAL:
-        case Ast::LONG_LITERAL:
-        case Ast::FLOATING_POINT_LITERAL:
-        case Ast::DOUBLE_LITERAL:
-        case Ast::TRUE_LITERAL:
-        case Ast::FALSE_LITERAL:
-        case Ast::STRING_LITERAL:
-        case Ast::CHARACTER_LITERAL:
-        return LoadConstant(expression);
         case Ast::THIS_EXPRESSION:
         case Ast::SUPER_EXPRESSION:
              PutOp(OP_ALOAD_0); // must be use
@@ -2419,9 +2406,6 @@ int ByteCode::EmitExpression(AstExpression *expression)
              return EmitConditionalExpression((AstConditionalExpression *) expression);
         case Ast::ASSIGNMENT:
              return EmitAssignmentExpression((AstAssignmentExpression *) expression, true);
-        case Ast::NULL_LITERAL:
-             PutOp(OP_ACONST_NULL);
-             return 1;
         default:
              assert(false && "unknown expression kind");
              break;
@@ -2563,29 +2547,24 @@ void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
     PutOp(OP_ALOAD_0);
     PutOp(OP_INVOKESTATIC);
     ChangeStack(-1);
-    PutU2(RegisterMethodref(this_control.java_SL_lang_SL_Class_literal,
-                            this_control.forName_literal,
-                            this_control.LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_Class_SC_literal));
+    PutU2(RegisterLibraryMethodref(this_control.Class_forNameMethod()));
     ChangeStack(1);
 
     PutOp(OP_ARETURN);
     PutOp(OP_ASTORE_1);
     PutOp(OP_NEW);
-    PutU2(RegisterClass(this_control.java_SL_lang_SL_NoClassDefFoundError_literal));
+    PutU2(RegisterClass(this_control.NoClassDefFoundError() -> fully_qualified_name));
     PutOp(OP_DUP);
     PutOp(OP_ALOAD_1);
     PutOp(OP_INVOKEVIRTUAL);
     ChangeStack(-1);
-    PutU2(RegisterMethodref(this_control.java_SL_lang_SL_Throwable_literal,
-                            this_control.getMessage_literal,
-                            this_control.LP_RP_Ljava_SL_lang_SL_String_SC_literal));
+    PutU2(RegisterLibraryMethodref(this_control.Throwable_getMessageMethod()));
     ChangeStack(1);
 
     PutOp(OP_INVOKENONVIRTUAL);
     ChangeStack(-1);
-    PutU2(RegisterMethodref(this_control.java_SL_lang_SL_NoClassDefFoundError_literal,
-                            this_control.LT_init_GT_literal,
-                            this_control.LP_Ljava_SL_lang_SL_String_SC_RP_V_literal));
+    PutU2(RegisterLibraryMethodref(this_control.NoClassDefFoundError_InitMethod()));
+                            
     ChangeStack(1);
     PutOp(OP_ATHROW);
 
@@ -2594,7 +2573,7 @@ void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
     code_attribute -> AddException(0,
                                    5,
                                    5,
-                                   RegisterClass(this_control.java_SL_lang_SL_ClassNotFoundException_literal));
+                                   RegisterClass(this_control.ClassNotFoundException() -> fully_qualified_name));
 
     return;
 }
@@ -2739,19 +2718,19 @@ int ByteCode::EmitArrayCreationExpression(AstArrayCreationExpression *expression
 //
 // ASSIGNMENT
 //
-int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *expression, bool need_value)
+int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expression, bool need_value)
 {
-    AstCastExpression *casted_left_hand_side = expression -> left_hand_side -> CastExpressionCast();
-    AstExpression *left_hand_side = (casted_left_hand_side ? casted_left_hand_side -> expression : expression -> left_hand_side);
+    AstCastExpression *casted_left_hand_side = assignment_expression -> left_hand_side -> CastExpressionCast();
+    AstExpression *left_hand_side = (casted_left_hand_side ? casted_left_hand_side -> expression : assignment_expression -> left_hand_side);
 
     TypeSymbol *left_type = left_hand_side -> Type();
 
-    int kind = GetLhsKind(expression);
-    VariableSymbol *accessed_member = (expression -> write_method
-                                                   ? expression -> write_method -> accessed_member -> VariableCast()
+    int kind = GetLhsKind(assignment_expression);
+    VariableSymbol *accessed_member = (assignment_expression -> write_method
+                                                   ? assignment_expression -> write_method -> accessed_member -> VariableCast()
                                                    : (VariableSymbol *) NULL);
 
-    if (expression -> assignment_tag == AstAssignmentExpression::EQUAL)
+    if (assignment_expression -> assignment_tag == AstAssignmentExpression::EQUAL)
     {
         switch(kind)
         {
@@ -2781,7 +2760,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *expression, bool
                  break;
         }
 
-        EmitExpression(expression -> expression);
+        EmitExpression(assignment_expression -> expression);
     }
     //
     // Here for compound assignment. Get the left operand, saving any information necessary to
@@ -2798,12 +2777,34 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *expression, bool
                  //
                  // load current value
                  //
-                 (void) LoadArrayElement(expression -> Type());
+                 (void) LoadArrayElement(assignment_expression -> Type());
                  break;
             case LHS_FIELD:
                  EmitFieldAccessLhs(left_hand_side);
                  break;
             case LHS_LOCAL:
+                 if ((! casted_left_hand_side) &&
+                     assignment_expression -> Type() == this_control.int_type &&
+                     assignment_expression -> expression -> IsConstant() &&
+                     (assignment_expression -> assignment_tag == AstAssignmentExpression::PLUS_EQUAL ||
+                      assignment_expression -> assignment_tag == AstAssignmentExpression::MINUS_EQUAL))
+                 {
+                     IntLiteralValue *vp = (IntLiteralValue *) assignment_expression -> expression -> value;
+                     int val = (assignment_expression -> assignment_tag == AstAssignmentExpression::MINUS_EQUAL
+                                                                         ? -(vp -> value) // we treat "a -= x" as "a += (-x)"
+                                                                         : vp -> value);
+                     if (val >= -32768 && val < 32768) // if value in range
+                     {
+                         VariableSymbol *sym = (VariableSymbol *) left_hand_side -> symbol;
+                         PutOpIINC(sym -> LocalVariableIndex(), val);
+                         if (need_value)
+                             LoadVariable(LHS_LOCAL, left_hand_side);
+                         return GetTypeWords(assignment_expression -> Type());
+                     }
+                 }
+
+                 (void) LoadVariable(kind, left_hand_side);
+                 break;
             case LHS_STATIC:
                  (void) LoadVariable(kind, left_hand_side);
                  //
@@ -2830,22 +2831,22 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *expression, bool
         //
         // Here for string concatenation.
         //
-        if (expression -> assignment_tag == AstAssignmentExpression::PLUS_EQUAL && left_type == this_control.String())
+        if (assignment_expression -> assignment_tag == AstAssignmentExpression::PLUS_EQUAL && left_type == this_control.String())
         {
             PutOp(OP_NEW);
-            PutU2(RegisterClass(this_control.java_SL_lang_SL_StringBuffer_literal));
+            PutU2(RegisterClass(this_control.StringBuffer() -> fully_qualified_name));
             PutOp(OP_DUP);
             PutOp(OP_INVOKENONVIRTUAL);
-            PutU2(RegisterMethodStringbufferInit());
+            PutU2(RegisterLibraryMethodref(this_control.StringBuffer_InitMethod()));
             PutOp(OP_SWAP); // swap address if buffer and string to update.
             EmitStringAppendMethod(this_control.String());
-            AppendString(expression -> expression);
+            AppendString(assignment_expression -> expression);
 
             //
             // convert string buffer to string
             //
             PutOp(OP_INVOKEVIRTUAL);
-            PutU2(RegisterMethodStringbufferTostring());
+            PutU2(RegisterLibraryMethodref(this_control.StringBuffer_toStringMethod()));
             ChangeStack(1); // account for return value
         }
         //
@@ -2855,11 +2856,11 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *expression, bool
         {
             int opc;
 
-            TypeSymbol *op_type = (casted_left_hand_side ? casted_left_hand_side -> Type() : expression -> Type());
+            TypeSymbol *op_type = (casted_left_hand_side ? casted_left_hand_side -> Type() : assignment_expression -> Type());
 
             if (this_control.IsSimpleIntegerValueType(op_type) || op_type == this_control.boolean_type)
             {
-                switch (expression -> assignment_tag)
+                switch (assignment_expression -> assignment_tag)
                 {
                     case AstAssignmentExpression::STAR_EQUAL:
                          opc = OP_IMUL;
@@ -2900,7 +2901,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *expression, bool
             }
             else if (op_type == this_control.long_type)
             {
-                switch (expression -> assignment_tag)
+                switch (assignment_expression -> assignment_tag)
                 {
                     case AstAssignmentExpression::STAR_EQUAL:
                          opc = OP_LMUL;
@@ -2941,7 +2942,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *expression, bool
             }
             else if (op_type == this_control.float_type)
             {
-                switch (expression -> assignment_tag)
+                switch (assignment_expression -> assignment_tag)
                 {
                     case AstAssignmentExpression::STAR_EQUAL:
                          opc = OP_FMUL;
@@ -2964,7 +2965,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *expression, bool
             }
             else if (op_type == this_control.double_type)
             {
-                switch (expression -> assignment_tag)
+                switch (assignment_expression -> assignment_tag)
                 {
                     case AstAssignmentExpression::STAR_EQUAL:
                          opc = OP_DMUL;
@@ -2992,7 +2993,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *expression, bool
             if (casted_left_hand_side)
                 EmitCast(casted_left_hand_side -> Type(), left_type);
 
-            EmitExpression(expression -> expression);
+            EmitExpression(assignment_expression -> expression);
 
             PutOp(opc);  
 
@@ -3009,7 +3010,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *expression, bool
         case LHS_ARRAY:
              if (need_value)
                  PutOp(this_control.IsDoubleWordType(left_type) ? OP_DUP2_X2 : OP_DUP_X2);
-             StoreArrayElement(expression -> Type());
+             StoreArrayElement(assignment_expression -> Type());
              break;
         case LHS_FIELD:
              if (need_value)
@@ -3027,7 +3028,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *expression, bool
 
                  int stack_words = (this_control.IsDoubleWordType(left_type) ? 2 : 1) + (accessed_member -> ACC_STATIC() ? 0 : 1);
                  PutOp(OP_INVOKESTATIC);
-                 CompleteCall(expression -> write_method, stack_words);
+                 CompleteCall(assignment_expression -> write_method, stack_words);
              }
              break;
         case LHS_LOCAL:
@@ -3040,7 +3041,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *expression, bool
             break;
     }
 
-    return GetTypeWords(expression -> Type());
+    return GetTypeWords(assignment_expression -> Type());
 }
 
 
@@ -3115,7 +3116,7 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
             case AstBinaryExpression::RIGHT_SHIFT:
             case AstBinaryExpression::UNSIGNED_RIGHT_SHIFT:
                  if (this_control.IsSimpleIntegerValueType(right_type) || right_type == this_control.boolean_type)
-                     LoadShort(0);
+                     LoadImmediateInteger(0);
                  else
                  {
                      assert((right_type == this_control.long_type ||
@@ -3167,7 +3168,7 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
             case AstBinaryExpression::STAR:
             case AstBinaryExpression::AND: // here for cases that evaluate to zero
                  if (this_control.IsSimpleIntegerValueType(left_type) || left_type == this_control.boolean_type)
-                      LoadShort(0);
+                      LoadImmediateInteger(0);
                  else
                  {
                      assert((left_type == this_control.long_type ||
@@ -3283,99 +3284,81 @@ void ByteCode::EmitCast(TypeSymbol *dest_type, TypeSymbol *source_type)
     {
         if (dest_type != this_control.int_type) // no conversion needed
         {
-            assert((dest_type == this_control.long_type ||
-                    dest_type == this_control.float_type ||
-                    dest_type == this_control.double_type ||
-                    dest_type == this_control.char_type ||
-                    dest_type == this_control.byte_type ||
-                    dest_type == this_control.short_type) && "unsupported conversion");
+            Operators::operators op_kind = (dest_type == this_control.long_type
+                                                       ? OP_I2L
+                                                       : dest_type == this_control.float_type
+                                                                    ? OP_I2F
+                                                                    : dest_type == this_control.double_type
+                                                                                 ? OP_I2D
+                                                                                 : dest_type == this_control.char_type
+                                                                                              ? OP_I2C
+                                                                                              : dest_type == this_control.byte_type
+                                                                                                           ? OP_I2B
+                                                                                                           : OP_I2S); // short_type
+            assert(op_kind != OP_I2S || dest_type == this_control.short_type);
 
-            PutOp(dest_type == this_control.long_type
-                             ? OP_I2L
-                             : dest_type == this_control.float_type
-                                          ? OP_I2F
-                                          : dest_type == this_control.double_type
-                                                       ? OP_I2D
-                                                       : dest_type == this_control.char_type
-                                                                    ? OP_I2C
-                                                                    : dest_type == this_control.byte_type
-                                                                                 ? OP_I2B
-                                                                                 : OP_I2S); // short_type
+            PutOp(op_kind);
         }
     }
     else if (source_type == this_control.long_type)
     {
-        if (this_control.IsSimpleIntegerValueType(dest_type))
-        {
-            PutOp(OP_L2I);
+        Operators::operators op_kind = (dest_type == this_control.float_type
+                                                   ? OP_L2F
+                                                   : dest_type == this_control.double_type
+                                                                ? OP_L2D
+                                                                : OP_L2I);
+        PutOp(op_kind);
 
-            if (dest_type != this_control.int_type)
-            {
-                PutOp(dest_type == this_control.char_type
-                                 ? OP_I2C
-                                 : dest_type == this_control.byte_type
-                                              ? OP_I2B
-                                              : OP_I2S); // short_type
-            }
-        }
-        else
+        if (op_kind == OP_L2I && dest_type != this_control.int_type)
         {
-            assert((dest_type == this_control.float_type ||
-                    dest_type == this_control.double_type) && "unsupported conversion");
+            assert(this_control.IsSimpleIntegerValueType(dest_type) && "unsupported conversion");
 
-            PutOp(dest_type == this_control.float_type
-                             ? OP_L2F
-                             : OP_L2D); // double_type
+            PutOp(dest_type == this_control.char_type
+                             ? OP_I2C
+                             : dest_type == this_control.byte_type
+                                          ? OP_I2B
+                                          : OP_I2S); // short_type
         }
     }
     else if (source_type == this_control.float_type)
     {
-        if (this_control.IsSimpleIntegerValueType(dest_type))
-        {
-            PutOp(OP_F2I);
+        Operators::operators op_kind = (dest_type == this_control.long_type
+                                                   ? OP_F2L
+                                                   : dest_type == this_control.double_type
+                                                                ? OP_F2D
+                                                                : OP_F2I);
+        PutOp(op_kind);
 
-            if (dest_type != this_control.int_type)
-            {
-                PutOp(dest_type == this_control.char_type
-                                 ? OP_I2C
-                                 : dest_type == this_control.byte_type
-                                              ? OP_I2B
-                                              : OP_I2S); // short_type
-            }
-        }
-        else
+        if (op_kind == OP_F2I && dest_type != this_control.int_type)
         {
-            assert((dest_type == this_control.long_type ||
-                    dest_type == this_control.double_type) && "unsupported conversion");
+            assert(this_control.IsSimpleIntegerValueType(dest_type) && "unsupported conversion");
 
-            PutOp(dest_type == this_control.long_type
-                             ? OP_F2L
-                             : OP_F2D);
+            PutOp(dest_type == this_control.char_type
+                             ? OP_I2C
+                             : dest_type == this_control.byte_type
+                                          ? OP_I2B
+                                          : OP_I2S); // short_type
         }
     }
     else if (source_type == this_control.double_type)
     {
-        if (this_control.IsSimpleIntegerValueType(dest_type))
-        {
-            PutOp(OP_D2I);
+        Operators::operators op_kind = (dest_type == this_control.long_type
+                                                   ? OP_D2L
+                                                   : dest_type == this_control.float_type
+                                                                ? OP_D2F
+                                                                : OP_D2I);
 
-            if (dest_type != this_control.int_type)
-            {
-                PutOp(dest_type == this_control.char_type
-                                 ? OP_I2C
-                                 : dest_type == this_control.byte_type
-                                              ? OP_I2B
-                                              : OP_I2S); // short_type
-            }
-        }
-        else
-        {
-            assert((dest_type == this_control.long_type ||
-                    dest_type == this_control.float_type) && "unsupported conversion");
+        PutOp(op_kind);
 
-            PutOp(dest_type == this_control.long_type
-                             ? OP_D2L
-                             : OP_D2F); // float_type
+        if (op_kind == OP_D2I && dest_type != this_control.int_type)
+        {
+            assert(this_control.IsSimpleIntegerValueType(dest_type) && "unsupported conversion");
+
+            PutOp(dest_type == this_control.char_type
+                             ? OP_I2C
+                             : dest_type == this_control.byte_type
+                                          ? OP_I2B
+                                          : OP_I2S); // short_type
         }
     }
     else if (source_type == this_control.null_type)
@@ -3471,21 +3454,10 @@ int ByteCode::EmitConditionalExpression(AstConditionalExpression *expression)
 
 int ByteCode::EmitFieldAccess(AstFieldAccess *expression) 
 {
+    assert(! expression -> IsConstant());
+
     AstExpression *base = expression -> base;
     VariableSymbol *sym = expression -> symbol -> VariableCast();
-    if (expression -> IsConstant())
-    {
-        if (sym -> ACC_STATIC())
-        {
-            if (! (base -> symbol -> TypeCast() || base -> symbol -> VariableCast()))
-            {
-                EmitExpression(base);
-                PutOp(OP_POP);
-            }
-        }
-
-        return LoadConstant(expression);
-    }
 
     if (expression -> resolution_opt) // resolve reference to private field in parent
         return EmitExpression(expression -> resolution_opt);
@@ -3501,7 +3473,7 @@ int ByteCode::EmitFieldAccess(AstFieldAccess *expression)
     TypeSymbol *expression_type = expression -> Type();
     if (sym -> ACC_STATIC())
     {
-        if (! (base -> symbol -> TypeCast() || base -> symbol -> VariableCast()))
+        if (! base -> IsSimpleNameOrFieldAccess()) // if the base expression is an arbitrary expression, evaluate it for side effects.
         {
             EmitExpression(base);
             PutOp(OP_POP);
@@ -3522,64 +3494,6 @@ int ByteCode::EmitFieldAccess(AstFieldAccess *expression)
 }
 
 
-//
-// generate code corresponding to
-//  try {
-//      evaluate super.clone();
-//  } catch (CloneNotSupportedException e) {
-//      throw new InternalError(e.getMessage());
-//  }
-//
-void ByteCode::EmitCloneArray(AstMethodInvocation *expression)
-{
-    int start_pc = code_attribute -> CodeLength(); 
-
-    assert(expression -> method -> FieldAccessCast());
-    EmitExpression(expression -> method -> FieldAccessCast() -> base);
-
-    PutOp(OP_INVOKEVIRTUAL);
-
-    PutU2(RegisterMethodClone());
-    Label end_label;
-    EmitBranch(OP_GOTO, end_label);
-    int end_pc = code_attribute -> CodeLength(); 
-
-    //
-    // indicate that we use at least 2 local variables (this and the exception)
-    //
-    if (code_attribute -> MaxLocals() < 2)
-        code_attribute -> ResetMaxLocals(2); // CSA fix 08-dec-1998 for PR 294
-
-    //
-    // start handler
-    // can't count next StoreLocal as pop since in handler
-    //
-    ChangeStack(1); 
-    StoreLocal(1, this_control.Object());
-    PutOp(OP_NEW); 
-    PutU2(RegisterClass(this_control.java_SL_lang_SL_InternalError_literal));
-    PutOp(OP_DUP);
-    LoadLocal(1, this_control.Object());
-    PutOp(OP_INVOKEVIRTUAL);
-    PutU2(RegisterMethodCloneGetmessage());
-    PutOp(OP_INVOKENONVIRTUAL);
-    PutU2(RegisterMethodCloneInit());
-    PutOp(OP_ATHROW);
-    DefineLabel(end_label);
-    CompleteLabel(end_label);
-
-    //
-    // "java/lang/CloneNotSupportedException"
-    //
-    code_attribute -> AddException(start_pc,
-                                   end_pc,
-                                   end_pc,
-                                   RegisterClass(this_control.java_SL_lang_SL_CloneNotSupportedException_literal));
-
-    return;
-}
-
-
 void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
 {
     //
@@ -3590,12 +3504,6 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
                                                     : expression);
 
     MethodSymbol *msym = (MethodSymbol *) method_call -> symbol;
-
-    if (msym -> ExternalIdentity() == this_control.clone_name_symbol && msym -> containing_type -> IsArray())
-    {
-        EmitCloneArray(method_call);
-        return;
-    }
 
     bool is_super = false; // set if super call
 
@@ -3775,7 +3683,7 @@ void ByteCode::EmitPostUnaryExpressionField(int kind, AstPostUnaryExpression *ex
     if (need_value)
         PutOp(this_control.IsDoubleWordType(expression_type) ? OP_DUP2_X1 : OP_DUP_X1);
 
-    if (this_control.IsSimpleIntegerValueType(expression_type)) // TBSL: use iinc eventually
+    if (this_control.IsSimpleIntegerValueType(expression_type))
     {
         PutOp(OP_ICONST_1);
         PutOp(expression -> post_unary_tag == AstPostUnaryExpression::PLUSPLUS ? OP_IADD : OP_ISUB);
@@ -3824,18 +3732,13 @@ void ByteCode::EmitPostUnaryExpressionField(int kind, AstPostUnaryExpression *ex
 void ByteCode::EmitPostUnaryExpressionSimple(int kind, AstPostUnaryExpression *expression, bool need_value) 
 {
     TypeSymbol *expression_type = expression -> Type();
-    if (expression_type == this_control.int_type) // see if can use IINC
+    if (kind == LHS_LOCAL && expression_type == this_control.int_type) // can we use IINC ??
     {
-        if (IsLocal(expression))
-        {
-            if (need_value)
-                (void) LoadVariable(kind, expression);
-            PutOp(OP_IINC);
-            PutU1(expression -> symbol -> VariableCast() -> LocalVariableIndex());
-            PutI1(expression -> post_unary_tag == AstPostUnaryExpression::PLUSPLUS ? 1 : -1);
-
-            return;
-        }
+        if (need_value)
+            (void) LoadVariable(kind, expression);
+        PutOpIINC(expression -> symbol -> VariableCast() -> LocalVariableIndex(),
+                  expression -> post_unary_tag == AstPostUnaryExpression::PLUSPLUS ? 1 : -1);
+        return;
     }
 
     (void) LoadVariable(kind, expression -> expression); // this will also load value needing resolution
@@ -3843,7 +3746,7 @@ void ByteCode::EmitPostUnaryExpressionSimple(int kind, AstPostUnaryExpression *e
     if (need_value)
         PutOp(this_control.IsDoubleWordType(expression_type) ? OP_DUP2 : OP_DUP);
 
-    if (this_control.IsSimpleIntegerValueType(expression_type)) // TBSL: use iinc eventually
+    if (this_control.IsSimpleIntegerValueType(expression_type))
     {
         PutOp(OP_ICONST_1);
         PutOp(expression -> post_unary_tag == AstPostUnaryExpression::PLUSPLUS ? OP_IADD : OP_ISUB);
@@ -4081,22 +3984,18 @@ void ByteCode::EmitPreUnaryIncrementExpression(AstPreUnaryExpression *expression
 void ByteCode::EmitPreUnaryIncrementExpressionSimple(int kind, AstPreUnaryExpression *expression, bool need_value) 
 {
     TypeSymbol *type = expression -> Type();
-    if (type == this_control.int_type)
+    if (kind == LHS_LOCAL && type == this_control.int_type)
     {
-        if (kind == LHS_LOCAL)
-        {
-            PutOp(OP_IINC);
-            PutU1(expression -> symbol -> VariableCast() -> LocalVariableIndex());
-            PutI1(expression -> pre_unary_tag == AstPreUnaryExpression::PLUSPLUS ? 1 : -1);
-            if (need_value)
-                (void) LoadVariable(kind, expression);
-            return;
-        }
+        PutOpIINC(expression -> symbol -> VariableCast() -> LocalVariableIndex(),
+                  expression -> pre_unary_tag == AstPreUnaryExpression::PLUSPLUS ? 1 : -1);
+        if (need_value)
+            (void) LoadVariable(kind, expression);
+        return;
     }
 
     (void) LoadVariable(kind, expression -> expression); // will also load value if resolution needed
 
-    if (this_control.IsSimpleIntegerValueType(type)) // TBSL: use iinc eventually
+    if (this_control.IsSimpleIntegerValueType(type))
     {
         PutOp(OP_ICONST_1);
         PutOp(expression -> pre_unary_tag == AstPreUnaryExpression::PLUSPLUS ? OP_IADD : OP_ISUB);
@@ -4363,7 +4262,7 @@ void ByteCode::ConcatenateString(AstBinaryExpression *expression)
     // Call appropriate constructor depending on whether or not first operand is a string.
     //
     PutOp(OP_NEW);
-    PutU2(RegisterClass(this_control.java_SL_lang_SL_StringBuffer_literal));
+    PutU2(RegisterClass(this_control.StringBuffer() -> fully_qualified_name));
     PutOp(OP_DUP);
     if (expression -> left_expression -> IsConstant())
     {
@@ -4371,13 +4270,13 @@ void ByteCode::ConcatenateString(AstBinaryExpression *expression)
 
         EmitExpression(expression -> left_expression);
         PutOp(OP_INVOKENONVIRTUAL);
-        PutU2(RegisterMethodStringbufferStringInit());
+        PutU2(RegisterLibraryMethodref(this_control.StringBuffer_InitWithStringMethod()));
         ChangeStack(-1);
     }
     else
     {
         PutOp(OP_INVOKENONVIRTUAL);
-        PutU2(RegisterMethodStringbufferInit());
+        PutU2(RegisterLibraryMethodref(this_control.StringBuffer_InitMethod()));
 
         AppendString(expression -> left_expression); 
     }
@@ -4388,7 +4287,7 @@ void ByteCode::ConcatenateString(AstBinaryExpression *expression)
     // convert string buffer to string
     //
     PutOp(OP_INVOKEVIRTUAL);
-    PutU2(RegisterMethodStringbufferTostring());
+    PutU2(RegisterLibraryMethodref(this_control.StringBuffer_toStringMethod()));
     ChangeStack(1); // account for return value
 
     return;
@@ -4458,43 +4357,38 @@ void ByteCode::AppendString(AstExpression *p)
 
 void ByteCode::EmitStringAppendMethod(TypeSymbol *type) 
 {
-    int method_sig = 0,
-        stack_words = 1; // assume one word put on stack
+    //
+    // Find appropriate append routine to add to string buffer
+    //
+    MethodSymbol *append_method = 
+            (type -> num_dimensions == 1 && type -> base_type == this_control.char_type
+                   ? this_control.StringBuffer_append_char_arrayMethod()
+                   : type == this_control.char_type
+                          ? this_control.StringBuffer_append_charMethod()
+                          : type == this_control.boolean_type
+                                 ? this_control.StringBuffer_append_booleanMethod()
+                                 : type == this_control.int_type ||
+                                   type == this_control.short_type ||
+                                   type == this_control.byte_type
+                                        ? this_control.StringBuffer_append_intMethod()
+                                        : type == this_control.long_type
+                                               ? this_control.StringBuffer_append_longMethod()
+                                               : type == this_control.float_type
+                                                      ? this_control.StringBuffer_append_floatMethod()
+                                                      : type == this_control.double_type
+                                                             ? this_control.StringBuffer_append_doubleMethod()
+                                                             : type == this_control.String()
+                                                                    ? this_control.StringBuffer_append_stringMethod()
+                                                                    : IsReferenceType(type)
+                                                                          ? this_control.StringBuffer_append_objectMethod()
+                                                                          : this_control.StringBuffer_InitMethod()); // for assertion
 
-    //
-    // call appropriate append routine to add to string buffer
-    //
-    if (type -> num_dimensions == 1 && type -> base_type == this_control.char_type)
-         method_sig = RegisterMethodStringbufferAppendchararray();
-    else if (type == this_control.char_type)
-         method_sig = RegisterMethodStringbufferAppendchar();
-    else if (type == this_control.boolean_type)
-         method_sig = RegisterMethodStringbufferAppendboolean();
-    else if (type == this_control.int_type|| type == this_control.short_type || type == this_control.byte_type)
-         method_sig = RegisterMethodStringbufferAppendint();
-    else if (type == this_control.long_type)
-    {
-         method_sig = RegisterMethodStringbufferAppendlong();
-         stack_words += 1;
-    }
-    else if (type == this_control.float_type)
-         method_sig = RegisterMethodStringbufferAppendfloat();
-    else if (type == this_control.double_type)
-    {
-         method_sig = RegisterMethodStringbufferAppenddouble();
-         stack_words += 1;
-    }
-    else if (type == this_control.String())
-         method_sig = RegisterMethodStringbufferAppendstring();
-    else if (IsReferenceType(type))
-         method_sig = RegisterMethodStringbufferAppendobject();
-    else assert(false && "unexpected string buffer append operand");
+    assert(append_method != this_control.StringBuffer_InitMethod() && "unable to find method for string buffer concatenation");
 
     PutOp(OP_INVOKEVIRTUAL);
-    ChangeStack(-stack_words);
-    PutU2(method_sig);
+    ChangeStack(this_control.IsDoubleWordType(type) ? -2 : -1);
+    PutU2(RegisterLibraryMethodref(append_method));
     ChangeStack(1); // account for return value
-    assert((method_sig != 0) && "unable to find type for string buffer concatenation");
 
     return;
 }
@@ -4525,24 +4419,8 @@ ByteCode::ByteCode(TypeSymbol *unit_type) : ClassFile(unit_type),
                                             fieldref_constant_pool_index(NULL),
                                             methodref_constant_pool_index(NULL),
 
-                                            method_clone_index(0),
-                                            method_clone_getmessage_index(0),
-                                            method_clone_init_index(0),
-                                            method_stringbuffer_tostring_index(0),
-                                            method_stringbuffer_init_index(0),
-                                            method_stringbuffer_string_init_index(0),
-                                            method_stringbuffer_appendchararray_index(0),
-                                            method_stringbuffer_appendchar_index(0),
-                                            method_stringbuffer_appendboolean_index(0),
-                                            method_stringbuffer_appendint_index(0),
-                                            method_stringbuffer_appendlong_index(0),
-                                            method_stringbuffer_appendfloat_index(0),
-                                            method_stringbuffer_appenddouble_index(0),
-                                            method_stringbuffer_appendstring_index(0),
-                                            method_stringbuffer_appendobject_index(0),
-
-                                            stack_depth(0),
                                             string_overflow(false),
+                                            library_method_not_found(false),
 
                                             synchronized_blocks(0),
                                             finally_blocks(0)
@@ -4663,83 +4541,40 @@ void ByteCode::UseLabel(Label &lab, int _length, int _op_offset)
 }
 
 
-//
-// see if operand is default value of its type
-//
-bool ByteCode::IsDefaultValue(AstExpression *p)
+void ByteCode::LoadLocal(int varno, TypeSymbol *type)
 {
-    if (! p -> IsConstant())
-         return false;
-
-    LiteralValue *litp = p -> value;
-    TypeSymbol *type = p -> Type();
     if (this_control.IsSimpleIntegerValueType(type) || type == this_control.boolean_type)
     {
-        IntLiteralValue *vp = (IntLiteralValue *) litp;
-        return (vp -> value == 0);
+         if (varno <= 3)
+              PutOp(OP_ILOAD_0 + varno);
+         else PutOpWide(OP_ILOAD, varno);
     }
     else if (type == this_control.long_type)
     {
-        LongLiteralValue *vp = (LongLiteralValue *) litp;
-        return (vp -> value == 0);
+         if (varno <= 3)
+              PutOp(OP_LLOAD_0 + varno);
+         else PutOpWide(OP_LLOAD, varno);
     }
     else if (type == this_control.float_type)
     {
-        FloatLiteralValue *vp = (FloatLiteralValue *) litp;
-        return (vp -> value.FloatValue() == 0.0F);
+         if (varno <= 3)
+              PutOp(OP_FLOAD_0 + varno);
+         else PutOpWide(OP_FLOAD, varno);
     }
     else if (type == this_control.double_type)
     {
-        DoubleLiteralValue *vp = (DoubleLiteralValue *) litp;
-        return (vp -> value.DoubleValue() == 0.0L);
+         if (varno <= 3)
+              PutOp(OP_DLOAD_0 + varno);
+         else PutOpWide(OP_DLOAD, varno);
     }
-
-    //
-    // the default value for everything else is null
-    //
-    return (type == this_control.null_type);
-}
-
-
-//
-//  Methods to load values
-//
-int ByteCode::GetConstant(LiteralValue *litp, TypeSymbol *type)
-{
-    int lit_index;
-
-    if (type == this_control.String())
+    else // assume reference
     {
-        Utf8LiteralValue *vp = (Utf8LiteralValue *) litp;
-        lit_index = RegisterString(vp);
-    }
-    else
-    {
-        if (this_control.IsSimpleIntegerValueType(type) || type == this_control.boolean_type)
-        {
-            IntLiteralValue *vp = (IntLiteralValue *) litp;
-            lit_index = RegisterInteger(vp);
-        }
-        else if (type == this_control.float_type)
-        {
-            FloatLiteralValue *vp = (FloatLiteralValue *) litp;
-            IEEEfloat val = vp -> value;
-            lit_index = RegisterFloat(vp);
-        }
-        else if (type == this_control.long_type)
-        {
-            LongLiteralValue *vp = (LongLiteralValue *) litp;
-            lit_index = RegisterLong(vp);
-        }
-        else if (type == this_control.double_type)
-        {
-            DoubleLiteralValue *vp = (DoubleLiteralValue *) litp;
-            lit_index = RegisterDouble(vp);
-        }
-        else assert(false && "unexpected GetConstant kind");
+         if (varno <= 3)
+              PutOp(OP_ALOAD_0 + varno);
+         else PutOpWide(OP_ALOAD, varno);
     }
 
-    return lit_index;
+    return;
 }
 
 
@@ -4748,254 +4583,95 @@ int ByteCode::GetConstant(LiteralValue *litp, TypeSymbol *type)
 // if one has not yet been generated.
 //
 //
-int ByteCode::LoadLiteral(LiteralValue *litp, TypeSymbol *type) 
+void ByteCode::LoadLiteral(LiteralValue *litp, TypeSymbol *type) 
 {
     if (litp == this_control.NullValue())
     {
         PutOp(OP_ACONST_NULL);
-        return 1;
-    }
-
-    int lit_index = -1; // an invalid constant pool index !!!
-    if (type == this_control.String()) // register index as string if this has not yet been done
-    {
-        lit_index = RegisterString((Utf8LiteralValue *) litp);
     }
     else if (this_control.IsSimpleIntegerValueType(type) || type == this_control.boolean_type) // load literal using literal value
     {
         IntLiteralValue *vp = (IntLiteralValue *) litp;
         int val = vp -> value;
-        if (val >= -32768 && val < 32768)
+        if (val >= -32768 && val < 32768) // In this case, we might be able to use an immediate instruction
+             LoadImmediateInteger(val);
+        else LoadConstantAtIndex(RegisterInteger(vp));
+    }
+    else if (type == this_control.String()) // register index as string if this has not yet been done
+    {
+        LoadConstantAtIndex(RegisterString((Utf8LiteralValue *) litp));
+    }
+    else if (type == this_control.long_type)
+    {
+        LongLiteralValue *vp = (LongLiteralValue *) litp;
+        if (vp -> value == 0)
+             PutOp(OP_LCONST_0);
+        else if (vp -> value == 1)
+             PutOp(OP_LCONST_1);
+        else
         {
-            LoadShort(val);
-            return 1;
+             PutOp(OP_LDC2_W);
+             PutU2(RegisterLong(vp));
         }
-
-        lit_index = RegisterInteger(vp);
     }
     else if (type == this_control.float_type)
     {
         FloatLiteralValue *vp = (FloatLiteralValue *) litp;
         IEEEfloat val = vp -> value;
         if (val.Word() == 0) // if float 0.0
-        {
-            PutOp(OP_FCONST_0);
-            return 1;
-        }
+             PutOp(OP_FCONST_0);
         else if (val.Word() == 0x3f800000) // if float 1.0
-        {
-            PutOp(OP_FCONST_1);
-            return 1;
-        }
+             PutOp(OP_FCONST_1);
         else if (val.Word() == 0x40000000) // if float 2.0
-        {
-            PutOp(OP_FCONST_2);
-            return 1;
-        }
-
-        lit_index = RegisterFloat(vp);
-    }
-    else if (type == this_control.long_type)
-    {
-        LongLiteralValue *vp = (LongLiteralValue *) litp;
-        LongInt val = vp -> value;
-        if (val == 0)
-        {
-            PutOp(OP_LCONST_0); // long 0
-            return 2;
-        }
-        else if (val == 1)
-        {
-            PutOp(OP_LCONST_1); // long 1
-            return 2;
-        }
-
-        lit_index = RegisterLong(vp);
+             PutOp(OP_FCONST_2);
+        else LoadConstantAtIndex(RegisterFloat(vp));
     }
     else if (type == this_control.double_type)
     {
         DoubleLiteralValue *vp = (DoubleLiteralValue *) litp;
         IEEEdouble val = vp -> value;
         if (val.HighWord() == 0 && val.LowWord() == 0)
-        {
-            PutOp(OP_DCONST_0);
-            return 2;
-        }
+             PutOp(OP_DCONST_0);
         else if (val.HighWord() == 0x3ff00000 && val.LowWord() == 0x00000000) // if double 1.0
+             PutOp(OP_DCONST_1);
+        else
         {
-            PutOp(OP_DCONST_1);
-            return 2;
+             PutOp(OP_LDC2_W);
+             PutU2(RegisterDouble(vp));
         }
-
-        lit_index = RegisterDouble(vp);
     }
     else assert(false && "unsupported constant kind");
 
-    assert(lit_index >= 0);
-
-    if (type == this_control.long_type || type == this_control.double_type)
-    {
-        PutOp(OP_LDC2_W);
-        PutU2(lit_index);
-        return 2;
-    }
-
-    if (lit_index <= 255)
-    {
-        PutOp(OP_LDC);
-        PutU1(lit_index);
-    }
-    else
-    {
-        PutOp(OP_LDC_W);
-        PutU2(lit_index);
-    }
-
-    return 1;
-}
-
-
-void ByteCode::LoadLocal(int varno, TypeSymbol *type)
-{
-    if (this_control.IsSimpleIntegerValueType(type) || type == this_control.boolean_type)
-    {
-         if (varno <= 3)
-              PutOp(OP_ILOAD_0 + varno);
-         else if (varno < 256)
-         {
-              PutOp(OP_ILOAD);
-              PutU1(varno);
-         }
-         else
-         {
-              PutOp(OP_WIDE);
-              PutOp(OP_ILOAD);
-              PutU2(varno);
-         }
-    }
-    else if (type == this_control.long_type)
-    {
-         if (varno <= 3)
-              PutOp(OP_LLOAD_0 + varno);
-         else if (varno < 256)
-         {
-              PutOp(OP_LLOAD);
-              PutU1(varno);
-         }
-         else
-         {
-              PutOp(OP_WIDE);
-              PutOp(OP_LLOAD);
-              PutU2(varno);
-         }
-    }
-    else if (type == this_control.float_type)
-    {
-         if (varno <= 3)
-              PutOp(OP_FLOAD_0 + varno);
-         else if (varno < 256)
-         {
-              PutOp(OP_FLOAD);
-              PutU1(varno);
-         }
-         else
-         {
-              PutOp(OP_WIDE);
-              PutOp(OP_FLOAD);
-              PutU2(varno);
-         }
-    }
-    else if (type == this_control.double_type)
-    {
-         if (varno <= 3)
-              PutOp(OP_DLOAD_0 + varno);
-         else if (varno < 256)
-         {
-              PutOp(OP_DLOAD);
-              PutU1(varno);
-         }
-         else
-         {
-              PutOp(OP_WIDE);
-              PutOp(OP_DLOAD);
-              PutU2(varno);
-         }
-    }
-    else // assume reference
-    {
-         if (varno <= 3)
-              PutOp(OP_ALOAD_0 + varno);
-         else if (varno < 256)
-         {
-              PutOp(OP_ALOAD);
-              PutU1(varno);
-         }
-         else
-         {
-              PutOp(OP_WIDE);
-              PutOp(OP_ALOAD);
-              PutU2(varno);
-         }
-    }
-
     return;
 }
 
 
-void ByteCode::LoadInteger(int val)
+void ByteCode::LoadImmediateInteger(int val)
 {
-    
-    if (val >= -32768 && val < 32768) // if short
-        LoadShort(val);
+    if (val >= -1 && val <= 5)
+         PutOp(OP_ICONST_0 + val); // exploit opcode encoding
+    else if (val >= -128 && val < 128)
+    {
+         PutOp(OP_BIPUSH);
+         PutU1(val);
+    }
     else
     {
-        u2 index = RegisterInteger(this_control.int_pool.FindOrInsert(val));
-        if (index <= 255)
+        //
+        // For a short value, look to see if it is already in the constant pool.
+        // For a value outside the short range, make sure it is entered in the
+        // constant pool.
+        //
+        u2 index = (val >= -32768 && val < 32768 ? FindInteger(this_control.int_pool.Find(val))
+                                                 : RegisterInteger(this_control.int_pool.FindOrInsert(val)));
+        if (index == 0) // a short value that was not previously registered in the constant pool
         {
-            PutOp(OP_LDC);
-            PutU1((u1) index);
+            PutOp(OP_SIPUSH);
+            PutU1(val >> 8);
+            PutU1(val);
         }
-        else
-        {
-            PutOp(OP_LDC_W);
-            PutU2(index);
-        }
+        else LoadConstantAtIndex(index);
     }
-
-    return;
-}
-
-
-//
-// load short (signed) value onto stack
-//
-void ByteCode::LoadShort(int val)
-{
-    if (val >= -128 && val < 128)
-    {
-        switch (val)
-        {
-            case -1:
-            case 0:
-            case 1:
-            case 2:
-            case 3:
-            case 4:
-            case 5:
-                PutOp(OP_ICONST_0 + val); // exploit opcode encoding
-                break;
-            default: // else put byte value
-                PutOp(OP_BIPUSH);
-                PutU1(val);
-        }
-    }
-    else if (val >= -32768 && val < 32768) // if short
-    {
-        PutOp(OP_SIPUSH);
-        PutU1((val >> 8)); 
-        PutU1(val);
-    }
-    else assert(false && "bcShort operand not short!");
 
     return;
 }
@@ -5112,7 +4788,7 @@ void ByteCode::LoadReference(AstExpression *expression)
 }
 
 
-int  ByteCode::LoadArrayElement(TypeSymbol *type)
+int ByteCode::LoadArrayElement(TypeSymbol *type)
 {
     PutOp(type == this_control.byte_type || type == this_control.boolean_type
                 ? OP_BALOAD
@@ -5202,81 +4878,31 @@ void ByteCode::StoreLocal(int varno, TypeSymbol *type)
     {
          if (varno <= 3)
               PutOp(OP_ISTORE_0 + varno);
-         else if (varno < 256)
-         {
-              PutOp(OP_ISTORE);
-              PutU1(varno);
-         }
-         else
-         {
-              PutOp(OP_WIDE);
-              PutOp(OP_ISTORE);
-              PutU2(varno);
-         }
+         else PutOpWide(OP_ISTORE, varno);
     }
     else if (type == this_control.long_type)
     {
          if (varno <= 3)
               PutOp(OP_LSTORE_0 + varno);
-         else if (varno < 256)
-         {
-              PutOp(OP_LSTORE);
-              PutU1(varno);
-         }
-         else
-         {
-              PutOp(OP_WIDE);
-              PutOp(OP_LSTORE);
-              PutU2(varno);
-         }
+         else PutOpWide(OP_LSTORE, varno);
     }
     else if (type == this_control.float_type)
     {
          if (varno <= 3)
               PutOp(OP_FSTORE_0 + varno);
-         else if (varno < 256)
-         {
-              PutOp(OP_FSTORE);
-              PutU1(varno);
-         }
-         else
-         {
-              PutOp(OP_WIDE);
-              PutOp(OP_FSTORE);
-              PutU2(varno);
-         }
+         else PutOpWide(OP_FSTORE, varno);
     }
     else if (type == this_control.double_type)
     {
          if (varno <= 3)
               PutOp(OP_DSTORE_0 + varno);
-         else if (varno < 256)
-         {
-              PutOp(OP_DSTORE);
-              PutU1(varno);
-         }
-         else
-         {
-              PutOp(OP_WIDE);
-              PutOp(OP_DSTORE);
-              PutU2(varno);
-         }
+         else PutOpWide(OP_DSTORE, varno);
     }
     else // assume reference
     {
          if (varno <= 3)
               PutOp(OP_ASTORE_0 + varno);
-         else if (varno < 256)
-         {
-              PutOp(OP_ASTORE);
-              PutU1(varno);
-         }
-         else
-         {
-              PutOp(OP_WIDE);
-              PutOp(OP_ASTORE);
-              PutU2(varno);
-         }
+         else PutOpWide(OP_ASTORE, varno);
     }
 
     return;
@@ -5604,6 +5230,39 @@ void ByteCode::PutOp(unsigned char opc)
     return;
 }
 
+void ByteCode::PutOpWide(unsigned char opc, u2 var)
+{
+    if (var <= 255)  // if can use standard form
+    {
+        PutOp(opc);
+        PutU1(var);
+    }
+    else // need wide form
+    {
+        PutOp(OP_WIDE);
+        PutOp(opc);
+        PutU2(var);
+    }
+    
+    return;
+}
+
+void ByteCode::PutOpIINC(u2 var, int val)
+{
+    if (var <= 255 && (val >= -128 && val <= 127))  // if can use standard form
+    {
+        PutOp(OP_IINC);
+        PutU1(var);
+        PutU1(val);
+    }
+    else // else need wide form
+    {
+        PutOp(OP_WIDE);
+        PutOp(OP_IINC);
+        PutU2(var);
+        PutU2(val);
+    }
+}
 
 void ByteCode::ChangeStack(int i)
 {

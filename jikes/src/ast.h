@@ -320,6 +320,7 @@ public:
     // Given an Ast tree, check whether or not it is a Name - simple or qualified.
     //
     bool IsName();
+    bool IsSimpleNameOrFieldAccess();
     bool IsSuperExpression();
     bool IsLeftHandSide();
     bool IsGenerated();
@@ -656,20 +657,20 @@ class AstBlock : public AstStatement
 private:
 
     StoragePool *pool;
+    AstArray<LexStream::TokenIndex> *labels;
     AstArray<Ast *> *block_statements;
 
 public:
     BlockSymbol *block_symbol;
 
-    LexStream::TokenIndex label_token_opt;
     int nesting_level;
     LexStream::TokenIndex left_brace_token;
     LexStream::TokenIndex right_brace_token;
 
     AstBlock(StoragePool *pool_) : pool(pool_),
+                                   labels(NULL),
                                    block_statements(NULL),
                                    block_symbol(NULL),
-                                   label_token_opt(0),
                                    nesting_level(0)
     {
         Ast::kind = Ast::BLOCK;
@@ -687,6 +688,11 @@ public:
     inline int NumStatements() { return (block_statements ? block_statements -> Length() : 0); }
     inline void AllocateBlockStatements(int estimate = 0);
     inline void AddStatement(Ast *);
+
+    inline LexStream::TokenIndex &Label(int i) { return (*labels)[i]; }
+    inline int NumLabels() { return (labels ? labels -> Length() : 0); }
+    inline void AllocateLabels(int estimate = 4);
+    inline void AddLabel(LexStream::TokenIndex);
 
 #ifdef TEST
     virtual void Print(LexStream &);
@@ -3829,6 +3835,19 @@ inline bool Ast::IsName()
 
 
 //
+// Given an Ast tree, check whether or not it is a simple name or
+// a field access consisting only of simple names or keywords.
+//
+inline bool Ast::IsSimpleNameOrFieldAccess()
+{
+    Ast *name = this;
+    for (AstFieldAccess *field_access = name -> FieldAccessCast(); field_access; field_access = name -> FieldAccessCast())
+        name = field_access -> base;
+    return (name -> SimpleNameCast() || name -> TypeExpressionCast());
+}
+
+
+//
 // Do we have a simple 'super' expression or a field of the form XXX.super
 //
 inline bool Ast::IsSuperExpression()
@@ -4078,6 +4097,11 @@ public:
     }
 
     // ********************************************************************************************** //
+
+    inline AstArray<LexStream::TokenIndex> *NewTokenIndexArray(unsigned size = 0)
+    {
+        return new (Alloc(sizeof(AstArray<LexStream::TokenIndex>))) AstArray<LexStream::TokenIndex>((StoragePool *) this, size);
+    }
 
     inline AstArray<Ast *> *NewAstArray(unsigned size = 0)
     {
@@ -5238,6 +5262,19 @@ inline void AstBlock::AddStatement(Ast *statement)
     if (! block_statements)
         AllocateBlockStatements();
     block_statements -> Next() = statement;
+}
+
+inline void AstBlock::AllocateLabels(int estimate)
+{
+    if (! labels)
+        labels = pool -> NewTokenIndexArray(estimate);
+}
+
+inline void AstBlock::AddLabel(LexStream::TokenIndex label_token_index)
+{
+    if (! labels)
+        AllocateLabels();
+    labels -> Next() = label_token_index;
 }
 
 inline void AstSwitchBlockStatement::AllocateBlockStatements(int estimate)

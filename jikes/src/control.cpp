@@ -17,6 +17,7 @@
 #include "bytecode.h"
 #include "case.h"
 
+
 Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
                                                                  option(option_),
                                                                  dot_classpath_index(0),
@@ -43,10 +44,32 @@ Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
                                                                  Float_type(NULL),
                                                                  Double_type(NULL),
                                                                  Class_type(NULL),
-                                                                 StringBuffer_type(NULL),
                                                                  Throwable_type(NULL),
                                                                  RuntimeException_type(NULL),
+                                                                 ClassNotFoundException_type(NULL),
                                                                  Error_type(NULL),
+                                                                 NoClassDefFoundError_type(NULL),
+                                                                 StringBuffer_type(NULL),
+
+                                                                 Class_forName_method(NULL),
+
+                                                                 Throwable_getMessage_method(NULL),
+
+                                                                 NoClassDefFoundError_InitWithString_method(NULL),
+
+                                                                 StringBuffer_Init_method(NULL),
+                                                                 StringBuffer_InitWithString_method(NULL),
+                                                                 StringBuffer_toString_method(NULL),
+                                                                 StringBuffer_append_char_array_method(NULL),
+                                                                 StringBuffer_append_char_method(NULL),
+                                                                 StringBuffer_append_boolean_method(NULL),
+                                                                 StringBuffer_append_int_method(NULL),
+                                                                 StringBuffer_append_long_method(NULL),
+                                                                 StringBuffer_append_float_method(NULL),
+                                                                 StringBuffer_append_double_method(NULL),
+                                                                 StringBuffer_append_string_method(NULL),
+                                                                 StringBuffer_append_object_method(NULL),
+
                                                                  int_pool(&bad_value),
                                                                  long_pool(&bad_value),
                                                                  float_pool(&bad_value),

@@ -622,13 +622,104 @@ public:
         DefiniteBinaryExpr[AstBinaryExpression::GREATER]              = &Semantic::DefiniteDefaultBinaryExpression;
         DefiniteBinaryExpr[AstBinaryExpression::LESS_EQUAL]           = &Semantic::DefiniteDefaultBinaryExpression;
         DefiniteBinaryExpr[AstBinaryExpression::GREATER_EQUAL]        = &Semantic::DefiniteDefaultBinaryExpression;
-        DefiniteBinaryExpr[AstBinaryExpression::AND]                  = &Semantic::DefiniteAND;
-        DefiniteBinaryExpr[AstBinaryExpression::XOR]                  = &Semantic::DefiniteXOR;
-        DefiniteBinaryExpr[AstBinaryExpression::IOR]                  = &Semantic::DefiniteIOR;
+
+        //
+        // TODO: Remove this comment as well as the functions:
+        //
+        //     DefiniteAND
+        //     DefiniteXOR
+        //     DefiniteIOR
+        //
+        //     DefiniteEQUAL
+        //     DefiniteNOT_EQUAL
+        //
+        // when revised spec is released !!!
+        //
+        //****************************************************************************************
+        //
+        // To:	Martin Odersky <Martin.Odersky@epfl.ch>
+        // cc:	David Shields/Watson/IBM@IBMUS, compiler@eng.sun.com, 
+        // gilad.bracha@eng.sun.com, jrose@eng.sun.com, 
+        // innerclass-comments@lukasiewicz.eng.sun.com, guy.steele@east.sun.com, 
+        // peter.kessler@eng.sun.com 
+        // Subject:	Re: Query #32 to Sun: Verification problem
+        // 
+        // 
+        // 
+        // 
+        // On Thu, 29 Jul 1999, Martin Odersky wrote:
+        // 
+        // > It seems a very undesirable state of affairs if the Java spec for |,
+        // > &, ^ and the JVM spec for iand, ior, ixor differ in their definite
+        // > assignment properties. Assuming that it's unreasonable to make the
+        // > verifier implement the current JLS spec one-to-one, would it be
+        // > possible to tighten the JLS so that definite assignment for |, & ,^ is
+        // > done in the way the verifier does it? I doubt that such a tightening
+        // > would invalidate any real Java programs.
+        // 
+        // Gilad and I decided today that ammending the JLS was the best course of
+        // action, and then discovered that Guy had already done so in our working
+        // draft of the revised specification.  We anticipate that when a draft is 
+        // made
+        // available for public review, it will drop sections 16.1.6, 16.1.7, and
+        // 16.1.8, which specify special-case rules for the &, |, and ^ operators.
+        // They will be covered instead by the general case for expressions with
+        // subexpressions, which reads as follows in the current working draft:
+        // 
+        // 	If the expression has subexpressions, V is [un]assigned
+        // 	after the expression iff V is [un]assigned after its rightmost
+        // 	immediate subexpression.
+        // 
+        // Note that the when-true and when-false cases, currently distinguished
+        // for these operators, are now coalesced, as in the general case.
+        // 
+        // Pending an official change to the specification, we recommend that
+        // compiler implementors follow the proposed ammendments.
+        // 
+        // Due to the fact that 'javac' has never been in compliance with the
+        // current JLS on this issue, nor will much (all?) code that
+        // relies on the difference actually verify and execute, compatibility
+        // implications should be minimal.
+        // 
+        // --Bill
+        // 
+        //------------------------------------------------------------------------------------------------
+        // 
+        // To:	David Shields/Watson/IBM@IBMUS
+        // cc:	Martin Odersky <Martin.Odersky@epfl.ch>, compiler@eng.sun.com, gilad.bracha@eng.sun.com, 
+        // jrose@eng.sun.com, innerclass-comments@lukasiewicz.eng.sun.com, guy.steele@east.sun.com, 
+        // peter.kessler@eng.sun.com 
+        // Subject:	Re: Query #32 to Sun: Verification problem
+        // 
+        // On Mon, 2 Aug 1999 shieldsd@us.ibm.com wrote:
+        // 
+        // > Do you still plan to retain 16.1.3, 16.1.4 and 16.1.11? Since we follow them as
+        // > currently written, we accept some of the positive 1.2 JCK tests that javac
+        // > currently rejects, but the resulting class files fail verification. Examples
+        // > include dasg02901, dasg03001, dasg03301, dasg03303, dasg03401, dasg03501,
+        // > dasg04501, dasg04601, dasg04701 and dasg05001).
+        // >
+        // > dave and philippe
+        // 
+        // We plan to keep these.  However, the special rules for '==' (16.1.9) and
+        // '!=' (16.1.10) have also been dropped, again because the bytecodes for these
+        // operators create materialized boolean values on the stack at runtime.
+        // 
+        // Guy and Gilad:  In my copy of the draft, the second-to-last sentence on
+        // page p.395 claims otherwise, but sections 16.1.9 and 16.1.10 have in fact
+        // been deleted.
+        // 
+        // --Bill
+        // 
+        DefiniteBinaryExpr[AstBinaryExpression::AND]                  = &Semantic::DefiniteDefaultBinaryExpression;// &Semantic::DefiniteAND;
+        DefiniteBinaryExpr[AstBinaryExpression::XOR]                  = &Semantic::DefiniteDefaultBinaryExpression;// &Semantic::DefiniteXOR;
+        DefiniteBinaryExpr[AstBinaryExpression::IOR]                  = &Semantic::DefiniteDefaultBinaryExpression;// &Semantic::DefiniteIOR;
+
+        DefiniteBinaryExpr[AstBinaryExpression::EQUAL_EQUAL]          = &Semantic::DefiniteDefaultBinaryExpression; // &Semantic::DefiniteEQUAL_EQUAL;
+        DefiniteBinaryExpr[AstBinaryExpression::NOT_EQUAL]            = &Semantic::DefiniteDefaultBinaryExpression; // &Semantic::DefiniteNOT_EQUAL;
+
         DefiniteBinaryExpr[AstBinaryExpression::AND_AND]              = &Semantic::DefiniteAND_AND;
         DefiniteBinaryExpr[AstBinaryExpression::OR_OR]                = &Semantic::DefiniteOR_OR;
-        DefiniteBinaryExpr[AstBinaryExpression::EQUAL_EQUAL]          = &Semantic::DefiniteEQUAL_EQUAL;
-        DefiniteBinaryExpr[AstBinaryExpression::NOT_EQUAL]            = &Semantic::DefiniteNOT_EQUAL;
         DefiniteBinaryExpr[AstBinaryExpression::STAR]                 = &Semantic::DefiniteDefaultBinaryExpression;
         DefiniteBinaryExpr[AstBinaryExpression::MINUS]                = &Semantic::DefiniteDefaultBinaryExpression;
         DefiniteBinaryExpr[AstBinaryExpression::SLASH]                = &Semantic::DefiniteDefaultBinaryExpression;

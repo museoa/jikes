@@ -42,6 +42,8 @@ public:
         CANNOT_OPEN_DIRECTORY,
         BAD_INPUT_FILE,
         UNREADABLE_INPUT_FILE,
+        NON_STANDARD_LIBRARY_TYPE,
+        LIBRARY_METHOD_NOT_FOUND,
         CANNOT_REOPEN_FILE,
         CANNOT_WRITE_FILE,
         CONSTANT_POOL_OVERFLOW,
@@ -380,6 +382,8 @@ private:
     static void PrintCANNOT_OPEN_DIRECTORY(ErrorInfo &, LexStream *, Control &);
     static void PrintBAD_INPUT_FILE(ErrorInfo &, LexStream *, Control &);
     static void PrintUNREADABLE_INPUT_FILE(ErrorInfo &, LexStream *, Control &);
+    static void PrintNON_STANDARD_LIBRARY_TYPE(ErrorInfo &, LexStream *, Control &);
+    static void PrintLIBRARY_METHOD_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
     static void PrintCANNOT_REOPEN_FILE(ErrorInfo &, LexStream *, Control &);
     static void PrintCANNOT_WRITE_FILE(ErrorInfo &, LexStream *, Control &);
     static void PrintCONSTANT_POOL_OVERFLOW(ErrorInfo &, LexStream *, Control &);

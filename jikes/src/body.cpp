@@ -117,9 +117,9 @@ void Semantic::ProcessBlock(Ast *stmt)
     //     l: a = b;
     //     l: b = c;
     //
-    if (block_body -> label_token_opt)
+    for (int i = 0; i < block_body -> NumLabels(); i++)
     {
-        NameSymbol *name_symbol = lex_stream -> NameSymbol(block_body -> label_token_opt);
+        NameSymbol *name_symbol = lex_stream -> NameSymbol(block_body -> Label(i));
         Symbol *symbol = NULL;
         for (SemanticEnvironment *env = state_stack.Top(); env; env = env -> previous)
         {
@@ -131,8 +131,8 @@ void Semantic::ProcessBlock(Ast *stmt)
         if (symbol)
         {
             ReportSemError(SemanticError::DUPLICATE_LABEL,
-                           block_body -> label_token_opt,
-                           block_body -> label_token_opt,
+                           block_body -> Label(i),
+                           block_body -> Label(i),
                            name_symbol -> Name());
         }
         else
@@ -224,7 +224,7 @@ void Semantic::ProcessLocalVariableDeclarationStatement(Ast *stmt)
             BlockSymbol *block = LocalBlockStack().TopBlock() -> block_symbol;
             symbol -> SetLocalVariableIndex(block -> max_variable_index++); // Assigning a local_variable_index to a variable
                                                                             // also marks it complete as a side-effect.
-            if (symbol -> Type() == control.long_type || symbol -> Type() == control.double_type)
+            if (control.IsDoubleWordType(symbol -> Type()))
                 block -> max_variable_index++;
 
             if (variable_declarator -> variable_initializer_opt)
@@ -287,7 +287,7 @@ void Semantic::ProcessSynchronizedStatement(Ast *stmt)
     //
     block -> synchronized_variable_index = enclosing_block -> block_symbol -> max_variable_index;
     block -> max_variable_index = block -> synchronized_variable_index + 2;
-    if (ThisMethod() -> Type() == control.double_type || ThisMethod() -> Type() == control.long_type)
+    if (control.IsDoubleWordType(ThisMethod() -> Type()))
          block -> max_variable_index += 2;
     else if (ThisMethod() -> Type() != control.void_type)
          block -> max_variable_index++;

@@ -1361,7 +1361,7 @@ VariableSymbol *Semantic::FindInstance(TypeSymbol *base_type, TypeSymbol *enviro
         rhs -> method                  = method_name;
         rhs -> left_parenthesis_token  = loc;
         rhs -> right_parenthesis_token = loc;
-        rhs -> symbol                  = type -> GetReadAccessMethod(variable_symbol);
+        rhs -> symbol                  = TypeSymbol::GetReadAccessMethod(variable_symbol);
         rhs -> AddArgument(parm); // TODO: WARNING: sharing of Ast subtree !!!
 
 
@@ -1460,7 +1460,7 @@ AstExpression *Semantic::CreateAccessToType(Ast *source, TypeSymbol *environment
 
                 assert(containing_type == variable -> owner -> TypeCast());
 
-                method_call -> symbol = containing_type -> GetReadAccessMethod(variable);
+                method_call -> symbol = TypeSymbol::GetReadAccessMethod(variable);
                 method_call -> AddArgument(resolution);
 
                 resolution = method_call;
@@ -1517,7 +1517,7 @@ void Semantic::CreateAccessToScopedVariable(AstSimpleName *simple_name, TypeSymb
             method_call -> method                  = method_name;
             method_call -> left_parenthesis_token  = simple_name -> identifier_token;
             method_call -> right_parenthesis_token = simple_name -> identifier_token;
-            method_call -> symbol                  = environment_type -> GetReadAccessMethod(variable_symbol);
+            method_call -> symbol                  = TypeSymbol::GetReadAccessMethod(variable_symbol);
 
             if (! variable_symbol -> ACC_STATIC())
                 method_call -> AddArgument(access_expression); // TODO: WARNING: sharing of Ast subtree !!!
@@ -1568,7 +1568,7 @@ void Semantic::CreateAccessToScopedMethod(AstMethodInvocation *method_call, Type
         if (method -> ACC_PRIVATE())
         {
             if (method -> ACC_STATIC())
-                method_call -> symbol = environment_type -> GetReadAccessMethod(method);
+                method_call -> symbol = TypeSymbol::GetReadAccessMethod(method);
             else
             {
                 AstMethodInvocation *old_method_call = method_call;
@@ -1580,7 +1580,7 @@ void Semantic::CreateAccessToScopedMethod(AstMethodInvocation *method_call, Type
                 method_call -> method                  = old_method_call -> method;
                 method_call -> left_parenthesis_token  = old_method_call -> left_parenthesis_token;
                 method_call -> right_parenthesis_token = old_method_call -> right_parenthesis_token;
-                method_call -> symbol                  = environment_type -> GetReadAccessMethod(method);
+                method_call -> symbol                  = TypeSymbol::GetReadAccessMethod(method);
                 method_call -> AddArgument(access_expression);
                 for (int i = 0; i < old_method_call -> NumArguments(); i++)
                     method_call -> AddArgument(old_method_call -> Argument(i));
@@ -2140,7 +2140,7 @@ void Semantic::FindVariableMember(TypeSymbol *type, TypeSymbol *environment_type
                     p -> method                  = method_name;
                     p -> left_parenthesis_token  = field_access -> identifier_token;
                     p -> right_parenthesis_token = field_access -> identifier_token;
-                    p -> symbol                  = environment_type -> GetReadAccessMethod(variable_symbol);
+                    p -> symbol                  = TypeSymbol::GetReadAccessMethod(variable_symbol);
 
                     if (! variable_symbol -> ACC_STATIC())
                         p -> AddArgument(field_access -> base);
@@ -2276,6 +2276,9 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                                field_access -> RightToken());
             }
 
+            AddDependence(this_type, control.NoClassDefFoundError(), field_access -> identifier_token);
+            AddDependence(this_type, control.ClassNotFoundException(), field_access -> identifier_token);
+
             AstTypeExpression *base = (AstTypeExpression *) field_access -> base;
 
             AstArrayType *array_type = base -> type -> ArrayTypeCast();
@@ -2401,10 +2404,10 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                         method_call -> method                  = method_access;
                         method_call -> left_parenthesis_token  = field_access -> identifier_token;
                         method_call -> right_parenthesis_token = field_access -> identifier_token;
-                        method_call -> symbol                  = outermost_type -> GetWriteAccessMethod(variable_symbol);
+                        method_call -> symbol                  = TypeSymbol::GetWriteAccessMethod(variable_symbol);
 
                         field_access -> resolution_opt = method_call;
-                        field_access -> symbol = outermost_type -> GetReadAccessMethod(variable_symbol);
+                        field_access -> symbol = TypeSymbol::GetReadAccessMethod(variable_symbol);
                     }
                 }
             }
@@ -2668,7 +2671,7 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                                 p -> method                  = method_name;
                                 p -> left_parenthesis_token  = field_access -> identifier_token;
                                 p -> right_parenthesis_token = field_access -> identifier_token;
-                                p -> symbol                  = type -> GetReadAccessMethod(variable_symbol);
+                                p -> symbol                  = TypeSymbol::GetReadAccessMethod(variable_symbol);
 
                                 if (! variable_symbol -> ACC_STATIC())
                                     p -> AddArgument(field_access -> base); // TODO: WARNING: sharing of Ast subtree !!!
@@ -3021,7 +3024,7 @@ MethodSymbol *Semantic::FindMethodMember(TypeSymbol *type, TypeSymbol *environme
                 (method -> ACC_PRIVATE() && this_type != method -> containing_type))
             {
                 if (method -> ACC_STATIC())
-                    method_call -> symbol = environment_type -> GetReadAccessMethod(method);
+                    method_call -> symbol = TypeSymbol::GetReadAccessMethod(method);
                 else
                 {
                     AstMethodInvocation *old_method_call = method_call;
@@ -3033,7 +3036,7 @@ MethodSymbol *Semantic::FindMethodMember(TypeSymbol *type, TypeSymbol *environme
                     method_call -> method                  = old_method_call -> method;
                     method_call -> left_parenthesis_token  = old_method_call -> left_parenthesis_token;
                     method_call -> right_parenthesis_token = old_method_call -> right_parenthesis_token;
-                    method_call -> symbol                  = environment_type -> GetReadAccessMethod(method);
+                    method_call -> symbol                  = TypeSymbol::GetReadAccessMethod(method);
                     method_call -> AddArgument(field_access -> base);
                     for (int i = 0; i < old_method_call -> NumArguments(); i++)
                         method_call -> AddArgument(old_method_call -> Argument(i));
@@ -3244,7 +3247,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                         (method -> ACC_PRIVATE() && this_type != method -> containing_type))
                     {
                         if (method -> ACC_STATIC())
-                            method_call -> symbol = type -> GetReadAccessMethod(method);
+                            method_call -> symbol = TypeSymbol::GetReadAccessMethod(method);
                         else
                         {
                             AstMethodInvocation *old_method_call = method_call;
@@ -3256,7 +3259,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                             method_call -> method                  = old_method_call -> method;
                             method_call -> left_parenthesis_token  = old_method_call -> left_parenthesis_token;
                             method_call -> right_parenthesis_token = old_method_call -> right_parenthesis_token;
-                            method_call -> symbol                  = type -> GetReadAccessMethod(method);
+                            method_call -> symbol                  = TypeSymbol::GetReadAccessMethod(method);
                             method_call -> AddArgument(field_access -> base);
                             for (int i = 0; i < old_method_call -> NumArguments(); i++)
                                 method_call -> AddArgument(old_method_call -> Argument(i));
@@ -3483,7 +3486,7 @@ void Semantic::UpdateGeneratedLocalConstructor(MethodSymbol *constructor)
 
         symbol -> SetExternalIdentity(param -> ExternalIdentity()); // TODO: do we really need this ?
         symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
-        if (symbol -> Type() == control.long_type || symbol -> Type() == control.double_type)
+        if (control.IsDoubleWordType(symbol -> Type()))
             block_symbol -> max_variable_index++;
         local_constructor -> AddFormalParameter(symbol);
     }
@@ -3894,7 +3897,7 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression *class
         symbol -> SetType(param -> Type());
         symbol -> SetOwner(constructor);
         symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
-        if (symbol -> Type() == control.long_type || symbol -> Type() == control.double_type)
+        if (control.IsDoubleWordType(symbol -> Type()))
             block_symbol -> max_variable_index++;
         constructor -> AddFormalParameter(symbol);
     }
@@ -4422,7 +4425,7 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
             {
                 if (! method -> LocalConstructor())
                 {
-                    method = type -> GetReadAccessMethod(method);
+                    method = TypeSymbol::GetReadAccessMethod(method);
                     class_creation -> class_type -> symbol = method;
 
                     //
@@ -4583,7 +4586,7 @@ void Semantic::ProcessPostUnaryExpression(Ast *expr)
             if (read_method)
             {
                 variable_symbol = (VariableSymbol *) read_method -> accessed_member;
-                postfix_expression -> write_method = read_method -> containing_type -> GetWriteAccessMethod(variable_symbol);
+                postfix_expression -> write_method = TypeSymbol::GetWriteAccessMethod(variable_symbol);
             }
             else variable_symbol = postfix_expression -> expression -> symbol -> VariableCast();
         }
@@ -4776,7 +4779,7 @@ void Semantic::ProcessPLUSPLUSOrMINUSMINUS(AstPreUnaryExpression *expr)
             if (read_method)
             {
                 variable_symbol = (VariableSymbol *) read_method -> accessed_member;
-                expr -> write_method = read_method -> containing_type -> GetWriteAccessMethod(variable_symbol);
+                expr -> write_method = TypeSymbol::GetWriteAccessMethod(variable_symbol);
             }
             else variable_symbol = expr -> expression -> symbol -> VariableCast();
         }
@@ -6592,11 +6595,14 @@ void Semantic::ProcessMINUS(AstBinaryExpression *expr)
 
 void Semantic::ProcessSLASH(AstBinaryExpression *expr)
 {
-    ProcessExpression(expr -> left_expression);
-    ProcessExpression(expr -> right_expression);
+    AstExpression *left_expression = expr -> left_expression,
+                  *right_expression = expr -> right_expression;
 
-    TypeSymbol *left_type  = expr -> left_expression -> Type(),
-               *right_type = expr -> right_expression -> Type();
+    ProcessExpression(left_expression);
+    ProcessExpression(right_expression);
+
+    TypeSymbol *left_type  = left_expression -> Type(),
+               *right_type = right_expression -> Type();
 
     if (left_type == control.no_type || right_type == control.no_type)
         expr -> symbol = control.no_type;
@@ -6614,55 +6620,59 @@ void Semantic::ProcessSLASH(AstBinaryExpression *expr)
             exception_set -> AddElement(control.Error());
         }
 
-        if (expr -> left_expression -> IsConstant() && expr -> right_expression -> IsConstant())
+        if (right_expression -> IsConstant())
         {
-             if (expr -> Type() == control.double_type)
-             {
-                 DoubleLiteralValue *left = (DoubleLiteralValue *) expr -> left_expression -> value;
-                 DoubleLiteralValue *right = (DoubleLiteralValue *) expr -> right_expression -> value;
+            //
+            // If the type of the expression is int or long and the right-hand side is 0
+            // then issue an error message.
+            // Otherwise, if both subexpressions are constant, calculate result.
+            //
+            if ((expr -> Type() == control.int_type && ((IntLiteralValue *) right_expression -> value) -> value == 0) ||
+                (expr -> Type() == control.long_type && ((LongLiteralValue *) right_expression -> value) -> value == 0))
+            {
+                ReportSemError(SemanticError::ZERO_DIVIDE,
+                               expr -> LeftToken(),
+                               expr -> RightToken());
+            }
+            else if (left_expression -> IsConstant())
+            {
+                if (expr -> Type() == control.double_type)
+                {
+                    DoubleLiteralValue *left = (DoubleLiteralValue *) left_expression -> value;
+                    DoubleLiteralValue *right = (DoubleLiteralValue *) right_expression -> value;
 
-                 expr -> value = control.double_pool.FindOrInsert(left -> value / right -> value);
-             }
-             else if (expr -> Type() == control.float_type)
-             {
-                 FloatLiteralValue *left = (FloatLiteralValue *) expr -> left_expression -> value;
-                 FloatLiteralValue *right = (FloatLiteralValue *) expr -> right_expression -> value;
+                    expr -> value = control.double_pool.FindOrInsert(left -> value / right -> value);
+                }
+                else if (expr -> Type() == control.float_type)
+                {
+                    FloatLiteralValue *left = (FloatLiteralValue *) left_expression -> value;
+                    FloatLiteralValue *right = (FloatLiteralValue *) right_expression -> value;
 
-                 expr -> value = control.float_pool.FindOrInsert(left -> value / right -> value);
-             }
-             else if (expr -> Type() == control.long_type)
-             {
-                 LongLiteralValue *left = (LongLiteralValue *) expr -> left_expression -> value;
-                 LongLiteralValue *right = (LongLiteralValue *) expr -> right_expression -> value;
+                    expr -> value = control.float_pool.FindOrInsert(left -> value / right -> value);
+                }
+                else if (expr -> Type() == control.long_type)
+                {
+                    LongLiteralValue *left = (LongLiteralValue *) left_expression -> value;
+                    LongLiteralValue *right = (LongLiteralValue *) right_expression -> value;
 
-                 if (right -> value == 0)
-                 {
-                     ReportSemError(SemanticError::ZERO_DIVIDE,
-                                    expr -> LeftToken(),
-                                    expr -> RightToken());
-                 }
-                 else expr -> value = control.long_pool.FindOrInsert(left -> value / right -> value);
-             }
-             else if (expr -> Type() == control.int_type)
-             {
-                 IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
-                 IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+                    expr -> value = control.long_pool.FindOrInsert(left -> value / right -> value);
+                }
+                else if (expr -> Type() == control.int_type)
+                {
+                    IntLiteralValue *left = (IntLiteralValue *) left_expression -> value;
+                    IntLiteralValue *right = (IntLiteralValue *) right_expression -> value;
 
-                 if (right -> value == 0)
-                 {
-                     ReportSemError(SemanticError::ZERO_DIVIDE,
-                                    expr -> LeftToken(),
-                                    expr -> RightToken());
-                 }
-//
-// There is a bug in the intel hardware where if one tries to compute ((2**32-1) / -1), he gets a ZeroDivide exception.
-// Thus, instead of using the straightforward code below, we use the short-circuited one that follows:
-//
-//                 else expr -> value = control.int_pool.FindOrInsert(left -> value / right -> value);
-//
-                 else expr -> value = control.int_pool.FindOrInsert(right -> value == -1 ? -(left -> value)
-                                                                                         : left -> value / right -> value);
-             }
+                    //
+                    // There is a bug in the intel hardware where if one tries to compute ((2**32-1) / -1),
+                    // he gets a ZeroDivide exception. Thus, instead of using the straightforward code below,
+                    // we use the short-circuited one that follows:
+                    //
+                    //  expr -> value = control.int_pool.FindOrInsert(left -> value / right -> value);
+                    //
+                    expr -> value = control.int_pool.FindOrInsert(right -> value == -1 ? -(left -> value)
+                                                                                       : left -> value / right -> value);
+                }
+            }
         }
     }
 
@@ -6672,11 +6682,14 @@ void Semantic::ProcessSLASH(AstBinaryExpression *expr)
 
 void Semantic::ProcessMOD(AstBinaryExpression *expr)
 {
-    ProcessExpression(expr -> left_expression);
-    ProcessExpression(expr -> right_expression);
+    AstExpression *left_expression = expr -> left_expression,
+                  *right_expression = expr -> right_expression;
 
-    TypeSymbol *left_type  = expr -> left_expression -> Type(),
-               *right_type = expr -> right_expression -> Type();
+    ProcessExpression(left_expression);
+    ProcessExpression(right_expression);
+
+    TypeSymbol *left_type  = left_expression -> Type(),
+               *right_type = right_expression -> Type();
 
     if (left_type == control.no_type || right_type == control.no_type)
         expr -> symbol = control.no_type;
@@ -6694,62 +6707,66 @@ void Semantic::ProcessMOD(AstBinaryExpression *expr)
             exception_set -> AddElement(control.Error());
         }
 
-        if (expr -> left_expression -> IsConstant() && expr -> right_expression -> IsConstant())
+        if (right_expression -> IsConstant())
         {
-             if (expr -> Type() == control.double_type)
-             {
-                 DoubleLiteralValue *left = (DoubleLiteralValue *) expr -> left_expression -> value;
-                 DoubleLiteralValue *right = (DoubleLiteralValue *) expr -> right_expression -> value;
-                 IEEEdouble result = IEEEdouble((u4) 0);
-                 IEEEdouble::Fmodulus(left -> value, right -> value, result);
+            //
+            // If the type of the expression is int or long and the right-hand side is 0
+            // then issue an error message.
+            // Otherwise, if both subexpressions are constant, calculate result.
+            //
+            if ((expr -> Type() == control.int_type && ((IntLiteralValue *) right_expression -> value) -> value == 0) ||
+                (expr -> Type() == control.long_type && ((LongLiteralValue *) right_expression -> value) -> value == 0))
+            {
+                ReportSemError(SemanticError::ZERO_DIVIDE,
+                               expr -> LeftToken(),
+                               expr -> RightToken());
+            }
+            else if (left_expression -> IsConstant())
+            {
+                if (expr -> Type() == control.double_type)
+                {
+                    DoubleLiteralValue *left = (DoubleLiteralValue *) left_expression -> value;
+                    DoubleLiteralValue *right = (DoubleLiteralValue *) right_expression -> value;
+                    IEEEdouble result = IEEEdouble((u4) 0);
+                    IEEEdouble::Fmodulus(left -> value, right -> value, result);
 
-                 expr -> value = control.double_pool.FindOrInsert(result);
-             }
-             else if (expr -> Type() == control.float_type)
-             {
-                 FloatLiteralValue *left = (FloatLiteralValue *) expr -> left_expression -> value;
-                 FloatLiteralValue *right = (FloatLiteralValue *) expr -> right_expression -> value;
-                 IEEEfloat result = IEEEfloat(0);
-                 IEEEfloat::Fmodulus(left -> value, right -> value, result);
+                    expr -> value = control.double_pool.FindOrInsert(result);
+                }
+                else if (expr -> Type() == control.float_type)
+                {
+                    FloatLiteralValue *left = (FloatLiteralValue *) left_expression -> value;
+                    FloatLiteralValue *right = (FloatLiteralValue *) right_expression -> value;
+                    IEEEfloat result = IEEEfloat(0);
+                    IEEEfloat::Fmodulus(left -> value, right -> value, result);
 
-                 expr -> value = control.float_pool.FindOrInsert(result);
-             }
-             else if (expr -> Type() == control.long_type)
-             {
-                 LongLiteralValue *left = (LongLiteralValue *) expr -> left_expression -> value;
-                 LongLiteralValue *right = (LongLiteralValue *) expr -> right_expression -> value;
+                    expr -> value = control.float_pool.FindOrInsert(result);
+                }
+                else if (expr -> Type() == control.long_type)
+                {
+                    LongLiteralValue *left = (LongLiteralValue *) left_expression -> value;
+                    LongLiteralValue *right = (LongLiteralValue *) right_expression -> value;
 
-                 if (right -> value == 0)
-                 {
-                     ReportSemError(SemanticError::ZERO_DIVIDE,
-                                    expr -> LeftToken(),
-                                    expr -> RightToken());
-                 }
-                 else expr -> value = control.long_pool.FindOrInsert(left -> value % right -> value);
-             }
-             else if (expr -> Type() == control.int_type)
-             {
-                 IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
-                 IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+                    expr -> value = control.long_pool.FindOrInsert(left -> value % right -> value);
+                }
+                else if (expr -> Type() == control.int_type)
+                {
+                    IntLiteralValue *left = (IntLiteralValue *) left_expression -> value;
+                    IntLiteralValue *right = (IntLiteralValue *) right_expression -> value;
 
-                 if (right -> value == 0)
-                 {
-                     ReportSemError(SemanticError::ZERO_DIVIDE,
-                                    expr -> LeftToken(),
-                                    expr -> RightToken());
-                 }
-//
-// There is a bug in the intel hardware where if one tries to compute ((2**32-1) / -1), he gets a ZeroDivide exception.
-// Thus, instead of using the straightforward code below, we use the short-circuited one that follows:
-//
-//                 else expr -> value = control.int_pool.FindOrInsert(left -> value % right -> value);
-//
-                 else expr -> value = control.int_pool.FindOrInsert((left -> value  == (signed) 0x80000000 &&
-                                                                     right -> value == (signed) 0xffffffff)
-                                                                                     ? 0
-                                                                                     : left -> value % right -> value);
-             }
-         }
+                    //
+                    // There is a bug in the intel hardware where if one tries to compute ((2**32-1) / -1),
+                    // he gets a ZeroDivide exception. Thus, instead of using the straightforward code below,
+                    // we use the short-circuited one that follows:
+                    //
+                    // expr -> value = control.int_pool.FindOrInsert(left -> value % right -> value);
+                    //
+                    expr -> value = control.int_pool.FindOrInsert((left -> value  == (signed) 0x80000000 &&
+                                                                   right -> value == (signed) 0xffffffff)
+                                                                                   ? 0
+                                                                                   : left -> value % right -> value);
+                }
+            }
+        }
     }
 
     return;
@@ -7009,7 +7026,7 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
         if (read_method)
         {
             VariableSymbol *symbol = (VariableSymbol *) read_method -> accessed_member;
-            assignment_expression -> write_method = read_method -> containing_type -> GetWriteAccessMethod(symbol);
+            assignment_expression -> write_method = TypeSymbol::GetWriteAccessMethod(symbol);
         }
     }
 
@@ -7100,10 +7117,29 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
     {
         case AstAssignmentExpression::PLUS_EQUAL:
         case AstAssignmentExpression::STAR_EQUAL:
-        case AstAssignmentExpression::SLASH_EQUAL:
-        case AstAssignmentExpression::MOD_EQUAL:
         case AstAssignmentExpression::MINUS_EQUAL:
             BinaryNumericPromotion(assignment_expression);
+            break;
+        case AstAssignmentExpression::SLASH_EQUAL:
+        case AstAssignmentExpression::MOD_EQUAL:
+            BinaryNumericPromotion(assignment_expression);
+            {
+                AstExpression *right_expression = assignment_expression -> expression;
+                if (right_expression -> IsConstant())
+                {
+                    //
+                    // If the type of the expression is int or long and the right-hand side is 0
+                    // then issue an error message.
+                    //
+                    if ((left_type == control.int_type && ((IntLiteralValue *) right_expression -> value) -> value == 0) ||
+                        (left_type == control.long_type && ((LongLiteralValue *) right_expression -> value) -> value == 0))
+                    {
+                        ReportSemError(SemanticError::ZERO_DIVIDE,
+                                       assignment_expression -> LeftToken(),
+                                       assignment_expression -> RightToken());
+                    }
+                }
+            }
             break;
         case AstAssignmentExpression::LEFT_SHIFT_EQUAL:
         case AstAssignmentExpression::RIGHT_SHIFT_EQUAL:

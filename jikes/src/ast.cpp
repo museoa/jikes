@@ -104,15 +104,16 @@ Ast *AstBlock::Clone(StoragePool *ast_pool)
 {
     AstBlock *clone = ast_pool -> GenBlock();
 
-    clone -> label_token_opt = this -> label_token_opt;
+    for (int i = 0; i < this -> NumLabels(); i++)
+        clone -> AddLabel(this -> Label(i));
     clone -> nesting_level = this -> nesting_level;
     clone -> left_brace_token = this -> left_brace_token;
     if (this -> NumStatements() == 0)
         clone -> block_statements = NULL;
     else
     {
-        for (int i = 0; i < this -> NumStatements(); i++)
-            clone -> AddStatement(this -> Statement(i) -> Clone(ast_pool));
+        for (int j = 0; j < this -> NumStatements(); j++)
+            clone -> AddStatement(this -> Statement(j) -> Clone(ast_pool));
     }
     clone -> right_brace_token = this -> right_brace_token;
 
@@ -916,10 +917,13 @@ Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
 
     void AstBlock::Print(LexStream& lex_stream)
     {
-        Coutput << "#" << this -> id << " ("
-                << (label_token_opt ? lex_stream.NameString(label_token_opt) : L"")
-                << (label_token_opt ? ": " : "")
-                << "Block at level " << nesting_level;
+        Coutput << "#" << this -> id << " (";
+        for (int i = 0; i < this -> NumLabels(); i++)
+        {
+             Coutput << lex_stream.NameString(this -> Label(i))
+                     << ": ";
+        }
+        Coutput << "Block at level " << nesting_level;
         if (block_symbol)
              Coutput << ", max_variable_index " << block_symbol -> max_variable_index
                      << ", try_variable_index " << block_symbol -> try_variable_index;
@@ -929,11 +933,11 @@ Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
         if (NumStatements() > 0)
         {
             Coutput << "    {";
-            for (int i = 0; i < this -> NumStatements(); i++)
+            for (int j = 0; j < this -> NumStatements(); j++)
             {
-                if (i % 10 == 0)
+                if (j % 10 == 0)
                     Coutput << "\n        ";
-                Coutput << " #" << this -> Statement(i) -> id;
+                Coutput << " #" << this -> Statement(j) -> id;
             }
             Coutput << "    }\n";
             for (int k = 0; k < this -> NumStatements(); k++)

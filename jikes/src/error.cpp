@@ -315,6 +315,8 @@ void SemanticError::StaticInitializer()
     print_message[CANNOT_OPEN_DIRECTORY] = PrintCANNOT_OPEN_DIRECTORY;
     print_message[BAD_INPUT_FILE] = PrintBAD_INPUT_FILE;
     print_message[UNREADABLE_INPUT_FILE] = PrintUNREADABLE_INPUT_FILE;
+    print_message[NON_STANDARD_LIBRARY_TYPE] = PrintNON_STANDARD_LIBRARY_TYPE;
+    print_message[LIBRARY_METHOD_NOT_FOUND] = PrintLIBRARY_METHOD_NOT_FOUND;
     print_message[CANNOT_REOPEN_FILE] = PrintCANNOT_REOPEN_FILE;
     print_message[CANNOT_WRITE_FILE] = PrintCANNOT_WRITE_FILE;
     print_message[CONSTANT_POOL_OVERFLOW] = PrintCONSTANT_POOL_OVERFLOW;
@@ -1126,6 +1128,36 @@ void SemanticError::PrintUNREADABLE_INPUT_FILE(ErrorInfo &err, LexStream *lex_st
     Coutput << "The input file \""
             << err.insert1
             << "\" was not found.";
+
+    return;
+}
+
+
+void SemanticError::PrintNON_STANDARD_LIBRARY_TYPE(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    Coutput << "A non-standard version of the type \"";
+    if (NotDot(err.insert1))
+    {
+        Coutput << err.insert1
+                << "/";
+    }
+    Coutput << err.insert2
+            << "\" was found. Class files that depend on this type may not have been generated.";
+
+    return;
+}
+
+
+void SemanticError::PrintLIBRARY_METHOD_NOT_FOUND(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    Coutput << "A class file was not generated for the type \"";
+    if (NotDot(err.insert1))
+    {
+        Coutput << err.insert1
+                << "/";
+    }
+    Coutput << err.insert2
+            << "\" because a library method that it depends on was not found. See system messages for more information.";
 
     return;
 }

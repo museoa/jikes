@@ -897,6 +897,21 @@ void IntLiteralTable::Rehash()
 }
 
 
+IntLiteralValue *IntLiteralTable::Find(int value)
+{
+    int k = ((unsigned) value) % hash_size; // The unsigned casting turns the negative values into positive values
+
+    IntLiteralValue *lit = NULL;
+    for (lit = base[k]; lit; lit = (IntLiteralValue *) lit -> next)
+    {
+        if (lit -> value == value)
+            break;
+    }
+
+    return lit;
+}
+
+
 IntLiteralValue *IntLiteralTable::FindOrInsert(int value)
 {
     int k = ((unsigned) value) % hash_size; // The unsigned casting turns the negative values into positive values

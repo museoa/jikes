@@ -117,13 +117,13 @@ void Semantic::ProcessTypeNames()
 
                 assert(type);
 
+                type -> MarkBad();
                 type -> MarkSourceNoLongerPending();
                 type -> supertypes_closure = new SymbolSet;
                 type -> subtypes = new SymbolSet;
                 type -> semantic_environment = new SemanticEnvironment((Semantic *) this, type, NULL);
                 if (type != control.Object())
                     type -> super = (type == control.Throwable() ? control.Object() : control.Throwable());
-                type -> MarkBad();
                 if (! type -> FindConstructorSymbol())
                     AddDefaultConstructor(type);
                 source_file_symbol -> types.Next() = type;
@@ -2140,6 +2140,7 @@ TypeSymbol *Semantic::ReadType(FileSymbol *file_symbol, PackageSymbol *package, 
         if (! type)
         {
             type = package -> InsertOuterTypeSymbol(name_symbol);
+            type -> MarkBad();
             type -> outermost_type = type;
             type -> supertypes_closure = new SymbolSet;
             type -> subtypes = new SymbolSet;
@@ -2148,7 +2149,6 @@ TypeSymbol *Semantic::ReadType(FileSymbol *file_symbol, PackageSymbol *package, 
                 type -> super = (type == control.Throwable() ? control.Object() : control.Throwable());
             type -> SetOwner(package);
             type -> SetSignature(control);
-            type -> MarkBad();
             AddDefaultConstructor(type);
             type -> file_symbol = file_symbol;
             file_symbol -> types.Next() = type;
@@ -2186,9 +2186,9 @@ TypeSymbol *Semantic::ReadType(FileSymbol *file_symbol, PackageSymbol *package, 
         else
         {
             control.ProcessBadType(type);
+            type -> MarkBad();
             if (type != control.Object())
                 type -> super = (type == control.Throwable() ? control.Object() : control.Throwable());
-            type -> MarkBad();
             AddDefaultConstructor(type);
 
             ReportSemError(SemanticError::TYPE_NOT_FOUND,
@@ -2235,6 +2235,7 @@ TypeSymbol *Semantic::GetBadNestedType(TypeSymbol *type, LexStream::TokenIndex i
     wcscat(external_name, name_symbol -> Name());
 
     TypeSymbol *inner_type = type -> InsertNestedTypeSymbol(name_symbol);
+    inner_type -> MarkBad();
     inner_type -> outermost_type = type -> outermost_type;
     inner_type -> supertypes_closure = new SymbolSet;
     inner_type -> subtypes = new SymbolSet;
@@ -2246,7 +2247,6 @@ TypeSymbol *Semantic::GetBadNestedType(TypeSymbol *type, LexStream::TokenIndex i
     inner_type -> SetOwner(type);
     inner_type -> SetSignature(control);
     inner_type -> InsertThis(0);
-    inner_type -> MarkBad();
     AddDefaultConstructor(inner_type);
 
     ReportSemError(SemanticError::TYPE_NOT_FOUND,
@@ -2816,7 +2816,7 @@ void Semantic::GenerateLocalConstructor(MethodSymbol *constructor)
         symbol -> SetOwner(local_constructor);
         symbol -> SetExternalIdentity(param -> ExternalIdentity());
         symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
-        if (symbol -> Type() == control.long_type || symbol -> Type() == control.double_type)
+        if (control.IsDoubleWordType(symbol -> Type()))
             block_symbol -> max_variable_index++;
         local_constructor -> AddFormalParameter(symbol);
     }
@@ -2927,7 +2927,7 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration *construc
 
         symbol -> SetOwner(constructor);
         symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
-        if (symbol -> Type() == control.long_type || symbol -> Type() == control.double_type)
+        if (control.IsDoubleWordType(symbol -> Type()))
             block_symbol -> max_variable_index++;
         symbol -> declarator = formal_declarator;
         constructor -> AddFormalParameter(symbol);
@@ -3831,7 +3831,7 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
 
         symbol -> SetOwner(method);
         symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
-        if (symbol -> Type() == control.long_type || symbol -> Type() == control.double_type)
+        if (control.IsDoubleWordType(symbol -> Type()))
             block_symbol -> max_variable_index++;
         symbol -> declarator = formal_declarator;
         method -> AddFormalParameter(symbol);
