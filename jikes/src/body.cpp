@@ -1189,18 +1189,24 @@ wchar_t *Semantic::UncaughtExceptionContext()
             s << " must be declared to throw the exception.";
         }
     }
+    else if (ThisType() -> ACC_INTERFACE())
+    {
+        s << " must be wrapped in a helper class method which catches the "
+          << "exception, since interface field initializers cannot throw "
+          << "checked exceptions.";
+    }
     else
     {
         VariableSymbol *this_variable = ThisVariable();
         assert(this_variable);
         if (this_variable -> ACC_STATIC())
-            s << "must be moved to a static initializer and enclosed in a try "
+            s << " must be moved to a static initializer and enclosed in a try "
               << "statement which catches the exception, since static "
               << "initializers cannot throw checked exceptions.";
         else
         {
             assert(! ThisType() -> Anonymous());
-            s << "must be moved to an instance initializer or constructor and "
+            s << " must be moved to an instance initializer or constructor and "
               << "enclosed in a try statement which catches the exception, or "
               << "else every constructor in this class must be declared to "
               << "throw the exception.";

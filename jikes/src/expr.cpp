@@ -3166,11 +3166,9 @@ MethodShadowSymbol *Semantic::FindMethodMember(TypeSymbol *type,
             if (this_type != target_type &&
                 (method -> ACC_PRIVATE() ||
                  (method -> ACC_PROTECTED() &&
-                  (! ProtectedAccessCheck(containing_type) ||
-                   target_type != containing_type)) ||
-                 (method -> ACC_PUBLIC() &&
-                  ! this_type -> IsSubclass(target_type) &&
-                  target_type != containing_type)))
+                  ! ProtectedAccessCheck(containing_type)) ||
+                 (target_type != containing_type &&
+                  target_type != this_type)))
             {
                 //
                 // Find the right enclosing class to place the accessor method
@@ -4197,8 +4195,8 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
 
         if (UncaughtException(exception))
             ReportSemError((class_creation -> class_body_opt
-                            ? SemanticError::UNCAUGHT_CONSTRUCTOR_EXCEPTION
-                            : SemanticError::UNCAUGHT_ANONYMOUS_CONSTRUCTOR_EXCEPTION),
+                            ? SemanticError::UNCAUGHT_ANONYMOUS_CONSTRUCTOR_EXCEPTION
+                            : SemanticError::UNCAUGHT_CONSTRUCTOR_EXCEPTION),
                            actual_type -> LeftToken(),
                            actual_type -> RightToken(),
                            type -> ExternalName(),
