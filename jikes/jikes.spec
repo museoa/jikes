@@ -34,5 +34,5 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,-,root)
 /usr/bin/jikes
-/usr/doc/jikes-%{version}/license.htm
-/usr/man/man1/jikes.1
+%doc /usr/doc/jikes-%{version}/license.htm
+%doc /usr/man/man1/jikes.1.gz

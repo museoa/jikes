@@ -2,6 +2,13 @@
 
 	Released Jikes 1.14, Happy Mother's Day.
 
+2001-05-13  Chris Abbey  <cabbey@bresnanlink.net>
+
+	* jikes.spec: added %doc for documentation files,
+	and changed jikes.1 to jikes.1.gz because the rpm
+	build process automatically compresses man pages,
+	but doesn't reflect this in the %files section.
+
 2001-05-11  Chris Abbey  <cabbey@bresnanlink.net>
 
 	* src/stream.cpp (Stream::DecodeNextCharacter): fixed
