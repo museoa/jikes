@@ -1,10 +1,14 @@
+2002-11-07  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/error.cpp (NotDot): Fix logic.
+
 2002-11-06  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/error.h:
 	* src/error.cpp (FILE_FILE_CONFLICT): Restore error I accidentally
 	deleted in last patch.
 
-2002-11-02  Elliott Hughes  <enh@acm.org>
+2002-11-05  Elliott Hughes  <enh@acm.org>
 
 	* src/error.cpp:
 	* src/error.h: Massive rewrite. Use printf style strings and

@@ -819,7 +819,7 @@ static void PrintFile(ErrorString& s, const wchar_t* filename,
 //
 static bool NotDot(const wchar_t* str)
 {
-    return str && (*str != U_DO || str[1] != U_NU);
+    return str && *str && *str != U_DO && str[1] != U_NU;
 }
 
 //
