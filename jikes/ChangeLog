@@ -1,3 +1,8 @@
+2002-07-09  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/symbol.h (VariableSymbol): Silence HP-UX aCC warning about
+	trailing comma.
+
 2002-07-10  Chris Abbey	 <jikes@cabbey.net>
 
         * 1.16 release.

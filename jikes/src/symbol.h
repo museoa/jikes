@@ -1542,7 +1542,7 @@ private:
         COMPLETE = 0x01, // Used to prevent use of field before declaration
         SYNTHETIC = 0x02, // Used to mark compiler-created variables
         DEPRECATED = 0x04, // Used to mark deprecated fields
-        INITIALIZED = 0x08, // Used when initial value of final field is known
+        INITIALIZED = 0x08 // Used when initial value of final field is known
     };
     NameSymbol *external_name_symbol;
 
