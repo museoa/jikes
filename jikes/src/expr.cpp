@@ -2650,7 +2650,17 @@ void Semantic::ProcessAmbiguousName(Ast *name)
         //
         if (field_access -> IsClassAccess())
         {
-            if (type -> Primitive())
+            //
+            // In a clone, simply return control.no_type. We are in a clone
+            // only when doing something like evaluating a forward reference
+            // to a final field for its constant value, but a class literal
+            // has no constant value. In such cases, this method will again
+            // be invoked when we finally reach the field, and then it is
+            // finally appropriate to resolve the reference.
+            //
+            if (error && error -> InClone())
+                field_access -> symbol = control.no_type;
+            else if (type -> Primitive())
             {
                 if (type == control.int_type)
                     type = control.Integer();

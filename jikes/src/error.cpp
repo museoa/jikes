@@ -1702,8 +1702,8 @@ void SemanticError::InitializeMessages()
     //
     // Make sure that there is a message associated with each code
     //
-    for (int i = 0; i < _num_kinds; i++)
-        assert(messages[i]);
+    for (int j = 0; j < _num_kinds; j++)
+        assert(messages[j]);
 }
 
 #ifdef HAVE_JIKES_NAMESPACE

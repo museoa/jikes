@@ -5728,8 +5728,11 @@ void ByteCode::ConcatenateString(AstBinaryExpression *expression)
 
 void ByteCode::AppendString(AstExpression *expression)
 {
+    //
+    // Grab the type before reducing no-ops, in the case of ""+(int)char.
+    //
+    TypeSymbol* type = expression -> Type();
     expression = StripNops(expression);
-    TypeSymbol *type = expression -> Type();
 
     if (expression -> IsConstant())
     {
