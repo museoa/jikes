@@ -1,5 +1,10 @@
 2002-06-27  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/symbol.cpp (EnclosingType): Update logic to work for classes
+	read from .class file - bug 2995.
+
+2002-06-27  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/expr.cpp (CanCastConvert): Don't allow conversion to null
 	type - bug 2982.
 

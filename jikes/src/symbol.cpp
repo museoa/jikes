@@ -1400,11 +1400,14 @@ bool TypeSymbol::IsNestedIn(TypeSymbol *type)
 
 //
 // Return the type of an enclosing instance, if this is an inner class
-// which is not in a static context.
+// which is not in a static context. For anonymous and local classes, the
+// compiler necessarily built them from source, so enclosing_instance will
+// be properly set. Non-static nested classes, however, could have been
+// read from a .class file, hence the need for the second half of the ||.
 //
 TypeSymbol *TypeSymbol::EnclosingType()
 {
-    if (enclosing_instance)
+    if (enclosing_instance || (IsInner() && ! Anonymous() && ! IsLocal()))
     {
         assert(ContainingType());
         return ContainingType();
