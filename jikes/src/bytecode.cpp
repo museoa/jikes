@@ -3883,8 +3883,8 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression* expression,
     }
 
     //
-    // Next, simplify if no result is needed. The only remaining boolean
-    // operations with side-effects are division and remainder on integral 0.
+    // Next, simplify if no result is needed. Be careful of side-effects with
+    // binary / and % on integral 0, as well as evaluation order of && and ||.
     //
     if (! need_value)
     {
@@ -3926,6 +3926,22 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression* expression,
                       ? OP_IDIV : OP_IREM);
                 PutOp(OP_POP);
             }
+        }
+        else if (expression -> binary_tag == AstBinaryExpression::OR_OR)
+        {
+            Label lab1;
+            EmitBranchIfExpression(expression -> left_expression, true, lab1);
+            EmitExpression(expression -> right_expression, false);
+            DefineLabel(lab1);
+            CompleteLabel(lab1);
+        }
+        else if (expression -> binary_tag == AstBinaryExpression::AND_AND)
+        {
+            Label lab2;
+            EmitBranchIfExpression(expression -> left_expression, false, lab2);
+            EmitExpression(expression -> right_expression, false);
+            DefineLabel(lab2);
+            CompleteLabel(lab2);
         }
         else
         {

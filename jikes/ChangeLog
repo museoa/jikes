@@ -1,3 +1,8 @@
+2003-10-11  Eric Blake  <ebb9@byu.net>
+
+	* src/bytecode.cpp (EmitBinaryExpression): Evaluate left branch of
+	otherwise unused && and || - bug 3488.
+
 2003-10-06  Eric Blake  <ebb9@byu.net>
 
 	* src/ast.h (AstWhileStatement, AstDoStatement, AstForStatement):
