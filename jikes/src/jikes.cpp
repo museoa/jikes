@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
         // Be quiet about +A and +C. Those who know, know; those who don't, don't.
         //
         fprintf(stderr,
-                "\nIBM Research Jikes Compiler"
+                "\nIBM Jikes Compiler"
                 "\n(C) Copyright IBM Corp. 1997, 1999.\n"
                 "- Licensed Materials - Program Property of IBM - All Rights Reserved.\n\n");
         fprintf(stderr, "%s", StringConstant::U8S_command_format);

@@ -1,5 +1,10 @@
 1999-09-10    <shields@jikes.watson.ibm.com>
 
+	* README: 
+	* contrib.htm:
+	* jikes.htm:
+	Drop 'Research' from name of project, just 'IBM Jikes' will do.
+
 	* jikes.htm: 
 	Delete the part about VA Java and other IBM products. That may have
 	relevant back in Dec 98 when source first came out, but is no longer
