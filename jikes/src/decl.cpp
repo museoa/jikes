@@ -1691,7 +1691,9 @@ void Semantic::ProcessMembers(AstInterfaceDeclaration *interface_declaration)
 //
 // Pass 4: Process the field declarations at the top level of the types
 //
-void Semantic::CompleteSymbolTable(SemanticEnvironment *environment, LexStream::TokenIndex identifier_token, AstClassBody *class_body)
+void Semantic::CompleteSymbolTable(SemanticEnvironment *environment,
+                                   LexStream::TokenIndex identifier_token,
+                                   AstClassBody *class_body)
 {
     if (compilation_unit -> BadCompilationUnitCast())
         return;
@@ -1748,21 +1750,37 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment, LexStream::
         }
 
         //
-        // If the super class of this_type is abstract and it is contained in a
+        // If any super class of this_type is abstract and is contained in a
         // different package, check to see if its members include abstract
         // methods with default access. If so, we must issue error messages
-        // for them also as they cannot be overridden.
+        // for them also as they cannot be overridden. However, this can be
+        // tricky: suppose abstract p1.A declares abstract foo(), abstract
+        // p2.B extends p1.A, abstract p1.C extends p2.B and implements foo().
+        // Then, p2.B does not inherit foo() and thus neither does p1.C, but
+        // p1.C DOES override foo() with a valid implementation. And thus,
+        // p2.D extends p1.C need not be abstract.
         //
-        if (this_type != control.Object() && this_type -> super -> ACC_ABSTRACT() &&
-            (this_type -> ContainingPackage() != this_type -> super -> ContainingPackage()))
+        PackageSymbol *package = this_type -> ContainingPackage();
+        for (TypeSymbol *super_type = this_type -> super;
+             super_type -> ACC_ABSTRACT();
+             super_type = super_type -> super)
         {
-            ExpandedMethodTable &super_expanded_table = *(this_type -> super -> expanded_method_table);
+            if (super_type -> ContainingPackage() == package)
+                continue;
+
+            package = super_type -> ContainingPackage();
+            ExpandedMethodTable &super_expanded_table = *(super_type -> expanded_method_table);
             for (int i = 0; i < super_expanded_table.symbol_pool.Length(); i++)
             {
                 MethodSymbol *method = super_expanded_table.symbol_pool[i] -> method_symbol;
 
+                //
+                // Remember that abstract methods cannot be private. Filter
+                // out the inherited methods, which were already reported.
+                //
                 if (method -> ACC_ABSTRACT() &&
-                    (! (method -> ACC_PUBLIC() || method -> ACC_PROTECTED() || method -> ACC_PRIVATE())))
+                    ! method -> ACC_PUBLIC() &&
+                    ! method -> ACC_PROTECTED())
                 {
                     TypeSymbol *containing_type = method -> containing_type;
 
@@ -1770,18 +1788,35 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment, LexStream::
                         method -> ProcessMethodSignature((Semantic *) this, identifier_token);
 
                     //
-                    // If the method is contained in an abstract type read
-                    // from a class file, then it is possible that the abstract
-                    // method is just out-of-date and needs to be recompiled.
+                    // Search all intermediate superclasses in the same package
+                    // as the current super_class for an override of the
+                    // abstract method in question.
                     //
-                    ReportSemError(SemanticError::NON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD,
-                                   identifier_token,
-                                   identifier_token,
-                                   method -> Header(),
-                                   containing_type -> ContainingPackage() -> PackageName(),
-                                   containing_type -> ExternalName(),
-                                   this_type -> ContainingPackage() -> PackageName(),
-                                   this_type -> ExternalName());
+                    TypeSymbol *intermediate;
+                    for (intermediate = this_type;
+                         intermediate != super_type;
+                         intermediate = intermediate -> super)
+                    {
+                        if (intermediate -> ContainingPackage() != package)
+                            continue;
+                        MethodShadowSymbol *shadow = intermediate ->
+                            expanded_method_table ->
+                            FindOverloadMethodShadow(method,
+                                                     (Semantic *) this,
+                                                     identifier_token);
+                        if (shadow && shadow -> method_symbol -> containing_type == intermediate)
+                            break;
+                    }
+
+                    if (intermediate == super_type)
+                        ReportSemError(SemanticError::NON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD,
+                                       identifier_token,
+                                       identifier_token,
+                                       method -> Header(),
+                                       containing_type -> ContainingPackage() -> PackageName(),
+                                       containing_type -> ExternalName(),
+                                       this_type -> ContainingPackage() -> PackageName(),
+                                       this_type -> ExternalName());
                 }
             }
         }
@@ -1907,9 +1942,10 @@ void Semantic::CompleteSymbolTable(AstInterfaceDeclaration *interface_declaratio
 
         if (method)
         {
-            MethodShadowSymbol *method_shadow = expanded_table.FindOverloadMethodShadow(method,
-                                                                                        (Semantic *) this,
-                                                                                        interface_declaration -> identifier_token);
+            MethodShadowSymbol *method_shadow =
+                expanded_table.FindOverloadMethodShadow(method,
+                                                        (Semantic *) this,
+                                                        interface_declaration -> identifier_token);
             for (int k = 0; k < method_shadow -> NumConflicts(); k++)
             {
                 if (method_shadow -> method_symbol -> Type() != method_shadow -> Conflict(k) -> Type())
@@ -3370,49 +3406,63 @@ void Semantic::AddInheritedTypes(TypeSymbol *base_type, TypeSymbol *super_type)
     ExpandedTypeTable &base_expanded_table = *(base_type -> expanded_type_table),
                       &super_expanded_table = *(super_type -> expanded_type_table);
 
-    for (int j = 0; j < super_expanded_table.symbol_pool.Length(); j++)
+    for (int i = 0; i < super_expanded_table.symbol_pool.Length(); i++)
     {
-        TypeShadowSymbol *type_shadow_symbol = super_expanded_table.symbol_pool[j];
-        TypeSymbol *type_symbol = type_shadow_symbol -> type_symbol;
+        TypeShadowSymbol *type_shadow_symbol = super_expanded_table.symbol_pool[i];
+        TypeSymbol *type = type_shadow_symbol -> type_symbol;
 
         //
-        // Note that since all fields in an interface are implicitly public,
-        // all other fields encountered here are enclosed in a type that is a
+        // Note that since all types in an interface are implicitly public,
+        // all other types encountered here are enclosed in a type that is a
         // super class of base_type.
         //
-        if (type_symbol -> ACC_PUBLIC() ||
-            type_symbol -> ACC_PROTECTED() ||
-            ((! type_symbol -> ACC_PRIVATE()) &&
-             (super_type -> ContainingPackage() == base_type -> ContainingPackage())))
+        if (type -> ACC_PUBLIC() ||
+            type -> ACC_PROTECTED() ||
+            (! type -> ACC_PRIVATE() &&
+             super_type -> ContainingPackage() == base_type -> ContainingPackage()))
         {
-            NameSymbol *name_symbol = type_symbol -> Identity();
-            TypeShadowSymbol *shadow = base_expanded_table.FindTypeShadowSymbol(name_symbol);
+            TypeShadowSymbol *shadow = base_expanded_table.FindTypeShadowSymbol(type -> Identity());
 
-            if ((! shadow) || (shadow -> type_symbol -> owner != base_type))
+            if (! shadow || shadow -> type_symbol -> owner != base_type)
             {
                 if (! shadow)
-                     shadow = base_expanded_table.InsertTypeShadowSymbol(type_symbol);
-                else shadow -> AddConflict(type_symbol);
+                    shadow = base_expanded_table.InsertTypeShadowSymbol(type);
+                else shadow -> AddConflict(type);
 
-                if (type_symbol -> owner != super_type) // main type doesn't override all other fields? process conflicts.
-                {
-                    for (int k = 0; k < type_shadow_symbol -> NumConflicts(); k++)
-                        shadow -> AddConflict(type_shadow_symbol -> Conflict(k));
-                }
+                assert(type -> owner != super_type ||
+                       type_shadow_symbol -> NumConflicts() == 0);
+                for (int j = 0; j < type_shadow_symbol -> NumConflicts(); j++)
+                    shadow -> AddConflict(type_shadow_symbol -> Conflict(j));
             }
-            //
-            // TODO: maybe? if base_type is a nested type check if a type with
-            // the same name appears in one of the enclosed lexical scopes. If
-            // so, add it to the shadow!
-            //
+        }
+        //
+        // The main type was not accessible. But it may have been inherited
+        // from yet another class, in which case any conflicts (which are
+        // necessarily public types from interfaces) are still inherited in
+        // the base_type.
+        //
+        else if (! type -> ACC_PRIVATE() &&
+                 type_shadow_symbol -> NumConflicts() > 0)
+        {
+            assert(type -> owner != super_type);
+            TypeShadowSymbol *shadow = base_expanded_table.FindTypeShadowSymbol(type -> Identity());
+
+            if (! shadow || shadow -> type_symbol -> owner != base_type)
+            {
+                if (! shadow)
+                    shadow = base_expanded_table.InsertTypeShadowSymbol(type_shadow_symbol -> Conflict(0));
+                else shadow -> AddConflict(type_shadow_symbol -> Conflict(0));
+
+                for (int k = 1; k < type_shadow_symbol -> NumConflicts(); k++)
+                    shadow -> AddConflict(type_shadow_symbol -> Conflict(k));
+            }
         }
     }
-
-    return;
 }
 
 
-void Semantic::AddInheritedFields(TypeSymbol *base_type, TypeSymbol *super_type)
+void Semantic::AddInheritedFields(TypeSymbol *base_type,
+                                  TypeSymbol *super_type)
 {
     ExpandedFieldTable &base_expanded_table = *(base_type -> expanded_field_table),
                        &super_expanded_table = *(super_type -> expanded_field_table);
@@ -3420,47 +3470,68 @@ void Semantic::AddInheritedFields(TypeSymbol *base_type, TypeSymbol *super_type)
     for (int i = 0; i < super_expanded_table.symbol_pool.Length(); i++)
     {
         VariableShadowSymbol *variable_shadow_symbol = super_expanded_table.symbol_pool[i];
-        VariableSymbol *variable_symbol = variable_shadow_symbol -> variable_symbol;
+        VariableSymbol *variable = variable_shadow_symbol -> variable_symbol;
         //
         // Note that since all fields in an interface are implicitly public,
         // all other fields encountered here are enclosed in a type that is a
         // super class of base_type.
         //
-        if (variable_symbol -> ACC_PUBLIC() ||
-            variable_symbol -> ACC_PROTECTED() ||
-            ((! variable_symbol -> ACC_PRIVATE()) &&
-             (super_type -> ContainingPackage() == base_type -> ContainingPackage())))
+        if (variable -> ACC_PUBLIC() ||
+            variable -> ACC_PROTECTED() ||
+            (! variable -> ACC_PRIVATE() &&
+             super_type -> ContainingPackage() == base_type -> ContainingPackage()))
         {
-            NameSymbol *name_symbol = variable_symbol -> Identity();
-            VariableShadowSymbol *shadow = base_expanded_table.FindVariableShadowSymbol(name_symbol);
+            VariableShadowSymbol *shadow = base_expanded_table.FindVariableShadowSymbol(variable -> Identity());
 
-            if ((! shadow) || (shadow -> variable_symbol -> owner != base_type))
+            if (! shadow || shadow -> variable_symbol -> owner != base_type)
             {
                 if (! shadow)
-                     shadow = base_expanded_table.InsertVariableShadowSymbol(variable_symbol);
-                else shadow -> AddConflict(variable_symbol);
+                    shadow = base_expanded_table.InsertVariableShadowSymbol(variable);
+                else shadow -> AddConflict(variable);
 
-                if (variable_symbol -> owner != super_type) // main variable doesn't override all other fields? process conflicts.
-                {
-                    for (int k = 0; k < variable_shadow_symbol -> NumConflicts(); k++)
-                        shadow -> AddConflict(variable_shadow_symbol -> Conflict(k));
-                }
+                assert(variable -> owner != super_type ||
+                       variable_shadow_symbol -> NumConflicts() == 0);
+                for (int j = 0; j < variable_shadow_symbol -> NumConflicts(); j++)
+                    shadow -> AddConflict(variable_shadow_symbol -> Conflict(j));
+            }
+        }
+        //
+        // The main field was not accessible. But it may have been inherited
+        // from yet another class, in which case any conflicts (which are
+        // necessarily public fields from interfaces) are still inherited in
+        // the base_type.
+        //
+        else if (! variable -> ACC_PRIVATE() &&
+                 ! variable -> IsSynthetic() &&
+                 variable_shadow_symbol -> NumConflicts() > 0)
+        {
+            assert(variable -> owner != super_type);
+            VariableShadowSymbol *shadow = base_expanded_table.FindVariableShadowSymbol(variable -> Identity());
+
+            if (! shadow || shadow -> variable_symbol -> owner != base_type)
+            {
+                if (! shadow)
+                    shadow = base_expanded_table.InsertVariableShadowSymbol(variable_shadow_symbol -> Conflict(0));
+                else shadow -> AddConflict(variable_shadow_symbol -> Conflict(0));
+
+                for (int k = 1; k < variable_shadow_symbol -> NumConflicts(); k++)
+                    shadow -> AddConflict(variable_shadow_symbol -> Conflict(k));
             }
         }
     }
-
-    return;
 }
 
 
-void Semantic::AddInheritedMethods(TypeSymbol *base_type, TypeSymbol *super_type, LexStream::TokenIndex tok)
+void Semantic::AddInheritedMethods(TypeSymbol *base_type,
+                                   TypeSymbol *super_type,
+                                   LexStream::TokenIndex tok)
 {
     ExpandedMethodTable &base_expanded_table = *(base_type -> expanded_method_table),
                         &super_expanded_table = *(super_type -> expanded_method_table);
 
-    for (int k = 0; k < super_expanded_table.symbol_pool.Length(); k++)
+    for (int i = 0; i < super_expanded_table.symbol_pool.Length(); i++)
     {
-        MethodShadowSymbol *method_shadow_symbol = super_expanded_table.symbol_pool[k];
+        MethodShadowSymbol *method_shadow_symbol = super_expanded_table.symbol_pool[i];
         MethodSymbol *method = method_shadow_symbol -> method_symbol;
 
         //
@@ -3470,98 +3541,112 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type, TypeSymbol *super_type
         //
         if (method -> ACC_PUBLIC() ||
             method -> ACC_PROTECTED() ||
-            ((! method -> ACC_PRIVATE()) &&
-             (super_type -> ContainingPackage() == base_type -> ContainingPackage())))
+            (! method -> ACC_PRIVATE() &&
+             super_type -> ContainingPackage() == base_type -> ContainingPackage()))
         {
-            MethodShadowSymbol *base_method_shadow =
-                  base_expanded_table.FindMethodShadowSymbol(method -> Identity());
-            if (! base_method_shadow)
-                 base_expanded_table.InsertMethodShadowSymbol(method);
-            else
+            MethodShadowSymbol *shadow =
+                base_expanded_table.FindOverloadMethodShadow(method,
+                                                             (Semantic *) this,
+                                                             tok);
+
+            if (! shadow || shadow -> method_symbol -> containing_type != base_type)
             {
-                MethodShadowSymbol *shadow = base_expanded_table.FindOverloadMethodShadow(method, (Semantic *) this, tok);
-
                 if (! shadow)
-                     base_expanded_table.Overload(base_method_shadow, method);
-                else
-                {
-                    shadow -> AddConflict(method);
+                    shadow = base_expanded_table.Overload(method);
+                else shadow -> AddConflict(method);
 
-                    //
-                    // If main method in question does not override all other
-                    // methods, add all other conflicting methods.
-                    //
-                    if (method -> containing_type != super_type)
-                    {
-                        for (int i = 0; i < method_shadow_symbol -> NumConflicts(); i++)
-                            shadow -> AddConflict(method_shadow_symbol -> Conflict(i));
-                    }
-                }
+                assert(method -> containing_type != super_type ||
+                       method_shadow_symbol -> NumConflicts() == 0);
+                for (int j = 0; j < method_shadow_symbol -> NumConflicts(); j++)
+                    shadow -> AddConflict(method_shadow_symbol -> Conflict(j));
             }
         }
-        else if (! (method -> ACC_PRIVATE() || method -> IsSynthetic())) // Not a method with default access from another package?
+        //
+        // The main method was not accessible. But it may have been inherited
+        // from yet another class, in which case any conflicts (which are
+        // necessarily public methods from interfaces) are still inherited in
+        // the base_type.
+        //
+        else if (! method -> ACC_PRIVATE() &&
+                 ! method -> IsSynthetic())
         {
-            MethodShadowSymbol *base_method_shadow = base_expanded_table.FindMethodShadowSymbol(method -> Identity());
-
-            if (base_method_shadow)
+            MethodShadowSymbol *shadow =
+                base_expanded_table.FindOverloadMethodShadow(method,
+                                                             (Semantic *) this,
+                                                             tok);
+            if (method_shadow_symbol -> NumConflicts() > 0)
             {
-                MethodShadowSymbol *shadow = base_expanded_table.FindOverloadMethodShadow(method, (Semantic *) this, tok);
+                assert(method -> containing_type != super_type);
 
-                if (shadow)
+                if (! shadow ||
+                    shadow -> method_symbol -> containing_type != base_type)
                 {
-                    LexStream::TokenIndex left_tok,
-                                          right_tok;
+                    if (! shadow)
+                        shadow = base_expanded_table.Overload(method_shadow_symbol -> Conflict(0));
+                    else shadow -> AddConflict(method_shadow_symbol -> Conflict(0));
 
-                    if (ThisType() == base_type)
+                    for (int k = 1; k < method_shadow_symbol -> NumConflicts(); k++)
+                        shadow -> AddConflict(method_shadow_symbol -> Conflict(k));
+                }
+            }
+            else if (shadow && ! method -> ACC_STATIC())
+            {
+                //
+                // The base_type declares a method by the same name as an
+                // instance method in the superclass, but the new method does
+                // not override the old. Warn the user about this fact. (This
+                // is never a problem with fields, nested types, or static
+                // methods, since they are just hidden, not overridden.)
+                //
+                assert(shadow -> method_symbol -> containing_type == base_type);
+                LexStream::TokenIndex left_tok,
+                                      right_tok;
+
+                if (ThisType() == base_type)
+                {
+                    AstMethodDeclaration *method_declaration = ((AstMethodDeclaration *) shadow -> method_symbol -> method_or_constructor_declaration);
+                    AstMethodDeclarator *method_declarator = method_declaration -> method_declarator;
+
+                    left_tok = method_declarator -> LeftToken();
+                    right_tok = method_declarator -> RightToken();
+                }
+                else
+                {
+                    AstInterfaceDeclaration *interface_declaration = ThisType() -> declaration -> InterfaceDeclarationCast();
+                    AstClassDeclaration *class_declaration = ThisType() -> declaration -> ClassDeclarationCast();
+                    if (interface_declaration)
                     {
-                        AstMethodDeclaration *method_declaration = (AstMethodDeclaration *)
-                                                                    shadow -> method_symbol -> method_or_constructor_declaration;
-                        AstMethodDeclarator *method_declarator = method_declaration -> method_declarator;
-
-                        left_tok = method_declarator -> LeftToken();
-                        right_tok = method_declarator -> RightToken();
+                        left_tok = right_tok = interface_declaration -> identifier_token;
+                    }
+                    else if (class_declaration)
+                    {
+                        left_tok = right_tok = class_declaration -> identifier_token;
                     }
                     else
                     {
-                        AstInterfaceDeclaration *interface_declaration = ThisType() -> declaration -> InterfaceDeclarationCast();
-                        AstClassDeclaration *class_declaration = ThisType() -> declaration -> ClassDeclarationCast();
-                        if (interface_declaration)
-                        {
-                            left_tok = right_tok = interface_declaration -> identifier_token;
-                        }
-                        else if (class_declaration)
-                        {
-                            left_tok = right_tok = class_declaration -> identifier_token;
-                        }
-                        else
-                        {
-                            AstClassInstanceCreationExpression *class_creation = ThisType() -> declaration
-                                                                                            -> ClassInstanceCreationExpressionCast();
+                        AstClassInstanceCreationExpression *class_creation = ThisType() -> declaration -> ClassInstanceCreationExpressionCast();
 
-                            assert(class_creation);
+                        assert(class_creation);
 
-                            left_tok = class_creation -> class_type -> LeftToken();
-                            right_tok = class_creation -> class_type -> RightToken();
-                        }
+                        left_tok = class_creation -> class_type -> LeftToken();
+                        right_tok = class_creation -> class_type -> RightToken();
                     }
-
-                    if (! method -> IsTyped())
-                        method -> ProcessMethodSignature((Semantic *) this, tok);
-
-                    ReportSemError(SemanticError::DEFAULT_METHOD_NOT_OVERRIDDEN,
-                                   left_tok,
-                                   right_tok,
-                                   method -> Header(),
-                                   base_type -> ContainingPackage() -> PackageName(),
-                                   base_type -> ExternalName(),
-                                   super_type -> ContainingPackage() -> PackageName(),
-                                   super_type -> ExternalName());
                 }
+
+                if (! method -> IsTyped())
+                    method -> ProcessMethodSignature((Semantic *) this, tok);
+
+                ReportSemError(SemanticError::DEFAULT_METHOD_NOT_OVERRIDDEN,
+                               left_tok,
+                               right_tok,
+                               method -> Header(),
+                               base_type -> ContainingPackage() -> PackageName(),
+                               base_type -> ExternalName(),
+                               super_type -> ContainingPackage() -> PackageName(),
+                               super_type -> ExternalName());
             }
         }
     }
-
-    return;
 }
 
 

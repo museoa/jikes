@@ -1,3 +1,14 @@
+2001-11-08  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/decl.cpp (CompleteSymbolTable): Improve the tests for
+	abstract method implementations, bug 2382.
+	(AddInherited*): Improve tests for ambiguous names, as the public
+	member of a superclass' interface is inherited even if the default
+	member of the grandparent class is not. This is a first of two
+	parts for addressing bug 2376.
+	* src/table.h (class ExpandedMethodTable): Fix method return types
+	for use in AddInheritedMethods - patch 227.
+
 2001-11-07  Chris Dennis  <Chris.Dennis@invidi.com>
 
 	* src/symbol.cpp: Fix for-loop scoping for the non-compliant VC++

@@ -372,7 +372,7 @@ public:
         return p;
     }
 
-    inline void InsertMethodShadowSymbol(MethodSymbol *method_symbol)
+    inline MethodShadowSymbol *InsertMethodShadowSymbol(MethodSymbol *method_symbol)
     {
         int i = method_symbol -> name_symbol -> index % hash_size;
         MethodShadowSymbol *p = new MethodShadowSymbol(method_symbol);
@@ -381,7 +381,7 @@ public:
         base[i] = p;
         symbol_pool.Next() = p;
 
-        return;
+        return p;
     }
 
     inline void Overload(MethodShadowSymbol *base_shadow, MethodSymbol *overload_method)
@@ -392,12 +392,13 @@ public:
         base_shadow -> next_method = shadow;
     }
 
-    inline void Overload(MethodSymbol *overload_method)
+    inline MethodShadowSymbol *Overload(MethodSymbol *overload_method)
     {
         MethodShadowSymbol *base_shadow = FindMethodShadowSymbol(overload_method -> name_symbol);
         if (! base_shadow)
-             InsertMethodShadowSymbol(overload_method);
-        else Overload(base_shadow, overload_method);
+            return InsertMethodShadowSymbol(overload_method);
+        Overload(base_shadow, overload_method);
+        return base_shadow;
     }
 
     MethodShadowSymbol *FindOverloadMethodShadow(MethodSymbol *overload_method, Semantic *sem, LexStream::TokenIndex tok)
