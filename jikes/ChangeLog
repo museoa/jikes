@@ -1,3 +1,7 @@
+2004-03-28  Elliott Hughes  <enh@acm.org>
+
+	* src/class.h (CPUtf8Info): Fix uninitialized member data.
+
 2004-03-27  Eric Blake  <ebb9@byu.net>
 
 	* src/depend.cpp (AddDependence): Don't create dependencies on

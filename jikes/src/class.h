@@ -204,8 +204,7 @@ public:
         , contents(length)
         , valid(true)
     {
-        if (len)
-            bytes = new u1[len];
+        bytes = (len > 0) ? new u1[len] : 0;
         for (unsigned i = 0; i < len; i++)
             bytes[i] = (u1) _bytes[i];
         Init(len);
