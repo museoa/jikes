@@ -152,7 +152,11 @@ void Option::SaveCurrentDirectoryOnDisk(char c)
 
 Option::Option(ArgumentExpander &arguments) : default_path(NULL),
                                               classpath(NULL),
+#ifdef HAVE_LIB_ICU_UC
+                                              converter(NULL),
+#endif
                                               directory(NULL),
+                                              encoding(NULL),
                                               makefile_name(NULL),
                                               nowrite(false),
                                               deprecation(false),
@@ -228,6 +232,20 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
             }
             else if (strcmp(arguments.argv[i], "-depend") == 0 || strcmp(arguments.argv[i], "-Xdepend") == 0)
                  depend = true;
+            else if (strcmp(arguments.argv[i], "-encoding") == 0 && ((i + 1) < arguments.argc))
+            {
+#ifdef HAVE_LIB_ICU_UC
+                encoding = new char[strlen(arguments.argv[++i]) + 1];
+                strcpy(encoding, arguments.argv[i]);
+                UErrorCode err=ZERO_ERROR;
+                converter=ucnv_open(encoding, &err);
+                if(!converter)
+                    bad_options.Next() = new OptionError(SemanticError::UNSUPPORTED_ENCODING, encoding); 
+#else
+// if compiling without ICU support, will only support one encoding (ascii).
+#endif
+                continue;
+            }
             else if (strcmp(arguments.argv[i],"-verbose") == 0)
                  verbose = true;
             else if (strcmp(arguments.argv[i],"-g") == 0)

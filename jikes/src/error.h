@@ -33,6 +33,7 @@ public:
         INVALID_K_TARGET,
         INVALID_TAB_VALUE,
         INVALID_DIRECTORY,
+        UNSUPPORTED_ENCODING,
         UNSUPPORTED_OPTION,
         DISABLED_OPTION,
 
@@ -379,6 +380,7 @@ private:
     static void PrintINVALID_K_TARGET(ErrorInfo &, LexStream *, Control &);
     static void PrintINVALID_TAB_VALUE(ErrorInfo &, LexStream *, Control &);
     static void PrintINVALID_DIRECTORY(ErrorInfo &, LexStream *, Control &);
+    static void PrintUNSUPPORTED_ENCODING(ErrorInfo &, LexStream *, Control &);
     static void PrintUNSUPPORTED_OPTION(ErrorInfo &, LexStream *, Control &);
     static void PrintDISABLED_OPTION(ErrorInfo &, LexStream *, Control &);
     static void PrintNO_CURRENT_DIRECTORY(ErrorInfo &, LexStream *, Control &);
