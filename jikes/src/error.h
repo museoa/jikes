@@ -206,17 +206,14 @@ public:
         INCOMPATIBLE_TYPE_FOR_CONDITIONAL_EXPRESSION,
         VOID_ARRAY,
         TYPE_NOT_THROWABLE,
-        TYPE_NOT_PRIMITIVE,
         TYPE_NOT_INTEGRAL,
         TYPE_NOT_NUMERIC,
         TYPE_NOT_INTEGER,
         TYPE_NOT_BOOLEAN,
         TYPE_NOT_ARRAY,
         TYPE_NOT_REFERENCE,
-        TYPE_NOT_VALID_FOR_SWITCH,
         TYPE_IS_VOID,
         VALUE_NOT_REPRESENTABLE_IN_SWITCH_TYPE,
-        TYPE_NOT_CONVERTIBLE_TO_SWITCH_TYPE,
         DUPLICATE_CASE_VALUE,
         MISPLACED_THIS_EXPRESSION,
         MISPLACED_SUPER_EXPRESSION,
@@ -512,17 +509,14 @@ private:
     static wchar_t *PrintINCOMPATIBLE_TYPE_FOR_CONDITIONAL_EXPRESSION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintVOID_ARRAY(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintTYPE_NOT_THROWABLE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintTYPE_NOT_PRIMITIVE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintTYPE_NOT_INTEGRAL(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintTYPE_NOT_NUMERIC(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintTYPE_NOT_INTEGER(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintTYPE_NOT_BOOLEAN(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintTYPE_NOT_ARRAY(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintTYPE_NOT_REFERENCE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintTYPE_NOT_VALID_FOR_SWITCH(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintTYPE_IS_VOID(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintVALUE_NOT_REPRESENTABLE_IN_SWITCH_TYPE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintTYPE_NOT_CONVERTIBLE_TO_SWITCH_TYPE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintDUPLICATE_CASE_VALUE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISPLACED_THIS_EXPRESSION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISPLACED_SUPER_EXPRESSION(ErrorInfo &, LexStream *, Control &);

@@ -489,17 +489,14 @@ void SemanticError::StaticInitializer()
     print_message[INCOMPATIBLE_TYPE_FOR_CONDITIONAL_EXPRESSION] = PrintINCOMPATIBLE_TYPE_FOR_CONDITIONAL_EXPRESSION;
     print_message[VOID_ARRAY] = PrintVOID_ARRAY;
     print_message[TYPE_NOT_THROWABLE] = PrintTYPE_NOT_THROWABLE;
-    print_message[TYPE_NOT_PRIMITIVE] = PrintTYPE_NOT_PRIMITIVE;
     print_message[TYPE_NOT_INTEGRAL] = PrintTYPE_NOT_INTEGRAL;
     print_message[TYPE_NOT_NUMERIC] = PrintTYPE_NOT_NUMERIC;
     print_message[TYPE_NOT_INTEGER] = PrintTYPE_NOT_INTEGER;
     print_message[TYPE_NOT_BOOLEAN] = PrintTYPE_NOT_BOOLEAN;
     print_message[TYPE_NOT_ARRAY] = PrintTYPE_NOT_ARRAY;
     print_message[TYPE_NOT_REFERENCE] = PrintTYPE_NOT_REFERENCE;
-    print_message[TYPE_NOT_VALID_FOR_SWITCH] = PrintTYPE_NOT_VALID_FOR_SWITCH;
     print_message[TYPE_IS_VOID] = PrintTYPE_IS_VOID;
     print_message[VALUE_NOT_REPRESENTABLE_IN_SWITCH_TYPE] = PrintVALUE_NOT_REPRESENTABLE_IN_SWITCH_TYPE;
-    print_message[TYPE_NOT_CONVERTIBLE_TO_SWITCH_TYPE] = PrintTYPE_NOT_CONVERTIBLE_TO_SWITCH_TYPE;
     print_message[DUPLICATE_CASE_VALUE] = PrintDUPLICATE_CASE_VALUE;
     print_message[MISPLACED_THIS_EXPRESSION] = PrintMISPLACED_THIS_EXPRESSION;
     print_message[MISPLACED_SUPER_EXPRESSION] = PrintMISPLACED_SUPER_EXPRESSION;
@@ -2420,15 +2417,13 @@ wchar_t *SemanticError::PrintINCOMPATIBLE_TYPE_FOR_INITIALIZATION(ErrorInfo &err
 {
     ErrorString s;
 
-    s << "The type of the left-hand side (or array type) in this "
-      << "initialization (or array creation expression), \"";
-    if (NotDot(err.insert1))
-        s << err.insert1 << '/';
-    s << err.insert2 << "\", is not compatible with the type of the "
-      << "right-hand side expression, \"";
+    s << "The type of the initializer, \"";
     if (NotDot(err.insert3))
         s << err.insert3 << '/';
-    s << err.insert4 << "\".";
+    s << err.insert4 << "\", is not assignable to the variable, of type \"";
+    if (NotDot(err.insert1))
+        s << err.insert1 << '/';
+    s << err.insert2 << "\".";
 
     return s.Array();
 }
@@ -2440,14 +2435,13 @@ wchar_t *SemanticError::PrintINCOMPATIBLE_TYPE_FOR_ASSIGNMENT(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "The type of the left-hand side in this assignment, \"";
-    if (NotDot(err.insert1))
-        s << err.insert1 << '/';
-    s << err.insert2 << "\", is not compatible with the type of the "
-      << "right-hand side expression, \"";
+    s << "The type of the right sub-expression, \"";
     if (NotDot(err.insert3))
         s << err.insert3 << '/';
-    s << err.insert4 << "\".";
+    s << err.insert4 << "\", is not assignable to the variable, of type \"";
+    if (NotDot(err.insert1))
+        s << err.insert1 << '/';
+    s << err.insert2 << "\".";
 
     return s.Array();
 }
@@ -2459,12 +2453,11 @@ wchar_t *SemanticError::PrintINCOMPATIBLE_TYPE_FOR_CONDITIONAL_EXPRESSION(ErrorI
 {
     ErrorString s;
 
-    s << "In this conditional expression, the type of the false "
-      << "subexpression, \"";
+    s << "In the conditional, the type of the true sub-expression, \"";
     if (NotDot(err.insert1))
         s << err.insert1 << '/';
     s << err.insert2
-      << "\", is not compatible with the type of the true subexpression, \"";
+      << "\", is not compatible with the type of the false sub-expression, \"";
     if (NotDot(err.insert3))
         s << err.insert3 << '/';
     s << err.insert4 << "\".";
@@ -2491,14 +2484,14 @@ wchar_t *SemanticError::PrintINCOMPATIBLE_TYPE_FOR_BINARY_EXPRESSION(ErrorInfo &
 {
     ErrorString s;
 
-    s << "The type of the left-hand side expression, \"";
+    s << "The type of the left sub-expression, \"";
     if (NotDot(err.insert1))
         s << err.insert1 << '/';
     s << err.insert2 << "\", is not compatible with the type of the "
-      << "right-hand side expression, \"";
+      << "right sub-expression, \"";
     if (NotDot(err.insert3))
         s << err.insert3 << '/';
-    s << err.insert4 << "\" (and vice-versa).";
+    s << err.insert4 << "\".";
 
     return s.Array();
 }
@@ -2510,7 +2503,7 @@ wchar_t *SemanticError::PrintINVALID_INSTANCEOF_CONVERSION(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "The type of the left-side expression, \"";
+    s << "The type of the left sub-expression, \"";
     if (NotDot(err.insert1))
         s << err.insert1 << '/';
     s << err.insert2 << "\", cannot possibly be an instance of type \"";
@@ -2547,27 +2540,16 @@ wchar_t *SemanticError::PrintINVALID_CAST_TYPE(ErrorInfo &err,
 }
 
 
-wchar_t *SemanticError::PrintTYPE_NOT_PRIMITIVE(ErrorInfo &err,
-                                                LexStream *lex_stream,
-                                                Control &control)
-{
-    ErrorString s;
-
-    s << "The type of this expression, \"" << err.insert1
-      << "\", is not a primitive type.";
-
-    return s.Array();
-}
-
-
 wchar_t *SemanticError::PrintTYPE_NOT_INTEGRAL(ErrorInfo &err,
                                                LexStream *lex_stream,
                                                Control &control)
 {
     ErrorString s;
 
-    s << "The type of this expression, \"" << err.insert1
-      << "\", is not an integral type.";
+    s << "The type of this expression, \"";
+    if (NotDot(err.insert1))
+        s << err.insert1 << '/';
+    s << err.insert2 << "\", is not an integral type.";
 
     return s.Array();
 }
@@ -2579,8 +2561,10 @@ wchar_t *SemanticError::PrintTYPE_NOT_NUMERIC(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "The type of this expression, \"" << err.insert1
-      << "\", is not numeric.";
+    s << "The type of this expression, \"";
+    if (NotDot(err.insert1))
+        s << err.insert1 << '/';
+    s << err.insert2 << "\", is not numeric.";
 
     return s.Array();
 }
@@ -2592,8 +2576,11 @@ wchar_t *SemanticError::PrintTYPE_NOT_INTEGER(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "The type of this expression, \"" << err.insert1
-      << "\", cannot be promoted to \"int\" by widening conversion.";
+    s << "The type of this expression, \"";
+    if (NotDot(err.insert1))
+        s << err.insert1 << '/';
+    s << err.insert2
+      << "\", is not assignable to \"int\".";
 
     return s.Array();
 }
@@ -2605,8 +2592,10 @@ wchar_t *SemanticError::PrintTYPE_NOT_BOOLEAN(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "The type of this expression, \"" << err.insert1
-      << "\", is not boolean.";
+    s << "The type of this expression, \"";
+    if (NotDot(err.insert1))
+        s << err.insert1 << '/';
+    s << err.insert2 << "\", is not \"boolean\".";
 
     return s.Array();
 }
@@ -2618,8 +2607,10 @@ wchar_t *SemanticError::PrintTYPE_NOT_ARRAY(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "The type of this expression, \"" << err.insert1
-      << "\", is not an array type.";
+    s << "The type of this expression, \"";
+    if (NotDot(err.insert1))
+        s << err.insert1 << '/';
+    s << err.insert2 << "\", is not an array type.";
 
     return s.Array();
 }
@@ -2632,23 +2623,7 @@ wchar_t *SemanticError::PrintTYPE_NOT_REFERENCE(ErrorInfo &err,
     ErrorString s;
 
     s << "The type of this expression, \"" << err.insert1
-      << "\", is not a valid reference type in this context.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintTYPE_NOT_VALID_FOR_SWITCH(ErrorInfo &err,
-                                                       LexStream *lex_stream,
-                                                       Control &control)
-{
-    ErrorString s;
-
-    s << "The type of a switch statement expression must be either \"int\", "
-      << "\"short\", \"char\" or \"byte\". The type of this expression is \"";
-    if (NotDot(err.insert1))
-        s << err.insert1 << '/';
-    s << err.insert2 << "\".";
+      << "\", is not a reference type.";
 
     return s.Array();
 }
@@ -2660,8 +2635,8 @@ wchar_t *SemanticError::PrintTYPE_IS_VOID(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "An expression of type \"" << err.insert1
-      << "\" is not valid in this context.";
+    s << "An expression of type \"void\" is not valid in this context where "
+      << "a value is expected.";
 
     return s.Array();
 }
@@ -2676,20 +2651,6 @@ wchar_t *SemanticError::PrintVALUE_NOT_REPRESENTABLE_IN_SWITCH_TYPE(ErrorInfo &e
     s << "The value of this expression, " << err.insert1
       << ", cannot be represented in the type of the switch statement "
       << "expression, \"" << err.insert2 << "\".";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintTYPE_NOT_CONVERTIBLE_TO_SWITCH_TYPE(ErrorInfo &err,
-                                                                 LexStream *lex_stream,
-                                                                 Control &control)
-{
-    ErrorString s;
-
-    s << "The type of this expression, \"" << err.insert1
-      << "\", is not assignment-convertible to the type of the switch "
-      << "statement expression, \"" << err.insert2 << "\".";
 
     return s.Array();
 }

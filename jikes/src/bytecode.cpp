@@ -3093,20 +3093,27 @@ TypeSymbol *ByteCode::VariableTypeResolution(AstExpression *expression,
     expression = VariableExpressionResolution(expression);
     AstFieldAccess *field = expression -> FieldAccessCast();
     AstSimpleName *simple_name = expression -> SimpleNameCast();
+    TypeSymbol *owner = sym -> ContainingType();
     assert(field || simple_name);
 
     //
     // JLS2 13.1 Use the type of the base expression for qualified reference
     // (this even works for super expressions), and the innermost type that
     // contains the (possibly inherited) field for simple name reference.
-    // However, for class literals, use the owner of the field.
+    // However, for class literals, use the owner of the symbol: int.class
+    // refers to Integer.TYPE, not a field of int.
     //
-    return (field ? (field -> IsClassAccess()
-                     ? (TypeSymbol *) field -> symbol -> VariableCast() -> owner
-                     : field -> base -> Type())
-            : (simple_name -> resolution_opt
-               ? simple_name -> resolution_opt -> Type()
-               : unit_type));
+    // Prior to JDK 1.4, VMs incorrectly complained if a field declared in an
+    // interface is referenced by inheritance, even though the JVMS permits it
+    // and JLS 13 requires it.
+    //
+    TypeSymbol *candidate = field
+        ? (field -> IsClassAccess() ? owner : field -> base -> Type())
+        : (simple_name -> resolution_opt
+           ? simple_name -> resolution_opt -> Type() : unit_type);
+    return (sym -> ContainingType() -> ACC_INTERFACE() &&
+            control.option.target < JikesOption::SDK1_4)
+        ? sym -> ContainingType() : candidate;
 }
 
 
@@ -4525,97 +4532,93 @@ int ByteCode::EmitConditionalExpression(AstConditionalExpression *expression,
             PutOp(OP_ACONST_NULL);
         return need_value ? 1 : 0;
     }
-    if (expression -> false_expression -> IsConstant() &&
-        expression -> true_expression -> IsConstant())
+    if (expression -> true_expression -> IsConstant())
     {
-        if (! need_value)
-            return EmitExpression(expression -> test_expression, false);
-        //
-        // Optimize (cond ? expr : expr) to (cond, expr).
-        //
-        if (expression -> Type() == control.String())
+        if (expression -> false_expression -> IsConstant())
         {
-            Utf8LiteralValue *left = DYNAMIC_CAST<Utf8LiteralValue *>
-                (expression -> true_expression -> value);
-            Utf8LiteralValue *right = DYNAMIC_CAST<Utf8LiteralValue *>
-                (expression -> false_expression -> value);
-            if (! strcmp(left -> value, right -> value))
+            if (! need_value)
+                return EmitExpression(expression -> test_expression, false);
+            if (expression -> true_expression -> value ==
+                expression -> false_expression -> value)
             {
+                //
+                // Optimize (cond ? expr : expr) to (cond, expr).
+                //
                 EmitExpression(expression -> test_expression, false);
                 return EmitExpression(expression -> true_expression);
+            }
+            if (control.IsSimpleIntegerValueType(expression -> Type()) ||
+                expression -> Type() == control.boolean_type)
+            {
+                //
+                // Optimize (expr ? 1 : 0) to (expr).
+                // Optimize (expr ? value + 1 : value) to (expr + value).
+                // Optimize (expr ? value - 1 : value) to (value - expr).
+                //
+                IntLiteralValue *left = DYNAMIC_CAST<IntLiteralValue *>
+                    (expression -> true_expression -> value);
+                IntLiteralValue *right = DYNAMIC_CAST<IntLiteralValue *>
+                    (expression -> false_expression -> value);
+                if (left -> value == 1 && right -> value == 0)
+                    return EmitExpression(expression -> test_expression);
+                if (left -> value == right -> value + 1)
+                {
+                    EmitExpression(expression -> test_expression);
+                    EmitExpression(expression -> false_expression);
+                    PutOp(OP_IADD);
+                    return 1;
+                }
+                if (left -> value == right -> value - 1)
+                {
+                    EmitExpression(expression -> false_expression);
+                    EmitExpression(expression -> test_expression);
+                    PutOp(OP_ISUB);
+                    return 1;
+                }
             }
         }
-        else if (expression -> Type() == control.double_type)
+        else if ((control.IsSimpleIntegerValueType(expression -> Type()) ||
+                  expression -> Type() == control.boolean_type) &&
+                 IsOne(expression -> true_expression))
         {
-            DoubleLiteralValue *left = DYNAMIC_CAST<DoubleLiteralValue *>
-                (expression -> true_expression -> value);
-            DoubleLiteralValue *right = DYNAMIC_CAST<DoubleLiteralValue *>
-                (expression -> false_expression -> value);
-            if (left -> value == right -> value)
-            {
-                EmitExpression(expression -> test_expression, false);
-                return EmitExpression(expression -> true_expression);
-            }
-        }
-        else if (expression -> Type() == control.float_type)
-        {
-            FloatLiteralValue *left = DYNAMIC_CAST<FloatLiteralValue *>
-                (expression -> true_expression -> value);
-            FloatLiteralValue *right = DYNAMIC_CAST<FloatLiteralValue *>
-                (expression -> false_expression -> value);
-            if (left -> value == right -> value)
-            {
-                EmitExpression(expression -> test_expression, false);
-                return EmitExpression(expression -> true_expression);
-            }
-        }
-        else if (expression -> Type() == control.long_type)
-        {
-            LongLiteralValue *left = DYNAMIC_CAST<LongLiteralValue *>
-                (expression -> true_expression -> value);
-            LongLiteralValue *right = DYNAMIC_CAST<LongLiteralValue *>
-                (expression -> false_expression -> value);
-            if (left -> value == right -> value)
-            {
-                EmitExpression(expression -> test_expression, false);
-                return EmitExpression(expression -> true_expression);
-            }
-        }
-        else
-        {
-            assert(control.IsSimpleIntegerValueType(expression -> Type()) ||
-                   expression -> Type() == control.boolean_type);
-            IntLiteralValue *left = DYNAMIC_CAST<IntLiteralValue *>
-                (expression -> true_expression -> value);
-            IntLiteralValue *right = DYNAMIC_CAST<IntLiteralValue *>
-                (expression -> false_expression -> value);
-            if (left -> value == right -> value)
-            {
-                EmitExpression(expression -> test_expression, false);
-                return EmitExpression(expression -> true_expression);
-            }
             //
-            // Optimize (expr ? 1 : 0) to (expr).
-            // Optimize (expr ? value + 1 : value) to (expr + value).
-            // Optimize (expr ? value - 1 : value) to (value - expr).
+            // Optimize (cond ? 1 : b) to (cond || b)
             //
-            if (left -> value == 1 && right -> value == 0)
-                return EmitExpression(expression -> test_expression);
-            if (left -> value == right -> value + 1)
+            Label label;
+            EmitExpression(expression -> test_expression);
+            if (need_value)
             {
-                EmitExpression(expression -> test_expression);
-                EmitExpression(expression -> false_expression);
-                PutOp(OP_IADD);
-                return 1;
+                PutOp(OP_DUP);
+                EmitBranch(OP_IFNE, label);
+                PutOp(OP_POP);
             }
-            if (left -> value == right -> value - 1)
-            {
-                EmitExpression(expression -> false_expression);
-                EmitExpression(expression -> test_expression);
-                PutOp(OP_ISUB);
-                return 1;
-            }
+            else EmitBranch(OP_IFNE, label);
+            EmitExpression(expression -> false_expression, need_value);
+            DefineLabel(label);
+            CompleteLabel(label);
+            return need_value ? 1 : 0;
         }
+    }
+    else if ((control.IsSimpleIntegerValueType(expression -> Type()) ||
+              expression -> Type() == control.boolean_type) &&
+             IsZero(expression -> false_expression))
+    {
+        //
+        // Optimize (cond ? a : 0) to (cond && a)
+        //
+        Label label;
+        EmitExpression(expression -> test_expression);
+        if (need_value)
+        {
+            PutOp(OP_DUP);
+            EmitBranch(OP_IFEQ, label);
+            PutOp(OP_POP);
+        }
+        else EmitBranch(OP_IFEQ, label);
+        EmitExpression(expression -> true_expression, need_value);
+        DefineLabel(label);
+        CompleteLabel(label);
+        return need_value ? 1 : 0;
     }
     Label lab1,
         lab2;
@@ -5747,10 +5750,22 @@ void ByteCode::DefineLabel(Label& lab)
     //
     // Optimize if previous instruction was unconditional jump to this label.
     // However, we cannot perform the optimization if another label was also
-    // defined at this location.
+    // defined at this location. Likewise, if local symbol tables are being
+    // emitted, this optimization would screw up the symbol table.
+    //
+    // TODO: It would be nice to redo the bytecode emitter, to make it a
+    // two-pass algorithm with straight-forward emission the first time, and
+    // peephole optimizations the second time. This would be a better way to
+    // cleanly collapse useless jumps, and could catch several other cases
+    // that are missed or difficult to detect currently. This would require
+    // creating labels at the compiled method level, rather than on the
+    // invocation stack at the compiled statement level; as well as other code
+    // changes. However, it might also improve inlining (such as in
+    // try-finally, or in private methods); and might allow us to finally
+    // implement the -O option as more than a no-op.
     //
     int index = lab.uses.Length() - 1;
-    if (last_op_goto && index >= 0)
+    if (last_op_goto && index >= 0 && ! (control.option.g & JikesOption::VARS))
     {
         unsigned int luse = lab.uses[index].use_offset;
         int start = luse - lab.uses[index].op_offset;

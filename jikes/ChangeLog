@@ -1,3 +1,29 @@
+2002-08-15  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/error.cpp:
+	* src/error.h (TYPE_NOT_PRIMITIVE, TYPE_NOT_VALID_FOR_SWITCH),
+	(TYPE_NOT_CONVERTIBLE_TO_SWITCH_TYPE): Delete.
+	(TYPE_NOT_*): Improve wording.
+	* src/body.cpp: Use improved error wording.
+	(ProcessSwitchStatement): Improve handling of sub-integer cases.
+	(ProcessThisCall, ProcessSuperCall): Detect void arguments to
+	constructors.
+	* src/semantic.h (BinaryNumericPromotion): New method, to collapse
+	common code from existing 3 overloads.
+	* src/expr.cpp (Process*): General cleanup: detect more cases of
+	void subexpressions, don't cause errors in outer expression if
+	inner one was bad, use improved error wording, improve formatting.
+	(ProcessEQUAL_EQUAL, ProcessNOT_EQUAL): Fix
+	problems when void or reference types compared - bug 3201.
+	(ProcessConditionalExpression): Fix problems with sub-integer
+	cases in ?:.
+	* src/bytecode.cpp (DefineLabel): Undo optimization of goto next
+	bytecode when local variable table is created, as that was the
+	cause of bug 3212.
+	(VariableTypeResolution): Add -target 1.4 control to static fields
+	of interfaces, bug 3218.
+	(EmitConditionalExpression): Fix bug in cond?0:-0.0.
+
 2002-08-06  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/lookup.h (Hash): Improve hash function for strings.

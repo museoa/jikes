@@ -1046,6 +1046,7 @@ private:
     void BinaryNumericPromotion(AstAssignmentExpression *);
     void BinaryNumericPromotion(AstBinaryExpression *);
     void BinaryNumericPromotion(AstConditionalExpression *);
+    TypeSymbol *BinaryNumericPromotion(AstExpression *&, AstExpression *&);
 
     // Implemented in definite.cpp - definite (un)assignment analysis
     void (Semantic::*DefiniteStmt[Ast::_num_kinds])(Ast *);
