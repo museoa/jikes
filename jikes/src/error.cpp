@@ -2096,6 +2096,9 @@ void SemanticError::InitializeMessages()
         "The super type of this type, \"%T1\", is immediately enclosed "
         "in type \"%T3\" which does not match the type of this "
         "primary expression, \"%T5\".";
+    messages[STATIC_TYPE_ACCESSING_MEMBER_TYPE] =
+        "The static type \"%T1\" must use a qualified name to access the "
+        "non-static member type \"%T3\" of the enclosing type \"%T5\".";
 
     //
     // Make sure that there is a message associated with each code

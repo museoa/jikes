@@ -1,3 +1,9 @@
+2004-04-12  Eric Blake  <ebb9@byu.net>
+
+	* src/error.h (STATIC_TYPE_ACCESSING_MEMBER_TYPE): New error.
+	* src/error.cpp: Ditto.
+	* src/decl.cpp (FindType): Emit it when appropriate.
+
 2004-04-11  Eric Blake  <ebb9@byu.net>
 
 	* src/symbol.cpp (UnlinkFromParents): Fix compile-time error with
@@ -5,7 +11,7 @@
 
 2004-04-11  Elliott Hughes  <enh@acm.org>
 
-	* AUTHORS: credit where credit's due.
+	* AUTHORS: Credit where credit's due.
 
 2004-04-11  Elliott Hughes  <enh@acm.org>
 

@@ -451,12 +451,13 @@ public:
         ENCLOSING_INSTANCE_ACCESS_ACROSS_STATIC_REGION,
         ENCLOSING_INSTANCE_NOT_ACCESSIBLE,
         INVALID_ENCLOSING_INSTANCE,
+        STATIC_TYPE_ACCESSING_MEMBER_TYPE,
 
-        //this counts the number of legitimate types in the enum
-        // it must follow all of the real error types
+        // This counts the number of legitimate types in the enum
+        // it must follow all of the real error types.
         _num_kinds,
 
-        //this is a made up, bogus, error type. It is used in lists
+        // This is a made up, bogus, error type. It is used in lists
         // of SemanticErrorKinds to mark the end of the list.
         // It is not used as an index into
         // the tables that are indexed by the above... no point

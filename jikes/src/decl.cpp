@@ -3624,6 +3624,24 @@ TypeSymbol* Semantic::FindType(TokenIndex identifier_token)
     if (env) // The type was found in some enclosing environment?
     {
         //
+        // A static type cannot access a non-static member type of an enclosing
+        // class by simple name.
+        //
+        TypeSymbol* this_type = ThisType();
+        assert(this_type);
+        if (this_type -> ACC_STATIC() && ! type -> ACC_STATIC() &&
+            ! this_type -> IsSubclass(type -> ContainingType()))
+        {
+            ReportSemError(SemanticError::STATIC_TYPE_ACCESSING_MEMBER_TYPE,
+                           identifier_token,
+                           this_type -> ContainingPackageName(),
+                           this_type -> ExternalName(),
+                           type -> ContainingPackageName(),
+                           type -> ExternalName(),
+                           env -> Type() -> ContainingPackageName(),
+                           env -> Type() -> ExternalName());
+        }
+        //
         // If the type was inherited, give a warning if it shadowed another
         // type of the same name within an enclosing lexical scope.
         //
@@ -3794,7 +3812,6 @@ TypeSymbol* Semantic::MustFindType(AstName* name)
     if (! name -> base_opt)
     {
         type = FindType(name -> identifier_token);
-
         //
         // If the type was not found, generate an appropriate error message.
         //
