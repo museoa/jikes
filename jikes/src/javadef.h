@@ -11,19 +11,6 @@
 #define javadef_INCLUDED
 
 enum {
-      ERROR_CODE,
-      BEFORE_CODE,
-      INSERTION_CODE,
-      INVALID_CODE,
-      SUBSTITUTION_CODE,
-      DELETION_CODE,
-      MERGE_CODE,
-      MISPLACED_CODE,
-      SCOPE_CODE,
-      MANUAL_CODE,
-      SECONDARY_CODE,
-      EOF_CODE,
-
       ERROR_SYMBOL      = 107,
       MAX_DISTANCE      = 30,
       MIN_DISTANCE      = 3,

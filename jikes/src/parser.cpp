@@ -626,7 +626,7 @@ void Parser::ErrorRepair(TokenObject error_token)
 {
     SecondaryRepairInfo repair;
 
-    repair.code = 0;
+    repair.code = ERROR_CODE;
     do
     {
         repair.distance = 0;

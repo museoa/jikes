@@ -1,3 +1,11 @@
+2000-02-17  Vadim Zaliva  <lord@crocodile.org>
+
+	* parser.h (ParseErrorCode): DiagnoseParser error codes definitions
+	moved to here from javadefs.h and grouped as new Enum.
+
+	* diagnose.h:
+	* diagnose.cpp: DiagnoseParser uses JikesAPI for error reporting.
+
 2000-02-14  Vadim Zaliva  <lord@crocodile.org>
 
 	* config.h:

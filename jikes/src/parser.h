@@ -28,10 +28,36 @@ class AstInterfaceDeclaration;
 class Ast;
 class AstListNode;
 
+enum ParseErrorCode
+{
+    ERROR_CODE,
+    BEFORE_CODE,
+    INSERTION_CODE,
+    INVALID_CODE,
+    SUBSTITUTION_CODE,
+    DELETION_CODE,
+    MERGE_CODE,
+    MISPLACED_CODE,
+    SCOPE_CODE,
+    MANUAL_CODE,
+    SECONDARY_CODE,
+    EOF_CODE
+};
+
+struct PrimaryRepairInfo
+{
+    ParseErrorCode code;
+    
+    int distance,
+        buffer_position,
+        misspell_index,
+        symbol;
+};
+
 struct SecondaryRepairInfo
 {
-    int code,
-        distance,
+    ParseErrorCode code;
+    int distance,
         buffer_position,
         stack_position,
         num_deletions,
