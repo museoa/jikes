@@ -211,184 +211,142 @@
             </div>
             <p>&nbsp; </p>
             <h2><a name="installing-cygwin"></a>Installing Cygwin</h2>
-            <p>This section is dedicated to Cygwin, since this package of tools 
-              is mandatory to configure a correct build environment for Jikes. 
-              It's used for setting the build environment up and, optionally, 
-              to <a href="#source-control">get your hands on Jikes source code</a>.</p>
+            <p>This section is dedicated to Cygwin. The Cygwin tools provide
+               the officially supported means of compiling Jikes under Windows.</p>
             <h3>What is Cygwin?</h3>
-            <p>Cygwin is a POSIX emulation layer for Windows. It works with Windows 
-              NT, 2000 or 95/98 (but NT and 2000 works better). Cygwin is free 
-              software, it is licensed under the GPL (GNU Public License) with 
-              a special exception for projects that meet the OSD (Open Source 
-              D????), like Jikes.</p>
-            <p>Using a Cygwin based executable means you can use Windows style 
-              <code>C:\foo</code> or Unix style <code>/tmp</code> paths. A Cygwin 
-              program must be able to find <code>cygwin1.dll</code> on the <code>PATH</code>. 
-              It is not possible to compile static C++ executables that will run 
-              on any system using the Cygwin compiler.</p>
+            <p>Cygwin is a POSIX emulation layer for Windows. It works with Windows
+              95, 98, NT, W2K. Cygwin is free software and is licensed under the GPL.</p>
+            <p>A Cygwin executable is able to make use of Windows style
+              <code>C:\foo</code> or Unix style <code>/tmp</code> paths.
+              Cygwin programs rely on <code>cygwin1.dll</code> for this
+              functionality, it must be accessible on the <code>PATH</code>.
+              Cygwin naturally supports compiling Cygwin executables, but
+              it also supports a cross compile mode that provides a way
+              to compile a pure Win32 application (one that does not
+              depend on <code>cygwin1.dll</code>).
+
+              Unfortunatly, this only works for C executables at the
+              moment. Future versions of Cygwin may extend the
+              -mno-cygwin support to include C++.</p>
             <h3>How do I install Cygwin?</h3>
-            <p>It is very simple. Cygwin provides a GUI based installer that will 
-              automatically download the requested packages and install them. 
-              All you need to do is download the installer and run it. </p>
-            <h3>Detailed step by step install instructions</h3>
-            <p>First, download the CygWin installer and save it to your disk. 
-              Watch out! You may have problems if you are behind a firewall that 
-              does not allow "active" FTP sessions, they seem to be the default 
-              when using Netscape under NT. If you are having these sorts of problems, 
-              you might want to try the HTTP based download:</p>
-            <div style="text-align: center"> 
-              <table border="0" cellspacing="0" cellpadding="1" align="center">
-                <tr> 
-                  <td class="HighlightedFrameBorder"> 
-                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
-                      <tr> 
-                        <td class="HighlightedFrameBackground">Download the CygWin 
-                          Installer from:<br>
-                          <a href="http://ftp.eq.uc.pt/software/pc/prog/cygwin/latest/setup.exe">http://ftp.eq.uc.pt/software/pc/prog/cygwin/latest/setup.exe</a><br>
-                          or:<br>
-                          <a href="ftp://ftp.freesoftware.com/pub/sourceware/cygwin/latest/setup.exe">ftp://ftp.freesoftware.com/pub/sourceware/cygwin/latest/setup.exe</a></td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </div>
-            <h3>Running the Cygwin Installer</h3>
-            <p>Double click on the downloaded <code>setup.exe</code> installer 
-              and choose the "Install from Internet" option. Hit the Next button 
-              and you will be asked for a &quot;Local package directory&quot;. 
-              The default should be the directory where you saved the installer, 
-              and since that is the directory you probably want to save files 
-              in (for future installations) you can press the Next button. This 
-              way, it will be installed on your machine, and you'll also have 
-              the downloaded binaries on your hard-drive in case you should rerun 
-              the setup again.</p>
-            <p>Now you are presented with the "Select install root directory" 
-              dialog. This is the directory that you want to install Cygwin into. 
-              The "root directory" you select will be the / directory visible 
-              from Cygwin applications. Beware of directories containing whitespaces! 
-              Cygwin doesn't like this at all for its installation directory.</p>
-            <p>The defaults for the file type (Unix) and the install for option 
-              (All) are fine. The &quot;All&quot; option is available only if 
-              you've got administration priviledges: it allows regular users to 
-              be able to run Cygwin. If you are installing as a regular user you 
-              might want to change the &quot;Install for&quot; option and choose 
-              &quot;Just me&quot; instead.</p>
-            <div style="text-align: center"> 
-              <table border="0" cellspacing="0" cellpadding="1" align="center">
-                <tr> 
-                  <td class="HighlightedFrameBorder"> 
-                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
-                      <tr> 
-                        <td class="HighlightedFrameBackground">Run <code>setup.exe</code> 
-                          &lt;Next&gt;<br>
-                          Select &quot;Install from Internet&quot; &lt;Next&gt;<br>
-                          [Optional : choose a directory to store the distribution] 
-                          &lt;Next&gt;<br>
-                          Choose the Cygwin installation directory<br>
-                          Select the &quot;Install for&quot; appropriate to your 
-                          priviledges and needs &lt;Next&gt;</td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </div>
-            <p>At the next screen, you have a couple of options. Most folks will 
-              want to choose the "Direct Connection" option (when you dial up 
-              your Internet Service Provider using a modem, for example). If you're 
-              behind a firewall, the Installer can retrieve the connection properties 
-              from Internet Explorer (assuming it's setup correctly): select "Use 
-              IE Settings" in this case. If none of the option works for you, 
-              then explicitly specify the proxy settings by choosing the &quot;Use 
-              HTTP/FTP proxy&quot; option.</p>
-            <p>You are now presented with a mirrors list. You might want to pick 
-              any of them close to you, but the ftp.freesoftware.com mirror is 
-              a good default.</p>
-            <p>Once the mirror is selected, a dialog box shows you all the packages 
+            <p>Cygwin provides a simple GUI installer that automatically
+              downloads the Cygwin packages and installs them.
+
+              All you need to do is download the installer and run it.</p>
+            <h3>Download the Cygwin Installer</h3>
+            <p>The first step is to create a directory where the
+              downloaded Cygwin files will be saved. This is not
+              the directory Cygwin will be installed in,
+              it is just used the save the downloaded files.</p>
+            <p>Our example install will use the
+              <code>D:\download_cygwin</code> directory.</p>
+            <p>The next step is to download the installer
+              and save it in the <code>D:\download_cygwin</code> directory.</p>
+            <p>The installer can be downloaded from one of the many
+              <A HREF="http://cygwin.com/mirrors.html">Cygwin Mirror Sites</A>.
+              Your download time will be shorter if you select a mirror close to you.
+              The installer is named <code>setup.exe</code>, it should
+              appear in a directory like <code>.../cygwin/latest/setup.exe</code>.</p>
+            <p>Users located in the U.S. may want to use the freesoftware.com mirror in CA:
+              <A href="ftp://ftp.freesoftware.com/pub/sourceware/cygwin/latest/setup.exe">ftp://ftp.freesoftware.com/pub/sourceware/cygwin/latest/setup.exe</a></p>
+            <p>Watch out! You may have problems behind a firewall that 
+              does not allow active FTP sessions. Netscape running
+              under Windows NT may appear to "get stuck" downloading
+              a file via FTP. If you are having this problem, try a
+              HTTP based download of <A HREF="http://cygwin.com/setup.exe">setup.exe</A>.</p>
+            <h3>Run the Cygwin Installer</h3>
+            <p>Double click on the <code>setup.exe</code> installer you just downloaded
+              and choose the <b>Install from Internet</b> option. Press the Next button 
+              and you will be asked for a <b>Local package directory</b>. 
+              The default value should be <code>D:\download_cygwin</code>, the
+              directory the installer was saved in. Since this is the directory
+              you want to save downloaded packages in, you can simply press the
+              Next button to accept the default.</p>
+            <p>You should now see the <b>Select install root directory</b> dialog.
+              This is the directory Cygwin will be installed into, the directory
+              you enter here will be mapped to the <code>/</code> root directory
+              in Cygwin applications. Avoid using a directory name that contains
+              spaces if possible. Our example install will use
+              <code>D:\Cygwin</code> as the root directory.</p>
+            <p>The default for the file type (Unix) is what most users would want.
+              If you are installing under NT as the Administrator, you can use
+              the install for <b>All</b> option to make Cygwin available to all
+              users. If you are installing as a normal user, you will want
+              to use the <b>Just me</b> setting. Press Next to continue.</p>
+            <p>You will be presented with network connection options.
+              Most folks will want to choose the <b>Direct Connection</b>
+              option. If you are behind a firewall, you may want to
+              select the <b>Use IE Settings</b> option so that the installer
+              will use the connection properties from Internet Explorer
+              (assuming it's setup correctly). Otherwise, you may need to
+              manually enter your sites <b>Use HTTP/FTP proxy</b> options.</p>
+            <p>You are now presented with a Cygwin mirror list. If you
+              don't know which mirror is closest to you, the
+              <code>ftp.freesoftware.com</code> is a reasonable default.</p>
+            <p>Once the mirror is selected, a dialog box displays the packages 
               available in the Cygwin distribution. If you are not worried about 
-              disk space and enjoy a high-speed connection, just install all the 
-              packages. A full install takes up about 230 Megs of space. Not installing 
-              some packages will speed up the install process since the files 
-              will not need to be downloaded. If you have a slow connection this 
-              could be a major concern. Don't worry you can always install more 
-              packages later by running the Installer again, it tracks which packages 
-              you have installed.</p>
-            <p>Once the installer has downloaded and installed everything, it 
-              will ask you if you want to create a start menu entry and a desktop 
-              shortcut. Select whatever you want.</p>
-            <div style="text-align: center"> 
-              <table border="0" cellspacing="0" cellpadding="1" align="center">
-                <tr> 
-                  <td class="HighlightedFrameBorder"> 
-                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
-                      <tr> 
-                        <td class="HighlightedFrameBackground">Select connection 
-                          settings (Use IE Settings if you don't know) &lt;Next&gt;<br>
-                          Select a mirror site (ftp.freesoftware.com) &lt;Next&gt;<br>
-                          Select the packages to download and install &lt;Next&gt;<br>
-                          Choose shortcuts creation options</td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </div>
-            <p> Cygwin is now installed and ready to run!</p>
-            <h3>Using Cygwin</h3>
-            <p>There are two ways of using Cygwin. You can use the Cygwin shell 
-              to perform all your command-line operations, or use a regular Windows 
-              MS-DOS (Command Prompt) window.</p>
-            <p>Using the Cygwin <code>bash</code> shell is straightforward: the 
-              Installer creates a start menu shortcut to it. Just launch it to 
-              run the shell.</p>
-            <div style="text-align: center"> 
-              <table border="0" cellspacing="0" cellpadding="1" align="center">
-                <tr> 
-                  <td class="HighlightedFrameBorder"> 
-                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
-                      <tr> 
-                        <td class="HighlightedFrameBackground">Using Cygwin <code>bash</code> 
-                          Shell:<br>
-                          run <code>Start / Programs / Cygnus Solutions / Cygwin 
-                          Bash Shell</code></td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </div>
-            <p>When you want to able to benefit from the Cygwin tools from a regular 
-              (MS-DOS) prompt, you only have to include the path to the <code>[Cygwin 
-              install dir]/bin</code> directory into the <code>PATH</code> environement 
-              variable, so that the appropriate Cygwin executable (and <code>cygwin1.dll</code>) 
-              can be found when invoking a Cygwin tool.</p>
-            <div style="text-align: center"> 
-              <table border="0" cellspacing="0" cellpadding="1" align="center">
-                <tr> 
-                  <td class="DimmedFrameBorder"> 
-                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
-                      <tr> 
-                        <td class="DimmedFrameBackground">Using Cygwin tools in 
-                          a regular Command window (one shot):<br>
-                          at the prompt: <code>set PATH=%PATH%;[Cygwin install 
-                          dir]/bin</code><br>
-                          <br>
-                          Using Cygwin tools in regular Command windows (permanently):<br>
-                          add <code>[Cygwin install dir]/bin</code> to <code>PATH</code> 
-                          (WinNT/2k)<br>
-                          or: <br>
-                          add <code>set PATH=%PATH%;[Cygwin install dir]/bin</code> 
-                          to <code>autoexec.bat</code> (Win9x/ME)</td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </div>
-            <p>&nbsp;</p>
-            <h2><a name="cygwin-gcc-mingw-compiling"></a>Compiling with gcc and 
-              mingw (GNU gcc for Windows)</h2>
+              disk space and have a high-speed connection, just install all
+              the packages.
+
+              A full install takes up about 230 Megs of space. If you avoid
+              installing some packages, less disk space will be used and
+              the download will take less time to complete.</p>
+            <p>Here is a list of the Cygwin packages you <b>do not need</b>
+              if you are just going to compile Jikes.
+              If you have a slow connection, deselecting these
+              packages can save a lot of download time.</p>
+
+              <ul>
+              <li>bison
+              <li>byacc
+              <li>cpio
+              <li>dejagnu
+              <li>expect
+              <li>flex
+              <li>gperf
+              <li>groff
+              <li>inetutils
+              <li>jbigkit
+              <li>jpeg
+              <li>libpng
+              <li>login
+              <li>mt
+              <li>mutt
+              <li>ncftp
+              <li>ncurses
+              <li>opengl
+              <li>openssh
+              <li>openssl
+              <li>perl
+              <li>popt
+              <li>regex
+              <li>squid
+              <li>tcsh
+              <li>tcltk
+              <li>tiff
+              <li>vim
+              <li>wget
+              <li>xpm
+              </ul>
+
+            <p>Once the package list is selected, press Next to start the
+              download and install process.</p>
+            <p>Once the installer has downloaded and installed all the packages,
+              it will ask you if you want to create a start menu entry and
+              a desktop shortcut.</p>
+            <p>We suggest adding the start menu entry,
+              it would be installed as:</p>
+            <p><code>
+              Start > Programs > Cygnus Solutions > Cygwin Bash Shell
+              </code></p>
+            <p>Selecting this menu option will start the Cygwin bash shell.
+              UNIX users will already be familliar with the shell interface.
+              Windows users should not fear, bash is basically the same as
+              a DOS prompt except that it support Cygwin paths by and TAB
+              completion by default. To learn more about bash see the following
+              <A HREF="http://www.beforever.com/bashtut.htm">Bash Tutorial</a>.</p>
+            <h2><a name="cygwin-gcc-mingw-compiling"></a>Compiling with mingw 
+              (gcc for Windows)</h2>
             <h3>Installing mingw</h3>
             <p>The following instructions describe the process of building Jikes 
               with gcc and mingw. The resulting <code>jikes.exe</code> executable 

@@ -1,3 +1,19 @@
+2001-03-03  Mo DeJong  <mdejong@redhat.com>
+
+	* faq/dev-win32.shtml:
+	Overhaul the Installing Cygwin section.
+	Add example install paths.
+	Remove short lists of steps that
+	appear after the text instructions.
+	Include links to Cygwin mirrors
+	page and HTTP based installer download.
+	Remove description of setting the Windows
+	PATH to make Cygwin tools available in
+	dos mode. Added list of packages that
+	were not strictly required for the
+	minimum download and install. Add
+	link to bash tutorial.
+
 2001-03-03  Christopher Abbey  <cabbey@bresnanlink.net>
 
         * ChangeLog: Revisionism sucks, but this is a revisionist
