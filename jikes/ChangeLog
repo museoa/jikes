@@ -1,3 +1,10 @@
+2000-07-23  Andrew G. Tereschenko  <tag@ibis.odessa.ua>
+
+	* src/jikesapi.cpp (parseOptions): Use
+	expanded argv not passed in argv. This
+	fixes the bug that was causing @ argument
+	to not get expanded.
+
 2000-07-23  Mo DeJong  <mdejong@redhat.com>
 
 	* INSTALL: Added detailed build instructions.

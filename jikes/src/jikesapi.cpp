@@ -136,7 +136,7 @@ char ** JikesAPI::parseOptions(int argc, char **argv)
         char **res=new char*[n+1];
         for(int i=0;i<n;i++)
         {
-            const char *o=argv[opt->first_file_index+i];
+            const char *o=args->argv[opt->first_file_index+i];
             if(o)
             {
                 res[i] = new char[strlen(o)+1];
