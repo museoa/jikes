@@ -5,6 +5,7 @@ ast.cpp \
 body.cpp \
 bytecode.cpp \
 case.cpp \
+class.cpp \
 code.cpp \
 control.cpp \
 decl.cpp \
@@ -15,7 +16,6 @@ double.cpp \
 dump.cpp \
 error.cpp \
 expr.cpp \
-getclass.cpp \
 incrmnt.cpp \
 init.cpp \
 javaact.cpp \
@@ -55,7 +55,6 @@ depend.h \
 diagnose.h \
 double.h \
 error.h \
-getclass.h \
 javaact.h \
 javadcl.h \
 javadef.h \

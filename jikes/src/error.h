@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002, 2003 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -350,8 +349,7 @@ public:
         DEFAULT_METHOD_NOT_OVERRIDDEN,
 
         // Package related errors.
-        TYPE_NOT_IN_UNNAMED_PACKAGE,
-        TYPE_IN_WRONG_PACKAGE,
+        WRONG_TYPE_IN_CLASSFILE,
         TYPE_NAME_MISMATCH,
         DEPRECATED_TYPE,
         DEPRECATED_FIELD,

@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 #include "platform.h"
@@ -113,7 +113,7 @@ void Semantic::ProcessTypeNames()
                     new SemanticEnvironment(this, type, NULL);
                 if (type != control.Object())
                     type -> super = control.no_type;
-                if (! type -> FindConstructorSymbol())
+                if (! type -> FindMethodSymbol(control.init_name_symbol))
                     AddDefaultConstructor(type);
                 source_file_symbol -> types.Next() = type;
             }
@@ -1915,32 +1915,21 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration* construc
         ? lex_stream -> NameSymbol(constructor_declarator -> identifier_token)
         : control.init_name_symbol;
     MethodSymbol* constructor = this_type -> FindMethodSymbol(name_symbol);
-
-    if (! constructor) // there exists a constructor already in type -> table.
-        if (! treat_as_method)
-            constructor = this_type -> InsertConstructorSymbol(name_symbol);
-        else
-            constructor = this_type -> InsertMethodSymbol(name_symbol);
-    else
+    if (constructor && this_type -> FindOverloadMethod(constructor,
+                                                       constructor_declarator))
     {
-        if (this_type -> FindOverloadMethod(constructor,
-                                            constructor_declarator))
-        {
-            ReportSemError(SemanticError::DUPLICATE_CONSTRUCTOR,
-                           constructor_declarator, this_type -> Name(),
-                           constructor -> FileLoc());
-            delete block_symbol;
-            return;
-        }
-
-        constructor = this_type -> Overload(constructor);
+        ReportSemError(SemanticError::DUPLICATE_CONSTRUCTOR,
+                       constructor_declarator, this_type -> Name(),
+                       constructor -> FileLoc());
+        delete block_symbol;
+        return;
     }
 
-    //
-    // If the method is not static, leave a slot for the "this" pointer.
-    //
-    constructor -> SetType(treat_as_method ? control.no_type
-                           : this_type);
+    constructor = this_type -> InsertMethodSymbol(name_symbol);
+    TypeSymbol* ctor_type = this_type;
+    if (treat_as_method)
+        ctor_type = control.no_type;
+    constructor -> SetType(ctor_type);
     constructor -> SetFlags(access_flags);
     constructor -> SetContainingType(this_type);
     constructor -> SetBlockSymbol(block_symbol);
@@ -1995,7 +1984,7 @@ void Semantic::AddDefaultConstructor(TypeSymbol* type)
 {
     assert(! type -> ACC_INTERFACE());
     MethodSymbol* constructor =
-        type -> InsertConstructorSymbol(control.init_name_symbol);
+        type -> InsertMethodSymbol(control.init_name_symbol);
 
     BlockSymbol* block_symbol = new BlockSymbol(1);
     block_symbol -> max_variable_index = 1; // All types need a spot for "this"
@@ -3021,25 +3010,16 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration* method_declaration
         this_type -> ResetDeprecated();
 
     MethodSymbol* method = this_type -> FindMethodSymbol(name_symbol);
-
-    if (! method)
-        method = this_type -> InsertMethodSymbol(name_symbol);
-    else
+    if (method && this_type -> FindOverloadMethod(method, method_declarator))
     {
-        if (this_type -> FindOverloadMethod(method, method_declarator))
-        {
-            ReportSemError(SemanticError::DUPLICATE_METHOD,
-                           method_declarator -> LeftToken(),
-                           method_declarator -> RightToken(),
-                           name_symbol -> Name(),
-                           this_type -> Name(),
-                           method -> FileLoc());
-            delete block_symbol;
-            return;
-        }
-
-        method = this_type -> Overload(method);
+        ReportSemError(SemanticError::DUPLICATE_METHOD,
+                       method_declarator, name_symbol -> Name(),
+                       this_type -> Name(), method -> FileLoc());
+        delete block_symbol;
+        return;
     }
+
+    method = this_type -> InsertMethodSymbol(name_symbol);
     unsigned dims =
         method_type -> num_dimensions + method_declarator -> NumBrackets();
     method -> SetType(method_type -> GetArrayType(this, dims));

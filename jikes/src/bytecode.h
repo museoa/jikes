@@ -272,10 +272,10 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     u2 shadow_parameter_offset;
 
-    Code_attribute* code_attribute; // code for current method ?
-    LineNumberTable_attribute* line_number_table_attribute;
-    LocalVariableTable_attribute* local_variable_table_attribute;
-    InnerClasses_attribute* inner_classes_attribute;
+    CodeAttribute* code_attribute; // code for current method
+    LineNumberTableAttribute* line_number_table_attribute;
+    LocalVariableTableAttribute* local_variable_table_attribute;
+    InnerClassesAttribute* inner_classes_attribute;
 
     void MethodInitialization()
     {
@@ -512,12 +512,11 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
             //
             u2 name_index = RegisterUtf8(name);
             u2 type_index = RegisterUtf8(type_name);
-            index = (u2) constant_pool.NextIndex();
+            index = (u2) constant_pool.Length();
             name_and_type_constant_pool_index ->
                 Image(name -> index, type_name -> index) = index;
-            constant_pool[index] =
-                new CONSTANT_NameAndType_info(CONSTANT_NameAndType,
-                                              name_index, type_index);
+            constant_pool.SetNext(new CPNameAndTypeInfo(name_index,
+                                                        type_index));
         }
         return index;
     }
@@ -545,12 +544,12 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
             // pool overflowed.
             //
             u2 class_index = RegisterClass(class_name);
-            index = (u2) constant_pool.NextIndex();
+            index = (u2) constant_pool.Length();
             fieldref_constant_pool_index ->
                 Image(class_name -> index, name_type_index) = index;
-            constant_pool[index] =
-                new CONSTANT_Fieldref_info(CONSTANT_Fieldref,
-                                           class_index, name_type_index);
+            constant_pool.SetNext(new CPMemberInfo(CPInfo::CONSTANT_Fieldref,
+                                                   class_index,
+                                                   name_type_index));
         }
         return index;
     }
@@ -561,7 +560,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         assert(variable -> owner -> TypeCast());
         return RegisterFieldref(type -> fully_qualified_name,
                                 variable -> ExternalIdentity() -> Utf8_literal,
-                                variable -> Type() -> signature);
+                                variable -> signature);
     }
 
 
@@ -570,11 +569,11 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         assert(variable -> owner -> TypeCast());
         return RegisterFieldref(variable -> ContainingType() -> fully_qualified_name,
                                 variable -> ExternalIdentity() -> Utf8_literal,
-                                variable -> Type() -> signature);
+                                variable -> signature);
     }
 
 
-    u2 RegisterMethodref(ConstantKind kind,
+    u2 RegisterMethodref(CPInfo::ConstantPoolTag kind,
                          Utf8LiteralValue* class_name,
                          Utf8LiteralValue* method_name,
                          Utf8LiteralValue* method_type_name)
@@ -597,16 +596,11 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
             // pool overflowed.
             //
             u2 class_name_index = RegisterClass(class_name);
-            index = (u2) constant_pool.NextIndex();
+            index = (u2) constant_pool.Length();
             methodref_constant_pool_index -> Image(class_name -> index,
                                                    name_type_index) = index;
-            constant_pool[index] = kind == CONSTANT_Methodref
-                ? (cp_info*) new CONSTANT_Methodref_info(CONSTANT_Methodref,
-                                                          class_name_index,
-                                                          name_type_index)
-                : (cp_info*) new CONSTANT_InterfaceMethodref_info(CONSTANT_InterfaceMethodref,
-                                                                   class_name_index,
-                                                                   name_type_index);
+            constant_pool.SetNext(new CPMemberInfo(kind, class_name_index,
+                                                   name_type_index));
         }
         return index;
     }
@@ -616,7 +610,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
                          const NameSymbol* method_name,
                          const MethodSymbol* method_type)
     {
-        return RegisterMethodref(CONSTANT_Methodref,
+        return RegisterMethodref(CPInfo::CONSTANT_Methodref,
                                  class_type -> fully_qualified_name,
                                  method_name -> Utf8_literal,
                                  method_type -> signature);
@@ -626,7 +620,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
                                   const NameSymbol* method_name,
                                   const MethodSymbol* method_type_name)
     {
-        return RegisterMethodref(CONSTANT_InterfaceMethodref,
+        return RegisterMethodref(CPInfo::CONSTANT_InterfaceMethodref,
                                  interface_name -> fully_qualified_name,
                                  method_name -> Utf8_literal,
                                  method_type_name -> signature);
@@ -637,7 +631,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         // The library method must exist. If it does not, flag an error.
         if (method)
-            return RegisterMethodref(CONSTANT_Methodref,
+            return RegisterMethodref(CPInfo::CONSTANT_Methodref,
                                      method -> containing_type -> fully_qualified_name,
                                      method -> ExternalIdentity()-> Utf8_literal,
                                      method -> signature);
@@ -661,13 +655,10 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
             // Either the pair is not in the constant pool, or the constant
             // pool overflowed.
             //
-            index = (u2) constant_pool.NextIndex();
-            constant_pool.Next() = NULL; // extra slop for double-word entry
+            index = (u2) constant_pool.Length();
             (*double_constant_pool_index)[lit -> index] = index;
-            constant_pool[index] =
-                new CONSTANT_Double_info(CONSTANT_Double,
-                                         lit -> value.HighWord(),
-                                         lit -> value.LowWord());
+            constant_pool.SetNext(new CPDoubleInfo(lit -> value.HighWord(),
+                                                   lit -> value.LowWord()));
         }
         return index;
     }
@@ -688,11 +679,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
             // Either the pair is not in the constant pool, or the constant
             // pool overflowed.
             //
-            index = (u2) constant_pool.NextIndex();
+            index = (u2) constant_pool.Length();
             (*integer_constant_pool_index)[lit -> index] = index;
-            constant_pool[index] =
-                new CONSTANT_Integer_info(CONSTANT_Integer,
-                                          (u4) lit -> value);
+            constant_pool.SetNext(new CPIntegerInfo((u4) lit -> value));
         }
         return index;
     }
@@ -720,13 +709,10 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
             // Either the pair is not in the constant pool, or the constant
             // pool overflowed.
             //
-            index = (u2) constant_pool.NextIndex();
-            constant_pool.Next() = NULL; // extra slop for double-word entry
+            index = (u2) constant_pool.Length();
             (*long_constant_pool_index)[lit -> index] = index;
-            constant_pool[index] =
-                new CONSTANT_Long_info(CONSTANT_Long,
-                                       lit -> value.HighWord(),
-                                       lit -> value.LowWord());
+            constant_pool.SetNext(new CPLongInfo(lit -> value.HighWord(),
+                                                 lit -> value.LowWord()));
         }
         return index;
     }
@@ -747,11 +733,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
             // Either the pair is not in the constant pool, or the constant
             // pool overflowed.
             //
-            index = (u2) constant_pool.NextIndex();
+            index = (u2) constant_pool.Length();
             (*float_constant_pool_index)[lit -> index] = index;
-            constant_pool[index] =
-                new CONSTANT_Float_info(CONSTANT_Float,
-                                        lit -> value.Word());
+            constant_pool.SetNext(new CPFloatInfo(lit -> value.Word()));
         }
         return index;
     }
@@ -768,11 +752,10 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
             // Either the pair is not in the constant pool, or the constant
             // pool overflowed.
             //
-            index = (u2) constant_pool.NextIndex();
+            index = (u2) constant_pool.Length();
             utf8_constant_pool_index[lit -> index] = index;
-            constant_pool[index] = new CONSTANT_Utf8_info(CONSTANT_Utf8,
-                                                          lit -> value,
-                                                          lit -> length);
+            constant_pool.SetNext(new CPUtf8Info(lit -> value,
+                                                 lit -> length));
             if (lit -> length > 0xffff)
                 string_overflow = true;
         }
@@ -799,10 +782,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
             // pool overflowed.
             //
             u2 utf_index = RegisterUtf8(lit);
-            index = (u2) constant_pool.NextIndex();
+            index = (u2) constant_pool.Length();
             (*string_constant_pool_index)[lit -> index] = index;
-            constant_pool[index] = new CONSTANT_String_info(CONSTANT_String,
-                                                            utf_index);
+            constant_pool.SetNext(new CPStringInfo(utf_index));
         }
         return index;
     }
@@ -820,10 +802,9 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
             // pool overflowed.
             //
             u2 utf_index = RegisterUtf8(lit);
-            index = (u2) constant_pool.NextIndex();
+            index = (u2) constant_pool.Length();
             class_constant_pool_index[lit -> index] = index;
-            constant_pool[index] = new CONSTANT_Class_info(CONSTANT_Class,
-                                                           utf_index);
+            constant_pool.SetNext(new CPClassInfo(utf_index));
         }
         return index;
     }
@@ -837,15 +818,16 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     //  Methods to write out the byte code
     //
-    Deprecated_attribute* CreateDeprecatedAttribute()
+    DeprecatedAttribute* CreateDeprecatedAttribute()
     {
-        return new Deprecated_attribute(RegisterUtf8(control.Deprecated_literal));
+        return new DeprecatedAttribute(RegisterUtf8
+                                       (control.Deprecated_literal));
     }
 
 
-    Synthetic_attribute* CreateSyntheticAttribute()
+    SyntheticAttribute* CreateSyntheticAttribute()
     {
-        return new Synthetic_attribute(RegisterUtf8(control.Synthetic_literal));
+        return new SyntheticAttribute(RegisterUtf8(control.Synthetic_literal));
     }
 
 
@@ -965,10 +947,6 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
               : OP_ARETURN);
     }
 
-
-#ifdef JIKES_DEBUG
-    void PrintCode();
-#endif
 
     void PutOp(Opcode);
 

@@ -1655,14 +1655,9 @@ void SemanticError::InitializeMessages()
         "the corresponding method with default access in class \"%T4\".";
 
     // Package related errors.
-    messages[TYPE_NOT_IN_UNNAMED_PACKAGE] =
-        "The file \"%1.class\" was found in directory \"%2\" specified "
-        "in the CLASSPATH. However, that class file specifies a type "
-        "associated with the named package \"%3\" instead of the unnamed "
-        "package.";
-    messages[TYPE_IN_WRONG_PACKAGE] =
-        "The type \"%1\" was found in package \"%2\". However, that type "
-        "is associated with %P3.";
+    messages[WRONG_TYPE_IN_CLASSFILE] =
+        "The file \"%1.class\" was found in directory \"%F2\" specified in the"
+        "CLASSPATH. However, that class file specifies the type \"%4\".";
     messages[TYPE_NAME_MISMATCH] =
         "The name of the type specified, \"%T1\", does not match "
         "the name found in the class file: \"%3\".";

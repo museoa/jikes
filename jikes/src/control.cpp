@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 #include "control.h"
@@ -564,7 +563,7 @@ Control::~Control()
 }
 
 
-PackageSymbol* Control::ProcessPackage(wchar_t* name)
+PackageSymbol* Control::ProcessPackage(const wchar_t* name)
 {
     int name_length = wcslen(name);
     wchar_t* package_name = new wchar_t[name_length];

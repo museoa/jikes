@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler Open
 // Source License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002, 2003 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -23,9 +22,9 @@
 namespace Jikes { // Open namespace Jikes block
 #endif
 
-char* FileSymbol::java_suffix = StringConstant::U8S_DO_java;
+const char* FileSymbol::java_suffix = StringConstant::U8S_DO_java;
 unsigned FileSymbol::java_suffix_length = strlen(java_suffix);
-char* FileSymbol::class_suffix = StringConstant::U8S_DO_class;
+const char* FileSymbol::class_suffix = StringConstant::U8S_DO_class;
 unsigned FileSymbol::class_suffix_length = strlen(class_suffix);
 
 wchar_t* MethodSymbol::Header()
@@ -34,27 +33,7 @@ wchar_t* MethodSymbol::Header()
 
     if (! header)
     {
-        bool is_constructor = false;
-        if (containing_type -> semantic_environment &&
-            Identity() == (containing_type -> semantic_environment ->
-                           sem -> control.init_name_symbol))
-        {
-            is_constructor = true;
-        }
-        else
-        {
-            MethodSymbol* ctor;
-            for (ctor = containing_type -> FindConstructorSymbol();
-                 ctor; ctor = ctor -> next_method)
-            {
-                if (this == ctor)
-                {
-                    is_constructor = true;
-                    break;
-                }
-            }
-        }
-
+        bool is_constructor = Name()[0] == U_LESS && Name()[1] == U_i;
         int length = (Type() -> ContainingPackage() -> PackageNameLength() +
                       Type() -> ExternalNameLength() +
                       (is_constructor ? containing_type -> NameLength()
@@ -534,12 +513,11 @@ void SymbolTable::Rehash()
 
 
 SymbolTable::SymbolTable(unsigned hash_size_)
-    : type_symbol_pool(NULL),
-      anonymous_symbol_pool(NULL),
-      method_symbol_pool(NULL),
-      variable_symbol_pool(NULL),
-      other_symbol_pool(NULL),
-      constructor(NULL)
+    : type_symbol_pool(NULL)
+    , anonymous_symbol_pool(NULL)
+    , method_symbol_pool(NULL)
+    , variable_symbol_pool(NULL)
+    , other_symbol_pool(NULL)
 {
     hash_size = (hash_size_ <= 0 ? 1 : hash_size_);
 
@@ -1255,6 +1233,7 @@ void MethodSymbol::ProcessMethodSignature(Semantic* sem,
 
         int num_parameters = 0;
         const char* signature = SignatureString();
+        assert(*signature == U_LEFT_PARENTHESIS);
         signature++; // +1 to skip initial '('
 
         //
@@ -1264,23 +1243,10 @@ void MethodSymbol::ProcessMethodSignature(Semantic* sem,
             ! containing_type -> EnclosingType() -> ACC_PRIVATE() &&
             Identity() == sem -> control.init_name_symbol)
         {
-            if (*signature != U_RIGHT_PARENTHESIS)
-            {
-                //
-                // Move to next signature
-                //
-                const char* str;
-                for (str = signature; *str == U_LEFT_BRACKET; str++)
-                    ;
-                if (*str == U_L)
-                {
-                    for (str++; *str != U_SEMICOLON; str++)
-                        ;
-                }
-
-                int len = str - signature + 1;
-                signature += len; // make signature point to next type
-            }
+            TypeSymbol* enclosing = sem -> ProcessSignature(containing_type,
+                                                            signature,
+                                                            token_location);
+            assert(enclosing == containing_type -> EnclosingType());
         }
 
         while (*signature && *signature != U_RIGHT_PARENTHESIS)
@@ -1296,23 +1262,9 @@ void MethodSymbol::ProcessMethodSignature(Semantic* sem,
                                                       token_location));
             symbol -> MarkComplete();
             AddFormalParameter(symbol);
-
-            //
-            // Move to next signature
-            //
-            const char* str;
-            for (str = signature; *str == U_LEFT_BRACKET; str++)
-                ;
-            if (*str == U_L)
-            {
-                for (str++; *str != U_SEMICOLON; str++)
-                    ;
-            }
-
-            int len = str - signature + 1;
-            signature += len; // make signature point to next type
         }
-        signature++; // skip L')'
+        assert(*signature == U_RIGHT_PARENTHESIS);
+        signature++; // skip ')'
 
         //
         // Now set the type of the method.
@@ -1327,6 +1279,7 @@ void MethodSymbol::ProcessMethodSignature(Semantic* sem,
             SetType(sem -> ProcessSignature(containing_type, signature,
                                             token_location));
         }
+        assert(! *signature);
 
         //
         // Create a symbol table for this method for consistency, and in
@@ -1400,9 +1353,11 @@ void VariableSymbol::ProcessVariableSignature(Semantic* sem,
     if (! type_)
     {
         assert(sem);
+        const char* signature = signature_string;
 
-        SetType(sem -> ProcessSignature((TypeSymbol*) owner, signature_string,
+        SetType(sem -> ProcessSignature((TypeSymbol*) owner, signature,
                                         token_location));
+        assert(! *signature);
     }
 }
 
@@ -1961,15 +1916,21 @@ MethodSymbol* TypeSymbol::GetReadAccessMethod(MethodSymbol* member,
         //
         LexStream::TokenIndex loc = declaration -> identifier_token;
 
-        int parameter_count = member -> NumFormalParameters();
+        unsigned parameter_count = member -> NumFormalParameters();
 
-        read_method = InsertMethodSymbol(control.FindOrInsertName(name,
-                                                                  length));
+        //
+        // Add the method instead of inserting it, so it is not an overload
+        // candidate.
+        //
+        read_method = new MethodSymbol(control.FindOrInsertName(name, length));
+        Table() -> AddMethodSymbol(read_method);
         read_method -> MarkSynthetic();
         read_method -> SetType(member -> Type());
         read_method -> SetACC_STATIC();
         if (member -> ACC_STRICTFP())
             read_method -> SetACC_STRICTFP();
+        if (member -> ACC_FINAL() || ACC_FINAL())
+            read_method -> SetACC_FINAL();
         read_method -> SetContainingType(this);
 
         //
@@ -2045,7 +2006,7 @@ MethodSymbol* TypeSymbol::GetReadAccessMethod(MethodSymbol* member,
                               ? (Symbol*) super : (Symbol*) instance);
         }
 
-        for (int i = 0; i < parameter_count; i++)
+        for (unsigned i = 0; i < parameter_count; i++)
         {
             VariableSymbol* parm = block_symbol ->
                 InsertVariableSymbol(member -> FormalParameter(i) -> Identity());
@@ -2087,7 +2048,6 @@ MethodSymbol* TypeSymbol::GetReadAccessMethod(MethodSymbol* member,
             expression_statement -> is_reachable = true;
             expression_statement -> can_complete_normally = true;
 
-            // this block contains two statements
             block -> AllocateStatements(2);
             block -> AddStatement(expression_statement);
         }
@@ -2198,7 +2158,12 @@ MethodSymbol* TypeSymbol::GetReadAccessConstructor(MethodSymbol* ctor)
         BlockSymbol* block_symbol =
             new BlockSymbol(ctor -> NumFormalParameters() + 3);
 
-        read_method = InsertMethodSymbol(control.init_name_symbol);
+        //
+        // Add the method instead of inserting it, so it is not an overload
+        // candidate.
+        //
+        read_method = new MethodSymbol(control.init_name_symbol);
+        Table() -> AddMethodSymbol(read_method);
         read_method -> MarkSynthetic();
         read_method -> SetType(this);
         read_method -> SetContainingType(this);
@@ -2367,15 +2332,23 @@ MethodSymbol* TypeSymbol::GetReadAccessMethod(VariableSymbol* member,
         wcscat(name, value.String());
 
         //
-        // Use the location of the class name for all elements of this method
+        // Use the location of the class name for all elements of this method.
         //
         LexStream::TokenIndex loc = declaration -> identifier_token;
 
-        read_method = InsertMethodSymbol(control.FindOrInsertName(name,
-                                                                  length));
+        //
+        // Add the method instead of inserting it, so it is not an overload
+        // candidate.
+        //
+        read_method = new MethodSymbol(control.FindOrInsertName(name, length));
+        Table() -> AddMethodSymbol(read_method);
         read_method -> MarkSynthetic();
         read_method -> SetType(member -> Type());
         read_method -> SetACC_STATIC();
+        if (ACC_STRICTFP())
+            read_method -> SetACC_STRICTFP();
+        if (ACC_FINAL())
+            read_method -> SetACC_FINAL();
         read_method -> SetContainingType(this);
 
         //
@@ -2451,10 +2424,8 @@ MethodSymbol* TypeSymbol::GetReadAccessMethod(VariableSymbol* member,
         AstMethodBody* block = ast_pool -> GenMethodBody();
         block -> left_brace_token = loc;
         block -> right_brace_token = loc;
-        // the symbol table associated with this block will contain no element
         block -> block_symbol = new BlockSymbol(0);
         block -> is_reachable = true;
-        // this block contains one statement
         block -> AllocateStatements(1);
         block -> AddStatement(return_statement);
 
@@ -2527,15 +2498,24 @@ MethodSymbol* TypeSymbol::GetWriteAccessMethod(VariableSymbol* member,
         wcscat(name, value.String());
 
         //
-        // Use the location of the class name for all elements of this method
+        // Use the location of the class name for all elements of this method.
         //
         LexStream::TokenIndex loc = declaration -> identifier_token;
 
-        write_method = InsertMethodSymbol(control.FindOrInsertName(name,
-                                                                   length));
+        //
+        // Add the method instead of inserting it, so it is not an overload
+        // candidate.
+        //
+        write_method =
+            new MethodSymbol(control.FindOrInsertName(name, length));
+        Table() -> AddMethodSymbol(write_method);
         write_method -> MarkSynthetic();
         write_method -> SetType(sem -> control.void_type);
         write_method -> SetACC_STATIC();
+        if (ACC_STRICTFP())
+            write_method -> SetACC_STRICTFP();
+        if (ACC_FINAL())
+            write_method -> SetACC_FINAL();
         write_method -> SetContainingType(this);
 
         BlockSymbol* block_symbol =
@@ -2634,10 +2614,8 @@ MethodSymbol* TypeSymbol::GetWriteAccessMethod(VariableSymbol* member,
         AstMethodBody* block = ast_pool -> GenMethodBody();
         block -> left_brace_token = loc;
         block -> right_brace_token = loc;
-        // the symbol table associated with this block will contain no element
         block -> block_symbol = new BlockSymbol(0);
         block -> is_reachable = true;
-        // this block contains two statements
         block -> AllocateStatements(2);
         block -> AddStatement(expression_statement);
         block -> AddStatement(return_statement);

@@ -379,7 +379,7 @@ void Semantic::ReportConstructorNotFound(Ast* ast, TypeSymbol* type)
     MethodSymbol* best_match = NULL;
     MethodSymbol* ctor;
     int difference = 255;
-    for (ctor = type -> FindConstructorSymbol();
+    for (ctor = type -> FindMethodSymbol(control.init_name_symbol);
          ctor; ctor = ctor -> next_method)
     {
         if (ConstructorAccessCheck(ctor, ! class_creation))
@@ -405,7 +405,7 @@ void Semantic::ReportConstructorNotFound(Ast* ast, TypeSymbol* type)
     //
     // Check if the constructor is inaccessible.
     //
-    for (ctor = type -> FindConstructorSymbol();
+    for (ctor = type -> FindMethodSymbol(control.init_name_symbol);
          ctor; ctor = ctor -> next_method)
     {
         if (num_arguments == ctor -> NumFormalParameters())
@@ -576,8 +576,8 @@ MethodSymbol* Semantic::FindConstructor(TypeSymbol* containing_type, Ast* ast,
 
     unsigned num_arguments = args -> NumArguments();
     assert(containing_type -> ConstructorMembersProcessed());
-
-    for (MethodSymbol* ctor = containing_type -> FindConstructorSymbol();
+    MethodSymbol* ctor;
+    for (ctor = containing_type -> FindMethodSymbol(control.init_name_symbol);
          ctor; ctor = ctor -> next_method)
     {
         if (! ctor -> IsTyped())
@@ -622,12 +622,11 @@ MethodSymbol* Semantic::FindConstructor(TypeSymbol* containing_type, Ast* ast,
                        constructor_set[1] -> Header());
     }
 
-    MethodSymbol* constructor_symbol = constructor_set[0];
-
-    if (constructor_symbol -> IsSynthetic())
+    ctor = constructor_set[0];
+    if (ctor -> IsSynthetic())
     {
         ReportSemError(SemanticError::SYNTHETIC_CONSTRUCTOR_INVOCATION,
-                       left_tok, right_tok, constructor_symbol -> Header(),
+                       left_tok, right_tok, ctor -> Header(),
                        containing_type -> ContainingPackageName(),
                        containing_type -> ExternalName());
     }
@@ -636,17 +635,17 @@ MethodSymbol* Semantic::FindConstructor(TypeSymbol* containing_type, Ast* ast,
     // If this constructor came from a class file, make sure that its throws
     // clause has been processed.
     //
-    constructor_symbol -> ProcessMethodThrows(this, right_tok);
+    ctor -> ProcessMethodThrows(this, right_tok);
 
-    if (control.option.deprecation && constructor_symbol -> IsDeprecated() &&
+    if (control.option.deprecation && ctor -> IsDeprecated() &&
         ! InDeprecatedContext())
     {
         ReportSemError(SemanticError::DEPRECATED_CONSTRUCTOR,
-                       left_tok, right_tok, constructor_symbol -> Header(),
-                       constructor_symbol -> containing_type -> ContainingPackageName(),
-                       constructor_symbol -> containing_type -> ExternalName());
+                       left_tok, right_tok, ctor -> Header(),
+                       ctor -> containing_type -> ContainingPackageName(),
+                       ctor -> containing_type -> ExternalName());
     }
-    return constructor_symbol;
+    return ctor;
 }
 
 
@@ -3495,7 +3494,8 @@ void Semantic::UpdateLocalConstructors(TypeSymbol* inner_type)
     unsigned param_count = inner_type -> NumConstructorParameters();
     if (param_count)
     {
-        for (MethodSymbol* ctor = inner_type -> FindConstructorSymbol();
+        MethodSymbol* ctor;
+        for (ctor = inner_type -> FindMethodSymbol(control.init_name_symbol);
              ctor; ctor = ctor -> next_method)
         {
             ctor -> SetSignature(control);
@@ -3597,7 +3597,7 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression* class
     block_symbol -> max_variable_index = 1; // A spot for "this".
 
     MethodSymbol* constructor =
-        anonymous_type -> InsertConstructorSymbol(control.init_name_symbol);
+        anonymous_type -> InsertMethodSymbol(control.init_name_symbol);
     constructor -> SetType(anonymous_type);
     constructor -> SetContainingType(anonymous_type);
     constructor -> SetBlockSymbol(block_symbol);

@@ -264,7 +264,7 @@ int Operators::OpDesc(Opcode opc, const char** name, const char** desc)
     return 0;
 }
 
-void Operators::OpLine(Tuple<cp_info*>& constant_pool, char hdr, int pc,
+void Operators::OpLine(const ConstantPool& constant_pool, char hdr, int pc,
                        const char* name, char* args, const char* desc,
                        OpInfo info_kind, unsigned info_index)
 {
@@ -317,7 +317,7 @@ void Operators::OpLine(Tuple<cp_info*>& constant_pool, char hdr, int pc,
     Coutput << endl;
 }
 
-void Operators::OpDmp(Tuple<cp_info*>& constant_pool, Tuple<u1>& code)
+void Operators::OpDmp(const ConstantPool& constant_pool, const Tuple<u1>& code)
 {
     assert(sizeof(int) == 4 && "Debugger must have 32-bit int");
     unsigned pc = 0;

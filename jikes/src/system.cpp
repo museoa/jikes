@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002, 2003 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -340,30 +339,29 @@ void Control::InitAssertionErrorInfo()
         //
         // Search for relevant constructors
         //
-        for (MethodSymbol* constructor =
-                 AssertionError_type -> FindConstructorSymbol();
-             constructor;
-             constructor = constructor -> next_method)
+        MethodSymbol* ctor;
+        for (ctor = AssertionError_type -> FindMethodSymbol(init_name_symbol);
+             ctor; ctor = ctor -> next_method)
         {
-            const char* signature = constructor -> SignatureString();
+            const char* signature = ctor -> SignatureString();
 
             if (strcmp(signature, StringConstant::U8S_LP_RP_V) == 0)
-                AssertionError_Init_method = constructor;
+                AssertionError_Init_method = ctor;
             else if (strcmp(signature, StringConstant::U8S_LP_C_RP_V) == 0)
-                AssertionError_InitWithChar_method = constructor;
+                AssertionError_InitWithChar_method = ctor;
             else if (strcmp(signature, StringConstant::U8S_LP_Z_RP_V) == 0)
-                AssertionError_InitWithBoolean_method = constructor;
+                AssertionError_InitWithBoolean_method = ctor;
             else if (strcmp(signature, StringConstant::U8S_LP_I_RP_V) == 0)
-                AssertionError_InitWithInt_method = constructor;
+                AssertionError_InitWithInt_method = ctor;
             else if (strcmp(signature, StringConstant::U8S_LP_J_RP_V) == 0)
-                AssertionError_InitWithLong_method = constructor;
+                AssertionError_InitWithLong_method = ctor;
             else if (strcmp(signature, StringConstant::U8S_LP_F_RP_V) == 0)
-                AssertionError_InitWithFloat_method = constructor;
+                AssertionError_InitWithFloat_method = ctor;
             else if (strcmp(signature, StringConstant::U8S_LP_D_RP_V) == 0)
-                AssertionError_InitWithDouble_method = constructor;
+                AssertionError_InitWithDouble_method = ctor;
             else if (strcmp(signature,
                             StringConstant::U8S_LP_Object_RP_V) == 0)
-                AssertionError_InitWithObject_method = constructor;
+                AssertionError_InitWithObject_method = ctor;
         }
 
         if (! (AssertionError_Init_method &&
@@ -446,17 +444,16 @@ void Control::InitNoClassDefFoundErrorInfo()
         //
         // Search for relevant constructors
         //
-        for (MethodSymbol* constructor =
-                 NoClassDefFoundError_type -> FindConstructorSymbol();
-             constructor;
-             constructor = constructor -> next_method)
+        MethodSymbol* ctor;
+        for (ctor = NoClassDefFoundError_type -> FindMethodSymbol(init_name_symbol);
+             ctor; ctor = ctor -> next_method)
         {
-            const char* signature = constructor -> SignatureString();
+            const char* signature = ctor -> SignatureString();
 
             if (strcmp(signature, StringConstant::U8S_LP_String_RP_V) == 0)
-                NoClassDefFoundError_InitString_method = constructor;
+                NoClassDefFoundError_InitString_method = ctor;
             else if (strcmp(signature, StringConstant::U8S_LP_RP_V) == 0)
-                NoClassDefFoundError_Init_method = constructor;
+                NoClassDefFoundError_Init_method = ctor;
         }
 
         if (! NoClassDefFoundError_InitString_method ||
@@ -478,18 +475,16 @@ void Control::InitStringBufferInfo()
         //
         // Search for relevant constructors
         //
-        for (MethodSymbol* constructor =
-                 StringBuffer_type -> FindConstructorSymbol();
-             constructor;
-             constructor = constructor -> next_method)
+        MethodSymbol* ctor;
+        for (ctor = StringBuffer_type -> FindMethodSymbol(init_name_symbol);
+             ctor; ctor = ctor -> next_method)
         {
-            const char* signature = constructor -> SignatureString();
-
+            const char* signature = ctor -> SignatureString();
             if (strcmp(signature, StringConstant::U8S_LP_RP_V) == 0)
-                 StringBuffer_Init_method = constructor;
+                 StringBuffer_Init_method = ctor;
             else if (strcmp(signature,
                             StringConstant::U8S_LP_String_RP_V) == 0)
-                 StringBuffer_InitWithString_method = constructor;
+                 StringBuffer_InitWithString_method = ctor;
         }
 
         //
@@ -1454,7 +1449,8 @@ void Control::ProcessSourcePath()
     }
 }
 
-TypeSymbol* Control::GetPrimitiveType(wchar_t* name, char* signature)
+TypeSymbol* Control::GetPrimitiveType(const wchar_t* name,
+                                      const char* signature)
 {
     NameSymbol* name_symbol = FindOrInsertName(name, wcslen(name));
     TypeSymbol* type = unnamed_package -> InsertSystemTypeSymbol(name_symbol);
@@ -1796,7 +1792,7 @@ FileSymbol* Control::GetFileFirst(Control& control, PackageSymbol* package,
 
 
 
-TypeSymbol* Control::GetType(PackageSymbol* package, wchar_t* name)
+TypeSymbol* Control::GetType(PackageSymbol* package, const wchar_t* name)
 {
     NameSymbol* name_symbol = FindOrInsertName(name, wcslen(name));
     TypeSymbol* type = package -> FindTypeSymbol(name_symbol);

@@ -1,3 +1,41 @@
+2004-01-19  Eric Blake  <ebb9@byu.net>
+
+	* src/class.h: Backport improved .class file handling from
+	generics branch.
+	* src/class.cpp: New file in the backport, replaces...
+	* src/getclass.h: Delete.
+	* src/getclass.cpp: Delete.
+	* src/Makefile.am: Replace getclass.cpp with class.cpp.
+	* src/Makefile.in: Regenerate.
+	* src/bytecode.h: Backport changes related to class.h. In the
+	process, this solves core dump from double delete on JVMS jacks
+	tests.
+	* src/bytecode.cpp: Ditto.
+	* src/op.h (OpLine, OpDmp): Ditto.
+	* src/op.cpp: Ditto.
+	* src/semantic.h: Ditto.
+	* src/symbol.cpp: Ditto.
+	* src/symbol.h: Backport the symbol table handling from generics
+	branch, which provides better handling of symbols.
+	* src/body.cpp (UncaughtException, GetLocalType): Use symbol.h
+	updates.
+	* src/decl.cpp (ProcessTypeNames, ProcessConstructorDeclaration),
+	(AddDefaultConstructor, ProcessMethodDeclaration): Ditto.
+	* src/expr.cpp (ReportConstructorNotFound, FindConstructor),
+	(UpdateLocalConstructor, GetAnonymousConstructor): Ditto.
+	* src/system.cpp (InitAssertionErrorInfo),
+	(InitNoClassDefFoundErrorInfo, InitStringBufferInfo): Ditto.
+	* src/access.h (LegalAccess): New function, backported.
+	* src/control.h (GetType, ProcessPackage, GetPrimitiveType):
+	const-ified.
+	* src/control.cpp (ProcessPackage): Ditto.
+	* src/error.h (WRONG_TYPE_IN_CLASSFILE): Replaces
+	TYPE_NOT_IN_UNNAMED_PACKAGE and TYPE_IN_WRONG_PACKAGE.
+	* src/error.cpp: Ditto.
+	* src/platform.h: Added several needed String constants.
+	* src/platform.cpp: const-ify. Initialize new
+	constants. Reformat.
+
 2004-01-17  Eric Blake  <ebb9@byu.net>
 
 	* autogen.sh: Use depcomp.

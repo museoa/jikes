@@ -24,6 +24,8 @@ namespace Jikes { // Open namespace Jikes block
 
 class Control;
 class TypeShadowSymbol;
+class CPClassInfo;
+class ConstantPool;
 
 //
 // Maintains a stack of symbol tables, for storing the different variables
@@ -800,8 +802,8 @@ public:
     // Implemented in init.cpp - determines values of final fields.
     void ComputeFinalValue(VariableSymbol*);
 
-    // Implemented in getclass.cpp - reads in a .class file.
-    TypeSymbol* ProcessSignature(TypeSymbol*, const char*,
+    // Implemented in class.cpp - reads in a .class file.
+    TypeSymbol* ProcessSignature(TypeSymbol*, const char*&,
                                  LexStream::TokenIndex);
     TypeSymbol* ReadTypeFromSignature(TypeSymbol*, const char*, int,
                                       LexStream::TokenIndex);
@@ -1301,33 +1303,16 @@ private:
     void ComputeFieldsClosure(TypeSymbol*, LexStream::TokenIndex);
     void ComputeMethodsClosure(TypeSymbol*, LexStream::TokenIndex);
 
-    inline bool InRange(const char* buffer_ptr, const char* buffer_tail,
-                        int size)
-    {
-        return ((buffer_ptr + size) <= buffer_tail);
-    }
+    // Implemented in class.cpp - reads in a .class file.
     TypeSymbol* RetrieveNestedTypes(TypeSymbol*, wchar_t*,
                                     LexStream::TokenIndex);
-    TypeSymbol* GetClassPool(TypeSymbol*, TypeSymbol**, const char**, int,
-                             LexStream::TokenIndex);
-    void ProcessBadClass(TypeSymbol*, LexStream::TokenIndex);
-    bool ProcessClassFile(TypeSymbol*, const char*, int,
+    TypeSymbol* GetType(TypeSymbol*, CPClassInfo*, const ConstantPool&,
+                        LexStream::TokenIndex);
+    void ProcessClassFile(TypeSymbol*, const char*, size_t,
                           LexStream::TokenIndex);
     void ReadClassFile(TypeSymbol*, LexStream::TokenIndex);
 
-public:
-
-    // Implemented in getclass.cpp - class processing from .class files
-    static inline u1 GetU1(const char*);
-    static inline u2 GetU2(const char*);
-    static inline u4 GetU4(const char*);
-
-    static inline u1 GetAndSkipU1(const char*&);
-    static inline u2 GetAndSkipU2(const char*&);
-    static inline u4 GetAndSkipU4(const char*&);
-    static inline void Skip(const char*&, int);
-
-    // Implemented in depend.cpp - class dependence tracking
+    // Implemented in depend.cpp - class dependence tracking.
     void AddDependence(TypeSymbol*, TypeSymbol*, bool = false);
     void AddStringConversionDependence(TypeSymbol*);
 };

@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -38,7 +38,7 @@ class SymbolSet;
 class SymbolMap;
 class Zip;
 
-template <class Key, class Value>
+template <typename Key, typename Value>
 class Map;
 
 class PackageSymbol;
@@ -211,17 +211,17 @@ public:
     Tuple<TypeSymbol*> types;
 
     FileSymbol(const NameSymbol* name_symbol_)
-        : output_directory(NULL),
-          file_name(NULL),
-          file_name_literal(NULL),
-          name_symbol(name_symbol_),
-          directory_symbol(NULL),
-          package(NULL),
-          mtime(0),
-          lex_stream(NULL),
-          compilation_unit(NULL),
-          semantic(NULL),
-          types(4)
+        : output_directory(NULL)
+        , file_name(NULL)
+        , file_name_literal(NULL)
+        , name_symbol(name_symbol_)
+        , directory_symbol(NULL)
+        , package(NULL)
+        , mtime(0)
+        , lex_stream(NULL)
+        , compilation_unit(NULL)
+        , semantic(NULL)
+        , types(4)
     {
          Symbol::_kind = _FILE;
     }
@@ -271,9 +271,9 @@ public:
     inline bool IsZip() { return PathSym() -> IsZip(); }
     inline Zip* Zipfile() { return PathSym() -> zipfile; }
 
-    static char* java_suffix;
+    static const char* java_suffix;
     static unsigned java_suffix_length;
-    static char* class_suffix;
+    static const char* class_suffix;
     static unsigned class_suffix_length;
     static bool IsJavaSuffix(char* ptr);
     static bool IsClassSuffix(char* ptr);
@@ -363,11 +363,11 @@ public:
     PackageSymbol* owner;
 
     PackageSymbol(const NameSymbol* name_symbol_, PackageSymbol* owner_)
-        : directory(4),
-          owner(owner_),
-          name_symbol(name_symbol_),
-          table(NULL),
-          package_name(NULL)
+        : directory(4)
+        , owner(owner_)
+        , name_symbol(name_symbol_)
+        , table(NULL)
+        , package_name(NULL)
     {
         Symbol::_kind = PACKAGE;
     }
@@ -424,6 +424,12 @@ private:
 
 class MethodSymbol : public Symbol, public AccessFlags
 {
+    enum
+    {
+        SYNTHETIC = 0x01,
+        DEPRECATED = 0x02
+    };
+
 public:
     Ast* declaration; // AstMethodDeclaration or AstConstructorDeclaration
     const NameSymbol* name_symbol;
@@ -432,6 +438,10 @@ public:
     MethodSymbol* next_method;
     Utf8LiteralValue* signature;
     FileLocation* file_location;
+    // Index of element in symbol_pool (in the relevant symbol table) that
+    // points to this method.
+    unsigned pool_index;
+
     unsigned max_block_depth;
 
     //
@@ -439,7 +449,11 @@ public:
     // enclosing type then accessed_member identifies the member in question.
     //
     Symbol* accessed_member;
-    inline bool AccessesStaticMember();
+    inline bool AccessesStaticMember()
+    {
+        return accessed_member &&
+            DYNAMIC_CAST<AccessFlags*> (accessed_member) -> ACC_STATIC();
+    }
 
     virtual const wchar_t* Name() const { return name_symbol -> Name(); }
     virtual unsigned NameLength() const { return name_symbol -> NameLength(); }
@@ -460,25 +474,25 @@ public:
         return (wchar_t*) (file_location ? file_location -> location : NULL);
     }
     void SetLocation();
+
     MethodSymbol(const NameSymbol* name_symbol_)
-        : declaration(NULL),
-          name_symbol(name_symbol_),
-          containing_type(NULL),
-          block_symbol(NULL),
-          next_method(NULL),
-          signature(NULL),
-          file_location(NULL),
-          max_block_depth(1), // there must be at least one block in a method
-          // this default is useful for default constructors.
-          accessed_member(NULL),
-          external_name_symbol(NULL),
-          status(0),
-          header(NULL),
-          type_(NULL),
-          formal_parameters(NULL),
-          throws(NULL),
-          throws_signatures(NULL),
-          local_constructor(NULL)
+        : declaration(NULL)
+        , name_symbol(name_symbol_)
+        , containing_type(NULL)
+        , block_symbol(NULL)
+        , next_method(NULL)
+        , signature(NULL)
+        , file_location(NULL)
+        , max_block_depth(1) // there must be at least one block in a method
+        // this default is useful for default constructors.
+        , accessed_member(NULL)
+        , external_name_symbol(NULL)
+        , status(0)
+        , header(NULL)
+        , type_(NULL)
+        , formal_parameters(NULL)
+        , throws(NULL)
+        , throws_signatures(NULL)
     {
         Symbol::_kind = METHOD;
     }
@@ -608,11 +622,11 @@ public:
 
     void CleanUp();
 
-    void MarkSynthetic() { status |= (unsigned char) 0x08; }
-    bool IsSynthetic() { return (status & (unsigned char) 0x08) != 0; }
+    void MarkSynthetic() { status |= SYNTHETIC; }
+    bool IsSynthetic() { return (status & SYNTHETIC) != 0; }
 
-    void MarkDeprecated() { status |= (unsigned char) 0x10; }
-    bool IsDeprecated() { return (status & (unsigned char) 0x10) != 0; }
+    void MarkDeprecated() { status |= DEPRECATED; }
+    bool IsDeprecated() { return (status & DEPRECATED) != 0; }
 
 private:
     const NameSymbol* external_name_symbol;
@@ -626,18 +640,11 @@ private:
     Tuple<VariableSymbol*>* formal_parameters;
     Tuple<TypeSymbol*>* throws;
     Tuple<char*>* throws_signatures;
-
-    //
-    // If the method in question is a constructor of a local type, we may need
-    // to construct another constructor that accepts extra local parameters.
-    //
-    MethodSymbol* local_constructor;
 };
 
 
 class TypeSymbol : public Symbol, public AccessFlags
 {
-private:
     enum
     {
         CONSTRUCTOR_MEMBERS_PROCESSED = 0x0001,
@@ -829,7 +836,7 @@ public:
 
     // Index of element in symbol_pool (in the relevant symbol table) that
     // points to this type.
-    int pool_index;
+    unsigned pool_index;
 
     Utf8LiteralValue* signature;
     Utf8LiteralValue* fully_qualified_name;
@@ -1027,7 +1034,8 @@ public:
     }
 
     //
-    // The most generic subtype relation. This correctly checks a class's
+    // The most generic subtype relation; returns true if this type is a
+    // subtype of the argument type. This correctly checks a class's
     // superclasses and superinterfaces, an interfaces's superinterfaces and
     // Object, and an array's compatible types (smaller dimensions of Object,
     // Cloneable, Serializable, and all equal dimension arrays where the
@@ -1237,21 +1245,16 @@ public:
     TypeSymbol* TypeSym(unsigned);
 
     inline TypeSymbol* InsertAnonymousTypeSymbol(NameSymbol*);
-    inline TypeSymbol* FindTypeSymbol(const NameSymbol*);
     inline TypeSymbol* InsertNestedTypeSymbol(NameSymbol*);
-    inline MethodSymbol* FindConstructorSymbol();
-    inline MethodSymbol* InsertConstructorSymbol(const NameSymbol*);
-    inline void InsertConstructorSymbol(MethodSymbol*);
-    inline MethodSymbol* FindMethodSymbol(const NameSymbol*);
-    inline VariableSymbol* FindVariableSymbol(const NameSymbol*);
+    inline TypeSymbol* FindTypeSymbol(const NameSymbol*);
+
     inline VariableSymbol* InsertVariableSymbol(const NameSymbol*);
     inline void InsertVariableSymbol(VariableSymbol*);
+    inline VariableSymbol* FindVariableSymbol(const NameSymbol*);
 
     inline MethodSymbol* InsertMethodSymbol(const NameSymbol*);
     inline void InsertMethodSymbol(MethodSymbol*);
-    inline MethodSymbol* Overload(MethodSymbol*);
-    inline void Overload(MethodSymbol*, MethodSymbol*);
-    inline MethodSymbol* LocalConstructorOverload(MethodSymbol*);
+    inline MethodSymbol* FindMethodSymbol(const NameSymbol*);
     MethodSymbol* FindOverloadMethod(MethodSymbol*, AstMethodDeclarator*);
 
     inline void CompressSpace();
@@ -1375,6 +1378,11 @@ public:
     const NameSymbol* name_symbol;
     Symbol* owner;
     LiteralValue* initial_value;
+    Utf8LiteralValue* signature;
+
+    // Index of element in symbol_pool (in the relevant symbol table) that
+    // points to this variable.
+    unsigned pool_index;
 
     VariableSymbol* accessed_local;
 
@@ -1431,17 +1439,18 @@ public:
     }
 
     VariableSymbol(const NameSymbol* name_symbol_)
-        : declarator(NULL),
-          file_location(NULL),
-          name_symbol(name_symbol_),
-          owner(NULL),
-          initial_value(NULL),
-          accessed_local(NULL),
-          external_name_symbol(NULL),
-          status(0),
-          local_variable_index(-1),
-          type_(NULL),
-          signature_string(NULL)
+        : declarator(NULL)
+        , file_location(NULL)
+        , name_symbol(name_symbol_)
+        , owner(NULL)
+        , initial_value(NULL)
+        , signature(NULL)
+        , accessed_local(NULL)
+        , external_name_symbol(NULL)
+        , status(0)
+        , local_variable_index(-1)
+        , type_(NULL)
+        , signature_string(NULL)
     {
         Symbol::_kind = VARIABLE;
     }
@@ -1481,7 +1490,11 @@ public:
 
     bool IsTyped() const { return type_ != NULL; }
 
-    void SetType(TypeSymbol* _type) { type_ = _type; }
+    void SetType(TypeSymbol* _type)
+    {
+        type_ = _type;
+        signature = type_ -> signature;
+    }
 
     void ProcessVariableSignature(Semantic*, LexStream::TokenIndex);
 
@@ -1594,9 +1607,9 @@ public:
     }
 
     LabelSymbol(const NameSymbol* name_symbol_)
-        : block(NULL),
-          name_symbol(name_symbol_),
-          nesting_level(0)
+        : block(NULL)
+        , name_symbol(name_symbol_)
+        , nesting_level(0)
     {
         Symbol::_kind = LABEL;
     }
@@ -1627,6 +1640,7 @@ public:
         if (! anonymous_symbol_pool)
             anonymous_symbol_pool = new ConvertibleArray<TypeSymbol*>(256);
         anonymous_symbol_pool -> Next() = symbol;
+        // not hashed, because anonymous types have no name
     }
 
     unsigned NumTypeSymbols()
@@ -1639,9 +1653,11 @@ public:
     }
     void AddTypeSymbol(TypeSymbol* symbol)
     {
+        symbol -> pool_index = NumTypeSymbols();
         if (! type_symbol_pool)
             type_symbol_pool = new Tuple<TypeSymbol*>(256);
         type_symbol_pool -> Next() = symbol;
+        Hash(symbol);
     }
 
     unsigned NumMethodSymbols()
@@ -1654,9 +1670,11 @@ public:
     }
     void AddMethodSymbol(MethodSymbol* symbol)
     {
+        symbol -> pool_index = NumMethodSymbols();
         if (! method_symbol_pool)
             method_symbol_pool = new ConvertibleArray<MethodSymbol*>(256);
         method_symbol_pool -> Next() = symbol;
+        // not hashed, because of method overloading
     }
 
     unsigned NumVariableSymbols()
@@ -1669,9 +1687,11 @@ public:
     }
     void AddVariableSymbol(VariableSymbol* symbol)
     {
+        symbol -> pool_index = NumVariableSymbols();
         if (! variable_symbol_pool)
             variable_symbol_pool = new ConvertibleArray<VariableSymbol*>(256);
         variable_symbol_pool -> Next() = symbol;
+        Hash(symbol);
     }
 
     unsigned NumOtherSymbols()
@@ -1687,6 +1707,7 @@ public:
         if (! other_symbol_pool)
             other_symbol_pool = new ConvertibleArray<Symbol*>(256);
         other_symbol_pool -> Next() = symbol;
+        // not hashed, because not all symbols have names
     }
 
     SymbolTable(unsigned hash_size_ = DEFAULT_HASH_SIZE);
@@ -1695,13 +1716,13 @@ public:
     inline void CompressSpace()
     {
         if (anonymous_symbol_pool)
-            (void) anonymous_symbol_pool -> Array();
+            anonymous_symbol_pool -> Array();
         if (method_symbol_pool)
-            (void) method_symbol_pool -> Array();
+            method_symbol_pool -> Array();
         if (variable_symbol_pool)
-            (void) variable_symbol_pool -> Array();
+            variable_symbol_pool -> Array();
         if (other_symbol_pool)
-            (void) other_symbol_pool -> Array();
+            other_symbol_pool -> Array();
     }
 
 private:
@@ -1722,58 +1743,59 @@ private:
 
     unsigned Size()
     {
-        return NumAnonymousSymbols() +
-               NumTypeSymbols() +
-               NumMethodSymbols() +
-               NumVariableSymbols() +
-               NumOtherSymbols();
+        return NumAnonymousSymbols() + NumTypeSymbols() + NumMethodSymbols() +
+            NumVariableSymbols() + NumOtherSymbols();
+    }
+    void Hash(Symbol* symbol)
+    {
+        unsigned k = symbol -> Identity() -> index % hash_size;
+        symbol -> next = base[k];
+        base[k] = symbol;
+        //
+        // If the set is "adjustable" and the number of unique elements in it
+        // exceeds 2 times the size of the base, and we have not yet reached
+        // the maximum allowable size for a base, reallocate a larger base and
+        // rehash the elements.
+        //
+        if (Size() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
+            Rehash();
     }
     void Rehash();
-
-    MethodSymbol* constructor;
 
 public:
 
     inline PathSymbol* InsertPathSymbol(NameSymbol*, DirectorySymbol*);
     inline PathSymbol* FindPathSymbol(const NameSymbol*);
+
     inline DirectorySymbol* InsertDirectorySymbol(const NameSymbol*, Symbol*,
                                                   bool source_path);
     inline DirectorySymbol* FindDirectorySymbol(const NameSymbol*);
+
     inline FileSymbol* InsertFileSymbol(const NameSymbol*);
     inline FileSymbol* FindFileSymbol(const NameSymbol*);
+
     inline PackageSymbol* InsertPackageSymbol(NameSymbol*, PackageSymbol*);
     inline PackageSymbol* FindPackageSymbol(const NameSymbol*);
+
     inline TypeSymbol* InsertAnonymousTypeSymbol(NameSymbol*);
-    inline TypeSymbol* InsertSystemTypeSymbol(NameSymbol*);
-    inline TypeSymbol* InsertOuterTypeSymbol(NameSymbol*);
-    inline TypeSymbol* InsertNestedTypeSymbol(NameSymbol*);
+    inline TypeSymbol* InsertTypeSymbol(NameSymbol*);
     inline void DeleteTypeSymbol(TypeSymbol*);
     inline void DeleteAnonymousTypes();
     inline TypeSymbol* FindTypeSymbol(const NameSymbol*);
-    inline MethodSymbol* InsertMethodSymbol(const NameSymbol*);
-    inline MethodSymbol* InsertConstructorSymbol(const NameSymbol*);
-    inline void InsertMethodSymbol(MethodSymbol*);
-    inline void InsertConstructorSymbol(MethodSymbol*);
+
+    inline MethodSymbol* InsertMethodSymbol(MethodSymbol*);
     inline MethodSymbol* FindMethodSymbol(const NameSymbol*);
-    inline MethodSymbol* FindConstructorSymbol();
+    MethodSymbol* FindOverloadMethod(MethodSymbol*, AstMethodDeclarator*);
+
     inline VariableSymbol* InsertVariableSymbol(const NameSymbol*);
-    inline void InsertVariableSymbol(VariableSymbol*);
+    inline VariableSymbol* InsertVariableSymbol(VariableSymbol*);
     inline VariableSymbol* FindVariableSymbol(const NameSymbol*);
+
     inline LabelSymbol* InsertLabelSymbol(NameSymbol*);
     inline LabelSymbol* FindLabelSymbol(const NameSymbol*);
+
     inline BlockSymbol* InsertBlockSymbol(unsigned);
-
-    inline MethodSymbol* Overload(MethodSymbol*);
-    inline void Overload(MethodSymbol*, MethodSymbol*);
-    inline MethodSymbol* LocalConstructorOverload(MethodSymbol*);
-    MethodSymbol* FindOverloadMethod(MethodSymbol*, AstMethodDeclarator*);
 };
-
-inline bool MethodSymbol::AccessesStaticMember()
-{
-    return accessed_member &&
-        DYNAMIC_CAST<AccessFlags*> (accessed_member) -> ACC_STATIC();
-}
 
 inline unsigned TypeSymbol::NumVariableSymbols()
 {
@@ -1831,19 +1853,7 @@ inline PathSymbol* SymbolTable::InsertPathSymbol(NameSymbol* name_symbol,
     directory_symbol -> owner = symbol;
     symbol -> root_directory = directory_symbol;
     AddOtherSymbol(symbol);
-
-    unsigned k = name_symbol -> index % hash_size;
-    symbol -> next = base[k];
-    base[k] = symbol;
-
-    //
-    // If the set is "adjustable" and the number of unique elements in it
-    // exceeds 2 times the size of the base, and we have not yet reached the
-    // maximum allowable size for a base, reallocate a larger base and rehash
-    // the elements.
-    //
-    if (Size() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
-        Rehash();
+    Hash(symbol);
     return symbol;
 }
 
@@ -1851,11 +1861,10 @@ inline PathSymbol* SymbolTable::InsertPathSymbol(NameSymbol* name_symbol,
 inline PathSymbol* SymbolTable::FindPathSymbol(const NameSymbol* name_symbol)
 {
     assert(base);
-
     for (Symbol* symbol = base[name_symbol -> index % hash_size];
          symbol; symbol = symbol -> next)
     {
-        if (name_symbol == symbol -> Identity())
+        if (name_symbol == symbol -> Identity() && symbol -> PathCast())
             return (PathSymbol*) symbol;
     }
     return NULL;
@@ -1867,23 +1876,10 @@ inline DirectorySymbol* SymbolTable::InsertDirectorySymbol(const NameSymbol* nam
                                                            bool source_path)
 {
     assert(base);
-
     DirectorySymbol* symbol = new DirectorySymbol(name_symbol, owner,
                                                   source_path);
     AddOtherSymbol(symbol);
-
-    unsigned k = name_symbol -> index % hash_size;
-    symbol -> next = base[k];
-    base[k] = symbol;
-
-    //
-    // If the set is "adjustable" and the number of unique elements in it
-    // exceeds 2 times the size of the base, and we have not yet reached the
-    // maximum allowable size for a base, reallocate a larger base and rehash
-    // the elements.
-    //
-    if (Size() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
-        Rehash();
+    Hash(symbol);
     return symbol;
 }
 
@@ -1901,16 +1897,11 @@ inline DirectorySymbol* DirectorySymbol::InsertDirectorySymbol(const NameSymbol*
 inline DirectorySymbol* SymbolTable::FindDirectorySymbol(const NameSymbol* name_symbol)
 {
     assert(base);
-
     for (Symbol* symbol = base[name_symbol -> index % hash_size];
          symbol; symbol = symbol -> next)
     {
-        if (name_symbol == symbol -> Identity())
-        {
-            DirectorySymbol* directory_symbol = symbol -> DirectoryCast();
-            if (directory_symbol)
-                return directory_symbol;
-        }
+        if (name_symbol == symbol -> Identity() && symbol -> DirectoryCast())
+            return (DirectorySymbol*) symbol;
     }
     return NULL;
 }
@@ -1926,22 +1917,9 @@ inline DirectorySymbol* DirectorySymbol::FindDirectorySymbol(const NameSymbol* n
 inline FileSymbol* SymbolTable::InsertFileSymbol(const NameSymbol* name_symbol)
 {
     assert(base);
-
     FileSymbol* symbol = new FileSymbol(name_symbol);
     AddOtherSymbol(symbol);
-
-    unsigned k = name_symbol -> index % hash_size;
-    symbol -> next = base[k];
-    base[k] = symbol;
-
-    //
-    // If the set is "adjustable" and the number of unique elements in it
-    // exceeds 2 times the size of the base, and we have not yet reached the
-    // maximum allowable size for a base, reallocate a larger base and rehash
-    // the elements.
-    //
-    if (Size() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
-        Rehash();
+    Hash(symbol);
     return symbol;
 }
 
@@ -1955,16 +1933,11 @@ inline FileSymbol* DirectorySymbol::InsertFileSymbol(const NameSymbol* name_symb
 inline FileSymbol* SymbolTable::FindFileSymbol(const NameSymbol* name_symbol)
 {
     assert(base);
-
     for (Symbol* symbol = base[name_symbol -> index % hash_size];
          symbol; symbol = symbol -> next)
     {
-        if (name_symbol == symbol -> Identity())
-        {
-            FileSymbol* file_symbol = symbol -> FileCast();
-            if (file_symbol)
-                return file_symbol;
-        }
+        if (name_symbol == symbol -> Identity() && symbol -> FileCast())
+            return (FileSymbol*) symbol;
     }
     return NULL;
 }
@@ -1981,22 +1954,9 @@ inline PackageSymbol* SymbolTable::InsertPackageSymbol(NameSymbol* name_symbol,
                                                        PackageSymbol* owner)
 {
     assert(base);
-
     PackageSymbol* symbol = new PackageSymbol(name_symbol, owner);
     AddOtherSymbol(symbol);
-
-    unsigned k = name_symbol -> index % hash_size;
-    symbol -> next = base[k];
-    base[k] = symbol;
-
-    //
-    // If the set is "adjustable" and the number of unique elements in it
-    // exceeds 2 times the size of the base, and we have not yet reached the
-    // maximum allowable size for a base, reallocate a larger base and rehash
-    // the elements.
-    //
-    if (Size() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
-        Rehash();
+    Hash(symbol);
     return symbol;
 }
 
@@ -2010,16 +1970,11 @@ inline PackageSymbol* PackageSymbol::InsertPackageSymbol(NameSymbol* name_symbol
 inline PackageSymbol* SymbolTable::FindPackageSymbol(const NameSymbol* name_symbol)
 {
     assert(base);
-
     for (Symbol* symbol = base[name_symbol -> index % hash_size];
          symbol; symbol = symbol -> next)
     {
-        if (name_symbol == symbol -> Identity())
-        {
-            PackageSymbol* package_symbol = symbol -> PackageCast();
-            if (package_symbol)
-                return package_symbol;
-        }
+        if (name_symbol == symbol -> Identity() && symbol -> PackageCast())
+            return (PackageSymbol*) symbol;
     }
     return NULL;
 }
@@ -2045,100 +2000,34 @@ inline TypeSymbol* TypeSymbol::InsertAnonymousTypeSymbol(NameSymbol* name_symbol
 }
 
 
-inline TypeSymbol* SymbolTable::InsertSystemTypeSymbol(NameSymbol* name_symbol)
+inline TypeSymbol* SymbolTable::InsertTypeSymbol(NameSymbol* name_symbol)
 {
     assert(base);
-
     TypeSymbol* symbol = new TypeSymbol(name_symbol);
-    symbol -> pool_index = NumTypeSymbols();
     AddTypeSymbol(symbol);
-
-    unsigned k = name_symbol -> index % hash_size;
-    symbol -> next = base[k];
-    base[k] = symbol;
-
-    //
-    // If the set is "adjustable" and the number of unique elements in it
-    // exceeds 2 times the size of the base, and we have not yet reached the
-    // maximum allowable size for a base, reallocate a larger base and rehash
-    // the elements.
-    //
-    if (Size() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
-        Rehash();
     return symbol;
 }
 
 
 inline TypeSymbol* PackageSymbol::InsertSystemTypeSymbol(NameSymbol* name_symbol)
 {
-    return Table() -> InsertSystemTypeSymbol(name_symbol);
+    return Table() -> InsertTypeSymbol(name_symbol);
 }
-
-
-inline TypeSymbol* SymbolTable::InsertOuterTypeSymbol(NameSymbol* name_symbol)
-{
-    assert(base);
-
-    TypeSymbol* symbol = new TypeSymbol(name_symbol);
-    symbol -> pool_index = NumTypeSymbols();
-    AddTypeSymbol(symbol);
-
-    unsigned k = name_symbol -> index % hash_size;
-    symbol -> next = base[k];
-    base[k] = symbol;
-
-    //
-    // If the set is "adjustable" and the number of unique elements in it
-    // exceeds 2 times the size of the base, and we have not yet reached the
-    // maximum allowable size for a base, reallocate a larger base and rehash
-    // the elements.
-    //
-    if (Size() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
-        Rehash();
-    return symbol;
-}
-
 
 inline TypeSymbol* PackageSymbol::InsertOuterTypeSymbol(NameSymbol* name_symbol)
 {
-    return Table() -> InsertOuterTypeSymbol(name_symbol);
+    return Table() -> InsertTypeSymbol(name_symbol);
 }
-
-
-inline TypeSymbol* SymbolTable::InsertNestedTypeSymbol(NameSymbol* name_symbol)
-{
-    assert(base);
-
-    TypeSymbol* symbol = new TypeSymbol(name_symbol);
-    symbol -> pool_index = NumTypeSymbols();
-    AddTypeSymbol(symbol);
-
-    unsigned k = name_symbol -> index % hash_size;
-    symbol -> next = base[k];
-    base[k] = symbol;
-
-    //
-    // If the set is "adjustable" and the number of unique elements in it
-    // exceeds 2 times the size of the base, and we have not yet reached the
-    // maximum allowable size for a base, reallocate a larger base and rehash
-    // the elements.
-    //
-    if (Size() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
-        Rehash();
-    return symbol;
-}
-
 
 inline TypeSymbol* TypeSymbol::InsertNestedTypeSymbol(NameSymbol* name_symbol)
 {
-    return Table() -> InsertNestedTypeSymbol(name_symbol);
+    return Table() -> InsertTypeSymbol(name_symbol);
 }
 
 
 inline void SymbolTable::DeleteTypeSymbol(TypeSymbol* type)
 {
     assert(base);
-
     unsigned k = type -> name_symbol -> index % hash_size;
     if (type == base[k])
         base[k] = type -> next;
@@ -2151,7 +2040,7 @@ inline void SymbolTable::DeleteTypeSymbol(TypeSymbol* type)
         previous -> next = type -> next;
     }
 
-    int last_index = NumTypeSymbols() - 1;
+    unsigned last_index = NumTypeSymbols() - 1;
     if (type -> pool_index != last_index)
     {
         // Move last element to position previously occupied by element being
@@ -2161,7 +2050,6 @@ inline void SymbolTable::DeleteTypeSymbol(TypeSymbol* type)
     }
 
     type_symbol_pool -> Reset(last_index); // remove last slot in symbol_pool
-
     delete type;
 }
 
@@ -2193,16 +2081,11 @@ inline void TypeSymbol::DeleteAnonymousTypes()
 inline TypeSymbol* SymbolTable::FindTypeSymbol(const NameSymbol* name_symbol)
 {
     assert(base);
-
     for (Symbol* symbol = base[name_symbol -> index % hash_size];
          symbol; symbol = symbol -> next)
     {
-        if (name_symbol == symbol -> Identity())
-        {
-            TypeSymbol* type = symbol -> TypeCast();
-            if (type)
-                return type;
-        }
+        if (name_symbol == symbol -> Identity() && symbol -> TypeCast())
+            return (TypeSymbol*) symbol;
     }
     return NULL;
 }
@@ -2222,68 +2105,37 @@ inline TypeSymbol* TypeSymbol::FindTypeSymbol(const NameSymbol* name_symbol)
 }
 
 
-inline MethodSymbol* SymbolTable::InsertMethodSymbol(const NameSymbol* name_symbol)
+inline MethodSymbol* SymbolTable::InsertMethodSymbol(MethodSymbol* symbol)
 {
     assert(base);
-
-    MethodSymbol* symbol = new MethodSymbol(name_symbol);
     AddMethodSymbol(symbol);
-
-    unsigned k = name_symbol -> index % hash_size;
-    symbol -> next = base[k];
-    base[k] = symbol;
-
-    //
-    // If the set is "adjustable" and the number of unique elements in it
-    // exceeds 2 times the size of the base, and we have not yet reached the
-    // maximum allowable size for a base, reallocate a larger base and rehash
-    // the elements.
-    //
-    if (Size() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
-        Rehash();
+    const NameSymbol* name_symbol = symbol -> Identity();
+    MethodSymbol* base_method = NULL;
+    Symbol* candidate;
+    for (candidate = base[name_symbol -> index % hash_size];
+         candidate; candidate = candidate -> next)
+    {
+        if (name_symbol == candidate -> Identity() &&
+            candidate -> MethodCast())
+        {
+            base_method = (MethodSymbol*) candidate;
+            break;
+        }
+    }
+    if (base_method)
+    {
+        symbol -> next = symbol; // mark method as overloaded
+        symbol -> next_method = base_method -> next_method;
+        base_method -> next_method = symbol;
+    }
+    else Hash(symbol);
     return symbol;
 }
 
 
 inline MethodSymbol* TypeSymbol::InsertMethodSymbol(const NameSymbol* name_symbol)
 {
-    return Table() -> InsertMethodSymbol(name_symbol);
-}
-
-
-inline MethodSymbol* SymbolTable::InsertConstructorSymbol(const NameSymbol* name_symbol)
-{
-    assert(! constructor);
-
-    constructor = InsertMethodSymbol(name_symbol);
-    return constructor;
-}
-
-
-inline MethodSymbol* TypeSymbol::InsertConstructorSymbol(const NameSymbol* name_symbol)
-{
-    return Table() -> InsertConstructorSymbol(name_symbol);
-}
-
-
-inline void SymbolTable::InsertMethodSymbol(MethodSymbol* method_symbol)
-{
-    assert(base);
-
-    AddMethodSymbol(method_symbol);
-
-    unsigned k = method_symbol -> name_symbol -> index % hash_size;
-    method_symbol -> next = base[k];
-    base[k] = method_symbol;
-
-    //
-    // If the set is "adjustable" and the number of unique elements in it
-    // exceeds 2 times the size of the base, and we have not yet reached the
-    // maximum allowable size for a base, reallocate a larger base and rehash
-    // the elements.
-    //
-    if (Size() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
-        Rehash();
+    return Table() -> InsertMethodSymbol(new MethodSymbol(name_symbol));
 }
 
 
@@ -2293,34 +2145,14 @@ inline void TypeSymbol::InsertMethodSymbol(MethodSymbol* method_symbol)
 }
 
 
-inline void SymbolTable::InsertConstructorSymbol(MethodSymbol* method_symbol)
-{
-    assert(! constructor);
-
-    constructor = method_symbol;
-    InsertMethodSymbol(method_symbol);
-}
-
-
-inline void TypeSymbol::InsertConstructorSymbol(MethodSymbol* method_symbol)
-{
-    Table() -> InsertConstructorSymbol(method_symbol);
-}
-
-
 inline MethodSymbol* SymbolTable::FindMethodSymbol(const NameSymbol* name_symbol)
 {
     assert(base);
-
     for (Symbol* symbol = base[name_symbol -> index % hash_size];
          symbol; symbol = symbol -> next)
     {
-        if (name_symbol == symbol -> Identity())
-        {
-            MethodSymbol* method = symbol -> MethodCast();
-            if (method)
-                return method;
-        }
+        if (name_symbol == symbol -> Identity() && symbol -> MethodCast())
+            return (MethodSymbol*) symbol;
     }
     return NULL;
 }
@@ -2333,36 +2165,19 @@ inline MethodSymbol* TypeSymbol::FindMethodSymbol(const NameSymbol* name_symbol)
 }
 
 
-inline MethodSymbol* SymbolTable::FindConstructorSymbol()
+inline MethodSymbol* TypeSymbol::FindOverloadMethod(MethodSymbol* base_method,
+                                                    AstMethodDeclarator* method_declarator)
 {
-    return constructor;
-}
-
-inline MethodSymbol* TypeSymbol::FindConstructorSymbol()
-{
-    return table ? table -> FindConstructorSymbol()
+    return table ? table -> FindOverloadMethod(base_method, method_declarator)
         : (MethodSymbol*) NULL;
 }
+
 
 inline VariableSymbol* SymbolTable::InsertVariableSymbol(const NameSymbol* name_symbol)
 {
     assert(base);
-
     VariableSymbol* symbol = new VariableSymbol(name_symbol);
     AddVariableSymbol(symbol);
-
-    unsigned k = name_symbol -> index % hash_size;
-    symbol -> next = base[k];
-    base[k] = symbol;
-
-    //
-    // If the set is "adjustable" and the number of unique elements in it
-    // exceeds 2 times the size of the base, and we have not yet reached the
-    // maximum allowable size for a base, reallocate a larger base and rehash
-    // the elements.
-    //
-    if (Size() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
-        Rehash();
     return symbol;
 }
 
@@ -2379,24 +2194,11 @@ inline VariableSymbol* BlockSymbol::InsertVariableSymbol(const NameSymbol* name_
 }
 
 
-inline void SymbolTable::InsertVariableSymbol(VariableSymbol* variable_symbol)
+inline VariableSymbol* SymbolTable::InsertVariableSymbol(VariableSymbol* symbol)
 {
     assert(base);
-
-    AddVariableSymbol(variable_symbol);
-
-    unsigned k = variable_symbol -> name_symbol -> index % hash_size;
-    variable_symbol -> next = base[k];
-    base[k] = variable_symbol;
-
-    //
-    // If the set is "adjustable" and the number of unique elements in it
-    // exceeds 2 times the size of the base, and we have not yet reached the
-    // maximum allowable size for a base, reallocate a larger base and rehash
-    // the elements.
-    //
-    if (Size() > (hash_size << 1) && hash_size < MAX_HASH_SIZE)
-        Rehash();
+    AddVariableSymbol(symbol);
+    return symbol;
 }
 
 
@@ -2415,16 +2217,11 @@ inline void BlockSymbol::InsertVariableSymbol(VariableSymbol* variable_symbol)
 inline VariableSymbol* SymbolTable::FindVariableSymbol(const NameSymbol* name_symbol)
 {
     assert(base);
-
     for (Symbol* symbol = base[name_symbol -> index % hash_size];
          symbol; symbol = symbol -> next)
     {
-        if (name_symbol == symbol -> Identity())
-        {
-            VariableSymbol* variable_symbol = symbol -> VariableCast();
-            if (variable_symbol)
-                return variable_symbol;
-        }
+        if (name_symbol == symbol -> Identity() && symbol -> VariableCast())
+            return (VariableSymbol*) symbol;
     }
     return NULL;
 }
@@ -2447,18 +2244,9 @@ inline VariableSymbol* BlockSymbol::FindVariableSymbol(const NameSymbol* name_sy
 inline LabelSymbol* SymbolTable::InsertLabelSymbol(NameSymbol* name_symbol)
 {
     assert(base);
-
     LabelSymbol* symbol = new LabelSymbol(name_symbol);
     AddOtherSymbol(symbol);
-
-    unsigned k = name_symbol -> index % hash_size;
-    symbol -> next = base[k];
-    base[k] = symbol;
-
-    //
-    // as only one label can be inserted in any given symboltable,
-    // we don't need to try to rehash here !
-    //
+    Hash(symbol);
     return symbol;
 }
 
@@ -2466,16 +2254,11 @@ inline LabelSymbol* SymbolTable::InsertLabelSymbol(NameSymbol* name_symbol)
 inline LabelSymbol* SymbolTable::FindLabelSymbol(const NameSymbol* name_symbol)
 {
     assert(base);
-
     for (Symbol* symbol = base[name_symbol -> index % hash_size];
          symbol; symbol = symbol -> next)
     {
-        if (name_symbol == symbol -> Identity())
-        {
-            LabelSymbol* label = symbol -> LabelCast();
-            if (label)
-                return label;
-        }
+        if (name_symbol == symbol -> Identity() && symbol -> LabelCast())
+            return (LabelSymbol*) symbol;
     }
     return NULL;
 }
@@ -2491,71 +2274,6 @@ inline BlockSymbol* SymbolTable::InsertBlockSymbol(unsigned hash_size = 0)
 inline BlockSymbol* BlockSymbol::InsertBlockSymbol(unsigned hash_size = 0)
 {
     return Table() -> InsertBlockSymbol(hash_size);
-}
-
-
-inline MethodSymbol* SymbolTable::Overload(MethodSymbol* base_method)
-{
-    MethodSymbol* overload_method =
-        new MethodSymbol(base_method -> Identity());
-    AddMethodSymbol(overload_method);
-
-    overload_method -> next = overload_method; // mark overloaded method
-    overload_method -> next_method = base_method -> next_method;
-    base_method -> next_method = overload_method;
-    return overload_method;
-}
-
-
-inline MethodSymbol* TypeSymbol::Overload(MethodSymbol* base_method)
-{
-    assert(table);
-    return table -> Overload(base_method);
-}
-
-
-inline void SymbolTable::Overload(MethodSymbol* base_method,
-                                  MethodSymbol* overload_method)
-{
-    AddMethodSymbol(overload_method);
-
-    overload_method -> next = overload_method; // mark overloaded method
-    overload_method -> next_method = base_method -> next_method;
-    base_method -> next_method = overload_method;
-}
-
-inline void TypeSymbol::Overload(MethodSymbol* base_method,
-                                 MethodSymbol* overload_method)
-{
-    assert(table);
-
-    table -> Overload(base_method, overload_method);
-}
-
-
-inline MethodSymbol* SymbolTable::LocalConstructorOverload(MethodSymbol* base_method)
-{
-    MethodSymbol* overload_method =
-        new MethodSymbol(base_method -> Identity());
-    AddMethodSymbol(overload_method);
-
-    overload_method -> next = overload_method; // mark overloaded method
-    return overload_method;
-}
-
-
-inline MethodSymbol* TypeSymbol::LocalConstructorOverload(MethodSymbol* base_method)
-{
-    assert(table);
-    return table -> LocalConstructorOverload(base_method);
-}
-
-
-inline MethodSymbol* TypeSymbol::FindOverloadMethod(MethodSymbol* base_method,
-                                                    AstMethodDeclarator* method_declarator)
-{
-    return table ? table -> FindOverloadMethod(base_method, method_declarator)
-        : (MethodSymbol*) NULL;
 }
 
 

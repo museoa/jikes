@@ -253,7 +253,7 @@ void ByteCode::GenerateCode()
         Write(unit_type);
 #ifdef JIKES_DEBUG
     if (control.option.debug_dump_class)
-        PrintCode();
+        Print();
 #endif // JIKES_DEBUG
 }
 
@@ -368,17 +368,18 @@ void ByteCode::CompileConstructor(AstConstructorDeclaration* constructor,
 void ByteCode::DeclareField(VariableSymbol* symbol)
 {
     int field_index = fields.NextIndex(); // index for field
-    TypeSymbol* type = symbol -> Type();
+    fields[field_index] = new FieldInfo();
+    const TypeSymbol* type = symbol -> Type();
     if (type -> num_dimensions > 255)
     {
         semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW,
                                 symbol -> declarator);
     }
 
-    fields[field_index].SetFlags(symbol -> Flags());
-    fields[field_index].SetNameIndex(RegisterName(symbol ->
-                                                  ExternalIdentity()));
-    fields[field_index].SetDescriptorIndex(RegisterUtf8(type -> signature));
+    fields[field_index] -> SetFlags(symbol -> Flags());
+    fields[field_index] -> SetNameIndex(RegisterName(symbol ->
+                                                     ExternalIdentity()));
+    fields[field_index] -> SetDescriptorIndex(RegisterUtf8(type -> signature));
 
     //
     // Any final field initialized with a constant must have a ConstantValue
@@ -404,14 +405,15 @@ void ByteCode::DeclareField(VariableSymbol* symbol)
                     : RegisterDouble(DYNAMIC_CAST<DoubleLiteralValue*>
                                      (symbol -> initial_value)));
         u2 attribute_index = RegisterUtf8(control.ConstantValue_literal);
-        fields[field_index].AddAttribute(new ConstantValue_attribute(attribute_index, index));
+        fields[field_index] ->
+            AddAttribute(new ConstantValueAttribute(attribute_index, index));
     }
 
     if (symbol -> IsSynthetic())
-        fields[field_index].AddAttribute(CreateSyntheticAttribute());
+        fields[field_index] -> AddAttribute(CreateSyntheticAttribute());
 
     if (symbol -> IsDeprecated())
-        fields[field_index].AddAttribute(CreateDeprecatedAttribute());
+        fields[field_index] -> AddAttribute(CreateDeprecatedAttribute());
 }
 
 
@@ -435,28 +437,30 @@ void ByteCode::BeginMethod(int method_index, MethodSymbol* msym)
 #endif // JIKES_DEBUG
     MethodInitialization();
 
-    methods[method_index].SetNameIndex(RegisterName(msym ->
-                                                    ExternalIdentity()));
-    methods[method_index].SetDescriptorIndex(RegisterUtf8(msym -> signature));
-    methods[method_index].SetFlags(msym -> Flags());
+    methods[method_index] = new MethodInfo();
+    methods[method_index] ->
+        SetNameIndex(RegisterName(msym -> ExternalIdentity()));
+    methods[method_index] ->
+        SetDescriptorIndex(RegisterUtf8(msym -> signature));
+    methods[method_index] -> SetFlags(msym -> Flags());
 
     if (msym -> IsSynthetic())
-        methods[method_index].AddAttribute(CreateSyntheticAttribute());
+        methods[method_index] -> AddAttribute(CreateSyntheticAttribute());
 
     if (msym -> IsDeprecated())
-        methods[method_index].AddAttribute(CreateDeprecatedAttribute());
+        methods[method_index] -> AddAttribute(CreateDeprecatedAttribute());
 
     //
     // Generate throws attribute if method throws any exceptions
     //
     if (msym -> NumThrows())
     {
-        Exceptions_attribute* exceptions_attribute =
-            new Exceptions_attribute(RegisterUtf8(control.Exceptions_literal));
+        ExceptionsAttribute* exceptions_attribute =
+            new ExceptionsAttribute(RegisterUtf8(control.Exceptions_literal));
         for (unsigned i = 0; i < msym -> NumThrows(); i++)
             exceptions_attribute ->
                 AddExceptionIndex(RegisterClass(msym -> Throws(i)));
-        methods[method_index].AddAttribute(exceptions_attribute);
+        methods[method_index] -> AddAttribute(exceptions_attribute);
     }
 
     //
@@ -467,19 +471,17 @@ void ByteCode::BeginMethod(int method_index, MethodSymbol* msym)
         method_stack =
             new MethodStack(msym -> max_block_depth,
                             msym -> block_symbol -> max_variable_index);
-
         code_attribute =
-            new Code_attribute(RegisterUtf8(control.Code_literal),
-                               msym -> block_symbol -> max_variable_index);
-
+            new CodeAttribute(RegisterUtf8(control.Code_literal),
+                              msym -> block_symbol -> max_variable_index);
         line_number = 0;
-        line_number_table_attribute = new LineNumberTable_attribute
+        line_number_table_attribute = new LineNumberTableAttribute
             (RegisterUtf8(control.LineNumberTable_literal));
 
         local_variable_table_attribute = (control.option.g & JikesOption::VARS)
-            ? (new LocalVariableTable_attribute
+            ? (new LocalVariableTableAttribute
                (RegisterUtf8(control.LocalVariableTable_literal)))
-            : (LocalVariableTable_attribute*) NULL;
+            : (LocalVariableTableAttribute*) NULL;
     }
 
     if (msym -> Type() -> num_dimensions > 255)
@@ -628,7 +630,7 @@ void ByteCode::EndMethod(int method_index, MethodSymbol* msym)
         }
         else delete local_variable_table_attribute;
 
-        methods[method_index].AddAttribute(code_attribute);
+        methods[method_index] -> AddAttribute(code_attribute);
 
         delete method_stack;
     }
@@ -3010,13 +3012,8 @@ int ByteCode::EmitExpression(AstExpression* expression, bool need_value)
     case Ast::DOT:
         return EmitFieldAccess((AstFieldAccess*) expression, need_value);
     case Ast::CALL:
-        {
-            AstMethodInvocation* method_call =
-                (AstMethodInvocation*) expression;
-            // must evaluate for side effects
-            EmitMethodInvocation(method_call, need_value);
-            return need_value ? GetTypeWords(method_call -> Type()) : 0;
-        }
+        return EmitMethodInvocation((AstMethodInvocation*) expression,
+                                    need_value);
     case Ast::ARRAY_ACCESS:
         {
             // must evaluate, for potential Exception side effects
@@ -3135,8 +3132,8 @@ void ByteCode::EmitFieldAccessLhsBase(AstExpression* expression)
     AstName* name = expression -> NameCast();
 
     //
-    // We now have the right expression. Check if it's a field. If so, process
-    // base Otherwise, it must be a simple name...
+    // We now have the right expression. Check if it is qualified, in which
+    // case we process the base. Otherwise, it must be a simple name.
     //
     if (field || (name && name -> base_opt))
         EmitExpression(field ? field -> base : name -> base_opt);
@@ -4510,9 +4507,6 @@ void ByteCode::EmitCast(TypeSymbol* dest_type, TypeSymbol* source_type)
     }
     else
     {
-        //
-        // Generate check cast instruction.
-        //
         PutOp(OP_CHECKCAST);
         PutU2(dest_type -> num_dimensions
               ? RegisterClass(dest_type -> signature)
@@ -4865,7 +4859,7 @@ int ByteCode::EmitMethodInvocation(AstMethodInvocation* expression,
 
 
 int ByteCode::CompleteCall(MethodSymbol* msym, int stack_words,
-                            bool need_value, TypeSymbol* base_type)
+                           bool need_value, TypeSymbol* base_type)
 {
     ChangeStack(-stack_words);
 
@@ -4898,7 +4892,7 @@ int ByteCode::CompleteCall(MethodSymbol* msym, int stack_words,
 
 
 //
-// Called when expression has been parenthesized to removed parantheses and
+// Called when expression has been parenthesized; remove parentheses and
 // widening casts to expose true structure.
 //
 AstExpression* ByteCode::StripNops(AstExpression* expr)
@@ -5903,7 +5897,6 @@ ByteCode::ByteCode(TypeSymbol* type)
     if (! unit_type -> ACC_INTERFACE())
         SetACC_SUPER();
 
-    magic = 0xcafebabe;
     switch (control.option.target)
     {
     default: // use Sun JDK 1.1 version numbers
@@ -5923,7 +5916,6 @@ ByteCode::ByteCode(TypeSymbol* type)
         minor_version = 0;
     }
 
-    constant_pool.Next() = NULL;
     this_class = RegisterClass(unit_type);
     super_class = (unit_type -> super ? RegisterClass(unit_type -> super) : 0);
     for (unsigned k = 0; k < unit_type -> NumInterfaces(); k++)
@@ -6503,9 +6495,10 @@ void ByteCode::FinishCode()
     // Only output SourceFile attribute if -g:source is enabled.
     //
     if (control.option.g & JikesOption::SOURCE)
-        attributes.Next() =
-            new SourceFile_attribute(RegisterUtf8(control.SourceFile_literal),
-                                     RegisterUtf8(unit_type -> file_symbol -> FileNameLiteral()));
+        AddAttribute(new SourceFileAttribute
+                     (RegisterUtf8(control.SourceFile_literal),
+                      RegisterUtf8(unit_type -> file_symbol ->
+                                   FileNameLiteral())));
 
     //
     // Generate InnerClasses attribute for every CONSTANT_Class_info in the
@@ -6514,7 +6507,8 @@ void ByteCode::FinishCode()
     if (unit_type -> IsNested() || unit_type -> NumNestedTypes())
     {
         inner_classes_attribute =
-            new InnerClasses_attribute(RegisterUtf8(control.InnerClasses_literal));
+            new InnerClassesAttribute(RegisterUtf8
+                                      (control.InnerClasses_literal));
 
         //
         // need to build chain from this type to its owner all the way to the
@@ -6558,9 +6552,9 @@ void ByteCode::FinishCode()
     }
 
     if (unit_type -> IsDeprecated())
-        attributes.Next() = CreateDeprecatedAttribute();
+        AddAttribute(CreateDeprecatedAttribute());
     if (unit_type -> IsSynthetic())
-        attributes.Next() = CreateSyntheticAttribute();
+        AddAttribute(CreateSyntheticAttribute());
 }
 
 
@@ -6636,59 +6630,6 @@ void ByteCode::ChangeStack(int i)
 #endif // JIKES_DEBUG
 }
 
-
-#ifdef JIKES_DEBUG
-void ByteCode::PrintCode()
-{
-    unsigned i;
-    // This explicit casting works around a bug in g++ 3.1 library.
-    Coutput << "magic " << (ios&(*)(ios&)) hex << magic << (ios&(*)(ios&)) dec
-            << " major_version " << (unsigned) major_version
-            << " minor_version " << (unsigned) minor_version << endl;
-    AccessFlags::Print();
-    Coutput << endl
-            << " this_class " << (unsigned) this_class << "  super_class "
-            << (unsigned) super_class << endl
-            << " constant_pool: " << constant_pool.Length() << endl;
-    for (i = 1; i < constant_pool.Length(); i++)
-    {
-        Coutput << "  " << i << "  ";
-        constant_pool[i] -> Print(constant_pool);
-        if (constant_pool[i] -> Tag() == CONSTANT_Long ||
-            constant_pool[i] -> Tag() == CONSTANT_Double)
-        {
-            i++; // skip the next entry for eight-byte constants
-        }
-    }
-
-    Coutput << "  interfaces " << interfaces.Length() <<": ";
-    for (i = 0; i < interfaces.Length(); i++)
-        Coutput << "  " << (int) interfaces[i];
-    Coutput << endl;
-
-    Coutput << "  fields " << fields.Length() << ": ";
-    for (i = 0; i < fields.Length(); i++)
-    {
-        Coutput << "field " << i << endl;
-        fields[i].Print(constant_pool);
-    }
-
-    Coutput << " methods length " << methods.Length() << endl;
-    for (i = 0; i < methods.Length(); i++)
-    {
-        Coutput << "method " << i << endl;
-        methods[i].Print(constant_pool);
-    }
-
-    Coutput << " attributes length " << attributes.Length() << endl;
-    for (i = 0; i < attributes.Length(); i++)
-    {
-        Coutput << "attribute " << i << endl;
-        attributes[i] -> Print(constant_pool);
-    }
-    Coutput << endl;
-}
-#endif // JIKES_DEBUG
 
 #ifdef HAVE_JIKES_NAMESPACE
 } // Close namespace Jikes block

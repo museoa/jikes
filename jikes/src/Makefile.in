@@ -76,17 +76,18 @@ am__installdirs = $(DESTDIR)$(bindir) $(DESTDIR)$(includedir)
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_jikes_OBJECTS = ast.$(OBJEXT) body.$(OBJEXT) bytecode.$(OBJEXT) \
-	case.$(OBJEXT) code.$(OBJEXT) control.$(OBJEXT) decl.$(OBJEXT) \
-	definite.$(OBJEXT) depend.$(OBJEXT) diagnose.$(OBJEXT) \
-	double.$(OBJEXT) dump.$(OBJEXT) error.$(OBJEXT) expr.$(OBJEXT) \
-	getclass.$(OBJEXT) incrmnt.$(OBJEXT) init.$(OBJEXT) \
-	javaact.$(OBJEXT) jikes.$(OBJEXT) jikesapi.$(OBJEXT) \
-	long.$(OBJEXT) lookup.$(OBJEXT) lpginput.$(OBJEXT) \
-	modifier.$(OBJEXT) op.$(OBJEXT) option.$(OBJEXT) \
-	parser.$(OBJEXT) platform.$(OBJEXT) scanner.$(OBJEXT) \
-	segment.$(OBJEXT) set.$(OBJEXT) stream.$(OBJEXT) \
-	symbol.$(OBJEXT) system.$(OBJEXT) tab.$(OBJEXT) \
-	unparse.$(OBJEXT) unzip.$(OBJEXT) zip.$(OBJEXT)
+	case.$(OBJEXT) class.$(OBJEXT) code.$(OBJEXT) \
+	control.$(OBJEXT) decl.$(OBJEXT) definite.$(OBJEXT) \
+	depend.$(OBJEXT) diagnose.$(OBJEXT) double.$(OBJEXT) \
+	dump.$(OBJEXT) error.$(OBJEXT) expr.$(OBJEXT) \
+	incrmnt.$(OBJEXT) init.$(OBJEXT) javaact.$(OBJEXT) \
+	jikes.$(OBJEXT) jikesapi.$(OBJEXT) long.$(OBJEXT) \
+	lookup.$(OBJEXT) lpginput.$(OBJEXT) modifier.$(OBJEXT) \
+	op.$(OBJEXT) option.$(OBJEXT) parser.$(OBJEXT) \
+	platform.$(OBJEXT) scanner.$(OBJEXT) segment.$(OBJEXT) \
+	set.$(OBJEXT) stream.$(OBJEXT) symbol.$(OBJEXT) \
+	system.$(OBJEXT) tab.$(OBJEXT) unparse.$(OBJEXT) \
+	unzip.$(OBJEXT) zip.$(OBJEXT)
 jikes_OBJECTS = $(am_jikes_OBJECTS)
 jikes_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
@@ -94,12 +95,12 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/ast.Po ./$(DEPDIR)/body.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/bytecode.Po ./$(DEPDIR)/case.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/code.Po ./$(DEPDIR)/control.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/decl.Po ./$(DEPDIR)/definite.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/depend.Po ./$(DEPDIR)/diagnose.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/double.Po ./$(DEPDIR)/dump.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/error.Po ./$(DEPDIR)/expr.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/getclass.Po ./$(DEPDIR)/incrmnt.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/class.Po ./$(DEPDIR)/code.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/control.Po ./$(DEPDIR)/decl.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/definite.Po ./$(DEPDIR)/depend.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/diagnose.Po ./$(DEPDIR)/double.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/dump.Po ./$(DEPDIR)/error.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/expr.Po ./$(DEPDIR)/incrmnt.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/init.Po ./$(DEPDIR)/javaact.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/jikes.Po ./$(DEPDIR)/jikesapi.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/long.Po ./$(DEPDIR)/lookup.Po \
@@ -210,6 +211,7 @@ ast.cpp \
 body.cpp \
 bytecode.cpp \
 case.cpp \
+class.cpp \
 code.cpp \
 control.cpp \
 decl.cpp \
@@ -220,7 +222,6 @@ double.cpp \
 dump.cpp \
 error.cpp \
 expr.cpp \
-getclass.cpp \
 incrmnt.cpp \
 init.cpp \
 javaact.cpp \
@@ -260,7 +261,6 @@ depend.h \
 diagnose.h \
 double.h \
 error.h \
-getclass.h \
 javaact.h \
 javadcl.h \
 javadef.h \
@@ -392,6 +392,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/body.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bytecode.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/case.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/class.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/code.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/control.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/decl.Po@am__quote@
@@ -402,7 +403,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dump.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/error.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/expr.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getclass.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/incrmnt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/init.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/javaact.Po@am__quote@

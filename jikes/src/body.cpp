@@ -1072,7 +1072,8 @@ bool Semantic::UncaughtException(TypeSymbol* exception)
         (ThisVariable() && ! ThisVariable() -> ACC_STATIC()))
     {
         TypeSymbol* this_type = ThisType();
-        MethodSymbol* ctor = this_type -> FindConstructorSymbol();
+        MethodSymbol* ctor =
+            this_type -> FindMethodSymbol(control.init_name_symbol);
         if (! this_type -> Anonymous())
         {
             for ( ; ctor; ctor = ctor -> next_method)
@@ -1610,7 +1611,7 @@ TypeSymbol* Semantic::GetLocalType(AstClassDeclaration* class_declaration)
     NameSymbol* name_symbol = lex_stream ->
         NameSymbol(class_declaration -> class_body -> identifier_token);
     TypeSymbol* type =
-        LocalSymbolTable().Top() -> InsertNestedTypeSymbol(name_symbol);
+        LocalSymbolTable().Top() -> InsertTypeSymbol(name_symbol);
 
     TypeSymbol* this_type = ThisType();
     TypeSymbol* outermost_type = this_type -> outermost_type;

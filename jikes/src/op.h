@@ -17,7 +17,7 @@
 namespace Jikes { // Open namespace Jikes block
 #endif
 
-class cp_info;
+class ConstantPool;
 
 // code dealing with describing and listing byte code
 class Operators
@@ -236,7 +236,7 @@ protected:
 
 #ifdef JIKES_DEBUG
 public:
-    static void OpDmp(Tuple<cp_info*>&, Tuple<u1>&);
+    static void OpDmp(const ConstantPool&, const Tuple<u1>&);
     static int OpDesc(Opcode, const char** name, const char** desc);
 
 private:
@@ -257,7 +257,7 @@ private:
     inline static i2 GetAndSkipI2(const Tuple<u1>& code, unsigned& pc)
     {
         i2 s = code[pc++] << 8;
-        return  s | code[pc++];
+        return s | code[pc++];
     }
 
     inline static i4 GetAndSkipI4(const Tuple<u1>& code, unsigned& pc)
@@ -287,7 +287,7 @@ private:
         return u | code[pc++];
     }
 
-    static void OpLine(Tuple<cp_info*>&, char, int, const char*,
+    static void OpLine(const ConstantPool&, char, int, const char*,
                        char*, const char*, OpInfo, unsigned);
 #endif // JIKES_DEBUG
 };
