@@ -1150,66 +1150,29 @@ public:
         return (status & LOCAL_CLASS_PROCESSING_COMPLETED) != 0;
     }
 
-    void MarkSourcePending()
-    {
-        status |= SOURCE_PENDING;
-    }
-    void MarkSourceNoLongerPending()
-    {
-        status &= ~ SOURCE_PENDING;
-    }
-    bool SourcePending()
-    {
-        return (status & SOURCE_PENDING) != 0;
-    }
+    void MarkSourcePending() { status |= SOURCE_PENDING; }
+    void MarkSourceNoLongerPending() { status &= ~ SOURCE_PENDING; }
+    bool SourcePending() { return (status & SOURCE_PENDING) != 0; }
 
-    void MarkAnonymous()
-    {
-        status |= ANONYMOUS;
-    }
-    bool Anonymous()
-    {
-        return (status & ANONYMOUS) != 0;
-    }
+    void MarkAnonymous() { status |= ANONYMOUS; }
+    bool Anonymous() { return (status & ANONYMOUS) != 0; }
 
-    void MarkHeaderProcessed()
-    {
-        status |= HEADER_PROCESSED;
-    }
-    bool HeaderProcessed()
-    {
-        return (status & HEADER_PROCESSED) != 0;
-    }
+    void MarkHeaderProcessed() { status |= HEADER_PROCESSED; }
+    bool HeaderProcessed() { return (status & HEADER_PROCESSED) != 0; }
 
-    void MarkPrimitive()
-    {
-        status |= PRIMITIVE;
-    }
-    bool Primitive()
-    {
-        return (status & PRIMITIVE) != 0;
-    }
+    void MarkPrimitive() { status |= PRIMITIVE; }
+    bool Primitive() { return (status & PRIMITIVE) != 0; }
 
-    void MarkDeprecated()
-    {
-        status |= DEPRECATED;
-    }
-    bool IsDeprecated()
-    {
-        return (status & DEPRECATED) != 0;
-    }
+    void MarkDeprecated() { status |= DEPRECATED; }
+    void ResetDeprecated() { status &= ~DEPRECATED; }
+    bool IsDeprecated() { return (status & DEPRECATED) != 0; }
 
     void MarkBad()
     {
         SetACC_PUBLIC();
-
-        status |= BAD;
-
-        MarkHeaderProcessed();
-        MarkConstructorMembersProcessed();
-        MarkMethodMembersProcessed();
-        MarkFieldMembersProcessed();
-        MarkLocalClassProcessingCompleted();
+        status |= (BAD | HEADER_PROCESSED | CONSTRUCTOR_MEMBERS_PROCESSED |
+                   METHOD_MEMBERS_PROCESSED | FIELD_MEMBERS_PROCESSED |
+                   LOCAL_CLASS_PROCESSING_COMPLETED);
         MarkSourceNoLongerPending();
     }
     bool Bad() { return (status & BAD) != 0; }

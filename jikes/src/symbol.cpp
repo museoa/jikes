@@ -1552,7 +1552,7 @@ TypeSymbol *TypeSymbol::FindOrInsertClassLiteralClass(LexStream::TokenIndex tok)
             sem -> GetAnonymousType(class_creation, control.Object());
         class_literal_type -> FindOrInsertClassLiteralMethod(control);
 
-        sem -> AddDependence(class_literal_type, control.Class(), tok);
+        sem -> AddDependence(class_literal_type, control.Class());
 
         class_literal_class = class_literal_type;
     }

@@ -573,10 +573,8 @@ MethodSymbol *Semantic::FindConstructor(TypeSymbol *containing_type, Ast *ast,
     //
     constructor_symbol -> ProcessMethodThrows((Semantic *) this, right_tok);
 
-    if (control.option.deprecation &&
-        constructor_symbol -> IsDeprecated() &&
-        (constructor_symbol -> containing_type -> outermost_type !=
-         ThisType() -> outermost_type))
+    if (control.option.deprecation && constructor_symbol -> IsDeprecated() &&
+        ! InDeprecatedContext())
     {
         ReportSemError(SemanticError::DEPRECATED_CONSTRUCTOR,
                        left_tok,
@@ -775,8 +773,7 @@ MethodSymbol *Semantic::FindMethodInType(TypeSymbol *type,
     method -> ProcessMethodThrows(this, field_access -> identifier_token);
 
     if (control.option.deprecation && method -> IsDeprecated() &&
-        (method -> containing_type -> outermost_type !=
-         ThisType() -> outermost_type))
+        ! InDeprecatedContext())
     {
         ReportSemError(SemanticError::DEPRECATED_METHOD,
                        method_call -> LeftToken(),
@@ -1081,8 +1078,8 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
     {
         method_symbol -> ProcessMethodThrows(this, method_call -> method -> RightToken());
 
-        if (control.option.deprecation &&
-            method_symbol -> IsDeprecated() && method_symbol -> containing_type -> outermost_type != ThisType() -> outermost_type)
+        if (control.option.deprecation && method_symbol -> IsDeprecated() &&
+            ! InDeprecatedContext())
         {
             ReportSemError(SemanticError::DEPRECATED_METHOD,
                            method_call -> LeftToken(),
@@ -1173,8 +1170,7 @@ VariableSymbol *Semantic::FindVariableInType(TypeSymbol *type,
     }
 
     if (control.option.deprecation && variable -> IsDeprecated() &&
-        (variable -> ContainingType() -> outermost_type !=
-         ThisType() -> outermost_type))
+        ! InDeprecatedContext())
     {
         ReportSemError(SemanticError::DEPRECATED_FIELD,
                        field_access -> LeftToken(),
@@ -1493,9 +1489,8 @@ VariableSymbol *Semantic::FindVariableInEnvironment(SemanticEnvironment *&where_
 
     if (variable_symbol)
     {
-        if (control.option.deprecation &&
-            variable_symbol -> IsDeprecated() &&
-            variable_symbol -> ContainingType() -> outermost_type != ThisType() -> outermost_type)
+        if (control.option.deprecation && variable_symbol -> IsDeprecated() &&
+            ! InDeprecatedContext())
         {
             ReportSemError(SemanticError::DEPRECATED_FIELD,
                            identifier_token,
@@ -2416,9 +2411,8 @@ void Semantic::ProcessAmbiguousName(Ast *name)
         else if ((type = FindType(simple_name -> identifier_token)))
         {
             simple_name -> symbol = type;
-            if (control.option.deprecation &&
-                type -> IsDeprecated() &&
-                (type -> outermost_type != ThisType() -> outermost_type))
+            if (control.option.deprecation && type -> IsDeprecated() &&
+                ! InDeprecatedContext())
             {
                 ReportSemError(SemanticError::DEPRECATED_TYPE,
                                simple_name -> identifier_token,

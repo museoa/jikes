@@ -1,3 +1,21 @@
+2002-07-19  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/scanner.cpp (ScanStarComment): Only the most recent doc
+	comment applies to a declaration.
+	* src/getclass.cpp (ReadTypeFromSignature): 
+	* src/symbol.cpp (FindOrInsertClassLiteralClass): Missed a case in
+	previous commit.
+	* src/expr.cpp (FindConstructor, FindMethodInType),
+	(FindMethodInEnvironment, FindVariableInType),
+	(FindVariableInEnvironment, ProcessAmbiguousName):
+	* src/decl.cpp (ProcessTypeHeader, ProcessInterface),
+	(ProcessFieldDeclaration, ProcessMethodDeclaration),
+	(MustFindType):
+	* src/semantic.h (InDeprecatedContext):
+	* src/stream.h (ResetDeprecated):
+	* src/symbol.h (TypeSymbol::ResetDeprecated): Silence deprecation
+	warnings inside a deprecated context.
+
 2002-07-18  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/expr.cpp (FindConstructor, FindMethodInType),

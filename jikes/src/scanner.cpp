@@ -295,6 +295,8 @@ void Scanner::ScanStarComment()
             STAR,
             REMAINDER
         } state = HEADER;
+        // Only the most recent doc comment applies to a section.
+        current_token -> ResetDeprecated();
         while (cursor != input_buffer_tail)
         {
             switch (*cursor++)

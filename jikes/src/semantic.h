@@ -1061,6 +1061,11 @@ private:
     PackageSymbol *this_package;
 
     // Look at state associated with the current type
+    bool InDeprecatedContext() {
+        return ThisType() -> IsDeprecated() ||
+            (ThisMethod() && ThisMethod() -> IsDeprecated()) ||
+            (ThisVariable() && ThisVariable() -> IsDeprecated());
+    }
     TypeSymbol *ThisType() { return state_stack.Top() -> Type(); }
     MethodSymbol *&ThisMethod() { return state_stack.Top() -> this_method; }
     VariableSymbol *&ThisVariable()

@@ -508,6 +508,7 @@ private:
             info = (info & 0xFFFFFF80) | kind;
         }
         inline unsigned Kind() { return (info & 0x0000007F); }
+        inline void ResetDeprecated() { info &= ~0x00000080; }
         inline void SetDeprecated() { info |= 0x00000080; }
         inline bool Deprecated() { return ((info & 0x00000080) != 0); }
 

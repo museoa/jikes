@@ -758,6 +758,15 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration *class_declaration)
     {
         TypeSymbol *super_type = MustFindType(class_declaration -> super_opt);
         assert(! super_type -> SourcePending());
+        if (control.option.deprecation && state_stack.Size() == 0 &&
+            super_type -> IsDeprecated() && ! type -> IsDeprecated())
+        {
+            ReportSemError(SemanticError::DEPRECATED_TYPE,
+                           class_declaration -> super_opt -> LeftToken(),
+                           class_declaration -> super_opt -> RightToken(),
+                           super_type -> ContainingPackage() -> PackageName(),
+                           super_type -> ExternalName());
+        }
         if (super_type -> ACC_INTERFACE())
         {
             ReportSemError(SemanticError::NOT_A_CLASS,
@@ -854,6 +863,15 @@ void Semantic::ProcessInterface(TypeSymbol *base_type, AstExpression *name)
 
     assert(! interf -> SourcePending());
 
+    if (control.option.deprecation && state_stack.Size() == 0 &&
+        interf -> IsDeprecated() && ! base_type -> IsDeprecated())
+    {
+        ReportSemError(SemanticError::DEPRECATED_TYPE,
+                       name -> LeftToken(),
+                       name -> RightToken(),
+                       interf -> ContainingPackage() -> PackageName(),
+                       interf -> ExternalName());
+    }
     if (! interf -> ACC_INTERFACE())
     {
         if (! interf -> Bad())
@@ -2206,10 +2224,15 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration *field_declaration)
     }
 
     //
-    //
+    // To avoid deprecated type warnings when processing a deprecated field
+    // declaration, we must temporarily mark this type as deprecated, because
+    // the field variable symbol(s) do not yet exist.
     //
     bool deprecated_declarations = lex_stream ->
         IsDeprecated(lex_stream -> Previous(field_declaration -> LeftToken()));
+    bool deprecated_type = this_type -> IsDeprecated();
+    if (deprecated_declarations)
+        this_type -> MarkDeprecated();
     AstArrayType *array_type = field_declaration -> type -> ArrayTypeCast();
     TypeSymbol *field_type;
     {
@@ -2219,6 +2242,8 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration *field_declaration)
         field_type = (primitive_type ? FindPrimitiveType(primitive_type)
                       : MustFindType(actual_type));
     }
+    if (! deprecated_type && deprecated_declarations)
+        this_type -> ResetDeprecated();
 
     for (int i = 0; i < field_declaration -> NumVariableDeclarators(); i++)
     {
@@ -3392,8 +3417,17 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
     }
 
     //
+    // To avoid deprecated type warnings when processing a deprecated method
+    // declaration, we must temporarily mark this type as deprecated, because
+    // the method symbol does not yet exist. We fix it after formal parameter
+    // processing.
     //
-    //
+    bool deprecated_method = lex_stream ->
+        IsDeprecated(lex_stream -> Previous(method_declaration ->
+                                            LeftToken()));
+    bool deprecated_type = this_type -> IsDeprecated();
+    if (deprecated_method)
+        this_type -> MarkDeprecated();
     AstArrayType *array_type = method_declaration -> type -> ArrayTypeCast();
     Ast *actual_type = (array_type ? array_type -> type
                         : method_declaration -> type);
@@ -3435,6 +3469,8 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
         new BlockSymbol(method_declarator -> NumFormalParameters());
     block_symbol -> max_variable_index = (access_flags.ACC_STATIC() ? 0 : 1);
     ProcessFormalParameters(block_symbol, method_declarator);
+    if (! deprecated_type && deprecated_method)
+        this_type -> ResetDeprecated();
 
     MethodSymbol *method = this_type -> FindMethodSymbol(name_symbol);
 
@@ -3506,7 +3542,7 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
                        this_type -> Name());
     }
 
-    if (lex_stream -> IsDeprecated(lex_stream -> Previous(method_declaration -> LeftToken())))
+    if (deprecated_method)
         method -> MarkDeprecated();
 }
 
@@ -3806,6 +3842,7 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
     if (simple_name)
     {
         identifier_token = simple_name -> identifier_token;
+        int start_num_errors = NumErrors();
         type = FindType(identifier_token);
 
         //
@@ -3828,7 +3865,7 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
             // "type not found" error message, check whether or not the user is
             // not attempting to access an inaccessible private type.
             //
-            if ((! file_symbol) && state_stack.Size() > 0)
+            if (! file_symbol && state_stack.Size() > 0)
             {
                 for (TypeSymbol *super_type = ThisType() -> super;
                      super_type; super_type = super_type -> super)
@@ -3852,7 +3889,7 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
             else type = ReadType(file_symbol, package, name_symbol,
                                  identifier_token);
         }
-        else
+        else if (start_num_errors == NumErrors())
         {
              TypeAccessCheck(name, type);
         }
@@ -3909,21 +3946,18 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
     // processing the type header of an outermost type.
     //
     if (state_stack.Size() > 0)
-        AddDependence(ThisType(), type, identifier_token);
-
-    //
-    //
-    //
-    if (control.option.deprecation && type -> IsDeprecated() &&
-        type -> file_symbol != source_file_symbol)
     {
-        ReportSemError(SemanticError::DEPRECATED_TYPE,
-                       name -> LeftToken(),
-                       name -> RightToken(),
-                       type -> ContainingPackage() -> PackageName(),
-                       type -> ExternalName());
+        AddDependence(ThisType(), type);
+        if (control.option.deprecation && type -> IsDeprecated() &&
+            ! InDeprecatedContext())
+        {
+            ReportSemError(SemanticError::DEPRECATED_TYPE,
+                           name -> LeftToken(),
+                           name -> RightToken(),
+                           type -> ContainingPackage() -> PackageName(),
+                           type -> ExternalName());
+        }
     }
-
     return type;
 }
 
