@@ -155,6 +155,11 @@ BaseLong BaseLong::operator++ ()
     return *this;
 }
 
+BaseLong BaseLong::operator+ ()
+{
+    return(*this);
+}
+
 BaseLong BaseLong::operator- ()
 {
     return ~(*this) + 1;

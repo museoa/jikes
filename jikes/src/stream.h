@@ -70,7 +70,7 @@ public:
     typedef int TypeIndex;
     typedef int TokenIndex;
     typedef int CommentIndex;
-    enum { INFINITY = INT_MAX }; // the largest possible value for TokenIndex
+    enum { LEX_INFINITY = INT_MAX }; // the largest possible value for TokenIndex
 
     FileSymbol *file_symbol;
 

@@ -104,7 +104,7 @@ void TypeCycleChecker::ProcessSubtypes(TypeSymbol *type)
         do
         {
             scc_subtype = stack.Top();
-            scc_subtype -> index = INFINITY;
+            scc_subtype -> index = CYCLE_INFINITY;
             *(scc_subtype -> subtypes_closure) = *(type -> subtypes_closure);
             type_list.Next() = scc_subtype;
             stack.Pop();
@@ -161,7 +161,7 @@ void ConstructorCycleChecker::CheckConstructorCycles(AstConstructorDeclaration *
         if (constructor_declaration == stack.Top() && constructor_declaration != called_constructor_declaration)
         {
             stack.Pop();
-            constructor_declaration -> index = INFINITY;
+            constructor_declaration -> index = CYCLE_INFINITY;
         }
         //
         // Otherwise, all elements in the stack up to (and including) constructor_declaration form an SCC.
@@ -173,7 +173,7 @@ void ConstructorCycleChecker::CheckConstructorCycles(AstConstructorDeclaration *
             {
                 called_constructor_declaration = stack.Top();
                 stack.Pop();
-                called_constructor_declaration -> index = INFINITY;
+                called_constructor_declaration -> index = CYCLE_INFINITY;
 
                 constructor_block = (AstConstructorBlock *) called_constructor_declaration -> constructor_body;
                 AstMethodDeclarator *constructor_declarator = called_constructor_declaration -> constructor_declarator;
@@ -245,7 +245,7 @@ void TypeDependenceChecker::ProcessType(TypeSymbol *type)
         do
         {
             scc_dependent = stack.Top();
-            scc_dependent -> incremental_index = INFINITY;
+            scc_dependent -> incremental_index = CYCLE_INFINITY;
             *(scc_dependent -> dependents_closure) = *(type -> dependents_closure);
             type_list.Next() = scc_dependent;
             stack.Pop();
