@@ -1,3 +1,8 @@
+2001-11-07  Chris Dennis  <Chris.Dennis@invidi.com>
+
+	* src/symbol.cpp: Fix for-loop scoping for the non-compliant VC++
+	compiler (this seems to be a recurring problem!) - bug 2377.
+
 2001-11-06  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/error.h:

@@ -1661,8 +1661,8 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
         read_method -> SetContainingType(this_type);
         read_method -> SetBlockSymbol(block_symbol);
 
-        for (int i = 0; i < member -> NumThrows(); i++)
-            read_method -> AddThrows(member -> Throws(i));
+        for (int j = 0; j < member -> NumThrows(); j++)
+            read_method -> AddThrows(member -> Throws(j));
 
         //
         //
@@ -1738,8 +1738,8 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *member)
         read_method -> SetContainingType(this_type);
         read_method -> SetBlockSymbol(block_symbol);
 
-        for (int i = 0; i < member -> NumThrows(); i++)
-            read_method -> AddThrows(member -> Throws(i));
+        for (int j = 0; j < member -> NumThrows(); j++)
+            read_method -> AddThrows(member -> Throws(j));
 
         //
         // A constructor in a local class already has a
