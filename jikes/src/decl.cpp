@@ -2056,7 +2056,9 @@ void Semantic::CleanUp()
                 break;
             }
         default:
+#ifdef ERNST
         assert(false);
+#endif
         break;
         }
 
