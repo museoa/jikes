@@ -1726,8 +1726,8 @@ void Semantic::ProcessClassFile(TypeSymbol* type, const char* buffer,
         Control::ConvertUtf8ToUnicode(unicode_problem, problem, length);
 
         ReportSemError(SemanticError::INVALID_CLASS_FILE, tok,
-                       type -> file_symbol -> PathSym() -> Name(),
                        type -> ExternalName(),
+                       type -> file_symbol -> PathSym() -> Name(),
                        type -> ContainingPackageName(),
                        unicode_problem);
         type -> MarkBad();

@@ -1,5 +1,11 @@
 2004-05-03  Elliott Hughes  <enh@acm.org>
 
+	* src/class.cpp, src/error.cpp: ensures we also print the path to
+	the class file within the JAR file (i.e. include the package) in
+	diagnostics about invalid class files.
+
+2004-05-03  Elliott Hughes  <enh@acm.org>
+
 	* src/class.h: fixes compilation with libgcj3.3.jar; gcj-compiled
 	classes have an extra attribute "gnu.gcj.gcj-compiled". A fencepost
 	error in GetN was causing us to reject the class file. (Also fixes
