@@ -40,14 +40,16 @@
           <td><!-- #BeginEditable "TopicContent" --> 
             <h1>Testing Jikes</h1>
             <p>&nbsp;</p>
-            <p><i>Not written yet.</i></p>
-            <p>> > Mo, what's the magic incantation to list the changes in a jacks 
-              run the > > way you did? That should probably be added to the jacks 
-              documentation. > > Oh, sorry about that. > > You run "jacks loggen 
-              jikes" to regen the log changes file > for the jikes target. You 
-              need to do that after a full > test suite run from the toplevel 
-              directory. Running "jacks" > prints some info about it, so you don't 
-              have to remember > but I have not added HTML docs as yet.</p>
+
+            <p>Jikes makes use of a regression test framework called
+            Jacks. This suite of tests helps to ensure that already
+            fixed bugs stay fixed and that new code is tested as it
+            is added. Check out the
+            <A HREF="http://www-124.ibm.com/developerworks/oss/jacks/">Jacks project</A>
+            page for more info about how to setup and run the Jacks tests.
+            Most users will not have any reason to use Jacks, but developers
+            contributing code to jikes or working on new ports should be
+            familiar with it.</p>
             <!-- #EndEditable --></td>
         </tr>
       </table>

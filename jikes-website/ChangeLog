@@ -1,5 +1,12 @@
 2003-02-05  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* faq/dev-linux.shtml: Point users at generic
+	build notes.
+	* faq/dev-testing.shtml: Add description and link
+	to the Jacks project.
+
+2003-02-05  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* faq/dev-compiling.shtml: Cleanup and update generic compiling
 	section. Document more configure flags and make all the boxes
 	the same color.

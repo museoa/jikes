@@ -40,8 +40,10 @@
           <td><!-- #BeginEditable "TopicContent" -->
             <h1>Jikes on Linux</h1>
             <p>&nbsp;</p>
-            <p><i>Not written yet.</i></p>
-            <p><i>No information about it: normal ?</i></p>
+            <p>Just grab the latest release of Jikes from
+            <a href="http://www-124.ibm.com/developerworks/downloads/?group_id=10">Jikes downloads page</a>
+              and follow the
+              <a href="dev-compiling.shtml">generic build instructions</a>.
             <p>&nbsp;</p>
             <!-- #EndEditable --></td>
         </tr>
