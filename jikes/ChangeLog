@@ -1,5 +1,10 @@
 2002-10-14  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/decl.cpp (ReadType): Always report when a type is not found
+	- solves core dumps reported in bug 3319.
+
+2002-10-14  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/expr.cpp (CanCastConvert): Fix recognition of incompatible
 	casts between classes - bug 3320.
 

@@ -4827,7 +4827,7 @@ bool Semantic::CanCastConvert(TypeSymbol *target_type,
 
     //
     // Here, we are left with two reference types. Two classes are not
-    // compatible at this point, and final classes do not inmplement
+    // compatible at this point, and final classes do not implement
     // interfaces. Otherwise, a class can implement an interface (even with
     // conflicting signatures), but two interfaces must be compatible.
     //

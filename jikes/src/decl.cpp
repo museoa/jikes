@@ -1715,12 +1715,9 @@ TypeSymbol *Semantic::ReadType(FileSymbol *file_symbol,
             type -> SetSignature(control);
             control.ProcessBadType(type);
             type -> MarkBad();
-            if (package -> directory.Length())
-                ReportSemError(SemanticError::TYPE_NOT_FOUND,
-                               tok,
-                               tok,
-                               type -> ContainingPackage() -> PackageName(),
-                               type -> ExternalName());
+            ReportSemError(SemanticError::TYPE_NOT_FOUND, tok, tok,
+                           type -> ContainingPackage() -> PackageName(),
+                           type -> ExternalName());
         }
     }
 
