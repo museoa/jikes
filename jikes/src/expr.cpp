@@ -35,31 +35,46 @@ bool Semantic::IsIntValueRepresentableInType(AstExpression *expr,
     return (type == control.int_type || type == control.no_type ||
             (type == control.char_type && (literal -> value >= 0) &&
              (literal -> value <= 65535)) ||
-             (type == control.byte_type && (literal -> value >= -128) &&
-              (literal -> value <= 127)) ||
-             (type == control.short_type && (literal -> value >= -32768) &&
-              (literal -> value <= 32767)));
+            (type == control.byte_type && (literal -> value >= -128) &&
+             (literal -> value <= 127)) ||
+            (type == control.short_type && (literal -> value >= -32768) &&
+             (literal -> value <= 32767)));
 }
 
 
+//
+// Returns true if source_method is more specific than target_method, which
+// is defined as the type that declared the method, as well as all method
+// parameter types, being equal or more specific in the source_method.
+//
 inline bool Semantic::MoreSpecific(MethodSymbol *source_method,
                                    MethodSymbol *target_method)
 {
     if (! CanMethodInvocationConvert(target_method -> containing_type,
                                      source_method -> containing_type))
+    {
         return false;
+    }
 
     for (int k = target_method -> NumFormalParameters() - 1; k >= 0; k--)
     {
-        if (! CanMethodInvocationConvert(target_method -> FormalParameter(k) -> Type(),
-                                         source_method -> FormalParameter(k) -> Type()))
+        if (! CanMethodInvocationConvert(target_method -> FormalParameter(k) ->
+                                         Type(),
+                                         source_method -> FormalParameter(k) ->
+                                         Type()))
+        {
             return false;
+        }
     }
 
     return true;
 }
 
 
+//
+// Returns true if a method is more specific than the current set of maximally
+// specific methods.
+//
 inline bool Semantic::MoreSpecific(MethodSymbol *method,
                                    Tuple<MethodSymbol *> &maximally_specific_method)
 {
@@ -73,6 +88,11 @@ inline bool Semantic::MoreSpecific(MethodSymbol *method,
 }
 
 
+//
+// Returns true if no method in the current set of maximally specific methods
+// is more specific than the given method, meaning that the given method should
+// be added to the set.
+//
 inline bool Semantic::NoMethodMoreSpecific(Tuple<MethodSymbol *> &maximally_specific_method,
                                            MethodSymbol *method)
 {
@@ -1865,16 +1885,17 @@ void Semantic::ProcessSimpleName(Ast *expr)
                 simple_name -> value = variable_symbol -> initial_value;
             else if (variable_symbol -> declarator)
             {
-                AstVariableDeclarator *declarator = variable_symbol -> declarator -> VariableDeclaratorCast();
+                AstVariableDeclarator *declarator =
+                    variable_symbol -> declarator -> VariableDeclaratorCast();
                 //
                 // If the variable declarator in question exists and its
                 // computation is not pending (to avoid looping) and it has a
                 // simple expression initializer.
                 //
-                if (declarator &&
-                    (! declarator -> pending) &&
+                if (declarator && ! declarator -> pending &&
                     declarator -> variable_initializer_opt &&
-                    (! declarator -> variable_initializer_opt -> ArrayInitializerCast()))
+                    (! declarator -> variable_initializer_opt ->
+                     ArrayInitializerCast()))
                 {
                     TypeSymbol *type = (TypeSymbol *) variable_symbol -> owner;
                     Semantic *sem = type -> semantic_environment -> sem;
@@ -1891,7 +1912,7 @@ void Semantic::ProcessSimpleName(Ast *expr)
         // private variable) necessary to get to it.
         //
         if (where_found != state_stack.Top() &&
-            (! simple_name -> IsConstant()))
+            ! simple_name -> IsConstant())
         {
             CreateAccessToScopedVariable(simple_name, where_found -> Type());
         }
@@ -4319,6 +4340,10 @@ void Semantic::ProcessPreUnaryExpression(Ast *expr)
 }
 
 
+//
+// Returns true if both types are primitive, and the source type can be
+// widened into the target type.
+//
 inline bool Semantic::CanWideningPrimitiveConvert(TypeSymbol *target_type,
                                                   TypeSymbol *source_type)
 {
@@ -4351,6 +4376,10 @@ inline bool Semantic::CanWideningPrimitiveConvert(TypeSymbol *target_type,
 }
 
 
+//
+// Returns true if both types are primitive, and the source type can be
+// narrowed to the target type.
+//
 inline bool Semantic::CanNarrowingPrimitiveConvert(TypeSymbol *target_type,
                                                    TypeSymbol *source_type)
 {
@@ -4388,12 +4417,16 @@ inline bool Semantic::CanNarrowingPrimitiveConvert(TypeSymbol *target_type,
 }
 
 
+//
+// Returns true if the source type can be converted to the target type in a
+// method invocation - this includes identity and widening conversions.
+//
 bool Semantic::CanMethodInvocationConvert(TypeSymbol *target_type,
                                           TypeSymbol *source_type)
 {
-    if (target_type == control.no_type) // convert nothing to bad
+    if (target_type == control.no_type) // Don't convert any class to bad type.
         return false;
-    if (source_type == control.no_type) // convert bad to anything
+    if (source_type == control.no_type) // Allow bad type to match anything.
         return true;
 
     if (source_type -> Primitive())
@@ -4443,6 +4476,11 @@ bool Semantic::CanMethodInvocationConvert(TypeSymbol *target_type,
 }
 
 
+//
+// Returns true if the reference source type can be automatically converted to
+// the target type in assignments. This works only for references (including
+// null), but allows a bad target type while method invocation does not.
+//
 bool Semantic::CanAssignmentConvertReference(TypeSymbol *target_type,
                                              TypeSymbol *source_type)
 {
@@ -4452,6 +4490,11 @@ bool Semantic::CanAssignmentConvertReference(TypeSymbol *target_type,
 }
 
 
+//
+// Returns true if the source expression can be automatically converted to the
+// target type. This includes all method invocation conversions, and
+// additionally allows narrowing conversions of primitive constants.
+//
 bool Semantic::CanAssignmentConvert(TypeSymbol *target_type,
                                     AstExpression *expr)
 {
@@ -4513,13 +4556,16 @@ bool Semantic::CanCastConvert(TypeSymbol *target_type,
             // target_type contains a method with the same signature, then
             // make sure that the two methods have the same return type.
             //
-            ExpandedMethodTable *source_method_table = source_type -> expanded_method_table;
+            ExpandedMethodTable *source_method_table =
+                source_type -> expanded_method_table;
             int i;
             for (i = 0; i < source_method_table -> symbol_pool.Length(); i++)
             {
-                MethodSymbol *method1 = source_method_table -> symbol_pool[i] -> method_symbol;
-                MethodShadowSymbol *method_shadow2 = target_type -> expanded_method_table
-                    -> FindOverloadMethodShadow(method1, this, tok);
+                MethodSymbol *method1 =
+                    source_method_table -> symbol_pool[i] -> method_symbol;
+                MethodShadowSymbol *method_shadow2 =
+                    target_type -> expanded_method_table ->
+                    FindOverloadMethodShadow(method1, this, tok);
                 if (method_shadow2)
                 {
                     if (! method1 -> IsTyped())
@@ -4560,7 +4606,7 @@ bool Semantic::CanCastConvert(TypeSymbol *target_type,
         else if (! source_type -> IsSubclass(target_type) &&
                  ! target_type -> IsSubclass(source_type))
         {
-                 return false;
+            return false;
         }
     }
 
@@ -4858,7 +4904,8 @@ void Semantic::ProcessCastExpression(Ast *expr)
     // Recall that the type is optional only when the compiler inserts
     // a CAST conversion node into the program.
     //
-    AstPrimitiveType *primitive_type = cast_expression -> type_opt -> PrimitiveTypeCast();
+    AstPrimitiveType *primitive_type =
+        cast_expression -> type_opt -> PrimitiveTypeCast();
     TypeSymbol *target_type;
     if (primitive_type)
          target_type = FindPrimitiveType(primitive_type);
@@ -4907,11 +4954,12 @@ void Semantic::ProcessCastExpression(Ast *expr)
 //
 // Inserts a widening conversion, if necessary. 
 //
-AstExpression *Semantic::ConvertToType(AstExpression *expr, TypeSymbol *type)
+AstExpression *Semantic::ConvertToType(AstExpression *expr,
+                                       TypeSymbol *target_type)
 {
-    TypeSymbol *target_type = expr -> Type();
-    if (target_type == control.null_type || target_type == type ||
-        target_type == control.no_type || type -> Bad())
+    TypeSymbol *source_type = expr -> Type();
+    if (source_type == control.null_type || source_type == target_type ||
+        source_type == control.no_type || target_type -> Bad())
     {
         return expr;
     }
@@ -4929,8 +4977,8 @@ AstExpression *Semantic::ConvertToType(AstExpression *expr, TypeSymbol *type)
     result -> right_parenthesis_token_opt = loc;
     result -> expression = expr;
 
-    result -> symbol = type;
-    result -> value = CastValue(type, expr);
+    result -> symbol = target_type;
+    result -> value = CastValue(target_type, expr);
 
     return result;
 }

@@ -334,7 +334,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     // name (includes local varable, or class variable, or field access)
     // array
     //
-    enum
+    enum VariableCategory
     {
         LHS_LOCAL =  0, // local variable
         LHS_ARRAY =  1, // array (of any kind)
@@ -343,7 +343,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         LHS_METHOD = 4 // access to private variable
     };
 
-    int GetLhsKind(AstExpression *expression)
+    VariableCategory GetLhsKind(AstExpression *expression)
     {
         AstAssignmentExpression *assignment = expression -> AssignmentExpressionCast();
         AstPreUnaryExpression *pre = expression -> PreUnaryExpressionCast();
@@ -402,11 +402,11 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void StoreLocal(int varno, TypeSymbol *);
     void LoadLiteral(LiteralValue *, TypeSymbol *);
     void LoadImmediateInteger(int);
-    int LoadVariable(int, AstExpression *, bool = true);
+    int LoadVariable(VariableCategory, AstExpression *, bool = true);
     int LoadArrayElement(TypeSymbol *);
     void StoreArrayElement(TypeSymbol *);
     void StoreField(AstExpression *);
-    void StoreVariable(int, AstExpression *);
+    void StoreVariable(VariableCategory, AstExpression *);
 
     void LoadConstantAtIndex(u2 index)
     {
@@ -767,13 +767,17 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void EmitNewArray(int, TypeSymbol *);
     int  EmitPostUnaryExpression(AstPostUnaryExpression *, bool);
     void EmitPostUnaryExpressionArray(AstPostUnaryExpression *, bool);
-    void EmitPostUnaryExpressionField(int, AstPostUnaryExpression *, bool);
-    void EmitPostUnaryExpressionSimple(int, AstPostUnaryExpression *, bool);
+    void EmitPostUnaryExpressionField(VariableCategory,
+                                      AstPostUnaryExpression *, bool);
+    void EmitPostUnaryExpressionSimple(VariableCategory,
+                                       AstPostUnaryExpression *, bool);
     int  EmitPreUnaryExpression(AstPreUnaryExpression *, bool);
-    void EmitPreUnaryIncrementExpression(AstPreUnaryExpression *expression, bool);
-    void EmitPreUnaryIncrementExpressionArray(AstPreUnaryExpression *expression, bool);
-    void EmitPreUnaryIncrementExpressionField(int, AstPreUnaryExpression *expression, bool);
-    void EmitPreUnaryIncrementExpressionSimple(int, AstPreUnaryExpression *expression, bool);
+    void EmitPreUnaryIncrementExpression(AstPreUnaryExpression *, bool);
+    void EmitPreUnaryIncrementExpressionArray(AstPreUnaryExpression *, bool);
+    void EmitPreUnaryIncrementExpressionField(VariableCategory,
+                                              AstPreUnaryExpression *, bool);
+    void EmitPreUnaryIncrementExpressionSimple(VariableCategory,
+                                               AstPreUnaryExpression *, bool);
     void EmitThisInvocation(AstThisCall *);
     void EmitSuperInvocation(AstSuperCall *);
     void ConcatenateString(AstBinaryExpression *);

@@ -524,8 +524,8 @@ Control::Control(char **arguments, Option &option_)
                 candidates -> Union(input_class_file_set);
 
                 TypeDependenceChecker *dependence_checker =
-                    new TypeDependenceChecker((Control *) this,
-                                              *candidates, type_trash_bin);
+                    new TypeDependenceChecker(this, *candidates,
+                                              type_trash_bin);
                 dependence_checker -> PartialOrder();
                 dependence_checker -> OutputDependences();
                 delete dependence_checker;
@@ -1370,7 +1370,7 @@ void Control::ProcessBodies(TypeSymbol *type)
                     TypeSymbol *type = (*types)[k];
 
                     // Make sure the literal is available for bytecode.
-                    type -> file_symbol -> SetFileNameLiteral((Control *) this);
+                    type -> file_symbol -> SetFileNameLiteral(this);
 
                     ByteCode *code = new ByteCode(type);
                     code -> GenerateCode();

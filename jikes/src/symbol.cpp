@@ -1104,7 +1104,7 @@ void MethodSymbol::ProcessMethodThrows(Semantic *sem, LexStream::TokenIndex tok)
 
 
 //
-// In addition to setting the signature, this updates the max_variable_index
+// In addition to (re)setting the signature, this updates the max_variable_index
 // if needed.
 //
 void MethodSymbol::SetSignature(Control &control, TypeSymbol *placeholder)
@@ -1654,19 +1654,19 @@ VariableSymbol *TypeSymbol::FindOrInsertLocalShadow(VariableSymbol *local)
     // expands to:
     // class Outer {
     //   static void foo(final int i) {
-    //     new Outer$1&Local(1, i);
+    //     new Outer$1Local(1, i);
     //   }
     // }
-    // class Outer$1&Local {
+    // class Outer$1Local {
     //   /*synthetic*/ final int val$i;
-    //   Outer$1&Local(int k, int i) {
+    //   Outer$1Local(int k, int i) {
     //     val$i = i;
     //     super();
     //     k = val$i;
     //   }
     // }
     //
-    // This method creates Outer$1$Local.val$i in the above example.  Notice
+    // This method creates Outer$1Local.val$i in the above example.  Notice
     // that JVMS 4.9.4 permits initialization of synthetic fields BEFORE the
     // explicit constructor invocation, even though it would not normally be
     // valid Java; this is necessary for the case when the superconstructor

@@ -1,3 +1,14 @@
+2002-06-24  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/bytecode.cpp:
+	* src/bytecode.h:
+	* src/control.cpp:
+	* src/decl.cpp:
+	* src/expr.cpp:
+	* src/symbol.cpp:
+	* src/symbol.h: Fix formatting, comments, and improve some naming
+	issues; but no code changes.
+
 2002-06-19  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/control.cpp (ProcessHeaders):
@@ -18,7 +29,7 @@
 	* src/expr.cpp (ConstructorAccessCheck): Fix regressions not
 	covered by patch 280 - still bug 2899.
 
-2002-06-18  Eric B Blake  <eblake@ee.byu.edu>
+2002-06-18  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/symbol.h (HasEnclosingInstance):
 	* src/symbol.cpp (HasEnclosingInstance): 

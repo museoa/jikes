@@ -975,6 +975,7 @@ public:
     bool IsArray() { return (num_dimensions > 0); }
 
     void SetOwner(Symbol *owner_) { owner = owner_; }
+
     bool IsOwner(TypeSymbol *type)
     {
         Symbol *sym = type -> owner;
@@ -1456,7 +1457,7 @@ public:
           accessed_local(NULL),
           external_name_symbol(NULL),
           status(0),
-          local_variable_index_(-1),
+          local_variable_index(-1),
           type_(NULL),
           signature_string(NULL)
     {
@@ -1469,10 +1470,10 @@ public:
 
     void SetLocalVariableIndex(int index)
     {
-        local_variable_index_ = index;
+        local_variable_index = index;
         MarkComplete();
     }
-    int LocalVariableIndex() { return local_variable_index_; }
+    int LocalVariableIndex() { return local_variable_index; }
 
     bool IsTyped()
     {
@@ -1535,7 +1536,7 @@ private:
     NameSymbol *external_name_symbol;
 
     unsigned char status;
-    int local_variable_index_;
+    int local_variable_index;
     TypeSymbol *type_;
     char *signature_string;
 };

@@ -2814,7 +2814,7 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
         {
             if (expression -> symbol && expression -> symbol -> TypeCast())
                 return 0;
-            AstSimpleName *simple_name = expression -> SimpleNameCast();
+            AstSimpleName *simple_name = (AstSimpleName *) expression;
             return (simple_name -> resolution_opt
                     ? EmitExpression(simple_name -> resolution_opt, need_value)
                     : LoadVariable(GetLhsKind(expression), expression,
@@ -2835,7 +2835,7 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
         return EmitArrayCreationExpression((AstArrayCreationExpression *) expression);
     case Ast::DIM:
         assert(need_value && "dimension can't qualify static member");
-        return EmitExpression(expression -> DimExprCast() -> expression);
+        return EmitExpression(((AstDimExpr *) expression) -> expression);
     case Ast::DOT:
         {
             AstFieldAccess *field_access = (AstFieldAccess *) expression;
@@ -2852,7 +2852,7 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
     case Ast::CALL:
         {
             AstMethodInvocation *method_call =
-                expression -> MethodInvocationCast();
+                (AstMethodInvocation *) expression;
             // must evaluate for side effects
             EmitMethodInvocation(method_call);
             if (need_value)
@@ -3295,7 +3295,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
 
     TypeSymbol *left_type = left_hand_side -> Type();
 
-    int kind = GetLhsKind(assignment_expression);
+    VariableCategory kind = GetLhsKind(assignment_expression);
     VariableSymbol *accessed_member = (assignment_expression -> write_method
                                                    ? assignment_expression -> write_method -> accessed_member -> VariableCast()
                                                    : (VariableSymbol *) NULL);
@@ -4223,8 +4223,7 @@ int ByteCode::EmitInstanceCreationExpression(AstClassInstanceCreationExpression 
                                              bool need_value)
 {
     if (expression -> resolution_opt)
-        return EmitInstanceCreationExpression(expression -> resolution_opt,
-                                              need_value);
+        expression = expression -> resolution_opt;
     MethodSymbol *constructor =
         (MethodSymbol *) expression -> class_type -> symbol;
 
@@ -4235,8 +4234,7 @@ int ByteCode::EmitInstanceCreationExpression(AstClassInstanceCreationExpression 
 
     //
     // Pass enclosing instance along, then real arguments, then shadow
-    // variables. We do not need to worry about an extra null argument, as
-    // there are no accessibility issues when invoking this().
+    // variables, and finally an extra null argument, as needed.
     //
     int stack_words = 0;
     if (expression -> base_opt)
@@ -4665,7 +4663,7 @@ void ByteCode::EmitNewArray(int num_dims, TypeSymbol *type)
 int ByteCode::EmitPostUnaryExpression(AstPostUnaryExpression *expression,
                                       bool need_value)
 {
-    int kind = GetLhsKind(expression);
+    VariableCategory kind = GetLhsKind(expression);
 
     switch (kind)
     {
@@ -4701,7 +4699,7 @@ int ByteCode::EmitPostUnaryExpression(AstPostUnaryExpression *expression,
 // load value of field, duplicate, do increment or decrement, then store
 // back, leaving original value on top of stack.
 //
-void ByteCode::EmitPostUnaryExpressionField(int kind,
+void ByteCode::EmitPostUnaryExpressionField(VariableCategory kind,
                                             AstPostUnaryExpression *expression,
                                             bool need_value)
 {
@@ -4764,7 +4762,7 @@ void ByteCode::EmitPostUnaryExpressionField(int kind,
 // load value of variable, duplicate, do increment or decrement, then store
 // back, leaving original value on top of stack.
 //
-void ByteCode::EmitPostUnaryExpressionSimple(int kind,
+void ByteCode::EmitPostUnaryExpressionSimple(VariableCategory kind,
                                              AstPostUnaryExpression *expression,
                                              bool need_value)
 {
@@ -4978,7 +4976,7 @@ int ByteCode::EmitPreUnaryExpression(AstPreUnaryExpression *expression,
 void ByteCode::EmitPreUnaryIncrementExpression(AstPreUnaryExpression *expression,
                                                bool need_value)
 {
-    int kind = GetLhsKind(expression);
+    VariableCategory kind = GetLhsKind(expression);
 
     switch (kind)
     {
@@ -5012,7 +5010,7 @@ void ByteCode::EmitPreUnaryIncrementExpression(AstPreUnaryExpression *expression
 // load value of variable, do increment or decrement, duplicate, then store
 // back, leaving new value on top of stack.
 //
-void ByteCode::EmitPreUnaryIncrementExpressionSimple(int kind,
+void ByteCode::EmitPreUnaryIncrementExpressionSimple(VariableCategory kind,
                                                      AstPreUnaryExpression *expression,
                                                      bool need_value)
 {
@@ -5168,7 +5166,7 @@ void ByteCode::EmitPreUnaryIncrementExpressionArray(AstPreUnaryExpression *expre
 // Pre Unary for which operand is field (instance variable)
 // AstExpression *expression;
 //
-void ByteCode::EmitPreUnaryIncrementExpressionField(int kind,
+void ByteCode::EmitPreUnaryIncrementExpressionField(VariableCategory kind,
                                                     AstPreUnaryExpression *expression,
                                                     bool need_value)
 {
@@ -5807,7 +5805,8 @@ void ByteCode::ResolveAccess(AstExpression *p)
 }
 
 
-int ByteCode::LoadVariable(int kind, AstExpression *expr, bool need_value)
+int ByteCode::LoadVariable(VariableCategory kind, AstExpression *expr,
+                           bool need_value)
 {
     expr = StripNops(expr);
     VariableSymbol *sym = (VariableSymbol *) expr -> symbol;
@@ -5962,7 +5961,7 @@ void ByteCode::StoreLocal(int varno, TypeSymbol *type)
 }
 
 
-void ByteCode::StoreVariable(int kind, AstExpression *expr)
+void ByteCode::StoreVariable(VariableCategory kind, AstExpression *expr)
 {
     VariableSymbol *sym = (VariableSymbol *) expr -> symbol;
     switch (kind)
