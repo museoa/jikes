@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
              << "+Td...d            set value of tab d...d spaces; each d is a decimal digit\n"
              << "+U                 do full dependence check including Zip and Jar files\n"
              << "+Z                 treat cautions as errors\n"
-             << "\nVersion 0.48 (24 Mar 99)"
+             << "\nVersion 0.48 (12 Apr 99)"
              << " by Philippe Charles and David Shields, IBM Research.\n";
         cerr << "Please report problems to shields@watson.ibm.com.\n" ;
     cerr << "or via browser at http://www.ibm.com/research/jikes\n";
