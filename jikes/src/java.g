@@ -463,14 +463,14 @@ void Parser::InitRuleAction()
 namespace Jikes { // Open namespace Jikes block
 #endif
 
-//****************************************************************************//
-//****************************************************************************//
-//*                                                                          *//
-//* Below, we show each rule of the Java grammar together with the semantic  *//
-//* action that is invoked when the parser performs a reduction by that rule.*//
-//*                                                                          *//
-//****************************************************************************//
-//****************************************************************************//
+//**************************************************************************//
+//**************************************************************************//
+//*                                                                        *//
+//* Below, we show each rule of the Java grammar together with the         *//
+//* semantic action that is invoked when the parser performs a reduction   *//
+//* by that rule.                                                          *//
+//**************************************************************************//
+//**************************************************************************//
 
 ./
 
@@ -3606,7 +3606,9 @@ PrimaryNoNewArray -> FieldAccess
 /.$shared_NoAction./
 
 --1.1 feature
-PrimaryNoNewArray ::= ClassType '.' 'this'
+-- Technically, only ClassType is allowed instead of Name, but that would be
+-- ambiguous with qualified names
+PrimaryNoNewArray ::= Name '.' 'this'
 \:$action:\
 /.$location
 void Parser::Act$rule_number(void)
@@ -3948,7 +3950,9 @@ void Parser::MakeSuperFieldAccess(void)
 ./
 
 --1.2 feature
-FieldAccess ::= ClassType '.' 'super' '.' 'Identifier'
+-- Technically, only ClassType is allowed instead of Name, but that would be
+-- ambiguous with qualified names
+FieldAccess ::= Name '.' 'super' '.' 'Identifier'
 \:$MakeSuperDoubleFieldAccess:\
 /.$location
 void Parser::MakeSuperDoubleFieldAccess(void)
@@ -4048,7 +4052,9 @@ void Parser::Act$rule_number(void)
 ./
 
 --1.2 feature
-MethodInvocation ::= ClassType '.' 'super' '.' 'Identifier' '(' ArgumentListopt ')'
+-- Technically, only ClassType is allowed instead of Name, but that would be
+-- ambiguous with qualified names
+MethodInvocation ::= Name '.' 'super' '.' 'Identifier' '(' ArgumentListopt ')'
 \:$action:\
 /.$location
 void Parser::Act$rule_number(void)

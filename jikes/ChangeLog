@@ -1,5 +1,13 @@
 2001-12-19  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/java.g: Fix core dump caused by patch on Dec 8 - bug 2518.
+	* src/javaact.cpp:
+	* src/javadcl.h:
+	* src/javadef.h:
+	* src/javasym.h: Regenerate.
+
+2001-12-19  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/jikes.cpp (main): Provide help message when no command-line
 	arguments are given.
 
