@@ -1,3 +1,11 @@
+2001-01-01  Pascal Davoust  <davoustp@yahoo.com>
+
+	* src/platform.h:
+	* src/m4/ac_cxx_check_set_new_handler.m4: Rework
+	detection and use of VC++ style _set_new_handler().
+	The <new.h> include will always be used when
+	compiling with VC++.
+
 2000-12-29  Andrew G. Tereschenko  <tag@ibis.odessa.ua>
 
 	* src/ast.h:

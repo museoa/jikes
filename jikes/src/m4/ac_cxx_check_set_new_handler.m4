@@ -8,22 +8,27 @@ dnl standard impl works as expected. This method will
 dnl define HAVE_VCPP_SET_NEW_HANDLER if a VC++ style
 dnl implementation is found, otherwise it does nothing.
 dnl This method also checks for the C++ standard include
-dnl <new> and the old style <new.h>.
+dnl <new> and the old style <new.h>. Note that only
+dnl <new.h> is support by VC++.
 dnl
-dnl You include file could look like this:
+dnl You include file could look something like this:
 dnl
-dnl #ifdef HAVE_NEW
-dnl # include <new>
-dnl # ifdef HAVE_NAMESPACES
-dnl   using namespace std;
-dnl # endif
+dnl #ifdef HAVE_VCPP_SET_NEW_HANDLER
+dnl # include <new.h>
 dnl #else
-dnl # ifdef HAVE_NEW_H
-dnl #  include <new.h>
+dnl # ifdef HAVE_NEW
+dnl #  include <new>
+dnl #  ifdef HAVE_NAMESPACES
+dnl     using namespace std;
+dnl #  endif
+dnl # else
+dnl #  ifdef HAVE_NEW_H
+dnl #   include <new.h>
+dnl #  endif
 dnl # endif
 dnl #endif
 dnl
-dnl Your source code should look something like this:
+dnl Your source code could look something like this:
 dnl
 dnl #ifdef HAVE_VCPP_SET_NEW_HANDLER
 dnl int OutOfMemory(size_t)
@@ -67,17 +72,7 @@ AC_CACHE_CHECK(for VC++ style set_new_handler, ac_cv_vcpp_set_new_handler,
   AC_LANG_SAVE
   AC_LANG_CPLUSPLUS
   AC_TRY_LINK([
-#ifdef HAVE_NEW
-# include <new>
-# ifdef HAVE_NAMESPACES
-    using namespace std;
-# endif
-#else
-# ifdef HAVE_NEW_H
-#  include <new.h>
-# endif
-#endif
-
+#include <new.h>
 int OutOfMemory(size_t) { return 0; }
 ], [ _set_new_handler(OutOfMemory); ],
   ac_cv_vcpp_set_new_handler=yes,

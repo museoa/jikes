@@ -104,22 +104,36 @@ Currently, we do not use this one
 # include <float.h>
 #endif
 
-/* C++ standard support */
+// C++ standard support
 #ifdef HAVE_STD
-# include <new>
 # include <iostream>
 # ifdef HAVE_NAMESPACES
    using namespace std;
 # endif
 #else
-# ifdef HAVE_NEW_H
-#  include <new.h>
-# endif
 # ifdef HAVE_IOSTREAM_H
 #  include <iostream.h>
 # endif
 #endif
 
+// VC++ pretends to support the
+// C++ standard, but it does not.
+// The set_new_handler method in
+// <new> is not implemented so
+// the _set_new_handler method
+// in <new.h> must be used.
+
+#ifdef HAVE_VCPP_SET_NEW_HANDLER
+# include <new.h>
+#else
+# ifdef HAVE_NEW
+#  include <new>
+# else
+#  ifdef HAVE_NEW_H
+#   include <new.h>
+#  endif
+# endif
+#endif
 
 
 #ifdef HAVE_BROKEN_USHRT_MAX
