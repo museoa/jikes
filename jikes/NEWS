@@ -1,4 +1,33 @@
-*** Jikes 1.19a is a CVS version.
+*** Jikes 1.20 was released ???
+
+Many new diagnostics have been added. These include detection of
+overflow in integer constant expressions, serialization-related
+checks made by Java 1.5's javac, detection of locals shadowing
+fields (often caused by an unfinished refactoring that promotes a
+local to a field) and fields in subclasses that hide fields in
+superclasses. New command-line options generalize the old -nowarn/+Z
+to also allow all warnings to be considered errors (with +Z2). The
+default on vs. off state of several warnings added in 1.19 have been
+changed, by popular demand.
+
+The set of legal characters in identifiers has grown according to
+Unicode 4.0.  Now surrogate character pairs are parsed correctly,
+according to the improvements in the JDK 1.5 java.lang.Character, so
+that something like \ud801\udc00 is now an identifier.
+
+Jikes now correctly detects an attempt to use a non-static member
+class from a static one, without proper qualification.  Since javac
+does not yet correctly enforce this, it is likely that existing code
+has the following bug:
+class Outer {
+  class NonStatic {}
+  static class Static {
+    NonStatic a; // illegal, jikes now correctly gives an error
+    Outer.NonStatic b; // legal, the proper workaround
+  }
+}
+
+As always, several bugs from the Jikes bug database have been closed.
 
 The `-target 1.5' option produces class files compatible with Sun's
 JDK 1.5 virtual machine (the biggest changes are that class literals
@@ -6,11 +35,6 @@ take much less space, and String concatenation is more efficient).
 Also, the EnclosingMethod attribute is now used to improve reflection.
 Fixed bug where compiling with classfiles produced by JDK 1.5 caused
 an assertion error when read by jikes.
-
-The set of legal characters in identifiers has grown according to
-Unicode 4.0.  Now surrogate character pairs are parsed correctly,
-according to the improvements in the JDK 1.5 java.lang.Character, so
-that something like \ud801\udc00 is now an identifier.
 
 Some beta support for JDK 1.5 features is being added.  To try it out,
 you must build jikes yourself, and use the --enable-source15 configure
@@ -34,14 +58,14 @@ is short for:
        i.hasNext(); ) {
     Object o = i.next();
   }
-
-Many new diagnostics have been added. These include detection of
-overflow in integer constant expressions, serialization-related
-checks made by Java 1.5's javac, detection of locals shadowing
-fields (often caused by an unfinished refactoring that promotes a
-local to a field) and fields in subclasses that hide fields in
-superclasses. New command-line options generalize the old -nowarn/+Z
-to also allow all warnings to be considered errors (with +Z2).
+- Generics (type parameters) parse correctly, but are not otherwise
+supported.
+- Annotations parse correctly, but are not otherwise supported.
+- Variadic methods (varargs) parse correctly, but are treated as
+though the final parameter used '[]' instead of '...'.
+- Enumerations parse correctly, but are not otherwise supported.
+- Static imports parse correctly, but are not otherwise supported.
+- Autoboxing and autoboxing are not supported.
 
 *** Jikes 1.19 was released 1 February 2004.
 

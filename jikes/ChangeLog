@@ -1,3 +1,7 @@
+2004-04-14  Eric Blake  <ebb9@byu.net>
+
+	* NEWS: My shot at 1.20 release notes.
+
 2004-04-13  Chris Abbey  <jikes@cabbey.net>
 
 	* src/symbol.ccp: revert to using strcmp and wcscmp instead of
