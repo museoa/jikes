@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -887,9 +887,9 @@ bool IEEEfloat::operator== (const IEEEfloat op) const
 #ifdef HAVE_IEEE754
     return value.float_value == op.value.float_value;
 #else
-    return IsNaN() || op.IsNaN() ? false
-                                 : IsZero() && op.IsZero() ? true
-                                                           : value.word == op.value.word;
+    return (IsNaN() || op.IsNaN() ? false
+            : IsZero() && op.IsZero() ? true
+            : value.word == op.value.word);
 #endif
 }
 
@@ -899,7 +899,7 @@ bool IEEEfloat::operator!= (const IEEEfloat op) const
 #ifdef HAVE_IEEE754
     return value.float_value != op.value.float_value;
 #else
-    return !(*this == op);
+    return ! (*this == op);
 #endif
 }
 
@@ -915,6 +915,10 @@ bool IEEEfloat::operator< (const IEEEfloat op) const
         return op.IsZero() ? false : op.IsPositive();
     if (op.IsZero())
         return IsNegative();
+    if (IsInfinite())
+        return IsPositive() ? false : ! op.IsNegativeInfinity();
+    if (op.IsInfinite())
+        return op.IsPositive() ? ! IsPositiveInfinity() : false;
     // Exploit fact that remaining IEEE floating point sort as signed ints
     return value.iword < op.value.iword;
 #endif
@@ -942,6 +946,10 @@ bool IEEEfloat::operator> (const IEEEfloat op) const
         return op.IsZero() ? false : op.IsNegative();
     if (op.IsZero())
         return IsPositive();
+    if (IsInfinite())
+        return IsPositive() ? ! op.IsPositiveInfinity() : false;
+    if (op.IsInfinite())
+        return op.IsPositive() ? false : ! IsNegativeInfinity();
     // Exploit fact that remaining IEEE floating point sort as signed ints
     return value.iword > op.value.iword;
 #endif
@@ -1142,8 +1150,8 @@ IEEEfloat IEEEfloat::operator/ (const IEEEfloat op) const
     //
 
     if (IsInfinite())
-        return op.IsInfinite() ? NaN()
-                               : sign ? NEGATIVE_INFINITY() : POSITIVE_INFINITY();
+        return (op.IsInfinite() ? NaN()
+                : sign ? NEGATIVE_INFINITY() : POSITIVE_INFINITY());
 
     if (op.IsInfinite())
         return sign ? NEGATIVE_ZERO() : POSITIVE_ZERO();
@@ -1200,7 +1208,8 @@ IEEEfloat IEEEfloat::operator% (const IEEEfloat op) const
 {
 #ifdef HAVE_IEEE754
     return IEEEfloat((op.IsZero() ? NaN().value.float_value
-                                  : (float) fmod((double) value.float_value, (double) op.value.float_value)));
+                      : (float) fmod((double) value.float_value,
+                                     (double) op.value.float_value)));
 #else // HAVE_IEEE754
     if (IsNaN() || op.IsNaN())
         return NaN(); // arithmetic on NaNs not allowed
@@ -1314,8 +1323,8 @@ IEEEdouble::IEEEdouble(const LongInt &a)
 # ifdef HAVE_64BIT_TYPES
     value.double_value = (double)(i8) a.Words();
 # else
-    value.double_value = ((double)(i4) a.HighWord() * (double) 0x40000000 * 4.0) +
-        (double) a.LowWord();
+    value.double_value = ((double)(i4) a.HighWord() * (double) 0x40000000 *
+                          4.0) + (double) a.LowWord();
 # endif // HAVE_64BIT_TYPES
 #else
     int sign = 0;
@@ -1793,7 +1802,8 @@ IEEEdouble::IEEEdouble(const char *str, bool check_invalid)
             *this += aadj1 * Ulp();
             if (Exponent() >= BIAS - FRACT_SIZE)
             {
-                if (tmp.HighWord() == POS_INF_HI - 1 && tmp.LowWord() == ZERO_LO - 1)
+                if (tmp.HighWord() == POS_INF_HI - 1 &&
+                    tmp.LowWord() == ZERO_LO - 1)
                 {
                     // overflow
                     *this = POSITIVE_INFINITY();
@@ -1914,7 +1924,9 @@ IEEEdouble IEEEdouble::Normalize(int sign, int exponent, ULongInt fraction)
             fraction >>= 1;
             exponent++;
         }
-        if (round && (sticky || (fraction.LowWord() & 1)) && exponent > -(int) BIAS)
+        if (round && (sticky || (fraction.LowWord() & 1)) &&
+            exponent > -(int) BIAS)
+        {
             //
             // Capture any overflow caused by rounding. No other checks are
             // required because if overflow occurred, the the low order bit
@@ -1925,6 +1937,7 @@ IEEEdouble IEEEdouble::Normalize(int sign, int exponent, ULongInt fraction)
                 fraction >>= 1;
                 exponent++;
             }
+        }
     }
 
     //
@@ -2032,9 +2045,9 @@ bool IEEEdouble::operator== (const IEEEdouble op) const
     // TODO: Microsoft VC++ botches this, mixing 12.0 and NaN
     return value.double_value == op.value.double_value;
 #else
-    return IsNaN() || op.IsNaN() ? false
-                                 : IsZero() && op.IsZero() ? true
-                                                           : (BaseLong) *this == (BaseLong) op;
+    return (IsNaN() || op.IsNaN() ? false
+            : IsZero() && op.IsZero() ? true
+            : (BaseLong) *this == (BaseLong) op);
 #endif
 }
 
@@ -2226,10 +2239,10 @@ IEEEdouble IEEEdouble::operator/ (const IEEEdouble op) const
 {
 #ifdef HAVE_IEEE754
     return op.IsZero() ? ((IsNaN() || IsZero()) ? NaN()
-                               : (IsPositive() ^ op.IsPositive())
-                                       ? NEGATIVE_INFINITY()
-                                       : POSITIVE_INFINITY())
-                       : IEEEdouble(value.double_value / op.value.double_value);
+                          : ((IsPositive() ^ op.IsPositive())
+                             ? NEGATIVE_INFINITY()
+                             : POSITIVE_INFINITY()))
+        : IEEEdouble(value.double_value / op.value.double_value);
 #else // HAVE_IEEE754
     if (IsNaN() || op.IsNaN())
         return NaN(); // arithmetic on NaNs not allowed
@@ -2241,8 +2254,8 @@ IEEEdouble IEEEdouble::operator/ (const IEEEdouble op) const
     //
 
     if (IsInfinite())
-        return op.IsInfinite() ? NaN()
-                               : sign ? NEGATIVE_INFINITY() : POSITIVE_INFINITY();
+        return (op.IsInfinite() ? NaN()
+                : sign ? NEGATIVE_INFINITY() : POSITIVE_INFINITY());
 
     if (op.IsInfinite())
         return sign ? NEGATIVE_ZERO() : POSITIVE_ZERO();
@@ -2299,7 +2312,7 @@ IEEEdouble IEEEdouble::operator% (const IEEEdouble op) const
 {
 #ifdef HAVE_IEEE754
     return IEEEdouble((op.IsZero() ? NaN().value.double_value
-                                   : fmod(value.double_value, op.value.double_value)));
+                       : fmod(value.double_value, op.value.double_value)));
 #else // HAVE_IEEE754
     if (IsNaN() || op.IsNaN())
         return NaN(); // arithmetic on NaNs not allowed
@@ -2362,6 +2375,10 @@ bool IEEEdouble::operator< (const IEEEdouble op) const
         return op.IsZero() ? false : op.IsPositive();
     if (op.IsZero())
         return IsNegative();
+    if (IsInfinite())
+        return IsPositive() ? false : ! op.IsNegativeInfinity();
+    if (op.IsInfinite())
+        return op.IsPositive() ? ! IsPositiveInfinity() : false;
     // Exploit fact that remaining IEEE floating point sort as signed ints
     u4 a = HighWord(), b = op.HighWord();
     return (a < b) || ((a == b) && LowWord() < op.LowWord());
@@ -2390,6 +2407,10 @@ bool IEEEdouble::operator> (const IEEEdouble op) const
         return op.IsZero() ? false : op.IsNegative();
     if (op.IsZero())
         return IsPositive();
+    if (IsInfinite())
+        return IsPositive() ? ! op.IsPositiveInfinity() : false;
+    if (op.IsInfinite())
+        return op.IsPositive() ? false : ! IsNegativeInfinity();
     // Exploit fact that remaining IEEE floating point sort as signed ints
     u4 a = HighWord(), b = op.HighWord();
     return (a > b) || ((a == b) && LowWord() > op.LowWord());
