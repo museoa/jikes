@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
         "+u                 unparse AST; produces Java code for the AST\n"
         "+ud                unparse AST, with extra debugging information\n"
 #endif
-        "\nVersion 1.10 (3 Nov 99)\n"
+        "\nVersion 1.11 (4 Jan 2000)\n"
         "Originally written by Philippe Charles and David Shields \n"
         "of IBM Research, Jikes is now maintained and refined by the\n"
         "Jikes Project at http://ibm.com/developerworks/opensource.\n"

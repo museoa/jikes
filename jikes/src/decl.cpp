@@ -1172,7 +1172,16 @@ void Semantic::ProcessTypeHeaders(AstClassDeclaration *class_declaration)
                           this_type -> super,
                           (class_declaration -> super_opt ? class_declaration -> super_opt -> LeftToken()
                                                           : class_declaration -> identifier_token));
-        }
+             //
+             // Also, check whether or not the super type of this outermost type is accessible.
+             //
+             if (class_declaration -> super_opt)
+             {
+                 state_stack.Push(this_type -> semantic_environment); // we need an environment for the type check.
+                 TypeAccessCheck(class_declaration -> super_opt, this_type -> super);
+                 state_stack.Pop();
+             }
+       }
 
         for (int i = 0; i < class_declaration -> NumInterfaces(); i++)
         {
