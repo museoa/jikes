@@ -93,6 +93,13 @@ $MakeCompilationUnit
 #endif
 ./
 
+$MakePackageDeclaration
+/.
+#ifndef HEADERS
+    rule_action[$rule_number] = &Parser::MakePackageDeclaration;
+#endif
+./
+
 $MakeImportDeclaration
 /.
 #ifndef HEADERS
@@ -121,10 +128,24 @@ $MakeArrayInitializer
 #endif
 ./
 
+$MakeClassDeclaration
+/.
+#ifndef HEADERS
+    rule_action[$rule_number] = &Parser::MakeClassDeclaration;
+#endif
+./
+
 $MakeClassBody
 /.
 #ifndef HEADERS
     rule_action[$rule_number] = &Parser::MakeClassBody;
+#endif
+./
+
+$MakeFieldDeclaration
+/.
+#ifndef HEADERS
+    rule_action[$rule_number] = &Parser::MakeFieldDeclaration;
 #endif
 ./
 
@@ -156,6 +177,13 @@ $MakeFormalParameter
 #endif
 ./
 
+$MakeInitializerDeclaration
+/.
+#ifndef HEADERS
+    rule_action[$rule_number] = &Parser::MakeInitializerDeclaration;
+#endif
+./
+
 $MakeConstructorDeclaration
 /.
 #ifndef HEADERS
@@ -167,6 +195,41 @@ $MakeQualifiedSuper
 /.
 #ifndef HEADERS
     rule_action[$rule_number] = &Parser::MakeQualifiedSuper;
+#endif
+./
+
+$MakeEnumDeclaration
+/.
+#ifndef HEADERS
+    rule_action[$rule_number] = &Parser::MakeEnumDeclaration;
+#endif
+./
+
+$MakeEnumBody
+/.
+#ifndef HEADERS
+    rule_action[$rule_number] = &Parser::MakeEnumBody;
+#endif
+./
+
+$MakeInterfaceDeclaration
+/.
+#ifndef HEADERS
+    rule_action[$rule_number] = &Parser::MakeInterfaceDeclaration;
+#endif
+./
+
+$MakeAnnotationTypeDeclaration
+/.
+#ifndef HEADERS
+    rule_action[$rule_number] = &Parser::MakeAnnotationTypeDeclaration;
+#endif
+./
+
+$MakeAnnotationTypeMemberDeclaration
+/.
+#ifndef HEADERS
+    rule_action[$rule_number] = &Parser::MakeAnnotationTypeMemberDeclaration;
 #endif
 ./
 
@@ -659,7 +722,6 @@ void Parser::InitRuleAction()
     AstName* MakeSimpleName(int tokennum);
     AstModifiers* MakeModifiers();
     AstTypeParameters* MakeTypeParameters(int tokennum);
-    AstArguments* MakeArguments(int tokennum);
     AstTypeArguments* MakeExplicitTypeArguments(int tokennum);
     AstBlock* MakeBlock(int tokennum);
     AstStatement* MakeSwitchBlockStatement(AstListNode* labels,
@@ -676,17 +738,26 @@ void Parser::InitRuleAction()
     void MakeTypeArguments();
     void MakeArrayType();
     void MakeCompilationUnit();
+    void MakePackageDeclaration();
     void MakeImportDeclaration();
     void MakeModifier();
     void MakeAnnotation();
     void MakeArrayInitializer();
+    void MakeClassDeclaration();
     void MakeClassBody();
     void MakeMethodDeclaration();
+    void MakeFieldDeclaration();
     void MakeMethodHeader();
     void MakeMethodDeclarator();
     void MakeFormalParameter();
+    void MakeInitializerDeclaration();
     void MakeConstructorDeclaration();
     void MakeQualifiedSuper();
+    void MakeEnumDeclaration();
+    void MakeEnumBody();
+    void MakeInterfaceDeclaration();
+    void MakeAnnotationTypeDeclaration();
+    void MakeAnnotationTypeMemberDeclaration();
     void MakeLocalVariable();
     void MakeLabeledStatement();
     void MakeExpressionStatement();
@@ -1288,6 +1359,21 @@ void Parser::AddList3()
 }
 ./
 
+ImportDeclarationsopt ::= $empty
+\:$NullAction:\
+/.$location
+//
+// Given a rule of the form A ::= x1 x2 ... xn
+//
+// Construct a NULL Ast for A.
+//
+void Parser::NullAction() { Sym(1) = NULL; }
+./
+
+ImportDeclarationsopt ::= ImportDeclarations
+\:$NoAction:\
+/.$shared_NoAction./
+
 TypeDeclarations ::= TypeDeclaration
 \:$StartList:\
 /.$shared_StartList./
@@ -1296,16 +1382,22 @@ TypeDeclarations ::= TypeDeclarations TypeDeclaration
 \:$AddList2:\
 /.$shared_AddList2./
 
+TypeDeclarationsopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+TypeDeclarationsopt ::= TypeDeclarations
+\:$NoAction:\
+/.$shared_NoAction./
+
 --
--- Annotations were added in JSR 175. We must use Modifiers with a semantic
--- check that no modifier keywords appeared, because of the ambiguity between
--- '@A @B' starting '@A @B package C;' or '@A @B class C{}'.
+-- The use of Marker allows us to share code.
 --
 --PackageDeclaration ::= 'package' Name PackageHeaderMarker ';'
-PackageDeclaration ::= Modifiersopt 'package' Name PackageHeaderMarker ';'
-\:$action:\
+PackageDeclaration ::= Marker 'package' Name PackageHeaderMarker ';'
+\:$MakePackageDeclaration:\
 /.$location
-void Parser::Act$rule_number()
+void Parser::MakePackageDeclaration()
 {
     AstPackageDeclaration* p = ast_pool -> NewPackageDeclaration();
     p -> modifiers_opt = MakeModifiers();
@@ -1320,32 +1412,40 @@ void Parser::Act$rule_number()
 //
 AstModifiers* Parser::MakeModifiers()
 {
-    AstModifiers* p = NULL;
-    if (Sym(1))
+    if (! Sym(1))
+        return NULL;
+    AstModifiers* p = ast_pool -> NewModifiers();
+    AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
+    p -> AllocateModifiers(tail -> index + 1);
+    AstListNode* root = tail;
+    do
     {
-        p = ast_pool -> NewModifiers();
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(1));
-        p -> AllocateModifiers(tail -> index + 1);
-        AstListNode* root = tail;
-        do
+        root = root -> next;
+        if (root -> element -> ModifierKeywordCast())
         {
-            root = root -> next;
-            if (root -> element -> ModifierKeywordCast())
-            {
-                AstModifierKeyword* mod =
-                    (AstModifierKeyword*) root -> element;
-                p -> AddModifier(mod);
-                if (lex_stream -> Kind(mod -> modifier_token) == TK_static)
-                    p -> static_token_opt = mod -> modifier_token;
-            }
-            else p -> AddModifier(DYNAMIC_CAST<AstAnnotation*>
-                                  (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
+            AstModifierKeyword* mod = (AstModifierKeyword*) root -> element;
+            p -> AddModifier(mod);
+            if (lex_stream -> Kind(mod -> modifier_token) == TK_static)
+                p -> static_token_opt = mod -> modifier_token;
+        }
+        else p -> AddModifier(DYNAMIC_CAST<AstAnnotation*> (root -> element));
+    } while (root != tail);
+    FreeCircularList(tail);
     return p;
 }
 ./
+
+--
+-- Annotations were added in JSR 175. We must use Modifiers with a semantic
+-- check that no modifier keywords appeared, because of the ambiguity between
+-- '@A @B' starting '@A @B package C;' or '@A @B class C{}'.
+--
+PackageDeclaration ::= Modifiers 'package' Name PackageHeaderMarker ';'
+\:$MakePackageDeclaration:\
+/.$shared_function
+//
+// void MakePackageDeclaration();
+//./
 
 ImportDeclaration ::= SingleTypeImportDeclaration
 \:$NoAction:\
@@ -1431,7 +1531,21 @@ TypeDeclaration ::= ClassDeclaration
 \:$NoAction:\
 /.$shared_NoAction./
 
+--
+-- Enums were added in JSR 201.
+--
+TypeDeclaration ::= EnumDeclaration
+\:$NoAction:\
+/.$shared_NoAction./
+
 TypeDeclaration ::= InterfaceDeclaration
+\:$NoAction:\
+/.$shared_NoAction./
+
+--
+-- Annotations were added in JSR 175.
+--
+TypeDeclaration ::= AnnotationTypeDeclaration
 \:$NoAction:\
 /.$shared_NoAction./
 
@@ -1463,6 +1577,14 @@ Modifiers ::= Modifier
 Modifiers ::= Modifiers Modifier
 \:$AddList2:\
 /.$shared_AddList2./
+
+Modifiersopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+Modifiersopt ::= Modifiers
+\:$NoAction:\
+/.$shared_NoAction./
 
 Modifier ::= 'public'
 \:$MakeModifier:\
@@ -1618,6 +1740,20 @@ MemberValuePairs ::= MemberValuePairs ',' MemberValuePair
 /.$shared_AddList3./
 
 --
+-- Annotations were added in JSR 175.
+--
+MemberValuePairsopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+--
+-- Annotations were added in JSR 175.
+--
+MemberValuePairsopt ::= MemberValuePairs
+\:$NoAction:\
+/.$shared_NoAction./
+
+--
 -- Annotations were added in JSR 175. We got rid of SimpleName.
 --
 --MemberValuePair ::= SimpleName '=' MemberValue
@@ -1655,9 +1791,8 @@ MemberValue ::= MemberValueArrayInitializer
 /.$shared_NoAction./
 
 --
--- Annotations were added in JSR 175.
--- The rule was expanded inline below to make the grammar lalr(1). The use of
--- Marker allows us to share code.
+-- Annotations were added in JSR 175. The rule was expanded inline below to
+-- make the grammar LALR(1). The use of Marker allows us to share code.
 --
 --MemberValueArrayInitializer ::= '{' MemberValuesopt ,opt '}'
 MemberValueArrayInitializer ::= '{' Marker ,opt '}'
@@ -1745,15 +1880,16 @@ void Parser::Act$rule_number()
 --18.8.1 Productions from 8.1: Class Declarations
 
 --
--- Parameterized types were added in JSR 14.
+-- Parameterized types were added in JSR 14.  We must inline expand
+-- Modifiersopt to avoid ambiguity. The use of Marker allows us to share code.
 --
 --ClassDeclaration ::= ClassModifiersopt 'class' 'Identifier' Superopt
 --                     Interfacesopt ClassBody
-ClassDeclaration ::= Modifiersopt 'class' 'Identifier' TypeParametersopt
+ClassDeclaration ::= Marker 'class' 'Identifier' TypeParametersopt
                      Superopt Interfacesopt ClassBody
-\:$action:\
+\:$MakeClassDeclaration:\
 /.$location
-void Parser::Act$rule_number()
+void Parser::MakeClassDeclaration()
 {
     AstClassDeclaration* p = ast_pool -> NewClassDeclaration();
     p -> modifiers_opt = MakeModifiers();
@@ -1802,6 +1938,18 @@ AstTypeParameters* Parser::MakeTypeParameters(int tokennum)
 ./
 
 --
+-- Parameterized types were added in JSR 14.  We must inline expand
+-- Modifiersopt to avoid ambiguity.
+--
+ClassDeclaration ::= Modifiers 'class' 'Identifier' TypeParametersopt
+                     Superopt Interfacesopt ClassBody
+\:$MakeClassDeclaration:\
+/.$shared_function
+//
+// void MakeClassDeclaration();
+//./
+
+--
 -- Simplify.
 --
 --Super ::= 'extends' ClassType
@@ -1811,6 +1959,14 @@ Super ::= 'extends' ClassOrInterfaceType
 //
 // void SetSym1ToSym2();
 //./
+
+Superopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+Superopt ::= Super
+\:$NoAction:\
+/.$shared_NoAction./
 
 --
 -- Simplify.
@@ -1822,6 +1978,14 @@ Interfaces ::= 'implements' TypeList
 //
 // void SetSym1ToSym2();
 //./
+
+Interfacesopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+Interfacesopt ::= Interfaces
+\:$NoAction:\
+/.$shared_NoAction./
 
 --InterfaceTypeList ::= InterfaceType
 --ClassTypeList ::= ClassType
@@ -1847,15 +2011,17 @@ void Parser::MakeClassBody()
     p -> left_brace_token = Token(1);
     if (Sym(2))
     {
-        int num_instance_variables = 0,
-            num_class_variables = 0,
-            num_methods = 0,
-            num_constructors = 0,
-            num_static_initializers = 0,
-            num_instance_initializers = 0,
-            num_inner_classes = 0,
-            num_inner_interfaces = 0,
-            num_empty_declarations = 0;
+        unsigned num_instance_variables = 0;
+        unsigned num_class_variables = 0;
+        unsigned num_methods = 0;
+        unsigned num_constructors = 0;
+        unsigned num_static_initializers = 0;
+        unsigned num_instance_initializers = 0;
+        unsigned num_inner_classes = 0;
+        unsigned num_inner_enums = 0;
+        unsigned num_inner_interfaces = 0;
+        unsigned num_inner_annotations = 0;
+        unsigned num_empty_declarations = 0;
 
         AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(2));
         p -> AllocateClassBodyDeclarations(tail -> index + 1);
@@ -1865,7 +2031,6 @@ void Parser::MakeClassBody()
             root = root -> next;
             AstDeclared* declaration =
                 DYNAMIC_CAST<AstDeclared*> (root -> element);
-            p -> AddClassBodyDeclaration(declaration);
             AstFieldDeclaration* field_declaration =
                 declaration -> FieldDeclarationCast();
             AstInitializerDeclaration* initializer =
@@ -1900,8 +2065,12 @@ void Parser::MakeClassBody()
             }
             else if (declaration -> ClassDeclarationCast())
                 num_inner_classes++;
+            else if (declaration -> EnumDeclarationCast())
+                num_inner_enums++;
             else if (declaration -> InterfaceDeclarationCast())
                 num_inner_interfaces++;
+            else if (declaration -> AnnotationDeclarationCast())
+                num_inner_annotations++;
             else num_empty_declarations++;
         } while (root != tail);
 
@@ -1912,53 +2081,17 @@ void Parser::MakeClassBody()
         p -> AllocateStaticInitializers(num_static_initializers);
         p -> AllocateInstanceInitializers(num_instance_initializers);
         p -> AllocateNestedClasses(num_inner_classes);
+        p -> AllocateNestedEnums(num_inner_enums);
         p -> AllocateNestedInterfaces(num_inner_interfaces);
+        p -> AllocateNestedAnnotations(num_inner_annotations);
         p -> AllocateEmptyDeclarations(num_empty_declarations);
 
         root = tail;
         do
         {
             root = root -> next;
-            AstDeclared* declaration =
-                DYNAMIC_CAST<AstDeclared*> (root -> element);
-            AstFieldDeclaration* field_declaration =
-                declaration -> FieldDeclarationCast();
-            AstMethodDeclaration* method_declaration =
-                declaration -> MethodDeclarationCast();
-            AstConstructorDeclaration* constructor_declaration =
-                declaration -> ConstructorDeclarationCast();
-            AstInitializerDeclaration* initializer =
-                declaration -> InitializerDeclarationCast();
-            AstClassDeclaration* class_declaration =
-                declaration -> ClassDeclarationCast();
-            AstInterfaceDeclaration* interface_declaration =
-                declaration -> InterfaceDeclarationCast();
-
-            if (field_declaration)
-            {
-                if (field_declaration -> StaticFieldCast())
-                    p -> AddClassVariable(field_declaration);
-                else p -> AddInstanceVariable(field_declaration);
-            }
-            else if (method_declaration)
-                p -> AddMethod(method_declaration);
-            else if (constructor_declaration)
-                p -> AddConstructor(constructor_declaration);
-            else if (initializer)
-            {
-                if (initializer -> StaticInitializerCast())
-                     p -> AddStaticInitializer(initializer);
-                else p -> AddInstanceInitializer(initializer);
-            }
-            else if (class_declaration)
-                p -> AddNestedClass(class_declaration);
-            else if (interface_declaration)
-                p -> AddNestedInterface(interface_declaration);
-            else
-            {
-                p -> AddEmptyDeclaration(DYNAMIC_CAST<AstEmptyDeclaration*>
+            p -> AddClassBodyDeclaration(DYNAMIC_CAST<AstDeclared*>
                                          (root -> element));
-            }
         } while (root != tail);
         FreeCircularList(tail);
     }
@@ -1969,6 +2102,14 @@ void Parser::MakeClassBody()
 }
 ./
 
+ClassBodyopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+ClassBodyopt ::= ClassBody
+\:$NoAction:\
+/.$shared_NoAction./
+
 ClassBodyDeclarations ::= ClassBodyDeclaration
 \:$StartList:\
 /.$shared_StartList./
@@ -1977,15 +2118,18 @@ ClassBodyDeclarations ::= ClassBodyDeclarations ClassBodyDeclaration
 \:$AddList2:\
 /.$shared_AddList2./
 
---
--- For nicer semantic error messages, we treat class and interface
--- members identically, giving errors if an interface forgets a field
--- initializer or adds a method body.
---
---ClassBodyDeclaration ::= ClassMemberDeclaration
-ClassBodyDeclaration ::= MemberDeclaration
+ClassBodyDeclarationsopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+ClassBodyDeclarationsopt ::= ClassBodyDeclarations
 \:$NoAction:\
 /.$shared_NoAction./
+
+--
+-- Simplify. See below.
+--
+--ClassBodyDeclaration ::= ClassMemberDeclaration
 
 ClassBodyDeclaration ::= ConstructorDeclaration
 \:$NoAction:\
@@ -2002,37 +2146,44 @@ ClassBodyDeclaration ::= InitializerDeclaration
 \:$NoAction:\
 /.$shared_NoAction./
 
+--
+-- Simplify.
+--
 --ClassMemberDeclaration ::= FieldDeclaration
-MemberDeclaration ::= FieldDeclaration
+ClassBodyDeclaration ::= FieldDeclaration
 \:$NoAction:\
 /.$shared_NoAction./
 
+--
+-- Simplify.
+--
 --ClassMemberDeclaration ::= MethodDeclaration
-MemberDeclaration ::= MethodDeclaration
+ClassBodyDeclaration ::= MethodDeclaration
 \:$NoAction:\
 /.$shared_NoAction./
 
 --1.1 feature
 --
--- Consolidate.
+-- Consolidate and simplify.
 --ClassMemberDeclaration ::= ClassDeclaration
 --ClassMemberDeclaration ::= InterfaceDeclaration
 --ClassMemberDeclaration ::= ';'
 --
-MemberDeclaration ::= TypeDeclaration
+ClassBodyDeclaration ::= TypeDeclaration
 \:$NoAction:\
 /.$shared_NoAction./
 
 --18.8.2 Productions from 8.3: Field Declarations
 
 --
--- The use of Marker allows us to share code.
+-- The use of Marker allows us to share code.  We must inline expand
+-- Modifiersopt to avoid ambiguity.
 --
 --FieldDeclaration ::= FieldModifiersopt Type VariableDeclarators ';'
-FieldDeclaration ::= Modifiersopt Marker Type VariableDeclarators ';'
-\:$action:\
+FieldDeclaration ::= Marker Marker Type VariableDeclarators ';'
+\:$MakeFieldDeclaration:\
 /.$location
-void Parser::Act$rule_number()
+void Parser::MakeFieldDeclaration()
 {
     AstFieldDeclaration* p = ast_pool -> NewFieldDeclaration();
     p -> modifiers_opt = MakeModifiers();
@@ -2051,6 +2202,13 @@ void Parser::Act$rule_number()
     Sym(1) = p;
 }
 ./
+
+FieldDeclaration ::= Modifiers Marker Type VariableDeclarators ';'
+\:$MakeFieldDeclaration:\
+/.$shared_function
+//
+// void MakeFieldDeclaration();
+//./
 
 VariableDeclarators ::= VariableDeclarator
 \:$StartList:\
@@ -2122,8 +2280,10 @@ MethodDeclaration ::= MethodHeader MethodHeaderMarker MethodBody
 /.$location
 void Parser::MakeMethodDeclaration()
 {
-    DYNAMIC_CAST<AstMethodDeclaration*> (Sym(1)) -> method_body_opt =
-        DYNAMIC_CAST<AstMethodBody*> (Sym(3));
+    AstMethodDeclaration* p = DYNAMIC_CAST<AstMethodDeclaration*> (Sym(1));
+    if (Sym(3))
+        p -> method_body_opt = DYNAMIC_CAST<AstMethodBody*> (Sym(3));
+    else p -> semicolon_token_opt = Token(4);
 }
 ./
 
@@ -2138,10 +2298,11 @@ MethodDeclaration ::= MethodHeader MethodHeaderMarker Marker ';'
 //./
 
 --
--- The use of Marker allows us to share code.
+-- The use of Marker allows us to share code.  We must inline expand
+-- Modifiersopt to avoid ambiguity.
 --
 --MethodHeader ::= MethodModifiersopt Type MethodDeclarator Throwsopt
-MethodHeader ::= Modifiersopt Marker Type MethodDeclarator Throwsopt
+MethodHeader ::= Marker Marker Type MethodDeclarator Throwsopt
 \:$MakeMethodHeader:\
 /.$location
 void Parser::MakeMethodHeader()
@@ -2168,10 +2329,22 @@ void Parser::MakeMethodHeader()
 ./
 
 --
--- Parameterized types were added in JSR 14.
+-- The use of Marker allows us to share code.  We must inline expand
+-- Modifiersopt to avoid ambiguity.
+--
+MethodHeader ::= Modifiers Marker Type MethodDeclarator Throwsopt
+\:$MakeMethodHeader:\
+/.$shared_function
+//
+// void MakeMethodHeader();
+//./
+
+--
+-- Parameterized types were added in JSR 14.  We must inline expand
+-- Modifiersopt to avoid ambiguity. The use of Marker allows us to share code.
 --
 --MethodHeader ::= MethodModifiersopt Type MethodDeclarator Throwsopt
-MethodHeader ::= Modifiersopt TypeParameters Type MethodDeclarator Throwsopt
+MethodHeader ::= Marker TypeParameters Type MethodDeclarator Throwsopt
 \:$MakeMethodHeader:\
 /.$shared_function
 //
@@ -2179,10 +2352,22 @@ MethodHeader ::= Modifiersopt TypeParameters Type MethodDeclarator Throwsopt
 //./
 
 --
--- The use of Marker allows us to share code.
+-- Parameterized types were added in JSR 14.  We must inline expand
+-- Modifiersopt to avoid ambiguity.
+--
+MethodHeader ::= Modifiers TypeParameters Type MethodDeclarator Throwsopt
+\:$MakeMethodHeader:\
+/.$shared_function
+//
+// void MakeMethodHeader();
+//./
+
+--
+-- The use of Marker allows us to share code.  We must inline expand
+-- Modifiersopt to avoid ambiguity.
 --
 --MethodHeader ::= MethodModifiersopt 'void' MethodDeclarator Throwsopt
-MethodHeader ::= Modifiersopt Marker VoidType MethodDeclarator Throwsopt
+MethodHeader ::= Marker Marker VoidType MethodDeclarator Throwsopt
 \:$MakeMethodHeader:\
 /.$shared_function
 //
@@ -2190,11 +2375,33 @@ MethodHeader ::= Modifiersopt Marker VoidType MethodDeclarator Throwsopt
 //./
 
 --
--- Parameterized types were added in JSR 14.
+-- The use of Marker allows us to share code.  We must inline expand
+-- Modifiersopt to avoid ambiguity.
+--
+MethodHeader ::= Modifiers Marker VoidType MethodDeclarator Throwsopt
+\:$MakeMethodHeader:\
+/.$shared_function
+//
+// void MakeMethodHeader();
+//./
+
+--
+-- Parameterized types were added in JSR 14.  We must inline expand
+-- Modifiersopt to avoid ambiguity. The use of Marker allows us to share code.
 --
 --MethodHeader ::= Modifiersopt 'void' MethodDeclarator Throwsopt
-MethodHeader ::= Modifiersopt TypeParameters VoidType MethodDeclarator
-                 Throwsopt
+MethodHeader ::= Marker TypeParameters VoidType MethodDeclarator Throwsopt
+\:$MakeMethodHeader:\
+/.$shared_function
+//
+// void MakeMethodHeader();
+//./
+
+--
+-- Parameterized types were added in JSR 14.  We must inline expand
+-- Modifiersopt to avoid ambiguity.
+--
+MethodHeader ::= Modifiers TypeParameters VoidType MethodDeclarator Throwsopt
 \:$MakeMethodHeader:\
 /.$shared_function
 //
@@ -2243,6 +2450,14 @@ FormalParameterList ::= LastFormalParameter
 FormalParameterList ::= FormalParameters ',' LastFormalParameter
 \:$AddList3:\
 /.$shared_AddList3./
+
+FormalParameterListopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+FormalParameterListopt ::= FormalParameterList
+\:$NoAction:\
+/.$shared_NoAction./
 
 --
 -- Varargs were added in JSR 201.
@@ -2343,6 +2558,14 @@ Throws ::= 'throws' TypeList
 // void SetSym1ToSym2();
 //./
 
+Throwsopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+Throwsopt ::= Throws
+\:$NoAction:\
+/.$shared_NoAction./
+
 --
 -- Notice that we filter out an initial explicit constructor invocation,
 -- since we have modified Statement to include this() and super(). Other
@@ -2392,12 +2615,13 @@ void Parser::Act$rule_number()
 -- For nicer error messages, we accept arbitrary modifiers. Thus this rule can
 -- parse static and instance initializers. The use of MethodHeaderMarker
 -- allows the 2-pass parsing. See comments of MethodDeclaration.
+-- The use of Marker allows us to share code.
 --
 --StaticInitializer ::= 'static' MethodBody
-InitializerDeclaration ::= Modifiersopt MethodHeaderMarker MethodBody
-\:$action:\
+InitializerDeclaration ::= Marker MethodHeaderMarker MethodBody
+\:$MakeInitializerDeclaration:\
 /.$location
-void Parser::Act$rule_number()
+void Parser::MakeInitializerDeclaration()
 {
     AstInitializerDeclaration* p = ast_pool -> NewInitializerDeclaration();
     p -> modifiers_opt = MakeModifiers();
@@ -2406,15 +2630,26 @@ void Parser::Act$rule_number()
 }
 ./
 
+-- For nicer error messages, we accept arbitrary modifiers. Thus this rule can
+-- parse static and instance initializers. The use of MethodHeaderMarker
+-- allows the 2-pass parsing. See comments of MethodDeclaration.
+--
+InitializerDeclaration ::= Modifiers MethodHeaderMarker MethodBody
+\:$MakeInitializerDeclaration:\
+/.$shared_function
+//
+// void MakeInitializerDeclaration();
+//./
+
 --18.8.5 Productions from 8.6: Constructor Declarations
 --
 -- The use of Marker allows us to share code. MethodHeaderMarker allows us to
 -- do 2-pass parsing, and MethodBody was rewritten to handle constructor
--- bodies. See comments above.
+-- bodies. We must inline expand Modifiersopt to avoid ambiguity.
 --
 --ConstructorDeclaration ::= ConstructorModifiersopt ConstructorDeclarator
 --                           Throwsopt ConstructorBody
-ConstructorDeclaration ::= Modifiersopt Marker ConstructorDeclarator Throwsopt
+ConstructorDeclaration ::= Marker Marker ConstructorDeclarator Throwsopt
                            MethodHeaderMarker MethodBody
 \:$MakeConstructorDeclaration:\
 /.$location
@@ -2442,11 +2677,37 @@ void Parser::MakeConstructorDeclaration()
 ./
 
 --
--- Parameterized types were added in JSR 14.
+-- The use of Marker allows us to share code. MethodHeaderMarker allows us to
+-- do 2-pass parsing, and MethodBody was rewritten to handle constructor
+-- bodies. We must inline expand Modifiersopt to avoid ambiguity.
+--
+ConstructorDeclaration ::= Modifiers Marker ConstructorDeclarator Throwsopt
+                           MethodHeaderMarker MethodBody
+\:$MakeConstructorDeclaration:\
+/.$shared_function
+//
+// void MakeConstructorDeclaration();
+//./
+
+--
+-- Parameterized types were added in JSR 14.  We must inline expand
+-- Modifiersopt to avoid ambiguity. The use of Marker allows us to share code.
 --
 --ConstructorDeclaration ::= ConstructorModifiersopt ConstructorDeclarator
 --                           Throwsopt ConstructorBody
-ConstructorDeclaration ::= Modifiersopt TypeParameters ConstructorDeclarator
+ConstructorDeclaration ::= Marker TypeParameters ConstructorDeclarator
+                           Throwsopt MethodHeaderMarker MethodBody
+\:$MakeConstructorDeclaration:\
+/.$shared_function
+//
+// void MakeConstructorDeclaration();
+//./
+
+--
+-- Parameterized types were added in JSR 14.  We must inline expand
+-- Modifiersopt to avoid ambiguity.
+--
+ConstructorDeclaration ::= Modifiers TypeParameters ConstructorDeclarator
                            Throwsopt MethodHeaderMarker MethodBody
 \:$MakeConstructorDeclaration:\
 /.$shared_function
@@ -2475,46 +2736,27 @@ ConstructorDeclarator ::= 'Identifier' '(' FormalParameterListopt ')' Marker
 --                    BlockStatementsopt '}'
 --
 
-ExplicitConstructorInvocation ::= 'this' '(' ArgumentListopt ')' ';'
+--
+-- Simplify.
+--
+--ExplicitConstructorInvocation ::= 'this' '(' ArgumentListopt ')' ';'
+ExplicitConstructorInvocation ::= 'this' Arguments ';'
 \:$action:\
 /.$location
 void Parser::Act$rule_number()
 {
     AstThisCall* p = ast_pool -> NewThisCall();
     p -> this_token = Token(1);
-    p -> arguments = MakeArguments(2);
-    p -> semicolon_token = Token(5);
+    p -> arguments = DYNAMIC_CAST<AstArguments*> (Sym(2));
+    p -> semicolon_token = Token(3);
     Sym(1) = p;
-}
-
-//
-// Parses the optional arguments between '(' and ')' at tokennum.
-//
-AstArguments* Parser::MakeArguments(int tokennum)
-{
-    AstArguments* p = ast_pool -> NewArguments(Token(tokennum),
-                                               Token(tokennum + 2));
-    if (Sym(tokennum + 1))
-    {
-        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(tokennum + 1));
-        p -> AllocateArguments(tail -> index + 1);
-        AstListNode* root = tail;
-        do
-        {
-            root = root -> next;
-            p -> AddArgument(DYNAMIC_CAST<AstExpression*> (root -> element));
-        } while (root != tail);
-        FreeCircularList(tail);
-    }
-    return p;
 }
 ./
 
 --
 -- Parameterized types were added in JSR 14.
 --
-ExplicitConstructorInvocation ::= TypeArguments 'this' '(' ArgumentListopt ')'
-                                  ';'
+ExplicitConstructorInvocation ::= TypeArguments 'this' Arguments ';'
 \:$action:\
 /.$location
 void Parser::Act$rule_number()
@@ -2522,8 +2764,8 @@ void Parser::Act$rule_number()
     AstThisCall* p = ast_pool -> NewThisCall();
     p -> type_arguments_opt = MakeExplicitTypeArguments(1);
     p -> this_token = Token(2);
-    p -> arguments = MakeArguments(3);
-    p -> semicolon_token = Token(6);
+    p -> arguments = DYNAMIC_CAST<AstArguments*> (Sym(3));
+    p -> semicolon_token = Token(4);
     Sym(1) = p;
 }
 
@@ -2552,15 +2794,19 @@ AstTypeArguments* Parser::MakeExplicitTypeArguments(int tokennum)
 }
 ./
 
-ExplicitConstructorInvocation ::= 'super' '(' ArgumentListopt ')' ';'
+--
+-- Simplify.
+--
+--ExplicitConstructorInvocation ::= 'super' '(' ArgumentListopt ')' ';'
+ExplicitConstructorInvocation ::= 'super' Arguments ';'
 \:$action:\
 /.$location
 void Parser::Act$rule_number()
 {
     AstSuperCall* p = ast_pool -> NewSuperCall();
     p -> super_token = Token(1);
-    p -> arguments = MakeArguments(2);
-    p -> semicolon_token = Token(5);
+    p -> arguments = DYNAMIC_CAST<AstArguments*> (Sym(2));
+    p -> semicolon_token = Token(3);
     Sym(1) = p;
 }
 ./
@@ -2568,8 +2814,7 @@ void Parser::Act$rule_number()
 --
 -- Parameterized types were added in JSR 14.
 --
-ExplicitConstructorInvocation ::= TypeArguments 'super' '(' ArgumentListopt ')'
-                                  ';'
+ExplicitConstructorInvocation ::= TypeArguments 'super' Arguments ';'
 \:$action:\
 /.$location
 void Parser::Act$rule_number()
@@ -2577,8 +2822,8 @@ void Parser::Act$rule_number()
     AstSuperCall* p = ast_pool -> NewSuperCall();
     p -> type_arguments_opt = MakeExplicitTypeArguments(1);
     p -> super_token = Token(2);
-    p -> arguments = MakeArguments(3);
-    p -> semicolon_token = Token(6);
+    p -> arguments = DYNAMIC_CAST<AstArguments*> (Sym(3));
+    p -> semicolon_token = Token(4);
     Sym(1) = p;
 }
 ./
@@ -2589,8 +2834,8 @@ void Parser::Act$rule_number()
 --
 --ExplicitConstructorInvocation ::= Primary '.' 'super' '(' ArgumentListopt ')'
 --                                  ';'
-ExplicitConstructorInvocation ::= Primary '.' TypeArgumentsopt 'super' '('
-                                  ArgumentListopt ')' ';'
+ExplicitConstructorInvocation ::= Primary '.' TypeArgumentsopt 'super'
+                                  Arguments ';'
 \:$MakeQualifiedSuper:\
 /.$location
 void Parser::MakeQualifiedSuper()
@@ -2599,8 +2844,8 @@ void Parser::MakeQualifiedSuper()
     p -> base_opt = DYNAMIC_CAST<AstExpression*> (Sym(1));
     p -> type_arguments_opt = MakeExplicitTypeArguments(3);
     p -> super_token = Token(4);
-    p -> arguments = MakeArguments(5);
-    p -> semicolon_token = Token(8);
+    p -> arguments = DYNAMIC_CAST<AstArguments*> (Sym(5));
+    p -> semicolon_token = Token(6);
     Sym(1) = p;
 }
 ./
@@ -2611,8 +2856,7 @@ void Parser::MakeQualifiedSuper()
 --
 --ExplicitConstructorInvocation ::= Name '.' 'super' '(' ArgumentListopt ')'
 --                                  ';'
-ExplicitConstructorInvocation ::= Name '.' Marker 'super' '('
-                                  ArgumentListopt ')' ';'
+ExplicitConstructorInvocation ::= Name '.' Marker 'super' Arguments ';'
 \:$MakeQualifiedSuper:\
 /.$shared_function
 //
@@ -2625,26 +2869,222 @@ ExplicitConstructorInvocation ::= Name '.' Marker 'super' '('
 --
 --ExplicitConstructorInvocation ::= Name '.' 'super' '(' ArgumentListopt ')'
 --                                  ';'
-ExplicitConstructorInvocation ::= Name '.' TypeArguments 'super' '('
-                                  ArgumentListopt ')' ';'
+ExplicitConstructorInvocation ::= Name '.' TypeArguments 'super' Arguments ';'
 \:$MakeQualifiedSuper:\
 /.$shared_function
 //
 // void MakeQualifiedSuper();
 //./
 
---18.9 Productions from 9: Interface Declarations
---18.9.1 Productions from 9.1: Interface Declarations
 --
--- Parameterized types were added in JSR 14.
+-- Enums were added in JSR 201. We must inline expand Modifiersopt to avoid
+-- ambiguity. The use of Marker allows us to share code.
 --
---InterfaceDeclaration ::= InterfaceModifiersopt 'interface' 'Identifier'
---                         ExtendsInterfacesopt InterfaceBody
-InterfaceDeclaration ::= Modifiersopt 'interface' 'Identifier'
-                         TypeParametersopt ExtendsInterfacesopt InterfaceBody
+--EnumDeclaration ::= ClassModifiersopt 'enum' 'Identifier' Interfacesopt
+--                    EnumBody
+EnumDeclaration ::= Marker 'enum' 'Identifier' Interfacesopt EnumBody
+\:$MakeEnumDeclaration:\
+/.$location
+void Parser::MakeEnumDeclaration()
+{
+    //
+    // Because of how we handle EnumConstants, the EnumBody production already
+    // created the AstEnumDeclaration, and populated the class_body field.
+    //
+    AstEnumDeclaration* p = DYNAMIC_CAST<AstEnumDeclaration*> (Sym(5));
+    p -> modifiers_opt = MakeModifiers();
+    p -> enum_token = Token(2);
+    p -> class_body -> identifier_token = Token(3);
+    if (Sym(4))
+    {
+        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(4));
+        p -> AllocateInterfaces(tail -> index + 1);
+        AstListNode* root = tail;
+        do
+        {
+            root = root -> next;
+            p -> AddInterface(DYNAMIC_CAST<AstTypeName*> (root -> element));
+        } while (root != tail);
+        FreeCircularList(tail);
+    }
+    p -> class_body -> identifier_token = Token(3);
+    Sym(1) = p;
+}
+./
+
+--
+-- Enums were added in JSR 201. We must inline expand Modifiersopt to avoid
+-- ambiguity. The use of Marker allows us to share code.
+--
+EnumDeclaration ::= Modifiers 'enum' 'Identifier' Interfacesopt EnumBody
+\:$MakeEnumDeclaration:\
+/.$shared_function
+//
+// void MakeEnumDeclaration();
+//./
+
+--
+-- Enums were added in JSR 201. The rule was expanded inline below to
+-- make the grammar LALR(1). The use of Marker allows us to share code.
+--
+--EnumBody ::= '{' EnumConstantsopt ,opt EnumBodyDeclarationsopt '}'
+EnumBody ::= '{' Marker ,opt EnumBodyDeclarationsopt '}'
+\:$MakeEnumBody:\
+/.$location
+void Parser::MakeEnumBody()
+{
+    //
+    // The class_body was either created in EnumBodyDeclarations, or we must
+    // generate it here.
+    //
+    AstEnumDeclaration* p = ast_pool -> NewEnumDeclaration();
+    if (Sym(2))
+    {
+        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(2));
+        p -> AllocateEnumConstants(tail -> index + 1);
+        AstListNode* root = tail;
+        do
+        {
+            root = root -> next;
+            p -> AddEnumConstant(DYNAMIC_CAST<AstEnumConstant*>
+                                 (root -> element));
+        } while (root != tail);
+        FreeCircularList(tail);
+    }
+    if (Sym(4))
+    {
+        p -> class_body = DYNAMIC_CAST<AstClassBody*> (Sym(4));
+    }
+    else
+    {
+        p -> class_body = ast_pool -> NewClassBody();
+        p -> class_body -> right_brace_token = Token(5);
+        p -> class_body -> pool = body_pool;
+    }
+    p -> class_body -> left_brace_token = Token(1);
+    p -> class_body -> owner = p;
+    Sym(1) = p;
+}
+./
+
+--
+-- Enums were added in JSR 201.
+--
+EnumBody ::= '{' EnumConstants ,opt EnumBodyDeclarationsopt '}'
+\:$MakeEnumBody:\
+/.$shared_function
+//
+// void MakeEnumBody();
+//./
+
+--
+-- Enums were added in JSR 201.
+--
+EnumConstants ::= EnumConstant
+\:$StartList:\
+/.$shared_StartList./
+
+--
+-- Enums were added in JSR 201.
+--
+EnumConstants ::= EnumConstants ',' EnumConstant
+\:$AddList3:\
+/.$shared_AddList3./
+
+--
+-- Enums were added in JSR 201.
+--
+EnumConstant ::= Modifiersopt 'Identifier' Argumentsopt ClassBodyopt
 \:$action:\
 /.$location
 void Parser::Act$rule_number()
+{
+    AstEnumConstant* p = ast_pool -> NewEnumConstant(Token(2));
+    p -> modifiers_opt = MakeModifiers();
+    p -> arguments_opt = DYNAMIC_CAST<AstArguments*> (Sym(3));
+    p -> class_body_opt = DYNAMIC_CAST<AstClassBody*> (Sym(4));
+    Sym(1) = p;
+}
+./
+
+--
+-- Enums were added in JSR 201. As long as enums introduce this production, we
+-- use it elsewhere, too.
+--
+Arguments ::= '(' ArgumentListopt ')'
+\:$action:\
+/.$location
+void Parser::Act$rule_number()
+{
+    AstArguments* p = ast_pool -> NewArguments(Token(1), Token(3));
+    if (Sym(2))
+    {
+        AstListNode* tail = DYNAMIC_CAST<AstListNode*> (Sym(2));
+        p -> AllocateArguments(tail -> index + 1);
+        AstListNode* root = tail;
+        do
+        {
+            root = root -> next;
+            p -> AddArgument(DYNAMIC_CAST<AstExpression*> (root -> element));
+        } while (root != tail);
+        FreeCircularList(tail);
+    }
+    Sym(1) = p;
+}
+./
+
+--
+-- Enums were added in JSR 201.
+--
+Argumentsopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+--
+-- Enums were added in JSR 201.
+--
+Argumentsopt ::= Arguments
+\:$NoAction:\
+/.$shared_NoAction./
+
+--
+-- Enums were added in JSR 201. The use of Marker allows us to share code.
+--
+--EnumBodyDeclarations ::= ';' ClassBodyDeclarationsopt
+EnumBodyDeclarations ::= ';' ClassBodyDeclarationsopt Marker
+\:$MakeClassBody:\
+/.$shared_function
+//
+// void MakeClassBody();
+//./
+
+--
+-- Enums were added in JSR 201.
+--
+EnumBodyDeclarationsopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+--
+-- Enums were added in JSR 201.
+--
+EnumBodyDeclarationsopt ::= EnumBodyDeclarations
+\:$NoAction:\
+/.$shared_NoAction./
+
+--18.9 Productions from 9: Interface Declarations
+--18.9.1 Productions from 9.1: Interface Declarations
+--
+-- Parameterized types were added in JSR 14.  We must inline expand
+-- Modifiersopt to avoid ambiguity. The use of Marker allows us to share code.
+--
+--InterfaceDeclaration ::= InterfaceModifiersopt 'interface' 'Identifier'
+--                         ExtendsInterfacesopt InterfaceBody
+InterfaceDeclaration ::= Marker 'interface' 'Identifier' TypeParametersopt
+                         ExtendsInterfacesopt InterfaceBody
+\:$MakeInterfaceDeclaration:\
+/.$location
+void Parser::MakeInterfaceDeclaration()
 {
     AstInterfaceDeclaration* p = ast_pool -> NewInterfaceDeclaration();
     p -> modifiers_opt = MakeModifiers();
@@ -2670,6 +3110,18 @@ void Parser::Act$rule_number()
 ./
 
 --
+-- Parameterized types were added in JSR 14.  We must inline expand
+-- Modifiersopt to avoid ambiguity.
+--
+InterfaceDeclaration ::= Modifiers 'interface' 'Identifier' TypeParametersopt
+                         ExtendsInterfacesopt InterfaceBody
+\:$MakeInterfaceDeclaration:\
+/.$shared_function
+//
+// void MakeInterfaceDeclaration();
+//./
+
+--
 -- Simplify.
 --
 --ExtendsInterfaces ::= 'extends' InterfaceTypeList
@@ -2680,6 +3132,14 @@ ExtendsInterfaces ::= 'extends' TypeList
 // void SetSym1ToSym2();
 //./
 
+ExtendsInterfacesopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+ExtendsInterfacesopt ::= ExtendsInterfaces
+\:$NoAction:\
+/.$shared_NoAction./
+
 InterfaceBody ::= '{' InterfaceMemberDeclarationsopt '}'
 \:$MakeClassBody:\
 /.$shared_function
@@ -2687,49 +3147,221 @@ InterfaceBody ::= '{' InterfaceMemberDeclarationsopt '}'
 // void MakeClassBody();
 //./
 
---
--- For less code duplication and better semantic messages, we treat all
--- interface members as class members now, then do a semantic check that
--- this was valid.
---
---InterfaceMemberDeclarations ::= InterfaceMemberDeclaration
-InterfaceMemberDeclarations ::= MemberDeclaration
-\:$action:\
-/.$location
-void Parser::Act$rule_number()
-{
-    AstFieldDeclaration* field = Sym(1) -> FieldDeclarationCast();
-    if (field)
-        field -> MarkStatic();
-    StartList();
-}
-./
+InterfaceMemberDeclarations ::= InterfaceMemberDeclaration
+\:$StartList:\
+/.$shared_StartList./
 
---InterfaceMemberDeclarations ::= InterfaceMemberDeclarations
---                                InterfaceMemberDeclaration
 InterfaceMemberDeclarations ::= InterfaceMemberDeclarations
-                                MemberDeclaration
-\:$action:\
-/.$location
-void Parser::Act$rule_number()
-{
-    AstFieldDeclaration* field = Sym(2) -> FieldDeclarationCast();
-    if (field)
-        field -> MarkStatic();
-    AddList2();
-}
-./
+                                InterfaceMemberDeclaration
+\:$AddList2:\
+/.$shared_AddList2./
+
+InterfaceMemberDeclarationsopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+InterfaceMemberDeclarationsopt ::= InterfaceMemberDeclarations
+\:$NoAction:\
+/.$shared_NoAction./
 
 --
--- See description of MemberDeclaration.
 --
---InterfaceMemberDeclaration ::= ConstantDeclaration
+-- For less code duplication and better semantic messages, we parse
+-- non-abstract method bodies and non-initialized fields now, then do a
+-- semantic check that this was valid.
+--
+InterfaceMemberDeclaration ::= ConstantDeclaration
+\:$NoAction:\
+/.$shared_NoAction./
+
+--
+-- Simplify. See below.
+--
 --InterfaceMemberDeclaration ::= AbstractMethodDeclaration
+
+--1.1 feature
+--
+-- Consolidate and simplify.
+--
 --InterfaceMemberDeclaration ::= ClassDeclaration
 --InterfaceMemberDeclaration ::= InterfaceDeclaration
 --InterfaceMemberDeclaration ::= ';'
---ConstantDeclaration ::= FieldDeclaration
+InterfaceMemberDeclaration ::= TypeDeclaration
+\:$NoAction:\
+/.$shared_NoAction./
+
+ConstantDeclaration ::= FieldDeclaration
+\:$action:\
+/.$location
+void Parser::Act$rule_number()
+{
+    DYNAMIC_CAST<AstFieldDeclaration*> (Sym(1)) -> MarkStatic();
+}
+./
+
+--
+-- Simplify.
+--
 --AbstractMethodDeclaration ::= MethodHeader ';'
+InterfaceMemberDeclaration ::= MethodDeclaration
+\:$NoAction:\
+/.$shared_NoAction./
+
+--
+-- Annotations were added in JSR 175. We must inline expand Modifiersopt to
+-- avoid ambiguity: does 'public @' start 'public @A class B{}' or
+-- 'public @interface A{}'. The use of Marker allows us to share code.
+--
+--AnnotationTypeDeclaration ::= InterfaceModifiersopt '@' 'interface'
+--                              'Identifier' AnnotationTypeBody
+AnnotationTypeDeclaration ::= '@' Marker 'interface' 'Identifier'
+                              AnnotationTypeBody
+\:$MakeAnnotationTypeDeclaration:\
+/.$location
+void Parser::MakeAnnotationTypeDeclaration()
+{
+    AstAnnotationDeclaration* p =
+        ast_pool -> NewAnnotationDeclaration(Token(3));
+    if (Token(3) > Token(2))
+        p -> modifiers_opt = MakeModifiers();
+    p -> class_body = DYNAMIC_CAST<AstClassBody*> (Sym(5));
+    p -> class_body -> identifier_token = Token(4);
+    p -> class_body -> owner = p;
+    Sym(1) = p;
+}
+./
+
+-- Annotations were added in JSR 175. We must inline expand Modifiersopt to
+-- avoid ambiguity: does 'public @' start 'public @A class B{}' or
+-- 'public @interface A{}'.
+--
+AnnotationTypeDeclaration ::= Modifiers '@' 'interface' 'Identifier'
+                              AnnotationTypeBody
+\:$MakeAnnotationTypeDeclaration:\
+/.$shared_function
+//
+// void MakeAnnotationTypeDeclaration();
+//./
+
+--
+-- Annotations were added in JSR 175.
+--
+AnnotationTypeBody ::= '{' AnnotationTypeMemberDeclarationsopt '}'
+\:$MakeClassBody:\
+/.$shared_function
+//
+// void MakeClassBody();
+//./
+
+--
+-- Annotations were added in JSR 175.
+--
+AnnotationTypeMemberDeclarations ::= AnnotationTypeMemberDeclaration
+\:$StartList:\
+/.$shared_StartList./
+
+--
+-- Annotations were added in JSR 175.
+--
+AnnotationTypeMemberDeclarations ::= AnnotationTypeMemberDeclarations
+                                     AnnotationTypeMemberDeclaration
+\:$AddList2:\
+/.$shared_AddList2./
+
+--
+-- Annotations were added in JSR 175.
+--
+AnnotationTypeMemberDeclarationsopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+--
+-- Annotations were added in JSR 175.
+--
+AnnotationTypeMemberDeclarationsopt ::= AnnotationTypeMemberDeclarations
+\:$NoAction:\
+/.$shared_NoAction./
+
+--
+-- Annotations were added in JSR 175. We must inline expand Modifiersopt to
+-- avoid ambiguity. The use of Marker allows us to share code.
+--
+--AnnotationTypeMemberDeclaration ::= AbstractMethodModifiersopt Type
+--                                    'Identifier' '(' ')' DefaultValueopt ';'
+AnnotationTypeMemberDeclaration ::= Marker Marker Type 'Identifier' '(' ')'
+                                    DefaultValueopt ';'
+\:$MakeAnnotationTypeMemberDeclaration:\
+/.$location
+void Parser::MakeAnnotationTypeMemberDeclaration()
+{
+    AstMethodDeclaration* p = ast_pool -> NewMethodDeclaration();
+    p -> modifiers_opt = MakeModifiers();
+    p -> type = DYNAMIC_CAST<AstType*> (Sym(3));
+    AstMethodDeclarator* q = ast_pool -> NewMethodDeclarator();
+    q -> identifier_token = Token(4);
+    q -> left_parenthesis_token = Token(5);
+    q -> right_parenthesis_token = Token(6);
+    p -> method_declarator = q;
+    p -> default_value_opt = DYNAMIC_CAST<AstMemberValue*> (Sym(7));
+    p -> semicolon_token_opt = Token(8);
+    Sym(1) = p;
+}
+./
+
+--
+-- Annotations were added in JSR 175. We must inline expand Modifiersopt to
+-- avoid ambiguity.
+--
+AnnotationTypeMemberDeclaration ::= Modifiers Marker Type 'Identifier' '(' ')'
+                                    DefaultValueopt ';'
+\:$MakeAnnotationTypeMemberDeclaration:\
+/.$shared_function
+//
+// void MakeAnnotationTypeMemberDeclaration();
+//./
+
+--
+-- Annotations were added in JSR 175.
+--
+AnnotationTypeMemberDeclaration ::= ConstantDeclaration
+\:$NoAction:\
+/.$shared_NoAction./
+
+--
+-- Annotations were added in JSR 175. Consolidate and simplify.
+--
+--AnnotationTypeMemberDeclaration ::= ClassDeclaration
+--AnnotationTypeMemberDeclaration ::= InterfaceDeclaration
+--AnnotationTypeMemberDeclaration ::= EnumDeclaration
+--AnnotationTypeMemberDeclaration ::= AnnotationTypeDeclaration
+--AnnotationTypeMemberDeclaration ::= ';'
+AnnotationTypeMemberDeclaration ::= TypeDeclaration
+\:$NoAction:\
+/.$shared_NoAction./
+
+--
+-- Annotations were added in JSR 175.
+--
+DefaultValue ::= 'default' MemberValue
+\:$SetSym1ToSym2:\
+/.$shared_function
+//
+// void SetSym1ToSym2();
+//./
+
+--
+-- Annotations were added in JSR 175.
+--
+DefaultValueopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+--
+-- Annotations were added in JSR 175.
+--
+DefaultValueopt ::= DefaultValue
+\:$NoAction:\
+/.$shared_NoAction./
 
 --18.10 Productions from 10: Arrays
 --
@@ -2793,6 +3425,14 @@ BlockStatements ::= BlockStatements BlockStatement
 \:$AddList2:\
 /.$shared_AddList2./
 
+BlockStatementsopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+BlockStatementsopt ::= BlockStatements
+\:$NoAction:\
+/.$shared_NoAction./
+
 BlockStatement ::= LocalVariableDeclarationStatement
 \:$NoAction:\
 /.$shared_NoAction./
@@ -2809,6 +3449,19 @@ void Parser::Act$rule_number()
 {
     Sym(1) = ast_pool ->
         NewLocalClassStatement(DYNAMIC_CAST<AstClassDeclaration*> (Sym(1)));
+}
+./
+
+--
+-- Enums were added in JSR 201.
+--
+BlockStatement ::= EnumDeclaration
+\:$action:\
+/.$location
+void Parser::Act$rule_number()
+{
+    Sym(1) = ast_pool ->
+        NewLocalClassStatement(DYNAMIC_CAST<AstEnumDeclaration*> (Sym(1)));
 }
 ./
 
@@ -3280,6 +3933,14 @@ SwitchLabels ::= SwitchLabels SwitchLabel
 \:$AddList2:\
 /.$shared_AddList2./
 
+SwitchLabelsopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+SwitchLabelsopt ::= SwitchLabels
+\:$NoAction:\
+/.$shared_NoAction./
+
 --
 -- Simplify.
 --
@@ -3437,7 +4098,23 @@ ForInit ::= LocalVariableDeclaration
 \:$StartList:\
 /.$shared_StartList./
 
+ForInitopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+ForInitopt ::= ForInit
+\:$NoAction:\
+/.$shared_NoAction./
+
 ForUpdate ::= StatementExpressionList
+\:$NoAction:\
+/.$shared_NoAction./
+
+ForUpdateopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+ForUpdateopt ::= ForUpdate
 \:$NoAction:\
 /.$shared_NoAction./
 
@@ -3633,6 +4310,14 @@ Catches ::= Catches CatchClause
 \:$AddList2:\
 /.$shared_AddList2./
 
+Catchesopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+Catchesopt ::= Catches
+\:$NoAction:\
+/.$shared_NoAction./
+
 CatchClause ::= 'catch' '(' FormalParameter ')' Block
 \:$action:\
 /.$location
@@ -3808,10 +4493,12 @@ PrimaryNoNewArray ::= ArrayAccess
 --1.1 feature
 --
 -- In Java 1.0 a ClassBody could not appear at all in a
--- ClassInstanceCreationExpression.
+-- ClassInstanceCreationExpression. Simplify.
 --
-ClassInstanceCreationExpression ::= 'new' ClassOrInterfaceType '('
-                                    ArgumentListopt ')' ClassBodyopt
+--ClassInstanceCreationExpression ::= 'new' ClassOrInterfaceType '('
+--                                    ArgumentListopt ')' ClassBodyopt
+ClassInstanceCreationExpression ::= 'new' ClassOrInterfaceType Arguments
+                                    ClassBodyopt
 \:$action:\
 /.$location
 void Parser::Act$rule_number()
@@ -3819,8 +4506,8 @@ void Parser::Act$rule_number()
     AstClassCreationExpression* p = ast_pool -> NewClassCreationExpression();
     p -> new_token = Token(1);
     p -> class_type = DYNAMIC_CAST<AstTypeName*> (Sym(2));
-    p -> arguments = MakeArguments(3);
-    p -> class_body_opt = DYNAMIC_CAST<AstClassBody*> (Sym(6));
+    p -> arguments = DYNAMIC_CAST<AstArguments*> (Sym(3));
+    p -> class_body_opt = DYNAMIC_CAST<AstClassBody*> (Sym(4));
     if (p -> class_body_opt)
         p -> class_body_opt -> identifier_token =
             p -> class_type -> IdentifierToken();
@@ -3834,7 +4521,7 @@ void Parser::Act$rule_number()
 --ClassInstanceCreationExpression ::= 'new' ClassOrInterfaceType '('
 --                                    ArgumentListopt ')' ClassBodyopt
 ClassInstanceCreationExpression ::= 'new' TypeArguments ClassOrInterfaceType
-                                    '(' ArgumentListopt ')' ClassBodyopt
+                                    Arguments ClassBodyopt
 \:$action:\
 /.$location
 void Parser::Act$rule_number()
@@ -3843,8 +4530,8 @@ void Parser::Act$rule_number()
     p -> new_token = Token(1);
     p -> type_arguments_opt = MakeExplicitTypeArguments(2);
     p -> class_type = DYNAMIC_CAST<AstTypeName*> (Sym(3));
-    p -> arguments = MakeArguments(4);
-    p -> class_body_opt = DYNAMIC_CAST<AstClassBody*> (Sym(7));
+    p -> arguments = DYNAMIC_CAST<AstArguments*> (Sym(4));
+    p -> class_body_opt = DYNAMIC_CAST<AstClassBody*> (Sym(5));
     if (p -> class_body_opt)
         p -> class_body_opt -> identifier_token =
             p -> class_type -> IdentifierToken();
@@ -3859,8 +4546,8 @@ void Parser::Act$rule_number()
 --ClassInstanceCreationExpression ::= Primary '.' 'new' 'Identifier' '('
 --                                    ArgumentListopt ')' ClassBodyopt
 ClassInstanceCreationExpression ::= Primary '.' 'new' TypeArgumentsopt
-                                    'Identifier' TypeArgumentsopt '('
-                                    ArgumentListopt ')' ClassBodyopt
+                                    'Identifier' TypeArgumentsopt Arguments
+                                    ClassBodyopt
 \:$MakeQualifiedNew:\
 /.$location
 void Parser::MakeQualifiedNew()
@@ -3871,8 +4558,8 @@ void Parser::MakeQualifiedNew()
     p -> type_arguments_opt = MakeExplicitTypeArguments(4);
     p -> class_type = ast_pool -> NewTypeName(MakeSimpleName(5));
     p -> class_type -> type_arguments_opt = MakeExplicitTypeArguments(6);
-    p -> arguments = MakeArguments(7);
-    p -> class_body_opt = DYNAMIC_CAST<AstClassBody*> (Sym(10));
+    p -> arguments = DYNAMIC_CAST<AstArguments*> (Sym(7));
+    p -> class_body_opt = DYNAMIC_CAST<AstClassBody*> (Sym(8));
     if (p -> class_body_opt)
         p -> class_body_opt -> identifier_token = Token(5);
     Sym(1) = p;
@@ -3886,8 +4573,8 @@ void Parser::MakeQualifiedNew()
 --ClassInstanceCreationExpression ::= Name '.' 'new' 'Identifier' '('
 --                                    ArgumentListopt ')' ClassBodyopt
 ClassInstanceCreationExpression ::= Name '.' 'new' TypeArgumentsopt
-                                    'Identifier' TypeArgumentsopt '('
-                                    ArgumentListopt ')' ClassBodyopt
+                                    'Identifier' TypeArgumentsopt Arguments
+                                    ClassBodyopt
 \:$MakeQualifiedNew:\
 /.$shared_function
 //
@@ -3901,6 +4588,14 @@ ArgumentList ::= Expression
 ArgumentList ::= ArgumentList ',' Expression
 \:$AddList3:\
 /.$shared_AddList3./
+
+ArgumentListopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+ArgumentListopt ::= ArgumentList
+\:$NoAction:\
+/.$shared_NoAction./
 
 --1.2 feature
 --
@@ -4002,6 +4697,14 @@ void Parser::Act$rule_number()
 }
 ./
 
+Dimsopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+Dimsopt ::= Dims
+\:$NoAction:\
+/.$shared_NoAction./
+
 --
 -- Added rule to make parsing 'super' '.' easier.
 --
@@ -4065,13 +4768,13 @@ FieldAccess ::= SuperAccess '.' Marker 'Identifier'
 -- method identifier.
 --
 --MethodInvocation ::= Name '(' ArgumentListopt ')'
-MethodInvocation ::= 'Identifier' '(' ArgumentListopt ')'
+MethodInvocation ::= 'Identifier' Arguments
 \:$action:\
 /.$location
 void Parser::Act$rule_number()
 {
     AstMethodInvocation* p = ast_pool -> NewMethodInvocation(Token(1));
-    p -> arguments = MakeArguments(2);
+    p -> arguments = DYNAMIC_CAST<AstArguments*> (Sym(2));
     Sym(1) = p;
 }
 ./
@@ -4081,7 +4784,7 @@ void Parser::Act$rule_number()
 -- method identifier.  The use of Marker allows us to share code.
 --
 --MethodInvocation ::= Name '(' ArgumentListopt ')'
-MethodInvocation ::= Name '.' Marker 'Identifier' '(' ArgumentListopt ')'
+MethodInvocation ::= Name '.' Marker 'Identifier' Arguments
 \:$MakeMethodInvocation:\
 /.$location
 void Parser::MakeMethodInvocation()
@@ -4089,7 +4792,7 @@ void Parser::MakeMethodInvocation()
     AstMethodInvocation* p = ast_pool -> NewMethodInvocation(Token(4));
     p -> base_opt = DYNAMIC_CAST<AstExpression*> (Sym(1));
     p -> type_arguments_opt = MakeExplicitTypeArguments(3);
-    p -> arguments = MakeArguments(5);
+    p -> arguments = DYNAMIC_CAST<AstArguments*> (Sym(5));
     Sym(1) = p;
 }
 ./
@@ -4097,8 +4800,7 @@ void Parser::MakeMethodInvocation()
 --
 -- Parameterized types were added in JSR 14.
 --
-MethodInvocation ::= Name '.' TypeArguments 'Identifier' '(' ArgumentListopt
-                     ')'
+MethodInvocation ::= Name '.' TypeArguments 'Identifier' Arguments
 \:$MakeMethodInvocation:\
 /.$shared_function
 //
@@ -4109,7 +4811,7 @@ MethodInvocation ::= Name '.' TypeArguments 'Identifier' '(' ArgumentListopt
 -- The use of Marker allows us to share code.
 --
 --MethodInvocation ::= Primary '.' 'Identifier' '(' ArgumentListopt ')'
-MethodInvocation ::= Primary '.' Marker 'Identifier' '(' ArgumentListopt ')'
+MethodInvocation ::= Primary '.' Marker 'Identifier' Arguments
 \:$MakeMethodInvocation:\
 /.$shared_function
 //
@@ -4119,8 +4821,7 @@ MethodInvocation ::= Primary '.' Marker 'Identifier' '(' ArgumentListopt ')'
 --
 -- Parameterized types were added in JSR 14.
 --
-MethodInvocation ::= Primary '.' TypeArguments 'Identifier' '('
-                     ArgumentListopt ')'
+MethodInvocation ::= Primary '.' TypeArguments 'Identifier' Arguments
 \:$MakeMethodInvocation:\
 /.$shared_function
 //
@@ -4134,8 +4835,7 @@ MethodInvocation ::= Primary '.' TypeArguments 'Identifier' '('
 --MethodInvocation ::= 'super' '.' 'Identifier' '(' ArgumentListopt ')'
 --MethodInvocation ::= ClassType '.' 'super' '.' 'Identifier' '('
 --                     ArgumentListopt ')'
-MethodInvocation ::= SuperAccess '.' Marker 'Identifier' '(' ArgumentListopt
-                     ')'
+MethodInvocation ::= SuperAccess '.' Marker 'Identifier' Arguments
 \:$MakeMethodInvocation:\
 /.$shared_function
 //
@@ -4150,8 +4850,7 @@ MethodInvocation ::= SuperAccess '.' Marker 'Identifier' '(' ArgumentListopt
 --                     ArgumentListopt ')'
 --MethodInvocation ::= ClassType '.' 'super' '.' TypeArguments 'Identifier' '('
 --                     ArgumentListopt ')'
-MethodInvocation ::= SuperAccess '.' TypeArguments 'Identifier' '('
-                     ArgumentListopt ')'
+MethodInvocation ::= SuperAccess '.' TypeArguments 'Identifier' Arguments
 \:$MakeMethodInvocation:\
 /.$shared_function
 //
@@ -4977,6 +5676,14 @@ Expression ::= AssignmentExpression
 \:$NoAction:\
 /.$shared_NoAction./
 
+Expressionopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+Expressionopt ::= Expression
+\:$NoAction:\
+/.$shared_NoAction./
+
 ExpressionNotName ::= AssignmentExpressionNotName
 \:$NoAction:\
 /.$shared_NoAction./
@@ -4988,10 +5695,17 @@ ExpressionNotName ::= AssignmentExpressionNotName
 
 -----------------------------------------------------------------------------
 --
--- The following rules are for optional productions. Most place NULL on
--- the stack if the production was empty.
+-- The following rules are for optional and helper productions.
 --
 -----------------------------------------------------------------------------
+
+--
+-- This rule exists solely to put NULL on the symbol stack, allowing us to
+-- share productions that differ by the presence or absence of a rule.
+--
+Marker ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
 
 ,opt ::= $empty
 \:$NoAction:\
@@ -5006,235 +5720,6 @@ Identifieropt ::= $empty
 /.$shared_NoAction./
 
 Identifieropt ::= 'Identifier'
-\:$NoAction:\
-/.$shared_NoAction./
-
-Superopt ::= $empty
-\:$NullAction:\
-/.$location
-//
-// Given a rule of the form A ::= x1 x2 ... xn
-//
-// Construct a NULL Ast for A.
-//
-void Parser::NullAction() { Sym(1) = NULL; }
-./
-
-Superopt ::= Super
-\:$NoAction:\
-/.$shared_NoAction./
-
-Expressionopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
-
-Expressionopt ::= Expression
-\:$NoAction:\
-/.$shared_NoAction./
-
-ClassBodyopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
-
-ClassBodyopt ::= ClassBody
-\:$NoAction:\
-/.$shared_NoAction./
-
-ImportDeclarationsopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
-
-ImportDeclarationsopt ::= ImportDeclarations
-\:$NoAction:\
-/.$shared_NoAction./
-
-TypeDeclarationsopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
-
-TypeDeclarationsopt ::= TypeDeclarations
-\:$NoAction:\
-/.$shared_NoAction./
-
-ClassBodyDeclarationsopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
-
-ClassBodyDeclarationsopt ::= ClassBodyDeclarations
-\:$NoAction:\
-/.$shared_NoAction./
-
-Modifiersopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
-
-Modifiersopt ::= Modifiers
-\:$NoAction:\
-/.$shared_NoAction./
-
-BlockStatementsopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
-
-BlockStatementsopt ::= BlockStatements
-\:$NoAction:\
-/.$shared_NoAction./
-
-Dimsopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
-
-Dimsopt ::= Dims
-\:$NoAction:\
-/.$shared_NoAction./
-
-ArgumentListopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
-
-ArgumentListopt ::= ArgumentList
-\:$NoAction:\
-/.$shared_NoAction./
-
-SwitchLabelsopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
-
-SwitchLabelsopt ::= SwitchLabels
-\:$NoAction:\
-/.$shared_NoAction./
-
-Throwsopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
-
-Throwsopt ::= Throws
-\:$NoAction:\
-/.$shared_NoAction./
-
-FormalParameterListopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
-
-FormalParameterListopt ::= FormalParameterList
-\:$NoAction:\
-/.$shared_NoAction./
-
-Interfacesopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
-
-Interfacesopt ::= Interfaces
-\:$NoAction:\
-/.$shared_NoAction./
-
-InterfaceMemberDeclarationsopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
-
-InterfaceMemberDeclarationsopt ::= InterfaceMemberDeclarations
-\:$NoAction:\
-/.$shared_NoAction./
-
-ForInitopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
-
-ForInitopt ::= ForInit
-\:$NoAction:\
-/.$shared_NoAction./
-
-ForUpdateopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
-
-ForUpdateopt ::= ForUpdate
-\:$NoAction:\
-/.$shared_NoAction./
-
-ExtendsInterfacesopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
-
-ExtendsInterfacesopt ::= ExtendsInterfaces
-\:$NoAction:\
-/.$shared_NoAction./
-
-Catchesopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
-
-Catchesopt ::= Catches
-\:$NoAction:\
-/.$shared_NoAction./
-
---
--- Annotations were added in JSR 175.
---
-MemberValuePairsopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
-
---
--- Annotations were added in JSR 175.
---
-MemberValuePairsopt ::= MemberValuePairs
-\:$NoAction:\
-/.$shared_NoAction./
-
---
--- Parameterized types were added in JSR 14.
---
-TypeArgumentsopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
-
---
--- Parameterized types were added in JSR 14.
---
-TypeArgumentsopt ::= TypeArguments
-\:$NoAction:\
-/.$shared_NoAction./
-
---
--- Parameterized types were added in JSR 14.
---
-TypeParametersopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
-
---
--- Parameterized types were added in JSR 14.
---
-TypeParametersopt ::= TypeParameters
-\:$NoAction:\
-/.$shared_NoAction./
-
---
--- Parameterized types were added in JSR 14.
---
-TypeBoundopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
-
---
--- Parameterized types were added in JSR 14.
---
-TypeBoundopt ::= TypeBound
-\:$NoAction:\
-/.$shared_NoAction./
-
---
--- Parameterized types were added in JSR 14.
---
-AdditionalBoundListopt ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
-
---
--- Parameterized types were added in JSR 14.
---
-AdditionalBoundListopt ::= AdditionalBoundList
 \:$NoAction:\
 /.$shared_NoAction./
 
@@ -5275,18 +5760,9 @@ void Parser::Act$rule_number()
         if (lex_stream -> Kind(token) == TK_LBRACE)
             lex_stream -> Reset(lex_stream -> MatchingBrace(token));
     }
-
     Sym(1) = NULL;
 }
 ./
-
---
--- This rule exists solely to put NULL on the symbol stack, allowing us to
--- share productions that differ by the presence or absence of a rule.
---
-Marker ::= $empty
-\:$NullAction:\
-/.$shared_NullAction./
 
 -----------------------------------------------------------------------------
 --
@@ -5303,6 +5779,20 @@ TypeArguments ::= '<' TypeArgumentList1
 //
 // void SetSym1ToSym2();
 //./
+
+--
+-- Parameterized types were added in JSR 14.
+--
+TypeArgumentsopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+--
+-- Parameterized types were added in JSR 14.
+--
+TypeArgumentsopt ::= TypeArguments
+\:$NoAction:\
+/.$shared_NoAction./
 
 --
 -- Parameterized types were added in JSR 14. We inline expanded WildcardBounds
@@ -5621,6 +6111,20 @@ TypeParameters ::= '<' TypeParameterList1
 --
 -- Parameterized types were added in JSR 14.
 --
+TypeParametersopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+--
+-- Parameterized types were added in JSR 14.
+--
+TypeParametersopt ::= TypeParameters
+\:$NoAction:\
+/.$shared_NoAction./
+
+--
+-- Parameterized types were added in JSR 14.
+--
 TypeParameterList ::= TypeParameter
 \:$StartList:\
 /.$shared_StartList./
@@ -5725,6 +6229,20 @@ void Parser::MakeTypeBound()
 
 --
 -- Parameterized types were added in JSR 14.
+--
+TypeBoundopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+--
+-- Parameterized types were added in JSR 14.
+--
+TypeBoundopt ::= TypeBound
+\:$NoAction:\
+/.$shared_NoAction./
+
+--
+-- Parameterized types were added in JSR 14.
 -- The use of Marker allows us to share code.
 --
 TypeBound1 ::= 'extends' ReferenceType1 Marker
@@ -5757,6 +6275,20 @@ AdditionalBoundList ::= AdditionalBound
 AdditionalBoundList ::= AdditionalBoundList AdditionalBound
 \:$AddList2:\
 /.$shared_AddList2./
+
+--
+-- Parameterized types were added in JSR 14.
+--
+AdditionalBoundListopt ::= $empty
+\:$NullAction:\
+/.$shared_NullAction./
+
+--
+-- Parameterized types were added in JSR 14.
+--
+AdditionalBoundListopt ::= AdditionalBoundList
+\:$NoAction:\
+/.$shared_NoAction./
 
 --
 -- Parameterized types were added in JSR 14.

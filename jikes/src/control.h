@@ -91,13 +91,14 @@ public:
     NameSymbol* clone_name_symbol;
     NameSymbol* dot_name_symbol;
     NameSymbol* dot_dot_name_symbol;
+    NameSymbol* Enum_name_symbol;
     NameSymbol* equals_name_symbol;
     NameSymbol* false_name_symbol;
     NameSymbol* hashCode_name_symbol;
     NameSymbol* init_name_symbol;
     NameSymbol* length_name_symbol;
     NameSymbol* null_name_symbol;
-    NameSymbol* object_name_symbol;
+    NameSymbol* Object_name_symbol;
     NameSymbol* package_info_name_symbol;
     NameSymbol* question_name_symbol;
     NameSymbol* serialPersistentFields_name_symbol;

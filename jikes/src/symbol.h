@@ -662,8 +662,9 @@ class TypeSymbol : public Symbol, public AccessFlags
         HEADER_PROCESSED = 0x0040,
         PRIMITIVE = 0x0080,
         DEPRECATED = 0x0100,
-        BAD = 0x0200,
-        CIRCULAR = 0x0400
+        ENUM_TYPE = 0x0200, // can't use ACC_ENUM on types :(
+        BAD = 0x0400,
+        CIRCULAR = 0x0800
     };
 
 public:
@@ -1191,6 +1192,10 @@ public:
     void MarkDeprecated() { status |= DEPRECATED; }
     void ResetDeprecated() { status &= ~DEPRECATED; }
     bool IsDeprecated() const { return (status & DEPRECATED) != 0; }
+
+    void MarkEnum() { status |= ENUM_TYPE; }
+    void ResetEnum() { status &= ~ENUM_TYPE; }
+    bool IsEnum() const { return (status & ENUM_TYPE) != 0; }
 
     void MarkBad()
     {

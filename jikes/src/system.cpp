@@ -303,13 +303,14 @@ void Control::ProcessGlobals()
     clone_name_symbol = FindOrInsertSystemName("clone");
     dot_name_symbol = FindOrInsertSystemName(".");
     dot_dot_name_symbol = FindOrInsertSystemName("..");
+    Enum_name_symbol = FindOrInsertSystemName("Enum");
     equals_name_symbol = FindOrInsertSystemName("equals");
     false_name_symbol = FindOrInsertSystemName("false");
     hashCode_name_symbol = FindOrInsertSystemName("hashCode");
     init_name_symbol = FindOrInsertSystemName("<init>");
     length_name_symbol = FindOrInsertSystemName("length");
     null_name_symbol = FindOrInsertSystemName("null");
-    object_name_symbol = FindOrInsertSystemName("Object");
+    Object_name_symbol = FindOrInsertSystemName("Object");
     package_info_name_symbol = FindOrInsertSystemName("package-info");
     question_name_symbol = FindOrInsertSystemName("??");
     serialPersistentFields_name_symbol =

@@ -1776,6 +1776,18 @@ void SemanticError::InitializeMessages()
         "all modifier keywords.";
     messages[DUPLICATE_ANNOTATION] =
         "Duplicate specification of the annotation modifier \"%1\".";
+    messages[ANNOTATION_TYPE_UNSUPPORTED] =
+        "Annotation types are only supported for `-source 1.5' or greater."
+        "(not yet implemented)";
+    messages[ENUM_TYPE_UNSUPPORTED] =
+        "Enumeration types are only supported for `-source 1.5' or greater."
+        "(not yet implemented)";
+    messages[SUPER_IS_ENUM] =
+        "Enumeration type \"%T1\" cannot be used as a superclass. Instead, "
+        "use the \"enum\" keyword added in `-source 1.5'.";
+    messages[CANNOT_CONSTRUCT_ENUM] =
+        "An instance of the enumeration type \"%T1\" cannot be created in a "
+        "\"new\" expression.";
     messages[TYPE_ARGUMENTS_UNSUPPORTED] =
         "Using type arguments to access generic types requires the use of "
         "\"-source 1.5\" or greater. Compilation will continue using the raw "

@@ -994,12 +994,12 @@ void Scanner::ClassifyIdOrKeyword()
         }
     }
     else if (current_token -> Kind() == TK_class ||
+             current_token -> Kind() == TK_enum ||
              current_token -> Kind() == TK_interface)
     {
         //
-        // This type keyword is not nested. When we encounter an occurrence of
-        // the keyword class or interface that is not enclosed in at least one
-        // set of braces, we keep track of it by adding it to a list.
+        // If this is a top-level type keyword (not in braces), we keep track
+        // of it by adding it to a list.
         //
         if (brace_stack.Size() == 0)
             lex -> type_index.Next() = current_token_index;

@@ -210,7 +210,10 @@ class AstArguments;
 class AstThisCall;
 class AstSuperCall;
 class AstConstructorDeclaration;
+class AstEnumDeclaration;
+class AstEnumConstant;
 class AstInterfaceDeclaration;
+class AstAnnotationDeclaration;
 class AstLocalVariableStatement;
 class AstLocalClassStatement;
 class AstIfStatement;
@@ -373,7 +376,10 @@ public:
         METHOD_DECLARATOR,
         PARAMETER,
         CONSTRUCTOR,
+        ENUM_TYPE,
+        ENUM,
         INTERFACE,
+        ANNOTATION_TYPE,
         ARRAY_INITIALIZER,
         INITIALIZER,
         METHOD_BODY,
@@ -468,29 +474,36 @@ public:
     //
     //       AstFieldDeclaration* fp = (FieldDeclaration*) p;
     //
-    // However, if p points to a ClassBodyDeclaration which may be
-    // either a FieldDeclaration, MethodDeclaration, ConstructorDeclaration,
-    // InitializerDeclaration, ClassDeclaration, or an InterfaceDeclaration,
-    // then the following sequence of code may be used:
+    // However, if p points to a ClassBodyDeclaration, it may be a
+    // FieldDeclaration, MethodDeclaration, ConstructorDeclaration,
+    // InitializerDeclaration, ClassDeclaration, EnumDeclaration,
+    // InterfaceDeclaration, or AnnotationDeclaration; and the following
+    // sequence of code may be used:
     //
-    //    AstFieldDeclaration* fp;
-    //    AstMethodDeclaration* mp;
-    //    AstConstructorDeclaration* cp;
-    //    AstInitializerDeclaration* sp;
-    //    AstClassDeclaration* Cp; // 1.1 only
-    //    AstInterfaceDeclaration* Ip; // 1.1 only
+    //    AstFieldDeclaration* fp = FieldDeclarationCast();
+    //    AstMethodDeclaration* mp = MethodDeclarationCast();
+    //    AstConstructorDeclaration* cp = ConstructorDeclarationCast();
+    //    AstInitializerDeclaration* sp = InitializerdeclarationCast();
+    //    AstClassDeclaration* Cp = ClassDeclarationCast(); // 1.1 only
+    //    AstEnumDeclaration* Ep = EnumDeclarationCast(); // 1.5 only
+    //    AstInterfaceDeclaration* Ip = InterfaceDeclarationCast(); // 1.1 only
+    //    AstAnnotationDeclaration* Ap = AnnotationDeclarationCast(); // 1.5
     //
-    //    if (fp = p -> FieldDeclarationCast())
+    //    if (fp)
     //        ...
-    //    else if (mp = p -> MethodDeclarationCast())
+    //    else if (mp)
     //        ...
-    //    else if (cp = p -> ConstructorDeclarationCast())
+    //    else if (cp)
     //        ...
-    //    else if (sp = p -> InitializerDeclarationCast())
+    //    else if (sp)
     //        ...
-    //    else if (Cp = p -> ClassDeclarationCast())
+    //    else if (Cp)
     //        ...
-    //    else if (Ip = p -> InterfaceDeclarationCast())
+    //    else if (Ep)
+    //        ...
+    //    else if (Ip)
+    //        ...
+    //    else if (Ap)
     //        ...
     //
 
@@ -546,7 +559,10 @@ public:
     inline AstThisCall* ThisCallCast();
     inline AstSuperCall* SuperCallCast();
     inline AstConstructorDeclaration* ConstructorDeclarationCast();
+    inline AstEnumDeclaration* EnumDeclarationCast();
+    inline AstEnumConstant* EnumConstantCast();
     inline AstInterfaceDeclaration* InterfaceDeclarationCast();
+    inline AstAnnotationDeclaration* AnnotationDeclarationCast();
     inline AstLocalVariableStatement* LocalVariableStatementCast();
     inline AstLocalClassStatement* LocalClassStatementCast();
     inline AstIfStatement* IfStatementCast();
@@ -720,8 +736,8 @@ public:
 
 //
 // This class adds some type safety. It represents all member declarations
-// in types. See AstFieldDeclaration, AstMethodDeclaration,
-// AstConstructorDeclaration, AstInitializerDeclaration, DeclaredType.
+// in types. See DeclaredType, AstFieldDeclaration, AstMethodDeclaration,
+// AstConstructorDeclaration, AstInitializerDeclaration, and AstEnumConstant.
 //
 class AstDeclared : public Ast
 {
@@ -737,7 +753,8 @@ public:
 
 //
 // This class adds some type safety. It represents all type declarations.
-// See AstClassDeclaration, AstInterfaceDeclaration, AstEmptyDeclaration.
+// See AstClassDeclaration, AstEnumDeclaration, AstInterfaceDeclaration,
+// AstAnnotationDeclaration, and AstEmptyDeclaration.
 //
 class AstDeclaredType : public AstDeclared
 {
@@ -1529,7 +1546,11 @@ public:
 
 
 //
-// ClassBody --> <CLASS_BODY, {_token, ClassBodyDeclarations, }_token>
+// Represents the class body of the following: AstClassDeclaration,
+// AstEnumDeclaration, AstInterfaceDeclaration, AstAnnotationDeclaration,
+// AstEnumConstant, and AstClassCreationExpression.  Not all uses can legally
+// have all class body members, so some filtering is in order in the semantic
+// pass.
 //
 class AstClassBody : public Ast
 {
@@ -1545,7 +1566,9 @@ class AstClassBody : public Ast
     AstArray<AstInitializerDeclaration*>* static_initializers;
     AstArray<AstInitializerDeclaration*>* instance_initializers;
     AstArray<AstClassDeclaration*>* inner_classes;
+    AstArray<AstEnumDeclaration*>* inner_enums;
     AstArray<AstInterfaceDeclaration*>* inner_interfaces;
+    AstArray<AstAnnotationDeclaration*>* inner_annotations;
     AstArray<AstEmptyDeclaration*>* empty_declarations;
 
 public:
@@ -1559,9 +1582,10 @@ public:
     AstConstructorDeclaration* default_constructor;
 
     //
-    // Filled in by the owning AstClassDeclaration, AstInterfaceDeclaration,
-    // or AstClassCreationExpression to allow nicer error messages.
-    // Note that owner is null for anonymous classes.
+    // Filled in by the owning AstClassDeclaration, AstEnumDeclaration,
+    // AstInterfaceDeclaration, or AstAnnotationDeclaration to allow nicer
+    // error messages. Note that owner is null for anonymous classes,
+    // including enum constants.
     //
     AstDeclaredType* owner;
     LexStream::TokenIndex identifier_token;
@@ -1591,8 +1615,7 @@ public:
             ? class_body_declarations -> Length() : 0;
     }
     inline void AllocateClassBodyDeclarations(unsigned estimate = 1);
-    inline void AddClassBodyDeclaration(AstDeclared*);
-    inline void AddClassBodyDeclarationNicely(AstDeclared*);
+    void AddClassBodyDeclaration(AstDeclared*);
 
     inline AstFieldDeclaration*& InstanceVariable(unsigned i)
     {
@@ -1668,6 +1691,17 @@ public:
     inline void AllocateNestedClasses(unsigned estimate = 1);
     inline void AddNestedClass(AstClassDeclaration*);
 
+    inline AstEnumDeclaration*& NestedEnum(unsigned i)
+    {
+        return (*inner_enums)[i];
+    }
+    inline unsigned NumNestedEnums()
+    {
+        return inner_enums ? inner_enums -> Length() : 0;
+    }
+    inline void AllocateNestedEnums(unsigned estimate = 1);
+    inline void AddNestedEnum(AstEnumDeclaration*);
+
     inline AstInterfaceDeclaration*& NestedInterface(unsigned i)
     {
         return (*inner_interfaces)[i];
@@ -1678,6 +1712,17 @@ public:
     }
     inline void AllocateNestedInterfaces(unsigned estimate = 1);
     inline void AddNestedInterface(AstInterfaceDeclaration*);
+
+    inline AstAnnotationDeclaration*& NestedAnnotation(unsigned i)
+    {
+        return (*inner_annotations)[i];
+    }
+    inline unsigned NumNestedAnnotations()
+    {
+        return inner_annotations ? inner_annotations -> Length() : 0;
+    }
+    inline void AllocateNestedAnnotations(unsigned estimate = 1);
+    inline void AddNestedAnnotation(AstAnnotationDeclaration*);
 
     inline AstEmptyDeclaration*& EmptyDeclaration(unsigned i)
     {
@@ -1692,7 +1737,8 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
-    virtual void Unparse(Ostream&, LexStream*);
+    virtual void Unparse(Ostream& o, LexStream* l) { Unparse(o, l, false); }
+    void Unparse(Ostream&, LexStream*, bool);
 #endif // JIKES_DEBUG
 
     virtual Ast* Clone(StoragePool*);
@@ -2142,6 +2188,7 @@ public:
     AstMethodDeclarator* method_declarator;
     AstMemberValue* default_value_opt;
     AstMethodBody* method_body_opt;
+    LexStream::TokenIndex semicolon_token_opt;
 
     inline AstMethodDeclaration(StoragePool* p)
         : AstDeclared(METHOD)
@@ -2174,9 +2221,7 @@ public:
     virtual LexStream::TokenIndex RightToken()
     {
         return method_body_opt ? method_body_opt -> right_brace_token
-            : default_value_opt ? default_value_opt -> RightToken() + 1
-            : NumThrows() ? Throw(NumThrows() - 1) -> RightToken()
-            : method_declarator -> RightToken() + 1;
+            : semicolon_token_opt;
     }
 };
 
@@ -2224,9 +2269,9 @@ public:
 
 //
 // Represents the arguments of AstThisCall, AstSuperCall, AstMethodInvocation,
-// and AstClassCreationExpression. For convenience, the need to add null
-// argument or pass shadow parameters is contained here, even though not all
-// the calling instances can use these features.
+// AstClassCreationExpression, and AstEnumConstant. For convenience, the need
+// to add null argument or pass shadow parameters is contained here, even
+// though not all the calling instances can use these features.
 //
 class AstArguments : public Ast
 {
@@ -2423,6 +2468,104 @@ public:
 
 
 //
+// Represents an enum type, added by JSR 201.
+//
+class AstEnumDeclaration : public AstDeclaredType
+{
+    StoragePool* pool;
+    AstArray<AstTypeName*>* interfaces;
+    AstArray<AstEnumConstant*>* enum_constants;
+
+public:
+    LexStream::TokenIndex enum_token;
+
+    inline AstEnumDeclaration(StoragePool* p)
+        : AstDeclaredType(ENUM_TYPE)
+        , pool(p)
+    {}
+    ~AstEnumDeclaration() {}
+
+    inline AstTypeName*& Interface(unsigned i)
+    {
+        return (*interfaces)[i];
+    }
+    inline unsigned NumInterfaces()
+    {
+        return interfaces ? interfaces -> Length() : 0;
+    }
+    inline void AllocateInterfaces(unsigned estimate = 1);
+    inline void AddInterface(AstTypeName*);
+
+    inline AstEnumConstant*& EnumConstant(unsigned i)
+    {
+        return (*enum_constants)[i];
+    }
+    inline unsigned NumEnumConstants()
+    {
+        return enum_constants ? enum_constants -> Length() : 0;
+    }
+    inline void AllocateEnumConstants(unsigned estimate = 1);
+    inline void AddEnumConstant(AstEnumConstant*);
+
+#ifdef JIKES_DEBUG
+    virtual void Print(LexStream&);
+    virtual void Unparse(Ostream&, LexStream*);
+#endif // JIKES_DEBUG
+
+    virtual Ast* Clone(StoragePool*);
+
+    virtual LexStream::TokenIndex LeftToken()
+    {
+        return modifiers_opt ? modifiers_opt -> LeftToken() : enum_token;
+    }
+    virtual LexStream::TokenIndex RightToken()
+    {
+        return class_body -> right_brace_token;
+    }
+};
+
+
+//
+// Represents an enum constant, added by JSR 201.
+//
+class AstEnumConstant : public AstDeclared
+{
+public:
+    LexStream::TokenIndex identifier_token;
+    AstArguments* arguments_opt;
+    AstClassBody* class_body_opt;
+
+    u4 ordinal; // the sequential position of the constant
+    VariableSymbol* field_symbol; // the field the constant lives in
+    MethodSymbol* ctor_symbol; // the constructor that builds the constant
+
+    inline AstEnumConstant(LexStream::TokenIndex t)
+        : AstDeclared(ENUM)
+        , identifier_token(t)
+    {}
+    ~AstEnumConstant() {}
+
+#ifdef JIKES_DEBUG
+    virtual void Print(LexStream&);
+    virtual void Unparse(Ostream&, LexStream*);
+#endif // JIKES_DEBUG
+
+    virtual Ast* Clone(StoragePool*);
+
+    virtual LexStream::TokenIndex LeftToken()
+    {
+        return modifiers_opt ? modifiers_opt -> LeftToken() : identifier_token;
+    }
+    virtual LexStream::TokenIndex RightToken()
+    {
+        return class_body_opt ? class_body_opt -> right_brace_token
+            : arguments_opt ? arguments_opt -> right_parenthesis_token
+            : identifier_token;
+    }
+};
+
+
+//
 // Represents an interface type.
 //
 class AstInterfaceDeclaration : public AstDeclaredType
@@ -2461,6 +2604,39 @@ public:
     virtual LexStream::TokenIndex LeftToken()
     {
         return modifiers_opt ? modifiers_opt -> LeftToken() : interface_token;
+    }
+    virtual LexStream::TokenIndex RightToken()
+    {
+        return class_body -> right_brace_token;
+    }
+};
+
+
+//
+// Represents an annotation type, added by JSR 175.
+//
+class AstAnnotationDeclaration : public AstDeclaredType
+{
+public:
+    LexStream::TokenIndex interface_token;
+
+    inline AstAnnotationDeclaration(LexStream::TokenIndex t)
+        : AstDeclaredType(ANNOTATION_TYPE)
+        , interface_token(t)
+    {}
+    ~AstAnnotationDeclaration() {}
+
+#ifdef JIKES_DEBUG
+    virtual void Print(LexStream&);
+    virtual void Unparse(Ostream&, LexStream*);
+#endif // JIKES_DEBUG
+
+    virtual Ast* Clone(StoragePool*);
+
+    virtual LexStream::TokenIndex LeftToken()
+    {
+        return modifiers_opt ? modifiers_opt -> LeftToken()
+            : interface_token - 1;
     }
     virtual LexStream::TokenIndex RightToken()
     {
@@ -2526,9 +2702,13 @@ public:
 class AstLocalClassStatement : public AstStatement
 {
 public:
-    AstClassDeclaration* declaration;
+    AstDeclaredType* declaration; // AstClassDeclaration, AstEnumDeclaration
 
     inline AstLocalClassStatement(AstClassDeclaration* decl)
+        : AstStatement(LOCAL_CLASS, false, true)
+        , declaration(decl)
+    {}
+    inline AstLocalClassStatement(AstEnumDeclaration* decl)
         : AstStatement(LOCAL_CLASS, false, true)
         , declaration(decl)
     {}
@@ -4661,9 +4841,24 @@ public:
         return new (this) AstConstructorDeclaration(this);
     }
 
+    inline AstEnumDeclaration* NewEnumDeclaration()
+    {
+        return new (this) AstEnumDeclaration(this);
+    }
+
+    inline AstEnumConstant* NewEnumConstant(LexStream::TokenIndex t)
+    {
+        return new (this) AstEnumConstant(t);
+    }
+
     inline AstInterfaceDeclaration* NewInterfaceDeclaration()
     {
         return new (this) AstInterfaceDeclaration(this);
+    }
+
+    inline AstAnnotationDeclaration* NewAnnotationDeclaration(LexStream::TokenIndex t)
+    {
+        return new (this) AstAnnotationDeclaration(t);
     }
 
     inline AstLocalVariableStatement* NewLocalVariableStatement()
@@ -4672,6 +4867,11 @@ public:
     }
 
     inline AstLocalClassStatement* NewLocalClassStatement(AstClassDeclaration* decl)
+    {
+        return new (this) AstLocalClassStatement(decl);
+    }
+
+    inline AstLocalClassStatement* NewLocalClassStatement(AstEnumDeclaration* decl)
     {
         return new (this) AstLocalClassStatement(decl);
     }
@@ -5153,9 +5353,30 @@ public:
         return p;
     }
 
+    inline AstEnumDeclaration* GenEnumDeclaration()
+    {
+        AstEnumDeclaration* p = NewEnumDeclaration();
+        p -> generated = true;
+        return p;
+    }
+
+    inline AstEnumConstant* GenEnumConstant(LexStream::TokenIndex t)
+    {
+        AstEnumConstant* p = NewEnumConstant(t);
+        p -> generated = true;
+        return p;
+    }
+
     inline AstInterfaceDeclaration* GenInterfaceDeclaration()
     {
         AstInterfaceDeclaration* p = NewInterfaceDeclaration();
+        p -> generated = true;
+        return p;
+    }
+
+    inline AstAnnotationDeclaration* GenAnnotationDeclaration(LexStream::TokenIndex t)
+    {
+        AstAnnotationDeclaration* p = NewAnnotationDeclaration(t);
         p -> generated = true;
         return p;
     }
@@ -5168,6 +5389,13 @@ public:
     }
 
     inline AstLocalClassStatement* GenLocalClassStatement(AstClassDeclaration* decl)
+    {
+        AstLocalClassStatement* p = NewLocalClassStatement(decl);
+        p -> generated = true;
+        return p;
+    }
+
+    inline AstLocalClassStatement* GenLocalClassStatement(AstEnumDeclaration* decl)
     {
         AstLocalClassStatement* p = NewLocalClassStatement(decl);
         p -> generated = true;
@@ -5767,10 +5995,26 @@ inline AstConstructorDeclaration* Ast::ConstructorDeclarationCast()
         (kind == CONSTRUCTOR ? this : NULL);
 }
 
+inline AstEnumDeclaration* Ast::EnumDeclarationCast()
+{
+    return DYNAMIC_CAST<AstEnumDeclaration*> (kind == ENUM_TYPE ? this : NULL);
+}
+
+inline AstEnumConstant* Ast::EnumConstantCast()
+{
+    return DYNAMIC_CAST<AstEnumConstant*> (kind == ENUM ? this : NULL);
+}
+
 inline AstInterfaceDeclaration* Ast::InterfaceDeclarationCast()
 {
     return DYNAMIC_CAST<AstInterfaceDeclaration*>
         (kind == INTERFACE ? this : NULL);
+}
+
+inline AstAnnotationDeclaration* Ast::AnnotationDeclarationCast()
+{
+    return DYNAMIC_CAST<AstAnnotationDeclaration*>
+        (kind == ANNOTATION_TYPE ? this : NULL);
 }
 
 inline AstLocalVariableStatement* Ast::LocalVariableStatementCast()
@@ -6141,12 +6385,6 @@ inline void AstClassBody::AllocateClassBodyDeclarations(unsigned estimate)
         new (pool) AstArray<AstDeclared*> (pool, estimate);
 }
 
-inline void AstClassBody::AddClassBodyDeclaration(AstDeclared* member)
-{
-    assert(class_body_declarations);
-    class_body_declarations -> Next() = member;
-}
-
 inline void AstClassBody::AllocateInstanceVariables(unsigned estimate)
 {
     assert(! instance_variables);
@@ -6236,6 +6474,18 @@ inline void AstClassBody::AddNestedClass(AstClassDeclaration* class_declaration)
     inner_classes -> Next() = class_declaration;
 }
 
+inline void AstClassBody::AllocateNestedEnums(unsigned estimate)
+{
+    assert(! inner_enums);
+    inner_enums = new (pool) AstArray<AstEnumDeclaration*> (pool, estimate);
+}
+
+inline void AstClassBody::AddNestedEnum(AstEnumDeclaration* enum_declaration)
+{
+    assert(inner_enums);
+    inner_enums -> Next() = enum_declaration;
+}
+
 inline void AstClassBody::AllocateNestedInterfaces(unsigned estimate)
 {
     assert(! inner_interfaces);
@@ -6247,6 +6497,19 @@ inline void AstClassBody::AddNestedInterface(AstInterfaceDeclaration* interface_
 {
     assert(inner_interfaces);
     inner_interfaces -> Next() = interface_declaration;
+}
+
+inline void AstClassBody::AllocateNestedAnnotations(unsigned estimate)
+{
+    assert(! inner_annotations);
+    inner_annotations =
+        new (pool) AstArray<AstAnnotationDeclaration*> (pool, estimate);
+}
+
+inline void AstClassBody::AddNestedAnnotation(AstAnnotationDeclaration* ann)
+{
+    assert(inner_annotations);
+    inner_annotations -> Next() = ann;
 }
 
 inline void AstClassBody::AllocateEmptyDeclarations(unsigned estimate)
@@ -6383,6 +6646,31 @@ inline void AstConstructorDeclaration::AddThrow(AstTypeName* exception)
 {
     assert(throws);
     throws -> Next() = exception;
+}
+
+inline void AstEnumDeclaration::AllocateInterfaces(unsigned estimate)
+{
+    assert(! interfaces);
+    interfaces = new (pool) AstArray<AstTypeName*> (pool, estimate);
+}
+
+inline void AstEnumDeclaration::AddInterface(AstTypeName* interf)
+{
+    assert(interfaces);
+    interfaces -> Next() = interf;
+}
+
+inline void AstEnumDeclaration::AllocateEnumConstants(unsigned estimate)
+{
+    assert(! enum_constants);
+    enum_constants = new (pool) AstArray<AstEnumConstant*> (pool, estimate);
+}
+
+inline void AstEnumDeclaration::AddEnumConstant(AstEnumConstant* constant)
+{
+    assert(enum_constants);
+    constant -> ordinal = enum_constants -> Length();
+    enum_constants -> Next() = constant;
 }
 
 inline void AstInterfaceDeclaration::AllocateInterfaces(unsigned estimate)

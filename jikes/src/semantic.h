@@ -835,10 +835,10 @@ private:
 
     // Implemented in decl.cpp - process a .java file for declarations
     void ProcessTypeHeader(AstClassDeclaration*);
+    void ProcessTypeHeader(AstEnumDeclaration*);
     void ProcessTypeHeader(AstInterfaceDeclaration*);
-    void ProcessTypeHeaders(AstClassDeclaration*);
-    void ProcessTypeHeaders(AstInterfaceDeclaration*);
-    void ProcessTypeHeaders(TypeSymbol*, AstClassBody*);
+    void ProcessTypeHeader(AstAnnotationDeclaration*);
+    TypeSymbol* ProcessTypeHeaders(AstClassBody*, TypeSymbol* = NULL);
     void ProcessSuperinterface(TypeSymbol*, AstTypeName*);
     void ProcessTypeParameters(TypeSymbol*, AstTypeParameters*);
     void ProcessConstructorMembers(AstClassBody*);
@@ -977,7 +977,7 @@ private:
     AccessFlags ProcessPackageModifiers(AstPackageDeclaration*);
     AccessFlags ProcessTopLevelTypeModifiers(AstDeclaredType*);
     AccessFlags ProcessNestedTypeModifiers(TypeSymbol*, AstDeclaredType*);
-    AccessFlags ProcessLocalClassModifiers(AstClassDeclaration*);
+    AccessFlags ProcessLocalClassModifiers(AstDeclaredType*);
     AccessFlags ProcessFieldModifiers(AstFieldDeclaration*);
     AccessFlags ProcessLocalModifiers(AstLocalVariableStatement*);
     AccessFlags ProcessFormalModifiers(AstFormalParameter*);
@@ -986,6 +986,7 @@ private:
     AccessFlags ProcessInterfaceFieldModifiers(AstFieldDeclaration*);
     AccessFlags ProcessInterfaceMethodModifiers(AstMethodDeclaration*);
     AccessFlags ProcessInitializerModifiers(AstInitializerDeclaration*);
+    AccessFlags ProcessEnumConstantModifiers(AstEnumConstant*);
 
     // Implemented in decl.cpp - process declarations
     void AddDefaultConstructor(TypeSymbol*);
@@ -1270,7 +1271,7 @@ private:
                        statement -> RightToken());
     }
 
-    TypeSymbol* GetLocalType(AstClassDeclaration*);
+    TypeSymbol* GetLocalType(AstDeclaredType*);
     void ProcessClassDeclaration(Ast*);
 
     // Implemented in expr.cpp - expression processing

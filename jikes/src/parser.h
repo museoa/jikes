@@ -33,7 +33,6 @@ class AstCompilationUnit;
 class AstClassBody;
 class AstTypeParameters;
 class AstMethodBody;
-class AstArguments;
 
 enum ParseErrorCode
 {

@@ -256,8 +256,8 @@ wchar_t* Semantic::Header(const NameSymbol* name, AstArguments* args)
     for (unsigned i = 0; i < num_arguments; i++)
     {
         TypeSymbol* arg_type = args -> Argument(i) -> Type();
-        // '.' after package_name ',' and ' ' to separate this formal
-        // parameter from the next one
+        // '.' after package_name; ',' and ' ' to separate this argument
+        // from the next one
         length += arg_type -> ContainingPackage() -> PackageNameLength() +
             arg_type -> ExternalNameLength() + 3;
     }
@@ -3956,7 +3956,7 @@ TypeSymbol* Semantic::GetAnonymousType(AstClassCreationExpression* class_creatio
     // Now process the body of the anonymous class !!!
     //
     CheckNestedMembers(anon_type, class_body);
-    ProcessTypeHeaders(anon_type, class_body);
+    ProcessTypeHeaders(class_body, anon_type);
 
     //
     // If the class body has not yet been parsed, do so now.
@@ -4080,7 +4080,14 @@ void Semantic::ProcessClassCreationExpression(Ast* expr)
     // order, when the superclass of the anonymous class has an enclosing
     // instance.
     //
-    if (class_creation -> class_body_opt)
+    if (type -> IsEnum())
+    {
+        ReportSemError(SemanticError::CANNOT_CONSTRUCT_ENUM, actual_type,
+                       type -> ContainingPackageName(),
+                       type -> ExternalName());
+        type = control.no_type;
+    }
+    else if (class_creation -> class_body_opt)
     {
         type = GetAnonymousType(class_creation, type);
         class_creation -> symbol = type;

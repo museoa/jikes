@@ -34,6 +34,7 @@ wchar_t* MethodSymbol::Header()
     if (! header)
     {
         bool is_constructor = Name()[0] == U_LESS && Name()[1] == U_i;
+        unsigned num_parameters = NumFormalParameters();
         int length = (Type() -> ContainingPackage() -> PackageNameLength() +
                       Type() -> ExternalNameLength() +
                       (is_constructor ? containing_type -> NameLength()
@@ -41,14 +42,15 @@ wchar_t* MethodSymbol::Header()
                       + 5); // +5 for '.' after package_name, ' ' after type,
                             // '(' after name, ')' after all parameters,
                             // ';' to terminate
-        for (unsigned i = 0; i < NumFormalParameters(); i++)
+        for (unsigned i = 0; i < num_parameters; i++)
         {
             VariableSymbol* formal = FormalParameter(i);
             length += (formal -> Type() -> ContainingPackage() -> PackageNameLength() +
                        formal -> Type() -> ExternalNameLength() +
                        formal -> NameLength() + 4);
-            // +4 for '.' after package_name, ' ' after type
-            // ',' and ' ' to separate this formal parameter from the next one
+            // +4 for '.' after package_name, ' ' after type; ',' and ' ' to
+            // separate this formal parameter from the next one. Last
+            // parameter may need '...' instead of '[]', but doesn't need ', '.
         }
 
         if (throws_signatures && NumThrowsSignatures())
@@ -103,9 +105,9 @@ wchar_t* MethodSymbol::Header()
                  *s++ = *s2;
         }
         *s++ = U_LEFT_PARENTHESIS;
-        if (NumFormalParameters() > 0)
+        if (num_parameters > 0)
         {
-            for (unsigned k = 0; k < NumFormalParameters(); k++)
+            for (unsigned k = 0; k < num_parameters; k++)
             {
                 VariableSymbol* formal = FormalParameter(k);
 
@@ -127,6 +129,13 @@ wchar_t* MethodSymbol::Header()
                 for (s2 = formal -> Type() -> ExternalName(); *s2; s2++)
                 {
                     *s++ = *s2;
+                }
+                if (k == num_parameters - 1 && ACC_VARARGS())
+                {
+                    assert(s[-2] == U_LB && s[-1] == U_RB);
+                    s[-2] = U_DOT;
+                    s[-1] = U_DOT;
+                    *s++ = U_DOT;
                 }
                 *s++ = U_SPACE;
                 for (s2 = formal -> Name(); *s2; s2++)
@@ -258,17 +267,7 @@ MethodSymbol* SymbolTable::FindOverloadMethod(MethodSymbol* base_method,
 
 void TypeSymbol::ProcessTypeHeaders()
 {
-    AstClassDeclaration* class_decl =
-        declaration -> owner -> ClassDeclarationCast();
-    AstInterfaceDeclaration* interf_decl =
-        declaration -> owner -> InterfaceDeclarationCast();
-    if (class_decl)
-        semantic_environment -> sem -> ProcessTypeHeaders(class_decl);
-    else
-    {
-        assert(interf_decl);
-        semantic_environment -> sem -> ProcessTypeHeaders(interf_decl);
-    }
+    semantic_environment -> sem -> ProcessTypeHeaders(declaration);
 }
 
 void TypeSymbol::ProcessMembers()

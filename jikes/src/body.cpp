@@ -1922,7 +1922,7 @@ void Semantic::ProcessEmptyStatement(Ast* stmt)
 }
 
 
-TypeSymbol* Semantic::GetLocalType(AstClassDeclaration* class_declaration)
+TypeSymbol* Semantic::GetLocalType(AstDeclaredType* class_declaration)
 {
     NameSymbol* name_symbol = lex_stream ->
         NameSymbol(class_declaration -> class_body -> identifier_token);
@@ -1944,7 +1944,8 @@ TypeSymbol* Semantic::GetLocalType(AstClassDeclaration* class_declaration)
         name_symbol -> NameLength(); // +1 for $
     wchar_t* external_name = new wchar_t[length + 1]; // +1 for '\0';
     wcscpy(external_name, this_type -> ExternalName());
-    wcscat(external_name, StringConstant::US_DS);
+    wcscat(external_name, (control.option.target < JikesOption::SDK1_5
+                           ? StringConstant::US_DS : StringConstant::US_MI));
     wcscat(external_name, value.String());
     wcscat(external_name, name_symbol -> Name());
 
@@ -1962,7 +1963,7 @@ TypeSymbol* Semantic::GetLocalType(AstClassDeclaration* class_declaration)
 void Semantic::ProcessClassDeclaration(Ast* stmt)
 {
     AstLocalClassStatement* class_statement = (AstLocalClassStatement*) stmt;
-    AstClassDeclaration* class_declaration = class_statement -> declaration;
+    AstDeclaredType* class_declaration = class_statement -> declaration;
     AstClassBody* class_body = class_declaration -> class_body;
 
     CheckNestedTypeDuplication(state_stack.Top(),
@@ -1997,7 +1998,7 @@ void Semantic::ProcessClassDeclaration(Ast* stmt)
     // Save environment for processing bodies later.
     class_body -> semantic_environment = inner_type -> semantic_environment;
     CheckNestedMembers(inner_type, class_body);
-    ProcessTypeHeaders(class_declaration);
+    ProcessTypeHeaders(class_body);
 
     ProcessMembers(class_body);
     CompleteSymbolTable(class_body);

@@ -1,5 +1,33 @@
 2004-03-23  Eric Blake  <ebb9@byu.net>
 
+	* src/ast.h (AstEnumDeclaration, AstEnumConstant),
+	(AstAnnotationDeclaration): Final new classes to fully parse JDK
+	1.5 grammar (but semantics are still a ways off).
+	* src/error.h (ANNOTATION_TYPE_UNSUPPORTED, ENUM_TYPE_UNSUPPORTED),
+	(SUPER_IS_ENUM, CANNOT_CONSTRUCT_ENUM): New errors.
+	* src/error.cpp: Ditto.
+	* src/ast.cpp: Rough support for enum and annotation types.
+	* src/body.cpp: Ditto.
+	* src/control.h: Ditto.
+	* src/decl.cpp: Ditto.
+	* src/expr.cpp: Ditto.
+	* src/java.g: Ditto.
+	* src/modifier.cpp: Ditto.
+	* src/parser.h: Ditto.
+	* src/scanner.cpp: Ditto.
+	* src/semantic.h: Ditto.
+	* src/symbol.cpp: Ditto.
+	* src/symbol.h: Ditto.
+	* src/system.cpp: Ditto.
+	* src/unparse.cpp: Ditto.
+	* src/javaact.cpp: Regenerate.
+	* src/javaact.h: Ditto.
+	* src/javadcl.h: Ditto.
+	* src/javadef.h: Ditto.
+	* src/javasym.h: Ditto.
+
+2004-03-23  Eric Blake  <ebb9@byu.net>
+
 	* src/control.h: Reorder accessor cache variables.
 	(FIELD_ACCESSOR): Similar to TYPE_ACCESSOR, to access fields like
 	Integer.TYPE and ElementType.FIELD.

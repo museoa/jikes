@@ -412,18 +412,21 @@ Ast* AstClassBody::Clone(StoragePool* ast_pool)
     clone -> AllocateStaticInitializers(NumStaticInitializers());
     clone -> AllocateInstanceInitializers(NumInstanceInitializers());
     clone -> AllocateNestedClasses(NumNestedClasses());
+    clone -> AllocateNestedEnums(NumNestedEnums());
     clone -> AllocateNestedInterfaces(NumNestedInterfaces());
+    clone -> AllocateNestedAnnotations(NumNestedAnnotations());
     clone -> AllocateEmptyDeclarations(NumEmptyDeclarations());
     for (unsigned i = 0; i < NumClassBodyDeclarations(); i++)
-        clone -> AddClassBodyDeclarationNicely((AstDeclaredType*)
-                                               ClassBodyDeclaration(i) ->
-                                               Clone(ast_pool));
+        clone -> AddClassBodyDeclaration((AstDeclaredType*)
+                                         ClassBodyDeclaration(i) ->
+                                         Clone(ast_pool));
     clone -> right_brace_token = right_brace_token;
     return clone;
 }
 
-void AstClassBody::AddClassBodyDeclarationNicely(AstDeclared* member)
+void AstClassBody::AddClassBodyDeclaration(AstDeclared* member)
 {
+    assert(class_body_declarations);
     AstFieldDeclaration* field_declaration = member -> FieldDeclarationCast();
     AstMethodDeclaration* method_declaration =
         member -> MethodDeclarationCast();
@@ -432,11 +435,13 @@ void AstClassBody::AddClassBodyDeclarationNicely(AstDeclared* member)
     AstInitializerDeclaration* initializer =
         member -> InitializerDeclarationCast();
     AstClassDeclaration* class_declaration = member -> ClassDeclarationCast();
+    AstEnumDeclaration* enum_declaration = member -> EnumDeclarationCast();
     AstInterfaceDeclaration* interface_declaration =
         member -> InterfaceDeclarationCast();
+    AstAnnotationDeclaration* annotation_declaration =
+        member -> AnnotationDeclarationCast();
 
-    AddClassBodyDeclaration(member);
-
+    class_body_declarations -> Next() = member;
     if (field_declaration)
     {
         if (field_declaration -> StaticFieldCast())
@@ -455,8 +460,12 @@ void AstClassBody::AddClassBodyDeclarationNicely(AstDeclared* member)
     }
     else if (class_declaration)
         AddNestedClass(class_declaration);
+    else if (enum_declaration)
+        AddNestedEnum(enum_declaration);
     else if (interface_declaration)
         AddNestedInterface(interface_declaration);
+    else if (annotation_declaration)
+        AddNestedAnnotation(annotation_declaration);
     else AddEmptyDeclaration((AstEmptyDeclaration*) member);
 }
 
@@ -610,6 +619,7 @@ Ast* AstMethodDeclaration::Clone(StoragePool* ast_pool)
     if (method_body_opt)
         clone -> method_body_opt =
             (AstMethodBody*) method_body_opt -> Clone(ast_pool);
+    clone -> semicolon_token_opt = semicolon_token_opt;
     return clone;
 }
 
@@ -685,6 +695,40 @@ Ast* AstConstructorDeclaration::Clone(StoragePool* ast_pool)
     return clone;
 }
 
+Ast* AstEnumDeclaration::Clone(StoragePool* ast_pool)
+{
+    unsigned i;
+    AstEnumDeclaration* clone = ast_pool -> GenEnumDeclaration();
+    if (modifiers_opt)
+        clone -> modifiers_opt =
+            (AstModifiers*) modifiers_opt -> Clone(ast_pool);
+    clone -> AllocateInterfaces(NumInterfaces());
+    for (i = 0; i < NumInterfaces(); i++)
+        clone -> AddInterface((AstTypeName*) Interface(i) -> Clone(ast_pool));
+    clone -> AllocateEnumConstants(NumEnumConstants());
+    for (i = 0; i < NumEnumConstants(); i++)
+        clone -> AddEnumConstant((AstEnumConstant*) EnumConstant(i) ->
+                                 Clone(ast_pool));
+    clone -> class_body = (AstClassBody*) class_body -> Clone(ast_pool);
+    clone -> class_body -> owner = clone;
+    return clone;
+}
+
+Ast* AstEnumConstant::Clone(StoragePool* ast_pool)
+{
+    AstEnumConstant* clone = ast_pool -> GenEnumConstant(identifier_token);
+    if (modifiers_opt)
+        clone -> modifiers_opt =
+            (AstModifiers*) modifiers_opt -> Clone(ast_pool);
+    if (arguments_opt)
+        clone -> arguments_opt =
+            (AstArguments*) arguments_opt -> Clone(ast_pool);
+    if (class_body_opt)
+        clone -> class_body_opt =
+            (AstClassBody*) class_body_opt -> Clone(ast_pool);
+    return clone;
+}
+
 Ast* AstInterfaceDeclaration::Clone(StoragePool* ast_pool)
 {
     AstInterfaceDeclaration* clone = ast_pool -> GenInterfaceDeclaration();
@@ -698,6 +742,18 @@ Ast* AstInterfaceDeclaration::Clone(StoragePool* ast_pool)
     clone -> AllocateInterfaces(NumInterfaces());
     for (unsigned i = 0; i < NumInterfaces(); i++)
         clone -> AddInterface((AstTypeName*) Interface(i) -> Clone(ast_pool));
+    clone -> class_body = (AstClassBody*) class_body -> Clone(ast_pool);
+    clone -> class_body -> owner = clone;
+    return clone;
+}
+
+Ast* AstAnnotationDeclaration::Clone(StoragePool* ast_pool)
+{
+    AstAnnotationDeclaration* clone =
+        ast_pool -> GenAnnotationDeclaration(interface_token);
+    if (modifiers_opt)
+        clone -> modifiers_opt =
+            (AstModifiers*) modifiers_opt -> Clone(ast_pool);
     clone -> class_body = (AstClassBody*) class_body -> Clone(ast_pool);
     clone -> class_body -> owner = clone;
     return clone;
@@ -721,8 +777,10 @@ Ast* AstLocalVariableStatement::Clone(StoragePool* ast_pool)
 
 Ast* AstLocalClassStatement::Clone(StoragePool* ast_pool)
 {
-    return ast_pool -> GenLocalClassStatement((AstClassDeclaration*)
-                                              declaration -> Clone(ast_pool));
+    Ast* p = declaration -> Clone(ast_pool);
+    if (p -> ClassDeclarationCast())
+        return ast_pool -> GenLocalClassStatement((AstClassDeclaration*) p);
+    else return ast_pool -> GenLocalClassStatement((AstEnumDeclaration*) p);
 }
 
 Ast* AstIfStatement::Clone(StoragePool* ast_pool)
@@ -1315,6 +1373,7 @@ void AstAnnotation::Print(LexStream& lex_stream)
         Coutput << " #" << MemberValuePair(i) -> id;
     }
     Coutput << ')' << endl;
+    name -> Print(lex_stream);
     for (i = 0; i < NumMemberValuePairs(); i++)
         MemberValuePair(i) -> Print(lex_stream);
 }
@@ -1640,6 +1699,43 @@ void AstConstructorDeclaration::Print(LexStream& lex_stream)
     constructor_body -> Print(lex_stream);
 }
 
+void AstEnumDeclaration::Print(LexStream& lex_stream)
+{
+    unsigned i;
+    Coutput << '#' << id << " (EnumDeclaration):  #"
+            << (modifiers_opt ? modifiers_opt -> id : 0) << ' '
+            << lex_stream.NameString(enum_token) << ' '
+            << lex_stream.NameString(class_body -> identifier_token) << " (";
+    for (i = 0; i < NumInterfaces(); i++)
+        Coutput << " #" << Interface(i) -> id;
+    Coutput << ") {";
+    for (i = 0; i < NumEnumConstants(); i++)
+        Coutput << " #" << EnumConstant(i) -> id;
+    Coutput << "} #" << class_body -> id << endl;
+    if (modifiers_opt)
+        modifiers_opt -> Print(lex_stream);
+    for (i = 0; i < NumInterfaces(); i++)
+        Interface(i) -> Print(lex_stream);
+    for (i = 0; i < NumEnumConstants(); i++)
+        EnumConstant(i) -> Print(lex_stream);
+    class_body -> Print(lex_stream);
+}
+
+void AstEnumConstant::Print(LexStream& lex_stream)
+{
+    Coutput << '#' << id << " (EnumConstant):  #"
+            << (modifiers_opt ? modifiers_opt -> id : 0) << ' '
+            << lex_stream.NameString(identifier_token) << " #"
+            << (arguments_opt ? arguments_opt -> id : 0) << " #"
+            << (class_body_opt ? class_body_opt -> id : 0) << endl;
+    if (modifiers_opt)
+        modifiers_opt -> Print(lex_stream);
+    if (arguments_opt)
+        arguments_opt -> Print(lex_stream);
+    if (class_body_opt)
+        class_body_opt -> Print(lex_stream);
+}
+
 void AstInterfaceDeclaration::Print(LexStream& lex_stream)
 {
     unsigned i;
@@ -1657,6 +1753,18 @@ void AstInterfaceDeclaration::Print(LexStream& lex_stream)
         type_parameters_opt -> Print(lex_stream);
     for (i = 0; i < NumInterfaces(); i++)
         Interface(i) -> Print(lex_stream);
+    class_body -> Print(lex_stream);
+}
+
+void AstAnnotationDeclaration::Print(LexStream& lex_stream)
+{
+    Coutput << '#' << id << " (AnnotationDeclaration):  #"
+            << (modifiers_opt ? modifiers_opt -> id : 0) << " @"
+            << lex_stream.NameString(interface_token) << ' '
+            << lex_stream.NameString(class_body -> identifier_token) << " #"
+            << class_body -> id << endl;
+    if (modifiers_opt)
+        modifiers_opt -> Print(lex_stream);
     class_body -> Print(lex_stream);
 }
 

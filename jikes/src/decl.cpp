@@ -294,14 +294,23 @@ void Semantic::CheckNestedMembers(TypeSymbol* containing_type,
     unsigned i;
     for (i = 0; i < class_body -> NumNestedClasses(); i++)
     {
-        AstClassDeclaration* class_declaration = class_body -> NestedClass(i);
-        ProcessNestedTypeName(containing_type, class_declaration);
+        AstClassDeclaration* decl = class_body -> NestedClass(i);
+        ProcessNestedTypeName(containing_type, decl);
+    }
+    for (i = 0; i < class_body -> NumNestedEnums(); i++)
+    {
+        AstEnumDeclaration* decl = class_body -> NestedEnum(i);
+        ProcessNestedTypeName(containing_type, decl);
     }
     for (i = 0; i < class_body -> NumNestedInterfaces(); i++)
     {
-        AstInterfaceDeclaration* interface_declaration =
-            class_body -> NestedInterface(i);
-        ProcessNestedTypeName(containing_type, interface_declaration);
+        AstInterfaceDeclaration* decl = class_body -> NestedInterface(i);
+        ProcessNestedTypeName(containing_type, decl);
+    }
+    for (i = 0; i < class_body -> NumNestedAnnotations(); i++)
+    {
+        AstAnnotationDeclaration* decl = class_body -> NestedAnnotation(i);
+        ProcessNestedTypeName(containing_type, decl);
     }
     for (i = 0; i < class_body -> NumEmptyDeclarations(); i++)
     {
@@ -492,8 +501,11 @@ void Semantic::ProcessImports()
         if (import_declaration -> static_token_opt)
         {
             // TODO: Add static import support for 1.5.
-            ReportSemError(SemanticError::STATIC_IMPORT_UNSUPPORTED,
-                           import_declaration -> static_token_opt);
+            //      if (control.option.source < JikesOption::SDK1_5)
+            {
+                ReportSemError(SemanticError::STATIC_IMPORT_UNSUPPORTED,
+                               import_declaration -> static_token_opt);
+            }
         }
         if (import_declaration -> star_token_opt)
             ProcessTypeImportOnDemandDeclaration(import_declaration);
@@ -516,27 +528,37 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration* declaration)
         return;
 
     //
-    // Special case java.lang.Object, the only class with no supertype.
+    // Special case certain classes in java.lang.  We can't use the
+    // control.Classname() accessor method here, because that causes problems
+    // with recursion or non-existant classes.
     //
-    if (type -> Identity() == control.object_name_symbol &&
-        this_package == control.LangPackage() && ! type -> IsNested())
+    if (this_package == control.LangPackage() && ! type -> IsNested())
     {
-        if (declaration -> super_opt || declaration -> NumInterfaces())
+        // java.lang.Object is the only class with no supertype.
+        if (type -> Identity() == control.Object_name_symbol)
         {
-            ReportSemError(SemanticError::OBJECT_WITH_SUPER_TYPE,
-                           declaration -> LeftToken(),
-                           declaration -> class_body -> left_brace_token - 1);
+            if (declaration -> super_opt || declaration -> NumInterfaces())
+            {
+                ReportSemError(SemanticError::OBJECT_WITH_SUPER_TYPE,
+                               declaration -> LeftToken(),
+                               declaration -> class_body -> left_brace_token - 1);
+            }
+            if (declaration -> type_parameters_opt)
+            {
+                ReportSemError(SemanticError::TYPE_MAY_NOT_HAVE_PARAMETERS,
+                               declaration -> LeftToken(),
+                               declaration -> class_body -> left_brace_token - 1,
+                               type -> ContainingPackageName(),
+                               type -> ExternalName());
+            }
+            type -> MarkHeaderProcessed();
+            return;
         }
-        if (declaration -> type_parameters_opt)
-        {
-            ReportSemError(SemanticError::TYPE_MAY_NOT_HAVE_PARAMETERS,
-                           declaration -> LeftToken(),
-                           declaration -> class_body -> left_brace_token - 1,
-                           type -> ContainingPackageName(),
-                           type -> ExternalName());
-        }
-        type -> MarkHeaderProcessed();
-        return;
+        //
+        // java.lang.Enum didn't exist before 1.5.
+        //
+        else if (type -> Identity() == control.Enum_name_symbol)
+            type -> MarkEnum();
     }
 
     if (declaration -> type_parameters_opt)
@@ -551,18 +573,7 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration* declaration)
         TypeSymbol* super_type = declaration -> super_opt -> symbol;
         assert(! super_type -> SourcePending());
         if (! super_type -> HeaderProcessed())
-        {
-            AstClassDeclaration* class_decl = super_type ->
-                declaration -> owner -> ClassDeclarationCast();
-            AstInterfaceDeclaration* interface_decl = super_type ->
-                declaration -> owner -> InterfaceDeclarationCast();
-            Semantic* sem = super_type -> semantic_environment -> sem;
-            if (class_decl)
-                sem -> ProcessTypeHeaders(class_decl);
-            else if (interface_decl)
-                sem -> ProcessTypeHeaders(interface_decl);
-            else assert(false && "supertype not processed");
-        }
+            super_type -> ProcessTypeHeaders();
         if (control.option.deprecation && state_stack.Size() == 0 &&
             super_type -> IsDeprecated() && ! type -> IsDeprecated())
         {
@@ -571,7 +582,14 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration* declaration)
                            super_type -> ContainingPackageName(),
                            super_type -> ExternalName());
         }
-        if (super_type -> ACC_INTERFACE())
+        if (super_type -> IsEnum())
+        {
+            ReportSemError(SemanticError::SUPER_IS_ENUM,
+                           declaration -> super_opt,
+                           super_type -> ContainingPackageName(),
+                           super_type -> ExternalName());
+        }
+        else if (super_type -> ACC_INTERFACE())
         {
             ReportSemError(SemanticError::NOT_A_CLASS,
                            declaration -> super_opt,
@@ -626,7 +644,7 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration* declaration)
                        type -> ExternalName());
     }
     else if (declaration -> type_parameters_opt &&
-             type -> super -> IsSubclass(control.Throwable()))
+             type -> IsSubclass(control.Throwable()))
     {
         ReportSemError(SemanticError::TYPE_MAY_NOT_HAVE_PARAMETERS,
                        declaration -> LeftToken(),
@@ -637,13 +655,44 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration* declaration)
 }
 
 
+void Semantic::ProcessTypeHeader(AstEnumDeclaration* declaration)
+{
+    TypeSymbol* type =
+        declaration -> class_body -> semantic_environment -> Type();
+    assert(! type -> HeaderProcessed() || type -> Bad());
+    type -> MarkHeaderProcessed();
+    // TODO: Add enum support for 1.5.
+//      if (control.option.source < JikesOption::SDK1_5)
+    {
+        ReportSemError(SemanticError::ENUM_TYPE_UNSUPPORTED,
+                       declaration -> enum_token);
+        type -> super = control.Object();
+        type -> MarkBad();
+    }
+    if (type -> Bad())
+        return;
+
+    //
+    // Process the supertypes.
+    //
+    type -> super = control.Enum();
+    type -> supertypes_closure -> AddElement(control.Enum());
+    type -> MarkEnum(); // Since ACC_ENUM is only for enum constants.
+    control.Enum() -> subtypes -> AddElement(type);
+    AddDependence(type, type -> super);
+    for (unsigned i = 0; i < declaration -> NumInterfaces(); i++)
+        ProcessSuperinterface(type, declaration -> Interface(i));
+    // there will not be a cycle
+    assert(! type -> supertypes_closure -> IsElement(type));
+}
+
+
 void Semantic::ProcessTypeHeader(AstInterfaceDeclaration* declaration)
 {
     TypeSymbol* type =
         declaration -> class_body -> semantic_environment -> Type();
     assert(! type -> HeaderProcessed() || type -> Bad());
     type -> MarkHeaderProcessed();
-
     if (declaration -> type_parameters_opt)
         ProcessTypeParameters(type, declaration -> type_parameters_opt);
 
@@ -672,6 +721,30 @@ void Semantic::ProcessTypeHeader(AstInterfaceDeclaration* declaration)
 }
 
 
+void Semantic::ProcessTypeHeader(AstAnnotationDeclaration* declaration)
+{
+    TypeSymbol* type =
+        declaration -> class_body -> semantic_environment -> Type();
+    assert(! type -> HeaderProcessed() || type -> Bad());
+    type -> MarkHeaderProcessed();
+    // TODO: Add annotation support for 1.5.
+//      if (control.option.source < JikesOption::SDK1_5)
+    {
+        ReportSemError(SemanticError::ANNOTATION_TYPE_UNSUPPORTED,
+                       declaration -> interface_token - 1,
+                       declaration -> interface_token);
+        type -> MarkBad();
+    }
+    //
+    // All annotations are treated as subclasses of Object and Annotation.
+    //
+    type -> super = control.Object();
+    AddDependence(type, control.Object());
+    type -> AddInterface(control.Annotation());
+    AddDependence(type, control.Annotation());
+}
+
+
 void Semantic::ProcessSuperinterface(TypeSymbol* base_type, AstTypeName* name)
 {
     ProcessType(name);
@@ -679,19 +752,7 @@ void Semantic::ProcessSuperinterface(TypeSymbol* base_type, AstTypeName* name)
 
     assert(! interf -> SourcePending());
     if (! interf -> HeaderProcessed())
-    {
-        AstClassDeclaration* class_decl =
-            interf -> declaration -> owner -> ClassDeclarationCast();
-        AstInterfaceDeclaration* interface_decl =
-            interf -> declaration -> owner -> InterfaceDeclarationCast();
-        Semantic* sem = interf -> semantic_environment -> sem;
-        if (class_decl)
-            sem -> ProcessTypeHeaders(class_decl);
-        else if (interface_decl)
-            sem -> ProcessTypeHeaders(interface_decl);
-        else assert(false && "supertype not processed");
-    }
-
+        interf -> ProcessTypeHeaders();
     if (control.option.deprecation && state_stack.Size() == 0 &&
         interf -> IsDeprecated() && ! base_type -> IsDeprecated())
     {
@@ -751,84 +812,56 @@ void Semantic::ProcessTypeParameters(TypeSymbol* /*type*/,
 }
 
 
-void Semantic::ProcessTypeHeaders(AstClassDeclaration* class_declaration)
+//
+// Process the type headers of the owner of body.  Anonymous types have no
+// owner, so anon_type must be non-null only in that case.
+//
+TypeSymbol* Semantic::ProcessTypeHeaders(AstClassBody* body,
+                                         TypeSymbol* anon_type)
 {
-    TypeSymbol* type =
-        class_declaration -> class_body -> semantic_environment -> Type();
-
+    assert(! body -> owner ^ ! anon_type);
+    SemanticEnvironment* sem = anon_type ? anon_type -> semantic_environment
+        : body -> semantic_environment;
+    TypeSymbol* type = anon_type ? anon_type : sem -> Type();
     if (type -> HeaderProcessed())
-        return; // Possible if a subclass was declared in the same file.
-    ProcessTypeHeader(class_declaration);
-    state_stack.Push(class_declaration -> class_body -> semantic_environment);
-    AstClassBody* class_body = class_declaration -> class_body;
-    for (unsigned i = 0; i < class_body -> NumNestedClasses(); i++)
+        return type; // Possible if a subclass was declared in the same file.
+    if (anon_type)
+        anon_type -> MarkHeaderProcessed();
+    else if (body -> owner -> ClassDeclarationCast())
+        ProcessTypeHeader((AstClassDeclaration*) body -> owner);
+    else if (body -> owner -> EnumDeclarationCast())
+        ProcessTypeHeader((AstEnumDeclaration*) body -> owner);
+    else if (body -> owner -> InterfaceDeclarationCast())
+        ProcessTypeHeader((AstInterfaceDeclaration*) body -> owner);
+    else
     {
-        AstClassDeclaration* nested_class = class_body -> NestedClass(i);
-        ProcessTypeHeaders(nested_class);
-        type -> AddNestedType(nested_class -> class_body ->
-                              semantic_environment -> Type());
+        assert(body -> owner -> AnnotationDeclarationCast());
+        ProcessTypeHeader((AstAnnotationDeclaration*) body -> owner);
     }
-    for (unsigned j = 0; j < class_body -> NumNestedInterfaces(); j++)
-    {
-        AstInterfaceDeclaration* nested_interface =
-            class_body -> NestedInterface(j);
-        ProcessTypeHeaders(nested_interface);
-        type -> AddNestedType(nested_interface -> class_body ->
-                              semantic_environment -> Type());
-    }
-    state_stack.Pop();
-}
-
-
-void Semantic::ProcessTypeHeaders(AstInterfaceDeclaration* interface_declaration)
-{
-    TypeSymbol* type =
-        interface_declaration -> class_body -> semantic_environment -> Type();
-
-    if (type -> HeaderProcessed())
-        return; // Possible if a subclass was declared in the same file.
-    ProcessTypeHeader(interface_declaration);
-    state_stack.Push(interface_declaration -> class_body ->
-                     semantic_environment);
-    AstClassBody* class_body = interface_declaration -> class_body;
-    for (unsigned i = 0; i < class_body -> NumNestedClasses(); i++)
-    {
-        AstClassDeclaration* nested_class = class_body -> NestedClass(i);
-        ProcessTypeHeaders(nested_class);
-        type -> AddNestedType(nested_class -> class_body ->
-                              semantic_environment -> Type());
-    }
-    for (unsigned j = 0; j < class_body -> NumNestedInterfaces(); j++)
-    {
-        AstInterfaceDeclaration* nested_interface =
-            class_body -> NestedInterface(j);
-        ProcessTypeHeaders(nested_interface);
-        type -> AddNestedType(nested_interface -> class_body ->
-                              semantic_environment -> Type());
-    }
-    state_stack.Pop();
-}
-
-
-void Semantic::ProcessTypeHeaders(TypeSymbol* anon_type, AstClassBody* body)
-{
-    anon_type -> MarkHeaderProcessed();
-    state_stack.Push(anon_type -> semantic_environment);
-    for (unsigned i = 0; i < body -> NumNestedClasses(); i++)
+    state_stack.Push(sem);
+    unsigned i;
+    for (i = 0; i < body -> NumNestedClasses(); i++)
     {
         AstClassDeclaration* nested_class = body -> NestedClass(i);
-        ProcessTypeHeaders(nested_class);
-        anon_type -> AddNestedType(nested_class -> class_body ->
-                                   semantic_environment -> Type());
+        type -> AddNestedType(ProcessTypeHeaders(nested_class -> class_body));
     }
-    for (unsigned j = 0; j < body -> NumNestedInterfaces(); j++)
+    for (i = 0; i < body -> NumNestedEnums(); i++)
     {
-        AstInterfaceDeclaration* nested_interface = body -> NestedInterface(j);
-        ProcessTypeHeaders(nested_interface);
-        anon_type -> AddNestedType(nested_interface -> class_body ->
-                                   semantic_environment -> Type());
+        AstEnumDeclaration* nested_enum = body -> NestedEnum(i);
+        type -> AddNestedType(ProcessTypeHeaders(nested_enum -> class_body));
+    }
+    for (i = 0; i < body -> NumNestedInterfaces(); i++)
+    {
+        AstInterfaceDeclaration* nested = body -> NestedInterface(i);
+        type -> AddNestedType(ProcessTypeHeaders(nested -> class_body));
+    }
+    for (i = 0; i < body -> NumNestedAnnotations(); i++)
+    {
+        AstAnnotationDeclaration* nested = body -> NestedAnnotation(i);
+        type -> AddNestedType(ProcessTypeHeaders(nested -> class_body));
     }
     state_stack.Pop();
+    return type;
 }
 
 
@@ -3087,18 +3120,7 @@ void Semantic::AddInheritedMethods(TypeSymbol* base_type,
 void Semantic::ComputeTypesClosure(TypeSymbol* type, LexStream::TokenIndex tok)
 {
     if (! type -> HeaderProcessed())
-    {
-        AstClassDeclaration* class_decl =
-            type -> declaration -> owner -> ClassDeclarationCast();
-        AstInterfaceDeclaration* interface_decl =
-            type -> declaration -> owner -> InterfaceDeclarationCast();
-        Semantic* sem = type -> semantic_environment -> sem;
-        if (class_decl)
-            sem -> ProcessTypeHeaders(class_decl);
-        else if (interface_decl)
-            sem -> ProcessTypeHeaders(interface_decl);
-        else assert(false && "type not processed");
-    }
+        type -> ProcessTypeHeaders();
     type -> expanded_type_table = new ExpandedTypeTable();
 
     TypeSymbol* super_class = type -> super;
@@ -3247,14 +3269,19 @@ void Semantic::ProcessFormalParameters(BlockSymbol* block,
         }
         else symbol = block -> InsertVariableSymbol(name_symbol);
 
+        unsigned dims = parm_type -> num_dimensions + name -> NumBrackets();
         if (parameter -> ellipsis_token_opt)
         {
             assert(i == method_declarator -> NumFormalParameters() - 1);
-            // TODO: Add Varargs support for 1.5.
-            ReportSemError(SemanticError::VARARGS_UNSUPPORTED,
-                           parameter -> ellipsis_token_opt);
+            dims++;
+            access_flags.SetACC_VARARGS();
+            // TODO: Add varargs support for 1.5.
+            //            if (control.option.source < JikesOption::SDK1_5)
+            {
+                ReportSemError(SemanticError::VARARGS_UNSUPPORTED,
+                               parameter -> ellipsis_token_opt);
+            }
         }
-        unsigned dims = parm_type -> num_dimensions + name -> NumBrackets();
         symbol -> SetType(parm_type -> GetArrayType(this, dims));
         symbol -> SetFlags(access_flags);
         symbol -> MarkComplete();
