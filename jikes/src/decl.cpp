@@ -4018,7 +4018,31 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
             NameSymbol *name_symbol = lex_stream -> NameSymbol(identifier_token);
             PackageSymbol *package = (compilation_unit -> package_declaration_opt ? this_package : control.unnamed_package);
             FileSymbol *file_symbol = Control::GetFile(package, name_symbol, control.option.depend);
-            type = ReadType(file_symbol, package, name_symbol, identifier_token);
+
+            //
+            // If there is no file associated with the name of the type then the type does
+            // not exist. Before invoking ReadType to issue a "type not found" error message,
+            // check whether or not the user is not attempting to access an inaccessible
+            // private type.
+            //
+            if (! file_symbol)
+            {
+                for (TypeSymbol *super_type = ThisType() -> super; super_type; super_type = super_type -> super)
+                {
+                    assert(super_type -> expanded_type_table);
+
+                    TypeShadowSymbol *type_shadow_symbol = super_type -> expanded_type_table -> FindTypeShadowSymbol(name_symbol);
+                    if (type_shadow_symbol)
+                    {
+                        type = FindTypeInShadow(type_shadow_symbol, identifier_token);
+                        break;
+                    }
+                }
+            }
+
+            if (type)
+                 ReportTypeInaccessible(name -> LeftToken(), name -> RightToken(), type); 
+            else type = ReadType(file_symbol, package, name_symbol, identifier_token);
         }
         else
         {
