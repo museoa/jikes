@@ -61,9 +61,9 @@ const wchar_t *StreamError::getErrorMessage()
     case StreamError::INVALID_ESCAPE_SEQUENCE:
         return L"Invalid escape sequence.";
     case StreamError::DEPRECATED_IDENTIFIER_ASSERT:
-        return L"The use of \"assert\" as an identifier is deprecated, as it "
-            L"is now a keyword. Use -source 1.4 if you intended to make use of "
-	    L"assertions.";
+        return L"The use of \"assert\" as an identifier is deprecated,"
+            L" as it is now a keyword. Use -source 1.4 if you intended to make use of "
+            L" to make use of assertions.";
     case StreamError::DOLLAR_IN_IDENTIFIER:
         return L"The use of \"$\" in an identifier, while legal, is strongly "
             L"discouraged, since it can conflict with compiler-generated "

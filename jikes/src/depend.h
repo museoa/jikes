@@ -81,10 +81,10 @@ class TypeDependenceChecker : public CycleChecker<TypeSymbol>
 {
 public:
     TypeDependenceChecker(Control *control_,
-			  SymbolSet &file_set_,
-			  Tuple<TypeSymbol *> &type_trash_bin_) : file_set(file_set_),
-								  control(control_),
-								  type_trash_bin(type_trash_bin_)
+                          SymbolSet &file_set_,
+                          Tuple<TypeSymbol *> &type_trash_bin_) : file_set(file_set_),
+                                                                  control(control_),
+                                                                  type_trash_bin(type_trash_bin_)
     {}
 
     ~TypeDependenceChecker() {}

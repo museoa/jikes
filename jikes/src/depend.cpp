@@ -174,15 +174,15 @@ void ConstructorCycleChecker::CheckConstructorCycles(AstConstructorDeclaration *
         // pop it, mark it and return.
         //
         if (constructor_declaration == stack.Top() &&
-	    constructor_declaration != called_constructor_declaration)
+            constructor_declaration != called_constructor_declaration)
         {
             stack.Pop();
             constructor_declaration -> index = CYCLE_INFINITY;
         }
         //
         // Otherwise, all elements in the stack up to (and including)
-	// constructor_declaration form an SCC. Pop them off the stack, in
-	// turn, mark them and issue the appropriate error message.
+        // constructor_declaration form an SCC. Pop them off the stack, in
+        // turn, mark them and issue the appropriate error message.
         //
         else
         {
