@@ -1254,6 +1254,7 @@ public:
     MethodSymbol* FindOverloadMethod(MethodSymbol*, AstMethodDeclarator*);
 
     inline void CompressSpace();
+    void UnlinkFromParents();
 
 private:
     //
@@ -2058,7 +2059,11 @@ inline void PackageSymbol::DeleteTypeSymbol(TypeSymbol* type)
 inline void SymbolTable::DeleteAnonymousTypes()
 {
     for (unsigned i = 0; i < NumAnonymousSymbols(); i++)
-        delete AnonymousSym(i);
+    {
+        TypeSymbol* symbol = AnonymousSym(i);
+        symbol -> UnlinkFromParents();
+        delete symbol;
+    }
     delete anonymous_symbol_pool;
     anonymous_symbol_pool = NULL;
 }

@@ -1,3 +1,14 @@
+2004-04-11  Phil Norman  <cuvy.abezna@virgin.net>
+
+	* src/symbol.h, src/symbol.cpp: Fix bug 3446. Added a method
+	TypeSymbol::UnlinkFromParents which removes references from the
+	subtypes and dependents sets of the TypeSymbol's 'super' and set
+	of implemented interfaces. Used this method in the method
+	SymbolTable::DeleteAnonymousTypes so that destroyed anonymous
+	types will be properly unlinked. Bug 3446 was caused by things such
+	as the TypeSymbol representing java.lang.Object keeping references
+	to a destroyed TypeSymbol, and so causing segfaults.
+
 2004-04-08  Eric Blake  <ebb9@byu.net>
 
 	* src/class.cpp (Init) [!JIKES_DEBUG]: Fix regression in non-debug

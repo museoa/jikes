@@ -683,6 +683,25 @@ TypeSymbol::~TypeSymbol()
 }
 
 
+void TypeSymbol::UnlinkFromParents()
+{
+    if (super)
+    {
+        super -> subtypes -> RemoveElement(this);
+        super -> dependents -> RemoveElement(this);
+    }
+    if (interfaces)
+    {
+        for (unsigned i = 0; i < NumInterfaces(); ++i)
+        {
+            TypeSymbol* interface = Interface(i);
+            interface -> subtypes -> RemoveElement(this);
+            interface -> dependents -> RemoveElement(this);
+        }
+    }
+}
+
+
 MethodSymbol::~MethodSymbol()
 {
     for (unsigned i = 0; i < NumThrowsSignatures(); i++)
