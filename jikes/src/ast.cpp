@@ -88,7 +88,7 @@ template <class T>
     AstArray<T>::AstArray(StoragePool *pool_, unsigned estimate) : pool(pool_)
     {
         assert(sizeof(T) == sizeof(StoragePool::Cell)); // AstArray should only be used for arrays of pointers.
-        assert(pool -> Blksize() > 256); // There must be enough space in the storage pool to move !!!
+        assert(pool -> Blksize() >= 256); // There must be enough space in the storage pool to move !!!
 
         if (estimate == 0)
             log_blksize = 6; // take a guess
