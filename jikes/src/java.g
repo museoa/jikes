@@ -1043,6 +1043,15 @@ void Parser::Act$rule_number(void)
 }
 ./
 
+Modifier ::= 'strictfp'
+\:$action:\
+/.$location
+void Parser::Act$rule_number(void)
+{
+    Sym(1) = ast_pool -> NewModifier(Ast::STRICTFP, Token(1));
+}
+./
+
 Modifier ::= 'synchronized'
 \:$action:\
 /.$location
