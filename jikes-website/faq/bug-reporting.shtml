@@ -13,6 +13,7 @@
    
   1. examples of how to do some of this stuff... like the backtrace/
   2. good and bad examples
+  3. the last couple sections are weak. :(
  
 -->
  
@@ -160,11 +161,33 @@
      </dl>     
      
      <h1>Report the bug</h1>
-     
+     <p>This is the <strong>easy</strong> part. Just go to the <a href="/developerworks/bugs/?func=addbug&amp;group_id=10">submission page</a>
+      and put all the information above into the form in some nice coherent fashion. The first thing you'll need to supply is your email
+      address, be sure to put a VALID address, you'll also need to decide if you want this address to be publicly visible on this bug.
+      Reference the IBM Privacy Guidelines at the bottom of that page for details, but the general gist of this switch is that the dW staff,
+      and (<small>in theory</small>) the Jikes project administraitors and registered developers will be able to see your address either way (<small>although this
+      is currently broken such that only the deverloperWorks staff can retrieve all addresses</small>) but the general public will ONLY be
+      able to see your address if you check the box. Note that this is the address where the system will mail updates about the status of
+      your bug as it changes. The next option you need to provide is what category your bug belongs in. Reference the set of categories
+      above for details, or leave it as <code>None</code> if you don't know. The bug group can be left alone or set to <code>Open</code>.
+      Next you will need to furnish a short summary of the problem... this is limited to a couple dozen characters, so be breif but CLEAR.
+      That last large area... well that's where everything else goes.</p>
+     <p>After you click submit there is one last <strong>very important</strong> step you'll have to do: confirm your address. A message
+      will be sent to your email address which contains a URL... untill you visit that URL your bug will <em>NOT</em> be seen, you <strong>must</strong>
+      visit the URL that is sent to you in order to confirm your address is valid.</p>
+
      <h1>Assist in the elimination of the bug</h1>
+     <p>Having reported the bug many people think that their job is finished, ideally this maybe the case, but out here in the real world
+      it never is. As developers and other users are working on your bug they may need information, they'll post questions, or suggestions
+      to work around the bug into it's record in the database. If we never hear from you again then odds are very good that the bug will
+      never move forward. You have got to stick around a help with the debug process.</p>
      
      <h1>Verify the bug has been fixed</h1>
-    
+     <p>The last step. By now the bug has been cornerd and eradicated, a patch has been developed, and commited, possibly even shipped.
+      This last step is the most important from your end... verify that the fix works on your machine, with your project in your environment.
+      This can be especially important with bugs where you had to reduce any enviroment of input inorder to produce a testcase. Once a bug
+      is verified as fixed either in a cvs build or in an official production release.</p>
+
     </td>
    </tr>
   </table>

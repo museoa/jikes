@@ -1284,17 +1284,8 @@ class C implements C.I {
             How do I report bugs?</a>
           </h3>
 
-          <p>
-            Go to the 
-            <a href="/developerworks/bugs/?func=addbug&amp;group_id=10">
-            Jikes bug page</a>
-            to report bugs.
-          </p>
-          <p>
-            You should provide a small program that reproduces the problem.
-            If you do cannot provide a test case, it is unlikely your bug
-            will get fixed.
-          </p>
+          <a href="bug-reporting.shtml">This has been documented seperately.</a>
+          
           <!-- TODO: add reference to Jacks when the Jacks site is working -->
           <p class="BackToTop">
             <a href="#index">Back to top</a>
