@@ -1455,7 +1455,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=jikes
- VERSION=post-1.16-cvs
+ VERSION=1.17
 
 
 cat >>confdefs.h <<_ACEOF
@@ -1583,7 +1583,7 @@ INSTALL_STRIP_PROGRAM="\${SHELL} \$(install_sh) -c -s"
 
 
 cat >>confdefs.h <<\_ACEOF
-#define JIKES_VERSION_STRING "Version post-1.16-cvs - sometime after 10 July 2002"
+#define JIKES_VERSION_STRING "Version 1.17 - 27 September 2002"
 _ACEOF
 
 

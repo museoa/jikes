@@ -1,3 +1,7 @@
+2002-09-27  Chris Abbey  <jikes@cabbey.net>
+
+	* 1.17 release.
+
 2002-09-25  Andrew M. Inggs  <aminggs@yahoo.co.uk>
 
 	* src/m4/ac_try_encoding.m4: Use positive return values to
