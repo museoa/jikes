@@ -1,3 +1,13 @@
+2001-12-11  Mo DeJong  <supermo@bayarea.net>
+
+	Patch 243, based on poll of user base.
+	* src/option.cpp (ExpandAtFileArgument, GetErrorMessage):
+	Revert modifications to @file processing made on
+	2001-11-01. Only one file name per line is supported.
+	Remove unused error condition.
+	* src/option.h (UNTERMINATED_QUOTE): Remove unused
+ 	error condition.
+
 2001-12-10  Chris Dennis  <Chris.Dennis@invidi.com>
 
 	* src/expr.cpp (ProcessClassInstanceCreationExpression): Yet

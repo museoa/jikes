@@ -18,11 +18,8 @@ namespace Jikes { // Open namespace Jikes block
 #endif
 
 //
-// Look for arguments in a file and add them to the passed in tuple. If
-// the file does not exist, cannot be read, or contains invalid entries,
-// update the list of bad_options. We follow Sun's example of tokenizing
-// whitespace separated entries as arguments, except for quoted filenames
-// which may contain spaces.
+// Look for file names in an @file and add them to the passed
+// in tuple.
 //
 void ArgumentExpander::ExpandAtFileArgument(Tuple<char *>& arguments,
                                             char *file_name,
@@ -35,7 +32,9 @@ void ArgumentExpander::ExpandAtFileArgument(Tuple<char *>& arguments,
     {
         char *buffer;
         int file_size;
-        char* start = NULL;
+        char *start = NULL;
+        char *end = NULL;
+        char *eol = NULL;
 
         buffer = new char[status.st_size + 2];
         file_size = SystemFread(buffer, 1, status.st_size, afile);
@@ -43,114 +42,81 @@ void ArgumentExpander::ExpandAtFileArgument(Tuple<char *>& arguments,
         buffer[file_size] = U_LINE_FEED;
         buffer[file_size + 1] = U_NULL;
 
-        char* ptr = buffer;
-        enum
+        for (char *ptr = buffer; *ptr; )
         {
-            WHITESPACE,
-            NORMAL,
-            SINGLE_QUOTE,
-            DOUBLE_QUOTE
-        } state = WHITESPACE;
+            // Skip spaces, tabs, and EOL until we find some text
 
-        while (*ptr)
-        {
-            switch (*ptr)
-            {
-            case U_SPACE:
-            case U_HORIZONTAL_TAB:
-            case U_FORM_FEED:
-            case U_LINE_FEED:
-            case U_CARRIAGE_RETURN:
-                if (state == NORMAL)
-                {
-                    // End the current token.
-                    *ptr = U_NULL;
-                    char *arg = new char[strlen(start) + 1];
-                    strcpy(arg, start);
-                    arguments.Next() = arg;
-                    start = NULL;
-                    state = WHITESPACE;
-                }
-                break;
-            case U_SINGLE_QUOTE:
-                if (state == SINGLE_QUOTE)
-                {
-                    // End current quoted token.
-                    *ptr = U_NULL;
-                    char *arg = new char[strlen(start) + 1];
-                    strcpy(arg, start);
-                    arguments.Next() = arg;
-                    start = NULL;
-                    state = WHITESPACE;
-                }
-                else
-                {
-                    // Start new token, ending previous if needed.
-                    if (state == NORMAL)
-                    {
-                        *ptr = U_NULL;
-                        char *arg = new char[strlen(start) + 1];
-                        strcpy(arg, start);
-                        arguments.Next() = arg;
-                    }
-                    start = ptr + 1;
-                    state = SINGLE_QUOTE;
-                }
-                break;
-            case U_DOUBLE_QUOTE:
-                if (state == DOUBLE_QUOTE)
-                {
-                    // End current quoted token.
-                    *ptr = U_NULL;
-                    char *arg = new char[strlen(start) + 1];
-                    strcpy(arg, start);
-                    arguments.Next() = arg;
-                    start = NULL;
-                    state = WHITESPACE;
-                }
-                else
-                {
-                    // Start new token, ending previous if needed.
-                    if (state == NORMAL)
-                    {
-                        *ptr = U_NULL;
-                        char *arg = new char[strlen(start) + 1];
-                        strcpy(arg, start);
-                        arguments.Next() = arg;
-                    }
-                    start = ptr + 1;
-                    state = DOUBLE_QUOTE;
-                }
-                break;
-            case U_AT:
-                if (state == WHITESPACE)
-                {
-                    bad_options.Next() = new OptionError(OptionError::NESTED_AT_FILE, file_name);
-                    *(ptr + 1) = U_NULL;
-                }
-                break;
-            default:
-                if (state == WHITESPACE)
-                {
-                    // Start new token.
+            while (start == NULL && *ptr) {
+                switch (*ptr) {
+                case U_SPACE:
+                case U_HORIZONTAL_TAB:
+                case U_LINE_FEED:
+                case U_CARRIAGE_RETURN:
+                    break; // Out of the switch not the while
+                default:
                     start = ptr;
-                    state = NORMAL;
+                    end = ptr;
                 }
+                ptr++;
             }
-            ptr++;
+
+            // If at end of the buffer, no arguments are left
+            if (! *ptr)
+                break;
+
+            // Find the end of this line, save last non space
+            // or tab position in the end ptr
+
+            while (eol == NULL)
+            {
+                switch (*ptr)
+                {
+                case U_LINE_FEED:
+                case U_CARRIAGE_RETURN:
+                    eol = ptr;
+                    break;
+                case U_SPACE:
+                case U_HORIZONTAL_TAB:
+                    break; // ignore tabs and spaces
+                default:
+                    end = ptr;
+                }
+                ptr++;
+
+            }
+
+            // Ignore single/double quotes at start and end of line.
+
+            if (start < end &&
+                (*start == U_DOUBLE_QUOTE &&
+                *end == U_DOUBLE_QUOTE) ||
+                (*start == U_SINGLE_QUOTE &&
+                *end == U_SINGLE_QUOTE)) {
+                start++;
+                end--;
+            }
+
+            // Another @file name in an @file is not allowed
+            if (start < end && (*start == U_AT)) {
+                bad_options.Next() =
+                    new OptionError(OptionError::NESTED_AT_FILE, file_name);
+                break;
+            }
+
+            // Copy arg into new string and add to tuple
+            *(end+1) = '\0';
+            char *arg = new char[strlen(start) + 1];
+            strcpy(arg, start);
+            arguments.Next() = arg;
+
+            // Reinit the pointers
+            start = NULL;
+            end = NULL;
+            eol = NULL;
         }
 
-        //
-        // Note: Sun's JDK 1.4 just treats an unterminated quote as a legal
-        // token, but that seems counterintuitive.
-        //
-        if (state > NORMAL)
-            bad_options.Next() = new OptionError(OptionError::UNTERMINATED_QUOTE, file_name);
-
         delete [] buffer;
-    }
-    else
-    {
+    } else {
         bad_options.Next() = new OptionError(OptionError::INVALID_AT_FILE,
                                              file_name);
     }
@@ -224,10 +190,6 @@ wchar_t* OptionError::GetErrorMessage()
     case INVALID_AT_FILE:
         s << "The @ file \"" << name
           << "\", is either invalid or it could not be located.";
-        break;
-    case UNTERMINATED_QUOTE:
-        s << "The @ file \"" << name
-          << "\" contains an unterminated quote.";
         break;
     case NESTED_AT_FILE:
         s << "The @ file \"" << name
