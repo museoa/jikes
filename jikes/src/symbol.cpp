@@ -1894,7 +1894,7 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member)
             instance -> SetOwner(write_method);
             instance -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
             write_method -> AddFormalParameter(instance);
-	}
+        }
 
         VariableSymbol *symbol = block_symbol -> InsertVariableSymbol(member -> Identity());
         symbol -> MarkSynthetic();

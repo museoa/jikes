@@ -6595,14 +6595,11 @@ void Semantic::ProcessMINUS(AstBinaryExpression *expr)
 
 void Semantic::ProcessSLASH(AstBinaryExpression *expr)
 {
-    AstExpression *left_expression = expr -> left_expression,
-                  *right_expression = expr -> right_expression;
+    ProcessExpression(expr -> left_expression);
+    ProcessExpression(expr -> right_expression);
 
-    ProcessExpression(left_expression);
-    ProcessExpression(right_expression);
-
-    TypeSymbol *left_type  = left_expression -> Type(),
-               *right_type = right_expression -> Type();
+    TypeSymbol *left_type  = expr -> left_expression -> Type(),
+               *right_type = expr -> right_expression -> Type();
 
     if (left_type == control.no_type || right_type == control.no_type)
         expr -> symbol = control.no_type;
@@ -6620,6 +6617,8 @@ void Semantic::ProcessSLASH(AstBinaryExpression *expr)
             exception_set -> AddElement(control.Error());
         }
 
+        AstExpression *left_expression = expr -> left_expression,
+                      *right_expression = expr -> right_expression;
         if (right_expression -> IsConstant())
         {
             //
@@ -6682,14 +6681,11 @@ void Semantic::ProcessSLASH(AstBinaryExpression *expr)
 
 void Semantic::ProcessMOD(AstBinaryExpression *expr)
 {
-    AstExpression *left_expression = expr -> left_expression,
-                  *right_expression = expr -> right_expression;
+    ProcessExpression(expr -> left_expression);
+    ProcessExpression(expr -> right_expression);
 
-    ProcessExpression(left_expression);
-    ProcessExpression(right_expression);
-
-    TypeSymbol *left_type  = left_expression -> Type(),
-               *right_type = right_expression -> Type();
+    TypeSymbol *left_type  = expr -> left_expression -> Type(),
+               *right_type = expr -> right_expression -> Type();
 
     if (left_type == control.no_type || right_type == control.no_type)
         expr -> symbol = control.no_type;
@@ -6707,6 +6703,8 @@ void Semantic::ProcessMOD(AstBinaryExpression *expr)
             exception_set -> AddElement(control.Error());
         }
 
+        AstExpression *left_expression = expr -> left_expression,
+                      *right_expression = expr -> right_expression;
         if (right_expression -> IsConstant())
         {
             //

@@ -206,7 +206,7 @@ public:
         {
             Class_type = GetType(system_package, StringConstant::US_Class);
             InitClassInfo();
-	}
+        }
 
         return Class_type;
     }
@@ -226,7 +226,7 @@ public:
         {
             Throwable_type = GetType(system_package, StringConstant::US_Throwable);
             InitThrowableInfo();
-	}
+        }
 
         return Throwable_type;
     }
@@ -265,7 +265,7 @@ public:
         {
             NoClassDefFoundError_type = GetType(system_package, StringConstant::US_NoClassDefFoundError);
             InitNoClassDefFoundErrorInfo();
-	}
+        }
 
         return NoClassDefFoundError_type;
     }

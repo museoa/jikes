@@ -1222,9 +1222,9 @@ void Control::ProcessBodies(TypeSymbol *type)
                 }
             }
 
-	    //
-	    // If we are supposed to generate code, do so now !!!
-	    //
+            //
+            // If we are supposed to generate code, do so now !!!
+            //
             if (option.bytecode)
             {
                 for (int k = 0; k < types -> Length(); k++)

@@ -637,12 +637,12 @@ public:
         //
         //****************************************************************************************
         //
-        // To:	Martin Odersky <Martin.Odersky@epfl.ch>
-        // cc:	David Shields/Watson/IBM@IBMUS, compiler@eng.sun.com, 
+        // To: Martin Odersky <Martin.Odersky@epfl.ch>
+        // cc: David Shields/Watson/IBM@IBMUS, compiler@eng.sun.com, 
         // gilad.bracha@eng.sun.com, jrose@eng.sun.com, 
         // innerclass-comments@lukasiewicz.eng.sun.com, guy.steele@east.sun.com, 
         // peter.kessler@eng.sun.com 
-        // Subject:	Re: Query #32 to Sun: Verification problem
+        // Subject: Re: Query #32 to Sun: Verification problem
         // 
         // 
         // 
@@ -666,9 +666,9 @@ public:
         // They will be covered instead by the general case for expressions with
         // subexpressions, which reads as follows in the current working draft:
         // 
-        // 	If the expression has subexpressions, V is [un]assigned
-        // 	after the expression iff V is [un]assigned after its rightmost
-        // 	immediate subexpression.
+        //  If the expression has subexpressions, V is [un]assigned
+        //  after the expression iff V is [un]assigned after its rightmost
+        //  immediate subexpression.
         // 
         // Note that the when-true and when-false cases, currently distinguished
         // for these operators, are now coalesced, as in the general case.
@@ -685,11 +685,11 @@ public:
         // 
         //------------------------------------------------------------------------------------------------
         // 
-        // To:	David Shields/Watson/IBM@IBMUS
-        // cc:	Martin Odersky <Martin.Odersky@epfl.ch>, compiler@eng.sun.com, gilad.bracha@eng.sun.com, 
+        // To: David Shields/Watson/IBM@IBMUS
+        // cc: Martin Odersky <Martin.Odersky@epfl.ch>, compiler@eng.sun.com, gilad.bracha@eng.sun.com, 
         // jrose@eng.sun.com, innerclass-comments@lukasiewicz.eng.sun.com, guy.steele@east.sun.com, 
         // peter.kessler@eng.sun.com 
-        // Subject:	Re: Query #32 to Sun: Verification problem
+        // Subject: Re: Query #32 to Sun: Verification problem
         // 
         // On Mon, 2 Aug 1999 shieldsd@us.ibm.com wrote:
         // 

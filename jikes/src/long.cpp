@@ -105,14 +105,10 @@ BaseLong BaseLong::operator<< (BaseLong op)
     // whereas on windows the Microsoft compiler produces the value of x(very bad !).
     // That is the reason why we have the initial special check for (n == 0).
     //
-
-	if(n == 0)
-		return *this;
-	else if(n < 32)
-		return BaseLong((HighWord() << n) |
-			(LowWord() >> (32 - n)), LowWord() << n);
-	else
-		return BaseLong(LowWord() << (n - 32), 0);
+    return (n == 0 ? *this
+                   : n < 32
+                       ? BaseLong((HighWord() << n) | (LowWord() >> (32 - n)), LowWord() << n)
+                       : BaseLong(LowWord() << (n - 32), 0));
 }
 
 BaseLong& BaseLong::operator<<= (BaseLong op)
@@ -400,15 +396,10 @@ ULongInt ULongInt::operator>> (ULongInt op)
     // whereas on windows the Microsoft compiler produces the value of x(very bad !).
     // That is the reason why we have the initial special check for (n == 0).
     //
-
-
-	if(n == 0)
-		return *this;
-	else if( n < 32)
-		return ULongInt(HighWord() >> n,
-			(HighWord() << (32 - n)) | (LowWord() >> n));
-	else
-		return ULongInt(0, HighWord() >> (n - 32));
+    return (n == 0 ? *this
+                   : n < 32
+                       ? ULongInt(HighWord() >> n, (HighWord() << (32 - n)) | (LowWord() >> n))
+                       : ULongInt(0, HighWord() >> (n - 32)));
 }
 
 ULongInt& ULongInt::operator>>= (ULongInt op)
@@ -493,7 +484,7 @@ LongInt::LongInt(IEEEdouble a) : BaseLong (0,0)
 LongInt LongInt::operator/ (LongInt op)
 {
     bool negative_dividend = ((HighWord() & 0x80000000) != 0),
-    negative_divisor  = ((op.HighWord() & 0x80000000) != 0);
+         negative_divisor  = ((op.HighWord() & 0x80000000) != 0);
 
     BaseLong a = (negative_dividend ? -(*this) : (BaseLong) *this),
     b = (negative_divisor  ? -(op)    : (BaseLong) op),
@@ -553,14 +544,10 @@ LongInt LongInt::operator>> (LongInt op)
     // shift the "long" quantity in a similar manner as the system (compiler + environement)
     // used to compile it would shift a 32-bit signed integer.
     //
-	if(n == 0)
-		return *this;
-	else if(n < 32)
-		return LongInt(((i4) HighWord()) >> n,
-			(HighWord() << (32 - n)) | (LowWord() >> n));
-	else
-		return LongInt(((i4) HighWord()) >> 31,
-				((i4) HighWord()) >> (n - 32));
+    return (n == 0 ? *this
+                   : n < 32
+                       ? LongInt(((i4) HighWord()) >> n, (HighWord() << (32 - n)) | (LowWord() >> n))
+                       : LongInt(((i4) HighWord()) >> 31, ((i4) HighWord()) >> (n - 32)));
 }
 
 LongInt& LongInt::operator>>= (LongInt op)

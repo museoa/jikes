@@ -129,17 +129,13 @@ IEEEdouble IEEEdouble::operator/ (IEEEdouble op)
 #ifndef IEEE_DIV_0
     return IEEEdouble(DoubleValue() / op.DoubleValue());
 #else /* IEEE_DIV_0 */
-    if (op.DoubleValue() == 0.0)
-    {
-	if (DoubleValue() < 0.0)
-	    return NEGATIVE_INFINITY();
-	else if (DoubleValue() == 0.0)
-	    return NaN();
-	else
-	    return POSITIVE_INFINITY();
-    }
-    else
-	return IEEEdouble(DoubleValue() / op.DoubleValue());
+    return (op.DoubleValue() == 0.0
+                              ? (DoubleValue() < 0.0
+                                               ? NEGATIVE_INFINITY()
+                                               : DoubleValue() == 0.0
+                                                                ? NaN()
+                                                                : POSITIVE_INFINITY())
+                              : IEEEdouble(DoubleValue() / op.DoubleValue()));
 #endif /* IEEE_DIV_0 */
 }
 
@@ -148,18 +144,15 @@ IEEEdouble& IEEEdouble::operator/= (IEEEdouble op)
 #ifndef IEEE_DIV_0
     *this = *this / op;
 #else /* IEEE_DIV_0 */
-    if (op.DoubleValue() == 0.0)
-    {
-	if (*this < 0.0)
-	    *this = NEGATIVE_INFINITY();
-	else if (*this == 0.0)
-	    *this = NaN();
-	else
-	    *this = POSITIVE_INFINITY();
-    }
-    else
-	*this = *this / op;
+    *this = (op.DoubleValue() == 0.0
+                               ? (*this < 0.0
+                                        ? NEGATIVE_INFINITY()
+                                        : *this == 0.0
+                                                 ? NaN()
+                                                 : POSITIVE_INFINITY())
+                               : *this / op);
 #endif /* IEEE_DIV_0 */
+
     return *this;
 }
 
@@ -260,17 +253,13 @@ IEEEfloat IEEEfloat::operator/ (IEEEfloat op)
 #ifndef IEEE_DIV_0
     return IEEEfloat(FloatValue() / op.FloatValue());
 #else /* IEEE_DIV_0 */
-    if (op.FloatValue() == 0.0)
-    {
-	if (FloatValue() < 0.0)
-	    return IEEEfloat(IEEEdouble::NEGATIVE_INFINITY());
-	else if (FloatValue() == 0.0)
-	    return IEEEfloat(IEEEdouble::NaN());
-	else
-	    return IEEEfloat(IEEEdouble::POSITIVE_INFINITY());
-    }
-    else
-	return IEEEfloat(FloatValue() / op.FloatValue());
+    return (op.FloatValue() == 0.0
+                             ? (FloatValue() < 0.0
+                                             ? IEEEfloat(IEEEdouble::NEGATIVE_INFINITY())
+                                             : FloatValue() == 0.0
+                                                             ? IEEEfloat(IEEEdouble::NaN())
+                                                             : IEEEfloat(IEEEdouble::POSITIVE_INFINITY()))
+                             : IEEEfloat(FloatValue() / op.FloatValue()));
 #endif /* IEEE_DIV_0 */
 }
 
@@ -279,18 +268,15 @@ IEEEfloat& IEEEfloat::operator/= (IEEEfloat op)
 #ifndef IEEE_DIV_0
     *this = *this / op;
 #else /* IEEE_DIV_0 */
-    if (op.FloatValue() == 0.0)
-    {
-	if (*this < (float)0.0)
-	    *this = IEEEdouble::NEGATIVE_INFINITY();
-	else if (*this == (float)0.0)
-	    *this = IEEEdouble::NaN();
-	else
-	    *this = IEEEdouble::POSITIVE_INFINITY();
-    }
-    else
-	*this = *this / op;
+    *this = (op.FloatValue() == 0.0
+                              ? (*this < (float) 0.0
+                                       ? IEEEdouble::NEGATIVE_INFINITY()
+                                       : *this == (float) 0.0
+                                                ? IEEEdouble::NaN()
+                                                : IEEEdouble::POSITIVE_INFINITY())
+                              : *this / op);
 #endif /* IEEE_DIV_0 */
+
     return *this;
 }
 
@@ -300,10 +286,8 @@ void IEEEdouble::Fmodulus(IEEEdouble a, IEEEdouble b, IEEEdouble& result)
 #ifndef IEEE_DIV_0
      result.DoubleValue() = fmod(a.DoubleValue(), b.DoubleValue());
 #else /* IEEE_DIV_0 */
-    if (b.DoubleValue() == 0)
-	result.DoubleValue() = NaN().DoubleValue();
-    else
-	result.DoubleValue() = fmod(a.DoubleValue(), b.DoubleValue());
+    result.DoubleValue() = (b.DoubleValue() == 0 ? NaN().DoubleValue()
+                                                 : fmod(a.DoubleValue(), b.DoubleValue()));
 #endif /* IEEE_DIV_0 */
 }
 
@@ -312,18 +296,15 @@ void IEEEdouble::Divide(IEEEdouble dividend, IEEEdouble divisor, IEEEdouble &quo
 #ifndef IEEE_DIV_0
     quotient = dividend.DoubleValue() / divisor.DoubleValue();
 #else /* IEEE_DIV_0 */
-    if (divisor.DoubleValue() == 0)
-    {
-	if (dividend.DoubleValue() < 0.0)
-	    quotient = NEGATIVE_INFINITY();
-	else if (dividend.DoubleValue() == 0.0)
-	    quotient = NaN();
-	else
-	    quotient = POSITIVE_INFINITY();
-    }
-    else
-	quotient = dividend.DoubleValue() / divisor.DoubleValue();
+    quotient = (divisor.DoubleValue() == 0
+                                       ? (dividend.DoubleValue() < 0.0
+                                                                 ? NEGATIVE_INFINITY()
+                                                                 : dividend.DoubleValue() == 0.0
+                                                                                           ? NaN()
+                                                                                           : POSITIVE_INFINITY())
+                                       : dividend.DoubleValue() / divisor.DoubleValue());
 #endif /* IEEE_DIV_0 */
+
     return;
 }
 
@@ -342,11 +323,11 @@ void IEEEfloat::Fmodulus(IEEEfloat a, IEEEfloat b, IEEEfloat& result)
 #ifndef IEEE_DIV_0
     result.FloatValue() = (float) fmod((double) a.FloatValue(), (double) b.FloatValue());
 #else /* IEEE_DIV_0 */
-    if (b.FloatValue() == 0.0)
-	result.FloatValue() = (IEEEdouble::NaN()).DoubleValue();
-    else
-	result.FloatValue() = fmod((double) a.FloatValue(), (double) b.FloatValue());
+    result.FloatValue() = (b.FloatValue() == 0.0 ? (IEEEdouble::NaN()).DoubleValue()
+                                                 : fmod((double) a.FloatValue(), (double) b.FloatValue()));
 #endif /* IEEE_DIV_0 */
+
+    return;
 }
 
 void IEEEfloat::String(char * str)
