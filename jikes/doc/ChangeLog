@@ -1,3 +1,9 @@
+2000-01-14 C. Scott Ananian <cananian@alumni.princeton.edu>
+
+       * option.cpp: Fixed an off-by-one error in a string
+       allocation.  Debugging-malloc libraries are a
+       Good Thing.
+                                                          
 2000-01-13  Vadim Zaliva  <lord@crocodile.org>
 
 	* jikes.spec: ChangeLog included in RPM package.

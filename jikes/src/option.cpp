@@ -449,7 +449,7 @@ Option::Option(ArgumentExpander &arguments) :
             /* Create a copy of the classpath string we can modify
                this copy without worry that it will effect the env array */
             char * buf;
-            buf = new char[strlen(classpath)];
+            buf = new char[strlen(classpath)+1];
             strcpy(buf, classpath);
             classpath = buf;
 
