@@ -907,8 +907,8 @@ static void m(Class c) {
 	  href="http://sourceforge.net/mailarchive/message.php?msg_id=10786505">this
 	  posting</a> to jikes-dev.</p>
 
-          <a name="compat-extra-semi">
-          <h4>Extraneous Semicolons</h4>
+          <h4><a name="compat-extra-semi">
+          Extraneous Semicolons</a></h4>
 
           <p>
             Your program may contain extraneous semicolons that are silently
@@ -940,8 +940,8 @@ public class Test {
             delete those extra semicolons.
           </p>
 
-          <a name="compat-unreach">
-          <h4>Unreachable Statements</h4>
+          <h4><a name="compat-unreach">
+          Unreachable Statements</a></h4>
 
           <p>
             It is a compile-time error if a statement cannot be executed
@@ -1001,8 +1001,8 @@ class Test {
             for the full story.
           </p>
 
-          <a name="compat-cyclic">
-          <h4>Cyclic Scoping</h4>
+          <h4><a name="compat-cyclic">
+          Cyclic Scoping</a></h4>
 
           <p>
             <!-- TODO: does this qualify as a program?  source file? -->
@@ -1111,8 +1111,8 @@ class C implements C.I {
             erroneous.
           </p>
 
-          <a name="compat-queries">
-          <h4>Queries to Sun</h4>
+          <h4><a name="compat-queries">
+          Queries to Sun</a></h4>
 
           <p>
             Here are some more examples of issues related to interpreting the
