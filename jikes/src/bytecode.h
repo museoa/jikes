@@ -2,7 +2,7 @@
 //
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -453,7 +453,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void LoadLocal(int varno, const TypeSymbol*);
     void StoreLocal(int varno, const TypeSymbol*);
     void LoadLiteral(LiteralValue*, const TypeSymbol*);
-    void LoadImmediateInteger(int);
+    void LoadImmediateInteger(i4);
     int LoadVariable(VariableCategory, AstExpression*, bool = true);
     int LoadArrayElement(const TypeSymbol*);
     void StoreArrayElement(const TypeSymbol*);
@@ -869,7 +869,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     TypeSymbol* MethodTypeResolution(AstExpression*, MethodSymbol*);
     void EmitFieldAccessLhsBase(AstExpression*);
     void EmitFieldAccessLhs(AstExpression*);
-    void EmitMethodInvocation(AstMethodInvocation*);
+    int EmitMethodInvocation(AstMethodInvocation*, bool);
     void EmitNewArray(unsigned, const TypeSymbol*);
     int EmitPostUnaryExpression(AstPostUnaryExpression*, bool);
     void EmitPostUnaryExpressionArray(AstPostUnaryExpression*, bool);
@@ -921,7 +921,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void EmitBranchIfExpression(AstExpression*, bool, Label&,
                                 AstStatement* = NULL);
     void EmitBranch(Opcode, Label&, AstStatement* = NULL);
-    void CompleteCall(MethodSymbol*, int, TypeSymbol* = NULL);
+    int CompleteCall(MethodSymbol*, int, bool = true, TypeSymbol* = NULL);
 
     AstExpression* StripNops(AstExpression*);
     bool IsNop(AstBlock*);

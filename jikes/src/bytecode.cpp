@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -681,7 +681,8 @@ void ByteCode::InitializeArray(const TypeSymbol* type,
         LoadImmediateInteger(array_initializer -> NumVariableInitializers());
         EmitNewArray(1, type); // make the array
     }
-    for (unsigned i = 0; i < array_initializer -> NumVariableInitializers(); i++)
+    for (unsigned i = 0;
+         i < array_initializer -> NumVariableInitializers(); i++)
     {
         Ast* entry = array_initializer -> VariableInitializer(i);
         AstExpression* expr = entry -> ExpressionCast();
@@ -1235,14 +1236,7 @@ void ByteCode::EmitStatementExpression(AstExpression* expression)
     switch (expression -> kind)
     {
     case Ast::CALL:
-        {
-            AstMethodInvocation* method_call =
-                (AstMethodInvocation*) expression;
-            EmitMethodInvocation(method_call);
-            if (method_call -> Type() != control.void_type)
-                PutOp(control.IsDoubleWordType(method_call -> Type())
-                      ? OP_POP2 : OP_POP); // discard value
-        }
+        EmitMethodInvocation((AstMethodInvocation*) expression, false);
         break;
     case Ast::POST_UNARY:
         EmitPostUnaryExpression((AstPostUnaryExpression*) expression, false);
@@ -3020,11 +3014,8 @@ int ByteCode::EmitExpression(AstExpression* expression, bool need_value)
             AstMethodInvocation* method_call =
                 (AstMethodInvocation*) expression;
             // must evaluate for side effects
-            EmitMethodInvocation(method_call);
-            if (need_value)
-                return GetTypeWords(method_call -> Type());
-            PutOp(GetTypeWords(method_call -> Type()) == 1 ? OP_POP : OP_POP2);
-            return 0;
+            EmitMethodInvocation(method_call, need_value);
+            return need_value ? GetTypeWords(method_call -> Type()) : 0;
         }
     case Ast::ARRAY_ACCESS:
         {
@@ -4800,7 +4791,8 @@ int ByteCode::EmitFieldAccess(AstFieldAccess* expression, bool need_value)
 }
 
 
-void ByteCode::EmitMethodInvocation(AstMethodInvocation* expression)
+int ByteCode::EmitMethodInvocation(AstMethodInvocation* expression,
+                                   bool need_value)
 {
     //
     // If the method call was resolved into a call to another method, use the
@@ -4868,13 +4860,12 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation* expression)
           : (is_super || msym -> ACC_PRIVATE()) ? OP_INVOKESPECIAL
           : type -> ACC_INTERFACE() ? OP_INVOKEINTERFACE
           : OP_INVOKEVIRTUAL);
-    CompleteCall(msym, stack_words, type);
+    return CompleteCall(msym, stack_words, need_value, type);
 }
 
 
-void ByteCode::CompleteCall(MethodSymbol* msym,
-                            int stack_words,
-                            TypeSymbol* base_type)
+int ByteCode::CompleteCall(MethodSymbol* msym, int stack_words,
+                            bool need_value, TypeSymbol* base_type)
 {
     ChangeStack(-stack_words);
 
@@ -4891,10 +4882,18 @@ void ByteCode::CompleteCall(MethodSymbol* msym,
     }
 
     //
-    // must account for value returned by method.
+    // Must account for value returned by method.
     //
-    ChangeStack(control.IsDoubleWordType(msym -> Type()) ? 2
-                : msym -> Type() == control.void_type ? 0 : 1);
+    if (msym -> Type() == control.void_type)
+        return 0;
+    bool wide = control.IsDoubleWordType(msym -> Type());
+    ChangeStack(wide ? 2 : 1);
+    if (! need_value)
+    {
+        PutOp(wide ? OP_POP2 : OP_POP);
+        return 0;
+    }
+    return wide ? 2 : 1;
 }
 
 
@@ -6180,7 +6179,7 @@ void ByteCode::LoadLiteral(LiteralValue* litp, const TypeSymbol* type)
 }
 
 
-void ByteCode::LoadImmediateInteger(int val)
+void ByteCode::LoadImmediateInteger(i4 val)
 {
     if (val >= -1 && val <= 5)
         PutOp((Opcode) (OP_ICONST_0 + val)); // exploit opcode encoding
