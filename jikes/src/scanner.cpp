@@ -143,10 +143,12 @@ void Scanner::Initialize(FileSymbol *file_symbol)
 #ifdef JIKES_DEBUG
     if (control.option.debug_comments)
     {
-        LexStream::Comment *current_comment = &(lex -> comment_stream.Next()); // add 0th comment !
+        // Add 0th comment.
+        LexStream::Comment *current_comment = &(lex -> comment_stream.Next());
         current_comment -> string = NULL;
         current_comment -> length = 0;
-        current_comment -> previous_token = -1; // No token precedes this comment
+        // No token precedes this comment.
+        current_comment -> previous_token = -1;
         current_comment -> location = 0;
     }
 #endif // JIKES_DEBUG
@@ -227,7 +229,8 @@ void Scanner::Scan()
         //
         // Allocate space for next token and set its location.
         //
-        current_token_index = lex -> GetNextToken(cursor - lex -> InputBuffer());
+        current_token_index = lex -> GetNextToken(cursor -
+                                                  lex -> InputBuffer());
         current_token = &(lex -> token_stream[current_token_index]);
 
         (this ->* classify_token[*cursor < 128 ? *cursor : 128])();
@@ -245,7 +248,8 @@ void Scanner::Scan()
     //
     assert(current_token_index == lex -> token_stream.Length() - 1);
 
-    for (LexStream::TokenIndex left_brace = brace_stack.Top(); left_brace; left_brace = brace_stack.Top())
+    for (LexStream::TokenIndex left_brace = brace_stack.Top();
+         left_brace; left_brace = brace_stack.Top())
     {
         lex -> token_stream[left_brace].SetRightBrace(current_token_index);
         brace_stack.Pop();
@@ -266,7 +270,8 @@ void Scanner::ScanStarComment()
                                            ? &(lex -> comment_stream.Next())
                                            : new LexStream::Comment());
     current_comment -> string = NULL;
-    current_comment -> previous_token = current_token_index; // the token that precedes this comment
+    // The token that precedes this comment.
+    current_comment -> previous_token = current_token_index;
     current_comment -> location = location;
 #endif // JIKES_DEBUG
 
@@ -319,7 +324,8 @@ void Scanner::ScanStarComment()
                 if (state == STAR)
                 {
 #ifdef JIKES_DEBUG
-                    current_comment -> length = ((cursor - lex -> InputBuffer()) -
+                    current_comment -> length = ((cursor -
+                                                  lex -> InputBuffer()) -
                                                  current_comment -> location);
                     if (! control.option.debug_comments)
                         delete current_comment;
@@ -362,18 +368,19 @@ void Scanner::ScanStarComment()
                 {
                     cursor++;
 #ifdef JIKES_DEBUG
-                    current_comment -> length = (cursor - lex -> InputBuffer()) - current_comment -> location;
+                    current_comment -> length = ((cursor -
+                                                  lex -> InputBuffer()) -
+                                                 current_comment -> location);
                     if (! control.option.debug_comments)
                         delete current_comment;
 #endif // JIKES_DEBUG
                     return;
                 }
             }
-            else if (Code::IsNewline(*cursor)) // Record new line
+            if (Code::IsNewline(*cursor++)) // Record new line
             {
-                lex -> line_location.Next() = cursor - lex -> InputBuffer() + 1;
+                lex -> line_location.Next() = cursor - lex -> InputBuffer();
             }
-            cursor++;
         }
     }
 
@@ -384,7 +391,8 @@ void Scanner::ScanStarComment()
     cursor -= 2;
     lex -> bad_tokens.Next().Initialize(StreamError::UNTERMINATED_COMMENT,
                                         location,
-                                        (unsigned) (cursor - lex -> InputBuffer()) - 1,
+                                        (unsigned) (cursor -
+                                                    lex -> InputBuffer()) - 1,
                                         lex);
 
 #ifdef JIKES_DEBUG
@@ -406,16 +414,18 @@ void Scanner::ScanSlashComment()
     {
         LexStream::Comment *current_comment = &(lex -> comment_stream.Next());
         current_comment -> string = NULL;
-        current_comment -> previous_token = current_token_index;  // the token that precedes this comment
+        // The token that precedes this comment.
+        current_comment -> previous_token = current_token_index;
         current_comment -> location = cursor - lex -> InputBuffer();
-        for (cursor += 2; ! Code::IsNewline(*cursor); cursor++)  // skip all until \n
-            ;
-        current_comment -> length = (cursor - lex -> InputBuffer()) - current_comment -> location;
+        for (cursor += 2; ! Code::IsNewline(*cursor); cursor++)
+            ;  // Skip all until \n
+        current_comment -> length = ((cursor - lex -> InputBuffer()) -
+                                     current_comment -> location);
         return;
     }
 #endif // JIKES_DEBUG
-    for (cursor += 2; ! Code::IsNewline(*cursor); cursor++)  // skip all until \n
-        ;
+    for (cursor += 2; ! Code::IsNewline(*cursor); cursor++)
+        ; // Skip all until \n
 }
 
 
@@ -785,7 +795,8 @@ inline void Scanner::CheckOctalLiteral(wchar_t *cursor, wchar_t *tail)
         if (p < tail)
             lex -> bad_tokens.Next().Initialize(StreamError::BAD_OCTAL_CONSTANT,
                                                 (unsigned) (cursor - lex -> InputBuffer()),
-                                                (unsigned) (tail - lex -> InputBuffer()) - 1, lex);
+                                                (unsigned) (tail - lex -> InputBuffer()) - 1,
+                                                lex);
     }
 }
 
@@ -809,8 +820,8 @@ void Scanner::ClassifyCharLiteral()
     while (*ptr != U_SINGLE_QUOTE && (! Code::IsNewline(*ptr)))
     {
         if (*ptr++ == U_BACKSLASH)   // In any case, skip the character
-        {                            // If it was a backslash,
-            if (! Code::IsNewline(*ptr)) // if the next char is not eol, skip it.
+        {                            // If it was a backslash, and next char
+            if (! Code::IsNewline(*ptr)) // is not EOF, skip the backslash.
                 ptr++;
         }
     }
@@ -821,7 +832,8 @@ void Scanner::ClassifyCharLiteral()
         if (len == 1)
             lex -> bad_tokens.Next().Initialize(StreamError::EMPTY_CHARACTER_CONSTANT,
                                                 current_token -> Location(),
-                                                (unsigned) (ptr - lex -> InputBuffer()), lex);
+                                                (unsigned) (ptr - lex -> InputBuffer()),
+                                                lex);
         ptr++;
     }
     else
@@ -830,10 +842,13 @@ void Scanner::ClassifyCharLiteral()
             current_token -> SetKind(0);
         lex -> bad_tokens.Next().Initialize(StreamError::UNTERMINATED_CHARACTER_CONSTANT,
                                             current_token -> Location(),
-                                            (unsigned) (ptr - lex -> InputBuffer()) - 1, lex);
+                                            (unsigned) (ptr - lex -> InputBuffer()) - 1,
+                                            lex);
     }
 
-    current_token -> SetSymbol(control.char_table.FindOrInsertLiteral(cursor, ptr - cursor));
+    current_token ->
+        SetSymbol(control.char_table.FindOrInsertLiteral(cursor,
+                                                         ptr - cursor));
 
     cursor = ptr;
 }
@@ -858,8 +873,8 @@ void Scanner::ClassifyStringLiteral()
     while (*ptr != U_DOUBLE_QUOTE && (! Code::IsNewline(*ptr)))
     {
         if (*ptr++ == U_BACKSLASH)   // In any case, skip the character
-        {                            // If it was a backslash,
-            if (! Code::IsNewline(*ptr)) // if the next char is not eol, skip it.
+        {                            // If it was a backslash, and next char
+            if (! Code::IsNewline(*ptr)) // is not EOF, skip the backslash.
                 ptr++;
         }
     }
@@ -868,14 +883,17 @@ void Scanner::ClassifyStringLiteral()
         ptr++;
     else
     {
-        if ((ptr - cursor) == 1) /* Definitely, an isolated double quote */
+        if ((ptr - cursor) == 1) // Definitely, an isolated double quote.
             current_token -> SetKind(0);
         lex -> bad_tokens.Next().Initialize(StreamError::UNTERMINATED_STRING_CONSTANT,
                                             current_token -> Location(),
-                                            (unsigned) (ptr - lex -> InputBuffer()) - 1, lex);
+                                            (unsigned) (ptr - lex -> InputBuffer()) - 1,
+                                            lex);
     }
 
-    current_token -> SetSymbol(control.string_table.FindOrInsertLiteral(cursor, ptr - cursor));
+    current_token ->
+        SetSymbol(control.string_table.FindOrInsertLiteral(cursor,
+                                                           ptr - cursor));
 
     cursor = ptr;
 }
@@ -922,7 +940,8 @@ void Scanner::ClassifyIdOrKeyword()
     }
     int len = ptr - cursor;
 
-    current_token -> SetKind(len < 13 ? (scan_keyword[len])(cursor) : TK_Identifier);
+    current_token -> SetKind(len < 13 ? (scan_keyword[len])(cursor)
+                             : TK_Identifier);
 
     if (current_token -> Kind() == TK_assert &&
         control.option.source < JikesOption::SDK1_4)
@@ -947,16 +966,20 @@ void Scanner::ClassifyIdOrKeyword()
         current_token -> SetSymbol(control.FindOrInsertName(cursor, len));
         for (int i = 0; i < control.option.keyword_map.Length(); i++)
         {
-            if (control.option.keyword_map[i].length == len && wcsncmp(cursor, control.option.keyword_map[i].name, len) == 0)
+            if (control.option.keyword_map[i].length == len &&
+                wcsncmp(cursor, control.option.keyword_map[i].name, len) == 0)
+            {
                 current_token -> SetKind(control.option.keyword_map[i].key);
+            }
         }
     }
-    else if (current_token -> Kind() == TK_class || current_token -> Kind() == TK_interface)
+    else if (current_token -> Kind() == TK_class ||
+             current_token -> Kind() == TK_interface)
     {
         //
-        // This type keyword is not nested. When we encounter an occurrence of the keyword
-        // class or interface that is not enclosed in at least one set of braces, we keep track
-        // of it by adding it to a list.
+        // This type keyword is not nested. When we encounter an occurrence of
+        // the keyword class or interface that is not enclosed in at least one
+        // set of braces, we keep track of it by adding it to a list.
         //
         if (brace_stack.Size() == 0)
             lex -> type_index.Next() = current_token_index;
@@ -999,8 +1022,11 @@ void Scanner::ClassifyId()
 
     for (int i = 0; i < control.option.keyword_map.Length(); i++)
     {
-        if (control.option.keyword_map[i].length == len && wcsncmp(cursor, control.option.keyword_map[i].name, len) == 0)
+        if (control.option.keyword_map[i].length == len &&
+            wcsncmp(cursor, control.option.keyword_map[i].name, len) == 0)
+        {
             current_token -> SetKind(control.option.keyword_map[i].key);
+        }
     }
 
     cursor = ptr;
@@ -1065,7 +1091,8 @@ void Scanner::ClassifyNumericLiteral()
             }
             else lex -> bad_tokens.Next().Initialize(StreamError::INVALID_HEX_CONSTANT,
                                                      current_token -> Location(),
-                                                     (unsigned) (ptr - lex -> InputBuffer()) - 1, lex);
+                                                     (unsigned) (ptr - lex -> InputBuffer()) - 1,
+                                                     lex);
         }
     }
 
@@ -1097,7 +1124,8 @@ void Scanner::ClassifyNumericLiteral()
         }
         else lex -> bad_tokens.Next().Initialize(StreamError::INVALID_FLOATING_CONSTANT_EXPONENT,
                                                  current_token -> Location(),
-                                                 (unsigned) (ptr - lex -> InputBuffer()) - 1, lex);
+                                                 (unsigned) (ptr - lex -> InputBuffer()) - 1,
+                                                 lex);
     }
 
     /******************************************************************/
@@ -1111,14 +1139,16 @@ void Scanner::ClassifyNumericLiteral()
     {
         ptr++;
         len = ptr - cursor;
-        current_token -> SetSymbol(control.float_table.FindOrInsertLiteral(cursor, len));
+        current_token ->
+            SetSymbol(control.float_table.FindOrInsertLiteral(cursor, len));
         current_token -> SetKind(TK_FloatingPointLiteral);
     }
     else if (*ptr == U_d || *ptr == U_D)
     {
         ptr++;
         len = ptr - cursor;
-        current_token -> SetSymbol(control.double_table.FindOrInsertLiteral(cursor, len));
+        current_token ->
+            SetSymbol(control.double_table.FindOrInsertLiteral(cursor, len));
         current_token -> SetKind(TK_DoubleLiteral);
     }
     else if (current_token -> Kind() == TK_IntegerLiteral)
@@ -1127,13 +1157,15 @@ void Scanner::ClassifyNumericLiteral()
         {
             ptr++; /* Skip the 'l' or 'L' */
             len = ptr - cursor;
-            current_token -> SetSymbol(control.long_table.FindOrInsertLiteral(cursor, len));
+            current_token ->
+                SetSymbol(control.long_table.FindOrInsertLiteral(cursor, len));
             current_token -> SetKind(TK_LongLiteral);
         }
         else
         {
             len = ptr - cursor;
-            current_token -> SetSymbol(control.int_table.FindOrInsertLiteral(cursor, len));
+            current_token ->
+                SetSymbol(control.int_table.FindOrInsertLiteral(cursor, len));
         }
 
         CheckOctalLiteral(cursor, ptr);
@@ -1141,7 +1173,8 @@ void Scanner::ClassifyNumericLiteral()
     else
     {
         len = ptr - cursor;
-        current_token -> SetSymbol(control.double_table.FindOrInsertLiteral(cursor, len));
+        current_token ->
+            SetSymbol(control.double_table.FindOrInsertLiteral(cursor, len));
         current_token -> SetKind(TK_DoubleLiteral);
     }
 
@@ -1553,7 +1586,8 @@ void Scanner::ClassifyComplement()
 /**********************************************************************/
 void Scanner::ClassifyBadToken()
 {
-    if (++cursor < &lex -> InputBuffer()[lex -> InputBufferLength()]) // not the terminating character?
+    // Not the terminating character?
+    if (++cursor < &lex -> InputBuffer()[lex -> InputBufferLength()])
     {
          current_token -> SetKind(0);
          current_token -> SetSymbol(control.FindOrInsertName(cursor - 1, 1));

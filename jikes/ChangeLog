@@ -1,5 +1,9 @@
 2002-03-05  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/scanner.cpp (ScanStarComment): Fix bug 2721.
+
+2002-03-05  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/bytecode.cpp (LoadVariable): Fix bug 2728.
 	(EmitStatement): Fix bug 2729.
 	(ProcessAbruptExit): Fix bug 2731.
