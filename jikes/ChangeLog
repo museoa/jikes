@@ -1,3 +1,8 @@
+2004-04-02  Elliott Hughes  <enh@acm.org>
+
+	* src/error.cpp: Fix a few package-related errors; packages should
+	be reported as "java.lang", not "java/lang".
+
 2004-03-31  Eric Blake  <ebb9@byu.net>
 
 	* src/ast.cpp [JIKES_DEBUG]: Move stream.h include outside of the

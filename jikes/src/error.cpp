@@ -1213,7 +1213,7 @@ void SemanticError::InitializeMessages()
         "The file \"%1\" is not a valid directory.";
     messages[PACKAGE_NOT_FOUND] =
         "You need to modify your classpath, sourcepath, bootclasspath, "
-        "and/or extdirs setup. Package \"%1\" could not be found in: %C";
+        "and/or extdirs setup. Package \"%P1\" could not be found in: %C";
     messages[CANNOT_OPEN_DIRECTORY] = "Unable to open directory \"%1\".";
     messages[BAD_INPUT_FILE] =
         "The input file \"%1\" does not have the \".java\" extension.";
@@ -1435,7 +1435,8 @@ void SemanticError::InitializeMessages()
     messages[UNUSED_TYPE_IMPORT] =
         "Unnecessary import of type \"%T1\". The type is never referenced.";
     messages[UNUSED_PACKAGE_IMPORT] =
-        "Unnecessary import of %P1. No types of this package are referenced.";
+        "Unnecessary import of \"%P1\". No types of this package are "
+        "referenced.";
     messages[DUPLICATE_ACCESS_MODIFIER] =
         "Duplicate specification of an access modifier. "
         "Only one instance of \"public\", \"private\", or \"protected\" "
@@ -1454,7 +1455,7 @@ void SemanticError::InitializeMessages()
         "All files that depend on this source file, in particular, "
         "%F1.java should be recompiled.";
     messages[PACKAGE_NOT_TYPE] =
-        "Package \"%1\" was found when a type was expected.";
+        "Package \"%P1\" was found when a type was expected.";
     messages[TYPE_NOT_FOUND] =
         "Type \"%T1\" was not found.";
     messages[INVALID_TYPE_FOUND] =
