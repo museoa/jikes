@@ -1,4 +1,4 @@
-*** Jikes 1.19 was released 31 January 2004.
+*** Jikes 1.19 was released 1 February 2004.
 
 The default -source and -target options are now 1.4 (that is, the
 assert statement now compiles by default); for the old behavior you
@@ -13,7 +13,9 @@ that 1L is preferred over 1l when writing a long literal).
 * New switch -Xswitchcheck: Warn about fallthrough in switch
 statements (compatible with javac).
 * New switch +Pnaming-convention: Warn about naming choices that
-violate Java's naming conventions.
+violate Java's naming conventions. This switch is currently ON by
+default, +Pno-naming-convention will disable it for sites that use
+a different naming convention.
 * New switch --noassert: Omits assertions from .class files (not
 recommended for normal development, but provided to allow you to do
 -source 1.4 -target 1.3).
@@ -95,6 +97,9 @@ LALR(1) instead of LALR(2)].
 
 The compiler now works around a bug in VMs when storing an array into
 a multi-dimensional array expression that happened to be null.
+
+Extranious error messages about non zip or jar content in extdirs has
+been removed.
 
 As always, minor bug fixes for several bugs in the database.
 
