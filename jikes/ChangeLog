@@ -1,3 +1,10 @@
+2001-09-05  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/body.cpp (ProcessSynchronizedStatement, ProcessReturnStatement):
+	* src/expr.cpp (ProcessAmbiguousName, ProcessMethodName):
+	Fix remaining cases of string constants not being
+	compiled inline - patch 121, from bug 66.
+
 2001-09-05  Eric B Blake  <eblake@ee.byu.edu>
 
 	* src/segment.h (PairSegment, TripletSegment):

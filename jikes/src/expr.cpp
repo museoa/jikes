@@ -2457,8 +2457,9 @@ void Semantic::ProcessAmbiguousName(Ast *name)
             // ...First, classify the name or expression to the left of the '.'...
             //
             if (simple_name || sub_field_access)
-                 ProcessAmbiguousName(base);
-            else ProcessExpression(base);
+                ProcessAmbiguousName(base);
+            else // The qualifier might be a complex String constant
+                ProcessExpressionOrStringConstant(base);
 
             if (base -> symbol == control.no_type)
             {
@@ -3041,8 +3042,9 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
         AstFieldAccess *sub_field_access = base -> FieldAccessCast();
 
         if (base -> SimpleNameCast() || sub_field_access)
-             ProcessAmbiguousName(base);
-        else ProcessExpression(base);
+            ProcessAmbiguousName(base);
+        else // The qualifier might be a complex String constant
+            ProcessExpressionOrStringConstant(base);
 
         if (base -> symbol == control.no_type)
         {

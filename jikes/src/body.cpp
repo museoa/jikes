@@ -247,7 +247,12 @@ void Semantic::ProcessSynchronizedStatement(Ast *stmt)
 {
     AstSynchronizedStatement *synchronized_statement = (AstSynchronizedStatement *) stmt;
 
-    ProcessExpression(synchronized_statement -> expression);
+    //
+    // Notice that in the case of a complex string constant, it is
+    // vital to inline correctly; otherwise, we would not be using
+    // the correct object as the monitor.
+    //
+    ProcessExpressionOrStringConstant(synchronized_statement -> expression);
 
     synchronized_statement -> block -> is_reachable = synchronized_statement -> is_reachable;
 
@@ -944,7 +949,7 @@ void Semantic::ProcessReturnStatement(Ast *stmt)
     }
     else if (return_statement -> expression_opt)
     {
-        ProcessExpression(return_statement -> expression_opt);
+        ProcessExpressionOrStringConstant(return_statement -> expression_opt);
 
         if (this_method -> Type() == control.void_type)
         {
