@@ -4928,19 +4928,21 @@ int ByteCode::EmitPreUnaryExpression(AstPreUnaryExpression *expression,
         {
         case AstPreUnaryExpression::PLUS:
             // nothing to do (front-end will have done any needed conversions)
+            assert(need_value);
             EmitExpression(expression -> expression);
             break;
         case AstPreUnaryExpression::MINUS:
+            assert(need_value);
+            assert(control.IsNumeric(type) && "unary minus on bad type");
+
             EmitExpression(expression -> expression);
-
-            assert(control.IsNumeric(type) && "unary minus on unsupported type");
-
             PutOp(control.IsSimpleIntegerValueType(type) ? OP_INEG
                   : type == control.long_type ? OP_LNEG
                   : type == control.float_type ? OP_FNEG
                   : OP_DNEG); // double_type
             break;
         case AstPreUnaryExpression::TWIDDLE:
+            assert(need_value);
             if (control.IsSimpleIntegerValueType(type))
             {
                 EmitExpression(expression -> expression);
@@ -4959,7 +4961,9 @@ int ByteCode::EmitPreUnaryExpression(AstPreUnaryExpression *expression,
         case AstPreUnaryExpression::NOT:
             assert(type == control.boolean_type);
 
-            EmitExpression(expression -> expression);
+            EmitExpression(expression -> expression, need_value);
+            if (! need_value)
+                return 0;
             PutOp(OP_ICONST_1);
             PutOp(OP_IXOR); // !(e) <=> (e)^true
             break;
