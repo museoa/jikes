@@ -1,3 +1,9 @@
+2002-04-29  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/bytecode.cpp (PrintCode): Add casts for g++ 3.1 problem.
+	* src/platform.h (operator<<): Ditto.
+	* src/jikesapi.cpp (stat): Fix resolution issue for g++ 3.1.
+
 2002-03-22  Eric Blake  <ebb9@email.byu.edu>
 
 	Update to automake 1.6, autoconf 1.53.

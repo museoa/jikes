@@ -1177,7 +1177,7 @@ class ErrorString: public ConvertibleArray<wchar_t>
     ErrorString &operator<<(int n);
     ErrorString &operator<<(ostream &(*f)(ostream&))
     {
-        assert(f == endl);
+        assert(f == (ostream &(*)(ostream&)) endl);
         return *this << '\n';
     }
 

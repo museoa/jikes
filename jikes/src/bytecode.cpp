@@ -6099,7 +6099,8 @@ void ByteCode::ChangeStack(int i)
 #ifdef JIKES_DEBUG
 void ByteCode::PrintCode()
 {
-    Coutput << "magic " << hex << magic << dec
+    // This explicit casting works around a bug in g++ 3.1 library.
+    Coutput << "magic " << (ios&(*)(ios&)) hex << magic << (ios&(*)(ios&)) dec
             << " major_version " << (unsigned) major_version
             << " minor_version " << (unsigned) minor_version << endl;
     AccessFlags::Print();
