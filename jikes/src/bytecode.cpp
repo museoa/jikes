@@ -2663,7 +2663,6 @@ void ByteCode::EmitFieldAccessLhsBase(AstExpression *expression)
     // We now have the right expression. Check if it's a field. If so, process base
     // Otherwise, it must be a simple name...
     //
-    field = expression -> FieldAccessCast();
     if (field)
         EmitExpression(field -> base);
     else
@@ -2907,6 +2906,21 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
             case LHS_FIELD:
                  EmitFieldAccessLhsBase(left_hand_side); // load base for field access
                  break;
+            case LHS_STATIC:
+                 //
+                 // if the access is qualified by an arbitrary base
+                 // expression, evaluate it for side effects.
+                 //
+                 if (left_hand_side -> FieldAccessCast())
+                 {
+                     AstExpression *base = left_hand_side -> FieldAccessCast() -> base;
+                     if (! base -> IsSimpleNameOrFieldAccess())
+                     {
+                         EmitExpression(base);
+                         PutOp(OP_POP);
+                     }
+                 }
+                 break;
             case LHS_METHOD:
                  if (! accessed_member -> ACC_STATIC()) // need to load address of object, obtained from resolution
                  {
@@ -2922,9 +2936,24 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
 
                      EmitExpression(field_expression -> base);
                  }
+                 else if (left_hand_side -> FieldAccessCast())
+                 {
+                     //
+                     // if the access is qualified by an arbitrary base
+                     // expression, evaluate it for side effects.
+                     //
+                     AstExpression *base = left_hand_side -> FieldAccessCast() -> base;
+                     if (! base -> IsSimpleNameOrFieldAccess())
+                     {
+                         EmitExpression(base);
+                         PutOp(OP_POP);
+                     }
+                 }
+                 break;
+            case LHS_LOCAL:
                  break;
             default:
-                 break;
+                 assert(false && "bad kind in EmitAssignmentExpression");
         }
 
         EmitExpression(assignment_expression -> expression);
@@ -2992,7 +3021,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
                  else ResolveAccess(left_hand_side);
                  break;
             default:
-                 break;
+                 assert(false && "bad kind in EmitAssignmentExpression");
         }
 
         //
@@ -3063,7 +3092,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
                          opc = OP_IXOR;
                          break;
                     default:
-                         break;
+                         assert(false && "bad op_type in EmitAssignmentExpression");
                 }
             }
             else if (op_type == this_control.long_type)
@@ -3104,7 +3133,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
                          opc = OP_LXOR;
                          break;
                     default:
-                         break;
+                         assert(false && "bad op_type in EmitAssignmentExpression");
                 }
             }
             else if (op_type == this_control.float_type)
@@ -3127,7 +3156,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
                          opc = OP_FSUB;
                          break;
                     default:
-                         break;
+                         assert(false && "bad op_type in EmitAssignmentExpression");
                 }
             }
             else if (op_type == this_control.double_type)
@@ -3150,7 +3179,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
                          opc = OP_DSUB;
                          break;
                     default:
-                         break;
+                         assert(false && "bad op_type in EmitAssignmentExpression");
                 }
             }
 
@@ -3205,7 +3234,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
             StoreVariable(kind, left_hand_side);
             break;
         default:
-            break;
+            assert(false && "bad kind in EmitAssignmentExpression");
     }
 
     if (this_control.option.g && assignment_expression -> assignment_tag == AstAssignmentExpression::DEFINITE_EQUAL)
@@ -3659,7 +3688,11 @@ int ByteCode::EmitFieldAccess(AstFieldAccess *expression)
     TypeSymbol *expression_type = expression -> Type();
     if (sym -> ACC_STATIC())
     {
-        if (! base -> IsSimpleNameOrFieldAccess()) // if the base expression is an arbitrary expression, evaluate it for side effects.
+        //
+        // if the access is qualified by an arbitrary base
+        // expression, evaluate it for side effects.
+        //
+        if (! base -> IsSimpleNameOrFieldAccess())
         {
             EmitExpression(base);
             PutOp(OP_POP);
@@ -3693,49 +3726,41 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
 
     bool is_super = false; // set if super call
 
-    AstSimpleName *simple_name = method_call -> method -> SimpleNameCast();
     if (msym -> ACC_STATIC())
     {
-        AstFieldAccess *field = expression -> resolution_opt ?
-            (((MethodSymbol *)expression->symbol)->ACC_STATIC() ? expression->method->FieldAccessCast() : NULL)
-            :
-            method_call -> method -> FieldAccessCast()
-            ;
-
-        
-        if (field)
+        //
+        // if the access is qualified by an arbitrary base
+        // expression, evaluate it for side effects.
+        // Notice that accessor methods, which are always static, already
+        // evaluate the base expression.
+        //
+        AstFieldAccess *field = expression -> resolution_opt ||
+            (msym -> accessed_member &&
+             msym -> accessed_member -> VariableCast() &&
+             (! msym -> accessed_member -> VariableCast() -> ACC_STATIC()))
+            ? NULL
+            : method_call -> method -> FieldAccessCast();
+        if (field && ! field -> base -> IsSimpleNameOrFieldAccess())
         {
-            // JLS 15.11.4.7
-            if (field -> base -> MethodInvocationCast())
-            {
-                EmitMethodInvocation(field -> base -> MethodInvocationCast());
-                PutOp(OP_POP); // discard value (only evaluating for side effect)
-            }
-            else if (field -> base -> ClassInstanceCreationExpressionCast())
-            {
-                (void) EmitClassInstanceCreationExpression(field -> base -> ClassInstanceCreationExpressionCast(), false);
-            }
-            else 
-            {
-	        // FIXME : diasbled because it is crashing jikes !
-	        // This seems to have been caused by a fix for bug #198
-	        //PutOp(EmitExpression(field -> base) == 2 ? OP_POP2 : OP_POP); // discard value
-            }
-        }
+            EmitExpression(field -> base);
+            PutOp(OP_POP);
+        }        
     }
     else
     {
         AstFieldAccess *field = method_call -> method -> FieldAccessCast();
+        AstSimpleName *simple_name = method_call -> method -> SimpleNameCast();
         if (field)
         {
             AstFieldAccess *sub_field_access = field -> base -> FieldAccessCast();
-            is_super = field -> base -> SuperExpressionCast() || (sub_field_access && sub_field_access -> IsSuperAccess());
+            is_super = field -> base -> SuperExpressionCast() ||
+                (sub_field_access && sub_field_access -> IsSuperAccess());
 
             if (field -> base -> MethodInvocationCast())
                  EmitMethodInvocation(field -> base -> MethodInvocationCast());
             else EmitExpression(field -> base);
         }
-        else if (method_call -> method -> SimpleNameCast())
+        else if (simple_name)
         {
             if (simple_name -> resolution_opt) // use resolution if available
                 EmitExpression(simple_name -> resolution_opt);
@@ -4898,6 +4923,20 @@ int ByteCode::LoadVariable(int kind, AstExpression *expr)
              {
                  if (sym -> ACC_STATIC())
                  {
+                     //
+                     // if the access is qualified by an arbitrary base
+                     // expression, evaluate it for side effects.
+                     //
+                     if (expr -> FieldAccessCast())
+                     {
+                         AstExpression *base = expr -> FieldAccessCast() -> base;
+                         if (! base -> IsSimpleNameOrFieldAccess())
+                         {
+                             EmitExpression(base);
+                             PutOp(OP_POP);
+                         }
+                     }
+
                      PutOp(OP_GETSTATIC);
                      ChangeStack(GetTypeWords(expression_type));
                  }
@@ -4947,6 +4986,16 @@ void ByteCode::LoadReference(AstExpression *expression)
 
         if (sym -> ACC_STATIC())
         {
+            //
+            // if the access is qualified by an arbitrary base
+            // expression, evaluate it for side effects.
+            //
+            if (! field_access -> base -> IsSimpleNameOrFieldAccess())
+            {
+                EmitExpression(field_access -> base);
+                PutOp(OP_POP);
+            }
+
             PutOp(OP_GETSTATIC);
             ChangeStack(1);
         }

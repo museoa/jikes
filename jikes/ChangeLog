@@ -1,5 +1,17 @@
 2001-05-06  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/bytecode.cpp (EmitFieldAccessLhsBase):
+	Removed redundant code.
+	(EmitAssignmentExpression, EmitMethodInvocation)
+	(LoadVariable, LoadReference): Fix assignments
+	to static fields, calls to static methods,
+	increments of static fields, and accesses to
+	static methods, so that qualifying expressions
+	are evaluated (bug 132).  Improve the error
+	checking by adding asserts on dead code branches.
+
+2001-05-06  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/expr.cpp (ProcessAssignmentExpression):
 	Fixed a bad cast, which was causing bug 234.
 
