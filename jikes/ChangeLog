@@ -1,3 +1,8 @@
+2001-11-05  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/bytecode.cpp (DeclareField): Correct the use of
+	ConstantValue attributes to obey JLS2, bug 183, patch 224.
+
 2001-11-04  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/control.h (StringBuffer_*Method): Fix some typos.

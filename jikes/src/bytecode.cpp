@@ -43,28 +43,22 @@ void ByteCode::CompileClass()
                 DeclareField(vsym);
 
                 //
-                // We need a static constructor-initializer if we encounter at least one class
-                // variable that is declared with an initializer that is not a constant expression.
+                // We need a static initializer if we encounter at least one
+                // class variable that is not a constant. Remember, according
+                // to JLS 15.28, a constant is a final field initialized with
+                // a constant expression.
                 //
                 if (variable_declarator -> variable_initializer_opt)
                 {
-                    AstExpression *init = variable_declarator -> variable_initializer_opt -> ExpressionCast();
-                    if (! (init && init -> IsConstant()))
-                        initialized_static_fields.Next() = variable_declarator;
-
-                    //
-                    // TODO: there seems to be a contradiction between the language spec and the VM spec.
-                    // The language spec seems to require that a variable be initialized (in the class file)
-                    // with a "ConstantValue" only if it is static. The VM spec, on the other hand, states
-                    // that a static need not be final to be initialized with a ConstantValue.
-                    // As of now, we are following the language spec - ergo, this extra test.
-                    //
-                    else
+                    if (vsym -> initial_value)
                     {
-                        assert(variable_declarator -> symbol);
-                        if (! variable_declarator -> symbol -> ACC_FINAL())
-                            initialized_static_fields.Next() = variable_declarator;
+                        AstExpression *init;
+                        assert(init = variable_declarator -> variable_initializer_opt -> ExpressionCast());
+                        assert(init -> IsConstant() &&
+                               variable_declarator -> symbol -> ACC_FINAL());
                     }
+                    else
+                        initialized_static_fields.Next() = variable_declarator;
                 }
             }
         }
@@ -84,7 +78,7 @@ void ByteCode::CompileClass()
                 DeclareField(vd -> symbol);
 
                 //
-                // must set Constant attribute if initial value specified
+                // We must initialize all instance fields, even the constants.
                 //
                 if (vd -> variable_initializer_opt)
                     initialized_instance_fields.Next() = vd;
@@ -471,21 +465,23 @@ void ByteCode::CompileInterface()
             {
                 AstVariableDeclarator *variable_declarator = field_decl -> VariableDeclarator(vi);
                 VariableSymbol *vsym = variable_declarator -> symbol;
-
-                //
-                // We need a static constructor-initializer if we encounter at least one
-                // variable (all variable declared in an interface are implicitly static)
-                // that is declared with an initialization expression that is not a
-                // constant expression.
-                //
-                if (variable_declarator -> variable_initializer_opt)
-                {
-                    AstExpression *init = variable_declarator -> variable_initializer_opt -> ExpressionCast();
-                    if (! (init && init -> IsConstant()))
-                        initialized_fields.Next() = variable_declarator;
-                }
-
                 DeclareField(vsym);
+
+                //
+                // We need a static initializer if we encounter at least one
+                // variable that is not a constant. Remember, according to JLS
+                // 15.28, a constant is a final field initialized with a
+                // constant expression (and all interface fields are final).
+                //
+                assert(variable_declarator -> variable_initializer_opt);
+                if (vsym -> initial_value)
+                {
+                    AstExpression *init;
+                    assert(init = variable_declarator -> variable_initializer_opt -> ExpressionCast());
+                    assert(init -> IsConstant());
+                }
+                else
+                    initialized_fields.Next() = variable_declarator;
             }
         }
     }
@@ -637,45 +633,31 @@ void ByteCode::CompileConstructor(AstConstructorDeclaration *constructor, Tuple<
 void ByteCode::DeclareField(VariableSymbol *symbol)
 {
     int field_index = fields.NextIndex(); // index for field
+    TypeSymbol *type = symbol -> Type();
 
     fields[field_index].SetFlags(symbol -> Flags());
     fields[field_index].SetNameIndex(RegisterUtf8(symbol -> ExternalIdentity() -> Utf8_literal));
-    fields[field_index].SetDescriptorIndex(RegisterUtf8(symbol -> Type() -> signature));
+    fields[field_index].SetDescriptorIndex(RegisterUtf8(type -> signature));
 
-    AstVariableDeclarator *variable_declarator = symbol -> declarator;
-    if (variable_declarator && symbol -> ACC_STATIC()) // a declared static variable (not a generated one!)
+    //
+    // Any final field initialized with a constant must have a ConstantValue
+    // attribute.  However, the VM only reads this value for static fields.
+    //
+    if (symbol -> initial_value)
     {
-        AstExpression *init = (variable_declarator -> variable_initializer_opt
-                                                    ? variable_declarator -> variable_initializer_opt -> ExpressionCast()
-                                                    : (AstExpression *) NULL);
-        LiteralValue *initial_value = (init ? init -> value : (LiteralValue *) NULL);
-
-        TypeSymbol *type = symbol -> Type();
-        if (initial_value)
-        {
-            assert(type -> Primitive() || type == this_control.String());
-            //
-            // TODO: there seems to be a contradiction between the language spec and the VM spec.
-            // The language spec seems to require that a variable be initialized (in the class file)
-            // with a "ConstantValue" only if it is static. The VM spec, on the other hand, states
-            // that a static need not be final to be initialized with a ConstantValue.
-            // As of now, we are following the language spec - ergo, this extra test.
-            //
-            if (symbol -> ACC_FINAL())
-            {
-                u2 index = (this_control.IsSimpleIntegerValueType(type) || type == this_control.boolean_type
-                                ? RegisterInteger((IntLiteralValue *) initial_value)
-                                : type == this_control.String()
-                                        ? RegisterString((Utf8LiteralValue *) initial_value)
-                                        : type == this_control.float_type
-                                                ? RegisterFloat((FloatLiteralValue *) initial_value)
-                                                : type == this_control.long_type
-                                                        ? RegisterLong((LongLiteralValue *) initial_value)
-                                                        : RegisterDouble((DoubleLiteralValue *) initial_value));
-                u2 attribute_index = RegisterUtf8(this_control.ConstantValue_literal);
-                fields[field_index].AddAttribute(new ConstantValue_attribute(attribute_index, index));
-            }
-        }
+        assert(symbol -> ACC_FINAL());
+        assert(type -> Primitive() || type == this_control.String());
+        u2 index = (this_control.IsSimpleIntegerValueType(type) || type == this_control.boolean_type
+                    ? RegisterInteger((IntLiteralValue *) symbol -> initial_value)
+                    : type == this_control.String()
+                        ? RegisterString((Utf8LiteralValue *) symbol -> initial_value)
+                        : type == this_control.float_type
+                            ? RegisterFloat((FloatLiteralValue *) symbol -> initial_value)
+                            : type == this_control.long_type
+                                ? RegisterLong((LongLiteralValue *) symbol -> initial_value)
+                                : RegisterDouble((DoubleLiteralValue *) symbol -> initial_value));
+        u2 attribute_index = RegisterUtf8(this_control.ConstantValue_literal);
+        fields[field_index].AddAttribute(new ConstantValue_attribute(attribute_index, index));
     }
 
     if (symbol -> IsSynthetic())
@@ -948,6 +930,9 @@ void ByteCode::EndMethod(int method_index, MethodSymbol *msym)
 }
 
 
+//
+// This should only be called on non-constant static fields.
+//
 void ByteCode::InitializeClassVariable(AstVariableDeclarator *vd)
 {
     assert(vd -> variable_initializer_opt);
@@ -955,26 +940,15 @@ void ByteCode::InitializeClassVariable(AstVariableDeclarator *vd)
     AstExpression *expression = vd -> variable_initializer_opt -> ExpressionCast();
     if (expression)
     {
-        //
-        // TODO: there seems to be a contradiction between the language spec and the VM spec.
-        // The language spec seems to require that a variable be initialized (in the class file)
-        // with a "ConstantValue" only if it is static. The VM spec, on the other hand, states
-        // that a static need not be final to be initialized with a ConstantValue.
-        // As of now, we are following the language spec - ergo, this extra test.
-        //
-        // if (expression -> IsConstant())  // if already initialized
-        //
-        assert(vd -> symbol);
+        assert(vd -> symbol && ! vd -> symbol -> initial_value);
 
-        if (expression -> IsConstant() && vd -> symbol -> ACC_FINAL())  // if already initialized
-            return;
-
-        // Here, we add a line number attribute for this initializer for 
-        // this expression.  It seems that some debuggers (notably
-        // Sun's JDB) will not allow setting breakpoints at a specific line of code if a class contains
-        // initialized class variables but _no_ static initializer block.  We now add a line number attribute
-        // to appease that debugger.
-        
+        //
+        // Here, we add a line number attribute for this initializer for this
+        // expression.  It seems that some debuggers (notably Sun's JDB) will
+        // not allow setting breakpoints at a specific line of code if a class
+        // contains initialized class variables but _no_ static initializer
+        // block.  We now add a line number attribute to appease that debugger.
+        //
         line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
                                                      this_semantic.lex_stream -> Line(expression -> LeftToken()));
 
@@ -986,11 +960,14 @@ void ByteCode::InitializeClassVariable(AstVariableDeclarator *vd)
 
         assert(array_initializer);
 
-        // Like the case above, we add a line number attribute for this initializer. In this case, the initializer
-        // is an array. It seems that some debuggers (notably Sun's JDB) will not allow setting breakpoints at a
-        // specific line of code if a class contains initialized class variables but _no_ static initializer block.
+        //
+        // Like the case above, we add a line number attribute for this
+        // initializer. In this case, the initializer is an array. It seems
+        // that some debuggers (notably Sun's JDB) will not allow setting
+        // breakpoints at a specific line of code if a class contains
+        // initialized class variables but _no_ static initializer block.
         // We now add a line number attribute to appease that debugger.
-        
+        //
         line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
                                                      this_semantic.lex_stream -> Line(array_initializer->LeftToken()));
 
