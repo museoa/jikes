@@ -1,3 +1,9 @@
+2002-07-05  Chris Abbey  <jikes@cabbey.net>
+
+	* doc/jikes.1: explain that windows doesn't have -encoding
+	by default, and how to tell if a given binary has -encoding
+	support or not.
+
 2002-07-04  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/set.h (Resize): Fix bug in patch 316, which was causing

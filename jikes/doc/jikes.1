@@ -71,6 +71,10 @@ Report uses of deprecated features.
 \fB\-\-encoding\fP \fIencoding\fP
 Use specified encoding to read source files. This is not available in
 some builds, because it requires a working iconv or ICU encoder.
+\fBNote:\fP in particular that the Windows binary provided for
+download does NOT include support for the encoding option as there
+is not a transcoding library on windows by default.
+
 
 .TP
 \fB\-extdirs\fP \fIpath\fP
@@ -106,7 +110,7 @@ Prints a helpful summary of options, then exit.
 .TP
 \fB\-J\fP\&.\|.\|.
 No effect, since jikes is native code, and does not need a Virtual
-Machine (recognized for compatibility).
+Machine (ignored for compatibility).
 
 .TP
 \fB\-nowarn
