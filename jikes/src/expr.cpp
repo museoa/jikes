@@ -1713,8 +1713,6 @@ void Semantic::CreateAccessToScopedVariable(AstSimpleName *simple_name, TypeSymb
             simple_name -> resolution_opt = field_access;
         }
     }
-
-    return;
 }
 
 
@@ -1771,8 +1769,6 @@ void Semantic::CreateAccessToScopedMethod(AstMethodInvocation *method_call, Type
             method_call -> resolution_opt = accessor;
         }
     }
-
-    return;
 }
 
 
@@ -1830,8 +1826,6 @@ void Semantic::CheckSimpleName(AstSimpleName *simple_name, SemanticEnvironment *
             }
         }
     }
-
-    return;
 }
 
 
@@ -1962,8 +1956,6 @@ void Semantic::TypeNestAccessCheck(AstExpression *name)
     TypeSymbol *type = (simple_name ? simple_name -> Type() : field_access -> Type());
     if (type)
         TypeAccessCheck(name, type);
-
-    return;
 }
 
 
@@ -2488,7 +2480,16 @@ void Semantic::ProcessAmbiguousName(Ast *name)
         //
         AstExpression *base = field_access -> base;
         if (base -> FieldAccessCast() || base -> SimpleNameCast())
-             ProcessAmbiguousName(base);
+        {
+            //
+            // Remember that Foo.this, Foo.super, and Foo.class treat Foo
+            // as a type name, while Foo.fieldname treats Foo as an ambiguous
+            // name (which favors an obsuring variable over a type name).
+            //
+            if (field_access -> IsNameAccess())
+                ProcessAmbiguousName(base);
+            else ProcessTypeExpression(base);
+        }
         else ProcessExpression(base);
 
         TypeSymbol *type = base -> Type();
@@ -2742,8 +2743,6 @@ void Semantic::ProcessFieldAccess(Ast *expr)
             assert((! field_access -> symbol -> VariableCast()) || field_access -> symbol -> VariableCast() -> IsTyped());
         }
     }
-
-    return;
 }
 
 
@@ -2941,8 +2940,6 @@ void Semantic::ProcessArrayAccess(Ast *expr)
                            array_access -> base -> Type() -> Name());
         array_access -> symbol = control.no_type;
     }
-
-    return;
 }
 
 
@@ -3293,9 +3290,8 @@ void Semantic::ProcessMethodInvocation(Ast *expr)
          ProcessMethodName(method_call);
     else method_call -> symbol = control.no_type;
 
-    assert(method_call -> symbol == control.no_type || ((MethodSymbol *) method_call -> symbol) -> IsTyped());
-
-    return;
+    assert(method_call -> symbol == control.no_type ||
+           ((MethodSymbol *) method_call -> symbol) -> IsTyped());
 }
 
 
@@ -3306,8 +3302,6 @@ void Semantic::ProcessNullLiteral(Ast *expr)
     //
     AstNullLiteral *null_literal = (AstNullLiteral *) expr;
     null_literal -> symbol = control.null_type;
-
-    return;
 }
 
 
@@ -3331,8 +3325,6 @@ void Semantic::ProcessThisExpression(Ast *expr)
         this_expression -> symbol = control.no_type;
     }
     else this_expression -> symbol = ThisType();
-
-    return;
 }
 
 
@@ -3514,8 +3506,6 @@ void Semantic::UpdateGeneratedLocalConstructor(MethodSymbol *constructor)
     stmt -> can_complete_normally = true;
 
     constructor_block -> original_constructor_invocation = stmt;
-
-    return;
 }
 
 
@@ -3747,8 +3737,6 @@ void Semantic::UpdateLocalConstructors(TypeSymbol *inner_type)
             }
         }
     }
-
-    return;
 }
 
 
@@ -4007,8 +3995,6 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression *class
     }
 
     class_creation -> class_type -> symbol = constructor;
-
-    return;
 }
 
 //
@@ -4404,8 +4390,6 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
             }
         }
     }
-
-    return;
 }
 
 
@@ -4464,8 +4448,6 @@ void Semantic::ProcessArrayCreationExpression(Ast *expr)
 
     if (array_creation -> array_initializer_opt)
         ProcessArrayInitializer((AstArrayInitializer *) array_creation -> array_initializer_opt, type);
-
-    return;
 }
 
 
@@ -4519,8 +4501,6 @@ void Semantic::ProcessPostUnaryExpression(Ast *expr)
             else variable_symbol = postfix_expression -> expression -> symbol -> VariableCast();
         }
     }
-
-    return;
 }
 
 
@@ -4598,8 +4578,6 @@ void Semantic::ProcessMINUS(AstPreUnaryExpression *expr)
             }
         }
     }
-
-    return;
 }
 
 
@@ -4634,8 +4612,6 @@ void Semantic::ProcessTWIDDLE(AstPreUnaryExpression *expr)
         }
         expr -> symbol = expr -> expression -> symbol;
     }
-
-    return;
 }
 
 
@@ -4660,8 +4636,6 @@ void Semantic::ProcessNOT(AstPreUnaryExpression *expr)
         }
         expr -> symbol = control.boolean_type;
     }
-
-    return;
 }
 
 
@@ -4713,8 +4687,6 @@ void Semantic::ProcessPLUSPLUSOrMINUSMINUS(AstPreUnaryExpression *expr)
         }
     }
     expr -> symbol = expr -> expression -> symbol;
-
-    return;
 }
 
 
@@ -4722,8 +4694,6 @@ void Semantic::ProcessPreUnaryExpression(Ast *expr)
 {
     AstPreUnaryExpression *prefix_expression = (AstPreUnaryExpression *) expr;
     (this ->* ProcessPreUnaryExpr[prefix_expression -> pre_unary_tag])(prefix_expression);
-
-    return;
 }
 
 
@@ -5236,8 +5206,6 @@ void Semantic::ProcessCastExpression(Ast *expr)
                        target_type -> Name());
         cast_expression -> symbol = control.no_type;
     }
-
-    return;
 }
 
 
@@ -5361,8 +5329,6 @@ void Semantic::BinaryNumericPromotion(AstBinaryExpression *binary_expression)
             binary_expression -> right_expression = ConvertToType(binary_expression -> right_expression, control.int_type);
         binary_expression -> symbol = control.int_type;
     }
-
-    return;
 }
 
 
@@ -5431,8 +5397,6 @@ void Semantic::BinaryNumericPromotion(AstAssignmentExpression *assignment_expres
         if (right_type != control.int_type)
             assignment_expression -> expression = ConvertToType(assignment_expression -> expression, control.int_type);
     }
-
-    return;
 }
 
 
@@ -5519,8 +5483,6 @@ void Semantic::BinaryNumericPromotion(AstConditionalExpression *conditional_expr
                         ConvertToType(conditional_expression -> false_expression, control.int_type);
         conditional_expression -> symbol = control.int_type;
     }
-
-    return;
 }
 
 
@@ -5630,8 +5592,6 @@ void Semantic::ProcessPLUS(AstBinaryExpression *expr)
              }
         }
     }
-
-    return;
 }
 
 
@@ -5687,8 +5647,6 @@ void Semantic::ProcessLEFT_SHIFT(AstBinaryExpression *expr)
             }
         }
     }
-
-    return;
 }
 
 
@@ -5744,8 +5702,6 @@ void Semantic::ProcessRIGHT_SHIFT(AstBinaryExpression *expr)
             }
         }
     }
-
-    return;
 }
 
 
@@ -5803,8 +5759,6 @@ void Semantic::ProcessUNSIGNED_RIGHT_SHIFT(AstBinaryExpression *expr)
             }
         }
     }
-
-    return;
 }
 
 
@@ -5854,8 +5808,6 @@ void Semantic::ProcessLESS(AstBinaryExpression *expr)
     }
 
     expr -> symbol = control.boolean_type;
-
-    return;
 }
 
 
@@ -5905,8 +5857,6 @@ void Semantic::ProcessGREATER(AstBinaryExpression *expr)
     }
 
     expr -> symbol = control.boolean_type;
-
-    return;
 }
 
 
@@ -5956,8 +5906,6 @@ void Semantic::ProcessLESS_EQUAL(AstBinaryExpression *expr)
     }
 
     expr -> symbol = control.boolean_type;
-
-    return;
 }
 
 
@@ -6007,8 +5955,6 @@ void Semantic::ProcessGREATER_EQUAL(AstBinaryExpression *expr)
     }
 
     expr -> symbol = control.boolean_type;
-
-    return;
 }
 
 
@@ -6070,8 +6016,6 @@ void Semantic::ProcessAND(AstBinaryExpression *expr)
             }
         }
     }
-
-    return;
 }
 
 
@@ -6133,8 +6077,6 @@ void Semantic::ProcessXOR(AstBinaryExpression *expr)
             }
         }
     }
-
-    return;
 }
 
 
@@ -6196,8 +6138,6 @@ void Semantic::ProcessIOR(AstBinaryExpression *expr)
             }
         }
     }
-
-    return;
 }
 
 
@@ -6238,8 +6178,6 @@ void Semantic::ProcessAND_AND(AstBinaryExpression *expr)
     }
 
     expr -> symbol = control.boolean_type;
-
-    return;
 }
 
 
@@ -6280,8 +6218,6 @@ void Semantic::ProcessOR_OR(AstBinaryExpression *expr)
     }
 
     expr -> symbol = control.boolean_type;
-
-    return;
 }
 
 
@@ -6349,8 +6285,6 @@ void Semantic::ProcessEQUAL_EQUAL(AstBinaryExpression *expr)
     }
 
     expr -> symbol = control.boolean_type;
-
-    return;
 }
 
 
@@ -6416,8 +6350,6 @@ void Semantic::ProcessNOT_EQUAL(AstBinaryExpression *expr)
     }
 
     expr -> symbol = control.boolean_type;
-
-    return;
 }
 
 
@@ -6467,8 +6399,6 @@ void Semantic::ProcessSTAR(AstBinaryExpression *expr)
             }
         }
     }
-
-    return;
 }
 
 
@@ -6518,8 +6448,6 @@ void Semantic::ProcessMINUS(AstBinaryExpression *expr)
             }
         }
     }
-
-    return;
 }
 
 
@@ -6608,8 +6536,6 @@ void Semantic::ProcessSLASH(AstBinaryExpression *expr)
             }
         }
     }
-
-    return;
 }
 
 
@@ -6700,8 +6626,6 @@ void Semantic::ProcessMOD(AstBinaryExpression *expr)
             }
         }
     }
-
-    return;
 }
 
 
@@ -6732,8 +6656,6 @@ void Semantic::ProcessINSTANCEOF(AstBinaryExpression *expr)
     }
 
     expr -> symbol = control.boolean_type;
-
-    return;
 }
 
 
@@ -6741,8 +6663,6 @@ void Semantic::ProcessBinaryExpression(Ast *expr)
 {
     AstBinaryExpression *binary_expression = (AstBinaryExpression *) expr;
     (this ->* ProcessBinaryExpr[binary_expression -> binary_tag])(binary_expression);
-
-    return;
 }
 
 
@@ -6760,8 +6680,6 @@ void Semantic::ProcessTypeExpression(Ast *expr)
         type = type -> GetArrayType((Semantic *) this, array_type -> NumBrackets());
 
     type_expression -> symbol = type;
-
-    return;
 }
 
 
@@ -6936,8 +6854,6 @@ void Semantic::ProcessConditionalExpression(Ast *expr)
                 conditional_expression -> value = conditional_expression -> false_expression -> value;
         }
     }
-
-    return;
 }
 
 
@@ -7181,8 +7097,6 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
             assert(false);
             break;
     }
-
-    return;
 }
 
 #ifdef HAVE_JIKES_NAMESPACE

@@ -1,3 +1,8 @@
+2001-12-06  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/expr.cpp (ProcessAmbiguousName): Update name resolution to
+	search for type in Foo.this - bug 2465, patch 235.
+
 2001-12-05  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/body.cpp: Reformat comments to 80 columns. Improve error
