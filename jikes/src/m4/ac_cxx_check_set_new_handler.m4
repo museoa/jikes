@@ -94,6 +94,9 @@ AC_CACHE_CHECK(for standard set_new_handler, ac_cv_standard_set_new_handler,
     AC_TRY_COMPILE([
 #ifdef HAVE_NEW
 # include <new>
+# ifdef HAVE_NAMESPACE
+#  using namespace std;
+# endif
 #else
 # ifdef HAVE_NEW_H
 #  include <new.h>

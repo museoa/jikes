@@ -1,3 +1,9 @@
+2000-07-22  Chris Abbey <cabbey@bresnanlink.net>
+
+	* configure.in: Add check for iconv library.
+	* src/m4/ac_cxx_check_set_new_handler.m4: Add
+	missing "using namespace std" statement.
+
 2000-07-15  Mo DeJong  <mdejong@redhat.com>
 
 	* src/depcomp: Added missing file.

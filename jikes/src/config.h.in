@@ -49,6 +49,9 @@
 /* use unix style mkdir(str, S_IRWXU) */
 #undef HAVE_LIBC5_MKDIR
 
+/* Define if you have the `iconv' library (-liconv). */
+#undef HAVE_LIBICONV
+
 /* Define if you have the `icu-uc' library (-licu-uc). */
 #undef HAVE_LIBICU_UC
 
