@@ -25,7 +25,7 @@
 //
 // Developed at SunSoft, a Sun Microsystems, Inc. business.
 // Permission to use, copy, modify, and distribute this
-// software is freely granted, provided that this notice 
+// software is freely granted, provided that this notice
 // is preserved.
 // ====================================================
 //
@@ -183,7 +183,7 @@ IEEEfloat::IEEEfloat(const IEEEdouble &d)
             *this = NEGATIVE_INFINITY();
         else if (d.IsNaN())
             *this = NaN();
-        else 
+        else
         {
             //
             // A regular, normalized number - do work on the parts
@@ -431,7 +431,7 @@ IEEEfloat::IEEEfloat(const char *str, bool check_invalid)
                 // Avoid confusion from exponents so large that e might
                 // overflow
                 if (s - s1 > 8 || L > 19999)
-                    e = 19999;  
+                    e = 19999;
                 else
                     e = L;
                 if (esign)
@@ -482,7 +482,7 @@ IEEEfloat::IEEEfloat(const char *str, bool check_invalid)
     }
     e1 = e -= nf;
 
-    // 
+    //
     // Now we have nd0 digits, starting at s0, followed by a
     // decimal point, followed by nd-nd0 digits.  The number we're
     // after is the integer represented by those digits times 10**e
@@ -529,7 +529,7 @@ IEEEfloat::IEEEfloat(const char *str, bool check_invalid)
     }
     e1 += nd - k;
 
-    // 
+    //
     // Get starting approximation: *this * 10**e1
     //
     if (e1 > 0)
@@ -610,7 +610,7 @@ IEEEfloat::IEEEfloat(const char *str, bool check_invalid)
     //
     // Now the hard part -- adjusting *this to the correct value.
     // Put digits into bd: true value = bd * 10^e
-    // 
+    //
     BigInt bd0(s0, nd0, nd, y, 8);
     if (roundup)
         ++bd0;
@@ -710,11 +710,11 @@ i4 IEEEfloat::IntValue() const
 {
     if (IsNaN())
         return 0;
-            
+
     int sign = Sign(),
         exponent = Exponent();
 
-    if (IsInfinite())
+    if (exponent > 30)
         return sign ? MIN_INT : MAX_INT;
 
     // This covers true zero and denorms.
@@ -735,11 +735,11 @@ LongInt IEEEfloat::LongValue() const
 {
     if (IsNaN())
         return LongInt(0);
-            
+
     int sign = Sign(),
         exponent = Exponent();
 
-    if (IsInfinite())
+    if (exponent > 62)
         return sign ? LongInt::MIN_LONG() : LongInt::MAX_LONG();
 
     // This covers true zero and denorms.
@@ -804,7 +804,7 @@ IEEEfloat IEEEfloat::Normalize(int sign, int exponent, u4 fraction)
         return sign ? NEGATIVE_INFINITY() : POSITIVE_INFINITY();
 
     //
-    // Check and respond to underflow 
+    // Check and respond to underflow
     //
     if (exponent <= -BIAS)
     {
@@ -855,7 +855,7 @@ IEEEfloat IEEEfloat::Ulp() const
     i4 L;
     IEEEfloat f;
     f.value.float_value = value.float_value;
-    
+
     L = (i4) f.ExpBits() - FRACT_SIZE * MIN_FRACT;
     if (L > 0)
         f.value.iword = L;
@@ -994,7 +994,7 @@ IEEEfloat IEEEfloat::operator+ (const IEEEfloat op) const
 
     expx = SplitInto((u4 &) x);
     expy = op.SplitInto((u4 &) y);
-    
+
     signx = Sign();
     signy = op.Sign();
 
@@ -1008,7 +1008,7 @@ IEEEfloat IEEEfloat::operator+ (const IEEEfloat op) const
     // Denormalize the fractions, so that the exponents are
     // the same and then set the exponent for the result.
     // Leave enough space for overflow and INT_MIN avoidance!
-    // 
+    //
     if (signx)
         x = -x;
     if (signy)
@@ -1118,7 +1118,7 @@ IEEEfloat IEEEfloat::operator* (const IEEEfloat op) const
     b = a & 0xfffff;
     a >>= 20;
     x = a.LowWord() | ((b > 0) ? 1 : 0);
-    
+
     return Normalize(sign, exponent - 3, x);
 #endif // HAVE_IEEE754
 }
@@ -1477,7 +1477,7 @@ IEEEdouble::IEEEdouble(const char *str, bool check_invalid)
                 // Avoid confusion from exponents so large that e might
                 // overflow
                 if (s - s1 > 8 || L > 19999)
-                    e = 19999;  
+                    e = 19999;
                 else
                     e = L;
                 if (esign)
@@ -1528,7 +1528,7 @@ IEEEdouble::IEEEdouble(const char *str, bool check_invalid)
     }
     e1 = e -= nf;
 
-    // 
+    //
     // Now we have nd0 digits, starting at s0, followed by a
     // decimal point, followed by nd-nd0 digits.  The number we're
     // after is the integer represented by those digits times 10**e
@@ -1577,7 +1577,7 @@ IEEEdouble::IEEEdouble(const char *str, bool check_invalid)
     }
     e1 += nd - k;
 
-    // 
+    //
     // Get starting approximation: *this * 10**e1
     //
     if (e1 > 0)
@@ -1658,7 +1658,7 @@ IEEEdouble::IEEEdouble(const char *str, bool check_invalid)
     //
     // Now the hard part -- adjusting *this to the correct value.
     // Put digits into bd: true value = bd * 10^e
-    // 
+    //
     BigInt bd0(s0, nd0, nd, y, 9);
     if (roundup)
         ++bd0;
@@ -1846,8 +1846,8 @@ IEEEdouble::IEEEdouble(const char *str, bool check_invalid)
 i4 IEEEdouble::IntValue() const
 {
     if (IsNaN())
-        return 0;                                                             
-            
+        return 0;
+
 #ifdef HAVE_IEEE754
     if (value.double_value < (double)(i4) MIN_INT)
         return MIN_INT;
@@ -1858,7 +1858,7 @@ i4 IEEEdouble::IntValue() const
     int sign = Sign(),
         exponent = Exponent();
 
-    if (IsInfinite() || exponent > 30)
+    if (exponent > 30)
         return sign ? MIN_INT : MAX_INT;
 
     // This includes true zero and denorms.
@@ -1868,18 +1868,18 @@ i4 IEEEdouble::IntValue() const
     i4 result = (i4) (Fraction() >> (FRACT_SIZE - exponent)).LowWord();
 
     return sign ? -result : result;
-#endif // HAVE_IEEE754
+#endif // ! HAVE_IEEE754
 }
 
 LongInt IEEEdouble::LongValue() const
 {
     if (IsNaN())
         return LongInt(0);
-            
+
     int sign = Sign(),
         exponent = Exponent();
 
-    if (IsInfinite() || exponent > 62)
+    if (exponent > 62)
         return sign ? LongInt::MIN_LONG() : LongInt::MAX_LONG();
 
     // This covers true zero and denorms.
@@ -1944,7 +1944,7 @@ IEEEdouble IEEEdouble::Normalize(int sign, int exponent, ULongInt fraction)
         return sign ? NEGATIVE_INFINITY() : POSITIVE_INFINITY();
 
     //
-    // Check and respond to underflow 
+    // Check and respond to underflow
     //
     if (exponent <= -(int) BIAS)
     {
@@ -1993,7 +1993,7 @@ IEEEdouble IEEEdouble::Ulp() const
     i4 L;
     IEEEdouble d;
     d.value.double_value = value.double_value;
-    
+
     L = (i4) d.ExpBits() - FRACT_SIZE * MIN_FRACT;
     if (L > 0)
         d.setHighAndLowWords((u4) L, 0);
@@ -2082,10 +2082,10 @@ IEEEdouble IEEEdouble::operator+ (const IEEEdouble op) const
     //
     LongInt x, y, round = 0;
     int expx, expy, signx, signy;
-    
+
     expx = SplitInto(x);
     expy = op.SplitInto(y);
-    
+
     signx = Sign();
     signy = op.Sign();
 
@@ -2099,7 +2099,7 @@ IEEEdouble IEEEdouble::operator+ (const IEEEdouble op) const
     // Denormalize the fractions, so that the exponents are
     // the same and then set the exponent for the result.
     // Leave enough space for overflow and LONG_MIN avoidance!
-    // 
+    //
     if (signx)
         x = -x;
     if (signy)
@@ -2607,7 +2607,7 @@ BigInt &BigInt::operator +(const unsigned op) const
     ULongInt sum; // sum
     BigInt *result = new BigInt(*this);
     u4 *x = result -> data; // access to data
-    
+
     do
     {
         sum = ULongInt(*x) + carry;
@@ -2808,7 +2808,7 @@ BigInt &BigInt::multadd(unsigned m, unsigned a)
     u4 carry = a; // carry between words
     ULongInt product; // product
     ULongInt factor = m; // avoid creating object multiple times
-    
+
     do
     {
         product = ULongInt(*x) * factor + carry;

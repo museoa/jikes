@@ -1,5 +1,10 @@
 2001-11-12  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/double.cpp (IntValue, LongValue): Fix a bug in
+	float to integral-type conversion, bug 2403.
+
+2001-11-12  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/bytecode.cpp (GenerateAssertVariableInitializer),
 	(EmitAssertStatement): Fix regressions caused by patch 225.
 
