@@ -322,35 +322,48 @@ Test.java</pre>
           </h3>
 
           <p>
-            <!-- TODO: what about 1.2, 1.3, ... -->
-            You must have some version of the JDK or JRE to run Jikes, so the
-            compiler can access the standard class files.  Note that versions
-            1.1 of the JDK do not require that you provide a definition of
-            <code>CLASSPATH</code> to run <code>javac</code> and
-            <code>java</code>.  However, Jikes doesn't know what version of
-            the JDK you are using and so must be told how to find the standard
-            library files.  This can be done in three ways:
+            You must have some version of the JDK or JRE to run Jikes, so
+            the compiler can access the standard class files.  Note that
+            from version 1.1 of the JDK, you are not required to provide a
+            definition of <code>CLASSPATH</code> to run <code>javac</code>
+            and <code>java</code>.  However, Jikes doesn't know what
+            version of the JDK you are using and so must be told how to
+            find the standard library files.  This can be done in three
+            ways:
           </p>
           <ul>
             <li>
-              <!-- TODO: which proposition for an OS?  in, on, under? -->
-              Provide a definition of <code>CLASSPATH</code>;  for example, in
-              <!-- CHANGE: Win95 -> Windows -->
-              Windows this takes the form
+              Provide a definition of <code>CLASSPATH</code>;  for example,
+              in Windows using Sun's JDK, this takes the form of one of the
+              following
               <pre class="example">
-SET CLASSPATH=.;C:\JAVA\LIB\CLASSES.ZIP</pre>
-              or for example, in Linux:
-              <!-- TODO: jdk.1.1.6 -> jdk1.1.6? -->
+set CLASSPATH=.;C:\Java\lib\classes.zip                 (JDK 1.1)
+set CLASSPATH=.;C:\jdk1.2.2\jre\lib\rt.jar              (JDK 1.2)
+set CLASSPATH=.;C:\Program Files\JDK1.3\jre\lib\rt.jar  (JDK 1.3)</pre>
+              or with the IBM Developer Kit 2.0 (compatible with Sun's J2SE
+              version 1.3)
               <pre class="example">
-export CLASSPATH=.:/usr/local/jdk.1.1.6/lib/classes.zip  (JDK)
-export CLASSPATH=.:/usr/local/jre1.1.6/lib/rt.jar        (JRE)</pre>
-              <!-- TODO: is </li> a real tag? -->
+set CLASSPATH=.;C:\Program Files\IBM\Java13\jre\lib\rt.jar</pre>
+              or with Microsoft's SDK for Java 4.0 (after running
+              &quot;<code>clspack -auto</code>&quot;)
+              <pre class="example">
+set CLASSPATH=.;C:\WINNT\Java\Classes\classes.zip</pre>
+              In Linux you would use
+              <pre class="example">
+export CLASSPATH=.:/usr/local/jdk1.1.6/lib/classes.zip  (JDK 1.1)
+export CLASSPATH=.:/usr/local/jre1.1.6/lib/rt.jar       (JRE 1.1)
+export CLASSPATH=.:/opt/jdk1.3/jre/lib/rt.jar           (JDK 1.3)</pre>
+              or for <code>csh</code>
+              <pre class="example">
+setenv CLASSPATH .:/usr/local/jdk1.1.6/lib/classes.zip  (JDK 1.1)
+setenv CLASSPATH .:/usr/local/jre1.1.6/lib/rt.jar       (JRE 1.1)
+setenv CLASSPATH .:/opt/jdk1.3/jre/lib/rt.jar           (JDK 1.3)</pre>
             </li>
             <li>
-              Always specify a value for the <code>-classpath</code> option on
-              the command line;  for example:
+              Always specify a value for the <code>-classpath</code> option
+              on the command line;  for example:
               <pre class="example">
-jikes -classpath .:$HOME/java/lib/classes.zip ...</pre>
+jikes -classpath .:/opt/jdk1.3/jre/lib/rt.jar ...</pre>
             </li>
             <li>
               Use <code>JIKESPATH</code> as discussed below.
