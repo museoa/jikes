@@ -1294,28 +1294,30 @@ void Semantic::ProcessTryStatement(Ast *stmt)
         VariableSymbol *symbol = clause -> parameter_symbol;
         if (CheckedException(symbol -> Type()))
         {
-            TypeSymbol *exception;
-            for (exception = (TypeSymbol *) exception_set -> FirstElement();
+            int initial_length = thrown_exceptions.Length();
+
+            for (TypeSymbol *exception = (TypeSymbol *) exception_set -> FirstElement();
                  exception;
                  exception = (TypeSymbol *) exception_set -> NextElement())
             {
                 if (CanAssignmentConvertReference(symbol -> Type(), exception) ||
                     CanAssignmentConvertReference(exception, symbol -> Type()))
-                    break;
+                    thrown_exceptions.Next() = exception;
             }
 
-            if (! exception) // no assignable exception was found
+            if (thrown_exceptions.Length() == initial_length) // no assignable exception was found
             {
-                 ReportSemError(SemanticError::UNREACHABLE_CATCH_CLAUSE,
-                                clause -> formal_parameter -> LeftToken(),
-                                clause -> formal_parameter -> RightToken(),
-                                symbol -> Type() -> ContainingPackage() -> PackageName(),
-                                symbol -> Type() -> ExternalName());
+                ReportSemError(SemanticError::UNREACHABLE_CATCH_CLAUSE,
+                               clause -> formal_parameter -> LeftToken(),
+                               clause -> formal_parameter -> RightToken(),
+                               symbol -> Type() -> ContainingPackage() -> PackageName(),
+                               symbol -> Type() -> ExternalName());
             }
             else
             {
-                thrown_exceptions.Next() = exception;
-
+                //
+                // TODO: I know, I know, this is a sequential search...
+                //
                 AstCatchClause *previous_clause;
                 int k;
                 for (k = 0; k < l; k++)

@@ -17,6 +17,7 @@
 #include "option.h"
 #include "long.h"
 #include "op.h"
+#include "segment.h"
 
 class TypeSymbol;
 class Control;
@@ -43,271 +44,6 @@ public:
     Tuple<LabelUse> uses;
 
     Label() : defined(false), definition(0) {}
-};
-
-
-class Pair
-{
-public:
-
-    enum
-    {
-        LIST_LIMIT = 5,
-        LOG_BLKSIZE = 8,
-        BLKSIZE = 1 << LOG_BLKSIZE,
-        BEST_BASE_SIZE_GUESS = 65536 >> LOG_BLKSIZE
-    };
-
-private:
-
-    class Segment
-    {
-        class TargetValuePair
-        {
-        public:
-            u2 target;
-            u2 value;
-        };
-
-    public:
-
-        TargetValuePair list[LIST_LIMIT];
-        int top;
-        u2 *array;
-
-        Segment() : top(0),
-                    array(NULL)
-        {}
-
-        ~Segment()
-        {
-            if (array)
-            {
-                int k = ((unsigned) list[0].target) >> LOG_BLKSIZE;
-                delete [] (array + (k << LOG_BLKSIZE));
-            }
-        }
-
-        u2 &Image(u2 target)
-        {
-            if (array == NULL)
-            {
-                for (int i = 0; i < top; i++)
-                {
-                    if (list[i].target == target)
-                        return list[i].value;
-                }
-
-                if (top < LIST_LIMIT)
-                {
-                    int j = top++;
-                    list[j].target = target;
-                    list[j].value = 0;
-                    return list[j].value;
-                }
-
-                int k = ((unsigned) target) >> LOG_BLKSIZE;
-                array = (u2 *) memset(new u2[BLKSIZE], 0, BLKSIZE * sizeof(u2));
-                array -= (k << LOG_BLKSIZE);
-
-                for (int j = 0; j < top; j++)
-                    array[list[j].target] = list[j].value;
-            }
-
-            return array[target];
-        }
-    };
-
-    Segment **base;
-    int base_size;
-
-public:
-
-    Pair(int estimate = 0)
-    {
-        //
-        // DO NOT PERFORM THESE INITIALIZATION IN THE METHOD DECLARATOR !!!
-        // There appears to be a bug in the xlC compiler that causes base to
-        // not be initialized properly !!!
-        //
-        base_size = (estimate > 0 ? (estimate >> LOG_BLKSIZE) + 1 : 0);
-        base = (Segment **) (estimate > 0 ? memset(new Segment*[base_size], 0, base_size * sizeof(Segment *)) : NULL);
-    }
-
-    ~Pair()
-    {
-        for (int i = 0; i < base_size; i++)
-            delete base[i];
-        delete [] base;
-    }
-
-    inline u2 &operator[](const u2 target)
-    {
-        int k = ((unsigned) target) >> LOG_BLKSIZE;
-
-        if (k >= base_size)
-        {
-            int old_base_size = base_size;
-            Segment **old_base = base;
-
-            //
-            // For the first allocation, assume that there won't be that many more.
-            // If there are others add a much bigger margin.
-            //
-            base_size = k + (old_base_size == 0 ? 2 : 16);
-            base = new Segment*[base_size];
-    
-            if (old_base != NULL)
-            {
-                memmove(base, old_base, old_base_size * sizeof(Segment *));
-                delete [] old_base;
-            }
-
-            memset(&base[old_base_size], 0, (base_size - old_base_size) * sizeof(Segment *));
-        }
-
-        if (! base[k])
-            base[k] = new Segment();
-
-        return base[k] -> Image(target);
-    }
-};
-
-
-class Triplet
-{
-public:
-
-    enum
-    {
-        LIST_LIMIT = 5,
-        LOG_BLKSIZE = 8,
-        BLKSIZE = 1 << LOG_BLKSIZE,
-        BEST_BASE_SIZE_GUESS = 65536 >> LOG_BLKSIZE
-    };
-
-private:
-
-    class Segment
-    {
-        class TargetValuePair
-        {
-        public:
-            TargetValuePair() : value(NULL)
-            {}
-
-            ~TargetValuePair()
-            {
-                delete value;
-            }
-
-            u2 target;
-            Pair *value;
-        };
-
-    public:
-
-        TargetValuePair list[LIST_LIMIT];
-        int top;
-        Pair **array;
-
-        Segment() : top(0),
-                    array(NULL)
-        {}
-
-        ~Segment()
-        {
-            if (array)
-            {
-                int k = ((unsigned) list[0].target) >> LOG_BLKSIZE;
-                array += (k << LOG_BLKSIZE);
-                for (int i = 0; i < BLKSIZE; i++)
-                     delete array[i];
-                delete [] array;
-            }
-        }
-
-        Pair &Image(u2 target)
-        {
-            if (array == NULL)
-            {
-                for (int i = 0; i < top; i++)
-                {
-                    if (list[i].target == target)
-                        return *list[i].value;
-                }
-
-                if (top < LIST_LIMIT)
-                {
-                    int j = top++;
-                    list[j].target = target;
-                    return *(list[j].value = new Pair());
-                }
-
-                int k = ((unsigned) target) >> LOG_BLKSIZE;
-                array = (Pair **) memset(new Pair*[BLKSIZE], 0, BLKSIZE * sizeof(Pair *));
-                array -= (k << LOG_BLKSIZE);
-
-                for (int j = 0; j < top; j++)
-                {
-                    array[list[j].target] = list[j].value;
-                    list[j].value = NULL; // remove pointer to this pair as the array now owns it !!!
-                }
-            }
-
-            return *(array[target] ? array[target] : array[target] = new Pair());
-        }
-    };
-
-    Segment **base;
-    int base_size;
-
-public:
-
-    Triplet(int estimate = 0)
-    {
-        //
-        // DO NOT PERFORM THESE INITIALIZATION IN THE METHOD DECLARATOR !!!
-        // There appears to be a bug in the xlC compiler that causes base to
-        // not be initialized properly !!!
-        //
-        base_size = (estimate > 0 ? (estimate >> LOG_BLKSIZE) + 1 : 0);
-        base = (Segment **) (estimate > 0 ? memset(new Segment*[base_size], 0, base_size * sizeof(Segment *)) : NULL);
-    }
-
-    ~Triplet()
-    {
-        for (int i = 0; i < base_size; i++)
-            delete base[i];
-        delete [] base;
-    }
-
-    inline u2 &Image(const u2 target, const u2 target2)
-    {
-        int k = ((unsigned) target) >> LOG_BLKSIZE;
-
-        if (k >= base_size)
-        {
-            int old_base_size = base_size;
-            Segment **old_base = base;
-
-            base_size = (old_base_size == 0 ? k + 1 : (k + 4 < BEST_BASE_SIZE_GUESS ? BEST_BASE_SIZE_GUESS : k + 4));
-            base = new Segment*[base_size];
-    
-            if (old_base != NULL)
-            {
-                memmove(base, old_base, old_base_size * sizeof(Segment *));
-                delete [] old_base;
-            }
-
-            memset(&base[old_base_size], 0, (base_size - old_base_size) * sizeof(Segment *));
-        }
-
-        if (! base[k])
-            base[k] = new Segment();
-
-        return base[k] -> Image(target)[target2];
-    }
 };
 
 
@@ -552,6 +288,8 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         return LoadLiteral(p -> value, p -> Type());
     }
 
+    SegmentPool segment_pool;
+
     Pair *double_constant_pool_index,
          *integer_constant_pool_index,
          *long_constant_pool_index,
@@ -790,17 +528,15 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         assert((name != NULL && type_name != NULL) && "null argument to RegisterNameAndType");
 
         if (! name_and_type_constant_pool_index)
-            name_and_type_constant_pool_index = new Triplet();
+            name_and_type_constant_pool_index = new Triplet(segment_pool, this_control.Utf8_pool.symbol_pool.Length());
 
-        u2 name_index = RegisterUtf8(name),
-           type_index = RegisterUtf8(type_name),
-           index = name_and_type_constant_pool_index -> Image(type_index, name_index);
+        u2 index = name_and_type_constant_pool_index -> Image(name -> index, type_name -> index);
         if (index == 0)
         {
             int i = constant_pool.NextIndex(); // We cannot use the variable "index" here as it might be truncated
             index = i;
-            name_and_type_constant_pool_index -> Image(type_index, name_index) = index;
-            constant_pool[i] = new CONSTANT_NameAndType_info(CONSTANT_NameAndType, name_index, type_index);
+            name_and_type_constant_pool_index -> Image(name -> index, type_name -> index) = index;
+            constant_pool[i] = new CONSTANT_NameAndType_info(CONSTANT_NameAndType, RegisterUtf8(name), RegisterUtf8(type_name));
         }
 
         return index;
@@ -814,17 +550,16 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         assert((class_name != NULL && field_name != NULL && field_type_name != NULL) && "null argument to RegisterFieldref");
 
         if (! fieldref_constant_pool_index)
-            fieldref_constant_pool_index = new Triplet();
+            fieldref_constant_pool_index = new Triplet(segment_pool, this_control.Utf8_pool.symbol_pool.Length());
 
-        u2 class_name_index = RegisterClass(class_name),
-           name_type_index = RegisterNameAndType(field_name, field_type_name),
-           index = fieldref_constant_pool_index -> Image(class_name_index, name_type_index);
+        u2 name_type_index = RegisterNameAndType(field_name, field_type_name),
+           index = fieldref_constant_pool_index -> Image(class_name -> index, name_type_index);
         if (index == 0)
         {
             int i = constant_pool.NextIndex(); // We cannot use the variable "index" here as it might be truncated
             index = i;
-            fieldref_constant_pool_index -> Image(class_name_index, name_type_index) = index;
-            constant_pool[i] = new CONSTANT_Fieldref_info(CONSTANT_Fieldref, class_name_index, name_type_index);
+            fieldref_constant_pool_index -> Image(class_name -> index, name_type_index) = index;
+            constant_pool[i] = new CONSTANT_Fieldref_info(CONSTANT_Fieldref, RegisterClass(class_name), name_type_index);
         }
 
         return index;
@@ -859,16 +594,17 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         assert((class_name != NULL && method_name != NULL && method_type_name != NULL) && "null argument to RegisterMethodref");
 
         if (! methodref_constant_pool_index)
-            methodref_constant_pool_index = new Triplet();
+            methodref_constant_pool_index = new Triplet(segment_pool, this_control.Utf8_pool.symbol_pool.Length());
 
-        u2 class_name_index = RegisterClass(class_name),
-           name_type_index = RegisterNameAndType(method_name, method_type_name),
-           index = methodref_constant_pool_index -> Image(class_name_index, name_type_index);
+        u2 name_type_index = RegisterNameAndType(method_name, method_type_name),
+           index = methodref_constant_pool_index -> Image(class_name -> index, name_type_index);
         if (index == 0)
         {
             int i = constant_pool.NextIndex(); // We cannot use the variable "index" here as it might be truncated
             index = i;
-            methodref_constant_pool_index -> Image(class_name_index, name_type_index) = index;
+            methodref_constant_pool_index -> Image(class_name -> index, name_type_index) = index;
+
+            u2 class_name_index = RegisterClass(class_name);
             constant_pool[i] = (kind == CONSTANT_Methodref
                                       ? (cp_info *) new CONSTANT_Methodref_info(CONSTANT_Methodref,
                                                                                 class_name_index,
@@ -898,7 +634,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         assert((lit != NULL) && "null argument to RegisterDouble");
 
         if (! double_constant_pool_index)
-            double_constant_pool_index = new Pair(this_control.double_pool.symbol_pool.Length());
+            double_constant_pool_index = new Pair(segment_pool, this_control.double_pool.symbol_pool.Length());
 
         u2 index = (*double_constant_pool_index)[lit -> index];
         if (index == 0)
@@ -919,7 +655,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         assert((lit != NULL) && "null argument to RegisterInteger");
 
         if (! integer_constant_pool_index)
-            integer_constant_pool_index = new Pair(this_control.int_pool.symbol_pool.Length());
+            integer_constant_pool_index = new Pair(segment_pool, this_control.int_pool.symbol_pool.Length());
 
         u2 index = (*integer_constant_pool_index)[lit -> index];
         if (index == 0)
@@ -941,7 +677,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         assert((lit != NULL) && "null argument to RegisterLong");
 
         if (! long_constant_pool_index)
-            long_constant_pool_index = new Pair(this_control.long_pool.symbol_pool.Length());
+            long_constant_pool_index = new Pair(segment_pool, this_control.long_pool.symbol_pool.Length());
 
         u2 index = (*long_constant_pool_index)[lit -> index];
         if (index == 0)
@@ -962,7 +698,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         assert((lit != NULL) && "null argument to RegisterFloat");
 
         if (! float_constant_pool_index)
-            float_constant_pool_index = new Pair(this_control.float_pool.symbol_pool.Length());
+            float_constant_pool_index = new Pair(segment_pool, this_control.float_pool.symbol_pool.Length());
 
         u2 index = (*float_constant_pool_index)[lit -> index];
         if (index == 0)
@@ -1004,16 +740,15 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         // to 65k elements.
         //
         if (! string_constant_pool_index)
-            string_constant_pool_index = new Pair();
+            string_constant_pool_index = new Pair(segment_pool, this_control.Utf8_pool.symbol_pool.Length());
 
-        u2 utf8_index = RegisterUtf8(lit),
-           index = (*string_constant_pool_index)[utf8_index];
+        u2 index = (*string_constant_pool_index)[lit -> index];
         if (index == 0)
         {
             int i = constant_pool.NextIndex(); // We cannot use the variable "index" here as it might be truncated
             index = i;
-            (*string_constant_pool_index)[utf8_index] = index;
-            constant_pool[i] = new CONSTANT_String_info(CONSTANT_String, utf8_index);
+            (*string_constant_pool_index)[lit -> index] = index;
+            constant_pool[i] = new CONSTANT_String_info(CONSTANT_String, RegisterUtf8(lit));
         }
 
         return index;
@@ -1024,14 +759,13 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         assert((lit != NULL) && "null argument to RegisterClass");
 
-        u2 utf8_index = RegisterUtf8(lit),
-           index = class_constant_pool_index[utf8_index];
+        u2 index = class_constant_pool_index[lit -> index];
         if (index == 0)
         {
             int i = constant_pool.NextIndex(); // We cannot use the variable "index" here as it might be truncated
             index = i;
-            class_constant_pool_index[utf8_index] = index;
-            constant_pool[i] = new CONSTANT_Class_info(CONSTANT_Class, utf8_index);
+            class_constant_pool_index[lit -> index] = index;
+            constant_pool[i] = new CONSTANT_Class_info(CONSTANT_Class, RegisterUtf8(lit));
         }
 
         return index;

@@ -3641,14 +3641,13 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
     for (int i = 0; i < method_call -> NumArguments(); i++)
         stack_words += EmitExpression((AstExpression *) method_call -> Argument(i));
 
+    TypeSymbol *type = MethodTypeResolution(method_call -> method, msym);
     PutOp(msym -> ACC_STATIC()
                 ? OP_INVOKESTATIC 
                 : (is_super || msym -> ACC_PRIVATE())
                              ? OP_INVOKENONVIRTUAL
-                             : msym -> containing_type -> ACC_INTERFACE() ? OP_INVOKEINTERFACE 
-                                                                          : OP_INVOKEVIRTUAL);
-
-    CompleteCall(msym, stack_words, MethodTypeResolution(method_call -> method, msym));
+                             : type -> ACC_INTERFACE() ? OP_INVOKEINTERFACE : OP_INVOKEVIRTUAL);
+    CompleteCall(msym, stack_words, type);
 
     return;
 }
@@ -3658,15 +3657,16 @@ void ByteCode::CompleteCall(MethodSymbol *msym, int stack_words, TypeSymbol *bas
 {
     ChangeStack(-stack_words);
 
-    PutU2(msym -> containing_type -> ACC_INTERFACE()
-                ? RegisterInterfaceMethodref((base_type ? base_type : msym -> containing_type) -> fully_qualified_name,
-                                             msym -> ExternalIdentity() -> Utf8_literal,
-                                             msym -> signature)
-                : RegisterMethodref((base_type ? base_type : msym -> containing_type) -> fully_qualified_name,
-                                    msym -> ExternalIdentity() -> Utf8_literal,
-                                    msym -> signature));
+    TypeSymbol *type = (base_type ? base_type : msym -> containing_type);
 
-    if (msym -> containing_type -> ACC_INTERFACE())
+    PutU2(type -> ACC_INTERFACE() ? RegisterInterfaceMethodref(type -> fully_qualified_name,
+                                                               msym -> ExternalIdentity() -> Utf8_literal,
+                                                               msym -> signature)
+                                  : RegisterMethodref(type -> fully_qualified_name,
+                                                      msym -> ExternalIdentity() -> Utf8_literal,
+                                                      msym -> signature));
+
+    if (type -> ACC_INTERFACE())
     {
         PutU1(stack_words + 1);
         PutU1(0);
@@ -4518,8 +4518,8 @@ ByteCode::ByteCode(TypeSymbol *unit_type) : ClassFile(unit_type),
                                             float_constant_pool_index(NULL),
                                             string_constant_pool_index(NULL),
 
-                                            utf8_constant_pool_index(this_control.Utf8_pool.symbol_pool.Length()),
-                                            class_constant_pool_index(0),
+                                            utf8_constant_pool_index(segment_pool, this_control.Utf8_pool.symbol_pool.Length()),
+                                            class_constant_pool_index(segment_pool, this_control.Utf8_pool.symbol_pool.Length()),
 
                                             name_and_type_constant_pool_index(NULL),
                                             fieldref_constant_pool_index(NULL),

@@ -769,29 +769,40 @@ DefiniteAssignmentSet *Semantic::DefiniteAssignmentExpression(AstExpression *exp
     // is associated with the array access, the testing for the presence of variable
     // takes care of that possibility.
     //
-    if (variable && variable -> ACC_FINAL())
+    if (variable)
     {
         if (variable -> IsLocal(ThisMethod()) || variable -> IsFinal(ThisType()))
         {
-            //
-            // variable already initialized ?
-            //
-            if ((assignment_expression -> assignment_tag != AstAssignmentExpression::EQUAL) ||
-                ((*possibly_assigned_finals) [variable -> LocalVariableIndex()]))
+            if (assignment_expression -> assignment_tag != AstAssignmentExpression::EQUAL &&
+                (! set[variable -> LocalVariableIndex()]))
             {
-                ReportSemError(SemanticError::TARGET_VARIABLE_IS_FINAL,
-                               left_hand_side -> LeftToken(),
-                               left_hand_side -> RightToken(),
+                ReportSemError(SemanticError::VARIABLE_NOT_DEFINITELY_ASSIGNED,
+                               assignment_expression -> left_hand_side -> LeftToken(),
+                               assignment_expression -> left_hand_side -> RightToken(),
                                variable -> Name());
             }
-            else if (definite_final_assignment_stack -> Size() > 0) // are we processing the body of a loop ?
-                 definite_final_assignment_stack -> Top().Next() = left_hand_side;
+            else if (variable -> ACC_FINAL())
+            {
+                //
+                // If the final variable may have already been initialized, issue an error.
+                //
+                if ((assignment_expression -> assignment_tag != AstAssignmentExpression::EQUAL) ||
+                    ((*possibly_assigned_finals) [variable -> LocalVariableIndex()]))
+                {
+                    ReportSemError(SemanticError::TARGET_VARIABLE_IS_FINAL,
+                                   assignment_expression -> left_hand_side -> LeftToken(),
+                                   assignment_expression -> left_hand_side -> RightToken(),
+                                   variable -> Name());
+                }
+                else if (definite_final_assignment_stack -> Size() > 0) // are we processing the body of a loop ?
+                     definite_final_assignment_stack -> Top().Next() = left_hand_side;
+            }
         }
-        else
+        else if (variable -> ACC_FINAL()) // attempt to assign a value to a final field member!
         {
             ReportSemError(SemanticError::TARGET_VARIABLE_IS_FINAL,
-                           left_hand_side -> LeftToken(),
-                           left_hand_side -> RightToken(),
+                           assignment_expression -> left_hand_side -> LeftToken(),
+                           assignment_expression -> left_hand_side -> RightToken(),
                            variable -> Name());
         }
     }

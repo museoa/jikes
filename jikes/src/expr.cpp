@@ -1460,7 +1460,7 @@ AstExpression *Semantic::CreateAccessToType(Ast *source, TypeSymbol *environment
 
                 assert(containing_type == variable -> owner -> TypeCast());
 
-                method_call -> symbol                  = containing_type -> GetReadAccessMethod(variable);
+                method_call -> symbol = containing_type -> GetReadAccessMethod(variable);
                 method_call -> AddArgument(resolution);
 
                 resolution = method_call;
@@ -1505,7 +1505,7 @@ void Semantic::CreateAccessToScopedVariable(AstSimpleName *simple_name, TypeSymb
         //
         // SimpleNameAccessCheck(simple_name, variable_symbol -> owner -> TypeCast(), variable_symbol);
         //
-        if (variable_symbol -> ACC_PRIVATE() || variable_symbol -> ACC_PROTECTED())
+        if (variable_symbol -> ACC_PRIVATE())
         {
             AstFieldAccess *method_name     = compilation_unit -> ast_pool -> GenFieldAccess();
             method_name -> base             = access_expression;
@@ -1565,7 +1565,7 @@ void Semantic::CreateAccessToScopedMethod(AstMethodInvocation *method_call, Type
         // SimpleNameAccessCheck(simple_name, method -> containing_type, method);
         //
         simple_name -> resolution_opt = access_expression;
-        if (method -> ACC_PRIVATE() || method -> ACC_PROTECTED())
+        if (method -> ACC_PRIVATE())
         {
             if (method -> ACC_STATIC())
                 method_call -> symbol = environment_type -> GetReadAccessMethod(method);
@@ -1898,8 +1898,18 @@ void Semantic::MemberAccessCheck(AstFieldAccess *field_access, TypeSymbol *base_
     assert(containing_type);
 
     AstExpression *base = field_access -> base;
-    if (! (base_type -> ACC_PUBLIC() || base_type -> ContainingPackage() == this_package))
-        ReportTypeInaccessible(base, base_type);
+
+    //
+    // When this function, MemberAccessCheck is invoked, it is assumed that the function TypeAccessCheck
+    // has already been invoked as follows:
+    //
+    //    TypeAccessCheck(base, base_type);
+    //
+    // and that the check below has already been performed.
+    //
+    //    if (! (base_type -> ACC_PUBLIC() || base_type -> ContainingPackage() == this_package))
+    //        ReportTypeInaccessible(base, base_type);
+    //
 
     if (this_type -> outermost_type != containing_type -> outermost_type)
     {
@@ -2114,8 +2124,7 @@ void Semantic::FindVariableMember(TypeSymbol *type, TypeSymbol *environment_type
             // Access to an private or protected variable in an enclosing type ?
             //
             if (this_type -> outermost_type == environment_type -> outermost_type &&
-                ((variable_symbol -> ACC_PRIVATE() && this_type != containing_type) ||
-                 (variable_symbol -> ACC_PROTECTED() && (! this_type -> IsSubclass(containing_type)))))
+                (variable_symbol -> ACC_PRIVATE() && this_type != containing_type))
             {
                 if (field_access -> IsConstant())
                     field_access -> symbol = variable_symbol;
@@ -2640,8 +2649,7 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                         // Access to a private or protected variable in an enclosing type ?
                         //
                         if (this_type -> outermost_type == type -> outermost_type &&
-                            ((variable_symbol -> ACC_PRIVATE() && this_type != containing_type) ||
-                             (variable_symbol -> ACC_PROTECTED() && (! this_type -> IsSubclass(containing_type)))))
+                            (variable_symbol -> ACC_PRIVATE() && this_type != containing_type))
                         {
                             if (field_access -> IsConstant())
                                 field_access -> symbol = variable_symbol;
@@ -3010,8 +3018,7 @@ MethodSymbol *Semantic::FindMethodMember(TypeSymbol *type, TypeSymbol *environme
             // Access to an private or protected method in an enclosing type ?
             //
             if (this_type -> outermost_type == environment_type -> outermost_type &&
-                ((method -> ACC_PRIVATE() && this_type != method -> containing_type) ||
-                 (method -> ACC_PROTECTED() && (! this_type -> IsSubclass(method -> containing_type)))))
+                (method -> ACC_PRIVATE() && this_type != method -> containing_type))
             {
                 if (method -> ACC_STATIC())
                     method_call -> symbol = environment_type -> GetReadAccessMethod(method);
@@ -3234,8 +3241,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
                     // Access to an private or protected method in an enclosing type ?
                     //
                     if (this_type -> outermost_type == type -> outermost_type &&
-                        ((method -> ACC_PRIVATE() && this_type != method -> containing_type) ||
-                         (method -> ACC_PROTECTED() && (! this_type -> IsSubclass(method -> containing_type)))))
+                        (method -> ACC_PRIVATE() && this_type != method -> containing_type))
                     {
                         if (method -> ACC_STATIC())
                             method_call -> symbol = type -> GetReadAccessMethod(method);
@@ -4412,8 +4418,7 @@ void Semantic::ProcessClassInstanceCreationExpression(Ast *expr)
             class_creation -> symbol = (anonymous_type ? anonymous_type : type);
 
             if (ThisType() -> outermost_type == type -> outermost_type &&
-                ((method -> ACC_PRIVATE() && ThisType() != type) ||
-                 (method -> ACC_PROTECTED() && (! ThisType() -> IsSubclass(type)))))
+                (method -> ACC_PRIVATE() && ThisType() != type))
             {
                 if (! method -> LocalConstructor())
                 {

@@ -46,7 +46,7 @@ OBJECTS=jikes.@O@ scanner.@O@ code.@O@ zip.@O@ unzip.@O@ \
         stream.@O@ op.@O@ control.@O@ modifier.@O@ system.@O@ \
         bytecode.@O@ body.@O@ decl.@O@ definite.@O@ dump.@O@ expr.@O@ \
         getclass.@O@ init.@O@ double.@O@ config.@O@ option.@O@ \
-        incrmnt.@O@ case.@O@ tab.@O@
+        incrmnt.@O@ case.@O@ tab.@O@ segment.@O@
 
 $(EXECUTABLE):	$(OBJECTS)
 	$(LD) $(LDFLAGS)  $(OBJECTS) $(SYSOBJECTS)
@@ -98,6 +98,7 @@ bytecode.@O@: $(srcdir)/bytecode.cpp $(srcdir)/config.h $(srcdir)/ast.h \
               $(srcdir)/semantic.h $(srcdir)/diagnose.h $(srcdir)/parser.h \
               $(srcdir)/lpginput.h $(srcdir)/javaprs.h $(srcdir)/javaact.h \
               $(srcdir)/error.h $(srcdir)/control.h $(srcdir)/set.h \
+              $(srcdir)/op.h $(srcdir)/segment.h  \
               $(srcdir)/op.h $(srcdir)/table.h 
 	$(CC) $(CCFLAGS) $(srcdir)/bytecode.cpp 
 
@@ -117,6 +118,7 @@ control.@O@:  $(srcdir)/control.cpp $(srcdir)/config.h $(srcdir)/control.h \
 	      $(srcdir)/parser.h $(srcdir)/lpginput.h $(srcdir)/javaprs.h \
               $(srcdir)/javaact.h $(srcdir)/semantic.h $(srcdir)/ast.h \
 	      $(srcdir)/diagnose.h $(srcdir)/error.h $(srcdir)/bytecode.h \
+              $(srcdir)/class.h $(srcdir)/segment.h \
               $(srcdir)/class.h $(srcdir)/op.h 
 	$(CC) $(CCFLAGS) $(srcdir)/control.cpp 
 
@@ -404,3 +406,7 @@ zip.@O@:  $(srcdir)/zip.cpp $(srcdir)/config.h $(srcdir)/control.h \
           $(srcdir)/depend.h $(srcdir)/access.h $(srcdir)/set.h \
           $(srcdir)/zip.h $(srcdir)/unzip.h 
 	$(CC) $(CCFLAGS) $(srcdir)/zip.cpp 
+
+segment.@O@:  $SRCdir/segment.cpp$(srcdir)/segment.h $(srcdir)/tuple.h $(srcdir)/config.h 
+	$(CC) $(CCFLAGS) $(srcdir)/segment.cpp
+
