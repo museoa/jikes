@@ -155,7 +155,7 @@ Stream::Stream()
       input_buffer_length(0)
 #if defined(HAVE_LIBICU_UC)
     , _decoder(NULL)
-#elif defined(HAVE_ICONV_H)
+#elif defined(JIKES_ICONV_ENCODING)
     , _decoder((iconv_t) - 1)
 #endif
 {
@@ -164,12 +164,12 @@ Stream::Stream()
 Stream::~Stream()
 {
     DestroyInput();
-#if defined(HAVE_ENCODING)
+#ifdef HAVE_ENCODING
     DestroyEncoding();
-#endif
+#endif // HAVE_ENCODING
 }
 
-#if defined(HAVE_ENCODING)
+#ifdef HAVE_ENCODING
 
 // This method will return true is the given encoding
 // can be supported, it is static because we need to
@@ -190,12 +190,12 @@ bool Stream::SetEncoding(char* encoding)
     assert(encoding);
     DestroyEncoding();
 
-#if defined(HAVE_LIBICU_UC)
+# if defined(HAVE_LIBICU_UC)
     UErrorCode err = U_ZERO_ERROR;
     _decoder = ucnv_open(encoding, &err);
-#elif defined(HAVE_ICONV_H)
+# elif defined(JIKES_ICONV_ENCODING)
     _decoder = iconv_open(JIKES_ICONV_ENCODING, encoding);
-#endif
+# endif
 
     return HaveDecoder();
 }
@@ -204,13 +204,13 @@ void Stream::DestroyEncoding()
 {
     if (HaveDecoder())
     {
-#if defined(HAVE_LIBICU_UC)
+# if defined(HAVE_LIBICU_UC)
         ucnv_close(_decoder);
         _decoder = NULL;
-#elif defined(HAVE_ICONV_H)
+# elif defined(JIKES_ICONV_ENCODING)
         iconv_close(_decoder);
         _decoder = (iconv_t)-1;
-#endif
+# endif
     }
 }
 
@@ -225,7 +225,7 @@ wchar_t Stream::DecodeNextCharacter()
     wchar_t next;
     error_decode_next_character = false;
 
-#if defined(HAVE_LIBICU_UC)
+# if defined(HAVE_LIBICU_UC)
 
     if (!HaveDecoder())
         return (wchar_t) *source_ptr++;
@@ -243,7 +243,7 @@ wchar_t Stream::DecodeNextCharacter()
         return 0;
     }
 
-#elif defined(HAVE_ICONV_H)
+# elif defined(JIKES_ICONV_ENCODING)
 
     if (!HaveDecoder()) {
         // you can't just cast a char to a wchar_t, since that would
@@ -259,9 +259,9 @@ wchar_t Stream::DecodeNextCharacter()
 
  try_it_again:
     size_t n = iconv(_decoder,
-# ifdef HAVE_ERROR_CALL_ICONV_CONST
+#  ifdef HAVE_ERROR_CALL_ICONV_CONST
                      (char**)
-# endif // HAVE_ERROR_CALL_ICONV_CONST
+#  endif // HAVE_ERROR_CALL_ICONV_CONST
                      &source_ptr, &srcl,
                      (char**) &chp, &chl);
 
@@ -282,28 +282,27 @@ wchar_t Stream::DecodeNextCharacter()
         }
     }
 
-# if JIKES_ICONV_NEEDS_BYTE_SWAP
+#  if JIKES_ICONV_NEEDS_BYTE_SWAP
     char tmp;
     char* targ = (char*) &next;
-#  if SIZEOF_WCHAR_T == 2
+#   if SIZEOF_WCHAR_T == 2
     tmp = targ[0];
     targ[0] = targ[1];
     targ[1] = tmp;
-#  elif SIZEOF_WCHAR_T == 4
+#   elif SIZEOF_WCHAR_T == 4
     tmp = targ[0];
     targ[0] = targ[3];
     targ[3] = tmp;
     tmp = targ[1];
     targ[1] = targ[2];
     targ[2] = tmp;
-#  else
-    assert(0 && "sizeof(wchar_t) is not one I can cope with, this should "
-           "never have got past configure!!");
-#  endif //sizeof(wchar_t)
+#   else
+#    error sizeof(wchar_t) unworkable, this should not have passed configure
+#   endif //sizeof(wchar_t)
 
-# endif //byteswap
+#  endif // JIKES_ICONV_NEEDS_BYTE_SWAP
 
-#endif //iconv
+# endif // JIKES_ICONV_ENCODING
 
     if (before == source_ptr)
     {
@@ -315,7 +314,7 @@ wchar_t Stream::DecodeNextCharacter()
     return next;
 }
 
-#endif // defined(HAVE_ENCODING)
+#endif // HAVE_ENCODING
 
 
 // Class LexStream

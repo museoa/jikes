@@ -75,9 +75,6 @@ You must accept the terms of that agreement to use this software. */
 /* use unix style mkdir(str, S_IRWXU) */
 #undef HAVE_LIBC5_MKDIR
 
-/* Define to 1 if you have the `iconv' library (-liconv). */
-#undef HAVE_LIBICONV
-
 /* Define to 1 if you have the `icu-uc' library (-licu-uc). */
 #undef HAVE_LIBICU_UC
 
@@ -200,7 +197,7 @@ You must accept the terms of that agreement to use this software. */
 /* Used to test results of stat call to see if it is a directory */
 #undef JIKES_STAT_S_IFDIR
 
-/* A string to indicate the release of jikes: Version 1.18 - 21 Nov 2002 */
+/* A string to indicate the release of jikes: Version 1.19 - 1 Feb 2004 */
 #undef JIKES_VERSION_STRING
 
 /* Name of package */

@@ -132,11 +132,11 @@ protected:
 
 //private: // FIXME : Make vars private once extracted from LexStream!
 
-#if defined(HAVE_ENCODING)
+#ifdef HAVE_ENCODING
 
 #if defined(HAVE_LIBICU_UC)
     UConverter* _decoder;
-#elif defined(HAVE_ICONV_H)
+#elif defined(JIKES_ICONV_ENCODING)
     iconv_t _decoder;
 #endif
 
@@ -162,12 +162,12 @@ protected:
     {
 #if defined(HAVE_LIBICU_UC)
         return _decoder != NULL;
-#elif defined(HAVE_ICONV_H)
+#elif defined(JIKES_ICONV_ENCODING)
         return _decoder != (iconv_t) -1;
 #endif
     }
 
-#endif // defined(HAVE_ENCODING)
+#endif // HAVE_ENCODING
 
     inline void InitializeDataBuffer(const char* buffer, long size)
     {

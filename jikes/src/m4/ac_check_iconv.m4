@@ -12,10 +12,10 @@ dnl No point going on if iconv.h isn't present.
 dnl In this case, we just assume iconv can not be used by the application
 AS_IF([test "$ac_cv_header_iconv_h" = yes],
 [dnl	Check if iconv library is present
-AC_CHECK_LIB(iconv, iconv)
+AC_SEARCH_LIBS([iconv], [iconv])
 
 dnl	Check if we need to link the iconv lib (cygwin)
-AC_CHECK_LIB(iconv, libiconv_open)
+AC_SEARCH_LIBS([libiconv_open], [iconv])
 
 iconv_includes="
 #ifdef HAVE_STRING_H

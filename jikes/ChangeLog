@@ -1,6 +1,31 @@
+2004-02-02  Eric Blake  <ebb9@byu.net>
+
+	* NEWS (1.19a): Placeholder for changes to future 1.20.
+	* AUTHORS: Add credit where it is due.
+	* src/Makefile.am [MAINTAINER_MODE]: Remove race in parallel
+	builds, from automake FAQ.
+	* configure.ac: Bump version to 1.19a for CVS development. Fix
+	more autoconf style issues.
+	* src/m4/ac_check_iconv.m4: Improve iconv checks. Allow configure
+	to continue for systems with broken iconv (such as current cygwin).
+	* src/m4/ac_find_encoding.m4: Ditto.
+	* src/m4/ac_try_encoding.m4: Ditto.
+	* src/stream.h [HAVE_ENCODING]: Key off of JIKES_ICONV_ENCODING
+	rather than HAVE_ICONV_H, so systems with broken iconv can still
+	make it through configure, but without -encoding support.
+	* src/stream.cpp [HAVE_ENCODING]: Ditto.
+	* src/.cvsignore: Update for new witness files.
+	* configure: Regenerate.
+	* src/Makefile.in: Ditto.
+	* src/config.h.in: Ditto.
+
 2004-02-02  Dirk Weigenand  <Dirk.Weigenand@smb-tec.com>
 
 	* NEWS: fixed my (cabbey's) bad spelling.
+
+2004-02-01  Chris Abbey  <jikes@cabbey.net>
+
+	Release 1.19.
 
 2004-01-31  Elliott Hughes  <enh@acm.org>
 

@@ -3,5 +3,6 @@ config.h
 stamp-h*
 gencode.class
 .deps
-classbin.stamp
+*.stamp
+*.tmp
 TAGS

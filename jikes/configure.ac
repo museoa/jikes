@@ -4,13 +4,13 @@ dnl	generate the file "configure", which is run to configure the
 dnl	Makefile in this directory.
 
 dnl Set up the name and version
-AC_INIT([jikes],[1.19])
+AC_INIT([jikes],[1.19a])
 AM_INIT_AUTOMAKE([foreign check-news dist-bzip2 1.8.2])
 AC_PREREQ(2.59)
 
 AC_DEFINE(JIKES_VERSION_STRING,
-          "Version 1.19 - 1 February 2004",
-    [A string to indicate the release of jikes: Version 1.18 - 21 Nov 2002])
+          "Version 1.19a (CVS) - sometime after 2 February 2004",
+    [A string to indicate the release of jikes: Version 1.19 - 1 Feb 2004])
 
 dnl AC_CACHE_LOAD
 
@@ -135,11 +135,10 @@ AC_CHECK_ICONV()
 dnl	Check if "IBM Classes for UNICODE library" is present
 AC_CHECK_LIB(icu-uc, u_getVersion)
 
-if test "$ac_cv_header_iconv_h" = "yes" || \
-   test "$ac_cv_lib_icu_uc_u_getVersion" = "yes" ; then
-   AC_DEFINE(HAVE_ENCODING,1,
-       [Defined if Jikes supports -encoding for input files.])
-fi
+AS_IF([test -n "$ac_cv_jikes_iconv_encoding" || \
+       test "$ac_cv_lib_icu_uc_u_getVersion" = "yes"],
+      [AC_DEFINE([HAVE_ENCODING], [1],
+       [Defined if Jikes supports -encoding for input files.])])
 
 dnl	Check for cygwin path conversion functions
 AC_CHECK_FUNCS(cygwin_win32_to_posix_path_list)
@@ -179,16 +178,12 @@ AC_ARG_ENABLE(fp-emulation, [  --disable-fp-emulation  Use native floating point
 
 AC_MSG_CHECKING([for floating point support])
 
-if test "$ok" = "yes"; then
-  # Do nothing, floating point emulation is used when HAVE_IEEE754 is not defined
-  AC_MSG_RESULT([emulated])
-else
-  AC_DEFINE(HAVE_IEEE754, 1,
+AS_IF([test "$ok" = yes],
+ [# Do nothing, floating point emulation used when HAVE_IEEE754 is not defined
+  AC_MSG_RESULT([emulated])],
+ [AC_DEFINE([HAVE_IEEE754], [1],
     [Defined when Jikes is built with native floating support])
-
-  AC_MSG_RESULT([native])
-fi
-
+  AC_MSG_RESULT([native])])
 
 dnl Ensure that we have exact type sizes.
 AC_DEFINE_INTEGER_BITS(int8_t, signed char, __int8, char)
@@ -208,14 +203,11 @@ AC_DEFINE_INTEGER_BITS(uint64_t, unsigned int64_t, unsigned long,
 
 AC_CXX_TYPE_EQUIVALENCE(int32_t, int)
 
-if test "$uint64_t" = no; then
+AS_IF([test "$uint64_t" = no],
   dnl Check for endianness
-  AC_C_BIGENDIAN()
-else
-  AC_DEFINE(HAVE_64BIT_TYPES, 1,
-    [Defined when the compiler supports 64 bit integer math])
-fi
-
+  [AC_C_BIGENDIAN()],
+  [AC_DEFINE([HAVE_64BIT_TYPES], [1],
+    [Defined when the compiler supports 64 bit integer math])])
 
 dnl	Check the stat() system call to find out how many
 dnl	underscores are needed in front of S_IFDIR
@@ -329,30 +321,26 @@ dnl            jikes_cv_icc_fp_bugs=yes
 dnl            ;;
 dnl esac
 
-AC_CACHE_CHECK(floating point bug workaround for ICC compiler, jikes_cv_icc_fp_bugs,
-    if test "$CXX" = "ICC" || test "$CXX" = "vacpp" ; then
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <float.h>]], [[ _control87(EM_UNDERFLOW, EM_UNDERFLOW); ]])],[jikes_cv_icc_fp_bugs=yes],[jikes_cv_icc_fp_bugs=no])
-else
-    jikes_cv_icc_fp_bugs=no
-fi)
+AC_CACHE_CHECK([floating point bug workaround for ICC compiler],
+               [jikes_cv_icc_fp_bugs],
+   [AS_IF([test "$CXX" = ICC || test "$CXX" = vacpp],
+          [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <float.h>]],
+             [[ _control87(EM_UNDERFLOW, EM_UNDERFLOW); ]])],
+             [jikes_cv_icc_fp_bugs=yes],[jikes_cv_icc_fp_bugs=no])],
+          [jikes_cv_icc_fp_bugs=no])])
 
-if test "$jikes_cv_icc_fp_bugs" = "yes" ; then
-    AC_DEFINE(HAVE_ICC_FP_BUGS, , [known to be broken on Win and OS2 when compiled with ICC])
-fi
-
+AS_IF([test "$jikes_cv_icc_fp_bugs" = yes],
+    [AC_DEFINE([HAVE_ICC_FP_BUGS], [],
+    [known to be broken on Win and OS2 when compiled with ICC])])
 
 dnl	see if jikespg location is given on the command line
+AC_ARG_WITH([jikespg], [  --with-jikespg=PROG     location of jikes parser generator (optional)],
+    [JIKESPG=$withval], [JIKESPG=NONE])
 
-AC_ARG_WITH(jikespg, [  --with-jikespg=PROG     location of jikes parser generator (optional)],
-    JIKESPG=$withval, JIKESPG=NONE)
-
-if test "$JIKESPG" != "NONE"; then
-    if test ! -f "$JIKESPG" || test ! -x "$JIKESPG"; then
-        AC_MSG_ERROR([jikespg argument '$JIKESPG' is not a file or is not executable])
-    fi
-else
-    JIKESPG=jikespg
-fi
+AS_IF([test "$JIKESPG" != NONE],
+      [AS_IF([test ! -f "$JIKESPG" || test ! -x "$JIKESPG"],
+             [AC_MSG_ERROR([jikespg argument '$JIKESPG' is not a file or is not executable])])],
+      [JIKESPG=jikespg])
 AC_SUBST(JIKESPG)
 
 

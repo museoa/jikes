@@ -1,3 +1,7 @@
+*** Jikes 1.19a is a CVS version.
+
+FIXME: no improvements, yet.
+
 *** Jikes 1.19 was released 1 February 2004.
 
 The default -source and -target options are now 1.4 (that is, the

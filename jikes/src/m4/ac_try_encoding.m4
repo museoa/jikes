@@ -74,8 +74,8 @@ AC_DEFUN([AC_TRY_AN_ENCODING], [
   else
     return 4;
   ]])],
-  [is_good=$1
-   AC_MSG_RESULT(works)],
-  [AC_MSG_RESULT(nope)],
+  [ac_cv_jikes_iconv_encoding=$1
+   AC_MSG_RESULT($1)],
+  [AC_MSG_RESULT(no)],
   [AC_MSG_RESULT([cross-compiling, you must supply correct answer in cache])])
 ])
