@@ -403,7 +403,6 @@ public:
 
     SemanticEnvironment(Semantic *sem_, TypeSymbol *type_, SemanticEnvironment *previous_ = NULL)
             : sem(sem_),
-              is_static_region(false),
               _type(type_),
               previous(previous_),
               next(NULL),
@@ -447,17 +446,12 @@ public:
     //
     inline bool StaticRegion()
     {
-        return is_static_region ||
-               (this_variable && this_variable -> ACC_STATIC()) ||
+        return (this_variable && this_variable -> ACC_STATIC()) ||
                (this_method   && this_method -> ACC_STATIC())   ||
                (_type -> ACC_INTERFACE());
     }
 
-    inline void EnterStaticRegion() { is_static_region = true; }
-    inline void ExitStaticRegion()  { is_static_region = false; }
-
 private:
-    bool is_static_region;
 
     TypeSymbol *_type;
     SemanticEnvironment *next; // use to link an environment to its clones.
@@ -889,8 +883,6 @@ private:
     BlockStack &LocalBlockStack()                 { assert(state_stack.Size()); return state_stack.Top() -> block_stack; }
     SemanticEnvironment *GetEnvironment(Ast *ast) { assert(state_stack.Size()); return state_stack.Top() -> GetEnvironment(ast); }
     bool StaticRegion()                           { assert(state_stack.Size()); return state_stack.Top() -> StaticRegion(); }
-    void EnterStaticRegion()                      { assert(state_stack.Size()); state_stack.Top() -> EnterStaticRegion(); }
-    void ExitStaticRegion()                       { assert(state_stack.Size()); state_stack.Top() -> ExitStaticRegion(); }
 
     SemanticEnvironmentStack state_stack;
 
