@@ -1,3 +1,8 @@
+2001-10-15  Michael Ernst  <mernst@alum.mit.edu>
+
+	* src/platform.h: Fix typos, and reindent comments to 80 columns -
+	patch 204.
+
 2001-10-15  C. Scott Ananian  <cananian@alumni.princeton.edu>
 
 	* src/body.cpp (ProcessClassDeclaration): Hack to fix bug 1954:

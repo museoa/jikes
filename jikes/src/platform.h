@@ -43,7 +43,7 @@
 
 /*
    undefine any symbols defined by the autotools
-   build process that can conflict with out symbols
+   build process that can conflict with our symbols
 */
 
 #undef PACKAGE
@@ -157,12 +157,9 @@ typedef unsigned int wint_t;
 # include <fstream.h>
 #endif
 
-// VC++ pretends to support the
-// C++ standard, but it does not.
-// The set_new_handler method in
-// <new> is not implemented so
-// the _set_new_handler method
-// in <new.h> must be used.
+// VC++ pretends to support the C++ standard, but it does not.
+// The set_new_handler method in <new> is not implemented so
+// the _set_new_handler method in <new.h> must be used.
 
 #ifdef HAVE_VCPP_SET_NEW_HANDLER
 # include <new.h>
@@ -267,7 +264,8 @@ namespace Jikes { // Open namespace Jikes block
 #endif
 
 //
-// The configure scripts check each of these to see if we need our own implementation
+// The configure scripts check each of these to see if we need our own
+// implementation
 //
 
 #ifndef HAVE_WCSLEN
@@ -325,8 +323,9 @@ extern size_t SystemFread(char *ptr, size_t element_size, size_t count, FILE *st
 extern int SystemIsDirectory(char *name);
 
 //
-// The symbol used in this environment for separating argument in a system string. E.g., in a unix system
-// directories specified in the CLASSPATH are separated by a ':', whereas in win95 it is ';'.
+// The symbol used in this environment for separating argument in a system
+// string. E.g., in a unix system directories specified in the CLASSPATH
+// are separated by a ':', whereas in win95 it is ';'.
 //
 extern char PathSeparator();
 extern int SystemMkdir(char *);
@@ -347,34 +346,42 @@ extern char * wstring2string(wchar_t * in);
 
 
 
-// The following comment was part of the original config.h, it explains why some parts of the
-// guts of the compiler are written the way they are. This comment was removed when the ifdef'd
-// EBCDIC code was initially removed. I've added it back for it's "why do they do it that way"
-// value, hopefully it's presence will help prevent people from making assumptions and breaking
-// the code for non-ascii platforms. At some point we'll want to be able to compile on EBCDIC
-// systems again, using the API and iconv/ICU instead of ifdefs scattered all over creation,
-// if the core code hasn't been compromised this should be easier. For those that have no idea
-// what EBCDIC is... it is like ASCII in that it is an encoding system, but it predates ASCII
-// by a number of years (think punchcards). It is still the default encoding on some mainframes
-// and minicomputers such as the IBM zSeries and iSeries (aka the 390 and the 400). To see what
-// the old EBCDIC code looked like, pull a cvs tree with the tag v1-06.
+// The following comment was part of the original config.h, it explains why
+// some parts of the guts of the compiler are written the way they are. This
+// comment was removed when the ifdef'd EBCDIC code was initially removed.
+// I've added it back for its "why do they do it that way" value, hopefully
+// its presence will help prevent people from making assumptions and breaking
+// the code for non-ascii platforms. At some point we'll want to be able to
+// compile on EBCDIC systems again, using the API and iconv/ICU instead of
+// ifdefs scattered all over creation, if the core code hasn't been
+// compromised this should be easier. For those that have no idea what EBCDIC
+// is... it is like ASCII in that it is an encoding system, but it predates
+// ASCII by a number of years (think punchcards). It is still the default
+// encoding on some mainframes and minicomputers such as the IBM zSeries and
+// iSeries (aka the 390 and the 400). To see what the old EBCDIC code looked
+// like, pull a cvs tree with the tag v1-06.
 //
 //
-// Jikes can be compiled on systems using the EBCDIC character set, for which character and string
-// literals are translated by the compiler to EBCDIC and not ASCII, and so cannot be used to represent
-// ASCII/UNICODE values. Such values are constructed using the U_ values defined below. Thus
-// 'a' is represented using U_a, and ".java" is represented by an explicit literal:
+// Jikes can be compiled on systems using the EBCDIC character set, for which
+// character and string literals are translated by the compiler to EBCDIC and
+// not ASCII, and so cannot be used to represent ASCII/UNICODE values. Such
+// values are constructed using the U_ values defined below. Thus 'a' is
+// represented using U_a, and ".java" is represented by an explicit literal:
 //    {U_DOT, U_j, U_a, U_v, U_a, U_NULL}
-// Variables associated with such literals have names beginning with US_ if the value are 16-bits
-// or U8S_ for 8 bits. The initial underscore is followed by the characters being represented, with
-// letters and digits representing themselves, and other values, all of which have a two character code,
-// surrounded by underscore. Thus the name used for the literal above is US__DO_java.
+// Variables associated with such literals have names beginning with US_ if
+// the value are 16-bits or U8S_ for 8 bits. The initial underscore is
+// followed by the characters being represented, with letters and digits
+// representing themselves, and other values, all of which have a two
+// character code, surrounded by underscore. Thus the name used for the
+// literal above is US__DO_java.
 //
-// All string-related values are represented internally in ASCII/UNICODE using the U_ values defined
-// below. EBCDIC systems also require that arguments to system functions representing file names be
-// converted from the internal form used by Jikes to EBCDIC, and such functions are referred to using
-// their usual name prefixed with "system_"; for example, a call to "fopen(..." is written "system_fopen(..."
-// The "system_" procedures are define in the file code.cpp.
+// All string-related values are represented internally in ASCII/UNICODE
+// using the U_ values defined below. EBCDIC systems also require that
+// arguments to system functions representing file names be converted from
+// the internal form used by Jikes to EBCDIC, and such functions are referred
+// to using their usual name prefixed with "system_"; for example, a call to
+// "fopen(..." is written "system_fopen(..." The "system_" procedures are
+// define in the file code.cpp.
 //
 
 enum U_chars
