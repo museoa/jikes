@@ -918,8 +918,14 @@ bool ByteCode::EmitStatement(AstStatement *statement)
                 return false;
             }
             // True and false parts.
-            if (if_statement -> false_statement_opt)
+            if (if_statement -> false_statement_opt &&
+                ! IsNop(if_statement -> false_statement_opt -> BlockCast()))
             {
+                if (IsNop(if_statement -> true_statement -> BlockCast()))
+                {
+                    EmitExpression(if_statement -> expression, false);
+                    return false;
+                }
                 Label label1,
                       label2;
                 bool abrupt;
@@ -945,6 +951,11 @@ bool ByteCode::EmitStatement(AstStatement *statement)
                 return abrupt;
             }
             // No false part.
+            if (IsNop(if_statement -> true_statement -> BlockCast()))
+            {
+                EmitExpression(if_statement -> expression, false);
+                return false;
+            }
             Label label1;
             EmitBranchIfExpression(if_statement -> expression,
                                    false, label1,
@@ -5513,6 +5524,7 @@ void ByteCode::DefineLabel(Label& lab)
             code_attribute -> DeleteCode(lab.uses[index].op_offset +
                                          lab.uses[index].use_length);
             lab.uses.Reset(index);
+            line_number_table_attribute -> SetMax(start);
             last_label_pc = start;
             last_op_goto = false;
         }

@@ -4,6 +4,12 @@
 
 2002-07-08  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/class.h (SetMax): New function.
+	* src/bytecode.cpp (EmitStatement, DefineLabel): Improve dead
+	branch handling in if statements - bug 2895.
+
+2002-07-08  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/bytecode.cpp (LoadVariable): Fix assertion in bug 3044.
 	* src/decl.cpp (InitializeVariable): Improve variable
 	initialization procedure.

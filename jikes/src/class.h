@@ -1063,6 +1063,13 @@ public:
         line_number_table[line_number_index].line_number = line_number;
     }
 
+    void SetMax(u2 max_pc)
+    {
+        int i = line_number_table.Length();
+        while(--i > 0 && line_number_table[i].start_pc > max_pc)
+            line_number_table[i].start_pc = max_pc;
+    }
+
     virtual void Put(OutputBuffer &output_buffer)
     {
         assert(attribute_name_index != 0);
