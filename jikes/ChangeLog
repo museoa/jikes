@@ -1,3 +1,9 @@
+2004-03-14  Elliott Hughes  <enh@acm.org>
+
+	* src/expr.cpp (ReportVariableNotFound): fix for bug 3378; if we can't
+	find an accessible type, look for an inaccessible one as a plausible
+	cause of the error.
+
 2004-03-13  Elliott Hughes  <enh@acm.org>
 
 	* src/control.cpp: only check for unused imports if compilation

@@ -1380,31 +1380,52 @@ void Semantic::ReportVariableNotFound(AstExpression* access, TypeSymbol* type)
     }
 
     //
-    // Search for a misspelled field name.
+    // Try various possibilities of what the user might have meant.
     //
     VariableSymbol* variable = FindMisspelledVariableName(type, access);
     if (variable)
+    {
+        //
+        // There is a field with a similar name.
+        //
         ReportSemError(SemanticError::FIELD_NAME_MISSPELLED,
                        id_token, name_symbol -> Name(),
                        type -> ContainingPackageName(),
                        type -> ExternalName(),
                        variable -> Name());
-    //
-    // Search for a type or package of the same name.
-    //
+    }
     else if (FindType(id_token))
+    {
+        //
+        // There is a type or package of the same name.
+        //
         ReportSemError(SemanticError::TYPE_NOT_FIELD,
                        id_token, name_symbol -> Name());
+    }
+    else if (access -> NameCast() && MustFindType(access -> NameCast()))
+    {
+        //
+        // There is an inaccessible type of the same name.
+        //
+        // MustFindType will have reported a suitable error already if
+        // it found an inaccessible type, so there's nothing to do here.
+        //
+    }
     else if (access -> symbol && access -> symbol -> PackageCast())
+    {
         ReportSemError(SemanticError::UNKNOWN_AMBIGUOUS_NAME,
                        access, name_symbol -> Name());
-    //
-    // Give up. We didn't find it.
-    //
-    else ReportSemError(SemanticError::FIELD_NOT_FOUND,
-                        id_token, name_symbol -> Name(),
-                        type -> ContainingPackageName(),
-                        type -> ExternalName());
+    }
+    else
+    {
+        //
+        // Give up. We didn't find it.
+        //
+        ReportSemError(SemanticError::FIELD_NOT_FOUND,
+                       id_token, name_symbol -> Name(),
+                       type -> ContainingPackageName(),
+                       type -> ExternalName());
+    }
 }
 
 
