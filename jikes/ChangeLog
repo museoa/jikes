@@ -1,5 +1,8 @@
 1999-09-17    <shields@jikes.watson.ibm.com>
 
+	* jikes.1: 
+	Add 'BUGS' section for 1.06 since '++' disabled.
+
 	* contrib.htm: minor html cleanup
 
 	* jikes.spec (Summary): 
