@@ -1,4 +1,9 @@
-2000-01-15  Mo DeJong  <mdejong@redhat.com>
+2001-01-17  Chris Abbey  <cabbey@bresnanlink.net>
+
+	* index.shtml: fixed links to cvs
+	* *.shtml: tr -d "\r"
+
+2001-01-15  Mo DeJong  <mdejong@redhat.com>
 
 	* ChangeLog: Initialize new jikes-website
 	module.

@@ -34,7 +34,7 @@
           <hr>
           For Developers
           <ul>
-            <li><a href="/developerworks/cvs/?group_id=10">CVS</a>
+            <li><a href="cvs.shtml">CVS</a>
             <li><a href="/developerworks/patch/?group_id=10">Patches</a>
             <li>todo list
             <li>...
@@ -113,7 +113,7 @@ officially been moved on to other projects within IBM.
 <P>The source code is available under IBM's Public License, which has
 been approved by the <a href="http://www.opensource.org/">OSI</a>
 (Open Source Initiative) as a fully compliant open source license.
-The project provides access to the complete <A HREF="/developerworks/cvs/?group_id=10">CVS</A>
+The project provides access to the complete <A HREF="cvs.shtml">CVS</A>
 development tree, which includes not only Jikes, but also the source for the Jacks
 Test Suite and the Jikes Parser Generator used to build Jikes. Members of the community
 contribute <A HREF="downloads/">binaries</A> for their platforms of choice, additonaly
