@@ -2596,7 +2596,9 @@ void Semantic::CheckMethodOverride(MethodSymbol* method,
     //
     if (control.option.deprecation &&
         hidden_method -> IsDeprecated() &&
-        ! method -> containing_type -> file_symbol -> IsClassOnly())
+        ! method -> containing_type -> file_symbol -> IsClassOnly() &&
+        ! method -> IsDeprecated() &&
+        ! InDeprecatedContext())
     {
         ReportSemError(SemanticError::DEPRECATED_METHOD_OVERRIDE,
                        left_tok, right_tok, method -> Header(),
