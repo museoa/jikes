@@ -1,3 +1,13 @@
+2000-11-03  Mo DeJong  <mdejong@redhat.com>
+
+	* src/jikesapi.cpp (parseOptions): Revert
+	the change that allocated an ArgumentExpander
+	on the stack. Moving the object onto the
+	stack masked test suite failures, causing
+	them to pass even though memory was getting
+	corrupted. From now on, we should never
+	allocate an object on the stack.
+
 2000-11-29  Mo DeJong  <mdejong@redhat.com>
 
 	* src/jikesapi.h: Re-order instance declaration

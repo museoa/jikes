@@ -135,13 +135,14 @@ char ** JikesAPI::parseOptions(int argc, char **argv)
 {
     cleanupOptions();
 
-    ArgumentExpander args(argc, argv);
-    Option* opt = new Option(args);
+    ArgumentExpander *args = new ArgumentExpander(argc, argv);
+    Option* opt = new Option(*args);
     option = opt;
-    int n = args.argc - opt->first_file_index;
+    int n = args->argc - opt->first_file_index;
 
     if (n <= 0)
     {
+        delete args;
         return NULL;
     }
     else
@@ -149,7 +150,7 @@ char ** JikesAPI::parseOptions(int argc, char **argv)
         parsedOptions = new char*[n+1];
         for (int i=0; i<n; i++)
         {
-            const char *o = args.argv[opt->first_file_index+i];
+            const char *o = args->argv[opt->first_file_index+i];
             if (o)
             {
                 parsedOptions[i] = new char[strlen(o)+1];
@@ -161,6 +162,7 @@ char ** JikesAPI::parseOptions(int argc, char **argv)
             }
         }
         parsedOptions[n] = NULL;
+        delete args;
         return parsedOptions;
     }
 }
