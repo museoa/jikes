@@ -1,3 +1,19 @@
+2005-02-23  Chris Abbey  <jikes@cabbey.net>
+
+	* patchguide.shtml:
+	* faq/bug-reporting.shtml:
+	* faq/dev-hp-ux.shtml:
+	* faq/dev-license.shtml:
+	* faq/dev-linux.shtml:
+	* faq/dev-navbar.html:
+	* faq/dev-source-control.shtml:
+	* faq/dev-testing.shtml:
+	* faq/faq-update.shtml:
+	* faq/user-index.shtml:
+	* faq/user-navbar.html:
+	* queries/index.shtml: fixup a bunch of broken links and other
+	issues my wife found in an audit of the site today. Thanks Love!
+
 2005-02-20  Chris Abbey  <jikes@cabbey.net>
 
 	* index.html: begin the migration to SF.net.

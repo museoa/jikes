@@ -56,7 +56,7 @@
             <h2>Official Releases source</h2>
             <p>
               The most recent official release of Jikes is available
-              at the <A HREF="/developerworks/downloads/?group_id=10">Jikes Download Page</A>.
+              at the <A HREF="http://sourceforge.net/project/showfiles.php?group_id=128803">Jikes Download Page</A>.
 	       It's already packaged as a single
               downloadable file, so you don't need CVS if you will
               be using a released version of Jikes.
@@ -107,7 +107,7 @@
                       <tr> 
                         <td class="HighlightedFrameBackground">
                           ( sh/bash syntax )
-                          <pre><code>export CVSROOT=:pserver:anoncvs@www-124.ibm.com:/usr/cvs/jikes</code></pre></td>
+                          <pre><code>export CVSROOT=:pserver:anonymous@cvs.sourceforge.net:/cvsroot/jikes</code></pre></td>
                       </tr>
                     </table>
                   </td>
@@ -155,6 +155,7 @@
 
             <p>&nbsp;</p>
 
+<!-- sourceforge cvs servers don't seem to require a login for anonymous
             <h2>Login into the server</h2>
             <p>Now that the CVS client is correctly configured to connect to the 
               Jikes repository, you'll have to login into the CVS server. You
@@ -179,7 +180,7 @@
               </table>
             </div>
             <p>&nbsp;</p>
-
+-->
             <h2>Retrieving Jikes source code</h2>
             <p>The next step is to retrieve the source code itself. The first 
               time you get the Jikes code, you'll need to perform a
@@ -222,12 +223,12 @@
                               <td><code>jikes</code></td>
                               <td>the Jikes compiler source code</td>
                             </tr>
-                            <tr> 
+                            <!-- tr> 
                               <td><code>jacks</code></td>
                               <td>
                               the regression test suite use by Jikes project
                               </td>
-                            </tr>
+                            </tr -->
                             <tr>
                               <td><code>jiketst</code></td>
                               <td>the old Jikes test package code (unused)</td>
@@ -301,14 +302,15 @@
             <p>&nbsp;</p>
 
 
-            <h2>WebCVS Interface</h2>
+            <h2>ViewCVS/WebCVS Interface</h2>
             <p>
               The WebCVS Interface can be a useful way to browse the contents
               of the Jikes CVS for those folks that are unable or unwilling to
               use the normal CVS client. WebCVS is a Web-based front-end on top of
               a CVS-enabled server, so you don't have to do a CVS client installed
               to use it. This interface is most handy for comparing
-              revisions and checking to see when/if a given feature was added.
+              revisions and checking to see when/if a given feature was
+              added. SourceForge.net uses a more modern ViewCVS for the same purpose.
             </p>
             <div style="text-align: center">
               <table width="400" border="0" cellspacing="0" cellpadding="1" align="center">
@@ -316,7 +318,7 @@
                   <td class="HighlightedFrameBorder"> 
                     <table width="100%" border="0" cellspacing="0" cellpadding="10">
                       <tr> 
-                        <td class="HighlightedFrameBackground"><a href="/developerworks/opensource/cvs/jikes/">http://ibm.com/developerworks/opensource/cvs/jikes/</a></td>
+                        <td class="HighlightedFrameBackground"><a href="http://cvs.sourceforge.net/viewcvs.py/jikes">http://cvs.sourceforge.net/viewcvs.py/jikes</a></td>
                       </tr>
                     </table>
                   </td>
@@ -326,7 +328,7 @@
             <p>&nbsp;</p>
 
 
-            <h2>Additional resources</h2>
+            <!-- this url went 404... h2>Additional resources</h2>
             <p>You'll find additional information on how to use the powerful features 
               of CVS here:</p>
             <div style="text-align: center">
@@ -343,7 +345,7 @@
                 </tr>
               </table>
             </div>
-            <p>&nbsp;</p>
+            <p>&nbsp;</p -->
             <!-- #EndEditable --></td>
         </tr>
       </table>

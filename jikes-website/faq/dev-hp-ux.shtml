@@ -72,9 +72,8 @@
             <p>&nbsp;&nbsp;<i>Minor tweaks required</i> : Unfortunately, at
             this time, aCC will not compile jikes out of the box.
             However, the changes required are minimal, and this
-            situation may be remedied by 1.14.  You will need
-            <a href="/developerworks/patch/?func=detailpatch&patch_id=55&group_id=10">
-            this patch</a> from the queue, since aCC does not like
+            situation may be remedied by 1.14.  Untill then you will
+	    need patch 1149112 from the queue, since aCC does not like
             ostream &gt;&gt; unsigned char *.</p>
             <p>If you want 64-bit integer math, you will need to
             configure with the -ext flag.  Also, Jikes has a number of

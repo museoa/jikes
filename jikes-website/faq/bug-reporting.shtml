@@ -54,7 +54,7 @@
      <dl>
       <dt>Empty if clause in if-else statement causes problems</dt>
        <dd>This is bug
-       <a href="/developerworks/bugs/?func=detailbug&amp;bug_id=3076&amp;group_id=10">3076</a>.
+       <a href="http://sourceforge.net/tracker/index.php?func=detail&amp;aid=1148267&amp;group_id=128803&mp;atid=712760"3076</a>.
        In Jikes 1.16, if the if clause of an if-else statement is empty, the
        else clause is not compiled correctly.  The workaround is to ensure
        there is a statement in the if clause, even if it does nothing.  <span

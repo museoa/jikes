@@ -27,7 +27,7 @@
         <tr>
           <td -->
         <!-- START INCLUDE NAVBAR.SHTML -->
-        <!--include file="navbar.html" -->
+        <!--include file="dev-navbar.html" -->
         <!-- END INCLUDE NAVBAR.SHTML -->
           <!--/td>
         </tr>

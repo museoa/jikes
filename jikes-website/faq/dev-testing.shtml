@@ -44,8 +44,8 @@
             <p>Jikes makes use of a regression test framework called
             Jacks. This suite of tests helps to ensure that already
             fixed bugs stay fixed and that new code is tested as it
-            is added. Check out the
-            <A HREF="http://www-124.ibm.com/developerworks/oss/jacks/">Jacks project</A>
+            is added. Check out the Jacks component in the
+	    <a href="http://sources.redhat.com/mauve">Mauve project</A>
             page for more info about how to setup and run the Jacks tests.
             Most users will not have any reason to use Jacks, but developers
             contributing code to jikes or working on new ports should be

@@ -3,7 +3,7 @@
 <html>
   <head>
     <title>
-      IBM - developerWorks - Open Source Software - Jikes - User FAQ
+      Jikes - User FAQ
     </title>
     <link rel="stylesheet" href="../styles/jikes-faq.css">
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
@@ -79,19 +79,19 @@
             distributions</a> page for a list of Linux distributions known
             to include Jikes as a standard package.  For other platforms,
             go to the
-            <a href="/developerworks/downloads/?group_id=10&amp;recent_only=1">
+            <a href="http://sourceforge.net/project/showfiles.php?group_id=128803">
             downloads</a> page and look for an official binary version of
             Jikes.  A Zip file is provided for Windows users, just unzip
             it and place the bin directory on your PATH.
             If there isn't an official version for your operating
-            system, join the <a href="/developerworks/mail/?group_id=10">
+            system, join the <a href="http://sourceforge.net/mail/?group_id=128803">
             jikes</a> mailing list and search the archives.  There might be
             an unofficial port available, or someone else might be working
             on one.  If you're still out of luck, why not download the
             source and try compiling it yourself?  The
             <a href="dev-index.shtml">Developer FAQ</a> has a lot of
             information about compiling Jikes.  Join the the
-            <a href="/developerworks/mail/?group_id=10">
+            <a href="http://sourceforge.net/mail/?group_id=128803">
             jikes-dev</a> mailing list where other developers can help you
             out.
           </p>
@@ -372,20 +372,18 @@ jikes -classpath .:/opt/jdk1.3/jre/lib/rt.jar ...</pre>
             zip-speak).  Indeed, any item in the class path that is a not a
             directory is assumed to be a file in zip format.  The code used to
             do the the uncompression is based on that used in
-            <code>unzip532</code> from Info-ZIP, so we have to make the
+            <code>unzip532</code> from Info-ZIP, so we need to make the
             following statement:
           </p>
+	  <!-- note that the url we had here was 404, updated to a new one,
+          without checking that the code was the same. -->
           <blockquote>
             <p>
               Jikes incorporates compression code from the Info-ZIP group.
               There are no extra charges or costs due to the use of this code,
               and the original compression sources are freely available from
-              <a href="http://www.freesoftware.com/pub/infozip/">
-              Info-ZIP</a>
-              or
-              <a href="ftp://ftp.freesoftware.com/pub/infozip/">
-              Info-ZIP ftp site</a>
-              on the Internet.
+              <a href="http://www.info-zip.org/pub/infozip/">Info-ZIP</a>
+	      on the Internet.
             </p>
           </blockquote>
           <p>
@@ -906,7 +904,7 @@ static void m(Class c) {
 }</pre>
 
 	  <p>For additional details, see <a
-	  href="/pipermail/jikes-dev/2002-December/003642.html">this
+	  href="http://sourceforge.net/mailarchive/message.php?msg_id=10786505">this
 	  posting</a> to jikes-dev.</p>
 
           <a name="compat-extra-semi">
