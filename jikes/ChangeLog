@@ -1,3 +1,11 @@
+2001-02-26  Mo DeJong  <mdejong@redhat.com>
+
+	* src/jikesapi.cpp (DefaultFileReader):
+	Use const_cast operator only when
+	HAVE_CONST_CAST is defined. Comment
+	out an assert that depends on the
+	binary mode of SystemFread.
+
 2001-02-24  Mo DeJong  <mdejong@redhat.com>
 
 	* src/option.cpp:

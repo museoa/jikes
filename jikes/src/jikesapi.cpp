@@ -325,8 +325,14 @@ DefaultFileReader::DefaultFileReader(const char *fileName)
     if (srcfile != NULL)
     {
         buffer = new char[size];
-        size_t numread = SystemFread(const_cast<char*>(buffer), sizeof(char), size, srcfile);
-        assert(numread == size);
+        size_t numread = SystemFread(
+#ifdef HAVE_CONST_CAST
+            const_cast<char*>(buffer)
+#else
+            (char *) buffer
+#endif
+            , sizeof(char), size, srcfile);
+        //assert(numread == size); // FIXME: uncomment when SystemFread uses "b"
         fclose(srcfile);
     }
 }
