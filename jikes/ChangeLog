@@ -1,5 +1,14 @@
 2004-01-17  Eric Blake  <ebb9@byu.net>
 
+	* autogen.sh: Use depcomp.
+	* src/Makefile.am: depcomp is more mature; we can quit manually
+	tracking dependencies (thank heavens).
+	* Makefile.in: Regenerate.
+	* doc/Makefile.in: Ditto.
+	* src/Makefile.in: Ditto.
+
+2004-01-17  Eric Blake  <ebb9@byu.net>
+
 	* src/semantic.h: Drop dependence on control.h (slight compilation
 	speed improvement).
 	* src/body.cpp (CheckedException): Move here from semantic.h.

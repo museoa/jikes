@@ -90,8 +90,27 @@ am_jikes_OBJECTS = ast.$(OBJEXT) body.$(OBJEXT) bytecode.$(OBJEXT) \
 jikes_OBJECTS = $(am_jikes_OBJECTS)
 jikes_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I.
-depcomp =
-am__depfiles_maybe =
+depcomp = $(SHELL) $(top_srcdir)/depcomp
+am__depfiles_maybe = depfiles
+@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/ast.Po ./$(DEPDIR)/body.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/bytecode.Po ./$(DEPDIR)/case.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/code.Po ./$(DEPDIR)/control.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/decl.Po ./$(DEPDIR)/definite.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/depend.Po ./$(DEPDIR)/diagnose.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/double.Po ./$(DEPDIR)/dump.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/error.Po ./$(DEPDIR)/expr.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/getclass.Po ./$(DEPDIR)/incrmnt.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/init.Po ./$(DEPDIR)/javaact.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/jikes.Po ./$(DEPDIR)/jikesapi.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/long.Po ./$(DEPDIR)/lookup.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/lpginput.Po ./$(DEPDIR)/modifier.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/op.Po ./$(DEPDIR)/option.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/parser.Po ./$(DEPDIR)/platform.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/scanner.Po ./$(DEPDIR)/segment.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/set.Po ./$(DEPDIR)/stream.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/symbol.Po ./$(DEPDIR)/system.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/tab.Po ./$(DEPDIR)/unparse.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/unzip.Po ./$(DEPDIR)/zip.Po
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 CXXLD = $(CXX)
@@ -299,9 +318,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  --ignore-deps src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  --ignore-deps src/Makefile
+	  $(AUTOMAKE) --foreign  src/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -369,11 +388,60 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ast.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/body.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bytecode.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/case.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/code.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/control.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/decl.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/definite.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/depend.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/diagnose.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/double.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dump.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/error.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/expr.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getclass.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/incrmnt.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/init.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/javaact.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jikes.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/jikesapi.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/long.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lookup.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lpginput.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/modifier.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/op.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/option.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parser.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/platform.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scanner.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/segment.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/set.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stream.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/symbol.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/system.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tab.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unparse.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unzip.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/zip.Po@am__quote@
+
 .cpp.o:
-	$(CXXCOMPILE) -c -o $@ $<
+@am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ $<
 
 .cpp.obj:
-	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+@am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ `$(CYGPATH_W) '$<'`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 uninstall-info-am:
 install-includeHEADERS: $(include_HEADERS)
 	@$(NORMAL_INSTALL)
@@ -503,6 +571,7 @@ clean: clean-am
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
 
 distclean: distclean-am
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-hdr distclean-tags
@@ -528,6 +597,7 @@ install-man:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
+	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -571,118 +641,9 @@ uninstall-am: uninstall-binPROGRAMS uninstall-includeHEADERS \
 
 # This rule will build an efence malloc debugging enabled version of jikes.
 # This should be used for testing purposes only! It is really slow!
-
 efence:
 	@rm -f jikes$(EXEEXT)
 	$(CXXLINK) -o jikes$(EXEEXT) $(jikes_OBJECTS) -lstdc++ -lefence
-
-# The rest of the entries in this file are dependencies manually extracted
-# from the source files; I used ``g++ 3.2 -MM -Ipath/to/jikes/src *.cpp'',
-# then replaced .o with .$(OBJEXT) and filtered config.h out of the lists.
-#
-# We choose not use the automatic dependency tracking available in
-# automake because the depcomp script still has some
-# portability problems with non-gcc compilers. If
-# dependencies are changed in the source code, these
-# deps will need to be manually updated.
-
-$(jikes_OBJECTS): config.h
-
-ast.$(OBJEXT): ast.cpp ast.h platform.h stream.h tuple.h jikesapi.h \
-  depend.h symbol.h lookup.h long.h double.h access.h
-body.$(OBJEXT): body.cpp platform.h semantic.h ast.h stream.h tuple.h \
-  jikesapi.h depend.h error.h symbol.h lookup.h long.h double.h access.h \
-  control.h set.h option.h
-bytecode.$(OBJEXT): bytecode.cpp bytecode.h platform.h tuple.h \
-  jikesapi.h ast.h stream.h depend.h class.h semantic.h error.h symbol.h \
-  lookup.h long.h double.h access.h control.h set.h op.h option.h \
-  segment.h table.h
-case.$(OBJEXT): case.cpp case.h platform.h
-code.$(OBJEXT): code.cpp code.h platform.h
-control.$(OBJEXT): control.cpp control.h platform.h symbol.h stream.h \
-  tuple.h jikesapi.h lookup.h long.h double.h access.h set.h scanner.h \
-  parser.h lpginput.h javasym.h javadef.h javaprs.h javaact.h semantic.h \
-  ast.h depend.h error.h bytecode.h class.h op.h option.h segment.h \
-  case.h
-decl.$(OBJEXT): decl.cpp platform.h semantic.h ast.h stream.h tuple.h \
-  jikesapi.h depend.h error.h symbol.h lookup.h long.h double.h access.h \
-  control.h set.h table.h spell.h case.h javasym.h option.h
-definite.$(OBJEXT): definite.cpp platform.h semantic.h ast.h stream.h \
-  tuple.h jikesapi.h depend.h error.h symbol.h lookup.h long.h double.h \
-  access.h control.h set.h option.h
-depend.$(OBJEXT): depend.cpp depend.h platform.h tuple.h jikesapi.h \
-  control.h symbol.h stream.h lookup.h long.h double.h access.h set.h \
-  ast.h semantic.h error.h option.h
-diagnose.$(OBJEXT): diagnose.cpp diagnose.h platform.h parser.h \
-  lpginput.h stream.h tuple.h jikesapi.h javasym.h javadef.h javaprs.h \
-  javaact.h control.h symbol.h lookup.h long.h double.h access.h set.h \
-  semantic.h ast.h depend.h error.h case.h spell.h option.h
-double.$(OBJEXT): double.cpp double.h platform.h long.h
-dump.$(OBJEXT): dump.cpp platform.h javasym.h control.h symbol.h \
-  stream.h tuple.h jikesapi.h lookup.h long.h double.h access.h set.h
-error.$(OBJEXT): error.cpp error.h platform.h stream.h tuple.h \
-  jikesapi.h control.h symbol.h lookup.h long.h double.h access.h set.h \
-  semantic.h ast.h depend.h diagnose.h parser.h lpginput.h javasym.h \
-  javadef.h javaprs.h javaact.h option.h
-expr.$(OBJEXT): expr.cpp platform.h double.h long.h parser.h lpginput.h \
-  stream.h tuple.h jikesapi.h javasym.h javadef.h javaprs.h javaact.h \
-  semantic.h ast.h depend.h error.h symbol.h lookup.h access.h control.h \
-  set.h table.h spell.h case.h option.h
-getclass.$(OBJEXT): getclass.cpp getclass.h platform.h semantic.h ast.h \
-  stream.h tuple.h jikesapi.h depend.h error.h symbol.h lookup.h long.h \
-  double.h access.h control.h set.h zip.h unzip.h option.h code.h
-incrmnt.$(OBJEXT): incrmnt.cpp platform.h control.h symbol.h stream.h \
-  tuple.h jikesapi.h lookup.h long.h double.h access.h set.h scanner.h \
-  parser.h lpginput.h javasym.h javadef.h javaprs.h javaact.h semantic.h \
-  ast.h depend.h error.h case.h
-init.$(OBJEXT): init.cpp platform.h semantic.h ast.h stream.h tuple.h \
-  jikesapi.h depend.h error.h symbol.h lookup.h long.h double.h access.h \
-  control.h set.h
-javaact.$(OBJEXT): javaact.cpp platform.h parser.h lpginput.h stream.h \
-  tuple.h jikesapi.h javasym.h javadef.h javaprs.h javaact.h ast.h \
-  depend.h
-jikes.$(OBJEXT): jikes.cpp platform.h jikesapi.h error.h stream.h \
-  tuple.h
-jikesapi.$(OBJEXT): jikesapi.cpp platform.h control.h symbol.h stream.h \
-  tuple.h jikesapi.h lookup.h long.h double.h access.h set.h option.h
-long.$(OBJEXT): long.cpp long.h platform.h double.h
-lookup.$(OBJEXT): lookup.cpp lookup.h platform.h tuple.h jikesapi.h \
-  long.h double.h control.h symbol.h stream.h access.h set.h code.h ast.h \
-  depend.h case.h
-lpginput.$(OBJEXT): lpginput.cpp lpginput.h platform.h stream.h tuple.h \
-  jikesapi.h javasym.h javadef.h javaprs.h javadcl.h
-modifier.$(OBJEXT): modifier.cpp platform.h semantic.h ast.h stream.h \
-  tuple.h jikesapi.h depend.h error.h symbol.h lookup.h long.h double.h \
-  access.h control.h set.h option.h javasym.h
-op.$(OBJEXT): op.cpp op.h platform.h tuple.h jikesapi.h
-option.$(OBJEXT): option.cpp option.h platform.h tuple.h jikesapi.h \
-  javasym.h error.h stream.h case.h tab.h code.h
-parser.$(OBJEXT): parser.cpp parser.h platform.h lpginput.h stream.h \
-  tuple.h jikesapi.h javasym.h javadef.h javaprs.h javaact.h ast.h \
-  depend.h
-platform.$(OBJEXT): platform.cpp platform.h long.h double.h
-scanner.$(OBJEXT): scanner.cpp scanner.h platform.h stream.h tuple.h \
-  jikesapi.h control.h symbol.h lookup.h long.h double.h access.h set.h \
-  error.h javadef.h javasym.h option.h code.h
-segment.$(OBJEXT): segment.cpp segment.h platform.h tuple.h jikesapi.h
-set.$(OBJEXT): set.cpp set.h platform.h lookup.h tuple.h jikesapi.h \
-  long.h double.h
-stream.$(OBJEXT): stream.cpp stream.h platform.h tuple.h jikesapi.h \
-  code.h zip.h unzip.h symbol.h lookup.h long.h double.h access.h \
-  control.h set.h semantic.h ast.h depend.h error.h javasym.h option.h \
-  tab.h
-symbol.$(OBJEXT): symbol.cpp symbol.h platform.h stream.h tuple.h \
-  jikesapi.h lookup.h long.h double.h access.h control.h set.h ast.h \
-  depend.h semantic.h error.h table.h zip.h unzip.h case.h option.h
-system.$(OBJEXT): system.cpp platform.h control.h symbol.h stream.h \
-  tuple.h jikesapi.h lookup.h long.h double.h access.h set.h semantic.h \
-  ast.h depend.h error.h zip.h unzip.h option.h case.h
-tab.$(OBJEXT): tab.cpp tab.h platform.h
-unparse.$(OBJEXT): unparse.cpp ast.h platform.h stream.h tuple.h \
-  jikesapi.h depend.h
-unzip.$(OBJEXT): unzip.cpp unzip.h platform.h
-zip.$(OBJEXT): zip.cpp zip.h platform.h tuple.h jikesapi.h unzip.h \
-  control.h symbol.h stream.h lookup.h long.h double.h access.h set.h
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

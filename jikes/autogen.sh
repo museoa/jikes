@@ -15,4 +15,4 @@
 aclocal -I src/m4
 autoconf
 autoheader
-automake --ignore-deps --foreign --add-missing --force-missing --copy
+automake --foreign --add-missing --force-missing --copy
