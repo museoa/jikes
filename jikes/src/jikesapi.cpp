@@ -359,7 +359,8 @@ DefaultFileWriter::DefaultFileWriter(const char *fileName,size_t maxSize):
  */
 DefaultFileWriter::~DefaultFileWriter()
 {
-    fclose(file);
+    if (valid)
+        fclose(file);
 }
 
 int DefaultFileWriter::isValid()  {return(valid);}

@@ -1,3 +1,8 @@
+2001-01-28  Mo DeJong  <mdejong@redhat.com>
+
+	* src/jikesapi.cpp (~DefaultFileWriter): Don't
+	call fclose() unless the earlier fopen() worked.
+
 2001-01-26  C. Scott Ananian  <cananian@lesser-magoo.lcs.mit.edu>
 
 	* src/option.cpp (Option, ~Option): Create a copy
