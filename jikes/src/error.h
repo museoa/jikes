@@ -35,7 +35,6 @@ public:
         INVALID_DIRECTORY,
         UNSUPPORTED_OPTION,
         DISABLED_OPTION,
-        UNSUPPORTED_ENCODING,
 
         NO_CURRENT_DIRECTORY,
         CANNOT_OPEN_ZIP_FILE,
@@ -297,7 +296,8 @@ public:
         ENCLOSING_INSTANCE_NOT_ACCESSIBLE,
         INVALID_ENCLOSING_INSTANCE,
 
-        ZERO_DIVIDE,
+        ZERO_DIVIDE_ERROR,
+        ZERO_DIVIDE_CAUTION,
         VOID_TO_STRING,
 
         _num_kinds
@@ -381,7 +381,6 @@ private:
     static void PrintINVALID_DIRECTORY(ErrorInfo &, LexStream *, Control &);
     static void PrintUNSUPPORTED_OPTION(ErrorInfo &, LexStream *, Control &);
     static void PrintDISABLED_OPTION(ErrorInfo &, LexStream *, Control &);
-    static void PrintUNSUPPORTED_ENCODING(ErrorInfo &, LexStream *, Control &);
     static void PrintNO_CURRENT_DIRECTORY(ErrorInfo &, LexStream *, Control &);
     static void PrintCANNOT_OPEN_ZIP_FILE(ErrorInfo &, LexStream *, Control &);
     static void PrintCANNOT_OPEN_PATH_DIRECTORY(ErrorInfo &, LexStream *, Control &);
@@ -642,7 +641,8 @@ private:
     static void PrintENCLOSING_INSTANCE_ACCESS_ACROSS_STATIC_REGION(ErrorInfo &, LexStream *, Control &);
     static void PrintENCLOSING_INSTANCE_NOT_ACCESSIBLE(ErrorInfo &, LexStream *, Control &);
     static void PrintINVALID_ENCLOSING_INSTANCE(ErrorInfo &, LexStream *, Control &);
-    static void PrintZERO_DIVIDE(ErrorInfo &, LexStream *, Control &);
+    static void PrintZERO_DIVIDE_ERROR(ErrorInfo &, LexStream *, Control &);
+    static void PrintZERO_DIVIDE_CAUTION(ErrorInfo &, LexStream *, Control &);
     static void PrintVOID_TO_STRING(ErrorInfo &, LexStream *, Control &);
 
     void SortMessages();

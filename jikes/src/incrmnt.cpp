@@ -28,9 +28,9 @@ void Control::RemoveTrashedTypes(SymbolSet &type_trash_set)
     //
     for (type = (TypeSymbol *) type_trash_set.FirstElement(); type; type = (TypeSymbol *) type_trash_set.NextElement())
     {
-        for (TypeSymbol *static_parent = (TypeSymbol *) type -> parents -> FirstElement();
+        for (TypeSymbol *static_parent = (TypeSymbol *) type -> static_parents -> FirstElement();
                          static_parent;
-                         static_parent = (TypeSymbol *) type -> parents -> NextElement())
+                         static_parent = (TypeSymbol *) type -> static_parents -> NextElement())
         {
             if (! type_trash_set.IsElement(static_parent))
             {

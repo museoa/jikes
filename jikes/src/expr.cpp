@@ -6736,7 +6736,8 @@ void Semantic::ProcessSLASH(AstBinaryExpression *expr)
             if ((expr -> Type() == control.int_type && ((IntLiteralValue *) right_expression -> value) -> value == 0) ||
                 (expr -> Type() == control.long_type && ((LongLiteralValue *) right_expression -> value) -> value == 0))
             {
-                ReportSemError(SemanticError::ZERO_DIVIDE,
+                ReportSemError(left_expression -> IsConstant() ? SemanticError::ZERO_DIVIDE_ERROR
+                                                               : SemanticError::ZERO_DIVIDE_CAUTION,
                                expr -> LeftToken(),
                                expr -> RightToken());
             }
@@ -6823,7 +6824,8 @@ void Semantic::ProcessMOD(AstBinaryExpression *expr)
             if ((expr -> Type() == control.int_type && ((IntLiteralValue *) right_expression -> value) -> value == 0) ||
                 (expr -> Type() == control.long_type && ((LongLiteralValue *) right_expression -> value) -> value == 0))
             {
-                ReportSemError(SemanticError::ZERO_DIVIDE,
+                ReportSemError(left_expression -> IsConstant() ? SemanticError::ZERO_DIVIDE_ERROR
+                                                               : SemanticError::ZERO_DIVIDE_CAUTION,
                                expr -> LeftToken(),
                                expr -> RightToken());
             }
@@ -7246,7 +7248,7 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
                     if ((left_type == control.int_type && ((IntLiteralValue *) right_expression -> value) -> value == 0) ||
                         (left_type == control.long_type && ((LongLiteralValue *) right_expression -> value) -> value == 0))
                     {
-                        ReportSemError(SemanticError::ZERO_DIVIDE,
+                        ReportSemError(SemanticError::ZERO_DIVIDE_CAUTION,
                                        assignment_expression -> LeftToken(),
                                        assignment_expression -> RightToken());
                     }
