@@ -236,7 +236,7 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
 #ifdef HAVE_LIB_ICU_UC
                 encoding = new char[strlen(arguments.argv[++i]) + 1];
                 strcpy(encoding, arguments.argv[i]);
-                UErrorCode err=ZERO_ERROR;
+                UErrorCode err=U_ZERO_ERROR;
                 converter=ucnv_open(encoding, &err);
                 if(!converter)
                     bad_options.Next() = new OptionError(SemanticError::UNSUPPORTED_ENCODING, encoding); 
