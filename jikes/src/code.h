@@ -14,6 +14,10 @@
 #include <ctype.h>
 #include <assert.h>
 
+#ifdef HAVE_LIB_ICU_UC
+# include <uchar.h>
+#endif
+
 class Code
 {
     //
@@ -41,11 +45,6 @@ class Code
     static char code[39424];
     static char *base[512];
 
-#ifdef EBCDIC
-    static char to_ascii[256];
-    static char to_ebcdic[256];
-#endif
-
 public:
 
     static inline void SetBadCode(wchar_t c)
@@ -72,38 +71,57 @@ public:
 
     static inline bool IsSpace(wchar_t c)
     {
+#ifdef HAVE_LIB_ICU_UC
+        return u_isspace(c);
+#else
         return base[c >> LOG_COMPLEMENT_SIZE][c] <= SPACE_CODE;
+#endif        
     }
 
     static inline bool IsDigit(wchar_t c)
     {
+#ifdef HAVE_LIB_ICU_UC
+        return u_isdigit(c);
+#else
         return base[c >> LOG_COMPLEMENT_SIZE][c] == DIGIT_CODE;
+#endif        
     }
 
     static inline bool IsUpper(wchar_t c)
     {
+#ifdef HAVE_LIB_ICU_UC
+        return u_isupper(c);
+#else
         return base[c >> LOG_COMPLEMENT_SIZE][c] == UPPER_CODE;
+#endif        
     }
 
     static inline bool IsLower(wchar_t c)
     {
+#ifdef HAVE_LIB_ICU_UC
+        return u_islower(c);
+#else
         return base[c >> LOG_COMPLEMENT_SIZE][c] == LOWER_CODE;
+#endif        
     }
 
     static inline bool IsAlpha(wchar_t c)
     {
+#ifdef HAVE_LIB_ICU_UC
+        return u_isalpha(c);
+#else
         return base[c >> LOG_COMPLEMENT_SIZE][c] >= LOWER_CODE;
+#endif        
     }
 
     static inline bool IsAlnum(wchar_t c)
     {
+#ifdef HAVE_LIB_ICU_UC
+        return IsAlpha(c)|IsDigit(c);
+#else
         return base[c >> LOG_COMPLEMENT_SIZE][c] >= DIGIT_CODE;
+#endif        
     }
-
-#ifdef EBCDIC
-    static inline char ToASCII(char c)         { return to_ascii[c]; }
-    static inline char ToEBCDIC(char c)        { return to_ebcdic[c]; }
-#endif
 
 };
 

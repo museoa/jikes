@@ -18,6 +18,10 @@
 #include "code.h"
 #include "tuple.h"
 
+#ifdef HAVE_LIB_ICU_UC
+# include <ucnv.h>
+#endif
+
 class ArgumentExpander
 {
 public:
@@ -108,8 +112,13 @@ public:
     char *default_path,
          *classpath,
          *directory,
-         *makefile_name;
+         *makefile_name,
+         *encoding;
 
+#ifdef HAVE_LIB_ICU_UC
+         UConverter *converter;
+#endif
+         
     Tuple<KeywordMap> keyword_map;
     Tuple<OptionError *> bad_options;
 
@@ -137,7 +146,6 @@ public:
          unzip,
          dump_errors,
          errors,
-         ascii, // used on EBCDIC systems to AVOID input translation from EBCDIC to ASCII
          comments,
          pedantic;
 

@@ -9,6 +9,7 @@ ERASE=@ERASE@
 EXECUTABLE=@EXECUTABLE@
 LD=@LD@
 LDFLAGS=@LDFLAGS@
+LIBS=@LIBS@
 SYSOBJECTS=@SYSOBJECTS@
 
 
@@ -51,7 +52,7 @@ OBJECTS=jikes.@O@ scanner.@O@ code.@O@ zip.@O@ unzip.@O@ \
         incrmnt.@O@ case.@O@ tab.@O@ segment.@O@
 
 $(EXECUTABLE):	$(OBJECTS)
-	$(LD) $(LDFLAGS)  $(OBJECTS) $(SYSOBJECTS)
+	$(LD) $(LDFLAGS)  $(OBJECTS) $(SYSOBJECTS) $(LIBS)
 
 
 javasym.h: $(srcdir)/java.g

@@ -289,6 +289,19 @@ void LexStream::Dump(); // temporary function used to dump token stream.
 
 private:
 
+    int hexvalue(wchar_t ch);
+    
+    enum UnicodeLexerState
+    {
+        RAW,
+        CR,
+        QUOTE,
+        UNICODE_ESCAPE,
+        UNICODE_ESCAPE_DIGIT_0,
+        UNICODE_ESCAPE_DIGIT_1,
+        UNICODE_ESCAPE_DIGIT_2,
+    };
+    
     friend class Scanner;
 
     class Token

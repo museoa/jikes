@@ -563,9 +563,6 @@ bool DiagnoseParser::MergeCandidate(int state, int buffer_position)
                 while (*p0 != U_NULL)
                 {
                     wchar_t c = *(p3++);
-#ifdef EBCDIC
-                    c = Code::ToASCII(c);
-#endif
 
                     if (Case::ToAsciiLower(*p0) != Case::ToAsciiLower(c))
                         break;
@@ -1171,9 +1168,6 @@ int DiagnoseParser::Misspell(int sym, TokenObject tok)
     for (int i = name_start[terminal_index[sym]], j = 0; j < len; i++, j++)
     {
         wchar_t c = string_buffer[i];
-#ifdef EBCDIC
-        c = Code::ToASCII(c);
-#endif
         keyword[j] = c;
     }
     keyword[len] = U_NULL;

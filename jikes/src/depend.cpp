@@ -275,30 +275,11 @@ void TypeDependenceChecker::OutputMake(FILE *outfile, char *output_name, Tuple<F
         strncpy(java_name, name, length);
         strcpy(&java_name[length], FileSymbol::java_suffix);
 
-#ifdef EBCDIC
-        for (char *p = output_name; *p; p++)
-            fprintf(outfile, "%c", Code::ToEBCDIC(*p));
-        fprintf(outfile, " : ");
-        for (char *q = java_name; *q; q++)
-            fprintf(outfile, "%c", Code::ToEBCDIC(*q));
-        fprintf(outfile, "\n");
-#else
         fprintf(outfile, "%s : %s\n", output_name, java_name);
-#endif
 
         if (i > 0) // Not the first file in the list
         {
-
-#ifdef EBCDIC
-            for (char *p = output_name; *p; p++)
-                fprintf(outfile, "%c", Code::ToEBCDIC(*p));
-            fprintf(outfile, " : ");
-            for (char *q = class_name; *q; q++)
-                fprintf(outfile, "%c", Code::ToEBCDIC(*q));
-            fprintf(outfile, "\n");
-#else
             fprintf(outfile, "%s : %s\n", output_name, class_name);
-#endif
         }
 
         delete [] class_name;
