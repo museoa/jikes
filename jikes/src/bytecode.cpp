@@ -751,7 +751,8 @@ void ByteCode::DeclareLocalVariable(AstVariableDeclarator* declarator)
             code_attribute -> CodeLength();
     }
 
-    if (declarator -> symbol -> Type() -> num_dimensions > 255)
+    TypeSymbol* type = declarator -> symbol -> Type();
+    if (type -> num_dimensions > 255)
         semantic.ReportSemError(SemanticError::ARRAY_OVERFLOW, declarator);
 
     if (declarator -> symbol -> initial_value)
@@ -769,21 +770,39 @@ void ByteCode::DeclareLocalVariable(AstVariableDeclarator* declarator)
     {
         AstArrayCreationExpression* ace = declarator ->
             variable_initializer_opt -> ArrayCreationExpressionCast();
+        AstArrayInitializer* ai = declarator ->
+            variable_initializer_opt -> ArrayInitializerCast();
         if (ace)
             EmitArrayCreationExpression(ace);
-        else if (declarator -> variable_initializer_opt ->
-                 ArrayInitializerCast())
-        {
-            InitializeArray(declarator -> symbol -> Type(),
-                            declarator -> variable_initializer_opt -> ArrayInitializerCast());
-        }
+        else if (ai)
+            InitializeArray(type, ai);
         else // evaluation as expression
-            EmitExpression(declarator -> variable_initializer_opt -> ExpressionCast());
+        {
+            AstExpression* expr =
+                (AstExpression*) declarator -> variable_initializer_opt;
+            assert(declarator -> variable_initializer_opt -> ExpressionCast());
+            EmitExpression(expr);
+            //
+            // Prior to JDK 1.5, VMs incorrectly complained if assigning an
+            // array type into an element of a null expression (in other
+            // words, null was not being treated as compatible with a
+            // multi-dimensional array on the aastore opcode).  The
+            // workaround requires a checkcast any time null might be
+            // assigned to a multi-dimensional local variable or directly
+            // used as an array access base.
+            //
+            if (control.option.target < JikesOption::SDK1_5 &&
+                type -> num_dimensions > 1 &&
+                (StripNops(expr) -> Type() == control.null_type))
+            {
+                PutOp(OP_CHECKCAST);
+                PutU2(RegisterClass(type -> signature));
+            }
+        }
     }
     else return; // if nothing to initialize
 
-    StoreLocal(declarator -> symbol -> LocalVariableIndex(),
-               declarator -> symbol -> Type());
+    StoreLocal(declarator -> symbol -> LocalVariableIndex(), type);
 }
 
 
@@ -3819,6 +3838,24 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression* assignment_expre
         }
         break;
     case LOCAL_VAR:
+        //
+        // Prior to JDK 1.5, VMs incorrectly complained if assigning an array
+        // type into an element of a null expression (in other words, null
+        // was not being treated as compatible with a multi-dimensional array
+        // on the aastore opcode).  The workaround requires a checkcast any
+        // time null might be assigned to a multi-dimensional local variable
+        // or directly used as an array access base.
+        //
+        if (control.option.target < JikesOption::SDK1_5 &&
+            left_type -> num_dimensions > 1 &&
+            (StripNops(assignment_expression -> expression) -> Type() ==
+             control.null_type))
+        {
+            assert(assignment_expression -> SimpleAssignment());
+            PutOp(OP_CHECKCAST);
+            PutU2(RegisterClass(left_type -> signature));
+        }
+        // fallthrough
     case STATIC_VAR:
         if (need_value)
             PutOp(control.IsDoubleWordType(left_type) ? OP_DUP2 : OP_DUP);
@@ -4991,6 +5028,31 @@ void ByteCode::EmitNewArray(unsigned num_dims, const TypeSymbol* type)
     }
 }
 
+
+//
+// Initial part of array access: ready to either load or store after this.
+//
+void ByteCode::EmitArrayAccessLhs(AstArrayAccess* expression)
+{
+    TypeSymbol* base_type = expression -> base -> Type();
+    AstExpression* base = StripNops(expression -> base);
+    EmitExpression(base);
+    if (control.option.target < JikesOption::SDK1_5 &&
+        base_type -> num_dimensions > 1 && base -> Type() == control.null_type)
+    {
+        //
+        // Prior to JDK 1.5, VMs incorrectly complained if assigning an array
+        // type into an element of a null expression (in other words, null
+        // was not being treated as compatible with a multi-dimensional array
+        // on the aastore opcode).  The workaround requires a checkcast any
+        // time null might be assigned to a multi-dimensional local variable
+        // or directly used as an array access base.
+        //
+        PutOp(OP_CHECKCAST);
+        PutU2(RegisterClass(base_type -> signature));
+    }
+    EmitExpression(expression -> expression);
+}
 
 //
 // POST_UNARY

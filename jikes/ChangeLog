@@ -1,3 +1,12 @@
+2004-01-20  Eric Blake  <ebb9@byu.net>
+
+	* src/bytecode.h (ArrayAccessLhs): Move to bytecode.cpp.
+	* src/bytecode.cpp (DeclareLocalVariable),
+	(EmitAssignmentExpression, EmitArrayAccessLhs): Emit checkcast
+	when treating null as multidimensional array, since pre-1.5 VMs
+	incorrectly choke on aastore.
+	* NEWS: Document.
+
 2004-01-19  Eric Blake  <ebb9@byu.net>
 
 	* src/class.h: Backport improved .class file handling from

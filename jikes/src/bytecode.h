@@ -908,13 +908,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     AstExpression* StripNops(AstExpression*);
     bool IsNop(AstBlock*);
 
-    void EmitArrayAccessLhs(AstArrayAccess* expression)
-    {
-        EmitExpression(expression -> base);
-        EmitExpression(expression -> expression);
-    }
-
-
+    void EmitArrayAccessLhs(AstArrayAccess* expression);
     int EmitArrayAccessRhs(AstArrayAccess* expression)
     {
         EmitArrayAccessLhs(expression); // get array address and index

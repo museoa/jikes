@@ -25,6 +25,9 @@ since it always results in a NullPointerException being thrown. This
 also means that throwing null does not make a checked exception catch
 clause reachable.
 
+The compiler now works around a bug in VMs when storing an array into
+a multi-dimensional array expression that happened to be null.
+
 FIXME: What other big changes have been added?
 
 *** Jikes 1.18 was released 21 November 2002.
