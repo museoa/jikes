@@ -1,3 +1,8 @@
+2000-07-22  Mo DeJong  <mdejong@redhat.com>
+
+	* configure.in: Do not check for the stdc++ library.
+	* src/java.g: Include platform.h not config.h.
+
 2000-07-22  C. Scott Ananian  <cananian@lesser-magoo.lcs.mit.edu>
 
 	* src/error.cpp (PrintRETURN_STATEMENT_IN_INITIALIZER,
