@@ -1128,11 +1128,11 @@ void ByteCode::EmitStatement(AstStatement *statement)
             AstIfStatement *if_statement = (AstIfStatement *) statement;
             if (IsOne(if_statement -> expression))
                 EmitStatement(if_statement -> true_statement);
-            else if (IsZero(if_statement -> expression) &&
-                     if_statement -> false_statement_opt)
+            else if (IsZero(if_statement -> expression))
             {
                 // if there is false part
-                EmitStatement(if_statement -> false_statement_opt);
+                if (if_statement -> false_statement_opt)
+                    EmitStatement(if_statement -> false_statement_opt);
             }
             else if (if_statement -> false_statement_opt)
             {
