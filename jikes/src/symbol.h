@@ -767,7 +767,6 @@ public:
     char *Utf8Name() { return (char *) (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> value : NULL); }
     int Utf8NameLength() { return (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0); }
 
-    char *FullyQualifiedName();
 
     void SetExternalIdentity(NameSymbol *external_name_symbol_) { external_name_symbol = external_name_symbol_; }
     NameSymbol *ExternalIdentity()

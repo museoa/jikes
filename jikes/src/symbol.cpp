@@ -17,7 +17,6 @@
 #include "table.h"
 #include "zip.h"
 #include "set.h"
-#include <strstream.h>
 #include "case.h"
 
 #ifdef UNIX_FILE_SYSTEM
@@ -1925,27 +1924,3 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member)
 }
 
 
-// Problem:  there's no way to know whether the value can be safely deleted.
-// I could fix this by:
-//  * storing it to fully_qualified_name; then caller never deletes the result
-//  * always allocating a new copy; then caller always deletes the result
-char *TypeSymbol::FullyQualifiedName() {
-    if (fully_qualified_name)
-	return fully_qualified_name -> value;
-    if (!owner)
-	return Utf8Name();
-    ostrstream result_os_base;
-    Ostream result_os(&result_os_base);
-    Symbol *o = owner;
-    if (o -> PackageCast()) {
-	result_os << o -> PackageCast() -> PackageName();
-    } else if (o -> TypeCast()) {
-	result_os << o -> TypeCast() -> FullyQualifiedName();
-    } else {
-	Ostream() << "Huh?  Parent of type.";
-    }
-    result_os << "." << Utf8Name();
-    // I'm having trouble with "result_os << ends;", so cheat.
-    result_os_base << ends;
-    return result_os_base.str();
-}
