@@ -18,7 +18,6 @@
 #include <stddef.h>
 #include <stdio.h>
 #include "tuple.h"
-#include "bool.h"
 #include "unzip.h"
 
 class Control;
