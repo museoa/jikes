@@ -18,6 +18,7 @@
     <a href="/developerworks/mail/?group_id=10">Jikes-Dev list</a>. <small>(and yes, it's also to keep us honest ;)</small></p>
 
     <ul>
+      <li>New developer recruitment.
       <li>Finish the FAQ. (Pascal, Andrew Inggs)
       <li>Finish bringing new web pages online. (Pascal)
       <li>complete the documentation of bug system categories, priorities and groups. (cabbey)
@@ -26,6 +27,7 @@
       <li>Write a class introspector in TCL for use in Jacks testcases. (earmarked for cabbey)
       <li>Move the old Sun Queries from the research database to a web page.
       <li>Fix the bugs that are known, triage the ones that are brand new.
+      <li>Update both todo lists.
     </ul>
 
     <p>This is of course an open source document, so if there's something I've missed just post a patch to the list.</p>
