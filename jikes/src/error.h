@@ -252,6 +252,11 @@ public:
         TYPE_IN_WRONG_PACKAGE,
         TYPE_NAME_MISMATCH,
 
+        DEPRECATED_TYPE,
+        DEPRECATED_FIELD,
+        DEPRECATED_METHOD,
+        DEPRECATED_CONSTRUCTOR,
+
         COMPRESSED_ZIP_FILE,
         INVALID_CLASS_FILE,
         CANNOT_OPEN_CLASS_FILE,
@@ -572,6 +577,11 @@ private:
     static void PrintTYPE_NOT_IN_UNNAMED_PACKAGE(ErrorInfo &, LexStream *, Control &);
     static void PrintTYPE_IN_WRONG_PACKAGE(ErrorInfo &, LexStream *, Control &);
     static void PrintTYPE_NAME_MISMATCH(ErrorInfo &, LexStream *, Control &);
+
+    static void PrintDEPRECATED_TYPE(ErrorInfo &, LexStream *, Control &);
+    static void PrintDEPRECATED_FIELD(ErrorInfo &, LexStream *, Control &);
+    static void PrintDEPRECATED_METHOD(ErrorInfo &, LexStream *, Control &);
+    static void PrintDEPRECATED_CONSTRUCTOR(ErrorInfo &, LexStream *, Control &);
 
     static void PrintCOMPRESSED_ZIP_FILE(ErrorInfo &, LexStream *, Control &);
     static void PrintINVALID_CLASS_FILE(ErrorInfo &, LexStream *, Control &);

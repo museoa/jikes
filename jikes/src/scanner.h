@@ -45,6 +45,9 @@ private:
     LexStream* lex;
     wchar_t *cursor;
 
+    LexStream::Token *current_token;
+    LexStream::TokenIndex current_token_index;
+
     void Initialize(FileSymbol *);
     void Scan();
 

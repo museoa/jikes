@@ -126,10 +126,9 @@ void Scanner::Initialize(FileSymbol *file_symbol)
     lex = new LexStream(control, file_symbol);
     lex -> Reset();
 
-    LexStream::Token *current_token = &(lex -> token_stream.Next()); // add 0th token !
+    current_token_index = lex -> GetNextToken(0); // Get 0th token !
+    current_token = &(lex -> token_stream[current_token_index]);
     current_token -> SetKind(0);
-    current_token -> SetLocation(0);
-    current_token -> SetSymbol(NULL);
 
     if (control.option.comments)
     {
@@ -176,6 +175,7 @@ void Scanner::Scan(FileSymbol *file_symbol)
     if (cursor)
     {
         Scan();
+
         lex -> CompressSpace();
 
         //
@@ -218,6 +218,13 @@ void Scanner::Scan()
     do
     {
         SkipSpaces();
+
+        //
+        // Allocate space for next token and set its location.
+        //
+        current_token_index = lex -> GetNextToken(cursor - lex -> InputBuffer());
+        current_token = &(lex -> token_stream[current_token_index]);
+
         (this ->* classify_token[*cursor < 128 ? *cursor : 128])();
     } while (cursor < input_buffer_tail);
 
@@ -231,9 +238,11 @@ void Scanner::Scan()
     // braces in the input. Each unmatched left brace should point to 
     // the EOF token as a substitute for a matching right brace.
     //
+    assert(current_token_index == lex -> token_stream.Length() - 1);
+
     for (LexStream::TokenIndex left_brace = brace_stack.Top(); left_brace; left_brace = brace_stack.Top())
     {
-        lex -> token_stream[left_brace].SetRightBrace(lex -> token_stream.Length() - 1);
+        lex -> token_stream[left_brace].SetRightBrace(current_token_index);
         brace_stack.Pop();
     }
 
@@ -244,41 +253,93 @@ void Scanner::Scan()
 //
 // CURSOR points to the starting position of a comment.  Scan the      
 // the comment and return the location of the character immediately   
-// following it. CURSOR may be destroyed.                              
+// following it. CURSOR is advanced accordingly.
 //
 void Scanner::ScanStarComment()
 {
     LexStream::Comment *current_comment = (control.option.comments ? &(lex -> comment_stream.Next()) : new LexStream::Comment());
     current_comment -> string = NULL;
-    current_comment -> previous_token = lex -> token_stream.Length() - 2; // the token that precedes this comment
+    current_comment -> previous_token = current_token_index; // the token that precedes this comment
     current_comment -> location = cursor - lex -> InputBuffer();
 
     cursor += 2;
 
-    for (;;)
+    //
+    // If this comment starts with the prefix "/**" then, it may be a document
+    // comment. Check whether or not it contains the deprecated tag and if so,
+    // mark the token preceeding it.
+    //
+    if (*cursor == U_STAR)
     {
-        while (*cursor != U_STAR && (! Code::IsNewline(*cursor)) && *cursor != U_CTL_Z)
-            cursor++;
-
-        if (*cursor == U_STAR) // Potential comment closer 
+        for (;;)
         {
-            while (*++cursor == U_STAR)
-                ;
-            if (*cursor == U_SLASH)
+            while (*cursor != U_STAR && (! Code::IsNewline(*cursor)) && *cursor != U_CTL_Z)
+            {
+                if (cursor[0] == U_AT &&
+                    cursor[1] == U_d &&
+                    cursor[2] == U_e &&
+                    cursor[3] == U_p &&
+                    cursor[4] == U_r &&
+                    cursor[5] == U_e &&
+                    cursor[6] == U_c &&
+                    cursor[7] == U_a &&
+                    cursor[8] == U_t &&
+                    cursor[9] == U_e &&
+                    cursor[10] == U_d)
+                {
+                    current_token -> SetDeprecated(); // the token that precedes this comment
+                }
+                cursor++;
+            }
+
+            if (*cursor == U_STAR) // Potential comment closer 
+            {
+                while (*++cursor == U_STAR)
+                    ;
+                if (*cursor == U_SLASH)
+                {
+                    cursor++;
+                    current_comment -> length = (cursor - lex -> InputBuffer()) - current_comment -> location;
+                    if (! control.option.comments)
+                        delete current_comment;
+                    return;
+                }
+            }
+            else if (Code::IsNewline(*cursor)) // Record new line 
             {
                 cursor++;
-                current_comment -> length = (cursor - lex -> InputBuffer()) - current_comment -> location;
-                if (! control.option.comments)
-                    delete current_comment;
-                return;
+                lex -> line_location.Next() = cursor - lex -> InputBuffer();
             }
+            else break;
         }
-        else if (Code::IsNewline(*cursor)) // Record new line 
+    }
+    else
+    {
+        for (;;)
         {
-            cursor++;
-            lex -> line_location.Next() = cursor - lex -> InputBuffer();
+            while (*cursor != U_STAR && (! Code::IsNewline(*cursor)) && *cursor != U_CTL_Z)
+                cursor++;
+
+            if (*cursor == U_STAR) // Potential comment closer 
+            {
+                while (*++cursor == U_STAR)
+                    ;
+                if (*cursor == U_SLASH)
+                {
+                    cursor++;
+                    current_comment -> length = (cursor - lex -> InputBuffer()) - current_comment -> location;
+                    if (! control.option.comments)
+                        delete current_comment;
+                    return;
+                }
+            }
+            else if (Code::IsNewline(*cursor)) // Record new line 
+            {
+                cursor++;
+                lex -> line_location.Next() = cursor - lex -> InputBuffer();
+            }
+            else break;
         }
-        else break;
     }
 
     lex -> bad_tokens.Next().Initialize(StreamError::UNTERMINATED_COMMENT,
@@ -303,7 +364,7 @@ void Scanner::ScanSlashComment()
     {
         LexStream::Comment *current_comment = &(lex -> comment_stream.Next());
         current_comment -> string = NULL;
-        current_comment -> previous_token = lex -> token_stream.Length() - 2;  // the token that precedes this comment
+        current_comment -> previous_token = current_token_index;  // the token that precedes this comment
         current_comment -> location = cursor - lex -> InputBuffer();
         for (cursor += 2; ! Code::IsNewline(*cursor); cursor++)  // skip all until \n
             ;
@@ -701,8 +762,6 @@ inline void Scanner::CheckOctalLiteral(wchar_t *cursor, wchar_t *tail)
 /**********************************************************************/
 void Scanner::ClassifyCharLiteral()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
     current_token -> SetKind(TK_CharacterLiteral);
 
     wchar_t *ptr = cursor + 1;
@@ -753,8 +812,6 @@ void Scanner::ClassifyCharLiteral()
 /**********************************************************************/
 void Scanner::ClassifyStringLiteral()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
     current_token -> SetKind(TK_StringLiteral);
 
     wchar_t *ptr = cursor + 1;
@@ -817,9 +874,6 @@ void Scanner::ClassifyStringLiteral()
 /**********************************************************************/
 void Scanner::ClassifyIdOrKeyword()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
-
     wchar_t *ptr = cursor + 1;
 
     while (Code::IsAlnum(*ptr))
@@ -836,17 +890,19 @@ void Scanner::ClassifyIdOrKeyword()
                 current_token -> SetKind(control.option.keyword_map[i].key);
         }
     }
-    else
+    else if (current_token -> Kind() == TK_class || current_token -> Kind() == TK_interface)
     {
-        current_token -> SetSymbol(NULL);
-        if (current_token -> Kind() == TK_class || current_token -> Kind() == TK_interface)
-        {
-            if (brace_stack.Size() == 0) // This type keyword is not nested.
-                lex -> type_index.Next() = lex -> token_stream.Length() - 1;
-        }
+        //
+        // This type keyword is not nested. When we encounter an occurrence of the keyword
+        // class or interface that is not enclosed in at least one set of braces, we keep track
+        // of it by adding it to a list.
+        //
+        if (brace_stack.Size() == 0)
+            lex -> type_index.Next() = current_token_index;
     }
 
     cursor = ptr;
+
     return;
 }
 
@@ -859,9 +915,6 @@ void Scanner::ClassifyIdOrKeyword()
 /**********************************************************************/
 void Scanner::ClassifyId()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
-
     wchar_t *ptr = cursor + 1;
 
     while (Code::IsAlnum(*ptr))
@@ -900,9 +953,6 @@ void Scanner::ClassifyId()
 /**********************************************************************/
 void Scanner::ClassifyNumericLiteral()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
-
     /******************************************************************/
     /* Scan the initial sequence of digits if any.                    */
     /******************************************************************/
@@ -1043,10 +1093,7 @@ void Scanner::ClassifyNumericLiteral()
 /**********************************************************************/
 void Scanner::ClassifyColon()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
     current_token -> SetKind(TK_COLON);
-    current_token -> SetSymbol(NULL);
 
     cursor++;
 
@@ -1059,9 +1106,6 @@ void Scanner::ClassifyColon()
 /**********************************************************************/
 void Scanner::ClassifyPlus()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
-
     cursor++;
 
     if (*cursor == U_PLUS)
@@ -1075,7 +1119,6 @@ void Scanner::ClassifyPlus()
         current_token -> SetKind(TK_PLUS_EQUAL);
     }
     else current_token -> SetKind(TK_PLUS);
-    current_token -> SetSymbol(NULL);
 
     return;
 }
@@ -1086,9 +1129,6 @@ void Scanner::ClassifyPlus()
 /**********************************************************************/
 void Scanner::ClassifyMinus()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
-
     cursor++;
 
     if (*cursor == U_MINUS)
@@ -1102,7 +1142,6 @@ void Scanner::ClassifyMinus()
         current_token -> SetKind(TK_MINUS_EQUAL);
     }
     else current_token -> SetKind(TK_MINUS);
-    current_token -> SetSymbol(NULL);
 
     return;
 }
@@ -1113,9 +1152,6 @@ void Scanner::ClassifyMinus()
 /**********************************************************************/
 void Scanner::ClassifyStar()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
-
     cursor++;
 
     if (*cursor == U_EQUAL)
@@ -1124,7 +1160,6 @@ void Scanner::ClassifyStar()
         current_token -> SetKind(TK_MULTIPLY_EQUAL);
     }
     else current_token -> SetKind(TK_MULTIPLY);
-    current_token -> SetSymbol(NULL);
 
     return;
 }
@@ -1135,9 +1170,6 @@ void Scanner::ClassifyStar()
 /**********************************************************************/
 void Scanner::ClassifySlash()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
-
     cursor++;
 
     if (*cursor == U_EQUAL)
@@ -1146,7 +1178,6 @@ void Scanner::ClassifySlash()
         current_token -> SetKind(TK_DIVIDE_EQUAL);
     }
     else current_token -> SetKind(TK_DIVIDE);
-    current_token -> SetSymbol(NULL);
 
     return;
 }
@@ -1157,9 +1188,6 @@ void Scanner::ClassifySlash()
 /**********************************************************************/
 void Scanner::ClassifyLess()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
-
     cursor++;
 
     if (*cursor == U_EQUAL)
@@ -1179,7 +1207,6 @@ void Scanner::ClassifyLess()
         else current_token -> SetKind(TK_LEFT_SHIFT);
     }
     else current_token -> SetKind(TK_LESS);
-    current_token -> SetSymbol(NULL);
 
     return;
 }
@@ -1190,9 +1217,6 @@ void Scanner::ClassifyLess()
 /**********************************************************************/
 void Scanner::ClassifyGreater()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
-
     cursor++;
 
     if (*cursor == U_EQUAL)
@@ -1223,7 +1247,6 @@ void Scanner::ClassifyGreater()
         else current_token -> SetKind(TK_RIGHT_SHIFT);
     }
     else current_token -> SetKind(TK_GREATER);
-    current_token -> SetSymbol(NULL);
 
     return;
 }
@@ -1234,9 +1257,6 @@ void Scanner::ClassifyGreater()
 /**********************************************************************/
 void Scanner::ClassifyAnd()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
-
     cursor++;
 
     if (*cursor == U_AMPERSAND)
@@ -1250,7 +1270,6 @@ void Scanner::ClassifyAnd()
         current_token -> SetKind(TK_AND_EQUAL);
     }
     else current_token -> SetKind(TK_AND);
-    current_token -> SetSymbol(NULL);
 
     return;
 }
@@ -1261,9 +1280,6 @@ void Scanner::ClassifyAnd()
 /**********************************************************************/
 void Scanner::ClassifyOr()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
-
     cursor++;
 
     if (*cursor == U_BAR)
@@ -1277,7 +1293,6 @@ void Scanner::ClassifyOr()
         current_token -> SetKind(TK_OR_EQUAL);
     }
     else current_token -> SetKind(TK_OR);
-    current_token -> SetSymbol(NULL);
 
     return;
 }
@@ -1288,9 +1303,6 @@ void Scanner::ClassifyOr()
 /**********************************************************************/
 void Scanner::ClassifyXor()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
-
     cursor++;
 
     if (*cursor == U_EQUAL)
@@ -1299,7 +1311,6 @@ void Scanner::ClassifyXor()
         current_token -> SetKind(TK_XOR_EQUAL);
     }
     else current_token -> SetKind(TK_XOR);
-    current_token -> SetSymbol(NULL);
 
     return;
 }
@@ -1310,9 +1321,6 @@ void Scanner::ClassifyXor()
 /**********************************************************************/
 void Scanner::ClassifyNot()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
-
     cursor++;
 
     if (*cursor == U_EQUAL)
@@ -1321,7 +1329,6 @@ void Scanner::ClassifyNot()
         current_token -> SetKind(TK_NOT_EQUAL);
     }
     else current_token -> SetKind(TK_NOT);
-    current_token -> SetSymbol(NULL);
 
     return;
 }
@@ -1332,9 +1339,6 @@ void Scanner::ClassifyNot()
 /**********************************************************************/
 void Scanner::ClassifyEqual()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
-
     cursor++;
 
     if (*cursor == U_EQUAL)
@@ -1343,7 +1347,6 @@ void Scanner::ClassifyEqual()
         current_token -> SetKind(TK_EQUAL_EQUAL);
     }
     else current_token -> SetKind(TK_EQUAL);
-    current_token -> SetSymbol(NULL);
 
     return;
 }
@@ -1354,9 +1357,6 @@ void Scanner::ClassifyEqual()
 /**********************************************************************/
 void Scanner::ClassifyMod()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
-
     cursor++;
 
     if (*cursor == U_EQUAL)
@@ -1365,7 +1365,6 @@ void Scanner::ClassifyMod()
         current_token -> SetKind(TK_REMAINDER_EQUAL);
     }
     else current_token -> SetKind(TK_REMAINDER);
-    current_token -> SetSymbol(NULL);
 
     return;
 }
@@ -1380,10 +1379,7 @@ void Scanner::ClassifyPeriod()
         ClassifyNumericLiteral();
     else
     {
-        LexStream::Token *current_token = &(lex -> token_stream.Next());
-        current_token -> SetLocation(cursor - lex -> InputBuffer());
         current_token -> SetKind(TK_DOT);
-        current_token -> SetSymbol(NULL);
 
         cursor++;
     }
@@ -1397,10 +1393,7 @@ void Scanner::ClassifyPeriod()
 /**********************************************************************/
 void Scanner::ClassifySemicolon()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
     current_token -> SetKind(TK_SEMICOLON);
-    current_token -> SetSymbol(NULL);
 
     cursor++;
 
@@ -1413,10 +1406,7 @@ void Scanner::ClassifySemicolon()
 /**********************************************************************/
 void Scanner::ClassifyComma()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
     current_token -> SetKind(TK_COMMA);
-    current_token -> SetSymbol(NULL);
 
     cursor++;
 
@@ -1434,10 +1424,8 @@ void Scanner::ClassifyLbrace()
     // When we encounter its matching right brace, we use the symbol field
     // to identify its counterpart.
     //
-    brace_stack.Push(lex -> token_stream.Length());
+    brace_stack.Push(current_token_index);
 
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
     current_token -> SetKind(TK_LBRACE);
 
     cursor++;
@@ -1459,14 +1447,11 @@ void Scanner::ClassifyRbrace()
     LexStream::TokenIndex left_brace = brace_stack.Top();
     if (left_brace) // This right brace is matched by a left one
     {
-        lex -> token_stream[left_brace].SetRightBrace(lex -> token_stream.Length());
+        lex -> token_stream[left_brace].SetRightBrace(current_token_index);
         brace_stack.Pop();
     }
 
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
     current_token -> SetKind(TK_RBRACE);
-    current_token -> SetSymbol(NULL);
 
     cursor++;
 
@@ -1479,10 +1464,7 @@ void Scanner::ClassifyRbrace()
 /**********************************************************************/
 void Scanner::ClassifyLparen()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
     current_token -> SetKind(TK_LPAREN);
-    current_token -> SetSymbol(NULL);
 
     cursor++;
 
@@ -1495,10 +1477,7 @@ void Scanner::ClassifyLparen()
 /**********************************************************************/
 void Scanner::ClassifyRparen()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
     current_token -> SetKind(TK_RPAREN);
-    current_token -> SetSymbol(NULL);
 
     cursor++;
 
@@ -1511,10 +1490,7 @@ void Scanner::ClassifyRparen()
 /**********************************************************************/
 void Scanner::ClassifyLbracket()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
     current_token -> SetKind(TK_LBRACKET);
-    current_token -> SetSymbol(NULL);
 
     cursor++;
 
@@ -1527,10 +1503,7 @@ void Scanner::ClassifyLbracket()
 /**********************************************************************/
 void Scanner::ClassifyRbracket()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
     current_token -> SetKind(TK_RBRACKET);
-    current_token -> SetSymbol(NULL);
 
     cursor++;
 
@@ -1543,10 +1516,7 @@ void Scanner::ClassifyRbracket()
 /**********************************************************************/
 void Scanner::ClassifyComplement()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
     current_token -> SetKind(TK_TWIDDLE);
-    current_token -> SetSymbol(NULL);
 
     cursor++;
 
@@ -1559,16 +1529,19 @@ void Scanner::ClassifyComplement()
 /**********************************************************************/
 void Scanner::ClassifyBadToken()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
-    current_token -> SetKind(0);
-    current_token -> SetSymbol(control.FindOrInsertName(cursor, 1));
-
     if (++cursor < &lex -> InputBuffer()[lex -> InputBufferLength()]) // not the terminating character?
+    {
+         current_token -> SetKind(0);
+         current_token -> SetSymbol(control.FindOrInsertName(cursor - 1, 1));
+
          lex -> bad_tokens.Next().Initialize(StreamError::BAD_TOKEN,
                                              current_token -> Location(),
                                              current_token -> Location());
-    else current_token -> SetKind(TK_EOF);
+    }
+    else
+    {
+        current_token -> SetKind(TK_EOF);
+    }
 
     return;
 }
@@ -1580,10 +1553,7 @@ void Scanner::ClassifyBadToken()
 /**********************************************************************/
 void Scanner::ClassifyQuestion()
 {
-    LexStream::Token *current_token = &(lex -> token_stream.Next());
-    current_token -> SetLocation(cursor - lex -> InputBuffer());
     current_token -> SetKind(TK_QUESTION);
-    current_token -> SetSymbol(NULL);
 
     cursor++;
 

@@ -323,6 +323,17 @@ MethodSymbol *Semantic::FindConstructor(TypeSymbol *containing_type, Ast *ast,
     //
     constructor_set[0] -> ProcessMethodThrows((Semantic *) this, right_tok);
 
+    if (constructor_set[0] -> IsDeprecated() &&
+        constructor_set[0] -> containing_type -> outermost_type != ThisType() -> outermost_type)
+    {
+        ReportSemError(SemanticError::DEPRECATED_METHOD,
+                       left_tok,
+                       right_tok,
+                       constructor_set[0] -> Header(),
+                       constructor_set[0] -> containing_type -> ContainingPackage() -> PackageName(),
+                       constructor_set[0] -> containing_type -> ExternalName());
+    }
+
     return constructor_set[0];
 }
 
@@ -635,6 +646,16 @@ See comment above...
     //
     method -> ProcessMethodThrows((Semantic *) this, field_access -> identifier_token);
 
+    if (method -> IsDeprecated() && method -> containing_type -> outermost_type != ThisType() -> outermost_type)
+    {
+        ReportSemError(SemanticError::DEPRECATED_METHOD,
+                       method_call -> LeftToken(),
+                       method_call -> RightToken(),
+                       method -> Header(),
+                       method -> containing_type -> ContainingPackage() -> PackageName(),
+                       method -> containing_type -> ExternalName());
+    }
+
     return method;
 }
 
@@ -928,7 +949,20 @@ MethodSymbol *Semantic::FindMethodInEnvironment(SemanticEnvironment *&where_foun
     //
     // If this method came from a class file, make sure that its throws clause has been processed.
     //
-    method_symbol -> ProcessMethodThrows((Semantic *) this, method_call -> method -> RightToken());
+    if (method_symbol)
+    {
+        method_symbol -> ProcessMethodThrows((Semantic *) this, method_call -> method -> RightToken());
+
+        if (method_symbol -> IsDeprecated() && method_symbol -> containing_type -> outermost_type != ThisType() -> outermost_type)
+        {
+            ReportSemError(SemanticError::DEPRECATED_METHOD,
+                           method_call -> LeftToken(),
+                           method_call -> RightToken(),
+                           method_symbol -> Header(),
+                           method_symbol -> containing_type -> ContainingPackage() -> PackageName(),
+                           method_symbol -> containing_type -> ExternalName());
+        }
+    }
 
     return method_symbol;
 }
@@ -990,6 +1024,17 @@ inline VariableSymbol *Semantic::FindVariableInType(TypeSymbol *type, AstFieldAc
         if (variable_symbol -> IsSynthetic())
         {
             ReportSemError(SemanticError::SYNTHETIC_VARIABLE_ACCESS,
+                           field_access -> LeftToken(),
+                           field_access -> RightToken(),
+                           variable_symbol -> Name(),
+                           variable_symbol -> owner -> TypeCast() -> ContainingPackage() -> PackageName(),
+                           variable_symbol -> owner -> TypeCast() -> ExternalName());
+        }
+
+        if (variable_symbol -> IsDeprecated() &&
+            variable_symbol -> owner -> TypeCast() -> outermost_type != ThisType() -> outermost_type)
+        {
+            ReportSemError(SemanticError::DEPRECATED_FIELD,
                            field_access -> LeftToken(),
                            field_access -> RightToken(),
                            variable_symbol -> Name(),
@@ -1227,8 +1272,22 @@ VariableSymbol *Semantic::FindVariableInEnvironment(SemanticEnvironment *&where_
                        variables_found[i] -> owner -> TypeCast() -> ExternalName());
     }
 
-    if (variable_symbol && (! variable_symbol -> IsTyped()))
-        variable_symbol -> ProcessVariableSignature((Semantic *) this, identifier_token);
+    if (variable_symbol)
+    {
+        if (variable_symbol -> IsDeprecated() &&
+            variable_symbol -> owner -> TypeCast() -> outermost_type != ThisType() -> outermost_type)
+        {
+            ReportSemError(SemanticError::DEPRECATED_FIELD,
+                           identifier_token,
+                           identifier_token,
+                           variable_symbol -> Name(),
+                           variable_symbol -> owner -> TypeCast() -> ContainingPackage() -> PackageName(),
+                           variable_symbol -> owner -> TypeCast() -> ExternalName());
+        }
+
+        if (! variable_symbol -> IsTyped())
+            variable_symbol -> ProcessVariableSignature((Semantic *) this, identifier_token);
+    }
 
     return variable_symbol;
 }
@@ -2217,6 +2276,17 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                 VariableSymbol *variable_symbol = type -> FindVariableSymbol(control.type_name_symbol);
 
                 assert(variable_symbol);
+
+                if (variable_symbol -> IsDeprecated() &&
+                    variable_symbol -> owner -> TypeCast() -> outermost_type != ThisType() -> outermost_type)
+                {
+                    ReportSemError(SemanticError::DEPRECATED_FIELD,
+                                   field_access -> identifier_token,
+                                   field_access -> identifier_token,
+                                   variable_symbol -> Name(),
+                                   variable_symbol -> owner -> TypeCast() -> ContainingPackage() -> PackageName(),
+                                   variable_symbol -> owner -> TypeCast() -> ExternalName());
+                }
 
                 if (! variable_symbol -> IsTyped())
                     variable_symbol -> ProcessVariableSignature((Semantic *) this, field_access -> identifier_token);

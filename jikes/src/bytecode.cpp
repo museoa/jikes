@@ -577,6 +577,9 @@ void ByteCode::DeclareField(VariableSymbol *symbol)
     if (symbol -> IsSynthetic())
         fields[field_index].AddAttribute(CreateSyntheticAttribute());
 
+    if (symbol -> IsDeprecated())
+        fields[field_index].AddAttribute(CreateDeprecatedAttribute());
+
     return;
 }
             
@@ -672,6 +675,9 @@ void ByteCode::BeginMethod(int method_index, MethodSymbol *msym)
 
     if (msym -> IsSynthetic())
         methods[method_index].AddAttribute(CreateSyntheticAttribute());
+
+    if (msym -> IsDeprecated())
+        methods[method_index].AddAttribute(CreateDeprecatedAttribute());
 
     //
     // Generate throws attribute if method throws any exceptions
@@ -5143,6 +5149,9 @@ void ByteCode::FinishCode(TypeSymbol *type)
 
         attributes.Next() = inner_classes_attribute;
     }
+
+    if (type -> IsDeprecated())
+        attributes.Next() = CreateDeprecatedAttribute();
 
     return;
 }

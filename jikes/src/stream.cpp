@@ -119,6 +119,7 @@ wchar_t *LexStream::KeywordName(int kind)
         case TK_COMMA:                      return StringConstant::US_COMMA; break;
         case TK_DOT:                        return StringConstant::US_DOT; break;
         case TK_EQUAL:                      return StringConstant::US_EQUAL; break;
+        case TK_EOF:                        return StringConstant::US_EOF; break;
         default:                            break;
     }
 

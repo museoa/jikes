@@ -253,6 +253,11 @@ void SemanticError::StaticInitializer()
     warning[NO_TYPES] = 1;
     warning[PARENT_TYPE_IN_UNNAMED_PACKAGE] = 1;
 
+    warning[DEPRECATED_TYPE] = 1;
+    warning[DEPRECATED_FIELD] = 1;
+    warning[DEPRECATED_METHOD] = 1;
+    warning[DEPRECATED_CONSTRUCTOR] = 1;
+
     warning[UNNECESSARY_TYPE_IMPORT] = 1;
     warning[MULTIPLE_PUBLIC_TYPES] = 1;
     warning[TYPE_IN_MULTIPLE_FILES] = 1;
@@ -518,6 +523,11 @@ void SemanticError::StaticInitializer()
     print_message[TYPE_NOT_IN_UNNAMED_PACKAGE] = PrintTYPE_NOT_IN_UNNAMED_PACKAGE;
     print_message[TYPE_IN_WRONG_PACKAGE] = PrintTYPE_IN_WRONG_PACKAGE;
     print_message[TYPE_NAME_MISMATCH] = PrintTYPE_NAME_MISMATCH;
+
+    print_message[DEPRECATED_TYPE] = PrintDEPRECATED_TYPE;
+    print_message[DEPRECATED_FIELD] = PrintDEPRECATED_FIELD;
+    print_message[DEPRECATED_METHOD] = PrintDEPRECATED_METHOD;
+    print_message[DEPRECATED_CONSTRUCTOR] = PrintDEPRECATED_CONSTRUCTOR;
 
     print_message[COMPRESSED_ZIP_FILE] = PrintCOMPRESSED_ZIP_FILE;
     print_message[INVALID_CLASS_FILE] = PrintINVALID_CLASS_FILE;
@@ -3979,6 +3989,72 @@ void SemanticError::PrintTYPE_NAME_MISMATCH(ErrorInfo &err, LexStream *lex_strea
     cout << "\", does not match the name found in the class file: \"";
     Unicode::Cout(err.insert3);
     cout << "\".";
+
+    return;
+}
+
+
+void SemanticError::PrintDEPRECATED_TYPE(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "The type \"";
+    if (NotDot(err.insert1))
+    {
+        Unicode::Cout(err.insert1);
+        cout << "/";
+    }
+    Unicode::Cout(err.insert2);
+    cout << "\" has been deprecated.";
+
+    return;
+}
+
+
+void SemanticError::PrintDEPRECATED_FIELD(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "The variable \"";
+    Unicode::Cout(err.insert1);
+    cout << "\" declared in type \"";
+    if (NotDot(err.insert2))
+    {
+        Unicode::Cout(err.insert2);
+        cout << "/";
+    }
+    Unicode::Cout(err.insert3);
+    cout << "\" has been deprecated.";
+
+    return;
+}
+
+
+void SemanticError::PrintDEPRECATED_METHOD(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "The method \"";
+    Unicode::Cout(err.insert1);
+    cout << "\" declared in type \"";
+    if (NotDot(err.insert2))
+    {
+        Unicode::Cout(err.insert2);
+        cout << "/";
+    }
+    Unicode::Cout(err.insert3);
+    cout << "\" has been deprecated.";
+
+    return;
+}
+
+
+void SemanticError::PrintDEPRECATED_CONSTRUCTOR(ErrorInfo &err, LexStream *lex_stream, Control &control)
+{
+    cout << "The constructor \"";
+    Unicode::Cout(err.insert1);
+    cout << "\" declared in type \"";
+    if (NotDot(err.insert2))
+    {
+        Unicode::Cout(err.insert2);
+        cout << "/";
+    }
+    Unicode::Cout(err.insert3);
+    cout << "\" has been deprecated.";
 
     return;
 }

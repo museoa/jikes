@@ -781,38 +781,6 @@ public:
 };
 
 
-class Deprecated_attribute : public attribute_info
-{
-    //
-    //    u2 attribute_name_index;
-    //
-    // The fields attribute_name_index is inherited from attribute_info
-    //
-    //
-    //    u4 attribute_length;
-    //
-    // The value of attribute_length is always 0
-    //
-
-public:
-
-    Deprecated_attribute(u2 _name_index) : attribute_info(Deprecated, _name_index)
-    {}
-    virtual ~Deprecated_attribute() {}
-
-    virtual u4 AttributeLength() { return 0; }
-
-#ifdef TEST
-    virtual void Print(Tuple<cp_info *> &constant_pool)
-    {
-        cout << "Deprecated_attribute attribute_name_index " << attribute_name_index
-             << " length " << AttributeLength()
-             << "\n";
-    }
-#endif    
-};
-
-
 class Exceptions_attribute : public attribute_info
 {
     //
@@ -1200,6 +1168,43 @@ public:
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
         cout << "Synthetic_attribute attribute_name_index " << attribute_name_index
+             << " length " << AttributeLength()
+             << "\n";
+    }
+#endif    
+};
+
+
+class Deprecated_attribute : public attribute_info
+{
+    //
+    //    u2 attribute_name_index;
+    //
+    // The fields attribute_name_index and attribute_length are inherited from attribute_info
+    //
+    // The attribute_length is always 0.
+    //
+
+public:
+
+    Deprecated_attribute(u2 _name_index) : attribute_info(Deprecated, _name_index)
+    {}
+    virtual ~Deprecated_attribute() {}
+
+    virtual u4 AttributeLength() { return 0; }
+
+    virtual void Put(OutputBuffer &output_buffer)
+    {
+        assert(attribute_name_index != 0);
+
+        output_buffer.PutB2(attribute_name_index);
+        output_buffer.PutB4(AttributeLength());
+    }
+                
+#ifdef TEST
+    virtual void Print(Tuple<cp_info *> &constant_pool)
+    {
+        cout << "Deprecated_attribute attribute_name_index " << attribute_name_index
              << " length " << AttributeLength()
              << "\n";
     }

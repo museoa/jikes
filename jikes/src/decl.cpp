@@ -196,6 +196,9 @@ void Semantic::ProcessTypeNames()
                         type -> SetSymbolTable(class_declaration -> class_body -> NumClassBodyDeclarations() + 3);
                         type -> SetLocation();
 
+                        if (lex_stream -> IsDeprecated(lex_stream -> Previous(class_declaration -> LeftToken())))
+                            type -> MarkDeprecated();
+
                         source_file_symbol -> types.Next() = type;
                         class_declaration -> semantic_environment = type -> semantic_environment; // save for processing bodies later.
 
@@ -249,6 +252,9 @@ void Semantic::ProcessTypeNames()
                         type -> SetFlags(ProcessInterfaceModifiers(interface_declaration));
                         type -> SetSymbolTable(interface_declaration -> NumInterfaceMemberDeclarations());
                         type -> SetLocation();
+
+                        if (lex_stream -> IsDeprecated(lex_stream -> Previous(interface_declaration -> LeftToken())))
+                            type -> MarkDeprecated();
 
                         source_file_symbol -> types.Next() = type;
                         interface_declaration -> semantic_environment = type -> semantic_environment;
@@ -553,6 +559,9 @@ TypeSymbol *Semantic::ProcessNestedClassName(TypeSymbol *containing_type, AstCla
     inner_type -> SetLocation();
     inner_type -> SetSignature(control);
 
+    if (lex_stream -> IsDeprecated(lex_stream -> Previous(class_declaration -> LeftToken())))
+        inner_type -> MarkDeprecated();
+
     //
     // If not a top-level type, then add pointer to enclosing type.
     //
@@ -654,6 +663,9 @@ TypeSymbol *Semantic::ProcessNestedInterfaceName(TypeSymbol *containing_type, As
     inner_type -> SetSymbolTable(interface_declaration -> NumInterfaceMemberDeclarations());
     inner_type -> SetLocation();
     inner_type -> SetSignature(control);
+
+    if (lex_stream -> IsDeprecated(lex_stream -> Previous(interface_declaration -> LeftToken())))
+        inner_type -> MarkDeprecated();
 
     if (inner_type -> IsLocal())
     {
@@ -1162,7 +1174,7 @@ void Semantic::ProcessTypeHeaders(AstClassDeclaration *class_declaration)
 
         for (int i = 0; i < class_declaration -> NumInterfaces(); i++)
         {
-            if (class_declaration -> Interface(i) -> symbol)
+            if (class_declaration -> Interface(i) -> Type())
                 AddDependence(this_type,
                               class_declaration -> Interface(i) -> Type(),
                               class_declaration -> Interface(i) -> LeftToken());
@@ -1190,7 +1202,7 @@ void Semantic::ProcessTypeHeaders(AstInterfaceDeclaration *interface_declaration
     //
     for (int i = 0; i < interface_declaration -> NumExtendsInterfaces(); i++)
     {
-        if (interface_declaration -> ExtendsInterface(i) -> symbol)
+        if (interface_declaration -> ExtendsInterface(i) -> Type())
             AddDependence(this_type,
                           interface_declaration -> ExtendsInterface(i) -> Type(),
                           interface_declaration -> ExtendsInterface(i) -> LeftToken());
@@ -2452,6 +2464,19 @@ void Semantic::ProcessTypeImportOnDemandDeclaration(AstImportDeclaration *import
 
     import_on_demand_packages.Next() = symbol;
 
+    //
+    //
+    //
+    TypeSymbol *type = symbol -> TypeCast();
+    if (type && type -> IsDeprecated() && type -> file_symbol != source_file_symbol)
+    {
+        ReportSemError(SemanticError::DEPRECATED_TYPE,
+                       import_declaration -> name -> LeftToken(),
+                       import_declaration -> name -> RightToken(),
+                       type -> ContainingPackage() -> PackageName(),
+                       type -> ExternalName());
+    }
+
     return;
 }
 
@@ -2646,6 +2671,18 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_d
     if (! (type -> ACC_PUBLIC() || type -> ContainingPackage() == this_package))
         ReportTypeInaccessible(import_declaration -> name, type);
 
+    //
+    //
+    //
+    if (type -> IsDeprecated() && type -> file_symbol != source_file_symbol)
+    {
+        ReportSemError(SemanticError::DEPRECATED_TYPE,
+                       import_declaration -> name -> LeftToken(),
+                       import_declaration -> name -> RightToken(),
+                       type -> ContainingPackage() -> PackageName(),
+                       type -> ExternalName());
+    }
+
     return;
 }
 
@@ -2680,6 +2717,7 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration *field_declaration)
     //
     //
     //
+    bool deprecated_declarations = lex_stream -> IsDeprecated(lex_stream -> Previous(field_declaration -> LeftToken()));
     AstArrayType *array_type = field_declaration -> type -> ArrayTypeCast();
     Ast *actual_type = (array_type ? array_type -> type : field_declaration -> type);
     AstPrimitiveType *primitive_type = actual_type -> PrimitiveTypeCast();
@@ -2711,6 +2749,9 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration *field_declaration)
             variable -> MarkIncomplete(); // the declaration of a field is not complete until its initializer
                                           // (if any) has been processed.
             variable_declarator -> symbol = variable;
+
+            if (deprecated_declarations)
+                variable -> MarkDeprecated();
         }
     }
 
@@ -2889,6 +2930,9 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration *construc
 
     if (this_type -> IsLocal())
         GenerateLocalConstructor(constructor);
+
+    if (lex_stream -> IsDeprecated(lex_stream -> Previous(constructor_declaration -> LeftToken())))
+        constructor -> MarkDeprecated();
 
     return;
 }
@@ -3796,6 +3840,9 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
                        this_type -> Name());
     }
 
+    if (lex_stream -> IsDeprecated(lex_stream -> Previous(method_declaration -> LeftToken())))
+        method -> MarkDeprecated();
+
     return;
 }
 
@@ -4062,7 +4109,7 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
             // check whether or not the user is not attempting to access an inaccessible
             // private type.
             //
-            if (! file_symbol)
+            if ((! file_symbol) && state_stack.Size() > 0)
             {
                 for (TypeSymbol *super_type = ThisType() -> super; super_type; super_type = super_type -> super)
                 {
@@ -4136,6 +4183,18 @@ TypeSymbol *Semantic::MustFindType(Ast *name)
     if (state_stack.Size() > 0)
         AddDependence(ThisType(), type, identifier_token);
 
+    //
+    //
+    //
+    if (type -> IsDeprecated() && type -> file_symbol != source_file_symbol)
+    {
+        ReportSemError(SemanticError::DEPRECATED_TYPE,
+                       name -> LeftToken(),
+                       name -> RightToken(),
+                       type -> ContainingPackage() -> PackageName(),
+                       type -> ExternalName());
+    }
+
     return type;
 }
 
@@ -4156,6 +4215,8 @@ void Semantic::ProcessInterface(TypeSymbol *base_type, AstExpression *name)
                            interf -> ContainingPackage() -> PackageName(),
                            interf -> ExternalName());
         }
+
+        name -> symbol = NULL;
     }
     else
     {
@@ -4169,6 +4230,9 @@ void Semantic::ProcessInterface(TypeSymbol *base_type, AstExpression *name)
                                interf -> ContainingPackage() -> PackageName(),
                                interf -> ExternalName(),
                                base_type -> ExternalName());
+
+                name -> symbol = NULL;
+
                 return;
             }
         }

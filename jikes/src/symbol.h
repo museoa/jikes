@@ -571,6 +571,9 @@ public:
     void MarkSynthetic() { status |= (unsigned char) 0x08; }
     bool IsSynthetic()   { return (status & (unsigned char) 0x08) != 0; }
 
+    void MarkDeprecated() { status |= (unsigned char) 0x10; }
+    bool IsDeprecated()   { return (status & (unsigned char) 0x10) != 0; }
+
 private:
     NameSymbol *external_name_symbol;
 
@@ -959,11 +962,14 @@ public:
     void MarkPrimitive() { status |= (unsigned short) 0x0080; }
     bool Primitive()     { return (status & (unsigned short) 0x0080) != 0; }
 
+    void MarkDeprecated() { status |= (unsigned short) 0x0100; }
+    bool IsDeprecated()   { return (status & (unsigned short) 0x0100) != 0; }
+
     void MarkBad()
     {
         SetACC_PUBLIC();
 
-        status |= (unsigned short) 0x0100;
+        status |= (unsigned short) 0x0200;
 
         MarkHeaderProcessed();
         MarkConstructorMembersProcessed();
@@ -974,16 +980,16 @@ public:
 
         return;
     }
-    bool Bad() { return (status & (unsigned short) 0x0100) != 0; }
+    bool Bad() { return (status & (unsigned short) 0x0200) != 0; }
 
     void MarkCircular()
     {
-        status |= (unsigned short) 0x0200;
+        status |= (unsigned short) 0x0400;
         MarkBad();
         return;
     }
-    void MarkNonCircular() { status &= (~ ((unsigned short) 0x0200)); }
-    bool Circular() { return (status & (unsigned short) 0x0200) != 0; }
+    void MarkNonCircular() { status &= (~ ((unsigned short) 0x0400)); }
+    bool Circular() { return (status & (unsigned short) 0x0400) != 0; }
 
     void ProcessNestedTypeSignatures(Semantic *, LexStream::TokenIndex);
 
@@ -1265,6 +1271,9 @@ public:
 
     void MarkSynthetic() { status |= (unsigned char) 0x08; }
     bool IsSynthetic()   { return (status & (unsigned char) 0x08) != 0; }
+
+    void MarkDeprecated() { status |= (unsigned char) 0x10; }
+    bool IsDeprecated()   { return (status & (unsigned char) 0x10) != 0; }
 
 private:
     NameSymbol *external_name_symbol;

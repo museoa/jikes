@@ -298,11 +298,12 @@ void LexStream::Dump()
 #else
         fprintf(tokfile, " %s",FileName());
 #endif
-        fprintf(tokfile, ", %cline %d.%d: %s  ",
+        fprintf(tokfile, ", %cline %d.%d: %s %s  ",
                          (AfterEol(tok) ? '*' : ' '),
                          Line(tok),
                          Column(tok),
-                         token_type(Kind(tok)));
+                         token_type(Kind(tok)),
+                         (IsDeprecated(Previous(tok)) ? "(d)" : " "));
         for (wchar_t *s = NameString(tok); *s != U_NULL; s++)
 #ifdef EBCDIC
             fprintf(tokfile, "%c", Code::ToEBCDIC(*s));

@@ -102,6 +102,8 @@ public:
 
     inline bool AfterEol(TokenIndex i) { return (i < 1 ? true : Line(i - 1) < Line(i)); }
 
+    inline bool IsDeprecated(TokenIndex i) { return tokens[i].Deprecated(); }
+
     inline TokenIndex MatchingBrace(TokenIndex i) { return tokens[i].additional_info.right_brace; }
 
     wchar_t *NameString(TokenIndex i)
@@ -260,6 +262,17 @@ private:
 
     class Token
     {
+        //
+        // It is expected that a location will be set for every token. Therefore,
+        // as we are setting the location, we also reset the deprecated bit to 0.
+        // If it is subsequently discovered that the token is followed by one or more
+        // deprecated tags then the bit is set to 1 by an invocation of the
+        // function SetDeprecated. Note that a better way to resetting all the bits in
+        // "info" is to use the function ResetInfoAndSetLocation defined below, instead
+        // of using SetLocation
+        //
+        inline void SetLocation(unsigned location) { assert(location <= 0x00FFFFFF); info = (info & 0x0000007F) | (location << 8); }
+
     public:
         unsigned info;
         union
@@ -268,21 +281,33 @@ private:
             TokenIndex right_brace;
         } additional_info;
 
-        inline void SetLocation(unsigned location) { info = (info & 0x000000FF) | (location << 8); }
-        inline unsigned Location()                 { return (info >> 8); }
-        inline void SetKind(unsigned kind)         { info = (info & 0xFFFFFF80) | kind; }
-        inline unsigned Kind()                     { return (info & 0x0000007F); }
-        
         //
-        // Note that the bit 0x00000080 is currently unused. It might be used in the future
-        // either to record some boolean fact about a token, To allow the number of token
-        // kinds to be expanded from 127 to 255 or to allow the number of input locations
-        // to be expanded from 16M to 32M.
+        // To just reset the info, this function should be invoked with a location value of 0.
         //
+        inline void ResetInfoAndSetLocation(unsigned location)
+        {
+            assert(location <= 0x00FFFFFF);
+            info = (location << 8);
+            additional_info.symbol = NULL;
+        }
 
-        inline void SetSymbol(Symbol *symbol)         { additional_info.symbol = symbol; }
-        inline void SetRightBrace(TokenIndex right_brace) { additional_info.right_brace = right_brace; }
+        inline unsigned Location()                   { return (info >> 8); }
+        inline void SetKind(unsigned kind)           { assert(kind <= 0x0000007F); info = (info & 0xFFFFFF80) | kind; }
+        inline unsigned Kind()                       { return (info & 0x0000007F); }
+        inline void SetDeprecated()                  { info |= 0x00000080; }
+        inline bool Deprecated()                     { return ((info & 0x00000080) != 0); }
+
+        inline void SetSymbol(Symbol *symbol)        { additional_info.symbol = symbol; }
+        inline void SetRightBrace(TokenIndex rbrace) { additional_info.right_brace = rbrace; }
     };
+
+    TokenIndex GetNextToken(unsigned location = 0)
+    {
+        TokenIndex index = token_stream.NextIndex();
+        token_stream[index].ResetInfoAndSetLocation(location);
+
+        return index;
+    }
 
     class Comment
     {
