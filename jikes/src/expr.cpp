@@ -21,6 +21,97 @@
 namespace Jikes { // Open namespace Jikes block
 #endif
 
+template <typename T> static void ExtremaForType(T& min, T& max);
+
+template <> static void ExtremaForType(i4& min, i4& max)
+{
+    min = Int::MIN_INT();
+    max = Int::MAX_INT();
+}
+
+template <> static void ExtremaForType(LongInt& min, LongInt& max)
+{
+    min = LongInt::MIN_LONG();
+    max = LongInt::MAX_LONG();
+}
+
+static void ReportOverflow(Semantic* semantic, AstExpression* expr, bool safe)
+{
+    if (! safe)
+    {
+        semantic -> ReportSemError(SemanticError::CONSTANT_OVERFLOW, expr,
+                                   expr -> Type() -> Name());
+    }
+}
+
+
+template <typename T>
+static void CheckIntegerNegation(Semantic* semantic, AstExpression* expr,
+                                 const T& x)
+{
+    T min, max;
+    ExtremaForType(min, max);
+    ReportOverflow(semantic, expr, (x != min));
+}
+
+
+template <typename T>
+static void CheckIntegerAddition(Semantic* semantic, AstExpression* expr,
+                                 const T& x, const T& y)
+{
+    const T zero = T(0);
+    T min, max;
+    ExtremaForType(min, max);
+    bool safe = x == zero ||
+                y == zero ||
+                x < zero && y < zero && x >= (min - y) ||
+                x < zero && y > zero ||
+                x > zero && y < zero ||
+                x > zero && y > zero && x <= (max - y);
+    ReportOverflow(semantic, expr, safe);
+}
+
+
+template <typename T>
+static void CheckIntegerSubtraction(Semantic* semantic, AstExpression* expr,
+                                    const T& x, const T& y)
+{
+    CheckIntegerAddition(semantic, expr, x, T(-y));
+}
+
+
+template <typename T>
+static void CheckIntegerMultiplication(Semantic* semantic, AstExpression* expr,
+                                       const T& x, const T& y)
+{
+    const T zero = T(0);
+    const T one = T(1);
+    const T minus_one = T(-1);
+    T min, max;
+    ExtremaForType(min, max);
+    bool safe = x > minus_one && x <= one ||
+                y > minus_one && y <= one ||
+                x < zero && y < zero && T(-x) <= max/-y ||
+                x < zero && y > zero && x >= min/y ||
+                x > zero && y < zero && y >= min/x ||
+                x > zero && y > zero && x <= max/y;
+    ReportOverflow(semantic, expr, safe);
+}
+
+
+template <typename T>
+static void CheckIntegerDivision(Semantic* semantic, AstExpression* expr,
+                                 const T& x, const T& y)
+{
+    const T zero = T(0);
+    const T minus_one = T(-1);
+    T min, max;
+    ExtremaForType(min, max);
+    bool safe = (y != zero) && !(x == min && y == minus_one);
+    ReportOverflow(semantic, expr, safe);
+}
+
+
 bool Semantic::IsIntValueRepresentableInType(AstExpression* expr,
                                              const TypeSymbol* type)
 {
@@ -2166,6 +2257,11 @@ void Semantic::FindVariableMember(TypeSymbol* type, AstExpression* expr)
                 expr -> symbol = control.no_type;
                 return;
             }
+            if (variable -> ACC_STATIC() && ! base_is_type)
+            {
+                ReportSemError(SemanticError::CLASS_FIELD_ACCESSED_VIA_INSTANCE,
+                               id_token, lex_stream -> NameString(id_token));
+            }
             //
             // If a variable is FINAL, initialized with a constant expression,
             // and of the form TypeName.Identifier, we substitute the
@@ -2790,6 +2886,12 @@ MethodShadowSymbol* Semantic::FindMethodMember(TypeSymbol* type,
                                lex_stream -> NameString(id_token));
                 method_call -> symbol = control.no_type;
                 return NULL;
+            }
+            if (method -> ACC_STATIC() && ! base_is_type)
+            {
+                ReportSemError(SemanticError::CLASS_METHOD_INVOKED_VIA_INSTANCE,
+                               method_call -> method,
+                               lex_stream -> NameString(id_token));
             }
 
             //
@@ -4283,6 +4385,7 @@ void Semantic::ProcessMINUS(AstPreUnaryExpression* expr)
             {
                 LongLiteralValue* literal = DYNAMIC_CAST<LongLiteralValue*>
                     (expr -> expression -> value);
+                CheckIntegerNegation(this, expr, literal -> value);
                 expr -> value =
                     control.long_pool.FindOrInsert(-literal -> value);
             }
@@ -4290,6 +4393,7 @@ void Semantic::ProcessMINUS(AstPreUnaryExpression* expr)
             {
                 IntLiteralValue* literal = DYNAMIC_CAST<IntLiteralValue*>
                     (expr -> expression -> value);
+                CheckIntegerNegation(this, expr, literal -> value);
                 expr -> value =
                     control.int_pool.FindOrInsert(-literal -> value);
             }
@@ -4904,7 +5008,7 @@ LiteralValue* Semantic::CastValue(const TypeSymbol* target_type,
             LongLiteralValue* literal =
                 DYNAMIC_CAST<LongLiteralValue*> (expr -> value);
             literal_value =
-                control.int_pool.FindOrInsert((int) (i1) (literal -> value).LowWord());
+                control.int_pool.FindOrInsert((int) (i1) (literal -> value).LowWord()); //FIXME: shouldn't this say i4 instead of int?
         }
         else
         {
@@ -5184,56 +5288,62 @@ void Semantic::ProcessPLUS(AstBinaryExpression* expr)
 
         if (left -> IsConstant() && right -> IsConstant())
         {
-             if (expr -> Type() == control.double_type)
-             {
-                 DoubleLiteralValue* left_value =
-                     DYNAMIC_CAST<DoubleLiteralValue*> (left -> value);
-                 DoubleLiteralValue* right_value =
-                     DYNAMIC_CAST<DoubleLiteralValue*> (right -> value);
+            if (expr -> Type() == control.double_type)
+            {
+                DoubleLiteralValue* left_value =
+                    DYNAMIC_CAST<DoubleLiteralValue*> (left -> value);
+                DoubleLiteralValue* right_value =
+                    DYNAMIC_CAST<DoubleLiteralValue*> (right -> value);
 
-                 expr -> value =
-                     control.double_pool.FindOrInsert(left_value -> value +
-                                                      right_value -> value);
-             }
-             else if (expr -> Type() == control.float_type)
-             {
-                 FloatLiteralValue* left_value =
-                     DYNAMIC_CAST<FloatLiteralValue*> (left -> value);
-                 FloatLiteralValue* right_value =
-                     DYNAMIC_CAST<FloatLiteralValue*> (right -> value);
-
-                 expr -> value =
-                     control.float_pool.FindOrInsert(left_value -> value +
+                expr -> value =
+                    control.double_pool.FindOrInsert(left_value -> value +
                                                      right_value -> value);
-             }
-             else if (expr -> Type() == control.long_type)
-             {
-                 LongLiteralValue* left_value =
-                     DYNAMIC_CAST<LongLiteralValue*> (left -> value);
-                 LongLiteralValue* right_value =
-                     DYNAMIC_CAST<LongLiteralValue*> (right -> value);
-
-                 expr -> value =
-                     control.long_pool.FindOrInsert(left_value -> value +
+            }
+            else if (expr -> Type() == control.float_type)
+            {
+                FloatLiteralValue* left_value =
+                    DYNAMIC_CAST<FloatLiteralValue*> (left -> value);
+                FloatLiteralValue* right_value =
+                    DYNAMIC_CAST<FloatLiteralValue*> (right -> value);
+                expr -> value =
+                    control.float_pool.FindOrInsert(left_value -> value +
                                                     right_value -> value);
-             }
-             else // assert(expr -> Type() == control.int_type)
-             {
-                 IntLiteralValue* left_value =
-                     DYNAMIC_CAST<IntLiteralValue*> (left -> value);
-                 IntLiteralValue* right_value =
-                     DYNAMIC_CAST<IntLiteralValue*> (right -> value);
+            }
+            else if (expr -> Type() == control.long_type)
+            {
+                LongLiteralValue* left_value =
+                    DYNAMIC_CAST<LongLiteralValue*> (left -> value);
+                LongLiteralValue* right_value =
+                    DYNAMIC_CAST<LongLiteralValue*> (right -> value);
 
-                 expr -> value =
-                     control.int_pool.FindOrInsert(left_value -> value +
+                CheckIntegerAddition(this, expr,
+                                     left_value -> value,
+                                     right_value -> value);
+                expr -> value =
+                    control.long_pool.FindOrInsert(left_value -> value +
                                                    right_value -> value);
-             }
+            }
+            else if (expr -> Type() == control.int_type)
+            {
+                IntLiteralValue* left_value =
+                    DYNAMIC_CAST<IntLiteralValue*> (left -> value);
+                IntLiteralValue* right_value =
+                    DYNAMIC_CAST<IntLiteralValue*> (right -> value);
+
+                CheckIntegerAddition(this, expr,
+                                     left_value -> value,
+                                     right_value -> value);
+                expr -> value =
+                    control.int_pool.FindOrInsert(left_value -> value +
+                                                  right_value -> value);
+            }
+            else assert(false);
         }
     }
 }
 
 
-void Semantic::ProcessLEFT_SHIFT(AstBinaryExpression* expr)
+void Semantic::ProcessShift(AstBinaryExpression* expr)
 {
     ProcessExpression(expr -> left_expression);
     ProcessExpression(expr -> right_expression);
@@ -5275,7 +5385,49 @@ void Semantic::ProcessLEFT_SHIFT(AstBinaryExpression* expr)
                                                  control.int_type);
         if (expr -> symbol != control.no_type)
             expr -> symbol = expr -> left_expression -> symbol;
+
+        ProcessShiftCount(left_type, expr -> right_expression);
     }
+}
+
+
+//
+// Checks whether 'expr' is a suitable shift count for something of type
+// 'left_type'. JLS2 15.19 is quite clear about the meaning of code with
+// with a negative or out-of-range shift count, so it's still valid code,
+// but the behavior is probably not what the author was expecting.
+//
+void Semantic::ProcessShiftCount(TypeSymbol* left_type, AstExpression* expr)
+{
+    if (! expr -> IsConstant())
+        return;
+
+    IntLiteralValue* literal = DYNAMIC_CAST<IntLiteralValue*>(expr -> value);
+    i4 count = literal -> value;
+    IntToWstring count_text(count);
+
+    if (count < 0)
+    {
+        ReportSemError(SemanticError::NEGATIVE_SHIFT_COUNT,
+                       expr,
+                       count_text.String());
+    }
+
+    int width = (left_type == control.long_type) ? 64 : 32;
+    if (count >= width)
+    {
+        IntToWstring width_text(width);
+        ReportSemError(SemanticError::SHIFT_COUNT_TOO_LARGE,
+                       expr,
+                       count_text.String(),
+                       width_text.String());
+    }
+}
+
+
+void Semantic::ProcessLEFT_SHIFT(AstBinaryExpression* expr)
+{
+    ProcessShift(expr);
 
     if (expr -> left_expression -> IsConstant() &&
         expr -> right_expression -> IsConstant())
@@ -5308,47 +5460,7 @@ void Semantic::ProcessLEFT_SHIFT(AstBinaryExpression* expr)
 
 void Semantic::ProcessRIGHT_SHIFT(AstBinaryExpression* expr)
 {
-    ProcessExpression(expr -> left_expression);
-    ProcessExpression(expr -> right_expression);
-
-    TypeSymbol* left_type = expr -> left_expression -> Type();
-    TypeSymbol* right_type = expr -> right_expression -> Type();
-
-    if (! control.IsIntegral(left_type))
-    {
-        if (left_type != control.no_type)
-            ReportSemError(SemanticError::TYPE_NOT_INTEGRAL,
-                           expr -> left_expression,
-                           left_type -> ContainingPackageName(),
-                           left_type -> ExternalName());
-        expr -> symbol = control.no_type;
-    }
-    else
-    {
-        expr -> left_expression =
-            PromoteUnaryNumericExpression(expr -> left_expression);
-    }
-    //
-    // This call captures both unary numeric conversion (widening) of
-    // byte, char, or short, and narrowing of long, since the bytecode
-    // requires an int shift amount.
-    //
-    if (! control.IsIntegral(right_type))
-    {
-        if (right_type != control.no_type)
-            ReportSemError(SemanticError::TYPE_NOT_INTEGRAL,
-                           expr -> right_expression,
-                           right_type -> ContainingPackageName(),
-                           right_type -> ExternalName());
-        expr -> symbol = control.no_type;
-    }
-    else
-    {
-        expr -> right_expression = ConvertToType(expr -> right_expression,
-                                                 control.int_type);
-        if (expr -> symbol != control.no_type)
-            expr -> symbol = expr -> left_expression -> symbol;
-    }
+    ProcessShift(expr);
 
     if (expr -> left_expression -> IsConstant() &&
         expr -> right_expression -> IsConstant())
@@ -5381,47 +5493,7 @@ void Semantic::ProcessRIGHT_SHIFT(AstBinaryExpression* expr)
 
 void Semantic::ProcessUNSIGNED_RIGHT_SHIFT(AstBinaryExpression* expr)
 {
-    ProcessExpression(expr -> left_expression);
-    ProcessExpression(expr -> right_expression);
-
-    TypeSymbol* left_type = expr -> left_expression -> Type();
-    TypeSymbol* right_type = expr -> right_expression -> Type();
-
-    if (! control.IsIntegral(left_type))
-    {
-        if (left_type != control.no_type)
-            ReportSemError(SemanticError::TYPE_NOT_INTEGRAL,
-                           expr -> left_expression,
-                           left_type -> ContainingPackageName(),
-                           left_type -> ExternalName());
-        expr -> symbol = control.no_type;
-    }
-    else
-    {
-        expr -> left_expression =
-            PromoteUnaryNumericExpression(expr -> left_expression);
-    }
-    //
-    // This call captures both unary numeric conversion (widening) of
-    // byte, char, or short, and narrowing of long, since the bytecode
-    // requires an int shift amount.
-    //
-    if (! control.IsIntegral(right_type))
-    {
-        if (right_type != control.no_type)
-            ReportSemError(SemanticError::TYPE_NOT_INTEGRAL,
-                           expr -> right_expression,
-                           right_type -> ContainingPackageName(),
-                           right_type -> ExternalName());
-        expr -> symbol = control.no_type;
-    }
-    else
-    {
-        expr -> right_expression = ConvertToType(expr -> right_expression,
-                                                 control.int_type);
-        if (expr -> symbol != control.no_type)
-            expr -> symbol = expr -> left_expression -> symbol;
-    }
+    ProcessShift(expr);
 
     if (expr -> left_expression -> IsConstant() &&
         expr -> right_expression -> IsConstant())
@@ -6294,6 +6366,8 @@ void Semantic::ProcessSTAR(AstBinaryExpression* expr)
             LongLiteralValue* right = DYNAMIC_CAST<LongLiteralValue*>
                 (expr -> right_expression -> value);
 
+            CheckIntegerMultiplication(this, expr,
+                                       left -> value, right -> value);
             expr -> value =
                 control.long_pool.FindOrInsert(left -> value *
                                                right -> value);
@@ -6305,6 +6379,8 @@ void Semantic::ProcessSTAR(AstBinaryExpression* expr)
             IntLiteralValue* right = DYNAMIC_CAST<IntLiteralValue*>
                 (expr -> right_expression -> value);
 
+            CheckIntegerMultiplication(this, expr,
+                                       left -> value, right -> value);
             expr -> value =
                 control.int_pool.FindOrInsert(left -> value *
                                               right -> value);
@@ -6351,6 +6427,7 @@ void Semantic::ProcessMINUS(AstBinaryExpression* expr)
             LongLiteralValue* right = DYNAMIC_CAST<LongLiteralValue*>
                 (expr -> right_expression -> value);
 
+            CheckIntegerSubtraction(this, expr, left -> value, right -> value);
             expr -> value =
                 control.long_pool.FindOrInsert(left -> value -
                                                right -> value);
@@ -6362,6 +6439,7 @@ void Semantic::ProcessMINUS(AstBinaryExpression* expr)
             IntLiteralValue* right = DYNAMIC_CAST<IntLiteralValue*>
                 (expr -> right_expression -> value);
 
+            CheckIntegerSubtraction(this, expr, left -> value, right -> value);
             expr -> value =
                 control.int_pool.FindOrInsert(left -> value -
                                               right -> value);
@@ -6427,6 +6505,7 @@ void Semantic::ProcessSLASH(AstBinaryExpression* expr)
                 LongLiteralValue* right = DYNAMIC_CAST<LongLiteralValue*>
                     (right_expression -> value);
 
+                CheckIntegerDivision(this, expr, left -> value, right -> value);
                 expr -> value =
                     control.long_pool.FindOrInsert(left -> value /
                                                    right -> value);
@@ -6438,6 +6517,7 @@ void Semantic::ProcessSLASH(AstBinaryExpression* expr)
                 IntLiteralValue* right = DYNAMIC_CAST<IntLiteralValue*>
                     (right_expression -> value);
 
+                CheckIntegerDivision(this, expr, left -> value, right -> value);
                 //
                 // There is a bug in the intel hardware where if one tries
                 // to compute ((2**32-1) / -1), he gets a ZeroDivide
@@ -6997,6 +7077,7 @@ void Semantic::ProcessAssignmentExpression(Ast* expr)
             assignment_expression -> expression =
                 ConvertToType(assignment_expression -> expression,
                               control.int_type);
+            ProcessShiftCount(left_type, assignment_expression -> expression);
             break;
         case AstAssignmentExpression::AND_EQUAL:
         case AstAssignmentExpression::XOR_EQUAL:

@@ -836,6 +836,7 @@ private:
     void ProcessConstructorMembers(AstClassBody*);
     void ProcessMethodMembers(AstClassBody*);
     void ProcessClassBodyForEffectiveJavaChecks(AstClassBody*);
+    void CheckForSerializationMistakes(AstClassBody*);
     void ProcessFieldMembers(AstClassBody*);
     void ProcessMembers(AstClassBody*);
     void CompleteSymbolTable(AstClassBody*);
@@ -983,7 +984,9 @@ private:
     void ProcessMethodDeclaration(AstMethodDeclaration*);
     void ProcessFieldDeclaration(AstFieldDeclaration*);
     void ProcessFormalParameters(BlockSymbol*, AstMethodDeclarator*);
-    bool FieldDeclarationIsNotSerialVersionUID(NameSymbol*, TypeSymbol*);
+    void CheckFieldDeclaration(AstFieldDeclaration*, AstVariableDeclaratorId*,
+                               const AccessFlags&);
+    void CheckFieldName(AstVariableDeclaratorId*, NameSymbol*, bool);
     TypeSymbol* ImportType(LexStream::TokenIndex, NameSymbol*);
     TypeSymbol* FindPrimitiveType(AstPrimitiveType*);
     TypeSymbol* FindType(LexStream::TokenIndex);
@@ -1182,6 +1185,8 @@ private:
 
     void (Semantic::*ProcessBinaryExpr[AstBinaryExpression::_num_kinds])(AstBinaryExpression*);
     void ProcessPLUS(AstBinaryExpression*);
+    void ProcessShift(AstBinaryExpression*);
+    void ProcessShiftCount(TypeSymbol*, AstExpression*);
     void ProcessLEFT_SHIFT(AstBinaryExpression*);
     void ProcessRIGHT_SHIFT(AstBinaryExpression*);
     void ProcessUNSIGNED_RIGHT_SHIFT(AstBinaryExpression*);

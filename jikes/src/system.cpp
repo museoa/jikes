@@ -207,6 +207,9 @@ void Control::ProcessGlobals()
                                          wcslen(US_class_DOLLAR));
     equals_name_symbol = FindOrInsertName(US_equals, wcslen(US_equals));
     hashCode_name_symbol = FindOrInsertName(US_hashCode, wcslen(US_hashCode));
+    serialPersistentFields_name_symbol =
+        FindOrInsertName(US_serialPersistentFields,
+                         wcslen(US_serialPersistentFields));
     serialVersionUID_name_symbol =
         FindOrInsertName(US_serialVersionUID, wcslen(US_serialVersionUID));
     toString_name_symbol = FindOrInsertName(US_toString, wcslen(US_toString));

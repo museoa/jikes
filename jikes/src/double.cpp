@@ -721,7 +721,7 @@ i4 IEEEfloat::IntValue() const
         exponent = Exponent();
 
     if (exponent > 30)
-        return sign ? MIN_INT : MAX_INT;
+        return sign ? Int::MIN_INT() : Int::MAX_INT();
 
     // This covers true zero and denorms.
     if (exponent < 0)
@@ -1863,17 +1863,17 @@ i4 IEEEdouble::IntValue() const
         return 0;
 
 #ifdef HAVE_IEEE754
-    if (value.double_value < (double)(i4) MIN_INT)
-        return MIN_INT;
-    else if (value.double_value > (double) MAX_INT)
-        return MAX_INT;
+    if (value.double_value < (double)(i4) Int::MIN_INT())
+        return Int::MIN_INT();
+    else if (value.double_value > (double) Int::MAX_INT())
+        return Int::MAX_INT();
     return (i4) value.double_value;
 #else
     int sign = Sign(),
         exponent = Exponent();
 
     if (exponent > 30)
-        return sign ? MIN_INT : MAX_INT;
+        return sign ? Int::MIN_INT() : Int::MAX_INT();
 
     // This includes true zero and denorms.
     if (exponent < 0)

@@ -1060,6 +1060,49 @@ void Semantic::ProcessClassBodyForEffectiveJavaChecks(AstClassBody* class_body)
                            this_type -> Name());
         }
     }
+
+    CheckForSerializationMistakes(class_body);
+}
+
+
+void Semantic::CheckForSerializationMistakes(AstClassBody* class_body)
+{
+    TypeSymbol* this_type = ThisType();
+
+    if (! this_type -> Implements(control.Serializable()))
+        return;
+
+    if (this_type -> IsInner())
+    {
+        // FIXME: If the class implements the readObject and writeObject
+        // methods, it should be okay. But would anyone really do that?
+        ReportSemError(SemanticError::EJ_SERIALIZABLE_INNER_CLASS,
+                       class_body -> identifier_token);
+    }
+
+    //
+    // Warn against Serializable classes without an explicit serialVersionUID.
+    //
+    bool found_serialVersionUID = false;
+    for (unsigned i = 0; i < class_body -> NumClassVariables(); ++i)
+    {
+        AstFieldDeclaration* fd = class_body -> ClassVariable(i);
+        for (unsigned j = 0; j < fd -> NumVariableDeclarators(); ++j)
+        {
+            AstVariableDeclarator* vd = fd -> VariableDeclarator(j);
+            NameSymbol* name_symbol = lex_stream -> NameSymbol(vd ->
+                variable_declarator_name -> identifier_token);
+            if (name_symbol == control.serialVersionUID_name_symbol)
+            {
+                found_serialVersionUID = true;
+            }
+        }
+    }
+    if (! found_serialVersionUID)
+    {
+        ReportSemError(SemanticError::MISSING_SERIAL_VERSION_UID,
+                       class_body -> identifier_token);
+    }
 }
 
 
@@ -1908,17 +1951,6 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration* import_d
 }
 
 
-//
-// Helper method for Semantic::ProcessFieldDeclaration.
-//
-bool Semantic::FieldDeclarationIsNotSerialVersionUID(NameSymbol* name_symbol,
-                                                     TypeSymbol* field_type)
-{
-    return (name_symbol != control.serialVersionUID_name_symbol ||
-            field_type != control.long_type);
-}
-
-
 void Semantic::ProcessFieldDeclaration(AstFieldDeclaration* field_declaration)
 {
     TypeSymbol* this_type = ThisType();
@@ -2008,39 +2040,87 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration* field_declaration)
                 variable -> MarkDeprecated();
         }
         
-        //
-        // Warn against public static final array fields.
-        //
-        bool is_constant_field = (access_flags.ACC_FINAL() &&
-                                  access_flags.ACC_STATIC());
-        if (access_flags.ACC_PUBLIC() &&
-            is_constant_field &&
-            field_type -> IsArray())
-        {
-            // FIXME: shouldn't warn if it's a zero-length array.
-            ReportSemError(SemanticError::EJ_PUBLIC_STATIC_FINAL_ARRAY_FIELD,
-                           name -> identifier_token,
-                           name_symbol -> Name());
-        }
+        CheckFieldDeclaration(field_declaration, name, access_flags);
+    }
+}
+
+
+void Semantic::CheckFieldDeclaration(AstFieldDeclaration* field_declaration,
+                                     AstVariableDeclaratorId* name,
+                                     const AccessFlags& access_flags)
+{
+    TypeSymbol* field_type = field_declaration -> type -> symbol;
+    NameSymbol* name_symbol = lex_stream ->
+        NameSymbol(name -> identifier_token);
+
+    //
+    // Warn against public static final array fields.
+    //
+    bool is_constant_field = (access_flags.ACC_FINAL() &&
+                              access_flags.ACC_STATIC());
+    if (access_flags.ACC_PUBLIC() &&
+        is_constant_field &&
+        field_type -> IsArray())
+    {
+        // FIXME: shouldn't warn if it's a zero-length array.
+        ReportSemError(SemanticError::EJ_PUBLIC_STATIC_FINAL_ARRAY_FIELD,
+                       name, name_symbol -> Name());
+    }
         
+    if (name_symbol == control.serialVersionUID_name_symbol)
+    {
         //
-        // Warn against unconventional names. We need to ignore fields called
-        // serialVersionUID, because that name is used in versioned classes
-        // for a static final long field.
+        // Warn about serialVersionUID mistakes.
         //
-        if (is_constant_field &&
-            name_symbol -> IsBadStyleForConstantField() &&
-            FieldDeclarationIsNotSerialVersionUID(name_symbol, field_type))
+        TypeSymbol* this_type = ThisType();
+        bool is_serializable = this_type -> Implements(control.Serializable());
+        if (! is_serializable)
         {
-            ReportSemError(SemanticError::UNCONVENTIONAL_CONSTANT_FIELD_NAME,
-                           name -> identifier_token, name_symbol -> Name());
+            ReportSemError(SemanticError::UNNEEDED_SERIAL_VERSION_UID,
+                           name);
         }
-        else if (! is_constant_field &&
-                 name_symbol -> IsBadStyleForField())
+        else if (field_type != control.long_type ||
+                 is_constant_field == false ||
+                 ! access_flags.ACC_PRIVATE())
         {
-            ReportSemError(SemanticError::UNCONVENTIONAL_FIELD_NAME,
-                           name -> identifier_token, name_symbol -> Name());
+            ReportSemError(SemanticError::BAD_SERIAL_VERSION_UID,
+                           field_declaration);
         }
+    }
+    else if (name_symbol == control.serialPersistentFields_name_symbol)
+    {
+        //
+        // FIXME: Warn about serialPersistentFields mistakes; has anyone
+        // ever seen this used in the wild?
+        //
+    }
+    else
+    {
+        //
+        // Warn against unconventional field names. This doesn't apply to
+        // the serialization fields above, because their names are mandated
+        // names that break conventions, and aren't likely to be fixed.
+        //
+        CheckFieldName(name, name_symbol, is_constant_field);
+    }
+}
+
+
+void Semantic::CheckFieldName(AstVariableDeclaratorId* name,
+                              NameSymbol* name_symbol,
+                              bool is_constant_field)
+{
+    if (is_constant_field &&
+        name_symbol -> IsBadStyleForConstantField())
+    {
+        ReportSemError(SemanticError::UNCONVENTIONAL_CONSTANT_FIELD_NAME,
+                       name -> identifier_token, name_symbol -> Name());
+    }
+    else if (! is_constant_field &&
+             name_symbol -> IsBadStyleForField())
+    {
+        ReportSemError(SemanticError::UNCONVENTIONAL_FIELD_NAME,
+                       name -> identifier_token, name_symbol -> Name());
     }
 }
 

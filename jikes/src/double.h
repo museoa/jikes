@@ -114,10 +114,8 @@ private:
         POS_INF = 0x7F800000, // +Inf
         NAN_BITS = 0x7FC00000, // canonical NaN
         BYTE_MASK = 0x000000FF, // mask off least significant byte
-        MAX_INT = 0x7FFFFFFF, // maximum integer
-        MIN_INT = 0x80000000, // minimum integer
-        MIN_LONG_F = 0xDF000000, // bit pattern of (float)MIN_LONG
-        MIN_INT_F = 0xCF000000 // bit pattern of (float)MIN_INT
+        MIN_LONG_F = 0xDF000000, // bit pattern of (float)LongInt::MIN_LONG()
+        MIN_INT_F = 0xCF000000 // bit pattern of (float)Int::MIN_INT()
     };
 
     inline u4 SignBit() const { return value.word & SIGN_BIT; }

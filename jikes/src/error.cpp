@@ -474,15 +474,14 @@ void SemanticError::StaticInitializer()
         return;
     initialized = true;
 
+    //
+    // If not explicitly told otherwise, we assume that a SemanticErrorKind
+    // is an error (as opposed to a warning or a caution). An individual
+    // warning or caution can be marked as such below; a group of related
+    // warnings is better defined in InitializeMessageGroups where the
+    // group can be named for command-line use.
+    //
     memset(warning, MANDATORY_ERROR, _num_kinds * sizeof(unsigned char));
-
-    //
-    // Named warnings. These must be given one of the NAMED_* enum values,
-    // which will be used as the default state if no +P options are specified.
-    //
-    warning[REDUNDANT_MODIFIER] = NAMED_WEAK_OFF;
-    warning[RECOMMENDED_MODIFIER_ORDER] = NAMED_WEAK_OFF;
-    warning[SWITCH_FALLTHROUGH] = NAMED_WEAK_OFF;
 
     //
     // Weak warnings.
@@ -513,29 +512,14 @@ void SemanticError::StaticInitializer()
         WEAK_WARNING;
     warning[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER] =
         WEAK_WARNING;
+    warning[CLASS_METHOD_INVOKED_VIA_INSTANCE] = WEAK_WARNING;
+    warning[CLASS_FIELD_ACCESSED_VIA_INSTANCE] = WEAK_WARNING;
 
     //
-    // Warnings based on advice in the book "Effective Java" by Josh Bloch.
+    // serialVersionUID warnings.
     //
-    warning[EJ_AVOID_OVERLOADING_EQUALS] = STRONG_WARNING;
-    warning[EJ_EMPTY_CATCH_BLOCK] = WEAK_WARNING;
-    warning[EJ_EMPTY_FINALLY_BLOCK] = STRONG_WARNING;
-    warning[EJ_EQUALS_WITHOUT_HASH_CODE] = STRONG_WARNING;
-    warning[EJ_HASH_CODE_WITHOUT_EQUALS] = STRONG_WARNING;
-    warning[EJ_INTERFACE_DOES_NOT_DEFINE_TYPE] = WEAK_WARNING;
-    warning[EJ_MISSING_PRIVATE_CONSTRUCTOR] = WEAK_WARNING;
-    warning[EJ_OVERLY_GENERAL_THROWS_CLAUSE] = WEAK_WARNING;
-    warning[EJ_PUBLIC_STATIC_FINAL_ARRAY_FIELD] = WEAK_WARNING;
-    warning[EJ_RETURN_OF_NULL_ARRAY] = WEAK_WARNING;
-    
-    //
-    // Naming convention warnings.
-    //
-    warning[UNCONVENTIONAL_CLASS_NAME] = WEAK_WARNING;
-    warning[UNCONVENTIONAL_CONSTANT_FIELD_NAME] = WEAK_WARNING;
-    warning[UNCONVENTIONAL_FIELD_NAME] = WEAK_WARNING;
-    warning[UNCONVENTIONAL_METHOD_NAME] = WEAK_WARNING;
-    warning[UNCONVENTIONAL_VARIABLE_NAME] = WEAK_WARNING;
+    warning[UNNEEDED_SERIAL_VERSION_UID] = WEAK_WARNING;
+    warning[BAD_SERIAL_VERSION_UID] = WEAK_WARNING;
 
     //
     // Somewhat stronger warnings, but code will be generated anyway.
@@ -544,49 +528,126 @@ void SemanticError::StaticInitializer()
     warning[BAD_INPUT_FILE] = STRONG_WARNING;
     warning[UNREADABLE_INPUT_FILE] = STRONG_WARNING;
     warning[NEGATIVE_ARRAY_SIZE] = STRONG_WARNING;
+    warning[NEGATIVE_SHIFT_COUNT] = STRONG_WARNING;
+    warning[SHIFT_COUNT_TOO_LARGE] = STRONG_WARNING;
     warning[UNNECESSARY_PARENTHESIS] = STRONG_WARNING;
     warning[ZERO_DIVIDE_CAUTION] = STRONG_WARNING;
     warning[UNIMPLEMENTABLE_INTERFACE] = STRONG_WARNING;
     warning[UNIMPLEMENTABLE_CLASS] = STRONG_WARNING;
     warning[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_TYPE] =
         STRONG_WARNING;
+    warning[CONSTANT_OVERFLOW] = STRONG_WARNING;
 
     InitializeMessages();
+    InitializeMessageGroups();
 }
+
+void SemanticError::SetWarningLevel(SemanticErrorKind code, WarningLevel level)
+{
+    warning[code] = level;
+}
+
+//
+// Describes an error code (or group of error codes) for the purpose
+// of turning them on or off by name.
+//
+// 'name' is used on the command-line, and with 'reason' in
+// Jikes' -help output.
+//
+struct MessageGroup
+{
+    MessageGroup(const char* name, const char* reason,
+                 const SemanticError::WarningLevel level)
+        : name(name), reason(reason), level(level)
+    {}
+
+    void AddMessage(const SemanticError::SemanticErrorKind code)
+    {
+        codes.Push(code);
+        SemanticError::SetWarningLevel(code, level);
+    }
+
+    const char* name;
+    const char* reason;
+    SemanticError::WarningLevel level;
+    Tuple<SemanticError::SemanticErrorKind> codes;
+};
+
+
+static Tuple<MessageGroup*> message_groups; 
 
 
 //
 // HOWTO: Add a +Pno-<something> flag to selectively enable/disable a warning.
 //
-// Add an entry to the 'named_errors' array. The four items are the text to
-// appear after "+P[no-]" on the command-line, the text to appear after
-// "warn about " in the -help output, the SemanticErrorKind enum value for
-// the warning in question, and the WarningLevel::NAMED_* enum value which
-// determines the default state of the warning when plain +P is used and no
-// prior +P option was used.
+// 1. Push a MessageGroup instance to message_groups. The WarningLevel will
+//    be the default for all the members of the group.
 //
-// Update the warning[] entry for the SemanticErrorKind to be one of the
-// WarningLevel::NAMED_* enum values. This will specify the default state of
-// the warning when no +P option is used.
+// 2. Add the SemanticErrorKind enum values for the warning(s) that should be
+//    in the group.
 //
-// Update the documentation in docs/jikes.1 to reflect the new option.
+// 3. Update the documentation in docs/jikes.1 to reflect the new option.
 //
-SemanticError::NamedError SemanticError::named_errors[] =
+void SemanticError::InitializeMessageGroups()
 {
-    { "modifier-order", "modifiers appearing out of order",
-      RECOMMENDED_MODIFIER_ORDER, NAMED_WEAK_OFF },
-    { "redundant-modifiers", "modifiers which are implied",
-      REDUNDANT_MODIFIER, NAMED_WEAK_OFF },
-    { "switchcheck", "fallthrough between switch statement cases",
-      SWITCH_FALLTHROUGH, NAMED_WEAK_ON },
-    //this next one is really a meta switch, it is special cased below
-    // to turn on/off several flags instead of just one
-    { "naming-convention", "names which differ from standard convention",
-      UNCONVENTIONAL_NAMES, NAMED_WEAK_ON },
+    MessageGroup* group;
 
-    // The table must end with this entry. New items *MUST* be added above.
-    { 0, 0, BAD_ERROR, DISABLED }
-};
+    group = new MessageGroup("modifier-order",
+                             "modifiers appearing out of order",
+                             NAMED_WEAK_OFF);
+    group -> AddMessage(RECOMMENDED_MODIFIER_ORDER);
+    message_groups.Push(group);
+
+    group = new MessageGroup("redundant-modifiers",
+                             "modifiers which are implied",
+                             NAMED_WEAK_OFF);
+    group -> AddMessage(REDUNDANT_MODIFIER);
+    message_groups.Push(group);
+
+    group = new MessageGroup("serial",
+                             "serializable classes without serialVersionUIDs",
+                             NAMED_WEAK_OFF);
+    group -> AddMessage(EJ_SERIALIZABLE_INNER_CLASS);
+    group -> AddMessage(MISSING_SERIAL_VERSION_UID);
+    message_groups.Push(group);
+
+    group = new MessageGroup("switchcheck",
+                             "fallthrough between switch statement cases",
+                             NAMED_WEAK_ON);
+    group -> AddMessage(SWITCH_FALLTHROUGH);
+    message_groups.Push(group);
+
+    //
+    // Naming convention warnings.
+    //
+    group = new MessageGroup("naming-convention",
+                             "names which differ from standard convention",
+                             NAMED_WEAK_ON);
+    group -> AddMessage(UNCONVENTIONAL_CLASS_NAME);
+    group -> AddMessage(UNCONVENTIONAL_CONSTANT_FIELD_NAME);
+    group -> AddMessage(UNCONVENTIONAL_FIELD_NAME);
+    group -> AddMessage(UNCONVENTIONAL_METHOD_NAME);
+    group -> AddMessage(UNCONVENTIONAL_VARIABLE_NAME);
+    message_groups.Push(group);
+
+    //
+    // Warnings from Bloch's "Effective Java".
+    //
+    group = new MessageGroup("effective-java",
+                             "practices warned about in \"Effective Java\"",
+                             NAMED_WEAK_ON);
+    group -> AddMessage(EJ_AVOID_OVERLOADING_EQUALS);
+    group -> AddMessage(EJ_EMPTY_CATCH_BLOCK);
+    group -> AddMessage(EJ_EMPTY_FINALLY_BLOCK);
+    group -> AddMessage(EJ_EQUALS_WITHOUT_HASH_CODE);
+    group -> AddMessage(EJ_HASH_CODE_WITHOUT_EQUALS);
+    group -> AddMessage(EJ_INTERFACE_DOES_NOT_DEFINE_TYPE);
+    group -> AddMessage(EJ_MISSING_PRIVATE_CONSTRUCTOR);
+    group -> AddMessage(EJ_OVERLY_GENERAL_THROWS_CLAUSE);
+    group -> AddMessage(EJ_PUBLIC_STATIC_FINAL_ARRAY_FIELD);
+    group -> AddMessage(EJ_RETURN_OF_NULL_ARRAY);
+    message_groups.Push(group);
+}
 
 //
 // Outputs information about the warnings that can be disabled on the
@@ -594,14 +655,17 @@ SemanticError::NamedError SemanticError::named_errors[] =
 //
 void SemanticError::PrintNamedWarnings()
 {
-    for (NamedError* pair = named_errors; pair -> name; ++pair)
+    StaticInitializer();
+    for (unsigned i = 0; i < message_groups.Length(); ++i)
     {
+        MessageGroup* group = message_groups[i];
+
         static const unsigned SPACE_FOR_NAME = 15;
-        printf("+P[no-]%-*s", SPACE_FOR_NAME, pair -> name);
-        if (strlen(pair -> name) >= SPACE_FOR_NAME)
+        printf("+P[no-]%-*s", SPACE_FOR_NAME, group -> name);
+        if (strlen(group -> name) >= SPACE_FOR_NAME)
             printf("\n                      ");
-        printf("warn about %s, %sactivated by +P\n", pair -> reason,
-	       ((pair->level == NAMED_WEAK_OFF)?"not ":""));
+        printf("warn about %s, %sactivated by +P\n", group -> reason,
+               ((group -> level == NAMED_WEAK_OFF) ? "not " : ""));
     }
 }
 
@@ -612,23 +676,19 @@ void SemanticError::PrintNamedWarnings()
 void SemanticError::EnableDefaultWarnings()
 {
     StaticInitializer();
-    for (NamedError* pair = named_errors; pair -> name; ++pair)
+    for (unsigned g = 0; g < message_groups.Length(); ++g)
     {
-        assert(pair -> level > DISABLED);
-        if (warning[pair -> code] > DISABLED)
-	    if (pair -> code == UNCONVENTIONAL_NAMES)
-	    {
-		//This is a meta flag for several warnings actually
-		warning[UNCONVENTIONAL_CLASS_NAME] = pair -> level;
-		warning[UNCONVENTIONAL_CONSTANT_FIELD_NAME] = pair -> level;
-		warning[UNCONVENTIONAL_FIELD_NAME] = pair -> level;
-		warning[UNCONVENTIONAL_METHOD_NAME] = pair -> level;
-		warning[UNCONVENTIONAL_VARIABLE_NAME] = pair -> level;
-	    }
-	    else
-	    {
-		warning[pair -> code] = pair -> level;
-	    }
+        MessageGroup* group = message_groups[g];
+
+        assert(group -> level > DISABLED); // Is this a named warning?
+        for (unsigned c = 0; c < group -> codes.Length(); ++c)
+        {
+            SemanticErrorKind kind = group -> codes[c];
+            if (warning[kind] > DISABLED)
+            {
+                warning[kind] = group -> level;
+            }
+        }
     }
 }
 
@@ -646,56 +706,39 @@ bool SemanticError::ProcessWarningSwitch(const char* image)
 {
     StaticInitializer();
     bool enable = true;
-    SemanticError::WarningLevel name_value;
     if (strncmp(image, "no-", 3) == 0)
     {
         image += 3;
         enable = false;
     }
-    for (NamedError* pair = named_errors; pair -> name; ++pair)
+
+    bool switch_recognized = false;
+    for (unsigned g = 0; g < message_groups.Length(); ++g)
     {
-	if (strcmp(pair -> name, image) == 0)
-	{
-	    if (pair -> code == UNCONVENTIONAL_NAMES)
-	    {
-		//This is a meta flag for several warnings actually
-		if (enable && (pair -> level == NAMED_STRONG_ON ||
-			       pair -> level == NAMED_STRONG_OFF)  )
-		    name_value = STRONG_WARNING;
-		else if (enable && (pair -> level == NAMED_WEAK_ON ||
-				     pair -> level == NAMED_WEAK_OFF)  )
-		    name_value = STRONG_WARNING;
-		else
-		{
-		    assert((!enable) && "how did we get here?");
-		    name_value = DISABLED;
-		}
-		warning[UNCONVENTIONAL_CLASS_NAME] = name_value;
-		warning[UNCONVENTIONAL_CONSTANT_FIELD_NAME] = name_value;
-		warning[UNCONVENTIONAL_FIELD_NAME] = name_value;
-		warning[UNCONVENTIONAL_METHOD_NAME] = name_value;
-		warning[UNCONVENTIONAL_VARIABLE_NAME] = name_value;
-		return true;
-	    }
-	    else
-	    {
-		switch(pair -> level)
-		{
-		    case NAMED_STRONG_ON:
-		    case NAMED_STRONG_OFF:
-			warning[pair -> code] = enable ? STRONG_WARNING : DISABLED;
-			return true;
-		    case NAMED_WEAK_ON:
-		    case NAMED_WEAK_OFF:
-			warning[pair -> code] = enable ? WEAK_WARNING : DISABLED;
-			return true;
-		    default:
-			assert(false && "Invalid default level for named warning");
-		}
-	    }
-	}
+        MessageGroup* group = message_groups[g];
+        if (strcmp(group -> name, image) == 0)
+        {
+            switch_recognized = true;
+            for (int c = 0; c < group -> codes.Length(); ++c)
+            {
+                SemanticErrorKind kind = group -> codes[c];
+                switch(group -> level)
+                {
+                    case NAMED_STRONG_ON:
+                    case NAMED_STRONG_OFF:
+                        warning[kind] = enable ? STRONG_WARNING : DISABLED;
+                        break;
+                    case NAMED_WEAK_ON:
+                    case NAMED_WEAK_OFF:
+                        warning[kind] = enable ? WEAK_WARNING : DISABLED;
+                        break;
+                    default:
+                        assert(false && "Invalid default level for named warning");
+                }
+            }
+        }
     }
-    return false;
+    return switch_recognized;
 }
 
 //
@@ -1195,6 +1238,10 @@ void SemanticError::InitializeMessages()
     // Warnings and pedantic errors.
     messages[NEGATIVE_ARRAY_SIZE] =
         "Array initialization will fail with a negative dimension.";
+    messages[NEGATIVE_SHIFT_COUNT] =
+        "The shift count %1 is negative.";
+    messages[SHIFT_COUNT_TOO_LARGE] =
+        "The shift count of %1 is >= the %2-bit width of the type.";
     messages[UNNECESSARY_PARENTHESIS] =
         "Parenthesis surrounding a variable are syntactically unnecessary. "
         "While legal now, they were illegal in previous versions of Java.";
@@ -1238,6 +1285,16 @@ void SemanticError::InitializeMessages()
         "Integer division will fail with division by zero.";
     messages[VOID_TO_STRING] =
         "Attempt to convert a void expression into java.lang.String.";
+    messages[CLASS_METHOD_INVOKED_VIA_INSTANCE] =
+        "Invoking the class method \"%1\" via an instance is discouraged "
+        "because the method invoked will be the one in the variable's "
+        "declared type, not the instance's dynamic type.";
+    messages[CLASS_FIELD_ACCESSED_VIA_INSTANCE] =
+        "Accessing the class field \"%1\" via an instance is discouraged "
+        "because the field accessed will be the one in the variable's "
+        "declared type, not the instance's dynamic type.";
+    messages[CONSTANT_OVERFLOW] =
+        "Overflow in %1 expression.";
 
     // "Effective Java" warnings.
     messages[EJ_AVOID_OVERLOADING_EQUALS] =
@@ -1284,7 +1341,23 @@ void SemanticError::InitializeMessages()
         "Return a zero-length array instead of null. This avoids the need "
         "for special-case code in the caller. "
         "(See item 27 of \"Effective Java\".)";
+    messages[EJ_SERIALIZABLE_INNER_CLASS] =
+        "The default serialized form of an inner class is ill-defined; "
+        "inner classes should rarely, if ever, implement Serializable. "
+        "(See item 54 of \"Effective Java\".)";
     
+    // serialVersionUID warnings.
+    messages[UNNEEDED_SERIAL_VERSION_UID] =
+        "serialVersionUID is only needed in classes that implement "
+        "\"java.io.Serializable\".";
+    messages[BAD_SERIAL_VERSION_UID] =
+        "serialVersionUID should be a private static final long field.";
+    messages[MISSING_SERIAL_VERSION_UID] =
+        "It is strongly recommended that all serializable classes "
+        "explicitly declare serialVersionUID, since the default computation "
+        "can result in unexpected InvalidClassExceptions during "
+        "deserialization.";
+
     // Naming convention warnings.
     messages[UNCONVENTIONAL_CLASS_NAME] =
         "Use names ThatLookLikeThis for classes such as \"%1\". "

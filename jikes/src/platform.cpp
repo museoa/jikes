@@ -1307,6 +1307,9 @@ const wchar_t StringConstant::US_RuntimeException[] = {
 const wchar_t StringConstant::US_Serializable[] = {
     U_S, U_e, U_r, U_i, U_a, U_l, U_i, U_z, U_a, U_b, U_l, U_e,
     U_NU}; // L"Serializable"
+const wchar_t StringConstant::US_serialPersistentFields[] = {
+    U_s, U_e, U_r, U_i, U_a, U_l, U_P, U_e, U_r, U_s, U_i, U_s, U_t, U_e,
+    U_n, U_t, U_F, U_i, U_e, U_l, U_d, U_s, U_NU}; // L"serialPersistentFields"
 const wchar_t StringConstant::US_serialVersionUID[] = {
     U_s, U_e, U_r, U_i, U_a, U_l, U_V, U_e, U_r, U_s, U_i, U_o,
     U_n, U_U, U_I, U_D, U_NU}; // L"serialVersionUID"

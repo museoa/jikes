@@ -1,3 +1,30 @@
+2004-02-17  Elliott Hughes  <enh@acm.org>
+
+	* doc/jikes.1: Document new +Peffective-java and +Pserial switches.
+	* src/control.h, src/platform.cpp, src/platform.h, src/system.cpp: Adds
+	new serialPersistentFields name symbol.
+	* src/decl.cpp (CheckForSerializationMistakes): Don't warn about
+	the companion field to serialVersionUID, serialPersistentFields.
+	Add the new serialization checks from Java 1.5's javac.
+	(CheckFieldDeclaration, CheckFieldName): Factor out the field
+	checking, now there's more of it.
+	* double.cpp, src/double.h: Use Int::MIN_INT and Int::MAX_INT.
+	* src/error.cpp, src/error.h: New errors. Proper support for
+	command-line +P switches that turn groups of warnings on/off (previously
+	there was a single special case for +Pnaming).
+	* src/expr.cpp: Adds overflow checking for integer constant expressions.
+	* src/expr.cpp (FindMethodMember, FindVariableMember): Check for class
+	methods or fields accessed via an instance rather than the class.
+	* src/expr.cpp (ProcessShift, ProcessShiftCount, ProcessLEFT_SHIFT,
+	ProcessRIGHT_SHIFT): check for over-large or negative shift counts,
+	factor out some duplicated code. (These checks would have helped the
+	submitter of the recently-fixed code generation bug for prefix unary
+	operators.)
+	(The new overflow-related code might be better in a new file overflow.h)
+	* src/long.h: New class Int, analogous to LongInt, so we can get hold
+	of MIN_INT and MAX_INT in a similar manner.
+	* src/semantic.h: New prototypes.
+
 2004-02-16  Elliott Hughes  <enh@acm.org>
 
 	* src/class.cpp (AnnotationComponentAnnotation::Print): Fix

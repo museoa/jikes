@@ -590,6 +590,7 @@ public:
         US_PObject[], // L"PObject"
         US_RuntimeException[], // L"RuntimeException"
         US_Serializable[], // L"Serializable"
+        US_serialPersistentFields[], // L"serialPersistentFields"
         US_serialVersionUID[], // L"serialVersionUID"
         US_Short[], // L"Short"
         US_String[], // L"String"

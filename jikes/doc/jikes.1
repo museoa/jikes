@@ -297,11 +297,17 @@ listed multiple times, with cumulative effect. With no flags, this
 turns on the default set of pedantic warnings. Specifying a flag will
 then turn on or off a particular warning, depending on the presence of
 the \fIno-\fP prefix. At present, the recognized flags are
+\fBeffective-java\fP, which warns about the anti-patterns mentioned
+in Joshua Bloch's book "Effective Java";
 \fBmodifier-order\fP, which warns about the recommended ordering of
-multiple modifiers; \fBredundant-modifiers\fP, which warns about
-explicitly mentioning an implied modifier; \fBswitchcheck\fP, which
-warns about fallthrough between cases of switch statements; and
-\fBnaming-convention\fP, which warns about names that violate Java
+multiple modifiers;
+\fBredundant-modifiers\fP, which warns about
+explicitly mentioning an implied modifier;
+\fBserial\fP, which warns about serializable classes without
+serialVersionUID fields;
+\fBswitchcheck\fP, which
+warns about fallthrough between cases of switch statements;
+and \fBnaming-convention\fP, which warns about names that violate Java
 naming conventions.  Only switchcheck and naming-convention are
 included in plain \fB\+P\fP; the others must be asked for by
 name. Multiple \fB\+P\fP options are cumulative in effect. For

@@ -162,6 +162,8 @@ public:
 
         // Warnings and pedantic errors.
         NEGATIVE_ARRAY_SIZE,
+        NEGATIVE_SHIFT_COUNT,
+        SHIFT_COUNT_TOO_LARGE,
         UNNECESSARY_PARENTHESIS,
         EMPTY_DECLARATION,
         REDUNDANT_MODIFIER,
@@ -177,6 +179,9 @@ public:
         REFERENCE_TO_TYPE_IN_MISMATCHED_FILE,
         ZERO_DIVIDE_CAUTION,
         VOID_TO_STRING,
+        CLASS_METHOD_INVOKED_VIA_INSTANCE,
+        CLASS_FIELD_ACCESSED_VIA_INSTANCE,
+        CONSTANT_OVERFLOW,
 
         // "Effective Java" warnings.
         EJ_AVOID_OVERLOADING_EQUALS,
@@ -189,6 +194,12 @@ public:
         EJ_OVERLY_GENERAL_THROWS_CLAUSE,
         EJ_PUBLIC_STATIC_FINAL_ARRAY_FIELD,
         EJ_RETURN_OF_NULL_ARRAY,
+        EJ_SERIALIZABLE_INNER_CLASS,
+
+        // serialVersionUID warnings.
+        UNNEEDED_SERIAL_VERSION_UID,
+        BAD_SERIAL_VERSION_UID,
+        MISSING_SERIAL_VERSION_UID,
         
         // Naming convention warnings.
         UNCONVENTIONAL_CLASS_NAME,
@@ -396,34 +407,22 @@ public:
         ENCLOSING_INSTANCE_NOT_ACCESSIBLE,
         INVALID_ENCLOSING_INSTANCE,
 
-	//this counts the number of legitimate types in the enum
-	// it must follow all of the real error types
+        //this counts the number of legitimate types in the enum
+        // it must follow all of the real error types
         _num_kinds,
 
-	//this is a made up, bogus, error type. It is used as
-	// token for *all* of the UNCONVENTIONAL_*_NAME errors
-	// above, but ONLY in the argument processing logic,
-	// where it is used as a token, but not as an index into
-	// the tables that are indexed by the above... no point
-	// wasting space in those tables for it.
-	UNCONVENTIONAL_NAMES
+        //this is a made up, bogus, error type. It is used in lists
+        // of SemanticErrorKinds to mark the end of the list.
+        // It is not used as an index into
+        // the tables that are indexed by the above... no point
+        // wasting space in those tables for it.
+        END,
     };
-
-    //
-    // Describes an error code for the purpose of turning it on or off by name.
-    // The name is used on the command-line, in Jikes' -help output.
-    //
-    struct NamedError
-    {
-        const char* name;
-        const char* reason;
-        SemanticErrorKind code;
-        WarningLevel level;
-    };
-    static NamedError named_errors[];
 
     static void StaticInitializer();
     static void InitializeMessages();
+    static void InitializeMessageGroups();
+    static void SetWarningLevel(SemanticErrorKind, WarningLevel);
 
     static bool ProcessWarningSwitch(const char*);
     static void PrintNamedWarnings();

@@ -22,13 +22,27 @@ class IEEEfloat;
 class LongInt;
 class ULongInt;
 
+class Int
+{
+public:
+    // Max value of i4
+    static inline const i4 MAX_INT()
+    {
+        return 0x7FFFFFFF;
+    }
+
+    // Min value of i4
+    static inline const i4 MIN_INT()
+    {
+        return 0x80000000;
+    }
+};
+
 class BaseLong
 {
 protected:
     enum
     {
-        MAX_INT = 0x7FFFFFFF, // max value of i4
-        MIN_INT = 0x80000000, // min value of i4
         SHORT_MASK = 0xFFFF, // mask for lower half of i4
         SIGN_BIT = 0x80000000 // sign bit
     };
