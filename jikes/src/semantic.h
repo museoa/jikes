@@ -24,6 +24,7 @@ namespace Jikes { // Open namespace Jikes block
 
 class Control;
 class TypeShadowSymbol;
+class MethodShadowSymbol;
 class CPClassInfo;
 class ConstantPool;
 
@@ -838,6 +839,8 @@ private:
     void ProcessTypeHeaders(AstClassDeclaration*);
     void ProcessTypeHeaders(AstInterfaceDeclaration*);
     void ProcessTypeHeaders(TypeSymbol*, AstClassBody*);
+    void ProcessSuperinterface(TypeSymbol*, AstTypeName*);
+    void ProcessTypeParameters(TypeSymbol*, AstTypeParameters*);
     void ProcessConstructorMembers(AstClassBody*);
     void ProcessMethodMembers(AstClassBody*);
     void ProcessClassBodyForEffectiveJavaChecks(AstClassBody*);
@@ -999,14 +1002,13 @@ private:
     TypeSymbol* FindInaccessibleType(AstName*);
     TypeSymbol* MustFindType(AstName*);
     void ProcessType(AstType*);
-    void ProcessInterface(TypeSymbol*, AstTypeName*);
 
     // Implemented in decl.cpp - process initializers
     void InitializeVariable(AstFieldDeclaration*, MethodSymbol*);
     void ProcessInitializer(AstInitializerDeclaration*, MethodSymbol*);
     void ProcessStaticInitializers(AstClassBody*);
     void ProcessInstanceInitializers(AstClassBody*);
-    MethodSymbol* GetStaticInitializerMethod(int estimate = 0);
+    MethodSymbol* GetStaticInitializerMethod(unsigned estimate = 0);
 
     // Implemented in expr.cpp - expression processing
     inline bool CanWideningPrimitiveConvert(const TypeSymbol*,

@@ -182,6 +182,8 @@ class AstName;
 class AstPrimitiveType;
 class AstBrackets;
 class AstArrayType;
+class AstWildcard;
+class AstTypeArguments;
 class AstTypeName;
 class AstMemberValuePair;
 class AstAnnotation;
@@ -192,6 +194,8 @@ class AstImportDeclaration;
 class AstCompilationUnit;
 class AstEmptyDeclaration;
 class AstClassBody;
+class AstTypeParameter;
+class AstTypeParameters;
 class AstClassDeclaration;
 class AstArrayInitializer;
 class AstVariableDeclaratorId;
@@ -346,6 +350,8 @@ public:
         BOOLEAN,
         VOID_TYPE,
         ARRAY,
+        WILDCARD,
+        TYPE_ARGUMENTS,
         TYPE,
         COMPILATION,
         MEMBER_VALUE_PAIR,
@@ -356,6 +362,8 @@ public:
         IMPORT,
         EMPTY_DECLARATION,
         CLASS,
+        TYPE_PARAM,
+        PARAM_LIST,
         CLASS_BODY,
         FIELD,
         VARIABLE_DECLARATOR,
@@ -510,6 +518,8 @@ public:
     inline AstName* NameCast();
     inline AstBrackets* BracketsCast();
     inline AstArrayType* ArrayTypeCast();
+    inline AstWildcard* WildcardCast();
+    inline AstTypeArguments* TypeArgumentsCast();
     inline AstTypeName* TypeNameCast();
     inline AstMemberValuePair* MemberValuePairCast();
     inline AstAnnotation* AnnotationCast();
@@ -520,6 +530,8 @@ public:
     inline AstCompilationUnit* CompilationUnitCast();
     inline AstEmptyDeclaration* EmptyDeclarationCast();
     inline AstClassBody* ClassBodyCast();
+    inline AstTypeParameter* TypeParameterCast();
+    inline AstTypeParameters* TypeParametersCast();
     inline AstClassDeclaration* ClassDeclarationCast();
     inline AstArrayInitializer* ArrayInitializerCast();
     inline AstVariableDeclaratorId* VariableDeclaratorIdCast();
@@ -798,7 +810,8 @@ public:
 
 
 //
-// This is the superclass of constructs which represent a type.
+// This is the superclass of constructs which represent a type:
+// AstPrimitiveType, AstArrayType, AstWildcard, and AstTypeName. 
 //
 class AstType : public Ast
 {
@@ -1049,20 +1062,114 @@ public:
 
 
 //
+// Represents a wildcard type. Only occurs in type arguments for naming a
+// generic type or method (but not in explicit type arguments for invoking
+// a method).
+//
+class AstWildcard : public AstType
+{
+public:
+    LexStream::TokenIndex question_token;
+    // 0 or 1 of the next two fields, but never both
+    LexStream::TokenIndex extends_token_opt;
+    LexStream::TokenIndex super_token_opt;
+    AstType* bounds_opt; // AstArrayType, AstTypeName
+
+    inline AstWildcard(LexStream::TokenIndex t)
+        : AstType(WILDCARD)
+        , question_token(t)
+    {}
+    ~AstWildcard() {}
+
+#ifdef JIKES_DEBUG
+    virtual void Print(LexStream&);
+    virtual void Unparse(Ostream&, LexStream*);
+#endif // JIKES_DEBUG
+
+    virtual Ast* Clone(StoragePool*);
+
+    virtual LexStream::TokenIndex LeftToken() { return question_token; }
+    virtual LexStream::TokenIndex RightToken()
+    {
+        return bounds_opt ? bounds_opt -> RightToken() : question_token;
+    }
+    virtual LexStream::TokenIndex IdentifierToken() { return question_token; }
+};
+
+
+//
+// Represents the type arguments associated with a TypeName, as well as the
+// explicit type arguments of ThisCall, SuperCall,MethodInvocation, and
+// ClassCreationExpression.  The grammar always allows wildcards, so the
+// semantic engine must reject them when they are illegal.
+//
+class AstTypeArguments : public Ast
+{
+    StoragePool* pool;
+    // AstTypeName, AstArrayType, AstWildcard
+    AstArray<AstType*>* type_arguments;
+
+public:
+    LexStream::TokenIndex left_angle_token;
+    LexStream::TokenIndex right_angle_token;
+
+    inline AstTypeArguments(StoragePool* p,
+                            LexStream::TokenIndex l, LexStream::TokenIndex r)
+        : Ast(TYPE_ARGUMENTS)
+        , pool(p)
+        , left_angle_token(l)
+        , right_angle_token(r)
+    {}
+    ~AstTypeArguments() {}
+
+    inline AstType*& TypeArgument(unsigned i) { return (*type_arguments)[i]; }
+    inline unsigned NumTypeArguments()
+    {
+        assert(type_arguments);
+        return type_arguments -> Length();
+    }
+    inline void AllocateTypeArguments(unsigned estimate = 1);
+    inline void AddTypeArgument(AstType*);
+
+#ifdef JIKES_DEBUG
+    virtual void Print(LexStream&);
+    virtual void Unparse(Ostream&, LexStream*);
+#endif // JIKES_DEBUG
+
+    virtual Ast* Clone(StoragePool*);
+
+    virtual LexStream::TokenIndex LeftToken() { return left_angle_token; }
+    virtual LexStream::TokenIndex RightToken() { return right_angle_token; }
+};
+
+
+//
 // Represents a type. Occurs in several contexts - imports; supertypes;
 // throws clauses; parameter, field, and method return types; qualified this
-// and super; class literals; casts.
+// and super; class literals; casts. Some of these uses can be parameterized.
 //
 class AstTypeName : public AstType
 {
 public:
+    AstTypeName* base_opt;
     AstName* name;
+    AstTypeArguments* type_arguments_opt;
 
-    inline AstTypeName(StoragePool*, AstName* n)
+    inline AstTypeName(AstName* n)
         : AstType(TYPE)
         , name(n)
     {}
     ~AstTypeName() {}
+
+    inline AstType*& TypeArgument(unsigned i)
+    {
+        return type_arguments_opt -> TypeArgument(i);
+    }
+    inline unsigned NumTypeArguments()
+    {
+        return type_arguments_opt
+            ? type_arguments_opt -> NumTypeArguments() : 0;
+    }
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -1073,11 +1180,12 @@ public:
 
     virtual LexStream::TokenIndex LeftToken()
     {
-        return name -> LeftToken();
+        return base_opt ? base_opt -> LeftToken() : name -> LeftToken();
     }
     virtual LexStream::TokenIndex RightToken()
     {
-        return name -> identifier_token;
+        return type_arguments_opt ? type_arguments_opt -> right_angle_token
+            :  name -> identifier_token;
     }
     virtual LexStream::TokenIndex IdentifierToken()
     {
@@ -1247,7 +1355,8 @@ public:
 
 
 //
-// PackageDeclaration --> <PACKAGE, package_token, Name, ;_token>
+// Represents the PackageDeclaration, including the annotations made possible
+// in package-info.java by JSR 175.
 //
 class AstPackageDeclaration : public Ast
 {
@@ -1593,6 +1702,88 @@ public:
 };
 
 
+//
+// Represents a type parameter, used by AstTypeParameters.
+//
+class AstTypeParameter : public Ast
+{
+    StoragePool* pool;
+    AstArray<AstTypeName*>* bounds;
+
+public:
+    LexStream::TokenIndex identifier_token;
+
+    TypeSymbol* symbol;
+
+    inline AstTypeParameter(StoragePool* p, LexStream::TokenIndex token)
+        : Ast(TYPE_PARAM)
+        , pool(p)
+        , identifier_token(token)
+    {}
+    ~AstTypeParameter() {}
+
+    inline AstTypeName*& Bound(unsigned i) { return (*bounds)[i]; }
+    inline unsigned NumBounds() { return bounds ? bounds -> Length() : 0; }
+    inline void AllocateBounds(unsigned estimate = 1);
+    inline void AddBound(AstTypeName*);
+
+#ifdef JIKES_DEBUG
+    virtual void Print(LexStream&);
+    virtual void Unparse(Ostream&, LexStream*);
+#endif // JIKES_DEBUG
+
+    virtual Ast* Clone(StoragePool*);
+
+    virtual LexStream::TokenIndex LeftToken() { return identifier_token; }
+    virtual LexStream::TokenIndex RightToken()
+    {
+        return NumBounds() ? Bound(NumBounds() - 1) -> RightToken()
+            : identifier_token;
+    }
+};
+
+
+//
+// Represents type parameter declarations, used by AstClassDeclaration,
+// AstInterfaceDeclaration, AstMethodDeclaration, AstConstructorDeclaration.
+//
+class AstTypeParameters : public Ast
+{
+    StoragePool* pool;
+    AstArray<AstTypeParameter*>* parameters;
+
+public:
+    LexStream::TokenIndex left_angle_token;
+    LexStream::TokenIndex right_angle_token;
+
+    inline AstTypeParameters(StoragePool* p)
+        : Ast(PARAM_LIST)
+        , pool(p)
+    {}
+    ~AstTypeParameters() {}
+
+    inline AstTypeParameter*& TypeParameter(unsigned i)
+    {
+        return (*parameters)[i];
+    }
+    inline unsigned NumTypeParameters()
+    {
+        return parameters ? parameters -> Length() : 0;
+    }
+    inline void AllocateTypeParameters(unsigned estimate = 1);
+    inline void AddTypeParameter(AstTypeParameter*);
+
+#ifdef JIKES_DEBUG
+    virtual void Print(LexStream&);
+    virtual void Unparse(Ostream&, LexStream*);
+#endif // JIKES_DEBUG
+
+    virtual Ast* Clone(StoragePool*);
+
+    virtual LexStream::TokenIndex LeftToken() { return left_angle_token; }
+    virtual LexStream::TokenIndex RightToken() { return right_angle_token; }
+};
+
 
 //
 // Represents a class declaration.
@@ -1604,6 +1795,7 @@ class AstClassDeclaration : public AstDeclaredType
 
 public:
     LexStream::TokenIndex class_token;
+    AstTypeParameters* type_parameters_opt;
     AstTypeName* super_opt;
 
     inline AstClassDeclaration(StoragePool* p)
@@ -1934,16 +2126,8 @@ public:
 
 
 //
-// MethodDeclaration --> <METHOD, MethodModifiers, Type, MethodDeclarator,
-//    Throws, MethodBody>
-//
-// MethodModifier --> Modifier (PUBLIC, PROTECTED, PRIVATE, STATIC, ABSTRACT,
-//    FINAL, NATIVE or SYNCHRONIZED)
-//
-// Throws --> Names
-//
-// MethodBody --> Block
-//              | EmptyStatement
+// Represents MethodDeclaration, AbstractMethodDeclaration, and Annotation
+// method declarations added in JSR 175.
 //
 class AstMethodDeclaration : public AstDeclared
 {
@@ -1953,8 +2137,10 @@ class AstMethodDeclaration : public AstDeclared
 public:
     MethodSymbol* method_symbol;
 
+    AstTypeParameters* type_parameters_opt;
     AstType* type;
     AstMethodDeclarator* method_declarator;
+    AstMemberValue* default_value_opt;
     AstMethodBody* method_body_opt;
 
     inline AstMethodDeclaration(StoragePool* p)
@@ -1982,11 +2168,14 @@ public:
     virtual LexStream::TokenIndex LeftToken()
     {
         return modifiers_opt ? modifiers_opt -> LeftToken()
+            : type_parameters_opt ? type_parameters_opt -> left_angle_token
             : type -> LeftToken();
     }
     virtual LexStream::TokenIndex RightToken()
     {
         return method_body_opt ? method_body_opt -> right_brace_token
+            : default_value_opt ? default_value_opt -> RightToken() + 1
+            : NumThrows() ? Throw(NumThrows() - 1) -> RightToken()
             : method_declarator -> RightToken() + 1;
     }
 };
@@ -2106,6 +2295,7 @@ class AstThisCall : public AstStatement
 public:
     MethodSymbol* symbol;
 
+    AstTypeArguments* type_arguments_opt;
     LexStream::TokenIndex this_token;
     AstArguments* arguments;
     LexStream::TokenIndex semicolon_token;
@@ -2122,7 +2312,11 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return this_token; }
+    virtual LexStream::TokenIndex LeftToken()
+    {
+        return type_arguments_opt ? type_arguments_opt -> left_angle_token
+            : this_token;
+    }
     virtual LexStream::TokenIndex RightToken() { return semicolon_token; }
 };
 
@@ -2136,6 +2330,7 @@ public:
     MethodSymbol* symbol;
 
     AstExpression* base_opt;
+    AstTypeArguments* type_arguments_opt;
     LexStream::TokenIndex super_token;
     AstArguments* arguments;
     LexStream::TokenIndex semicolon_token;
@@ -2154,7 +2349,9 @@ public:
 
     virtual LexStream::TokenIndex LeftToken()
     {
-        return base_opt ? base_opt -> LeftToken() : super_token;
+        return base_opt ? base_opt -> LeftToken()
+            : type_arguments_opt ? type_arguments_opt -> left_angle_token
+            : super_token;
     }
     virtual LexStream::TokenIndex RightToken() { return semicolon_token; }
 };
@@ -2187,6 +2384,7 @@ public:
     MethodSymbol* constructor_symbol;
     int index; // Used in depend.cpp to detect cycles.
 
+    AstTypeParameters* type_parameters_opt;
     AstMethodDeclarator* constructor_declarator;
     AstMethodBody* constructor_body;
 
@@ -2214,6 +2412,7 @@ public:
     virtual LexStream::TokenIndex LeftToken()
     {
         return modifiers_opt ? modifiers_opt -> LeftToken()
+            : type_parameters_opt ? type_parameters_opt -> left_angle_token
             : constructor_declarator -> identifier_token;
     }
     virtual LexStream::TokenIndex RightToken()
@@ -2224,27 +2423,7 @@ public:
 
 
 //
-// InterfaceDeclaration --> <INTERFACE, Interfacemodifiers, interface_token,
-// identifier_token, ExtendsInterfaces, {_token, InterfaceMemberDeclarations,
-// }_token>
-//
-// InterfaceModifier --> Modifier (PUBLIC, ABSTRACT)
-//
-// ExtendsInterfaces --> Names
-//
-//
-// InterfaceMemberDeclaration --> ConstantDeclaration
-//                              | AbstractMethodDeclaration
-//
-// ConstantDeclaration --> FieldDeclaration (where the FieldModifierList is a
-//         Constantmodifiers)
-//
-// ConstantModifier --> Modifier (PUBLIC, STATIC or FINAL)
-//
-// AbstractMethodDeclaration --> MethodDeclaration (where MethodModifierList
-//         is a SignatureModifierList and the MethodBody is an EmptyStatement)
-//
-// SignatureModifier --> Modifier (PUBLIC or ABSTRACT)
+// Represents an interface type.
 //
 class AstInterfaceDeclaration : public AstDeclaredType
 {
@@ -2253,6 +2432,7 @@ class AstInterfaceDeclaration : public AstDeclaredType
 
 public:
     LexStream::TokenIndex interface_token;
+    AstTypeParameters* type_parameters_opt;
 
     inline AstInterfaceDeclaration(StoragePool* p)
         : AstDeclaredType(INTERFACE)
@@ -2693,13 +2873,9 @@ public:
 
 
 //
-// ForStatement --> <FOR, Label_opt, for_token, ForInits, Expression_opt,
-// ForUpdates, Statement>
-//
-// ForInit --> ExpressionStatement
-//           | LocalVariableStatement
-//
-// ForUpdate --> ExpressionStatement
+// Represents the traditional for statement. The parser has already enclosed
+// the overall for statement in its own block, as well as the enclosed
+// statement.
 //
 class AstForStatement : public AstStatement
 {
@@ -3103,7 +3279,7 @@ public:
 
 
 //
-// IntegerLiteral --> <INTEGER_LITERAL, integer_literal_token, value>
+// Represents an int literal.
 //
 class AstIntegerLiteral : public AstExpression
 {
@@ -3496,6 +3672,7 @@ class AstClassCreationExpression : public AstExpression
 public:
     AstExpression* base_opt;
     LexStream::TokenIndex new_token;
+    AstTypeArguments* type_arguments_opt;
     AstTypeName* class_type;
     AstArguments* arguments;
     AstClassBody* class_body_opt;
@@ -3645,12 +3822,15 @@ public:
 
 
 //
-// Represents a method call.
+// Represents a method call.  Sometimes, during semantic analysis an
+// artificial base_opt expression is constructed. In such a case, the user
+// can determine this condition by testing base_opt -> generated.
 //
 class AstMethodInvocation : public AstExpression
 {
 public:
     AstExpression* base_opt;
+    AstTypeArguments* type_arguments_opt;
     LexStream::TokenIndex identifier_token;
     AstArguments* arguments;
 
@@ -3676,6 +3856,8 @@ public:
 
     virtual LexStream::TokenIndex LeftToken()
     {
+        if (type_arguments_opt)
+            assert(base_opt);
         return base_opt ? base_opt -> LeftToken() : identifier_token;
     }
     virtual LexStream::TokenIndex RightToken()
@@ -4337,9 +4519,20 @@ public:
         return new (this) AstArrayType(type, brackets);
     }
 
+    inline AstWildcard* NewWildcard(LexStream::TokenIndex question)
+    {
+        return new (this) AstWildcard(question);
+    }
+
+    inline AstTypeArguments* NewTypeArguments(LexStream::TokenIndex left,
+                                              LexStream::TokenIndex right)
+    {
+        return new (this) AstTypeArguments(this, left, right);
+    }
+
     inline AstTypeName* NewTypeName(AstName* name)
     {
-        return new (this) AstTypeName(this, name);
+        return new (this) AstTypeName(name);
     }
 
     inline AstMemberValuePair* NewMemberValuePair()
@@ -4385,6 +4578,16 @@ public:
     inline AstClassBody* NewClassBody()
     {
         return new (this) AstClassBody(this);
+    }
+
+    inline AstTypeParameter* NewTypeParameter(LexStream::TokenIndex token)
+    {
+        return new (this) AstTypeParameter(this, token);
+    }
+
+    inline AstTypeParameters* NewTypeParameters()
+    {
+        return new (this) AstTypeParameters(this);
     }
 
     inline AstClassDeclaration* NewClassDeclaration()
@@ -4752,6 +4955,21 @@ public:
         return p;
     }
 
+    inline AstWildcard* GenWildcard(LexStream::TokenIndex question)
+    {
+        AstWildcard* p = NewWildcard(question);
+        p -> generated = true;
+        return p;
+    }
+
+    inline AstTypeArguments* GenTypeArguments(LexStream::TokenIndex left,
+                                              LexStream::TokenIndex right)
+    {
+        AstTypeArguments* p = NewTypeArguments(left, right);
+        p -> generated = true;
+        return p;
+    }
+
     inline AstTypeName* GenTypeName(AstName* type)
     {
         AstTypeName* p = NewTypeName(type);
@@ -4818,6 +5036,20 @@ public:
     inline AstClassBody* GenClassBody()
     {
         AstClassBody* p = NewClassBody();
+        p -> generated = true;
+        return p;
+    }
+
+    inline AstTypeParameter* GenTypeParameter(LexStream::TokenIndex token)
+    {
+        AstTypeParameter* p = NewTypeParameter(token);
+        p -> generated = true;
+        return p;
+    }
+
+    inline AstTypeParameters* GenTypeParameters()
+    {
+        AstTypeParameters* p = NewTypeParameters();
         p -> generated = true;
         return p;
     }
@@ -5383,6 +5615,17 @@ inline AstArrayType* Ast::ArrayTypeCast()
     return DYNAMIC_CAST<AstArrayType*> (kind == ARRAY ? this : NULL);
 }
 
+inline AstWildcard* Ast::WildcardCast()
+{
+    return DYNAMIC_CAST<AstWildcard*> (kind == WILDCARD ? this : NULL);
+}
+
+inline AstTypeArguments* Ast::TypeArgumentsCast()
+{
+    return DYNAMIC_CAST<AstTypeArguments*>
+        (kind == TYPE_ARGUMENTS ? this : NULL);
+}
+
 inline AstTypeName* Ast::TypeNameCast()
 {
     return DYNAMIC_CAST<AstTypeName*> (kind == TYPE ? this : NULL);
@@ -5436,6 +5679,16 @@ inline AstEmptyDeclaration* Ast::EmptyDeclarationCast()
 inline AstClassBody* Ast::ClassBodyCast()
 {
     return DYNAMIC_CAST<AstClassBody*> (kind == CLASS_BODY ? this : NULL);
+}
+
+inline AstTypeParameter* Ast::TypeParameterCast()
+{
+    return DYNAMIC_CAST<AstTypeParameter*> (kind == TYPE_PARAM ? this : NULL);
+}
+
+inline AstTypeParameters* Ast::TypeParametersCast()
+{
+    return DYNAMIC_CAST<AstTypeParameters*> (kind == PARAM_LIST ? this : NULL);
 }
 
 inline AstClassDeclaration* Ast::ClassDeclarationCast()
@@ -5811,6 +6064,19 @@ inline void AstBlock::AddLocallyDefinedVariable(VariableSymbol* variable_symbol)
     defined_variables -> Next() = variable_symbol;
 }
 
+inline void AstTypeArguments::AllocateTypeArguments(unsigned estimate)
+{
+    assert(! type_arguments && estimate);
+    type_arguments = new (pool) AstArray<AstType*> (pool, estimate);
+}
+
+inline void AstTypeArguments::AddTypeArgument(AstType* argument)
+{
+    assert(! argument -> PrimitiveTypeCast());
+    assert(type_arguments);
+    type_arguments -> Next() = argument;
+}
+
 inline void AstAnnotation::AllocateMemberValuePairs(unsigned estimate)
 {
     assert(! member_value_pairs);
@@ -5994,6 +6260,30 @@ inline void AstClassBody::AddEmptyDeclaration(AstEmptyDeclaration* empty_declara
 {
     assert(empty_declarations);
     empty_declarations -> Next() = empty_declaration;
+}
+
+inline void AstTypeParameter::AllocateBounds(unsigned estimate)
+{
+    assert(! bounds);
+    bounds = new (pool) AstArray<AstTypeName*> (pool, estimate);
+}
+
+inline void AstTypeParameter::AddBound(AstTypeName* bound)
+{
+    assert(bounds);
+    bounds -> Next() = bound;
+}
+
+inline void AstTypeParameters::AllocateTypeParameters(unsigned estimate)
+{
+    assert(! parameters);
+    parameters = new (pool) AstArray<AstTypeParameter*> (pool, estimate);
+}
+
+inline void AstTypeParameters::AddTypeParameter(AstTypeParameter* type)
+{
+    assert(parameters);
+    parameters -> Next() = type;
 }
 
 inline void AstClassDeclaration::AllocateInterfaces(unsigned estimate)

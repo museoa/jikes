@@ -214,15 +214,14 @@ CaseElement* AstSwitchStatement::CaseForValue(i4 value)
 
 TypeSymbol* AstMemberValue::Type()
 {
-    return (TypeSymbol*)
-        (symbol ? (symbol -> Kind() == Symbol::TYPE
-                   ? (TypeSymbol*) symbol
-                   : (symbol -> Kind() == Symbol::VARIABLE
-                      ? ((VariableSymbol*) symbol) -> Type()
-                      : (symbol -> Kind() == Symbol::METHOD
-                         ? ((MethodSymbol*) symbol) -> Type()
-                         : NULL)))
-         : NULL);
+    return ! symbol ? (TypeSymbol*) NULL
+        : symbol -> Kind() == Symbol::TYPE
+        ? (TypeSymbol*) symbol
+        : symbol -> Kind() == Symbol::VARIABLE
+        ? ((VariableSymbol*) symbol) -> Type()
+        : symbol -> Kind() == Symbol::METHOD
+        ? ((MethodSymbol*) symbol) -> Type()
+        : (TypeSymbol*) NULL;
 }
 
 
@@ -278,10 +277,36 @@ Ast* AstArrayType::Clone(StoragePool* ast_pool)
                                      Clone(ast_pool)));
 }
 
+Ast* AstWildcard::Clone(StoragePool* ast_pool)
+{
+    AstWildcard* clone = ast_pool -> GenWildcard(question_token);
+    clone -> extends_token_opt = extends_token_opt;
+    clone -> super_token_opt = super_token_opt;
+    if (bounds_opt)
+        clone -> bounds_opt = (AstType*) bounds_opt -> Clone(ast_pool);
+    return clone;
+}
+
+Ast* AstTypeArguments::Clone(StoragePool* ast_pool)
+{
+    AstTypeArguments* clone = ast_pool -> GenTypeArguments(left_angle_token,
+                                                           right_angle_token);
+    clone -> AllocateTypeArguments(NumTypeArguments());
+    for (unsigned i = 0; i < NumTypeArguments(); i++)
+        clone -> AddTypeArgument((AstType*) TypeArgument(i) ->
+                                 Clone(ast_pool));
+    return clone;
+}
+
 Ast* AstTypeName::Clone(StoragePool* ast_pool)
 {
     AstTypeName* clone =
         ast_pool -> GenTypeName((AstName*) name -> Clone(ast_pool));
+    if (base_opt)
+        clone -> base_opt = (AstTypeName*) base_opt -> Clone(ast_pool);
+    if (type_arguments_opt)
+        clone -> type_arguments_opt =
+            (AstTypeArguments*) type_arguments_opt -> Clone(ast_pool);
     return clone;
 }
 
@@ -435,6 +460,27 @@ void AstClassBody::AddClassBodyDeclarationNicely(AstDeclared* member)
     else AddEmptyDeclaration((AstEmptyDeclaration*) member);
 }
 
+Ast* AstTypeParameter::Clone(StoragePool* ast_pool)
+{
+    AstTypeParameter* clone = ast_pool -> GenTypeParameter(identifier_token);
+    clone -> AllocateBounds(NumBounds());
+    for (unsigned i = 0; i < NumBounds(); i++)
+        clone -> AddBound((AstTypeName*) Bound(i) -> Clone(ast_pool));
+    return clone;
+}
+
+Ast* AstTypeParameters::Clone(StoragePool* ast_pool)
+{
+    AstTypeParameters* clone = ast_pool -> GenTypeParameters();
+    clone -> left_angle_token = left_angle_token;
+    clone -> AllocateTypeParameters(NumTypeParameters());
+    for (unsigned i = 0; i < NumTypeParameters(); i++)
+        clone -> AddTypeParameter((AstTypeParameter*) TypeParameter(i) ->
+                                  Clone(ast_pool));
+    clone -> right_angle_token = right_angle_token;
+    return clone;
+}
+
 Ast* AstClassDeclaration::Clone(StoragePool* ast_pool)
 {
     AstClassDeclaration* clone = ast_pool -> GenClassDeclaration();
@@ -442,6 +488,9 @@ Ast* AstClassDeclaration::Clone(StoragePool* ast_pool)
         clone -> modifiers_opt =
             (AstModifiers*) modifiers_opt -> Clone(ast_pool);
     clone -> class_token = class_token;
+    if (type_parameters_opt)
+        clone -> type_parameters_opt =
+            (AstTypeParameters*) type_parameters_opt -> Clone(ast_pool);
     if (super_opt)
         clone -> super_opt = (AstTypeName*) super_opt -> Clone(ast_pool);
     clone -> AllocateInterfaces(NumInterfaces());
@@ -546,12 +595,18 @@ Ast* AstMethodDeclaration::Clone(StoragePool* ast_pool)
     if (modifiers_opt)
         clone -> modifiers_opt =
             (AstModifiers*) modifiers_opt -> Clone(ast_pool);
+    if (type_parameters_opt)
+        clone -> type_parameters_opt =
+            (AstTypeParameters*) type_parameters_opt -> Clone(ast_pool);
     clone -> type = (AstType*) type -> Clone(ast_pool);
     clone -> method_declarator =
         (AstMethodDeclarator*) method_declarator -> Clone(ast_pool);
     clone -> AllocateThrows(NumThrows());
     for (unsigned i = 0; i < NumThrows(); i++)
         clone -> AddThrow((AstTypeName*) Throw(i) -> Clone(ast_pool));
+    if (default_value_opt)
+        clone -> default_value_opt =
+            (AstMemberValue*) default_value_opt -> Clone(ast_pool);
     if (method_body_opt)
         clone -> method_body_opt =
             (AstMethodBody*) method_body_opt -> Clone(ast_pool);
@@ -588,6 +643,9 @@ Ast* AstArguments::Clone(StoragePool* ast_pool)
 Ast* AstThisCall::Clone(StoragePool* ast_pool)
 {
     AstThisCall* clone = ast_pool -> GenThisCall();
+    if (type_arguments_opt)
+        clone -> type_arguments_opt =
+            (AstTypeArguments*) type_arguments_opt -> Clone(ast_pool);
     clone -> this_token = this_token;
     clone -> arguments = (AstArguments*) arguments -> Clone(ast_pool);
     clone -> semicolon_token = semicolon_token;
@@ -599,6 +657,9 @@ Ast* AstSuperCall::Clone(StoragePool* ast_pool)
     AstSuperCall* clone = ast_pool -> GenSuperCall();
     if (base_opt)
         clone -> base_opt = (AstExpression*) base_opt -> Clone(ast_pool);
+    if (type_arguments_opt)
+        clone -> type_arguments_opt =
+            (AstTypeArguments*) type_arguments_opt -> Clone(ast_pool);
     clone -> super_token = super_token;
     clone -> arguments = (AstArguments*) arguments -> Clone(ast_pool);
     clone -> semicolon_token = semicolon_token;
@@ -611,6 +672,9 @@ Ast* AstConstructorDeclaration::Clone(StoragePool* ast_pool)
     if (modifiers_opt)
         clone -> modifiers_opt =
             (AstModifiers*) modifiers_opt -> Clone(ast_pool);
+    if (type_parameters_opt)
+        clone -> type_parameters_opt =
+            (AstTypeParameters*) type_parameters_opt -> Clone(ast_pool);
     clone -> constructor_declarator =
         (AstMethodDeclarator*) constructor_declarator -> Clone(ast_pool);
     clone -> AllocateThrows(NumThrows());
@@ -628,6 +692,9 @@ Ast* AstInterfaceDeclaration::Clone(StoragePool* ast_pool)
         clone -> modifiers_opt =
             (AstModifiers*) modifiers_opt -> Clone(ast_pool);
     clone -> interface_token = interface_token;
+    if (type_parameters_opt)
+        clone -> type_parameters_opt =
+            (AstTypeParameters*) type_parameters_opt -> Clone(ast_pool);
     clone -> AllocateInterfaces(NumInterfaces());
     for (unsigned i = 0; i < NumInterfaces(); i++)
         clone -> AddInterface((AstTypeName*) Interface(i) -> Clone(ast_pool));
@@ -638,8 +705,7 @@ Ast* AstInterfaceDeclaration::Clone(StoragePool* ast_pool)
 
 Ast* AstLocalVariableStatement::Clone(StoragePool* ast_pool)
 {
-    AstLocalVariableStatement* clone =
-        ast_pool -> GenLocalVariableStatement();
+    AstLocalVariableStatement* clone = ast_pool -> GenLocalVariableStatement();
     if (modifiers_opt)
         clone -> modifiers_opt =
             (AstModifiers*) modifiers_opt -> Clone(ast_pool);
@@ -655,9 +721,8 @@ Ast* AstLocalVariableStatement::Clone(StoragePool* ast_pool)
 
 Ast* AstLocalClassStatement::Clone(StoragePool* ast_pool)
 {
-    return ast_pool ->
-        GenLocalClassStatement((AstClassDeclaration*) declaration ->
-                               Clone(ast_pool));
+    return ast_pool -> GenLocalClassStatement((AstClassDeclaration*)
+                                              declaration -> Clone(ast_pool));
 }
 
 Ast* AstIfStatement::Clone(StoragePool* ast_pool)
@@ -968,6 +1033,9 @@ Ast* AstClassCreationExpression::Clone(StoragePool* ast_pool)
     if (base_opt)
         clone -> base_opt = (AstExpression*) base_opt -> Clone(ast_pool);
     clone -> new_token = new_token;
+    if (type_arguments_opt)
+        clone -> type_arguments_opt =
+            (AstTypeArguments*) type_arguments_opt -> Clone(ast_pool);
     clone -> class_type = (AstTypeName*) class_type -> Clone(ast_pool);
     clone -> arguments = (AstArguments*) arguments -> Clone(ast_pool);
     if (class_body_opt)
@@ -1022,6 +1090,9 @@ Ast* AstMethodInvocation::Clone(StoragePool* ast_pool)
         ast_pool -> GenMethodInvocation(identifier_token);
     if (base_opt)
         clone -> base_opt = (AstExpression*) base_opt -> Clone(ast_pool);
+    if (type_arguments_opt)
+        clone -> type_arguments_opt =
+            (AstTypeArguments*) type_arguments_opt -> Clone(ast_pool);
     clone -> identifier_token = identifier_token;
     clone -> arguments = (AstArguments*) arguments -> Clone(ast_pool);
     if (resolution_opt)
@@ -1185,10 +1256,43 @@ void AstArrayType::Print(LexStream& lex_stream)
     brackets -> Print(lex_stream);
 }
 
+void AstWildcard::Print(LexStream& lex_stream)
+{
+    Coutput << '#' << id << " (Wildcard):  "
+            << lex_stream.NameString(question_token);
+    if (extends_token_opt)
+        Coutput << ' ' << lex_stream.NameString(extends_token_opt) << " #"
+                << bounds_opt -> id;
+    else if (super_token_opt)
+        Coutput << ' ' << lex_stream.NameString(super_token_opt) << " #"
+                << bounds_opt -> id;
+    Coutput << endl;
+    if (bounds_opt)
+        bounds_opt -> Print(lex_stream);
+}
+
+void AstTypeArguments::Print(LexStream& lex_stream)
+{
+    unsigned i;
+    Coutput << '#' << id << " (TypeArguments):  <";
+    for (i = 0; i < NumTypeArguments(); i++)
+        Coutput << " #" << TypeArgument(i) -> id;
+    Coutput << '>' << endl;
+    for (i = 0; i < NumTypeArguments(); i++)
+        TypeArgument(i) -> Print(lex_stream);
+}
+
 void AstTypeName::Print(LexStream& lex_stream)
 {
-    Coutput << '#' << id << " (TypeName):  #" << name -> id << endl;
+    Coutput << '#' << id << " (TypeName):  #"
+            << (base_opt ? base_opt -> id : 0) << ".#" << name -> id << "<#"
+            << (type_arguments_opt ? type_arguments_opt -> id : 0) << '>'
+            << endl;
+    if (base_opt)
+        base_opt -> Print(lex_stream);
     name -> Print(lex_stream);
+    if (type_arguments_opt)
+        type_arguments_opt -> Print(lex_stream);
 }
 
 void AstMemberValuePair::Print(LexStream& lex_stream)
@@ -1303,19 +1407,45 @@ void AstClassBody::Print(LexStream& lex_stream)
         ClassBodyDeclaration(i) -> Print(lex_stream);
 }
 
+void AstTypeParameter::Print(LexStream& lex_stream)
+{
+    unsigned i;
+    Coutput << '#' << id << " (TypeParameter):  "
+            << lex_stream.NameString(identifier_token) << " (";
+    for (i = 0; i < NumBounds(); i++)
+        Coutput << " #" << Bound(i) -> id;
+    Coutput << ')' << endl;
+    for (i = 0; i < NumBounds(); i++)
+        Bound(i) -> Print(lex_stream);
+}
+
+void AstTypeParameters::Print(LexStream& lex_stream)
+{
+    unsigned i;
+    Coutput << '#' << id << " (TypeParameters): <";
+    for (i = 0; i < NumTypeParameters(); i++)
+        Coutput << " #" << TypeParameter(i) -> id;
+    Coutput << '>' << endl;
+    for (i = 0; i < NumTypeParameters(); i++)
+        TypeParameter(i) -> Print(lex_stream);
+}
+
 void AstClassDeclaration::Print(LexStream& lex_stream)
 {
     unsigned i;
     Coutput << '#' << id << " (ClassDeclaration):  #"
             << (modifiers_opt ? modifiers_opt -> id : 0) << ' '
             << lex_stream.NameString(class_token) << ' '
-            << lex_stream.NameString(class_body -> identifier_token)
+            << lex_stream.NameString(class_body -> identifier_token) << " #"
+            << (type_parameters_opt ? type_parameters_opt -> id : 0)
             << " #" << (super_opt ? super_opt -> id : 0) << '(';
     for (i = 0; i < NumInterfaces(); i++)
         Coutput << " #" << Interface(i) -> id;
     Coutput << ") #" << class_body -> id << endl;
     if (modifiers_opt)
         modifiers_opt -> Print(lex_stream);
+    if (type_parameters_opt)
+        type_parameters_opt -> Print(lex_stream);
     if (super_opt)
         super_opt -> Print(lex_stream);
     for (i = 0; i < NumInterfaces(); i++)
@@ -1421,18 +1551,25 @@ void AstMethodDeclaration::Print(LexStream& lex_stream)
 {
     unsigned i;
     Coutput << '#' << id << " (MethodDeclaration):  #"
-            << (modifiers_opt ? modifiers_opt -> id : 0)
-            << " #" << type -> id << " #" << method_declarator -> id
+            << (modifiers_opt ? modifiers_opt -> id : 0) << " <#"
+            << (type_parameters_opt ? type_parameters_opt -> id : 0)
+            << "> #" << type -> id << " #" << method_declarator -> id
             << " throws: (";
     for (i = 0; i < NumThrows(); i++)
         Coutput << " #" << Throw(i) -> id;
-    Coutput << ") #" << (method_body_opt ? method_body_opt -> id : 0) << endl;
+    Coutput << ") default #"
+            << (default_value_opt ? default_value_opt -> id : 0) << ' '
+            << (method_body_opt ? method_body_opt -> id : 0) << endl;
     if (modifiers_opt)
         modifiers_opt -> Print(lex_stream);
+    if (type_parameters_opt)
+        type_parameters_opt -> Print(lex_stream);
     type -> Print(lex_stream);
     method_declarator -> Print(lex_stream);
     for (i = 0; i < NumThrows(); i++)
         Throw(i) -> Print(lex_stream);
+    if (default_value_opt)
+        default_value_opt -> Print(lex_stream);
     if (method_body_opt)
         method_body_opt -> Print(lex_stream);
 }
@@ -1460,20 +1597,26 @@ void AstArguments::Print(LexStream& lex_stream)
 
 void AstThisCall::Print(LexStream& lex_stream)
 {
-    Coutput << '#' << id << " (ThisCall):  "
+    Coutput << '#' << id << " (ThisCall):  #"
+            << (type_arguments_opt ? type_arguments_opt -> id : 0)
             << lex_stream.NameString(this_token) << " #" << arguments -> id
             << endl;
+    if (type_arguments_opt)
+        type_arguments_opt -> Print(lex_stream);
     arguments -> Print(lex_stream);
 }
 
 void AstSuperCall::Print(LexStream& lex_stream)
 {
     Coutput << '#' << id << " (SuperCall):  #"
-            << (base_opt ? base_opt -> id : 0) << '.'
+            << (base_opt ? base_opt -> id : 0) << ".#"
+            << (type_arguments_opt ? type_arguments_opt -> id : 0)
             << lex_stream.NameString(super_token) << " #" << arguments -> id
             << endl;
     if (base_opt)
         base_opt -> Print(lex_stream);
+    if (type_arguments_opt)
+        type_arguments_opt -> Print(lex_stream);
     arguments -> Print(lex_stream);
 }
 
@@ -1481,13 +1624,16 @@ void AstConstructorDeclaration::Print(LexStream& lex_stream)
 {
     unsigned i;
     Coutput << '#' << id << " (ConstructorDeclaration):  #"
-            << (modifiers_opt ? modifiers_opt -> id : 0)
+            << (modifiers_opt ? modifiers_opt -> id : 0) << " <#"
+            << (type_parameters_opt ? type_parameters_opt -> id : 0)
             << " #" << constructor_declarator -> id << " throws: (";
     for (i = 0; i < NumThrows(); i++)
         Coutput << " #" << Throw(i) -> id;
     Coutput << ") #" << constructor_body -> id << endl;
     if (modifiers_opt)
         modifiers_opt -> Print(lex_stream);
+    if (type_parameters_opt)
+        type_parameters_opt -> Print(lex_stream);
     constructor_declarator -> Print(lex_stream);
     for (i = 0; i < NumThrows(); i++)
         Throw(i) -> Print(lex_stream);
@@ -1500,12 +1646,15 @@ void AstInterfaceDeclaration::Print(LexStream& lex_stream)
     Coutput << '#' << id << " (InterfaceDeclaration):  #"
             << (modifiers_opt ? modifiers_opt -> id : 0) << ' '
             << lex_stream.NameString(interface_token) << ' '
-            << lex_stream.NameString(class_body -> identifier_token) << " (";
+            << lex_stream.NameString(class_body -> identifier_token) << " #"
+            << (type_parameters_opt ? type_parameters_opt -> id : 0) << " (";
     for (i = 0; i < NumInterfaces(); i++)
         Coutput << " #" << Interface(i) -> id;
     Coutput << ") #" << class_body -> id << endl;
     if (modifiers_opt)
         modifiers_opt -> Print(lex_stream);
+    if (type_parameters_opt)
+        type_parameters_opt -> Print(lex_stream);
     for (i = 0; i < NumInterfaces(); i++)
         Interface(i) -> Print(lex_stream);
     class_body -> Print(lex_stream);
@@ -1864,11 +2013,14 @@ void AstClassCreationExpression::Print(LexStream& lex_stream)
 {
     Coutput << '#' << id << " (ClassCreationExpression):  #"
             << (base_opt ? base_opt -> id : 0) << ' '
-            << lex_stream.NameString(new_token) << " #" << class_type -> id
-            << " #" << arguments -> id << " #"
+            << lex_stream.NameString(new_token) << " #"
+            << (type_arguments_opt ? type_arguments_opt -> id : 0) << " #"
+            << class_type -> id << " #" << arguments -> id << " #"
             << (class_body_opt ? class_body_opt -> id : 0) << endl;
     if (base_opt)
         base_opt -> Print(lex_stream);
+    if (type_arguments_opt)
+        type_arguments_opt -> Print(lex_stream);
     class_type -> Print(lex_stream);
     arguments -> Print(lex_stream);
     if (class_body_opt)
@@ -1916,11 +2068,14 @@ void AstFieldAccess::Print(LexStream& lex_stream)
 void AstMethodInvocation::Print(LexStream& lex_stream)
 {
     Coutput << '#' << id << " (MethodInvocation):  #"
-            << (base_opt ? base_opt -> id : 0) << ' '
+            << (base_opt ? base_opt -> id : 0) << ".#"
+            << (type_arguments_opt ? type_arguments_opt -> id : 0) << ' '
             << lex_stream.NameString(identifier_token)
             << " #" << arguments -> id << endl;
     if (base_opt)
         base_opt -> Print(lex_stream);
+    if (type_arguments_opt)
+        type_arguments_opt -> Print(lex_stream);
     arguments -> Print(lex_stream);
 }
 

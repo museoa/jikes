@@ -245,7 +245,7 @@ void Scanner::Scan()
     // braces in the input. Each unmatched left brace should point to
     // the EOF token as a substitute for a matching right brace.
     //
-    assert(current_token_index == (unsigned) (lex -> token_stream.Length()) - 1);
+    assert(current_token_index == lex -> token_stream.Length() - 1);
 
     for (LexStream::TokenIndex left_brace = brace_stack.Top();
          left_brace; left_brace = brace_stack.Top())
@@ -1006,7 +1006,6 @@ void Scanner::ClassifyIdOrKeyword()
     }
     else if (current_token -> Kind() == TK_package && ! lex -> package)
         lex -> package = current_token_index;
-
     cursor = ptr;
 }
 
@@ -1046,7 +1045,6 @@ void Scanner::ClassifyId()
             current_token -> SetKind(control.option.keyword_map[i].key);
         }
     }
-
     cursor = ptr;
 }
 

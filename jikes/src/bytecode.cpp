@@ -2468,8 +2468,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression* p, bool cond, Label& lab,
             EmitExpression(right, right_type != control.null_type);
             if (left_type == right_type)
             {
-                if (cond ==
-                    (bp -> Tag() == AstBinaryExpression::EQUAL_EQUAL))
+                if (cond == (bp -> Tag() == AstBinaryExpression::EQUAL_EQUAL))
                 {
                     EmitBranch(OP_GOTO, lab, over);
                 }
@@ -6073,8 +6072,7 @@ void ByteCode::AppendString(AstExpression* expression, bool need_value)
             expression -> BinaryExpressionCast();
         if (binary_expression && type == control.String())
         {
-            assert(binary_expression -> Tag() ==
-                   AstBinaryExpression::PLUS);
+            assert(binary_expression -> Tag() == AstBinaryExpression::PLUS);
             AppendString(binary_expression -> left_expression, need_value);
             AppendString(binary_expression -> right_expression, need_value);
             return;
@@ -6696,7 +6694,9 @@ int ByteCode::LoadVariable(VariableCategory kind, AstExpression* expr,
         ChangeStack(1);
     PutU2(RegisterFieldref(VariableTypeResolution(expr, sym), sym));
     if (need_value)
+    {
         return GetTypeWords(expression_type);
+    }
     PutOp(control.IsDoubleWordType(expression_type) ? OP_POP2 : OP_POP);
     return 0;
 }

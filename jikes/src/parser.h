@@ -25,16 +25,15 @@ class AstStatement;
 class AstBlock;
 class AstName;
 class AstType;
+class AstTypeArguments;
 class AstTypeName;
 class AstModifiers;
 class AstPackageDeclaration;
 class AstCompilationUnit;
 class AstClassBody;
-class AstVariableDeclaratorId;
-class AstFormalParameter;
+class AstTypeParameters;
 class AstMethodBody;
 class AstArguments;
-class AstMethodInvocation;
 
 enum ParseErrorCode
 {

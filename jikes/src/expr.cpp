@@ -3227,6 +3227,11 @@ void Semantic::ProcessMethodInvocation(Ast* expr)
 {
     AstMethodInvocation* method_call = (AstMethodInvocation*) expr;
 
+    if (method_call -> type_arguments_opt)
+    {
+        ReportSemError(SemanticError::EXPLICIT_TYPE_ARGUMENTS_UNSUPPORTED,
+                       method_call -> type_arguments_opt);
+    }
     bool bad_argument = ProcessArguments(method_call -> arguments);
     if (bad_argument)
         method_call -> symbol = control.no_type;
@@ -4079,6 +4084,11 @@ void Semantic::ProcessClassCreationExpression(Ast* expr)
     //
     // Check the arguments to the constructor.
     //
+    if (class_creation -> type_arguments_opt)
+    {
+        ReportSemError(SemanticError::EXPLICIT_TYPE_ARGUMENTS_UNSUPPORTED,
+                       class_creation -> type_arguments_opt);
+    }
     ProcessArguments(class_creation -> arguments);
 
     //

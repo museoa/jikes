@@ -219,10 +219,7 @@ Ast* Parser::HeaderParse()
 
         if (parse_stack[0] && parse_stack[0] -> CompilationUnitCast())
             ((AstCompilationUnit*) parse_stack[0]) -> MarkBad();
-        else
-        {
-            parse_stack[0] = NULL;
-        }
+        else parse_stack[0] = NULL;
     }
 
     return parse_stack[0];
@@ -274,8 +271,7 @@ bool Parser::Body(AstClassBody* class_body)
 
     for (i = 0; i < class_body -> NumMethods(); i++)
     {
-        AstMethodDeclaration *method_decl = class_body -> Method(i);
-
+        AstMethodDeclaration* method_decl = class_body -> Method(i);
         if (method_decl -> method_symbol && method_decl -> method_body_opt)
         {
             AstMethodBody* block = method_decl -> method_body_opt;
@@ -323,7 +319,6 @@ bool Parser::Initializer(AstClassBody* class_body)
          end_token = block -> right_brace_token; // last token in the body
          class_body -> StaticInitializer(i) -> block =
              ParseSegment(block -> left_brace_token);
-
         if (! class_body -> StaticInitializer(i) -> block)
         {
             errors_detected = true;

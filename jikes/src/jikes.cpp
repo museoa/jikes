@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
                "-nowrite            do not write any class files, useful with -verbose\n"
                "-O                  optimize bytecode (presently does nothing)\n"
                "-source release     interpret source by Java SDK release rules\n"
-               "                      [default to max(target, 1.3)]\n"
+               "                      [default to max(target, 1.4)]\n"
                "-sourcepath path    location of user source files [default '']\n"
                "-target release     output bytecode for Java SDK release rules\n"
                "                      [default to source if specified, else 1.4.2]\n"

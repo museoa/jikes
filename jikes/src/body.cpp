@@ -2013,6 +2013,11 @@ void Semantic::ProcessThisCall(AstThisCall* this_call)
     // Signal that we are about to process an explicit constructor invocation.
     ExplicitConstructorInvocation() = this_call;
 
+    if (this_call -> type_arguments_opt)
+    {
+        ReportSemError(SemanticError::EXPLICIT_TYPE_ARGUMENTS_UNSUPPORTED,
+                       this_call -> type_arguments_opt);
+    }
     bool bad_argument = ProcessArguments(this_call -> arguments);
     if (! bad_argument)
     {
@@ -2123,6 +2128,11 @@ void Semantic::ProcessSuperCall(AstSuperCall* super_call)
                 CreateAccessToType(super_call, super_type -> EnclosingType());
     }
 
+    if (super_call -> type_arguments_opt)
+    {
+        ReportSemError(SemanticError::EXPLICIT_TYPE_ARGUMENTS_UNSUPPORTED,
+                       super_call -> type_arguments_opt);
+    }
     MethodSymbol* constructor = NULL;
     bool bad_argument = ProcessArguments(super_call -> arguments);
     if (! bad_argument)

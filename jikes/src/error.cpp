@@ -1776,6 +1776,50 @@ void SemanticError::InitializeMessages()
         "all modifier keywords.";
     messages[DUPLICATE_ANNOTATION] =
         "Duplicate specification of the annotation modifier \"%1\".";
+    messages[TYPE_ARGUMENTS_UNSUPPORTED] =
+        "Using type arguments to access generic types requires the use of "
+        "\"-source 1.5\" or greater. Compilation will continue using the raw "
+        "type \"%T1\", but no class file will be emitted."
+        "(not yet implemented)";
+    messages[TYPE_PARAMETERS_UNSUPPORTED] =
+        "Declaring type parameters for types or methods requires the use of "
+        "\"-source 1.5\" or greater. Compilation will continue, but will "
+        "treat the parameter names as invalid types."
+        "(not yet implemented)";
+    messages[COVARIANCE_UNSUPPORTED] =
+        "Covariant return types require the use of \"-source 1.5\" or "
+        "greater. Otherwise, the return type of method \"%1\" must match the "
+        "return type of \"%2\" that it overrides.";
+    messages[WILDCARD_UNSUPPORTED] =
+        "Wildcard type parameters are not yet supported in \"-source 1.5\".";
+    messages[EXPLICIT_TYPE_ARGUMENTS_UNSUPPORTED] =
+        "Explicit type arguments are not yet supported in \"-source 1.5\".";
+    messages[UNCHECKED_TYPE_CONVERSION] =
+        "Conversion of the expression from type \"%T1\" to type \"%T3\" "
+        "bypasses type parameterization, and may cause runtime exceptions.";
+
+    // Type parameterization related errors.
+    messages[DUPLICATE_TYPE_PARAMETER] =
+        "Duplicate declaration of a type parameter \"%1\" in the declaration "
+        "of \"%2\".";
+    messages[TYPE_PARAMETER_FORWARD_REFERENCE] =
+        "Illegal forward reference to parameter \"%1\" in bounds of parameter "
+        "\"%2\".";
+    messages[TYPE_PARAMETER_IN_MULTIPLE_BOUNDS] =
+        "The type parameter \"%1\" cannot be combined with other bounds in "
+        "the definition of parameter \"%2\".";
+    messages[TYPE_NOT_PARAMETERIZED] =
+        "The type \"%T1\" is not parameterized.";
+    messages[MISMATCHED_TYPE_PARAMETER_COUNT] =
+        "Wrong number of type arguments for type \"%T1\".";
+    messages[TYPE_ARGUMENT_FAILS_BOUNDS] =
+        "The type \"%T1\" does not satisfy all the bounds required by type "
+        "parameter \"%3\".";
+    messages[TYPE_PARAMETER_NOT_TYPE] =
+        "The type parameter \"%1\" cannot be used where an actual class or "
+        "interface is expected.";
+    messages[TYPE_MAY_NOT_HAVE_PARAMETERS] =
+        "The type \"%T1\" may not be parameterized.";
 
     // More type-related errors.
     messages[NON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD] =

@@ -142,63 +142,58 @@ void Semantic::ProcessTypeNames()
             identifier_token = declaration -> class_body -> identifier_token;
             NameSymbol* name_symbol =
                 lex_stream -> NameSymbol(identifier_token);
-            type = this_package -> FindTypeSymbol(name_symbol);
-            if (type)
+            //
+            // Warn against unconventional names.
+            //
+            if (name_symbol -> IsBadStyleForClass())
             {
-                if (! type -> SourcePending())
+                ReportSemError(SemanticError::UNCONVENTIONAL_CLASS_NAME,
+                               identifier_token, name_symbol -> Name());
+            }
+            type = this_package -> FindTypeSymbol(name_symbol);
+            // type was already created in Control::ProcessPackageDeclaration
+            assert(type);
+            if (! type -> SourcePending())
+            {
+                ReportSemError(SemanticError::DUPLICATE_TYPE_DECLARATION,
+                               identifier_token, name_symbol -> Name(),
+                               type -> FileLoc());
+                type = NULL;
+            }
+            else
+            {
+                if (type -> ContainingPackage() == control.UnnamedPackage())
                 {
-                    ReportSemError(SemanticError::DUPLICATE_TYPE_DECLARATION,
-                                   identifier_token, name_symbol -> Name(),
-                                   type -> FileLoc());
-                    type = NULL;
-                }
-                else
-                {
-                    if (type -> ContainingPackage() ==
-                        control.UnnamedPackage())
+                    TypeSymbol* old_type = (TypeSymbol*) control.
+                        unnamed_package_types.Image(name_symbol);
+                    if (old_type != type)
                     {
-                        TypeSymbol* old_type = (TypeSymbol*) control.
-                            unnamed_package_types.Image(name_symbol);
-                        if (old_type != type)
-                        {
-                            ReportSemError(SemanticError::DUPLICATE_TYPE_DECLARATION,
-                                           identifier_token,
-                                           name_symbol -> Name(),
-                                           old_type -> FileLoc());
-                        }
+                        ReportSemError(SemanticError::DUPLICATE_TYPE_DECLARATION,
+                                       identifier_token, name_symbol -> Name(),
+                                       old_type -> FileLoc());
                     }
-                    // Save valid type for later processing. See below.
-                    type_list.Next() = type;
-                    type -> MarkSourceNoLongerPending();
-                    type -> semantic_environment =
-                        new SemanticEnvironment(this, type, NULL);
-                    type -> declaration = declaration -> class_body;
-                    type -> SetFlags(ProcessTopLevelTypeModifiers
-                                     (declaration));
-                    //
-                    // Add 3 extra elements for padding. May need a default
-                    // constructor and other support elements.
-                    //
-                    type -> SetSymbolTable(declaration -> class_body ->
-                                           NumClassBodyDeclarations() + 3);
-                    type -> SetLocation();
-
-                    if (lex_stream -> IsDeprecated(declaration -> LeftToken()))
-                        type -> MarkDeprecated();
-                    source_file_symbol -> types.Next() = type;
-                    declaration -> class_body -> semantic_environment =
-                        type -> semantic_environment;
-                    CheckNestedMembers(type, declaration -> class_body);
                 }
+                // Save valid type for later processing. See below.
+                type_list.Next() = type;
+                type -> MarkSourceNoLongerPending();
+                type -> semantic_environment =
+                    new SemanticEnvironment(this, type, NULL);
+                type -> declaration = declaration -> class_body;
+                type -> SetFlags(ProcessTopLevelTypeModifiers(declaration));
+                //
+                // Add 3 extra elements for padding. May need a default
+                // constructor and other support elements.
+                //
+                type -> SetSymbolTable(declaration -> class_body ->
+                                       NumClassBodyDeclarations() + 3);
+                type -> SetLocation();
 
-                //
-                // Warn against unconventional names.
-                //
-                if (name_symbol -> IsBadStyleForClass())
-                {
-                    ReportSemError(SemanticError::UNCONVENTIONAL_CLASS_NAME,
-                                   identifier_token, name_symbol -> Name());
-                }
+                if (lex_stream -> IsDeprecated(declaration -> LeftToken()))
+                    type -> MarkDeprecated();
+                source_file_symbol -> types.Next() = type;
+                declaration -> class_body -> semantic_environment =
+                    type -> semantic_environment;
+                CheckNestedMembers(type, declaration -> class_body);
             }
         }
 
@@ -532,10 +527,24 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration* declaration)
                            declaration -> LeftToken(),
                            declaration -> class_body -> left_brace_token - 1);
         }
+        if (declaration -> type_parameters_opt)
+        {
+            ReportSemError(SemanticError::TYPE_MAY_NOT_HAVE_PARAMETERS,
+                           declaration -> LeftToken(),
+                           declaration -> class_body -> left_brace_token - 1,
+                           type -> ContainingPackageName(),
+                           type -> ExternalName());
+        }
         type -> MarkHeaderProcessed();
         return;
     }
 
+    if (declaration -> type_parameters_opt)
+        ProcessTypeParameters(type, declaration -> type_parameters_opt);
+
+    //
+    // Process the supertypes.
+    //
     if (declaration -> super_opt)
     {
         ProcessType(declaration -> super_opt);
@@ -602,7 +611,7 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration* declaration)
     AddDependence(type, type -> super);
 
     for (unsigned i = 0; i < declaration -> NumInterfaces(); i++)
-        ProcessInterface(type, declaration -> Interface(i));
+        ProcessSuperinterface(type, declaration -> Interface(i));
 
     // if there is a cycle, break it and issue an error message
     if (type -> supertypes_closure -> IsElement(type))
@@ -612,6 +621,15 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration* declaration)
         type -> MarkCircular();
         ReportSemError(SemanticError::CIRCULAR_CLASS,
                        declaration -> class_body -> identifier_token,
+                       declaration -> class_body -> left_brace_token - 1,
+                       type -> ContainingPackageName(),
+                       type -> ExternalName());
+    }
+    else if (declaration -> type_parameters_opt &&
+             type -> super -> IsSubclass(control.Throwable()))
+    {
+        ReportSemError(SemanticError::TYPE_MAY_NOT_HAVE_PARAMETERS,
+                       declaration -> LeftToken(),
                        declaration -> class_body -> left_brace_token - 1,
                        type -> ContainingPackageName(),
                        type -> ExternalName());
@@ -626,6 +644,9 @@ void Semantic::ProcessTypeHeader(AstInterfaceDeclaration* declaration)
     assert(! type -> HeaderProcessed() || type -> Bad());
     type -> MarkHeaderProcessed();
 
+    if (declaration -> type_parameters_opt)
+        ProcessTypeParameters(type, declaration -> type_parameters_opt);
+
     //
     // Although interfaces do not have a superclass in source code, in
     // bytecode they are treated as subclasses of Object.
@@ -633,7 +654,7 @@ void Semantic::ProcessTypeHeader(AstInterfaceDeclaration* declaration)
     type -> super = control.Object();
     AddDependence(type, control.Object());
     for (unsigned k = 0; k < declaration -> NumInterfaces(); k++)
-        ProcessInterface(type, declaration -> Interface(k));
+        ProcessSuperinterface(type, declaration -> Interface(k));
 
     if (type -> supertypes_closure -> IsElement(type))
     {
@@ -651,7 +672,7 @@ void Semantic::ProcessTypeHeader(AstInterfaceDeclaration* declaration)
 }
 
 
-void Semantic::ProcessInterface(TypeSymbol* base_type, AstTypeName* name)
+void Semantic::ProcessSuperinterface(TypeSymbol* base_type, AstTypeName* name)
 {
     ProcessType(name);
     TypeSymbol* interf = name -> symbol;
@@ -716,6 +737,17 @@ void Semantic::ProcessInterface(TypeSymbol* base_type, AstTypeName* name)
             else interf = NULL;
         }
     }
+}
+
+
+//
+// Processes the type parameters of a class or interface.
+//
+void Semantic::ProcessTypeParameters(TypeSymbol* /*type*/,
+                                     AstTypeParameters* parameters)
+{
+    // TODO: Add generics support for 1.5.
+    ReportSemError(SemanticError::TYPE_PARAMETERS_UNSUPPORTED, parameters);
 }
 
 
@@ -2147,6 +2179,12 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration* construc
 
     AccessFlags access_flags =
         ProcessConstructorModifiers(constructor_declaration);
+    if (constructor_declaration -> type_parameters_opt)
+    {
+        // TODO: Add generics support for 1.5.
+        ReportSemError(SemanticError::TYPE_PARAMETERS_UNSUPPORTED,
+                       constructor_declaration -> type_parameters_opt);
+    }
 
     AstMethodDeclarator* constructor_declarator =
         constructor_declaration -> constructor_declarator;
@@ -2253,7 +2291,6 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration* construc
         symbol -> SetLocation();
         constructor -> AddFormalParameter(symbol);
     }
-
     constructor -> SetSignature(control);
 
     for (unsigned k = 0; k < constructor_declaration -> NumThrows(); k++)
@@ -2301,7 +2338,6 @@ void Semantic::AddDefaultConstructor(TypeSymbol* type)
         this0_variable -> MarkComplete();
         this0_variable -> SetACC_SYNTHETIC();
     }
-
     constructor -> SetSignature(control);
 
     AstClassBody* class_body = type -> declaration;
@@ -2420,11 +2456,16 @@ void Semantic::CheckMethodOverride(MethodSymbol* method,
         // void->primitive, or void->Object). When loading from .java files,
         // however, we enforce exact return type matching.
         //
-        if (method -> containing_type -> file_symbol -> IsClass() &&
-            hidden_method -> Type() -> IsSubtype(control.Object()) &&
+        if (hidden_method -> Type() -> IsSubtype(control.Object()) &&
             method -> Type() -> IsSubtype(hidden_method -> Type()))
         {
             // Silent acceptance. TODO: Should we add a pedantic warning?
+            // This must work, because the 1.5 library (including
+            // System.out.println("")) is covariant, even for -source 1.4!
+//              if (control.option.source < JikesOption::SDK1_5)
+//                  ReportSemError(SemanticError::COVARIANCE_UNSUPPORTED,
+//                                 left_tok, right_tok, method -> Header(),
+//                                 hidden_method -> Header());
         }
         else if (method -> containing_type == base_type)
         {
@@ -2878,13 +2919,12 @@ void Semantic::AddInheritedMethods(TypeSymbol* base_type,
             (! method -> ACC_PRIVATE() &&
              super_type -> ContainingPackage() == base_package))
         {
-            MethodShadowSymbol* shadow = base_expanded_table ->
-                FindOverloadMethodShadow(method, this, tok);
-
             //
             // Check that method is compatible with every method it
             // overrides.
             //
+            MethodShadowSymbol* shadow = base_expanded_table ->
+                FindOverloadMethodShadow(method, this, tok);
             if (shadow)
             {
                 CheckMethodOverride(shadow -> method_symbol, method,
@@ -3174,7 +3214,7 @@ void Semantic::ComputeMethodsClosure(TypeSymbol* type,
     // interfaces and are necessarily abstract; but if the first method
     // is not abstract, it implements all the conflicts.
     //
-    if (super_class && (! type -> ACC_INTERFACE()))
+    if (super_class && ! type -> ACC_INTERFACE())
         AddInheritedMethods(type, super_class, tok);
     for (unsigned k = 0; k < type -> NumInterfaces(); k++)
         AddInheritedMethods(type, type -> Interface(k), tok);
@@ -3241,6 +3281,12 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration* method_declaration
     if (this_type -> ACC_STRICTFP())
         access_flags.SetACC_STRICTFP();
 
+    if (method_declaration -> type_parameters_opt)
+    {
+        // TODO: Add generics support for 1.5.
+        ReportSemError(SemanticError::TYPE_PARAMETERS_UNSUPPORTED,
+                       method_declaration -> type_parameters_opt);
+    }
     //
     // A method enclosed in an inner type may not be declared static.
     //
@@ -3800,10 +3846,19 @@ TypeSymbol* Semantic::MustFindType(AstName* name)
 
 void Semantic::ProcessType(AstType* type_expr)
 {
+    if (type_expr -> symbol)
+        return; // already processed
     AstArrayType* array_type = type_expr -> ArrayTypeCast();
     AstType* actual_type = array_type ? array_type -> type : type_expr;
     AstTypeName* name = actual_type -> TypeNameCast();
     AstPrimitiveType* primitive_type = actual_type -> PrimitiveTypeCast();
+    AstWildcard* wildcard_type = actual_type -> WildcardCast();
+    if (wildcard_type)
+    {
+        ReportSemError(SemanticError::WILDCARD_UNSUPPORTED, type_expr);
+        type_expr -> symbol = control.no_type;
+        return;
+    }
     assert(name || primitive_type);
     //
     // Occaisionally, MustFindType finds a bad type (for example, if we
@@ -3814,12 +3869,28 @@ void Semantic::ProcessType(AstType* type_expr)
     TypeSymbol* type;
     if (primitive_type)
         type = FindPrimitiveType(primitive_type);
-    else type = MustFindType(name -> name);
+    else
+    {
+        if (name -> base_opt)
+        {
+            ProcessType(name -> base_opt);
+            type = MustFindNestedType(name -> base_opt -> symbol,
+                                      name -> name);
+        }
+        else type = MustFindType(name -> name);
+        if (name -> type_arguments_opt)
+        {
+            // TODO: Add generics support for 1.5.
+            ReportSemError(SemanticError::TYPE_ARGUMENTS_UNSUPPORTED,
+                           name -> type_arguments_opt,
+                           type -> ContainingPackageName(),
+                           type -> ExternalName());
+        }
+    }
     if (type -> Bad() && NumErrors() == error_count)
         ReportSemError(SemanticError::INVALID_TYPE_FOUND, actual_type,
                        lex_stream -> NameString(type_expr ->
                                                 IdentifierToken()));
-
     if (array_type)
         type = type -> GetArrayType(this, array_type -> NumBrackets());
     type_expr -> symbol = type;
@@ -3939,7 +4010,7 @@ inline void Semantic::ProcessInitializer(AstInitializerDeclaration* initializer,
 // assert statement is encountered (since assertions require an initialized
 // static variable to operate).
 //
-MethodSymbol* Semantic::GetStaticInitializerMethod(int estimate)
+MethodSymbol* Semantic::GetStaticInitializerMethod(unsigned estimate)
 {
     TypeSymbol* this_type = ThisType();
     if (this_type -> static_initializer_method)
@@ -4034,8 +4105,7 @@ void Semantic::ProcessStaticInitializers(AstClassBody* class_body)
         if (class_body -> ClassVariable(j) -> semicolon_token <
             class_body -> StaticInitializer(k) -> block -> right_brace_token)
         {
-            InitializeVariable(class_body -> ClassVariable(j++),
-                               init_method);
+            InitializeVariable(class_body -> ClassVariable(j++), init_method);
         }
         else
         {
@@ -4178,9 +4248,9 @@ void Semantic::ProcessInstanceInitializers(AstClassBody* class_body)
     block -> AllocateStatements(estimate);
 
     //
-    // Initialization code is executed by every constructor, just after the
-    // superclass constructor is called, in textual order along with any
-    // instance variable initializations.
+    // Initialization code is executed by every constructor that does not call
+    // this(), just after the superclass constructor is called, in textual
+    // order along with any instance variable initializations.
     //
     unsigned j = 0;
     unsigned k = 0;

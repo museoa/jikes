@@ -224,7 +224,7 @@ void MethodSymbol::SetLocation()
                               ? method_declaration -> LeftToken()
                               : constructor_declaration -> LeftToken()));
     }
-}        
+}
 
 MethodSymbol* SymbolTable::FindOverloadMethod(MethodSymbol* base_method,
                                               AstMethodDeclarator* method_declarator)
@@ -646,8 +646,9 @@ unsigned TypeSymbol::NumLocalTypes()
 
 TypeSymbol::~TypeSymbol()
 {
-    if (read_methods) delete read_methods;
-    if (write_methods) delete write_methods;
+    unsigned i;
+    delete read_methods;
+    delete write_methods;
     delete semantic_environment;
     delete local;
     delete non_local;
@@ -665,10 +666,10 @@ TypeSymbol::~TypeSymbol()
     delete expanded_method_table;
     delete file_location;
     delete [] class_name;
-    for (unsigned i = 1; i < NumArrays(); i++)
+    for (i = 1; i < NumArrays(); i++)
         delete Array(i);
-    for (unsigned k = 0; k < NumNestedTypeSignatures(); k++)
-        delete [] NestedTypeSignature(k);
+    for (i = 0; i < NumNestedTypeSignatures(); i++)
+        delete [] NestedTypeSignature(i);
     delete nested_type_signatures;
 
     delete local_constructor_call_environments;
@@ -697,9 +698,9 @@ MethodSymbol::~MethodSymbol()
 
 
 BlockSymbol::BlockSymbol(unsigned hash_size)
-    : max_variable_index(-1),
-      helper_variable_index(-1),
-      table(hash_size > 0 ? new SymbolTable(hash_size) : (SymbolTable*) NULL)
+    : max_variable_index(-1)
+    , helper_variable_index(-1)
+    , table(hash_size > 0 ? new SymbolTable(hash_size) : (SymbolTable*) NULL)
 {
     Symbol::_kind = BLOCK;
 }
@@ -710,8 +711,8 @@ BlockSymbol::~BlockSymbol()
 }
 
 PathSymbol::PathSymbol(const NameSymbol* name_symbol_)
-    : name_symbol(name_symbol_),
-      zipfile(NULL)
+    : name_symbol(name_symbol_)
+    , zipfile(NULL)
 {
     Symbol::_kind = PATH;
 }
@@ -723,15 +724,14 @@ PathSymbol::~PathSymbol()
 }
 
 DirectorySymbol::DirectorySymbol(const NameSymbol* name_symbol_,
-                                 Symbol* owner_,
-                                 bool source_dir_only_)
-    : owner(owner_),
-      name_symbol(name_symbol_),
-      mtime(0),
-      table(NULL),
-      entries(NULL),
-      directory_name(NULL),
-      source_dir_only(source_dir_only_)
+                                 Symbol* owner_, bool source_dir_only_)
+    : owner(owner_)
+    , name_symbol(name_symbol_)
+    , mtime(0)
+    , table(NULL)
+    , entries(NULL)
+    , directory_name(NULL)
+    , source_dir_only(source_dir_only_)
 {
     Symbol::_kind = _DIRECTORY;
 }
@@ -1008,8 +1008,8 @@ void FileSymbol::SetFileNameLiteral(Control* control)
                 break;
         }
 
-        int file_name_start = i + 1,
-            file_name_length = FileNameLength() - file_name_start;
+        int file_name_start = i + 1;
+        int file_name_length = FileNameLength() - file_name_start;
         file_name_literal =
             control -> Utf8_pool.FindOrInsert(file_name + file_name_start,
                                               file_name_length);
@@ -1346,7 +1346,8 @@ void VariableSymbol::SetLocation()
                               sem -> lex_stream),
                              declarator -> LeftToken());
     }
-}  
+}
+
 void VariableSymbol::ProcessVariableSignature(Semantic* sem,
                                               LexStream::TokenIndex token_location)
 {
