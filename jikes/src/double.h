@@ -625,7 +625,7 @@ public:
     BigInt(const char*, int before, int total, u4 start, int startsize);
     // copy constructor and assignment operator
     BigInt& operator=(const BigInt&);
-    BigInt(const BigInt& op) { *this = op; }
+    BigInt(const BigInt& op) { data = NULL; *this = op; }
     // destructor
     ~BigInt() { delete data; }
 

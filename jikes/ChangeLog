@@ -1,3 +1,10 @@
+2004-06-02  Elliott Hughes  <enh@acm.org>
+
+	* src/definite.cpp: remove redundant test from
+	DefinitePair::operator=(const DefiniteAssignmentSet&).
+	* src/double.cpp: fix leak in BigInt::operator=(const BigInt&).
+	* src/double.h: fix BitInt(BigInt&).
+
 2004-05-31  Elliott Hughes  <enh@acm.org>
 
 	* src/definite.cpp, src/double.cpp, src/set.h: fix operator=

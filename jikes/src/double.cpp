@@ -2745,6 +2745,7 @@ BigInt &BigInt::operator =(const BigInt &b)
         maxwds = b.maxwds;
         neg = b.neg;
         wds = b.wds;
+        delete data;
         data = new u4[maxwds];
         memcpy(data, b.data, wds * sizeof(u4));
     }

@@ -44,11 +44,8 @@ inline DefinitePair::DefinitePair(const DefiniteAssignmentSet& set)
 
 inline DefinitePair& DefinitePair::operator=(const DefiniteAssignmentSet& rhs)
 {
-    if (this != &rhs)
-    {
-        da_set = rhs.DASet();
-        du_set = rhs.DUSet();
-    }
+    da_set = rhs.DASet();
+    du_set = rhs.DUSet();
     return *this;
 }
 
