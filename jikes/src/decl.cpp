@@ -340,27 +340,6 @@ inline TypeSymbol* Semantic::FindTypeInShadow(TypeShadowSymbol* type_shadow_symb
 }
 
 
-//
-// Look for a type within an environment stack, without regard to inheritance.
-//
-TypeSymbol* Semantic::FindTypeInEnvironment(SemanticEnvironment* env_stack,
-                                            NameSymbol* name_symbol)
-{
-    for (SemanticEnvironment* env = env_stack; env; env = env -> previous)
-    {
-        TypeSymbol* type = env -> symbol_table.FindTypeSymbol(name_symbol);
-        if (type)
-            return type;
-        type = env -> Type() -> FindTypeSymbol(name_symbol);
-        if (type)
-            return type;
-        if (name_symbol == env -> Type() -> Identity())
-            return env -> Type();
-    }
-    return NULL;
-}
-
-
 void Semantic::CheckNestedTypeDuplication(SemanticEnvironment* env,
                                           LexStream::TokenIndex identifier_token)
 {

@@ -984,7 +984,6 @@ private:
     void ProcessFormalParameters(BlockSymbol*, AstMethodDeclarator*);
     TypeSymbol* ImportType(LexStream::TokenIndex, NameSymbol*);
     TypeSymbol* FindPrimitiveType(AstPrimitiveType*);
-    TypeSymbol* FindTypeInEnvironment(SemanticEnvironment*, NameSymbol*);
     TypeSymbol* FindType(LexStream::TokenIndex);
     TypeSymbol* MustFindType(AstName*);
     void ProcessType(AstType*);
@@ -1127,6 +1126,7 @@ private:
     const wchar_t* UncaughtExceptionContext();
 
     // Implemented in expr.cpp - expression processing
+    wchar_t* Header(const NameSymbol*, AstArguments*);
     void ReportConstructorNotFound(Ast*, TypeSymbol*);
     void ReportMethodNotFound(AstMethodInvocation*, TypeSymbol*);
     MethodSymbol* FindConstructor(TypeSymbol*, Ast*,
@@ -1145,7 +1145,6 @@ private:
                                            AstMethodInvocation*,
                                            NameSymbol*);
     MethodShadowSymbol* FindMethodInEnvironment(SemanticEnvironment*&,
-                                                SemanticEnvironment*,
                                                 AstMethodInvocation*);
     MethodShadowSymbol* FindMethodInType(TypeSymbol*, AstMethodInvocation*,
                                          NameSymbol* = NULL);
@@ -1158,7 +1157,6 @@ private:
     VariableSymbol* FindMisspelledVariableName(TypeSymbol*,
                                                LexStream::TokenIndex);
     VariableSymbol* FindVariableInEnvironment(SemanticEnvironment*&,
-                                              SemanticEnvironment*,
                                               LexStream::TokenIndex);
     VariableSymbol* FindVariableInType(TypeSymbol*, AstExpression*,
                                        NameSymbol* = NULL);

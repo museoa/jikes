@@ -1307,15 +1307,15 @@ void SemanticError::InitializeMessages()
     messages[NOT_A_NUMERIC_VARIABLE] =
         "Only a variable of numeric type can appear in this context.";
     messages[METHOD_OVERLOAD_NOT_FOUND] =
-        "No applicable overload for the method named \"%1\" was found "
+        "No applicable overload for a method with signature \"%1\" was found "
         "in type \"%T2\". Perhaps you wanted the overloaded version \"%4\" "
         "instead?";
     messages[METHOD_NOT_FOUND] =
-        "No method named \"%1\" was found in type \"%T2\".";
+        "No method with signature \"%1\" was found in type \"%T2\".";
     messages[METHOD_NAME_MISSPELLED] =
-        "No method named \"%1\" was found in type \"%T2\". "
-        "However, there is an accessible method \"%4\" "
-        "whose name closely matches the name \"%1\".";
+        "No method named \"%1\" was found in type \"%T2\". However, there is "
+        "an accessible method \"%4\" whose name closely matches the name "
+        "\"%1\".";
     messages[HIDDEN_METHOD_IN_ENCLOSING_CLASS] =
         "The method \"%1\" contained in the enclosing type \"%T2\" "
         "is a perfect match for this method call. "
@@ -1342,14 +1342,14 @@ void SemanticError::InitializeMessages()
         "are accessible from here: \"%2\" declared in type \"%T3\" "
         "and \"%5\" declared in type \"%T6\".";
     messages[CONSTRUCTOR_NOT_FOUND] =
-        "No match was found for constructor \"%1\".";
+        "No constructor with signature \"%1\" was found in type \"%T2\".";
     messages[METHOD_FOUND_FOR_CONSTRUCTOR] =
         "No match was found for constructor \"%1\". However, a method "
         "with the same name was found at location %2.";
     messages[CONSTRUCTOR_OVERLOAD_NOT_FOUND] =
-        "No applicable overload was found for a constructor of "
-        "type \"%T1\". Perhaps you wanted the overloaded version "
-        "\"%3\" instead?";
+        "No applicable overload was found for a constructor with signature "
+        "\"%1\" in type \"%T2\". Perhaps you wanted the overloaded version "
+        "\"%4\" instead?";
     messages[ABSTRACT_TYPE_CREATION] =
         "Attempt to instantiate an abstract class \"%1\".";
     messages[INVALID_INSTANCEOF_CONVERSION] =

@@ -1,5 +1,20 @@
 2004-01-24  Eric Blake  <ebb9@byu.net>
 
+	* src/decl.cpp (FindTypeInEnvironment): Delete unused method.
+	* src/error.cpp (METHOD_OVERLOAD_NOT_FOUND, METHOD_NOT_FOUND),
+	(CONSTRUCTOR_NOT_FOUND, CONSTRUCTOR_OVERLOAD_NOT_FOUND): Improve
+	wording and make more consistent. Fixes jikes bug 260.
+	* src/expr.cpp (Header): New helper method.
+	(ReportMethodNotFound): Use Header(). Consolidate with error
+	reporting previously done...
+	(FindMethodInEnvironment): ... here, to reduce code duplication.
+	(ReportConstructorNotFound): Use Header().
+	(ProcessAmbiguousName, ProcessMethodName): Simplify call to
+	Find*InEnvironment.
+	* src/semantic.h (Find*InEnvironment): Update prototypes.
+
+2004-01-24  Eric Blake  <ebb9@byu.net>
+
 	* src/body.cpp (ProcessSwitchStatement): Make sure scope of local
 	classes in switch statment is switch-statement block...
 	(ProcessLocalVariableDeclarationStatement): while keeping local

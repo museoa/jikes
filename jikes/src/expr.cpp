@@ -154,12 +154,73 @@ inline bool Semantic::NoMethodMoreSpecific(Tuple<MethodShadowSymbol*>& maximally
 
 
 //
-// Called when no accessible method was found. This checks in order: an
-// accessible method of the same name but different parameters, favoring
-// methods with the same parameter count; for a no-arg method, an accessible
-// field by the same name; an inaccessible method in a superclass; a
-// misspelled method name; a type by the same name; and finally no method
-// was found.
+// Creates a new wchar_t[] containing the type of the method or constructor
+// overload for printing in Report*NotFound. Caller is responsible for
+// calling delete[] on the result.
+//
+wchar_t* Semantic::Header(const NameSymbol* name, AstArguments* args)
+{
+    unsigned num_arguments = args -> NumArguments();
+    int length = name -> NameLength();
+    for (unsigned i = 0; i < num_arguments; i++)
+    {
+        TypeSymbol* arg_type = args -> Argument(i) -> Type();
+        // '.' after package_name ',' and ' ' to separate this formal
+        // parameter from the next one
+        length += arg_type -> ContainingPackage() -> PackageNameLength() +
+            arg_type -> ExternalNameLength() + 3;
+    }
+
+    // +1 for (, +1 for ), +1 for '\0'
+    wchar_t* header = new wchar_t[length + 3];
+    wchar_t* s = header;
+    const wchar_t* s2;
+
+    for (s2 = name -> Name(); *s2; s2++)
+        *s++ = *s2;
+    *s++ = U_LEFT_PARENTHESIS;
+    if (num_arguments > 0)
+    {
+        for (unsigned i = 0; i < num_arguments; i++)
+        {
+            TypeSymbol* arg_type = args -> Argument(i) -> Type();
+
+            PackageSymbol* package = arg_type -> ContainingPackage();
+            wchar_t* package_name = package -> PackageName();
+            if (package -> PackageNameLength() > 0 &&
+                wcscmp(package_name, StringConstant::US_DO) != 0)
+            {
+                while (*package_name)
+                {
+                    *s++ = (*package_name == U_SLASH ? (wchar_t) U_DOT
+                            : *package_name);
+                    package_name++;
+                }
+                *s++ = U_DOT;
+            }
+
+            for (s2 = arg_type -> ExternalName(); *s2; s2++)
+                *s++ = (*s2 == U_DOLLAR ? (wchar_t) U_DOT : *s2);
+            *s++ = U_COMMA;
+            *s++ = U_SPACE;
+        }
+
+        s -= 2; // remove the last ',' and ' '
+    }
+    *s++ = U_RIGHT_PARENTHESIS;
+    *s = U_NULL;
+    return header;
+}
+
+
+//
+// Called when no accessible method was found. This checks in order: a hidden
+// exact match in an enclosing class (for simple names only); an accessible
+// method of the same name but different parameter types, favoring methods with
+// the same parameter count; an accessible field by the same name (for no-arg
+// call only); an inaccessible method in a superclass; a misspelled method
+// name; a type by the same name; and finally no method was found. The
+// parameter type should be NULL only if method_call represents a simple name.
 //
 void Semantic::ReportMethodNotFound(AstMethodInvocation* method_call,
                                     TypeSymbol* type)
@@ -167,16 +228,33 @@ void Semantic::ReportMethodNotFound(AstMethodInvocation* method_call,
     AstFieldAccess* field_access = method_call -> method -> FieldAccessCast();
     AstName* name = method_call -> method -> NameCast();
     AstExpression* base = name ? name -> base_opt : field_access -> base;
+    SemanticEnvironment* env;
+    SemanticEnvironment* top_env = state_stack.Top();
     assert(field_access || name);
+    assert((base == NULL) == (type == NULL));
 
     LexStream::TokenIndex id_token = method_call -> method -> RightToken();
     NameSymbol* name_symbol = lex_stream -> NameSymbol(id_token);
     MethodShadowSymbol* method_shadow;
 
-    if (! type -> expanded_method_table)
-        ComputeMethodsClosure(type, id_token);
-    if (! type -> expanded_field_table)
-        ComputeFieldsClosure(type, id_token);
+    //
+    // First, for simple names, search for a hidden method match in an
+    // enclosing class.
+    //
+    for (env = top_env -> previous; ! base && env; env = env -> previous)
+    {
+        Tuple<MethodShadowSymbol*> others(2);
+        SemanticEnvironment* found_other;
+        FindMethodInEnvironment(others, found_other, env, method_call);
+        if (others.Length() > 0)
+        {
+            ReportSemError(SemanticError::HIDDEN_METHOD_IN_ENCLOSING_CLASS,
+                           method_call, others[0] -> method_symbol -> Header(),
+                           others[0] -> method_symbol -> containing_type -> ContainingPackageName(),
+                           others[0] -> method_symbol -> containing_type -> ExternalName());
+            return;
+        }
+    }
 
     //
     // Search for an accessible method with different arguments. Favor the
@@ -185,40 +263,47 @@ void Semantic::ReportMethodNotFound(AstMethodInvocation* method_call,
     // difference detection with 255.
     //
     MethodSymbol* best_match = NULL;
-    int difference = 255;
-    for (method_shadow = type -> expanded_method_table ->
-             FindMethodShadowSymbol(name_symbol);
-         method_shadow; method_shadow = method_shadow -> next_method)
+    for (env = top_env; env;
+         env = (base ? (SemanticEnvironment*) NULL : env -> previous))
     {
-        MethodSymbol* method = method_shadow -> method_symbol;
-
-        if (! method -> IsTyped())
-            method -> ProcessMethodSignature(this, id_token);
-
-        if (MemberAccessCheck(type, method, base) ||
-            method_shadow -> NumConflicts() > 0)
+        if (! base)
+            type = env -> Type();
+        if (! type -> expanded_method_table)
+            ComputeMethodsClosure(type, id_token);
+        int difference = 255;
+        for (method_shadow = type -> expanded_method_table ->
+                 FindMethodShadowSymbol(name_symbol);
+             method_shadow; method_shadow = method_shadow -> next_method)
         {
-            int diff = method_call -> arguments -> NumArguments() -
-                method -> NumFormalParameters();
-            if (diff < 0)
-                diff = - diff;
-            if (diff < difference)
+            MethodSymbol* method = method_shadow -> method_symbol;
+
+            if (! method -> IsTyped())
+                method -> ProcessMethodSignature(this, id_token);
+            if (MemberAccessCheck(type, method, base) ||
+                method_shadow -> NumConflicts() > 0)
             {
-                best_match = method;
-                difference = diff;
+                int diff = method_call -> arguments -> NumArguments() -
+                    method -> NumFormalParameters();
+                if (diff < 0)
+                    diff = - diff;
+                if (diff < difference)
+                {
+                    best_match = method;
+                    difference = diff;
+                }
             }
         }
-    }
-    if (best_match)
-    {
-        ReportSemError(SemanticError::METHOD_OVERLOAD_NOT_FOUND, method_call,
-                       name_symbol -> Name(), // FIXME: should be method_call ->
-                           // symbol -> Header(), except that method_call has
-                           // no symbol yet
-                       best_match -> containing_type -> ContainingPackageName(),
-                       best_match -> containing_type -> ExternalName(),
-                       best_match -> Header());
-        return;
+        if (best_match)
+        {
+            wchar_t* header = Header(name_symbol, method_call -> arguments);
+            ReportSemError(SemanticError::METHOD_OVERLOAD_NOT_FOUND,
+                           method_call, header,
+                           best_match -> containing_type -> ContainingPackageName(),
+                           best_match -> containing_type -> ExternalName(),
+                           best_match -> Header());
+            delete [] header;
+            return;
+        }
     }
 
     //
@@ -226,21 +311,29 @@ void Semantic::ReportMethodNotFound(AstMethodInvocation* method_call,
     //
     if (method_call -> arguments -> NumArguments() == 0)
     {
-        VariableShadowSymbol* variable_shadow = type ->
-            expanded_field_table -> FindVariableShadowSymbol(name_symbol);
-
-        if (variable_shadow)
+        for (env = top_env; env;
+             env = (base ? (SemanticEnvironment*) NULL : env -> previous))
         {
-            VariableSymbol* variable = variable_shadow -> variable_symbol;
-            if (MemberAccessCheck(type, variable))
+            if (! base)
+                type = env -> Type();
+            if (! type -> expanded_field_table)
+                ComputeFieldsClosure(type, id_token);
+            VariableShadowSymbol* variable_shadow = type ->
+                expanded_field_table -> FindVariableShadowSymbol(name_symbol);
+            if (variable_shadow)
             {
-                TypeSymbol* enclosing_type = variable -> owner -> TypeCast();
-                assert(enclosing_type);
-                ReportSemError(SemanticError::FIELD_NOT_METHOD, method_call,
-                               variable -> Name(),
-                               enclosing_type -> ContainingPackageName(),
-                               enclosing_type -> ExternalName());
-                return;
+                VariableSymbol* variable = variable_shadow -> variable_symbol;
+                if (MemberAccessCheck(type, variable))
+                {
+                    TypeSymbol* enclosing_type =
+                        variable -> owner -> TypeCast();
+                    assert(enclosing_type);
+                    ReportSemError(SemanticError::FIELD_NOT_METHOD,
+                                   method_call, variable -> Name(),
+                                   enclosing_type -> ContainingPackageName(),
+                                   enclosing_type -> ExternalName());
+                    return;
+                }
             }
         }
     }
@@ -263,9 +356,11 @@ void Semantic::ReportMethodNotFound(AstMethodInvocation* method_call,
                 method -> NumFormalParameters())
             {
                 unsigned i;
-                for (i = 0; i < method_call -> arguments -> NumArguments(); i++)
+                for (i = 0;
+                     i < method_call -> arguments -> NumArguments(); i++)
                 {
-                    AstExpression* expr = method_call -> arguments -> Argument(i);
+                    AstExpression* expr =
+                        method_call -> arguments -> Argument(i);
                     if (! CanMethodInvocationConvert(method -> FormalParameter(i) -> Type(),
                                                      expr -> Type()))
                     {
@@ -294,6 +389,7 @@ void Semantic::ReportMethodNotFound(AstMethodInvocation* method_call,
                              ! method -> ACC_STATIC() &&
                              ThisType() -> HasProtectedAccessTo(method -> containing_type))
                     {
+                        assert(base);
                         ReportSemError(SemanticError::PROTECTED_INSTANCE_METHOD_NOT_ACCESSIBLE,
                                        method_call, method -> Header(),
                                        method -> containing_type -> ContainingPackageName(),
@@ -318,28 +414,50 @@ void Semantic::ReportMethodNotFound(AstMethodInvocation* method_call,
     //
     // Search for a misspelled method name.
     //
-    best_match = FindMisspelledMethodName(type, method_call, name_symbol);
-    if (best_match)
-        ReportSemError(SemanticError::METHOD_NAME_MISSPELLED,
-                       method_call, name_symbol -> Name(),
-                       type -> ContainingPackageName(),
-                       type -> ExternalName(), best_match -> Name());
+    for (env = top_env; env;
+         env = (base ? (SemanticEnvironment*) NULL : env -> previous))
+    {
+        if (! base)
+            type = env -> Type();
+        best_match = FindMisspelledMethodName(type, method_call, name_symbol);
+        if (best_match)
+        {
+            ReportSemError(SemanticError::METHOD_NAME_MISSPELLED,
+                           method_call, name_symbol -> Name(),
+                           type -> ContainingPackageName(),
+                           type -> ExternalName(), best_match -> Name());
+            return;
+        }
+    }
     //
     // Search for a type of the same name.
     //
-    else if (FindType(id_token))
+    if (FindType(id_token))
         ReportSemError(SemanticError::TYPE_NOT_METHOD, method_call,
                        name_symbol -> Name());
     //
     // Give up. We didn't find it.
     //
-    else ReportSemError(SemanticError::METHOD_NOT_FOUND, method_call,
-                        name_symbol -> Name(),
-                        type -> ContainingPackageName(),
-                        type -> ExternalName());
+    else
+    {
+        if (! base)
+            type = ThisType();
+        wchar_t* header = Header(name_symbol, method_call -> arguments);
+        ReportSemError(SemanticError::METHOD_NOT_FOUND, method_call,
+                       header, type -> ContainingPackageName(),
+                       type -> ExternalName());
+        delete [] header;
+    }
 }
 
 
+//
+// Called when no accessible constructor was found. This checks in order: an
+// accessible method of the same name but different parameters, favoring
+// constructors with the same parameter count; an inaccessible constructor;
+// an accessible method with the same name as the type; and finally no
+// constructor was found.
+//
 void Semantic::ReportConstructorNotFound(Ast* ast, TypeSymbol* type)
 {
     AstClassInstanceCreationExpression* class_creation =
@@ -396,9 +514,11 @@ void Semantic::ReportConstructorNotFound(Ast* ast, TypeSymbol* type)
     }
     if (best_match)
     {
+        wchar_t* header = Header(type -> Identity(), args);
         ReportSemError(SemanticError::CONSTRUCTOR_OVERLOAD_NOT_FOUND, ast,
-                       type -> ContainingPackageName(), type -> ExternalName(),
-                       best_match -> Header());
+                       header, type -> ContainingPackageName(),
+                       type -> ExternalName(), best_match -> Header());
+        delete [] header;
         return;
     }
 
@@ -476,61 +596,15 @@ void Semantic::ReportConstructorNotFound(Ast* ast, TypeSymbol* type)
                            left_tok, right_tok, type -> Name(),
                            method -> containing_type -> file_location -> location);
         }
+        return;
     }
 
     //
     // Give up. We didn't find it.
     //
-    const wchar_t* name = type -> Name();
-    int length = type -> NameLength();
-
-    for (unsigned i = 0; i < num_arguments; i++)
-    {
-        TypeSymbol* arg_type = args -> Argument(i) -> Type();
-        // '/' after package_name ',' and ' ' to separate this formal
-        // parameter from the next one
-        length += arg_type -> ContainingPackage() -> PackageNameLength() +
-                  arg_type -> ExternalNameLength() + 3;
-    }
-
-    // +1 for (, +1 for ), +1 for '\0'
-    wchar_t* header = new wchar_t[length + 3];
-    wchar_t* s = header;
-
-    for (const wchar_t* s2 = name; *s2; s2++)
-        *s++ = *s2;
-    *s++ = U_LEFT_PARENTHESIS;
-    if (num_arguments > 0)
-    {
-        for (unsigned i = 0; i < num_arguments; i++)
-        {
-            TypeSymbol* arg_type = args -> Argument(i) -> Type();
-
-            PackageSymbol* package = arg_type -> ContainingPackage();
-            wchar_t* package_name = package -> PackageName();
-            if (package -> PackageNameLength() > 0 &&
-                wcscmp(package_name, StringConstant::US_DO) != 0)
-            {
-                while (*package_name)
-                {
-                    *s++ = (*package_name == U_SLASH ? (wchar_t) U_DOT
-                            : *package_name);
-                    package_name++;
-                }
-                *s++ = U_DOT;
-            }
-
-            for (const wchar_t* s2 = arg_type -> ExternalName(); *s2; s2++)
-                *s++ = (*s2 == U_DOLLAR ? (wchar_t) U_DOT : *s2);
-            *s++ = U_COMMA;
-            *s++ = U_SPACE;
-        }
-
-        s -= 2; // remove the last ',' and ' '
-    }
-    *s++ = U_RIGHT_PARENTHESIS;
-    *s = U_NULL;
-    ReportSemError(SemanticError::CONSTRUCTOR_NOT_FOUND, ast, header);
+    wchar_t* header = Header(type -> Identity(), args);
+    ReportSemError(SemanticError::CONSTRUCTOR_NOT_FOUND, ast, header,
+                   type -> ContainingPackageName(), type -> ExternalName());
     delete [] header;
 }
 
@@ -864,7 +938,7 @@ MethodShadowSymbol* Semantic::FindMethodInType(TypeSymbol* type,
 
 void Semantic::FindMethodInEnvironment(Tuple<MethodShadowSymbol*>& methods_found,
                                        SemanticEnvironment*& where_found,
-                                       SemanticEnvironment* stack,
+                                       SemanticEnvironment* envstack,
                                        AstMethodInvocation* method_call)
 {
     AstName* name = method_call -> method -> NameCast();
@@ -872,7 +946,7 @@ void Semantic::FindMethodInEnvironment(Tuple<MethodShadowSymbol*>& methods_found
     NameSymbol* name_symbol =
         lex_stream -> NameSymbol(name -> identifier_token);
 
-    for (SemanticEnvironment* env = stack; env; env = env -> previous)
+    for (SemanticEnvironment* env = envstack; env; env = env -> previous)
     {
         TypeSymbol* type = env -> Type();
         if (! type -> expanded_method_table)
@@ -945,247 +1019,91 @@ void Semantic::FindMethodInEnvironment(Tuple<MethodShadowSymbol*>& methods_found
 
 
 MethodShadowSymbol* Semantic::FindMethodInEnvironment(SemanticEnvironment*& where_found,
-                                                      SemanticEnvironment* stack,
                                                       AstMethodInvocation* method_call)
 {
     Tuple<MethodShadowSymbol*> methods_found(2);
-    FindMethodInEnvironment(methods_found, where_found, stack, method_call);
-
-    MethodSymbol* method_symbol = (methods_found.Length() > 0
-                                   ? methods_found[0] -> method_symbol
-                                   : (MethodSymbol*) NULL);
-    if (method_symbol)
+    FindMethodInEnvironment(methods_found, where_found, state_stack.Top(),
+                            method_call);
+    if (methods_found.Length() == 0)
     {
-        for (unsigned i = 1; i < methods_found.Length(); i++)
-        {
-            ReportSemError(SemanticError::AMBIGUOUS_METHOD_INVOCATION,
-                           method_call, method_symbol -> Name(),
-                           methods_found[0] -> method_symbol -> Header(),
-                           method_symbol -> containing_type -> ContainingPackageName(),
-                           method_symbol -> containing_type -> ExternalName(),
-                           methods_found[i] -> method_symbol -> Header(),
-                           methods_found[i] -> method_symbol -> containing_type -> ContainingPackageName(),
-                           methods_found[i] -> method_symbol -> containing_type -> ExternalName());
-        }
-
-        if (method_symbol -> containing_type != where_found -> Type())
-        {
-            //
-            // The method was inherited.
-            //
-            if (method_symbol -> IsSynthetic())
-            {
-                ReportSemError(SemanticError::SYNTHETIC_METHOD_INVOCATION,
-                               method_call, method_symbol -> Header(),
-                               method_symbol -> containing_type -> ContainingPackageName(),
-                               method_symbol -> containing_type -> ExternalName());
-            }
-            else if (control.option.pedantic)
-            {
-                //
-                // Give a pedantic warning if the inherited method shadowed
-                // a method of the same name within an enclosing lexical scope.
-                //
-                Tuple<MethodShadowSymbol*> others(2);
-                SemanticEnvironment* found_other;
-                SemanticEnvironment* previous_env = where_found -> previous;
-                FindMethodInEnvironment(others, found_other, previous_env,
-                                        method_call);
-
-                if (others.Length() > 0 &&
-                    where_found -> Type() != found_other -> Type())
-                {
-                    for (unsigned i = 0; i < others.Length();  i++)
-                    {
-                        if (others[i] -> method_symbol != method_symbol &&
-                            (others[i] -> method_symbol -> containing_type ==
-                             found_other -> Type()))
-                        {
-                            ReportSemError(SemanticError::INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER,
-                                           method_call,
-                                           method_symbol -> Name(),
-                                           method_symbol -> containing_type -> ContainingPackageName(),
-                                           method_symbol -> containing_type -> ExternalName(),
-                                           found_other -> Type() -> ContainingPackageName(),
-                                           found_other -> Type() -> ExternalName());
-                            break; // emit only one error message
-                        }
-                    }
-                }
-            }
-        }
+        ReportMethodNotFound(method_call, NULL);
+        return NULL;
     }
-    else
+    MethodSymbol* method_symbol =  methods_found[0] -> method_symbol;
+    for (unsigned i = 1; i < methods_found.Length(); i++)
     {
-        LexStream::TokenIndex id_token =
-            method_call -> arguments -> left_parenthesis_token - 1;
-        NameSymbol* name_symbol = lex_stream -> NameSymbol(id_token);
-        bool symbol_found = false;
-
-        //
-        // First, search for a perfect visible method match in an enclosing
-        // class.
-        //
-        assert(stack);
-        for (SemanticEnvironment* env = stack -> previous;
-             env; env = env -> previous)
-        {
-            Tuple<MethodShadowSymbol*> others(2);
-            SemanticEnvironment* found_other;
-            FindMethodInEnvironment(others, found_other, env, method_call);
-
-            if (others.Length() > 0)
-            {
-                ReportSemError(SemanticError::HIDDEN_METHOD_IN_ENCLOSING_CLASS,
-                               method_call,
-                               others[0] -> method_symbol -> Header(),
-                               others[0] -> method_symbol -> containing_type -> ContainingPackageName(),
-                               others[0] -> method_symbol -> containing_type -> ExternalName());
-
-                symbol_found = true;
-                break;
-            }
-        }
-
-        //
-        // If a method in an enclosing class was not found. Search for a
-        // similar visible field or a private method with the name.
-        //
-        for (SemanticEnvironment* env2 = stack;
-             env2 && (! symbol_found); env2 = env2 -> previous)
-        {
-            TypeSymbol* type = env2 -> Type();
-
-            if (! type -> expanded_field_table)
-                ComputeFieldsClosure(type, id_token);
-
-            VariableShadowSymbol* variable_shadow_symbol = type ->
-                expanded_field_table -> FindVariableShadowSymbol(name_symbol);
-            if (variable_shadow_symbol)
-            {
-                VariableSymbol* variable_symbol =
-                    variable_shadow_symbol -> variable_symbol;
-                TypeSymbol* enclosing_type =
-                    variable_symbol -> owner -> TypeCast();
-
-                assert(enclosing_type);
-                ReportSemError(SemanticError::FIELD_NOT_METHOD,
-                               method_call, variable_symbol -> Name(),
-                               enclosing_type -> ContainingPackageName(),
-                               enclosing_type -> ExternalName());
-                symbol_found = true;
-                break;
-            }
-            else
-            {
-                TypeSymbol* super_type;
-                MethodShadowSymbol* method_shadow;
-
-                for (super_type = type -> super;
-                     super_type; super_type = super_type -> super)
-                {
-                    for (method_shadow = super_type -> expanded_method_table ->
-                             FindMethodShadowSymbol(name_symbol);
-                         method_shadow;
-                         method_shadow = method_shadow -> next_method)
-                    {
-                        MethodSymbol* method = method_shadow -> method_symbol;
-                        if (! method -> IsTyped())
-                            method -> ProcessMethodSignature(this, id_token);
-
-                        if (method_call -> arguments -> NumArguments() ==
-                            method -> NumFormalParameters())
-                        {
-                            unsigned i;
-                            for (i = 0; i < method_call -> arguments -> NumArguments(); i++)
-                            {
-                                AstExpression* expr =
-                                    method_call -> arguments -> Argument(i);
-                                if (! CanMethodInvocationConvert(method -> FormalParameter(i) -> Type(),
-                                                                 expr -> Type()))
-                                {
-                                    break;
-                                }
-                            }
-                            if (i == method_call -> arguments -> NumArguments())
-                                // found a match ?
-                                break;
-                        }
-                    }
-
-                    if (method_shadow) // found a match ?
-                        break;
-                }
-
-                if (super_type)
-                {
-                    ReportSemError(SemanticError::METHOD_NOT_ACCESSIBLE,
-                                   method_call, name_symbol -> Name(),
-                                   super_type -> ContainingPackageName(),
-                                   super_type -> ExternalName(),
-                                   method_shadow -> method_symbol -> AccessString());
-                    assert(! method_shadow -> method_symbol -> ACC_PROTECTED());
-                    // protected access by simple name always possible
-                    symbol_found = true;
-                    break;
-                }
-            }
-        }
-
-        //
-        // Finally, if we did not find a method or field name that matches,
-        // look for a type with that name.
-        //
-        if (! symbol_found)
-        {
-            TypeSymbol* this_type = ThisType();
-
-            if (FindType(id_token))
-            {
-                ReportSemError(SemanticError::TYPE_NOT_METHOD,
-                               id_token, name_symbol -> Name());
-            }
-            else if (this_type -> expanded_method_table ->
-                     FindMethodShadowSymbol(name_symbol))
-            {
-                ReportMethodNotFound(method_call, this_type);
-            }
-            else
-            {
-                MethodSymbol* method = FindMisspelledMethodName(this_type,
-                                                                method_call,
-                                                                name_symbol);
-                ReportSemError((method
-                                ? SemanticError::METHOD_NAME_MISSPELLED
-                                : SemanticError::METHOD_NOT_FOUND),
-                               method_call, name_symbol -> Name(),
-                               this_package -> PackageName(),
-                               this_type -> ExternalName(),
-                               method ? method -> Name() : (wchar_t*) NULL);
-            }
-        }
+        ReportSemError(SemanticError::AMBIGUOUS_METHOD_INVOCATION,
+                       method_call, method_symbol -> Name(),
+                       methods_found[0] -> method_symbol -> Header(),
+                       method_symbol -> containing_type -> ContainingPackageName(),
+                       method_symbol -> containing_type -> ExternalName(),
+                       methods_found[i] -> method_symbol -> Header(),
+                       methods_found[i] -> method_symbol -> containing_type -> ContainingPackageName(),
+                       methods_found[i] -> method_symbol -> containing_type -> ExternalName());
     }
 
-    //
-    // If this method came from a class file, make sure that its throws clause
-    // has been processed.
-    //
-    if (method_symbol)
+    if (method_symbol -> containing_type != where_found -> Type())
     {
-        method_symbol -> ProcessMethodThrows(this, method_call ->
-                                             method -> RightToken());
-
-        if (control.option.deprecation && method_symbol -> IsDeprecated() &&
-            ! InDeprecatedContext())
+        //
+        // The method was inherited.
+        //
+        if (method_symbol -> IsSynthetic())
         {
-            ReportSemError(SemanticError::DEPRECATED_METHOD,
+            ReportSemError(SemanticError::SYNTHETIC_METHOD_INVOCATION,
                            method_call, method_symbol -> Header(),
                            method_symbol -> containing_type -> ContainingPackageName(),
                            method_symbol -> containing_type -> ExternalName());
         }
+        else if (control.option.pedantic)
+        {
+            //
+            // Give a pedantic warning if the inherited method shadowed
+            // a method of the same name within an enclosing lexical scope.
+            //
+            Tuple<MethodShadowSymbol*> others(2);
+            SemanticEnvironment* found_other;
+            SemanticEnvironment* previous_env = where_found -> previous;
+            FindMethodInEnvironment(others, found_other, previous_env,
+                                    method_call);
+
+            if (others.Length() > 0 &&
+                where_found -> Type() != found_other -> Type())
+            {
+                for (unsigned i = 0; i < others.Length();  i++)
+                {
+                    if (others[i] -> method_symbol != method_symbol &&
+                        (others[i] -> method_symbol -> containing_type ==
+                         found_other -> Type()))
+                    {
+                        ReportSemError(SemanticError::INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER,
+                                       method_call,
+                                       method_symbol -> Name(),
+                                       method_symbol -> containing_type -> ContainingPackageName(),
+                                       method_symbol -> containing_type -> ExternalName(),
+                                       found_other -> Type() -> ContainingPackageName(),
+                                       found_other -> Type() -> ExternalName());
+                        break; // emit only one error message
+                    }
+                }
+            }
+        }
     }
-    return methods_found.Length() > 0 ? methods_found[0]
-        : (MethodShadowSymbol*) NULL;
+
+    //
+    // If this method came from a class file, make sure that its throws
+    // clause has been processed.
+    //
+    method_symbol -> ProcessMethodThrows(this, method_call ->
+                                         method -> RightToken());
+    if (control.option.deprecation && method_symbol -> IsDeprecated() &&
+        ! InDeprecatedContext())
+    {
+        ReportSemError(SemanticError::DEPRECATED_METHOD,
+                       method_call, method_symbol -> Header(),
+                       method_symbol -> containing_type -> ContainingPackageName(),
+                       method_symbol -> containing_type -> ExternalName());
+    }
+    return methods_found[0];
 }
 
 
@@ -1387,14 +1305,14 @@ void Semantic::ReportVariableNotFound(AstExpression* access, TypeSymbol* type)
 
 void Semantic::FindVariableInEnvironment(Tuple<VariableSymbol*>& variables_found,
                                          SemanticEnvironment*& where_found,
-                                         SemanticEnvironment* stack,
+                                         SemanticEnvironment* envstack,
                                          NameSymbol* name_symbol,
                                          LexStream::TokenIndex identifier_token)
 {
     variables_found.Reset();
     where_found = (SemanticEnvironment*) NULL;
 
-    for (SemanticEnvironment* env = stack; env; env = env -> previous)
+    for (SemanticEnvironment* env = envstack; env; env = env -> previous)
     {
         VariableSymbol* variable_symbol =
             env -> symbol_table.FindVariableSymbol(name_symbol);
@@ -1435,12 +1353,12 @@ void Semantic::FindVariableInEnvironment(Tuple<VariableSymbol*>& variables_found
 
 
 VariableSymbol* Semantic::FindVariableInEnvironment(SemanticEnvironment*& where_found,
-                                                    SemanticEnvironment* stack,
                                                     LexStream::TokenIndex identifier_token)
 {
     Tuple<VariableSymbol*> variables_found(2);
     NameSymbol* name_symbol = lex_stream -> NameSymbol(identifier_token);
-    FindVariableInEnvironment(variables_found, where_found, stack,
+    SemanticEnvironment* envstack = state_stack.Top();
+    FindVariableInEnvironment(variables_found, where_found, envstack,
                               name_symbol, identifier_token);
 
     VariableSymbol* variable_symbol =
@@ -1451,9 +1369,9 @@ VariableSymbol* Semantic::FindVariableInEnvironment(SemanticEnvironment*& where_
     {
         if (variable_symbol -> IsLocal()) // a local variable
         {
-            if (where_found != stack)
+            if (where_found != envstack)
             {
-                TypeSymbol* type = stack -> Type();
+                TypeSymbol* type = envstack -> Type();
 
                 if (! variable_symbol -> ACC_FINAL())
                 {
@@ -1481,7 +1399,7 @@ VariableSymbol* Semantic::FindVariableInEnvironment(SemanticEnvironment*& where_
                     // scope of the variable, and use that shadow instead.
                     //
                     variable_symbol = FindLocalVariable(variable_symbol,
-                                                        stack -> Type());
+                                                        envstack -> Type());
                     TypeSymbol* shadow_owner =
                         variable_symbol -> ContainingType();
                     assert(shadow_owner);
@@ -2374,8 +2292,7 @@ void Semantic::ProcessAmbiguousName(AstName* name)
         //
         SemanticEnvironment* where_found;
         VariableSymbol* variable_symbol =
-            FindVariableInEnvironment(where_found, state_stack.Top(),
-                                      name -> identifier_token);
+            FindVariableInEnvironment(where_found, name -> identifier_token);
         if (variable_symbol)
         {
             assert(variable_symbol -> IsTyped());
@@ -2947,8 +2864,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation* method_call)
     if (! base)
     {
         SemanticEnvironment* where_found;
-        method_shadow = FindMethodInEnvironment(where_found, state_stack.Top(),
-                                                method_call);
+        method_shadow = FindMethodInEnvironment(where_found, method_call);
         if (! method_shadow)
         {
             method_call -> symbol = control.no_type;
