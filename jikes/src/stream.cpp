@@ -416,20 +416,24 @@ LexStream::~LexStream()
 //
 //
 //
-::LiteralSymbol *LexStream::LiteralSymbol(TokenIndex i)
+class LiteralSymbol *LexStream::LiteralSymbol(TokenIndex i)
 {
     Symbol *symbol = tokens[i].additional_info.symbol;
-    return (symbol && (Kind(i) != TK_LBRACE) ? symbol -> LiteralCast() : (::LiteralSymbol *) NULL);
+    return (symbol && (Kind(i) != TK_LBRACE) ?
+        symbol -> LiteralCast() :
+            (class LiteralSymbol *) NULL);
 }
 
 
 //
 //
 //
-::NameSymbol *LexStream::NameSymbol(TokenIndex i)
+class NameSymbol *LexStream::NameSymbol(TokenIndex i)
 {
     Symbol *symbol = tokens[i].additional_info.symbol;
-    return (symbol && (Kind(i) != TK_LBRACE) ? symbol -> NameCast() : (::NameSymbol *) NULL);
+    return (symbol && (Kind(i) != TK_LBRACE) ?
+        symbol -> NameCast() :
+            (class NameSymbol *) NULL);
 }
 
 

@@ -1,3 +1,10 @@
+2000-01-10  Mo DeJong  <mdejong@redhat.com>
+
+	* src/stream.cpp (LexStream::LiteralSymbol,
+	LexStream::NameSymbol): Added class qualifier
+	to fix compiler error when LexStream was
+	defined in the Jikes namespace.
+
 2000-01-10  Christopher Abbey  <cabbey@bresnanlink.net>
 
 	* src/jikesapi.cpp: Move DefaultFileReader and
