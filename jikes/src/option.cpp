@@ -152,11 +152,25 @@ void Option::SaveCurrentDirectoryOnDisk(char c)
 
 Option::Option(ArgumentExpander &arguments) : default_path(NULL),
                                               classpath(NULL),
+                                              directory(NULL),
                                               makefile_name(NULL),
+                                              nowrite(false),
+                                              deprecation(false),
+                                              O(false),
+                                              g(false),
+                                              verbose(false),
+                                              depend(false),
+                                              nowarn(false),
+                                              one_one(true),
+                                              zero_defect(false),
+                                              first_file_index(arguments.argc),
+                                              debug_trap_op(0),
                                               debug_dump_lex(false),
                                               debug_dump_ast(false),
+                                              debug_unparse_ast(false),
+                                              debug_unparse_ast_debug(false),
                                               debug_dump_class(false),
-                                              debug_trap_op(0),
+                                              nocleanup(false),
                                               applet_author(false),
                                               incremental(false),
                                               makefile(false),
@@ -166,20 +180,9 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
                                               dump_errors(false),
                                               errors(true),
                                               ascii(false),
-                                              comments(false),
-                                              pedantic(false),
-                                              directory(NULL),
-                                              first_file_index(arguments.argc),
                                               classpath_search_order(false),
-                                              one_one(true),
-                                              g(false),
-                                              nowrite(false),
-                                              deprecation(false),
-                                              verbose(false),
-                                              depend(false),
-                                              nowarn(false),
-                                              O(false),
-                                              zero_defect(false)
+                                              comments(false),
+                                              pedantic(false)
 {
 #ifdef WIN32_FILE_SYSTEM
     for (int j = 0; j < 128; j++)
@@ -293,6 +296,13 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
                  applet_author = true;
             else if (strcmp(arguments.argv[i], "+A") == 0)
                  debug_dump_ast = true;
+            else if (strcmp(arguments.argv[i], "+u") == 0)
+                 debug_unparse_ast = true;
+            else if (strcmp(arguments.argv[i], "+ud") == 0)
+            {
+                debug_unparse_ast = true;
+                debug_unparse_ast_debug = true;
+            }
 #ifdef EBCDIC
             else if (strcmp(arguments.argv[i], "+ASCII") == 0)
                      ascii = true;
@@ -483,5 +493,3 @@ Option::~Option()
 
     return;
 }
-
-

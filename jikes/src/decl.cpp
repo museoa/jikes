@@ -261,12 +261,10 @@ void Semantic::ProcessTypeNames()
                 }
                 break;
             }
+            case Ast::EMPTY_DECLARATION:
+		break;
         default:
-#ifdef ERNST
-// It is an open question if the next assert is appropriate.
-// Mike Ernst will sort this out.
         assert(false);
-#endif
         break;
         }
 
@@ -2055,10 +2053,10 @@ void Semantic::CleanUp()
                     type = interface_declaration -> semantic_environment -> Type();
                 break;
             }
+            case Ast::EMPTY_DECLARATION:
+		break;
         default:
-#ifdef ERNST
         assert(false);
-#endif
         break;
         }
 
@@ -2082,6 +2080,9 @@ void Semantic::CleanUpType(TypeSymbol *type)
         type -> MethodSym(j) -> CleanUp();
 
     delete type -> local;
+    if (control.option.nocleanup)
+	return;
+
     type -> local = NULL;
 
     delete type -> non_local;

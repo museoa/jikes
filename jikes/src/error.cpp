@@ -17,14 +17,13 @@
 unsigned char SemanticError::warning[SemanticError::_num_kinds] = { 0 };
 void (*SemanticError::print_message[SemanticError::_num_kinds]) (SemanticError::ErrorInfo &, LexStream *, Control &) = { NULL };
 
-SemanticError::SemanticError(Control &control_, FileSymbol *file_symbol) : control(control_),
+SemanticError::SemanticError(Control &control_, FileSymbol *file_symbol) : num_errors(0),
+                                                                           num_warnings(0),
+									   control(control_),
                                                                            lex_stream(file_symbol -> lex_stream),
-
-                                                                           buffer(1024),
-                                                                           error(512),
                                                                            clone_count(0),
-                                                                           num_errors(0),
-                                                                           num_warnings(0)
+                                                                           buffer(1024),
+                                                                           error(512)
 {}
 
 //
@@ -64,15 +63,15 @@ void SemanticError::Report(SemanticErrorKind msg_code,
     error[i].msg_code = msg_code;
 
     int total_length = 0,
-        length1,
-        length2,
-        length3,
-        length4,
-        length5,
-        length6,
-        length7,
-        length8,
-        length9;
+        length1 = 0,
+        length2 = 0,
+        length3 = 0,
+        length4 = 0,
+        length5 = 0,
+        length6 = 0,
+        length7 = 0,
+        length8 = 0,
+        length9 = 0;
 
     if (insert1)
     {

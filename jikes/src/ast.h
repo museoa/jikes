@@ -1088,6 +1088,7 @@ public:
 
 #ifdef TEST
     virtual void Print(LexStream &);
+    virtual void Unparse(LexStream &, char * directory); // special form
     virtual void Unparse(Ostream &, LexStream &);
 #endif
 

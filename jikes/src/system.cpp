@@ -477,7 +477,6 @@ void Control::ProcessPath()
         wchar_t *path_name = new wchar_t[max_path_name_length + 1]; // +1 for '\0'
 
         wchar_t *input_name = NULL;
-        char *full_directory_name = NULL;
 
         for (char *path = option.classpath, *path_tail = &path[strlen(path)]; path < path_tail; path++)
         {
@@ -640,6 +639,7 @@ void Control::ProcessSystemInformation()
     // Add entry for system package
     //
     system_package = ProcessPackage(StringConstant::US_java_SL_lang);
+    java_util_package = ProcessPackage(StringConstant::US_java_SL_util);
 
     //
     // Create an entry for each primitive type. Note that the type void is treated as a primitive.
@@ -738,7 +738,7 @@ FileSymbol *Control::GetJavaFile(PackageSymbol *package, NameSymbol *name_symbol
     for (int k = 0; k < package -> directory.Length(); k++)
     {
         directory_symbol = package -> directory[k];
-        if (entry = directory_symbol -> FindEntry(full_filename, length))
+        if ((entry = directory_symbol -> FindEntry(full_filename, length)))
             break;
     }
 
