@@ -1861,18 +1861,7 @@ void Semantic::ConstructorAccessCheck(AstClassInstanceCreationExpression *class_
         {
             if (constructor -> ACC_PROTECTED())
             {
-                //
-                // TODO: we need to file a query to Sun regarding which test is required here!
-                // According to the rules 6.6.2 in the JLS, access to a protected constructor
-                // that is not contained in the same package is only valid through a "super(...)" call.
-                // However, javac seems to have relaxed this restriction to allow subclass access...
-                //
-                //
-                // TODO: we have filed a query to Sun regarding which test is required here!
-                //
-                // if (! (containing_type -> ContainingPackage() == this_package || this_type -> IsSubclass(containing_type)))
-                //
-                if (! (containing_type -> ContainingPackage() == this_package || this_type -> HasProtectedAccessTo(containing_type)))
+                if(containing_type->ContainingPackage() != this_package)
                 {
                     ReportSemError(SemanticError::PROTECTED_CONSTRUCTOR_NOT_ACCESSIBLE,
                                    class_creation -> class_type -> LeftToken(),
