@@ -5269,6 +5269,10 @@ ByteCode::ByteCode(TypeSymbol *unit_type) : ClassFile(unit_type),
 #ifdef JIKES_DEBUG
     if (! control.option.nowrite)
         control.class_files_written++;
+
+    if (control.option.verbose)
+        Coutput << "[generating code for class "
+                << unit_type -> fully_qualified_name -> value << "]" << endl;
 #endif // JIKES_DEBUG
 
     SetFlags(unit_type -> Flags());

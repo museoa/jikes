@@ -1,3 +1,8 @@
+2002-01-11  Marko Kreen  <marko@l-t.ee>
+
+	* src/bytecode.cpp (ByteCode): Improve verbose output in debug
+	build to track down errant class files - patch 256.
+
 2002-01-06  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/op.h (class Operators):
