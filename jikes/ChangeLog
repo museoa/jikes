@@ -1,3 +1,11 @@
+2001-05-01  Mo DeJong  <mdejong@redhat.com>
+
+	* src/ast.h (DYNAMIC_CAST):
+	* src/lookup.cpp: Add new DYNAMIC_CAST method, it
+	will make use of the dynamic_cast<> operator
+	and RTTI to check for downcast errors. Use it
+	for all Ast and Symbol cast conversions.
+
 2001-05-01  Eric Blake  <ebb9@email.byu.edu>
 
 	* expr.cpp: use control.IsSimpleIntegerValueType(x)

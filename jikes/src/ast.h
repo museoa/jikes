@@ -5183,85 +5183,88 @@ public:
     }
 };
 
+
+//
+// Define a templatized function for the dynamic_cast<> operator.
+// This is slightly scary, but we need to do it so that we
+// can continue to support older compilers that don't implement
+// the dynamic_cast<> operator. We also do extra checking
+// of the result when RTTI is supported. This does add some
+// overhead, but if we catch a downcast bug as a result it
+// is worth it. Downcast bugs were to blame for a number of
+// core dumps in Jikes.
+//
+
+#ifdef HAVE_RTTI
+#include <typeinfo>
+#endif
+
+template <class TO, class FROM>
+TO DYNAMIC_CAST(FROM f) {
+#ifndef HAVE_DYNAMIC_CAST
+    return (TO) f;
+#else
+    // If NULL, return NULL to support dynamic_cast semantics
+    if (!f) return (TO) NULL;
+    TO ptr = dynamic_cast<TO> (f);
+
+    if (! ptr) {
+#ifdef HAVE_RTTI
+        const type_info& t = typeid(f);
+        const char *name = t.name();
+        fprintf(stderr, "DYNAMIC_CAST argument type was \"%s\"\n", name);
+#endif
+        assert(ptr && "Failed dynamic_cast<> in DYNAMIC_CAST");
+    }
+    return ptr;
+#endif
+}
+
+
 //
 // Cast conversions for Ast
 //
 
 inline AstStatement *Ast::StatementCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstStatement *>
-#else
-        (AstStatement *)
-#endif
-            (class_tag == STATEMENT ? this : NULL);
+    return DYNAMIC_CAST<AstStatement *, Ast *>
+        (class_tag == STATEMENT ? this : NULL);
 }
 
 inline AstExpression *Ast::ExpressionCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstExpression *>
-#else
-        (AstExpression *)
-#endif
-            (class_tag == EXPRESSION ? this : NULL);
+    return DYNAMIC_CAST<AstExpression *, Ast *>
+        (class_tag == EXPRESSION ? this : NULL);
 }
 
 inline AstPrimitiveType *Ast::PrimitiveTypeCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstPrimitiveType *>
-#else
-        (AstPrimitiveType *)
-#endif
-            (class_tag == PRIMITIVE_TYPE ? this : NULL);
+    return DYNAMIC_CAST<AstPrimitiveType *, Ast *>
+        (class_tag == PRIMITIVE_TYPE ? this : NULL);
 }
 
 inline AstModifier *Ast::ModifierCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstModifier *>
-#else
-        (AstModifier *)
-#endif
-            (class_tag == MODIFIER ? this : NULL);
+    return DYNAMIC_CAST<AstModifier *, Ast *>
+        (class_tag == MODIFIER ? this : NULL);
 }
 
 inline AstFieldDeclaration *Ast::StaticFieldCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstFieldDeclaration *>
-#else
-        (AstFieldDeclaration *)
-#endif
-            (class_tag == STATIC_FIELD ? this : NULL);
+    return DYNAMIC_CAST<AstFieldDeclaration *, Ast *>
+        (class_tag == STATIC_FIELD ? this : NULL);
 }
 
 inline AstClassBody *Ast::UnparsedClassBodyCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstClassBody *>
-#else
-        (AstClassBody *)
-#endif
-            (class_tag == UNPARSED ? this : NULL);
+    return DYNAMIC_CAST<AstClassBody *, Ast *>
+        (class_tag == UNPARSED ? this : NULL);
 }
 
 inline AstInterfaceDeclaration *Ast::UnparsedInterfaceBodyCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstInterfaceDeclaration *>
-#else
-        (AstInterfaceDeclaration *)
-#endif
-            (class_tag == UNPARSED ? this : NULL);
+    return DYNAMIC_CAST<AstInterfaceDeclaration *, Ast *>
+        (class_tag == UNPARSED ? this : NULL);
 }
 
 
@@ -5272,762 +5275,417 @@ inline AstInterfaceDeclaration *Ast::UnparsedInterfaceBodyCast()
 
 inline AstListNode *Ast::ListNodeCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstListNode *>
-#else
-        (AstListNode *)
-#endif
-            (kind == LIST_NODE ? this : NULL);
+    return DYNAMIC_CAST<AstListNode *, Ast *>
+        (kind == LIST_NODE ? this : NULL);
 }
 
 inline AstArrayType *Ast::ArrayTypeCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstArrayType *>
-#else
-        (AstArrayType *)
-#endif
-            (kind == ARRAY ? this : NULL);
+    return DYNAMIC_CAST<AstArrayType *, Ast *>
+        (kind == ARRAY ? this : NULL);
 }
 
 inline AstSimpleName *Ast::SimpleNameCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstSimpleName *>
-#else
-        (AstSimpleName *)
-#endif
-            (kind == IDENTIFIER ? this : NULL);
+    return DYNAMIC_CAST<AstSimpleName *, Ast *>
+        (kind == IDENTIFIER ? this : NULL);
 }
 
 inline AstPackageDeclaration *Ast::PackageDeclarationCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstPackageDeclaration *>
-#else
-        (AstPackageDeclaration *)
-#endif
-            (kind == PACKAGE ? this : NULL);
+    return DYNAMIC_CAST<AstPackageDeclaration *, Ast *>
+        (kind == PACKAGE ? this : NULL);
 }
 
 inline AstImportDeclaration *Ast::ImportDeclarationCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstImportDeclaration *>
-#else
-        (AstImportDeclaration *)
-#endif
-            (kind == IMPORT ? this : NULL);
+    return DYNAMIC_CAST<AstImportDeclaration *, Ast *>
+        (kind == IMPORT ? this : NULL);
 }
 
 inline AstCompilationUnit *Ast::CompilationUnitCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstCompilationUnit *>
-#else
-        (AstCompilationUnit *)
-#endif
-            (kind == COMPILATION || kind == BAD_COMPILATION
-                || kind == EMPTY_COMPILATION ? this : NULL);
+    return DYNAMIC_CAST<AstCompilationUnit *, Ast *>
+        (kind == COMPILATION || kind == BAD_COMPILATION
+            || kind == EMPTY_COMPILATION ? this : NULL);
 }
 
 inline AstCompilationUnit *Ast::BadCompilationUnitCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstCompilationUnit *>
-#else
-        (AstCompilationUnit *)
-#endif
-            (kind == BAD_COMPILATION ? this : NULL);
+    return DYNAMIC_CAST<AstCompilationUnit *, Ast *>
+        (kind == BAD_COMPILATION ? this : NULL);
 }
 
 inline AstCompilationUnit *Ast::EmptyCompilationUnitCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstCompilationUnit *>
-#else
-        (AstCompilationUnit *)
-#endif
-            (kind == EMPTY_COMPILATION ? this : NULL);
+    return DYNAMIC_CAST<AstCompilationUnit *, Ast *>
+        (kind == EMPTY_COMPILATION ? this : NULL);
 }
 
 inline AstEmptyDeclaration *Ast::EmptyDeclarationCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstEmptyDeclaration *>
-#else
-        (AstEmptyDeclaration *)
-#endif
-            (kind == EMPTY_DECLARATION ? this : NULL);
+    return DYNAMIC_CAST<AstEmptyDeclaration *, Ast *>
+        (kind == EMPTY_DECLARATION ? this : NULL);
 }
 
 inline AstClassDeclaration *Ast::ClassDeclarationCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstClassDeclaration *>
-#else
-        (AstClassDeclaration *)
-#endif
-            (kind == CLASS ? this : NULL);
+    return DYNAMIC_CAST<AstClassDeclaration *, Ast *>
+        (kind == CLASS ? this : NULL);
 }
 
 inline AstArrayInitializer *Ast::ArrayInitializerCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstArrayInitializer *>
-#else
-        (AstArrayInitializer *)
-#endif
-            (kind == ARRAY_INITIALIZER ? this : NULL);
+    return DYNAMIC_CAST<AstArrayInitializer *, Ast *>
+        (kind == ARRAY_INITIALIZER ? this : NULL);
 }
 
 inline AstBrackets *Ast::BracketsCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstBrackets *>
-#else
-        (AstBrackets *)
-#endif
-            (kind == BRACKETS ? this : NULL);
+    return DYNAMIC_CAST<AstBrackets *, Ast *>
+        (kind == BRACKETS ? this : NULL);
 }
 
 inline AstVariableDeclaratorId *Ast::VariableDeclaratorIdCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstVariableDeclaratorId *>
-#else
-        (AstVariableDeclaratorId *)
-#endif
-            (kind == VARIABLE_DECLARATOR_NAME ? this : NULL);
+    return DYNAMIC_CAST<AstVariableDeclaratorId *, Ast *>
+        (kind == VARIABLE_DECLARATOR_NAME ? this : NULL);
 }
 
 inline AstVariableDeclarator *Ast::VariableDeclaratorCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstVariableDeclarator *>
-#else
-        (AstVariableDeclarator *)
-#endif
-            (kind == VARIABLE_DECLARATOR ? this : NULL);
+    return DYNAMIC_CAST<AstVariableDeclarator *, Ast *>
+        (kind == VARIABLE_DECLARATOR ? this : NULL);
 }
 
 inline AstFieldDeclaration *Ast::FieldDeclarationCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstFieldDeclaration *>
-#else
-        (AstFieldDeclaration *)
-#endif
-            (kind == FIELD ? this : NULL);
+    return DYNAMIC_CAST<AstFieldDeclaration *, Ast *>
+        (kind == FIELD ? this : NULL);
 }
 
 inline AstFormalParameter *Ast::FormalParameterCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstFormalParameter *>
-#else
-        (AstFormalParameter *)
-#endif
-            (kind == PARAMETER ? this : NULL);
+    return DYNAMIC_CAST<AstFormalParameter *, Ast *>
+        (kind == PARAMETER ? this : NULL);
 }
 
 inline AstMethodDeclarator *Ast::MethodDeclaratorCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstMethodDeclarator *>
-#else
-        (AstMethodDeclarator *)
-#endif
-            (kind == METHOD_DECLARATOR ? this : NULL);
+    return DYNAMIC_CAST<AstMethodDeclarator *, Ast *>
+        (kind == METHOD_DECLARATOR ? this : NULL);
 }
 
 inline AstMethodDeclaration *Ast::MethodDeclarationCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstMethodDeclaration *>
-#else
-        (AstMethodDeclaration *)
-#endif
-            (kind == METHOD ? this : NULL);
+    return DYNAMIC_CAST<AstMethodDeclaration *, Ast *>
+        (kind == METHOD ? this : NULL);
 }
 
 inline AstStaticInitializer *Ast::StaticInitializerCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstStaticInitializer *>
-#else
-        (AstStaticInitializer *)
-#endif
-            (kind == STATIC_INITIALIZER ? this : NULL);
+    return DYNAMIC_CAST<AstStaticInitializer *, Ast *>
+        (kind == STATIC_INITIALIZER ? this : NULL);
 }
 
 inline AstThisCall *Ast::ThisCallCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstThisCall *>
-#else
-        (AstThisCall *)
-#endif
-            (kind == THIS_CALL ? this : NULL);
+    return DYNAMIC_CAST<AstThisCall *, Ast *>
+        (kind == THIS_CALL ? this : NULL);
 }
 
 inline AstSuperCall *Ast::SuperCallCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstSuperCall *>
-#else
-        (AstSuperCall *)
-#endif
-            (kind == SUPER_CALL ? this : NULL);
+    return DYNAMIC_CAST<AstSuperCall *, Ast *>
+        (kind == SUPER_CALL ? this : NULL);
 }
 
 inline AstConstructorBlock *Ast::ConstructorBlockCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstConstructorBlock *>
-#else
-        (AstConstructorBlock *)
-#endif
-            (kind == CONSTRUCTOR_BLOCK ? this : NULL);
+    return DYNAMIC_CAST<AstConstructorBlock *, Ast *>
+        (kind == CONSTRUCTOR_BLOCK ? this : NULL);
 }
 
 inline AstConstructorDeclaration *Ast::ConstructorDeclarationCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstConstructorDeclaration *>
-#else
-        (AstConstructorDeclaration *)
-#endif
-            (kind == CONSTRUCTOR ? this : NULL);
+    return DYNAMIC_CAST<AstConstructorDeclaration *, Ast *>
+        (kind == CONSTRUCTOR ? this : NULL);
 }
 
 inline AstInterfaceDeclaration *Ast::InterfaceDeclarationCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstInterfaceDeclaration *>
-#else
-        (AstInterfaceDeclaration *)
-#endif
-            (kind == INTERFACE ? this : NULL);
+    return DYNAMIC_CAST<AstInterfaceDeclaration *, Ast *>
+        (kind == INTERFACE ? this : NULL);
 }
 
 inline AstBlock *Ast::BlockCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstBlock *>
-#else
-        (AstBlock *)
-#endif
-            (kind == BLOCK ? this : NULL);
+    return DYNAMIC_CAST<AstBlock *, Ast *>
+        (kind == BLOCK ? this : NULL);
 }
 
 inline AstLocalVariableDeclarationStatement *Ast::LocalVariableDeclarationStatementCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstLocalVariableDeclarationStatement *>
-#else
-        (AstLocalVariableDeclarationStatement *)
-#endif
-            (kind == LOCAL_VARIABLE_DECLARATION ? this : NULL);
+    return DYNAMIC_CAST<AstLocalVariableDeclarationStatement *, Ast *>
+        (kind == LOCAL_VARIABLE_DECLARATION ? this : NULL);
 }
 
 inline AstIfStatement *Ast::IfStatementCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstIfStatement *>
-#else
-        (AstIfStatement *)
-#endif
-            (kind == IF ? this : NULL);
+    return DYNAMIC_CAST<AstIfStatement *, Ast *>
+        (kind == IF ? this : NULL);
 }
 
 inline AstEmptyStatement *Ast::EmptyStatementCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstEmptyStatement *>
-#else
-        (AstEmptyStatement *)
-#endif
-            (kind == EMPTY_STATEMENT ? this : NULL);
+    return DYNAMIC_CAST<AstEmptyStatement *, Ast *>
+        (kind == EMPTY_STATEMENT ? this : NULL);
 }
 
 inline AstExpressionStatement *Ast::ExpressionStatementCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstExpressionStatement *>
-#else
-        (AstExpressionStatement *)
-#endif
-            (kind == EXPRESSION_STATEMENT ? this : NULL);
+    return DYNAMIC_CAST<AstExpressionStatement *, Ast *>
+        (kind == EXPRESSION_STATEMENT ? this : NULL);
 }
 
 inline AstCaseLabel *Ast::CaseLabelCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstCaseLabel *>
-#else
-        (AstCaseLabel *)
-#endif
-            (kind == CASE ? this : NULL);
+    return DYNAMIC_CAST<AstCaseLabel *, Ast *>
+        (kind == CASE ? this : NULL);
 }
 
 inline AstDefaultLabel *Ast::DefaultLabelCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstDefaultLabel *>
-#else
-        (AstDefaultLabel *)
-#endif
-            (kind == DEFAULT ? this : NULL);
+    return DYNAMIC_CAST<AstDefaultLabel *, Ast *>
+        (kind == DEFAULT ? this : NULL);
 }
 
 inline AstSwitchBlockStatement *Ast::SwitchBlockStatementCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstSwitchBlockStatement *>
-#else
-        (AstSwitchBlockStatement *)
-#endif
-            (kind == SWITCH_BLOCK ? this : NULL);
+    return DYNAMIC_CAST<AstSwitchBlockStatement *, Ast *>
+        (kind == SWITCH_BLOCK ? this : NULL);
 }
 
 inline AstSwitchStatement *Ast::SwitchStatementCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstSwitchStatement *>
-#else
-        (AstSwitchStatement *)
-#endif
-            (kind == SWITCH ? this : NULL);
+    return DYNAMIC_CAST<AstSwitchStatement *, Ast *>
+        (kind == SWITCH ? this : NULL);
 }
 
 inline AstWhileStatement *Ast::WhileStatementCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstWhileStatement *>
-#else
-        (AstWhileStatement *)
-#endif
-            (kind == WHILE ? this : NULL);
+    return DYNAMIC_CAST<AstWhileStatement *, Ast *>
+        (kind == WHILE ? this : NULL);
 }
 
 inline AstDoStatement *Ast::DoStatementCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstDoStatement *>
-#else
-        (AstDoStatement *)
-#endif
-            (kind == DO ? this : NULL);
+    return DYNAMIC_CAST<AstDoStatement *, Ast *>
+        (kind == DO ? this : NULL);
 }
 
 inline AstForStatement *Ast::ForStatementCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstForStatement *>
-#else
-        (AstForStatement *)
-#endif
-            (kind == FOR ? this : NULL);
+    return DYNAMIC_CAST<AstForStatement *, Ast *>
+        (kind == FOR ? this : NULL);
 }
 
 inline AstBreakStatement *Ast::BreakStatementCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstBreakStatement *>
-#else
-        (AstBreakStatement *)
-#endif
-            (kind == BREAK ? this : NULL);
+    return DYNAMIC_CAST<AstBreakStatement *, Ast *>
+        (kind == BREAK ? this : NULL);
 }
 
 inline AstContinueStatement *Ast::ContinueStatementCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstContinueStatement *>
-#else
-        (AstContinueStatement *)
-#endif
-            (kind == CONTINUE ? this : NULL);
+    return DYNAMIC_CAST<AstContinueStatement *, Ast *>
+        (kind == CONTINUE ? this : NULL);
 }
 
 inline AstReturnStatement *Ast::ReturnStatementCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstReturnStatement *>
-#else
-        (AstReturnStatement *)
-#endif
-            (kind == RETURN ? this : NULL);
+    return DYNAMIC_CAST<AstReturnStatement *, Ast *>
+        (kind == RETURN ? this : NULL);
 }
 
 inline AstThrowStatement *Ast::ThrowStatementCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstThrowStatement *>
-#else
-        (AstThrowStatement *)
-#endif
-            (kind == THROW ? this : NULL);
+    return DYNAMIC_CAST<AstThrowStatement *, Ast *>
+        (kind == THROW ? this : NULL);
 }
 
 inline AstSynchronizedStatement *Ast::SynchronizedStatementCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstSynchronizedStatement *>
-#else
-        (AstSynchronizedStatement *)
-#endif
-            (kind == SYNCHRONIZED_STATEMENT ? this : NULL);
+    return DYNAMIC_CAST<AstSynchronizedStatement *, Ast *>
+        (kind == SYNCHRONIZED_STATEMENT ? this : NULL);
 }
 
 inline AstCatchClause *Ast::CatchClauseCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstCatchClause *>
-#else
-        (AstCatchClause *)
-#endif
-            (kind == CATCH ? this : NULL);
+    return DYNAMIC_CAST<AstCatchClause *, Ast *>
+        (kind == CATCH ? this : NULL);
 }
 
 inline AstFinallyClause *Ast::FinallyClauseCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstFinallyClause *>
-#else
-        (AstFinallyClause *)
-#endif
-            (kind == FINALLY ? this : NULL);
+    return DYNAMIC_CAST<AstFinallyClause *, Ast *>
+        (kind == FINALLY ? this : NULL);
 }
 
 inline AstTryStatement *Ast::TryStatementCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstTryStatement *>
-#else
-        (AstTryStatement *)
-#endif
-            (kind == TRY ? this : NULL);
+    return DYNAMIC_CAST<AstTryStatement *, Ast *>
+        (kind == TRY ? this : NULL);
 }
 
 inline AstIntegerLiteral *Ast::IntegerLiteralCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstIntegerLiteral *>
-#else
-        (AstIntegerLiteral *)
-#endif
-            (kind == INTEGER_LITERAL ? this : NULL);
+    return DYNAMIC_CAST<AstIntegerLiteral *, Ast *>
+        (kind == INTEGER_LITERAL ? this : NULL);
 }
 
 inline AstLongLiteral *Ast::LongLiteralCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstLongLiteral *>
-#else
-        (AstLongLiteral *)
-#endif
-            (kind == LONG_LITERAL ? this : NULL);
+    return DYNAMIC_CAST<AstLongLiteral *, Ast *>
+        (kind == LONG_LITERAL ? this : NULL);
 }
 
 inline AstFloatingPointLiteral *Ast::FloatingPointLiteralCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstFloatingPointLiteral *>
-#else
-        (AstFloatingPointLiteral *)
-#endif
-            (kind == FLOATING_POINT_LITERAL ? this : NULL);
+    return DYNAMIC_CAST<AstFloatingPointLiteral *, Ast *>
+        (kind == FLOATING_POINT_LITERAL ? this : NULL);
 }
 
 inline AstDoubleLiteral *Ast::DoubleLiteralCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstDoubleLiteral *>
-#else
-        (AstDoubleLiteral *)
-#endif
-            (kind == DOUBLE_LITERAL ? this : NULL);
+    return DYNAMIC_CAST<AstDoubleLiteral *, Ast *>
+        (kind == DOUBLE_LITERAL ? this : NULL);
 }
 
 inline AstTrueLiteral *Ast::TrueLiteralCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstTrueLiteral *>
-#else
-        (AstTrueLiteral *)
-#endif
-            (kind == TRUE_LITERAL ? this : NULL);
+    return DYNAMIC_CAST<AstTrueLiteral *, Ast *>
+        (kind == TRUE_LITERAL ? this : NULL);
 }
 
 inline AstFalseLiteral *Ast::FalseLiteralCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstFalseLiteral *>
-#else
-        (AstFalseLiteral *)
-#endif
-            (kind == FALSE_LITERAL ? this : NULL);
+    return DYNAMIC_CAST<AstFalseLiteral *, Ast *>
+        (kind == FALSE_LITERAL ? this : NULL);
 }
 
 inline AstStringLiteral *Ast::StringLiteralCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstStringLiteral *>
-#else
-        (AstStringLiteral *)
-#endif
-            (kind == STRING_LITERAL ? this : NULL);
+    return DYNAMIC_CAST<AstStringLiteral *, Ast *>
+        (kind == STRING_LITERAL ? this : NULL);
 }
 
 inline AstCharacterLiteral *Ast::CharacterLiteralCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstCharacterLiteral *>
-#else
-        (AstCharacterLiteral *)
-#endif
-            (kind == CHARACTER_LITERAL ? this : NULL);
+    return DYNAMIC_CAST<AstCharacterLiteral *, Ast *>
+        (kind == CHARACTER_LITERAL ? this : NULL);
 }
 
 inline AstNullLiteral *Ast::NullLiteralCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstNullLiteral *>
-#else
-        (AstNullLiteral *)
-#endif
-            (kind == NULL_LITERAL ? this : NULL);
+    return DYNAMIC_CAST<AstNullLiteral *, Ast *>
+        (kind == NULL_LITERAL ? this : NULL);
 }
 
 inline AstThisExpression *Ast::ThisExpressionCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstThisExpression *>
-#else
-        (AstThisExpression *)
-#endif
-            (kind == THIS_EXPRESSION ? this : NULL);
+    return DYNAMIC_CAST<AstThisExpression *, Ast *>
+        (kind == THIS_EXPRESSION ? this : NULL);
 }
 
 inline AstSuperExpression *Ast::SuperExpressionCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstSuperExpression *>
-#else
-        (AstSuperExpression *)
-#endif
-            (kind == SUPER_EXPRESSION ? this : NULL);
+    return DYNAMIC_CAST<AstSuperExpression *, Ast *>
+        (kind == SUPER_EXPRESSION ? this : NULL);
 }
 
 inline AstParenthesizedExpression *Ast::ParenthesizedExpressionCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstParenthesizedExpression *>
-#else
-        (AstParenthesizedExpression *)
-#endif
-            (kind == PARENTHESIZED_EXPRESSION ? this : NULL);
+    return DYNAMIC_CAST<AstParenthesizedExpression *, Ast *>
+        (kind == PARENTHESIZED_EXPRESSION ? this : NULL);
 }
 
 inline AstClassInstanceCreationExpression *Ast::ClassInstanceCreationExpressionCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstClassInstanceCreationExpression *>
-#else
-        (AstClassInstanceCreationExpression *)
-#endif
-            (kind == CLASS_CREATION ? this : NULL);
+    return DYNAMIC_CAST<AstClassInstanceCreationExpression *, Ast *>
+        (kind == CLASS_CREATION ? this : NULL);
 }
 
 inline AstDimExpr *Ast::DimExprCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstDimExpr *>
-#else
-        (AstDimExpr *)
-#endif
-            (kind == DIM ? this : NULL);
+    return DYNAMIC_CAST<AstDimExpr *, Ast *>
+        (kind == DIM ? this : NULL);
 }
 
 inline AstArrayCreationExpression *Ast::ArrayCreationExpressionCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstArrayCreationExpression *>
-#else
-        (AstArrayCreationExpression *)
-#endif
-            (kind == ARRAY_CREATION ? this : NULL);
+    return DYNAMIC_CAST<AstArrayCreationExpression *, Ast *>
+        (kind == ARRAY_CREATION ? this : NULL);
 }
 
 inline AstFieldAccess *Ast::FieldAccessCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstFieldAccess *>
-#else
-        (AstFieldAccess *)
-#endif
-            (kind == DOT ? this : NULL);
+    return DYNAMIC_CAST<AstFieldAccess *, Ast *>
+        (kind == DOT ? this : NULL);
 }
 
 inline AstMethodInvocation *Ast::MethodInvocationCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstMethodInvocation *>
-#else
-        (AstMethodInvocation *)
-#endif
-            (kind == CALL ? this : NULL);
+    return DYNAMIC_CAST<AstMethodInvocation *, Ast *>
+        (kind == CALL ? this : NULL);
 }
 
 inline AstArrayAccess *Ast::ArrayAccessCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstArrayAccess *>
-#else
-        (AstArrayAccess *)
-#endif
-            (kind == ARRAY_ACCESS ? this : NULL);
+    return DYNAMIC_CAST<AstArrayAccess *, Ast *>
+        (kind == ARRAY_ACCESS ? this : NULL);
 }
 
 inline AstPostUnaryExpression *Ast::PostUnaryExpressionCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstPostUnaryExpression *>
-#else
-        (AstPostUnaryExpression *)
-#endif
-            (kind == POST_UNARY ? this : NULL);
+    return DYNAMIC_CAST<AstPostUnaryExpression *, Ast *>
+        (kind == POST_UNARY ? this : NULL);
 }
 
 inline AstPreUnaryExpression *Ast::PreUnaryExpressionCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstPreUnaryExpression *>
-#else
-        (AstPreUnaryExpression *)
-#endif
-            (kind == PRE_UNARY ? this : NULL);
+    return DYNAMIC_CAST<AstPreUnaryExpression *, Ast *>
+        (kind == PRE_UNARY ? this : NULL);
 }
 
 inline AstCastExpression *Ast::CastExpressionCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstCastExpression *>
-#else
-        (AstCastExpression *)
-#endif
-            (kind == CAST || kind == CHECK_AND_CAST ? this : NULL);
+    return DYNAMIC_CAST<AstCastExpression *, Ast *>
+        (kind == CAST || kind == CHECK_AND_CAST ? this : NULL);
 }
 
 inline AstBinaryExpression *Ast::BinaryExpressionCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstBinaryExpression *>
-#else
-        (AstBinaryExpression *)
-#endif
-            (kind == BINARY ? this : NULL);
+    return DYNAMIC_CAST<AstBinaryExpression *, Ast *>
+        (kind == BINARY ? this : NULL);
 }
 
 inline AstTypeExpression *Ast::TypeExpressionCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstTypeExpression *>
-#else
-        (AstTypeExpression *)
-#endif
-            (kind == TYPE ? this : NULL);
+    return DYNAMIC_CAST<AstTypeExpression *, Ast *>
+        (kind == TYPE ? this : NULL);
 }
 
 inline AstConditionalExpression *Ast::ConditionalExpressionCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstConditionalExpression *>
-#else
-        (AstConditionalExpression *)
-#endif
-            (kind == CONDITIONAL ? this : NULL);
+    return DYNAMIC_CAST<AstConditionalExpression *, Ast *>
+        (kind == CONDITIONAL ? this : NULL);
 }
 
 inline AstAssignmentExpression *Ast::AssignmentExpressionCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<AstAssignmentExpression *>
-#else
-        (AstAssignmentExpression *)
-#endif
-            (kind == ASSIGNMENT ? this : NULL);
+    return DYNAMIC_CAST<AstAssignmentExpression *, Ast *>
+        (kind == ASSIGNMENT ? this : NULL);
 }
 
 inline void AstClassBody::AllocateInstanceVariables(int estimate)

@@ -14,133 +14,74 @@
 #include "ast.h"
 #include "case.h"
 
-#ifdef HAVE_RTTI
-#include <typeinfo>
-#endif
-
 #ifdef	HAVE_JIKES_NAMESPACE
 namespace Jikes {	// Open namespace Jikes block
 #endif
 
 PackageSymbol *Symbol::PackageCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<PackageSymbol *>
-#else
-        (PackageSymbol *)
-#endif
-            (_kind == PACKAGE ? this : NULL);
+    return DYNAMIC_CAST<PackageSymbol *, Symbol *>
+        (_kind == PACKAGE ? this : NULL);
 }
 
 TypeSymbol *Symbol::TypeCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<TypeSymbol *>
-#else
-        (TypeSymbol *)
-#endif
-            (_kind == TYPE ? this : NULL);
+    return DYNAMIC_CAST<TypeSymbol *, Symbol *>
+        (_kind == TYPE ? this : NULL);
 }
 
 MethodSymbol *Symbol::MethodCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<MethodSymbol *>
-#else
-        (MethodSymbol *)
-#endif
-            (_kind == METHOD ? this : NULL);
+    return DYNAMIC_CAST<MethodSymbol *, Symbol *>
+        (_kind == METHOD ? this : NULL);
 }
 
 BlockSymbol *Symbol::BlockCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<BlockSymbol *>
-#else
-        (BlockSymbol *)
-#endif
-            (_kind == BLOCK ? this : NULL);
+    return DYNAMIC_CAST<BlockSymbol *, Symbol *>
+        (_kind == BLOCK ? this : NULL);
 }
 
 VariableSymbol *Symbol::VariableCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<VariableSymbol *>
-#else
-        (VariableSymbol *)
-#endif
-           (_kind == VARIABLE ? this : NULL); 
+    return DYNAMIC_CAST<VariableSymbol *, Symbol *>
+        (_kind == VARIABLE ? this : NULL);
 }
 
 LabelSymbol *Symbol::LabelCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<LabelSymbol *>
-#else
-        (LabelSymbol *)
-#endif
-            (_kind == LABEL ? this : NULL);
+    return DYNAMIC_CAST<LabelSymbol *, Symbol *>
+        (_kind == LABEL ? this : NULL);
 }
 
 LiteralSymbol *Symbol::LiteralCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<LiteralSymbol *>
-#else
-        (LiteralSymbol *)
-#endif
-            (_kind == LITERAL ? this : NULL);
+    return DYNAMIC_CAST<LiteralSymbol *, Symbol *>
+        (_kind == LITERAL ? this : NULL);
 }
 
 NameSymbol *Symbol::NameCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<NameSymbol *>
-#else
-        (NameSymbol *)
-#endif
-            (_kind == NAME ? this : NULL);
+    return DYNAMIC_CAST<NameSymbol *, Symbol *>
+        (_kind == NAME ? this : NULL);
 }
 
 PathSymbol *Symbol::PathCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<PathSymbol *>
-#else
-        (PathSymbol *)
-#endif
-            (_kind == PATH ? this : NULL);
+    return DYNAMIC_CAST<PathSymbol *, Symbol *>
+        (_kind == PATH ? this : NULL);
 }
 
 DirectorySymbol *Symbol::DirectoryCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<DirectorySymbol *>
-#else
-        (DirectorySymbol *)
-#endif
-            (_kind == _DIRECTORY ? this : NULL);
+    return DYNAMIC_CAST<DirectorySymbol *, Symbol *>
+        (_kind == _DIRECTORY ? this : NULL);
 }
 
 FileSymbol *Symbol::FileCast()
 {
-    return
-#ifdef HAVE_DYNAMIC_CAST
-        dynamic_cast<FileSymbol *>
-#else
-        (FileSymbol *)
-#endif
-            (_kind == _FILE ? this : NULL);
+    return DYNAMIC_CAST<FileSymbol *, Symbol *>
+        (_kind == _FILE ? this : NULL);
 }
 
 int SystemTable::primes[] = {DEFAULT_HASH_SIZE, 101, 401, MAX_HASH_SIZE};
@@ -1747,28 +1688,14 @@ bool Utf8LiteralTable::IsConstant(AstExpression *expression,
     if (expression -> symbol == string_symbol && expression -> IsConstant())
     {
         // The EvaluateConstant method only works with
-        // Utf8LiteralValue* types. Checking that
-        // the expression is of type String is
-        // enough to determine the type, but we do
-        // an extra RTTI/cast check to make sure.
+        // Utf8LiteralValue* types.
 
         assert(expression -> value);
 
         Utf8LiteralValue *literal =
-#ifndef HAVE_DYNAMIC_CAST
-	    (Utf8LiteralValue *) expression -> value;
-#else
-            dynamic_cast<Utf8LiteralValue *>(expression -> value);
-            if (! literal) {
-#ifdef HAVE_RTTI
-                const type_info& t = typeid(*(expression -> value));
-                const char *name = t.name();
-                fprintf(stderr, "expr value not a Utf8LiteralValue %s%s\n",
-                    "it's type was ", name);
-#endif
-                assert(literal && "expr value not a Utf8LiteralValue");
-            }
-#endif
+            DYNAMIC_CAST<Utf8LiteralValue *, LiteralValue *>
+                (expression -> value);
+
         assert(literal -> value);
 
         utf8_literals -> Next() = literal;
