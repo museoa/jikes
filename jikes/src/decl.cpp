@@ -2215,6 +2215,9 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration* construc
 
     AccessFlags access_flags =
         ProcessConstructorModifiers(constructor_declaration);
+    if (this_type -> ACC_STRICTFP())
+        access_flags.SetACC_STRICTFP();
+
     if (constructor_declaration -> type_parameters_opt)
     {
         // TODO: Add generics support for 1.5.
@@ -2362,6 +2365,9 @@ void Semantic::AddDefaultConstructor(TypeSymbol* type)
         constructor -> SetACC_PROTECTED();
     else if (type -> ACC_PRIVATE())
         constructor -> SetACC_PRIVATE();
+
+    if (type -> ACC_STRICTFP())
+        constructor -> SetACC_STRICTFP();
 
     if (type -> EnclosingType())
     {
