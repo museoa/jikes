@@ -328,7 +328,7 @@ void ByteCode::CompileClass()
                     // generate a call to the parameterless function block_initializer_function
                     //
                     PutOp(OP_ALOAD_0); // load address of object on which method is to be invoked
-                    PutOp(OP_INVOKENONVIRTUAL);
+                    PutOp(OP_INVOKESPECIAL);
                     CompleteCall(unit_type -> block_initializer_method, 0);
                 }
             }
@@ -621,7 +621,7 @@ void ByteCode::CompileConstructor(AstConstructorDeclaration *constructor, Tuple<
         else // generate a call to the parameterless function block_initializer_function
         {
             PutOp(OP_ALOAD_0); // load address of object on which method is to be invoked
-            PutOp(OP_INVOKENONVIRTUAL);
+            PutOp(OP_INVOKESPECIAL);
             CompleteCall(type -> block_initializer_method, 0);
         }
     }
@@ -723,7 +723,7 @@ void ByteCode::GenerateAccessMethod(MethodSymbol *method_symbol)
     MethodSymbol *method_sym = method_symbol -> accessed_member -> MethodCast();
     if (method_sym)
     {
-        PutOp(method_sym -> ACC_STATIC() ? OP_INVOKESTATIC : OP_INVOKENONVIRTUAL);
+        PutOp(method_sym -> ACC_STATIC() ? OP_INVOKESTATIC : OP_INVOKESPECIAL);
         CompleteCall(method_sym, stack_words);
     }
     else
@@ -2828,7 +2828,7 @@ void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
     //  dup              save so can return
     //  aload_1          recover exception
     //  invokevirtual    java.lang.Throwable.getMessage() to get error message
-    //  invokenonvirtual <init>     // invoke initializer
+    //  invokespecial    <init>     // invoke initializer
     //  athrow           rethrow the exception
     //
     PutOp(OP_ALOAD_0);
@@ -2848,7 +2848,7 @@ void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
     PutU2(RegisterLibraryMethodref(this_control.Throwable_getMessageMethod()));
     ChangeStack(1);
 
-    PutOp(OP_INVOKENONVIRTUAL);
+    PutOp(OP_INVOKESPECIAL);
     ChangeStack(-1);
     PutU2(RegisterLibraryMethodref(this_control.NoClassDefFoundError_InitMethod()));
 
@@ -3139,7 +3139,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
             PutOp(OP_NEW);
             PutU2(RegisterClass(this_control.StringBuffer() -> fully_qualified_name));
             PutOp(OP_DUP);
-            PutOp(OP_INVOKENONVIRTUAL);
+            PutOp(OP_INVOKESPECIAL);
             PutU2(RegisterLibraryMethodref(this_control.StringBuffer_InitMethod()));
             PutOp(OP_SWAP); // swap address if buffer and string to update.
             EmitStringAppendMethod(this_control.String());
@@ -3765,7 +3765,7 @@ int ByteCode::EmitClassInstanceCreationExpression(AstClassInstanceCreationExpres
     for (int k = 0; k < expression -> NumArguments(); k++)
         stack_words += EmitExpression((AstExpression *) expression -> Argument(k));
 
-    PutOp(OP_INVOKENONVIRTUAL);
+    PutOp(OP_INVOKESPECIAL);
     ChangeStack(-stack_words);
     PutU2(RegisterMethodref(expression -> Type() -> fully_qualified_name,
                             this_control.init_name_symbol -> Utf8_literal,
@@ -3927,7 +3927,7 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
     PutOp(msym -> ACC_STATIC()
                 ? OP_INVOKESTATIC
                 : (is_super || msym -> ACC_PRIVATE())
-                             ? OP_INVOKENONVIRTUAL
+                             ? OP_INVOKESPECIAL
                              : type -> ACC_INTERFACE() ? OP_INVOKEINTERFACE : OP_INVOKEVIRTUAL);
     CompleteCall(msym, stack_words, type);
 
@@ -4578,7 +4578,7 @@ void ByteCode::EmitThisInvocation(AstThisCall *this_call)
     for (int k = 0; k < this_call -> NumArguments(); k++)
         stack_words += EmitExpression((AstExpression *) this_call -> Argument(k));
 
-    PutOp(OP_INVOKENONVIRTUAL);
+    PutOp(OP_INVOKESPECIAL);
     ChangeStack(-stack_words);
 
     PutU2(RegisterMethodref(unit_type -> fully_qualified_name,
@@ -4612,7 +4612,7 @@ void ByteCode::EmitSuperInvocation(AstSuperCall *super_call)
     for (int k = 0; k < super_call -> NumArguments(); k++)
         stack_words += EmitExpression((AstExpression *) super_call -> Argument(k));
 
-    PutOp(OP_INVOKENONVIRTUAL);
+    PutOp(OP_INVOKESPECIAL);
     ChangeStack(-stack_words);
 
     PutU2(RegisterMethodref(unit_type -> super -> fully_qualified_name,
@@ -4645,13 +4645,13 @@ void ByteCode::ConcatenateString(AstBinaryExpression *expression)
         assert(expression -> left_expression -> Type() == this_control.String());
 
         EmitExpression(expression -> left_expression);
-        PutOp(OP_INVOKENONVIRTUAL);
+        PutOp(OP_INVOKESPECIAL);
         PutU2(RegisterLibraryMethodref(this_control.StringBuffer_InitWithStringMethod()));
         ChangeStack(-1);
     }
     else
     {
-        PutOp(OP_INVOKENONVIRTUAL);
+        PutOp(OP_INVOKESPECIAL);
         PutU2(RegisterLibraryMethodref(this_control.StringBuffer_InitMethod()));
 
         AppendString(expression -> left_expression);
@@ -5554,7 +5554,7 @@ void ByteCode::PutOp(unsigned char opc)
         case OP_GETFIELD: break;
         case OP_PUTFIELD: break;
         case OP_INVOKEVIRTUAL: break;
-        case OP_INVOKENONVIRTUAL: break;
+        case OP_INVOKESPECIAL: break;
         case OP_INVOKESTATIC: break;
         case OP_INVOKEINTERFACE: break;
         case OP_XXXUNUSEDXXX: break;

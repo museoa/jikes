@@ -209,7 +209,7 @@ public:
         OP_GETFIELD = 0xb4,
         OP_PUTFIELD = 0xb5,
         OP_INVOKEVIRTUAL = 0xb6,
-        OP_INVOKENONVIRTUAL = 0xb7,
+        OP_INVOKESPECIAL = 0xb7,
         OP_INVOKESTATIC = 0xb8,
         OP_INVOKEINTERFACE = 0xb9,
         OP_XXXUNUSEDXXX = 0xba,

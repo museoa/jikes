@@ -1,3 +1,10 @@
+2001-10-16  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/op.h:
+	* src/op.cpp:
+	* src/bytecode.cpp: Change OP_INVOKENONVIRTUAL to OP_INVOKESPECIAL,
+	the new name in the second edition JVMS - patch 208.
+
 2001-10-16  Michael Ernst  <mernst@alum.mit.edu>
 
 	* src/unparse.cpp: Adjust bodies to use LexStream*.  Replace a use

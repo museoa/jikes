@@ -207,8 +207,8 @@ void Operators::opdesc(int opc, const char **name, const char **desc)
         {"putstatic",  "set static field in class"},
         {"getfield",  "fetch field from object"},
         {"putfield",  "set field in object"},
-        {"invokevirtual",  "invoke instance method; dispatch based on runtime type"},
-        {"invokenonvirtual",  "invoke instance method; dispatch based on compile-time type"},
+        {"invokevirtual",  "invoke polymorphic instance method; dispatch based on runtime type"},
+        {"invokespecial",  "invoke constructor, private, or superclass instance method; dispatch based on compile-time type"},
         {"invokestatic",  "invoke a class (static) method"},
         {"invokeinterface",  "invoke interface method"},
         {"xxxunusedxxx",  "xxxunusedxxx"},
@@ -280,7 +280,7 @@ void Operators::opline(Tuple<cp_info *> &constant_pool, const char *hdr,
             break;
     }
 //
-// DS (17 jun) - skip desc for now: it's too long and shoud only
+// DS (17 jun) - skip desc for now: it's too long and should only
 // be written at user request.
 //  Coutput << " " << desc;
 //
@@ -504,7 +504,7 @@ void Operators::opdmp(Tuple<cp_info *> &constant_pool, Tuple<u1> &code)
             case OP_GETFIELD:
             case OP_PUTFIELD:
             case OP_INVOKEVIRTUAL:
-            case OP_INVOKENONVIRTUAL:
+            case OP_INVOKESPECIAL:
             case OP_INVOKESTATIC:
             case OP_NEW:
             case OP_ANEWARRAY:
@@ -761,7 +761,7 @@ int Operators::stack_effect[] =
     0,  // OP_GETFIELD, caller must adjust if long or double
     0,  // OP_PUTFIELD, caller must adjust if long or double
    -1,  // OP_INVOKEVIRTUAL,   actually  -1-args_length
-   -1,  // OP_INVOKENONVIRTUAL,    actually  -1-args_length
+   -1,  // OP_INVOKESPECIAL,    actually  -1-args_length
     0,  // OP_INVOKESTATIC, actually -args_length
    -1,  // OP_INVOKEINTERFACE, actually -1 -args_length
     0,  // OP_XXXUNUSEDXXX
