@@ -27,4 +27,4 @@
 ALL		$CVSROOT/CVSROOT/log_accum.pl %s
 
 # we want this to spin off async... it till sleep 2 seconds, then do it's magic
-jikes-website ($CVSROOT/CVSROOT/update_www_from_cvs &)
+#jikes-website ($CVSROOT/CVSROOT/update_www_from_cvs &)
