@@ -39,180 +39,13 @@
         <tr>
           <td><!-- #BeginEditable "TopicContent" --> 
             <h1>Jikes on Win32 </h1>
-            <p>This section is quite large, because several options are possible 
-              to build a Jikes executable on the Win32 platform (the build process 
-              is detailed for three different compilers), and that it also involves 
-              tools that are not available by default on it. </p>
-            <h2><a name="source-control"></a>Source Control</h2>
-            <p>If you choose to use a CVS client instead of just <a href="/developerworks/project/showfiles.php?group_id=10">downloading 
-              the source</a>, two CVS clients can be used on the Win32 platform. 
-              The first is a command-line version, available in the Cygwin port 
-              of the GNU tools, and the second is a Win32 graphical application, 
-              WinCvs. You can use both of them, without any distinction.</p>
-            <h3>WinCvs</h3>
-            <p>The WinCvs tool is a graphical front-end of the command-line CVS 
-              client. The GUI offers many convenient controls (right-click menus, 
-              for instance), which is quite interesting compared to the command-line 
-              CVS client (at least if you're not used to command-line tools). 
-              You may find additional information on WinCvs on <a href="http://www.wincvs.org">their 
-              Web site</a> or directly into the online help that comes with the 
-              tool itself.</p>
-            <p>The 1.1b17 release is known to work properly, but previous versions 
-              may also work.</p>
-            <div style="text-align: center"> 
-              <table width="400" border="0" cellspacing="0" cellpadding="1" align="center">
-                <tr> 
-                  <td class="HighlightedFrameBorder"> 
-                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
-                      <tr> 
-                        <td class="HighlightedFrameBackground">WinCvs General 
-                          download area:<br>
-                          <a href="http://www.wincvs.org/download.html">http://www.wincvs.org/download.html</a><br>
-                          <br>
-                          Release 1.1b17 available from:<br>
-                          <a href="http://download.sourceforge.net/cvsgui/WinCvs11b17.zip">http://download.sourceforge.net/cvsgui/WinCvs11b17.zip</a><br>
-                          or:<br>
-                          <a href="ftp://ftp.sunet.se/pub/non-gnu/cvsgui/WinCvs11b17.zip">ftp://ftp.sunet.se/pub/non-gnu/cvsgui/WinCvs11b17.zip</a> 
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </div>
-            <p>The tool comes with the usual Setup that you'll need to run to 
-              install the tool.</p>
-            <p>Now, you need to configure WinCvs, as any CVS client. This is done 
-              by using the Preferences dialog box:</p>
-            <div style="text-align: center"> 
-              <table border="0" cellspacing="0" cellpadding="1" align="center">
-                <tr> 
-                  <td class="HighlightedFrameBorder"> 
-                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
-                      <tr> 
-                        <td class="HighlightedFrameBackground">Admin / Preferences... 
-                          / General:<br>
-                          CVSROOT = <code>:pserver:anoncvs@oss.software.ibm.com:/usr/cvs/jikes</code><br>
-                          Authentication = <code>&quot;password&quot; file on 
-                          the cvs server</code><br>
-                          Use version = <code>cvs 1.10 (standard)</code><br>
-                          <br>
-                          Admin / Preferences... / WinCvs:<br>
-                          HOME folder = [choose a directory]</td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </div>
-            <p>Note: you can use a proxy with WinCvs (Admin / Preferences... / 
-              Proxy tab), but be aware that if your proxy doesn't allow to use 
-              the CVS protocol, you won't be able to connect to the CVS server 
-              (many security admins only allow http and ftp protocols to go through 
-              their proxies or firewalls). Just download the release source archive 
-              <a href="http://oss.software.ibm.com/developerworks/opensource/cvs/jikes/"></a> 
-              instead. For your information, CVS uses its own proprietary protocol 
-              over TCP, connected to port 2401.</p>
-            <p>Then an optional (though recommended) <code>.cvsrc</code> file 
-              can be specified to store CVS-related switches once and for all. 
-              This file must be created (if it doesn't already exist) in the HOME 
-              folder you specified in the Admin / Preferences... tab. It cannot 
-              be created using Windows Explorer directly, because Explorer considers 
-              that a file with an extension and without a name (before the extension) 
-              is not legal. Use a MS-DOS command as stated below to create it, 
-              and then edit it with your favorite text editor, like any other 
-              file in Windows.</p>
-            <div style="text-align: center"> 
-              <table border="0" cellspacing="0" cellpadding="1" align="center" width="400">
-                <tr> 
-                  <td class="DimmedFrameBorder"> 
-                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
-                      <tr> 
-                        <td class="DimmedFrameBackground">Type:<br>
-                          <code> echo &gt; .cvsrc</code> (in the <code>[HOME folder]</code> 
-                          directory)<br>
-                          <br>
-                          Edit the <code>[HOME folder]/.cvsrc</code> file:<br>
-                          <code>cvs -q -z3<br>
-                          diff -uN<br>
-                          update -P<br>
-                          checkout -P</code></td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </div>
-            <p>You finally have to retrieve the source code of Jikes.</p>
-            <div style="text-align: center"> 
-              <table border="0" cellspacing="0" cellpadding="1" align="center" width="400">
-                <tr> 
-                  <td class="HighlightedFrameBorder"> 
-                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
-                      <tr> 
-                        <td class="HighlightedFrameBackground">Create / Checkout 
-                          module...:<br>
-                          Modules names = <code>jikes jacks</code><br>
-                          Local folder = <code>[choose a directory]</code></td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </div>
-            <p>Two directories must now have been created under the local folder 
-              you chose: <code>jikes</code> and <code>jacks</code>.</p>
-            <h3>Cygwin CVS</h3>
-            <p>This command-line version of the CVS client is part of the Cygwin 
-              distribution. To get it, just select the '<code>cvs</code>' package 
-              in the list of packages when <a href="#installing-cygwin">installing 
-              Cygwin</a>. Once the <code>cvs</code> Cygwin package is correctly 
-              installed, you may want to setup a few CVS options once and for 
-              all. This is done by creating and editing a <code>.cvsrc</code> 
-              file in your home directory:</p>
-            <div style="text-align: center"> 
-              <table border="0" cellspacing="0" cellpadding="1" align="center" width="400">
-                <tr> 
-                  <td class="DimmedFrameBorder"> 
-                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
-                      <tr> 
-                        <td class="DimmedFrameBackground">Type:<br>
-                          <code> cd<br>
-                          touch .cvsrc</code><br>
-                          <br>
-                          Edit the created <code>.cvsrc</code> file:<br>
-                          <code>cvs -q -z3<br>
-                          diff -uN<br>
-                          update -P<br>
-                          checkout -P</code></td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </div>
-            <p>You'll need to run following commands to retrieve Jikes source 
-              code.</p>
-            <div style="text-align: center"> 
-              <table border="0" cellspacing="0" cellpadding="1" align="center" width="400">
-                <tr> 
-                  <td class="DimmedFrameBorder"> 
-                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
-                      <tr> 
-                        <td class="DimmedFrameBackground"><code>export CVSROOT=:pserver:anoncvs@oss.software.ibm.com:/usr/cvs/jikes</code><br>
-                          <code>cvs login</code> (password is &quot;anoncvs&quot;, 
-                          without quotes)<br>
-                          <code>cvs checkout jikes jacks</code></td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </div>
-            <p>&nbsp; </p>
+
             <h2><a name="installing-cygwin"></a>Installing Cygwin</h2>
-            <p>This section is dedicated to Cygwin. The Cygwin tools provide
-               the officially supported means of compiling Jikes under Windows.</p>
+            <p>The Cygwin tools provide
+               the officially supported means of compiling Jikes under Windows.
+               You are welcome to compile Jikes with other tools like VC++,
+               just keep in mind that we only document and support the
+               Cygwin based method of building under Windows.</p>
             <h3>What is Cygwin?</h3>
             <p>Cygwin is a POSIX emulation layer for Windows. It works with Windows
               95, 98, NT, W2K. Cygwin is free software and is licensed under the GPL.</p>
@@ -247,8 +80,8 @@
               Your download time will be shorter if you select a mirror close to you.
               The installer is named <code>setup.exe</code>, it should
               appear in a directory like <code>.../cygwin/latest/setup.exe</code>.</p>
-            <p>Users located in the U.S. may want to use the freesoftware.com mirror in CA:<br>
-              <A href="ftp://ftp.freesoftware.com/pub/sourceware/cygwin/latest/setup.exe">ftp://ftp.freesoftware.com/pub/sourceware/cygwin/latest/setup.exe</a></p>
+            <p>Users located in the U.S. may want to use this mirror in CA:<br>
+              <A href="ftp://ftp.nas.nasa.gov/mirrors/cygwin.com/pub/cygwin/latest/setup.exe">ftp://ftp.nas.nasa.gov/mirrors/cygwin.com/pub/cygwin/latest/setup.exe</a></p>
             <p>Watch out! You may have problems behind a firewall that 
               does not allow active FTP sessions. Netscape running
               under Windows NT may appear to "get stuck" downloading
@@ -571,21 +404,24 @@
               <code>PATH</code>, or when run from a Cygwin shell.</p>
             <p>The build environment configuration and build process are quite 
               straightforward, as everything is detected automatically for you:</p>
+
+
             <div style="text-align: center"> 
-              <table border="0" cellspacing="0" cellpadding="1" align="center" width="400">
+              <table border="0" cellspacing="0" cellpadding="1" align="center">
                 <tr> 
-                  <td class="DimmedFrameBorder"> 
+                  <td class="HighlightedFrameBorder"> 
                     <table width="100%" border="0" cellspacing="0" cellpadding="10">
                       <tr> 
-                        <td class="DimmedFrameBackground"> 
-                          <p>In a Cygwin Bash shell:<br>
-                            <code>cd [jikes dir]</code><br>
-                            <code>./configure</code></p>
-                          <p>Output:</p>
-                          <p style="text-indent: 0em"><code>...<br>
-                            checking build system type... i686-pc-cygwin<br>
-                            checking host system type... i686-pc-cygwin<br>
-                            ...</code></p>
+                        <td class="HighlightedFrameBackground"> 
+                          <p style="text-indent: 0em"><code>
+                          $ cd ~/jikes<br>
+                          $ ./configure<br>
+                          ...<br>
+                          checking build system type... i686-pc-cygwin<br>
+                          checking host system type... i686-pc-cygwin<br>
+                          ...<br>
+                          config.status: creating Makefile<br>
+                          ...<br></code></p>
                         </td>
                       </tr>
                     </table>
@@ -593,105 +429,108 @@
                 </tr>
               </table>
             </div>
-            <p>And finally:</p>
+
+            <p>Now build jikes.exe by running make:</p>
+
             <div style="text-align: center"> 
-              <table border="0" cellspacing="0" cellpadding="1" align="center" width="400">
+              <table border="0" cellspacing="0" cellpadding="1" align="center">
                 <tr> 
-                  <td class="DimmedFrameBorder"> 
+                  <td class="HighlightedFrameBorder"> 
                     <table width="100%" border="0" cellspacing="0" cellpadding="10">
                       <tr> 
-                        <td class="DimmedFrameBackground"> <code>make</code><br>
-                          <br>
-                          <code>jikes.exe</code> is created under the src/ directory</td>
+                        <td class="HighlightedFrameBackground"> 
+                          <p style="text-indent: 0em"><code>
+                          $ make<br>
+                          ...<br>
+                          g++ -o jikes.exe jikes.o ...<br>
+                          ...<br><br>
+                          $ cd src/<br>
+                          $ ./jikes<br>
+                          Jikes Compiler<br>
+                          (C) Copyright IBM Corp. 1997, 2001.<br>
+                          ...<br></code></p>
+                        </td>
                       </tr>
                     </table>
                   </td>
                 </tr>
               </table>
             </div>
+
             <p>&nbsp;</p>
             <h3>Debugging Jikes with gdb</h3>
             <p>If you are interested in debugging your Cygwin Jikes, you can use 
               the Insight GUI front end to GDB:</p>
+
             <div style="text-align: center"> 
-              <table border="0" cellspacing="0" cellpadding="1" align="center" width="400">
+              <table border="0" cellspacing="0" cellpadding="1" align="center">
                 <tr> 
-                  <td class="DimmedFrameBorder"> 
+                  <td class="HighlightedFrameBorder"> 
                     <table width="100%" border="0" cellspacing="0" cellpadding="10">
                       <tr> 
-                        <td class="DimmedFrameBackground"> <code> cd [jikes dir]/src<br>
-                          gdb jikes</code></td>
+                        <td class="HighlightedFrameBackground"> 
+                          <p style="text-indent: 0em"><code>
+                          $ gdb jikes<br>
+                          </code></p>
+                        </td>
                       </tr>
                     </table>
                   </td>
                 </tr>
               </table>
             </div>
+
             <p>That will start up Insight in GUI mode. If you want to run in plain 
               gdb command line mode just use:</p>
+
             <div style="text-align: center"> 
-              <table border="0" cellspacing="0" cellpadding="1" align="center" width="400">
+              <table border="0" cellspacing="0" cellpadding="1" align="center">
                 <tr> 
-                  <td class="DimmedFrameBorder"> 
+                  <td class="HighlightedFrameBorder"> 
                     <table width="100%" border="0" cellspacing="0" cellpadding="10">
                       <tr> 
-                        <td class="DimmedFrameBackground"> <code> gdb -nw jikes</code></td>
+                        <td class="HighlightedFrameBackground"> 
+                          <p style="text-indent: 0em"><code>
+                          $ gdb -nw jikes<br>
+                          </code></p>
+                        </td>
                       </tr>
                     </table>
                   </td>
                 </tr>
               </table>
             </div>
-            <p>&nbsp;</p>
-            <h2>Compiling with Microsoft Visual C++</h2>
-            <p><i>Not written yet.</i></p>
-            <p>Q : Will we provide an automated detection of the msvc platform 
-              ? Or should state what to patch individually to do so ?</p>
-            <p>Option :</p>
-            <p>The 'configure' script uses a 'conftest.cc' file for testing the 
-              compiler,<br>
-              but VC++ does not recognize such an extension as a C++ source file.<br>
-              Fix : don't know yet, there's maybe a way of specifying to MSVC 
-              that a<br>
-              .cc file is a C++ source file. Hack to make it run : replace 'ac_ext=cc' 
-              by<br>
-              'ac_ext=cpp' in the script. You need to pass the -TP flag to cl.exe 
-              so that it treats the file as C++. This is something that we really 
-              need to fix in autoconf. </p>
-            <p>Well, it would be better to get it added to autoconf. </p>
-            <p>&nbsp; </p>
+
             <h2>Official Release</h2>
             <p>The Win32 official release of Jikes is not produced on the Win32 
-              platform as expected (at least until now). This is done by using 
-              a feature of some compilers known as cross-compiling (please refer 
-              to the appropriate section to <a href="dev-cross-compiling.shtml">learn 
-              about cross-compiling Jikes</a>). It's actually built on a Unix 
-              machine, using the <code>gcc</code> compiler with the <code>mingw</code> 
-              backend to produce a Win32 binary.</p>
+              platform. A cross compiler is used to create a jikes.exe executable
+              under Linux. Part of the reason for doing this is to avoid distributing
+              Windows virii. If you are interested in learning more about
+              cross-compiling see this section of the FAQ:
+              <a href="dev-cross-compiling.shtml">learn about cross-compiling Jikes</a>.
+              You can create a jikes.exe like the official release using the
+              following commands.</p>
+
+
             <div style="text-align: center"> 
-              <table border="0" cellspacing="0" cellpadding="1" align="center" width="400">
+              <table border="0" cellspacing="0" cellpadding="1" align="center">
                 <tr> 
-                  <td class="DimmedFrameBorder"> 
+                  <td class="HighlightedFrameBorder"> 
                     <table width="100%" border="0" cellspacing="0" cellpadding="10">
                       <tr> 
-                        <td class="DimmedFrameBackground"><i>Needed</i>: what's 
-                          the exact command line to build Jikes for the Win32 
-                          platform ? -O3 is used for optimisation, but what about 
-                          symbol stripping? </td>
+                        <td class="HighlightedFrameBackground"> 
+                          <p style="text-indent: 0em"><code>
+                          $ ./configure CXXFLAGS=-O3<br>
+                          $ make install-strip
+                          </code></p>
+                        </td>
                       </tr>
                     </table>
                   </td>
                 </tr>
               </table>
             </div>
-            <p>However, building Jikes with the same <code>gcc</code> and <code>mingw</code> 
-              combination running on the Win32 platform (as described <a href="#cygwin-gcc-mingw-compiling">here</a>) 
-              is perfectly valid (it's still a cross-compile, but the build is 
-              Cygwin instead of Unix). You don't need to reproduce the exact same 
-              hardware and software environment to generate a Jikes compiler as 
-              reliable as the official one (except for the modifications you may 
-              bring to the source code, of course!).</p>
-            <p>&nbsp; </p>
+
             <!-- #EndEditable --></td>
         </tr>
       </table>

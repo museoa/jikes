@@ -1,3 +1,10 @@
+2001-05-07  Mo DeJong  <mdejong@redhat.com>
+
+	* faq/dev-win32.shtml:
+	Remove section on CVS. Fix up remaining
+	build notes and update a broken link
+	to the Cygwin setup.exe.
+
 2001-03-30  Chris Abbey  <cabbey@bresnanlink.net>
 
 	* patchguide.shtml: added directions about howto
