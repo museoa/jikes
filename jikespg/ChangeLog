@@ -1,3 +1,8 @@
+2002-12-04  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/ctabs.c (terminal_time_action, terminal_space_action),
+	(terminal_shift_default_space_action): Remove unused parameter.
+
 2002-07-07  Bu FeiMing  <mybird@online.sh.cn>
 
 	* src/globals.c: version number was never updated for 1.3.

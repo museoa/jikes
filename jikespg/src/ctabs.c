@@ -135,7 +135,7 @@ static void terminal_time_action(void)
             "   action[check[state + sym] == sym ? state + sym : state]\n\n");
     else if (cpp_bit)
         fprintf(sysprs,
-            "    static int t_action(int state, int sym, LexStream *stream)\n"
+            "    static int t_action(int state, int sym, LexStream *)\n"
             "    {\n"
             "        return action[check[state + sym] == sym"
                                  " ? state + sym : state];\n"
@@ -165,7 +165,7 @@ static void terminal_space_action(void)
             "          base_action[state] + sym : base_action[state]]\n\n");
     else if (cpp_bit)
         fprintf(sysprs,
-            "    static int t_action(int state, int sym, LexStream *stream)\n"
+            "    static int t_action(int state, int sym, LexStream *)\n"
             "    {\n"
             "        return term_action[term_check[base_action[state]"
                                                       "+sym] == sym\n"
@@ -207,7 +207,7 @@ static void terminal_shift_default_space_action(void)
             "}\n\n");
     else if (cpp_bit)
         fprintf(sysprs,
-            "    static int t_action(int state, int sym, LexStream *stream)\n"
+            "    static int t_action(int state, int sym, LexStream *)\n"
             "    {\n"
             "        if (sym == 0)\n"
             "            return ERROR_ACTION;\n"
