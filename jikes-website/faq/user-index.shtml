@@ -998,7 +998,7 @@ class Test {
             This was the most frequently reported problem when Jikes first
             appeared.  It took several months to confirm that Jikes was right
             all along.  See 
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery2">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery2">
             Query #2 to Sun</a>
             for the full story.
           </p>
@@ -1107,7 +1107,7 @@ class C implements C.I {
           <p>
             This example is cyclic by Jikes's model of dependence.  We asked
             Sun about this usage: 
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery31">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery31">
             Query #31 to Sun: Rules of inheritance of class members</a>.
             Their response agrees with our interpretation that this usage is
             erroneous.
@@ -1119,85 +1119,85 @@ class C implements C.I {
           <p>
             Here are some more examples of issues related to interpreting the
             language specification:<br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery1">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery1">
             Query #1 to Sun: Inner Static</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery2">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery2">
             Query #2 to Sun: Unreachable Statements</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery3">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery3">
             Query #3 to Sun: Dependence</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery4">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery4">
             Query #4 to Sun: Are block-level inner interface declarations
             allowed?</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery5">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery5">
             Query #5 to Sun: String Concatenation Operator + and void</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery6">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery6">
             Query #6 to Sun: Getting a line on the LineNumberTable</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery7">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery7">
             Query #7 to Sun: Setting of InnerClasses_attribute inner_class_access_flags</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery8">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery8">
             Query #8 to Sun: Scope of Local Variable Declarations and Local
             Classes</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery9">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery9">
             Query #9 to Sun: Qualifying new for static inner class</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery10">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery10">
             Query #10 to Sun: Can a class access its own private methods via a
             subclass?</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery11">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery11">
             Query #11 to Sun: Access to members in anonymous classes</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery12">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery12">
             Query #12 to Sun: Anonymous inner classes should be final for
             instanceof and casts</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery13">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery13">
             Query #13 to Sun: Access to inner classes</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery14">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery14">
             Query #14 to Sun: Unreachability and do-while</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery15">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery15">
             Query #15 to Sun: Access control bug with protected member of
             sibling/outer classes</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery16">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery16">
             Query #16 to Sun: Floating point and bitwise operators</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery17">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery17">
             Query #17 to Sun: Compile-time evaluation of constant
             expressions</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery18">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery18">
             Query #18 to Sun: Explicit versus implicit setting of attributes,
             servialVersionUID algorithm</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery19">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery19">
             Query #19 to Sun: Octal escapes in string literals</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery20">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery20">
             Query #20 to Sun: What does "package-private method" mean?</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery21">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery21">
             Query #21 to Sun: Name resolution</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery22">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery22">
             Query #22 to Sun: Circularity problem?</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery23">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery23">
             Query #23 to Sun: Packages and non-existing directories</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery24">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery24">
             Query #24 to Sun: Protected</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery25">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery25">
             Query #25 to Sun: Can user-deifned package have a type named
             "java"?</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery26">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery26">
             Query #26 to Sun: Acceptability of unreachable byte code</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery27">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery27">
             Query #27 to Sun: Representation of null value</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery28">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery28">
             Query #28 to Sun: Use of anonymous class in explicit constructor
             invocation</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery29">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery29">
             Query #29 to Sun: When can the ConstantValue attribute be
             used?</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery30">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery30">
             Query #30 to Sun: Labeled statements and nested classes</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery31">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery31">
             Query #31 to Sun: Rules of inheritance of class members</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery32">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery32">
             Query #32 to Sun: Verification problem</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery33">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery33">
             Query #33 to Sun: Field resolution for interfaces</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery34">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery34">
             Query #34 to Sun: Which checked exceptions need to be checked?</a><br>
-            <a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf/Named/SunQuery35">
+            <a href="../queries/?syssftpr/JavaTech/Jikes.nsf/Named/SunQuery35">
             Query #35 to Sun: Clarification of White Space (3.6)</a>
 
           </p>
