@@ -71,14 +71,14 @@ void AstBlock::Unparse(Ostream& os, LexStream& lex_stream)
     if (Ast::debug_unparse)
         os << "/*AstBlock:#" << this-> id << "*/";
     if (Ast::debug_unparse)
-        os << "/*no_braces:" << no_braces << "*/";
+        os << "/*no_braces:" << (int) no_braces << "*/";
+    if (! no_braces)
+        os << "{\n";
     for (int il = 0; il < this -> NumLabels(); il++)
     {
         os << lex_stream.NameString(this -> Label(il)) << ": ";
     }
 
-    if (!no_braces)
-        os << "{" << endl;
     for (int is = 0; is < this -> NumStatements(); is++)
     {
         this -> Statement(is) -> Unparse(os, lex_stream);
