@@ -1834,7 +1834,9 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
         if (expr_type != control.no_type)
         {
             TypeSymbol *containing_type = super_type -> EnclosingType();
-            if (! containing_type)
+            if (super_type -> Bad()) // error already reported
+                super_call -> base_opt -> symbol = control.no_type;
+            else if (! containing_type)
             {
                 ReportSemError(SemanticError::SUPER_TYPE_NOT_INNER_CLASS,
                                super_call -> base_opt -> LeftToken(),
