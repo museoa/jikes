@@ -622,7 +622,11 @@ TypeSymbol *Semantic::ProcessNestedInterfaceName(TypeSymbol *containing_type, As
                                                                  containing_type -> semantic_environment);
     inner_type -> declaration = interface_declaration;
     inner_type -> file_symbol = source_file_symbol;
-    inner_type -> SetFlags(ProcessNestedInterfaceModifiers(interface_declaration));
+
+    inner_type -> SetFlags(containing_type -> ACC_INTERFACE()
+                           ? ProcessStaticNestedInterfaceModifiers(interface_declaration)
+                           : ProcessNestedInterfaceModifiers(interface_declaration));
+
     inner_type -> SetOwner(containing_type);
     inner_type -> SetSymbolTable(interface_declaration -> NumInterfaceMemberDeclarations());
     inner_type -> SetLocation();

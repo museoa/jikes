@@ -957,6 +957,7 @@ private:
     AccessFlags ProcessStaticNestedClassModifiers(AstClassDeclaration *);
     AccessFlags ProcessInterfaceModifiers(AstInterfaceDeclaration *);
     AccessFlags ProcessNestedInterfaceModifiers(AstInterfaceDeclaration *);
+    AccessFlags ProcessStaticNestedInterfaceModifiers(AstInterfaceDeclaration *);
     AccessFlags ProcessFieldModifiers(AstFieldDeclaration *);
     AccessFlags ProcessLocalModifiers(AstLocalVariableDeclarationStatement *);
     AccessFlags ProcessFormalModifiers(AstFormalParameter *);
