@@ -1,3 +1,9 @@
+2002-10-28  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/error.cpp (PrintCATCH_ARRAY_TYPE): Fix typo.
+	* src/body.cpp (ProcessTryStatement): Detect array catch types,
+	and reduce spurious catch clause duplication warnings - bug 3343.
+
 2002-10-14  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/body.cpp (ProcessExecutableBodies): Pedantic warning for

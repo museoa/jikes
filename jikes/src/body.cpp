@@ -1348,14 +1348,16 @@ void Semantic::ProcessTryStatement(Ast *stmt)
             ReportSemError(SemanticError::CATCH_PRIMITIVE_TYPE,
                            parameter -> LeftToken(),
                            parameter -> RightToken());
-            parm_type = control.Error();
+            parm_type = control.no_type;
         }
-        else if (parameter -> type -> ArrayTypeCast())
+        else if (parameter -> type -> ArrayTypeCast() ||
+                 (parameter -> formal_declarator ->
+                  variable_declarator_name -> NumBrackets()))
         {
             ReportSemError(SemanticError::CATCH_ARRAY_TYPE,
                            parameter -> LeftToken(),
                            parameter -> RightToken());
-            parm_type = control.Error();
+            parm_type = control.no_type;
         }
         else parm_type = MustFindType(parameter -> type);
 
@@ -1525,6 +1527,8 @@ void Semantic::ProcessTryStatement(Ast *stmt)
     {
         AstCatchClause *clause = try_statement -> CatchClause(l);
         TypeSymbol *type = clause -> parameter_symbol -> Type();
+        if (type == control.no_type)
+            continue;
         int initial_length = (catchable_exceptions.Length() +
                               convertible_exceptions.Length());
 

@@ -2349,8 +2349,7 @@ wchar_t *SemanticError::PrintCATCH_ARRAY_TYPE(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "A array type cannot be used to declare a catch clause "
-      << "parameter.";
+    s << "An array type cannot be used to declare a catch clause parameter.";
 
     return s.Array();
 }
