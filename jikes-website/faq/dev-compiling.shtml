@@ -1,5 +1,5 @@
-<!-- DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd" -->
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!-- DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd" -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html><!-- #BeginTemplate "/Templates/DevFAQTemplate.dwt" -->
 <head>
 <!-- #BeginEditable "doctitle" --> 
@@ -85,7 +85,7 @@
               to do more than just compiling Jikes (autoconf, automake...). The 
               online documentation for these tools can be found at <a href="http://www.gnu.org/manual/">http://www.gnu.org/manual/</a>.</p>
             <p>&nbsp;</p>
-            <h2>Build environment configuration</h2>
+            <h2><a name="build-env-config"></a>Build environment configuration</h2>
             <p>Jikes uses an autoconf/automake script, <code>configure</code>, 
               which goal is to detect automatically the capabilities of your platform, 
               and set the appropriate flags. The <code>configure</code> script 
@@ -129,7 +129,7 @@
               also a good starting point when posting about <code>configure</code>-related 
               problems in the mailing list.</p>
             <p>&nbsp;</p>
-            <h2>Configure script arguments</h2>
+            <h2><a name="config-script-args"></a>Configure script arguments</h2>
             <p>The <code>configure</code> script accepts many arguments, even 
               if most of the time it's invoked without any. You can have the entire 
               list by typing:</p>
@@ -167,7 +167,7 @@
               </table>
             </div>
             <p>&nbsp;</p>
-            <h2>Building in a different directory</h2>
+            <h2><a name="build-other-dir"></a>Building in a different directory</h2>
             <p>If you want to have the object files (.o) and jikes executable 
               created in a separate directory (somewhat more clean to separate 
               source code and objet files; also useful when having more than one 

@@ -1,5 +1,5 @@
-<!-- DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd" -->
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!-- DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd" -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html><!-- #BeginTemplate "/Templates/DevFAQTemplate.dwt" -->
 <head>
 <!-- #BeginEditable "doctitle" --> 
@@ -57,8 +57,10 @@
         <tr>
           <td><!-- #BeginEditable "TopicContent" --> 
             <h1>Jikes on Win32 </h1>
-            <p>Several options are possible to build a Jikes executable on the 
-              Win32 platform. </p>
+            <p>This section is quite large, because several options are possible 
+              to build a Jikes executable on the Win32 platform (the build process 
+              is detailed for three different compilers), and that it also involves 
+              tools that are not available by default on it. </p>
             <h2><a name="source-control"></a>Source Control</h2>
             <p>If you choose to use a CVS client instead of just downloading the 
               source through WebCVS, two CVS clients can be used on the Win32 
@@ -179,18 +181,57 @@
               you chose: <code>jikes</code> and <code>jacks</code>.</p>
             <h3>Cygwin CVS</h3>
             <p>This command-line version of the CVS client is part of the Cygwin 
-              distribution. To get it, just select the 'cvs' package in the list 
-              of packages to install. </p>
-            <p>&nbsp;</p>
-            <h2>Build environment setup </h2>
-            <p>Running the configure script to produce the correct build environment 
-              requires to install CygWin.</p>
-            <p>&nbsp;</p>
-            <h2>Installing Cygwin</h2>
+              distribution. To get it, just select the '<code>cvs</code>' package 
+              in the list of packages when <a href="#installing-cygwin">installing 
+              Cygwin</a>. Once the <code>cvs</code> Cygwin package is correctly 
+              installed, you may want to setup a few CVS options once and for 
+              all. This is done by creating and editing a <code>.cvsrc</code> 
+              file in your home directory:</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center" width="400">
+                <tr> 
+                  <td class="DimmedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="DimmedFrameBackground">Type:<br>
+                          <code> cd<br>
+                          touch .cvsrc</code><br>
+                          <br>
+                          Edit the created <code>.cvsrc</code> file:<br>
+                          <code>cvs -q -z3<br>
+                          diff -uN<br>
+                          update -P<br>
+                          checkout -P</code></td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>You'll need to run following commands to retrieve Jikes source 
+              code.</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center" width="400">
+                <tr> 
+                  <td class="DimmedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="DimmedFrameBackground"><code>export CVSROOT=:pserver:anoncvs@oss.software.ibm.com:/usr/cvs/jikes</code><br>
+                          <code>cvs login</code> (password is &quot;anoncvs&quot;, 
+                          without quotes)<br>
+                          <code>cvs checkout jikes jacks</code></td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>&nbsp; </p>
+            <h2><a name="installing-cygwin"></a>Installing Cygwin</h2>
             <p>This section is dedicated to Cygwin, since this package of tools 
-              is mandatory to build a working Jikes. It's used for setting the 
-              build environment up and, optionally, to <a href="#source-control">get 
-              your hands on Jikes source code</a>.</p>
+              is mandatory to configure a correct build environment for Jikes. 
+              It's used for setting the build environment up and, optionally, 
+              to <a href="#source-control">get your hands on Jikes source code</a>.</p>
             <h3>What is Cygwin?</h3>
             <p>Cygwin is a POSIX emulation layer for Windows. It works with Windows 
               NT, 2000 or 95/98 (but NT and 2000 works better). Cygwin is free 
@@ -299,9 +340,8 @@
                   <td class="HighlightedFrameBorder"> 
                     <table width="100%" border="0" cellspacing="0" cellpadding="10">
                       <tr> 
-                        <td class="HighlightedFrameBackground">Select the correct 
-                          connection settings (Use IE Settings if you don't know) 
-                          &lt;Next&gt;<br>
+                        <td class="HighlightedFrameBackground">Select connection 
+                          settings (Use IE Settings if you don't know) &lt;Next&gt;<br>
                           Select a mirror site (ftp.freesoftware.com) &lt;Next&gt;<br>
                           Select the packages to download and install &lt;Next&gt;<br>
                           Choose shortcuts creation options</td>
@@ -343,11 +383,11 @@
             <div style="text-align: center"> 
               <table border="0" cellspacing="0" cellpadding="1" align="center">
                 <tr> 
-                  <td class="HighlightedFrameBorder"> 
+                  <td class="DimmedFrameBorder"> 
                     <table width="100%" border="0" cellspacing="0" cellpadding="10">
                       <tr> 
-                        <td class="HighlightedFrameBackground">Using Cygwin tools 
-                          in a regular Command window (one shot):<br>
+                        <td class="DimmedFrameBackground">Using Cygwin tools in 
+                          a regular Command window (one shot):<br>
                           at the prompt: <code>set PATH=%PATH%;[Cygwin install 
                           dir]/bin</code><br>
                           <br>
@@ -364,6 +404,313 @@
               </table>
             </div>
             <p>&nbsp;</p>
+            <h2><a name="cygwin-gcc-mingw-compiling"></a>Compiling with gcc and 
+              mingw (GNU gcc for Windows)</h2>
+            <h3>Installing mingw</h3>
+            <p>The following instructions describe the process of building Jikes 
+              with gcc and mingw. The resulting <code>jikes.exe</code> executable 
+              will run on any Windows machine without the need for additional 
+              dlls.</p>
+            <p> Cygwin comes with its own version of gcc, but you will not be 
+              using that version since it would create an executable that depends 
+              on Cygwin. Instead, you'll use mingw.</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center" width="400">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground">Download via FTP:<br>
+                          <a href="ftp://ftp.nanotech.wisc.edu/pub/khan/gnu-win32/mingw32/snapshots/gcc-2.95.2-1/mingw-msvcrt-20000203.zip">mingw-msvcrt-20000203.zip</a><br>
+                          <a href="ftp://ftp.nanotech.wisc.edu/pub/khan/gnu-win32/mingw32/snapshots/gcc-2.95.2-1/binutils-19990818-1-msvcrt.zip">binutils-19990818-1-msvcrt.zip</a><br>
+                          <a href="ftp://ftp.nanotech.wisc.edu/pub/khan/gnu-win32/mingw32/snapshots/gcc-2.95.2-1/gcc-2.95.2-1-msvcrt.zip">gcc-2.95.2-1-msvcrt.zip</a><br>
+                          or HTTP:<br>
+                          <br>
+                          <i>Needed</i>: HTTP downloads of these?</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>These three packages are the mingw runtime libraries, the binutils 
+              package (used by the compiler to create binaries), and the last 
+              is the gcc compiler.</p>
+            <p> Then create a directory (let's call it <code>[mingw dir]</code>) 
+              where you'll extract the three archives. Do make sure to extract 
+              the packages in the same directory or else you'll have a subdirectory 
+              for each zip file, and it won't work properly. If a dialog like 
+              "Replace C++filt with new file" pops up while extracting, just hit 
+              "Yes to all".</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground">Create the <code>[mingw 
+                          dir]</code> directory<br>
+                          Extract all the zip files to this same <code>[mingw 
+                          dir]</code> directory</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>The <code>[mingw dir]</code> directory should now contain the following 
+              directories:</p>
+            <p> 
+            <ul>
+              <li><code>386-mingw32msvc/</code></li>
+              <li> <code>lib/</code></li>
+              <li> <code>bin/</code></li>
+              <li><code> include/</code></li>
+            </ul>
+            <p></p>
+            <p> You should now be able to run the mingw version of gcc. Check 
+              that your output matches the following:</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground"> 
+                          <p style="text-indent: 0em"><code>cd [mingw dir]\bin</code><br>
+                            <code>gcc.exe -v</code></p>
+                          <p>Output:</p>
+                          <p style="text-indent: 0em"><code>Reading specs from <br>
+                            C:\dev\mingw\bin\..\lib\gcc-lib\i386-mingw32msvc\2.95.2\specs<br>
+                            gcc version 2.95.2 19991024 (release)</code></p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p> <br>
+            </p>
+            <h3>Build environment configuration </h3>
+            <p>The rest of the process must be run in a Cygwin bash shell.</p>
+            <p>Running the <code>configure</code> script of Jikes needs a few 
+              extra parameters. First, you need to specify that you want to use 
+              the mingw <code>g++</code> instead of the Cygwin version by passing 
+              a <code>CXX=...</code> argument to <code>configure</code> (see the 
+              general discussion about <a href="dev-compiling.html#config-script-args">configuring 
+              the build environment</a>). You will also need to pass the "host 
+              system" (the environment the final executable runs in) to the <code>configure</code> 
+              script since this is a actually cross compile (see <a href="dev-cross-compiling.html">cross-compiling 
+              Jikes</a> for more information).</p>
+            <p><u>Important</u>: replace any backslash ('\') by a slash ('/') 
+              in the path to the mingw compiler or the Bash shell won't be able 
+              to run it. </p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground"> 
+                          <p>In a Cygwin Bash shell:<br>
+                            <code>cd [jikes dir]</code><br>
+                            <code>./configure --host=mingw32 CXX=[mingw dir with 
+                            slashes]/bin/g++</code></p>
+                          <p>Output:</p>
+                          <p style="text-indent: 0em"><code>...<br>
+                            checking build system type... i686-pc-cygwin<br>
+                            checking host system type... i386-unknown-mingw32<br>
+                            ...</code></p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p><u>Note</u>: Don't worry about the initial warning about --host, 
+              it is just there to scare off folks that don't know what they are 
+              doing :)</p>
+            <p>If the output contains two lines similar to these, this is good, 
+              it means the <code>configure</code> script correctly detected that 
+              the build system (Cygwin) is different from the host system (Mingw).</p>
+            <p><u>Remark</u>: Instead of specifying explicitly where is the Mingw 
+              compiler (with the <code>CXX</code> flag), you can place the <code>[mingw 
+              dir]</code> directory ahead of Cygwin <code>gcc</code> in the <code>PATH</code> 
+              (note that the detected host is now &quot;<code>i386-pc-mingw32</code>&quot;):</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center">
+                <tr> 
+                  <td class="DimmedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="DimmedFrameBackground"> 
+                          <p style="text-indent: 0em"><code>export PATH=[mingw dir with slashes]/bin:${PATH}<br>
+                            cd [jikes dir]<br>
+                            ./configure --host=mingw32</code></p>
+                          <p>Output:</p>
+                          <p style="text-indent: 0em"><code>...<br>
+                            checking build system type... i686-pc-cygwin<br>
+                            checking host system type... i386-pc-mingw32<br>
+                            ...</code> </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>&nbsp; </p>
+            <h3>Building Jikes</h3>
+            <p>Now all you need to do is run make and a <code>jikes.exe</code> 
+              file will be created for you.</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center" width="400">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground"> <code>make</code><br>
+                          <br>
+                          <code>jikes.exe</code> is created under the src/ directory</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>You now have a functional Jikes!</p>
+            <p> You can verify that the produced jikes.exe does not depend on 
+              any Cygwin libraries by running the following command:</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center" width="400">
+                <tr> 
+                  <td class="DimmedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="DimmedFrameBackground"> 
+                          <p style="text-indent: 0em"><code>cygcheck jikes.exe</code></p>
+                          <p>Output:</p>
+                          <p style="text-indent: 0em"><code>Found: .\jikes.exe<br>
+                            .\jikes.exe<br>
+                            C:\WINNT\System32\KERNEL32.dll<br>
+                            C:\WINNT\System32\ntdll.dll<br>
+                            C:\WINNT\System32\msvcrt.dll</code></p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>This shows that the executable only depends on dlls that are already 
+              installed on a Windows system.</p>
+            <p><u>Important note</u>: you can't build in a directory other than 
+              the <code>src</code> directory with mingw, as stated in <a href="dev-compiling.html#build-other-dir">the 
+              general compiling section</a>. This is a known issue with Mingw 
+              (probably related to paths in POSIX form). The Mingw author is aware 
+              of this problem and it sits now in his personal todo list :o).</p>
+            <p>&nbsp; </p>
+            <h2>Compiling with Cygwin gcc</h2>
+            <p>This section explains how to build a Jikes which will run under 
+              a Cygwin environment.</p>
+            <p>What is &quot;a Cygwin Jikes&quot; ? It means that the generated 
+              <code>jikes.exe</code> depends on Cygwin components to run, and 
+              more specifically on <code>cygwin1.dll</code>: it will run only 
+              on Win32 systems where Cygwin is installed and available in the 
+              <code>PATH</code>, or when run from a Cygwin shell.</p>
+            <p>The build environment configuration and build process are quite 
+              straightforward, as everything is detected automatically for you:</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center" width="400">
+                <tr> 
+                  <td class="DimmedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="DimmedFrameBackground"> 
+                          <p>In a Cygwin Bash shell:<br>
+                            <code>cd [jikes dir]</code><br>
+                            <code>./configure</code></p>
+                          <p>Output:</p>
+                          <p style="text-indent: 0em"><code>...<br>
+                            checking build system type... i686-pc-cygwin<br>
+                            checking host system type... i686-pc-cygwin<br>
+                            ...</code></p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>And finally:</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center" width="400">
+                <tr> 
+                  <td class="DimmedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="DimmedFrameBackground"> <code>make</code><br>
+                          <br>
+                          <code>jikes.exe</code> is created under the src/ directory</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>&nbsp;</p>
+            <h3>Debugging Jikes with gdb</h3>
+            <p>If you are interested in debugging your Cygwin Jikes, you can use 
+              the Insight GUI front end to GDB:</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center" width="400">
+                <tr> 
+                  <td class="DimmedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="DimmedFrameBackground"> <code> cd [jikes dir]/src<br>
+                          gdb jikes</code></td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>That will start up Insight in GUI mode. If you want to run in plain 
+              gdb command line mode just use:</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center" width="400">
+                <tr> 
+                  <td class="DimmedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="DimmedFrameBackground"> <code> gdb -nw jikes</code></td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>&nbsp;</p>
+            <h2>Compiling with Microsoft Visual C++</h2>
+            <p><i>Not written yet.</i></p>
+            <p>Q : Will we provide an automated detection of the msvc platform 
+              ? Or should state what to patch individually to do so ?</p>
+            <p>Option :</p>
+            <p>The 'configure' script uses a 'conftest.cc' file for testing the 
+              compiler,<br>
+              but VC++ does not recognize such an extension as a C++ source file.<br>
+              Fix : don't know yet, there's maybe a way of specifying to MSVC 
+              that a<br>
+              .cc file is a C++ source file. Hack to make it run : replace 'ac_ext=cc' 
+              by<br>
+              'ac_ext=cpp' in the script. You need to pass the -TP flag to cl.exe 
+              so that it treats the file as C++. This is something that we really 
+              need to fix in autoconf. </p>
+            <p>Well, it would be better to get it added to autoconf. </p>
+            <p>&nbsp; </p>
             <h2>Official Release</h2>
             <p>The Win32 official release of Jikes is not produced on the Win32 
               platform as expected (at least until now). This is done by using 
@@ -372,9 +719,22 @@
               about cross-compiling Jikes</a>). It's actually built on a Unix 
               machine, using the <code>gcc</code> compiler with the <code>mingw</code> 
               backend to produce a Win32 binary.</p>
-            <p><i>Needed</i>: what's the exact command line to build Jikes for 
-              the Win32 platform ? -O3 is used for optimisation, but what about 
-              symbol stripping? </p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center" width="400">
+                <tr> 
+                  <td class="DimmedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="DimmedFrameBackground"><i>Needed</i>: what's 
+                          the exact command line to build Jikes for the Win32 
+                          platform ? -O3 is used for optimisation, but what about 
+                          symbol stripping? </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
             <p>However, building Jikes with the same <code>gcc</code> and <code>mingw</code> 
               combination running on the Win32 platform (as described <a href="#cygwin-gcc-mingw-compiling">here</a>) 
               is perfectly valid (it's still a cross-compile, but the build is 
@@ -382,196 +742,6 @@
               hardware and software environment to generate a Jikes compiler as 
               reliable as the official one (except for the modifications you may 
               bring to the source code, of course!).</p>
-            <p>&nbsp;</p>
-            <p>Prefer having compiler specified with a path on the command-line 
-              rather than adding path to it in the PATH env var.</p>
-            <p>&nbsp;</p>
-            <h2>Compiling for Cygwin environment</h2>
-            <p> First, you will need to check the Jikes source code out of the 
-              CVS. Start up the Cygwin shell (bash) by clicking on the desktop 
-              shortcut or selecting the start menu item.</p>
-            <p> You should start in your users home directory, mine is /home/mdejong. 
-              Now create a directory that you will keep the source code in and 
-              a directory where you will build<br>
-              the Cygwin version of Jikes.</p>
-            <p> mkdir project<br>
-              cd project</p>
-            <p> Now you can check the Jikes source code out using the CVS clients.</p>
-            <p> export CVSROOT=:pserver:anoncvs@oss.software.ibm.com:/usr/cvs/jikes<br>
-              cvs login (password is anoncvs)<br>
-              cvs checkout jikes</p>
-            <p> Now build the source code. I always use a separate build directory 
-              when building code. The following commands will build jikes in the 
-              ~/build/jikes directory with debugging enabled and no optimization.</p>
-            <p> cd ~<br>
-              mkdir -p build/jikes<br>
-              cd build/jikes<br>
-              ../../project/jikes/configure CXXFLAGS=-g<br>
-              make</p>
-            <p> The configure script will automatically detect that you are building 
-              under Cygwin and it will set compilation options accordingly. All 
-              you have to do it type "make" and wait for the compile to finish. 
-              It will produce a jikes.exe file in the ~/build/jikes/src dir when 
-              it is finished.</p>
-            <p> That is all there is to it. You should now be able to run Jikes 
-              from the command line just like you would on any Unix system.</p>
-            <p> export JIKESPATH=D:/JDK1.3/jre/lib/rt.jar<br>
-              jikes Example.java</p>
-            <p> If you are interested in debugging Jikes, you can use the Insight 
-              GUI front end to GDB like so:</p>
-            <p> cd ~/build/jikes/src<br>
-              gdb jikes</p>
-            <p> That will start up Insight in GUI mode, if you want to run in 
-              plain gdb command line mode just use:</p>
-            <p> gdb -nw jikes</p>
-            <p>&nbsp;</p>
-            <h2><a name="cygwin-gcc-mingw-compiling"></a>Compiling with gcc and 
-              mingw (GNU gcc for Windows)</h2>
-            <p> The following instructions describe the process of building the 
-              Jikes Java compiler from source on a Windows machine. The resulting 
-              jikes.exe executable will run on any Windows machine without the 
-              need for additional dlls.</p>
-            <p> First, install Cygwin on your Windows box. Cygwin comes with its 
-              own version of gcc, but you will not be using that version since 
-              it would create an executable that depends on Cygwin.</p>
-            <p> You will need to download the mingw binaries. The first is the 
-              mingw runtime libs. The second is the binutils package (used by 
-              the compiler to create binaries). The last is the gcc compiler.</p>
-            <p> The files you will need to grab are:</p>
-            <p> mingw-msvcrt-20000203.zip<br>
-              binutils-19990818-1-msvcrt.zip<br>
-              gcc-2.95.2-1-msvcrt.zip</p>
-            <p> The URLs are:</p>
-            <p> ftp://ftp.nanotech.wisc.edu/pub/khan/gnu-win32/mingw32/snapshots/gcc-2.95.2-1/mingw-msvcrt-20000203.zip<br>
-              ftp://ftp.nanotech.wisc.edu/pub/khan/gnu-win32/mingw32/snapshots/gcc-2.95.2-1/binutils-19990818-1-msvcrt.zip<br>
-              ftp://ftp.nanotech.wisc.edu/pub/khan/gnu-win32/mingw32/snapshots/gcc-2.95.2-1/gcc-2.95.2-1-msvcrt.zip</p>
-            <p> Create a /usr/local/mingw directory (That's D:\cygwin\usr\local\mingw 
-              on my system) and save the .zip files in this newly created directory. 
-              Extract each of the zip files into the mingw directory. It is important 
-              that each of them extract directly into the /usr/local/mingw directory, 
-              you don't want a subdirectory for each zip file. If a dialog like 
-              "replace C++filt with new file" pops up while extracting, just hit 
-              "yes to all".</p>
-            <p> The /usr/local/mingw directory should now contain the following 
-              directories.</p>
-            <p> i386-mingw32msvc/<br>
-              lib/<br>
-              bin/<br>
-              include/</p>
-            <p> You should now be able to run the mingw version of gcc, check 
-              that your output matches the following:</p>
-            <p> $ /usr/local/mingw/bin/gcc.exe -v<br>
-              Reading specs from <br>
-              D:\cygwin\usr\local\mingw\bin\..\lib\gcc-lib\i386-mingw32msvc\2.95.2\specs<br>
-              gcc version 2.95.2 19991024 (release)</p>
-            <p> Now you are ready to grab the Jikes source code from the CVS. 
-              If you are using a released version, just extract the .tar file 
-              instead of getting the CVS version.</p>
-            <p> $ mkdir ~/project ; cd ~/project<br>
-              $ export CVSROOT=:pserver:anoncvs@oss.software.ibm.com:/usr/cvs/jikes<br>
-              $ cvs login (password is anoncvs)<br>
-              $ cvs co jikes</p>
-            <p> You should now have a ~/project/jikes directory, it contains all 
-              the source code to Jikes. You are now ready to build the source 
-              code.</p>
-            <p> The first step is to run the configure script. There are a couple 
-              things to note. You will need to tell the configure script that 
-              you want to use the mingw g++ instead of the Cygwin version by passing 
-              a CXX=... argument to configure. You will also need to pass the 
-              "host system" (the environment the final executable runs in) to 
-              the configure script since this is a cross compile. The --host=mingw32 
-              argument does just that.</p>
-            <p> $ cd jikes<br>
-              $ ./configure --host=mingw32 CXX=/usr/local/mingw/bin/g++</p>
-            <p> When you run configure, something like the following should be 
-              printed in the first few lines of output. Don't worry about the 
-              initial warning about --host, it is just there to scare off folks 
-              that don't know what they are doing :)</p>
-            <p> ...<br>
-              checking build system type... i686-pc-cygwin<br>
-              checking host system type... i386-unknown-mingw32<br>
-              ...</p>
-            <p> This is good, it means the configure script correctly detected 
-              that the build system (Cygwin) is different from the host system 
-              (Mingw). Now all you need to do is run make and a jikes.exe file 
-              will be created for you.</p>
-            <p> $ make</p>
-            <p> You can verify that the jikes.exe does not depend on any Cygwin 
-              libraries by running the following command:</p>
-            <p> $ cygcheck.exe jikes.exe<br>
-              Found: .\jikes.exe<br>
-              .\jikes.exe<br>
-              C:\WINNT\System32\KERNEL32.dll<br>
-              C:\WINNT\System32\ntdll.dll<br>
-              C:\WINNT\System32\msvcrt.dll</p>
-            <p> This shows that the executable only depends on dlls that are already 
-              installed on a Windows system.<br>
-              <br>
-              <br>
-            </p>
-            <p>&nbsp;</p>
-            <p>> You can't build in a directory other than the<br>
-              > srcdir with mingw. I am not sure what the problem is<br>
-              <br>
-              the problem is the -I paths in posix form... it's in Mumit's<br>
-              capable hands now.<br>
-              <br>
-              (workaround, -save-temps, pass all the .ii files through a<br>
-              sed script to replace \\ in files paths on lines begining<br>
-              with # to /, then finish compiling the .ii files.)<br>
-              <br>
-              (better workaround, let Mumit fix mingw)<br>
-            </p>
-            <p>&nbsp;</p>
-            <p>I just tried to build Jikes using mingw with the<br>
-              slight modification of putting the mingw gcc on the<br>
-              path ahead of the cygwin gcc. It worked just fine,<br>
-              so I think we should use that approach instead<br>
-              of having folks set CXX and stuff. A new user will<br>
-              want the most simple instructions possible, so<br>
-              the FAQ should look like:<br>
-              <br>
-              Install Cygwin and Mingw .... (from other post)<br>
-              <br>
-              Place Mingw gcc on the path ahead of Cygwin gcc:<br>
-              <br>
-              cd /usr/local/mingw/bin<br>
-              export PATH=`pwd`:${PATH}<br>
-              <br>
-              Compile the Jikes source code to create jikes.exe<br>
-              <br>
-              $ cd jikes<br>
-              $ ./configure --host=mingw32<br>
-              ...<br>
-              checking build system type... i686-pc-cygwin<br>
-              checking host system type... i386-pc-mingw32<br>
-              ...<br>
-              <br>
-              Note that the host should now be "i386-pc-mingw32",<br>
-              the other stuff should remain the same. Of course,<br>
-              the bits where "/usr/local/mingw/bin/g++ -v" were<br>
-              run can be replaced by "g++ -v".<br>
-              <br>
-            </p>
-            <p>&nbsp;</p>
-            <p>&nbsp; </p>
-            <p>&nbsp;</p>
-            <p>Q : Will we provide an automated detection of the msvc platform 
-              ? Or should state what to patch individually to do so ?</p>
-            <p>Option :</p>
-            <p>> The 'configure' script uses a 'conftest.cc' file for testing 
-              the compiler, > but VC++ does not recognize such an extension as 
-              a C++ source file. > => Fix : don't know yet, there's maybe a way 
-              of specifying to MSVC that a > .cc file is a C++ source file. Hack 
-              to make it run : replace 'ac_ext=cc' by > 'ac_ext=cpp' in the script. 
-              You need to pass the -TP flag to cl.exe so that it treats the file 
-              as C++. This is something that we really need to fix in autoconf. 
-            </p>
-            <p>Well, it would be better to get it added to autoconf. Do you have 
-              time to do some autoconf hacking? I have not done too much to get 
-              VC++ working under autoconf cause I just don't care about that compiler. 
-            </p>
-            <p>&nbsp; </p>
             <p>&nbsp; </p>
             <!-- #EndEditable --></td>
         </tr>
