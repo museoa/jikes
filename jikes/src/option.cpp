@@ -170,6 +170,7 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
                                               pedantic(false),
                                               directory(NULL),
                                               first_file_index(arguments.argc),
+                                              classpath_search_order(false),
                                               one_one(true),
                                               g(false),
                                               nowrite(false),
@@ -302,6 +303,8 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
                  comments = true;
             else if (strcmp(arguments.argv[i], "+C") == 0)
                  debug_dump_class = true;
+            else if (strcmp(arguments.argv[i], "+CSO") == 0)
+                 classpath_search_order = true;
             else if (strcmp(arguments.argv[i],"+D") == 0)
             {
                  dump_errors = true;
