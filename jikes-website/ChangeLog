@@ -1,3 +1,8 @@
+2005-03-07  Chris Abbey	 <jikes@cabbey.net>
+
+	* distribs.shtml: fix broken links reported by Lukas Theussl, add
+	Fedora.
+
 2005-02-24  Chris Abbey  <jikes@cabbey.net>
 
 	* faq/bug-reporting.shtml: finally got the urls right to link into

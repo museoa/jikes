@@ -43,6 +43,13 @@
       </TR><TR VALIGN="MIDDLE">
         <TD ALIGN="RIGHT"><a href="http://www.yellowdoglinux.com"><IMG SRC="images/ydl.png" alt="" BORDER=0 HEIGHT=111 WIDTH=103></A></TD>
         <TD ALIGN="LEFT" ><a href="http://www.yellowdoglinux.com">Yellow Dog Linux</a></TD>
+      </TR><TR>
+        <TD COLSPAN=2><HR></TD>
+      </TR><TR VALIGN="MIDDLE">
+        <TD ALIGN="RIGHT"><a href="http://fedora.redhat.com/"><IMG SRC="images/fedora.png" alt="" BORDER=0 HEIGHT=40 WIDTH=110></A></TD>
+        <TD ALIGN="LEFT" ><a href="http://fedora.redhat.com/">Fedora</a> - (<small>in <a href="http://download.fedora.redhat.com/pub/fedora/linux/extras/">extras</a></small)</TD>
+
+http://fedora.redhat.com/images/header-fedora_logo.png
       <!-- RH has removed jikes; ergo, jikes will remove RH... seems fair /TR><TR>
         <TD COLSPAN=2><HR></TD>
       </TR><TR VALIGN="MIDDLE">
@@ -72,9 +79,9 @@
 
 
 <br>
-    <P>If you know of an additional distribution we're missing here, please <A HREF="mailto:jikes-dev@www-124.ibm.com">let us know</A>.</P>
+    <P>If you know of an additional distribution we're missing here, please <A HREF="mailto:jikes-dev@lists.sourceforge.net">let us know</A>.</P>
 
-    <P>Most will acquire Jikes as an independent package though, like most open source projects, Jikes is <A HREF="/developerworks/downloads/?group_id=10&amp;recent_only=1">available</A> in both source and precompiled binary forms.</p>
+    <P>Most will acquire Jikes as an independent package though, like most open source projects, Jikes is <A HREF="http://sourceforge.net/project/showfiles.php?group_id=128803">available</A> in both source and precompiled binary forms.</p>
 
     <!--#include file="footer.shtml" -->
   </BODY>
