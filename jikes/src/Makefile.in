@@ -55,6 +55,7 @@ am__aclocal_m4_deps =  \
 	$(top_srcdir)/src/m4/ac_cxx_const_cast.m4 \
 	$(top_srcdir)/src/m4/ac_cxx_dynamic_cast.m4 \
 	$(top_srcdir)/src/m4/ac_cxx_explicit.m4 \
+	$(top_srcdir)/src/m4/ac_cxx_exceptions.m4 \
 	$(top_srcdir)/src/m4/ac_cxx_have_std.m4 \
 	$(top_srcdir)/src/m4/ac_cxx_member_constants.m4 \
 	$(top_srcdir)/src/m4/ac_cxx_namespaces.m4 \

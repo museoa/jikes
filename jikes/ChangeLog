@@ -2,6 +2,11 @@
 
 	Release 1.20.
 
+2004-04-16  Chris Abbey  <jikes@cabbey.net>
+
+	* src/Makefile.in: trivial hand patch, looks like  src/m4/
+	was not up to date the last time this was regen'd.
+
 2004-04-15  Eric Blake  <ebb9@byu.net>
 
 	* NEWS: More news blurbs.
