@@ -1,5 +1,10 @@
 2001-11-26  Mo DeJong  <supermo@bayarea.net>
 
+	* faq/user-index.shtml: Don't mention mingw compiled .zip
+	file by name since the file name changes often.
+
+2001-11-26  Mo DeJong  <supermo@bayarea.net>
+
 	* cvs.shtml: Remove ref to CVS mirror since it
 	is now badly out of date.
 
