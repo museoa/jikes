@@ -1,3 +1,9 @@
+2000-07-30  Mo DeJong  <mdejong@redhat.com>
+
+	* src/option.cpp (ArgumentExpanded): Fix core dump
+	when processing a @file argument that contains
+	the sequence "\n\n".
+
 2000-07-27  Mo DeJong  <mdejong@redhat.com>
  
 	* src/system.cpp (GetOutputDirectory): Check for

@@ -40,11 +40,13 @@ bool ArgumentExpander::ArgumentExpanded(Tuple<char *> &arguments, char *file_nam
         buffer[file_size] = '\n';
         for (int k = 0; k < file_size; k++)
         {
-            //
-            // isgraph(c) is true if c is any printing character except space.
-            //
+            // FIXME : When \r is replaced by \n, we should not need to check for U_CARRIAGE_RETURN.
+            // Skip spaces and line termination characters
             while (buffer[k] == U_SPACE || buffer[k] == U_LINE_FEED || buffer[k] == U_CARRIAGE_RETURN)
                 k++;
+            // If we are at the end of the file, there must not have been any arguments in the file
+            if (k >= file_size)
+                break;
 
             int n;
             for (n = k + 1; ! (buffer[n] == U_SPACE || buffer[n] == U_LINE_FEED || buffer[n] == U_CARRIAGE_RETURN); n++)
