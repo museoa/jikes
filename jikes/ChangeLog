@@ -1,5 +1,12 @@
 2000-08-21  Mo DeJong  <mdejong@redhat.com>
 
+	* src/incrmnt.cpp (IncrementalRecompilation): Rewrite
+	the user interaction loop for incremental re-compilation.
+	We now look for the letter 'q', if that is what the user
+	typed, we quit.
+
+2000-08-21  Mo DeJong  <mdejong@redhat.com>
+
 	* src/platform.h (Ostream::setf): Remove
 	the setf method, it is not used anywhere
 	and it causes the build to fail on the Mac.

@@ -353,7 +353,7 @@ void Control::ComputeRecompilationSet(TypeDependenceChecker &dependence_checker)
 
 
 //
-// Check whether or not there are files to be rempiled.
+// Check whether or not there are files to be recompiled.
 //
 bool Control::IncrementalRecompilation()
 {
@@ -364,49 +364,28 @@ bool Control::IncrementalRecompilation()
     type_table.SetEmpty();
 
     SymbolSet candidates(input_java_file_set.Size() + input_class_file_set.Size() + recompilation_file_set.Size());
-    ArgumentExpander *new_arguments = NULL;
 
     if (! recompilation_file_set.IsEmpty())
         candidates = recompilation_file_set;
     else
     {
-        fprintf(stderr, "\nIncremental Jikes: Press Enter to continue or [Q]uit + Enter to exit: ");
-        fflush(stderr);
+	// FIXME: This actually uses cerr for output, can't pass cout as argument because
+	// of the wacky #define of cout in platform.h.
+	Ostream out;
+	// FIXME: Why does this not work?
+	//out << endl;
+	out << "\nIncremental: Enter to continue or q + Enter to quit: ";
+	out.flush();
 
-        int  l = strlen(U8S_quit)+2;
-        int  n = 0;
-        // FIXME: replace use of char * with u1 * later
-        char* line = new char[l];
-        char ch;
+        u1 buffer[2];
 
-        while (n<l)
-        {
-            cin.get(ch);
-            if(ch == U_ESCAPE && ch == U_LINE_FEED)
-                break;
-            else
-                line[n++] = ch;
-        }
-        line[n]='\0';
-
-        if (line[0] == U_ESCAPE) {
-            delete line;
+        cin.getline(buffer,2);
+	if (buffer[0] == U_q) {
             return false;
         }
 
-        char q[2] = {U_q, U_NU};
-        
-        if (Case::StringEqual(line, U8S_quit) || Case::StringSegmentEqual(line, q, 2))
-        {
-            delete line;
-            delete new_arguments;
-            return false;
-        }
-        
         candidates = input_java_file_set;
         candidates.Union(input_class_file_set);
-
-        delete line;
     }
 
     if (!candidates.IsEmpty())
@@ -418,9 +397,6 @@ bool Control::IncrementalRecompilation()
         // Compute the initial set of files that need to be recompiled. Place them in recompilation_file_set.
         //
         RereadDirectories();
-        
-        if (new_arguments)
-            ProcessNewInputFiles(recompilation_file_set, NULL);
 
         ComputeRecompilationSet(dependence_checker);
     }
@@ -433,8 +409,6 @@ bool Control::IncrementalRecompilation()
     //
     fprintf(stderr, "%s", (recompilation_file_set.IsEmpty() && expired_file_set.IsEmpty() ? "\nnothing changed...\n" : "\nok...\n"));
     fflush(stderr);
-
-    delete new_arguments;
 
     return true;
 }
