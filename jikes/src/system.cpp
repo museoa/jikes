@@ -669,11 +669,14 @@ DirectorySymbol *Control::GetOutputDirectory(FileSymbol *file_symbol)
 {
     DirectorySymbol *directory_symbol;
 
-    Control &control = file_symbol -> semantic -> control;
-    if (control.option.directory == NULL)
+    // A FileSymbol for a .class file has a NULL semantic    
+    if (file_symbol -> semantic == NULL ||
+        (file_symbol -> semantic -> control).option.directory == NULL) {
         directory_symbol = file_symbol -> directory_symbol;
+    }
     else
     {
+        Control &control = file_symbol -> semantic -> control;
         char *directory_prefix = control.option.directory;
         int directory_prefix_length = strlen(directory_prefix),
             utf8_name_length = file_symbol -> package -> PackageNameLength() * 3,

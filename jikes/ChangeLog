@@ -1,3 +1,10 @@
+2000-07-27  Mo DeJong  <mdejong@redhat.com>
+ 
+	* src/system.cpp (GetOutputDirectory): Check for
+	a NULL semantic member of a FileSymbol when writing
+	dependencies. A .class file can have a NULL
+	semantic member which was causing a core dump.
+
 2000-07-26  C. Brian Jones  <cbj@gnu.org>
  
 	* src/option.cpp (Option): Create a
