@@ -1,3 +1,14 @@
+2004-06-20  Elliott Hughes  <enh@acm.org>
+
+	* src/system.cpp: bug #3934 and bug #3989; don't try to create
+	a placeholder for unfound system methods and fields. It's
+	likely to be too late. (I wonder if we should use tests such
+	as "control.Throwable_initCauseMethod() != NULL" instead of
+	the usual "control.option.target < JikesOption::SDK1_4", the
+	better to cope with unusual targets such as MIDP-1.0, and cases
+	where the user has forgotten "-target 1.3"? The current patch
+	stops us crashing; the alternative patch would let us "just work".)
+
 2004-06-02  Elliott Hughes  <enh@acm.org>
 
 	* src/double.cpp, src/double.h: it's impossible to implement

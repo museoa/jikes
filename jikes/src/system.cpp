@@ -1376,6 +1376,7 @@ MethodSymbol* Control::ProcessSystemMethod(TypeSymbol* type,
                 ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
                                BAD_TOKEN, type -> ContainingPackageName(),
                                type -> ExternalName());
+            return NULL;
         }
         method = type -> InsertMethodSymbol(name_symbol);
         method -> SetType(no_type);
@@ -1411,6 +1412,7 @@ VariableSymbol* Control::ProcessSystemField(TypeSymbol* type,
                 ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
                                BAD_TOKEN, type -> ContainingPackageName(),
                                type -> ExternalName());
+            return NULL;
         }
         field = type -> InsertVariableSymbol(name_symbol);
         field -> SetType(no_type);
