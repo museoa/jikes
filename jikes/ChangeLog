@@ -1,3 +1,11 @@
+2001-05-06  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/definite.cpp (DefiniteBlock)
+	(DefiniteSwitchStatement, DefiniteTryStatement):
+	Changed the definite algorithm to quit checking
+	variables that went out of scope, fixing bug
+	253 and related.
+
 2001-05-06  ??  <kumaran@alumni.stanford.org>
 
 	* src/control.cpp (ProcessBodies): fix
