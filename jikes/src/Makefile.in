@@ -37,8 +37,10 @@ distclean: clean
 	$(ERASE) Makefile
 
 install: all
-	mkdir -p $(exec_prefix)/bin
-	cp $(EXECUTABLE) $(exec_prefix)/bin
+	mkdir -p $(prefix)/bin
+	cp $(EXECUTABLE) $(prefix)/bin
+	mkdir -p $(prefix)/man/man1
+	cp jikes.1 $(prefix)/man/man1/jikes.1
 
 OBJECTS=jikes.@O@ scanner.@O@ code.@O@ zip.@O@ unzip.@O@ \
         ast.@O@ diagnose.@O@ parser.@O@ lpginput.@O@ javaact.@O@ \

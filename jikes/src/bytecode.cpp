@@ -2470,7 +2470,7 @@ TypeSymbol *ByteCode::MethodTypeResolution(AstExpression *method_name, MethodSym
 
     TypeSymbol *owner_type = msym -> containing_type,
                *base_type = (field ? field -> base -> Type()
-                                   : (simple_name -> resolution_opt ? simple_name -> resolution_opt -> Type() : unit_type));
+                                   : (simple_name -> resolution_opt ? simple_name -> resolution_opt -> Type() : owner_type));
 
     //
     // If the base_type is an interface and the real owner of the method is Object
