@@ -1,3 +1,10 @@
+2002-11-18  Eric Blake  <ebb9@email.byu.edu>
+
+	* NEWS:
+	* jikes.spec:
+	* configure.in: Prepare for releasing 1.18.
+	* configure: Regenerate.
+
 2002-11-16  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/definite.cpp (DefiniteBlock): Don't mark variables declared
