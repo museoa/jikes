@@ -27,4 +27,7 @@ a -encoding koi8-r
 e test0 test0
 e test1 test1
 c test2 test2
+a -encoding UnicodeLittle
+c utf16le utf16le
+c utf16lex utf16lex
 #
