@@ -219,40 +219,6 @@ void Control::ProcessGlobals()
 }
 
 
-void Control::InitObjectInfo()
-{
-    if (! Object_type -> Bad())
-    {
-        //
-        // Search for relevant getClass method
-        //
-        for (MethodSymbol *method = Object_type -> FindMethodSymbol(getClass_name_symbol);
-             method;
-             method = method -> next_method)
-        {
-            char *signature = method -> SignatureString();
-
-            if (strcmp(signature, StringConstant::U8S_LP_RP_Ljava_SL_lang_SL_Class_SC) == 0)
-            {
-                Object_getClass_method = method;
-                break;
-            }
-        }
-
-        if (! Object_getClass_method)
-        {
-            system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
-                                              0,
-                                              0,
-                                              Object_type -> ContainingPackage() -> PackageName(),
-                                              Object_type -> ExternalName());
-        }
-    }
-
-    return;
-}
-
-
 void Control::InitClassInfo()
 {
     if (! Class_type -> Bad())

@@ -1367,6 +1367,47 @@ void Control::CleanUp(FileSymbol *file_symbol)
     return;
 }
 
+MethodSymbol *Control::Object_getClassMethod()
+{
+    //
+    // This requires lazy initialization for the case when the user is
+    // compiling java.lang.Object. We don't access the getClass method
+    // until bytecode emission, after the .java file has been processed.
+    //
+    if (! Object_getClass_method)
+    {
+        TypeSymbol *Object_type = Object();
+        if (! Object_type -> Bad())
+        {
+            //
+            // Search for relevant getClass method
+            //
+            for (MethodSymbol *method = Object_type -> FindMethodSymbol(getClass_name_symbol);
+                 method; method = method -> next_method)
+            {
+                if (strcmp(method -> SignatureString(),
+                           StringConstant::U8S_LP_RP_Ljava_SL_lang_SL_Class_SC) == 0)
+                {
+                    Object_getClass_method = method;
+                    break;
+                }
+            }
+
+            if (! Object_getClass_method)
+            {
+                system_semantic -> ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
+                                                  0,
+                                                  0,
+                                                  Object_type -> ContainingPackage() -> PackageName(),
+                                                  Object_type -> ExternalName());
+                Object_type -> MarkBad();
+            }
+        }
+    }
+    return Object_getClass_method;
+}
+
+
 #ifdef HAVE_JIKES_NAMESPACE
 } // Close namespace Jikes block
 #endif

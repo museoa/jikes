@@ -1,5 +1,13 @@
 2001-11-12  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/system.cpp (InitObjectInfo): Delete.
+	* src/control.h (Object):
+	* src/control.cpp (Object_getClassMethod): Rearrange evaluation
+	dependencies to	allow compilation of java.lang.Object, fixing
+	regression caused by patch 139.
+
+2001-11-12  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/bytecode.cpp (LoadImmediateInteger): Fix a regression from
 	my patch of bug 220.
 

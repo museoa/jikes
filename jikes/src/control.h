@@ -127,24 +127,12 @@ public:
         return Serializable_type;
     }
 
-    void InitObjectInfo();
     inline TypeSymbol *Object()
     {
-        if (! Object_type)
-        {
-            Object_type = GetType(system_package, StringConstant::US_Object);
-            InitObjectInfo();
-        }
-
-        return Object_type;
+        return (Object_type ? Object_type : Object_type = GetType(system_package, StringConstant::US_Object));
     }
 
-    MethodSymbol *Object_getClassMethod()
-    {
-        if (! Object_getClass_method)
-            (void) Object();
-        return Object_getClass_method;
-    }
+    MethodSymbol *Object_getClassMethod();
 
     inline TypeSymbol *Cloneable()
     {
