@@ -1,3 +1,7 @@
+2000-10-28  Mo DeJong  <mdejong@redhat.com>
+
+	* src/Makefile.am: Remove commented out bits.
+
 2000-10-18  Mo DeJong  <mdejong@redhat.com>
 
 	* src/incrmnt.cpp (Control::IncrementalRecompilation):
