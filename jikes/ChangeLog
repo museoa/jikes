@@ -1,3 +1,10 @@
+2002-02-18  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/gencode.java: Add more optimizations, to reduce the size of
+	the Unicode lookup table.
+	* src/code.h:
+	* src/code.cpp: Regenerate.
+
 2002-02-12  Andrew M. Inggs  <aminggs@yahoo.co.uk>
 
 	* doc/jikes.1: Updated description of @file option to match
