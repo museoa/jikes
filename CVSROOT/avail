@@ -1,9 +1,10 @@
 unavail
-avail|coar,shields,cabbey,lord,perera,ernst,charles,mdejong,cabbey|jikes,jikespg,jikestst,core,jikes-website
-avail|coar,shields,cabbey|CVSROOT
+avail|mdernst,mdejong,cabbey|jikes,jikespg,jikestst,core,jikes-website
+avail|cabbey|CVSROOT
 avail|pdavoust|jikes-website
-avail|ericb|jikes,jikespg,jikestst
-avail|elliott-oss|jikes,jikespg
+avail|ebblake,enh|jikes,jikespg,jikestst
 #the following prevent anyone except jikes admin changing the license files
 unavail||jikes/COPYING,jikes/doc/license.htm
-avail|cabbey|jikes/COPYING,jikes/doc/license.htm
+##uncomment the next line, add your id, commit this change, then commit your
+## changes to these files, and revert this file. 
+#avail|your_id_here|jikes/COPYING,jikes/doc/license.htm
