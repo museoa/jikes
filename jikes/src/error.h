@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002, 2003 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -36,6 +36,7 @@ class ErrorString : public ConvertibleArray<wchar_t>
 {
 public:
     ErrorString();
+    ~ErrorString() {}
 
     ErrorString& operator<<(const wchar_t* s);
     ErrorString& operator<<(const wchar_t c);

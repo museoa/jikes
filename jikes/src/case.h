@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 2000, 2001, 2003 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -31,20 +31,44 @@ class Case
 
 public:
 
-    static inline bool IsAsciiLower(char c)       { return c == lower[c]; }
-    static inline char ToAsciiLower(char c)       { return (c & (char) 0x80) ? c : lower[c]; }
-    static inline wchar_t ToAsciiLower(wchar_t c) { return (c < 128 ? (wchar_t) lower[c] : c); }
+    static inline bool IsAsciiLower(char c)
+    {
+        return c == lower[(int) c];
+    }
+    static inline char ToAsciiLower(char c)
+    {
+        return (c & (char) 0x80) ? c : lower[(int) c];
+    }
+    static inline wchar_t ToAsciiLower(wchar_t c)
+    {
+        return (c < 128 ? (wchar_t) lower[(int) c] : c);
+    }
 
-    static inline bool IsAsciiUpper(char c)       { return c == upper[c]; }
-    static inline char ToAsciiUpper(char c)       { return (c & (char) 0x80) ? c : upper[c]; }
-    static inline wchar_t ToAsciiUpper(wchar_t c) { return (c < 128 ? (wchar_t) upper[c] : c); }
+    static inline bool IsAsciiUpper(char c)
+    {
+        return c == upper[(int) c];
+    }
+    static inline char ToAsciiUpper(char c)
+    {
+        return (c & (char) 0x80) ? c : upper[(int) c];
+    }
+    static inline wchar_t ToAsciiUpper(wchar_t c)
+    {
+        return (c < 128 ? (wchar_t) upper[(int) c] : c);
+    }
 
-    static inline bool IsAsciiAlpha(char c)    { return (c == lower[c] || c == upper[c]); }
-    static inline bool IsAsciiAlpha(wchar_t c) { return (c == lower[c] || c == upper[c]); }
+    static inline bool IsAsciiAlpha(char c)
+    {
+        return (c == lower[(int) c] || c == upper[(int) c]);
+    }
+    static inline bool IsAsciiAlpha(wchar_t c)
+    {
+        return (c == lower[(int) c] || c == upper[(int) c]);
+    }
 
     //
-    // Find the position of the first occurrence of a character within a string.
-    // If the character is not foud, return -1.
+    // Find the position of the first occurrence of a character within a
+    // string. If the character is not foud, return -1.
     //
     static inline int Index(char *s, wchar_t c)
     {

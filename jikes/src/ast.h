@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002, 2003 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -724,6 +724,8 @@ public:
     // For efficiency, there is no constructor. Subclasses are expected to set
     // modifiers_opt to NULL in their constructor.
     //
+
+    ~AstDeclared() {}
 };
 
 
@@ -740,6 +742,8 @@ public:
     // For efficiency, there is no constructor. Subclasses are expected to set
     // class_body to NULL in their constructor.
     //
+
+    ~AstDeclaredType() {}
 
     inline bool IsValid();
 };
@@ -761,6 +765,7 @@ public:
     // can_complete_normally appropriately.
     //
 
+    ~AstStatement() {}
 };
 
 
@@ -781,6 +786,8 @@ public:
     // {}
     //
 
+    ~AstExpression() {}
+
     bool IsConstant() { return value != NULL; }
 
     TypeSymbol* Type();
@@ -800,6 +807,9 @@ public:
     // Subclasses that are derived from AstType are expected to initialize
     // symbol to NULL.
     //
+
+    ~AstType() {}
+
     virtual LexStream::TokenIndex IdentifierToken() = 0;
 };
 
@@ -858,6 +868,7 @@ public:
         is_reachable = false;
         can_complete_normally = false;
     }
+    ~AstBlock() {}
 
     inline AstStatement*& Statement(unsigned i)
     {
@@ -922,6 +933,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstName() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -964,6 +976,7 @@ public:
         generated = false;
         symbol = NULL;
     }
+    ~AstPrimitiveType() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -1001,6 +1014,7 @@ public:
         class_tag = NO_TAG;
         generated = false;
     }
+    ~AstBrackets() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -1041,6 +1055,7 @@ public:
         generated = false;
         symbol = NULL;
     }
+    ~AstArrayType() {}
 
     inline unsigned NumBrackets() { return brackets -> dims; }
 
@@ -1081,6 +1096,7 @@ public:
         generated = false;
         symbol = NULL;
     }
+    ~AstTypeName() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -1120,6 +1136,7 @@ public:
         class_tag = NO_TAG;
         generated = false;
     }
+    ~AstPackageDeclaration() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -1151,6 +1168,7 @@ public:
         class_tag = NO_TAG;
         generated = false;
     }
+    ~AstImportDeclaration() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -1187,6 +1205,7 @@ public:
         class_tag = NO_TAG;
         generated = false;
     }
+    ~AstCompilationUnit() {}
 
     void FreeAst();
 
@@ -1269,6 +1288,7 @@ public:
         class_tag = NO_TAG;
         generated = false;
     }
+    ~AstModifiers() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -1299,6 +1319,7 @@ public:
         modifiers_opt = NULL;
         class_body = NULL;
     }
+    ~AstEmptyDeclaration() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -1370,6 +1391,7 @@ public:
         class_tag = NO_TAG;
         generated = false;
     }
+    ~AstClassBody() {}
 
     inline void MarkUnparsed() { class_tag = UNPARSED; }
     inline void MarkParsed() { class_tag = NO_TAG; }
@@ -1518,6 +1540,7 @@ public:
         generated = false;
         modifiers_opt = NULL;
     }
+    ~AstClassDeclaration() {}
 
     inline AstTypeName*& Interface(unsigned i) { return (*interfaces)[i]; }
     inline unsigned NumInterfaces()
@@ -1570,6 +1593,7 @@ public:
         class_tag = NO_TAG;
         generated = false;
     }
+    ~AstArrayInitializer() {}
 
     inline Ast*& VariableInitializer(unsigned i)
     {
@@ -1611,6 +1635,7 @@ public:
         class_tag = NO_TAG;
         generated = false;
     }
+    ~AstVariableDeclaratorId() {}
 
     inline unsigned NumBrackets()
     {
@@ -1665,6 +1690,7 @@ public:
         is_reachable = true;
         can_complete_normally = true;
     }
+    ~AstVariableDeclarator() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -1711,6 +1737,7 @@ public:
         generated = false;
         modifiers_opt = NULL;
     }
+    ~AstFieldDeclaration() {}
 
     inline void MarkStatic() { class_tag = STATIC; }
 
@@ -1758,6 +1785,7 @@ public:
         class_tag = NO_TAG;
         generated = false;
     }
+    ~AstFormalParameter() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -1802,6 +1830,7 @@ public:
         class_tag = NO_TAG;
         generated = false;
     }
+    ~AstMethodDeclarator() {}
 
     inline AstFormalParameter*& FormalParameter(unsigned i)
     {
@@ -1856,6 +1885,7 @@ public:
         can_complete_normally = false;
         no_braces = true;
     }
+    ~AstMethodBody() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -1902,6 +1932,7 @@ public:
         generated = false;
         modifiers_opt = NULL;
     }
+    ~AstMethodDeclaration() {}
 
     bool IsValid() { return method_symbol != NULL; }
 
@@ -1948,6 +1979,7 @@ public:
         generated = false;
         modifiers_opt = NULL;
     }
+    ~AstInitializerDeclaration() {}
 
     inline void MarkStatic() { class_tag = STATIC; }
 
@@ -2000,6 +2032,7 @@ public:
         class_tag = NO_TAG;
         generated = false;
     }
+    ~AstArguments() {}
 
     inline AstExpression*& Argument(unsigned i) { return (*arguments)[i]; }
     inline unsigned NumArguments()
@@ -2067,6 +2100,7 @@ public:
         is_reachable = true;
         can_complete_normally = true;
     }
+    ~AstThisCall() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -2103,6 +2137,7 @@ public:
         is_reachable = true;
         can_complete_normally = true;
     }
+    ~AstSuperCall() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -2160,6 +2195,7 @@ public:
         generated = false;
         modifiers_opt = NULL;
     }
+    ~AstConstructorDeclaration() {}
 
     bool IsValid() { return constructor_symbol != NULL; }
 
@@ -2227,6 +2263,7 @@ public:
         generated = false;
         modifiers_opt = NULL;
     }
+    ~AstInterfaceDeclaration() {}
 
     inline AstTypeName*& Interface(unsigned i)
     {
@@ -2283,6 +2320,7 @@ public:
         is_reachable = false;
         can_complete_normally = false;
     }
+    ~AstLocalVariableDeclarationStatement() {}
 
     inline AstVariableDeclarator*& VariableDeclarator(unsigned i)
     {
@@ -2333,6 +2371,7 @@ public:
         is_reachable = false;
         can_complete_normally = true;
     }
+    ~AstLocalClassDeclarationStatement() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -2391,6 +2430,7 @@ public:
         is_reachable = false;
         can_complete_normally = false;
     }
+    ~AstIfStatement() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -2428,6 +2468,7 @@ public:
         is_reachable = false;
         can_complete_normally = false;
     }
+    ~AstEmptyStatement() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -2460,6 +2501,7 @@ public:
         is_reachable = false;
         can_complete_normally = false;
     }
+    ~AstExpressionStatement() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -2503,6 +2545,7 @@ public:
         class_tag = NO_TAG;
         generated = false;
     }
+    ~AstSwitchLabel() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -2531,6 +2574,7 @@ public:
         kind = SWITCH_BLOCK;
         no_braces = true;
     }
+    ~AstSwitchBlockStatement() {}
 
     inline AstSwitchLabel*& SwitchLabel(unsigned i)
     {
@@ -2609,6 +2653,7 @@ public:
         is_reachable = false;
         can_complete_normally = false;
     }
+    ~AstSwitchStatement() {}
 
     inline CaseElement*& Case(unsigned i) { return (*cases)[i + 1]; }
     inline CaseElement*& DefaultCase() { return (*cases)[0]; }
@@ -2658,6 +2703,7 @@ public:
         is_reachable = false;
         can_complete_normally = false;
     }
+    ~AstWhileStatement() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -2697,6 +2743,7 @@ public:
         is_reachable = false;
         can_complete_normally = false;
     }
+    ~AstDoStatement() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -2745,6 +2792,7 @@ public:
         is_reachable = false;
         can_complete_normally = false;
     }
+    ~AstForStatement() {}
 
     inline AstStatement*& ForInitStatement(unsigned i)
     {
@@ -2808,6 +2856,7 @@ public:
         is_reachable = false;
         can_complete_normally = false;
     }
+    ~AstBreakStatement() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -2846,6 +2895,7 @@ public:
         is_reachable = false;
         can_complete_normally = false;
     }
+    ~AstContinueStatement() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -2882,6 +2932,7 @@ public:
         is_reachable = false;
         can_complete_normally = false;
     }
+    ~AstReturnStatement() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -2916,6 +2967,7 @@ public:
         is_reachable = false;
         can_complete_normally = false;
     }
+    ~AstThrowStatement() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -2951,6 +3003,7 @@ public:
         is_reachable = false;
         can_complete_normally = false;
     }
+    ~AstSynchronizedStatement() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -2995,6 +3048,7 @@ public:
         is_reachable = false;
         can_complete_normally = false;
     }
+    ~AstAssertStatement() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -3026,6 +3080,7 @@ public:
         class_tag = NO_TAG;
         generated = false;
     }
+    ~AstCatchClause() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -3057,6 +3112,7 @@ public:
         class_tag = NO_TAG;
         generated = false;
     }
+    ~AstFinallyClause() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -3100,6 +3156,7 @@ public:
         is_reachable = false;
         can_complete_normally = false;
     }
+    ~AstTryStatement() {}
 
     inline AstCatchClause*& CatchClause(unsigned i)
     {
@@ -3182,6 +3239,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstIntegerLiteral() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -3215,6 +3273,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstLongLiteral() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -3245,6 +3304,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstFloatLiteral() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -3275,6 +3335,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstDoubleLiteral() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -3305,6 +3366,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstTrueLiteral() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -3335,6 +3397,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstFalseLiteral() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -3365,6 +3428,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstStringLiteral() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -3395,6 +3459,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstCharacterLiteral() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -3431,6 +3496,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstNullLiteral() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -3469,6 +3535,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstClassLiteral() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -3508,6 +3575,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstThisExpression() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -3550,6 +3618,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstSuperExpression() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -3585,6 +3654,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstParenthesizedExpression() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -3639,6 +3709,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstClassInstanceCreationExpression() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -3675,6 +3746,7 @@ public:
         class_tag = NO_TAG;
         generated = false;
     }
+    ~AstDimExpr() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -3715,6 +3787,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstArrayCreationExpression() {}
 
     inline AstDimExpr*& DimExpr(unsigned i) { return (*dim_exprs)[i]; }
     inline unsigned NumDimExprs()
@@ -3773,6 +3846,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstFieldAccess() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -3814,6 +3888,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstMethodInvocation() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -3849,6 +3924,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstArrayAccess() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -3906,6 +3982,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstPostUnaryExpression() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -3969,6 +4046,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstPreUnaryExpression() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -4011,6 +4089,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstCastExpression() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -4088,6 +4167,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstBinaryExpression() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -4125,6 +4205,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstInstanceofExpression() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -4165,6 +4246,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstConditionalExpression() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -4251,6 +4333,7 @@ public:
         value = NULL;
         symbol = NULL;
     }
+    ~AstAssignmentExpression() {}
 
     inline bool SimpleAssignment() { return assignment_tag == SIMPLE_EQUAL; }
 

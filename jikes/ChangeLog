@@ -1,3 +1,11 @@
+2003-04-10  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/ast.h:
+	* src/error.h: Fix implicit destructor warning in gcc 3.3+.
+	* src/case.h: Fix array reference warning in gcc 3.3+.
+	* src/getclass.h: Fix empty class warning in gcc 3.3+.
+	* src/set.h: Workaround for gcc PR c++/10347. 
+
 2003-03-28  Eric Blake  <ebb9@email.byu.edu>
 
 	* Makefile.am: Allow maintainer mode to detect changes in src/m4.

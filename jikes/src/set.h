@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002, 2003 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -1081,8 +1081,8 @@ void Map<Key, Value>::Resize()
         hash_size = primes[++prime_index];
     }
     delete [] base;
-    base = (Element**) memset(new Element*[hash_size], 0,
-                              hash_size * sizeof(Element*));
+    base = new Element*[hash_size];
+    memset(base, 0, hash_size * sizeof(Element*));
 }
 
 
