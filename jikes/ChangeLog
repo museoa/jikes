@@ -1,3 +1,11 @@
+2002-12-27  Elliott Hughes  <enh@acm.org>
+
+	* src/diagnose.cpp:
+	* src/stream.cpp: (emacsErrorString, regularErrorString):
+	improve consistency between the emacs and regular error
+	output by ensuring that both kinds contain both a type
+	such as "Lexical" or "Syntax" and a severity.
+	
 2003-02-18  Jan Ploski  <jpljpl@gmx.de>
 
 	* src/dump.cpp: Fix segfault with +c +L and files that

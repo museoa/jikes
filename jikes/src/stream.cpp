@@ -109,7 +109,7 @@ const wchar_t* StreamError::emacsErrorString()
     s << getFileName()
       << ':' << left_line_no  << ':' << left_column_no
       << ':' << right_line_no << ':' << right_column_no
-      << ": Lexical: " << getErrorMessage();
+      << ": Lexical " << getSeverityString() << ": " << getErrorMessage();
 
     return s.Array();
 }

@@ -2184,7 +2184,8 @@ const wchar_t* ParseErrorInfo::regularErrorString()
 
     lex_stream -> OutputSource(this, s);
 
-    s << endl << "*** Syntax: " << getErrorMessage();
+    s << endl << "*** Syntax " << getSeverityString() << ": "
+      << getErrorMessage();
 
     return s.Array();
 }
@@ -2196,7 +2197,7 @@ const wchar_t* ParseErrorInfo::emacsErrorString()
     s << getFileName()
       << ':' << left_line_no  << ':' << left_column_no
       << ':' << right_line_no << ':' << right_column_no
-      << ": " << getSeverityString() << ": "
+      << ": Syntax " << getSeverityString() << ": "
       << getErrorMessage() << endl;
 
     return s.Array();
