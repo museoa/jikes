@@ -1,3 +1,16 @@
+2003-03-28  Eric Blake  <ebb9@email.byu.edu>
+
+	* Makefile.am: Allow maintainer mode to detect changes in src/m4.
+	* configure.in: Check for touch, for maintainer mode.
+	* src/Makefile.am: Fix maintainer mode dependence.
+	* src/symbol.cpp:
+	* src/system.cpp: Remove compiler warning.
+	* src/m4/ac_check_wcs_funcs.m4: Fix to work with -Werror.
+	* Makefile.in:
+	* configure:
+	* doc/Makefile.in:
+	* src/Makefile.in: Regenerate.
+
 2003-03-24  Eric Blake  <ebb9@email.byu.edu>
 
 	* configure.in: Update to automake 1.7.3.

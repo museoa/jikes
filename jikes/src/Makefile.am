@@ -104,7 +104,7 @@ $(PARSER_FILES): $(srcdir)/java.g
 # FIXME: hardcoded at the moment, makes bootstrap difficult...
 JAVA = java
 JAVAC = jikes
-code.h: gencode.java
+code.h: $(srcdir)/gencode.java
 	$(JAVAC) -d $(srcdir) $<
 	(cd $(srcdir); $(JAVA) -classpath . gencode)
 

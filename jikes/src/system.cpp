@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002, 2003 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -1073,16 +1073,20 @@ void Control::ProcessExtDirs()
                                 strcat(extdir_entry, U8S_SL);
 
                                 for (int i = 0; i < entry_length; i++)
+                                {
                                     extdir_entry[i + path_length] =
-                                        (entry.cFileName[i] == U_BACKSLASH
-                                         ? U_SLASH : entry.cFileName[i]);
+                                        entry.cFileName[i] == U_BACKSLASH
+                                        ? (char) U_SLASH : entry.cFileName[i];
+                                }
                             }
                             else
                             { // If it's there, just append filename.
                                 for (int i = 0; i < entry_length; i++)
+                                {
                                     extdir_entry[i + input_name_length] =
-                                        (entry.cFileName[i] == U_BACKSLASH
-                                         ? U_SLASH : entry.cFileName[i]);
+                                        entry.cFileName[i] == U_BACKSLASH
+                                        ? (char) U_SLASH : entry.cFileName[i];
+                                }
                             }
 
                             for (int i = 0; i < fullpath_length; ++i)

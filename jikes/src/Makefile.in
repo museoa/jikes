@@ -81,6 +81,7 @@ PATH_SEPARATOR = @PATH_SEPARATOR@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+TOUCH = @TOUCH@
 VERSION = @VERSION@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_STRIP = @ac_ct_STRIP@
@@ -526,7 +527,7 @@ uninstall-am: uninstall-binPROGRAMS uninstall-includeHEADERS \
 @MAINTAINER_MODE_TRUE@$(PARSER_FILES): $(srcdir)/java.g
 @MAINTAINER_MODE_TRUE@	(cd $(srcdir); $(JIKESPG) java.g)
 @MAINTAINER_MODE_TRUE@	rm -f $(srcdir)/java.l
-@MAINTAINER_MODE_TRUE@code.h: gencode.java
+@MAINTAINER_MODE_TRUE@code.h: $(srcdir)/gencode.java
 @MAINTAINER_MODE_TRUE@	$(JAVAC) -d $(srcdir) $<
 @MAINTAINER_MODE_TRUE@	(cd $(srcdir); $(JAVA) -classpath . gencode)
 

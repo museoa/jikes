@@ -37,19 +37,10 @@ wcs_funcs_includes="
 "
 
 dnl	See if wint_t is defined in stddef.h or wchar.h
-
-dnl	FIXME: We can't use AC_CHECK_TYPE since it does not consider includes
-dnl AC_CHECK_TYPE(wint_t)
-
-AC_CACHE_CHECK(for wchar_t type,
-  ac_cv_type_wint_t,
-[
-AC_TRY_COMPILE($wcs_funcs_includes, [wint_t s = sizeof (wint_t *);],
-  ac_cv_type_wint_t=yes,
-  ac_cv_type_wint_t=no)
-])
+AC_CHECK_TYPE(wint_t, ac_cv_type_wint_t=yes, ac_cv_type_wint_t=no,
+              $wcs_funcs_includes)
 if test "$ac_cv_type_wint_t" = "yes" ; then
-  AC_DEFINE(HAVE_WINT_T, ,
+  AC_DEFINE(HAVE_WINT_T, 1,
     [Defined when the wint_t type is supported])
 fi
 
