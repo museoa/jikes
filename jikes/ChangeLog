@@ -1,3 +1,11 @@
+2000-07-25  Mo DeJong  <mdejong@redhat.com>
+
+	* src/configure:
+	* src/configure.in: Remove files from
+	the old build system. These files
+	were removed before but somehow they
+	showed up in the CVS again.
+
 2000-07-25  Chris Abbey <cabbey@bresnanlink.net>
 
 	* configure.in: Disable check for namespace support.
