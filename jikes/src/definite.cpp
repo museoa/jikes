@@ -221,6 +221,12 @@ DefiniteAssignmentSet *Semantic::DefinitePLUSPLUSOrMINUSMINUS(AstExpression *exp
 {
     DefiniteExpression(expr, def_pair);
 
+    //
+    // JLS2 added ability for parenthesized variable to remain a variable
+    //
+    while (expr -> ParenthesizedExpressionCast())
+        expr = ((AstParenthesizedExpression *) expr) -> expression;
+
     VariableSymbol *variable = NULL;
     if (! expr -> ArrayAccessCast()) // some kind of name
     {

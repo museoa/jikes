@@ -366,10 +366,11 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         // subexpression has to be referenced via an access method then the
         // symbol is null.
         //
-        AstCastExpression *cast = (lhs ? lhs -> CastExpressionCast()
-                                   : (AstCastExpression *) NULL);
-        Symbol *sym = (cast ? cast -> expression -> symbol
-                       : (lhs ? lhs -> symbol : (Symbol *) NULL));
+        if (lhs && lhs -> CastExpressionCast())
+            lhs = ((AstCastExpression *) lhs) -> expression;
+        while (lhs && lhs -> ParenthesizedExpressionCast())
+            lhs = ((AstParenthesizedExpression *) lhs) -> expression;
+        Symbol *sym = lhs ? lhs -> symbol : (Symbol *) NULL;
 
         //
         // If the expression associated with the left-hand side is null,

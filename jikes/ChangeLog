@@ -1,5 +1,23 @@
 2002-05-15  Eric Blake  <ebb9@email.byu.edu>
 
+	Updated version of patch 40.
+	* src/bytecode.cpp:
+	* src/bytecode.h:
+	* src/definite.cpp:
+	* src/expr.cpp: Add support for parenthesized variables - bug 105.
+	* src/error.cpp:
+	* src/error.h: Add new errors UNNECESSARY_PARENTHESIS,
+	NOT_A_VARIABLE.
+	* src/java.g: Update grammar to allow parenthesized variables in
+	assignment expressions.
+	* src/javaact.cpp:
+	* src/javaact.h:
+	* src/javadcl.h:
+	* src/javadef.h:
+	* src/javasym.h: Regenerate.
+
+2002-05-15  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/bytecode.cpp (EmitStatement):  Fix definite assignment
 	analysis of for loops - bug 2780.
 	* src/definite.cpp (DefiniteForStatement): Fix abrupt completion

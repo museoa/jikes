@@ -330,7 +330,6 @@ $Terminals
 
     ERROR
     EOF
-    EOL
 
 $Alias
 
@@ -384,8 +383,6 @@ $Alias
 
     $EOF   ::= EOF
     $ERROR ::= ERROR
-
-    $EOL   ::= ;
 
 $Start
 
@@ -4625,7 +4622,13 @@ AssignmentExpression -> Assignment
 \:$NoAction:\
 /.$shared_NoAction./
 
-Assignment ::= LeftHandSide AssignmentOperator AssignmentExpression
+--
+-- The original grammar uses LeftHandSide, instead of PostfixExpression.
+-- However, parenthesized variables were added in JLS 2, and the
+-- grammar is ambiguous unless we include all non-assignment
+-- expressions. The semantic pass will filter out bad left-hand sides.
+--
+Assignment ::= PostfixExpression AssignmentOperator AssignmentExpression
 \:$action:\
 /.$location
 void Parser::Act$rule_number(void)
@@ -4637,17 +4640,20 @@ void Parser::Act$rule_number(void)
 }
 ./
 
-LeftHandSide -> Name
-\:$NoAction:\
-/.$shared_NoAction./
-
-LeftHandSide -> FieldAccess
-\:$NoAction:\
-/.$shared_NoAction./
-
-LeftHandSide -> ArrayAccess
-\:$NoAction:\
-/.$shared_NoAction./
+--
+-- See comments above for Assignment - LeftHandSide is now a useless rule.
+--
+--LeftHandSide -> Name
+--\:$NoAction:\
+--/.$shared_NoAction./
+--
+--LeftHandSide -> FieldAccess
+--\:$NoAction:\
+--/.$shared_NoAction./
+--
+--LeftHandSide -> ArrayAccess
+--\:$NoAction:\
+--/.$shared_NoAction./
 
 AssignmentOperator ::= '='
 \:$action:\

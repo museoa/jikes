@@ -4418,13 +4418,27 @@ void Semantic::ProcessArrayCreationExpression(Ast *expr)
 void Semantic::ProcessPostUnaryExpression(Ast *expr)
 {
     AstPostUnaryExpression *postfix_expression = (AstPostUnaryExpression *) expr;
+    AstExpression *expression = postfix_expression -> expression;
 
-    ProcessExpression(postfix_expression -> expression);
-    postfix_expression -> symbol = postfix_expression -> expression -> symbol;
+    ProcessExpression(expression);
+    postfix_expression -> symbol = expression -> symbol;
 
-    if (postfix_expression -> symbol != control.no_type)
+    //
+    // JLS2 added ability for parenthesized variable to remain a variable.
+    //
+    if (expression -> ParenthesizedExpressionCast())
     {
-        if (! postfix_expression -> expression -> IsLeftHandSide())
+        ReportSemError(SemanticError::UNNECESSARY_PARENTHESIS,
+                       expression -> LeftToken(),
+                       expression -> RightToken());
+        while (expression -> ParenthesizedExpressionCast())
+            expression = ((AstParenthesizedExpression *) expression) ->
+                expression;
+    }
+
+    if (expression -> symbol != control.no_type)
+    {
+        if (! expression -> IsLeftHandSide())
         {
             ReportSemError(SemanticError::NOT_A_NUMERIC_VARIABLE,
                            postfix_expression -> expression -> LeftToken(),
@@ -4432,18 +4446,18 @@ void Semantic::ProcessPostUnaryExpression(Ast *expr)
                            postfix_expression -> expression -> Type() -> Name());
             postfix_expression -> symbol = control.no_type;
         }
-        else if (! control.IsNumeric(postfix_expression -> Type()))
+        else if (! control.IsNumeric(expression -> Type()))
         {
             ReportSemError(SemanticError::TYPE_NOT_NUMERIC,
                            postfix_expression -> expression -> LeftToken(),
                            postfix_expression -> expression -> RightToken(),
-                           postfix_expression -> Type() -> Name());
+                           expression -> Type() -> Name());
             postfix_expression -> symbol = control.no_type;
         }
-        else if (! postfix_expression -> expression -> ArrayAccessCast()) // some kind of name
+        else if (! expression -> ArrayAccessCast()) // some kind of name
         {
             MethodSymbol *read_method = NULL;
-            AstSimpleName *simple_name = postfix_expression -> expression -> SimpleNameCast();
+            AstSimpleName *simple_name = expression -> SimpleNameCast();
             if (simple_name)
             {
                 if (simple_name -> resolution_opt)
@@ -4451,18 +4465,15 @@ void Semantic::ProcessPostUnaryExpression(Ast *expr)
             }
             else
             {
-                AstFieldAccess *field_access = (AstFieldAccess *) postfix_expression -> expression;
+                AstFieldAccess *field_access = (AstFieldAccess *) expression;
                 if (field_access -> resolution_opt)
                     read_method = field_access -> resolution_opt -> symbol -> MethodCast();
             }
 
-            VariableSymbol *variable_symbol;
             if (read_method)
             {
-                variable_symbol = (VariableSymbol *) read_method -> accessed_member;
                 postfix_expression -> write_method = read_method -> containing_type -> GetWriteAccessFromReadAccess(read_method);
             }
-            else variable_symbol = postfix_expression -> expression -> symbol -> VariableCast();
         }
     }
 }
@@ -4600,32 +4611,48 @@ void Semantic::ProcessNOT(AstPreUnaryExpression *expr)
 }
 
 
-void Semantic::ProcessPLUSPLUSOrMINUSMINUS(AstPreUnaryExpression *expr)
+void Semantic::ProcessPLUSPLUSOrMINUSMINUS(AstPreUnaryExpression *prefix_expression)
 {
-    ProcessExpression(expr -> expression);
+    AstExpression *expression = prefix_expression -> expression;
 
-    if (expr -> expression -> symbol != control.no_type)
+    ProcessExpression(expression);
+    prefix_expression -> symbol = expression -> symbol;
+
+    //
+    // JLS2 added ability for parenthesized variable to remain a variable.
+    //
+    if (expression -> ParenthesizedExpressionCast())
     {
-        if (! expr -> expression -> IsLeftHandSide())
+        ReportSemError(SemanticError::UNNECESSARY_PARENTHESIS,
+                       expression -> LeftToken(),
+                       expression -> RightToken());
+        while (expression -> ParenthesizedExpressionCast())
+            expression = ((AstParenthesizedExpression *) expression) ->
+                expression;
+    }
+
+    if (expression -> symbol != control.no_type)
+    {
+        if (! expression -> IsLeftHandSide())
         {
             ReportSemError(SemanticError::NOT_A_NUMERIC_VARIABLE,
-                           expr -> expression -> LeftToken(),
-                           expr -> expression -> RightToken(),
-                           expr -> expression -> Type() -> Name());
-            expr -> symbol = control.no_type;
+                           prefix_expression -> expression -> LeftToken(),
+                           prefix_expression -> expression -> RightToken(),
+                           prefix_expression -> expression -> Type() -> Name());
+            prefix_expression -> symbol = control.no_type;
         }
-        else if (! control.IsNumeric(expr -> expression -> Type()))
+        else if (! control.IsNumeric(expression -> Type()))
         {
             ReportSemError(SemanticError::TYPE_NOT_NUMERIC,
-                           expr -> expression -> LeftToken(),
-                           expr -> expression -> RightToken(),
-                           expr -> expression -> Type() -> Name());
-            expr -> symbol = control.no_type;
+                           prefix_expression -> expression -> LeftToken(),
+                           prefix_expression -> expression -> RightToken(),
+                           expression -> Type() -> Name());
+            prefix_expression -> symbol = control.no_type;
         }
-        else if (! expr -> expression -> ArrayAccessCast()) // some kind of name
+        else if (! expression -> ArrayAccessCast()) // some kind of name
         {
             MethodSymbol *read_method = NULL;
-            AstSimpleName *simple_name = expr -> expression -> SimpleNameCast();
+            AstSimpleName *simple_name = expression -> SimpleNameCast();
             if (simple_name)
             {
                 if (simple_name -> resolution_opt)
@@ -4633,21 +4660,17 @@ void Semantic::ProcessPLUSPLUSOrMINUSMINUS(AstPreUnaryExpression *expr)
             }
             else
             {
-                AstFieldAccess *field_access = (AstFieldAccess *) expr -> expression;
+                AstFieldAccess *field_access = (AstFieldAccess *) expression;
                 if (field_access -> resolution_opt)
                     read_method = field_access -> resolution_opt -> symbol -> MethodCast();
             }
 
-            VariableSymbol *variable_symbol;
             if (read_method)
             {
-                variable_symbol = (VariableSymbol *) read_method -> accessed_member;
-                expr -> write_method = read_method -> containing_type -> GetWriteAccessFromReadAccess(read_method);
+                prefix_expression -> write_method = read_method -> containing_type -> GetWriteAccessFromReadAccess(read_method);
             }
-            else variable_symbol = expr -> expression -> symbol -> VariableCast();
         }
     }
-    expr -> symbol = expr -> expression -> symbol;
 }
 
 
@@ -5316,6 +5339,8 @@ void Semantic::BinaryNumericPromotion(AstBinaryExpression *binary_expression)
 void Semantic::BinaryNumericPromotion(AstAssignmentExpression *assignment_expression)
 {
     AstExpression *left_expr = assignment_expression -> left_hand_side;
+    while (left_expr -> ParenthesizedExpressionCast())
+        left_expr = ((AstParenthesizedExpression *) left_expr) -> expression;
     AstExpression *right_expr = assignment_expression -> expression;
 
     TypeSymbol *left_type  = left_expr -> Type(),
@@ -6878,8 +6903,32 @@ void Semantic::ProcessConditionalExpression(Ast *expr)
 void Semantic::ProcessAssignmentExpression(Ast *expr)
 {
     AstAssignmentExpression *assignment_expression = (AstAssignmentExpression *) expr;
+    ProcessExpressionOrStringConstant(assignment_expression -> expression);
 
     AstExpression *left_hand_side = assignment_expression -> left_hand_side;
+    //
+    // JLS2 added ability for parenthesized variable to remain a variable.
+    // Therefore, the grammar was changed to accept all expressions, to avoid
+    // ambiguities, and we must filter out invalid left-hand sides.
+    //
+    if (left_hand_side -> ParenthesizedExpressionCast())
+    {
+        ReportSemError(SemanticError::UNNECESSARY_PARENTHESIS,
+                       left_hand_side -> LeftToken(),
+                       left_hand_side -> RightToken());
+        while (left_hand_side -> ParenthesizedExpressionCast())
+            left_hand_side = ((AstParenthesizedExpression *) left_hand_side) ->
+                expression;
+    }
+
+    if (! left_hand_side -> IsLeftHandSide())
+    {
+        ReportSemError(SemanticError::NOT_A_VARIABLE,
+                       left_hand_side -> LeftToken(),
+                       left_hand_side -> RightToken());
+        assignment_expression -> symbol = control.no_type;
+        return;
+    }
 
     //
     // JLS2 8.3.2.3 permits simple assignment to a variable that has not
@@ -6887,27 +6936,26 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
     // variable, we use processing_simple_assignment to inform
     // CheckSimpleName() to treat it specially.
     //
+    if (assignment_expression -> assignment_tag ==
+        AstAssignmentExpression::SIMPLE_EQUAL)
     {
-        if (assignment_expression -> assignment_tag == AstAssignmentExpression::SIMPLE_EQUAL)
-        {
-            AstSimpleName *simple_name = left_hand_side -> SimpleNameCast();
-            if (simple_name)
-                processing_simple_assignment = true;
-        }
-
-        ProcessExpression(left_hand_side);
-
-        processing_simple_assignment = false;
+        AstSimpleName *simple_name = left_hand_side -> SimpleNameCast();
+        if (simple_name)
+            processing_simple_assignment = true;
     }
 
-    ProcessExpressionOrStringConstant(assignment_expression -> expression);
+    ProcessExpression(left_hand_side);
+    processing_simple_assignment = false;
+
     TypeSymbol *left_type = left_hand_side -> Type(),
                *right_type = assignment_expression -> expression -> Type();
 
-    assignment_expression -> symbol = left_type;
-
     if (left_type == control.no_type || right_type == control.no_type)
+    {
+        assignment_expression -> symbol = control.no_type;
         return;
+    }
+    assignment_expression -> symbol = left_type;
 
     if (! left_hand_side -> ArrayAccessCast()) // the left-hand-side is a name
     {
@@ -6929,7 +6977,8 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
             assignment_expression -> write_method = read_method -> containing_type -> GetWriteAccessFromReadAccess(read_method);
     }
 
-    if (assignment_expression -> assignment_tag == AstAssignmentExpression::SIMPLE_EQUAL)
+    if (assignment_expression -> assignment_tag ==
+        AstAssignmentExpression::SIMPLE_EQUAL)
     {
         if (left_type != right_type)
         {
@@ -7069,10 +7118,12 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
                                 right_type -> Name());
              }
 
-             assignment_expression -> left_hand_side = PromoteUnaryNumericExpression(left_hand_side);
+             assignment_expression -> left_hand_side = PromoteUnaryNumericExpression(assignment_expression -> left_hand_side);
              assignment_expression -> expression = PromoteUnaryNumericExpression(assignment_expression -> expression);
              if (assignment_expression -> expression -> Type() == control.long_type)
-                 assignment_expression -> expression = ConvertToType(assignment_expression -> expression, control.int_type);
+                 assignment_expression -> expression
+                     = ConvertToType(assignment_expression -> expression,
+                                     control.int_type);
              break;
         case AstAssignmentExpression::AND_EQUAL:
         case AstAssignmentExpression::XOR_EQUAL:

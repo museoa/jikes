@@ -3102,6 +3102,11 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
 
 AstExpression *ByteCode::VariableExpressionResolution(AstExpression *expression)
 {
+    //
+    // JLS2 added ability for parenthesized variable to remain a variable.
+    //
+    expression = StripNops(expression);
+
     AstFieldAccess *field = expression -> FieldAccessCast();
     AstSimpleName *simple_name = expression -> SimpleNameCast();
 
@@ -3453,8 +3458,14 @@ int ByteCode::EmitArrayCreationExpression(AstArrayCreationExpression *expression
 int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expression,
                                        bool need_value)
 {
+    //
+    // JLS2 added ability for parenthesized variable to remain a variable.
+    //
     AstCastExpression *casted_left_hand_side = assignment_expression -> left_hand_side -> CastExpressionCast();
-    AstExpression *left_hand_side = (casted_left_hand_side ? casted_left_hand_side -> expression : assignment_expression -> left_hand_side);
+    AstExpression *left_hand_side
+        = StripNops(casted_left_hand_side
+                    ? casted_left_hand_side -> expression
+                    : assignment_expression -> left_hand_side);
 
     TypeSymbol *left_type = left_hand_side -> Type();
 
@@ -5004,7 +5015,10 @@ void ByteCode::EmitPostUnaryExpressionSimple(int kind,
 void ByteCode::EmitPostUnaryExpressionArray(AstPostUnaryExpression *expression,
                                             bool need_value)
 {
-    EmitArrayAccessLhs((AstArrayAccess *) expression -> expression); // lhs must be array access
+    //
+    // JLS2 added ability for parenthesized variable to remain a variable.
+    //
+    EmitArrayAccessLhs((AstArrayAccess *) StripNops(expression -> expression)); // lhs must be array access
     PutOp(OP_DUP2); // save array base and index for later store
 
     TypeSymbol *expression_type = expression -> Type();
@@ -5254,7 +5268,10 @@ void ByteCode::EmitPreUnaryIncrementExpressionSimple(int kind,
 void ByteCode::EmitPreUnaryIncrementExpressionArray(AstPreUnaryExpression *expression,
                                                     bool need_value)
 {
-    EmitArrayAccessLhs((AstArrayAccess *) expression -> expression); // lhs must be array access
+    //
+    // JLS2 added ability for parenthesized variable to remain a variable.
+    //
+    EmitArrayAccessLhs((AstArrayAccess *) StripNops(expression -> expression)); // lhs must be array access
 
     PutOp(OP_DUP2); // save array base and index for later store
 
@@ -5970,6 +5987,11 @@ void ByteCode::LoadImmediateInteger(int val)
 //
 void ByteCode::ResolveAccess(AstExpression *p)
 {
+    //
+    // JLS2 added ability for parenthesized variable to remain a variable.
+    //
+    p = StripNops(p);
+
     AstFieldAccess *field = p -> FieldAccessCast();
     AstExpression *resolve_expression = (field ? field -> resolution_opt : p -> SimpleNameCast() -> resolution_opt);
     AstMethodInvocation *read_method = resolve_expression -> MethodInvocationCast();
@@ -5985,6 +6007,7 @@ void ByteCode::ResolveAccess(AstExpression *p)
 
 int ByteCode::LoadVariable(int kind, AstExpression *expr, bool need_value)
 {
+    expr = StripNops(expr);
     VariableSymbol *sym = (VariableSymbol *) expr -> symbol;
     TypeSymbol *expression_type = expr -> Type();
     switch (kind)
@@ -5997,8 +6020,12 @@ int ByteCode::LoadVariable(int kind, AstExpression *expr, bool need_value)
     case LHS_METHOD:
         {
             AstFieldAccess *field_access = expr -> FieldAccessCast();
-            assert(field_access && field_access -> resolution_opt);
-            return EmitExpression(field_access -> resolution_opt, need_value);
+            AstSimpleName *simple_name = expr -> SimpleNameCast();
+            assert(field_access || simple_name);
+            expr = (field_access ? field_access -> resolution_opt
+                    : simple_name -> resolution_opt);
+            assert(expr);
+            return EmitExpression(expr, need_value);
         }
     case LHS_FIELD:
     case LHS_STATIC:

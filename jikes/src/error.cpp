@@ -478,6 +478,7 @@ void SemanticError::StaticInitializer()
     warning[BAD_INPUT_FILE] = 2;
     warning[UNREADABLE_INPUT_FILE] = 2;
     warning[NEGATIVE_ARRAY_SIZE] = 2;
+    warning[UNNECESSARY_PARENTHESIS] = 2;
     warning[ZERO_DIVIDE_CAUTION] = 2;
 
 #ifdef JIKES_DEBUG
@@ -509,6 +510,7 @@ void SemanticError::StaticInitializer()
     print_message[STACK_OVERFLOW] = PrintSTACK_OVERFLOW;
     print_message[CODE_OVERFLOW] = PrintCODE_OVERFLOW;
     print_message[NEGATIVE_ARRAY_SIZE] = PrintNEGATIVE_ARRAY_SIZE;
+    print_message[UNNECESSARY_PARENTHESIS] = PrintUNNECESSARY_PARENTHESIS;
     print_message[CANNOT_COMPUTE_COLUMNS] = PrintCANNOT_COMPUTE_COLUMNS;
     print_message[EMPTY_DECLARATION] = PrintEMPTY_DECLARATION;
     print_message[REDUNDANT_MODIFIER] = PrintREDUNDANT_MODIFIER;
@@ -577,6 +579,7 @@ void SemanticError::StaticInitializer()
     print_message[METHOD_NOT_FIELD] = PrintMETHOD_NOT_FIELD;
     print_message[NAME_NOT_YET_AVAILABLE] = PrintNAME_NOT_YET_AVAILABLE;
     print_message[NAME_NOT_CLASS_VARIABLE] = PrintNAME_NOT_CLASS_VARIABLE;
+    print_message[NOT_A_VARIABLE] = PrintNOT_A_VARIABLE;
     print_message[NOT_A_NUMERIC_VARIABLE] = PrintNOT_A_NUMERIC_VARIABLE;
     print_message[METHOD_OVERLOAD_NOT_FOUND] = PrintMETHOD_OVERLOAD_NOT_FOUND;
     print_message[METHOD_NOT_FOUND] = PrintMETHOD_NOT_FOUND;
@@ -1059,6 +1062,7 @@ wchar_t *SemanticError::PrintCANNOT_OPEN_PATH_DIRECTORY(ErrorInfo &err,
     return s.Array();
 }
 
+
 wchar_t *SemanticError::PrintPACKAGE_NOT_FOUND(ErrorInfo &err,
                                                LexStream *lex_stream,
                                                Control &control)
@@ -1339,6 +1343,19 @@ wchar_t *SemanticError::PrintNEGATIVE_ARRAY_SIZE(ErrorInfo &err,
     ErrorString s;
 
     s << "Array initialization will fail with a negative dimension.";
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintUNNECESSARY_PARENTHESIS(ErrorInfo &err,
+                                                     LexStream *lex_stream,
+                                                     Control &control)
+{
+    ErrorString s;
+
+    s << "Parenthesis surrounding a variable are syntactically unnecessary. "
+      << "While legal now, they were illegal in previous versions of Java.";
 
     return s.Array();
 }
@@ -2452,6 +2469,18 @@ wchar_t *SemanticError::PrintNAME_NOT_CLASS_VARIABLE(ErrorInfo &err,
 
     s << "The field \"" << err.insert1
       << "\" is not static, and cannot be accessed in this static context.";
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintNOT_A_VARIABLE(ErrorInfo &err,
+                                            LexStream *lex_stream,
+                                            Control &control)
+{
+    ErrorString s;
+
+    s << "The left-hand side of an assignment must be a variable.";
 
     return s.Array();
 }
@@ -4378,6 +4407,7 @@ wchar_t *SemanticError::PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL
 
     return s.Array();
 }
+
 
 wchar_t *SemanticError::PrintINHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER(ErrorInfo &err,
                                                                                   LexStream *lex_stream,

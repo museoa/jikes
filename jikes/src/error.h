@@ -119,6 +119,7 @@ class SemanticError
         STACK_OVERFLOW,
         CODE_OVERFLOW,
         NEGATIVE_ARRAY_SIZE,
+        UNNECESSARY_PARENTHESIS,
         CANNOT_COMPUTE_COLUMNS,
         EMPTY_DECLARATION,
         REDUNDANT_MODIFIER,
@@ -187,6 +188,7 @@ class SemanticError
         METHOD_NOT_FIELD,
         NAME_NOT_YET_AVAILABLE,
         NAME_NOT_CLASS_VARIABLE,
+        NOT_A_VARIABLE,
         NOT_A_NUMERIC_VARIABLE,
         METHOD_OVERLOAD_NOT_FOUND,
         METHOD_NOT_FOUND,
@@ -423,6 +425,7 @@ private:
     static wchar_t *PrintSTACK_OVERFLOW(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintCODE_OVERFLOW(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNEGATIVE_ARRAY_SIZE(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintUNNECESSARY_PARENTHESIS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintCANNOT_COMPUTE_COLUMNS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintEMPTY_DECLARATION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintREDUNDANT_MODIFIER(ErrorInfo &, LexStream *, Control &);
@@ -491,6 +494,7 @@ private:
     static wchar_t *PrintMETHOD_NOT_FIELD(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNAME_NOT_YET_AVAILABLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNAME_NOT_CLASS_VARIABLE(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintNOT_A_VARIABLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNOT_A_NUMERIC_VARIABLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMETHOD_OVERLOAD_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMETHOD_NOT_FOUND(ErrorInfo &, LexStream *, Control &);
