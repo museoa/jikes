@@ -1,3 +1,12 @@
+2000-03-13  Vadim Zaliva  <lord@crocodile.org>
+
+	* double.h: Commited slightly optimized version of 
+	Peter Naulls <peter@erble.freeserve.co.uk> patch which corrects problem
+	with casting float/double to int.
+
+	* config.cpp: updated brief command line options description 
+	(inconsistency reported	by Chris Abbey <cabbey@home.net>)
+
 2000-03-09 Joe Berkovitz <joeb@atg.com>                                        
        * option.h                                                              
        * option.cpp                                                            

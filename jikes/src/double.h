@@ -78,8 +78,19 @@ public:
     IEEEfloat(char *);
     IEEEfloat(IEEEdouble a);
     IEEEfloat() {}
-
-    inline int IntValue() { return (int) FloatValue(); }
+    
+    inline int IntValue()
+        {
+            if(IsNaN())                                                             
+                return 0;                                                             
+            
+            if(value.float_value < INT_MIN)
+                return INT_MIN;
+            else if (value.float_value > INT_MAX)
+                return INT_MAX;
+            else
+                return (int)value.float_value;
+        }
 
     IEEEfloat  operator+  (IEEEfloat); // binary addition
     IEEEfloat  operator+  ();         // unary plus
@@ -187,7 +198,18 @@ public:
     IEEEdouble(char *);
     IEEEdouble() {}
 
-    inline int IntValue() { return (int) DoubleValue(); }
+    inline int IntValue()
+        {
+            if(IsNaN())                                                             
+                return 0;                                                             
+            
+            if(value.double_value < INT_MIN)
+                return INT_MIN;
+            else if (value.double_value > INT_MAX)
+                return INT_MAX;
+            else
+                return (int)value.double_value;
+        }
 
     IEEEdouble  operator+  (IEEEdouble); // binary addition
     IEEEdouble  operator+  ();         // unary plus
