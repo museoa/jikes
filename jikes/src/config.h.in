@@ -37,7 +37,7 @@
 /* use unix style mkdir(str, S_IRWXU | S_IRWXG | S_IRWXO) */
 #undef HAVE_GLIBC_MKDIR
 
-/* known to be broken on Win and OS2 when compiled with xlC */
+/* known to be broken on Win and OS2 when compiled with ICC */
 #undef HAVE_ICC_FP_BUGS
 
 /* Define if you have the <iconv.h> header file. */

@@ -1,3 +1,9 @@
+2000-05-12  Mo DeJong  <mdejong@cygnus.com>
+
+	* configure.in: Added patches for ICC
+	floating point bug detection sent
+	in by Chris Abbey <cabbey@home.net>.
+
 2000-05-11  Mo DeJong  <mdejong@cygnus.com>
 
 	* src/access.h:
