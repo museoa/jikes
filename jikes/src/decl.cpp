@@ -113,9 +113,10 @@ void Semantic::ProcessTypeNames()
                 type -> MarkSourceNoLongerPending();
                 type -> supertypes_closure = new SymbolSet;
                 type -> subtypes = new SymbolSet;
-                type -> semantic_environment = new SemanticEnvironment((Semantic *) this, type, NULL);
+                type -> semantic_environment =
+                    new SemanticEnvironment((Semantic *) this, type, NULL);
                 if (type != control.Object())
-                    type -> super = (type == control.Throwable() ? control.Object() : control.Throwable());
+                    type -> super = control.no_type;
                 if (! type -> FindConstructorSymbol())
                     AddDefaultConstructor(type);
                 source_file_symbol -> types.Next() = type;

@@ -918,7 +918,7 @@ bool IEEEfloat::operator< (const IEEEfloat op) const
     if (IsInfinite())
         return IsPositive() ? false : ! op.IsNegativeInfinity();
     if (op.IsInfinite())
-        return op.IsPositive() ? ! IsPositiveInfinity() : false;
+        return op.IsPositive();
     // Exploit fact that remaining IEEE floating point sort as signed ints
     return value.iword < op.value.iword;
 #endif
@@ -949,7 +949,7 @@ bool IEEEfloat::operator> (const IEEEfloat op) const
     if (IsInfinite())
         return IsPositive() ? ! op.IsPositiveInfinity() : false;
     if (op.IsInfinite())
-        return op.IsPositive() ? false : ! IsNegativeInfinity();
+        return op.IsNegative();
     // Exploit fact that remaining IEEE floating point sort as signed ints
     return value.iword > op.value.iword;
 #endif
@@ -2378,7 +2378,7 @@ bool IEEEdouble::operator< (const IEEEdouble op) const
     if (IsInfinite())
         return IsPositive() ? false : ! op.IsNegativeInfinity();
     if (op.IsInfinite())
-        return op.IsPositive() ? ! IsPositiveInfinity() : false;
+        return op.IsPositive();
     // Exploit fact that remaining IEEE floating point sort as signed ints
     u4 a = HighWord(), b = op.HighWord();
     return (a < b) || ((a == b) && LowWord() < op.LowWord());
@@ -2410,7 +2410,7 @@ bool IEEEdouble::operator> (const IEEEdouble op) const
     if (IsInfinite())
         return IsPositive() ? ! op.IsPositiveInfinity() : false;
     if (op.IsInfinite())
-        return op.IsPositive() ? false : ! IsNegativeInfinity();
+        return op.IsNegative();
     // Exploit fact that remaining IEEE floating point sort as signed ints
     u4 a = HighWord(), b = op.HighWord();
     return (a > b) || ((a == b) && LowWord() > op.LowWord());

@@ -1,3 +1,9 @@
+2002-03-06  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/decl.cpp (ProcessTypeNames): Fix crash in compiling
+	java.lang with syntax errors.
+	* src/double.cpp (operator>, operator<): Quick optimization.
+
 2002-03-05  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/scanner.cpp (ScanStarComment): Fix bug 2721.
@@ -12,6 +18,11 @@
 2002-02-26  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.cpp (ProcessAbruptExit): Fix bug 2713.
+
+2002-02-25  Chris Abbey  <jikes@cabbey.net>
+
+	* configure.in: Fix spacing error.
+	* configure: Regenerate.
 
 2002-02-25  Eric Blake  <ebb9@email.byu.edu>
 
