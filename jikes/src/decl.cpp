@@ -1876,69 +1876,53 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment, LexStream::
     return;
 }
 
+
 void Semantic::CompleteSymbolTable(AstInterfaceDeclaration *interface_declaration)
 {
     if (compilation_unit -> BadCompilationUnitCast())
         return;
-    
+
     state_stack.Push(interface_declaration -> semantic_environment);
     TypeSymbol *this_type = ThisType();
-    
+
     assert(this_type -> MethodMembersProcessed());
     assert(this_type -> FieldMembersProcessed());
-    
+
+    //
+    //
+    //
     if (! this_type -> expanded_method_table)
         ComputeMethodsClosure(this_type, interface_declaration -> identifier_token);
-    
-    ExpandedMethodTable &expanded_table = *(this_type -> expanded_method_table);
 
-    for(int i = 0; i < expanded_table.symbol_pool.Length(); i++)
+    ExpandedMethodTable &expanded_table = *(this_type -> expanded_method_table);
+    for (int i = 0; i < interface_declaration -> NumMethods(); i++)
     {
-        MethodShadowSymbol *method_shadow = expanded_table.symbol_pool[i];
-        MethodSymbol       *method        = method_shadow -> method_symbol;
-        
-        for (int k = 0; k < method_shadow -> NumConflicts(); k++)
+        AstMethodDeclaration *method_declaration = interface_declaration -> Method(i);
+        MethodSymbol *method = method_declaration -> method_symbol;
+
+        if (method)
         {
-            MethodSymbol *conflict=method_shadow -> Conflict(k);
-            if(conflict)
+            MethodShadowSymbol *method_shadow = expanded_table.FindOverloadMethodShadow(method,
+                                                                                        (Semantic *) this,
+                                                                                        interface_declaration -> identifier_token);
+            for (int k = 0; k < method_shadow -> NumConflicts(); k++)
             {
-                AstMethodDeclaration *method_declaration = 
-                    (AstMethodDeclaration *)method->method_or_constructor_declaration;
-                
-                if(method->Type() !=  conflict->Type())
+                if (method_shadow -> method_symbol -> Type() != method_shadow -> Conflict(k) -> Type())
                 {
-                    if (method -> containing_type == this_type) 
-                    {
-                        ReportSemError(SemanticError::MISMATCHED_INHERITED_METHOD,
-                                       method_declaration -> method_declarator -> LeftToken(),
-                                       method_declaration -> method_declarator -> RightToken(),
-                                       method   -> Header(),
-                                       conflict -> Header(),
-                                       conflict -> containing_type -> ContainingPackage() -> PackageName(),
-                                       conflict -> containing_type -> ExternalName()
-                        );
-                    } else
-                    {
-                        ReportSemError(SemanticError::MISMATCHED_INHERITED_METHODS_IN_BASE,
-                                       interface_declaration->LeftToken(),
-                                       interface_declaration->RightToken(),
-                                       lex_stream -> NameString(interface_declaration -> identifier_token),
-                                       method -> Header(),
-                                       method -> containing_type -> ContainingPackage() -> PackageName(),
-                                       method -> containing_type -> ExternalName(),
-                                       conflict -> Header(),
-                                       conflict -> containing_type -> ContainingPackage() -> PackageName(),
-                                       conflict -> containing_type -> ExternalName()
-                        );
-                    }
+                    ReportSemError(SemanticError::MISMATCHED_INHERITED_METHOD,
+                                   method_declaration -> method_declarator -> LeftToken(),
+                                   method_declaration -> method_declarator -> RightToken(),
+                                   method_shadow -> method_symbol -> Header(),
+                                   method_shadow -> Conflict(k) -> Header(),
+                                   method_shadow -> Conflict(k) -> containing_type -> ContainingPackage() -> PackageName(),
+                                   method_shadow -> Conflict(k) -> containing_type -> ExternalName());
                 }
-                
-                CheckInheritedMethodThrows(method_declaration, conflict);
+
+                if (method_shadow -> method_symbol -> containing_type == this_type) // override ?
+                    CheckInheritedMethodThrows(method_declaration, method_shadow -> Conflict(k));
             }
         }
-        method_shadow->RemoveConflicts();
     }
-
 
     //
     // Compute the set of final variables (all fields in an interface are final) in this type.
@@ -3387,6 +3371,7 @@ void Semantic::AddInheritedFields(TypeSymbol *base_type, TypeSymbol *super_type)
     return;
 }
 
+
 void Semantic::AddInheritedMethods(TypeSymbol *base_type, TypeSymbol *super_type, LexStream::TokenIndex tok)
 {
     ExpandedMethodTable &base_expanded_table = *(base_type -> expanded_method_table),
@@ -3410,16 +3395,13 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type, TypeSymbol *super_type
             MethodShadowSymbol *base_method_shadow =
                   base_expanded_table.FindMethodShadowSymbol(method -> Identity());
             if (! base_method_shadow)
-            {
-                base_expanded_table.InsertMethodShadowSymbol(method);
-            } else
+                 base_expanded_table.InsertMethodShadowSymbol(method);
+            else
             {
                 MethodShadowSymbol *shadow = base_expanded_table.FindOverloadMethodShadow(method, (Semantic *) this, tok);
 
                 if (! shadow)
-                {
                      base_expanded_table.Overload(base_method_shadow, method);
-                }
                 else
                 {
                     shadow -> AddConflict(method);
