@@ -9,7 +9,7 @@ AM_INIT_AUTOMAKE([foreign check-news dist-bzip2 1.8.2])
 AC_PREREQ(2.59)
 
 AC_DEFINE(JIKES_VERSION_STRING,
-          "Version 1.19 - 31 January 2004",
+          "Version 1.19 - 1 February 2004",
     [A string to indicate the release of jikes: Version 1.18 - 21 Nov 2002])
 
 dnl AC_CACHE_LOAD

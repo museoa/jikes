@@ -1506,8 +1506,16 @@ void Semantic::ProcessClassFile(TypeSymbol* type, const char* buffer,
                 }
             }
             else if (outer == class_info &&
-                     inner_classes -> Name(i, constant_pool))
+                     inner_classes -> Name(i, constant_pool) &&
+                     inner_classes -> NameLength(i, constant_pool))
             {
+                //
+                // Some idiot compilers give anonymous classes the name "" and
+                // an outer class, rather than obeying JVMS 4.7.5.  For
+                // example, mail.jar in Sun's javamail 1.3.1 includes
+                // javax.mail.Service with this property. The check for
+                // NameLength above skips those invalid entries.
+                //
                 type -> AddNestedTypeSignature((inner_classes ->
                                                 Name(i, constant_pool)),
                                                (inner_classes ->

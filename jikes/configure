@@ -1749,7 +1749,7 @@ INSTALL_STRIP_PROGRAM="\${SHELL} \$(install_sh) -c -s"
 
 
 cat >>confdefs.h <<\_ACEOF
-#define JIKES_VERSION_STRING "Version 1.19 - 31 January 2004"
+#define JIKES_VERSION_STRING "Version 1.19 - 1 February 2004"
 _ACEOF
 
 
