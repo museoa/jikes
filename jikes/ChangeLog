@@ -1,3 +1,12 @@
+2002-08-29  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/error.h:
+	* src/error.cpp (*_THROWS_CLAUSE_CLASS): New pedantic warnings.
+	* src/semantic.h (CheckThrow):
+	* src/body.cpp (CheckThrow): Improve to give pedantic warnings
+	regarding throws clauses - bug 3232.
+	(ProcessMethodBody, ProcessConstructorBody): Use new features.
+
 2002-08-28  Elliott Hughes  <enh@acm.org>
 
 	* src/set.h (primes): g++ 3.1 on Mac OS X 10.2 has trouble

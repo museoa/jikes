@@ -205,6 +205,9 @@ public:
         INCOMPATIBLE_TYPE_FOR_BINARY_EXPRESSION,
         INCOMPATIBLE_TYPE_FOR_CONDITIONAL_EXPRESSION,
         VOID_ARRAY,
+        DUPLICATE_THROWS_CLAUSE_CLASS,
+        REDUNDANT_THROWS_CLAUSE_CLASS,
+        UNCHECKED_THROWS_CLAUSE_CLASS,
         TYPE_NOT_THROWABLE,
         TYPE_NOT_INTEGRAL,
         TYPE_NOT_NUMERIC,
@@ -508,6 +511,9 @@ private:
     static wchar_t *PrintINCOMPATIBLE_TYPE_FOR_BINARY_EXPRESSION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINCOMPATIBLE_TYPE_FOR_CONDITIONAL_EXPRESSION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintVOID_ARRAY(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintDUPLICATE_THROWS_CLAUSE_CLASS(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintREDUNDANT_THROWS_CLAUSE_CLASS(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintUNCHECKED_THROWS_CLAUSE_CLASS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintTYPE_NOT_THROWABLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintTYPE_NOT_INTEGRAL(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintTYPE_NOT_NUMERIC(ErrorInfo &, LexStream *, Control &);

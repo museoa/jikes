@@ -2035,11 +2035,17 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
 }
 
 
-void Semantic::CheckThrow(AstExpression *throw_expression)
+//
+// Checks that types in a throws clause extend Throwable. throws_list is NULL
+// except in pedantic mode, where it is used to detect duplicates.
+//
+void Semantic::CheckThrow(AstExpression *throw_expression,
+                          Tuple<AstExpression *> *throws_list)
 {
     TypeSymbol *throw_type = throw_expression -> symbol -> TypeCast();
-
     assert(throw_type);
+    if (throw_type -> Bad())
+        return;
 
     if (throw_type -> ACC_INTERFACE())
     {
@@ -2057,6 +2063,64 @@ void Semantic::CheckThrow(AstExpression *throw_expression)
                        throw_type -> ContainingPackage() -> PackageName(),
                        throw_type -> ExternalName());
     }
+    else if (control.option.pedantic)
+    {
+        assert(throws_list);
+        if (! CheckedException(throw_type))
+            ReportSemError(SemanticError::UNCHECKED_THROWS_CLAUSE_CLASS,
+                           throw_expression -> LeftToken(),
+                           throw_expression -> RightToken(),
+                           throw_type -> ContainingPackage() -> PackageName(),
+                           throw_type -> ExternalName());
+        else
+        {
+            bool add = true;
+            for (int i = 0; i < throws_list -> Length(); i++)
+            {
+                AstExpression *other_expr = (*throws_list)[i];
+                TypeSymbol *other_type = other_expr -> symbol -> TypeCast();
+                if (other_type == throw_type)
+                {
+                    ReportSemError(SemanticError::DUPLICATE_THROWS_CLAUSE_CLASS,
+                                   throw_expression -> LeftToken(),
+                                   throw_expression -> RightToken(),
+                                   throw_type -> ContainingPackage() -> PackageName(),
+                                   throw_type -> ExternalName());
+                    add = false;
+                }
+                else if (throw_type -> IsSubclass(other_type))
+                {
+                    ReportSemError(SemanticError::REDUNDANT_THROWS_CLAUSE_CLASS,
+                                   throw_expression -> LeftToken(),
+                                   throw_expression -> RightToken(),
+                                   throw_type -> ContainingPackage() -> PackageName(),
+                                   throw_type -> ExternalName(),
+                                   other_type -> ContainingPackage() -> PackageName(),
+                                   other_type -> ExternalName());
+                    add = false;
+                }
+                else if (other_type -> IsSubclass(throw_type))
+                {
+                    ReportSemError(SemanticError::REDUNDANT_THROWS_CLAUSE_CLASS,
+                                   other_expr -> LeftToken(),
+                                   other_expr -> RightToken(),
+                                   other_type -> ContainingPackage() -> PackageName(),
+                                   other_type -> ExternalName(),
+                                   throw_type -> ContainingPackage() -> PackageName(),
+                                   throw_type -> ExternalName());
+                    //
+                    // Remove other type from the list, to reduce extra errors.
+                    //
+                    int last_index = throws_list -> Length() - 1;
+                    (*throws_list)[i] = (*throws_list)[last_index];
+                    throws_list -> Reset(last_index);
+                    i--;
+                }
+            }
+            if (add)
+                throws_list -> Next() = throw_expression;
+        }
+    }
 }
 
 
@@ -2064,8 +2128,16 @@ void Semantic::ProcessMethodBody(AstMethodDeclaration *method_declaration)
 {
     MethodSymbol *this_method = ThisMethod();
 
-    for (int k = 0; k < method_declaration -> NumThrows(); k++)
-        CheckThrow(method_declaration -> Throw(k));
+    if (method_declaration -> NumThrows())
+    {
+        Tuple<AstExpression *> *throws_list = NULL;
+        if (control.option.pedantic)
+            throws_list = new Tuple<AstExpression *>
+                (method_declaration -> NumThrows());
+        for (int k = 0; k < method_declaration -> NumThrows(); k++)
+            CheckThrow(method_declaration -> Throw(k), throws_list);
+        delete throws_list;
+    }
 
     if (method_declaration -> method_body -> MethodBodyCast())
     {
@@ -2135,8 +2207,16 @@ void Semantic::ProcessConstructorBody(AstConstructorDeclaration *constructor_dec
     TypeSymbol *this_type = ThisType();
     MethodSymbol *this_method = ThisMethod();
 
-    for (int k = 0; k < constructor_declaration -> NumThrows(); k++)
-        CheckThrow(constructor_declaration -> Throw(k));
+    if (constructor_declaration -> NumThrows())
+    {
+        Tuple<AstExpression *> *throws_list = NULL;
+        if (control.option.pedantic)
+            throws_list = new Tuple<AstExpression *>
+                (constructor_declaration -> NumThrows());
+        for (int k = 0; k < constructor_declaration -> NumThrows(); k++)
+            CheckThrow(constructor_declaration -> Throw(k), throws_list);
+        delete throws_list;
+    }
 
     AstMethodBody *constructor_block =
         constructor_declaration -> constructor_body;

@@ -1138,7 +1138,7 @@ private:
     void ProcessBlockStatements(AstBlock *);
     void ProcessThisCall(AstThisCall *);
     void ProcessSuperCall(AstSuperCall *);
-    void CheckThrow(AstExpression *);
+    void CheckThrow(AstExpression *, Tuple<AstExpression *> *);
     void ProcessMethodBody(AstMethodDeclaration *);
     void ProcessConstructorBody(AstConstructorDeclaration *);
     bool UncaughtException(TypeSymbol *);
