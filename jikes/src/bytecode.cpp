@@ -1465,21 +1465,23 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
     }
 
     //
-    // march through switch block statements, compiling blocks in
-    // proper order. We must respect order in which blocks seen
+    // March through switch block statements, compiling blocks in
+    // proper order. We must respect order in which blocks are seen
     // so that blocks lacking a terminal break fall through to the
     // proper place.
     //
     for (int i = 0; i < switch_block -> NumStatements(); i++)
     {
-        AstSwitchBlockStatement *switch_block_statement = (AstSwitchBlockStatement *) switch_block -> Statement(i);
+        AstSwitchBlockStatement *switch_block_statement =
+            (AstSwitchBlockStatement *) switch_block -> Statement(i);
 
         //
         // process labels for this block
         //
         for (int li = 0; li < switch_block_statement -> NumSwitchLabels(); li++)
         {
-            AstCaseLabel *case_label = switch_block_statement -> SwitchLabel(li) -> CaseLabelCast();
+            AstCaseLabel *case_label =
+                switch_block_statement -> SwitchLabel(li) -> CaseLabelCast();
             if (case_label)
             {
                 int map_index = case_label -> map_index;
@@ -1495,7 +1497,8 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
                     {
                         if (switch_statement -> Case(di) -> index == map_index)
                         {
-                            int ci = switch_statement -> Case(di) -> Value() - low;
+                            int ci =
+                                switch_statement -> Case(di) -> Value() - low;
                             DefineLabel(case_labels[ci]);
                             break;
                         }
@@ -1504,9 +1507,14 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
             }
             else
             {
-                assert(switch_block_statement -> SwitchLabel(li) -> DefaultLabelCast());
+                assert(switch_block_statement -> SwitchLabel(li) ->
+                       DefaultLabelCast());
                 assert(switch_statement -> default_case.switch_block_statement);
-
+                //
+                // Bug 2895: If previous label ended in break, and the default
+                // label is a no-op, optimizing the goto is incorrect.
+                //
+                last_op_goto = false;
                 DefineLabel(default_label);
             }
         }
@@ -5491,6 +5499,10 @@ void ByteCode::DefineLabel(Label& lab)
         int start = luse - lab.uses[index].op_offset;
         if (start == last_op_pc)
         {
+#ifdef JIKES_DEBUG
+            if (control.option.debug_trace_stack_change)
+                Coutput << "removing dead jump: pc " << start << endl;
+#endif
             code_attribute -> DeleteCode(lab.uses[index].op_offset +
                                          lab.uses[index].use_length);
             lab.uses.Reset(index);
