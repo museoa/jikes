@@ -1,3 +1,12 @@
+2004-01-10  Eric Blake  <ebb9@byu.net>
+
+	* src/m4/ac_cxx_check_set_new_handler.m4: More autoconf fixes;
+	use AC_LANG_PROGRAM not AC_LANG_SOURCES.
+	* configure: Regenerate with patched autoconf 2.59 (see
+	http://mail.gnu.org/archive/html/autoconf-patches/2004-01/msg00033.html),
+	so that autoconf -Wall is warning-free.
+	* NEWS: Start filling in, to prepare for jikes 1.19.
+
 2004-01-07  Eric Blake  <ebb9@byu.net>
 
 	* doc/jikes.1: Add defaults to options with arguments. Bump
