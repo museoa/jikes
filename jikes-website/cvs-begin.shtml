@@ -1,6 +1,6 @@
 <HTML>
   <head>
-    <TITLE>IBM - developerWorks - Open Source Software - Jikes - Concurrent Versions System Beginers' Introduction</TITLE>
+    <TITLE>IBM - developerWorks - Open Source Software - Jikes - Concurrent Versions System Beginners' Introduction</TITLE>
   </head>
   <BODY bgcolor="ffffff">
     <p align="center"><img src="images/jikes.png" width=600 height=54 border=0 align=center alt="Jikes<sup><small>TM</small></sup>"><BR>&nbsp;</p>
@@ -13,7 +13,7 @@
 <p>If you want to browse the code and only make occasional downloads, you may want to use <a href="/developerworks/opensource/cvs/jikes">WebCVS</a>. It provides a convenient, Web-based interface for browsing and downloading the latest version of the source code and documentation. You can also view each file's revision history, display the differences between individual revisions, determine which revisions were part of which official release, and more.</p>
 
 <h2>CVS clients for advanced source code manipulation</h2>
-<p>If you will be doing serious work on the source code, you should probably install a CVS client on your own machine so that you can do batch operations without going through the WebCVS interface. On Windows, we suggest the <a href="http://www.wincvs.org">WinCVS client</a>. For UNIX users, select the <a href="http://www.cvshome.org/dev/codelinux.html">appropriate client</a>. An alternative environment for those working on windows but more comfortable with a POSIX environment (like Unix) is the <a href="http://sources.redhat.com/cygwin/">Cygwin</a> toolcahin which includes cvs as well as bash, the GNU C/C++ compiler, linker, and debugger, and some common libraries.</p>
+<p>If you will be doing serious work on the source code, you should probably install a CVS client on your own machine so that you can do batch operations without going through the WebCVS interface. On Windows, we suggest the <a href="http://www.wincvs.org">WinCVS client</a>. For UNIX users, select the <a href="http://www.cvshome.org/dev/codelinux.html">appropriate client</a>. An alternative environment for those working on windows but more comfortable with a POSIX environment (like Unix) is the <a href="http://sources.redhat.com/cygwin/">Cygwin</a> tool-chain which includes CVS as well as bash, the GNU C/C++ compiler, linker, and debugger, and some common libraries.</p>
 
 <h3>Example commands to create a local replica of the master source tree</h3>
 <p>First you'll need to setup the correct environment for CVS, this is platform dependent, so first in a POSIX environment try:
@@ -74,7 +74,7 @@ cvs update
 </code>
 </pre>
 
-You will not need to re-establish the CVSROOT, as it will be stored in the data that is extracted; similarly you shold not need to re-login either; however, your cvs client may not maintain the login status.</p>
+You will not need to re-establish the CVSROOT, as it will be stored in the data that is extracted; similarly you should not need to re-login either; however, your cvs client may not maintain the login status.</p>
 
 <h1>Additional CVS Resources:</h1>
 <ul>

@@ -15,7 +15,7 @@ as the Jikes Steering Committee. This group has the following responsibilities:
         <LI>Deciding which features go into which releases when
 	the project administrators are unable to decide.
         <LI>Appointing new members of the Steering Committee and new Project
-	Administraitors.
+	Administrators.
 </UL>
 
 New members of the Jikes Steering Committee are added when a frequent
@@ -36,15 +36,15 @@ remaining members of the Steering Committee.
 
 <h1>Jikes Project Administrators</h1>
 <p>The day to day, and release to release decisions on the project
-are handled by the <a href="people.shtml#admin">Project Administraitors</a>.
-They have read-write access to the CVS repository and adminstrative control
+are handled by the <a href="people.shtml#admin">Project Administrators</a>.
+They have read-write access to the CVS repository and administrative control
 over the Jikes Project space within developerWorks.
 
 <P>
-In the unlikely event that a Project Adminstraitor becomes
+In the unlikely event that a Project Administrator becomes
 disruptive to the development process or ceases to contribute for a
 long period, he or she may be removed by a majority vote of the
-Steering Committee. New Project Adminstraitors will be named on
+Steering Committee. New Project Administrators will be named on
 an as needed basis by the Steering Committee and will in most cases
 have been actively contributing to the project for at least a year.
 <!--except chris, who seems to have given himself a promotion in the
@@ -54,11 +54,11 @@ process of rewriting this web page-->
 <p>Contributors are individual or company-affiliated developers who have
 registered developer level access to the Jikes Project in developerWorks.
 New Jikes contributors are added when a developer is recognized by the
-Project Administraitors or a member of the Steering Committee and is approved
+Project Administrators or a member of the Steering Committee and is approved
 by at least half of the Steering Committee, without any &quot;no&quot;
-votes, or by unanimous agreement of the Project Adminstraitors. In most cases,
+votes, or by unanimous agreement of the Project Administrators. In most cases,
 new contributors will have already been participating in the development process
-by submitting patches, bug reportss, testcases and/or binaries for at least
+by submitting patches, bug reports, test cases and/or binaries for at least
 a few months.
 
 <p>Contributors are listed on the <a href="people.shtml#contrib">people page</a>.

@@ -5,7 +5,7 @@
   <BODY bgcolor="ffffff">
     <p align="center"><img src="images/jikes.png" width=600 height=54 border=0 align=center alt="Jikes<sup><small>TM</small></sup>"><BR>&nbsp;</p>
 
-<h1>Jikes Patches Guidlines</h1>
+<h1>Jikes Patches Guidelines</h1>
 
 <p>The Jikes project welcomes patches, but cannot promise that every
 patch submitted will be accepted. Patches should be submitted to the

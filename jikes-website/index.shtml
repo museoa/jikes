@@ -31,7 +31,7 @@
           <ul>
 	    <li>Developer's FAQ
             <li><a href="cvs.shtml">CVS</a>
-            <li><a href="/developerworks/patch/?group_id=10">Patche Queue</a>
+            <li><a href="/developerworks/patch/?group_id=10">Patch Queue</a>
 	    <ul>
 	      <li><a href="patchguide.shtml"><small>Patch Guidelines</small></a>
             </ul>
@@ -90,7 +90,7 @@ the Linux and Java communities:
             tightly as possible, and does not support subsets, supersets, or
             other variations of the language. The <!--A HREF="faq.shtml"-->FAQ<!--/A--> describes
             some of the side effects of this strict language conformance.</LI>
-        <LI><em>High performance</em>. Jikes is a high-performance compiler, making
+        <LI><em>High performance</em>. Jikes is a high performance compiler, making
             it ideal for use with larger projects.</LI>
         <LI><em>Dependency analysis</em>. Jikes performs a dependency analysis on
             your code that provides two very useful features: Incremental builds
@@ -100,7 +100,7 @@ the Linux and Java communities:
 some material by Lou Grinzo for an article he wrote, the link I have for which is no longer valid.</p>
 
 <p>It's worth pointing out that Jikes is not, and is not intended to be, a complete
-development environment -- it is simply a command-line compiler. It should not be
+development environment -- it is simply a command line compiler. It should not be
 considered a replacement for more complete tools, such as <A HREF="http://sources.redhat.com/sourcenav/">
 Source Navigator</A> or <A HREF="http://www.ibm.com/software/ad/vajava/">IBM's VisualAge for Java</A>
 which provide sophisticated graphical IDEs (Integrated Development Environments).</P>
@@ -117,7 +117,7 @@ source was released under a liberal license in December 1998 to make a very
 visible demonstration of IBM's commitment to open standards and to Java, to make 
 Jikes more reliable and accessible, to encourage more widespread use of Java, to 
 encourage standardization of Java, and to gain some experience actually running 
-an open-source project.  This marked the start of one of IBM's first efforts in 
+an open source project.  This marked the start of one of IBM's first efforts in 
 the open source arena.</P>
 
 <P>The original alphaWorks version of Jikes was written by Philippe Charles and Dave 
@@ -131,7 +131,7 @@ been approved by the <a href="http://www.opensource.org/">OSI</a>
 The project provides access to the complete <A HREF="cvs.shtml">CVS</A>
 development tree, which includes not only Jikes, but also the source for the Jacks
 Test Suite and the Jikes Parser Generator used to build Jikes. Members of the community
-contribute <A HREF="downloads/">binaries</A> for their platforms of choice, additonally
+contribute <A HREF="downloads/">binaries</A> for their platforms of choice, additionally
 Jikes is included in many <A HREF="distribs.shtml">Open Source Operating Systems</A>.
 The Jacks Test Suite is a replacement for the Jikestst package, and it is expected
 to replace it over time.</p>
