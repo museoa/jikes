@@ -10,7 +10,7 @@ AC_CHECK_HEADERS(iconv.h)
 
 dnl No point going on if iconv.h isn't present.
 dnl In this case, we just assume iconv can not be used by the application
-AS_IF([test "$ac_cv_header_iconv_h" = yes],
+AS_IF([test "$ac_cv_header_iconv_h" = yes -a "x$with_iconv" != "xno" ],
 [dnl	Check if iconv library is present
 AC_SEARCH_LIBS([iconv], [iconv])
 
