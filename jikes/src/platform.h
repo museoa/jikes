@@ -963,11 +963,6 @@ public:
         return os -> width(w);
     }
 
-    long setf(long setbits)
-    {
-        return os -> setf(setbits);
-    }
-
     Ostream &operator<<(ios &(*f)(ios&))
     {
         (*f)(*os);

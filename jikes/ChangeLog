@@ -1,5 +1,11 @@
 2000-08-21  Mo DeJong  <mdejong@redhat.com>
 
+	* src/platform.h (Ostream::setf): Remove
+	the setf method, it is not used anywhere
+	and it causes the build to fail on the Mac.
+
+2000-08-21  Mo DeJong  <mdejong@redhat.com>
+
 	* src/error.cpp (PrintUNREACHABLE_DEFAULT_CATCH_CLAUSE):
 	Reword warning for try block that catches Exception
 	but does not contain a method that can raise a
