@@ -49,14 +49,15 @@
             <li><a href="/developerworks/patch/?group_id=10">Patch Queue</a>
 	    <ul>
 	      <li><a href="patchguide.shtml"><small>Patch Guidelines</small></a>
+	      <li><a href="/developerworks/oss/jacks"><small>Regression Testing Framework</small></a>
             </ul>
 	    <li><a href="todo.shtml">Todo list</a>
           </ul>
           <hr>
           Related Links
           <ul>
-<!-- wait 'till Mo has this ready            <li><a href="/developerworks/projects/jacks/">Jacks Project</a>
--->            <li><a href="http://www.ergnosis.com/java-spec-report/">Java Spec Report</a>
+            <li><a href="/developerworks/oss/jacks/">Jacks Project</a>
+            <li><a href="http://www.ergnosis.com/java-spec-report/">Java Spec Report</a>
 	    <li><a href="http://ibm.com/java/jdk/">The Best JVMs on the net</a>
 	    <li><a href="http://www.java.sun.com/docs/books/jls">Language Spec.</a>
 	    <li><a href="http://www.java.sun.com/docs/books/vmspec">Virtual Machine Spec.</a>

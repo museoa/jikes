@@ -83,7 +83,8 @@
             go to the
             <a href="/developerworks/project/showfiles.php?group_id=10">
             downloads</a> page and look for an official binary version of
-            Jikes.  If there isn't an official version for your operating
+            Jikes.  Windows users should select the Jikes-X.YY-mingw-win32.zip
+	    file.  If there isn't an official version for your operating
             system, join the
             <a href="http://oss.software.ibm.com/developerworks/mail/?group_id=10">
             jikes</a> mailing list and search the archives.  There might be

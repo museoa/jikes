@@ -116,13 +116,13 @@
 
         <P><b>Name:</b> Chris Abbey<BR>
            <b>Email:</b> <A HREF="mailto:jikes-dev@oss.software.ibm.com">on jikes-dev list</A><BR>
-           <b>URL:</b> <A HREF="http://www.software.ibm.com/ad/sanfrancisco/">SanFrancisco</A><BR>
+           <!--b>URL:</b> <A HREF=""></A><BR-->
            <b>Organization:</b> IBM Corp - <small>not working on jikes officially, only in personal time</small><BR>
-           <b>Occupation:</b> Staff Software Engineer, eServer iSeries LPAR &amp; Linux (on assignment to dw/OSS at the moment)<BR>
+           <b>Occupation:</b> Staff Software Engineer, eServer iSeries Logical Partitioning<BR>
            <b>Location:</b> Rochester, MN, USA<BR>
            <b>Comments:</b> java geek, open source bigot, linux advocate, thorn in management's side<BR>
-           <b>Contributions:</b> AIX support &amp; binary, a few patches, some testcases, support structure liaison.
-	   Note that I defer all code related matter to Mo, so if he rejects a patch, don't appeal to me...
+           <b>Contributions:</b> AIX support &amp; binary, a few patches, some testcases, support structure liaison. <small>(which means I scream at the IBM staff responsible for this server when things break)</small>
+	   Note that I defer code related matters to Mo, so if he rejects a patch, don't appeal to me...
 	   instead you should take a reasoned argument to jikes-dev.</p>
         
       <h2><a name="contrib">Project Contributors</a></h2>
