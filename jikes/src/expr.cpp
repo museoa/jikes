@@ -22,21 +22,21 @@
 namespace Jikes { // Open namespace Jikes block
 #endif
 
-template <typename T> static void ExtremaForType(T& min, T& max);
+template <typename T> inline void ExtremaForType(T& min, T& max);
 
-template <> static void ExtremaForType(i4& min, i4& max)
+template <> inline void ExtremaForType(i4& min, i4& max)
 {
     min = Int::MIN_INT();
     max = Int::MAX_INT();
 }
 
-template <> static void ExtremaForType(LongInt& min, LongInt& max)
+template <> inline void ExtremaForType(LongInt& min, LongInt& max)
 {
     min = LongInt::MIN_LONG();
     max = LongInt::MAX_LONG();
 }
 
-static void ReportOverflow(Semantic* semantic, AstExpression* expr, bool safe)
+inline void ReportOverflow(Semantic* semantic, AstExpression* expr, bool safe)
 {
     if (! safe)
     {
@@ -57,7 +57,7 @@ static void CheckIntegerNegation(Semantic* semantic, AstExpression* expr,
 
 
 template <typename T>
-static void CheckIntegerAddition(Semantic* semantic, AstExpression* expr,
+inline void CheckIntegerAddition(Semantic* semantic, AstExpression* expr,
                                  const T& x, const T& y)
 {
     const T zero = T(0);
