@@ -615,8 +615,6 @@ void Semantic::DefiniteArrayInitializer(AstArrayInitializer *array_initializer, 
             DefiniteExpression(init, def_pair);
         }
     }
-
-    return;
 }
 
 inline void Semantic::DefiniteArrayInitializer(AstArrayInitializer *array_initializer)
@@ -643,16 +641,12 @@ inline void Semantic::DefiniteVariableInitializer(AstVariableDeclarator *variabl
     {
         blank_finals -> AddElement(variable_declarator -> symbol -> LocalVariableIndex());
     }
-
-    return;
 }
 
 
 inline void Semantic::DefiniteStatement(Ast *ast)
 {
     (this ->* DefiniteStmt[ast -> kind])(ast);
-
-    return;
 }
 
 inline void Semantic::DefiniteBlockStatements(AstBlock *block_body)
@@ -718,8 +712,6 @@ void Semantic::DefiniteBlock(Ast *stmt)
         *definitely_assigned_variables *= definite_block_stack -> TopBreakPair();
 
     definite_block_stack -> Pop();
-
-    return;
 }
 
 
@@ -783,8 +775,6 @@ void Semantic::DefiniteSynchronizedStatement(Ast *stmt)
     DefiniteExpression(synchronized_statement -> expression, *definitely_assigned_variables);
 
     DefiniteBlock(synchronized_statement -> block);
-
-    return;
 }
 
 
@@ -820,8 +810,6 @@ void Semantic::DefiniteIfStatement(Ast *stmt)
 
     // harmless if NULL
     delete starting_pair;
-
-    return;
 }
 
 
@@ -859,8 +847,6 @@ void Semantic::DefiniteLoopBody(AstStatement *statement)
 
     definitely_assigned_variables -> du_set = exit_set * definite_block_stack -> TopBreakPair().du_set;
     definite_final_assignment_stack -> Pop();
-
-    return;
 }
 
 
@@ -897,8 +883,6 @@ void Semantic::DefiniteWhileStatement(Ast *stmt)
 
     ContinuableStatementStack().Pop();
     BreakableStatementStack().Pop();
-
-    return;
 }
 
 
@@ -974,8 +958,6 @@ void Semantic::DefiniteForStatement(Ast *stmt)
 
     ContinuableStatementStack().Pop();
     BreakableStatementStack().Pop();
-
-    return;
 }
 
 
@@ -1002,8 +984,6 @@ void Semantic::DefiniteDoStatement(Ast *stmt)
 
     ContinuableStatementStack().Pop();
     BreakableStatementStack().Pop();
-
-    return;
 }
 
 
@@ -1066,8 +1046,6 @@ void Semantic::DefiniteSwitchStatement(Ast *stmt)
 
     BreakableStatementStack().Pop();
     definite_block_stack -> Pop();
-
-    return;
 }
 
 
@@ -1123,8 +1101,6 @@ void Semantic::DefiniteBreakStatement(Ast *stmt)
     // any way).
     //
     *definitely_assigned_variables = *universe;
-
-    return;
 }
 
 
@@ -1180,8 +1156,6 @@ void Semantic::DefiniteContinueStatement(Ast *stmt)
     // any way).
     //
     *definitely_assigned_variables = *universe;
-
-    return;
 }
 
 
@@ -1271,8 +1245,6 @@ void Semantic::DefiniteReturnStatement(Ast *stmt)
     // any way).
     //
     *definitely_assigned_variables = *universe;
-
-    return;
 }
 
 
@@ -1371,8 +1343,6 @@ void Semantic::DefiniteThrowStatement(Ast *stmt)
     // any way).
     //
     *definitely_assigned_variables = *universe;
-
-    return;
 }
 
 
@@ -1543,8 +1513,6 @@ void Semantic::DefiniteTryStatement(Ast *stmt)
         definitely_assigned_variables -> da_set += after_blocks;
     }
     else definitely_assigned_variables -> da_set = after_blocks;
-
-    return;
 }
 
 
@@ -1563,13 +1531,14 @@ void Semantic::DefiniteAssertStatement(Ast *stmt)
     {
         //
         // The second expression is evaluated only when the first is false
-        // Don't modify da, but update du, since asserts might be on or off
+        // Don't modify da, but update du, as a variable is DU after the assert
+        // iff it is DU before the assert and DU after the condition when true.
         //
         *definitely_assigned_variables = after_condition -> false_pair;
-        before_assert -> du_set = after_condition -> DUSet();
+        before_assert -> du_set *= after_condition -> true_pair.du_set;
     }
     else
-        before_assert -> du_set = definitely_assigned_variables -> du_set;
+        before_assert -> du_set *= definitely_assigned_variables -> du_set;
 
     if (assert_statement -> message_opt)
         DefiniteExpression(assert_statement -> message_opt, *definitely_assigned_variables);
@@ -1630,7 +1599,6 @@ void Semantic::DefiniteAssertStatement(Ast *stmt)
     // harmless if NULL
     delete before_assert;
     delete after_condition;
-    return;
 }
 
 
@@ -1738,8 +1706,6 @@ void Semantic::DefiniteMethodBody(AstMethodDeclaration *method_declaration, Tupl
         delete definite_visible_variables;
         delete blank_finals;
     }
-
-    return;
 }
 
 
@@ -1866,8 +1832,6 @@ void Semantic::DefiniteConstructorBody(AstConstructorDeclaration *constructor_de
     delete definite_final_assignment_stack;
     delete definite_visible_variables;
     delete blank_finals;
-
-    return;
 }
 
 
@@ -1957,8 +1921,6 @@ void Semantic::DefiniteBlockInitializer(AstBlock *block_body, int stack_size, Tu
     delete definite_final_assignment_stack;
     delete definite_visible_variables;
     delete blank_finals;
-
-    return;
 }
 
 
@@ -2012,8 +1974,6 @@ void Semantic::DefiniteVariableInitializer(AstVariableDeclarator *variable_decla
     delete definite_final_assignment_stack;
     delete definite_visible_variables;
     delete blank_finals;
-
-    return;
 }
 
 #ifdef HAVE_JIKES_NAMESPACE
