@@ -1933,8 +1933,8 @@ void Semantic::MemberAccessCheck(AstFieldAccess *field_access, TypeSymbol *base_
             // to encourage the user to not use it.
             //
             if (flags -> ACC_STATIC() &&
-                this_type -> IsSubclass(containing_type) &&
-                this_package != containing_type -> ContainingPackage())
+                this_package != containing_type -> ContainingPackage() &&
+                this_type -> IsSubclass(containing_type))
             {
                 //
                 // Since "this" is a primary, it can be parenthesized. We remove all such parentheses here.
@@ -3189,6 +3189,7 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
             else
             {
                 MethodSymbol *method = FindMethodMember(sub_field_access -> Type() -> super, sub_field_access -> Type(), method_call);
+                field_access -> base = ConvertToType(sub_field_access, sub_field_access -> Type() -> super);
 
                 //
                 // TODO: This test was added in order to pass the test in section 8.4.3.1, page 159.
