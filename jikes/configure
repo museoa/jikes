@@ -722,7 +722,7 @@ Optional Features:
   --enable-dependency-tracking  Do not reject slow dependency extractors
   --enable-maintainer-mode enable make rules and dependencies not useful
                           (and sometimes confusing) to the casual installer
-  --enable-native-fp         Use native floating point instead of emulation floating point operations
+  --disable-fp-emulation  Use native floating point operations instead of emulation
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -4674,29 +4674,29 @@ fi
 echo "$as_me:4674: result: $jikes_cv_schar_max" >&5
 echo "${ECHO_T}$jikes_cv_schar_max" >&6
 
-# Check whether --enable-native-fp or --disable-native-fp was given.
-if test "${enable_native_fp+set}" = set; then
-  enableval="$enable_native_fp"
+# Check whether --enable-fp-emulation or --disable-fp-emulation was given.
+if test "${enable_fp_emulation+set}" = set; then
+  enableval="$enable_fp_emulation"
   ok=$enableval
 else
-  ok=no
+  ok=yes
 fi;
 
 echo "$as_me:4685: checking for floating point support" >&5
 echo $ECHO_N "checking for floating point support... $ECHO_C" >&6
 
 if test "$ok" = "yes"; then
+  # Do nothing, floating point emulation is used when HAVE_IEEE754 is not defined
+  echo "$as_me:4690: result: emulated" >&5
+echo "${ECHO_T}emulated" >&6
+else
 
 cat >>confdefs.h <<\EOF
 #define HAVE_IEEE754 1
 EOF
 
-  echo "$as_me:4694: result: native" >&5
+  echo "$as_me:4698: result: native" >&5
 echo "${ECHO_T}native" >&6
-else
-  # Do nothing, floating point emulation is used when HAVE_IEEE754 is not defined
-  echo "$as_me:4698: result: emulated" >&5
-echo "${ECHO_T}emulated" >&6
 fi
 
 for ac_header in stdlib.h string.h memory.h strings.h inttypes.h unistd.h

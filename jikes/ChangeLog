@@ -1,3 +1,8 @@
+2001-03-30  Mo DeJong  <mdejong@redhat.com>
+
+	* configure.in: Add --enable-fp-emulation
+	back in and default it to enabled.
+
 2001-03-29  Chris Abbey  <cabbey@bresnanlink.net>
 
 	* configure.in:

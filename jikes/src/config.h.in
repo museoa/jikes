@@ -56,7 +56,7 @@
 /* Define if you have the <iconv.h> header file. */
 #undef HAVE_ICONV_H
 
-/* Defined, by default, when Jikes is built with native floating support */
+/* Defined when Jikes is built with native floating support */
 #undef HAVE_IEEE754
 
 /* Define if you have the <inttypes.h> header file. */
