@@ -1173,7 +1173,7 @@ void LexStream::ProcessInputUnicode(const char* buffer, long filesize)
         {
             *(++input_ptr) = U_BACKSLASH;
         }
-        else if (state >= UNICODE_ESCAPE && state <= UNICODE_ESCAPE_DIGIT_2)
+        else if (state >= UNICODE_ESCAPE)
         {
             if (initial_reading_of_input)
                 ReportMessage(StreamError::INVALID_UNICODE_ESCAPE,

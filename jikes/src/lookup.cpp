@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -589,9 +588,9 @@ LiteralValue* IntLiteralTable::FindOrInsertChar(LiteralSymbol* literal)
     if (len <= 0) // An isolated or unterminated quote.
         return literal -> value = bad_value;
     if (len == 1) // A regular character.
-        return literal -> value = FindOrInsert((int) name[0]);
+        return literal -> value = FindOrInsert((i4) name[0]);
 
-    int value = -1;
+    i4 value = -1;
 
     if (name[0] == U_BACKSLASH)
         switch (name[1])
@@ -697,7 +696,7 @@ LiteralValue* IntLiteralTable::FindOrInsertInt(LiteralSymbol* literal)
                             : FindOrInsertOctalInt(literal));
     else
     {
-        int value = 0;
+        i4 value = 0;
 
         const wchar_t* p;
         for (p = name; *p; p++)
@@ -738,7 +737,7 @@ LiteralValue* IntLiteralTable::FindOrInsertNegativeInt(LiteralSymbol* literal)
         return FindOrInsert(- int_literal -> value);
     }
 
-    int value = 0;
+    i4 value = 0;
 
     const wchar_t* p;
     for (p = name; *p; p++)
@@ -774,7 +773,7 @@ void IntLiteralTable::Rehash()
 }
 
 
-IntLiteralValue* IntLiteralTable::Find(int value)
+IntLiteralValue* IntLiteralTable::Find(i4 value)
 {
     // The unsigned casting turns the negative values into positive values.
     int k = ((unsigned) value) % hash_size;
@@ -789,7 +788,7 @@ IntLiteralValue* IntLiteralTable::Find(int value)
 }
 
 
-IntLiteralValue* IntLiteralTable::FindOrInsert(int value)
+IntLiteralValue* IntLiteralTable::FindOrInsert(i4 value)
 {
     // The unsigned casting turns the negative values into positive values.
     int k = ((unsigned) value) % hash_size;

@@ -1,4 +1,4 @@
-/* src/config.h.in.  Generated from configure.in by autoheader.  */
+/* src/config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* This software is subject to the terms of the IBM Jikes
 Compiler License Agreement available at the following URL:
@@ -320,6 +320,10 @@ You must accept the terms of that agreement to use this software. */
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
+
+/* Defined when int32_t and int are equivalent types for method overloading.
+   */
+#undef TYPE_INT32_T_IS_INT
 
 /* quick hack to use UNIX file system, fixme */
 #undef UNIX_FILE_SYSTEM

@@ -1,3 +1,30 @@
+2003-09-27  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/m4/ac_cxx_type_equivalence.m4: New file, needed for at least
+	gcc 3.3	on cygwin.
+	* Makefile.am: Add dependence on ac_cxx_type_equivalence.m4.
+	* acinclude.m4: Ditto.
+	* configure.ac: Require automake 1.7.6, and rename from
+	configure.in as recommended by automake.
+	* Makefile.in: Regenerate.
+	* aclocal.m4: Ditto.
+	* config.guess: Ditto.
+	* config.sub: Ditto.
+	* configure: Ditto.
+	* depcomp: Ditto.
+	* install-sh: Ditto.
+	* doc/Makefile.in: Ditto.
+	* src/Makefile.in: Ditto.
+	* src/config.h.in: Ditto.
+	* src/platform.h: Add TYPE_I4_IS_INT to clean up type warnings.
+	* src/case.h: Fix type warnings under gcc 3.3.
+	* src/double.cpp: Ditto.
+	* src/double.h: Ditto.
+	* src/long.h: Ditto.
+	* src/lookup.cpp: Ditto.
+	* src/lookup.h: Ditto.
+	* src/stream.cpp: Ditto.
+
 2003-06-29  Musachy Barroso  <insanus@bellsouth.net>
 
 	* src/body.cpp:

@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -631,8 +630,16 @@ public:
     LiteralValue* FindOrInsertOctalInt(LiteralSymbol*);
     LiteralValue* FindOrInsertNegativeInt(LiteralSymbol*);
 
-    IntLiteralValue* FindOrInsert(int);
-    IntLiteralValue* Find(int);
+    IntLiteralValue* FindOrInsert(i4);
+    IntLiteralValue* Find(i4);
+    // Forwarding methods, if needed, so that Find(0) works.
+#ifndef TYPE_I4_IS_INT
+    inline IntLiteralValue* FindOrInsert(int i)
+    {
+        return FindOrInsert((i4) i);
+    }
+    inline IntLiteralValue* Find(int i) { return Find((i4) i); }
+#endif // TYPE_I4_IS_INT
 
 #ifdef JIKES_DEBUG
     //

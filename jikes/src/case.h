@@ -58,7 +58,8 @@ public:
 
     static inline bool IsAsciiAlpha(char c)
     {
-        return (c == lower[(int) c] || c == upper[(int) c]);
+        return (c == (wchar_t) lower[(int) c] ||
+                c == (wchar_t) upper[(int) c]);
     }
     static inline bool IsAsciiAlpha(wchar_t c)
     {
@@ -84,7 +85,7 @@ public:
     {
         for (int i = 0; *s != U_NULL; i++, s++)
         {
-            if (*s == c)
+            if ((wchar_t) *s == c)
                 return i;
         }
         return -1;
@@ -131,7 +132,7 @@ public:
     {
         for (int i = 0; i < n; i++)
         {
-            if (ToAsciiLower(s1[i]) != ToAsciiLower(s2[i]))
+            if (ToAsciiLower(s1[i]) != (wchar_t) ToAsciiLower(s2[i]))
                 return false;
         }
         return true;
@@ -147,7 +148,7 @@ public:
         int i;
         for (i = 0; s1[i] && s2[i]; i++)
         {
-            if (ToAsciiLower(s1[i]) != ToAsciiLower(s2[i]))
+            if ((wchar_t) ToAsciiLower(s1[i]) != ToAsciiLower(s2[i]))
                 return false;
         }
         return (s1[i] == s2[i]);
@@ -180,10 +181,10 @@ public:
         int i;
         for (i = 0; s1[i] && s2[i]; i++)
         {
-            if (ToAsciiLower(s1[i]) != ToAsciiLower(s2[i]))
+            if (ToAsciiLower(s1[i]) != (wchar_t) ToAsciiLower(s2[i]))
                 return false;
         }
-        return (s1[i] == s2[i]);
+        return (s1[i] == (wchar_t) s2[i]);
     }
 
 // see comment above.

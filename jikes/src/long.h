@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -120,6 +119,10 @@ public:
     BaseLong(u4 high, u4 low);
     BaseLong(u4 a); // no sign extension
     BaseLong(i4 a); // sign extends
+    // Forwarding constructor, if needed, so that BaseLong(0) works.
+#ifndef TYPE_I4_IS_INT
+    inline BaseLong(int i) { *this = BaseLong((i4) i); }
+#endif // TYPE_I4_IS_INT
     inline BaseLong() {} // construct without initializing
 #ifdef HAVE_64BIT_TYPES
     inline BaseLong(u8 a) { value.words = a; } // construct in one step
@@ -179,6 +182,10 @@ public:
     inline LongInt(u4 a, u4 b) : BaseLong(a, b) {}
     inline LongInt(u4 a) : BaseLong(a) {} // no sign extension
     inline LongInt(i4 a) : BaseLong(a) {} // sign extends
+    // Forwarding constructor, if needed, so that LongInt(0) works.
+#ifndef TYPE_I4_IS_INT
+    inline LongInt(int i) { *this = LongInt((i4) i); }
+#endif // TYPE_I4_IS_INT
 #ifdef HAVE_EXPLICIT
     explicit
 #endif
@@ -255,6 +262,10 @@ public:
     inline ULongInt(u4 a, u4 b) : BaseLong(a, b) {}
     inline ULongInt(u4 a) : BaseLong(a) {} // no sign extension
     inline ULongInt(i4 a) : BaseLong(a) {} // sign extended
+    // Forwarding constructor, if needed, so that ULongInt(0) works.
+#ifndef TYPE_I4_IS_INT
+    inline ULongInt(int i) { *this = ULongInt((i4) i); }
+#endif // TYPE_I4_IS_INT
     inline ULongInt() : BaseLong() {} // uninitialized
 #ifdef HAVE_64BIT_TYPES
     inline ULongInt(u8 a) : BaseLong(a) {} // construct in one step

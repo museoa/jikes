@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 2000, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 2000, 2003 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 //
@@ -212,6 +211,11 @@ typedef int32_t i4;
 typedef uint64_t u8;
 typedef int64_t i8;
 #endif // HAVE_64BIT_TYPES
+
+// Rename for readability in double.h.
+#ifdef TYPE_INT32_T_IS_INT
+#define TYPE_I4_IS_INT TYPE_INT32_T_IS_INT
+#endif
 
 //
 // Some compilers do not correctly predefine the primitive type "bool"
@@ -816,7 +820,7 @@ private:
 class IntToWstring
 {
 public:
-    IntToWstring(int);
+    IntToWstring(i4);
 
     const wchar_t* String() { return wstr; }
     int Length() { return (&winfo[TAIL_INDEX]) - wstr; }
@@ -1032,6 +1036,18 @@ public:
     }
 
     Ostream &operator<<(unsigned int a)
+    {
+        *os << a;
+        return *this;
+    }
+
+    Ostream &operator<<(long a)
+    {
+        *os << a;
+        return *this;
+    }
+
+    Ostream &operator<<(unsigned long a)
     {
         *os << a;
         return *this;

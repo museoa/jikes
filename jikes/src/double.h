@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 //
@@ -221,6 +220,10 @@ public:
     IEEEfloat(const char*, bool check_invalid = false);
     // Widening conversion of int to float, may lose precision
     IEEEfloat(i4);
+    // Forwarding constructor, if needed, so that IEEEfloat(0) works.
+#ifndef TYPE_I4_IS_INT
+    inline IEEEfloat(int i) { *this = IEEEfloat((i4) i); }
+#endif // TYPE_I4_IS_INT
     // Widening conversion of long to float, may lose precision
     IEEEfloat(const LongInt&);
     // Narrowing conversion of double to float, may lose precision
@@ -497,6 +500,10 @@ public:
 
     // widening conversion of int to double, no information lost
     IEEEdouble(i4);
+    // Forwarding constructor, if needed, so that IEEEdouble(0) works.
+#ifndef TYPE_I4_IS_INT
+    inline IEEEdouble(int i) { *this = IEEEdouble((i4) i); }
+#endif // TYPE_I4_IS_INT
     // Widening conversion of long to double, may lose precision
     IEEEdouble(const LongInt&);
     // Widening conversion of float to double, no information lost

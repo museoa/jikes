@@ -24,6 +24,7 @@ $(srcdir)/src/m4/ac_cxx_namespaces.m4 \
 $(srcdir)/src/m4/ac_cxx_reinterpret_cast.m4 \
 $(srcdir)/src/m4/ac_cxx_rtti.m4 \
 $(srcdir)/src/m4/ac_cxx_static_cast.m4 \
+$(srcdir)/src/m4/ac_cxx_type_equivalence.m4 \
 $(srcdir)/src/m4/ac_define_integer_bits.m4 \
 $(srcdir)/src/m4/ac_find_encoding.m4 \
 $(srcdir)/src/m4/ac_try_encoding.m4 \
