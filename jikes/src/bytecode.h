@@ -254,18 +254,6 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
 
 
     //
-    // see if operand is null. The front-end will have inserted a cast
-    // of null to the present type
-    //
-    bool IsNull(AstExpression *p)
-    {
-        return (p -> CastExpressionCast()
-                ? (p -> CastExpressionCast() -> expression -> Type() == control.null_type)
-                : false);
-    }
-
-
-    //
     // Does p refer to a non-null reference type?
     //
     bool IsReferenceType(TypeSymbol *p)
@@ -275,18 +263,49 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
 
 
     //
-    // see if operand is integer type and is zero
+    // See if operand is constant zero (including -0.0).
     //
     bool IsZero(AstExpression *p)
     {
-        if (p -> IsConstant() &&
-            (p -> Type() == control.int_type ||
-             p -> Type() == control.boolean_type))
+        TypeSymbol *type = p -> Type();
+        if (p -> IsConstant() && type != control.String())
         {
-            IntLiteralValue *vp = (IntLiteralValue *) (p -> value);
-            return (vp -> value == 0);
+            if (type == control.int_type || type == control.boolean_type)
+                return ((IntLiteralValue *) (p -> value)) -> value == 0;
+            else if (type == control.long_type)
+                return ((LongLiteralValue *) (p -> value)) -> value == 0;
+            else if (type == control.float_type)
+                return ((FloatLiteralValue *) (p -> value)) -> value == 0;
+            else
+            {
+                assert(type == control.double_type);
+                return ((DoubleLiteralValue *) (p -> value)) -> value == 0;
+            }
         }
+        return false;
+    }
 
+
+    //
+    // See if operand is constant one.
+    //
+    bool IsOne(AstExpression *p)
+    {
+        TypeSymbol *type = p -> Type();
+        if (p -> IsConstant() && type != control.String())
+        {
+            if (type == control.int_type || type == control.boolean_type)
+                return ((IntLiteralValue *) (p -> value)) -> value == 1;
+            else if (type == control.long_type)
+                return ((LongLiteralValue *) (p -> value)) -> value == 1;
+            else if (type == control.float_type)
+                return ((FloatLiteralValue *) (p -> value)) -> value == 1;
+            else
+            {
+                assert(type == control.double_type);
+                return ((DoubleLiteralValue *) (p -> value)) -> value == 1;
+            }
+        }
         return false;
     }
 
@@ -689,7 +708,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     int  EmitArrayCreationExpression(AstArrayCreationExpression *);
     int  EmitAssignmentExpression(AstAssignmentExpression *, bool);
     int  EmitBinaryExpression(AstBinaryExpression *);
-    int  EmitCastExpression(AstCastExpression *);
+    int  EmitCastExpression(AstCastExpression *, bool);
     void EmitCast(TypeSymbol *, TypeSymbol *);
     int  EmitClassInstanceCreationExpression(AstClassInstanceCreationExpression *, bool);
     int  EmitConditionalExpression(AstConditionalExpression *, bool);

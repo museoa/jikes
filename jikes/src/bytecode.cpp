@@ -1122,15 +1122,17 @@ void ByteCode::EmitStatement(AstStatement *statement)
     case Ast::IF: // JLS 14.8
         {
             AstIfStatement *if_statement = (AstIfStatement *) statement;
-            if (if_statement -> expression -> IsConstant())
+            if (IsOne(if_statement -> expression))
+                EmitStatement(if_statement -> true_statement);
+            else if (IsZero(if_statement -> expression) &&
+                     if_statement -> false_statement_opt)
             {
-                if (! IsZero(if_statement -> expression))
-                    EmitStatement(if_statement -> true_statement);
-                else if (if_statement -> false_statement_opt) // if there is false part
-                    EmitStatement(if_statement -> false_statement_opt);
+                // if there is false part
+                EmitStatement(if_statement -> false_statement_opt);
             }
-            else if (if_statement -> false_statement_opt) // if true and false parts
+            else if (if_statement -> false_statement_opt)
             {
+                // if true and false parts
                 Label label1,
                       label2;
                 AstStatement *true_statement = if_statement -> true_statement;
@@ -1198,8 +1200,8 @@ void ByteCode::EmitStatement(AstStatement *statement)
                 {
                     line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
                                                                  semantic.lex_stream -> Line(wp -> expression -> LeftToken()));
-                    EmitExpression(wp -> expression); // for side effects only
-                    PutOp(OP_POP);
+                    // for side effects only
+                    EmitExpression(wp -> expression, false);
                 }
                 EmitStatement(wp -> statement);
                 DefineLabel(method_stack -> TopContinueLabel());
@@ -1280,8 +1282,9 @@ void ByteCode::EmitStatement(AstStatement *statement)
                     {
                         line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
                                                                      semantic.lex_stream -> Line(for_statement -> end_expression_opt -> LeftToken()));
-                        EmitExpression(for_statement -> end_expression_opt); // for side effects only
-                        PutOp(OP_POP);
+                        // for side effects only
+                        EmitExpression(for_statement -> end_expression_opt,
+                                       false);
                     }
                 }
                 EmitStatement(for_statement -> statement);
@@ -2021,12 +2024,12 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
     if (p -> IsConstant())
     {
         if (IsZero(p) != cond)
-            EmitBranch(OP_GOTO, lab);
+            EmitBranch(OP_GOTO, lab, over);
         return;
     }
 
     AstPreUnaryExpression *pre = p -> PreUnaryExpressionCast();
-    if (pre) // must be !, though should probably
+    if (pre) // must be !
     {
         // branch_if(!e,c,l) => branch_if(e,!c,l)
         // test opcode
@@ -2049,12 +2052,10 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
         //
         if (conditional -> test_expression -> IsConstant())
         {
-            if (IsZero(conditional -> test_expression))
-                EmitBranchIfExpression(conditional -> false_expression,
-                                       cond, lab, over);
-            else
-                EmitBranchIfExpression(conditional -> true_expression,
-                                       cond, lab, over);
+            EmitBranchIfExpression((IsZero(conditional -> test_expression)
+                                    ? conditional -> false_expression
+                                    : conditional -> true_expression),
+                                   cond, lab, over);
             return;
         }
     }
@@ -2084,14 +2085,36 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
     {
     case AstBinaryExpression::INSTANCEOF:
         {
-            EmitExpression(left);
-            PutOp(OP_INSTANCEOF);
-            TypeSymbol *instanceof_type = bp -> right_expression -> Type();
-            PutU2(instanceof_type -> num_dimensions > 0
-                  ? RegisterClass(instanceof_type -> signature)
-                  : RegisterClass(instanceof_type -> fully_qualified_name));
+            if (left_type == control.null_type)
+            {
+                //
+                // We know the result: false. But emit the left expression,
+                // in case of side effects in (expr ? null : null).
+                //
+                EmitExpression(left, false);
+                if (! cond)
+                    EmitBranch(OP_GOTO, lab, over);
+            }
+            else if (left -> IsConstant() &&
+                     left_type -> IsSubclass(right_type))
+            {
+                //
+                // We know the result: true.
+                //
+                assert(left_type == control.String());
+                if (cond)
+                    EmitBranch(OP_GOTO, lab, over);
+            }
+            else
+            {
+                EmitExpression(left);
+                PutOp(OP_INSTANCEOF);
+                PutU2(right_type -> num_dimensions > 0
+                      ? RegisterClass(right_type -> signature)
+                      : RegisterClass(right_type -> fully_qualified_name));
 
-            EmitBranch((cond ? OP_IFNE : OP_IFEQ), lab, over);
+                EmitBranch((cond ? OP_IFNE : OP_IFEQ), lab, over);
+            }
         }
         return;
     case AstBinaryExpression::AND_AND:
@@ -2103,7 +2126,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
         //
         if (left -> IsConstant())
         {
-            if (! IsZero(left))
+            if (IsOne(left))
                 EmitBranchIfExpression(right, cond, lab, over);
             else if (! cond)
                 EmitBranch(OP_GOTO, lab, over);
@@ -2116,12 +2139,11 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
         //
         else if (right -> IsConstant())
         {
-            if (! IsZero(right))
+            if (IsOne(right))
                 EmitBranchIfExpression(left, cond, lab, over);
             else
             {
-                EmitExpression(left);
-                PutOp(OP_POP);
+                EmitExpression(left, false);
                 if (! cond)
                     EmitBranch(OP_GOTO, lab, over);
             }
@@ -2175,8 +2197,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
                 EmitBranchIfExpression(left, cond, lab, over);
             else
             {
-                EmitExpression(left);
-                PutOp(OP_POP);
+                EmitExpression(left, false);
                 if (cond)
                     EmitBranch(OP_GOTO, lab, over);
             }
@@ -2207,46 +2228,33 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
     case AstBinaryExpression::EQUAL_EQUAL:
     case AstBinaryExpression::NOT_EQUAL:
         //
-        // One of the operands is null.
+        // One of the operands is null. We must evaluate both operands, to get
+        // any side effects in (expr ? null : null).
         //
         if (left_type == control.null_type || right_type == control.null_type)
         {
-            if (left_type == control.null_type)
+            EmitExpression(left, left_type != control.null_type);
+            EmitExpression(right, right_type != control.null_type);
+            if (left_type == right_type)
             {
-                // arrange so right operand is null
-                AstExpression *temp = left;
-                left = right;
-                right = temp;
-
-                left_type = left -> Type();
-                right_type = right -> Type();
+                if (cond == (bp -> binary_tag == AstBinaryExpression::EQUAL_EQUAL))
+                    EmitBranch(OP_GOTO, lab, over);
             }
-
-            EmitExpression(left);
-
-            if (bp -> binary_tag == AstBinaryExpression::EQUAL_EQUAL)
-                EmitBranch(cond ? OP_IFNULL : OP_IFNONNULL, lab, over);
-            else EmitBranch(cond ? OP_IFNONNULL : OP_IFNULL, lab, over);
-
+            else
+            {
+                if (bp -> binary_tag == AstBinaryExpression::EQUAL_EQUAL)
+                    EmitBranch(cond ? OP_IFNULL : OP_IFNONNULL, lab, over);
+                else EmitBranch(cond ? OP_IFNONNULL : OP_IFNULL, lab, over);
+            }
             return;
         }
 
         //
-        // One of the operands is zero.
+        // One of the operands is zero. Only emit the other operand.
         //
         if (IsZero(left) || IsZero(right))
         {
-            if (IsZero(left)) // arrange so right operand is zero
-            {
-                AstExpression *temp = left;
-                left = right;
-                right = temp;
-
-                left_type = left -> Type();
-                right_type = right -> Type();
-            }
-
-            EmitExpression(left);
+              EmitExpression(IsZero(left) ? right : left);
 
             if (bp -> binary_tag == AstBinaryExpression::EQUAL_EQUAL)
                 EmitBranch((cond ? OP_IFEQ : OP_IFNE), lab, over);
@@ -2256,13 +2264,13 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
         }
 
         //
-        // both operands are integer
+        // Both operands are integer.
         //
-        if ((control.IsSimpleIntegerValueType(left_type) ||
-             left_type == control.boolean_type) &&
-            (control.IsSimpleIntegerValueType(right_type) ||
-             right_type == control.boolean_type))
+        if (control.IsSimpleIntegerValueType(left_type) ||
+             left_type == control.boolean_type)
         {
+            assert(control.IsSimpleIntegerValueType(right_type) ||
+                   right_type == control.boolean_type);
             EmitExpression(left);
             EmitExpression(right);
 
@@ -2274,10 +2282,11 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
         }
 
         //
-        // Both operands are reference types: just do the comparison
+        // Both operands are reference types: just do the comparison.
         //
-        if (IsReferenceType(left_type) && IsReferenceType(right_type))
+        if (IsReferenceType(left_type))
         {
+            assert(IsReferenceType(right_type));
             EmitExpression(left);
             EmitExpression(right);
 
@@ -2324,7 +2333,8 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
     unsigned opcode = 0,
              op_true,
              op_false;
-    if (control.IsSimpleIntegerValueType(left_type) || left_type == control.boolean_type)
+    if (control.IsSimpleIntegerValueType(left_type) ||
+        left_type == control.boolean_type)
     {
         //
         // we have already dealt with EQUAL_EQUAL and NOT_EQUAL for the case
@@ -2655,11 +2665,6 @@ void ByteCode::EmitAssertStatement(AstAssertStatement *assertion)
 //
 int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
 {
-    //
-    // The only time when need_value should be false is for an expression
-    // qualifying a static member access.  Hence, it must be a reference,
-    // and if one is a constant, it must be a String expression.
-    //
     expression = StripNops(expression);
     if (expression -> IsConstant())
     {
@@ -2668,11 +2673,7 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
             LoadLiteral(expression -> value, expression -> Type());
             return (GetTypeWords(expression -> Type()));
         }
-        else
-        {
-            assert(expression -> Type() == control.String());
-            return 0;
-        }
+        else return 0;
     }
 
     switch (expression -> kind)
@@ -2725,8 +2726,8 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
                 return GetTypeWords(method_call -> Type());
             else
             {
-                assert(! method_call -> Type() -> Primitive());
-                PutOp(OP_POP);
+                PutOp(GetTypeWords(method_call -> Type()) == 1
+                      ? OP_POP : OP_POP2);
                 return 0;
             }
         }
@@ -2738,43 +2739,30 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
                 return words;
             else
             {
-                assert(words == 1); // must be reference type
-                PutOp(OP_POP);
+                PutOp(words == 1 ? OP_POP : OP_POP2);
                 return 0;
             }
         }
     case Ast::POST_UNARY:
-        assert(need_value && "increment can't qualify static member");
-        return EmitPostUnaryExpression((AstPostUnaryExpression *) expression, true);
+        return EmitPostUnaryExpression((AstPostUnaryExpression *) expression,
+                                       need_value);
     case Ast::PRE_UNARY:
-        assert(need_value && "increment can't qualify static member");
-        return EmitPreUnaryExpression((AstPreUnaryExpression *) expression, true);
+        return EmitPreUnaryExpression((AstPreUnaryExpression *) expression,
+                                      need_value);
     case Ast::CAST:
         {
             AstCastExpression *cast_expression = (AstCastExpression *) expression;
-
-            assert(need_value || ! cast_expression -> expression -> Type() -> Primitive());
 
             //
             // only primitive types require casting
             //
             return (cast_expression -> expression -> Type() -> Primitive()
-                    ? EmitCastExpression(cast_expression)
+                    ? EmitCastExpression(cast_expression, need_value)
                     : EmitExpression(cast_expression -> expression, need_value));
         }
     case Ast::CHECK_AND_CAST:
-        {
-            // must evaluate, for ClassCastException side effect
-            int words = EmitCastExpression((AstCastExpression *) expression);
-            if (need_value)
-                return words;
-            else
-            {
-                assert(words == 1); // must be reference type
-                PutOp(OP_POP);
-                return 0;
-            }
-        }
+        // must evaluate, for ClassCastException side effect
+        return EmitCastExpression((AstCastExpression *) expression, need_value);
     case Ast::BINARY:
         {
             // must evaluate for potential side effects
@@ -2783,15 +2771,16 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
                 return words;
             else
             {
-                assert(((AstBinaryExpression *) expression) -> binary_tag == AstBinaryExpression::PLUS && words == 1); // must be string concat
-                PutOp(OP_POP);
+                PutOp(words == 1 ? OP_POP : OP_POP2);
                 return 0;
             }
         }
     case Ast::CONDITIONAL:
-        return EmitConditionalExpression((AstConditionalExpression *) expression, need_value);
+        return EmitConditionalExpression((AstConditionalExpression *) expression,
+                                         need_value);
     case Ast::ASSIGNMENT:
-        return EmitAssignmentExpression((AstAssignmentExpression *) expression, need_value);
+        return EmitAssignmentExpression((AstAssignmentExpression *) expression,
+                                        need_value);
     case Ast::NULL_LITERAL:
         if (need_value)
         {
@@ -3476,11 +3465,335 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
 
 
 //
-// BINARY: Similar code patterns are used for the ordered comparisons
+// BINARY: Similar code patterns are used for the ordered comparisons. This
+// method relies on the compiler having already inserted numeric promotion
+// casts, so that the type of the left and right expressions match.
 //
 int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
 {
-    switch (expression -> binary_tag) // process boolean-results first
+    TypeSymbol *type = expression -> Type();
+
+    //
+    // First, special case instanceof and string concatenation.
+    //
+    if (expression -> binary_tag == AstBinaryExpression::INSTANCEOF)
+    {
+        TypeSymbol *left_type = expression -> left_expression -> Type();
+        TypeSymbol *right_type = expression -> right_expression -> Type();
+        if (left_type == control.null_type)
+        {
+            //
+            // We know the result: false. But emit the left expression,
+            // in case of side effects in (expr ? null : null).
+            //
+            EmitExpression(expression -> left_expression, false);
+            PutOp(OP_ICONST_0);
+        }
+        else if (expression -> left_expression -> IsConstant() &&
+                 left_type -> IsSubclass(right_type))
+        {
+            //
+            // We know the result: true.
+            //
+            assert(left_type == control.String());
+            PutOp(OP_ICONST_1);
+        }
+        else
+        {
+            EmitExpression(expression -> left_expression);
+            PutOp(OP_INSTANCEOF);
+            PutU2(right_type -> num_dimensions > 0
+                  ? RegisterClass(right_type -> signature)
+                  : RegisterClass(right_type -> fully_qualified_name));
+        }
+        return 1;
+    }
+
+    if (type == control.String())
+    {
+        assert(expression -> binary_tag == AstBinaryExpression::PLUS);
+        ConcatenateString(expression);
+        PutOp(OP_INVOKEVIRTUAL);
+        PutU2(RegisterLibraryMethodref(control.StringBuffer_toStringMethod()));
+        ChangeStack(1); // account for return value
+        return 1;
+    }
+
+    //
+    // Next, try to simplify if one operand known to be zero or one.
+    //
+    if (IsZero(expression -> left_expression))
+    {
+        //
+        // Undo compiler-inserted numeric promotion, as well as narrowing from
+        // long to int in shifts, to avoid unnecessary type conversions.
+        //
+        AstExpression *right_expr = expression -> right_expression;
+        if (right_expr -> CastExpressionCast() && right_expr -> generated)
+            right_expr = ((AstCastExpression *) right_expr) -> expression;
+        TypeSymbol *right_type = right_expr -> Type();
+
+        switch (expression -> binary_tag)
+        {
+        case AstBinaryExpression::AND_AND:
+            PutOp(OP_ICONST_0);
+            return 1;
+        case AstBinaryExpression::EQUAL_EQUAL:
+            if (right_type != control.boolean_type)
+                break;
+            EmitExpression(right_expr);
+            PutOp(OP_ICONST_1);
+            PutOp(OP_IXOR);
+            return 1;
+        case AstBinaryExpression::NOT_EQUAL:
+            if (right_type != control.boolean_type)
+                break;
+            // Fallthrough on boolean case!
+        case AstBinaryExpression::PLUS:
+        case AstBinaryExpression::IOR:
+        case AstBinaryExpression::XOR:
+        case AstBinaryExpression::OR_OR:
+            //
+            // Note that +0.0 + expr cannot be simplified if expr is floating
+            // point, because of -0.0 rules.
+            //
+            if (control.IsFloatingPoint(right_type))
+            {
+                if (expression -> left_expression -> Type() == control.float_type)
+                {
+                    FloatLiteralValue *value = (FloatLiteralValue *) expression -> left_expression -> value;
+                    if (value -> value.IsPositiveZero())
+                        break;
+                }
+                else if (expression -> left_expression -> Type() == control.double_type)
+                {
+                    DoubleLiteralValue *value = (DoubleLiteralValue *) expression -> left_expression -> value;
+                    if (value -> value.IsPositiveZero())
+                        break;
+                }
+            }
+
+            EmitExpression(right_expr);
+            return GetTypeWords(type);
+        case AstBinaryExpression::STAR:
+        case AstBinaryExpression::AND:
+        case AstBinaryExpression::LEFT_SHIFT:
+        case AstBinaryExpression::RIGHT_SHIFT:
+        case AstBinaryExpression::UNSIGNED_RIGHT_SHIFT:
+            //
+            // Floating point multiplication by 0 cannot be simplified, because
+            // of NaN, infinity, and -0.0 rules. And in general, division
+            // cannot be simplified because of divide by 0 for integers and
+            // corner cases for floating point.
+            //
+            if (control.IsFloatingPoint(type))
+                break;
+
+            EmitExpression(right_expr, false);
+            PutOp(type == control.long_type ? OP_LCONST_0 : OP_ICONST_0);
+            return GetTypeWords(type);
+        case AstBinaryExpression::MINUS:
+            //
+            // 0 - x is negation, but note that +0.0 - expr cannot be
+            // simplified if expr is floating point, because of -0.0 rules.
+            //
+            if (control.IsFloatingPoint(right_type))
+            {
+                if (expression -> left_expression -> Type() == control.float_type)
+                {
+                    FloatLiteralValue *value = (FloatLiteralValue *) expression -> left_expression -> value;
+                    if (value -> value.IsPositiveZero())
+                        break;
+                }
+                else if (expression -> left_expression -> Type() == control.double_type)
+                {
+                    DoubleLiteralValue *value = (DoubleLiteralValue *) expression -> left_expression -> value;
+                    if (value -> value.IsPositiveZero())
+                        break;
+                }
+            }
+
+            EmitExpression(right_expr);
+
+            PutOp(control.IsSimpleIntegerValueType(type) ? OP_INEG
+                  : type == control.long_type ? OP_LNEG
+                  : type == control.float_type ? OP_FNEG
+                  : OP_DNEG); // double_type
+            return GetTypeWords(type);
+        default:
+            break;
+        }
+    }
+
+    if (IsOne(expression -> left_expression))
+    {
+        if (expression -> binary_tag == AstBinaryExpression::STAR)
+        {
+            EmitExpression(expression -> right_expression);
+            return GetTypeWords(type);
+        }
+        if (expression -> left_expression -> Type() == control.boolean_type)
+        {
+            switch (expression -> binary_tag)
+            {
+            case AstBinaryExpression::EQUAL_EQUAL:
+            case AstBinaryExpression::AND_AND:
+            case AstBinaryExpression::AND:
+                EmitExpression(expression -> right_expression);
+                break;
+            case AstBinaryExpression::IOR:
+                EmitExpression(expression -> right_expression, false);
+                // Fallthrough
+            case AstBinaryExpression::OR_OR:
+                PutOp(OP_ICONST_1);
+                break;
+            case AstBinaryExpression::NOT_EQUAL:
+            case AstBinaryExpression::XOR:
+                EmitExpression(expression -> right_expression);
+                PutOp(OP_ICONST_1);
+                PutOp(OP_IXOR);
+                break;
+            default:
+                assert(false && "Invalid operator on boolean");
+            }
+            return 1;
+        }
+    }
+
+    if (IsZero(expression -> right_expression))
+    {
+        //
+        // Undo compiler-inserted numeric promotion to avoid unnecessary type
+        // conversions.
+        //
+        AstExpression *left_expr = expression -> left_expression;
+        if (left_expr -> CastExpressionCast() && left_expr -> generated)
+            left_expr = ((AstCastExpression *) left_expr) -> expression;
+        TypeSymbol *left_type = left_expr -> Type();
+
+        switch (expression -> binary_tag)
+        {
+        case AstBinaryExpression::AND_AND:
+            EmitExpression(left_expr, false);
+            PutOp(OP_ICONST_0);
+            return 1;
+        case AstBinaryExpression::EQUAL_EQUAL:
+            if (left_type != control.boolean_type)
+                break;
+            EmitExpression(left_expr);
+            PutOp(OP_ICONST_1);
+            PutOp(OP_IXOR);
+            return 1;
+        case AstBinaryExpression::NOT_EQUAL:
+            if (left_type != control.boolean_type)
+                break;
+            // Fallthrough on boolean case!
+        case AstBinaryExpression::PLUS:
+        case AstBinaryExpression::MINUS:
+        case AstBinaryExpression::IOR:
+        case AstBinaryExpression::XOR:
+        case AstBinaryExpression::OR_OR:
+        case AstBinaryExpression::LEFT_SHIFT:
+        case AstBinaryExpression::RIGHT_SHIFT:
+        case AstBinaryExpression::UNSIGNED_RIGHT_SHIFT:
+            //
+            // Here for cases that simplify to the left operand. Note that
+            // (expr + +0.0) and (expr - -0.0) cannot be simplified if expr
+            // is floating point, because of -0.0 rules.
+            //
+            if (control.IsFloatingPoint(left_type))
+            {
+                if (expression -> right_expression -> Type() == control.float_type)
+                {
+                    FloatLiteralValue *value = (FloatLiteralValue *) expression -> right_expression -> value;
+                    if (value -> value.IsPositiveZero() ==
+                        (expression -> binary_tag == AstBinaryExpression::PLUS))
+                        break;
+                }
+                else if (expression -> right_expression -> Type() == control.double_type)
+                {
+                    DoubleLiteralValue *value = (DoubleLiteralValue *) expression -> right_expression -> value;
+                    if (value -> value.IsPositiveZero() ==
+                        (expression -> binary_tag == AstBinaryExpression::PLUS))
+                        break;
+                }
+            }
+            EmitExpression(expression -> left_expression);
+            return GetTypeWords(type);
+        case AstBinaryExpression::STAR:
+        case AstBinaryExpression::AND:
+            //
+            // Floating point multiplication by 0 cannot be simplified, because
+            // of NaN, infinity, and -0.0 rules. And in general, division
+            // cannot be simplified because of divide by 0 for integers and
+            // corner cases for floating point.
+            //
+            if (control.IsFloatingPoint(type))
+                break;
+
+            EmitExpression(left_expr, false);
+            PutOp(type == control.long_type ? OP_LCONST_0 : OP_ICONST_0);
+            return GetTypeWords(type);
+        default:
+            break;
+        }
+    }
+
+    if (IsOne(expression -> right_expression))
+    {
+        if (expression -> binary_tag == AstBinaryExpression::STAR ||
+            expression -> binary_tag == AstBinaryExpression::SLASH)
+        {
+            EmitExpression(expression -> left_expression);
+            return GetTypeWords(type);
+        }
+        if (expression -> right_expression -> Type() == control.boolean_type)
+        {
+            switch (expression -> binary_tag)
+            {
+            case AstBinaryExpression::EQUAL_EQUAL:
+            case AstBinaryExpression::AND_AND:
+            case AstBinaryExpression::AND:
+                EmitExpression(expression -> left_expression);
+                break;
+            case AstBinaryExpression::IOR:
+                EmitExpression(expression -> left_expression, false);
+                // Fallthrough
+            case AstBinaryExpression::OR_OR:
+                PutOp(OP_ICONST_1);
+                break;
+            case AstBinaryExpression::NOT_EQUAL:
+            case AstBinaryExpression::XOR:
+                EmitExpression(expression -> left_expression);
+                PutOp(OP_ICONST_1);
+                PutOp(OP_IXOR);
+                break;
+            default:
+                assert(false && "Invalid operator on boolean");
+            }
+            return 1;
+        }
+    }
+
+    //
+    // Next, simplify all remaining boolean result expressions.
+    //
+    if (expression -> left_expression -> Type() == control.boolean_type &&
+        (expression -> binary_tag == AstBinaryExpression::EQUAL_EQUAL ||
+         expression -> binary_tag == AstBinaryExpression::NOT_EQUAL))
+    {
+        EmitExpression(expression -> left_expression);
+        EmitExpression(expression -> right_expression);
+        PutOp(OP_IXOR);
+        if (expression -> binary_tag == AstBinaryExpression::EQUAL_EQUAL)
+        {
+            PutOp(OP_ICONST_1);
+            PutOp(OP_IXOR);
+        }
+        return 1;
+    }
+
+    switch (expression -> binary_tag)
     {
     case AstBinaryExpression::OR_OR:
     case AstBinaryExpression::AND_AND:
@@ -3505,117 +3818,15 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
         break;
     }
 
-    if (expression -> binary_tag == AstBinaryExpression::INSTANCEOF)
-    {
-        TypeSymbol *instanceof_type = expression -> right_expression -> Type();
-        EmitExpression(expression -> left_expression);
-        PutOp(OP_INSTANCEOF);
-        PutU2(instanceof_type -> num_dimensions > 0 ? RegisterClass(instanceof_type -> signature)
-                                                    : RegisterClass(instanceof_type -> fully_qualified_name));
-        return 1;
-    }
-
     //
-    // special case string concatenation
+    // Finally, if we get here, the expression is not boolean, and cannot be
+    // optimized.
     //
-    if (expression -> Type() == control.String())
-    {
-        assert(expression -> binary_tag == AstBinaryExpression::PLUS);
-        ConcatenateString(expression);
-        PutOp(OP_INVOKEVIRTUAL);
-        PutU2(RegisterLibraryMethodref(control.StringBuffer_toStringMethod()));
-        ChangeStack(1); // account for return value
-        return 1;
-    }
-
-    //
-    // Try to simplify if one operand known to be zero.
-    //
-    if (IsZero(expression -> left_expression))
-    {
-        TypeSymbol *right_type = expression -> right_expression -> Type();
-        switch (expression -> binary_tag)
-        {
-        case AstBinaryExpression::PLUS:
-        case AstBinaryExpression::IOR:
-        case AstBinaryExpression::XOR:
-            EmitExpression(expression -> right_expression);
-            return GetTypeWords(expression -> Type());
-        case AstBinaryExpression::STAR:
-        case AstBinaryExpression::AND:
-        case AstBinaryExpression::LEFT_SHIFT:
-        case AstBinaryExpression::RIGHT_SHIFT:
-        case AstBinaryExpression::UNSIGNED_RIGHT_SHIFT:
-            if (control.IsSimpleIntegerValueType(right_type) || right_type == control.boolean_type)
-                PutOp(OP_ICONST_0);
-            else
-            {
-                assert((right_type == control.long_type ||
-                        right_type == control.float_type ||
-                        right_type == control.double_type) && "unexpected type in expression simplification");
-
-                PutOp(right_type == control.long_type ? OP_LCONST_0
-                      : right_type == control.float_type ? OP_FCONST_0
-                      : OP_DCONST_0); // double_type
-            }
-            return GetTypeWords(right_type);
-        case AstBinaryExpression::MINUS: // 0 - x is negation of x
-            EmitExpression(expression -> right_expression);
-
-            assert((control.IsSimpleIntegerValueType(right_type) ||
-                    right_type == control.long_type ||
-                    right_type == control.float_type ||
-                    right_type == control.double_type) && "unexpected type in expression simplification");
-
-            PutOp(control.IsSimpleIntegerValueType(right_type) ? OP_INEG
-                  : right_type == control.long_type ? OP_LNEG
-                  : right_type == control.float_type ? OP_FNEG
-                  : OP_DNEG); // double_type
-            return GetTypeWords(expression -> Type());
-        default:
-            break;
-        }
-    }
-
-    if (IsZero(expression -> right_expression))
-    {
-        TypeSymbol *left_type = expression -> left_expression -> Type();
-        switch (expression -> binary_tag)
-        {
-        case AstBinaryExpression::PLUS:
-        case AstBinaryExpression::MINUS:
-        case AstBinaryExpression::IOR:
-        case AstBinaryExpression::XOR:
-        case AstBinaryExpression::LEFT_SHIFT:
-        case AstBinaryExpression::RIGHT_SHIFT:
-        case AstBinaryExpression::UNSIGNED_RIGHT_SHIFT: // here for cases that simplify to the left operand
-            EmitExpression(expression -> left_expression);
-            return GetTypeWords(expression -> Type());
-        case AstBinaryExpression::STAR:
-        case AstBinaryExpression::AND: // here for cases that evaluate to zero
-            if (control.IsSimpleIntegerValueType(left_type) || left_type == control.boolean_type)
-                PutOp(OP_ICONST_0);
-            else
-            {
-                assert((left_type == control.long_type ||
-                        left_type == control.float_type ||
-                        left_type == control.double_type) && "unexpected type in expression simplification");
-
-                PutOp(left_type == control.long_type ? OP_LCONST_0
-                      : left_type == control.float_type ? OP_FCONST_0
-                      : OP_DCONST_0); // double_type
-            }
-            return GetTypeWords(expression -> Type());
-        default:
-            break;
-        }
-    }
-
     EmitExpression(expression -> left_expression);
     EmitExpression(expression -> right_expression);
 
-    TypeSymbol *type = expression -> left_expression -> Type();
-    bool integer_type = (control.IsSimpleIntegerValueType(type) || type == control.boolean_type);
+    bool integer_type = (control.IsSimpleIntegerValueType(type) ||
+                         type == control.boolean_type);
     switch (expression -> binary_tag)
     {
     case AstBinaryExpression::STAR:
@@ -3674,15 +3885,18 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
 }
 
 
-int ByteCode::EmitCastExpression(AstCastExpression *expression)
+int ByteCode::EmitCastExpression(AstCastExpression *expression, bool need_value)
 {
     //
     // convert from numeric type src to destination type dest
     //
-    EmitExpression(expression -> expression);
+    EmitExpression(expression -> expression, need_value);
 
-    TypeSymbol *dest_type = expression -> Type(),
-               *source_type = expression -> expression -> Type();
+    if (! need_value)
+        return 0;
+
+    TypeSymbol *dest_type = expression -> Type();
+    TypeSymbol *source_type = expression -> expression -> Type();
     EmitCast(dest_type, source_type);
 
     return GetTypeWords(dest_type);
@@ -3863,10 +4077,20 @@ int ByteCode::EmitConditionalExpression(AstConditionalExpression *expression,
                                         bool need_value)
 {
     if (expression -> test_expression -> IsConstant())
+        EmitExpression((IsZero(expression -> test_expression)
+                        ? expression -> false_expression
+                        : expression -> true_expression),
+                       need_value);
+    else if (expression -> Type() == control.null_type &&
+        expression -> false_expression -> NullLiteralCast() &&
+        expression -> true_expression -> NullLiteralCast())
     {
-        if (IsZero(expression -> test_expression))
-            EmitExpression(expression -> false_expression);
-        else EmitExpression(expression -> true_expression);
+        //
+        // Optimize (expr ? null : null).
+        //
+        EmitExpression(expression -> test_expression, false);
+        if (need_value)
+            PutOp(OP_ACONST_NULL);
     }
     else
     {
@@ -3915,7 +4139,8 @@ int ByteCode::EmitFieldAccess(AstFieldAccess *expression, bool need_value)
 
     if (base -> Type() -> IsArray() && sym -> ExternalIdentity() == control.length_name_symbol)
     {
-        assert(need_value && "array.length cannot qualify static member");
+        if (! need_value)
+            return 0;
 
         EmitExpression(base);
         PutOp(OP_ARRAYLENGTH);
@@ -3952,8 +4177,7 @@ int ByteCode::EmitFieldAccess(AstFieldAccess *expression, bool need_value)
 
     if (! need_value)
     {
-        assert(! expression_type -> Primitive());
-        PutOp(OP_POP);
+        PutOp(control.IsDoubleWordType(expression_type) ? OP_POP2 : OP_POP);
         return 0;
     }
 
@@ -4108,8 +4332,7 @@ void ByteCode::EmitNewArray(int num_dims, TypeSymbol *type)
     {
         TypeSymbol *element_type = type -> ArraySubtype();
 
-        if (control.IsNumeric(element_type) ||
-            element_type == control.boolean_type)
+        if (control.IsPrimitive(element_type))
         {
             PutOp(OP_NEWARRAY);
             PutU1(element_type == control.boolean_type ? 4
@@ -4401,10 +4624,7 @@ int ByteCode::EmitPreUnaryExpression(AstPreUnaryExpression *expression, bool nee
         case AstPreUnaryExpression::MINUS:
             EmitExpression(expression -> expression);
 
-            assert((control.IsSimpleIntegerValueType(type) ||
-                    type == control.long_type ||
-                    type == control.float_type ||
-                    type == control.double_type) && "unary minus on unsupported type");
+            assert(control.IsNumeric(type) && "unary minus on unsupported type");
 
             PutOp(control.IsSimpleIntegerValueType(type) ? OP_INEG
                   : type == control.long_type ? OP_LNEG
@@ -4770,7 +4990,7 @@ void ByteCode::ConcatenateString(AstBinaryExpression *expression)
     //
     AstExpression *left_expr = StripNops(expression -> left_expression);
     if (left_expr -> Type() == control.String() &&
-	left_expr -> BinaryExpressionCast())
+        left_expr -> BinaryExpressionCast())
     {
         ConcatenateString((AstBinaryExpression *) left_expr);
     }

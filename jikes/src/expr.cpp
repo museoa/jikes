@@ -5198,45 +5198,58 @@ void Semantic::BinaryNumericPromotion(AstBinaryExpression *binary_expression)
     if (left_type == control.double_type)
     {
         if (right_type != control.double_type)
-            binary_expression -> right_expression = ConvertToType(binary_expression -> right_expression, control.double_type);
+            binary_expression -> right_expression =
+                ConvertToType(binary_expression -> right_expression,
+                              control.double_type);
         binary_expression -> symbol = control.double_type;
     }
     else if (right_type == control.double_type)
     {
-        if (left_type != control.double_type)
-            binary_expression -> left_expression = ConvertToType(binary_expression -> left_expression, control.double_type);
+        binary_expression -> left_expression =
+            ConvertToType(binary_expression -> left_expression,
+                          control.double_type);
         binary_expression -> symbol = control.double_type;
     }
     else if (left_type == control.float_type)
     {
         if (right_type != control.float_type)
-            binary_expression -> right_expression = ConvertToType(binary_expression -> right_expression, control.float_type);
+            binary_expression -> right_expression =
+                ConvertToType(binary_expression -> right_expression,
+                              control.float_type);
         binary_expression -> symbol = control.float_type;
     }
     else if (right_type == control.float_type)
     {
-        if (left_type != control.float_type)
-            binary_expression -> left_expression = ConvertToType(binary_expression -> left_expression, control.float_type);
+        binary_expression -> left_expression =
+            ConvertToType(binary_expression -> left_expression,
+                          control.float_type);
         binary_expression -> symbol = control.float_type;
     }
     else if (left_type == control.long_type)
     {
         if (right_type != control.long_type)
-            binary_expression -> right_expression = ConvertToType(binary_expression -> right_expression, control.long_type);
+            binary_expression -> right_expression =
+                ConvertToType(binary_expression -> right_expression,
+                              control.long_type);
         binary_expression -> symbol = control.long_type;
     }
     else if (right_type == control.long_type)
     {
-        if (left_type != control.long_type)
-            binary_expression -> left_expression = ConvertToType(binary_expression -> left_expression, control.long_type);
+        binary_expression -> left_expression =
+            ConvertToType(binary_expression -> left_expression,
+                          control.long_type);
         binary_expression -> symbol = control.long_type;
     }
     else
     {
         if (left_type != control.int_type)
-            binary_expression -> left_expression = ConvertToType(binary_expression -> left_expression, control.int_type);
+            binary_expression -> left_expression =
+                ConvertToType(binary_expression -> left_expression,
+                              control.int_type);
         if (right_type != control.int_type)
-            binary_expression -> right_expression = ConvertToType(binary_expression -> right_expression, control.int_type);
+            binary_expression -> right_expression =
+                ConvertToType(binary_expression -> right_expression,
+                              control.int_type);
         binary_expression -> symbol = control.int_type;
     }
 }
@@ -5273,39 +5286,52 @@ void Semantic::BinaryNumericPromotion(AstAssignmentExpression *assignment_expres
     if (left_type == control.double_type)
     {
         if (right_type != control.double_type)
-            assignment_expression -> expression = ConvertToType(assignment_expression -> expression, control.double_type);
+            assignment_expression -> expression =
+                ConvertToType(assignment_expression -> expression,
+                              control.double_type);
     }
     else if (right_type == control.double_type)
     {
-        if (left_type != control.double_type)
-            assignment_expression -> left_hand_side = ConvertToType(assignment_expression -> left_hand_side, control.double_type);
+        assignment_expression -> left_hand_side =
+            ConvertToType(assignment_expression -> left_hand_side,
+                          control.double_type);
     }
     else if (left_type == control.float_type)
     {
         if (right_type != control.float_type)
-            assignment_expression -> expression = ConvertToType(assignment_expression -> expression, control.float_type);
+            assignment_expression -> expression =
+                ConvertToType(assignment_expression -> expression,
+                              control.float_type);
     }
     else if (right_type == control.float_type)
     {
-        if (left_type != control.float_type)
-            assignment_expression -> left_hand_side = ConvertToType(assignment_expression -> left_hand_side, control.float_type);
+        assignment_expression -> left_hand_side =
+            ConvertToType(assignment_expression -> left_hand_side,
+                          control.float_type);
     }
     else if (left_type == control.long_type)
     {
         if (right_type != control.long_type)
-            assignment_expression -> expression = ConvertToType(assignment_expression -> expression, control.long_type);
+            assignment_expression -> expression =
+                ConvertToType(assignment_expression -> expression,
+                              control.long_type);
     }
     else if (right_type == control.long_type)
     {
-        if (left_type != control.long_type)
-            assignment_expression -> left_hand_side = ConvertToType(assignment_expression -> left_hand_side, control.long_type);
+        assignment_expression -> left_hand_side =
+            ConvertToType(assignment_expression -> left_hand_side,
+                          control.long_type);
     }
     else
     {
         if (left_type != control.int_type)
-            assignment_expression -> left_hand_side = ConvertToType(assignment_expression -> left_hand_side, control.int_type);
+            assignment_expression -> left_hand_side =
+                ConvertToType(assignment_expression -> left_hand_side,
+                              control.int_type);
         if (right_type != control.int_type)
-            assignment_expression -> expression = ConvertToType(assignment_expression -> expression, control.int_type);
+            assignment_expression -> expression =
+                ConvertToType(assignment_expression -> expression,
+                              control.int_type);
     }
 }
 
@@ -5347,50 +5373,57 @@ void Semantic::BinaryNumericPromotion(AstConditionalExpression *conditional_expr
     {
         if (right_type != control.double_type)
             conditional_expression -> false_expression =
-                        ConvertToType(conditional_expression -> false_expression, control.double_type);
+                ConvertToType(conditional_expression -> false_expression,
+                              control.double_type);
         conditional_expression -> symbol = control.double_type;
     }
     else if (right_type == control.double_type)
     {
-        if (left_type != control.double_type)
-            conditional_expression -> true_expression =
-                        ConvertToType(conditional_expression -> true_expression, control.double_type);
+        conditional_expression -> true_expression =
+            ConvertToType(conditional_expression -> true_expression,
+                          control.double_type);
         conditional_expression -> symbol = control.double_type;
     }
     else if (left_type == control.float_type)
     {
         if (right_type != control.float_type)
             conditional_expression -> false_expression =
-                        ConvertToType(conditional_expression -> false_expression, control.float_type);
+                ConvertToType(conditional_expression -> false_expression,
+                              control.float_type);
         conditional_expression -> symbol = control.float_type;
     }
     else if (right_type == control.float_type)
     {
-        if (left_type != control.float_type)
-            conditional_expression -> true_expression =
-                        ConvertToType(conditional_expression -> true_expression, control.float_type);
+        conditional_expression -> true_expression =
+            ConvertToType(conditional_expression -> true_expression,
+                          control.float_type);
         conditional_expression -> symbol = control.float_type;
     }
     else if (left_type == control.long_type)
     {
         if (right_type != control.long_type)
             conditional_expression -> false_expression =
-                        ConvertToType(conditional_expression -> false_expression, control.long_type);
+                ConvertToType(conditional_expression -> false_expression,
+                              control.long_type);
         conditional_expression -> symbol = control.long_type;
     }
     else if (right_type == control.long_type)
     {
-        if (left_type != control.long_type)
-            conditional_expression -> true_expression = ConvertToType(conditional_expression -> true_expression, control.long_type);
+        conditional_expression -> true_expression =
+            ConvertToType(conditional_expression -> true_expression,
+                          control.long_type);
         conditional_expression -> symbol = control.long_type;
     }
     else
     {
         if (left_type != control.int_type)
-            conditional_expression -> true_expression = ConvertToType(conditional_expression -> true_expression, control.int_type);
+            conditional_expression -> true_expression =
+                ConvertToType(conditional_expression -> true_expression,
+                              control.int_type);
         if (right_type != control.int_type)
             conditional_expression -> false_expression =
-                        ConvertToType(conditional_expression -> false_expression, control.int_type);
+                ConvertToType(conditional_expression -> false_expression,
+                              control.int_type);
         conditional_expression -> symbol = control.int_type;
     }
 }
