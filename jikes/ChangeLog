@@ -1,5 +1,10 @@
 2002-11-02  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/modifier.cpp (ProcessAccessFlag): Overdid last commit -
+	restore behavior of pedantic_modifier_order.
+
+2002-11-02  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/expr.cpp (ReportConstructorNotFound, ProcessTypeExpression),
 	(GetAnonymousType): Minor touchups.
 	* src/bytecode.cpp (ByteCode): Move ACC_SUPER logic here...

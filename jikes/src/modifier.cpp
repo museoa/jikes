@@ -50,7 +50,7 @@ static u2 AstKindToFlag(Ast::Kind kind)
 // . Duplicated mutually exclusive modifiers (public, protected, private).
 // . Duplicated general modifiers.
 // . Modifier combinations not legal (such as final abstract).
-// . Modifiers not in the recommended order (pedantic only).
+// . Modifiers not in the recommended order (pedantic_modifier_order only).
 // . Explicit specification of implicit modifier (pedantic only).
 //
 void Semantic::ProcessAccessFlag(AccessFlags& access_flags,
@@ -79,16 +79,17 @@ void Semantic::ProcessAccessFlag(AccessFlags& access_flags,
     else
     {
         // We have a valid flag if it is alone.
-        if (control.option.pedantic)
+        if (control.option.pedantic && (flag & implicit_flags))
         {
-            if ((flag & implicit_flags) != 0)
-                ReportSemError(SemanticError::REDUNDANT_MODIFIER, token_index,
-                               lex_stream -> NameString(token_index),
-                               declaration_kind_name);
-            if (! access_flags.RecommendedOrder(flag))
-                ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
-                               token_index,
-                               lex_stream -> NameString(token_index));
+            ReportSemError(SemanticError::REDUNDANT_MODIFIER, token_index,
+                           lex_stream -> NameString(token_index),
+                           declaration_kind_name);
+        }
+        if (control.option.pedantic_modifier_order &&
+            ! access_flags.RecommendedOrder(flag))
+        {
+            ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
+                           token_index, lex_stream -> NameString(token_index));
         }
         access_flags.SetFlags(flag);
         if (access_flags.ACC_FINAL())
