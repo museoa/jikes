@@ -1157,7 +1157,7 @@ private:
                                    SemanticEnvironment*, NameSymbol*,
                                    LexStream::TokenIndex);
     VariableSymbol* FindMisspelledVariableName(TypeSymbol*,
-                                               LexStream::TokenIndex);
+                                               AstExpression*);
     VariableSymbol* FindVariableInEnvironment(SemanticEnvironment*&,
                                               LexStream::TokenIndex);
     VariableSymbol* FindVariableInType(TypeSymbol*, AstExpression*,

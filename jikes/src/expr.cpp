@@ -727,10 +727,15 @@ MethodSymbol* Semantic::FindConstructor(TypeSymbol* containing_type, Ast* ast,
 //
 //
 VariableSymbol* Semantic::FindMisspelledVariableName(TypeSymbol* type,
-                                                     LexStream::TokenIndex identifier_token)
+                                                     AstExpression* expr)
 {
+    AstFieldAccess* field_access = expr -> FieldAccessCast();
+    AstName* field_name = expr -> NameCast();
+    AstExpression* base =
+        field_name ? field_name -> base_opt : field_access -> base;
     VariableSymbol* misspelled_variable = NULL;
     int index = 0;
+    LexStream::TokenIndex identifier_token = expr -> RightToken();
     const wchar_t* name = lex_stream -> NameString(identifier_token);
 
     for (unsigned k = 0;
@@ -741,12 +746,27 @@ VariableSymbol* Semantic::FindMisspelledVariableName(TypeSymbol* type,
         VariableSymbol* variable = variable_shadow -> variable_symbol;
         if (! variable -> IsTyped())
             variable -> ProcessVariableSignature(this, identifier_token);
-
-        int new_index = Spell::Index(name, variable -> Name());
-        if (new_index > index)
+        if (! MemberAccessCheck(type, variable, base))
+            variable = NULL;
+        for (unsigned i = 0;
+             ! variable && i < variable_shadow -> NumConflicts(); i++)
         {
-            misspelled_variable = variable;
-            index = new_index;
+            variable = variable_shadow -> Conflict(i);
+            if (! variable -> IsTyped())
+                variable -> ProcessVariableSignature(this,
+                                                     identifier_token);
+            if (! MemberAccessCheck(type, variable, base))
+                variable = NULL;
+        }
+
+        if (variable)
+        {
+            int new_index = Spell::Index(name, variable -> Name());
+            if (new_index > index)
+            {
+                misspelled_variable = variable;
+                index = new_index;
+            }
         }
     }
 
@@ -764,6 +784,9 @@ MethodSymbol* Semantic::FindMisspelledMethodName(TypeSymbol* type,
                                                  AstMethodInvocation* method_call,
                                                  NameSymbol* name_symbol)
 {
+    AstFieldAccess* field_access = method_call -> method -> FieldAccessCast();
+    AstName* name = method_call -> method -> NameCast();
+    AstExpression* base = name ? name -> base_opt : field_access -> base;
     MethodSymbol* misspelled_method = NULL;
     int index = 0;
     LexStream::TokenIndex identifier_token =
@@ -779,8 +802,10 @@ MethodSymbol* Semantic::FindMisspelledMethodName(TypeSymbol* type,
         if (! method -> IsTyped())
             method -> ProcessMethodSignature(this, identifier_token);
 
-        if (method_call -> arguments -> NumArguments() ==
-            method -> NumFormalParameters())
+        if ((method_call -> arguments -> NumArguments() ==
+             method -> NumFormalParameters()) &&
+            (MemberAccessCheck(type, method, base) ||
+             method_shadow -> NumConflicts() > 0))
         {
             unsigned i;
             for (i = 0; i < method_call -> arguments -> NumArguments(); i++)
@@ -1277,7 +1302,7 @@ void Semantic::ReportVariableNotFound(AstExpression* access, TypeSymbol* type)
     //
     // Search for a misspelled field name.
     //
-    VariableSymbol* variable = FindMisspelledVariableName(type, id_token);
+    VariableSymbol* variable = FindMisspelledVariableName(type, access);
     if (variable)
         ReportSemError(SemanticError::FIELD_NAME_MISSPELLED,
                        id_token, name_symbol -> Name(),

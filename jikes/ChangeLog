@@ -1,5 +1,14 @@
 2004-01-30  Eric Blake  <ebb9@byu.net>
 
+	* src/expr.cpp (FindMisspelledMethodName): Jikes bug 3613.
+	(ReportVariableNotFound, FindMisspelledVariableName): Similar, but
+	with fields.
+	* src/semantic.h (FindMisspelledVariableName): Update signature.
+	* src/error.cpp (FIELD_NOT_FOUND, METHOD_NOT_FOUND): Update
+	wording.
+
+2004-01-30  Eric Blake  <ebb9@byu.net>
+
 	* src/bytecode.cpp (ConcatenateString): Jikes bug 3501.
 	(EmitTryStatement): Minor optimization when catch block is empty.
 

@@ -1335,7 +1335,7 @@ void SemanticError::InitializeMessages()
     messages[PACKAGE_NOT_TYPE] =
         "Package \"%1\" was found when a type was expected.";
     messages[TYPE_NOT_FOUND] =
-        "Type %T1 was not found.";
+        "Type \"%T1\" was not found.";
     messages[INVALID_TYPE_FOUND] =
         "A candidate for type \"%1\" was found, but it is invalid and needs "
         "to be fixed before this type will successfully compile.";
@@ -1422,11 +1422,11 @@ void SemanticError::InitializeMessages()
         "are accessible from here: one declared in type \"%T2\" "
         "and one declared in type \"%T4\".";
     messages[FIELD_NOT_FOUND] =
-        "No field named \"%1\" was found in type \"%T2\".";
+        "No accessible field named \"%1\" was found in type \"%T2\".";
     messages[FIELD_NAME_MISSPELLED] =
-        "No field named \"%1\" was found in type \"%T2\". "
-        "However, there is an accessible field \"%4\" "
-        "whose name closely matches the name \"%1\".";
+        "No field named \"%1\" was found in type \"%T2\". However, there is "
+        "an accessible field \"%4\" whose name closely matches the name "
+        "\"%1\".";
     messages[METHOD_NOT_FIELD] =
         "The name \"%1\" is not a field name but the name of a method "
         "declared in the type \"%T2\".";
@@ -1445,7 +1445,8 @@ void SemanticError::InitializeMessages()
         "in type \"%T2\". Perhaps you wanted the overloaded version \"%4\" "
         "instead?";
     messages[METHOD_NOT_FOUND] =
-        "No method with signature \"%1\" was found in type \"%T2\".";
+        "No accessible method with signature \"%1\" was found in type "
+        "\"%T2\".";
     messages[METHOD_NAME_MISSPELLED] =
         "No method named \"%1\" was found in type \"%T2\". However, there is "
         "an accessible method \"%4\" whose name closely matches the name "
