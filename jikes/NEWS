@@ -1,3 +1,7 @@
+*** Jikes 1.18c is a work in progress, as of 29 December 2003.
+
+Incremental fixes over 1.18. FIXME: This list is not complete.
+
 *** Jikes 1.18 was released 21 November 2002.
 
 Compilation that encounters syntax errors is more robust.

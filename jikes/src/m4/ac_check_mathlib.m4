@@ -6,7 +6,7 @@ dnl
 dnl @version $Id$
 dnl @author Mo DeJong <mdejong@cygnus.com>
 dnl
-AC_DEFUN(AC_CHECK_MATHLIB,
+AC_DEFUN([AC_CHECK_MATHLIB],
 [
 AC_CHECK_HEADERS(math.h)
 AC_CACHE_CHECK(if math lib is required, ac_cv_need_math_lib,

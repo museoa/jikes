@@ -7,7 +7,7 @@ dnl ones we test.
 dnl @version $Id$
 dnl @author Christopher Abbey <chris_abbey@yahoo.com>
 
-AC_DEFUN(AC_FIND_ENCODING, [
+AC_DEFUN([AC_FIND_ENCODING], [
 
 dnl start the list with wchar_t... because if it
 dnl  is there then we're made in the shade.

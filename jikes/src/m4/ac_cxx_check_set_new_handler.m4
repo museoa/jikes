@@ -53,7 +53,7 @@ dnl @version $Id$
 dnl @author Mo DeJong <mdejong@cygnus.com>
 dnl
 
-AC_DEFUN(AC_CXX_CHECK_SET_NEW_HANDLER,
+AC_DEFUN([AC_CXX_CHECK_SET_NEW_HANDLER],
 [
 AC_REQUIRE([AC_CXX_HAVE_STD])
 AC_CACHE_CHECK(for VC++ style set_new_handler, ac_cv_vcpp_set_new_handler,

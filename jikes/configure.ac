@@ -4,13 +4,14 @@ dnl	generate the file "configure", which is run to configure the
 dnl	Makefile in this directory.
 
 dnl Set up the name and version
-AC_INIT([jikes], [1.18b])
-AM_INIT_AUTOMAKE([foreign check-news dist-bzip2 1.7.6])
+AC_INIT([jikes], [1.18c])
+AM_INIT_AUTOMAKE([foreign check-news dist-bzip2 1.8])
+AC_PREREQ(2.59)
+
 AC_DEFINE(JIKES_VERSION_STRING,
-          "Version 1.18c (CVS) - sometime after 27 September 2003",
+          "Version 1.18c (CVS) - sometime after 24 December 2003",
     [A string to indicate the release of jikes: Version 1.18 - 21 Nov 2002])
 
-AC_PREREQ(2.57)
 
 dnl AC_CACHE_LOAD
 
@@ -18,8 +19,7 @@ AC_CONFIG_HEADERS([src/config.h])
 AH_TOP([/* This software is subject to the terms of the IBM Jikes
 Compiler License Agreement available at the following URL:
 http://ibm.com/developerworks/opensource/jikes.
-Copyright (C) 1996, 2002, 2003 International Business Machines Corporation
-and others.  All Rights Reserved.
+Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
 You must accept the terms of that agreement to use this software. */])
 
 dnl	Do not autoupdate if configure.in and friends are changed

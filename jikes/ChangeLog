@@ -1,3 +1,47 @@
+2003-12-29  Eric Blake  <ebb9@byu.net>
+
+	* Makefile.am (INCLUDED_M4_FILES): Delete,
+	(ACLOCAL_AMFLAGS): Add. Let automake 1.8 do the work.
+	* NEWS: Add a blurb, for testing 'make dist'.
+	* acinclude.m4: Delete; now done by automake.
+	* autogen.sh: Update to match latest auto-toolchain.
+	* configure.ac (AC_INIT): Bump version to 1.18c.
+	(AM_INIT_AUTOMAKE): Require automake 1.8.
+	(AC_PREREQ): Require autoconf 2.59.
+	* src/stamp-h.in: Delete, not needed in CVS.
+	* Makefile.in: Regenerate.
+	* aclocal.m4: Ditto.
+	* config.guess: Ditto.
+	* config.sub: Ditto.
+	* configure: Ditto.
+	* depcomp: Ditto.
+	* install-sh: Ditto.
+	* missing: Ditto.
+	* mkinstalldirs: Ditto.
+	* doc/Makefile.in: Ditto.
+	* src/Makefile.in: Ditto.
+	* src/config.h.in: Ditto.
+	* src/m4/ac_check_error_discard_const.m4: Properly quote AC_DEFUN,
+	because automake 1.8 requires it.
+	* src/m4/ac_check_iconv.m4: Ditto.
+	* src/m4/ac_check_mathlib.m4: Ditto.
+	* src/m4/ac_check_wcs_funcs.m4: Ditto.
+	* src/m4/ac_cxx_bool.m4: Ditto.
+	* src/m4/ac_cxx_check_ostream_const_unsigned_char_ptr.m4: Ditto.
+	* src/m4/ac_cxx_check_set_new_handler.m4: Ditto.
+	* src/m4/ac_cxx_exceptions.m4: Ditto.
+	* src/m4/ac_cxx_have_std.m4: Ditto.
+	* src/m4/ac_cxx_namespaces.m4: Ditto.
+	* src/m4/ac_find_encoding.m4: Ditto.
+	* src/m4/ac_try_encoding.m4: Ditto.
+	* src/m4/acx_check_pathname_style.m4: Ditto.
+
+2003-12-29  Paul  <paul@gear.dyndns.org>
+
+	* jikes.spec: Improve the spec file, in part for better Red Hat
+	use - patches 416, 417.
+	* doc/Makefile.am (docdir): Documentation belongs in $(datadir).
+
 2003-12-24  Eric Blake  <ebb9@byu.net>
 
 	* src/bytecode.h (CompileConstructor): Add parameter.

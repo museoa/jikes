@@ -13,7 +13,7 @@ dnl
 dnl @version $Id$
 dnl @author Mark Elbrecht <snowball3@bigfoot.com>
 dnl
-AC_DEFUN(ACX_CHECK_PATHNAME_STYLE_DOS,
+AC_DEFUN([ACX_CHECK_PATHNAME_STYLE_DOS],
 [AC_MSG_CHECKING(for Windows and DOS and OS/2 style pathnames)
 AC_CACHE_VAL(acx_cv_pathname_style_dos,
 [AC_REQUIRE([AC_CANONICAL_HOST])

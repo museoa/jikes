@@ -4,7 +4,7 @@ dnl Check to see if the iconv functions and libs are present
 dnl @version $Id$
 dnl @author Mo DeJong <mdejong@redhat.com>
 dnl
-AC_DEFUN(AC_CHECK_ICONV,
+AC_DEFUN([AC_CHECK_ICONV],
 [
 dnl	Check for the iconv header file
 AC_CHECK_HEADERS(iconv.h)

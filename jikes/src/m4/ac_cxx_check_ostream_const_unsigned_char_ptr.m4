@@ -6,7 +6,7 @@ dnl
 dnl @version $Id$
 dnl @author Eric Blake <ebb9@email.byu.edu>
 dnl
-AC_DEFUN(AC_CXX_CHECK_OSTREAM_CONST_UNSIGNED_CHAR_PTR,
+AC_DEFUN([AC_CXX_CHECK_OSTREAM_CONST_UNSIGNED_CHAR_PTR],
 [AC_CACHE_CHECK(for presence of ostream << const unsigned char *,
 ac_cv_cxx_ostream_const_unsigned_char_ptr,
 [AC_TRY_COMPILE([

@@ -9,7 +9,7 @@ dnl This macro depends on AC_CHECK_ERROR_DISCARD_CONST
 dnl This file also defines the macro AC_CHECK_EXTENDED_WCS_FUNCS
 dnl which checks for even more wcs functions.
 dnl
-AC_DEFUN(AC_CHECK_WCS_FUNCS,
+AC_DEFUN([AC_CHECK_WCS_FUNCS],
 [
 dnl	Check for standard places where wide string functions are defined
 AC_CHECK_HEADERS(wchar.h string.h strings.h memory.h)
@@ -104,7 +104,7 @@ fi
 dnl	Check for extended wcs functions, these are not as commonly used
 dnl	AS the ones above so we do not want to always check for them.
 
-AC_DEFUN(AC_CHECK_EXTENDED_WCS_FUNCS,
+AC_DEFUN([AC_CHECK_EXTENDED_WCS_FUNCS],
 [
 AC_CHECK_FUNCS(wcsncat wcsnlen wcscasecmp wcsncasecmp wcscoll wcsxfrm wcsdup)
 AC_CHECK_FUNCS(wcschr wcsrchr wcscspn wcsspn wcspbrk wcsstr wcswcs wcstok)

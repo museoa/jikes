@@ -6,7 +6,7 @@ dnl  seems the safest... I could be wrong.
 dnl @version $Id$
 dnl @author Christopher Abbey <chris_abbey@yahoo.com>
 
-AC_DEFUN(AC_TRY_AN_ENCODING, [
+AC_DEFUN([AC_TRY_AN_ENCODING], [
 
   checkmsg="$1 as an encoding"
   if test "$2" = "yes" ; then

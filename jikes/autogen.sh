@@ -8,7 +8,7 @@
 # configure.in
 # any of the files in src/m4
 
-aclocal
-autoheader
+aclocal -I src/m4
 autoconf
+autoheader
 automake --ignore-deps --foreign --add-missing --force-missing

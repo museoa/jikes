@@ -6,7 +6,7 @@ dnl
 dnl @version $Id$
 dnl @author Luc Maisonobe
 dnl
-AC_DEFUN(AC_CXX_HAVE_STD,
+AC_DEFUN([AC_CXX_HAVE_STD],
 [AC_CACHE_CHECK(whether the compiler supports ISO C++ standard library,
 ac_cv_cxx_have_std,
 [AC_REQUIRE([AC_CXX_NAMESPACES])
