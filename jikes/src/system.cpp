@@ -477,6 +477,7 @@ void Control::ProcessPath()
         wchar_t *path_name = new wchar_t[max_path_name_length + 1]; // +1 for '\0'
 
         wchar_t *input_name = NULL;
+        char * full_directory_name = NULL;
 
         for (char *path = option.classpath, *path_tail = &path[strlen(path)]; path < path_tail; path++)
         {
