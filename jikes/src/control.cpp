@@ -1163,13 +1163,11 @@ void Control::ProcessBodies(TypeSymbol *type)
             DirectoryEntry *entry = directory -> FindCaseInsensitiveEntry(classfile_name, length);
 
             //
-            // If no entry exists for the classfile name, add it as we are about to create
-            // such a file. If an entry is found and it is not identical (in a case-sensitive test)
-            // to the name of the type, issue an appropriate message.
+            // If an entry is found and it is not identical (in a
+            // case-sensitive test) to the name of the type, issue an
+            // appropriate message.
             //
-            if (! entry)
-                directory -> InsertEntry(classfile_name, length);
-            else if (strcmp(classfile_name, entry -> name) != 0)
+            if (entry && strcmp(classfile_name, entry -> name) != 0)
             {
                 wchar_t *entry_name = new wchar_t[entry -> length + 1];
                 for (int i = 0; i < length; i++)

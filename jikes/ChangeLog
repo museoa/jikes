@@ -1,3 +1,9 @@
+2001-05-06  ??  <kumaran@alumni.stanford.org>
+
+	* src/control.cpp (ProcessBodies): fix
+	timestamp assert failure on Windows builds
+	fixes bugs 128, 406. (by way of Eric).
+
 2001-05-04  Pascal Davoust  <davoustp@yahoo.com>
 
 	* control.cpp (Control): fix MSVC build break
