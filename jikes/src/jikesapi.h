@@ -48,7 +48,9 @@ public:
         SDK1_1,
         SDK1_2,
         SDK1_3,
-        SDK1_4
+        SDK1_4,
+        SDK1_4_2,
+        SDK1_5
     };
 
     // This field can be 0 through 7 to represent all debug level combinations.

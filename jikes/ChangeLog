@@ -1,3 +1,20 @@
+2002-11-27  Eric Blake  <ebb9@email.byu.edu>
+
+	* doc/jikes.1 (+a): New option to omit asserts.
+	(-target, -source):
+	* src/jikes.cpp: Improve documentation to match new behavior.
+	* src/body (ProcessAssertStatement):
+	* src/bytecode.cpp (CompileClass, EmitAssertStatement),
+	(GenerateAssertVariableInitializer): Update to allow forward
+	compatibility to old VMs with proper command line options.
+	* src/error.h:
+	* src/error.cpp (ASSERT_UNSUPPORTED_IN_TARGET): New error.
+	* src/jikesapi.h (SDK1_4_2, SDK1_5): New Java release levels.
+	* src/option.cpp:
+	* src/option.h: Add long names for sevaral +options, improve
+	handling of +a, -source, -target.
+	* src/semantic.h: Fix typo.
+
 2002-11-26  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/ast.h (Ast): Remove unnecessary destructors (Ast nodes are

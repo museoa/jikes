@@ -1585,13 +1585,13 @@ void Semantic::ProcessTryStatement(Ast *stmt)
 }
 
 
-void Semantic::ProcessAssertStatement(Ast *stmt)
+void Semantic::ProcessAssertStatement(Ast* stmt)
 {
-    AstAssertStatement *assert_statement = (AstAssertStatement *) stmt;
+    AstAssertStatement* assert_statement = (AstAssertStatement*) stmt;
 
     ProcessExpression(assert_statement -> condition);
 
-    TypeSymbol *type = assert_statement -> condition -> Type();
+    TypeSymbol* type = assert_statement -> condition -> Type();
     if (type != control.no_type && type != control.boolean_type)
     {
         ReportSemError(SemanticError::TYPE_NOT_BOOLEAN,
@@ -1602,19 +1602,22 @@ void Semantic::ProcessAssertStatement(Ast *stmt)
     }
     //
     // If the condition is not constant true, store a reference to this class's
-    // assert variable (creating it if necessary as a side-effect)
+    // assert variable (creating it if necessary as a side-effect). However,
+    // if we are not emitting asserts, we can skip this.
     //
-    else if (! IsConstantTrue(assert_statement -> condition))
+    else if (! IsConstantTrue(assert_statement -> condition) &&
+             ! control.option.noassert)
+    {
         assert_statement -> assert_variable =
             ThisType() -> FindOrInsertAssertVariable();
+    }
 
     if (assert_statement -> message_opt)
     {
-        ProcessExpression(assert_statement -> message_opt);
+        ProcessExpressionOrStringConstant(assert_statement -> message_opt);
         if (assert_statement -> message_opt -> Type() == control.void_type)
             ReportSemError(SemanticError::TYPE_IS_VOID,
-                           assert_statement -> message_opt -> LeftToken(),
-                           assert_statement -> message_opt -> RightToken(),
+                           assert_statement -> message_opt,
                            assert_statement -> message_opt -> Type() -> Name());
     }
 

@@ -59,7 +59,8 @@ public:
     {
         INVALID_OPTION,
         MISSING_OPTION_ARGUMENT,
-        INVALID_SDK_ARGUMENT,
+        INVALID_SOURCE_ARGUMENT,
+        INVALID_TARGET_ARGUMENT,
         INVALID_K_OPTION,
         INVALID_K_TARGET,
         INVALID_TAB_VALUE,
@@ -147,7 +148,8 @@ public:
          unzip,
          dump_errors,
          errors,
-         pedantic;
+         pedantic,
+         noassert;
 
     char *dependence_report_name;
 

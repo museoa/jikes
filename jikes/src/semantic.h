@@ -719,7 +719,7 @@ public:
         error -> Report(kind, ltok, rtok, s1, s2, s3, s4, s5, s6, s7, s8, s9);
     }
 
-    // Report a semantic warning or error on a syntax tree branch..
+    // Report a semantic warning or error on a syntax tree branch.
     void ReportSemError(SemanticError::SemanticErrorKind kind, Ast* ast,
                         const wchar_t* s1 = NULL, const wchar_t* s2 = NULL,
                         const wchar_t* s3 = NULL, const wchar_t* s4 = NULL,

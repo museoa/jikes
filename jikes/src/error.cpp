@@ -566,7 +566,7 @@ void SemanticError::PrintNamedWarnings()
         static const unsigned SPACE_FOR_NAME = 15;
         printf("+P[no-]%-*s", SPACE_FOR_NAME, pair -> name);
         if (strlen(pair -> name) >= SPACE_FOR_NAME)
-            printf("\n                    ");
+            printf("\n                      ");
         printf("warn about %s\n", pair -> reason);
     }
 }
@@ -1080,6 +1080,10 @@ void SemanticError::InitializeMessages()
         "See system messages for more information.";
     messages[CANNOT_REOPEN_FILE] = "Unable to reopen file \"%1\".";
     messages[CANNOT_WRITE_FILE] = "Unable to write file \"%1\".";
+    messages[ASSERT_UNSUPPORTED_IN_TARGET] =
+        "The type \"%T1\" requires support for assert statements not present "
+        "in your choice of -target. Either use \"-target 1.4\" or greater, or "
+        "use \"--noassert\" (or \"+a\") at the command line.";
     messages[CONSTANT_POOL_OVERFLOW] =
         "The type \"%T1\" produced a constant pool that exceeded "
         "the limit of 65535 elements.";

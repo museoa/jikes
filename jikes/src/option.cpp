@@ -173,9 +173,13 @@ const wchar_t* OptionError::GetErrorMessage()
     case MISSING_OPTION_ARGUMENT:
         s << '\"' << name << "\" requires an argument.";
         break;
-    case INVALID_SDK_ARGUMENT:
-        s << '\"' << name
-          << "\" only recognizes Java SDK targets of 1.1 through 1.4.";
+    case INVALID_SOURCE_ARGUMENT:
+        s << "\"-source\" only recognizes Java releases 1.3 (no new features) "
+          << "and 1.4 (assert statement).";
+        break;
+    case INVALID_TARGET_ARGUMENT:
+        s << "\"-target\" only recognizes Java releases 1.1, 1.2, 1.3, 1.4, "
+          << "and 1.4.2.";
         break;
     case INVALID_K_OPTION:
         s << "No argument specified for +K option. The proper form is "
@@ -324,6 +328,7 @@ Option::Option(ArgumentExpander& arguments,
       dump_errors(false),
       errors(true),
       pedantic(false),
+      noassert(false),
       dependence_report_name(NULL)
 {
 #ifdef WIN32_FILE_SYSTEM
@@ -362,8 +367,10 @@ Option::Option(ArgumentExpander& arguments,
 
     for (int i = 1; i < arguments.argc; i++)
     {
+        bool consumed = false;
         if (arguments.argv[i][0] == '-')
         {
+            consumed = true;
             if (strcmp(arguments.argv[i], "-bootclasspath") == 0 ||
                 strcmp(arguments.argv[i], "--bootclasspath") == 0)
             {
@@ -586,18 +593,14 @@ Option::Option(ArgumentExpander& arguments,
                 }
                 // For now, this defaults to SDK1_3 if not specified.
                 i++;
-                if (strcmp(arguments.argv[i], "1.1") == 0)
-                    source = SDK1_1;
-                else if (strcmp(arguments.argv[i], "1.2") == 0)
-                    source = SDK1_2;
-                else if (strcmp(arguments.argv[i], "1.3") == 0)
+                if (strcmp(arguments.argv[i], "1.3") == 0)
                     source = SDK1_3;
                 else if (strcmp(arguments.argv[i], "1.4") == 0)
                     source = SDK1_4;
                 else
                 {
                     bad_options.Next() =
-                        new OptionError(OptionError::INVALID_SDK_ARGUMENT,
+                        new OptionError(OptionError::INVALID_SOURCE_ARGUMENT,
                                         "-source");
                 }
             }
@@ -637,10 +640,12 @@ Option::Option(ArgumentExpander& arguments,
                     target = SDK1_3;
                 else if (strcmp(arguments.argv[i], "1.4") == 0)
                     target = SDK1_4;
+                else if (strcmp(arguments.argv[i], "1.4.2") == 0)
+                    target = SDK1_4_2;
                 else
                 {
                     bad_options.Next() =
-                        new OptionError(OptionError::INVALID_SDK_ARGUMENT,
+                        new OptionError(OptionError::INVALID_TARGET_ARGUMENT,
                                         "-target");
                 }
             }
@@ -677,23 +682,37 @@ Option::Option(ArgumentExpander& arguments,
                     new OptionError(OptionError::UNSUPPORTED_OPTION,
                                     arguments.argv[i]);
             }
-            else
+            else if (arguments.argv[i][1] != '-')
             {
                 bad_options.Next() =
                     new OptionError(OptionError::INVALID_OPTION,
                                     arguments.argv[i]);
             }
+            else consumed = false;
         }
-        else if (arguments.argv[i][0] == '+')
+        if (! consumed &&
+            (arguments.argv[i][0] == '+' ||
+             (arguments.argv[i][0] == '-' && arguments.argv[i][1] == '-')))
         {
-            if (strcmp(arguments.argv[i], "++") == 0)
+            consumed = true;
+            if (strcmp(arguments.argv[i], "++") == 0 ||
+                strcmp(arguments.argv[i], "--incremental") == 0)
             {
                 incremental = true;
                 full_check = true;
             }
-            else if (strcmp(arguments.argv[i], "+B") == 0)
+            else if (strcmp(arguments.argv[i], "+a") == 0 ||
+                     strcmp(arguments.argv[i], "--noassert") == 0)
+            {
+                noassert = true;
+            }
+            else if (strcmp(arguments.argv[i], "+B") == 0 ||
+                     strcmp(arguments.argv[i], "--nobytecode") == 0)
+            {
                 bytecode = false;
-            else if (strcmp(arguments.argv[i], "+D") == 0)
+            }
+            else if (strcmp(arguments.argv[i], "+D") == 0 ||
+                     strcmp(arguments.argv[i], "--dump-errors") == 0)
             {
                 dump_errors = true;
                 errors = false;
@@ -721,10 +740,16 @@ Option::Option(ArgumentExpander& arguments,
                 dependence_report_name = new char[strlen(image) + 1];
                 strcpy(dependence_report_name, image);
             }
-            else if (strcmp(arguments.argv[i], "+E") == 0)
+            else if (strcmp(arguments.argv[i], "+E") == 0 ||
+                     strcmp(arguments.argv[i], "--emacs") == 0)
+            {
                 errors = false;
-            else if (strcmp(arguments.argv[i], "+F") == 0)
+            }
+            else if (strcmp(arguments.argv[i], "+F") == 0 ||
+                     strcmp(arguments.argv[i], "--full-dependence") == 0)
+            {
                 full_check = true;
+            }
             else if (arguments.argv[i][1] == 'K')
             {
                 char *name = arguments.argv[i] + 2,
@@ -776,14 +801,16 @@ Option::Option(ArgumentExpander& arguments,
                     }
                 }
             }
-            else if (strcmp(arguments.argv[i], "+M") == 0)
+            else if (strcmp(arguments.argv[i], "+M") == 0 ||
+                     strcmp(arguments.argv[i], "--makefile") == 0)
             {
                 makefile = true;
                 full_check = true;
             }
             else if (strcmp(arguments.argv[i], "+OLDCSO") == 0)
                 old_classpath_search_order = true;
-            else if (strcmp(arguments.argv[i], "+P") == 0)
+            else if (strcmp(arguments.argv[i], "+P") == 0 ||
+                     strcmp(arguments.argv[i], "--pedantic") == 0)
             {
                 // Turn on ALL default pedantic warnings. Can be called
                 // multiple times.
@@ -792,7 +819,7 @@ Option::Option(ArgumentExpander& arguments,
             }
             else if (arguments.argv[i][1] == 'P')
             {
-                const char *image = arguments.argv[i] + 2;
+                const char* image = arguments.argv[i] + 2;
                 if (! SemanticError::ProcessWarningSwitch(image))
                 {
                     bad_options.Next() =
@@ -800,10 +827,13 @@ Option::Option(ArgumentExpander& arguments,
                                         image);
                 }
             }
-            else if (arguments.argv[i][1] == 'T')
+            else if (arguments.argv[i][1] == 'T' ||
+                     strncmp(arguments.argv[i], "--tab", 5) == 0)
             {
                 int tab_size = 0;
-                char *image = arguments.argv[i] + 2;
+                char* image = arguments.argv[i] + 2;
+                if (arguments.argv[i][1] == '-')
+                    image += 3;
                 if (*image == '=')
                     image++;
                 else if (! *image)
@@ -832,13 +862,17 @@ Option::Option(ArgumentExpander& arguments,
                 Tab::SetTabSize(tab_size == 0 ? Tab::DEFAULT_TAB_SIZE
                                 : tab_size);
             }
-            else if (strcmp(arguments.argv[i], "+U") == 0)
+            else if (strcmp(arguments.argv[i], "+U") == 0 ||
+                     strcmp(arguments.argv[i], "--unzip-dependence") == 0)
             {
                 unzip = true;
                 full_check = true;
             }
-            else if (strcmp(arguments.argv[i], "+Z") == 0)
+            else if (strcmp(arguments.argv[i], "+Z") == 0 ||
+                     strcmp(arguments.argv[i], "--zero-cautions") == 0)
+            {
                 zero_defect = true;
+            }
 #ifdef JIKES_DEBUG
             else if (strcmp(arguments.argv[i], "+A") == 0)
                 debug_dump_ast = true;
@@ -867,13 +901,21 @@ Option::Option(ArgumentExpander& arguments,
                                     arguments.argv[i]);
             }
         }
-        else filename_index.Next() = i;
+        if (! consumed)
+            filename_index.Next() = i;
     }
 
     // Specify defaults for -source and -target.
     if (source == UNKNOWN)
-        source = SDK1_3;
-    if (target < source)
+    {
+        if (target == UNKNOWN)
+        {
+            source = SDK1_3;
+            target = SDK1_3;
+        }
+        else source = target;
+    }
+    else if (target == UNKNOWN)
         target = source;
 
     if (! bootclasspath)
