@@ -30,16 +30,18 @@
           <ul>
             <li><a href="cvs.shtml">CVS</a>
             <li><a href="/developerworks/patch/?group_id=10">Patches</a>
-	    <li><a href="patchguide.shtml">patch submission guidelines</a>
-            <li><a href="todo.shtml">Todo list</a>
+	    <ul>
+	      <li><a href="patchguide.shtml"><small>Patch Guidelines</small></a>
+            </ul>
+	    <li><a href="todo.shtml">Todo list</a>
             <li>...
           </ul>
 	      <hr>
           General Interest
           <ul>
             <li><a href="people.shtml">People</a>
-	    <li><a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf">Old discusion<br>database at<br>IBM Research</a><small>includes the queries<br>to Sun about<br>the JLS.</small>
 	    <li><a href="steering.shtml">Jikes Steering Committee</a>
+	    <li><a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf">Old discusion<br>database at<br>IBM Research</a> <small>includes the queries<br>to Sun about<br>the JLS.</small>
           </ul>
           <hr>
           Related Links
@@ -47,6 +49,8 @@
             <li><a href="/developerworks/projects/jacks/">Jacks Project</a>
             <li><a href="http://www.ergnosis.com/java-spec-report/">Java Spec Report</a>
 	    <li><a href="http://ibm.com/java/jdk/">The Best JVMs on the planet</a>
+	    <li><a href="http://www.java.sun.com/docs/books/jls">The Java Language Specification</a>
+	    <li><a href="http://www.java.sun.com/docs/books/vmspec">The Java Virtual Machine Specification</a>
           </ul>
         </td>
         <TD BGCOLOR="ccCCff" WIDTH=6>&nbsp;</TD><!--padding-->
