@@ -91,7 +91,7 @@ EXTRA_DIST = java.g
 
 jikespg:
 	cd $(srcdir)
-	jikespg java.g
+	$(JIKESPG) java.g
 	rm -f java.l
 
 # This rule will build an efence malloc debugging enabled version of jikes.

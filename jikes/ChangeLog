@@ -1,3 +1,9 @@
+2001-05-01  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/Makefile.am (jikespg):
+	* src/Makefile.in (jikespg):
+	Use $(JIKESPG) instead of hardcoded jikespg.
+
 2001-05-01  Mo DeJong  <mdejong@redhat.com>
 
 	* src/ast.h (DYNAMIC_CAST):
