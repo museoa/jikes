@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 #include "platform.h"
@@ -1842,7 +1841,7 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration* field_declaration)
                                this_type -> Name(), this_type -> FileLoc());
             }
             variable_declarator -> symbol = variable;
-			variable -> SetLocation();
+            variable -> SetLocation();
             if (deprecated_declarations)
                 variable -> MarkDeprecated();
         }
@@ -1901,7 +1900,8 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration* construc
     //
     BlockSymbol* block_symbol =
         new BlockSymbol(constructor_declarator -> NumFormalParameters() + 3);
-    block_symbol -> max_variable_index = 1; // All types need a spot for "this".
+    // All types need a spot for "this".
+    block_symbol -> max_variable_index = 1;
 
     ProcessFormalParameters(block_symbol, constructor_declarator);
 
@@ -1926,7 +1926,7 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration* construc
         {
             ReportSemError(SemanticError::DUPLICATE_CONSTRUCTOR,
                            constructor_declarator, this_type -> Name(),
-						   constructor -> FileLoc());
+                           constructor -> FileLoc());
             delete block_symbol;
             return;
         }
@@ -1943,7 +1943,7 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration* construc
     constructor -> SetContainingType(this_type);
     constructor -> SetBlockSymbol(block_symbol);
     constructor -> declaration = constructor_declaration;
-	constructor -> SetLocation();
+    constructor -> SetLocation();
     if (this_type -> EnclosingType())
     {
         VariableSymbol* this0_variable =
@@ -2798,7 +2798,10 @@ void Semantic::ComputeTypesClosure(TypeSymbol* type, LexStream::TokenIndex tok)
     for (unsigned i = 0; i < type -> NumTypeSymbols(); i++)
     {
         if (! type -> TypeSym(i) -> Bad())
-            type -> expanded_type_table -> InsertTypeShadowSymbol(type -> TypeSym(i));
+        {
+            type -> expanded_type_table ->
+                InsertTypeShadowSymbol(type -> TypeSym(i));
+        }
     }
     if (super_class)
         AddInheritedTypes(type, super_class);
@@ -3023,12 +3026,12 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration* method_declaration
     {
         if (this_type -> FindOverloadMethod(method, method_declarator))
         {
-           ReportSemError(SemanticError::DUPLICATE_METHOD,
+            ReportSemError(SemanticError::DUPLICATE_METHOD,
                            method_declarator -> LeftToken(),
                            method_declarator -> RightToken(),
                            name_symbol -> Name(),
                            this_type -> Name(),
-						   method -> FileLoc());
+                           method -> FileLoc());
             delete block_symbol;
             return;
         }
@@ -3046,7 +3049,7 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration* method_declaration
     method -> SetContainingType(this_type);
     method -> SetBlockSymbol(block_symbol);
     method -> declaration = method_declaration;
-	method-> SetLocation();
+    method-> SetLocation();
     for (unsigned i = 0; i < method_declarator -> NumFormalParameters(); i++)
     {
         AstVariableDeclarator* formal_declarator =

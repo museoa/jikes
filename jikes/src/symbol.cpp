@@ -230,22 +230,23 @@ void MethodSymbol::SetLocation()
 {
     //AstMethodDeclaration or AstConstructorDeclaration
     if (! declaration)
-        file_location = new FileLocation(containing_type ->file_symbol);
+        file_location = new FileLocation(containing_type -> file_symbol);
     else
     {
-        AstMethodDeclaration  *method_declaration =
+        AstMethodDeclaration* method_declaration =
             declaration -> MethodDeclarationCast();
-        AstConstructorDeclaration *constructor_declaration =
+        AstConstructorDeclaration* constructor_declaration =
             declaration -> ConstructorDeclarationCast();
 
         file_location =
-			new FileLocation(containing_type -> semantic_environment -> sem -> lex_stream,
+            new FileLocation((containing_type -> semantic_environment ->
+                              sem -> lex_stream),
                              (method_declaration
                               ? method_declaration -> LeftToken()
-							  : constructor_declaration -> LeftToken()));
+                              : constructor_declaration -> LeftToken()));
     }
 }        
-	
+
 MethodSymbol* SymbolTable::FindOverloadMethod(MethodSymbol* base_method,
                                               AstMethodDeclarator* method_declarator)
 {
@@ -431,7 +432,6 @@ void TypeSymbol::SetLocation()
                              declaration -> identifier_token);
     }
 }
-
 
 void TypeSymbol::SetSignature(Control& control)
 {
@@ -1382,15 +1382,17 @@ int VariableSymbol::LocalVariableIndex(Semantic* sem)
 
 void VariableSymbol::SetLocation()
 {
-	if(!declarator)
-	{
-		file_location = new FileLocation(ContainingType() -> file_symbol);
-	}
-	else
-	{
-		file_location = new FileLocation(ContainingType() -> semantic_environment -> sem -> lex_stream,
-														     declarator->LeftToken());
-	}
+    if (! declarator)
+    {
+        file_location = new FileLocation(ContainingType() -> file_symbol);
+    }
+    else
+    {
+        file_location =
+            new FileLocation((ContainingType() -> semantic_environment ->
+                              sem -> lex_stream),
+                             declarator -> LeftToken());
+    }
 }  
 void VariableSymbol::ProcessVariableSignature(Semantic* sem,
                                               LexStream::TokenIndex token_location)

@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -198,7 +197,8 @@ void Semantic::ProcessLocalVariableDeclarationStatement(Ast* stmt)
         {
             ReportSemError(SemanticError::DUPLICATE_LOCAL_VARIABLE_DECLARATION,
                            name -> identifier_token, name_symbol -> Name(),
-                           LocalSymbolTable().FindVariableSymbol(name_symbol) -> FileLoc());
+                           LocalSymbolTable().
+                           FindVariableSymbol(name_symbol) -> FileLoc());
         }
         else
         {
@@ -575,7 +575,8 @@ void Semantic::ProcessSwitchStatement(Ast* stmt)
             if (switch_label -> expression_opt)
             {
                 ProcessExpression(switch_label -> expression_opt);
-                TypeSymbol* case_type = switch_label -> expression_opt -> Type();
+                TypeSymbol* case_type =
+                    switch_label -> expression_opt -> Type();
                 if (case_type == control.no_type)
                     continue;
                 if (! control.IsSimpleIntegerValueType(case_type))
@@ -823,7 +824,8 @@ void Semantic::ProcessBreakStatement(Ast* stmt)
             break_statement -> nesting_level = block_body -> nesting_level;
             ReportSemError(SemanticError::UNDECLARED_LABEL,
                            break_statement -> identifier_token_opt,
-                           lex_stream -> NameString(break_statement -> identifier_token_opt));
+                           lex_stream -> NameString(break_statement ->
+                                                    identifier_token_opt));
         }
     }
     else
@@ -883,7 +885,8 @@ void Semantic::ProcessContinueStatement(Ast* stmt)
             continue_statement -> nesting_level = block_body -> nesting_level;
             ReportSemError(SemanticError::UNDECLARED_LABEL,
                            continue_statement -> identifier_token_opt,
-                           lex_stream -> NameString(continue_statement -> identifier_token_opt));
+                           lex_stream -> NameString(continue_statement ->
+                                                    identifier_token_opt));
         }
     }
     else
@@ -927,7 +930,8 @@ void Semantic::ProcessContinueStatement(Ast* stmt)
 
             ReportSemError(SemanticError::INVALID_CONTINUE_TARGET,
                            continue_statement,
-                           lex_stream -> NameString(continue_statement -> identifier_token_opt));
+                           lex_stream -> NameString(continue_statement ->
+                                                    identifier_token_opt));
         }
     }
 }
@@ -1132,16 +1136,16 @@ const wchar_t* Semantic::UncaughtExceptionContext()
         VariableSymbol* this_variable = ThisVariable();
         assert(this_variable);
         if (this_variable -> ACC_STATIC())
-            s << " must be moved to a static initializer and enclosed in a try "
-              << "statement which catches the exception, since static "
+            s << " must be moved to a static initializer and enclosed in a "
+              << "try statement which catches the exception, since static "
               << "initializers cannot throw checked exceptions.";
         else
         {
             assert(! ThisType() -> Anonymous());
-            s << " must be moved to an instance initializer or constructor and "
-              << "enclosed in a try statement which catches the exception, or "
-              << "else every constructor in this class must be declared to "
-              << "throw the exception.";
+            s << " must be moved to an instance initializer or constructor "
+              << "and enclosed in a try statement which catches the "
+              << "exception, or else every constructor in this class must be "
+              << "declared to throw the exception.";
         }
     }
     return s.Array();
@@ -1444,7 +1448,8 @@ void Semantic::ProcessTryStatement(Ast* stmt)
         unsigned initial_length = catchable_exceptions.Length() +
             convertible_exceptions.Length();
 
-        for (TypeSymbol* exception = (TypeSymbol*) exception_set -> FirstElement();
+        for (TypeSymbol* exception =
+                 (TypeSymbol*) exception_set -> FirstElement();
              exception;
              exception = (TypeSymbol*) exception_set -> NextElement())
         {
@@ -1475,7 +1480,8 @@ void Semantic::ProcessTryStatement(Ast* stmt)
             for (k = 0; k < l; k++)
             {
                 previous_clause = try_statement -> CatchClause(k);
-                if (type -> IsSubclass(previous_clause -> parameter_symbol -> Type()))
+                if (type -> IsSubclass(previous_clause -> parameter_symbol ->
+                                       Type()))
                     break;
             }
 

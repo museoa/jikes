@@ -3,8 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
-// Machines Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -1230,11 +1229,14 @@ void SemanticError::InitializeMessages()
     messages[OBJECT_HAS_NO_SUPER_TYPE] =
         "The type \"java.lang.Object\" does not have a supertype.";
     messages[DUPLICATE_FIELD] =
-        "Duplicate declaration of field \"%1\" in type \"%2\". The other occurrence is at location \"%3\".";
+        "Duplicate declaration of field \"%1\" in type \"%2\". The other "
+        "occurrence is at location \"%3\".";
     messages[DUPLICATE_METHOD] =
-        "Duplicate declaration of method \"%1\" in type \"%2\". The other occurrence is at location \"%3\".";
+        "Duplicate declaration of method \"%1\" in type \"%2\". The other "
+        "occurrence is at location \"%3\".";
     messages[DUPLICATE_CONSTRUCTOR] =
-        "Duplicate declaration of this constructor signature in type \"%1\". The other occurrence is at location \"%2\".";
+        "Duplicate declaration of this constructor signature in type \"%1\". "
+        "The other occurrence is at location \"%2\".";
     messages[MISMATCHED_INHERITED_METHOD] =
         "The return type of method \"%1\" does not match the return type of "
         "the accessible method \"%2\" declared in type \"%T3\".";
@@ -1269,7 +1271,8 @@ void SemanticError::InitializeMessages()
 
     // Statement and expression related errors.
     messages[DUPLICATE_LOCAL_VARIABLE_DECLARATION] =
-        "Duplicate declaration of local variable \"%1\". The other occurrence is at location \"%2\".";
+        "Duplicate declaration of local variable \"%1\". The other occurrence "
+        "is at location \"%2\".";
     messages[MULTIPLE_DEFAULT_LABEL] =
         "Multiple specification of default label in switch statement.";
     messages[UNDECLARED_LABEL] =

@@ -1,3 +1,11 @@
+2003-10-03  Eric Blake  <ebb9@byu.net>
+
+	* src/body.cpp: Formatting.
+	* src/decl.cpp: Ditto.
+	* src/error.cpp: Ditto.
+	* src/symbol.cpp: Ditto.
+	* src/symbol.h: Ditto.
+
 2003-10-01  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/symbol.h (MethodSymbol::file_location),
