@@ -1197,7 +1197,7 @@ void Control::ProcessBodies(TypeSymbol *type)
             Tuple<TypeSymbol *> *types = new Tuple<TypeSymbol *>(1024);
             types -> Next() = type;
 
-            for (int j = 0; j < type -> num_anonymous_types(); j++)
+            for (int j = 0; j < type -> NumAnonymousTypes(); j++)
             {
                 types -> Next() = type -> AnonymousType(j);
             }

@@ -1,3 +1,15 @@
+2001-11-04  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/control.h (StringBuffer_*Method): Fix some typos.
+	* src/control.cpp:
+	* src/expr.cpp:
+	* src/symbol.cpp:
+	* src/symbol.h (NumAnonymousTypes): Rename from
+	num_anonymous_types, to be consistent.
+	* src/ast.h: Add Ast::IsSuperAccess to complement
+	IsSuperAccess. Initialize a number of fields that were never
+	being assigned in the grammar.
+
 2001-11-03  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/option.h (INVALID_SDK_ARGUMENT): Add error message.

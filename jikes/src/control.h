@@ -317,7 +317,7 @@ public:
 
     MethodSymbol *StringBuffer_append_charMethod()
     {
-        if (! StringBuffer_InitWithString_method)
+        if (! StringBuffer_append_char_method)
             (void) StringBuffer();
         return StringBuffer_append_char_method;
     }
@@ -325,7 +325,7 @@ public:
 
     MethodSymbol *StringBuffer_append_booleanMethod()
     {
-        if (! StringBuffer_InitWithString_method)
+        if (! StringBuffer_append_boolean_method)
             (void) StringBuffer();
         return StringBuffer_append_boolean_method;
     }
@@ -333,7 +333,7 @@ public:
 
     MethodSymbol *StringBuffer_append_intMethod()
     {
-        if (! StringBuffer_InitWithString_method)
+        if (! StringBuffer_append_int_method)
             (void) StringBuffer();
         return StringBuffer_append_int_method;
     }
@@ -341,7 +341,7 @@ public:
 
     MethodSymbol *StringBuffer_append_longMethod()
     {
-        if (! StringBuffer_InitWithString_method)
+        if (! StringBuffer_append_long_method)
             (void) StringBuffer();
         return StringBuffer_append_long_method;
     }
@@ -349,7 +349,7 @@ public:
 
     MethodSymbol *StringBuffer_append_floatMethod()
     {
-        if (! StringBuffer_InitWithString_method)
+        if (! StringBuffer_append_float_method)
             (void) StringBuffer();
         return StringBuffer_append_float_method;
     }
@@ -357,7 +357,7 @@ public:
 
     MethodSymbol *StringBuffer_append_doubleMethod()
     {
-        if (! StringBuffer_InitWithString_method)
+        if (! StringBuffer_append_double_method)
             (void) StringBuffer();
         return StringBuffer_append_double_method;
     }
@@ -365,7 +365,7 @@ public:
 
     MethodSymbol *StringBuffer_append_stringMethod()
     {
-        if (! StringBuffer_InitWithString_method)
+        if (! StringBuffer_append_string_method)
             (void) StringBuffer();
         return StringBuffer_append_string_method;
     }
@@ -373,7 +373,7 @@ public:
 
     MethodSymbol *StringBuffer_append_objectMethod()
     {
-        if (! StringBuffer_InitWithString_method)
+        if (! StringBuffer_append_object_method)
             (void) StringBuffer();
         return StringBuffer_append_object_method;
     }
@@ -453,7 +453,7 @@ public:
     }
 
     //
-    // Make up a parameter name of the form #(num) and return its name symbol.
+    // Make up a parameter name of the form $(num) and return its name symbol.
     //
     NameSymbol *MakeParameter(int num)
     {

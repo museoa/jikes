@@ -279,8 +279,8 @@ TypeSymbol *TypeSymbol::GetArrayType(Semantic *sem, int num_dimensions_)
         type -> AddInterface(sem -> control.Cloneable());
         type -> base_type = this;
         type -> num_dimensions = num;
-        type -> SetOwner(this -> ContainingPackage());
-        type -> table = new SymbolTable(3); // only 2 elements will be added to this table
+        type -> SetOwner(ContainingPackage());
+        type -> table = new SymbolTable(2); // only 2 elements will be added to this table
         type -> SetSignature(sem -> control);
 
         MethodSymbol *method = type -> InsertMethodSymbol(sem -> control.clone_name_symbol);

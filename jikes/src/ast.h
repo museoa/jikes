@@ -410,6 +410,7 @@ public:
     bool IsName();
     bool IsSimpleNameOrFieldAccess();
     bool IsSuperExpression();
+    bool IsThisExpression();
     bool IsLeftHandSide();
     bool IsGenerated();
 
@@ -619,7 +620,7 @@ public:
     //
     T& Next() { int i = NextIndex(); return base[i >> log_blksize][i]; }
 
-    inline void Push(T elt) { this -> Next() = elt; }
+    inline void Push(T elt) { Next() = elt; }
     // Not "return (*this)[--top]" because that may violate an invariant
     // in operator[].
     inline T Pop() { assert(top!=0); top--; return base[top >> log_blksize][top]; }
@@ -1060,7 +1061,8 @@ public:
 
     AstCompilationUnit(StoragePool *pool_) : pool(pool_),
                                              import_declarations(NULL),
-                                             type_declarations(NULL)
+                                             type_declarations(NULL),
+                                             package_declaration_opt(NULL)
     {
         Ast::kind = Ast::COMPILATION;
         Ast::class_tag = Ast::NO_TAG;
@@ -1334,12 +1336,13 @@ public:
 
     AstClassDeclaration(StoragePool *pool_) : class_modifiers(NULL),
                                               interfaces(NULL),
-                                              semantic_environment(NULL)
+                                              semantic_environment(NULL),
+                                              super_opt(NULL)
     {
         Ast::kind = Ast::CLASS;
         Ast::class_tag = Ast::NO_TAG;
         Ast::generated = 0;
-    AstStatement::pool = pool_;
+        AstStatement::pool = pool_;
     }
 
     virtual ~AstClassDeclaration();
@@ -1483,7 +1486,8 @@ public:
     Ast *variable_initializer_opt;
 
     AstVariableDeclarator() : symbol(NULL),
-                              pending(false)
+                              pending(false),
+                              variable_initializer_opt(NULL)
     {
         Ast::kind = Ast::VARIABLE_DECLARATOR;
         Ast::class_tag = Ast::NO_TAG;
@@ -1839,7 +1843,8 @@ public:
     AstSuperCall(StoragePool *pool_) : arguments(NULL),
                                        local_arguments_opt(NULL),
                                        add_null_argument(false),
-                                       symbol(NULL)
+                                       symbol(NULL),
+                                       base_opt(NULL)
     {
         Ast::kind = Ast::SUPER_CALL;
         Ast::class_tag = Ast::STATEMENT;
@@ -1906,6 +1911,7 @@ public:
 
     AstConstructorBlock(StoragePool *pool_) : local_init_statements(NULL),
                                               block_symbol(NULL),
+                                              explicit_constructor_invocation_opt(NULL),
                                               original_constructor_invocation(NULL)
     {
         Ast::kind = Ast::CONSTRUCTOR_BLOCK;
@@ -2199,7 +2205,7 @@ public:
     AstStatement *true_statement;
     AstStatement *false_statement_opt;
 
-    AstIfStatement(StoragePool *pool_) : expression(NULL)
+    AstIfStatement(StoragePool *pool_) : false_statement_opt(NULL)
     {
         Ast::kind = Ast::IF;
         Ast::class_tag = Ast::STATEMENT;
@@ -2588,7 +2594,8 @@ public:
     AstStatement *statement;
 
     AstForStatement(StoragePool *pool_) : for_init_statements(NULL),
-                                          for_update_statements(NULL)
+                                          for_update_statements(NULL),
+                                          end_expression_opt(NULL)
     {
         Ast::kind = Ast::FOR;
         Ast::class_tag = Ast::STATEMENT;
@@ -2713,7 +2720,7 @@ public:
     AstExpression *expression_opt;
     LexStream::TokenIndex semicolon_token;
 
-    AstReturnStatement(StoragePool *pool_)
+    AstReturnStatement(StoragePool *pool_) : expression_opt(NULL)
     {
         Ast::kind = Ast::RETURN;
         Ast::class_tag = Ast::STATEMENT;
@@ -2894,7 +2901,8 @@ public:
     AstBlock *block;
     AstFinallyClause *finally_clause_opt;
 
-    AstTryStatement(StoragePool *pool_) : catch_clauses(NULL)
+    AstTryStatement(StoragePool *pool_) : catch_clauses(NULL),
+                                          finally_clause_opt(NULL)
     {
         Ast::kind = Ast::TRY;
         Ast::class_tag = Ast::STATEMENT;
@@ -3390,7 +3398,9 @@ public:
     AstClassInstanceCreationExpression(StoragePool *pool_) : pool(pool_),
                                                              arguments(NULL),
                                                              local_arguments_opt(NULL),
-                                                             add_null_argument(false)
+                                                             add_null_argument(false),
+                                                             base_opt(NULL),
+                                                             class_body_opt(NULL)
     {
         Ast::kind = Ast::CLASS_CREATION;
         Ast::class_tag = Ast::EXPRESSION;
@@ -3478,7 +3488,8 @@ public:
 
     AstArrayCreationExpression(StoragePool *pool_) : pool(pool_),
                                                      brackets(NULL),
-                                                     dim_exprs(NULL)
+                                                     dim_exprs(NULL),
+                                                     array_initializer_opt(NULL)
     {
         Ast::kind = Ast::ARRAY_CREATION;
         Ast::class_tag = Ast::EXPRESSION;
@@ -3819,7 +3830,8 @@ public:
     AstExpression *expression;
 
     AstCastExpression(StoragePool *pool_) : pool(pool_),
-                                            brackets(NULL)
+                                            brackets(NULL),
+                                            type_opt(NULL)
     {
         Ast::kind = Ast::CAST;
         Ast::class_tag = Ast::EXPRESSION;
@@ -4077,8 +4089,15 @@ inline bool Ast::IsSimpleNameOrFieldAccess()
 //
 inline bool Ast::IsSuperExpression()
 {
-    return (this -> SuperExpressionCast() || (this -> FieldAccessCast() && this -> FieldAccessCast() -> IsSuperAccess()));
+    return (SuperExpressionCast() || (FieldAccessCast() && FieldAccessCast() -> IsSuperAccess()));
+}
 
+//
+// Do we have a simple 'this' expression or a field of the form XXX.this
+//
+inline bool Ast::IsThisExpression()
+{
+    return (ThisExpressionCast() || (FieldAccessCast() && FieldAccessCast() -> IsThisAccess()));
 }
 
 //
@@ -4086,7 +4105,7 @@ inline bool Ast::IsSuperExpression()
 //
 inline bool Ast::IsLeftHandSide()
 {
-    return (this -> SimpleNameCast() || this -> FieldAccessCast() || this -> ArrayAccessCast());
+    return (SimpleNameCast() || FieldAccessCast() || ArrayAccessCast());
 }
 
 
@@ -6237,8 +6256,8 @@ inline void AstBlock::AddLocallyDefinedVariable(VariableSymbol *variable_symbol)
 
 inline void AstBlock::TransferLocallyDefinedVariablesTo(AstSwitchBlockStatement *switch_block_statement)
 {
-    switch_block_statement -> locally_defined_variables = this -> locally_defined_variables;
-    this -> locally_defined_variables = NULL;
+    switch_block_statement -> locally_defined_variables = locally_defined_variables;
+    locally_defined_variables = NULL;
 }
 
 inline void AstStatement::AllocateDefinedVariables(int estimate)

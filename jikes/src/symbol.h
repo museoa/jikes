@@ -729,7 +729,7 @@ public:
         interfaces -> Next() = type_symbol;
     }
 
-    int num_anonymous_types() { return (anonymous_types ? anonymous_types -> Length() : 0); }
+    int NumAnonymousTypes() { return (anonymous_types ? anonymous_types -> Length() : 0); }
     TypeSymbol *&AnonymousType(int i) { return (*anonymous_types)[i]; }
     void AddAnonymousType(TypeSymbol *type_symbol)
     {

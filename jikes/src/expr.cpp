@@ -3606,7 +3606,7 @@ void Semantic::UpdateLocalConstructors(TypeSymbol *inner_type)
             }
         }
 
-        for (int j = 0; j < outermost_type -> num_anonymous_types(); j++)
+        for (int j = 0; j < outermost_type -> NumAnonymousTypes(); j++)
         {
             if (outermost_type -> AnonymousType(j) -> CanAccess(inner_type))
                 local_classes.Next() = outermost_type -> AnonymousType(j);
@@ -4107,7 +4107,7 @@ TypeSymbol *Semantic::GetAnonymousType(AstClassInstanceCreationExpression *class
     //
     // Make up a proper name for the anonymous type
     //
-    IntToWstring value(outermost_type -> num_anonymous_types() + 1);
+    IntToWstring value(outermost_type -> NumAnonymousTypes() + 1);
 
     int length = value.Length() + outermost_type -> NameLength() + 1; // +1 for $
     wchar_t *anonymous_name = new wchar_t[length + 1];
