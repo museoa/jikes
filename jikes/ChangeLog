@@ -1,3 +1,23 @@
+2001-02-16  Mo DeJong  <mdejong@redhat.com>
+
+	* TODO: Update items in the TODO list.
+	* acinclude.m4: Add new macro files.
+	* configure.in: Add macros to check
+	for C++ style casts, the explicit
+	keyword, and RTTI (disabled by default).
+	Reorder a couple of macro calls so
+	that header check appear together.
+	* src/double.h:
+	* src/long.h: Add explicit keyword
+	to some constructor declarations.
+	* src/m4/ac_cxx_const_cast.m4:
+	* src/m4/ac_cxx_dynamic_cast.m4:
+	* src/m4/ac_cxx_explicit.m4:
+	* src/m4/ac_cxx_reinterpret_cast.m4:
+	* src/m4/ac_cxx_rtti.m4:
+	* src/m4/ac_cxx_static_cast.m4:
+	Add new macro files.
+
 2001-02-16  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/platform.cpp (LongToDecString,

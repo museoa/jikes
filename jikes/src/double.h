@@ -133,7 +133,10 @@ public:
     // Widening conversion of long to float, may lose precision
              IEEEfloat(LongInt);
     // Narrowing conversion of double to float, may lose precision
-    IEEEfloat(IEEEdouble);
+#ifdef HAVE_EXPLICIT
+    explicit
+#endif
+             IEEEfloat(IEEEdouble);
     // Create a float without initializing it
     inline   IEEEfloat(void) {}
 

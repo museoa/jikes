@@ -167,7 +167,14 @@ public:
     inline LongInt (u4 a) : BaseLong (a) {} // no sign extension
     inline LongInt (i4 a) : BaseLong (a) {} // sign extends
     inline LongInt (void) : BaseLong () {} // uninitialized
-    LongInt (IEEEdouble); // narrowing conversion of double to long
+#ifdef HAVE_EXPLICIT
+    explicit
+#endif
+           LongInt (IEEEdouble); // narrowing conversion of double to long
+
+#ifdef HAVE_EXPLICIT
+    explicit 
+#endif
     LongInt (IEEEfloat); // narrowing conversion of float to long
 #ifdef HAVE_UNSIGNED_LONG_LONG
     inline LongInt(u8 a) : BaseLong (a) {} // construct in one step

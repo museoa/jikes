@@ -2,7 +2,8 @@
 
 Fix build under IRIX, it failed in
 1.12 because of iconv prototype mismatch.
-(FIXED : needs to be verified)
+Same goes for Red Hat 7.0.
+(FIXED)
 
 Include java.g file in tar ball.
 This was omitted in the 1.12 release.
@@ -12,28 +13,18 @@ Add RPM spec file to the tar ball.
 This was omitted in the 1.12 release.
 (FIXED)
 
-Add the src/m4 subdir contents to
-the .tar file.
-
 
 
 Fix namespaces. People need
 to be able to compile on
 systems that require namespace
-support.
+support. Many versions of gcc
+have bugs that keep namespaces
+from working.
 
-.../configure HAVE_JIKES_NAMESPACE=1
+./configure HAVE_JIKES_NAMESPACE=1
 
-Namespaces are totally broken with gcc,
-2.96 will compile with some minor hacks
-but it fails to link since global methods
-get defined outside the namespace.
-
-% nm --print-file-name *.o | grep SystemIsDirectory | c++filt
-control.o:         U Jikes::SystemIsDirectory(char *)
-platform.o:000000d8 T SystemIsDirectory(char *)
-
-(FIXED: needs to be verified)
+(FIXED)
 
 
 
@@ -62,7 +53,7 @@ one at a time?
 
 
 Use new casting operations instead of C style
-casts:
+casts, need to add autoconf check too.
 
 Casting up from A to B will be checked if
 compiler support RTTI. This could catch
@@ -70,7 +61,7 @@ nasty cast errors in Jikes.
 
 http://www.sns.ias.edu/Main/computing/compilers_html/c-plusplus/c++_ug/Cast.new.doc.html
 
-const_case<int> 'c'
+const_cast<int> 'c'
 
 same as
 
@@ -88,6 +79,8 @@ B*  bp2 = dynamic_cast<B*>(ap);
 assert( bp2 != NULL );
 
 
+(FIXED)
+
 
 
 
@@ -102,7 +95,7 @@ the automatic depcomp feature of automake.
 The website needs to be made available as a CVS module.
 That will make changing and tracking changes far easier.
 
-(FIXED: needs to be verified)
+(FIXED)
 
 
 Fix the problems with @files demonstrated by
@@ -116,11 +109,24 @@ one that does lexing. That way, it could also
 be used in the Option class to process @ files.
 
 
+
 Add new floating point emulation support code.
+
+(FIXED)
+
 
 Fix problem with debug line number tables. Newer
 versions of java don't like our line numbers.
 This is commonly known as "Jikes and JPDA".
+
+
+Fix problems with double class use of
+static const, gcc 3.0 pukes unless
+there is an external def too.
+
+(FIXED)
+
+
 
 
 *** Things that will not be done in 1.13
@@ -129,6 +135,16 @@ Add a configure check to make sure
 folks do not attempt to build under
 Cygwin with the -mno-cygwin flag.
 (Will not fix in this release)
+
+
+
+Add the src/m4 subdir contents to
+the .tar file.
+
+(Don't fix, people will not be
+able to regenerate a working
+./configure with autoconf 2.13
+anyway, so this can be delayed)
 
 
 
