@@ -1,3 +1,10 @@
+2000-12-29  Diane Holt  <holtdl@yahoo.com>
+
+	* src/error.cpp (SemanticError::PrintPACKAGE_NOT_FOUND):
+	Change format of error message printed when a package
+	can not be found. Print the name of the package once
+	and then print each of the paths in the classpath.
+
 2000-12-26  Mo DeJong  <mdejong@redhat.com>
 
 	* src/incrmnt.cpp (Control::IncrementalRecompilation):

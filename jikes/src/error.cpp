@@ -1194,30 +1194,17 @@ wchar_t *SemanticError::PrintPACKAGE_NOT_FOUND(ErrorInfo &err, LexStream *lex_st
 {
     ErrorString s;
 
-    s << "Could not find package named: \n";
+    s << "Could not find package \""
+      << err.insert1
+      << "\" in:\n" ;
+
     for (int i = 1; i < control.classpath.Length(); i++)
     {
         PathSymbol *path_symbol = control.classpath[i];
         wchar_t *path = path_symbol -> Name();
-
         s << "                "
-                << path;
-        if (path_symbol -> IsZip())
-        {
-            s << "("
-                    << err.insert1
-                    << ")";
-        }
-        else
-        {
-            s << "/"
-                    << err.insert1;
-        }
-
-        if (i + 2 < control.classpath.Length())
-             s << ", \n";
-        else if (i + 2 == control.classpath.Length())
-             s << " or \n";
+          << path
+          << "\n";
     }
 
     return s.Array();
