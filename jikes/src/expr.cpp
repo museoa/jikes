@@ -2005,10 +2005,9 @@ bool Semantic::ConstructorAccessCheck(Ast *invocation,
     // access protected constructors outside the package.
     //
     if (containing_type -> ContainingPackage() != this_package &&
-        ((constructor -> ACC_PROTECTED() && class_creation) ||
-         ! constructor -> ACC_PUBLIC()))
+        ! constructor -> ACC_PUBLIC())
     {
-        return false;
+        return ! class_creation && constructor -> ACC_PROTECTED();
     }
     return true;
 }

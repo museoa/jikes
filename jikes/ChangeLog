@@ -1,5 +1,10 @@
 2002-06-17  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/expr.cpp (ConstructorAccessCheck): Allow access of protected
+	superconstructors - bug 2899.
+
+2002-06-17  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/body.cpp (ProcessSuperCall): Remove duplicate error message,
 	final cleanup for bug 386.
 	
