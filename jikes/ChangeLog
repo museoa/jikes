@@ -1,3 +1,9 @@
+2002-08-28  Elliott Hughes  <enh@acm.org>
+
+	* src/set.h (primes): g++ 3.1 on Mac OS X 10.2 has trouble
+	with static arrays in template classes; avoid these and remove
+	duplication of hash-resizing code as a side-effect - patch 349.
+
 2002-08-28  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/expr.cpp (FindMethodMember): One more case of bug 3240.
