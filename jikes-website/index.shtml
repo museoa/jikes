@@ -15,12 +15,6 @@
           <br>
           <p align=center><big>Quick Links</big></p>
           <hr>
-          General Interest
-          <ul>
-            <li><a href="people.shtml">People</a>
-            <li>Help Needed
-          </ul>
-          <hr>
           For Users
           <ul>
             <li>FAQ
@@ -38,6 +32,11 @@
             <li><a href="/developerworks/patch/?group_id=10">Patches</a>
             <li><a href="todo.shtml">Todo list</a>
             <li>...
+          </ul>
+	  <hr>
+          General Interest
+          <ul>
+            <li><a href="people.shtml">People</a>
           </ul>
           <hr>
           Related Links
