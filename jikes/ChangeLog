@@ -1,3 +1,9 @@
+2000-01-14  Christopher Abbey  <cabbey@bresnanlink.net>
+
+	* src/dump.cpp:
+	* src/unparse.cpp: Fix for build problems
+	when JIKES_DEBUG is defined.
+
 2000-01-10  Mo DeJong  <mdejong@redhat.com>
 
 	* src/jikesapi.cpp:

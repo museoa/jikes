@@ -7,14 +7,14 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
-#ifdef JIKES_DEBUG
 
-#include "platform.h"
 #include "ast.h"
 
 //FIXME: include stuff
 //#include <iostream.h>
 //#include <fstream.h>
+
+#ifdef JIKES_DEBUG
 
 #ifdef	HAVE_JIKES_NAMESPACE
 namespace Jikes {	// Open namespace Jikes block
