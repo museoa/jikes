@@ -1852,7 +1852,8 @@ void Semantic::CheckSimpleName(AstSimpleName *simple_name,
         // an instance field member ?
         TypeSymbol *containing_type = variable_symbol -> owner -> TypeCast();
 
-        if (containing_type) // variable must be a field
+        // variable must be a field for these next errors to be valid
+        if (containing_type && ! variable_symbol -> accessed_local)
         {
             if (containing_type == ThisType() &&
                 ! variable_symbol -> IsDeclarationComplete() &&

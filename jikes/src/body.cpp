@@ -1563,12 +1563,18 @@ void Semantic::ProcessTryStatement(Ast *stmt)
 
             if (k < l)
             {
-                FileLocation loc(lex_stream, previous_clause -> formal_parameter -> RightToken());
+                FileLocation loc(lex_stream,
+                                 (previous_clause -> formal_parameter ->
+                                  RightToken()));
+                TypeSymbol *prev_type =
+                    previous_clause -> parameter_symbol -> Type();
                 ReportSemError(SemanticError::BLOCKED_CATCH_CLAUSE,
                                clause -> formal_parameter -> LeftToken(),
                                clause -> formal_parameter -> RightToken(),
                                type -> ContainingPackage() -> PackageName(),
                                type -> ExternalName(),
+                               prev_type -> ContainingPackage() -> PackageName(),
+                               prev_type -> ExternalName(),
                                loc.location);
             }
             else clause -> block -> is_reachable = true;

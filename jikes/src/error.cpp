@@ -3886,7 +3886,9 @@ wchar_t *SemanticError::PrintEXPRESSION_NOT_CONSTANT(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "A constant expression is expected in this context.";
+    s << "A constant expression is expected in this context. A constant "
+      << "expression is built from literals, operators, and constant "
+      << "variables referenced by 'id' or 'Classname.id'.";
 
     return s.Array();
 }
@@ -4038,8 +4040,11 @@ wchar_t *SemanticError::PrintBLOCKED_CATCH_CLAUSE(ErrorInfo &err,
     s << "This catch block is unreachable: the exception \"";
     if (NotDot(err.insert1))
         s << err.insert1 << "/";
-    s << err.insert2 << "\" is a subclass of the type used in a previous "
-      << "catch clause at location " << err.insert3 << '.';
+    s << err.insert2 << "\" is a subclass of the type \"";
+    if (NotDot(err.insert3))
+        s << err.insert3 << "/";
+    s << err.insert4 << "\", caught previously at location "
+      << err.insert5 << '.';
 
     return s.Array();
 }
