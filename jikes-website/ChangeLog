@@ -1,3 +1,12 @@
+2001-02-17  Mo DeJong  <mdejong@redhat.com>
+
+	* faq/dev-source-control.shtml: Fixup
+	descriptions of using cvs to checkout
+	the Jikes source code. Put the WebCVS
+	section at the end of the file. Include
+	link to the downloads page. Describe
+	the .cvsrc options a bit more.
+
 2001-02-11  Chris Abbey  <cabbey@bresnanlink.net>
 
 	* *.shtml: made 4.01 transitional valid (except index, still

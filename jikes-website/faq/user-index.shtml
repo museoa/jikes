@@ -76,16 +76,26 @@
             Where do I get Jikes?</a>
           </h3>
 
-          
-      <p> If you use Linux, check the <a href="../distribs.shtml"> distributions</a> 
-        page for a list of your Linux distribution known to include Jikes as a 
-        standard package. For other platforms, go to the <a href="/developerworks/project/showfiles.php?group_id=10"> 
-        downloads</a> page and look for a binary version of Jikes. If there isn't 
-        a binary version for your particular operating system, why not download 
-        the source and try compiling it yourself? If you get stuck, have a look 
-        at the <a href="dev-index.shtml"> Developer FAQ</a> and join the <a href="../lists.shtml"> 
-        jikes-dev</a> mailing list where other Jikes developers can help you out. 
-      </p>
+          <p>
+            If you use Linux, check the <a href="../distribs.shtml">
+            distributions</a> page for a list of Linux distributions known
+            to include Jikes as a standard package.  For other platforms,
+            go to the
+            <a href="/developerworks/project/showfiles.php?group_id=10">
+            downloads</a> page and look for an official binary version of
+            Jikes.  If there isn't an official version for your operating
+            system, join the
+            <a href="http://oss.software.ibm.com/developerworks/mail/?group_id=10">
+            jikes</a> mailing list and search the archives.  There might be
+            an unofficial port available, or someone else might be working
+            on one.  If you're still out of luck, why not download the
+            source and try compiling it yourself?  The
+            <a href="dev-index.shtml"> Developer FAQ</a> has a lot of
+            information about compiling Jikes.  Join the the
+            <a href="http://oss.software.ibm.com/developerworks/mail/?group_id=10">
+            jikes-dev</a> mailing list where other developers can help you
+            out.
+          </p>
           <p class="BackToTop">
             <a href="#index">Back to top</a>
           </p>
@@ -1262,7 +1272,6 @@ class C implements C.I {
           </h3>
 
           <p>
-            <!-- TODO: URL is sure to change -->
             Go to the 
             <a href="/developerworks/bugs/?func=addbug&amp;group_id=10">
             Jikes bug page</a>
@@ -1270,8 +1279,8 @@ class C implements C.I {
           </p>
           <p>
             You should provide a small program that reproduces the problem.
-            If you do cannot provide a test case, it in unlikely your bug will
-            get fixed.
+            If you do cannot provide a test case, it is unlikely your bug
+            will get fixed.
           </p>
           <!-- TODO: add reference to Jacks when the Jacks site is working -->
           <p class="BackToTop">
