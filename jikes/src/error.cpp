@@ -2882,7 +2882,7 @@ void SemanticError::PrintNON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METH
     }
     Unicode::Cout(err.insert3);
     cout << "\" has default access."
-            " Therefore, it is not inherited and, hence, cannot be implemented in the non-abstract class \"";
+            " Therefore, it is not inherited and hence, it cannot be implemented in the non-abstract class \"";
     if (NotDot(err.insert4))
     {
         Unicode::Cout(err.insert4);
