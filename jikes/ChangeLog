@@ -1,5 +1,11 @@
 2000-07-12  Mo DeJong  <mdejong@redhat.com>
 
+	* src/Makefile.hand: Removed the Makefile
+	used in the old build system. All builds
+	should now be done with ./configure ; make.
+
+2000-07-12  Mo DeJong  <mdejong@redhat.com>
+
 	* missing:
 	* mkinstalldirs: Added files that did not
 	make it into the CVS for some strange reason.
