@@ -36,7 +36,8 @@
        help the odds of this bug being fixed are infinitesimally small.</p>
      <h2>Overview of process from here:</h2>
      <ol style="text-align:left;">
-      <li>Verify that this isn't a WKB (Well Known Bug, aka a FRB (Frequently Reported Bug)).</li>
+      <li>Verify that this isn't a WKB (Well Known Bug) aka an FRB
+        (Frequently Reported Bug).</li>
       <li>Verify that this is in fact a Jikes bug.</li>
       <li>Check that this bug is not already reported.</li>
       <li>Collect the information needed for a Jikes bug report.</li>
@@ -51,30 +52,13 @@
        too, you should fix this" type of messages.) <span style="background-color:#ffcccc;">Current
        status is indicated thusly.</span></p>
      <dl>
-      <dt>Floating point issues</dt>
-       <dd><a href="/developerworks/bugs/?func=detailbug&amp;bug_id=138&amp;group_id=10">138</a> and others.
-        <span style="background-color:#ffcccc;">Eric is beating the fp code into submission one patch at a time.</span></dd>
-      <dt>JPDA issues</dt>
-       <dd><a href="/developerworks/bugs/?func=detailbug&amp;bug_id=210&amp;group_id=10">210</a>
-       <span style="background-color:#ffcccc;">Patch
-       <a href="/developerworks/bugs/?func=detailpatch&patch_id=56&group_id=10">56</a>
-        has been proposed, but not verified.  Your feedback is
-       needed!</span></dd>
-      <dt>Variable shadowing</dt>
-       <dd><a href="http://oss.software.ibm.com/developerworks/bugs/?func=detailbug&bug_id=197&group_id=10">197</a>
-       Jikes does not allow legal variable shadowing in inner classes.
-       <span style="background-color:#ffcccc;">Patch
-       <a href="http://oss.software.ibm.com/developerworks/patch/?func=detailpatch&patch_id=62&group_id=10">62</a>
-       has been proposed.</span></dd>
-      <dt>-encoding issues</dt>
-       <dd><a href="/developerworks/bugs/?func=detailbug&amp;bug_id=113&amp;group_id=10">113</a> and others
-       not in the new bug system. <span style="background-color:#ffcccc;">These issues do not appear to be resolved in 1.13, but are
-       being investigated by a number of people, we're hoping for a fix post 1.13.</span></dd>
-      <dt>Build related issues</dt>
-       <dd>There were a number of these. <span style="background-color:#ffcccc;">There was a completely new build system put into
-       place for 1.12, if you've not tried to build anything newer than 1.11 try again now. There is one notable exception
-       to this currently: <a href="/developerworks/bugs/?func=detailbug&amp;bug_id=110&amp;group_id=10">HP/UX</a>
-       remains a problem. We need an HP/UX compiler expert to assist with this.</span></dd>
+      <dt>Empty if clause in if-else statement causes problems</dt>
+       <dd>This is bug
+       <a href="http://www-124.ibm.com/developerworks/bugs/?func=detailbug&amp;bug_id=3076&amp;group_id=10">3076</a>.
+       In Jikes 1.16, if the if clause of an if-else statement is empty, the
+       else clause is not compiled correctly.  The workaround is to ensure
+       there is a statement in the if clause, even if it does nothing.  <span
+       style="background-color:#ffcccc;">Fixed in CVS.</span>
       <dt>Classpath crashes</dt>
        <dd>Older Jikes builds (~1.06 - 1.11) would occasionally drop core due to the length of the classpath (not so much that
        it was too long, as that it was "oddly mod 2" long), this also varied based on the platform and how its compiler laid out
@@ -177,7 +161,7 @@
       Next you will need to furnish a short summary of the problem... this is limited to a couple dozen characters, so be breif but CLEAR.
       That last large area... well that's where everything else goes.</p>
      <p>After you click submit there is one last <strong>very important</strong> step you'll have to do: confirm your address. A message
-      will be sent to your email address which contains a URL... untill you visit that URL your bug will <em>NOT</em> be seen, you <strong>must</strong>
+      will be sent to your email address which contains a URL... until you visit that URL your bug will <em>NOT</em> be seen, you <strong>must</strong>
       visit the URL that is sent to you in order to confirm your address is valid.</p>
 
      <h1>Assist in the elimination of the bug</h1>
