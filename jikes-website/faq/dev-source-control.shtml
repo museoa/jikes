@@ -106,7 +106,7 @@
                       <tr> 
                         <td class="HighlightedFrameBackground">
                           ( sh/bash syntax )
-                          <pre><code>export CVSROOT=pserver:anoncvs@oss.software.ibm.com:/usr/cvs/jikes</code></pre></td>
+                          <pre><code>export CVSROOT=:pserver:anoncvs@oss.software.ibm.com:/usr/cvs/jikes</code></pre></td>
                       </tr>
                     </table>
                   </td>
