@@ -155,14 +155,21 @@ IEEEfloat::IEEEfloat(const LongInt &a)
         *this = Normalize(sign, FRACT_SIZE, l.LowWord());
     else
     {
-        int exponent = FRACT_SIZE, round = 0;
+        int exponent = FRACT_SIZE - 1, sticky = 0;
         while (l.HighWord())
         {
-            round |= (l.LowWord() & BYTE_MASK) ? 1 : 0;
+            sticky |= (l.LowWord() & BYTE_MASK) ? 1 : 0;
             l >>= 8;
             exponent += 8;
         }
-        *this = Normalize(sign, exponent, l.LowWord() | round);
+        u4 low = l.LowWord();
+        if ((i4) low < 0)
+        {
+            sticky |= (low & BYTE_MASK) ? 1 : 0;
+            low >>= 8;
+            exponent += 8;
+        }
+        *this = Normalize(sign, exponent, low + low + sticky);
     }
 #endif // HAVE_IEEE754
 }

@@ -1,5 +1,10 @@
 2002-09-11  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/double.cpp (IEEEfloat(LongInt)): Fix bug in (float)long -
+	bug 3272.
+
+2002-09-11  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/bytecode.h:
 	* src/bytecode.cpp (InitializeArray, EmitArrayCreationExpression):
 	Allow for discarded creation in instanceof - bug 3267.
