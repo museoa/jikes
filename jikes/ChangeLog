@@ -1,5 +1,10 @@
 2001-09-15  Chris Dennis  <Chris.Dennis@invidi.com>
 
+	* src/platform.h: Add support for MS VC++ __int64 - patch 190,
+	from bug 1897.
+
+2001-09-15  Chris Dennis  <Chris.Dennis@invidi.com>
+
 	* src/java.g: Fix namespace typo - patch 189, from bug 1896.
 	* src/javaact.h: regenerate
 

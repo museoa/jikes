@@ -107,12 +107,12 @@ Currently, we do not use this one
 #endif
 
 #ifdef HAVE_DIRENT_H
-#include <dirent.h>
+# include <dirent.h>
 #endif
 
 #ifndef HAVE_WINT_T
-    /* On some systems the type wint_t is not defined in wchar.h */
-    typedef unsigned int wint_t;
+/* On some systems the type wint_t is not defined in wchar.h */
+typedef unsigned int wint_t;
 #endif
 
 #ifdef HAVE_WCHAR_H
@@ -208,17 +208,25 @@ Currently, we do not use this one
 
 #ifdef HAVE_32BIT_TYPES
 
-//
-// FIXME: Someone with Microsoft VC++ should add __int64 support
-//
+// MS VC++ supports long long, but by a different name...
+# ifdef _WINDOWS_
+#  define HAVE_UNSIGNED_LONG_LONG 1
+# endif
 
-# ifdef HAVE_UNSIGNED_LONG_LONG
 // Range 0..18446744073709551615
+# ifdef HAVE_UNSIGNED_LONG_LONG
+#  ifndef _WINDOWS
 typedef unsigned long long u8;
+#  else
+typedef unsigned __int64 u8;
+#  endif
 
 // Range -9223372036854775808..9223372036854775807
+#  ifndef _WINDOWS_
 typedef signed long long i8;
-
+#  else
+typedef signed __int64 i8;
+#  endif
 # endif // HAVE_UNSIGNED_LONG_LONG
 
 // Range 0..4294967295
