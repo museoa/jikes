@@ -1,107 +1,16 @@
-*** TBD for Jikes 1.13 release:
+*** TBD for Jikes 1.14 release:
 
-Fix build under IRIX, it failed in
-1.12 because of iconv prototype mismatch.
-Same goes for Red Hat 7.0.
-(FIXED)
+correct configure script for LIB_ICU, HP/UX, and ICC fp
+bug on other compilers
 
-Include java.g file in tar ball.
-This was omitted in the 1.12 release.
-(FIXED)
-
-Add RPM spec file to the tar ball.
-This was omitted in the 1.12 release.
-(FIXED)
+(fixes in hand)
 
 
-Fix namespaces. People need
-to be able to compile on
-systems that require namespace
-support. Many versions of gcc
-have bugs that keep namespaces
-from working.
+Fix problem with debug line number tables. Newer
+versions of java don't like our line numbers.
+This is commonly known as "Jikes and JPDA".
 
-./configure HAVE_JIKES_NAMESPACE=1
-
-(FIXED)
-
-
-Use new casting operations instead of C style
-casts, need to add autoconf check too.
-
-Casting up from A to B will be checked if
-compiler support RTTI. This could catch
-nasty cast errors in Jikes.
-
-http://www.sns.ias.edu/Main/computing/compilers_html/c-plusplus/c++_ug/Cast.new.doc.html
-
-const_cast<int> 'c'
-
-same as
-
-(int) 'c'
-
-dynamic_cast<type>(ARG)
-
-A -> B
-
-B*  bp = new B():
-A*  ap = bp;
-
-assert( ap != NULL );
-B*  bp2 = dynamic_cast<B*>(ap);
-assert( bp2 != NULL );
-
-
-(FIXED : still need to actually use them in #ifdefs)
-
-
-
-
-Manually generate a list of #include deps for
-each of the .c files in the src dir and include
-then in Makefile.am. We do not want to use
-the automatic depcomp feature of automake.
-
-(FIXED)
-
-
-The website needs to be made available as a CVS module.
-That will make changing and tracking changes far easier.
-
-(FIXED)
-
-
-Fix the problems with @files demonstrated by
-non-jls-argument-expansion tests in Jacks. This
-would be significantly easier if during input
-conversion, \r \r\n and \n where always converted
-into a single \n in the source code. This is
-currently implemented in LexStream but it needs
-to be done in a more general stream class not
-one that does lexing. That way, it could also
-be used in the Option class to process @ files.
-
-(FIXED, reverted since it caused other problems )
-
-
-Add new floating point emulation support code.
-
-(FIXED)
-
-
-
-Fix problems with double class use of
-static const, gcc 3.0 pukes unless
-there is an external def too.
-
-(FIXED)
-
-
-
-
-*** Things that will not be done in 1.13
-
+(first fix in hand, need to see if it exposes more problems)
 
 
 It is not clear if iconv is only a little
@@ -131,7 +40,61 @@ that would set ch to zero right? I
 don't think that is really what we
 would have wanted.
 
-(Will not fix in this release)
+(postponed from last release)
+
+
+
+
+
+Use new casting operations instead of C style
+casts, need to add autoconf check too.
+
+Casting up from A to B will be checked if
+compiler support RTTI. This could catch
+nasty cast errors in Jikes.
+
+http://www.sns.ias.edu/Main/computing/compilers_html/c-plusplus/c++_ug/Cast.new.doc.html
+
+const_cast<int> 'c'
+
+same as
+
+(int) 'c'
+
+dynamic_cast<type>(ARG)
+
+A -> B
+
+B*  bp = new B():
+A*  ap = bp;
+
+assert( ap != NULL );
+B*  bp2 = dynamic_cast<B*>(ap);
+assert( bp2 != NULL );
+
+(left over from last release... #ifdefs need to be put in for these)
+
+
+
+Fix the problems with @files demonstrated by
+non-jls-argument-expansion tests in Jacks. This
+would be significantly easier if during input
+conversion, \r \r\n and \n where always converted
+into a single \n in the source code. This is
+currently implemented in LexStream but it needs
+to be done in a more general stream class not
+one that does lexing. That way, it could also
+be used in the Option class to process @ files.
+
+(FIXED, reverted since it caused other problems )
+
+
+Make the floating point emulation code default.
+                                                
+
+
+
+*** Things that will not be done in 1.14
 
 
 
@@ -142,12 +105,6 @@ Cygwin with the -mno-cygwin flag.
 
 
 
-Fix problem with debug line number tables. Newer
-versions of java don't like our line numbers.
-This is commonly known as "Jikes and JPDA".
-
-
-
 Add the src/m4 subdir contents to
 the .tar file.
 
@@ -155,7 +112,6 @@ the .tar file.
 able to regenerate a working
 ./configure with autoconf 2.13
 anyway, so this can be delayed)
-
 
 
 If a zip file can not be found,
@@ -174,7 +130,6 @@ is "invalid" (implies it was corrupted).
 Add test cases for the typos in error.cpp that were fixed
 just before the 1.12 release. In fact, it would be nice if we
 could generate a test case for every error condition and
-
 test the compiler output.
 
 Check into the fix for bug 102, we reverted it because of
