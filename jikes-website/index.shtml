@@ -62,6 +62,7 @@
 	    <li><a href="http://www.java.sun.com/docs/books/jls">Language Spec.</a>
 	    <li><a href="http://www.java.sun.com/docs/books/vmspec">Virtual Machine Spec.</a>
 	    <li><a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf">Old Jikes discussion database<br>at IBM Research</a> <small style="color: black">includes<br>the "Queries to Sun".</small>
+	    <li><a href="/developerworks/oss/jikesrvm/?origin=jikes">The Jikes Research Virtual Machine project</a> can only be built with Jikes.
           </ul>
         </td>
         <TD class=navbar WIDTH=6>&nbsp;</TD><!--padding-->
@@ -71,6 +72,7 @@
 
 <!-- content, main - still needs cleanup -->
 
+ <a href="http://www-106.ibm.com/developerworks/aboutdw/letter2.html?origin=jikes"><img src="http://www-106.ibm.com/developerworks/i/addWbday2.gif" border=0 width=150 height=50 align=right></a>
  <p>The Jikes Homepage has been reorganized to take advantage of the new support
     infrastructure offered by IBM's developerWorks Open Source Software zone. These
     pages will continue to provide user support to the Jikes community; however,
