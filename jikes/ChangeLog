@@ -1,5 +1,15 @@
 2002-08-29  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/expr.cpp (ReportMethodNotFound, FindMethodInType),
+	(ProcessMethodName, FindMethodMember):
+	* src/decl.cpp (CompleteSymbolTable, CheckMethodOverride),
+	(AddInheritedMethods): Allow for multiple inheritance of abstract
+	methods, including when one of the set is not public - bug 3253.
+	* src/error.h:
+	* src/error.cpp (UNIMPLEMENTABLE_CLASS): New caution.
+
+2002-08-29  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/error.h:
 	* src/error.cpp (*_THROWS_CLAUSE_CLASS): New pedantic warnings.
 	* src/semantic.h (CheckThrow):

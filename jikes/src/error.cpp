@@ -369,6 +369,7 @@ void SemanticError::StaticInitializer()
     warning[UNNECESSARY_PARENTHESIS] = 2;
     warning[ZERO_DIVIDE_CAUTION] = 2;
     warning[UNIMPLEMENTABLE_INTERFACE] = 2;
+    warning[UNIMPLEMENTABLE_CLASS] = 2;
 
 #ifdef JIKES_DEBUG
     for (int i = 0; i < _num_kinds; i++)
@@ -458,6 +459,7 @@ void SemanticError::StaticInitializer()
         PrintMISMATCHED_INHERITED_METHOD;
     print_message[MISMATCHED_IMPLICIT_METHOD] = PrintMISMATCHED_IMPLICIT_METHOD;
     print_message[UNIMPLEMENTABLE_INTERFACE] = PrintUNIMPLEMENTABLE_INTERFACE;
+    print_message[UNIMPLEMENTABLE_CLASS] = PrintUNIMPLEMENTABLE_CLASS;
     print_message[MISMATCHED_INHERITED_METHOD_EXTERNALLY] =
         PrintMISMATCHED_INHERITED_METHOD_EXTERNALLY;
     print_message[DUPLICATE_FORMAL_PARAMETER] = PrintDUPLICATE_FORMAL_PARAMETER;
@@ -1951,9 +1953,36 @@ wchar_t *SemanticError::PrintUNIMPLEMENTABLE_INTERFACE(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "The interface is legal, but cannot be implemented: method \""
-      << err.insert1 << "\" has a different return type than \""
-      << err.insert2 << "\" declared in Object.";
+    s << "Interface \"";
+    if (NotDot(err.insert1))
+        s << err.insert1 << '/';
+    s << err.insert2 << "\" is legal, but cannot be implemented: method \""
+      << err.insert3 << "\" has a different return type than \""
+      << err.insert4 << "\" declared in java.lang.Object.";
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintUNIMPLEMENTABLE_CLASS(ErrorInfo &err,
+                                                   LexStream *lex_stream,
+                                                   Control &control)
+{
+    ErrorString s;
+
+    s << "Class \"";
+    if (NotDot(err.insert1))
+        s << err.insert1 << '/';
+    s << err.insert2 << "\" cannot be implemented: method \"" << err.insert3
+      << "\" declared in \"";
+    if (NotDot(err.insert4))
+        s << err.insert4 << '/';
+    s << err.insert5 << "\" has a different return type than the non-inherited "
+      << "default access abstract method \"" << err.insert6
+      << "\" declared in the superclass \"";
+    if (NotDot(err.insert7))
+        s << err.insert7 << '/';
+    s << err.insert8 << "\".";
 
     return s.Array();
 }
@@ -3237,15 +3266,14 @@ wchar_t *SemanticError::PrintNON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_
     ErrorString s;
 
     s << "The abstract method \"" << err.insert1
-      << "\", belonging to the class \"";
+      << "\", belonging to the superclass \"";
     if (NotDot(err.insert2))
         s << err.insert2 << '/';
-    s << err.insert3 << "\" has default access. Therefore, it is not "
-      << "inherited and hence, it cannot be implemented in the non-abstract "
-      << "class \"";
+    s << err.insert3 << "\", has default access, so it is not inherited and "
+      << "cannot be implemented in this package. Therefore, class \"";
     if (NotDot(err.insert4))
         s << err.insert4 << '/';
-    s << err.insert5 << "\".";
+    s << err.insert5 << "\" must be abstract.";
 
     return s.Array();
 }

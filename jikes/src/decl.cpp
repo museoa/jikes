@@ -1379,52 +1379,58 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment,
     if (! this_type -> expanded_method_table)
         ComputeMethodsClosure(this_type, identifier_token);
 
-    ExpandedMethodTable &expanded_table = *(this_type -> expanded_method_table);
-    if (this_type -> super && ! this_type -> ACC_ABSTRACT() &&
-        ! this_type -> Bad())
+    if (this_type -> super && ! this_type -> Bad())
     {
-        //
-        // Check that every abstract method that is inherited is overridden.
-        // Exploit the fact that the method table is built with the first
-        // element being from a superclass; all conflicts are inherited
-        // from interfaces and are necessarily abstract.
-        //
-        for (int i = 0; i < expanded_table.symbol_pool.Length(); i++)
+        if (! this_type -> ACC_ABSTRACT())
         {
-            MethodSymbol *method =
-                expanded_table.symbol_pool[i] -> method_symbol;
-
-            if (method -> ACC_ABSTRACT())
+            //
+            // We already checked that this class does not declare abstract
+            // methods. Now see that there are no unimplemented abstract
+            // methods in any of the superclasses or superinterfaces. Exploit
+            // the fact that the method table is built with the first element
+            // being from a superclass; all conflicts are inherited from
+            // interfaces and are necessarily abstract.
+            //
+            ExpandedMethodTable *expanded_table =
+                this_type -> expanded_method_table;
+            for (int i = 0; i < expanded_table -> symbol_pool.Length(); i++)
             {
-                TypeSymbol *containing_type = method -> containing_type;
-                if (containing_type != this_type)
-                {
-                    if (! method -> IsTyped())
-                        method -> ProcessMethodSignature(this,
-                                                         identifier_token);
+                MethodSymbol *method =
+                    expanded_table -> symbol_pool[i] -> method_symbol;
 
-                    ReportSemError(SemanticError::NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD,
-                                   identifier_token,
-                                   identifier_token,
-                                   method -> Header(),
-                                   containing_type -> ContainingPackage() -> PackageName(),
-                                   containing_type -> ExternalName(),
-                                   this_type -> ContainingPackage() -> PackageName(),
-                                   this_type -> ExternalName());
+                if (method -> ACC_ABSTRACT())
+                {
+                    TypeSymbol *containing_type = method -> containing_type;
+                    if (containing_type != this_type)
+                    {
+                        if (! method -> IsTyped())
+                            method -> ProcessMethodSignature(this,
+                                                             identifier_token);
+
+                        ReportSemError(SemanticError::NON_ABSTRACT_TYPE_INHERITS_ABSTRACT_METHOD,
+                                       identifier_token,
+                                       identifier_token,
+                                       method -> Header(),
+                                       containing_type -> ContainingPackage() -> PackageName(),
+                                       containing_type -> ExternalName(),
+                                       this_type -> ContainingPackage() -> PackageName(),
+                                       this_type -> ExternalName());
+                    }
                 }
             }
         }
 
         //
-        // If any super class of this_type is abstract and is contained in a
+        // If any superclass of this_type is abstract and is contained in a
         // different package, check to see if its members include abstract
-        // methods with default access. If so, we must issue error messages
-        // for them also as they cannot be overridden. However, this can be
-        // tricky: suppose abstract p1.A declares abstract foo(), abstract
-        // p2.B extends p1.A, abstract p1.C extends p2.B and implements foo().
-        // Then, p2.B does not inherit foo() and thus neither does p1.C, but
-        // p1.C DOES override foo() with a valid implementation. And thus,
-        // p2.D extends p1.C need not be abstract.
+        // methods with default access. If so, this class must be abstract,
+        // as it cannot override them. And if this class has a protected or
+        // public method with a conflicting signature, then it is cannot be
+        // implemented. However, this can be tricky: suppose abstract p1.A
+        // declares abstract foo(), abstract p2.B extends p1.A, abstract p1.C
+        // extends p2.B and implements foo(). Then, p2.B does not inherit foo()
+        // and thus neither does p1.C, but p1.C DOES override foo() with a
+        // valid implementation. And thus, p2.D extends p1.C may be concrete.
         //
         PackageSymbol *package = this_type -> ContainingPackage();
         for (TypeSymbol *super_type = this_type -> super;
@@ -1435,55 +1441,94 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment,
                 continue;
 
             package = super_type -> ContainingPackage();
-            ExpandedMethodTable &super_expanded_table =
-                *(super_type -> expanded_method_table);
-            for (int i = 0; i < super_expanded_table.symbol_pool.Length(); i++)
+            ExpandedMethodTable *super_expanded_table =
+                super_type -> expanded_method_table;
+            for (int i = 0;
+                 i < super_expanded_table -> symbol_pool.Length(); i++)
             {
                 MethodSymbol *method =
-                    super_expanded_table.symbol_pool[i] -> method_symbol;
+                    super_expanded_table -> symbol_pool[i] -> method_symbol;
 
                 //
-                // Remember that abstract methods cannot be private.
+                // Remember that abstract methods cannot be private, and that
+                // non-default methods were inherited.
                 //
-                if (method -> ACC_ABSTRACT() &&
-                    ! method -> ACC_PUBLIC() &&
-                    ! method -> ACC_PROTECTED())
+                if (! method -> ACC_ABSTRACT() || method -> ACC_PUBLIC() ||
+                    method -> ACC_PROTECTED())
                 {
-                    TypeSymbol *containing_type = method -> containing_type;
+                    continue;
+                }
+                TypeSymbol *containing_type = method -> containing_type;
+                if (! method -> IsTyped())
+                    method -> ProcessMethodSignature(this, identifier_token);
 
-                    if (! method -> IsTyped())
-                        method -> ProcessMethodSignature(this,
-                                                         identifier_token);
-
-                    //
-                    // Search all intermediate superclasses in the same package
-                    // as the current super_class for an override of the
-                    // abstract method in question.
-                    //
-                    TypeSymbol *intermediate;
-                    for (intermediate = this_type;
-                         intermediate != super_type;
-                         intermediate = intermediate -> super)
+                //
+                // Search all intermediate superclasses in the same package
+                // as the current super_class for an override of the abstract
+                // method in question. Also report any protected or public
+                // methods outside super's package that cause this class
+                // to be uninstantiable.
+                //
+                TypeSymbol *intermediate;
+                MethodSymbol *method_clash = NULL;
+                for (intermediate = this_type;
+                     intermediate != super_type;
+                     intermediate = intermediate -> super)
+                {
+                    MethodShadowSymbol *shadow = intermediate ->
+                        expanded_method_table ->
+                        FindOverloadMethodShadow(method, this,
+                                                 identifier_token);
+                    if (! shadow)
+                        continue;
+                    if (intermediate -> ContainingPackage() != package)
                     {
-                        if (intermediate -> ContainingPackage() != package)
-                            continue;
-                        MethodShadowSymbol *shadow = intermediate ->
-                            expanded_method_table ->
-                            FindOverloadMethodShadow(method, this,
-                                                     identifier_token);
-                        if (shadow && shadow -> method_symbol -> containing_type == intermediate)
-                            break;
+                        if ((shadow -> method_symbol -> ACC_PUBLIC() ||
+                             shadow -> method_symbol -> ACC_PROTECTED()) &&
+                            (shadow -> method_symbol -> Type() !=
+                             method -> Type()))
+                        {
+                            //
+                            // No need to repeat the warning for subclasses of
+                            // where the problem originally occurred.
+                            //
+                            if (method_clash == shadow -> method_symbol)
+                                method_clash = NULL;
+                            else method_clash = shadow -> method_symbol;
+                        }
                     }
+                    else if (shadow -> method_symbol -> containing_type ==
+                             intermediate)
+                    {
+                        break;
+                    }
+                }
 
-                    if (intermediate == super_type)
-                        ReportSemError(SemanticError::NON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD,
-                                       identifier_token,
-                                       identifier_token,
-                                       method -> Header(),
-                                       containing_type -> ContainingPackage() -> PackageName(),
-                                       containing_type -> ExternalName(),
-                                       this_type -> ContainingPackage() -> PackageName(),
-                                       this_type -> ExternalName());
+                if (intermediate == super_type && ! this_type -> ACC_ABSTRACT())
+                {
+                    ReportSemError(SemanticError::NON_ABSTRACT_TYPE_CANNOT_OVERRIDE_DEFAULT_ABSTRACT_METHOD,
+                                   identifier_token,
+                                   identifier_token,
+                                   method -> Header(),
+                                   containing_type -> ContainingPackage() -> PackageName(),
+                                   containing_type -> ExternalName(),
+                                   this_type -> ContainingPackage() -> PackageName(),
+                                   this_type -> ExternalName());
+                }
+                if (method_clash)
+                {
+                    TypeSymbol *base_type = method_clash -> containing_type;
+                    ReportSemError(SemanticError::UNIMPLEMENTABLE_CLASS,
+                                   identifier_token,
+                                   identifier_token,
+                                   this_type -> ContainingPackage() -> PackageName(),
+                                   this_type -> ExternalName(),
+                                   method_clash -> Header(),
+                                   base_type -> ContainingPackage() -> PackageName(),
+                                   base_type -> ExternalName(),
+                                   method -> Header(),
+                                   containing_type -> ContainingPackage() -> PackageName(),
+                                   containing_type -> ExternalName());
                 }
             }
         }
@@ -2646,15 +2691,25 @@ void Semantic::CheckMethodOverride(MethodSymbol *method,
                 // 4479715, which explains our current stance of allowing
                 // int clone() throws MyException; or Object finalize();.
                 //
-                ReportSemError((hidden_method -> ACC_PUBLIC()
-                                ? SemanticError::MISMATCHED_IMPLICIT_METHOD
-                                : SemanticError::UNIMPLEMENTABLE_INTERFACE),
-                               left_tok,
-                               right_tok,
-                               method -> Header(),
-                               hidden_method -> Header());
                 if (hidden_method -> ACC_PUBLIC())
+                {
+                    ReportSemError(SemanticError::MISMATCHED_IMPLICIT_METHOD,
+                                   left_tok,
+                                   right_tok,
+                                   method -> Header(),
+                                   hidden_method -> Header());
                     base_type -> MarkBad();
+                }
+                else
+                {
+                    ReportSemError(SemanticError::UNIMPLEMENTABLE_INTERFACE,
+                                   left_tok,
+                                   right_tok,
+                                   base_type -> ContainingPackage() -> PackageName(),
+                                   base_type -> ExternalName(),
+                                   method -> Header(),
+                                   hidden_method -> Header());
+                }
             }
             else
             {
@@ -2769,6 +2824,7 @@ void Semantic::CheckMethodOverride(MethodSymbol *method,
                                StringConstant::US_public,
                                hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
                                hidden_method -> containing_type -> ExternalName());
+                base_type -> MarkBad();
             }
             else if (! method -> ACC_ABSTRACT())
             {
@@ -2784,8 +2840,8 @@ void Semantic::CheckMethodOverride(MethodSymbol *method,
                                StringConstant::US_public,
                                hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
                                hidden_method -> containing_type -> ExternalName());
+                base_type -> MarkBad();
             }
-            base_type -> MarkBad();
         }
     }
     else if (hidden_method -> ACC_PROTECTED())
@@ -3074,11 +3130,13 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type,
         //
         // We have to special case interfaces, since they implicitly declare
         // the public methods of Object. In ComputeMethodsClosure, we add all
-        // methods from Object after adding those from interfaces.
+        // methods from Object after adding those from interfaces. Also, since
+        // user code cannot invoke synthetic methods, we ignore those.
         //
-        if (base_type -> ACC_INTERFACE() &&
-            super_type -> ACC_INTERFACE() &&
-            method -> containing_type == control.Object())
+        if ((base_type -> ACC_INTERFACE() &&
+             super_type -> ACC_INTERFACE() &&
+             method -> containing_type == control.Object()) ||
+            method -> IsSynthetic())
         {
             continue;
         }
@@ -3086,13 +3144,11 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type,
         //
         // Note that since all methods in an interface are implicitly
         // public, all other methods encountered here are enclosed in a
-        // type that is a super class of base_type. Since synthetic methods
-        // cannot be called in user code, we can safely ignore them here.
+        // type that is a super class of base_type.
         //
-        if ((method -> ACC_PUBLIC() || method -> ACC_PROTECTED() ||
-             (! method -> ACC_PRIVATE() &&
-              super_type -> ContainingPackage() == base_package)) &&
-            ! method -> IsSynthetic())
+        if (method -> ACC_PUBLIC() || method -> ACC_PROTECTED() ||
+            (! method -> ACC_PRIVATE() &&
+             super_type -> ContainingPackage() == base_package))
         {
             MethodShadowSymbol *shadow = base_expanded_table ->
                 FindOverloadMethodShadow(method, this, tok);
@@ -3130,8 +3186,7 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type,
         // necessarily public methods from interfaces) are still inherited in
         // the base_type.
         //
-        else if (! method -> ACC_PRIVATE() &&
-                 ! method -> IsSynthetic())
+        else if (! method -> ACC_PRIVATE())
         {
             MethodShadowSymbol *shadow = base_expanded_table ->
                 FindOverloadMethodShadow(method, this, tok);
@@ -3216,14 +3271,24 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type,
                 if (! method -> IsTyped())
                     method -> ProcessMethodSignature(this, tok);
 
-                ReportSemError(SemanticError::DEFAULT_METHOD_NOT_OVERRIDDEN,
-                               left_tok,
-                               right_tok,
-                               method -> Header(),
-                               base_type -> ContainingPackage() -> PackageName(),
-                               base_type -> ExternalName(),
-                               super_type -> ContainingPackage() -> PackageName(),
-                               super_type -> ExternalName());
+                //
+                // We filter here, because CompleteSymbolTable gives a different
+                // warning for unimplementable abstract classes.
+                //
+                if (! method -> ACC_ABSTRACT() ||
+                    method -> Type() == shadow -> method_symbol -> Type() ||
+                    (! shadow -> method_symbol -> ACC_PUBLIC() &&
+                     ! shadow -> method_symbol -> ACC_PROTECTED()))
+                {
+                    ReportSemError(SemanticError::DEFAULT_METHOD_NOT_OVERRIDDEN,
+                                   left_tok,
+                                   right_tok,
+                                   method -> Header(),
+                                   base_type -> ContainingPackage() -> PackageName(),
+                                   base_type -> ExternalName(),
+                                   super_type -> ContainingPackage() -> PackageName(),
+                                   super_type -> ExternalName());
+                }
             }
         }
     }
@@ -3593,7 +3658,7 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
 
     method_declaration -> method_symbol = method; // save for processing bodies later.
 
-    if (method -> ACC_ABSTRACT() && (! this_type -> ACC_ABSTRACT()))
+    if (method -> ACC_ABSTRACT() && ! this_type -> ACC_ABSTRACT())
     {
         ReportSemError(SemanticError::NON_ABSTRACT_TYPE_CONTAINS_ABSTRACT_METHOD,
                        method_declaration -> LeftToken(),

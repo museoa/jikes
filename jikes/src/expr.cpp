@@ -185,7 +185,8 @@ void Semantic::ReportMethodNotFound(AstMethodInvocation *method_call,
         if (! method -> IsTyped())
             method -> ProcessMethodSignature(this, id_token);
 
-        if (MemberAccessCheck(field_access, type, method))
+        if (MemberAccessCheck(field_access, type, method) ||
+            method_shadow -> NumConflicts() > 0)
         {
             int diff =
                 method_call -> NumArguments() - method -> NumFormalParameters();
@@ -778,8 +779,14 @@ MethodShadowSymbol *Semantic::FindMethodInType(TypeSymbol *type,
             method -> ProcessMethodSignature(this,
                                              field_access -> identifier_token);
 
+        //
+        // If there are method shadow conflicts, they are necessarily public
+        // abstract methods inherited from interfaces; and we can skip the
+        // member access check because we can always invoke the public version.
+        //
         if (method_call -> NumArguments() == method -> NumFormalParameters() &&
-            MemberAccessCheck(field_access, type, method))
+            (MemberAccessCheck(field_access, type, method) ||
+             method_shadow -> NumConflicts() > 0))
         {
             int i;
             for (i = 0; i < method_call -> NumArguments(); i++)
@@ -3133,7 +3140,7 @@ MethodShadowSymbol *Semantic::FindMethodMember(TypeSymbol *type,
                                field_access -> identifier_token,
                                lex_stream -> NameString(field_access -> identifier_token));
                 method_call -> symbol = control.no_type;
-                return shadow;
+                return NULL;
             }
 
             //
@@ -3230,6 +3237,8 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
     TypeSymbol *this_type = ThisType();
 
     AstSimpleName *simple_name = method_call -> method -> SimpleNameCast();
+    AstFieldAccess *field_access = method_call -> method -> FieldAccessCast();
+    TypeSymbol *base_type;
     MethodShadowSymbol *method_shadow;
     if (simple_name)
     {
@@ -3237,9 +3246,13 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
         method_shadow = FindMethodInEnvironment(where_found, state_stack.Top(),
                                                 method_call);
         if (! method_shadow)
+        {
             method_call -> symbol = control.no_type;
+            base_type = NULL;
+        }
         else
         {
+            base_type = where_found -> Type();
             MethodSymbol *method = method_shadow -> method_symbol;
             assert(method -> IsTyped());
 
@@ -3305,8 +3318,6 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
         // ProcessFieldAccess, since we already know what context the name
         // is in.
         //
-        AstFieldAccess *field_access =
-            method_call -> method -> FieldAccessCast();
         AstExpression* base = field_access -> base;
         if (base -> FieldAccessCast() || base -> SimpleNameCast())
             ProcessAmbiguousName(base);
@@ -3323,15 +3334,15 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
             return;
         }
 
-        TypeSymbol *type = base -> Type();
-        assert(type);
+        base_type = base -> Type();
+        assert(base_type);
 
-        if (type == control.no_type)
+        if (base_type == control.no_type)
         {
             method_call -> symbol = control.no_type;
             return;
         }
-        method_shadow = FindMethodMember(type, method_call);
+        method_shadow = FindMethodMember(base_type, method_call);
         if (base -> IsSuperExpression())
         {
             //
@@ -3348,16 +3359,31 @@ void Semantic::ProcessMethodName(AstMethodInvocation *method_call)
         }
         else
         {
-            TypeSymbol *parent_type = (type -> IsArray() ? type -> base_type
-                                       : type);
+            TypeSymbol *parent_type = (base_type -> IsArray()
+                                       ? base_type -> base_type
+                                       : base_type);
             if (! parent_type -> Primitive())
                 AddDependence(this_type, parent_type);
         }
     }
 
+    //
+    // If we found a candidate, proceed to check the throws clauses. If
+    // base_type inherited multiple abstract methods, then this calling
+    // environment must merge the throws clauses (although it may invoke an
+    // arbitrary method from the set). Be careful of default and protected
+    // abstract methods which are not accessible when doing this merge.
+    //
     if (method_shadow)
     {
         MethodSymbol *method = (MethodSymbol *) method_call -> symbol;
+        if (! MemberAccessCheck(field_access, base_type, method))
+        {
+            assert(method_shadow -> NumConflicts() > 0);
+            method = method_shadow -> Conflict(0);
+            method_call -> symbol = method;
+        }
+
         SymbolSet exceptions(method -> NumThrows());
         int i, j;
         // First, the base set

@@ -162,6 +162,7 @@ public:
         MISMATCHED_INHERITED_METHOD,
         MISMATCHED_IMPLICIT_METHOD,
         UNIMPLEMENTABLE_INTERFACE,
+        UNIMPLEMENTABLE_CLASS,
         MISMATCHED_INHERITED_METHOD_EXTERNALLY,
         DUPLICATE_FORMAL_PARAMETER,
         MISSPELLED_CONSTRUCTOR_NAME,
@@ -468,6 +469,7 @@ private:
     static wchar_t *PrintMISMATCHED_INHERITED_METHOD(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISMATCHED_IMPLICIT_METHOD(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNIMPLEMENTABLE_INTERFACE(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintUNIMPLEMENTABLE_CLASS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISMATCHED_INHERITED_METHOD_EXTERNALLY(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintDUPLICATE_FORMAL_PARAMETER(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISSPELLED_CONSTRUCTOR_NAME(ErrorInfo &, LexStream *, Control &);
