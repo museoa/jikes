@@ -26,6 +26,10 @@
 # include <errno.h>
 #endif
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 JikesError::JikesErrorSeverity StreamError::getSeverity        () 
 { 
     //All Lexical errors are ERRORs.

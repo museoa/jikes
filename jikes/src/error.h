@@ -15,6 +15,10 @@
 #include "tuple.h"
 #include "jikesapi.h"
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
 class Control;
 class LexStream;
 class Ast_CompilationUnit;
@@ -692,4 +696,9 @@ private:
     void SortMessages();
 };
 
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
 #endif
+
+#endif
+

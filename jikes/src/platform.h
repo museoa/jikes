@@ -97,6 +97,9 @@ Currently, we do not use this one
 #ifdef HAVE_STD
 # include <new>
 # include <iostream>
+# ifdef HAVE_NAMESPACE
+   using namespace std;
+# endif
 #else
 # ifdef HAVE_NEW_H
 #  include <new.h>
@@ -119,6 +122,10 @@ Currently, we do not use this one
 #endif
 
 
+
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
 
 //
 // The configure scripts check each of these to see if we need our own implementation
@@ -993,4 +1000,9 @@ class ErrorString:public ConvertibleArray<wchar_t>
     int  field_width ;
 };
 
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+
 #endif // #ifndef platform_INCLUDED
+

@@ -14,6 +14,10 @@
 #include "parser.h"
 #include "jikesapi.h"
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
 struct RepairCandidate
 {
     int symbol;
@@ -182,4 +186,9 @@ private:
                         int buffer_position, int distance);
 };
 
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
 #endif
+
+#endif
+

@@ -11,6 +11,10 @@
 #include "semantic.h"
 #include "control.h"
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 void Semantic::ProcessVariableInitializer(AstVariableDeclarator *variable_declarator)
 {
     if (! variable_declarator -> variable_initializer_opt)

@@ -13,6 +13,10 @@
 #include "platform.h"
 #include "symbol.h"
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
 class VariableShadowSymbol
 {
 public:
@@ -433,6 +437,10 @@ private:
     MethodShadowSymbol **base;
     int hash_size;
 };
+
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
 #endif
 
+#endif
 

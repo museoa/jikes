@@ -14,6 +14,10 @@
 #include "ast.h"
 #include "case.h"
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 int SystemTable::primes[] = {DEFAULT_HASH_SIZE, 101, 401, MAX_HASH_SIZE};
 
 SystemTable::SystemTable(int hash_size_) : directories(1024)

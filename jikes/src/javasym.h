@@ -10,6 +10,10 @@
 #ifndef javasym_INCLUDED
 #define javasym_INCLUDED
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
 enum {
       TK_BodyMarker = 101,
       TK_Identifier = 29,
@@ -120,5 +124,9 @@ enum {
       TK_EOF = 96,
       TK_EOL = 108
      };
+
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
+#endif
 
 #endif /* javasym_INCLUDED */

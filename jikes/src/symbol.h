@@ -20,6 +20,10 @@
 #include "tuple.h"
 #include "case.h"
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
 class Semantic;
 class SemanticEnvironment;
 class Ast;
@@ -2303,4 +2307,9 @@ inline SymbolTable *BlockSymbol::Table()
     }
 #endif
 
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+
 #endif // ifndef symbol_INCLUDED
+

@@ -16,6 +16,11 @@
 #include "symbol.h"
 #include "set.h"
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
+
 class Parser;
 class SemanticEnvironment;
 class StoragePool;
@@ -6093,5 +6098,9 @@ template <class T>
         base = NULL;
     }
 
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
+#endif
 
 #endif
+

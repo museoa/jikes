@@ -10,6 +10,10 @@
 
 #include "case.h"
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 char Case::lower[128] =
 {
       0,   1,   2,   3,   4,   5,   6,   7,   8,   9,

@@ -10,6 +10,11 @@
 
 #include "long.h"
 #include "double.h"
+
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 //
 // Note that the minimum long value, (0x80000000, 0x00000000), can be represented
 // exactly in a double field. However, the maximum long value, (0x7FFFFFFF, 0xFFFFFFFF)

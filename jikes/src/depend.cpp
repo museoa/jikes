@@ -16,6 +16,10 @@
 #include <time.h>
 #endif
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 //
 // Note that the types are ordered based on on the subtype relationship. We reverse
 // the order here because the desired order for processing is the supertype relationship.

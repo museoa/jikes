@@ -25,6 +25,11 @@
 */
 
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
+
 class StoragePool;
 class AstPackageDeclaration;
 class AstCompilationUnit;
@@ -201,4 +206,9 @@ protected:
     int ParseCheck(int stack[], int stack_top, int first_token, int buffer_position);
 };
 
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
 #endif
+
+#endif
+

@@ -15,6 +15,10 @@
 #include "case.h"
 #include "set.h"
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 void Control::RemoveTrashedTypes(SymbolSet &type_trash_set)
 {
     TypeSymbol *type;

@@ -22,6 +22,10 @@
 #include <sys/cygwin.h>
 #endif
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 //
 //
 //

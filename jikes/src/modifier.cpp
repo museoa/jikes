@@ -11,6 +11,10 @@
 #include "platform.h"
 #include "semantic.h"
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 AccessFlags Semantic::ProcessClassModifiers(AstClassDeclaration *class_declaration)
 {
     AccessFlags access_flags;

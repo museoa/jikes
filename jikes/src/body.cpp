@@ -12,6 +12,10 @@
 #include "semantic.h"
 #include "control.h"
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 void Semantic::ProcessBlockStatements(AstBlock *block_body)
 {
     //

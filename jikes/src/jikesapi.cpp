@@ -19,6 +19,10 @@
 # include <windows.h>
 #endif
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 /**
  * A default implementation of ReadObject that read from the file sysytem.
  */ 

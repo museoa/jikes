@@ -11,6 +11,10 @@
 #include "double.h"
 #include "long.h"
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 IEEEfloat::IEEEfloat(float d)
 {
     value.float_value = d;

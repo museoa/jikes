@@ -13,6 +13,10 @@
 #include "semantic.h"
 #include "ast.h"
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 unsigned char SemanticError::warning[SemanticError::_num_kinds] = { 0 };
 wchar_t * (*SemanticError::print_message[SemanticError::_num_kinds]) (ErrorInfo &, LexStream *, Control &) = { NULL };
 

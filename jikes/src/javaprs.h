@@ -14,6 +14,10 @@
 #define FULL_DIAGNOSIS
 #define SPACE_TABLES
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
 class LexStream;
 
 class javaprs_table
@@ -80,5 +84,9 @@ public:
         return act;
     }
 };
+
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
+#endif
 
 #endif /* javaprs_INCLUDED */

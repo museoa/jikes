@@ -10,6 +10,10 @@
 
 #include "segment.h"
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 u2 &PairSegment::Image(u2 target)
 {
     if (array == NULL)

@@ -18,6 +18,10 @@
 #include <string.h>
 */
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 
 void Operators::opdesc(int opc, char **name, char **desc)
 {

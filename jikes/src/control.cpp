@@ -15,6 +15,9 @@
 #include "bytecode.h"
 #include "case.h"
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
 
 Control::Control(char **arguments, Option &option_) : return_code(0),
                                                                  option(option_),

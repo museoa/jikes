@@ -24,6 +24,10 @@
 #include <time.h>
 #endif
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
 class Control;
 class FileSymbol;
 
@@ -122,7 +126,9 @@ private:
     void ClassifyNonAsciiUnicode();
 };
 
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
 #endif
 
-
+#endif
 

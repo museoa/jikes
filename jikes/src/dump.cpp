@@ -20,6 +20,10 @@
 #include <stdio.h>
 */
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 
 static char*
       TK_notoken_STRING      = "TK_notoken",

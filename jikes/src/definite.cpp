@@ -10,6 +10,10 @@
 #include "platform.h"
 #include "semantic.h"
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 DefiniteAssignmentSet *Semantic::DefiniteExpression(AstExpression *expr, BitSet &set)
 {
     DefiniteAssignmentSet *definite = NULL;

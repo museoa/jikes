@@ -12,6 +12,10 @@
 
 #include "platform.h"
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
 class IEEEdouble;
 class IEEEfloat;
 
@@ -189,5 +193,9 @@ public:
     double Double();      // convert LongInt value to a double value
 };
 
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
+#endif
 
 #endif // Long_INCLUDED
+

@@ -13,10 +13,18 @@
 #include "platform.h"
 #include "stream.h"
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
 typedef LexStream::TokenIndex TokenObject;
 typedef LexStream::TokenIndex Location;
 
 inline Location Loc(TokenObject i) { return i; }
+
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
+#endif
 
 #include "javasym.h" /* mapping of lexical symbols  */
 #include "javadef.h" /* definition of parsing names */

@@ -13,6 +13,10 @@
 #include "platform.h"
 #include "case.h"
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
 class Spell
 {
     static inline int Min(int x, int y) { return (x < y ? x : y); }
@@ -126,4 +130,9 @@ public:
     }
 };
 
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+
 #endif // #ifndef spell_INCLUDED
+

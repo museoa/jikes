@@ -24,6 +24,10 @@
 #include <math.h>
 */
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 
 bool Semantic::IsIntValueRepresentableInType(AstExpression *expr, TypeSymbol *type)
 {

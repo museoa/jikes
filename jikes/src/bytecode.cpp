@@ -32,6 +32,9 @@
 #endif
 */
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
 
 void ByteCode::CompileClass()
 {

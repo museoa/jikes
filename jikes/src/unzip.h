@@ -4,6 +4,10 @@
 
 #include "platform.h"
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
 //
 // NOTE: Jikes incorporates compression code from the Info-ZIP
 // group. There are no extra charges or costs due to the use of
@@ -371,4 +375,9 @@ public:
 #endif
 }; // end class unzip
 
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+
 #endif /* unzip_INCLUDED */
+

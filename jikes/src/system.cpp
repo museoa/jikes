@@ -12,6 +12,10 @@
 #include "semantic.h"
 #include "zip.h"
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 //
 // Convert the null terminated Unicode string source into its Utf8
 // representation pointed to by target. The char string target is presumed

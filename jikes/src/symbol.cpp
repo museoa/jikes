@@ -17,6 +17,10 @@
 #include "set.h"
 #include "case.h"
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 char *FileSymbol::java_suffix = StringConstant::U8S__DO_java;
 int FileSymbol::java_suffix_length = strlen(java_suffix);
 char *FileSymbol::class_suffix = StringConstant::U8S__DO_class;

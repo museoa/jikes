@@ -20,6 +20,10 @@
 #endif
 */
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
 //
 // NOTE that this class is hard-wired to work on an ASCII machine.
 // To make it universal, one should uncomment the constructor and
@@ -177,4 +181,9 @@ public:
 //  }
 };
 
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+
 #endif /* case_INCLUDED */
+

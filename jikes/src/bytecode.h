@@ -19,6 +19,10 @@
 #include "op.h"
 #include "segment.h"
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
 class TypeSymbol;
 class Control;
 class Semantic;
@@ -887,4 +891,9 @@ public:
     }
 };
 
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
 #endif
+
+#endif
+

@@ -14,6 +14,10 @@
 #include "table.h"
 #include "tuple.h"
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 //
 // If this compilation unit contains a package declaration, make sure the package
 // is associated with a directory and that the name of the package is not also

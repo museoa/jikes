@@ -10,6 +10,10 @@
 #include "parser.h"
 #include "ast.h"
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 void Parser::ReallocateStacks()
 {
     int old_stack_length = stack_length;

@@ -9,6 +9,10 @@
 //
 #include "tab.h"
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 int Tab::tab_size = Tab::DEFAULT_TAB_SIZE;
 
 //

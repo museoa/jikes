@@ -26,6 +26,10 @@
 #endif
 */
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
 
 class cp_info;
 class TypeShadowSymbol;
@@ -1311,4 +1315,10 @@ inline void Semantic::AddStringConversionDependence(TypeSymbol *type, LexStream:
     else // (type == control.double_type)
          AddDependence(ThisType(), control.Double(), tok);
 }
+
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
 #endif
+
+#endif
+

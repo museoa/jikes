@@ -14,6 +14,10 @@
 #include "assert.h"
 #include "symbol.h"
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
 class ShadowSymbol
 {
 public:
@@ -668,5 +672,10 @@ public:
                                            false_set(set_size)
     {}
 };
+
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+
 #endif
 

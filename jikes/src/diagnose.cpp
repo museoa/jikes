@@ -19,6 +19,9 @@
 #include <iostream.h>
 */
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
 
 void DiagnoseParser::ReallocateStacks()
 {

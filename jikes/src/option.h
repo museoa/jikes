@@ -25,6 +25,9 @@
 # include <iconv.h>
 #endif
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
 
 class ArgumentExpander
 {
@@ -151,4 +154,9 @@ public:
     ~Option();
 };
 
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+
 #endif /* option_INCLUDED */
+

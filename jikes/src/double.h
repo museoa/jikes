@@ -12,6 +12,10 @@
 
 #include "platform.h"
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
 class LongInt;
 class IEEEdouble;
 
@@ -283,4 +287,9 @@ public:
     static void Fmodulus(IEEEdouble, IEEEdouble, IEEEdouble &);
 };
 
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+
 #endif // Double_INCLUDED
+

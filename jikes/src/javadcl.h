@@ -10,6 +10,10 @@
 #ifndef javadcl_INCLUDED
 #define javadcl_INCLUDED
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
 
 #define CLASS_HEADER javaprs_table::
 
@@ -2739,4 +2743,9 @@ const unsigned short CLASS_HEADER in_symb[] = {0,
             0,0,0,0,0,0,0,0,0,0
                           };
 
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+
 #endif /* javadcl_INCLUDED */
+

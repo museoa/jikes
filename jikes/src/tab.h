@@ -20,6 +20,10 @@
 #include <string.h>
 */
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
 class Tab
 {
 public:
@@ -33,5 +37,10 @@ public:
 private:
     static int tab_size;
 };
+
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+
 #endif
 

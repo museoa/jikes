@@ -17,6 +17,10 @@
 #include "platform.h"
 #include "jikesapi.h"
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 int main(int argc, char *argv[])
 {
     // Here we are creating instance of default API

@@ -9,10 +9,14 @@
 //
 
 #include "ast.h"
+
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 #ifdef JIKES_DEBUG
     unsigned Ast::count = 0;
 #endif
-
 
 //
 // Allocate another block of storage for the VariableSymbol array.

@@ -13,6 +13,10 @@
 #include "platform.h"
 #include "jikesapi.h"
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
 class OutputBuffer;
 
 //
@@ -437,4 +441,9 @@ private:
     Tuple<u1> buffer;
 };
 
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+
 #endif /* #ifndef TUPLE_INCLUDED */
+

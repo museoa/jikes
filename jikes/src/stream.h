@@ -26,6 +26,10 @@
 #include <stdio.h>
 */
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
 class Control    ;
 class Input_info ;
 class Scanner    ;
@@ -427,4 +431,9 @@ private:
     }
 };
 
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
 #endif
+
+#endif
+

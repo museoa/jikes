@@ -12,6 +12,10 @@
 #include "control.h"
 #include "symbol.h"
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 //************************************************************************************************
 //
 // The ZipFile methods follow

@@ -14,6 +14,10 @@
 // Also included in platform.h but that might change
 //#include "tuple.h"
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
 class Semantic;
 class TypeSymbol;
 class FileSymbol;
@@ -140,4 +144,9 @@ private:
     Tuple<TypeSymbol *> &type_list;
 };
 
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+
 #endif /* cycle_INCLUDED */
+

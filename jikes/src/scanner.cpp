@@ -11,6 +11,10 @@
 #include "control.h"
 #include "error.h"
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 int (*Scanner::scan_keyword[13]) (wchar_t *p1) =
 {
     ScanKeyword0,

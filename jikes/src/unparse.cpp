@@ -12,6 +12,11 @@
 //FIXME: need to move to platform.h
 //#include <iostream.h>
 //#include <fstream.h>
+
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 #ifdef JIKES_DEBUG
     bool Ast::debug_unparse = false;
 #endif

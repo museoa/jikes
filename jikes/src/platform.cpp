@@ -12,6 +12,9 @@
 #include "long.h"
 #include "double.h"
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
 
 // Define the PathSeparator() function with the proper
 // impl for each platform.

@@ -23,6 +23,10 @@
 # include <wchar.h>
 #endif
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
 class Control;
 class Symbol;
 class PackageSymbol;
@@ -815,4 +819,9 @@ private:
 
     void Rehash();
 };
+
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+
 #endif

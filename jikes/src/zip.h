@@ -23,6 +23,10 @@
 #include "tuple.h"
 #include "unzip.h"
 
+#ifdef	HAVE_NAMESPACE
+namespace Jikes {	// Open namespace Jikes block
+#endif
+
 class Control;
 class Zip;
 class DirectorySymbol;
@@ -98,5 +102,10 @@ private:
     HANDLE zipfile, mapfile;
 #endif
 };
+
+#ifdef	HAVE_NAMESPACE
+}			// Close namespace Jikes block
+#endif
+
 #endif /* zip_INCLUDED */
 

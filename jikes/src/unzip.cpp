@@ -34,6 +34,10 @@
 
 #include "unzip.h"
 
+#ifdef	HAVE_NAMESPACE
+using namespace Jikes;
+#endif
+
 unsigned long Unzip::global_bb;                         /* bit buffer */
 unsigned Unzip::global_bk;                    /* bits in bit buffer */
 
