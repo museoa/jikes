@@ -331,6 +331,50 @@ void LexStream::Dump()
 }
 
 
+// We often run into cases where we have a wchar_t that we want to print out
+// while debugging. This method provides a way to print out a wchar_t* as
+// a char *, if one of the characters is outside the range of a char it
+// will be returned as a \u subst. The string must be terminated by
+// a U_NULL char.
+
+// There is currently no prototype for this method, that is ok since
+// it is to be called from inside the debugger.
+
+char *
+Dump(wchar_t* wstr) {
+    Tuple<char> &str = *(new Tuple<char>(500));
+    static char *saved_data = NULL;
+
+    wchar_t *ptr = wstr;
+    while (*ptr) {
+        wchar_t c = *ptr;
+        if (c <= 128) {
+            str.Next() = (char) c;
+        } else {
+            str.Next() = '\\';
+            str.Next() = 'u';
+            char buff[5];
+            sprintf(buff, "%04x", (int) c);
+            str.Next() = buff[0];
+            str.Next() = buff[1];
+            str.Next() = buff[2];
+            str.Next() = buff[3];
+        }
+        ptr++;
+    }
+
+    delete [] saved_data; // Delete data allocated in last call to Dump()
+    saved_data = new char[str.Length() + 1];
+    char *tmp=saved_data;
+    for (int i=0, len=str.Length() ; i < len ; i++, tmp++) {
+        *tmp = str[i];
+    }
+    *tmp = '\0';
+
+    delete &str;
+    return saved_data;
+}
+
 #ifdef	HAVE_JIKES_NAMESPACE
 }			// Close namespace Jikes block
 #endif
