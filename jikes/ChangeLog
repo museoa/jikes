@@ -1,3 +1,12 @@
+2001-06-01  Mo DeJong  <mdejong@redhat.com>
+
+	* src/option.cpp (ArgumentExpanded, ArgumentExpander): Rename
+	ArgumentExpanded to ExpandAtFileArgument. Change parsing so
+	@files are treated as one filename per line instead of
+	space or tab separated file names.
+	* src/option.h (ArgumentExpanded): Rename ArgumentExpanded
+	to ExpandAtFileArgument.
+
 2001-05-28  Pascal Davoust  <davoustp@yahoo.com>
 
 	* src/double.h: Add (u4) cast to IEEEfloat constructor
