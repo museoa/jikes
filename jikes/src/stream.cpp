@@ -26,7 +26,7 @@
 JikesError::JikesErrorSeverity StreamError::getSeverity        () 
 { 
     //All Lexical errors are ERRORs.
-    return JikesError::ERROR; 
+    return JikesError::JIKES_ERROR; 
 }
 
 int StreamError::getLeftLineNo      () { return left_line_no    ; }
@@ -74,6 +74,8 @@ const wchar_t *StreamError::getErrorMessage()
     default:
         assert(false);
     }
+
+    return L"Unknown Error\n";
 }
 
 bool StreamError::emacs_style_report=false;
@@ -566,40 +568,18 @@ void LexStream::ReadInput()
     else
     {
         struct stat status;
-        ::SystemStat(FileName(), &status);
+        JikesAPI::getInstance()->stat(FileName(), &status);
 
         file_symbol -> mtime = status.st_mtime; // actual time stamp of file read
         file_symbol -> lex_stream = this;
 
-#ifdef UNIX_FILE_SYSTEM
-        FILE *srcfile = ::SystemFopen(FileName(), "r");
-        if (srcfile != NULL)
-        {
-            char *buffer = new char[status.st_size];
-            size_t file_size = ::SystemFread(buffer, sizeof(char), status.st_size, srcfile);
-            fclose(srcfile);
-            ProcessInput(buffer, file_size);
-            delete [] buffer;
-        }
-#elif defined(WIN32_FILE_SYSTEM)
-#include <windows.h>
-        HANDLE srcfile = CreateFile(FileName(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
-        if (srcfile != INVALID_HANDLE_VALUE)
-        {
-            HANDLE mapfile = CreateFileMapping(srcfile, NULL, PAGE_READONLY, 0, 0, NULL);
-            if (mapfile != INVALID_HANDLE_VALUE)
-            {
-                char *buffer = (char *) MapViewOfFile(mapfile, FILE_MAP_READ, 0, 0, 0);
-                DWORD file_size = GetFileSize(srcfile, NULL);
-                ProcessInput(buffer, file_size);
-                if (buffer)
-                    UnmapViewOfFile(buffer);
-                CloseHandle(mapfile);
-            }
 
-            CloseHandle(srcfile);
+        JikesAPI::FileReader  *file = JikesAPI::getInstance()->read(FileName());
+        if (file)
+        {
+            ProcessInput(file->GetBuffer(),file->GetBufferSize());
+            delete file;
         }
-#endif
     }
 
     initial_reading_of_input = false;
@@ -633,39 +613,16 @@ void LexStream::RereadInput()
     else
     {
         struct stat status;
-        ::SystemStat(FileName(), &status);
+        JikesAPI::getInstance()->stat(FileName(), &status);
 
         if (status.st_mtime == file_symbol -> mtime)
         {
-#ifdef UNIX_FILE_SYSTEM
-            FILE *srcfile = ::SystemFopen(FileName(), "r");
-            if (srcfile != NULL)
-            {
-                char *buffer = new char[status.st_size];
-                size_t file_size = ::SystemFread(buffer, sizeof(char), status.st_size, srcfile);
-                fclose(srcfile);
-                ProcessInput(buffer, file_size);
-                delete [] buffer;
-            }
-#elif defined(WIN32_FILE_SYSTEM)
-            HANDLE srcfile = CreateFile(FileName(), GENERIC_READ, FILE_SHARE_READ,
-                                        NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
-            if (srcfile != INVALID_HANDLE_VALUE)
-            {
-                HANDLE mapfile = CreateFileMapping(srcfile, NULL, PAGE_READONLY, 0, 0, NULL);
-                if (mapfile != INVALID_HANDLE_VALUE)
-                {
-                    char *buffer = (char *) MapViewOfFile(mapfile, FILE_MAP_READ, 0, 0, 0);
-                    DWORD file_size = GetFileSize(srcfile, NULL);
-                    ProcessInput(buffer, file_size);
-                    if (buffer)
-                        UnmapViewOfFile(buffer);
-                    CloseHandle(mapfile);
-                }
-
-                CloseHandle(srcfile);
-            }
-#endif
+           JikesAPI::FileReader  *file = JikesAPI::getInstance()->read(FileName());
+           if (file)
+           {
+               ProcessInput(file->GetBuffer(),file->GetBufferSize());
+               delete file;
+           }
         }
         else
         {
@@ -702,7 +659,7 @@ int LexStream::hexvalue(wchar_t ch)
 // Read filesize  characters from srcfile, convert them to unicode, and
 // store them in input_buffer.
 //
-void LexStream::ProcessInput(char *buffer, long filesize)
+void LexStream::ProcessInput(const char *buffer, long filesize)
 {
 #if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
     LexStream::ProcessInputUnicode(buffer,filesize);

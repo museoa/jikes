@@ -18,13 +18,19 @@
 int main(int argc, char *argv[])
 {
     int return_code;
-    JikesAPI compiler;
+    JikesAPI *defaultCompiler	= NULL;
+    JikesAPI *compiler			= JikesAPI::getInstance();
 
-    char **files = compiler.parseOptions(argc, argv);
+	if (compiler == NULL)
+	{
+		defaultCompiler	= compiler	= new JikesAPI();
+	}
+
+    char **files = compiler->parseOptions(argc, argv);
 
     if(files)
     {
-        return_code = compiler.compile(files);
+        return_code = compiler->compile(files);
         delete []files;
     }
     else
@@ -80,6 +86,6 @@ int main(int argc, char *argv[])
 
         return_code = 1;
     }
-
+	delete defaultCompiler;
     return return_code;
 }

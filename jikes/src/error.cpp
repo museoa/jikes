@@ -43,7 +43,7 @@ void ErrorInfo::Initialize(LexStream *l, wchar_t  *m, JikesErrorSeverity s)
     severity = s;
 }
 
-ErrorInfo::ErrorInfo():msg(NULL),severity(JikesError::ERROR)
+ErrorInfo::ErrorInfo():msg(NULL),severity(JikesError::JIKES_ERROR)
 {
 }
 
@@ -1006,10 +1006,10 @@ void SemanticError::reportError(int k)
     error[k].Initialize(lex_stream,
                         (print_message[error[k].msg_code]) (error[k], lex_stream, control),
                         (warning[error[k].msg_code] == 1
-                         ? ErrorInfo::WARNING
+                         ? ErrorInfo::JIKES_WARNING
                          : (warning[error[k].msg_code] == 2 && (! control.option.zero_defect)
-                            ? ErrorInfo::CAUTION
-                            : ErrorInfo::ERROR))
+                            ? ErrorInfo::JIKES_CAUTION
+                            : ErrorInfo::JIKES_ERROR))
     );
 
     JikesAPI::getInstance()->reportError(&error[k]);

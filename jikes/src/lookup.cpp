@@ -277,7 +277,7 @@ time_t DirectoryEntry::Mtime()
         strcat(file_name, this -> name);
 
         struct stat status;
-        if (::SystemStat(file_name, &status) == 0)
+        if (JikesAPI::getInstance()->stat(file_name, &status) == 0)
              mtime_ = status.st_mtime;
         else assert(false && "Cannot compute system time stamp\n");
 
@@ -460,7 +460,7 @@ void TypeLookupTable::Rehash()
 }
 
 
-TypeSymbol *TypeLookupTable::FindType(char *str, int len)
+TypeSymbol *TypeLookupTable::FindType(const char *str, int len)
 {
     unsigned hash_address = Hash(str, len);
     int k = hash_address % hash_size;
@@ -1554,7 +1554,7 @@ if (hash_size < total)
 }
 
 
-Utf8LiteralValue *Utf8LiteralTable::FindOrInsert(char *str, int len)
+Utf8LiteralValue *Utf8LiteralTable::FindOrInsert(const char *str, int len)
 {
     unsigned hash_address = Hash(str, len);
     int k = hash_address % hash_size;

@@ -57,7 +57,7 @@ int Control::ConvertUnicodeToUtf8(wchar_t *source, char *target)
 // to have been allocated and to be large enough (at least len + 1) to accomodate
 // the conversion.
 //
-int Control::ConvertUtf8ToUnicode(wchar_t *target, char *source, int len)
+int Control::ConvertUtf8ToUnicode(wchar_t *target, const char *source, int len)
 {
     wchar_t *ptr = target;
     for (int i = 0; i < len; i++, ptr++)

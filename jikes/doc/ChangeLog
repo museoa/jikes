@@ -1,3 +1,61 @@
+2000-02-21  Martin York <myork202@mail.mwfree.net>
+
+	Some Vadim remarks taken in account:
+
+	1) The  default read object now always opens files with the mode "rb".
+	2) The classes to manipulate files have been renamed:                           
+                                                                                
+	FileReader           (Reader was causing problems)                              
+        DefaultFileReader                                                               
+                                                                                
+        FileWriter           (Writer was causing problems)                              
+        DefaultFileWriter                                                               
+                                                                                
+        3) Small fixes that I had overlooked in the UNIX code                           
+        since I was working on an NT box.                                           
+
+	* jikes.cpp: If no object of type jikesAPI is defined then main
+ 	will create an object of JikesAPI and use this as the default.
+
+	* jikesapi.h 
+	* jikesapi.cpp: Made the methods JikesAPI::read() and
+ 	JikesAPI::write() non virtual. These methods now do error
+ 	checking.
+                                                                                
+        The methods 
+	
+	JikesAPI::readerFactory() and                                   
+        JikesAPI::writerFactory() 
+
+	are now the virtual methods that can be overridden.                   
+
+2000-02-20  Martin York <myork202@mail.mwfree.net>
+
+	* control.h
+	* getclass.cpp
+	* getclass.h
+	* lookup.cpp
+	* lookup.h
+	* semantic.h
+	* stream.cpp
+	* stream.h
+	* symbol.h
+	* system.cpp: As the content of a file is represented by
+	"const char *" I have modified a few functions
+	in the following files so that they are "const
+	char *" rather than "char *".
+
+	* error.cpp
+	* jikesapi.h
+	* stream.cpp: As Windows already defines a macro "ERROR" I have
+	renamed ERROR to JIKES_ERROR.
+	
+	* getclass.cpp
+	* jikesapi.cpp
+	* jikesapi.h
+	* stream.cpp
+	* tuple.h: moved all actual file reading/writing to JikesAPI.
+	
 2000-02-18  Vadim Zaliva  <lord@crocodile.org>
 
 	* stream.cpp (ProcessInputUnicode): igniring BOM at the

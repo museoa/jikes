@@ -80,10 +80,10 @@ public:
     //
     // Same as above function for a regular "char" string.
     //
-    inline static unsigned Function(char *head, int len)
+    inline static unsigned Function(const char *head, int len)
     {
         unsigned long hash_value = head[len >> 1]; // start with center (or unique) letter
-        char *tail = &head[len - 1];
+        const char *tail = &head[len - 1];
 
         for (int i = 0; i < 5 && head < tail; i++)
         {
@@ -254,7 +254,7 @@ private:
     static int primes[];
     int prime_index;
 
-    inline static unsigned Hash(char *head, int len) { return Hash::Function(head, len); }
+    inline static unsigned Hash(const char *head, int len) { return Hash::Function(head, len); }
 
     void Rehash();
 };
@@ -393,7 +393,7 @@ public:
         delete [] value;
     }
 
-    void Initialize(char *value_, int length_, unsigned hash_address_, int index_)
+    void Initialize(const char *value_, int length_, unsigned hash_address_, int index_)
     {
         length = length_;
         value = new char[length + 1];
@@ -494,7 +494,7 @@ public:
     TypeLookupTable(int estimate = 16384);
     ~TypeLookupTable();
 
-    TypeSymbol *FindType(char *, int);
+    TypeSymbol *FindType(const char *, int);
     void InsertType(TypeSymbol *);
     void SetEmpty();
 
@@ -513,7 +513,7 @@ private:
     static int primes[];
     int prime_index;
 
-    inline static unsigned Hash(char *head, int len) { return Hash::Function(head, len); }
+    inline static unsigned Hash(const char *head, int len) { return Hash::Function(head, len); }
 
     void Rehash();
 };
@@ -784,7 +784,7 @@ public:
 
     LiteralValue *FindOrInsertString(LiteralSymbol *);
 
-    Utf8LiteralValue *FindOrInsert(char *, int);
+    Utf8LiteralValue *FindOrInsert(const char *, int);
     Utf8LiteralValue *FindOrInsert(wchar_t);
 
     void CheckStringConstant(AstExpression *expr);
@@ -809,7 +809,7 @@ private:
 
     LiteralValue *bad_value;
 
-    inline static unsigned Hash(char *head, int len) { return Hash::Function(head, len); }
+    inline static unsigned Hash(const char *head, int len) { return Hash::Function(head, len); }
 
     void Rehash();
 };

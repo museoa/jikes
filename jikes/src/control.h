@@ -411,9 +411,9 @@ public:
         return literal;
     }
 
-    static int ConvertUtf8ToUnicode(wchar_t *, char *, int);
+    static int ConvertUtf8ToUnicode(wchar_t *, const char *, int);
 
-    NameSymbol *ConvertUtf8ToUnicode(char *source, int length)
+    NameSymbol *ConvertUtf8ToUnicode(const char *source, int length)
     {
         wchar_t *name = new wchar_t[length + 1];
         int name_length = ConvertUtf8ToUnicode(name, source, length);

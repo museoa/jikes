@@ -861,9 +861,9 @@ public:
         return;
     }
 
-    TypeSymbol *ProcessSignature(TypeSymbol *, char *, LexStream::TokenIndex);
+    TypeSymbol *ProcessSignature(TypeSymbol *, const char *, LexStream::TokenIndex);
     TypeSymbol *ReadType(FileSymbol *, PackageSymbol *, NameSymbol *, LexStream::TokenIndex);
-    TypeSymbol *ReadTypeFromSignature(TypeSymbol *, char *, int, LexStream::TokenIndex);
+    TypeSymbol *ReadTypeFromSignature(TypeSymbol *, const char *, int, LexStream::TokenIndex);
     TypeSymbol *ProcessNestedType(TypeSymbol *, NameSymbol *, LexStream::TokenIndex);
 
 private:
@@ -1220,11 +1220,11 @@ private:
     void ComputeFieldsClosure(TypeSymbol *, LexStream::TokenIndex);
     void ComputeMethodsClosure(TypeSymbol *, LexStream::TokenIndex);
 
-    inline bool InRange(char *buffer_ptr, char *buffer_tail, int size) { return ((buffer_ptr + size) <= buffer_tail); }
+    inline bool InRange(const char *buffer_ptr, const char *buffer_tail, int size) { return ((buffer_ptr + size) <= buffer_tail); }
     TypeSymbol *RetrieveNestedTypes(TypeSymbol *, wchar_t *, LexStream::TokenIndex);
-    TypeSymbol *GetClassPool(TypeSymbol *, TypeSymbol **, char **, int, LexStream::TokenIndex);
+    TypeSymbol *GetClassPool(TypeSymbol *, TypeSymbol **, const char **, int, LexStream::TokenIndex);
     void ProcessBadClass(TypeSymbol *, LexStream::TokenIndex);
-    bool ProcessClassFile(TypeSymbol *, char *, int, LexStream::TokenIndex);
+    bool ProcessClassFile(TypeSymbol *, const char *, int, LexStream::TokenIndex);
     void ReadClassFile(TypeSymbol *, LexStream::TokenIndex);
 
     //
@@ -1238,14 +1238,14 @@ private:
 
 public:
 
-    static inline u1 GetU1(char *);
-    static inline u2 GetU2(char *);
-    static inline u4 GetU4(char *);
+    static inline u1 GetU1(const char *);
+    static inline u2 GetU2(const char *);
+    static inline u4 GetU4(const char *);
 
-    static inline u1 GetAndSkipU1(char *&);
-    static inline u2 GetAndSkipU2(char *&);
-    static inline u4 GetAndSkipU4(char *&);
-    static inline void Skip(char *&, int);
+    static inline u1 GetAndSkipU1(const char *&);
+    static inline u2 GetAndSkipU2(const char *&);
+    static inline u4 GetAndSkipU4(const char *&);
+    static inline void Skip(const char *&, int);
 
     inline void AddDependence(TypeSymbol *, TypeSymbol *, LexStream::TokenIndex, bool = false);
     inline void SetObjectSuperType(TypeSymbol *, LexStream::TokenIndex);

@@ -15,6 +15,8 @@
 #endif
 
 #include "config.h"
+#include "jikesapi.h"
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -419,50 +421,23 @@ public:
 
     inline bool WriteToFile(char *file_name)
     {
-#ifdef UNIX_FILE_SYSTEM
-        FILE *file = ::SystemFopen(file_name, "wb");
-        if (file  ==  (FILE *) NULL)
+        JikesAPI::FileWriter *file = JikesAPI::getInstance()->write(file_name,buffer.top);
+
+        if (file == NULL) // NB if file was invalid it would already have been destroyed by write()
             return false;
 
-        int i = 0,
-            size = 0,
-            n = (buffer.top - 1) >> buffer.log_blksize; // the last non-empty slot!
-        while (i < n)
+        size_t size  = 0;
+        int    n     = (buffer.top - 1) >> buffer.log_blksize; // the last non-empty slot!
+
+        for (int i=0; i < n; i++)
         {
-            fwrite(buffer.base[i] + size, sizeof(u1), buffer.Blksize(), file);
-            i++;
+            file->Write(buffer.base[i] + size, buffer.Blksize());
             size += buffer.Blksize();
         }
-        fwrite(buffer.base[n] + size, sizeof(u1), (buffer.top - size), file);
+        file->Write(buffer.base[n] + size, (buffer.top - size));
 
-        fclose(file);
-#elif defined(WIN32_FILE_SYSTEM)
-        HANDLE file = CreateFile(file_name, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-        HANDLE mapfile = (file == INVALID_HANDLE_VALUE
-                                     ? file
-                                     : CreateFileMapping(file, NULL, PAGE_READWRITE, 0, buffer.top, NULL));
-        if (mapfile == INVALID_HANDLE_VALUE)
-            return false;
-        u1 *string_buffer = (u1 *) MapViewOfFile(mapfile, FILE_MAP_WRITE, 0, 0, buffer.top);
-
-        assert(string_buffer);
-
-        int i = 0,
-            size = 0,
-            n = (buffer.top - 1) >> buffer.log_blksize; // the last non-empty slot!
-        while (i < n)
-        {
-            memmove(&string_buffer[size], buffer.base[i] + size, buffer.Blksize() * sizeof(u1));
-            i++;
-            size += buffer.Blksize();
-        }
-        memmove(&string_buffer[size], buffer.base[n] + size, (buffer.top - size) * sizeof(u1));
-
-        UnmapViewOfFile(string_buffer);
-        CloseHandle(mapfile);
-        CloseHandle(file);
-#endif
-
+        delete file;
+       
         return true;
     }
 

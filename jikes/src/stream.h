@@ -406,7 +406,7 @@ private:
     Control &control;
 
     void ReadInput();
-    void ProcessInput(char *, long);
+    void ProcessInput(const char *, long);
     void ProcessInputAscii(const char *, long);
 #if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
     void ProcessInputUnicode(const char *, long);

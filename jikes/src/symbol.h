@@ -526,7 +526,7 @@ public:
     {
         return (*throws_signatures)[i];
     }
-    void AddThrowsSignature(char *signature_, int length)
+    void AddThrowsSignature(const char *signature_, int length)
     {
         char *signature = new char[length + 1];
         strncpy(signature, signature_, length);
@@ -1014,7 +1014,7 @@ public:
     {
         return (*nested_type_signatures)[i];
     }
-    void AddNestedTypeSignature(char *signature_, int length)
+    void AddNestedTypeSignature(const char *signature_, int length)
     {
         char *signature = new char[length + 1];
         strncpy(signature, signature_, length);
@@ -1256,7 +1256,7 @@ public:
         return type_;
     }
 
-    void SetSignatureString(char *signature_, int length)
+    void SetSignatureString(const char *signature_, int length)
     {
         signature_string = new char[length + 1];
         strncpy(signature_string, signature_, length);

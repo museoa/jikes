@@ -2041,7 +2041,7 @@ int ParseErrorInfo::getRightColumnNo   () { return right_column_no ; }
 
 JikesError::JikesErrorSeverity ParseErrorInfo::getSeverity()
 { 
-    return JikesError::ERROR; 
+    return JikesError::JIKES_ERROR; 
 }
 
 const char *ParseErrorInfo::getFileName() 
