@@ -24,6 +24,10 @@
 /* Define if you have the <dirent.h> header file. */
 #undef HAVE_DIRENT_H
 
+/* Defined when the compiler would generate an error on a call to iconv with a
+   non const 2nd argument. This is a known problem on IRIX systems. */
+#undef HAVE_ERROR_CALL_ICONV_CONST
+
 /* Defined when the compiler would generate an error on a call to wcslen with
    a non const argument. This is only known to happen on cygwin and mingwin */
 #undef HAVE_ERROR_CALL_WCSLEN_CONST
