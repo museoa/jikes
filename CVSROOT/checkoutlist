@@ -11,3 +11,14 @@
 #	[<whitespace>]<filename><whitespace><error message><end-of-line>
 #
 # comment lines begin with '#'
+#
+avail
+commit_prep.pl
+commitcheck
+cvs_acls.pl
+cvsedit
+cvsignore
+log_accum.pl
+rcstemplate
+unwrap
+wrap
