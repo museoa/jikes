@@ -1,5 +1,11 @@
 2000-11-03  Mo DeJong  <mdejong@redhat.com>
 
+	* src/jikesapi.cpp (compile): Revert
+	change that allocated a Control object
+	on the stack.
+
+2000-11-03  Mo DeJong  <mdejong@redhat.com>
+
 	* src/jikesapi.cpp (parseOptions): Revert
 	the change that allocated an ArgumentExpander
 	on the stack. Moving the object onto the
