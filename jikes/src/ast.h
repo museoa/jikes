@@ -2380,7 +2380,7 @@ private:
     AstArray<Ast *> *switch_labels;
     VariableSymbolArray *locally_defined_variables;
 
-    friend AstBlock;
+    friend class AstBlock;
 
 public:
     AstSwitchBlockStatement(StoragePool *pool_) : pool(pool_),

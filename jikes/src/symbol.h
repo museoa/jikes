@@ -1062,7 +1062,7 @@ private:
     // The fields hash_address and next_type are used in the class TypeLookupTable
     // to contruct a mapping from each fully_qualified name into the type that it defines.
     //
-    friend TypeLookupTable;
+    friend class TypeLookupTable;
     unsigned hash_address;
     TypeSymbol *next_type;
 

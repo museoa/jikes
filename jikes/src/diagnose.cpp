@@ -2180,8 +2180,7 @@ bool ParseErrorInfo::emacs_style_report=false;
 
 const wchar_t *ParseErrorInfo::getErrorReport() 
 {
-    emacs_style_report?emacsErrorString():regularErrorString();
-
+    return emacs_style_report?emacsErrorString():regularErrorString();
 }
 
 wchar_t *ParseErrorInfo::regularErrorString ()

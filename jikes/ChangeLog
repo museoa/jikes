@@ -1,5 +1,15 @@
 2000-05-03  Mo DeJong  <mdejong@cygnus.com>
 
+	* src/ast.h:
+	* src/symbol.h: Use "friend class Foo"
+	instead of "friend Foo" in class declarations
+	to make some compilers (xlC) happy.
+	* src/diagnose.cpp(getErrorReport): Added
+	missing return statement on non-void method.
+	Patches care of Chris Abbey <cabbey@home.net>.
+
+2000-05-03  Mo DeJong  <mdejong@cygnus.com>
+
 	* src/incrmnt.cpp: Fixed use of dynamically
 	sized buffer on stack. It was not legal code
 	even though g++ accepted it. Also fixed up
