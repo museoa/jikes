@@ -47,6 +47,9 @@
 /* Define if you have the <iconv.h> header file. */
 #undef HAVE_ICONV_H
 
+/* Defined when Jikes is built with native floating support */
+#undef HAVE_IEEE754
+
 /* Define Jikes functions in a namespace */
 #undef HAVE_JIKES_NAMESPACE
 
@@ -70,6 +73,9 @@
 
 /* Define if you have the <math.h> header file. */
 #undef HAVE_MATH_H
+
+/* define if the compiler supports member constants */
+#undef HAVE_MEMBER_CONSTANTS
 
 /* Define if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H

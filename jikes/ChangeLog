@@ -1,3 +1,24 @@
+2001-02-14  Mo DeJong  <mdejong@redhat.com>
+
+	* acinclude.m4: Add the M4 macro file
+	ac_cxx_member_constants.m4.
+	* configure.in: Add parens to all
+	macro invocations. Add call to
+	AC_CXX_MEMBER_CONSTANTS.
+	* src/double.cpp:
+	* src/double.h: Check for
+	HAVE_MEMBER_CONSTANTS, use
+	static const members if it
+	is defined. Remove uses of
+	the explicit keyword.
+	* src/long.cpp: Change some
+	bit pattern comparisons to
+	avoid VC++ warning.
+	* src/long.h: Remove uses of
+	the explicit keyword.
+	* src/m4/ac_cxx_member_constants.m4:
+	Add new AC_CXX_MEMBER_CONSTANTS macro.
+
 2001-02-12  Eric Blake  <ebb9@email.byu.edu>
 
 	* configure.in: Add --enable-fp-emulation

@@ -458,8 +458,8 @@ LongInt LongInt::operator/ (LongInt op)
 
     return LongInt((negative_dividend ^ negative_divisor) ? -(a / b) : a / b);
 #else
-    bool negative_dividend = (HighWord() & 0x80000000),
-         negative_divisor  = (op.HighWord() & 0x80000000);
+    bool negative_dividend = ((HighWord() & 0x80000000) != 0),
+         negative_divisor  = ((op.HighWord() & 0x80000000) != 0);
 
     BaseLong a = (negative_dividend ? -(*this) : *this),
              b = (negative_divisor  ? -(op)    : op),
@@ -488,8 +488,8 @@ LongInt LongInt::operator% (LongInt op)
 
     return LongInt(negative_dividend ? -(a % b) : a % b);
 #else
-    bool negative_dividend = (HighWord() & 0x80000000),
-         negative_divisor  = (op.HighWord() & 0x80000000);
+    bool negative_dividend = ((HighWord() & 0x80000000) != 0),
+         negative_divisor  = ((op.HighWord() & 0x80000000) != 0);
 
     BaseLong a = (negative_dividend ? -(*this) : *this),
              b = (negative_divisor  ? -(op)    : op),

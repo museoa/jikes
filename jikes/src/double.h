@@ -69,12 +69,21 @@ private:
     // takes the float and splits it into a normalized fraction and exponent;
     // the exponent is returned, the parameter fraction is modified
     int SplitInto(u4 &fraction);
-   
+
+#ifndef HAVE_MEMBER_CONSTANTS
+    // VC++ can't cope with constant class members
+    static u4 MAX_FRACT;
+    static u4 MAX_FRACT2;
+    static u4 MIN_INT_F;
+    static i4 MIN_INT;
+    static i4 MAX_INT;
+#else
     static const u4 MAX_FRACT   = 0x01000000;
     static const u4 MAX_FRACT2  = 0x00800000;
     static const u4 MIN_INT_F   = 0xCF000000;
     static const i4 MIN_INT     = 0x80000000;
     static const i4 MAX_INT     = 0x7FFFFFFF;
+#endif
 
 public:
     //
@@ -124,7 +133,7 @@ public:
     // Widening conversion of long to float, may lose precision
              IEEEfloat(LongInt);
     // Narrowing conversion of double to float, may lose precision
-    explicit IEEEfloat(IEEEdouble);
+    IEEEfloat(IEEEdouble);
     // Create a float without initializing it
     inline   IEEEfloat(void) {}
 
@@ -228,10 +237,20 @@ private:
     // the exponent is returned, the parameter fraction is modified
     int SplitInto(BaseLong &fraction);
 
-    static const i4 MIN_INT    = 0x80000000;
-    static const i4 MAX_INT    = 0x7FFFFFFF;
+
+
+#ifndef HAVE_MEMBER_CONSTANTS
+    // VC++ can't cope with constant class members
+    static u4 MAX_FRACT;
+    static u4 MAX_FRACT2;
+    static i4 MIN_INT;
+    static i4 MAX_INT;
+#else
     static const u4 MAX_FRACT  = 0x00200000;
     static const u4 MAX_FRACT2 = 0x00100000;
+    static const i4 MIN_INT    = 0x80000000;
+    static const i4 MAX_INT    = 0x7FFFFFFF;
+#endif
 
 public:
     //

@@ -30,6 +30,7 @@ builtin(include,src/m4/ac_cxx_check_set_new_handler.m4)
 builtin(include,src/m4/ac_check_error_discard_const.m4)
 builtin(include,src/m4/ac_check_wcs_funcs.m4)
 builtin(include,src/m4/ac_check_iconv.m4)
+builtin(include,src/m4/ac_cxx_member_constants.m4)
 
 dnl builtin(include,src/m4/)
 

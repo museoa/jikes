@@ -36,6 +36,34 @@
 namespace Jikes {	// Open namespace Jikes block
 #endif
 
+#ifndef HAVE_MEMBER_CONSTANTS
+// VC++ can't cope with constant class members
+u4 IEEEfloat::MAX_FRACT   = 0x01000000;
+u4 IEEEfloat::MAX_FRACT2  = 0x00800000;
+u4 IEEEfloat::MIN_INT_F   = 0xCF000000;
+i4 IEEEfloat::MIN_INT     = 0x80000000;
+i4 IEEEfloat::MAX_INT     = 0x7FFFFFFF;
+
+u4 IEEEdouble::MAX_FRACT  = 0x00200000;
+u4 IEEEdouble::MAX_FRACT2 = 0x00100000;
+i4 IEEEdouble::MIN_INT    = 0x80000000;
+i4 IEEEdouble::MAX_INT    = 0x7FFFFFFF;
+#else
+// gcc bug 1877 can cause linker errors if
+// the following external decls are not used.
+const u4 IEEEfloat::MAX_FRACT;
+const u4 IEEEfloat::MAX_FRACT2;
+const u4 IEEEfloat::MIN_INT_F;
+const i4 IEEEfloat::MIN_INT;
+const i4 IEEEfloat::MAX_INT;
+
+const u4 IEEEdouble::MAX_FRACT;
+const u4 IEEEdouble::MAX_FRACT2;
+const i4 IEEEdouble::MIN_INT;
+const i4 IEEEdouble::MAX_INT;
+#endif
+
+
 IEEEfloat::IEEEfloat(i4 a)
 {
 #ifdef HAVE_IEEE754
@@ -216,7 +244,7 @@ LongInt IEEEfloat::LongValue()
     else if (exponent < FRACT_BITS)
 	result >>= (FRACT_BITS - exponent);
 
-    return sign ? -result : result;
+    return sign ? (LongInt) -result : result;
 }
 
 IEEEfloat IEEEfloat::Normalize(int sign, int exponent, u4 fraction)
@@ -848,7 +876,7 @@ LongInt IEEEdouble::LongValue()
     else if (exponent < FRACT_BITS)
 	result >>= (FRACT_BITS - exponent);
 
-    return sign ? -result : result;
+    return sign ? (LongInt) -result : result;
 }
 
 IEEEdouble IEEEdouble::Normalize(int sign, int exponent, ULongInt fraction)
