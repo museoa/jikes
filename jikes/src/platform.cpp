@@ -1287,7 +1287,6 @@ wchar_t StringConstant::US_AND[]                        = {U_AM, U_NU}, // "&"
         StringConstant::US_TYPE[] = {U_T, U_Y, U_P, U_E, U_NU}, // "TYPE"
         StringConstant::US_Throwable[] = {U_T, U_h, U_r, U_o, U_w, U_a, U_b, U_l, U_e, U_NU}, // Throwable
         StringConstant::US_Void[] = {U_V, U_o, U_i, U_d, U_NU}, // Void
-        StringConstant::US_Vector[] = {U_V, U_e, U_c, U_t, U_o, U_r, U_NU}, // Vector
         StringConstant::US__DO[] = {U_DO, U_NU}, // "."
         StringConstant::US__DO__DO[] = {U_DO, U_DO, U_NU}, // ".."
         StringConstant::US__DS[] = {U_DS, U_NU}, // "$"

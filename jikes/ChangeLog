@@ -1,5 +1,12 @@
 2001-09-07  Michael Ernst  <mernst@lcs.mit.edu>
 
+	* src/platform.h (StringConstant):
+	* src/platform.cpp (StringConstant):
+	* src/control.h (Control): Remove references to US_Vector and
+	Vector_type, which is unused - patch 161.
+
+2001-09-07  Michael Ernst  <mernst@lcs.mit.edu>
+
 	* src/unparse.cpp (Unparse AstBlock): Labels need to be within,
 	not outside, added braces - patch 134, from bug 638.
 

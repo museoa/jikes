@@ -559,7 +559,6 @@ public:
                    US_StringBuffer[], // "StringBuffer"
                    US_String[], // "String"
                    US_TYPE[], // "TYPE"
-                   US_Vector[], // Vector
                    US_Throwable[], // "Throwable"
                    US_Void[], // "Void"
                    US__DO[], // "."

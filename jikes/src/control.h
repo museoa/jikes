@@ -255,11 +255,6 @@ public:
         return (Error_type ? Error_type : Error_type = GetType(system_package, StringConstant::US_Error));
     }
 
-    inline TypeSymbol *Vector()
-    {
-        return (Vector_type ? Vector_type : Vector_type = GetType(java_util_package, StringConstant::US_Vector));
-    }
-
     void InitNoClassDefFoundErrorInfo();
     inline TypeSymbol *NoClassDefFoundError()
     {
@@ -562,7 +557,6 @@ private:
                *RuntimeException_type,
                *ClassNotFoundException_type,
                *Error_type,
-               *Vector_type,
                *NoClassDefFoundError_type,
                *StringBuffer_type;
 
