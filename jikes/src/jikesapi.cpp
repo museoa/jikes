@@ -98,11 +98,11 @@ class DefaultFileWriter: public JikesAPI::FileWriter
 JikesOption::~JikesOption()
 {
     delete [] bootclasspath;
-    delete [] classpath    ;
-    delete [] directory    ;
-    delete [] encoding     ;
-    delete [] extdirs  ;
-    delete [] sourcepath   ;
+    delete [] classpath;
+    delete [] directory;
+    delete [] encoding;
+    delete [] extdirs;
+    delete [] sourcepath;
 }
 
 JikesOption::JikesOption():
