@@ -1,0 +1,10 @@
+// This software is subject to the terms of the IBM Jikes Compiler Open
+// Source License Agreement available at the following URL:
+// http://www.ibm.com/research/jikes.
+// Copyright (C) 1996, 1998, International Business Machines Corporation
+// and others.  All Rights Reserved.
+// You must accept the terms of that agreement to use this software.
+
+// problem 180: requires swing jar
+import com.sun.java.swing.plaf.windows.WindowsLookAndFeel;
+public class MyLookAndFeel extends WindowsLookAndFeel {}
