@@ -195,7 +195,7 @@ Option::Option(ArgumentExpander &arguments) :
     DWORD length = GetCurrentDirectory(directory_length, main_current_directory);
     if (length > directory_length)
     {
-        delete [] main_current_directory;
+        delete [] main_current_directory; // FIXME: missing a delete of main_current_directory ???
         main_current_directory = StringConstant::U8S__DO;
         main_disk = 0;
     }
@@ -220,6 +220,13 @@ Option::Option(ArgumentExpander &arguments) :
             if (strcmp(arguments.argv[i],"-classpath") == 0 && ((i + 1) < arguments.argc))
             {
                 classpath = arguments.argv[++i];
+		
+                /* Create a copy of the -classpath argument so we can modify
+                   this copy and delete it later in ~JikesOption */
+                classpath_buffer = new char[strlen(classpath)+1];
+                strcpy(classpath_buffer, classpath);
+                classpath = classpath_buffer;
+
 #ifdef EBCDIC
                 //
                 //  Maintain CLASSPATH in ASCII and translate back to EBCDIC when building file name
