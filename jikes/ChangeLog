@@ -1,3 +1,25 @@
+2001-09-05  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/platform.h (Ostream operator<<): Add missing
+	operator<<(ostream&(&)(ostream&)).
+	* src/access.h:
+	* src/ast.cpp:
+	* src/bytecode.cpp:
+	* src/class.h:
+	* src/control.cpp:
+	* src/decl.cpp:
+	* src/definite.cpp:
+	* src/depend.cpp:
+	* src/dump.cpp:
+	* src/error.cpp:
+	* src/getclass.cpp:
+	* src/incrmnt.cpp:
+	* src/jikesapi.cpp:
+	* src/op.cpp:
+	* src/stream.cpp:
+	* src/unparse.cpp: Use endl instead of '\n' for platform
+	independence.
+
 2001-09-04  Eric Blake  <ebb9@email.byu.edu>
 
 	* depcomp: One more autotool file, but only useful when

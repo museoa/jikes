@@ -369,13 +369,10 @@ bool Control::IncrementalRecompilation()
         candidates = recompilation_file_set;
     else
     {
-	// FIXME: This actually uses cerr for output, can't pass cout as argument because
-	// of the wacky #define of cout in platform.h.
-	Ostream out;
-	// FIXME: Why does this not work?
-	//out << endl;
-	out << "\nIncremental: Enter to continue or q + Enter to quit: ";
-	out.flush();
+        Ostream out;
+        out.StandardOutput();
+        out << endl << "Incremental: Enter to continue or q + Enter to quit: "
+            << flush;
 
         char ch;
         // See if the user types Q or presses enter/escape or sends an EOF

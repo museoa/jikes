@@ -86,7 +86,7 @@ public:
 #ifdef JIKES_DEBUG
     virtual void Print(Tuple<cp_info *>& constant_pool)
     {
-        Coutput << "CONSTANT_Class_info: name_index " << (unsigned) name_index << "\n";
+        Coutput << "CONSTANT_Class_info: name_index " << (unsigned) name_index << endl;
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
@@ -125,7 +125,7 @@ public:
 #ifdef JIKES_DEBUG
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
-        Coutput << "CONSTANT_Double_info: bytes " << BaseLong(high_bytes, low_bytes).DoubleView() << "\n";
+        Coutput << "CONSTANT_Double_info: bytes " << BaseLong(high_bytes, low_bytes).DoubleView() << endl;
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
@@ -168,7 +168,7 @@ public:
                 << (unsigned) class_index
                 << ", name_and_type_index: "
                 << (unsigned) name_and_type_index
-                << "\n";
+                << endl;
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
@@ -206,7 +206,7 @@ public:
 #ifdef JIKES_DEBUG
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
-        Coutput << "CONSTANT_Float_info: bytes " << (float) bytes << "\n";
+        Coutput << "CONSTANT_Float_info: bytes " << (float) bytes << endl;
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
@@ -245,7 +245,7 @@ public:
         int val = ((bytes >> 24) & 0xff) << 24 | ((bytes >> 16) & 0xff) << 16 | ((bytes >> 8) & 0xff) << 8 | (bytes & 0xff);
         Coutput << "CONSTANT_Integer_info: bytes "
                 << val
-                << "\n";
+                << endl;
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
@@ -288,7 +288,7 @@ public:
                 << (unsigned) class_index
                 << ", name_and_type_index: "
                 << (unsigned) name_and_type_index
-                << "\n";
+                << endl;
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
@@ -329,7 +329,7 @@ public:
 #ifdef JIKES_DEBUG
     virtual void Print(Tuple<cp_info *> &constant_pool)
     {
-        Coutput << "CONSTANT_Long_info: bytes \n";
+        Coutput << "CONSTANT_Long_info: bytes" << endl;
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
@@ -372,7 +372,7 @@ public:
                 << (unsigned) class_index
                 << ", name_and_type_index: "
                 << (unsigned) name_and_type_index
-                << "\n";
+                << endl;
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
@@ -417,7 +417,7 @@ public:
                 << (unsigned) name_index
                 << ", descriptor_index: "
                 << (unsigned) descriptor_index
-                << "\n";
+                << endl;
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
@@ -456,7 +456,7 @@ public:
     {
         Coutput << "CONSTANT_String_info: string_index: "
                 << (unsigned) string_index
-                << "\n";
+                << endl;
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
@@ -512,7 +512,7 @@ public:
 
         for (int i = 0; i < length_; i++)
             Coutput << (char) bytes[i];
-        Coutput << "\n";
+        Coutput << endl;
     }
 
     virtual void Describe(Tuple<cp_info *> &constant_pool)
@@ -579,7 +579,8 @@ public:
     {
         Coutput << "print for attribute info tag "
                 << (unsigned) tag
-                << " not defined\n";
+                << " not defined"
+                << endl;
         Coutput.flush();
         assert(false); // abstract method: should not be invoked.
     }
@@ -739,18 +740,19 @@ public:
                 << (unsigned) attribute_name_index
                 << " attribute_length "
                 << (unsigned) attribute_length
-                << "\n"
+                << endl
                 << " max_stack "
                 << (unsigned) max_stack
                 << " max_locals "
                 << (unsigned) max_locals
                 << " code_length "
                 << code.Length()
-                << "\n";
+                << endl;
 
         if (exception_table.Length())
         {
-            Coutput << " exception_table: " << exception_table.Length() << " entries\n";
+            Coutput << " exception_table: " << exception_table.Length()
+                    << " entries" << endl;
             for (int i  = 0; i < exception_table.Length(); i++)
             {
                 Coutput << "  start_pc "
@@ -761,13 +763,13 @@ public:
                         << (unsigned) exception_table[i].handler_pc
                         << "  catch_type "
                         << (unsigned) exception_table[i].catch_type
-                        << "\n";
+                        << endl;
             }
         }
 
         Operators::opdmp(constant_pool, code);
 
-        Coutput << "  \n";
+        Coutput << "  " << endl;
 
         for (int i = 0; i < attributes.Length(); i++)
             attributes[i] -> Print(constant_pool);
@@ -816,7 +818,7 @@ public:
                 << AttributeLength()
                 << " constantvalue_index "
                 << (unsigned) constantvalue_index
-                << "\n";
+                << endl;
     }
 #endif
 };
@@ -876,12 +878,12 @@ public:
                 << (unsigned) attribute_name_index
                 << " attribute_length "
                 << AttributeLength()
-                << "\n";
+                << endl;
 
         for (int i = 0; i < exception_index_table.Length(); i++)
             Coutput << "    "
                     << (unsigned) exception_index_table[i];
-        Coutput << "\n";
+        Coutput << endl;
     }
 #endif
 };
@@ -959,10 +961,10 @@ public:
                 << (unsigned) attribute_name_index
                 << " attribute_length "
                 << AttributeLength()
-                << "\n"
+                << endl
                 << " inner_classes_length "
                 << inner_classes.Length()
-                << "\n";
+                << endl;
 
         for (int i = 0; i < inner_classes.Length(); i++)
         {
@@ -976,7 +978,7 @@ public:
                     << (unsigned) inner_classes[i].inner_name_index
                     << "  inner_class_access_flags "
                     << (unsigned) inner_classes[i].inner_class_access_flags
-                    << "\n";
+                    << endl;
         }
     }
 #endif
@@ -1052,10 +1054,10 @@ public:
                 << (unsigned) attribute_name_index
                 << " attribute_length "
                 << AttributeLength()
-                << "\n"
+                << endl
                 << " line_number_table_length "
                 << line_number_table.Length()
-                << "\n";
+                << endl;
 
         for (int i = 0; i < line_number_table.Length(); i++)
         {
@@ -1065,7 +1067,7 @@ public:
                     << (unsigned) line_number_table[i].start_pc
                     << "  line_number "
                     << (unsigned) line_number_table[i].line_number
-                    << "\n";
+                    << endl;
         }
     }
 #endif
@@ -1158,10 +1160,10 @@ end = end;
                 << (unsigned) attribute_name_index
                 << " attribute_length "
                 << AttributeLength()
-                << "\n"
+                << endl
                 << " local_variable_table_length "
                 << local_variable_table.Length()
-                << "\n";
+                << endl;
 
         for (int i = 0; i < local_variable_table.Length(); i++)
         {
@@ -1177,7 +1179,7 @@ end = end;
                     << (unsigned) local_variable_table[i].descriptor_index
                     << "  index "
                     << (unsigned) local_variable_table[i].index
-                    << "\n";
+                    << endl;
         }
     }
 #endif
@@ -1222,7 +1224,7 @@ public:
                 << AttributeLength()
                 << " sourcefile_index "
                 << (unsigned) sourcefile_index
-                << "\n";
+                << endl;
     }
 #endif
 };
@@ -1261,7 +1263,7 @@ public:
                 << (unsigned) attribute_name_index
                 << " length "
                 << AttributeLength()
-                << "\n";
+                << endl;
     }
 #endif
 };
@@ -1300,7 +1302,7 @@ public:
                 << (unsigned) attribute_name_index
                 << " length "
                 << AttributeLength()
-                << "\n";
+                << endl;
     }
 #endif
 };
@@ -1353,13 +1355,13 @@ public:
                 << (unsigned) name_index
                 << "  descriptor_index "
                 << (unsigned) descriptor_index
-                << "\n";
+                << endl;
 
         AccessFlags::Print();
 
         for (int i = 0; i < attributes.Length(); i++)
             attributes[i] -> Print(constant_pool);
-        Coutput << "\n";
+        Coutput << endl;
     }
 #endif
 };
@@ -1412,13 +1414,13 @@ public:
                 << (unsigned) name_index
                 << "  descriptor_index "
                 << (unsigned) descriptor_index
-                << "\n";
+                << endl;
 
         AccessFlags::Print();
 
         for (int i = 0; i < attributes.Length(); i++)
             attributes[i] -> Print(constant_pool);
-        Coutput << "\n";
+        Coutput << endl;
     }
 #endif
 };
@@ -1541,7 +1543,7 @@ public:
             {
                 Coutput << "[write "
                         << class_file_name
-                        << "]\n";
+                        << "]" << endl;
             }
 
             if (! output_buffer.WriteToFile(class_file_name))

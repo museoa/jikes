@@ -913,6 +913,7 @@ public:
     {}
 
     void StandardOutput() { os = &cout; }
+    void StandardError() { os = &cerr; }
     void SetExpandWchar(bool val = true) { expand_wchar = val; }
     bool ExpandWchar() { return expand_wchar; }
 
@@ -1061,9 +1062,15 @@ public:
         return os -> width(w);
     }
 
-    Ostream &operator<<(ios &(*f)(ios&))
+    Ostream &operator<<(ios &(&f)(ios&))
     {
-        (*f)(*os);
+        f(*os);
+        return *this;
+    }
+
+    Ostream &operator<<(ostream &(&f)(ostream&))
+    {
+        f(*os);
         return *this;
     }
 };
@@ -1072,8 +1079,9 @@ extern Ostream Coutput;
 
 //
 // From now on, DO NOT USE cout or cerr !
-// You should wrap cout and cerr in an instance of the Ostream class so that unicode
-// output is translated properly. If you try to use cerr or cout this define will
+// Instead, use Coutput, which wraps either cout or cerr as determined by
+// command line flags, and translates unicode output properly.
+// If you try to use cerr or cout this define will
 // create an undefined symbol and give you a linker error.
 //
 #define cout Please_Do_Not_Use_cout_Directly_But_use_an_instance_of_Ostream_with_cout_as_argument

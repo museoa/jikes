@@ -373,7 +373,7 @@ void TypeDependenceChecker::OutputMake(FileSymbol *file_symbol)
 
     FILE *outfile = SystemFopen(u_name, "w");
     if (outfile == NULL)
-        Coutput << "*** Cannot open file " << u_name << "\n";
+        Coutput << "*** Cannot open file " << u_name << endl;
     else
     {
         OutputMake(outfile, output_name, file_list);

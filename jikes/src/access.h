@@ -92,7 +92,7 @@ public:
         if (ACC_INTERFACE())    Coutput << " interface";
         if (ACC_ABSTRACT())     Coutput << " abstract";
         if (ACC_STRICTFP())     Coutput << " strictfp";
-        Coutput << "\n";
+        Coutput << endl;
     }
 #endif
 };

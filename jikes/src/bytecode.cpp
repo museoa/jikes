@@ -776,7 +776,7 @@ if (this_control.option.g)
 {
 Coutput << "(51) Generating code for method \"" << msym -> Name()
         << "\" in " << unit_type -> ContainingPackage() -> PackageName() << "/"
-        << unit_type -> ExternalName() << "\n";
+        << unit_type -> ExternalName() << endl;
 Coutput.flush();
 }
 #endif
@@ -1097,7 +1097,7 @@ void ByteCode::DeclareLocalVariable(AstVariableDeclarator *declarator)
 #ifdef DUMP
 Coutput << "(53) Variable \"" << declarator -> symbol -> Name()
         << "\" numbered " << declarator -> symbol -> LocalVariableIndex()
-        << " was processed\n";
+        << " was processed" << endl;
 Coutput.flush();
 #endif
         method_stack -> StartPc(declarator -> symbol) = code_attribute -> CodeLength();
@@ -1140,7 +1140,7 @@ void ByteCode::EmitStatement(AstStatement *statement)
 #ifdef DUMP
 Coutput << "(55) Variable \"" << variable -> Name()
         << "\" numbered " << variable -> LocalVariableIndex()
-        << " was processed\n";
+        << " was processed" << endl;
 Coutput.flush();
 #endif
             method_stack -> StartPc(variable) = code_attribute -> CodeLength();
@@ -1400,7 +1400,7 @@ void ByteCode::EmitBlockStatement(AstBlock *block)
 #ifdef DUMP
 Coutput << "(56) The symbol \"" << variable -> Name()
         << "\" numbered " << variable -> LocalVariableIndex()
-        << " was released\n";
+        << " was released" << endl;
 Coutput.flush();
 #endif
             local_variable_table_attribute -> AddLocalVariable(method_stack -> StartPc(variable),
@@ -1685,7 +1685,7 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
 #ifdef DUMP
 Coutput << "(57) The symbol \"" << variable -> Name()
         << "\" numbered " << variable -> LocalVariableIndex()
-        << " was released\n";
+        << " was released" << endl;
 Coutput.flush();
 #endif
                 local_variable_table_attribute -> AddLocalVariable(method_stack -> StartPc(variable),
@@ -1717,7 +1717,7 @@ Coutput.flush();
 #ifdef DUMP
 Coutput << "(58) The symbol \"" << variable -> Name()
         << "\" numbered " << variable -> LocalVariableIndex()
-        << " was released\n";
+        << " was released" << endl;
 Coutput.flush();
 #endif
             local_variable_table_attribute -> AddLocalVariable(method_stack -> StartPc(variable),
@@ -3231,7 +3231,7 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
 #ifdef DUMP
 Coutput << "(59) Variable \"" << variable -> Name()
         << "\" numbered " << variable -> LocalVariableIndex()
-        << " was processed\n";
+        << " was processed" << endl;
 Coutput.flush();
 #endif
         method_stack -> StartPc(variable) = code_attribute -> CodeLength();
@@ -5498,7 +5498,7 @@ void ByteCode::ChangeStack(int i)
             << stack_depth
             << "  max_stack: "
             << max_stack
-            << "\n";
+            << endl;
 #endif
 
     return;
@@ -5510,11 +5510,12 @@ void ByteCode::PrintCode()
 {
     Coutput << "magic " << hex << magic << dec
             << " major_version " << (unsigned) major_version
-            << " minor_version " << (unsigned) minor_version << "\n";
+            << " minor_version " << (unsigned) minor_version << endl;
     AccessFlags::Print();
-    Coutput << "\n"
-            << " this_class " << (unsigned) this_class << "  super_class " << (unsigned) super_class <<"\n"
-            << " constant_pool: " << constant_pool.Length() << "\n";
+    Coutput << endl
+            << " this_class " << (unsigned) this_class << "  super_class "
+            << (unsigned) super_class << endl
+            << " constant_pool: " << constant_pool.Length() << endl;
 
     {
         for (int i = 1; i < constant_pool.Length(); i++)
@@ -5530,36 +5531,36 @@ void ByteCode::PrintCode()
     {
         for (int i = 0; i < interfaces.Length(); i++)
              Coutput << "  " << (int) interfaces[i];
-        Coutput <<"\n";
+        Coutput << endl;
     }
 
-    Coutput << "  fields " << fields.Length() <<": ";
+    Coutput << "  fields " << fields.Length() << ": ";
     {
         for (int i = 0; i < fields.Length(); i++)
         {
-            Coutput << "field " << i << "\n";
+            Coutput << "field " << i << endl;
             fields[i].Print(constant_pool);
         }
     }
 
-    Coutput << " methods length " << methods.Length() << "\n";
+    Coutput << " methods length " << methods.Length() << endl;
     {
         for (int i = 0; i < methods.Length(); i++)
         {
-            Coutput << "method " << i << "\n";
+            Coutput << "method " << i << endl;
             methods[i].Print(constant_pool);
         }
     }
 
-    Coutput << " attributes length " << attributes.Length() << "\n";
+    Coutput << " attributes length " << attributes.Length() << endl;
     {
         for (int i = 0; i < attributes.Length(); i++)
         {
-            Coutput << "attribute " << i << "\n";
+            Coutput << "attribute " << i << endl;
             attributes[i] -> Print(constant_pool);
         }
     }
-    Coutput << "\n";
+    Coutput << endl;
 
     return;
 }

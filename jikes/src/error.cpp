@@ -76,11 +76,11 @@ const wchar_t *ErrorInfo::getErrorMessage()
     return msg;
 }
 
-bool ErrorInfo::emacs_style_report=false;
+bool ErrorInfo::emacs_style_report = false;
 
 const wchar_t *ErrorInfo::getErrorReport() 
 {
-    return emacs_style_report?emacsErrorString():regularErrorString();
+    return emacs_style_report ? emacsErrorString() : regularErrorString();
 }
 
 wchar_t *ErrorInfo::regularErrorString() 
@@ -93,8 +93,7 @@ wchar_t *ErrorInfo::regularErrorString()
         PrintSmallSource(s);
     
     s << "\n*** " << getSeverityString() << ": "
-      << getErrorMessage()
-      << '\n';
+      << getErrorMessage();
     
     return s.Array();
 }
@@ -110,7 +109,7 @@ void ErrorInfo::PrintLargeSource(ErrorString &s)
     if (left_line_no == right_line_no)
     {
         if (left_line_no == 0)
-            s << "\n";
+            s << '\n';
         else
         {
             s << "\n\n";
@@ -136,7 +135,7 @@ void ErrorInfo::PrintLargeSource(ErrorString &s)
 
         s.width(lex_stream -> LineSegmentLength(left_token));
         s.fill('-');
-        s << "\n";
+        s << '\n';
         s.fill(' ');
 
         s.width(6);
@@ -174,7 +173,7 @@ void ErrorInfo::PrintLargeSource(ErrorString &s)
 void ErrorInfo::PrintSmallSource(ErrorString &s)
 {
     if (left_line_no == 0)
-        s << "\n";
+        s << '\n';
     else
     {
         s << "\n\n";
@@ -208,7 +207,7 @@ wchar_t *ErrorInfo::emacsErrorString()
       << ':' << left_line_no  << ':' << left_column_no
       << ':' << right_line_no << ':' << right_column_no
       << ": " << getSeverityString() << ": " 
-      << getErrorMessage() << '\n';
+      << getErrorMessage();
     
     return s.Array();
 }
@@ -910,14 +909,14 @@ int SemanticError::PrintMessages()
                 if (control.option.nowarn) // we only had warnings and they should not be reported
                     return return_code;
 
-                Coutput << "\nIssued "
+                Coutput << endl << "Issued "
                         << num_warnings
                         << (lex_stream -> file_symbol -> semantic == control.system_semantic ? " system" : " semantic")
                         << " warning" << (num_warnings <= 1 ? "" : "s");
             }
             else // we had some errors, and possibly warnings as well
             {
-                Coutput << "\nFound "
+                Coutput << endl << "Found "
                         << num_errors
                         << (lex_stream -> file_symbol -> semantic == control.system_semantic ? " system" : " semantic")
                         << " error" << (num_errors <= 1 ? "" : "s");
@@ -1197,15 +1196,14 @@ wchar_t *SemanticError::PrintPACKAGE_NOT_FOUND(ErrorInfo &err, LexStream *lex_st
 
     s << "Could not find package \""
       << err.insert1
-      << "\" in:\n" ;
+      << "\" in:\n";
 
     for (int i = 1; i < control.classpath.Length(); i++)
     {
         PathSymbol *path_symbol = control.classpath[i];
         wchar_t *path = path_symbol -> Name();
         s << "                "
-          << path
-          << "\n";
+          << path << '\n';
     }
 
     return s.Array();

@@ -292,7 +292,7 @@ void Operators::opline(Tuple<cp_info *> &constant_pool, char *hdr, int pc, int o
 // be written at user request.
 //  Coutput << " " << desc;
 //
-    Coutput << "\n";
+    Coutput << endl;
 
     return;
 }

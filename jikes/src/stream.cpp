@@ -54,49 +54,49 @@ const wchar_t *StreamError::getErrorMessage()
     switch(kind)
     {
     case StreamError::BAD_TOKEN:
-        return L"Illegal token\n";
+        return L"Illegal token";
         break;
     case StreamError::BAD_OCTAL_CONSTANT:
-        return L"Octal constant contains invalid digit\n";
+        return L"Octal constant contains invalid digit";
         break;
     case StreamError::EMPTY_CHARACTER_CONSTANT:
-        return L"Empty character constant\n";
+        return L"Empty character constant";
         break;
     case StreamError::UNTERMINATED_CHARACTER_CONSTANT:
-        return L"Character constant not properly terminated\n";
+        return L"Character constant not properly terminated";
         break;
     case StreamError::UNTERMINATED_COMMENT:
-        return L"Comment not properly terminated\n";
+        return L"Comment not properly terminated";
         break;
     case StreamError::UNTERMINATED_STRING_CONSTANT:
-        return L"String constant not properly terminated\n";
+        return L"String constant not properly terminated";
         break;
     case StreamError::INVALID_HEX_CONSTANT:
-        return L"The prefix 0x must be followed by at least one hex digit\n";
+        return L"The prefix 0x must be followed by at least one hex digit";
         break;
     case StreamError::INVALID_FLOATING_CONSTANT_EXPONENT:
-        return L"floating-constant exponent has no digit\n";
+        return L"floating-constant exponent has no digit";
         break;
     case StreamError::INVALID_UNICODE_ESCAPE:
-        return L"Invalid unicode escape character\n";
+        return L"Invalid unicode escape character";
         break;
     default:
         assert(false);
     }
 
-    return L"Unknown Error\n";
+    return L"Unknown Error";
 }
 
-bool StreamError::emacs_style_report=false;
+bool StreamError::emacs_style_report = false;
 
 const wchar_t *StreamError::getErrorReport() 
 {
     /*
      * We need to use this lazy initialization,
      * because we can't to it in Initialize() method. Reason
-     * is that Find* methods are unusalble until
+     * is that Find* methods are unusable until
      * LexStream::CompressSpace is called, which
-     * is not happend until later after scanning is done
+     * does not happen until later after scanning is done
      * and all errors are reported.
      * (lord)
      */
@@ -109,7 +109,7 @@ const wchar_t *StreamError::getErrorReport()
         initialized     = true;
     }
 
-    return emacs_style_report?emacsErrorString():regularErrorString();
+    return emacs_style_report ? emacsErrorString() : regularErrorString();
 }
 
 wchar_t *StreamError::emacsErrorString()

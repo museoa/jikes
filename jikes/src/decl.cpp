@@ -1267,7 +1267,8 @@ TypeSymbol *Semantic::FindTypeInLayer(Ast *name, SymbolSet &inner_types)
     }
 
     //
-    // We now go through the field access in order until we either encouter a type that is an element of inner_types,
+    // We now go through the field access in order until we either encounter a
+    // type that is an element of inner_types,
     // in which case, we return the type. Otherwise, we return NULL.
     //
     //

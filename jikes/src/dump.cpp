@@ -258,7 +258,7 @@ void LexStream::Dump()
 
     if ((tokfile = SystemFopen(tokfile_name, "w")) == NULL)
     {
-        Coutput << "*** Cannot open file " << tokfile_name << "\n";
+        Coutput << "*** Cannot open file " << tokfile_name << endl;
         return;
     }
 

@@ -221,17 +221,16 @@ int JikesAPI::compile(char **filenames)
  */
 void JikesAPI::reportError(JikesError *error)
 {
-    Coutput << error->getErrorReport();
-    Coutput.flush();
+    Coutput << error -> getErrorReport() << endl;
 }
 
 const char *JikesError::getSeverityString() 
 {
     switch(getSeverity())
     {
-    case JIKES_ERROR  : return "Error"   ;
-    case JIKES_WARNING: return "Warning" ;
-    case JIKES_CAUTION: return "Caution" ;
+    case JIKES_ERROR  : return "Error";
+    case JIKES_WARNING: return "Warning";
+    case JIKES_CAUTION: return "Caution";
     default: return "Unknown";
     }
 }
