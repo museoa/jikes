@@ -1,3 +1,8 @@
+2001-09-15  Chris Dennis  <Chris.Dennis@invidi.com>
+
+	* src/java.g: Fix namespace typo - patch 189, from bug 1896.
+	* src/javaact.h: regenerate
+
 2001-09-14  Jerry Veldhuis  <jerry@invidi.com>
 
 	* src/symbol.h (IsInner): Fix a regression caused by patch 90.

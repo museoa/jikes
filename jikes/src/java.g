@@ -399,7 +399,7 @@ $Rules
 
 #ifndef HEADERS
 
-#ifdef HAVE_NAMESPACE
+#ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes { // Open namespace Jikes block
 #endif
 
