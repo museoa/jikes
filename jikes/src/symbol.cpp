@@ -1479,6 +1479,8 @@ TypeSymbol* TypeSymbol::BoxedType(Control& control)
         return control.Integer();
     if (this == control.boolean_type)
         return control.Boolean();
+    if (this == control.byte_type)
+        return control.Byte();
     if (this == control.short_type)
         return control.Short();
     if (this == control.char_type)

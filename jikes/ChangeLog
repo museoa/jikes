@@ -1,5 +1,9 @@
 2004-04-04  Elliott Hughes  <enh@acm.org>
 
+	* src/symbol.cpp (BoxedType): Adds the missing primitive type 'byte'.
+
+2004-04-04  Elliott Hughes  <enh@acm.org>
+
 	* src/expr.cpp (GetAnonymousType): Fix bug 3692. If we failed to
 	get a default constructor, we should give up before we require it.
 
