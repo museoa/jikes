@@ -173,6 +173,51 @@ public:
 #endif
 
 
+class SystemTable
+{ 
+    enum
+    {
+        DEFAULT_HASH_SIZE = 13,
+        MAX_HASH_SIZE = 1021
+    };
+
+public:
+
+    SystemTable(int = DEFAULT_HASH_SIZE);
+    virtual ~SystemTable();
+
+    DirectorySymbol *FindDirectorySymbol(dev_t, ino_t);
+    void InsertDirectorySymbol(dev_t, ino_t, DirectorySymbol *);
+
+private:
+    class Element
+    {
+    public:
+        Element(dev_t device_, ino_t inode_, DirectorySymbol *directory_symbol_) : device(device_),
+                                                                                   inode(inode_),
+                                                                                   directory_symbol(directory_symbol_)
+        {}
+
+        Element *next;
+        dev_t device;
+        ino_t inode;
+        DirectorySymbol *directory_symbol;
+    };
+
+    Tuple<Element *> directories;
+
+    Element **base;
+    int hash_size;
+
+    static int primes[];
+    int prime_index;
+
+    int hash(dev_t device, ino_t inode) { return (device + inode) % hash_size; }
+
+    void Rehash();
+};
+
+
 class DirectoryTable
 {
 public:

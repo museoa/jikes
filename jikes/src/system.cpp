@@ -57,20 +57,26 @@ void Control::FindPathsToDirectory(PackageSymbol *package)
             {
                 DirectorySymbol *owner_directory_symbol = owner_package -> directory[i],
                                 *subdirectory_symbol = owner_directory_symbol -> FindDirectorySymbol(package -> Identity());
-                if ((! subdirectory_symbol) && (! owner_directory_symbol -> IsZip()))
+                if (! owner_directory_symbol -> IsZip())
                 {
-                    int length = owner_directory_symbol -> DirectoryNameLength() + package -> Utf8NameLength() + 1; // +1 for '/'
-                    char *directory_name = new char[length + 1]; // +1 for '\0';
+                    if (! subdirectory_symbol)
+                    {
+                        int length = owner_directory_symbol -> DirectoryNameLength() + package -> Utf8NameLength() + 1; // +1 for '/'
+                        char *directory_name = new char[length + 1]; // +1 for '\0';
 
-                    strcpy(directory_name, owner_directory_symbol -> DirectoryName());
-                    if (owner_directory_symbol -> DirectoryName()[owner_directory_symbol -> DirectoryNameLength() - 1] != U_SLASH)
-                        strcat(directory_name, StringConstant::U8S__SL);
-                    strcat(directory_name, package -> Utf8Name());
+                        strcpy(directory_name, owner_directory_symbol -> DirectoryName());
+                        if (owner_directory_symbol -> DirectoryName()[owner_directory_symbol -> DirectoryNameLength() - 1] != U_SLASH)
+                            strcat(directory_name, StringConstant::U8S__SL);
+                        strcat(directory_name, package -> Utf8Name());
 
-                    if (::SystemIsDirectory(directory_name))
-                        subdirectory_symbol = owner_directory_symbol -> InsertAndReadDirectorySymbol(package -> Identity());
+                        if (::SystemIsDirectory(directory_name))
+                            subdirectory_symbol = owner_directory_symbol -> InsertDirectorySymbol(package -> Identity());
 
-                    delete [] directory_name;
+                        delete [] directory_name;
+                    }
+
+                    if (subdirectory_symbol)
+                        subdirectory_symbol -> ReadDirectory();
                 }
 
                 if (subdirectory_symbol)
@@ -87,17 +93,25 @@ void Control::FindPathsToDirectory(PackageSymbol *package)
             {
                 PathSymbol *path_symbol = classpath[k];
                 DirectorySymbol *directory_symbol = path_symbol -> RootDirectory() -> FindDirectorySymbol(package -> Identity());
-                if ((! directory_symbol) && (! path_symbol -> IsZip()))
+                if (! path_symbol -> IsZip())
                 {
-                    int length = path_symbol -> Utf8NameLength() + package -> Utf8NameLength() + 1; // +1 for '/'
-                    char *directory_name = new char[length + 1]; // +1 for '/' +1 for '\0'
-                    strcpy(directory_name, path_symbol -> Utf8Name());
-                    strcat(directory_name, StringConstant::U8S__SL);
-                    strcat(directory_name, package -> Utf8Name());
+                    if (! directory_symbol)
+                    {
+                        int length = path_symbol -> Utf8NameLength() + package -> Utf8NameLength() + 1; // +1 for '/'
+                        char *directory_name = new char[length + 1]; // +1 for '\0'
+                        strcpy(directory_name, path_symbol -> Utf8Name());
+                        char tail = path_symbol -> Utf8Name()[path_symbol -> Utf8NameLength() - 1];
+                        if (tail != U_SLASH && tail != U_BACKSLASH)
+                            strcat(directory_name, StringConstant::U8S__SL);
+                        strcat(directory_name, package -> Utf8Name());
 
-                    if (::SystemIsDirectory(directory_name))
-                        directory_symbol = path_symbol -> RootDirectory() -> InsertAndReadDirectorySymbol(package -> Identity());
-                    delete [] directory_name;
+                        if (::SystemIsDirectory(directory_name))
+                            directory_symbol = path_symbol -> RootDirectory() -> InsertDirectorySymbol(package -> Identity());
+                        delete [] directory_name;
+                    }
+
+                    if (directory_symbol)
+                        directory_symbol -> ReadDirectory();
                 }
 
                 if (directory_symbol)
@@ -361,29 +375,45 @@ void Control::ProcessUnnamedPackage()
 
 void Control::ProcessPath()
 {
-    NameSymbol *dot_path_name_symbol;
-
 #ifdef UNIX_FILE_SYSTEM
-    dot_path_name_symbol = dot_name_symbol;
-#elif defined(WIN32_FILE_SYSTEM)
-    char *main_current_directory = option.GetMainCurrentDirectory();
-    int dot_path_name_length = strlen(main_current_directory);
-    wchar_t *dot_path_name = new wchar_t[dot_path_name_length + 1];
-    for (int i = 0; i < dot_path_name_length; i++)
-        dot_path_name[i] = main_current_directory[i];
-    dot_path_name[dot_path_name_length] = U_NULL;
-    dot_path_name_symbol = FindOrInsertName(dot_path_name, dot_path_name_length);
-    delete [] dot_path_name;
-#endif
+    NameSymbol *dot_path_name_symbol = dot_name_symbol;
 
     //
     // We need a place to start. Allocate a "." directory with no owner initially. (Hence, the null argument.)
     // Allocate a "." path whose associated directory is the "." directory.
     // Identify the "." path as the owner of the "." directory.
     //
-    default_directory = new DirectorySymbol(dot_name_symbol, NULL);
+    DirectorySymbol *default_directory = new DirectorySymbol(dot_name_symbol, NULL);
     classpath.Next() = classpath_table.InsertPathSymbol(dot_path_name_symbol, default_directory);
-    default_directory -> ResetDirectory(); // Note that main_root_directory is reset after it has been assigned the owner above.
+    default_directory -> ReadDirectory(); // Note that the default_directory is reset after it has been assigned the owner above.
+    system_directories.Next() = default_directory;
+
+    system_table = new SystemTable();
+    struct stat status;
+    if ((::SystemStat(dot_name_symbol -> Utf8Name(), &status) == 0) && (status.st_mode & STAT_S_IFDIR))
+        system_table -> InsertDirectorySymbol(status.st_dev, status.st_ino, default_directory);
+
+#elif defined(WIN32_FILE_SYSTEM)
+
+    char *main_current_directory = option.GetMainCurrentDirectory();
+    int dot_path_name_length = strlen(main_current_directory);
+    wchar_t *dot_path_name = new wchar_t[dot_path_name_length + 1];
+    for (int i = 0; i < dot_path_name_length; i++)
+        dot_path_name[i] = main_current_directory[i];
+    dot_path_name[dot_path_name_length] = U_NULL;
+    NameSymbol *dot_path_name_symbol = FindOrInsertName(dot_path_name, dot_path_name_length);
+    delete [] dot_path_name;
+
+    //
+    // We need a place to start. Allocate a "." directory with no owner initially. (Hence, the null argument.)
+    // Allocate a "." path whose associated directory is the "." directory.
+    // Identify the "." path as the owner of the "." directory.
+    //
+    DirectorySymbol *default_directory = new DirectorySymbol(dot_name_symbol, NULL);
+    classpath.Next() = classpath_table.InsertPathSymbol(dot_path_name_symbol, default_directory);
+    default_directory -> ReadDirectory(); // Note that the default_directory is reset after it has been assigned the owner above.
+    system_directories.Next() = default_directory;
+#endif
 
     //
     //
@@ -595,7 +625,8 @@ DirectorySymbol *Control::GetOutputDirectory(FileSymbol *file_symbol)
 
         if (file_symbol -> package != control.unnamed_package) // if there was a package declaration, then...
         {
-            strcat(directory_name, StringConstant::U8S__SL);
+            if (directory_prefix[directory_prefix_length - 1] != U_SLASH)
+                strcat(directory_name, StringConstant::U8S__SL);
             char *utf8_name = new char[utf8_name_length + 1];
             (void) ConvertUnicodeToUtf8(file_symbol -> package -> PackageName(), utf8_name);
             strcat(directory_name, utf8_name);

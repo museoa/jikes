@@ -5102,6 +5102,8 @@ LiteralValue *Semantic::CastPrimitiveValue(TypeSymbol *target_type, AstExpressio
                 len = strlen(output_string);
                 literal_value = control.Utf8_pool.FindOrInsert(output_string, len);
             }
+            else if (expr -> value == control.NullValue())
+                literal_value = expr -> value;
         }
         else if (target_type == control.double_type)
         {
@@ -5264,9 +5266,9 @@ LiteralValue *Semantic::CastPrimitiveValue(TypeSymbol *target_type, AstExpressio
 //
 inline LiteralValue *Semantic::CastValue(TypeSymbol *target_type, AstExpression *expr)
 {
-    return (LiteralValue *) (expr -> IsConstant() && target_type -> Primitive()
+    return (LiteralValue *) (expr -> IsConstant() && (target_type -> Primitive() || target_type == control.String())
                                                    ? CastPrimitiveValue(target_type, expr)
-                                                   : (expr -> value == control.NullValue() ? expr -> value : NULL));
+                                                   : NULL);
 }
 
 

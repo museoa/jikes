@@ -92,11 +92,13 @@ public:
 #ifdef WIN32_FILE_SYSTEM
     DirectoryEntry *FindCaseInsensitiveEntry(char *name, int length)
     {
-        return entries -> FindCaseInsensitiveEntry(name, length);
+        return (entries ? entries -> FindCaseInsensitiveEntry(name, length) : (DirectoryEntry *) NULL);
     }
 
     void InsertEntry(char *name, int length)
     {
+        assert(entries);
+
         DirectoryEntry *entry = entries -> InsertEntry((DirectorySymbol *) this, name, length);
         entries -> InsertCaseInsensitiveEntry(entry);
 
@@ -126,7 +128,6 @@ public:
     }
 
     inline DirectorySymbol *InsertDirectorySymbol(NameSymbol *);
-    inline DirectorySymbol *InsertAndReadDirectorySymbol(NameSymbol *);
     inline DirectorySymbol *FindDirectorySymbol(NameSymbol *);
 
     inline FileSymbol *InsertFileSymbol(NameSymbol *);
@@ -134,11 +135,11 @@ public:
 
     void ResetDirectory();
 
+    void ReadDirectory();
+
 private:
 
     time_t mtime;
-
-    void ReadDirectory();
 
     SymbolTable *table;
     inline SymbolTable *Table();
@@ -1477,7 +1478,6 @@ public:
     inline PathSymbol *InsertPathSymbol(NameSymbol *, DirectorySymbol *);
     inline PathSymbol *FindPathSymbol(NameSymbol *);
     inline DirectorySymbol *InsertDirectorySymbol(NameSymbol *, Symbol *);
-    inline DirectorySymbol *InsertAndReadDirectorySymbol(NameSymbol *, Symbol *);
     inline DirectorySymbol *FindDirectorySymbol(NameSymbol *);
     inline FileSymbol *InsertFileSymbol(NameSymbol *);
     inline FileSymbol *FindFileSymbol(NameSymbol *);
@@ -1589,27 +1589,9 @@ inline DirectorySymbol *SymbolTable::InsertDirectorySymbol(NameSymbol *name_symb
 }
 
 
-inline DirectorySymbol *SymbolTable::InsertAndReadDirectorySymbol(NameSymbol *name_symbol, Symbol *owner)
-{
-    DirectorySymbol *subdirectory_symbol = InsertDirectorySymbol(name_symbol, owner);
-    subdirectory_symbol -> ResetDirectory();
-
-    return subdirectory_symbol;
-}
-
-
 inline DirectorySymbol *DirectorySymbol::InsertDirectorySymbol(NameSymbol *name_symbol)
 {
     DirectorySymbol *subdirectory_symbol = Table() -> InsertDirectorySymbol(name_symbol, this);
-    this -> subdirectories.Next() = subdirectory_symbol;
-
-    return subdirectory_symbol;
-}
-
-
-inline DirectorySymbol *DirectorySymbol::InsertAndReadDirectorySymbol(NameSymbol *name_symbol)
-{
-    DirectorySymbol *subdirectory_symbol = Table() -> InsertAndReadDirectorySymbol(name_symbol, this);
     this -> subdirectories.Next() = subdirectory_symbol;
 
     return subdirectory_symbol;

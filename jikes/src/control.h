@@ -33,6 +33,7 @@ public:
     Option &option;
     SymbolTable classpath_table,
                 external_table;
+
     PackageSymbol *system_package,
                   *unnamed_package;
     int dot_classpath_index;
@@ -41,7 +42,8 @@ public:
                      bad_input_filenames,
                      unreadable_input_filenames;
 
-    DirectorySymbol *default_directory;
+    SystemTable *system_table;
+    Tuple<DirectorySymbol *> system_directories;
                      
     Semantic *system_semantic;
     Tuple<Semantic *> semantic;

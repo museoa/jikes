@@ -21,7 +21,7 @@
 Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
                                                                  option(option_),
                                                                  dot_classpath_index(0),
-                                                                 default_directory(NULL),
+                                                                 system_table(NULL),
                                                                  system_semantic(NULL),
                                                                  semantic(1024),
                                                                  needs_body_work(1024),
@@ -545,7 +545,8 @@ Control::~Control()
     for (int k = 0; k < unreadable_input_filenames.Length(); k++)
         delete [] unreadable_input_filenames[k];
 
-    delete default_directory;
+    for (int l = 0; l < system_directories.Length(); l++)
+        delete [] system_directories[l];
 
     delete scanner;
     delete parser;
@@ -632,71 +633,90 @@ DirectorySymbol *Control::FindSubdirectory(PathSymbol *path_symbol, wchar_t *nam
 #ifdef UNIX_FILE_SYSTEM
     DirectorySymbol *Control::ProcessSubdirectories(wchar_t *source_name, int source_name_length)
     {
-        DirectorySymbol *directory_symbol = classpath[dot_classpath_index] -> RootDirectory();
-
         int name_length = (source_name_length < 0 ? 0 : source_name_length);
-        wchar_t *name = new wchar_t[name_length + 1];
+        char *input_name = new char[name_length + 1];
         for (int i = 0; i < name_length; i++)
-            name[i] = source_name[i];
-        name[name_length] = U_NULL;
+            input_name[i] = source_name[i];
+        input_name[name_length] = U_NULL;
 
-        int end;
-        for (end = 0; end < name_length && name[end] == U_SLASH; end++) // keep all extra leading '/'
-            ;
+        DirectorySymbol *directory_symbol = NULL;
+        struct stat status;
+        if ((::SystemStat(input_name, &status) == 0) && (status.st_mode & STAT_S_IFDIR))
+            directory_symbol = system_table -> FindDirectorySymbol(status.st_dev, status.st_ino);
 
-        //
-        //
-        //
-        wchar_t *directory_name = new wchar_t[name_length];
-        int length;
-        if (end > 0)
+        if (! directory_symbol)
         {
-            for (length = 0; length < end; length++)
-                directory_name[length] = name[length];
-            NameSymbol *name_symbol = FindOrInsertName(directory_name, length);
-            DirectorySymbol *subdirectory_symbol = directory_symbol -> FindDirectorySymbol(name_symbol);
-            if (! subdirectory_symbol)
-                subdirectory_symbol = directory_symbol -> InsertAndReadDirectorySymbol(name_symbol);
-            directory_symbol = subdirectory_symbol;
-        }
-
-        //
-        //
-        //
-        for (int start = end; start < name_length; start = end)
-        {
-            for (length = 0; end < name_length && name[end] != U_SLASH; length++, end++)
-                directory_name[length] = name[end];
-
-            if (length != 1 || directory_name[0] != U_DOT) // Not the current directory
+            if (input_name[0] == U_SLASH) // file name starts with '/'
             {
-                if (length == 2 && directory_name[0] == U_DOT && directory_name[1] == U_DOT) // keep the current directory
-                {
-                    if (directory_symbol -> Identity() == dot_name_symbol || directory_symbol -> Identity() == dot_dot_name_symbol)
-                    {
-                        DirectorySymbol *subdirectory_symbol = directory_symbol -> FindDirectorySymbol(dot_dot_name_symbol);
-                        if (! subdirectory_symbol)
-                            subdirectory_symbol = directory_symbol -> InsertAndReadDirectorySymbol(dot_dot_name_symbol);
-                        directory_symbol = subdirectory_symbol;
-                    }
-                    else directory_symbol = directory_symbol -> owner -> DirectoryCast();
-                }
-                else
-                {
-                    NameSymbol *name_symbol = FindOrInsertName(directory_name, length);
-                    DirectorySymbol *subdirectory_symbol = directory_symbol -> FindDirectorySymbol(name_symbol);
-                    if (! subdirectory_symbol)
-                        subdirectory_symbol = directory_symbol -> InsertAndReadDirectorySymbol(name_symbol);
-                    directory_symbol = subdirectory_symbol;
-                }
+                directory_symbol = new DirectorySymbol(FindOrInsertName(source_name, name_length), classpath[dot_classpath_index]);
+                directory_symbol -> ReadDirectory();
+                system_directories.Next() = directory_symbol;
+                system_table -> InsertDirectorySymbol(status.st_dev, status.st_ino, directory_symbol);
             }
+            else
+            {
+                wchar_t *name = new wchar_t[name_length + 1];
+                for (int i = 0; i < name_length; i++)
+                    name[i] = source_name[i];
+                name[name_length] = U_NULL;
 
-            for (end++; end < name_length && name[end] == U_SLASH; end++) // skip all extra '/'
-                ;
+                directory_symbol = classpath[dot_classpath_index] -> RootDirectory(); // start at the dot directory.
+
+                //
+                //
+                //
+                wchar_t *directory_name = new wchar_t[name_length];
+                int end = 0;
+                for (int start = end; start < name_length; start = end)
+                {
+                    int length;
+                    for (length = 0; end < name_length && name[end] != U_SLASH; length++, end++)
+                        directory_name[length] = name[end];
+
+                    if (length != 1 || directory_name[0] != U_DOT) // Not the current directory
+                    {
+                        if (length == 2 && directory_name[0] == U_DOT && directory_name[1] == U_DOT) // keep the current directory
+                        {
+                            if (directory_symbol -> Identity() == dot_name_symbol ||
+                                directory_symbol -> Identity() == dot_dot_name_symbol)
+                            {
+                                DirectorySymbol *subdirectory_symbol = directory_symbol -> FindDirectorySymbol(dot_dot_name_symbol);
+                                if (! subdirectory_symbol)
+                                    subdirectory_symbol = directory_symbol -> InsertDirectorySymbol(dot_dot_name_symbol);
+                                directory_symbol = subdirectory_symbol;
+                            }
+                            else directory_symbol = directory_symbol -> owner -> DirectoryCast();
+                        }
+                        else
+                        {
+                            NameSymbol *name_symbol = FindOrInsertName(directory_name, length);
+                            DirectorySymbol *subdirectory_symbol = directory_symbol -> FindDirectorySymbol(name_symbol);
+                            if (! subdirectory_symbol)
+                                subdirectory_symbol = directory_symbol -> InsertDirectorySymbol(name_symbol);
+                            directory_symbol = subdirectory_symbol;
+                        }
+                    }
+
+                    for (end++; end < name_length && name[end] == U_SLASH; end++) // skip all extra '/'
+                        ;
+                }
+
+                //
+                // Insert the new directory into the system table to avoid duplicates, in case
+                // the same directory is specified with a different name.
+                //
+                if (directory_symbol != classpath[dot_classpath_index] -> RootDirectory()) // Not the dot directory.
+                {
+                    system_table -> InsertDirectorySymbol(status.st_dev, status.st_ino, directory_symbol);
+                    directory_symbol -> ReadDirectory();
+                }
+
+                delete [] directory_name;
+                delete [] name;
+            }
         }
 
-        delete [] directory_name;
-        delete [] name;
+        delete [] input_name;
 
         return directory_symbol;
     }
@@ -778,7 +798,7 @@ DirectorySymbol *Control::FindSubdirectory(PathSymbol *path_symbol, wchar_t *nam
             NameSymbol *name_symbol = FindOrInsertName(directory_name, length);
             DirectorySymbol *subdirectory_symbol = directory_symbol -> FindDirectorySymbol(name_symbol);
             if (! subdirectory_symbol)
-                subdirectory_symbol = directory_symbol -> InsertAndReadDirectorySymbol(name_symbol);
+                subdirectory_symbol = directory_symbol -> InsertDirectorySymbol(name_symbol);
             directory_symbol = subdirectory_symbol;
         }
 
@@ -798,29 +818,17 @@ DirectorySymbol *Control::FindSubdirectory(PathSymbol *path_symbol, wchar_t *nam
                     {
                         DirectorySymbol *subdirectory_symbol = directory_symbol -> FindDirectorySymbol(dot_dot_name_symbol);
                         if (! subdirectory_symbol)
-                            subdirectory_symbol = directory_symbol -> InsertAndReadDirectorySymbol(dot_dot_name_symbol);
+                            subdirectory_symbol = directory_symbol -> InsertDirectorySymbol(dot_dot_name_symbol);
                         directory_symbol = subdirectory_symbol;
                     }
                     else directory_symbol = directory_symbol -> owner -> DirectoryCast();
                 }
                 else
                 {
-                    char *entry_name = new char[length + 1];
-                    for (int i = 0; i < length; i++)
-                        entry_name[i] = directory_name[i];
-                    entry_name[length] = U_NULL;
-                    DirectoryEntry *entry = directory_symbol -> FindCaseInsensitiveEntry(entry_name, length);
-                    if (entry)
-                    {
-                        for (int k = 0; k < length; k++)
-                            directory_name[k] = entry -> name[k];
-                    }
-                    delete [] entry_name;
-
                     NameSymbol *name_symbol = FindOrInsertName(directory_name, length);
                     DirectorySymbol *subdirectory_symbol = directory_symbol -> FindDirectorySymbol(name_symbol);
                     if (! subdirectory_symbol)
-                        subdirectory_symbol = directory_symbol -> InsertAndReadDirectorySymbol(name_symbol);
+                        subdirectory_symbol = directory_symbol -> InsertDirectorySymbol(name_symbol);
                     directory_symbol = subdirectory_symbol;
                 }
             }
@@ -828,6 +836,8 @@ DirectorySymbol *Control::FindSubdirectory(PathSymbol *path_symbol, wchar_t *nam
             for (end++; end < name_length && name[end] == U_SLASH; end++) // skip all extra '/'
                 ;
         }
+
+        directory_symbol -> ReadDirectory();
 
         delete [] directory_name;
         delete [] name;
