@@ -1,3 +1,11 @@
+2002-10-04  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/symbol.cpp (GetReadAccessConstructor): Avoid bug when
+	accessor constructor is created during final field evaluation -
+	bug 3310.
+	* src/ast.h (AstBreakStatement, AstContinueStatement): Initialize
+	nesting_level, to avoid coredump found on generics-branch.
+
 2002-10-02  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.cpp (EmitConditionalExpression): Fix verifyerror in
@@ -151,7 +159,7 @@
 	accessor methods required for classname.super when inner class and
 	enclosing class extend same superclass - bug 3240.
 
-2002-08-26  ??  <nobody@ibm.com>
+2002-08-26  ??  <lecharny@libertysurf.fr>
 
 	* src/option.cpp (Option): Fix bad logic with drive letters in -d
 	for Windows - bug 3238.

@@ -2166,6 +2166,14 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *ctor)
         //
         Semantic *sem = semantic_environment -> sem;
         assert(sem);
+        //
+        // A clone situation exists only when trying to determine a final
+        // value for a field. As obtaining a final value does not need an
+        // access method, we delay creating the accessor until out of the
+        // clone (otherwise, the placeholder type might be incorrect).
+        //
+        if (sem -> error && sem -> error -> InClone())
+            return ctor;
 
         Control &control = sem -> control;
         StoragePool *ast_pool = sem -> compilation_unit -> ast_pool;

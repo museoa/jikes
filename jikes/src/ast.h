@@ -2883,6 +2883,7 @@ public:
     int nesting_level;
 
     AstBreakStatement(StoragePool *pool_)
+        : nesting_level(0)
     {
         Ast::kind = Ast::BREAK;
         Ast::class_tag = Ast::STATEMENT;
@@ -2921,6 +2922,7 @@ public:
     int nesting_level;
 
     AstContinueStatement(StoragePool *pool_)
+        : nesting_level(0)
     {
         Ast::kind = Ast::CONTINUE;
         Ast::class_tag = Ast::STATEMENT;
