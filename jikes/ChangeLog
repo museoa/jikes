@@ -1,3 +1,8 @@
+2001-09-02  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/stream.cpp (ProcessInputUnicode): Remove side effect from
+	assert statement - patch 145, from bug 657.
+
 2001-08-31  Chris Abbey  <jikes@cabbey.net>
 
 	* README:
