@@ -1,3 +1,8 @@
+2000-06-22  Andrew G. Tereschenko  <tag@ibis.odessa.ua>
+
+	* src/platform.h: Avoid using #if ! to avoid
+	bugs in the VC++ preprocessor.
+
 2000-06-07  Mo DeJong  <mdejong@redhat.com>
 
 	* src/control.cpp (ProcessSubdirectories):

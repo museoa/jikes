@@ -27,8 +27,10 @@
 # endif
 #endif
 #ifdef HAVE_STRING_H
-# if !STDC_HEADERS && HAVE_MEMORY_H
-#  include <memory.h>
+# ifndef STDC_HEADERS
+#  ifdef HAVE_MEMORY_H
+#   include <memory.h>
+#  endif
 # endif
 # include <string.h>
 #else
