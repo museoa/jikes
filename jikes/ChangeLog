@@ -1,3 +1,15 @@
+2000-07-23  Mo DeJong  <mdejong@redhat.com>
+
+	* INSTALL: Added detailed build instructions.
+	* README: Added note about OSI certification. Removed
+	mention of Makefile.hand and jikestst. Removed dead links.
+	* doc/ChangeLog: Removed old ChangeLog.
+	* doc/jikes.html: Updated FAQ.
+	* doc/news.html: Updated news.
+	* doc/news_v1.html: Removed old news page, if someone
+	wants this info the be retained then they should merge
+	it into the docs/news.html file.
+
 2000-07-22  Mo DeJong  <mdejong@redhat.com>
 
 	* configure.in: Do not check for the stdc++ library.
