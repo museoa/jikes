@@ -1,3 +1,4 @@
+
 // $Id$
 //
 // This software is subject to the terms of the IBM Jikes Compiler
@@ -81,7 +82,11 @@ public:
                *clone_name_symbol,
                *object_name_symbol,
                *type_name_symbol,
-               *class_name_symbol;
+               *class_name_symbol,
+               *toString_name_symbol,
+               *append_name_symbol,
+               *forName_name_symbol,
+               *getMessage_name_symbol;
 
     //
     //
@@ -113,10 +118,12 @@ public:
                *Float_type,
                *Double_type,
                *Class_type,
-               *StringBuffer_type,
                *Throwable_type,
                *RuntimeException_type,
-               *Error_type;
+               *ClassNotFoundException_type,
+               *Error_type,
+               *NoClassDefFoundError_type,
+               *StringBuffer_type;
     //
     TypeSymbol *GetType(PackageSymbol *, wchar_t *);
 
@@ -192,21 +199,45 @@ public:
         return (Double_type ? Double_type : Double_type = GetType(system_package, StringConstant::US_Double));
     }
 
+    void InitClassInfo();
     inline TypeSymbol *Class()
     {
-        return (Class_type ? Class_type : Class_type = GetType(system_package, StringConstant::US_Class));
+        if (! Class_type)
+        {
+            Class_type = GetType(system_package, StringConstant::US_Class);
+            InitClassInfo();
+	}
+
+        return Class_type;
     }
 
-    inline TypeSymbol *StringBuffer()
+    MethodSymbol *Class_forNameMethod()
     {
-        return (StringBuffer_type ? StringBuffer_type
-                                  : StringBuffer_type = GetType(system_package, StringConstant::US_StringBuffer));
+        if (! Class_forName_method)
+            (void) Class();
+        return Class_forName_method;
     }
 
+
+    void InitThrowableInfo();
     inline TypeSymbol *Throwable()
     {
-        return (Throwable_type ? Throwable_type : Throwable_type = GetType(system_package, StringConstant::US_Throwable));
+        if (! Throwable_type)
+        {
+            Throwable_type = GetType(system_package, StringConstant::US_Throwable);
+            InitThrowableInfo();
+	}
+
+        return Throwable_type;
     }
+
+    MethodSymbol *Throwable_getMessageMethod()
+    {
+        if (! Throwable_getMessage_method)
+            (void) Throwable();
+        return Throwable_getMessage_method;
+    }
+
 
     inline TypeSymbol *RuntimeException()
     {
@@ -215,9 +246,144 @@ public:
                        : RuntimeException_type = GetType(system_package, StringConstant::US_RuntimeException));
     }
 
+    inline TypeSymbol *ClassNotFoundException()
+    {
+        return (ClassNotFoundException_type
+                       ? ClassNotFoundException_type
+                       : ClassNotFoundException_type = GetType(system_package, StringConstant::US_ClassNotFoundException));
+    }
+
     inline TypeSymbol *Error()
     {
         return (Error_type ? Error_type : Error_type = GetType(system_package, StringConstant::US_Error));
+    }
+
+    void InitNoClassDefFoundErrorInfo();
+    inline TypeSymbol *NoClassDefFoundError()
+    {
+        if (! NoClassDefFoundError_type)
+        {
+            NoClassDefFoundError_type = GetType(system_package, StringConstant::US_NoClassDefFoundError);
+            InitNoClassDefFoundErrorInfo();
+	}
+
+        return NoClassDefFoundError_type;
+    }
+
+    MethodSymbol *NoClassDefFoundError_InitMethod()
+    {
+        if (! NoClassDefFoundError_InitWithString_method)
+            (void) NoClassDefFoundError();
+        return NoClassDefFoundError_InitWithString_method;
+    }
+
+
+    void InitStringBufferInfo();
+    inline TypeSymbol *StringBuffer()
+    {
+        if (! StringBuffer_type)
+        {
+            StringBuffer_type = GetType(system_package, StringConstant::US_StringBuffer);
+            InitStringBufferInfo();
+        }
+
+        return StringBuffer_type;
+    }
+
+
+    MethodSymbol *StringBuffer_InitMethod()
+    {
+        if (! StringBuffer_Init_method)
+            (void) StringBuffer();
+        return StringBuffer_Init_method;
+    }
+
+
+    MethodSymbol *StringBuffer_InitWithStringMethod()
+    {
+        if (! StringBuffer_InitWithString_method)
+            (void) StringBuffer();
+        return StringBuffer_InitWithString_method;
+    }
+
+
+    MethodSymbol *StringBuffer_toStringMethod()
+    {
+        if (! StringBuffer_InitWithString_method)
+            (void) StringBuffer();
+        return StringBuffer_toString_method;
+    }
+
+
+    MethodSymbol *StringBuffer_append_char_arrayMethod()
+    {
+        if (! StringBuffer_InitWithString_method)
+            (void) StringBuffer();
+        return StringBuffer_append_char_array_method;
+    }
+
+
+    MethodSymbol *StringBuffer_append_charMethod()
+    {
+        if (! StringBuffer_InitWithString_method)
+            (void) StringBuffer();
+        return StringBuffer_append_char_method;
+    }
+
+
+    MethodSymbol *StringBuffer_append_booleanMethod()
+    {
+        if (! StringBuffer_InitWithString_method)
+            (void) StringBuffer();
+        return StringBuffer_append_boolean_method;
+    }
+
+
+    MethodSymbol *StringBuffer_append_intMethod()
+    {
+        if (! StringBuffer_InitWithString_method)
+            (void) StringBuffer();
+        return StringBuffer_append_int_method;
+    }
+
+
+    MethodSymbol *StringBuffer_append_longMethod()
+    {
+        if (! StringBuffer_InitWithString_method)
+            (void) StringBuffer();
+        return StringBuffer_append_long_method;
+    }
+
+
+    MethodSymbol *StringBuffer_append_floatMethod()
+    {
+        if (! StringBuffer_InitWithString_method)
+            (void) StringBuffer();
+        return StringBuffer_append_float_method;
+    }
+
+
+    MethodSymbol *StringBuffer_append_doubleMethod()
+    {
+        if (! StringBuffer_InitWithString_method)
+            (void) StringBuffer();
+        return StringBuffer_append_double_method;
+    }
+
+
+    MethodSymbol *StringBuffer_append_stringMethod()
+    {
+        if (! StringBuffer_InitWithString_method)
+            (void) StringBuffer();
+        return StringBuffer_append_string_method;
+    }
+
+
+    MethodSymbol *StringBuffer_append_objectMethod()
+    {
+        if (! StringBuffer_InitWithString_method)
+            (void) StringBuffer();
+        return StringBuffer_append_object_method;
     }
 
     //
@@ -231,35 +397,7 @@ public:
     DoubleLiteralTable double_pool;
     Utf8LiteralTable   Utf8_pool;
 
-    Utf8LiteralValue *LP_C_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal,
-                     *LP_D_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal,
-                     *LP_F_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal,
-                     *LP_I_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal,
-                     *LP_J_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal,
-                     *LP_LB_C_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal,
-                     *LP_Ljava_SL_lang_SL_Object_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal,
-                     *LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal,
-                     *LP_Ljava_SL_lang_SL_String_SC_RP_V_literal,
-                     *LP_RP_Ljava_SL_lang_SL_Object_SC_literal,
-                     *LP_RP_Ljava_SL_lang_SL_String_SC_literal,
-                     *LP_RP_V_literal,
-                     *LP_Z_RP_Ljava_SL_lang_SL_StringBuffer_SC_literal,
-                     *LT_init_GT_literal,
-                     *append_literal,
-                     *clone_literal,
-                     *getMessage_literal,
-                     *java_SL_lang_SL_InternalError_literal,
-                     *java_SL_lang_SL_Object_literal,
-                     *java_SL_lang_SL_StringBuffer_literal,
-                     *java_SL_lang_SL_Throwable_literal,
-                     *toString_literal,
-
-                     *java_SL_lang_SL_ClassNotFoundException_literal,
-                     *java_SL_lang_SL_Class_literal,
-                     *java_SL_lang_SL_CloneNotSupportedException_literal,
-                     *java_SL_lang_SL_NoClassDefFoundError_literal,
-
-                     *ConstantValue_literal,
+    Utf8LiteralValue *ConstantValue_literal,
                      *Exceptions_literal,
                      *InnerClasses_literal,
                      *Synthetic_literal,
@@ -269,12 +407,8 @@ public:
                      *Code_literal,
                      *Sourcefile_literal,
 
-                     *LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_Class_SC_literal,
-                     *LT_clinit_GT_literal,
-                     *forName_literal,
                      *null_literal,
                      *this_literal;
-
 
     Control(ArgumentExpander &, Option &);
     ~Control();
@@ -391,6 +525,25 @@ public:
 private:
 
     LiteralValue null_value;
+
+    MethodSymbol *Class_forName_method,
+
+                 *Throwable_getMessage_method,
+
+                 *NoClassDefFoundError_InitWithString_method,
+
+                 *StringBuffer_Init_method,
+                 *StringBuffer_InitWithString_method,
+                 *StringBuffer_toString_method,
+                 *StringBuffer_append_char_array_method,
+                 *StringBuffer_append_char_method,
+                 *StringBuffer_append_boolean_method,
+                 *StringBuffer_append_int_method,
+                 *StringBuffer_append_long_method,
+                 *StringBuffer_append_float_method,
+                 *StringBuffer_append_double_method,
+                 *StringBuffer_append_string_method,
+                 *StringBuffer_append_object_method;
 
     static int ConvertUnicodeToUtf8(wchar_t *, char *);
 
