@@ -386,7 +386,8 @@ LongToDecString::LongToDecString(LongInt &num)
         *str = U_NULL;
 
         // compute absolute value
-        ULongInt n = (num.HighWord() & 0x80000000 ? -num : num);
+        ULongInt n = (num.HighWord() & 0x80000000 ?
+            (ULongInt) -num : (ULongInt) num);
 
         do
         {

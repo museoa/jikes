@@ -1,5 +1,11 @@
 2001-02-18  Mo DeJong  <mdejong@redhat.com>
 
+	* src/platform.cpp (LongToDecString):
+	Add cast to ?: operator to make
+	the gcc shipped with Red Hat 7 happy.
+
+2001-02-18  Mo DeJong  <mdejong@redhat.com>
+
 	* src/body.cpp (ProcessSuperCall): Fix
 	assert caused by cast expression that
 	was attempting to cast a primitive
