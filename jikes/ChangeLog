@@ -1,3 +1,12 @@
+2000-11-26  Mo DeJong  <mdejong@redhat.com>
+
+	* src/Makefile.am: Add efence rule. This rule will
+	build an efence malloc debugging version of jikes.
+	* src/Makefile.in: Regen.
+	* src/error.cpp: Minor code reformat to improve
+	readability. No functional changes made.
+	* src/option.cpp: Minor comment reformat.
+	
 2000-10-28  Mo DeJong  <mdejong@redhat.com>
 
 	* src/Makefile.am: Remove commented out bits.

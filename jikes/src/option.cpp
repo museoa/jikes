@@ -223,8 +223,8 @@ Option::Option(ArgumentExpander &arguments) :
             {
                 classpath = arguments.argv[++i];
 		
-                /* Create a copy of the -classpath argument so we can modify
-                   this copy and delete it later in ~JikesOption */
+                // Create a copy of the -classpath argument so we can modify
+                //   this copy and delete it later in ~JikesOption
                 classpath_buffer = new char[strlen(classpath)+1];
                 strcpy(classpath_buffer, classpath);
                 classpath = classpath_buffer;

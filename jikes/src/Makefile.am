@@ -88,3 +88,11 @@ jikespg:
 	cd $(srcdir)
 	jikespg java.g
 	rm -f java.l
+
+# This rule will build an efence malloc debugging enabled version of jikes.
+# This should be used for testing purposes only! It is really slow!
+
+efence:
+	@rm -f jikes$(EXEEXT)
+	$(CXXLINK) -o jikes $(jikes_OBJECTS) -lstdc++ -lefence
+

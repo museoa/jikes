@@ -46,13 +46,15 @@ void ErrorInfo::Initialize(LexStream *l, wchar_t  *m, JikesErrorSeverity s)
     severity = s;
 }
 
-ErrorInfo::ErrorInfo():msg(NULL),severity(JikesError::JIKES_ERROR)
+ErrorInfo::ErrorInfo()
+:msg(NULL),
+severity(JikesError::JIKES_ERROR)
 {
 }
 
 ErrorInfo::~ErrorInfo()
 {
-    delete []msg;
+    delete [] msg;
 }
 
 
