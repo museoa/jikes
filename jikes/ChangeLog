@@ -1,5 +1,10 @@
 2001-04-05  Chris Abbey  <cabbey@bresnanlink.net>
 
+	* configure.in: set release date for 1.14 in stone.
+	Mo can breathe easier now.
+
+2001-04-05  Chris Abbey  <cabbey@bresnanlink.net>
+
 	* src/bytecode.cpp: removed debugging printfs
 	that idiot Abbey just commited.
 	* ChangeLog: spacing police

@@ -1318,7 +1318,7 @@ fi
 # some platforms.
 
 cat >>confdefs.h <<\EOF
-#define JIKES_VERSION_STRING "Version 1.14 TDB/2001"
+#define JIKES_VERSION_STRING "Version 1.14 - 13 May 2001"
 EOF
 
 ac_config_headers="$ac_config_headers src/config.h"
