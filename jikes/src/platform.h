@@ -105,15 +105,11 @@ Currently, we do not use this one
 #endif
 
 // C++ standard support
+
 #ifdef HAVE_STD
 # include <iostream>
-# ifdef HAVE_NAMESPACES
-   using namespace std;
-# endif
 #else
-# ifdef HAVE_IOSTREAM_H
-#  include <iostream.h>
-# endif
+# include <iostream.h>
 #endif
 
 // VC++ pretends to support the
@@ -126,12 +122,16 @@ Currently, we do not use this one
 #ifdef HAVE_VCPP_SET_NEW_HANDLER
 # include <new.h>
 #else
-# ifdef HAVE_NEW
+# ifdef HAVE_STD
 #  include <new>
 # else
-#  ifdef HAVE_NEW_H
-#   include <new.h>
-#  endif
+#  include <new.h>
+# endif
+#endif
+
+#ifdef HAVE_STD
+# ifdef HAVE_NAMESPACES
+   using namespace std;
 # endif
 #endif
 

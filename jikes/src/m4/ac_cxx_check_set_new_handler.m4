@@ -7,24 +7,20 @@ dnl find a VC++ style impl, then double check that the
 dnl standard impl works as expected. This method will
 dnl define HAVE_VCPP_SET_NEW_HANDLER if a VC++ style
 dnl implementation is found, otherwise it does nothing.
-dnl This method also checks for the C++ standard include
-dnl <new> and the old style <new.h>. Note that only
-dnl <new.h> is support by VC++.
+dnl Note that only <new.h> is supported by VC++.
 dnl
 dnl You include file could look something like this:
 dnl
 dnl #ifdef HAVE_VCPP_SET_NEW_HANDLER
 dnl # include <new.h>
 dnl #else
-dnl # ifdef HAVE_NEW
+dnl # ifdef HAVE_STD
 dnl #  include <new>
 dnl #  ifdef HAVE_NAMESPACES
 dnl     using namespace std;
 dnl #  endif
 dnl # else
-dnl #  ifdef HAVE_NEW_H
-dnl #   include <new.h>
-dnl #  endif
+dnl #  include <new.h>
 dnl # endif
 dnl #endif
 dnl
@@ -60,13 +56,6 @@ dnl
 AC_DEFUN(AC_CXX_CHECK_SET_NEW_HANDLER,
 [
 AC_REQUIRE([AC_CXX_HAVE_STD])
-
-dnl If new style headers do not work, then just test for new.h
-if test "$ac_cv_cxx_have_std" = yes; then
-  AC_CHECK_HEADERS(new)
-fi
-AC_CHECK_HEADERS(new.h)
-
 AC_CACHE_CHECK(for VC++ style set_new_handler, ac_cv_vcpp_set_new_handler,
 [
   AC_LANG_SAVE
@@ -87,15 +76,13 @@ else
 dnl Double check that the standard set_new_handler actually works.
 AC_CACHE_CHECK(for standard set_new_handler, ac_cv_standard_set_new_handler,
     AC_TRY_COMPILE([
-#ifdef HAVE_NEW
+#ifdef HAVE_STD
 # include <new>
 # ifdef HAVE_NAMESPACES
     using namespace std;
 # endif
 #else
-# ifdef HAVE_NEW_H
-#  include <new.h>
-# endif
+# include <new.h>
 #endif
 
 void OutOfMemory() { return; }

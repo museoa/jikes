@@ -1,3 +1,15 @@
+2000-01-03  Mo DeJong  <mdejong@redhat.com>
+
+	* configure.in: Don't check for iostream.h.
+	* src/platform.h: Remove HAVE_IOSTREAM_H
+	test since this file is required. Remove
+	HAVE_NEW and HAVE_NEW_H checks since both
+	of these files are required.
+	* src/m4/ac_cxx_check_set_new_handler.m4:
+	Remove checks for new and new.h headers.
+	Use HAVE_STD instead of HAVE_NEW and
+	HAVE_NEW_H.
+
 2001-01-01  Pascal Davoust  <davoustp@yahoo.com>
 
 	* src/platform.h:
