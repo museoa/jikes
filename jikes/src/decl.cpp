@@ -801,7 +801,9 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration *class_declaration)
 
         this_type -> super = super_type;
 
-        if (this_type -> subtypes_closure -> IsElement(super_type)) // if there is a cycle, break it and issue an error message
+        // if there is a cycle, break it and issue an error message
+        if (this_type -> subtypes_closure -> IsElement(super_type) ||
+            this_type == super_type)
         {
             this_type -> super = control.Object();
             this_type -> MarkCircular();
