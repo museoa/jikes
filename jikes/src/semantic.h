@@ -964,7 +964,7 @@ private:
     AccessFlags ProcessMethodModifiers(AstMethodDeclaration *);
     AccessFlags ProcessConstructorModifiers(AstConstructorDeclaration *);
     AccessFlags ProcessConstantModifiers(AstFieldDeclaration *);
-    AccessFlags ProcessAbstractMethodModifiers(AstMethodDeclaration *);
+    AccessFlags ProcessInterfaceMethodModifiers(AstMethodDeclaration *);
     void AddDefaultConstructor(TypeSymbol *);
     void ProcessConstructorDeclaration(AstConstructorDeclaration *);
     void ProcessMethodDeclaration(AstMethodDeclaration *);

@@ -901,7 +901,7 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
 }
 
 
-AccessFlags Semantic::ProcessAbstractMethodModifiers(AstMethodDeclaration *method_declaration)
+AccessFlags Semantic::ProcessInterfaceMethodModifiers(AstMethodDeclaration *method_declaration)
 {
     AccessFlags access_flags;
 

@@ -3678,7 +3678,7 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
 {
     TypeSymbol *this_type = ThisType();
     AccessFlags access_flags = (this_type -> ACC_INTERFACE()
-                                           ? ProcessAbstractMethodModifiers(method_declaration)
+                                           ? ProcessInterfaceMethodModifiers(method_declaration)
                                            : ProcessMethodModifiers(method_declaration));
 
     //
