@@ -1,11 +1,11 @@
+2002-07-10  Chris Abbey  <jikes@cabbey.net>
+
+	* 1.16 release.
+
 2002-07-09  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/symbol.h (VariableSymbol): Silence HP-UX aCC warning about
 	trailing comma.
-
-2002-07-10  Chris Abbey	 <jikes@cabbey.net>
-
-        * 1.16 release.
 
 2002-07-08  Eric Blake  <ebb9@email.byu.edu>
 
@@ -749,7 +749,7 @@
 	* src/semantic.h (ProtectedAccessCheck): Update rules to fix bug
 	exposed by Classpath.
 	* src/decl.cpp (CompleteSymbolTable): Special case
-	java.lang.Object when checking concrete classes.	
+	java.lang.Object when checking concrete classes.
 
 2002-02-05  Eric Blake  <ebb9@email.byu.edu>
 
@@ -909,7 +909,7 @@
 	2001-11-01. Only one file name per line is supported.
 	Remove unused error condition.
 	* src/option.h (UNTERMINATED_QUOTE): Remove unused
- 	error condition.
+	error condition.
 
 2001-12-10  Chris Dennis  <Chris.Dennis@invidi.com>
 
@@ -960,7 +960,7 @@
 	* src/symbol.cpp: Update spelling of BadToken.
 	* src/bytecode.cpp:
 	* src/error.cpp:
-	* src/expr.cpp: Other minor fixes - patch 239.	
+	* src/expr.cpp: Other minor fixes - patch 239.
 
 2001-12-08  Eric Blake  <ebb9@email.byu.edu>
 
@@ -1136,7 +1136,7 @@
 	* src/system.cpp (InitObjectInfo): Delete.
 	* src/control.h (Object):
 	* src/control.cpp (Object_getClassMethod): Rearrange evaluation
-	dependencies to	allow compilation of java.lang.Object, fixing
+	dependencies to allow compilation of java.lang.Object, fixing
 	regression caused by patch 139.
 
 2001-11-12  Eric Blake  <ebb9@email.byu.edu>
@@ -1664,7 +1664,7 @@
 2001-09-15  Chris Abbey  <jikes@cabbey.net>
 
 	* src/m4/ac_try_encoding.m4: Add fallback test for ISO8859-1 to
-	fix AIX's iconv (and others without ISO-8859-1) - patch	188.
+	fix AIX's iconv (and others without ISO-8859-1) - patch 188.
 	* configure: regenerate
 
 2001-09-15  Chris Abbey  <jikes@cabbey.net>
@@ -1786,7 +1786,7 @@
 	* src/bytecode.cpp (EmitExpression)
 	(EmitConditionalExpression, EmitFieldAccess):
 	Added the flag need_value, for optimal code
-	generation when a qualifying expression	to a static
+	generation when a qualifying expression to a static
 	reference is encountered - patch 90, from bug 435.
 	* src/bytecode.cpp (EmitStatementExpression): 
 	Removed case Ast::PARENTHESIZED_EXPRESSION, since
@@ -2083,7 +2083,7 @@
 	finally blocks - patch 50, from bug 204.
 	* src/bytecode.cpp (ProcessAbruptExit)
 	(EmitSynchronizedStatement): Likewise.  Also
-	optimized the emitted bytecode for synchronized.	
+	optimized the emitted bytecode for synchronized.
 
 2001-09-03  Eric Blake  <ebb9@email.byu.edu>
 
@@ -2722,7 +2722,7 @@
 
 	* src/dump.cpp (Dump): Add debugging
 	Dump method. The method signature is
- 	char* Dump(wchar_t*), it takes a
+	char* Dump(wchar_t*), it takes a
 	wchar_t* and returns a char* with
 	the chars outside the ASCII range
 	escaped with \uXXXX ids.
@@ -4064,7 +4064,7 @@
 2000-04-09  Vadim Zaliva  <lord@crocodile.org>
 
 	* ChangeLog moved from doc/ to project root per
-	Mo DeJong <mdejong@cygnus.com> suggestion.	
+	Mo DeJong <mdejong@cygnus.com> suggestion.
 
 	* error.cpp (PrintMISMATCHED_INHERITED_METHODS_IN_BASE): 
 	* error.h (class SemanticError): 
@@ -4136,15 +4136,15 @@
 	with casting float/double to int.
 
 	* config.cpp: updated brief command line options description 
-	(inconsistency reported	by Chris Abbey <cabbey@home.net>)
+	(inconsistency reported by Chris Abbey <cabbey@home.net>)
 
-2000-03-09 Joe Berkovitz <joeb@atg.com>	
+2000-03-09  Joe Berkovitz  <joeb@atg.com>
 	* option.h:
 	* option.cpp:
 	* jikes.cpp:
 	* system.cpp: rename +CSO option and classpath_search_order
 	variable to +OLDCSO and old_classpath_search_order, and invert
-	sense of option correspondingly.	
+	sense of option correspondingly.
 	 
 2000-02-29  Vadim Zaliva  <lord@crocodile.org>
 
@@ -4176,16 +4176,16 @@
 	Some Vadim remarks taken in account:
 
 	1) The  default read object now always opens files with the mode "rb".
-	2) The classes to manipulate files have been renamed:	   
+	2) The classes to manipulate files have been renamed:   
 
-	FileReader	   (Reader was causing problems)
+	FileReader    (Reader was causing problems)
 	DefaultFileReader
 
-	FileWriter	   (Writer was causing problems)
+	FileWriter    (Writer was causing problems)
 	DefaultFileWriter
 
-	3) Small fixes that I had overlooked in the UNIX code	   
-	since I was working on an NT box.	   
+	3) Small fixes that I had overlooked in the UNIX code   
+	since I was working on an NT box.   
 
 	* jikes.cpp: If no object of type jikesAPI is defined then main
 	will create an object of JikesAPI and use this as the default.
@@ -4469,7 +4469,7 @@
 	* lookup.cpp:
 	* option.cpp:
 	* symbol.h:
-	* system.cpp:	
+	* system.cpp:
 	Patches from Mike Ernst that correct a few minor problems with Jikes 1.10:
 	 * some formatting
 	 * repeated declarations
@@ -4958,7 +4958,7 @@ that
 	* stream.cpp: 
 	Fix typos: TRUE->true, FALSE->false
 	
-1999-10-10  Dave Shields	shields@watson.ibm.com
+1999-10-10  Dave Shields <shields@watson.ibm.com>
 	Incorporate recent changes from Vadim, including some that I forgot
 	to include in vz1009a changes. Mark this set vz1010a.
 
@@ -5713,7 +5713,7 @@ that
 	* depend.h
 	* error.cpp
 	* incrmnt.cpp
-	* jikes.cpp	now version v0.47
+	* jikes.cpp: now version v0.47
 	* option.cpp
 	* option.h
 	* semantic.h
@@ -5843,7 +5843,7 @@ that
 	* expr.cpp: 
 	fix problem with shift if right operand long
 
-	* option.h: 	
+	* option.h:
 	* option.cpp:
 	* jikes.cpp: 
 	* getclass.cpp
@@ -5915,7 +5915,7 @@ that
 	Much new code from Philippe to support more of the new 
 	features added in 1.2,  fix regression bugs from v0.42 
 	for clone() and problem with 'protected' caused by too 
-	literal reading of 6.6.2 (fourth bullet	that says 
+	literal reading of 6.6.2 (fourth bullet that says 
 	'or subclass of S' should be 'or superclass of S').
 
 1999-02-08    <shields@jikes.watson.ibm.com>
@@ -5930,7 +5930,7 @@ that
 	over a day after the source was first posted. Well done Scott!
 
 	* Makefile: 
-	Add clause for Sun Solaris CC (SunOS),	provided by 
+	Add clause for Sun Solaris CC (SunOS), provided by 
 	mo dejong (dejong at cs.umn.edu), 2 Feb 1999
 
 
