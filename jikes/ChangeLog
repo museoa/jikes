@@ -1,3 +1,11 @@
+2001-10-12  Eric Blake  <ebb9@email.byu.edu>
+
+	* jikes.spec: Update to version 1.15.
+	* configure.in: Change version to 1.15a to make it obvious when
+	bug reports are made against CVS.
+	* configure:
+	* src/config.h.in: Regenerate.
+
 2001-09-28  Chris Abbey  <jikes@cabbey.net>
 
 	Released 1.15, thanks for driving this one Eric.

@@ -1251,7 +1251,7 @@ fi
 
 # Define the identity of the package.
 PACKAGE=jikes
-VERSION=1.15
+VERSION=1.15a
 
 cat >>confdefs.h <<EOF
 #define PACKAGE "$PACKAGE"
@@ -1294,7 +1294,7 @@ INSTALL_STRIP_PROGRAM="\${SHELL} \$(install_sh) -c -s"
 # some platforms.
 
 cat >>confdefs.h <<\EOF
-#define JIKES_VERSION_STRING "Version 1.15 - 26 Sept 2001"
+#define JIKES_VERSION_STRING "Version 1.15a(CVS) - Oct 2001"
 EOF
 
 		    		    		    ac_config_headers="$ac_config_headers src/config.h"
