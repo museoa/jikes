@@ -58,13 +58,12 @@ public:
 
     static inline bool IsAsciiAlpha(char c)
     {
-        return (c == (wchar_t) lower[(int) c] ||
-                c == (wchar_t) upper[(int) c]);
+        return (c == lower[(int) c] || c == upper[(int) c]);
     }
     static inline bool IsAsciiAlpha(wchar_t c)
     {
-        return (c == (wchar_t) lower[(int) c] || c ==
-                (wchar_t) upper[(int) c]);
+        return (c == (wchar_t) lower[(int) c] ||
+                c == (wchar_t) upper[(int) c]);
     }
 
     //
@@ -148,7 +147,7 @@ public:
         int i;
         for (i = 0; s1[i] && s2[i]; i++)
         {
-            if ((wchar_t) ToAsciiLower(s1[i]) != ToAsciiLower(s2[i]))
+            if (ToAsciiLower(s1[i]) != ToAsciiLower(s2[i]))
                 return false;
         }
         return (s1[i] == s2[i]);

@@ -1,5 +1,11 @@
 2003-09-27  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/case.h (IsAsciiAlpha, StringEqual): Removed compiler
+	warnings.
+	* src/op.cpp (OpDesc): Ditto.
+
+2003-09-27  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/m4/ac_cxx_type_equivalence.m4: New file, needed for at least
 	gcc 3.3	on cygwin.
 	* Makefile.am: Add dependence on ac_cxx_type_equivalence.m4.
