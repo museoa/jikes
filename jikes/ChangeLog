@@ -1,3 +1,8 @@
+2001-04-15  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/expr.cpp: fix Assertion failure with string
+	concat and divide by 0, bug 184
+
 2001-04-13  Mo DeJong  <mdejong@redhat.com>
 
 	* src/ast.h:

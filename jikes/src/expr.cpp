@@ -6686,6 +6686,7 @@ void Semantic::ProcessSLASH(AstBinaryExpression *expr)
                                                                : SemanticError::ZERO_DIVIDE_CAUTION,
                                expr -> LeftToken(),
                                expr -> RightToken());
+                expr -> symbol = control.no_type;
             }
             else if (left_expression -> IsConstant())
             {
@@ -6774,6 +6775,7 @@ void Semantic::ProcessMOD(AstBinaryExpression *expr)
                                                                : SemanticError::ZERO_DIVIDE_CAUTION,
                                expr -> LeftToken(),
                                expr -> RightToken());
+                expr -> symbol = control.no_type;
             }
             else if (left_expression -> IsConstant())
             {
