@@ -304,7 +304,6 @@ Option::Option(ArgumentExpander &arguments) :
     current_directory[0] = main_current_directory;
 #endif // WIN32_FILE_SYSTEM
 
-    char * paths_buffer;
     Tuple<int> filename_index(2048);
 
     for (int i = 1; i < arguments.argc; i++)
@@ -314,46 +313,30 @@ Option::Option(ArgumentExpander &arguments) :
             if (strcmp(arguments.argv[i], "-classpath") == 0 &&
                 ((i + 1) < arguments.argc))
             {
-                classpath = arguments.argv[++i];
-
-                // Create a copy of the -classpath argument so we can modify
+                // Create a clean copy of the -classpath argument so we can modify
                 //   this copy and delete it later in ~JikesOption
-                paths_buffer = new char[strlen(classpath)+1];
-                strcpy(paths_buffer, classpath);
-                classpath = paths_buffer;
+                classpath = makeStrippedCopy(arguments.argv[++i]);
             }
             else if (strcmp(arguments.argv[i], "-bootclasspath") == 0 &&
                      ((i + 1) < arguments.argc))
             {
-                bootclasspath = arguments.argv[++i];
-
-                // Create a copy of the -bootclasspath argument so we can
+                // Create a clean copy of the -bootclasspath argument so we can
                 // modify this copy and delete it later in ~JikesOption
-                paths_buffer = new char[strlen(bootclasspath)+1];
-                strcpy(paths_buffer, bootclasspath);
-                bootclasspath = paths_buffer;
+                bootclasspath = makeStrippedCopy(arguments.argv[++i]);
             }
             else if (strcmp(arguments.argv[i], "-extdirs") == 0 &&
                      ((i + 1) < arguments.argc))
             {
-                extdirs = arguments.argv[++i];
-
-                // Create a copy of the -extdirs argument so we can modify
+                // Create a clean copy of the -extdirs argument so we can modify
                 // this copy and delete it later in ~JikesOption
-                paths_buffer = new char[strlen(extdirs)+1];
-                strcpy(paths_buffer, extdirs);
-                extdirs = paths_buffer;
+                extdirs = makeStrippedCopy(arguments.argv[++i]);
             }
             else if (strcmp(arguments.argv[i], "-sourcepath") == 0 &&
                      ((i + 1) < arguments.argc))
             {
-                sourcepath = arguments.argv[++i];
-
-                // Create a copy of the -sourcepath argument so we can
+                // Create a clean copy of the -sourcepath argument so we can
                 // modify this copy and delete it later in ~JikesOption
-                paths_buffer = new char[strlen(sourcepath)+1];
-                strcpy(paths_buffer, sourcepath);
-                sourcepath = paths_buffer;
+                sourcepath = makeStrippedCopy(arguments.argv[++i]);
             }
             else if (strcmp(arguments.argv[i], "-depend") == 0 ||
                      strcmp(arguments.argv[i], "-Xdepend") == 0)
@@ -560,17 +543,27 @@ Option::Option(ArgumentExpander &arguments) :
     }
 
     if (! bootclasspath)
+        // Create a clean copy of the bootclasspath envvar so we can modify
+        //   this copy and delete it later in ~JikesOption
         bootclasspath = makeStrippedCopy(getenv("BOOTCLASSPATH"));
     if (! extdirs)
+        // Create a clean copy of the extdirs envvar so we can modify
+        //   this copy and delete it later in ~JikesOption
         extdirs = makeStrippedCopy(getenv("EXTDIRS"));
     if (! classpath)
     {
+        // Create a clean copy of the jikespath envvar so we can modify
+        //   this copy and delete it later in ~JikesOption
         classpath = makeStrippedCopy(getenv("JIKESPATH"));
         if (! classpath)
+        // Create a clean copy of the classpath envvar so we can modify
+        //   this copy and delete it later in ~JikesOption
             classpath = makeStrippedCopy(getenv("CLASSPATH"));
     }
     if (! sourcepath)
     {
+        // Create a clean copy of the sourcepath envvar so we can modify
+        //   this copy and delete it later in ~JikesOption
         sourcepath = makeStrippedCopy(getenv("SOURCEPATH"));
 
         if (! sourcepath)

@@ -1,3 +1,12 @@
+2001-09-28  Chris Abbey  <jikes@cabbey.net>
+
+	Released 1.15, thanks for driving this one Eric.
+
+2001-09-28  Chris Abbey  <jikes@cabbey.net>
+
+	* src/option.cpp: Correct regression with cygwin classpath
+	handling, consolidate options and envvars to common code.
+
 2001-09-21  Eric Blake  <ebb9@email.byu.edu>
 
 	* configure.in: Update the version to 1.15 in preparation for
