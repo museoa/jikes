@@ -12,7 +12,7 @@
 <p>CVS is a system that lets groups of people work simultaneously on groups of files. CERN has a Web site with <a href="http://wwwinfo.cern.ch/asd/cvs/">general information on CVS</a>. CVS provides a network-transparent way for developers to share source control management. It is the most widely used open-source version control software. For more information on CVS, please see the <a href="http://cvshome.org">CVS Web site</a>.</p>
 
 <h2>WebCvs for browsing source code and easy downloads</h2>
-<p>If you want to browse the code and only make occasional downloads, you may want to use <a href="/developerworks/opensource/cvs/jikes">WebCVS</a>. It provides a convenient, Web-based interface for browsing and downloading the latest version of the source code and documentation. You can also view each file's revision history, display the differences between individual revisions, determine which revisions were part of which official release, and more.</p>
+<p>If you want to browse the code and only make occasional downloads, you may want to use <a href="http://cvs.sourceforge.net/viewcvs.py/jikes">WebCVS</a>. It provides a convenient, Web-based interface for browsing and downloading the latest version of the source code and documentation. You can also view each file's revision history, display the differences between individual revisions, determine which revisions were part of which official release, and more.</p>
 
 <h2>CVS clients for advanced source code manipulation</h2>
 <p>If you will be doing serious work on the source code, you should probably install a CVS client on your own machine so that you can do batch operations without going through the WebCVS interface. On Windows, we suggest the <a href="http://www.wincvs.org">WinCVS client</a>. For UNIX users, select the <a href="http://www.cvshome.org/dev/codelinux.html">appropriate client</a>. An alternative environment for those working on windows but more comfortable with a POSIX environment (like Unix) is the <a href="http://sources.redhat.com/cygwin/">Cygwin</a> tool-chain which includes CVS as well as bash, the GNU C/C++ compiler, linker, and debugger, and some common libraries.</p>
@@ -21,13 +21,13 @@
 <p>First you'll need to setup the correct environment for CVS, this is platform dependent, so first in a POSIX environment try:
 <pre>
 <code>
-setenv CVSROOT :pserver:anoncvs@www-124.ibm.com:/usr/cvs/jikes
+setenv CVSROOT :pserver:anonymous@cvs.sourceforge.net/cvsroot/jikes
 </code>
 </pre>
 or
 <pre>
 <code>
-CVSROOT=:pserver:anoncvs@www-124.ibm.com:/usr/cvs/jikes; export CVSROOT
+CVSROOT=:pserver:anonymous@cvs.sourceforge.net/cvsroot/jikes; export CVSROOT
 </code>
 </pre>
 Note that the exact syntax of the setenv command is shell specific. :(<br>
@@ -35,22 +35,12 @@ Note that the exact syntax of the setenv command is shell specific. :(<br>
 If you are a Windows user, you may want to do something like:
 <pre>
 <code>
-set CVSROOT=:pserver:anoncvs@www-124.ibm.com:/usr/cvs/jikes
+set CVSROOT=:pserver:anonymous@cvs.sourceforge.net:/cvsroot/jikes
 set homedrive=c:
 set homepath=\cvs
 </code>
 </pre>
 
-
-<p>Now that the environment is correctly configured, you'll need to log into the cvs server, both the userid and server name are stored in the CVSROOT variable, and are "anoncvs" and "www-124.ibm.com" respectively. Most all command line cvs programs will accept the following command:
-
-<pre>
-<code>
-cvs login
-</code>
-</pre>
-
-The password is "anoncvs" (without the quotes), just like the userid.
 
 <p>The next step is to extract a copy of the modules you are interested in, again this is common to all command line oriented cvs programs. The following will extract the sources and build environment for the Jikes Project:
 
@@ -80,7 +70,7 @@ You will not need to re-establish the CVSROOT, as it will be stored in the data 
 
 <h1>Additional CVS Resources:</h1>
 <ul>
-<li><a href="/developerworks/cvs/os-cvs.php?group_id=10">Common CVS Operations and Tips: customized for this Project</a></li>
+<li><a href="https://sourceforge.net/cvs/?group_id=128803">Common CVS Operations and Tips: customized for this Project</a></li>
 <li><a href="http://www.loria.fr/~molli/cvs/doc/cvs_toc.html">Version Management with CVS</a></li>
 <li><a href="http://www.computas.com/pub/wincvs-howto/">WinCvs -- Daily Use Guide</A></li>
 </ul>

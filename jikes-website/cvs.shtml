@@ -11,19 +11,19 @@
        sufficient to get those familiar with CVS up and running, additional information about CVS can be obtained <a href="cvs-begin.shtml">here</a>. 
 
     <dl>
-      <dt>CVSROOT</dt><dd><code>:pserver:anoncvs@www-124.ibm.com:/usr/cvs/jikes</code></dd>
-      <dt>password</dt><dd>anoncvs</dd>
+      <dt>CVSROOT</dt><dd><code>:pserver:anonymous@cvs.sourceforge.net:/cvsroot/jikes</code></dd>
+      <dt>CVSROOT for developers</dt><dd><code>:ext:USER@cvs.sourceforge.net:/cvsroot/jikes</code><br>
+      You'll also need to set <code>CVS_RSH=ssh</code>. <a href="http://sourceforge.net/cvs/?group_id=128803">more info from sf.net</a></dd>
       <dt>modules</dt><dd>
         <dl>
           <dt>jikes</dt><dd>The main compiler source code</dd>
-          <dt>jacks</dt><dd>Jacks is an Automated Compiler Killing Suite</dd>
           <dt>jikestst</dt><dd>The old jikes test package code</dd>
           <dt>jikespg</dt><dd>The Jikes Parser Generator source code</dd>
           <dt>jcl</dt><dd>Jikes Class Lister source code (old)</dd>
           <dt>jikes-website</dt><dd>The project webpages</dd>
         </dl>
       </dd>
-      <dt>CVSWeb</dt><dd><a href="http://www-124.ibm.com/developerworks/opensource/cvs/jikes/">Browsable here</a></dd>
+      <dt>CVSWeb</dt><dd><a href="http://cvs.sourceforge.net/viewcvs.py/jikes">Browsable here</a></dd>
       <dt>.cvsrc</dt><dd>The following values are suggested for Jikes developers:<br>cvs -q -z3<br>diff -uN<br>update -P<br>checkout -P</dd>
     </dl>
 
