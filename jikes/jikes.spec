@@ -1,5 +1,5 @@
 Summary: java source to bytecode compiler
-%define version 1.12
+%define version 1.13
 Copyright: IBM Public License, http://oss.software.ibm.com/developerworks/opensource/license10.html
 Group: Development/Languages
 Name: jikes

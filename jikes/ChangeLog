@@ -1,3 +1,18 @@
+2000-12-19  Mo DeJong  <mdejong@redhat.com>
+
+	* autogen.sh: Pass the --ignore-deps
+	flag to automake. We don't want to
+	use depcomp, it breaks in too many
+	places.
+	* config.guess:
+	* config.sub: Update guess and sub
+	platform detection files.
+	* configure.in:
+	* jikes.spec: Set version to 1.13.
+	* src/depcomp: Remove depcomp, now
+	that we pass --ignore-deps to automake,
+	it is no longer needed.
+
 2000-12-03  Mo DeJong  <mdejong@redhat.com>
 
 	* src/stream.cpp (ProcessInputUnicode): Use
@@ -51,7 +66,6 @@
 
 	* src/Makefile.am: Add efence rule. This rule will
 	build an efence malloc debugging version of jikes.
-	* src/Makefile.in: Regen.
 	* src/error.cpp: Minor code reformat to improve
 	readability. No functional changes made.
 	* src/option.cpp: Minor comment reformat.

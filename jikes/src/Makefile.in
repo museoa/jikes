@@ -1,6 +1,7 @@
 # Makefile.in generated automatically by automake 1.4a from Makefile.am
 
-# Copyright (C) 1994, 1995-9, 2000 Free Software Foundation, Inc.
+# Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000
+# Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
 # with or without modifications, as long as this notice is preserved.
@@ -200,22 +201,9 @@ LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 DIST_SOURCES =  $(jikes_SOURCES)
 HEADERS =  $(noinst_HEADERS)
 
-depcomp = $(SHELL) $(top_srcdir)/depcomp
-DEP_FILES =  @AMDEP@ $(DEPDIR)/ast.Po $(DEPDIR)/body.Po \
-$(DEPDIR)/bytecode.Po $(DEPDIR)/case.Po $(DEPDIR)/code.Po \
-$(DEPDIR)/control.Po $(DEPDIR)/decl.Po $(DEPDIR)/definite.Po \
-$(DEPDIR)/depend.Po $(DEPDIR)/diagnose.Po $(DEPDIR)/double.Po \
-$(DEPDIR)/dump.Po $(DEPDIR)/error.Po $(DEPDIR)/expr.Po \
-$(DEPDIR)/getclass.Po $(DEPDIR)/incrmnt.Po $(DEPDIR)/init.Po \
-$(DEPDIR)/javaact.Po $(DEPDIR)/jikes.Po $(DEPDIR)/jikesapi.Po \
-$(DEPDIR)/long.Po $(DEPDIR)/lookup.Po $(DEPDIR)/lpginput.Po \
-$(DEPDIR)/modifier.Po $(DEPDIR)/op.Po $(DEPDIR)/option.Po \
-$(DEPDIR)/parser.Po $(DEPDIR)/platform.Po $(DEPDIR)/scanner.Po \
-$(DEPDIR)/segment.Po $(DEPDIR)/set.Po $(DEPDIR)/stream.Po \
-$(DEPDIR)/symbol.Po $(DEPDIR)/system.Po $(DEPDIR)/tab.Po \
-$(DEPDIR)/unparse.Po $(DEPDIR)/unzip.Po $(DEPDIR)/zip.Po
+depcomp = 
 DIST_COMMON =  $(noinst_HEADERS) ./stamp-h.in Makefile.am Makefile.in \
-config.h.in depcomp
+config.h.in
 
 
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -228,7 +216,7 @@ all: all-redirect
 .SUFFIXES:
 .SUFFIXES: .c .cpp .h .o .obj
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-	cd $(top_srcdir) && $(AUTOMAKE) --gnu src/Makefile
+	cd $(top_srcdir) && $(AUTOMAKE) --gnu --ignore-deps src/Makefile
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) \
@@ -309,6 +297,10 @@ maintainer-clean-compile:
 jikes$(EXEEXT): $(jikes_OBJECTS) $(jikes_DEPENDENCIES)
 	@rm -f jikes$(EXEEXT)
 	$(CXXLINK) $(jikes_LDFLAGS) $(jikes_OBJECTS) $(jikes_LDADD) $(LIBS)
+.cpp.o:
+	$(CXXCOMPILE) -c -o $@ $<
+.cpp.obj:
+	$(CXXCOMPILE) -c -o $@ `cygpath -w $<`
 
 tags: TAGS
 
@@ -342,69 +334,6 @@ distclean-tags:
 	-rm -f TAGS ID
 
 maintainer-clean-tags:
-
-@AMDEP@include $(DEPDIR)/ast.Po
-@AMDEP@include $(DEPDIR)/body.Po
-@AMDEP@include $(DEPDIR)/bytecode.Po
-@AMDEP@include $(DEPDIR)/case.Po
-@AMDEP@include $(DEPDIR)/code.Po
-@AMDEP@include $(DEPDIR)/control.Po
-@AMDEP@include $(DEPDIR)/decl.Po
-@AMDEP@include $(DEPDIR)/definite.Po
-@AMDEP@include $(DEPDIR)/depend.Po
-@AMDEP@include $(DEPDIR)/diagnose.Po
-@AMDEP@include $(DEPDIR)/double.Po
-@AMDEP@include $(DEPDIR)/dump.Po
-@AMDEP@include $(DEPDIR)/error.Po
-@AMDEP@include $(DEPDIR)/expr.Po
-@AMDEP@include $(DEPDIR)/getclass.Po
-@AMDEP@include $(DEPDIR)/incrmnt.Po
-@AMDEP@include $(DEPDIR)/init.Po
-@AMDEP@include $(DEPDIR)/javaact.Po
-@AMDEP@include $(DEPDIR)/jikes.Po
-@AMDEP@include $(DEPDIR)/jikesapi.Po
-@AMDEP@include $(DEPDIR)/long.Po
-@AMDEP@include $(DEPDIR)/lookup.Po
-@AMDEP@include $(DEPDIR)/lpginput.Po
-@AMDEP@include $(DEPDIR)/modifier.Po
-@AMDEP@include $(DEPDIR)/op.Po
-@AMDEP@include $(DEPDIR)/option.Po
-@AMDEP@include $(DEPDIR)/parser.Po
-@AMDEP@include $(DEPDIR)/platform.Po
-@AMDEP@include $(DEPDIR)/scanner.Po
-@AMDEP@include $(DEPDIR)/segment.Po
-@AMDEP@include $(DEPDIR)/set.Po
-@AMDEP@include $(DEPDIR)/stream.Po
-@AMDEP@include $(DEPDIR)/symbol.Po
-@AMDEP@include $(DEPDIR)/system.Po
-@AMDEP@include $(DEPDIR)/tab.Po
-@AMDEP@include $(DEPDIR)/unparse.Po
-@AMDEP@include $(DEPDIR)/unzip.Po
-@AMDEP@include $(DEPDIR)/zip.Po
-
-mostlyclean-depend:
-
-clean-depend:
-
-distclean-depend:
-	-rm -rf $(DEPDIR)
-
-maintainer-clean-depend:
-
-@AMDEP@CXXDEPMODE = @CXXDEPMODE@
-
-.cpp.o:
-@AMDEP@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
-@AMDEP@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-	$(CXXCOMPILE) -c -o $@ `test -f $< || echo '$(srcdir)/'`$<
-
-.cpp.obj:
-@AMDEP@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
-@AMDEP@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-	$(CXXCOMPILE) -c -o $@ `cygpath -w $<`
-
 
 distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
 
@@ -461,26 +390,24 @@ distclean-generic:
 maintainer-clean-generic:
 	-rm -f Makefile.in
 mostlyclean-am:  mostlyclean-hdr mostlyclean-binPROGRAMS \
-		mostlyclean-compile mostlyclean-tags mostlyclean-depend \
+		mostlyclean-compile mostlyclean-tags \
 		mostlyclean-generic
 
 mostlyclean: mostlyclean-am
 
 clean-am:  clean-hdr clean-binPROGRAMS clean-compile clean-tags \
-		clean-depend clean-generic mostlyclean-am
+		clean-generic mostlyclean-am
 
 clean: clean-am
 
 distclean-am:  distclean-hdr distclean-binPROGRAMS distclean-compile \
-		distclean-tags distclean-depend distclean-generic \
-		clean-am
+		distclean-tags distclean-generic clean-am
 
 distclean: distclean-am
 
 maintainer-clean-am:  maintainer-clean-hdr maintainer-clean-binPROGRAMS \
 		maintainer-clean-compile maintainer-clean-tags \
-		maintainer-clean-depend maintainer-clean-generic \
-		distclean-am
+		maintainer-clean-generic distclean-am
 	@echo "This command is intended for maintainers to use;"
 	@echo "it deletes files that may require special tools to rebuild."
 
@@ -491,11 +418,10 @@ mostlyclean-binPROGRAMS distclean-binPROGRAMS clean-binPROGRAMS \
 maintainer-clean-binPROGRAMS uninstall-binPROGRAMS install-binPROGRAMS \
 mostlyclean-compile distclean-compile clean-compile \
 maintainer-clean-compile tags mostlyclean-tags distclean-tags \
-clean-tags maintainer-clean-tags mostlyclean-depend distclean-depend \
-clean-depend maintainer-clean-depend distdir info-am info dvi-am dvi \
-check check-am installcheck-am installcheck all-recursive-am \
-install-exec-am install-exec install-data-am install-data install-am \
-install uninstall-am uninstall all-redirect all-am all install-strip \
+clean-tags maintainer-clean-tags distdir info-am info dvi-am dvi check \
+check-am installcheck-am installcheck all-recursive-am install-exec-am \
+install-exec install-data-am install-data install-am install \
+uninstall-am uninstall all-redirect all-am all install-strip \
 installdirs mostlyclean-generic distclean-generic clean-generic \
 maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
