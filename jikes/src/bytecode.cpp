@@ -710,6 +710,17 @@ void ByteCode::GenerateAccessMethod(MethodSymbol *method_symbol)
 {
     assert(method_symbol -> ACC_STATIC());
 
+    // Here, we add a line-number attribute entry for this method.
+    // Even though this is a generated method, JPDA debuggers will
+    // still fail setting breakpoints if methods don't have line numbers.
+    // Sun's javac compiler generates a single line number entry
+    // with start_pc set to zero and line number set to the first line of
+    // code in the source.  
+    // In testing, it appears that setting the start_pc and line_number
+    // to zero as we do here, also works.  
+    line_number_table_attribute -> AddLineNumber(0, 0);
+
+
     int stack_words = 0,
         argument_offset = 0; // offset to start of argument
 
@@ -2686,6 +2697,16 @@ void ByteCode::EmitFieldAccessLhs(AstExpression *expression)
 //
 void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
 {
+    // Here, we add a line-number attribute entry for this method.
+    // Even though this is a generated method, JPDA debuggers will
+    // still fail setting breakpoints if methods don't have line numbers.
+    // Sun's javac compiler generates a single line number entry
+    // with start_pc set to zero and line number set to the first line of
+    // code in the source.  
+    // In testing, it appears that setting the start_pc and line_number
+    // to zero as we do here, also works.  
+    line_number_table_attribute -> AddLineNumber(0, 0);
+
     //
     // The code takes the form:
     //

@@ -1,3 +1,9 @@
+2001-09-06  Russ Trotter <russtrotter@yahoo.com>
+
+	* src/bytecode.cpp (GenerateAccessMethod)
+	(GenerateClassAccessMethod): Second half of JPDA patches, to work
+	around bug in Sun's software - patch 119, from bugs 210, 473.
+
 2001-09-06  Michael Ernst  <mernst@lcs.mit.edu>
 
 	* src/bytecode.cpp (EmitAssignmentExpression):
