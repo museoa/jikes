@@ -15,6 +15,10 @@
 #include "error.h"
 #include "case.h"
 
+#ifdef CYGWIN
+#include <sys/cygwin.h>
+#endif
+
 //
 //
 //
@@ -150,7 +154,7 @@ void Option::SaveCurrentDirectoryOnDisk(char c)
 #endif
 
 
-Option::Option(ArgumentExpander &arguments) : default_path(NULL),
+Option::Option(ArgumentExpander &arguments) : 
                                               classpath(NULL),
                                               directory(NULL),
                                               dependence_report_name(NULL),
@@ -445,6 +449,13 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
 
         if (classpath)
         {
+            /* Create a copy of the classpath string we can modify
+               this copy without worry that it will effect the env array */
+            char * buf;
+            buf = new char[strlen(classpath)];
+            strcpy(buf, classpath);
+            classpath = buf;
+
 #ifdef EBCDIC
             //
             //  Maintain CLASSPATH in ASCII and translate back to EBCDIC when building file name
@@ -455,16 +466,26 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
             while (isspace(*classpath))
                 classpath++;
 
-            if (*classpath == U_NULL)
+            if (*classpath == U_NULL) {
+                delete [] classpath;
                 classpath = NULL;
+            }
+
+#ifdef CYGWIN
+            // Under Cygwin, we convert a windows style path into a unix style path
+            // so that we can parse it using the unix path seperator char ':'
+            buf = new char[cygwin_win32_to_posix_path_list_buf_size(classpath)];
+            cygwin_win32_to_posix_path_list(classpath, buf);
+            delete [] classpath;
+            classpath = buf;
+#endif
         }
 
         if (! classpath)
         {
-            default_path = new char[2];
-            default_path[0] = '.';
-            default_path[1] = U_NULL;
-            classpath = default_path;
+            classpath = new char[2];
+            classpath[0] = '.';
+            classpath[1] = U_NULL;
         }
     }
 
@@ -499,7 +520,7 @@ Option::~Option()
     for (int i = 0; i < bad_options.Length(); i++)
         delete bad_options[i];
 
-    delete [] default_path;
+    delete [] classpath;
     delete [] directory;
 
 #ifdef WIN32_FILE_SYSTEM

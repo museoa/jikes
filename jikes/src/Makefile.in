@@ -20,14 +20,6 @@ LDFLAGS=@LDFLAGS@
 LIBS=@LIBS@
 SYSOBJECTS=@SYSOBJECTS@
 
-# Java compiler (optional)
-JAVAC=@JAVAC@
-JAVACFLAGS=@JAVACFLAGS@
-
-# Java runtime (optional)
-JAVA=@JAVA@
-JAVARFLAGS=@JAVARFLAGS@
-
 
 BUILD_DIR=@BUILD_DIR@
 
@@ -442,16 +434,6 @@ segment.@O@:  $(srcdir)/segment.cpp $(srcdir)/segment.h $(srcdir)/tuple.h $(srcd
 
 tags:
 	etags *.h *.cpp
-
-# Not all 'make' implementation understand multiple targets at the left part of ':'
-# so we duplicate this rule
-$(srcdir)/code.h: gencode.java
-	$(JAVAC) $(JAVACFLAGS) gencode.java
-	$(JAVA)  $(JAVARFLAGS) gencode
-
-$(srcdir)/code.cpp: gencode.java
-	$(JAVAC) $(JAVACFLAGS) gencode.java
-	$(JAVA)  $(JAVARFLAGS) gencode
 
 
 TAGS:  tags
