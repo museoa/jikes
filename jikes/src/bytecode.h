@@ -701,6 +701,7 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void ResolveAccess(AstExpression *);
     int  GenerateClassAccess(AstFieldAccess *);
     void GenerateClassAccessMethod(MethodSymbol *);
+    void EmitCheckForNull(AstExpression *);
 
     //
     // Methods to process statements

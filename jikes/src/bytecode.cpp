@@ -3591,6 +3591,27 @@ void ByteCode::EmitCast(TypeSymbol *dest_type, TypeSymbol *source_type)
     return;
 }
 
+//
+// Emits the required check for null in a qualified instance creation or
+// super constructor call if the base expression can possibly be null.
+//
+void ByteCode::EmitCheckForNull(AstExpression *expression)
+{
+    if (expression -> ParenthesizedExpressionCast())
+        expression = UnParenthesize(expression);
+
+    if (! expression -> ClassInstanceCreationExpressionCast() &&
+        ! expression -> ThisExpressionCast())
+    {
+        PutOp(OP_DUP);
+        Label lab1;
+        EmitBranch(OP_IFNONNULL, lab1);
+        PutOp(OP_ACONST_NULL); // need to test for null, raising NullPointerException if so. So just do athrow
+        PutOp(OP_ATHROW);
+        DefineLabel(lab1);
+        CompleteLabel(lab1);
+    }
+}
 
 int ByteCode::EmitClassInstanceCreationExpression(AstClassInstanceCreationExpression *expression, bool need_value)
 {
@@ -3609,14 +3630,7 @@ int ByteCode::EmitClassInstanceCreationExpression(AstClassInstanceCreationExpres
     if (expression -> base_opt)
     {
         stack_words += EmitExpression(expression -> base_opt);
-        PutOp(OP_DUP);
-
-        Label lab1;
-        EmitBranch(OP_IFNONNULL, lab1);
-        PutOp(OP_ACONST_NULL); // need to test for null, raising NullPointerException if so. So just do athrow
-        PutOp(OP_ATHROW);
-        DefineLabel(lab1);
-        CompleteLabel(lab1);
+        EmitCheckForNull(expression -> base_opt);
     }
 
     //
@@ -4448,7 +4462,10 @@ void ByteCode::EmitSuperInvocation(AstSuperCall *super_call)
 
     int stack_words = 0; // words on stack needed for arguments
     if (super_call -> base_opt)
+    {
         stack_words += EmitExpression(super_call -> base_opt);
+        EmitCheckForNull(super_call -> base_opt);
+    }
 
     for (int i = 0; i < super_call -> NumLocalArguments(); i++)
         stack_words += EmitExpression((AstExpression *) super_call -> LocalArgument(i));

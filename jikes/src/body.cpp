@@ -1627,12 +1627,10 @@ void Semantic::ProcessSuperCall(AstSuperCall *super_call)
                 super_call -> base_opt -> symbol = control.no_type;
             }
             //
-            // 1.2 change. In 1.1, we used to allow access to any subclass of type. Now, there must
-            // be a perfect match.
+            // JLS2 8.8.5.1: For an enclosing class O of the superclass,
+            // the qualifying primary must be of type O or a subclass.
             //
-            // else if (! expr_type -> IsSubclass(containing_type))
-            //
-            else if (expr_type != containing_type)
+            else if (! expr_type -> IsSubclass(containing_type))
             {
                 ReportSemError(SemanticError::INVALID_ENCLOSING_INSTANCE,
                                super_call -> base_opt -> LeftToken(),

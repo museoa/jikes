@@ -1,5 +1,19 @@
 2001-05-06  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/bytecode.h:
+	* src/bytecode.cpp (EmitCheckForNull): Add a method
+	which emits a check for null-qualified expressions,
+	shared between...
+	(EmitClassInstanceCreationExpression): 
+	(EmitSuperInvocation): Use EmitCheckForNull to
+	improve checks of qualified expressions (bugs 171,
+	419).
+	* src/body.cpp (ProcessSuperCall): Fix qualified
+	super calls to allow subclasses of the enclosing
+	class, in line with JLS 8.8.5.1 (bug 401).
+
+2001-05-06  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/bytecode.cpp (EmitFieldAccessLhsBase):
 	Removed redundant code.
 	(EmitAssignmentExpression, EmitMethodInvocation)
