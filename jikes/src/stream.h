@@ -299,7 +299,7 @@ private:
         UNICODE_ESCAPE,
         UNICODE_ESCAPE_DIGIT_0,
         UNICODE_ESCAPE_DIGIT_1,
-        UNICODE_ESCAPE_DIGIT_2,
+        UNICODE_ESCAPE_DIGIT_2
     };
     
     friend class Scanner;
