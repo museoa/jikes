@@ -1,3 +1,9 @@
+2004-04-14  Chris Abbey	 <jikes@cabbey.net>
+
+	* src/error.cpp (SemanticError::InitializeMessageGroups): turn
+	the defaults down for Effective Java and Naming Conventions
+	diagnostics.
+
 2004-04-14  Eric Blake  <ebb9@byu.net>
 
 	* NEWS: My shot at 1.20 release notes.

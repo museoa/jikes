@@ -639,7 +639,7 @@ void SemanticError::InitializeMessageGroups()
     //
     group = new MessageGroup("naming-convention",
                              "names which differ from standard convention",
-                             NAMED_WEAK_ON);
+                             NAMED_WEAK_OFF);
     group -> AddMessage(UNCONVENTIONAL_CLASS_NAME);
     group -> AddMessage(UNCONVENTIONAL_CONSTANT_FIELD_NAME);
     group -> AddMessage(UNCONVENTIONAL_FIELD_NAME);
@@ -652,7 +652,7 @@ void SemanticError::InitializeMessageGroups()
     //
     group = new MessageGroup("effective-java",
                              "practices warned about in \"Effective Java\"",
-                             NAMED_WEAK_ON);
+                             NAMED_WEAK_OFF);
     group -> AddMessage(EJ_AVOID_OVERLOADING_EQUALS);
     group -> AddMessage(EJ_EMPTY_CATCH_BLOCK);
     group -> AddMessage(EJ_EMPTY_FINALLY_BLOCK);
