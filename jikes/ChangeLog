@@ -1,3 +1,30 @@
+2004-03-16  Eric Blake  <ebb9@byu.net>
+
+	* src/ast.cpp: Backport the ability to parse JSR 14 from the
+	generics-branch (but not the semantic passes). Now mainline and
+	generics are in sync on the grammar.
+	* src/ast.h: Ditto.
+	* src/body.cpp: Ditto.
+	* src/bytecode.cpp: Ditto.
+	* src/decl.cpp: Ditto.
+	* src/error.cpp: Ditto.
+	* src/error.h: Ditto.
+	* src/expr.cpp: Ditto.
+	* src/java.g: Ditto.
+	* src/jikes.cpp: Ditto.
+	* src/jikesapi.cpp: Ditto.
+	* src/parser.cpp: Ditto.
+	* src/parser.h: Ditto.
+	* src/scanner.cpp: Ditto.
+	* src/semantic.h: Ditto.
+	* src/symbol.cpp: Ditto.
+	* src/unparse.cpp: Ditto.
+	* src/javaact.cpp: Regenerate.
+	* src/javaact.h: Ditto.
+	* src/javadcl.h: Ditto.
+	* src/javadef.h: Ditto.
+	* src/javasym.h: Ditto.
+
 2004-03-14  Elliott Hughes  <enh@acm.org>
 
 	* src/decl.cpp, src/semantic.h: Bug 3378 - the previous fix made the
