@@ -9,9 +9,9 @@ class JikesOption
 {    
  public:
     
-    char *classpath    ;
-    char *directory    ;
-    char *encoding     ;
+    char *classpath;
+    char *directory;
+    char *encoding;
     
     bool nowrite;
     bool deprecation;
@@ -88,7 +88,7 @@ class JikesAPI
      *
      * @return list of java file names found on command line
      */
-    virtual char ** parseOptions(int argc, char **argv) ;
+    virtual char** parseOptions(int argc, char **argv) ;
 
     /**
      * Compile given list ofiles using current compiler options.

@@ -1,3 +1,10 @@
+2000-10-14  Mo DeJong  <mdejong@redhat.com>
+
+	* src/jikesapi.cpp (compile): Minor code
+	reformat. Allocate a control instance on
+	the stack instead of the heap.
+	* src/jikesapi.h: Minor code reformat.
+
 2000-10-09  Mo DeJong  <mdejong@redhat.com>
 
 	* acinclude.m4: Include iconv macro file.

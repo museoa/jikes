@@ -119,13 +119,12 @@ JikesAPI::~JikesAPI()
 
 char ** JikesAPI::parseOptions(int argc, char **argv)
 {
-
     delete option;
 
-    ArgumentExpander *args=new ArgumentExpander(argc, argv);
-    Option *opt = new Option(*args);
+    ArgumentExpander *args = new ArgumentExpander(argc, argv);
+    Option* opt = new Option(*args);
     option = opt;
-    int n=args->argc - opt->first_file_index;
+    int n = args->argc - opt->first_file_index;
 
     if(n <= 0)
     {
@@ -133,10 +132,10 @@ char ** JikesAPI::parseOptions(int argc, char **argv)
     }
     else
     {
-        char **res=new char*[n+1];
-        for(int i=0;i<n;i++)
+        char **res = new char*[n+1];
+        for(int i=0; i<n; i++)
         {
-            const char *o=args->argv[opt->first_file_index+i];
+            const char *o = args->argv[opt->first_file_index+i];
             if(o)
             {
                 res[i] = new char[strlen(o)+1];
@@ -152,7 +151,7 @@ char ** JikesAPI::parseOptions(int argc, char **argv)
     }
 }
 
-JikesOption *JikesAPI::getOptions()
+JikesOption* JikesAPI::getOptions()
 {
     return option;
 }
@@ -162,13 +161,14 @@ JikesOption *JikesAPI::getOptions()
  */
 int JikesAPI::compile(char **filenames)
 {
-    // FIXME: why dont we just create a Control on the stack here?
-    Control *control = new Control(filenames , *((Option*)option));
-    int return_code = control -> return_code;
+    // Cast the JikesOption to an Option instance.
+    // Note that the reason we don't use an Option
+    // member type in the declaration of JikesAPI
+    // is so that the jikespai.h header does not
+    // need to include option.h.
 
-    delete control;
-
-    return return_code;
+    Control control(filenames, *((Option*)option));
+    return control.return_code;
 }
 
 /**
