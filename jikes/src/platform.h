@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 2000, 2003 IBM Corporation and others.  All Rights Reserved.
+// Copyright (C) 2000, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 //
@@ -174,17 +174,6 @@ typedef unsigned int wint_t;
 #ifdef HAVE_STD
 # ifdef HAVE_NAMESPACES
    using namespace std;
-# endif
-#endif
-
-
-#ifdef HAVE_BROKEN_USHRT_MAX
-    /* There is a bug in mingwin's limits.h file we need to work around */
-# undef USHRT_MAX
-# ifdef SHRT_MAX
-#  define USHRT_MAX (2U * SHRT_MAX + 1)
-# else
-#  define USHRT_MAX 0xFFFF
 # endif
 #endif
 

@@ -48,9 +48,9 @@ dnl	Make sure we can compile a simple call to wcslen
 AC_CACHE_CHECK(call wcslen,
   ac_cv_call_wcslen,
 [
-AC_TRY_COMPILE($wcs_funcs_includes, [wcslen(NULL)],
-  ac_cv_call_wcslen=yes,
-  ac_cv_call_wcslen=no)
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([$wcs_funcs_includes], [wcslen(NULL)])],
+  [ac_cv_call_wcslen=yes],
+  [ac_cv_call_wcslen=no])
 ])
 
 
@@ -62,11 +62,11 @@ if test "$ac_cv_call_wcslen" = "yes" ; then
 dnl	Check for declaration of wcslen without const qualifier
 AC_CACHE_CHECK(for error calling wcslen with const argument,
   ac_cv_error_call_wcslen_const,
-[AC_TRY_COMPILE($wcs_funcs_includes, [
+[AC_COMPILE_IFELSE([AC_LANG_SOURCE([$wcs_funcs_includes], [
 const wchar_t * s = NULL;
 wcslen(s);
-],
- ac_cv_error_call_wcslen_const=no, ac_cv_error_call_wcslen_const=yes)
+])],
+ [ac_cv_error_call_wcslen_const=no], [ac_cv_error_call_wcslen_const=yes])
 ])
 
 if test "$ac_cv_error_call_wcslen_const" = "yes"; then
@@ -81,16 +81,16 @@ if test "$ac_cv_error_call_wcslen_const" = "yes"; then
 
   AC_CACHE_CHECK(fix for calling wcslen with non const argument,
     ac_cv_call_wcslen_non_const,
-  [AC_TRY_COMPILE($wcs_funcs_includes, [
+  [AC_COMPILE_IFELSE([AC_LANG_SOURCE([$wcs_funcs_includes], [
   const wchar_t * s = NULL;
   wcslen(
   #ifdef HAVE_ERROR_CALL_WCSLEN_CONST
            (wchar_t *)
   #endif
          s);
-  ],
-    ac_cv_call_wcslen_non_const=yes,
-    AC_MSG_ERROR([Could not compile with wcslen const cast fix])
+  ])],
+    [ac_cv_call_wcslen_non_const=yes],
+    [AC_MSG_ERROR([Could not compile with wcslen const cast fix])]
   )])
 
 fi

@@ -9,13 +9,14 @@ AC_DEFUN([AC_CXX_REINTERPRET_CAST],
 [AC_CACHE_CHECK(whether the compiler supports reinterpret_cast<>,
 ac_cv_cxx_reinterpret_cast,
 [AC_LANG_PUSH([C++])
- AC_TRY_COMPILE([#include <typeinfo>
+ AC_COMPILE_IFELSE([AC_LANG_SOURCE([#include <typeinfo>
 class Base { public : Base () {} virtual void f () = 0;};
 class Derived : public Base { public : Derived () {} virtual void f () {} };
 class Unrelated { public : Unrelated () {} };
 int g (Unrelated&) { return 0; }],[
-Derived d;Base& b=d;Unrelated& e=reinterpret_cast<Unrelated&>(b);return g(e);],
- ac_cv_cxx_reinterpret_cast=yes, ac_cv_cxx_reinterpret_cast=no)
+Derived d;Base& b=d;
+Unrelated& e=reinterpret_cast<Unrelated&>(b);return g(e);])],
+ [ac_cv_cxx_reinterpret_cast=yes], [ac_cv_cxx_reinterpret_cast=no])
  AC_LANG_POP([C++])
 ])
 if test "$ac_cv_cxx_reinterpret_cast" = yes; then

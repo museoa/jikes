@@ -4,7 +4,7 @@ dnl	generate the file "configure", which is run to configure the
 dnl	Makefile in this directory.
 
 dnl Set up the name and version
-AC_INIT([jikes], [1.18c])
+AC_INIT([jikes],[1.18c])
 AM_INIT_AUTOMAKE([foreign check-news dist-bzip2 1.8])
 AC_PREREQ(2.59)
 
@@ -12,14 +12,13 @@ AC_DEFINE(JIKES_VERSION_STRING,
           "Version 1.18c (CVS) - sometime after 24 December 2003",
     [A string to indicate the release of jikes: Version 1.18 - 21 Nov 2002])
 
-
 dnl AC_CACHE_LOAD
 
 AC_CONFIG_HEADERS([src/config.h])
 AH_TOP([/* This software is subject to the terms of the IBM Jikes
 Compiler License Agreement available at the following URL:
 http://ibm.com/developerworks/opensource/jikes.
-Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
+Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 You must accept the terms of that agreement to use this software. */])
 
 dnl	Do not autoupdate if configure.in and friends are changed
@@ -173,101 +172,6 @@ AC_CXX_DYNAMIC_CAST()
 AC_CXX_REINTERPRET_CAST()
 AC_CXX_STATIC_CAST()
 
-
-#FIXME : do we need to add the -funsigned-char option when compiling with
-# g++? If we always use the u1 type (see platform.h), then I think not.
-
-# It might also be better to use the following macro for these tests!
-#AC_CHECK_SIZEOF (TYPE, [CROSS-SIZE], [INCLUDES])
-
-
-AC_CACHE_CHECK(correct value for UINT_MAX,
-    jikes_cv_uint_max,
-    AC_TRY_COMPILE([
-#include <limits.h>
-#if ! (UINT_MAX == 0xFFFFFFFFUL)
-# error "UINT_MAX"
-#endif
-],[return 0;],
-    jikes_cv_uint_max=yes,
-    AC_MSG_ERROR([unsigned int does not store values in the range
-    0..4294967295 on this system])))
-
-AC_CACHE_CHECK(correct value for INT_MAX,
-    jikes_cv_int_max,
-    AC_TRY_COMPILE([
-#include <limits.h>
-#if ! ((INT_MAX == 2147483647) && (INT_MIN + 1 == -INT_MAX))
-# error "INT_MAX"
-#endif
-],[return 0;],
-    jikes_cv_int_max=yes,
-    AC_MSG_ERROR([int does not store values in the range
-    -2147483648..+2147483647 on this system])))
-
-dnl   Check for broken USHRT_MAX (under Mingwin and maybe some other systems)
-AC_CACHE_CHECK(for broken USHRT_MAX, jikes_cv_ushrt_max_is_broken,
-    AC_TRY_COMPILE([
-#include <limits.h>
-#if ! (USHRT_MAX == 0xFFFF)
-int hi=0;
-#endif
-],[return 0;], jikes_cv_ushrt_max_is_broken=no ,
-               jikes_cv_ushrt_max_is_broken=yes)
-)
-if test "$jikes_cv_ushrt_max_is_broken" = "yes" ; then
-    AC_DEFINE(HAVE_BROKEN_USHRT_MAX, , [known to be broken on mingwin beta 20])
-fi
-
-AC_CACHE_CHECK(correct value for USHRT_MAX,
-    jikes_cv_ushrt_max,
-    AC_TRY_COMPILE([
-#include <limits.h>
-#if ! (USHRT_MAX == 0xFFFF)
-# error "USHRT_MAX"
-#endif
-],[return 0;],
-    jikes_cv_ushrt_max=yes,
-    AC_MSG_ERROR([unsigned short does not store values in the range
-    0..65535 on this system])))
-
-AC_CACHE_CHECK(correct value for SHRT_MAX,
-    jikes_cv_shrt_max,
-    AC_TRY_COMPILE([
-#include <limits.h>
-#if ! ((SHRT_MAX == 32767) && (SHRT_MIN + 1 == -SHRT_MAX))
-# error "SHRT_MAX"
-#endif
-],[return 0;],
-    jikes_cv_shrt_max=yes,
-    AC_MSG_ERROR([short does not store values in the range
-    -32768..+32767 on this system])))
-
-AC_CACHE_CHECK(correct value for UCHAR_MAX,
-    jikes_cv_uchar_max,
-    AC_TRY_COMPILE([
-#include <limits.h>
-#if ! (UCHAR_MAX == 0xFF)
-# error "UCHAR_MAX"
-#endif
-],[return 0;],
-    jikes_cv_uchar_max=yes,
-    AC_MSG_ERROR([unsigned char does not store values in the range
-    0..255 on this system])))
-
-AC_CACHE_CHECK(correct value for SCHAR_MAX,
-    jikes_cv_schar_max,
-    AC_TRY_COMPILE([
-#include <limits.h>
-#if ! ((SCHAR_MAX == 127) && (SCHAR_MIN + 1 == -SCHAR_MAX))
-# error "SCHAR_MAX"
-#endif
-],[return 0;],
-    jikes_cv_schar_max=yes,
-    AC_MSG_ERROR([char does not store values in the range
-    -128..+127 on this system])))
-
-
 dnl Check to see if build will use emulated floating point
 
 AC_ARG_ENABLE(fp-emulation, [  --disable-fp-emulation  Use native floating point operations instead of emulation],
@@ -318,27 +222,21 @@ dnl	underscores are needed in front of S_IFDIR
 
 AC_CACHE_CHECK(for __S_IFDIR symbol,
     jikes_cv_stat_ifdir_2underscore,
-    AC_TRY_COMPILE([
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/stat.h>
-],[int i = __S_IFDIR; i++;],
-    jikes_cv_stat_ifdir_2underscore=yes,
-    jikes_cv_stat_ifdir_2underscore=no))
+]], [[int i = __S_IFDIR; i++;]])],[jikes_cv_stat_ifdir_2underscore=yes],[jikes_cv_stat_ifdir_2underscore=no]))
 
 AC_CACHE_CHECK(for _S_IFDIR symbol,
     jikes_cv_stat_ifdir_1underscore,
-    AC_TRY_COMPILE([
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/stat.h>
-],[int i = _S_IFDIR; i++;],
-    jikes_cv_stat_ifdir_1underscore=yes,
-    jikes_cv_stat_ifdir_1underscore=no))
+]], [[int i = _S_IFDIR; i++;]])],[jikes_cv_stat_ifdir_1underscore=yes],[jikes_cv_stat_ifdir_1underscore=no]))
 
 AC_CACHE_CHECK(for S_IFDIR symbol,
     jikes_cv_stat_ifdir_0underscore,
-    AC_TRY_COMPILE([
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/stat.h>
-],[int i = S_IFDIR; i++;],
-    jikes_cv_stat_ifdir_0underscore=yes,
-    jikes_cv_stat_ifdir_0underscore=no))
+]], [[int i = S_IFDIR; i++;]])],[jikes_cv_stat_ifdir_0underscore=yes],[jikes_cv_stat_ifdir_0underscore=no]))
 
 if test "$jikes_cv_stat_ifdir_2underscore" = "yes"; then
     AC_DEFINE(JIKES_STAT_S_IFDIR, __S_IFDIR,
@@ -362,38 +260,34 @@ dnl First, we just make sure mkdir() actually exists
 AC_CHECK_FUNCS(mkdir, , AC_MSG_ERROR([No mkdir() function found]))
 
 AC_CACHE_CHECK(for mac style mkdir, jikes_cv_mac_mkdir,
-    AC_TRY_LINK([
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/stat.h>
 #include <stat.mac.h>
-], [mkdir("foo.dir", 0);
-], jikes_cv_mac_mkdir=yes,
-   jikes_cv_mac_mkdir=no)
+]], [[mkdir("foo.dir", 0);
+]])],[jikes_cv_mac_mkdir=yes],[jikes_cv_mac_mkdir=no])
 )
 
 AC_CACHE_CHECK(for glibc style mkdir, jikes_cv_glibc_mkdir,
-    AC_TRY_LINK([
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/stat.h>
 #include <unistd.h>
-], [mkdir("foo.dir", S_IRWXU | S_IRWXG | S_IRWXO);
-], jikes_cv_glibc_mkdir=yes,
-   jikes_cv_glibc_mkdir=no)
+]], [[mkdir("foo.dir", S_IRWXU | S_IRWXG | S_IRWXO);
+]])],[jikes_cv_glibc_mkdir=yes],[jikes_cv_glibc_mkdir=no])
 )
 
 AC_CACHE_CHECK(for libc5 style mkdir, jikes_cv_libc5_mkdir,
-    AC_TRY_LINK([
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/stat.h>
 #include <unistd.h>
-], [mkdir("foo.dir", S_IRWXU);
-], jikes_cv_libc5_mkdir=yes,
-   jikes_cv_libc5_mkdir=no)
+]], [[mkdir("foo.dir", S_IRWXU);
+]])],[jikes_cv_libc5_mkdir=yes],[jikes_cv_libc5_mkdir=no])
 )
 
 AC_CACHE_CHECK(for win32 style mkdir, jikes_cv_win32_mkdir,
-    AC_TRY_LINK([
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <direct.h>
-], [mkdir("foo.dir");
-], jikes_cv_win32_mkdir=yes,
-   jikes_cv_win32_mkdir=no)
+]], [[mkdir("foo.dir");
+]])],[jikes_cv_win32_mkdir=yes],[jikes_cv_win32_mkdir=no])
 )
 
 if test "$jikes_cv_glibc_mkdir" = "yes" ; then
@@ -437,10 +331,7 @@ dnl esac
 
 AC_CACHE_CHECK(floating point bug workaround for ICC compiler, jikes_cv_icc_fp_bugs,
     if test "$CXX" = "ICC" || test "$CXX" = "vacpp" ; then
-AC_TRY_COMPILE([#include <float.h>],
-[ _control87(EM_UNDERFLOW, EM_UNDERFLOW); ],
-jikes_cv_icc_fp_bugs=yes,
-jikes_cv_icc_fp_bugs=no)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <float.h>]], [[ _control87(EM_UNDERFLOW, EM_UNDERFLOW); ]])],[jikes_cv_icc_fp_bugs=yes],[jikes_cv_icc_fp_bugs=no])
 else
     jikes_cv_icc_fp_bugs=no
 fi)

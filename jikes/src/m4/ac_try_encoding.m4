@@ -16,7 +16,7 @@ AC_DEFUN([AC_TRY_AN_ENCODING], [
     byte_swap=0
   fi
   AC_MSG_CHECKING([$checkmsg])
-  AC_TRY_RUN([
+  AC_RUN_IFELSE([AC_LANG_SOURCE([[
 
     #ifdef HAVE_STRING_H
     # if !STDC_HEADERS && HAVE_MEMORY_H
@@ -80,9 +80,10 @@ int main (int, char**) {
     return 0;
   else
     return 4;
-    }],
+    }]])],
   [ is_good=$1
     AC_MSG_RESULT(works)],
-  [ AC_MSG_RESULT(nope)])
+  [ AC_MSG_RESULT(nope)],
+  [ AC_MSG_RESULT([cross-compiling, you must supply correct answer in cache])])
 ]
 )

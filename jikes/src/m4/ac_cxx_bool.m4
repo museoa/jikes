@@ -12,12 +12,12 @@ AC_DEFUN([AC_CXX_BOOL],
 [AC_CACHE_CHECK(whether the compiler recognizes bool as a built-in type,
 ac_cv_cxx_bool,
 [AC_LANG_PUSH([C++])
- AC_TRY_COMPILE([
+ AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 int f(int  x){return x;}
 int f(char x){return x;}
 int f(bool x){return x;}
-],[bool b = true; return f(b);],
- ac_cv_cxx_bool=yes, ac_cv_cxx_bool=no)
+],[bool b = true; return f(b);])],
+ [ac_cv_cxx_bool=yes], [ac_cv_cxx_bool=no])
  AC_LANG_POP([C++])
 ])
 if test "$ac_cv_cxx_bool" = "yes"; then

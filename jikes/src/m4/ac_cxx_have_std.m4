@@ -11,14 +11,15 @@ AC_DEFUN([AC_CXX_HAVE_STD],
 ac_cv_cxx_have_std,
 [AC_REQUIRE([AC_CXX_NAMESPACES])
  AC_LANG_PUSH([C++])
- AC_TRY_COMPILE([#include <iostream>
+ AC_COMPILE_IFELSE([AC_LANG_SOURCE([#include <iostream>
 #include <map>
 #include <iomanip>
 #include <cmath>
 #ifdef HAVE_NAMESPACES
 using namespace std;
-#endif],[return 0;],
- ac_cv_cxx_have_std=yes, ac_cv_cxx_have_std=no)
+#endif
+],[return 0;])],
+ [ac_cv_cxx_have_std=yes], [ac_cv_cxx_have_std=no])
  AC_LANG_POP([C++])
 ])
 if test "$ac_cv_cxx_have_std" = yes; then

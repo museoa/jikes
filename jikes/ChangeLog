@@ -1,3 +1,33 @@
+2004-01-02  Eric Blake  <ebb9@byu.net>
+
+	* autogen.sh: Add --copy to automake invocation.
+	* configure.ac: Clean up autoconf -Wall warnings. Remove unused
+	checks for max int sizes.
+	* src/platform.h: Remove unused USHRT_MAX checks.
+	* src/m4/ac_check_error_discard_const.m4: Clean up autoconf -Wall
+	warnings.
+	* src/m4/ac_check_iconv.m4: Ditto.
+	* src/m4/ac_check_mathlib.m4: Ditto.
+	* src/m4/ac_check_wcs_funcs.m4: Ditto.
+	* src/m4/ac_cxx_bool.m4: Ditto.
+	* src/m4/ac_cxx_check_ostream_const_unsigned_char_ptr.m4: Ditto.
+	* src/m4/ac_cxx_check_set_new_handler.m4: Ditto.
+	* src/m4/ac_cxx_const_cast.m4: Ditto.
+	* src/m4/ac_cxx_dynamic_cast.m4: Ditto.
+	* src/m4/ac_cxx_explicit.m4: Ditto.
+	* src/m4/ac_cxx_have_std.m4: Ditto.
+	* src/m4/ac_cxx_member_constants.m4: Ditto.
+	* src/m4/ac_cxx_namespaces.m4: Ditto.
+	* src/m4/ac_cxx_reinterpret_cast.m4: Ditto.
+	* src/m4/ac_cxx_rtti.m4: Ditto.
+	* src/m4/ac_cxx_static_cast.m4: Ditto.
+	* src/m4/ac_try_encoding.m4: Ditto.
+	* Makefile.in: Regenerate.
+	* configure: Regenerate.
+	* doc/Makefile.in: Regenerate.
+	* src/Makefile.in: Regenerate.
+	* src/config.h.in: Regenerate.
+
 2003-12-29  Eric Blake  <ebb9@byu.net>
 
 	* Makefile.am (INCLUDED_M4_FILES): Delete,

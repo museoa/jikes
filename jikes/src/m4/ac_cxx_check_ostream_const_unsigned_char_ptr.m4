@@ -9,11 +9,12 @@ dnl
 AC_DEFUN([AC_CXX_CHECK_OSTREAM_CONST_UNSIGNED_CHAR_PTR],
 [AC_CACHE_CHECK(for presence of ostream << const unsigned char *,
 ac_cv_cxx_ostream_const_unsigned_char_ptr,
-[AC_TRY_COMPILE([
+[AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 #include <iostream.h>
 void foo(const unsigned char *arg) { cerr << arg; }
-],[],
- ac_cv_cxx_ostream_const_unsigned_char_ptr=yes, ac_cv_cxx_ostream_const_unsigned_char_ptr=no)
+],[])],
+ [ac_cv_cxx_ostream_const_unsigned_char_ptr=yes],
+ [ac_cv_cxx_ostream_const_unsigned_char_ptr=no])
 ])
 if test "$ac_cv_cxx_ostream_const_unsigned_char_ptr" = "yes"; then
   AC_DEFINE(HAVE_OSTREAM_CONST_UNSIGNED_CHAR_PTR, ,
