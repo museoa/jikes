@@ -6,8 +6,20 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 
-// pr199a, from 1.2 spec comp test
-public class foo {
-	int i = 3000000000;
-	int j = 6000000000;
-}
+public class myclass  {
+	public static void main( String args[] ) {
+		myclass newObj = new myclass();
+		System.out.println("OK");
+	}
+
+	public myclass() {
+		myinner depo = new myinner ();
+	}
+
+	public class myinner {
+		public myinner() {
+			this(true);
+		}
+		public myinner(boolean bool) {
+		}
+	}

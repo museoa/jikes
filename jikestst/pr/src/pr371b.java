@@ -6,8 +6,27 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 
-// pr199a, from 1.2 spec comp test
-public class foo {
-	int i = 3000000000;
-	int j = 6000000000;
+package com.qwest.common.account;
+
+// class AccountId
+
+public class AccountId
+{
+	public long i_lAccountId;
+
+	public AccountId(long p_lAccountId)
+	{
+		i_lAccountId=p_lAccountId;
+	}
+
+	public long getAccountId()
+	{
+		return i_lAccountId;
+	}
+
+	public String toString()
+	{
+		return ""+i_lAccountId;
+	}
 }
+

@@ -9,7 +9,7 @@
 // pr273 -- name omitted from method argument list
 class Test {
   public void foo(String) {}
-}##pr275a.java##
+}
 interface A { void m(Object a); }
 interface B { void m(String a); }
 interface C extends A, B { }

@@ -6,8 +6,17 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 
-// pr199a, from 1.2 spec comp test
-public class foo {
-	int i = 3000000000;
-	int j = 6000000000;
+// Problem with kaffe
+public class Throw {
+
+	public static void main( String[] args ) {
+
+		try {
+			throw new IndexOutOfBoundsException();
+
+		} catch ( IndexOutOfBoundsException ioe ) {
+			System.out.println( "Array index out of bounds" );
+		}
+	}
+
 }

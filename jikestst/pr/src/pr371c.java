@@ -6,23 +6,25 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 
-abstract class Parent {
-	Parent() {
-		setI(100);
+package com.qwest.common.account;
+
+import com.qwest.common.customer.Customer;
+
+public class AccountImpl implements Account
+{
+	AccountId i_AccountId=null;
+
+	public AccountImpl()
+	{
+		i_AccountId=new AccountId(System.currentTimeMillis());
 	}
 
-	abstract public void setI(int value);
-}
-
-public class InitTest extends Parent {
-	public int i = 0;
-
-	public void setI(int value) {
-		i = value;
+	public AccountId getIdentity()
+	{
+		return i_AccountId;
 	}
 
-	public static void main(String [] args) {
-		InitTest test = new InitTest();
-		System.out.println(test.i);
+	public String getAttribute1()
+	{
+		return "hi!";
 	}
-}

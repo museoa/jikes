@@ -6,8 +6,18 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 
-// pr199a, from 1.2 spec comp test
-public class foo {
-	int i = 3000000000;
-	int j = 6000000000;
+class us {
+	public static void main(String[] args) {
+		m();
+		System.out.println("hi there"); 
+	}
+	static void m() {
+		int i=0,j=0,k=0;
+		try { 
+			i = j*k;
+		}
+		catch (Throwable e) {
+			System.out.println("exception caught");
+		}
+	}
 }

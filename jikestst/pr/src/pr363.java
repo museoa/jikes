@@ -6,8 +6,17 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 
-// pr199a, from 1.2 spec comp test
-public class foo {
-	int i = 3000000000;
-	int j = 6000000000;
+class Constant1 {
+	void v(int p) {
+		switch (p) {
+			case 7:
+			case Constant2.i:
+				break;
+		}
+	}
+	static final int j = Constant2.k * 3;
+}
+class Constant2 {
+	static final int i = Constant1.j + 1;
+	static final int k = 2;
 }

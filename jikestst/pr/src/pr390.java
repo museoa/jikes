@@ -6,8 +6,13 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 
-// pr199a, from 1.2 spec comp test
-public class foo {
-	int i = 3000000000;
-	int j = 6000000000;
+final int id;
+if(candidate_id != null) {
+	try {
+		id  = Integer.parseInt(candidate_id);
+	} catch (NumberFormatException ex) {
+		id = -1;
+	}
+} else {
+	id = -1;
 }

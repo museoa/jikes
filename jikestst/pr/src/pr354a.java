@@ -6,8 +6,20 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 
-// pr199a, from 1.2 spec comp test
-public class foo {
-	int i = 3000000000;
-	int j = 6000000000;
+public class test
+{
+
+	public static void main(String args[])
+	{
+
+		Object o = new Object();
+
+		try{
+			Object a=o.clone();
+		}
+		catch (CloneNotSupportedException e){
+			System.out.println("test");
+		}
+	}
+
 }

@@ -32,9 +32,3 @@ public class testclass extends Object {
 		System.out.println( "done!  jikes says we can't get here." );
 	}
 
-
-
-
-
-	##pr206.java##
-void myMethod {{ }

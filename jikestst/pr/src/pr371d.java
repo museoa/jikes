@@ -6,8 +6,22 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 
-// pr199a, from 1.2 spec comp test
-public class foo {
-	int i = 3000000000;
-	int j = 6000000000;
+package com.qwest.common.account;
+
+public class AccountFactory
+{
+	private static AccountFactory c_AccountFactory=new AccountFactory();
+	private AccountFactory()
+	{
+	}
+	public static AccountFactory getInstance()
+	{
+		return c_AccountFactory;
+	}
+
+	public Account createAccount()
+	{
+		return new AccountImpl();
+	}
 }
+

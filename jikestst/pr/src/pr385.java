@@ -6,8 +6,15 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 
-// pr199a, from 1.2 spec comp test
-public class foo {
-	int i = 3000000000;
-	int j = 6000000000;
+class Test {
+  static public void main(String[] args) {
+    boolean cond=true;
+    if (cond) {
+    
+    } else {
+    
+    } else {
+ 
+    }
+  }
 }

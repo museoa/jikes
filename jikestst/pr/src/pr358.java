@@ -6,8 +6,21 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 
-// pr199a, from 1.2 spec comp test
-public class foo {
-	int i = 3000000000;
-	int j = 6000000000;
+class T {
+  Object thrower () throws Exception {
+    int i=1,j=2;
+    if (i==j) {
+      throw new Exception(); 
+    }
+    return new Object(); 
+  }
+  void m() {
+    final Object o;
+    Object defaultValue = new Object();
+    try {
+    	o = thrower();
+    } catch (Exception e) {
+    	o = defaultValue;  // declared elsewhere
+    }
+  }
 }

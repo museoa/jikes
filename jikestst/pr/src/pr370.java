@@ -6,8 +6,20 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 
-// pr199a, from 1.2 spec comp test
-public class foo {
-	int i = 3000000000;
-	int j = 6000000000;
+public class Foo {
+	public static Object test() {
+		Object foo = new Object();
+		try {
+			synchronized(foo) {
+		 /* A */         return foo;
+		 /* B */     }
+		} finally {
+			boolean b = false;
+			System.out.println("foo is " + foo);
+		}
+	}
+
+	public static void main(String argv[]) {
+		System.out.println("test returns " + test());
+	}
 }

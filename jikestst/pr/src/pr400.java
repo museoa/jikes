@@ -6,8 +6,10 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 
-// pr199a, from 1.2 spec comp test
-public class foo {
-	int i = 3000000000;
-	int j = 6000000000;
-}
+public class ifZuordnen extends JInternalFrame implements ActionListener
+{
+	String test[] = new String[tm.getRowCount()];  // THIS WILL NOT WORK
+	public TableModel tm = new AbstractTableModel() {
+		private static final int rowCount = 15;
+		public int getRowCount() { return rowCount; }
+		...

@@ -6,8 +6,9 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 
-// pr199a, from 1.2 spec comp test
-public class foo {
-	int i = 3000000000;
-	int j = 6000000000;
+package play;
+public class MA {
+  MB b;
+  void f() { b.g(); }
 }
+

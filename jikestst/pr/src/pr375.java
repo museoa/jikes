@@ -6,8 +6,17 @@
 // and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 
-// pr199a, from 1.2 spec comp test
-public class foo {
-	int i = 3000000000;
-	int j = 6000000000;
+class Circle
+{
+	private double radius_;
+
+	Circle(double radius)
+	{
+		this.radius_ = radius;
+	}
+
+	public double area()
+	{
+		return( Math.PI * radius_^2 );
+	}
 }

@@ -23,11 +23,4 @@ public interface ViewFactory extends ComponentFactory {
    * created by this factory) with the given value
    */
 	public void updateComponent(Component component, Object value);
-}##pr316.java##
-// pr 316
-public class foo{
-	foo(){
-		double a = 1.0/0.0;
-	}
 }
-
