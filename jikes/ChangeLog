@@ -1,5 +1,11 @@
 1999-11-03    <shields@jikes.watson.ibm.com>
 
+	* jikes.spec:
+	* news_v1.html (new):
+	Save old news from Research as news_v1.html.
+
+1999-11-03    <shields@jikes.watson.ibm.com>
+
 	* jikes.1: 
 	* jikes.html:
 	* jikes.spec:

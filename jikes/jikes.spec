@@ -37,6 +37,6 @@ rm -fr $RPM_BUILD_ROOT
 
 %files
 %defattr(-,-,root)
-%doc README contrib.html jikes.html license.htm news.html 
+%doc README contrib.html jikes.html license.htm news.html news_v1.html
 %doc /usr/man/man1/jikes.1
 /usr/bin/jikes
