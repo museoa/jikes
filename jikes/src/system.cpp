@@ -363,7 +363,6 @@ void Control::ProcessUnnamedPackage()
     no_type -> SetSignature(dot_name_symbol -> Utf8_literal);
     no_type -> outermost_type = no_type;
     no_type -> SetOwner(unnamed_package);
-    no_type -> subtypes = new SymbolSet();
     no_type -> MarkBad();
 
     //

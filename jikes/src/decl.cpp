@@ -111,7 +111,6 @@ void Semantic::ProcessTypeNames()
                 type -> MarkBad();
                 type -> MarkSourceNoLongerPending();
                 type -> supertypes_closure = new SymbolSet;
-                type -> subtypes = new SymbolSet;
                 type -> semantic_environment =
                     new SemanticEnvironment(this, type, NULL);
                 if (type != control.Object())
@@ -422,7 +421,6 @@ TypeSymbol* Semantic::ProcessNestedTypeName(TypeSymbol* containing_type,
         containing_type -> InsertNestedTypeSymbol(name_symbol);
     inner_type -> outermost_type = outermost_type;
     inner_type -> supertypes_closure = new SymbolSet;
-    inner_type -> subtypes = new SymbolSet;
     inner_type -> SetExternalIdentity(control.FindOrInsertName(external_name,
                                                                length));
     inner_type -> semantic_environment =
@@ -1481,7 +1479,6 @@ TypeSymbol* Semantic::ReadType(FileSymbol* file_symbol, PackageSymbol* package,
             type -> MarkBad();
             type -> outermost_type = type;
             type -> supertypes_closure = new SymbolSet;
-            type -> subtypes = new SymbolSet;
             type -> semantic_environment =
                 new SemanticEnvironment(this, type, NULL);
             if (type != control.Object())
@@ -1509,7 +1506,6 @@ TypeSymbol* Semantic::ReadType(FileSymbol* file_symbol, PackageSymbol* package,
         type = package -> InsertOuterTypeSymbol(name_symbol);
         type -> outermost_type = type;
         type -> supertypes_closure = new SymbolSet;
-        type -> subtypes = new SymbolSet;
         type -> SetOwner(package);
         type -> SetSignature(control);
         type -> file_symbol = file_symbol;
@@ -1579,7 +1575,6 @@ TypeSymbol* Semantic::GetBadNestedType(TypeSymbol* type,
     inner_type -> MarkBad();
     inner_type -> outermost_type = type -> outermost_type;
     inner_type -> supertypes_closure = new SymbolSet;
-    inner_type -> subtypes = new SymbolSet;
     inner_type -> SetExternalIdentity(control.FindOrInsertName(external_name,
                                                                length));
     inner_type -> super = control.Object();

@@ -1449,7 +1449,6 @@ TypeSymbol* Semantic::ProcessNestedType(TypeSymbol* base_type,
         inner_type = base_type -> InsertNestedTypeSymbol(name_symbol);
         inner_type -> outermost_type = base_type -> outermost_type;
         inner_type -> supertypes_closure = new SymbolSet;
-        inner_type -> subtypes = new SymbolSet;
         inner_type -> SetExternalIdentity(external_name_symbol);
         inner_type -> SetOwner(base_type);
         inner_type -> SetSignature(control);

@@ -1510,7 +1510,6 @@ void Control::ProcessPackageDeclaration(FileSymbol* file_symbol,
                 type -> file_symbol = file_symbol;
                 type -> outermost_type = type;
                 type -> supertypes_closure = new SymbolSet;
-                type -> subtypes = new SymbolSet;
                 type -> SetOwner(file_symbol -> package);
                 type -> SetSignature(*this);
                 type -> MarkSourcePending();

@@ -1,3 +1,12 @@
+2004-12-11  Elliott Hughes  <enh@acm.org>
+
+	* src/symbol.cpp: bug #4090; always allocate a SymbolSet for
+	a type's subtypes.
+	* src/body.cpp, src/class.cpp, src/control.cpp, src/decl.cpp,
+	src/system.cpp: remove manual allocations.
+
+	* src/class.h: fix unrelated compiler warning.
+
 2004-10-10  Elliott Hughes  <enh@acm.org>
 
 	* src/option.cpp, src/option.h: bug #3079; fall back to using

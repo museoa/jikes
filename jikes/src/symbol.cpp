@@ -594,7 +594,7 @@ TypeSymbol::TypeSymbol(const NameSymbol* name_symbol_)
     local(NULL),
     non_local(NULL),
     supertypes_closure(NULL),
-    subtypes(NULL),
+    subtypes(new SymbolSet),
     subtypes_closure(NULL),
     innertypes_closure(NULL),
     dependents(new SymbolSet()),

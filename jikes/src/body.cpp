@@ -1982,7 +1982,6 @@ void Semantic::ProcessClassDeclaration(Ast* stmt)
     inner_type -> outermost_type = ThisType() -> outermost_type;
     inner_type -> supertypes_closure = new SymbolSet;
     inner_type -> subtypes_closure = new SymbolSet;
-    inner_type -> subtypes = new SymbolSet;
     inner_type -> semantic_environment =
         new SemanticEnvironment(this, inner_type, state_stack.Top());
     inner_type -> declaration = class_body;
