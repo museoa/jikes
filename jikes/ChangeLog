@@ -1,3 +1,7 @@
+2002-10-31  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/unparse.cpp (Unparse): Fix unparse output typo.
+
 2002-10-28  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/error.cpp (PrintCATCH_ARRAY_TYPE): Fix typo.

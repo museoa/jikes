@@ -378,7 +378,7 @@ void AstSuperCall::Unparse(Ostream& os, LexStream* lex_stream)
         if (base_opt && dot_token_opt)
         {
             base_opt -> Unparse(os, lex_stream);
-            os << lex_stream -> NameString(dot_token_opt);
+            os << '.';
         }
         os << lex_stream -> NameString(super_token)
            << lex_stream -> NameString(left_parenthesis_token);
@@ -877,7 +877,10 @@ void AstClassInstanceCreationExpression::Unparse(Ostream& os, LexStream* lex_str
     if (Ast::debug_unparse)
         os << "/*AstClassInstanceCreationExpression:#" << id << "*/";
     if (dot_token_opt /* base_opt - see ast.h for explanation */)
+    {
         base_opt -> Unparse(os, lex_stream);
+        os << '.';
+    }
     os << lex_stream -> NameString(new_token) << ' ';
     class_type -> Unparse(os, lex_stream);
     os << "( ";
