@@ -859,11 +859,12 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
     {
         int      escape_value;
         wchar_t *escape_ptr;
+
         const char *source_ptr  = buffer;
         const char *source_tail = buffer + filesize - 1; // point to last character read from the file.
 
         UnicodeLexerState saved_state;
-        UnicodeLexerState state = RAW;
+        UnicodeLexerState state = START;
 #ifdef HAVE_LIB_ICU_UC
         UErrorCode err = U_ZERO_ERROR;
 #endif
@@ -955,6 +956,7 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
       
             switch(state)
             {
+
             case QUOTE:
                 if(ch==U_BACKSLASH)
                 {
@@ -972,6 +974,7 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                     oncemore       = true;
                 }
                 break;
+
             case UNICODE_ESCAPE:
                 if(isxdigit(ch))
                 {
@@ -985,6 +988,7 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                                                      (unsigned) (input_ptr - input_buffer), this);
                 }
                 break;
+
             case UNICODE_ESCAPE_DIGIT_0:
                 if(isxdigit(ch))
                 {
@@ -998,6 +1002,7 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                                                      (unsigned) (input_ptr - input_buffer), this);
                 }
                 break;
+
             case UNICODE_ESCAPE_DIGIT_1:
                 if(isxdigit(ch))
                 {
@@ -1011,6 +1016,7 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                                                      (unsigned) (input_ptr - input_buffer), this);
                 }
                 break;
+
             case UNICODE_ESCAPE_DIGIT_2:
                 if(isxdigit(ch))
                 {
@@ -1026,6 +1032,7 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                                                      (unsigned) (input_ptr - input_buffer), this);
                 }
                 break;
+
             case CR:
                 if(ch==U_LINE_FEED)
                 {
@@ -1040,6 +1047,14 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                     *(++input_ptr)=ch;                    
                 }
                 break;
+
+            case START:
+                // if for some reason converter produced or passed
+                // byte order mark, it have to be ignored.
+                state = RAW;
+                if(ch==U_BOM || ch==U_REVERSE_BOM)
+                    break; //ignore
+                    
             case RAW:
                 if(ch==U_BACKSLASH && saved_state != UNICODE_ESCAPE_DIGIT_2)
                 {

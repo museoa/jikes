@@ -1,3 +1,10 @@
+2000-02-18  Vadim Zaliva  <lord@crocodile.org>
+
+	* stream.cpp (ProcessInputUnicode): igniring BOM at the
+	beginning of the file.
+
+	* config.h (U_chars): added U_BOM and U_REVERSE_BOM
+
 2000-02-17  Vadim Zaliva  <lord@crocodile.org>
 
 	* parser.h (ParseErrorCode): DiagnoseParser error codes definitions

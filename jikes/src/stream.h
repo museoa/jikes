@@ -310,6 +310,7 @@ private:
 #if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
     enum UnicodeLexerState
     {
+        START,
         RAW,
         CR,
         QUOTE,
