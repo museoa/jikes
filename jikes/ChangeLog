@@ -1,5 +1,12 @@
 2002-02-09  Eric Blake  <ebb9@email.byu.edu>
 
+	* configure.in: Bump version to 1.15b, to mark a stable CVS
+	version for use with GNU Classpath.
+	* configure:
+	* src/config.h.in: Regenerate.
+
+2002-02-09  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/bytecode.cpp (EmitStatement): Fix emission of dead code.
 
 2002-02-08  Eric Blake  <ebb9@email.byu.edu>
