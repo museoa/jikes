@@ -1,3 +1,11 @@
+2001-03-01  Pascal Davoust  <davoustp@yahoo.com>
+
+	* faq/dev-mac.shtml: added minimal instructions
+	  for building Jikes on MacOS X Public Beta.
+        * faq/dev-win32.shtml: removed note on downloading
+          source through WebCVS, fixed a few typos, added
+	  info about CVS protocol.
+
 2001-02-17  Mo DeJong  <mdejong@redhat.com>
 
 	* faq/dev-source-control.shtml: Fixup

@@ -44,11 +44,11 @@
               is detailed for three different compilers), and that it also involves 
               tools that are not available by default on it. </p>
             <h2><a name="source-control"></a>Source Control</h2>
-            <p>If you choose to use a CVS client instead of just downloading the 
-              source through WebCVS, two CVS clients can be used on the Win32 
-              platform. The first is a command-line version, available in the 
-              CygWin port of the GNU tools, and the second is a Win32 graphical 
-              application, WinCvs. You can use both of them, without any distinction.</p>
+            <p>If you choose to use a CVS client instead of just <a href="/developerworks/project/showfiles.php?group_id=10">downloading 
+              the source</a>, two CVS clients can be used on the Win32 platform. 
+              The first is a command-line version, available in the Cygwin port 
+              of the GNU tools, and the second is a Win32 graphical application, 
+              WinCvs. You can use both of them, without any distinction.</p>
             <h3>WinCvs</h3>
             <p>The WinCvs tool is a graphical front-end of the command-line CVS 
               client. The GUI offers many convenient controls (right-click menus, 
@@ -107,11 +107,12 @@
             </div>
             <p>Note: you can use a proxy with WinCvs (Admin / Preferences... / 
               Proxy tab), but be aware that if your proxy doesn't allow to use 
-              the cvs protocol, you won't be able to connect to the CVS server 
+              the CVS protocol, you won't be able to connect to the CVS server 
               (many security admins only allow http and ftp protocols to go through 
-              their proxies or firewalls). Use <a href="http://oss.software.ibm.com/developerworks/opensource/cvs/jikes/">WebCVS</a> 
-              instead.</p>
-            <p><i>Needed</i>: anybody knows what's the protocol used by cvs ?</p>
+              their proxies or firewalls). Just download the release source archive 
+              <a href="http://oss.software.ibm.com/developerworks/opensource/cvs/jikes/"></a> 
+              instead. For your information, CVS uses its own proprietary protocol 
+              over TCP, connected to port 2401.</p>
             <p>Then an optional (though recommended) <code>.cvsrc</code> file 
               can be specified to store CVS-related switches once and for all. 
               This file must be created (if it doesn't already exist) in the HOME 
@@ -462,7 +463,8 @@
                           <p style="text-indent: 0em"><code>cd [mingw dir]\bin</code><br>
                             <code>gcc.exe -v</code></p>
                           <p>Output:</p>
-                          <p style="text-indent: 0em"><code>Reading specs from <br>
+                          <p style="text-indent: 0em"><code>Reading specs from 
+                            <br>
                             C:\dev\mingw\bin\..\lib\gcc-lib\i386-mingw32msvc\2.95.2\specs<br>
                             gcc version 2.95.2 19991024 (release)</code></p>
                         </td>
@@ -528,7 +530,8 @@
                     <table width="100%" border="0" cellspacing="0" cellpadding="10">
                       <tr> 
                         <td class="DimmedFrameBackground"> 
-                          <p style="text-indent: 0em"><code>export PATH=[mingw dir with slashes]/bin:${PATH}<br>
+                          <p style="text-indent: 0em"><code>export PATH=[mingw 
+                            dir with slashes]/bin:${PATH}<br>
                             cd [jikes dir]<br>
                             ./configure --host=mingw32</code></p>
                           <p>Output:</p>

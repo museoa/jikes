@@ -39,10 +39,136 @@
         <tr>
           <td><!-- #BeginEditable "TopicContent" --> 
             <h1>Jikes on Mac</h1>
-            <p>Jikes is known to run on the Mac platform, but we don't have any 
-              information on how such a Jikes executable is built on the Mac.</p>
-            <p>If you do have this info, please drop a post in the Jikes or Jikes-Dev 
-              mailing list so we can update this topic.</p>
+            <p>Jikes has been successfully compiled and used on MacOS X Public 
+              Beta. We don't know about how Jikes is built on other versions of 
+              this OS, but if you do have additional info, please drop a post 
+              in the Jikes or Jikes-Dev mailing list so we can update this topic.</p>
+            <h2>Development tools</h2>
+            <p>You'll need at list a subset of the Developper Tools offered by 
+              Apple to be able to build your own Jikes. You won't probably need 
+              the entire suite (especially the GUI part), but you'll definitely 
+              need the GNU tools that are part of it.</p>
+            <div style="text-align: center"> 
+              <table width="400" border="0" cellspacing="0" cellpadding="1" align="center">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground">Download the Dev 
+                          Tools from Apple:<br>
+                          <a href="http://developer.apple.com/tools/projectbuilder/#Download">http://developer.apple.com/tools/projectbuilder/#Download</a> 
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>&nbsp;</p>
+            <p><i>NEEDED</i>: Is additional info about how to install it required? 
+              Paths for the command line tools and all that stuff?</p>
+            <h2>Source control</h2>
+            <p>You can either decide to build Jikes based on the release source 
+              tree, or decide that you want to get more serious about Jikes and 
+              use CVS. The Project Builder comes with a bundled CVS, so you don't 
+              need an additional tool.</p>
+            <p><i>NEEDED</i>: Additional info on how to use the CVS from Project 
+              Builder is extremely important but missing here. Please contact 
+              us if you think you can help us improve these instructions.</p>
+            <p>Here is what you need to do if you choose to use the release source 
+              tree:</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground">Download the Jikes 
+                          source distribution:<br>
+                          <a href="/developerworks/project/showfiles.php?group_id=10">http://oss.software.ibm.com/developerworks/project/showfiles.php?group_id=10</a><br>
+                          Then, in a command window, uncompress the archive:<br>
+                          <code>gnutar -xzf [jikes-archive.tar.gz)] </code></td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>After these steps, a jikes directory must be available, containing 
+              the Jikes source files.</p>
+            <h2>Build environment configuration</h2>
+            <p>Now that you have a Jikes source tree, just have a look into it. 
+              Right in the jikes directory, you'll find a script named <code>configure</code>, 
+              which role is to automatically detect the features of your build 
+              environment and produce a <code>Makefile</code> and <code>config.h</code> 
+              files which contain the appropriate definitions and instructions 
+              for your platform (see the general <a href="dev-compiling.shtml#build-env-config">Compiling</a> 
+              section for additional info about the <code>configure</code> script).</p>
+            <p>Just run it from a command windows:</p>
+            <div style="text-align: center"> 
+              <table width="400" border="0" cellspacing="0" cellpadding="1" align="center">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground">In a command window:<br>
+                          <code>cd [jikes directory]</code><br>
+                          <code>./configure </code><code></code></td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p><i>NEEDED</i>: how do you specify what your compiler is? Is it 
+              gcc? Should it be in the PATH?</p>
+            <h2>Compiling</h2>
+            <p>Your build environment is now setup and ready. In the same command 
+              window, run the command below:</p>
+            <div style="text-align: center"> 
+              <table width="400" border="0" cellspacing="0" cellpadding="1" align="center">
+                <tr> 
+                  <td class="HighlightedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="HighlightedFrameBackground"> <code>make</code><code></code></td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>When the compilation is finished, your Jikes executable must be 
+              found in the <code>src</code> directory. <b>Congratulations!</b></p>
+            <h2>Building Jikes distributables</h2>
+            <p>You may want to generate a distributable package for your newly 
+              compiled Jikes. The generated <code>Makefile</code> provides the 
+              adequate targets: <code>install</code> and <code>install-strip</code>. 
+              The <code>install-strip</code> target will remove any additional 
+              symbols included by the compiler for debugging, making the executable 
+              more compact. If you intend to develop on Jikes (thus probably debug 
+              it), use the <code>install</code> target.</p>
+            <div style="text-align: center"> 
+              <table border="0" cellspacing="0" cellpadding="1" align="center" width="400">
+                <tr> 
+                  <td class="DimmedFrameBorder"> 
+                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
+                      <tr> 
+                        <td class="DimmedFrameBackground"> <code>su - root</code><br>
+                          <br>
+                          For development:<br>
+                          <code>make install</code><br>
+                          <br>
+                          Or for day-to-day use:<br>
+                          <code>make install-strip</code></td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
             <!-- #EndEditable --></td>
         </tr>
       </table>
