@@ -9,6 +9,9 @@
 
 #include "ast.h"
 #include "symbol.h"
+#ifdef JIKES_DEBUG
+# include "stream.h"
+#endif // JIKES_DEBUG
 
 #ifdef HAVE_JIKES_NAMESPACE
 namespace Jikes { // Open namespace Jikes block
@@ -1246,8 +1249,6 @@ Ast* AstAssignmentExpression::Clone(StoragePool* ast_pool)
 
 
 #ifdef JIKES_DEBUG
-
-#include "stream.h"
 
 //
 // These methods allow printing the Ast structure to Coutput (usually stdout).

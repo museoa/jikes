@@ -1,3 +1,23 @@
+2004-03-31  Eric Blake  <ebb9@byu.net>
+
+	* src/ast.cpp [JIKES_DEBUG]: Move stream.h include outside of the
+	namespace.
+	* src/depend.cpp: Formatting.
+	(BoxedTypeForPrimitiveType, AddStringConversionDependence): Delete
+	- with autoboxing in JSR 201, this information better belongs in
+	TypeSymbol.
+	* src/semantic.h: Ditto.
+	* src/expr.cpp (ReportVariableNotFound): Use NULL, not 0, when we
+	mean a pointer.
+	(ProcessClassLiteral): Restore class dependence on non-primitive
+	types, that Elliott's patch regressed on.
+	(ProcessPLUS): Depend on the boxed type.
+	(CreateAccessToScopedVariable, ProcessAmbiguousName): Don't allow
+	static class to access constant instance variable of enclosing
+	class, bug 3536.
+	* src/symbol.h (BoxedType, UnboxedType): New methods.
+	* src/symbol.cpp: Implement.
+
 2004-03-31  Elliott Hughes  <enh@acm.org>
 
 	* src/expr.cpp: Fix a null-pointer access caused by trying to be too

@@ -1471,6 +1471,53 @@ bool TypeSymbol::HasProtectedAccessTo(TypeSymbol* target_type)
 }
 
 
+TypeSymbol* TypeSymbol::BoxedType(Control& control)
+{
+    if (! Primitive())
+        return this;
+    if (this == control.int_type)
+        return control.Integer();
+    if (this == control.boolean_type)
+        return control.Boolean();
+    if (this == control.short_type)
+        return control.Short();
+    if (this == control.char_type)
+        return control.Character();
+    if (this == control.long_type)
+        return control.Long();
+    if (this == control.float_type)
+        return control.Float();
+    if (this == control.double_type)
+        return control.Double();
+    assert(this == control.void_type);
+    return control.Void();
+}
+
+
+TypeSymbol* TypeSymbol::UnboxedType(Control& control)
+{
+    if (ContainingPackage() != control.LangPackage())
+        return this;
+    if (this == control.Integer())
+        return control.int_type;
+    if (this == control.Boolean())
+        return control.boolean_type;
+    if (this == control.Short())
+        return control.short_type;
+    if (this == control.Character())
+        return control.char_type;
+    if (this == control.Long())
+        return control.long_type;
+    if (this == control.Float())
+        return control.float_type;
+    if (this == control.Double())
+        return control.double_type;
+    if (this == control.Void())
+        return control.void_type;
+    return this;
+}
+
+
 VariableSymbol* TypeSymbol::InsertThis0()
 {
     assert(IsInner() && ContainingType() &&

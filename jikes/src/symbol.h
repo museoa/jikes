@@ -980,6 +980,14 @@ public:
     bool HasProtectedAccessTo(TypeSymbol*);
 
     //
+    // For JSR 201, control.int_class -> BoxedType() returns control.Integer(),
+    // types without boxing return themselves. UnboxedType() works the other
+    // direction.
+    //
+    TypeSymbol* BoxedType(Control&);
+    TypeSymbol* UnboxedType(Control&);
+
+    //
     // Note that this test considers a class a subclass of itself, and also
     // interfaces are a subclass of Object. See also IsSubtype.
     //
@@ -1271,7 +1279,6 @@ private:
 
     MethodSymbol* class_literal_method;
     Utf8LiteralValue* class_literal_name;
-
     VariableSymbol* assert_variable;
 
     //

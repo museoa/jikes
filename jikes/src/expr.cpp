@@ -1384,8 +1384,8 @@ void Semantic::ReportVariableNotFound(AstExpression* access, TypeSymbol* type)
     // Try various possibilities of what the user might have meant.
     //
     AstName* ast_name = access -> NameCast();
-    TypeSymbol* inaccessible_type = (ast_name == 0 || ast_name -> base_opt)
-        ? 0 : FindInaccessibleType(ast_name);
+    TypeSymbol* inaccessible_type = (! ast_name || ast_name -> base_opt)
+        ? NULL : FindInaccessibleType(ast_name);
     VariableSymbol* variable = FindMisspelledVariableName(type, access);
     if (variable)
     {
@@ -1823,18 +1823,9 @@ AstExpression* Semantic::CreateAccessToType(Ast* source,
 void Semantic::CreateAccessToScopedVariable(AstName* name,
                                             TypeSymbol* environment_type)
 {
-    assert(! name -> base_opt && ! name -> IsConstant());
+    assert(! name -> base_opt);
     VariableSymbol* variable = (VariableSymbol*) name -> symbol;
-
-    if (variable -> owner -> MethodCast() && ! variable -> ACC_FINAL())
-    {
-        //
-        // We've already reported the error, in FindVariableInEnvironment.
-        //
-        name -> symbol = control.no_type;
-        return;
-    }
-
+    assert(variable -> owner -> TypeCast());
     AstExpression* access_expression;
     if (variable -> ACC_STATIC())
     {
@@ -1854,8 +1845,6 @@ void Semantic::CreateAccessToScopedVariable(AstName* name,
 
     if (access_expression -> symbol != control.no_type)
     {
-        assert(variable -> owner -> TypeCast());
-
         TypeSymbol* containing_type = variable -> ContainingType();
 
         if (variable -> ACC_PRIVATE() ||
@@ -2444,8 +2433,11 @@ void Semantic::ProcessAmbiguousName(AstName* name)
             // pointer dereferences (and method access in the case of a
             // private variable) necessary to  get to it.
             //
-            if (where_found != state_stack.Top() && ! name -> value)
+            if (where_found != state_stack.Top() &&
+                variable_symbol -> owner -> TypeCast())
+            {
                 CreateAccessToScopedVariable(name, where_found -> Type());
+            }
         }
         //
         // ...Otherwise, if a type of that name is declared in the compilation
@@ -3273,11 +3265,11 @@ void Semantic::ProcessClassLiteral(Ast* expr)
     }
     ProcessType(class_lit -> type);
     TypeSymbol* type = class_lit -> type -> symbol;
+    AddDependence(this_type, type -> BoxedType(control));
     if (type == control.no_type)
         class_lit -> symbol = control.no_type;
     else if (type -> Primitive())
     {
-        AddDependence(this_type, BoxedTypeForPrimitiveType(type));
         if (type == control.int_type)
             class_lit -> symbol = control.Integer_TYPE_Field();
         else if (type == control.double_type)
@@ -5244,7 +5236,7 @@ void Semantic::ProcessPLUS(AstBinaryExpression* expr)
         //
         if (left_type != control.String())
         {
-            AddStringConversionDependence(left_type);
+            AddDependence(ThisType(), left_type -> BoxedType(control));
             if (left_type == control.void_type)
             {
                 ReportSemError(SemanticError::VOID_TO_STRING, left);
@@ -5262,7 +5254,7 @@ void Semantic::ProcessPLUS(AstBinaryExpression* expr)
         //
         if (right_type != control.String())
         {
-            AddStringConversionDependence(right_type);
+            AddDependence(ThisType(), right_type -> BoxedType(control));
             if (right_type == control.void_type)
             {
                 ReportSemError(SemanticError::VOID_TO_STRING, right);
@@ -5275,7 +5267,8 @@ void Semantic::ProcessPLUS(AstBinaryExpression* expr)
             }
         }
 
-        AddDependence(ThisType(), control.StringBuffer());
+        AddDependence(ThisType(), control.option.target >= JikesOption::SDK1_5
+                      ? control.StringBuilder() : control.StringBuffer());
 
         //
         // If both subexpressions are string constants, identify the result as
