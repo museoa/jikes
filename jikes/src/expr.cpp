@@ -2188,7 +2188,8 @@ void Semantic::FindVariableMember(TypeSymbol *type, TypeSymbol *environment_type
         }
         else
         {
-            if (TypeSymbol *inner_type = FindNestedType(type, field_access -> identifier_token))
+            TypeSymbol *inner_type = FindNestedType(type, field_access -> identifier_token);
+            if (inner_type)
                  ReportSemError(SemanticError::FIELD_IS_TYPE,
                                 field_access -> identifier_token,
                                 field_access -> identifier_token,
@@ -2791,7 +2792,8 @@ void Semantic::ProcessFieldAccess(Ast *expr)
 
     if (field_access -> symbol != control.no_type)
     {
-        if (PackageSymbol *package = field_access -> symbol -> PackageCast())
+        PackageSymbol *package = field_access -> symbol -> PackageCast();
+        if (package)
         {
             ReportSemError(SemanticError::UNKNOWN_AMBIGUOUS_NAME,
                            field_access -> LeftToken(),
