@@ -1,5 +1,19 @@
 2002-07-02  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/ast.cpp:
+	* src/ast.h (original_constructor_invocation),
+	(local_init_statments): Delete unused fields.
+	* src/decl.cpp (ProcessConstructorDeclaration),
+	(AddDefaultConstructor): Mark the this$0 parameter synthetic.
+	* src/definite.cpp: Delete dead comments.
+	(DefiniteThisCall, DefiniteSuperCall): Add methods for definite
+	analysis in explicit constructor calls - bug 2999.
+	(DefiniteConstructorBody): Use new methods.
+	* src/semantic.h: Add new method signatures.
+	(DefiniteClassDeclaration): Delete unused method.
+
+2002-07-02  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/bytecode.cpp (EmitCheckForNull): Revert part of patch 296,
 	as well as detect one more case of guaranteed non-null reference.
 

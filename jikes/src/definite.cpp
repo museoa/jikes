@@ -1860,6 +1860,31 @@ void Semantic::DefiniteEmptyStatement(Ast *stmt)
 }
 
 
+//
+// Called only from DefiniteConstructorBody, for this() calls.
+//
+void Semantic::DefiniteThisCall(AstThisCall *this_call)
+{
+    for (int i = 0; i < this_call -> NumArguments(); i++)
+        DefiniteExpression(this_call -> Argument(i),
+                           *DefinitelyAssignedVariables());
+}
+
+
+//
+// Called only from DefiniteConstructorBody, for super() calls.
+//
+void Semantic::DefiniteSuperCall(AstSuperCall *super_call)
+{
+    if (super_call -> base_opt)
+        DefiniteExpression(super_call -> base_opt,
+                           *DefinitelyAssignedVariables());
+    for (int i = 0; i < super_call -> NumArguments(); i++)
+        DefiniteExpression(super_call -> Argument(i),
+                           *DefinitelyAssignedVariables());
+}
+
+
 void Semantic::DefiniteMethodBody(AstMethodDeclaration *method_declaration)
 {
     int i;
@@ -1876,35 +1901,14 @@ void Semantic::DefiniteMethodBody(AstMethodDeclaration *method_declaration)
 #endif
     AstBlock *block_body = (AstBlock *) method_declaration -> method_body;
 
-//      Universe() =
-//          new DefinitePair((block_body -> block_symbol -> max_variable_index +
-//                            FinalFields() -> Length()),
-//                           BitSet::UNIVERSE);
     int size = block_body -> block_symbol -> max_variable_index +
         FinalFields() -> Length();
     Universe() -> Resize(size, BitSet::UNIVERSE);
-//      DefiniteBlocks() =
-//          new DefiniteBlockStack(control,
-//                                 method_declaration -> method_symbol -> max_block_depth,
-//                                 Universe() -> Size());
     int stack_size = method_declaration -> method_symbol -> max_block_depth;
     DefiniteBlocks() = new DefiniteBlockStack(control, stack_size, size);
-//      DefiniteTrys() =
-//          new DefiniteTryStack(method_declaration -> method_symbol ->
-//                               max_block_depth);
     DefiniteTrys() = new DefiniteTryStack(stack_size);
-//      DefiniteFinalAssignments() =  new DefiniteFinalAssignmentStack();
-//      DefiniteVisibleVariables() = new SymbolSet(Universe() -> Size());
-//      DefinitelyAssignedVariables() = new DefinitePair(Universe() -> Size());
     DefinitelyAssignedVariables() -> Resize(size);
-//      BlankFinals() = new BitSet(Universe() -> Size(), BitSet::EMPTY);
     BlankFinals() -> Resize(size, BitSet::EMPTY);
-//      for (int i = 0; i < FinalFields() -> Length(); i++)
-//      {
-//          // Assume all final variables have been assigned a value.
-//          DefinitelyAssignedVariables() -> AssignElement(i);
-//          DefiniteVisibleVariables() -> AddElement((*FinalFields())[i]);
-//      }
 
     DefiniteBlocks() -> Push(block_body);
 
@@ -1974,20 +1978,10 @@ void Semantic::DefiniteMethodBody(AstMethodDeclaration *method_declaration)
     }
     DefiniteBlocks() -> Pop();
 
-//      delete Universe();
-//      Universe() = NULL;
-//      delete DefinitelyAssignedVariables();
-//      DefinitelyAssignedVariables() = NULL;
     delete DefiniteBlocks();
     DefiniteBlocks() = NULL;
     delete DefiniteTrys();
     DefiniteTrys() = NULL;
-//      delete DefiniteFinalAssignments();
-//      DefiniteFinalAssignments() = NULL;
-//      delete DefiniteVisibleVariables();
-//      DefiniteVisibleVariables() = NULL;
-//      delete BlankFinals();
-//      BlankFinals() = NULL;
     size = FinalFields() -> Length();
     Universe() -> Resize(size);
     DefinitelyAssignedVariables() -> Resize(size);
@@ -2007,43 +2001,17 @@ void Semantic::DefiniteConstructorBody(AstConstructorDeclaration *constructor_de
                 << ThisType() -> ContainingPackage() -> PackageName() << "/"
                 << ThisType() -> ExternalName() << endl;
 #endif
-    AstBlock *block_body = constructor_declaration -> constructor_body;
+    AstMethodBody *block_body = constructor_declaration -> constructor_body;
 
-//      Universe() =
-//          new DefinitePair((block_body -> block_symbol -> max_variable_index +
-//                            FinalFields() -> Length()),
-//                           BitSet::UNIVERSE);
     int size = block_body -> block_symbol -> max_variable_index +
         FinalFields() -> Length();
     Universe() -> Resize(size, BitSet::UNIVERSE);
-//      DefiniteBlocks() =
-//          new DefiniteBlockStack(control,
-//                                 constructor_declaration -> constructor_symbol -> max_block_depth,
-//                                 Universe() -> Size());
     int stack_size =
         constructor_declaration -> constructor_symbol -> max_block_depth;
     DefiniteBlocks() = new DefiniteBlockStack(control, stack_size, size);
-//      DefiniteTrys() =
-//          new DefiniteTryStack(constructor_declaration -> constructor_symbol ->
-//                               max_block_depth);
     DefiniteTrys() = new DefiniteTryStack(stack_size);
-//      DefiniteFinalAssignments() =  new DefiniteFinalAssignmentStack();
-//      DefiniteVisibleVariables() = new SymbolSet(Universe() -> Size());
-//      DefinitelyAssignedVariables() = new DefinitePair(Universe() -> Size());
     DefinitelyAssignedVariables() -> Resize(size);
-//      BlankFinals() = new BitSet(Universe() -> Size(), BitSet::EMPTY);
     BlankFinals() -> Resize(size, BitSet::EMPTY);
-//      for (int i = 0; i < FinalFields() -> Length(); i++)
-//      {
-//          VariableSymbol *final_var = (*FinalFields())[i];
-//          if (final_var -> IsDefinitelyAssigned())
-//              DefinitelyAssignedVariables() -> AssignElement(i);
-//          else if (final_var -> IsPossiblyAssigned())
-//              DefinitelyAssignedVariables() -> AddElement(i);
-//          if (! final_var -> declarator -> variable_initializer_opt)
-//              BlankFinals() -> AddElement(i);
-//          DefiniteVisibleVariables() -> AddElement(final_var);
-//      }
 
     DefiniteBlocks() -> Push(block_body);
 
@@ -2078,19 +2046,14 @@ void Semantic::DefiniteConstructorBody(AstConstructorDeclaration *constructor_de
         DefiniteVisibleVariables() -> AddElement(variable);
     }
 
-    //
-    // As an explicit constructor call cannot refer to any locally declared
-    // variables other than formal parameters, no local variable can be
-    // assigned within it (other than a formal parameter which is considered
-    // to have been assigned anyway). Therefore, the following code is not
-    // necessary:
-    //
-    //    if (this_call)
-    //         DefiniteThisCall(this_call);
-    //    else if (super_call)
-    //         DefiniteSuperCall(super_call);
-    // TODO: what about Foo(final int i) { super(i = 1); }?
-    //
+    if (block_body -> explicit_constructor_opt)
+    {
+        if (block_body -> explicit_constructor_opt -> ThisCallCast())
+            DefiniteThisCall((AstThisCall *) block_body ->
+                             explicit_constructor_opt);
+        else DefiniteSuperCall((AstSuperCall *) block_body ->
+                               explicit_constructor_opt);
+    }
     DefiniteBlockStatements(block_body);
 
 #ifdef DUMP
@@ -2111,13 +2074,6 @@ void Semantic::DefiniteConstructorBody(AstConstructorDeclaration *constructor_de
     // Compute the set of finals that has definitely been assigned in this
     // constructor. Also remove the variables that went out of scope.
     //
-//      BitSet &exit_set = DefiniteBlocks() ->
-//          TopExitPair(*DefinitelyAssignedVariables()).da_set;
-//      for (int k = 0; k < FinalFields() -> Length(); k++)
-//      {
-//          if (exit_set[k])
-//              (*FinalFields())[k] -> MarkDefinitelyAssigned();
-//      }
     *DefinitelyAssignedVariables() = DefiniteBlocks() ->
         TopExitPair(*DefinitelyAssignedVariables());
     for (i = 0; i < constructor_declarator -> NumFormalParameters(); i++)
@@ -2133,20 +2089,10 @@ void Semantic::DefiniteConstructorBody(AstConstructorDeclaration *constructor_de
     }
     DefiniteBlocks() -> Pop();
 
-//      delete Universe();
-//      Universe() = NULL;
-//      delete DefinitelyAssignedVariables();
-//      DefinitelyAssignedVariables() = NULL;
     delete DefiniteBlocks();
     DefiniteBlocks() = NULL;
     delete DefiniteTrys();
     DefiniteTrys() = NULL;
-//      delete DefiniteFinalAssignments();
-//      DefiniteFinalAssignments() = NULL;
-//      delete DefiniteVisibleVariables();
-//      DefiniteVisibleVariables() = NULL;
-//      delete BlankFinals();
-//      BlankFinals() = NULL;
     size = FinalFields() -> Length();
     Universe() -> Resize(size);
     DefinitelyAssignedVariables() -> Resize(size);
@@ -2164,35 +2110,14 @@ void Semantic::DefiniteBlockInitializer(AstBlock *block_body, int stack_size)
                 << ThisType() -> ContainingPackage() -> PackageName() << "/"
                 << ThisType() -> ExternalName() << endl;
 #endif
-//      Universe() =
-//          new DefinitePair((block_body -> block_symbol -> max_variable_index +
-//                            FinalFields() -> Length()),
-//                           BitSet::UNIVERSE);
     int size = block_body -> block_symbol -> max_variable_index +
         FinalFields() -> Length();
     Universe() -> Resize(size, BitSet::UNIVERSE);
     // +1 for absent method block
-//      DefiniteBlocks() = new DefiniteBlockStack(control, stack_size + 1,
-//                                                    Universe() -> Size());
     DefiniteBlocks() = new DefiniteBlockStack(control, stack_size + 1, size);
     DefiniteTrys() = new DefiniteTryStack(stack_size + 1);
-//      DefiniteFinalAssignments() =  new DefiniteFinalAssignmentStack();
-//      DefiniteVisibleVariables() = new SymbolSet(Universe() -> Size());
-//      DefinitelyAssignedVariables() = new DefinitePair(Universe() -> Size());
     DefinitelyAssignedVariables() -> Resize(size);
-//      BlankFinals() = new BitSet(Universe() -> Size(), BitSet::EMPTY);
     BlankFinals() -> Resize(size, BitSet::EMPTY);
-//      for (int i = 0; i < FinalFields() -> Length(); i++)
-//      {
-//          VariableSymbol *final_var = (*FinalFields())[i];
-//          if (final_var -> IsDefinitelyAssigned())
-//              DefinitelyAssignedVariables() -> AssignElement(i);
-//          else if (final_var -> IsPossiblyAssigned())
-//              DefinitelyAssignedVariables() -> AddElement(i);
-//          if (! final_var -> declarator -> variable_initializer_opt)
-//              BlankFinals() -> AddElement(i);
-//          DefiniteVisibleVariables() -> AddElement(final_var);
-//      }
 
     DefiniteBlocks() -> Push(NULL); // No method available
     DefiniteBlocks() -> Push(block_body);
@@ -2224,16 +2149,6 @@ void Semantic::DefiniteBlockInitializer(AstBlock *block_body, int stack_size)
     // in this block, mark it appropriately. Also remove the variables that
     // went out of scope.
     //
-//      DefinitePair &exit_pair =
-//          DefiniteBlocks() -> TopExitPair(*DefinitelyAssignedVariables());
-//      for (int k = 0; k < FinalFields() -> Length(); k++)
-//      {
-//          VariableSymbol *final_var = (*FinalFields())[k];
-//          if (exit_pair.da_set[k])
-//              final_var -> MarkDefinitelyAssigned();
-//          if (! exit_pair.du_set[k])
-//              final_var -> MarkPossiblyAssigned();
-//      }
     *DefinitelyAssignedVariables() = DefiniteBlocks() ->
         TopExitPair(*DefinitelyAssignedVariables());
     for (i = 0; i < block_body -> block_symbol -> NumVariableSymbols(); i++)
@@ -2245,15 +2160,10 @@ void Semantic::DefiniteBlockInitializer(AstBlock *block_body, int stack_size)
     // remove NULL that was pushed to indicate that no method is available
     DefiniteBlocks() -> Pop();
 
-//      delete Universe();
-//      delete DefinitelyAssignedVariables();
     delete DefiniteBlocks();
     DefiniteBlocks() = NULL;
     delete DefiniteTrys();
     DefiniteTrys() = NULL;
-//      delete DefiniteFinalAssignments();
-//      delete DefiniteVisibleVariables();
-//      delete BlankFinals();
     size = FinalFields() -> Length();
     Universe() -> Resize(size);
     DefinitelyAssignedVariables() -> Resize(size);
@@ -2264,47 +2174,14 @@ void Semantic::DefiniteBlockInitializer(AstBlock *block_body, int stack_size)
 void Semantic::DefiniteFieldInitializer(AstVariableDeclarator *variable_declarator)
 {
     assert(FinalFields());
-//      Universe() = new DefinitePair(FinalFields() -> Length(), BitSet::UNIVERSE);
-//      DefiniteBlocks() = NULL;
-//      DefiniteTrys() = NULL;
-//      DefiniteFinalAssignments() =  new DefiniteFinalAssignmentStack();
-//      DefiniteVisibleVariables() = new SymbolSet(Universe() -> Size());
-//      DefinitelyAssignedVariables() = new DefinitePair(Universe() -> Size());
-//      BlankFinals() = new BitSet(Universe() -> Size(), BitSet::EMPTY);
-//      for (int i = 0; i < FinalFields() -> Length(); i++)
-//      {
-//          VariableSymbol *final_var = (*FinalFields())[i];
-//          if (final_var -> IsDefinitelyAssigned())
-//              DefinitelyAssignedVariables() -> AssignElement(i);
-//          else if (final_var -> IsPossiblyAssigned())
-//              DefinitelyAssignedVariables() -> AddElement(i);
-//          if (! final_var -> declarator -> variable_initializer_opt)
-//              BlankFinals() -> AddElement(i);
-//          DefiniteVisibleVariables() -> AddElement(final_var);
-//      }
 
     DefiniteVariableInitializer(variable_declarator);
     if (variable_declarator -> symbol -> ACC_FINAL())
+    {
         DefinitelyAssignedVariables() ->
             AssignElement(variable_declarator -> symbol ->
                           LocalVariableIndex());
-    //
-    // Also, update any other finals that may have been initialized as
-    // a side-effect in an assignment embedded within the initializer
-    // expression.
-    //
-//      BitSet &exit_set = DefinitelyAssignedVariables() -> da_set;
-//      for (int k = 0; k < FinalFields() -> Length(); k++)
-//      {
-//          if (exit_set[k])
-//              (*FinalFields())[k] -> MarkDefinitelyAssigned();
-//      }
-
-//      delete Universe();
-//      delete DefinitelyAssignedVariables();
-//      delete DefiniteFinalAssignments();
-//      delete DefiniteVisibleVariables();
-//      delete BlankFinals();
+    }
 }
 
 

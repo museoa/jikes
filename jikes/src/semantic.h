@@ -746,7 +746,16 @@ public:
         ProcessExprOrStmt[Ast::ASSERT] = &Semantic::ProcessAssertStatement;
         ProcessExprOrStmt[Ast::TRY] = &Semantic::ProcessTryStatement;
 
+        //
         // Check statements for definite assignment.
+        //
+        // Class declarations do not have an effect on definite assignment.
+        // This and super calls are not normally statements, so
+        // DefiniteThisCall and DefiniteSuperCall should be invoked manually
+        // from DefiniteConstructorBody rather than automatically by
+        // DefiniteStatement. Therefore, all three of these categories are
+        // diverted to the no-op DefiniteEmptyStatement.
+        //
         DefiniteStmt[Ast::CLASS] = &Semantic::DefiniteEmptyStatement;
         DefiniteStmt[Ast::THIS_CALL] = &Semantic::DefiniteEmptyStatement;
         DefiniteStmt[Ast::SUPER_CALL] = &Semantic::DefiniteEmptyStatement;
@@ -1221,7 +1230,8 @@ private:
     void DefiniteTryStatement(Ast *);
     void DefiniteAssertStatement(Ast *);
     void DefiniteEmptyStatement(Ast *);
-    void DefiniteClassDeclaration(Ast *);
+    void DefiniteThisCall(AstThisCall *);
+    void DefiniteSuperCall(AstSuperCall *);
 
     VariableSymbol *DefiniteFinal(AstFieldAccess *);
 

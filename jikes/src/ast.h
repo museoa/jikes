@@ -102,14 +102,6 @@ public:
 };
 
 
-//
-// Global function used when the space for a dynamic object is
-// preallocated, but we need to call a constructor to initialize the
-// space.
-//
-// inline static void *operator new(size_t, void *p) { return p; }
-//
-
 //***************************************************************************
 //
 // This file contains the definitions of the classes used to construct the
@@ -145,9 +137,11 @@ public:
 //    Ast::COMPILATION for a tree constructed from an otherwise valid program
 //    and Ast::BAD_COMPILATION for a tree constructed from an invalid program.
 //
-//    Since the AST is a tree data structure, each node contains a virtual
-//    destructor that can delete its subtrees. Therefore, a user can dispose of
-//    a whole ast tree (or subtree) by simply deleting the root node.
+//    All AST tree nodes belong to a StoragePool. When a new node must be added,
+//    it is allocated from the same StoragePool. Thus, you should never use
+//    operator new to construct an AST object, but instead use New* or Gen*
+//    defined in StoragePool. Likewise, AST tree nodes never need destruction -
+//    simply delete the pool to reclaim the entire tree.
 //
 //    When the preprocessor variable JIKES_DEBUG is defined the user may print
 //    out an AST tree to standard output by calling the virtual function
@@ -1745,20 +1739,12 @@ public:
 //
 class AstMethodBody : public AstBlock
 {
-private:
-    // Generated statements to shadow variables into a local class.
-    AstArray<AstStatement *> *local_init_statements;
-
 public:
     AstStatement *explicit_constructor_opt;
 
-    AstExpressionStatement *original_constructor_invocation;
-
     AstMethodBody(StoragePool *pool_)
         : AstBlock(pool_),
-          local_init_statements(NULL),
-          explicit_constructor_opt(NULL),
-          original_constructor_invocation(NULL)
+          explicit_constructor_opt(NULL)
     {
         Ast::kind = Ast::METHOD_BODY;
         Ast::class_tag = Ast::STATEMENT;
@@ -1768,17 +1754,6 @@ public:
     }
 
     virtual ~AstMethodBody();
-
-    inline AstStatement *&LocalInitStatement(int i)
-    {
-        return (*local_init_statements)[i];
-    }
-    inline int NumLocalInitStatements()
-    {
-        return (local_init_statements ? local_init_statements -> Length() : 0);
-    }
-    inline void AllocateLocalInitStatements(int estimate = 0);
-    inline void AddLocalInitStatement(AstStatement *);
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
@@ -4167,6 +4142,12 @@ inline bool Ast::IsGenerated()
 // that instead of a Next() function we have an alloc(size_t) function. The
 // value of the size_t argument represents the size of the object to allocate.
 //
+// Since all AST nodes for a given parse are allocated from the same storage
+// pool, you should never need to directly allocate an AST object (with
+// operator new), and you should never need to destroy an AST object (with
+// operator delete). To reclaim memory when processing is complete, simply
+// delete the underlying storage pool.
+//
 class StoragePool
 {
 public:
@@ -6159,20 +6140,6 @@ inline void AstSwitchStatement::AddCase(CaseElement *case_element)
     if (! cases)
         AllocateCases();
     cases -> Next() = case_element;
-}
-
-inline void AstMethodBody::AllocateLocalInitStatements(int estimate)
-{
-    if (! local_init_statements)
-        local_init_statements =
-            NewAstArray<AstStatement *> (pool, estimate);
-}
-
-inline void AstMethodBody::AddLocalInitStatement(AstStatement *statement)
-{
-    if (! local_init_statements)
-        AllocateLocalInitStatements();
-    local_init_statements -> Next() = statement;
 }
 
 inline void AstVariableDeclaratorId::AllocateBrackets(int estimate)

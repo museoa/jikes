@@ -2886,6 +2886,7 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration *construc
         this0_variable -> SetLocalVariableIndex(block_symbol ->
                                                 max_variable_index++);
         this0_variable -> MarkComplete();
+        this0_variable -> MarkSynthetic();
     }
 
     for (int i = 0; i < constructor_declarator -> NumFormalParameters(); i++)
@@ -2947,6 +2948,7 @@ void Semantic::AddDefaultConstructor(TypeSymbol *type)
         this0_variable -> SetLocalVariableIndex(block_symbol ->
                                                 max_variable_index++);
         this0_variable -> MarkComplete();
+        this0_variable -> MarkSynthetic();
     }
 
     constructor -> SetSignature(control);
