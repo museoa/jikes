@@ -640,7 +640,7 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                                           &source_ptr,
                                           source_tail,
                                           &err);
-                    if(U_FAILURE(err) || before==source_ptr)
+                    if(U_FAILURE(err))
                     {
                         fprintf(stderr,"conversion error!\n");
                         break;
