@@ -1086,15 +1086,16 @@ bool Semantic::UncaughtException(TypeSymbol *exception)
         }
 
         //
-        // Check each catch clause in turn.
+        // Check each catch clause in turn if we are in the try block.
         //
-        for (int k = 0; k < try_statement -> NumCatchClauses(); k++)
-        {
-            AstCatchClause *clause = try_statement -> CatchClause(k);
-            VariableSymbol *symbol = clause -> parameter_symbol;
-            if (CanAssignmentConvertReference(symbol -> Type(), exception))
-                return false;
-        }
+        if (try_statement -> processing_try_block)
+            for (int k = 0; k < try_statement -> NumCatchClauses(); k++)
+            {
+                AstCatchClause *clause = try_statement -> CatchClause(k);
+                VariableSymbol *symbol = clause -> parameter_symbol;
+                if (CanAssignmentConvertReference(symbol -> Type(), exception))
+                    return false;
+            }
     }
 
     //
@@ -1263,6 +1264,7 @@ void Semantic::ProcessTryStatement(Ast *stmt)
     AstBlock *enclosing_block = LocalBlockStack().TopBlock();
     int max_variable_index =
         enclosing_block -> block_symbol -> max_variable_index;
+    bool continue_in_finally = false;
 
     if (try_statement -> finally_clause_opt)
     {
@@ -1295,6 +1297,7 @@ void Semantic::ProcessTryStatement(Ast *stmt)
         //
         AstBlock *block_body = try_statement -> finally_clause_opt -> block;
         block_body -> is_reachable = try_statement -> is_reachable;
+        assert(! try_statement -> can_complete_normally);
         ProcessBlock(block_body);
         max_variable_index = block_body -> block_symbol -> max_variable_index;
 
@@ -1307,19 +1310,30 @@ void Semantic::ProcessTryStatement(Ast *stmt)
             TryExceptionTableStack().Push(new SymbolSet());
             AbruptFinallyStack().Push(block_body -> nesting_level);
         }
+        //
+        // If the try statement can now complete normally, then it is the
+        // only statement in a do-while block, and the finally block contained
+        // a continue statement. Remember this for later, since the do-while
+        // loop depends on knowing if its statement completed normally.
+        //
+        continue_in_finally = try_statement -> can_complete_normally;
     }
 
     //
     // Note that the catch clauses are processed first - prior to processing
     // the main block - so that we can have their parameters available when we
     // are processing the main block, in case that block contains a throw
-    // statement. See ProcessThrowStatement for more information.
+    // statement. See ProcessThrowStatement for more information. But since
+    // a catch clause may be interrupted by an abrupt finally clause, we go
+    // ahead and push the try block on the stack now, then use the field
+    // processing_try_block later to mark the difference.
     //
     // Also, recall that the body of the catch blocks must not be
     // processed within the environment of the associated try whose
     // exceptions they are supposed to catch but within the immediate enclosing
     // block (which may itself be a try block).
     //
+    TryStatementStack().Push(try_statement);
     for (int i = 0; i < try_statement -> NumCatchClauses(); i++)
     {
         AstCatchClause *clause = try_statement -> CatchClause(i);
@@ -1427,9 +1441,9 @@ void Semantic::ProcessTryStatement(Ast *stmt)
     }
 
     //
+    // Finally, process the main try block.
     //
-    //
-    TryStatementStack().Push(try_statement);
+    try_statement -> processing_try_block = true;
     SymbolSet *exception_set = new SymbolSet;
     TryExceptionTableStack().Push(exception_set);
 
@@ -1561,6 +1575,7 @@ void Semantic::ProcessTryStatement(Ast *stmt)
         }
     }
 
+    try_statement -> processing_try_block = false;
     TryStatementStack().Pop();
     TryExceptionTableStack().Pop();
     if (TryExceptionTableStack().Top())
@@ -1578,12 +1593,15 @@ void Semantic::ProcessTryStatement(Ast *stmt)
 
     //
     // A try statement cannot complete normally if it contains a finally
-    // clause that cannot complete normally. Clean up from above.
+    // clause that cannot complete normally. But remember that a continue
+    // statement may have already marked the try statement as completing
+    // normally. Clean up from above.
     //
     if (try_statement -> finally_clause_opt &&
         ! try_statement -> finally_clause_opt -> block -> can_complete_normally)
     {
-        try_statement -> can_complete_normally = false;
+        if (! continue_in_finally)
+            try_statement -> can_complete_normally = false;
         delete TryExceptionTableStack().Top();
         TryExceptionTableStack().Pop();
         AbruptFinallyStack().Pop();

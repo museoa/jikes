@@ -1,5 +1,13 @@
 2002-07-19  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/ast.h (processing_try_block): Add.
+	* src/body.cpp (UncaughtException, ProcessTryStatement): 
+	Fix try-block handling, when a catch clause is interrupted by an
+	abrupt finally, and when a try-finally is the sole statement in a
+	do-while loop - bug 613.
+
+2002-07-19  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/decl.cpp (CheckMethodOverride, AddInheritedMethods): Fix
 	method overriding to detect package scope method conflicts when
 	the method was not inherited.

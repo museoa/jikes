@@ -2898,9 +2898,11 @@ public:
     LexStream::TokenIndex try_token;
     AstBlock *block;
     AstFinallyClause *finally_clause_opt;
+    bool processing_try_block;
 
     AstTryStatement(StoragePool *pool_) : catch_clauses(NULL),
-                                          finally_clause_opt(NULL)
+                                          finally_clause_opt(NULL),
+                                          processing_try_block(false)
     {
         Ast::kind = Ast::TRY;
         Ast::class_tag = Ast::STATEMENT;
