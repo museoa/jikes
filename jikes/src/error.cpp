@@ -1214,7 +1214,7 @@ void SemanticError::InitializeMessages()
         "The file \"%1\" is not a valid directory.";
     messages[PACKAGE_NOT_FOUND] =
         "You need to modify your classpath, sourcepath, bootclasspath, "
-        "and/or extdirs setup. Package \"%P1\" could not be found in: %C";
+        "and/or extdirs setup. Jikes could not find %P1 in: %C";
     messages[CANNOT_OPEN_DIRECTORY] = "Unable to open directory \"%1\".";
     messages[BAD_INPUT_FILE] =
         "The input file \"%1\" does not have the \".java\" extension.";
@@ -1436,7 +1436,7 @@ void SemanticError::InitializeMessages()
     messages[UNUSED_TYPE_IMPORT] =
         "Unnecessary import of type \"%T1\". The type is never referenced.";
     messages[UNUSED_PACKAGE_IMPORT] =
-        "Unnecessary import of \"%P1\". No types of this package are "
+        "Unnecessary import of %P1. No types of this package are "
         "referenced.";
     messages[DUPLICATE_ACCESS_MODIFIER] =
         "Duplicate specification of an access modifier. "
@@ -1456,7 +1456,7 @@ void SemanticError::InitializeMessages()
         "All files that depend on this source file, in particular, "
         "%F1.java should be recompiled.";
     messages[PACKAGE_NOT_TYPE] =
-        "Package \"%P1\" was found when a type was expected.";
+        "Found %P1 when a type was expected.";
     messages[TYPE_NOT_FOUND] =
         "Type \"%T1\" was not found.";
     messages[INVALID_TYPE_FOUND] =
@@ -1466,7 +1466,7 @@ void SemanticError::InitializeMessages()
         "Type \"%1\" exists in the unnamed package, and "
         "cannot be imported. Consider putting it into a named package.";
     messages[DUPLICATE_ON_DEMAND_IMPORT] =
-        "Type %1 is imported on demand from %2 and %3.";
+        "Type \"%1\" is imported on demand from %P2 and %P3.";
     messages[UNKNOWN_ON_DEMAND_IMPORT] =
         "The import \"%1\" is not valid, since it does not name a type "
         "in a package.";
@@ -2006,6 +2006,8 @@ void SemanticError::InitializeMessages()
     messages[TYPE_NAME_MISMATCH] =
         "The name of the type specified, \"%T1\", does not match "
         "the name found in the class file: \"%3\".";
+
+    // Deprecation errors.
     messages[DEPRECATED_TYPE] =
         "The type \"%T1\" has been deprecated.";
     messages[DEPRECATED_FIELD] =
