@@ -193,7 +193,7 @@ void CPUtf8Info::Init(u2 size)
             break;
 #endif // JIKES_DEBUG
         default:
-            if (bytes[i] < 0x7f) // printing ASCII
+            if (bytes[i] <= 0x7f) // 1-byte (printing ASCII, if JIKES_DEBUG)
             {
 #ifdef JIKES_DEBUG
                 contents.Next() = bytes[i];
@@ -213,9 +213,10 @@ void CPUtf8Info::Init(u2 size)
 #endif // JIKES_DEBUG
                     break;
                 }
+                ++i;
 #ifdef JIKES_DEBUG
-                u2 value = (bytes[i] & 0x1f) << 6;
-                value |= bytes[++i] & 0x3f;
+                u2 value = (bytes[i - 1] & 0x1f) << 6;
+                value |= bytes[i] & 0x3f;
                 contents.Next() = '\\';
                 contents.Next() = 'u';
                 tmp = IntToString(value, 4).String();
@@ -242,10 +243,11 @@ void CPUtf8Info::Init(u2 size)
 #endif // JIKES_DEBUG
                     break;
                 }
+                i += 2;
 #ifdef JIKES_DEBUG
-                u2 value = (bytes[i] & 0x0f) << 12;
-                value |= (bytes[++i] & 0x3f) << 6;
-                value |= bytes[++i] & 0x3f;
+                u2 value = (bytes[i - 2] & 0x0f) << 12;
+                value |= (bytes[i - 1] & 0x3f) << 6;
+                value |= bytes[i] & 0x3f;
                 contents.Next() = '\\';
                 contents.Next() = 'u';
                 tmp = IntToString(value, 4).String();
