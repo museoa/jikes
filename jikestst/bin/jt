@@ -10,11 +10,12 @@
 #
 #set -vx
 # adjust next line to point to your jikes executable
-COMP=/u/shields/jp/mk/jikes
+COMP=~/src/jikes/src/jikes
 
 SRCDIR=../src
 CPATH=$CLASSPATH
-COMPARGS="-nowarn"
+REQCOMPARGS="-nowarn"
+COMPARGS=$REQCOMPARGS
 FILE=$(basename $1 .d)
 exec 3<$FILE.d
 exec 4>$FILE.r
@@ -33,7 +34,7 @@ do
       echo "jt $1 $2"
       NAME=$2
       case $3 in
-        [A-Za-z]*)	CLASS=$3
+        [A-Za-z][A-Za-z0-9]*)	CLASS=$3
     		;;
         *)		CLASS=Test
     		;;
@@ -83,6 +84,11 @@ do
       shift
       shift
       ARGS=$*
+      ;;
+    a)	# remaining args are used as arguments when compile
+      shift
+      COMPARGS="$REQCOMPARGS $*"
+      print -u4 "new compilation arguments: $COMPARGS"
       ;;
   esac
 
@@ -148,6 +154,8 @@ do
     Z)	# undone - don't know how to handle
 	print -u4 "undone: $2"
 	;;
+    a)
+      ;;
     *)
 	print -u4 "unknown test kind: $1 $2"
   esac

@@ -29,6 +29,8 @@ machine he wrote early in 1996,</li>
 Java team.</li>,
 <li>The <code>spec</code> tests, based on the program fragments in the
 published Java Language Specification,</li>
+<li>The <code>unicode</code> tests, Test various aspects of Unicode support.
+</li>
 <li>Version 2.1.1. of the Modena Test Suite,</li>
 <li>The <code>lang</code> component of Sun's JCK test suite for JDK 1.1.4.</li>
 </ul>
@@ -111,6 +113,8 @@ The supported commands are as follows:
 <dl>
 <dt><code>#</code>
 <dd>comment
+<dt><code>a</code> <em>params</em>
+<dd>Add <em>params</em> to compiler command line for all subsequence tests.
 <dt><code>c</code> <em>file</em> <em>class</em>
 <dd>copy source file <em>file</em><code>.java</code> to file local <em>class</em><code>.java</code>
     and compile it, saving compiler output in <em>file</em>.c
