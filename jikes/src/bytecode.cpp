@@ -1280,14 +1280,14 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *sws)
     // Use tableswitch if have exact match or size of tableswitch
     // case is no more than 30 bytes more code than lookup case
     //
-    int ncases = sws -> map.Length(),
+    int ncases = sws -> NumCases(),
         nlabels = ncases,
         high = 0,
         low = 0;
     if (ncases > 0)
     {
-        low = sws -> map[0] -> Value();
-        high = sws -> map[ncases - 1] -> Value();
+        low = sws -> Case(0) -> Value();
+        high = sws -> Case(ncases - 1) -> Value();
 
         //
         // want to compute
@@ -1337,8 +1337,8 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *sws)
 
         for (int i = 0; i < ncases; i++)
         {
-            PutU4(sws -> map[i] -> Value());
-            UseLabel(case_labels[sws -> map[i] -> index], 4, code_attribute -> CodeLength() - op_start);
+            PutU4(sws -> Case(i) -> Value());
+            UseLabel(case_labels[sws -> Case(i) -> index], 4, code_attribute -> CodeLength() - op_start);
         }
     }
     else
@@ -1366,7 +1366,7 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *sws)
                 AstCaseLabel *case_label = sbs -> SwitchLabel(li) -> CaseLabelCast();
                 if (case_label)
                 {
-                    int label_index = sws -> map[case_label -> map_index] -> Value() - low;
+                    int label_index = sws -> Case(case_label -> map_index) -> Value() - low;
                     has_tag[label_index] = true;
                 }
             }
@@ -1415,11 +1415,11 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *sws)
                     //
                     // TODO: Do this more efficiently ???!!!
                     //
-                    for (int di = 0; di < sws -> map.Length(); di++)
+                    for (int di = 0; di < sws -> NumCases(); di++)
                     {
-                        if (sws -> map[di] -> index == map_index)
+                        if (sws -> Case(di) -> index == map_index)
                         {
-                            int ci = sws -> map[di] -> Value() - low;
+                            int ci = sws -> Case(di) -> Value() - low;
                             DefineLabel(case_labels[ci]);
                             break;
                         }

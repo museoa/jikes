@@ -486,8 +486,6 @@ public:
 template <class T>
 class AstArray
 {
-    enum { DEFAULT_LOG_BLKSIZE = 4, DEFAULT_BASE_INCREMENT = 16 };
-
     T **base;
     int base_size,
         top,
@@ -501,7 +499,7 @@ class AstArray
     //
     // Allocate another block of storage for the Ast array.
     //
-    inline void AllocateMoreSpace();
+    void AllocateMoreSpace();
 
 public:
 
@@ -552,37 +550,7 @@ public:
     //
     // Constructor of a ast array.
     //
-    AstArray(StoragePool *pool_, unsigned estimate = 0) : pool(pool_)
-    {
-        if (estimate == 0)
-        {
-            log_blksize = DEFAULT_LOG_BLKSIZE;
-            base_increment = DEFAULT_BASE_INCREMENT;
-        }
-        else
-        {
-            for (log_blksize = 1; (((unsigned) 1 << log_blksize) < estimate) && (log_blksize < 31); log_blksize++)
-                ;
-            if (log_blksize <= DEFAULT_LOG_BLKSIZE)
-                base_increment = 1;
-            else if (log_blksize < 13)
-            {
-                base_increment = (unsigned) 1 << (log_blksize - 4);
-                log_blksize = 4;
-            }
-            else
-            {
-                base_increment = (unsigned) 1 << (log_blksize - 8);
-                log_blksize = 8;
-            }
-            base_increment++; // add a little margin to avoid reallocating the base.
-        }
-
-        base_size = 0;
-        size = 0;
-        top = 0;
-        base = NULL;
-    }
+    AstArray(StoragePool *, unsigned);
 
     //
     // Destructor of an Ast array.
@@ -2305,15 +2273,18 @@ public:
 // 
 class AstSwitchStatement : public AstStatement
 {
+    StoragePool *pool;
+    AstArray<CaseElement *> *cases;
+
 public:
-    AstArray<CaseElement *> map;
     CaseElement default_case;
 
     LexStream::TokenIndex switch_token;
     AstExpression *expression;
     AstBlock *switch_block;
 
-    AstSwitchStatement(StoragePool *pool) : map(pool)
+    AstSwitchStatement(StoragePool *pool_) : pool(pool_),
+                                             cases(NULL)
     {
         Ast::kind = Ast::SWITCH;
         Ast::class_tag = Ast::STATEMENT;
@@ -2323,6 +2294,11 @@ public:
     }
 
     virtual ~AstSwitchStatement();
+
+    inline CaseElement *&Case(int i) { return (*cases)[i]; }
+    inline int NumCases() { return (cases ? cases -> Length() : 0); }
+    inline void AllocateCases(int estimate = 0);
+    inline void AddCase(CaseElement *);
 
     void SortCases();
 
@@ -3878,7 +3854,13 @@ inline bool Ast::IsGenerated()
 //
 class StoragePool
 {
-    typedef void * Cell;
+public:
+
+    typedef void *Cell;
+
+    inline size_t Blksize() { return (1 << log_blksize); }
+
+private:
 
     Cell **base;
     int base_size,
@@ -3888,12 +3870,10 @@ class StoragePool
     size_t log_blksize,
            base_increment;
 
-    inline size_t Blksize() { return (1 << log_blksize); }
-
     //
     // Allocate another block of storage for the storage pool
     //
-    inline void AllocateMoreSpace()
+    void AllocateMoreSpace()
     {
         //
         // The variable size always indicates the maximum number of
@@ -4034,14 +4014,15 @@ public:
     //
     inline void *Alloc(size_t n)
     {
-        size_t i = top;
-        top += ((n + sizeof(Cell) - 1) / sizeof(Cell));
+        size_t i = top,
+               chunk_size = ((n + sizeof(Cell) - 1) / sizeof(Cell));
+        top += chunk_size;
         if (top > size)
         {
-            if (n > Blksize()) // we cannot allocate a chunk of storage that is larger than the block !
-                assert(false);
+            assert(chunk_size <= Blksize() && "we cannot allocate a chunk of storage that is larger than the block !");
+
             i = size;
-            top = size + ((n + sizeof(Cell) - 1) / sizeof(Cell));
+            top = size + chunk_size;
             AllocateMoreSpace();
         }
 
@@ -4093,6 +4074,11 @@ public:
     inline AstArray<Ast *> *NewAstArray(unsigned size = 0)
     {
         return new (Alloc(sizeof(AstArray<Ast *>))) AstArray<Ast *>((StoragePool *) this, size);
+    }
+
+    inline AstArray<CaseElement *> *NewCaseElementArray(unsigned size = 0)
+    {
+        return new (Alloc(sizeof(AstArray<CaseElement *>))) AstArray<CaseElement *>((StoragePool *) this, size);
     }
 
     inline AstListNode *NewListNode()
@@ -4960,65 +4946,6 @@ public:
     }
 };
 
-//
-// Allocate another block of storage for the ast array.
-//
-template <class T>
-    void AstArray<T>::AllocateMoreSpace()
-    {
-        //
-        //
-        // The variable size always indicates the maximum number of
-        // elements that has been allocated for the array.
-        // Initially, it is set to 0 to indicate that the array is empty.
-        // The pool of available elements is divided into segments of size
-        // 2**log_blksize each. Each segment is pointed to by a slot in
-        // the array base.
-        //
-        // By dividing size by the size of the segment we obtain the
-        // index for the next segment in base. If base is full, it is
-        // reallocated.
-        //
-        //
-        int k = size >> log_blksize; /* which segment? */
-    
-        //
-        // If the base is overflowed, reallocate it and initialize the new elements to NULL.
-        //
-        if (k == base_size)
-        {
-            int old_base_size = base_size;
-            T **old_base = base;
-    
-            base_size += base_increment;
-            base = (T **) pool -> Alloc(sizeof(T *) * base_size);
-    
-            if (old_base != NULL)
-            {
-                memmove(base, old_base, old_base_size * sizeof(T *));
-// STG:
-//                delete [] old_base;
-            }
-            memset(&base[old_base_size], 0, (base_size - old_base_size) * sizeof(T *));
-        }
-    
-        //
-        // We allocate a new segment and place its adjusted address in 
-        // base[k]. The adjustment allows us to index the segment directly,
-        // instead of having to perform a subtraction for each reference.
-        // See operator[] below.
-        //
-        base[k] = (T *) pool -> Alloc(sizeof(T) * Blksize());
-        base[k] -= size;
-    
-        //
-        // Finally, we update size.
-        //
-        size += Blksize();
-    
-        return;
-    }
-
 inline void AstClassBody::AllocateInstanceVariables(int estimate)
 {
     if (! instance_variables)
@@ -5329,6 +5256,19 @@ inline void AstSwitchBlockStatement::AddSwitchLabel(Ast *case_or_default_label)
     if (! switch_labels)
         AllocateSwitchLabels();
     switch_labels -> Next() = case_or_default_label;
+}
+
+inline void AstSwitchStatement::AllocateCases(int estimate)
+{
+    if (! cases)
+        cases = pool -> NewCaseElementArray(estimate);
+}
+
+inline void AstSwitchStatement::AddCase(CaseElement *case_element)
+{
+    if (! cases)
+        AllocateCases();
+    cases -> Next() = case_element;
 }
 
 inline void AstConstructorBlock::AllocateLocalInitStatements(int estimate)

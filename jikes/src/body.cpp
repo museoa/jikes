@@ -549,18 +549,29 @@ void Semantic::ProcessSwitchStatement(Ast *stmt)
     switch_statement -> default_case.switch_block_statement = NULL;
 
     //
-    // A switch block is reachable iff its switch statement is reachable.
+    // Count the number case labels in this switch statement
     //
-    block_body -> is_reachable = switch_statement -> is_reachable;
+    int num_case_labels = 0;
     for (int i = 0; i < block_body -> NumStatements(); i++)
     {
         AstSwitchBlockStatement *switch_block_statement = (AstSwitchBlockStatement *) block_body -> Statement(i);
+        num_case_labels += switch_block_statement -> NumSwitchLabels();
+    }
+    switch_statement -> AllocateCases(num_case_labels);
 
-        for (int j = 0; j < switch_block_statement -> NumSwitchLabels(); j++)
+    //
+    // A switch block is reachable iff its switch statement is reachable.
+    //
+    block_body -> is_reachable = switch_statement -> is_reachable;
+    for (int j = 0; j < block_body -> NumStatements(); j++)
+    {
+        AstSwitchBlockStatement *switch_block_statement = (AstSwitchBlockStatement *) block_body -> Statement(j);
+
+        for (int k = 0; k < switch_block_statement -> NumSwitchLabels(); k++)
         {
-            AstCaseLabel *case_label;
+            AstCaseLabel *case_label = switch_block_statement -> SwitchLabel(k) -> CaseLabelCast();
 
-            if (case_label = switch_block_statement -> SwitchLabel(j) -> CaseLabelCast())
+            if (case_label)
             {
                 ProcessExpression(case_label -> expression);
 
@@ -580,10 +591,10 @@ void Semantic::ProcessSwitchStatement(Ast *stmt)
                             if (case_label -> expression -> Type() != type)
                                 case_label -> expression = ConvertToType(case_label -> expression, type);
 
-                            case_label -> map_index = switch_statement -> map.Length();
+                            case_label -> map_index = switch_statement -> NumCases();
 
                             CaseElement *case_element = compilation_unit -> ast_pool -> GenCaseElement();
-                            switch_statement -> map.Next() = case_element;
+                            switch_statement -> AddCase(case_element);
 
                             case_element -> expression = case_label -> expression;
                             case_element -> switch_block_statement = switch_block_statement;
@@ -616,8 +627,8 @@ void Semantic::ProcessSwitchStatement(Ast *stmt)
             else
             {
                 ReportSemError(SemanticError::MULTIPLE_DEFAULT_LABEL,
-                               ((AstDefaultLabel *) switch_block_statement -> SwitchLabel(j)) -> LeftToken(),
-                               ((AstDefaultLabel *) switch_block_statement -> SwitchLabel(j)) -> RightToken());
+                               ((AstDefaultLabel *) switch_block_statement -> SwitchLabel(k)) -> LeftToken(),
+                               ((AstDefaultLabel *) switch_block_statement -> SwitchLabel(k)) -> RightToken());
             }
         }
 
@@ -712,15 +723,15 @@ void Semantic::ProcessSwitchStatement(Ast *stmt)
     }
 
     switch_statement -> SortCases();
-    for (int k = 1; k < switch_statement -> map.Length(); k++)
+    for (int k = 1; k < switch_statement -> NumCases(); k++)
     {
-        if (switch_statement -> map[k] -> Value() == switch_statement -> map[k - 1] -> Value())
+        if (switch_statement -> Case(k) -> Value() == switch_statement -> Case(k - 1) -> Value())
         {
-            IntToWstring value(switch_statement -> map[k] -> Value());
+            IntToWstring value(switch_statement -> Case(k) -> Value());
 
             ReportSemError(SemanticError::DUPLICATE_CASE_VALUE,
-                           switch_statement -> map[k] -> expression -> LeftToken(),
-                           switch_statement -> map[k] -> expression -> RightToken(),
+                           switch_statement -> Case(k) -> expression -> LeftToken(),
+                           switch_statement -> Case(k) -> expression -> RightToken(),
                            value.String());
         }
     }
