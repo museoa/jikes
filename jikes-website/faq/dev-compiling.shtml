@@ -39,38 +39,14 @@
         <tr>
           <td><!-- #BeginEditable "TopicContent" --> 
             <h1>Compiling</h1>
-            <h2>Compile chain</h2>
-            <p>To compile Jikes, you'll need a shell, a GNU make and a compiler 
-              (can be the GNU one). Note that it's possible to use integrated 
-              development environments (see the section related to your platform 
-              to see if somebody has already done the work for you), but the build 
-              configuration step is mandatory in any case.</p>
-            <div style="text-align: center"> 
-              <table border="0" cellspacing="0" cellpadding="1" align="center">
-                <tr> 
-                  <td class="HighlightedFrameBorder"> 
-                    <table width="100%" border="0" cellspacing="0" cellpadding="10">
-                      <tr> 
-                        <td class="HighlightedFrameBackground"> Install or check 
-                          the tools below:<br>
-                          <br>
-                          Needed: list of tools (make, ...) / required minimum 
-                          versions??? </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </div>
-            <p>&nbsp;</p>
-            <p>Additional development tools from GNU will be needed if you plan 
-              to do more than just compiling Jikes (autoconf, automake...). The 
-              online documentation for these tools can be found at <a href="http://www.gnu.org/manual/">http://www.gnu.org/manual/</a>.</p>
+            <h2>Tools</h2>
+            <p>To compile Jikes, you'll need a shell, GNU make and a C++
+              compiler.</p>
             <p>&nbsp;</p>
             <h2><a name="build-env-config"></a>Build environment configuration</h2>
             <p>Jikes uses an autoconf/automake script, <code>configure</code>, 
-              which goal is to detect automatically the capabilities of your platform, 
-              and set the appropriate flags. The <code>configure</code> script 
+              to automatically detect the capabilities of your platform, 
+              and set the appropriate compiler flags. The <code>configure</code> script 
               is available at the root of the Jikes source tree.</p>
             <p>This script will run several tests and basically creates two important 
               files:</p>
@@ -139,9 +115,7 @@
                         <td class="DimmedFrameBackground"><code>CXX=</code>[C++ 
                           compiler]<br>
                           <code>CXXFLAGS=</code>[C++ compiler flags]<br>
-                          <code>CPPFLAGS=</code>[C++ preprocessor flags]<br>
-                          <code>--host</code>=[host platform] and<br>
-                          <code>--build</code>=[targetted platform] (cross-compiling)</td>
+                          <code>--host</code>=[host platform]<br>
                       </tr>
                     </table>
                   </td>
@@ -152,7 +126,7 @@
             <h2><a name="build-other-dir"></a>Building in a different directory</h2>
             <p>If you want to have the object files (.o) and jikes executable 
               created in a separate directory (somewhat more clean to separate 
-              source code and objet files; also useful when having more than one 
+              source code and object files; also useful when having more than one 
               build configuration), just go to the wanted directory and invoke 
               the <code>configure</code> script from there. The files will be 
               created under this directory, including the <code>Makefile</code> 
@@ -212,7 +186,7 @@
                   <td class="HighlightedFrameBorder"> 
                     <table width="100%" border="0" cellspacing="0" cellpadding="10">
                       <tr> 
-                        <td class="HighlightedFrameBackground"> <code>./make</code><br>
+                        <td class="HighlightedFrameBackground"> <code>make</code><br>
                           <code>jikes</code> is generated in <code>src/</code> 
                           directory</td>
                       </tr>
@@ -236,7 +210,7 @@
                   <td class="DimmedFrameBorder"> 
                     <table width="100%" border="0" cellspacing="0" cellpadding="10">
                       <tr> 
-                        <td class="DimmedFrameBackground"><code>./make clean</code></td>
+                        <td class="DimmedFrameBackground"><code>make clean</code></td>
                       </tr>
                     </table>
                   </td>
