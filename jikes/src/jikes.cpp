@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
     {
         fprintf(stderr,
                 "\nJikes Compiler"
-                "\n(C) Copyright IBM Corp. 1997, 2000.\n"
+                "\n(C) Copyright IBM Corp. 1997, 2001.\n"
                 "- Licensed Materials - Program Property of IBM - All Rights Reserved.\n\n");
         fprintf(stderr, "%s", StringConstant::U8S_command_format);
         fprintf(stderr,

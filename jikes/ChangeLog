@@ -1,3 +1,13 @@
+2000-03-01  Mo DeJong  <mdejong@redhat.com>
+
+	Released Jikes 1.13.
+
+2001-02-27  Mo DeJong  <mdejong@redhat.com>
+
+	* TODO: Add note about reverted patch.
+	* doc/jikes.1: Fixup man page.
+	* src/jikes.cpp: Fixup copyright year.
+
 2001-02-27  Mo DeJong  <mdejong@redhat.com>
 
 	* HACKING:

@@ -82,7 +82,7 @@ to be done in a more general stream class not
 one that does lexing. That way, it could also
 be used in the Option class to process @ files.
 
-(FIXED)
+(FIXED, reverted since it caused other problems )
 
 
 Add new floating point emulation support code.
