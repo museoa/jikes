@@ -230,7 +230,6 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     int line_number,
         last_label_pc,        // pc for last (closest to end) label
         last_op_pc,           // pc of last operation emitted
-        last_op_nop,          // set if last operation was NOP.
         stack_depth,          // current stack depth;
         max_stack,
         max_block_depth,
@@ -238,7 +237,8 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     MethodStack *method_stack;
 
     bool string_overflow,
-         library_method_not_found;
+         library_method_not_found,
+         last_op_goto;        // set if last operation was GOTO or GOTO_W.
 
     Code_attribute *code_attribute; // code for current method ?
     LineNumberTable_attribute *line_number_table_attribute;
@@ -249,10 +249,8 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     {
         last_label_pc = 0;
         last_op_pc = 0;
-        last_op_nop = 0;
-
+        last_op_goto = false;
         stack_depth = 0;
-
         max_stack = 0;
     }
 
@@ -784,10 +782,10 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void InitializeInstanceVariable(AstVariableDeclarator *);
     void InitializeArray(TypeSymbol *, AstArrayInitializer *);
     void DeclareLocalVariable(AstVariableDeclarator *);
-    void EmitStatement(AstStatement *);
+    bool EmitStatement(AstStatement *);
     void EmitReturnStatement(AstReturnStatement *);
-    void EmitSynchronizedStatement(AstSynchronizedStatement *);
-    void EmitBlockStatement(AstBlock *);
+    bool EmitSynchronizedStatement(AstSynchronizedStatement *);
+    bool EmitBlockStatement(AstBlock *);
     void EmitStatementExpression(AstExpression *);
     void EmitSwitchStatement(AstSwitchStatement *);
     void EmitTryStatement(AstTryStatement *);

@@ -188,11 +188,13 @@ void ByteCode::CompileClass()
 
         int fi = 0,
             bi = 0;
-        while (fi < initialized_instance_fields.Length() && bi < class_body -> NumBlocks())
+        bool abrupt = false;
+        while (fi < initialized_instance_fields.Length() &&
+               bi < class_body -> NumBlocks() && ! abrupt)
         {
             if (initialized_instance_fields[fi] -> LeftToken() < class_body -> Block(bi) -> left_brace_token)
                  InitializeInstanceVariable(initialized_instance_fields[fi++]);
-            else EmitStatement(class_body -> Block(bi++));
+            else abrupt = EmitStatement(class_body -> Block(bi++));
         }
 
         while (fi < initialized_instance_fields.Length())
@@ -201,16 +203,16 @@ void ByteCode::CompileClass()
         //
         // compile any initialization blocks
         //
-        while (bi < class_body -> NumBlocks())
-            EmitStatement(class_body -> Block(bi++));
+        while (bi < class_body -> NumBlocks() && ! abrupt)
+            abrupt = EmitStatement(class_body -> Block(bi++));
 
-        PutOp(OP_RETURN);
+        if (! abrupt)
+            PutOp(OP_RETURN);
         EndMethod(method_index, block_init_method);
     }
 
     //
     // Compile generated constructors.
-    //
     //
     if (unit_type -> NumGeneratedConstructors() == 0)
     {
@@ -356,20 +358,25 @@ void ByteCode::CompileClass()
         //
         int fi = 0,
             bi = 0;
-        while (fi < class_body -> NumStaticInitializers() && bi < initialized_static_fields.Length())
+        bool abrupt = false;
+        while (fi < class_body -> NumStaticInitializers() &&
+               bi < initialized_static_fields.Length() && ! abrupt)
         {
             if (class_body -> StaticInitializer(fi) -> static_token < initialized_static_fields[bi] -> LeftToken())
-                 EmitStatement(class_body -> StaticInitializer(fi++) -> block);
+                abrupt = EmitStatement(class_body ->
+                                       StaticInitializer(fi++) -> block);
             else InitializeClassVariable(initialized_static_fields[bi++]);
         }
 
-        while (fi < class_body -> NumStaticInitializers())
-            EmitStatement(class_body -> StaticInitializer(fi++) -> block);
+        while (fi < class_body -> NumStaticInitializers() && ! abrupt)
+            abrupt = EmitStatement(class_body -> StaticInitializer(fi++) ->
+                                   block);
 
         while (bi < initialized_static_fields.Length())
             InitializeClassVariable(initialized_static_fields[bi++]);
 
-        PutOp(OP_RETURN);
+        if (! abrupt)
+            PutOp(OP_RETURN);
         EndMethod(method_index, unit_type -> static_initializer_method);
     }
     else assert(class_body -> NumStaticInitializers() == 0 &&
@@ -560,11 +567,13 @@ void ByteCode::CompileConstructor(AstConstructorDeclaration *constructor,
         EmitStatement((AstStatement *) constructor_block -> explicit_constructor_invocation_opt);
     else
     {
-        assert(unit_type == control.Object() && "A constructor block without an explicit constructor_invocation");
+        assert(unit_type == control.Object() &&
+               "A constructor block without an explicit constructor_invocation");
     }
 
     // supply needed field initialization unless constructor
     // starts with explicit 'this' call to another constructor
+    bool abrupt = false;
     if (! (constructor_block -> explicit_constructor_invocation_opt &&
            constructor_block -> explicit_constructor_invocation_opt -> ThisCallCast()))
     {
@@ -589,15 +598,23 @@ void ByteCode::CompileConstructor(AstConstructorDeclaration *constructor,
             int fi = 0,
                 bi = 0;
 
-            while (fi < initialized_fields.Length() && bi < class_body -> NumBlocks())
+            while (fi < initialized_fields.Length() &&
+                   bi < class_body -> NumBlocks() && ! abrupt)
             {
-                if (initialized_fields[fi] -> LeftToken() < class_body -> Block(bi) -> left_brace_token)
+                if (initialized_fields[fi] -> LeftToken() <
+                    class_body -> Block(bi) -> left_brace_token)
+                {
                     InitializeInstanceVariable(initialized_fields[fi++]);
+                }
                 else
                 {
                     AstBlock *block = class_body -> Block(bi++);
-                    for (int si = 0; si < block -> NumStatements(); si++)
-                        EmitStatement((AstStatement *) block -> Statement(si));
+                    for (int si = 0;
+                         si < block -> NumStatements() && ! abrupt; si++)
+                    {
+                        abrupt = EmitStatement((AstStatement *) block ->
+                                               Statement(si));
+                    }
                 }
             }
 
@@ -605,11 +622,15 @@ void ByteCode::CompileConstructor(AstConstructorDeclaration *constructor,
                 InitializeInstanceVariable(initialized_fields[fi++]);
 
             // compile any initialization blocks
-            while (bi < class_body -> NumBlocks())
+            while (bi < class_body -> NumBlocks() && ! abrupt)
             {
                 AstBlock *block = class_body -> Block(bi++);
-                for (int si = 0; si < block -> NumStatements(); si++)
-                    EmitStatement((AstStatement *) block -> Statement(si));
+                for (int si = 0;
+                     si < block -> NumStatements() && ! abrupt; si++)
+                {
+                    abrupt = EmitStatement((AstStatement *) block ->
+                                           Statement(si));
+                }
             }
         }
         else // generate a call to the parameterless function block_initializer_function
@@ -620,8 +641,8 @@ void ByteCode::CompileConstructor(AstConstructorDeclaration *constructor,
         }
     }
 
-    EmitStatement(constructor_block -> block);
-
+    if (! abrupt)
+        EmitStatement(constructor_block -> block);
     EndMethod(method_index, method_symbol);
 }
 
@@ -1098,7 +1119,11 @@ void ByteCode::DeclareLocalVariable(AstVariableDeclarator *declarator)
 // Labels allocated but never used incur no extra cost in the generated
 // byte code, only in additional execution expense during compilation.
 //
-void ByteCode::EmitStatement(AstStatement *statement)
+// This method returns true if the statement is guaranteed to complete
+// abruptly (break, continue, throw, return, and special cases of if); it
+// allows some dead code elimination.
+//
+bool ByteCode::EmitStatement(AstStatement *statement)
 {
     if (! statement -> BlockCast())
     {
@@ -1111,71 +1136,72 @@ void ByteCode::EmitStatement(AstStatement *statement)
     switch (statement -> kind)
     {
     case Ast::BLOCK: // JLS 14.2
-        EmitBlockStatement((AstBlock *) statement);
-        break;
+        return EmitBlockStatement((AstBlock *) statement);
     case Ast::LOCAL_VARIABLE_DECLARATION: // JLS 14.3
         {
             AstLocalVariableDeclarationStatement *lvds = statement -> LocalVariableDeclarationStatementCast();
             for (int i = 0; i < lvds -> NumVariableDeclarators(); i++)
                 DeclareLocalVariable(lvds -> VariableDeclarator(i));
         }
-        break;
+        return false;
     case Ast::EMPTY_STATEMENT: // JLS 14.5
-        break;
+        return false;
     case Ast::EXPRESSION_STATEMENT: // JLS 14.7
         EmitStatementExpression(statement -> ExpressionStatementCast() -> expression);
-        break;
+        return false;
     case Ast::IF: // JLS 14.8
         {
             AstIfStatement *if_statement = (AstIfStatement *) statement;
+            // Constant condition.
             if (IsOne(if_statement -> expression))
-                EmitStatement(if_statement -> true_statement);
-            else if (IsZero(if_statement -> expression))
+                return EmitStatement(if_statement -> true_statement);
+            if (IsZero(if_statement -> expression))
             {
-                // if there is false part
                 if (if_statement -> false_statement_opt)
-                    EmitStatement(if_statement -> false_statement_opt);
+                    return EmitStatement(if_statement -> false_statement_opt);
+                return false;
             }
-            else if (if_statement -> false_statement_opt)
+            // True and false parts.
+            if (if_statement -> false_statement_opt)
             {
-                // if true and false parts
                 Label label1,
                       label2;
+                bool abrupt;
                 AstStatement *true_statement = if_statement -> true_statement;
                 EmitBranchIfExpression(if_statement -> expression,
                                        false, label1, true_statement);
                 assert(stack_depth == 0);
 
-                EmitStatement(true_statement);
-                if (true_statement -> can_complete_normally)
+                abrupt = EmitStatement(true_statement);
+                if (! abrupt)
                     EmitBranch(OP_GOTO, label2,
                                if_statement -> false_statement_opt);
 
                 DefineLabel(label1);
-                EmitStatement(if_statement -> false_statement_opt);
+                abrupt &= EmitStatement(if_statement -> false_statement_opt);
 
-                if (true_statement -> can_complete_normally)
+                if (! abrupt)
+                {
                     DefineLabel(label2);
-
+                    CompleteLabel(label2);
+                }
                 CompleteLabel(label1);
-                CompleteLabel(label2);
+                return abrupt;
             }
-            else // if no false part
-            {
-                Label label1;
-                EmitBranchIfExpression(if_statement -> expression,
-                                       false, label1,
-                                       if_statement -> true_statement);
-                assert(stack_depth == 0);
-                EmitStatement(if_statement -> true_statement);
-                DefineLabel(label1);
-                CompleteLabel(label1);
-            }
+            // No false part.
+            Label label1;
+            EmitBranchIfExpression(if_statement -> expression,
+                                   false, label1,
+                                   if_statement -> true_statement);
+            assert(stack_depth == 0);
+            EmitStatement(if_statement -> true_statement);
+            DefineLabel(label1);
+            CompleteLabel(label1);
+            return false;
         }
-        break;
     case Ast::SWITCH: // JLS 14.9
         EmitSwitchStatement(statement -> SwitchStatementCast());
-        break;
+        return ! statement -> can_complete_normally;
     case Ast::SWITCH_BLOCK: // JLS 14.9
     case Ast::CASE:
     case Ast::DEFAULT:
@@ -1184,10 +1210,11 @@ void ByteCode::EmitStatement(AstStatement *statement)
         // are not directly visited
         //
         assert(false && "faulty logic encountered");
-        break;
+        return false;
     case Ast::WHILE: // JLS 14.10
         {
             AstWhileStatement *wp = statement -> WhileStatementCast();
+            bool abrupt = false;
             //
             // Branch to continuation test. This test is placed after the
             // body of the loop we can fall through into it after each
@@ -1201,6 +1228,7 @@ void ByteCode::EmitStatement(AstStatement *statement)
                     // must be true, or internal statement would be
                     // unreachable
                     assert(semantic.IsConstantTrue(wp -> expression));
+                    abrupt = true;
                 }
                 else
                 {
@@ -1211,10 +1239,10 @@ void ByteCode::EmitStatement(AstStatement *statement)
                                            wp -> statement);
                 }
                 EmitStatement(wp -> statement);
-                DefineLabel(method_stack -> TopContinueLabel());
                 assert(stack_depth == 0);
+                DefineLabel(method_stack -> TopContinueLabel());
                 CompleteLabel(method_stack -> TopContinueLabel());
-                break;
+                return abrupt;
             }
             if (wp -> expression -> IsConstant())
                 // must be true, or internal statement would be
@@ -1225,8 +1253,9 @@ void ByteCode::EmitStatement(AstStatement *statement)
                            wp -> statement);
             Label begin_label;
             DefineLabel(begin_label);
-            EmitStatement(wp -> statement);
+            abrupt = EmitStatement(wp -> statement);
             DefineLabel(method_stack -> TopContinueLabel());
+            CompleteLabel(method_stack -> TopContinueLabel());
             assert(stack_depth == 0);
 
             //
@@ -1238,19 +1267,23 @@ void ByteCode::EmitStatement(AstStatement *statement)
             EmitBranchIfExpression(wp -> expression, true, begin_label,
                                    wp -> statement);
             CompleteLabel(begin_label);
-            CompleteLabel(method_stack -> TopContinueLabel());
+            return abrupt && ! wp -> can_complete_normally;
         }
-        break;
     case Ast::DO: // JLS 14.11
         {
             AstDoStatement *sp = statement -> DoStatementCast();
             Label begin_label;
             DefineLabel(begin_label);
-            EmitStatement(sp -> statement);
-            DefineLabel(method_stack -> TopContinueLabel());
+            bool abrupt = EmitStatement(sp -> statement);
+            if (IsLabelUsed(method_stack -> TopContinueLabel()))
+            {
+                DefineLabel(method_stack -> TopContinueLabel());
+                CompleteLabel(method_stack -> TopContinueLabel());
+                abrupt = false;
+            }
             assert(stack_depth == 0);
 
-            if (sp -> statement -> can_complete_normally)
+            if (! abrupt)
             {
                 //
                 // Reset the line number before evaluating the expression
@@ -1261,9 +1294,8 @@ void ByteCode::EmitStatement(AstStatement *statement)
                                        begin_label, sp -> statement);
             }
             CompleteLabel(begin_label);
-            CompleteLabel(method_stack -> TopContinueLabel());
+            return abrupt && ! sp -> can_complete_normally;
         }
-        break;
     case Ast::FOR: // JLS 14.12
         {
             AstForStatement *for_statement = statement -> ForStatementCast();
@@ -1277,6 +1309,7 @@ void ByteCode::EmitStatement(AstStatement *statement)
             //
             if (! for_statement -> statement -> can_complete_normally)
             {
+                bool abrupt = true;
                 if (for_statement -> end_expression_opt)
                 {
                     if (for_statement -> end_expression_opt -> IsConstant())
@@ -1287,6 +1320,7 @@ void ByteCode::EmitStatement(AstStatement *statement)
                     }
                     else
                     {
+                        abrupt = false;
                         line_number_table_attribute -> AddLineNumber(code_attribute -> CodeLength(),
                                                                      semantic.lex_stream -> Line(for_statement -> end_expression_opt -> LeftToken()));
                         EmitBranchIfExpression(for_statement -> end_expression_opt,
@@ -1295,10 +1329,10 @@ void ByteCode::EmitStatement(AstStatement *statement)
                     }
                 }
                 EmitStatement(for_statement -> statement);
-                DefineLabel(method_stack -> TopContinueLabel());
                 assert(stack_depth == 0);
+                DefineLabel(method_stack -> TopContinueLabel());
                 CompleteLabel(method_stack -> TopContinueLabel());
-                break;
+                return abrupt;
             }
             if (for_statement -> end_expression_opt &&
                 ! for_statement -> end_expression_opt -> IsConstant())
@@ -1307,11 +1341,13 @@ void ByteCode::EmitStatement(AstStatement *statement)
                            for_statement -> statement);
             }
             DefineLabel(begin_label);
-            EmitStatement(for_statement -> statement);
+            bool abrupt = EmitStatement(for_statement -> statement);
             DefineLabel(method_stack -> TopContinueLabel());
+            CompleteLabel(method_stack -> TopContinueLabel());
             for (int j = 0; j < for_statement -> NumForUpdateStatements(); j++)
                 EmitStatement(for_statement -> ForUpdateStatement(j));
             DefineLabel(test_label);
+            CompleteLabel(test_label);
 
             AstExpression *end_expr = for_statement -> end_expression_opt;
             if (end_expr)
@@ -1329,12 +1365,9 @@ void ByteCode::EmitStatement(AstStatement *statement)
             }
             else EmitBranch(OP_GOTO, begin_label,
                             for_statement -> statement);
-
             CompleteLabel(begin_label);
-            CompleteLabel(test_label);
-            CompleteLabel(method_stack -> TopContinueLabel());
+            return abrupt && ! for_statement -> can_complete_normally;
         }
-        break;
     case Ast::BREAK: // JLS 14.13
         {
             int nesting_level = statement -> BreakStatementCast() ->
@@ -1347,8 +1380,8 @@ void ByteCode::EmitStatement(AstStatement *statement)
                 EmitBranch(OP_GOTO, method_stack -> BreakLabel(nesting_level),
                            over);
             }
+            return true;
         }
-        break;
     case Ast::CONTINUE: // JLS 14.14
         {
             int nesting_level = statement -> ContinueStatementCast() ->
@@ -1362,43 +1395,42 @@ void ByteCode::EmitStatement(AstStatement *statement)
                            method_stack -> ContinueLabel(nesting_level),
                            over);
             }
+            return true;
         }
-        break;
     case Ast::RETURN: // JLS 14.15
         EmitReturnStatement(statement -> ReturnStatementCast());
-        break;
+        return true;
     case Ast::SUPER_CALL:
         EmitSuperInvocation((AstSuperCall *) statement);
-        break;
+        return false;
     case Ast::THIS_CALL:
         EmitThisInvocation((AstThisCall *) statement);
-        break;
+        return false;
     case Ast::THROW: // JLS 14.16
         EmitExpression(statement -> ThrowStatementCast() -> expression);
         PutOp(OP_ATHROW);
-        break;
+        return true;
     case Ast::SYNCHRONIZED_STATEMENT: // JLS 14.17
-        EmitSynchronizedStatement((AstSynchronizedStatement *) statement);
-        break;
+        return EmitSynchronizedStatement((AstSynchronizedStatement *) statement);
     case Ast::TRY: // JLS 14.18
         EmitTryStatement((AstTryStatement *) statement);
-        break;
+        return ! statement -> can_complete_normally;
     case Ast::ASSERT: // JDK 1.4 (JSR 41)
         EmitAssertStatement((AstAssertStatement *) statement);
-        break;
+        return false;
     case Ast::CLASS: // Class Declaration
     case Ast::INTERFACE: // InterfaceDeclaration
         //
         // these are factored out by the front end; and so must be
         // skipped here
         //
-        break;
+        return false;
     case Ast::CATCH:   // JLS 14.18
     case Ast::FINALLY: // JLS 14.18
         // handled by TryStatement
     default:
         assert(false && "unknown statement kind");
-        break;
+        return false;
     }
 }
 
@@ -1425,21 +1457,24 @@ void ByteCode::EmitReturnStatement(AstReturnStatement *statement)
 }
 
 
-void ByteCode::EmitBlockStatement(AstBlock *block)
+bool ByteCode::EmitBlockStatement(AstBlock *block)
 {
     assert(stack_depth == 0); // stack empty at start of statement
 
     method_stack -> Push(block);
-
-    for (int i = 0; i < block -> NumStatements(); i++)
-        EmitStatement((AstStatement *) block -> Statement(i));
+    bool abrupt = false;
+    for (int i = 0; i < block -> NumStatements() && ! abrupt; i++)
+        abrupt = EmitStatement((AstStatement *) block -> Statement(i));
 
     //
-    // Always define LABEL_BREAK at this point, and complete its definition.
+    // If contained break statements jump out of this block, define the label.
     //
-    if (IsLabelUsed(method_stack -> TopBreakLabel())) // need define only if used
+    if (IsLabelUsed(method_stack -> TopBreakLabel()))
+    {
         DefineLabel(method_stack -> TopBreakLabel());
-    CompleteLabel(method_stack -> TopBreakLabel());
+        CompleteLabel(method_stack -> TopBreakLabel());
+        abrupt = false;
+    }
 
     if (control.option.g & JikesOption::VARS)
     {
@@ -1463,6 +1498,7 @@ void ByteCode::EmitBlockStatement(AstBlock *block)
     }
 
     method_stack -> Pop();
+    return abrupt;
 }
 
 
@@ -1816,7 +1852,7 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
         {
             statement -> block -> block_tag = AstBlock::ABRUPT_TRY_FINALLY;
         }
-    EmitBlockStatement(statement -> block);
+    bool abrupt = EmitBlockStatement(statement -> block);
 
     //
     // The computation of end_try_block_pc, the instruction following the last
@@ -1824,8 +1860,7 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
     // any, needed to call a finally block or skip to the end of the try
     // statement.
     //
-    u2 end_try_block_pc = code_attribute -> CodeLength(),
-       special_end_pc = end_try_block_pc; // end_pc for "special" handler
+    u2 end_try_block_pc = code_attribute -> CodeLength();
 
     //
     // If try block is not empty, process catch clauses, including "special"
@@ -1840,7 +1875,7 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
         //
         // If try block completes normally, skip code for catch blocks.
         //
-        if (statement -> block -> can_complete_normally &&
+        if (! abrupt &&
             (emit_finally_clause || statement -> NumCatchClauses()))
         {
             EmitBranch(OP_GOTO, end_label, statement);
@@ -1874,7 +1909,7 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
                     catch_clause -> block -> block_tag =
                         AstBlock::ABRUPT_TRY_FINALLY;
                 }
-            EmitBlockStatement(catch_clause -> block);
+            abrupt = EmitBlockStatement(catch_clause -> block);
 
             if (control.option.g & JikesOption::VARS)
             {
@@ -1890,14 +1925,11 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
                                            handler_pc,
                                            RegisterClass(parameter_symbol -> Type() -> fully_qualified_name));
 
-            special_end_pc = code_attribute -> CodeLength();
-
             //
             // If catch block completes normally, skip further catch blocks.
             //
-            if (catch_clause -> block -> can_complete_normally &&
-                (emit_finally_clause ||
-                 i < (statement -> NumCatchClauses() - 1)))
+            if (! abrupt && (emit_finally_clause ||
+                             i < (statement -> NumCatchClauses() - 1)))
             {
                 EmitBranch(OP_GOTO, end_label, statement);
             }
@@ -1910,16 +1942,16 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
         {
             int variable_index = method_stack -> TopBlock() ->
                 block_symbol -> try_or_synchronized_variable_index;
+            u2 finally_start_pc = code_attribute -> CodeLength();
+            u2 special_end_pc = finally_start_pc;
 
             //
             // Emit code for "special" handler to make sure finally clause is
             // invoked in case an otherwise uncaught exception is thrown in the
             // try block, or an exception is thrown from within a catch block.
+            // This must cover all instructions through the jsr, in case of
+            // asynchronous exceptions.
             //
-            code_attribute -> AddException(start_try_block_pc,
-                                           special_end_pc,
-                                           code_attribute -> CodeLength(),
-                                           0);
             assert(stack_depth == 0);
             stack_depth = 1; // account for the exception already on stack
             if (statement -> finally_clause_opt -> block ->
@@ -1927,6 +1959,7 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
             {
                 StoreLocal(variable_index, control.Object()); // Save exception
                 EmitBranch(OP_JSR, finally_label, statement);
+                special_end_pc = code_attribute -> CodeLength();
                 LoadLocal(variable_index, control.Object()); // Reload and
                 PutOp(OP_ATHROW); // rethrow exception.
             }
@@ -1938,6 +1971,8 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
                 //
                 PutOp(OP_POP);
             }
+            code_attribute -> AddException(start_try_block_pc, special_end_pc,
+                                           finally_start_pc, 0);
 
             //
             // Generate code for finally clause. If the finally block can
@@ -1952,28 +1987,39 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
                 StoreLocal(variable_index + 1, control.Object());
             }
             else if (IsLabelUsed(end_label))
+            {
                 DefineLabel(end_label);
+                CompleteLabel(end_label);
+            }
             EmitBlockStatement(statement -> finally_clause_opt -> block);
 
             //
             // If a finally block can complete normally, return to the saved
             // address of the caller.
             //
-            if (statement -> finally_clause_opt -> block -> can_complete_normally)
+            if (statement -> finally_clause_opt -> block ->
+                can_complete_normally)
             {
                 PutOpWide(OP_RET, variable_index + 1);
-
                 //
                 // Now, if the try or catch blocks complete normally, execute
-                // the finally block before advancing to next statement.
+                // the finally block before advancing to next statement. We
+                // need to trap one more possibility of an asynchronous
+                // exception before the jsr has started.
                 //
                 if (IsLabelUsed(end_label))
                 {
                     DefineLabel(end_label);
+                    CompleteLabel(end_label);
                     EmitBranch(OP_JSR, finally_label,
                                statement -> finally_clause_opt -> block);
+                    special_end_pc = code_attribute -> CodeLength();
+                    code_attribute -> AddException(special_end_pc - 3,
+                                                   special_end_pc,
+                                                   finally_start_pc, 0);
                 }
             }
+            CompleteLabel(finally_label);
         }
         else
         {
@@ -1982,9 +2028,8 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
             //
             assert(! IsLabelUsed(finally_label));
             DefineLabel(end_label);
+            CompleteLabel(end_label);
         }
-        CompleteLabel(finally_label);
-        CompleteLabel(end_label);
     }
     else
     {
@@ -2166,8 +2211,7 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
         // call again with complementary control expression to show
         // effect of negation
         assert(pre -> pre_unary_tag == AstPreUnaryExpression::NOT);
-
-        EmitBranchIfExpression(pre -> expression, (! cond), lab, over);
+        EmitBranchIfExpression(pre -> expression, ! cond, lab, over);
         return;
     }
 
@@ -2175,10 +2219,8 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
     if (conditional)
     {
         //
-        // branch_if(true?a:b, cond, lab) =>
-        // branch_if(a, cond, lab);
-        // branch_if(false?a:b, cond, lab) =>
-        // branch_if(b, cond, lab);
+        // branch_if(true?a:b, cond, lab) => branch_if(a, cond, lab);
+        // branch_if(false?a:b, cond, lab) => branch_if(b, cond, lab);
         //
         if (conditional -> test_expression -> IsConstant())
         {
@@ -2188,8 +2230,46 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
                                    cond, lab, over);
             return;
         }
+        //
+        // branch_if(expr?true:false, c, l) => branch_if(expr, c, l);
+        // branch_if(expr?false:true, c, l) => branch_if(expr, ! c, l);
+        // branch_if(expr?true:true, c, l) => expr, branch if c
+        // branch_if(expr?false:false, c, l) => expr, branch if ! c
+        //
+        if (conditional -> true_expression -> IsConstant() &&
+            conditional -> false_expression -> IsConstant())
+        {
+            if (IsOne(conditional -> true_expression))
+            {
+                if (IsOne(conditional -> false_expression))
+                {
+                    EmitExpression(conditional -> test_expression, false);
+                    if (cond)
+                        EmitBranch(OP_GOTO, lab, over);
+                }
+                else
+                {
+                    EmitBranchIfExpression(conditional -> test_expression,
+                                           cond, lab, over);
+                }
+            }
+            else
+            {
+                if (IsOne(conditional -> false_expression))
+                {
+                    EmitBranchIfExpression(conditional -> test_expression,
+                                           ! cond, lab, over);
+                }
+                else
+                {
+                    EmitExpression(conditional -> test_expression, false);
+                    if (! cond)
+                        EmitBranch(OP_GOTO, lab, over);
+                }
+            }
+            return;
+        }
     }
-
 
     //
     // dispose of non-binary expression case by just evaluating
@@ -2265,10 +2345,8 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
         return;
     case AstBinaryExpression::AND_AND:
         //
-        // branch_if(true&&b, cond, lab) =>
-        // branch_if(b, cond, lab);
-        // branch_if(false&&b, cond, lab) =>
-        // branch_if(false, cond, lab);
+        // branch_if(true&&b, cond, lab) => branch_if(b, cond, lab);
+        // branch_if(false&&b, cond, lab) => branch_if(false, cond, lab);
         //
         if (left -> IsConstant())
         {
@@ -2278,10 +2356,8 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
                 EmitBranch(OP_GOTO, lab, over);
         }
         //
-        // branch_if(a&&true, cond, lab) =>
-        // branch_if(a, cond, lab);
-        // branch_if(a&&false, cond, lab) =>
-        // emit(a), pop; for side effects
+        // branch_if(a&&true, cond, lab) => branch_if(a, cond, lab);
+        // branch_if(a&&false, cond, lab) => emit(a), pop; for side effects
         //
         else if (right -> IsConstant())
         {
@@ -2296,12 +2372,12 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
         }
         //
         // branch_if(a&&b, true, lab) =>
-        // branch_if(a,false,skip);
-        // branch_if(b,true,lab);
-        // skip:
+        //   branch_if(a,false,skip);
+        //   branch_if(b,true,lab);
+        //   skip:
         // branch_if(a&&b, false, lab) =>
-        // branch_if(a,false,lab);
-        // branch_if(b,false,lab);
+        //   branch_if(a,false,lab);
+        //   branch_if(b,false,lab);
         //
         else if (cond)
         {
@@ -2319,10 +2395,8 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
         return;
     case AstBinaryExpression::OR_OR:
         //
-        // branch_if(false||b, cond, lab) =>
-        // branch_if(b, cond, lab);
-        // branch_if(true||b, cond, lab) =>
-        // branch_if(true, cond, lab);
+        // branch_if(false||b, cond, lab) => branch_if(b, cond, lab);
+        // branch_if(true||b, cond, lab) => branch_if(true, cond, lab);
         //
         if (left -> IsConstant())
         {
@@ -2332,10 +2406,8 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
                 EmitBranch(OP_GOTO, lab, over);
         }
         //
-        // branch_if(a||false, cond, lab) =>
-        // branch_if(a, cond, lab);
-        // branch_if(a||true, cond, lab) =>
-        // emit(a), pop; for side effects
+        // branch_if(a||false, cond, lab) => branch_if(a, cond, lab);
+        // branch_if(a||true, cond, lab) => emit(a), pop; for side effects
         //
         else if (right -> IsConstant())
         {
@@ -2350,12 +2422,12 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
         }
         //
         // branch_if(a||b,true,lab) =>
-        // branch_if(a,true,lab);
-        // branch_if(b,true,lab);
+        //   branch_if(a,true,lab);
+        //   branch_if(b,true,lab);
         // branch_if(a||b,false,lab) =>
-        // branch_if(a,true,skip);
-        // branch_if(b,false,lab);
-        // skip:
+        //   branch_if(a,true,skip);
+        //   branch_if(b,false,lab);
+        //   skip:
         //
         else if (cond)
         {
@@ -2773,7 +2845,11 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab,
 }
 
 
-void ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
+//
+// Emits a synchronized statement, including monitor cleanup. The return
+// value is true if the contained statement is abrupt.
+//
+bool ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
 {
     int variable_index = method_stack -> TopBlock() -> block_symbol ->
         try_or_synchronized_variable_index;
@@ -2819,16 +2895,18 @@ void ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
     // within the block statement.
     //
     method_stack -> TopMonitorStartPc() = code_attribute -> CodeLength();
-    EmitBlockStatement(statement -> block);
+    bool abrupt = EmitBlockStatement(statement -> block);
 
-    if (statement -> block -> can_complete_normally)
+    if (! abrupt)
     {
         LoadLocal(variable_index, control.Object()); // reload monitor
         PutOp(OP_MONITOREXIT);
-        u2 end_pc = code_attribute -> CodeLength();
+    }
+    u2 end_pc = code_attribute -> CodeLength();
+    if (end_pc != method_stack -> TopMonitorStartPc())
         code_attribute -> AddException(method_stack -> TopMonitorStartPc(),
                                        end_pc, handler_pc, 0);
-    }
+    return abrupt;
 }
 
 
@@ -4360,37 +4438,130 @@ int ByteCode::EmitClassInstanceCreationExpression(AstClassInstanceCreationExpres
 int ByteCode::EmitConditionalExpression(AstConditionalExpression *expression,
                                         bool need_value)
 {
+    //
+    // Optimize (true ? a : b) to (a).
+    // Optimize (false ? a : b) (b).
+    //
     if (expression -> test_expression -> IsConstant())
-        EmitExpression((IsZero(expression -> test_expression)
-                        ? expression -> false_expression
-                        : expression -> true_expression),
-                       need_value);
-    else if (expression -> Type() == control.null_type &&
+        return EmitExpression((IsZero(expression -> test_expression)
+                               ? expression -> false_expression
+                               : expression -> true_expression),
+                              need_value);
+    if (expression -> Type() == control.null_type &&
         expression -> false_expression -> NullLiteralCast() &&
         expression -> true_expression -> NullLiteralCast())
     {
         //
-        // Optimize (expr ? null : null).
+        // Optimize (cond ? null : null) to (cond, null).
         //
         EmitExpression(expression -> test_expression, false);
         if (need_value)
             PutOp(OP_ACONST_NULL);
+        return need_value ? 1 : 0;
     }
-    else
+    if (expression -> false_expression -> IsConstant() &&
+        expression -> true_expression -> IsConstant())
     {
-        Label lab1,
-              lab2;
-        EmitBranchIfExpression(expression -> test_expression, false, lab1);
-        EmitExpression(expression -> true_expression, need_value);
-        EmitBranch(OP_GOTO, lab2);
-        if (need_value) // restore the stack size
-            ChangeStack(- GetTypeWords(expression -> Type()));
-        DefineLabel(lab1);
-        EmitExpression(expression -> false_expression, need_value);
-        DefineLabel(lab2);
-        CompleteLabel(lab1);
-        CompleteLabel(lab2);
+        if (! need_value)
+            return EmitExpression(expression -> test_expression, false);
+        //
+        // Optimize (cond ? expr : expr) to (cond, expr).
+        //
+        if (expression -> Type() == control.String())
+        {
+            Utf8LiteralValue *left = DYNAMIC_CAST<Utf8LiteralValue *>
+                (expression -> true_expression -> value);
+            Utf8LiteralValue *right = DYNAMIC_CAST<Utf8LiteralValue *>
+                (expression -> false_expression -> value);
+            if (! strcmp(left -> value, right -> value))
+            {
+                EmitExpression(expression -> test_expression, false);
+                return EmitExpression(expression -> true_expression);
+            }
+        }
+        else if (expression -> Type() == control.double_type)
+        {
+            DoubleLiteralValue *left = DYNAMIC_CAST<DoubleLiteralValue *>
+                (expression -> true_expression -> value);
+            DoubleLiteralValue *right = DYNAMIC_CAST<DoubleLiteralValue *>
+                (expression -> false_expression -> value);
+            if (left -> value == right -> value)
+            {
+                EmitExpression(expression -> test_expression, false);
+                return EmitExpression(expression -> true_expression);
+            }
+        }
+        else if (expression -> Type() == control.float_type)
+        {
+            FloatLiteralValue *left = DYNAMIC_CAST<FloatLiteralValue *>
+                (expression -> true_expression -> value);
+            FloatLiteralValue *right = DYNAMIC_CAST<FloatLiteralValue *>
+                (expression -> false_expression -> value);
+            if (left -> value == right -> value)
+            {
+                EmitExpression(expression -> test_expression, false);
+                return EmitExpression(expression -> true_expression);
+            }
+        }
+        else if (expression -> Type() == control.long_type)
+        {
+            LongLiteralValue *left = DYNAMIC_CAST<LongLiteralValue *>
+                (expression -> true_expression -> value);
+            LongLiteralValue *right = DYNAMIC_CAST<LongLiteralValue *>
+                (expression -> false_expression -> value);
+            if (left -> value == right -> value)
+            {
+                EmitExpression(expression -> test_expression, false);
+                return EmitExpression(expression -> true_expression);
+            }
+        }
+        else
+        {
+            assert(control.IsSimpleIntegerValueType(expression -> Type()));
+            IntLiteralValue *left = DYNAMIC_CAST<IntLiteralValue *>
+                (expression -> true_expression -> value);
+            IntLiteralValue *right = DYNAMIC_CAST<IntLiteralValue *>
+                (expression -> false_expression -> value);
+            if (left -> value == right -> value)
+            {
+                EmitExpression(expression -> test_expression, false);
+                return EmitExpression(expression -> true_expression);
+            }
+            //
+            // Optimize (expr ? 1 : 0) to (expr).
+            // Optimize (expr ? value + 1 : value) to (expr + value).
+            // Optimize (expr ? value - 1 : value) to (value - expr).
+            //
+            if (left -> value == 1 && right -> value == 0)
+                return EmitExpression(expression -> test_expression);
+            if (left -> value == right -> value + 1)
+            {
+                EmitExpression(expression -> test_expression);
+                EmitExpression(expression -> false_expression);
+                PutOp(OP_IADD);
+                return 1;
+            }
+            if (left -> value == right -> value - 1)
+            {
+                EmitExpression(expression -> false_expression);
+                EmitExpression(expression -> test_expression);
+                PutOp(OP_ISUB);
+                return 1;
+            }
+        }
     }
+    Label lab1,
+        lab2;
+    EmitBranchIfExpression(expression -> test_expression, false, lab1);
+    EmitExpression(expression -> true_expression, need_value);
+    EmitBranch(OP_GOTO, lab2);
+    if (need_value) // restore the stack size
+        ChangeStack(- GetTypeWords(expression -> Type()));
+    DefineLabel(lab1);
+    EmitExpression(expression -> false_expression, need_value);
+    DefineLabel(lab2);
+    CompleteLabel(lab2);
+    CompleteLabel(lab1);
     return GetTypeWords(expression -> true_expression -> Type());
 }
 
@@ -4607,9 +4778,23 @@ bool ByteCode::IsNop(AstBlock *block)
         if (statement -> EmptyStatementCast() ||
             (statement -> BlockCast() && IsNop((AstBlock *) statement)))
             continue;
+        if (statement -> kind == Ast::IF)
+        {
+            AstIfStatement *ifstat = (AstIfStatement *) statement;
+            assert(ifstat -> true_statement -> BlockCast() &&
+                   (! ifstat -> false_statement_opt ||
+                    ifstat -> false_statement_opt -> BlockCast()));
+            if ((IsOne(ifstat -> expression) &&
+                 IsNop((AstBlock *) ifstat -> true_statement)) ||
+                (IsZero(ifstat -> expression) &&
+                 (! ifstat -> false_statement_opt ||
+                  IsNop((AstBlock *) ifstat -> false_statement_opt))))
+            {
+                continue;
+            }
+        }
         //
-        // TODO: Is it worth adding checks for bypassed code in if(false)
-        // and similar sections?
+        // TODO: Is it worth adding more checks for bypassed code?
         //
         return false;
     }
@@ -5509,8 +5694,25 @@ ByteCode::ByteCode(TypeSymbol *unit_type) : ClassFile(unit_type),
 //
 void ByteCode::DefineLabel(Label& lab)
 {
-    assert((! lab.defined) && "duplicate label definition");
+    assert(! lab.defined && "duplicate label definition");
 
+    //
+    // Optimize if previous instruction was unconditional jump to this label.
+    //
+    int index = lab.uses.Length() - 1;
+    if (last_op_goto && index >= 0)
+    {
+        unsigned int luse = lab.uses[index].use_offset;
+        int start = luse - lab.uses[index].op_offset;
+        if (start == last_op_pc)
+        {
+            code_attribute -> DeleteCode(lab.uses[index].op_offset +
+                                         lab.uses[index].use_length);
+            lab.uses.Reset(index);
+            last_label_pc = start;
+            last_op_goto = false;
+        }
+    }
     lab.defined = true;
     lab.definition = code_attribute -> CodeLength();
 }
@@ -5522,18 +5724,18 @@ void ByteCode::DefineLabel(Label& lab)
 //
 void ByteCode::CompleteLabel(Label& lab)
 {
-    //
-    // TODO: when the offset is to the next instruction, the goto is useless
-    // and can be optimized away (but what if it is at the end of a method...?)
-    //
     if (lab.uses.Length() > 0)
     {
         assert((lab.defined) && "label used but with no definition");
 
         //
         // Sanity check - when completing method, make sure nothing jumps out
-        // of the method
+        // of the method. This also collapses two labels that begin on
+        // the same location, before one is optimized away, as in
+        // "if (b) <statement> else {}".
         //
+        if (lab.definition > code_attribute -> CodeLength())
+            lab.definition = code_attribute -> CodeLength();
         if (lab.definition > last_label_pc)
             last_label_pc = lab.definition;
 
@@ -5623,8 +5825,8 @@ void ByteCode::LoadLocal(int varno, TypeSymbol *type)
 
 
 //
-// See if we can load without using LDC; otherwise generate constant pool entry if
-// one has not yet been generated.
+// See if we can load without using LDC; otherwise generate constant pool
+// entry if one has not yet been generated.
 //
 void ByteCode::LoadLiteral(LiteralValue *litp, TypeSymbol *type)
 {
@@ -6045,6 +6247,7 @@ void ByteCode::PutOp(Opcode opc)
     last_op_pc = code_attribute -> CodeLength();
     code_attribute -> AddCode(opc);
     ChangeStack(stack_effect[opc]);
+    last_op_goto = (opc == OP_GOTO || opc == OP_GOTO_W);
 }
 
 void ByteCode::PutOpWide(Opcode opc, u2 var)
