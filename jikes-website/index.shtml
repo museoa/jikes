@@ -18,15 +18,15 @@
           General Interest
           <ul>
             <li><a href="people.shtml">People</a>
-            <li>Needed
+            <li>Help Needed
           </ul>
           <hr>
           For Users
           <ul>
             <li>FAQ
             <li><a href="/developerworks/news/index.php?group_id=10">News</a>
-            <li><a href="/developerworks/project/showfiles.php?group_id=10">Downloads</a> ??
             <li><a href="distribs.shtml">Distributions</a>
+            <li><a href="/developerworks/project/showfiles.php?group_id=10">Downloads</a>
             <li><a href="/developerworks/mail/?group_id=10">Mailing Lists</a>
             <li><a href="/developerworks/bugs/?group_id=10">Report Bugs</a>
             <li>...
@@ -36,24 +36,29 @@
           <ul>
             <li><a href="cvs.shtml">CVS</a>
             <li><a href="/developerworks/patch/?group_id=10">Patches</a>
-            <li>todo list
+            <li><a href="todo.shtml">Todo list</a>
             <li>...
           </ul>
           <hr>
           Related Links
           <ul>
             <li><a href="../jacks/">Jacks Project</a>
-            <li>...
+            <li><a href="http://www.ergnosis.com/java-spec-report/">Java Spec Report</a>
+	    <li><a href="http://ibm.com/java/jdk/">The Best JVMs on the planet</a>
           </ul>
         </td>
         <TD BGCOLOR="ccCCff" WIDTH=6>&nbsp;</TD><!--padding-->
         <TD WIDTH=12>&nbsp;</TD><!--gutter-->
-        <TD><!-- content, main -->
-            <p>The Jikes Homepage has been reorganized to take advantage of the new support
-            infrastructure offered by IBM's developerWorks Open Source Software zone. These
-            pages will continue to provide user support to the Jikes community; however,
-            development related issues will be moved to the
-            <a href="/developerworks/projects/jikes/">dW/OSS</a> system.
+        <TD>
+
+
+<!-- content, main - still needs cleanup -->
+
+ <p>The Jikes Homepage has been reorganized to take advantage of the new support
+    infrastructure offered by IBM's developerWorks Open Source Software zone. These
+    pages will continue to provide user support to the Jikes community; however,
+    development related issues will be moved to the
+    <a href="/developerworks/projects/jikes/">dW/OSS</a> system.
 
 <hr>
 <p>What is Jikes<sup>TM</sup>?</p>
@@ -84,6 +89,7 @@ the Linux and Java communities:
     </UL></p>
 <p>Abriged from <a href="faq.shtml">a FAQ entry</A> which was adapted from
 some material by Lou Grinzo for an article he wrote, the link I have for which is no longer valid.</p>
+
 <p>It's worth pointing out that Jikes is not, and is not intended to be, a complete
 development environment -- it is simply a command-line compiler. It should not be
 considered a replacement for more complete tools, such as <A HREF="http://sources.redhat.com/sourcenav/">
