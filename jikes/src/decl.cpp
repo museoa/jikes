@@ -4326,18 +4326,20 @@ bool Semantic::NeedsInitializationMethod(AstFieldDeclaration *field_declaration)
 {
     //
     // We need a static constructor-initializer if we encounter at least one
-    // class variable that is declared with an initializer is not a constant
-    // expression. Remember that non-final variables are not constants, so
-    // the only variables with an initial value should be final.
+    // class variable that is declared with an initializer which is not a
+    // constant expression. Remember that non-final variables are not
+    // constants, so the only variables with an initial value should be final.
     //
     for (int i = 0; i < field_declaration -> NumVariableDeclarators(); i++)
     {
         AstVariableDeclarator *variable_declarator = field_declaration -> VariableDeclarator(i);
         assert(variable_declarator -> symbol);
-        if (! variable_declarator -> symbol -> initial_value)
-            return true;
-        else assert(variable_declarator -> symbol -> ACC_FINAL() &&
-                    variable_declarator -> variable_initializer_opt);
+        if (variable_declarator -> variable_initializer_opt)
+        {
+            if (! variable_declarator -> symbol -> initial_value)
+                return true;
+            else assert(variable_declarator -> symbol -> ACC_FINAL());
+        }
     }
 
     return false;

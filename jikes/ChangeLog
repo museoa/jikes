@@ -1,3 +1,8 @@
+2001-11-11  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/decl.cpp (NeedsInitializationMethod): Fix assertion error in
+	previous commit.
+
 2001-11-10  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/decl.cpp (CheckMethodOverride, AddInherited*): Consolidate
