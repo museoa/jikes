@@ -894,12 +894,15 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                                      (char **)&chp, &chl
                     );
 
-                    if(n==-1)
+                    if(n == (size_t) -1)
                     {
                         fprintf(stderr,"Charset conversion error at offset %d: ", int(before-buffer));
                         perror("");
                         break;
                     }
+
+                    // FIXME: This seems like a hack, someone should reread the docs
+                    // and clean this nasty code up -> http://www.netppl.fi/~pp/glibc21/libc_6.html#SEC91
 
                     // Operate on chd buffer in endian independent fashion
                     uni_high = (u1) (*wchp);

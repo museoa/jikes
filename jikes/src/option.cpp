@@ -161,8 +161,7 @@ void Option::SaveCurrentDirectoryOnDisk(char c)
 #endif
 
 
-Option::Option(ArgumentExpander &arguments) : 
-                                              dependence_report_name(NULL),
+Option::Option(ArgumentExpander &arguments) :
 #if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
                                               converter(NULL),
 #endif
@@ -183,7 +182,8 @@ Option::Option(ArgumentExpander &arguments) :
                                               dump_errors(false),
                                               errors(true),
                                               comments(false),
-                                              pedantic(false)
+                                              pedantic(false),
+                                              dependence_report_name(NULL)
 {
 #ifdef WIN32_FILE_SYSTEM
     for (int j = 0; j < 128; j++)

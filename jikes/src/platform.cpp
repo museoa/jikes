@@ -270,7 +270,7 @@ char * wstring2string(wchar_t * in) {
 
 IntToString::IntToString(int num)
 {
-    if (num == 0x80000000)
+    if (0x80000000 == (unsigned int) num)
     {
         str = info;
         strcpy(str, StringConstant::U8S_smallest_int);
@@ -296,7 +296,7 @@ IntToString::IntToString(int num)
 
 IntToWstring::IntToWstring(int num)
 {
-    if (num == 0x80000000)
+    if (0x80000000 == (unsigned int) num)
     {
         wstr = winfo;
         wcscpy(wstr,  StringConstant::US_smallest_int);

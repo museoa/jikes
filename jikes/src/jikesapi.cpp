@@ -281,7 +281,8 @@ DefaultFileReader::DefaultFileReader(const char *fileName)
     if (srcfile != NULL)
     {
         buffer = new char[size];
-        size_t file_size = ::SystemFread(const_cast<char*>(buffer), sizeof(char), size, srcfile);
+        size_t numread = ::SystemFread(const_cast<char*>(buffer), sizeof(char), size, srcfile);
+        assert(numread == size);
         fclose(srcfile);
     }
 }
