@@ -1,7 +1,0 @@
-1999-02-10    <shields@jikes.watson.ibm.com>
-
-	* Start ChangeLog.
-	Just added *.am automake/autoconf files provided by Aaron Renn
-	(arenn@urbanophile.com) as start toward support GNU's "configure"
-	build process.
-
