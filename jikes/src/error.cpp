@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -477,6 +477,7 @@ void SemanticError::StaticInitializer()
     //
     warning[BAD_INPUT_FILE] = 2;
     warning[UNREADABLE_INPUT_FILE] = 2;
+    warning[NEGATIVE_ARRAY_SIZE] = 2;
     warning[ZERO_DIVIDE_CAUTION] = 2;
 
 #ifdef JIKES_DEBUG
@@ -507,6 +508,7 @@ void SemanticError::StaticInitializer()
     print_message[LOCAL_VARIABLES_OVERFLOW] = PrintLOCAL_VARIABLES_OVERFLOW;
     print_message[STACK_OVERFLOW] = PrintSTACK_OVERFLOW;
     print_message[CODE_OVERFLOW] = PrintCODE_OVERFLOW;
+    print_message[NEGATIVE_ARRAY_SIZE] = PrintNEGATIVE_ARRAY_SIZE;
     print_message[CANNOT_COMPUTE_COLUMNS] = PrintCANNOT_COMPUTE_COLUMNS;
     print_message[EMPTY_DECLARATION] = PrintEMPTY_DECLARATION;
     print_message[REDUNDANT_MODIFIER] = PrintREDUNDANT_MODIFIER;
@@ -1327,6 +1329,18 @@ wchar_t *SemanticError::PrintCODE_OVERFLOW(ErrorInfo &err,
         s << err.insert2 << "/";
     s << err.insert3 << "\" produced a code attribute that exceeds the "
       << "code limit of 65535 elements.";
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintNEGATIVE_ARRAY_SIZE(ErrorInfo &err,
+                                                 LexStream *lex_stream,
+                                                 Control &control)
+{
+    ErrorString s;
+
+    s << "Array initialization will fail with a negative dimension.";
 
     return s.Array();
 }
@@ -3040,7 +3054,7 @@ wchar_t *SemanticError::PrintINVALID_FLOAT_VALUE(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "Invalid floating-point constant.";
+    s << "The value of a float literal must not round to infinity or zero.";
 
     return s.Array();
 }
@@ -3052,7 +3066,7 @@ wchar_t *SemanticError::PrintINVALID_DOUBLE_VALUE(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "Invalid double constant.";
+    s << "The value of a double literal must not round to infinity or zero.";
 
     return s.Array();
 }
@@ -3995,8 +4009,8 @@ wchar_t *SemanticError::PrintBLOCKED_CATCH_CLAUSE(ErrorInfo &err,
     s << "This catch block is unreachable: the exception \"";
     if (NotDot(err.insert1))
         s << err.insert1 << "/";
-    s << err.insert2 << "\" was used in a previous catch clause in this "
-      << "try statement at location " << err.insert3 << '.';
+    s << err.insert2 << "\" is a subclass of the type used in a previous "
+      << "catch clause at location " << err.insert3 << '.';
 
     return s.Array();
 }

@@ -100,7 +100,9 @@ void Semantic::ReportMethodNotFound(AstMethodInvocation *method_call,
     AstSimpleName *simple_name = method_call -> method -> SimpleNameCast();
     assert(field_access || simple_name);
 
-    LexStream::TokenIndex id_token = field_access ? field_access -> identifier_token : simple_name -> identifier_token;
+    LexStream::TokenIndex id_token = (field_access
+                                      ? field_access -> identifier_token
+                                      : simple_name -> identifier_token);
     NameSymbol *name_symbol = lex_stream -> NameSymbol(id_token);
     MethodShadowSymbol *method_shadow;
 
@@ -536,7 +538,8 @@ MethodSymbol *Semantic::FindConstructor(TypeSymbol *containing_type, Ast *ast,
 //
 //
 //
-VariableSymbol *Semantic::FindMisspelledVariableName(TypeSymbol *type, LexStream::TokenIndex identifier_token)
+VariableSymbol *Semantic::FindMisspelledVariableName(TypeSymbol *type,
+                                                     LexStream::TokenIndex identifier_token)
 {
     VariableSymbol *misspelled_variable = NULL;
     int index = 0;
@@ -559,15 +562,18 @@ VariableSymbol *Semantic::FindMisspelledVariableName(TypeSymbol *type, LexStream
 
     int length = wcslen(name);
 
-    return ((length == 3 && index >= 5) || (length == 4 && index >= 6) || (length >= 5 && index >= 7)
-                          ? misspelled_variable
-                          : (VariableSymbol *) NULL);
+    return ((length == 3 && index >= 5) ||
+            (length == 4 && index >= 6) ||
+            (length >= 5 && index >= 7)
+            ? misspelled_variable : (VariableSymbol *) NULL);
 }
 
 //
 //
 //
-MethodSymbol *Semantic::FindMisspelledMethodName(TypeSymbol *type, AstMethodInvocation *method_call, NameSymbol *name_symbol)
+MethodSymbol *Semantic::FindMisspelledMethodName(TypeSymbol *type,
+                                                 AstMethodInvocation *method_call,
+                                                 NameSymbol *name_symbol)
 {
     MethodSymbol *misspelled_method = NULL;
     int index = 0;
@@ -614,11 +620,10 @@ MethodSymbol *Semantic::FindMisspelledMethodName(TypeSymbol *type, AstMethodInvo
     // Otherwise, if the length of the name is > 3, accept >= 60% probability.
     //
     return (index < 3 ? (MethodSymbol *) NULL
-                      : (length == 2 && (index >= 3 || num_args > 0)) ||
-                        (length == 3 && (index >= 5 || num_args > 0)) ||
-                        (length  > 3 && (index >= 6 || (index >= 5 && num_args > 0)))
-                                     ? misspelled_method
-                                     : (MethodSymbol *) NULL);
+            : ((length == 2 && (index >= 3 || num_args > 0)) ||
+               (length == 3 && (index >= 5 || num_args > 0)) ||
+               (length  > 3 && (index >= 6 || (index >= 5 && num_args > 0))))
+            ? misspelled_method : (MethodSymbol *) NULL);
 }
 
 
@@ -1526,7 +1531,8 @@ VariableSymbol *Semantic::FindInstance(TypeSymbol *base_type,
 }
 
 
-AstExpression *Semantic::CreateAccessToType(Ast *source, TypeSymbol *environment_type)
+AstExpression *Semantic::CreateAccessToType(Ast *source,
+                                            TypeSymbol *environment_type)
 {
     TypeSymbol *this_type = ThisType();
 
@@ -1656,12 +1662,12 @@ AstExpression *Semantic::CreateAccessToType(Ast *source, TypeSymbol *environment
 
     return ((resolution -> symbol == control.no_type) ||
             (resolution -> Type() == environment_type)
-                ? resolution
-                : ConvertToType(resolution, environment_type));
+            ? resolution : ConvertToType(resolution, environment_type));
 }
 
 
-void Semantic::CreateAccessToScopedVariable(AstSimpleName *simple_name, TypeSymbol *environment_type)
+void Semantic::CreateAccessToScopedVariable(AstSimpleName *simple_name,
+                                            TypeSymbol *environment_type)
 {
     assert(environment_type -> IsOwner(ThisType()) &&
            (! simple_name -> IsConstant()));
@@ -1722,7 +1728,8 @@ void Semantic::CreateAccessToScopedVariable(AstSimpleName *simple_name, TypeSymb
 }
 
 
-void Semantic::CreateAccessToScopedMethod(AstMethodInvocation *method_call, TypeSymbol *environment_type)
+void Semantic::CreateAccessToScopedMethod(AstMethodInvocation *method_call,
+                                          TypeSymbol *environment_type)
 {
     assert(environment_type -> IsOwner(ThisType()));
 
@@ -1778,7 +1785,8 @@ void Semantic::CreateAccessToScopedMethod(AstMethodInvocation *method_call, Type
 }
 
 
-void Semantic::CheckSimpleName(AstSimpleName *simple_name, SemanticEnvironment *where_found)
+void Semantic::CheckSimpleName(AstSimpleName *simple_name,
+                               SemanticEnvironment *where_found)
 {
     VariableSymbol *variable_symbol = simple_name -> symbol -> VariableCast();
 
@@ -1965,7 +1973,8 @@ void Semantic::TypeNestAccessCheck(AstExpression *name)
 }
 
 
-void Semantic::ConstructorAccessCheck(AstClassInstanceCreationExpression *class_creation, MethodSymbol *constructor)
+void Semantic::ConstructorAccessCheck(AstClassInstanceCreationExpression *class_creation,
+                                      MethodSymbol *constructor)
 {
     TypeSymbol *this_type = ThisType();
     TypeSymbol *containing_type = constructor -> containing_type;
@@ -3679,7 +3688,8 @@ void Semantic::UpdateLocalConstructors(TypeSymbol *inner_type)
 }
 
 
-void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression *class_creation, TypeSymbol *anonymous_type)
+void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression *class_creation,
+                                       TypeSymbol *anonymous_type)
 {
     LexStream::TokenIndex left_loc  = class_creation -> class_type -> LeftToken(),
                           right_loc = class_creation -> right_parenthesis_token;
@@ -3711,13 +3721,10 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression *class
     // superclass.
     //
     int num_throws = super_constructor -> NumThrows();
-    if (num_throws > 0)
+    for (int i = 0; i < num_throws; i++)
     {
-        for (int i = 0; i < num_throws; i++)
-        {
-            TypeSymbol *exception = super_constructor -> Throws(i);
-            constructor -> AddThrows(exception);
-        }
+        TypeSymbol *exception = super_constructor -> Throws(i);
+        constructor -> AddThrows(exception);
     }
 
     VariableSymbol *this0_variable = NULL;
@@ -3940,7 +3947,8 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression *class
 // super_type is the type specified in the anonymous constructor,
 // which is the supertype of the created anonymous type.
 //
-TypeSymbol *Semantic::GetAnonymousType(AstClassInstanceCreationExpression *class_creation, TypeSymbol *super_type)
+TypeSymbol *Semantic::GetAnonymousType(AstClassInstanceCreationExpression *class_creation,
+                                       TypeSymbol *super_type)
 {
     TypeSymbol *this_type = ThisType();
 
@@ -4353,7 +4361,8 @@ void Semantic::ProcessArrayCreationExpression(Ast *expr)
         AstDimExpr *dim_expr = array_creation -> DimExpr(i);
         ProcessExpression(dim_expr -> expression);
         AstExpression *expr = PromoteUnaryNumericExpression(dim_expr -> expression);
-        if (expr -> Type() != control.int_type && expr -> symbol != control.no_type)
+        if (expr -> Type() != control.int_type &&
+            expr -> symbol != control.no_type)
         {
             ReportSemError(SemanticError::TYPE_NOT_INTEGER,
                            dim_expr -> expression -> LeftToken(),
@@ -4361,6 +4370,13 @@ void Semantic::ProcessArrayCreationExpression(Ast *expr)
                            dim_expr -> expression -> Type() -> Name());
         }
         dim_expr -> expression = expr;
+        if (expr -> IsConstant() &&
+            (DYNAMIC_CAST<IntLiteralValue *> (expr -> value)) -> value < 0)
+        {
+            ReportSemError(SemanticError::NEGATIVE_ARRAY_SIZE,
+                           dim_expr -> expression -> LeftToken(),
+                           dim_expr -> expression -> RightToken());
+        }
     }
 
     if (array_creation -> array_initializer_opt)
@@ -4611,49 +4627,77 @@ void Semantic::ProcessPreUnaryExpression(Ast *expr)
 }
 
 
-inline bool Semantic::CanWideningPrimitiveConvert(TypeSymbol *target_type, TypeSymbol *source_type)
+inline bool Semantic::CanWideningPrimitiveConvert(TypeSymbol *target_type,
+                                                  TypeSymbol *source_type)
 {
     if (target_type == control.double_type)
-         return (source_type == control.float_type || source_type == control.long_type  || source_type == control.int_type ||
-                 source_type == control.char_type  || source_type == control.short_type || source_type == control.byte_type);
-    else if (target_type == control.float_type)
-         return (source_type == control.long_type  || source_type == control.int_type   ||
-                 source_type == control.char_type  || source_type == control.short_type || source_type == control.byte_type);
-    else if (target_type == control.long_type)
-         return (source_type == control.int_type   || source_type == control.char_type  ||
-                 source_type == control.short_type || source_type == control.byte_type);
-    else if (target_type == control.int_type)
-         return (source_type == control.char_type  || source_type == control.short_type || source_type == control.byte_type);
-    else if (target_type == control.short_type)
-         return source_type == control.byte_type;
+        return (source_type == control.float_type ||
+                source_type == control.long_type ||
+                source_type == control.int_type ||
+                source_type == control.char_type ||
+                source_type == control.short_type ||
+                source_type == control.byte_type);
+    if (target_type == control.float_type)
+        return (source_type == control.long_type ||
+                source_type == control.int_type ||
+                source_type == control.char_type ||
+                source_type == control.short_type ||
+                source_type == control.byte_type);
+    if (target_type == control.long_type)
+        return (source_type == control.int_type ||
+                source_type == control.char_type ||
+                source_type == control.short_type ||
+                source_type == control.byte_type);
+    if (target_type == control.int_type)
+        return (source_type == control.char_type ||
+                source_type == control.short_type ||
+                source_type == control.byte_type);
+    if (target_type == control.short_type)
+        return source_type == control.byte_type;
 
     return false;
 }
 
 
-inline bool Semantic::CanNarrowingPrimitiveConvert(TypeSymbol *target_type, TypeSymbol *source_type)
+inline bool Semantic::CanNarrowingPrimitiveConvert(TypeSymbol *target_type,
+                                                   TypeSymbol *source_type)
 {
     if (target_type == control.byte_type)
-         return (source_type == control.double_type || source_type == control.float_type || source_type == control.long_type ||
-                 source_type == control.int_type    || source_type == control.char_type  || source_type == control.short_type);
-    else if (target_type == control.char_type)
-         return (source_type == control.double_type || source_type == control.float_type || source_type == control.long_type ||
-                 source_type == control.int_type    || source_type == control.short_type || source_type == control.byte_type);
-    else if (target_type == control.short_type)
-         return (source_type == control.double_type || source_type == control.float_type ||
-                 source_type == control.long_type   || source_type == control.int_type   || source_type == control.char_type);
-    else if (target_type == control.int_type)
-         return (source_type == control.double_type || source_type == control.float_type || source_type == control.long_type);
-    else if (target_type == control.long_type)
-         return (source_type == control.double_type || source_type == control.float_type);
-    else if (target_type == control.float_type)
-         return source_type == control.double_type;
+        return (source_type == control.double_type ||
+                source_type == control.float_type ||
+                source_type == control.long_type ||
+                source_type == control.int_type ||
+                source_type == control.char_type ||
+                source_type == control.short_type);
+    if (target_type == control.char_type)
+        return (source_type == control.double_type ||
+                source_type == control.float_type ||
+                source_type == control.long_type ||
+                source_type == control.int_type ||
+                source_type == control.short_type ||
+                source_type == control.byte_type);
+    if (target_type == control.short_type)
+        return (source_type == control.double_type ||
+                source_type == control.float_type ||
+                 source_type == control.long_type ||
+                source_type == control.int_type ||
+                source_type == control.char_type);
+    if (target_type == control.int_type)
+        return (source_type == control.double_type ||
+                source_type == control.float_type ||
+                source_type == control.long_type);
+    if (target_type == control.long_type)
+        return (source_type == control.double_type ||
+                source_type == control.float_type);
+    if (target_type == control.float_type)
+        return source_type == control.double_type;
 
     return false;
 }
 
 
-bool Semantic::CanMethodInvocationConvert(TypeSymbol *target_type, TypeSymbol *source_type)
+bool Semantic::CanMethodInvocationConvert(TypeSymbol *target_type,
+                                          TypeSymbol *source_type)
 {
     if (target_type == control.no_type || source_type == control.no_type)
         return false;
@@ -4663,7 +4707,8 @@ bool Semantic::CanMethodInvocationConvert(TypeSymbol *target_type, TypeSymbol *s
         if (! target_type -> Primitive())
             return false;
 
-        return (target_type == source_type || CanWideningPrimitiveConvert(target_type, source_type));
+        return (target_type == source_type ||
+                CanWideningPrimitiveConvert(target_type, source_type));
     }
     else
     {
@@ -4676,9 +4721,11 @@ bool Semantic::CanMethodInvocationConvert(TypeSymbol *target_type, TypeSymbol *s
             {
                 TypeSymbol *source_subtype = source_type -> ArraySubtype();
                 TypeSymbol *target_subtype = target_type -> ArraySubtype();
-                return (source_subtype -> Primitive() && target_subtype -> Primitive()
-                                                       ? (source_subtype == target_subtype)
-                                                       : CanMethodInvocationConvert(target_subtype, source_subtype));
+                return (source_subtype -> Primitive() &&
+                        target_subtype -> Primitive()
+                        ? (source_subtype == target_subtype)
+                        : CanMethodInvocationConvert(target_subtype,
+                                                     source_subtype));
             }
             return (target_type == control.Object() ||
                     target_type == control.Cloneable() ||
@@ -4706,16 +4753,17 @@ bool Semantic::CanMethodInvocationConvert(TypeSymbol *target_type, TypeSymbol *s
 }
 
 
-bool Semantic::CanAssignmentConvertReference(TypeSymbol *target_type, TypeSymbol *source_type)
+bool Semantic::CanAssignmentConvertReference(TypeSymbol *target_type,
+                                             TypeSymbol *source_type)
 {
     return (target_type == control.no_type ||
             source_type == control.no_type ||
-            CanMethodInvocationConvert(target_type, source_type)
-           );
+            CanMethodInvocationConvert(target_type, source_type));
 }
 
 
-bool Semantic::CanAssignmentConvert(TypeSymbol *target_type, AstExpression *expr)
+bool Semantic::CanAssignmentConvert(TypeSymbol *target_type,
+                                    AstExpression *expr)
 {
     return (target_type == control.no_type ||
             expr -> symbol == control.no_type ||
@@ -4724,7 +4772,9 @@ bool Semantic::CanAssignmentConvert(TypeSymbol *target_type, AstExpression *expr
 }
 
 
-bool Semantic::CanCastConvert(TypeSymbol *target_type, TypeSymbol *source_type, LexStream::TokenIndex tok)
+bool Semantic::CanCastConvert(TypeSymbol *target_type,
+                              TypeSymbol *source_type,
+                              LexStream::TokenIndex tok)
 {
     if (source_type == target_type || source_type == control.no_type || target_type == control.no_type)
         return true;
@@ -4734,7 +4784,8 @@ bool Semantic::CanCastConvert(TypeSymbol *target_type, TypeSymbol *source_type, 
         if (! target_type -> Primitive())
             return false;
 
-        return (CanWideningPrimitiveConvert(target_type, source_type) || CanNarrowingPrimitiveConvert(target_type, source_type));
+        return (CanWideningPrimitiveConvert(target_type, source_type) ||
+                CanNarrowingPrimitiveConvert(target_type, source_type));
     }
     else
     {
@@ -4747,17 +4798,14 @@ bool Semantic::CanCastConvert(TypeSymbol *target_type, TypeSymbol *source_type, 
             {
                 TypeSymbol *source_subtype = source_type -> ArraySubtype();
                 TypeSymbol *target_subtype = target_type -> ArraySubtype();
-                return (source_subtype -> Primitive() && target_subtype -> Primitive()
-                                                       ? (source_subtype == target_subtype)
-                                                       : CanCastConvert(target_subtype, source_subtype, tok));
+                return (source_subtype -> Primitive() &&
+                        target_subtype -> Primitive()
+                        ? (source_subtype == target_subtype)
+                        : CanCastConvert(target_subtype, source_subtype, tok));
             }
             return (target_type == control.Object() ||
                     target_type == control.Cloneable() ||
-                    //
-                    // TODO: This is an undocumented feature, but this fix
-                    // appears to make sense.
-                    //
-                    (target_type == control.Serializable() && source_type -> Implements(target_type)));
+                    target_type == control.Serializable());
         }
         else if (source_type -> ACC_INTERFACE())
         {
@@ -4794,7 +4842,8 @@ bool Semantic::CanCastConvert(TypeSymbol *target_type, TypeSymbol *source_type, 
                     }
                 }
 
-                return (i == source_method_table -> symbol_pool.Length()); // all the methods passed the test
+                // all the methods passed the test
+                return (i == source_method_table -> symbol_pool.Length());
             }
             else if (target_type -> ACC_FINAL() && (! target_type -> Implements(source_type)))
                  return false;
@@ -5132,9 +5181,11 @@ AstExpression *Semantic::PromoteUnaryNumericExpression(AstExpression *unary_expr
         return unary_expression;
     }
 
-    return ((type == control.byte_type || type == control.short_type || type == control.char_type)
-                                                ? ConvertToType(unary_expression, control.int_type)
-                                                : unary_expression);
+    return ((type == control.byte_type ||
+             type == control.short_type ||
+             type == control.char_type)
+            ? ConvertToType(unary_expression, control.int_type)
+            : unary_expression);
 }
 
 
@@ -6898,7 +6949,8 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
     //
     // TODO: Get the definative answer from Sun which behavior is correct
     //
-    if (left_type == control.String() && assignment_expression -> assignment_tag == AstAssignmentExpression::PLUS_EQUAL)
+    if (left_type == control.String() &&
+        assignment_expression -> assignment_tag == AstAssignmentExpression::PLUS_EQUAL)
     {
         if (right_type != control.String())
         {

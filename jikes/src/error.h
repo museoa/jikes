@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -118,6 +118,7 @@ class SemanticError
         LOCAL_VARIABLES_OVERFLOW,
         STACK_OVERFLOW,
         CODE_OVERFLOW,
+        NEGATIVE_ARRAY_SIZE,
         CANNOT_COMPUTE_COLUMNS,
         EMPTY_DECLARATION,
         REDUNDANT_MODIFIER,
@@ -423,6 +424,7 @@ private:
     static wchar_t *PrintLOCAL_VARIABLES_OVERFLOW(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintSTACK_OVERFLOW(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintCODE_OVERFLOW(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintNEGATIVE_ARRAY_SIZE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintCANNOT_COMPUTE_COLUMNS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintEMPTY_DECLARATION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintREDUNDANT_MODIFIER(ErrorInfo &, LexStream *, Control &);

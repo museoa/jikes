@@ -1,5 +1,12 @@
 2002-02-20  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/error.cpp (PrintNEGATIVE_ARRAY_SIZE):
+	* src/error.h:
+	* src/expr.cpp (ProcessArrayCreationExpression): Add caution for
+	NEGATIVE_ARRAY_SIZE.
+
+2002-02-20  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/ast.h (AstBlock): Add ABRUPT_TRY_FINALLY, to correctly emit
 	synchronized blocks in try-finally.
 	* src/bytecode.cpp (EmitSynchronizedStatement),
