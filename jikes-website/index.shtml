@@ -75,7 +75,7 @@
 
 
 <!-- content, main - still needs cleanup -->
-<table border=0 cellspacing=0 cellpadding=> <!-- a table within a table, how low have I sunken? -->
+<table border=0 cellspacing=0 cellpadding=0> <!-- a table within a table, how low have I sunken? -->
 <tr><td>
 <p>
     The Jikes Homepage has been reorganized to take advantage of the new support
