@@ -3271,11 +3271,11 @@ void Semantic::ProcessClassLiteral(Ast* expr)
     }
     ProcessType(class_lit -> type);
     TypeSymbol* type = class_lit -> type -> symbol;
-    AddDependence(this_type, type);
     if (type == control.no_type)
         class_lit -> symbol = control.no_type;
     else if (type -> Primitive())
     {
+        AddDependence(this_type, BoxedTypeForPrimitiveType(type));
         if (type == control.int_type)
             class_lit -> symbol = control.Integer_TYPE_Field();
         else if (type == control.double_type)

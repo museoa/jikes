@@ -1321,6 +1321,8 @@ private:
     void ProcessClassFile(TypeSymbol*, const char*, unsigned, TokenIndex);
     void ReadClassFile(TypeSymbol*, TokenIndex);
 
+    TypeSymbol* BoxedTypeForPrimitiveType(TypeSymbol* primitive_type);
+
     // Implemented in depend.cpp - class dependence tracking.
     void AddDependence(TypeSymbol*, TypeSymbol*, bool = false);
     void AddStringConversionDependence(TypeSymbol*);

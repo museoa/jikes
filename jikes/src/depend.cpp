@@ -522,6 +522,32 @@ void Semantic::AddDependence(TypeSymbol* base_type, TypeSymbol* parent_type,
            base_type -> ContainingPackage() == control.UnnamedPackage());
 }
 
+
+TypeSymbol* Semantic::BoxedTypeForPrimitiveType(TypeSymbol* primitive_type)
+{
+    if (primitive_type == control.boolean_type)
+        return control.Boolean();
+    else if (primitive_type == control.byte_type)
+        return control.Byte();
+    else if (primitive_type == control.char_type)
+        return control.Character();
+    else if (primitive_type == control.short_type)
+        return control.Short();
+    else if (primitive_type == control.int_type)
+        return control.Integer();
+    else if (primitive_type == control.long_type)
+        return control.Long();
+    else if (primitive_type == control.float_type)
+        return control.Float();
+    else if (primitive_type == control.double_type)
+        return control.Double();
+    else if (primitive_type == control.void_type)
+        return control.Void();
+    else
+        assert(0 && "unknown primitive type");
+}
+
+
 void Semantic::AddStringConversionDependence(TypeSymbol* type)
 {
     if (type == control.null_type)

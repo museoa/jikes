@@ -1,5 +1,15 @@
 2004-03-28  Elliott Hughes  <enh@acm.org>
 
+	* src/expr.cpp: Fix an assertion compiling Sun's
+	JDK 1.4.1 source; it looks like the call to AddDependence in
+	ProcessClassLiteral was lifted too high, and the dependence should
+	be on the java.lang class that wraps the primitive type, not
+	the primitive type itself.
+	* src/depend.cpp, src/semantic.h: A new method to translate from
+	a primitive type to its java.lang wrapper type.
+
+2004-03-28  Elliott Hughes  <enh@acm.org>
+
 	* src/class.h (CPUtf8Info): Fix uninitialized member data.
 
 2004-03-27  Eric Blake  <ebb9@byu.net>
