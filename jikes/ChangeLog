@@ -1,3 +1,12 @@
+2002-02-21  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/expr.cpp (ProcessMethodInvocation): Check for void
+	arguments.
+	(ProcessNOT_EQUAL, ProcessEQUAL_EQUAL): 
+	* src/error.cpp:
+	* src/error.h (VOID_TYPE_IN_EQUALITY_EXPRESSION): Use TYPE_IS_VOID
+	instead.
+
 2002-02-20  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/jikesapi.cpp (DefaultFileReader): Silence a warning.

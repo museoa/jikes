@@ -209,7 +209,6 @@ class SemanticError
         INCOMPATIBLE_TYPE_FOR_BINARY_EXPRESSION,
         INCOMPATIBLE_TYPE_FOR_CONDITIONAL_EXPRESSION,
         VOID_ARRAY,
-        VOID_TYPE_IN_EQUALITY_EXPRESSION,
         TYPE_NOT_THROWABLE,
         TYPE_NOT_PRIMITIVE,
         TYPE_NOT_INTEGRAL,
@@ -515,7 +514,6 @@ private:
     static wchar_t *PrintINCOMPATIBLE_TYPE_FOR_BINARY_EXPRESSION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINCOMPATIBLE_TYPE_FOR_CONDITIONAL_EXPRESSION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintVOID_ARRAY(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintVOID_TYPE_IN_EQUALITY_EXPRESSION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintTYPE_NOT_THROWABLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintTYPE_NOT_PRIMITIVE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintTYPE_NOT_INTEGRAL(ErrorInfo &, LexStream *, Control &);

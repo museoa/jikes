@@ -599,7 +599,6 @@ void SemanticError::StaticInitializer()
     print_message[INCOMPATIBLE_TYPE_FOR_BINARY_EXPRESSION] = PrintINCOMPATIBLE_TYPE_FOR_BINARY_EXPRESSION;
     print_message[INCOMPATIBLE_TYPE_FOR_CONDITIONAL_EXPRESSION] = PrintINCOMPATIBLE_TYPE_FOR_CONDITIONAL_EXPRESSION;
     print_message[VOID_ARRAY] = PrintVOID_ARRAY;
-    print_message[VOID_TYPE_IN_EQUALITY_EXPRESSION] = PrintVOID_TYPE_IN_EQUALITY_EXPRESSION;
     print_message[TYPE_NOT_THROWABLE] = PrintTYPE_NOT_THROWABLE;
     print_message[TYPE_NOT_PRIMITIVE] = PrintTYPE_NOT_PRIMITIVE;
     print_message[TYPE_NOT_INTEGRAL] = PrintTYPE_NOT_INTEGRAL;
@@ -2587,19 +2586,6 @@ wchar_t *SemanticError::PrintVOID_ARRAY(ErrorInfo &err,
     ErrorString s;
 
     s << "Arrays of type \"void\" are not legal.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintVOID_TYPE_IN_EQUALITY_EXPRESSION(ErrorInfo &err,
-                                                              LexStream *lex_stream,
-                                                              Control &control)
-{
-    ErrorString s;
-
-    s << "Subexpressions of type \"void\" may not appear in an "
-      << "EqualityExpression.";
 
     return s.Array();
 }

@@ -3231,7 +3231,16 @@ void Semantic::ProcessMethodInvocation(Ast *expr)
     {
         AstExpression *expr = method_call -> Argument(i);
         ProcessExpressionOrStringConstant(expr);
-        no_bad_argument = no_bad_argument && (expr -> symbol != control.no_type);
+        if (expr -> symbol == control.no_type)
+            no_bad_argument = false;
+        else if (expr -> Type() == control.void_type)
+        {
+            no_bad_argument = false;
+            ReportSemError(SemanticError::TYPE_IS_VOID,
+                           expr -> LeftToken(),
+                           expr -> RightToken(),
+                           expr -> Type() -> Name());
+        }
     }
 
     if (no_bad_argument)
@@ -6252,11 +6261,10 @@ void Semantic::ProcessEQUAL_EQUAL(AstBinaryExpression *expr)
         else
         {
             if (left_type == control.void_type)
-                ReportSemError(SemanticError::VOID_TYPE_IN_EQUALITY_EXPRESSION,
+                ReportSemError(SemanticError::TYPE_IS_VOID,
                                expr -> LeftToken(),
                                expr -> RightToken(),
-                               expr -> left_expression -> Type() -> Name(),
-                               expr -> right_expression -> Type() -> Name());
+                               expr -> Type() -> Name());
             expr -> symbol = left_type;
         }
 
@@ -6319,9 +6327,10 @@ void Semantic::ProcessNOT_EQUAL(AstBinaryExpression *expr)
         else
         {
             if (left_type == control.void_type)
-                ReportSemError(SemanticError::VOID_TYPE_IN_EQUALITY_EXPRESSION,
+                ReportSemError(SemanticError::TYPE_IS_VOID,
                                expr -> LeftToken(),
-                               expr -> RightToken());
+                               expr -> RightToken(),
+                               expr -> Type() -> Name());
             expr -> symbol = left_type;
         }
 
