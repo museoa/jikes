@@ -1,5 +1,5 @@
 Summary: java source to bytecode compiler
-%define version 1.09
+%define version 1.10
 Buildroot: /var/tmp/jikes-%{version}-root
 Copyright: IBM Public License, http://ibm.com/developerworks/opensource
 Group: Development/Languages
