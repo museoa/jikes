@@ -1709,7 +1709,7 @@ void SemanticError::PrintMISMATCHED_CONSTRUCTOR_NAME(ErrorInfo &err, LexStream *
 {
     cout << "The name of the constructor \"";
     Unicode::Cout(err.insert1);
-    cout << "\" does not match name of class \"";
+    cout << "\" does not match the name of the class \"";
     Unicode::Cout(err.insert2);
     cout << "\"";
 

@@ -105,7 +105,8 @@ assert(current_directory[d]);
 public:
     char *default_path,
          *classpath,
-         *directory;
+         *directory,
+         *makefile_name;
 
     Tuple<KeywordMap> keyword_map;
     Tuple<OptionError *> bad_options;

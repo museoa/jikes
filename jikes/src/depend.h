@@ -82,8 +82,10 @@ private:
 class TypeDependenceChecker : public CycleChecker
 {
 public:
-    TypeDependenceChecker(SymbolSet &file_set_, Tuple<TypeSymbol *> &type_trash_bin_) : file_set(file_set_),
-                                                                                        type_trash_bin(type_trash_bin_)
+    TypeDependenceChecker(Control *control_, SymbolSet &file_set_, Tuple<TypeSymbol *> &type_trash_bin_)
+        : control(control_),
+          file_set(file_set_),
+          type_trash_bin(type_trash_bin_)
     {}
 
     ~TypeDependenceChecker() {}
@@ -96,6 +98,9 @@ public:
     SymbolSet &file_set;
 
 private:
+    Control *control;
+    Tuple<TypeSymbol *> &type_trash_bin;
+
     class Stack
     {
     public:
@@ -107,10 +112,9 @@ private:
         Tuple<TypeSymbol *> info;
     } stack;
 
-    void OutputMake(char *, char *, Tuple<FileSymbol *> &);
-    void OutputMake(FileSymbol *);
+    void OutputMake(FILE *, char *, Tuple<FileSymbol *> &);
+    void OutputMake(FILE *, FileSymbol *);
 
-    Tuple<TypeSymbol *> &type_trash_bin;
     Tuple<TypeSymbol *> type_list;
 
     void ProcessType(TypeSymbol *);

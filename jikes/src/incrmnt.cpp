@@ -380,7 +380,7 @@ bool Control::IncrementalRecompilation()
 
     if ((! candidates.IsEmpty()) || (new_arguments && new_arguments -> argc > 0))
     {
-        TypeDependenceChecker dependence_checker(candidates, type_trash_bin);
+        TypeDependenceChecker dependence_checker((Control *) this, candidates, type_trash_bin);
         dependence_checker.PartialOrder();
 
         //

@@ -1512,22 +1512,29 @@ void Semantic::DefiniteThrowStatement(Ast *stmt)
     //
     // We have a few cases to consider:
     //
-    //    1. The throw statement is not contained in a try statement - the possibly-assigned set is only relevant to
-    //       to the enclosing method (or constructor) block. The definitely assigned set is updated as if the throw
-    //       statement was a break statement out of the method (or constructor) block.
+    //    1. The throw statement is not contained in a try statement - the possibly-assigned 
+    //       set is only relevant to the enclosing method (or constructor) block. If the
+    //       containing function in question is a method (i.e., not a constructor) then the
+    //       definitely assigned set is updated as if the throw statement was a break statement
+    //       out of the method block.
     //
     //    2. The throw statement is enclosed in a try statement main block or catch clause.
     //
-    //        2a. if the nearest try-block that encloses the throw statement is a main try-block - the possibly-assigned block is
-    //            relevant to that main block.
+    //        2a. if the nearest try-block that encloses the throw statement is a main try-block -
+    //            the possibly-assigned block is relevant to that main block.
     //
-    //        2b. if the nearest try-block that encloses the throw statement is a catch-block and the try
-    //            block contains a finally clause - the possibly-assigned block is relevant to the catch-block
+    //        2b. if the nearest try-block that encloses the throw statement is a catch-block and
+    //            the try block contains a finally clause - the possibly-assigned block is relevant
+    //            to the catch-block
     //
-    //        2c. otherwise, treat the throw statement as if it immediately followed its containing try statement
+    //        2c. otherwise, treat the throw statement as if it immediately followed its containing
+    //            try statement
     //
     if (definite_try_stack -> Size() == 0)
-        definite_block_stack -> ThrowSet(0) *= (*definitely_assigned_variables);
+    {
+        if (ThisMethod() -> Identity() != control.init_name_symbol) // Not a constructor
+            definite_block_stack -> ThrowSet(0) *= (*definitely_assigned_variables);
+    }
     else
     {
         for (int i = definite_try_stack -> Size() - 1; i >= 0; i--)

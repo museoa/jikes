@@ -378,7 +378,7 @@ Control::Control(ArgumentExpander &arguments, Option &option_) : return_code(0),
             *candidates = input_java_file_set;
             candidates -> Union(input_class_file_set);
 
-            TypeDependenceChecker *dependence_checker = new TypeDependenceChecker(*candidates, type_trash_bin);
+            TypeDependenceChecker *dependence_checker = new TypeDependenceChecker((Control *) this, *candidates, type_trash_bin);
             dependence_checker -> PartialOrder();
             dependence_checker -> OutputDependences();
             delete dependence_checker;

@@ -1126,11 +1126,8 @@ inline void Semantic::AddDependence(TypeSymbol *base_type_, TypeSymbol *parent_t
     TypeSymbol *base_type = base_type_ -> outermost_type,
                *parent_type = parent_type_ -> outermost_type; 
 
-    if (control.option.makefile || control.option.incremental)
-    {
-        parent_type -> dependents -> AddElement(base_type);
-        base_type -> parents -> AddElement(parent_type);
-    }
+    parent_type -> dependents -> AddElement(base_type);
+    base_type -> parents -> AddElement(parent_type);
 
     if (control.option.pedantic)
     {

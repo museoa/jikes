@@ -61,6 +61,22 @@ void ByteCode::CompileClass(TypeSymbol * type)
     AstStaticInitializer * static_initializer;
     class_literal_method = type -> outermost_type -> ClassLiteralMethod();
     
+    //
+    // Make sure there is an entry in the constant pool for all types on which
+    // this type depends. This code is necessary because in the case of a dependence
+    // on a type from which we only access a static final constant, the constant is
+    // inlined and no other information about it is otherwise recorded.
+    //
+    for (TypeSymbol *parent = (TypeSymbol *) type -> parents -> FirstElement();
+         parent;
+         parent = (TypeSymbol *) type -> parents -> NextElement())
+    {
+        RegisterUtf8(parent -> signature);
+    }
+
+    //
+    // Process static variables.
+    //
     for (i=0; i < class_body -> NumClassVariables(); i++) {
         field_decl = class_body -> ClassVariable(i);
         for (int vi=0;vi<field_decl -> NumVariableDeclarators();vi++) {

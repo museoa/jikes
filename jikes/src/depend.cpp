@@ -9,6 +9,7 @@
 //
 #include "config.h"
 #include <time.h>
+#include "control.h"
 #include "ast.h"
 #include "semantic.h"
 
@@ -259,13 +260,9 @@ void TypeDependenceChecker::ProcessType(TypeSymbol *type)
 }
 
 
-void TypeDependenceChecker::OutputMake(char *file_name, char *output_name, Tuple<FileSymbol *> &file_list)
+void TypeDependenceChecker::OutputMake(FILE *outfile, char *output_name, Tuple<FileSymbol *> &file_list)
 {
-    FILE *outfile = ::SystemFopen(file_name, "w");
-
-    if (outfile == NULL)
-        cout << "*** Cannot open file " << file_name << "\n";
-    else
+    if (outfile)
     {
         for (int i = 0; i < file_list.Length(); i++)
         {
@@ -316,14 +313,11 @@ void TypeDependenceChecker::OutputMake(char *file_name, char *output_name, Tuple
         }
     }
 
-    if (outfile)
-        fclose(outfile);
-
     return;
 }
 
 
-void TypeDependenceChecker::OutputMake(FileSymbol *file_symbol)
+void TypeDependenceChecker::OutputMake(FILE *outfile, FileSymbol *file_symbol)
 {
     //
     //
@@ -366,7 +360,20 @@ void TypeDependenceChecker::OutputMake(FileSymbol *file_symbol)
     for (FileSymbol *symbol = (FileSymbol *) file_set.FirstElement(); symbol; symbol = (FileSymbol *) file_set.NextElement())
         file_list.Next() = symbol;
 
-    OutputMake(u_name, output_name, file_list);
+    if (outfile) // A single output makefile was specified
+        OutputMake(outfile, output_name, file_list);
+    else
+    {
+        outfile = ::SystemFopen(u_name, "w");
+        if (outfile == NULL)
+            cout << "*** Cannot open file " << u_name << "\n";
+        else
+        {
+            OutputMake(outfile, output_name, file_list);
+            fclose(outfile);
+        }
+    }
+
     delete [] output_name;
     delete [] u_name;
 
@@ -398,8 +405,16 @@ void TypeDependenceChecker::OutputDependences()
                 dependent -> parents_closure -> AddElement(parent);
     }
 
+    FILE *outfile = NULL;
+    if (control -> option.makefile_name)
+    {
+        outfile = ::SystemFopen(control -> option.makefile_name, "w");
+        if (outfile == NULL)
+            cout << "*** Cannot open file " << control -> option.makefile_name << "\n";
+    }
+
     for (FileSymbol *symbol = (FileSymbol *) new_file_set.FirstElement(); symbol; symbol = (FileSymbol *) new_file_set.NextElement())
-        OutputMake(symbol);
+        OutputMake(outfile, symbol);
 
     for (int n = 0; n < type_list.Length(); n++)
     {

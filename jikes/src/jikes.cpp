@@ -66,11 +66,12 @@ int main(int argc, char *argv[])
              << "+F                 do full dependence check except for Zip and Jar files\n"
              << "+Kname=TypeKeyWord map name to type keyword\n"
              << "+M                 generate makefile dependencies\n"
+             << "+M=filename        generate makefile dependencies information in filename\n"
              << "+P                 Pedantic compilation - issues lots of warnings\n"
              << "+Td...d            set value of tab d...d spaces; each d is a decimal digit\n"
              << "+U                 do full dependence check including Zip and Jar files\n"
              << "+Z                 treat cautions as errors\n"
-             << "\nVersion 0.46 (9 Mar 99)"
+             << "\nVersion 0.47 (10 Mar 99)"
              << " by Philippe Charles and David Shields, IBM Research.\n";
         cerr << "Please report problems to shields@watson.ibm.com.\n" ;
     cerr << "or via browser at http://www.ibm.com/research/jikes\n";

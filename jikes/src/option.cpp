@@ -153,6 +153,7 @@ void Option::SaveCurrentDirectoryOnDisk(char c)
 
 Option::Option(ArgumentExpander &arguments) : default_path(NULL),
                                               classpath(NULL),
+                                              makefile_name(NULL),
                                               debug_dump_lex(false),
                                               debug_dump_ast(false),
                                               debug_dump_class(false),
@@ -361,6 +362,12 @@ Option::Option(ArgumentExpander &arguments) : default_path(NULL),
             {
                  makefile = true;
                  full_check = true;
+            }
+            else if (strncmp(arguments.argv[i], "+M=", 3) == 0) 
+            {
+                 makefile = true;
+                 full_check = true;
+                 makefile_name = &arguments.argv[i][3];
             }
             else if (strcmp(arguments.argv[i], "+O") == 0)
             {
