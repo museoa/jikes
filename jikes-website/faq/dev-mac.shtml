@@ -39,18 +39,18 @@
         <tr>
           <td><!-- #BeginEditable "TopicContent" --> 
             <h1>Jikes on Mac</h1>
-            <p>Jikes has been successfully compiled and used on MacOS X 10.2
-              (Jaguar).</p>
+            <p>Jikes has been successfully compiled and used on Mac OS X 10.2
+              (Jaguar) and 10.3 (Panther).</p>
             <h2>Development tools</h2>
             <p>You'll need Apple's Developer Tools to compile Jikes. Although
-              they come with Mac OS X 10.2, they're not installed by default.
-              You can install them from the gray Developer Tools CD-ROM that
-              accompanied the other Mac OS X CD-ROMS, or you can download a
+              they come with Mac OS X, they're not installed by default.
+              You can install them from the Developer Tools CD-ROM that
+              accompanied the other Mac OS X CD-ROM, or you can download a
               disk image free from
               <a href="http://developer.apple.com/tools/index.html">Apple's
               Developer website</a>.</p>
             <p>The Developer Tools installation includes the GUI tools
-              such as ProjectBuilder and many of the underlying GNU tools
+              such as Xcode and many of the underlying GNU tools
               you know and love from other Unixes, including all the ones
               you'll need to build Jikes.
             <p>The command-line tools are installed in <tt>/usr/bin/</tt>
