@@ -3997,15 +3997,22 @@ void Semantic::ProcessStaticInitializers(AstClassBody* class_body)
     assert(FinalFields());
 
     //
+    // Work out how many statements we'll need.
+    //
+    unsigned estimate = class_body -> NumStaticInitializers();
+    for (unsigned i = 0; i < class_body -> NumClassVariables(); ++i)
+    {
+        estimate += class_body -> ClassVariable(i) -> NumVariableDeclarators();
+    }
+    MethodSymbol* init_method = GetStaticInitializerMethod(estimate);
+
+    //
     // The static initializers and class variable initializers are executed
     // in textual order, with the exception that assignments may occur before
     // declaration. See JLS 8.5.
     //
     unsigned j = 0;
     unsigned k = 0;
-    unsigned estimate = class_body -> NumClassVariables() +
-        class_body -> NumStaticInitializers();
-    MethodSymbol* init_method = GetStaticInitializerMethod(estimate);
     while (j < class_body -> NumClassVariables() &&
            k < class_body -> NumStaticInitializers())
     {
@@ -4145,15 +4152,23 @@ void Semantic::ProcessInstanceInitializers(AstClassBody* class_body)
     }
 
     //
+    // Work out how many statements we'll need.
+    //
+    unsigned estimate = class_body -> NumInstanceInitializers();
+    for (unsigned i = 0; i < class_body -> NumInstanceVariables(); ++i)
+    {
+        estimate += class_body -> InstanceVariable(i) ->
+            NumVariableDeclarators();
+    }
+    block -> AllocateStatements(estimate);
+
+    //
     // Initialization code is executed by every constructor, just after the
     // superclass constructor is called, in textual order along with any
     // instance variable initializations.
     //
     unsigned j = 0;
     unsigned k = 0;
-    unsigned estimate = class_body -> NumInstanceVariables() +
-        class_body -> NumInstanceInitializers();
-    block -> AllocateStatements(estimate);
     while (j < class_body -> NumInstanceVariables() &&
            k < class_body -> NumInstanceInitializers())
     {

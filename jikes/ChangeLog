@@ -1,3 +1,13 @@
+2004-03-07  Elliott Hughes  <enh@acm.org>
+
+	* src/decl.cpp (ProcessInstanceInitializers, ProcessStaticInitializers):
+	fix compilation of classes such as Sun's implementation of
+	java.lang.Character which use field declarations that declare more
+	than one field. The misleading names NumInstanceVariables and
+	NumClassVariables actually give the number of field declarations,
+	not the number of variables declared (i.e. "int i = 0, j = 1;" was
+	being treated as one rather than two).
+
 2004-03-05  Eric Blake  <ebb9@byu.net>
 
 	* src/ast.h (AstMemberValue, AstMemberValuePair, AstAnnotation),
