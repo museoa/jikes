@@ -1,3 +1,37 @@
+2002-08-02  Eric Blake  <ebb9@email.byu.edu>
+
+	Overhaul line ending and error message output. Solves bug 2879,
+	and makes errors more unified in appearance.
+	* src/gencode.java (IsNewline): Redefine.
+	(IsWhitespace): New category, necessary for @deprecated - bug 519.
+	* src/code.cpp:
+	* src/code.h: Regenerate.
+	* src/control.cpp (ProcessBodies): Do not output .class file after
+	parse error, even if we were able to recover.
+	* src/diagnose.h (ParseErrorInfo):
+	* src/diagnose.cpp:
+	* src/error.h (ErrorInfo):
+	* src/error.cpp:
+	* src/stream.h (StreamError):
+	* src/stream.cpp: Unify, using new features of LexStream.
+	* src/option.cpp:
+	* src/parser.cpp:
+	* src/unparse.cpp:
+	* src/dump.cpp: Fix outputting bugs, plus file formatting.
+	* src/expr.cpp (ProcessCharacterLiteral, ProcessStringLiteral):
+	Allow a known bad token to not kill semantic analysis.
+	* src/lookup.cpp (FindOrInsertChar, FindOrInsertString): Keep the
+	quotes surrounding literals.
+	* src/platform.h (operator<<): Make sure non-printable characters
+	do not cause display problems.
+	* src/scanner.cpp: Improve comment and literal parsing.
+	* src/stream.cpp (ProcessInputAscii, ProcessInputUnicode): Improve
+	parsing, especially with end-of-file issues.
+	* src/stream.h (RightColumn, OutputLine, OutputSource): Added.
+	(ComputeColumns, InitializeColumns): Deleted.
+	* src/tab.h:
+	* src/tab.cpp (Tab): Improve tab expansion.
+
 2002-07-31  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/symbol.cpp (FindOrInsertClassLiteral): Fix coredump with

@@ -171,7 +171,7 @@ Ast *Parser::HeaderParse()
     //
     // Process a terminal
     //
-    for (;;)
+    while (true)
     {
         if (++state_stack_top >= stack_length)
             ReallocateStacks();
@@ -491,7 +491,7 @@ AstMethodBody *Parser::ParseSegment(TokenObject start_token)
     //
     // Process a terminal
     //
-    for (;;)
+    while (true)
     {
         if (++state_stack_top >= stack_length)
             ReallocateStacks();
@@ -552,7 +552,7 @@ void Parser::RepairParse(TokenObject curtok)
     //
     // Repair an error
     //
-    for (;;)
+    while(true)
     {
         //
         // Pop state stack up to first state that had an
@@ -581,7 +581,7 @@ void Parser::RepairParse(TokenObject curtok)
         //
         // Process a terminal
         //
-        for (;;)
+        while (true)
         {
             if (++state_stack_top >= stack_length)
                  ReallocateStacks();
@@ -763,7 +763,8 @@ int Parser::ParseCheck(int stck[], int stack_top, int first_token,
         lex_stream -> Reset(buffer[buffer_position]);
     }
 
-    process_terminal: for (;;)
+ process_terminal:
+    while (true)
     {
         if (++temp_stack_top >= stack_length)  /* Stack overflow!!! */
             return indx;

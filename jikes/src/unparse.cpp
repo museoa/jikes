@@ -128,8 +128,7 @@ void AstCompilationUnit::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
         os << "/*AstCompilationUnit:#" << id << "*/";
-    // The file is
-    // os << lex_stream -> FileName();
+    os << "// " << lex_stream -> FileName() << endl;
     if (package_declaration_opt)
         package_declaration_opt -> Unparse(os, lex_stream);
     for (int m = 0; m < NumImportDeclarations(); m++)
@@ -176,6 +175,8 @@ void AstClassDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
         os << "/*AstClassDeclaration:#" << id << "*/";
+    if (lex_stream -> IsDeprecated(lex_stream -> Previous(LeftToken())))
+        os << "/**@deprecated*/ ";
     for (int i = 0; i < NumClassModifiers(); i++)
     {
         os << lex_stream -> NameString(ClassModifier(i) -> modifier_kind_token);
@@ -202,7 +203,6 @@ void AstClassDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
         }
         os << " ";
     }
-    // os << ") #" << class_body -> id << endl;
     class_body -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
         os << "/*:AstClassDeclaration#" << id << "*/";
@@ -262,6 +262,8 @@ void AstFieldDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
         os << "/*AstFieldDeclaration:#" << id << "*/";
+    if (lex_stream -> IsDeprecated(lex_stream -> Previous(LeftToken())))
+        os << "/**@deprecated*/ ";
     for (int i = 0; i < NumVariableModifiers(); i++)
     {
         os << lex_stream -> NameString(VariableModifier(i) -> modifier_kind_token);
@@ -272,7 +274,7 @@ void AstFieldDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
     for (int k = 0; k < NumVariableDeclarators(); k++)
     {
         if (k>0)
-            os << " ,";
+            os << ", ";
         VariableDeclarator(k) -> Unparse(os, lex_stream);
     }
     os << ";" << endl;
@@ -319,6 +321,8 @@ void AstMethodDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
         os << "/*AstMethodDeclaration:#" << id << "*/";
+    if (lex_stream -> IsDeprecated(lex_stream -> Previous(LeftToken())))
+        os << "/**@deprecated*/ ";
     for (int i = 0; i < NumMethodModifiers(); i++)
     {
         os << lex_stream -> NameString(MethodModifier(i) -> modifier_kind_token);
@@ -415,6 +419,8 @@ void AstConstructorDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
         os << "/*AstConstructorDeclaration:#" << id << "*/";
+    if (lex_stream -> IsDeprecated(lex_stream -> Previous(LeftToken())))
+        os << "/**@deprecated*/ ";
     for (int i = 0; i < NumConstructorModifiers(); i++)
     {
         os << lex_stream -> NameString(ConstructorModifier(i) -> modifier_kind_token);
@@ -440,6 +446,8 @@ void AstInterfaceDeclaration::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
         os << "/*AstInterfaceDeclaration:#" << id << "*/";
+    if (lex_stream -> IsDeprecated(lex_stream -> Previous(LeftToken())))
+        os << "/**@deprecated*/ ";
     for (int i = 0; i < NumInterfaceModifiers(); i++)
     {
         os << lex_stream -> NameString(InterfaceModifier(i) -> modifier_kind_token);
@@ -573,7 +581,7 @@ void AstSwitchStatement::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
         os << "/*AstSwitchStatement:#" << id << "*/";
-  // What about the label_opt??
+    // What about the label_opt??
     os << lex_stream -> NameString(switch_token);
     AstParenthesizedExpression *parenth = expression -> ParenthesizedExpressionCast();
     if (!parenth)
@@ -581,11 +589,7 @@ void AstSwitchStatement::Unparse(Ostream& os, LexStream* lex_stream)
     expression -> Unparse(os, lex_stream);
     if (!parenth)
         os << ")";
-    // I think that switch_block will output its own braces.
-    // os << "{" << endl;
     switch_block -> Unparse(os, lex_stream);
-    // what about switch_labels_opt?
-    // os << "}" << endl;
     if (Ast::debug_unparse)
         os << "/*:AstSwitchStatement#" << id << "*/";
 }
@@ -849,12 +853,10 @@ void AstStringLiteral::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
         os << "/*AstStringLiteral:#" << id << "*/";
-    {
-        bool old_expand = os.ExpandWchar();
-        os.SetExpandWchar(true);
-        os << lex_stream -> NameString(string_literal_token), lex_stream -> NameStringLength(string_literal_token);
-        os.SetExpandWchar(old_expand);
-    }
+    bool old_expand = os.ExpandWchar();
+    os.SetExpandWchar(true);
+    os << lex_stream -> NameString(string_literal_token);
+    os.SetExpandWchar(old_expand);
     if (Ast::debug_unparse)
         os << "/*:AstStringLiteral#" << id << "*/";
 }
@@ -863,12 +865,10 @@ void AstCharacterLiteral::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (Ast::debug_unparse)
         os << "/*AstCharacterLiteral:#" << id << "*/";
-    {
-        bool old_expand = os.ExpandWchar();
-        os.SetExpandWchar(true);
-        os << lex_stream -> NameString(character_literal_token), lex_stream -> NameStringLength(character_literal_token);
-        os.SetExpandWchar(old_expand);
-    }
+    bool old_expand = os.ExpandWchar();
+    os.SetExpandWchar(true);
+    os << lex_stream -> NameString(character_literal_token);
+    os.SetExpandWchar(old_expand);
     if (Ast::debug_unparse)
         os << "/*:AstCharacterLiteral#" << id << "*/";
 }

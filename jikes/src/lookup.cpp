@@ -667,10 +667,10 @@ if (hash_size < total)
 
 LiteralValue *IntLiteralTable::FindOrInsertChar(LiteralSymbol *literal)
 {
-    wchar_t *name = literal -> Name();
-    int len = literal -> NameLength();
+    wchar_t *name = literal -> Name() + 1;
+    int len = literal -> NameLength() - 2; // discard ''
 
-    if (len == 0) // An isolated quote.
+    if (len <= 0) // An isolated or unterminated quote.
         return literal -> value = bad_value;
     if (len == 1) // A regular character.
         return literal -> value = FindOrInsert((int) name[0]);
@@ -1426,9 +1426,8 @@ DoubleLiteralValue *DoubleLiteralTable::FindOrInsert(IEEEdouble value)
 
 LiteralValue *Utf8LiteralTable::FindOrInsertString(LiteralSymbol *literal)
 {
-    wchar_t *name = literal -> Name();
-
-    int literal_length = literal -> NameLength();
+    wchar_t *name = literal -> Name() + 1;
+    int literal_length = literal -> NameLength() - 2; // discard ""
 
     // Big enough for the worst case: 3 bytes/char + \0.
     char *value = new char[literal_length * 3 + 1];

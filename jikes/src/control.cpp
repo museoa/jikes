@@ -1355,6 +1355,7 @@ void Control::ProcessBodies(TypeSymbol *type)
         }
 
         if (sem -> NumErrors() == 0 &&
+            sem -> lex_stream -> NumBadTokens() == 0 &&
             ! sem -> compilation_unit -> BadCompilationUnitCast())
         {
             Tuple<TypeSymbol *> *types = new Tuple<TypeSymbol *>(1024);

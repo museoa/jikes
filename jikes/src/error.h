@@ -68,7 +68,6 @@ private:
     wchar_t *msg;
     unsigned num;
     short msg_code;
-    short right_string_length;
     JikesErrorSeverity severity;
 
     static bool emacs_style_report;
@@ -76,9 +75,6 @@ private:
 
     wchar_t *regularErrorString();
     wchar_t *emacsErrorString();
-
-    void PrintLargeSource(ErrorString &s);
-    void PrintSmallSource(ErrorString &s);
 
     void Initialize(LexStream *, wchar_t *, JikesErrorSeverity);
 };
@@ -117,7 +113,6 @@ public:
         CODE_OVERFLOW,
         NEGATIVE_ARRAY_SIZE,
         UNNECESSARY_PARENTHESIS,
-        CANNOT_COMPUTE_COLUMNS,
         EMPTY_DECLARATION,
         REDUNDANT_MODIFIER,
         RECOMMENDED_MODIFIER_ORDER,
@@ -424,7 +419,6 @@ private:
     static wchar_t *PrintCODE_OVERFLOW(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNEGATIVE_ARRAY_SIZE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNNECESSARY_PARENTHESIS(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintCANNOT_COMPUTE_COLUMNS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintEMPTY_DECLARATION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintREDUNDANT_MODIFIER(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintRECOMMENDED_MODIFIER_ORDER(ErrorInfo &, LexStream *, Control &);

@@ -27,7 +27,7 @@ void ErrorInfo::Initialize(LexStream *l, wchar_t *m, JikesErrorSeverity s)
     left_line_no = lex_stream -> Line(left_token);
     left_column_no = lex_stream -> Column(left_token);
     right_line_no = lex_stream -> Line(right_token);
-    right_column_no = lex_stream -> Column(right_token);
+    right_column_no = lex_stream -> RightColumn(right_token);
 
     msg = m;
     severity = s;
@@ -73,9 +73,7 @@ wchar_t *ErrorInfo::regularErrorString()
 {
     ErrorString s;
 
-    if (left_token < right_token)
-        PrintLargeSource(s);
-    else PrintSmallSource(s);
+    lex_stream -> OutputSource(this, s);
 
     s << endl << "*** " << getSeverityString() << ": "
       << getErrorMessage();
@@ -83,117 +81,6 @@ wchar_t *ErrorInfo::regularErrorString()
     return s.Array();
 }
 
-//
-// This procedure is invoked to print a large message that may
-// span more than one line. The parameter message points to the
-// starting line. The parameter k points to the error message in
-// the error structure.
-//
-void ErrorInfo::PrintLargeSource(ErrorString &s)
-{
-    if (left_line_no == right_line_no)
-    {
-        if (left_line_no == 0)
-            s << endl;
-        else
-        {
-            s << endl << endl;
-            s.width(6);
-            s << left_line_no << ". ";
-            for (int i = lex_stream -> LineStart(left_line_no);
-                 i <= lex_stream -> LineEnd(left_line_no); i++)
-            {
-                s << lex_stream -> InputBuffer()[i];
-            }
-
-            int offset = lex_stream -> WcharOffset(left_token, right_token);
-            s.width(left_column_no + 8);
-            s << "<";
-            s.width(right_column_no + right_string_length - left_column_no - 1 + offset);
-            s.fill('-');
-            s << ">";
-            s.fill(' ');
-        }
-    }
-    else
-    {
-        s << endl << endl;
-        s.width(left_column_no + 8);
-        s << "<";
-
-        s.width(lex_stream -> LineSegmentLength(left_token));
-        s.fill('-');
-        s << endl;
-        s.fill(' ');
-
-        s.width(6);
-        s << left_line_no << ". ";
-        for (int i = lex_stream -> LineStart(left_line_no);
-             i <= lex_stream -> LineEnd(left_line_no); i++)
-        {
-            s << lex_stream -> InputBuffer()[i];
-        }
-
-        if (right_line_no > left_line_no + 1)
-        {
-            s.width(left_column_no + 7);
-            s << " . . ." << endl;
-        }
-
-        s.width(6);
-        s << right_line_no << ". ";
-        for (int j = lex_stream -> LineStart(right_line_no);
-             j <= lex_stream -> LineEnd(right_line_no); j++)
-        {
-            s << lex_stream -> InputBuffer()[j];
-        }
-
-        int offset = lex_stream -> WcharOffset(right_token);
-        s.width(8);
-        s << "";
-        s.width(right_column_no + right_string_length - 1 + offset);
-        s.fill('-');
-        s << ">";
-        s.fill(' ');
-    }
-}
-
-//
-// This procedure is invoked to print a small message that may
-// only span a single line. The parameter k points to the error
-// message in the error structure.
-//
-void ErrorInfo::PrintSmallSource(ErrorString &s)
-{
-    if (left_line_no == 0)
-        s << endl;
-    else
-    {
-        s << endl << endl;
-        s.width(6);
-        s << left_line_no;
-        s << ". ";
-        for (int i = lex_stream -> LineStart(left_line_no);
-             i <= lex_stream -> LineEnd(left_line_no); i++)
-        {
-            s << lex_stream -> InputBuffer()[i];
-        }
-
-        s.width(left_column_no + 7);
-        s << "";
-        if (left_column_no == right_column_no && right_string_length == 1)
-            s << '^';
-        else
-        {
-            int offset = lex_stream -> WcharOffset(left_token, right_token);
-            s << '<';
-            s.width(right_column_no + right_string_length - left_column_no - 1 + offset);
-            s.fill('-');
-            s << ">";
-            s.fill(' ');
-        }
-    }
-}
 
 wchar_t *ErrorInfo::emacsErrorString()
 {
@@ -411,10 +298,9 @@ void SemanticError::Report(SemanticErrorKind msg_code,
         }
     }
 
-    error[i].num         = i;
-    error[i].left_token  = (left_token > right_token ? right_token : left_token);
+    error[i].num = i;
+    error[i].left_token = (left_token > right_token ? right_token : left_token);
     error[i].right_token = right_token;
-    error[i].right_string_length = lex_stream -> NameStringLength(right_token);
 
     //
     // Dump the error immediately ?
@@ -510,7 +396,6 @@ void SemanticError::StaticInitializer()
     print_message[CODE_OVERFLOW] = PrintCODE_OVERFLOW;
     print_message[NEGATIVE_ARRAY_SIZE] = PrintNEGATIVE_ARRAY_SIZE;
     print_message[UNNECESSARY_PARENTHESIS] = PrintUNNECESSARY_PARENTHESIS;
-    print_message[CANNOT_COMPUTE_COLUMNS] = PrintCANNOT_COMPUTE_COLUMNS;
     print_message[EMPTY_DECLARATION] = PrintEMPTY_DECLARATION;
     print_message[REDUNDANT_MODIFIER] = PrintREDUNDANT_MODIFIER;
     print_message[RECOMMENDED_MODIFIER_ORDER] = PrintRECOMMENDED_MODIFIER_ORDER;
@@ -855,112 +740,75 @@ int SemanticError::PrintMessages()
     //
     // If the errors have not yet been dumped,...
     //
-    if (! control.option.dump_errors)
+    if (control.option.errors) // regular error messages
     {
-        if (control.option.errors)
+        if (num_errors == 0)
         {
-            if (num_errors == 0)
-            {
-                if (control.option.nowarn) // we only had warnings and they should not be reported
-                    return return_code;
+            if (control.option.nowarn)
+                // we only had warnings and they should not be reported
+                return return_code;
 
-                Coutput << endl << "Issued "
-                        << num_warnings
-                        << (lex_stream -> file_symbol -> semantic == control.system_semantic ? " system" : " semantic")
+            Coutput << endl << "Issued " << num_warnings
+                    << (lex_stream -> file_symbol -> semantic ==
+                        control.system_semantic ? " system" : " semantic")
+                    << " warning" << (num_warnings <= 1 ? "" : "s");
+        }
+        else // we had some errors, and possibly warnings as well
+        {
+            Coutput << endl << "Found " << num_errors
+                    << (lex_stream -> file_symbol -> semantic ==
+                        control.system_semantic ? " system" : " semantic")
+                    << " error" << (num_errors <= 1 ? "" : "s");
+            if (num_warnings > 0 && !control.option.nowarn)
+            {
+                Coutput << " and issued " << num_warnings
                         << " warning" << (num_warnings <= 1 ? "" : "s");
             }
-            else // we had some errors, and possibly warnings as well
-            {
-                Coutput << endl << "Found "
-                        << num_errors
-                        << (lex_stream -> file_symbol -> semantic == control.system_semantic ? " system" : " semantic")
-                        << " error" << (num_errors <= 1 ? "" : "s");
-                if (num_warnings > 0 && !control.option.nowarn)
-                {
-                     Coutput << " and issued "
-                             << num_warnings << " warning" << (num_warnings <= 1 ? "" : "s");
-                }
-            }
-
-            if (lex_stream -> file_symbol -> semantic != control.system_semantic)
-            {
-                Coutput << " compiling \""
-                        << lex_stream -> FileName()
-                        << '\"';
-            }
-            Coutput << ':';
-
-            //
-            //
-            //
-            if (lex_stream -> file_symbol -> semantic != control.system_semantic)
-            {
-                lex_stream -> RereadInput();
-
-                if (! lex_stream -> InputBuffer())
-                {
-                    char *file_name = lex_stream -> FileName();
-                    int length = lex_stream -> FileNameLength();
-                    wchar_t *name = new wchar_t[length + 1];
-                    for (int i = 0; i < length; i++)
-                        name[i] = file_name[i];
-                    name[length] = U_NULL;
-                    control.system_semantic -> ReportSemError(SemanticError::CANNOT_REOPEN_FILE,
-                                                              0,
-                                                              0,
-                                                              name);
-                    delete [] name;
-                }
-            }
-
-            if (lex_stream -> file_symbol -> semantic == control.system_semantic ||
-                lex_stream -> InputBuffer())
-            {
-                SortMessages();
-                for (int k = 0; k < error.Length(); k++)
-                {
-                    if (warning[error[k].msg_code] != 1 ||
-                        ! control.option.nowarn)
-                    {
-                        reportError(k);
-                    }
-                }
-                lex_stream -> DestroyInput();
-            }
         }
-        else
-        {
-            if (lex_stream -> file_symbol -> semantic != control.system_semantic)
-            {
-                if (! lex_stream -> ComputeColumns())
-                {
-                    char *file_name = lex_stream -> FileName();
-                    int length = lex_stream -> FileNameLength();
-                    wchar_t *name = new wchar_t[length + 1];
-                    for (int i = 0; i < length; i++)
-                        name[i] = file_name[i];
-                    name[length] = U_NULL;
-                    control.system_semantic -> ReportSemError(SemanticError::CANNOT_COMPUTE_COLUMNS,
-                                                              0,
-                                                              0,
-                                                              name);
-                    delete [] name;
-                }
-            }
 
-            SortMessages();
-            for (int k = 0; k < error.Length(); k++)
-            {
-                if ((warning[error[k].msg_code] != 1) || (! control.option.nowarn))
-                {
-                    reportError(k);
-                }
-            }
+        if (lex_stream -> file_symbol -> semantic !=
+            control.system_semantic)
+        {
+            Coutput << " compiling \"" << lex_stream -> FileName() << '\"';
+        }
+        Coutput << ':';
+    }
+
+    //
+    // Reopen the file to report the errors, unless we didn't parse it in the
+    // first place.
+    //
+    if (lex_stream -> file_symbol -> semantic != control.system_semantic)
+    {
+        lex_stream -> RereadInput();
+
+        if (! lex_stream -> InputBuffer())
+        {
+            char *file_name = lex_stream -> FileName();
+            int length = lex_stream -> FileNameLength();
+            wchar_t *name = new wchar_t[length + 1];
+            for (int i = 0; i < length; i++)
+                name[i] = file_name[i];
+            name[length] = U_NULL;
+            control.system_semantic ->
+                ReportSemError(SemanticError::CANNOT_REOPEN_FILE, 0, 0, name);
+            delete [] name;
         }
     }
 
-    Coutput.flush();
+    if (lex_stream -> file_symbol -> semantic == control.system_semantic ||
+        lex_stream -> InputBuffer())
+    {
+        SortMessages();
+        for (int k = 0; k < error.Length(); k++)
+        {
+            if (warning[error[k].msg_code] != 1 || ! control.option.nowarn)
+                reportError(k);
+        }
+        lex_stream -> DestroyInput();
+    }
 
+    Coutput.flush();
     return return_code;
 }
 
@@ -970,12 +818,13 @@ void SemanticError::reportError(int k)
                         (print_message[error[k].msg_code]) (error[k], lex_stream, control),
                         (warning[error[k].msg_code] == 1
                          ? ErrorInfo::JIKES_WARNING
-                         : (warning[error[k].msg_code] == 2 && (! control.option.zero_defect)
+                         : ((warning[error[k].msg_code] == 2 &&
+                             ! control.option.zero_defect)
                             ? ErrorInfo::JIKES_CAUTION
                             : ErrorInfo::JIKES_ERROR))
     );
 
-    JikesAPI::getInstance()->reportError(&error[k]);
+    JikesAPI::getInstance() -> reportError(&error[k]);
 }
 
 
@@ -1354,19 +1203,6 @@ wchar_t *SemanticError::PrintUNNECESSARY_PARENTHESIS(ErrorInfo &err,
 
     s << "Parenthesis surrounding a variable are syntactically unnecessary. "
       << "While legal now, they were illegal in previous versions of Java.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintCANNOT_COMPUTE_COLUMNS(ErrorInfo &err,
-                                                    LexStream *lex_stream,
-                                                    Control &control)
-{
-    ErrorString s;
-
-    s << "Unable to reopen file \"" << err.insert1
-      << "\". Therefore, column positions may be incorrect.";
 
     return s.Array();
 }

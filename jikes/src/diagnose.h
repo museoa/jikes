@@ -63,7 +63,6 @@ private:
     LexStream::TokenIndex right_token;
 
     int name_index;
-    int right_string_length;
     int num;
     unsigned char msg_level;
     ParseErrorCode msg_code;
@@ -76,7 +75,8 @@ class ParseError : public javaprs_table
 public:
 
     void Report(int msg_level, ParseErrorCode, int name_index,
-                LexStream::TokenIndex left_token, LexStream::TokenIndex right_token,
+                LexStream::TokenIndex left_token,
+                LexStream::TokenIndex right_token,
                 int scope_name_index = 0);
 
     void SortMessages();
@@ -91,8 +91,7 @@ private:
 
     Tuple<ParseErrorInfo> errors;
 
-    void PrintPrimaryMessage(int k);
-    void PrintSecondaryMessage(int k);
+    void PrintMessage(int k);
 };
 
 

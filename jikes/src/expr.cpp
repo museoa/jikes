@@ -2784,13 +2784,18 @@ void Semantic::ProcessCharacterLiteral(Ast *expr)
 {
     AstCharacterLiteral *char_literal = (AstCharacterLiteral *) expr;
 
-    LiteralSymbol *literal = lex_stream -> LiteralSymbol(char_literal -> character_literal_token);
+    LiteralSymbol *literal =
+        lex_stream -> LiteralSymbol(char_literal -> character_literal_token);
 
     if (! literal -> value)
         control.int_pool.FindOrInsertChar(literal);
-    assert(literal -> value != control.BadValue());
-    char_literal -> value = literal -> value;
-    char_literal -> symbol = control.char_type;
+    if (literal -> value == control.BadValue())
+        char_literal -> symbol = control.no_type;
+    else
+    {
+        char_literal -> value = literal -> value;
+        char_literal -> symbol = control.char_type;
+    }
 }
 
 
@@ -2915,9 +2920,13 @@ void Semantic::ProcessStringLiteral(Ast *expr)
 
     if (! literal -> value)
         control.Utf8_pool.FindOrInsertString(literal);
-    assert(literal -> value != control.BadValue());
-    string_literal -> value = literal -> value;
-    string_literal -> symbol = control.String();
+    if (literal -> value == control.BadValue())
+        string_literal -> symbol = control.no_type;
+    else
+    {
+        string_literal -> value = literal -> value;
+        string_literal -> symbol = control.String();
+    }
 }
 
 

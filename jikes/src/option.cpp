@@ -885,7 +885,7 @@ Option::Option(ArgumentExpander& arguments,
     // If the traditional batch output form for reporting errors is requested,
     // then wide character expansion is turned on.
     //
-    if (errors && (! dump_errors))
+    if (errors)
         Coutput.SetExpandWchar();
 }
 
