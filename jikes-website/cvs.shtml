@@ -18,6 +18,7 @@
           <dt>jacks</dt><dd>Jacks is an Automated Compiler Killing Suite</dd>
           <dt>jikestst</dt><dd>The old jikes test package code</dd>
           <dt>jikespg</dt><dd>The Jikes Parser Generator source code</dd>
+          <dt>jcl</dt><dd>Jikes Class Lister source code (old)</dd>
           <dt>jikes-website</dt><dd>The project webpages</dd>
         </dl>
       </dd>
