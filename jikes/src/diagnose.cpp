@@ -2303,7 +2303,7 @@ void ParseError::PrintPrimaryMessage(int k)
         Coutput << lex_stream -> FileName()
                 << ':' << left_line_no  << ':' << left_column_no
                 << ':' << right_line_no << ':' << right_column_no
-                << ":\n    Syntax: ";
+                << ": Syntax: ";
     }
     else Coutput << "*** Syntax Error: ";
 
@@ -2437,7 +2437,7 @@ void ParseError::PrintSecondaryMessage(int k)
         Coutput << lex_stream -> FileName()
                 << ':' << left_line_no  << ':' << left_column_no
                 << ':' << right_line_no << ':' << right_column_no
-                << ":\n    Syntax: ";
+                << ": Syntax: ";
     }
     else Coutput << "*** Syntax Error: ";
 
