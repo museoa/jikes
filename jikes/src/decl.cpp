@@ -1900,6 +1900,11 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment,
         }
     }
 
+    //
+    // Compute the set of final variables declared by the user in this type.
+    // Then process all variable initializers and initializer blocks.
+    //
+    DefiniteSetup();
     ProcessStaticInitializers(class_body);
     ProcessInstanceInitializers(class_body);
 
@@ -1949,25 +1954,11 @@ void Semantic::CompleteSymbolTable(AstInterfaceDeclaration *interface_declaratio
         ComputeMethodsClosure(this_type,
                               interface_declaration -> identifier_token);
 
-    //
-    // Compute the set of final variables (all fields in an interface are
-    // final) in this type.
-    //
-    Tuple<VariableSymbol *> finals(this_type -> NumVariableSymbols());
-    for (int j = 0; j < this_type -> NumVariableSymbols(); j++)
-    {
-        VariableSymbol *variable_symbol = this_type -> VariableSym(j);
-        finals.Next() = variable_symbol;
-    }
-
-    //
-    // Initialize each variable, in turn, and check to see if we need to
-    // declare a static initialization method: <clinit>.
-    //
+    DefiniteSetup();
     int count = interface_declaration -> NumClassVariables();
     for (int k = 0; k < count; k++)
         InitializeVariable(interface_declaration -> ClassVariable(k),
-                           GetStaticInitializerMethod(count - k), finals);
+                           GetStaticInitializerMethod(count - k));
 
     //
     // Recursively process all inner types
@@ -2762,9 +2753,6 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration *field_declaration)
             variable -> SetFlags(access_flags);
             variable -> SetOwner(this_type);
             variable -> declarator = variable_declarator;
-            // the declaration of a field is not complete until its initializer
-            // (if any) has been processed.
-            variable -> MarkIncomplete();
             if (must_be_constant &&
                 (num_dimensions != 0 ||
                  ! variable_declarator -> variable_initializer_opt ||
@@ -2897,6 +2885,7 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration *construc
         this0_variable -> SetOwner(constructor);
         this0_variable -> SetLocalVariableIndex(block_symbol ->
                                                 max_variable_index++);
+        this0_variable -> MarkComplete();
     }
 
     for (int i = 0; i < constructor_declarator -> NumFormalParameters(); i++)
@@ -2907,6 +2896,7 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration *construc
 
         symbol -> SetOwner(constructor);
         symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+        symbol -> MarkComplete();
         if (control.IsDoubleWordType(symbol -> Type()))
             block_symbol -> max_variable_index++;
         symbol -> declarator = formal_declarator;
@@ -2954,7 +2944,9 @@ void Semantic::AddDefaultConstructor(TypeSymbol *type)
             block_symbol -> InsertVariableSymbol(control.this0_name_symbol);
         this0_variable -> SetType(type -> ContainingType());
         this0_variable -> SetOwner(constructor);
-        this0_variable -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+        this0_variable -> SetLocalVariableIndex(block_symbol ->
+                                                max_variable_index++);
+        this0_variable -> MarkComplete();
     }
 
     constructor -> SetSignature(control);
@@ -3985,6 +3977,7 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
 
         symbol -> SetOwner(method);
         symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+        symbol -> MarkComplete();
         if (control.IsDoubleWordType(symbol -> Type()))
             block_symbol -> max_variable_index++;
         symbol -> declarator = formal_declarator;
@@ -4125,8 +4118,10 @@ TypeSymbol *Semantic::FindType(LexStream::TokenIndex identifier_token)
 
     NameSymbol *name_symbol = lex_stream -> NameSymbol(identifier_token);
 
-    SemanticEnvironment *env;
-    for (env = state_stack.Top(); env; env = env -> previous)
+    SemanticEnvironment *env = NULL;
+    if (state_stack.Size())
+        env = state_stack.Top();
+    for ( ; env; env = env -> previous)
     {
         type = env -> symbol_table.FindTypeSymbol(name_symbol);
         if (type)
@@ -4458,8 +4453,7 @@ void Semantic::ProcessInterface(TypeSymbol *base_type, AstExpression *name)
 // constant.
 //
 void Semantic::InitializeVariable(AstFieldDeclaration *field_declaration,
-                                  MethodSymbol *init_method,
-                                  Tuple<VariableSymbol *> &finals)
+                                  MethodSymbol *init_method)
 {
     ThisMethod() = NULL;
     AstMethodDeclaration *declaration =
@@ -4479,20 +4473,23 @@ void Semantic::InitializeVariable(AstFieldDeclaration *field_declaration,
                 variable_declarator -> pending = true;
 
                 int start_num_errors = NumErrors();
-
-                ProcessVariableInitializer(variable_declarator);
+                if (! variable_declarator -> symbol -> IsDeclarationComplete())
+                    ProcessVariableInitializer(variable_declarator);
                 if (NumErrors() == start_num_errors)
                 {
-                    DefiniteVariableInitializer(variable_declarator, finals);
+                    DefiniteFieldInitializer(variable_declarator);
                     if (! variable_declarator -> symbol -> ACC_STATIC() ||
                         ! variable_declarator -> symbol -> initial_value)
                     {
                         init_block -> AddStatement(variable_declarator);
                     }
                 }
-                else
+                else if (variable_declarator -> symbol -> ACC_FINAL())
+                {
                     // Suppress further error messages.
-                    variable_declarator -> symbol -> MarkDefinitelyAssigned();
+                    DefinitelyAssignedVariables() ->
+                        AssignElement(variable_declarator ->  symbol -> LocalVariableIndex());
+                }
 
                 variable_declarator -> pending = false;
             }
@@ -4507,8 +4504,7 @@ void Semantic::InitializeVariable(AstFieldDeclaration *field_declaration,
 // for easier bytecode emission.
 //
 inline void Semantic::ProcessInitializer(AstMethodBody *initializer,
-                                         MethodSymbol *init_method,
-                                         Tuple<VariableSymbol *> &finals)
+                                         MethodSymbol *init_method)
 {
     ThisVariable() = NULL;
     ThisMethod() = init_method;
@@ -4532,7 +4528,7 @@ inline void Semantic::ProcessInitializer(AstMethodBody *initializer,
                        initializer -> explicit_constructor_opt -> LeftToken(),
                        initializer -> explicit_constructor_opt -> RightToken());
     ProcessBlock(initializer);
-    DefiniteBlockInitializer(initializer, LocalBlockStack().max_size, finals);
+    DefiniteBlockInitializer(initializer, LocalBlockStack().max_size);
 
     init_block -> AddStatement(initializer);
 
@@ -4629,17 +4625,7 @@ void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
 
     TypeSymbol *this_type = ThisType();
     LocalBlockStack().max_size = 1;
-
-    //
-    // Compute the set of final variables declared by the user in this type.
-    //
-    Tuple<VariableSymbol *> finals(this_type -> NumVariableSymbols());
-    for (int i = 0; i < this_type -> NumVariableSymbols(); i++)
-    {
-        VariableSymbol *variable_symbol = this_type -> VariableSym(i);
-        if (variable_symbol -> ACC_FINAL())
-            finals.Next() = variable_symbol;
-    }
+    assert(FinalFields());
 
     //
     // The static initializers and class variable initializers are executed
@@ -4666,45 +4652,45 @@ void Semantic::ProcessStaticInitializers(AstClassBody *class_body)
             class_body -> StaticInitializer(k) -> static_token)
         {
             InitializeVariable(class_body -> ClassVariable(j++),
-                               init_method, finals);
+                               init_method);
         }
         else
         {
             ProcessInitializer(class_body -> StaticInitializer(k++) -> block,
-                               init_method, finals);
+                               init_method);
         }
     }
     while (j < class_body -> NumClassVariables())
     {
-        InitializeVariable(class_body -> ClassVariable(j++), init_method,
-                           finals);
+        InitializeVariable(class_body -> ClassVariable(j++), init_method);
     }
     while (k < class_body -> NumStaticInitializers())
     {
         ProcessInitializer(class_body -> StaticInitializer(k++) -> block,
-                           init_method, finals);
+                           init_method);
     }
 
     //
-    // Check that each static final variables has been initialized by now.
+    // Check that each static final variable has been initialized by now.
     // If not, issue an error and assume it is.  Notice that for inner
     // classes, we have already reported that a non-constant static
     // field is illegal, so we only need an error here for top-level
     // and static classes.
     //
-    for (int l = 0; l < finals.Length(); l++)
+    for (int l = 0; l < FinalFields() -> Length(); l++)
     {
-        if (! finals[l] -> IsDefinitelyAssigned() &&
-            finals[l] -> ACC_STATIC())
+        VariableSymbol *final_var = (*FinalFields())[l];
+        if (final_var -> ACC_STATIC() &&
+            ! DefinitelyAssignedVariables() -> da_set[l])
         {
             if (! this_type -> IsInner())
             {
                 ReportSemError(SemanticError::UNINITIALIZED_STATIC_FINAL_VARIABLE,
-                               finals[l] -> declarator -> LeftToken(),
-                               finals[l] -> declarator -> RightToken(),
-                               finals[l] -> Name());
+                               final_var -> declarator -> LeftToken(),
+                               final_var -> declarator -> RightToken(),
+                               final_var -> Name());
             }
-            finals[l] -> MarkDefinitelyAssigned();
+            DefinitelyAssignedVariables() -> AssignElement(l);
         }
     }
 
@@ -4779,18 +4765,19 @@ void Semantic::ProcessInstanceInitializers(AstClassBody *class_body)
     this_type -> instance_initializer_method = init_method;
 
     //
-    // Compute the set of final variables declared by the user in this type.
+    // Make sure the instance final fields are properly set.
     //
-    Tuple<VariableSymbol *> finals(this_type -> NumVariableSymbols());
-    for (int i = 0; i < this_type -> NumVariableSymbols(); i++)
+    assert(FinalFields());
+    for (int i = 0; i < FinalFields() -> Length(); i++)
     {
-        VariableSymbol *variable_symbol = this_type -> VariableSym(i);
-        if (variable_symbol -> ACC_FINAL())
+        VariableSymbol *variable_symbol = (*FinalFields())[i];
+        if (variable_symbol -> ACC_STATIC())
         {
-            finals.Next() = variable_symbol;
-            if (! variable_symbol -> ACC_STATIC())
-                variable_symbol -> MarkNotDefinitelyAssigned();
+            DefinitelyAssignedVariables() -> AssignElement(i);
+            BlankFinals() -> RemoveElement(i);
         }
+        else
+            DefinitelyAssignedVariables() -> ReclaimElement(i);
     }
 
     //
@@ -4817,30 +4804,29 @@ void Semantic::ProcessInstanceInitializers(AstClassBody *class_body)
             class_body -> InstanceInitializer(k) -> left_brace_token)
         {
             InitializeVariable(class_body -> InstanceVariable(j++),
-                               init_method, finals);
+                               init_method);
         }
         else
         {
             ProcessInitializer(class_body -> InstanceInitializer(k++),
-                               init_method, finals);
+                               init_method);
         }
     }
     while (j < class_body -> NumInstanceVariables())
     {
-        InitializeVariable(class_body -> InstanceVariable(j++), init_method,
-                           finals);
+        InitializeVariable(class_body -> InstanceVariable(j++), init_method);
     }
     while (k < class_body -> NumInstanceInitializers())
     {
         ProcessInitializer(class_body -> InstanceInitializer(k++),
-                           init_method, finals);
+                           init_method);
     }
 
     //
-    // Note that unlike the case of static fields. We do not ensure here that
-    // each final instance variable has been initialized at this point,
-    // because the user may chose instead to initialize such a final variable
-    // in every constructor instead. See body.cpp
+    // Note that unlike the case of static fields, we do not ensure here that
+    // each final instance variable has been initialized at this point. This
+    // is because the user may choose instead to initialize such a final
+    // variable in every constructor instead. See body.cpp
     //
     init_method -> max_block_depth = LocalBlockStack().max_size;
     init_method -> block_symbol -> CompressSpace(); // space optimization

@@ -528,6 +528,20 @@ public:
     NestingLevelStack abrupt_finally_stack;
     BlockStack block_stack;
 
+    //
+    // This set of fields is used in definite assignment analysis; they should
+    // not need to be cloned.
+    //
+    DefinitePair *definitely_assigned_variables,
+                 *universe;
+    BitSet *blank_finals;
+    DefiniteBlockStack *definite_block_stack;
+    DefiniteTryStack *definite_try_stack;
+    DefiniteFinalAssignmentStack *definite_final_assignment_stack;
+    SymbolSet *definite_visible_variables;
+    Tuple<VariableSymbol *> *final_fields;
+    bool processing_simple_assignment;
+
     SemanticEnvironment(Semantic *sem_, TypeSymbol *type_,
                         SemanticEnvironment *previous_ = NULL)
         : sem(sem_),
@@ -536,6 +550,15 @@ public:
           this_variable(NULL),
           explicit_constructor(NULL),
           ast_construct(NULL),
+          definitely_assigned_variables(NULL),
+          universe(NULL),
+          blank_finals(NULL),
+          definite_block_stack(NULL),
+          definite_try_stack(NULL),
+          definite_final_assignment_stack(NULL),
+          definite_visible_variables(NULL),
+          final_fields(NULL),
+          processing_simple_assignment(false),
           type(type_),
           next(NULL)
     {}
@@ -598,16 +621,16 @@ public:
 
     void Pop()
     {
-        if (info.Length() > 0)
-            info.Reset(info.Length() - 1);
+        assert(info.Length());
+        info.Reset(info.Length() - 1);
     }
 
     int Size() { return info.Length(); }
 
     SemanticEnvironment *Top()
     {
-        return (SemanticEnvironment *) (info.Length() > 0
-                                        ? info[info.Length() - 1] : NULL);
+        assert(info.Length());
+        return info[info.Length() - 1];
     }
 
     SemanticEnvironment *operator[](const int i) { return info[i]; }
@@ -651,15 +674,7 @@ public:
           directory_symbol(file_symbol_ -> directory_symbol),
           return_code(0),
           error(NULL),
-          this_package(file_symbol_ -> package),
-          definitely_assigned_variables(NULL),
-          universe(NULL),
-          blank_finals(NULL),
-          definite_block_stack(NULL),
-          definite_try_stack(NULL),
-          definite_final_assignment_stack(NULL),
-          definite_visible_variables(NULL),
-          processing_simple_assignment(false)
+          this_package(file_symbol_ -> package)
     {
 #ifdef JIKES_DEBUG
         for (int i = 0; i < Ast::_num_kinds; i++)
@@ -1024,6 +1039,7 @@ private:
     void CompleteSymbolTable(AstInterfaceDeclaration *);
 
     friend class TypeSymbol;
+    friend class VariableSymbol;
 
     Tuple<Symbol *> import_on_demand_packages;
     Tuple<TypeSymbol *> single_type_imports;
@@ -1033,81 +1049,85 @@ private:
     //
     PackageSymbol *this_package;
 
-    TypeSymbol *ThisType()
-    {
-        assert(state_stack.Size());
-        return state_stack.Top() -> Type();
-    }
-    MethodSymbol *&ThisMethod()
-    {
-        assert(state_stack.Size());
-        return state_stack.Top() -> this_method;
-    }
+    TypeSymbol *ThisType() { return state_stack.Top() -> Type(); }
+    MethodSymbol *&ThisMethod() { return state_stack.Top() -> this_method; }
     VariableSymbol *&ThisVariable()
     {
-        assert(state_stack.Size());
         return state_stack.Top() -> this_variable;
     }
     AstStatement *&ExplicitConstructorInvocation()
     {
-        assert(state_stack.Size());
         return state_stack.Top() -> explicit_constructor;
     }
     SymbolTableStack &LocalSymbolTable()
     {
-        assert(state_stack.Size());
         return state_stack.Top() -> symbol_table;
     }
     ExceptionTableStack &TryExceptionTableStack()
     {
-        assert(state_stack.Size());
         return state_stack.Top() -> try_exception_table_stack;
     }
     StatementStack &TryStatementStack()
     {
-        assert(state_stack.Size());
         return state_stack.Top() -> try_statement_stack;
     }
     StatementStack &BreakableStatementStack()
     {
-        assert(state_stack.Size());
         return state_stack.Top() -> breakable_statement_stack;
     }
     StatementStack &ContinuableStatementStack()
     {
-        assert(state_stack.Size());
         return state_stack.Top() -> continuable_statement_stack;
     }
     NestingLevelStack &AbruptFinallyStack()
     {
-        assert(state_stack.Size());
         return state_stack.Top() -> abrupt_finally_stack;
     }
     BlockStack &LocalBlockStack()
     {
-        assert(state_stack.Size());
         return state_stack.Top() -> block_stack;
     }
     SemanticEnvironment *GetEnvironment(Ast *ast)
     {
-        assert(state_stack.Size());
         return state_stack.Top() -> GetEnvironment(ast);
     }
     bool StaticRegion()
     {
-        assert(state_stack.Size());
         return state_stack.Top() -> StaticRegion();
     }
 
-    SemanticEnvironmentStack state_stack;
+    DefinitePair *&DefinitelyAssignedVariables()
+    {
+        return state_stack.Top() -> definitely_assigned_variables;
+    }
+    DefinitePair *&Universe() { return state_stack.Top() -> universe; }
+    BitSet *&BlankFinals() { return state_stack.Top() -> blank_finals; }
+    DefiniteBlockStack *&DefiniteBlocks()
+    {
+        return state_stack.Top() -> definite_block_stack;
+    }
+    DefiniteTryStack *&DefiniteTrys()
+    {
+        return state_stack.Top() -> definite_try_stack;
+    }
+    DefiniteFinalAssignmentStack *&DefiniteFinalAssignments()
+    {
+        return state_stack.Top() -> definite_final_assignment_stack;
+    }
+    SymbolSet *&DefiniteVisibleVariables()
+    {
+        return state_stack.Top() -> definite_visible_variables;
+    }
+    Tuple<VariableSymbol *> *&FinalFields()
+    {
+        return state_stack.Top() -> final_fields;
+    }
+    bool &ProcessingSimpleAssignment()
+    {
+        return state_stack.Top() -> processing_simple_assignment;
+    }
 
-    DefinitePair *definitely_assigned_variables,
-                 *universe;
-    BitSet *blank_finals;
-    DefiniteBlockStack *definite_block_stack;
-    DefiniteTryStack *definite_try_stack;
-    DefiniteFinalAssignmentStack *definite_final_assignment_stack;
-    SymbolSet *definite_visible_variables;
+    SemanticEnvironmentStack state_stack;
 
     bool IsIntValueRepresentableInType(AstExpression *, TypeSymbol *);
 
@@ -1160,10 +1180,8 @@ private:
     TypeSymbol *MustFindType(Ast *);
     void ProcessInterface(TypeSymbol *, AstExpression *);
 
-    void InitializeVariable(AstFieldDeclaration *, MethodSymbol *,
-                            Tuple<VariableSymbol *> &);
-    void ProcessInitializer(AstMethodBody *, MethodSymbol *,
-                            Tuple<VariableSymbol *> &);
+    void InitializeVariable(AstFieldDeclaration *, MethodSymbol *);
+    void ProcessInitializer(AstMethodBody *, MethodSymbol *);
     void ProcessStaticInitializers(AstClassBody *);
     void ProcessInstanceInitializers(AstClassBody *);
     MethodSymbol *GetStaticInitializerMethod(int estimate = 0);
@@ -1259,12 +1277,12 @@ private:
     void DefiniteArrayInitializer(AstArrayInitializer *);
     void DefiniteVariableInitializer(AstVariableDeclarator *);
     void DefiniteBlockStatements(AstBlock *);
-    void DefiniteMethodBody(AstMethodDeclaration *, Tuple<VariableSymbol *> &);
-    void DefiniteConstructorBody(AstConstructorDeclaration *,
-                                 Tuple<VariableSymbol *> &);
-    void DefiniteBlockInitializer(AstBlock *, int, Tuple<VariableSymbol *> &);
-    void DefiniteVariableInitializer(AstVariableDeclarator *,
-                                     Tuple<VariableSymbol *> &);
+    void DefiniteMethodBody(AstMethodDeclaration *);
+    void DefiniteConstructorBody(AstConstructorDeclaration *);
+    void DefiniteBlockInitializer(AstBlock *, int);
+    void DefiniteFieldInitializer(AstVariableDeclarator *);
+    void DefiniteSetup();
+    void DefiniteCleanUp();
 
     void ProcessBlockStatements(AstBlock *);
     void ProcessThisCall(AstThisCall *);
@@ -1409,12 +1427,6 @@ private:
 
     TypeSymbol *GetLocalType(AstClassDeclaration *);
     void ProcessClassDeclaration(Ast *);
-
-    //
-    // CheckSimpleName must behave differently if we are in the middle
-    // of a simple assignment. See expr.cpp.
-    //
-    bool processing_simple_assignment;
 
     void CheckSimpleName(AstSimpleName *, SemanticEnvironment *where_found);
     void ProcessSimpleName(Ast *);

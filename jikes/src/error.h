@@ -230,6 +230,7 @@ class SemanticError
         VARIABLE_NOT_DEFINITELY_UNASSIGNED,
         VARIABLE_NOT_DEFINITELY_UNASSIGNED_IN_LOOP,
         FINAL_VARIABLE_NOT_BLANK,
+        FINAL_FIELD_ASSIGNMENT_NOT_SIMPLE,
         UNINITIALIZED_FINAL_VARIABLE,
         UNINITIALIZED_STATIC_FINAL_VARIABLE,
         UNINITIALIZED_FINAL_VARIABLE_IN_CONSTRUCTOR,
@@ -535,6 +536,7 @@ private:
     static wchar_t *PrintVARIABLE_NOT_DEFINITELY_UNASSIGNED(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintVARIABLE_NOT_DEFINITELY_UNASSIGNED_IN_LOOP(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintFINAL_VARIABLE_NOT_BLANK(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintFINAL_FIELD_ASSIGNMENT_NOT_SIMPLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNINITIALIZED_FINAL_VARIABLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNINITIALIZED_STATIC_FINAL_VARIABLE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintUNINITIALIZED_FINAL_VARIABLE_IN_CONSTRUCTOR(ErrorInfo &, LexStream *, Control &);

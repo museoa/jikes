@@ -227,10 +227,6 @@ void Semantic::ProcessLocalVariableDeclarationStatement(Ast *stmt)
             symbol -> declarator = variable_declarator;
             BlockSymbol *block = LocalBlockStack().TopBlock() -> block_symbol;
 
-            //
-            // Assigning a local_variable_index to a variable also marks it
-            // complete as a side-effect.
-            //
             symbol -> SetLocalVariableIndex(block -> max_variable_index++);
             if (control.IsDoubleWordType(symbol -> Type()))
                 block -> max_variable_index++;
@@ -1386,6 +1382,7 @@ void Semantic::ProcessTryStatement(Ast *stmt)
         symbol -> SetType(parm_type);
         symbol -> SetOwner(ThisMethod());
         symbol -> SetLocalVariableIndex(block -> max_variable_index++);
+        symbol -> MarkComplete();
         symbol -> declarator = parameter -> formal_declarator;
 
         clause -> parameter_symbol = symbol;
@@ -2187,21 +2184,17 @@ void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment,
     ThisVariable() = NULL;
 
     //
-    // Compute the set of instance final variables declared by the user in
-    // this type as well as the set of instance final variables that have not
-    // yet been initialized.
+    // Compute the set of instance final variables which must be assigned in
+    // every constructor.
     //
-    Tuple<VariableSymbol *> finals(this_type -> NumVariableSymbols()),
-                            unassigned_finals(this_type -> NumVariableSymbols());
-    for (i = 0; i < this_type -> NumVariableSymbols(); i++)
+    Tuple<VariableSymbol *> unassigned_finals(FinalFields() -> Length());
+    for (i = 0; i < FinalFields() -> Length(); i++)
     {
-        VariableSymbol *variable_symbol = this_type -> VariableSym(i);
-        if (variable_symbol -> ACC_FINAL() && variable_symbol -> declarator)
+        VariableSymbol *variable_symbol = (*FinalFields())[i];
+        if (! DefinitelyAssignedVariables() -> da_set[i])
         {
-            finals.Next() = variable_symbol;
-
-            if (! variable_symbol -> IsDefinitelyAssigned())
-                unassigned_finals.Next() = variable_symbol;
+            assert(! variable_symbol -> ACC_STATIC());
+            unassigned_finals.Next() = variable_symbol;
         }
     }
 
@@ -2234,43 +2227,46 @@ void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment,
     }
     else
     {
+        DefinitePair initial_state(*DefinitelyAssignedVariables());
         for (i = 0; i < class_body -> NumConstructors(); i++)
         {
             AstConstructorDeclaration *constructor_decl =
                 class_body -> Constructor(i);
 
-            ThisMethod() = constructor_decl -> constructor_symbol;
-            MethodSymbol *this_method = ThisMethod();
-            if (this_method)
+            MethodSymbol *this_method = constructor_decl -> constructor_symbol;
+            if (! this_method)
+                continue;
+            ThisMethod() = this_method;
+            AstMethodBody *constructor_block =
+                constructor_decl -> constructor_body;
+
+            LocalSymbolTable().Push(this_method -> block_symbol -> Table());
+            LocalBlockStack().max_size = 0;
+            ProcessConstructorBody(constructor_decl);
+
+            LocalSymbolTable().Pop();
+            this_method -> max_block_depth = LocalBlockStack().max_size;
+
+            //
+            // Each constructor starts from the same initial definite
+            // assignment status, except those which call this() start with
+            // all fields definitely assigned.
+            //
+            if (constructor_block -> explicit_constructor_opt &&
+                constructor_block -> explicit_constructor_opt -> ThisCallCast())
             {
-                AstMethodBody *constructor_block =
-                    constructor_decl -> constructor_body;
-                if (constructor_block -> explicit_constructor_opt &&
-                    constructor_block -> explicit_constructor_opt -> ThisCallCast())
-                {
-                    for (int j = 0; j < unassigned_finals.Length(); j++)
-                        unassigned_finals[j] -> MarkDefinitelyAssigned();
-                }
-                else
-                {
-                    for (int j = 0; j < unassigned_finals.Length(); j++)
-                        unassigned_finals[j] -> MarkNotDefinitelyAssigned();
-                }
-
-                LocalSymbolTable().Push(this_method -> block_symbol ->
-                                        Table());
-                LocalBlockStack().max_size = 0;
-                ProcessConstructorBody(constructor_decl);
-
-                LocalSymbolTable().Pop();
-                this_method -> max_block_depth = LocalBlockStack().max_size;
-
-                DefiniteConstructorBody(constructor_decl, finals);
-
+                DefinitelyAssignedVariables() -> AssignAll();
+                DefiniteConstructorBody(constructor_decl);
+            }
+            else
+            {
+                *DefinitelyAssignedVariables() = initial_state;
+                DefiniteConstructorBody(constructor_decl);
                 for (int k = 0; k < unassigned_finals.Length(); k++)
                 {
                     VariableSymbol *variable_symbol = unassigned_finals[k];
-                    if (! variable_symbol -> IsDefinitelyAssigned())
+                    if (! DefinitelyAssignedVariables() ->
+                        da_set[variable_symbol -> LocalVariableIndex()])
                     {
                         ReportSemError(SemanticError::UNINITIALIZED_FINAL_VARIABLE_IN_CONSTRUCTOR,
                                        constructor_decl -> LeftToken(),
@@ -2282,20 +2278,14 @@ void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment,
         }
         ConstructorCycleChecker cycle_checker(class_body);
     }
-
-    for (i = 0; i < this_type -> NumPrivateAccessConstructors(); i++)
-    {
-        ThisMethod() = this_type -> PrivateAccessConstructor(i);
-        MethodSymbol *this_method = ThisMethod();
-        AstConstructorDeclaration *constructor_decl =
-            (AstConstructorDeclaration *) this_method -> declaration;
-
-        LocalSymbolTable().Push(this_method -> block_symbol -> Table());
-        LocalBlockStack().max_size = 0;
-        ProcessConstructorBody(constructor_decl);
-        LocalSymbolTable().Pop();
-        this_method -> max_block_depth = LocalBlockStack().max_size;
-    }
+    //
+    // No need to worry about private access constructors, as we have already
+    // done all necessary processing when creating them. Following all
+    // constructors, all fields are definitely assigned, and are no longer
+    // treated as blank finals.
+    //
+    DefinitelyAssignedVariables() -> AssignAll();
+    BlankFinals() -> SetEmpty();
 
     for (i = 0; i < class_body -> NumMethods(); i++)
     {
@@ -2315,7 +2305,7 @@ void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment,
             this_method -> max_block_depth = LocalBlockStack().max_size;
 
             if (NumErrors() == start_num_errors)
-                DefiniteMethodBody(method_decl, finals);
+                DefiniteMethodBody(method_decl);
         }
     }
 
@@ -2342,6 +2332,7 @@ void Semantic::ProcessExecutableBodies(SemanticEnvironment *environment,
             ProcessExecutableBodies(class_body -> NestedInterface(i));
     }
 
+    DefiniteCleanUp();
     state_stack.Pop();
 }
 
@@ -2358,7 +2349,7 @@ void Semantic::ProcessExecutableBodies(AstInterfaceDeclaration *interface_declar
     for (int k = 0; k < this_type -> NumVariableSymbols(); k++)
     {
         VariableSymbol *variable_symbol = this_type -> VariableSym(k);
-        if (! variable_symbol -> IsDefinitelyAssigned())
+        if (! DefinitelyAssignedVariables() -> da_set[k])
         {
             ReportSemError(SemanticError::UNINITIALIZED_FINAL_VARIABLE_IN_INTERFACE,
                            variable_symbol -> declarator -> LeftToken(),
@@ -2389,6 +2380,7 @@ void Semantic::ProcessExecutableBodies(AstInterfaceDeclaration *interface_declar
         }
     }
 
+    DefiniteCleanUp();
     state_stack.Pop();
 }
 

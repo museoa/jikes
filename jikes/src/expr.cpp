@@ -1820,8 +1820,9 @@ void Semantic::CheckSimpleName(AstSimpleName *simple_name,
                            simple_name -> identifier_token,
                            lex_stream -> NameString(simple_name -> identifier_token));
         }
-        else if (! variable_symbol -> IsDeclarationComplete() &&
-                 ! processing_simple_assignment)
+        else if (variable_symbol -> owner -> TypeCast() &&
+                 ! variable_symbol -> IsDeclarationComplete() &&
+                 ! ProcessingSimpleAssignment())
         {
             ReportSemError(SemanticError::NAME_NOT_YET_AVAILABLE,
                            simple_name -> identifier_token,
@@ -1838,7 +1839,7 @@ void Semantic::CheckSimpleName(AstSimpleName *simple_name,
         {
             if (containing_type == ThisType() &&
                 ! variable_symbol -> IsDeclarationComplete() &&
-                ! processing_simple_assignment) // forward reference?
+                ! ProcessingSimpleAssignment()) // forward reference?
             {
                 ReportSemError(SemanticError::NAME_NOT_YET_AVAILABLE,
                                simple_name -> identifier_token,
@@ -1873,9 +1874,9 @@ void Semantic::ProcessSimpleName(Ast *expr)
     VariableSymbol *variable_symbol = FindVariableInEnvironment(where_found, state_stack.Top(), simple_name -> identifier_token);
     if (variable_symbol)
     {
-        simple_name -> symbol = variable_symbol;
-
         assert(variable_symbol -> IsTyped());
+        simple_name -> symbol = variable_symbol;
+        CheckSimpleName(simple_name, where_found);
 
         //
         // A variable_symbol FINAL must have an initial value.
@@ -1904,8 +1905,6 @@ void Semantic::ProcessSimpleName(Ast *expr)
                 }
             }
         }
-
-        CheckSimpleName(simple_name, where_found);
 
         //
         // If the variable belongs to an outer type, add the proper
@@ -2235,57 +2234,58 @@ void Semantic::FindVariableMember(TypeSymbol *type,
         {
             assert(variable -> IsTyped());
 
-            if (base_is_type)
+            if (base_is_type && ! variable -> ACC_STATIC())
             {
-                if (! variable -> ACC_STATIC())
-                {
-                    ReportSemError(SemanticError::NAME_NOT_CLASS_VARIABLE,
-                                   field_access -> identifier_token,
-                                   field_access -> identifier_token,
-                                   lex_stream -> NameString(field_access -> identifier_token));
-                    field_access -> symbol = control.no_type;
-                    return;
-                }
+                ReportSemError(SemanticError::NAME_NOT_CLASS_VARIABLE,
+                               field_access -> identifier_token,
+                               field_access -> identifier_token,
+                               lex_stream -> NameString(field_access -> identifier_token));
+                field_access -> symbol = control.no_type;
+                return;
+            }
+            //
+            // If a variable is FINAL, initialized with a constant expression,
+            // and of the form TypeName.Identifier, we substitute the
+            // expression here - JLS 15.28. If it is of any other form, we
+            // still compute the initial value, which will be inlined in
+            // bytecode, but do not treat the expression as a constant - JLS2
+            // clarifications.
+            //
+            if (variable -> ACC_FINAL())
+            {
                 //
-                // If a variable is FINAL, initialized with a constant
-                // expression, and of the form TypeName.Identifier, we
-                // substitute the expression here. - JLS 15.28
+                // If the field declaration of the type has been completely
+                // processed, simply retrieve the value. Otherwise, compute
+                // the value of the initialization expression in question on
+                // the fly if the variable in question is not in the same type.
+                // Recall that static variables must be processed in the
+                // textual order in which they appear in the body of a type.
+                // Therefore, if the static initialization of a field refers
+                // to another variable in the same type it must have appeared
+                // before the current field declaration otherwise we will emit
+                // an error message later...
                 //
-                if (variable -> ACC_FINAL())
+                if (variable -> declarator &&
+                    ! variable -> IsDeclarationComplete())
                 {
+                    AstVariableDeclarator *declarator = variable -> declarator;
                     //
-                    // If the field declaration of the type has been
-                    // completely processed, simply retrieve the value.
-                    // Otherwise, compute the value of the initialization
-                    // expression in question on the fly if the variable in
-                    // question is not in the same type. Recall that static
-                    // variables must be processed in the textual order in
-                    // which they appear in the body of a type. Therefore, if
-                    // the static initialization of a field refers to another
-                    // variable in the same type it must have appeared before
-                    // the current field declaration otherwise we will emit an
-                    // error message later...
+                    // If the variable declarator in question exists and
+                    // its computation is not pending (to avoid looping)
+                    // and it has a simple expression initializer.
                     //
-                    if (variable -> IsDeclarationComplete())
-                        field_access -> value = variable -> initial_value;
-                    else if (variable -> declarator)
+                    if (! declarator -> pending &&
+                        declarator -> variable_initializer_opt &&
+                        ! declarator -> variable_initializer_opt -> ArrayInitializerCast())
                     {
-                        AstVariableDeclarator *declarator = variable -> declarator -> VariableDeclaratorCast();
-                        //
-                        // If the variable declarator in question exists and
-                        // its computation is not pending (to avoid looping)
-                        // and it has a simple expression initializer.
-                        //
-                        if (declarator && (! declarator -> pending) &&
-                            declarator -> variable_initializer_opt &&
-                            (! declarator -> variable_initializer_opt -> ArrayInitializerCast()))
-                        {
-                            TypeSymbol *variable_type = (TypeSymbol *) variable -> owner;
-                            Semantic *sem = variable_type -> semantic_environment -> sem;
-                            field_access -> value = sem -> ComputeFinalValue(declarator);
-                        }
+                        TypeSymbol *variable_type =
+                            (TypeSymbol *) variable -> owner;
+                        variable_type -> semantic_environment -> sem ->
+                            ComputeFinalValue(declarator);
                     }
                 }
+                if (base_is_type && variable -> IsDeclarationComplete())
+                    field_access -> value = variable -> initial_value;
             }
 
             //
@@ -3535,6 +3535,7 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression *class
         this0_variable -> SetACC_FINAL();
         this0_variable -> SetLocalVariableIndex(block_symbol ->
                                                 max_variable_index++);
+        this0_variable -> MarkComplete();
         AstThisExpression *this0_expression =
             compilation_unit -> ast_pool -> GenThisExpression(left_loc);
         this0_expression -> symbol = anonymous_type -> EnclosingType();
@@ -3607,6 +3608,7 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression *class
         super_this0_variable -> SetOwner(constructor);
         super_this0_variable -> SetLocalVariableIndex(block_symbol ->
                                                       max_variable_index++);
+        super_this0_variable -> MarkComplete();
 
         resolution -> AllocateArguments(class_creation -> NumArguments() + 1);
         resolution -> AddArgument(class_creation -> base_opt);
@@ -3630,6 +3632,7 @@ void Semantic::GetAnonymousConstructor(AstClassInstanceCreationExpression *class
         symbol -> SetType(param -> Type());
         symbol -> SetOwner(constructor);
         symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+        symbol -> MarkComplete();
         if (control.IsDoubleWordType(symbol -> Type()))
             block_symbol -> max_variable_index++;
 
@@ -6910,19 +6913,18 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
     //
     // JLS2 8.3.2.3 permits simple assignment to a variable that has not
     // yet been declared in an initializer.  If the left_hand_side is a
-    // variable, we use processing_simple_assignment to inform
+    // variable, we use ProcessingSimpleAssignment() to inform
     // CheckSimpleName() to treat it specially.
     //
-    if (assignment_expression -> assignment_tag ==
-        AstAssignmentExpression::SIMPLE_EQUAL)
+    if ((assignment_expression -> assignment_tag ==
+         AstAssignmentExpression::SIMPLE_EQUAL) &&
+        left_hand_side -> SimpleNameCast())
     {
-        AstSimpleName *simple_name = left_hand_side -> SimpleNameCast();
-        if (simple_name)
-            processing_simple_assignment = true;
+        ProcessingSimpleAssignment() = true;
     }
 
     ProcessExpression(left_hand_side);
-    processing_simple_assignment = false;
+    ProcessingSimpleAssignment() = false;
 
     TypeSymbol *left_type = left_hand_side -> Type(),
                *right_type = assignment_expression -> expression -> Type();

@@ -620,6 +620,7 @@ void SemanticError::StaticInitializer()
     print_message[VARIABLE_NOT_DEFINITELY_UNASSIGNED] = PrintVARIABLE_NOT_DEFINITELY_UNASSIGNED;
     print_message[VARIABLE_NOT_DEFINITELY_UNASSIGNED_IN_LOOP] = PrintVARIABLE_NOT_DEFINITELY_UNASSIGNED_IN_LOOP;
     print_message[FINAL_VARIABLE_NOT_BLANK] = PrintFINAL_VARIABLE_NOT_BLANK;
+    print_message[FINAL_FIELD_ASSIGNMENT_NOT_SIMPLE] = PrintFINAL_FIELD_ASSIGNMENT_NOT_SIMPLE;
     print_message[UNINITIALIZED_FINAL_VARIABLE] = PrintUNINITIALIZED_FINAL_VARIABLE;
     print_message[UNINITIALIZED_STATIC_FINAL_VARIABLE] = PrintUNINITIALIZED_STATIC_FINAL_VARIABLE;
     print_message[UNINITIALIZED_FINAL_VARIABLE_IN_CONSTRUCTOR] = PrintUNINITIALIZED_FINAL_VARIABLE_IN_CONSTRUCTOR;
@@ -2917,6 +2918,22 @@ wchar_t *SemanticError::PrintFINAL_VARIABLE_NOT_BLANK(ErrorInfo &err,
 
     s << "The final variable \"" << err.insert1
       << "\" is not a blank final in this context, so it may not be assigned.";
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintFINAL_FIELD_ASSIGNMENT_NOT_SIMPLE(ErrorInfo &err,
+                                                               LexStream *lex_stream,
+                                                               Control &control)
+{
+    ErrorString s;
+
+    s << "The final field \"" << err.insert1
+      << "\" may not be assigned in a qualified expression. Use a simple name";
+    if (err.insert2)
+        s << " or this." << err.insert2;
+    s << " instead.";
 
     return s.Array();
 }

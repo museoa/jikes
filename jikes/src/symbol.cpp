@@ -413,6 +413,7 @@ TypeSymbol *TypeSymbol::GetArrayType(Semantic *sem, int num_dimensions_)
         symbol -> SetACC_FINAL();
         symbol -> SetOwner(type);
         symbol -> SetType(sem -> control.int_type);
+        symbol -> MarkComplete();
 
         type -> CompressSpace(); // space optimization
 
@@ -1375,13 +1376,26 @@ void MethodSymbol::CleanUp()
 }
 
 
-void VariableSymbol::ProcessVariableSignature(Semantic *sem, LexStream::TokenIndex token_location)
+int VariableSymbol::LocalVariableIndex(Semantic *sem)
+{
+    if (IsLocal(sem -> ThisMethod()))
+    {
+        assert(sem -> FinalFields());
+        return local_variable_index + sem -> FinalFields() -> Length();
+    }
+    return local_variable_index;
+}
+
+
+void VariableSymbol::ProcessVariableSignature(Semantic *sem,
+                                              LexStream::TokenIndex token_location)
 {
     if (! type_)
     {
         assert(sem);
 
-        SetType(sem -> ProcessSignature((TypeSymbol *) owner, signature_string, token_location));
+        SetType(sem -> ProcessSignature((TypeSymbol *) owner, signature_string,
+                                        token_location));
     }
 }
 
@@ -1494,7 +1508,6 @@ VariableSymbol *TypeSymbol::InsertThis0()
     variable_symbol -> SetOwner(this);
     variable_symbol -> MarkComplete();
     variable_symbol -> MarkSynthetic();
-    variable_symbol -> MarkDefinitelyAssigned();
 
     enclosing_instance = variable_symbol;
 
@@ -1575,6 +1588,7 @@ MethodSymbol *TypeSymbol::FindOrInsertClassLiteralMethod(Control &control)
         variable_symbol -> SetOwner(class_literal_method);
         variable_symbol -> SetLocalVariableIndex(block_symbol ->
                                                  max_variable_index++);
+        variable_symbol -> MarkComplete();
 
         class_literal_method -> AddFormalParameter(variable_symbol);
         class_literal_method -> SetSignature(control);
@@ -1673,7 +1687,6 @@ VariableSymbol *TypeSymbol::FindOrInsertClassLiteral(TypeSymbol *type)
         variable_symbol -> SetOwner(this);
         variable_symbol -> MarkComplete();
         variable_symbol -> MarkSynthetic();
-        variable_symbol -> MarkDefinitelyAssigned();
 
         AddClassLiteral(variable_symbol);
     }
@@ -1706,7 +1719,6 @@ VariableSymbol *TypeSymbol::FindOrInsertAssertVariable()
         assert_variable -> SetOwner(this);
         assert_variable -> MarkComplete();
         assert_variable -> MarkSynthetic();
-        assert_variable -> MarkDefinitelyAssigned();
 
         //
         // We'll create the field initializer later in bytecode.cpp, but we
@@ -1784,13 +1796,9 @@ VariableSymbol *TypeSymbol::FindOrInsertLocalShadow(VariableSymbol *local)
         variable -> SetOwner(this);
         variable -> MarkComplete();
         variable -> MarkSynthetic();
-        variable -> MarkDefinitelyAssigned();
 
-        if (ContainingType() ==
-            local -> owner -> MethodCast() -> containing_type)
-        {
+        if (ContainingType() == local -> ContainingType())
             variable -> accessed_local = local;
-        }
         else
         {
             assert(Anonymous() && ! EnclosingType());
@@ -2025,6 +2033,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
             instance -> SetOwner(read_method);
             instance -> SetLocalVariableIndex(block_symbol ->
                                               max_variable_index++);
+            instance -> MarkComplete();
             read_method -> AddFormalParameter(instance);
             base -> symbol = instance;
         }
@@ -2037,6 +2046,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
             parm -> SetType(member -> FormalParameter(i) -> Type());
             parm -> SetOwner(read_method);
             parm -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+            parm -> MarkComplete();
             if (control.IsDoubleWordType(parm -> Type()))
                 block_symbol -> max_variable_index++;
             read_method -> AddFormalParameter(parm);
@@ -2220,6 +2230,7 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *ctor)
             this0_variable -> SetOwner(read_method);
             this0_variable -> SetLocalVariableIndex(block_symbol ->
                                                     max_variable_index++);
+            this0_variable -> MarkComplete();
         }
 
         //
@@ -2235,6 +2246,7 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *ctor)
             parm -> SetType(ctor -> FormalParameter(i) -> Type());
             parm -> SetOwner(read_method);
             parm -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+            parm -> MarkComplete();
             if (control.IsDoubleWordType(parm -> Type()))
                 block_symbol -> max_variable_index++;
             read_method -> AddFormalParameter(parm);
@@ -2390,6 +2402,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member,
             instance -> SetOwner(read_method);
             instance -> SetLocalVariableIndex(block_symbol ->
                                               max_variable_index++);
+            instance -> MarkComplete();
             read_method -> AddFormalParameter(instance);
             base -> symbol = instance;
         }
@@ -2531,6 +2544,7 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member,
             instance -> SetOwner(write_method);
             instance -> SetLocalVariableIndex(block_symbol ->
                                               max_variable_index++);
+            instance -> MarkComplete();
             write_method -> AddFormalParameter(instance);
             base -> symbol = instance;
         }
@@ -2541,6 +2555,7 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member,
         symbol -> SetType(member -> Type());
         symbol -> SetOwner(write_method);
         symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+        symbol -> MarkComplete();
 
         if (control.IsDoubleWordType(member -> Type()))
             block_symbol -> max_variable_index++;

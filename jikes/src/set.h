@@ -100,7 +100,7 @@ public:
     ~SymbolSet();
 
     //
-    // Calculate the size of the set an return the value.
+    // Calculate the size of the set and return the value.
     //
     inline int Size()
     {
@@ -513,7 +513,8 @@ class BitSet
     typedef unsigned CELL;
 
     CELL *s;
-    const int set_size;
+    unsigned set_size;
+    unsigned max_set_size;
 
 public:
 
@@ -524,8 +525,7 @@ public:
     //
     void SetEmpty()
     {
-        for (int i = (set_size - 1) / cell_size; i >= 0; i--)
-            s[i] = 0;
+        memset(s, 0, (set_size + cell_size - 1) / cell_size * sizeof(CELL));
     }
 
     //
@@ -533,33 +533,33 @@ public:
     //
     void SetUniverse()
     {
-        for (int i = (set_size - 1) / cell_size; i >= 0; i--)
-            s[i] = ~((CELL) 0);
+        memset(s, ~((CELL) 0),
+               (set_size + cell_size - 1) / cell_size * sizeof(CELL));
     }
 
     //
     // This function takes as argument the size of a hash table, table_size.
     // It hashes a bitset into a location within the range <1..table_size-1>.
+    // Note that a set's hash value changes when its bits change, so be careful
+    // that only constant sets are used as hash keys.
     //
-    int Hash(int table_size)
+    int Hash(int table_size) const
     {
         unsigned long hash_address = 0;
 
-        for (int i = (set_size - 1) / cell_size; i >= 0; i--)
+        for (int i = ((int) set_size - 1) / cell_size; i >= 0; i--)
             hash_address += s[i];
 
         return hash_address % table_size;
     }
 
     //
-    // Assignment of a bitset to another.
+    // Assignment of a bitset to another, the two sets must be the same size.
     //
     BitSet& operator=(const BitSet& rhs)
     {
         assert(set_size == rhs.set_size);
-        for (int i = (set_size - 1) / cell_size; i >= 0; i--)
-            s[i] = rhs.s[i];
-
+        memcpy(s, rhs.s, (set_size + cell_size - 1) / cell_size * sizeof(CELL));
         return *this;
     }
 
@@ -569,45 +569,46 @@ public:
 #ifdef HAVE_EXPLICIT
     explicit
 #endif
-             BitSet(int set_size_) : set_size(set_size_)
+    BitSet(unsigned set_size_)
+        : set_size(set_size_),
+          max_set_size(set_size_)
     {
         //
-        // Note that we comment out the -1 because some C++ compilers
-        // do not know how to allocate an array of size 0. Note that
-        // we assert that set_size >= 0.
+        // Note that some C++ compilers do not know how to allocate an
+        // array of size 0.
         //
-        s = new CELL[(set_size + cell_size /* - 1 */) / cell_size];
+        int num_cells = (set_size + cell_size - 1) / cell_size;
+        s = new CELL[num_cells ? num_cells : 1];
     }
 
     //
     // Constructor of an initialized bitset.
     //
-    BitSet(int set_size_, int init) : set_size(set_size_)
+    BitSet(unsigned set_size_, int init)
+        : set_size(set_size_),
+          max_set_size(set_size_)
     {
         //
-        // Note that we comment out the -1 because some C++ compilers
-        // do not know how to allocate an array of size 0. Note that
-        // we assert that set_size >= 0.
+        // Note that some C++ compilers do not know how to allocate an
+        // array of size 0.
         //
-        s = new CELL[(set_size + cell_size /* - 1 */) / cell_size];
+        int num_cells = (set_size + cell_size - 1) / cell_size;
+        s = new CELL[num_cells ? num_cells : 1];
         if (init == UNIVERSE)
-             SetUniverse();
+            SetUniverse();
         else SetEmpty();
     }
 
     //
     // Constructor to clone a bitset.
     //
-    BitSet(const BitSet& rhs) : set_size(rhs.set_size)
+    BitSet(const BitSet& rhs)
+        : set_size(rhs.set_size),
+          max_set_size(set_size)
     {
-        //
-        // Note that we comment out the -1 because some C++ compilers
-        // do not know how to allocate an array of size 0. Note that
-        // we assert that set_size >= 0.
-        //
-        s = new CELL[(set_size + cell_size /* - 1 */) / cell_size];
-        for (int i = (set_size - 1) / cell_size; i >= 0; i--)
-            s[i] = rhs.s[i];
+        int num_cells = (set_size + cell_size - 1) / cell_size;
+        s = new CELL[num_cells ? num_cells : 1];
+        memcpy(s, rhs.s, num_cells * sizeof(CELL));
     }
 
     //
@@ -618,43 +619,39 @@ public:
     //
     // Return size of a bit set.
     //
-    int Size() const { return set_size; }
+    unsigned Size() const { return set_size; }
 
     //
     // Return a boolean value indicating whether or not the element i
     // is in the bitset in question.
     //
-    bool operator[](const int i)
+    bool operator[](const unsigned i) const
     {
-        assert(i >= 0 && i < set_size);
+        assert(i < set_size);
 
-        return (s[i / cell_size] &
-                ((i + cell_size) % cell_size
-                          ? (CELL) 1 << ((i + cell_size) % cell_size)
-                          : (CELL) 1)) != 0;
+        return 0 != (s[i / cell_size] &
+                     (i % cell_size ? (CELL) 1 << (i % cell_size) : (CELL) 1));
     }
 
     //
     // Insert an element i in the bitset in question.
     //
-    void AddElement(int i)
+    void AddElement(const unsigned i)
     {
-        assert(i >= 0 && i < set_size);
+        assert(i < set_size);
 
-        s[i / cell_size] |= ((i + cell_size) % cell_size
-                             ? (CELL) 1 << ((i + cell_size) % cell_size)
+        s[i / cell_size] |= (i % cell_size ? (CELL) 1 << (i % cell_size)
                              : (CELL) 1);
     }
 
     //
     // Remove an element i from the bitset in question.
     //
-    void RemoveElement(int i)
+    void RemoveElement(const unsigned i)
     {
-        assert(i >= 0 && i < set_size);
+        assert(i < set_size);
 
-        s[i / cell_size] &= ~((i + cell_size) % cell_size
-                              ? (CELL) 1 << ((i + cell_size) % cell_size)
+        s[i / cell_size] &= ~(i % cell_size ? (CELL) 1 << (i % cell_size)
                               : (CELL) 1);
     }
 
@@ -667,7 +664,15 @@ public:
         if (set_size != rhs.set_size)
             return false;
 
-        for (int i = (set_size - 1) / cell_size; i >= 0; i--)
+        int i = ((int) set_size - 1) / cell_size;
+        if (set_size &&
+            ((s[i] ^ rhs.s[i]) &
+             (i % cell_size ? ((CELL) 1 << (i % cell_size)) - (CELL) 1
+              : ~((CELL) 0))) != 0)
+        {
+            return false;
+        }
+        while (--i >= 0)
         {
             if (s[i] != rhs.s[i])
                 return false;
@@ -690,12 +695,7 @@ public:
     //
     BitSet operator+(const BitSet& rhs) const
     {
-        BitSet result(set_size);
-
-        for (int i = (set_size - 1) / cell_size; i >= 0; i--)
-            result.s[i] = s[i] | rhs.s[i];
-
-        return result;
+        return BitSet(*this) += rhs;
     }
 
     //
@@ -703,7 +703,7 @@ public:
     //
     BitSet& operator+=(const BitSet& rhs)
     {
-        for (int i = (set_size - 1) / cell_size; i >= 0; i--)
+        for (int i = ((int) set_size - 1) / cell_size; i >= 0; i--)
             s[i] |= rhs.s[i];
 
         return *this;
@@ -714,12 +714,7 @@ public:
     //
     BitSet operator*(const BitSet& rhs) const
     {
-        BitSet result(set_size);
-
-        for (int i = (set_size - 1) / cell_size; i >= 0; i--)
-            result.s[i] = s[i] & rhs.s[i];
-
-        return result;
+        return BitSet(*this) *= rhs;
     }
 
     //
@@ -727,7 +722,7 @@ public:
     //
     BitSet& operator*=(const BitSet& rhs)
     {
-        for (int i = (set_size - 1) / cell_size; i >= 0; i--)
+        for (int i = ((int) set_size - 1) / cell_size; i >= 0; i--)
             s[i] &= rhs.s[i];
 
         return *this;
@@ -738,12 +733,7 @@ public:
     //
     BitSet operator-(const BitSet& rhs) const
     {
-        BitSet result(set_size);
-
-        for (int i = (set_size - 1) / cell_size; i >= 0; i--)
-            result.s[i] = s[i] & (~ rhs.s[i]);
-
-        return result;
+        return BitSet(*this) -= rhs;
     }
 
     //
@@ -751,10 +741,49 @@ public:
     //
     BitSet& operator-=(const BitSet& rhs)
     {
-        for (int i = (set_size - 1) / cell_size; i >= 0; i--)
+        for (int i = ((int) set_size - 1) / cell_size; i >= 0; i--)
             s[i] &= (~ rhs.s[i]);
 
         return *this;
+    }
+
+    //
+    // Changes the size of the set. Any new bits are given the value of init.
+    //
+    void Resize(const unsigned new_size, const int init = EMPTY)
+    {
+        if (new_size > max_set_size)
+        {
+            int new_cell_count = (new_size + cell_size - 1) / cell_size;
+            int old_cell_count = (max_set_size + cell_size - 1) / cell_size;
+            if (new_cell_count > old_cell_count && old_cell_count > 0)
+            {
+                // Must grow the storage for the set.
+                CELL *tmp = s;
+                s = new CELL[new_cell_count];
+                memcpy(s, tmp, old_cell_count * sizeof(CELL));
+                delete [] tmp;
+            }
+            max_set_size = new_size;
+        }
+        if (new_size > set_size)
+        {
+            // Initialize new bits.
+            int i = (new_size - 1) / cell_size;
+            while (i > ((int) set_size - 1) / cell_size)
+                s[i--] = init == EMPTY ? (CELL) 0 : ~((CELL) 0);
+            if (! set_size)
+                s[0] = init == EMPTY ? (CELL) 0 : ~((CELL) 0);
+            else if (init == EMPTY)
+                s[i] &= (set_size % cell_size
+                         ? ((CELL) 1 << (set_size % cell_size)) - (CELL) 1
+                         : ~((CELL) 0));
+            else
+                s[i] |= (set_size % cell_size
+                         ? ~(((CELL) 1 << (set_size % cell_size)) - (CELL) 1)
+                         : (CELL) 0);
+        }
+        set_size = new_size;
     }
 };
 
@@ -779,12 +808,12 @@ public:
     //
     // Other useful constructors.
     //
-    inline DefinitePair(int size) : da_set(size, BitSet::EMPTY),
-                                    du_set(size, BitSet::UNIVERSE)
+    inline DefinitePair(unsigned size) : da_set(size, BitSet::EMPTY),
+                                         du_set(size, BitSet::UNIVERSE)
     {}
 
-    inline DefinitePair(int size, int init) : da_set(size, init),
-                                              du_set(size, init)
+    inline DefinitePair(unsigned size, int init) : da_set(size, init),
+                                                   du_set(size, init)
     {}
 
     inline DefinitePair(const BitSet da, const BitSet du) : da_set(da),
@@ -801,29 +830,56 @@ public:
     //
     // Set both bitsets.
     //
-    inline void SetEmpty()    { da_set.SetEmpty();    du_set.SetEmpty(); }
-    inline void SetUniverse() { da_set.SetUniverse(); du_set.SetUniverse(); }
+    inline void SetEmpty()
+    {
+        da_set.SetEmpty();
+        du_set.SetEmpty();
+    }
+    inline void SetUniverse()
+    {
+        da_set.SetUniverse();
+        du_set.SetUniverse();
+    }
+    inline void AssignAll()
+    {
+        da_set.SetUniverse();
+        du_set.SetEmpty();
+    }
+
+    //
+    // Resize the bitsets.
+    //
+    inline void Resize(const unsigned size)
+    {
+        da_set.Resize(size, BitSet::EMPTY);
+        du_set.Resize(size, BitSet::UNIVERSE);
+    }
+    inline void Resize(const unsigned size, const int init)
+    {
+        da_set.Resize(size, init);
+        du_set.Resize(size, init);
+    }
 
     inline DefinitePair& operator=(const DefinitePair& rhs)
     {
-        this -> da_set = rhs.da_set;
-        this -> du_set = rhs.du_set;
+        da_set = rhs.da_set;
+        du_set = rhs.du_set;
         return *this;
     }
 
     inline DefinitePair& operator=(const DefiniteAssignmentSet& rhs);
 
-    inline int Size() const { return da_set.Size(); }
+    inline unsigned Size() const { return da_set.Size(); }
 
     //
     // Modify element i in both bitsets.
     //
-    inline void AddElement(int i)
+    inline void AddElement(unsigned i)
     {
         da_set.AddElement(i);
         du_set.AddElement(i);
     }
-    inline void RemoveElement(int i)
+    inline void RemoveElement(unsigned i)
     {
         da_set.RemoveElement(i);
         du_set.RemoveElement(i);
@@ -833,12 +889,12 @@ public:
     // An assignment statement adds to da, but removes from du; reclaim it when
     // the variable leaves scope.
     //
-    inline void AssignElement(int i)
+    inline void AssignElement(unsigned i)
     {
         da_set.AddElement(i);
         du_set.RemoveElement(i);
     }
-    inline void ReclaimElement(int i)
+    inline void ReclaimElement(unsigned i)
     {
         da_set.RemoveElement(i);
         du_set.AddElement(i);
@@ -861,8 +917,7 @@ public:
     //
     inline DefinitePair operator+(const DefinitePair& rhs) const
     {
-        DefinitePair result(da_set + rhs.da_set, du_set + rhs.du_set);
-        return result;
+        return DefinitePair(*this) += rhs;
     }
     inline DefinitePair& operator+=(const DefinitePair& rhs)
     {
@@ -876,8 +931,7 @@ public:
     //
     inline DefinitePair operator*(const DefinitePair& rhs) const
     {
-        DefinitePair result(da_set * rhs.da_set, du_set * rhs.du_set);
-        return result;
+        return DefinitePair(*this) *= rhs;
     }
     inline DefinitePair& operator*=(const DefinitePair& rhs)
     {
@@ -891,8 +945,7 @@ public:
     //
     inline DefinitePair operator-(const DefinitePair& rhs) const
     {
-        DefinitePair result(da_set - rhs.da_set, du_set - rhs.du_set);
-        return result;
+        return DefinitePair(*this) -= rhs;
     }
     inline DefinitePair& operator-=(const DefinitePair& rhs)
     {
@@ -909,8 +962,8 @@ public:
     DefinitePair true_pair,
                  false_pair;
 
-    inline DefiniteAssignmentSet(int set_size) : true_pair(set_size),
-                                                 false_pair(set_size)
+    inline DefiniteAssignmentSet(unsigned set_size) : true_pair(set_size),
+                                                      false_pair(set_size)
     {}
 
     inline DefiniteAssignmentSet(DefinitePair &true_pair_,
@@ -935,7 +988,7 @@ public:
     {
         return DefinitePair(DASet(), DUSet());
     }
-    inline void AddElement(int i)
+    inline void AddElement(unsigned i)
     {
         true_pair.AddElement(i);
         false_pair.AddElement(i);
@@ -945,7 +998,7 @@ public:
     // An assignment statement adds to da, but removes from du; reclaim it when
     // the variable leaves scope.
     //
-    inline void AssignElement(int i)
+    inline void AssignElement(unsigned i)
     {
         true_pair.AssignElement(i);
         false_pair.AssignElement(i);

@@ -1,3 +1,31 @@
+2002-07-01  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/body.cpp (ProcessExecutableBodies):
+	* src/decl.cpp (CompleteSymbolTable, InitializeVariable),
+	(ProcessInitializer, ProcessStaticInitializers),
+	(ProcessInstanceInitializers):
+	* src/definite.cpp: Refactor definite assignment of fields to use
+	O(n) performance instead of O(n^2) performance, as well as saving
+	assignment status on a stack - bugs 118, 500.
+	* src/error.cpp:
+	* src/error.h (FINAL_FIELD_ASSIGNMENT_NOT_SIMPLE): Add an error
+	message as part of the definite assignment fix.
+	* src/expr.cpp (CheckSimpleName, ProcessSimpleName),
+	(FindVariableMember, ProcessAssignmentExpression): Fix remaining
+	cases of accessing a field before declaration - bug 603.
+	* src/init.cpp: Improve constant variable analysis - bug 2991.
+	* src/semantic.h (SemanticEnvironment): Move definite assignment
+	status here, to store state on the stack, necessary for processing
+	anonymous classes inline.
+	(Semantic): Change definite assignment to use the state stack.
+	* src/set.h (BitSet, DefinitePair): Improve functionality to be
+	more efficient by allowing resizing, as well as fix a few bugs in
+	things like operator==.
+	* src/symbol.cpp (LocalVariableIndex): Add method to allow the
+	definite assignment analysis speedup.
+	* src/symbol.h (MarkIncomplete, *Assigned): Delete methods that
+	are redundant with definite assignment refactoring.
+
 2002-06-28  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.cpp (EmitPreUnaryExpression): Fix bug in ! when

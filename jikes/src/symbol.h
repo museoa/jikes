@@ -1466,7 +1466,11 @@ public:
 
     virtual ~VariableSymbol() { delete [] signature_string; }
 
-    void SetOwner(Symbol *owner_) { owner = owner_; }
+    void SetOwner(Symbol *owner_)
+    {
+        owner = owner_;
+        assert(owner -> TypeCast() || owner -> MethodCast());
+    }
 
     TypeSymbol *ContainingType()
     {
@@ -1475,12 +1479,17 @@ public:
             : owner -> TypeCast();
     }
 
-    void SetLocalVariableIndex(int index)
-    {
-        local_variable_index = index;
-        MarkComplete();
-    }
+    void SetLocalVariableIndex(int index) { local_variable_index = index; }
+    //
+    // For local variables, returns the index allocated to the variable.
+    //
     int LocalVariableIndex() { return local_variable_index; }
+    //
+    // Returns the local variable index, but for local variables, it adds an
+    // offset to account for all final fields. This version should only be
+    // needed for definite assignment analysis.
+    //
+    int LocalVariableIndex(Semantic *);
 
     bool IsTyped() { return type_ != NULL; }
 
@@ -1516,24 +1525,21 @@ public:
     // These functions are used to identify when the declaration of a field
     // in the body of a class is complete.
     //
-    void MarkIncomplete()         { status &= (~((unsigned char) 0x01)); }
-    void MarkComplete()           { status |= (unsigned char) 0x01; }
-    bool IsDeclarationComplete()  { return (status & (unsigned char) 0x01) != 0; }
+    void MarkComplete() { status |= COMPLETE; }
+    bool IsDeclarationComplete() { return (status & COMPLETE) != 0; }
 
-    void MarkNotDefinitelyAssigned() { status &= (~((unsigned char) 0x02)); }
-    void MarkDefinitelyAssigned()    { status |= (unsigned char) 0x02; }
-    bool IsDefinitelyAssigned()      { return (status & (unsigned char) 0x02) != 0; }
+    void MarkSynthetic() { status |= SYNTHETIC; }
+    bool IsSynthetic() { return (status & SYNTHETIC) != 0; }
 
-    void MarkPossiblyAssigned() { status |= (unsigned char) 0x04; }
-    bool IsPossiblyAssigned()   { return (status & (unsigned char) 0x04) != 0; }
-
-    void MarkSynthetic() { status |= (unsigned char) 0x08; }
-    bool IsSynthetic()   { return (status & (unsigned char) 0x08) != 0; }
-
-    void MarkDeprecated() { status |= (unsigned char) 0x10; }
-    bool IsDeprecated()   { return (status & (unsigned char) 0x10) != 0; }
+    void MarkDeprecated() { status |= DEPRECATED; }
+    bool IsDeprecated() { return (status & DEPRECATED) != 0; }
 
 private:
+    enum {
+        COMPLETE = 0x01,
+        SYNTHETIC = 0x02,
+        DEPRECATED = 0x04
+    };
     NameSymbol *external_name_symbol;
 
     unsigned char status;
