@@ -277,9 +277,9 @@ Stream::Stream()
 :   input_buffer(NULL),
     input_buffer_length(0)
 #if defined(HAVE_LIB_ICU_UC)
-    ,_converter(NULL)
+    ,_decoder(NULL)
 #elif defined(HAVE_ICONV_H)
-    ,_converter((iconv_t)-1)
+    ,_decoder((iconv_t)-1)
 #endif
 {
 }
@@ -300,11 +300,10 @@ Stream::~Stream()
 
 bool Stream::IsSupportedEncoding(char* encoding)
 {
-    bool supported;
     // Create a tmp object instead of duplicating
     // the code in SetEncoding and DestroyEncoding
     Stream* tmp = new Stream();
-    supported = tmp->SetEncoding(encoding);
+    bool supported = tmp->SetEncoding(encoding);
     delete tmp;
     return supported;
 }
@@ -316,43 +315,106 @@ bool Stream::SetEncoding(char* encoding)
 
 #if defined(HAVE_LIB_ICU_UC)
     UErrorCode err = U_ZERO_ERROR;
-
-    _converter = ucnv_open(encoding, &err);
-    if (!_converter)
-    {
-        return false;
-    }
-    else {
-        return true;
-    }
+    _decoder = ucnv_open(encoding, &err);
 #elif defined(HAVE_ICONV_H)
-    _converter = iconv_open("utf-16", encoding);
-    if (_converter == (iconv_t)-1)
-    {
-        return false;
-    }
-    else
-    {
-        return true;
-    }
+    _decoder = iconv_open("utf-16", encoding);
 #endif
+
+    return HaveDecoder();
 }
 
 void Stream::DestroyEncoding()
 {
+    if (HaveDecoder())
+    {
 #if defined(HAVE_LIB_ICU_UC)
-    if (_converter)
-    {
-        ucnv_close(_converter);
-        _converter = NULL;
-    }
+        ucnv_close(_decoder);
+        _decoder = NULL;
 #elif defined(HAVE_ICONV_H)
-    if (_converter != (iconv_t)-1)
-    {
-        iconv_close(_converter);
-        _converter = (iconv_t)-1;
-    }
+        iconv_close(_decoder);
+        _decoder = (iconv_t)-1;
 #endif
+    }
+}
+
+
+// FIXME: We may want to inline this next method
+
+wchar_t
+Stream::DecodeNextCharacter() {
+    const char *before = source_ptr;
+    wchar_t next;
+    error_decode_next_character = false;
+
+#if defined(HAVE_LIB_ICU_UC)
+
+    if (!HaveDecoder()) {
+        return (wchar_t) *source_ptr++;
+    }
+
+    UErrorCode err = U_ZERO_ERROR;
+
+    next=ucnv_getNextUChar(_decoder,
+                          &source_ptr,
+                          source_tail+1,
+                          &err);
+
+    if(U_FAILURE(err))
+    {
+        fprintf(stderr,"Conversion error: %s at byte %d\n", 
+            u_errorName(err),
+            int(before - data_buffer)
+        );
+        error_decode_next_character = true;
+        return 0;
+    }
+
+#elif defined(HAVE_ICONV_H)
+
+    if (!HaveDecoder()) {
+        return (wchar_t) *source_ptr++;
+    }
+
+    u1 chd[2], uni_high, uni_low;
+    u1 *chp  = chd;
+    // Point to 2 bytes with 16 bit type
+    wchar_t* wchp = (wchar_t *) chp;
+    size_t   chl  = 2;
+    size_t   srcl = 1;
+    size_t n = iconv(_decoder,
+# ifdef HAVE_ERROR_CALL_ICONV_CONST
+                    (char **)
+# endif // HAVE_ERROR_CALL_ICONV_CONST
+                    &source_ptr, &srcl,
+                    (char **)&chp, &chl);
+
+    if(n == (size_t) -1)
+    {
+        fprintf(stderr,"Charset conversion error at offset %d: ",
+            int(before - data_buffer));
+        perror("");
+        error_decode_next_character = true;
+        return 0;
+    }
+
+    // FIXME: This seems like a hack, someone should reread the docs
+    // and clean this nasty code up -> http://www.netppl.fi/~pp/glibc21/libc_6.html#SEC91
+
+    // Operate on chd buffer in endian independent fashion
+    uni_high = (u1) (*wchp);
+    uni_low = (u1) ((*wchp) >> 8);
+    next = (uni_low + (uni_high * 256));
+
+#endif
+
+    if(before == source_ptr)
+    {
+        //End of conversion
+        error_decode_next_character = true;
+        return 0;
+    }
+
+    return next;
 }
 
 #endif // defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
@@ -755,22 +817,23 @@ int LexStream::hexvalue(wchar_t ch)
 }
 
 //
-// Read filesize  characters from srcfile, convert them to unicode, and
-// store them in input_buffer.
+// Store/convert filesize bytes from a file in the input_buffer.
 //
+
+#if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
+
 void LexStream::ProcessInput(const char *buffer, long filesize)
 {
-#if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
     LexStream::ProcessInputUnicode(buffer,filesize);
-#else
-    LexStream::ProcessInputAscii(buffer, filesize);
-#endif
 }
 
-//
-// Read file_size Ascii characters from srcfile, convert them to unicode and
-// store them in input_buffer.
-//
+#else // defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
+
+void LexStream::ProcessInput(const char *buffer, long filesize)
+{
+    LexStream::ProcessInputAscii(buffer, filesize);
+}
+
 void LexStream::ProcessInputAscii(const char *buffer, long filesize)
 {
 #ifdef JIKES_DEBUG
@@ -782,8 +845,7 @@ void LexStream::ProcessInputAscii(const char *buffer, long filesize)
 
     if (buffer)
     {
-        const char *source_ptr = buffer,
-             *source_tail = &(buffer[filesize - 1]); // point to last character read from the file.
+        InitializeDataBuffer(buffer, filesize);
 
         while(source_ptr <= source_tail)
         {
@@ -892,11 +954,12 @@ void LexStream::ProcessInputAscii(const char *buffer, long filesize)
     return;
 }
 
+#endif // defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
+
+
+
 #if defined(HAVE_LIB_ICU_UC) || defined(HAVE_ICONV_H)
-//
-// Read file_size Ascii characters from srcfile, convert them to unicode, and
-// store them in input_buffer.
-//
+
 void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
 {
     //fprintf(stderr,"LexStream::ProcessInputUnicode called.\n");
@@ -913,14 +976,8 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
         int      escape_value;
         wchar_t *escape_ptr;
 
-        const char *source_ptr  = buffer;
-        const char *source_tail = buffer + filesize - 1; // point to last character read from the file.
-
         UnicodeLexerState saved_state = START;
         UnicodeLexerState state = START;
-#ifdef HAVE_LIB_ICU_UC
-        UErrorCode err = U_ZERO_ERROR;
-#endif
         bool oncemore = false;
 
         if(control.option.encoding)
@@ -929,7 +986,10 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
             assert( SetEncoding(control.option.encoding) );
         }
 
-        while((source_ptr <= source_tail) || oncemore)
+        // init data after setting the encoding
+        InitializeDataBuffer(buffer, filesize);
+
+        while(HasMoreData() || oncemore)
         {
             // On each iteration we advance input_ptr maximun 2 postions.
             // Here we check if we are close to the end of input_buffer
@@ -957,69 +1017,15 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
             
             if(!oncemore)
             {
-                if(control.option.encoding)
-                {
-                    const char *before = source_ptr;
+                ch=DecodeNextCharacter();
 
-#ifdef HAVE_LIB_ICU_UC
-                    ch=ucnv_getNextUChar (_converter,
-                                          &source_ptr,
-                                          source_tail+1,
-                                          &err);
-
-                   
-                    if(U_FAILURE(err))
-                    {
-                        fprintf(stderr,"Conversion error: %s at byte %d\n", 
-                                u_errorName(err),
-                                int(before-buffer)
-                        );
-                        break;
-                    }
-#else
-#   ifdef HAVE_ICONV_H
-                    u1 chd[2], uni_high, uni_low;
-                    u1 *chp  = chd;
-                    // Point to 2 bytes with 16 bit type
-                    wchar_t* wchp = (wchar_t *) chp;
-                    size_t   chl  = 2;
-                    size_t   srcl = 1;
-                    size_t n = iconv(_converter,
-#ifdef HAVE_ERROR_CALL_ICONV_CONST
-                                     (char **)
-#endif
-                                     &source_ptr, &srcl,
-                                     (char **)&chp, &chl
-                    );
-
-                    if(n == (size_t) -1)
-                    {
-                        fprintf(stderr,"Charset conversion error at offset %d: ", int(before-buffer));
-                        perror("");
-                        break;
-                    }
-
-                    // FIXME: This seems like a hack, someone should reread the docs
-                    // and clean this nasty code up -> http://www.netppl.fi/~pp/glibc21/libc_6.html#SEC91
-
-                    // Operate on chd buffer in endian independent fashion
-                    uni_high = (u1) (*wchp);
-                    uni_low = (u1) ((*wchp) >> 8);
-                    ch = uni_low + (uni_high * 256);
-#   endif
-#endif
-                    if(before==source_ptr)
-                    {
-                        //End of conversion
-                        break;
-                    }
+                if (ErrorDecodeNextCharacter()) {
+                    break;
                 }
-                else
-                {
-                    ch=*source_ptr++;
-                }
-            } else oncemore = false;
-      
+            } else {
+                oncemore = false;
+            }
+
             switch(state)
             {
 

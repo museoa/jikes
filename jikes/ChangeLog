@@ -1,3 +1,38 @@
+2000-03-04  Mo DeJong  <mdejong@redhat.com>
+
+	* src/stream.cpp (Stream, HaveDecoder,
+	SetEncoding, DestroyEncoding,
+	ProcessInputAscii, ProcessInputUnicode,
+	DecodeNextCharacter):
+	Add new HaveDecoder method, use it
+	in SetEncoding and DestroyEncoding.
+	Conditionally compile the
+	ProcessInputAscii method. Call
+	new InitializeDataBuffer in the
+	ProcessInputAscii and ProcessInputUnicode
+	methods. Use new HasMoreData method
+	instead of dealing with source_ptr
+	and source_tail directly. Move all
+	decoding code into the DecodeNextCharacter
+	method. Check for error conditions using
+	the ErrorDecodeNextCharacter method.
+	No functional changes made, the code
+	was simply moved into the super class.
+	* src/stream.h (InitializeDataBuffer,
+	HasMoreData, ErrorDecodeNextCharacter,
+	ProcessInputAscii):
+	Add source_ptr, source_tail, data_buffer,
+	and error_decode_next_character fields
+	to the Stream class. Rename _converter
+	to _decoder in Stream class. Add new
+	ErrorDecodeNextCharacter, HaveDecoder,
+	and HasMoreData methods to query
+	the state of a Stream. Add new
+	InitializeDataBuffer method to setup
+	source data pointers. Conditionally
+	compile the ProcessInputAscii method
+	in the LexStream class.
+
 2001-03-03  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/dump.cpp (Dump): Fix typo,
