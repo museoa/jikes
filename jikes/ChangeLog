@@ -1,5 +1,7 @@
 2000-06-07  Mo DeJong  <mdejong@redhat.com>
 
+	* src/control.cpp (ProcessSubdirectories):
+	Fixed up compiler warnings in the Windows code.
 	* src/jikesapi.cpp (DefaultFileReader):
 	Added check for number of bytes read.
 	* src/option.cpp (Option): Reorder
