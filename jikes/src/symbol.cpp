@@ -1380,7 +1380,18 @@ int VariableSymbol::LocalVariableIndex(Semantic* sem)
     return local_variable_index;
 }
 
-
+void VariableSymbol::SetLocation()
+{
+	if(!declarator)
+	{
+		file_location = new FileLocation(ContainingType() -> file_symbol);
+	}
+	else
+	{
+		file_location = new FileLocation(ContainingType() -> semantic_environment -> sem -> lex_stream,
+														     declarator->LeftToken());
+	}
+}  
 void VariableSymbol::ProcessVariableSignature(Semantic* sem,
                                               LexStream::TokenIndex token_location)
 {

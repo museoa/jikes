@@ -1819,7 +1819,8 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration* field_declaration)
         {
             ReportSemError(SemanticError::DUPLICATE_FIELD,
                            name -> identifier_token, name_symbol -> Name(),
-                           this_type -> Name());
+                           this_type -> Name(),
+                           this_type -> FindVariableSymbol(name_symbol) -> FileLoc());
         }
         else
         {
@@ -1841,7 +1842,7 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration* field_declaration)
                                this_type -> Name(), this_type -> FileLoc());
             }
             variable_declarator -> symbol = variable;
-
+			variable -> SetLocation();
             if (deprecated_declarations)
                 variable -> MarkDeprecated();
         }

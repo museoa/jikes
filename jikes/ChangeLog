@@ -1,5 +1,15 @@
 2003-06-29  Musachy Barroso  <insanus@bellsouth.net>
 
+	* src/body.cpp:
+	* src/decl.cpp:
+	* src/error.cpp:
+	* src/symbol.cpp:
+	* src/symbol.h: On duplicated field or local variable
+	error message, add location of original field or local
+        variable declaration.
+
+2003-06-29  Musachy Barroso  <insanus@bellsouth.net>
+
 	* src/decl.cpp:
 	* src/error.cpp:
 	* src/symbol.cpp:

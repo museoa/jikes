@@ -1370,7 +1370,7 @@ class VariableSymbol : public Symbol, public AccessFlags
 {
 public:
     AstVariableDeclarator* declarator;
-
+    FileLocation *file_location;
     const NameSymbol* name_symbol;
     Symbol* owner;
     LiteralValue* initial_value;
@@ -1380,6 +1380,7 @@ public:
     virtual const wchar_t* Name() const { return name_symbol -> Name(); }
     virtual unsigned NameLength() const { return name_symbol -> NameLength(); }
     virtual const NameSymbol* Identity() const { return name_symbol; }
+    void SetLocation();
     const char* Utf8Name() const
     {
         return name_symbol -> Utf8_literal
@@ -1390,7 +1391,10 @@ public:
         return name_symbol -> Utf8_literal
             ? name_symbol -> Utf8_literal -> length : 0;
     }
-
+	wchar_t *FileLoc()
+    {
+        return (wchar_t *) (file_location ? file_location -> location : NULL);
+    }	
     void SetExternalIdentity(const NameSymbol* external_name_symbol_)
     {
         external_name_symbol = external_name_symbol_;

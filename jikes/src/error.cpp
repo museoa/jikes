@@ -1230,7 +1230,7 @@ void SemanticError::InitializeMessages()
     messages[OBJECT_HAS_NO_SUPER_TYPE] =
         "The type \"java.lang.Object\" does not have a supertype.";
     messages[DUPLICATE_FIELD] =
-        "Duplicate declaration of field \"%1\" in type \"%2\".";
+        "Duplicate declaration of field \"%1\" in type \"%2\". The other occurrence is at location \"%3\".";
     messages[DUPLICATE_METHOD] =
         "Duplicate declaration of method \"%1\" in type \"%2\". The other occurrence is at location \"%3\".";
     messages[DUPLICATE_CONSTRUCTOR] =
@@ -1269,7 +1269,7 @@ void SemanticError::InitializeMessages()
 
     // Statement and expression related errors.
     messages[DUPLICATE_LOCAL_VARIABLE_DECLARATION] =
-        "Duplicate declaration of local variable \"%1\".";
+        "Duplicate declaration of local variable \"%1\". The other occurrence is at location \"%2\".";
     messages[MULTIPLE_DEFAULT_LABEL] =
         "Multiple specification of default label in switch statement.";
     messages[UNDECLARED_LABEL] =

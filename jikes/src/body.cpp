@@ -197,7 +197,8 @@ void Semantic::ProcessLocalVariableDeclarationStatement(Ast* stmt)
         if (LocalSymbolTable().FindVariableSymbol(name_symbol))
         {
             ReportSemError(SemanticError::DUPLICATE_LOCAL_VARIABLE_DECLARATION,
-                           name -> identifier_token, name_symbol -> Name());
+                           name -> identifier_token, name_symbol -> Name(),
+                           LocalSymbolTable().FindVariableSymbol(name_symbol) -> FileLoc());
         }
         else
         {
@@ -211,6 +212,7 @@ void Semantic::ProcessLocalVariableDeclarationStatement(Ast* stmt)
             symbol -> SetFlags(access_flags);
             symbol -> SetOwner(ThisMethod());
             symbol -> declarator = variable_declarator;
+            symbol -> SetLocation();
             BlockSymbol* block = LocalBlockStack().TopBlock() -> block_symbol;
 
             symbol -> SetLocalVariableIndex(block -> max_variable_index++);
