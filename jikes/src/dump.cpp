@@ -303,7 +303,7 @@ void LexStream::Dump()
                          Line(tok),
                          Column(tok),
                          token_type(Kind(tok)));
-        for (wchar_t *s = Name(tok); *s != U_NULL; s++)
+        for (wchar_t *s = NameString(tok); *s != U_NULL; s++)
 #ifdef EBCDIC
             fprintf(tokfile, "%c", Code::ToEBCDIC(*s));
 #else

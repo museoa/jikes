@@ -187,7 +187,7 @@ void ConstructorCycleChecker::CheckConstructorCycles(AstConstructorDeclaration *
                 sem -> ReportSemError(SemanticError::CIRCULAR_THIS_CALL,
                                        constructor_block -> explicit_constructor_invocation_opt -> LeftToken(),
                                        constructor_block -> explicit_constructor_invocation_opt -> RightToken(),
-                                       sem -> lex_stream -> Name(constructor_declarator -> identifier_token));
+                                       sem -> lex_stream -> NameString(constructor_declarator -> identifier_token));
             } while (called_constructor_declaration != constructor_declaration);
         }
     }

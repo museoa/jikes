@@ -830,7 +830,7 @@ void Semantic::ProcessBreakStatement(Ast *stmt)
             ReportSemError(SemanticError::UNDECLARED_LABEL,
                            break_statement -> identifier_token_opt,
                            break_statement -> identifier_token_opt,
-                           lex_stream -> Name(break_statement -> identifier_token_opt));
+                           lex_stream -> NameString(break_statement -> identifier_token_opt));
         }
     }
     else
@@ -885,7 +885,7 @@ assert(label_symbol -> block -> NumStatements() > 0);
             ReportSemError(SemanticError::UNDECLARED_LABEL,
                            continue_statement -> identifier_token_opt,
                            continue_statement -> identifier_token_opt,
-                           lex_stream -> Name(continue_statement -> identifier_token_opt));
+                           lex_stream -> NameString(continue_statement -> identifier_token_opt));
         }
     }
     else
@@ -917,7 +917,7 @@ assert(continue_statement -> identifier_token_opt);
             ReportSemError(SemanticError::INVALID_CONTINUE_TARGET,
                            continue_statement -> LeftToken(),
                            continue_statement -> RightToken(),
-                           lex_stream -> Name(continue_statement -> identifier_token_opt));
+                           lex_stream -> NameString(continue_statement -> identifier_token_opt));
         }
     }
 
@@ -1489,7 +1489,7 @@ void Semantic::ProcessThisCall(AstThisCall *this_call)
             }
         }
     }
-    else // (! super_call -> base_opt)
+    else // (! this_call -> base_opt)
     {
         if (this_type -> IsInner())
             this_call -> base_opt = CreateAccessToType(this_call, containing_type);

@@ -61,6 +61,7 @@ public:
         REFERENCE_TO_TYPE_IN_MISMATCHED_FILE,
         DUPLICATE_INNER_TYPE_NAME,
         DUPLICATE_TYPE_DECLARATION,
+        UNNECESSARY_TYPE_IMPORT,
         DUPLICATE_ACCESS_MODIFIER,
         DUPLICATE_MODIFIER,
         FINAL_ABSTRACT_CLASS,
@@ -231,6 +232,7 @@ public:
         SYNTHETIC_METHOD_INVOCATION,
         THIS_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
         SUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
+        INNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
         EXPRESSION_NOT_CONSTANT,
         UNCATCHABLE_METHOD_THROWN_CHECKED_EXCEPTION,
         UNCATCHABLE_CONSTRUCTOR_THROWN_CHECKED_EXCEPTION,
@@ -379,6 +381,7 @@ private:
     static void PrintREFERENCE_TO_TYPE_IN_MISMATCHED_FILE(ErrorInfo &, LexStream *, Control &);
     static void PrintDUPLICATE_INNER_TYPE_NAME(ErrorInfo &, LexStream *, Control &);
     static void PrintDUPLICATE_TYPE_DECLARATION(ErrorInfo &, LexStream *, Control &);
+    static void PrintUNNECESSARY_TYPE_IMPORT(ErrorInfo &, LexStream *, Control &);
     static void PrintDUPLICATE_ACCESS_MODIFIER(ErrorInfo &, LexStream *, Control &);
     static void PrintDUPLICATE_MODIFIER(ErrorInfo &, LexStream *, Control &);
     static void PrintFINAL_ABSTRACT_CLASS(ErrorInfo &, LexStream *, Control &);
@@ -549,6 +552,7 @@ private:
     static void PrintSYNTHETIC_METHOD_INVOCATION(ErrorInfo &, LexStream *, Control &);
     static void PrintTHIS_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
     static void PrintSUPER_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
+    static void PrintINNER_CONSTRUCTOR_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
     static void PrintEXPRESSION_NOT_CONSTANT(ErrorInfo &, LexStream *, Control &);
     static void PrintUNCATCHABLE_METHOD_THROWN_CHECKED_EXCEPTION(ErrorInfo &, LexStream *, Control &);
     static void PrintUNCATCHABLE_CONSTRUCTOR_THROWN_CHECKED_EXCEPTION(ErrorInfo &, LexStream *, Control &);

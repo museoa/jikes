@@ -1581,7 +1581,7 @@ assert(! this_type -> FieldMembersProcessed() || this_type -> Bad());
                     ReportSemError(SemanticError::STATIC_TYPE_IN_INNER_CLASS,
                                    interface_declaration -> identifier_token,
                                    interface_declaration -> identifier_token,
-                                   lex_stream -> Name(interface_declaration -> identifier_token),
+                                   lex_stream -> NameString(interface_declaration -> identifier_token),
                                    this_type -> Name(),
                                    this_type -> FileLoc());
                 }
@@ -1600,7 +1600,7 @@ assert(! this_type -> FieldMembersProcessed() || this_type -> Bad());
                     ReportSemError(SemanticError::STATIC_TYPE_IN_INNER_CLASS,
                                    class_declaration -> identifier_token,
                                    class_declaration -> identifier_token,
-                                   lex_stream -> Name(class_declaration -> identifier_token),
+                                   lex_stream -> NameString(class_declaration -> identifier_token),
                                    this_type -> Name(),
                                    this_type -> FileLoc());
                 }
@@ -1811,7 +1811,7 @@ assert(this_type -> FieldMembersProcessed());
                                              ? class_declaration -> Interface(class_declaration -> NumInterfaces() - 1) -> RightToken()
                                              : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
                                                                                : class_declaration -> identifier_token)),
-                                       lex_stream -> Name(class_declaration -> identifier_token),
+                                       lex_stream -> NameString(class_declaration -> identifier_token),
                                        method -> Header((Semantic *) this, identifier_token),
                                        method -> containing_type -> ContainingPackage() -> PackageName(),
                                        method -> containing_type -> ExternalName(),
@@ -2523,11 +2523,22 @@ void Semantic::ProcessSingleTypeImportDeclaration(AstImportDeclaration *import_d
 
     if (k < compilation_unit -> NumTypeDeclarations())
     {
-        ReportSemError(SemanticError::DUPLICATE_TYPE_DECLARATION,
-                       import_declaration -> name -> LeftToken(),
-                       import_declaration -> name -> RightToken(),
-                       lex_stream -> Name(import_declaration -> name -> RightToken()),
-                       old_type -> FileLoc());
+        if (type == old_type) // It's ok to import a type that is being compiled...
+        {
+            ReportSemError(SemanticError::UNNECESSARY_TYPE_IMPORT,
+                           import_declaration -> name -> LeftToken(),
+                           import_declaration -> name -> RightToken(),
+                           lex_stream -> NameString(import_declaration -> name -> RightToken()),
+                           old_type -> FileLoc());
+        }
+        else
+        {
+            ReportSemError(SemanticError::DUPLICATE_TYPE_DECLARATION,
+                           import_declaration -> name -> LeftToken(),
+                           import_declaration -> name -> RightToken(),
+                           lex_stream -> NameString(import_declaration -> name -> RightToken()),
+                           old_type -> FileLoc());
+        }
     }
     else
     {
@@ -2552,7 +2563,7 @@ assert(i < compilation_unit -> NumImportDeclarations());
             ReportSemError(SemanticError::DUPLICATE_TYPE_DECLARATION,
                            import_declaration -> name -> LeftToken(),
                            import_declaration -> name -> RightToken(),
-                           lex_stream -> Name(import_declaration -> name -> RightToken()),
+                           lex_stream -> NameString(import_declaration -> name -> RightToken()),
                            file_location.location);
         }
     }
@@ -2713,7 +2724,7 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration *construc
 
     AstMethodDeclarator *constructor_declarator = constructor_declaration -> constructor_declarator;
     NameSymbol *name_symbol = lex_stream -> NameSymbol(constructor_declarator -> identifier_token);
-    wchar_t *constructor_name = lex_stream -> Name(constructor_declarator -> identifier_token);
+    wchar_t *constructor_name = lex_stream -> NameString(constructor_declarator -> identifier_token);
 
     if (lex_stream -> NameSymbol(constructor_declarator -> identifier_token) != this_type -> Identity())
     {
@@ -3037,7 +3048,7 @@ void Semantic::CheckInheritedMethodThrows(AstClassDeclaration *class_declaration
                                      ? class_declaration -> Interface(class_declaration -> NumInterfaces() - 1) -> RightToken()
                                      : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
                                                                        : class_declaration -> identifier_token)),
-                               lex_stream -> Name(class_declaration -> identifier_token),
+                               lex_stream -> NameString(class_declaration -> identifier_token),
                                exception -> Name(),
                                method -> Header((Semantic *) this, class_declaration -> identifier_token),
                                hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
@@ -3062,7 +3073,7 @@ void Semantic::CheckMethodOverride(AstClassDeclaration *class_declaration, Metho
                                            ? class_declaration -> Interface(class_declaration -> NumInterfaces() - 1) -> RightToken()
                                            : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
                                                                              : class_declaration -> identifier_token)),
-                       lex_stream -> Name(class_declaration -> identifier_token),
+                       lex_stream -> NameString(class_declaration -> identifier_token),
                        method -> Header((Semantic *) this, class_declaration -> identifier_token),
                        method -> containing_type -> ContainingPackage() -> PackageName(),
                        method -> containing_type -> ExternalName(),
@@ -3077,7 +3088,7 @@ void Semantic::CheckMethodOverride(AstClassDeclaration *class_declaration, Metho
                                            ? class_declaration -> Interface(class_declaration -> NumInterfaces() - 1) -> RightToken()
                                            : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
                                                                              : class_declaration -> identifier_token)),
-                       lex_stream -> Name(class_declaration -> identifier_token),
+                       lex_stream -> NameString(class_declaration -> identifier_token),
                        method -> Header((Semantic *) this, class_declaration -> identifier_token),
                        method -> containing_type -> ContainingPackage() -> PackageName(),
                        method -> containing_type -> ExternalName(),
@@ -3094,7 +3105,7 @@ void Semantic::CheckMethodOverride(AstClassDeclaration *class_declaration, Metho
                                                 ? class_declaration -> Interface(class_declaration -> NumInterfaces() - 1) -> RightToken()
                                                 : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
                                                                                   : class_declaration -> identifier_token)),
-                            lex_stream -> Name(class_declaration -> identifier_token),
+                            lex_stream -> NameString(class_declaration -> identifier_token),
                             method -> Header((Semantic *) this, class_declaration -> identifier_token),
                             method -> containing_type -> ContainingPackage() -> PackageName(),
                             method -> containing_type -> ExternalName(),
@@ -3107,7 +3118,7 @@ void Semantic::CheckMethodOverride(AstClassDeclaration *class_declaration, Metho
                                                 ? class_declaration -> Interface(class_declaration -> NumInterfaces() - 1) -> RightToken()
                                                 : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
                                                                                   : class_declaration -> identifier_token)),
-                            lex_stream -> Name(class_declaration -> identifier_token),
+                            lex_stream -> NameString(class_declaration -> identifier_token),
                             method -> Header((Semantic *) this, class_declaration -> identifier_token),
                             method -> containing_type -> ContainingPackage() -> PackageName(),
                             method -> containing_type -> ExternalName(),
@@ -3125,7 +3136,7 @@ void Semantic::CheckMethodOverride(AstClassDeclaration *class_declaration, Metho
                                                ? class_declaration -> Interface(class_declaration -> NumInterfaces() - 1) -> RightToken()
                                                : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
                                                                                  : class_declaration -> identifier_token)),
-                           lex_stream -> Name(class_declaration -> identifier_token),
+                           lex_stream -> NameString(class_declaration -> identifier_token),
                            method -> Header((Semantic *) this, class_declaration -> identifier_token),
                            (method -> ACC_PRIVATE() ? StringConstant::US_private
                                                     : (method -> ACC_PROTECTED() ? StringConstant::US_protected
@@ -3146,7 +3157,7 @@ void Semantic::CheckMethodOverride(AstClassDeclaration *class_declaration, Metho
                                                 ? class_declaration -> Interface(class_declaration -> NumInterfaces() - 1) -> RightToken()
                                                 : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
                                                                                   : class_declaration -> identifier_token)),
-                            lex_stream -> Name(class_declaration -> identifier_token),
+                            lex_stream -> NameString(class_declaration -> identifier_token),
                             method -> Header((Semantic *) this, class_declaration -> identifier_token),
                             StringConstant::US_default,
                             method -> containing_type -> ContainingPackage() -> PackageName(),
@@ -3164,7 +3175,7 @@ void Semantic::CheckMethodOverride(AstClassDeclaration *class_declaration, Metho
                                             ? class_declaration -> Interface(class_declaration -> NumInterfaces() - 1) -> RightToken()
                                             : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
                                                                               : class_declaration -> identifier_token)),
-                        lex_stream -> Name(class_declaration -> identifier_token),
+                        lex_stream -> NameString(class_declaration -> identifier_token),
                         method -> Header((Semantic *) this, class_declaration -> identifier_token),
                         StringConstant::US_private,
                         method -> containing_type -> ContainingPackage() -> PackageName(),
@@ -3843,7 +3854,7 @@ TypeSymbol *Semantic::FindType(LexStream::TokenIndex identifier_token)
                         ReportSemError(SemanticError::INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL,
                                        identifier_token,
                                        identifier_token,
-                                       lex_stream -> Name(identifier_token),
+                                       lex_stream -> NameString(identifier_token),
                                        env -> Type() -> ContainingPackage() -> PackageName(),
                                        env -> Type() -> ExternalName(),
                                        method -> Name());
@@ -3854,7 +3865,7 @@ TypeSymbol *Semantic::FindType(LexStream::TokenIndex identifier_token)
                         ReportSemError(SemanticError::INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER,
                                        identifier_token,
                                        identifier_token,
-                                       lex_stream -> Name(identifier_token),
+                                       lex_stream -> NameString(identifier_token),
                                        env -> Type() -> ContainingPackage() -> PackageName(),
                                        env -> Type() -> ExternalName(),
                                        env2 -> Type() -> ContainingPackage() -> PackageName(),

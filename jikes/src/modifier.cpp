@@ -74,7 +74,7 @@ AccessFlags Semantic::ProcessClassModifiers(AstClassDeclaration *class_declarati
                  ReportSemError(SemanticError::INVALID_TOP_LEVEL_CLASS_MODIFIER,
                                 modifier -> modifier_kind_token,
                                 modifier -> modifier_kind_token,
-                                lex_stream -> Name(modifier -> modifier_kind_token));
+                                lex_stream -> NameString(modifier -> modifier_kind_token));
                  break;
         }
     }
@@ -139,7 +139,7 @@ AccessFlags Semantic::ProcessLocalClassModifiers(AstClassDeclaration *class_decl
                  ReportSemError(SemanticError::INVALID_LOCAL_CLASS_MODIFIER,
                                 modifier -> modifier_kind_token,
                                 modifier -> modifier_kind_token,
-                                lex_stream -> Name(modifier -> modifier_kind_token));
+                                lex_stream -> NameString(modifier -> modifier_kind_token));
                  break;
         }
     }
@@ -239,7 +239,7 @@ AccessFlags Semantic::ProcessNestedClassModifiers(AstClassDeclaration *class_dec
                  ReportSemError(SemanticError::INVALID_INNER_CLASS_MODIFIER,
                                 modifier -> modifier_kind_token,
                                 modifier -> modifier_kind_token,
-                                lex_stream -> Name(modifier -> modifier_kind_token));
+                                lex_stream -> NameString(modifier -> modifier_kind_token));
                  break;
         }
     }
@@ -335,7 +335,7 @@ AccessFlags Semantic::ProcessStaticNestedClassModifiers(AstClassDeclaration *cla
                  ReportSemError(SemanticError::INVALID_INNER_CLASS_MODIFIER,
                                 modifier -> modifier_kind_token,
                                 modifier -> modifier_kind_token,
-                                lex_stream -> Name(modifier -> modifier_kind_token));
+                                lex_stream -> NameString(modifier -> modifier_kind_token));
                  break;
         }
     }
@@ -398,7 +398,7 @@ AccessFlags Semantic::ProcessInterfaceModifiers(AstInterfaceDeclaration *interfa
                  ReportSemError(SemanticError::INVALID_INTERFACE_MODIFIER,
                                 modifier -> modifier_kind_token,
                                 modifier -> modifier_kind_token,
-                                lex_stream -> Name(modifier -> modifier_kind_token));
+                                lex_stream -> NameString(modifier -> modifier_kind_token));
                  break;
         }
     }
@@ -491,7 +491,7 @@ AccessFlags Semantic::ProcessNestedInterfaceModifiers(AstInterfaceDeclaration *i
                  ReportSemError(SemanticError::INVALID_INTERFACE_MODIFIER,
                                 modifier -> modifier_kind_token,
                                 modifier -> modifier_kind_token,
-                                lex_stream -> Name(modifier -> modifier_kind_token));
+                                lex_stream -> NameString(modifier -> modifier_kind_token));
                  break;
         }
     }
@@ -595,7 +595,7 @@ AccessFlags Semantic::ProcessFieldModifiers(AstFieldDeclaration *field_declarati
                  ReportSemError(SemanticError::INVALID_FIELD_MODIFIER,
                                 modifier -> modifier_kind_token,
                                 modifier -> modifier_kind_token,
-                                lex_stream -> Name(modifier -> modifier_kind_token));
+                                lex_stream -> NameString(modifier -> modifier_kind_token));
                  break;
         }
     }
@@ -627,7 +627,7 @@ AccessFlags Semantic::ProcessLocalModifiers(AstLocalVariableDeclarationStatement
             ReportSemError(SemanticError::INVALID_LOCAL_MODIFIER,
                            modifier -> modifier_kind_token,
                            modifier -> modifier_kind_token,
-                           lex_stream -> Name(modifier -> modifier_kind_token));
+                           lex_stream -> NameString(modifier -> modifier_kind_token));
         }
     }
 
@@ -658,7 +658,7 @@ AccessFlags Semantic::ProcessFormalModifiers(AstFormalParameter *parameter_decla
             ReportSemError(SemanticError::INVALID_LOCAL_MODIFIER,
                            modifier -> modifier_kind_token,
                            modifier -> modifier_kind_token,
-                           lex_stream -> Name(modifier -> modifier_kind_token));
+                           lex_stream -> NameString(modifier -> modifier_kind_token));
         }
     }
 
@@ -708,7 +708,7 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
                      ReportSemError(SemanticError::ABSTRACT_METHOD_MODIFIER_CONFLICT,
                                     modifier -> modifier_kind_token,
                                     modifier -> modifier_kind_token,
-                                    lex_stream -> Name(modifier -> modifier_kind_token));
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  break;
             case Ast::STATIC:
@@ -725,7 +725,7 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
                      ReportSemError(SemanticError::ABSTRACT_METHOD_MODIFIER_CONFLICT,
                                     modifier -> modifier_kind_token,
                                     modifier -> modifier_kind_token,
-                                    lex_stream -> Name(modifier -> modifier_kind_token));
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  break;
             case Ast::STRICTFP:
@@ -768,7 +768,7 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
                      ReportSemError(SemanticError::ABSTRACT_METHOD_MODIFIER_CONFLICT,
                                     modifier -> modifier_kind_token,
                                     modifier -> modifier_kind_token,
-                                    lex_stream -> Name(modifier -> modifier_kind_token));
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  break;
             case Ast::NATIVE:
@@ -785,7 +785,7 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
                      ReportSemError(SemanticError::ABSTRACT_METHOD_MODIFIER_CONFLICT,
                                     modifier -> modifier_kind_token,
                                     modifier -> modifier_kind_token,
-                                    lex_stream -> Name(modifier -> modifier_kind_token));
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  break;
             case Ast::SYNCHRONIZED:
@@ -802,14 +802,14 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
                      ReportSemError(SemanticError::ABSTRACT_METHOD_MODIFIER_CONFLICT,
                                     modifier -> modifier_kind_token,
                                     modifier -> modifier_kind_token,
-                                    lex_stream -> Name(modifier -> modifier_kind_token));
+                                    lex_stream -> NameString(modifier -> modifier_kind_token));
                  }
                  break;
             default:
                  ReportSemError(SemanticError::INVALID_METHOD_MODIFIER,
                                 modifier -> modifier_kind_token,
                                 modifier -> modifier_kind_token,
-                                lex_stream -> Name(modifier -> modifier_kind_token));
+                                lex_stream -> NameString(modifier -> modifier_kind_token));
                  break;
         }
     }
@@ -864,7 +864,7 @@ AccessFlags Semantic::ProcessAbstractMethodModifiers(AstMethodDeclaration *metho
                  ReportSemError(SemanticError::INVALID_SIGNATURE_MODIFIER,
                                 modifier -> modifier_kind_token,
                                 modifier -> modifier_kind_token,
-                                lex_stream -> Name(modifier -> modifier_kind_token));
+                                lex_stream -> NameString(modifier -> modifier_kind_token));
                  break;
         }
     }
@@ -920,7 +920,7 @@ AccessFlags Semantic::ProcessConstructorModifiers(AstConstructorDeclaration *con
                  ReportSemError(SemanticError::INVALID_CONSTRUCTOR_MODIFIER,
                                 modifier -> modifier_kind_token,
                                 modifier -> modifier_kind_token,
-                                lex_stream -> Name(modifier -> modifier_kind_token));
+                                lex_stream -> NameString(modifier -> modifier_kind_token));
                  break;
         }
     }
@@ -991,7 +991,7 @@ AccessFlags Semantic::ProcessConstantModifiers(AstFieldDeclaration *field_declar
                  ReportSemError(SemanticError::INVALID_CONSTANT_MODIFIER,
                                 modifier -> modifier_kind_token,
                                 modifier -> modifier_kind_token,
-                                lex_stream -> Name(modifier -> modifier_kind_token));
+                                lex_stream -> NameString(modifier -> modifier_kind_token));
                  break;
         }
     }

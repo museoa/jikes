@@ -531,15 +531,15 @@ bool DiagnoseParser::MergeCandidate(int state, int buffer_position)
     wchar_t str[MAX_TERM_LENGTH + 1];
 
     len1 = 0;
-    for (p1 = lex_stream -> Name(buffer[buffer_position]); *p1; p1++)
+    for (p1 = lex_stream -> NameString(buffer[buffer_position]); *p1; p1++)
         len1++;
     len2 = 0;
-    for (p2 = lex_stream -> Name(buffer[buffer_position + 1]); *p2; p2++)
+    for (p2 = lex_stream -> NameString(buffer[buffer_position + 1]); *p2; p2++)
         len2++;
     len  = len1 + len2;
  
-    p1 = lex_stream -> Name(buffer[buffer_position]);
-    p2 = lex_stream -> Name(buffer[buffer_position + 1]);
+    p1 = lex_stream -> NameString(buffer[buffer_position]);
+    p2 = lex_stream -> NameString(buffer[buffer_position + 1]);
 
     if (len <= MAX_TERM_LENGTH)
     {
@@ -1178,7 +1178,7 @@ int DiagnoseParser::Misspell(int sym, TokenObject tok)
     }
     keyword[len] = U_NULL;
 
-    int index = Spell::Index(lex_stream -> Name(tok), keyword);
+    int index = Spell::Index(lex_stream -> NameString(tok), keyword);
 
     delete [] keyword;
 
@@ -2012,7 +2012,7 @@ void ParseError::Report(int msg_level,
     errors[i].num                 = i;
     errors[i].left_token          = (left_token > Loc(right_token) ? Loc(right_token) : left_token);
     errors[i].right_token         = Loc(right_token);
-    errors[i].right_string_length = lex_stream -> NameLength(right_token);
+    errors[i].right_string_length = lex_stream -> NameStringLength(right_token);
     errors[i].scope_name_index    = scope_name_index;
  
     if (control.option.dump_errors)

@@ -104,14 +104,16 @@ public:
 
     inline TokenIndex MatchingBrace(TokenIndex i) { return tokens[i].additional_info.right_brace; }
 
-    wchar_t *Name(TokenIndex i)
+    wchar_t *NameString(TokenIndex i)
     {
-        return (NameSymbol(i) ? tokens[i].additional_info.symbol -> Name() : KeywordName(tokens[i].Kind()));
+        return (NameSymbol(i) || LiteralSymbol(i) ? tokens[i].additional_info.symbol -> Name()
+                                                  : KeywordName(tokens[i].Kind()));
     }
 
-    int NameLength(TokenIndex i)
+    int NameStringLength(TokenIndex i)
     {
-        return (NameSymbol(i) ? tokens[i].additional_info.symbol -> NameLength() : wcslen(KeywordName(tokens[i].Kind())));
+        return (NameSymbol(i) || LiteralSymbol(i) ? tokens[i].additional_info.symbol -> NameLength()
+                                                  : wcslen(KeywordName(tokens[i].Kind())));
     }
 
     ::LiteralSymbol *LiteralSymbol(TokenIndex);
