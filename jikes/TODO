@@ -12,22 +12,17 @@ Add RPM spec file to the tar ball.
 This was omitted in the 1.12 release.
 (FIXED)
 
-Add a configure check to make sure
-folks do not attempt to build under
-Cygwin with the -mno-cygwin flag.
-
 Add the src/m4 subdir contents to
 the .tar file.
 
-Look into fixing namespaces so that
-folks can at least build on systems
-that require strict namespace support.
-Currently, we incorrectly use
-HAVE_NAMESPACE instead of HAVE_NAMESPACES,
-so even this does not work!
 
-setenv HAVE_NAMESPACES 1
-./configure
+
+Fix namespaces. People need
+to be able to compile on
+systems that require namespace
+support.
+
+.../configure HAVE_JIKES_NAMESPACE=1
 
 Namespaces are totally broken with gcc,
 2.96 will compile with some minor hacks
@@ -37,6 +32,9 @@ get defined outside the namespace.
 % nm --print-file-name *.o | grep SystemIsDirectory | c++filt
 control.o:         U Jikes::SystemIsDirectory(char *)
 platform.o:000000d8 T SystemIsDirectory(char *)
+
+(FIXED: needs to be verified)
+
 
 
 
@@ -97,19 +95,44 @@ the automatic depcomp feature of automake.
 The website needs to be made available as a CVS module.
 That will make changing and tracking changes far easier.
 
+(FIXED: needs to be verified)
+
 
 Fix the problems with @files demonstrated by
 non-jls-argument-expansion tests in Jacks. This
 would be significantly easier if during input
 conversion, \r \r\n and \n where always converted
-into a single \n in the source code.
+into a single \n in the source code. This is
+currently implemented in LexStream but it needs
+to be done in a more general stream class not
+one that does lexing. That way, it could also
+be used in the Option class to process @ files.
 
 
 Add new floating point emulation support code.
 
+Fix problem with debug line number tables. Newer
+versions of java don't like our line numbers.
+This is commonly known as "Jikes and JPDA".
+
 
 *** Things that will not be done in 1.13
 
+Add a configure check to make sure
+folks do not attempt to build under
+Cygwin with the -mno-cygwin flag.
+(Will not fix in this release)
+
+
+
+If a zip file can not be found,
+the error message printed should
+say that instead of saying it
+is "invalid" (implies it was corrupted).
+
+"D:\File\with\wrong\classpath\entry\rt.jar is not a valid zip file" (BAD)
+
+"D:\File\with\wrong\classpath\entry\rt.jar not found" (GOOD)
 
 
 
