@@ -1525,26 +1525,30 @@ ErrorString &ErrorString::operator<<(const char c)
 
 ErrorString &ErrorString::operator<<(const wchar_t *s)
 {
-    do_fill(
-            wcslen(
-#ifdef HAVE_ERROR_CALL_WCSLEN_CONST
-                   (wchar_t *)
-#endif
-                   s)
-            );
     if (s)
+    {
+        do_fill(
+                wcslen(
+#ifdef HAVE_ERROR_CALL_WCSLEN_CONST
+                       (wchar_t *)
+#endif
+                       s)
+                );
         while (*s)
             Next() = *(s++);
+    }
 
     return *this;
 }
 
 ErrorString &ErrorString::operator<<(const char *s)
 {
-    do_fill(strlen(s));
     if (s)
+    {
+        do_fill(strlen(s));
         while (*s)
             Next() = (wchar_t) *(s++);
+    }
     
     return *this;
 }

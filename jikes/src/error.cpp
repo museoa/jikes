@@ -444,11 +444,8 @@ void SemanticError::StaticInitializer()
     warning[CANNOT_OPEN_PATH_DIRECTORY] = 1;
 
     warning[EMPTY_DECLARATION] = 1;
-    warning[REDUNDANT_ABSTRACT] = 1;
-    warning[REDUNDANT_FINAL] = 1;
-    warning[REDUNDANT_PUBLIC] = 1;
-    warning[REDUNDANT_STATIC] = 1;
-    warning[OBSOLESCENT_ABSTRACT] = 1;
+    warning[REDUNDANT_MODIFIER] = 1;
+    warning[RECOMMENDED_MODIFIER_ORDER] = 1;
     warning[OBSOLESCENT_BRACKETS] = 1;
     warning[NO_TYPES] = 1;
     warning[PARENT_TYPE_IN_UNNAMED_PACKAGE] = 1;
@@ -475,8 +472,6 @@ void SemanticError::StaticInitializer()
     //       a warning.
     warning[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_LOCAL] = 2;
     warning[INHERITANCE_AND_LEXICAL_SCOPING_CONFLICT_WITH_MEMBER] = 2;
-    warning[PRIVATE_METHOD_OVERRIDE] = 1;
-    warning[PRIVATE_METHOD_OVERRIDE_EXTERNALLY] = 1;
 
     //
     // Something stronger than a warning, but code will be generated anyway
@@ -526,11 +521,8 @@ void SemanticError::StaticInitializer()
     print_message[CODE_OVERFLOW] = PrintCODE_OVERFLOW;
     print_message[CANNOT_COMPUTE_COLUMNS] = PrintCANNOT_COMPUTE_COLUMNS;
     print_message[EMPTY_DECLARATION] = PrintEMPTY_DECLARATION;
-    print_message[REDUNDANT_ABSTRACT] = PrintREDUNDANT_ABSTRACT;
-    print_message[REDUNDANT_FINAL] = PrintREDUNDANT_FINAL;
-    print_message[REDUNDANT_PUBLIC] = PrintREDUNDANT_PUBLIC;
-    print_message[REDUNDANT_STATIC] = PrintREDUNDANT_STATIC;
-    print_message[OBSOLESCENT_ABSTRACT] = PrintOBSOLESCENT_ABSTRACT;
+    print_message[REDUNDANT_MODIFIER] = PrintREDUNDANT_MODIFIER;
+    print_message[RECOMMENDED_MODIFIER_ORDER] = PrintRECOMMENDED_MODIFIER_ORDER;
     print_message[OBSOLESCENT_BRACKETS] = PrintOBSOLESCENT_BRACKETS;
     print_message[NO_TYPES] = PrintNO_TYPES;
     print_message[MULTIPLE_PUBLIC_TYPES] = PrintMULTIPLE_PUBLIC_TYPES;
@@ -546,8 +538,7 @@ void SemanticError::StaticInitializer()
     print_message[DUPLICATE_ACCESS_MODIFIER] = PrintDUPLICATE_ACCESS_MODIFIER;
     print_message[DUPLICATE_MODIFIER] = PrintDUPLICATE_MODIFIER;
     print_message[FINAL_ABSTRACT_CLASS] = PrintFINAL_ABSTRACT_CLASS;
-    print_message[VOLATILE_FINAL] = PrintVOLATILE_FINAL;
-    print_message[FINAL_VOLATILE] = PrintFINAL_VOLATILE;
+    print_message[VOLATILE_FINAL_FIELD] = PrintVOLATILE_FINAL_FIELD;
     print_message[INVALID_TOP_LEVEL_CLASS_MODIFIER] = PrintINVALID_TOP_LEVEL_CLASS_MODIFIER;
     print_message[INVALID_INNER_CLASS_MODIFIER] = PrintINVALID_INNER_CLASS_MODIFIER;
     print_message[INVALID_STATIC_INNER_CLASS_MODIFIER] = PrintINVALID_STATIC_INNER_CLASS_MODIFIER;
@@ -576,8 +567,8 @@ void SemanticError::StaticInitializer()
     print_message[DUPLICATE_METHOD] = PrintDUPLICATE_METHOD;
     print_message[DUPLICATE_CONSTRUCTOR] = PrintDUPLICATE_CONSTRUCTOR;
     print_message[MISMATCHED_INHERITED_METHOD] = PrintMISMATCHED_INHERITED_METHOD;
+    print_message[MISMATCHED_IMPLICIT_METHOD] = PrintMISMATCHED_IMPLICIT_METHOD;
     print_message[MISMATCHED_INHERITED_METHOD_EXTERNALLY] = PrintMISMATCHED_INHERITED_METHOD_EXTERNALLY;
-    print_message[MISMATCHED_INHERITED_METHODS_IN_BASE] = PrintMISMATCHED_INHERITED_METHODS_IN_BASE;
     print_message[DUPLICATE_FORMAL_PARAMETER] = PrintDUPLICATE_FORMAL_PARAMETER;
     print_message[MISSPELLED_CONSTRUCTOR_NAME] = PrintMISSPELLED_CONSTRUCTOR_NAME;
     print_message[MISMATCHED_CONSTRUCTOR_NAME] = PrintMISMATCHED_CONSTRUCTOR_NAME;
@@ -685,21 +676,17 @@ void SemanticError::StaticInitializer()
     print_message[STRICTFP_NATIVE_METHOD] = PrintSTRICTFP_NATIVE_METHOD;
     print_message[ABSTRACT_METHOD_INVOCATION] = PrintABSTRACT_METHOD_INVOCATION;
     print_message[FINAL_METHOD_OVERRIDE] = PrintFINAL_METHOD_OVERRIDE;
-    print_message[FINAL_METHOD_OVERRIDE_EXTERNALLY] = PrintFINAL_METHOD_OVERRIDE_EXTERNALLY;
-    print_message[PRIVATE_METHOD_OVERRIDE] = PrintPRIVATE_METHOD_OVERRIDE;
-    print_message[PRIVATE_METHOD_OVERRIDE_EXTERNALLY] = PrintPRIVATE_METHOD_OVERRIDE_EXTERNALLY;
+    print_message[FINAL_IMPLICIT_METHOD_OVERRIDE] = PrintFINAL_IMPLICIT_METHOD_OVERRIDE;
     print_message[INSTANCE_METHOD_OVERRIDE] = PrintINSTANCE_METHOD_OVERRIDE;
     print_message[INSTANCE_METHOD_OVERRIDE_EXTERNALLY] = PrintINSTANCE_METHOD_OVERRIDE_EXTERNALLY;
     print_message[CLASS_METHOD_OVERRIDE] = PrintCLASS_METHOD_OVERRIDE;
-    print_message[CLASS_METHOD_OVERRIDE_EXTERNALLY] = PrintCLASS_METHOD_OVERRIDE_EXTERNALLY;
     print_message[MISMATCHED_OVERRIDDEN_EXCEPTION] = PrintMISMATCHED_OVERRIDDEN_EXCEPTION;
+    print_message[MISMATCHED_IMPLICIT_OVERRIDDEN_EXCEPTION] = PrintMISMATCHED_IMPLICIT_OVERRIDDEN_EXCEPTION;
     print_message[MISMATCHED_OVERRIDDEN_EXCEPTION_EXTERNALLY] = PrintMISMATCHED_OVERRIDDEN_EXCEPTION_EXTERNALLY;
     print_message[ABSTRACT_METHOD_WITH_BODY] = PrintABSTRACT_METHOD_WITH_BODY;
     print_message[NON_ABSTRACT_METHOD_WITHOUT_BODY] = PrintNON_ABSTRACT_METHOD_WITHOUT_BODY;
     print_message[BAD_ACCESS_METHOD_OVERRIDE] = PrintBAD_ACCESS_METHOD_OVERRIDE;
     print_message[BAD_ACCESS_METHOD_OVERRIDE_EXTERNALLY] = PrintBAD_ACCESS_METHOD_OVERRIDE_EXTERNALLY;
-    print_message[STATIC_OVERRIDE_ABSTRACT] = PrintSTATIC_OVERRIDE_ABSTRACT;
-    print_message[STATIC_OVERRIDE_ABSTRACT_EXTERNALLY] = PrintSTATIC_OVERRIDE_ABSTRACT_EXTERNALLY;
     print_message[CIRCULAR_THIS_CALL] = PrintCIRCULAR_THIS_CALL;
     print_message[INSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR_INVOCATION] = PrintINSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR_INVOCATION;
     print_message[INSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR_INVOCATION] = PrintINSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR_INVOCATION;
@@ -1370,58 +1357,6 @@ wchar_t *SemanticError::PrintCANNOT_COMPUTE_COLUMNS(ErrorInfo &err,
 }
 
 
-wchar_t *SemanticError::PrintREDUNDANT_ABSTRACT(ErrorInfo &err,
-                                                LexStream *lex_stream,
-                                                Control &control)
-{
-    ErrorString s;
-
-    s << "The use of the \"abstract\" modifier in this context is redundant "
-      << "and strongly discouraged as a matter of style.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintREDUNDANT_FINAL(ErrorInfo &err,
-                                             LexStream *lex_stream,
-                                             Control &control)
-{
-    ErrorString s;
-
-    s << "The use of the \"final\" modifier in this context is redundant "
-      << "and strongly discouraged as a matter of style.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintREDUNDANT_PUBLIC(ErrorInfo &err,
-                                              LexStream *lex_stream,
-                                              Control &control)
-{
-    ErrorString s;
-
-    s << "The use of the \"public\" modifier in this context is redundant "
-      << "and strongly discouraged as a matter of style.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintREDUNDANT_STATIC(ErrorInfo &err,
-                                              LexStream *lex_stream,
-                                              Control &control)
-{
-    ErrorString s;
-
-    s << "The use of the \"static\" modifier in this context is redundant "
-      << "and strongly discouraged as a matter of style.";
-
-    return s.Array();
-}
-
-
 wchar_t *SemanticError::PrintEMPTY_DECLARATION(ErrorInfo &err,
                                                LexStream *lex_stream,
                                                Control &control)
@@ -1435,14 +1370,28 @@ wchar_t *SemanticError::PrintEMPTY_DECLARATION(ErrorInfo &err,
 }
 
 
-wchar_t *SemanticError::PrintOBSOLESCENT_ABSTRACT(ErrorInfo &err,
-                                                  LexStream *lex_stream,
-                                                  Control &control)
+wchar_t *SemanticError::PrintREDUNDANT_MODIFIER(ErrorInfo &err,
+                                                LexStream *lex_stream,
+                                                Control &control)
 {
     ErrorString s;
 
-    s << "Every interface in implicitly abstract. This modifier is obsolete "
-      << "and should not be used in new Java programs.";
+    s << "The use of the \"" << err.insert1 << "\" modifier in this context "
+      << "is redundant and strongly discouraged as a matter of style.";
+
+    return s.Array();
+}
+
+
+wchar_t *SemanticError::PrintRECOMMENDED_MODIFIER_ORDER(ErrorInfo &err,
+                                                        LexStream *lex_stream,
+                                                        Control &control)
+{
+    ErrorString s;
+
+    s << "While it is legal to list modifiers in any order, it is recommended "
+      << "as a matter of style to list \"" << err.insert1 << "\" before \""
+      << err.insert2 << "\".";
 
     return s.Array();
 }
@@ -1743,25 +1692,13 @@ wchar_t *SemanticError::PrintINVALID_INTERFACE_MODIFIER(ErrorInfo &err,
 }
 
 
-wchar_t *SemanticError::PrintVOLATILE_FINAL(ErrorInfo &err,
-                                            LexStream *lex_stream,
-                                            Control &control)
+wchar_t *SemanticError::PrintVOLATILE_FINAL_FIELD(ErrorInfo &err,
+                                                  LexStream *lex_stream,
+                                                  Control &control)
 {
     ErrorString s;
 
-    s << "A \"volatile\" field may not be declared \"final\".";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintFINAL_VOLATILE(ErrorInfo &err,
-                                            LexStream *lex_stream,
-                                            Control &control)
-{
-    ErrorString s;
-
-    s << "A \"final\" field may not be declared \"volatile\".";
+    s << "A field may not be both \"volatile\" and \"final\".";
 
     return s.Array();
 }
@@ -2056,33 +1993,28 @@ wchar_t *SemanticError::PrintMISMATCHED_INHERITED_METHOD(ErrorInfo &err,
 }
 
 
+wchar_t *SemanticError::PrintMISMATCHED_IMPLICIT_METHOD(ErrorInfo &err,
+                                                        LexStream *lex_stream,
+                                                        Control &control)
+{
+    ErrorString s;
+
+    s << "The return type of method \"" << err.insert1
+      << "\" does not match the return type of method \"" << err.insert2
+      << "\" declared implicitly for interfaces.";
+
+    return s.Array();
+}
+
+
 wchar_t *SemanticError::PrintMISMATCHED_INHERITED_METHOD_EXTERNALLY(ErrorInfo &err,
                                                                     LexStream *lex_stream,
                                                                     Control &control)
 {
     ErrorString s;
 
-    s << "In class \"" << err.insert1 << "\", the method \"" << err.insert2
+    s << "In type \"" << err.insert1 << "\", the method \"" << err.insert2
       << "\", inherited from type \"";
-    if (NotDot(err.insert3))
-        s << err.insert3 << "/";
-    s << err.insert4 << "\", does not have the same return type as the "
-      << "overridden method \"" << err.insert5 << "\", inherited from type \"";
-    if (NotDot(err.insert6))
-        s << err.insert6 << "/";
-    s << err.insert7 << "\".";
-
-    return s.Array();
-}
-
-wchar_t *SemanticError::PrintMISMATCHED_INHERITED_METHODS_IN_BASE(ErrorInfo &err,
-                                                                  LexStream *lex_stream,
-                                                                  Control &control)
-{
-    ErrorString s;
-
-    s << "In class \"" << err.insert1 << "\", the method \""
-      << err.insert2 << "\", inherited from type \"";
     if (NotDot(err.insert3))
         s << err.insert3 << "/";
     s << err.insert4
@@ -2094,6 +2026,7 @@ wchar_t *SemanticError::PrintMISMATCHED_INHERITED_METHODS_IN_BASE(ErrorInfo &err
 
     return s.Array();
 }
+
 
 wchar_t *SemanticError::PrintDUPLICATE_CONSTRUCTOR(ErrorInfo &err,
                                                    LexStream *lex_stream,
@@ -3677,6 +3610,21 @@ wchar_t *SemanticError::PrintABSTRACT_METHOD_INVOCATION(ErrorInfo &err,
 }
 
 
+wchar_t *SemanticError::PrintFINAL_IMPLICIT_METHOD_OVERRIDE(ErrorInfo &err,
+                                                            LexStream *lex_stream,
+                                                            Control &control)
+{
+    ErrorString s;
+
+    s << "The explicit method \"" << err.insert1
+      << "\" is not allowed in an interface, because it conflicts with the "
+      << "final method \"" << err.insert2
+      << "\" declared implicitly for interfaces.";
+
+    return s.Array();
+}
+
+
 wchar_t *SemanticError::PrintFINAL_METHOD_OVERRIDE(ErrorInfo &err,
                                                    LexStream *lex_stream,
                                                    Control &control)
@@ -3694,64 +3642,6 @@ wchar_t *SemanticError::PrintFINAL_METHOD_OVERRIDE(ErrorInfo &err,
 }
 
 
-wchar_t *SemanticError::PrintFINAL_METHOD_OVERRIDE_EXTERNALLY(ErrorInfo &err,
-                                                              LexStream *lex_stream,
-                                                              Control &control)
-{
-    ErrorString s;
-
-    s << "In class \"" << err.insert1 << "\", the method \""
-      << err.insert2 << "\", inherited from type \"";
-    if (NotDot(err.insert3))
-        s << err.insert3 << "/";
-    s << err.insert4 << "\", overrides the final (or private) method \""
-      << err.insert5 << "\", inherited from type \"";
-    if (NotDot(err.insert6))
-        s << err.insert6 << "/";
-    s << err.insert7 << "\".";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintPRIVATE_METHOD_OVERRIDE(ErrorInfo &err,
-                                                     LexStream *lex_stream,
-                                                     Control &control)
-{
-    ErrorString s;
-
-    s << "The method \"" << err.insert1
-      << "\" is overriding the private (should be treated as final) method \""
-      << err.insert2 << "\" declared in type \"";
-    if (NotDot(err.insert3))
-        s << err.insert3 << "/";
-    s << err.insert4 << "\".";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintPRIVATE_METHOD_OVERRIDE_EXTERNALLY(ErrorInfo &err,
-                                                                LexStream *lex_stream,
-                                                                Control &control)
-{
-    ErrorString s;
-
-    s << "In class \"" << err.insert1 << "\", the method \"" << err.insert2
-      << "\", inherited from type \"";
-    if (NotDot(err.insert3))
-        s << err.insert3 << "/";
-    s << err.insert4
-      << "\", overrides the private (should be treated as final) method \""
-      << err.insert5 << "\", inherited from type \"";
-    if (NotDot(err.insert6))
-        s << err.insert6 << "/";
-    s << err.insert7 << "\".";
-
-    return s.Array();
-}
-
-
 wchar_t *SemanticError::PrintCLASS_METHOD_OVERRIDE(ErrorInfo &err,
                                                    LexStream *lex_stream,
                                                    Control &control)
@@ -3764,26 +3654,6 @@ wchar_t *SemanticError::PrintCLASS_METHOD_OVERRIDE(ErrorInfo &err,
     if (NotDot(err.insert3))
         s << err.insert3 << "/";
     s << err.insert4 << "\".";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintCLASS_METHOD_OVERRIDE_EXTERNALLY(ErrorInfo &err,
-                                                              LexStream *lex_stream,
-                                                              Control &control)
-{
-    ErrorString s;
-
-    s << "In class \"" << err.insert1 << "\", the instance method \""
-      << err.insert2 << "\", inherited from type \"";
-    if (NotDot(err.insert3))
-        s << err.insert3 << "/";
-    s << err.insert4 << "\", cannot override the static method \""
-      << err.insert5 << "\", declared in type \"";
-    if (NotDot(err.insert6))
-        s << err.insert6 << "/";
-    s << err.insert7 << "\".";
 
     return s.Array();
 }
@@ -3813,11 +3683,11 @@ wchar_t *SemanticError::PrintINSTANCE_METHOD_OVERRIDE_EXTERNALLY(ErrorInfo &err,
     ErrorString s;
 
     s << "In class \"" << err.insert1 << "\", the static method \""
-      << err.insert2 << "\", inherited from type \"";
+      << err.insert2 << "\", inherited from the superclass \"";
     if (NotDot(err.insert3))
         s << err.insert3 << "/";
-    s << err.insert4 << "\", hides the instance method \""
-      << err.insert5 << "\", declared in type \"";
+    s << err.insert4 << "\", conflicts with the abstract instance method \""
+      << err.insert5 << "\", inherited from the interface \"";
     if (NotDot(err.insert6))
         s << err.insert6 << "/";
     s << err.insert7 << "\".";
@@ -3850,11 +3720,11 @@ wchar_t *SemanticError::PrintBAD_ACCESS_METHOD_OVERRIDE_EXTERNALLY(ErrorInfo &er
     ErrorString s;
 
     s << "In class \"" << err.insert1 << "\", the method \"" << err.insert2
-      << "\" with " << err.insert3 << " access inherited from type \"";
+      << "\" with " << err.insert3 << " access, inherited from type \"";
     if (NotDot(err.insert4))
         s << err.insert4 << "/";
     s << err.insert5 << "\", cannot override the method \"" << err.insert6
-      << "\" with " << err.insert7 << " access inherited from type \"";
+      << "\" with " << err.insert7 << " access, inherited from type \"";
     if (NotDot(err.insert8))
         s << err.insert8 << "/";
     s << err.insert9 << "\".";
@@ -3869,7 +3739,7 @@ wchar_t *SemanticError::PrintMISMATCHED_OVERRIDDEN_EXCEPTION(ErrorInfo &err,
 {
     ErrorString s;
 
-    s << "The exception \"" << err.insert1
+    s << "The checked exception \"" << err.insert1
       << "\" is not the same as or a subclass of any exception in the "
       << "throws clause of the overridden method \"" << err.insert2
       << "\" declared in type \"";
@@ -3881,15 +3751,29 @@ wchar_t *SemanticError::PrintMISMATCHED_OVERRIDDEN_EXCEPTION(ErrorInfo &err,
 }
 
 
+wchar_t *SemanticError::PrintMISMATCHED_IMPLICIT_OVERRIDDEN_EXCEPTION(ErrorInfo &err,
+                                                                      LexStream *lex_stream,
+                                                                      Control &control)
+{
+    ErrorString s;
+
+    s << "The checked exception \"" << err.insert1
+      << "\" is not compatible with the throws clause in the method \""
+      << err.insert2 << "\" declared implicitly for interfaces.";
+
+    return s.Array();
+}
+
+
 wchar_t *SemanticError::PrintMISMATCHED_OVERRIDDEN_EXCEPTION_EXTERNALLY(ErrorInfo &err,
                                                                         LexStream *lex_stream,
                                                                         Control &control)
 {
     ErrorString s;
 
-    s << "In class \"" << err.insert1 << "\", the exception \"" << err.insert2
-      << "\" specified in method \"" << err.insert3
-      << "\" inherited from type \"";
+    s << "In type \"" << err.insert1 << "\", the checked exception \""
+      << err.insert2 << "\" specified by method \"" << err.insert3
+      << "\", inherited from type \"";
     if (NotDot(err.insert4))
         s << err.insert4 << "/";
     s << err.insert5 << "\", is not the same as or a subclass of any "
@@ -3924,43 +3808,6 @@ wchar_t *SemanticError::PrintNON_ABSTRACT_METHOD_WITHOUT_BODY(ErrorInfo &err,
 
     s << "The declaration of the non-abstract and non-native method, \""
       << err.insert1 << "\", must contain a method body.";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintSTATIC_OVERRIDE_ABSTRACT(ErrorInfo &err,
-                                                      LexStream *lex_stream,
-                                                      Control &control)
-{
-    ErrorString s;
-
-    s << "The static method \"" << err.insert1
-      << "\" cannot hide an abstract method of the same name declared in "
-      << "type \"";
-    if (NotDot(err.insert2))
-        s << err.insert2 << "/";
-    s << err.insert3 << "\".";
-
-    return s.Array();
-}
-
-
-wchar_t *SemanticError::PrintSTATIC_OVERRIDE_ABSTRACT_EXTERNALLY(ErrorInfo &err,
-                                                                 LexStream *lex_stream,
-                                                                 Control &control)
-{
-    ErrorString s;
-
-    s << "In class \"" << err.insert1 << "\", the static method \""
-      << err.insert2 << "\", inherited from type \"";
-    if (NotDot(err.insert3))
-        s << err.insert3 << "/";
-    s << err.insert4 << "\", cannot hide the abstract method \""
-      << err.insert5 << "\", inherited from type \"";
-    if (NotDot(err.insert6))
-        s << err.insert6 << "/";
-    s << err.insert7 << "\".";
 
     return s.Array();
 }

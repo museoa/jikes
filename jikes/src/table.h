@@ -42,7 +42,6 @@ public:
     {
         if ((variable_symbol != conflict_symbol) && (! Find(conflict_symbol)))
             conflict -> Next() = conflict_symbol;
-        return;
     }
     inline void CompressSpace()
     {
@@ -93,12 +92,6 @@ public:
     {
         if ((method_symbol != conflict_symbol) && (! Find(conflict_symbol)))
             conflict -> Next() = conflict_symbol;
-        return;
-    }
-    inline void RemoveConflicts()
-    {
-        delete conflict;
-        conflict = NULL;
     }
 
     inline void CompressSpace()
@@ -150,7 +143,6 @@ public:
     {
         if ((type_symbol != conflict_symbol) && (! Find(conflict_symbol)))
             conflict -> Next() = conflict_symbol;
-        return;
     }
 
     inline void CompressSpace()

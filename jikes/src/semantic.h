@@ -872,7 +872,7 @@ private:
     AccessFlags ProcessFormalModifiers(AstFormalParameter *);
     AccessFlags ProcessMethodModifiers(AstMethodDeclaration *);
     AccessFlags ProcessConstructorModifiers(AstConstructorDeclaration *);
-    AccessFlags ProcessConstantModifiers(AstFieldDeclaration *);
+    AccessFlags ProcessInterfaceFieldModifiers(AstFieldDeclaration *);
     AccessFlags ProcessInterfaceMethodModifiers(AstMethodDeclaration *);
     void AddDefaultConstructor(TypeSymbol *);
     void ProcessConstructorDeclaration(AstConstructorDeclaration *);
@@ -1122,10 +1122,7 @@ private:
     void ProcessVariableInitializer(AstVariableDeclarator *);
     void ProcessArrayInitializer(AstArrayInitializer *, TypeSymbol *);
 
-    void CheckInheritedMethodThrows(AstMethodDeclaration *, MethodSymbol *);
-    void CheckMethodOverride(AstMethodDeclaration *, MethodSymbol *);
-    void CheckInheritedMethodThrows(AstClassDeclaration *, MethodSymbol *, MethodSymbol *);
-    void CheckMethodOverride(AstClassDeclaration *, MethodSymbol *, MethodSymbol *);
+    void CheckMethodOverride(MethodSymbol *, MethodSymbol *, TypeSymbol *);
     void AddInheritedTypes(TypeSymbol *, TypeSymbol *);
     void AddInheritedFields(TypeSymbol *, TypeSymbol *);
     void AddInheritedMethods(TypeSymbol *, TypeSymbol *, LexStream::TokenIndex);

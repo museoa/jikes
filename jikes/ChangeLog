@@ -1,3 +1,27 @@
+2001-11-10  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/decl.cpp (CheckMethodOverride, AddInherited*): Consolidate
+	all the work of CompleteSymbolTable, CheckMethodOverride, and
+	CheckInheritedMethodThrows into one place, which is now called
+	when building the inheritance tables. Fixes bugs 190, 1787, 1801.
+	* src/error.h:
+	* src/error.cpp: More error cleanups: Collapse REDUNDANT_* and
+	OBSOLESCENT_ABSTRACT into REDUNDENT_MODIFIER, add
+	RECOMMENDED_MODIFIER_ORDER, collapse VOLATILE_FINAL and
+	FINAL_VOLATILE to VOLATILE_FINAL_FIELD, add
+	MISMATCHED_IMPLICIT_METHOD, FINAL_IMPLICIT_METHOD_OVERRIDE, and
+	MISMATCHED_IMPLICIT_OVERRIDDEN_EXCEPTION, and delete some unused
+	errors.
+	* src/modifier.cpp: Add checking (in pedantic mode) for the
+	recommended ordering of modifiers.
+	* src/platform.cpp: Fix a core-dump caused during my testing when
+	I accidentally passed NULL as an error message parameter.
+	* src/semantic.h: Update some method headers.
+	* src/table.h (RemoveConflicts): Delete this method, as saving the
+	method conflicts is essential for determining the merged throws
+	clause mentioned in bug 2395 (although I don't have that bit
+	working yet) - patch 229.
+
 2001-11-09  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/decl.cpp (ProcessImportQualifiedName): Detect attempts to

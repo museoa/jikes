@@ -120,11 +120,8 @@ class SemanticError
         CODE_OVERFLOW,
         CANNOT_COMPUTE_COLUMNS,
         EMPTY_DECLARATION,
-        REDUNDANT_ABSTRACT,
-        REDUNDANT_FINAL,
-        REDUNDANT_PUBLIC,
-        REDUNDANT_STATIC,
-        OBSOLESCENT_ABSTRACT,
+        REDUNDANT_MODIFIER,
+        RECOMMENDED_MODIFIER_ORDER,
         OBSOLESCENT_BRACKETS,
         NO_TYPES,
         MULTIPLE_PUBLIC_TYPES,
@@ -140,8 +137,7 @@ class SemanticError
         DUPLICATE_ACCESS_MODIFIER,
         DUPLICATE_MODIFIER,
         FINAL_ABSTRACT_CLASS,
-        VOLATILE_FINAL,
-        FINAL_VOLATILE,
+        VOLATILE_FINAL_FIELD,
         INVALID_TOP_LEVEL_CLASS_MODIFIER,
         INVALID_INNER_CLASS_MODIFIER,
         INVALID_STATIC_INNER_CLASS_MODIFIER,
@@ -170,8 +166,8 @@ class SemanticError
         DUPLICATE_METHOD,
         DUPLICATE_CONSTRUCTOR,
         MISMATCHED_INHERITED_METHOD,
+        MISMATCHED_IMPLICIT_METHOD,
         MISMATCHED_INHERITED_METHOD_EXTERNALLY,
-        MISMATCHED_INHERITED_METHODS_IN_BASE,
         DUPLICATE_FORMAL_PARAMETER,
         MISSPELLED_CONSTRUCTOR_NAME,
         MISMATCHED_CONSTRUCTOR_NAME,
@@ -279,21 +275,17 @@ class SemanticError
         STRICTFP_NATIVE_METHOD,
         ABSTRACT_METHOD_INVOCATION,
         FINAL_METHOD_OVERRIDE,
-        FINAL_METHOD_OVERRIDE_EXTERNALLY,
-        PRIVATE_METHOD_OVERRIDE,
-        PRIVATE_METHOD_OVERRIDE_EXTERNALLY,
+        FINAL_IMPLICIT_METHOD_OVERRIDE,
         INSTANCE_METHOD_OVERRIDE,
         INSTANCE_METHOD_OVERRIDE_EXTERNALLY,
         CLASS_METHOD_OVERRIDE,
-        CLASS_METHOD_OVERRIDE_EXTERNALLY,
         MISMATCHED_OVERRIDDEN_EXCEPTION,
+        MISMATCHED_IMPLICIT_OVERRIDDEN_EXCEPTION,
         MISMATCHED_OVERRIDDEN_EXCEPTION_EXTERNALLY,
         ABSTRACT_METHOD_WITH_BODY,
         NON_ABSTRACT_METHOD_WITHOUT_BODY,
         BAD_ACCESS_METHOD_OVERRIDE,
         BAD_ACCESS_METHOD_OVERRIDE_EXTERNALLY,
-        STATIC_OVERRIDE_ABSTRACT,
-        STATIC_OVERRIDE_ABSTRACT_EXTERNALLY,
         CIRCULAR_THIS_CALL,
         INSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
         INSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR_INVOCATION,
@@ -434,11 +426,8 @@ private:
     static wchar_t *PrintCODE_OVERFLOW(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintCANNOT_COMPUTE_COLUMNS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintEMPTY_DECLARATION(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintREDUNDANT_ABSTRACT(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintREDUNDANT_FINAL(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintREDUNDANT_PUBLIC(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintREDUNDANT_STATIC(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintOBSOLESCENT_ABSTRACT(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintREDUNDANT_MODIFIER(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintRECOMMENDED_MODIFIER_ORDER(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintOBSOLESCENT_BRACKETS(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNO_TYPES(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMULTIPLE_PUBLIC_TYPES(ErrorInfo &, LexStream *, Control &);
@@ -454,8 +443,7 @@ private:
     static wchar_t *PrintDUPLICATE_ACCESS_MODIFIER(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintDUPLICATE_MODIFIER(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintFINAL_ABSTRACT_CLASS(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintVOLATILE_FINAL(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintFINAL_VOLATILE(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintVOLATILE_FINAL_FIELD(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINVALID_TOP_LEVEL_CLASS_MODIFIER(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINVALID_INNER_CLASS_MODIFIER(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINVALID_STATIC_INNER_CLASS_MODIFIER(ErrorInfo &, LexStream *, Control &);
@@ -484,8 +472,8 @@ private:
     static wchar_t *PrintDUPLICATE_METHOD(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintDUPLICATE_CONSTRUCTOR(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISMATCHED_INHERITED_METHOD(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintMISMATCHED_IMPLICIT_METHOD(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISMATCHED_INHERITED_METHOD_EXTERNALLY(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintMISMATCHED_INHERITED_METHODS_IN_BASE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintDUPLICATE_FORMAL_PARAMETER(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISSPELLED_CONSTRUCTOR_NAME(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISMATCHED_CONSTRUCTOR_NAME(ErrorInfo &, LexStream *, Control &);
@@ -593,21 +581,17 @@ private:
     static wchar_t *PrintSTRICTFP_NATIVE_METHOD(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintABSTRACT_METHOD_INVOCATION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintFINAL_METHOD_OVERRIDE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintFINAL_METHOD_OVERRIDE_EXTERNALLY(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintPRIVATE_METHOD_OVERRIDE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintPRIVATE_METHOD_OVERRIDE_EXTERNALLY(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintFINAL_IMPLICIT_METHOD_OVERRIDE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINSTANCE_METHOD_OVERRIDE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINSTANCE_METHOD_OVERRIDE_EXTERNALLY(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintCLASS_METHOD_OVERRIDE(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintCLASS_METHOD_OVERRIDE_EXTERNALLY(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISMATCHED_OVERRIDDEN_EXCEPTION(ErrorInfo &, LexStream *, Control &);
+    static wchar_t *PrintMISMATCHED_IMPLICIT_OVERRIDDEN_EXCEPTION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintMISMATCHED_OVERRIDDEN_EXCEPTION_EXTERNALLY(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintABSTRACT_METHOD_WITH_BODY(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintNON_ABSTRACT_METHOD_WITHOUT_BODY(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintBAD_ACCESS_METHOD_OVERRIDE(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintBAD_ACCESS_METHOD_OVERRIDE_EXTERNALLY(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintSTATIC_OVERRIDE_ABSTRACT(ErrorInfo &, LexStream *, Control &);
-    static wchar_t *PrintSTATIC_OVERRIDE_ABSTRACT_EXTERNALLY(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintCIRCULAR_THIS_CALL(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINSTANCE_VARIABLE_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintINSTANCE_METHOD_IN_EXPLICIT_CONSTRUCTOR_INVOCATION(ErrorInfo &, LexStream *, Control &);

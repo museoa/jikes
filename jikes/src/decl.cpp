@@ -121,6 +121,7 @@ void Semantic::ProcessTypeNames()
                 source_file_symbol -> types.Next() = type;
             }
         }
+        return;
     }
 
     //
@@ -486,8 +487,6 @@ void Semantic::CheckNestedTypeDuplication(SemanticEnvironment *env, LexStream::T
             }
         }
     }
-
-    return;
 }
 
 
@@ -583,8 +582,6 @@ void Semantic::CheckInterfaceMembers(TypeSymbol *containing_type, AstInterfaceDe
                            interface_declaration -> EmptyDeclaration(l) -> RightToken());
         }
     }
-
-    return;
 }
 
 
@@ -660,8 +657,6 @@ void Semantic::ProcessImports()
              ProcessTypeImportOnDemandDeclaration(import_declaration);
         else ProcessSingleTypeImportDeclaration(import_declaration);
     }
-
-    return;
 }
 
 
@@ -698,8 +693,6 @@ void Semantic::ProcessSuperTypeDependences(AstClassDeclaration *class_declaratio
 
     for (int j = 0; j < class_body -> NumNestedInterfaces(); j++)
         ProcessSuperTypeDependences(class_body -> NestedInterface(j));
-
-    return;
 }
 
 
@@ -720,8 +713,6 @@ void Semantic::ProcessSuperTypeDependences(AstInterfaceDeclaration *interface_de
 
     for (int j = 0; j < interface_declaration -> NumNestedInterfaces(); j++)
         ProcessSuperTypeDependences(interface_declaration -> NestedInterface(j));
-
-    return;
 }
 
 
@@ -739,8 +730,6 @@ void Semantic::SetDefaultSuperType(AstClassDeclaration *class_declaration)
             type -> ContainingPackage() != control.system_package || type -> IsNested())
             type -> super = control.Object();
     }
-
-    return;
 }
 
 
@@ -767,8 +756,6 @@ void Semantic::SetDefaultSuperType(AstInterfaceDeclaration *interface_declaratio
         if (inner_interface_declaration -> semantic_environment)
             SetDefaultSuperType(inner_interface_declaration);
     }
-
-    return;
 }
 
 
@@ -843,8 +830,6 @@ void Semantic::ProcessTypeHeader(AstClassDeclaration *class_declaration)
         ProcessInterface(this_type, class_declaration -> Interface(i));
 
     this_type -> MarkHeaderProcessed();
-
-    return;
 }
 
 
@@ -876,8 +861,6 @@ void Semantic::ProcessTypeHeader(AstInterfaceDeclaration *interface_declaration)
     }
 
     this_type -> MarkHeaderProcessed();
-
-    return;
 }
 
 
@@ -916,8 +899,6 @@ void Semantic::MarkCircularNest(TypeSymbol *type)
         for (int k = 0; k < interface_declaration -> NumNestedInterfaces(); k++)
             MarkCircularNest(interface_declaration -> NestedInterface(k) -> semantic_environment -> Type());
     }
-
-    return;
 }
 
 
@@ -1002,8 +983,6 @@ void Semantic::ProcessSuperTypesOfOuterType(TypeSymbol *type)
 
         MarkCircularNest(type);
     }
-
-    return;
 }
 
 
@@ -1100,8 +1079,6 @@ void Semantic::ProcessSuperTypesOfInnerType(TypeSymbol *type, Tuple<TypeSymbol *
         type -> AddNestedType(inner_type);
         type -> innertypes_closure -> Union(*(inner_type -> innertypes_closure));
     }
-
-    return;
 }
 
 
@@ -1149,8 +1126,6 @@ void Semantic::ProcessTypeHeaders(AstClassDeclaration *class_declaration)
                               class_declaration -> Interface(i) -> LeftToken());
         }
     }
-
-    return;
 }
 
 
@@ -1176,8 +1151,6 @@ void Semantic::ProcessTypeHeaders(AstInterfaceDeclaration *interface_declaration
                           interface_declaration -> ExtendsInterface(i) -> Type(),
                           interface_declaration -> ExtendsInterface(i) -> LeftToken());
     }
-
-    return;
 }
 
 
@@ -1189,8 +1162,6 @@ void Semantic::ReportTypeInaccessible(LexStream::TokenIndex left_tok, LexStream:
                    type -> ContainingPackage() -> PackageName(),
                    type -> ExternalName(),
                    (type -> ACC_PRIVATE() ? StringConstant::US_private : (type -> ACC_PROTECTED() ? StringConstant::US_protected : StringConstant::US_default)));
-
-    return;
 }
 
 
@@ -1401,8 +1372,6 @@ void Semantic::ProcessNestedSuperTypes(TypeSymbol *type)
 
         ProcessSuperTypesOfInnerType(type, partially_ordered_types);
     }
-
-    return;
 }
 
 
@@ -1436,8 +1405,6 @@ void Semantic::ProcessNestedTypeHeaders(TypeSymbol *type, AstClassBody *class_bo
     ProcessNestedSuperTypes(type);
 
     state_stack.Pop();
-
-    return;
 }
 
 
@@ -1472,8 +1439,6 @@ void Semantic::ProcessNestedTypeHeaders(AstInterfaceDeclaration *interface_decla
     ProcessNestedSuperTypes(type);
 
     state_stack.Pop();
-
-    return;
 }
 
 
@@ -1500,8 +1465,6 @@ inline void Semantic::ProcessConstructorMembers(AstClassBody *class_body)
          AddDefaultConstructor(this_type);
 
     this_type -> MarkConstructorMembersProcessed();
-
-    return;
 }
 
 
@@ -1513,8 +1476,6 @@ inline void Semantic::ProcessMethodMembers(AstClassBody *class_body)
         ProcessMethodDeclaration(class_body -> Method(k));
 
     ThisType() -> MarkMethodMembersProcessed();
-
-    return;
 }
 
 
@@ -1529,16 +1490,12 @@ inline void Semantic::ProcessFieldMembers(AstClassBody *class_body)
         ProcessFieldDeclaration(class_body -> ClassVariable(k));
 
     ThisType() -> MarkFieldMembersProcessed();
-
-    return;
 }
 
 
-void Semantic::ProcessMembers(SemanticEnvironment *environment, AstClassBody *class_body)
+void Semantic::ProcessMembers(SemanticEnvironment *environment,
+                              AstClassBody *class_body)
 {
-    //
-    //
-    //
     state_stack.Push(environment);
     TypeSymbol *this_type = ThisType();
 
@@ -1592,7 +1549,8 @@ void Semantic::ProcessMembers(SemanticEnvironment *environment, AstClassBody *cl
         {
             AstClassDeclaration *class_declaration = (AstClassDeclaration *) inner_type -> declaration;
 
-            ProcessMembers(class_declaration -> semantic_environment, class_declaration -> class_body);
+            ProcessMembers(class_declaration -> semantic_environment,
+                           class_declaration -> class_body);
 
             if (this_type -> IsInner() && class_declaration -> semantic_environment &&
                 class_declaration -> semantic_environment -> Type() -> ACC_STATIC())
@@ -1608,8 +1566,6 @@ void Semantic::ProcessMembers(SemanticEnvironment *environment, AstClassBody *cl
     }
 
     state_stack.Pop();
-
-    return;
 }
 
 
@@ -1621,8 +1577,6 @@ inline void Semantic::ProcessMethodMembers(AstInterfaceDeclaration *interface_de
         ProcessMethodDeclaration(interface_declaration -> Method(k));
 
     ThisType() -> MarkMethodMembersProcessed();
-
-    return;
 }
 
 
@@ -1634,16 +1588,11 @@ inline void Semantic::ProcessFieldMembers(AstInterfaceDeclaration *interface_dec
         ProcessFieldDeclaration(interface_declaration -> ClassVariable(k));
 
     ThisType() -> MarkFieldMembersProcessed();
-
-    return;
 }
 
 
 void Semantic::ProcessMembers(AstInterfaceDeclaration *interface_declaration)
 {
-    //
-    //
-    //
     state_stack.Push(interface_declaration -> semantic_environment);
     TypeSymbol *this_type = ThisType();
 
@@ -1668,13 +1617,12 @@ void Semantic::ProcessMembers(AstInterfaceDeclaration *interface_declaration)
         else
         {
             AstClassDeclaration *class_declaration = (AstClassDeclaration *) inner_type -> declaration;
-            ProcessMembers(class_declaration -> semantic_environment, class_declaration -> class_body);
+            ProcessMembers(class_declaration -> semantic_environment,
+                           class_declaration -> class_body);
         }
     }
 
     state_stack.Pop();
-
-    return;
 }
 
 
@@ -1695,17 +1643,17 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment,
     assert(this_type -> MethodMembersProcessed());
     assert(this_type -> FieldMembersProcessed());
 
-    //
-    //
-    //
     if (! this_type -> expanded_method_table)
         ComputeMethodsClosure(this_type, identifier_token);
 
     ExpandedMethodTable &expanded_table = *(this_type -> expanded_method_table);
-    if (! this_type -> ACC_ABSTRACT())
+    if (! this_type -> ACC_ABSTRACT() && ! this_type -> Bad())
     {
         //
         // Check that every abstract method that is inherited is overridden.
+        // Exploit the fact that the method table is built with the first
+        // element being from a superclass; all conflicts are inherited
+        // from interfaces and are necessarily abstract.
         //
         for (int i = 0; i < expanded_table.symbol_pool.Length(); i++)
         {
@@ -1717,7 +1665,8 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment,
                 if (containing_type != this_type)
                 {
                     if (! method -> IsTyped())
-                        method -> ProcessMethodSignature((Semantic *) this, identifier_token);
+                        method -> ProcessMethodSignature((Semantic *) this,
+                                                         identifier_token);
 
                     //
                     // If the method is contained in an abstract type read from
@@ -1765,8 +1714,7 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment,
                 MethodSymbol *method = super_expanded_table.symbol_pool[i] -> method_symbol;
 
                 //
-                // Remember that abstract methods cannot be private. Filter
-                // out the inherited methods, which were already reported.
+                // Remember that abstract methods cannot be private.
                 //
                 if (method -> ACC_ABSTRACT() &&
                     ! method -> ACC_PUBLIC() &&
@@ -1775,7 +1723,8 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment,
                     TypeSymbol *containing_type = method -> containing_type;
 
                     if (! method -> IsTyped())
-                        method -> ProcessMethodSignature((Semantic *) this, identifier_token);
+                        method -> ProcessMethodSignature((Semantic *) this,
+                                                         identifier_token);
 
                     //
                     // Search all intermediate superclasses in the same package
@@ -1812,67 +1761,6 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment,
         }
     }
 
-    for (int i = 0; i < expanded_table.symbol_pool.Length(); i++)
-    {
-        MethodShadowSymbol *method_shadow = expanded_table.symbol_pool[i];
-
-        if (method_shadow -> NumConflicts() > 0)
-        {
-            MethodSymbol *method = method_shadow -> method_symbol;
-
-            if (method -> containing_type == this_type)
-            {
-                AstMethodDeclaration *method_declaration = (AstMethodDeclaration *) method -> method_or_constructor_declaration;
-
-                for (int k = 0; k < method_shadow -> NumConflicts(); k++)
-                {
-                    MethodSymbol *hidden_method = method_shadow -> Conflict(k);
-                    if (method -> containing_type != hidden_method -> containing_type) // the methods are not in the same type
-                        CheckMethodOverride(method_declaration, hidden_method);
-                }
-            }
-            else
-            {
-                AstClassDeclaration *class_declaration = (AstClassDeclaration *) this_type -> declaration;
-
-                for (int k = 0; k < method_shadow -> NumConflicts(); k++)
-                {
-                    MethodSymbol *hidden_method = method_shadow -> Conflict(k);
-                    if (method -> containing_type != hidden_method -> containing_type) // the methods are not in the same type
-                        CheckMethodOverride(class_declaration, method, hidden_method);
-                }
-
-                if (! method -> ACC_ABSTRACT())
-                {
-                    if (method -> ACC_STATIC())
-                    {
-                        if (! method -> IsTyped())
-                            method -> ProcessMethodSignature((Semantic *) this, identifier_token);
-
-                        if (! method_shadow -> Conflict(0) -> IsTyped())
-                            method_shadow -> Conflict(0) -> ProcessMethodSignature((Semantic *) this, identifier_token);
-
-                        ReportSemError(SemanticError::STATIC_OVERRIDE_ABSTRACT_EXTERNALLY,
-                                       class_declaration -> identifier_token,
-                                       (class_declaration -> NumInterfaces() > 0
-                                             ? class_declaration -> Interface(class_declaration -> NumInterfaces() - 1) -> RightToken()
-                                             : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
-                                                                               : class_declaration -> identifier_token)),
-                                       lex_stream -> NameString(class_declaration -> identifier_token),
-                                       method -> Header(),
-                                       method -> containing_type -> ContainingPackage() -> PackageName(),
-                                       method -> containing_type -> ExternalName(),
-                                       method_shadow -> Conflict(0) -> Header(),
-                                       method_shadow -> Conflict(0) -> containing_type -> ContainingPackage() -> PackageName(),
-                                       method_shadow -> Conflict(0) -> containing_type -> ExternalName());
-                    }
-                }
-            }
-
-            method_shadow -> RemoveConflicts();
-        }
-    }
-
     ProcessBlockInitializers(class_body);
     ProcessStaticInitializers(class_body);
 
@@ -1902,8 +1790,6 @@ void Semantic::CompleteSymbolTable(SemanticEnvironment *environment,
     }
 
     state_stack.Pop();
-
-    return;
 }
 
 
@@ -1918,42 +1804,8 @@ void Semantic::CompleteSymbolTable(AstInterfaceDeclaration *interface_declaratio
     assert(this_type -> MethodMembersProcessed());
     assert(this_type -> FieldMembersProcessed());
 
-    //
-    //
-    //
     if (! this_type -> expanded_method_table)
         ComputeMethodsClosure(this_type, interface_declaration -> identifier_token);
-
-    ExpandedMethodTable &expanded_table = *(this_type -> expanded_method_table);
-    for (int i = 0; i < interface_declaration -> NumMethods(); i++)
-    {
-        AstMethodDeclaration *method_declaration = interface_declaration -> Method(i);
-        MethodSymbol *method = method_declaration -> method_symbol;
-
-        if (method)
-        {
-            MethodShadowSymbol *method_shadow =
-                expanded_table.FindOverloadMethodShadow(method,
-                                                        (Semantic *) this,
-                                                        interface_declaration -> identifier_token);
-            for (int k = 0; k < method_shadow -> NumConflicts(); k++)
-            {
-                if (method_shadow -> method_symbol -> Type() != method_shadow -> Conflict(k) -> Type())
-                {
-                    ReportSemError(SemanticError::MISMATCHED_INHERITED_METHOD,
-                                   method_declaration -> method_declarator -> LeftToken(),
-                                   method_declaration -> method_declarator -> RightToken(),
-                                   method_shadow -> method_symbol -> Header(),
-                                   method_shadow -> Conflict(k) -> Header(),
-                                   method_shadow -> Conflict(k) -> containing_type -> ContainingPackage() -> PackageName(),
-                                   method_shadow -> Conflict(k) -> containing_type -> ExternalName());
-                }
-
-                if (method_shadow -> method_symbol -> containing_type == this_type) // override ?
-                    CheckInheritedMethodThrows(method_declaration, method_shadow -> Conflict(k));
-            }
-        }
-    }
 
     //
     // Compute the set of final variables (all fields in an interface are
@@ -1981,25 +1833,7 @@ void Semantic::CompleteSymbolTable(AstInterfaceDeclaration *interface_declaratio
         // expression that is not a constant expression.
         //
         if ((! init_method) && NeedsInitializationMethod(interface_declaration -> ClassVariable(k)))
-        {
-            MethodSymbol *init_method = this_type -> InsertMethodSymbol(control.clinit_name_symbol);
-
-            init_method -> SetType(control.void_type);
-            init_method -> SetACC_FINAL();
-            init_method -> SetACC_STATIC();
-            init_method -> SetContainingType(this_type);
-            init_method -> SetBlockSymbol(new BlockSymbol(0)); // the symbol table associated with this block will contain no element
-            init_method -> block_symbol -> max_variable_index = 0;
-            init_method -> SetSignature(control);
-
-            //
-            //
-            //
-            init_method -> max_block_depth = 2; // TODO: Dave why is this the case? We need a legitimate comment here !!!
-            init_method -> block_symbol -> CompressSpace(); // space optimization
-
-            this_type -> static_initializer_method = init_method;
-        }
+            init_method = GetStaticInitializerMethod();
     }
 
     //
@@ -2019,8 +1853,6 @@ void Semantic::CompleteSymbolTable(AstInterfaceDeclaration *interface_declaratio
     }
 
     state_stack.Pop();
-
-    return;
 }
 
 
@@ -2030,7 +1862,7 @@ void Semantic::CompleteSymbolTable(AstInterfaceDeclaration *interface_declaratio
 void Semantic::CleanUp()
 {
     if (control.option.nocleanup)
-    return;
+        return;
 
     for (int i = 0; i < compilation_unit -> NumTypeDeclarations(); i++)
     {
@@ -2062,8 +1894,6 @@ void Semantic::CleanUp()
         if (type)
             CleanUpType(type);
     }
-
-    return;
 }
 
 
@@ -2091,8 +1921,6 @@ void Semantic::CleanUpType(TypeSymbol *type)
     type -> semantic_environment = NULL;
 
     type -> declaration = NULL;
-
-    return;
 }
 
 
@@ -2395,8 +2223,6 @@ void Semantic::ProcessPackageOrType(AstExpression *name)
             simple_name -> symbol = package;
         }
     }
-
-    return;
 }
 
 
@@ -2664,8 +2490,8 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration *field_declaration)
 {
     TypeSymbol *this_type = ThisType();
     AccessFlags access_flags = (this_type -> ACC_INTERFACE()
-                                           ? ProcessConstantModifiers(field_declaration)
-                                           : ProcessFieldModifiers(field_declaration));
+                                ? ProcessInterfaceFieldModifiers(field_declaration)
+                                : ProcessFieldModifiers(field_declaration));
 
     //
     // JLS2 8.1.2 - Inner classes may not have static fields unless they are
@@ -2760,8 +2586,6 @@ void Semantic::ProcessFieldDeclaration(AstFieldDeclaration *field_declaration)
                 variable -> MarkDeprecated();
         }
     }
-
-    return;
 }
 
 
@@ -2848,8 +2672,6 @@ void Semantic::GenerateLocalConstructor(MethodSymbol *constructor)
     }
 
     local_type -> AddGeneratedConstructor(local_constructor);
-
-    return;
 }
 
 
@@ -2987,8 +2809,6 @@ void Semantic::ProcessConstructorDeclaration(AstConstructorDeclaration *construc
 
     if (lex_stream -> IsDeprecated(lex_stream -> Previous(constructor_declaration -> LeftToken())))
         constructor -> MarkDeprecated();
-
-    return;
 }
 
 
@@ -3078,317 +2898,358 @@ void Semantic::AddDefaultConstructor(TypeSymbol *type)
         if (type -> IsLocal())
             GenerateLocalConstructor(constructor);
     }
-
-    return;
 }
 
 
-void Semantic::CheckInheritedMethodThrows(AstMethodDeclaration *method_declaration, MethodSymbol *method)
+//
+// This is called by AddInheritedMethods in two conditions: First, method
+// belongs to base_type, so it must successfully override hidden_method,
+// including a compatible throws clause. Second, method belongs to a supertype
+// of base_type, in which case base_type is inheriting two declarations, one
+// of which is necessarily abstract. If one is non-abstract, it must
+// successfully override the abstract version, including the throws clause;
+// but if both are abstract the throws clauses are inconsequential. It is
+// possible that both method and hidden_method were declared in the same
+// class, and inherited through two paths, in which case we do nothing.
+// See JLS 8.4.6.4, and 9.4.1.
+//
+void Semantic::CheckMethodOverride(MethodSymbol *method,
+                                   MethodSymbol *hidden_method,
+                                   TypeSymbol *base_type)
 {
-    if (method_declaration -> NumThrows() > 0)
+    assert(! hidden_method -> ACC_PRIVATE());           
+
+    if (hidden_method == method)
+        return;
+
+    if (method -> containing_type != base_type)
     {
-        if (! method -> IsTyped())
-            method -> ProcessMethodSignature((Semantic *) this, method_declaration -> Throw(0) -> LeftToken());
-        method -> ProcessMethodThrows((Semantic *) this, method_declaration -> Throw(0) -> LeftToken());
-
-        for (int i = 0; i < method_declaration -> NumThrows(); i++)
+        //
+        // If an interface inherits something from Object along two paths, it
+        // is guaranteed to be safe. Otherwise, the hidden method should be
+        // from an interface, based on the order we built the method table.
+        //
+        if (base_type -> ACC_INTERFACE() &&
+            hidden_method -> containing_type == control.Object())
         {
-            AstExpression *name = method_declaration -> Throw(i);
-            TypeSymbol *exception = (TypeSymbol *) name -> symbol;
+            return;
+        }
+        assert(hidden_method -> ACC_ABSTRACT() &&
+               hidden_method -> ACC_PUBLIC());
+    }
 
-            if (CheckedException(exception))
-            {
-                int k;
-                for (k = method -> NumThrows() - 1; k >= 0; k--)
-                {
-                    if (exception -> IsSubclass(method -> Throws(k)))
-                        break;
-                }
+    LexStream::TokenIndex left_tok;
+    LexStream::TokenIndex right_tok;
 
-                if (k < 0)
-                {
-                    ReportSemError(SemanticError::MISMATCHED_OVERRIDDEN_EXCEPTION,
-                                   name -> LeftToken(),
-                                   name -> RightToken(),
-                                   exception -> Name(),
-                                   method -> Header(),
-                                   method -> containing_type -> ContainingPackage() -> PackageName(),
-                                   method -> containing_type -> ExternalName());
-                }
-            }
+    if (method -> containing_type == base_type && ThisType() == base_type)
+    {
+        AstMethodDeclaration *method_declaration = ((AstMethodDeclaration *) method -> method_or_constructor_declaration);
+        assert(method_declaration);
+        AstMethodDeclarator *method_declarator = method_declaration -> method_declarator;
+
+        left_tok = method_declarator -> LeftToken();
+        right_tok = method_declarator -> RightToken();
+    }
+    else
+    {
+        AstInterfaceDeclaration *interface_declaration = ThisType() -> declaration -> InterfaceDeclarationCast();
+        AstClassDeclaration *class_declaration = ThisType() -> declaration -> ClassDeclarationCast();
+        if (interface_declaration)
+            left_tok = right_tok = interface_declaration -> identifier_token;
+        else if (class_declaration)
+            left_tok = right_tok = class_declaration -> identifier_token;
+        else
+        {
+            AstClassInstanceCreationExpression *class_creation = ThisType() -> declaration -> ClassInstanceCreationExpressionCast();
+
+            assert(class_creation);
+
+            left_tok = class_creation -> class_type -> LeftToken();
+            right_tok = class_creation -> class_type -> RightToken();
         }
     }
 
-    return;
-}
-
-
-void Semantic::CheckMethodOverride(AstMethodDeclaration *method_declaration, MethodSymbol *hidden_method)
-{
-    AstMethodDeclarator *method_declarator = method_declaration -> method_declarator;
-    MethodSymbol *method = method_declaration -> method_symbol;
-
+    //
+    // Return types must match.
+    //
     if (hidden_method -> Type() != method -> Type())
     {
-        ReportSemError(SemanticError::MISMATCHED_INHERITED_METHOD,
-                       method_declarator -> LeftToken(),
-                       method_declarator -> RightToken(),
-                       method -> Header(),
-                       hidden_method -> Header(),
-                       hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
-                       hidden_method -> containing_type -> ExternalName());
+        if (method -> containing_type == base_type)
+        {
+            if (base_type -> ACC_INTERFACE() &&
+                hidden_method -> containing_type == control.Object())
+            {
+                //
+                // TODO: Review this when JLS3 is published.  JLS2 9.2 claims
+                // that only public methods are implicitly declared in
+                // interfaces, ie. clone() and finalize() are not
+                // automatically in interfaces, and can therefore be
+                // overridden with a new return type, even though that makes
+                // the interface non-instantiable. However, Sun's compiler has
+                // never permitted an interface to have a clone() or
+                // finalize() with a conflicting return type.  For now, we
+                // take the conservative stance, and reject an attempt to
+                // clash with clone() or finalize().
+                //
+                // if (hidden_method -> ACC_PUBLIC())
+                //
+                ReportSemError(SemanticError::MISMATCHED_IMPLICIT_METHOD,
+                               left_tok,
+                               right_tok,
+                               method -> Header(),
+                               hidden_method -> Header());
+            }
+            else
+            {
+                ReportSemError(SemanticError::MISMATCHED_INHERITED_METHOD,
+                               left_tok,
+                               right_tok,
+                               method -> Header(),
+                               hidden_method -> Header(),
+                               hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
+                               hidden_method -> containing_type -> ExternalName());
+            }
+        }
+        else
+        {
+            ReportSemError(SemanticError::MISMATCHED_INHERITED_METHOD_EXTERNALLY,
+                           left_tok,
+                           right_tok,
+                           base_type -> ExternalName(),
+                           method -> Header(),
+                           method -> containing_type -> ContainingPackage() -> PackageName(),
+                           method -> containing_type -> ExternalName(),
+                           hidden_method -> Header(),
+                           hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
+                           hidden_method -> containing_type -> ExternalName());
+        }
+        base_type -> MarkBad();
     }
-    if (hidden_method -> IsFinal() || hidden_method -> ACC_PRIVATE()) // Merged because same kind of message. See error.cpp
-        ReportSemError(hidden_method -> IsFinal() ? SemanticError::FINAL_METHOD_OVERRIDE : SemanticError::PRIVATE_METHOD_OVERRIDE,
-                       method_declarator -> LeftToken(),
-                       method_declarator -> RightToken(),
-                       method -> Header(),
-                       hidden_method -> Header(),
-                       hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
-                       hidden_method -> containing_type -> ExternalName());
 
+
+    //
+    // If base_type declared method, hidden_method must not be final. On the
+    // other hand, if a type inherits a final method from a superclass and
+    // an abstract method from an interface, it is legal.
+    //
+    if (method -> containing_type == base_type && hidden_method -> IsFinal())
+    {
+        if (base_type -> ACC_INTERFACE())
+        {
+            ReportSemError(SemanticError::FINAL_IMPLICIT_METHOD_OVERRIDE,
+                           left_tok,
+                           right_tok,
+                           method -> Header(),
+                           hidden_method -> Header());
+        }
+        else
+        {
+            ReportSemError(SemanticError::FINAL_METHOD_OVERRIDE,
+                           left_tok,
+                           right_tok,
+                           method -> Header(),
+                           hidden_method -> Header(),
+                           hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
+                           hidden_method -> containing_type -> ExternalName());
+        }
+        base_type -> MarkBad();
+    }
+
+
+    //
+    // Both or neither versions must be static.
+    //
     if (method -> ACC_STATIC() != hidden_method -> ACC_STATIC())
     {
-        if (method -> ACC_STATIC())
-             ReportSemError(SemanticError::INSTANCE_METHOD_OVERRIDE,
-                            method_declarator -> LeftToken(),
-                            method_declarator -> RightToken(),
-                            method -> Header(),
-                            hidden_method -> Header(),
-                            hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
-                            hidden_method -> containing_type -> ExternalName());
-        else ReportSemError(SemanticError::CLASS_METHOD_OVERRIDE,
-                            method_declarator -> LeftToken(),
-                            method_declarator -> RightToken(),
-                            method -> Header(),
-                            hidden_method -> Header(),
-                            hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
-                            hidden_method -> containing_type -> ExternalName());
+        if (method -> containing_type == base_type)
+        {
+            ReportSemError((method -> ACC_STATIC()
+                            ? SemanticError::INSTANCE_METHOD_OVERRIDE
+                            : SemanticError::CLASS_METHOD_OVERRIDE),
+                           left_tok,
+                           right_tok,
+                           method -> Header(),
+                           hidden_method -> Header(),
+                           hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
+                           hidden_method -> containing_type -> ExternalName());
+        }
+        else
+        {
+            assert(method -> ACC_STATIC());
+            ReportSemError(SemanticError::INSTANCE_METHOD_OVERRIDE_EXTERNALLY,
+                           left_tok,
+                           right_tok,
+                           base_type -> ExternalName(),
+                           method -> Header(),
+                           method -> containing_type -> ContainingPackage() -> PackageName(),
+                           method -> containing_type -> ExternalName(),
+                           hidden_method -> Header(),
+                           hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
+                           hidden_method -> containing_type -> ExternalName());
+        }
+        base_type -> MarkBad();
     }
 
+    //
+    // An overriding method cannot be less accessible. On the other hand, it
+    // is legal to inherit two abstract methods when one is not public.
+    //
     if (hidden_method -> ACC_PUBLIC())
     {
         if (! method -> ACC_PUBLIC())
-            ReportSemError(SemanticError::BAD_ACCESS_METHOD_OVERRIDE,
-                           method_declarator -> LeftToken(),
-                           method_declarator -> RightToken(),
-                           method -> Header(),
-                           (method -> ACC_PRIVATE() ? StringConstant::US_private : (method -> ACC_PROTECTED() ? StringConstant::US_protected : StringConstant::US_default)),
-                           hidden_method -> Header(),
-                           StringConstant::US_public,
-                           hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
-                           hidden_method -> containing_type -> ExternalName());
+        {
+            if (method -> containing_type == base_type)
+            {
+                ReportSemError(SemanticError::BAD_ACCESS_METHOD_OVERRIDE,
+                               left_tok,
+                               right_tok,
+                               method -> Header(),
+                               method -> AccessString(),
+                               hidden_method -> Header(),
+                               StringConstant::US_public,
+                               hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
+                               hidden_method -> containing_type -> ExternalName());
+            }
+            else if (! method -> ACC_ABSTRACT())
+            {
+                ReportSemError(SemanticError::BAD_ACCESS_METHOD_OVERRIDE_EXTERNALLY,
+                               left_tok,
+                               right_tok,
+                               base_type -> ExternalName(),
+                               method -> Header(),
+                               method -> AccessString(),
+                               method -> containing_type -> ContainingPackage() -> PackageName(),
+                               method -> containing_type -> ExternalName(),
+                               hidden_method -> Header(),
+                               StringConstant::US_public,
+                               hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
+                               hidden_method -> containing_type -> ExternalName());
+            }
+            base_type -> MarkBad();
+        }
     }
     else if (hidden_method -> ACC_PROTECTED())
     {
-        if (! (method -> ACC_PROTECTED() || method -> ACC_PUBLIC()))
-             ReportSemError(SemanticError::BAD_ACCESS_METHOD_OVERRIDE,
-                            method_declarator -> LeftToken(),
-                            method_declarator -> RightToken(),
-                            method -> Header(),
-                            StringConstant::US_default,
-                            hidden_method -> Header(),
-                            StringConstant::US_protected,
-                            hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
-                            hidden_method -> containing_type -> ExternalName());
+        if (! method -> ACC_PROTECTED() &&
+            ! method -> ACC_PUBLIC())
+        {
+            ReportSemError(SemanticError::BAD_ACCESS_METHOD_OVERRIDE,
+                           left_tok,
+                           right_tok,
+                           method -> Header(),
+                           method -> AccessString(),
+                           hidden_method -> Header(),
+                           StringConstant::US_protected,
+                           hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
+                           hidden_method -> containing_type -> ExternalName());
+            base_type -> MarkBad();
+        }
     }
-    else if (method -> ACC_PRIVATE()) // The hidden_method method must have default access as it cannot be private...
+    else if (method -> ACC_PRIVATE())
     {
-         ReportSemError(SemanticError::BAD_ACCESS_METHOD_OVERRIDE,
-                        method_declarator -> LeftToken(),
-                        method_declarator -> RightToken(),
-                        method -> Header(),
-                        StringConstant::US_private,
-                        hidden_method -> Header(),
-                        StringConstant::US_default,
-                        hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
-                        hidden_method -> containing_type -> ExternalName());
+        ReportSemError(SemanticError::BAD_ACCESS_METHOD_OVERRIDE,
+                       left_tok,
+                       right_tok,
+                       method -> Header(),
+                       StringConstant::US_private,
+                       hidden_method -> Header(),
+                       StringConstant::US_default,
+                       hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
+                       hidden_method -> containing_type -> ExternalName());
+        base_type -> MarkBad();
     }
 
-    CheckInheritedMethodThrows(method_declaration, hidden_method);
+    //
+    // Check the throws clause, unless base_type is inheriting two abstract
+    // methods.
+    //
+    if (method -> containing_type != base_type && method -> ACC_ABSTRACT())
+        return;
 
-    return;
-}
-
-
-void Semantic::CheckInheritedMethodThrows(AstClassDeclaration *class_declaration, MethodSymbol *method, MethodSymbol *hidden_method)
-{
-    method -> ProcessMethodThrows((Semantic *) this, class_declaration -> identifier_token);
-    hidden_method -> ProcessMethodThrows((Semantic *) this, class_declaration -> identifier_token);
+    method -> ProcessMethodThrows((Semantic *) this, left_tok);
+    hidden_method -> ProcessMethodThrows((Semantic *) this, left_tok);
 
     for (int i = method -> NumThrows() - 1; i >= 0; i--)
     {
         TypeSymbol *exception = method -> Throws(i);
 
-        if (CheckedException(exception))
+        if (! CheckedException(exception))
+            continue;
+
+        int k;
+        for (k = hidden_method -> NumThrows() - 1; k >= 0; k--)
         {
-            int k;
-            for (k = hidden_method -> NumThrows() - 1; k >= 0; k--)
+            if (exception -> IsSubclass(hidden_method -> Throws(k)))
+                break;
+        }
+
+        if (k < 0)
+        {
+            if (method -> containing_type == base_type)
             {
-                if (exception -> IsSubclass(hidden_method -> Throws(k)))
-                    break;
+                if (base_type -> ACC_INTERFACE() &&
+                    hidden_method -> containing_type == control.Object())
+                {
+                    //
+                    // TODO: Review this when JLS3 is published.  JLS2 9.2
+                    // claims that only public methods are implicitly declared
+                    // in interfaces, ie. clone() and finalize() are not
+                    // automatically in interfaces, and can therefore have a
+                    // conflicting throws clause (although that concept is not
+                    // well-defined in JLS 9). However, Sun's compiler has
+                    // never permitted an interface to have a clone() with a
+                    // conflicting throws clause.  For now, we take the
+                    // conservative stance, and reject an attempt to clash with
+                    // clone(). Note that finalize() is not a problem, since
+                    // it throws Throwable.
+                    //
+                    // if (hidden_method -> ACC_PUBLIC())
+                    //
+                    ReportSemError(SemanticError::MISMATCHED_IMPLICIT_OVERRIDDEN_EXCEPTION,
+                                   left_tok,
+                                   right_tok,
+                                   exception -> Name(),
+                                   method -> Header());
+                }
+                else
+                {
+                    ReportSemError(SemanticError::MISMATCHED_OVERRIDDEN_EXCEPTION,
+                                   left_tok,
+                                   right_tok,
+                                   exception -> Name(),
+                                   hidden_method -> Header(),
+                                   hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
+                                   hidden_method -> containing_type -> ExternalName());
+                }
             }
-
-            if (k < 0)
+            else
             {
-                if (! method -> IsTyped())
-                    method -> ProcessMethodSignature((Semantic *) this, class_declaration -> identifier_token);
-
-                if (! hidden_method -> IsTyped())
-                    hidden_method -> ProcessMethodSignature((Semantic *) this, class_declaration -> identifier_token);
-
                 ReportSemError(SemanticError::MISMATCHED_OVERRIDDEN_EXCEPTION_EXTERNALLY,
-                               class_declaration -> identifier_token,
-                               (class_declaration -> NumInterfaces() > 0
-                                     ? class_declaration -> Interface(class_declaration -> NumInterfaces() - 1) -> RightToken()
-                                     : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
-                                                                       : class_declaration -> identifier_token)),
-                               lex_stream -> NameString(class_declaration -> identifier_token),
+                               left_tok,
+                               right_tok,
+                               base_type -> ExternalName(),
                                exception -> Name(),
                                method -> Header(),
-                               hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
-                               hidden_method -> containing_type -> ExternalName(),
-                               hidden_method -> Header(),
                                method -> containing_type -> ContainingPackage() -> PackageName(),
-                               method -> containing_type -> ExternalName());
+                               method -> containing_type -> ExternalName(),
+                               hidden_method -> Header(),
+                               hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
+                               hidden_method -> containing_type -> ExternalName());
             }
+            base_type -> MarkBad();
         }
     }
-
-    return;
-}
-
-
-void Semantic::CheckMethodOverride(AstClassDeclaration *class_declaration, MethodSymbol *method, MethodSymbol *hidden_method)
-{
-    if (hidden_method -> Type() != method -> Type())
-        ReportSemError(SemanticError::MISMATCHED_INHERITED_METHOD_EXTERNALLY,
-                       class_declaration -> identifier_token,
-                       (class_declaration -> NumInterfaces() > 0
-                                           ? class_declaration -> Interface(class_declaration -> NumInterfaces() - 1) -> RightToken()
-                                           : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
-                                                                             : class_declaration -> identifier_token)),
-                       lex_stream -> NameString(class_declaration -> identifier_token),
-                       method -> Header(),
-                       method -> containing_type -> ContainingPackage() -> PackageName(),
-                       method -> containing_type -> ExternalName(),
-                       hidden_method -> Header(),
-                       hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
-                       hidden_method -> containing_type -> ExternalName());
-    if (hidden_method -> IsFinal() || hidden_method -> ACC_PRIVATE()) // Merged because same kind of message. See error.cpp
-        ReportSemError(hidden_method -> IsFinal() ? SemanticError::FINAL_METHOD_OVERRIDE_EXTERNALLY
-                                                  : SemanticError::PRIVATE_METHOD_OVERRIDE_EXTERNALLY,
-                       class_declaration -> identifier_token,
-                       (class_declaration -> NumInterfaces() > 0
-                                           ? class_declaration -> Interface(class_declaration -> NumInterfaces() - 1) -> RightToken()
-                                           : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
-                                                                             : class_declaration -> identifier_token)),
-                       lex_stream -> NameString(class_declaration -> identifier_token),
-                       method -> Header(),
-                       method -> containing_type -> ContainingPackage() -> PackageName(),
-                       method -> containing_type -> ExternalName(),
-                       hidden_method -> Header(),
-                       hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
-                       hidden_method -> containing_type -> ExternalName());
-
-    if (method -> ACC_STATIC() != hidden_method -> ACC_STATIC())
-    {
-        if (method -> ACC_STATIC())
-             ReportSemError(SemanticError::INSTANCE_METHOD_OVERRIDE_EXTERNALLY,
-                            class_declaration -> identifier_token,
-                            (class_declaration -> NumInterfaces() > 0
-                                                ? class_declaration -> Interface(class_declaration -> NumInterfaces() - 1) -> RightToken()
-                                                : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
-                                                                                  : class_declaration -> identifier_token)),
-                            lex_stream -> NameString(class_declaration -> identifier_token),
-                            method -> Header(),
-                            method -> containing_type -> ContainingPackage() -> PackageName(),
-                            method -> containing_type -> ExternalName(),
-                            hidden_method -> Header(),
-                            hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
-                            hidden_method -> containing_type -> ExternalName());
-        else ReportSemError(SemanticError::CLASS_METHOD_OVERRIDE_EXTERNALLY,
-                            class_declaration -> identifier_token,
-                            (class_declaration -> NumInterfaces() > 0
-                                                ? class_declaration -> Interface(class_declaration -> NumInterfaces() - 1) -> RightToken()
-                                                : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
-                                                                                  : class_declaration -> identifier_token)),
-                            lex_stream -> NameString(class_declaration -> identifier_token),
-                            method -> Header(),
-                            method -> containing_type -> ContainingPackage() -> PackageName(),
-                            method -> containing_type -> ExternalName(),
-                            hidden_method -> Header(),
-                            hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
-                            hidden_method -> containing_type -> ExternalName());
-    }
-
-    if (hidden_method -> ACC_PUBLIC())
-    {
-        if (! method -> ACC_PUBLIC())
-            ReportSemError(SemanticError::BAD_ACCESS_METHOD_OVERRIDE_EXTERNALLY,
-                           class_declaration -> identifier_token,
-                           (class_declaration -> NumInterfaces() > 0
-                                               ? class_declaration -> Interface(class_declaration -> NumInterfaces() - 1) -> RightToken()
-                                               : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
-                                                                                 : class_declaration -> identifier_token)),
-                           lex_stream -> NameString(class_declaration -> identifier_token),
-                           method -> Header(),
-                           (method -> ACC_PRIVATE() ? StringConstant::US_private
-                                                    : (method -> ACC_PROTECTED() ? StringConstant::US_protected
-                                                                                 : StringConstant::US_default)),
-                           method -> containing_type -> ContainingPackage() -> PackageName(),
-                           method -> containing_type -> ExternalName(),
-                           hidden_method -> Header(),
-                           StringConstant::US_public,
-                           hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
-                           hidden_method -> containing_type -> ExternalName());
-    }
-    else if (hidden_method -> ACC_PROTECTED())
-    {
-        if (! (method -> ACC_PROTECTED() || method -> ACC_PUBLIC()))
-             ReportSemError(SemanticError::BAD_ACCESS_METHOD_OVERRIDE,
-                            class_declaration -> identifier_token,
-                            (class_declaration -> NumInterfaces() > 0
-                                                ? class_declaration -> Interface(class_declaration -> NumInterfaces() - 1) -> RightToken()
-                                                : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
-                                                                                  : class_declaration -> identifier_token)),
-                            lex_stream -> NameString(class_declaration -> identifier_token),
-                            method -> Header(),
-                            StringConstant::US_default,
-                            method -> containing_type -> ContainingPackage() -> PackageName(),
-                            method -> containing_type -> ExternalName(),
-                            hidden_method -> Header(),
-                            StringConstant::US_protected,
-                            hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
-                            hidden_method -> containing_type -> ExternalName());
-    }
-    else if (method -> ACC_PRIVATE()) // The hidden_method method must have default access as it cannot be private...
-    {
-         ReportSemError(SemanticError::BAD_ACCESS_METHOD_OVERRIDE_EXTERNALLY,
-                        class_declaration -> identifier_token,
-                        (class_declaration -> NumInterfaces() > 0
-                                            ? class_declaration -> Interface(class_declaration -> NumInterfaces() - 1) -> RightToken()
-                                            : (class_declaration -> super_opt ? class_declaration -> super_opt -> RightToken()
-                                                                              : class_declaration -> identifier_token)),
-                        lex_stream -> NameString(class_declaration -> identifier_token),
-                        method -> Header(),
-                        StringConstant::US_private,
-                        method -> containing_type -> ContainingPackage() -> PackageName(),
-                        method -> containing_type -> ExternalName(),
-                        hidden_method -> Header(),
-                        StringConstant::US_default,
-                        hidden_method -> containing_type -> ContainingPackage() -> PackageName(),
-                        hidden_method -> containing_type -> ExternalName());
-    }
-
-    CheckInheritedMethodThrows(class_declaration, method, hidden_method);
-
-    return;
 }
 
 
 void Semantic::AddInheritedTypes(TypeSymbol *base_type, TypeSymbol *super_type)
 {
+    if (super_type -> Bad())
+    {
+        base_type -> MarkBad();
+        return;
+    }
+
     ExpandedTypeTable &base_expanded_table = *(base_type -> expanded_type_table),
                       &super_expanded_table = *(super_type -> expanded_type_table);
 
@@ -3433,11 +3294,11 @@ void Semantic::AddInheritedTypes(TypeSymbol *base_type, TypeSymbol *super_type)
             assert(type -> owner != super_type);
             TypeShadowSymbol *shadow = base_expanded_table.FindTypeShadowSymbol(type -> Identity());
 
-            if (! shadow || shadow -> type_symbol -> owner != base_type)
+            if (shadow)
+                assert(shadow -> type_symbol -> owner == base_type);
+            else
             {
-                if (! shadow)
-                    shadow = base_expanded_table.InsertTypeShadowSymbol(type_shadow_symbol -> Conflict(0));
-                else shadow -> AddConflict(type_shadow_symbol -> Conflict(0));
+                shadow = base_expanded_table.InsertTypeShadowSymbol(type_shadow_symbol -> Conflict(0));
 
                 for (int k = 1; k < type_shadow_symbol -> NumConflicts(); k++)
                     shadow -> AddConflict(type_shadow_symbol -> Conflict(k));
@@ -3450,6 +3311,12 @@ void Semantic::AddInheritedTypes(TypeSymbol *base_type, TypeSymbol *super_type)
 void Semantic::AddInheritedFields(TypeSymbol *base_type,
                                   TypeSymbol *super_type)
 {
+    if (super_type -> Bad())
+    {
+        base_type -> MarkBad();
+        return;
+    }
+
     ExpandedFieldTable &base_expanded_table = *(base_type -> expanded_field_table),
                        &super_expanded_table = *(super_type -> expanded_field_table);
 
@@ -3494,11 +3361,11 @@ void Semantic::AddInheritedFields(TypeSymbol *base_type,
             assert(variable -> owner != super_type);
             VariableShadowSymbol *shadow = base_expanded_table.FindVariableShadowSymbol(variable -> Identity());
 
-            if (! shadow || shadow -> variable_symbol -> owner != base_type)
+            if (shadow)
+                assert(shadow -> variable_symbol -> owner == base_type);
+            else
             {
-                if (! shadow)
-                    shadow = base_expanded_table.InsertVariableShadowSymbol(variable_shadow_symbol -> Conflict(0));
-                else shadow -> AddConflict(variable_shadow_symbol -> Conflict(0));
+                shadow = base_expanded_table.InsertVariableShadowSymbol(variable_shadow_symbol -> Conflict(0));
 
                 for (int k = 1; k < variable_shadow_symbol -> NumConflicts(); k++)
                     shadow -> AddConflict(variable_shadow_symbol -> Conflict(k));
@@ -3512,6 +3379,12 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type,
                                    TypeSymbol *super_type,
                                    LexStream::TokenIndex tok)
 {
+    if (super_type -> Bad())
+    {
+        base_type -> MarkBad();
+        return;
+    }
+
     ExpandedMethodTable &base_expanded_table = *(base_type -> expanded_method_table),
                         &super_expanded_table = *(super_type -> expanded_method_table);
 
@@ -3519,6 +3392,18 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type,
     {
         MethodShadowSymbol *method_shadow_symbol = super_expanded_table.symbol_pool[i];
         MethodSymbol *method = method_shadow_symbol -> method_symbol;
+
+        //
+        // We have to special case interfaces, since they implicitly declare
+        // the public methods of Object. In ComputeMethodsClosure, we add all
+        // methods from Object after adding those from interfaces.
+        //
+        if (base_type -> ACC_INTERFACE() &&
+            super_type -> ACC_INTERFACE() &&
+            method -> containing_type == control.Object())
+        {
+            continue;
+        }
 
         //
         // Note that since all methods in an interface are implicitly
@@ -3534,6 +3419,20 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type,
                 base_expanded_table.FindOverloadMethodShadow(method,
                                                              (Semantic *) this,
                                                              tok);
+
+            //
+            // Check that method is compatible with every method it
+            // overrides.
+            //
+            if (shadow)
+            {
+                CheckMethodOverride(shadow -> method_symbol, method,
+                                    base_type);
+                for (int m = 0; m < method_shadow_symbol -> NumConflicts(); m++)
+                    CheckMethodOverride(shadow -> method_symbol,
+                                        method_shadow_symbol -> Conflict(m),
+                                        base_type);
+            }
 
             if (! shadow || shadow -> method_symbol -> containing_type != base_type)
             {
@@ -3564,15 +3463,20 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type,
             {
                 assert(method -> containing_type != super_type);
 
-                if (! shadow ||
-                    shadow -> method_symbol -> containing_type != base_type)
+                if (shadow)
                 {
-                    if (! shadow)
-                        shadow = base_expanded_table.Overload(method_shadow_symbol -> Conflict(0));
-                    else shadow -> AddConflict(method_shadow_symbol -> Conflict(0));
+                    assert(shadow -> method_symbol -> containing_type == base_type);
+                    for (int k = 0; k < method_shadow_symbol -> NumConflicts(); k++)
+                        CheckMethodOverride(shadow -> method_symbol,
+                                            method_shadow_symbol -> Conflict(k),
+                                            base_type);
+                }
+                else
+                {
+                    shadow = base_expanded_table.Overload(method_shadow_symbol -> Conflict(0));
 
-                    for (int k = 1; k < method_shadow_symbol -> NumConflicts(); k++)
-                        shadow -> AddConflict(method_shadow_symbol -> Conflict(k));
+                    for (int l = 1; l < method_shadow_symbol -> NumConflicts(); l++)
+                        shadow -> AddConflict(method_shadow_symbol -> Conflict(l));
                 }
             }
             else if (shadow && ! method -> ACC_STATIC())
@@ -3580,9 +3484,10 @@ void Semantic::AddInheritedMethods(TypeSymbol *base_type,
                 //
                 // The base_type declares a method by the same name as an
                 // instance method in the superclass, but the new method does
-                // not override the old. Warn the user about this fact. (This
-                // is never a problem with fields, nested types, or static
-                // methods, since they are just hidden, not overridden.)
+                // not override the old. Warn the user about this fact,
+                // although it is usually not an error. (This is never a
+                // problem with fields, nested types, or static methods,
+                // since they are just hidden, not overridden.)
                 //
                 assert(shadow -> method_symbol -> containing_type == base_type);
                 LexStream::TokenIndex left_tok,
@@ -3666,8 +3571,6 @@ void Semantic::ComputeTypesClosure(TypeSymbol *type, LexStream::TokenIndex tok)
     for (int k = 0; k < type -> NumInterfaces(); k++)
         AddInheritedTypes(type, type -> Interface(k));
     type -> expanded_type_table -> CompressSpace();
-
-    return;
 }
 
 
@@ -3707,8 +3610,6 @@ void Semantic::ComputeFieldsClosure(TypeSymbol *type, LexStream::TokenIndex tok)
     for (int k = 0; k < type -> NumInterfaces(); k++)
         AddInheritedFields(type, type -> Interface(k));
     type -> expanded_field_table -> CompressSpace();
-
-    return;
 }
 
 
@@ -3739,15 +3640,19 @@ void Semantic::ComputeMethodsClosure(TypeSymbol *type, LexStream::TokenIndex tok
         //
         // If the method in question is neither a constructor nor an
         // initializer, then ...
-        //        if (method -> Identity() != control.init_name_symbol &&
-        //            method -> Identity() != control.block_init_name_symbol &&
-        //            method -> Identity() != control.clinit_name_symbol)
         //
         if (*(method -> Name()) != U_LESS)
         {
             type -> expanded_method_table -> Overload(method);
         }
     }
+
+    //
+    // We build in this order to guarantee that the first method listed in
+    // the table will be declared in a class.  Conflicts, if any, are from
+    // interfaces and are necessarily abstract; but if the first method
+    // is not abstract, it implements all the conflicts.
+    //
     if (super_class && (! type -> ACC_INTERFACE()))
         AddInheritedMethods(type, super_class, tok);
     for (int k = 0; k < type -> NumInterfaces(); k++)
@@ -3755,8 +3660,6 @@ void Semantic::ComputeMethodsClosure(TypeSymbol *type, LexStream::TokenIndex tok
     if (type -> ACC_INTERFACE()) // the super class is Object
         AddInheritedMethods(type, control.Object(), tok);
     type -> expanded_method_table -> CompressSpace();
-
-    return;
 }
 
 
@@ -3794,8 +3697,6 @@ void Semantic::ProcessFormalParameters(BlockSymbol *block, AstMethodDeclarator *
 
         parameter -> formal_declarator -> symbol = symbol;
     }
-
-    return;
 }
 
 
@@ -3944,8 +3845,6 @@ void Semantic::ProcessMethodDeclaration(AstMethodDeclaration *method_declaration
 
     if (lex_stream -> IsDeprecated(lex_stream -> Previous(method_declaration -> LeftToken())))
         method -> MarkDeprecated();
-
-    return;
 }
 
 
@@ -4349,8 +4248,6 @@ void Semantic::ProcessInterface(TypeSymbol *base_type, AstExpression *name)
         name -> symbol = interf; // save type name in ast.
         base_type -> AddInterface(interf);
     }
-
-    return;
 }
 
 
@@ -4382,8 +4279,6 @@ void Semantic::InitializeVariable(AstFieldDeclaration *field_declaration, Tuple<
             ThisVariable() -> MarkComplete();
         }
     }
-
-    return;
 }
 
 
@@ -4424,8 +4319,6 @@ inline void Semantic::ProcessInitializer(AstBlock *initializer_block, AstBlock *
 
     LocalBlockStack().Pop();
     LocalSymbolTable().Pop();
-
-    return;
 }
 
 
@@ -4434,29 +4327,17 @@ bool Semantic::NeedsInitializationMethod(AstFieldDeclaration *field_declaration)
     //
     // We need a static constructor-initializer if we encounter at least one
     // class variable that is declared with an initializer is not a constant
-    // expression.
+    // expression. Remember that non-final variables are not constants, so
+    // the only variables with an initial value should be final.
     //
     for (int i = 0; i < field_declaration -> NumVariableDeclarators(); i++)
     {
         AstVariableDeclarator *variable_declarator = field_declaration -> VariableDeclarator(i);
-        if (variable_declarator -> variable_initializer_opt)
-        {
-            AstExpression *init = variable_declarator -> variable_initializer_opt -> ExpressionCast();
-            if (! (init && init -> IsConstant()))
-                return true;
-
-            //
-            // TODO: there seems to be a contradiction between the language
-            // spec and the VM spec. The language spec seems to require that a
-            // variable be initialized (in the class file) with a
-            // "ConstantValue" only if it is static. The VM spec, on the other
-            // hand, states that a static need not be final to be initialized
-            // with a ConstantValue. As of now, we are following the language
-            // spec - ergo, this extra test.
-            //
-            if (variable_declarator -> symbol && (! variable_declarator -> symbol -> ACC_FINAL()))
-                return true;
-        }
+        assert(variable_declarator -> symbol);
+        if (! variable_declarator -> symbol -> initial_value)
+            return true;
+        else assert(variable_declarator -> symbol -> ACC_FINAL() &&
+                    variable_declarator -> variable_initializer_opt);
     }
 
     return false;
@@ -4782,12 +4663,7 @@ void Semantic::ProcessBlockInitializers(AstClassBody *class_body)
         // point, because the user may chose instead to initialize such a
         // final variable in every constructor instead. See body.cpp
         //
-
-// STG:
-//        delete initializer_block;
     }
-
-    return;
 }
 
 #ifdef HAVE_JIKES_NAMESPACE
