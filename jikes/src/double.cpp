@@ -2739,12 +2739,15 @@ BigInt::BigInt(const char *s, int nd0, int nd, u4 start, int startsize) :
 
 BigInt &BigInt::operator =(const BigInt &b)
 {
-    k = b.k;
-    maxwds = b.maxwds;
-    neg = b.neg;
-    wds = b.wds;
-    data = new u4[maxwds];
-    memcpy(data, b.data, wds * sizeof(u4));
+    if (this != &b)
+    {
+        k = b.k;
+        maxwds = b.maxwds;
+        neg = b.neg;
+        wds = b.wds;
+        data = new u4[maxwds];
+        memcpy(data, b.data, wds * sizeof(u4));
+    }
     return *this;
 }
 

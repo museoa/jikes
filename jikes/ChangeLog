@@ -1,3 +1,9 @@
+2004-05-31  Elliott Hughes  <enh@acm.org>
+
+	* src/definite.cpp, src/double.cpp, src/set.h: fix operator=
+	implementations missing self-assignment checks (found while
+	investigating bug 3973).
+
 2004-05-20  Elliott Hughes  <enh@acm.org>
 
 	* src/bytecode.cpp: Bug 3974 - don't assume that a string literal

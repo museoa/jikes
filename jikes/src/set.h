@@ -542,9 +542,12 @@ public:
     //
     BitSet& operator=(const BitSet& rhs)
     {
-        assert(set_size == rhs.set_size);
-        memcpy(s, rhs.s,
-               (set_size + cell_size - 1) / cell_size * sizeof(CELL));
+        if (this != &rhs)
+        {
+            assert(set_size == rhs.set_size);
+            memcpy(s, rhs.s,
+                   (set_size + cell_size - 1) / cell_size * sizeof(CELL));
+        }
         return *this;
     }
 
@@ -853,8 +856,11 @@ public:
 
     inline DefinitePair& operator=(const DefinitePair& rhs)
     {
-        da_set = rhs.da_set;
-        du_set = rhs.du_set;
+        if (this != &rhs)
+        {
+            da_set = rhs.da_set;
+            du_set = rhs.du_set;
+        }
         return *this;
     }
 
