@@ -4,4 +4,7 @@ class Test {
 			   j++;
 			   return;
 	}
+}##pr199qa.java##
+package java.lang.String;
+class Illegal {
 }
