@@ -1125,22 +1125,22 @@ Coutput.flush();
 
     switch (statement -> kind)
     {
-        case Ast::BLOCK: // JLS 13.2
+        case Ast::BLOCK: // JLS 14.2
              EmitBlockStatement((AstBlock *) statement);
              break;
-        case Ast::LOCAL_VARIABLE_DECLARATION: // JLS 13.3
+        case Ast::LOCAL_VARIABLE_DECLARATION: // JLS 14.3
              {
                  AstLocalVariableDeclarationStatement *lvds = statement -> LocalVariableDeclarationStatementCast();
                  for (int i = 0; i < lvds -> NumVariableDeclarators(); i++)
                      DeclareLocalVariable(lvds -> VariableDeclarator(i));
              }
              break;
-        case Ast::EMPTY_STATEMENT: // JLS 13.5
+        case Ast::EMPTY_STATEMENT: // JLS 14.5
              break;
-        case Ast::EXPRESSION_STATEMENT: // JLS 13.7
+        case Ast::EXPRESSION_STATEMENT: // JLS 14.7
              EmitStatementExpression(statement -> ExpressionStatementCast() -> expression);
              break;
-        case Ast::IF: // JLS 13.8
+        case Ast::IF: // JLS 14.8
              {
                  AstIfStatement *if_statement = (AstIfStatement *) statement;
                  if (if_statement -> expression -> IsConstant())
@@ -1184,10 +1184,10 @@ Coutput.flush();
                  }
              }
              break;
-        case Ast::SWITCH: // JLS 13.9
+        case Ast::SWITCH: // JLS 14.9
              EmitSwitchStatement(statement -> SwitchStatementCast());
              break;
-        case Ast::SWITCH_BLOCK: // JLS 13.9
+        case Ast::SWITCH_BLOCK: // JLS 14.9
         case Ast::CASE:
         case Ast::DEFAULT:
             //
@@ -1195,7 +1195,7 @@ Coutput.flush();
             // are not directly visited
             //
             break;
-        case Ast::WHILE: // JLS 13.10
+        case Ast::WHILE: // JLS 14.10
              {
                  AstWhileStatement *wp = statement -> WhileStatementCast();
                  //
@@ -1221,7 +1221,7 @@ Coutput.flush();
                  CompleteLabel(method_stack -> TopContinueLabel());
              }
              break;
-        case Ast::DO: // JLS 13.11
+        case Ast::DO: // JLS 14.11
              {
                  AstDoStatement *sp = statement -> DoStatementCast();
                  Label begin_label;
@@ -1241,7 +1241,7 @@ Coutput.flush();
                  CompleteLabel(method_stack -> TopContinueLabel());
              }
              break;
-        case Ast::FOR: // JLS 13.12
+        case Ast::FOR: // JLS 14.12
              {
                  AstForStatement *for_statement = statement -> ForStatementCast();
                  for (int i = 0; i < for_statement -> NumForInitStatements(); i++)
@@ -1276,15 +1276,15 @@ Coutput.flush();
                  CompleteLabel(method_stack -> TopContinueLabel());
              }
              break;
-        case Ast::BREAK: // JLS 13.13
+        case Ast::BREAK: // JLS 14.13
              ProcessAbruptExit(statement -> BreakStatementCast() -> nesting_level);
              EmitBranch(OP_GOTO, method_stack -> BreakLabel(statement -> BreakStatementCast() -> nesting_level));
              break;
-        case Ast::CONTINUE: // JLS 13.14
+        case Ast::CONTINUE: // JLS 14.14
              ProcessAbruptExit(statement -> ContinueStatementCast() -> nesting_level);
              EmitBranch(OP_GOTO, method_stack -> ContinueLabel(statement -> ContinueStatementCast() -> nesting_level));
              break;
-        case Ast::RETURN: // JLS 13.15
+        case Ast::RETURN: // JLS 14.15
              EmitReturnStatement(statement -> ReturnStatementCast());
              break;
         case Ast::SUPER_CALL:
@@ -1293,14 +1293,14 @@ Coutput.flush();
         case Ast::THIS_CALL:
              EmitThisInvocation((AstThisCall *) statement);
              break;
-        case Ast::THROW: // JLS 13.16
+        case Ast::THROW: // JLS 14.16
              EmitExpression(statement -> ThrowStatementCast() -> expression);
              PutOp(OP_ATHROW);
              break;
-        case Ast::SYNCHRONIZED_STATEMENT: // JLS 13.17
+        case Ast::SYNCHRONIZED_STATEMENT: // JLS 14.17
              EmitSynchronizedStatement(statement -> SynchronizedStatementCast());
              break;
-        case Ast::TRY: // JLS 13.18
+        case Ast::TRY: // JLS 14.18
              EmitTryStatement(statement -> TryStatementCast());
              break;
         case Ast::CLASS: // Class Declaration
@@ -1309,8 +1309,8 @@ Coutput.flush();
              // these are factored out by the front end; and so must be skipped here
              //
              break;
-        case Ast::CATCH:   // JLS 13.18
-        case Ast::FINALLY: // JLS 13.18
+        case Ast::CATCH:   // JLS 14.18
+        case Ast::FINALLY: // JLS 14.18
              // handled by TryStatement
         default:
             assert(false && "unknown statement kind");
@@ -3653,12 +3653,19 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
 
     bool is_super = false; // set if super call
 
-    AstFieldAccess *field = method_call -> method -> FieldAccessCast();
     AstSimpleName *simple_name = method_call -> method -> SimpleNameCast();
     if (msym -> ACC_STATIC())
     {
+        AstFieldAccess *field = expression -> resolution_opt ?
+            (((MethodSymbol *)expression->symbol)->ACC_STATIC() ? expression->method->FieldAccessCast() : NULL)
+            :
+            method_call -> method -> FieldAccessCast()
+            ;
+
+        
         if (field)
         {
+            // JLS 15.11.4.7
             if (field -> base -> MethodInvocationCast())
             {
                 EmitMethodInvocation(field -> base -> MethodInvocationCast());
@@ -3668,10 +3675,15 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
             {
                 (void) EmitClassInstanceCreationExpression(field -> base -> ClassInstanceCreationExpressionCast(), false);
             }
+            else 
+            {
+                PutOp(EmitExpression(field -> base) == 2 ? OP_POP2 : OP_POP); // discard value
+            }
         }
     }
     else
     {
+        AstFieldAccess *field = method_call -> method -> FieldAccessCast();
         if (field)
         {
             AstFieldAccess *sub_field_access = field -> base -> FieldAccessCast();
