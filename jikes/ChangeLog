@@ -1,3 +1,10 @@
+2002-05-16  Andrew Pimlott  <jikes-dev@andrew.pimlott.net>
+
+	* src/stream.h (ReportMessage): New method, to silence syntax
+	warnings.
+	* src/stream.cpp: Use it.
+	* src/scanner.cpp: Use it.
+
 2002-05-16  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/expr.cpp (ProcessAssignmentExpression): Fix coredump in

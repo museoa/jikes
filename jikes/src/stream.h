@@ -64,9 +64,6 @@ public:
         DOLLAR_IN_IDENTIFIER
     };
 
-    void Initialize(StreamErrorKind kind_, unsigned start_location_,
-                    unsigned end_location_, LexStream *);
-
 private:
 
     unsigned start_location;
@@ -89,6 +86,9 @@ private:
 
     bool initialized;
     
+    void Initialize(StreamErrorKind kind_, unsigned start_location_,
+                    unsigned end_location_, LexStream *);
+
 };
 
 
@@ -390,6 +390,8 @@ class LexStream : public Stream
         comment_buffer = NULL;
     }
 
+    void ReportMessage(StreamError::StreamErrorKind kind,
+                       unsigned start_location, unsigned end_location);
     void SortMessages();
     void PrintMessages();
 

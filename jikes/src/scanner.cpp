@@ -384,11 +384,9 @@ void Scanner::ScanStarComment()
     // U_LINE_FEED and U_CTRL_Z that end the stream.
     //
     cursor -= 2;
-    lex -> bad_tokens.Next().Initialize(StreamError::UNTERMINATED_COMMENT,
-                                        location,
-                                        (unsigned) (cursor -
-                                                    lex -> InputBuffer()) - 1,
-                                        lex);
+    lex -> ReportMessage(StreamError::UNTERMINATED_COMMENT,
+                         location,
+                         (unsigned) (cursor - lex -> InputBuffer()) - 1);
 
 #ifdef JIKES_DEBUG
     current_comment -> length = ((cursor - lex -> InputBuffer()) -
@@ -780,11 +778,9 @@ void Scanner::ClassifyCharLiteral()
 
     if (*ptr == U_SINGLE_QUOTE)
     {
-        lex -> bad_tokens.Next().
-            Initialize(StreamError::EMPTY_CHARACTER_CONSTANT,
-                       current_token -> Location(),
-                       (unsigned) (ptr - lex -> InputBuffer()),
-                       lex);
+        lex -> ReportMessage(StreamError::EMPTY_CHARACTER_CONSTANT,
+                             current_token -> Location(),
+                             (unsigned) (ptr - lex -> InputBuffer()));
         current_token -> SetKind(0);
     }
     else if (*ptr == U_BACKSLASH)
@@ -822,11 +818,9 @@ void Scanner::ClassifyCharLiteral()
             // illegal to try it twice (such as '\u005cu0000').
             //
         default:
-            lex -> bad_tokens.Next().
-                Initialize(StreamError::INVALID_ESCAPE_SEQUENCE,
-                           (unsigned) (cursor - lex -> InputBuffer()),
-                           (unsigned) (ptr - lex -> InputBuffer()),
-                           lex);
+            lex -> ReportMessage(StreamError::INVALID_ESCAPE_SEQUENCE,
+                                 (unsigned) (cursor - lex -> InputBuffer()),
+                                 (unsigned) (ptr - lex -> InputBuffer()));
             current_token -> SetKind(0);
         }
     }
@@ -835,11 +829,9 @@ void Scanner::ClassifyCharLiteral()
     {
         if (current_token -> Kind())
         {
-            lex -> bad_tokens.Next().
-                Initialize(StreamError::UNTERMINATED_CHARACTER_CONSTANT,
-                           current_token -> Location(),
-                           (unsigned) (ptr - lex -> InputBuffer()),
-                           lex);
+            lex -> ReportMessage(StreamError::UNTERMINATED_CHARACTER_CONSTANT,
+                                 current_token -> Location(),
+                                 (unsigned) (ptr - lex -> InputBuffer()));
             current_token -> SetKind(0);
         }
         lex -> line_location.Next() = ptr - lex -> InputBuffer() + 1;
@@ -849,11 +841,9 @@ void Scanner::ClassifyCharLiteral()
         ptr--;
         if (current_token -> Kind())
         {
-            lex -> bad_tokens.Next().
-                Initialize(StreamError::UNTERMINATED_CHARACTER_CONSTANT,
-                           current_token -> Location(),
-                           (unsigned) (ptr - lex -> InputBuffer()),
-                           lex);
+            lex -> ReportMessage(StreamError::UNTERMINATED_CHARACTER_CONSTANT,
+                                 current_token -> Location(),
+                                 (unsigned) (ptr - lex -> InputBuffer()));
             current_token -> SetKind(0);
         }
     }
@@ -906,11 +896,9 @@ void Scanner::ClassifyStringLiteral()
                 // is illegal to try it twice (such as "\u005cu0000").
                 //
             default:
-                lex -> bad_tokens.Next().
-                    Initialize(StreamError::INVALID_ESCAPE_SEQUENCE,
-                               (unsigned) (ptr - lex -> InputBuffer()) - 1,
-                               (unsigned) (ptr - lex -> InputBuffer()),
-                               lex);
+                lex -> ReportMessage(StreamError::INVALID_ESCAPE_SEQUENCE,
+                                     (unsigned) (ptr - lex -> InputBuffer()) - 1,
+                                     (unsigned) (ptr - lex -> InputBuffer()));
                 current_token -> SetKind(0);
                 if (Code::IsNewline(ptr[-1]))
                     ptr--; // This will break us out of the loop.
@@ -921,11 +909,9 @@ void Scanner::ClassifyStringLiteral()
     if (Code::IsNewline(*ptr))
     {
         if (current_token -> Kind())
-            lex -> bad_tokens.Next().
-                Initialize(StreamError::UNTERMINATED_STRING_CONSTANT,
-                           current_token -> Location(),
-                           (unsigned) (ptr - lex -> InputBuffer()),
-                           lex);
+            lex -> ReportMessage(StreamError::UNTERMINATED_STRING_CONSTANT,
+                                 current_token -> Location(),
+                                 (unsigned) (ptr - lex -> InputBuffer()));
         current_token -> SetKind(0);
         lex -> line_location.Next() = ptr - lex -> InputBuffer() + 1;
     }
@@ -962,19 +948,17 @@ void Scanner::ClassifyIdOrKeyword()
     if (current_token -> Kind() == TK_assert &&
         control.option.source < JikesOption::SDK1_4)
     {
-        lex -> bad_tokens.Next().Initialize(StreamError::DEPRECATED_IDENTIFIER_ASSERT,
-                                            current_token -> Location(),
-                                            (unsigned) (current_token -> Location() + len - 1),
-                                            lex);
+        lex -> ReportMessage(StreamError::DEPRECATED_IDENTIFIER_ASSERT,
+                             current_token -> Location(),
+                             (unsigned) (current_token -> Location() + len - 1));
         current_token -> SetKind(TK_Identifier);
     }
-    if (has_dollar && ! dollar_warning_given && ! control.option.nowarn)
+    if (has_dollar && ! dollar_warning_given)
     {
         dollar_warning_given = true;
-        lex -> bad_tokens.Next().Initialize(StreamError::DOLLAR_IN_IDENTIFIER,
-                                            current_token -> Location(),
-                                            (unsigned) (current_token -> Location() + len - 1),
-                                            lex);
+        lex -> ReportMessage(StreamError::DOLLAR_IN_IDENTIFIER,
+                             current_token -> Location(),
+                             (unsigned) (current_token -> Location() + len - 1));
     }
 
     if (current_token -> Kind() == TK_Identifier)
@@ -1021,13 +1005,12 @@ void Scanner::ClassifyId()
 
     int len = ptr - cursor;
 
-    if (has_dollar && ! dollar_warning_given && ! control.option.nowarn)
+    if (has_dollar && ! dollar_warning_given)
     {
         dollar_warning_given = true;
-        lex -> bad_tokens.Next().Initialize(StreamError::DOLLAR_IN_IDENTIFIER,
-                                            current_token -> Location(),
-                                            (unsigned) (current_token -> Location() + len - 1),
-                                            lex);
+        lex -> ReportMessage(StreamError::DOLLAR_IN_IDENTIFIER,
+                             current_token -> Location(),
+                             (unsigned) (current_token -> Location() + len - 1));
     }
 
     current_token -> SetKind(TK_Identifier);
@@ -1093,11 +1076,9 @@ void Scanner::ClassifyNumericLiteral()
                 {
                     while (Code::IsHexDigit(*++ptr));
                 }
-                else lex -> bad_tokens.Next().
-                         Initialize(StreamError::INVALID_HEX_CONSTANT,
-                                    current_token -> Location(),
-                                    (unsigned) (ptr - lex -> InputBuffer()),
-                                    lex);
+                else lex -> ReportMessage(StreamError::INVALID_HEX_CONSTANT,
+                                          current_token -> Location(),
+                                          (unsigned) (ptr - lex -> InputBuffer()));
             }
             else if (! (((*ptr == U_e || *ptr == U_E) &&
                          (Code::IsDigit(ptr[1]) ||
@@ -1521,9 +1502,9 @@ void Scanner::ClassifyBadToken()
          current_token -> SetKind(0);
          current_token -> SetSymbol(control.FindOrInsertName(cursor - 1, 1));
 
-         lex -> bad_tokens.Next().Initialize(StreamError::BAD_TOKEN,
-                                             current_token -> Location(),
-                                             current_token -> Location(), lex);
+         lex -> ReportMessage(StreamError::BAD_TOKEN,
+                              current_token -> Location(),
+                              current_token -> Location());
     }
     else
     {

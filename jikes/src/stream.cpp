@@ -918,9 +918,9 @@ void LexStream::ProcessInputAscii(const char *buffer, long filesize)
                     if (i != 4)
                     {
                         if (initial_reading_of_input)
-                            bad_tokens.Next().Initialize(StreamError::INVALID_UNICODE_ESCAPE,
-                                                         (unsigned) (input_ptr - input_buffer),
-                                                         (unsigned) (input_ptr - input_buffer) + (source_ptr - u_ptr), this);
+                            ReportMessage(StreamError::INVALID_UNICODE_ESCAPE,
+                                          (unsigned) (input_ptr - input_buffer),
+                                          (unsigned) (input_ptr - input_buffer) + (source_ptr - u_ptr));
 
                         source_ptr = u_ptr;
                         *input_ptr = U_BACKSLASH;
@@ -1078,9 +1078,9 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                 else if (ch != U_u)
                 {
                     if (initial_reading_of_input)
-                        bad_tokens.Next().Initialize(StreamError::INVALID_UNICODE_ESCAPE,
-                                                     (unsigned) (escape_ptr - input_buffer),
-                                                     (unsigned) (input_ptr - input_buffer), this);
+                        ReportMessage(StreamError::INVALID_UNICODE_ESCAPE,
+                                      (unsigned) (escape_ptr - input_buffer),
+                                      (unsigned) (input_ptr - input_buffer));
                 }
                 break;
 
@@ -1093,9 +1093,9 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                 else
                 {
                     if (initial_reading_of_input)
-                        bad_tokens.Next().Initialize(StreamError::INVALID_UNICODE_ESCAPE,
-                                                     (unsigned) (escape_ptr - input_buffer),
-                                                     (unsigned) (input_ptr - input_buffer), this);
+                        ReportMessage(StreamError::INVALID_UNICODE_ESCAPE,
+                                      (unsigned) (escape_ptr - input_buffer),
+                                      (unsigned) (input_ptr - input_buffer));
                 }
                 break;
 
@@ -1108,9 +1108,9 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                 else
                 {
                     if (initial_reading_of_input)
-                        bad_tokens.Next().Initialize(StreamError::INVALID_UNICODE_ESCAPE,
-                                                     (unsigned) (escape_ptr - input_buffer),
-                                                     (unsigned) (input_ptr - input_buffer), this);
+                        ReportMessage(StreamError::INVALID_UNICODE_ESCAPE,
+                                      (unsigned) (escape_ptr - input_buffer),
+                                      (unsigned) (input_ptr - input_buffer));
                 }
                 break;
 
@@ -1125,9 +1125,9 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
                 else
                 {
                     if (initial_reading_of_input)
-                        bad_tokens.Next().Initialize(StreamError::INVALID_UNICODE_ESCAPE,
-                                                     (unsigned) (escape_ptr - input_buffer),
-                                                     (unsigned) (input_ptr - input_buffer), this);
+                        ReportMessage(StreamError::INVALID_UNICODE_ESCAPE,
+                                      (unsigned) (escape_ptr - input_buffer),
+                                      (unsigned) (input_ptr - input_buffer));
                 }
                 break;
 
@@ -1196,6 +1196,17 @@ void LexStream::ProcessInputUnicode(const char *buffer, long filesize)
     return;
 }
 #endif // defined(HAVE_LIBICU_UC) || defined(HAVE_ICONV_H)
+
+void LexStream::ReportMessage(StreamError::StreamErrorKind kind,
+                              unsigned start_location,
+                              unsigned end_location)
+{
+    if (! control.option.nowarn ||
+        kind < StreamError::DEPRECATED_IDENTIFIER_ASSERT)
+    {
+        bad_tokens.Next().Initialize(kind, start_location, end_location, this);
+    }
+}
 
 //
 // This procedure uses a  quick sort algorithm to sort the stream ERRORS
@@ -1294,7 +1305,7 @@ void LexStream::PrintMessages()
                 Coutput << endl << "Found " << error_count << " lexical error"
                         << (error_count == 1 ? "" : "s");
             }
-            if (warning_count && (! control.option.nowarn))
+            if (warning_count)
             {
                 if (error_count)
                     Coutput << "and issued ";
@@ -1303,7 +1314,7 @@ void LexStream::PrintMessages()
                 Coutput << warning_count << " lexical warning"
                         << (warning_count == 1 ? "" : "s");
             }
-            if (error_count || (warning_count && (! control.option.nowarn)))
+            if (error_count || warning_count)
                 Coutput << " in \"" << file_name << "\":";
 
             if (! input_buffer)
