@@ -394,7 +394,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     //
@@ -800,7 +800,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -836,7 +836,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -867,7 +867,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -916,7 +916,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -958,7 +958,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -988,7 +988,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -1019,7 +1019,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -1072,8 +1072,10 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(LexStream &, char * directory); // special form
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
+
+    // special forms
+    virtual void Unparse(LexStream *, const char * const directory);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -1129,7 +1131,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -1158,7 +1160,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -1274,7 +1276,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -1350,7 +1352,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -1397,7 +1399,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -1438,7 +1440,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -1475,7 +1477,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -1532,7 +1534,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -1576,7 +1578,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -1628,7 +1630,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -1693,7 +1695,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -1725,7 +1727,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -1750,6 +1752,8 @@ private:
 public:
     MethodSymbol *symbol;
 
+    AstExpression *base_opt;
+    LexStream::TokenIndex dot_token_opt;
     LexStream::TokenIndex this_token;
     LexStream::TokenIndex left_parenthesis_token;
     LexStream::TokenIndex right_parenthesis_token;
@@ -1782,7 +1786,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -1846,7 +1850,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -1905,7 +1909,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -1955,7 +1959,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -2079,7 +2083,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -2130,7 +2134,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -2192,7 +2196,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -2232,7 +2236,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -2269,7 +2273,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -2310,7 +2314,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -2340,7 +2344,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -2392,7 +2396,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -2454,7 +2458,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -2492,7 +2496,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -2532,7 +2536,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -2591,7 +2595,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -2630,7 +2634,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -2668,7 +2672,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -2706,7 +2710,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -2744,7 +2748,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -2782,7 +2786,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -2818,7 +2822,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -2848,7 +2852,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -2892,7 +2896,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -2961,7 +2965,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -2992,7 +2996,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -3023,7 +3027,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -3053,7 +3057,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -3083,7 +3087,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -3113,7 +3117,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -3143,7 +3147,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -3173,7 +3177,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -3203,7 +3207,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -3233,7 +3237,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -3264,7 +3268,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -3297,7 +3301,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -3328,7 +3332,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -3393,7 +3397,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -3427,7 +3431,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -3478,7 +3482,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -3555,7 +3559,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -3613,7 +3617,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -3647,7 +3651,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -3705,7 +3709,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -3763,7 +3767,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -3814,7 +3818,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -3892,7 +3896,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -3927,7 +3931,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);
@@ -4010,7 +4014,7 @@ public:
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream &);
-    virtual void Unparse(Ostream &, LexStream &);
+    virtual void Unparse(Ostream &, LexStream *);
 #endif
 
     virtual Ast *Clone(StoragePool *);

@@ -1,5 +1,14 @@
 2001-10-16  Michael Ernst  <mernst@alum.mit.edu>
 
+	* src/unparse.cpp: Adjust bodies to use LexStream*.  Replace a use
+	of "\n" by endl.  Add comment.  Make line breaks in if statements
+	consistent.
+	* src/ast.h: Adjust Unparse prototypes to take LexStream*, not
+	LexStream&.
+	* src/control.cpp (CleanUp): Use LexStream* - patch 198.
+
+2001-10-16  Michael Ernst  <mernst@alum.mit.edu>
+
 	* src/bytecode.cpp (EmitAssignmentExpression): 
 	* src/control.cpp (Serializable_type): 
 	* src/depend.cpp (OutputMake): 

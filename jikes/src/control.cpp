@@ -1346,7 +1346,7 @@ void Control::CleanUp(FileSymbol *file_symbol)
                 sem -> compilation_unit -> debug_unparse = true;
                 Ast::debug_unparse = true;
               }
-            sem -> compilation_unit -> Unparse(*sem -> lex_stream,
+            sem -> compilation_unit -> Unparse(sem -> lex_stream,
                                                "unparsed/");
         }
 #endif
