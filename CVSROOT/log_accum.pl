@@ -12,7 +12,6 @@
 # Roy Fielding removed useless code and added log/mail of new files
 # Ken Coar added special processing (i.e., no diffs) for binary files
 #
-#
 
 ############################################################
 #
@@ -51,8 +50,9 @@ $SUMMARY_FILE  = "$TMPDIR/${FILE_PREFIX}files.summary";
 
 $CVSROOT       = $ENV{'CVSROOT'};
 
-#$MAIL_TO       = 'jikes@cabbey.net'; #testing
-$MAIL_TO       = 'jikes-cvs@www-126.ibm.com';
+#this is a workaround for the fact that sby can't get mail routing right
+$MAIL_TO       = 'cvs-list-hack-around-sby-stupidity@cabbey.net';
+#$MAIL_TO       = 'jikes-cvs@www-126.ibm.com';
 
 ############################################################
 #
