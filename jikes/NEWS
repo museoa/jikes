@@ -98,7 +98,7 @@ LALR(1) instead of LALR(2)].
 The compiler now works around a bug in VMs when storing an array into
 a multi-dimensional array expression that happened to be null.
 
-Extranious error messages about non zip or jar content in extdirs has
+Extraneous error messages about non zip or jar content in extdirs has
 been removed.
 
 As always, minor bug fixes for several bugs in the database.
