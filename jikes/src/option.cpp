@@ -183,6 +183,10 @@ wchar_t* OptionError::GetErrorMessage()
         s << '\"' << name
           << "\" is not a valid tab size. An integer value is expected.";
         break;
+    case INVALID_P_ARGUMENT:
+        s << '\"' << name
+          << "\" is not a recognized flag for controlling pedantic warnings.";
+        break;
     case INVALID_DIRECTORY:
         s << "The directory specified in the \"-d\" option, \"" << name
           << "\", is either invalid or it could not be expanded.";
@@ -288,28 +292,30 @@ static inline char* makeStrippedCopy(char* value)
 }
 
 Option::Option(ArgumentExpander& arguments,
-               Tuple<OptionError *>& bad_options) : first_file_index(arguments.argc),
+               Tuple<OptionError *>& bad_options)
+    : first_file_index(arguments.argc),
 #ifdef JIKES_DEBUG
-                                                    debug_trap_op(0),
-                                                    debug_dump_lex(false),
-                                                    debug_dump_ast(false),
-                                                    debug_unparse_ast(false),
-                                                    debug_unparse_ast_debug(false),
-                                                    debug_comments(false),
-                                                    debug_dump_class(false),
-                                                    debug_trace_stack_change(false),
+      debug_trap_op(0),
+      debug_dump_lex(false),
+      debug_dump_ast(false),
+      debug_unparse_ast(false),
+      debug_unparse_ast_debug(false),
+      debug_comments(false),
+      debug_dump_class(false),
+      debug_trace_stack_change(false),
 #endif // JIKES_DEBUG
-                                                    nocleanup(false),
-                                                    incremental(false),
-                                                    makefile(false),
-                                                    dependence_report(false),
-                                                    bytecode(true),
-                                                    full_check(false),
-                                                    unzip(false),
-                                                    dump_errors(false),
-                                                    errors(true),
-                                                    pedantic(false),
-                                                    dependence_report_name(NULL)
+      nocleanup(false),
+      incremental(false),
+      makefile(false),
+      dependence_report(false),
+      bytecode(true),
+      full_check(false),
+      unzip(false),
+      dump_errors(false),
+      errors(true),
+      pedantic_modifier_order(false),
+      pedantic(false),
+      dependence_report_name(NULL)
 {
 #ifdef WIN32_FILE_SYSTEM
     for (int j = 0; j < 128; j++)
@@ -656,7 +662,28 @@ Option::Option(ArgumentExpander& arguments,
             else if (strcmp(arguments.argv[i], "+OLDCSO") == 0)
                 old_classpath_search_order = true;
             else if (strcmp(arguments.argv[i], "+P") == 0)
+            {
+                // Turn on ALL default pedantic warnings. Can be called
+                // multiple times.
+                pedantic_modifier_order = true;
                 pedantic = true;
+            }
+            else if (arguments.argv[i][1] == 'P')
+            {
+                // Turn on or off particular pedantic warning. Can be called
+                // multiple times.
+                bool state = true;
+                char *image = arguments.argv[i] + 2;
+                if (! strncmp(image, "no-", 3))
+                {
+                    image += 3;
+                    state = false;
+                }
+                if (! strncmp(image, "modifier-order", 14))
+                    pedantic_modifier_order = state;
+                // Add detection for future pedantic flags here.
+                else bad_options.Next() = new OptionError(OptionError::INVALID_P_ARGUMENT, image);
+            }
             else if (arguments.argv[i][1] == 'T')
             {
                 int tab_size = 0;

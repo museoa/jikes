@@ -64,6 +64,7 @@ public:
         INVALID_K_OPTION,
         INVALID_K_TARGET,
         INVALID_TAB_VALUE,
+        INVALID_P_ARGUMENT,
         INVALID_DIRECTORY,
         INVALID_AT_FILE,
         NESTED_AT_FILE,
@@ -146,8 +147,16 @@ public:
          full_check,
          unzip,
          dump_errors,
-         errors,
-         pedantic;
+         errors;
+
+    //
+    // This next section covers pedantic warnings. Named warnings are
+    // specified by flags to the +P command-line option; the last variable
+    // covers all unnamed warnings. This list is designed to grow when new
+    // pedantic warning categories are added (often from user complaints).
+    //
+    bool pedantic_modifier_order, // suggested modifier ordering
+         pedantic; // all other warnings
 
     char *dependence_report_name;
 

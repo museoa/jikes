@@ -5,7 +5,8 @@ jikes \- java source to bytecode compiler
 jikes [\fI\-options\fP] [\fI\+options\fP] [\fI\@files\fP]
       \fIfile.java\fP\&.\|.\|.
 
-Options, @files, and filenames may be intermixed.
+Options, @files, and filenames may be intermixed. Individual options
+should not be repeated, unless noted below.
 
 .SH DESCRIPTION
 \fBJikes\fP translates Java(TM) source files to bytecode. Features
@@ -221,8 +222,16 @@ Jikes (for compatibility).
 .\" Someone should document how this differs from regular search order.
 
 .TP
-\fB\+P
-Pedantic compilation - issues lots of warnings.
+\fB\+P\fP[\fIflags\fP]
+Pedantic compilation - issues lots of warnings. This option may be
+listed multiple times, with cumulative effect. With no flags, this
+turns on the default set of pedantic warnings. Specifying a flag will
+then turn on or off a particular warning, depending on the presence of
+the \fIno-\fP prefix. At present, the only recognized flag is
+\fBmodifier-order\fP, which warns about the recommended ordering of
+multiple modifiers, and is turned on by default in pedantic
+compilation mode. Thus, to get all pedantic warnings except this, use
+\fB\+P \+Pno-modifier-order\fP.
 
 .TP
 \fB\+T\fInn\fP

@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -41,13 +41,15 @@ AccessFlags Semantic::ProcessClassModifiers(AstClassDeclaration *class_declarati
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token);
 
-            if (access_flags.ACC_STRICTFP() && control.option.pedantic)
+            if (access_flags.ACC_STRICTFP() &&
+                control.option.pedantic_modifier_order)
+            {
                 ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token,
                                StringConstant::US_abstract,
                                StringConstant::US_strictfp);
-
+            }
             break;
         case Ast::FINAL:
             if (access_flags.ACC_FINAL())
@@ -62,13 +64,15 @@ AccessFlags Semantic::ProcessClassModifiers(AstClassDeclaration *class_declarati
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token);
 
-            if (access_flags.ACC_STRICTFP() && control.option.pedantic)
+            if (access_flags.ACC_STRICTFP() &&
+                control.option.pedantic_modifier_order)
+            {
                 ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token,
                                StringConstant::US_final,
                                StringConstant::US_strictfp);
-
+            }
             break;
         case Ast::PUBLIC:
             if (access_flags.ACC_PUBLIC())
@@ -78,7 +82,7 @@ AccessFlags Semantic::ProcessClassModifiers(AstClassDeclaration *class_declarati
                                StringConstant::US_public);
             else access_flags.SetACC_PUBLIC();
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_ABSTRACT())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -149,13 +153,15 @@ AccessFlags Semantic::ProcessLocalClassModifiers(AstClassDeclaration *class_decl
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token);
 
-            if (access_flags.ACC_STRICTFP() && control.option.pedantic)
+            if (access_flags.ACC_STRICTFP() &&
+                control.option.pedantic_modifier_order)
+            {
                 ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token,
                                StringConstant::US_abstract,
                                StringConstant::US_strictfp);
-
+            }
             break;
         case Ast::FINAL:
             if (access_flags.ACC_FINAL())
@@ -170,13 +176,15 @@ AccessFlags Semantic::ProcessLocalClassModifiers(AstClassDeclaration *class_decl
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token);
 
-            if (access_flags.ACC_STRICTFP() && control.option.pedantic)
+            if (access_flags.ACC_STRICTFP() &&
+                control.option.pedantic_modifier_order)
+            {
                 ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token,
                                StringConstant::US_final,
                                StringConstant::US_strictfp);
-
+            }
             break;
         case Ast::STRICTFP:
             if (access_flags.ACC_STRICTFP())
@@ -225,7 +233,7 @@ AccessFlags Semantic::ProcessNestedClassModifiers(AstClassDeclaration *class_dec
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token);
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_STATIC())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -254,13 +262,15 @@ AccessFlags Semantic::ProcessNestedClassModifiers(AstClassDeclaration *class_dec
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token);
 
-            if (access_flags.ACC_STRICTFP() && control.option.pedantic)
+            if (access_flags.ACC_STRICTFP() &&
+                control.option.pedantic_modifier_order)
+            {
                 ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token,
                                StringConstant::US_final,
                                StringConstant::US_strictfp);
-
+            }
             break;
         case Ast::PUBLIC:
             if (access_flags.ACC_PUBLIC() || access_flags.ACC_PROTECTED() ||
@@ -272,7 +282,7 @@ AccessFlags Semantic::ProcessNestedClassModifiers(AstClassDeclaration *class_dec
             }
             else access_flags.SetACC_PUBLIC();
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_ABSTRACT())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -310,7 +320,7 @@ AccessFlags Semantic::ProcessNestedClassModifiers(AstClassDeclaration *class_dec
             }
             else access_flags.SetACC_PRIVATE();
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_ABSTRACT())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -348,7 +358,7 @@ AccessFlags Semantic::ProcessNestedClassModifiers(AstClassDeclaration *class_dec
             }
             else access_flags.SetACC_PROTECTED();
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_ABSTRACT())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -384,7 +394,7 @@ AccessFlags Semantic::ProcessNestedClassModifiers(AstClassDeclaration *class_dec
                                StringConstant::US_static);
             else access_flags.SetACC_STATIC();
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_FINAL())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -447,7 +457,7 @@ AccessFlags Semantic::ProcessStaticNestedClassModifiers(AstClassDeclaration *cla
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token);
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_STATIC())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -476,13 +486,15 @@ AccessFlags Semantic::ProcessStaticNestedClassModifiers(AstClassDeclaration *cla
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token);
 
-            if (access_flags.ACC_STRICTFP() && control.option.pedantic)
+            if (access_flags.ACC_STRICTFP() &&
+                control.option.pedantic_modifier_order)
+            {
                 ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token,
                                StringConstant::US_final,
                                StringConstant::US_strictfp);
-
+            }
             break;
         case Ast::PUBLIC:
             if (access_flags.ACC_PUBLIC())
@@ -500,7 +512,7 @@ AccessFlags Semantic::ProcessStaticNestedClassModifiers(AstClassDeclaration *cla
                 access_flags.SetACC_PUBLIC(); // detect duplicates
             }
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_ABSTRACT())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -544,7 +556,7 @@ AccessFlags Semantic::ProcessStaticNestedClassModifiers(AstClassDeclaration *cla
                 access_flags.SetACC_STATIC(); // detect duplicates
             }
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_FINAL())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -623,13 +635,15 @@ AccessFlags Semantic::ProcessInterfaceModifiers(AstInterfaceDeclaration *interfa
                 access_flags.SetACC_ABSTRACT(); // detect duplicates
             }
 
-            if (access_flags.ACC_STRICTFP() && control.option.pedantic)
+            if (access_flags.ACC_STRICTFP() &&
+                control.option.pedantic_modifier_order)
+            {
                 ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token,
                                StringConstant::US_abstract,
                                StringConstant::US_strictfp);
-
+            }
             break;
         case Ast::PUBLIC:
             if (access_flags.ACC_PUBLIC())
@@ -639,7 +653,7 @@ AccessFlags Semantic::ProcessInterfaceModifiers(AstInterfaceDeclaration *interfa
                                StringConstant::US_public);
             else access_flags.SetACC_PUBLIC();
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_ABSTRACT())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -716,7 +730,7 @@ AccessFlags Semantic::ProcessStaticNestedInterfaceModifiers(AstInterfaceDeclarat
                 access_flags.SetACC_ABSTRACT(); // detect duplicates
             }
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_STATIC())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -748,7 +762,7 @@ AccessFlags Semantic::ProcessStaticNestedInterfaceModifiers(AstInterfaceDeclarat
                 access_flags.SetACC_PUBLIC(); // detect duplicates
             }
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_ABSTRACT())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -786,13 +800,15 @@ AccessFlags Semantic::ProcessStaticNestedInterfaceModifiers(AstInterfaceDeclarat
                 access_flags.SetACC_STATIC(); // detect duplicates
             }
 
-            if (access_flags.ACC_STRICTFP() && control.option.pedantic)
+            if (access_flags.ACC_STRICTFP() &&
+                control.option.pedantic_modifier_order)
+            {
                 ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token,
                                StringConstant::US_static,
                                StringConstant::US_strictfp);
-
+            }
             break;
         case Ast::STRICTFP:
             if (access_flags.ACC_STRICTFP())
@@ -859,7 +875,7 @@ AccessFlags Semantic::ProcessNestedInterfaceModifiers(AstInterfaceDeclaration *i
                 access_flags.SetACC_ABSTRACT(); // detect duplicates
             }
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_STATIC())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -885,7 +901,7 @@ AccessFlags Semantic::ProcessNestedInterfaceModifiers(AstInterfaceDeclaration *i
             }
             else access_flags.SetACC_PUBLIC();
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_ABSTRACT())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -917,7 +933,7 @@ AccessFlags Semantic::ProcessNestedInterfaceModifiers(AstInterfaceDeclaration *i
             }
             else access_flags.SetACC_PRIVATE();
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_ABSTRACT())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -949,7 +965,7 @@ AccessFlags Semantic::ProcessNestedInterfaceModifiers(AstInterfaceDeclaration *i
             }
             else access_flags.SetACC_PROTECTED();
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_ABSTRACT())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -987,13 +1003,15 @@ AccessFlags Semantic::ProcessNestedInterfaceModifiers(AstInterfaceDeclaration *i
                 access_flags.SetACC_STATIC(); // detect duplicates
             }
 
-            if (access_flags.ACC_STRICTFP() && control.option.pedantic)
+            if (access_flags.ACC_STRICTFP() &&
+                control.option.pedantic_modifier_order)
+            {
                 ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token,
                                StringConstant::US_static,
                                StringConstant::US_strictfp);
-
+            }
             break;
         case Ast::STRICTFP:
             if (access_flags.ACC_STRICTFP())
@@ -1046,7 +1064,7 @@ AccessFlags Semantic::ProcessFieldModifiers(AstFieldDeclaration *field_declarati
             }
             else access_flags.SetACC_PUBLIC();
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_STATIC())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -1084,7 +1102,7 @@ AccessFlags Semantic::ProcessFieldModifiers(AstFieldDeclaration *field_declarati
             }
             else access_flags.SetACC_PROTECTED();
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_STATIC())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -1122,7 +1140,7 @@ AccessFlags Semantic::ProcessFieldModifiers(AstFieldDeclaration *field_declarati
             }
             else access_flags.SetACC_PRIVATE();
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_STATIC())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -1158,7 +1176,7 @@ AccessFlags Semantic::ProcessFieldModifiers(AstFieldDeclaration *field_declarati
                                StringConstant::US_static);
             else access_flags.SetACC_STATIC();
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_FINAL())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -1193,13 +1211,15 @@ AccessFlags Semantic::ProcessFieldModifiers(AstFieldDeclaration *field_declarati
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token);
 
-            if (access_flags.ACC_TRANSIENT() && control.option.pedantic)
+            if (access_flags.ACC_TRANSIENT() &&
+                control.option.pedantic_modifier_order)
+            {
                 ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token,
                                StringConstant::US_final,
                                StringConstant::US_transient);
-
+            }
             break;
         case Ast::TRANSIENT:
             if (access_flags.ACC_TRANSIENT())
@@ -1209,13 +1229,15 @@ AccessFlags Semantic::ProcessFieldModifiers(AstFieldDeclaration *field_declarati
                                StringConstant::US_transient);
             else access_flags.SetACC_TRANSIENT();
 
-            if (access_flags.ACC_VOLATILE() && control.option.pedantic)
+            if (access_flags.ACC_VOLATILE() &&
+                control.option.pedantic_modifier_order)
+            {
                 ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token,
                                StringConstant::US_transient,
                                StringConstant::US_volatile);
-
+            }
             break;
         case Ast::VOLATILE:
             if (access_flags.ACC_VOLATILE())
@@ -1333,7 +1355,7 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
             }
             else access_flags.SetACC_PUBLIC();
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_ABSTRACT())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -1383,7 +1405,7 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
             }
             else access_flags.SetACC_PROTECTED();
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_ABSTRACT())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -1439,7 +1461,7 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
                                modifier -> modifier_kind_token,
                                StringConstant::US_private);
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_STATIC())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -1487,7 +1509,7 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
                                modifier -> modifier_kind_token,
                                StringConstant::US_static);
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_FINAL())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -1566,7 +1588,7 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
                                modifier -> modifier_kind_token,
                                StringConstant::US_final);
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_SYNCHRONIZED())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -1622,7 +1644,7 @@ AccessFlags Semantic::ProcessMethodModifiers(AstMethodDeclaration *method_declar
                                modifier -> modifier_kind_token,
                                StringConstant::US_synchronized);
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_NATIVE())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -1680,13 +1702,15 @@ AccessFlags Semantic::ProcessInterfaceMethodModifiers(AstMethodDeclaration *meth
                 access_flags.SetACC_PUBLIC(); // detect duplicates
             }
 
-            if (access_flags.ACC_ABSTRACT() && control.option.pedantic)
+            if (access_flags.ACC_ABSTRACT() &&
+                control.option.pedantic_modifier_order)
+            {
                 ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token,
                                StringConstant::US_public,
                                StringConstant::US_abstract);
-
+            }
             break;
         case Ast::ABSTRACT:
             if (access_flags.ACC_ABSTRACT())
@@ -1808,7 +1832,7 @@ AccessFlags Semantic::ProcessInterfaceFieldModifiers(AstFieldDeclaration *field_
                 access_flags.SetACC_PUBLIC(); // detect duplicates
             }
 
-            if (control.option.pedantic)
+            if (control.option.pedantic_modifier_order)
             {
                 if (access_flags.ACC_STATIC())
                     ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
@@ -1840,13 +1864,15 @@ AccessFlags Semantic::ProcessInterfaceFieldModifiers(AstFieldDeclaration *field_
                 access_flags.SetACC_STATIC(); // detect duplicates
             }
 
-            if (access_flags.ACC_FINAL() && control.option.pedantic)
+            if (access_flags.ACC_FINAL() &&
+                control.option.pedantic_modifier_order)
+            {
                 ReportSemError(SemanticError::RECOMMENDED_MODIFIER_ORDER,
                                modifier -> modifier_kind_token,
                                modifier -> modifier_kind_token,
                                StringConstant::US_static,
                                StringConstant::US_final);
-
+            }
             break;
         case Ast::FINAL:
             if (access_flags.ACC_FINAL())
