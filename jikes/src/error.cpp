@@ -3387,7 +3387,7 @@ wchar_t *SemanticError::PrintRETURN_STATEMENT_IN_INITIALIZER(ErrorInfo &err, Lex
 {
     ErrorString s;
     
-    s << "A return s.Array()tatement may not appear in an initializer block.";
+    s << "A return statement may not appear in an initializer block.";
 
     return s.Array();
 }
@@ -3397,7 +3397,7 @@ wchar_t *SemanticError::PrintMISPLACED_RETURN_WITH_EXPRESSION(ErrorInfo &err, Le
 {
     ErrorString s;
     
-    s << "A return s.Array()tatement with expression must be contained in a method declaration that is "
+    s << "A return statement with expression must be contained in a method declaration that is "
                "declared to return a value.";
 
     return s.Array();
@@ -3408,7 +3408,7 @@ wchar_t *SemanticError::PrintMISPLACED_RETURN_WITH_NO_EXPRESSION(ErrorInfo &err,
 {
     ErrorString s;
     
-    s << "A return s.Array()tatement with no expression may only appear in void method or a constructor.";
+    s << "A return statement with no expression may only appear in void method or a constructor.";
 
     return s.Array();
 }

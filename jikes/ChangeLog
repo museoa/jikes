@@ -1,3 +1,10 @@
+2000-07-22  C. Scott Ananian  <cananian@lesser-magoo.lcs.mit.edu>
+
+	* src/error.cpp (PrintRETURN_STATEMENT_IN_INITIALIZER,
+	PrintMISPLACED_RETURN_WITH_EXPRESSION,
+	PrintMISPLACED_RETURN_WITH_NO_EXPRESSION): Fix typos
+	introduced during JikesAPI changes.
+
 2000-07-22  Chris Abbey <cabbey@bresnanlink.net>
 
 	* configure.in: Add check for iconv library.
