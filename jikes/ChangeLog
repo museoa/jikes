@@ -1,3 +1,8 @@
+2002-06-04  Andrew G. Tereschenko  <tag@ibis.odessa.ua>
+
+	* src/double.cpp: additional parenthesis near shift operators
+	to make MSVC v7 (.NET) happier.
+
 2002-06-03  Chris Dennis  <chris.dennis@invidi.com>
 
 	* src/expr.cpp (ProcessClassInstanceCreationExpression):

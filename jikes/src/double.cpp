@@ -2016,7 +2016,7 @@ IEEEdouble IEEEdouble::Ulp() const
         else
         {
             L -= FRACT_SIZE_HI;
-            d.setHighAndLowWords(0, L >= 31 ? 1 : 1 << 31 - L);
+            d.setHighAndLowWords(0, L >= 31 ? 1 : 1 << (31 - L));
         }
     }
     return d;
@@ -2476,7 +2476,7 @@ BigInt::BigInt(const IEEEdouble &d, int &e, int &bits) : data(NULL)
     {
         if ((k = lo0bits(y)) != 0)
         {
-            data[0] = y | z << 32 - k;
+            data[0] = y | z << (32 - k);
             z >>= k;
         }
         else
@@ -2957,10 +2957,10 @@ IEEEfloat BigInt::FloatValue() const
     y = *--xa;
     k = hi0bits(y);
     if (k < 8)
-        return IEEEfloat(0x3f800000 | y >> 8 - k);
+        return IEEEfloat(0x3f800000 | y >> (8 - k));
     z = xa > data ? *--xa : 0;
     if (k -= 8)
-        return IEEEfloat(0x3f800000 | y << k | z >> 32 - k);
+        return IEEEfloat(0x3f800000 | y << k | z >> (32 - k));
     else
         return IEEEfloat(0x3f800000 | y);
 }
@@ -2974,17 +2974,17 @@ IEEEdouble BigInt::DoubleValue() const
     k = hi0bits(y);
     if (k < 11)
     {
-        hi = 0x3ff00000 | y >> 11 - k;
+        hi = 0x3ff00000 | y >> (11 - k);
         w = xa > data ? *--xa : 0;
-        lo = y << (32- 11) + k | w >> 11 - k;
+        lo = y << (32 - 11 + k) | w >> (11 - k);
         return IEEEdouble(hi, lo);
     }
     z = xa > data ? *--xa : 0;
     if (k -= 11)
     {
-        hi = 0x3ff00000 | y << k | z >> 32 - k;
+        hi = 0x3ff00000 | y << k | z >> (32 - k);
         y = xa > data ? *--xa : 0;
-        lo = z << k | y >> 32 - k;
+        lo = z << k | y >> (32 - k);
     }
     else
     {
