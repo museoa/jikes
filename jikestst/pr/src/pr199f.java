@@ -1,3 +1,4 @@
+// $Id$
 class Test {
 	void[] m(int i) {}
 }##pr199g.java##

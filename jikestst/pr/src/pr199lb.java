@@ -1,3 +1,4 @@
+// $Id$
 public class InitTest2 {
 	public int j = method();
 	public int i = 0;

@@ -1,3 +1,4 @@
+// $Id$
 import pack1.P1;
 public class Cmain {
 	public static void main(String [] args) {

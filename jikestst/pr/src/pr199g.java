@@ -1,3 +1,4 @@
+// $Id$
 class Test {
 	abstract private void am() {}
 }##pr199h.java##
