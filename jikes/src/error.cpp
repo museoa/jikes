@@ -19,7 +19,7 @@ void (*SemanticError::print_message[SemanticError::_num_kinds]) (SemanticError::
 
 SemanticError::SemanticError(Control &control_, FileSymbol *file_symbol) : num_errors(0),
                                                                            num_warnings(0),
-                                       control(control_),
+                                                                           control(control_),
                                                                            lex_stream(file_symbol -> lex_stream),
                                                                            clone_count(0),
                                                                            buffer(1024),

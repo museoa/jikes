@@ -1035,8 +1035,7 @@ Ast *AstAssignmentExpression::Clone(StoragePool *ast_pool)
             for (int k = 0; k < this -> NumStatements(); k++)
                 this -> Statement(k) -> Print(lex_stream);
         }
-        else
-	     Coutput <<"\n";
+        else Coutput <<"\n";
     }
 
     void AstPrimitiveType::Print(LexStream& lex_stream)

@@ -262,10 +262,10 @@ void Semantic::ProcessTypeNames()
                 break;
             }
             case Ast::EMPTY_DECLARATION:
-		break;
-        default:
-        assert(false);
-        break;
+                 break;
+            default:
+                assert(false);
+                break;
         }
 
         //
@@ -2054,10 +2054,10 @@ void Semantic::CleanUp()
                 break;
             }
             case Ast::EMPTY_DECLARATION:
-		break;
-        default:
-        assert(false);
-        break;
+                 break;
+            default:
+                 assert(false);
+                 break;
         }
 
         if (type)
@@ -2081,7 +2081,7 @@ void Semantic::CleanUpType(TypeSymbol *type)
 
     delete type -> local;
     if (control.option.nocleanup)
-	return;
+        return;
 
     type -> local = NULL;
 

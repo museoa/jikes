@@ -124,7 +124,7 @@ void Semantic::ReportMethodNotFound(Ast *ast, wchar_t *name)
         }
         else
         {
-	    AstThisCall *this_call = ast -> ThisCallCast();
+            AstThisCall *this_call = ast -> ThisCallCast();
 
             assert(this_call);
 

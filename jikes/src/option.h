@@ -141,7 +141,7 @@ public:
          debug_unparse_ast,
          debug_unparse_ast_debug,
          debug_dump_class,
-	 nocleanup,
+         nocleanup,
          applet_author,
          incremental,
          makefile,
@@ -149,7 +149,7 @@ public:
          full_check,
          unzip,
          dump_errors,
-	 ascii,
+         ascii,
          errors,
          comments,
          pedantic;

@@ -625,7 +625,7 @@ class Code_attribute : public attribute_info
 public:
 
     Code_attribute(u2 _name_index, u2 _max_locals) : attribute_info(Code, _name_index),
-						     attribute_length(0),
+                                                     attribute_length(0),
                                                      max_stack(0),
                                                      max_locals(_max_locals),
                                                      code(8, 4),

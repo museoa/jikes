@@ -2212,9 +2212,9 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
                      op_true = OP_IFLE;
                      op_false = OP_IFGT;
                      break;
-	        default:
-		    assert(false);
-		    break;
+                default:
+                    assert(false);
+                    break;
             }
         }
         else if (IsZero(right))
@@ -2239,9 +2239,9 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
                      op_true = OP_IFGE;
                      op_false = OP_IFLT;
                      break;
-	        default:
-		    assert(false);
-		    break;
+                default:
+                    assert(false);
+                    break;
             }
         }
         else
@@ -2267,9 +2267,9 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
                      op_true = OP_IF_ICMPGE;
                      op_false = OP_IF_ICMPLT;
                      break;
-	        default:
-		    assert(false);
-		    break;
+                default:
+                    assert(false);
+                    break;
             }
         }
     }
@@ -2309,9 +2309,9 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
                  op_true = OP_IFGE;
                  op_false = OP_IFLT;
                  break;
-	    default:
-		assert(false);
-		break;
+            default:
+                assert(false);
+                break;
         }
     }
     else if (left_type == this_control.float_type)
@@ -2351,9 +2351,9 @@ void ByteCode::EmitBranchIfExpression(AstExpression *p, bool cond, Label &lab)
                  op_true = OP_IFGE;
                  op_false = OP_IFLT;
                  break;
-	    default:
-		assert(false);
-		break;
+            default:
+                assert(false);
+                break;
         }
     }
     else if (left_type == this_control.double_type)
