@@ -13,7 +13,7 @@
 #include "semantic.h"
 #include "ast.h"
 
-#ifdef	HAVE_NAMESPACES
+#ifdef	HAVE_JIKES_NAMESPACE
 using namespace Jikes;
 #endif
 

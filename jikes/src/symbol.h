@@ -20,7 +20,7 @@
 #include "tuple.h"
 #include "case.h"
 
-#ifdef	HAVE_NAMESPACES
+#ifdef	HAVE_JIKES_NAMESPACE
 namespace Jikes {	// Open namespace Jikes block
 #endif
 
@@ -2310,7 +2310,7 @@ inline SymbolTable *BlockSymbol::Table()
     }
 #endif
 
-#ifdef	HAVE_NAMESPACES
+#ifdef	HAVE_JIKES_NAMESPACE
 }			// Close namespace Jikes block
 #endif
 

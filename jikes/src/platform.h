@@ -188,7 +188,7 @@ typedef signed char i1;
 
 
 
-#ifdef	HAVE_NAMESPACES
+#ifdef	HAVE_JIKES_NAMESPACE
 namespace Jikes {	// Open namespace Jikes block
 #endif
 
@@ -1022,7 +1022,7 @@ class ErrorString: public ConvertibleArray<wchar_t>
     int  field_width ;
 };
 
-#ifdef	HAVE_NAMESPACES
+#ifdef	HAVE_JIKES_NAMESPACE
 }			// Close namespace Jikes block
 #endif
 

@@ -25,7 +25,7 @@
 */
 
 
-#ifdef	HAVE_NAMESPACES
+#ifdef	HAVE_JIKES_NAMESPACE
 namespace Jikes {	// Open namespace Jikes block
 #endif
 
@@ -206,7 +206,7 @@ protected:
     int ParseCheck(int stack[], int stack_top, int first_token, int buffer_position);
 };
 
-#ifdef	HAVE_NAMESPACES
+#ifdef	HAVE_JIKES_NAMESPACE
 }			// Close namespace Jikes block
 #endif
 

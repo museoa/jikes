@@ -13,7 +13,7 @@
 #include "platform.h"
 #include "stream.h"
 
-#ifdef	HAVE_NAMESPACES
+#ifdef	HAVE_JIKES_NAMESPACE
 namespace Jikes {	// Open namespace Jikes block
 #endif
 
@@ -22,7 +22,7 @@ typedef LexStream::TokenIndex Location;
 
 inline Location Loc(TokenObject i) { return i; }
 
-#ifdef	HAVE_NAMESPACES
+#ifdef	HAVE_JIKES_NAMESPACE
 }			// Close namespace Jikes block
 #endif
 

@@ -12,7 +12,7 @@
 #include "semantic.h"
 #include "control.h"
 
-#ifdef	HAVE_NAMESPACES
+#ifdef	HAVE_JIKES_NAMESPACE
 using namespace Jikes;
 #endif
 

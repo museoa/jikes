@@ -20,7 +20,7 @@
 #include <stdio.h>
 */
 
-#ifdef	HAVE_NAMESPACES
+#ifdef	HAVE_JIKES_NAMESPACE
 using namespace Jikes;
 #endif
 

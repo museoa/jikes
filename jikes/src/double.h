@@ -12,7 +12,7 @@
 
 #include "platform.h"
 
-#ifdef	HAVE_NAMESPACES
+#ifdef	HAVE_JIKES_NAMESPACE
 namespace Jikes {	// Open namespace Jikes block
 #endif
 
@@ -287,7 +287,7 @@ public:
     static void Fmodulus(IEEEdouble, IEEEdouble, IEEEdouble &);
 };
 
-#ifdef	HAVE_NAMESPACES
+#ifdef	HAVE_JIKES_NAMESPACE
 }			// Close namespace Jikes block
 #endif
 

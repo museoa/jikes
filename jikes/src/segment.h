@@ -13,7 +13,7 @@
 #include "platform.h"
 #include "tuple.h"
 
-#ifdef	HAVE_NAMESPACES
+#ifdef	HAVE_JIKES_NAMESPACE
 namespace Jikes {	// Open namespace Jikes block
 #endif
 
@@ -190,7 +190,7 @@ public:
     TripletSegment *AllocateTripletSegment() { return triplet_segment_pool.Next() = new TripletSegment(*this); }
 };
 
-#ifdef	HAVE_NAMESPACES
+#ifdef	HAVE_JIKES_NAMESPACE
 }			// Close namespace Jikes block
 #endif
 

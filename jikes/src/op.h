@@ -13,7 +13,7 @@
 #include "platform.h"
 #include "tuple.h"
 
-#ifdef	HAVE_NAMESPACES
+#ifdef	HAVE_JIKES_NAMESPACE
 namespace Jikes {	// Open namespace Jikes block
 #endif
 
@@ -282,7 +282,7 @@ private:
     static void opline(Tuple<cp_info *> &, char *, int, int, char *, char *, char *, int, int);
 };
 
-#ifdef	HAVE_NAMESPACES
+#ifdef	HAVE_JIKES_NAMESPACE
 }			// Close namespace Jikes block
 #endif
 
