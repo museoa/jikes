@@ -4023,15 +4023,24 @@ TypeSymbol *Semantic::FindType(LexStream::TokenIndex identifier_token)
     // If a package was specified in this file (the one we are compiling),
     // we look for the type requested inside the package in question.
     // Otherwise, we look for the type requested in the unnamed package.
+    // If we don't find the type or we find a bad type we check to see
+    // if the type can be imported.
     //
     PackageSymbol *package = (compilation_unit -> package_declaration_opt ? this_package : control.unnamed_package);
     type = FindSimpleNameType(package, identifier_token);
+    TypeSymbol *imported_type = ((! type ) || type -> Bad() ? ImportType(identifier_token, name_symbol) : (TypeSymbol *) NULL);
 
     //
-    // Note that a type T contained in a package P is always accessible to all other
-    // types contained in P. I.e., we do not need to perform access check for type.
+    // If a valid type can be imported on demand, chose that type.
+    // Otherwise, if a type was found at all, do some final checks on it.
     //
-    if (type)
+    // Note that a type T contained in a package P is always accessible to all other
+    // types contained in P. I.e., we do not need to perform access check for type...
+    //
+    //
+    if (imported_type)
+        type = imported_type;
+    else if (type)
     {
         //
         // If a type T was specified in a source file that is not called T.java
@@ -4049,15 +4058,9 @@ TypeSymbol *Semantic::FindType(LexStream::TokenIndex identifier_token)
                            type -> Name(),
                            file_symbol -> Name());
         }
-
-        return type;
     }
 
-    //
-    // check whether or not the type can be imported on demand from
-    // exactly one package or type.
-    //
-    return ImportType(identifier_token, name_symbol);
+    return type;
 }
 
 

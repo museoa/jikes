@@ -1287,25 +1287,53 @@ void Semantic::ProcessTryStatement(Ast *stmt)
     //       type of C's parameter is the same as or a subclass of the type of A's
     //       parameter.
     //
-    Tuple<TypeSymbol *> thrown_exceptions;
+    // Note that the use of the word assignable here is slightly misleading.
+    // It does not mean assignable in the strict sense defined in section 5.2.
+    // Using the strict definition of 5.2, the rule can be more accurately 
+    // stated as follows:
+    //
+    //    . Catchable Exception:
+    //      some expression or throw statement in the try block is reachable
+    //      and can throw an exception S that is assignable to the parameter
+    //      with type T (S is a subclass of T) of the catch clause C.
+    //
+    //      In this case, when S is thrown it will definitely be caught by
+    //      clause C.
+    //
+    //    . Convertible Exception:
+    //      the type T of the parameter of the catch clause C is assignable to
+    //      the type S (T is a subclass of S) of an exception that can be thrown by
+    //      some expression or throw statement in the try block that is reachable.
+    //      
+    //      This rule captures the idea that at run time an object declared to
+    //      be of type S can actually be an instance of an object of type T in
+    //      which case it will be caught by clause C.
+    //
+    //
+    Tuple<TypeSymbol *> catchable_exceptions,
+                        convertible_exceptions;
     for (int l = 0; l < try_statement -> NumCatchClauses(); l++)
     {
         AstCatchClause *clause = try_statement -> CatchClause(l);
         VariableSymbol *symbol = clause -> parameter_symbol;
         if (CheckedException(symbol -> Type()))
         {
-            int initial_length = thrown_exceptions.Length();
+            int initial_length = catchable_exceptions.Length() + convertible_exceptions.Length();
 
             for (TypeSymbol *exception = (TypeSymbol *) exception_set -> FirstElement();
                  exception;
                  exception = (TypeSymbol *) exception_set -> NextElement())
             {
-                if (CanAssignmentConvertReference(symbol -> Type(), exception) ||
-                    CanAssignmentConvertReference(exception, symbol -> Type()))
-                    thrown_exceptions.Next() = exception;
+                if (CanAssignmentConvertReference(symbol -> Type(), exception))
+                     catchable_exceptions.Next() = exception;
+                else if (CanAssignmentConvertReference(exception, symbol -> Type()))
+                     convertible_exceptions.Next() = exception;
             }
 
-            if (thrown_exceptions.Length() == initial_length) // no assignable exception was found
+            //
+            // No clause was found whose parameter can possibly accept this exception.
+            //
+            if ((catchable_exceptions.Length() + convertible_exceptions.Length()) == initial_length)
             {
                 ReportSemError(SemanticError::UNREACHABLE_CATCH_CLAUSE,
                                clause -> formal_parameter -> LeftToken(),
@@ -1347,12 +1375,12 @@ void Semantic::ProcessTryStatement(Ast *stmt)
     if (TryExceptionTableStack().Top())
     {
         //
-        // First, remove all the thrown exceptions that are caught by the enclosing
-        // try statement. Then, add the remaining ones to the set that must be caught
-        // by the immediately enclosing try statement.
+        // First, remove all the thrown exceptions that are definitely caught by the
+        // enclosing try statement. Then, add the remaining ones to the set that must
+        // be caught by the immediately enclosing try statement.
         //
-        for (int i = 0; i < thrown_exceptions.Length(); i++)
-            exception_set -> RemoveElement(thrown_exceptions[i]);
+        for (int i = 0; i < catchable_exceptions.Length(); i++)
+            exception_set -> RemoveElement(catchable_exceptions[i]);
         TryExceptionTableStack().Top() -> Union(*exception_set);
     }
     delete exception_set;

@@ -1322,7 +1322,7 @@ TypeSymbol *TypeSymbol::FindOrInsertClassLiteralClass(LexStream::TokenIndex tok)
     AstCompilationUnit *compilation_unit = sem -> compilation_unit;
     Control &control = sem -> control;
 
-    assert(this == outermost_type);
+    assert(this == outermost_type && this -> ACC_INTERFACE());
 
     if (! this -> class_literal_class)
     {
@@ -1679,7 +1679,13 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member)
 
             class_creation -> class_body_opt = class_body;
 
+            //
+            // We artificially enter a static region for the creation of this anonymous type
+            // to guarantee that it is a top-level class that does not depend on its surrounding.
+            //
+            sem -> EnterStaticRegion();
             TypeSymbol *anonymous_type = sem -> GetAnonymousType(class_creation, control.Object());
+            sem -> ExitStaticRegion();
 
             //
             //

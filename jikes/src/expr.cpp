@@ -302,7 +302,8 @@ MethodSymbol *Semantic::FindConstructor(TypeSymbol *containing_type, Ast *ast,
                                method -> containing_type -> file_location -> location);
             }
         }
-        else ReportMethodNotFound(ast, containing_type -> Name());
+        else if ((! containing_type -> Bad()) || NumErrors() == 0)
+            ReportMethodNotFound(ast, containing_type -> Name());
 
         delete [] argument;
 
@@ -553,7 +554,7 @@ See comment above...
             MethodShadowSymbol *method_shadow;
 
             //
-            // Check whether or not the method we are looking fr is not an inaccessible private method.
+            // Check whether or not the method we are looking for is not an inaccessible private method.
             //
             for (super_type = type; super_type; super_type = super_type -> super)
             {

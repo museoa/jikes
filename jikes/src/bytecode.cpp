@@ -1460,11 +1460,13 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *sws)
         //  high - low < ncases * 2 + 28
         // but can't have number of labels < number of cases
         //
-        if ((high - low) < (ncases * 2 + 28))
+        LongInt range = LongInt(high) - low + 1;
+        if (range < (ncases * 2 + 28))
         {
             use_lookup = false; // use tableswitch
-            nlabels = high - low + 1;
+            nlabels = range.LowWord();
 
+            assert(range.HighWord() == 0);
             assert(nlabels >= ncases);
         }
     }
