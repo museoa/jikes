@@ -95,6 +95,7 @@ Option no longer used ...
                   *ohalfword           = "HALFWORD",
                   *ohblockb            = "HBLOCKB",
                   *ohblocke            = "HBLOCKE",
+                  *ojikes              = "JIKES",
                   *olalr               = "LALR",
                   *olist               = "LIST",
                   *omax                = "MAXIMUM",

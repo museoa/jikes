@@ -506,6 +506,9 @@ static void options(void)
                       (memcmp(ohalfword2, token, len) == 0) ||
                       (memcmp(ohalfword3, token, len) == 0))
                 byte_bit = NOT(flag);
+	    else if ((strcmp(token, "JI") == 0) ||
+		     (memcmp(ojikes, token, len) == 0))
+		jikes_bit = 1;
             else if (len >= 2 && memcmp(olalr, token, len) == 0)
             {
                 slr_bit = NOT(flag);
@@ -1179,13 +1182,13 @@ static void process_options_lines(void)
 #else
 #if defined(MVS)
         if (act_file[0] == '\0')
-            sprintf(act_file, "%sACT.JAVA", file_prefix, (java_bit ? "JAVA" : "H"));
+            sprintf(act_file, "%sACT.%s", file_prefix, (java_bit ? "JAVA" : "H"));
         if (hact_file[0] == '\0')
             sprintf(hact_file, "%sHDR.%s", file_prefix, (java_bit ? "JAVA" : "H"));
         sprintf(sym_file, "%sSYM.%s", file_prefix, (java_bit ? "JAVA" : "H"));
         sprintf(def_file, "%sDEF.%s", file_prefix, (java_bit ? "JAVA" : "H"));
         sprintf(prs_file, "%sPRS.%s", file_prefix, (java_bit ? "JAVA" : "H"));
-        sprintf(dcl_file, "%sDCL.%S", file_prefix, (java_bit ? "JAVA" : "H"));
+        sprintf(dcl_file, "%sDCL.%s", file_prefix, (java_bit ? "JAVA" : "H"));
 #else
         if (act_file[0] == '\0')
             sprintf(act_file, "%sact.%s", file_prefix, (java_bit ? "java" : "h"));

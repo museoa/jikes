@@ -124,6 +124,7 @@ BOOLEAN list_bit               = FALSE,
         c_bit                  = FALSE,
         cpp_bit                = FALSE,
         java_bit               = FALSE,
+        jikes_bit              = FALSE,
         scopes_bit             = FALSE;
 
 int lalr_level       = 1,

@@ -631,6 +631,7 @@ extern BOOLEAN list_bit,
                c_bit,
                cpp_bit,
                java_bit,
+               jikes_bit, /* undocumented hack for special jikes behavior */
                scopes_bit;
 
 extern int lalr_level,

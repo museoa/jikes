@@ -553,11 +553,28 @@ static void init_file(FILE **file, char *file_name, char *file_tag)
     memcpy(file_tag, file_name, p - file_name);
     file_tag[p - file_name] = '\0';
 
+    if (jikes_bit)
+	fprintf(*file, "// $I"/*CVS hack*/"d$\n"
+		"// DO NOT MODIFY THIS FILE - it is generated using jikespg on java.g.\n"
+		"//\n"
+		"// This software is subject to the terms of the IBM Jikes Compiler Open\n"
+		"// Source License Agreement available at the following URL:\n"
+		"// http://ibm.com/developerworks/opensource/jikes.\n"
+		"// Copyright (C) 1996, 1997, 1998, 1999, 2001, International\n"
+		"// Business Machines Corporation and others.  All Rights Reserved.\n"
+		"// You must accept the terms of that agreement to use this software.\n"
+		"//\n\n");
+
     if (c_bit || cpp_bit)
     {
         fprintf(*file, "#ifndef %s_INCLUDED\n", file_tag);
         fprintf(*file, "#define %s_INCLUDED\n\n", file_tag);
     }
+
+    if (jikes_bit)
+	fprintf(*file, "#ifdef HAVE_JIKES_NAMESPACE\n"
+		"namespace Jikes { // Open namespace Jikes block\n"
+		"#endif\n\n");
 
     return;
 }
@@ -578,22 +595,33 @@ static void init_parser_files(void)
 
 
 /*********************************************************************/
+/*                            EXIT_FILE:                             */
+/*********************************************************************/
+static void exit_file(FILE **file, char *file_tag)
+{
+    if (jikes_bit)
+	fprintf(*file, "\n#ifdef HAVE_JIKES_NAMESPACE\n"
+		"} // Close namespace Jikes block\n"
+		"#endif\n");
+
+    if (c_bit || cpp_bit)
+        fprintf(*file, "\n#endif /* %s_INCLUDED */\n", file_tag);
+
+    fclose(*file);
+
+    return;
+}
+
+
+/*********************************************************************/
 /*                            EXIT_PRS_FILE:                         */
 /*********************************************************************/
 static void exit_parser_files(void)
 {
-    if (c_bit || cpp_bit)
-    {
-        fprintf(sysdcl, "\n#endif /* %s_INCLUDED */\n", dcl_tag);
-        fprintf(syssym, "\n#endif /* %s_INCLUDED */\n", sym_tag);
-        fprintf(sysdef, "\n#endif /* %s_INCLUDED */\n", def_tag);
-        fprintf(sysprs, "\n#endif /* %s_INCLUDED */\n", prs_tag);
-    }
-
-    fclose(sysdcl);
-    fclose(syssym);
-    fclose(sysdef);
-    fclose(sysprs);
+    exit_file(&sysdcl, dcl_tag);
+    exit_file(&syssym, sym_tag);
+    exit_file(&sysdef, def_tag);
+    exit_file(&sysprs, prs_tag);
 
     return;
 }
@@ -1645,20 +1673,23 @@ static void print_definitions(void)
                      error_image,
                      max_name_length,
                      num_states);
-        else fprintf(sysdef,
-                     "      ERROR_CODE,\n"
-                     "      BEFORE_CODE,\n"
-                     "      INSERTION_CODE,\n"
-                     "      INVALID_CODE,\n"
-                     "      SUBSTITUTION_CODE,\n"
-                     "      DELETION_CODE,\n"
-                     "      MERGE_CODE,\n"
-                     "      MISPLACED_CODE,\n"
-                     "      SCOPE_CODE,\n"
-                     "      MANUAL_CODE,\n"
-                     "      SECONDARY_CODE,\n"
-                     "      EOF_CODE,\n\n"
-
+        else
+	{
+	    if (! jikes_bit)
+		fprintf(sysdef,
+			"      ERROR_CODE,\n"
+			"      BEFORE_CODE,\n"
+			"      INSERTION_CODE,\n"
+			"      INVALID_CODE,\n"
+			"      SUBSTITUTION_CODE,\n"
+			"      DELETION_CODE,\n"
+			"      MERGE_CODE,\n"
+			"      MISPLACED_CODE,\n"
+			"      SCOPE_CODE,\n"
+			"      MANUAL_CODE,\n"
+			"      SECONDARY_CODE,\n"
+			"      EOF_CODE,\n\n");
+	    fprintf(sysdef,
                      "      ERROR_SYMBOL      = %d,\n"
                      "      MAX_DISTANCE      = %d,\n"
                      "      MIN_DISTANCE      = %d,\n"
@@ -1672,6 +1703,7 @@ static void print_definitions(void)
                      max_name_length,
                      max_name_length,
                      num_states);
+	}
     }
 
     if (java_bit)

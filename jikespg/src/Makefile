@@ -8,7 +8,7 @@
 # You must accept the terms of that agreement to use this software.
 
 # Makefile for aix for Jikes Parser Generator
-CC = xlc -O
+CC = gcc -O1
 
 all: jikespg
 
