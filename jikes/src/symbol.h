@@ -434,6 +434,7 @@ public:
     // enclosing type then accessed_member identifies the member in question.
     //
     Symbol *accessed_member;
+    inline bool AccessesInstanceMember();
 
     virtual wchar_t *Name() { return name_symbol -> Name(); }
     virtual size_t NameLength() { return name_symbol -> NameLength(); }
@@ -1518,6 +1519,11 @@ public:
     MethodSymbol *FindOverloadMethod(MethodSymbol *, AstMethodDeclarator *);
 };
 
+inline bool MethodSymbol::AccessesInstanceMember() {
+    return accessed_member &&
+        ((accessed_member -> MethodCast() && ! accessed_member -> MethodCast() -> ACC_STATIC()) ||
+         (accessed_member -> VariableCast() && ! accessed_member -> VariableCast() -> ACC_STATIC()));
+}
 
 inline int TypeSymbol::NumVariableSymbols() { return (table ? table -> NumVariableSymbols() : 0); }
 inline VariableSymbol *TypeSymbol::VariableSym(int i) { return table -> VariableSym(i); }

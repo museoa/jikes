@@ -1436,9 +1436,6 @@ void ByteCode::EmitStatementExpression(AstExpression *expression)
 {
     switch (expression -> kind)
     {
-        case Ast::PARENTHESIZED_EXPRESSION:
-             (void) EmitStatementExpression(expression -> ParenthesizedExpressionCast() -> expression);
-             break;
         case Ast::CALL:
              {
                  AstMethodInvocation *method_call = (AstMethodInvocation *) expression;
@@ -2545,77 +2542,164 @@ void ByteCode::EmitSynchronizedStatement(AstSynchronizedStatement *statement)
 //
 // Expressions: Chapter 14 of JLS
 //
-int ByteCode::EmitExpression(AstExpression *expression)
+int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
 {
+    //
+    // The only time when need_value should be false is for an expression
+    // qualifying a static member access.  Hence, it must be a reference,
+    // and if one is a constant, it must be a String expression.
+    //
     if (expression -> IsConstant())
     {
-        LoadLiteral(expression -> value, expression -> Type());
-        return (this_control.IsDoubleWordType(expression -> Type()) ? 2 : 1);
+        if (need_value)
+        {
+            LoadLiteral(expression -> value, expression -> Type());
+            return (this_control.IsDoubleWordType(expression -> Type()) ? 2 : 1);
+        }
+        else
+        {
+            assert(expression -> Type() == this_control.String());
+            return 0;
+        }
     }
 
     switch (expression -> kind)
     {
         case Ast::IDENTIFIER:
+             if (need_value)
              {
                  AstSimpleName *simple_name = expression -> SimpleNameCast();
                  return (simple_name -> resolution_opt ? EmitExpression(simple_name -> resolution_opt)
                                                        : LoadVariable(GetLhsKind(expression), expression));
              }
+             else
+             {
+                 return 0;
+             }
         case Ast::THIS_EXPRESSION:
         case Ast::SUPER_EXPRESSION:
-             PutOp(OP_ALOAD_0); // must be use
-             return 1;
+             if (need_value)
+             {
+                 PutOp(OP_ALOAD_0); // will be used
+                 return 1;
+             }
+             else
+             {
+                 return 0;
+             }
         case Ast::PARENTHESIZED_EXPRESSION:
-             return EmitExpression(((AstParenthesizedExpression *) expression) -> expression);
+             return EmitExpression(((AstParenthesizedExpression *) expression) -> expression, need_value);
         case Ast::CLASS_CREATION:
-             return EmitClassInstanceCreationExpression((AstClassInstanceCreationExpression *) expression, true);
+             return EmitClassInstanceCreationExpression((AstClassInstanceCreationExpression *) expression, need_value);
         case Ast::ARRAY_CREATION:
+             assert(need_value && "array can't qualify static member");
              return EmitArrayCreationExpression((AstArrayCreationExpression *) expression);
         case Ast::DIM:
+             assert(need_value && "dimension can't qualify static member");
              return EmitExpression(expression -> DimExprCast() -> expression);
         case Ast::DOT:
              {
                  AstFieldAccess *field_access = (AstFieldAccess *) expression;
                  return ((field_access -> IsClassAccess()) && (field_access -> resolution_opt))
                                                             ? (unit_type -> outermost_type -> ACC_INTERFACE()
-                                                                          ? EmitExpression(field_access -> resolution_opt)
+                                                                          ? EmitExpression(field_access -> resolution_opt, need_value)
                                                                           : GenerateClassAccess(field_access))
-                                                            : EmitFieldAccess(field_access);
+                                                            : EmitFieldAccess(field_access, need_value);
              }
         case Ast::CALL:
              {
                  AstMethodInvocation *method_call = expression -> MethodInvocationCast();
+                 // must evaluate for side effects
                  EmitMethodInvocation(method_call);
-                 return GetTypeWords(method_call -> Type());
+                 if (need_value)
+                 {
+                     return GetTypeWords(method_call -> Type());
+                 }
+                 else
+                 {
+                     assert(! method_call -> Type() -> Primitive());
+                     PutOp(OP_POP);
+                     return 0;
+                 }
              }
-        case Ast::ARRAY_ACCESS:             // if seen alone this will be as RHS
-             return EmitArrayAccessRhs((AstArrayAccess *) expression);
+        case Ast::ARRAY_ACCESS:         // if seen alone this will be as RHS
+             {
+                 // must evaluate, for potential Exception side effects
+                 int words = EmitArrayAccessRhs((AstArrayAccess *) expression);
+                 if (need_value)
+                 {
+                     return words;
+                 }
+                 else
+                 {
+                     assert(words == 1); // must be reference type
+                     PutOp(OP_POP);
+                     return 0;
+                 }
+             }
         case Ast::POST_UNARY:
+             assert(need_value && "increment can't qualify static member");
              return EmitPostUnaryExpression((AstPostUnaryExpression *) expression, true);
         case Ast::PRE_UNARY:
+             assert(need_value && "increment can't qualify static member");
              return EmitPreUnaryExpression((AstPreUnaryExpression *) expression, true);
         case Ast::CAST:
              {
                  AstCastExpression *cast_expression = (AstCastExpression *) expression;
+
+                 assert(need_value || ! cast_expression -> expression -> Type() -> Primitive());
 
                  //
                  // only primitive types require casting
                  //
                  return (cast_expression -> expression -> Type() -> Primitive()
                                           ? EmitCastExpression(cast_expression)
-                                          : EmitExpression(cast_expression -> expression));
+                                          : EmitExpression(cast_expression -> expression, need_value));
              }
         case Ast::CHECK_AND_CAST:
-             return EmitCastExpression((AstCastExpression *) expression);
+             {
+                 // must evaluate, for ClassCastException side effect
+                 int words = EmitCastExpression((AstCastExpression *) expression);
+                 if (need_value)
+                 {
+                     return words;
+                 }
+                 else
+                 {
+                     assert(words == 1); // must be reference type
+                     PutOp(OP_POP);
+                     return 0;
+                 }
+             }
         case Ast::BINARY:
-             return EmitBinaryExpression((AstBinaryExpression *) expression);
+             {
+                 // must evaluate for potential side effects
+                 int words = EmitBinaryExpression((AstBinaryExpression *) expression);
+                 if (need_value)
+                 {
+                     return words;
+                 }
+                 else
+                 {
+                     assert(((AstBinaryExpression *) expression) -> binary_tag == AstBinaryExpression::PLUS && words == 1); // must be string concat
+                     PutOp(OP_POP);
+                     return 0;
+                 }
+             }
         case Ast::CONDITIONAL:
-             return EmitConditionalExpression((AstConditionalExpression *) expression);
+             return EmitConditionalExpression((AstConditionalExpression *) expression, need_value);
         case Ast::ASSIGNMENT:
-             return EmitAssignmentExpression((AstAssignmentExpression *) expression, true);
+             return EmitAssignmentExpression((AstAssignmentExpression *) expression, need_value);
         case Ast::NULL_LITERAL:
-             PutOp(OP_ACONST_NULL);
-             return 1;
+             if (need_value)
+             {
+                 PutOp(OP_ACONST_NULL);
+                 return 1;
+             }
+             else
+             {
+                 return 0;
+             }
         default:
              assert(false && "unknown expression kind");
              break;
@@ -2958,18 +3042,11 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
                  break;
             case LHS_STATIC:
                  //
-                 // if the access is qualified by an arbitrary base
+                 // If the access is qualified by an arbitrary base
                  // expression, evaluate it for side effects.
                  //
                  if (left_hand_side -> FieldAccessCast())
-                 {
-                     AstExpression *base = left_hand_side -> FieldAccessCast() -> base;
-                     if (! base -> IsSimpleNameOrFieldAccess())
-                     {
-                         EmitExpression(base);
-                         PutOp(OP_POP);
-                     }
-                 }
+                     EmitExpression(((AstFieldAccess *) left_hand_side) -> base, false);
                  break;
             case LHS_METHOD:
                  if (! accessed_member -> ACC_STATIC()) // need to load address of object, obtained from resolution
@@ -2987,18 +3064,11 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression *assignment_expre
                      EmitExpression(field_expression -> base);
                  }
                  else if (left_hand_side -> FieldAccessCast())
-                 {
                      //
-                     // if the access is qualified by an arbitrary base
+                     // If the access is qualified by an arbitrary base
                      // expression, evaluate it for side effects.
                      //
-                     AstExpression *base = left_hand_side -> FieldAccessCast() -> base;
-                     if (! base -> IsSimpleNameOrFieldAccess())
-                     {
-                         EmitExpression(base);
-                         PutOp(OP_POP);
-                     }
-                 }
+                     EmitExpression(((AstFieldAccess *) left_hand_side) -> base, false);
                  break;
             case LHS_LOCAL:
                  break;
@@ -3718,15 +3788,16 @@ int ByteCode::EmitClassInstanceCreationExpression(AstClassInstanceCreationExpres
 }
 
 
-int ByteCode::EmitConditionalExpression(AstConditionalExpression *expression)
+int ByteCode::EmitConditionalExpression(AstConditionalExpression *expression,
+                                        bool need_value)
 {
     Label lab1,
           lab2;
     EmitBranchIfExpression(expression -> test_expression, false, lab1, 0);
-    EmitExpression(expression -> true_expression);
+    EmitExpression(expression -> true_expression, need_value);
     EmitBranch(OP_GOTO, lab2);
     DefineLabel(lab1);
-    EmitExpression(expression -> false_expression);
+    EmitExpression(expression -> false_expression, need_value);
     DefineLabel(lab2);
     CompleteLabel(lab1);
     CompleteLabel(lab2);
@@ -3735,18 +3806,36 @@ int ByteCode::EmitConditionalExpression(AstConditionalExpression *expression)
 }
 
 
-int ByteCode::EmitFieldAccess(AstFieldAccess *expression)
+int ByteCode::EmitFieldAccess(AstFieldAccess *expression, bool need_value)
 {
     assert(! expression -> IsConstant());
 
     AstExpression *base = expression -> base;
     VariableSymbol *sym = expression -> symbol -> VariableCast();
 
-    if (expression -> resolution_opt) // resolve reference to private field in parent
-        return EmitExpression(expression -> resolution_opt);
+    if (! sym) // must be a class or package name
+        return 0;
+
+    if (expression -> resolution_opt) // resolve reference to private field nested in same top-level class
+    {
+        //
+        // If the access is qualified by an arbitrary base
+        // expression, evaluate it for side effects.
+        // Normally, this will be done when evaluating the accessor method.
+        // However, if this is a static field, and need_value is false,
+        // the access will not have a side effect, so we can bypass it.
+        //
+        MethodSymbol *method = expression -> symbol -> MethodCast();
+        if (! need_value && method && ! method -> AccessesInstanceMember())
+            return EmitExpression(base, false);
+        else
+            return EmitExpression(expression -> resolution_opt, need_value);
+    }
 
     if (base -> Type() -> IsArray() && sym -> ExternalIdentity() == this_control.length_name_symbol)
     {
+        assert(need_value && "array.length cannot qualify static member");
+
         EmitExpression(base);
         PutOp(OP_ARRAYLENGTH);
 
@@ -3757,25 +3846,35 @@ int ByteCode::EmitFieldAccess(AstFieldAccess *expression)
     if (sym -> ACC_STATIC())
     {
         //
-        // if the access is qualified by an arbitrary base
+        // If the access is qualified by an arbitrary base
         // expression, evaluate it for side effects.
         //
-        if (! base -> IsSimpleNameOrFieldAccess())
+        EmitExpression(base, false);
+        if (need_value)
         {
-            EmitExpression(base);
-            PutOp(OP_POP);
+            PutOp(OP_GETSTATIC);
+            ChangeStack(this_control.IsDoubleWordType(expression_type) ? 2 : 1);
         }
-        PutOp(OP_GETSTATIC);
-        ChangeStack(this_control.IsDoubleWordType(expression_type) ? 2 : 1);
+        else
+        {
+            return 0;
+        }
     }
     else
     {
         EmitExpression(base); // get base
-        PutOp(OP_GETFIELD);
+        PutOp(OP_GETFIELD); // must evaluate, in case of NullPointerException
         ChangeStack(this_control.IsDoubleWordType(expression_type) ? 1 : 0);
     }
 
     PutU2(RegisterFieldref(VariableTypeResolution(expression, sym), sym));
+
+    if (! need_value)
+    {
+        assert(! expression_type -> Primitive());
+        PutOp(OP_POP);
+        return 0;
+    }
 
     return GetTypeWords(expression_type);
 }
@@ -3797,22 +3896,16 @@ void ByteCode::EmitMethodInvocation(AstMethodInvocation *expression)
     if (msym -> ACC_STATIC())
     {
         //
-        // if the access is qualified by an arbitrary base
+        // If the access is qualified by an arbitrary base
         // expression, evaluate it for side effects.
-        // Notice that accessor methods, which are always static, already
-        // evaluate the base expression.
+        // Notice that accessor methods, which are always static, might
+        // access an instance method, in which case the base expression
+        // will already be evaluated as the first parameter.
         //
-        AstFieldAccess *field = expression -> resolution_opt ||
-            (msym -> accessed_member &&
-             msym -> accessed_member -> VariableCast() &&
-             (! msym -> accessed_member -> VariableCast() -> ACC_STATIC()))
-            ? NULL
+        AstFieldAccess *field = msym -> AccessesInstanceMember() ? NULL
             : method_call -> method -> FieldAccessCast();
-        if (field && ! field -> base -> IsSimpleNameOrFieldAccess())
-        {
-            EmitExpression(field -> base);
-            PutOp(OP_POP);
-        }        
+        if (field)
+            EmitExpression(field -> base, false);
     }
     else
     {
@@ -4994,18 +5087,11 @@ int ByteCode::LoadVariable(int kind, AstExpression *expr)
                  if (sym -> ACC_STATIC())
                  {
                      //
-                     // if the access is qualified by an arbitrary base
+                     // If the access is qualified by an arbitrary base
                      // expression, evaluate it for side effects.
                      //
                      if (expr -> FieldAccessCast())
-                     {
-                         AstExpression *base = expr -> FieldAccessCast() -> base;
-                         if (! base -> IsSimpleNameOrFieldAccess())
-                         {
-                             EmitExpression(base);
-                             PutOp(OP_POP);
-                         }
-                     }
+                         EmitExpression(((AstFieldAccess *) expr) -> base, false);
 
                      PutOp(OP_GETSTATIC);
                      ChangeStack(GetTypeWords(expression_type));
@@ -5057,14 +5143,10 @@ void ByteCode::LoadReference(AstExpression *expression)
         if (sym -> ACC_STATIC())
         {
             //
-            // if the access is qualified by an arbitrary base
+            // If the access is qualified by an arbitrary base
             // expression, evaluate it for side effects.
             //
-            if (! field_access -> base -> IsSimpleNameOrFieldAccess())
-            {
-                EmitExpression(field_access -> base);
-                PutOp(OP_POP);
-            }
+            EmitExpression(field_access -> base, false);
 
             PutOp(OP_GETSTATIC);
             ChangeStack(1);

@@ -672,15 +672,15 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     //
     // Methods to generate expressions.
     //
-    int  EmitExpression(AstExpression *);
+    int  EmitExpression(AstExpression *, bool = true);
     int  EmitArrayCreationExpression(AstArrayCreationExpression *);
     int  EmitAssignmentExpression(AstAssignmentExpression *, bool);
     int  EmitBinaryExpression(AstBinaryExpression *);
     int  EmitCastExpression(AstCastExpression *);
     void EmitCast(TypeSymbol *, TypeSymbol *);
     int  EmitClassInstanceCreationExpression(AstClassInstanceCreationExpression *, bool);
-    int  EmitConditionalExpression(AstConditionalExpression *);
-    int  EmitFieldAccess(AstFieldAccess *);
+    int  EmitConditionalExpression(AstConditionalExpression *, bool);
+    int  EmitFieldAccess(AstFieldAccess *, bool = true);
     AstExpression *VariableExpressionResolution(AstExpression *);
     TypeSymbol *VariableTypeResolution(AstExpression *, VariableSymbol *);
     TypeSymbol *MethodTypeResolution(AstExpression *, MethodSymbol *);

@@ -1,3 +1,21 @@
+2001-09-09  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/bytecode.h:
+	* src/bytecode.cpp (EmitExpression)
+	(EmitConditionalExpression, EmitFieldAccess):
+	Added the flag need_value, for optimal code
+	generation when a qualifying expression	to a static
+	reference is encountered - patch 90, from bug 435.
+	* src/bytecode.cpp (EmitStatementExpression): 
+	Removed case Ast::PARENTHESIZED_EXPRESSION, since
+	the JLS forbids them as statements.
+	(EmitAssignmentExpression, EmitFieldAccess)
+	(EmitMethodInvocation, LoadVariable, LoadReference):
+	Update to use added need_value flags.
+	* src/symbol.h (AccessesInstanceMember): 
+	Added a method for easier detection when a static
+	accessor method is accessing an instance member.
+
 2001-09-08  Gregory Steuck  <greg@nest.cx>
 	    Andrew M. Inggs  <aminggs@yahoo.co.uk>
 	    Eric Blake  <ebb9@email.byu.edu>
