@@ -127,88 +127,87 @@ public:
             FindPathsToDirectory(io_package);
             Serializable_type = GetType(io_package, US_Serializable);
         }
-
         return Serializable_type;
     }
 
     inline TypeSymbol* Object()
     {
-        return (Object_type ? Object_type
-                : Object_type = GetType(system_package, US_Object));
+        return Object_type ? Object_type
+            : Object_type = GetType(system_package, US_Object);
     }
 
     MethodSymbol* Object_getClassMethod();
 
     inline TypeSymbol* Cloneable()
     {
-        return (Cloneable_type ? Cloneable_type
-                : Cloneable_type = GetType(system_package, US_Cloneable));
+        return Cloneable_type ? Cloneable_type
+            : Cloneable_type = GetType(system_package, US_Cloneable);
     }
 
     inline TypeSymbol* String()
     {
-        return (String_type ? String_type
-                : String_type = GetType(system_package, US_String));
+        return String_type ? String_type
+            : String_type = GetType(system_package, US_String);
     }
 
     inline TypeSymbol* Void()
     {
-        return (Void_type ? Void_type
-                : Void_type = GetType(system_package, US_Void));
+        return Void_type ? Void_type
+            : Void_type = GetType(system_package, US_Void);
     }
 
     inline TypeSymbol* Boolean()
     {
-        return (Boolean_type ? Boolean_type
-                : Boolean_type = GetType(system_package, US_Boolean));
+        return Boolean_type ? Boolean_type
+            : Boolean_type = GetType(system_package, US_Boolean);
     }
 
     inline TypeSymbol* Byte()
     {
-        return (Byte_type ? Byte_type
-                : Byte_type = GetType(system_package, US_Byte));
+        return Byte_type ? Byte_type
+            : Byte_type = GetType(system_package, US_Byte);
     }
 
     inline TypeSymbol* Short()
     {
-        return (Short_type ? Short_type
-                : Short_type = GetType(system_package, US_Short));
+        return Short_type ? Short_type
+            : Short_type = GetType(system_package, US_Short);
     }
 
     inline TypeSymbol* Character()
     {
-        return (Character_type ? Character_type
-                : Character_type = GetType(system_package, US_Character));
+        return Character_type ? Character_type
+            : Character_type = GetType(system_package, US_Character);
     }
 
     inline TypeSymbol* Integer()
     {
-        return (Integer_type ? Integer_type
-                : Integer_type = GetType(system_package, US_Integer));
+        return Integer_type ? Integer_type
+            : Integer_type = GetType(system_package, US_Integer);
     }
 
     inline TypeSymbol* Long()
     {
-        return (Long_type ? Long_type
-                : Long_type = GetType(system_package, US_Long));
+        return Long_type ? Long_type
+            : Long_type = GetType(system_package, US_Long);
     }
 
     inline TypeSymbol* Float()
     {
-        return (Float_type ? Float_type
-                : Float_type = GetType(system_package, US_Float));
+        return Float_type ? Float_type
+            : Float_type = GetType(system_package, US_Float);
     }
 
     inline TypeSymbol* Double()
     {
-        return (Double_type ? Double_type
-                : Double_type = GetType(system_package, US_Double));
+        return Double_type ? Double_type
+            : Double_type = GetType(system_package, US_Double);
     }
 
     inline TypeSymbol* Comparable()
     {
-        return (Comparable_type ? Comparable_type
-                : Comparable_type = GetType(system_package, US_Comparable));
+        return Comparable_type ? Comparable_type
+            : Comparable_type = GetType(system_package, US_Comparable);
     }
 
     void InitAssertionErrorInfo();
@@ -219,7 +218,6 @@ public:
             AssertionError_type = GetType(system_package, US_AssertionError);
             InitAssertionErrorInfo();
         }
-
         return AssertionError_type;
     }
 
@@ -287,7 +285,6 @@ public:
             Class_type = GetType(system_package, US_Class);
             InitClassInfo();
         }
-
         return Class_type;
     }
 
@@ -321,7 +318,6 @@ public:
             Throwable_type = GetType(system_package, US_Throwable);
             InitThrowableInfo();
         }
-
         return Throwable_type;
     }
 
@@ -341,28 +337,28 @@ public:
 
     inline TypeSymbol* Exception()
     {
-        return (Exception_type ? Exception_type
-                : Exception_type = GetType(system_package, US_Exception));
+        return Exception_type ? Exception_type
+            : Exception_type = GetType(system_package, US_Exception);
     }
 
     inline TypeSymbol* RuntimeException()
     {
-        return (RuntimeException_type ? RuntimeException_type
-                : RuntimeException_type = GetType(system_package,
-                                                  US_RuntimeException));
+        return RuntimeException_type ? RuntimeException_type
+            : RuntimeException_type = GetType(system_package,
+                                              US_RuntimeException);
     }
 
     inline TypeSymbol* ClassNotFoundException()
     {
-        return (ClassNotFoundException_type ? ClassNotFoundException_type
-                : (ClassNotFoundException_type =
-                   GetType(system_package, US_ClassNotFoundException)));
+        return ClassNotFoundException_type ? ClassNotFoundException_type
+            : (ClassNotFoundException_type =
+               GetType(system_package, US_ClassNotFoundException));
     }
 
     inline TypeSymbol* Error()
     {
-        return (Error_type ? Error_type
-                : Error_type = GetType(system_package, US_Error));
+        return Error_type ? Error_type
+            : Error_type = GetType(system_package, US_Error);
     }
 
     void InitNoClassDefFoundErrorInfo();
@@ -374,7 +370,6 @@ public:
                 GetType(system_package, US_NoClassDefFoundError);
             InitNoClassDefFoundErrorInfo();
         }
-
         return NoClassDefFoundError_type;
     }
 
@@ -401,7 +396,6 @@ public:
                 GetType(system_package, US_StringBuffer);
             InitStringBufferInfo();
         }
-
         return StringBuffer_type;
     }
 
@@ -515,14 +509,13 @@ public:
     Control(char**, Option&);
     ~Control();
 
-    Utf8LiteralValue* ConvertUnicodeToUtf8(wchar_t* source)
+    Utf8LiteralValue* ConvertUnicodeToUtf8(const wchar_t* source)
     {
         // Should be big enough for the worst case.
         char* target = new char[wcslen(source) * 3 + 1];
         int length = ConvertUnicodeToUtf8(source, target);
         Utf8LiteralValue* literal = Utf8_pool.FindOrInsert(target, length);
         delete [] target;
-
         return literal;
     }
 
@@ -534,7 +527,6 @@ public:
         int name_length = ConvertUtf8ToUnicode(name, source, length);
         NameSymbol* name_symbol = FindOrInsertName(name, name_length);
         delete [] name;
-
         return name_symbol;
     }
 
@@ -565,7 +557,6 @@ public:
         if (! name_symbol -> Utf8_literal)
             name_symbol -> Utf8_literal =
                 ConvertUnicodeToUtf8(name_symbol -> Name());
-
         return name_symbol;
     }
 
@@ -575,11 +566,9 @@ public:
     NameSymbol* MakeParameter(int num)
     {
         IntToWstring value(num);
-
         wchar_t str[13];
         str[0] = U_DOLLAR; // '$'
         wcscpy(&str[1], value.String());
-
         return FindOrInsertName(str, value.Length() + 1);
     }
 
@@ -598,18 +587,18 @@ public:
 
     inline bool IsSimpleIntegerValueType(TypeSymbol* type)
     {
-        return (type == byte_type || type == short_type ||
-                type == int_type || type == char_type);
+        return type == byte_type || type == short_type ||
+            type == int_type || type == char_type;
     }
 
     inline bool IsIntegral(TypeSymbol* type)
     {
-        return (IsSimpleIntegerValueType(type) || type == long_type);
+        return IsSimpleIntegerValueType(type) || type == long_type;
     }
 
     inline bool IsFloatingPoint(TypeSymbol* type)
     {
-        return (type == float_type || type == double_type);
+        return type == float_type || type == double_type;
     }
 
     inline bool IsNumeric(TypeSymbol* type)
@@ -619,12 +608,12 @@ public:
 
     inline bool IsDoubleWordType(TypeSymbol* type)
     {
-        return (type == long_type || type == double_type);
+        return type == long_type || type == double_type;
     }
 
     inline bool IsPrimitive(TypeSymbol* type)
     {
-        return (IsNumeric(type) || type == boolean_type);
+        return IsNumeric(type) || type == boolean_type;
     }
 
     inline void ProcessBadType(TypeSymbol* type_symbol)
@@ -707,7 +696,7 @@ private:
     MethodSymbol* StringBuffer_append_string_method;
     MethodSymbol* StringBuffer_append_object_method;
 
-    static int ConvertUnicodeToUtf8(wchar_t*, char*);
+    static int ConvertUnicodeToUtf8(const wchar_t*, char*);
 
     void ProcessGlobals();
     void ProcessUnnamedPackage();

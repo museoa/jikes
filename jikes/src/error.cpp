@@ -833,8 +833,7 @@ static void FormatClasspath(ErrorString& s, Control& control)
     for (int i = 1; i < control.classpath.Length(); i++)
     {
         PathSymbol* path_symbol = control.classpath[i];
-        wchar_t* path = path_symbol -> Name();
-        s << "                " << path << endl;
+        s << "                " << path_symbol -> Name() << endl;
     }
 }
 

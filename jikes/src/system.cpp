@@ -24,7 +24,7 @@ namespace Jikes { // Open namespace Jikes block
 // representation pointed to by target. The char string target is presumed
 // to have been allocated and to be large enough to accomodate the conversion.
 //
-int Control::ConvertUnicodeToUtf8(wchar_t* source, char* target)
+int Control::ConvertUnicodeToUtf8(const wchar_t* source, char* target)
 {
     int length = 0;
 

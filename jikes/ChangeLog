@@ -1,3 +1,22 @@
+2002-12-10  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/ast.cpp:
+	* src/ast.h:
+	* src/control.h:
+	* src/diagnose.cpp:
+	* src/error.cpp:
+	* src/expr.cpp:
+	* src/jikesapi.cpp:
+	* src/lookup.cpp:
+	* src/lookup.h:
+	* src/parser.cpp:
+	* src/segment.cpp:
+	* src/symbol.cpp:
+	* src/symbol.h:
+	* src/system.cpp:
+	* src/tuple.h: Silence HP compiler warnings introduced in prior
+	patch. Also, change memmove to more efficient memcpy where legal.
+
 2002-12-09  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/ast.h (AstName): Another back-port from generics-branch.

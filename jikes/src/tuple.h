@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1998, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1998, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -80,10 +80,11 @@ protected:
 
             if (old_base != NULL)
             {
-                memmove(base, old_base, old_base_size * sizeof(T *));
+                memcpy(base, old_base, old_base_size * sizeof(T*));
                 delete [] old_base;
             }
-            memset(&base[old_base_size], 0, (base_size - old_base_size) * sizeof(T *));
+            memset(&base[old_base_size], 0,
+                   (base_size - old_base_size) * sizeof(T*));
         }
 
         //
@@ -340,12 +341,15 @@ public:
                 n = (Tuple<T>::top - 1) >> Tuple<T>::log_blksize; // the last non-empty slot!
             while (i < n)
             {
-                memmove(&array[processed_size], Tuple<T>::base[i] + processed_size, Tuple<T>::Blksize() * sizeof(T));
+                memcpy(&array[processed_size],
+                       Tuple<T>::base[i] + processed_size,
+                       Tuple<T>::Blksize() * sizeof(T));
                 delete [] (Tuple<T>::base[i] + processed_size);
                 i++;
                 processed_size += Tuple<T>::Blksize();
             }
-            memmove(&array[processed_size], Tuple<T>::base[n] + processed_size, (Tuple<T>::top - processed_size) * sizeof(T));
+            memcpy(&array[processed_size], Tuple<T>::base[n] + processed_size,
+                   (Tuple<T>::top - processed_size) * sizeof(T));
             delete [] (Tuple<T>::base[n] + processed_size);
             delete [] Tuple<T>::base;
             Tuple<T>::base = NULL;

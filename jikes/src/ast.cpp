@@ -58,7 +58,7 @@ void VariableSymbolArray::AllocateMoreSpace()
 
         if (old_base != NULL)
         {
-            memmove(base, old_base, old_base_size * sizeof(T*));
+            memcpy(base, old_base, old_base_size * sizeof(T*));
         }
         memset(&base[old_base_size], 0,
                (base_size - old_base_size) * sizeof(T*));

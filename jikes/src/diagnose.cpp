@@ -27,45 +27,45 @@ void DiagnoseParser::ReallocateStacks()
 
     assert(stack_length <= SHRT_MAX);
 
-    int *old_stack = stack;
-    stack = (int *) memmove(new int[stack_length], stack,
-                            old_stack_length * sizeof(int));
+    int* old_stack = stack;
+    stack = (int*) memcpy(new int[stack_length], stack,
+                          old_stack_length * sizeof(int));
     delete [] old_stack;
 
-    Location *old_location_stack = location_stack;
-    location_stack = (Location *) memmove(new Location[stack_length],
-                                          location_stack,
-                                          old_stack_length * sizeof(Location));
+    Location* old_location_stack = location_stack;
+    location_stack = (Location*) memcpy(new Location[stack_length],
+                                        location_stack,
+                                        old_stack_length * sizeof(Location));
     delete [] old_location_stack;
 
-    Ast **old_parse_stack = parse_stack;
-    parse_stack = (Ast **) memmove(new Ast *[stack_length], parse_stack,
-                                   old_stack_length * sizeof(Ast *));
+    Ast** old_parse_stack = parse_stack;
+    parse_stack = (Ast**) memcpy(new Ast*[stack_length], parse_stack,
+                                 old_stack_length * sizeof(Ast*));
     delete [] old_parse_stack;
 
-    int *old_temp_stack = temp_stack;
-    temp_stack = (int *) memmove(new int[stack_length], temp_stack,
-                                 old_stack_length * sizeof(int));
+    int* old_temp_stack = temp_stack;
+    temp_stack = (int*) memcpy(new int[stack_length], temp_stack,
+                               old_stack_length * sizeof(int));
     delete [] old_temp_stack;
 
-    int *old_next_stack = next_stack;
-    next_stack = (int *) memmove(new int[stack_length], next_stack,
-                                 old_stack_length * sizeof(int));
+    int* old_next_stack = next_stack;
+    next_stack = (int*) memcpy(new int[stack_length], next_stack,
+                               old_stack_length * sizeof(int));
     delete [] old_next_stack;
 
-    int *old_prev_stack = prev_stack;
-    prev_stack = (int *) memmove(new int[stack_length], prev_stack,
-                                 old_stack_length * sizeof(int));
+    int* old_prev_stack = prev_stack;
+    prev_stack = (int*) memcpy(new int[stack_length], prev_stack,
+                               old_stack_length * sizeof(int));
     delete [] old_prev_stack;
 
-    int *old_scope_index = scope_index;
-    scope_index = (int *) memmove(new int[stack_length], scope_index,
-                                  old_stack_length * sizeof(int));
+    int* old_scope_index = scope_index;
+    scope_index = (int*) memcpy(new int[stack_length], scope_index,
+                                old_stack_length * sizeof(int));
     delete [] old_scope_index;
 
-    int *old_scope_position = scope_position;
-    scope_position = (int *) memmove(new int[stack_length], scope_position,
-                                     old_stack_length * sizeof(int));
+    int* old_scope_position = scope_position;
+    scope_position = (int*) memcpy(new int[stack_length], scope_position,
+                                   old_stack_length * sizeof(int));
     delete [] old_scope_position;
 }
 

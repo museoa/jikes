@@ -4365,7 +4365,7 @@ private:
 
             if (old_base != NULL)
             {
-                memmove(base, old_base, old_base_size * sizeof(Cell*));
+                memcpy(base, old_base, old_base_size * sizeof(Cell*));
                 delete [] old_base;
             }
             memset(&base[old_base_size], 0,
@@ -6401,7 +6401,7 @@ void AstArray<T>::AllocateMoreSpace()
         base = (T**) pool -> Alloc(sizeof(T*) * base_size);
 
         if (old_base != NULL)
-            memmove(base, old_base, old_base_size * sizeof(T*));
+            memcpy(base, old_base, old_base_size * sizeof(T*));
         memset(&base[old_base_size], 0,
                (base_size - old_base_size) * sizeof(T*));
     }

@@ -465,7 +465,7 @@ void Semantic::ReportConstructorNotFound(Ast* ast, TypeSymbol* type)
     //
     // Give up. We didn't find it.
     //
-    wchar_t* name = type -> Name();
+    const wchar_t* name = type -> Name();
     int length = type -> NameLength();
 
     for (unsigned i = 0; i < num_arguments; i++)
@@ -481,7 +481,7 @@ void Semantic::ReportConstructorNotFound(Ast* ast, TypeSymbol* type)
     wchar_t* header = new wchar_t[length + 3];
     wchar_t* s = header;
 
-    for (wchar_t* s2 = name; *s2; s2++)
+    for (const wchar_t* s2 = name; *s2; s2++)
         *s++ = *s2;
     *s++ = U_LEFT_PARENTHESIS;
     if (num_arguments > 0)
@@ -504,7 +504,7 @@ void Semantic::ReportConstructorNotFound(Ast* ast, TypeSymbol* type)
                 *s++ = U_DOT;
             }
 
-            for (wchar_t* s2 = arg_type -> ExternalName(); *s2; s2++)
+            for (const wchar_t* s2 = arg_type -> ExternalName(); *s2; s2++)
                 *s++ = (*s2 == U_DOLLAR ? (wchar_t) U_DOT : *s2);
             *s++ = U_COMMA;
             *s++ = U_SPACE;

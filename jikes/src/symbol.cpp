@@ -94,10 +94,11 @@ wchar_t* MethodSymbol::Header()
 
         header = new wchar_t[length + 1]; // +1 for '\0'
         wchar_t* s = header;
+        const wchar_t* s2;
 
         if (is_constructor)
         {
-            for (wchar_t* s2 = containing_type -> Name(); *s2; s2++)
+            for (s2 = containing_type -> Name(); *s2; s2++)
                  *s++ = *s2;
         }
         else
@@ -116,11 +117,11 @@ wchar_t* MethodSymbol::Header()
                 *s++ = U_DOT;
             }
 
-            for (wchar_t* s2 = Type() -> ExternalName(); *s2; s2++)
+            for (s2 = Type() -> ExternalName(); *s2; s2++)
                  *s++ = *s2;
             *s++ = U_SPACE;
-            for (wchar_t* s3 = Name(); *s3; s3++)
-                 *s++ = *s3;
+            for (s2 = Name(); *s2; s2++)
+                 *s++ = *s2;
         }
         *s++ = U_LEFT_PARENTHESIS;
         if (NumFormalParameters() > 0)
@@ -144,14 +145,13 @@ wchar_t* MethodSymbol::Header()
                     *s++ = U_DOT;
                 }
 
-                for (wchar_t* s2 = formal -> Type() -> ExternalName(); *s2;
-                     s2++)
+                for (s2 = formal -> Type() -> ExternalName(); *s2; s2++)
                 {
                     *s++ = *s2;
                 }
                 *s++ = U_SPACE;
-                for (wchar_t* s3 = formal -> Name(); *s3; s3++)
-                     *s++ = *s3;
+                for (s2 = formal -> Name(); *s2; s2++)
+                     *s++ = *s2;
                 *s++ = U_COMMA;
                 *s++ = U_SPACE;
             }
@@ -210,7 +210,7 @@ wchar_t* MethodSymbol::Header()
                     *s++ = U_DOT;
                 }
 
-                for (wchar_t* s2 = exception -> ExternalName(); *s2; s2++)
+                for (s2 = exception -> ExternalName(); *s2; s2++)
                     *s++ = *s2;
                 *s++ = U_COMMA;
             }
@@ -223,7 +223,6 @@ wchar_t* MethodSymbol::Header()
 
         assert((s - header) <= length);
     }
-
     return header;
 }
 
@@ -434,7 +433,7 @@ void TypeSymbol::SetSignature(Control& control)
     else
     {
         const wchar_t* package_name = ContainingPackageName();
-        wchar_t* type_name = ExternalName();
+        const wchar_t* type_name = ExternalName();
 
         // +1 for 'L' +1 for '/' +1 for ';' +1 for '\0'
         int len = ContainingPackage() -> PackageNameLength() +
@@ -825,7 +824,6 @@ void DirectorySymbol::ResetDirectory()
 
     delete entries;
     entries = NULL;
-
     ReadDirectory();
 }
 
@@ -937,8 +935,8 @@ void DirectorySymbol::ReadDirectory()
 
 DirectorySymbol* FileSymbol::OutputDirectory()
 {
-    return (output_directory ? output_directory
-            : output_directory = Control::GetOutputDirectory(this));
+    return output_directory ? output_directory
+        : output_directory = Control::GetOutputDirectory(this);
 }
 
 
@@ -978,12 +976,12 @@ void FileSymbol::SetFileName()
 #ifdef UNIX_FILE_SYSTEM
 bool FileSymbol::IsClassSuffix(char* suffix)
 {
-    return (strncmp(suffix, class_suffix, class_suffix_length) == 0);
+    return strncmp(suffix, class_suffix, class_suffix_length) == 0;
 }
 
 bool FileSymbol::IsJavaSuffix(char* suffix)
 {
-    return (strncmp(suffix, java_suffix, java_suffix_length) == 0);
+    return strncmp(suffix, java_suffix, java_suffix_length) == 0;
 }
 #elif defined(WIN32_FILE_SYSTEM)
 bool FileSymbol::IsClassSuffix(char* suffix)
@@ -1451,7 +1449,6 @@ bool TypeSymbol::HasProtectedAccessTo(TypeSymbol* target_type)
                 return true;
         }
     }
-
     return false;
 }
 
@@ -1479,7 +1476,6 @@ VariableSymbol* TypeSymbol::InsertThis0()
     variable_symbol -> MarkSynthetic();
 
     enclosing_instance = variable_symbol;
-
     return variable_symbol;
 }
 
@@ -1549,7 +1545,6 @@ MethodSymbol* TypeSymbol::FindOrInsertClassLiteralMethod(Control& control)
         class_literal_method -> SetSignature(control);
         semantic_environment -> sem -> AddDependence(this, control.Class());
     }
-
     return class_literal_method;
 }
 
@@ -1568,7 +1563,6 @@ Utf8LiteralValue* TypeSymbol::FindOrInsertClassLiteralName(Control& control)
         class_literal_name = control.Utf8_pool.FindOrInsert(name, length);
         delete [] name;
     }
-
     return class_literal_name;
 }
 
@@ -1665,7 +1659,6 @@ VariableSymbol* TypeSymbol::FindOrInsertClassLiteral(TypeSymbol* type)
 
         owner -> AddClassLiteral(variable_symbol);
     }
-
     return variable_symbol;
 }
 
@@ -1703,7 +1696,6 @@ VariableSymbol* TypeSymbol::FindOrInsertAssertVariable()
         //
         sem -> GetStaticInitializerMethod();
     }
-
     return assert_variable;
 }
 
@@ -1798,7 +1790,6 @@ VariableSymbol* TypeSymbol::FindOrInsertLocalShadow(VariableSymbol* local)
          accessed = accessed -> accessed_local);
     assert(accessed);
 #endif // JIKES_DEBUG
-
     return variable;
 }
 
@@ -2079,7 +2070,6 @@ MethodSymbol* TypeSymbol::GetReadAccessMethod(MethodSymbol* member,
 
         delete [] name;
     }
-
     return read_method;
 }
 
@@ -2282,7 +2272,6 @@ MethodSymbol* TypeSymbol::GetReadAccessConstructor(MethodSymbol* ctor)
         read_method -> accessed_member = ctor;
         MapSymbolToReadMethod(ctor, this, read_method);
     }
-
     return read_method;
 }
 
@@ -2441,7 +2430,6 @@ MethodSymbol* TypeSymbol::GetReadAccessMethod(VariableSymbol* member,
 
         delete [] name;
     }
-
     return read_method;
 }
 
@@ -2626,7 +2614,6 @@ MethodSymbol* TypeSymbol::GetWriteAccessMethod(VariableSymbol* member,
 
         delete [] name;
     }
-
     return write_method;
 }
 

@@ -53,8 +53,8 @@ public:
     PathSymbol(NameSymbol*);
     virtual ~PathSymbol();
 
-    virtual wchar_t* Name() { return name_symbol -> Name(); }
-    virtual size_t NameLength() { return name_symbol -> NameLength(); }
+    virtual const wchar_t* Name() { return name_symbol -> Name(); }
+    virtual unsigned NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol* Identity() { return name_symbol; }
     char* Utf8Name()
     {
@@ -88,8 +88,8 @@ public:
     DirectorySymbol(NameSymbol*, Symbol*, bool source_dir_only);
     virtual ~DirectorySymbol();
 
-    virtual wchar_t* Name() { return name_symbol -> Name(); }
-    virtual size_t NameLength() { return name_symbol -> NameLength(); }
+    virtual const wchar_t* Name() { return name_symbol -> Name(); }
+    virtual unsigned NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol* Identity() { return name_symbol; }
     char* Utf8Name()
     {
@@ -140,7 +140,7 @@ public:
             SetDirectoryName();
         return directory_name;
     }
-    inline size_t DirectoryNameLength()
+    inline unsigned DirectoryNameLength()
     {
         if (! directory_name)
             SetDirectoryName();
@@ -166,7 +166,7 @@ private:
 
     DirectoryTable* entries;
     char* directory_name;
-    size_t directory_name_length;
+    unsigned directory_name_length;
 
     bool source_dir_only;
 };
@@ -184,7 +184,7 @@ private:
 
     DirectorySymbol* output_directory;
     char* file_name;
-    size_t file_name_length;
+    unsigned file_name_length;
     Utf8LiteralValue* file_name_literal;
 
 public:
@@ -243,8 +243,8 @@ public:
         return clone;
     }
 
-    virtual wchar_t* Name() { return name_symbol -> Name(); }
-    virtual size_t NameLength() { return name_symbol -> NameLength(); }
+    virtual const wchar_t* Name() { return name_symbol -> Name(); }
+    virtual unsigned NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol* Identity() { return name_symbol; }
     char* Utf8Name()
     {
@@ -375,8 +375,8 @@ public:
 
     virtual ~PackageSymbol();
 
-    virtual wchar_t* Name() { return name_symbol -> Name(); }
-    virtual size_t NameLength() { return name_symbol -> NameLength(); }
+    virtual const wchar_t* Name() { return name_symbol -> Name(); }
+    virtual unsigned NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol* Identity() { return name_symbol; }
     char* Utf8Name()
     {
@@ -420,7 +420,7 @@ private:
     inline SymbolTable* Table();
 
     wchar_t* package_name;
-    size_t package_name_length;
+    unsigned package_name_length;
 };
 
 
@@ -443,8 +443,8 @@ public:
     Symbol* accessed_member;
     inline bool AccessesStaticMember();
 
-    virtual wchar_t* Name() { return name_symbol -> Name(); }
-    virtual size_t NameLength() { return name_symbol -> NameLength(); }
+    virtual const wchar_t* Name() { return name_symbol -> Name(); }
+    virtual unsigned NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol* Identity() { return name_symbol; }
     char* Utf8Name()
     {
@@ -562,7 +562,7 @@ public:
     {
         return external_name_symbol ? external_name_symbol : name_symbol;
     }
-    wchar_t* ExternalName()
+    const wchar_t* ExternalName()
     {
         return external_name_symbol ? external_name_symbol -> Name()
             : name_symbol -> Name();
@@ -848,8 +848,8 @@ public:
     MethodSymbol* instance_initializer_method;
     MethodSymbol* static_initializer_method;
 
-    virtual wchar_t* Name() { return name_symbol -> Name(); }
-    virtual size_t NameLength() { return name_symbol -> NameLength(); }
+    virtual const wchar_t* Name() { return name_symbol -> Name(); }
+    virtual unsigned NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol* Identity() { return name_symbol; }
     char* Utf8Name()
     {
@@ -871,7 +871,7 @@ public:
     {
         return external_name_symbol ? external_name_symbol : name_symbol;
     }
-    wchar_t* ExternalName()
+    const wchar_t* ExternalName()
     {
         return external_name_symbol ? external_name_symbol -> Name()
             : name_symbol -> Name();
@@ -1358,8 +1358,8 @@ public:
 
     VariableSymbol* accessed_local;
 
-    virtual wchar_t* Name() { return name_symbol -> Name(); }
-    virtual size_t NameLength() { return name_symbol -> NameLength(); }
+    virtual const wchar_t* Name() { return name_symbol -> Name(); }
+    virtual unsigned NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol* Identity() { return name_symbol; }
     char* Utf8Name()
     {
@@ -1380,7 +1380,7 @@ public:
     {
         return external_name_symbol ? external_name_symbol : name_symbol;
     }
-    wchar_t* ExternalName()
+    const wchar_t* ExternalName()
     {
         return external_name_symbol ? external_name_symbol -> Name()
             : name_symbol -> Name();
@@ -1542,8 +1542,8 @@ public:
 
     unsigned nesting_level;
 
-    virtual wchar_t* Name() { return name_symbol -> Name(); }
-    virtual size_t NameLength() { return name_symbol -> NameLength(); }
+    virtual const wchar_t* Name() { return name_symbol -> Name(); }
+    virtual unsigned NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol* Identity() { return name_symbol; }
     char* Utf8Name()
     {

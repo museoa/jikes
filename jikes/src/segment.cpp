@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -62,12 +62,12 @@ u2 &Pair::operator[](const int target)
 
         if (old_base != NULL)
         {
-            memmove(base, old_base, old_base_size * sizeof(PairSegment *));
+            memcpy(base, old_base, old_base_size * sizeof(PairSegment*));
             delete [] old_base;
         }
 
         memset(&base[old_base_size], 0,
-               (base_size - old_base_size) * sizeof(PairSegment *));
+               (base_size - old_base_size) * sizeof(PairSegment*));
     }
 
     if (! base[k])
@@ -122,7 +122,7 @@ u2 &Triplet::Image(const int target, const int target2)
 
         if (old_base != NULL)
         {
-            memmove(base, old_base, old_base_size * sizeof(TripletSegment *));
+            memcpy(base, old_base, old_base_size * sizeof(TripletSegment*));
             delete [] old_base;
         }
 

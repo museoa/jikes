@@ -286,7 +286,7 @@ public:
     };
 
     SymbolKind Kind() { return _kind; }
-    virtual wchar_t* Name()   { return NULL; }
+    virtual const wchar_t* Name() { return NULL; }
     virtual unsigned NameLength() { return 0; }
     virtual NameSymbol* Identity() { return NULL; }
     inline unsigned HashCode();
@@ -425,7 +425,7 @@ public:
     int index;
     Utf8LiteralValue* Utf8_literal;
 
-    virtual wchar_t* Name()   { return name_; }
+    virtual const wchar_t* Name()   { return name_; }
     virtual unsigned NameLength() { return length; }
     virtual NameSymbol* Identity() { return this; }
     char* Utf8Name()
@@ -542,7 +542,7 @@ class LiteralSymbol : public Symbol
 public:
     LiteralValue* value;
 
-    virtual wchar_t* Name()   { return name_; }
+    virtual const wchar_t* Name()   { return name_; }
     virtual unsigned NameLength() { return length; }
     virtual NameSymbol* Identity() { return NULL; }
 

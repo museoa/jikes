@@ -295,7 +295,7 @@ void DirectoryTable::InsertCaseInsensitiveEntry(DirectoryEntry* image)
         // allowable size for a base, reallocate a larger base and rehash
         // the elements.
         //
-        if (entry_pool.Length() > (hash_size << 1) &&
+        if (entry_pool.Length() > (int) (hash_size << 1) &&
             hash_size < MAX_HASH_SIZE)
         {
             Rehash();
@@ -533,7 +533,7 @@ IntLiteralTable::~IntLiteralTable()
 
 LiteralValue* IntLiteralTable::FindOrInsertChar(LiteralSymbol* literal)
 {
-    wchar_t* name = literal -> Name() + 1;
+    const wchar_t* name = literal -> Name() + 1;
     int len = literal -> NameLength() - 2; // discard ''
 
     if (len <= 0) // An isolated or unterminated quote.
@@ -589,8 +589,8 @@ LiteralValue* IntLiteralTable::FindOrInsertChar(LiteralSymbol* literal)
 
 LiteralValue* IntLiteralTable::FindOrInsertHexInt(LiteralSymbol* literal)
 {
-    wchar_t* head = literal -> Name() + 1; // point to X
-    wchar_t* tail = &literal -> Name()[literal -> NameLength() - 1];
+    const wchar_t* head = literal -> Name() + 1; // point to X
+    const wchar_t* tail = &literal -> Name()[literal -> NameLength() - 1];
 
     u4 uvalue = 0;
 
@@ -611,8 +611,8 @@ LiteralValue* IntLiteralTable::FindOrInsertHexInt(LiteralSymbol* literal)
 
 LiteralValue* IntLiteralTable::FindOrInsertOctalInt(LiteralSymbol* literal)
 {
-    wchar_t* head = literal -> Name(); // point to initial '0'
-    wchar_t* tail = &head[literal -> NameLength() - 1];
+    const wchar_t* head = literal -> Name(); // point to initial '0'
+    const wchar_t* tail = &head[literal -> NameLength() - 1];
 
     u4 uvalue = 0;
     for (++head; tail > head && *head == U_0; head++) // skip leading zeroes
@@ -642,7 +642,7 @@ LiteralValue* IntLiteralTable::FindOrInsertOctalInt(LiteralSymbol* literal)
 
 LiteralValue* IntLiteralTable::FindOrInsertInt(LiteralSymbol* literal)
 {
-    wchar_t* name = literal -> Name();
+    const wchar_t* name = literal -> Name();
 
     if (name[0] == U_0)
         literal -> value = (name[1] == U_x || name[1] == U_X
@@ -652,7 +652,7 @@ LiteralValue* IntLiteralTable::FindOrInsertInt(LiteralSymbol* literal)
     {
         int value = 0;
 
-        wchar_t* p;
+        const wchar_t* p;
         for (p = name; *p; p++)
         {
             int digit = *p - U_0;
@@ -677,7 +677,7 @@ LiteralValue* IntLiteralTable::FindOrInsertNegativeInt(LiteralSymbol* literal)
         return FindOrInsert(- int_literal -> value);
     }
 
-    wchar_t* name = literal -> Name();
+    const wchar_t* name = literal -> Name();
 
     //
     // We can assert that the name of a literal contains at least two
@@ -694,7 +694,7 @@ LiteralValue* IntLiteralTable::FindOrInsertNegativeInt(LiteralSymbol* literal)
 
     int value = 0;
 
-    wchar_t* p;
+    const wchar_t* p;
     for (p = name; *p; p++)
     {
         int digit = *p - U_0;
@@ -806,9 +806,9 @@ LiteralValue* LongLiteralTable::FindOrInsertHexLong(LiteralSymbol* literal)
     u4 high = 0,
        low = 0;
 
-    wchar_t* head = literal -> Name() + 1; // point to X
+    const wchar_t* head = literal -> Name() + 1; // point to X
     // -2 to skip the 'L' suffix
-    wchar_t* tail = &literal -> Name()[literal -> NameLength() - 2];
+    const wchar_t* tail = &literal -> Name()[literal -> NameLength() - 2];
 
     for (++head; tail > head && *head == U_0; head++) // skip leading zeroes
         ;
@@ -834,9 +834,9 @@ LiteralValue* LongLiteralTable::FindOrInsertHexLong(LiteralSymbol* literal)
 
 LiteralValue* LongLiteralTable::FindOrInsertOctalLong(LiteralSymbol* literal)
 {
-    wchar_t* head = literal -> Name(); // point to initial '0'
+    const wchar_t* head = literal -> Name(); // point to initial '0'
     // -2 to skip the 'L' suffix
-    wchar_t* tail = &head[literal -> NameLength() - 2];
+    const wchar_t* tail = &head[literal -> NameLength() - 2];
 
     ULongInt uvalue = 0;
     for (++head; tail > head && *head == U_0; head++) // skip leading zeroes
@@ -866,7 +866,7 @@ LiteralValue* LongLiteralTable::FindOrInsertOctalLong(LiteralSymbol* literal)
 
 LiteralValue* LongLiteralTable::FindOrInsertLong(LiteralSymbol* literal)
 {
-    wchar_t* name = literal -> Name();
+    const wchar_t* name = literal -> Name();
 
     //
     // We can assert that the name of a literal contains at least two
@@ -880,7 +880,7 @@ LiteralValue* LongLiteralTable::FindOrInsertLong(LiteralSymbol* literal)
     {
         LongInt value = 0;
 
-        wchar_t* p;
+        const wchar_t* p;
         for (p = name; *p != U_L && *p != U_l; p++)
         {
             u4 digit = *p - U_0;
@@ -906,7 +906,7 @@ LiteralValue* LongLiteralTable::FindOrInsertNegativeLong(LiteralSymbol* literal)
         return FindOrInsert(- long_literal -> value);
     }
 
-    wchar_t* name = literal -> Name();
+    const wchar_t* name = literal -> Name();
     //
     // We can assert that the name of a literal contains at least two
     // characters: at least one digit and the terminating '\0'.
@@ -922,7 +922,7 @@ LiteralValue* LongLiteralTable::FindOrInsertNegativeLong(LiteralSymbol* literal)
 
     LongInt value = 0;
 
-    wchar_t* p;
+    const wchar_t* p;
     for (p = name; *p != U_L && *p != U_l && value >= 0; p++)
     {
         u4 digit = *p - U_0;
@@ -1189,7 +1189,7 @@ DoubleLiteralValue* DoubleLiteralTable::FindOrInsert(IEEEdouble value)
 
 LiteralValue* Utf8LiteralTable::FindOrInsertString(LiteralSymbol* literal)
 {
-    wchar_t* name = literal -> Name() + 1;
+    const wchar_t* name = literal -> Name() + 1;
     int literal_length = literal -> NameLength() - 2; // discard ""
 
     // Big enough for the worst case: 3 bytes/char + \0.

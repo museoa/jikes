@@ -467,9 +467,10 @@ int DefaultFileWriter::isValid()
 }
 
 // Copy the input data to the mapped memory.
-size_t DefaultFileWriter::doWrite(const unsigned char *data, size_t size)
+size_t DefaultFileWriter::doWrite(const unsigned char* data, size_t size)
 {
-    memmove(&string_buffer[dataWritten], data, size * sizeof(u1));
+    // This assumes that data never overlaps string_buffer.
+    memcpy(&string_buffer[dataWritten], data, size * sizeof(u1));
     dataWritten += size;
     return size;
 }
