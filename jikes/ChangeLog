@@ -1,3 +1,10 @@
+2001-04-03  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/expr.cpp: Make const expressions involving binary
+	operators & ^ | && || and trinary ?: correctly const. Fixes
+	Jacks tests 15.28-primitive-13, -primitive-15, -primitive-17,
+	-string-13, and -string-16, and a pair of bugs.
+
 2001-04-01  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.cpp (ByteCode::EmitStringAppendMethod):

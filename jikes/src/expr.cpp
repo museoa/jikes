@@ -6164,7 +6164,15 @@ void Semantic::ProcessAND(AstBinaryExpression *expr)
     else
     {
         if (left_type == control.boolean_type && right_type == control.boolean_type)
+        {
              expr -> symbol = control.boolean_type;
+             if (expr -> left_expression -> IsConstant() && expr -> right_expression -> IsConstant())
+             {
+                 IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
+                 IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+                 expr -> value = control.int_pool.FindOrInsert(left -> value & right -> value);
+             }
+        }
         else
         {
             BinaryNumericPromotion(expr);
@@ -6219,7 +6227,15 @@ void Semantic::ProcessXOR(AstBinaryExpression *expr)
     else
     {
         if (left_type == control.boolean_type && right_type == control.boolean_type)
+        {
              expr -> symbol = control.boolean_type;
+             if (expr -> left_expression -> IsConstant() && expr -> right_expression -> IsConstant())
+             {
+                 IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
+                 IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+                 expr -> value = control.int_pool.FindOrInsert(left -> value ^ right -> value);
+             }
+        }
         else
         {
             BinaryNumericPromotion(expr);
@@ -6274,7 +6290,15 @@ void Semantic::ProcessIOR(AstBinaryExpression *expr)
     else
     {
         if (left_type == control.boolean_type && right_type == control.boolean_type)
+        {
              expr -> symbol = control.boolean_type;
+             if (expr -> left_expression -> IsConstant() && expr -> right_expression -> IsConstant())
+             {
+                 IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
+                 IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+                 expr -> value = control.int_pool.FindOrInsert(left -> value | right -> value);
+             }
+        }
         else
         {
             BinaryNumericPromotion(expr);
@@ -6340,16 +6364,14 @@ void Semantic::ProcessAND_AND(AstBinaryExpression *expr)
                            expr -> right_expression -> RightToken(),
                            right_type -> Name());
         }
-        else if (expr -> left_expression -> IsConstant())
+        else if (expr -> left_expression -> IsConstant() && expr -> right_expression -> IsConstant())
         {
+            //
+            // Even when evaluating false && x, x must be constant for && to be constant
+            //
             IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
-            if (! left -> value)
-                expr -> value = control.int_pool.FindOrInsert(0);
-            else if (expr -> right_expression -> IsConstant())
-            {
-                IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
-                expr -> value = control.int_pool.FindOrInsert(left -> value && right -> value ? 1 : 0);
-            }
+            IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+            expr -> value = control.int_pool.FindOrInsert(left -> value && right -> value ? 1 : 0);
         }
     }
 
@@ -6383,16 +6405,14 @@ void Semantic::ProcessOR_OR(AstBinaryExpression *expr)
                            expr -> right_expression -> RightToken(),
                            right_type -> Name());
         }
-        else if (expr -> left_expression -> IsConstant())
+        else if (expr -> left_expression -> IsConstant() && expr -> right_expression -> IsConstant())
         {
+            //
+            // Even when evaluating true || x, x must be constant for && to be constant
+            //
             IntLiteralValue *left = (IntLiteralValue *) expr -> left_expression -> value;
-            if (left -> value)
-                expr -> value = control.int_pool.FindOrInsert(1);
-            else if (expr -> right_expression -> IsConstant())
-            {
-                IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
-                expr -> value = control.int_pool.FindOrInsert(left -> value || right -> value ? 1 : 0);
-            }
+            IntLiteralValue *right = (IntLiteralValue *) expr -> right_expression -> value;
+            expr -> value = control.int_pool.FindOrInsert(left -> value || right -> value ? 1 : 0);
         }
     }
 
@@ -6883,6 +6903,11 @@ void Semantic::ProcessConditionalExpression(Ast *expr)
     AstConditionalExpression *conditional_expression = (AstConditionalExpression *) expr;
 
     ProcessExpression(conditional_expression -> test_expression);
+    //
+    // TODO: Should we delay calculating results of true/false expressions
+    // until CheckStringConstant in lookup.cpp to put fewer intermediate
+    // strings in the storage pools?
+    //
     ProcessExpressionOrStringConstant(conditional_expression -> true_expression);
     ProcessExpressionOrStringConstant(conditional_expression -> false_expression);
 
@@ -6964,16 +6989,18 @@ void Semantic::ProcessConditionalExpression(Ast *expr)
             }
 
             //
-            // If all the relevant subexpressions are constants, compute the results and
+            // If all the subexpressions are constants, compute the results and
             // set the value of the expression accordingly.
             //
-            if (conditional_expression -> test_expression -> IsConstant())
+            if (conditional_expression -> test_expression -> IsConstant() &&
+                conditional_expression -> true_expression -> IsConstant() &&
+                conditional_expression -> false_expression -> IsConstant())
             {
                 IntLiteralValue *test = (IntLiteralValue *) conditional_expression -> test_expression -> value;
 
-                if (test -> value && conditional_expression -> true_expression -> IsConstant())
+                if (test -> value)
                      conditional_expression -> value = conditional_expression -> true_expression -> value;
-                else if ((! test -> value) && conditional_expression -> false_expression -> IsConstant())
+                else
                      conditional_expression -> value = conditional_expression -> false_expression -> value;
             }
         }
@@ -7017,6 +7044,28 @@ void Semantic::ProcessConditionalExpression(Ast *expr)
                            conditional_expression -> true_expression -> Type() -> ContainingPackage() -> PackageName(),
                            conditional_expression -> true_expression -> Type() -> ExternalName());
             conditional_expression -> symbol = control.no_type;
+        }
+
+        //
+        // If all the subexpressions are constants, compute the results and
+        // set the value of the expression accordingly.
+        //
+        // FIXME: Since null should not be a compile-time constant, the assert
+        // should not need to check for null type
+        //
+        if (conditional_expression -> test_expression -> IsConstant() &&
+            conditional_expression -> true_expression -> IsConstant() &&
+            conditional_expression -> false_expression -> IsConstant())
+        {
+            assert(conditional_expression -> symbol == control.String() ||
+                   conditional_expression -> symbol == control.null_type);
+
+            IntLiteralValue *test = (IntLiteralValue *) conditional_expression -> test_expression -> value;
+            
+            if (test -> value)
+                conditional_expression -> value = conditional_expression -> true_expression -> value;
+            else
+                conditional_expression -> value = conditional_expression -> false_expression -> value;
         }
     }
 
