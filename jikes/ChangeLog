@@ -1,3 +1,8 @@
+2002-07-02  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/bytecode.cpp (EmitCheckForNull): Revert part of patch 296,
+	as well as detect one more case of guaranteed non-null reference.
+
 2002-07-01  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.cpp (EmitFieldAccess): Eliminate code duplication,

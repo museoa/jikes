@@ -4199,25 +4199,35 @@ void ByteCode::EmitCheckForNull(AstExpression *expression)
         //
         PutOp(OP_ATHROW);
         ChangeStack(1);
+        return;
     }
-    else if (! (expression -> ClassInstanceCreationExpressionCast() ||
-                expression -> IsThisExpression() ||
-                expression -> IsSuperExpression()))
+    VariableSymbol *variable = expression -> symbol -> VariableCast();
+    if (expression -> ClassInstanceCreationExpressionCast() ||
+        expression -> IsThisExpression() ||
+        expression -> IsSuperExpression()) ||
+        (variable && variable -> IsSynthetic() &&
+         variable -> Identity() == control.this0_name_symbol))
     {
-        //
-        // It is uncertain whether the expression can be null, so check. This
-        // follows the lead of javac 1.4.1, in using a discarded instance method
-        // to perform the check. We did not bother checking for other
-        // guaranteed non-null conditions: IsConstant(), string concats, and
-        // ArrayCreationExpressionCast(), since none of these can qualify
-        // a constructor invocation.
-        //
-        PutOp(OP_DUP);
-        PutOp(OP_INVOKEVIRTUAL);
-        ChangeStack(1); // for returned value
-        PutU2(RegisterLibraryMethodref(control.Object_getClassMethod()));
-        PutOp(OP_POP);
+        return;
     }
+    //
+    // We did not bother checking for other guaranteed non-null conditions:
+    // IsConstant(), string concats, and ArrayCreationExpressionCast(), since
+    // none of these can qualify a constructor invocation. If we get here, it
+    // is uncertain whether the expression can be null, so check, using:
+    //
+    // if (ref == null) throw null;
+    //
+    // This will cause the necessary NullPointerException when attempting to
+    // throw null.
+    //
+    PutOp(OP_DUP);
+    Label lab1;
+    EmitBranch(OP_IFNONNULL, lab1);
+    PutOp(OP_ACONST_NULL);
+    PutOp(OP_ATHROW);
+    DefineLabel(lab1);
+    CompleteLabel(lab1);
 }
 
 int ByteCode::EmitInstanceCreationExpression(AstClassInstanceCreationExpression *expression,
