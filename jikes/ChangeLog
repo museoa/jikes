@@ -1,5 +1,21 @@
 2002-05-22  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/ast.h: Minor touchups to previous patch.
+	* src/body.cpp:
+	* src/bytecode.cpp:
+	* src/bytecode.h:
+	* src/code.cpp:
+	* src/decl.cpp:
+	* src/definite.cpp:
+	* src/expr.cpp:
+	* src/modifier.cpp:
+	* src/semantic.h:
+	* src/symbol.cpp:
+	* src/symbol.h:
+	* src/unparse.cpp:
+
+2002-05-22  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/java.g: Change grammar to detect this() and super() anywhere
 	in method - bug 2805.
 	* src/javaact.cpp: Regenerate.

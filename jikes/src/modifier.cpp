@@ -123,6 +123,11 @@ AccessFlags Semantic::ProcessClassModifiers(AstClassDeclaration *class_declarati
         }
     }
 
+    //
+    // All classes have the SUPER modifier set, by JVMS2 4.1.
+    //
+    access_flags.SetACC_SUPER();
+
     return access_flags;
 }
 
@@ -202,6 +207,11 @@ AccessFlags Semantic::ProcessLocalClassModifiers(AstClassDeclaration *class_decl
             break;
         }
     }
+
+    //
+    // All classes have the SUPER modifier set, by JVMS2 4.1.
+    //
+    access_flags.SetACC_SUPER();
 
     return access_flags;
 }
@@ -427,12 +437,17 @@ AccessFlags Semantic::ProcessNestedClassModifiers(AstClassDeclaration *class_dec
         }
     }
 
+    //
+    // All classes have the SUPER modifier set, by JVMS2 4.1.
+    //
+    access_flags.SetACC_SUPER();
+
     return access_flags;
 }
 
 
 //
-// Process modifiers of nested classes occuring in an interace.
+// Process modifiers of nested classes occuring in an interface.
 //
 AccessFlags Semantic::ProcessStaticNestedClassModifiers(AstClassDeclaration *class_declaration)
 {
@@ -592,9 +607,11 @@ AccessFlags Semantic::ProcessStaticNestedClassModifiers(AstClassDeclaration *cla
     //
     // A type that is a member of an interface is implicitly deemed to
     // be static and public, whether it is explicitly marked so or not.
+    // All classes have the SUPER modifier set, by JVMS2 4.1.
     //
     access_flags.SetACC_STATIC();
     access_flags.SetACC_PUBLIC();
+    access_flags.SetACC_SUPER();
 
     return access_flags;
 }

@@ -1908,8 +1908,11 @@ void Semantic::DefiniteConstructorBody(AstConstructorDeclaration *constructor_de
             definitely_assigned_variables -> AssignElement(index);
         else if (finals[i] -> IsPossiblyAssigned())
             definitely_assigned_variables -> AddElement(index);
-        if (! finals[i] -> declarator -> variable_initializer_opt)
+        if (! finals[i] -> IsSynthetic() &&
+            ! finals[i] -> declarator -> variable_initializer_opt)
+        {
             blank_finals -> AddElement(index);
+        }
         definite_visible_variables -> AddElement(finals[i]);
     }
 

@@ -1018,7 +1018,7 @@ private:
     //
     // Where am I?
     //
-    PackageSymbol  *this_package;
+    PackageSymbol *this_package;
 
     TypeSymbol *ThisType()
     {

@@ -779,7 +779,6 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
     void ConcatenateString(AstBinaryExpression *);
     void AppendString(AstExpression *);
     void EmitStringAppendMethod(TypeSymbol *);
-    void GenerateAccessMethod(MethodSymbol *);
     void ChangeStack(int);
     void ResolveAccess(AstExpression *);
     int  GenerateClassAccess(AstFieldAccess *, bool);
@@ -828,8 +827,8 @@ class ByteCode : public ClassFile, public StringConstant, public Operators
         return LoadArrayElement(expression -> Type());
     }
 
-    // Return the OP_IF... bytecode that has the opposite meaning 
-    Opcode InvertIfOpCode(Opcode opc) 
+    // Return the OP_IF... bytecode that has the opposite meaning
+    Opcode InvertIfOpCode(Opcode opc)
     {
         //
         // Unfortunately, the JVMS does not nicely specify symmetric opcodes;

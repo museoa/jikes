@@ -59,8 +59,16 @@ public:
     virtual wchar_t *Name() { return name_symbol -> Name(); }
     virtual size_t NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol *Identity() { return name_symbol; }
-    char *Utf8Name() { return (char *) (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> value : NULL); }
-    int Utf8NameLength() { return (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0); }
+    char *Utf8Name()
+    {
+        return (char *) (name_symbol -> Utf8_literal
+                         ? name_symbol -> Utf8_literal -> value : NULL);
+    }
+    int Utf8NameLength()
+    {
+        return (name_symbol -> Utf8_literal
+                ? name_symbol -> Utf8_literal -> length : 0);
+    }
 
     inline bool IsZip() { return zipfile != NULL; }
 
@@ -86,16 +94,29 @@ public:
     virtual wchar_t *Name() { return name_symbol -> Name(); }
     virtual size_t NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol *Identity() { return name_symbol; }
-    char *Utf8Name() { return (char *) (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> value : NULL); }
-    int Utf8NameLength() { return (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0); }
+    char *Utf8Name()
+    {
+        return (char *) (name_symbol -> Utf8_literal
+                         ? name_symbol -> Utf8_literal -> value : NULL);
+    }
+    int Utf8NameLength()
+    {
+        return (name_symbol -> Utf8_literal
+                ? name_symbol -> Utf8_literal -> length : 0);
+    }
     bool IsSourceDirectory() { return source_dir_only; }
 
-    DirectoryEntry *FindEntry(char *name, int len) { return (entries ? entries -> FindEntry(name, len) : (DirectoryEntry *) NULL); }
+    DirectoryEntry *FindEntry(char *name, int len)
+    {
+        return (entries ? entries -> FindEntry(name, len)
+                : (DirectoryEntry *) NULL);
+    }
 
 #ifdef WIN32_FILE_SYSTEM
     DirectoryEntry *FindCaseInsensitiveEntry(char *name, int length)
     {
-        return (entries ? entries -> FindCaseInsensitiveEntry(name, length) : (DirectoryEntry *) NULL);
+        return (entries ? entries -> FindCaseInsensitiveEntry(name, length)
+                : (DirectoryEntry *) NULL);
     }
 
     void InsertEntry(char *name, int length)
@@ -105,11 +126,12 @@ public:
         DirectoryEntry *entry = entries -> InsertEntry(this, name, length);
         entries -> InsertCaseInsensitiveEntry(entry);
     }
-#endif
+#endif // WIN32_FILE_SYSTEM
 
     PathSymbol *PathSym()
     {
-        return (owner -> PathCast() ? (PathSymbol *) owner : ((DirectorySymbol *) owner) -> PathSym());
+        return (owner -> PathCast() ? (PathSymbol *) owner
+                : ((DirectorySymbol *) owner) -> PathSym());
     }
 
     inline bool IsZip() { return PathSym() -> IsZip(); }
@@ -236,8 +258,16 @@ public:
     virtual wchar_t *Name() { return name_symbol -> Name(); }
     virtual size_t NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol *Identity() { return name_symbol; }
-    char *Utf8Name() { return (char *) (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> value : NULL); }
-    int Utf8NameLength() { return (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0); }
+    char *Utf8Name()
+    {
+        return (char *) (name_symbol -> Utf8_literal
+                         ? name_symbol -> Utf8_literal -> value : NULL);
+    }
+    int Utf8NameLength()
+    {
+        return (name_symbol -> Utf8_literal
+                ? name_symbol -> Utf8_literal -> length : 0);
+    }
 
     inline void SetJava()       { kind = JAVA; }
     inline void SetClass()      { kind = CLASS; }
@@ -274,7 +304,11 @@ public:
         return file_name_length;
     }
 
-    inline Utf8LiteralValue *FileNameLiteral() { assert(file_name_literal); return file_name_literal; }
+    inline Utf8LiteralValue *FileNameLiteral()
+    {
+        assert(file_name_literal);
+        return file_name_literal;
+    }
 
     void SetFileNameLiteral(Control *);
 
@@ -341,11 +375,12 @@ public:
     Tuple<DirectorySymbol *> directory;
     PackageSymbol *owner;
 
-    PackageSymbol(NameSymbol *name_symbol_, PackageSymbol *owner_) : directory(4),
-                                                                     owner(owner_),
-                                                                     name_symbol(name_symbol_),
-                                                                     table(NULL),
-                                                                     package_name(NULL)
+    PackageSymbol(NameSymbol *name_symbol_, PackageSymbol *owner_)
+        : directory(4),
+          owner(owner_),
+          name_symbol(name_symbol_),
+          table(NULL),
+          package_name(NULL)
     {
         Symbol::_kind = PACKAGE;
     }
@@ -355,8 +390,16 @@ public:
     virtual wchar_t *Name() { return name_symbol -> Name(); }
     virtual size_t NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol *Identity() { return name_symbol; }
-    char *Utf8Name() { return (char *) (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> value : NULL); }
-    int Utf8NameLength() { return (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0); }
+    char *Utf8Name()
+    {
+        return (char *) (name_symbol -> Utf8_literal
+                         ? name_symbol -> Utf8_literal -> value : NULL);
+    }
+    int Utf8NameLength()
+    {
+        return (name_symbol -> Utf8_literal
+                ? name_symbol -> Utf8_literal -> length : 0);
+    }
     // This name is fully qualified, using slashes.
 
     void SetPackageName();
@@ -411,7 +454,8 @@ public:
     //
     int NumInitializerConstructors()
     {
-        return (initializer_constructors ? initializer_constructors -> Length() : 0);
+        return (initializer_constructors
+                ? initializer_constructors -> Length() : 0);
     }
     MethodSymbol *InitializerConstructor(int i)
     {
@@ -436,8 +480,16 @@ public:
     virtual wchar_t *Name() { return name_symbol -> Name(); }
     virtual size_t NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol *Identity() { return name_symbol; }
-    char *Utf8Name() { return (char *) (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> value : NULL); }
-    int Utf8NameLength() { return (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0); }
+    char *Utf8Name()
+    {
+        return (char *) (name_symbol -> Utf8_literal
+                         ? name_symbol -> Utf8_literal -> value : NULL);
+    }
+    int Utf8NameLength()
+    {
+        return (name_symbol -> Utf8_literal
+                ? name_symbol -> Utf8_literal -> length : 0);
+    }
 
     MethodSymbol(NameSymbol *name_symbol_)
         : declaration(NULL),
@@ -611,6 +663,22 @@ private:
 
 class TypeSymbol : public Symbol, public AccessFlags
 {
+private:
+    enum
+    {
+        CONSTRUCTOR_MEMBERS_PROCESSED = 0x0001,
+        METHOD_MEMBERS_PROCESSED = 0x0002,
+        FIELD_MEMBERS_PROCESSED = 0x0004,
+        LOCAL_CLASS_PROCESSING_COMPLETED = 0x0008,
+        SOURCE_PENDING = 0x0010,
+        ANONYMOUS = 0x0020,
+        HEADER_PROCESSED = 0x0040,
+        PRIMITIVE = 0x0080,
+        DEPRECATED = 0x0100,
+        BAD = 0x0200,
+        CIRCULAR = 0x0400
+    };
+
 public:
     SemanticEnvironment *semantic_environment;
 
@@ -648,8 +716,15 @@ public:
     // (files) need to be recompiled based on the "dependent" relationship.
     int incremental_index;
 
-    int NumLocalConstructorCallEnvironments() { return (local_constructor_call_environments ? local_constructor_call_environments -> Length() : 0); }
-    SemanticEnvironment *&LocalConstructorCallEnvironment(int i) { return (*local_constructor_call_environments)[i]; }
+    int NumLocalConstructorCallEnvironments()
+    {
+        return (local_constructor_call_environments
+                ? local_constructor_call_environments -> Length() : 0);
+    }
+    SemanticEnvironment *&LocalConstructorCallEnvironment(int i)
+    {
+        return (*local_constructor_call_environments)[i];
+    }
     void AddLocalConstructorCallEnvironment(SemanticEnvironment *environment)
     {
         if (! local_constructor_call_environments)
@@ -657,8 +732,15 @@ public:
         local_constructor_call_environments -> Next() = environment;
     }
 
-    int NumPrivateAccessMethods() { return (private_access_methods ? private_access_methods -> Length() : 0); }
-    MethodSymbol *&PrivateAccessMethod(int i) { return (*private_access_methods)[i]; }
+    int NumPrivateAccessMethods()
+    {
+        return (private_access_methods
+                ? private_access_methods -> Length() : 0);
+    }
+    MethodSymbol *&PrivateAccessMethod(int i)
+    {
+        return (*private_access_methods)[i];
+    }
     void AddPrivateAccessMethod(MethodSymbol *method_symbol)
     {
         if (! private_access_methods)
@@ -666,8 +748,15 @@ public:
         private_access_methods -> Next() = method_symbol;
     }
 
-    int NumPrivateAccessConstructors() { return (private_access_constructors ? private_access_constructors -> Length() : 0); }
-    MethodSymbol *&PrivateAccessConstructor(int i) { return (*private_access_constructors)[i]; }
+    int NumPrivateAccessConstructors()
+    {
+        return (private_access_constructors
+                ? private_access_constructors -> Length() : 0);
+    }
+    MethodSymbol *&PrivateAccessConstructor(int i)
+    {
+        return (*private_access_constructors)[i];
+    }
     void AddPrivateAccessConstructor(MethodSymbol *constructor_symbol)
     {
         if (! private_access_constructors)
@@ -675,8 +764,15 @@ public:
         private_access_constructors -> Next() = constructor_symbol;
     }
 
-    int NumConstructorParameters() { return (constructor_parameters ? constructor_parameters -> Length() : 0); }
-    VariableSymbol *&ConstructorParameter(int i) { return (*constructor_parameters)[i]; }
+    int NumConstructorParameters()
+    {
+        return (constructor_parameters
+                ? constructor_parameters -> Length() : 0);
+    }
+    VariableSymbol *&ConstructorParameter(int i)
+    {
+        return (*constructor_parameters)[i];
+    }
     void AddConstructorParameter(VariableSymbol *variable_symbol)
     {
         if (! constructor_parameters)
@@ -689,7 +785,10 @@ public:
         return enclosing_instance;
     }
 
-    int NumClassLiterals() { return (class_literals ? class_literals -> Length() : 0); }
+    int NumClassLiterals()
+    {
+        return (class_literals ? class_literals -> Length() : 0);
+    }
     VariableSymbol *&ClassLiteral(int i) { return (*class_literals)[i]; }
     void AddClassLiteral(VariableSymbol *literal_symbol)
     {
@@ -700,7 +799,10 @@ public:
 
     VariableSymbol *AssertVariable() { return assert_variable; }
 
-    int NumNestedTypes() { return (nested_types ? nested_types -> Length() : 0); }
+    int NumNestedTypes()
+    {
+        return (nested_types ? nested_types -> Length() : 0);
+    }
     TypeSymbol *&NestedType(int i) { return (*nested_types)[i]; }
     void AddNestedType(TypeSymbol *type_symbol)
     {
@@ -723,7 +825,10 @@ public:
         interfaces -> Next() = type_symbol;
     }
 
-    int NumAnonymousTypes() { return (anonymous_types ? anonymous_types -> Length() : 0); }
+    int NumAnonymousTypes()
+    {
+        return anonymous_types ? anonymous_types -> Length() : 0;
+    }
     TypeSymbol *&AnonymousType(int i) { return (*anonymous_types)[i]; }
     void AddAnonymousType(TypeSymbol *type_symbol)
     {
@@ -780,8 +885,16 @@ public:
     virtual wchar_t *Name() { return name_symbol -> Name(); }
     virtual size_t NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol *Identity() { return name_symbol; }
-    char *Utf8Name() { return (char *) (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> value : NULL); }
-    int Utf8NameLength() { return (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0); }
+    char *Utf8Name()
+    {
+        return (char *) (name_symbol -> Utf8_literal
+                         ? name_symbol -> Utf8_literal -> value : NULL);
+    }
+    int Utf8NameLength()
+    {
+        return (name_symbol -> Utf8_literal
+                ? name_symbol -> Utf8_literal -> length : 0);
+    }
 
 
     void SetExternalIdentity(NameSymbol *external_name_symbol_)
@@ -871,7 +984,8 @@ public:
                 return true;
 
             MethodSymbol *method = sym -> MethodCast();
-            sym = (method ? method -> containing_type : ((TypeSymbol *) sym) -> owner);
+            sym = (method ? method -> containing_type
+                   : ((TypeSymbol *) sym) -> owner);
         }
 
         return false;
@@ -907,6 +1021,9 @@ public:
         return false;
     }
 
+    //
+    // Note that this test considers an interface a subtype of itself.
+    //
     bool IsSubinterface(TypeSymbol *super_interface)
     {
         if (this == super_interface)
@@ -949,9 +1066,15 @@ public:
     void SetSignature(Utf8LiteralValue *signature_) { signature = signature_; }
     char *SignatureString() { return signature -> value; }
 
-    void SetClassLiteralName(Utf8LiteralValue *class_literal_name_) { class_literal_name = class_literal_name_; }
+    void SetClassLiteralName(Utf8LiteralValue *class_literal_name_)
+    {
+        class_literal_name = class_literal_name_;
+    }
 
-    PackageSymbol *ContainingPackage() { return outermost_type -> owner -> PackageCast(); }
+    PackageSymbol *ContainingPackage()
+    {
+        return outermost_type -> owner -> PackageCast();
+    }
 
     bool IsNestedIn(TypeSymbol *);
 
@@ -990,39 +1113,96 @@ public:
         return class_name;
     }
 
-    void MarkConstructorMembersProcessed() { status |= (unsigned short) 0x0001; }
-    bool ConstructorMembersProcessed() { return (status & (unsigned short) 0x0001) != 0 ; }
+    void MarkConstructorMembersProcessed()
+    {
+        status |= CONSTRUCTOR_MEMBERS_PROCESSED;
+    }
+    bool ConstructorMembersProcessed()
+    {
+        return (status & CONSTRUCTOR_MEMBERS_PROCESSED) != 0;
+    }
 
-    void MarkMethodMembersProcessed() { status |= (unsigned short) 0x0002; }
-    bool MethodMembersProcessed() { return (status & (unsigned short) 0x0002) != 0; }
+    void MarkMethodMembersProcessed()
+    {
+        status |= METHOD_MEMBERS_PROCESSED;
+    }
+    bool MethodMembersProcessed()
+    {
+        return (status & METHOD_MEMBERS_PROCESSED) != 0;
+    }
 
-    void MarkFieldMembersProcessed() { status |= (unsigned short) 0x0004; }
-    bool FieldMembersProcessed() { return (status & (unsigned short) 0x0004) != 0; }
+    void MarkFieldMembersProcessed()
+    {
+        status |= FIELD_MEMBERS_PROCESSED;
+    }
+    bool FieldMembersProcessed()
+    {
+        return (status & FIELD_MEMBERS_PROCESSED) != 0;
+    }
 
-    void MarkLocalClassProcessingCompleted() { status |= (unsigned short) 0x0008; }
-    bool LocalClassProcessingCompleted() { return (status & (unsigned short) 0x0008) != 0; }
+    void MarkLocalClassProcessingCompleted()
+    {
+        status |= LOCAL_CLASS_PROCESSING_COMPLETED;
+    }
+    bool LocalClassProcessingCompleted()
+    {
+        return (status & LOCAL_CLASS_PROCESSING_COMPLETED) != 0;
+    }
 
-    void MarkSourcePending() { status |= (unsigned short) 0x0010; }
-    void MarkSourceNoLongerPending() { status &= (~ ((unsigned short) 0x0010)); }
-    bool SourcePending() { return (status & (unsigned short) 0x0010) != 0; }
+    void MarkSourcePending()
+    {
+        status |= SOURCE_PENDING;
+    }
+    void MarkSourceNoLongerPending()
+    {
+        status &= ~ SOURCE_PENDING;
+    }
+    bool SourcePending()
+    {
+        return (status & SOURCE_PENDING) != 0;
+    }
 
-    void MarkAnonymous() { status |= (unsigned short) 0x0020; }
-    bool Anonymous() { return (status & (unsigned short) 0x0020) != 0; }
+    void MarkAnonymous()
+    {
+        status |= ANONYMOUS;
+    }
+    bool Anonymous()
+    {
+        return (status & ANONYMOUS) != 0;
+    }
 
-    void MarkHeaderProcessed() { status |= (unsigned short) 0x0040; }
-    bool HeaderProcessed() { return (status & (unsigned short) 0x0040) != 0; }
+    void MarkHeaderProcessed()
+    {
+        status |= HEADER_PROCESSED;
+    }
+    bool HeaderProcessed()
+    {
+        return (status & HEADER_PROCESSED) != 0;
+    }
 
-    void MarkPrimitive() { status |= (unsigned short) 0x0080; }
-    bool Primitive()     { return (status & (unsigned short) 0x0080) != 0; }
+    void MarkPrimitive()
+    {
+        status |= PRIMITIVE;
+    }
+    bool Primitive()
+    {
+        return (status & PRIMITIVE) != 0;
+    }
 
-    void MarkDeprecated() { status |= (unsigned short) 0x0100; }
-    bool IsDeprecated()   { return (status & (unsigned short) 0x0100) != 0; }
+    void MarkDeprecated()
+    {
+        status |= DEPRECATED;
+    }
+    bool IsDeprecated()
+    {
+        return (status & DEPRECATED) != 0;
+    }
 
     void MarkBad()
     {
         SetACC_PUBLIC();
 
-        status |= (unsigned short) 0x0200;
+        status |= BAD;
 
         MarkHeaderProcessed();
         MarkConstructorMembersProcessed();
@@ -1031,15 +1211,15 @@ public:
         MarkLocalClassProcessingCompleted();
         MarkSourceNoLongerPending();
     }
-    bool Bad() { return (status & (unsigned short) 0x0200) != 0; }
+    bool Bad() { return (status & BAD) != 0; }
 
     void MarkCircular()
     {
-        status |= (unsigned short) 0x0400;
+        status |= CIRCULAR;
         MarkBad();
     }
-    void MarkNonCircular() { status &= (~ ((unsigned short) 0x0400)); }
-    bool Circular() { return (status & (unsigned short) 0x0400) != 0; }
+    void MarkNonCircular() { status &= ~ CIRCULAR; }
+    bool Circular() { return (status & CIRCULAR) != 0; }
 
     void ProcessNestedTypeSignatures(Semantic *, LexStream::TokenIndex);
 
@@ -1047,7 +1227,8 @@ public:
 
     int NumNestedTypeSignatures()
     {
-        return (nested_type_signatures ? nested_type_signatures -> Length() : 0);
+        return (nested_type_signatures
+                ? nested_type_signatures -> Length() : 0);
     }
     char *NestedTypeSignature(int i)
     {
@@ -1146,7 +1327,8 @@ private:
 
     inline void MapSymbolToReadMethod(Symbol *, TypeSymbol *, MethodSymbol *);
     inline MethodSymbol *ReadMethod(Symbol *, TypeSymbol *);
-    inline void MapSymbolToWriteMethod(VariableSymbol *, TypeSymbol *, MethodSymbol *);
+    inline void MapSymbolToWriteMethod(VariableSymbol *, TypeSymbol *,
+                                       MethodSymbol *);
     inline MethodSymbol *WriteMethod(VariableSymbol *, TypeSymbol *);
 
     Map<Symbol, Map<TypeSymbol, MethodSymbol> > *read_methods;
@@ -1213,7 +1395,7 @@ public:
     AstVariableDeclarator *declarator;
 
     NameSymbol *name_symbol;
-    Symbol     *owner;
+    Symbol *owner;
     LiteralValue *initial_value;
 
     VariableSymbol *accessed_local;
@@ -1221,8 +1403,16 @@ public:
     virtual wchar_t *Name() { return name_symbol -> Name(); }
     virtual size_t NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol *Identity() { return name_symbol; }
-    char *Utf8Name() { return (char *) (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> value : NULL); }
-    int Utf8NameLength() { return (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0); }
+    char *Utf8Name()
+    {
+        return (char *) (name_symbol -> Utf8_literal
+                         ? name_symbol -> Utf8_literal -> value : NULL);
+    }
+    int Utf8NameLength()
+    {
+        return (name_symbol -> Utf8_literal
+                ? name_symbol -> Utf8_literal -> length : 0);
+    }
 
     void SetExternalIdentity(NameSymbol *external_name_symbol_)
     {
@@ -1389,8 +1579,16 @@ public:
     virtual wchar_t *Name() { return name_symbol -> Name(); }
     virtual size_t NameLength() { return name_symbol -> NameLength(); }
     virtual NameSymbol *Identity() { return name_symbol; }
-    char *Utf8Name() { return (char *) (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> value : NULL); }
-    int Utf8NameLength() { return (name_symbol -> Utf8_literal ? name_symbol -> Utf8_literal -> length : 0); }
+    char *Utf8Name()
+    {
+        return (char *) (name_symbol -> Utf8_literal
+                         ? name_symbol -> Utf8_literal -> value : NULL);
+    }
+    int Utf8NameLength()
+    {
+        return (name_symbol -> Utf8_literal
+                ? name_symbol -> Utf8_literal -> length : 0);
+    }
 
     LabelSymbol(NameSymbol *name_symbol_) : block(NULL),
                                             name_symbol(name_symbol_),
@@ -1400,8 +1598,6 @@ public:
     }
 
     virtual ~LabelSymbol() {}
-
-private:
 };
 
 
@@ -1535,7 +1731,8 @@ public:
 
     inline PathSymbol *InsertPathSymbol(NameSymbol *, DirectorySymbol *);
     inline PathSymbol *FindPathSymbol(NameSymbol *);
-    inline DirectorySymbol *InsertDirectorySymbol(NameSymbol *, Symbol *, bool source_path);
+    inline DirectorySymbol *InsertDirectorySymbol(NameSymbol *, Symbol *,
+                                                  bool source_path);
     inline DirectorySymbol *FindDirectorySymbol(NameSymbol *);
     inline FileSymbol *InsertFileSymbol(NameSymbol *);
     inline FileSymbol *FindFileSymbol(NameSymbol *);
@@ -1568,27 +1765,59 @@ public:
 };
 
 inline bool MethodSymbol::AccessesInstanceMember() {
-    return accessed_member &&
-        ((accessed_member -> MethodCast() && ! accessed_member -> MethodCast() -> ACC_STATIC()) ||
-         (accessed_member -> VariableCast() && ! accessed_member -> VariableCast() -> ACC_STATIC()));
+    return (accessed_member &&
+            ((accessed_member -> MethodCast() &&
+              ! accessed_member -> MethodCast() -> ACC_STATIC()) ||
+             (accessed_member -> VariableCast() &&
+              ! accessed_member -> VariableCast() -> ACC_STATIC())));
 }
 
-inline int TypeSymbol::NumVariableSymbols() { return (table ? table -> NumVariableSymbols() : 0); }
-inline VariableSymbol *TypeSymbol::VariableSym(int i) { return table -> VariableSym(i); }
+inline int TypeSymbol::NumVariableSymbols()
+{
+    return (table ? table -> NumVariableSymbols() : 0);
+}
+inline VariableSymbol *TypeSymbol::VariableSym(int i)
+{
+    return table -> VariableSym(i);
+}
 
-inline int BlockSymbol::NumVariableSymbols() { return (table ? table -> NumVariableSymbols() : 0); }
-inline VariableSymbol *BlockSymbol::VariableSym(int i) { return table -> VariableSym(i); }
+inline int BlockSymbol::NumVariableSymbols()
+{
+    return (table ? table -> NumVariableSymbols() : 0);
+}
+inline VariableSymbol *BlockSymbol::VariableSym(int i)
+{
+    return table -> VariableSym(i);
+}
 
-inline int TypeSymbol::NumMethodSymbols() { return (table ? table -> NumMethodSymbols() : 0); }
-inline MethodSymbol *TypeSymbol::MethodSym(int i) { return table -> MethodSym(i); }
+inline int TypeSymbol::NumMethodSymbols()
+{
+    return (table ? table -> NumMethodSymbols() : 0);
+}
+inline MethodSymbol *TypeSymbol::MethodSym(int i)
+{
+    return table -> MethodSym(i);
+}
 
-inline int TypeSymbol::NumTypeSymbols() { return (table ? table -> NumTypeSymbols() : 0); }
+inline int TypeSymbol::NumTypeSymbols()
+{
+    return (table ? table -> NumTypeSymbols() : 0);
+}
 inline TypeSymbol *TypeSymbol::TypeSym(int i) { return table -> TypeSym(i); }
 
-inline void TypeSymbol::CompressSpace() { if (table) table -> CompressSpace(); }
-inline void BlockSymbol::CompressSpace() { if (table) table -> CompressSpace(); }
+inline void TypeSymbol::CompressSpace()
+{
+    if (table)
+        table -> CompressSpace();
+}
+inline void BlockSymbol::CompressSpace()
+{
+    if (table)
+        table -> CompressSpace();
+}
 
-inline PathSymbol *SymbolTable::InsertPathSymbol(NameSymbol *name_symbol, DirectorySymbol *directory_symbol)
+inline PathSymbol *SymbolTable::InsertPathSymbol(NameSymbol *name_symbol,
+                                                 DirectorySymbol *directory_symbol)
 {
     assert(base);
 
@@ -1618,7 +1847,8 @@ inline PathSymbol *SymbolTable::FindPathSymbol(NameSymbol *name_symbol)
 {
     assert(base);
 
-    for (Symbol *symbol = base[name_symbol -> index % hash_size]; symbol; symbol = symbol -> next)
+    for (Symbol *symbol = base[name_symbol -> index % hash_size];
+         symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
             return (PathSymbol *) symbol;
@@ -1628,11 +1858,14 @@ inline PathSymbol *SymbolTable::FindPathSymbol(NameSymbol *name_symbol)
 }
 
 
-inline DirectorySymbol *SymbolTable::InsertDirectorySymbol(NameSymbol *name_symbol, Symbol *owner, bool source_path)
+inline DirectorySymbol *SymbolTable::InsertDirectorySymbol(NameSymbol *name_symbol,
+                                                           Symbol *owner,
+                                                           bool source_path)
 {
     assert(base);
 
-    DirectorySymbol *symbol = new DirectorySymbol(name_symbol, owner, source_path);
+    DirectorySymbol *symbol = new DirectorySymbol(name_symbol, owner,
+                                                  source_path);
     AddOtherSymbol(symbol);
 
     int k = name_symbol -> index % hash_size;
@@ -1652,7 +1885,8 @@ inline DirectorySymbol *SymbolTable::InsertDirectorySymbol(NameSymbol *name_symb
 }
 
 
-inline DirectorySymbol *DirectorySymbol::InsertDirectorySymbol(NameSymbol *name_symbol, bool source_dir)
+inline DirectorySymbol *DirectorySymbol::InsertDirectorySymbol(NameSymbol *name_symbol,
+                                                               bool source_dir)
 {
     DirectorySymbol *subdirectory_symbol = Table() -> InsertDirectorySymbol(name_symbol, this, source_dir);
     this -> subdirectories.Next() = subdirectory_symbol;
@@ -1665,7 +1899,8 @@ inline DirectorySymbol *SymbolTable::FindDirectorySymbol(NameSymbol *name_symbol
 {
     assert(base);
 
-    for (Symbol *symbol = base[name_symbol -> index % hash_size]; symbol; symbol = symbol -> next)
+    for (Symbol *symbol = base[name_symbol -> index % hash_size];
+         symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
         {
@@ -1681,7 +1916,8 @@ inline DirectorySymbol *SymbolTable::FindDirectorySymbol(NameSymbol *name_symbol
 
 inline DirectorySymbol *DirectorySymbol::FindDirectorySymbol(NameSymbol *name_symbol)
 {
-    return (table ? table -> FindDirectorySymbol(name_symbol) : (DirectorySymbol *) NULL);
+    return (table ? table -> FindDirectorySymbol(name_symbol)
+            : (DirectorySymbol *) NULL);
 }
 
 
@@ -1719,7 +1955,8 @@ inline FileSymbol *SymbolTable::FindFileSymbol(NameSymbol *name_symbol)
 {
     assert(base);
 
-    for (Symbol *symbol = base[name_symbol -> index % hash_size]; symbol; symbol = symbol -> next)
+    for (Symbol *symbol = base[name_symbol -> index % hash_size];
+         symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
         {
@@ -1735,11 +1972,13 @@ inline FileSymbol *SymbolTable::FindFileSymbol(NameSymbol *name_symbol)
 
 inline FileSymbol *DirectorySymbol::FindFileSymbol(NameSymbol *name_symbol)
 {
-    return (table ? table -> FindFileSymbol(name_symbol) : (FileSymbol *) NULL);
+    return (table ? table -> FindFileSymbol(name_symbol)
+            : (FileSymbol *) NULL);
 }
 
 
-inline PackageSymbol *SymbolTable::InsertPackageSymbol(NameSymbol *name_symbol, PackageSymbol *owner)
+inline PackageSymbol *SymbolTable::InsertPackageSymbol(NameSymbol *name_symbol,
+                                                       PackageSymbol *owner)
 {
     assert(base);
 
@@ -1773,7 +2012,8 @@ inline PackageSymbol *SymbolTable::FindPackageSymbol(NameSymbol *name_symbol)
 {
     assert(base);
 
-    for (Symbol *symbol = base[name_symbol -> index % hash_size]; symbol; symbol = symbol -> next)
+    for (Symbol *symbol = base[name_symbol -> index % hash_size];
+         symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
         {
@@ -1789,7 +2029,8 @@ inline PackageSymbol *SymbolTable::FindPackageSymbol(NameSymbol *name_symbol)
 
 inline PackageSymbol *PackageSymbol::FindPackageSymbol(NameSymbol *name_symbol)
 {
-  return (table ? table -> FindPackageSymbol(name_symbol) : (PackageSymbol *) NULL);
+  return (table ? table -> FindPackageSymbol(name_symbol)
+          : (PackageSymbol *) NULL);
 }
 
 inline TypeSymbol *SymbolTable::InsertAnonymousTypeSymbol(NameSymbol *name_symbol)
@@ -1958,7 +2199,8 @@ inline TypeSymbol *SymbolTable::FindTypeSymbol(NameSymbol *name_symbol)
 {
     assert(base);
 
-    for (Symbol *symbol = base[name_symbol -> index % hash_size]; symbol; symbol = symbol -> next)
+    for (Symbol *symbol = base[name_symbol -> index % hash_size];
+         symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
         {
@@ -1974,13 +2216,15 @@ inline TypeSymbol *SymbolTable::FindTypeSymbol(NameSymbol *name_symbol)
 
 inline TypeSymbol *PackageSymbol::FindTypeSymbol(NameSymbol *name_symbol)
 {
-    return (table ? table -> FindTypeSymbol(name_symbol) : (TypeSymbol *) NULL);
+    return (table ? table -> FindTypeSymbol(name_symbol)
+            : (TypeSymbol *) NULL);
 }
 
 
 inline TypeSymbol *TypeSymbol::FindTypeSymbol(NameSymbol *name_symbol)
 {
-    return (table ? table -> FindTypeSymbol(name_symbol) : (TypeSymbol *) NULL);
+    return (table ? table -> FindTypeSymbol(name_symbol)
+            : (TypeSymbol *) NULL);
 }
 
 
@@ -2075,7 +2319,8 @@ inline MethodSymbol *SymbolTable::FindMethodSymbol(NameSymbol *name_symbol)
 {
     assert(base);
 
-    for (Symbol *symbol = base[name_symbol -> index % hash_size]; symbol; symbol = symbol -> next)
+    for (Symbol *symbol = base[name_symbol -> index % hash_size];
+         symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
         {
@@ -2091,7 +2336,8 @@ inline MethodSymbol *SymbolTable::FindMethodSymbol(NameSymbol *name_symbol)
 
 inline MethodSymbol *TypeSymbol::FindMethodSymbol(NameSymbol *name_symbol)
 {
-    return (table ? table -> FindMethodSymbol(name_symbol) : (MethodSymbol *) NULL);
+    return (table ? table -> FindMethodSymbol(name_symbol)
+            : (MethodSymbol *) NULL);
 }
 
 
@@ -2102,7 +2348,8 @@ inline MethodSymbol *SymbolTable::FindConstructorSymbol()
 
 inline MethodSymbol *TypeSymbol::FindConstructorSymbol()
 {
-    return (table ? table -> FindConstructorSymbol() : (MethodSymbol *) NULL);
+    return (table ? table -> FindConstructorSymbol()
+            : (MethodSymbol *) NULL);
 }
 
 inline VariableSymbol *SymbolTable::InsertVariableSymbol(NameSymbol *name_symbol)
@@ -2178,7 +2425,8 @@ inline VariableSymbol *SymbolTable::FindVariableSymbol(NameSymbol *name_symbol)
 {
     assert(base);
 
-    for (Symbol *symbol = base[name_symbol -> index % hash_size]; symbol; symbol = symbol -> next)
+    for (Symbol *symbol = base[name_symbol -> index % hash_size];
+         symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
         {
@@ -2194,13 +2442,15 @@ inline VariableSymbol *SymbolTable::FindVariableSymbol(NameSymbol *name_symbol)
 
 inline VariableSymbol *TypeSymbol::FindVariableSymbol(NameSymbol *name_symbol)
 {
-    return (table ? table -> FindVariableSymbol(name_symbol) : (VariableSymbol *) NULL);
+    return (table ? table -> FindVariableSymbol(name_symbol)
+            : (VariableSymbol *) NULL);
 }
 
 
 inline VariableSymbol *BlockSymbol::FindVariableSymbol(NameSymbol *name_symbol)
 {
-    return (table ? table -> FindVariableSymbol(name_symbol) : (VariableSymbol *) NULL);
+    return (table ? table -> FindVariableSymbol(name_symbol)
+            : (VariableSymbol *) NULL);
 }
 
 
@@ -2228,7 +2478,8 @@ inline LabelSymbol *SymbolTable::FindLabelSymbol(NameSymbol *name_symbol)
 {
     assert(base);
 
-    for (Symbol *symbol = base[name_symbol -> index % hash_size]; symbol; symbol = symbol -> next)
+    for (Symbol *symbol = base[name_symbol -> index % hash_size];
+         symbol; symbol = symbol -> next)
     {
         if (name_symbol == symbol -> Identity())
         {
@@ -2277,7 +2528,8 @@ inline MethodSymbol *TypeSymbol::Overload(MethodSymbol *base_method)
 }
 
 
-inline void SymbolTable::Overload(MethodSymbol *base_method, MethodSymbol *overload_method)
+inline void SymbolTable::Overload(MethodSymbol *base_method,
+                                  MethodSymbol *overload_method)
 {
     AddMethodSymbol(overload_method);
 
@@ -2286,7 +2538,8 @@ inline void SymbolTable::Overload(MethodSymbol *base_method, MethodSymbol *overl
     base_method -> next_method = overload_method;
 }
 
-inline void TypeSymbol::Overload(MethodSymbol *base_method, MethodSymbol *overload_method)
+inline void TypeSymbol::Overload(MethodSymbol *base_method,
+                                 MethodSymbol *overload_method)
 {
     assert(table);
 
@@ -2361,12 +2614,14 @@ inline SymbolTable *BlockSymbol::Table()
 #elif defined(WIN32_FILE_SYSTEM)
     inline bool FileSymbol::IsClassSuffix(char *suffix)
     {
-        return Case::StringSegmentEqual(suffix, class_suffix, class_suffix_length);
+        return Case::StringSegmentEqual(suffix, class_suffix,
+                                        class_suffix_length);
     }
 
     inline bool  FileSymbol::IsJavaSuffix(char *suffix)
     {
-        return Case::StringSegmentEqual(suffix, java_suffix, java_suffix_length);
+        return Case::StringSegmentEqual(suffix, java_suffix,
+                                        java_suffix_length);
     }
 #endif // WIN32_FILE_SYSTEM
 

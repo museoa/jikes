@@ -1211,8 +1211,6 @@ public:
 
     AstConstructorDeclaration *default_constructor;
 
-    AstBlock *this_block; // used by inner classes to initialize this$1, ...this$n fields
-
     LexStream::TokenIndex left_brace_token;
     LexStream::TokenIndex right_brace_token;
 
@@ -1230,8 +1228,7 @@ public:
                                        inner_interfaces(NULL),
                                        instance_initializers(NULL),
                                        empty_declarations(NULL),
-                                       default_constructor(NULL),
-                                       this_block(NULL)
+                                       default_constructor(NULL)
     {
         Ast::kind = Ast::CLASS_BODY;
         Ast::class_tag = Ast::NO_TAG;
@@ -3594,18 +3591,13 @@ public:
     LexStream::TokenIndex identifier_token;
 
     //
-    // When the right-side of a field access consists of
-    // the keyword this, we resolve it either into a
-    // "this" expression if it refers to "this" type or
-    // to a method call that gives access to the relevant
-    // (private) this$0.
+    // When the right-side of a field access consists of the keyword this,
+    // we resolve it into either "this" or a chain of "this$0" traversals.
     //
-    // If the base expression of FieldAccess expression is
-    // of the form expr.this.X, where X is a private variable
-    // that is a member of an outer class, then we resolve it
-    // into a method call to the read_mehod that gives access
-    // to X. In some cases, we also need to resolve field accesses
-    // of the form expr.class.
+    // If the base expression of FieldAccess expression is of the form
+    // type.this.X, where X is a private variable that is a member of an
+    // outer class, then we resolve it into a method call to the read_mehod
+    // that gives access to X.
     //
     AstExpression *resolution_opt;
 
@@ -4142,7 +4134,8 @@ inline bool Ast::IsSuperExpression()
 //
 inline bool Ast::IsThisExpression()
 {
-    return kind == THIS_EXPRESSION || (kind == DOT && FieldAccessCast() -> IsThisAccess());
+    return kind == THIS_EXPRESSION ||
+        (kind == DOT && FieldAccessCast() -> IsThisAccess());
 }
 
 //

@@ -83,7 +83,7 @@ void AstArrayType::Unparse(Ostream& os, LexStream* lex_stream)
         os << "/*AstArrayType:#" << id << "*/";
     type -> Unparse(os, lex_stream);
     for (int i = 0; i < NumBrackets(); i++)
-        os << "[]";
+        Brackets(i) -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
         os << "/*:AstArrayType#" << id << "*/";
 }
@@ -239,7 +239,7 @@ void AstVariableDeclaratorId::Unparse(Ostream& os, LexStream* lex_stream)
         os << "/*AstVariableDeclaratorId:#" << id << "*/";
     os << lex_stream -> NameString(identifier_token);
     for (int i = 0; i < NumBrackets(); i++)
-        os << "[]";
+        Brackets(i) -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
         os << "/*:AstVariableDeclaratorId#" << id << "*/";
 }
@@ -310,7 +310,7 @@ void AstMethodDeclarator::Unparse(Ostream& os, LexStream* lex_stream)
     }
     os << ") ";
     for (int i = 0; i < NumBrackets(); i++)
-        os << "[]";
+        Brackets(i) -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
         os << "/*:AstMethodDeclarator#" << id << "*/";
 }
@@ -965,7 +965,7 @@ void AstArrayCreationExpression::Unparse(Ostream& os, LexStream* lex_stream)
     for (int i = 0; i < NumDimExprs(); i++)
         DimExpr(i) -> Unparse(os, lex_stream);
     for (int k = 0; k < NumBrackets(); k++)
-       os << "[]";
+        Brackets(k) -> Unparse(os, lex_stream);
     if (array_initializer_opt)
         array_initializer_opt -> Unparse(os, lex_stream);
     if (Ast::debug_unparse)
@@ -1041,7 +1041,7 @@ void AstCastExpression::Unparse(Ostream& os, LexStream* lex_stream)
         os << "(";
         type_opt -> Unparse(os, lex_stream);
         for (int i = 0; i < NumBrackets(); i++)
-            os << "[]";
+            Brackets(i) -> Unparse(os, lex_stream);
         os << ")";
     }
 

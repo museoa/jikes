@@ -132,14 +132,11 @@ void ByteCode::CompileClass()
         int method_index = methods.NextIndex(); // index for method
 
         MethodSymbol *method_sym = unit_type -> PrivateAccessMethod(i);
-        AstMethodDeclaration *method = (method_sym -> declaration
-                                        ? method_sym -> declaration -> MethodDeclarationCast()
-                                        : (AstMethodDeclaration *) NULL);
+        AstMethodDeclaration *method = method_sym -> declaration ->
+            MethodDeclarationCast();
+        assert(method);
         BeginMethod(method_index, method_sym);
-        if (method)
-            EmitBlockStatement((AstBlock *) method -> method_body);
-        else
-            GenerateAccessMethod(method_sym);
+        EmitBlockStatement((AstBlock *) method -> method_body);
         EndMethod(method_index, method_sym);
     }
 
@@ -531,82 +528,6 @@ void ByteCode::DeclareField(VariableSymbol *symbol)
 
     if (symbol -> IsDeprecated())
         fields[field_index].AddAttribute(CreateDeprecatedAttribute());
-}
-
-
-//
-// Generate code for access method to private member of containing class
-//
-void ByteCode::GenerateAccessMethod(MethodSymbol *method_symbol)
-{
-    assert(method_symbol -> ACC_STATIC());
-
-    // Here, we add a line-number attribute entry for this method.
-    // Even though this is a generated method, JPDA debuggers will
-    // still fail setting breakpoints if methods don't have line numbers.
-    // Sun's javac compiler generates a single line number entry
-    // with start_pc set to zero and line number set to the first line of
-    // code in the source.  
-    // In testing, it appears that setting the start_pc and line_number
-    // to zero as we do here, also works.  
-    line_number_table_attribute -> AddLineNumber(0, 0);
-
-
-    int stack_words = 0,
-        argument_offset = 0; // offset to start of argument
-
-    //
-    // Load the parameters
-    //
-    for (int i = 0; i < method_symbol -> NumFormalParameters(); i++)
-    {
-        TypeSymbol *local_type = method_symbol -> FormalParameter(i) -> Type();
-        stack_words += GetTypeWords(local_type);
-        LoadLocal(argument_offset, local_type);
-        argument_offset += GetTypeWords(local_type); // update position in stack
-    }
-
-    MethodSymbol *method_sym = method_symbol -> accessed_member -> MethodCast();
-    if (method_sym)
-    {
-        if (method_sym -> ACC_STATIC())
-            PutOp(OP_INVOKESTATIC);
-        else
-        {
-            stack_words--;
-            PutOp(method_sym -> ACC_PROTECTED() ? OP_INVOKEVIRTUAL
-                  : OP_INVOKESPECIAL);
-        }
-        CompleteCall(method_sym, stack_words, unit_type);
-    }
-    else
-    {
-        VariableSymbol *field_sym = method_symbol -> accessed_member -> VariableCast();
-
-        if (method_symbol -> Type() == control.void_type) // writing to a field
-        {
-            TypeSymbol *parameter_type = method_symbol -> FormalParameter(field_sym -> ACC_STATIC() ? 0 : 1) -> Type();
-            PutOp(field_sym -> ACC_STATIC() ? OP_PUTSTATIC : OP_PUTFIELD);
-            PutU2(RegisterFieldref(unit_type, field_sym));
-            if (control.IsDoubleWordType(parameter_type))
-                ChangeStack(-1);
-        }
-        else // reading a field: need method to retrieve value of field
-        {
-            PutOp(field_sym -> ACC_STATIC() ? OP_GETSTATIC : OP_GETFIELD);
-            PutU2(RegisterFieldref(unit_type, field_sym));
-            if (control.IsDoubleWordType(method_symbol -> Type()))
-                ChangeStack(1);
-        }
-    }
-
-    //
-    // Method returns void, generate code for expression-less return statement.
-    // Otherwise, call GenerateReturn to generate proper code.
-    //
-    if (method_symbol -> Type() == control.void_type)
-         PutOp(OP_RETURN);
-    else GenerateReturn(method_symbol -> Type());
 }
 
 
@@ -1430,7 +1351,7 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
         assert(low <= high);
 
         if ((unsigned long)high < 0x7ffffff0UL)
-        { 
+        {
             // want to compute
             //  (2 + high-low + 1) < (1 + ncases * 2 + 30)
             // but must guard against overflow, so factor out
@@ -1442,11 +1363,11 @@ void ByteCode::EmitSwitchStatement(AstSwitchStatement *switch_statement)
             {
                 use_lookup = false; // use tableswitch
                 nlabels = range.LowWord();
-    
+
                 assert(range.HighWord() == 0);
                 assert(nlabels >= ncases);
             }
-        } 
+        }
     }
 
     //
@@ -1780,7 +1701,6 @@ void ByteCode::EmitTryStatement(AstTryStatement *statement)
                 EmitBranch(OP_GOTO, end_label, statement);
             }
         }
-
         //
         // If this try statement contains a finally clause, then ...
         //
@@ -1947,7 +1867,7 @@ bool ByteCode::ProcessAbruptExit(int level, u2 width, TypeSymbol *return_type)
             width = 0;
             EmitBranch(OP_GOTO, method_stack -> FinallyLabel(enclosing_level),
                        method_stack -> Block(enclosing_level));
-            break;            
+            break;
         }
         else if (block -> block_tag == AstBlock::SYNCHRONIZED)
         {
@@ -1960,7 +1880,7 @@ bool ByteCode::ProcessAbruptExit(int level, u2 width, TypeSymbol *return_type)
                 block_symbol -> try_or_synchronized_variable_index;
             u2 start_pc = method_stack -> MonitorStartPc(enclosing_level);
             u2 handler_pc = method_stack -> MonitorHandlerPc(enclosing_level);
-            
+
             LoadLocal(variable_index, control.Object());
             PutOp(OP_MONITOREXIT);
             u2 end_pc = code_attribute -> CodeLength();
@@ -2799,7 +2719,7 @@ void ByteCode::EmitAssertStatement(AstAssertStatement *assertion)
             ChangeStack(- GetTypeWords(type));
         }
         else constructor = control.AssertionError_InitMethod();
-    
+
         PutOp(OP_INVOKESPECIAL);
         PutU2(RegisterLibraryMethodref(constructor));
         PutOp(OP_ATHROW);
@@ -2918,7 +2838,7 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
             assert(expression -> Type() -> IsSubclass(control.Object()));
             PutOp(OP_POP);
             return 0;
-        }        
+        }
     case Ast::BINARY:
         {
             // Must evaluate for potential side effects.
@@ -4013,7 +3933,7 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
             PutOp(OP_ICONST_0); // push false
             EmitBranchIfExpression(expression, false, label);
             PutOp(OP_POP); // pop the false
-            PutOp(OP_ICONST_1); // push true 
+            PutOp(OP_ICONST_1); // push true
             DefineLabel(label);
             CompleteLabel(label);
         }
@@ -5782,7 +5702,7 @@ void ByteCode::LoadImmediateInteger(int val)
         // that ldc_w does not buy us anything, however.
         //
         u2 index = FindInteger(control.int_pool.Find(val));
-        if (index == 0 || index > 255) 
+        if (index == 0 || index > 255)
         {
             PutOp(OP_SIPUSH);
             PutU2(val);

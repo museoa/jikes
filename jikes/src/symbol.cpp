@@ -33,20 +33,13 @@ wchar_t *MethodSymbol::Header()
 
     if (! header)
     {
-        bool is_constructor = false;
-        for (MethodSymbol *constr = containing_type -> FindConstructorSymbol(); constr; constr = constr -> next_method)
-        {
-            if (this == constr)
-            {
-                is_constructor = true;
-                break;
-            }
-        }
+        bool is_constructor = Identity() == containing_type ->
+            semantic_environment -> sem -> control.init_name_symbol;
 
         int length = (Type() -> ContainingPackage() -> PackageNameLength() +
                       Type() -> ExternalNameLength() +
                       (is_constructor ? containing_type -> NameLength() : NameLength())
-                      + 5); // '/' after package_name, ' ' after type,
+                      + 5); // +5 for '.' after package_name, ' ' after type,
                             // '(' after name, ')' after all parameters,
                             // ';' to terminate
         for (int i = 0; i < NumFormalParameters(); i++)
@@ -54,9 +47,18 @@ wchar_t *MethodSymbol::Header()
             VariableSymbol *formal = FormalParameter(i);
             length += (formal -> Type() -> ContainingPackage() -> PackageNameLength() +
                        formal -> Type() -> ExternalNameLength() +
-                       formal -> NameLength() + 4); // '/' after package_name
-                                                    // ' ' after type
-                                                    // ',' and ' ' to separate this formal parameter from the next one
+                       formal -> NameLength() + 4);
+            // +4 for '.' after package_name, ' ' after type
+            // ',' and ' ' to separate this formal parameter from the next one
+        }
+
+        for (int j = 0; j < NumThrows(); j++)
+        {
+            TypeSymbol *exception = Throws(j);
+            length += (exception -> ContainingPackage() -> PackageNameLength() +
+                       exception -> ExternalNameLength() + 10);
+            // +10 for " throws", '.' after package_name,
+            // ',' and ' ' to separate this throws clause from the next one
         }
 
         header = new wchar_t[length + 1]; // +1 for '\0'
@@ -120,6 +122,44 @@ wchar_t *MethodSymbol::Header()
             s -= 2; // remove the last ',' and ' '
         }
         *s++ = U_RIGHT_PARENTHESIS;
+
+        if (NumThrows() > 0)
+        {
+            *s++ = U_SPACE;
+            *s++ = U_t;
+            *s++ = U_h;
+            *s++ = U_r;
+            *s++ = U_o;
+            *s++ = U_w;
+            *s++ = U_s;
+            *s++ = U_SPACE;
+            for (int k = 0; k < NumThrows(); k++)
+            {
+                TypeSymbol *exception = Throws(k);
+
+                PackageSymbol *package = exception -> ContainingPackage();
+                wchar_t *package_name = package -> PackageName();
+                if (package -> PackageNameLength() > 0 &&
+                    wcscmp(package_name, StringConstant::US_DO) != 0)
+                {
+                    while (*package_name)
+                    {
+                        *s++ = (*package_name == U_SLASH ? (wchar_t) U_DOT
+                                : *package_name);
+                        package_name++;
+                    }
+                    *s++ = U_DOT;
+                }
+
+                for (wchar_t *s2 = exception -> ExternalName(); *s2; s2++)
+                    *s++ = *s2;
+                *s++ = U_COMMA;
+                *s++ = U_SPACE;
+            }
+
+            s -= 2; // remove the last ',' and ' '
+        }
+
         *s++ = U_SEMICOLON;
         *s = U_NULL;
 
@@ -632,6 +672,7 @@ TypeSymbol::~TypeSymbol()
     delete array;
 }
 
+
 MethodSymbol::~MethodSymbol()
 {
     for (int i = 0; i < NumThrowsSignatures(); i++)
@@ -1012,6 +1053,10 @@ void MethodSymbol::ProcessMethodThrows(Semantic *sem, LexStream::TokenIndex tok)
 }
 
 
+//
+// In addition to setting the signature, this updates the max_variable_index
+// if needed.
+//
 void MethodSymbol::SetSignature(Control &control, TypeSymbol *placeholder)
 {
     int i;
@@ -1396,11 +1441,11 @@ MethodSymbol *TypeSymbol::FindOrInsertClassLiteralMethod(Control &control)
         class_literal_method -> SetContainingType(this);
         class_literal_method -> SetBlockSymbol(block_symbol);
 
-            VariableSymbol *variable_symbol = block_symbol -> InsertVariableSymbol(control.MakeParameter(1));
-            variable_symbol -> MarkSynthetic();
-            variable_symbol -> SetType(control.String());
-            variable_symbol -> SetOwner(class_literal_method);
-            variable_symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
+        VariableSymbol *variable_symbol = block_symbol -> InsertVariableSymbol(control.MakeParameter(1));
+        variable_symbol -> MarkSynthetic();
+        variable_symbol -> SetType(control.String());
+        variable_symbol -> SetOwner(class_literal_method);
+        variable_symbol -> SetLocalVariableIndex(block_symbol -> max_variable_index++);
 
         class_literal_method -> AddFormalParameter(variable_symbol);
         class_literal_method -> SetSignature(control);
@@ -1487,11 +1532,12 @@ VariableSymbol *TypeSymbol::FindOrInsertClassLiteral(TypeSymbol *type)
         //     /*synthetic*/ static java.lang.Class class$Foo$Bar;
         //
         variable_symbol = InsertVariableSymbol(name_symbol);
-        variable_symbol -> MarkSynthetic();
         variable_symbol -> SetType(control.Class());
         variable_symbol -> SetACC_STATIC();
         variable_symbol -> SetOwner(this);
         variable_symbol -> MarkComplete();
+        variable_symbol -> MarkSynthetic();
+        variable_symbol -> MarkDefinitelyAssigned();
 
         AddClassLiteral(variable_symbol);
     }
@@ -1517,13 +1563,13 @@ VariableSymbol *TypeSymbol::FindOrInsertAssertVariable()
         delete [] name;
 
         assert_variable = InsertVariableSymbol(name_symbol);
-        assert_variable -> MarkSynthetic();
         assert_variable -> SetType(control.boolean_type);
         assert_variable -> SetACC_PRIVATE();
         assert_variable -> SetACC_STATIC();
         assert_variable -> SetACC_FINAL();
         assert_variable -> SetOwner(this);
         assert_variable -> MarkComplete();
+        assert_variable -> MarkSynthetic();
         assert_variable -> MarkDefinitelyAssigned();
 
         //
@@ -1642,7 +1688,7 @@ inline void TypeSymbol::MapSymbolToReadMethod(Symbol *symbol,
 {
     if (! read_methods)
         read_methods = new Map<Symbol, Map<TypeSymbol, MethodSymbol> >(); // default size
- 
+
     Map<TypeSymbol, MethodSymbol> *map = read_methods -> Image(symbol);
     if (! map)
     {
@@ -1679,7 +1725,7 @@ inline void TypeSymbol::MapSymbolToWriteMethod(VariableSymbol *symbol,
         map = new Map<TypeSymbol, MethodSymbol>(1); // small size
         write_methods -> Add(symbol, map);
     }
- 
+
     map -> Add(base_type, method);
 }
 
@@ -1907,7 +1953,8 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *ctor)
     //
     // Protected superconstructors are always accessible, and class instance
     // creation expressions can only invoke a protected constructor in the
-    // current package, where an accessor is not needed.
+    // current package, where an accessor is not needed. Also, anonymous
+    // classes never have a private constructor.
     //
     assert((ctor -> Identity() ==
             semantic_environment -> sem -> control.init_name_symbol) &&
@@ -1966,7 +2013,7 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *ctor)
         //     private Outer$Inner(Outer $0) { super(); this$0 = $0; }
         //     /*synthetic*/ Outer$Inner(Outer $0, Outer$ $1) { this($0); }
         // }
-        // 
+        //
         Semantic *sem = semantic_environment -> sem;
         assert(sem);
 
@@ -2097,7 +2144,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member,
 {
     TypeSymbol *containing_type = member -> owner -> TypeCast();
     if (! base_type)
-        base_type = this;        
+        base_type = this;
 
     assert((member -> ACC_PRIVATE() && this == containing_type) ||
            (member -> ACC_PROTECTED() &&
@@ -2314,7 +2361,7 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member,
             method_declarator -> AllocateFormalParameters(2);
 
             NameSymbol *instance_name = control.MakeParameter(1);
-                
+
             VariableSymbol *instance = block_symbol -> InsertVariableSymbol(instance_name);
             instance -> MarkSynthetic();
             instance -> SetType(base_type);

@@ -845,7 +845,7 @@ void Semantic::ProcessDoStatement(Ast *stmt)
     AstBlock *block_body = (AstBlock *) BreakableStatementStack().Top();
     do_statement -> can_complete_normally =
         ((enclosed_statement -> can_complete_normally &&
-          ! IsConstantTrue(do_statement -> expression)) || 
+          ! IsConstantTrue(do_statement -> expression)) ||
          block_body -> can_complete_normally);
 
     BreakableStatementStack().Pop();
@@ -1453,7 +1453,7 @@ void Semantic::ProcessTryStatement(Ast *stmt)
     LocalBlockStack().Push(block_body);
 
     ProcessBlockStatements(block_body);
-    
+
     LocalBlockStack().Pop();
     LocalSymbolTable().Pop();
 
@@ -1485,7 +1485,7 @@ void Semantic::ProcessTryStatement(Ast *stmt)
     //
     // Note that the use of the word assignable here is slightly misleading.
     // It does not mean assignable in the strict sense defined in section 5.2.
-    // Using the strict definition of 5.2, the rule can be more accurately 
+    // Using the strict definition of 5.2, the rule can be more accurately
     // stated as follows:
     //
     //    . Catchable Exception:

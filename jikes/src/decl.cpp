@@ -774,7 +774,8 @@ void Semantic::SetDefaultSuperType(AstInterfaceDeclaration *interface_declaratio
 
 
 //
-// Pass 2: Process "extends" and "implements" clauses associated with the types.
+// Pass 2: Process "extends" and "implements" clauses associated with the
+// types.
 //
 void Semantic::ProcessTypeHeader(AstClassDeclaration *class_declaration)
 {
