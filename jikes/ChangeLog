@@ -1,5 +1,10 @@
 2001-09-02  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/expr.cpp (ProcessAssignmentExpression): Fix the regression
+	caused by the patch committed 2001-05-06 - patch 118, from bug 493.
+
+2001-09-02  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/stream.cpp (ProcessInputUnicode): Remove side effect from
 	assert statement - patch 145, from bug 657.
 

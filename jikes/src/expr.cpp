@@ -7104,14 +7104,12 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
                     // hand side is constant 0 then issue an error message.
                     //
                     if (control.IsIntegral(left_type) &&
-#ifdef HAVE_DYNAMIC_CAST
-                        (right_type == control.int_type && dynamic_cast<IntLiteralValue *> (right_expression -> value) -> value == 0) ||
-                        (right_type == control.long_type && dynamic_cast<LongLiteralValue *> (right_expression -> value) -> value == 0)
-#else // ! HAVE_DYNAMIC_CAST
-                        (right_type == control.int_type && ((IntLiteralValue *) right_expression -> value) -> value == 0) ||
-                        (right_type == control.long_type && ((LongLiteralValue *) right_expression -> value) -> value == 0)
-#endif // ! HAVE_DYNAMIC_CAST
-                        )
+                        (right_expression -> Type() == control.int_type &&
+                         DYNAMIC_CAST<IntLiteralValue *, LiteralValue *>
+                         (right_expression -> value) -> value == 0) ||
+                        (right_expression -> Type() == control.long_type &&
+                         DYNAMIC_CAST<LongLiteralValue *, LiteralValue *>
+                         (right_expression -> value) -> value == 0))
                     {
                         ReportSemError(SemanticError::ZERO_DIVIDE_CAUTION,
                                        assignment_expression -> LeftToken(),
@@ -7147,8 +7145,28 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
         case AstAssignmentExpression::AND_EQUAL:
         case AstAssignmentExpression::XOR_EQUAL:
         case AstAssignmentExpression::IOR_EQUAL:
-             if (left_type != control.boolean_type || right_type != control.boolean_type) // if anyont of the exprs is not boolean
+             if (left_type == control.boolean_type)
+             {
+                 if (right_type != control.boolean_type)
+                     ReportSemError(SemanticError::TYPE_NOT_BOOLEAN,
+                                    assignment_expression -> expression -> LeftToken(),
+                                    assignment_expression -> expression -> RightToken(),
+                                    right_type -> Name());
+             }
+             else
+             {
+                 if (! control.IsIntegral(left_type))
+                     ReportSemError(SemanticError::TYPE_NOT_INTEGRAL,
+                                    left_hand_side -> LeftToken(),
+                                    left_hand_side -> RightToken(),
+                                    left_type -> Name());
+                 if (! control.IsIntegral(right_type))
+                     ReportSemError(SemanticError::TYPE_NOT_INTEGRAL,
+                                    assignment_expression -> expression -> LeftToken(),
+                                    assignment_expression -> expression -> RightToken(),
+                                    right_type -> Name());
                  BinaryNumericPromotion(assignment_expression);
+             }
              break;
         default:
             assert(false);
