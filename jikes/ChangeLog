@@ -4,6 +4,11 @@
 
 2002-07-10  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/expr.cpp (ProcessPLUS): Fix the (hopefully) last bug with
+	string concatenation - bug 3066.
+
+2002-07-10  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/class.h (AddException): Add optimizations.
 	* src/bytecode.h (handler_range_start, handler_range_end): New
 	fields to allow better handling of exception handler ranges.

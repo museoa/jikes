@@ -5283,9 +5283,11 @@ void Semantic::ProcessPLUS(AstBinaryExpression *expr)
                 ReportSemError(SemanticError::VOID_TO_STRING,
                                left -> LeftToken(),
                                left -> RightToken());
-            else if (left_type == control.null_type)
+            else if (left_type == control.null_type || left -> IsConstant())
+            {
+                left -> value = CastValue(control.String(), left);
                 left -> symbol = control.String();
-            else left -> value = CastValue(control.String(), left);
+            }
         }
 
         //
@@ -5299,9 +5301,11 @@ void Semantic::ProcessPLUS(AstBinaryExpression *expr)
                 ReportSemError(SemanticError::VOID_TO_STRING,
                                right -> LeftToken(),
                                right -> RightToken());
-            else if (right_type == control.null_type)
+            else if (right_type == control.null_type || right -> IsConstant())
+            {
+                right -> value = CastValue(control.String(), right);
                 right -> symbol = control.String();
-            else right -> value = CastValue(control.String(), right);
+            }
         }
 
         AddDependence(ThisType(), control.StringBuffer(),
