@@ -1,5 +1,11 @@
 2001-11-08  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/bytecode.cpp (LoadImmediateInteger): Comment why we emit ldc
+	instead of sipush if the constant already appears in the pool; but
+	emit sipush instead of ldc_w - bug 220.
+
+2001-11-08  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/double.h (NAN_BITS): Rename from NAN, which happened to
 	expand as a pre-processor macro in gcc 3.0.1 - bug 2255.
 

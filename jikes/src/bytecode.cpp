@@ -3611,7 +3611,7 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
             case AstBinaryExpression::RIGHT_SHIFT:
             case AstBinaryExpression::UNSIGNED_RIGHT_SHIFT:
                  if (this_control.IsSimpleIntegerValueType(right_type) || right_type == this_control.boolean_type)
-                     LoadImmediateInteger(0);
+                     PutOp(OP_ICONST_0);
                  else
                  {
                      assert((right_type == this_control.long_type ||
@@ -3663,7 +3663,7 @@ int ByteCode::EmitBinaryExpression(AstBinaryExpression *expression)
             case AstBinaryExpression::STAR:
             case AstBinaryExpression::AND: // here for cases that evaluate to zero
                  if (this_control.IsSimpleIntegerValueType(left_type) || left_type == this_control.boolean_type)
-                      LoadImmediateInteger(0);
+                     PutOp(OP_ICONST_0);
                  else
                  {
                      assert((left_type == this_control.long_type ||
@@ -5136,10 +5136,7 @@ void ByteCode::LoadLiteral(LiteralValue *litp, TypeSymbol *type)
     if (this_control.IsSimpleIntegerValueType(type) || type == this_control.boolean_type) // load literal using literal value
     {
         IntLiteralValue *vp = (IntLiteralValue *) litp;
-        int val = vp -> value;
-        if (val >= -32768 && val < 32768) // In this case, we might be able to use an immediate instruction
-             LoadImmediateInteger(val);
-        else LoadConstantAtIndex(RegisterInteger(vp));
+        LoadImmediateInteger(vp -> value);
     }
     else if (type == this_control.String()) // register index as string if this has not yet been done
     {
@@ -5193,31 +5190,30 @@ void ByteCode::LoadLiteral(LiteralValue *litp, TypeSymbol *type)
 void ByteCode::LoadImmediateInteger(int val)
 {
     if (val >= -1 && val <= 5)
-         PutOp(OP_ICONST_0 + val); // exploit opcode encoding
+        PutOp(OP_ICONST_0 + val); // exploit opcode encoding
     else if (val >= -128 && val < 128)
     {
-         PutOp(OP_BIPUSH);
-         PutU1(val);
+        PutOp(OP_BIPUSH);
+        PutU1(val);
     }
     else
     {
         //
         // For a short value, look to see if it is already in the constant
-        // pool. For a value outside the short range, make sure it is entered
-        // in the constant pool.
+        // pool. In such a case, ldc is two bytes, while sipush is three, so
+        // we emit a smaller classfile with no penalty to a good JIT. Note
+        // that ldc_w does not buy us anything, however. Outside the range of
+        // sipush, we must use the constant pool.
         //
         u2 index = (val >= -32768 && val < 32768 ? FindInteger(this_control.int_pool.Find(val))
                                                  : RegisterInteger(this_control.int_pool.FindOrInsert(val)));
-        if (index == 0) // a short value that was not previously registered in the constant pool
+        if (index == 0 || index > 255) // a short value where ldc is overkill
         {
             PutOp(OP_SIPUSH);
-            PutU1(val >> 8);
-            PutU1(val);
+            PutU2(val);
         }
         else LoadConstantAtIndex(index);
     }
-
-    return;
 }
 
 
