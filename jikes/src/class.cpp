@@ -136,7 +136,9 @@ CPUtf8Info::CPUtf8Info(ClassFile& buffer)
 
 void CPUtf8Info::Init(u2 size)
 {
+#ifdef JIKES_DEBUG
     const char* tmp;
+#endif // JIKES_DEBUG
     for (u2 i = 0; i < size; i++)
     {
         switch (bytes[i])

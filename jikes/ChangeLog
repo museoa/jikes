@@ -1,5 +1,21 @@
 2004-04-04  Eric Blake  <ebb9@byu.net>
 
+	* src/class.cpp (Init): Silence compiler warning.
+
+2004-04-04  Musachy Barroso <insanus@bellsouth.net>
+
+	Jikes patch 432.
+	* src/control.cpp (Control): Check for system I/O errors.
+	* src/control.h (general_io_errors, general_io_warnings): New
+	fields.
+	* src/error.cpp (SafeArray): New method for persistent strings.
+	* src/error.h (IO_WARNING, IO_ERROR): New errors.
+	* src/system.cpp (ProcessBootClassPath): 
+	* src/system.cpp (ProcessExtDirs): 
+	* src/system.cpp (ProcessClassPath): 
+
+2004-04-04  Eric Blake  <ebb9@byu.net>
+
 	* src/class.h (GetN): Return NULL-terminated byte arrays. 
 	(CPUtf8Info::Bytes): Change to reflect the actual contents of the
 	bytes array rather than debugging view - fixes bug 3913.

@@ -57,6 +57,12 @@ public:
     //
     const wchar_t* Array();
 
+    //
+    // The returned value is safe, but the caller is responsible for
+    // freeing the returned memory.
+    //
+    const wchar_t* SafeArray();
+
 private:
     void DoFill(int n);
     char fill_char;
@@ -159,6 +165,8 @@ public:
         COMPRESSED_ZIP_FILE,
         INVALID_CLASS_FILE,
         CANNOT_OPEN_CLASS_FILE,
+        IO_ERROR,
+        IO_WARNING,
 
         // Warnings and pedantic errors.
         NEGATIVE_ARRAY_SIZE,

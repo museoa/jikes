@@ -591,6 +591,7 @@ void Control::ProcessBootClassPath()
                 }
                 else
                 {
+                    errno = 0;
                     Zip* zipinfo = new Zip(*this, head);
                     if (! zipinfo -> IsValid())
                     {
@@ -599,13 +600,24 @@ void Control::ProcessBootClassPath()
                         for (int i = 0; i < input_name_length; i++)
                             name[i] = input_name[i];
                         name[input_name_length] = U_NULL;
-                        wchar_t* tail = &name[input_name_length - 3];
-                        if (Case::StringSegmentEqual(tail, US_zip, 3) ||
-                            Case::StringSegmentEqual(tail, US_jar, 3))
+                        if (errno)
                         {
-                            bad_zip_filenames.Next() = name;
+                            const char* std_err = strerror(errno);
+                            ErrorString err_str;
+                            err_str << '"' << std_err << '"'
+                                    << " while trying to open " << name;
+                            general_io_warnings.Next() = err_str.SafeArray();
                         }
-                        else bad_dirnames.Next() = name;
+                        else
+                        {
+                            wchar_t* tail = &name[input_name_length - 3];
+                            if (Case::StringSegmentEqual(tail, US_zip, 3) ||
+                               Case::StringSegmentEqual(tail, US_jar, 3))
+                            {
+                                bad_zip_filenames.Next() = name;
+                            }
+                            else bad_dirnames.Next() = name;
+                        }
                     }
 
                     unnamed_package -> directory.Next() =
@@ -760,8 +772,8 @@ void Control::ProcessExtDirs()
                             // + 1 for possible '/' between path and file.
                             int fullpath_length = input_name_length +
                                 entry_length + 1;
-			    char * ending = &(entry->d_name[entry_length-3]);
-			    // skip ., .., and things that are neither zip nor jar
+                            char* ending = &(entry->d_name[entry_length-3]);
+                            // skip ., .., non-zip, and non-jar
                             if (! strcmp(entry -> d_name, ".") ||
                                 ! strcmp(entry -> d_name, "..") ||
                                 (strcasecmp(ending, "zip") &&
@@ -786,6 +798,7 @@ void Control::ProcessExtDirs()
                             for (int i = 0; i < fullpath_length; ++i)
                                 extdir_entry_name[i] = extdir_entry[i];
 
+                            errno = 0;
                             Zip* zipinfo = new Zip(*this, extdir_entry);
                             if (! zipinfo -> IsValid())
                             {
@@ -794,7 +807,17 @@ void Control::ProcessExtDirs()
                                 for (int i = 0; i < fullpath_length; ++i)
                                     name[i] = extdir_entry_name[i];
                                 name[fullpath_length] = U_NULL;
-                                bad_zip_filenames.Next() = name;
+                                if (errno)
+                                {
+                                    const char* std_err = strerror(errno);
+                                    ErrorString err_str;
+                                    err_str << '"' << std_err << '"'
+                                            << " while trying to open "
+                                            << name;
+                                    general_io_warnings.Next() =
+                                        err_str.SafeArray();
+                                }
+                                else bad_zip_filenames.Next() = name;
                             }
 
                             unnamed_package->directory.Next() =
@@ -834,13 +857,15 @@ void Control::ProcessExtDirs()
                             // + 1 for possible '/' between path and file.
                             int fullpath_length = input_name_length +
                                 entry_length + 1;
-			    char* ending = &(entry.cFileName[entry_length-3]);
-			    // skip ., .., and not zip or jar
+                            char* ending = &(entry.cFileName[entry_length-3]);
+                            // skip ., .., and not zip or jar
                             if ((! strcmp(entry.cFileName, "." )) ||
                                 (! strcmp(entry.cFileName, "..")) ||
-				  ( strcasecmp(ending, "zip") &&
-				    strcasecmp(ending, "jar")    ) )
+                                ( strcasecmp(ending, "zip") &&
+                                  strcasecmp(ending, "jar")))
+                            {
                                 continue;
+                            }
 
                             char* extdir_entry = new char[fullpath_length + 1];
                             wchar_t* extdir_entry_name =
@@ -874,6 +899,7 @@ void Control::ProcessExtDirs()
                             for (int i = 0; i < fullpath_length; ++i)
                                 extdir_entry_name[i] = extdir_entry[i];
 
+                            errno = 0;
                             Zip* zipinfo = new Zip(*this, extdir_entry);
                             if (! zipinfo -> IsValid())
                             {
@@ -882,7 +908,17 @@ void Control::ProcessExtDirs()
                                 for (int i = 0; i < fullpath_length; ++i)
                                     name[i] = extdir_entry_name[i];
                                 name[fullpath_length] = U_NULL;
-                                bad_zip_filenames.Next() = name;
+                                if (errno)
+                                {
+                                    const char* std_err = strerror(errno);
+                                    ErrorString err_str;
+                                    err_str << '"' << std_err << '"'
+                                            << " while trying to open "
+                                            << name;
+                                    general_io_warnings.Next() =
+                                        err_str.SafeArray();
+                                }
+                                else bad_zip_filenames.Next() = name;
                             }
 
                             unnamed_package -> directory.Next() =
@@ -1060,6 +1096,7 @@ void Control::ProcessClassPath()
                 }
                 else
                 {
+                    errno = 0;
                     Zip* zipinfo = new Zip(*this, head);
                     // If the zipfile is all screwed up, give up here !!!
                     if (! zipinfo -> IsValid())
@@ -1068,12 +1105,24 @@ void Control::ProcessClassPath()
                         for (int i = 0; i < input_name_length; i++)
                             name[i] = input_name[i];
                         name[input_name_length] = U_NULL;
-                        wchar_t* tail = &name[input_name_length - 3];
-                        if (Case::StringSegmentEqual(tail, US_zip, 3) ||
-                            Case::StringSegmentEqual(tail, US_jar, 3))
-                            bad_zip_filenames.Next() = name;
+                        if (errno)
+                        {
+                            const char* std_err = strerror(errno);
+                            ErrorString err_str;
+                            err_str << '"' << std_err << '"'
+                                    << " while trying to open " << name;
+                            general_io_warnings.Next() = err_str.SafeArray();
+                        }
                         else
-                            bad_dirnames.Next() = name;
+                        {
+                            wchar_t* tail = &name[input_name_length - 3];
+                            if (Case::StringSegmentEqual(tail, US_zip, 3) ||
+                                Case::StringSegmentEqual(tail, US_jar, 3))
+                            {
+                                bad_zip_filenames.Next() = name;
+                            }
+                            else bad_dirnames.Next() = name;
+                        }
                     }
 
                     unnamed_package -> directory.Next() =

@@ -140,6 +140,15 @@ const wchar_t* ErrorString::Array()
     return result;
 }
 
+const wchar_t* ErrorString::SafeArray()
+{
+    // safe, but the caller will be resposible for freeing the memory
+    Next() = U_NULL; // zero terminate string
+    wchar_t* result = new wchar_t[top];
+    memcpy(result, ConvertibleArray<wchar_t>::Array(), top * sizeof(wchar_t));
+    return result;
+}
+
 void ErrorString::width(int w)
 {
     field_width = w;
@@ -492,6 +501,7 @@ void SemanticError::StaticInitializer()
     //
     warning[CANNOT_OPEN_ZIP_FILE] = WEAK_WARNING;
     warning[CANNOT_OPEN_PATH_DIRECTORY] = WEAK_WARNING;
+    warning[IO_WARNING] = WEAK_WARNING;
 
     warning[EMPTY_DECLARATION] = WEAK_WARNING;
     warning[DUPLICATE_THROWS_CLAUSE_CLASS] = WEAK_WARNING;
@@ -1273,12 +1283,15 @@ void SemanticError::InitializeMessages()
         "The class file \"%F1.class\" has an invalid format.";
     messages[CANNOT_OPEN_CLASS_FILE] =
         "Unable to open file associated with type \"%T1\".";
+    messages[IO_ERROR] = "I/O error: %1.";
+    messages[IO_WARNING] = "I/O warning: %1.";
 
     // Warnings and pedantic errors.
     messages[NEGATIVE_ARRAY_SIZE] =
         "Array initialization will fail with a negative dimension.";
     messages[NEGATIVE_SHIFT_COUNT] =
-        "The shift count %1 is negative.";
+        "The shift count %1 is negative; it will be masked to the "
+        "appropriate width and behave as a positive shift count.";
     messages[SHIFT_COUNT_TOO_LARGE] =
         "The shift count of %1 is >= the %2-bit width of the type.";
     messages[UNNECESSARY_PARENTHESIS] =

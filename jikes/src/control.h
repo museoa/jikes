@@ -48,6 +48,8 @@ public:
     Tuple<wchar_t*> bad_zip_filenames;
     Tuple<wchar_t*> bad_input_filenames;
     Tuple<wchar_t*> unreadable_input_filenames;
+    Tuple<const wchar_t*> general_io_errors;
+    Tuple<const wchar_t*> general_io_warnings;
 
     SystemTable* system_table;
     Tuple<DirectorySymbol*> system_directories;

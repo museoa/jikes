@@ -182,6 +182,7 @@ Control::Control(char** arguments, Option& option_)
 #ifdef JIKES_DEBUG
         input_files_processed++;
 #endif
+        errno = 0;
         scanner -> Scan(file_symbol);
         if (file_symbol -> lex_stream) // did we have a successful scan!
         {
@@ -190,6 +191,14 @@ Control::Control(char** arguments, Option& option_)
                                              ast_pool);
             ProcessPackageDeclaration(file_symbol, package_declaration);
             ast_pool -> Reset();
+        }
+        else
+        {
+            const char* std_err = strerror(errno);
+            ErrorString err_str;
+            err_str << '"' << std_err << '"' << " while trying to open "
+                    << file_symbol -> FileName();
+            general_io_errors.Next() = err_str.SafeArray();
         }
     }
 
@@ -240,6 +249,18 @@ Control::Control(char** arguments, Option& option_)
     {
         system_semantic -> ReportSemError(SemanticError::CANNOT_OPEN_ZIP_FILE,
                                           BAD_TOKEN, bad_zip_filenames[i]);
+    }
+    for (i = 0; i < general_io_warnings.Length(); i++)
+    {
+        system_semantic -> ReportSemError(SemanticError::IO_WARNING, BAD_TOKEN,
+                                          general_io_warnings[i]);
+        delete [] general_io_warnings[i];
+    }
+    for (i = 0; i < general_io_errors.Length(); i++)
+    {
+        system_semantic -> ReportSemError(SemanticError::IO_ERROR, BAD_TOKEN,
+                                          general_io_errors[i]);
+        delete [] general_io_errors[i];
     }
 
     //
