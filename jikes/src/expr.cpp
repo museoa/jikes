@@ -7099,11 +7099,18 @@ void Semantic::ProcessAssignmentExpression(Ast *expr)
                 if (right_expression -> IsConstant())
                 {
                     //
-                    // If the type of the expression is int or long and the right-hand side is 0
-                    // then issue an error message.
+                    // If the type of the expression is integral and the right
+                    // hand side is constant 0 then issue an error message.
                     //
-                    if ((left_type == control.int_type && ((IntLiteralValue *) right_expression -> value) -> value == 0) ||
-                        (left_type == control.long_type && ((LongLiteralValue *) right_expression -> value) -> value == 0))
+                    if (control.IsIntegral(left_type) &&
+#ifdef HAVE_DYNAMIC_CAST
+                        (right_type == control.int_type && dynamic_cast<IntLiteralValue *> (right_expression -> value) -> value == 0) ||
+                        (right_type == control.long_type && dynamic_cast<LongLiteralValue *> (right_expression -> value) -> value == 0)
+#else // ! HAVE_DYNAMIC_CAST
+                        (right_type == control.int_type && ((IntLiteralValue *) right_expression -> value) -> value == 0) ||
+                        (right_type == control.long_type && ((LongLiteralValue *) right_expression -> value) -> value == 0)
+#endif // ! HAVE_DYNAMIC_CAST
+                        )
                     {
                         ReportSemError(SemanticError::ZERO_DIVIDE_CAUTION,
                                        assignment_expression -> LeftToken(),

@@ -1,5 +1,10 @@
 2001-05-06  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/expr.cpp (ProcessAssignmentExpression):
+	Fixed a bad cast, which was causing bug 234.
+
+2001-05-06  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/bytecode.cpp (EmitPostUnaryExpressionField)
 	(EmitPreUnaryIncrementExpressionArray):
 	Fix bad bytecodes when performing increment
