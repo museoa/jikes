@@ -17,6 +17,19 @@ class B extends A {
   }
 }
 
+Blank finals used inside a local class must be definitely assigned
+before the class declaration, rather than simply before all calls to a
+constructor of the local class.  For example, this code now causes an
+error:
+class C {
+  void m() {
+    final int i;
+    class Local { int j = i; } // i has not been assigned before here
+    i = 1;
+    new Local(); // even though it has been before creating a Local
+  }
+}
+
 Constant instance variables are now initialized sooner, so that you
 cannot view their default 0 value even with reflection.
 

@@ -553,17 +553,17 @@ public:
         //
         // Check statements for definite assignment.
         //
-        // Class declarations do not have an effect on definite assignment.
         // This and super calls are not normally statements, so
         // DefiniteThisCall and DefiniteSuperCall should be invoked manually
         // from DefiniteConstructorBody rather than automatically by
-        // DefiniteStatement. Therefore, all three of these categories are
-        // diverted to the no-op DefiniteDefaultStatement.
+        // DefiniteStatement. Therefore, they are diverted to the no-op
+        // DefiniteDefaultStatement.
         //
-        DefiniteStmt[Ast::LOCAL_CLASS] = &Semantic::DefiniteDefaultStatement;
         DefiniteStmt[Ast::THIS_CALL] = &Semantic::DefiniteDefaultStatement;
         DefiniteStmt[Ast::SUPER_CALL] = &Semantic::DefiniteDefaultStatement;
         DefiniteStmt[Ast::BLOCK] = &Semantic::DefiniteBlock;
+        DefiniteStmt[Ast::LOCAL_CLASS] =
+            &Semantic::DefiniteLocalClassDeclarationStatement;
         DefiniteStmt[Ast::LOCAL_VARIABLE_DECLARATION] =
             &Semantic::DefiniteLocalVariableDeclarationStatement;
         DefiniteStmt[Ast::IF] = &Semantic::DefiniteIfStatement;
@@ -1023,6 +1023,7 @@ private:
     void DefiniteLoopBody(BitSet&);
 
     void DefiniteBlock(Ast*);
+    void DefiniteLocalClassDeclarationStatement(Ast*);
     void DefiniteLocalVariableDeclarationStatement(Ast*);
     void DefiniteExpressionStatement(Ast*);
     void DefiniteSynchronizedStatement(Ast*);

@@ -1,3 +1,11 @@
+2004-01-22  Eric Blake  <ebb9@byu.net>
+
+	* src/semantic.h (DefiniteLocalClassDeclarationStatement): Add.
+	* src/definite.cpp (DefiniteLocalClassDeclarationStatement):
+	Define, to detect definite assignment before local class
+	declarations.
+	* NEWS: Document this.
+
 2004-01-21  Elliott Hughes  <enh@acm.org>
 
 	* src/body.cpp (ProcessTryStatement): Better error report on

@@ -837,6 +837,28 @@ void Semantic::DefiniteBlock(Ast* stmt)
 }
 
 
+void Semantic::DefiniteLocalClassDeclarationStatement(Ast* stmt)
+{
+    AstLocalClassDeclarationStatement* local_decl =
+        (AstLocalClassDeclarationStatement*) stmt;
+    TypeSymbol* local_type = local_decl -> declaration -> class_body ->
+        semantic_environment -> Type();
+    assert(local_type -> LocalClassProcessingCompleted());
+    for (unsigned i = 0; i < local_type -> NumConstructorParameters(); i++)
+    {
+        VariableSymbol* var =
+            local_type -> ConstructorParameter(i) -> accessed_local;
+        if (var -> owner == ThisMethod() &&
+            (! DefinitelyAssignedVariables() ->
+             da_set[var -> LocalVariableIndex(this)]))
+        {
+            ReportSemError(SemanticError::VARIABLE_NOT_DEFINITELY_ASSIGNED,
+                           local_decl, var -> Name());
+        }
+    }
+}
+
+
 void Semantic::DefiniteLocalVariableDeclarationStatement(Ast* stmt)
 {
     AstLocalVariableDeclarationStatement* local_decl =
