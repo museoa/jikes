@@ -644,7 +644,7 @@ void Parser::InitRuleAction()
     AstBlock* MakeBlock(int tokennum);
     AstStatement* MakeSwitchBlockStatement(AstListNode* labels,
                                            AstListNode* statements = NULL);
-    void MakeMethodInvocation(int tokennum);
+    AstMethodInvocation* MakeMethodInvocation(int tokennum);
     void MakeCastExpression(AstType* type, int tokennum);
 
     void BadAction();
@@ -3822,21 +3822,45 @@ void Parser::MakeQualifiedSuperFieldAccess()
 }
 ./
 
-MethodInvocation ::= Name '(' ArgumentListopt ')'
+--
+-- Inline expand Name so we can distinguish the optional base from the required
+-- method identifier.
+--
+--MethodInvocation ::= Name '(' ArgumentListopt ')'
+MethodInvocation ::= 'Identifier' '(' ArgumentListopt ')'
 \:$action:\
 /.$location
-void Parser::Act$rule_number() { MakeMethodInvocation(2); }
+void Parser::Act$rule_number()
+{
+    Sym(1) = NULL;
+    Sym(1) = MakeMethodInvocation(1);
+}
 
 //
-// This function treats Sym(1) as a method name, and builds the method
-// invocation starting with the '('.
+// This function treats Sym(1) as base_opt, and builds the method invocation
+// starting with the 'Identifier' at tokennum.
 //
-void Parser::MakeMethodInvocation(int tokennum)
+AstMethodInvocation* Parser::MakeMethodInvocation(int tokennum)
 {
-    AstMethodInvocation* p = ast_pool -> NewMethodInvocation();
-    p -> method = DYNAMIC_CAST<AstExpression*> (Sym(1));
-    p -> arguments = MakeArguments(tokennum);
+    AstMethodInvocation* p = ast_pool -> NewMethodInvocation(Token(tokennum));
+    p -> base_opt = DYNAMIC_CAST<AstExpression*> (Sym(1));
+    p -> arguments = MakeArguments(tokennum + 1);
     Sym(1) = p;
+    return p;
+}
+./
+
+--
+-- Inline expand Name so we can distinguish the optional base from the required
+-- method identifier.
+--
+--MethodInvocation ::= Name '(' ArgumentListopt ')'
+MethodInvocation ::= Name '.' 'Identifier' '(' ArgumentListopt ')'
+\:$action:\
+/.$location
+void Parser::Act$rule_number()
+{
+    MakeMethodInvocation(3);
 }
 ./
 
@@ -3845,8 +3869,7 @@ MethodInvocation ::= Primary '.' 'Identifier' '(' ArgumentListopt ')'
 /.$location
 void Parser::Act$rule_number()
 {
-    MakeFieldAccess();
-    MakeMethodInvocation(4);
+    MakeMethodInvocation(3);
 }
 ./
 
@@ -3855,8 +3878,8 @@ MethodInvocation ::= 'super' '.' 'Identifier' '(' ArgumentListopt ')'
 /.$location
 void Parser::Act$rule_number()
 {
-    MakeSuperFieldAccess();
-    MakeMethodInvocation(4);
+    Sym(1) = ast_pool -> NewSuperExpression(Token(1));
+    MakeMethodInvocation(3);
 }
 ./
 
@@ -3872,8 +3895,10 @@ MethodInvocation ::= Name '.' 'super' '.' 'Identifier' '(' ArgumentListopt ')'
 /.$location
 void Parser::Act$rule_number()
 {
-    MakeQualifiedSuperFieldAccess();
-    MakeMethodInvocation(6);
+    AstSuperExpression* p = ast_pool -> NewSuperExpression(Token(3));
+    p -> base_opt = ast_pool -> NewTypeName(DYNAMIC_CAST<AstName*> (Sym(1)));
+    Sym(1) = p;
+    MakeMethodInvocation(5);
 }
 ./
 

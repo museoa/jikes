@@ -1182,6 +1182,7 @@ public:
         : Ast(MODIFIER_KEYWORD)
         , modifier_token(token)
     {}
+    ~AstModifierKeyword() {}
 
 #ifdef JIKES_DEBUG
     virtual void Print(LexStream&);
@@ -3644,15 +3645,13 @@ public:
 
 
 //
-// MethodInvocation --> <CALL, Method, (_token, Arguments, )_token>
-//
-// Method --> SimpleName
-//          | FieldAccess
+// Represents a method call.
 //
 class AstMethodInvocation : public AstExpression
 {
 public:
-    AstExpression* method; // AstName, AstFieldAccess
+    AstExpression* base_opt;
+    LexStream::TokenIndex identifier_token;
     AstArguments* arguments;
 
     //
@@ -3662,8 +3661,9 @@ public:
     //
     AstExpression* resolution_opt;
 
-    inline AstMethodInvocation()
+    inline AstMethodInvocation(LexStream::TokenIndex t)
         : AstExpression(CALL)
+        , identifier_token(t)
     {}
     ~AstMethodInvocation() {}
 
@@ -3674,7 +3674,10 @@ public:
 
     virtual Ast* Clone(StoragePool*);
 
-    virtual LexStream::TokenIndex LeftToken() { return method -> LeftToken(); }
+    virtual LexStream::TokenIndex LeftToken()
+    {
+        return base_opt ? base_opt -> LeftToken() : identifier_token;
+    }
     virtual LexStream::TokenIndex RightToken()
     {
         return arguments -> right_parenthesis_token;
@@ -4650,9 +4653,9 @@ public:
         return new (this) AstFieldAccess();
     }
 
-    inline AstMethodInvocation* NewMethodInvocation()
+    inline AstMethodInvocation* NewMethodInvocation(LexStream::TokenIndex t)
     {
-        return new (this) AstMethodInvocation();
+        return new (this) AstMethodInvocation(t);
     }
 
     inline AstArrayAccess* NewArrayAccess()
@@ -5191,9 +5194,9 @@ public:
         return p;
     }
 
-    inline AstMethodInvocation* GenMethodInvocation()
+    inline AstMethodInvocation* GenMethodInvocation(LexStream::TokenIndex t)
     {
-        AstMethodInvocation* p = NewMethodInvocation();
+        AstMethodInvocation* p = NewMethodInvocation(t);
         p -> generated = true;
         return p;
     }

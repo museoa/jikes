@@ -3369,7 +3369,7 @@ TypeSymbol* ByteCode::VariableTypeResolution(AstExpression* expression,
 }
 
 
-TypeSymbol* ByteCode::MethodTypeResolution(AstExpression* method_name,
+TypeSymbol* ByteCode::MethodTypeResolution(AstExpression* base,
                                            MethodSymbol* msym)
 {
     //
@@ -3380,15 +3380,9 @@ TypeSymbol* ByteCode::MethodTypeResolution(AstExpression* method_name,
     // this is an accessor method, use the owner_type (since the base type
     // relates to the accessed expression, not the accessor method).
     //
-    AstFieldAccess* field = method_name -> FieldAccessCast();
-    AstName* name = method_name -> NameCast();
-    assert(field || name);
-
     TypeSymbol* owner_type = msym -> containing_type;
     TypeSymbol* base_type = msym -> ACC_SYNTHETIC() ? owner_type
-        : field ? field -> base -> Type()
-        : name -> resolution_opt ? name -> resolution_opt -> Type()
-        : name -> base_opt ? name -> base_opt -> Type() : unit_type;
+        : base ? base -> Type() : unit_type;
     return owner_type == control.Object() ? owner_type : base_type;
 }
 
@@ -3787,15 +3781,12 @@ int ByteCode::EmitAssignmentExpression(AstAssignmentExpression* assignment_expre
                 AstExpression* resolve = left_hand_side -> FieldAccessCast()
                     ? left_hand_side -> FieldAccessCast() -> resolution_opt
                     : left_hand_side -> NameCast() -> resolution_opt;
-
                 assert(resolve);
 
-                AstFieldAccess* field_expression = resolve ->
-                    MethodInvocationCast() -> method -> FieldAccessCast();
-
-                assert(field_expression);
-
-                EmitExpression(field_expression -> base);
+                AstExpression* base =
+                    resolve -> MethodInvocationCast() -> base_opt;
+                assert(base);
+                EmitExpression(base);
             }
             else if (left_hand_side -> FieldAccessCast())
                 //
@@ -5092,11 +5083,8 @@ int ByteCode::EmitMethodInvocation(AstMethodInvocation* expression,
     AstMethodInvocation* method_call = expression -> resolution_opt
         ? expression -> resolution_opt -> MethodInvocationCast() : expression;
     assert(method_call);
-
     MethodSymbol* msym = (MethodSymbol*) method_call -> symbol;
-    AstFieldAccess* field = method_call -> method -> FieldAccessCast();
-    AstName* name = method_call -> method -> NameCast();
-
+    AstExpression* base = method_call -> base_opt;
     bool is_super = false; // set if super call
 
     if (msym -> ACC_STATIC())
@@ -5108,17 +5096,15 @@ int ByteCode::EmitMethodInvocation(AstMethodInvocation* expression,
         // access an instance method, in which case the base expression
         // will already be evaluated as the first parameter.
         //
-        if (field && (! msym -> accessed_member ||
+        if (base && (! msym -> accessed_member ||
                       msym -> AccessesStaticMember()))
         {
-            EmitExpression(field -> base, false);
+            EmitExpression(base, false);
         }
-        else if (name && name -> base_opt)
-            EmitName(name -> base_opt, false);
     }
     else
     {
-        if (field)
+        if (base)
         {
             //
             // Note that field will be marked IsSuperAccess only in synthetic
@@ -5127,26 +5113,17 @@ int ByteCode::EmitMethodInvocation(AstMethodInvocation* expression,
             // Foo.access$<num>(Foo $1) { $1.bar(); }
             // but must use invokespecial instead of the regular invokevirtual.
             //
-            is_super = field -> base -> SuperExpressionCast() != NULL;
-            EmitExpression(field -> base);
+            is_super = base -> SuperExpressionCast() != NULL;
+            EmitExpression(base);
         }
-        else if (name)
-        {
-            if (name -> resolution_opt) // use resolution if available
-                EmitExpression(name -> resolution_opt);
-            else if (name -> base_opt)
-                EmitName(name -> base_opt, true);
-            else // must be method of current object, so load this
-                PutOp(OP_ALOAD_0);
-        }
-        else assert(false && "unexpected argument to field access");
+        else PutOp(OP_ALOAD_0);
     }
 
     int stack_words = 0; // words on stack needed for arguments
     for (unsigned i = 0; i < method_call -> arguments -> NumArguments(); i++)
         stack_words += EmitExpression(method_call -> arguments -> Argument(i));
 
-    TypeSymbol* type = MethodTypeResolution(method_call -> method, msym);
+    TypeSymbol* type = MethodTypeResolution(method_call -> base_opt, msym);
     PutOp(msym -> ACC_STATIC() ? OP_INVOKESTATIC
           : (is_super || msym -> ACC_PRIVATE()) ? OP_INVOKESPECIAL
           : type -> ACC_INTERFACE() ? OP_INVOKEINTERFACE

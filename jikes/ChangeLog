@@ -1,3 +1,23 @@
+2004-03-12  Eric Blake  <ebb9@byu.net>
+
+	* src/ast.h (AstMethodInvocation): Split method into base_opt and
+	identifier_token.
+	* src/ast.cpp (Clone, Print): Use updated AST.
+	* src/bytecode.cpp (MethodTypeResolution),
+	(EmitAssignmentExpression, EmitMethodInvocation): Ditto.
+	* src/definite.cpp (DefiniteMethodInvocation): Ditto.
+	* src/expr.cpp (Header, FindMisspelledMethodName),
+	(FindMethodInType, FindMethodInEnvironment, CreateAccessToType),
+	(CreateAccessToScopedVariable, CreateAccessToScopedMethod),
+	(FindVariableMember, FindMethodMember, ProcessMethodName): Ditto.
+	* src/java.g (MethodInvocation): Ditto.
+	* src/parser.h: Ditto.
+	* src/unparse.cpp (Unparse): Ditto.
+	* src/javaact.cpp: Regenerate.
+	* src/javaact.h: Ditto.
+	* src/javadcl.h: Ditto.
+	* src/javadef.h: Ditto.
+
 2004-03-11  Elliott Hughes  <enh@acm.org>
 
 	* src/error.cpp: Bug 3896 - failure to find .java files mentioned

@@ -316,15 +316,12 @@ wchar_t* Semantic::Header(const NameSymbol* name, AstArguments* args)
 void Semantic::ReportMethodNotFound(AstMethodInvocation* method_call,
                                     TypeSymbol* type)
 {
-    AstFieldAccess* field_access = method_call -> method -> FieldAccessCast();
-    AstName* name = method_call -> method -> NameCast();
-    AstExpression* base = name ? name -> base_opt : field_access -> base;
+    AstExpression* base = method_call -> base_opt;
     SemanticEnvironment* env;
     SemanticEnvironment* top_env = state_stack.Top();
-    assert(field_access || name);
     assert((base == NULL) == (type == NULL));
 
-    LexStream::TokenIndex id_token = method_call -> method -> RightToken();
+    LexStream::TokenIndex id_token = method_call -> identifier_token;
     NameSymbol* name_symbol = lex_stream -> NameSymbol(id_token);
     MethodShadowSymbol* method_shadow;
 
@@ -875,13 +872,10 @@ MethodSymbol* Semantic::FindMisspelledMethodName(TypeSymbol* type,
                                                  AstMethodInvocation* method_call,
                                                  NameSymbol* name_symbol)
 {
-    AstFieldAccess* field_access = method_call -> method -> FieldAccessCast();
-    AstName* name = method_call -> method -> NameCast();
-    AstExpression* base = name ? name -> base_opt : field_access -> base;
+    AstExpression* base = method_call -> base_opt;
     MethodSymbol* misspelled_method = NULL;
     int index = 0;
-    LexStream::TokenIndex identifier_token =
-        method_call -> arguments -> left_parenthesis_token - 1;
+    LexStream::TokenIndex identifier_token = method_call -> identifier_token;
 
     for (unsigned k = 0;
          k < type -> expanded_method_table -> symbol_pool.Length(); k++)
@@ -949,11 +943,8 @@ MethodShadowSymbol* Semantic::FindMethodInType(TypeSymbol* type,
                                                NameSymbol* name_symbol)
 {
     Tuple<MethodShadowSymbol*> method_set(2); // Stores method overloads.
-    AstFieldAccess* field_access = method_call -> method -> FieldAccessCast();
-    AstName* name = method_call -> method -> NameCast();
-    AstExpression* base = name ? name -> base_opt : field_access -> base;
-    LexStream::TokenIndex id_token =
-        name ? name -> identifier_token : field_access -> identifier_token;
+    AstExpression* base = method_call -> base_opt;
+    LexStream::TokenIndex id_token = method_call -> identifier_token;
     assert(base);
     if (! name_symbol)
         name_symbol = lex_stream -> NameSymbol(id_token);
@@ -1057,16 +1048,15 @@ void Semantic::FindMethodInEnvironment(Tuple<MethodShadowSymbol*>& methods_found
                                        SemanticEnvironment* envstack,
                                        AstMethodInvocation* method_call)
 {
-    AstName* name = method_call -> method -> NameCast();
-    assert(! name -> base_opt);
-    NameSymbol* name_symbol =
-        lex_stream -> NameSymbol(name -> identifier_token);
+    assert(! method_call -> base_opt);
+    LexStream::TokenIndex id_token = method_call -> identifier_token;
+    NameSymbol* name_symbol = lex_stream -> NameSymbol(id_token);
 
     for (SemanticEnvironment* env = envstack; env; env = env -> previous)
     {
         TypeSymbol* type = env -> Type();
         if (! type -> expanded_method_table)
-            ComputeMethodsClosure(type, name -> identifier_token);
+            ComputeMethodsClosure(type, id_token);
 
         methods_found.Reset();
         where_found = NULL;
@@ -1090,8 +1080,7 @@ void Semantic::FindMethodInEnvironment(Tuple<MethodShadowSymbol*>& methods_found
                 MethodSymbol* method = method_shadow -> method_symbol;
 
                 if (! method -> IsTyped())
-                    method -> ProcessMethodSignature(this,
-                                                     name -> identifier_token);
+                    method -> ProcessMethodSignature(this, id_token);
 
                 //
                 // Since type -> IsOwner(this_type()), i.e., type encloses
@@ -1209,8 +1198,8 @@ MethodShadowSymbol* Semantic::FindMethodInEnvironment(SemanticEnvironment*& wher
     // If this method came from a class file, make sure that its throws
     // clause has been processed.
     //
-    method_symbol -> ProcessMethodThrows(this, method_call ->
-                                         method -> RightToken());
+    method_symbol -> ProcessMethodThrows(this,
+                                         method_call -> identifier_token);
     if (control.option.deprecation && method_symbol -> IsDeprecated() &&
         ! InDeprecatedContext())
     {
@@ -1695,7 +1684,8 @@ AstExpression* Semantic::CreateAccessToType(Ast* source,
     LexStream::TokenIndex left_tok;
     LexStream::TokenIndex right_tok;
 
-    AstName* name = source -> NameCast();
+    AstName* variable = source -> NameCast();
+    AstMethodInvocation* method = source -> MethodInvocationCast();
     AstSuperCall* super_call = source -> SuperCallCast();
     AstThisExpression* this_expr = source -> ThisExpressionCast();
     AstSuperExpression* super_expr = source -> SuperExpressionCast();
@@ -1703,14 +1693,27 @@ AstExpression* Semantic::CreateAccessToType(Ast* source,
         source -> ClassCreationExpressionCast();
     bool exact = false;
 
-    if (name)
+    if (variable)
     {
-        assert(! name -> base_opt);
-        left_tok = right_tok = name -> identifier_token;
+        assert(! variable -> base_opt);
+        left_tok = right_tok = variable -> identifier_token;
         //
-        // If this type subclasses the enclosing type, then this method was
+        // If this type subclasses the enclosing type, then CreateAccess was
         // called because the simple name was not inherited into this type
         // (ie. the variable is private or else hidden in a superclass). In
+        // this case, turn on exact enclosing type checking.
+        //
+        if (this_type -> IsSubclass(environment_type))
+            exact = true;
+    }
+    else if (method)
+    {
+        assert(! method -> base_opt);
+        left_tok = right_tok = method -> identifier_token;
+        //
+        // If this type subclasses the enclosing type, then CreateAccess was
+        // called because the simple name was not inherited into this type
+        // (ie. the method is private or else hidden in a superclass). In
         // this case, turn on exact enclosing type checking.
         //
         if (this_type -> IsSubclass(environment_type))
@@ -1734,7 +1737,7 @@ AstExpression* Semantic::CreateAccessToType(Ast* source,
         right_tok = super_expr -> super_token;
         exact = true;
     }
-    else assert(false);
+    else assert(false && "create access to invalid expression");
 
     AstExpression* resolution;
 
@@ -1842,12 +1845,6 @@ void Semantic::CreateAccessToScopedVariable(AstName* name,
                     environment_type -> IsSubclass(containing_type)));
 
             LexStream::TokenIndex loc = name -> identifier_token;
-            AstFieldAccess* method_name =
-                compilation_unit -> ast_pool -> GenFieldAccess();
-            method_name -> base = access_expression;
-            method_name -> identifier_token = loc;
-            method_name -> symbol = variable;
-
             AstArguments* args =
                 compilation_unit -> ast_pool -> GenArguments(loc, loc);
             if (! variable -> ACC_STATIC())
@@ -1858,8 +1855,8 @@ void Semantic::CreateAccessToScopedVariable(AstName* name,
             }
 
             AstMethodInvocation* accessor =
-                compilation_unit -> ast_pool -> GenMethodInvocation();
-            accessor -> method = method_name;
+                compilation_unit -> ast_pool -> GenMethodInvocation(loc);
+            accessor -> base_opt = access_expression;
             accessor -> arguments = args;
             // The default base type of the accessor method is appropriate.
             accessor -> symbol =
@@ -1885,33 +1882,28 @@ void Semantic::CreateAccessToScopedMethod(AstMethodInvocation* method_call,
                                           TypeSymbol* environment_type)
 {
     assert(environment_type -> IsOwner(ThisType()));
-    assert(method_call -> method -> NameCast() &&
-           ! ((AstName*) method_call -> method) -> base_opt);
-
+    assert(! method_call -> base_opt);
     MethodSymbol* method = (MethodSymbol*) method_call -> symbol;
-    AstName* name = (AstName*) method_call -> method;
-
     AstExpression* access_expression;
     if (method -> ACC_STATIC())
     {
         access_expression = compilation_unit -> ast_pool ->
-            GenName(name -> identifier_token);
+            GenName(method_call -> identifier_token);
         access_expression -> symbol = environment_type;
     }
     else
     {
         AstThisExpression* this_expr = compilation_unit -> ast_pool ->
-            GenThisExpression(name -> identifier_token);
+            GenThisExpression(method_call -> identifier_token);
         this_expr -> resolution_opt =
-            CreateAccessToType(name, environment_type);
+            CreateAccessToType(method_call, environment_type);
         this_expr -> symbol = this_expr -> resolution_opt -> symbol;
         access_expression = this_expr;
     }
 
     if (access_expression -> symbol != control.no_type)
     {
-        name -> resolution_opt = access_expression;
-
+        method_call -> base_opt = access_expression;
         TypeSymbol* containing_type = method -> containing_type;
 
         if (method -> ACC_PRIVATE() ||
@@ -1936,10 +1928,9 @@ void Semantic::CreateAccessToScopedMethod(AstMethodInvocation* method_call,
             for (unsigned i = 0; i < num_args; i++)
                 args -> AddArgument(method_call -> arguments -> Argument(i));
 
-            AstMethodInvocation* accessor =
-                compilation_unit -> ast_pool -> GenMethodInvocation();
-            // TODO: WARNING: sharing of subtrees...
-            accessor -> method = method_call -> method;
+            AstMethodInvocation* accessor = compilation_unit -> ast_pool ->
+                GenMethodInvocation(method_call -> identifier_token);
+            accessor -> base_opt = access_expression;
             accessor -> arguments = args;
             accessor -> symbol =
                 // default base type is appropriate
@@ -2327,13 +2318,6 @@ void Semantic::FindVariableMember(TypeSymbol* type, AstExpression* expr)
                                environment_type != this_type);
                     }
 
-                    AstFieldAccess* method_name =
-                        compilation_unit -> ast_pool -> GenFieldAccess();
-                    // TODO: WARNING: sharing of Ast subtree !!!
-                    method_name -> base = base;
-                    method_name -> identifier_token = id_token;
-                    method_name -> symbol = variable;
-
                     AstArguments* args =
                         compilation_unit -> ast_pool -> GenArguments(id_token,
                                                                      id_token);
@@ -2343,9 +2327,9 @@ void Semantic::FindVariableMember(TypeSymbol* type, AstExpression* expr)
                         args -> AddArgument(base);
                     }
 
-                    AstMethodInvocation* accessor =
-                        compilation_unit -> ast_pool -> GenMethodInvocation();
-                    accessor -> method = method_name;
+                    AstMethodInvocation* accessor = compilation_unit ->
+                        ast_pool -> GenMethodInvocation(id_token);
+                    accessor -> base_opt = base;
                     accessor -> arguments = args;
                     accessor -> symbol = environment_type ->
                         GetReadAccessMethod(variable, base -> Type());
@@ -2844,10 +2828,8 @@ void Semantic::ProcessArrayAccess(Ast* expr)
 MethodShadowSymbol* Semantic::FindMethodMember(TypeSymbol* type,
                                                AstMethodInvocation* method_call)
 {
-    AstFieldAccess* field_access = method_call -> method -> FieldAccessCast();
-    AstName* name = method_call -> method -> NameCast();
-    AstExpression* base = name ? name -> base_opt : field_access -> base;
-    LexStream::TokenIndex id_token = method_call -> method -> RightToken();
+    AstExpression* base = method_call -> base_opt;
+    LexStream::TokenIndex id_token = method_call -> identifier_token;
     assert(base);
     //
     // TypeCast() returns true for super, this, and instance creation as
@@ -2894,7 +2876,7 @@ MethodShadowSymbol* Semantic::FindMethodMember(TypeSymbol* type,
             if (base_is_type && ! method -> ACC_STATIC())
             {
                 ReportSemError(SemanticError::METHOD_NOT_CLASS_METHOD,
-                               method_call -> method,
+                               method_call -> LeftToken(), id_token,
                                lex_stream -> NameString(id_token));
                 method_call -> symbol = control.no_type;
                 return NULL;
@@ -2902,7 +2884,7 @@ MethodShadowSymbol* Semantic::FindMethodMember(TypeSymbol* type,
             if (method -> ACC_STATIC() && ! base_is_type)
             {
                 ReportSemError(SemanticError::CLASS_METHOD_INVOKED_VIA_INSTANCE,
-                               method_call -> method,
+                               method_call -> LeftToken(), id_token,
                                lex_stream -> NameString(id_token));
             }
 
@@ -2966,10 +2948,10 @@ MethodShadowSymbol* Semantic::FindMethodMember(TypeSymbol* type,
                 for (unsigned i = 0; i < num_args; i++)
                     args -> AddArgument(method_call -> arguments -> Argument(i));
 
-                AstMethodInvocation* accessor =
-                    compilation_unit -> ast_pool -> GenMethodInvocation();
+                AstMethodInvocation* accessor = compilation_unit ->
+                    ast_pool -> GenMethodInvocation(id_token);
                 // TODO: WARNING: sharing of subtrees...
-                accessor -> method = method_call -> method;
+                accessor -> base_opt = base;
                 accessor -> arguments = args;
                 accessor -> symbol = environment_type ->
                     GetReadAccessMethod(method, base -> Type());
@@ -2977,8 +2959,7 @@ MethodShadowSymbol* Semantic::FindMethodMember(TypeSymbol* type,
                 method_call -> symbol = method;
                 method_call -> resolution_opt = accessor;
             }
-            else
-                method_call -> symbol = method;
+            else method_call -> symbol = method;
         }
         else
         {
@@ -2992,12 +2973,8 @@ MethodShadowSymbol* Semantic::FindMethodMember(TypeSymbol* type,
 void Semantic::ProcessMethodName(AstMethodInvocation* method_call)
 {
     TypeSymbol* this_type = ThisType();
-
-    AstName* name = method_call -> method -> NameCast();
-    AstFieldAccess* field_access = method_call -> method -> FieldAccessCast();
-    AstExpression* base = name ? name -> base_opt : field_access -> base;
-    LexStream::TokenIndex id_token =
-        name ? name -> identifier_token : field_access -> identifier_token;
+    AstExpression* base = method_call -> base_opt;
+    LexStream::TokenIndex id_token = method_call -> identifier_token;
     TypeSymbol* base_type;
     MethodShadowSymbol* method_shadow;
     if (! base)
@@ -3065,8 +3042,8 @@ void Semantic::ProcessMethodName(AstMethodInvocation* method_call)
         // ProcessFieldAccess, since we already know what context the name
         // is in.
         //
-        if (name)
-            ProcessAmbiguousName(name -> base_opt);
+        if (base -> NameCast())
+            ProcessAmbiguousName((AstName*) base);
         else // The qualifier might be a complex String constant
             ProcessExpressionOrStringConstant(base);
 
@@ -3136,8 +3113,8 @@ void Semantic::ProcessMethodName(AstMethodInvocation* method_call)
         for (i = method_shadow -> NumConflicts(); --i >= 0; )
         {
             MethodSymbol* conflict = method_shadow -> Conflict(i);
-            conflict -> ProcessMethodThrows(this, (method_call -> method ->
-                                                   RightToken()));
+            conflict -> ProcessMethodThrows(this,
+                                            method_call -> identifier_token);
             for (j = conflict -> NumThrows(); --j >= 0; )
             {
                 TypeSymbol* candidate = conflict -> Throws(j);

@@ -150,7 +150,8 @@ DefiniteAssignmentSet* Semantic::DefiniteMethodInvocation(AstExpression* express
                                                           DefinitePair& def_pair)
 {
     AstMethodInvocation* method_call = (AstMethodInvocation*) expression;
-    DefiniteExpression(method_call -> method, def_pair);
+    if (method_call -> base_opt)
+        DefiniteExpression(method_call -> base_opt, def_pair);
     for (unsigned i = 0; i < method_call -> arguments -> NumArguments(); i++)
         DefiniteExpression(method_call -> arguments -> Argument(i), def_pair);
     return NULL;

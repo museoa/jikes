@@ -1018,8 +1018,11 @@ Ast* AstFieldAccess::Clone(StoragePool* ast_pool)
 
 Ast* AstMethodInvocation::Clone(StoragePool* ast_pool)
 {
-    AstMethodInvocation* clone = ast_pool -> GenMethodInvocation();
-    clone -> method = (AstExpression*) method -> Clone(ast_pool);
+    AstMethodInvocation* clone =
+        ast_pool -> GenMethodInvocation(identifier_token);
+    if (base_opt)
+        clone -> base_opt = (AstExpression*) base_opt -> Clone(ast_pool);
+    clone -> identifier_token = identifier_token;
     clone -> arguments = (AstArguments*) arguments -> Clone(ast_pool);
     if (resolution_opt)
         clone -> resolution_opt =
@@ -1913,8 +1916,11 @@ void AstFieldAccess::Print(LexStream& lex_stream)
 void AstMethodInvocation::Print(LexStream& lex_stream)
 {
     Coutput << '#' << id << " (MethodInvocation):  #"
-            << method -> id << " #" << arguments -> id << endl;
-    method -> Print(lex_stream);
+            << (base_opt ? base_opt -> id : 0) << ' '
+            << lex_stream.NameString(identifier_token)
+            << " #" << arguments -> id << endl;
+    if (base_opt)
+        base_opt -> Print(lex_stream);
     arguments -> Print(lex_stream);
 }
 

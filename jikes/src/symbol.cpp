@@ -1955,16 +1955,12 @@ MethodSymbol* TypeSymbol::GetReadAccessMethod(MethodSymbol* member,
         }
         else base = ast_pool -> GenName(loc);
 
-        AstFieldAccess* field_access = ast_pool -> GenFieldAccess();
-        field_access -> base = base;
-        field_access -> identifier_token = loc;
-
         AstArguments* args = ast_pool -> GenArguments(loc, loc);
         args -> AllocateArguments(parameter_count);
 
         AstMethodInvocation* method_invocation =
-            ast_pool -> GenMethodInvocation();
-        method_invocation -> method = field_access;
+            ast_pool -> GenMethodInvocation(loc);
+        method_invocation -> base_opt = base;
         method_invocation -> arguments = args;
         method_invocation -> symbol = member;
 

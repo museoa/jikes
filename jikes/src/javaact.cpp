@@ -2761,57 +2761,72 @@ void Parser::MakeQualifiedSuperFieldAccess()
 }
 
 //
-// Rule 258:  MethodInvocation ::= Name LPAREN ArgumentListopt RPAREN
+// Rule 258:  MethodInvocation ::= Identifier LPAREN ArgumentListopt RPAREN
 //
-#line 3828 "java.g"
-void Parser::Act258() { MakeMethodInvocation(2); }
-
-//
-// This function treats Sym(1) as a method name, and builds the method
-// invocation starting with the '('.
-//
-void Parser::MakeMethodInvocation(int tokennum)
+#line 3833 "java.g"
+void Parser::Act258()
 {
-    AstMethodInvocation* p = ast_pool -> NewMethodInvocation();
-    p -> method = DYNAMIC_CAST<AstExpression*> (Sym(1));
-    p -> arguments = MakeArguments(tokennum);
-    Sym(1) = p;
+    Sym(1) = NULL;
+    Sym(1) = MakeMethodInvocation(1);
 }
 
 //
-// Rule 259:  MethodInvocation ::= Primary DOT Identifier LPAREN ArgumentListopt RPAREN
+// This function treats Sym(1) as base_opt, and builds the method invocation
+// starting with the 'Identifier' at tokennum.
 //
-#line 3846 "java.g"
+AstMethodInvocation* Parser::MakeMethodInvocation(int tokennum)
+{
+    AstMethodInvocation* p = ast_pool -> NewMethodInvocation(Token(tokennum));
+    p -> base_opt = DYNAMIC_CAST<AstExpression*> (Sym(1));
+    p -> arguments = MakeArguments(tokennum + 1);
+    Sym(1) = p;
+    return p;
+}
+
+//
+// Rule 259:  MethodInvocation ::= Name DOT Identifier LPAREN ArgumentListopt RPAREN
+//
+#line 3861 "java.g"
 void Parser::Act259()
 {
-    MakeFieldAccess();
-    MakeMethodInvocation(4);
+    MakeMethodInvocation(3);
 }
 
 //
-// Rule 260:  MethodInvocation ::= super DOT Identifier LPAREN ArgumentListopt RPAREN
+// Rule 260:  MethodInvocation ::= Primary DOT Identifier LPAREN ArgumentListopt RPAREN
 //
-#line 3856 "java.g"
+#line 3870 "java.g"
 void Parser::Act260()
 {
-    MakeSuperFieldAccess();
-    MakeMethodInvocation(4);
+    MakeMethodInvocation(3);
 }
 
 //
-// Rule 261:  MethodInvocation ::= Name DOT super DOT Identifier LPAREN ArgumentListopt RPAREN
+// Rule 261:  MethodInvocation ::= super DOT Identifier LPAREN ArgumentListopt RPAREN
 //
-#line 3873 "java.g"
+#line 3879 "java.g"
 void Parser::Act261()
 {
-    MakeQualifiedSuperFieldAccess();
-    MakeMethodInvocation(6);
+    Sym(1) = ast_pool -> NewSuperExpression(Token(1));
+    MakeMethodInvocation(3);
 }
 
 //
-// Rule 262:  ArrayAccess ::= Name LBRACKET Expression RBRACKET
+// Rule 262:  MethodInvocation ::= Name DOT super DOT Identifier LPAREN ArgumentListopt RPAREN
 //
-#line 3883 "java.g"
+#line 3896 "java.g"
+void Parser::Act262()
+{
+    AstSuperExpression* p = ast_pool -> NewSuperExpression(Token(3));
+    p -> base_opt = ast_pool -> NewTypeName(DYNAMIC_CAST<AstName*> (Sym(1)));
+    Sym(1) = p;
+    MakeMethodInvocation(5);
+}
+
+//
+// Rule 263:  ArrayAccess ::= Name LBRACKET Expression RBRACKET
+//
+#line 3908 "java.g"
 void Parser::MakeArrayAccess()
 {
     AstArrayAccess* p = ast_pool -> NewArrayAccess();
@@ -2823,64 +2838,64 @@ void Parser::MakeArrayAccess()
 }
 
 //
-// Rule 263:  ArrayAccess ::= PrimaryNoNewArray LBRACKET Expression RBRACKET
+// Rule 264:  ArrayAccess ::= PrimaryNoNewArray LBRACKET Expression RBRACKET
 //
 // void MakeArrayAccess();
 //
 
 //
-// Rule 264:  ArrayAccess ::= ArrayCreationInitialized LBRACKET Expression RBRACKET
+// Rule 265:  ArrayAccess ::= ArrayCreationInitialized LBRACKET Expression RBRACKET
 //
 // void MakeArrayAccess();
 //
 
 //
-// Rule 265:  PostfixExpression ::= Primary
+// Rule 266:  PostfixExpression ::= Primary
 //
 // void NoAction();
 //
 
 //
-// Rule 266:  PostfixExpression ::= Name
+// Rule 267:  PostfixExpression ::= Name
 //
 // void NoAction();
 //
 
 //
-// Rule 267:  PostfixExpression ::= PostIncrementExpression
+// Rule 268:  PostfixExpression ::= PostIncrementExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 268:  PostfixExpression ::= PostDecrementExpression
+// Rule 269:  PostfixExpression ::= PostDecrementExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 269:  PostfixExpressionNotName ::= Primary
+// Rule 270:  PostfixExpressionNotName ::= Primary
 //
 // void NoAction();
 //
 
 //
-// Rule 270:  PostfixExpressionNotName ::= PostIncrementExpression
+// Rule 271:  PostfixExpressionNotName ::= PostIncrementExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 271:  PostfixExpressionNotName ::= PostDecrementExpression
+// Rule 272:  PostfixExpressionNotName ::= PostDecrementExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 272:  PostIncrementExpression ::= PostfixExpression PLUS_PLUS
+// Rule 273:  PostIncrementExpression ::= PostfixExpression PLUS_PLUS
 //
-#line 3943 "java.g"
-void Parser::Act272()
+#line 3968 "java.g"
+void Parser::Act273()
 {
     AstPostUnaryExpression* p =
         ast_pool -> NewPostUnaryExpression(AstPostUnaryExpression::PLUSPLUS);
@@ -2890,10 +2905,10 @@ void Parser::Act272()
 }
 
 //
-// Rule 273:  PostDecrementExpression ::= PostfixExpression MINUS_MINUS
+// Rule 274:  PostDecrementExpression ::= PostfixExpression MINUS_MINUS
 //
-#line 3956 "java.g"
-void Parser::Act273()
+#line 3981 "java.g"
+void Parser::Act274()
 {
     AstPostUnaryExpression* p =
         ast_pool -> NewPostUnaryExpression(AstPostUnaryExpression::MINUSMINUS);
@@ -2903,21 +2918,21 @@ void Parser::Act273()
 }
 
 //
-// Rule 274:  UnaryExpression ::= PreIncrementExpression
+// Rule 275:  UnaryExpression ::= PreIncrementExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 275:  UnaryExpression ::= PreDecrementExpression
+// Rule 276:  UnaryExpression ::= PreDecrementExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 276:  UnaryExpression ::= PLUS UnaryExpression
+// Rule 277:  UnaryExpression ::= PLUS UnaryExpression
 //
-#line 3977 "java.g"
+#line 4002 "java.g"
 void Parser::MakePreUnaryExpression()
 {
     AstPreUnaryExpression::PreUnaryExpressionTag tag;
@@ -2938,111 +2953,111 @@ void Parser::MakePreUnaryExpression()
 }
 
 //
-// Rule 277:  UnaryExpression ::= MINUS UnaryExpression
+// Rule 278:  UnaryExpression ::= MINUS UnaryExpression
 //
 // void MakePreUnaryExpression();
 //
 
 //
-// Rule 278:  UnaryExpression ::= UnaryExpressionNotPlusMinus
+// Rule 279:  UnaryExpression ::= UnaryExpressionNotPlusMinus
 //
 // void NoAction();
 //
 
 //
-// Rule 279:  UnaryExpressionNotName ::= PreIncrementExpression
+// Rule 280:  UnaryExpressionNotName ::= PreIncrementExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 280:  UnaryExpressionNotName ::= PreDecrementExpression
+// Rule 281:  UnaryExpressionNotName ::= PreDecrementExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 281:  UnaryExpressionNotName ::= PLUS UnaryExpression
+// Rule 282:  UnaryExpressionNotName ::= PLUS UnaryExpression
 //
 // void MakePreUnaryExpression();
 //
 
 //
-// Rule 282:  UnaryExpressionNotName ::= MINUS UnaryExpression
+// Rule 283:  UnaryExpressionNotName ::= MINUS UnaryExpression
 //
 // void MakePreUnaryExpression();
 //
 
 //
-// Rule 283:  UnaryExpressionNotName ::= UnaryExpressionNotPlusMinusNotName
+// Rule 284:  UnaryExpressionNotName ::= UnaryExpressionNotPlusMinusNotName
 //
 // void NoAction();
 //
 
 //
-// Rule 284:  PreIncrementExpression ::= PLUS_PLUS UnaryExpression
+// Rule 285:  PreIncrementExpression ::= PLUS_PLUS UnaryExpression
 //
 // void MakePreUnaryExpression();
 //
 
 //
-// Rule 285:  PreDecrementExpression ::= MINUS_MINUS UnaryExpression
+// Rule 286:  PreDecrementExpression ::= MINUS_MINUS UnaryExpression
 //
 // void MakePreUnaryExpression();
 //
 
 //
-// Rule 286:  UnaryExpressionNotPlusMinus ::= PostfixExpression
+// Rule 287:  UnaryExpressionNotPlusMinus ::= PostfixExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 287:  UnaryExpressionNotPlusMinus ::= TWIDDLE UnaryExpression
+// Rule 288:  UnaryExpressionNotPlusMinus ::= TWIDDLE UnaryExpression
 //
 // void MakePreUnaryExpression();
 //
 
 //
-// Rule 288:  UnaryExpressionNotPlusMinus ::= NOT UnaryExpression
+// Rule 289:  UnaryExpressionNotPlusMinus ::= NOT UnaryExpression
 //
 // void MakePreUnaryExpression();
 //
 
 //
-// Rule 289:  UnaryExpressionNotPlusMinus ::= CastExpression
+// Rule 290:  UnaryExpressionNotPlusMinus ::= CastExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 290:  UnaryExpressionNotPlusMinusNotName ::= PostfixExpressionNotName
+// Rule 291:  UnaryExpressionNotPlusMinusNotName ::= PostfixExpressionNotName
 //
 // void NoAction();
 //
 
 //
-// Rule 291:  UnaryExpressionNotPlusMinusNotName ::= TWIDDLE UnaryExpression
+// Rule 292:  UnaryExpressionNotPlusMinusNotName ::= TWIDDLE UnaryExpression
 //
 // void MakePreUnaryExpression();
 //
 
 //
-// Rule 292:  UnaryExpressionNotPlusMinusNotName ::= NOT UnaryExpression
+// Rule 293:  UnaryExpressionNotPlusMinusNotName ::= NOT UnaryExpression
 //
 // void MakePreUnaryExpression();
 //
 
 //
-// Rule 293:  UnaryExpressionNotPlusMinusNotName ::= CastExpression
+// Rule 294:  UnaryExpressionNotPlusMinusNotName ::= CastExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 294:  CastExpression ::= LPAREN PrimitiveType Dimsopt RPAREN UnaryExpression
+// Rule 295:  CastExpression ::= LPAREN PrimitiveType Dimsopt RPAREN UnaryExpression
 //
-#line 4084 "java.g"
+#line 4109 "java.g"
 void Parser::MakeCastExpression() { MakeCastExpression(MakeArrayType(2), 4); }
 
 //
@@ -3060,27 +3075,27 @@ void Parser::MakeCastExpression(AstType* type, int tokennum)
 }
 
 //
-// Rule 295:  CastExpression ::= LPAREN Name Marker RPAREN UnaryExpressionNotPlusMinus
+// Rule 296:  CastExpression ::= LPAREN Name Marker RPAREN UnaryExpressionNotPlusMinus
 //
 // void MakeCastExpression();
 //
 
 //
-// Rule 296:  CastExpression ::= LPAREN Name Dims RPAREN UnaryExpressionNotPlusMinus
+// Rule 297:  CastExpression ::= LPAREN Name Dims RPAREN UnaryExpressionNotPlusMinus
 //
 // void MakeCastExpression();
 //
 
 //
-// Rule 297:  MultiplicativeExpression ::= UnaryExpression
+// Rule 298:  MultiplicativeExpression ::= UnaryExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 298:  MultiplicativeExpression ::= MultiplicativeExpression MULTIPLY UnaryExpression
+// Rule 299:  MultiplicativeExpression ::= MultiplicativeExpression MULTIPLY UnaryExpression
 //
-#line 4125 "java.g"
+#line 4150 "java.g"
 //
 // This creates a binary expression of the named type.
 //
@@ -3119,207 +3134,207 @@ void Parser::MakeBinaryExpression()
 }
 
 //
-// Rule 299:  MultiplicativeExpression ::= MultiplicativeExpression DIVIDE UnaryExpression
+// Rule 300:  MultiplicativeExpression ::= MultiplicativeExpression DIVIDE UnaryExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 300:  MultiplicativeExpression ::= MultiplicativeExpression REMAINDER UnaryExpression
+// Rule 301:  MultiplicativeExpression ::= MultiplicativeExpression REMAINDER UnaryExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 301:  MultiplicativeExpressionNotName ::= UnaryExpressionNotName
+// Rule 302:  MultiplicativeExpressionNotName ::= UnaryExpressionNotName
 //
 // void NoAction();
 //
 
 //
-// Rule 302:  MultiplicativeExpressionNotName ::= MultiplicativeExpressionNotName MULTIPLY UnaryExpression
+// Rule 303:  MultiplicativeExpressionNotName ::= MultiplicativeExpressionNotName MULTIPLY UnaryExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 303:  MultiplicativeExpressionNotName ::= Name MULTIPLY UnaryExpression
+// Rule 304:  MultiplicativeExpressionNotName ::= Name MULTIPLY UnaryExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 304:  MultiplicativeExpressionNotName ::= MultiplicativeExpressionNotName DIVIDE UnaryExpression
+// Rule 305:  MultiplicativeExpressionNotName ::= MultiplicativeExpressionNotName DIVIDE UnaryExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 305:  MultiplicativeExpressionNotName ::= Name DIVIDE UnaryExpression
+// Rule 306:  MultiplicativeExpressionNotName ::= Name DIVIDE UnaryExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 306:  MultiplicativeExpressionNotName ::= MultiplicativeExpressionNotName REMAINDER UnaryExpression
+// Rule 307:  MultiplicativeExpressionNotName ::= MultiplicativeExpressionNotName REMAINDER UnaryExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 307:  MultiplicativeExpressionNotName ::= Name REMAINDER UnaryExpression
+// Rule 308:  MultiplicativeExpressionNotName ::= Name REMAINDER UnaryExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 308:  AdditiveExpression ::= MultiplicativeExpression
+// Rule 309:  AdditiveExpression ::= MultiplicativeExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 309:  AdditiveExpression ::= AdditiveExpression PLUS MultiplicativeExpression
+// Rule 310:  AdditiveExpression ::= AdditiveExpression PLUS MultiplicativeExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 310:  AdditiveExpression ::= AdditiveExpression MINUS MultiplicativeExpression
+// Rule 311:  AdditiveExpression ::= AdditiveExpression MINUS MultiplicativeExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 311:  AdditiveExpressionNotName ::= MultiplicativeExpressionNotName
+// Rule 312:  AdditiveExpressionNotName ::= MultiplicativeExpressionNotName
 //
 // void NoAction();
 //
 
 //
-// Rule 312:  AdditiveExpressionNotName ::= AdditiveExpressionNotName PLUS MultiplicativeExpression
+// Rule 313:  AdditiveExpressionNotName ::= AdditiveExpressionNotName PLUS MultiplicativeExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 313:  AdditiveExpressionNotName ::= Name PLUS MultiplicativeExpression
+// Rule 314:  AdditiveExpressionNotName ::= Name PLUS MultiplicativeExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 314:  AdditiveExpressionNotName ::= AdditiveExpressionNotName MINUS MultiplicativeExpression
+// Rule 315:  AdditiveExpressionNotName ::= AdditiveExpressionNotName MINUS MultiplicativeExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 315:  AdditiveExpressionNotName ::= Name MINUS MultiplicativeExpression
+// Rule 316:  AdditiveExpressionNotName ::= Name MINUS MultiplicativeExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 316:  ShiftExpression ::= AdditiveExpression
+// Rule 317:  ShiftExpression ::= AdditiveExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 317:  ShiftExpression ::= ShiftExpression LEFT_SHIFT AdditiveExpression
+// Rule 318:  ShiftExpression ::= ShiftExpression LEFT_SHIFT AdditiveExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 318:  ShiftExpression ::= ShiftExpression RIGHT_SHIFT AdditiveExpression
+// Rule 319:  ShiftExpression ::= ShiftExpression RIGHT_SHIFT AdditiveExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 319:  ShiftExpression ::= ShiftExpression UNSIGNED_RIGHT_SHIFT AdditiveExpression
+// Rule 320:  ShiftExpression ::= ShiftExpression UNSIGNED_RIGHT_SHIFT AdditiveExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 320:  ShiftExpressionNotName ::= AdditiveExpressionNotName
+// Rule 321:  ShiftExpressionNotName ::= AdditiveExpressionNotName
 //
 // void NoAction();
 //
 
 //
-// Rule 321:  ShiftExpressionNotName ::= ShiftExpressionNotName LEFT_SHIFT AdditiveExpression
+// Rule 322:  ShiftExpressionNotName ::= ShiftExpressionNotName LEFT_SHIFT AdditiveExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 322:  ShiftExpressionNotName ::= Name LEFT_SHIFT AdditiveExpression
+// Rule 323:  ShiftExpressionNotName ::= Name LEFT_SHIFT AdditiveExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 323:  ShiftExpressionNotName ::= ShiftExpressionNotName RIGHT_SHIFT AdditiveExpression
+// Rule 324:  ShiftExpressionNotName ::= ShiftExpressionNotName RIGHT_SHIFT AdditiveExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 324:  ShiftExpressionNotName ::= Name RIGHT_SHIFT AdditiveExpression
+// Rule 325:  ShiftExpressionNotName ::= Name RIGHT_SHIFT AdditiveExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 325:  ShiftExpressionNotName ::= ShiftExpressionNotName UNSIGNED_RIGHT_SHIFT AdditiveExpression
+// Rule 326:  ShiftExpressionNotName ::= ShiftExpressionNotName UNSIGNED_RIGHT_SHIFT AdditiveExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 326:  ShiftExpressionNotName ::= Name UNSIGNED_RIGHT_SHIFT AdditiveExpression
+// Rule 327:  ShiftExpressionNotName ::= Name UNSIGNED_RIGHT_SHIFT AdditiveExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 327:  RelationalExpression ::= ShiftExpression
+// Rule 328:  RelationalExpression ::= ShiftExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 328:  RelationalExpression ::= RelationalExpression LESS ShiftExpression
+// Rule 329:  RelationalExpression ::= RelationalExpression LESS ShiftExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 329:  RelationalExpression ::= RelationalExpression GREATER ShiftExpression
+// Rule 330:  RelationalExpression ::= RelationalExpression GREATER ShiftExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 330:  RelationalExpression ::= RelationalExpression LESS_EQUAL ShiftExpression
+// Rule 331:  RelationalExpression ::= RelationalExpression LESS_EQUAL ShiftExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 331:  RelationalExpression ::= RelationalExpression GREATER_EQUAL ShiftExpression
+// Rule 332:  RelationalExpression ::= RelationalExpression GREATER_EQUAL ShiftExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 332:  RelationalExpression ::= RelationalExpression instanceof ReferenceType
+// Rule 333:  RelationalExpression ::= RelationalExpression instanceof ReferenceType
 //
-#line 4303 "java.g"
+#line 4328 "java.g"
 void Parser::MakeInstanceofExpression()
 {
     AstInstanceofExpression* p = ast_pool -> NewInstanceofExpression();
@@ -3330,279 +3345,279 @@ void Parser::MakeInstanceofExpression()
 }
 
 //
-// Rule 333:  RelationalExpressionNotName ::= ShiftExpressionNotName
+// Rule 334:  RelationalExpressionNotName ::= ShiftExpressionNotName
 //
 // void NoAction();
 //
 
 //
-// Rule 334:  RelationalExpressionNotName ::= RelationalExpressionNotName LESS ShiftExpression
+// Rule 335:  RelationalExpressionNotName ::= RelationalExpressionNotName LESS ShiftExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 335:  RelationalExpressionNotName ::= Name LESS ShiftExpression
+// Rule 336:  RelationalExpressionNotName ::= Name LESS ShiftExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 336:  RelationalExpressionNotName ::= RelationalExpressionNotName GREATER ShiftExpression
+// Rule 337:  RelationalExpressionNotName ::= RelationalExpressionNotName GREATER ShiftExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 337:  RelationalExpressionNotName ::= Name GREATER ShiftExpression
+// Rule 338:  RelationalExpressionNotName ::= Name GREATER ShiftExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 338:  RelationalExpressionNotName ::= RelationalExpressionNotName LESS_EQUAL ShiftExpression
+// Rule 339:  RelationalExpressionNotName ::= RelationalExpressionNotName LESS_EQUAL ShiftExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 339:  RelationalExpressionNotName ::= Name LESS_EQUAL ShiftExpression
+// Rule 340:  RelationalExpressionNotName ::= Name LESS_EQUAL ShiftExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 340:  RelationalExpressionNotName ::= RelationalExpressionNotName GREATER_EQUAL ShiftExpression
+// Rule 341:  RelationalExpressionNotName ::= RelationalExpressionNotName GREATER_EQUAL ShiftExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 341:  RelationalExpressionNotName ::= Name GREATER_EQUAL ShiftExpression
+// Rule 342:  RelationalExpressionNotName ::= Name GREATER_EQUAL ShiftExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 342:  RelationalExpressionNotName ::= RelationalExpressionNotName instanceof ReferenceType
+// Rule 343:  RelationalExpressionNotName ::= RelationalExpressionNotName instanceof ReferenceType
 //
 // void MakeInstanceofExpression();
 //
 
 //
-// Rule 343:  RelationalExpressionNotName ::= Name instanceof ReferenceType
+// Rule 344:  RelationalExpressionNotName ::= Name instanceof ReferenceType
 //
 // void MakeInstanceofExpression();
 //
 
 //
-// Rule 344:  EqualityExpression ::= RelationalExpression
+// Rule 345:  EqualityExpression ::= RelationalExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 345:  EqualityExpression ::= EqualityExpression EQUAL_EQUAL RelationalExpression
+// Rule 346:  EqualityExpression ::= EqualityExpression EQUAL_EQUAL RelationalExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 346:  EqualityExpression ::= EqualityExpression NOT_EQUAL RelationalExpression
+// Rule 347:  EqualityExpression ::= EqualityExpression NOT_EQUAL RelationalExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 347:  EqualityExpressionNotName ::= RelationalExpressionNotName
+// Rule 348:  EqualityExpressionNotName ::= RelationalExpressionNotName
 //
 // void NoAction();
 //
 
 //
-// Rule 348:  EqualityExpressionNotName ::= EqualityExpressionNotName EQUAL_EQUAL RelationalExpression
+// Rule 349:  EqualityExpressionNotName ::= EqualityExpressionNotName EQUAL_EQUAL RelationalExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 349:  EqualityExpressionNotName ::= Name EQUAL_EQUAL RelationalExpression
+// Rule 350:  EqualityExpressionNotName ::= Name EQUAL_EQUAL RelationalExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 350:  EqualityExpressionNotName ::= EqualityExpressionNotName NOT_EQUAL RelationalExpression
+// Rule 351:  EqualityExpressionNotName ::= EqualityExpressionNotName NOT_EQUAL RelationalExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 351:  EqualityExpressionNotName ::= Name NOT_EQUAL RelationalExpression
+// Rule 352:  EqualityExpressionNotName ::= Name NOT_EQUAL RelationalExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 352:  AndExpression ::= EqualityExpression
+// Rule 353:  AndExpression ::= EqualityExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 353:  AndExpression ::= AndExpression AND EqualityExpression
+// Rule 354:  AndExpression ::= AndExpression AND EqualityExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 354:  AndExpressionNotName ::= EqualityExpressionNotName
+// Rule 355:  AndExpressionNotName ::= EqualityExpressionNotName
 //
 // void NoAction();
 //
 
 //
-// Rule 355:  AndExpressionNotName ::= AndExpressionNotName AND EqualityExpression
+// Rule 356:  AndExpressionNotName ::= AndExpressionNotName AND EqualityExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 356:  AndExpressionNotName ::= Name AND EqualityExpression
+// Rule 357:  AndExpressionNotName ::= Name AND EqualityExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 357:  ExclusiveOrExpression ::= AndExpression
+// Rule 358:  ExclusiveOrExpression ::= AndExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 358:  ExclusiveOrExpression ::= ExclusiveOrExpression XOR AndExpression
+// Rule 359:  ExclusiveOrExpression ::= ExclusiveOrExpression XOR AndExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 359:  ExclusiveOrExpressionNotName ::= AndExpressionNotName
+// Rule 360:  ExclusiveOrExpressionNotName ::= AndExpressionNotName
 //
 // void NoAction();
 //
 
 //
-// Rule 360:  ExclusiveOrExpressionNotName ::= ExclusiveOrExpressionNotName XOR AndExpression
+// Rule 361:  ExclusiveOrExpressionNotName ::= ExclusiveOrExpressionNotName XOR AndExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 361:  ExclusiveOrExpressionNotName ::= Name XOR AndExpression
+// Rule 362:  ExclusiveOrExpressionNotName ::= Name XOR AndExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 362:  InclusiveOrExpression ::= ExclusiveOrExpression
+// Rule 363:  InclusiveOrExpression ::= ExclusiveOrExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 363:  InclusiveOrExpression ::= InclusiveOrExpression OR ExclusiveOrExpression
+// Rule 364:  InclusiveOrExpression ::= InclusiveOrExpression OR ExclusiveOrExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 364:  InclusiveOrExpressionNotName ::= ExclusiveOrExpressionNotName
+// Rule 365:  InclusiveOrExpressionNotName ::= ExclusiveOrExpressionNotName
 //
 // void NoAction();
 //
 
 //
-// Rule 365:  InclusiveOrExpressionNotName ::= InclusiveOrExpressionNotName OR ExclusiveOrExpression
+// Rule 366:  InclusiveOrExpressionNotName ::= InclusiveOrExpressionNotName OR ExclusiveOrExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 366:  InclusiveOrExpressionNotName ::= Name OR ExclusiveOrExpression
+// Rule 367:  InclusiveOrExpressionNotName ::= Name OR ExclusiveOrExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 367:  ConditionalAndExpression ::= InclusiveOrExpression
+// Rule 368:  ConditionalAndExpression ::= InclusiveOrExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 368:  ConditionalAndExpression ::= ConditionalAndExpression AND_AND InclusiveOrExpression
+// Rule 369:  ConditionalAndExpression ::= ConditionalAndExpression AND_AND InclusiveOrExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 369:  ConditionalAndExpressionNotName ::= InclusiveOrExpressionNotName
+// Rule 370:  ConditionalAndExpressionNotName ::= InclusiveOrExpressionNotName
 //
 // void NoAction();
 //
 
 //
-// Rule 370:  ConditionalAndExpressionNotName ::= ConditionalAndExpressionNotName AND_AND InclusiveOrExpression
+// Rule 371:  ConditionalAndExpressionNotName ::= ConditionalAndExpressionNotName AND_AND InclusiveOrExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 371:  ConditionalAndExpressionNotName ::= Name AND_AND InclusiveOrExpression
+// Rule 372:  ConditionalAndExpressionNotName ::= Name AND_AND InclusiveOrExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 372:  ConditionalOrExpression ::= ConditionalAndExpression
+// Rule 373:  ConditionalOrExpression ::= ConditionalAndExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 373:  ConditionalOrExpression ::= ConditionalOrExpression OR_OR ConditionalAndExpression
+// Rule 374:  ConditionalOrExpression ::= ConditionalOrExpression OR_OR ConditionalAndExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 374:  ConditionalOrExpressionNotName ::= ConditionalAndExpressionNotName
+// Rule 375:  ConditionalOrExpressionNotName ::= ConditionalAndExpressionNotName
 //
 // void NoAction();
 //
 
 //
-// Rule 375:  ConditionalOrExpressionNotName ::= ConditionalOrExpressionNotName OR_OR ConditionalAndExpression
+// Rule 376:  ConditionalOrExpressionNotName ::= ConditionalOrExpressionNotName OR_OR ConditionalAndExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 376:  ConditionalOrExpressionNotName ::= Name OR_OR ConditionalAndExpression
+// Rule 377:  ConditionalOrExpressionNotName ::= Name OR_OR ConditionalAndExpression
 //
 // void MakeBinaryExpression();
 //
 
 //
-// Rule 377:  ConditionalExpression ::= ConditionalOrExpression
+// Rule 378:  ConditionalExpression ::= ConditionalOrExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 378:  ConditionalExpression ::= ConditionalOrExpression QUESTION Expression COLON ConditionalExpression
+// Rule 379:  ConditionalExpression ::= ConditionalOrExpression QUESTION Expression COLON ConditionalExpression
 //
-#line 4513 "java.g"
+#line 4538 "java.g"
 void Parser::MakeConditionalExpression()
 {
     AstConditionalExpression* p = ast_pool -> NewConditionalExpression();
@@ -3615,52 +3630,52 @@ void Parser::MakeConditionalExpression()
 }
 
 //
-// Rule 379:  ConditionalExpressionNotName ::= ConditionalOrExpressionNotName
+// Rule 380:  ConditionalExpressionNotName ::= ConditionalOrExpressionNotName
 //
 // void NoAction();
 //
 
 //
-// Rule 380:  ConditionalExpressionNotName ::= ConditionalOrExpressionNotName QUESTION Expression COLON...
+// Rule 381:  ConditionalExpressionNotName ::= ConditionalOrExpressionNotName QUESTION Expression COLON...
 //
 // void MakeConditionalExpression();
 //
 
 //
-// Rule 381:  ConditionalExpressionNotName ::= Name QUESTION Expression COLON ConditionalExpression
+// Rule 382:  ConditionalExpressionNotName ::= Name QUESTION Expression COLON ConditionalExpression
 //
 // void MakeConditionalExpression();
 //
 
 //
-// Rule 382:  AssignmentExpression ::= ConditionalExpression
+// Rule 383:  AssignmentExpression ::= ConditionalExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 383:  AssignmentExpression ::= Assignment
+// Rule 384:  AssignmentExpression ::= Assignment
 //
 // void NoAction();
 //
 
 //
-// Rule 384:  AssignmentExpressionNotName ::= ConditionalExpressionNotName
+// Rule 385:  AssignmentExpressionNotName ::= ConditionalExpressionNotName
 //
 // void NoAction();
 //
 
 //
-// Rule 385:  AssignmentExpressionNotName ::= Assignment
+// Rule 386:  AssignmentExpressionNotName ::= Assignment
 //
 // void NoAction();
 //
 
 //
-// Rule 386:  Assignment ::= PostfixExpression AssignmentOperator AssignmentExpression
+// Rule 387:  Assignment ::= PostfixExpression AssignmentOperator AssignmentExpression
 //
-#line 4570 "java.g"
-void Parser::Act386()
+#line 4595 "java.g"
+void Parser::Act387()
 {
     AstAssignmentExpression::AssignmentExpressionTag tag;
     switch (lex_stream -> Kind(Token(2)))
@@ -3690,117 +3705,117 @@ void Parser::Act386()
 }
 
 //
-// Rule 387:  AssignmentOperator ::= EQUAL
+// Rule 388:  AssignmentOperator ::= EQUAL
 //
 // void NoAction();
 //
 
 //
-// Rule 388:  AssignmentOperator ::= MULTIPLY_EQUAL
+// Rule 389:  AssignmentOperator ::= MULTIPLY_EQUAL
 //
 // void NoAction();
 //
 
 //
-// Rule 389:  AssignmentOperator ::= DIVIDE_EQUAL
+// Rule 390:  AssignmentOperator ::= DIVIDE_EQUAL
 //
 // void NoAction();
 //
 
 //
-// Rule 390:  AssignmentOperator ::= REMAINDER_EQUAL
+// Rule 391:  AssignmentOperator ::= REMAINDER_EQUAL
 //
 // void NoAction();
 //
 
 //
-// Rule 391:  AssignmentOperator ::= PLUS_EQUAL
+// Rule 392:  AssignmentOperator ::= PLUS_EQUAL
 //
 // void NoAction();
 //
 
 //
-// Rule 392:  AssignmentOperator ::= MINUS_EQUAL
+// Rule 393:  AssignmentOperator ::= MINUS_EQUAL
 //
 // void NoAction();
 //
 
 //
-// Rule 393:  AssignmentOperator ::= LEFT_SHIFT_EQUAL
+// Rule 394:  AssignmentOperator ::= LEFT_SHIFT_EQUAL
 //
 // void NoAction();
 //
 
 //
-// Rule 394:  AssignmentOperator ::= RIGHT_SHIFT_EQUAL
+// Rule 395:  AssignmentOperator ::= RIGHT_SHIFT_EQUAL
 //
 // void NoAction();
 //
 
 //
-// Rule 395:  AssignmentOperator ::= UNSIGNED_RIGHT_SHIFT_EQUAL
+// Rule 396:  AssignmentOperator ::= UNSIGNED_RIGHT_SHIFT_EQUAL
 //
 // void NoAction();
 //
 
 //
-// Rule 396:  AssignmentOperator ::= AND_EQUAL
+// Rule 397:  AssignmentOperator ::= AND_EQUAL
 //
 // void NoAction();
 //
 
 //
-// Rule 397:  AssignmentOperator ::= XOR_EQUAL
+// Rule 398:  AssignmentOperator ::= XOR_EQUAL
 //
 // void NoAction();
 //
 
 //
-// Rule 398:  AssignmentOperator ::= OR_EQUAL
+// Rule 399:  AssignmentOperator ::= OR_EQUAL
 //
 // void NoAction();
 //
 
 //
-// Rule 399:  Expression ::= AssignmentExpression
+// Rule 400:  Expression ::= AssignmentExpression
 //
 // void NoAction();
 //
 
 //
-// Rule 400:  ExpressionNotName ::= AssignmentExpressionNotName
+// Rule 401:  ExpressionNotName ::= AssignmentExpressionNotName
 //
 // void NoAction();
 //
 
 //
-// Rule 401:  ,opt ::=
+// Rule 402:  ,opt ::=
 //
 // void NoAction();
 //
 
 //
-// Rule 402:  ,opt ::= COMMA
+// Rule 403:  ,opt ::= COMMA
 //
 // void NoAction();
 //
 
 //
-// Rule 403:  Identifieropt ::=
+// Rule 404:  Identifieropt ::=
 //
 // void NoAction();
 //
 
 //
-// Rule 404:  Identifieropt ::= Identifier
+// Rule 405:  Identifieropt ::= Identifier
 //
 // void NoAction();
 //
 
 //
-// Rule 405:  Superopt ::=
+// Rule 406:  Superopt ::=
 //
-#line 4694 "java.g"
+#line 4719 "java.g"
 //
 // Given a rule of the form A ::= x1 x2 ... xn
 //
@@ -3809,248 +3824,248 @@ void Parser::Act386()
 void Parser::NullAction() { Sym(1) = NULL; }
 
 //
-// Rule 406:  Superopt ::= Super
+// Rule 407:  Superopt ::= Super
 //
 // void NoAction();
 //
 
 //
-// Rule 407:  Expressionopt ::=
+// Rule 408:  Expressionopt ::=
 //
 // void NullAction();
 //
 
 //
-// Rule 408:  Expressionopt ::= Expression
+// Rule 409:  Expressionopt ::= Expression
 //
 // void NoAction();
 //
 
 //
-// Rule 409:  ClassBodyopt ::=
+// Rule 410:  ClassBodyopt ::=
 //
 // void NullAction();
 //
 
 //
-// Rule 410:  ClassBodyopt ::= ClassBody
+// Rule 411:  ClassBodyopt ::= ClassBody
 //
 // void NoAction();
 //
 
 //
-// Rule 411:  ImportDeclarationsopt ::=
+// Rule 412:  ImportDeclarationsopt ::=
 //
 // void NullAction();
 //
 
 //
-// Rule 412:  ImportDeclarationsopt ::= ImportDeclarations
+// Rule 413:  ImportDeclarationsopt ::= ImportDeclarations
 //
 // void NoAction();
 //
 
 //
-// Rule 413:  TypeDeclarationsopt ::=
+// Rule 414:  TypeDeclarationsopt ::=
 //
 // void NullAction();
 //
 
 //
-// Rule 414:  TypeDeclarationsopt ::= TypeDeclarations
+// Rule 415:  TypeDeclarationsopt ::= TypeDeclarations
 //
 // void NoAction();
 //
 
 //
-// Rule 415:  ClassBodyDeclarationsopt ::=
+// Rule 416:  ClassBodyDeclarationsopt ::=
 //
 // void NullAction();
 //
 
 //
-// Rule 416:  ClassBodyDeclarationsopt ::= ClassBodyDeclarations
+// Rule 417:  ClassBodyDeclarationsopt ::= ClassBodyDeclarations
 //
 // void NoAction();
 //
 
 //
-// Rule 417:  Modifiersopt ::=
+// Rule 418:  Modifiersopt ::=
 //
 // void NullAction();
 //
 
 //
-// Rule 418:  Modifiersopt ::= Modifiers
+// Rule 419:  Modifiersopt ::= Modifiers
 //
 // void NoAction();
 //
 
 //
-// Rule 419:  BlockStatementsopt ::=
+// Rule 420:  BlockStatementsopt ::=
 //
 // void NullAction();
 //
 
 //
-// Rule 420:  BlockStatementsopt ::= BlockStatements
+// Rule 421:  BlockStatementsopt ::= BlockStatements
 //
 // void NoAction();
 //
 
 //
-// Rule 421:  Dimsopt ::=
+// Rule 422:  Dimsopt ::=
 //
 // void NullAction();
 //
 
 //
-// Rule 422:  Dimsopt ::= Dims
+// Rule 423:  Dimsopt ::= Dims
 //
 // void NoAction();
 //
 
 //
-// Rule 423:  ArgumentListopt ::=
+// Rule 424:  ArgumentListopt ::=
 //
 // void NullAction();
 //
 
 //
-// Rule 424:  ArgumentListopt ::= ArgumentList
+// Rule 425:  ArgumentListopt ::= ArgumentList
 //
 // void NoAction();
 //
 
 //
-// Rule 425:  SwitchLabelsopt ::=
+// Rule 426:  SwitchLabelsopt ::=
 //
 // void NullAction();
 //
 
 //
-// Rule 426:  SwitchLabelsopt ::= SwitchLabels
+// Rule 427:  SwitchLabelsopt ::= SwitchLabels
 //
 // void NoAction();
 //
 
 //
-// Rule 427:  Throwsopt ::=
+// Rule 428:  Throwsopt ::=
 //
 // void NullAction();
 //
 
 //
-// Rule 428:  Throwsopt ::= Throws
+// Rule 429:  Throwsopt ::= Throws
 //
 // void NoAction();
 //
 
 //
-// Rule 429:  FormalParameterListopt ::=
+// Rule 430:  FormalParameterListopt ::=
 //
 // void NullAction();
 //
 
 //
-// Rule 430:  FormalParameterListopt ::= FormalParameterList
+// Rule 431:  FormalParameterListopt ::= FormalParameterList
 //
 // void NoAction();
 //
 
 //
-// Rule 431:  Interfacesopt ::=
+// Rule 432:  Interfacesopt ::=
 //
 // void NullAction();
 //
 
 //
-// Rule 432:  Interfacesopt ::= Interfaces
+// Rule 433:  Interfacesopt ::= Interfaces
 //
 // void NoAction();
 //
 
 //
-// Rule 433:  InterfaceMemberDeclarationsopt ::=
+// Rule 434:  InterfaceMemberDeclarationsopt ::=
 //
 // void NullAction();
 //
 
 //
-// Rule 434:  InterfaceMemberDeclarationsopt ::= InterfaceMemberDeclarations
+// Rule 435:  InterfaceMemberDeclarationsopt ::= InterfaceMemberDeclarations
 //
 // void NoAction();
 //
 
 //
-// Rule 435:  ForInitopt ::=
+// Rule 436:  ForInitopt ::=
 //
 // void NullAction();
 //
 
 //
-// Rule 436:  ForInitopt ::= ForInit
+// Rule 437:  ForInitopt ::= ForInit
 //
 // void NoAction();
 //
 
 //
-// Rule 437:  ForUpdateopt ::=
+// Rule 438:  ForUpdateopt ::=
 //
 // void NullAction();
 //
 
 //
-// Rule 438:  ForUpdateopt ::= ForUpdate
+// Rule 439:  ForUpdateopt ::= ForUpdate
 //
 // void NoAction();
 //
 
 //
-// Rule 439:  ExtendsInterfacesopt ::=
+// Rule 440:  ExtendsInterfacesopt ::=
 //
 // void NullAction();
 //
 
 //
-// Rule 440:  ExtendsInterfacesopt ::= ExtendsInterfaces
+// Rule 441:  ExtendsInterfacesopt ::= ExtendsInterfaces
 //
 // void NoAction();
 //
 
 //
-// Rule 441:  Catchesopt ::=
+// Rule 442:  Catchesopt ::=
 //
 // void NullAction();
 //
 
 //
-// Rule 442:  Catchesopt ::= Catches
+// Rule 443:  Catchesopt ::= Catches
 //
 // void NoAction();
 //
 
 //
-// Rule 443:  MemberValuePairsopt ::=
+// Rule 444:  MemberValuePairsopt ::=
 //
 // void NullAction();
 //
 
 //
-// Rule 444:  MemberValuePairsopt ::= MemberValuePairs
+// Rule 445:  MemberValuePairsopt ::= MemberValuePairs
 //
 // void NoAction();
 //
 
 //
-// Rule 445:  PackageHeaderMarker ::=
+// Rule 446:  PackageHeaderMarker ::=
 //
-#line 4867 "java.g"
+#line 4892 "java.g"
 //
 // When this function is invoked, if the "parse_package_header_only" flag
 // is turned on, we skip to the end-of-file token.
 //
-void Parser::Act445()
+void Parser::Act446()
 {
     if (parse_package_header_only)
         // point to the EOF token
@@ -4059,14 +4074,14 @@ void Parser::Act445()
 }
 
 //
-// Rule 446:  MethodHeaderMarker ::=
+// Rule 447:  MethodHeaderMarker ::=
 //
-#line 4883 "java.g"
+#line 4908 "java.g"
 //
 // When this function is invoked, if the "parse_header_only" flag
 // is turned on, the body of the method being parsed is skipped.
 //
-void Parser::Act446()
+void Parser::Act447()
 {
     if (parse_header_only)
     {
@@ -4085,7 +4100,7 @@ void Parser::Act446()
 }
 
 //
-// Rule 447:  Marker ::=
+// Rule 448:  Marker ::=
 //
 // void NullAction();
 //

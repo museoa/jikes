@@ -34,6 +34,7 @@ class AstVariableDeclaratorId;
 class AstFormalParameter;
 class AstMethodBody;
 class AstArguments;
+class AstMethodInvocation;
 
 enum ParseErrorCode
 {

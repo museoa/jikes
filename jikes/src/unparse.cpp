@@ -999,7 +999,12 @@ void AstMethodInvocation::Unparse(Ostream& os, LexStream* lex_stream)
 {
     if (debug_unparse)
         os << "/*AstMethodInvocation:#" << id << "*/";
-    method -> Unparse(os, lex_stream);
+    if (base_opt && ! base_opt -> generated)
+    {
+        base_opt -> Unparse(os, lex_stream);
+        os << '.';
+    }
+    os << lex_stream -> NameString(identifier_token);
     arguments -> Unparse(os, lex_stream);
     if (debug_unparse)
         os << "/*:AstMethodInvocation#" << id << "*/";
