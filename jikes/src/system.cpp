@@ -317,7 +317,6 @@ void Control::ProcessGlobals()
     serialVersionUID_name_symbol = FindOrInsertSystemName("serialVersionUID");
     this_name_symbol = FindOrInsertSystemName("this");
     true_name_symbol = FindOrInsertSystemName("true");
-    type_name_symbol = FindOrInsertSystemName("TYPE");
     val_name_symbol =
         FindOrInsertSystemName(option.source < JikesOption::SDK1_5
                                ? "val$" : "-");
@@ -1321,11 +1320,14 @@ MethodSymbol* Control::ProcessSystemMethod(TypeSymbol* type,
     }
     if (! method)
     {
-        system_semantic ->
-            ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
-                           LexStream::BadToken(),
-                           type -> ContainingPackageName(),
-                           type -> ExternalName());
+        if (! type -> Bad())
+        {
+            system_semantic ->
+                ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
+                               LexStream::BadToken(),
+                               type -> ContainingPackageName(),
+                               type -> ExternalName());
+        }
         method = type -> InsertMethodSymbol(name_symbol);
         method -> SetType(no_type);
         method -> SetContainingType(type);
@@ -1333,6 +1335,45 @@ MethodSymbol* Control::ProcessSystemMethod(TypeSymbol* type,
                                Utf8_literal);
     }
     return method;
+}
+
+
+//
+// Find the given system field.
+//
+VariableSymbol* Control::ProcessSystemField(TypeSymbol* type,
+                                            const char* name,
+                                            const char* descriptor)
+{
+    NameSymbol* name_symbol = FindOrInsertSystemName(name);
+    VariableSymbol* field = NULL;
+    if (! type -> Bad())
+    {
+        field = type -> FindVariableSymbol(name_symbol);
+        if (! field -> IsTyped())
+            field -> ProcessVariableSignature(system_semantic,
+                                              LexStream::BadToken());
+        field -> MarkInitialized();
+    }
+    if (! field)
+    {
+        if (! type -> Bad())
+        {
+            system_semantic ->
+                ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
+                               LexStream::BadToken(),
+                               type -> ContainingPackageName(),
+                               type -> ExternalName());
+        }
+        field = type -> InsertVariableSymbol(name_symbol);
+        field -> SetType(no_type);
+        field -> SetOwner(type);
+        field -> MarkInitialized();
+        Utf8LiteralValue* utf8 =
+            FindOrInsertSystemName(descriptor) -> Utf8_literal;
+        field -> SetSignatureString(utf8 -> value, utf8 -> length);
+    }
+    return field;
 }
 
 

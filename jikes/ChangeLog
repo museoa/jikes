@@ -1,3 +1,15 @@
+2004-03-23  Eric Blake  <ebb9@byu.net>
+
+	* src/control.h: Reorder accessor cache variables.
+	(FIELD_ACCESSOR): Similar to TYPE_ACCESSOR, to access fields like
+	Integer.TYPE and ElementType.FIELD.
+	* src/control.cpp: Ditto.
+	* src/system.cpp (ProcessSystemField): New.
+	* src/expr.cpp (ProcessClassLiteral): Use field accessors.
+	(GetAnonymousType): Use '-' instead of '$' in 1.5 anon types.
+	* src/platform.cpp (US_MI): New.
+	* src/platform.h: Ditto.
+
 2004-03-16  Eric Blake  <ebb9@byu.net>
 
 	* src/ast.cpp: Backport the ability to parse JSR 14 from the

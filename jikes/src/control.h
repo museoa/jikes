@@ -104,7 +104,6 @@ public:
     NameSymbol* serialVersionUID_name_symbol;
     NameSymbol* this_name_symbol;
     NameSymbol* true_name_symbol;
-    NameSymbol* type_name_symbol;
     NameSymbol* val_name_symbol;
 
     Utf8LiteralValue* ConstantValue_literal;
@@ -166,145 +165,192 @@ public:
     }
 
     //
-    // System type and method accessors. Useful boilerplate macros.
+    // System type, method, and field accessors. Useful boilerplate macros
+    // reduce the chance for typos, but be sure to update Control::Control to
+    // initialize the field created by the macros to NULL.
     //
+
+    // TYPE_ACCESSOR(classname, expression);
 #define TYPE_ACCESSOR(type, package)                           \
+private:                                                       \
+    TypeSymbol* type ## _type;                                 \
+public:                                                        \
     inline TypeSymbol* type()                                  \
     {                                                          \
         if (! type ## _type)                                   \
             type ## _type = ProcessSystemType(package, #type); \
         return type ## _type;                                  \
     }
-#define METHOD_ACCESSOR(method, type, name, signature)                      \
-    inline MethodSymbol* method ## Method()                                 \
-    {                                                                       \
-        if (! method ## _method)                                            \
-            method ## _method = ProcessSystemMethod(type, name, signature); \
-        return method ## _method;                                           \
+
+    // METHOD_ACCESSOR(class_methodname, expression, "name", "descriptor");
+#define METHOD_ACCESSOR(method, type, name, descriptor)                      \
+private:                                                                     \
+    MethodSymbol* method ## _method;                                         \
+public:                                                                      \
+    inline MethodSymbol* method ## Method()                                  \
+    {                                                                        \
+        if (! method ## _method)                                             \
+            method ## _method = ProcessSystemMethod(type, name, descriptor); \
+        return method ## _method;                                            \
     }
-    TYPE_ACCESSOR(Annotation, AnnotationPackage())
-        TYPE_ACCESSOR(AssertionError, lang_package)
-        METHOD_ACCESSOR(AssertionError_Init, AssertionError(),
-                        "<init>", "()V")
-        METHOD_ACCESSOR(AssertionError_InitWithChar, AssertionError(),
-                        "<init>", "(C)V")
-        METHOD_ACCESSOR(AssertionError_InitWithBoolean, AssertionError(),
-                        "<init>", "(Z)V")
-        METHOD_ACCESSOR(AssertionError_InitWithInt, AssertionError(),
-                        "<init>", "(I)V")
-        METHOD_ACCESSOR(AssertionError_InitWithLong, AssertionError(),
-                        "<init>", "(J)V")
-        METHOD_ACCESSOR(AssertionError_InitWithFloat, AssertionError(),
-                        "<init>", "(F)V")
-        METHOD_ACCESSOR(AssertionError_InitWithDouble, AssertionError(),
-                        "<init>", "(D)V")
-        METHOD_ACCESSOR(AssertionError_InitWithObject, AssertionError(),
-                        "<init>", "(Ljava/lang/Object;)V")
-        TYPE_ACCESSOR(Boolean, lang_package)
-        TYPE_ACCESSOR(Byte, lang_package)
-        TYPE_ACCESSOR(Character, lang_package)
-        TYPE_ACCESSOR(Class, lang_package)
-        METHOD_ACCESSOR(Class_forName, Class(),
-                        "forName", "(Ljava/lang/String;)Ljava/lang/Class;")
-        METHOD_ACCESSOR(Class_getComponentType, Class(),
-                        "getComponentType", "()Ljava/lang/Class;")
-        METHOD_ACCESSOR(Class_desiredAssertionStatus, Class(),
-                        "desiredAssertionStatus", "()Z")
-        TYPE_ACCESSOR(ClassNotFoundException, lang_package)
-        TYPE_ACCESSOR(Cloneable, lang_package)
-        TYPE_ACCESSOR(Comparable, lang_package)
-        TYPE_ACCESSOR(Double, lang_package)
-        TYPE_ACCESSOR(Enum, lang_package)
-        METHOD_ACCESSOR(Enum_Init, Enum(),
-                        "<init>", "(Ljava/lang/String;I)V")
-        METHOD_ACCESSOR(Enum_ordinal, Enum(),
-                        "ordinal", "()I")
-        METHOD_ACCESSOR(Enum_valueOf, Enum(), "valueOf",
-                        "(Ljava/lang/Class;Ljava/lang/String;)Ljava/lang/Enum;")
-        TYPE_ACCESSOR(Error, lang_package)
-        TYPE_ACCESSOR(Exception, lang_package)
-        TYPE_ACCESSOR(Float, lang_package)
-        TYPE_ACCESSOR(Integer, lang_package)
-        TYPE_ACCESSOR(Iterable, lang_package)
-        METHOD_ACCESSOR(Iterable_iterator, Iterable(),
-                        "iterator", "()Ljava/util/Iterator;")
-        TYPE_ACCESSOR(Iterator, UtilPackage())
-        METHOD_ACCESSOR(Iterator_hasNext, Iterator(),
-                        "hasNext", "()Z")
-        METHOD_ACCESSOR(Iterator_next, Iterator(),
-                        "next", "()Ljava/lang/Object;")
-        TYPE_ACCESSOR(Long, lang_package)
-        TYPE_ACCESSOR(NoClassDefFoundError, lang_package)
-        METHOD_ACCESSOR(NoClassDefFoundError_Init,
-                        NoClassDefFoundError(),
-                        "<init>", "()V")
-        METHOD_ACCESSOR(NoClassDefFoundError_InitString,
-                        NoClassDefFoundError(),
-                        "<init>", "(Ljava/lang/String;)V")
-        TYPE_ACCESSOR(Object, lang_package)
-        METHOD_ACCESSOR(Object_getClass, Object(),
-                        "getClass", "()Ljava/lang/Class;")
-        TYPE_ACCESSOR(Overrides, lang_package)
-        TYPE_ACCESSOR(Retention, AnnotationPackage())
-        TYPE_ACCESSOR(RuntimeException, lang_package)
-        TYPE_ACCESSOR(Serializable, IoPackage())
-        TYPE_ACCESSOR(Short, lang_package)
-        TYPE_ACCESSOR(String, lang_package)
-        TYPE_ACCESSOR(StringBuffer, lang_package)
-        METHOD_ACCESSOR(StringBuffer_Init, StringBuffer(),
-                        "<init>", "()V")
-        METHOD_ACCESSOR(StringBuffer_InitWithString, StringBuffer(),
-                        "<init>", "(Ljava/lang/String;)V")
-        METHOD_ACCESSOR(StringBuffer_toString, StringBuffer(),
-                        "toString", "()Ljava/lang/String;")
-        METHOD_ACCESSOR(StringBuffer_append_char, StringBuffer(),
-                        "append", "(C)Ljava/lang/StringBuffer;")
-        METHOD_ACCESSOR(StringBuffer_append_boolean, StringBuffer(),
-                        "append", "(Z)Ljava/lang/StringBuffer;")
-        METHOD_ACCESSOR(StringBuffer_append_int, StringBuffer(),
-                        "append", "(I)Ljava/lang/StringBuffer;")
-        METHOD_ACCESSOR(StringBuffer_append_long, StringBuffer(),
-                        "append", "(J)Ljava/lang/StringBuffer;")
-        METHOD_ACCESSOR(StringBuffer_append_float, StringBuffer(),
-                        "append", "(F)Ljava/lang/StringBuffer;")
-        METHOD_ACCESSOR(StringBuffer_append_double, StringBuffer(),
-                        "append", "(D)Ljava/lang/StringBuffer;")
-        METHOD_ACCESSOR(StringBuffer_append_string, StringBuffer(), "append",
-                        "(Ljava/lang/String;)Ljava/lang/StringBuffer;")
-        METHOD_ACCESSOR(StringBuffer_append_object, StringBuffer(), "append",
-                        "(Ljava/lang/Object;)Ljava/lang/StringBuffer;")
-        TYPE_ACCESSOR(StringBuilder, lang_package)
-        METHOD_ACCESSOR(StringBuilder_Init, StringBuilder(),
-                        "<init>", "()V")
-        METHOD_ACCESSOR(StringBuilder_InitWithString, StringBuilder(),
-                        "<init>", "(Ljava/lang/String;)V")
-        METHOD_ACCESSOR(StringBuilder_toString, StringBuilder(),
-                        "toString", "()Ljava/lang/String;")
-        METHOD_ACCESSOR(StringBuilder_append_char, StringBuilder(),
-                        "append", "(C)Ljava/lang/StringBuilder;")
-        METHOD_ACCESSOR(StringBuilder_append_boolean, StringBuilder(),
-                        "append", "(Z)Ljava/lang/StringBuilder;")
-        METHOD_ACCESSOR(StringBuilder_append_int, StringBuilder(),
-                        "append", "(I)Ljava/lang/StringBuilder;")
-        METHOD_ACCESSOR(StringBuilder_append_long, StringBuilder(),
-                        "append", "(J)Ljava/lang/StringBuilder;")
-        METHOD_ACCESSOR(StringBuilder_append_float, StringBuilder(),
-                        "append", "(F)Ljava/lang/StringBuilder;")
-        METHOD_ACCESSOR(StringBuilder_append_double, StringBuilder(),
-                        "append", "(D)Ljava/lang/StringBuilder;")
-        METHOD_ACCESSOR(StringBuilder_append_string, StringBuilder(), "append",
-                        "(Ljava/lang/String;)Ljava/lang/StringBuilder;")
-        METHOD_ACCESSOR(StringBuilder_append_object, StringBuilder(), "append",
-                        "(Ljava/lang/Object;)Ljava/lang/StringBuilder;")
-        TYPE_ACCESSOR(Target, AnnotationPackage())
-        TYPE_ACCESSOR(Throwable, lang_package)
-        METHOD_ACCESSOR(Throwable_getMessage, Throwable(),
-                        "getMessage", "()Ljava/lang/String;")
-        METHOD_ACCESSOR(Throwable_initCause, Throwable(), "initCause",
-                        "(Ljava/lang/Throwable;)Ljava/lang/Throwable;")
-        TYPE_ACCESSOR(Void, lang_package)
+
+    // FIELD_ACCESSOR(classname, fieldname, "descriptor");
+#define FIELD_ACCESSOR(type, name, descriptor)                  \
+private:                                                        \
+    VariableSymbol* type ## _ ## name ## _field;                \
+public:                                                         \
+    inline VariableSymbol* type ## _ ## name ## _Field()        \
+    {                                                           \
+        if (! type ## _ ## name ## _field)                      \
+            type ## _ ## name ## _field =                       \
+                ProcessSystemField(type (), #name, descriptor); \
+        return type ## _ ## name ## _field;                     \
+    }
+
+    TYPE_ACCESSOR(Annotation, AnnotationPackage());
+    TYPE_ACCESSOR(AssertionError, lang_package);
+    METHOD_ACCESSOR(AssertionError_Init, AssertionError(), "<init>", "()V");
+    METHOD_ACCESSOR(AssertionError_InitWithChar, AssertionError(),
+                    "<init>", "(C)V");
+    METHOD_ACCESSOR(AssertionError_InitWithBoolean, AssertionError(),
+                    "<init>", "(Z)V");
+    METHOD_ACCESSOR(AssertionError_InitWithInt, AssertionError(),
+                    "<init>", "(I)V");
+    METHOD_ACCESSOR(AssertionError_InitWithLong, AssertionError(),
+                    "<init>", "(J)V");
+    METHOD_ACCESSOR(AssertionError_InitWithFloat, AssertionError(),
+                    "<init>", "(F)V");
+    METHOD_ACCESSOR(AssertionError_InitWithDouble, AssertionError(),
+                    "<init>", "(D)V");
+    METHOD_ACCESSOR(AssertionError_InitWithObject, AssertionError(),
+                    "<init>", "(Ljava/lang/Object;)V");
+    TYPE_ACCESSOR(Boolean, lang_package);
+    FIELD_ACCESSOR(Boolean, TYPE, "java/lang/Class");
+    TYPE_ACCESSOR(Byte, lang_package);
+    FIELD_ACCESSOR(Byte, TYPE, "java/lang/Class");
+    TYPE_ACCESSOR(Character, lang_package);
+    FIELD_ACCESSOR(Character, TYPE, "java/lang/Class");
+    TYPE_ACCESSOR(Class, lang_package);
+    METHOD_ACCESSOR(Class_forName, Class(),
+                    "forName", "(Ljava/lang/String;)Ljava/lang/Class;");
+    METHOD_ACCESSOR(Class_getComponentType, Class(),
+                    "getComponentType", "()Ljava/lang/Class;");
+    METHOD_ACCESSOR(Class_desiredAssertionStatus, Class(),
+                    "desiredAssertionStatus", "()Z");
+    TYPE_ACCESSOR(ClassNotFoundException, lang_package);
+    TYPE_ACCESSOR(Cloneable, lang_package);
+    TYPE_ACCESSOR(Comparable, lang_package);
+    TYPE_ACCESSOR(Double, lang_package);
+    FIELD_ACCESSOR(Double, TYPE, "java/lang/Class");
+    TYPE_ACCESSOR(ElementType, AnnotationPackage());
+    FIELD_ACCESSOR(ElementType, TYPE, "java/lang/annotation/ElementType");
+    FIELD_ACCESSOR(ElementType, FIELD, "java/lang/annotation/ElementType");
+    FIELD_ACCESSOR(ElementType, METHOD, "java/lang/annotation/ElementType");
+    FIELD_ACCESSOR(ElementType, PARAMETER, "java/lang/annotation/ElementType");
+    FIELD_ACCESSOR(ElementType, CONSTRUCTOR,
+                   "java/lang/annotation/ElementType");
+    FIELD_ACCESSOR(ElementType, LOCAL_VARIABLE,
+                   "java/lang/annotation/ElementType");
+    FIELD_ACCESSOR(ElementType, ANNOTATION_TYPE,
+                   "java/lang/annotation/ElementType");
+    FIELD_ACCESSOR(ElementType, PACKAGE, "java/lang/annotation/ElementType");
+    TYPE_ACCESSOR(Enum, lang_package);
+    METHOD_ACCESSOR(Enum_Init, Enum(), "<init>", "(Ljava/lang/String;I)V");
+    METHOD_ACCESSOR(Enum_ordinal, Enum(), "ordinal", "()I");
+    METHOD_ACCESSOR(Enum_valueOf, Enum(), "valueOf",
+                    "(Ljava/lang/Class;Ljava/lang/String;)Ljava/lang/Enum;");
+    TYPE_ACCESSOR(Error, lang_package);
+    TYPE_ACCESSOR(Exception, lang_package);
+    TYPE_ACCESSOR(Float, lang_package);
+    FIELD_ACCESSOR(Float, TYPE, "java/lang/Class");
+    TYPE_ACCESSOR(Integer, lang_package);
+    FIELD_ACCESSOR(Integer, TYPE, "java/lang/Class");
+    TYPE_ACCESSOR(Iterable, lang_package);
+    METHOD_ACCESSOR(Iterable_iterator, Iterable(),
+                    "iterator", "()Ljava/util/Iterator;");
+    TYPE_ACCESSOR(Iterator, UtilPackage());
+    METHOD_ACCESSOR(Iterator_hasNext, Iterator(), "hasNext", "()Z");
+    METHOD_ACCESSOR(Iterator_next, Iterator(), "next", "()Ljava/lang/Object;");
+    TYPE_ACCESSOR(Long, lang_package);
+    FIELD_ACCESSOR(Long, TYPE, "java/lang/Class");
+    TYPE_ACCESSOR(NoClassDefFoundError, lang_package);
+    METHOD_ACCESSOR(NoClassDefFoundError_Init, NoClassDefFoundError(),
+                    "<init>", "()V");
+    METHOD_ACCESSOR(NoClassDefFoundError_InitString, NoClassDefFoundError(),
+                    "<init>", "(Ljava/lang/String;)V");
+    TYPE_ACCESSOR(Object, lang_package);
+    METHOD_ACCESSOR(Object_getClass, Object(),
+                    "getClass", "()Ljava/lang/Class;");
+    TYPE_ACCESSOR(Overrides, lang_package);
+    TYPE_ACCESSOR(Retention, AnnotationPackage());
+    TYPE_ACCESSOR(RetentionPolicy, AnnotationPackage());
+    FIELD_ACCESSOR(RetentionPolicy, SOURCE,
+                   "java/lang/annotation/RetentionPolicy");
+    FIELD_ACCESSOR(RetentionPolicy, CLASS,
+                   "java/lang/annotation/RetentionPolicy");
+    FIELD_ACCESSOR(RetentionPolicy, RUNTIME,
+                   "java/lang/annotation/RetentionPolicy");
+    TYPE_ACCESSOR(RuntimeException, lang_package);
+    TYPE_ACCESSOR(Serializable, IoPackage());
+    TYPE_ACCESSOR(Short, lang_package);
+    FIELD_ACCESSOR(Short, TYPE, "java/lang/Class");
+    TYPE_ACCESSOR(String, lang_package);
+    TYPE_ACCESSOR(StringBuffer, lang_package);
+    METHOD_ACCESSOR(StringBuffer_Init, StringBuffer(), "<init>", "()V");
+    METHOD_ACCESSOR(StringBuffer_InitWithString, StringBuffer(),
+                    "<init>", "(Ljava/lang/String;)V");
+    METHOD_ACCESSOR(StringBuffer_toString, StringBuffer(),
+                    "toString", "()Ljava/lang/String;");
+    METHOD_ACCESSOR(StringBuffer_append_char, StringBuffer(),
+                    "append", "(C)Ljava/lang/StringBuffer;");
+    METHOD_ACCESSOR(StringBuffer_append_boolean, StringBuffer(),
+                    "append", "(Z)Ljava/lang/StringBuffer;");
+    METHOD_ACCESSOR(StringBuffer_append_int, StringBuffer(),
+                    "append", "(I)Ljava/lang/StringBuffer;");
+    METHOD_ACCESSOR(StringBuffer_append_long, StringBuffer(),
+                    "append", "(J)Ljava/lang/StringBuffer;");
+    METHOD_ACCESSOR(StringBuffer_append_float, StringBuffer(),
+                    "append", "(F)Ljava/lang/StringBuffer;");
+    METHOD_ACCESSOR(StringBuffer_append_double, StringBuffer(),
+                    "append", "(D)Ljava/lang/StringBuffer;");
+    METHOD_ACCESSOR(StringBuffer_append_string, StringBuffer(),
+                    "append", "(Ljava/lang/String;)Ljava/lang/StringBuffer;");
+    METHOD_ACCESSOR(StringBuffer_append_object, StringBuffer(),
+                    "append", "(Ljava/lang/Object;)Ljava/lang/StringBuffer;");
+    TYPE_ACCESSOR(StringBuilder, lang_package);
+    METHOD_ACCESSOR(StringBuilder_Init, StringBuilder(), "<init>", "()V");
+    METHOD_ACCESSOR(StringBuilder_InitWithString, StringBuilder(),
+                    "<init>", "(Ljava/lang/String;)V");
+    METHOD_ACCESSOR(StringBuilder_toString, StringBuilder(),
+                    "toString", "()Ljava/lang/String;");
+    METHOD_ACCESSOR(StringBuilder_append_char, StringBuilder(),
+                    "append", "(C)Ljava/lang/StringBuilder;");
+    METHOD_ACCESSOR(StringBuilder_append_boolean, StringBuilder(),
+                    "append", "(Z)Ljava/lang/StringBuilder;");
+    METHOD_ACCESSOR(StringBuilder_append_int, StringBuilder(),
+                    "append", "(I)Ljava/lang/StringBuilder;");
+    METHOD_ACCESSOR(StringBuilder_append_long, StringBuilder(),
+                    "append", "(J)Ljava/lang/StringBuilder;");
+    METHOD_ACCESSOR(StringBuilder_append_float, StringBuilder(),
+                    "append", "(F)Ljava/lang/StringBuilder;");
+    METHOD_ACCESSOR(StringBuilder_append_double, StringBuilder(),
+                    "append", "(D)Ljava/lang/StringBuilder;");
+    METHOD_ACCESSOR(StringBuilder_append_string, StringBuilder(),
+                    "append", "(Ljava/lang/String;)Ljava/lang/StringBuilder;");
+    METHOD_ACCESSOR(StringBuilder_append_object, StringBuilder(),
+                    "append", "(Ljava/lang/Object;)Ljava/lang/StringBuilder;");
+    TYPE_ACCESSOR(Target, AnnotationPackage());
+    TYPE_ACCESSOR(Throwable, lang_package);
+    METHOD_ACCESSOR(Throwable_getMessage, Throwable(),
+                    "getMessage", "()Ljava/lang/String;");
+    METHOD_ACCESSOR(Throwable_initCause, Throwable(), "initCause",
+                    "(Ljava/lang/Throwable;)Ljava/lang/Throwable;");
+    TYPE_ACCESSOR(Void, lang_package);
+    FIELD_ACCESSOR(Void, TYPE, "java/lang/Class");
+
 #undef TYPE_ACCESSOR
 #undef METHOD_ACCESSOR
+#undef FIELD_ACCESSOR
 
     IntLiteralTable int_pool;
     LongLiteralTable long_pool;
@@ -458,87 +504,6 @@ private:
     PackageSymbol* util_package;
     PackageSymbol* unnamed_package;
 
-    //
-    // Cache of system types and methods. Constructor initializes these to
-    // NULL in control.cpp; see accessor methods above for assignment. The
-    // types are in java.lang unless commented otherwise.
-    //
-    TypeSymbol* Annotation_type; // java.lang.annotation
-    TypeSymbol* AssertionError_type;
-    MethodSymbol* AssertionError_Init_method;
-    MethodSymbol* AssertionError_InitWithChar_method;
-    MethodSymbol* AssertionError_InitWithBoolean_method;
-    MethodSymbol* AssertionError_InitWithInt_method;
-    MethodSymbol* AssertionError_InitWithLong_method;
-    MethodSymbol* AssertionError_InitWithFloat_method;
-    MethodSymbol* AssertionError_InitWithDouble_method;
-    MethodSymbol* AssertionError_InitWithObject_method;
-    TypeSymbol* Boolean_type;
-    TypeSymbol* Byte_type;
-    TypeSymbol* Character_type;
-    TypeSymbol* Class_type;
-    MethodSymbol* Class_forName_method;
-    MethodSymbol* Class_getComponentType_method;
-    MethodSymbol* Class_desiredAssertionStatus_method;
-    TypeSymbol* ClassNotFoundException_type;
-    TypeSymbol* Cloneable_type;
-    TypeSymbol* Comparable_type;
-    TypeSymbol* Double_type;
-    TypeSymbol* Enum_type;
-    MethodSymbol* Enum_Init_method;
-    MethodSymbol* Enum_ordinal_method;
-    MethodSymbol* Enum_valueOf_method;
-    TypeSymbol* Error_type;
-    TypeSymbol* Exception_type;
-    TypeSymbol* Float_type;
-    TypeSymbol* Integer_type;
-    TypeSymbol* Iterable_type;
-    MethodSymbol* Iterable_iterator_method;
-    TypeSymbol* Iterator_type; // java.util
-    MethodSymbol* Iterator_hasNext_method;
-    MethodSymbol* Iterator_next_method;
-    TypeSymbol* Long_type;
-    TypeSymbol* NoClassDefFoundError_type;
-    MethodSymbol* NoClassDefFoundError_Init_method;
-    MethodSymbol* NoClassDefFoundError_InitString_method;
-    TypeSymbol* Object_type;
-    MethodSymbol* Object_getClass_method;
-    TypeSymbol* Overrides_type; // spelled Override? JSR 175 not sure...
-    TypeSymbol* Retention_type; // java.lang.annotation
-    TypeSymbol* RuntimeException_type;
-    TypeSymbol* Serializable_type; // java.io
-    TypeSymbol* Short_type;
-    TypeSymbol* String_type;
-    TypeSymbol* StringBuffer_type;
-    MethodSymbol* StringBuffer_Init_method;
-    MethodSymbol* StringBuffer_InitWithString_method;
-    MethodSymbol* StringBuffer_toString_method;
-    MethodSymbol* StringBuffer_append_char_method;
-    MethodSymbol* StringBuffer_append_boolean_method;
-    MethodSymbol* StringBuffer_append_int_method;
-    MethodSymbol* StringBuffer_append_long_method;
-    MethodSymbol* StringBuffer_append_float_method;
-    MethodSymbol* StringBuffer_append_double_method;
-    MethodSymbol* StringBuffer_append_string_method;
-    MethodSymbol* StringBuffer_append_object_method;
-    TypeSymbol* StringBuilder_type;
-    MethodSymbol* StringBuilder_Init_method;
-    MethodSymbol* StringBuilder_InitWithString_method;
-    MethodSymbol* StringBuilder_toString_method;
-    MethodSymbol* StringBuilder_append_char_method;
-    MethodSymbol* StringBuilder_append_boolean_method;
-    MethodSymbol* StringBuilder_append_int_method;
-    MethodSymbol* StringBuilder_append_long_method;
-    MethodSymbol* StringBuilder_append_float_method;
-    MethodSymbol* StringBuilder_append_double_method;
-    MethodSymbol* StringBuilder_append_string_method;
-    MethodSymbol* StringBuilder_append_object_method;
-    TypeSymbol* Target_type; // java.lang.annotation
-    TypeSymbol* Throwable_type;
-    MethodSymbol* Throwable_getMessage_method;
-    MethodSymbol* Throwable_initCause_method;
-    TypeSymbol* Void_type;
-
     static int ConvertUnicodeToUtf8(const wchar_t*, char*);
     NameSymbol* FindOrInsertSystemName(const char* name);
 
@@ -553,6 +518,7 @@ private:
     void ProcessSystemInformation();
     TypeSymbol* ProcessSystemType(PackageSymbol*, const char*);
     MethodSymbol* ProcessSystemMethod(TypeSymbol*, const char*, const char*);
+    VariableSymbol* ProcessSystemField(TypeSymbol*, const char*, const char*);
 
     void ProcessFile(FileSymbol*);
     void ProcessMembers();

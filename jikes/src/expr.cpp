@@ -3270,51 +3270,31 @@ void Semantic::ProcessClassLiteral(Ast* expr)
     }
     ProcessType(class_lit -> type);
     TypeSymbol* type = class_lit -> type -> symbol;
+    AddDependence(this_type, type);
     if (type == control.no_type)
         class_lit -> symbol = control.no_type;
     else if (type -> Primitive())
     {
         if (type == control.int_type)
-            type = control.Integer();
+            class_lit -> symbol = control.Integer_TYPE_Field();
         else if (type == control.double_type)
-            type = control.Double();
+            class_lit -> symbol = control.Double_TYPE_Field();
         else if (type == control.char_type)
-            type = control.Character();
+            class_lit -> symbol = control.Character_TYPE_Field();
         else if (type == control.long_type)
-            type = control.Long();
+            class_lit -> symbol = control.Long_TYPE_Field();
         else if (type == control.float_type)
-            type = control.Float();
+            class_lit -> symbol = control.Float_TYPE_Field();
         else if (type == control.byte_type)
-            type = control.Byte();
+            class_lit -> symbol = control.Byte_TYPE_Field();
         else if (type == control.short_type)
-            type = control.Short();
+            class_lit -> symbol = control.Short_TYPE_Field();
         else if (type == control.boolean_type)
-            type = control.Boolean();
+            class_lit -> symbol = control.Boolean_TYPE_Field();
         else
         {
             assert(type == control.void_type);
-            type = control.Void();
-        }
-        AddDependence(this_type, type);
-        VariableSymbol* var =
-            type -> FindVariableSymbol(control.type_name_symbol);
-        if (var)
-        {
-            if (! var -> IsTyped())
-            {
-                var -> ProcessVariableSignature(this,
-                                                class_lit -> class_token);
-            }
-            var -> MarkInitialized();
-            class_lit -> symbol = var;
-        }
-        else
-        {
-            ReportSemError(SemanticError::NON_STANDARD_LIBRARY_TYPE,
-                           LexStream::BadToken(),
-                           type -> ContainingPackageName(),
-                           type -> ExternalName());
-            class_lit -> symbol = control.no_type;
+            class_lit -> symbol = control.Void_TYPE_Field();
         }
     }
     else if (control.option.target < JikesOption::SDK1_5)
@@ -3876,7 +3856,8 @@ TypeSymbol* Semantic::GetAnonymousType(AstClassCreationExpression* class_creatio
         value.Length(); // +1 for $
     wchar_t* anonymous_name = new wchar_t[length + 1]; // +1 for '\0'
     wcscpy(anonymous_name, this_type -> ExternalName());
-    wcscat(anonymous_name, StringConstant::US_DS);
+    wcscat(anonymous_name, (control.option.target < JikesOption::SDK1_5
+                            ? StringConstant::US_DS : StringConstant::US_MI));
     wcscat(anonymous_name, value.String());
 
     NameSymbol* name_symbol = control.FindOrInsertName(anonymous_name, length);

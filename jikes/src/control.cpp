@@ -32,21 +32,6 @@ Control::Control(char** arguments, Option& option_)
     , input_class_file_set(1021)
     , expired_file_set()
     , recompilation_file_set(1021)
-    , int_pool(&bad_value)
-    , long_pool(&bad_value)
-    , float_pool(&bad_value)
-    , double_pool(&bad_value)
-    , Utf8_pool(&bad_value)
-#ifdef JIKES_DEBUG
-    , input_files_processed(0)
-    , class_files_read(0)
-    , class_files_written(0)
-    , line_count(0)
-#endif
-    // Package cache.  unnamed and lang are initialized in constructor body.
-    , annotation_package(NULL)
-    , io_package(NULL)
-    , util_package(NULL)
     // Type and method cache. These variables are assigned in control.h
     // accessors, but must be NULL at startup.
     , Annotation_type(NULL)
@@ -60,8 +45,11 @@ Control::Control(char** arguments, Option& option_)
     , AssertionError_InitWithDouble_method(NULL)
     , AssertionError_InitWithObject_method(NULL)
     , Boolean_type(NULL)
+    , Boolean_TYPE_field(NULL)
     , Byte_type(NULL)
+    , Byte_TYPE_field(NULL)
     , Character_type(NULL)
+    , Character_TYPE_field(NULL)
     , Class_type(NULL)
     , Class_forName_method(NULL)
     , Class_getComponentType_method(NULL)
@@ -70,6 +58,16 @@ Control::Control(char** arguments, Option& option_)
     , Cloneable_type(NULL)
     , Comparable_type(NULL)
     , Double_type(NULL)
+    , Double_TYPE_field(NULL)
+    , ElementType_type(NULL)
+    , ElementType_TYPE_field(NULL)
+    , ElementType_FIELD_field(NULL)
+    , ElementType_METHOD_field(NULL)
+    , ElementType_PARAMETER_field(NULL)
+    , ElementType_CONSTRUCTOR_field(NULL)
+    , ElementType_LOCAL_VARIABLE_field(NULL)
+    , ElementType_ANNOTATION_TYPE_field(NULL)
+    , ElementType_PACKAGE_field(NULL)
     , Enum_type(NULL)
     , Enum_Init_method(NULL)
     , Enum_ordinal_method(NULL)
@@ -77,13 +75,16 @@ Control::Control(char** arguments, Option& option_)
     , Error_type(NULL)
     , Exception_type(NULL)
     , Float_type(NULL)
+    , Float_TYPE_field(NULL)
     , Integer_type(NULL)
+    , Integer_TYPE_field(NULL)
     , Iterable_type(NULL)
     , Iterable_iterator_method(NULL)
     , Iterator_type(NULL)
     , Iterator_hasNext_method(NULL)
     , Iterator_next_method(NULL)
     , Long_type(NULL)
+    , Long_TYPE_field(NULL)
     , NoClassDefFoundError_type(NULL)
     , NoClassDefFoundError_Init_method(NULL)
     , NoClassDefFoundError_InitString_method(NULL)
@@ -91,9 +92,14 @@ Control::Control(char** arguments, Option& option_)
     , Object_getClass_method(NULL)
     , Overrides_type(NULL)
     , Retention_type(NULL)
+    , RetentionPolicy_type(NULL)
+    , RetentionPolicy_SOURCE_field(NULL)
+    , RetentionPolicy_CLASS_field(NULL)
+    , RetentionPolicy_RUNTIME_field(NULL)
     , RuntimeException_type(NULL)
     , Serializable_type(NULL)
     , Short_type(NULL)
+    , Short_TYPE_field(NULL)
     , String_type(NULL)
     , StringBuffer_type(NULL)
     , StringBuffer_Init_method(NULL)
@@ -124,6 +130,23 @@ Control::Control(char** arguments, Option& option_)
     , Throwable_getMessage_method(NULL)
     , Throwable_initCause_method(NULL)
     , Void_type(NULL)
+    , Void_TYPE_field(NULL)
+    // storage for all literals seen in source
+    , int_pool(&bad_value)
+    , long_pool(&bad_value)
+    , float_pool(&bad_value)
+    , double_pool(&bad_value)
+    , Utf8_pool(&bad_value)
+#ifdef JIKES_DEBUG
+    , input_files_processed(0)
+    , class_files_read(0)
+    , class_files_written(0)
+    , line_count(0)
+#endif // JIKES_DEBUG
+    // Package cache.  unnamed and lang are initialized in constructor body.
+    , annotation_package(NULL)
+    , io_package(NULL)
+    , util_package(NULL)
 {
     ProcessGlobals();
     ProcessUnnamedPackage();
@@ -1455,16 +1478,17 @@ void Control::ProcessPackageDeclaration(FileSymbol* file_symbol,
 
     for (unsigned i = 0; i < file_symbol -> lex_stream -> NumTypes(); i++)
     {
-        LexStream::TokenIndex identifier_token =
-            file_symbol -> lex_stream -> Next(file_symbol -> lex_stream -> Type(i));
-        if (file_symbol -> lex_stream -> Kind(identifier_token) == TK_Identifier)
+        LexStream::TokenIndex identifier_token = file_symbol -> lex_stream ->
+            Next(file_symbol -> lex_stream -> Type(i));
+        if (file_symbol -> lex_stream -> Kind(identifier_token) ==
+            TK_Identifier)
         {
             NameSymbol* name_symbol =
                 file_symbol -> lex_stream -> NameSymbol(identifier_token);
             if (! file_symbol -> package -> FindTypeSymbol(name_symbol))
             {
-                TypeSymbol* type =
-                    file_symbol -> package -> InsertOuterTypeSymbol(name_symbol);
+                TypeSymbol* type = file_symbol -> package ->
+                    InsertOuterTypeSymbol(name_symbol);
                 type -> file_symbol = file_symbol;
                 type -> outermost_type = type;
                 type -> supertypes_closure = new SymbolSet;

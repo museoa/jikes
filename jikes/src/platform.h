@@ -572,6 +572,7 @@ public:
     //
     static const wchar_t US_DS[]; // L"$"
     static const wchar_t US_LB_RB[]; // L"[]"
+    static const wchar_t US_MI[]; // L"-"
     static const wchar_t US_SC[]; // L";"
     static const wchar_t US_SL[]; // L"/"
     static const wchar_t US_jar[]; // L"jar"

@@ -1261,6 +1261,7 @@ const wchar_t StringConstant::US_XOR_EQUAL[] = {U_CA, U_EQ, U_NU}; // L"^="
 //
 const wchar_t StringConstant::US_DS[] = {U_DS, U_NU}; // L"$"
 const wchar_t StringConstant::US_LB_RB[] = {U_LB, U_RB, U_NU}; // L"[]"
+const wchar_t StringConstant::US_MI[] = {U_MI, U_NU}; // L"-"
 const wchar_t StringConstant::US_SC[] = {U_SC, U_NU}; // L";"
 const wchar_t StringConstant::US_SL[] = {U_SL, U_NU}; // L"/"
 const wchar_t StringConstant::US_jar[] = {U_j, U_a, U_r, U_NU}; // L"jar"
