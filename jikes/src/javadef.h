@@ -1,5 +1,5 @@
 // $Id$
-// 
+//
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://www.ibm.com/research/jikes.
@@ -38,17 +38,17 @@ enum {
       STACK_SIZE        = 128,
       SCOPE_UBOUND      = 56,
       SCOPE_SIZE        = 57,
-      LA_STATE_OFFSET   = 5530,
+      LA_STATE_OFFSET   = 5532,
       MAX_LA            = 2,
-      NUM_RULES         = 354,
+      NUM_RULES         = 355,
       NUM_TERMINALS     = 108,
       NUM_NON_TERMINALS = 159,
       NUM_SYMBOLS       = 267,
-      START_STATE       = 977,
-      EOFT_SYMBOL       = 95,
+      START_STATE       = 978,
+      EOFT_SYMBOL       = 96,
       EOLT_SYMBOL       = 27,
-      ACCEPT_ACTION     = 5175,
-      ERROR_ACTION      = 5176
+      ACCEPT_ACTION     = 5176,
+      ERROR_ACTION      = 5177
      };
 
 
