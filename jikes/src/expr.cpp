@@ -2411,7 +2411,7 @@ void Semantic::ProcessAmbiguousName(Ast *name)
             // pointer dereferences (and method access in the case of a
             // private variable) necessary to  get to it.
             //
-            if (where_found != state_stack.Top())
+            if (where_found != state_stack.Top() && ! simple_name -> value)
                 CreateAccessToScopedVariable(simple_name, where_found -> Type());
         }
         //
