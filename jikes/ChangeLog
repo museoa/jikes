@@ -1,3 +1,12 @@
+2001-03-29  Chris Abbey  <cabbey@bresnanlink.net>
+
+	* configure.in:
+	* acinlclude.m4:
+	* src/m4/ac_check_broken_ostream.m4:
+	* src/m4/ac_cxx_check_ostream_const_unsigned_char_ptr.m4:
+	renamed the define, and reversed the logic in concensuous
+	with the lists opinions.
+
 2001-03-28  Eric Blake  <ebb9@email.byu.edu>
 
 	* configure.in:
