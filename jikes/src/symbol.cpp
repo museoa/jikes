@@ -702,7 +702,6 @@ TypeSymbol::TypeSymbol(NameSymbol *name_symbol_)
     status(0),
     package(NULL),
     class_name(NULL),
-    class_literal_class(NULL),
     class_literal_method(NULL),
     class_literal_name(NULL),
     assert_variable(NULL),
@@ -1177,8 +1176,8 @@ void MethodSymbol::ProcessMethodThrows(Semantic *sem, LexStream::TokenIndex tok)
 
 
 //
-// In addition to (re)setting the signature, this updates the max_variable_index
-// if needed.
+// In addition to (re)setting the signature, this updates the
+// max_variable_index if needed.
 //
 void MethodSymbol::SetSignature(Control &control, TypeSymbol *placeholder)
 {
@@ -1517,69 +1516,45 @@ VariableSymbol *TypeSymbol::InsertThis0()
 }
 
 
-TypeSymbol *TypeSymbol::FindOrInsertClassLiteralClass(LexStream::TokenIndex tok)
+TypeSymbol *TypeSymbol::FindOrInsertClassLiteralClass()
 {
-    Semantic *sem = semantic_environment -> sem;
-    AstCompilationUnit *compilation_unit = sem -> compilation_unit;
-    Control &control = sem -> control;
-
-    assert(this == outermost_type && ACC_INTERFACE());
-
-    if (! class_literal_class)
-    {
-        AstClassInstanceCreationExpression *class_creation = compilation_unit ->
-            ast_pool -> GenClassInstanceCreationExpression();
-        class_creation -> base_opt = NULL;
-        class_creation -> dot_token_opt = 0;
-        class_creation -> new_token = tok;
-
-        AstSimpleName *ast_type =
-            compilation_unit -> ast_pool -> GenSimpleName(tok);
-
-        class_creation -> class_type =
-            compilation_unit -> ast_pool -> GenTypeExpression(ast_type);
-        class_creation -> left_parenthesis_token = tok;
-        class_creation -> right_parenthesis_token = tok;
-
-        AstClassBody *class_body =
-            compilation_unit -> ast_pool -> GenClassBody();
-        class_body -> left_brace_token = tok;
-        class_body -> right_brace_token = tok;
-
-        class_creation -> class_body_opt = class_body;
-
-        TypeSymbol *class_literal_type =
-            sem -> GetAnonymousType(class_creation, control.Object());
-        class_literal_type -> FindOrInsertClassLiteralMethod(control);
-
-        sem -> AddDependence(class_literal_type, control.Class());
-
-        class_literal_class = class_literal_type;
-    }
-
-    return class_literal_class;
+    //
+    // Normally, the place-holder type for invoking private constructors can
+    // be any type, because we just pass null along, avoiding static
+    // initialization. But if we use the place-holder type to store the
+    // class$() method, we must ensure it is a subclass of Object.
+    //
+    if (placeholder_type && (placeholder_type -> super !=
+                             semantic_environment -> sem -> control.Object()))
+        placeholder_type = NULL;
+    return GetPlaceholderType();
 }
 
 
 MethodSymbol *TypeSymbol::FindOrInsertClassLiteralMethod(Control &control)
 {
+    assert(! ACC_INTERFACE());
     if (! class_literal_method)
     {
         //
-        // Note that max_variable_index is initialized to 1 (instead of 0),
+        // Note that max_variable_index is initialized to 2 (instead of 1),
         // even though the class literal method is static. The reason is that
         // in generating code for this method, a try statement with a catch
         // will be used. Therefore, an extra "local" slot is required for the
-        // local Exception parameter of the catch clause.
+        // local Exception parameter of the catch clause. We do not fill in
+        // the body of this method here, because bytecode.cpp can do a much
+        // more optimal job later. The method has the signature:
         //
-        // the associated symbol table will contain 1 element
-        BlockSymbol *block_symbol = new BlockSymbol(1);
-        block_symbol -> max_variable_index = 1;
+        // /*synthetic*/ static Class class$(String name, boolean array);
+        //
+        BlockSymbol *block_symbol = new BlockSymbol(2);
+        block_symbol -> max_variable_index = 2;
 
         class_literal_method = InsertMethodSymbol(control.class_name_symbol);
         class_literal_method -> MarkSynthetic();
         class_literal_method -> SetType(control.Class());
         class_literal_method -> SetACC_STATIC();
+        // No need to worry about strictfp, since this method avoids fp math
         class_literal_method -> SetContainingType(this);
         class_literal_method -> SetBlockSymbol(block_symbol);
 
@@ -1591,9 +1566,20 @@ MethodSymbol *TypeSymbol::FindOrInsertClassLiteralMethod(Control &control)
         variable_symbol -> SetLocalVariableIndex(block_symbol ->
                                                  max_variable_index++);
         variable_symbol -> MarkComplete();
-
         class_literal_method -> AddFormalParameter(variable_symbol);
+
+        variable_symbol =
+            block_symbol -> InsertVariableSymbol(control.MakeParameter(2));
+        variable_symbol -> MarkSynthetic();
+        variable_symbol -> SetType(control.boolean_type);
+        variable_symbol -> SetOwner(class_literal_method);
+        variable_symbol -> SetLocalVariableIndex(block_symbol ->
+                                                 max_variable_index++);
+        variable_symbol -> MarkComplete();
+        class_literal_method -> AddFormalParameter(variable_symbol);
+
         class_literal_method -> SetSignature(control);
+        semantic_environment -> sem -> AddDependence(this, control.Class());
     }
 
     return class_literal_method;
@@ -1621,14 +1607,27 @@ Utf8LiteralValue *TypeSymbol::FindOrInsertClassLiteralName(Control &control)
 
 VariableSymbol *TypeSymbol::FindOrInsertClassLiteral(TypeSymbol *type)
 {
-    assert(! IsInner() && ! type -> Primitive());
+    assert(! type -> Primitive() && ! type -> Anonymous());
+    assert(! Primitive() && ! IsArray());
 
     Semantic *sem = semantic_environment -> sem;
     Control &control = sem -> control;
 
-    (void) FindOrInsertClassLiteralMethod(control);
-
-    (void) type -> FindOrInsertClassLiteralName(control);
+    //
+    // We must be careful that we do not initialize the class literal in
+    // question, or any enclosing types. True inner classes can defer to their
+    // enclosing class (since code in the inner class cannot be run without
+    // the enclosing class being initialized), but static nested types get
+    // their own class$ method and cache variables. Interfaces cannot have
+    // non-public members, so if the innermost non-local type is an interface,
+    // we use the placeholder class to hold the class$ magic.
+    //
+    TypeSymbol *owner = this;
+    while (owner -> IsInner())
+        owner = owner -> EnclosingType();
+    if (owner -> ACC_INTERFACE())
+        owner = outermost_type -> FindOrInsertClassLiteralClass();
+    owner -> FindOrInsertClassLiteralMethod(control);
 
     NameSymbol *name_symbol = NULL;
     char *signature = type -> SignatureString();
@@ -1654,8 +1653,9 @@ VariableSymbol *TypeSymbol::FindOrInsertClassLiteral(TypeSymbol *type)
 
         delete [] name;
     }
-    else if (signature[0] == U_L) // a reference type ?
+    else
     {
+        assert(signature[0] == U_L); // a reference type
         int class_length = wcslen(StringConstant::US_class_DOLLAR),
             length = strlen(signature) + class_length;
 
@@ -1674,23 +1674,28 @@ VariableSymbol *TypeSymbol::FindOrInsertClassLiteral(TypeSymbol *type)
         delete [] name;
     }
 
-    VariableSymbol *variable_symbol = FindVariableSymbol(name_symbol);
+    VariableSymbol *variable_symbol = owner -> FindVariableSymbol(name_symbol);
     if (! variable_symbol)
     {
         //
         // Generate a caching variable (no need to make it private, so that
-        // nested classes can share it easily).  Foo.Bar.class is cached in:
+        // nested classes of interfaces can share it easily).
         //
-        //     /*synthetic*/ static java.lang.Class class$Foo$Bar;
+        // Foo.Bar.class is cached in:
+        //     /*synthetic*/ static Class class$Foo$Bar;
+        // int[][].class is cached in:
+        //     /*synthetic*/ static Class array$$I;
+        // Blah[].class is cached in:
+        //     /*synthetic*/ static Class array$LBlah;
         //
-        variable_symbol = InsertVariableSymbol(name_symbol);
+        variable_symbol = owner -> InsertVariableSymbol(name_symbol);
         variable_symbol -> SetType(control.Class());
         variable_symbol -> SetACC_STATIC();
-        variable_symbol -> SetOwner(this);
+        variable_symbol -> SetOwner(owner);
         variable_symbol -> MarkComplete();
         variable_symbol -> MarkSynthetic();
 
-        AddClassLiteral(variable_symbol);
+        owner -> AddClassLiteral(variable_symbol);
     }
 
     return variable_symbol;

@@ -2909,10 +2909,7 @@ int ByteCode::EmitExpression(AstExpression *expression, bool need_value)
             if (field_access -> IsClassAccess() &&
                 field_access -> resolution_opt)
             {
-                return unit_type -> outermost_type -> ACC_INTERFACE()
-                    ? EmitExpression(field_access -> resolution_opt,
-                                     need_value)
-                    : GenerateClassAccess(field_access, need_value);
+                return GenerateClassAccess(field_access, need_value);
             }
             return EmitFieldAccess(field_access, need_value);
         }
@@ -3125,12 +3122,16 @@ void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
     // runtime object, we use this approach.  Notice that forName can throw
     // a checked exception, but JLS semantics do not allow this, so we must
     // add a catch block to convert the problem to an unchecked Error.
+    // Likewise, note that we must not initialize the class in question,
+    // hence the use of forName on array types in all cases.
     //
-    // The generated code is equivalent to:
+    // The generated code is semantically equivalent to:
     //
-    // /*synthetic*/ static java.lang.Class class$(java.lang.String name) {
+    // /*synthetic*/ static java.lang.Class class$(java.lang.String name,
+    //                                             boolean array) {
     //     try {
-    //         return java.lang.Class.forName(name);
+    //         Class result = java.lang.Class.forName(name);
+    //         return array ? result : result.getComponentType();
     //     } catch (ClassNotFoundException e) {
     //         throw new NoClassDefFoundError(((Throwable) e).getMessage());
     //     }
@@ -3145,9 +3146,13 @@ void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
     // show that we are still obeying JLS 13.1, which requires that .class
     // files must link to the type of the qualifying expression.
     //
-    //  aload_0        load this
+    //  aload_0        load class name in array form
     //  invokestatic   java/lang/Class.forName(Ljava/lang/String;)Ljava/lang/Class;
-    //  areturn        return Class object for the class named by string
+    //  iload_1        load array
+    //  ifne label
+    //  invokevirtual  java/lang/Class.getComponentType()Ljava/lang/Class;
+    //  label:
+    //  areturn        return Class object
     //
     // pre-SDK1_4 exception handler if forName fails (optimization: the
     // ClassNotFoundException will already be on the stack):
@@ -3168,12 +3173,20 @@ void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
     //  invokevirtual  java/lang/Throwable.initCause(Ljava/lang/Throwable;)Ljava/lang/Throwable;
     //  athrow         throw the correct exception
     //
+    Label label;
     PutOp(OP_ALOAD_0);
     PutOp(OP_INVOKESTATIC);
     PutU2(RegisterLibraryMethodref(control.Class_forNameMethod()));
+    PutOp(OP_ILOAD_1);
+    EmitBranch(OP_IFNE, label);
+    PutOp(OP_INVOKEVIRTUAL);
+    PutU2(RegisterLibraryMethodref(control.Class_getComponentTypeMethod()));
+    ChangeStack(1); // account for the return
+    DefineLabel(label);
+    CompleteLabel(label);
     PutOp(OP_ARETURN);
-    code_attribute -> AddException(0, 5, 5,
-                                   RegisterClass(control.ClassNotFoundException()));
+    code_attribute ->
+      AddException(0, 12, 12, RegisterClass(control.ClassNotFoundException()));
 
     ChangeStack(1); // account for the exception on the stack
     if (control.option.target < JikesOption::SDK1_4)
@@ -3212,21 +3225,24 @@ int ByteCode::GenerateClassAccess(AstFieldAccess *field_access,
 {
     //
     // Evaluate X.class literal. If X is a primitive type, this is a
-    // predefined field; otherwise, we must create a new synthetic field to
-    // hold the desired result and initialize it at runtime. Within a class,
+    // predefined field, and we emitted it directly rather than relying on
+    // this method. Otherwise, we have created a synthetic field to cache
+    // the desired result, and we initialize it at runtime. Within a class,
     // this cannot be done in the static initializer, because it is possible
-    // to access a class literal before a class is initialized. We cache the
-    // result, to avoid a runtime hit.
+    // to access a class literal before a class is initialized.
     //
     // Foo.Bar.class becomes
-    // (class$Foo$Bar == null ? class$Foo$Bar = class$("Foo.Bar")
+    // (class$Foo$Bar == null ? class$Foo$Bar = class$("[LFoo.Bar;", false)
     //                        : class$Foo$Bar)
+    // int[].class becomes
+    // (array$I == null ? array$I = class$("[I", true) : array$I)
     //
     // getstatic class_field     load class field
     // dup                       optimize: common case is non-null
     // ifnonnull label           branch if it exists, otherwise initialize
     // pop                       pop the null we just duplicated
     // load class_constant       get name of class
+    // iconst_x                  true iff array
     // invokestatic              invoke synthetic class$ method
     // dup                       save value so can return it
     // put class_field           initialize the field
@@ -3234,8 +3250,9 @@ int ByteCode::GenerateClassAccess(AstFieldAccess *field_access,
     //
     Label label;
     assert(field_access -> symbol -> VariableCast());
+    VariableSymbol *cache = (VariableSymbol *) field_access -> symbol;
 
-    u2 field_index = RegisterFieldref(field_access -> symbol -> VariableCast());
+    u2 field_index = RegisterFieldref(cache);
 
     PutOp(OP_GETSTATIC);
     PutU2(field_index);
@@ -3243,10 +3260,15 @@ int ByteCode::GenerateClassAccess(AstFieldAccess *field_access,
     EmitBranch(OP_IFNONNULL, label);
 
     PutOp(OP_POP);
-    LoadLiteral(field_access -> base -> Type() -> ClassLiteralName(),
+    TypeSymbol *type = field_access -> base -> Type();
+    bool is_array = type -> IsArray();
+    if (! is_array)
+        type = type -> GetArrayType(control.system_semantic, 1);
+    LoadLiteral(type -> FindOrInsertClassLiteralName(control),
                 control.String());
+    PutOp(is_array ? OP_ICONST_1 : OP_ICONST_0);
     PutOp(OP_INVOKESTATIC);
-    CompleteCall(unit_type -> outermost_type -> ClassLiteralMethod(), 1);
+    CompleteCall(cache -> ContainingType() -> ClassLiteralMethod(), 2);
     PutOp(OP_DUP);
     PutOp(OP_PUTSTATIC);
     PutU2(field_index);
@@ -3283,24 +3305,23 @@ void ByteCode::GenerateAssertVariableInitializer(TypeSymbol *tsym,
     // value of false in this variable will enable asserts anywhere in the
     // class.
     //
-    // private static final boolean $noassert = ! new <outermostClass>[0]
-    //     .getClass().getComponentType().desiredAssertionStatus();
+    // private static final boolean $noassert
+    //     = ! Class.forName("[L<outermostClass>;").getComponentType()
+    //     .desiredAssertionStatus();
     //
-    //  iconst_0
-    //  anewarray        <outermostClass>
-    //  invokevirtual    java/lang/Object.getClass()java/lang/Class
-    //  invokevirtual    java/lang/Class.getComponentType()java/lang/Class
+    //  ldc              "L[<outermostClass>;"
+    //  invokevirtual    java/lang/Class.forName(Ljava/lang/String;)java/lang/Class
+    //  invokevirtual    java/lang/Class.getComponentType()Ljava/lang/Class;
     //  invokevirtual    java/lang/Class.desiredAssertionStatus()Z
     //  iconst_1
     //  ixor             result ^ true <=> !result
     //  putstatic        <thisClass>.$noassert
     //
-    PutOp(OP_ICONST_0);
-    PutOp(OP_ANEWARRAY);
-    PutU2(RegisterClass(tsym));
-    PutOp(OP_INVOKEVIRTUAL);
-    ChangeStack(1); // for returned value
-    PutU2(RegisterLibraryMethodref(control.Object_getClassMethod()));
+    tsym = tsym -> GetArrayType(control.system_semantic, 1);
+    LoadLiteral(tsym -> FindOrInsertClassLiteralName(control),
+                control.String());
+    PutOp(OP_INVOKESTATIC);
+    PutU2(RegisterLibraryMethodref(control.Class_forNameMethod()));
     PutOp(OP_INVOKEVIRTUAL);
     ChangeStack(1); // for returned value
     PutU2(RegisterLibraryMethodref(control.Class_getComponentTypeMethod()));
@@ -4281,18 +4302,17 @@ void ByteCode::EmitCheckForNull(AstExpression *expression)
     // none of these can qualify a constructor invocation. If we get here, it
     // is uncertain whether the expression can be null, so check, using:
     //
-    // if (ref == null) throw null;
+    // ((Object) ref).getClass();
     //
-    // This will cause the necessary NullPointerException when attempting to
-    // throw null.
+    // This discarded instance method call will cause the necessary
+    // NullPointerException if invoked on null; and since it is final in
+    // Object, we can be certain it has no side-effects.
     //
     PutOp(OP_DUP);
-    Label lab1;
-    EmitBranch(OP_IFNONNULL, lab1);
-    PutOp(OP_ACONST_NULL);
-    PutOp(OP_ATHROW);
-    DefineLabel(lab1);
-    CompleteLabel(lab1);
+    PutOp(OP_INVOKEVIRTUAL);
+    ChangeStack(1); // for returned value
+    PutU2(RegisterLibraryMethodref(control.Object_getClassMethod()));
+    PutOp(OP_POP);
 }
 
 int ByteCode::EmitInstanceCreationExpression(AstClassInstanceCreationExpression *expression,

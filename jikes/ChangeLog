@@ -1,3 +1,17 @@
+2002-07-26  Eric Blake  <ebb9@email.byu.edu>
+
+	* src/symbol.h (class_literal_class): Share with placeholder
+	class, when possible.
+	* src/symbol.cpp (FindOrInsertClassLiteralClass),
+	(FindOrInsertClassLiteralMethod, FindOrInsertClassLiteral):
+	* src/expr.cpp (ProcessAmbiguousName):
+	* src/bytecode.cpp (EmitExpression, GenerateClassAccessMethod)
+	(GenerateClassAccess): Don't initialize classes when using class
+	literals - bug 3142.
+	(EmitCheckForNull): Optimize null check to use less bytecode.
+	(GenerateAssertVariableInitializer): Optimize assert
+	initialization to use less bytecode.
+
 2002-07-25  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/definite.cpp: Improve definite assignment analysis to use

@@ -2491,9 +2491,6 @@ void Semantic::ProcessAmbiguousName(Ast *name)
         //
         if (field_access -> IsClassAccess())
         {
-            AddDependence(this_type, control.NoClassDefFoundError());
-            AddDependence(this_type, control.ClassNotFoundException());
-
             if (type -> Primitive())
             {
                 if (type == control.int_type)
@@ -2515,6 +2512,7 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                 else // (type == control.void_type)
                     type = control.Void();
 
+                AddDependence(this_type, type);
                 VariableSymbol *variable_symbol =
                     type -> FindVariableSymbol(control.type_name_symbol);
 
@@ -2544,46 +2542,14 @@ void Semantic::ProcessAmbiguousName(Ast *name)
                 //
                 // We have already checked that the type is accessible
                 //
-                TypeSymbol *outermost_type = this_type -> outermost_type;
+                VariableSymbol *variable_symbol =
+                    this_type -> FindOrInsertClassLiteral(type);
+                AstSimpleName *simple_name = compilation_unit -> ast_pool ->
+                    GenSimpleName(field_access -> identifier_token);
+                simple_name -> symbol = variable_symbol;
 
-                if (outermost_type -> ACC_INTERFACE())
-                {
-                    TypeSymbol *class_literal_type = outermost_type -> FindOrInsertClassLiteralClass(field_access -> identifier_token);
-                    AddDependence(this_type, class_literal_type);
-
-                    AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(field_access -> identifier_token);
-                    simple_name -> symbol = class_literal_type;
-
-                    AstFieldAccess *method_access = compilation_unit -> ast_pool -> GenFieldAccess();
-                    method_access -> base = simple_name;
-                    method_access -> dot_token = field_access -> identifier_token;
-                    method_access -> identifier_token = field_access -> identifier_token;
-
-                    AstStringLiteral *string_literal = compilation_unit -> ast_pool -> GenStringLiteral(field_access -> identifier_token);
-                    string_literal -> value = type -> FindOrInsertClassLiteralName(control);
-                    string_literal -> symbol = control.String();
-
-                    AstMethodInvocation *method_call       = compilation_unit -> ast_pool -> GenMethodInvocation();
-                    method_call -> method                  = method_access;
-                    method_call -> left_parenthesis_token  = field_access -> identifier_token;
-                    method_call -> AddArgument(string_literal);
-                    method_call -> right_parenthesis_token = field_access -> identifier_token;
-                    method_call -> symbol                  = class_literal_type -> ClassLiteralMethod();
-
-                    field_access -> resolution_opt = method_call;
-                    field_access -> symbol = (method_call -> symbol ? method_call -> symbol : control.no_type);
-                }
-                else
-                {
-                    AddDependence(this_type, control.Class());
-
-                    VariableSymbol *variable_symbol = outermost_type -> FindOrInsertClassLiteral(type);
-                    AstSimpleName *simple_name = compilation_unit -> ast_pool -> GenSimpleName(field_access -> identifier_token);
-                    simple_name -> symbol = variable_symbol;
-
-                    field_access -> symbol = variable_symbol;
-                    field_access -> resolution_opt = simple_name;
-                }
+                field_access -> symbol = variable_symbol;
+                field_access -> resolution_opt = simple_name;
             }
         }
         //

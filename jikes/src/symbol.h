@@ -942,21 +942,13 @@ public:
 
     VariableSymbol *InsertThis0();
 
-    TypeSymbol *FindOrInsertClassLiteralClass(LexStream::TokenIndex);
-    TypeSymbol *ClassLiteralClass()
-    {
-        return class_literal_class;
-    }
+    TypeSymbol *FindOrInsertClassLiteralClass();
     MethodSymbol *FindOrInsertClassLiteralMethod(Control &);
     MethodSymbol *ClassLiteralMethod()
     {
         return class_literal_method;
     }
     Utf8LiteralValue *FindOrInsertClassLiteralName(Control &);
-    Utf8LiteralValue *ClassLiteralName()
-    {
-        return class_literal_name;
-    }
     VariableSymbol *FindOrInsertClassLiteral(TypeSymbol *);
     VariableSymbol *FindOrInsertLocalShadow(VariableSymbol *);
     VariableSymbol *FindOrInsertAssertVariable();
@@ -1263,7 +1255,6 @@ private:
 
     void SetClassName();
 
-    TypeSymbol *class_literal_class;
     MethodSymbol *class_literal_method;
     Utf8LiteralValue *class_literal_name;
 
