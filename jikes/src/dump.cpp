@@ -247,7 +247,7 @@ void LexStream::Dump()
     FILE *tokfile;
     char *tokfile_name = new char[FileNameLength() + 5]; // +1 for '\0' +4 for length(".tok")
     strcpy(tokfile_name, FileName());
-    strcat(tokfile_name, StringConstant::U8S__DO_tok);
+    strcat(tokfile_name, StringConstant::U8S_DO_tok);
 
     if ((tokfile = SystemFopen(tokfile_name, "w")) == NULL)
     {

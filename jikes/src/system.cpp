@@ -123,7 +123,7 @@ void Control::FindPathsToDirectory(PackageSymbol *package)
 
                         strcpy(directory_name, owner_directory_symbol -> DirectoryName());
                         if (owner_directory_symbol -> DirectoryName()[owner_directory_symbol -> DirectoryNameLength() - 1] != U_SLASH)
-                            strcat(directory_name, StringConstant::U8S__SL);
+                            strcat(directory_name, StringConstant::U8S_SL);
                         strcat(directory_name, package -> Utf8Name());
 
                         if (SystemIsDirectory(directory_name))
@@ -159,7 +159,7 @@ void Control::FindPathsToDirectory(PackageSymbol *package)
                         strcpy(directory_name, path_symbol -> Utf8Name());
                         char tail = path_symbol -> Utf8Name()[path_symbol -> Utf8NameLength() - 1];
                         if (tail != U_SLASH && tail != U_BACKSLASH)
-                            strcat(directory_name, StringConstant::U8S__SL);
+                            strcat(directory_name, StringConstant::U8S_SL);
                         strcat(directory_name, package -> Utf8Name());
 
                         if (SystemIsDirectory(directory_name))
@@ -183,39 +183,51 @@ void Control::FindPathsToDirectory(PackageSymbol *package)
 
 void Control::ProcessGlobals()
 {
-    dot_name_symbol        = FindOrInsertName(US__DO, wcslen(US__DO));
-    dot_dot_name_symbol    = FindOrInsertName(US__DO__DO, wcslen(US__DO__DO));
-    length_name_symbol     = FindOrInsertName(US_length, wcslen(US_length));
-    init_name_symbol       = FindOrInsertName(US__LT_init_GT, wcslen(US__LT_init_GT));
-    clinit_name_symbol     = FindOrInsertName(US__LT_clinit_GT, wcslen(US__LT_clinit_GT));
-    block_init_name_symbol = FindOrInsertName(US_block_DOLLAR, wcslen(US_block_DOLLAR));
-    this0_name_symbol      = FindOrInsertName(US_this0, wcslen(US_this0));
-    clone_name_symbol      = FindOrInsertName(US_clone, wcslen(US_clone));
-    object_name_symbol     = FindOrInsertName(US_Object, wcslen(US_Object));
-    type_name_symbol       = FindOrInsertName(US_TYPE, wcslen(US_TYPE));
-    class_name_symbol      = FindOrInsertName(US__class_DOLLAR, wcslen(US__class_DOLLAR));
-    toString_name_symbol   = FindOrInsertName(US_toString, wcslen(US_toString));
-    append_name_symbol     = FindOrInsertName(US_append, wcslen(US_append));
-    forName_name_symbol    = FindOrInsertName(US_forName, wcslen(US_forName));
-    getMessage_name_symbol = FindOrInsertName(US_getMessage, wcslen(US_getMessage));
-    getClass_name_symbol   = FindOrInsertName(US_getClass, wcslen(US_getClass));
-    getComponentType_name_symbol       = FindOrInsertName(US_getComponentType, wcslen(US_getComponentType));
-    desiredAssertionStatus_name_symbol = FindOrInsertName(US_desiredAssertionStatus, wcslen(US_desiredAssertionStatus));
+    dot_name_symbol = FindOrInsertName(US_DO, wcslen(US_DO));
+    dot_dot_name_symbol = FindOrInsertName(US_DO_DO, wcslen(US_DO_DO));
+    length_name_symbol = FindOrInsertName(US_length, wcslen(US_length));
+    init_name_symbol = FindOrInsertName(US_LT_init_GT, wcslen(US_LT_init_GT));
+    clinit_name_symbol = FindOrInsertName(US_LT_clinit_GT,
+                                          wcslen(US_LT_clinit_GT));
+    block_init_name_symbol = FindOrInsertName(US_block_DOLLAR,
+                                              wcslen(US_block_DOLLAR));
+    this0_name_symbol = FindOrInsertName(US_this0, wcslen(US_this0));
+    clone_name_symbol = FindOrInsertName(US_clone, wcslen(US_clone));
+    object_name_symbol = FindOrInsertName(US_Object, wcslen(US_Object));
+    type_name_symbol = FindOrInsertName(US_TYPE, wcslen(US_TYPE));
+    class_name_symbol = FindOrInsertName(US_class_DOLLAR,
+                                         wcslen(US_class_DOLLAR));
+    toString_name_symbol = FindOrInsertName(US_toString, wcslen(US_toString));
+    append_name_symbol = FindOrInsertName(US_append, wcslen(US_append));
+    forName_name_symbol = FindOrInsertName(US_forName, wcslen(US_forName));
+    getMessage_name_symbol = FindOrInsertName(US_getMessage,
+                                              wcslen(US_getMessage));
+    getClass_name_symbol = FindOrInsertName(US_getClass, wcslen(US_getClass));
+    getComponentType_name_symbol = FindOrInsertName(US_getComponentType,
+                                                    wcslen(US_getComponentType));
+    desiredAssertionStatus_name_symbol = FindOrInsertName(US_desiredAssertionStatus,
+                                                          wcslen(US_desiredAssertionStatus));
 
-    ConstantValue_literal = Utf8_pool.FindOrInsert(U8S_ConstantValue, U8S_ConstantValue_length);
-    Exceptions_literal = Utf8_pool.FindOrInsert(U8S_Exceptions, U8S_Exceptions_length);
-    InnerClasses_literal = Utf8_pool.FindOrInsert(U8S_InnerClasses, U8S_InnerClasses_length);
-    Synthetic_literal = Utf8_pool.FindOrInsert(U8S_Synthetic, U8S_Synthetic_length);
-    Deprecated_literal = Utf8_pool.FindOrInsert(U8S_Deprecated, U8S_Deprecated_length);
-    LineNumberTable_literal = Utf8_pool.FindOrInsert(U8S_LineNumberTable, U8S_LineNumberTable_length);
-    LocalVariableTable_literal = Utf8_pool.FindOrInsert(U8S_LocalVariableTable, U8S_LocalVariableTable_length);
+    ConstantValue_literal = Utf8_pool.FindOrInsert(U8S_ConstantValue,
+                                                   U8S_ConstantValue_length);
+    Exceptions_literal = Utf8_pool.FindOrInsert(U8S_Exceptions,
+                                                U8S_Exceptions_length);
+    InnerClasses_literal = Utf8_pool.FindOrInsert(U8S_InnerClasses,
+                                                  U8S_InnerClasses_length);
+    Synthetic_literal = Utf8_pool.FindOrInsert(U8S_Synthetic,
+                                               U8S_Synthetic_length);
+    Deprecated_literal = Utf8_pool.FindOrInsert(U8S_Deprecated,
+                                                U8S_Deprecated_length);
+    LineNumberTable_literal = Utf8_pool.FindOrInsert(U8S_LineNumberTable,
+                                                     U8S_LineNumberTable_length);
+    LocalVariableTable_literal = Utf8_pool.FindOrInsert(U8S_LocalVariableTable,
+                                                        U8S_LocalVariableTable_length);
     Code_literal = Utf8_pool.FindOrInsert(U8S_Code, U8S_Code_length);
-    Sourcefile_literal = Utf8_pool.FindOrInsert(U8S_Sourcefile, U8S_Sourcefile_length);
+    SourceFile_literal = Utf8_pool.FindOrInsert(U8S_SourceFile,
+                                                U8S_SourceFile_length);
 
     null_literal = Utf8_pool.FindOrInsert(U8S_null, U8S_null_length);
     this_literal = Utf8_pool.FindOrInsert(U8S_this, U8S_this_length);
-
-    return;
 }
 
 
@@ -514,8 +526,8 @@ void Control::ProcessUnnamedPackage()
     //
     // Create an entry for no_type. no_type is used primarily to signal an error
     //
-    no_type = unnamed_package -> InsertSystemTypeSymbol(FindOrInsertName(US__QU__QU, wcslen(US__QU__QU)));
-    no_type -> SetSignature(Utf8_pool.FindOrInsert(U8S__DO, strlen(U8S__DO))); // give it some signature...
+    no_type = unnamed_package -> InsertSystemTypeSymbol(FindOrInsertName(US_QU_QU, wcslen(US_QU_QU)));
+    no_type -> SetSignature(Utf8_pool.FindOrInsert(U8S_DO, strlen(U8S_DO))); // give it some signature...
     no_type -> outermost_type = no_type;
     no_type -> SetOwner(unnamed_package);
     no_type -> MarkBad();
@@ -725,7 +737,8 @@ void Control::ProcessBootClassPath()
                             name[i] = input_name[i];
                         name[input_name_length] = U_NULL;
                         wchar_t *tail = &name[input_name_length - 3];
-                        if (Case::StringSegmentEqual(tail, StringConstant::US__zip, 3) || Case::StringSegmentEqual(tail, StringConstant::US__jar, 3))
+                        if (Case::StringSegmentEqual(tail, StringConstant::US_zip, 3) ||
+                            Case::StringSegmentEqual(tail, StringConstant::US_jar, 3))
                             bad_zip_filenames.Next() = name;
                         else
                             bad_dirnames.Next() = name;
@@ -875,7 +888,7 @@ void Control::ProcessExtDirs()
 
                             // Add '/' if it's not already there
                             if (head[input_name_length - 1] != U_SLASH)
-                                strcat(extdir_entry, U8S__SL);
+                                strcat(extdir_entry, U8S_SL);
 
                             // Then add the filename.
                             strcat(extdir_entry, entry -> d_name);
@@ -911,8 +924,8 @@ void Control::ProcessExtDirs()
                     char *directory_name = new char[input_name_length + 3]; // +2 for "/*" +1 for '\0'
                     strcpy(directory_name, head);
                     if (directory_name[input_name_length - 1] != U_SLASH)
-                        strcat(directory_name, StringConstant::U8S__SL);
-                    strcat(directory_name, StringConstant::U8S__ST);
+                        strcat(directory_name, StringConstant::U8S_SL);
+                    strcat(directory_name, StringConstant::U8S_ST);
 
                     WIN32_FIND_DATA entry;
                     HANDLE file_handle = FindFirstFile(directory_name, &entry);
@@ -936,7 +949,7 @@ void Control::ProcessExtDirs()
                             if (head[input_name_length - 1] != U_SLASH)
                             {
                                 int path_length = input_name_length + 1;
-                                strcat(extdir_entry, U8S__SL);
+                                strcat(extdir_entry, U8S_SL);
 
                                 for (int i = 0; i < entry_length; i++)
                                     extdir_entry[i + path_length] = (entry.cFileName[i] == U_BACKSLASH ? U_SLASH : entry.cFileName[i]);
@@ -1117,7 +1130,8 @@ void Control::ProcessClassPath()
                             name[i] = input_name[i];
                         name[input_name_length] = U_NULL;
                         wchar_t *tail = &name[input_name_length - 3];
-                        if (Case::StringSegmentEqual(tail, StringConstant::US__zip, 3) || Case::StringSegmentEqual(tail, StringConstant::US__jar, 3))
+                        if (Case::StringSegmentEqual(tail, StringConstant::US_zip, 3) ||
+                            Case::StringSegmentEqual(tail, StringConstant::US_jar, 3))
                             bad_zip_filenames.Next() = name;
                         else
                             bad_dirnames.Next() = name;
@@ -1338,7 +1352,7 @@ DirectorySymbol *Control::GetOutputDirectory(FileSymbol *file_symbol)
         if (file_symbol -> package != control.unnamed_package) // if there was a package declaration, then...
         {
             if (directory_prefix[directory_prefix_length - 1] != U_SLASH)
-                strcat(directory_name, StringConstant::U8S__SL);
+                strcat(directory_name, StringConstant::U8S_SL);
             char *utf8_name = new char[utf8_name_length + 1];
             (void) ConvertUnicodeToUtf8(file_symbol -> package -> PackageName(), utf8_name);
             strcat(directory_name, utf8_name);

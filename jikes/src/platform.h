@@ -374,7 +374,7 @@ extern char * wstring2string(wchar_t * in);
 // followed by the characters being represented, with letters and digits
 // representing themselves, and other values, all of which have a two
 // character code, surrounded by underscore. Thus the name used for the
-// literal above is US__DO_java.
+// literal above is US_DO_java.
 //
 // All string-related values are represented internally in ASCII/UNICODE
 // using the U_ values defined below. EBCDIC systems also require that
@@ -504,11 +504,15 @@ enum U_chars
 
 
 //
-// Constant strings used in the program.
+// Constant strings used in the program. Those prefixed with US_ are
+// Unicode strings in wchar_t, and those with U8S are UTF8 strings in char.
 //
 class StringConstant
 {
 public:
+    //
+    // Symbols and operators.
+    //
     static wchar_t US_AND[], // "&"
                    US_AND_AND[], // "&&"
                    US_AND_EQUAL[], // "&="
@@ -555,9 +559,12 @@ public:
                    US_UNSIGNED_RIGHT_SHIFT[], // ">>>"
                    US_UNSIGNED_RIGHT_SHIFT_EQUAL[], // ">>>="
                    US_XOR[], // "^"
-                   US_XOR_EQUAL[], // "^="
+                   US_XOR_EQUAL[]; // "^="
 
-                   US_AssertionError[], // "AssertionError"
+    //
+    // Library classes and methods.
+    //
+    static wchar_t US_AssertionError[], // "AssertionError"
                    US_Boolean[], // "Boolean"
                    US_Byte[], // "Byte"
                    US_Character[], // "Character"
@@ -583,31 +590,48 @@ public:
                    US_TYPE[], // "TYPE"
                    US_Throwable[], // "Throwable"
                    US_Void[], // "Void"
-                   US__DO[], // "."
-                   US__DO__DO[], // ".."
-                   US__DS[], // "$"
-                   US__LB__RB[], // "[]"
-                   US__LT_clinit_GT[], // "<clinit>"
-                   US__LT_init_GT[], // "<init>"
-                   US__QU__QU[],  // "??"
-                   US__SC[], // ";"
-                   US__SL[], // "/"
+                   US_DO[], // "."
+                   US_DO_DO[], // ".."
+                   US_DS[], // "$"
+                   US_LB_RB[], // "[]"
+                   US_LT_clinit_GT[], // "<clinit>"
+                   US_LT_init_GT[], // "<init>"
+                   US_QU_QU[],  // "??"
+                   US_SC[], // ";"
+                   US_SL[], // "/"
+                   US_zip[], // "zip"
+                   US_jar[]; // "jar"
 
-                   US__zip[], // "zip"
-                   US__jar[], // "jar"
-
-                   US__DOLLAR_noassert[], // "$noassert"
-                   US__array[], // "array"
-                   US__access_DOLLAR[], // "access$"
-                   US__class_DOLLAR[], // "class$"
-                   US__constructor_DOLLAR[], // "constructor$"
-                   US__this_DOLLAR[], // "this$"
-                   US__val_DOLLAR[], // "val$"
-
-                   US_abstract[], // "abstract"
+    //
+    // Used in synthetic (compiler-generated) code.
+    //
+    static wchar_t US_DOLLAR_noassert[], // "$noassert"
                    US_append[], // "append"
-                   US_assert[], // "assert"
+                   US_array[], // "array"
+                   US_access_DOLLAR[], // "access$"
                    US_block_DOLLAR[], // "block$"
+                   US_class_DOLLAR[], // "class$"
+                   US_clone[], // "clone"
+                   US_constructor_DOLLAR[], // "constructor$"
+                   US_desiredAssertionStatus[], // "desiredAssertionStatus"
+                   US_forName[], // "forName"
+                   US_getClass[], // "getClass"
+                   US_getComponentType[], // "getComponentType"
+                   US_getMessage[], // "getMessage"
+                   US_java_SL_io[], // "java/io"
+                   US_java_SL_lang[], // "java/lang"
+                   US_java_SL_util[], // "java/util"
+                   US_length[], // "length"
+                   US_this_DOLLAR[], // "this$"
+                   US_this0[], // "this$0"
+                   US_toString[], // "toString"
+                   US_val_DOLLAR[]; // "val$"
+
+    //
+    // Java keywords.
+    //
+    static wchar_t US_abstract[], // "abstract"
+                   US_assert[], // "assert"
                    US_boolean[], // "boolean"
                    US_break[], // "break"
                    US_byte[], // "byte"
@@ -615,11 +639,9 @@ public:
                    US_catch[], // "catch"
                    US_char[], // "char"
                    US_class[], // "class"
-                   US_clone[], // "clone"
                    US_const[], // "const"
                    US_continue[], // "continue"
                    US_default[], // "default"
-                   US_desiredAssertionStatus[], // "desiredAssertionStatus"
                    US_do[], // "do"
                    US_double[], // "double"
                    US_else[], // "else"
@@ -629,10 +651,6 @@ public:
                    US_finally[], // "finally"
                    US_float[], // "float"
                    US_for[], // "for"
-                   US_forName[], // "forName"
-                   US_getClass[], // "getClass"
-                   US_getComponentType[], // "getComponentType"
-                   US_getMessage[], // "getMessage"
                    US_goto[], // "goto"
                    US_if[], // "if"
                    US_implements[], // "implements"
@@ -640,10 +658,6 @@ public:
                    US_instanceof[], // "instanceof"
                    US_int[], // "int"
                    US_interface[], // "interface"
-                   US_java_SL_io[], // "java/io"
-                   US_java_SL_lang[], // "java/lang"
-                   US_java_SL_util[], // "java/util"
-                   US_length[], // "length"
                    US_long[], // "long"
                    US_native[], // "native"
                    US_new[], // "new"
@@ -659,25 +673,29 @@ public:
                    US_super[], // "super"
                    US_switch[], // "switch"
                    US_synchronized[], // "synchronized"
-                   US_this0[], // "this$0"
                    US_this[], // "this"
                    US_throw[], // "throw"
                    US_throws[], // "throws"
-                   US_toString[], // "toString"
                    US_transient[], // "transient"
                    US_true[], // "true"
                    US_try[], // "try"
                    US_void[], // "void"
                    US_volatile[], // "volatile"
-                   US_while[], // "while"
+                   US_while[]; // "while"
 
-                   US_EOF[]; // "EOF"
+    //
+    // Miscellaneous strings.
+    //
+    static wchar_t US_EOF[]; // "EOF"
 
     static wchar_t US_smallest_int[]; // "-2147483648"
 
     static char U8S_help_header[];
     static char U8S_command_format[];
 
+    //
+    // Constant pool entries.
+    //
     static int U8S_ConstantValue_length,
                U8S_Exceptions_length,
                U8S_InnerClasses_length,
@@ -686,7 +704,7 @@ public:
                U8S_LineNumberTable_length,
                U8S_LocalVariableTable_length,
                U8S_Code_length,
-               U8S_Sourcefile_length,
+               U8S_SourceFile_length,
 
                U8S_null_length,
                U8S_this_length;
@@ -717,21 +735,21 @@ public:
                 U8S_LineNumberTable[], // "LineNumberTable"
                 U8S_LocalVariableTable[], // "LocalVariableTable"
                 U8S_S[], // "S"
-                U8S_Sourcefile[], // "Sourcefile"
+                U8S_SourceFile[], // "SourceFile"
                 U8S_Synthetic[], // "Synthetic"
                 U8S_Deprecated[], // "Deprecated"
                 U8S_V[], // "V"
                 U8S_Z[], // "Z"
 
-                U8S__DO[], // "."
-                U8S__DO_class[], // ".class"
-                U8S__DO_java[], // ".java"
-                U8S__DO_tok[], // ".tok"
-                U8S__DO_u[], // ".u"
-                U8S__LP[], // "("
-                U8S__RP[], // ")"
-                U8S__SL[], // "/"
-                U8S__ST[], // "*"
+                U8S_DO[], // "."
+                U8S_DO_class[], // ".class"
+                U8S_DO_java[], // ".java"
+                U8S_DO_tok[], // ".tok"
+                U8S_DO_u[], // ".u"
+                U8S_LP[], // "("
+                U8S_RP[], // ")"
+                U8S_SL[], // "/"
+                U8S_ST[], // "*"
 
                 U8S_class[], // "class"
                 U8S_java[], // "java"
@@ -1134,11 +1152,11 @@ extern Ostream Coutput;
 // In future basic_ostringstream<wchar_t> will be used.
 // But now it is not supported by libg++.
 // (lord).
-class ErrorString: public ConvertibleArray<wchar_t> 
-{ 
+class ErrorString: public ConvertibleArray<wchar_t>
+{
  public:
-    ErrorString(); 
-    
+    ErrorString();
+
     ErrorString &operator<<(const wchar_t *s);
     ErrorString &operator<<(const wchar_t c);
     ErrorString &operator<<(const char *s);
@@ -1152,7 +1170,7 @@ class ErrorString: public ConvertibleArray<wchar_t>
 
     void width(int w);
     void fill(const char c);
-    
+
     wchar_t *Array();
 
  private:

@@ -500,7 +500,7 @@ TypeSymbol *Semantic::ProcessNestedClassName(TypeSymbol *containing_type, AstCla
     int length = containing_type -> ExternalNameLength() + 1 + name_symbol -> NameLength(); // +1 for $,... +1 for $
     wchar_t *external_name = new wchar_t[length + 1]; // +1 for '\0';
     wcscpy(external_name, containing_type -> ExternalName());
-    wcscat(external_name, StringConstant::US__DS);
+    wcscat(external_name, StringConstant::US_DS);
     wcscat(external_name, name_symbol -> Name());
 
     TypeSymbol *inner_type = containing_type -> InsertNestedTypeSymbol(name_symbol);
@@ -595,7 +595,7 @@ TypeSymbol *Semantic::ProcessNestedInterfaceName(TypeSymbol *containing_type, As
     int length = containing_type -> ExternalNameLength() + 1 + name_symbol -> NameLength(); // +1 for $,... +1 for $
     wchar_t *external_name = new wchar_t[length + 1]; // +1 for '\0';
     wcscpy(external_name, containing_type -> ExternalName());
-    wcscat(external_name, StringConstant::US__DS);
+    wcscat(external_name, StringConstant::US_DS);
     wcscat(external_name, name_symbol -> Name());
 
     TypeSymbol *inner_type = containing_type -> InsertNestedTypeSymbol(name_symbol);
@@ -2027,7 +2027,7 @@ TypeSymbol *Semantic::GetBadNestedType(TypeSymbol *type, LexStream::TokenIndex i
     int length = type -> ExternalNameLength() + 1 + name_symbol -> NameLength(); // +1 for $,... +1 for $
     wchar_t *external_name = new wchar_t[length + 1]; // +1 for '\0';
     wcscpy(external_name, type -> ExternalName());
-    wcscat(external_name, StringConstant::US__DS);
+    wcscat(external_name, StringConstant::US_DS);
     wcscat(external_name, name_symbol -> Name());
 
     TypeSymbol *inner_type = type -> InsertNestedTypeSymbol(name_symbol);
@@ -2608,7 +2608,7 @@ void Semantic::GenerateLocalConstructor(MethodSymbol *constructor)
 
     int length = 12 + value.Length(); // +12 for constructor$
     wchar_t *external_name = new wchar_t[length + 1]; // +1 for '\0';
-    wcscpy(external_name, StringConstant::US__constructor_DOLLAR);
+    wcscpy(external_name, StringConstant::US_constructor_DOLLAR);
     wcscat(external_name, value.String());
     constructor -> SetExternalIdentity(control.FindOrInsertName(external_name, length)); // Turn the constructor into a method
     constructor -> ResetFlags();

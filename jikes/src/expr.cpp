@@ -331,7 +331,8 @@ void Semantic::ReportConstructorNotFound(Ast *ast, TypeSymbol *type)
 
             PackageSymbol *package = arg_type -> ContainingPackage();
             wchar_t *package_name = package -> PackageName();
-            if (package -> PackageNameLength() > 0 && wcscmp(package_name, StringConstant::US__DO) != 0)
+            if (package -> PackageNameLength() > 0 &&
+                wcscmp(package_name, StringConstant::US_DO) != 0)
             {
                 while (*package_name)
                 {
@@ -4036,7 +4037,7 @@ TypeSymbol *Semantic::GetAnonymousType(AstClassInstanceCreationExpression *class
     int length = value.Length() + outermost_type -> NameLength() + 1; // +1 for $
     wchar_t *anonymous_name = new wchar_t[length + 1];
     wcscpy(anonymous_name, outermost_type -> Name());
-    wcscat(anonymous_name, StringConstant::US__DS);
+    wcscat(anonymous_name, StringConstant::US_DS);
     wcscat(anonymous_name, value.String());
 
     NameSymbol *name_symbol = control.FindOrInsertName(anonymous_name, length);

@@ -476,7 +476,7 @@ public:
                      *LineNumberTable_literal,
                      *LocalVariableTable_literal,
                      *Code_literal,
-                     *Sourcefile_literal,
+                     *SourceFile_literal,
 
                      *null_literal,
                      *this_literal;

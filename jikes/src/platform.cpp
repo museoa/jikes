@@ -162,7 +162,7 @@ int wcsncmp(const wchar_t *cs, const wchar_t *ct, size_t n)
 // If the system runs out of memory, this function is invoked
 // This is tricky because VC++ on windows uses a non standard
 // implementation of the set_new_handler function.
-// 
+//
 
 #ifdef HAVE_VCPP_SET_NEW_HANDLER
 int OutOfMemory(size_t)
@@ -193,8 +193,8 @@ void SetNewHandler()
 // testing for various floating point exceptions. Default behavior
 // was causing problems reading some standard class files.
 //
-// We obviously don't need this on AIX (non x86), which uses xlC/ICC           
-//            
+// We obviously don't need this on AIX (non x86), which uses xlC/ICC
+//
 void FloatingPointCheck()
 {
 #ifdef HAVE_ICC_FP_BUGS
@@ -203,7 +203,6 @@ void FloatingPointCheck()
   _control87(EM_OVERFLOW, EM_OVERFLOW);
   _control87(EM_INVALID, EM_INVALID);
 #endif
-  return;
 }
 
 
@@ -338,8 +337,6 @@ IntToString::IntToString(int num)
         if (num < 0)
             *--str = U_MINUS;
     }
-
-    return;
 }
 
 
@@ -364,8 +361,6 @@ IntToWstring::IntToWstring(int num)
         if (num < 0)
             *--wstr = U_MINUS;
     }
-
-    return;
 }
 
 
@@ -380,8 +375,6 @@ ULongToDecString::ULongToDecString(ULongInt &num)
         *--str = U_0 + (n % 10).LowWord();
         n /= 10;
     } while (n != 0);
-
-    return;
 }
 
 
@@ -398,8 +391,6 @@ LongToOctString::LongToOctString(BaseLong &num)
     } while (n != 0);
 
     *--str = U_0;
-
-    return;
 }
 
 
@@ -417,8 +408,6 @@ LongToHexString::LongToHexString(BaseLong &num)
 
     *--str = U_x;
     *--str = U_0;
-
-    return;
 }
 
 
@@ -447,8 +436,6 @@ LongToDecString::LongToDecString(LongInt &num)
         if (num.HighWord() & 0x80000000)
             *--str = U_MINUS;
     }
-
-    return;
 }
 
 
@@ -623,7 +610,7 @@ FloatToString::FloatToString(const IEEEfloat &f)
         s2++;
         spec_case = true;
     }
-    
+
     // Arrange for convenient computation of quotients:
     // shift left if necessary so divisor has 4 leading 0 bits.
     //
@@ -806,9 +793,9 @@ void FloatToString::Format(char *s, int exp, bool neg)
         {
             str[1] = str[0];
             str[0] = U_MINUS;
-        }    
+        }
         str[neg ? 2 : 1] = U_DOT;
-    }      
+    }
     if (neg)
         length++;
     str[length] = U_NULL;
@@ -989,7 +976,7 @@ DoubleToString::DoubleToString(const IEEEdouble &d)
         s2++;
         spec_case = true;
     }
-    
+
     // Arrange for convenient computation of quotients:
     // shift left if necessary so divisor has 4 leading 0 bits.
     //
@@ -1174,9 +1161,9 @@ void DoubleToString::Format(char *s, int exp, bool neg)
         {
             str[1] = str[0];
             str[0] = U_MINUS;
-        }    
+        }
         str[neg ? 2 : 1] = U_DOT;
-    }      
+    }
     if (neg)
         length++;
     str[length] = U_NULL;
@@ -1236,266 +1223,468 @@ Ostream &Ostream::operator<<(ULongInt a)
     return *this;
 }
 
-wchar_t StringConstant::US_AND[]                        = {U_AM, U_NU}, // "&"
-        StringConstant::US_AND_AND[]                    = {U_AM, U_AM, U_NU}, // "&&"
-        StringConstant::US_AND_EQUAL[]                  = {U_AM, U_EQ, U_NU}, // "&="
-        StringConstant::US_COLON[]                      = {U_CO, U_NU}, // ":"
-        StringConstant::US_COMMA[]                      = {U_CM, U_NU}, // ","
-        StringConstant::US_DIVIDE[]                     = {U_SL, U_NU}, // "/"
-        StringConstant::US_DIVIDE_EQUAL[]               = {U_SL, U_EQ, U_NU}, // "/="
-        StringConstant::US_DOT[]                        = {U_DO, U_NU}, // "."
-        StringConstant::US_EMPTY[]                      = {U_NU}, // ""
-        StringConstant::US_EQUAL[]                      = {U_EQ, U_NU}, // "="
-        StringConstant::US_EQUAL_EQUAL[]                = {U_EQ, U_EQ, U_NU}, // "=="
-        StringConstant::US_GREATER[]                    = {U_GT, U_NU}, // ">"
-        StringConstant::US_GREATER_EQUAL[]              = {U_GT, U_EQ, U_NU}, // ">="
-        StringConstant::US_LBRACE[]                     = {U_OS, U_NU}, // "{"
-        StringConstant::US_LBRACKET[]                   = {U_LB, U_NU}, // "["
-        StringConstant::US_LEFT_SHIFT[]                 = {U_LT, U_LT, U_NU}, // "<<"
-        StringConstant::US_LEFT_SHIFT_EQUAL[]           = {U_LT, U_LT, U_EQ, U_NU}, // "<<="
-        StringConstant::US_LESS[]                       = {U_LT, U_NU}, // "<"
-        StringConstant::US_LESS_EQUAL[]                 = {U_LT, U_EQ, U_NU}, // "<="
-        StringConstant::US_LPAREN[]                     = {U_LP, U_NU}, // "("
-        StringConstant::US_MINUS[]                      = {U_MI, U_NU}, // "-"
-        StringConstant::US_MINUS_EQUAL[]                = {U_MI, U_EQ, U_NU}, // "-="
-        StringConstant::US_MINUS_MINUS[]                = {U_MI, U_MI, U_NU}, // "--"
-        StringConstant::US_MULTIPLY[]                   = {U_ST, U_NU}, // "*"
-        StringConstant::US_MULTIPLY_EQUAL[]             = {U_ST, U_EQ, U_NU}, // "*="
-        StringConstant::US_NOT[]                        = {U_EX, U_NU}, // "!"
-        StringConstant::US_NOT_EQUAL[]                  = {U_EX, U_EQ, U_NU}, // "!="
-        StringConstant::US_OR[]                         = {U_BA, U_NU}, // "|"
-        StringConstant::US_OR_EQUAL[]                   = {U_BA, U_EQ, U_NU}, // "|="
-        StringConstant::US_OR_OR[]                      = {U_BA, U_BA, U_NU}, // "||"
-        StringConstant::US_PLUS[]                       = {U_PL, U_NU}, // "+"
-        StringConstant::US_PLUS_EQUAL[]                 = {U_PL, U_EQ, U_NU}, // "+="
-        StringConstant::US_PLUS_PLUS[]                  = {U_PL, U_PL, U_NU}, // "++"
-        StringConstant::US_QUESTION[]                   = {U_QU, U_NU}, // "?"
-        StringConstant::US_RBRACE[]                     = {U_CS, U_NU}, // "}"
-        StringConstant::US_RBRACKET[]                   = {U_RB, U_NU}, // "]"
-        StringConstant::US_REMAINDER[]                  = {U_PE, U_NU}, // "%"
-        StringConstant::US_REMAINDER_EQUAL[]            = {U_PE, U_EQ, U_NU}, // "%="
-        StringConstant::US_RIGHT_SHIFT[]                = {U_GT, U_GT, U_NU}, // ">>"
-        StringConstant::US_RIGHT_SHIFT_EQUAL[]          = {U_GT, U_GT, U_EQ, U_NU}, // ">>="
-        StringConstant::US_RPAREN[]                     = {U_RP, U_NU}, // ")"
-        StringConstant::US_SEMICOLON[]                  = {U_SC, U_NU}, // ";"
-        StringConstant::US_TWIDDLE[]                    = {U_TI, U_NU}, // "~"
-        StringConstant::US_UNSIGNED_RIGHT_SHIFT[]       = {U_GT, U_GT, U_GT, U_NU}, // ">>>"
-        StringConstant::US_UNSIGNED_RIGHT_SHIFT_EQUAL[] = {U_GT, U_GT, U_GT, U_EQ, U_NU}, // ">>>="
-        StringConstant::US_XOR[]                        = {U_CA, U_NU}, // "^"
-        StringConstant::US_XOR_EQUAL[]                  = {U_CA, U_EQ, U_NU}, // "^="
+//
+// Punctuation and operators
+//
+wchar_t StringConstant::US_AND[] = {U_AM, U_NU}; // "&"
+wchar_t StringConstant::US_AND_AND[] = {U_AM, U_AM, U_NU}; // "&&"
+wchar_t StringConstant::US_AND_EQUAL[] = {U_AM, U_EQ, U_NU}; // "&="
+wchar_t StringConstant::US_COLON[] = {U_CO, U_NU}; // ":"
+wchar_t StringConstant::US_COMMA[] = {U_CM, U_NU}; // ","
+wchar_t StringConstant::US_DIVIDE[] = {U_SL, U_NU}; // "/"
+wchar_t StringConstant::US_DIVIDE_EQUAL[] = {U_SL, U_EQ, U_NU}; // "/="
+wchar_t StringConstant::US_DOT[] = {U_DO, U_NU}; // "."
+wchar_t StringConstant::US_EMPTY[] = {U_NU}; // ""
+wchar_t StringConstant::US_EQUAL[] = {U_EQ, U_NU}; // "="
+wchar_t StringConstant::US_EQUAL_EQUAL[] = {U_EQ, U_EQ, U_NU}; // "=="
+wchar_t StringConstant::US_GREATER[] = {U_GT, U_NU}; // ">"
+wchar_t StringConstant::US_GREATER_EQUAL[] = {U_GT, U_EQ, U_NU}; // ">="
+wchar_t StringConstant::US_LBRACE[] = {U_OS, U_NU}; // "{"
+wchar_t StringConstant::US_LBRACKET[] = {U_LB, U_NU}; // "["
+wchar_t StringConstant::US_LEFT_SHIFT[] = {U_LT, U_LT, U_NU}; // "<<"
+wchar_t StringConstant::US_LEFT_SHIFT_EQUAL[] = {U_LT, U_LT, U_EQ,
+                                                 U_NU}; // "<<="
+wchar_t StringConstant::US_LESS[] = {U_LT, U_NU}; // "<"
+wchar_t StringConstant::US_LESS_EQUAL[] = {U_LT, U_EQ, U_NU}; // "<="
+wchar_t StringConstant::US_LPAREN[] = {U_LP, U_NU}; // "("
+wchar_t StringConstant::US_MINUS[] = {U_MI, U_NU}; // "-"
+wchar_t StringConstant::US_MINUS_EQUAL[] = {U_MI, U_EQ, U_NU}; // "-="
+wchar_t StringConstant::US_MINUS_MINUS[] = {U_MI, U_MI, U_NU}; // "--"
+wchar_t StringConstant::US_MULTIPLY[] = {U_ST, U_NU}; // "*"
+wchar_t StringConstant::US_MULTIPLY_EQUAL[] = {U_ST, U_EQ, U_NU}; // "*="
+wchar_t StringConstant::US_NOT[] = {U_EX, U_NU}; // "!"
+wchar_t StringConstant::US_NOT_EQUAL[] = {U_EX, U_EQ, U_NU}; // "!="
+wchar_t StringConstant::US_OR[] = {U_BA, U_NU}; // "|"
+wchar_t StringConstant::US_OR_EQUAL[] = {U_BA, U_EQ, U_NU}; // "|="
+wchar_t StringConstant::US_OR_OR[] = {U_BA, U_BA, U_NU}; // "||"
+wchar_t StringConstant::US_PLUS[] = {U_PL, U_NU}; // "+"
+wchar_t StringConstant::US_PLUS_EQUAL[] = {U_PL, U_EQ, U_NU}; // "+="
+wchar_t StringConstant::US_PLUS_PLUS[] = {U_PL, U_PL, U_NU}; // "++"
+wchar_t StringConstant::US_QUESTION[] = {U_QU, U_NU}; // "?"
+wchar_t StringConstant::US_RBRACE[] = {U_CS, U_NU}; // "}"
+wchar_t StringConstant::US_RBRACKET[] = {U_RB, U_NU}; // "]"
+wchar_t StringConstant::US_REMAINDER[] = {U_PE, U_NU}; // "%"
+wchar_t StringConstant::US_REMAINDER_EQUAL[] = {U_PE, U_EQ, U_NU}; // "%="
+wchar_t StringConstant::US_RIGHT_SHIFT[] = {U_GT, U_GT, U_NU}; // ">>"
+wchar_t StringConstant::US_RIGHT_SHIFT_EQUAL[] = {U_GT, U_GT, U_EQ,
+                                                  U_NU}; // ">>="
+wchar_t StringConstant::US_RPAREN[] = {U_RP, U_NU}; // ")"
+wchar_t StringConstant::US_SEMICOLON[] = {U_SC, U_NU}; // ";"
+wchar_t StringConstant::US_TWIDDLE[] = {U_TI, U_NU}; // "~"
+wchar_t StringConstant::US_UNSIGNED_RIGHT_SHIFT[] = {U_GT, U_GT, U_GT,
+                                                     U_NU}; // ">>>"
+wchar_t StringConstant::US_UNSIGNED_RIGHT_SHIFT_EQUAL[] = {U_GT, U_GT,
+                                                           U_GT, U_EQ,
+                                                           U_NU}; // ">>>="
+wchar_t StringConstant::US_XOR[] = {U_CA, U_NU}; // "^"
+wchar_t StringConstant::US_XOR_EQUAL[] = {U_CA, U_EQ, U_NU}; // "^="
 
-        StringConstant::US_AssertionError[] = {U_A, U_s, U_s, U_e, U_r, U_t, U_i, U_o, U_n, U_E, U_r, U_r, U_o, U_r, U_NU}, // "AssertionError"
-        StringConstant::US_Boolean[] = {U_B, U_o, U_o, U_l, U_e, U_a, U_n, U_NU}, // "Boolean"
-        StringConstant::US_Byte[] = {U_B, U_y, U_t, U_e, U_NU}, // "Byte"
-        StringConstant::US_Character[] = {U_C, U_h, U_a, U_r, U_a, U_c, U_t, U_e, U_r, U_NU}, // "Character"
-        StringConstant::US_Class[] = {U_C, U_l, U_a, U_s, U_s, U_NU}, // "Class"
-        StringConstant::US_ClassNotFoundException[] = {U_C, U_l, U_a, U_s, U_s, U_N, U_o, U_t, U_F, U_o, U_u, U_n, U_d, U_E, U_x, U_c, U_e, U_p, U_t, U_i, U_o, U_n, U_NU}, // "ClassNotFoundException"
-        StringConstant::US_Cloneable[] = {U_C, U_l, U_o, U_n, U_e, U_a, U_b, U_l, U_e, U_NU}, // "Cloneable"
-        StringConstant::US_Comparable[] = {U_C, U_o, U_m, U_p, U_a, U_r, U_a, U_b, U_l, U_e, U_NU}, // "Comparable"
-        StringConstant::US_Double[] = {U_D, U_o, U_u, U_b, U_l, U_e, U_NU}, // "Double"
-        StringConstant::US_Error[] = {U_E, U_r, U_r, U_o, U_r, U_NU}, // "Error"
-        StringConstant::US_Exception[] = { U_E, U_x, U_c, U_e, U_p, U_t, U_i, U_o, U_n, U_NU}, // "Exception"
-        StringConstant::US_Float[] = {U_F, U_l, U_o, U_a, U_t, U_NU},  // "Float"
-        StringConstant::US_Integer[] = {U_I, U_n, U_t, U_e, U_g, U_e, U_r, U_NU}, // "Integer"
-        StringConstant::US_L[] = {U_L, U_NU}, // "L"
-        StringConstant::US_Long[]  = {U_L, U_o, U_n, U_g, U_NU}, // "Long"
-        StringConstant::US_NoClassDefFoundError[] = {U_N, U_o, U_C, U_l, U_a, U_s, U_s, U_D, U_e, U_f, U_F, U_o, U_u, U_n, U_d, U_E, U_r, U_r, U_o, U_r, U_NU}, // "NoClassDefFoundError"
-        StringConstant::US_Object[] = {U_O, U_b, U_j, U_e, U_c, U_t, U_NU}, // "Object"
-        StringConstant::US_PObject[] = {U_P, U_O, U_b, U_j, U_e, U_c, U_t, U_NU}, // "PObject"
-        StringConstant::US_RuntimeException[] = {U_R, U_u, U_n, U_t, U_i, U_m, U_e, U_E, U_x, U_c, U_e, U_p, U_t, U_i, U_o, U_n, U_NU}, // "RuntimeException"
-        StringConstant::US_Serializable[] = {U_S, U_e, U_r, U_i, U_a, U_l, U_i, U_z, U_a, U_b, U_l, U_e, U_NU}, // "Serializable"
-        StringConstant::US_Short[] = {U_S, U_h, U_o, U_r, U_t, U_NU}, // "Short"
-        StringConstant::US_String[] = {U_S, U_t, U_r, U_i, U_n, U_g, U_NU}, // "String"
-        StringConstant::US_StringBuffer[] = {U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_f, U_f, U_e, U_r, U_NU}, // "StringBuffer"
-        StringConstant::US_TYPE[] = {U_T, U_Y, U_P, U_E, U_NU}, // "TYPE"
-        StringConstant::US_Throwable[] = {U_T, U_h, U_r, U_o, U_w, U_a, U_b, U_l, U_e, U_NU}, // "Throwable"
-        StringConstant::US_Void[] = {U_V, U_o, U_i, U_d, U_NU}, // "Void"
-        StringConstant::US__DO[] = {U_DO, U_NU}, // "."
-        StringConstant::US__DO__DO[] = {U_DO, U_DO, U_NU}, // ".."
-        StringConstant::US__DS[] = {U_DS, U_NU}, // "$"
-        StringConstant::US__LB__RB[] = {U_LB, U_RB, U_NU}, // "[]"
-        StringConstant::US__LT_clinit_GT[] = {U_LT, U_c, U_l, U_i, U_n, U_i, U_t, U_GT, U_NU}, // "<clinit>"
-        StringConstant::US__LT_init_GT[] = {U_LT, U_i, U_n, U_i, U_t, U_GT, U_NU}, // "<init>"
-        StringConstant::US__QU__QU[] = {U_QU, U_QU, U_NU},  // "??"
-        StringConstant::US__SC[] = {U_SC, U_NU}, // ";"
-        StringConstant::US__SL[] = {U_SL, U_NU}, // "/"
+//
+// Common constant pool entries
+//
+wchar_t StringConstant::US_AssertionError[] = {
+    U_A, U_s, U_s, U_e, U_r, U_t, U_i, U_o, U_n,
+    U_E, U_r, U_r, U_o, U_r, U_NU}; // "AssertionError"
+wchar_t StringConstant::US_Boolean[] = {
+    U_B, U_o, U_o, U_l, U_e, U_a, U_n, U_NU}; // "Boolean"
+wchar_t StringConstant::US_Byte[] = {U_B, U_y, U_t, U_e, U_NU}; // "Byte"
+wchar_t StringConstant::US_Character[] = {
+    U_C, U_h, U_a, U_r, U_a, U_c, U_t, U_e, U_r, U_NU}; // "Character"
+wchar_t StringConstant::US_Class[] = {
+    U_C, U_l, U_a, U_s, U_s, U_NU}; // "Class"
+wchar_t StringConstant::US_ClassNotFoundException[] = {
+    U_C, U_l, U_a, U_s, U_s,
+    U_N, U_o, U_t, U_F, U_o, U_u, U_n, U_d,
+    U_E, U_x, U_c, U_e, U_p, U_t, U_i, U_o, U_n,
+    U_NU}; // "ClassNotFoundException"
+wchar_t StringConstant::US_Cloneable[] = {
+    U_C, U_l, U_o, U_n, U_e, U_a, U_b, U_l, U_e, U_NU}; // "Cloneable"
+wchar_t StringConstant::US_Comparable[] = {
+    U_C, U_o, U_m, U_p, U_a, U_r, U_a, U_b, U_l, U_e, U_NU}; // "Comparable"
+wchar_t StringConstant::US_Double[] = {
+    U_D, U_o, U_u, U_b, U_l, U_e, U_NU}; // "Double"
+wchar_t StringConstant::US_Error[] = {
+    U_E, U_r, U_r, U_o, U_r, U_NU}; // "Error"
+wchar_t StringConstant::US_Exception[] = {
+    U_E, U_x, U_c, U_e, U_p, U_t, U_i, U_o, U_n, U_NU}; // "Exception"
+wchar_t StringConstant::US_Float[] = {
+    U_F, U_l, U_o, U_a, U_t, U_NU};  // "Float"
+wchar_t StringConstant::US_Integer[] = {
+    U_I, U_n, U_t, U_e, U_g, U_e, U_r, U_NU}; // "Integer"
+wchar_t StringConstant::US_L[] = {U_L, U_NU}; // "L"
+wchar_t StringConstant::US_Long[]  = {U_L, U_o, U_n, U_g, U_NU}; // "Long"
+wchar_t StringConstant::US_NoClassDefFoundError[] = {
+    U_N, U_o, U_C, U_l, U_a, U_s, U_s,
+    U_D, U_e, U_f, U_F, U_o, U_u, U_n, U_d,
+    U_E, U_r, U_r, U_o, U_r, U_NU}; // "NoClassDefFoundError"
+wchar_t StringConstant::US_Object[] = {
+    U_O, U_b, U_j, U_e, U_c, U_t, U_NU}; // "Object"
+wchar_t StringConstant::US_PObject[] = {
+    U_P, U_O, U_b, U_j, U_e, U_c, U_t, U_NU}; // "PObject"
+wchar_t StringConstant::US_RuntimeException[] = {
+    U_R, U_u, U_n, U_t, U_i, U_m, U_e,
+    U_E, U_x, U_c, U_e, U_p, U_t, U_i, U_o, U_n, U_NU}; // "RuntimeException"
+wchar_t StringConstant::US_Serializable[] = {
+    U_S, U_e, U_r, U_i, U_a, U_l, U_i, U_z, U_a, U_b, U_l, U_e,
+    U_NU}; // "Serializable"
+wchar_t StringConstant::US_Short[] = {
+    U_S, U_h, U_o, U_r, U_t, U_NU}; // "Short"
+wchar_t StringConstant::US_String[] = {
+    U_S, U_t, U_r, U_i, U_n, U_g, U_NU}; // "String"
+wchar_t StringConstant::US_StringBuffer[] = {
+    U_S, U_t, U_r, U_i, U_n, U_g,
+    U_B, U_u, U_f, U_f, U_e, U_r, U_NU}; // "StringBuffer"
+wchar_t StringConstant::US_TYPE[] = {U_T, U_Y, U_P, U_E, U_NU}; // "TYPE"
+wchar_t StringConstant::US_Throwable[] = {
+    U_T, U_h, U_r, U_o, U_w, U_a, U_b, U_l, U_e, U_NU}; // "Throwable"
+wchar_t StringConstant::US_Void[] = {U_V, U_o, U_i, U_d, U_NU}; // "Void"
+wchar_t StringConstant::US_DO[] = {U_DO, U_NU}; // "."
+wchar_t StringConstant::US_DO_DO[] = {U_DO, U_DO, U_NU}; // ".."
+wchar_t StringConstant::US_DS[] = {U_DS, U_NU}; // "$"
+wchar_t StringConstant::US_LB_RB[] = {U_LB, U_RB, U_NU}; // "[]"
+wchar_t StringConstant::US_LT_clinit_GT[] = {
+    U_LT, U_c, U_l, U_i, U_n, U_i, U_t, U_GT, U_NU}; // "<clinit>"
+wchar_t StringConstant::US_LT_init_GT[] = {
+    U_LT, U_i, U_n, U_i, U_t, U_GT, U_NU}; // "<init>"
+wchar_t StringConstant::US_QU_QU[] = {U_QU, U_QU, U_NU};  // "??"
+wchar_t StringConstant::US_SC[] = {U_SC, U_NU}; // ";"
+wchar_t StringConstant::US_SL[] = {U_SL, U_NU}; // "/"
+wchar_t StringConstant::US_zip[] = {U_z, U_i, U_p, U_NU}; // "zip"
+wchar_t StringConstant::US_jar[] = {U_j, U_a, U_r, U_NU}; // "jar"
 
-        StringConstant::US__zip[] = {U_z, U_i, U_p, U_NU}, // "zip"
-        StringConstant::US__jar[] = {U_j, U_a, U_r, U_NU}, // "jar"
+//
+// Used in synthetic (compiler-generated) code.
+//
+wchar_t StringConstant::US_DOLLAR_noassert[] = {
+    U_DS, U_n, U_o, U_a, U_s, U_s, U_e, U_r, U_t, U_NU}; // "$noassert"
+wchar_t StringConstant::US_append[] = {
+    U_a, U_p, U_p, U_e, U_n, U_d, U_NU}; // "append"
+wchar_t StringConstant::US_array[] = {
+    U_a, U_r, U_r, U_a, U_y, U_NU}; // "array"
+wchar_t StringConstant::US_access_DOLLAR[] = {
+    U_a, U_c, U_c, U_e, U_s, U_s, U_DS, U_NU}; // "access$"
+wchar_t StringConstant::US_block_DOLLAR[] = {
+    U_b, U_l, U_o, U_c, U_k, U_DS, U_NU}; // "block$"
+wchar_t StringConstant::US_class_DOLLAR[] = {
+    U_c, U_l, U_a, U_s, U_s, U_DS, U_NU}; // "class$"
+wchar_t StringConstant::US_clone[] = {
+    U_c, U_l, U_o, U_n, U_e, U_NU}; // "clone"
+wchar_t StringConstant::US_constructor_DOLLAR[] = {
+    U_c, U_o, U_n, U_s, U_t, U_r, U_u, U_c, U_t, U_o, U_r, U_DS,
+    U_NU}; // "constructor$"
+wchar_t StringConstant::US_desiredAssertionStatus[] = {
+    U_d, U_e, U_s, U_i, U_r, U_e, U_d,
+    U_A, U_s, U_s, U_e, U_r, U_t, U_i, U_o, U_n,
+    U_S, U_t, U_a, U_t, U_u, U_s, U_NU}; // "desiredAssertionStatus"
+wchar_t StringConstant::US_forName[] = {
+    U_f, U_o, U_r, U_N, U_a, U_m, U_e, U_NU}; // "forName"
+wchar_t StringConstant::US_getClass[] = {
+    U_g, U_e, U_t, U_C, U_l, U_a, U_s, U_s, U_NU}; // "getClass"
+wchar_t StringConstant::US_getComponentType[] = {
+    U_g, U_e, U_t, U_C, U_o, U_m, U_p, U_o, U_n, U_e, U_n, U_t,
+    U_T, U_y, U_p, U_e, U_NU}; // "getComponentType"
+wchar_t StringConstant::US_getMessage[] = {
+    U_g, U_e, U_t, U_M, U_e, U_s, U_s, U_a, U_g, U_e, U_NU}; // "getMessage"
+wchar_t StringConstant::US_java_SL_io[] = {
+    U_j, U_a, U_v, U_a, U_SL, U_i, U_o, U_NU}; // "java/io"
+wchar_t StringConstant::US_java_SL_lang[] = {
+    U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_NU}; // "java/lang"
+wchar_t StringConstant::US_java_SL_util[] = {
+    U_j, U_a, U_v, U_a, U_SL, U_u, U_t, U_i, U_l, U_NU}; // "java/util"
+wchar_t StringConstant::US_length[] = {
+    U_l, U_e, U_n, U_g, U_t, U_h, U_NU}; // "length"
+wchar_t StringConstant::US_this_DOLLAR[] = {
+    U_t, U_h, U_i, U_s, U_DS, U_NU}; // "this$"
+wchar_t StringConstant::US_this0[] = {
+    U_t, U_h, U_i, U_s, U_DS, U_0, U_NU}; // "this$0"
+wchar_t StringConstant::US_toString[] = {
+    U_t, U_o, U_S, U_t, U_r, U_i, U_n, U_g, U_NU}; // "toString"
+wchar_t StringConstant::US_val_DOLLAR[] = {
+    U_v, U_a, U_l, U_DS, U_NU}; // "val$"
 
-        StringConstant::US__DOLLAR_noassert[] = {U_DS, U_n, U_o, U_a, U_s, U_s, U_e, U_r, U_t, U_NU}, // "$noassert"
-        StringConstant::US__array[] = {U_a, U_r, U_r, U_a, U_y, U_NU}, // "array"
-        StringConstant::US__access_DOLLAR[] = {U_a, U_c, U_c, U_e, U_s, U_s, U_DS, U_NU}, // "access$"
-        StringConstant::US__class_DOLLAR[] = {U_c, U_l, U_a, U_s, U_s, U_DS, U_NU}, // "class$"
-        StringConstant::US__constructor_DOLLAR[] = {U_c, U_o, U_n, U_s, U_t, U_r, U_u, U_c, U_t, U_o, U_r, U_DS, U_NU}, // "constructor$"
-        StringConstant::US__this_DOLLAR[] = {U_t, U_h, U_i, U_s, U_DS, U_NU}, // "this$"
-        StringConstant::US__val_DOLLAR[] = {U_v, U_a, U_l, U_DS, U_NU}, // "val$"
+//
+// Java keywords.
+//
+wchar_t StringConstant::US_abstract[] = {
+    U_a, U_b, U_s, U_t, U_r, U_a, U_c, U_t, U_NU}; // "abstract"
+wchar_t StringConstant::US_assert[] = {
+    U_a, U_s, U_s, U_e, U_r, U_t, U_NU}; // "assert"
+wchar_t StringConstant::US_boolean[] = {
+    U_b, U_o, U_o, U_l, U_e, U_a, U_n, U_NU}; // "boolean"
+wchar_t StringConstant::US_break[] = {
+    U_b, U_r, U_e, U_a, U_k, U_NU}; // "break"
+wchar_t StringConstant::US_byte[] = {U_b, U_y, U_t, U_e, U_NU}; // "byte"
+wchar_t StringConstant::US_case[] = {U_c, U_a, U_s, U_e, U_NU}; // "case"
+wchar_t StringConstant::US_catch[] = {
+    U_c, U_a, U_t, U_c, U_h, U_NU}; // "catch"
+wchar_t StringConstant::US_char[] = {U_c, U_h, U_a, U_r, U_NU}; // "char"
+wchar_t StringConstant::US_class[] = {
+    U_c, U_l, U_a, U_s, U_s, U_NU}; // "class"
+wchar_t StringConstant::US_const[] = {
+    U_c, U_o, U_n, U_s, U_t, U_NU}; // "const"
+wchar_t StringConstant::US_continue[] = {
+    U_c, U_o, U_n, U_t, U_i, U_n, U_u, U_e, U_NU}; // "continue"
+wchar_t StringConstant::US_default[] = {
+    U_d, U_e, U_f, U_a, U_u, U_l, U_t, U_NU}; // "default"
+wchar_t StringConstant::US_do[] = {U_d, U_o, U_NU}; // "do"
+wchar_t StringConstant::US_double[] = {
+    U_d, U_o, U_u, U_b, U_l, U_e, U_NU}; // "double"
+wchar_t StringConstant::US_else[] = {U_e, U_l, U_s, U_e, U_NU}; // "else"
+wchar_t StringConstant::US_extends[] = {
+    U_e, U_x, U_t, U_e, U_n, U_d, U_s, U_NU}; // "extends"
+wchar_t StringConstant::US_false[] = {
+    U_f, U_a, U_l, U_s, U_e, U_NU}; // "false"
+wchar_t StringConstant::US_final[] = {
+    U_f, U_i, U_n, U_a, U_l, U_NU}; // "final"
+wchar_t StringConstant::US_finally[] = {
+    U_f, U_i, U_n, U_a, U_l, U_l, U_y, U_NU}; // "finally"
+wchar_t StringConstant::US_float[] = {
+    U_f, U_l, U_o, U_a, U_t, U_NU}; // "float"
+wchar_t StringConstant::US_for[] = {U_f, U_o, U_r, U_NU}; // "for"
+wchar_t StringConstant::US_goto[] = {U_g, U_o, U_t, U_o, U_NU}; // "goto"
+wchar_t StringConstant::US_if[] = {U_i, U_f, U_NU}; // "if"
+wchar_t StringConstant::US_implements[] = {
+    U_i, U_m, U_p, U_l, U_e, U_m, U_e, U_n, U_t, U_s, U_NU}; // "implements"
+wchar_t StringConstant::US_import[] = {
+    U_i, U_m, U_p, U_o, U_r, U_t, U_NU}; // "import"
+wchar_t StringConstant::US_instanceof[] = {
+    U_i, U_n, U_s, U_t, U_a, U_n, U_c, U_e, U_o, U_f, U_NU}; // "instanceof"
+wchar_t StringConstant::US_int[] = {U_i, U_n, U_t, U_NU}; // "int"
+wchar_t StringConstant::US_interface[] = {
+    U_i, U_n, U_t, U_e, U_r, U_f, U_a, U_c, U_e, U_NU}; // "interface"
+wchar_t StringConstant::US_long[] = {U_l, U_o, U_n, U_g, U_NU}; // "long"
+wchar_t StringConstant::US_native[] = {
+    U_n, U_a, U_t, U_i, U_v, U_e, U_NU}; // "native"
+wchar_t StringConstant::US_new[] = {U_n, U_e, U_w, U_NU}; // "new"
+wchar_t StringConstant::US_null[] = {U_n, U_u, U_l, U_l, U_NU}; // "null"
+wchar_t StringConstant::US_package[] = {
+    U_p, U_a, U_c, U_k, U_a, U_g, U_e, U_NU}; // "package"
+wchar_t StringConstant::US_private[] = {
+    U_p, U_r, U_i, U_v, U_a, U_t, U_e, U_NU}; // "private"
+wchar_t StringConstant::US_protected[] = {
+    U_p, U_r, U_o, U_t, U_e, U_c, U_t, U_e, U_d, U_NU}; // "protected"
+wchar_t StringConstant::US_public[] = {
+    U_p, U_u, U_b, U_l, U_i, U_c, U_NU}; // "public"
+wchar_t StringConstant::US_return[] = {
+    U_r, U_e, U_t, U_u, U_r, U_n, U_NU}; // "return"
+wchar_t StringConstant::US_short[] = {
+    U_s, U_h, U_o, U_r, U_t, U_NU}; // "short"
+wchar_t StringConstant::US_static[] = {
+    U_s, U_t, U_a, U_t, U_i, U_c, U_NU}; // "static"
+wchar_t StringConstant::US_strictfp[] = {
+    U_s, U_t, U_r, U_i, U_c, U_t, U_f, U_p, U_NU}; // "strictfp"
+wchar_t StringConstant::US_super[] = {
+    U_s, U_u, U_p, U_e, U_r, U_NU}; // "super"
+wchar_t StringConstant::US_switch[] = {
+    U_s, U_w, U_i, U_t, U_c, U_h, U_NU}; // "switch"
+wchar_t StringConstant::US_synchronized[] = {
+    U_s, U_y, U_n, U_c, U_h, U_r, U_o, U_n, U_i, U_z, U_e, U_d,
+    U_NU}; // "synchronized"
+wchar_t StringConstant::US_this[] = {U_t, U_h, U_i, U_s, U_NU}; // "this"
+wchar_t StringConstant::US_throw[] = {
+    U_t, U_h, U_r, U_o, U_w, U_NU}; // "throw"
+wchar_t StringConstant::US_throws[] = {
+    U_t, U_h, U_r, U_o, U_w, U_s, U_NU}; // "throws"
+wchar_t StringConstant::US_transient[] = {
+    U_t, U_r, U_a, U_n, U_s, U_i, U_e, U_n, U_t, U_NU}; // "transient"
+wchar_t StringConstant::US_true[] = {U_t, U_r, U_u, U_e, U_NU}; // "true"
+wchar_t StringConstant::US_try[] = {U_t, U_r, U_y, U_NU}; // "try"
+wchar_t StringConstant::US_void[] = {U_v, U_o, U_i, U_d, U_NU}; // "void"
+wchar_t StringConstant::US_volatile[] = {
+    U_v, U_o, U_l, U_a, U_t, U_i, U_l, U_e, U_NU}; // "volatile"
+wchar_t StringConstant::US_while[] = {
+    U_w, U_h, U_i, U_l, U_e, U_NU}; // "while"
 
-        StringConstant::US_abstract[] = {U_a, U_b, U_s, U_t, U_r, U_a, U_c, U_t, U_NU}, // "abstract"
-        StringConstant::US_append[] = {U_a, U_p, U_p, U_e, U_n, U_d, U_NU}, // "append"
-        StringConstant::US_assert[] = {U_a, U_s, U_s, U_e, U_r, U_t, U_NU}, // "assert"
-        StringConstant::US_block_DOLLAR[] = {U_b, U_l, U_o, U_c, U_k, U_DS, U_NU}, // "block$"
-        StringConstant::US_boolean[] = {U_b, U_o, U_o, U_l, U_e, U_a, U_n, U_NU}, // "boolean"
-        StringConstant::US_break[] = {U_b, U_r, U_e, U_a, U_k, U_NU}, // "break"
-        StringConstant::US_byte[] = {U_b, U_y, U_t, U_e, U_NU}, // "byte"
-        StringConstant::US_case[] = {U_c, U_a, U_s, U_e, U_NU}, // "case"
-        StringConstant::US_catch[] = {U_c, U_a, U_t, U_c, U_h, U_NU}, // "catch"
-        StringConstant::US_char[] = {U_c, U_h, U_a, U_r, U_NU}, // "char"
-        StringConstant::US_class[] = {U_c, U_l, U_a, U_s, U_s, U_NU}, // "class"
-        StringConstant::US_clone[] = {U_c, U_l, U_o, U_n, U_e, U_NU}, // "clone"
-        StringConstant::US_const[] = {U_c, U_o, U_n, U_s, U_t, U_NU}, // "const"
-        StringConstant::US_continue[] = {U_c, U_o, U_n, U_t, U_i, U_n, U_u, U_e, U_NU}, // "continue"
-        StringConstant::US_default[] = {U_d, U_e, U_f, U_a, U_u, U_l, U_t, U_NU}, // "default"
-        StringConstant::US_desiredAssertionStatus[] = {U_d, U_e, U_s, U_i, U_r, U_e, U_d, U_A, U_s, U_s, U_e, U_r, U_t, U_i, U_o, U_n, U_S, U_t, U_a, U_t, U_u, U_s, U_NU}, // "desiredAssertionStatus"
-        StringConstant::US_do[] = {U_d, U_o, U_NU}, // "do"
-        StringConstant::US_double[] = {U_d, U_o, U_u, U_b, U_l, U_e, U_NU}, // "double"
-        StringConstant::US_else[] = {U_e, U_l, U_s, U_e, U_NU}, // "else"
-        StringConstant::US_extends[] = {U_e, U_x, U_t, U_e, U_n, U_d, U_s, U_NU}, // "extends"
-        StringConstant::US_false[] = {U_f, U_a, U_l, U_s, U_e, U_NU}, // "false"
-        StringConstant::US_final[] = {U_f, U_i, U_n, U_a, U_l, U_NU}, // "final"
-        StringConstant::US_finally[] = {U_f, U_i, U_n, U_a, U_l, U_l, U_y, U_NU}, // "finally"
-        StringConstant::US_float[] = {U_f, U_l, U_o, U_a, U_t, U_NU}, // "float"
-        StringConstant::US_for[] = {U_f, U_o, U_r, U_NU}, // "for"
-        StringConstant::US_forName[] = {U_f, U_o, U_r, U_N, U_a, U_m, U_e, U_NU}, // "forName"
-        StringConstant::US_getClass[] = {U_g, U_e, U_t, U_C, U_l, U_a, U_s, U_s, U_NU}, // "getClass"
-        StringConstant::US_getComponentType[] = {U_g, U_e, U_t, U_C, U_o, U_m, U_p, U_o, U_n, U_e, U_n, U_t, U_T, U_y, U_p, U_e, U_NU}, // "getComponentType"
-        StringConstant::US_getMessage[] = {U_g, U_e, U_t, U_M, U_e, U_s, U_s, U_a, U_g, U_e, U_NU}, // "getMessage"
-        StringConstant::US_goto[] = {U_g, U_o, U_t, U_o, U_NU}, // "goto"
-        StringConstant::US_if[] = {U_i, U_f, U_NU}, // "if"
-        StringConstant::US_implements[] = {U_i, U_m, U_p, U_l, U_e, U_m, U_e, U_n, U_t, U_s, U_NU}, // "implements"
-        StringConstant::US_import[] = {U_i, U_m, U_p, U_o, U_r, U_t, U_NU}, // "import"
-        StringConstant::US_instanceof[] = {U_i, U_n, U_s, U_t, U_a, U_n, U_c, U_e, U_o, U_f, U_NU}, // "instanceof"
-        StringConstant::US_int[] = {U_i, U_n, U_t, U_NU}, // "int"
-        StringConstant::US_interface[] = {U_i, U_n, U_t, U_e, U_r, U_f, U_a, U_c, U_e, U_NU}, // "interface"
-        StringConstant::US_java_SL_io[] =  {U_j, U_a, U_v, U_a, U_SL, U_i, U_o, U_NU}, // "java/io"
-        StringConstant::US_java_SL_lang[] = {U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_NU}, // "java/lang"
-        StringConstant::US_java_SL_util[] = {U_j, U_a, U_v, U_a, U_SL, U_u, U_t, U_i, U_l, U_NU}, // "java/util"
-        StringConstant::US_length[] = {U_l, U_e, U_n, U_g, U_t, U_h, U_NU}, // "length"
-        StringConstant::US_long[] = {U_l, U_o, U_n, U_g, U_NU}, // "long"
-        StringConstant::US_native[] = {U_n, U_a, U_t, U_i, U_v, U_e, U_NU}, // "native"
-        StringConstant::US_new[] = {U_n, U_e, U_w, U_NU}, // "new"
-        StringConstant::US_null[] = {U_n, U_u, U_l, U_l, U_NU}, // "null"
-        StringConstant::US_package[] = {U_p, U_a, U_c, U_k, U_a, U_g, U_e, U_NU}, // "package"
-        StringConstant::US_private[] = {U_p, U_r, U_i, U_v, U_a, U_t, U_e, U_NU}, // "private"
-        StringConstant::US_protected[] = {U_p, U_r, U_o, U_t, U_e, U_c, U_t, U_e, U_d, U_NU}, // "protected"
-        StringConstant::US_public[] = {U_p, U_u, U_b, U_l, U_i, U_c, U_NU}, // "public"
-        StringConstant::US_return[] = {U_r, U_e, U_t, U_u, U_r, U_n, U_NU}, // "return"
-        StringConstant::US_short[] = {U_s, U_h, U_o, U_r, U_t, U_NU}, // "short"
-        StringConstant::US_static[] = {U_s, U_t, U_a, U_t, U_i, U_c, U_NU}, // "static"
-        StringConstant::US_strictfp[] = {U_s, U_t, U_r, U_i, U_c, U_t, U_f, U_p, U_NU}, // "strictfp"
-        StringConstant::US_super[] = {U_s, U_u, U_p, U_e, U_r, U_NU}, // "super"
-        StringConstant::US_switch[] = {U_s, U_w, U_i, U_t, U_c, U_h, U_NU}, // "switch"
-        StringConstant::US_synchronized[] = {U_s, U_y, U_n, U_c, U_h, U_r, U_o, U_n, U_i, U_z, U_e, U_d, U_NU}, // "synchronized"
-        StringConstant::US_this0[] = {U_t, U_h, U_i, U_s, U_DS, U_0, U_NU}, // "this$0"
-        StringConstant::US_this[] = {U_t, U_h, U_i, U_s, U_NU}, // "this"
-        StringConstant::US_throw[] = {U_t, U_h, U_r, U_o, U_w, U_NU}, // "throw"
-        StringConstant::US_throws[] = {U_t, U_h, U_r, U_o, U_w, U_s, U_NU}, // "throws"
-        StringConstant::US_toString[] = {U_t, U_o, U_S, U_t, U_r, U_i, U_n, U_g, U_NU}, // "toString"
-        StringConstant::US_transient[] = {U_t, U_r, U_a, U_n, U_s, U_i, U_e, U_n, U_t, U_NU}, // "transient"
-        StringConstant::US_true[] = {U_t, U_r, U_u, U_e, U_NU}, // "true"
-        StringConstant::US_try[] = {U_t, U_r, U_y, U_NU}, // "try"
-        StringConstant::US_void[] = {U_v, U_o, U_i, U_d, U_NU}, // "void"
-        StringConstant::US_volatile[] = {U_v, U_o, U_l, U_a, U_t, U_i, U_l, U_e, U_NU}, // "volatile"
-        StringConstant::US_while[] = {U_w, U_h, U_i, U_l, U_e, U_NU}, // "while"
+//
+// Miscellaneous strings.
+//
+wchar_t StringConstant::US_EOF[] = {U_E, U_O, U_F, U_NU}; // "EOF"
 
-        StringConstant::US_EOF[] = {U_E, U_O, U_F, U_NU}; // "EOF"
-
-wchar_t StringConstant::US_smallest_int[] = {U_MINUS, U_2, U_1, U_4, U_7, U_4, U_8, U_3, U_6, U_4, U_8, U_NU}; // "-2147483648"
+wchar_t StringConstant::US_smallest_int[] = {
+    U_MINUS, U_2, U_1, U_4, U_7, U_4, U_8, U_3, U_6, U_4, U_8,
+    U_NU}; // "-2147483648"
 
 char StringConstant::U8S_help_header[] = "Jikes Compiler - " JIKES_VERSION_STRING
         "\n(C) Copyright IBM Corp. 1997, 1998, 1999, 2000, 2001.\n"
         "- Licensed Materials - Program Property of IBM - All Rights Reserved.\n";
 char StringConstant::U8S_command_format[] = "use: jikes [options] [@files] file.java...\n";
 
-char StringConstant::U8S_B[] = {U_B, U_NU}, // "B"
-     StringConstant::U8S_C[] = {U_C, U_NU}, // "C"
-     StringConstant::U8S_Code[] = {U_C, U_o, U_d, U_e, U_NU}, // "Code"
-     StringConstant::U8S_ConstantValue[] = {U_C, U_o, U_n, U_s, U_t, U_a, U_n, U_t, U_V, U_a, U_l, U_u, U_e, U_NU}, // "ConstantValue"
-     StringConstant::U8S_D[] = {U_D, U_NU}, // "D"
-     StringConstant::U8S_Exceptions[] = {U_E, U_x, U_c, U_e, U_p, U_t, U_i, U_o, U_n, U_s, U_NU}, // "Exceptions"
-     StringConstant::U8S_F[] = {U_F, U_NU}, // "F"
-     StringConstant::U8S_I[] = {U_I, U_NU}, // "I"
-     StringConstant::U8S_InnerClasses[] = {U_I, U_n, U_n, U_e, U_r, U_C, U_l, U_a, U_s, U_s, U_e, U_s, U_NU}, // "InnerClasses"
-     StringConstant::U8S_J[] = {U_J, U_NU},  // "J"
-     StringConstant::U8S_LP_C_RP_V[] = {U_LP,U_C,U_RP,U_V,U_NU}, // "(C)V"
-     StringConstant::U8S_LP_D_RP_V[] = {U_LP,U_D,U_RP,U_V,U_NU}, // "(D)V"
-     StringConstant::U8S_LP_F_RP_V[] = {U_LP,U_F,U_RP,U_V,U_NU}, // "(F)V"
-     StringConstant::U8S_LP_I_RP_V[] = {U_LP,U_I,U_RP,U_V,U_NU}, // "(I)V"
-     StringConstant::U8S_LP_J_RP_V[] = {U_LP,U_J,U_RP,U_V,U_NU}, // "(J)V"
-     StringConstant::U8S_LP_Ljava_SL_lang_SL_Object_SC_RP_V[] = {U_LP,U_L,U_j,U_a,U_v,U_a,U_SL,U_l,U_a,U_n,U_g,U_SL,U_O,U_b,U_j,U_e,U_c,U_t,U_SC,U_RP,U_V,U_NU}, // "(Ljava/lang/Object;)V"
-     StringConstant::U8S_LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_Class_SC[] = {U_LP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL, U_S, U_t, U_r, U_i, U_n, U_g, U_SC, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL, U_C, U_l, U_a, U_s, U_s, U_SC, U_NU}, // "(Ljava/lang/String;)Ljava/lang/Class;"
-     StringConstant::U8S_LP_Ljava_SL_lang_SL_String_SC_RP_V[] = {U_LP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL, U_S, U_t, U_r, U_i, U_n, U_g, U_SC, U_RP, U_V, U_NU}, // "(Ljava/lang/String;)V"
-     StringConstant::U8S_LP_RP_Ljava_SL_lang_SL_Class_SC[] = {U_LP,U_RP,U_L,U_j,U_a,U_v,U_a,U_SL,U_l,U_a,U_n,U_g,U_SL,U_C,U_l,U_a,U_s,U_s,U_SC,U_NU}, // "()Ljava/lang/Class;"
-     StringConstant::U8S_LP_RP_Ljava_SL_lang_SL_String_SC[] = {U_LP,U_RP,U_L,U_j,U_a,U_v,U_a,U_SL,U_l,U_a,U_n,U_g,U_SL,U_S,U_t,U_r,U_i,U_n,U_g,U_SC,U_NU}, // "()Ljava/lang/String;"
-     StringConstant::U8S_LP_RP_V[] = {U_LP, U_RP, U_V, U_NU}, // "()V"
-     StringConstant::U8S_LP_RP_Z[] = {U_LP,U_RP,U_Z,U_NU}, // "()Z"
-     StringConstant::U8S_LP_Z_RP_V[] = {U_LP,U_Z,U_RP,U_V,U_NU}, // "(Z)V"
-     StringConstant::U8S_LineNumberTable[] = {U_L, U_i, U_n, U_e, U_N, U_u, U_m, U_b, U_e, U_r, U_T, U_a, U_b, U_l, U_e, U_NU}, // "LineNumberTable"
-     StringConstant::U8S_LocalVariableTable[] = {U_L, U_o, U_c, U_a, U_l, U_V, U_a, U_r, U_i, U_a, U_b, U_l, U_e, U_T, U_a, U_b, U_l, U_e, U_NU}, // "LocalVariableTable"
-     StringConstant::U8S_S[] = {U_S, U_NU}, // "S"
-     StringConstant::U8S_Sourcefile[] = {U_S, U_o, U_u, U_r, U_c, U_e, U_F, U_i, U_l, U_e, U_NU}, // "Sourcefile"
-     StringConstant::U8S_Synthetic[] = {U_S, U_y, U_n, U_t, U_h, U_e, U_t, U_i, U_c, U_NU}, // "Synthetic"
-     StringConstant::U8S_Deprecated[] = {U_D, U_e, U_p, U_r, U_e, U_c, U_a, U_t, U_e, U_d, U_NU}, // "Deprecated"
-     StringConstant::U8S_V[] = {U_V, U_NU}, // "V"
-     StringConstant::U8S_Z[] = {U_Z, U_NU}, // "Z"
+//
+// Constant pool entries.
+//
+char StringConstant::U8S_B[] = {U_B, U_NU}; // "B"
+char StringConstant::U8S_C[] = {U_C, U_NU}; // "C"
+char StringConstant::U8S_Code[] = {U_C, U_o, U_d, U_e, U_NU}; // "Code"
+char StringConstant::U8S_ConstantValue[] = {
+    U_C, U_o, U_n, U_s, U_t, U_a, U_n, U_t,
+    U_V, U_a, U_l, U_u, U_e, U_NU}; // "ConstantValue"
+char StringConstant::U8S_D[] = {U_D, U_NU}; // "D"
+char StringConstant::U8S_Exceptions[] = {
+    U_E, U_x, U_c, U_e, U_p, U_t, U_i, U_o, U_n, U_s, U_NU}; // "Exceptions"
+char StringConstant::U8S_F[] = {U_F, U_NU}; // "F"
+char StringConstant::U8S_I[] = {U_I, U_NU}; // "I"
+char StringConstant::U8S_InnerClasses[] = {
+    U_I, U_n, U_n, U_e, U_r,
+    U_C, U_l, U_a, U_s, U_s, U_e, U_s, U_NU}; // "InnerClasses"
+char StringConstant::U8S_J[] = {U_J, U_NU};  // "J"
+char StringConstant::U8S_LP_C_RP_V[] = {U_LP, U_C, U_RP, U_V, U_NU}; // "(C)V"
+char StringConstant::U8S_LP_D_RP_V[] = {U_LP, U_D, U_RP, U_V, U_NU}; // "(D)V"
+char StringConstant::U8S_LP_F_RP_V[] = {U_LP, U_F, U_RP, U_V, U_NU}; // "(F)V"
+char StringConstant::U8S_LP_I_RP_V[] = {U_LP, U_I, U_RP, U_V, U_NU}; // "(I)V"
+char StringConstant::U8S_LP_J_RP_V[] = {U_LP, U_J, U_RP, U_V, U_NU}; // "(J)V"
+char StringConstant::U8S_LP_Ljava_SL_lang_SL_Object_SC_RP_V[] = {
+    U_LP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_O, U_b, U_j, U_e, U_c, U_t, U_SC, U_RP, U_V,
+    U_NU}; // "(Ljava/lang/Object;)V"
+char StringConstant::U8S_LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_Class_SC[] = {
+    U_LP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_S, U_t, U_r, U_i, U_n, U_g, U_SC, U_RP,
+    U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_C, U_l, U_a, U_s, U_s, U_SC,
+    U_NU}; // "(Ljava/lang/String;)Ljava/lang/Class;"
+char StringConstant::U8S_LP_Ljava_SL_lang_SL_String_SC_RP_V[] = {
+    U_LP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_S, U_t, U_r, U_i, U_n, U_g, U_SC, U_RP, U_V,
+    U_NU}; // "(Ljava/lang/String;)V"
+char StringConstant::U8S_LP_RP_Ljava_SL_lang_SL_Class_SC[] = {
+    U_LP, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_C, U_l, U_a, U_s, U_s, U_SC, U_NU}; // "()Ljava/lang/Class;"
+char StringConstant::U8S_LP_RP_Ljava_SL_lang_SL_String_SC[] = {
+    U_LP, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_S, U_t, U_r, U_i, U_n, U_g, U_SC, U_NU}; // "()Ljava/lang/String;"
+char StringConstant::U8S_LP_RP_V[] = {U_LP, U_RP, U_V, U_NU}; // "()V"
+char StringConstant::U8S_LP_RP_Z[] = {U_LP,U_RP,U_Z,U_NU}; // "()Z"
+char StringConstant::U8S_LP_Z_RP_V[] = {U_LP,U_Z,U_RP,U_V,U_NU}; // "(Z)V"
+char StringConstant::U8S_LineNumberTable[] = {
+    U_L, U_i, U_n, U_e, U_N, U_u, U_m, U_b, U_e, U_r,
+    U_T, U_a, U_b, U_l, U_e, U_NU}; // "LineNumberTable"
+char StringConstant::U8S_LocalVariableTable[] = {
+    U_L, U_o, U_c, U_a, U_l, U_V, U_a, U_r, U_i, U_a, U_b, U_l, U_e,
+    U_T, U_a, U_b, U_l, U_e, U_NU}; // "LocalVariableTable"
+char StringConstant::U8S_S[] = {U_S, U_NU}; // "S"
+char StringConstant::U8S_SourceFile[] = {
+    U_S, U_o, U_u, U_r, U_c, U_e, U_F, U_i, U_l, U_e, U_NU}; // "SourceFile"
+char StringConstant::U8S_Synthetic[] = {
+    U_S, U_y, U_n, U_t, U_h, U_e, U_t, U_i, U_c, U_NU}; // "Synthetic"
+char StringConstant::U8S_Deprecated[] = {
+    U_D, U_e, U_p, U_r, U_e, U_c, U_a, U_t, U_e, U_d, U_NU}; // "Deprecated"
+char StringConstant::U8S_V[] = {U_V, U_NU}; // "V"
+char StringConstant::U8S_Z[] = {U_Z, U_NU}; // "Z"
 
-     StringConstant::U8S__DO[] = {U_DO, U_NU}, // "."
-     StringConstant::U8S__DO_class[] = {U_DO, U_c, U_l, U_a, U_s, U_s, U_NU}, // ".class"
-     StringConstant::U8S__DO_java[] = {U_DO, U_j, U_a, U_v, U_a, U_NU}, // ".java"
-     StringConstant::U8S__DO_tok[] = {U_DO, U_t, U_o, U_k, U_NU}, // ".tok"
-     StringConstant::U8S__DO_u[] = {U_DO, U_u, U_NU}, // ".u"
-     StringConstant::U8S__LP[] = {U_LP, U_NU}, // "("
-     StringConstant::U8S__RP[] = {U_RP, U_NU}, // ")"
-     StringConstant::U8S__SL[] = {U_SL, U_NU}, // "/"
-     StringConstant::U8S__ST[] = {U_ST, U_NU}, // "*"
+char StringConstant::U8S_DO[] = {U_DO, U_NU}; // "."
+char StringConstant::U8S_DO_class[] = {
+    U_DO, U_c, U_l, U_a, U_s, U_s, U_NU}; // ".class"
+char StringConstant::U8S_DO_java[] = {
+    U_DO, U_j, U_a, U_v, U_a, U_NU}; // ".java"
+char StringConstant::U8S_DO_tok[] = {U_DO, U_t, U_o, U_k, U_NU}; // ".tok"
+char StringConstant::U8S_DO_u[] = {U_DO, U_u, U_NU}; // ".u"
+char StringConstant::U8S_LP[] = {U_LP, U_NU}; // "("
+char StringConstant::U8S_RP[] = {U_RP, U_NU}; // ")"
+char StringConstant::U8S_SL[] = {U_SL, U_NU}; // "/"
+char StringConstant::U8S_ST[] = {U_ST, U_NU}; // "*"
 
-     StringConstant::U8S_class[] = {U_c, U_l, U_a, U_s, U_s, U_NU}, // "class"
-     StringConstant::U8S_java[] = {U_j, U_a, U_v, U_a, U_NU}, // "java"
-     StringConstant::U8S_java_SL_lang_SL_ClassNotFoundException[] = {U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL, U_C, U_l, U_a, U_s, U_s, U_N, U_o, U_t, U_F, U_o, U_u, U_n, U_d, U_E, U_x, U_c, U_e, U_p, U_t, U_i, U_o, U_n, U_NU}, // "java/lang/ClassNotFoundException"
-     StringConstant::U8S_java_SL_lang_SL_Class[] = {U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL, U_C, U_l, U_a, U_s, U_s, U_NU}, // "java/lang/Class"
-     StringConstant::U8S_java_SL_lang_SL_InternalError[] = {U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL, U_I, U_n, U_t, U_e, U_r, U_n, U_a, U_l, U_E, U_r, U_r, U_o, U_r, U_NU}, // "java/lang/InternalError"
-     StringConstant::U8S_java_SL_lang_SL_NoClassDefFoundError[] = {U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL, U_N, U_o, U_C, U_l, U_a, U_s, U_s, U_D, U_e, U_f, U_F, U_o, U_u, U_n, U_d, U_E, U_r, U_r, U_o, U_r, U_NU}, // "java/lang/NoClassDefFoundError"
-     StringConstant::U8S_java_SL_lang_SL_StringBuffer[] = {U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL, U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_f, U_f, U_e, U_r, U_NU}, // "java/lang/StringBuffer"
-     StringConstant::U8S_java_SL_lang_SL_Throwable[] = {U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL, U_T, U_h, U_r, U_o, U_w, U_a, U_b, U_l, U_e, U_NU}, // "java/lang/Throwable"
-     StringConstant::U8S_null[] = {U_n, U_u, U_l, U_l, U_NU}, // "null"
-     StringConstant::U8S_quit[] = {U_q, U_u, U_i, U_t, U_NU}, // "quit"
-     StringConstant::U8S_this[] = {U_t, U_h, U_i, U_s, U_NU}, // "this"
+char StringConstant::U8S_class[] = {U_c, U_l, U_a, U_s, U_s, U_NU}; // "class"
+char StringConstant::U8S_java[] = {U_j, U_a, U_v, U_a, U_NU}; // "java"
+char StringConstant::U8S_java_SL_lang_SL_ClassNotFoundException[] = {
+    U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_C, U_l, U_a, U_s, U_s, U_N, U_o, U_t, U_F, U_o, U_u, U_n, U_d,
+    U_E, U_x, U_c, U_e, U_p, U_t, U_i, U_o, U_n,
+    U_NU}; // "java/lang/ClassNotFoundException"
+char StringConstant::U8S_java_SL_lang_SL_Class[] = {
+    U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_C, U_l, U_a, U_s, U_s, U_NU}; // "java/lang/Class"
+char StringConstant::U8S_java_SL_lang_SL_InternalError[] = {
+    U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_I, U_n, U_t, U_e, U_r, U_n, U_a, U_l, U_E, U_r, U_r, U_o, U_r,
+    U_NU}; // "java/lang/InternalError"
+char StringConstant::U8S_java_SL_lang_SL_NoClassDefFoundError[] = {
+    U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_N, U_o, U_C, U_l, U_a, U_s, U_s,
+    U_D, U_e, U_f, U_F, U_o, U_u, U_n, U_d,
+    U_E, U_r, U_r, U_o, U_r, U_NU}; // "java/lang/NoClassDefFoundError"
+char StringConstant::U8S_java_SL_lang_SL_StringBuffer[] = {
+    U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_f, U_f, U_e, U_r,
+    U_NU}; // "java/lang/StringBuffer"
+char StringConstant::U8S_java_SL_lang_SL_Throwable[] = {
+    U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_T, U_h, U_r, U_o, U_w, U_a, U_b, U_l, U_e,
+    U_NU}; // "java/lang/Throwable"
+char StringConstant::U8S_null[] = {U_n, U_u, U_l, U_l, U_NU}; // "null"
+char StringConstant::U8S_quit[] = {U_q, U_u, U_i, U_t, U_NU}; // "quit"
+char StringConstant::U8S_this[] = {U_t, U_h, U_i, U_s, U_NU}; // "this"
 
-     StringConstant::U8S_LP_C_RP_Ljava_SL_lang_SL_StringBuffer_SC[] = {U_LP, U_C, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL, U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_f, U_f, U_e, U_r, U_SC, U_NU}, // "(C)Ljava/lang/StringBuffer;"
-     StringConstant::U8S_LP_Z_RP_Ljava_SL_lang_SL_StringBuffer_SC[] = {U_LP, U_Z, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL, U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_f, U_f, U_e, U_r, U_SC, U_NU}, // "(Z)Ljava/lang/StringBuffer;"
-     StringConstant::U8S_LP_I_RP_Ljava_SL_lang_SL_StringBuffer_SC[] = {U_LP, U_I, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL, U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_f, U_f, U_e, U_r, U_SC, U_NU}, // "(I)Ljava/lang/StringBuffer;"
-     StringConstant::U8S_LP_J_RP_Ljava_SL_lang_SL_StringBuffer_SC[] = {U_LP, U_J, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL, U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_f, U_f, U_e, U_r, U_SC, U_NU}, // "(J)Ljava/lang/StringBuffer;"
-     StringConstant::U8S_LP_F_RP_Ljava_SL_lang_SL_StringBuffer_SC[] = {U_LP, U_F, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL, U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_f, U_f, U_e, U_r, U_SC, U_NU}, // "(F)Ljava/lang/StringBuffer;"
-     StringConstant::U8S_LP_D_RP_Ljava_SL_lang_SL_StringBuffer_SC[] = {U_LP, U_D, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL, U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_f, U_f, U_e, U_r, U_SC, U_NU}, // "(D)Ljava/lang/StringBuffer;"
-     StringConstant::U8S_LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC[] = {U_LP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL, U_S, U_t, U_r, U_i, U_n, U_g, U_SC, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL, U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_f, U_f, U_e, U_r, U_SC, U_NU}, // "(Ljava/lang/String;)Ljava/lang/StringBuffer;"
-     StringConstant::U8S_LP_Ljava_SL_lang_SL_Object_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC[] = {U_LP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL, U_O, U_b, U_j, U_e, U_c, U_t, U_SC, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL, U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_f, U_f, U_e, U_r, U_SC, U_NU}; // "(Ljava/lang/Object;)Ljava/lang/StringBuffer;"
+char StringConstant::U8S_LP_C_RP_Ljava_SL_lang_SL_StringBuffer_SC[] = {
+    U_LP, U_C, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_f, U_f, U_e, U_r, U_SC,
+    U_NU}; // "(C)Ljava/lang/StringBuffer;"
+char StringConstant::U8S_LP_Z_RP_Ljava_SL_lang_SL_StringBuffer_SC[] = {
+    U_LP, U_Z, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_f, U_f, U_e, U_r, U_SC,
+    U_NU}; // "(Z)Ljava/lang/StringBuffer;"
+char StringConstant::U8S_LP_I_RP_Ljava_SL_lang_SL_StringBuffer_SC[] = {
+    U_LP, U_I, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_f, U_f, U_e, U_r, U_SC,
+    U_NU}; // "(I)Ljava/lang/StringBuffer;"
+char StringConstant::U8S_LP_J_RP_Ljava_SL_lang_SL_StringBuffer_SC[] = {
+    U_LP, U_J, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_f, U_f, U_e, U_r, U_SC,
+    U_NU}; // "(J)Ljava/lang/StringBuffer;"
+char StringConstant::U8S_LP_F_RP_Ljava_SL_lang_SL_StringBuffer_SC[] = {
+    U_LP, U_F, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_f, U_f, U_e, U_r, U_SC,
+    U_NU}; // "(F)Ljava/lang/StringBuffer;"
+char StringConstant::U8S_LP_D_RP_Ljava_SL_lang_SL_StringBuffer_SC[] = {
+    U_LP, U_D, U_RP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_f, U_f, U_e, U_r, U_SC,
+    U_NU}; // "(D)Ljava/lang/StringBuffer;"
+char StringConstant::U8S_LP_Ljava_SL_lang_SL_String_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC[] = {
+    U_LP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_S, U_t, U_r, U_i, U_n, U_g, U_SC, U_RP,
+    U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_f, U_f, U_e, U_r, U_SC,
+    U_NU}; // "(Ljava/lang/String;)Ljava/lang/StringBuffer;"
+char StringConstant::U8S_LP_Ljava_SL_lang_SL_Object_SC_RP_Ljava_SL_lang_SL_StringBuffer_SC[] = {
+    U_LP, U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_O, U_b, U_j, U_e, U_c, U_t, U_SC, U_RP,
+    U_L, U_j, U_a, U_v, U_a, U_SL, U_l, U_a, U_n, U_g, U_SL,
+    U_S, U_t, U_r, U_i, U_n, U_g, U_B, U_u, U_f, U_f, U_e, U_r, U_SC,
+    U_NU}; // "(Ljava/lang/Object;)Ljava/lang/StringBuffer;"
 
-char StringConstant::U8S_smallest_int[] = {U_MINUS, U_2, U_1, U_4, U_7, U_4, U_8, U_3, U_6, U_4, U_8, U_NU}, // "-2147483648"
-     StringConstant::U8S_smallest_long_int[] = {U_MINUS, U_9, U_2, U_2, U_3, U_3, U_7, U_2, U_0, U_3, U_6,
-                                                         U_8, U_5, U_4, U_7, U_7, U_5, U_8, U_0, U_8, U_NU}, // "-9223372036854775808"
-     StringConstant::U8S_NaN[] = {U_N, U_a, U_N, U_NU}, // "NaN"
-     StringConstant::U8S_pos_Infinity[] = {U_I, U_n, U_f, U_i, U_n, U_i, U_t, U_y, U_NU}, // "Infinity"
-     StringConstant::U8S_neg_Infinity[] = {U_MINUS, U_I, U_n, U_f, U_i, U_n, U_i, U_t, U_y, U_NU}, // "-Infinity"
-     StringConstant::U8S_pos_Zero[] = {U_0, U_DOT, U_0, U_NU}, // "0.0"
-     StringConstant::U8S_neg_Zero[] = {U_MINUS, U_0, U_DOT, U_0, U_NU}; // "-0.0"
+char StringConstant::U8S_smallest_int[] = {
+    U_MINUS, U_2, U_1, U_4, U_7, U_4, U_8, U_3, U_6, U_4, U_8,
+    U_NU}; // "-2147483648"
+char StringConstant::U8S_smallest_long_int[] = {
+    U_MINUS, U_9, U_2, U_2, U_3, U_3, U_7, U_2, U_0, U_3, U_6, U_8, U_5,
+    U_4, U_7, U_7, U_5, U_8, U_0, U_8, U_NU}; // "-9223372036854775808"
+char StringConstant::U8S_NaN[] = {U_N, U_a, U_N, U_NU}; // "NaN"
+char StringConstant::U8S_pos_Infinity[] = {
+    U_I, U_n, U_f, U_i, U_n, U_i, U_t, U_y, U_NU}; // "Infinity"
+char StringConstant::U8S_neg_Infinity[] = {
+    U_MINUS, U_I, U_n, U_f, U_i, U_n, U_i, U_t, U_y, U_NU}; // "-Infinity"
+char StringConstant::U8S_pos_Zero[] = {U_0, U_DOT, U_0, U_NU}; // "0.0"
+char StringConstant::U8S_neg_Zero[] = {
+    U_MINUS, U_0, U_DOT, U_0, U_NU}; // "-0.0"
 
-int StringConstant::U8S_ConstantValue_length = strlen(U8S_ConstantValue),
-    StringConstant::U8S_Exceptions_length = strlen(U8S_Exceptions),
-    StringConstant::U8S_InnerClasses_length = strlen(U8S_InnerClasses),
-    StringConstant::U8S_Synthetic_length = strlen(U8S_Synthetic),
-    StringConstant::U8S_Deprecated_length = strlen(U8S_Deprecated),
-    StringConstant::U8S_LineNumberTable_length = strlen(U8S_LineNumberTable),
-    StringConstant::U8S_LocalVariableTable_length = strlen(U8S_LocalVariableTable),
-    StringConstant::U8S_Code_length = strlen(U8S_Code),
-    StringConstant::U8S_Sourcefile_length = strlen(U8S_Sourcefile),
+int StringConstant::U8S_ConstantValue_length = strlen(U8S_ConstantValue);
+int StringConstant::U8S_Exceptions_length = strlen(U8S_Exceptions);
+int StringConstant::U8S_InnerClasses_length = strlen(U8S_InnerClasses);
+int StringConstant::U8S_Synthetic_length = strlen(U8S_Synthetic);
+int StringConstant::U8S_Deprecated_length = strlen(U8S_Deprecated);
+int StringConstant::U8S_LineNumberTable_length = strlen(U8S_LineNumberTable);
+int StringConstant::U8S_LocalVariableTable_length = strlen(U8S_LocalVariableTable);
+int StringConstant::U8S_Code_length = strlen(U8S_Code);
+int StringConstant::U8S_SourceFile_length = strlen(U8S_SourceFile);
 
-    StringConstant::U8S_null_length = strlen(U8S_null),
-    StringConstant::U8S_this_length = strlen(U8S_this);
+int StringConstant::U8S_null_length = strlen(U8S_null);
+int StringConstant::U8S_this_length = strlen(U8S_this);
 
 
 Ostream Coutput;
 
-ErrorString::ErrorString():ConvertibleArray<wchar_t>(1024), fill_char(' '), field_width(0)
+ErrorString::ErrorString() : ConvertibleArray<wchar_t>(1024),
+                             fill_char(' '),
+                             field_width(0)
 {
 }
 
@@ -1549,7 +1738,7 @@ ErrorString &ErrorString::operator<<(const char *s)
         while (*s)
             Next() = (wchar_t) *(s++);
     }
-    
+
     return *this;
 }
 
@@ -1557,7 +1746,7 @@ ErrorString &ErrorString::operator<<(int n)
 {
     char buf[64];
     sprintf(buf, "%d", n);
-    
+
     return (*this << buf);
 }
 

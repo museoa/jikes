@@ -1,3 +1,24 @@
+2001-11-13  Brian Sullivan  <bsulliv@legacyj.com>
+
+	* src/platform.cpp (class StringConstant): Code reformating to
+	support IA-64 compilation: the aCC compiler does not recognize
+	comma-chained class-member initializers.
+	* src/body.cpp:
+	* src/bytecode.cpp:
+	* src/control.h:
+	* src/decl.cpp:
+	* src/depend.cpp:
+	* src/dump.cpp:
+	* src/error.cpp:
+	* src/expr.cpp:
+	* src/getclass.cpp:
+	* src/lookup.cpp:
+	* src/option.cpp:
+	* src/platform.h:
+	* src/symbol.cpp:
+	* src/system.cpp: Change all US__ and U8S__ prefixes to US_ and
+	U8S_, for consistency - patch 230.
+
 2001-11-13  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/error.cpp:

@@ -5490,7 +5490,7 @@ void ByteCode::FinishCode(TypeSymbol *type)
     // Only output SourceFile attribute if -g:source is enabled.
     //
     if (this_control.option.g & JikesOption::SOURCE)
-        attributes.Next() = new SourceFile_attribute(RegisterUtf8(this_control.Sourcefile_literal),
+        attributes.Next() = new SourceFile_attribute(RegisterUtf8(this_control.SourceFile_literal),
                                                      RegisterUtf8(type -> file_symbol -> FileNameLiteral()));
 
     if (type == NULL)

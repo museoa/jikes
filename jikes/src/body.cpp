@@ -1493,9 +1493,9 @@ TypeSymbol *Semantic::GetLocalType(AstClassDeclaration *class_declaration)
     int length = value.Length() + outermost_type -> NameLength() + 1 + name_symbol -> NameLength() + 1; // +1 for $,... +1 for $
     wchar_t *external_name = new wchar_t[length + 1]; // +1 for '\0';
     wcscpy(external_name, outermost_type -> Name());
-    wcscat(external_name, StringConstant::US__DS);
+    wcscat(external_name, StringConstant::US_DS);
     wcscat(external_name, value.String());
-    wcscat(external_name, StringConstant::US__DS);
+    wcscat(external_name, StringConstant::US_DS);
     wcscat(external_name, name_symbol -> Name());
 
     type -> SetACC_PRIVATE();

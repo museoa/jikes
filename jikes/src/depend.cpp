@@ -335,12 +335,12 @@ void TypeDependenceChecker::OutputMake(FileSymbol *file_symbol)
 
 
     char *output_name = new char[length + FileSymbol::class_suffix_length + 1],
-         *u_name = new char[length + strlen(StringConstant::U8S__DO_u) + 1];
+         *u_name = new char[length + strlen(StringConstant::U8S_DO_u) + 1];
 
     strncpy(output_name, name, length);
     strncpy(u_name, name, length);
     strcpy(&output_name[length], FileSymbol::class_suffix);
-    strcpy(&u_name[length], StringConstant::U8S__DO_u);
+    strcpy(&u_name[length], StringConstant::U8S_DO_u);
 
     //
     //

@@ -340,7 +340,7 @@ time_t DirectoryEntry::Mtime()
         char *file_name = new char[length + 1];
         strcpy(file_name, dirname);
         if (dirname[this -> directory -> DirectoryNameLength() - 1] != U_SLASH)
-            strcat(file_name, StringConstant::U8S__SL);
+            strcat(file_name, StringConstant::U8S_SL);
         strcat(file_name, this -> name);
 
         struct stat status;

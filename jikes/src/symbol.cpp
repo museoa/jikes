@@ -22,9 +22,9 @@
 namespace Jikes { // Open namespace Jikes block
 #endif
 
-char *FileSymbol::java_suffix = StringConstant::U8S__DO_java;
+char *FileSymbol::java_suffix = StringConstant::U8S_DO_java;
 int FileSymbol::java_suffix_length = strlen(java_suffix);
-char *FileSymbol::class_suffix = StringConstant::U8S__DO_class;
+char *FileSymbol::class_suffix = StringConstant::U8S_DO_class;
 int FileSymbol::class_suffix_length = strlen(class_suffix);
 
 bool MethodSymbol::IsFinal()
@@ -76,7 +76,8 @@ wchar_t *MethodSymbol::Header()
         {
             PackageSymbol *package = Type() -> ContainingPackage();
             wchar_t *package_name = package -> PackageName();
-            if (package -> PackageNameLength() > 0 && wcscmp(package_name, StringConstant::US__DO) != 0)
+            if (package -> PackageNameLength() > 0 &&
+                wcscmp(package_name, StringConstant::US_DO) != 0)
             {
                 while (*package_name)
                 {
@@ -101,7 +102,8 @@ wchar_t *MethodSymbol::Header()
 
                 PackageSymbol *package = formal -> Type() -> ContainingPackage();
                 wchar_t *package_name = package -> PackageName();
-                if (package -> PackageNameLength() > 0 && wcscmp(package_name, StringConstant::US__DO) != 0)
+                if (package -> PackageNameLength() > 0 &&
+                    wcscmp(package_name, StringConstant::US_DO) != 0)
                 {
                     while (*package_name)
                     {
@@ -245,7 +247,7 @@ TypeSymbol *TypeSymbol::GetArrayType(Semantic *sem, int num_dimensions_)
          num <= num_dimensions_;
          num++, len = len + 2)
     {
-        wcscat(name, StringConstant::US__LB__RB);
+        wcscat(name, StringConstant::US_LB_RB);
         NameSymbol *name_sym = sem -> control.FindOrInsertName(name, len);
 
         TypeSymbol *type = new TypeSymbol(name_sym);
@@ -350,15 +352,16 @@ void TypeSymbol::SetSignature(Control &control)
                   ExternalNameLength() + 4; // +1 for 'L' +1 for '/' +1 for ';' +1 for '\0'
         wchar_t *type_signature = new wchar_t[len];
         wcscpy(type_signature, StringConstant::US_L);
-        if (ContainingPackage() -> PackageNameLength() > 0 && wcscmp(package_name, StringConstant::US__DO) != 0)
+        if (ContainingPackage() -> PackageNameLength() > 0 &&
+            wcscmp(package_name, StringConstant::US_DO) != 0)
         {
             wcscat(type_signature, package_name);
-            wcscat(type_signature, StringConstant::US__SL);
+            wcscat(type_signature, StringConstant::US_SL);
         }
         wcscat(type_signature, type_name);
         fully_qualified_name = control.ConvertUnicodeToUtf8(type_signature + 1); // +1 to skip the initial L'L'
 
-        wcscat(type_signature, StringConstant::US__SC);
+        wcscat(type_signature, StringConstant::US_SC);
         signature = control.ConvertUnicodeToUtf8(type_signature);
 
         delete [] type_signature;
@@ -513,7 +516,7 @@ void PackageSymbol::SetPackageName()
     if (owner)
     {
         wcscpy(package_name, owner -> PackageName());
-        wcscat(package_name, StringConstant::US__SL);
+        wcscat(package_name, StringConstant::US_SL);
     }
     else package_name[0] = U_NULL;
     wcscat(package_name, Name());
@@ -688,7 +691,7 @@ void DirectorySymbol::SetDirectoryName()
     PathSymbol *path_symbol = owner -> PathCast();
     if (path_symbol)
     {
-        if (strcmp(path_symbol -> Utf8Name(), StringConstant::U8S__DO) == 0)
+        if (strcmp(path_symbol -> Utf8Name(), StringConstant::U8S_DO) == 0)
         {
             directory_name_length = Utf8NameLength();
             directory_name = new char[directory_name_length + 1]; // +1 for '\0'
@@ -707,7 +710,8 @@ void DirectorySymbol::SetDirectoryName()
     {
         DirectorySymbol *owner_directory = owner -> DirectoryCast();
         if (Name()[NameLength() - 1] == U_SLASH ||                     // An absolute file name ?
-            strcmp(owner_directory -> DirectoryName(), StringConstant::U8S__DO) == 0) // or is the owner "." ?
+            strcmp(owner_directory -> DirectoryName(),
+                   StringConstant::U8S_DO) == 0) // or is the owner "." ?
         {
             directory_name_length = Utf8NameLength();
             directory_name = new char[directory_name_length + 1];  // +1 for '\0'
@@ -725,7 +729,7 @@ void DirectorySymbol::SetDirectoryName()
 
             strcpy(directory_name, owner_directory -> DirectoryName());
             if (owner_name[owner_length - 1] != U_SLASH)
-                strcat(directory_name, StringConstant::U8S__SL);
+                strcat(directory_name, StringConstant::U8S_SL);
             strcat(directory_name, Utf8Name());
         }
     }
@@ -802,8 +806,8 @@ void DirectorySymbol::ReadDirectory()
         char *directory_name = new char[DirectoryNameLength() + 3]; // +2 for "/*" +1 for '\0'
         strcpy(directory_name, DirectoryName());
         if (directory_name[DirectoryNameLength() - 1] != U_SLASH)
-            strcat(directory_name, StringConstant::U8S__SL);
-        strcat(directory_name, StringConstant::U8S__ST);
+            strcat(directory_name, StringConstant::U8S_SL);
+        strcat(directory_name, StringConstant::U8S_ST);
 
         WIN32_FIND_DATA entry;
         HANDLE file_handle = FindFirstFile(directory_name, &entry);
@@ -863,7 +867,7 @@ void FileSymbol::SetFileName()
     PathSymbol *path_symbol = PathSym();
     char *directory_name = directory_symbol -> DirectoryName();
     size_t directory_name_length = directory_symbol -> DirectoryNameLength();
-    bool dot_directory = (strcmp(directory_name, StringConstant::U8S__DO) == 0);
+    bool dot_directory = (strcmp(directory_name, StringConstant::U8S_DO) == 0);
     file_name_length = (dot_directory ? 0 : directory_name_length) +
                                Utf8NameLength()   +
                                (path_symbol -> IsZip() // For zip files, we need "()"; for regular directory, we need 1 '/'
@@ -878,14 +882,14 @@ void FileSymbol::SetFileName()
     {
         strcpy(file_name, directory_symbol -> DirectoryName());
         if (path_symbol -> IsZip())
-             strcat(file_name, StringConstant::U8S__LP);
+             strcat(file_name, StringConstant::U8S_LP);
         else if (directory_name[directory_name_length - 1] != U_SLASH)
-             strcat(file_name, StringConstant::U8S__SL);
+             strcat(file_name, StringConstant::U8S_SL);
     }
     strcat(file_name, Utf8Name());
     strcat(file_name, kind == JAVA ? FileSymbol::java_suffix : FileSymbol::class_suffix);
     if (path_symbol -> IsZip())
-        strcat(file_name, StringConstant::U8S__RP);
+        strcat(file_name, StringConstant::U8S_RP);
 
     assert(strlen(file_name) == file_name_length);
 
@@ -948,7 +952,7 @@ void TypeSymbol::SetClassName()
         strcpy(class_name, directory_name);
 
         if (directory_name[directory_length - 1] != U_SLASH)
-            strcat(class_name, StringConstant::U8S__SL);
+            strcat(class_name, StringConstant::U8S_SL);
     }
     else
     {
@@ -1273,9 +1277,9 @@ inline NameSymbol *TypeSymbol::GetThisName(Control &control, int n)
 {
     IntToWstring value(n);
 
-    int length = wcslen(StringConstant::US__this_DOLLAR) + value.Length();
+    int length = wcslen(StringConstant::US_this_DOLLAR) + value.Length();
     wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
-    wcscpy(name, StringConstant::US__this_DOLLAR);
+    wcscpy(name, StringConstant::US_this_DOLLAR);
     wcscat(name, value.String());
     NameSymbol *name_symbol = control.FindOrInsertName(name, length);
 
@@ -1440,10 +1444,10 @@ VariableSymbol *TypeSymbol::FindOrInsertClassLiteral(TypeSymbol *type)
     char *signature = type -> SignatureString();
     if (signature[0] == U_LEFT_BRACKET) // an array?
     {
-        int array_length = wcslen(StringConstant::US__array),
+        int array_length = wcslen(StringConstant::US_array),
             length = strlen(signature) + array_length;
         wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
-        wcscpy(name, StringConstant::US__array);
+        wcscpy(name, StringConstant::US_array);
         int i,
             k;
         for (i = 0, k = array_length; signature[i] == U_LEFT_BRACKET; i++, k++)
@@ -1459,11 +1463,11 @@ VariableSymbol *TypeSymbol::FindOrInsertClassLiteral(TypeSymbol *type)
     }
     else if (signature[0] == U_L) // a reference type ?
     {
-        int class_length = wcslen(StringConstant::US__class_DOLLAR),
+        int class_length = wcslen(StringConstant::US_class_DOLLAR),
             length = strlen(signature) + class_length;
 
         wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
-        wcscpy(name, StringConstant::US__class_DOLLAR);
+        wcscpy(name, StringConstant::US_class_DOLLAR);
         int i = 1, // skip leading 'L'
             k = class_length;
         for (wchar_t ch = signature[i++]; ch && ch != U_SEMICOLON; ch = signature[i++])
@@ -1507,9 +1511,9 @@ VariableSymbol *TypeSymbol::FindOrInsertAssertVariable()
         Control &control = sem -> control;
 
         NameSymbol *name_symbol = NULL;
-        int length = wcslen(StringConstant::US__DOLLAR_noassert);
+        int length = wcslen(StringConstant::US_DOLLAR_noassert);
         wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
-        wcscpy(name, StringConstant::US__DOLLAR_noassert);
+        wcscpy(name, StringConstant::US_DOLLAR_noassert);
         name_symbol = control.FindOrInsertName(name, length);
         delete [] name;
 
@@ -1559,7 +1563,7 @@ VariableSymbol *TypeSymbol::FindOrInsertLocalShadow(VariableSymbol *local)
     {
         int length = 4 + local -> NameLength(); // +4 for val$
         wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
-        wcscpy(name, StringConstant::US__val_DOLLAR);
+        wcscpy(name, StringConstant::US_val_DOLLAR);
         wcscat(name, local -> Name());
         NameSymbol *name_symbol = control.FindOrInsertName(name, length);
 
@@ -1716,7 +1720,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(MethodSymbol *member,
 
         int length = 7 + value.Length(); // +7 for access$
         wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
-        wcscpy(name, StringConstant::US__access_DOLLAR);
+        wcscpy(name, StringConstant::US_access_DOLLAR);
         wcscat(name, value.String());
 
         //
@@ -1950,7 +1954,7 @@ MethodSymbol *TypeSymbol::GetReadAccessConstructor(MethodSymbol *member)
         
         int length = 7 + value.Length(); // +7 for access$
         wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
-        wcscpy(name, StringConstant::US__access_DOLLAR);
+        wcscpy(name, StringConstant::US_access_DOLLAR);
         wcscat(name, value.String());
 
         BlockSymbol *block_symbol = new BlockSymbol(member -> NumFormalParameters() + 3);
@@ -2155,7 +2159,7 @@ MethodSymbol *TypeSymbol::GetReadAccessMethod(VariableSymbol *member,
 
         int length = 7 + value.Length(); // +7 for access$
         wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
-        wcscpy(name, StringConstant::US__access_DOLLAR);
+        wcscpy(name, StringConstant::US_access_DOLLAR);
         wcscat(name, value.String());
 
         //
@@ -2298,7 +2302,7 @@ MethodSymbol *TypeSymbol::GetWriteAccessMethod(VariableSymbol *member,
 
         int length = 7 + value.Length(); // +7 for access$
         wchar_t *name = new wchar_t[length + 1]; // +1 for '\0';
-        wcscpy(name, StringConstant::US__access_DOLLAR);
+        wcscpy(name, StringConstant::US_access_DOLLAR);
         wcscat(name, value.String());
 
         //

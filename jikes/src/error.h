@@ -396,11 +396,11 @@ private:
     static wchar_t *(*print_message[_num_kinds])(ErrorInfo &, LexStream *, Control &);
 
     static bool NotDot(wchar_t *str)
-        {
-            return str ?
-                (! (wcslen(str) == 0 || wcscmp(str, StringConstant::US__DO) == 0)) :
-                false;
-        }
+    {
+        return str ? (! (wcslen(str) == 0 ||
+                         wcscmp(str, StringConstant::US_DO) == 0))
+                   : false;
+    }
 
     static wchar_t *PrintBAD_ERROR(ErrorInfo &, LexStream *, Control &);
     static wchar_t *PrintDEFAULT_ERROR(ErrorInfo &, LexStream *, Control &);
