@@ -1393,7 +1393,8 @@ void Control::ProcessBodies(TypeSymbol* type)
 
 void Control::CheckForUnusedImports(Semantic *sem)
 {
-    for (int i = 0; i < sem -> compilation_unit -> NumImportDeclarations(); i++)
+    for (unsigned i = 0;
+         i < sem -> compilation_unit -> NumImportDeclarations(); ++i)
     {
         AstImportDeclaration *import_declaration = 
             sem -> compilation_unit -> ImportDeclaration(i);
