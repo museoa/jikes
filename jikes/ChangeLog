@@ -1,5 +1,19 @@
 2002-02-20  Eric Blake  <ebb9@email.byu.edu>
 
+	* src/jikesapi.cpp (DefaultFileReader): Silence a warning.
+	* src/bytecode.cpp (GenerateClassAccessMethod): Use exception
+	chaining for class literals when -source == 1.4.
+	* src/control.cpp: 
+	* src/control.h (Throwable_initCauseMethod),
+	(NoClassDefFoundError_InitStringMethod): Add methods.
+	* src/platform.cpp:
+	* src/platform.h (US_initCause, U8S_LP_Throwable_RP_Throwable):
+	Add fields. Also, shorten names of other long fields.
+	* src/set.h:
+	* src/system.cpp: Reformat code.
+
+2002-02-20  Eric Blake  <ebb9@email.byu.edu>
+
 	* src/error.cpp (PrintNEGATIVE_ARRAY_SIZE):
 	* src/error.h:
 	* src/expr.cpp (ProcessArrayCreationExpression): Add caution for

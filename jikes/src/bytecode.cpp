@@ -3145,8 +3145,6 @@ void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
     line_number_table_attribute -> AddLineNumber(0, 0);
 
     //
-    // The code takes the form:
-    //
     // Since the VM does not have a nice way of finding a class without a
     // runtime object, we use this approach.  Notice that getClass can throw
     // a checked exception, but JLS semantics do not allow this, so we must
@@ -3162,8 +3160,9 @@ void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
     //     }
     // }
     //
-    // TODO: Obey option.target >= SDK1_4, where we want to use
-    //   throw new NoClassDefFoundError(e);
+    // When option.target >= SDK1_4, we use the new exception chaining,
+    // and the catch clause becomes
+    //   throw (Error) ((Throwable) new NoClassDefFoundError()).initCause(e);
     //
     // Since ClassNotFoundException inherits, rather than declares, getMessage,
     // we link to Throwable, and use the cast to Throwable in the code above to
@@ -3174,7 +3173,7 @@ void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
     //  invokestatic   java/lang/Class.forName(Ljava/lang/String;)Ljava/lang/Class;
     //  areturn        return Class object for the class named by string
     //
-    // exception handler if forName fails (optimization: the
+    // pre-SDK1_4 exception handler if forName fails (optimization: the
     // ClassNotFoundException will already be on the stack):
     //
     //  invokevirtual  java/lang/Throwable.getMessage()Ljava/lang/String;
@@ -3183,28 +3182,50 @@ void ByteCode::GenerateClassAccessMethod(MethodSymbol *msym)
     //  swap           swap string and new object to correct order
     //  invokespecial  java/lang/NoClassDefFoundError.<init>(Ljava/lang/String;)V
     //  athrow         throw the correct exception
+    //
+    // post-SDK1_4 exception handler if forName fails (optimization: the
+    // ClassNotFoundException will already be on the stack):
+    //
+    //  new            java/lang/NoClassDefFoundError
+    //  dup_x1         save copy, but below cause
+    //  invokespecial  java/lang/NoClassDefFoundError.<init>()V
+    //  invokevirtual  java/lang/Throwable.initCause(Ljava/lang/Throwable;)Ljava/lang/Throwable;
+    //  athrow         throw the correct exception
+    //
     PutOp(OP_ALOAD_0);
     PutOp(OP_INVOKESTATIC);
     PutU2(RegisterLibraryMethodref(control.Class_forNameMethod()));
     PutOp(OP_ARETURN);
-
-    ChangeStack(1); // account for the exception on the stack
-    PutOp(OP_INVOKEVIRTUAL);
-    PutU2(RegisterLibraryMethodref(control.Throwable_getMessageMethod()));
-    ChangeStack(1); // account for the returned string
-    PutOp(OP_NEW);
-    PutU2(RegisterClass(control.NoClassDefFoundError() -> fully_qualified_name));
-    PutOp(OP_DUP_X1);
-    PutOp(OP_SWAP);
-    PutOp(OP_INVOKESPECIAL);
-    PutU2(RegisterLibraryMethodref(control.NoClassDefFoundError_InitMethod()));
-    ChangeStack(-1); // account for the argument to the constructor
-    PutOp(OP_ATHROW);
-
     code_attribute -> AddException(0,
                                    5,
                                    5,
                                    RegisterClass(control.ClassNotFoundException() -> fully_qualified_name));
+
+    ChangeStack(1); // account for the exception on the stack
+    if (control.option.source < JikesOption::SDK1_4)
+    {
+        PutOp(OP_INVOKEVIRTUAL);
+        PutU2(RegisterLibraryMethodref(control.Throwable_getMessageMethod()));
+        ChangeStack(1); // account for the returned string
+        PutOp(OP_NEW);
+        PutU2(RegisterClass(control.NoClassDefFoundError() -> fully_qualified_name));
+        PutOp(OP_DUP_X1);
+        PutOp(OP_SWAP);
+        PutOp(OP_INVOKESPECIAL);
+        PutU2(RegisterLibraryMethodref(control.NoClassDefFoundError_InitStringMethod()));
+        ChangeStack(-1); // account for the argument to the constructor
+    }
+    else
+    {
+        PutOp(OP_NEW);
+        PutU2(RegisterClass(control.NoClassDefFoundError() -> fully_qualified_name));
+        PutOp(OP_DUP_X1);
+        PutOp(OP_INVOKESPECIAL);
+        PutU2(RegisterLibraryMethodref(control.NoClassDefFoundError_InitMethod()));
+        PutOp(OP_INVOKEVIRTUAL);
+        PutU2(RegisterLibraryMethodref(control.Throwable_initCauseMethod()));
+    }
+    PutOp(OP_ATHROW);
 }
 
 

@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 1999, 2000, 2001 International Business
+// Copyright (C) 1996, 1999, 2000, 2001, 2002 International Business
 // Machines Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -334,7 +334,7 @@ DefaultFileReader::DefaultFileReader(const char *fileName)
             (char *) buffer
 #endif
             , sizeof(char), size, srcfile);
-        //assert(numread == size); // FIXME: uncomment when SystemFread uses "b"
+        assert(numread <= size); // FIXME: change to == when SystemFread uses "b"
         fclose(srcfile);
     }
 }
