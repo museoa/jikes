@@ -69,8 +69,8 @@ javaprs.h: $(srcdir)/java.g
 	$(ERASE) java.l
 
 
-ast.@O@:  $(srcdir)/ast.cpp $(srcdir)/config.h $(srcdir)/unicode.h \
-          $(srcdir)/bool.h $(srcdir)/code.h $(srcdir)/case.h $(srcdir)/ast.h \
+ast.@O@:  $(srcdir)/ast.cpp $(srcdir)/config.h \
+          $(srcdir)/code.h $(srcdir)/case.h $(srcdir)/ast.h \
           $(srcdir)/stream.h $(srcdir)/javadef.h $(srcdir)/javasym.h \
           $(srcdir)/tuple.h $(srcdir)/tab.h $(srcdir)/lookup.h $(srcdir)/long.h \
           $(srcdir)/double.h $(srcdir)/symbol.h $(srcdir)/option.h \
@@ -79,9 +79,9 @@ ast.@O@:  $(srcdir)/ast.cpp $(srcdir)/config.h $(srcdir)/unicode.h \
 
 body.@O@: $(srcdir)/body.cpp $(srcdir)/config.h $(srcdir)/semantic.h \
           $(srcdir)/ast.h $(srcdir)/stream.h $(srcdir)/javadef.h \
-          $(srcdir)/javasym.h $(srcdir)/tuple.h $(srcdir)/bool.h \
+          $(srcdir)/javasym.h $(srcdir)/tuple.h \
           $(srcdir)/tab.h $(srcdir)/lookup.h $(srcdir)/long.h \
-          $(srcdir)/double.h $(srcdir)/unicode.h $(srcdir)/code.h \
+          $(srcdir)/double.h $(srcdir)/code.h \
 	  $(srcdir)/case.h $(srcdir)/symbol.h $(srcdir)/option.h \
           $(srcdir)/depend.h $(srcdir)/access.h $(srcdir)/diagnose.h \
           $(srcdir)/parser.h $(srcdir)/lpginput.h $(srcdir)/javaprs.h \
@@ -90,9 +90,9 @@ body.@O@: $(srcdir)/body.cpp $(srcdir)/config.h $(srcdir)/semantic.h \
 
 bytecode.@O@: $(srcdir)/bytecode.cpp $(srcdir)/config.h $(srcdir)/ast.h \
               $(srcdir)/stream.h $(srcdir)/javadef.h $(srcdir)/javasym.h \
-              $(srcdir)/tuple.h $(srcdir)/bool.h $(srcdir)/tab.h \
+              $(srcdir)/tuple.h $(srcdir)/tab.h \
               $(srcdir)/lookup.h $(srcdir)/long.h $(srcdir)/double.h \
-              $(srcdir)/unicode.h $(srcdir)/code.h $(srcdir)/case.h \
+              $(srcdir)/code.h $(srcdir)/case.h \
               $(srcdir)/symbol.h $(srcdir)/option.h $(srcdir)/depend.h \
               $(srcdir)/access.h $(srcdir)/bytecode.h $(srcdir)/class.h \
               $(srcdir)/semantic.h $(srcdir)/diagnose.h $(srcdir)/parser.h \
@@ -104,15 +104,15 @@ bytecode.@O@: $(srcdir)/bytecode.cpp $(srcdir)/config.h $(srcdir)/ast.h \
 config.@O@:  $(srcdir)/config.cpp $(srcdir)/config.h 
 	$(CC) $(CCFLAGS) $(srcdir)/config.cpp 
 
-code.@O@:  $(srcdir)/code.cpp $(srcdir)/code.h $(srcdir)/config.h $(srcdir)/bool.h 
+code.@O@:  $(srcdir)/code.cpp $(srcdir)/code.h $(srcdir)/config.h 
 	$(CC) $(CCFLAGS) $(srcdir)/code.cpp 
 
 control.@O@:  $(srcdir)/control.cpp $(srcdir)/config.h $(srcdir)/control.h \
-              $(srcdir)/option.h $(srcdir)/bool.h $(srcdir)/code.h \
+              $(srcdir)/option.h $(srcdir)/code.h \
               $(srcdir)/tuple.h $(srcdir)/symbol.h $(srcdir)/stream.h \
               $(srcdir)/javadef.h $(srcdir)/javasym.h $(srcdir)/tab.h \
               $(srcdir)/lookup.h $(srcdir)/long.h $(srcdir)/double.h \
-              $(srcdir)/unicode.h $(srcdir)/case.h $(srcdir)/depend.h \
+              $(srcdir)/case.h $(srcdir)/depend.h \
               $(srcdir)/access.h $(srcdir)/set.h $(srcdir)/scanner.h \
 	      $(srcdir)/parser.h $(srcdir)/lpginput.h $(srcdir)/javaprs.h \
               $(srcdir)/javaact.h $(srcdir)/semantic.h $(srcdir)/ast.h \
@@ -120,14 +120,14 @@ control.@O@:  $(srcdir)/control.cpp $(srcdir)/config.h $(srcdir)/control.h \
               $(srcdir)/class.h $(srcdir)/op.h 
 	$(CC) $(CCFLAGS) $(srcdir)/control.cpp 
 
-case.@O@:  $(srcdir)/case.cpp $(srcdir)/config.h $(srcdir)/case.h $(srcdir)/bool.h 
+case.@O@:  $(srcdir)/case.cpp $(srcdir)/config.h $(srcdir)/case.h 
 	$(CC) $(CCFLAGS) $(srcdir)/case.cpp 
 
 diagnose.@O@:  $(srcdir)/diagnose.cpp $(srcdir)/config.h $(srcdir)/diagnose.h \
                $(srcdir)/parser.h $(srcdir)/lpginput.h $(srcdir)/stream.h \
 	       $(srcdir)/javadef.h $(srcdir)/javasym.h $(srcdir)/tuple.h \
-               $(srcdir)/bool.h $(srcdir)/tab.h $(srcdir)/lookup.h \
-               $(srcdir)/long.h $(srcdir)/double.h $(srcdir)/unicode.h \
+               $(srcdir)/tab.h $(srcdir)/lookup.h \
+               $(srcdir)/long.h $(srcdir)/double.h \
                $(srcdir)/code.h $(srcdir)/case.h $(srcdir)/javaprs.h \
                $(srcdir)/javaact.h $(srcdir)/control.h $(srcdir)/option.h \
 	       $(srcdir)/symbol.h $(srcdir)/depend.h $(srcdir)/access.h \
@@ -137,9 +137,9 @@ diagnose.@O@:  $(srcdir)/diagnose.cpp $(srcdir)/config.h $(srcdir)/diagnose.h \
 
 decl.@O@:  $(srcdir)/decl.cpp $(srcdir)/config.h $(srcdir)/semantic.h \
            $(srcdir)/ast.h $(srcdir)/stream.h $(srcdir)/javadef.h \
-           $(srcdir)/javasym.h $(srcdir)/tuple.h $(srcdir)/bool.h \
+           $(srcdir)/javasym.h $(srcdir)/tuple.h \
            $(srcdir)/tab.h $(srcdir)/lookup.h $(srcdir)/long.h \
-           $(srcdir)/double.h $(srcdir)/unicode.h $(srcdir)/code.h \
+           $(srcdir)/double.h $(srcdir)/code.h \
 	   $(srcdir)/case.h $(srcdir)/symbol.h $(srcdir)/option.h \
            $(srcdir)/depend.h $(srcdir)/access.h $(srcdir)/diagnose.h \
            $(srcdir)/parser.h $(srcdir)/lpginput.h $(srcdir)/javaprs.h \
@@ -149,9 +149,9 @@ decl.@O@:  $(srcdir)/decl.cpp $(srcdir)/config.h $(srcdir)/semantic.h \
 
 definite.@O@:  $(srcdir)/definite.cpp $(srcdir)/config.h $(srcdir)/semantic.h \
                $(srcdir)/ast.h $(srcdir)/stream.h $(srcdir)/javadef.h \
-	       $(srcdir)/javasym.h $(srcdir)/tuple.h $(srcdir)/bool.h \
+	       $(srcdir)/javasym.h $(srcdir)/tuple.h \
                $(srcdir)/tab.h $(srcdir)/lookup.h $(srcdir)/long.h \
-               $(srcdir)/double.h $(srcdir)/unicode.h $(srcdir)/code.h \
+               $(srcdir)/double.h $(srcdir)/code.h \
                $(srcdir)/case.h $(srcdir)/symbol.h $(srcdir)/option.h \
                $(srcdir)/depend.h $(srcdir)/access.h $(srcdir)/diagnose.h \
 	       $(srcdir)/parser.h $(srcdir)/lpginput.h $(srcdir)/javaprs.h \
@@ -161,9 +161,9 @@ definite.@O@:  $(srcdir)/definite.cpp $(srcdir)/config.h $(srcdir)/semantic.h \
 
 depend.@O@:  $(srcdir)/depend.cpp $(srcdir)/config.h $(srcdir)/ast.h \
              $(srcdir)/stream.h $(srcdir)/javadef.h $(srcdir)/javasym.h \
-             $(srcdir)/tuple.h $(srcdir)/bool.h $(srcdir)/tab.h \
+             $(srcdir)/tuple.h $(srcdir)/tab.h \
              $(srcdir)/lookup.h $(srcdir)/long.h $(srcdir)/double.h \
-             $(srcdir)/unicode.h $(srcdir)/code.h $(srcdir)/case.h \
+             $(srcdir)/code.h $(srcdir)/case.h \
 	     $(srcdir)/symbol.h $(srcdir)/option.h $(srcdir)/depend.h \
              $(srcdir)/access.h $(srcdir)/semantic.h $(srcdir)/diagnose.h \
 	     $(srcdir)/parser.h $(srcdir)/lpginput.h $(srcdir)/javaprs.h \
@@ -172,20 +172,20 @@ depend.@O@:  $(srcdir)/depend.cpp $(srcdir)/config.h $(srcdir)/ast.h \
 	$(CC) $(CCFLAGS) $(srcdir)/depend.cpp 
 
 double.@O@:  $(srcdir)/double.cpp $(srcdir)/config.h $(srcdir)/double.h \
-             $(srcdir)/bool.h $(srcdir)/long.h 
+             $(srcdir)/long.h 
 	$(CC) $(CCFLAGS) $(srcdir)/double.cpp 
 
 dump.@O@:  $(srcdir)/dump.cpp $(srcdir)/config.h $(srcdir)/javasym.h \
-           $(srcdir)/control.h $(srcdir)/option.h $(srcdir)/bool.h \
+           $(srcdir)/control.h $(srcdir)/option.h \
            $(srcdir)/code.h $(srcdir)/tuple.h $(srcdir)/symbol.h \
            $(srcdir)/stream.h $(srcdir)/javadef.h $(srcdir)/tab.h \
            $(srcdir)/lookup.h $(srcdir)/long.h $(srcdir)/double.h \
-           $(srcdir)/unicode.h $(srcdir)/case.h $(srcdir)/depend.h \
+           $(srcdir)/case.h $(srcdir)/depend.h \
            $(srcdir)/access.h $(srcdir)/set.h 
 	$(CC) $(CCFLAGS) $(srcdir)/dump.cpp 
 
-error.@O@:  $(srcdir)/error.cpp $(srcdir)/config.h $(srcdir)/unicode.h \
-            $(srcdir)/bool.h $(srcdir)/code.h $(srcdir)/case.h \
+error.@O@:  $(srcdir)/error.cpp $(srcdir)/config.h \
+            $(srcdir)/code.h $(srcdir)/case.h \
             $(srcdir)/error.h $(srcdir)/stream.h $(srcdir)/javadef.h \
             $(srcdir)/javasym.h $(srcdir)/tuple.h $(srcdir)/tab.h \
             $(srcdir)/lookup.h $(srcdir)/long.h $(srcdir)/double.h \
@@ -197,10 +197,10 @@ error.@O@:  $(srcdir)/error.cpp $(srcdir)/config.h $(srcdir)/unicode.h \
 	$(CC) $(CCFLAGS) $(srcdir)/error.cpp 
 
 expr.@O@:  $(srcdir)/expr.cpp $(srcdir)/double.h $(srcdir)/config.h \
-           $(srcdir)/bool.h $(srcdir)/parser.h $(srcdir)/lpginput.h \
+           $(srcdir)/parser.h $(srcdir)/lpginput.h \
            $(srcdir)/stream.h $(srcdir)/javadef.h $(srcdir)/javasym.h \
            $(srcdir)/tuple.h $(srcdir)/tab.h $(srcdir)/lookup.h \
-           $(srcdir)/long.h $(srcdir)/unicode.h $(srcdir)/code.h \
+           $(srcdir)/long.h $(srcdir)/code.h \
            $(srcdir)/case.h $(srcdir)/javaprs.h $(srcdir)/javaact.h \
            $(srcdir)/semantic.h $(srcdir)/ast.h $(srcdir)/symbol.h \
 	   $(srcdir)/option.h $(srcdir)/depend.h $(srcdir)/access.h \
@@ -209,11 +209,11 @@ expr.@O@:  $(srcdir)/expr.cpp $(srcdir)/double.h $(srcdir)/config.h \
 	$(CC) $(CCFLAGS) $(srcdir)/expr.cpp 
 
 getclass.@O@:  $(srcdir)/getclass.cpp $(srcdir)/config.h $(srcdir)/control.h \
-               $(srcdir)/option.h $(srcdir)/bool.h $(srcdir)/code.h \
+               $(srcdir)/option.h $(srcdir)/code.h \
                $(srcdir)/tuple.h $(srcdir)/symbol.h $(srcdir)/stream.h \
                $(srcdir)/javadef.h $(srcdir)/javasym.h $(srcdir)/tab.h \
                $(srcdir)/lookup.h $(srcdir)/long.h $(srcdir)/double.h \
-               $(srcdir)/unicode.h $(srcdir)/case.h $(srcdir)/depend.h \
+               $(srcdir)/case.h $(srcdir)/depend.h \
                $(srcdir)/access.h $(srcdir)/set.h $(srcdir)/semantic.h \
 	       $(srcdir)/ast.h $(srcdir)/diagnose.h $(srcdir)/parser.h \
                $(srcdir)/lpginput.h $(srcdir)/javaprs.h $(srcdir)/javaact.h \
@@ -222,11 +222,11 @@ getclass.@O@:  $(srcdir)/getclass.cpp $(srcdir)/config.h $(srcdir)/control.h \
 	$(CC) $(CCFLAGS) $(srcdir)/getclass.cpp 
 
 incrmnt.@O@:  $(srcdir)/incrmnt.cpp $(srcdir)/config.h $(srcdir)/control.h \
-              $(srcdir)/option.h $(srcdir)/bool.h $(srcdir)/code.h \
+              $(srcdir)/option.h $(srcdir)/code.h \
               $(srcdir)/tuple.h $(srcdir)/symbol.h $(srcdir)/stream.h \
               $(srcdir)/javadef.h $(srcdir)/javasym.h $(srcdir)/tab.h \
               $(srcdir)/lookup.h $(srcdir)/long.h $(srcdir)/double.h \
-              $(srcdir)/unicode.h $(srcdir)/case.h $(srcdir)/depend.h \
+              $(srcdir)/case.h $(srcdir)/depend.h \
               $(srcdir)/access.h $(srcdir)/set.h $(srcdir)/scanner.h \
 	      $(srcdir)/parser.h $(srcdir)/lpginput.h $(srcdir)/javaprs.h \
               $(srcdir)/javaact.h $(srcdir)/semantic.h $(srcdir)/ast.h \
@@ -235,9 +235,9 @@ incrmnt.@O@:  $(srcdir)/incrmnt.cpp $(srcdir)/config.h $(srcdir)/control.h \
 
 init.@O@:  $(srcdir)/init.cpp $(srcdir)/config.h $(srcdir)/semantic.h \
            $(srcdir)/ast.h $(srcdir)/stream.h $(srcdir)/javadef.h \
-           $(srcdir)/javasym.h $(srcdir)/tuple.h $(srcdir)/bool.h \
+           $(srcdir)/javasym.h $(srcdir)/tuple.h \
            $(srcdir)/tab.h $(srcdir)/lookup.h $(srcdir)/long.h \
-           $(srcdir)/double.h $(srcdir)/unicode.h $(srcdir)/code.h \
+           $(srcdir)/double.h $(srcdir)/code.h \
 	   $(srcdir)/case.h $(srcdir)/symbol.h $(srcdir)/option.h \
            $(srcdir)/depend.h $(srcdir)/access.h $(srcdir)/diagnose.h \
            $(srcdir)/parser.h $(srcdir)/lpginput.h $(srcdir)/javaprs.h \
@@ -246,49 +246,49 @@ init.@O@:  $(srcdir)/init.cpp $(srcdir)/config.h $(srcdir)/semantic.h \
 
 javaact.@O@: $(srcdir)/javaact.cpp $(srcdir)/config.h $(srcdir)/parser.h \
              $(srcdir)/lpginput.h $(srcdir)/stream.h $(srcdir)/javadef.h \
-	     $(srcdir)/javasym.h $(srcdir)/tuple.h $(srcdir)/bool.h \
+	     $(srcdir)/javasym.h $(srcdir)/tuple.h \
              $(srcdir)/tab.h $(srcdir)/lookup.h $(srcdir)/long.h \
-             $(srcdir)/double.h $(srcdir)/unicode.h $(srcdir)/code.h \
+             $(srcdir)/double.h $(srcdir)/code.h \
              $(srcdir)/case.h $(srcdir)/javaprs.h $(srcdir)/javaact.h \
              $(srcdir)/ast.h $(srcdir)/symbol.h $(srcdir)/option.h \
 	     $(srcdir)/depend.h $(srcdir)/access.h 
 	$(CC) $(CCFLAGS) $(srcdir)/javaact.cpp
 
 jikes.@O@:  $(srcdir)/jikes.cpp $(srcdir)/config.h $(srcdir)/control.h \
-            $(srcdir)/option.h $(srcdir)/bool.h $(srcdir)/code.h \
+            $(srcdir)/option.h $(srcdir)/code.h \
             $(srcdir)/tuple.h $(srcdir)/symbol.h $(srcdir)/stream.h \
             $(srcdir)/javadef.h $(srcdir)/javasym.h $(srcdir)/tab.h \
             $(srcdir)/lookup.h $(srcdir)/long.h $(srcdir)/double.h \
-            $(srcdir)/unicode.h $(srcdir)/case.h $(srcdir)/depend.h \
+            $(srcdir)/case.h $(srcdir)/depend.h \
             $(srcdir)/access.h $(srcdir)/set.h 
 	$(CC) $(CCFLAGS) $(srcdir)/jikes.cpp
 
 long.@O@:  $(srcdir)/long.cpp $(srcdir)/config.h $(srcdir)/long.h \
-           $(srcdir)/bool.h $(srcdir)/double.h 
+           $(srcdir)/double.h 
 	$(CC) $(CCFLAGS) $(srcdir)/long.cpp 
 
 lookup.@O@:  $(srcdir)/lookup.cpp $(srcdir)/config.h $(srcdir)/lookup.h \
-             $(srcdir)/tuple.h $(srcdir)/bool.h $(srcdir)/long.h \
+             $(srcdir)/tuple.h $(srcdir)/long.h \
              $(srcdir)/double.h $(srcdir)/symbol.h $(srcdir)/code.h \
              $(srcdir)/stream.h $(srcdir)/javadef.h $(srcdir)/javasym.h \
-             $(srcdir)/tab.h $(srcdir)/unicode.h $(srcdir)/case.h \
+             $(srcdir)/tab.h $(srcdir)/case.h \
              $(srcdir)/option.h $(srcdir)/depend.h $(srcdir)/access.h \
              $(srcdir)/ast.h 
 	$(CC) $(CCFLAGS) $(srcdir)/lookup.cpp
 
 lpginput.@O@:  $(srcdir)/lpginput.cpp $(srcdir)/config.h $(srcdir)/lpginput.h \
                $(srcdir)/stream.h $(srcdir)/javadef.h $(srcdir)/javasym.h \
-	       $(srcdir)/tuple.h $(srcdir)/bool.h $(srcdir)/tab.h \
+	       $(srcdir)/tuple.h $(srcdir)/tab.h \
                $(srcdir)/lookup.h $(srcdir)/long.h $(srcdir)/double.h \
-               $(srcdir)/unicode.h $(srcdir)/code.h $(srcdir)/case.h \
+               $(srcdir)/code.h $(srcdir)/case.h \
                $(srcdir)/javaprs.h $(srcdir)/javadcl.h 
 	$(CC) $(CCFLAGS) $(srcdir)/lpginput.cpp 
 
 modifier.@O@:  $(srcdir)/modifier.cpp $(srcdir)/config.h $(srcdir)/semantic.h \
                $(srcdir)/ast.h $(srcdir)/stream.h $(srcdir)/javadef.h \
-	       $(srcdir)/javasym.h $(srcdir)/tuple.h $(srcdir)/bool.h \
+	       $(srcdir)/javasym.h $(srcdir)/tuple.h \
                $(srcdir)/tab.h $(srcdir)/lookup.h $(srcdir)/long.h \
-               $(srcdir)/double.h $(srcdir)/unicode.h $(srcdir)/code.h \
+               $(srcdir)/double.h $(srcdir)/code.h \
                $(srcdir)/case.h $(srcdir)/symbol.h $(srcdir)/option.h \
                $(srcdir)/depend.h $(srcdir)/access.h $(srcdir)/diagnose.h \
 	       $(srcdir)/parser.h $(srcdir)/lpginput.h $(srcdir)/javaprs.h \
@@ -297,10 +297,10 @@ modifier.@O@:  $(srcdir)/modifier.cpp $(srcdir)/config.h $(srcdir)/semantic.h \
 	$(CC) $(CCFLAGS) $(srcdir)/modifier.cpp 
 
 op.@O@:  $(srcdir)/op.cpp $(srcdir)/config.h $(srcdir)/op.h $(srcdir)/tuple.h \
-         $(srcdir)/bool.h $(srcdir)/class.h $(srcdir)/semantic.h $(srcdir)/ast.h \
+         $(srcdir)/class.h $(srcdir)/semantic.h $(srcdir)/ast.h \
 	 $(srcdir)/stream.h $(srcdir)/javadef.h $(srcdir)/javasym.h \
          $(srcdir)/tab.h $(srcdir)/lookup.h $(srcdir)/long.h $(srcdir)/double.h \
-	 $(srcdir)/unicode.h $(srcdir)/code.h $(srcdir)/case.h $(srcdir)/symbol.h \
+	 $(srcdir)/code.h $(srcdir)/case.h $(srcdir)/symbol.h \
          $(srcdir)/option.h $(srcdir)/depend.h $(srcdir)/access.h \
          $(srcdir)/diagnose.h $(srcdir)/parser.h $(srcdir)/lpginput.h \
          $(srcdir)/javaprs.h $(srcdir)/javaact.h $(srcdir)/error.h \
@@ -308,45 +308,45 @@ op.@O@:  $(srcdir)/op.cpp $(srcdir)/config.h $(srcdir)/op.h $(srcdir)/tuple.h \
 	$(CC) $(CCFLAGS) $(srcdir)/op.cpp 
 
 option.@O@:  $(srcdir)/option.cpp $(srcdir)/option.h $(srcdir)/config.h \
-             $(srcdir)/bool.h $(srcdir)/code.h $(srcdir)/tuple.h \
+             $(srcdir)/code.h $(srcdir)/tuple.h \
              $(srcdir)/javasym.h $(srcdir)/error.h $(srcdir)/stream.h \
              $(srcdir)/javadef.h $(srcdir)/tab.h $(srcdir)/lookup.h \
-             $(srcdir)/long.h $(srcdir)/double.h $(srcdir)/unicode.h \
+             $(srcdir)/long.h $(srcdir)/double.h \
              $(srcdir)/case.h 
 	$(CC) $(CCFLAGS) $(srcdir)/option.cpp 
 
 parser.@O@:  $(srcdir)/parser.cpp $(srcdir)/config.h $(srcdir)/parser.h \
              $(srcdir)/lpginput.h $(srcdir)/stream.h $(srcdir)/javadef.h \
-	     $(srcdir)/javasym.h $(srcdir)/tuple.h $(srcdir)/bool.h \
+	     $(srcdir)/javasym.h $(srcdir)/tuple.h \
              $(srcdir)/tab.h $(srcdir)/lookup.h $(srcdir)/long.h \
-             $(srcdir)/double.h $(srcdir)/unicode.h $(srcdir)/code.h \
+             $(srcdir)/double.h $(srcdir)/code.h \
              $(srcdir)/case.h $(srcdir)/javaprs.h $(srcdir)/javaact.h \
              $(srcdir)/ast.h $(srcdir)/symbol.h $(srcdir)/option.h \
 	     $(srcdir)/depend.h $(srcdir)/access.h 
 	$(CC) $(CCFLAGS) $(srcdir)/parser.cpp
 
 scanner.@O@: $(srcdir)/scanner.cpp $(srcdir)/config.h $(srcdir)/scanner.h \
-             $(srcdir)/code.h $(srcdir)/bool.h $(srcdir)/javadef.h \
+             $(srcdir)/code.h $(srcdir)/javadef.h \
              $(srcdir)/javasym.h $(srcdir)/stream.h $(srcdir)/tuple.h \
              $(srcdir)/tab.h $(srcdir)/lookup.h $(srcdir)/long.h \
-             $(srcdir)/double.h $(srcdir)/unicode.h $(srcdir)/case.h \
+             $(srcdir)/double.h $(srcdir)/case.h \
              $(srcdir)/control.h $(srcdir)/option.h $(srcdir)/symbol.h \
              $(srcdir)/depend.h $(srcdir)/access.h $(srcdir)/set.h $(srcdir)/error.h 
 	$(CC) $(CCFLAGS) $(srcdir)/scanner.cpp 
 
 set.@O@:  $(srcdir)/set.cpp $(srcdir)/set.h $(srcdir)/config.h \
-          $(srcdir)/symbol.h $(srcdir)/code.h $(srcdir)/bool.h \
+          $(srcdir)/symbol.h $(srcdir)/code.h \
           $(srcdir)/stream.h $(srcdir)/javadef.h $(srcdir)/javasym.h \
           $(srcdir)/tuple.h $(srcdir)/tab.h $(srcdir)/lookup.h \
-          $(srcdir)/long.h $(srcdir)/double.h $(srcdir)/unicode.h \
+          $(srcdir)/long.h $(srcdir)/double.h \
           $(srcdir)/case.h $(srcdir)/option.h $(srcdir)/depend.h \
           $(srcdir)/access.h 
 	$(CC) $(CCFLAGS) $(srcdir)/set.cpp 
 
 stream.@O@:  $(srcdir)/stream.cpp $(srcdir)/config.h $(srcdir)/stream.h \
              $(srcdir)/javadef.h $(srcdir)/javasym.h $(srcdir)/tuple.h \
-             $(srcdir)/bool.h $(srcdir)/tab.h $(srcdir)/lookup.h \
-             $(srcdir)/long.h $(srcdir)/double.h $(srcdir)/unicode.h \
+             $(srcdir)/tab.h $(srcdir)/lookup.h \
+             $(srcdir)/long.h $(srcdir)/double.h \
              $(srcdir)/code.h $(srcdir)/case.h $(srcdir)/zip.h \
 	     $(srcdir)/unzip.h $(srcdir)/symbol.h $(srcdir)/option.h \
              $(srcdir)/depend.h $(srcdir)/access.h $(srcdir)/control.h \
@@ -357,8 +357,8 @@ stream.@O@:  $(srcdir)/stream.cpp $(srcdir)/config.h $(srcdir)/stream.h \
 
 symbol.@O@:  $(srcdir)/symbol.cpp $(srcdir)/config.h $(srcdir)/stream.h \
              $(srcdir)/javadef.h $(srcdir)/javasym.h $(srcdir)/tuple.h \
-             $(srcdir)/bool.h $(srcdir)/tab.h $(srcdir)/lookup.h \
-             $(srcdir)/long.h $(srcdir)/double.h $(srcdir)/unicode.h \
+             $(srcdir)/tab.h $(srcdir)/lookup.h \
+             $(srcdir)/long.h $(srcdir)/double.h \
              $(srcdir)/code.h $(srcdir)/case.h $(srcdir)/control.h \
 	     $(srcdir)/option.h $(srcdir)/symbol.h $(srcdir)/depend.h \
              $(srcdir)/access.h $(srcdir)/set.h $(srcdir)/ast.h \
@@ -368,11 +368,11 @@ symbol.@O@:  $(srcdir)/symbol.cpp $(srcdir)/config.h $(srcdir)/stream.h \
 	$(CC) $(CCFLAGS) $(srcdir)/symbol.cpp
 
 system.@O@:  $(srcdir)/system.cpp $(srcdir)/config.h $(srcdir)/control.h \
-             $(srcdir)/option.h $(srcdir)/bool.h $(srcdir)/code.h \
+             $(srcdir)/option.h $(srcdir)/code.h \
              $(srcdir)/tuple.h $(srcdir)/symbol.h $(srcdir)/stream.h \
              $(srcdir)/javadef.h $(srcdir)/javasym.h $(srcdir)/tab.h \
              $(srcdir)/lookup.h $(srcdir)/long.h $(srcdir)/double.h \
-             $(srcdir)/unicode.h $(srcdir)/case.h $(srcdir)/depend.h \
+             $(srcdir)/case.h $(srcdir)/depend.h \
              $(srcdir)/access.h $(srcdir)/set.h $(srcdir)/semantic.h \
 	     $(srcdir)/ast.h $(srcdir)/diagnose.h $(srcdir)/parser.h \
              $(srcdir)/lpginput.h $(srcdir)/javaprs.h $(srcdir)/javaact.h \
@@ -387,9 +387,9 @@ unzip.@O@:  $(srcdir)/unzip.cpp $(srcdir)/config.h $(srcdir)/unzip.h
 
 wom.@O@:  $(srcdir)/wom.cpp $(srcdir)/config.h $(srcdir)/semantic.h \
           $(srcdir)/ast.h $(srcdir)/stream.h $(srcdir)/javadef.h \
-          $(srcdir)/javasym.h $(srcdir)/tuple.h $(srcdir)/bool.h \
+          $(srcdir)/javasym.h $(srcdir)/tuple.h \
           $(srcdir)/tab.h $(srcdir)/lookup.h $(srcdir)/long.h \
-          $(srcdir)/double.h $(srcdir)/unicode.h $(srcdir)/code.h \
+          $(srcdir)/double.h $(srcdir)/code.h \
 	  $(srcdir)/case.h $(srcdir)/symbol.h $(srcdir)/option.h \
           $(srcdir)/depend.h $(srcdir)/access.h $(srcdir)/diagnose.h \
           $(srcdir)/parser.h $(srcdir)/lpginput.h $(srcdir)/javaprs.h \
@@ -397,10 +397,10 @@ wom.@O@:  $(srcdir)/wom.cpp $(srcdir)/config.h $(srcdir)/semantic.h \
 	$(CC) $(CCFLAGS) $(srcdir)/wom.cpp
 
 zip.@O@:  $(srcdir)/zip.cpp $(srcdir)/config.h $(srcdir)/control.h \
-          $(srcdir)/option.h $(srcdir)/bool.h $(srcdir)/code.h $(srcdir)/tuple.h \
+          $(srcdir)/option.h $(srcdir)/code.h $(srcdir)/tuple.h \
 	  $(srcdir)/symbol.h $(srcdir)/stream.h $(srcdir)/javadef.h \
           $(srcdir)/javasym.h $(srcdir)/tab.h $(srcdir)/lookup.h $(srcdir)/long.h \
-	  $(srcdir)/double.h $(srcdir)/unicode.h $(srcdir)/case.h \
+	  $(srcdir)/double.h $(srcdir)/case.h \
           $(srcdir)/depend.h $(srcdir)/access.h $(srcdir)/set.h \
           $(srcdir)/zip.h $(srcdir)/unzip.h 
 	$(CC) $(CCFLAGS) $(srcdir)/zip.cpp 
