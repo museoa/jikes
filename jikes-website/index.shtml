@@ -64,7 +64,7 @@
 	    <li><a href="http://ibm.com/java/jdk/">The Best JVMs on the net</a>
 	    <li><a href="http://www.java.sun.com/docs/books/jls">Language Spec.</a>
 	    <li><a href="http://www.java.sun.com/docs/books/vmspec">Virtual Machine Spec.</a>
-	    <li><a href="http://domino.watson.ibm.com/syssftpr/JavaTech/Jikes.nsf">Old Jikes discussion database<br>at IBM Research</a> <small>includes<br>the "Queries to Sun".</small>
+	    <li><a href="queries/">Old Jikes &quot;Queries to Sun&quot; database</a>
 	    <li><a href="/developerworks/oss/jikesrvm/?origin=jikes">The Jikes Research Virtual Machine project</a> can only be built with Jikes.
 	    <li><a href="http://ibm.com/alphaworks/robocode/?origin=jikes">Robocode</a> is a fun way to learn java programming, and it uses jikes under the covers to reduce the compile delays and keep the student's attention!
           </ul>
@@ -118,8 +118,15 @@ the Java community:
             your code that provides two very useful features: Incremental builds
             and makefile generation.</LI>
     </UL>
-<p>Abridged from <!--a href="faq.shtml"-->a FAQ entry<!--/A--> which was adapted from
-some material by Lou Grinzo for an article he wrote, the link I have for which is no longer valid.</p>
+<p>Abridged from a FAQ entry which was adapted from
+some material by Lou Grinzo for an article he wrote.</p>
+
+<P>The fact that Jikes is a high-performance, highly compatible Java
+compiler that can be used on almost any computing platform makes it
+an interesting program and worth investigating for almost any Java
+programmer. But Jikes is also notable because it lies at the center
+of two events: the adoption of open source philosophy and practice by
+large corporations, and the continued growth of Java for Linux.</p>
 
 <p>It's worth pointing out that Jikes is not, and is not intended to be, a complete
 development environment -- it is simply a command line compiler. It should not be
@@ -155,70 +162,11 @@ which has been approved by the <a href="http://www.opensource.org/">OSI</a>
 (Open Source Initiative) as a fully certified open source license.
 The project provides access to the complete <A HREF="cvs.shtml">CVS</A>
 development tree, which includes not only Jikes, but also the source for the Jacks
-Test Suite and the Jikes Parser Generator used to build Jikes. Members of the community
+Test Suite and the Jikes Parser Generator used to build Jikes.<!-- Members of the community
 contribute <A HREF="/developerworks/downloads/index.php?group_id=10&amp;recent_only=1">binaries</A>
-for their platforms of choice, additionally
+for their platforms of choice, additionally -->
 Jikes is included in many <A HREF="distribs.shtml">Open Source Operating Systems</A>.
-The Jacks Test Suite is a replacement for the Jikestst package, and it is expected
-to replace it over time.</p>
-
-
-<!--
-more crud from various sources to merge into main body or fork into seperate pages.
-
-
-<P>The fact that Jikes is a high-performance, highly compatible Java
-compiler that can be used on almost any computing platform makes it
-an interesting program and worth investigating for almost any Java
-programmer. But Jikes is also notable because it lies at the center
-of two events: the adoption of open source philosophy and practice by
-large corporations, and the continued growth of Java for Linux.</p>
-
-
-The Jikes project is a collaborative software development project dedicated to 
-providing a compiler from Java source code to bytecode that is conformant, 
-robust, full-featured, commercial-quality, and freely available. This project is 
-overseen by a group of companies and individual volunteers throughout the world, 
-using the internet to communicate, plan, and develop the compiler and its 
-related software and documentation.
-
-
-
-
-
-We provide the source code for Jikes, a parser generator, and a test suite under 
-a liberal <a href="../license10.html">license</a>.
-
-<p>
-
-We provide prebuilt binary versions for AIX, Linux Intel, Solaris Sparc, and 
-Windows95/NT. See <a href="../jikes/project/ports.html">ports</a> for a list of 
-known ports to other systems (some of the authors of these ports also provide 
-binary versions); see <a href="../jikes/project/distrib.html">distributions</a> 
-for a list software distributions known to include Jikes.
-
-<p>
-The original version of Jikes, first released in binary form in April 1997, was 
-written by Philippe Charles and Dave Shields of the IBM T. J. Watson Research 
-Center.  Since the release of the source in December 1998 they have continued to 
-work on the compiler as contributors.
-
-<p>Here are links to some of the articles in the press that have mentioned Jikes:
-<UL>
-    <LI>PC Week (December 1998): <a href="http://www.zdnet.com/pcweek/stories/news/0,4153,375509,00.html">Jikes! More open source code.</a></LI>
-    <LI>Javaworld (December 1998): <a href="http://www.javaworld.com/pr/awards98.html#1">JavaWorld announces finalists in its 1998 Editor's Choice Awards.</a></LI>
-    <LI>Computing (April 1998): <a href="http://www.zdnet.com/products/content/zdim/0304/288352.html">Internet Java Tools Enrich the Bean Pool.</a></LI>
-    badlink<LI>PC Week (December 1997): <a href="http://www.zdnet.com/pcweek/sr/1222/22prod97.html">PCW Labs' top 10 tech trends: It was the best of information technology.</a></LI>
-    <LI>PC Week (September 1997): <a href="http://www.pcweek.com/news/0922/22tech.html">IBM spreading its software wings.</a></LI>
-    <LI>Infoworld (May 1997): <a href="http://www.haifa.il.ibm.com/webcutter/infoworld/infoworld24May.html">IBM to invest $100 million in Internet, networking research center this year.</a></LI>
-    <LI>Web Week (April 1997): <a href="http://www.webweek.com/97Apr28/software/rails.html">IBM Greases Java's Rails.</a></LI>
-    <LI>PC Week (April 1997): <a href="http://www.pcweek.com/news/0414/14ante.html">IBM, Netscape Up Web Ante.</a></LI>
-</UL>
-</P>
-
-
-
--->
+The Jacks Test Suite is a replacement for the Jikestst package.</p>
 
 </td>
 </tr>

@@ -1,3 +1,10 @@
+2003-04-07  Chris Abbey  <jikes@cabbey.net>
+
+	* index.shtml: finally gut a bunch of old text, update
+	link for "Queries to Sun".
+	* queries/
+	* queries/index.shtml: new to handle the removal of jikes.nsf
+
 2003-02-07  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* faq/dev-win32.shtml: Add "cd .." to end of
