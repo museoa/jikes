@@ -205,11 +205,15 @@ public:
     }
     static void ConstantCleanup(void)
     {
+        // The explicit casts are there to workaround a MSVC
+        // behaviour which doesn't allow an implicit cast
+        // from const X* to void* for the delete operator.
         if (max_long_const)
-            delete max_long_const;
+            delete (LongInt*)max_long_const;
         if (min_long_const)
-            delete min_long_const;
+            delete (LongInt*)min_long_const;
     }
+
 
 private:
     static const LongInt *max_long_const, *min_long_const;

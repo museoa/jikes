@@ -1,3 +1,14 @@
+2001-05-07  Pascal Davoust  <davoustp@yahoo.com>
+
+	* long.cpp (LongInt::ConstantCleanup):
+	fix MSVC build break because the compiler
+	doesn't allow automated conversion of a const X*
+	to a void*. Explicit cast (without const modifier)
+	used.
+	* definite.cpp (DefiniteSwitchStatement):
+	fix MSVC build break because of duplicate
+	variables in 'for' loops.
+
 2001-05-06  Eric Blake  <ebb9@email.byu.edu>
 
 	* src/bytecode.h:

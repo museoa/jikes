@@ -1498,7 +1498,8 @@ void Semantic::DefiniteSwitchStatement(Ast *stmt)
            after_expr_finals(*possibly_assigned_finals),
            switch_finals_union(*possibly_assigned_finals);
 
-    for (int i = 0; i < block_body -> NumStatements(); i++)
+    int i;
+    for (i = 0; i < block_body -> NumStatements(); i++)
     {
         AstSwitchBlockStatement *switch_block_statement = (AstSwitchBlockStatement *) block_body -> Statement(i);
 
@@ -1590,7 +1591,7 @@ Coutput << "    \"" << block_body -> LocallyDefinedVariable(j) -> Name() << "\"\
     //
     // Remove all variables that just went out of scope
     //
-    for (int i = 0; i < block_body -> block_symbol -> NumVariableSymbols(); i++)
+    for (i = 0; i < block_body -> block_symbol -> NumVariableSymbols(); i++)
     {
         VariableSymbol *variable = block_body -> block_symbol -> VariableSym(i);
 
