@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -1167,8 +1167,13 @@ void Semantic::ProcessThrowStatement(Ast* stmt)
                        throw_statement);
     }
 
+    //
+    // Since 'throw null' always generates NullPointerException, we do not
+    // add it to the exception set; otherwise checked exception catch blocks
+    // would be reachable because null is assignable to them.
+    //
     SymbolSet* exception_set = TryExceptionTableStack().Top();
-    if (exception_set)
+    if (exception_set && type != control.null_type)
         exception_set -> AddElement(type);
 
     if (UncaughtException(type))
@@ -1446,6 +1451,7 @@ void Semantic::ProcessTryStatement(Ast* stmt)
              exception;
              exception = (TypeSymbol*) exception_set -> NextElement())
         {
+            assert(exception != control.null_type);
             if (CanAssignmentConvertReference(type, exception))
                 catchable_exceptions.Next() = exception;
             else if (CanAssignmentConvertReference(exception, type))

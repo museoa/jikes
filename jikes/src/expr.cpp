@@ -49,12 +49,15 @@ bool Semantic::IsIntValueRepresentableInType(AstExpression* expr,
 inline bool Semantic::MoreSpecific(MethodSymbol* source_method,
                                    MethodSymbol* target_method)
 {
-    if (! CanMethodInvocationConvert(target_method -> containing_type,
-                                     source_method -> containing_type))
-    {
-        return false;
-    }
-
+    //
+    // Sun bug 4761586: the declaration type is no longer considered when
+    // looking for the most specific method.
+    //
+//      if (! CanMethodInvocationConvert(target_method -> containing_type,
+//                                       source_method -> containing_type))
+//      {
+//          return false;
+//      }
     for (int k = target_method -> NumFormalParameters() - 1; k >= 0; k--)
     {
         if (! CanMethodInvocationConvert(target_method -> FormalParameter(k) ->

@@ -1,3 +1,13 @@
+2004-01-16  Eric Blake  <ebb9@byu.net>
+
+	* src/body.cpp (ProcessThrowStatement): Fallout from yesterday -
+	throwing null cannot make checked exception catch reachable.
+	* src/expr.cpp (MoreSpecific): From Sun bug 4761586, no longer
+	consider the declaring type when deciding method ambiguity.
+	* src/error.cpp (InitializeMessages): Update error message wording
+	accordingly.
+	* NEWS: Document this.
+
 2004-01-15  Eric Blake  <ebb9@byu.net>
 
 	* src/semantic.h (CheckedException): From Java Spec Report, throw

@@ -3,7 +3,7 @@
 // This software is subject to the terms of the IBM Jikes Compiler
 // License Agreement available at the following URL:
 // http://ibm.com/developerworks/opensource/jikes.
-// Copyright (C) 1996, 2003 IBM Corporation and others.  All Rights Reserved.
+// Copyright (C) 1996, 2004 IBM Corporation and others.  All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
 
@@ -1635,9 +1635,9 @@ void SemanticError::InitializeMessages()
         "This constructor must declare the checked exception \"%T1\" "
         "thrown by the explicit super() call to type \"%T3\".";
     messages[UNREACHABLE_CATCH_CLAUSE] =
-        "This catch block is unreachable because there is no exception "
-        "whose type is assignable to \"%T1\" that can be thrown during "
-        "execution of the body of the try block.";
+        "This catch block is unreachable because there is no non-null "
+        "exception whose type is assignable to \"%T1\" that can be thrown "
+        "during execution of the body of the try block.";
     messages[UNREACHABLE_STATEMENT] = "This statement is unreachable.";
     messages[UNREACHABLE_STATEMENTS] = "These statements are unreachable.";
     messages[BLOCKED_CATCH_CLAUSE] =

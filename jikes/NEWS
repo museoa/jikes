@@ -4,11 +4,26 @@ The default -source and -target options are now 1.4 (that is, the
 assert statement now compiles by default); for the old behavior you
 must specify -source 1.3 or -target 1.3 at the command line.
 
+The check for method ambiguity no longer looks at the type that
+declared each method.  Code that once caused an ambiguous method error
+is now legal, per Sun bug 4761586:
+class A {
+  void m(byte b) {}
+}
+class B extends A {
+  void m(int i) {}
+  void foo(byte b) {
+    m(b); // now calls inherited A.m(byte), rather than ambiguous
+  }
+}
+
 Constant instance variables are now initialized sooner, so that you
 cannot view their default 0 value even with reflection.
 
 The statement 'throw null;' is now treated as an unchecked exception,
-since it always results in a NullPointerException being thrown.
+since it always results in a NullPointerException being thrown. This
+also means that throwing null does not make a checked exception catch
+clause reachable.
 
 FIXME: What other big changes have been added?
 
